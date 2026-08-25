@@ -1,0 +1,78 @@
+# Abhaengigkeiten - gehoeren nicht ins Repository, kommen per "npm install"
+node_modules/
+
+# Geheimnisse - niemals ins Repository
+.env
+.env.local
+.env.*.local
+
+# Laufzeit-Dateien und Logs
+tts_cache/
+tunnel.log
+tunnel_out.log
+tunnel_url.txt
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Persoenliche Lerndaten - nichts fuer ein Repository
+data/
+*.bak
+*.tmp
+*.defekt-*
+
+# Grosse Binaerdateien, werden bei Bedarf heruntergeladen
+cloudflared.exe
+piper/
+*.exe
+*.dll
+*.onnx
+*.onnx.json
+
+# Alte Codestaende und Sicherungen - dafuer ist ab jetzt die Git-Historie da.
+#
+# ACHTUNG, hier lag der Fehler: Bisher stand hier "backup_*/" mit
+# Unterstrich. Der Ordner heisst aber schlicht "backup/" - er war damit
+# NICHT ausgenommen, und backup/amateurfunk_data.json (der Lernstand) lag
+# im Repository. Aufgefallen ist es erst bei der Pruefung vor dem
+# Hochladen.
+original/
+backup/
+backup_*/
+
+# Gesicherte Lernstaende ("Sichern" im Trainer). Persoenliche Daten -
+# und jederzeit neu erzeugbar.
+Klasse-N-Lernstand_*.json
+Amateurfunk-Lernstand_*.json
+
+# Test-/Build-Artefakte
+coverage/
+*.pid
+
+# Editor-/IDE-Ordner
+.vscode/
+.idea/
+
+# Betriebssystem
+Thumbs.db
+desktop.ini
+.DS_Store
+
+Node.js/
+*.msi
+
+# Hoerbuch: fertige MP3s fuer den USB-Stick. Bei allen Fragen rund 70 MB -
+# und jederzeit neu erzeugbar, also nichts fuer die Versionsgeschichte.
+Hoerbuch/
+
+# Ergebnis von Aufraeumen.bat - liegt nur so lange da, bis geprueft ist,
+# dass der Trainer auch ohne die Dateien laeuft. Nichts fuer die Historie.
+_Aufgeraeumt_*/
+
+# Die alte Historie, von GitHub-Neustart.bat zur Seite gelegt.
+#
+# OHNE DIESE ZEILE WAERE DER GANZE NEUSTART UMSONST: "git add -A" nimmt
+# den Ordner sonst als gewoehnliche Dateien mit auf - samt der alten
+# Objekte, in denen der Lernstand steckt. Beim ersten Test ist genau das
+# passiert, 46 statt 40 Dateien im ersten Commit.
+.git_alt_*/

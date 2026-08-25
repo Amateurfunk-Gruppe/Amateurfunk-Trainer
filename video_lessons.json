@@ -1,0 +1,1460 @@
+[
+  {
+    "id": "WnOBk1UogjM",
+    "title": "Lektion 01 – Betriebstechnik Grundlagen",
+    "url": "https://www.youtube.com/watch?v=WnOBk1UogjM",
+    "segments": [
+      {
+        "time": "2:03",
+        "sec": 123,
+        "desc": "Kurzwellenhören demonstriert – Beispiel eines echten Kurzwellenempfangs. Hören ist immer erlaubt."
+      },
+      {
+        "time": "3:00",
+        "sec": 180,
+        "desc": "Erklärung Push-to-Talk (PTT) – Grundfunktion des Sendens am Transceiver."
+      },
+      {
+        "time": "5:05",
+        "sec": 305,
+        "desc": "Buchstabiertafel vollständig durchgegangen Alpha bis Zulu, inklusive Aussprache. Umgang mit Umlauten."
+      },
+      {
+        "time": "10:53",
+        "sec": 653,
+        "desc": "Frequenzprüfung in der Praxis – Wie man hört, ob eine Frequenz frei ist. Beispiel eines belegten Kanals."
+      },
+      {
+        "time": "12:15",
+        "sec": 735,
+        "desc": "Allgemeiner Anruf (CQ) demonstriert – Originalruf: CQ CQ allgemeiner Anruf"
+      },
+      {
+        "time": "14:01",
+        "sec": 841,
+        "desc": "RST-System erklärt – Tabellen, Beispiele, praktische Bewertung."
+      },
+      {
+        "time": "18:13",
+        "sec": 1093,
+        "desc": "Japanische Station bewertet – Realer Funkkontakt mit R4 S4."
+      },
+      {
+        "time": "19:35",
+        "sec": 1175,
+        "desc": "Ausbildungsfunkbetrieb gezeigt – Beispielruf mit /training."
+      }
+    ]
+  },
+  {
+    "id": "MPSwrnhAbyY",
+    "title": "Lektion 02 – Frequenz, Wellenlänge, Ausbreitung",
+    "url": "https://www.youtube.com/watch?v=MPSwrnhAbyY",
+    "segments": [
+      {
+        "time": "0:00",
+        "sec": 0,
+        "desc": "Einführung – Was ist Frequenz?"
+      },
+      {
+        "time": "2:10",
+        "sec": 130,
+        "desc": "Wellenlänge und Frequenz – Grundbegriffe"
+      },
+      {
+        "time": "5:40",
+        "sec": 340,
+        "desc": "Zusammenhang zwischen Frequenz und Wellenlänge"
+      },
+      {
+        "time": "8:15",
+        "sec": 495,
+        "desc": "Elektromagnetische Wellen – Grundlagen"
+      },
+      {
+        "time": "11:30",
+        "sec": 690,
+        "desc": "Ausbreitungsarten – Bodenwelle, Raumwelle, Ionosphäre"
+      },
+      {
+        "time": "15:20",
+        "sec": 920,
+        "desc": "Reflexion an der Ionosphäre – Skip, Sprungentfernung"
+      },
+      {
+        "time": "18:45",
+        "sec": 1125,
+        "desc": "Einfluss von Tageszeit und Sonnenaktivität"
+      },
+      {
+        "time": "22:10",
+        "sec": 1330,
+        "desc": "Ausbreitung auf Kurzwelle – Beispiele"
+      },
+      {
+        "time": "26:40",
+        "sec": 1600,
+        "desc": "Ausbreitung auf UKW – Sichtverbindung, Beugung, Tropo"
+      },
+      {
+        "time": "30:55",
+        "sec": 1855,
+        "desc": "Störungen und Dämpfung – Wetter, Hindernisse, Rauschen"
+      },
+      {
+        "time": "34:20",
+        "sec": 2060,
+        "desc": "Zusammenfassung der wichtigsten Punkte"
+      }
+    ]
+  },
+  {
+    "id": "E5RuFuUv7ag",
+    "title": "Lektion 03 – Rufzeichen, Clubstationen, Relais, Baken, Satelliten, Exterritoriale Stationen",
+    "url": "https://www.youtube.com/watch?v=E5RuFuUv7ag",
+    "segments": [
+      {
+        "time": "0:09",
+        "sec": 9,
+        "desc": "Einführung: Personengebundenes Rufzeichen nach bestandener Prüfung."
+      },
+      {
+        "time": "0:22",
+        "sec": 22,
+        "desc": "Aufbau eines Rufzeichens: Präfix, Ziffer, Suffix."
+      },
+      {
+        "time": "0:57",
+        "sec": 57,
+        "desc": "ITU-Präfixliste erklärt (Länderpräfixe weltweit)."
+      },
+      {
+        "time": "2:02",
+        "sec": 122,
+        "desc": "Präfix erkennen → Herkunftsland einer Station."
+      },
+      {
+        "time": "2:47",
+        "sec": 167,
+        "desc": "Beispielstation EI2KP → Irland."
+      },
+      {
+        "time": "3:07",
+        "sec": 187,
+        "desc": "Deutsche Präfixe (DA–DR, Y2–Y9)."
+      },
+      {
+        "time": "3:29",
+        "sec": 209,
+        "desc": "Beispiele deutscher Rufzeichen."
+      },
+      {
+        "time": "4:11",
+        "sec": 251,
+        "desc": "Rufzeichenplan der Bundesnetzagentur."
+      },
+      {
+        "time": "4:55",
+        "sec": 295,
+        "desc": "Wunschrufzeichen beantragen."
+      },
+      {
+        "time": "5:12",
+        "sec": 312,
+        "desc": "Beispiel: DL1FLO (Suffix aus Namen)."
+      },
+      {
+        "time": "6:03",
+        "sec": 363,
+        "desc": "Clubstationen: Definition & Beantragung."
+      },
+      {
+        "time": "6:51",
+        "sec": 411,
+        "desc": "Gültigkeit: 5 Jahre, danach erneuern."
+      },
+      {
+        "time": "7:12",
+        "sec": 432,
+        "desc": "Clubstations-Rufzeichenblöcke."
+      },
+      {
+        "time": "7:48",
+        "sec": 468,
+        "desc": "Wer darf Clubstationen nutzen?"
+      },
+      {
+        "time": "8:14",
+        "sec": 494,
+        "desc": "Nutzung abhängig von Lizenzklasse (A/E)."
+      },
+      {
+        "time": "9:06",
+        "sec": 546,
+        "desc": "Standortbindung & temporäre Nutzung (Fielddays, Events)."
+      },
+      {
+        "time": "10:03",
+        "sec": 603,
+        "desc": "Langfristige Standortänderung → Meldepflicht."
+      },
+      {
+        "time": "10:23",
+        "sec": 623,
+        "desc": "Ausbildungsrufzeichen (Strich T / Strich training)."
+      },
+      {
+        "time": "11:06",
+        "sec": 666,
+        "desc": "Beispiel: DL2YMR/training ruft CQ."
+      },
+      {
+        "time": "11:22",
+        "sec": 682,
+        "desc": "Regeln für Ausbildungsbetrieb (Ausbilder muss vor Ort sein)."
+      },
+      {
+        "time": "12:20",
+        "sec": 740,
+        "desc": "Remote-Stationen: Definition & Voraussetzungen."
+      },
+      {
+        "time": "13:14",
+        "sec": 794,
+        "desc": "Betriebsmeldung & Erreichbarkeitspflicht."
+      },
+      {
+        "time": "13:35",
+        "sec": 815,
+        "desc": "Kontrolle & Verantwortung des Betreibers."
+      },
+      {
+        "time": "14:14",
+        "sec": 854,
+        "desc": "Remote-Betrieb an Clubstationen (nur Klasse A)."
+      },
+      {
+        "time": "14:33",
+        "sec": 873,
+        "desc": "Rufzeichen-Zusätze (remote, training, mobil, portabel etc.)."
+      },
+      {
+        "time": "15:15",
+        "sec": 915,
+        "desc": "Zusatz am (aeronautisch mobil)."
+      },
+      {
+        "time": "16:23",
+        "sec": 983,
+        "desc": "Zusatz mm (maritim mobil)."
+      },
+      {
+        "time": "17:02",
+        "sec": 1022,
+        "desc": "Live-QSO: mobil ↔ portabel."
+      },
+      {
+        "time": "18:14",
+        "sec": 1094,
+        "desc": "Erklärung der Zusätze mobil & portabel."
+      },
+      {
+        "time": "19:22",
+        "sec": 1162,
+        "desc": "Zusammenfassung aller Rufzeichen-Zusätze."
+      },
+      {
+        "time": "20:22",
+        "sec": 1222,
+        "desc": "Besondere Anlässe → Sonderrufzeichen (4–7-stelliger Suffix)."
+      },
+      {
+        "time": "21:16",
+        "sec": 1276,
+        "desc": "Beispiele: DL500BIER, DL73AFUG, DL22MAUS, DL0ELEFANT."
+      },
+      {
+        "time": "22:02",
+        "sec": 1322,
+        "desc": "Live-QSO mit DL22MAUS."
+      }
+    ]
+  },
+  {
+    "id": "KMxUv8N_F70",
+    "title": "Lektion 04 – Internationaler Funkbetrieb, Landeskenner, ITU, DX, CEPT",
+    "url": "https://www.youtube.com/watch?v=KMxUv8N_F70",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Einführung: Funkwellen kennen keine Ländergrenzen → internationale Regeln nötig."
+      },
+      {
+        "time": "0:30",
+        "sec": 30,
+        "desc": "Rufzeichenaufbau: Präfix = Landeskenner."
+      },
+      {
+        "time": "1:18",
+        "sec": 78,
+        "desc": "ITU-Landeskennerlisten (Europa, prüfungsrelevant markiert)."
+      },
+      {
+        "time": "1:47",
+        "sec": 107,
+        "desc": "13 wichtige Landeskenner für die Prüfung."
+      },
+      {
+        "time": "2:06",
+        "sec": 126,
+        "desc": "BY – China (bezahle in Yuan)."
+      },
+      {
+        "time": "2:27",
+        "sec": 147,
+        "desc": "CT – Portugal"
+      },
+      {
+        "time": "2:35",
+        "sec": 155,
+        "desc": "DA–DR – Deutschland"
+      },
+      {
+        "time": "2:52",
+        "sec": 172,
+        "desc": "EM – Ukraine"
+      },
+      {
+        "time": "2:55",
+        "sec": 175,
+        "desc": "JA – Japan"
+      },
+      {
+        "time": "3:03",
+        "sec": 183,
+        "desc": "K / W / N / AA – USA"
+      },
+      {
+        "time": "3:41",
+        "sec": 221,
+        "desc": "OZ – Dänemark"
+      },
+      {
+        "time": "3:58",
+        "sec": 238,
+        "desc": "PY – Brasilien"
+      },
+      {
+        "time": "4:08",
+        "sec": 248,
+        "desc": "SM – Schweden"
+      },
+      {
+        "time": "4:17",
+        "sec": 257,
+        "desc": "SP – Polen"
+      },
+      {
+        "time": "4:25",
+        "sec": 265,
+        "desc": "VE – Kanada"
+      },
+      {
+        "time": "4:36",
+        "sec": 276,
+        "desc": "VU – Indien"
+      },
+      {
+        "time": "4:45",
+        "sec": 285,
+        "desc": "XE – Mexiko"
+      },
+      {
+        "time": "5:04",
+        "sec": 304,
+        "desc": "Mit 13 Landeskennern alle Prüfungsfragen lösbar."
+      },
+      {
+        "time": "5:15",
+        "sec": 315,
+        "desc": "Beispiel 1: Spanien, Luxemburg, Polen → SP finden"
+      },
+      {
+        "time": "6:14",
+        "sec": 374,
+        "desc": "Beispiel 2: China, Kanada, Australien → BY + VE"
+      },
+      {
+        "time": "8:06",
+        "sec": 486,
+        "desc": "ITU-Regionen Region 1: Afrika, Europa, Russland, Region 2: Amerika, Region 3: Asien, Ozeanien"
+      },
+      {
+        "time": "8:55",
+        "sec": 535,
+        "desc": "DX – Weitverbindungen long distance"
+      },
+      {
+        "time": "9:42",
+        "sec": 582,
+        "desc": "DX auf Kurzwelle = anderer Kontinent. DX auf UKW = mehrere 100 km."
+      },
+      {
+        "time": "10:46",
+        "sec": 646,
+        "desc": "DX weiter einschränken: CQ ZL → Neuseeland CQ VK → Australien"
+      },
+      {
+        "time": "11:07",
+        "sec": 667,
+        "desc": "Warum DX? Diplomprogramme, DXCC (100 Länder)."
+      },
+      {
+        "time": "12:00",
+        "sec": 720,
+        "desc": "DXpeditionen: Aktivierung seltener Länder/Inseln."
+      },
+      {
+        "time": "13:23",
+        "sec": 803,
+        "desc": "CEPT-Regeln für vorübergehenden Aufenthalt (<3 Monate)."
+      },
+      {
+        "time": "14:26",
+        "sec": 866,
+        "desc": "Regeln je Land unterschiedlich → DARC-Auslandsreferat"
+      },
+      {
+        "time": "15:03",
+        "sec": 903,
+        "desc": "CEPT-Dokumente: ECC Report 89 (Klasse N), ERC Report 32, ECC Report 05-06, TR6101, TR6102"
+      },
+      {
+        "time": "15:40",
+        "sec": 940,
+        "desc": "Beispiel: Funken in der Schweiz DARC-Länderliste"
+      },
+      {
+        "time": "16:17",
+        "sec": 977,
+        "desc": "Beispiel DO7PR → Prefix HB3 HB3/DO7PR"
+      },
+      {
+        "time": "17:01",
+        "sec": 1021,
+        "desc": "Erlaubte Bänder & Leistungen in der Schweiz"
+      },
+      {
+        "time": "18:05",
+        "sec": 1085,
+        "desc": "Beispiel DL9MJ → Prefix HB9."
+      },
+      {
+        "time": "18:55",
+        "sec": 1135,
+        "desc": "Prefix SM oder SA Schweden"
+      },
+      {
+        "time": "19:10",
+        "sec": 1150,
+        "desc": "Klasse N ist noch nicht CEPT-gemeldet → kein Auslandbetrieb."
+      },
+      {
+        "time": "19:24",
+        "sec": 1164,
+        "desc": "Ausländische Funkamateure in Deutschland Beispiel G3MM → DL/G3MM"
+      },
+      {
+        "time": "20:12",
+        "sec": 1212,
+        "desc": "Längerer Aufenthalt (>3 Monate) Gastlizenz oder dauerhafte Lizenz nötig."
+      },
+      {
+        "time": "20:57",
+        "sec": 1257,
+        "desc": "Transit durch Nicht-CEPT-Länder"
+      }
+    ]
+  },
+  {
+    "id": "AeeffN4SOaE",
+    "title": "Lektion 05 – Modulation AM, FM, PM",
+    "url": "https://www.youtube.com/watch?v=AeeffN4SOaE",
+    "segments": [
+      {
+        "time": "0:00",
+        "sec": 0,
+        "desc": "Einführung – Warum brauchen wir Modulation?"
+      },
+      {
+        "time": "1:45",
+        "sec": 105,
+        "desc": "Grundbegriffe: Trägerfrequenz, Nutzsignal"
+      },
+      {
+        "time": "4:10",
+        "sec": 250,
+        "desc": "Amplitudenmodulation (AM) – Prinzip & Beispiele"
+      },
+      {
+        "time": "7:20",
+        "sec": 440,
+        "desc": "Seitenbänder und Träger – was entsteht bei AM?"
+      },
+      {
+        "time": "10:05",
+        "sec": 605,
+        "desc": "Frequenzmodulation (FM) – Funktionsweise"
+      },
+      {
+        "time": "13:40",
+        "sec": 820,
+        "desc": "FM im Amateurfunk – Vorteile & typische Anwendungen"
+      },
+      {
+        "time": "16:25",
+        "sec": 985,
+        "desc": "Phasenmodulation (PM) – Zusammenhang mit FM"
+      },
+      {
+        "time": "18:10",
+        "sec": 1090,
+        "desc": "Vergleich AM vs. FM vs. PM"
+      },
+      {
+        "time": "20:05",
+        "sec": 1205,
+        "desc": "Modulationsarten im Amateurfunk – Übersicht"
+      },
+      {
+        "time": "22:30",
+        "sec": 1350,
+        "desc": "Schmalband-FM (NFM) – warum wir sie nutzen"
+      },
+      {
+        "time": "24:15",
+        "sec": 1455,
+        "desc": "Bandbreite verschiedener Modulationsarten"
+      },
+      {
+        "time": "26:00",
+        "sec": 1560,
+        "desc": "Modulationsindex – Bedeutung & Beispiele"
+      },
+      {
+        "time": "27:20",
+        "sec": 1640,
+        "desc": "Zusammenfassung der wichtigsten Punkte"
+      }
+    ]
+  },
+  {
+    "id": "QRq0uPzdPZY",
+    "title": "Lektion 06 – Digitale Übertragungsverfahren",
+    "url": "https://www.youtube.com/watch?v=QRq0uPzdPZY",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Einführung: Analoge vs. digitale Informationen, Stufenwerte, Digitalisierung"
+      },
+      {
+        "time": "1:01",
+        "sec": 61,
+        "desc": "CW (Continuous Wave) als einfachstes digitales Verfahren: Träger an/aus."
+      },
+      {
+        "time": "1:20",
+        "sec": 80,
+        "desc": "Morsealphabet: kurze/lange Töne → Buchstaben → Dekodierung im Kopf."
+      },
+      {
+        "time": "2:06",
+        "sec": 126,
+        "desc": "Geschichte: Früher Pflichtprüfung in CW, heute freiwillig."
+      },
+      {
+        "time": "2:37",
+        "sec": 157,
+        "desc": "Telegraphie = Textübermittlung; Entwicklung zum Funkfernschreiber."
+      },
+      {
+        "time": "3:02",
+        "sec": 182,
+        "desc": "RTTY (Radio Teletype) – Funkfernschreiben."
+      },
+      {
+        "time": "3:21",
+        "sec": 201,
+        "desc": "Computer ersetzt Fernschreiber → viele Digimodes möglich."
+      },
+      {
+        "time": "4:01",
+        "sec": 241,
+        "desc": "Computer mit Funkgerät verbinden: Mikrofoneingang, Data-Eingang, USB."
+      },
+      {
+        "time": "4:28",
+        "sec": 268,
+        "desc": "Bedienungsanleitung beachten → Filterbreite, geeignete Eingänge."
+      },
+      {
+        "time": "4:55",
+        "sec": 295,
+        "desc": "CAT-Schnittstelle (Computer Aided Tuning): Bandwechsel, Mode, Speicher."
+      },
+      {
+        "time": "6:00",
+        "sec": 360,
+        "desc": "Digitale Verbindung: gleiche Sendeart nötig (RTTY, FT8, PSK, CW etc.)."
+      },
+      {
+        "time": "6:38",
+        "sec": 398,
+        "desc": "Abkürzungen in CW/RTTY → Q-Gruppen."
+      },
+      {
+        "time": "7:03",
+        "sec": 423,
+        "desc": "CW-QSO Beispiel CQ-Ruf erklärt: CQ CQ CQ DE DL2AB PSE K."
+      },
+      {
+        "time": "8:08",
+        "sec": 488,
+        "desc": "RST-Rapport: UR RST 599."
+      },
+      {
+        "time": "9:47",
+        "sec": 587,
+        "desc": "SK = Silent Key → Ende der Verbindung."
+      },
+      {
+        "time": "12:00",
+        "sec": 720,
+        "desc": "Digitale Sprachübertragung: DMR, D-STAR, C4FM, M17"
+      },
+      {
+        "time": "14:07",
+        "sec": 847,
+        "desc": "FreeDV – digitale Sprachübertragung auf KW."
+      },
+      {
+        "time": "14:18",
+        "sec": 858,
+        "desc": "Mehrere Datenströme gleichzeitig → TDMA."
+      },
+      {
+        "time": "15:15",
+        "sec": 915,
+        "desc": "PA-Verstärker muss schnelle PTT-Tastung unterstützen."
+      },
+      {
+        "time": "15:30",
+        "sec": 930,
+        "desc": "Zusätzliche Einstellungen: Sprechgruppe, Raum, Reflektor, Zeitschlitz."
+      }
+    ]
+  },
+  {
+    "id": "iVov9T0EO74",
+    "title": "Lektion 07 – Betriebliche Abkürzungen, Q-Gruppen, Locator",
+    "url": "https://www.youtube.com/watch?v=iVov9T0EO74",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Warnhinweis: Arbeiten mit elektrischem Strom"
+      },
+      {
+        "time": "0:21",
+        "sec": 21,
+        "desc": "Einführung: Bedeutung von Abkürzungen im Amateurfunk."
+      },
+      {
+        "time": "0:44",
+        "sec": 44,
+        "desc": "R = Received (Empfangsbestätigung)."
+      },
+      {
+        "time": "0:55",
+        "sec": 55,
+        "desc": "K = Aufforderung zum Senden (kommen)."
+      },
+      {
+        "time": "1:11",
+        "sec": 71,
+        "desc": "PSE = Please (bitte)."
+      },
+      {
+        "time": "2:10",
+        "sec": 130,
+        "desc": "CQ = allgemeiner Anruf (ich suche dich)."
+      },
+      {
+        "time": "2:47",
+        "sec": 167,
+        "desc": "RX = Receiver (Empfänger)."
+      },
+      {
+        "time": "3:09",
+        "sec": 189,
+        "desc": "TX = Transmitter (Sender)."
+      },
+      {
+        "time": "3:24",
+        "sec": 204,
+        "desc": "TRX = Transceiver (Sendeempfänger)."
+      },
+      {
+        "time": "4:38",
+        "sec": 278,
+        "desc": "Einführung: Q-Gruppen, historisch gewachsen, in RR definiert."
+      },
+      {
+        "time": "5:12",
+        "sec": 312,
+        "desc": "QRV = Ich bin bereit."
+      },
+      {
+        "time": "5:49",
+        "sec": 349,
+        "desc": "QRM = Störungen durch Menschen (man-made noise)."
+      },
+      {
+        "time": "6:41",
+        "sec": 401,
+        "desc": "QTH = Standort (Heim als Eselsbrücke)."
+      },
+      {
+        "time": "7:17",
+        "sec": 437,
+        "desc": "QRT = Übermittlung einstellen / ich schalte ab."
+      },
+      {
+        "time": "7:34",
+        "sec": 454,
+        "desc": "QRZ = Wer ruft mich? Pileups / DXpeditionen."
+      },
+      {
+        "time": "8:16",
+        "sec": 496,
+        "desc": "QSL = Empfangsbestätigung (QSL-Karten, DCL, LoTW)."
+      },
+      {
+        "time": "8:52",
+        "sec": 532,
+        "desc": "QRO = Leistung erhöhen (Watt oben drauf)."
+      },
+      {
+        "time": "9:22",
+        "sec": 562,
+        "desc": "QSO = Funkgespräch / Funkverkehr aufnehmen."
+      },
+      {
+        "time": "9:50",
+        "sec": 590,
+        "desc": "QRX = Wann rufst du mich wieder? / kurze Pause."
+      },
+      {
+        "time": "10:12",
+        "sec": 612,
+        "desc": "QRN = atmosphärische Störungen (Blitze, Natur)."
+      },
+      {
+        "time": "10:37",
+        "sec": 637,
+        "desc": "QSB = Fading (schwankende Signalstärke)."
+      },
+      {
+        "time": "11:03",
+        "sec": 663,
+        "desc": "QSY = Frequenzwechsel."
+      },
+      {
+        "time": "11:17",
+        "sec": 677,
+        "desc": "QRP = Leistung verringern / QRP-Betrieb (wenig Leistung)."
+      },
+      {
+        "time": "13:05",
+        "sec": 785,
+        "desc": "Maidenhead Locator – Einführung: Koordinatensystem zur Positionsangabe."
+      },
+      {
+        "time": "13:40",
+        "sec": 820,
+        "desc": "Einteilung der Erde in 18×18 Felder (AA–RR)."
+      },
+      {
+        "time": "15:33",
+        "sec": 933,
+        "desc": "Quadrate 00–99 (Beispiel JO00–JO99)."
+      },
+      {
+        "time": "16:29",
+        "sec": 989,
+        "desc": "Subquadrate (AA–XX). Beispiel: JO41RG / JO41OG."
+      }
+    ]
+  },
+  {
+    "id": "Oe2XpzhSVEQ",
+    "title": "Lektion 08 – Antennen und Leitungen, SWR, EMVU",
+    "url": "https://www.youtube.com/watch?v=Oe2XpzhSVEQ",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Warnhinweis: Arbeiten mit elektrischem Strom, Haftungsausschluss."
+      },
+      {
+        "time": "0:21",
+        "sec": 21,
+        "desc": "Einstieg: Funken = Funkgerät + Antenne + Leitung."
+      },
+      {
+        "time": "0:38",
+        "sec": 38,
+        "desc": "Grundprinzip Antenne & Speiseleitung Transceiver, Koaxkabel, Antenne"
+      },
+      {
+        "time": "1:30",
+        "sec": 90,
+        "desc": "Dipol erklärt: Aufbau, Resonanzfrequenz, Lambda/2."
+      },
+      {
+        "time": "3:03",
+        "sec": 183,
+        "desc": "Gitarren-Analogie: Länge ↔ Frequenz (Resonanzprinzip)."
+      },
+      {
+        "time": "5:12",
+        "sec": 312,
+        "desc": "Richtantennen Yagi-Uda: Reflektor, Direktoren, Richtwirkung."
+      },
+      {
+        "time": "6:12",
+        "sec": 372,
+        "desc": "Vertikalantennen Up-and-Outer: Strahler + Radial. Marconi-Antenne (Lambda/4, gegen Erde). Groundplane"
+      },
+      {
+        "time": "8:49",
+        "sec": 529,
+        "desc": "Endgespeiste Antenne (EF-Dipol) Endgespeister Dipol + Anpassglied."
+      },
+      {
+        "time": "9:17",
+        "sec": 557,
+        "desc": "Polarisation Horizontal vs. vertikal → Empfangsqualität. Zirkulare Polarisation"
+      },
+      {
+        "time": "10:54",
+        "sec": 654,
+        "desc": "Mobilbetrieb Einbauhinweise, Kabelverlegung, Antennenposition, Sicherheit."
+      },
+      {
+        "time": "12:35",
+        "sec": 755,
+        "desc": "Koaxialkabel Aufbau: Innenleiter, Außenleiter, Isolation. Dämpfung: abhängig von Frequenz & Länge."
+      },
+      {
+        "time": "14:50",
+        "sec": 890,
+        "desc": "Wellenwiderstand: 50 Ω im Amateurfunk."
+      },
+      {
+        "time": "15:03",
+        "sec": 903,
+        "desc": "Koaxialsteckverbinder SMA, BNC, N-Stecker, PL-Stecker → Einsatzbereiche."
+      },
+      {
+        "time": "17:40",
+        "sec": 1060,
+        "desc": "Anpassung & SWR 50 Ω-System: Transceiver ↔ Kabel ↔ Antenne. Fehlanpassung → Reflexion → SWR-Messung."
+      },
+      {
+        "time": "18:45",
+        "sec": 1125,
+        "desc": "SWR-Meter: Aufbau & Messprinzip."
+      },
+      {
+        "time": "22:00",
+        "sec": 1320,
+        "desc": "SWR = 1 → optimal."
+      },
+      {
+        "time": "23:46",
+        "sec": 1426,
+        "desc": "SWR-Werte: 2 → 11 % Rücklauf, 3 → 25 % Rücklauf."
+      },
+      {
+        "time": "26:30",
+        "sec": 1590,
+        "desc": "Dummy Load = künstliche Antenne (50 Ω, Wärme statt HF)."
+      },
+      {
+        "time": "27:00",
+        "sec": 1620,
+        "desc": "Bau eines 70-cm-Dipols Draht zuschneiden, montieren, BNC-Adapter."
+      },
+      {
+        "time": "30:03",
+        "sec": 1803,
+        "desc": "Dipol-Abgleich mit NanoVNA Resonanz messen, kürzen, erneut messen → 438 MHz."
+      },
+      {
+        "time": "33:01",
+        "sec": 1981,
+        "desc": "Isotroper Strahler & Antennengewinn EMVU, Personenschutz. ERP & EIRP erklärt."
+      },
+      {
+        "time": "36:12",
+        "sec": 2172,
+        "desc": "EMVU-Regeln & Standortbescheinigung Gesetzliche Grundlagen, Pflichten, Grenzwerte."
+      },
+      {
+        "time": "43:05",
+        "sec": 2585,
+        "desc": "Blitzschutz & VDE-Normen Potentialausgleich, Normen VDE 0855-300/305."
+      },
+      {
+        "time": "47:00",
+        "sec": 2820,
+        "desc": "Baurecht & Haftung Abstand zu Stromleitungen, Windlast, Verantwortung."
+      },
+      {
+        "time": "48:15",
+        "sec": 2895,
+        "desc": "Versicherung DARC-Antennenversicherung."
+      }
+    ]
+  },
+  {
+    "id": "0bn_wZe4a2I",
+    "title": "Lektion 09 – Transceiver Aufbau und Funktion",
+    "url": "https://www.youtube.com/watch?v=0bn_wZe4a2I",
+    "segments": [
+      {
+        "time": "0:00",
+        "sec": 0,
+        "desc": "Einführung – Was ist ein Transceiver?"
+      },
+      {
+        "time": "1:20",
+        "sec": 80,
+        "desc": "Grundaufbau: Sender, Empfänger, Endstufe, Filter"
+      },
+      {
+        "time": "3:10",
+        "sec": 190,
+        "desc": "Blockschaltbild eines Transceivers"
+      },
+      {
+        "time": "5:00",
+        "sec": 300,
+        "desc": "HF-Vorstufe und Bandfilter"
+      },
+      {
+        "time": "7:15",
+        "sec": 435,
+        "desc": "Mischer und ZF-Stufen (Zwischenfrequenz)"
+      },
+      {
+        "time": "9:40",
+        "sec": 580,
+        "desc": "Oszillator, PLL, Synthesizer"
+      },
+      {
+        "time": "12:05",
+        "sec": 725,
+        "desc": "AGC – automatische Verstärkungsregelung"
+      },
+      {
+        "time": "14:20",
+        "sec": 860,
+        "desc": "Demodulatoren für AM, FM, SSB"
+      },
+      {
+        "time": "16:45",
+        "sec": 1005,
+        "desc": "Modulatoren für SSB und FM"
+      },
+      {
+        "time": "19:10",
+        "sec": 1150,
+        "desc": "Endstufe (PA) – Leistungserzeugung"
+      },
+      {
+        "time": "21:30",
+        "sec": 1290,
+        "desc": "Schutzschaltungen: SWR-Schutz, Temperatur, Strombegrenzung"
+      },
+      {
+        "time": "23:50",
+        "sec": 1430,
+        "desc": "Mikrofontechnik und Sprachprozessor"
+      },
+      {
+        "time": "26:10",
+        "sec": 1570,
+        "desc": "Empfangsfilter: Notch, Noise Blanker, Noise Reduction"
+      },
+      {
+        "time": "28:40",
+        "sec": 1720,
+        "desc": "Bedienoberfläche: VFO, Speicher, Menüs"
+      },
+      {
+        "time": "31:00",
+        "sec": 1860,
+        "desc": "Digitale Funktionen: DSP, Wasserfall, Spektrum"
+      },
+      {
+        "time": "33:20",
+        "sec": 2000,
+        "desc": "Anschlüsse: Antenne, ACC, CAT, USB"
+      },
+      {
+        "time": "37:00",
+        "sec": 2220,
+        "desc": "Beispielgeräte: KW-Transceiver, VHF/UHF-Geräte"
+      },
+      {
+        "time": "39:20",
+        "sec": 2360,
+        "desc": "Messgeräte am Transceiver: SWR, Power, ALC"
+      }
+    ]
+  },
+  {
+    "id": "JdrDCAynRkU",
+    "title": "Lektion 10 – Logbuch, QSL-Karten, UTC",
+    "url": "https://www.youtube.com/watch?v=JdrDCAynRkU",
+    "segments": [
+      {
+        "time": "0:00",
+        "sec": 0,
+        "desc": "Einführung – Logbuch und QSL-Karten"
+      },
+      {
+        "time": "0:33",
+        "sec": 33,
+        "desc": "Pflichtangaben im Logbuch Rufzeichen, Datum, Uhrzeit in UTC, Sendeart, Frequenz, Rapport"
+      },
+      {
+        "time": "1:26",
+        "sec": 86,
+        "desc": "Heute keine Logbuchpflicht mehr – Ausnahme: Anordnung durch BNetzA"
+      },
+      {
+        "time": "2:05",
+        "sec": 125,
+        "desc": "Viele loggen trotzdem elektronisch Vorteile: Statistiken, Übersicht"
+      },
+      {
+        "time": "2:25",
+        "sec": 145,
+        "desc": "Elektronische Logbücher & Apps ADIF-Format erklärt"
+      },
+      {
+        "time": "3:04",
+        "sec": 184,
+        "desc": "UTC – warum wichtig für Funkamateure Weltweite Bezugszeit, Nullmeridian Greenwich"
+      },
+      {
+        "time": "4:02",
+        "sec": 242,
+        "desc": "UTC-Zeit vs. MEZ Differenz: 1 Stunde, Sommerzeit: 2 Stunden"
+      },
+      {
+        "time": "5:02",
+        "sec": 302,
+        "desc": "UTC wichtig für Diplome & Online-Logbücher Logbook of the World"
+      },
+      {
+        "time": "5:56",
+        "sec": 356,
+        "desc": "QSL-Karten – Einführung Normale & besondere QSL-Karten DX-QSL"
+      },
+      {
+        "time": "6:41",
+        "sec": 401,
+        "desc": "Was ist eine QSL-Karte? QSL = Empfangsbestätigung Aufbau: Vorderseite & Rückseite"
+      },
+      {
+        "time": "7:22",
+        "sec": 442,
+        "desc": "Pflichtfelder auf QSL-Karten Rufzeichen, Datum, Zeit (UTC), Band/Frequenz, Sendeart, Rapport"
+      },
+      {
+        "time": "10:18",
+        "sec": 618,
+        "desc": "QSL-Manager erklärt"
+      },
+      {
+        "time": "13:16",
+        "sec": 796,
+        "desc": "Wie kommt die QSL-Karte zum Empfänger? QSL-Büro im Amateurfunkverband"
+      },
+      {
+        "time": "14:43",
+        "sec": 883,
+        "desc": "Versand per Post möglich Adresse aus Callbook oder QRZ.com"
+      },
+      {
+        "time": "15:13",
+        "sec": 913,
+        "desc": "eQSL – elektronische QSL ADIF exportieren Logbook of the World, DCL"
+      }
+    ]
+  },
+  {
+    "id": "iVZDwRE4cwg",
+    "title": "Lektion 11 – Pileups, Split, Contest, Fuchsjagd, SSTV, Notfunk",
+    "url": "https://www.youtube.com/watch?v=iVZDwRE4cwg",
+    "segments": [
+      {
+        "time": "0:09",
+        "sec": 9,
+        "desc": "Was sind Pileups? – Einführung Sondersignale, DXpeditionen, seltene Länder"
+      },
+      {
+        "time": "2:10",
+        "sec": 130,
+        "desc": "Methoden zur Abarbeitung eines Pileups Arbeiten nach Nummern im Rufzeichen"
+      },
+      {
+        "time": "3:23",
+        "sec": 203,
+        "desc": "Splitbetrieb – sehr häufig genutzt Beispiel: 20-m-Band, Station in Island Prefix TF"
+      },
+      {
+        "time": "5:42",
+        "sec": 342,
+        "desc": "Viele Stationen rufen gleichzeitig → Chaos"
+      },
+      {
+        "time": "6:09",
+        "sec": 369,
+        "desc": "Definition Splitbetrieb: Senden & Empfangen auf unterschiedlichen Frequenzen"
+      },
+      {
+        "time": "6:58",
+        "sec": 418,
+        "desc": "Contest – Wettbewerbe im Amateurfunk Ziel: viele Verbindungen in kurzer Zeit"
+      },
+      {
+        "time": "8:14",
+        "sec": 494,
+        "desc": "Beispiel-QSO im Contest: DO2TI Rapport 59 + laufende Nummer"
+      },
+      {
+        "time": "9:08",
+        "sec": 548,
+        "desc": "Fuchsjagd – weiterer Wettbewerb Versteckte Sender finden Mobil oder zu Fuß, Peilen mit Richtantennen, ARDF"
+      },
+      {
+        "time": "10:33",
+        "sec": 633,
+        "desc": "SSTV – Slow Scan Television Bilder per Funk übertragen"
+      },
+      {
+        "time": "12:55",
+        "sec": 775,
+        "desc": "Notfunk – Funkamateure dürfen helfen Gesetzliche Grundlage im Amateurfunkgesetz"
+      },
+      {
+        "time": "13:48",
+        "sec": 828,
+        "desc": "IARU-Bandplan: Notfrequenzen"
+      },
+      {
+        "time": "14:00",
+        "sec": 840,
+        "desc": "Verhalten bei Notruf – die 5 W-Fragen: Was, Wo, Wann, Wie, Wer"
+      },
+      {
+        "time": "15:18",
+        "sec": 918,
+        "desc": "IARU-Notfrequenzen 80 m: 3760 kHz 40 m: 7110 kHz 20 m: 14300 kHz 17 m: 18160 kHz 15 m: 21360 kHz"
+      }
+    ]
+  },
+  {
+    "id": "H9wytHFZ2Z0",
+    "title": "Lektion 12 – Spannungsversorgung, Einheiten, Strom, Batterie",
+    "url": "https://www.youtube.com/watch?v=H9wytHFZ2Z0",
+    "segments": [
+      {
+        "time": "0:10",
+        "sec": 10,
+        "desc": "Warnhinweis: Arbeiten mit elektrischem Strom – Einführung Spannungsversorgung"
+      },
+      {
+        "time": "0:27",
+        "sec": 27,
+        "desc": "Alessandro Volta – Erfinder der Batterie Wiederholung: elektrische Spannung Ladungstrennung"
+      },
+      {
+        "time": "1:07",
+        "sec": 67,
+        "desc": "Spannung messen mit dem Multimeter Messung: 1,57 Volt Batterie, 13,15 Volt Akku"
+      },
+      {
+        "time": "2:03",
+        "sec": 123,
+        "desc": "Spannungen in der Funktechnik Einheitenvorzeichen (kilo, mega, giga) 1 kV = 1000 Volt"
+      },
+      {
+        "time": "3:05",
+        "sec": 185,
+        "desc": "Kleine Spannungen: Millivolt, Mikrovolt – griechischer Buchstabe µ Empfängereingang: 10 µV, Mikrofon: ca. 200 mV"
+      },
+      {
+        "time": "5:02",
+        "sec": 302,
+        "desc": "Einheitenvorzeichen in Alltag (ml, km) 1000 mV = 1 V"
+      },
+      {
+        "time": "5:24",
+        "sec": 324,
+        "desc": "Elektrischer Strom – geschlossener Stromkreis Spannung & Verbraucher, Einheit Ampere"
+      },
+      {
+        "time": "6:53",
+        "sec": 413,
+        "desc": "Strommessung: 5,72 mA Einheitenvorzeichen Strom (mA, µA)"
+      },
+      {
+        "time": "8:09",
+        "sec": 489,
+        "desc": "Gefahren durch elektrischen Strom VDE – anerkannte Regeln der Technik Gefährliche Spannungen: >50 V AC / >120 V DC"
+      },
+      {
+        "time": "11:22",
+        "sec": 682,
+        "desc": "Netzgerät – 13,8 V für Transceiver Steckdose: 230 V AC, Netzgerät wandelt AC → DC"
+      },
+      {
+        "time": "13:06",
+        "sec": 786,
+        "desc": "Ausgang Netzgerät: Plus & Minus Polung beachten – sonst Kurzschluss"
+      },
+      {
+        "time": "14:05",
+        "sec": 845,
+        "desc": "Feinsicherungen im Transceiver Sicherung unterbricht Stromfluss Schmelzsicherung"
+      },
+      {
+        "time": "16:03",
+        "sec": 963,
+        "desc": "Batterien & Akkus – elektrochemische Vorgänge Akkus wiederaufladbar Schaltzeichen Batterie"
+      },
+      {
+        "time": "17:07",
+        "sec": 1027,
+        "desc": "Reihenschaltung Batterien Gesamtspannung = Anzahl × Einzelspannung"
+      },
+      {
+        "time": "18:46",
+        "sec": 1126,
+        "desc": "Beispiel Akku Handfunkgerät Kapazität in Ah (Amperestunden) Beispielrechnung: 0,5 A → 10 Stunden"
+      },
+      {
+        "time": "19:37",
+        "sec": 1177,
+        "desc": "Akkutechnologien: Blei, NiCd, NiMH, Li-Ion LiFePO4 – Vorteile"
+      },
+      {
+        "time": "20:21",
+        "sec": 1221,
+        "desc": "Ladegerät muss zur Akkutechnologie passen Überhitzung, Verbrennungen, Explosion möglich"
+      }
+    ]
+  },
+  {
+    "id": "M6c2mlsrIvo",
+    "title": "Lektion 13 – Leiter, Halbleiter, Ohmsches Gesetz, Farbringe, Leistung",
+    "url": "https://www.youtube.com/watch?v=M6c2mlsrIvo",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Warnhinweis – Arbeiten mit elektrischem Strom – Geräte bauen, umbauen, betreiben, CE-Kennzeichnung"
+      },
+      {
+        "time": "0:55",
+        "sec": 55,
+        "desc": "Selbstbau im Amateurfunk – gesetzliche Grundlagen Amateurfunkgesetz §7, EMV-Gesetz §4"
+      },
+      {
+        "time": "6:49",
+        "sec": 409,
+        "desc": "Materialien: Leiter, Nichtleiter, Halbleiter"
+      },
+      {
+        "time": "7:11",
+        "sec": 431,
+        "desc": "Leiter – geringer Widerstand Drei prüfungsrelevante Leiter: Silber, Kupfer, Zinn"
+      },
+      {
+        "time": "8:55",
+        "sec": 535,
+        "desc": "Nichtleiter – Isolatoren Kunststoffisolierung, Porzellan als Isolator"
+      },
+      {
+        "time": "10:19",
+        "sec": 619,
+        "desc": "Tabelle: Leiter & Nichtleiter"
+      },
+      {
+        "time": "10:57",
+        "sec": 657,
+        "desc": "Messung mit Multimeter – Leitfähigkeitstest Silber, Kupfer, Lötzinn leitet, Kunststoff nicht"
+      },
+      {
+        "time": "13:15",
+        "sec": 795,
+        "desc": "Stromkreis – Grundlagen Elemente: Spannungsquelle, Verbraucher, Leiter Spannung U (Volt) Widerstand R (Ohm) Strom I (Ampere)"
+      },
+      {
+        "time": "14:34",
+        "sec": 874,
+        "desc": "Stromkreis erklärt (LED + Widerstand) Schalter im Stromkreis, Technische Stromrichtung"
+      },
+      {
+        "time": "15:49",
+        "sec": 949,
+        "desc": "Wasserkreislauf als Analogie Ventil = Schalter, Wasserrad = Verbraucher"
+      },
+      {
+        "time": "17:21",
+        "sec": 1041,
+        "desc": "Schaltzeichen: Batterie, Widerstand, Schalter Stromkreis gezeichnet"
+      },
+      {
+        "time": "19:23",
+        "sec": 1163,
+        "desc": "Messungen mit Multimeter Funktionen Spannungsmessung, Strommessung, Widerstandsmessung"
+      },
+      {
+        "time": "24:09",
+        "sec": 1449,
+        "desc": "Messung am Stromkreis Batteriespannung messen, Spannungsabfall am Widerstand, Strommessung seriell"
+      },
+      {
+        "time": "28:01",
+        "sec": 1681,
+        "desc": "Strommessung mit Netzteil Spannung halbieren → Strom halbiert, Spannung verdoppeln → Strom verdoppelt"
+      },
+      {
+        "time": "30:08",
+        "sec": 1808,
+        "desc": "Ohmsches Gesetz – Herleitung Widerstand = U / I, Spannung = R × I, Strom = U / R"
+      },
+      {
+        "time": "32:01",
+        "sec": 1921,
+        "desc": "Widerstandswerte – Farbringe Animation: Farbringe Beispiel: Gelb (4), Violett (7), Orange (×1000) Ergebnis: 47 kΩ Toleranzring"
+      },
+      {
+        "time": "34:20",
+        "sec": 2060,
+        "desc": "Halbleiter – Einführung LED – Light Emitting Diode Diode – Strom nur in eine Richtung Anode & Kathode"
+      },
+      {
+        "time": "37:02",
+        "sec": 2222,
+        "desc": "Transistor – Schaltzeichen Übersicht aller Schaltzeichen"
+      },
+      {
+        "time": "37:26",
+        "sec": 2246,
+        "desc": "Leistung – elektrische Energie Leistung in Watt Beispiel Glühbirne Formel: P = U × I"
+      },
+      {
+        "time": "39:12",
+        "sec": 2352,
+        "desc": "Leistungsaufnahme Transceiver Messung: 13,48 V × 0,7 A = 9,4 W"
+      },
+      {
+        "time": "40:06",
+        "sec": 2406,
+        "desc": "Leistungsformeln umstellen Schaltzeichen – Übersicht Kondensator, Spule"
+      }
+    ]
+  },
+  {
+    "id": "VdCP90XGQUU",
+    "title": "Lektion 14 – Gesetze und Vorschriften, AFuG, AFuV, EMVU",
+    "url": "https://www.youtube.com/watch?v=VdCP90XGQUU",
+    "segments": [
+      {
+        "time": "0:08",
+        "sec": 8,
+        "desc": "Warnhinweis – Arbeiten mit elektrischem Strom – Einführung Gesetze und Vorschriften im Amateurfunk"
+      },
+      {
+        "time": "0:40",
+        "sec": 40,
+        "desc": "Amateurfunkgesetz (AFuG) – Überblick Zweck des Amateurfunkdienstes Selbstbau, Experimentalfunk, Ausbildung"
+      },
+      {
+        "time": "1:33",
+        "sec": 93,
+        "desc": "Amateurfunkverordnung (AFuV) Frequenznutzungsplan – Bundesnetzagentur Frequenzbereiche für Klasse N, E und A"
+      },
+      {
+        "time": "2:55",
+        "sec": 175,
+        "desc": "Sendeleistungen – gesetzliche Grenzen EIRP-Begrenzungen Pflichten des Funkamateurs"
+      },
+      {
+        "time": "3:35",
+        "sec": 215,
+        "desc": "Rufzeichenpflicht – Anfang, Ende, alle 10 Minuten Ausbildungsfunkbetrieb – /training"
+      },
+      {
+        "time": "4:33",
+        "sec": 273,
+        "desc": "Notfunk – rechtliche Grundlagen Verbotene Inhalte – Verschlüsselung, kommerzielle Nutzung Datenschutz"
+      },
+      {
+        "time": "5:40",
+        "sec": 340,
+        "desc": "Internationale Regelungen – ITU CEPT-Regelungen – Betrieb im Ausland HAREC"
+      },
+      {
+        "time": "6:28",
+        "sec": 388,
+        "desc": "Frequenzkoordinierung – IARU Bandpläne – Bedeutung und Einhaltung"
+      },
+      {
+        "time": "7:12",
+        "sec": 432,
+        "desc": "EMVU – elektromagnetische Umweltverträglichkeit Grenzwerte – Personenschutz Standortbescheinigung"
+      },
+      {
+        "time": "8:55",
+        "sec": 535,
+        "desc": "Messverfahren – Feldstärke, Abstand Blitzschutz – VDE-Normen Erdung von Antennenanlagen Haftung bei Schäden"
+      },
+      {
+        "time": "10:35",
+        "sec": 635,
+        "desc": "Störungen anderer Funkdienste – Konsequenzen Bundesnetzagentur – Aufgaben und Befugnisse Maßnahmen bei Störungen"
+      },
+      {
+        "time": "11:48",
+        "sec": 708,
+        "desc": "Dokumentationspflichten Geräteanforderungen – EMV-Gesetz CE-Kennzeichnung – wann nötig Selbstbaugeräte"
+      },
+      {
+        "time": "13:18",
+        "sec": 798,
+        "desc": "Prüfungsrelevante Paragraphen – Zusammenfassung Wichtige Begriffe – AFuG, AFuV, EMVU, CEPT, BNetzA"
+      }
+    ]
+  }
+]
