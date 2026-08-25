@@ -1,7 +1,7 @@
 {
-  "name": "amateurfunk-klasse-n",
+  "name": "amateurfunk-trainer",
   "version": "1.1.0",
-  "description": "Amateurfunk Prüfung Klasse N mit Duo-Modus",
+  "description": "Amateurfunk-Pruefungstrainer fuer die Klassen N, E und A - mit Duo-Modus, Hoerbuch und Vorlesefunktion",
   "main": "Server.js",
   "scripts": {
     "start": "node Server.js",
