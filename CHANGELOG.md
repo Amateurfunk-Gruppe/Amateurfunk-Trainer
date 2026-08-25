@@ -896,3 +896,61 @@ unzugaenglich; fuer Klasse N sind es 61. Die deutsche Blindenausbildung
   vorgenommen.
 - Der graue „Reset"-Knopf in der Filterleiste ist möglicherweise redundant zum „Reset"-Knopf oben
   neben „Cache" — Klärung mit dem Projektinhaber steht noch aus.
+
+## 25.08.2026 - Hochladen zu GitHub: zwei Knoepfe statt einer Anleitung
+
+**Warum.** Dietmar fragte, ob ich das Hochladen fuer ihn uebernehmen koenne,
+und bot seine Zugangsdaten an. Das ist nicht noetig und nicht richtig: git
+bringt seine eigene Anmeldung mit (unter Windows den Anmeldeinformations-
+manager), und die Zugangsdaten gehoeren zwischen ihn, Windows und GitHub -
+nicht in ein Skript und nicht in ein Gespraech. Was sich abnehmen laesst,
+ist alles andere.
+
+**Stimmen_packen.bat / stimmen_packen.js.** Baut aus dem Ordner `piper` eine
+einzelne `Piper-Stimmen.zip`. Die Stimmen koennen nicht ins Repository:
+`de_DE-thorsten-high.onnx` misst 113.895.201 Bytes = 108,6 MiB, GitHubs
+harte Grenze liegt bei 100 MiB je Datei. Als Release-Anhang sind 2 GiB je
+Datei erlaubt, und ein Anhang laesst sich nur einzeln hochladen - deshalb
+ein ZIP statt eines Dutzends Dateien. Komprimiert wird auf Stufe 1: ein
+.onnx besteht aus Kommazahlen und laesst sich kaum zusammendruecken, Stufe 9
+haette minutenlang gerechnet fuer wenige Prozent. Geschrieben wird
+dateiweise auf die Platte statt alles im Speicher zu sammeln - bei 450 MB
+ist das der Unterschied zwischen "laeuft" und "laeuft dem Rechner voll".
+Das Skript sagt ausdruecklich dazu, dass das ZIP die 100-MiB-Grenze NICHT
+umgeht; die Vermutung liegt nahe und waere teuer.
+
+**Hochladen.bat / hochladen.js.** Traegt die Adresse ein, benennt den Zweig
+in `main`, fragt einmal nach und laedt hoch. Der eigentliche Wert liegt im
+Sicherheitsnetz davor: das Skript laesst `github_pruefen.js` laufen und
+bricht ab, wenn dort kein "SAUBER" steht. Ein Push laesst sich nicht
+zurueckholen - wer den Stand gezogen hat, hat ihn. Deshalb wird hier nicht
+gewarnt, sondern abgebrochen. Zusaetzlich prueft es jede nachverfolgte
+Datei auf die 100-MiB-Grenze, damit der Fehlschlag nicht erst nach dem
+Upload kommt.
+
+**Zwei Fehler in `github_pruefen.js`, gefunden beim Testen des Netzes.**
+
+Der erste war ein Widerspruch im eigenen Bericht. Bei einer Datei ueber der
+Grenze stand erst `!! Ueber 100 MB - GitHub lehnt den Push ab.` und drei
+Zeilen darunter `SAUBER. Nichts Uebergrosses.` Zwei Saetze, die einander
+aufheben - und der freundlichere stand zuletzt, also der, den man glaubt.
+Die Groessenpruefung fliesst jetzt ins Fazit ein.
+
+Der zweite war das Etikett. Gerechnet wurde immer mit 1024, beschriftet war
+es "MB". An genau dieser Zahl haengt aber die Entscheidung, ob GitHub eine
+Datei annimmt: 113.895.201 Bytes sind 108,6 MiB, aber 113,9 MB. Wer die
+zweite Zahl liest und die Grenze fuer 100 MB haelt, rechnet richtig und
+liegt trotzdem falsch. Jetzt steht MiB da, wo mit 1024 gerechnet wird.
+
+Ausserdem meldete die Pruefung eine Datei zweimal, wenn beide Listen auf
+sie passten - die Zaehlung am Ende war dann zu hoch. Und `.git_alt_*` steht
+jetzt in der heiklen Liste: waere die zur Seite gelegte alte Historie
+versehentlich mitcommittet worden, enthielte das neue Repository genau die
+Daten, wegen derer neu angefangen wurde.
+
+**Was beim Testen auffiel und richtig ist, auch wenn es aergert.** Nimmt man
+eine zu grosse Datei aus der Ablage und committet das, meldet die Pruefung
+sie weiterhin. Das ist kein Fehler: der Blob steckt in der Historie, und
+GitHub weist den Push genauso zurueck. Loeschen hilft hier nicht - nur eine
+frische Historie.
+

@@ -76,3 +76,12 @@ _Aufgeraeumt_*/
 # Objekte, in denen der Lernstand steckt. Beim ersten Test ist genau das
 # passiert, 46 statt 40 Dateien im ersten Commit.
 .git_alt_*/
+
+# Ergebnis von Stimmen_packen.bat - der Anhang fuers Release, rund 470 MB.
+#
+# Er liegt bewusst im Hauptordner, denn dort findet man ihn zum Hochladen.
+# Mitcommittet werden darf er unter keinen Umstaenden: GitHub weist jede
+# Datei ueber 100 MiB zurueck - und zwar erst, nachdem alles uebertragen
+# wurde. Ohne diese Zeile waere der Ordner eine Falle, die ich selbst
+# aufgestellt haette.
+Piper-Stimmen.zip

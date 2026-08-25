@@ -51,7 +51,7 @@ function main() {
   }
   // Ohne diese Zeile waere die neue Historie so unsauber wie die alte.
   const ignoriert = fs.readFileSync(path.join(WURZEL, '.gitignore'), 'utf8');
-  const fehlt = ['backup/', 'Klasse-N-Lernstand_*.json', 'data/', 'Node.js/']
+  const fehlt = ['backup/', 'Klasse-N-Lernstand_*.json', 'data/', 'Node.js/', '.git_alt_*/']
     .filter(m => !ignoriert.includes(m));
   if (fehlt.length) {
     console.log('Die .gitignore ist noch nicht die neue Fassung. Es fehlt: ' + fehlt.join(', '));
@@ -64,114 +64,90 @@ function main() {
   const heute = new Date().toISOString().slice(0, 10);
   const altPfad = path.join(WURZEL, '.git_alt_' + heute);
 
-  // ---- Vorschau: was kaeme in den ersten Commit? ----
+  // ---- Vorbereiten, dann fragen ----
   //
-  // Erster Anlauf war "git ls-files --others --cached --exclude-standard"
-  // - und der log: --cached listet alles auf, was das ALTE Repository
-  // nachverfolgt, ganz gleich was in der .gitignore steht. Genau die vier
-  // heiklen Dateien tauchten damit auf, obwohl ein frisches Repository sie
-  // gar nicht aufnehmen wuerde.
+  // ZWEITER ANLAUF. Der erste baute eine Vorschau, indem er den Ordner
+  // durchlief und git zu JEDER Datei fragte, ob die .gitignore sie
+  // ausnimmt. Bei 746 Zeichnungen im svgs-Ordner sind das ueber 900
+  // einzelne git-Aufrufe - unter Windows startet jeder einen eigenen
+  // Prozess. Das Fenster stand danach eine Minute lang leer da und sah
+  // aus, als haenge es. (Es hing nicht, es rechnete.)
   //
-  // Richtig ist, den Ordner selbst zu durchlaufen und git zu jeder Datei
-  // zu fragen, ob die .gitignore sie ausnimmt. Ganze Ordner werden dabei
-  // im Ganzen uebersprungen - node_modules und piper einzeln abzuklopfen
-  // dauerte sonst Minuten.
-  function ignoriertGit(relPfad) {
-    try {
-      execSync('git check-ignore -q --no-index "' + relPfad + '"', { cwd: WURZEL, stdio: 'ignore' });
-      return true;
-    } catch (e) { return false; }
-  }
-  function sammeln(rel, raus) {
-    for (const e of fs.readdirSync(path.join(WURZEL, rel || '.'), { withFileTypes: true })) {
-      const r = rel ? rel + '/' + e.name : e.name;
-      if (e.name === '.git' || e.name.startsWith('.git_alt_')) continue;
-      if (ignoriertGit(r)) continue;
-      if (e.isDirectory()) sammeln(r, raus);
-      else if (e.isFile()) raus.push(r);
-      if (raus.length > 5000) return;          // Notbremse
-    }
-  }
-  let liste = [];
-  try { sammeln('', liste); }
-  catch (e) { console.log('(Vorschau nicht moeglich: ' + e.message + ')'); }
-
+  // Jetzt macht git die Arbeit selbst: umbenennen, "git init", "git add"
+  // - das dauert einen Wimpernschlag und beachtet die .gitignore ohnehin.
+  // Erst DANN wird gezeigt, was drin waere, und gefragt. Ein Nein dreht
+  // alles zurueck: neues Repository weg, alte Historie zurueck an ihren
+  // Platz. Committet wird nichts, ehe du zugestimmt hast.
   console.log('');
   if (hatGit) {
-    console.log('Alte Historie:   ' + mb(groesse(path.join(WURZEL, '.git'))) + '  ->  wird nach .git_alt_' + heute + ' umbenannt');
-    console.log('                 (bleibt vollstaendig auf deinem Rechner, kommt nur nie ins Netz)');
+    console.log('Alte Historie: ' + mb(groesse(path.join(WURZEL, '.git')))
+      + '  ->  wird nach .git_alt_' + heute + ' gelegt (bleibt auf deinem Rechner)');
   } else {
     console.log('Es gibt noch kein Repository - es wird eines angelegt.');
   }
-  console.log('');
-  if (liste.length) {
-    const heikel = liste.filter(d => /^(data|backup)\//i.test(d) || /Lernstand_.*\.json$/i.test(d)
-                                  || /^Node\.js\//i.test(d) || /^piper\//i.test(d) || /^node_modules\//i.test(d));
-    console.log('In den ersten Commit kaemen ' + liste.length + ' Dateien.');
-    if (heikel.length) {
-      console.log('');
-      console.log('!! ABBRUCH: Davon sind ' + heikel.length + ' heikel:');
-      heikel.slice(0, 15).forEach(d => console.log('   ' + d));
-      console.log('Bitte melden - da stimmt an der .gitignore etwas nicht.');
-      return;
-    }
-    console.log('Nichts Persoenliches dabei, nichts Uebergrosses.');
+  console.log('Einen Moment, git sortiert ...');
+
+  if (hatGit && fs.existsSync(altPfad)) {
+    console.log('\n' + altPfad + ' gibt es schon. Bitte erst wegraeumen.');
+    return;
   }
+
+  let liste = [];
+  try {
+    if (hatGit) fs.renameSync(path.join(WURZEL, '.git'), altPfad);
+    git('init -q');
+    try { git('symbolic-ref HEAD refs/heads/main'); } catch (e) { /* aeltere Git-Fassung */ }
+    git('add -A');
+    liste = git('diff --cached --name-only').split('\n').filter(Boolean);
+  } catch (e) {
+    console.log('\nFehler beim Vorbereiten: ' + e.message);
+    zurueckdrehen();
+    return;
+  }
+
+  function zurueckdrehen() {
+    try {
+      fs.rmSync(path.join(WURZEL, '.git'), { recursive: true, force: true });
+      if (fs.existsSync(altPfad)) fs.renameSync(altPfad, path.join(WURZEL, '.git'));
+      console.log('Zurueckgedreht - der Ordner ist wie vorher.');
+    } catch (e) { console.log('Zuruecknehmen fehlgeschlagen: ' + e.message); }
+  }
+
+  const heikel = liste.filter(d => /^(data|backup)\//i.test(d) || /Lernstand_.*\.json$/i.test(d)
+                                || /^\.git_alt_/i.test(d) || /^Node\.js\//i.test(d)
+                                || /^(piper|node_modules|tts_cache|Hoerbuch)\//i.test(d));
   console.log('');
-  console.log('Was passiert:');
-  console.log('  1. .git wird zu .git_alt_' + heute + ' umbenannt (nichts geht verloren)');
-  console.log('  2. ein frisches Repository wird angelegt');
-  console.log('  3. ein erster Commit mit dem heutigen Stand');
-  console.log('  4. zur Kontrolle laeuft die Pruefung noch einmal');
+  console.log('Es waeren ' + liste.length + ' Dateien im ersten Commit.');
+  if (heikel.length) {
+    console.log('');
+    console.log('!! ABBRUCH: Davon sind ' + heikel.length + ' heikel:');
+    heikel.slice(0, 15).forEach(d => console.log('   ' + d));
+    zurueckdrehen();
+    return;
+  }
+  console.log('Nichts Persoenliches dabei, nichts Uebergrosses.');
   console.log('');
-  console.log('Hochgeladen wird NICHTS - das machst du danach selbst.');
+  console.log('Sagst du ja, wird ein erster Commit angelegt.');
+  console.log('Sagst du nein, wird alles zurueckgedreht - als waere nichts gewesen.');
+  console.log('Hochgeladen wird so oder so NICHTS.');
   console.log('');
 
   const frage = readline.createInterface({ input: process.stdin, output: process.stdout });
-  frage.question('Neustart der Historie?  [j/n]  ', (antwort) => {
+  frage.question('Ersten Commit anlegen?  [j/n]  ', (antwort) => {
     frage.close();
-    if (!/^j/i.test(antwort.trim())) { console.log('\nAbgebrochen - es wurde nichts angefasst.'); return; }
+    if (!/^j/i.test(antwort.trim())) { console.log(''); zurueckdrehen(); return; }
     try {
-      if (hatGit) {
-        if (fs.existsSync(altPfad)) { console.log('\n' + altPfad + ' gibt es schon. Bitte erst wegraeumen.'); return; }
-        fs.renameSync(path.join(WURZEL, '.git'), altPfad);
-        console.log('  alte Historie gesichert nach .git_alt_' + heute);
-      }
-      git('init -q');
-      // Standardzweig "main" - so heisst er bei GitHub seit 2020.
-      try { git('symbolic-ref HEAD refs/heads/main'); } catch (e) { /* aeltere Git-Fassung */ }
-      git('add -A');
-      const dabei = git('diff --cached --name-only').split('\n').filter(Boolean);
-      // .git_alt_ steht hier mit drin, weil beim ersten Test genau das
-      // passiert ist: "git add -A" nahm die zur Seite gelegte alte Historie
-      // als gewoehnliche Dateien mit auf - samt der Objekte, in denen der
-      // Lernstand steckt. Der ganze Neustart waere umsonst gewesen.
-      const schlimm = dabei.filter(d => /^(data|backup)\//i.test(d) || /Lernstand_.*\.json$/i.test(d)
-                                     || /^\.git_alt_/i.test(d));
-      if (schlimm.length) {
-        // Letzte Sicherung. Greift sie, wird alles zurueckgedreht: das
-        // frische Repository weg, die alte Historie wieder an ihren Platz.
-        // Ein halb angelegtes Repository ist schlimmer als gar keines.
-        console.log('\n!! Es waeren doch persoenliche Dateien dabei:');
-        schlimm.slice(0, 10).forEach(d => console.log('   ' + d));
-        try {
-          fs.rmSync(path.join(WURZEL, '.git'), { recursive: true, force: true });
-          if (fs.existsSync(altPfad)) fs.renameSync(altPfad, path.join(WURZEL, '.git'));
-          console.log('Alles zurueckgedreht - der Ordner ist wie vorher.');
-        } catch (e2) { console.log('Zuruecknehmen fehlgeschlagen: ' + e2.message); }
-        return;
-      }
       git('commit -q -m "Amateurfunk-Trainer - Klassen N, E und A"');
-      console.log('  ' + dabei.length + ' Dateien im ersten Commit.');
+      console.log('  ' + liste.length + ' Dateien im ersten Commit.');
       console.log('');
-      console.log('Fertig. Zur Kontrolle:');
-      console.log('');
+      console.log('Zur Kontrolle:');
       try { console.log(execSync('node github_pruefen.js', { cwd: WURZEL, encoding: 'utf8' })); }
       catch (e) { console.log('  (Pruefung nicht ausfuehrbar: ' + e.message + ')'); }
+      console.log('Die alte Historie liegt in .git_alt_' + heute + ' - dort und nur dort.');
       console.log('Jetzt kannst du das Repository bei GitHub anlegen und hochladen.');
     } catch (e) {
-      console.log('\nFehler: ' + e.message);
-      console.log('Falls .git schon umbenannt wurde, liegt die alte Historie in .git_alt_' + heute + '.');
+      console.log('\nFehler beim Commit: ' + e.message);
+      zurueckdrehen();
     }
   });
 }

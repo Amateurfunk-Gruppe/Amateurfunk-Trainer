@@ -27,10 +27,14 @@ const WURZEL = __dirname;
 function git(befehl) {
   return execSync('git ' + befehl, { cwd: WURZEL, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 }
-const mb = b => (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB';
+const mb = b => (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MiB';
 
 // Was in einem oeffentlichen Repository nichts zu suchen hat.
 const HEIKEL = [
+  // Die zur Seite gelegte alte Historie. Waere sie als gewoehnlicher Ordner
+  // mit committet, enthielte das neue Repository genau die Daten, wegen
+  // derer neu angefangen wurde - nur eine Ebene tiefer versteckt.
+  { muster: /^\.git_alt_/i,              grund: 'ALTE HISTORIE - enthaelt genau das, was draussen bleiben soll' },
   { muster: /^data\//i,                  grund: 'LERNSTAND - persoenliche Daten von dir und deinen Mitlernenden' },
   { muster: /amateurfunk_data\.json/i,   grund: 'LERNSTAND - persoenliche Daten' },
   { muster: /Klasse-N-Lernstand.*\.json/i, grund: 'gesicherter Lernstand' },
@@ -51,8 +55,13 @@ const GROSS = [
 function pruefe(name, liste) {
   const treffer = [];
   for (const d of liste) {
-    for (const h of HEIKEL) if (h.muster.test(d)) { treffer.push(['!!', d, h.grund]); break; }
-    for (const g of GROSS)  if (g.muster.test(d)) { treffer.push(['**', d, g.grund]); break; }
+    // Erst die heikle Liste, dann die grosse - und nach dem ersten Treffer
+    // ist Schluss. Sonst stuende eine Datei, auf die beide Listen passen,
+    // zweimal im Bericht und die Zaehlung am Ende waere zu hoch.
+    const h = HEIKEL.find(x => x.muster.test(d));
+    if (h) { treffer.push(['!!', d, h.grund]); continue; }
+    const g = GROSS.find(x => x.muster.test(d));
+    if (g) { treffer.push(['**', d, g.grund]); }
   }
   return treffer;
 }
@@ -93,6 +102,7 @@ function main() {
   // ---- 3. Die groessten Brocken ----
   console.log('');
   console.log('3) Die groessten Objekte in der Historie:');
+  let ueberGrenze = [];
   try {
     const roh = execSync('git rev-list --objects --all | git cat-file --batch-check="%(objecttype) %(objectname) %(objectsize) %(rest)"',
       { cwd: WURZEL, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
@@ -109,9 +119,10 @@ function main() {
     console.log('   ------');
     console.log('   ' + mb(alle).padStart(9) + '  alle Fassungen aller Dateien zusammen');
     if (blobs[0] && blobs[0].groesse > 100 * 1024 * 1024) {
-      console.log('   !! Ueber 100 MB - GitHub lehnt den Push ab.');
+      ueberGrenze = blobs.filter(x => x.groesse > 100 * 1024 * 1024).map(x => x.name);
+      console.log('   !! Ueber 100 MiB - GitHub lehnt den Push ab.');
     } else if (blobs[0] && blobs[0].groesse > 50 * 1024 * 1024) {
-      console.log('   ** Ueber 50 MB - GitHub nimmt es an, warnt aber.');
+      console.log('   ** Ueber 50 MiB - GitHub nimmt es an, warnt aber.');
     }
   } catch (e) { console.log('   (nicht ermittelbar: ' + (e.message || '').split('\n')[0] + ')'); }
 
@@ -120,7 +131,14 @@ function main() {
   console.log('==========================================================');
   const schlimm = jetztHeikel.filter(t => t[0] === '!!').length + histHeikel.filter(t => t[0] === '!!').length;
   const gross  = jetztHeikel.filter(t => t[0] === '**').length + histHeikel.filter(t => t[0] === '**').length;
-  if (!schlimm && !gross) {
+  if (ueberGrenze.length) {
+    console.log('!! ' + ueberGrenze.length + ' Datei/en ueber der harten Grenze von 100 MiB:');
+    ueberGrenze.forEach(n => console.log('   ' + n));
+    console.log('');
+    console.log('GitHub weist den Push zurueck - und zwar erst, nachdem alles');
+    console.log('uebertragen wurde. Solche Dateien gehoeren als Anhang an ein');
+    console.log('Release, nicht ins Repository.');
+  } else if (!schlimm && !gross) {
     console.log('SAUBER. Nichts Persoenliches, nichts Uebergrosses.');
     console.log('Das Repository kann oeffentlich hochgeladen werden.');
   } else {
