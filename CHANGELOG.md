@@ -1526,3 +1526,65 @@ sonst waere sie beim naechsten Umbenennen an mehreren Orten nachzuziehen.
 Geprueft am nachgebauten alten Server: beide Links zeigen auf
 raw.githubusercontent.com, das Fenster bleibt auch auf einem schmalen
 Bildschirm lesbar.
+
+## 26.08.2026 - Der Nachmittag, der in START.bat begraben lag
+
+Dietmar: *"Update lief durch, und wenn ich jetzt neu starte und auf Info und
+GitHub gehe, kommt das"* - und im Bild stand bei IHM die Meldung, die nur
+bei einem veralteten Programm erscheinen soll.
+
+**Erst die Fakten, dann die Vermutung.** Ich habe seine beiden Dateien vom
+Rechner geholt und verglichen: `Server.js` und `github_update.js` sind Byte
+fuer Byte dieselben wie meine, und das Modul laedt in Node ohne Murren. Die
+Routen `/api/github/*` MUESSEN also da sein, sobald diese Datei laeuft.
+
+Der Browser bekam trotzdem 404. Daraus folgt zwingend: **es laeuft nicht
+diese Datei.** Und der Grund stand nicht in der Server.js, sondern in
+`START.bat`:
+
+    start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul
+      http://localhost:3000 && start http://localhost:3000 && exit /b) ..."
+    node Server.js
+
+Lief noch ein `node.exe` auf Port 3000, brach das neue mit `EADDRINUSE` ab.
+Die Zeile darueber wartete aber nur darauf, **dass** Port 3000 antwortet -
+nicht darauf, **wer** antwortet. Der alte Server antwortete bereitwillig,
+der Browser ging auf, und man sah einen laufenden Trainer. Das neue Fenster
+stand derweil daneben mit einer Fehlermeldung, die niemand liest, weil im
+Browser ja alles da ist.
+
+Die Ironie: Diese Browser-Zeile war selbst einmal ein Fix ("damit kein
+'Seite nicht erreichbar'-Tab entsteht, falls der Port belegt ist"). Sie hat
+den Fehlerfall behandelt, indem sie ihn unsichtbar machte.
+
+**Jetzt: erst nachsehen, dann fragen, dann starten.** Beide Startdateien
+(`START.bat` und `START_MIT_TUNNEL.bat`) suchen vorher per `netstat`, ob
+auf Port 3000 schon jemand lauscht, und holen sich zu der PID per `tasklist`
+den Programmnamen:
+
+  - Ist es **node.exe**, wird gefragt, ob der alte beendet werden soll -
+    und erst nach `taskkill` plus zwei Sekunden Wartezeit (Windows gibt den
+    Port nicht im selben Augenblick frei) neu gestartet.
+  - Ist es **etwas anderes**, wird nichts angefasst und nichts gestartet.
+    Ein fremdes Programm abzuschiessen, weil es zufaellig auf 3000 sitzt,
+    waere schlimmer als das Problem.
+  - Am Ende steht ein `pause` mit dem Hinweis, eine Fehlermeldung
+    abzufotografieren - damit ein gescheiterter Start nicht mehr
+    kommentarlos verschwindet.
+
+Bei `START_MIT_TUNNEL.bat` ist es sogar heikler als beim einfachen Start:
+Dort haette der Tunnel den ALTEN Stand ins Internet gestellt.
+
+**Handwerkliches am Rande:** Geschrieben mit Sprungmarken statt
+verschachtelter Klammern. In einem `if (...)`-Block ersetzt die
+Windows-Eingabeaufforderung `%VAR%` schon beim Einlesen des ganzen Blocks -
+was man dort setzt, kann man dort nicht wieder lesen. Der erste Entwurf hatte
+genau diesen Fehler; mit `goto` gibt es das Problem nicht. Zeilenenden auf
+CRLF, weil Sprungmarken damit zuverlaessiger sind.
+
+Geprueft habe ich, was sich ohne Windows pruefen laesst: die
+`netstat`-Zeilen gegen echte Beispielausgabe (Port 3000 wird getroffen,
+Port 30000 nicht, IPv4 und IPv6 liefern dieselbe PID), die Vollstaendigkeit
+aller Sprungmarken und die Klammerbilanz. Den Rest sagt der erste Lauf: Wenn
+dort *"Auf Port 3000 laeuft schon etwas - node.exe - PID ..."* steht, ist die
+Vermutung bestaetigt.
