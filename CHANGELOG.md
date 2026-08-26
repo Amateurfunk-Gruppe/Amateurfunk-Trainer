@@ -2007,3 +2007,108 @@ dieses Protokolls.
 **Kein Rechtsrat.** Ich bin kein Anwalt. Das ist eine gaengige, sauber
 formulierte Lizenz fuer genau diesen Zweck - fuer eine belastbare Auskunft
 gehoert ein Anwalt gefragt.
+
+## 26.08.2026 - Ein Bild vom Updater
+
+Dietmar wollte das Update-Fenster auch auf der Repository-Seite sehen. Ein
+Bildschirmfoto davon ist nicht ohne weiteres zu bekommen: Das Fenster zeigt
+nur dann etwas, wenn bei GitHub tatsaechlich Neues liegt - und aus meinem
+Pruefstand antwortet api.github.com mit 403.
+
+Also der Aufbau von Hand: ein nachgebautes GitHub auf einem eigenen Port,
+davor der Trainer mit AFU_GITHUB_API und AFU_GITHUB_RAW auf diesen Port
+gerichtet. Dann drei Lagen gleichzeitig hergestellt, damit im Bild wirklich
+alles vorkommt, was der Updater kann:
+
+  * video_map_embed.js im Nachbau geaendert  -> "bei GitHub neuer", vorangehakt
+  * hoerbuch.js im Nachbau geaendert         -> "bei GitHub neuer", aber als
+                                                Programmdatei NICHT vorangehakt
+  * Index.html hier geaendert                -> gruener Kasten, nicht anhakbar
+
+Genau die dritte Zeile ist Dietmars Auflage in Bildform: Was er hier frisch
+bekommen hat, dreht der Updater nicht auf einen aelteren GitHub-Stand zurueck.
+
+Das Bildfenster wurde absichtlich knapp gewaehlt (1300x700), damit der
+Hinweisbalken von der Hauptseite oben mit ins Bild passt - Hinweis und
+Fenster sind zwei getrennte Wuensche gewesen, im Bild stehen sie jetzt
+zusammen.
+
+Neu: `bilder/08-updater.png`. Im README dazu der Abschnitt "Aktuell bleiben -
+ohne etwas kaputtzumachen" mit den drei Punkten, die den Updater
+ausmachen: keine eigenen Aenderungen ueberschreiben, Programmdateien
+gesondert bestaetigen, alte Fassung vorher nach backup/.
+
+**Weiterhin ungeprueft:** Der Updater ist nur gegen den Nachbau getestet.
+Gegen das echte api.github.com hat ihn noch niemand laufen sehen - das
+passiert das erste Mal auf Dietmars Rechner.
+
+## 26.08.2026 - Der Trainer fragt jetzt von selbst
+
+Dietmar: "Nachdem wir den Updater schon haben, koennen wir im Hintergrund
+nach dem Start automatisch bei GitHub pruefen ob es ein Update gibt. Wenn ja,
+das es ein Fenster oeffnet und fragt ob das Update installiert werden soll.
+Das mit dem Info und selbst schauen, ist irgendwie gut und irgendwie auch
+nicht."
+
+Das "irgendwie auch nicht" trifft es genau: Ein Update, das man erst unter
+Info suchen muss, findet nur, wer ohnehin schon weiss, dass es eins gibt.
+
+Nachgesehen hat der Trainer schon vorher - vier Sekunden nach dem Start
+fragt der Server bei GitHub nach. Neu ist, WIE er es sagt. Bisher kam eine
+schmale Leiste oben mit "Ansehen". Jetzt geht das Fenster von selbst auf und
+fragt.
+
+**Was ich NICHT gemacht habe, und warum.** Es waere ein Einzeiler gewesen,
+das Fenster einfach immer aufzuschlagen. Das waere falsch gewesen. Es gilt
+dieselbe Grenze, die Dietmar beim Fenster "Wo du aufgehoert hast" selbst
+gezogen hat ("Das darf nur bei Start so sein. Nicht im Pruefungssimulator und
+auch nicht im Gruppenraum."). Ein Update-Fenster mitten in der Pruefung, waehrend
+die Uhr laeuft - oder im Gruppenraum, waehrend zwoelf Leute auf die naechste
+Frage warten - waere eine Unterbrechung, die niemand bestellt hat.
+
+Das Fenster geht deshalb nur auf, wenn alle vier Punkte stimmen:
+
+  * Der Trainer laeuft oertlich (localhost) - ein Gast im Gruppenraum
+    bekommt nichts davon zu sehen, es ist ja nicht sein Ordner.
+  * Es laeuft gerade keine Frage (isQuizActive).
+  * Kein Pruefungssimulator, kein Gruppenraum (nurNormalesLernen()).
+  * Es steht kein anderes Fenster offen.
+
+Passt der Moment nicht, kommt die schmale Leiste von frueher. Sie ist nicht
+verschwunden, sie ist der Rueckfallweg geworden.
+
+**Nur einmal je Stand.** Wer "Spaeter" klickt, hat geklickt: Der Commit wird
+gemerkt, dieser Stand schlaegt nicht wieder auf. Erst wenn bei GitHub etwas
+Neues liegt, aendert sich der Commit - dann fragt es wieder. Ohne diese
+Bremse waere aus einer Hilfe binnen einer Woche eine Plage geworden.
+
+**Und ein Schalter.** Unten im Fenster steht klein "Nicht mehr von selbst
+fragen". Wer ihn drueckt, bekommt kuenftig nur noch die Leiste - und im
+Fenster steht dann die Zeile, mit der er es wieder einschaltet. Dietmars
+Satz war ambivalent; ein Schalter ist die ehrliche Antwort darauf.
+
+**Was sich NICHT geaendert hat** - und das ist der Punkt, an dem ein
+automatisches Fenster gefaehrlich werden koennte:
+
+  * Geholt wird immer noch nichts von allein. Oben im Fenster steht in
+    duerren Worten "Geaendert wurde noch nichts". Erst "Ausgewaehlte holen"
+    schreibt.
+  * Programmdateien sind weiter nicht vorangehakt und brauchen die zweite
+    ausdrueckliche Zusage.
+  * Der Ueberschreib-Schutz steht unveraendert: Was hier neuer ist, hat kein
+    Kaestchen.
+
+**Geprueft** gegen das nachgebaute GitHub, vier Faelle:
+
+  1. Hauptansicht, nichts laeuft   -> Fenster geht auf.        richtig
+  2. Derselbe Stand nach "Spaeter" -> nichts, weder noch.      richtig
+  3. Lernmodus laeuft              -> Leiste statt Fenster.    richtig
+  4. Nachschau abgeschaltet        -> Leiste statt Fenster.    richtig
+
+Und einmal wirklich geholt: video_map_embed.js kam an, die alte Fassung
+liegt in backup/github_2026-08-26-16-20, hoerbuch.js blieb als Programmdatei
+liegen - und Index.html, die hier neuer war, hat denselben Fingerabdruck wie
+vorher. Genau das war die Auflage.
+
+**Weiterhin ungeprueft** bleibt der Weg zum echten api.github.com; aus
+meinem Pruefstand kommt dort 403.

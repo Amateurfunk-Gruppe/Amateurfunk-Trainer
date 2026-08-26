@@ -90,6 +90,29 @@ Nachprüfung greift.
 
 ![Der Prüfungssimulator vor dem Start](bilder/04-simulator.png)
 
+### Aktuell bleiben — ohne etwas kaputtzumachen
+
+Der Trainer sagt beim Start selbst Bescheid, wenn hier auf GitHub etwas Neues
+liegt. Geholt wird nichts von allein: Ein Balken meldet es, das Fenster unter
+**Info → GitHub-Update** zeigt, worum es geht, und erst ein Klick auf
+„Ausgewählte holen" ändert etwas im Ordner.
+
+![Das Fenster „Update von GitHub"](bilder/08-updater.png)
+
+Drei Dinge sind daran wichtig:
+
+- **Eigene Änderungen werden nie überschrieben.** Der Trainer merkt sich, wie
+  jede Datei aussah, als sie zuletzt mit GitHub gleich war. Eine Datei, die
+  seither hier geändert wurde, steht im grünen Kasten — sie lässt sich gar
+  nicht erst anhaken. Ein Fingerabdruck sagt nämlich nur, *dass* zwei Dateien
+  verschieden sind, nicht welche die neuere ist.
+- **Programmdateien brauchen eine eigene Bestätigung.** `Server.js`,
+  `hoerbuch.js` und `lame.js` laufen mit vollen Rechten auf dem Rechner und
+  sind deshalb nie vorangehakt.
+- **Die alte Fassung wandert vorher nach `backup/`**, und jede geholte Datei
+  wird vor dem Schreiben nachgerechnet. Ein abgebrochener Download kommt so
+  nie im Ordner an.
+
 ## Loslegen
 
 Voraussetzung ist [Node.js](https://nodejs.org) (kostenlos).

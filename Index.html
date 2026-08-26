@@ -5838,12 +5838,46 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // ================================================================
 let githubDaten = null;
 
+// Wurde das Fenster von selbst geoeffnet (Start-Nachschau) oder von Hand
+// (Info -> GitHub-Update)? Davon haengt ab, was beim Schliessen passiert:
+// Was man selbst geoeffnet hat, will man nicht als "spaeter" gewertet sehen.
+let githubVonSelbst = false;
+
+const GITHUB_AUTO_AUS  = 'amateurfunk_githubAutoAus';   // gar nicht von selbst fragen
+const GITHUB_GEMELDET  = 'amateurfunk_githubGemeldet';  // dieser Stand wurde schon gezeigt
+
+function githubAutoErlaubt(){
+    try{ return localStorage.getItem(GITHUB_AUTO_AUS) !== '1'; }catch(e){ return true; }
+}
+function githubAutoSchalten(an){
+    try{
+        if(an) localStorage.removeItem(GITHUB_AUTO_AUS);
+        else   localStorage.setItem(GITHUB_AUTO_AUS, '1');
+    }catch(e){}
+    githubPruefen();   // Fenster neu zeichnen, damit die Zeile unten stimmt
+}
+window.githubAutoSchalten = githubAutoSchalten;
+
+// Schliessen. Kam das Fenster von selbst, gilt das als "spaeter": Dieser
+// Stand wird nicht noch einmal von allein aufgeschlagen. Beim naechsten
+// Update bei GitHub aendert sich der Commit - dann fragt es wieder.
+function githubSchliessen(){
+    const m = document.getElementById('githubModal');
+    if(m) m.style.display = 'none';
+    if(githubVonSelbst && githubDaten && githubDaten.commit){
+        try{ localStorage.setItem(GITHUB_GEMELDET, githubDaten.commit); }catch(e){}
+    }
+    githubVonSelbst = false;
+}
+window.githubSchliessen = githubSchliessen;
+
 // Rohdateien des Repositorys. Nur hier, damit ein umbenanntes Repository
 // nicht an mehreren Stellen nachgezogen werden muss.
 const GITHUB_ROH = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
 
 
-async function githubOeffnen(){
+async function githubOeffnen(vonSelbst){
+    githubVonSelbst = !!vonSelbst;
     let modal = document.getElementById('githubModal');
     if(!modal){
         modal = document.createElement('div');
@@ -5857,10 +5891,10 @@ async function githubOeffnen(){
             + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
             + '<i class="fab fa-github"></i> Update von GitHub</h3>'
             + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
-            + 'onclick="document.getElementById(\'githubModal\').style.display=\'none\'">&#10005;</button></div>'
+            + 'onclick="githubSchliessen()">&#10005;</button></div>'
             + '<div id="githubInhalt"></div></div>';
         document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+        modal.addEventListener('click', e => { if(e.target === modal) githubSchliessen(); });
     }
     modal.style.display = 'flex';
     githubPruefen();
@@ -5936,15 +5970,39 @@ function githubZeigen(j){
     const holbar = alle.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
     const gesperrt = alle.filter(e => e.lage === 'neuer_hier');
 
-    let html = '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.8rem;">'
+    let html = '';
+
+    // Kam das Fenster von selbst hoch, steht zuerst da, WARUM es da ist und
+    // dass noch nichts passiert ist. Sonst steht man vor einer Liste und
+    // weiss nicht, ob der Trainer schon etwas getan hat.
+    if(githubVonSelbst && (holbar.length || gesperrt.length)){
+        html += '<div style="border:1px solid #9ec5e8; background:#eef4fc; border-radius:12px; '
+            + 'padding:0.85rem 1rem; margin-bottom:0.9rem; font-size:0.88rem; line-height:1.6; color:#0f2745;">'
+            + '<b>Es gibt Neuerungen bei GitHub.</b><br>'
+            + 'Der Trainer hat beim Start von selbst nachgesehen. <b>Geändert wurde noch nichts</b> — '
+            + 'erst ein Klick auf „Ausgewählte holen" schreibt etwas in deinen Ordner.'
+            + '</div>';
+    }
+
+    html += '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.8rem;">'
         + 'Quelle: <span style="font-family:var(--font-mono);">' + j.quelle.replace(/^https:\/\//,'') + '</span>'
         + (j.zuletzt ? ' · zuletzt abgeglichen ' + j.zuletzt.replace('T',' ').slice(0,16) : ' · noch nie abgeglichen')
+        + '</div>';
+
+    const fussZeile = '<div style="margin-top:1rem; border-top:1px solid var(--line); padding-top:0.6rem; '
+        + 'font-size:0.76rem; color:var(--muted); line-height:1.6;">'
+        + (githubAutoErlaubt()
+            ? 'Der Trainer sieht beim Start von selbst nach und fragt, wenn es etwas gibt. '
+              + '<a href="#" style="color:var(--muted);" onclick="githubAutoSchalten(false); return false;">Nicht mehr von selbst fragen</a> '
+              + '— dann erscheint nur noch ein schmaler Hinweis oben.'
+            : 'Die Nachschau beim Start ist <b>ausgeschaltet</b>. Es erscheint nur ein schmaler Hinweis oben. '
+              + '<a href="#" style="color:var(--muted);" onclick="githubAutoSchalten(true); return false;">Wieder von selbst fragen lassen</a>')
         + '</div>';
 
     if(!holbar.length && !gesperrt.length){
         html += '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.9rem 1rem; font-size:0.88rem;">'
             + '<b>Alles auf demselben Stand.</b> Es gibt nichts zu holen.</div>';
-        ziel.innerHTML = html;
+        ziel.innerHTML = html + fussZeile;
         return;
     }
 
@@ -5989,10 +6047,18 @@ function githubZeigen(j){
     if(holbar.length){
         html += '<div style="margin-top:1rem; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">'
             + '<button class="btn-lernstand" onclick="githubAnwenden()"><i class="fas fa-download"></i> Ausgewählte holen</button>'
+            + (githubVonSelbst
+                ? '<button type="button" class="btn btn-outline" style="padding:6px 14px;" onclick="githubSchliessen()">Später</button>'
+                : '')
             + '<span style="font-size:0.76rem; color:var(--muted);">Die alten Fassungen wandern vorher nach <span style="font-family:var(--font-mono);">backup/</span>.</span>'
             + '</div>'
             + '<div id="githubErgebnis" style="margin-top:0.8rem;"></div>';
     }
+
+    // Der Schalter für die Nachschau beim Start. Er steht unten und klein:
+    // Wer ihn sucht, findet ihn - wer ihn nicht sucht, stolpert nicht darüber.
+    html += fussZeile;
+
     ziel.innerHTML = html;
 }
 
@@ -6043,27 +6109,95 @@ async function githubAnwenden(){
 }
 window.githubAnwenden = githubAnwenden;
 
-// ---- Der Hinweis auf der Hauptseite ----
+// ================================================================
+// DIE NACHSCHAU BEIM START
+// ================================================================
+// Der Server sieht vier Sekunden nach dem Start bei GitHub nach. Was dabei
+// herauskam, holt sich diese Seite ab - und entscheidet dann, WIE sie es
+// sagt. Zwei Wege, und welcher genommen wird, haengt allein davon ab, was
+// der Mensch gerade tut:
 //
-// Bewusst eine schmale Leiste und kein Fenster: Es ist eine Nachricht, kein
-// Auftrag. Wer gerade lernt, soll nicht aus der Frage gerissen werden.
+//   Fenster  - wenn er auf der Hauptansicht steht und nichts laeuft.
+//              Dann ist eine Frage angebracht, und man muss sie nicht
+//              suchen gehen.
+//   Leiste   - wenn er mitten in einer Frage sitzt, im Pruefungssimulator
+//              oder im Gruppenraum ist. Ein Fenster waere dort eine
+//              Unterbrechung, die niemand bestellt hat - im Simulator
+//              laeuft die Uhr, im Gruppenraum warten andere.
+//
+// Dieselbe Ueberlegung wie beim Fenster "Wo du aufgehoert hast": nur bei
+// Start, nicht im Simulator, nicht im Gruppenraum.
+//
+// Ausserdem: nur einmal je Stand. Wer "Später" geklickt hat, hat geklickt.
+// Erst wenn bei GitHub ein neuer Commit liegt, fragt es wieder.
+// ================================================================
+
+// Steht gerade etwas im Weg? Ein Fenster, das ueber ein anderes Fenster
+// springt, ist schlimmer als gar keins.
+function githubAnderesFensterOffen(){
+    try{
+        const alle = document.querySelectorAll('[id$="Modal"], [id$="modal"]');
+        for(const m of alle){
+            if(m.id === 'githubModal') continue;
+            const st = window.getComputedStyle(m);
+            if(st.display === 'none' || st.visibility === 'hidden') continue;
+            if(m.getBoundingClientRect().height > 0) return true;
+        }
+    }catch(e){}
+    return false;
+}
+
+function githubMomentPasst(){
+    if(!githubAutoErlaubt()) return false;
+    try{ if(typeof isQuizActive !== 'undefined' && isQuizActive) return false; }catch(e){}
+    try{ if(!nurNormalesLernen()) return false; }catch(e){}
+    if(githubAnderesFensterOffen()) return false;
+    return true;
+}
+
+// versuch: der Server ist unter Umstaenden noch nicht fertig mit Nachsehen,
+// wenn diese Seite schon steht. Dann steht in letzteLage noch nichts, und es
+// wird in Ruhe nachgefasst - dreimal, dann ist gut.
+async function githubAutoAngebot(versuch){
+    if(!laeuftLokal()) return;
+    versuch = versuch || 1;
+    let j = null;
+    try{
+        const res = await fetch('/api/github/stand', {cache:'no-store'});
+        if(!res.ok) return;
+        j = await res.json();
+    }catch(e){ return; }
+
+    const l = j && j.letzteLage;
+    if(!l){
+        if(versuch < 4) setTimeout(()=>{ githubAutoAngebot(versuch + 1); }, 8000);
+        return;
+    }
+    // Kein Netz, GitHub bremst, Repository umbenannt: still bleiben. Eine
+    // Fehlermeldung beim Start hilft niemandem - wer nachsehen will, findet
+    // sie unter Info.
+    if(l.fehler) return;
+    if(!l.anzahl) return;
+
+    try{ if(localStorage.getItem(GITHUB_GEMELDET) === l.commit) return; }catch(e){}
+
+    if(githubMomentPasst()) githubOeffnen(true);
+    else                    githubHinweisZeigen(l);
+}
+window.githubAutoAngebot = githubAutoAngebot;
+
+// ---- Der schmale Hinweis auf der Hauptseite ----
+//
+// Der Rueckfallweg: eine Nachricht, kein Auftrag. Er kommt, wenn ein
+// Fenster gerade stoeren wuerde - und wenn die Nachschau abgeschaltet ist.
 function githubHinweisWeg(){
     const b = document.getElementById('githubHinweis');
     if(b) b.remove();
 }
 
-async function githubHinweisPruefen(){
-    if(!laeuftLokal()) return;
+function githubHinweisZeigen(l){
     try{
-        const res = await fetch('/api/github/stand', {cache:'no-store'});
-        if(!res.ok) return;
-        const j = await res.json();
-        const l = j && j.letzteLage;
         if(!l || !l.anzahl) return;
-        // Nur einmal je Stand nerven. Wer weggeklickt hat, hat weggeklickt.
-        try{
-            if(localStorage.getItem('amateurfunk_githubGemeldet') === l.commit) return;
-        }catch(e){}
         if(document.getElementById('githubHinweis')) return;
         const b = document.createElement('div');
         b.id = 'githubHinweis';
@@ -6078,12 +6212,12 @@ async function githubHinweisPruefen(){
         document.body.appendChild(b);
         document.getElementById('githubHinweisAuf').onclick = ()=>{ githubHinweisWeg(); githubOeffnen(); };
         document.getElementById('githubHinweisZu').onclick = ()=>{
-            try{ localStorage.setItem('amateurfunk_githubGemeldet', l.commit); }catch(e){}
+            try{ localStorage.setItem(GITHUB_GEMELDET, l.commit); }catch(e){}
             githubHinweisWeg();
         };
     }catch(e){}
 }
-window.githubHinweisPruefen = githubHinweisPruefen;
+window.githubHinweisZeigen = githubHinweisZeigen;
 
 // ================================================================
 // STANDWACHE - merkt, wenn die offene Seite veraltet ist
@@ -9493,7 +9627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
-    try{ setTimeout(()=>{ githubHinweisPruefen(); }, 6000); }catch(e){}
+    try{ setTimeout(()=>{ githubAutoAngebot(); }, 6000); }catch(e){}
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     loadLearnParts();
