@@ -1000,3 +1000,58 @@ Geprueft wurde mit echtem Browser: zugeklappt, aufgeklappt, nach dem
 Wechsel des Pruefungsziels und nach dem Blaettern zu laengeren und
 kuerzeren Fragen. Der aufgeklappte Zustand ist unveraendert - Balken,
 Verlaufsfeld und Fragenkarte enden auf derselben Linie.
+
+## 26.08.2026 - "Ein Gast bekommt kein Update" - Ursache und Werkzeug
+
+Ein Mitlernender hat den Trainer im eigenen Ordner, ist ueber den
+Gruppenraum auf Dietmars Rechner unterwegs - und bekommt keine
+Aktualisierungen. Ich habe den vorhandenen Abgleich gelesen statt zu raten.
+
+**Die Mechanik ist in Ordnung, die Adresse ist es nicht.** Beim Herunterladen
+schreibt der Server die Adresse, unter der der Gast ihn gerade erreicht hat,
+in `herkunft.json` des Pakets. Bei jedem Start fragt der Trainer des Gastes
+dort nach. Wenn der Gastgeber ueber einen Tunnel freigibt, ist diese Adresse
+aber eine `…trycloudflare.com`-Adresse - und die wird bei **jedem** Start des
+Tunnels neu ausgewuerfelt. Die gemerkte Adresse ist also spaetestens nach
+Dietmars naechstem Neustart tot.
+
+Was dann passiert, ist bewusst so gebaut und macht die Sache trotzdem
+unsichtbar: "Ist der Gastgeber nicht erreichbar, passiert schlicht nichts.
+Der Start darf daran nicht haengen." Richtig - nur merkt der Gast nichts
+davon und haelt seinen Stand fuer aktuell.
+
+**Der zweite Weg ist in Chrome meist gesperrt.** Es gibt bereits ein Banner:
+Wer als Gast die Seite des Gastgebers oeffnet, waehrend sein EIGENER Trainer
+laeuft, bekommt "Ordner aktualisieren" angeboten. Dafuer muss die Seite von
+`https://….trycloudflare.com` aus `http://127.0.0.1:3000` abfragen. Das ist
+Private Network Access, und Chrome verlangt dafuer eine ausdrueckliche
+Freigabe; im Code steht seit laengerem der Hinweis, dass es "inzwischen
+meistens" gesperrt ist. Auf diesen Weg ist also kein Verlass.
+
+Uebrig bleibt der Weg, der immer funktioniert, weil kein Browser
+dazwischensteht: der Trainer des Gastes fragt selbst beim Gastgeber nach
+(Info > Abgleich, aktuelle Adresse eintragen). Server zu Server, keine
+Mixed-Content- und keine PNA-Frage.
+
+**Neu: `Update-Pruefen.bat` / `update_pruefen.js`** fuer den Ordner des
+Gastes. Liest nichts um und aendert nichts, sondern beantwortet in vier
+Schritten, woran es liegt:
+
+  1. Kann dieser Trainer ueberhaupt abgleichen, oder ist er aelter als die
+     Funktion? (Erkannt daran, ob `Server.js` den Endpunkt kennt.)
+  2. Welche Adresse ist hinterlegt - und ist es eine Tunnel-Adresse?
+  3. Antwortet dort jemand? Der Fehler wird uebersetzt: `ENOTFOUND` heisst
+     "Adresse gibt es nicht mehr", `ECONNREFUSED` heisst "gibt es, aber
+     niemand nimmt ab", Zeitueberschreitung heisst "laeuft nicht oder etwas
+     blockiert".
+  4. Was unterscheidet sich konkret - fehlt ganz, ist aelter, oder ist eine
+     Programmdatei (die absichtlich nicht automatisch ersetzt wird).
+
+Jeder Fall endet mit dem naechsten Schritt, nicht mit einer Fehlermeldung.
+Getestet wurden alle sechs Zustaende: ohne `Server.js`, ohne `herkunft.json`,
+tote Tunnel-Adresse, erreichbare Adresse ohne Server, erreichbar mit
+Unterschieden, erreichbar und alles gleich.
+
+**Die eigentliche Loesung bleibt der GitHub-Updater.** Eine Adresse bei
+`raw.githubusercontent.com` aendert sich nie. Solange die Quelle ein Tunnel
+ist, ist jede gemerkte Adresse ein Verfallsdatum.
