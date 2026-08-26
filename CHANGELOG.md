@@ -2243,3 +2243,35 @@ GitHub. Sie schadet nicht, aber wer beide sieht, fragt sich, welche gilt.
 Nur gemeldet, nicht angefasst - Loeschen ist Dietmars Entscheidung.
 Der Ordner `test/` dagegen darf bleiben: `tts-expand.test.js` ist echter
 Pruefcode.
+
+## 26.08.2026 - Der Banner ganz oben, und ein Bild, das nicht mehr stimmte
+
+Dietmar: "Das Bild wurde in GitHub nicht geladen." Und auf Nachfrage: "In
+GitHub fehlt es ganz oben!"
+
+**Erst nachgesehen, statt zu reparieren.** Die naheliegende Vermutung waere
+gewesen, dass mit der Bilddatei etwas nicht stimmt. Also nachgemessen:
+1280x640, 8 Bit RGB, nicht interlaced, 278 KB, kein Farbprofil - genau das,
+was GitHub verlangt. Und ueber raw.githubusercontent.com abgerufen: alle
+zehn Bilder des README liefern HTTP 200. An den Dateien lag es nicht.
+
+Gemeint war etwas anderes: Die Seite fing mit der Ueberschrift an. Ganz oben
+stand kein Bild. Das Vorschaubild lag zwar im Ordner, aber nur fuer den
+Fall, dass jemand den Link teilt - auf der Seite selbst kam es nicht vor.
+Ein Missverstaendnis auf meiner Seite: Ich hatte "Bilder fuer GitHub" als
+"Vorschaubild beim Teilen" gelesen, gemeint war der Kopf der Seite.
+
+Also steht die Karte jetzt als Banner ganz oben im README, mittig, 900
+Punkte breit. Sie tut damit beides: Kopf der Seite und Vorschaubild beim
+Teilen.
+
+**Dabei aufgefallen, und das war der eigentliche Fund:** Das erste
+Bildschirmfoto (`01-hauptansicht.png`) zeigte noch die alte
+Pruefungsuebersicht - drei Zeilen "Technik / Vorschriften / Betrieb", alle
+45 Minuten. Seit heute Mittag stimmt das nicht mehr; die Uebersicht nennt
+die Teile beim Namen ("Technik N") und kennt die 60 Minuten fuer Technik A.
+Das allererste Bild, das ein Besucher sieht, haette also dem widersprochen,
+was der Trainer tut. Neu aufgenommen.
+
+Merkposten fuer kuenftige Aenderungen an der Oberflaeche: Bildschirmfotos
+altern still. Sie sagen nie, dass sie veraltet sind.

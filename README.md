@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="bilder/github-vorschau.png" alt="Amateurfunk-Trainer — der komplette Fragenkatalog der Bundesnetzagentur mit Prüfungssimulator, Hörbuch und Gruppenraum" width="900">
+</p>
+
 # Amateurfunk-Trainer
 
 Ein Lernprogramm für die deutsche Amateurfunkprüfung — **Klasse N, E und A**.
