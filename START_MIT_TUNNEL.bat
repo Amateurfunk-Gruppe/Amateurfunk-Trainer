@@ -42,23 +42,29 @@ if not exist "cloudflared.exe" (
 )
 
 REM ============================================================
-REM  FIX 26.08.2026: Dieselbe Falle wie in START.bat.
+REM  LAEUFT SCHON EIN TRAINER AUF PORT 3000?
 REM
-REM  Laeuft noch ein node.exe auf Port 3000, bricht das neue mit
-REM  "EADDRINUSE" ab - der Browser wird aber trotzdem geoeffnet und
-REM  zeigt den ALTEN Server. Hier ist es sogar heikler: Der Tunnel
-REM  wuerde dann den alten Stand ins Internet stellen.
+REM  Dieselbe Falle wie in START.bat, hier aber heikler: Der Tunnel
+REM  wuerde den ALTEN Stand ins Internet stellen.
 REM
-REM  Sprungmarken statt verschachtelter Klammern - in einem if-Block
-REM  wird %VAR% schon beim Einlesen ersetzt, nicht beim Ausfuehren.
+REM  Gefragt wird ueber PowerShell (Get-NetTCPConnection), nicht
+REM  ueber netstat: dessen Ausgabe heisst auf einem deutschen
+REM  Windows "ABHOEREN" statt "LISTENING", und der erste Anlauf
+REM  suchte genau nach dem englischen Wort. Er war damit
+REM  stillschweigend wirkungslos.
+REM
+REM  Und: Im Zweifel wird gestartet. Eine Startdatei darf aus einem
+REM  Verdacht heraus niemals den Start verweigern.
 REM ============================================================
 set ALT_PID=
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /c:":3000 " ^| findstr /c:"LISTENING"') do set ALT_PID=%%p
+set ALT_NAME=
+for /f "usebackq delims=" %%p in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ @(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction Stop)[0].OwningProcess }catch{''}" 2^>nul`) do set ALT_PID=%%p
 
 if not defined ALT_PID goto :port_ist_frei
+echo %ALT_PID%| findstr /r "^[0-9][0-9]*$" >nul || goto :port_ist_frei
 
-set ALT_NAME=unbekannt
-for /f "tokens=1 delims=," %%n in ('tasklist /nh /fo csv /fi "PID eq %ALT_PID%" 2^>nul') do set ALT_NAME=%%~n
+for /f "usebackq delims=" %%n in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "try{(Get-Process -Id %ALT_PID% -ErrorAction Stop).ProcessName}catch{''}" 2^>nul`) do set ALT_NAME=%%n
+if not defined ALT_NAME set ALT_NAME=unbekannt
 
 echo ============================================================
 echo   Auf Port 3000 laeuft schon etwas.
@@ -66,17 +72,8 @@ echo.
 echo     Programm : %ALT_NAME%
 echo     PID      : %ALT_PID%
 echo.
-if /i "%ALT_NAME%"=="node.exe" goto :alter_trainer
+if /i not "%ALT_NAME%"=="node" goto :fremdes_programm
 
-echo   Das ist KEIN node.exe - hier wird nichts beendet, das koennte
-echo   ein ganz anderes Programm sein. Bitte von Hand schliessen oder
-echo   den Port freimachen.
-echo ============================================================
-echo.
-pause
-exit /b 1
-
-:alter_trainer
 echo   Das ist mit grosser Wahrscheinlichkeit ein Trainer, der noch
 echo   von vorhin laeuft. Solange der laeuft, kommt der neue nicht
 echo   hoch - und der Tunnel wuerde den ALTEN Stand ins Internet
@@ -84,8 +81,11 @@ echo   stellen.
 echo ============================================================
 echo.
 choice /c jn /n /m "   Den alten beenden und neu starten?  [j/n]  "
-if errorlevel 2 goto :nicht_beenden
+if errorlevel 2 goto :port_ist_frei
+if errorlevel 1 goto :alten_beenden
+goto :port_ist_frei
 
+:alten_beenden
 echo.
 echo   [INFO] Beende PID %ALT_PID% ...
 taskkill /pid %ALT_PID% /f >nul 2>nul
@@ -93,12 +93,14 @@ REM Windows gibt den Port nicht im selben Augenblick wieder frei.
 timeout /t 2 /nobreak >nul
 goto :port_ist_frei
 
-:nicht_beenden
+:fremdes_programm
+echo   Das ist kein Trainer. Hier wird nichts beendet - es koennte
+echo   ein ganz anderes Programm sein.
 echo.
-echo   Gut - es wird nichts beendet und kein Tunnel geoeffnet.
+echo   Es wird trotzdem gestartet. Kommt der Server nicht hoch,
+echo   steht unten "EADDRINUSE" - dann ist der Port belegt.
+echo ============================================================
 echo.
-pause
-exit /b 0
 
 :port_ist_frei
 

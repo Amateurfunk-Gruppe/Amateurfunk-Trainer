@@ -74,8 +74,7 @@ normalen Commits weiter (siehe `git log --oneline`).
   Zweiter Auslöser war `enablejsapi=1` ohne passenden `origin`-Parameter.
 - **Videos laufen jetzt regulär über YouTube**: Klick auf „Auf YouTube ansehen" öffnet den
   Lehrgang von Michael, DL2YMR, mit Zeitmarke in einem neuen Tab — mit Werbung und als zählender
-  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. Nur eine kleine private Runde
-  bekommt weiterhin das eingebettete Fenster.
+  Aufruf. Der Umweg über `yout-ube.com` ist entfallen.
 - **Benutzernamen**: Der Name aus dem Raum-Dialog gehört jetzt zum Benutzer-Slot und ersetzt
   „Benutzer 1/2/3" in Verlauf, Löschen-Dialog und Reset-Fenster. Der Gruppenraum bekommt
   automatisch den Namen des aktiven Slots. Die Lerndaten liegen unverändert unter `user1/2/3`.
@@ -1147,15 +1146,14 @@ Hell und dunkel, keine Fehler in der Konsole, Kopier-Knopf meldet "Kopiert".
 
 Dietmar wollte eine Zeile aus dem CHANGELOG haben, in der drei Vornamen
 standen. Beim Nachsehen fand sich dieselbe Liste an drei weiteren Stellen -
-und die schlimmste war nicht das CHANGELOG:
+und die schlimmste war nicht das CHANGELOG, sondern eine Zeile Javascript in
+`Index.html`, die die Namen als Liste enthielt.
 
-    const VIDEO_EMBED_WHITELIST = ['dietmar','maja','uwe'];
-
-Diese Zeile stand in `Index.html`. Solange das Projekt privat war, war das
-gleichgueltig. Seit heute frueh liegt Index.html oeffentlich bei GitHub -
-und jeder Besucher des Trainers liest sie ohnehin mit, denn Index.html geht
-komplett an den Browser. Dazu kam der Platzhalter im Raum-Dialog
-("z.B. Dietmar, Maja, Uwe...") und zwei Kommentare.
+Solange das Projekt privat war, war das gleichgueltig. Seit heute frueh
+liegt Index.html oeffentlich bei GitHub - und jeder Besucher des Trainers
+liest sie ohnehin mit, denn Index.html geht komplett an den Browser. Dazu
+kamen der Platzhalter im Raum-Dialog, der drei Vornamen als Beispiel nannte,
+und zwei Kommentare.
 
 **Jetzt steht die Liste in `video_embed.json`**, die per `.gitignore`
 draussen bleibt. Und sie verlaesst den Server nicht: der Browser fragt mit
@@ -1171,9 +1169,14 @@ aus der Liste das eingebettete Fenster, mit einem fremden Namen wieder
 YouTube.
 
 Der Platzhalter heisst jetzt "z.B. dein Vorname oder Rufzeichen", die
-Kommentare sprechen von "drei Leuten an einem Rechner". Auch meine eigenen
-Erklaerungen dazu nennen die Namen nicht - sonst haette ich sie beim
-Aufraeumen gleich wieder hineingeschrieben.
+Kommentare sprechen von "drei Leuten an einem Rechner".
+
+**Nachtrag.** Dieser Eintrag hat die Namen zunaechst selbst weiter
+transportiert - als Zitat der geloeschten Codezeile und des alten
+Platzhalters. Ein CHANGELOG, das die Namen aufbewahrt, macht die
+Aufraeumarbeit zunichte: Es liegt genauso oeffentlich bei GitHub wie
+Index.html. Dietmar hat es gesehen, die Zitate sind raus. Wer eine solche
+Aenderung macht, muss auch seine eigene Beschreibung davon durchsehen.
 
 
 ## 26.08.2026 - Update von GitHub, ohne die eigene Arbeit zu verlieren
@@ -1674,3 +1677,156 @@ Geprueft: Sprungmarken vollstaendig, Klammerbilanz stimmt, die
 `findstr /b /c:"<"`-Erkennung trennt HTML von Javascript, CRLF-Zeilenenden.
 Der Rest zeigt sich beim ersten Lauf - und das ist ja gerade der Zweck der
 beiden Dateien.
+
+## 26.08.2026 - Der Link ging nicht - und der Trainer wusste warum
+
+Dietmar: *"Jetzt geht der Link nicht mehr :("* - dazu das Protokoll. Darin
+stand die Antwort bereits, vom Trainer selbst geschrieben:
+
+    ueber deinen DNS-Server : schlaegt fehl (ENOTFOUND)
+    ueber 1.1.1.1 / 8.8.8.8 : 104.16.230.132
+    >> Der Name EXISTIERT oeffentlich, nur DIESER PC kennt ihn nicht.
+
+Der Selbsttest hat also genau das getan, wofuer er gebaut wurde: nicht "geht
+nicht" gemeldet, sondern getrennt, WO es klemmt. Der Tunnel lief, Cloudflare
+hatte den Namen veroeffentlicht, ein oeffentlicher DNS-Server loeste ihn
+auf - nur Dietmars eigener Rechner blieb bei seiner alten Auskunft.
+
+Ursache ist der **negative DNS-Cache** von Windows. Der Trainer startet den
+Tunnel und fragt gleich darauf nach dem Namen; in dem Augenblick kennt ihn
+noch niemand. Windows merkt sich diesen Fehlversuch und antwortet danach
+minutenlang weiter mit "gibt es nicht" - auch wenn die Welt draussen es
+laengst besser weiss. Fuer die anderen Teilnehmer war der Link in dieser
+Zeit hoechstwahrscheinlich schon erreichbar.
+
+**Neu: `DNS-Auffrischen.bat`.** Der Trainer nannte die Abhilfe
+(`ipconfig /flushdns`) schon im Protokoll - aber zwischen "im schwarzen
+Fenster steht ein Befehl" und "ich tippe ihn richtig ein" liegt eine Huerde,
+die man niemandem zumuten muss. Die Datei nimmt die Adresse aus
+`tunnel_url.txt`, wirft die alten Auskuenfte weg und fragt danach zweimal
+nach: einmal ueber den eigenen DNS-Server, einmal ueber 1.1.1.1. Aus dem
+Vergleich der beiden Antworten laesst sich ablesen, woran man ist:
+
+  - **beide antworten** -> geloest, Link neu laden
+  - **nur 1.1.1.1 antwortet** -> Windows braucht noch einen Moment,
+    gleich nochmal
+  - **keiner antwortet** -> es blockiert etwas dazwischen, DNS-Filter im
+    Router oder Webschutz des Virenscanners
+
+`ipconfig /flushdns` verlangt erhoehte Rechte. Statt daran wortlos zu
+scheitern, sagt die Datei, was zu tun ist: rechte Maustaste, "Als
+Administrator ausfuehren".
+
+Und in jedem Fall steht am Ende der Satz, auf den es ankommt: **fuer die
+anderen ist der Link sehr wahrscheinlich schon erreichbar** - am besten mit
+dem Handy ueber Mobilfunk gegenpruefen, WLAN aus. Sonst sucht man einen
+Fehler, den nur der eigene Rechner hat.
+
+## 26.08.2026 - Zweiter Anlauf bei der Port-Pruefung (und ein Eingestaendnis)
+
+Der Mitlernende meldete: Nach dem Einspielen der zwei Dateien startete sein
+Trainer nicht mehr; er kopierte die `START.bat` aus dem ZIP von gestern
+zurueck, und danach lief es wieder.
+
+**Ich weiss nicht sicher, warum.** Die neue `START.bat` liegt inzwischen im
+Repository, er koennte sie also von dort haben; nachweisen kann ich es
+nicht, und beim Nachstellen (alter Serverstand plus die zwei neuen Dateien)
+startete bei mir alles sauber. Was ich nicht rekonstruieren kann, behaupte
+ich auch nicht.
+
+**Beim Nachsehen fand ich aber zwei echte Fehler in meiner eigenen Datei -
+beide durch Lesen, nicht durch Testen.**
+
+**Erstens war die Pruefung auf deutschen Rechnern wirkungslos.** Sie suchte
+in der Ausgabe von `netstat -ano` nach `LISTENING`. Auf einem deutschen
+Windows steht dort `ABHOEREN`. Der Filter griff also nie, `ALT_PID` blieb
+leer, und der Ablauf sprang stillschweigend zum normalen Start durch. Auf
+genau den Rechnern, fuer die die Pruefung gebaut war, tat sie nichts - und
+niemand haette es gemerkt, weil ein wirkungsloser Test genauso aussieht wie
+ein bestandener.
+
+Jetzt fragt PowerShell: `Get-NetTCPConnection -LocalPort 3000 -State Listen`
+liefert die PID, `Get-Process` den Namen. Das antwortet in jeder Sprache
+gleich. Die Pipe im PowerShell-Befehl habe ich durch `@(...)[0]` ersetzt -
+innerhalb der Anfuehrungszeichen darf sie nicht escaped werden, ausserhalb
+muss sie es; solche Stolperstellen laesst man besser gar nicht erst
+entstehen.
+
+**Zweitens - und das ist der schwerere Fehler - konnte meine Pruefung den
+Start VERHINDERN.** Kam ein Programmname heraus, der nicht `node.exe` hiess,
+brach das Skript ab:
+
+    echo   Das ist KEIN node.exe - hier wird nichts beendet.
+    pause
+    exit /b 1
+
+Gut gemeint: kein fremdes Programm abschiessen. Aber die Schlussfolgerung
+war falsch. Aus "ich erkenne das Programm nicht" folgt nicht "also starte
+ich nicht". Eine Startdatei, die aus einem Verdacht heraus den Start
+verweigert, ist schlimmer als das Problem, das sie loesen soll.
+
+Jetzt gilt durchgehend: **im Zweifel starten.** Kein PowerShell, keine PID,
+ein fremder Programmname, ein unerwarteter Wert - jeder dieser Faelle
+springt zum Start durch. Bei einem fremden Programm gibt es einen Hinweis
+und trotzdem einen Startversuch; kommt der Server dann wegen `EADDRINUSE`
+nicht hoch, steht das im Fenster, und das Fenster bleibt stehen. Lieber eine
+Fehlermeldung, die man lesen kann, als ein Skript, das die Entscheidung an
+sich reisst.
+
+Geprueft, was sich ohne Windows pruefen laesst: alle Sprungmarken haben ein
+Ziel und jedes Ziel einen Sprung, die Klammerbilanz stimmt, `LISTENING` steht
+nur noch in Kommentaren, und in den PowerShell-Zeilen liegt kein
+ungeschuetztes `|` oder `>` ausserhalb der Anfuehrungszeichen.
+
+## 26.08.2026 - Noch einmal ausgemistet, und der Fehler im Aufraeumen selbst
+
+Dietmar, zwei Punkte: der Satz ueber die "kleine private Runde" solle auch
+aus dem CHANGELOG raus, und im Repository muesse aufgeraeumt werden.
+
+**Der erste Punkt war schlimmer, als er dachte.** In dem Eintrag, der die
+Vornamen aus dem oeffentlichen Repository nehmen sollte, standen sie danach
+immer noch - als Zitat der geloeschten Codezeile und als Zitat des alten
+Platzhalters. Ich hatte die Namen aus `Index.html` entfernt und gleichzeitig
+in meiner Beschreibung der Aenderung konserviert. Das CHANGELOG liegt genauso
+oeffentlich bei GitHub wie Index.html; die Aufraeumarbeit war damit zur
+Haelfte umsonst.
+
+Wer eine solche Aenderung macht, muss auch seine eigene Beschreibung davon
+durchsehen. Die Zitate sind raus.
+
+Dazu die Formulierung selbst: "Nur eine kleine private Runde bekommt
+weiterhin das eingebettete Fenster" nennt zwar keine Namen, sagt aber, dass
+es eine bevorzugte Gruppe gibt. Auch das gehoert nicht in ein oeffentliches
+Repository. Der Satz ist raus - im CHANGELOG und in den Kommentaren von
+`Index.html` und `Server.js`, wo er sinngemaess ebenfalls stand. Die
+Kommentare verweisen jetzt sachlich auf `video_embed.json`.
+
+**Zum zweiten Punkt: `BUG_REPORT.md` fliegt raus.** 71 KB Innenrevision vom
+17.08. Sie beschreibt einen Codestand, den es so nicht mehr gibt (damals
+6.956 Zeilen Index.html), enthaelt Merkposten wie "Was du selbst machen
+musst" und einmal den Pfad seines Windows-Benutzerkontos. Wer den Trainer
+herunterlaedt, um zu lernen, faengt damit nichts an. Auf Dietmars Platte
+bleibt sie liegen.
+
+**Dabei fand sich ein Fehler in `github_ausmisten.js` selbst.** Der erste
+Entwurf legte den Block in der `.gitignore` nur an, wenn die Marke noch
+fehlte:
+
+    if (!text.includes(MARKE)) { ... }
+
+Kommt spaeter ein Name dazu - wie jetzt `BUG_REPORT.md` -, wuerde er nie
+eingetragen, weil die Marke ja schon dasteht. Der naechste `git add -A`
+haette ihn zurueckgeholt, und das Ausmisten waere genau so umsonst gewesen
+wie heute Mittag, als ich die `.gitignore` ueberbuegelt habe. Zweimal
+derselbe Fehlertyp an einem Tag: etwas herausnehmen und vergessen, es auch
+draussen zu halten.
+
+Jetzt vergleicht das Skript zeilenweise, welche Namen fehlen, und haengt
+genau die an - egal ob die Marke schon dasteht.
+
+Geprueft an einem echten Klon: beim zweiten Lauf wird nur `BUG_REPORT.md`
+entfernt (die Werkzeuge sind ja schon draussen), die Datei bleibt auf der
+Platte, `.gitignore` bekommt genau einen Eintrag dazu, und `git add -A` holt
+nichts zurueck. Gegenprobe mit einem Ordner aus allen 25 beteiligten
+Dateien: es landen genau zehn im Commit - Trainer, Gast-Werkzeuge,
+CHANGELOG und die `.gitignore` selbst.

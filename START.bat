@@ -31,34 +31,46 @@ if not exist "node_modules" (
 )
 
 REM ============================================================
-REM  FIX 26.08.2026: LAEUFT SCHON EIN TRAINER?
+REM  LAEUFT SCHON EIN TRAINER AUF PORT 3000?
 REM
-REM  Das hat einen Nachmittag gekostet. Dietmar spielte eine neue
-REM  Server.js ein, startete neu - und bekam weiter das Verhalten
-REM  der alten Fassung. Der Grund stand nicht in der Server.js,
-REM  sondern hier:
+REM  Warum es das gibt (26.08.2026): Lief noch ein node.exe auf
+REM  Port 3000, brach das neue mit "EADDRINUSE" ab. Der Browser
+REM  wurde aber trotzdem geoeffnet - die Zeile weiter unten wartete
+REM  nur darauf, DASS Port 3000 antwortet, nicht darauf, WER
+REM  antwortet. Der alte Server antwortete bereitwillig. Man sah
+REM  einen laufenden Trainer, waehrend das neue Fenster daneben mit
+REM  einer Fehlermeldung stand, die niemand liest.
 REM
-REM  Lief noch ein node.exe auf Port 3000, brach das neue mit
-REM  "EADDRINUSE" ab. Der Browser wurde aber trotzdem geoeffnet -
-REM  die Zeile weiter unten wartete nur darauf, DASS Port 3000
-REM  antwortet, nicht darauf, WER antwortet. Der alte Server
-REM  antwortete bereitwillig. Man sah also einen laufenden Trainer,
-REM  waehrend das neue Fenster daneben mit einer Fehlermeldung
-REM  stand, die niemand las.
+REM  ZWEITER ANLAUF, und zwar aus zwei Gruenden:
 REM
-REM  Deshalb jetzt: erst nachsehen, dann fragen, dann starten.
+REM  1. Der erste suchte in der netstat-Ausgabe nach "LISTENING".
+REM     Auf einem deutschen Windows steht dort "ABHOEREN". Der
+REM     Filter griff also nie, die Pruefung war stillschweigend
+REM     wirkungslos - genau auf den Rechnern, fuer die sie gedacht
+REM     war. Jetzt fragt PowerShell (Get-NetTCPConnection), und das
+REM     antwortet in jeder Sprache gleich.
 REM
-REM  Geschrieben mit Sprungmarken statt verschachtelter Klammern:
-REM  In einem if-Block wird %VAR% schon beim Einlesen ersetzt, nicht
-REM  beim Ausfuehren - was man dort setzt, kann man dort nicht lesen.
+REM  2. Der erste konnte den Start VERHINDERN: Kam ein Programmname
+REM     heraus, der nicht "node.exe" hiess, brach er ab. Eine
+REM     Startdatei darf aus einem Verdacht heraus niemals den Start
+REM     verweigern. Jetzt wird in jedem Zweifelsfall gestartet - die
+REM     Pruefung darf helfen, aber nie im Weg stehen.
+REM
+REM  Sprungmarken statt verschachtelter Klammern: In einem if-Block
+REM  wird %VAR% schon beim Einlesen ersetzt, nicht beim Ausfuehren.
 REM ============================================================
 set ALT_PID=
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /c:":3000 " ^| findstr /c:"LISTENING"') do set ALT_PID=%%p
+set ALT_NAME=
+for /f "usebackq delims=" %%p in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ @(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction Stop)[0].OwningProcess }catch{''}" 2^>nul`) do set ALT_PID=%%p
 
+REM Nichts gefunden, PowerShell fehlt, Befehl unbekannt: dann eben
+REM ohne Pruefung starten. Lieber ein EADDRINUSE als ein Trainer,
+REM der wegen der Pruefung nicht hochkommt.
 if not defined ALT_PID goto :port_ist_frei
+echo %ALT_PID%| findstr /r "^[0-9][0-9]*$" >nul || goto :port_ist_frei
 
-set ALT_NAME=unbekannt
-for /f "tokens=1 delims=," %%n in ('tasklist /nh /fo csv /fi "PID eq %ALT_PID%" 2^>nul') do set ALT_NAME=%%~n
+for /f "usebackq delims=" %%n in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "try{(Get-Process -Id %ALT_PID% -ErrorAction Stop).ProcessName}catch{''}" 2^>nul`) do set ALT_NAME=%%n
+if not defined ALT_NAME set ALT_NAME=unbekannt
 
 echo ============================================================
 echo   Auf Port 3000 laeuft schon etwas.
@@ -66,25 +78,19 @@ echo.
 echo     Programm : %ALT_NAME%
 echo     PID      : %ALT_PID%
 echo.
-if /i "%ALT_NAME%"=="node.exe" goto :alter_trainer
+if /i not "%ALT_NAME%"=="node" goto :fremdes_programm
 
-echo   Das ist KEIN node.exe - hier wird nichts beendet, das koennte
-echo   ein ganz anderes Programm sein. Bitte von Hand schliessen oder
-echo   den Port freimachen.
-echo ============================================================
-echo.
-pause
-exit /b 1
-
-:alter_trainer
 echo   Das ist mit grosser Wahrscheinlichkeit ein Trainer, der noch
 echo   von vorhin laeuft. Solange der laeuft, kommt der neue nicht
 echo   hoch - und im Browser saehest du weiter den alten Stand.
 echo ============================================================
 echo.
 choice /c jn /n /m "   Den alten beenden und neu starten?  [j/n]  "
-if errorlevel 2 goto :nicht_beenden
+if errorlevel 2 goto :port_ist_frei
+if errorlevel 1 goto :alten_beenden
+goto :port_ist_frei
 
+:alten_beenden
 echo.
 echo   [INFO] Beende PID %ALT_PID% ...
 taskkill /pid %ALT_PID% /f >nul 2>nul
@@ -92,13 +98,15 @@ REM Windows gibt den Port nicht im selben Augenblick wieder frei.
 timeout /t 2 /nobreak >nul
 goto :port_ist_frei
 
-:nicht_beenden
+:fremdes_programm
+echo   Das ist kein Trainer. Hier wird nichts beendet - es koennte
+echo   ein ganz anderes Programm sein.
 echo.
-echo   Gut - es wird nichts beendet. Im Browser bleibt damit der alte
-echo   Trainer der, den du siehst.
+echo   Der Trainer wird trotzdem gestartet. Kommt er nicht hoch,
+echo   steht unten die Meldung "EADDRINUSE" - dann ist dieser Port
+echo   belegt und das andere Programm muss weichen.
+echo ============================================================
 echo.
-pause
-exit /b 0
 
 :port_ist_frei
 
@@ -133,8 +141,6 @@ echo.
 echo   (Wer den Tunnel schon beim Start moechte, nutzt START_MIT_TUNNEL.bat)
 echo.
 
-REM Browser erst oeffnen, wenn der Port antwortet. Der Port ist oben
-REM freigeraeumt worden, es kann also nur noch dieser Server sein.
 start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul http://localhost:3000 && start http://localhost:3000 && exit /b) || timeout /t 1 /nobreak >nul"
 
 REM Server starten (blockierend)

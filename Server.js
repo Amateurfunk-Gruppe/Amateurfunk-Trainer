@@ -1571,7 +1571,7 @@ app.get('/api/abgleich/datei', (req,res)=>{
 // Der Videolehrgang stammt von Michael, DL2YMR. Wer ihn im eingebetteten
 // Fenster schaut, erzeugt bei ihm keinen zaehlenden Aufruf und keine
 // Werbeeinnahme. Deshalb bekommt jeder normale Teilnehmer den Weg ueber
-// youtube.com; nur eine kleine private Runde behaelt das Fenster.
+// youtube.com; wer in video_embed.json steht, behaelt das Fenster.
 //
 // FRUEHER STANDEN DIE NAMEN IM KLARTEXT IN Index.html - drei Vornamen in
 // einer Zeile Javascript. Solange das Projekt privat war, war das gleichgueltig. Seit es bei
