@@ -1565,6 +1565,67 @@ app.get('/api/abgleich/datei', (req,res)=>{
   res.send(fs.readFileSync(voll));
 });
 
+// ================================================================
+// WER DARF DAS EINGEBETTETE VIDEOFENSTER SEHEN?
+//
+// Der Videolehrgang stammt von Michael, DL2YMR. Wer ihn im eingebetteten
+// Fenster schaut, erzeugt bei ihm keinen zaehlenden Aufruf und keine
+// Werbeeinnahme. Deshalb bekommt jeder normale Teilnehmer den Weg ueber
+// youtube.com; nur eine kleine private Runde behaelt das Fenster.
+//
+// FRUEHER STANDEN DIE NAMEN IM KLARTEXT IN Index.html - drei Vornamen in
+// einer Zeile Javascript. Solange das Projekt privat war, war das gleichgueltig. Seit es bei
+// GitHub liegt, stehen dort die Vornamen zweier Leute, die nie gefragt
+// wurden, ob sie im Netz auftauchen wollen - und Index.html liest jeder
+// Besucher ohnehin mit.
+//
+// Jetzt stehen sie in video_embed.json, die per .gitignore draussen
+// bleibt. Und die Liste verlaesst den Server nie: der Browser fragt mit
+// einem Namen an und bekommt ja oder nein. Fehlt die Datei, ist die
+// Antwort immer nein - der sichere Fall, denn dann bekommt Michael
+// seinen Aufruf.
+// ================================================================
+function namenNormalisieren(n){
+  return String(n || '').trim().toLowerCase()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]/g,'');
+}
+function videoEmbedListe(){
+  try{
+    const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'video_embed.json'), 'utf8'));
+    const roh = Array.isArray(j) ? j : (Array.isArray(j.namen) ? j.namen : []);
+    return roh.map(namenNormalisieren).filter(Boolean);
+  }catch(e){ return []; }
+}
+app.get('/api/video-embed', (req,res)=>{
+  // Bewusst nur ja/nein. Die Liste selbst wird nicht herausgegeben.
+  const n = namenNormalisieren(req.query.name);
+  res.json({ embed: !!n && videoEmbedListe().includes(n) });
+});
+
+// ================================================================
+// GITHUB-UPDATE - der zweite Weg, an Neuerungen zu kommen.
+//
+// Der Abgleich oben fragt einen laufenden Trainer unter einer
+// Tunnel-Adresse. Die aendert sich bei jedem Neustart des Tunnels, und
+// eine gemerkte Adresse ist irgendwann tot - dann passiert
+// stillschweigend nichts mehr. GitHub hat eine Adresse, die bleibt.
+//
+// Die Arbeit steht in github_update.js - hier wird nur eingehaengt, mit
+// derselben Whitelist und derselben Einteilung in Daten, Anzeige und
+// Programm. Zwei Wege, eine Liste dessen, was ueberhaupt wandern darf.
+// ================================================================
+let githubUpdate = null;
+try{
+  githubUpdate = require('./github_update').einrichten({
+    app, localOnly, projektOrdner: __dirname,
+    dateien: ABGLEICH_ALLE, kategorie: abgleichKategorie
+  });
+}catch(e){
+  // Fehlt die Datei (altes ZIP), soll der Trainer trotzdem starten.
+  console.warn('[GITHUB] Update-Funktion nicht verfuegbar:', e.message);
+}
+
 // ---- Beim EMPFAENGER ------------------------------------------------------
 
 function quelleSaeubern(roh){

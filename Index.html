@@ -3119,7 +3119,7 @@ window.klasseWaehlen = klasseWaehlen;
                 </button>
                 <div class="duo-collapsible-content">
                     <div style="display:flex; gap:6px;">
-                        <input type="text" id="duoUserNameInput" placeholder="z.B. Dietmar, Maja, Uwe..." maxlength="20" style="flex:1; padding:0.5rem 0.8rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.85rem;">
+                        <input type="text" id="duoUserNameInput" placeholder="z.B. dein Vorname oder Rufzeichen" maxlength="20" style="flex:1; padding:0.5rem 0.8rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.85rem;">
                         <button onclick="var v=window.setUserName(document.getElementById('duoUserNameInput').value); var h=document.getElementById('duoNameHint'); if(h) h.textContent = v ? '✅ Gespeichert als \''+v+'\'' : 'Name gelöscht'; setTimeout(function(){ if(window.refreshUserLabels) window.refreshUserLabels(); if(window.updateDuoNameHint) updateDuoNameHint(); }, 1500);" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Speichern"><i class="fas fa-save"></i> Speichern</button>
                         <button onclick="document.getElementById('duoUserNameInput').value=''; window.setUserName(''); if(window.updateDuoNameHint) updateDuoNameHint();" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Namen leeren"><i class="fas fa-times"></i></button>
                     </div>
@@ -3756,8 +3756,8 @@ let currentUser = (()=>{ try{ return localStorage.getItem('amateurfunk_currentUs
 // BENUTZERNAMEN (user1/user2/user3 bekommen einen echten Namen)
 // ----------------------------------------------------------------------------
 // Eingegeben wird der Name im Raum-Dialog ("Dein Name"). Gespeichert wird er
-// pro Benutzer-Slot, damit Dietmar, Maja und Uwe je eigene Fehler, eigenen
-// Lernbedarf und eigenen Verlauf behalten - die Datenschluessel bleiben
+// pro Benutzer-Slot, damit drei Leute an einem Rechner je eigene Fehler,
+// eigenen Lernbedarf und eigenen Verlauf behalten - die Datenschluessel bleiben
 // unveraendert user1/user2/user3, es aendert sich nur die Anzeige.
 // duo_userName spiegelt immer den Namen des AKTUELLEN Slots, damit der
 // Gruppenraum (duo.js) ohne Aenderung weiterlaeuft.
@@ -3797,6 +3797,10 @@ function syncDuoNameToSlot(){
 }
 // Aktualisiert alle sichtbaren Stellen, an denen der Name auftaucht
 function refreshUserLabels(){
+    // Der Name entscheidet, ob das eingebettete Videofenster erlaubt ist.
+    // Diese Funktion laeuft bei jedem Namens- und Slotwechsel - also genau
+    // dann, wenn die Antwort neu geholt werden muss.
+    try{ if(typeof videoEmbedPruefen === 'function') videoEmbedPruefen(); }catch(e){}
     try{
         const sel = document.getElementById('userSelect');
         if(sel){
@@ -3836,19 +3840,56 @@ window.refreshUserLabels = refreshUserLabels;
 // YouTube-Werbung. Deshalb bekommt jeder normale Teilnehmer den regulaeren Weg:
 // Klick auf "Video ansehen" oeffnet youtube.com in einem neuen Tab, mit
 // Werbung und als regulaerer Videoaufruf, der bei ihm zaehlt.
-// Nur die unten eingetragenen privaten Namen bekommen weiterhin das
-// eingebettete Fenster. Der Name kommt aus dem Raum-Dialog (siehe oben).
-// Weitere Namen einfach in die Liste eintragen - klein geschrieben.
+// Nur eine kleine private Runde bekommt weiterhin das eingebettete Fenster.
+//
+// FRUEHER STAND DIE LISTE HIER IM KLARTEXT - drei Vornamen in einer
+// Zeile Javascript. Solange das Projekt privat war, war das gleichgueltig. Seit es bei GitHub
+// liegt, standen dort die Vornamen zweier Leute, die nie gefragt wurden, ob
+// sie im Netz auftauchen wollen - und Index.html liest jeder Besucher des
+// Trainers ohnehin mit.
+//
+// Jetzt liegt die Liste in video_embed.json beim Server und bleibt dort. Der
+// Browser fragt mit EINEM Namen an und bekommt ja oder nein zurueck; die
+// Namen der anderen erfaehrt er nie.
+//
+// Die Antwort wird gemerkt, weil sie beim Zeichnen jeder Frage gebraucht
+// wird und dort nicht gewartet werden kann. Bis die erste Antwort da ist,
+// gilt NEIN - der sichere Fall: dann bekommt Michael seinen Videoaufruf.
 // ============================================================================
-const VIDEO_EMBED_WHITELIST = ['dietmar','maja','uwe'];
+let videoEmbedErlaubt = false;
+let videoEmbedGefragt = null;      // fuer welchen Namen die Antwort gilt
 
 function normalizeUserName(name){
     return (name||'').toString().trim().toLowerCase()
         .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
         .replace(/[^a-z0-9]/g,'');
 }
+
+async function videoEmbedPruefen(){
+    const name = normalizeUserName(getUserName(currentUser));
+    if(name === videoEmbedGefragt) return;      // schon beantwortet
+    videoEmbedGefragt = name;
+    if(!name){ videoEmbedErlaubt = false; return; }
+    try{
+        const r = await fetch('/api/video-embed?name=' + encodeURIComponent(name), {cache:'no-store'});
+        const j = await r.json();
+        const vorher = videoEmbedErlaubt;
+        videoEmbedErlaubt = !!(j && j.embed);
+        // Hat sich die Antwort geaendert, muss die Frage neu gezeichnet
+        // werden - sonst steht dort noch der Knopf von vorhin.
+        if(vorher !== videoEmbedErlaubt && typeof renderQuestion === 'function' && isQuizActive){
+            try{ renderQuestion(); }catch(e){}
+        }
+    }catch(e){
+        // Aelterer Server ohne diesen Endpunkt, kein Netz: beim sicheren
+        // Nein bleiben.
+        videoEmbedErlaubt = false;
+    }
+}
+window.videoEmbedPruefen = videoEmbedPruefen;
+
 function mayUseEmbeddedPlayer(){
-    return VIDEO_EMBED_WHITELIST.indexOf(normalizeUserName(getUserName(currentUser))) !== -1;
+    return videoEmbedErlaubt;
 }
 window.mayUseEmbeddedPlayer = mayUseEmbeddedPlayer;
 
@@ -5742,6 +5783,237 @@ async function autoAbgleichMelden(){
 window.autoAbgleichMelden = autoAbgleichMelden;
 
 // ================================================================
+// GITHUB-UPDATE
+//
+// Zweiter Weg neben dem Abgleich mit dem Gastgeber. Der Unterschied, der
+// alles entscheidet: die Adresse von GitHub aendert sich nie, die eines
+// Tunnels bei jedem Neustart.
+//
+// WAS HIER ANDERS IST ALS BEIM ABGLEICH:
+// Der Abgleich fragt "ist der Inhalt verschieden?" und bietet alles an, was
+// abweicht. Fuer Dietmar waere das falsch herum: er bekommt neue Dateien
+// direkt in den Ordner, oft Stunden bevor sie bei GitHub liegen. Sein
+// Trainer wuerde ihm die frische Arbeit durch die aeltere Fassung von
+// GitHub ersetzen.
+//
+// Deshalb kennt der Server hier drei Lagen statt zwei:
+//   neuer_dort  - dort hat sich etwas getan     -> anbieten
+//   neuer_hier  - HIER hat sich etwas getan     -> anzeigen, aber sperren
+//   unbekannt   - nie abgeglichen, keine Aussage -> anbieten, markiert
+//
+// "neuer_hier" bekommt hier bewusst kein Kaestchen zum Ankreuzen. Nicht
+// ausgegraut mit Erklaerung im Kleingedruckten, sondern gar nicht erst da.
+// ================================================================
+let githubDaten = null;
+
+async function githubOeffnen(){
+    let modal = document.getElementById('githubModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'githubModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+        modal.innerHTML =
+            '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:660px; width:96%; '
+            + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+            + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem;">'
+            + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
+            + '<i class="fab fa-github"></i> Update von GitHub</h3>'
+            + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
+            + 'onclick="document.getElementById(\'githubModal\').style.display=\'none\'">&#10005;</button></div>'
+            + '<div id="githubInhalt"></div></div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+    }
+    modal.style.display = 'flex';
+    githubPruefen();
+}
+window.githubOeffnen = githubOeffnen;
+
+async function githubPruefen(){
+    const ziel = document.getElementById('githubInhalt');
+    if(!ziel) return;
+    if(!laeuftLokal()){
+        ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
+            + '<b>Das hier ist der Trainer des Gastgebers.</b><br>'
+            + 'Ein Update schreibt Dateien in <i>deinen</i> Ordner. Dafür musst du deinen eigenen Trainer '
+            + 'öffnen: <span style="font-family:var(--font-mono); background:#eef4fc; padding:1px 6px; border-radius:6px;">http://localhost:3000</span>'
+            + '</div>';
+        return;
+    }
+    ziel.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Bei GitHub nachsehen …</div>';
+    try{
+        const res = await fetch('/api/github/pruefen', {cache:'no-store'});
+        const j = await res.json();
+        if(!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        githubDaten = j;
+        githubZeigen(j);
+    }catch(e){
+        ziel.innerHTML = '<div style="border:1px solid var(--line); border-radius:12px; padding:0.8rem; background:#fdf1e0; font-size:0.83rem;">'
+            + '<b>Nachsehen nicht möglich.</b><br>' + String(e.message).replace(/</g,'&lt;') + '<br>'
+            + '<span style="color:var(--muted);">Besteht eine Internetverbindung? GitHub lässt pro Stunde nur '
+            + 'eine begrenzte Zahl Anfragen zu — dann hilft abwarten.</span></div>';
+    }
+}
+window.githubPruefen = githubPruefen;
+
+function githubZeigen(j){
+    const ziel = document.getElementById('githubInhalt');
+    if(!ziel) return;
+    const alle = j.eintraege || [];
+    const holbar = alle.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
+    const gesperrt = alle.filter(e => e.lage === 'neuer_hier');
+
+    let html = '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.8rem;">'
+        + 'Quelle: <span style="font-family:var(--font-mono);">' + j.quelle.replace(/^https:\/\//,'') + '</span>'
+        + (j.zuletzt ? ' · zuletzt abgeglichen ' + j.zuletzt.replace('T',' ').slice(0,16) : ' · noch nie abgeglichen')
+        + '</div>';
+
+    if(!holbar.length && !gesperrt.length){
+        html += '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.9rem 1rem; font-size:0.88rem;">'
+            + '<b>Alles auf demselben Stand.</b> Es gibt nichts zu holen.</div>';
+        ziel.innerHTML = html;
+        return;
+    }
+
+    if(holbar.length){
+        html += '<div style="font-size:0.86rem; font-weight:700; color:var(--panel-navy); margin-bottom:0.5rem;">'
+            + 'Bei GitHub neuer:</div>';
+        holbar.forEach(e => {
+            const prog = e.art === 'programm';
+            html += '<label style="display:flex; align-items:flex-start; gap:9px; padding:0.5rem 0.7rem; '
+                + 'border:1px solid var(--line); border-radius:10px; margin-bottom:0.4rem; cursor:pointer; background:#fff;">'
+                + '<input type="checkbox" class="ghDatei" value="' + e.name + '" data-art="' + e.art + '" '
+                + (prog ? '' : 'checked ') + 'style="margin-top:3px; width:16px; height:16px; cursor:pointer;">'
+                + '<span style="flex:1;">'
+                + '<span style="font-family:var(--font-mono); font-size:0.83rem; color:var(--ink);">' + e.name + '</span>'
+                + (prog ? ' <span style="font-size:0.7rem; background:#fdf1e0; color:#8a6d00; padding:1px 7px; border-radius:8px; font-weight:700;">Programmdatei</span>' : '')
+                + (e.lage === 'fehlt' ? ' <span style="font-size:0.7rem; background:#eef4fc; color:#0f2745; padding:1px 7px; border-radius:8px;">fehlt hier</span>' : '')
+                + (e.lage === 'unbekannt' ? ' <span style="font-size:0.7rem; background:#eef4fc; color:#0f2745; padding:1px 7px; border-radius:8px;">nie abgeglichen</span>' : '')
+                + '<span style="display:block; font-size:0.74rem; color:var(--muted); margin-top:2px;">'
+                + (e.hierGroesse === null ? 'hier nicht vorhanden' : 'hier ' + e.hierGroesse + ' Bytes')
+                + ' · bei GitHub ' + e.fernGroesse + ' Bytes</span>'
+                + '</span></label>';
+        });
+    }
+
+    // Die gesperrten Dateien. Sie stehen hier, damit man sieht, dass sie
+    // nicht vergessen wurden - aber ohne Kaestchen, denn ein Kaestchen
+    // waere eine Einladung, genau das Falsche zu tun.
+    if(gesperrt.length){
+        html += '<div style="margin-top:0.9rem; border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.8rem 1rem;">'
+            + '<div style="font-size:0.86rem; font-weight:700; color:#14663a; margin-bottom:0.35rem;">'
+            + '<i class="fas fa-shield-halved"></i> Hier neuer als bei GitHub — bleibt unangetastet</div>'
+            + '<div style="font-size:0.78rem; color:#14663a; line-height:1.55; margin-bottom:0.45rem;">'
+            + 'Diese Dateien wurden hier geändert, seit zuletzt abgeglichen wurde. Ein Update würde '
+            + 'sie auf einen älteren Stand zurückdrehen. Sie lassen sich deshalb nicht anhaken. '
+            + 'Mit <span style="font-family:var(--font-mono);">Hochladen.bat</span> gehen sie zu GitHub.</div>';
+        gesperrt.forEach(e => {
+            html += '<div style="font-family:var(--font-mono); font-size:0.8rem; color:#14663a;">· ' + e.name + '</div>';
+        });
+        html += '</div>';
+    }
+
+    if(holbar.length){
+        html += '<div style="margin-top:1rem; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">'
+            + '<button class="btn-lernstand" onclick="githubAnwenden()"><i class="fas fa-download"></i> Ausgewählte holen</button>'
+            + '<span style="font-size:0.76rem; color:var(--muted);">Die alten Fassungen wandern vorher nach <span style="font-family:var(--font-mono);">backup/</span>.</span>'
+            + '</div>'
+            + '<div id="githubErgebnis" style="margin-top:0.8rem;"></div>';
+    }
+    ziel.innerHTML = html;
+}
+
+async function githubAnwenden(){
+    const erg = document.getElementById('githubErgebnis');
+    const kaesten = Array.from(document.querySelectorAll('.ghDatei:checked'));
+    if(!kaesten.length){ if(erg) erg.innerHTML = '<div style="color:var(--bad); font-size:0.85rem;">Nichts ausgewählt.</div>'; return; }
+    const namen = kaesten.map(k => k.value);
+    const programm = kaesten.some(k => k.dataset.art === 'programm');
+
+    // Programmdateien laufen mit vollen Rechten auf diesem Rechner. Dafuer
+    // reicht ein Haken nicht - es braucht eine ausdrueckliche zweite Zusage.
+    if(programm && !confirm(
+        'Programmdateien werden ersetzt:\n\n  '
+        + kaesten.filter(k => k.dataset.art === 'programm').map(k => k.value).join('\n  ')
+        + '\n\nDiese Dateien laufen mit vollen Rechten auf diesem Rechner.\n'
+        + 'Danach muss der Trainer neu gestartet werden.\n\nWirklich holen?')) return;
+
+    if(erg) erg.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Wird geholt …</div>';
+    try{
+        const res = await fetch('/api/github/anwenden', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ commit: githubDaten.commit, dateien: namen, programmBestaetigt: programm })
+        });
+        const j = await res.json();
+        if(!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        let t = '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.85rem 1rem; font-size:0.85rem; line-height:1.6;">';
+        t += '<b>' + j.geschrieben.length + ' Datei(en) geholt.</b>';
+        if(j.geschrieben.length) t += '<br><span style="font-family:var(--font-mono); font-size:0.8rem;">'
+            + j.geschrieben.map(g => g.name).join(', ') + '</span>';
+        if(j.uebersprungen && j.uebersprungen.length)
+            t += '<br><span style="color:#8a6d00;">Übersprungen: '
+               + j.uebersprungen.map(u => u.name + ' (' + u.grund + ')').join(', ') + '</span>';
+        if(j.fehler && j.fehler.length)
+            t += '<br><span style="color:var(--bad);">Fehlgeschlagen: '
+               + j.fehler.map(f => f.name + ' – ' + f.grund).join(', ') + '</span>';
+        t += '<br><span style="color:var(--muted); font-size:0.8rem;">Alte Fassungen: '
+           + (j.sicherung || 'backup/') + '</span>';
+        if(j.neustartNoetig) t += '<br><b>Der Trainer muss neu gestartet werden (START.bat).</b>';
+        else if(j.geschrieben.length) t += '<br>Seite einmal mit Strg+F5 neu laden.';
+        t += '</div>';
+        erg.innerHTML = t;
+        githubHinweisWeg();
+    }catch(e){
+        erg.innerHTML = '<div style="color:var(--bad); font-size:0.85rem;">Das hat nicht geklappt: '
+            + String(e.message).replace(/</g,'&lt;') + '</div>';
+    }
+}
+window.githubAnwenden = githubAnwenden;
+
+// ---- Der Hinweis auf der Hauptseite ----
+//
+// Bewusst eine schmale Leiste und kein Fenster: Es ist eine Nachricht, kein
+// Auftrag. Wer gerade lernt, soll nicht aus der Frage gerissen werden.
+function githubHinweisWeg(){
+    const b = document.getElementById('githubHinweis');
+    if(b) b.remove();
+}
+
+async function githubHinweisPruefen(){
+    if(!laeuftLokal()) return;
+    try{
+        const res = await fetch('/api/github/stand', {cache:'no-store'});
+        if(!res.ok) return;
+        const j = await res.json();
+        const l = j && j.letzteLage;
+        if(!l || !l.anzahl) return;
+        // Nur einmal je Stand nerven. Wer weggeklickt hat, hat weggeklickt.
+        try{
+            if(localStorage.getItem('amateurfunk_githubGemeldet') === l.commit) return;
+        }catch(e){}
+        if(document.getElementById('githubHinweis')) return;
+        const b = document.createElement('div');
+        b.id = 'githubHinweis';
+        b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100002; background:#0f2745; color:#ffffff;'
+            + 'padding:9px 14px; font-size:0.85rem; font-weight:600; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.25);';
+        b.innerHTML = 'Bei GitHub liegen ' + l.anzahl + ' neuere Datei(en) bereit.'
+            + (l.eigene ? ' <span style="font-weight:400; opacity:0.85;">(' + l.eigene + ' hier neuer — bleibt unangetastet)</span>' : '')
+            + ' <button type="button" id="githubHinweisAuf" style="margin-left:10px; padding:4px 12px; border:none;'
+            + 'border-radius:8px; background:#ffffff; color:#0f2745; font-weight:700; cursor:pointer;">Ansehen</button>'
+            + ' <button type="button" id="githubHinweisZu" style="margin-left:6px; padding:4px 10px; border:none;'
+            + 'border-radius:8px; background:transparent; color:#ffffff; cursor:pointer; text-decoration:underline;">später</button>';
+        document.body.appendChild(b);
+        document.getElementById('githubHinweisAuf').onclick = ()=>{ githubHinweisWeg(); githubOeffnen(); };
+        document.getElementById('githubHinweisZu').onclick = ()=>{
+            try{ localStorage.setItem('amateurfunk_githubGemeldet', l.commit); }catch(e){}
+            githubHinweisWeg();
+        };
+    }catch(e){}
+}
+window.githubHinweisPruefen = githubHinweisPruefen;
+
+// ================================================================
 // STANDWACHE - merkt, wenn die offene Seite veraltet ist
 //
 // Anlass: Jemand hatte den Trainer über den Einladungslink offen und sah
@@ -6367,6 +6639,7 @@ function infoFuellen() {
             'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Gastgeber — dort ist der Stand automatisch aktuell.',
             'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer <b>Momentaufnahme</b>: Der eigene Ordner erfährt von späteren Änderungen nichts.',
             '<button class="btn-lernstand" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; abgleichOeffnen();"><i class="fas fa-rotate"></i> Beim Gastgeber nach Neuerungen sehen</button>'
+            + '<button class="btn-lernstand" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> GitHub-Update</button>'
         ])
 
         + '<div style="text-align:center; margin-top:0.8rem; font-size:0.75rem; color:var(--muted); line-height:1.5;">'
@@ -7412,7 +7685,7 @@ window.updateTrainerParticipantSelect = function(data){
     var currentVal = select.value;
     var validIds = Object.keys(stats);
     
-    // Wenn Dropdown gerade auf __trainer__ steht und wir ein Update bekommen, bleibe auf __trainer__ (nicht zurück zu Maja springen)
+    // Wenn Dropdown gerade auf __trainer__ steht und wir ein Update bekommen, bleibe auf __trainer__ (nicht zurück zum Teilnehmer springen)
     var shouldStayOnTrainer = (currentVal === '__trainer__' || currentVal === '__host__' || currentVal === '' || !window.trainerViewUserId);
     
     if(!data || !data.usersStats || validIds.length===0){
@@ -8866,6 +9139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ standWacheStarten(); }catch(e){}
     // Hat der Trainer beim Start etwas vom Gastgeber nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
+    try{ videoEmbedPruefen(); }catch(e){}
+    try{ setTimeout(()=>{ githubHinweisPruefen(); }, 6000); }catch(e){}
     // Zu Gast beim Gastgeber? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     loadLearnParts();

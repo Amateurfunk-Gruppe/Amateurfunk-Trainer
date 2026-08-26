@@ -86,10 +86,33 @@ _Aufgeraeumt_*/
 # aufgestellt haette.
 Piper-Stimmen.zip
 
+# Merkposten des GitHub-Updaters. Er haelt fest, wie die Dateien aussahen,
+# als sie zuletzt mit GitHub gleich waren, und schuetzt so frisch
+# geschriebene Dateien davor, von einer aelteren Fassung ueberschrieben zu
+# werden. Das ist der Zustand DIESES Rechners - er gehoert niemandem sonst.
+github_stand.json
+
+# Wer das eingebettete Videofenster sehen darf. Enthaelt Vornamen echter
+# Menschen, die nie gefragt wurden, ob sie im Netz auftauchen wollen -
+# und genau deshalb steht die Liste seit dem 26.08.2026 in dieser Datei
+# und nicht mehr im Klartext in Index.html.
+video_embed.json
+
 # --- Werkzeuge, die nur auf dem Entwicklerrechner Sinn ergeben ---
 #
 # Sie liegen weiter im Ordner und funktionieren. Sie gehoeren nur
 # nicht in ein Repository, das andere herunterladen, um zu lernen.
+#
+# ACHTUNG, hier lag am 26.08.2026 ein Fehler von mir: GitHub-Ausmisten.bat
+# hatte diesen Block schon angelegt - und dann habe ich eine .gitignore
+# aus meiner eigenen Fassung darueber geschrieben und ihn dabei geloescht.
+# Die dreizehn Werkzeuge standen daraufhin wieder zum Hochladen bereit.
+# Seither steht der Block auch in meiner Fassung, damit er ein Ueber-
+# schreiben ueberlebt.
+#
+# NICHT dabei: github_update.js - das gehoert zum Trainer und wird von
+# Server.js gebraucht. Und Update-Pruefen.bat / update_pruefen.js, die
+# braucht der Gast in SEINEM Ordner.
 Hochladen.bat
 hochladen.js
 GitHub-Neustart.bat

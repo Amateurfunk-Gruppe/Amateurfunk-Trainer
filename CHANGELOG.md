@@ -74,7 +74,8 @@ normalen Commits weiter (siehe `git log --oneline`).
   Zweiter Auslöser war `enablejsapi=1` ohne passenden `origin`-Parameter.
 - **Videos laufen jetzt regulär über YouTube**: Klick auf „Auf YouTube ansehen" öffnet den
   Lehrgang von Michael, DL2YMR, mit Zeitmarke in einem neuen Tab — mit Werbung und als zählender
-  Aufruf. Der Umweg über `yout-ube.com` ist entfallen.
+  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. Nur eine kleine private Runde
+  bekommt weiterhin das eingebettete Fenster.
 - **Benutzernamen**: Der Name aus dem Raum-Dialog gehört jetzt zum Benutzer-Slot und ersetzt
   „Benutzer 1/2/3" in Verlauf, Löschen-Dialog und Reset-Fenster. Der Gruppenraum bekommt
   automatisch den Namen des aktiven Slots. Die Lerndaten liegen unverändert unter `user1/2/3`.
@@ -1141,3 +1142,174 @@ der Knopf sagt "Markiert - Strg+C".
 Geprueft mit echtem Browser von zwei Seiten: ueber `127.0.0.1` erscheint
 weiter das gewohnte Formular, ueber eine andere Adresse der neue Hinweis.
 Hell und dunkel, keine Fehler in der Konsole, Kopier-Knopf meldet "Kopiert".
+
+## 26.08.2026 - Namen aus dem oeffentlichen Repository genommen
+
+Dietmar wollte eine Zeile aus dem CHANGELOG haben, in der drei Vornamen
+standen. Beim Nachsehen fand sich dieselbe Liste an drei weiteren Stellen -
+und die schlimmste war nicht das CHANGELOG:
+
+    const VIDEO_EMBED_WHITELIST = ['dietmar','maja','uwe'];
+
+Diese Zeile stand in `Index.html`. Solange das Projekt privat war, war das
+gleichgueltig. Seit heute frueh liegt Index.html oeffentlich bei GitHub -
+und jeder Besucher des Trainers liest sie ohnehin mit, denn Index.html geht
+komplett an den Browser. Dazu kam der Platzhalter im Raum-Dialog
+("z.B. Dietmar, Maja, Uwe...") und zwei Kommentare.
+
+**Jetzt steht die Liste in `video_embed.json`**, die per `.gitignore`
+draussen bleibt. Und sie verlaesst den Server nicht: der Browser fragt mit
+EINEM Namen an (`/api/video-embed?name=...`) und bekommt ja oder nein
+zurueck. Wer die Antwort abfaengt, erfaehrt nichts ueber die anderen.
+
+Die Antwort wird im Browser gemerkt, weil sie beim Zeichnen jeder Frage
+gebraucht wird und dort nicht gewartet werden kann. Fehlt die Datei, ist
+der Server aelter oder die Leitung tot, lautet die Antwort NEIN - der
+sichere Fall, denn dann bekommt Michael (DL2YMR) seinen zaehlenden
+Videoaufruf. Geprueft: ohne Namen "Auf YouTube ansehen", mit einem Namen
+aus der Liste das eingebettete Fenster, mit einem fremden Namen wieder
+YouTube.
+
+Der Platzhalter heisst jetzt "z.B. dein Vorname oder Rufzeichen", die
+Kommentare sprechen von "drei Leuten an einem Rechner". Auch meine eigenen
+Erklaerungen dazu nennen die Namen nicht - sonst haette ich sie beim
+Aufraeumen gleich wieder hineingeschrieben.
+
+
+## 26.08.2026 - Update von GitHub, ohne die eigene Arbeit zu verlieren
+
+Dietmars Wunsch, in seinen Worten: ein Hinweis auf der Hauptseite und ein
+Knopf unter Info, den man bestaetigen muss. Und - der eigentlich schwierige
+Teil - *"wenn du mir auf meinem Rechner ein neues Update gibst, dass das
+nicht mit GitHub wieder ueberschrieben wird."*
+
+**Warum das nicht selbstverstaendlich ist.** Der vorhandene Abgleich fragt
+"ist der Inhalt verschieden?" und bietet alles an, was abweicht. Fuer
+Dietmar waere das falsch herum: er bekommt neue Dateien direkt in den
+Ordner, oft Stunden bevor sie bei GitHub liegen. Sein Trainer wuerde ihm
+die frische Arbeit durch die aeltere Fassung von GitHub ersetzen. Ein
+Fingerabdruck sagt naemlich, DASS zwei Dateien verschieden sind - nicht,
+welche die neuere ist.
+
+**Die Loesung ist ein dritter Wert.** `github_stand.json` haelt fest,
+welchen Fingerabdruck jede Datei hatte, als sie zuletzt mit GitHub gleich
+war. Daraus werden drei Lagen statt zwei:
+
+    fern == hier                    -> gleich, nichts zu tun
+    fern != hier, hier == gemerkt   -> DORT hat sich etwas getan  -> anbieten
+    fern != hier, hier != gemerkt   -> HIER hat sich etwas getan  -> sperren
+
+Der dritte Fall ist Dietmars Fall. Solche Dateien erscheinen im Fenster,
+aber **ohne Kaestchen zum Ankreuzen** - nicht ausgegraut mit Erklaerung im
+Kleingedruckten, sondern gar nicht erst da. Und selbst wenn eine Anfrage
+sie doch enthaelt, prueft der Server vor dem Schreiben ein zweites Mal und
+laesst sie liegen.
+
+**Woher der Merkposten kommt.** Aus `Hochladen.bat`, direkt nach einem
+erfolgreichen Push - dem einen Moment, in dem hier und dort nachweislich
+dasselbe steht. Das passt zu Dietmars Ablauf ("ich starte bei jedem Update
+auch die Hochladen.bat"). Die Zahlen liefert `git ls-files -s`: git kennt
+zu jeder Datei den Blob-Hash, und das ist dieselbe Zahl, die auch die
+GitHub-API nennt. Nichts nachrechnen, nichts nachfragen, keine Gelegenheit,
+sich zu vertun. Nur der Hauptordner - die 746 Zeichnungen wuerden die Datei
+nur aufblaehen.
+
+**Wie geprueft wird, ohne 10 MB zu ziehen.** Zwei kleine Anfragen: der
+Zeiger auf den letzten Commit, dann das Verzeichnis dieses Commits - ohne
+`recursive`, denn alle Dateien, um die es geht, liegen im Hauptordner.
+GitHub nennt dabei zu jeder Datei den Blob-Hash. Verglichen wird also mit
+zwei JSON-Antworten; heruntergeladen wird erst, was wirklich geholt werden
+soll.
+
+**Weitere Grenzen, bewusst gesetzt:**
+
+  - Geholt wird nur auf Klick. Der Start meldet hoechstens, DASS es etwas
+    gibt - eine schmale Leiste oben, kein Fenster. Es ist eine Nachricht,
+    kein Auftrag; wer gerade lernt, soll nicht aus der Frage gerissen
+    werden. Ein "spaeter" merkt sich den Commit und schweigt bis zum
+    naechsten.
+  - Programmdateien (`Server.js`, `hoerbuch.js`, `lame.js`) sind nicht
+    vorangekreuzt und brauchen eine zweite, ausdrueckliche Zusage. Sie
+    laufen mit vollen Rechten auf dem Rechner.
+  - Jede geholte Datei wird nachgerechnet, bevor sie geschrieben wird.
+    Stimmt der Fingerabdruck nicht mit dem, was GitHub angekuendigt hat,
+    wird sie verworfen. Ein abgebrochener Download kommt so nie im Ordner
+    an.
+  - Geholt wird von einem festen Commit, nicht von "main". Sonst koennte
+    zwischen Pruefen und Holen ein neuer Commit dazwischenkommen und man
+    bekaeme eine Mischung aus zwei Staenden.
+  - Alle Endpunkte sind `localOnly`. Ein Gast aus dem Gruppenraum hat mit
+    fremden Ordnern nichts zu schaffen.
+  - Der Commit wird im Merkposten nur festgehalten, wenn wirklich alles
+    Angefragte geklappt hat. Sonst stuende dort ein Stand, den der Ordner
+    gar nicht hat, und die naechste Pruefung faende faelschlich nichts mehr.
+
+**Getestet gegen ein nachgebautes GitHub** im Container - ein kleiner
+Server, der dieselben zwei API-Antworten und die Rohdateien liefert. Damit
+liessen sich Faelle durchspielen, die man mit dem echten GitHub nicht
+herstellen kann:
+
+  - Update vorhanden -> wird angeboten, geholt, alte Fassung in backup/
+  - alles gleich -> "Es gibt nichts zu holen"
+  - **lokal geaenderte Datei, ausdruecklich mit angefragt -> nicht
+    angefasst.** Die frische Index.html stand danach unveraendert im
+    Ordner, obwohl sie in der Anfrage stand.
+  - Programmdatei ohne Bestaetigung -> abgelehnt
+  - abgebrochener Download (halbe Datei) -> verworfen, alte Datei heil,
+    keine `.github-tmp` im Ordner
+  - GitHub antwortet mit 403 -> Start laeuft weiter, verstaendliche Meldung
+
+Der letzte Fall war kein Test, sondern echt: die GitHub-API antwortet aus
+meiner Sandbox heraus mit 403. **Gegen das echte api.github.com konnte ich
+also nicht pruefen** - nur gegen den Nachbau. Auf einem gewoehnlichen
+Anschluss sollte das gehen (60 Anfragen je Stunde reichen weit), aber
+gesehen habe ich es nicht. Wenn im Fenster "GitHub bremst gerade" steht,
+obwohl lange nichts abgefragt wurde, gehoert das hierher gemeldet.
+
+Der Abgleich mit dem Gastgeber bleibt unveraendert daneben bestehen. Zwei
+Wege, eine Whitelist: `ABGLEICH_ALLE` bestimmt fuer beide, was ueberhaupt
+wandern darf.
+
+## 26.08.2026 - Mein Fehler: die .gitignore ueberbuegelt
+
+Dietmar startete Hochladen.bat und bekam achtzehn offene Aenderungen
+vorgesetzt - darunter alle dreizehn Entwicklerwerkzeuge, die eine Stunde
+vorher mit GitHub-Ausmisten.bat sauber aus dem Repository genommen worden
+waren.
+
+**Was passiert war.** `github_ausmisten.js` nimmt die Werkzeuge mit
+`git rm --cached` aus der Verwaltung und traegt sie in die `.gitignore` ein -
+der zweite Schritt ist der entscheidende, denn ohne ihn holt der naechste
+`git add -A` alles zurueck. Genau das hat der Ordner auch getan.
+
+Kurz darauf habe ich ihm eine neue `.gitignore` in den Ordner geschrieben -
+aus meiner eigenen Fassung, die den Block nicht kannte. Damit war der zweite
+Schritt geloescht, und die dreizehn standen wieder zum Hochladen bereit. Der
+`git rm --cached` hatte gehalten (sie waren nicht mehr nachverfolgt), aber
+als neue, unbekannte Dateien wollten sie trotzdem mit.
+
+Das ist kein Bedienfehler von Dietmar, sondern ein Bauteil, das ich selbst
+mitgebracht habe: Ich schreibe Dateien in seinen Ordner, ohne zu wissen, was
+dort inzwischen hineingeschrieben wurde.
+
+**Zwei Reparaturen, nicht eine.**
+
+Die naheliegende: Der Block steht jetzt auch in meiner Fassung der
+`.gitignore`, mit derselben Marke, an der `github_ausmisten.js` ihn
+wiedererkennt - es haengt ihn also nicht ein zweites Mal an.
+
+Die wichtigere: `Hochladen.bat` prueft jetzt VOR allem anderen, ob eines der
+dreizehn Werkzeuge mitfahren wuerde, und bricht ab, wenn ja. Diese Abfrage
+glaubt der `.gitignore` nicht, sondern sieht nach, was git tatsaechlich
+mitnehmen wuerde (`ls-files` plus `status --porcelain`). Sie faengt den
+Fehler also auch dann, wenn ich das naechste Mal wieder etwas ueberschreibe.
+
+Nicht auf der Liste, mit Absicht: `github_update.js` gehoert zum Trainer und
+wird von `Server.js` gebraucht. `Update-Pruefen.bat` und `update_pruefen.js`
+gehoeren dem Gast.
+
+Geprueft: mit unvollstaendiger `.gitignore` bricht das Hochladen ab und nennt
+die Dateien; mit der richtigen laeuft es durch. In einem nachgebauten Ordner
+mit allen zwanzig Dateien landen genau sechs im Commit - Index.html,
+Server.js, github_update.js, die beiden Gast-Werkzeuge und die .gitignore
+selbst.
