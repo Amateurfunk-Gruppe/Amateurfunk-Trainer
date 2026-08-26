@@ -1055,3 +1055,47 @@ Unterschieden, erreichbar und alles gleich.
 **Die eigentliche Loesung bleibt der GitHub-Updater.** Eine Adresse bei
 `raw.githubusercontent.com` aendert sich nie. Solange die Quelle ein Tunnel
 ist, ist jede gemerkte Adresse ein Verfallsdatum.
+
+## 26.08.2026 - Entwicklerwerkzeuge gehoeren nicht ins Repository
+
+Dietmar ist aufgefallen, dass `Hochladen.bat` mit bei GitHub liegt, und hat
+gefragt, was dort sonst noch nichts zu suchen hat. Berechtigt.
+
+Wer das Repository herunterlaedt, will Amateurfunk lernen. Er findet dort
+aber elf Dateien, die nur auf Dietmars Rechner einen Sinn ergeben. Der Platz
+ist es nicht - zusammen 114 KB neben 10 MB Trainer. Es geht um zwei andere
+Dinge:
+
+**Eine davon ist gefaehrlich.** Klickt jemand, der das Repository geklont
+hat, auf `GitHub-Neustart.bat`, benennt das Skript seine `.git` in
+`.git_alt_<Datum>` um und legt ein frisches Repository an. Seine Verbindung
+zum Original ist damit weg. Zurueckzudrehen ist es (Ordner zurueckbenennen),
+aber niemand rechnet damit, und im Fenster steht viel von "alter Historie",
+was nach Schaden klingt.
+
+**Der Rest ist Ballast mit falscher Fibel.** `Hochladen.bat` laedt zu
+Dietmars Repository hoch - bei jedem anderen ein Anmeldefenster fuer ein
+fremdes Konto. `Stimmen_packen.bat` baut ohne Vorwarnung ein 419-MiB-ZIP.
+`Aufraeumen.bat` sucht nach Ordnern, die es nur bei Dietmar gibt.
+
+**Neu: `GitHub-Ausmisten.bat` / `github_ausmisten.js`.** Nimmt die elf
+Werkzeuge mit `git rm --cached` aus der Versionsverwaltung - die Dateien
+bleiben im Ordner liegen und funktionieren weiter. Danach ergaenzt es die
+`.gitignore`, denn ohne diesen zweiten Schritt holt der naechste
+`git add -A` alles sofort zurueck und das Ausmisten waere ein Schlag ins
+Wasser gewesen.
+
+Das Skript nimmt sich selbst mit auf die Liste. Es soll bei GitHub gar nicht
+erst auftauchen.
+
+`Update-Pruefen.bat` und `update_pruefen.js` bleiben ausdruecklich drin: die
+gehoeren dem Gast, nicht dem Entwickler.
+
+Der Preis, der im Skript auch so dasteht: Diese Werkzeuge sind dann nicht
+mehr in der Sicherung bei GitHub. Geht die Platte kaputt, sind sie weg - der
+Trainer selbst nicht.
+
+Getestet an einem echten Klon des Repositorys: 11 Dateien entfernt, alle
+noch auf der Platte, `git add -A` holt keine zurueck, `Update-Pruefen.bat`
+weiter verfolgt, danach 781 statt 792 Dateien und die Pruefung meldet
+weiterhin SAUBER.
