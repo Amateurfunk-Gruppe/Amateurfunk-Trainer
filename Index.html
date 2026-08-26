@@ -2561,20 +2561,51 @@ function klasseAnzeigeAktualisieren() {
     // sondern aus dem, was tatsächlich im Pool liegt. Damit stimmt die
     // Tabelle auch dann, wenn eine Datei anders zusammengestellt ist als
     // erwartet.
-    const teile = { technik:0, vorschriften:0, betrieb:0 };
-    bank.forEach(q => { if (teile[q.part] !== undefined) teile[q.part]++; });
-    [['examZeileTechnik','technik'], ['examZeileVorschriften','vorschriften'], ['examZeileBetrieb','betrieb']]
-        .forEach(([id, teil]) => {
-            const zeile = document.getElementById(id);
-            if (zeile) zeile.style.display = teile[teil] ? '' : 'none';
-        });
+    //
+    // Dieselbe Liste benutzt der Prüfungssimulator. Die Tabelle wird
+    // deshalb aus ihr aufgebaut statt aus drei festen Zeilen: Sonst stünde
+    // hier für Klasse A "Technik · 45 min", während der Simulator daneben
+    // drei Technikbögen führt, einen davon mit 60 Minuten. Zwei Stellen,
+    // die dasselbe behaupten und sich widersprechen, sind schlimmer als
+    // eine, die schweigt.
+    const koerper = document.getElementById('examTeileKoerper');
+    let teileListe = null;
+    try {
+        if (typeof window.realisticTeile === 'function' && bank.length) teileListe = window.realisticTeile();
+    } catch (e) { teileListe = null; }
+
+    if (koerper && teileListe && teileListe.length) {
+        const meta = window.REALISTIC_PART_META || {};
+        koerper.innerHTML = teileListe.map(t => {
+            const m = meta[t] || { name: t, zeit: 45 * 60 };
+            return '<tr><td><strong>' + m.name + '</strong></td><td>25</td><td>19 (76%)</td>'
+                 + '<td>6</td><td style="text-align:center;">' + Math.round(m.zeit / 60) + ' min</td></tr>';
+        }).join('');
+    } else {
+        // Rückfall: die drei festen Zeilen nach Pool ein- oder ausblenden.
+        const teile = { technik: 0, vorschriften: 0, betrieb: 0 };
+        bank.forEach(q => { if (teile[q.part] !== undefined) teile[q.part]++; });
+        [['examZeileTechnik', 'technik'], ['examZeileVorschriften', 'vorschriften'], ['examZeileBetrieb', 'betrieb']]
+            .forEach(([id, teil]) => {
+                const zeile = document.getElementById(id);
+                if (zeile) zeile.style.display = teile[teil] ? '' : 'none';
+            });
+    }
 
     const fuss = document.getElementById('footerTeile');
     if (fuss) {
-        const namen = [];
-        if (teile.vorschriften) namen.push('Vorschriften');
-        if (teile.betrieb) namen.push('Betrieb');
-        if (teile.technik) namen.push('Technik');
+        let namen;
+        if (teileListe && teileListe.length) {
+            const meta = window.REALISTIC_PART_META || {};
+            namen = teileListe.map(t => (meta[t] || {}).name || t);
+        } else {
+            const teile = { technik: 0, vorschriften: 0, betrieb: 0 };
+            bank.forEach(q => { if (teile[q.part] !== undefined) teile[q.part]++; });
+            namen = [];
+            if (teile.vorschriften) namen.push('Vorschriften');
+            if (teile.betrieb) namen.push('Betrieb');
+            if (teile.technik) namen.push('Technik');
+        }
         fuss.textContent = kl.titel + ' (' + namen.join(', ') + ')';
     }
 }
@@ -2801,7 +2832,7 @@ window.klasseWaehlen = klasseWaehlen;
         <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" style="background:#34495e; color:white;" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
         <button class="btn btn-abort" id="backToMainTopBtn" onclick="backToMain()" style="display:none;" data-tooltip="Zur Hauptansicht"><i class="fas fa-home"></i> Hauptmenü</button>
         <button class="btn" id="printExamBtn" onclick="printExam()" style="background:#2c3e50; color:white;" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
-        <button class="btn btn-exam" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator realistisch 3x25, je 45 Min"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
+        <button class="btn btn-exam" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
         <button class="btn" id="duoBtn" onclick="window.duoInit()" style="background:#d02076; color:white;" data-tooltip="Gruppenraum für gemeinsames Lernen"><i class="fas fa-users"></i> Gruppenraum</button>
     </div>
 
@@ -2827,10 +2858,14 @@ window.klasseWaehlen = klasseWaehlen;
                             <th>Zeit</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Bei den Aufstockungen (N→E, E→A) gibt es nur den
-                             Technikteil. Die beiden anderen Zeilen werden dann
-                             ausgeblendet - siehe pruefungsuebersichtAnpassen(). -->
+                    <tbody id="examTeileKoerper">
+                        <!-- Diese drei Zeilen sind der Rueckfall, falls die
+                             Teileliste des Simulators noch nicht geladen ist.
+                             Im Normalfall werden sie von
+                             klasseAnzeigeAktualisieren() durch die Teile
+                             ersetzt, die zum gewaehlten Pruefungsziel
+                             wirklich gehoeren - bei Klasse A sind das fuenf,
+                             bei einer Aufstockung einer. -->
                         <tr id="examZeileTechnik">
                             <td><strong>Technik</strong></td>
                             <td>25</td>
@@ -8463,8 +8498,8 @@ function renderQuestion() {
     
     html += `<div class="q-meta">
         <span><i class="fas fa-tag"></i> ${q.id} · ${partLabel}</span>
-        <span><i class="fas fa-layer-group"></i> Klasse N</span>
-        ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas fa-graduation-cap"></i> SIMULATOR ${currentIndex+1}/75</span>` : ''}
+        <span><i class="fas fa-layer-group"></i> ${(typeof klasseAktuell === 'function' ? klasseAktuell().name : 'Klasse N')}</span>
+        ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas fa-graduation-cap"></i> SIMULATOR ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
         ${examSimulatorMode && examTimerRunning ? `<span style="font-family:var(--font-mono);font-weight:700;color:${examTimeRemaining <= 300 ? 'var(--bad)' : 'var(--panel-navy)'};"><i class="fas fa-stopwatch"></i> ${String(Math.floor(examTimeRemaining/60)).padStart(2,'0')}:${String(examTimeRemaining%60).padStart(2,'0')}</span>` : ''}
         ${examSimulatorMode && !examTimerRunning ? `<span style="font-size:0.7rem;color:var(--muted);"><i class="fas fa-clock"></i> Timer startet bei 1. Antwort</span>` : ''}
         ${isTrainerViewActive ? `<span style="background:#e2932f;color:white;padding:2px 8px;border-radius:10px;font-size:0.65rem;"><i class="fas fa-eye"></i> ${trainerName}: ${displayCorrectCount}/${displayTotalAnswered}</span>` : ''}
@@ -10586,12 +10621,94 @@ if (originalSelectOption) {
 // GLOBAL SAFE ESCAPE - Fix XSS & duo.js crash
 window.escapeHtml = window.escapeHtml || function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); };
 function escapeHtml(s){ return window.escapeHtml(s); }
+// ================================================================
+// DIE PRUEFUNGSTEILE
+// ================================================================
+// Die Pruefung der Bundesnetzagentur kennt seit der Pruefungsordnung von
+// 2024 FUENF verschiedene Fragebogen, nicht drei:
+//
+//   Vorschriften   · Betriebliche Kenntnisse
+//   Technik N      · Technik E      · Technik A
+//
+// Jeder Bogen hat 25 Fragen und 45 Minuten - AUSSER Technik A, der hat 60
+// Minuten. Bestanden ab 19 von 25, muendliche Nachpruefung ab 17.
+//
+// Welche Boegen jemand schreibt, haengt vom Ziel ab:
+//
+//   Klasse N   V + B + Technik N                       3 Teile
+//   Klasse E   V + B + Technik N + Technik E           4 Teile
+//   Klasse A   V + B + Technik N + Technik E + A       5 Teile
+//   N → E      nur Technik E                           1 Teil
+//   E → A      nur Technik A                           1 Teil
+//   N → A      Technik E + Technik A                   2 Teile
+//
+// Wer schon eine Bescheinigung hat, schreibt die alten Boegen nicht noch
+// einmal - daher die kurzen Aufstockungspruefungen.
+//
+// UND JETZT DER PUNKT, DER DEN AUFBAU BESTIMMT:
+// Diese Tabelle steht hier NICHT im Code. Welche Teile angeboten werden,
+// wird aus dem gerechnet, was tatsaechlich im geladenen Fragenkatalog
+// liegt - genauso, wie es die Pruefungsuebersicht schon macht. Die
+// Katalogdateien tragen an jeder Frage 'part' (vorschriften/betrieb/
+// technik) und 'class' (1 = N, 2 = E, 3 = A). Daraus ergeben sich die
+// sechs Faelle oben von selbst. Haette ich die Tabelle hingeschrieben,
+// muesste sie bei jeder neuen Katalogdatei nachgezogen werden - und beim
+// ersten Vergessen stimmte die Pruefung nicht mehr.
+// ================================================================
 const REALISTIC_PART_META = {
-  betrieb: {name:'Betrieb', icon:'📡', desc:'Betriebstechnik · Q-Gruppen · Landeskenner'},
-  vorschriften: {name:'Vorschriften', icon:'⚖️', desc:'AFuG · AFuV · CEPT · BEMFV'},
-  technik: {name:'Technik', icon:'⚡', desc:'Elektronik · Schaltungen · Antennen'}
+  vorschriften: {name:'Vorschriften', icon:'⚖️', desc:'AFuG · AFuV · CEPT · BEMFV',
+                 part:'vorschriften', klasse:null, zeit:45*60},
+  betrieb:      {name:'Betrieb', icon:'📡', desc:'Betriebstechnik · Q-Gruppen · Landeskenner',
+                 part:'betrieb', klasse:null, zeit:45*60},
+  technik_n:    {name:'Technik N', icon:'⚡', desc:'Grundlagen · Bauteile · Sicherheit',
+                 part:'technik', klasse:'1', zeit:45*60},
+  technik_e:    {name:'Technik E', icon:'🔧', desc:'Schaltungen · Sender · Empfänger · Antennen',
+                 part:'technik', klasse:'2', zeit:45*60},
+  technik_a:    {name:'Technik A', icon:'🛠️', desc:'Vertiefte Technik · Messtechnik · EMV',
+                 part:'technik', klasse:'3', zeit:60*60}
 };
+// Die Reihenfolge, in der die Teile angeboten werden. Sie entspricht der
+// Ordnung im Fragenkatalog: erst das Nichttechnische, dann Technik von
+// unten nach oben.
+const REALISTIC_REIHENFOLGE = ['vorschriften','betrieb','technik_n','technik_e','technik_a'];
 const REALISTIC_TIME = 45*60;
+
+// Traegt der geladene Katalog ueberhaupt ein Klassenfeld? Aeltere
+// fragen.json-Dateien tun das nicht. Ohne diese Frage waere bei so einer
+// Datei ploetzlich GAR KEIN Technikteil mehr da - der Simulator waere
+// stillschweigend kaputt, und zwar bei genau den Leuten, die noch nicht
+// aktualisiert haben.
+function realisticHatKlassen(){
+  try{ return questionBank.some(q => q.class !== undefined && q.class !== null && q.class !== ''); }
+  catch(e){ return false; }
+}
+
+// Der Fragentopf eines Teils.
+function realisticPool(teil){
+  const m = REALISTIC_PART_META[teil];
+  if(!m || !window.questionBank) return [];
+  if(m.klasse === null) return questionBank.filter(q => q.part === m.part);
+  // Alter Katalog ohne Klassenfeld: alles Technische zaehlt als Technik N,
+  // also genau das Verhalten von frueher.
+  if(!realisticHatKlassen()) return m.klasse === '1' ? questionBank.filter(q => q.part === 'technik') : [];
+  return questionBank.filter(q => q.part === m.part && String(q.class) === m.klasse);
+}
+
+// Welche Teile stehen bei diesem Pruefungsziel an? Ein Teil zaehlt nur,
+// wenn wirklich 25 Fragen dafuer da sind - sonst waere es keine Pruefung.
+function realisticTeile(){
+  return REALISTIC_REIHENFOLGE.filter(t => realisticPool(t).length >= 25);
+}
+function realisticGesamtzeit(teile){
+  return teile.reduce((s,t)=> s + (REALISTIC_PART_META[t] ? REALISTIC_PART_META[t].zeit : REALISTIC_TIME), 0);
+}
+function realisticZeitText(teil){
+  const z = REALISTIC_PART_META[teil] ? REALISTIC_PART_META[teil].zeit : REALISTIC_TIME;
+  return Math.round(z/60) + ' Minuten';
+}
+window.realisticTeile = realisticTeile;
+window.realisticPool = realisticPool;
+window.REALISTIC_PART_META = REALISTIC_PART_META;
 
 window.realisticExam = {
   active:false,
@@ -10666,45 +10783,65 @@ window.selectRealisticStart = function(part){
   });
   const btn = document.getElementById('realisticStartBtn');
   if(btn) btn.disabled=false;
-  const base = ['betrieb','vorschriften','technik'];
+  const base = realisticTeile();
   const remaining = base.filter(p=>p!==part);
   const order = [part, ...remaining];
   const el = document.getElementById('realisticSummary');
   if(el){
-    el.textContent = `Reihenfolge: ${order.map(p=>REALISTIC_PART_META[p].name).join(' → ')} · Gesamt ${order.length*45} Min`;
+    const min = Math.round(realisticGesamtzeit(order)/60);
+    el.textContent = order.length === 1
+      ? `Ein Teil: ${REALISTIC_PART_META[part].name} · ${min} Min`
+      : `Reihenfolge: ${order.map(p=>REALISTIC_PART_META[p].name).join(' → ')} · Gesamt ${min} Min`;
   }
 };
 
 window.showRealisticSelection = function(){
   if(!window.questionBank || questionBank.length===0){ alert('Fragen noch nicht geladen'); return; }
-  const poolCounts = {
-    betrieb: questionBank.filter(q=>q.part==='betrieb').length,
-    vorschriften: questionBank.filter(q=>q.part==='vorschriften').length,
-    technik: questionBank.filter(q=>q.part==='technik').length
-  };
+  const teile = realisticTeile();
+  const poolCounts = {};
+  teile.forEach(t => { poolCounts[t] = realisticPool(t).length; });
+  const kl = (typeof klasseAktuell === 'function') ? klasseAktuell() : {titel:'Klasse N', name:'Klasse N'};
+
+  // Kein einziger vollstaendiger Teil - das darf nicht stillschweigend in
+  // einem leeren Fenster enden.
+  if(!teile.length){
+    const ov = ensureRealisticModal();
+    const bd = document.getElementById('realisticModalBody');
+    if(bd) bd.innerHTML = '<div class="finish-box" style="box-shadow:none; border:none;">'
+      + '<p style="font-weight:700;">Für dieses Prüfungsziel liegen keine vollständigen Prüfungsteile vor.</p>'
+      + '<p class="sub">Ein Teil braucht 25 Fragen. Prüfe unter <b>Prüfungsziel wählen</b>, ob der richtige Katalog geladen ist.</p>'
+      + '<button class="btn btn-primary" onclick="closeRealisticModal()">Schließen</button></div>';
+    if(ov) ov.classList.add('open');
+    return;
+  }
   const overlay = ensureRealisticModal();
   const body = document.getElementById('realisticModalBody');
   window.selectedStartPart=null;
   body.innerHTML = `
   <div class="realistic-wrapper" style="border:none; box-shadow:none; padding:0;">
     <div class="realistic-header">
-      <h2><i class="fas fa-graduation-cap"></i> Realistische Prüfung Klasse N</h2>
-      <p class="sub">3 Teile · je 25 Fragen · je 45 Minuten · ab 19/25 bestanden · Grauzone 17-18</p>
+      <h2><i class="fas fa-graduation-cap"></i> Realistische Prüfung — ${escapeHtml(kl.titel)}</h2>
+      <p class="sub">${teile.length === 1
+          ? 'Ein Teil · 25 Fragen · ' + realisticZeitText(teile[0])
+          : teile.length + ' Teile · je 25 Fragen · '
+            + (teile.some(t=>REALISTIC_PART_META[t].zeit!==45*60) ? 'je 45 Minuten, Technik A 60 Minuten' : 'je 45 Minuten')
+        } · ab 19/25 bestanden · Grauzone 17-18</p>
     </div>
     <div class="realistic-rules">
+      <div class="r-rule"><b>${teile.length === 1 ? '1 Teil' : teile.length + ' Teile'}</b><span>${teile.length === 1 ? REALISTIC_PART_META[teile[0]].name : 'einzeln nacheinander'}</span></div>
       <div class="r-rule"><b>25 Fragen</b><span>pro Teil</span></div>
-      <div class="r-rule"><b>45 Min</b><span>pro Teil</span></div>
+      <div class="r-rule"><b>${Math.round(realisticGesamtzeit(teile)/60)} Min</b><span>Prüfungszeit gesamt</span></div>
       <div class="r-rule"><b>19/25</b><span>= 76% bestanden</span></div>
       <div class="r-rule"><b>Grauzone</b><span>17-18 = Nachprüfung</span></div>
     </div>
-    <h3 style="margin:1rem 0 0.6rem; font-family:var(--font-display); font-size:1.05rem;">Womit möchtest du starten?</h3>
+    <h3 style="margin:1rem 0 0.6rem; font-family:var(--font-display); font-size:1.05rem;">${teile.length === 1 ? 'Dieser Teil steht an:' : 'Womit möchtest du starten?'}</h3>
     <div class="realistic-parts">
-      ${['betrieb','vorschriften','technik'].map(p=>`
+      ${teile.map(p=>`
         <div class="realistic-part-card" data-part="${p}" onclick="selectRealisticStart('${p}')">
           <div class="rpc-icon">${REALISTIC_PART_META[p].icon}</div>
           <div class="rpc-main">
             <div class="rpc-name">${REALISTIC_PART_META[p].name}</div>
-            <div class="rpc-desc">${REALISTIC_PART_META[p].desc} · Pool: ${poolCounts[p]} Fragen</div>
+            <div class="rpc-desc">${REALISTIC_PART_META[p].desc} · Pool: ${poolCounts[p]} Fragen · ${Math.round(REALISTIC_PART_META[p].zeit/60)} Min</div>
           </div>
           <div class="rpc-check"><i class="fas fa-check"></i></div>
         </div>
@@ -10719,7 +10856,9 @@ window.showRealisticSelection = function(){
       <span id="realisticSummary" class="sub" style="font-weight:500;"></span>
       <button class="btn btn-outline" onclick="closeRealisticModal()" style="margin-left:auto;"><i class="fas fa-times"></i> Schließen</button>
     </div>
-    <div class="sub" style="margin-top:0.9rem; font-size:0.8rem;">💡 Ablauf: Teil 1 → Ergebnis → Teil 2 → Ergebnis → Teil 3 → Gesamt-Ergebnis. Bei Zeitablauf wird der Teil automatisch gewertet.</div>
+    <div class="sub" style="margin-top:0.9rem; font-size:0.8rem;">💡 ${teile.length === 1
+        ? 'Ablauf: 25 Fragen, dann das Ergebnis.'
+        : 'Ablauf: ' + teile.map((t,i)=>'Teil '+(i+1)).join(' → Ergebnis → ') + ' → Gesamt-Ergebnis.'} Bei Zeitablauf wird der Teil automatisch gewertet.</div>
   </div>`;
   overlay.classList.add('open');
   try{ updateRealisticGelerntInfo(); }catch(e){}
@@ -10740,9 +10879,10 @@ function updateRealisticGelerntInfo(){
         if(!box || !info) return;
         box.checked = gelernteAutoRichtig();
         if(!box.checked){ info.textContent = ''; return; }
-        const teile = ['betrieb','vorschriften','technik'];
-        const gelernt = teile.map(t => questionBank.filter(q => q.part===t && isMastered(q.id)).length);
-        info.textContent = '– derzeit gelernt: ' + gelernt.join(' / ') + ' (Betrieb / Vorschriften / Technik)';
+        const teile = realisticTeile();
+        const gelernt = teile.map(t => realisticPool(t).filter(q => isMastered(q.id)).length);
+        info.textContent = '– derzeit gelernt: ' + gelernt.join(' / ')
+            + ' (' + teile.map(t=>REALISTIC_PART_META[t].name).join(' / ') + ')';
         info.style.color = 'var(--muted)';
     }catch(e){}
 }
@@ -10834,7 +10974,7 @@ function pickRandom(arr,n){
 window.beginRealisticExam = function(){
   const start = window.selectedStartPart;
   if(!start) return;
-  const base = ['betrieb','vorschriften','technik'];
+  const base = realisticTeile();
   const remaining = base.filter(p=>p!==start);
   realisticExam.order = [start, ...remaining];
   realisticExam.currentIdx = 0;
@@ -10850,8 +10990,14 @@ function startRealisticPart(){
   try{ closeRealisticModal(); }catch(e){}
   const part = realisticExam.order[realisticExam.currentIdx];
   realisticExam.currentPart = part;
-  const pool = questionBank.filter(q=>q.part===part);
-  if(pool.length<25){ alert(`Nicht genug Fragen in ${part}: nur ${pool.length} vorhanden, 25 benötigt`); backToMainRealistic(); return; }
+  const pool = realisticPool(part);
+  const teilZeit = (REALISTIC_PART_META[part] && REALISTIC_PART_META[part].zeit) || REALISTIC_TIME;
+  realisticExam.teilZeit = teilZeit;
+  if(pool.length<25){
+    const nm = REALISTIC_PART_META[part] ? REALISTIC_PART_META[part].name : part;
+    alert(`Nicht genug Fragen in ${nm}: nur ${pool.length} vorhanden, 25 benötigt`);
+    backToMainRealistic(); return;
+  }
   // Gezogen wird immer ganz normal aus dem vollen Topf - genau wie in der
   // echten Pruefung. Ob bereits gelernte Fragen davon auch gestellt werden,
   // entscheidet weiter unten gelernteVorbelegen().
@@ -10866,14 +11012,16 @@ function startRealisticPart(){
   examSimulatorMode=true;
   examMode=true;
   if(typeof showSidebar!=='undefined') showSidebar=true;
-  currentPart = `Prüfungssimulator – ${REALISTIC_PART_META[part].name} (Teil ${realisticExam.currentIdx+1}/3)`;
+  currentPart = realisticExam.order.length === 1
+    ? `Prüfungssimulator – ${REALISTIC_PART_META[part].name}`
+    : `Prüfungssimulator – ${REALISTIC_PART_META[part].name} (Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length})`;
   examFinished=false;
   isQuizActive=true;
   showAllAnswers=false;
   const showBtn = document.getElementById('showAnswersBtn');
   if(showBtn) showBtn.classList.remove('active');
-  examTimeRemaining = REALISTIC_TIME;
-  realisticExam.timeLeft = REALISTIC_TIME;
+  examTimeRemaining = teilZeit;
+  realisticExam.timeLeft = teilZeit;
   realisticExam.timerRunning=false;
   if(typeof examTimerInterval!=='undefined' && examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval=null; }
   if(realisticExam.timerId) { clearInterval(realisticExam.timerId); realisticExam.timerId=null; }
@@ -10914,7 +11062,7 @@ function updateRealisticTimerDisplay(){
   const el=document.getElementById('examTimerText');
   const container=document.getElementById('examTimerDisplay');
   if(!el||!container) return;
-  const tl = realisticExam.active ? realisticExam.timeLeft : (typeof examTimeRemaining!=='undefined'?examTimeRemaining:REALISTIC_TIME);
+  const tl = realisticExam.active ? realisticExam.timeLeft : (typeof examTimeRemaining!=='undefined'?examTimeRemaining:(realisticExam.teilZeit||REALISTIC_TIME));
   const m=Math.floor(Math.max(0,tl)/60);
   const s=Math.max(0,tl)%60;
   el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
@@ -10993,13 +11141,13 @@ function showRealisticInterim(isTimeUp){
       <div class="realistic-interim">
         <div class="finish-box" style="max-width:620px; margin:0 auto; border:none; box-shadow:none;">
           <div style="font-size:2.8rem; text-align:center;">${res.status==='bestanden'?'✅':res.status==='nachpruefung'?'⚠️':'❌'}</div>
-          <p style="font-size:1.35rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">Teil ${realisticExam.currentIdx+1}/3 – ${REALISTIC_PART_META[part].name} ${isTimeUp?'(Zeit abgelaufen)':''}</p>
+          <p style="font-size:1.35rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length} – ${REALISTIC_PART_META[part].name} ${isTimeUp?'(Zeit abgelaufen)':''}</p>
           <div style="margin:0.9rem 0; background:${statusBg}; border:2px solid ${statusColor}; border-radius:14px; padding:1rem; text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:${statusColor};">${res.correct}/25 richtig – ${res.errors} Fehler</div>
             <div style="margin-top:4px;font-weight:600; font-size:1rem;">${getPartStatusLabel(res.status,res.correct)}</div>
             <div style="font-size:0.82rem;color:var(--muted);margin-top:4px;">${res.unanswered>0?`${res.unanswered} unbeantwortet (zählen als Fehler)`:'Alle Fragen beantwortet'}</div>
           </div>
-          <div class="sub" style="margin:0.8rem 0; text-align:center;">Weiter geht es mit <b>${REALISTIC_PART_META[nextPart].icon} ${REALISTIC_PART_META[nextPart].name}</b><br>25 Fragen · 45 Minuten</div>
+          <div class="sub" style="margin:0.8rem 0; text-align:center;">Weiter geht es mit <b>${REALISTIC_PART_META[nextPart].icon} ${REALISTIC_PART_META[nextPart].name}</b><br>25 Fragen · ${realisticZeitText(nextPart)}</div>
           <div class="btn-group" style="margin-top:1rem; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
             <button class="btn btn-primary" onclick="nextRealisticPart()"><i class="fas fa-arrow-right"></i> Weiter zu ${REALISTIC_PART_META[nextPart].name}</button>
             <button class="btn btn-outline" onclick="backToMainRealistic()"><i class="fas fa-home"></i> Hauptmenü</button>
@@ -11052,7 +11200,7 @@ window.nextRealisticPart = function(){
 };
 
 function showRealisticFinal(){
-  const order = realisticExam.order && realisticExam.order.length ? realisticExam.order : ['betrieb','vorschriften','technik'];
+  const order = realisticExam.order && realisticExam.order.length ? realisticExam.order : realisticTeile();
   const completedOrder = order.filter(p => realisticExam.results && realisticExam.results[p]);
   const results = completedOrder.map(p=>realisticExam.results[p]).filter(r=>!!r);
   if(results.length === 0){
@@ -11438,7 +11586,7 @@ document.addEventListener('keydown', function(e){
   }
 });
 
-console.log('[Realistic Exam] Modal-Version aktiv – 3x25');
+console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem Prüfungsziel');
 })();
 </script>
 

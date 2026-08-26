@@ -84,9 +84,27 @@ Auffrischung meldet sich nach 3, 7, 21 und 60 Tagen von selbst.
 
 ### Prüfungssimulator
 
-Drei Teile zu je 25 Fragen und 45 Minuten, 19 Richtige zum Bestehen — die
-Grauzone von 17 bis 18 ist eigens ausgewiesen, weil dort die mündliche
-Nachprüfung greift.
+Echte Prüfungsbedingungen: 25 Fragen und 45 Minuten je Teil, 19 Richtige zum
+Bestehen — die Grauzone von 17 bis 18 ist eigens ausgewiesen, weil dort die
+mündliche Nachprüfung greift. Der Technikteil der Klasse A hat 60 Minuten.
+
+**Welche Teile anstehen, entscheidet das gewählte Prüfungsziel** — genauso wie
+bei der Bundesnetzagentur. Wer schon eine Bescheinigung hat, schreibt die alten
+Bögen nicht noch einmal:
+
+| Prüfungsziel | Teile im Simulator |
+|---|---|
+| Klasse N | Vorschriften · Betrieb · Technik N |
+| Klasse E | Vorschriften · Betrieb · Technik N · Technik E |
+| Klasse A | Vorschriften · Betrieb · Technik N · Technik E · Technik A |
+| Aufstockung N → E | nur Technik E |
+| Aufstockung N → A | Technik E · Technik A |
+| Aufstockung E → A | nur Technik A |
+
+![Der Prüfungssimulator für Klasse A mit allen fünf Teilen](bilder/09-simulator-klassen.png)
+
+Die Prüfungsübersicht auf der Hauptseite zeigt dieselben Teile — beide lesen
+aus demselben Fragenkatalog, sie können sich also nicht widersprechen.
 
 ![Der Prüfungssimulator vor dem Start](bilder/04-simulator.png)
 

@@ -2112,3 +2112,83 @@ vorher. Genau das war die Auflage.
 
 **Weiterhin ungeprueft** bleibt der Weg zum echten api.github.com; aus
 meinem Pruefstand kommt dort 403.
+
+## 26.08.2026 - Der Prüfungssimulator kennt jetzt alle sechs Prüfungsziele
+
+Dietmar: "Prüfungssimulator hat nur Klasse N? Hier könnte man das doch
+erweitern." Und kurz darauf, genau richtig: "Wenn ich die N habe dann brauche
+ich nur Technik. Bei Ziel wählen, sollte Maßgebend sein."
+
+**Was vorher war.** Der Simulator hat das gewählte Prüfungsziel schlicht
+ignoriert. Er bot immer dieselben drei Karten an - Betrieb, Vorschriften,
+Technik - und zog aus dem, was gerade geladen war. Bei Klasse A hiess das:
+alle 1374 Technikfragen aus N, E und A in EINEN Topf, daraus 25 Stueck. So
+prueft die Bundesnetzagentur nicht. Und bei den Aufstockungen waeren Betrieb
+und Vorschriften mit leerem Topf angeboten worden - ein Klick, und es kam
+"Nicht genug Fragen in betrieb".
+
+**Nachgesehen statt geraten.** Bevor ich etwas gebaut habe, habe ich
+nachgeschlagen, wie die Pruefung seit der Pruefungsordnung von 2024
+tatsaechlich aussieht (Vfg 29/2024; bestaetigt bei 50ohm.de, DARC und
+afu-base.de). Es gibt FUENF Fragebogen, nicht drei:
+
+    Vorschriften · Betriebliche Kenntnisse · Technik N · Technik E · Technik A
+
+Jeder Bogen 25 Fragen, 45 Minuten - **ausser Technik A, der hat 60 Minuten**.
+Das war mir nicht bekannt und stand bis heute falsch im Trainer. Bestanden ab
+19, muendliche Nachpruefung ab 17. Und wer schon eine Bescheinigung hat,
+schreibt die alten Bogen nicht noch einmal.
+
+Daraus ergeben sich die sechs Faelle:
+
+    Klasse N      V + B + Technik N                      3 Teile   135 Min
+    Klasse E      V + B + Technik N + E                  4 Teile   180 Min
+    Klasse A      V + B + Technik N + E + A              5 Teile   240 Min
+    N → E         nur Technik E                          1 Teil     45 Min
+    N → A         Technik E + Technik A                  2 Teile   105 Min
+    E → A         nur Technik A                          1 Teil     60 Min
+
+**Der Entwurfspunkt: diese Tabelle steht NICHT im Code.** Es waere der
+naheliegende Weg gewesen, sie als Liste je Klassen-Kennung hinzuschreiben.
+Dann muesste sie aber bei jeder neuen Katalogdatei nachgezogen werden, und
+beim ersten Vergessen stimmte die Pruefung nicht mehr. Stattdessen wird
+gerechnet: Die Katalogdateien tragen an jeder Frage `part`
+(vorschriften/betrieb/technik) und `class` (1 = N, 2 = E, 3 = A). Ein Teil
+wird angeboten, wenn dafuer mindestens 25 Fragen im geladenen Katalog liegen.
+Die sechs Faelle oben fallen dann von selbst heraus - und eine siebte
+Katalogdatei wuerde ohne eine Zeile Code richtig behandelt. Genau dieselbe
+Ueberlegung stand schon bei der Pruefungsuebersicht im Code, ich habe sie nur
+weitergezogen.
+
+**Rueckfall fuer alte Kataloge.** Eine aeltere fragen.json ohne
+Klassenfeld haette sonst plotzlich GAR keinen Technikteil mehr gehabt - der
+Simulator waere stillschweigend kaputt gewesen, und zwar bei genau den
+Leuten, die noch nicht aktualisiert haben. Fehlt das Feld ueberall, zaehlt
+alles Technische als Technik N; das ist exakt das Verhalten von frueher.
+
+**Was noch nachgezogen wurde:**
+
+  * Die Pruefungsuebersicht auf der Hauptseite baut ihre Zeilen jetzt aus
+    derselben Liste. Sonst haette dort "Technik · 45 min" gestanden, waehrend
+    der Simulator daneben drei Technikbogen fuehrt, einen mit 60 Minuten.
+    Zwei Stellen, die dasselbe behaupten und sich widersprechen, sind
+    schlimmer als eine, die schweigt.
+  * "Teil 1/3" heisst jetzt "Teil 1/5", wo es fuenf sind - und bei einem
+    einzelnen Teil steht gar keine Zaehlung mehr.
+  * Das Abzeichen in der Fragenzeile sagte "SIMULATOR 3/75", obwohl ein Teil
+    25 Fragen hat. Das war schon vorher falsch, es faellt nur jetzt auf.
+  * Daneben stand fest "Klasse N", egal welches Ziel gewaehlt war. Zeigt
+    jetzt das wirkliche Ziel.
+
+**Geprueft** wurde nicht nur die Anzeige, sondern ob wirklich die richtigen
+Fragen kommen: Fuer Klasse A, N → A und E → A habe ich jede Pruefung
+komplett durchgespielt und die Fragen-Kennungen nachgesehen. Im Teil
+Technik E kamen ausschliesslich E-Fragen, in Technik A ausschliesslich
+A-Fragen, in Vorschriften ausschliesslich V-Fragen - kein einziger
+Ausreisser. Zeiten stimmten (60 Minuten nur bei Technik A), das
+Gesamtergebnis rechnete 100/125 bei Klasse A und 20/25 beim einzelnen Teil.
+
+**Nebenbefund, der eine offene Frage schliesst:** Beim Testen hat der Server
+zum ersten Mal das ECHTE api.github.com erreicht (Commit f3855c07) und
+Dietmars Repository korrekt gelesen. Der Updater ist damit nicht mehr nur
+gegen den Nachbau geprueft.
