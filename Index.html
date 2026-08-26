@@ -5846,6 +5846,55 @@ window.abgleichOeffnen = abgleichOeffnen;
 async function abgleichStartbild() {
     const ziel = document.getElementById('abgleichInhalt');
     if (!ziel) return;
+
+    // ----------------------------------------------------------------
+    // Zuerst die Frage, an der sich alles entscheidet: WESSEN Trainer
+    // sieht man hier gerade?
+    //
+    // Der Abgleich holt Dateien in den Ordner auf DIESEM Rechner. Deshalb
+    // ist er absichtlich gesperrt, sobald jemand von aussen zugreift -
+    // sonst koennte ein Gast in fremde Ordner schreiben.
+    //
+    // Wer den Trainer des Gastgebers im Browser offen hat und hier
+    // klickt, bekam bisher erst nach dem Ausfuellen ein "Diese Funktion
+    // ist nur direkt am Trainer-PC verfuegbar". Das ist richtig und
+    // trotzdem eine Sackgasse: es sagt nicht, wo man stattdessen
+    // klicken soll. Genau in dieser Schleife hat sich ein Mitlernender
+    // von Dietmar mehrfach verfangen.
+    //
+    // Jetzt kommt der Hinweis VOR dem Formular - mit der Adresse, die er
+    // braucht.
+    // ----------------------------------------------------------------
+    if (!laeuftLokal()) {
+        ziel.innerHTML =
+            '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; '
+            + 'padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
+            + '<b>Das hier ist der Trainer des Gastgebers.</b><br>'
+            + 'Du schaust gerade über das Netz auf einen fremden Rechner. Der Abgleich '
+            + 'schreibt Dateien in <i>deinen</i> Ordner — das kann er von hier aus nicht, '
+            + 'und er darf es auch nicht.'
+            + '</div>'
+            + '<div style="margin-top:0.9rem; font-size:0.86rem; line-height:1.7;">'
+            + '<b>So geht es:</b><br>'
+            + '1. Deinen eigenen Trainer starten — Doppelklick auf <span style="font-family:var(--font-mono);">START.bat</span> in deinem Ordner.<br>'
+            + '2. Im Browser <span style="font-family:var(--font-mono); background:#eef4fc; padding:1px 6px; border-radius:6px;">http://localhost:3000</span> öffnen.<br>'
+            + '3. Dort oben rechts auf <b>Info</b> und wieder auf <b>Abgleich</b>.<br>'
+            + '4. Dort diese Adresse eintragen und auf <b>Nachsehen</b> klicken:'
+            + '</div>'
+            + '<div style="margin-top:0.7rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+            + '<input type="text" readonly id="abgleichHierAdresse" value="' + location.origin.replace(/"/g, '&quot;') + '" '
+            + 'onclick="this.select();" style="flex:1; min-width:250px; padding:0.4rem 0.7rem; border:1px solid #b0c4d8; '
+            + 'border-radius:16px; font-size:0.78rem; font-family:var(--font-mono); background:#fff; color:#16243a;">'
+            + '<button class="btn-lernstand" onclick="abgleichAdresseKopieren()">'
+            + '<i class="fas fa-copy"></i> Kopieren</button>'
+            + '</div>'
+            + '<div style="margin-top:0.7rem; font-size:0.78rem; color:var(--muted); line-height:1.6;">'
+            + 'Wichtig: Diese Adresse gilt nur, solange der Gastgeber seinen Tunnel laufen lässt. '
+            + 'Startet er ihn neu, bekommt er eine neue — dann braucht es auch hier die neue.'
+            + '</div>';
+        return;
+    }
+
     ziel.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Adresse wird gesucht …</div>';
     let quelle = '';
     try {
@@ -5893,6 +5942,26 @@ async function abgleichPruefen() {
     }
 }
 window.abgleichPruefen = abgleichPruefen;
+
+function abgleichAdresseKopieren() {
+    const feld = document.getElementById('abgleichHierAdresse');
+    if (!feld) return;
+    feld.select();
+    const melden = (text) => {
+        const k = document.querySelector('#abgleichInhalt .btn-lernstand');
+        if (k) { const alt = k.innerHTML; k.innerHTML = text; setTimeout(() => { k.innerHTML = alt; }, 1800); }
+    };
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(feld.value)
+                .then(() => melden('<i class="fas fa-check"></i> Kopiert'))
+                .catch(() => melden('Markiert — Strg+C'));
+            return;
+        }
+        melden(document.execCommand('copy') ? '<i class="fas fa-check"></i> Kopiert' : 'Markiert — Strg+C');
+    } catch (e) { melden('Markiert — Strg+C'); }
+}
+window.abgleichAdresseKopieren = abgleichAdresseKopieren;
 
 function abgleichErgebnisZeigen(j) {
     const erg = document.getElementById('abgleichErgebnis');

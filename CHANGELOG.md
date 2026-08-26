@@ -1099,3 +1099,46 @@ Getestet an einem echten Klon des Repositorys: 11 Dateien entfernt, alle
 noch auf der Platte, `git add -A` holt keine zurueck, `Update-Pruefen.bat`
 weiter verfolgt, danach 781 statt 792 Dateien und die Pruefung meldet
 weiterhin SAUBER.
+
+## 26.08.2026 - "Nachfragen nicht moeglich" - die Sackgasse beseitigt
+
+Der Screenshot von Dietmars Mitlernendem hat die Sache endlich geklaert. Er
+hatte alles richtig gemacht - nur am falschen Rechner. Er hatte den Trainer
+des Gastgebers im Browser offen (die `…trycloudflare.com`-Adresse), dort
+Info > Abgleich geklickt, die Adresse eingetragen und bekam:
+
+    Nachfragen nicht moeglich.
+    Diese Funktion ist nur direkt am Trainer-PC verfuegbar.
+
+Die Meldung ist technisch korrekt: `/api/abgleich/pruefen` ist `localOnly`,
+und das aus gutem Grund - der Abgleich schreibt Dateien in einen Ordner.
+Duerfte ein Gast das ausloesen, koennte er in fremde Ordner schreiben.
+
+Als Wegweiser taugte die Meldung trotzdem nichts. Sie sagt, was nicht geht,
+aber nicht, wo es stattdessen geht. Und sie kommt erst NACH dem Ausfuellen -
+man hat also erst gearbeitet und dann verloren. In genau dieser Schleife hat
+er sich mehrfach verfangen, und ich habe ihm zweimal per Text erklaert, wo
+er klicken soll, statt es das Programm sagen zu lassen. Das war mein Fehler,
+nicht seiner.
+
+**Jetzt kommt der Hinweis, bevor das Formular erscheint.** `laeuftLokal()`
+gab es schon; die Abfrage steht nun ganz am Anfang von `abgleichStartbild()`.
+Ist man nicht am eigenen Rechner, gibt es kein Eingabefeld, sondern:
+
+  - die Feststellung, wessen Trainer man da sieht, und warum es hier nicht
+    geht ("er kann es nicht, und er darf es auch nicht")
+  - vier nummerierte Schritte bis zum richtigen Fenster, mit
+    `http://localhost:3000` ausgeschrieben
+  - die Adresse des Gastgebers - fertig zum Kopieren, mit Kopier-Knopf.
+    Sie steht ohnehin in der Adresszeile, aber wer bis hierher gekommen ist,
+    soll nicht auch noch abtippen muessen.
+  - der Hinweis, dass eine Tunnel-Adresse nach jedem Neustart eine andere
+    ist
+
+Der Kopier-Knopf faellt weich: gibt es `navigator.clipboard` nicht oder ist
+er gesperrt (das passiert ohne HTTPS), wird der Text wenigstens markiert und
+der Knopf sagt "Markiert - Strg+C".
+
+Geprueft mit echtem Browser von zwei Seiten: ueber `127.0.0.1` erscheint
+weiter das gewohnte Formular, ueber eine andere Adresse der neue Hinweis.
+Hell und dunkel, keine Fehler in der Konsole, Kopier-Knopf meldet "Kopiert".
