@@ -5643,13 +5643,13 @@ window.lektionRundeStarten = lektionRundeStarten;
 // ================================================================
 // ORDNER-ABGLEICH BEIM MITMACHEN ÜBER DEN LINK
 //
-// Der Fall: Jemand öffnet den Einladungslink des Gastgebers und sieht dort den
+// Der Fall: Jemand öffnet den Einladungslink des Entwicklers und sieht dort den
 // neuesten Stand — die Seite läuft ja auf dessen Rechner. Sein EIGENER Ordner
 // bleibt davon unberührt. Startet er später seinen eigenen Trainer, ist wieder
 // die alte Fassung da.
 //
 // Diese Lücke wird hier geschlossen: Läuft auf demselben Rechner ein eigener
-// Trainer, bekommt er auf Wunsch die Dateien dieses Gastgebers.
+// Trainer, bekommt er auf Wunsch die Dateien dieses Entwicklers.
 //
 // WICHTIG, damit niemand darauf baut: Dieser Weg ist ein Bonus, kein
 // Verlass. Chrome sperrt Zugriffe von einer Seite aus dem offenen Netz auf
@@ -5722,7 +5722,7 @@ async function ordnerAbgleichAnbieten() {
     }
     if (!abweichend.length && !programmWeicht) return;
 
-    // Nicht bei jedem Seitenaufruf nerven: einmal je Stand des Gastgebers.
+    // Nicht bei jedem Seitenaufruf nerven: einmal je Stand des Entwicklers.
     const kennung = Object.keys(hier).map(n => hier[n] ? hier[n].hash : '-').join('');
     try {
         if (localStorage.getItem('amateurfunk_ordnerAbgleichGefragt') === kennung) return;
@@ -5757,7 +5757,7 @@ function ordnerAbgleichBanner(basis, dateien, programmWeicht, kennung) {
         ja.disabled = true;
         b.innerHTML = 'Dateien werden in deinen Ordner geschrieben …';
         try {
-            // Adresse dieses Gastgebers im eigenen Ordner merken, damit der
+            // Adresse dieses Entwicklers im eigenen Ordner merken, damit der
             // nächste Start von allein hier nachsieht.
             await fetch(basis + '/api/abgleich/herkunft', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -5785,7 +5785,7 @@ function ordnerAbgleichBanner(basis, dateien, programmWeicht, kennung) {
     };
 }
 
-// Meldet einmal, was der Trainer beim Start vom Gastgeber nachgezogen hat.
+// Meldet einmal, was der Trainer beim Start vom Entwickler nachgezogen hat.
 //
 // Ohne diese Meldung passiert das Update lautlos: Der Ordner ist plötzlich
 // aktuell, und niemand weiß, warum. Gerade beim ersten Mal soll man sehen,
@@ -5802,7 +5802,7 @@ async function autoAbgleichMelden(){
         const b = document.createElement('div');
         b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100002; background:#14663a; color:#ffffff;'
             + 'padding:10px 14px; font-size:0.85rem; font-weight:600; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.25);';
-        b.innerHTML = `Beim Start wurden ${j.geschrieben.length} Datei(en) vom Gastgeber übernommen: `
+        b.innerHTML = `Beim Start wurden ${j.geschrieben.length} Datei(en) vom Entwickler übernommen: `
             + j.geschrieben.join(', ')
             + (j.programmWeicht ? ' · <b>Server.js weicht ebenfalls ab</b> – siehe Info › Abgleich' : '')
             + ' <button type="button" id="abgleichMeldungZu" style="margin-left:10px; padding:4px 10px; border:none;'
@@ -5816,7 +5816,7 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // ================================================================
 // GITHUB-UPDATE
 //
-// Zweiter Weg neben dem Abgleich mit dem Gastgeber. Der Unterschied, der
+// Zweiter Weg neben dem Abgleich mit dem Entwickler. Der Unterschied, der
 // alles entscheidet: die Adresse von GitHub aendert sich nie, die eines
 // Tunnels bei jedem Neustart.
 //
@@ -5837,26 +5837,6 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // ================================================================
 let githubDaten = null;
 
-// null = noch nicht nachgesehen, true/false = Antwort des eigenen Servers.
-let githubMoeglich = null;
-
-async function githubVerfuegbarPruefen(){
-    try{
-        const r = await fetch('/api/github/stand', {cache:'no-store'});
-        // 404 heisst: dieser Server kennt den Aufruf nicht - er ist aelter
-        // als die Funktion. 403 heisst: wir sind hier zu Gast.
-        githubMoeglich = r.ok;
-    }catch(e){ githubMoeglich = false; }
-    // War das Info-Fenster schon offen, muss der Knopf noch verschwinden.
-    try{
-        const m = document.getElementById('infoModal');
-        if(!githubMoeglich && m && m.style.display !== 'none'){
-            const k = document.getElementById('githubUpdateBtn');
-            if(k) k.remove();
-        }
-    }catch(e){}
-}
-window.githubVerfuegbarPruefen = githubVerfuegbarPruefen;
 
 async function githubOeffnen(){
     let modal = document.getElementById('githubModal');
@@ -5887,7 +5867,7 @@ async function githubPruefen(){
     if(!ziel) return;
     if(!laeuftLokal()){
         ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
-            + '<b>Das hier ist der Trainer des Gastgebers.</b><br>'
+            + '<b>Das hier ist der Trainer des Entwicklers.</b><br>'
             + 'Ein Update schreibt Dateien in <i>deinen</i> Ordner. Dafür musst du deinen eigenen Trainer '
             + 'öffnen: <span style="font-family:var(--font-mono); background:#eef4fc; padding:1px 6px; border-radius:6px;">http://localhost:3000</span>'
             + '</div>';
@@ -5903,17 +5883,16 @@ async function githubPruefen(){
         let j = null;
         try{ j = JSON.parse(roh); }catch(e2){ j = null; }
         if(res.status === 404 || (j === null && /not found/i.test(roh))){
-            githubMoeglich = false;
             ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
                 + '<b>Dein Trainer-Programm ist älter als diese Funktion.</b><br>'
-                + 'Die Anzeige wurde beim Abgleich mit dem Gastgeber erneuert, das Programm '
+                + 'Die Anzeige wurde beim Abgleich mit dem Entwickler erneuert, das Programm '
                 + '(<span style="font-family:var(--font-mono);">Server.js</span>) aber nicht — '
                 + 'Programmdateien werden absichtlich nie automatisch ersetzt, weil sie mit vollen '
                 + 'Rechten auf deinem Rechner laufen.'
                 + '</div>'
                 + '<div style="margin-top:0.8rem; font-size:0.86rem; line-height:1.7;">'
                 + '<b>So kommst du an die neue Fassung:</b><br>'
-                + 'Info &rarr; <b>Beim Gastgeber nach Neuerungen sehen</b>, dort die Programmdateien '
+                + 'Info &rarr; <b>Beim Entwickler nach Neuerungen sehen</b>, dort die Programmdateien '
                 + 'anhaken und ausdrücklich bestätigen. Danach den Trainer einmal neu starten '
                 + '(<span style="font-family:var(--font-mono);">START.bat</span>).'
                 + '</div>';
@@ -6177,7 +6156,7 @@ function abgleichOeffnen() {
             + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
             + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem;">'
             + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
-            + '<i class="fas fa-rotate"></i> Abgleich mit dem Gastgeber</h3>'
+            + '<i class="fas fa-rotate"></i> Abgleich mit dem Entwickler</h3>'
             + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
             + 'onclick="document.getElementById(\'abgleichModal\').style.display=\'none\'">&#10005;</button></div>'
             + '<div id="abgleichInhalt"></div></div>';
@@ -6201,7 +6180,7 @@ async function abgleichStartbild() {
     // ist er absichtlich gesperrt, sobald jemand von aussen zugreift -
     // sonst koennte ein Gast in fremde Ordner schreiben.
     //
-    // Wer den Trainer des Gastgebers im Browser offen hat und hier
+    // Wer den Trainer des Entwicklers im Browser offen hat und hier
     // klickt, bekam bisher erst nach dem Ausfuellen ein "Diese Funktion
     // ist nur direkt am Trainer-PC verfuegbar". Das ist richtig und
     // trotzdem eine Sackgasse: es sagt nicht, wo man stattdessen
@@ -6215,7 +6194,7 @@ async function abgleichStartbild() {
         ziel.innerHTML =
             '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; '
             + 'padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
-            + '<b>Das hier ist der Trainer des Gastgebers.</b><br>'
+            + '<b>Das hier ist der Trainer des Entwicklers.</b><br>'
             + 'Du schaust gerade über das Netz auf einen fremden Rechner. Der Abgleich '
             + 'schreibt Dateien in <i>deinen</i> Ordner — das kann er von hier aus nicht, '
             + 'und er darf es auch nicht.'
@@ -6235,7 +6214,7 @@ async function abgleichStartbild() {
             + '<i class="fas fa-copy"></i> Kopieren</button>'
             + '</div>'
             + '<div style="margin-top:0.7rem; font-size:0.78rem; color:var(--muted); line-height:1.6;">'
-            + 'Wichtig: Diese Adresse gilt nur, solange der Gastgeber seinen Tunnel laufen lässt. '
+            + 'Wichtig: Diese Adresse gilt nur, solange der Entwickler seinen Tunnel laufen lässt. '
             + 'Startet er ihn neu, bekommt er eine neue — dann braucht es auch hier die neue.'
             + '</div>';
         return;
@@ -6251,7 +6230,7 @@ async function abgleichStartbild() {
 
     ziel.innerHTML =
         '<div style="font-size:0.85rem; line-height:1.55; margin-bottom:0.9rem;">'
-        + 'Hier lässt sich nachsehen, ob der Gastgeber, von dem dieser Trainer stammt, '
+        + 'Hier lässt sich nachsehen, ob der Entwickler, von dem dieser Trainer stammt, '
         + 'inzwischen etwas geändert hat. Sein Trainer muss dafür gerade laufen.'
         + '</div>'
         + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:0.9rem;">'
@@ -6260,7 +6239,7 @@ async function abgleichStartbild() {
         + 'style="flex:1; min-width:240px; padding:0.35rem 0.7rem; border:1px solid #b0c4d8; border-radius:16px; font-size:0.78rem; font-family:var(--font-mono); background:#fff; color:#16243a;">'
         + '<button class="btn-lernstand" onclick="abgleichPruefen()"><i class="fas fa-magnifying-glass"></i> Nachsehen</button>'
         + '</div>'
-        + (quelle ? '' : '<div style="font-size:0.78rem; color:var(--muted);">Es ist keine Adresse hinterlegt. Sie steht im Gruppenraum des Gastgebers unter „Einladungs-Link".</div>')
+        + (quelle ? '' : '<div style="font-size:0.78rem; color:var(--muted);">Es ist keine Adresse hinterlegt. Sie steht im Gruppenraum des Entwicklers unter „Einladungs-Link".</div>')
         + '<div id="abgleichErgebnis"></div>';
 }
 
@@ -6274,7 +6253,7 @@ async function abgleichPruefen() {
     // Auch im Ordner merken, damit der naechste Start von allein dort nachsieht.
     try { fetch('/api/abgleich/herkunft', {method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({quelle})}); } catch (e) {}
-    erg.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Beim Gastgeber nachfragen …</div>';
+    erg.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Beim Entwickler nachfragen …</div>';
     try {
         const res = await fetch('/api/abgleich/pruefen?quelle=' + encodeURIComponent(quelle), { cache: 'no-store' });
         const j = await res.json();
@@ -6284,7 +6263,7 @@ async function abgleichPruefen() {
     } catch (e) {
         erg.innerHTML = `<div style="border:1px solid var(--line); border-radius:12px; padding:0.8rem; background:#fdf1e0; font-size:0.83rem;">`
             + `<b>Nachfragen nicht möglich.</b><br>${String(e.message).replace(/</g, '&lt;')}<br>`
-            + `<span style="color:var(--muted);">Läuft der Trainer des Gastgebers gerade? Und stimmt die Adresse? Bei einem Tunnel ändert sie sich nach jedem Neustart.</span></div>`;
+            + `<span style="color:var(--muted);">Läuft der Trainer des Entwicklers gerade? Und stimmt die Adresse? Bei einem Tunnel ändert sie sich nach jedem Neustart.</span></div>`;
     }
 }
 window.abgleichPruefen = abgleichPruefen;
@@ -6323,7 +6302,7 @@ function abgleichErgebnisZeigen(j) {
     const harmlos = u.filter(x => x.art !== 'programm');
     const programm = u.filter(x => x.art === 'programm');
 
-    let html = `<div style="font-size:0.85rem; margin-bottom:0.7rem;">Der Gastgeber hat <b>${u.length}</b> ${u.length === 1 ? 'abweichende Datei' : 'abweichende Dateien'}:</div>`;
+    let html = `<div style="font-size:0.85rem; margin-bottom:0.7rem;">Der Entwickler hat <b>${u.length}</b> ${u.length === 1 ? 'abweichende Datei' : 'abweichende Dateien'}:</div>`;
     html += '<div style="border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:0.9rem;">';
     u.forEach(x => {
         const datum = x.fremd && x.fremd.geaendert
@@ -6344,7 +6323,7 @@ function abgleichErgebnisZeigen(j) {
         html += '<div style="margin-top:0.9rem; border:1px solid #f0c9c6; background:#fbe1df; border-radius:12px; padding:0.8rem; font-size:0.82rem; line-height:1.5;">'
             + '<b style="color:#a4262c;">Server.js weicht ebenfalls ab.</b><br>'
             + 'Das ist kein Text und kein Bild, sondern das Programm, das auf <b>deinem</b> Rechner läuft. '
-            + 'Es zu übernehmen heißt, den Programmcode des Gastgebers auszuführen. Mach das nur, wenn du ihm vertraust — '
+            + 'Es zu übernehmen heißt, den Programmcode des Entwicklers auszuführen. Mach das nur, wenn du ihm vertraust — '
             + 'bei einem Trainer aus dem eigenen Ortsverband ist das normal, bei einer fremden Adresse nicht.<br>'
             + '<button class="btn-lernstand" style="margin-top:0.6rem; background:#a4262c;" onclick="abgleichAnwenden(true)">'
             + '<i class="fas fa-triangle-exclamation"></i> Verstanden – auch Server.js übernehmen</button></div>';
@@ -6427,7 +6406,7 @@ window.infoOeffnen = infoOeffnen;
 // Zeigt, mit welchem Dateistand dieser Trainer gerade läuft.
 //
 // Hintergrund: Wer über den Einladungslink mitmacht, bekommt die Dateien des
-// Gastgebers und ist damit immer aktuell. Wer sich das Paket heruntergeladen
+// Entwicklers und ist damit immer aktuell. Wer sich das Paket heruntergeladen
 // hat, arbeitet mit einer Momentaufnahme - und sieht bisher nirgends, von
 // wann sie ist. Genau das beantwortet diese Zeile.
 async function dateiStandAnzeigen() {
@@ -6710,11 +6689,10 @@ function infoFuellen() {
 
         + block('Welchen Stand habe ich?', '🔄', [
             '<span id="infoDateiStand" style="color:var(--muted);">wird ermittelt …</span>',
-            'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Gastgeber — dort ist der Stand automatisch aktuell.',
+            'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Entwickler — dort ist der Stand automatisch aktuell.',
             'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer <b>Momentaufnahme</b>: Der eigene Ordner erfährt von späteren Änderungen nichts.',
-            '<button class="btn-lernstand" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; abgleichOeffnen();"><i class="fas fa-rotate"></i> Beim Gastgeber nach Neuerungen sehen</button>'
-            + (githubMoeglich === false ? ''
-               : '<button class="btn-lernstand" id="githubUpdateBtn" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> GitHub-Update</button>')
+            '<button class="btn-lernstand" style="margin-top:0.4rem; margin-bottom:0.3rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; abgleichOeffnen();"><i class="fas fa-rotate"></i> Beim Entwickler nach Neuerungen sehen</button>'
+            + '<button class="btn-lernstand" id="githubUpdateBtn" style="margin-top:0.4rem; margin-left:0.5rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> GitHub-Update</button>'
         ])
 
         + '<div style="text-align:center; margin-top:0.8rem; font-size:0.75rem; color:var(--muted); line-height:1.5;">'
@@ -9493,12 +9471,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadMastery();
     // Wacht darueber, dass niemand tagelang mit einer alten Seite arbeitet.
     try{ standWacheStarten(); }catch(e){}
-    // Hat der Trainer beim Start etwas vom Gastgeber nachgezogen? Dann einmal sagen.
+    // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
-    try{ githubVerfuegbarPruefen(); }catch(e){}
     try{ setTimeout(()=>{ githubHinweisPruefen(); }, 6000); }catch(e){}
-    // Zu Gast beim Gastgeber? Dann anbieten, den eigenen Ordner nachzuziehen.
+    // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     loadLearnParts();
     lernFilterWiederherstellen();

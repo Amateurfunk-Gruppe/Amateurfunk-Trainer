@@ -1424,21 +1424,73 @@ Das passiert bei **jeder** kuenftigen serverseitigen Funktion wieder, sobald
 Oberflaeche und Programm auseinanderlaufen. Also nicht diesen einen Fall
 flicken, sondern das Muster:
 
-**1. Der Knopf erscheint gar nicht erst.** Beim Start fragt die Seite einmal
-`/api/github/stand`. Antwortet der eigene Server mit 404, kennt er die
-Funktion nicht - dann steht unter Info kein GitHub-Knopf. Ein Knopf, der
-nichts kann, ist schlimmer als kein Knopf. (403 zaehlt genauso: dann ist man
-zu Gast bei jemand anderem.)
-
-**2. Wird er doch geklickt** - alte Seite im Zwischenspeicher, Fenster schon
-offen - liest die Seite die Antwort erst als Text und versucht dann erst,
-JSON daraus zu machen. Bei `Not found` steht jetzt da, was Sache ist: dass
-das Programm aelter ist als die Anzeige, warum das so gewollt ist, und wie
-man an die neue Fassung kommt (Info > Beim Gastgeber nach Neuerungen sehen,
-Programmdateien ausdruecklich bestaetigen, danach START.bat).
+**Die Meldung sagt jetzt, was Sache ist.** Die Seite liest die Antwort erst
+als Text und versucht dann erst, JSON daraus zu machen. Bei `Not found`
+steht dort: dass das Programm aelter ist als die Anzeige, warum das so
+gewollt ist, und wie man an die neue Fassung kommt (Info > Beim Gastgeber
+nach Neuerungen sehen, Programmdateien ausdruecklich bestaetigen, danach
+START.bat).
 
 **Geprueft mit zwei Servern nebeneinander**: der aktuelle auf Port 3000, ein
 Stand von vor der GitHub-Funktion auf Port 3001 - beide mit derselben neuen
-`Index.html`, also genau die Lage des Mitlernenden. Beim alten Server fehlt
-der Knopf und der erzwungene Aufruf zeigt die erklaerende Meldung; beim
-neuen ist alles wie vorher. Keine Fehler in der Browserkonsole.
+`Index.html`, also genau die Lage des Mitlernenden. Beim alten Server zeigt
+der Aufruf die erklaerende Meldung, beim neuen ist alles wie vorher. Keine
+Fehler in der Browserkonsole.
+
+---
+
+**Nachtrag am selben Abend: ein zweiter Anlauf, der zurueckgenommen wurde.**
+
+Der erste Versuch ging weiter: Wenn der eigene Server die Funktion nicht
+kennt, sollte der Knopf gar nicht erst erscheinen. Beim Start fragte die
+Seite dafuer einmal `/api/github/stand` und blendete den Knopf aus, wenn die
+Antwort nicht 200 war.
+
+Das klang sauber und hat bei Dietmar prompt den Knopf verschwinden lassen -
+obwohl bei ihm alles funktioniert. Was genau die Vorab-Anfrage bei ihm hat
+scheitern lassen, habe ich nicht herausgefunden; auf meinem Prueflauf kam
+sauber 200 zurueck.
+
+Und das ist der Punkt. Der Fehler war nicht die eine Zeile, sondern die
+Bauart: Ich habe die Sichtbarkeit einer Funktion von einer Vorab-Anfrage
+abhaengig gemacht, die aus Gruenden fehlschlagen kann, die ich nicht alle
+kenne - Zeitpunkt, Zwischenspeicher, ob man gerade ueber den Einladungslink
+schaut. Schlaegt sie fehl, verschwindet die Funktion spurlos, und niemand
+kann sehen, warum. Ein Knopf, der etwas Verstaendliches sagt, ist besser als
+einer, der nicht da ist.
+
+Die Vorab-Anfrage ist wieder raus. Der Knopf steht immer; wer ihn ohne
+passenden Server drueckt, bekommt die erklaerende Meldung von oben. Dazu
+bekommen die beiden Knoepfe im Info-Fenster einen Abstand - vorher klebten
+sie aneinander.
+
+## 26.08.2026 - Aus "Gastgeber" wird "Entwickler" (aber nicht ueberall)
+
+Dietmar: *"Beim Gastgeber moechte ich durch Entwickler ersetzen."*
+
+Dahinter steckt mehr als eine Wortwahl: **"Gastgeber" hiess im Trainer
+zweierlei**, und das war verwirrend.
+
+Im **Gruppenraum** ist der Gastgeber, wer den Raum aufmacht - er bestimmt die
+Fragen und sieht in der Trainer-Ansicht, wie es bei den anderen laeuft. Dort
+ist das Wort genau richtig.
+
+Im **Abgleich** war damit gemeint, von wem die eigene Kopie stammt - also
+Dietmar. Fuer die Lernenden ist das aber kein Gastgeber, sondern schlicht
+der Entwickler des Trainers. "Beim Entwickler nach Neuerungen sehen" sagt in
+vier Worten, was Sache ist; "beim Gastgeber" liess offen, wer gemeint ist,
+und legte die Verwechslung mit dem Gruppenraum sogar nahe.
+
+Geaendert wurden **25 Zeilen** - Knoepfe, Fenstertitel, Hinweistexte und
+Kommentare rund um Abgleich und Update. **Eine Zeile blieb bewusst stehen:**
+"Der Gastgeber sieht in der Trainer-Ansicht, wie es bei den anderen laeuft"
+im Info-Abschnitt zum Gruppenraum. Dort ist es der Gastgeber und niemand
+sonst.
+
+Grammatisch war es ein glatter Tausch: beide Woerter sind maennlich und
+beugen sich gleich ("des Gastgebers" -> "des Entwicklers", "vom Gastgeber"
+-> "vom Entwickler").
+
+**Nebenbei erledigt:** Die beiden Knoepfe im Info-Fenster klebten
+aneinander. Sie haben jetzt Abstand - auch auf einem schmalen Fenster, wo
+sie umbrechen koennten.
