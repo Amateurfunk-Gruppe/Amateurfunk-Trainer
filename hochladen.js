@@ -181,9 +181,19 @@ async function main() {
       console.log('  Fertig. Zu sehen unter:');
       console.log('  https://github.com/' + KONTO + '/' + REPO);
       console.log('');
-      console.log('  Jetzt noch die Stimmen: Stimmen_packen.bat ausfuehren,');
-      console.log('  dann auf der Seite "Releases" -> "Create a new release",');
-      console.log('  Tag v1.0, und Piper-Stimmen.zip ins Feld ziehen.');
+      // Nur raten, was noch fehlt. Wer das ZIP laengst gebaut hat, soll
+      // nicht bei jedem Hochladen aufgefordert werden, es nochmal zu bauen.
+      const zip = path.join(WURZEL, 'Piper-Stimmen.zip');
+      if (fs.existsSync(zip)) {
+        const gr = (fs.statSync(zip).size / 1024 / 1024).toFixed(1).replace('.', ',');
+        console.log('  Piper-Stimmen.zip liegt bereit (' + gr + ' MiB).');
+        console.log('  Auf der Seite "Releases" -> "Create a new release",');
+        console.log('  Tag vergeben und die Datei ins Feld ziehen.');
+      } else {
+        console.log('  Jetzt noch die Stimmen: Stimmen_packen.bat ausfuehren,');
+        console.log('  dann auf der Seite "Releases" -> "Create a new release",');
+        console.log('  Tag v1.0, und Piper-Stimmen.zip ins Feld ziehen.');
+      }
     } else {
       console.log('  Hochladen fehlgeschlagen. Haeufigste Gruende:');
       console.log('    - das Repository gibt es bei GitHub noch nicht');

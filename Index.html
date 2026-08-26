@@ -2014,6 +2014,30 @@
             color: #16232f !important;
             border-color: #c3d0de !important;
         }
+        /* Zeilen im Fenster "Pruefungsziel waehlen".
+           Rahmen und Hintergrund stehen hier und nicht mehr im style=""
+           am Element - sonst koennte :hover sie nicht ueberschreiben.
+           Die Werte sind dieselben wie vorher, das Aussehen aendert sich
+           im Ruhezustand nicht. */
+        .klasse-opt {
+            border: 1px solid #d7e0ec;
+            background: #ffffff;
+            transition: border-color 0.15s, background 0.15s, transform 0.15s;
+        }
+        .klasse-opt:hover:not(:disabled) {
+            border-color: #0f2745;
+            background: #f8faff;
+            transform: translateY(-1px);
+        }
+        .klasse-opt.aktiv {
+            border: 2px solid #0f2745;
+            background: #eef4fc;
+        }
+        .klasse-opt.aktiv:hover { background: #e4eefb; }
+        /* Die gesperrte Zeile (Datei fehlt) darf nicht so tun, als liesse
+           sie sich anklicken. */
+        .klasse-opt:disabled:hover { border-color: #d7e0ec; background: #ffffff; transform: none; }
+
         body.dark #klasseModal,
         body.dark #lektionenModal {
             color: #16232f;
@@ -2571,12 +2595,11 @@ function klasseModalFuellen() {
         const zahl = zahlen[k.id];
         const fehlt = zahl === -1;          // Datei nicht gefunden
         zeilen += '<button onclick="klasseWaehlen(\'' + k.id + '\')"'
+            + ' class="klasse-opt' + (an ? ' aktiv' : '') + '"'
             + (fehlt ? ' disabled' : '')
             + ' style="display:flex; align-items:center; gap:0.8rem; width:100%; text-align:left; '
             + 'padding:0.7rem 0.9rem; margin-bottom:0.45rem; border-radius:12px; cursor:' + (fehlt ? 'not-allowed' : 'pointer') + '; '
-            + 'font-family:inherit; opacity:' + (fehlt ? '0.5' : '1') + '; '
-            + 'border:' + (an ? '2px solid #0f2745' : '1px solid #d7e0ec') + '; '
-            + 'background:' + (an ? '#eef4fc' : '#ffffff') + ';">'
+            + 'font-family:inherit; opacity:' + (fehlt ? '0.5' : '1') + ';">'
             + '<span style="font-size:1.2rem; width:1.6rem; text-align:center;">'
             + (an ? '<i class="fas fa-circle-check" style="color:#15703c;"></i>'
                   : '<i class="far fa-circle" style="color:#8aa0bb;"></i>') + '</span>'
@@ -9519,14 +9542,26 @@ if (originalSelectOption) {
     if(!qa || !col) return;
     var h = qa.offsetHeight;
     if(!h || h < 50) return;
-    // nur wenn Sidebar offen
-    if(wrapper && wrapper.classList.contains('collapsed')) return;
+    var zu = !!(wrapper && wrapper.classList.contains('collapsed'));
+
+    // Die Spalte und der Knopf werden IMMER auf Fragenhoehe gebracht -
+    // auch bei zugeklapptem Verlauf. Frueher stieg die Funktion hier aus,
+    // und der Knopf blieb auf seiner Mindesthoehe von 260 Pixeln stehen,
+    // waehrend die Frage daneben deutlich hoeher war.
     col.style.height = h + 'px';
     col.style.minHeight = h + 'px';
     col.style.maxHeight = h + 'px';
-    if(wrapper){ wrapper.style.height = h + 'px'; wrapper.style.minHeight = h + 'px'; wrapper.style.maxHeight = h + 'px'; }
-    if(sidebar){ sidebar.style.height = h + 'px'; sidebar.style.minHeight = h + 'px'; sidebar.style.maxHeight = h + 'px'; }
     if(tab){ tab.style.height = h + 'px'; tab.style.minHeight = h + 'px'; tab.style.maxHeight = h + 'px'; }
+
+    // Verlaufsfeld und Rahmen nur anfassen, solange sie sichtbar sind.
+    // Zugeklappt werden die gesetzten Hoehen wieder entfernt, sonst
+    // schleppt das eingeklappte Feld beim naechsten Aufklappen die Hoehe
+    // einer laengst vergangenen Frage mit sich herum.
+    [wrapper, sidebar].forEach(function(el){
+      if(!el) return;
+      if(zu){ el.style.height = ''; el.style.minHeight = ''; el.style.maxHeight = ''; }
+      else  { el.style.height = h + 'px'; el.style.minHeight = h + 'px'; el.style.maxHeight = h + 'px'; }
+    });
   }
   function patch(){
     if(window.renderQuestion && !window.renderQuestion._finalPatched){

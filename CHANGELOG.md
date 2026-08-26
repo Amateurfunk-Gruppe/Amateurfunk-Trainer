@@ -954,3 +954,49 @@ sie weiterhin. Das ist kein Fehler: der Blob steckt in der Historie, und
 GitHub weist den Push genauso zurueck. Loeschen hilft hier nicht - nur eine
 frische Historie.
 
+## 26.08.2026 - Zwei Dinge, die Dietmar aufgefallen sind
+
+**1. Im Fenster "Pruefungsziel waehlen" reagierte keine Zeile auf die Maus.**
+
+Im Pruefungssimulator hebt sich die Zeile unter dem Zeiger hervor - dunkler
+Rahmen, heller Hintergrund, ein Pixel angehoben. Im Ziel-Fenster passierte
+nichts, und man traf beim Klicken auf gut Glueck.
+
+Der Grund war nicht Nachlaessigkeit, sondern eine Sackgasse: die Zeilen
+bekamen Rahmen und Hintergrund als `style=""` direkt am Element. Ein
+Inline-Stil schlaegt jede Regel aus dem Stylesheet, ein `:hover` waere also
+wirkungslos geblieben - egal wie man es schreibt. Deshalb sind genau diese
+zwei Angaben in die Klasse `.klasse-opt` gewandert; Aussehen im
+Ruhezustand unveraendert, Layout weiterhin inline. Die gewaehlte Zeile
+(`.aktiv`) bleibt am dickeren Rahmen erkennbar, und die gesperrte Zeile
+("Datei fehlt") reagiert bewusst nicht - sie soll nicht so tun, als liesse
+sie sich anklicken.
+
+Das Fenster bleibt im Dunkelmodus hell (eigene Regel weiter oben), deshalb
+braucht der Hover keine zweite Fassung. Nachgemessen: im Dunkelmodus
+dieselben Farbwerte.
+
+**2. "Verlauf einblenden" war kuerzer als die Frage daneben.**
+
+Die Hoehenangleichung gab es schon (`finalFixDynamicHeight`), sie stieg aber
+in der zweiten Zeile aus:
+
+    if(wrapper && wrapper.classList.contains('collapsed')) return;
+
+Also genau dann, wenn der Verlauf zugeklappt ist - und das ist der Zustand,
+in dem der Knopf als schmaler Balken allein dasteht und jede Abweichung
+sofort auffaellt. Er behielt seine Mindesthoehe von 260 Pixeln oder, noch
+haesslicher, die Hoehe einer laengst vergangenen Frage.
+
+Gemessen ueber 14 Fragen bei zugeklapptem Verlauf: **bis zu 88 Pixel
+Unterschied**. Nach der Aenderung 0 - bei jeder einzelnen.
+
+Jetzt werden Spalte und Knopf immer angeglichen. Verlaufsfeld und Rahmen
+nur, solange sie sichtbar sind; zugeklappt werden ihre gesetzten Hoehen
+wieder entfernt, sonst schleppt das eingeklappte Feld beim naechsten
+Aufklappen eine alte Hoehe mit sich herum.
+
+Geprueft wurde mit echtem Browser: zugeklappt, aufgeklappt, nach dem
+Wechsel des Pruefungsziels und nach dem Blaettern zu laengeren und
+kuerzeren Fragen. Der aufgeklappte Zustand ist unveraendert - Balken,
+Verlaufsfeld und Fragenkarte enden auf derselben Linie.
