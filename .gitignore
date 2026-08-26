@@ -126,3 +126,8 @@ stimmen_packen.js
 Aufraeumen.bat
 aufraeumen.js
 commit.bat
+#
+# Kein Werkzeug, aber genauso wenig fuer die Oeffentlichkeit: die
+# Innenrevision vom 17.08.2026. Sie beschreibt einen Codestand, den es so
+# nicht mehr gibt, und nennt einmal den Pfad des Windows-Benutzerkontos.
+BUG_REPORT.md
