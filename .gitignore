@@ -85,3 +85,21 @@ _Aufgeraeumt_*/
 # wurde. Ohne diese Zeile waere der Ordner eine Falle, die ich selbst
 # aufgestellt haette.
 Piper-Stimmen.zip
+
+# --- Werkzeuge, die nur auf dem Entwicklerrechner Sinn ergeben ---
+#
+# Sie liegen weiter im Ordner und funktionieren. Sie gehoeren nur
+# nicht in ein Repository, das andere herunterladen, um zu lernen.
+Hochladen.bat
+hochladen.js
+GitHub-Neustart.bat
+github_neustart.js
+GitHub-Pruefen.bat
+github_pruefen.js
+GitHub-Ausmisten.bat
+github_ausmisten.js
+Stimmen_packen.bat
+stimmen_packen.js
+Aufraeumen.bat
+aufraeumen.js
+commit.bat
