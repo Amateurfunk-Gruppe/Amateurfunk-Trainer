@@ -5,6 +5,8 @@ Läuft auf dem eigenen Rechner, ohne Konto, ohne Internetzwang, ohne Werbung.
 
 Der Lernfortschritt bleibt dort, wo er entsteht: auf dem eigenen Rechner.
 
+![Die Hauptansicht des Trainers](bilder/01-hauptansicht.png)
+
 ## Was es kann
 
 **Sechs Prüfungswege**, umschaltbar über „Ziel wählen":
@@ -22,6 +24,8 @@ Vorschriften und Betrieb sind für alle Klassen gleich — die Klassen untersche
 sich nur im Prüfungsteil Technik. Beim Aufstieg wird deshalb nur dieser Teil
 nachgeschrieben.
 
+![Das Fenster „Prüfungsziel wählen" mit allen sechs Wegen](bilder/02-pruefungsziel.png)
+
 **Weiter:**
 
 - **Lernmodus** mit Lernfortschritt, Fehlerliste, Merkliste und Auffrischung
@@ -34,6 +38,22 @@ nachgeschrieben.
 - **Videolehrgang** — die 14 Lektionen von Michael (DL2YMR) mit den passenden Fragen
 - **Prüfungstermin** eintragen, der Trainer rechnet das Tagespensum aus
 - **Bedienung per Tastatur** für Menschen, die keine Maus benutzen können
+
+### Beim Lernen
+
+Falsch angekreuzt: die eigene Antwort rot, die richtige daneben. Links die
+Auswertung und der Fortschritt durch die Runde, unten die passende Stelle im
+Videolehrgang mit Zeitmarke.
+
+![Eine beantwortete Frage im Lernmodus](bilder/03-frage.png)
+
+### Prüfungssimulator
+
+Drei Teile zu je 25 Fragen und 45 Minuten, 19 Richtige zum Bestehen — die
+Grauzone von 17 bis 18 ist eigens ausgewiesen, weil dort die mündliche
+Nachprüfung greift.
+
+![Der Prüfungssimulator vor dem Start](bilder/04-simulator.png)
 
 ## Loslegen
 

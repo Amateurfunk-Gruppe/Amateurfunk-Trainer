@@ -1882,3 +1882,49 @@ liegen. Die Cache-Frage in beiden Richtungen einzeln nachgestellt.
 Und wie beim ersten Mal: **geloescht wird nichts.** Alles wandert in einen
 Ordner mit Datum im Namen. Wer nachgesehen hat und weiter lernen kann, wirft
 ihn selbst weg.
+
+## 26.08.2026 - Bilder in der Repository-Beschreibung
+
+Dietmar: *"Kann ich in GitHub Bilder von meinem Trainer hochladen, die in der
+Beschreibung zu sehen sind?"*
+
+Ja - und zwar als Dateien im Repository, nicht ueber den Umweg, sie in einen
+Kommentar zu ziehen und die Adresse zu kopieren. Ein Ordner `bilder/`, im
+README mit `![Beschreibung](bilder/datei.png)` verlinkt: Die Bilder liegen
+damit in jedem Klon, ueberleben jeden Umzug und haengen an keinem fremden
+Server.
+
+**Die Bilder habe ich aufgenommen, nicht er - und zwar mit Absicht.** Ein
+Bildschirmfoto von seinem Rechner haette gezeigt, was gerade auf seinem
+Rechner steht: Benutzernamen im Verlauf, womoeglich die Tunnel-Adresse. Wir
+haben heute anderthalb Stunden damit zugebracht, drei Vornamen aus dem
+oeffentlichen Repository zu bekommen; sie ueber ein Bildschirmfoto wieder
+hineinzutragen waere ein schlechter Witz. Die Aufnahmen kommen deshalb aus
+meinem Pruefstand - dieselbe `Index.html`, aber ohne einen einzigen echten
+Namen. Im Verlauf steht "Benutzer 1", die Raumkennungen sind aus meinen
+Tests.
+
+Vier Bilder, jedes mit einem Grund:
+
+  - **Hauptansicht** ganz oben, direkt unter dem ersten Absatz. Wer auf eine
+    Repository-Seite kommt, entscheidet in Sekunden, ob ihn das Ding
+    interessiert. Ein Bild beantwortet "wie sieht das aus?" schneller als
+    jeder Absatz.
+  - **Pruefungsziel waehlen** direkt hinter der Tabelle, die die sechs Wege
+    aufzaehlt - Text und Bild sagen dasselbe, und das Bild sagt es sofort.
+  - **Eine beantwortete Frage** - die eigene Antwort rot, die richtige
+    daneben, links die Auswertung, unten die Stelle im Videolehrgang.
+  - **Pruefungssimulator** vor dem Start, mit der Grauzone 17-18.
+
+Aufgenommen mit doppelter Aufloesung und dann auf 1400 Pixel Breite
+gerechnet, damit sie auf hochaufloesenden Bildschirmen scharf bleiben. Statt
+Millionen Farben eine Palette aus 190: Bei einer Oberflaeche mit wenigen
+Flaechenfarben sieht man keinen Unterschied, die Dateien sind aber statt 500
+bis 700 KB nur noch **85 bis 136 KB** gross. Zusammen 448 KB fuer vier
+Bilder - das darf ein Repository tragen, das ohnehin 746 Zeichnungen
+mitbringt.
+
+Nachgesehen: Alle vier Pfade im README zeigen auf vorhandene Dateien, die
+`.gitignore` nimmt `bilder/` nicht versehentlich aus, und `aufraeumen.js`
+hat den Ordner jetzt in seiner Sperrliste - sonst haette es die Bilder beim
+naechsten Aufraeumen weggeraeumt.
