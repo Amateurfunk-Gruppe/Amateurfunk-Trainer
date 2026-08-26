@@ -1,23 +1,194 @@
-MIT License
+Amateurfunk-Trainer
+Copyright (c) 2026 Dietmar Reh — Entwickler und Urheber
 
-Copyright (c) 2026 Dietmar
+Required Notice: Copyright (c) 2026 Dietmar Reh — Amateurfunk-Trainer
+https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer
 
-Hiermit wird unentgeltlich jeder Person, die eine Kopie der Software und
-der zugehoerigen Dokumentationen (die "Software") erhaelt, die Erlaubnis
-erteilt, sie uneingeschraenkt zu nutzen, inklusive und ohne Ausnahme dem
-Recht, sie zu verwenden, zu kopieren, zu veraendern, zusammenzufuegen, zu
-veroeffentlichen, zu verbreiten, zu unterlizenzieren und/oder zu verkaufen,
-und Personen, denen diese Software ueberlassen wird, diese Rechte zu
-verschaffen, unter den folgenden Bedingungen:
 
-Der obige Urheberrechtsvermerk und dieser Erlaubnisvermerk sind in allen
-Kopien oder Teilkopien der Software beizulegen.
+================================================================
+  KURZ UND AUF DEUTSCH  (unverbindliche Zusammenfassung)
+================================================================
 
-DIE SOFTWARE WIRD OHNE JEDE AUSDRUECKLICHE ODER IMPLIZIERTE GARANTIE
-BEREITGESTELLT, EINSCHLIESSLICH DER GARANTIE ZUR BENUTZUNG FUER DEN
-VORGESEHENEN ODER EINEM BESTIMMTEN ZWECK SOWIE JEGLICHER RECHTSVERLETZUNG,
-JEDOCH NICHT DARAUF BESCHRAENKT. IN KEINEM FALL SIND DIE AUTOREN ODER
-COPYRIGHTINHABER FUER JEGLICHEN SCHADEN ODER SONSTIGE ANSPRUECHE HAFTBAR ZU
-MACHEN, OB INFOLGE DER ERFUELLUNG EINES VERTRAGES, EINES DELIKTES ODER
-ANDERS IM ZUSAMMENHANG MIT DER SOFTWARE ODER SONSTIGER VERWENDUNG DER
-SOFTWARE ENTSTANDEN.
+Der Amateurfunk-Trainer ist kostenfrei und darf frei benutzt,
+kopiert, verändert und weitergegeben werden — solange damit kein
+Geld verdient wird.
+
+Ausdrücklich erlaubt und erwünscht ist die Nutzung durch
+
+  * einzelne Lernende,
+  * Ortsverbände und Vereine,
+  * Volkshochschulen, Schulen und andere Bildungseinrichtungen,
+  * Ausbilderinnen und Ausbilder im Amateurfunk.
+
+Auch dann, wenn für den Kurs ein Teilnehmerbeitrag erhoben wird:
+Der Trainer selbst darf nur nicht zur Ware werden.
+
+Nicht erlaubt ist, den Trainer oder Teile davon zu verkaufen, in
+ein kostenpflichtiges Angebot einzubauen oder anderweitig
+gewerblich zu verwerten.
+
+Wer etwas vorhat, das darüber hinausgeht — eine Anpassung für den
+eigenen Ortsverband, eine andere Sprache, eine Zusammenarbeit —,
+ist eingeladen zu fragen. Anfragen von Ortsverbänden und
+Ausbildern sind willkommen und werden in aller Regel gern
+beantwortet.
+
+Verbindlich ist allein der englische Lizenztext unten.
+
+
+================================================================
+  PolyForm Noncommercial License 1.0.0
+  https://polyformproject.org/licenses/noncommercial/1.0.0
+================================================================
+
+## Acceptance
+
+In order to get any license under these terms, you must agree to
+them as both strict obligations and conditions to all your
+licenses.
+
+## Copyright License
+
+The licensor grants you a copyright license for the software to do
+everything you might do with the software that would otherwise
+infringe the licensor's copyright in it for any permitted purpose.
+However, you may only distribute the software according to
+Distribution License and make changes or new works based on the
+software according to Changes and New Works License.
+
+## Distribution License
+
+The licensor grants you an additional copyright license to
+distribute copies of the software. Your license to distribute
+covers distributing the software with changes and new works
+permitted by Changes and New Works License.
+
+## Notices
+
+You must ensure that anyone who gets a copy of any part of the
+software from you also gets a copy of these terms or the URL for
+them above, as well as copies of any plain-text lines beginning
+with `Required Notice:` that the licensor provided with the
+software.
+
+## Changes and New Works License
+
+The licensor grants you an additional copyright license to make
+changes and new works based on the software for any permitted
+purpose.
+
+## Patent License
+
+The licensor grants you a patent license for the software that
+covers patent claims the licensor can license, or becomes able to
+license, that you would infringe by using the software.
+
+## Noncommercial Purposes
+
+Any noncommercial purpose is a permitted purpose.
+
+## Personal Uses
+
+Personal use for research, experiment, and testing for the benefit
+of public knowledge, personal study, private entertainment, hobby
+projects, amateur pursuits, or religious observance, without any
+anticipated commercial application, is use for a permitted
+purpose.
+
+## Noncommercial Organizations
+
+Use by any charitable organization, educational institution,
+public research organization, public safety or health
+organization, environmental protection organization, or government
+institution is use for a permitted purpose regardless of the
+source of funding or obligations resulting from the funding.
+
+## Fair Use
+
+You may have "fair use" rights for the software under the law.
+These terms do not limit them.
+
+## No Other Rights
+
+These terms do not allow you to sublicense or transfer any of your
+licenses to anyone else, or prevent the licensor from granting
+licenses to anyone else. These terms do not imply any other
+licenses.
+
+## Patent Defense
+
+If you make any written claim that the software infringes or
+contributes to infringement of any patent, your patent license for
+the software granted under these terms ends immediately. If your
+company makes such a claim, your patent license ends immediately
+for work on behalf of your company.
+
+## Violations
+
+The first time you are notified in writing that you have violated
+any of these terms, or done anything with the software not covered
+by your licenses, your licenses can nonetheless continue if you
+come into full compliance with these terms, and take practical
+steps to correct past violations, within 32 days of receiving
+notice. Otherwise, all your licenses end immediately.
+
+## No Liability
+
+As far as the law allows, the software comes as is, without any
+warranty or condition, and the licensor will not be liable to you
+for any damages arising out of these terms or the use or nature of
+the software, under any kind of legal claim.
+
+## Definitions
+
+The licensor is the individual or entity offering these terms, and
+the software is the software the licensor makes available under
+these terms. You refers to the individual or entity agreeing to
+these terms. Your company is any legal entity, sole
+proprietorship, or other kind of organization that you work for,
+plus all organizations that have control over, are under the
+control of, or are under common control with that organization.
+Control means ownership of substantially all the assets of an
+entity, or the power to direct its management and policies by
+vote, contract, or otherwise. Control can be direct or indirect.
+Your licenses are all the licenses granted to you for the software
+under these terms. Use means anything you do with the software
+requiring one of your licenses.
+
+
+================================================================
+  WAS NICHT UNTER DIESER LIZENZ STEHT
+================================================================
+
+Der Trainer bringt fremde Bestandteile mit. Für sie gilt weiter
+die Lizenz ihrer Urheber — sie lässt sich nicht durch die obige
+ersetzen, und das ist auch nicht beabsichtigt:
+
+  lame.js
+      lamejs, eine JavaScript-Portierung von LAME, unter der
+      LGPL 2.1. Wird für die MP3-Ausgabe des Hörbuchs gebraucht.
+      https://github.com/gilmoreorless/lamejs
+
+  Der Fragenkatalog (fragen.json, Fragen-*.json)
+      Prüfungsfragen der Bundesnetzagentur, 3. Auflage, März 2024,
+      unter der Datenlizenz Deutschland – Namensnennung – 2.0.
+      Diese Lizenz erlaubt ausdrücklich auch die kommerzielle
+      Nutzung der Daten; daran ändert die Lizenz des Trainers
+      nichts.
+      https://www.govdata.de/dl-de/by-2-0
+
+  Die Zeichnungen (svgs/)
+      aus fritzsche/afu_test, dort in die Gemeinfreiheit
+      entlassen (Unlicense).
+      https://github.com/fritzsche/afu_test
+
+
+================================================================
+  ZUR VORGESCHICHTE
+================================================================
+
+Bis zum 26.08.2026 stand dieses Projekt unter der MIT-Lizenz. Wer
+in dieser Zeit eine Fassung bezogen hat, behält die damit
+erteilten Rechte — eine einmal erteilte Lizenz lässt sich nicht
+zurücknehmen. Die Umstellung gilt für diese und alle künftigen
+Fassungen.

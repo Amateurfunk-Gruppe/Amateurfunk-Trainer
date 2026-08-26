@@ -1,4 +1,11 @@
-# Änderungsprotokoll — Amateurfunk Klasse-N-Trainer
+# Änderungsprotokoll — Amateurfunk-Trainer
+
+**Entwickler und Urheber: Dietmar Reh.**
+Alles, was in diesem Protokoll beschrieben wird, ist auf seine Veranlassung,
+nach seinen Vorgaben und mit seinen Entscheidungen entstanden. Der Trainer
+steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE): kostenfrei
+für Lernende, Ortsverbände und Volkshochschulen, kommerzielle Verwertung
+ausgeschlossen.
 
 Dieser erste Überblick fasst zusammen, was am Projekt bereits gearbeitet wurde, bevor die
 Git-Historie eingerichtet wurde. Ab dem Initial-Commit läuft die Versionsgeschichte über die
@@ -1928,3 +1935,75 @@ Nachgesehen: Alle vier Pfade im README zeigen auf vorhandene Dateien, die
 `.gitignore` nimmt `bilder/` nicht versehentlich aus, und `aufraeumen.js`
 hat den Ordner jetzt in seiner Sperrliste - sonst haette es die Bilder beim
 naechsten Aufraeumen weggeraeumt.
+
+## 26.08.2026 - Bilder vom Gruppenraum, und ein Lizenzwechsel
+
+Zwei Wuensche in einem Zug: Bilder vom Gruppenraum mit mehreren Teilnehmern
+fuer die Repository-Seite, ein Text dazu, dass der Trainer die passende
+Ergaenzung fuer Ortsverbaende und Volkshochschulen ist - und der Wunsch,
+dass Dietmars Arbeit rechtlich nicht mehr voellig frei herumliegt.
+
+**Die Bilder.** Fuer den Gruppenraum reicht kein Bildschirmfoto: Es braucht
+tatsaechlich mehrere Leute im Raum. Also habe ich fuenf Browser gleichzeitig
+laufen lassen - einen als Gastgeber, vier als Teilnehmer mit den frei
+erfundenen Namen Anna, Bernd, Clara und Jonas. Bewusst Vornamen und keine
+Rufzeichen: Ein Rufzeichen gehoert immer jemandem.
+
+Dabei gab es einen Umweg, der eine Eigenart des Trainers zeigt: Der
+Einladungslink tritt dem Raum beim Laden von SELBST bei. Wer den Namen erst
+danach setzt, steht in der Liste als "Benutzer 1". Erst Name, dann Link -
+dann stimmt es.
+
+**Ein Beobachtung, die Dietmar pruefen sollte.** In meinem Aufbau bekamen die
+vier Teilnehmer die Fragen nicht: Der Gastgeber startete, seine eigene Runde
+lief, bei den Gaesten kam sofort `duoFinalResults` an, ohne dass sie je eine
+Frage gesehen haetten. Das kann an meinem Aufbau liegen - fuenf kopflose
+Browser auf einer Maschine sind kein Wohnzimmer voller Leute. Es kann aber
+auch ein echter Fehler sein. **Ich habe es nicht geklaert und behaupte
+nichts.** Beim naechsten Abend mit der Gruppe ist es in einer Minute
+geprueft.
+
+**Der Lizenzwechsel.** Bis heute stand das Projekt unter MIT. Diese Lizenz
+erlaubt ausdruecklich, den Trainer zu nehmen, zu veraendern und zu
+**verkaufen** - Namensnennung genuegt. Das ist das Gegenteil dessen, was
+Dietmar wollte. Auf die Frage hin hat er entschieden: kommerzielle Nutzung
+ausgeschlossen.
+
+Umgesetzt mit der **PolyForm Noncommercial License 1.0.0** statt der
+naheliegenden Creative-Commons-Variante. CC BY-NC-SA ist fuer Texte und
+Bilder gemacht; Creative Commons selbst raet von ihr fuer Software ab, weil
+sie Quelltext, Bibliotheken und Verlinkung nicht kennt. PolyForm
+Noncommercial ist eigens fuer diesen Fall geschrieben - und sie schliesst
+Bildungseinrichtungen ausdruecklich ein: "Use by any charitable
+organization, educational institution ... is use for a permitted purpose
+regardless of the source of funding." Genau der Fall Ortsverband und VHS,
+und zwar auch dann, wenn fuer den Kurs ein Beitrag erhoben wird.
+
+**Drei Dinge, die ich nicht schoenreden kann und deshalb hineingeschrieben
+habe:**
+
+  1. **Was unter MIT herausgegangen ist, bleibt MIT.** Eine erteilte Lizenz
+     laesst sich nicht zurueckziehen. Die Umstellung gilt ab jetzt.
+  2. **Ideen sind nicht geschuetzt.** Das Urheberrecht schuetzt die konkrete
+     Ausfuehrung - Code, Texte, Aufbau -, nicht den Einfall dahinter. Ein
+     Satz wie "meine Ideen sind geschuetzt" waere schlicht falsch, und
+     Falsches in eine Lizenzdatei zu schreiben schadet mehr, als es nuetzt.
+  3. **Fremde Bestandteile bleiben, wie sie sind.** `lame.js` steht unter
+     LGPL 2.1, der Fragenkatalog unter der Datenlizenz Deutschland - die
+     erlaubt sogar ausdruecklich kommerzielle Nutzung der Daten -, die
+     Zeichnungen aus fritzsche/afu_test sind gemeinfrei (nachgesehen: dort
+     liegt die Unlicense). Diese drei kann Dietmar nicht umlizenzieren, und
+     die LICENSE sagt das jetzt.
+
+Die Lizenzdatei beginnt mit einer deutschen Zusammenfassung in klarer
+Sprache - ausdruecklich als unverbindlich gekennzeichnet, verbindlich ist
+der englische Text. Wer wissen will, ob er den Trainer im Ortsverband
+einsetzen darf, soll das in dreissig Sekunden lesen koennen und nicht in
+einem englischen Paragraphenwerk suchen muessen.
+
+Ergaenzt wurden ausserdem `package.json` (Autor, Lizenzfeld) und der Kopf
+dieses Protokolls.
+
+**Kein Rechtsrat.** Ich bin kein Anwalt. Das ist eine gaengige, sauber
+formulierte Lizenz fuer genau diesen Zweck - fuer eine belastbare Auskunft
+gehoert ein Anwalt gefragt.

@@ -5,6 +5,9 @@ Läuft auf dem eigenen Rechner, ohne Konto, ohne Internetzwang, ohne Werbung.
 
 Der Lernfortschritt bleibt dort, wo er entsteht: auf dem eigenen Rechner.
 
+Entwickelt von **Dietmar Reh**. Kostenfrei für Lernende, Ortsverbände und
+Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
+
 ![Die Hauptansicht des Trainers](bilder/01-hauptansicht.png)
 
 ## Was es kann
@@ -46,6 +49,38 @@ Auswertung und der Fortschritt durch die Runde, unten die passende Stelle im
 Videolehrgang mit Zeitmarke.
 
 ![Eine beantwortete Frage im Lernmodus](bilder/03-frage.png)
+
+### Gruppenraum — für Ortsverbände und Volkshochschulen
+
+Der Trainer ist die passende Ergänzung für alle, die Amateurfunk **unterrichten**:
+im Ortsverband, an der Volkshochschule, im Verein.
+
+Der Ausbilder startet den Gruppenraum auf seinem eigenen Rechner und teilt einen
+Link. Mehr braucht es nicht:
+
+- **Bei den Teilnehmern wird nichts installiert.** Kein Konto, keine Anmeldung,
+  keine App. Der Link geht in jedem Browser auf — Windows, Mac, Linux, Tablet,
+  Handy. Nur der Ausbilder braucht den Trainer auf seinem Rechner.
+- **Alle bekommen dieselben Fragen**, jeder in seinem Tempo.
+- Der Ausbilder sieht in der **Teilnehmer-Übersicht**, wie weit jeder ist und wo
+  es hakt — ohne dass bei irgendjemandem ein Fenster aufspringt.
+- Ein **Gruppenchat** für Zwischenfragen gehört dazu.
+- Am Ende steht die **Auswertung für alle** — und wer will, nimmt sich den
+  kompletten Trainer über „Trainer herunterladen" mit nach Hause.
+
+![Der Gruppenraum mit mehreren Teilnehmern](bilder/05-gruppenraum.png)
+
+Die Übersicht, die nur der Ausbilder sieht:
+
+![Die Teilnehmer-Übersicht des Ausbilders](bilder/06-uebersicht.png)
+
+### Statistik und Lernfortschritt
+
+Getrennt nach Prüfungsteil: was gelernt ist, wie die Trefferquote über alle je
+gegebenen Antworten aussieht, und welche Fragen immer wieder danebengehen. Die
+Auffrischung meldet sich nach 3, 7, 21 und 60 Tagen von selbst.
+
+![Die Statistik mit Lernfortschritt und Stolpersteinen](bilder/07-statistik.png)
 
 ### Prüfungssimulator
 
@@ -102,7 +137,30 @@ Im Trainer gibt es oben den Knopf **Fehler melden** — er öffnet eine vorberei
 Mail, in der Fassung, Prüfungsziel und die gerade angezeigte Frage schon
 eingetragen sind. Oder hier ein Issue aufmachen.
 
-## Lizenz
+## Urheberrecht, Nutzung und Kontakt
 
-MIT — siehe [LICENSE](LICENSE). Für den Fragenkatalog gilt die Datenlizenz
-Deutschland, für `lame.js` die LGPL; beides ist oben genannt.
+Der Amateurfunk-Trainer ist von **Dietmar Reh** entwickelt worden. Programmcode,
+Texte, Aufbau und Gestaltung stehen unter seinem Urheberrecht.
+
+**Der Trainer ist und bleibt kostenfrei.** Er darf benutzt, kopiert, verändert
+und weitergegeben werden — solange damit kein Geld verdient wird. Ausdrücklich
+erlaubt und erwünscht ist die Nutzung durch einzelne Lernende, Ortsverbände,
+Vereine, Volkshochschulen, Schulen und Ausbilder. Auch dann, wenn für den Kurs
+ein Teilnehmerbeitrag erhoben wird — der Trainer selbst darf nur nicht zur Ware
+werden.
+
+**Nicht erlaubt** ist, ihn oder Teile davon zu verkaufen, in ein
+kostenpflichtiges Angebot einzubauen oder anderweitig gewerblich zu verwerten.
+
+Maßgeblich ist die [PolyForm Noncommercial License 1.0.0](LICENSE) — eine
+Lizenz, die eigens für diesen Fall geschrieben wurde: Weitergabe ja, Verkauf
+nein. Bildungseinrichtungen sind darin ausdrücklich eingeschlossen.
+
+**Anfragen sind willkommen.** Wer den Trainer im Ortsverband oder an der VHS
+einsetzen möchte, ihn für seinen Kurs anpassen will oder eine Zusammenarbeit
+vorschlägt: einfach fragen — über den Knopf **Fehler melden** im Trainer oder
+hier ein Issue. Das gilt auch für alles, was über die Lizenz hinausgeht.
+
+Für mitgelieferte Fremdbestandteile gilt weiter die Lizenz ihrer Urheber:
+`lame.js` unter LGPL 2.1, der Fragenkatalog unter der Datenlizenz Deutschland,
+die Zeichnungen sind gemeinfrei. Einzelheiten in [LICENSE](LICENSE).
