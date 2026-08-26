@@ -74,7 +74,8 @@ normalen Commits weiter (siehe `git log --oneline`).
   Zweiter Auslöser war `enablejsapi=1` ohne passenden `origin`-Parameter.
 - **Videos laufen jetzt regulär über YouTube**: Klick auf „Auf YouTube ansehen" öffnet den
   Lehrgang von Michael, DL2YMR, mit Zeitmarke in einem neuen Tab — mit Werbung und als zählender
-  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. 
+  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. Nur eine kleine private Runde
+  bekommt weiterhin das eingebettete Fenster.
 - **Benutzernamen**: Der Name aus dem Raum-Dialog gehört jetzt zum Benutzer-Slot und ersetzt
   „Benutzer 1/2/3" in Verlauf, Löschen-Dialog und Reset-Fenster. Der Gruppenraum bekommt
   automatisch den Namen des aktiven Slots. Die Lerndaten liegen unverändert unter `user1/2/3`.
@@ -1587,3 +1588,89 @@ Port 30000 nicht, IPv4 und IPv6 liefern dieselbe PID), die Vollstaendigkeit
 aller Sprungmarken und die Klammerbilanz. Den Rest sagt der erste Lauf: Wenn
 dort *"Auf Port 3000 laeuft schon etwas - node.exe - PID ..."* steht, ist die
 Vermutung bestaetigt.
+
+## 26.08.2026 - Ein Hinweis, der wie ein Auftrag klang
+
+Dietmar fragte: *"Kann ich Piper in den Hauptordner bei GitHub ziehen?"*
+
+Die Frage kam nicht von ungefaehr. `Hochladen.bat` sagte nach jedem
+erfolgreichen Push:
+
+    Piper-Stimmen.zip liegt bereit (418,9 MiB).
+    Auf der Seite "Releases" -> "Create a new release",
+    Tag vergeben und die Datei ins Feld ziehen.
+
+Das liest sich wie eine Anweisung - obwohl das Release `v1.0` mit genau
+dieser Datei laengst steht. Wer eine Anweisung bekommt, die er nicht
+ausfuehren kann oder will, sucht nach einem anderen Weg. In diesem Fall:
+"dann ziehe ich sie eben in den Hauptordner".
+
+Das ginge dreifach nicht: `de_DE-thorsten-high.onnx` misst 108,6 MiB gegen
+GitHubs harte Grenze von 100 MiB je Datei; das Formular auf der Webseite
+nimmt ohnehin nur 25 MB; und jeder Klon zoege 470 MB mit sich herum.
+
+Der Hinweis sagt das jetzt selbst - und macht klar, dass nichts zu tun ist,
+wenn schon ein Release steht:
+
+    Piper-Stimmen.zip liegt bereit (418,9 MiB) - falls du sie
+    neu gebaut hast: bei "Releases" ein neues Release anlegen und
+    die Datei anhaengen. Steht dort schon eines, ist nichts zu tun.
+    Ins Repository selbst gehoert sie nicht - dort gilt 100 MiB je
+    Datei, und thorsten-high allein misst 108,6 MiB.
+
+Dasselbe Muster wie heute frueh bei "Stimmen_packen.bat ausfuehren": Ein
+Hinweis, der bei jedem Lauf dasselbe fordert, wird entweder befolgt (und
+richtet Unfug an) oder ueberlesen (und taugt dann auch nichts). Er muss
+sagen, WANN er gilt.
+
+## 26.08.2026 - "Das Fenster geht auf und sofort wieder zu"
+
+Der Mitlernende hat getan, was das Fenster ihm sagte: die beiden Links
+angeklickt, gespeichert - und danach startete sein Trainer gar nicht mehr.
+
+**Erst nachstellen, dann raten.** Ich habe die Lage exakt nachgebaut: einen
+Serverstand von vor der GitHub-Funktion genommen und genau die zwei Dateien
+hineinkopiert, die er geladen hat. Das laeuft sauber durch, Katalog geladen,
+HTTP 200. Am Code liegt es also nicht.
+
+Dann die andere Richtung - was passiert, wenn statt der Datei die WEBSEITE
+gespeichert wurde:
+
+    SyntaxError: Unexpected token '<'
+
+Node bricht sofort ab, das Fenster ist schneller zu, als man lesen kann.
+Das passt genau auf seine Beschreibung. Und es ist kein Bedienfehler: Wer
+einen Link zu einer Textdatei anklickt, sieht Text im Browser; ein Strg+S
+darauf speichert je nach Browser die Seite drumherum statt der Datei.
+
+**Zwei neue Dateien - eine sieht nach, die andere macht es richtig.**
+
+`Fehler-Zeigen.bat` ist fuer genau diesen Fall gebaut: Sie zeigt die
+Node-Version, die Groessen der beteiligten Dateien (Server.js sollte rund
+139.000 Bytes haben, github_update.js rund 15.500), die **ersten drei Zeilen
+der Server.js** - dort sieht man sofort, ob dort `<!DOCTYPE html>` steht -
+und startet dann den Server. Und sie bleibt stehen, egal was passiert. Sie
+aendert nichts.
+
+`Programm-Aktualisieren.bat` beseitigt die Fehlerquelle ganz: Sie holt die
+beiden Dateien mit `curl` (gehoert seit Windows 10 zum System) direkt von
+raw.githubusercontent.com. Kein Speichern-Dialog, keine Gelegenheit, das
+Falsche zu erwischen. Geprueft wird VOR dem Ersetzen:
+
+  - faengt die geladene Datei mit `<` an, ist es eine Webseite - abbrechen
+  - ist sie verdaechtig klein, war die Uebertragung unvollstaendig -
+    abbrechen
+  - erst danach: alte Fassung nach `backup\` sichern und ersetzen
+
+In jedem Fehlerfall steht ausdruecklich da: "Es wurde NICHTS ersetzt." Ein
+Update-Werkzeug, das im Zweifel die Finger davon laesst, ist mehr wert als
+eines, das es versucht.
+
+Fehlt `curl` (Windows aelter als 10), nennt sie den Browser-Weg samt der
+Falle: als Dateityp "Alle Dateien" waehlen und den Namen ohne `.txt`
+eintragen.
+
+Geprueft: Sprungmarken vollstaendig, Klammerbilanz stimmt, die
+`findstr /b /c:"<"`-Erkennung trennt HTML von Javascript, CRLF-Zeilenenden.
+Der Rest zeigt sich beim ersten Lauf - und das ist ja gerade der Zweck der
+beiden Dateien.
