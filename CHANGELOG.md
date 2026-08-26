@@ -2275,3 +2275,78 @@ was der Trainer tut. Neu aufgenommen.
 
 Merkposten fuer kuenftige Aenderungen an der Oberflaeche: Bildschirmfotos
 altern still. Sie sagen nie, dass sie veraltet sind.
+
+## 26.08.2026 - Direkteinstieg und Aufstieg endlich auseinandergehalten
+
+Dietmar hatte zuerst geschrieben: "Wenn ich Direkteinstieg möchte egal von N
+nach E oder von E nach A, dann sollte das klarer sein." - und im selben Satz
+"N nach E" einen Direkteinstieg genannt. Genau das war der Befund: Das
+Fenster liess nicht erkennen, welcher der beiden Faelle gerade gewaehlt wird.
+
+**Zuerst ein Widerspruch, der geklaert werden musste.** Dietmar schrieb, bei
+Direkteinstieg auf E kaemen "Betrieb, Vorschriften und Technik" - also drei
+Boegen. Der Trainer zeigte vier (V, B, Technik N, Technik E). Statt einfach
+umzubauen habe ich nachgeschlagen. Vier Quellen sagen woertlich dasselbe:
+
+    "Für eine Amateurfunkprüfungsbescheinigung der Klasse E müssen die
+     Prüfungsteile V, B, N und E bestanden sein."      (afu-base.de)
+
+Die Bundesnetzagentur teilt die Technik in drei eigene Boegen. Ein
+Direkteinsteiger auf E schreibt also beide unteren Technikboegen. Auf
+Nachfrage hat Dietmar das bestaetigt und die Regel selbst noch einmal
+aufgeschrieben - sie deckt sich mit dem, was seit heute Mittag im Trainer
+steht. Zwei seiner drei gemeldeten Punkte waren damit schon behoben, der
+dritte war die Anzeige.
+
+**Merkposten fuer mich:** Wenn der Nutzer und vier Quellen sich
+widersprechen, ist Nachschlagen billiger als Umbauen. Haette ich seinem
+ersten Satz gehorcht, waere aus einem richtigen Simulator ein falscher
+geworden - und niemand haette es gemerkt, bis jemand in der echten Pruefung
+vor einem Technik-N-Bogen sitzt, den er nie geuebt hat.
+
+**Was neu ist: die Regel steht jetzt an einer Stelle.** Bisher ergab sich
+der Umfang aus dem, was in der Katalogdatei lag - richtig, aber nirgends
+ausgesprochen. Jetzt gibt es `getPruefungsUmfang(vorhandeneLizenz, ziel)`:
+
+    keine Lizenz, Ziel N   V + B + TN                 75 Fragen
+    keine Lizenz, Ziel E   V + B + TN + TE           100 Fragen
+    keine Lizenz, Ziel A   V + B + TN + TE + TA      125 Fragen
+    N vorhanden, Ziel E    TE                         25 Fragen
+    N vorhanden, Ziel A    TE + TA                    50 Fragen
+    E vorhanden, Ziel A    TA                         25 Fragen
+
+Die sechs Kennungen des Trainers ('n','e','a','ne','na','ea') sind nichts
+anderes als diese Paare; eine kleine Tabelle uebersetzt zwischen beiden. Ein
+vollstaendiger Umbau der Zustandsverwaltung waere moeglich gewesen, haette
+aber die gespeicherten Lernstaende und den Merkposten der Runde beruehrt -
+fuer null Verhaltensaenderung. Die Kennungen bleiben, die Regel wird
+ausgesprochen.
+
+**Und eine Selbstpruefung dazu.** Bei jedem Wechsel des Ziels vergleicht der
+Trainer, was die Regel sagt, mit dem, was tatsaechlich im Katalog liegt.
+Fallen sie auseinander, steht das in der Konsole. Kein Alarmfenster - der
+Katalog ist die Wirklichkeit, die Regel nur die Erwartung. Aber eine
+vertauschte Katalogdatei wuerde sonst nie auffallen. Ueber alle sechs Ziele
+geprueft: keine Abweichung.
+
+**Das Fenster** ist in zwei Gruppen geteilt:
+
+    Ich fange neu an — Direkteinstieg
+      Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse,
+      desto mehr Technik kommt dazu.
+        Klasse N · Basis          Prüfung: Vorschriften Betrieb Technik N  = 75
+        Direkteinstieg Klasse E   ... Technik N Technik E                  = 100
+        Direkteinstieg Klasse A   ... Technik N Technik E Technik A        = 125
+
+    Ich habe schon eine Bescheinigung — Aufstieg
+      Was du bereits bestanden hast, wird nicht noch einmal geprüft.
+        Aufstockung N → E         Prüfung: Technik E                       = 25
+        Aufstockung N → A         Prüfung: Technik E Technik A             = 50
+        Aufstockung E → A         Prüfung: Technik A                       = 25
+
+Jede Zeile sagt jetzt VOR dem Klick, was dabei geprueft wird. Die Zahl
+rechts heisst nicht mehr nur "463 Fragen", sondern "463 zum Lernen" - sie ist
+der Lernpool, nicht die Pruefung, und diese beiden wurden bisher
+verwechselt.
+
+Bild `02-pruefungsziel.png` neu aufgenommen.

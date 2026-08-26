@@ -31,7 +31,13 @@ Vorschriften und Betrieb sind für alle Klassen gleich — die Klassen untersche
 sich nur im Prüfungsteil Technik. Beim Aufstieg wird deshalb nur dieser Teil
 nachgeschrieben.
 
-![Das Fenster „Prüfungsziel wählen" mit allen sechs Wegen](bilder/02-pruefungsziel.png)
+Das Fenster trennt die beiden Fälle, die in der Praxis dauernd verwechselt
+werden: **Direkteinstieg** (noch keine Bescheinigung — je höher die Klasse,
+desto mehr Technik kommt dazu) und **Aufstieg** (Bescheinigung vorhanden — nur
+die fehlende Technik, kein Vorschriften und kein Betrieb mehr). Jede Zeile sagt
+vorher, welche Prüfungsbögen dazugehören.
+
+![Das Fenster „Prüfungsziel wählen" — Direkteinstieg und Aufstieg getrennt](bilder/02-pruefungsziel.png)
 
 **Weiter:**
 

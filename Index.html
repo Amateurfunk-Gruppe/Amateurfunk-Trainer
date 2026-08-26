@@ -2520,6 +2520,69 @@ const KLASSEN = [
     { id:'a',  datei:'Fragen-A.json',       name:'Klasse A',
       titel:'Direkteinstieg Klasse A', note:'Alles von N plus Technik E und Technik A.' }
 ];
+// ================================================================
+// DER PRUEFUNGSUMFANG - die Regel an einer einzigen Stelle
+// ================================================================
+// Die sechs Zeilen oben sind in Wahrheit zwei Angaben: was jemand schon
+// hat, und was er will. Genau daraus ergibt sich, was er schreiben muss.
+//
+//   ERSTPRUEFUNG (noch keine Bescheinigung) - die Technik ist kumulativ:
+//       Ziel N   V + B + TN                  75 Fragen
+//       Ziel E   V + B + TN + TE            100 Fragen
+//       Ziel A   V + B + TN + TE + TA       125 Fragen
+//
+//   ZUSATZPRUEFUNG (Bescheinigung vorhanden) - nur das Delta, kein V, kein B:
+//       N -> E   TE                          25 Fragen
+//       N -> A   TE + TA                     50 Fragen
+//       E -> A   TA                          25 Fragen
+//
+// Wer bereits eine Bescheinigung hat, schreibt die damit bestandenen
+// Boegen nicht noch einmal - deshalb faellt bei jedem Aufstieg alles weg,
+// was in der niedrigeren Klasse schon geprueft wurde.
+//
+// Die Regel steht hier EINMAL. Anzeige, Simulator und Lernpool lesen aus
+// ihr; keiner rechnet sie noch einmal nach.
+// ================================================================
+const PRUEFUNGSTEILE_REIHE = ['vorschriften','betrieb','technik_n','technik_e','technik_a'];
+
+function getPruefungsUmfang(vorhandeneLizenz, ziel){
+    const stufe = { N:1, E:2, A:3 };
+    const z = stufe[ziel];
+    if(!z) return [];
+    // 'keine' -> 0, 'N' -> 1, 'E' -> 2. Alles darueber wird geschrieben.
+    const habe = (vorhandeneLizenz === 'N') ? 1 : (vorhandeneLizenz === 'E') ? 2 : 0;
+    if(habe >= z) return [];                    // nichts nachzuschreiben
+    const teile = [];
+    if(habe === 0){ teile.push('vorschriften', 'betrieb'); }
+    if(habe < 1 && z >= 1) teile.push('technik_n');
+    if(habe < 2 && z >= 2) teile.push('technik_e');
+    if(habe < 3 && z >= 3) teile.push('technik_a');
+    return teile;
+}
+window.getPruefungsUmfang = getPruefungsUmfang;
+
+// Die sechs Kennungen sind nichts anderes als (Lizenz, Ziel).
+const KLASSE_LAGE = {
+    n:  { lizenz:'keine', ziel:'N', art:'erst' },
+    e:  { lizenz:'keine', ziel:'E', art:'erst' },
+    a:  { lizenz:'keine', ziel:'A', art:'erst' },
+    ne: { lizenz:'N',     ziel:'E', art:'auf'  },
+    na: { lizenz:'N',     ziel:'A', art:'auf'  },
+    ea: { lizenz:'E',     ziel:'A', art:'auf'  }
+};
+function klasseUmfang(id){
+    const l = KLASSE_LAGE[id];
+    return l ? getPruefungsUmfang(l.lizenz, l.ziel) : [];
+}
+window.klasseUmfang = klasseUmfang;
+
+// Lesbare Namen - der Simulator hat dieselben, aber der laedt spaeter.
+// Hier braucht das Fenster "Pruefungsziel waehlen" sie schon vorher.
+const TEIL_NAME = {
+    vorschriften:'Vorschriften', betrieb:'Betrieb',
+    technik_n:'Technik N', technik_e:'Technik E', technik_a:'Technik A'
+};
+
 const KLASSE_SCHLUESSEL = 'amateurfunk_klasse';
 // Gemerkte Fragenzahlen. Ohne sie muesste das Fenster jedes Mal alle sechs
 // Dateien laden, nur um "1034 Fragen" hinschreiben zu koennen.
@@ -2573,6 +2636,23 @@ function klasseAnzeigeAktualisieren() {
     try {
         if (typeof window.realisticTeile === 'function' && bank.length) teileListe = window.realisticTeile();
     } catch (e) { teileListe = null; }
+
+    // Selbstpruefung: Was die Regel sagt, und was wirklich im Katalog liegt,
+    // muessen dasselbe sein. Auseinanderfallen koennen sie nur, wenn eine
+    // Katalogdatei anders zusammengestellt ist als erwartet - und genau das
+    // wuerde sonst niemand merken. Kein Alarmfenster: Der Katalog ist die
+    // Wirklichkeit, die Regel nur die Erwartung. Aber in der Konsole steht
+    // es dann schwarz auf weiss.
+    try {
+        const erwartet = klasseUmfang(kl.id);
+        if (teileListe && erwartet.length) {
+            const a = erwartet.join('+'), b = teileListe.join('+');
+            if (a !== b) {
+                console.warn('[PRUEFUNGSZIEL] ' + kl.titel + ': erwartet ' + a
+                    + ', im Katalog liegt aber ' + b + '. Der Katalog gilt.');
+            }
+        }
+    } catch (e) {}
 
     if (koerper && teileListe && teileListe.length) {
         const meta = window.REALISTIC_PART_META || {};
@@ -2638,41 +2718,83 @@ function klasseModalFuellen() {
     if (!modal) return;
     const aktiv = klasseAktuell().id;
     const zahlen = klasseZahlen();
-    let zeilen = '';
-    KLASSEN.forEach(k => {
+
+    // Eine Zeile im Fenster. Sie sagt jetzt nicht mehr nur, wie das Ziel
+    // heisst, sondern WAS DABEI GEPRUEFT WIRD - das war Dietmars Punkt:
+    // "Wenn ich das Prüfungsziel auswähle, muss das auch so übernommen
+    // werden." Man soll es sehen, bevor man klickt, nicht erst danach.
+    function zeile(k) {
         const an = k.id === aktiv;
         const zahl = zahlen[k.id];
-        const fehlt = zahl === -1;          // Datei nicht gefunden
-        zeilen += '<button onclick="klasseWaehlen(\'' + k.id + '\')"'
+        const fehlt = zahl === -1;                 // Datei nicht gefunden
+        const teile = klasseUmfang(k.id);
+        const namen = teile.map(t => TEIL_NAME[t] || t);
+        const pruefungsfragen = teile.length * 25;
+
+        return '<button onclick="klasseWaehlen(\'' + k.id + '\')"'
             + ' class="klasse-opt' + (an ? ' aktiv' : '') + '"'
             + (fehlt ? ' disabled' : '')
-            + ' style="display:flex; align-items:center; gap:0.8rem; width:100%; text-align:left; '
+            + ' style="display:flex; align-items:flex-start; gap:0.8rem; width:100%; text-align:left; '
             + 'padding:0.7rem 0.9rem; margin-bottom:0.45rem; border-radius:12px; cursor:' + (fehlt ? 'not-allowed' : 'pointer') + '; '
             + 'font-family:inherit; opacity:' + (fehlt ? '0.5' : '1') + ';">'
-            + '<span style="font-size:1.2rem; width:1.6rem; text-align:center;">'
+            + '<span style="font-size:1.2rem; width:1.6rem; text-align:center; margin-top:1px;">'
             + (an ? '<i class="fas fa-circle-check" style="color:#15703c;"></i>'
                   : '<i class="far fa-circle" style="color:#8aa0bb;"></i>') + '</span>'
             + '<span style="flex:1;">'
             + '<span style="display:block; font-weight:700; font-size:0.9rem; color:#0f2745;">' + k.titel + '</span>'
             + '<span style="display:block; font-size:0.75rem; color:#4b5563; margin-top:2px;">' + k.note + '</span>'
+            + (namen.length
+                ? '<span style="display:block; font-size:0.73rem; color:#0f2745; margin-top:5px;">'
+                  + '<b>Prüfung:</b> ' + namen.map(n =>
+                      '<span style="display:inline-block; background:#eef4fc; border:1px solid #cfe0f2; '
+                      + 'border-radius:7px; padding:0px 6px; margin:1px 3px 1px 0; white-space:nowrap;">'
+                      + n + '</span>').join('')
+                  + '<span style="color:#4b5563; white-space:nowrap;"> = ' + pruefungsfragen + ' Fragen</span></span>'
+                : '')
             + '</span>'
-            + '<span style="font-size:0.78rem; font-weight:700; color:#0f2745; white-space:nowrap;">'
-            + (fehlt ? 'Datei fehlt' : (zahl ? zahl + ' Fragen' : '<span style="color:#8aa0bb;font-weight:400;">zähle …</span>'))
+            + '<span style="font-size:0.78rem; font-weight:700; color:#0f2745; white-space:nowrap; margin-top:1px;">'
+            + (fehlt ? 'Datei fehlt' : (zahl ? zahl + '<br><span style="font-weight:400; color:#4b5563;">zum Lernen</span>'
+                                             : '<span style="color:#8aa0bb;font-weight:400;">zähle …</span>'))
             + '</span></button>';
-    });
+    }
+
+    // Die Reihenfolge steht hier und nicht in KLASSEN: Innerhalb der
+    // Gruppen soll sie aufsteigen (N, E, A / N→E, N→A, E→A), nicht der
+    // historisch gewachsenen Reihenfolge der Katalogdateien folgen.
+    const ZEILEN_FOLGE = { erst: ['n','e','a'], auf: ['ne','na','ea'] };
+
+    function gruppe(ueberschrift, erklaerung, art) {
+        const drin = (ZEILEN_FOLGE[art] || [])
+            .map(id => KLASSEN.find(k => k.id === id))
+            .filter(Boolean);
+        if (!drin.length) return '';
+        return '<div style="margin:0.9rem 0 0.5rem;">'
+            + '<div style="font-size:0.82rem; font-weight:700; color:#0f2745;">' + ueberschrift + '</div>'
+            + '<div style="font-size:0.73rem; color:#4b5563; margin-top:1px;">' + erklaerung + '</div>'
+            + '</div>'
+            + drin.map(zeile).join('');
+    }
+
     modal.innerHTML =
-        '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:620px; width:96%; '
+        '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
         + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem;">'
         + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;">'
         + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Prüfungsziel wählen</h3>'
         + '<button onclick="klasseModalSchliessen()" style="background:none; border:none; font-size:1.2rem; '
         + 'cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
-        + '<p style="margin:0 0 0.9rem; font-size:0.78rem; color:#4b5563;">'
-        + 'Vorschriften und Betrieb sind für alle Klassen gleich — die Klassen unterscheiden sich nur '
-        + 'im Prüfungsteil Technik. Beim Aufstieg wird deshalb nur dieser Teil nachgeschrieben.</p>'
-        + zeilen
-        + '<p style="margin:0.8rem 0 0; font-size:0.72rem; color:#4b5563;">'
+        + '<p style="margin:0 0 0.2rem; font-size:0.78rem; color:#4b5563;">'
+        + 'Die Prüfung besteht aus fünf möglichen Bögen zu je 25 Fragen: <b>Vorschriften</b>, '
+        + '<b>Betrieb</b> und die drei Technikbögen <b>N</b>, <b>E</b> und <b>A</b>. '
+        + 'Welche davon du schreibst, hängt davon ab, ob du neu anfängst oder schon eine '
+        + 'Bescheinigung hast.</p>'
+        + gruppe('Ich fange neu an — Direkteinstieg',
+                 'Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik kommt dazu.',
+                 'erst')
+        + gruppe('Ich habe schon eine Bescheinigung — Aufstieg',
+                 'Was du bereits bestanden hast, wird nicht noch einmal geprüft. Es kommt nur die fehlende Technik.',
+                 'auf')
+        + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;">'
         + 'Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
         + 'Umschalten erhalten. Eine laufende Runde wird beendet.</p>'
         + '</div>';
