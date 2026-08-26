@@ -2192,3 +2192,54 @@ Gesamtergebnis rechnete 100/125 bei Klasse A und 20/25 beim einzelnen Teil.
 zum ersten Mal das ECHTE api.github.com erreicht (Commit f3855c07) und
 Dietmars Repository korrekt gelesen. Der Updater ist damit nicht mehr nur
 gegen den Nachbau geprueft.
+
+## 26.08.2026 - Vorschaubild und die drei Einstellungen, die keine Dateien sind
+
+Dietmar: "Für GitHub benötige ich noch Bilder und eine Beschreibung."
+
+**Erst nachgesehen, was ueberhaupt fehlt.** Der Trainer kann inzwischen
+selbst mit api.github.com sprechen - also habe ich das Repository gefragt,
+statt zu raten. Ergebnis: Die Bilder und die Beschreibungsseite sind
+laengst oben. Dietmars Push von 17:02 hat README.md und alle neun Bilder in
+bilder/ mitgenommen. Haette ich losgelegt, haette ich ihm gebaut, was er
+schon hat.
+
+Was wirklich fehlte, waren drei Dinge, die **keine Dateien sind**:
+
+    description   null   - der Einzeiler oben rechts unter "About"
+    topics        []     - die Schlagworte, ueber die man gefunden wird
+    social preview -     - das Bild beim Teilen eines Links
+
+Die liegen nicht im Repository, sondern in GitHubs eigener Verwaltung. Sie
+zu setzen braucht eine Anmeldung mit Dietmars Konto - und Zugangsdaten
+nehme ich nicht entgegen. Also: das Bild bauen, die Texte fertig
+hinschreiben, den Klickweg dazu.
+
+**Das Vorschaubild** (`bilder/github-vorschau.png`, 1280x640 - das von
+GitHub gewuenschte Format). Ohne eigenes Bild zeigt WhatsApp beim Teilen
+eines Repository-Links nur einen grauen Kasten mit dem Dateibaum. Gebaut
+in den Farben des Trainers, mit vier Zahlen, die stimmen und nachgerechnet
+sind:
+
+    1750  Pruefungsfragen  (204 V + 172 B + 195 Technik N
+                            + 463 Technik E + 716 Technik A - der
+                            vollstaendige Katalog ohne Doppelte)
+    6     Pruefungsziele
+    5     Pruefungsteile im Simulator
+    0 €   und ohne Konto
+
+Zahlen auf so einer Karte werden nie nachgeprueft und stehen jahrelang. Um
+so wichtiger, dass sie beim ersten Mal richtig sind.
+
+**Die Anleitung** liegt als `GITHUB-Einstellungen.md` im Ordner - mit dem
+Beschreibungstext und dreizehn Schlagworten zum Einfuegen. Die Schlagworte
+in Kleinbuchstaben ohne Umlaute (`pruefungsvorbereitung`), weil GitHub
+nichts anderes annimmt. Die Datei steht in `.gitignore`: Sie erklaert, wo
+man klickt, nicht was der Trainer kann - im Repository waere sie fehl am
+Platz.
+
+**Nebenbei aufgefallen:** `README.txt` liegt noch neben `README.md` bei
+GitHub. Sie schadet nicht, aber wer beide sieht, fragt sich, welche gilt.
+Nur gemeldet, nicht angefasst - Loeschen ist Dietmars Entscheidung.
+Der Ordner `test/` dagegen darf bleiben: `tts-expand.test.js` ist echter
+Pruefcode.

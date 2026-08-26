@@ -131,3 +131,8 @@ commit.bat
 # Innenrevision vom 17.08.2026. Sie beschreibt einen Codestand, den es so
 # nicht mehr gibt, und nennt einmal den Pfad des Windows-Benutzerkontos.
 BUG_REPORT.md
+#
+# Die Anleitung zu den GitHub-Einstellungen. Sie ist fuer Dietmar am
+# Rechner gedacht, nicht fuer Besucher des Repositorys - sie beschreibt,
+# wo man klickt, nicht was der Trainer kann.
+GITHUB-Einstellungen.md
