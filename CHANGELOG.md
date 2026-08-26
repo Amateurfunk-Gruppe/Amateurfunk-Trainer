@@ -1399,3 +1399,46 @@ Fenster durch; eine durchgespielte Runde wird nicht als fortsetzbar
 angeboten; im Simulator und im Gruppenraum wird weder gemerkt noch gefragt;
 kein Kasten mehr auf der Hauptansicht; hell und dunkel lesbar; keine Fehler
 in der Browserkonsole.
+
+## 26.08.2026 - Ein Knopf, den der eigene Server nicht bedienen kann
+
+Dietmar: *"Bei mir geht es, bei einem Benutzer nicht."* Beim Mitlernenden
+stand nach Info > GitHub-Update:
+
+    Unexpected token 'N', "Not found" is not valid JSON
+
+**Die Ursache ist eine Folge meiner eigenen Sicherheitsregel.** Der Abgleich
+mit dem Gastgeber holt Anzeigedateien - darunter `Index.html` - automatisch.
+Programmdateien wie `Server.js` NIE: die laufen mit vollen Rechten, und ein
+misslungener Download macht den Trainer beim naechsten Start unbrauchbar.
+Diese Regel ist richtig und bleibt.
+
+Sie hat aber eine Folge, die ich nicht bedacht hatte: Der Mitlernende bekam
+die neue Oberflaeche mit dem Knopf - und dazu den alten Server, der den
+zugehoerigen Aufruf nicht kennt. `/api/github/pruefen` lief ins Leere, der
+Server antwortete mit dem schlichten Wort `Not found`, und der Browser
+versuchte, das als JSON zu lesen. Heraus kam eine Meldung, die niemandem
+sagt, was los ist.
+
+Das passiert bei **jeder** kuenftigen serverseitigen Funktion wieder, sobald
+Oberflaeche und Programm auseinanderlaufen. Also nicht diesen einen Fall
+flicken, sondern das Muster:
+
+**1. Der Knopf erscheint gar nicht erst.** Beim Start fragt die Seite einmal
+`/api/github/stand`. Antwortet der eigene Server mit 404, kennt er die
+Funktion nicht - dann steht unter Info kein GitHub-Knopf. Ein Knopf, der
+nichts kann, ist schlimmer als kein Knopf. (403 zaehlt genauso: dann ist man
+zu Gast bei jemand anderem.)
+
+**2. Wird er doch geklickt** - alte Seite im Zwischenspeicher, Fenster schon
+offen - liest die Seite die Antwort erst als Text und versucht dann erst,
+JSON daraus zu machen. Bei `Not found` steht jetzt da, was Sache ist: dass
+das Programm aelter ist als die Anzeige, warum das so gewollt ist, und wie
+man an die neue Fassung kommt (Info > Beim Gastgeber nach Neuerungen sehen,
+Programmdateien ausdruecklich bestaetigen, danach START.bat).
+
+**Geprueft mit zwei Servern nebeneinander**: der aktuelle auf Port 3000, ein
+Stand von vor der GitHub-Funktion auf Port 3001 - beide mit derselben neuen
+`Index.html`, also genau die Lage des Mitlernenden. Beim alten Server fehlt
+der Knopf und der erzwungene Aufruf zeigt die erklaerende Meldung; beim
+neuen ist alles wie vorher. Keine Fehler in der Browserkonsole.

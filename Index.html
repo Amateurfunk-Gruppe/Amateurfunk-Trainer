@@ -5837,6 +5837,27 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // ================================================================
 let githubDaten = null;
 
+// null = noch nicht nachgesehen, true/false = Antwort des eigenen Servers.
+let githubMoeglich = null;
+
+async function githubVerfuegbarPruefen(){
+    try{
+        const r = await fetch('/api/github/stand', {cache:'no-store'});
+        // 404 heisst: dieser Server kennt den Aufruf nicht - er ist aelter
+        // als die Funktion. 403 heisst: wir sind hier zu Gast.
+        githubMoeglich = r.ok;
+    }catch(e){ githubMoeglich = false; }
+    // War das Info-Fenster schon offen, muss der Knopf noch verschwinden.
+    try{
+        const m = document.getElementById('infoModal');
+        if(!githubMoeglich && m && m.style.display !== 'none'){
+            const k = document.getElementById('githubUpdateBtn');
+            if(k) k.remove();
+        }
+    }catch(e){}
+}
+window.githubVerfuegbarPruefen = githubVerfuegbarPruefen;
+
 async function githubOeffnen(){
     let modal = document.getElementById('githubModal');
     if(!modal){
@@ -5875,8 +5896,30 @@ async function githubPruefen(){
     ziel.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Bei GitHub nachsehen …</div>';
     try{
         const res = await fetch('/api/github/pruefen', {cache:'no-store'});
-        const j = await res.json();
-        if(!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        // Erst als Text lesen. Ein aelterer Server antwortet hier mit dem
+        // schlichten Wort "Not found", und res.json() wuerde daran mit
+        // einer Javascript-Meldung zerbrechen, die niemandem hilft.
+        const roh = await res.text();
+        let j = null;
+        try{ j = JSON.parse(roh); }catch(e2){ j = null; }
+        if(res.status === 404 || (j === null && /not found/i.test(roh))){
+            githubMoeglich = false;
+            ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
+                + '<b>Dein Trainer-Programm ist älter als diese Funktion.</b><br>'
+                + 'Die Anzeige wurde beim Abgleich mit dem Gastgeber erneuert, das Programm '
+                + '(<span style="font-family:var(--font-mono);">Server.js</span>) aber nicht — '
+                + 'Programmdateien werden absichtlich nie automatisch ersetzt, weil sie mit vollen '
+                + 'Rechten auf deinem Rechner laufen.'
+                + '</div>'
+                + '<div style="margin-top:0.8rem; font-size:0.86rem; line-height:1.7;">'
+                + '<b>So kommst du an die neue Fassung:</b><br>'
+                + 'Info &rarr; <b>Beim Gastgeber nach Neuerungen sehen</b>, dort die Programmdateien '
+                + 'anhaken und ausdrücklich bestätigen. Danach den Trainer einmal neu starten '
+                + '(<span style="font-family:var(--font-mono);">START.bat</span>).'
+                + '</div>';
+            return;
+        }
+        if(!res.ok) throw new Error((j && j.error) || ('HTTP ' + res.status));
         githubDaten = j;
         githubZeigen(j);
     }catch(e){
@@ -6670,7 +6713,8 @@ function infoFuellen() {
             'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Gastgeber — dort ist der Stand automatisch aktuell.',
             'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer <b>Momentaufnahme</b>: Der eigene Ordner erfährt von späteren Änderungen nichts.',
             '<button class="btn-lernstand" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; abgleichOeffnen();"><i class="fas fa-rotate"></i> Beim Gastgeber nach Neuerungen sehen</button>'
-            + '<button class="btn-lernstand" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> GitHub-Update</button>'
+            + (githubMoeglich === false ? ''
+               : '<button class="btn-lernstand" id="githubUpdateBtn" style="margin-top:0.4rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> GitHub-Update</button>')
         ])
 
         + '<div style="text-align:center; margin-top:0.8rem; font-size:0.75rem; color:var(--muted); line-height:1.5;">'
@@ -9452,6 +9496,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hat der Trainer beim Start etwas vom Gastgeber nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
+    try{ githubVerfuegbarPruefen(); }catch(e){}
     try{ setTimeout(()=>{ githubHinweisPruefen(); }, 6000); }catch(e){}
     // Zu Gast beim Gastgeber? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
