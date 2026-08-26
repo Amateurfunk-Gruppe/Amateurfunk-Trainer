@@ -5837,6 +5837,10 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // ================================================================
 let githubDaten = null;
 
+// Rohdateien des Repositorys. Nur hier, damit ein umbenanntes Repository
+// nicht an mehreren Stellen nachgezogen werden muss.
+const GITHUB_ROH = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
+
 
 async function githubOeffnen(){
     let modal = document.getElementById('githubModal');
@@ -5890,11 +5894,25 @@ async function githubPruefen(){
                 + 'Programmdateien werden absichtlich nie automatisch ersetzt, weil sie mit vollen '
                 + 'Rechten auf deinem Rechner laufen.'
                 + '</div>'
-                + '<div style="margin-top:0.8rem; font-size:0.86rem; line-height:1.7;">'
-                + '<b>So kommst du an die neue Fassung:</b><br>'
-                + 'Info &rarr; <b>Beim Entwickler nach Neuerungen sehen</b>, dort die Programmdateien '
-                + 'anhaken und ausdrücklich bestätigen. Danach den Trainer einmal neu starten '
-                + '(<span style="font-family:var(--font-mono);">START.bat</span>).'
+                + '<div style="margin-top:0.9rem; font-size:0.86rem; line-height:1.7;">'
+                + '<b>Der kürzeste Weg — zwei Dateien von GitHub:</b><br>'
+                + 'Die beiden Links anklicken, jeweils mit <i>Rechtsklick &rarr; Speichern unter</i> '
+                + 'in deinen Trainer-Ordner legen (vorhandene ersetzen), dann '
+                + '<span style="font-family:var(--font-mono);">START.bat</span> neu starten.'
+                + '<div style="margin-top:0.5rem; font-family:var(--font-mono); font-size:0.78rem; line-height:1.9;">'
+                + '<a href="' + GITHUB_ROH + 'Server.js" target="_blank" rel="noopener">Server.js</a><br>'
+                + '<a href="' + GITHUB_ROH + 'github_update.js" target="_blank" rel="noopener">github_update.js</a>'
+                + '</div>'
+                + '<div style="margin-top:0.5rem; font-size:0.78rem; color:var(--muted);">'
+                + 'Dein Lernstand liegt im Ordner <span style="font-family:var(--font-mono);">data/</span> '
+                + 'und wird dabei nicht angefasst.</div>'
+                + '</div>'
+                + '<div style="margin-top:0.9rem; font-size:0.86rem; line-height:1.7; '
+                + 'border-top:1px solid var(--line); padding-top:0.7rem;">'
+                + '<b>Oder über den Entwickler</b> — nötig nur, wenn er etwas geändert hat, '
+                + 'das noch nicht bei GitHub liegt: Info &rarr; <b>Beim Entwickler nach Neuerungen sehen</b>, '
+                + 'dort die Programmdateien anhaken und ausdrücklich bestätigen. Sein Trainer muss '
+                + 'dafür gerade laufen, und die Tunnel-Adresse ändert sich bei jedem Neustart.'
                 + '</div>';
             return;
         }

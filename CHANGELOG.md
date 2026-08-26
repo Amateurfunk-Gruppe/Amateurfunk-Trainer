@@ -1494,3 +1494,35 @@ beugen sich gleich ("des Gastgebers" -> "des Entwicklers", "vom Gastgeber"
 **Nebenbei erledigt:** Die beiden Knoepfe im Info-Fenster klebten
 aneinander. Sie haben jetzt Abstand - auch auf einem schmalen Fenster, wo
 sie umbrechen koennten.
+
+## 26.08.2026 - Die Meldung nannte nur den umstaendlichen Weg
+
+Dietmar schickte zwei Bilder: bei ihm "Alles auf demselben Stand", beim
+Mitlernenden die Meldung "Dein Trainer-Programm ist aelter als diese
+Funktion". Das ist kein Fehler mehr, sondern genau die Diagnose, die dort
+stehen soll - aber der Weg heraus taugte nichts.
+
+Die Meldung sagte: Info > Beim Entwickler nach Neuerungen sehen, dort die
+Programmdateien anhaken. Das setzt voraus, dass Dietmars Trainer gerade
+laeuft, dass sein Tunnel offen ist und dass der Mitlernende dessen
+**aktuelle** Adresse hat - die sich bei jedem Tunnelstart aendert. An genau
+dieser Kette ist derselbe Nutzer heute frueh schon einmal gescheitert. Ihn
+noch einmal dorthin zu schicken waere zynisch gewesen.
+
+Es gibt einen viel kuerzeren Weg, der von niemandem abhaengt: die zwei
+Dateien direkt bei GitHub holen. Die Adresse dort aendert sich nie. Die
+Meldung nennt jetzt zuerst diesen Weg, mit zwei anklickbaren Links
+(`Server.js`, `github_update.js`), der Anweisung "Rechtsklick > Speichern
+unter" und dem Hinweis, dass der Lernstand in `data/` unangetastet bleibt.
+
+Der Abgleich beim Entwickler steht darunter als zweiter Weg - er ist der
+richtige, wenn Dietmar etwas geaendert hat, das noch gar nicht bei GitHub
+liegt. Dass dafuer sein Trainer laufen muss und die Tunnel-Adresse wandert,
+steht jetzt dabei.
+
+Die Rohadresse des Repositorys steht als `GITHUB_ROH` an einer Stelle -
+sonst waere sie beim naechsten Umbenennen an mehreren Orten nachzuziehen.
+
+Geprueft am nachgebauten alten Server: beide Links zeigen auf
+raw.githubusercontent.com, das Fenster bleibt auch auf einem schmalen
+Bildschirm lesbar.
