@@ -74,8 +74,7 @@ normalen Commits weiter (siehe `git log --oneline`).
   Zweiter Auslöser war `enablejsapi=1` ohne passenden `origin`-Parameter.
 - **Videos laufen jetzt regulär über YouTube**: Klick auf „Auf YouTube ansehen" öffnet den
   Lehrgang von Michael, DL2YMR, mit Zeitmarke in einem neuen Tab — mit Werbung und als zählender
-  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. Nur eine kleine private Runde
-  bekommt weiterhin das eingebettete Fenster.
+  Aufruf. Der Umweg über `yout-ube.com` ist entfallen. 
 - **Benutzernamen**: Der Name aus dem Raum-Dialog gehört jetzt zum Benutzer-Slot und ersetzt
   „Benutzer 1/2/3" in Verlauf, Löschen-Dialog und Reset-Fenster. Der Gruppenraum bekommt
   automatisch den Namen des aktiven Slots. Die Lerndaten liegen unverändert unter `user1/2/3`.
