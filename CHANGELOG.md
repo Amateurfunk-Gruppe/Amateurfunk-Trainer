@@ -1830,3 +1830,55 @@ Platte, `.gitignore` bekommt genau einen Eintrag dazu, und `git add -A` holt
 nichts zurueck. Gegenprobe mit einem Ordner aus allen 25 beteiligten
 Dateien: es landen genau zehn im Commit - Trainer, Gast-Werkzeuge,
 CHANGELOG und die `.gitignore` selbst.
+
+## 26.08.2026 - Aufraeumen, zweite Fassung
+
+Dietmar: *"In meinem Ordner moechte ich auch ausmisten."*
+
+Die vorhandene `aufraeumen.js` war auf den Stand von vorgestern gemuenzt -
+Erweiterungsordner, Node-Installer, Einrichtskripte. Das ist alles laengst
+weg; die Liste lief ins Leere. Heute steht anderes herum:
+
+  - **`Piper-Stimmen.zip`, 419 MiB.** Zweck erfuellt - die Datei haengt am
+    Release v1.0 bei GitHub. Mit `Stimmen_packen.bat` jederzeit neu gebaut.
+    Der groesste Brocken im Ordner.
+  - **`.git_alt_2026-08-25`** - die Historie VOR dem Neuanfang. Das neue
+    Repository laeuft seit einem Tag, alles Neue liegt bei GitHub.
+  - **`GitHub-Neustart.bat` und `github_neustart.js`** - der einmalige
+    Neuanfang ist erledigt. Die beiden sind jetzt nicht nur nutzlos,
+    sondern gefaehrlich: Ein Fehlklick benennt `.git` um und kappt die
+    Verbindung zum Repository.
+  - **`commit.bat`** - alter Git-Helfer, seit `Hochladen.bat` ohne Aufgabe.
+  - Die drei Tunnel-Protokolle, die bei jedem Start neu entstehen.
+
+**Zweimal gefragt statt einmal.** Der Zwischenspeicher `tts_cache` (rund
+195 MB, 837 fertig gesprochene WAVs) steht in einer eigenen Frage. Er ist
+kein Muell: Weg damit spart Platz, kostet aber beim naechsten Vorlesen jeder
+Frage ein bis zwei Sekunden, bis sie wieder erzeugt ist. Diese Abwaegung
+gehoert nicht in eine Liste, die man mit einem einzigen "j" abnickt.
+
+**`backup/` bleibt unangetastet** - dort liegen alte Codestaende, aber eben
+auch ein gesicherter Lernstand. Vier Megabyte sind der falsche Ort zum
+Sparen.
+
+**Zwei Fehler beim Testen gefunden, beide in meinem eigenen Skript.**
+
+Der erste: Fuer jede Rueckfrage machte ich eine neue Eingabeleitung auf. Im
+Terminal faellt das nicht auf - sobald die Antworten aber aus einer Datei
+kommen (so pruefe ich hier), verschluckt die erste beim Schliessen den Rest,
+und die zweite Frage bekommt nie eine Antwort. Jetzt gibt es eine Leitung,
+die bis zum Schluss offen bleibt.
+
+Der zweite war schlimmer: Faellt die Eingabe ganz weg - Fenster geschlossen,
+Strg+C -, wartete die Frage ewig. Das Skript endete mitten im Ablauf, ohne
+Schlusswort und ohne zu sagen, was es verschoben hatte. Jetzt gilt: keine
+Antwort heisst nein, und das Schlusswort kommt in jedem Fall.
+
+Geprueft an einem Nachbau seines Ordners mit allen 50 Eintraegen: Es
+wandern genau die acht vorgesehenen in `_Aufgeraeumt_<Datum>`, `data/`,
+`backup/`, `Hoerbuch/` und saemtliche Trainer- und Werkzeugdateien bleiben
+liegen. Die Cache-Frage in beiden Richtungen einzeln nachgestellt.
+
+Und wie beim ersten Mal: **geloescht wird nichts.** Alles wandert in einen
+Ordner mit Datum im Namen. Wer nachgesehen hat und weiter lernen kann, wirft
+ihn selbst weg.
