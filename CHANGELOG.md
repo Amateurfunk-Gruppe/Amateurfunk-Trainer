@@ -1313,3 +1313,89 @@ die Dateien; mit der richtigen laeuft es durch. In einem nachgebauten Ordner
 mit allen zwanzig Dateien landen genau sechs im Commit - Index.html,
 Server.js, github_update.js, die beiden Gast-Werkzeuge und die .gitignore
 selbst.
+
+## 26.08.2026 - Eine angefangene Runde ueberlebt das Mittagessen
+
+Ein Testnutzer, woertlich: *"Ich bin bei Frage 21, gehe zu Mittag, starte
+danach neu - und fange wieder bei 1 an. Aergerlich."*
+
+Er hat recht, und das Merkwuerdige daran: Gespeichert wurde bisher alles,
+was DAUERHAFT gilt - Lernfortschritt, Fehlerliste, Merkliste, Verlauf. Nur
+die laufende Runde selbst lag im Arbeitsspeicher und war mit dem Schliessen
+weg: welche Fragen in welcher Reihenfolge, wo man steht, was angekreuzt ist.
+
+**Was gespeichert wird - und warum so wenig.** Nicht die Fragen. Die stehen
+ohnehin im Katalog; sie ein zweites Mal abzulegen waere bei 571 Fragen ein
+halbes Megabyte, das bei jedem Klick neu geschrieben wird. Je Frage nur:
+
+    id  - welche Frage
+    o   - in welcher Reihenfolge ihre Antworten standen (Platznummern im
+          Katalog)
+    a   - was angekreuzt war
+
+Die Reihenfolge mitzuschreiben ist kein Luxus. Ohne sie saehe die Frage nach
+dem Fortsetzen anders aus als vorher - und wer sich "die dritte war richtig"
+gemerkt hat, laege ploetzlich falsch. Gemessen: **1076 Byte** fuer eine
+Runde mit 25 Fragen.
+
+Getrennt nach Benutzer-Slot UND Pruefungsziel. Wer auf Klasse E umstellt,
+soll nicht in eine Runde aus Klasse N zurueckfallen - die Fragen gibt es im
+neuen Katalog womoeglich gar nicht.
+
+**Zwei Korrekturen von Dietmar, beide berechtigt.**
+
+Der erste Entwurf setzte einen Kasten auf die Hauptansicht. Sein Urteil:
+*"Das ueberlaedt die Hauptansicht."* Stimmt - die traegt schon
+Pruefungsuebersicht, Lernfortschritt, Termin, Lektionen, Hoerbuch und
+Weitergeben. Ein siebter Kasten faellt dort nicht auf, er erschlaegt. Also
+ein Fenster - das ist auch das passendere Mittel: die Frage stellt sich
+genau einmal und hat genau zwei Antworten.
+
+Der zweite Entwurf zeigte das Fenster beim Laden der Seite. Auch das war
+falsch: *"Es kommt gleich bei einem Neustart. Ich wuensche mir das Fenster,
+wenn ich auf Start (Lernmodus) klicke."* Beim Laden hat man womoeglich ganz
+anderes vor - Statistik ansehen, ein Hoerbuch bauen, in den Gruppenraum. Ein
+Fenster, das ungefragt vor allem anderen steht, ist dann im Weg. Erst der
+Klick auf "Start" sagt: ich will jetzt lernen. Genau dort gehoert die Frage
+hin.
+
+Daraus wurde eine kleine Umbauarbeit: `startQuiz` fragt erst und macht dann
+weiter. `rundeAngebotZeigen` liefert zurueck, ob es gefragt hat; wenn ja,
+haelt `startQuiz` an, und es geht in einem der beiden Knoepfe weiter. "Neu
+beginnen" verwirft nicht nur den Merkposten, sondern startet auch die
+frische Runde, die mit dem Klick gemeint war. Ein Klick daneben startet
+nichts - und der naechste Klick auf "Start" fragt wieder.
+
+Dann: *"Das darf nur bei Start so sein. Nicht im Pruefungssimulator und auch
+nicht im Gruppenraum."* Zwei verschiedene Gruende, beide richtig:
+
+  - Der **Pruefungssimulator** laeuft gegen die Uhr. Eine Runde, die nach
+    dem Mittagessen mit stehengebliebenem Timer weiterlaeuft, waere keine
+    Pruefungssimulation mehr, sondern eine Uebung mit Pausenknopf.
+  - Im **Gruppenraum** bestimmt der Gastgeber, welche Frage dran ist. Einen
+    Teilnehmer beim naechsten Start an "seiner" Frage 21 wieder einzusetzen
+    waere sinnlos - die Runde von damals gibt es nicht mehr, und die anderen
+    sind laengst woanders.
+
+**Nebenbefund in `klasseWaehlen`.** Im Fenster "Pruefungsziel waehlen" steht
+seit jeher "Eine laufende Runde wird beendet." Beendet wurde sie nie:
+`isQuizActive` blieb stehen, waehrend darunter ein anderer Fragenkatalog
+geladen wurde. Aufgefallen ist es erst durch diese Arbeit. Jetzt wird die
+Runde tatsaechlich beendet - und vorher unter dem Schluessel der ALTEN
+Klasse gesichert, damit sie beim Zurueckwechseln wieder da ist.
+
+**Nachgezogen: der Abbruch-Dialog log.** Dort stand "Aktuelle unbeantwortete
+Fragen gehen verloren". Das war richtig, solange die Runde nur im
+Arbeitsspeicher lag. Jetzt steht dort, was zutrifft.
+
+**Geprueft mit echtem Browser, der ganze Ablauf einmal durchgespielt:**
+Runde beginnen, blaettern, Seite schliessen, neu oeffnen - beim Laden
+passiert nichts, erst der Klick auf "Start" fragt. "Weiter" fuehrt zurueck
+auf dieselbe Frage, mit derselben Antwortreihenfolge und denselben Zaehlern.
+Dazu: "Neu beginnen" raeumt den Merkposten weg UND startet die frische
+Runde bei Frage 1; ein Klick daneben startet nichts und der naechste Klick
+auf "Start" fragt wieder; ein erster Start ohne Merkposten laeuft ohne
+Fenster durch; eine durchgespielte Runde wird nicht als fortsetzbar
+angeboten; im Simulator und im Gruppenraum wird weder gemerkt noch gefragt;
+kein Kasten mehr auf der Hauptansicht; hell und dunkel lesbar; keine Fehler
+in der Browserkonsole.

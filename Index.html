@@ -1988,6 +1988,24 @@
 
         /* Auch das Info-Fenster ist hell wie die uebrigen. */
         /* Das Abgleich-Fenster ist hell wie die uebrigen. */
+        /* Das Fenster "Weiterlernen?" ist hell wie die uebrigen Fenster.
+           Ohne diese Zeilen erbte es im Dunkelmodus die hellen
+           Schriftfarben des Umfelds - helle Schrift auf hellem Grund. */
+        body.dark #rundeModal {
+            color: #16232f;
+            --ink: #16232f;
+            --muted: #3d5266;
+            --line: #cfe3e6;
+            --panel-navy: #0f2745;
+        }
+        body.dark #rundeModal .btn-outline {
+            background: #ffffff !important;
+            color: #16232f !important;
+            border-color: #b7cdd1 !important;
+        }
+        body.dark #rundeModal .btn-primary,
+        body.dark #rundeModal .btn-primary i { color: #ffffff !important; }
+
         body.dark #abgleichModal {
             color: #16232f;
             --ink: #16232f;
@@ -2662,6 +2680,18 @@ async function klasseWaehlen(id) {
             return;
         }
     } catch (e) { /* duoRaum gibt es nicht in jeder Ansicht */ }
+
+    // Erst die laufende Runde ordentlich beenden - so, wie es das Fenster
+    // ankuendigt. Gespeichert wird sie VOR dem Umschalten, denn der
+    // Merkposten haengt am Pruefungsziel: wer spaeter zu dieser Klasse
+    // zurueckkehrt, findet seine Runde wieder.
+    try {
+        if (isQuizActive) {
+            rundeSpeichern();
+            isQuizActive = false;      // sonst oeffnet backToMain den Abbruch-Dialog
+            backToMain();
+        }
+    } catch (e) { /* dann wird eben nur umgeschaltet */ }
 
     try { localStorage.setItem(KLASSE_SCHLUESSEL, id); } catch (e) { /* nicht speicherbar */ }
     klasseModalSchliessen();
@@ -5415,6 +5445,7 @@ clearHistoryBtn.addEventListener('click', verlaufAuswahlStarten);
 
 userSelect.addEventListener('change', function() {
     currentUser = this.value;
+
     // Eine offene Loesch-Auswahl gehoert zum alten Benutzer und wird beendet.
     try{ verlaufAuswahlBeenden(true); }catch(e){}
     try{ localStorage.setItem('amateurfunk_currentUser', currentUser); }catch(e){}
@@ -7416,7 +7447,267 @@ function neueRundeVorbereiten(){
     rundeGewertet = false;
 }
 
+// ================================================================
+// EINE ANGEFANGENE RUNDE UEBERLEBT DAS SCHLIESSEN
+//
+// Anlass (Testnutzer, 26.08.2026): "Ich bin bei Frage 21, gehe zu Mittag,
+// starte danach neu - und fange wieder bei 1 an."
+//
+// Gespeichert war bisher, was DAUERHAFT gilt: Lernfortschritt, Fehlerliste,
+// Merkliste, Verlauf. Die laufende Runde selbst - welche Fragen in welcher
+// Reihenfolge, wo man gerade steht, was schon angekreuzt ist - lag nur im
+// Arbeitsspeicher und war mit dem Schliessen weg.
+//
+// WAS GESPEICHERT WIRD UND WARUM SO WENIG:
+// Nicht die Fragen selbst. Die stehen ohnehin im Fragenkatalog; sie ein
+// zweites Mal abzulegen waere bei 571 Fragen ein halbes Megabyte, das bei
+// jedem Klick neu geschrieben wird. Gespeichert wird je Frage nur:
+//   id  - welche Frage
+//   o   - in welcher Reihenfolge ihre Antworten standen (als Platznummern
+//         im Katalog). Ohne das saehe die Frage nach dem Fortsetzen anders
+//         aus als vorher, und ein gemerktes "die dritte war richtig" waere
+//         ploetzlich falsch.
+//   a   - was angekreuzt war (oder nichts)
+// Das sind rund 30 Byte je Frage statt 800.
+//
+// Getrennt nach Benutzer-Slot UND Pruefungsziel: Wer auf Klasse E umstellt,
+// soll nicht in eine Runde aus Klasse N zurueckfallen - die Fragen dort gibt
+// es im neuen Katalog womoeglich gar nicht.
+//
+// Fortgesetzt wird nur auf Klick. Wer eine frische Runde will, bekommt sie.
+// ================================================================
+const RUNDE_PRAEFIX = 'amateurfunk_runde_';
+
+function rundeSchluessel(){
+    let kl = 'n';
+    try{ if(typeof klasseAktuell === 'function') kl = klasseAktuell().id || 'n'; }catch(e){}
+    return RUNDE_PRAEFIX + (currentUser || 'user1') + '_' + kl;
+}
+
+// Schluessel einer Antwort, um sie im Katalog wiederzufinden. Der Text
+// allein reicht nicht: bei Bildfragen ist er leer.
+function antwortSchluessel(o){
+    return (o && o.text ? o.text : '') + ' || ' + (o && o.image ? o.image : '');
+}
+
+function nurNormalesLernen(){
+    try{
+        if(window.duo && typeof window.duo.isActive === 'function' && window.duo.isActive()) return false;
+    }catch(e){}
+    try{ if(window.realisticExam && window.realisticExam.active) return false; }catch(e){}
+    try{ if(examSimulatorMode) return false; }catch(e){}
+    return true;
+}
+window.nurNormalesLernen = nurNormalesLernen;
+
+function rundeSpeichern(){
+    try{
+        if(!isQuizActive || !currentQuestions.length) return;
+        if(!nurNormalesLernen()) return;
+        const fragen = [];
+        for(const q of currentQuestions){
+            const roh = questionBank.find(x => x.id === q.id);
+            let ord = null;
+            if(roh && Array.isArray(roh.options) && roh.options.length === q.options.length){
+                const platz = new Map();
+                roh.options.forEach((o,i) => platz.set(antwortSchluessel(o), i));
+                const versuch = q.options.map(o => platz.has(antwortSchluessel(o)) ? platz.get(antwortSchluessel(o)) : -1);
+                if(versuch.every(i => i >= 0)) ord = versuch;
+            }
+            fragen.push({ id: q.id, o: ord, a: (q.userAnswerIndex === null ? null : q.userAnswerIndex) });
+        }
+        localStorage.setItem(rundeSchluessel(), JSON.stringify({
+            v: 1,
+            zeit: new Date().toISOString(),
+            teil: currentPart || '',
+            examMode: !!examMode,
+            nurGelernte: !!nurGelernte,
+            index: currentIndex,
+            beantwortet: totalAnswered,
+            richtig: correctCount,
+            fragen
+        }));
+    }catch(e){ /* Speicher voll oder gesperrt - dann eben nicht */ }
+}
+window.rundeSpeichern = rundeSpeichern;
+
+function rundeLesen(){
+    try{
+        const j = JSON.parse(localStorage.getItem(rundeSchluessel()) || 'null');
+        if(!j || j.v !== 1 || !Array.isArray(j.fragen) || !j.fragen.length) return null;
+        return j;
+    }catch(e){ return null; }
+}
+
+function rundeVerwerfen(){
+    try{ localStorage.removeItem(rundeSchluessel()); }catch(e){}
+}
+window.rundeVerwerfen = rundeVerwerfen;
+
+function rundeFortsetzen(){
+    const j = rundeLesen();
+    if(!j) return false;
+    const wieder = [];
+    for(const f of j.fragen){
+        const roh = questionBank.find(x => x.id === f.id);
+        if(!roh) continue;                       // Frage gibt es nicht mehr
+        let vorbereitet;
+        if(Array.isArray(f.o) && f.o.length === (roh.options||[]).length
+           && f.o.every(i => i >= 0 && i < roh.options.length)){
+            vorbereitet = {
+                id: roh.id, part: roh.part, text: roh.text,
+                options: f.o.map(i => ({ text: roh.options[i].text, image: roh.options[i].image,
+                                         correct: !!roh.options[i].correct })),
+                explanation: roh.explanation || '',
+                userAnswerIndex: null
+            };
+        }else{
+            // Reihenfolge nicht mehr zuzuordnen (Katalog geaendert): lieber
+            // die Frage in Ursprungsreihenfolge zeigen als sie wegzulassen.
+            vorbereitet = prepareQuestion(roh, true);
+        }
+        if(typeof f.a === 'number' && f.a >= 0 && f.a < vorbereitet.options.length){
+            vorbereitet.userAnswerIndex = f.a;
+        }
+        wieder.push(vorbereitet);
+    }
+    if(!wieder.length) return false;
+
+    isQuizActive = true;
+    examFinished = false;
+    examSimulatorMode = false;
+    currentQuestions = wieder;
+    examMode = !!j.examMode;
+    nurGelernte = !!j.nurGelernte;
+    if(j.teil) currentPart = j.teil;
+    showSidebar = true;
+
+    // progress aus den Antworten neu aufbauen - es ist nur eine andere
+    // Sicht auf dieselbe Information.
+    progress = {};
+    let gezaehlt = 0, richtig = 0;
+    for(const q of currentQuestions){
+        const beantwortet = q.userAnswerIndex !== null;
+        const istRichtig = beantwortet && !!(q.options[q.userAnswerIndex] || {}).correct;
+        progress[q.id] = { answered: beantwortet, correct: istRichtig };
+        if(beantwortet){ gezaehlt++; if(istRichtig) richtig++; }
+    }
+    totalAnswered = gezaehlt;
+    correctCount = richtig;
+    rundeGewertet = false;
+    currentIndex = Math.min(Math.max(0, j.index|0), currentQuestions.length - 1);
+    answered = currentQuestions[currentIndex].userAnswerIndex !== null;
+
+    renderQuestion();
+    if(typeof navArea !== 'undefined' && navArea) navArea.style.display = 'flex';
+    if(typeof updateVisibility === 'function') updateVisibility();
+    return true;
+}
+window.rundeFortsetzen = rundeFortsetzen;
+
+// currentPart haelt den Filterwert ("all", "technik"), nicht seine
+// Beschriftung. Im Angebot soll aber stehen, was auch sonst im Trainer
+// steht.
+function teilBeschriftung(t){
+    if(!t) return '';
+    if(t === 'all') return 'Alle Teile';
+    return ({ vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik' })[t] || String(t);
+}
+
+// ------------------------------------------------------------------
+// Gefragt wird in einem Fenster beim Start - nicht in einer weiteren
+// Kachel auf der Hauptansicht.
+//
+// Dietmar, nach dem ersten Entwurf: "Das ueberlaedt die Hauptansicht."
+// Stimmt. Die traegt schon Pruefungsuebersicht, Lernfortschritt, Termin,
+// Lektionen, Hoerbuch und Weitergeben; ein siebter Kasten faellt dort
+// nicht auf, er erschlaegt.
+//
+// Ein Fenster ist hier auch das passendere Mittel: Die Frage stellt sich
+// genau einmal, und sie hat genau zwei Antworten.
+// ------------------------------------------------------------------
+let rundeSchonGefragt = false;
+
+// Gibt true zurueck, wenn gefragt wurde - der Aufrufer haelt dann an und
+// wartet die Antwort ab. Bei false ist nichts zu klaeren und er macht
+// einfach weiter.
+//
+// "neuBeginnen" ist das, was passieren soll, wenn der Nutzer die alte
+// Runde verwirft: die frische Runde, die er mit "Start" wollte.
+function rundeAngebotZeigen(neuBeginnen){
+    if(isQuizActive || rundeSchonGefragt) return false;
+    if(!nurNormalesLernen()) return false;
+    const j = rundeLesen();
+    if(!j) return false;
+    rundeSchonGefragt = true;
+
+    let modal = document.getElementById('rundeModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'rundeModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + 'backdrop-filter:blur(8px); z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+        document.body.appendChild(modal);
+    }
+
+    const offen = j.fragen.length - (j.beantwortet || 0);
+    let wann = '';
+    try{
+        const d = new Date(j.zeit);
+        const uhr = d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        wann = (d.toDateString() === new Date().toDateString())
+             ? ('heute um ' + uhr + ' Uhr')
+             : (d.toLocaleDateString('de-DE') + ' um ' + uhr + ' Uhr');
+    }catch(e){}
+
+    modal.innerHTML =
+        '<div style="background:#fff; border-radius:18px; padding:1.5rem 1.6rem; max-width:480px; width:96%; '
+        + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+        + '<h3 style="margin:0 0 0.5rem; font-size:1.1rem; color:#0f2745;">'
+        + '<i class="fas fa-bookmark" style="color:#0e9aa7;"></i> Weiterlernen?</h3>'
+        + '<p style="margin:0 0 0.4rem; font-size:0.9rem; color:#16232f; line-height:1.6;">'
+        + 'Du warst bei <b>Frage ' + ((j.index|0) + 1) + ' von ' + j.fragen.length + '</b>'
+        + (teilBeschriftung(j.teil) ? ' in &bdquo;' + teilBeschriftung(j.teil).replace(/</g,'&lt;') + '&ldquo;' : '')
+        + (wann ? ' &mdash; zuletzt ' + wann : '') + '.</p>'
+        + '<p style="margin:0 0 1.1rem; font-size:0.82rem; color:#3d5266;">'
+        + (j.beantwortet||0) + ' beantwortet, ' + offen + ' noch offen'
+        + ((j.beantwortet||0) ? ' &middot; davon ' + (j.richtig||0) + ' richtig' : '') + '.</p>'
+        + '<div style="display:flex; gap:10px; flex-wrap:wrap;">'
+        + '<button class="btn btn-primary" id="rundeWeiterBtn">'
+        + '<i class="fas fa-play"></i> Weiter bei Frage ' + ((j.index|0) + 1) + '</button>'
+        + '<button class="btn btn-outline" id="rundeNeuBtn">'
+        + '<i class="fas fa-rotate-left"></i> Neu beginnen</button>'
+        + '</div>'
+        + '<p style="margin:0.9rem 0 0; font-size:0.75rem; color:#3d5266;">'
+        + 'Dein Lernfortschritt, die Fehlerliste und der Verlauf bleiben in beiden F&auml;llen erhalten.</p>'
+        + '</div>';
+    modal.style.display = 'flex';
+
+    const zu = () => { modal.style.display = 'none'; };
+    document.getElementById('rundeWeiterBtn').onclick = () => { zu(); rundeFortsetzen(); };
+    document.getElementById('rundeNeuBtn').onclick    = () => {
+        zu();
+        rundeVerwerfen();
+        if(typeof neuBeginnen === 'function') neuBeginnen();
+    };
+    // Klick daneben heisst weder ja noch nein: das Fenster geht zu, es
+    // startet nichts, der Merkposten bleibt liegen. Damit der naechste
+    // Klick auf "Start" wieder fragt, wird der Merker zurueckgesetzt.
+    modal.onclick = e => { if(e.target === modal){ zu(); rundeSchonGefragt = false; } };
+    return true;
+}
+window.rundeAngebotZeigen = rundeAngebotZeigen;
+
 function startQuiz() {
+    // Liegt eine angefangene Runde herum, wird hier gefragt - und erst
+    // die Antwort entscheidet, ob fortgesetzt oder neu begonnen wird.
+    // rundeAngebotZeigen liefert true, wenn das Fenster steht; dann ist
+    // hier Schluss und es geht in einem der beiden Knoepfe weiter.
+    if (!examSimulatorMode && rundeAngebotZeigen(() => startQuizWirklich())) return;
+    startQuizWirklich();
+}
+
+function startQuizWirklich() {
     if (examSimulatorMode) { stopExamTimer(); examSimulatorMode = false; document.getElementById('examTimerDisplay').style.display = 'none'; }
     if (questionBank.length === 0) {
         alert('❌ Keine Fragen geladen!');
@@ -8148,6 +8439,16 @@ function renderQuestion() {
 }
 
 
+// Nach jeder Aenderung sichern. Ein einzelner Aufruf am Ende einer Runde
+// wuerde genau den Fall nicht abdecken, um den es geht: mittendrin aufhoeren.
+function rundeSichernSpaeter(){
+    try{ clearTimeout(rundeSichernSpaeter._t); }catch(e){}
+    // Kurz warten: waehrend des Blaetterns waeren es sonst drei Schreib-
+    // vorgaenge je Sekunde. Eine Zehntelsekunde spaeter reicht voellig.
+    rundeSichernSpaeter._t = setTimeout(() => { try{ rundeSpeichern(); }catch(e){} }, 120);
+}
+window.rundeSichernSpaeter = rundeSichernSpaeter;
+
 function selectOption(optIndex) {
     const q = currentQuestions[currentIndex];
     if (!q || answered) return;
@@ -8169,6 +8470,9 @@ function selectOption(optIndex) {
         progress[qId].answered = true;
         progress[qId].correct = isCorrect;
     }
+    // Der wichtigste Speicherpunkt: hier ist gerade Arbeit entstanden, die
+    // beim Schliessen sonst verloren waere.
+    try{ rundeSichernSpaeter(); }catch(e){}
 
     // Rueckmeldung fuer Vorleseprogramme. Ohne das sieht man die gruene
     // oder rote Kachel - und wer sie nicht sieht, erfaehrt nichts. Bei
@@ -8519,6 +8823,11 @@ window.showDuoFinalResults = function(data){
 };
 
 function renderFinishScreen(isTimeUp = false) {
+    // Durchgespielt heisst durchgespielt. Bliebe der Merkposten liegen,
+    // boete der Trainer beim naechsten Start an, eine fertige Runde
+    // "fortzusetzen" - bei der letzten Frage, die schon beantwortet ist.
+    try{ rundeVerwerfen(); }catch(e){}
+
     if (window.duo && window.duo.isActive && window.duo.isActive()) {
         renderDuoWaitingScreen();
         return;
@@ -8703,6 +9012,7 @@ function renderFinishScreen(isTimeUp = false) {
 }
 
 function prevQuestion() {
+    try{ rundeSichernSpaeter(); }catch(e){}
     // Automatisch als richtig gewertete (bereits gelernte) Fragen werden
     // uebersprungen - siehe gelernteVorbelegen().
     let ziel = currentIndex - 1;
@@ -8711,6 +9021,7 @@ function prevQuestion() {
 }
 
 function nextQuestion() {
+    try{ rundeSichernSpaeter(); }catch(e){}
     try { if (typeof stopTTS === 'function') stopTTS(); } catch(e){}
     try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}
     try { if (window.currentTtsAudio) { try{ window.currentTtsAudio.pause(); }catch{} window.currentTtsAudio=null; } } catch(e){}
@@ -8820,6 +9131,7 @@ function backToMain() {
     if (container) {
         container.innerHTML = '';   // kein Platzhalter mehr, siehe questionContainer
     }
+
     qCounter.textContent = '0/0';
     learnedSpan.textContent = '0';
     accuracySpan.textContent = '0%';
@@ -11188,7 +11500,7 @@ function openAbortQuizModal(){
     const modal = document.getElementById('genericConfirmModal');
     document.getElementById('genericConfirmTitle').innerHTML = '<span id="genericConfirmIcon"><i class="fas fa-sign-out-alt" style="color:var(--panel-navy);"></i></span> Fragerunde abbrechen?';
     document.getElementById('genericConfirmMessage').innerHTML = 'Aktuelle Fragerunde wirklich abbrechen und zurück zur Hauptansicht?';
-    document.getElementById('genericConfirmDetails').innerHTML = '• Dein Lernfortschritt (Fehler, Schwierige, Verlauf) bleibt gespeichert<br>• Aktuelle unbeantwortete Fragen gehen verloren';
+    document.getElementById('genericConfirmDetails').innerHTML = '• Dein Lernfortschritt (Fehler, Schwierige, Verlauf) bleibt gespeichert<br>• Die angefangene Runde wird gemerkt – du kannst später an derselben Frage weitermachen';
     const btn = document.getElementById('genericConfirmBtn');
     btn.innerHTML = '<i class="fas fa-home"></i> Zurück zur Hauptansicht';
     btn.style.background = 'var(--panel-navy)';
@@ -11224,6 +11536,7 @@ function openAbortQuizModal(){
         try{ updateMasteryDisplay(); }catch(e){}
         try{ updateDifficultBadge(); }catch(e){}
         try{ updateErrorBadge(); }catch(e){}
+
     };
     if(modal){ modal.style.display='flex'; modal.classList.add('open'); }
 }
