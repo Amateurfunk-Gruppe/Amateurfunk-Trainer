@@ -146,6 +146,11 @@ GITHUB-Einstellungen.md
 # sich in zwei Minuten mit Node-Holen.bat.
 node/
 node_alt_*/
-README.txt
-bilder/youtube-vorlage.html
-sounds/fanfare.wav
+
+# --- Der Ordner "Mitnehmen" ---
+#
+# Angelegt am 27.08.2026, als der Trainer-Ordner neu aufgesetzt wurde:
+# Darin liegt alles, was NICHT bei GitHub ist und beim Loeschen des
+# Ordners verlorenginge - Werkzeuge, private Listen, Merkposten.
+# Genau deshalb hat er im Repository nichts zu suchen.
+Mitnehmen/
