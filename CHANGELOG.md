@@ -2810,3 +2810,31 @@ Funktionstest wird hier noch einmal selbst ausgefuehrt, damit das Ergebnis
 auswertbar ist statt nur sichtbar.
 
 README und Bild `10-usb-stick.png` zeigen den neuen Ablauf.
+
+### "das macht doch jetzt die USB Stick erstellen Bat"
+
+Dietmar hat recht - und der Einwand deckt eine Schwaeche auf, die ich
+selbst eingebaut hatte.
+
+USB-Stick-Erstellen.bat holt Node, node_modules und Piper von selbst.
+START.bat dagegen schickte weg: "Doppelklick auf Node-Holen.bat, danach
+diese START.bat erneut." Also zwei Werkzeuge, die dasselbe koennen, und
+nur eines tut es.
+
+Das ist an der falschen Stelle unangenehm. Wer einen Stick bekommt und
+START.bat anklickt, will lernen - und sieht eine Fehlermeldung, wo ein
+Trainer sein sollte. Auch wenn dort steht, was zu tun ist: Es ist eine
+Huerde, die keine sein muss.
+
+**START.bat holt Node jetzt selbst**, genau wie das USB-Werkzeug. Und das
+geht, obwohl kein Node da ist - node_holen.ps1 ist PowerShell, das ist
+seit Windows 7 auf jedem Rechner. Klappt es nicht (kein Internet), steht
+da, dass man es spaeter noch einmal versuchen kann, samt dem Hinweis fuer
+den Fall, dass jemand einen unvollstaendigen Stick bekommen hat.
+START_MIT_TUNNEL.bat genauso.
+
+**Wofuer Node-Holen.bat dann noch gut ist:** um Node in einen Ordner zu
+legen, ohne dabei einen Stick zu bespielen und ohne den Trainer zu
+starten. Genau Dietmars derzeitiger Fall - er will sein installiertes
+Node.js loswerden und braucht vorher das mitgelieferte in seinem
+Arbeitsordner. Fuer alle anderen ist die Datei ab jetzt entbehrlich.

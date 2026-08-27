@@ -36,20 +36,56 @@ if errorlevel 1 goto :kein_node
 goto :node_da
 
 :kein_node
+REM ============================================================
+REM  Kein Node - dann selbst holen, statt wegzuschicken.
+REM
+REM  Frueher stand hier "Doppelklick auf Node-Holen.bat, danach
+REM  diese Datei erneut". Das ist eine Zumutung fuer jemanden,
+REM  der einen Stick bekommen hat und einfach lernen will: Er
+REM  sieht eine Fehlermeldung, wo er einen Trainer erwartet hat.
+REM
+REM  Zum Holen wird kein Node gebraucht - node_holen.ps1 ist
+REM  PowerShell, und das ist seit Windows 7 ueberall dabei.
+REM ============================================================
 echo.
 echo ============================================================
-echo   Node.js wurde nicht gefunden.
+echo   Node.js fehlt auf diesem Rechner.
 echo.
 echo   Node.js ist das Programm, das den Trainer ausfuehrt.
-echo   Es fehlt auf diesem Rechner - ohne geht es nicht.
+echo   Ich hole es jetzt in den Ordner node\ - ohne Installation,
+echo   ohne Administratorrechte, ohne Aenderung an Windows.
 echo.
-echo   DER EINFACHSTE WEG:
-echo     Doppelklick auf   Node-Holen.bat
+echo   Dafuer wird einmal eine Internetverbindung gebraucht.
+echo ============================================================
 echo.
-echo   Das laedt Node.js in den Ordner node\ - ohne Installation,
-echo   ohne Administratorrechte. Danach diese START.bat erneut.
+
+if not exist "%~dp0node_holen.ps1" goto :node_von_hand
+
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0node_holen.ps1"
+if not exist "%~dp0node\node.exe" goto :node_von_hand
+
+set "NODE_EXE=%~dp0node\node.exe"
+set "NPM_CMD=%~dp0node\npm.cmd"
 echo.
-echo   Alternativ von Hand: https://nodejs.org  ^(Fassung "LTS"^)
+echo [INFO] Node.js liegt jetzt im Ordner node\ - weiter geht es.
+echo.
+goto :node_da
+
+:node_von_hand
+echo.
+echo ============================================================
+echo   Das Holen hat nicht geklappt.
+echo.
+echo   Ohne Internet geht es hier nicht weiter. Zwei Wege:
+echo.
+echo     1. Spaeter noch einmal versuchen - einfach diese
+echo        START.bat erneut doppelklicken.
+echo.
+echo     2. Von Hand: https://nodejs.org  ^(Fassung "LTS"^)
+echo        herunterladen und installieren.
+echo.
+echo   Wer den Trainer auf einem Stick bekommen hat: Bitte den
+echo   Stick zurueckgeben - dort fehlt der Ordner node\.
 echo ============================================================
 echo.
 pause

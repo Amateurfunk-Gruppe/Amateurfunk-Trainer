@@ -30,15 +30,27 @@ if errorlevel 1 goto :kein_node
 goto :node_da
 
 :kein_node
+REM  Wie in START.bat: selbst holen statt wegschicken. Zum Holen
+REM  wird kein Node gebraucht, node_holen.ps1 ist PowerShell.
+echo.
+echo   Node.js fehlt - ich hole es in den Ordner node\ ...
+echo.
+if not exist "%~dp0node_holen.ps1" goto :node_von_hand
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0node_holen.ps1"
+if not exist "%~dp0node\node.exe" goto :node_von_hand
+set "NODE_EXE=%~dp0node\node.exe"
+set "NPM_CMD=%~dp0node\npm.cmd"
+echo.
+echo [INFO] Node.js liegt jetzt im Ordner node\ - weiter geht es.
+echo.
+goto :node_da
+
+:node_von_hand
 echo.
 echo ============================================================
-echo   Node.js wurde nicht gefunden.
-echo.
-echo   DER EINFACHSTE WEG:  Doppelklick auf  Node-Holen.bat
-echo   Das legt Node.js in den Ordner node\ - ohne Installation.
-echo   Danach diese Datei erneut starten.
-echo.
-echo   Alternativ von Hand: https://nodejs.org  ^(Fassung "LTS"^)
+echo   Das Holen hat nicht geklappt - ohne Internet geht es hier
+echo   nicht weiter. Spaeter noch einmal versuchen, oder von Hand
+echo   https://nodejs.org  ^(Fassung "LTS"^) installieren.
 echo ============================================================
 echo.
 pause
