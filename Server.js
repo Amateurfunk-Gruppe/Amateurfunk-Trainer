@@ -1163,6 +1163,23 @@ const PAKET_DATEIEN = [
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
   'START.bat', 'piper.bat', 'README.txt',
+  // Node-Holen.bat + node_holen.ps1: Damit kommt der Empfaenger ohne
+  // Installation von Node.js aus. Genau daran ist am 25.08.2026 ein
+  // Benutzer haengengeblieben - "Beim Start seh ich kurz das Terminal
+  // aufgehen aber wieder zu geht."
+  //
+  // Der Ordner node\ selbst geht ABSICHTLICH NICHT mit: Er ist rund
+  // 90 MB gross und gilt nur fuer Windows x64. Das Paket wird oft ueber
+  // eine Tunnel-Leitung gezogen; 90 MB dort durchzuschieben, damit der
+  // Empfaenger sie sich sonst in zwei Minuten selbst holt, waere
+  // schlechter Tausch. Die beiden kleinen Dateien genuegen.
+  'Node-Holen.bat', 'node_holen.ps1',
+  // USB-Stick-Erstellen gehoert AUSDRUECKLICH mit ins Paket. Anders als
+  // Hochladen.bat ist das kein Werkzeug nur fuer den Entwickler: Wer den
+  // Trainer an einer VHS oder im Ortsverband einsetzt, will Sticks
+  // austeilen - und soll dabei nicht versehentlich seinen eigenen
+  // Lernstand mitverteilen.
+  'USB-Stick-Erstellen.bat', 'usb_erstellen.js',
 ];
 
 // ================================================================
@@ -1346,13 +1363,23 @@ const ANLEITUNG_TEXT = [
   'Einladungslink noch den Rechner, von dem du das Paket bekommen hast.',
   '',
   '----------------------------------------------------------------',
-  'SCHRITT 1: Node.js installieren (nur einmal noetig)',
+  'SCHRITT 1: Node.js besorgen (nur einmal noetig)',
   '----------------------------------------------------------------',
   'Node.js ist kostenlos und wird gebraucht, damit der Trainer starten kann.',
+  'Es gibt zwei Wege - der erste ist der einfachere:',
   '',
-  '  https://nodejs.org  -> die Version "LTS" herunterladen und installieren',
+  '  A) Doppelklick auf   Node-Holen.bat',
   '',
-  'Bei der Installation einfach alles so lassen, wie es vorgeschlagen wird.',
+  '     Legt Node.js in den Unterordner node\\ - ohne Installation, ohne',
+  '     Administratorrechte, ohne Aenderung an deinem System. Dauert ein',
+  '     bis zwei Minuten. Der Trainer nimmt es danach von selbst.',
+  '',
+  '  B) Oder von Hand: https://nodejs.org  -> Fassung "LTS" installieren',
+  '',
+  '     Bei der Installation alles so lassen, wie es vorgeschlagen wird.',
+  '',
+  'Wenn auf deinem Rechner schon Node.js installiert ist, kannst du diesen',
+  'Schritt ueberspringen.',
   '',
   '----------------------------------------------------------------',
   'SCHRITT 2: Trainer starten',
@@ -1385,7 +1412,10 @@ const ANLEITUNG_TEXT = [
   // "Formelsammlung.pdf", und die Anleitung log beide Male.
   '@@PDFS@@',
   '  - Lernmodus mit Lernfortschritt, Fehlerliste und Auffrischung',
-  '  - Pruefungssimulator (3 x 25 Fragen wie in der echten Pruefung)',
+  '  - Pruefungssimulator unter echten Bedingungen: 25 Fragen und 45 Minuten',
+  '    je Pruefungsteil. Welche Teile drankommen, richtet sich nach dem',
+  '    gewaehlten Ziel - bei Klasse N drei, bei Klasse A fuenf, bei einer',
+  '    Aufstockung nur die fehlende Technik.',
   '  - Statistiken und Verlauf',
   '  - Einen eigenen Gruppenraum, in den du selbst einladen kannst',
   '',

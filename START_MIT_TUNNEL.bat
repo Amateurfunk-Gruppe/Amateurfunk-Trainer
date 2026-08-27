@@ -14,18 +14,41 @@ echo   der Tunnel wird dann automatisch mit beendet.
 echo ============================================================
 echo.
 
-where node >nul 2>nul
-if errorlevel 1 (
-  echo [FEHLER] Node.js wurde nicht gefunden!
-  echo          Bitte installiere Node.js von https://nodejs.org und starte danach neu.
-  echo.
-  pause
-  exit /b 1
+REM  Das mitgelieferte Node aus dem Ordner node\ hat Vorrang vor einem
+REM  installierten - siehe die ausfuehrliche Begruendung in START.bat.
+set "NODE_EXE=node"
+set "NPM_CMD=npm"
+if exist "%~dp0node\node.exe" (
+  set "NODE_EXE=%~dp0node\node.exe"
+  set "NPM_CMD=%~dp0node\npm.cmd"
+  echo [INFO] Node aus dem Trainer-Ordner wird benutzt ^(node\^).
+  goto :node_da
 )
+
+where node >nul 2>nul
+if errorlevel 1 goto :kein_node
+goto :node_da
+
+:kein_node
+echo.
+echo ============================================================
+echo   Node.js wurde nicht gefunden.
+echo.
+echo   DER EINFACHSTE WEG:  Doppelklick auf  Node-Holen.bat
+echo   Das legt Node.js in den Ordner node\ - ohne Installation.
+echo   Danach diese Datei erneut starten.
+echo.
+echo   Alternativ von Hand: https://nodejs.org  ^(Fassung "LTS"^)
+echo ============================================================
+echo.
+pause
+exit /b 1
+
+:node_da
 
 if not exist "node_modules" (
   echo [INFO] node_modules nicht gefunden - fuehre "npm install" aus...
-  call npm install
+  call "%NPM_CMD%" install
   if errorlevel 1 (
     echo [FEHLER] npm install fehlgeschlagen.
     pause
@@ -111,7 +134,7 @@ start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul http://localhost:3000
 
 REM AFU_TUNNEL=1 schaltet den Auto-Start des Tunnels ein (siehe Fix K2 in BUG_REPORT.md)
 set AFU_TUNNEL=1
-node Server.js
+"%NODE_EXE%" Server.js
 
 echo.
 echo ============================================================

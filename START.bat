@@ -8,20 +8,63 @@ echo   Der Server laeuft zunaechst NUR lokal auf diesem PC.
 echo ============================================================
 echo.
 
-REM FIX: Pruefen ob Node.js ueberhaupt installiert ist, statt stillem Fehlschlag
-where node >nul 2>nul
-if errorlevel 1 (
-  echo [FEHLER] Node.js wurde nicht gefunden!
-  echo          Bitte installiere Node.js von https://nodejs.org und starte danach neu.
-  echo.
-  pause
-  exit /b 1
+REM ============================================================
+REM  WELCHES NODE WIRD BENUTZT?
+REM
+REM  Zwei Moeglichkeiten, und der eigene Ordner hat Vorrang:
+REM
+REM    1. node\node.exe  - die mitgelieferte Fassung. Sie entsteht
+REM       durch Node-Holen.bat und braucht keine Installation. Wer
+REM       den Trainer als ZIP bekommt, kann so ohne Umweg starten.
+REM    2. ein auf dem Rechner installiertes Node.
+REM
+REM  Warum der Ordner Vorrang hat: Wer sich die Muehe gemacht hat,
+REM  Node in den Trainer zu legen, will genau diese Fassung - sonst
+REM  hinge es vom Zufall ab, welche das System gerade liefert.
+REM ============================================================
+set "NODE_EXE=node"
+set "NPM_CMD=npm"
+if exist "%~dp0node\node.exe" (
+  set "NODE_EXE=%~dp0node\node.exe"
+  set "NPM_CMD=%~dp0node\npm.cmd"
+  echo [INFO] Node aus dem Trainer-Ordner wird benutzt ^(node\^).
+  goto :node_da
 )
 
+where node >nul 2>nul
+if errorlevel 1 goto :kein_node
+goto :node_da
+
+:kein_node
+echo.
+echo ============================================================
+echo   Node.js wurde nicht gefunden.
+echo.
+echo   Node.js ist das Programm, das den Trainer ausfuehrt.
+echo   Es fehlt auf diesem Rechner - ohne geht es nicht.
+echo.
+echo   DER EINFACHSTE WEG:
+echo     Doppelklick auf   Node-Holen.bat
+echo.
+echo   Das laedt Node.js in den Ordner node\ - ohne Installation,
+echo   ohne Administratorrechte. Danach diese START.bat erneut.
+echo.
+echo   Alternativ von Hand: https://nodejs.org  ^(Fassung "LTS"^)
+echo ============================================================
+echo.
+pause
+exit /b 1
+
+:node_da
+
 REM FIX: node_modules Check - fehlende Abhaengigkeiten automatisch installieren
+REM
+REM ACHTUNG, node_modules ist NICHT Node.js. Hier liegen die Bausteine
+REM des Trainers (express, socket.io); node.exe ist das Programm, das
+REM sie ausfuehrt. Die beiden werden gern verwechselt.
 if not exist "node_modules" (
   echo [INFO] node_modules nicht gefunden - fuehre "npm install" aus...
-  call npm install
+  call "%NPM_CMD%" install
   if errorlevel 1 (
     echo [FEHLER] npm install fehlgeschlagen. Bitte Fehlermeldung oben pruefen.
     echo.
@@ -144,7 +187,7 @@ echo.
 start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul http://localhost:3000 && start http://localhost:3000 && exit /b) || timeout /t 1 /nobreak >nul"
 
 REM Server starten (blockierend)
-node Server.js
+"%NODE_EXE%" Server.js
 
 REM Kommt der Server gar nicht erst hoch, soll das Fenster stehenbleiben
 REM und die Meldung zeigen - nicht kommentarlos zuklappen.

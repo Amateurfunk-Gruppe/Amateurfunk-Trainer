@@ -136,3 +136,13 @@ BUG_REPORT.md
 # Rechner gedacht, nicht fuer Besucher des Repositorys - sie beschreibt,
 # wo man klickt, nicht was der Trainer kann.
 GITHUB-Einstellungen.md
+#
+# --- Das mitgelieferte Node.js ---
+#
+# node.exe allein ist rund 90 MB. Das ist zwar knapp unter GitHubs
+# Grenze von 100 MiB, gehoert aber trotzdem nicht ins Repository:
+# Jeder, der klont, zoege es mit, und es gilt nur fuer Windows x64 -
+# Mac und Linux koennen damit nichts anfangen. Wer es braucht, holt es
+# sich in zwei Minuten mit Node-Holen.bat.
+node/
+node_alt_*/
