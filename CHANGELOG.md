@@ -2592,3 +2592,82 @@ reicht die Eingabe an das Unterprogramm durch. Das ist hier
 unproblematisch, weil node_holen.ps1 in genau diesem Fall nichts fragt -
 gefragt wird dort nur, wenn schon ein node\ existiert, und dann ruft das
 USB-Werkzeug es gar nicht erst auf.
+
+### Vierter Lauf: es klappt - und eine Warnung an der unguenstigsten Stelle
+
+Dietmars Ausgabe zeigt den ganzen Weg, und er stimmt: LTS v24.20.0
+(Krypton) gefunden, 35,8 MB geladen, **Pruefsumme stimmt**, entpackt nach
+node\, danach 90 Pakete per npm install, "Beides da", Laufwerksliste.
+
+Damit ist auch node_holen.ps1 zum ersten Mal wirklich gelaufen - bis
+gestern war es das einzige Stueck, das ich nur lesen, aber nicht
+ausfuehren konnte. Es funktioniert, samt Pruefsummenvergleich.
+
+**Ein Schoenheitsfehler mit unangenehmer Wirkung:** Genau in dem Moment,
+als die Frage nach dem Ziellaufwerk erschien, schob Node diese Zeile
+dazwischen:
+
+    (node:9816) [DEP0190] DeprecationWarning: Passing args to a child
+    process with shell option true can lead to security vulnerabilities
+
+Sachlich harmlos - die Pakete waren sauber installiert -, aber an dieser
+Stelle sieht es aus, als sei etwas schiefgegangen. Und wer gerade zwanzig
+Sticks bespielen will, soll nicht raten muessen, ob er weitermachen darf.
+
+Ursache: npm ist unter Windows eine .cmd-Datei und laesst sich seit der
+Sicherheitskorrektur in Node 18.20 nur noch ueber die Shell starten.
+Uebergibt man dabei zusaetzlich eine Argumentliste, mahnt Node ab Fassung
+22. Jetzt geht ein einziger Befehlstext hinaus statt Befehl plus Liste,
+der Pfad in Anfuehrungszeichen fuer den Fall von Leerzeichen.
+Nachgemessen: null Treffer fuer DEP0190, npm laeuft unveraendert.
+
+### "Das mit dem 1 finde ich seltsam"
+
+Dietmar: "Ich wuensche mir das es nach einem USB Stick sucht und alle
+auflistet."
+
+Er hat recht, und der Einwand trifft mehr als die Bedienung. Meine Liste
+zeigte, WELCHE LAUFWERKE ES GIBT - und liess offen, was man eigentlich
+wissen will: **wo steckt der Stick**. Ob "D:" der Stick ist oder die
+zweite Festplatte, musste man selbst wissen. Bei zwanzig Sticks
+hintereinander ist das eine Einladung zum Danebenkopieren.
+
+Windows weiss es genau: `Win32_LogicalDisk` kennt einen `DriveType`, und
+2 bedeutet Wechseldatentraeger. Dazu gibt es den Namen, den der Stick beim
+Formatieren bekommen hat, und die Groesse. Abgefragt ueber PowerShell -
+Node weiss von sich aus nichts ueber Laufwerkstypen, und eine fremde
+Bibliothek dafuer waere die vierte Abhaengigkeit in einem Projekt, das
+bewusst nur drei hat.
+
+Jetzt steht da:
+
+    Gefundene USB-Sticks:
+      1)  D:\  "AFU-KURS"          58.5 GB frei von 64.0 GB
+
+    Andere Laufwerke:
+      2)  E:\  "Daten"            900.0 GB frei von 2000.0 GB
+
+    Eingabetaste  = D:\Amateurfunk-Trainer
+    Nummer        = dieses Laufwerk
+    n             = noch einmal nach Sticks suchen
+
+**Ist genau ein Stick da, genuegt die Eingabetaste** - dann muss man gar
+nichts mehr tippen. Steckt keiner, steht das da ("Kein USB-Stick gefunden.
+Steckt er schon?") samt der Moeglichkeit, nach dem Einstecken noch einmal
+zu suchen, statt abbrechen und neu starten zu muessen. Und wer eine
+Festplatte waehlt, wird gefragt, ob das wirklich gewollt ist.
+
+**Geprueft ohne Windows**, indem die Funktion aus der Datei
+herausgeschnitten und mit nachgebauten WMI-Antworten gefuettert wurde -
+vier Faelle, alle bestanden:
+
+  * Stick, zweite Festplatte und C: nebeneinander -> nur der Stick wird
+    als Stick gefuehrt, C: faellt raus
+  * nur ein einziges Laufwerk -> PowerShell liefert dann KEIN Array,
+    sondern ein einzelnes Objekt. Ohne diesen Fall waere die Liste bei
+    genau einem Stick leer geblieben - also ausgerechnet in Dietmars
+    Alltagsfall.
+  * leeres Kartenlesegeraet (Size = null) -> wird uebergangen, statt als
+    "0.0 GB frei" in der Liste zu stehen
+  * PowerShell antwortet gar nicht -> keine Liste, aber auch kein
+    Absturz; der Pfad laesst sich weiterhin eintippen

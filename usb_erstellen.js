@@ -36,6 +36,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { spawnSync } = require('child_process');
 
 const WURZEL = __dirname;
 
@@ -99,6 +100,50 @@ const NIEMALS = new Set([
 ]);
 
 function mb(n) { return (n / 1024 / 1024).toFixed(1) + ' MB'; }
+function gb(n) { return (n / 1024 / 1024 / 1024).toFixed(1) + ' GB'; }
+
+// ---- Wo steckt der Stick? --------------------------------------
+//
+// "Laufwerk D:" sagt einem nichts - ist das der Stick oder die zweite
+// Festplatte? Windows weiss es genau: Win32_LogicalDisk kennt einen
+// DriveType, und 2 bedeutet Wechseldatentraeger. Dazu gibt es den
+// Namen, den der Stick beim Formatieren bekommen hat, und die Groesse.
+// Damit laesst sich die Frage stellen, die man wirklich meint.
+//
+// Abgefragt wird ueber PowerShell, weil Node von sich aus nichts ueber
+// Laufwerkstypen weiss und ich dem Projekt dafuer keine fremde
+// Bibliothek aufhalsen will - es hat bewusst nur drei Abhaengigkeiten.
+function laufwerkeSuchen() {
+  if (process.platform !== 'win32') return [];
+  try {
+    const r = spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+      'Get-CimInstance Win32_LogicalDisk | Select-Object DeviceID,DriveType,VolumeName,Size,FreeSpace | ConvertTo-Json -Compress'],
+      { encoding: 'utf8', timeout: 20000 });
+    if (!r.stdout) return [];
+    let d = JSON.parse(r.stdout);
+    if (!Array.isArray(d)) d = [d];
+    return d
+      .filter(x => x && x.DeviceID && Number(x.Size) > 0)
+      .map(x => ({
+        pfad:      x.DeviceID + '\\',
+        buchstabe: String(x.DeviceID)[0].toUpperCase(),
+        name:      x.VolumeName || '',
+        wechsel:   Number(x.DriveType) === 2,
+        gesamt:    Number(x.Size) || 0,
+        frei:      Number(x.FreeSpace) || 0,
+      }))
+      // C: ist nie ein Stick und waere hier nur eine Fehlerquelle.
+      .filter(x => x.buchstabe !== 'C');
+  } catch (e) {
+    return [];
+  }
+}
+
+function zeileFuer(l) {
+  const name = l.name ? '"' + l.name + '"' : '(ohne Namen)';
+  return (l.pfad + '  ' + name).padEnd(30)
+       + gb(l.frei) + ' frei von ' + gb(l.gesamt);
+}
 
 function groesse(p) {
   let s = 0;
@@ -161,7 +206,6 @@ function kopiereOrdner(von, nach) {
 // Ein Werkzeug, das dann sagt "fuehr erst zwei andere Dateien aus",
 // verfehlt genau das. Es kann beides selbst - also tut es das auch,
 // nach Rueckfrage.
-const { spawnSync } = require('child_process');
 
 function nodeHolen() {
   const skript = path.join(WURZEL, 'node_holen.ps1');
@@ -187,7 +231,16 @@ function bausteineHolen() {
   console.log('');
   console.log('  Hole die Bausteine mit "npm install" ...');
   console.log('  ------------------------------------------------------------');
-  const r = spawnSync(npm, ['install'], { cwd: WURZEL, stdio: 'inherit', shell: true });
+  // Ein einziger Befehlstext statt Befehl + Argumentliste.
+  //
+  // npm ist unter Windows eine .cmd-Datei; die laesst sich seit der
+  // Sicherheitskorrektur in Node 18.20 nur noch ueber die Shell starten.
+  // Uebergibt man dabei aber eine Argumentliste, warnt Node ab Fassung 22
+  // mit DEP0190 - und diese Warnung erschien bei Dietmar mitten in der
+  // Frage nach dem Ziellaufwerk, wo sie aussah wie ein Fehler.
+  // Anfuehrungszeichen um den Pfad, weil er Leerzeichen enthalten kann.
+  const befehl = (npm === 'npm' ? 'npm' : '"' + npm + '"') + ' install';
+  const r = spawnSync(befehl, { cwd: WURZEL, stdio: 'inherit', shell: true });
   console.log('  ------------------------------------------------------------');
   return r.status === 0 && fs.existsSync(path.join(WURZEL, 'node_modules', 'express'));
 }
@@ -270,60 +323,94 @@ function pruefeListe() {
 
   // ---- Wohin? ---------------------------------------------------
   //
-  // Einen Pfad abzutippen ist bei zwanzig Sticks hintereinander eine
-  // Zumutung - und ein Tippfehler legt die Kopie irgendwohin. Deshalb
-  // erst zeigen, welche Laufwerke es gibt.
-  const laufwerke = [];
-  if (process.platform === 'win32') {
-    for (const b of 'DEFGHIJKLMNOPQRSTUVWXYZ') {          // C: bewusst nicht
-      const w = b + ':\\';
-      try {
-        if (!fs.existsSync(w)) continue;
-        let frei = '';
-        try {
-          const st = fs.statfsSync(w);
-          frei = ' - ' + ((st.bavail * st.bsize) / 1024 / 1024 / 1024).toFixed(1) + ' GB frei';
-        } catch (e) {}
-        laufwerke.push({ buchstabe: b, pfad: w, frei });
-      } catch (e) {}
+  // Nicht "welche Laufwerke gibt es", sondern "wo ist der Stick".
+  // Eine Liste, in der D: einfach als Nummer 1 steht, sagt einem nichts -
+  // man muss raten, ob das der Stick ist oder die zweite Festplatte.
+  // Windows weiss das genau: Wechseldatentraeger sind DriveType 2.
+  // Danach wird gefragt, mit Namen und Groesse dazu.
+  let laufwerke = laufwerkeSuchen();
+  let ZIEL = null;
+
+  while (ZIEL === null) {
+    const sticks = laufwerke.filter(l => l.wechsel);
+    const feste  = laufwerke.filter(l => !l.wechsel);
+    const liste  = [...sticks, ...feste];          // Sticks zuerst
+
+    console.log('');
+    if (sticks.length) {
+      console.log('  Gefundene USB-Sticks:');
+      sticks.forEach((l, i) => console.log('    ' + (i + 1) + ')  ' + zeileFuer(l)));
+    } else if (laufwerke.length) {
+      console.log('  Kein USB-Stick gefunden. Steckt er schon?');
+    } else {
+      console.log('  Es liessen sich keine Laufwerke ermitteln.');
     }
+    if (feste.length) {
+      console.log('');
+      console.log('  ' + (sticks.length ? 'Andere Laufwerke:' : 'Gefundene Laufwerke (keines davon ein Stick):'));
+      feste.forEach((l, i) => console.log('    ' + (sticks.length + i + 1) + ')  ' + zeileFuer(l)));
+    }
+
+    console.log('');
+    if (sticks.length === 1) {
+      console.log('  Eingabetaste  = ' + sticks[0].pfad + 'Amateurfunk-Trainer');
+    }
+    console.log('  Nummer        = dieses Laufwerk');
+    console.log('  n             = noch einmal nach Sticks suchen');
+    console.log('  oder einen vollstaendigen Pfad, z.B.  E:\\Kurs-Herbst');
+
+    const eingabe = await fragen('  Ziel:  ');
+
+    // Nichts eingegeben: der einzige Stick, sonst nachfragen.
+    if (!eingabe) {
+      if (sticks.length === 1) {
+        ZIEL = path.resolve(path.join(sticks[0].pfad, 'Amateurfunk-Trainer'));
+        console.log('  Gewaehlt: ' + ZIEL);
+        break;
+      }
+      console.log('\n  Kein Ziel angegeben. Abgebrochen.\n');
+      rl.close(); return;
+    }
+
+    // Noch einmal suchen - der haeufigste Fall ist: Stick vergessen.
+    if (/^(n|neu|suchen)$/i.test(eingabe)) {
+      console.log('  Suche noch einmal ...');
+      laufwerke = laufwerkeSuchen();
+      continue;
+    }
+
+    const nummer = /^\d+$/.test(eingabe) ? parseInt(eingabe, 10) : 0;
+    if (nummer) {
+      if (nummer < 1 || nummer > liste.length) {
+        console.log('');
+        console.log('  !! Es gibt keine Nummer ' + nummer + ' in der Liste oben.');
+        continue;
+      }
+      const gewaehlt = liste[nummer - 1];
+      if (!gewaehlt.wechsel) {
+        console.log('');
+        console.log('  Achtung: ' + gewaehlt.pfad + ' ist kein Wechseldatentraeger,');
+        console.log('  sondern eine Festplatte oder ein Netzlaufwerk.');
+        const w = await fragen('  Trotzdem dorthin kopieren?  [j/n]  ');
+        if (!ja(w)) continue;
+      }
+      ZIEL = path.resolve(path.join(gewaehlt.pfad, 'Amateurfunk-Trainer'));
+      console.log('  Gewaehlt: ' + ZIEL);
+      break;
+    }
+
+    // Nur ein Buchstabe - dann den Unterordner selbst anhaengen, sonst
+    // laege der Trainer lose in der Wurzel des Sticks.
+    if (/^[a-zA-Z]:?\\?$/.test(eingabe)) {
+      ZIEL = path.resolve(path.join(eingabe[0].toUpperCase() + ':\\', 'Amateurfunk-Trainer'));
+      console.log('  Gewaehlt: ' + ZIEL);
+      break;
+    }
+
+    ZIEL = path.resolve(eingabe);
   }
 
-  console.log('');
-  if (laufwerke.length) {
-    console.log('  Gefundene Laufwerke:');
-    laufwerke.forEach((l, i) => console.log('    ' + (i + 1) + ')  ' + l.buchstabe + ':\\' + l.frei));
-    console.log('');
-    console.log('  Nummer eingeben - oder einen vollstaendigen Pfad,');
-    console.log('  zum Beispiel  E:\\Amateurfunk-Trainer');
-  } else {
-    console.log('  Wohin soll die Kopie? Beispiel:  E:\\Amateurfunk-Trainer');
-  }
-  const zielEingabe = await fragen('  Ziel:  ');
-  if (!zielEingabe) { console.log('\n  Kein Ziel angegeben. Abgebrochen.\n'); rl.close(); return; }
 
-  let zielRoh = zielEingabe;
-  const nummer = /^\d+$/.test(zielEingabe) ? parseInt(zielEingabe, 10) : 0;
-  // Eine Zahl ohne passendes Laufwerk landete sonst als Ordnername "9"
-  // im Trainer-Ordner. Die Sperre weiter unten faenge das zwar ab, aber
-  // mit einer Meldung, die niemand versteht.
-  if (nummer && (nummer < 1 || nummer > laufwerke.length)) {
-    console.log('');
-    console.log('  !! Es gibt keine Nummer ' + nummer + ' in der Liste oben.');
-    console.log('     Bitte eine der angebotenen Nummern - oder einen Pfad.');
-    console.log('');
-    rl.close(); return;
-  }
-  if (nummer >= 1 && nummer <= laufwerke.length) {
-    zielRoh = path.join(laufwerke[nummer - 1].pfad, 'Amateurfunk-Trainer');
-    console.log('  Gewaehlt: ' + zielRoh);
-  } else if (/^[a-zA-Z]:?\\?$/.test(zielEingabe)) {
-    // Nur ein Buchstabe getippt - dann den Unterordner selbst anhaengen,
-    // sonst laege der Trainer lose in der Wurzel des Sticks.
-    zielRoh = path.join(zielEingabe[0].toUpperCase() + ':\\', 'Amateurfunk-Trainer');
-    console.log('  Gewaehlt: ' + zielRoh);
-  }
-  const ZIEL = path.resolve(zielRoh);
 
   // Gross- und Kleinschreibung: Windows unterscheidet sie in Pfaden nicht.
   // Ohne diesen Abgleich rutschte "c:\users\..." an der Sperre vorbei.
