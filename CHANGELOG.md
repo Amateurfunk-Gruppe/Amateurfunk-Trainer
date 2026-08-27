@@ -2350,3 +2350,245 @@ der Lernpool, nicht die Pruefung, und diese beiden wurden bisher
 verwechselt.
 
 Bild `02-pruefungsziel.png` neu aufgenommen.
+
+## 27.08.2026 - Ohne Installation, und auf den USB-Stick
+
+Dietmar: "wenn ich mir node.js als Stand Alone downloade und in den Trainer
+veschiebe. Geht das?" - und kurz darauf das eigentliche Ziel: "Nichts
+installieren zu muessen und das man den Trainer zB auf einem USB Stick
+weiter geben kann. In einem Ortsverband oder einer VHS kann der Trainer USB
+Sticks zum lernen austeilen."
+
+**Erst ein Missverstaendnis geraderuecken.** Dietmar wollte Node in den
+Ordner `node_modules` legen. Die beiden werden staendig verwechselt, weil
+sie aehnlich heissen:
+
+    node_modules   die Bausteine des Trainers - express, socket.io, cors
+    node.exe       Node.js selbst, das Programm, das Server.js ausfuehrt
+
+Das eine ins andere zu entpacken haette nicht funktioniert und im
+schlimmsten Fall die vorhandenen Bausteine ueberschrieben.
+
+**Node-Holen.bat + node_holen.ps1.** Holt die aktuelle LTS-Fassung von
+nodejs.org nach `node\` - kein Installer, keine Administratorrechte, keine
+Aenderung an der Registry.
+
+Ausnahmsweise PowerShell statt Javascript, und zwar zwangslaeufig: Wer
+dieses Werkzeug braucht, hat noch kein Node, mit dem sich eine .js-Datei
+ausfuehren liesse. PowerShell ist seit Windows 7 ueberall dabei.
+
+Die Architektur wird abgefragt (x64 / arm64 / x86) - ein ARM-Notebook bekaeme
+sonst eine x64-Datei, die nicht startet, mit einer nichtssagenden
+Fehlermeldung. Und **die Pruefsumme wird gegen SHASUMS256.txt nachgerechnet**.
+Das ist kein Schmuck: Hier wird eine ausfuehrbare Datei auf einen fremden
+Rechner gelegt. Stimmt der Fingerabdruck nicht, wird geloescht und nichts
+entpackt.
+
+**START.bat und START_MIT_TUNNEL.bat** nehmen jetzt `node\node.exe`, wenn es
+da ist - mit Vorrang vor einem installierten Node. Wer sich die Muehe
+gemacht hat, Node in den Trainer zu legen, will genau diese Fassung. Fehlt
+beides, steht in der Meldung nicht mehr nur "installiere Node.js", sondern
+der Weg ueber Node-Holen.bat.
+
+**Und dann kam der eigentliche Zweck.** Sticks im Ortsverband austeilen. Dazu
+zwei Befunde:
+
+*Der Trainer ist tatsaechlich transportfaehig.* Alle 974 Dateien in
+node_modules durchsucht: **kein einziger nativer Baustein** (.node, .dll).
+express, socket.io und cors sind reines Javascript. Der Ordner laeuft mit
+jedem Node ab 18, auf jedem Rechner, von jedem Laufwerksbuchstaben - alle
+Startdateien arbeiten mit %~dp0.
+
+*Aber den Ordner einfach kopieren waere ein Fehler gewesen.* Im
+Trainer-Ordner liegen `data\` (Lernstand, Zaehler, Verlauf),
+`video_embed.json` (die drei echten Namen der Testgruppe), `.git\` (die
+ganze Vorgeschichte samt Mailadresse) und die Werkzeuge. Beim ZIP-Download
+gibt es dafuer eine Positivliste; im Explorer greift sie nicht.
+
+**USB-Stick-Erstellen.bat + usb_erstellen.js** benutzt deshalb dieselbe
+Positivliste - plus `node\` und `node_modules\`, damit auf dem Zielrechner
+weder eine Installation noch eine Internetverbindung noetig ist. Piper und
+Hoerbuch werden einzeln gefragt (zusammen rund 460 MB). Auf dem Stick landet
+eine ANLEITUNG-USB.txt: einstecken, START.bat, fertig. Der Lernstand
+speichert sich auf dem Stick - er wandert mit, auf dem fremden Rechner
+bleibt nichts zurueck.
+
+**Was der Test gefunden hat.** Ein nachgebauter Ordner mit absichtlich
+hineingelegtem Privatkram, dann durchgezaehlt: alle dreizehn verbotenen
+Eintraege blieben draussen, alle zwoelf noetigen waren da. Dabei kamen zwei
+echte Fehler heraus:
+
+  1. **Dieselbe readline-Falle wie in aufraeumen.js.** Endet die Eingabe,
+     ruft rl.question seine Funktion nie mehr auf, das Versprechen bleibt
+     offen, node beendet sich still mit Code 0 - es sah aus, als waere alles
+     gut gegangen, obwohl keine einzige Datei kopiert wurde. Jede Frage
+     horcht jetzt zusaetzlich auf das Ende der Eingabe.
+  2. **Die Sperre gegen die Kopie in sich selbst verglich
+     gross-/kleinschreibungsempfindlich.** Windows tut das bei Pfaden nicht;
+     "c:\users\..." waere durchgerutscht.
+
+**Und die Selbstpruefung hat sich sofort bewaehrt.** Die Dateiliste steht an
+zwei Stellen (Server.js und usb_erstellen.js) - genau die Konstellation, die
+mir bei der .gitignore schon einmal um die Ohren geflogen ist. Deshalb
+vergleicht das Werkzeug beim Start beide Listen. Und meldete prompt, dass
+ich USB-Stick-Erstellen.bat in Server.js eingetragen hatte, aber nicht in
+der eigenen Liste. Genau dafuer war sie da.
+
+**Nachtrag zur Bedienung:** Der Pfad muss nicht getippt werden - das Werkzeug
+zeigt die vorhandenen Laufwerke mit freiem Platz zur Auswahl. Bei zwanzig
+Sticks hintereinander macht das einen Unterschied. Elf Faelle der
+Zieleingabe durchgerechnet (Nummer, blosser Buchstabe, "E:", "E:\", voller
+Pfad, ungueltige Nummer) - alle richtig.
+
+**Ungeprueft:** node_holen.ps1 selbst. In meiner Umgebung gibt es kein
+PowerShell, der echte Download ist nie gelaufen. Der erste Lauf passiert auf
+Dietmars Rechner.
+
+**Nicht geloest: Android.** node.exe ist ein Windows-Programm, ein Stick
+hilft einem Tablet nicht. Nachgemessen ist aber, dass eine einzige,
+in sich geschlossene HTML-Datei fuer Klasse N nur rund 1,2 MB gross waere -
+die 699 SVG-Zeichnungen sind zusammen nur 130 KB. Machbar, aber noch nicht
+untersucht, was in so einer Fassung vom Trainer uebrig bliebe.
+
+### Nachtrag am selben Tag: der erste echte Lauf
+
+Dietmar hat das Werkzeug sofort ausprobiert und dabei drei Dinge zutage
+gefoerdert, die mein eigener Test nicht gefunden hatte:
+
+**1. Absturz bei "D:\".** Als Ziel gab er die Wurzel des Sticks an. Dort
+bricht `mkdirSync` mit EPERM ab, obwohl `recursive:true` gesetzt ist -
+Windows meldet fuer ein Laufwerks-Stammverzeichnis nicht "gibt es schon",
+sondern "nicht erlaubt". Das Skript stuerzte mit einem Stapelauszug aus
+node:fs ab. Wer Sticks fuer den Ortsverband vorbereitet, soll keine
+Fehlersuche in der Node-Bibliothek betreiben muessen.
+
+Jetzt geht jedes Anlegen eines Ordners durch `ordnerSicherstellen()`, das
+erst nachsieht, ob es ihn schon gibt. Ausserdem faengt der ganze Ablauf
+Fehler ab und schreibt eine Zeile statt eines Stapelauszugs - mit
+Klartext zu den haeufigen Ursachen (schreibgeschuetzt, kein Platz, Stick
+abgezogen).
+
+**2. Einzelne Dateien duerfen den Lauf nicht mehr sprengen.** Klemmt eine
+Datei (offen, schreibgeschuetzt), wird sie gesammelt und am Ende gemeldet.
+Vorher waere der ganze Stick auf halbem Weg liegengeblieben.
+
+**3. Mein Testverfahren taugte nichts.** Ich hatte die Antworten per Rohr
+hineingeschuettet. Dabei kommt das Ende der Eingabe frueher als die zweite
+Frage, und meine eigene Absicherung von heute frueh beantwortete sie
+prompt mit "nein" - der Test meldete "abgebrochen", wo ein Mensch laengst
+weitergeklickt haette. Es gibt jetzt einen Pruefstand, der auf die
+Eingabeaufforderung wartet und antwortet wie ein Mensch, mit offener
+Eingabe. Zehn Pruefungen ueber zwei Ablaeufe, alle bestanden.
+
+**Und die Selbstpruefung hat wieder angeschlagen.** Dietmars Ausgabe zeigte
+"[HINWEIS] Diese Liste weicht von PAKET_DATEIEN in Server.js ab: nur in
+Server.js: USB-Stick-Erstellen.bat, usb_erstellen.js" - genau der Fehler,
+den ich beim Eintragen gemacht hatte. Zweimal an einem Tag hat diese
+Pruefung etwas gefunden, das ich uebersehen hatte.
+
+**Bedienung erleichtert:** Der Pfad muss nicht mehr getippt werden. Das
+Werkzeug zeigt die vorhandenen Laufwerke mit freiem Platz zur Auswahl, und
+wer nur "D" oder "D:\" eingibt, bekommt automatisch den Unterordner
+`Amateurfunk-Trainer` - sonst laege der Trainer lose in der Wurzel des
+Sticks. Elf Faelle der Zieleingabe durchgerechnet, alle richtig.
+
+### Zweiter echter Lauf: der Stick startete nicht
+
+Dietmars naechste Ausgabe, diesmal vom Stick selbst:
+
+    [INFO] node_modules nicht gefunden - fuehre "npm install" aus...
+    Error: Cannot find module 'D:\Amateurfunk-Trainer\node_modules\npm\bin\npm-prefix.js'
+    ... zwei Stapelauszuege aus node:internal/modules/cjs/loader ...
+    [FEHLER] npm install fehlgeschlagen.
+
+**Die Ursache lag nicht auf dem Stick, sondern beim Bespielen.** Ein Blick
+auf D:\Amateurfunk-Trainer zeigte als Ordner nur `sounds` und `svgs` -
+weder `node\` noch `node_modules\`. Der Stick war aus einem frisch von
+GitHub geladenen Ordner bespielt worden, der beides nicht hat. Mein
+Werkzeug hatte das zwar angemerkt, aber danach seelenruhig "FERTIG"
+gemeldet.
+
+**Drei Dinge waren falsch, und alle drei am selben Punkt: Es wurde etwas
+gemeldet, was nicht stimmte.**
+
+**1. Das USB-Werkzeug prueft jetzt vorher UND nachher.** Vorher: Fehlt
+`node\` oder `node_modules\`, steht beides einzeln da, dazu der Pfad des
+Ordners, in dem man gerade steht ("Ist das der richtige Ordner? Ein frisch
+von GitHub geladener hat beides noch nicht"). Nachher wird nachgesehen, ob
+Oberflaeche, Programm, Fragen, Bausteine und Node wirklich am Ziel
+angekommen sind. Fehlt etwas, heisst die Schlusszeile nicht mehr "FERTIG",
+sondern "KOPIERT, ABER UNVOLLSTAENDIG" - mit der Angabe, was fehlt und was
+dagegen hilft.
+
+Ein Werkzeug, das "fertig" sagt und einen Stick hinterlaesst, der beim
+Empfaenger nicht anspringt, ist schlimmer als eines, das gar nichts tut.
+
+**2. START.bat ruft npm nicht mehr blind auf.** Vorher: `node_modules`
+fehlt, also `npm install` - egal ob npm ueberhaupt vorhanden ist. Auf dem
+Stick war es das nicht, und der Empfaenger bekam zwei Stapelauszuege aus
+der Node-Bibliothek zu sehen, in denen der eigentliche Fehler nicht einmal
+vorkam. Jetzt wird erst geprueft, ob npm da ist, und wenn nicht, steht da
+in Klartext, dass der Ordner unvollstaendig ist - mit zwei Wegen, je
+nachdem ob man ihn selbst angelegt oder bekommen hat.
+
+Geprueft wird ausserdem auf `node_modules\express` statt nur auf den
+Ordner `node_modules`. Ein leerer oder halb kopierter Ordner haette die
+alte Pruefung bestanden.
+
+**3. Zum Missverstaendnis von heute frueh:** node_modules und node.exe
+werden verwechselt, das zieht sich durch. Deshalb steht die Unterscheidung
+jetzt als Kommentar in START.bat, wo sie geprueft wird.
+
+Zwei Ablaeufe neu durchgetestet (unvollstaendiger Quellordner mit "nein"
+und mit "trotzdem weiter"), dazu die zehn Pruefungen von vorhin noch
+einmal - alle bestanden.
+
+### Dritter Lauf: das Werkzeug holt sich jetzt selbst, was fehlt
+
+Dietmar hat das Ziel endlich in einem Satz gesagt, und der raeumt mit
+meinem bisherigen Entwurf auf:
+
+    "Ziel ist es, wen ich von GitHub den Trainer downlade, hier die Bat
+     ausfuehren kann der auf meinem USB Stick den Trainer vollstaendig
+     kopiert."
+
+Mein Werkzeug meldete stattdessen brav, was fehlt, und schickte ihn weg:
+"Node-Holen.bat im Quellordner ausfuehren, dann noch einmal hierher." Das
+ist zwar richtig, aber es ist keine Antwort auf die Aufgabe. Ein
+Werkzeug, das weiss, was fehlt, und weiss, wie man es holt, soll es holen.
+
+**Jetzt fragt es einmal und erledigt beides:**
+
+    In diesem Ordner fehlt noch:
+       node\           - Node.js selbst, damit beim Empfaenger
+                         nichts installiert werden muss
+       node_modules\   - die Bausteine des Trainers
+
+    Das ist normal bei einem frisch von GitHub geladenen Ordner.
+    Beides kann ich jetzt holen - dafuer wird einmal eine
+    Internetverbindung gebraucht, danach nie wieder.
+
+    Jetzt holen und dann den Stick bespielen?  [j/n]
+
+Bei "j" laeuft node_holen.ps1 und danach "npm install", beides mit
+sichtbarer Ausgabe. Klappt nur eines, sagt es, welches - und fragt, ob
+trotzdem kopiert werden soll.
+
+**Auch USB-Stick-Erstellen.bat kann sich jetzt selbst helfen.** Sie
+braucht ein Node, um usb_erstellen.js ueberhaupt auszufuehren. Findet sie
+keines - weder im Ordner noch auf dem Rechner -, ruft sie node_holen.ps1
+auf, statt mit einer Fehlermeldung stehenzubleiben. Damit ist der ganze
+Weg wirklich ein Doppelklick, auch auf einem Rechner ohne Node.
+
+**Geprueft** an einem nachgebauten frischen GitHub-Ordner: Das Nachholen
+von node_modules lief durch (983 Dateien), das Holen von Node schlug hier
+erwartungsgemaess fehl (in dieser Umgebung gibt es kein PowerShell) - und
+genau das stand dann auch da, samt der Nachfrage, ob trotzdem kopiert
+werden soll. Der Stick wurde bespielt und korrekt als unvollstaendig
+gemeldet, weil node\ fehlte.
+
+Was dabei auffiel und kein Fehler ist: `spawnSync` mit `stdio:'inherit'`
+reicht die Eingabe an das Unterprogramm durch. Das ist hier
+unproblematisch, weil node_holen.ps1 in genau diesem Fall nichts fragt -
+gefragt wird dort nur, wenn schon ein node\ existiert, und dann ruft das
+USB-Werkzeug es gar nicht erst auf.

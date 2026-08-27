@@ -83,6 +83,7 @@ const DATEIEN = [
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
   'START.bat', 'piper.bat', 'README.txt',
   'Node-Holen.bat', 'node_holen.ps1',
+  'USB-Stick-Erstellen.bat', 'usb_erstellen.js',
 ];
 const PDF_MUSTER = [/^hilfsmittel.*\.pdf$/i, /^formelsammlung.*\.pdf$/i, /^pruefungsfragen.*\.pdf$/i];
 const ORDNER_IMMER = ['svgs', 'sounds', 'node_modules', 'node'];
@@ -114,11 +115,31 @@ function groesse(p) {
   return s;
 }
 
+// Einen Ordner anlegen - aber nur, wenn es ihn nicht schon gibt.
+//
+// Aus einem echten Lauf vom 27.08.2026: Als Ziel wurde "D:\" angegeben,
+// also die Wurzel des Sticks. mkdirSync bricht dort mit EPERM ab, obwohl
+// recursive:true gesetzt ist - Windows meldet fuer ein Laufwerks-
+// Stammverzeichnis nicht "gibt es schon", sondern "nicht erlaubt". Das
+// Skript stuerzte mit einem Stapelauszug ab, den niemand lesen will.
+function ordnerSicherstellen(p) {
+  try { if (fs.existsSync(p) && fs.statSync(p).isDirectory()) return; } catch (e) {}
+  fs.mkdirSync(p, { recursive: true });
+}
+
 let kopiert = 0, uebersprungen = 0;
+const fehlerListe = [];
 function kopiereDatei(von, nach) {
-  fs.mkdirSync(path.dirname(nach), { recursive: true });
-  fs.copyFileSync(von, nach);
-  kopiert++;
+  try {
+    ordnerSicherstellen(path.dirname(nach));
+    fs.copyFileSync(von, nach);
+    kopiert++;
+  } catch (e) {
+    // Eine einzelne Datei, die klemmt (offen, schreibgeschuetzt, Stick
+    // voll), darf nicht den ganzen Lauf abbrechen. Gesammelt und am Ende
+    // gemeldet - dann sieht man auf einen Blick, was fehlt.
+    fehlerListe.push(path.basename(nach) + ': ' + e.code);
+  }
 }
 function kopiereOrdner(von, nach) {
   let e = [];
@@ -126,9 +147,49 @@ function kopiereOrdner(von, nach) {
   for (const x of e) {
     if (NIEMALS.has(x.name) || /^node_alt_/.test(x.name)) { uebersprungen++; continue; }
     const a = path.join(von, x.name), b = path.join(nach, x.name);
-    if (x.isDirectory()) { fs.mkdirSync(b, { recursive: true }); kopiereOrdner(a, b); }
+    if (x.isDirectory()) { ordnerSicherstellen(b); kopiereOrdner(a, b); }
     else if (x.isFile()) kopiereDatei(a, b);
   }
+}
+
+// ---- Fehlendes selbst nachholen --------------------------------
+//
+// Dietmars Ziel, im Klartext: "wenn ich von GitHub den Trainer downlade,
+// hier die Bat ausfuehren kann der auf meinem USB Stick den Trainer
+// vollstaendig kopiert."
+//
+// Ein Werkzeug, das dann sagt "fuehr erst zwei andere Dateien aus",
+// verfehlt genau das. Es kann beides selbst - also tut es das auch,
+// nach Rueckfrage.
+const { spawnSync } = require('child_process');
+
+function nodeHolen() {
+  const skript = path.join(WURZEL, 'node_holen.ps1');
+  if (!fs.existsSync(skript)) {
+    console.log('  node_holen.ps1 fehlt in diesem Ordner - kann Node nicht holen.');
+    return false;
+  }
+  console.log('');
+  console.log('  Hole Node.js ... (rund 30 MB, ein bis zwei Minuten)');
+  console.log('  ------------------------------------------------------------');
+  const r = spawnSync('powershell',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', skript],
+    { cwd: WURZEL, stdio: 'inherit' });
+  console.log('  ------------------------------------------------------------');
+  return r.status === 0 && fs.existsSync(path.join(WURZEL, 'node', 'node.exe'));
+}
+
+function bausteineHolen() {
+  // Erst das mitgelieferte npm, dann das des Systems. In einem frisch
+  // von GitHub geladenen Ordner gibt es nur das zweite.
+  const eigenes = path.join(WURZEL, 'node', 'npm.cmd');
+  const npm = fs.existsSync(eigenes) ? eigenes : 'npm';
+  console.log('');
+  console.log('  Hole die Bausteine mit "npm install" ...');
+  console.log('  ------------------------------------------------------------');
+  const r = spawnSync(npm, ['install'], { cwd: WURZEL, stdio: 'inherit', shell: true });
+  console.log('  ------------------------------------------------------------');
+  return r.status === 0 && fs.existsSync(path.join(WURZEL, 'node_modules', 'express'));
 }
 
 // ---- Selbstpruefung: stimmt die Liste noch mit Server.js? -------
@@ -163,25 +224,116 @@ function pruefeListe() {
 
   pruefeListe();
 
-  const hatNode = fs.existsSync(path.join(WURZEL, 'node', 'node.exe'));
-  if (!hatNode) {
-    console.log('  [WICHTIG] Der Ordner node\\ fehlt.');
-    console.log('  Ohne ihn muss auf dem Zielrechner doch Node.js installiert');
-    console.log('  werden - genau das wolltest du ja vermeiden.');
-    console.log('  Erst  Node-Holen.bat  ausfuehren, dann wieder hierher.');
+  const hatNode  = fs.existsSync(path.join(WURZEL, 'node', 'node.exe'));
+  const hatBaust = fs.existsSync(path.join(WURZEL, 'node_modules', 'express'));
+
+  // Beide Ordner sind der ganze Sinn der Sache. Fehlt einer, entsteht ein
+  // Stick, der beim Empfaenger nicht startet - und die Fehlermeldung, die
+  // er dann sieht, ist ein Stapelauszug aus node:fs. Genau das ist am
+  // 27.08.2026 passiert: Das Werkzeug lief in einem frisch
+  // heruntergeladenen Ordner, der weder node\ noch node_modules\ hatte,
+  // meldete brav "FERTIG" - und der Stick war unbrauchbar.
+  let nodeDa = hatNode, baustDa = hatBaust;
+  if (!nodeDa || !baustDa) {
+    console.log('  In diesem Ordner fehlt noch:');
+    if (!nodeDa)  console.log('     node\\           - Node.js selbst, damit beim Empfaenger');
+    if (!nodeDa)  console.log('                       nichts installiert werden muss');
+    if (!baustDa) console.log('     node_modules\\   - die Bausteine des Trainers');
     console.log('');
-    const w = await fragen('  Trotzdem weitermachen?  [j/n]  ');
-    if (!ja(w)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
+    console.log('  Das ist normal bei einem frisch von GitHub geladenen Ordner.');
+    console.log('  Beides kann ich jetzt holen - dafuer wird einmal eine');
+    console.log('  Internetverbindung gebraucht, danach nie wieder.');
+    console.log('');
+    const w = await fragen('  Jetzt holen und dann den Stick bespielen?  [j/n]  ');
+    if (ja(w)) {
+      if (!nodeDa)  nodeDa  = nodeHolen();
+      if (!baustDa) baustDa = bausteineHolen();
+      console.log('');
+      if (nodeDa && baustDa) {
+        console.log('  Beides da. Weiter geht es mit dem Stick.');
+      } else {
+        console.log('  Es hat nicht alles geklappt:');
+        if (!nodeDa)  console.log('     node\\ fehlt weiterhin');
+        if (!baustDa) console.log('     node_modules\\ fehlt weiterhin');
+        const w2 = await fragen('  Trotzdem kopieren?  [j/n]  ');
+        if (!ja(w2)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
+      }
+    } else {
+      console.log('');
+      console.log('  Gut. Der Stick wird dann unvollstaendig - der Empfaenger');
+      console.log('  muesste Node.js selbst besorgen.');
+      const w2 = await fragen('  Trotzdem kopieren?  [j/n]  ');
+      if (!ja(w2)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
+    }
     console.log('');
   }
 
   // ---- Wohin? ---------------------------------------------------
-  console.log('  Wohin soll die Kopie? Beispiel:  E:\\Amateurfunk-Trainer');
+  //
+  // Einen Pfad abzutippen ist bei zwanzig Sticks hintereinander eine
+  // Zumutung - und ein Tippfehler legt die Kopie irgendwohin. Deshalb
+  // erst zeigen, welche Laufwerke es gibt.
+  const laufwerke = [];
+  if (process.platform === 'win32') {
+    for (const b of 'DEFGHIJKLMNOPQRSTUVWXYZ') {          // C: bewusst nicht
+      const w = b + ':\\';
+      try {
+        if (!fs.existsSync(w)) continue;
+        let frei = '';
+        try {
+          const st = fs.statfsSync(w);
+          frei = ' - ' + ((st.bavail * st.bsize) / 1024 / 1024 / 1024).toFixed(1) + ' GB frei';
+        } catch (e) {}
+        laufwerke.push({ buchstabe: b, pfad: w, frei });
+      } catch (e) {}
+    }
+  }
+
+  console.log('');
+  if (laufwerke.length) {
+    console.log('  Gefundene Laufwerke:');
+    laufwerke.forEach((l, i) => console.log('    ' + (i + 1) + ')  ' + l.buchstabe + ':\\' + l.frei));
+    console.log('');
+    console.log('  Nummer eingeben - oder einen vollstaendigen Pfad,');
+    console.log('  zum Beispiel  E:\\Amateurfunk-Trainer');
+  } else {
+    console.log('  Wohin soll die Kopie? Beispiel:  E:\\Amateurfunk-Trainer');
+  }
   const zielEingabe = await fragen('  Ziel:  ');
   if (!zielEingabe) { console.log('\n  Kein Ziel angegeben. Abgebrochen.\n'); rl.close(); return; }
-  const ZIEL = path.resolve(zielEingabe);
 
-  if (ZIEL === WURZEL || ZIEL.startsWith(WURZEL + path.sep)) {
+  let zielRoh = zielEingabe;
+  const nummer = /^\d+$/.test(zielEingabe) ? parseInt(zielEingabe, 10) : 0;
+  // Eine Zahl ohne passendes Laufwerk landete sonst als Ordnername "9"
+  // im Trainer-Ordner. Die Sperre weiter unten faenge das zwar ab, aber
+  // mit einer Meldung, die niemand versteht.
+  if (nummer && (nummer < 1 || nummer > laufwerke.length)) {
+    console.log('');
+    console.log('  !! Es gibt keine Nummer ' + nummer + ' in der Liste oben.');
+    console.log('     Bitte eine der angebotenen Nummern - oder einen Pfad.');
+    console.log('');
+    rl.close(); return;
+  }
+  if (nummer >= 1 && nummer <= laufwerke.length) {
+    zielRoh = path.join(laufwerke[nummer - 1].pfad, 'Amateurfunk-Trainer');
+    console.log('  Gewaehlt: ' + zielRoh);
+  } else if (/^[a-zA-Z]:?\\?$/.test(zielEingabe)) {
+    // Nur ein Buchstabe getippt - dann den Unterordner selbst anhaengen,
+    // sonst laege der Trainer lose in der Wurzel des Sticks.
+    zielRoh = path.join(zielEingabe[0].toUpperCase() + ':\\', 'Amateurfunk-Trainer');
+    console.log('  Gewaehlt: ' + zielRoh);
+  }
+  const ZIEL = path.resolve(zielRoh);
+
+  // Gross- und Kleinschreibung: Windows unterscheidet sie in Pfaden nicht.
+  // Ohne diesen Abgleich rutschte "c:\users\..." an der Sperre vorbei.
+  const gleichOrt = (a, b) => (process.platform === 'win32')
+    ? a.toLowerCase() === b.toLowerCase() : a === b;
+  const liegtIn = (kind, eltern) => (process.platform === 'win32')
+    ? kind.toLowerCase().startsWith((eltern + path.sep).toLowerCase())
+    : kind.startsWith(eltern + path.sep);
+
+  if (gleichOrt(ZIEL, WURZEL) || liegtIn(ZIEL, WURZEL)) {
     console.log('\n  !! Das Ziel liegt im Trainer-Ordner selbst. Das gaebe eine');
     console.log('     Kopie in der Kopie. Bitte einen Ort ausserhalb waehlen.\n');
     rl.close(); return;
@@ -209,7 +361,7 @@ function pruefeListe() {
   // ---- Kopieren -------------------------------------------------
   console.log('');
   console.log('  Kopiere nach ' + ZIEL + ' ...');
-  fs.mkdirSync(ZIEL, { recursive: true });
+  ordnerSicherstellen(ZIEL);
 
   for (const d of DATEIEN) {
     const von = path.join(WURZEL, d);
@@ -225,7 +377,7 @@ function pruefeListe() {
     if (!fs.existsSync(von)) continue;
     process.stdout.write('    ' + o + '\\ ...');
     const vorher = kopiert;
-    fs.mkdirSync(path.join(ZIEL, o), { recursive: true });
+    ordnerSicherstellen(path.join(ZIEL, o));
     kopiereOrdner(von, path.join(ZIEL, o));
     console.log(' ' + (kopiert - vorher) + ' Dateien');
   }
@@ -277,17 +429,48 @@ function pruefeListe() {
     kopiert++;
   } catch (e) {}
 
+  // ---- Probe: startet der Stick ueberhaupt? ----------------------
+  // Nicht "FERTIG" melden, ohne nachgesehen zu haben. Ein Stick, der
+  // beim Empfaenger nicht anspringt, ist schlimmer als gar keiner.
+  const mussDaSein = [
+    ['Index.html', 'die Oberflaeche'],
+    ['Server.js', 'das Programm'],
+    ['START.bat', 'die Startdatei'],
+    ['fragen.json', 'die Fragen'],
+    [path.join('node_modules', 'express'), 'die Bausteine (node_modules)'],
+    [path.join('node', 'node.exe'), 'Node.js selbst (node\\)'],
+  ];
+  const fehltAmZiel = mussDaSein.filter(([f]) => !fs.existsSync(path.join(ZIEL, f)));
+
   const g = groesse(ZIEL);
   console.log('');
   console.log('  ------------------------------------------------------------');
-  console.log('  FERTIG. ' + kopiert + ' Dateien, ' + mb(g) + ' in ' + ZIEL);
+  console.log('  ' + (fehltAmZiel.length ? 'KOPIERT, ABER UNVOLLSTAENDIG.' : 'FERTIG.')
+              + ' ' + kopiert + ' Dateien, ' + mb(g) + ' in ' + ZIEL);
   if (uebersprungen) console.log('  ' + uebersprungen + ' Eintraege bewusst ausgelassen (Lernstand, Werkzeuge, .git).');
+  if (fehlerListe.length) {
+    console.log('');
+    console.log('  !! ' + fehlerListe.length + ' Datei(en) liessen sich NICHT kopieren:');
+    fehlerListe.slice(0, 12).forEach(f => console.log('     ' + f));
+    if (fehlerListe.length > 12) console.log('     ... und ' + (fehlerListe.length - 12) + ' weitere');
+    console.log('     Haeufigste Ursachen: Stick voll, schreibgeschuetzt, oder');
+    console.log('     der Trainer laeuft gerade aus diesem Ordner.');
+  }
   console.log('  ------------------------------------------------------------');
   console.log('');
-  if (!hatNode) {
-    console.log('  ACHTUNG: Ohne node\\ muss auf dem Zielrechner Node.js');
-    console.log('  installiert oder dort Node-Holen.bat ausgefuehrt werden.');
+  if (fehltAmZiel.length) {
+    console.log('  !! Auf dem Ziel fehlt:');
+    fehltAmZiel.forEach(([f, was]) => console.log('       ' + f + '   - ' + was));
+    console.log('');
+    console.log('  So startet der Stick beim Empfaenger NICHT.');
+    if (fehltAmZiel.some(([f]) => f.indexOf('node' + path.sep + 'node.exe') === 0))
+      console.log('  -> Node-Holen.bat im Quellordner ausfuehren, dann noch einmal hierher.');
+    if (fehltAmZiel.some(([f]) => f.indexOf('node_modules') === 0))
+      console.log('  -> Im Quellordner einmal START.bat laufen lassen; die holt node_modules.');
   } else {
+    console.log('  Geprueft: Oberflaeche, Programm, Fragen, Bausteine und Node');
+    console.log('  sind auf dem Ziel angekommen.');
+    console.log('');
     console.log('  Auf dem Zielrechner genuegt: Stick einstecken, START.bat.');
   }
   console.log('');
@@ -295,4 +478,19 @@ function pruefeListe() {
   console.log('  einmal durch, bevor du zwanzig davon verteilst.');
   console.log('');
   rl.close();
-})();
+})().catch(e => {
+  // Kein Stapelauszug im Fenster. Wer Sticks fuer den Ortsverband
+  // vorbereitet, soll eine Zeile lesen muessen, keine Fehlersuche in
+  // node:fs betreiben.
+  console.log('');
+  console.log('  ------------------------------------------------------------');
+  console.log('  !! Der Vorgang ist abgebrochen.');
+  console.log('     ' + (e && e.message ? e.message : String(e)));
+  if (e && e.code === 'EPERM')  console.log('     (keine Berechtigung - ist der Stick schreibgeschuetzt?)');
+  if (e && e.code === 'ENOSPC') console.log('     (kein Platz mehr auf dem Ziel)');
+  if (e && e.code === 'ENOENT') console.log('     (Pfad nicht gefunden - steckt der Stick noch?)');
+  console.log('  ------------------------------------------------------------');
+  console.log('');
+  try { rl.close(); } catch (x) {}
+  process.exitCode = 1;
+});

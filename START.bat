@@ -57,21 +57,75 @@ exit /b 1
 
 :node_da
 
-REM FIX: node_modules Check - fehlende Abhaengigkeiten automatisch installieren
+REM ============================================================
+REM  SIND DIE BAUSTEINE DA?
 REM
-REM ACHTUNG, node_modules ist NICHT Node.js. Hier liegen die Bausteine
-REM des Trainers (express, socket.io); node.exe ist das Programm, das
-REM sie ausfuehrt. Die beiden werden gern verwechselt.
-if not exist "node_modules" (
-  echo [INFO] node_modules nicht gefunden - fuehre "npm install" aus...
-  call "%NPM_CMD%" install
-  if errorlevel 1 (
-    echo [FEHLER] npm install fehlgeschlagen. Bitte Fehlermeldung oben pruefen.
-    echo.
-    pause
-    exit /b 1
-  )
-)
+REM  ACHTUNG, node_modules ist NICHT Node.js. Hier liegen die
+REM  Bausteine des Trainers (express, socket.io); node.exe ist das
+REM  Programm, das sie ausfuehrt. Die beiden werden gern verwechselt.
+REM
+REM  Warum hier so viel Sorgfalt steckt (27.08.2026): Auf einem
+REM  frisch bespielten USB-Stick fehlte node_modules. Diese Datei
+REM  rief daraufhin npm auf - das aber auch nicht vollstaendig da
+REM  war. Der Empfaenger bekam zwei Stapelausz-uege aus
+REM  node:internal/modules/cjs/loader zu sehen. Niemand kann damit
+REM  etwas anfangen, und der Fehler stand nicht einmal darin: Der
+REM  Stick war unvollstaendig bespielt worden.
+REM ============================================================
+if exist "node_modules\express" goto :bausteine_da
+
+echo [INFO] node_modules fehlt oder ist unvollstaendig.
+
+REM Ist ueberhaupt ein npm da, mit dem sich das beheben liesse?
+REM "%NPM_CMD%" blind aufzurufen war der Fehler - fehlt es, kommt ein
+REM Stapelauszug statt einer Erklaerung.
+if /i "%NPM_CMD%"=="npm" goto :npm_pruefen_pfad
+if exist "%NPM_CMD%" goto :npm_da
+goto :kein_npm
+
+:npm_pruefen_pfad
+where npm >nul 2>nul
+if errorlevel 1 goto :kein_npm
+
+:npm_da
+echo [INFO] Hole die Bausteine mit "npm install" - dafuer wird einmal
+echo        eine Internetverbindung gebraucht.
+call "%NPM_CMD%" install
+if not exist "node_modules\express" goto :npm_ging_schief
+goto :bausteine_da
+
+:npm_ging_schief
+echo.
+echo ============================================================
+echo   Die Bausteine liessen sich nicht nachladen.
+echo.
+echo   Besteht eine Internetverbindung? Sonst siehe unten.
+echo ============================================================
+echo.
+pause
+exit /b 1
+
+:kein_npm
+echo.
+echo ============================================================
+echo   Dieser Ordner ist unvollstaendig.
+echo.
+echo   Es fehlt  node_modules\  - darin liegen die Bausteine des
+echo   Trainers. Nachladen geht hier nicht, weil auch npm fehlt.
+echo.
+echo   WENN DU DIESEN ORDNER VON JEMANDEM BEKOMMEN HAST:
+echo     Bitte um eine vollstaendige Fassung. Ein Stick, der mit
+echo     USB-Stick-Erstellen.bat bespielt wurde, hat alles dabei.
+echo.
+echo   WENN DU IHN SELBST ANGELEGT HAST:
+echo     Im Quellordner einmal START.bat laufen lassen - die holt
+echo     node_modules. Danach USB-Stick-Erstellen.bat erneut.
+echo ============================================================
+echo.
+pause
+exit /b 1
+
+:bausteine_da
 
 REM ============================================================
 REM  LAEUFT SCHON EIN TRAINER AUF PORT 3000?
