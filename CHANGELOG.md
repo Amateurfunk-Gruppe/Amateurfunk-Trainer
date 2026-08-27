@@ -2671,3 +2671,55 @@ vier Faelle, alle bestanden:
     "0.0 GB frei" in der Liste zu stehen
   * PowerShell antwortet gar nicht -> keine Liste, aber auch kein
     Absturz; der Pfad laesst sich weiterhin eintippen
+
+### "Quasi fuer dumme"
+
+Dietmar hat den Anspruch in einem Satz formuliert: "Mit den Dateien aus dem
+Zip Ordner von GitHub entpackt auf meinem Desktop, einen komplett
+lauffaehigen Amateurfunk Trainer haben ueber USB Stick erstellen.bat."
+
+Dabei fiel eine Luecke auf, die ich uebersehen hatte: **Im GitHub-Zip ist
+kein piper\.** Die Sprachausgabe ist rund 470 MB und liegt bewusst nicht
+im Repository - piper.bat holt sie bei Bedarf. Der Stick waere also
+komplett gewesen bis auf die natuerliche Stimme, und niemand haette
+gewusst, warum der Trainer plotzlich nach Windows klingt.
+
+Jetzt holt das Werkzeug alle drei fehlenden Stuecke: node\,
+node_modules\ und piper\. Aus einem frisch entpackten Zip heraus ist der
+ganze Weg:
+
+    Doppelklick  ->  Eingabetaste  ->  Eingabetaste  ->  fertig
+
+Die erste Eingabetaste holt die drei Teile, die zweite waehlt den einzigen
+gefundenen USB-Stick. Sonst nichts.
+
+**Was ich dabei weggelassen habe, ist genauso wichtig wie das, was ich
+hinzugefuegt habe.** Nach einem frischen piper.bat liegt genau EINE Stimme
+im Ordner. Die Frage "alle Stimmen / nur die beste / keine" waere dort
+sinnlos - eine Huerde ohne Entscheidung dahinter. Sie erscheint jetzt erst
+ab zwei Stimmen. Wer wie Dietmar sieben im Ordner hat, bekommt sie weiter,
+mit Groessen und der besten markiert:
+
+    Sprachausgabe (Ordner piper\) - 470.2 MB, 7 Stimme(n)
+       * de_DE-thorsten-high         113.9 MB   <- beste
+         de_DE-thorsten-medium        63.2 MB
+         ...
+    Eingabetaste  = alle mitnehmen  (470.2 MB)
+    b             = nur die beste  (133.8 MB)
+    n             = ohne Sprachausgabe
+
+Bei zwanzig Sticks sind das 9 GB gegen 2,7 GB Schreibarbeit - deshalb
+bleibt die Wahl, aber Mitnehmen ist die Vorgabe. Genau das hatte Dietmar
+verlangt: "Piper muss bei USB Stick erstellen auch mit rein."
+
+Zwei Kleinigkeiten dabei mitgenommen: Der Unterbau (piper.exe, die DLLs,
+espeak-ng-data, libtashkeel) geht immer mit, sonst nuetzt die schoenste
+Stimme nichts - und zu einer weggelassenen Stimme wird auch ihre .json
+weggelassen, weil der Trainer eine .onnx ohne .json gar nicht erst findet.
+Dietmars Probeordner `_stimmentest` bleibt draussen.
+
+**Geprueft** an einem nachgebauten frischen Zip-Ordner (31 Eintraege, kein
+node\, kein node_modules\, kein piper\) und danach an demselben Ordner
+im vollstaendigen Zustand: Dann kommt vor der Laufwerksauswahl keine
+einzige Frage mehr. Dazu drei Stimmen-Faelle (alle / nur die beste / keine)
+und die elf Pruefungen von vorhin - alle bestanden.
