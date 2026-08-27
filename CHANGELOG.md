@@ -2723,3 +2723,90 @@ node\, kein node_modules\, kein piper\) und danach an demselben Ordner
 im vollstaendigen Zustand: Dann kommt vor der Laufwerksauswahl keine
 einzige Frage mehr. Dazu drei Stimmen-Faelle (alle / nur die beste / keine)
 und die elf Pruefungen von vorhin - alle bestanden.
+
+### Kein zweiter Doppelklick mehr
+
+Dietmar: "Es muss alles fertig abschliessen. Moechte keine piper.bat Datei
+auch noch starten. Mit USB Stick erstellen, muss alles erledigt sein, auch
+Piper. Wenn noetig, baue die piper Test damit ein."
+
+Ich hatte piper.bat zwar aufgerufen, aber mit dem Hinweis "will
+zwischendurch zweimal eine Taste sehen". Das ist ein halber Schritt: Wer
+"fuer dumme" sagt, meint auch, dass niemand zwischendurch raten soll, ob
+das Fenster haengt oder auf ihn wartet.
+
+**Jetzt bekommt piper.bat ihre Tastendruecke von hier.** Unter Windows
+liest `pause` aus der Standardeingabe, wenn dort etwas anliegt - also
+gehen fuenf Zeilenumbrueche hinein, und die drei Haltepunkte laufen
+durch. Die Ausgabe bleibt sichtbar, nur die Eingabe ist vorbelegt.
+
+**Der Funktionstest ist eingebaut** - und zwar zweimal, mit Absicht.
+piper.bat macht ihn als Schritt 5 und zeigt das Ergebnis an; ich mache ihn
+danach noch einmal selbst (`piper.exe --help`), weil ich das Ergebnis
+*auswerten* will und nicht nur anzeigen. Damit steht in der Ausgabe
+entweder "startet einwandfrei" oder der Grund.
+
+**Und dabei ein Befund, den ich nicht verschweigen darf.** Der Stick kann
+NICHT alles mitbringen, was die Sprachausgabe braucht. piper.exe setzt
+das Microsoft-Laufzeitpaket voraus (Visual C++ Redistributable). Auf
+Dietmars Rechner ist es da - auf dem Rechner eines Teilnehmers
+moeglicherweise nicht, und dann stuerzt piper.exe dort ab, obwohl auf dem
+Stick alles liegt. Ein Laufzeitpaket laesst sich nicht auf einen Stick
+kopieren, es muss installiert werden.
+
+Der Trainer laeuft trotzdem - er liest dann mit der Windows-Stimme vor.
+Und `piper\piper_reparatur.bat` liegt ohnehin mit im Ordner piper\ und
+holt das Paket nach. Beides steht jetzt in der ANLEITUNG-USB.txt auf dem
+Stick, unter "Die Stimme klingt nach Windows statt natuerlich".
+
+**Geprueft** mit einem nachgebauten piper.bat, das sich wie das echte
+verhaelt (drei Haltepunkte): Alle drei liefen ohne Zutun durch. Dazu der
+Fehlerfall - ein piper.exe, das mit einem Fehlercode abbricht: Dann steht
+der Grund da, und die Dateien kommen trotzdem mit auf den Stick, damit die
+Reparatur dort moeglich bleibt.
+
+### Eine Frage. Sonst nichts.
+
+Dietmar: "Es soll nur Fragen wohin USB Stick erkennen und danach
+durchlaufen."
+
+Sein Lauf davor hatte funktioniert - Piper geladen, Funktionstest
+bestanden, Stick "Amateurfunk Trainer" erkannt -, aber auf dem Weg dorthin
+standen vier Fragen. Jede einzeln begruendbar, zusammen genau das
+Gegenteil von "fuer dumme".
+
+Weggefallen sind drei:
+
+  * **"alles holen? [j/n]"** - Wer das Werkzeug startet, will einen
+    fertigen Stick. Es holt jetzt, was fehlt, und sagt nur an, dass es das
+    tut.
+  * **"Der Ordner ist nicht leer, weiter? [j/n]"** - Denselben Stick ein
+    zweites Mal zu bespielen ist der Normalfall, nicht die Ausnahme. Die
+    Rueckfrage hat nie etwas verhindert, nur einen Tastendruck gekostet.
+    Gesagt wird es weiterhin, gefragt nicht mehr.
+  * **"alle Stimmen / nur die beste / keine"** - Die Auswahl sparte bei
+    sieben Stimmen rund 340 MB, aber sie kostete eine Entscheidung. Jetzt
+    kommt alles mit, was im Ordner piper\ liegt. Wer Platz sparen will,
+    loescht dort Stimmen - dann nimmt das Werkzeug von selbst weniger mit.
+    Das ist derselbe Effekt ohne Frage.
+
+Auch das Hoerbuch wird nicht mehr gefragt, sondern mitgenommen, wenn es da
+ist.
+
+**Zwei Fragen sind absichtlich geblieben**, und beide nur im Ausnahmefall:
+
+  * Liessen sich node\ oder node_modules\ nicht holen, wird gefragt, ob
+    trotzdem kopiert werden soll. Einen Stick stillschweigend zu bespielen,
+    der beim Empfaenger nicht startet, waere schlimmer als eine Frage.
+  * Wird statt eines Sticks eine Festplatte gewaehlt, wird nachgefragt.
+    600 MB versehentlich auf ein Datenlaufwerk zu schuetten ist teurer als
+    ein Tastendruck.
+
+Im Normalfall bleibt: **Doppelklick, Eingabetaste, fertig.**
+
+**Dazu laeuft piper.bat jetzt ohne Tastendruecke** (fuenf Zeilenumbrueche
+in die Standardeingabe - "pause" liest von dort und laeuft weiter), und ihr
+Funktionstest wird hier noch einmal selbst ausgefuehrt, damit das Ergebnis
+auswertbar ist statt nur sichtbar.
+
+README und Bild `10-usb-stick.png` zeigen den neuen Ablauf.

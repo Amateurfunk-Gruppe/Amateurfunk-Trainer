@@ -269,12 +269,46 @@ function piperHolen() {
   }
   console.log('');
   console.log('  Hole die Sprachausgabe ... (rund 80 MB)');
-  console.log('  Achtung: piper.bat will zwischendurch zweimal eine Taste sehen.');
-  console.log('  Einfach die Eingabetaste druecken, wenn es danach fragt.');
   console.log('  ------------------------------------------------------------');
-  const r = spawnSync('"' + bat + '"', { cwd: WURZEL, stdio: 'inherit', shell: true });
+  // Ohne Tastendruecke.
+  //
+  // piper.bat ist zum Anklicken gebaut und bleibt an drei Stellen mit
+  // "pause" stehen. Dietmar: "Es muss alles fertig abschliessen. Moechte
+  // keine piper.bat Datei auch noch starten." Also bekommt sie ihre
+  // Tastendruecke von hier - unter Windows liest "pause" aus der
+  // Standardeingabe, wenn dort etwas anliegt, und laeuft dann weiter.
+  // Die Ausgabe bleibt sichtbar, nur die Eingabe ist vorbelegt.
+  const r = spawnSync('"' + bat + '"', {
+    cwd: WURZEL, shell: true,
+    input: '\r\n\r\n\r\n\r\n\r\n',
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
   console.log('  ------------------------------------------------------------');
-  return fs.existsSync(path.join(WURZEL, 'piper', 'piper.exe'));
+
+  const exe = path.join(WURZEL, 'piper', 'piper.exe');
+  if (!fs.existsSync(exe)) {
+    console.log('  Die Sprachausgabe ist nicht angekommen.');
+    return false;
+  }
+
+  // Der Funktionstest, den piper.bat als Schritt 5 macht - hier noch
+  // einmal, weil ich das Ergebnis auswerten will und nicht nur anzeigen.
+  // Er faengt den haeufigsten Fall ab: piper.exe ist da, stuerzt aber
+  // beim Start ab, weil das Microsoft-Laufzeitpaket fehlt.
+  const t = spawnSync('"' + exe + '" --help', {
+    cwd: path.join(WURZEL, 'piper'), shell: true, timeout: 30000,
+    stdio: ['ignore', 'ignore', 'ignore'],
+  });
+  if (t.status === 0) {
+    console.log('  Funktionstest: piper.exe startet einwandfrei.');
+    return true;
+  }
+  console.log('  Funktionstest: piper.exe laesst sich hier NICHT starten.');
+  console.log('  Haeufigste Ursache: das Microsoft-Laufzeitpaket fehlt oder');
+  console.log('  ein Virenscanner haelt piper.exe fest. Die Dateien kommen');
+  console.log('  trotzdem mit auf den Stick - auf dem Zielrechner hilft dann');
+  console.log('  piper\\piper_reparatur.bat.');
+  return true;     // Dateien sind da, also mitnehmen
 }
 
 function bausteineHolen() {
@@ -353,30 +387,28 @@ function pruefeListe() {
     console.log('  diese drei sind zu gross fuers Repository und werden bei');
     console.log('  Bedarf geholt. Einmal Internet noetig, danach nie wieder.');
     console.log('');
-    console.log('  Eingabetaste  = alles holen und den Stick bespielen');
-    console.log('  n             = nichts holen');
-    const w = await fragen('  Weiter:  ');
-    if (!/^n/i.test(w)) {
-      if (!nodeDa)  nodeDa  = nodeHolen();
-      if (!baustDa) baustDa = bausteineHolen();
-      if (!piperDa) piperDa = piperHolen();
-      console.log('');
-      if (nodeDa && baustDa) {
-        console.log('  Der Trainer ist vollstaendig.'
-          + (piperDa ? ' Sprachausgabe ist auch dabei.' : ''));
-        if (!piperDa) console.log('  Nur die Sprachausgabe fehlt - der Trainer laeuft auch ohne,');
-        if (!piperDa) console.log('  dann liest die Windows-Stimme vor.');
-      } else {
-        console.log('  Es hat nicht alles geklappt:');
-        if (!nodeDa)  console.log('     node\\ fehlt weiterhin');
-        if (!baustDa) console.log('     node_modules\\ fehlt weiterhin');
-        const w2 = await fragen('  Trotzdem kopieren?  [j/n]  ');
-        if (!ja(w2)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
+    console.log('  Ich hole das jetzt. Danach wird nur noch gefragt,');
+    console.log('  auf welchen Stick es soll.');
+    if (!nodeDa)  nodeDa  = nodeHolen();
+    if (!baustDa) baustDa = bausteineHolen();
+    if (!piperDa) piperDa = piperHolen();
+    console.log('');
+    if (nodeDa && baustDa) {
+      console.log('  Der Trainer ist vollstaendig.'
+        + (piperDa ? ' Sprachausgabe ist auch dabei.' : ''));
+      if (!piperDa) {
+        console.log('  Nur die Sprachausgabe fehlt - der Trainer laeuft auch ohne,');
+        console.log('  dann liest die Windows-Stimme vor.');
       }
     } else {
-      console.log('');
-      console.log('  Gut. Der Stick wird dann unvollstaendig - der Empfaenger');
-      console.log('  muesste Node.js selbst besorgen.');
+      // Hier wird doch gefragt, und das ist Absicht: Ohne node\ oder
+      // node_modules\ startet der Stick beim Empfaenger nicht. Einen
+      // unbrauchbaren Stick stillschweigend zu bespielen waere schlimmer
+      // als eine Frage.
+      console.log('  Es hat nicht alles geklappt:');
+      if (!nodeDa)  console.log('     node\\ fehlt weiterhin');
+      if (!baustDa) console.log('     node_modules\\ fehlt weiterhin');
+      console.log('  So wuerde der Stick beim Empfaenger nicht starten.');
       const w2 = await fragen('  Trotzdem kopieren?  [j/n]  ');
       if (!ja(w2)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
     }
@@ -487,13 +519,15 @@ function pruefeListe() {
     console.log('     Kopie in der Kopie. Bitte einen Ort ausserhalb waehlen.\n');
     rl.close(); return;
   }
-  if (fs.existsSync(ZIEL) && fs.readdirSync(ZIEL).length) {
-    console.log('');
-    console.log('  Der Ordner ' + ZIEL + ' ist nicht leer.');
-    console.log('  Vorhandene Dateien gleichen Namens werden ueberschrieben.');
-    const w = await fragen('  Weiter?  [j/n]  ');
-    if (!ja(w)) { console.log('\n  Abgebrochen.\n'); rl.close(); return; }
-  }
+  // Ein nicht leeres Ziel ist der Normalfall, nicht die Ausnahme: Wer
+  // denselben Stick ein zweites Mal bespielt, will genau das. Frueher
+  // stand hier eine Rueckfrage - sie hat nie etwas verhindert, sondern
+  // nur einen Tastendruck gekostet. Gesagt wird es trotzdem.
+  try {
+    if (fs.existsSync(ZIEL) && fs.readdirSync(ZIEL).length) {
+      console.log('  (Der Ordner ist nicht leer - gleichnamige Dateien werden ersetzt.)');
+    }
+  } catch (e) {}
 
   // ---- Die Sprachausgabe ----------------------------------------
   //
@@ -501,49 +535,29 @@ function pruefeListe() {
   // ist Mitnehmen die Vorgabe - Eingabetaste genuegt. Die Frage bleibt
   // trotzdem stehen, weil es um rund 470 MB geht und weil sieben Stimmen
   // im Ordner liegen, von denen die meisten niemand anruehrt.
-  let stimmenNehmen = null;          // null = alle, [] = keine, Liste = Auswahl
-  // piperDa steht schon oben - dort wurde es notfalls nachgeholt.
+  // ---- Die Sprachausgabe ----------------------------------------
   //
-  // Nach einem frischen piper.bat liegt genau EINE Stimme im Ordner.
-  // Dann gibt es nichts zu entscheiden, und eine Frage waere nur eine
-  // Huerde mehr. Gefragt wird erst ab zwei Stimmen.
-  if (piperDa && stimmenFinden().length > 1) {
-    const stimmen = stimmenFinden();
-    const gesamtPiper = groesse(path.join(WURZEL, 'piper'));
-    const beste = stimmen[0];
-    // Der Unterbau (piper.exe, DLLs, espeak-ng-data) ohne die Stimmen.
-    const unterbau = gesamtPiper - stimmen.reduce((n, v) => n + v.bytes, 0);
-
-    console.log('');
-    console.log('  Sprachausgabe (Ordner piper\\) - ' + mb(gesamtPiper)
-                + ', ' + stimmen.length + ' Stimme(n)');
-    stimmen.slice(0, 8).forEach((v, i) => console.log('     '
-      + (i === 0 ? '* ' : '  ') + v.datei.replace(/\.onnx$/, '').padEnd(26)
-      + mb(v.bytes).padStart(9) + (i === 0 ? '   <- beste' : '')));
-    console.log('');
-    console.log('  Eingabetaste  = alle mitnehmen  (' + mb(gesamtPiper) + ')');
-    if (beste) console.log('  b             = nur die beste  ('
-      + mb(unterbau + beste.bytes) + ')');
-    console.log('  n             = ohne Sprachausgabe');
-    const w = await fragen('  Sprachausgabe:  ');
-    if (/^n/i.test(w))      stimmenNehmen = [];
-    else if (/^b/i.test(w) && beste) stimmenNehmen = [beste.datei];
-    else                    stimmenNehmen = null;
-    console.log('  ' + (stimmenNehmen === null ? 'Alle Stimmen kommen mit.'
-      : stimmenNehmen.length ? 'Nur ' + stimmenNehmen[0] + ' kommt mit.'
-      : 'Ohne Sprachausgabe.'));
+  // Dietmar: "Piper muss bei USB Stick erstellen auch mit rein" und "Es
+  // soll nur Fragen wohin USB Stick erkennen und danach durchlaufen".
+  // Also kommt alles mit, ohne Frage. Die Auswahl "nur die beste Stimme"
+  // gab es hier einmal - sie sparte bei sieben Stimmen rund 340 MB, aber
+  // sie kostete eine Entscheidung, und Entscheidungen waren genau das,
+  // was weg sollte. Wer Platz sparen will, loescht Stimmen im Ordner
+  // piper\ - dann nimmt das Werkzeug automatisch weniger mit.
+  const stimmenNehmen = null;        // null = alle
+  if (piperDa) {
+    const anzahl = stimmenFinden().length;
+    console.log('  Sprachausgabe: ' + anzahl + ' Stimme(n), '
+                + mb(groesse(path.join(WURZEL, 'piper'))) + ' - kommt mit.');
   }
 
-  // ---- Das uebrige Grosse einzeln fragen ------------------------
+  // ---- Was sonst noch da ist, kommt mit -------------------------
   const mitOrdner = [];
   for (const o of ORDNER_FRAGEN) {
     const p = path.join(WURZEL, o.name);
     if (!fs.existsSync(p)) continue;
-    const g = groesse(p);
-    console.log('');
-    console.log('  ' + o.text + ' (' + o.name + '\\, ' + mb(g) + ')');
-    const w = await fragen('  Mitnehmen?  [j/n]  ');
-    if (ja(w)) mitOrdner.push(o.name);
+    mitOrdner.push(o.name);
+    console.log('  ' + o.text + ': ' + mb(groesse(p)) + ' - kommt mit.');
   }
 
   // ---- Kopieren -------------------------------------------------
@@ -629,6 +643,13 @@ function pruefeListe() {
       'Fenster geht kurz auf und sofort wieder zu:',
       '  Der Ordner node\\ fehlt oder ist unvollstaendig. Doppelklick auf',
       '  Node-Holen.bat holt ihn (dafuer wird einmal Internet gebraucht).',
+      '',
+      'Die Stimme klingt nach Windows statt natuerlich:',
+      '  Dann ist piper.exe auf DIESEM Rechner nicht gestartet. Meist fehlt',
+      '  ein Microsoft-Laufzeitpaket, das der Stick nicht mitbringen darf.',
+      '  Doppelklick auf   piper\\piper_reparatur.bat   holt es nach.',
+      '  Der Trainer laeuft auch ohne - er liest dann mit der',
+      '  Windows-Stimme vor.',
       '',
       'Windows fragt nach der Firewall:',
       '  "Abbrechen" genuegt. Der Trainer laeuft nur auf diesem Rechner.',

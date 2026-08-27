@@ -141,9 +141,60 @@ Drei Dinge sind daran wichtig:
   wird vor dem Schreiben nachgerechnet. Ein abgebrochener Download kommt so
   nie im Ordner an.
 
+## Auf einem USB-Stick weitergeben — ohne Installation
+
+Für Ortsverbände und Volkshochschulen: Sticks bespielen, austeilen, fertig.
+Die Teilnehmer stecken ihn zu Hause ein, klicken **START.bat** und lernen los.
+**Auf ihrem Rechner wird nichts installiert** — kein Node.js, kein Konto,
+keine Administratorrechte, keine Änderung an Windows. Nach dem Abziehen
+bleibt nichts zurück.
+
+So wird ein Stick daraus:
+
+1. Dieses Repository herunterladen (**Code → Download ZIP**) und entpacken
+2. Stick einstecken
+3. Im entpackten Ordner: Doppelklick auf **`USB-Stick-Erstellen.bat`**
+
+Gefragt wird genau eines: **auf welchen Stick.** Und auch das nur, wenn mehr
+als einer steckt — bei einem genügt die Eingabetaste.
+
+Beim ersten Mal holt das Werkzeug selbst nach, was zu groß fürs Repository
+ist: Node.js, die Programmbausteine und die Sprachausgabe samt
+Funktionstest. Dafür wird einmal eine Internetverbindung gebraucht, danach
+nie wieder.
+
+![Der Ablauf von USB-Stick-Erstellen.bat](bilder/10-usb-stick.png)
+
+**Was auf den Stick kommt — und was nicht.** Kopiert wird nach einer
+Positivliste, nicht der ganze Ordner. Der eigene Lernstand (`data/`), die
+Entwickler-Werkzeuge und die Git-Vorgeschichte bleiben zurück. Wer Sticks
+austeilt, verteilt damit nicht versehentlich seinen eigenen Lernfortschritt.
+
+**Der Lernstand wandert mit.** Er wird auf dem Stick gespeichert, nicht auf
+dem fremden Rechner. Wer den Stick an mehreren Rechnern benutzt, findet
+seinen Fortschritt überall wieder.
+
+**Größe:** rund 200 MB mit einer Stimme. Wer mehrere Piper-Stimmen im Ordner
+hat, bekommt sie alle mit — wer Platz sparen will, löscht die überzähligen
+`.onnx`-Dateien im Ordner `piper/`, dann nimmt das Werkzeug automatisch
+weniger mit.
+
+**Eine Grenze, die ehrlich dazugehört:** Die natürliche Sprachausgabe
+braucht auf dem Zielrechner das Microsoft-Laufzeitpaket (Visual C++
+Redistributable). Das lässt sich nicht auf einen Stick kopieren, es muss
+installiert sein. Fehlt es, liest der Trainer mit der Windows-Stimme vor —
+er läuft also, klingt nur weniger natürlich. `piper/piper_reparatur.bat` auf
+dem Stick holt das Paket bei Bedarf nach.
+
+**Auch ohne Stick:** `Node-Holen.bat` legt Node.js allein in den Ordner
+`node/`, wenn der Trainer auf dem eigenen Rechner ohne Installation laufen
+soll.
+
 ## Loslegen
 
-Voraussetzung ist [Node.js](https://nodejs.org) (kostenlos).
+Voraussetzung ist [Node.js](https://nodejs.org) (kostenlos) — oder ein
+Doppelklick auf **`Node-Holen.bat`**, das holt Node.js ohne Installation in
+den Ordner `node/`.
 
     git clone https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer.git
     cd Amateurfunk-Trainer
