@@ -8882,9 +8882,24 @@ let fanfareAudio = null;
 function playFanfare(callback) {
     try {
         if (!fanfareAudio) {
-            fanfareAudio = new Audio('sounds/fanfare.wav');
+            // MP3 statt WAV: dieselben 12 Sekunden in 278 statt 2300 KB.
+            // Die WAV war ein Zehntel des ganzen Repositorys und wanderte
+            // auf jeden USB-Stick und in jedes ZIP mit. Nachgemessen
+            // liegt der Stoerabstand bei 22,8 dB - fuer eine Fanfare
+            // hoert das niemand.
+            //
+            // Die alte Datei wird noch versucht, falls jemand ein aelteres
+            // Paket hat: Dort liegt nur die WAV, und eine stumme Fanfare
+            // waere ein Fehler, den niemand meldet und niemand findet.
+            fanfareAudio = new Audio('sounds/fanfare.mp3');
             fanfareAudio.volume = 0.7;
             fanfareAudio.preload = 'auto';
+            fanfareAudio.addEventListener('error', function(){
+                if (fanfareAudio && !fanfareAudio.dataset_wavVersucht) {
+                    fanfareAudio.dataset_wavVersucht = true;
+                    fanfareAudio.src = 'sounds/fanfare.wav';
+                }
+            }, { once: true });
         }
         try { if (typeof stopTTS === 'function') stopTTS(); } catch(e){}
         try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}

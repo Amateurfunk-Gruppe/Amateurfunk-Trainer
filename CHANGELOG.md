@@ -2838,3 +2838,57 @@ legen, ohne dabei einen Stick zu bespielen und ohne den Trainer zu
 starten. Genau Dietmars derzeitiger Fall - er will sein installiertes
 Node.js loswerden und braucht vorher das mitgelieferte in seinem
 Arbeitsordner. Fuer alle anderen ist die Datei ab jetzt entbehrlich.
+
+## 27.08.2026 - Im Repository aufgeraeumt
+
+Dietmar: "lass uns in GitHub mal richtig aufraeumen."
+
+**Erst nachgesehen, was wirklich drinliegt.** Die GitHub-API bremste
+gerade, also habe ich den Git-Index in Dietmars Ordner ausgelesen und
+selbst ausgewertet - das ist ohnehin die verlaesslichere Quelle, weil dort
+steht, was git tatsaechlich verfolgt. (Beim ersten Anlauf ist mein Leser
+abgestuerzt: Die Auffuellung auf Achtergrenzen zaehlt ab Eintragsanfang,
+nicht ab Dateianfang.)
+
+Stand: **800 Dateien, 22,6 MB.** Die Entwicklerwerkzeuge waren schon
+draussen - das fruehere Ausmisten hatte gehalten. Uebrig blieben drei
+Funde, und der wichtigste war keine Frage der Groesse.
+
+**1. README.txt war schlicht falsch.** Sie erklaerte, wie man Piper VON
+HAND installiert: Zip von GitHub laden, DLLs kopieren, .onnx-Dateien
+ablegen. Das macht piper.bat seit Monaten allein. Sie nannte ausserdem
+"server.js" (heisst Server.js) und riet, dort den Stimmnamen zu aendern -
+der Trainer sucht die Stimmen laengst selbst.
+
+Das Aergerliche war nicht der Fehler, sondern wo er lag: **in jedem ZIP und
+auf jedem USB-Stick**, direkt neben der richtigen ANLEITUNG.txt. Wer sie
+zuerst aufschlug, bekam eine Bastelanleitung fuer etwas, das von selbst
+geht. Eine Anleitung, die etwas Falsches sagt, ist schlimmer als gar keine.
+Raus aus dem Repository, raus aus PAKET_DATEIEN, raus aus der Stick-Liste.
+
+**2. bilder/youtube-vorlage.html** hatte mit dem Trainer nichts zu tun -
+die Bauvorlage fuer Dietmars YouTube-Bild, mir beim Ablegen in seinen
+Ordner durchgerutscht.
+
+**3. sounds/fanfare.wav: 2,3 MB fuer zwoelf Sekunden.** Unkomprimiert, 48
+kHz Stereo - ein Zehntel des ganzen Repositorys, und sie wanderte auf jeden
+Stick und in jedes ZIP mit. Als MP3 sind es **278 KB**.
+
+Nicht auf Verdacht umgewandelt, sondern nachgemessen: beide Fassungen auf
+dieselbe Form gebracht, den Versatz gesucht, den der MP3-Kodierer einfuegt,
+und den Stoerabstand gerechnet. **22,8 dB** - fuer eine Fanfare hoert das
+niemand. Drei Guetestufen verglichen (278 / 226 / 167 KB) und die
+vorsichtigste genommen; die 50 KB Unterschied sind es nicht wert.
+
+Im Trainer steht jetzt `sounds/fanfare.mp3` - **mit der WAV als
+Rueckfall**. Wer ein aelteres Paket hat, in dem nur die WAV liegt, hoert
+weiter etwas. Eine stumme Fanfare waere ein Fehler, den niemand meldet und
+niemand findet.
+
+**Nach dem Ausmisten:** rund 20,3 MB statt 22,6 - und vor allem eine
+Anleitung weniger, die luegt.
+
+Die drei stehen jetzt in der RAUS-Liste von github_ausmisten.js. Sie
+bleiben auf Dietmars Platte liegen, nur das Repository fuehrt sie nicht
+mehr. Die Ueberschrift der Ausgabe ist mitgewandert - "Entwicklerwerkzeuge"
+stimmte fuer eine falsche Anleitung und eine Tondatei nicht mehr.

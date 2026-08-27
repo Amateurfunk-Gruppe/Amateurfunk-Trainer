@@ -82,7 +82,11 @@ const DATEIEN = [
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
-  'START.bat', 'piper.bat', 'README.txt',
+  // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
+  // Handinstallation von Piper, die piper.bat laengst allein macht,
+  // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
+  // ANLEITUNG.txt, auf dem Stick die ANLEITUNG-USB.txt.
+  'START.bat', 'piper.bat',
   'Node-Holen.bat', 'node_holen.ps1',
   'USB-Stick-Erstellen.bat', 'usb_erstellen.js',
 ];
