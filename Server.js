@@ -2147,7 +2147,15 @@ const PUBLIC_FILES = new Set([
   // Nutzerdaten. Ohne diesen Eintrag lief der Abruf in einen 404.
   '/video_lessons.json',
   '/klick-sound.js',
-  '/favicon.ico'
+  '/favicon.ico',
+  // Merkzettel fuer den Probelauf des Updaters, angelegt von
+  // Update-Test.bat. Die Seite sieht regelmaessig nach, ob es ihn gibt;
+  // ohne diesen Eintrag stuende bei jedem Blick eine Sicherheitswarnung im
+  // Serverfenster, sobald die Datei einmal da ist. Sie enthaelt nur einen
+  // Zeitstempel - nichts, was jemanden angehen koennte - und steht in der
+  // .gitignore. Im Normalfall gibt es sie gar nicht, dann ist das hier
+  // schlicht ein Eintrag ins Leere.
+  '/update_test.json'
 ]);
 const PUBLIC_DIRS = ['/svgs/', '/sounds/'];
 

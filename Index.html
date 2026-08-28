@@ -6022,8 +6022,21 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 // wegklicken jederzeit.
 // ================================================================
 let githubDaten = null;
-let githubHolbar = [];     // Namen, die geholt werden, wenn man installiert
-let githubProgramm = [];   // davon die Programmdateien - nur fuer den Hinweistext
+let githubHolbar = [];     // Namen, die geholt werden, wenn man aktualisiert
+let githubProgramm = [];   // davon die Programmdateien - fuer die Neustart-Meldung
+
+// Probelauf. Liegt update_test.json im Trainer-Ordner, tut der Trainer so,
+// als laege ein Update bereit: Der Knopf wechselt, der Ton spielt, das
+// Fenster geht auf. Geholt wird nichts, geschrieben wird nichts.
+//
+// Wozu: Ein Update gibt es selten, und wenn es eines gibt, will man nicht
+// erst herausfinden, ob die Meldung ueberhaupt funktioniert. Angelegt wird
+// die Datei von Update-Test.bat.
+//
+// Die Datei steht in der .gitignore und geht nie zu GitHub. Dieser
+// Programmteil schon - er ist ohne die Datei schlicht untaetig.
+let githubTest = false;
+let githubTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 
 // Rohdateien des Repositorys. Nur hier, damit ein umbenanntes Repository
 // nicht an mehreren Stellen nachgezogen werden muss.
@@ -6125,9 +6138,34 @@ function updateTonSpielen(){
 // Seite schon steht. Dann steht in letzteLage noch nichts, und es wird in
 // Ruhe nachgefasst - dreimal, dann ist gut.
 // ---------------------------------------------------------------
+// Liegt ein Probelauf bereit? Gibt es die Datei nicht, kommt ein 404 -
+// das ist der Normalfall und kostet nichts. Die Datei steht in der
+// Whitelist von Server.js, sonst gaebe es bei jedem Blick eine
+// Sicherheitswarnung im Serverfenster.
+async function githubTestFlagge(){
+    try{
+        const res = await fetch('update_test.json?t=' + Date.now(), {cache:'no-store'});
+        if(!res.ok) return null;
+        const j = await res.json();
+        return String((j && j.angelegt) || '1');
+    }catch(e){ return null; }
+}
+
 async function githubStartNachschau(versuch){
     if(!laeuftLokal()) return;
     versuch = versuch || 1;
+
+    // Probelauf geht vor: Wer testet, will das Ergebnis des Tests sehen
+    // und nicht den echten Stand.
+    const stempel = await githubTestFlagge();
+    if(stempel && stempel !== githubTestGesehen){
+        githubTestGesehen = stempel;
+        githubTest = true;
+        updateKnopfAn();
+        updateTonSpielen();
+        return;
+    }
+
     let j = null;
     try{
         const res = await fetch('/api/github/stand', {cache:'no-store'});
@@ -6146,8 +6184,22 @@ async function githubStartNachschau(versuch){
     if(l.fehler) return;
     if(!l.anzahl) return;
 
+    githubTest = false;
     updateKnopfAn();
     updateTonSpielen();
+}
+
+// Alle fuenf Sekunden noch einmal hinsehen, solange der Knopf noch nicht
+// umgesprungen ist. Zwei Dinge kommen dadurch an:
+//   - der Probelauf, der ja waehrend des laufenden Trainers angelegt wird
+//   - ein Stand, den der Server erst spaeter von GitHub erfahren hat
+// Es ist eine Anfrage an den eigenen Rechner, keine an GitHub - sie kostet
+// nichts und faellt weg, sobald der Knopf steht.
+function githubNachschauWachhalten(){
+    setInterval(()=>{
+        if(updateKnopfAlt) return;          // Knopf steht schon
+        try{ githubStartNachschau(9); }catch(e){}   // 9 = nicht noch einmal nachfassen
+    }, 5000);
 }
 window.githubStartNachschau = githubStartNachschau;
 // Alter Name aus der Zeit des Start-Fensters. Es kann noch irgendwo
@@ -6194,6 +6246,27 @@ window.githubOeffnen = githubOeffnen;
 async function githubPruefen(){
     const ziel = document.getElementById('githubInhalt');
     if(!ziel) return;
+
+    // Probelauf: dasselbe Fenster, dieselben Knoepfe - nur wird nichts
+    // geholt. Der Hinweis darauf steht klein darunter, damit man beim
+    // Vorfuehren nicht aus Versehen den Probelauf fuer den Ernstfall haelt.
+    if(githubTest){
+        githubHolbar = ['(Probelauf)'];
+        githubProgramm = [];
+        ziel.innerHTML =
+            '<div style="font-size:0.95rem; line-height:1.65; color:var(--ink);">'
+          + 'Für den Amateurfunk-Trainer liegt eine neuere Fassung bereit.'
+          + '</div>'
+          + '<div style="margin-top:1.1rem; display:flex; gap:10px; flex-wrap:wrap;">'
+          + '<button class="btn-lernstand" onclick="githubAnwenden()">Aktualisieren</button>'
+          + '<button type="button" class="btn btn-outline" style="padding:6px 16px;" '
+          + 'onclick="githubSchliessen()">Später</button>'
+          + '</div>'
+          + '<div style="margin-top:0.9rem; font-size:0.72rem; color:var(--muted);">'
+          + 'Probelauf — es wird nichts geholt und nichts geschrieben.</div>';
+        return;
+    }
+
     if(!laeuftLokal()){
         ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.85rem 0.95rem; font-size:0.85rem; line-height:1.6;">'
             + '<b>Das hier ist der Trainer des Entwicklers.</b><br>'
@@ -6300,6 +6373,20 @@ async function githubAnwenden(){
 
     const schliessKnopf = '<div style="margin-top:1rem;"><button type="button" class="btn btn-outline" '
         + 'style="padding:6px 16px;" onclick="githubSchliessen()">Schließen</button></div>';
+
+    // Probelauf: hier ist Schluss. Kein Aufruf an den Server, keine Datei.
+    if(githubTest){
+        setTimeout(()=>{
+            ziel.innerHTML = '<div style="font-size:0.95rem; line-height:1.65;">'
+                + '<b>Fertig.</b> Der Trainer ist auf dem neuesten Stand.'
+                + '<br><br>Bitte den Trainer einmal <b>neu starten</b>.</div>'
+                + '<div style="margin-top:0.9rem; font-size:0.72rem; color:var(--muted);">'
+                + 'Probelauf — es wurde nichts geholt und nichts geschrieben.</div>'
+                + schliessKnopf;
+            updateKnopfAus();
+        }, 900);
+        return;
+    }
     try{
         // programmBestaetigt: Der Klick auf "Aktualisieren" IST die Zusage.
         // Frueher kam hier noch eine Rueckfrage per confirm() - eine zweite
@@ -9768,6 +9855,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
     try{ setTimeout(()=>{ githubStartNachschau(); }, 6000); }catch(e){}
+    try{ setTimeout(()=>{ githubNachschauWachhalten(); }, 7000); }catch(e){}
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     loadLearnParts();

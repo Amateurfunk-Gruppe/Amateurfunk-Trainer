@@ -126,6 +126,13 @@ GitHub-Verbinden.bat
 github_verbinden.js
 Zurueckholen.bat
 zurueckholen.js
+#
+# Der Probelauf fuer die Update-Meldung. Update-Test.bat legt
+# update_test.json an; der Trainer meldet dann ein Update, holt aber
+# nichts. Beides gehoert nur auf den Entwicklerrechner - bei jemand
+# anderem waere eine Update-Meldung, die keine ist, schlicht eine Luege.
+Update-Test.bat
+update_test.json
 Stimmen_packen.bat
 stimmen_packen.js
 Aufraeumen.bat

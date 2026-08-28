@@ -3264,3 +3264,80 @@ Neustart-Meldung. Keine Javascript-Fehler.
 Neues Bild bilder/08-updater.png: oben der blinkende Knopf in der echten
 Kopfzeile, darunter das Fenster, wie es ueber der weichgezeichneten
 Hauptansicht schwebt.
+
+## 28.08.2026 - Ein Probelauf fuer die Update-Meldung
+
+Dietmar: "Schreibe mir eine Bat Datei zum testen, das ein Update vorhanden
+ist. Das darf nicht mit auf GitHub!"
+
+Der Anlass ist berechtigt: Ein echtes Update gibt es selten. Wenn es dann
+eines gibt, will man nicht in dem Moment herausfinden, ob die Meldung
+ueberhaupt funktioniert - ob der Knopf wechselt, ob der Ton kommt, ob das
+Fenster aufgeht.
+
+**Update-Test.bat** legt `update_test.json` an. Der Trainer sieht die
+Datei und tut so, als laege ein Update bereit: Der Knopf wird zum
+blinkenden Update-Knopf, der Ton spielt einmal, das Fenster geht auf.
+
+**Geholt wird nichts, geschrieben wird nichts.** Im Probelauf ruft die
+Seite den Server ueberhaupt nicht auf - weder zum Nachsehen noch zum
+Holen. Klein unter den Knoepfen steht "Probelauf - es wird nichts geholt
+und nichts geschrieben", damit beim Vorfuehren niemand den Probelauf fuer
+den Ernstfall haelt.
+
+Drei Dinge waren dabei zu loesen:
+
+**Der Trainer laeuft schon.** Die Nachschau lief bisher genau einmal,
+sechs Sekunden nach dem Laden. Eine Datei, die danach entsteht, haette
+niemand bemerkt. Die Seite sieht jetzt alle fuenf Sekunden noch einmal
+nach - aber nur, solange der Knopf noch nicht umgesprungen ist; danach
+hoert sie auf. Das ist eine Anfrage an den eigenen Rechner, keine an
+GitHub, und sie bringt auch im Ernstfall etwas: Erfaehrt der Server erst
+spaeter von einem Update, muss man den Trainer nicht mehr neu starten,
+damit es ankommt.
+
+**Der Knopf durfte nicht endlos wieder aufblinken.** Wer im Probelauf auf
+"Spaeter" klickt, will Ruhe haben - die Datei liegt aber noch da. Deshalb
+schreibt die .bat bei jedem Durchlauf einen frischen Zeitstempel hinein,
+und die Seite meldet sich nur bei einem NEUEN Stempel. Ohne das kaeme man
+aus dem Fenster nicht mehr heraus.
+
+**Die Sicherheits-Whitelist.** Server.js gibt seit K1 nur nach Positivliste
+aus. `update_test.json` stand nicht darin - und weil die Datei ja
+tatsaechlich existiert, haette jeder Blick darauf eine Warnung
+"[SEC] Zugriff auf nicht freigegebene Datei blockiert" ins Serverfenster
+geschrieben, alle fuenf Sekunden. Der Eintrag steht jetzt in PUBLIC_FILES,
+mit Begruendung. Die Datei enthaelt einen Zeitstempel, sonst nichts.
+
+Die .bat fragt am Ende, ob der Probelauf wieder weg soll, und loescht die
+Datei dann selbst. Bleibt sie liegen, meldet sich der Trainer bei jedem
+Start erneut - das steht auch so im Fenster.
+
+**Nicht ins Repository:** Update-Test.bat und update_test.json stehen in
+der .gitignore, in der RAUS-Liste von GitHub-Ausmisten.bat und in der
+Schutzliste von hochladen.js. Bei jemand anderem waere eine Update-Meldung,
+die keine ist, schlicht eine Luege.
+
+Der Programmteil in Index.html geht dagegen mit zu GitHub. Ohne die Datei
+ist er untaetig - das ist ehrlicher, als ihn beim Hochladen jedes Mal
+herauszuschneiden.
+
+Gemessen: Knopf wechselt 3,0 Sekunden nach dem Anlegen der Datei, Ton genau
+einmal, "Aktualisieren" schickt keinen einzigen Aufruf an den Server, und
+sieben Sekunden nach dem Schliessen blinkt nichts mehr. Der echte Weg
+laeuft unveraendert weiter.
+
+## 28.08.2026 - Das Video vom USB-Stick in der README
+
+Dietmar hat ein Video aufgenommen, das den ganzen Vorgang zeigt:
+"Amateurfunk-Trainer-Installation auf USB-Stick".
+
+Es steht jetzt im USB-Abschnitt der README, direkt hinter den drei
+Schritten - als anklickbares Vorschaubild und zusaetzlich als Textlink.
+GitHub bettet keine Videos ein; ein Vorschaubild, das zu YouTube fuehrt,
+ist der Weg, der ueberall funktioniert.
+
+Die Stelle ist mit Bedacht gewaehlt: Wer bis dorthin gelesen hat, weiss,
+worum es geht, und entscheidet dann, ob er es lieber sieht als liest. Ganz
+oben haette es die Leute vertrieben, die einfach nur die drei Schritte
+gebraucht haetten.

@@ -238,6 +238,15 @@ So wird ein Stick daraus:
 2. Stick einstecken
 3. Im entpackten Ordner: Doppelklick auf **`USB-Stick-Erstellen.bat`**
 
+**Lieber zusehen?** Ein Video zeigt den ganzen Vorgang von Anfang bis Ende:
+
+<a href="https://www.youtube.com/watch?v=Cg5ivdDuCQE">
+  <img src="https://i.ytimg.com/vi/Cg5ivdDuCQE/hqdefault.jpg" width="420"
+       alt="Video: Amateurfunk-Trainer-Installation auf USB-Stick">
+</a>
+
+[Amateurfunk-Trainer-Installation auf USB-Stick](https://www.youtube.com/watch?v=Cg5ivdDuCQE)
+
 Gefragt wird genau eines: **auf welchen Stick.** Und auch das nur, wenn mehr
 als einer steckt — bei einem genügt die Eingabetaste.
 
