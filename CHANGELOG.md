@@ -3097,3 +3097,46 @@ Jetzt stehen dort zwei Schritte: ZIP herunterladen, START.bat anklicken.
 Der git-Weg bleibt als Nebensatz fuer die, die ihn wollen. Dazu ein
 Verweis auf den USB-Abschnitt und eine ehrliche Zeile darueber, dass
 getestet ist unter Windows und der Rest nur wahrscheinlich geht.
+
+## 28.08.2026 - Der Umweg ueber ein Release ist aufgegeben
+
+Nach dem Hochladen stand jedes Mal derselbe Vorschlag im Fenster:
+
+    Jetzt noch die Stimmen: Stimmen_packen.bat ausfuehren,
+    dann auf der Seite "Releases" -> "Create a new release",
+    Tag v1.0, und Piper-Stimmen.zip ins Feld ziehen.
+
+Dietmar: "Stimmen-packen und Piper-Stimmen kann raus. Das verleidet nur
+dazu Bloedsinn zu machen."
+
+**Er hat recht, und der Grund ist aelter als der Satz.** Der Gedanke war
+gut, als er entstand: Die Stimmen sind rund 470 MB, GitHub nimmt keine
+Datei ueber 100 MiB ins Repository, aber an ein Release darf man 2 GiB
+haengen. Also einmal packen, einmal anhaengen, fertig.
+
+Inzwischen holen piper.bat und USB-Stick-Erstellen.bat die Stimmen selbst
+- direkt bei Piper und in der Fassung, die gerade gilt. Damit ist der
+Release-Anhang kein Weg mehr, sondern ein zweiter Ablageort, der von Hand
+gepflegt werden muesste und sonst veraltet. Und ein 470-MB-ZIP im
+Hauptordner ist eine stehende Einladung, es doch irgendwohin zu schieben -
+ausgerechnet in den Ordner, aus dem hochgeladen wird.
+
+Geaendert:
+
+- **hochladen.js** schweigt nach dem Hochladen. Kein Vorschlag mehr, kein
+  Release, kein Tag v1.0. Die Abbruchbedingung fuer Dateien ueber 100 MiB
+  bleibt selbstverstaendlich - sie nennt nur kein Release mehr als
+  Ausweg.
+- **aufraeumen.js** stuft `Stimmen_packen.bat`, `stimmen_packen.js` und
+  `Piper-Stimmen.zip` als raeumbar ein. Sie standen bisher in der
+  NIEMALS-Liste. Aufraeumen.bat loescht nichts, es verschiebt nach
+  `_Aufgeraeumt_<Datum>` - falls sie doch noch gebraucht werden, liegen
+  sie da.
+- **.gitignore** behaelt die Zeile `Piper-Stimmen.zip`. Der Weg ist
+  aufgegeben, die Falle nicht: Liegt das ZIP doch noch irgendwo, darf es
+  auf keinen Fall mitcommittet werden. GitHub weist eine zu grosse Datei
+  erst zurueck, NACHDEM alles uebertragen wurde.
+
+Die frueheren Begruendungen im Code sind stehengeblieben und um das Datum
+ergaenzt. Wer in einem halben Jahr liest "haengt am Release v1.0", soll
+daneben finden, warum das nicht mehr stimmt.

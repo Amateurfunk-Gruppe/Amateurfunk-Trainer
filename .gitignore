@@ -77,13 +77,14 @@ _Aufgeraeumt_*/
 # passiert, 46 statt 40 Dateien im ersten Commit.
 .git_alt_*/
 
-# Ergebnis von Stimmen_packen.bat - der Anhang fuers Release, rund 470 MB.
+# Ergebnis von Stimmen_packen.bat, rund 470 MB.
 #
-# Er liegt bewusst im Hauptordner, denn dort findet man ihn zum Hochladen.
-# Mitcommittet werden darf er unter keinen Umstaenden: GitHub weist jede
-# Datei ueber 100 MiB zurueck - und zwar erst, nachdem alles uebertragen
-# wurde. Ohne diese Zeile waere der Ordner eine Falle, die ich selbst
-# aufgestellt haette.
+# Der Weg ueber ein Release ist am 28.08.2026 aufgegeben worden -
+# piper.bat und USB-Stick-Erstellen.bat holen die Stimmen selbst. Die
+# Zeile bleibt trotzdem stehen: Falls das ZIP noch irgendwo im Ordner
+# liegt oder jemand es neu baut, darf es unter keinen Umstaenden
+# mitcommittet werden. GitHub weist jede Datei ueber 100 MiB zurueck -
+# und zwar erst, nachdem alles uebertragen wurde.
 Piper-Stimmen.zip
 
 # Merkposten des GitHub-Updaters. Er haelt fest, wie die Dateien aussahen,
