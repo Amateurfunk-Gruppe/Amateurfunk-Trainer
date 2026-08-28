@@ -121,6 +121,10 @@ GitHub-Pruefen.bat
 github_pruefen.js
 GitHub-Ausmisten.bat
 github_ausmisten.js
+GitHub-Verbinden.bat
+github_verbinden.js
+Zurueckholen.bat
+zurueckholen.js
 Stimmen_packen.bat
 stimmen_packen.js
 Aufraeumen.bat
@@ -154,3 +158,6 @@ node_alt_*/
 # Ordners verlorenginge - Werkzeuge, private Listen, Merkposten.
 # Genau deshalb hat er im Repository nichts zu suchen.
 Mitnehmen/
+README.txt
+bilder/youtube-vorlage.html
+sounds/fanfare.wav
