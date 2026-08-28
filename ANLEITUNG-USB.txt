@@ -1,0 +1,46 @@
+================================================================
+  Amateurfunk-Trainer - Stick zum Lernen
+================================================================
+
+SO GEHT ES LOS:
+
+  1. Stick einstecken
+  2. Doppelklick auf   START.bat
+
+Das war alles. Es muss nichts installiert werden - Node.js liegt
+im Ordner node\ mit auf dem Stick.
+
+Beim ersten Start dauert es einen Moment, dann oeffnet sich der
+Trainer von selbst im Browser. Zum Beenden das schwarze Fenster
+schliessen.
+
+----------------------------------------------------------------
+DEIN LERNSTAND
+----------------------------------------------------------------
+Er wird im Ordner data\ auf dem Stick gespeichert. Der Stick ist
+damit dein Lernstand - er wandert mit, egal an welchem Rechner du
+sitzt. Auf dem Rechner selbst bleibt nichts zurueck.
+
+Wer lieber auf der Festplatte lernt: den ganzen Ordner vom Stick
+auf den Rechner kopieren und von dort starten. Geht genauso.
+
+----------------------------------------------------------------
+WENN ETWAS NICHT GEHT
+----------------------------------------------------------------
+Fenster geht kurz auf und sofort wieder zu:
+  Der Ordner node\ fehlt oder ist unvollstaendig. Doppelklick auf
+  Node-Holen.bat holt ihn (dafuer wird einmal Internet gebraucht).
+
+Die Stimme klingt nach Windows statt natuerlich:
+  Dann ist piper.exe auf DIESEM Rechner nicht gestartet. Meist fehlt
+  ein Microsoft-Laufzeitpaket, das der Stick nicht mitbringen darf.
+  Doppelklick auf   piper\piper_reparatur.bat   holt es nach.
+  Der Trainer laeuft auch ohne - er liest dann mit der
+  Windows-Stimme vor.
+
+Windows fragt nach der Firewall:
+  "Abbrechen" genuegt. Der Trainer laeuft nur auf diesem Rechner.
+  Freigeben musst du nur, wenn du selbst einen Gruppenraum
+  anbieten willst.
+
+Erstellt am 27.8.2026, 11:57:53

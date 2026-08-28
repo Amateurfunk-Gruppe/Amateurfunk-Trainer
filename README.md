@@ -192,18 +192,38 @@ soll.
 
 ## Loslegen
 
-Voraussetzung ist [Node.js](https://nodejs.org) (kostenlos) — oder ein
-Doppelklick auf **`Node-Holen.bat`**, das holt Node.js ohne Installation in
-den Ordner `node/`.
+Ein Doppelklick. **Installiert wird nichts.**
+
+1. Oben auf **Code → Download ZIP**, das ZIP entpacken
+2. Im entpackten Ordner: Doppelklick auf **`START.bat`**
+
+Mehr ist es nicht. Was fehlt, holt START.bat selbst nach: Node.js landet ohne
+Installation im Unterordner `node/`, die Programmbausteine kommen per
+`npm install` dazu. Der erste Start dauert deshalb ein paar Minuten und
+braucht einmal Internet. Danach öffnet sich der Trainer im Browser — und ab
+dann läuft er auch ohne Netz.
+
+Wer lieber mit git arbeitet, klont statt zu entpacken:
 
     git clone https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer.git
-    cd Amateurfunk-Trainer
-    npm install
 
-Danach Doppelklick auf **START.bat** — der Trainer öffnet sich im Browser.
+Danach ebenfalls **START.bat**. Ein eigenes `npm install` ist nicht nötig,
+schadet aber auch nicht.
 
-Für die natürliche Sprachausgabe einmal **piper.bat** ausführen; das lädt rund
-80 MB und richtet die deutsche Stimme „Thorsten" ein. Der Trainer läuft auch ohne.
+**Sprachausgabe.** Vorgelesen wird von Haus aus mit der Windows-Stimme. Für
+die natürliche Stimme „Thorsten“ einmal **`piper.bat`** ausführen — rund
+80 MB. Wer einen Stick baut, braucht das nicht: `USB-Stick-Erstellen.bat`
+bringt die Sprachausgabe fertig eingerichtet mit.
+
+**Zum Weitergeben** gibt es den Weg
+[über den USB-Stick](#auf-einem-usb-stick-weitergeben--ohne-installation) —
+ein Stick, der an jedem Windows-Rechner läuft, ohne dort etwas zu
+installieren.
+
+Entwickelt und getestet unter Windows. `Server.js` selbst ist gewöhnliches
+Node.js und sollte auch unter macOS und Linux starten — nachgeprüft ist das
+nicht, und START.bat, `piper.bat` und das mitgelieferte Node.js sind
+Windows-Dateien.
 
 ## Herkunft der Fragen
 

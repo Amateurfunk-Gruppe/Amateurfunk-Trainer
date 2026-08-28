@@ -1178,6 +1178,32 @@ const PAKET_DATEIEN = [
   // Empfaenger sie sich sonst in zwei Minuten selbst holt, waere
   // schlechter Tausch. Die beiden kleinen Dateien genuegen.
   'Node-Holen.bat', 'node_holen.ps1',
+  //
+  // github_update.js ist KEINE Zugabe: Server.js laedt es beim Start
+  // (require('./github_update')). Es hat nie im Paket gestanden - also
+  // hatte jedes ZIP und jeder Stick den GitHub-Updater nicht, obwohl
+  // genau der dafuer gedacht war, dass Leute Neuerungen bekommen, ohne
+  // dass der Tunnel laeuft. Aufgefallen am 28.08.2026, als Dietmars
+  // frisch bespielter Ordner ihn nicht hatte.
+  'github_update.js',
+  //
+  // Die beiden gehoeren dem Empfaenger, nicht dem Entwickler: Damit
+  // findet er heraus, warum bei ihm kein Update ankommt. Sie standen
+  // im Repository, aber nicht im Paket - also fehlten sie genau dem,
+  // der sie braucht.
+  'Update-Pruefen.bat', 'update_pruefen.js',
+  //
+  // LICENSE ist eine Pflicht, keine Zierde. Die PolyForm-Lizenz sagt
+  // unter "Notices": wer eine Kopie weitergibt, muss die Bedingungen
+  // mitgeben. Sticks ohne diese Datei zu verteilen waere ein Verstoss
+  // gegen die eigene Lizenz.
+  'LICENSE', 'README.md',
+  //
+  // package-lock.json legt die Fassungen der drei Bausteine fest.
+  // Ohne sie holt "npm install" beim Empfaenger irgendeine neuere -
+  // meist harmlos, aber es ist genau die Art Unterschied, die man
+  // spaeter nicht mehr nachvollziehen kann.
+  'package-lock.json',
   // Symbol und Verknuepfung: Wer den Trainer auf einem Stick bekommt,
   // soll ihn mit einem Doppelklick vom Desktop starten koennen - und
   // zwar mit dem Funkgeraet statt des grauen Zahnrads, das Windows

@@ -2967,3 +2967,133 @@ eintritt. Bei Dietmar ist er heute eingetreten.
 
 Die Dateien liegen auch im Ordner Mitnehmen\, damit sie den geplanten
 Umzug ueberstehen.
+
+## 28.08.2026 - Ein ZIP ist kein Repository
+
+Nach dem Umzug nach `C:\Program Files\Amateurfunk-Trainer` meldete
+Hochladen.bat:
+
+    Hier ist kein Repository. Erst GitHub-Neustart.bat ausfuehren.
+
+Zwei Dinge stimmten daran nicht.
+
+**Erstens: Die Meldung nannte ein Werkzeug, das es nicht mehr gibt.**
+GitHub-Neustart.bat war einmalig fuer den Neuaufbau der Historie da und
+liegt laengst nicht mehr im Ordner. Wer die Zeile liest, sucht also nach
+einer Datei, die er nie finden wird. Beide Stellen in hochladen.js zeigen
+jetzt auf das richtige Werkzeug.
+
+**Zweitens: Ein Neustart waere hier genau das Falsche gewesen.** Der neue
+Ordner ist aus dem GitHub-ZIP entstanden, und ein ZIP enthaelt nur die
+Dateien - nicht den Ordner `.git` mit der Vorgeschichte. Die Vorgeschichte
+ist ja nicht weg, sie liegt bei GitHub. Sie muss nur wieder angebunden
+werden. GitHub-Neustart.bat haette stattdessen bei null angefangen und
+alles bisherige verworfen.
+
+Neu ist deshalb **GitHub-Verbinden.bat** (mit github_verbinden.js). Es
+tut vier Dinge und zeigt sie vorher an:
+
+    1. Repository anlegen        git init
+    2. Adresse eintragen         git remote add origin ...
+    3. Stand von GitHub holen    git fetch
+    4. Zeiger daraufsetzen       git reset --mixed origin/main
+
+Schritt 4 ist der heikle - und deshalb ausdruecklich `--mixed`, die
+Vorgabe: Sie setzt Zeiger und Merkliste, laesst die Arbeitsdateien aber
+unberuehrt. `--hard` haette an derselben Stelle jede Datei ueberschrieben,
+die hier neuer ist als bei GitHub - also genau die Arbeit der letzten
+Tage. Es wird nichts geloescht, nichts hochgeladen, und ein vorhandenes
+`.git` wird gar nicht erst angefasst.
+
+Danach zeigt es, was hier vom Stand bei GitHub abweicht, und verweist auf
+GitHub-Pruefen.bat und Hochladen.bat.
+
+**Das Werkzeug selbst gehoert nicht ins Repository.** Es steht in der
+.gitignore, in der RAUS-Liste von GitHub-Ausmisten.bat und in der
+Schutzliste von hochladen.js - an allen drei Stellen, damit ein Versehen
+an einer Stelle von den anderen beiden aufgefangen wird.
+
+## 28.08.2026 - 19 Dateien standen zum Loeschen bereit
+
+Direkt nach dem Verbinden stand in der Liste:
+
+    25 Datei(en) weichen vom Stand bei GitHub ab:
+       M .gitignore
+       M CHANGELOG.md
+       D DNS-Auffrischen.bat
+       D Programm-Aktualisieren.bat
+       D README.txt
+       D START_MIT_TUNNEL.bat
+       M Server.js
+       D bilder/01-hauptansicht.png
+       ...
+
+Und darunter von mir: "Das ist zu erwarten - hier liegt Neueres als dort."
+
+**Das war die Halbwahrheit des Tages.** Die `M`-Zeilen waren zu erwarten.
+Die `D`-Zeilen nicht - `D` heisst geloescht, und beim Hochladen wird eine
+Loeschung mitgeschickt wie jede andere Aenderung. 19 Dateien standen so zum
+Verschwinden bereit, darunter der ganze Ordner `bilder\`, auf den die
+README verweist. Die Startseite des Repositorys haette danach leere
+Bildrahmen gezeigt.
+
+**Warum sie fehlten:** Der Ordner ist mit USB-Stick-Erstellen.bat aus dem
+ZIP entstanden, und das Werkzeug kopiert nach einer Positivliste. Ein
+Lern-Stick braucht keine Bildschirmfotos, keine Tunnel-Werkzeuge und keine
+Testdatei - das ist richtig so. Nur weiss git davon nichts: Was im
+Repository steht und hier nicht liegt, ist fuer git geloescht. Zwei Ordner,
+die absichtlich verschieden sind, und ein Werkzeug dazwischen, das
+Gleichheit annimmt.
+
+**Passiert ist am Ende nichts.** Hochladen.bat committet nicht von selbst,
+sondern zeigt erst, was offen ist, und fragt "Jetzt mit aufnehmen? [j/n]".
+Diese Frage war die Bremse: Die Loeschungen wurden nie committet und damit
+auch nie hochgeladen. Bei GitHub stand die ganze Zeit alles unveraendert.
+
+Das ist Glueck mit System - genau dafuer ist die Frage da -, aber Glueck
+bleibt es. Zwei Dinge sind deshalb neu:
+
+**Zurueckholen.bat** (mit zurueckholen.js) holt zurueck, was bei GitHub
+liegt und hier fehlt. Es deckt beide Faelle ab: noch nicht hochgeladen
+(die Datei steht in der Merkliste) und schon hochgeladen (sie steht in der
+Historie, und dann kommt sie aus dem Commit DAVOR zurueck). Dateien, die
+spaeter wieder hinzugefuegt wurden, laesst es in Ruhe - sonst wuerde es
+Absichten ausgraben, die laengst erledigt sind. Geschrieben wird
+ausschliesslich, was gerade fehlt; ueberschreiben kann es damit gar nichts.
+
+Im Ernstfall lief es sauber durch:
+
+    19 von 19 Datei(en) sind wieder da.
+
+**GitHub-Verbinden.bat trennt `D` und `M`.** Loeschungen stehen jetzt in
+einem eigenen Block mit Warnung und dem Hinweis auf Zurueckholen.bat -
+nicht mehr unter einem gemeinsamen "das ist zu erwarten".
+
+**Merkposten fuer mich:** Ich habe eine Liste ausgegeben und im selben
+Atemzug beruhigt, ohne die Buchstaben davor gelesen zu haben. `D` und `M`
+sehen in einer Liste gleich harmlos aus und bedeuten das Gegenteil
+voneinander. Wer beruhigt, muss vorher hingesehen haben.
+
+## 28.08.2026 - "Loslegen" beschrieb noch den umstaendlichen Weg
+
+Dietmar: "Das kann auch entfernt oder bearbeitet werden. Wir haben jetzt
+USB Stick erstellen.bat."
+
+Im Abschnitt "Loslegen" der README stand noch:
+
+    Voraussetzung ist Node.js (kostenlos)
+    git clone ...
+    cd Amateurfunk-Trainer
+    npm install
+
+Drei Zeilen Kommandozeile und eine Voraussetzung - fuer ein Programm,
+dessen ganzer Sinn inzwischen ist, dass man **nichts** installieren muss.
+START.bat holt Node.js seit gestern selbst in den Ordner `node\` und ruft
+`npm install` von sich aus auf. Die Anleitung beschrieb also Handgriffe,
+die das Programm laengst selbst macht - und schreckte genau die Leute ab,
+fuer die der Trainer gedacht ist.
+
+Jetzt stehen dort zwei Schritte: ZIP herunterladen, START.bat anklicken.
+Der git-Weg bleibt als Nebensatz fuer die, die ihn wollen. Dazu ein
+Verweis auf den USB-Abschnitt und eine ehrliche Zeile darueber, dass
+getestet ist unter Windows und der Rest nur wahrscheinlich geht.
