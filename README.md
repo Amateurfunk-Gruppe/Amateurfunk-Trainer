@@ -128,29 +128,31 @@ Dazu spielt einmal ein kurzer Ton.
 
 ![Der Update-Knopf und das Fenster dahinter](bilder/08-updater.png)
 
-Ein Klick darauf öffnet ein kleines Fenster mit genau zwei Möglichkeiten:
-**Installieren** oder **Verwerfen**.
+Ein Klick darauf öffnet ein kleines Fenster: *Update vorhanden*, ein Satz,
+zwei Knöpfe — **Aktualisieren** oder **Später**. Keine Dateinamen, keine
+Byte-Zahlen, keine Kästchen zum Ankreuzen.
 
-- **Keine Liste zum Ankreuzen.** Es gab sie einmal, und sie war ein Fehler:
-  Eine Liste mit Kästchen sieht nach freier Auswahl aus, aber an den
-  Dateinamen kann niemand ablesen, welche Kombination heil ist — `Server.js`
-  ohne `github_update.js` zum Beispiel ist keine. Alles oder nichts ist die
-  einzige Auswahl, bei der nichts Halbes entstehen kann. Welche Dateien es
-  betrifft, steht weiterhin da — zugeklappt, zum Nachsehen, nicht zum
-  Auswählen.
+Die Kästchen gab es einmal, und sie waren ein Fehler: Eine Liste mit
+Kästchen sieht nach freier Auswahl aus, aber an den Dateinamen kann niemand
+ablesen, welche Kombination heil ist — `Server.js` ohne `github_update.js`
+zum Beispiel ist keine. Alles oder nichts ist die einzige Auswahl, bei der
+nichts Halbes entstehen kann.
+
+Was dabei geschieht, ist deshalb nicht weniger sorgfältig:
+
 - **Eigene Änderungen werden nie überschrieben.** Der Trainer merkt sich, wie
   jede Datei aussah, als sie zuletzt mit GitHub gleich war. Was seither hier
-  geändert wurde, bleibt unangetastet und wird im Fenster genannt. Ein
-  Fingerabdruck sagt nämlich nur, *dass* zwei Dateien verschieden sind, nicht
-  welche die neuere ist.
+  geändert wurde, bleibt unangetastet. Ein Fingerabdruck sagt nämlich nur,
+  *dass* zwei Dateien verschieden sind, nicht welche die neuere ist.
 - **Die alte Fassung wandert vorher nach `backup/`**, und jede geholte Datei
   wird vor dem Schreiben nachgerechnet. Ein abgebrochener Download kommt so
-  nie im Ordner an. Der Lernstand in `data/` wird nie angefasst.
-- **Verwerfen merkt sich nichts.** Beim nächsten Start meldet es sich wieder.
+  nie im Ordner an.
+- **Der Lernstand in `data/` wird nie angefasst.**
+- **„Später" merkt sich nichts.** Beim nächsten Start meldet es sich wieder.
   Vergessen kann man ein Update damit nicht, wegklicken jederzeit.
 
-Sind Programmdateien dabei (`Server.js`, `hoerbuch.js`, `lame.js`), sagt das
-Fenster es vorher und weist danach auf den nötigen Neustart hin.
+Waren Programmdateien dabei, sagt das Fenster danach, dass der Trainer einmal
+neu gestartet werden muss.
 
 ## Loslegen
 

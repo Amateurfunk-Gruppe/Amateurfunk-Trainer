@@ -3181,63 +3181,86 @@ Dietmar: "Der Updater gefaellt mir so nicht. Hier ballert man sich schnell
 was kaputt wenn man alles auswaehlt. Der Updater soll melden das es ein
 Update gibt. Installieren oder verwerfen."
 
-**Er hat recht, und der Grund ist nicht Unachtsamkeit.** Eine Liste mit
-Kaestchen SIEHT nach freier Auswahl aus. Aber an den Dateinamen kann
-niemand ablesen, welche Kombination heil ist: Server.js ohne
-github_update.js zum Beispiel ist keine. Wer waehlen darf, waehlt
-irgendwann falsch - und merkt es erst, wenn der Trainer nicht mehr
-startet. Ich hatte eine Entscheidung angeboten, fuer die es keine
-Entscheidungsgrundlage gibt.
+Und nach dem ersten Umbau, der noch zu viel zeigte: "Nein, das gefaellt mir
+nicht. Ich wuensche ein kleines Fenster ohne Code und dergleichen. Update
+vorhanden mit Github Icon und ein Button aktualisieren und spaeter."
 
-**Vorher:** Beim Start sprang ein Fenster auf, oder ein dunkler Balken
-legte sich ueber den Seitenkopf. Darin die Liste mit Kaestchen, ein Knopf
-"Ausgewaehlte holen", und wer Programmdateien angehakt hatte, bekam noch
-eine Rueckfrage per confirm().
+**Zweimal recht gehabt, und beim zweiten Mal deutlicher als beim ersten.**
 
-**Jetzt:**
+Die Kaestchen waren der offensichtliche Fehler. Eine Liste mit Kaestchen
+SIEHT nach freier Auswahl aus, aber an den Dateinamen kann niemand ablesen,
+welche Kombination heil ist: Server.js ohne github_update.js zum Beispiel
+ist keine. Wer waehlen darf, waehlt irgendwann falsch - und merkt es erst,
+wenn der Trainer nicht mehr startet. Ich hatte eine Entscheidung angeboten,
+fuer die es keine Entscheidungsgrundlage gibt.
 
-- **Kein Fenster und kein Balken beim Start.** Wer mitten in einer Frage
-  sitzt, wird nicht unterbrochen.
-- Der **Info-Knopf oben rechts wird zum Update-Knopf**: anderer Name,
-  andere Farbe, und er blinkt. Wer "Bewegung reduzieren" eingestellt hat,
-  bekommt statt des Pulsierens einen ruhigen Rahmen - blinkende Bewegung
-  ist fuer manche Menschen ein echtes Problem, nicht nur Geschmackssache.
-- **Einmal spielt sounds/update.mp3** (1,7 Sekunden). Browser lassen Ton
-  erst zu, wenn jemand die Seite angefasst hat; beim Start ist das nicht
-  der Fall, und play() wird abgelehnt. Statt den Ton dann stumm ausfallen
-  zu lassen, wird er beim ersten Klick oder Tastendruck nachgeholt - und
-  nur dieses eine Mal. Beides nachgemessen: ohne Geste 0, nach dem ersten
-  Klick 1.
-- **Ein Klick, ein kleines Fenster, zwei Knoepfe:** Installieren oder
-  Verwerfen. Das Fenster ist von 660 auf 430 Pixel geschrumpft.
-- **Keine Rueckfrage mehr bei Programmdateien.** Eine zweite Frage auf
-  dieselbe Entscheidung erzieht nur zum Wegklicken. Was passiert, steht
-  jetzt VOR dem Knopf im Fenster: wie viele Programmdateien dabei sind,
-  dass die alten Fassungen nach backup/ wandern, dass data/ nicht
-  angefasst wird, und dass danach ein Neustart faellig ist.
-- **Die Dateinamen gibt es weiterhin** - unter "Welche Dateien?"
-  zugeklappt. Zum Nachsehen, nicht zum Auswaehlen.
-- **Verwerfen merkt sich nichts.** Frueher wurde der gezeigte Commit in
-  den localStorage geschrieben und derselbe Stand nie wieder angeboten.
-  Jetzt meldet es sich bei jedem Start wieder, bis installiert wurde.
-  Vergessen kann man ein Update damit nicht, wegklicken jederzeit.
+Der zweite Fehler war meiner allein: Ich hatte die Kaestchen weggenommen,
+aber alles andere stehenlassen - Dateinamen, Byte-Zahlen, Quellenangabe,
+Sicherungspfade. Das sah nach Sorgfalt aus und war doch nur Ausstattung.
+"video_map_embed.js, 211892 Bytes" hilft bei der Frage, die hier ansteht,
+kein Stueck weiter. Es macht nur unsicher.
+
+**Was jetzt beim Start passiert:** nichts Sichtbares. Kein Fenster, kein
+Balken. Der Info-Knopf oben rechts wird zum Update-Knopf - anderer Name,
+andere Farbe, blinkend - und einmal spielt sounds/update.mp3.
+
+**Was ein Klick darauf oeffnet:**
+
+    +--------------------------------------+
+    |  [GitHub]  Update vorhanden      [x] |
+    |                                      |
+    |  Fuer den Amateurfunk-Trainer liegt  |
+    |  eine neuere Fassung bereit.         |
+    |                                      |
+    |  [ Aktualisieren ]   [ Spaeter ]     |
+    +--------------------------------------+
+
+Mehr nicht. Das Fenster schwebt wie alle anderen ueber der Hauptansicht,
+der Hintergrund ist weichgezeichnet. Von 660 auf 430 Pixel geschrumpft.
+
+Weitere Aenderungen:
+
+- **Keine Rueckfrage mehr bei Programmdateien.** Frueher kam nach dem Klick
+  ein confirm(). Eine zweite Frage auf dieselbe Entscheidung erzieht nur
+  zum Wegklicken.
+- **Nach dem Aktualisieren wird der ganze Fensterinhalt ersetzt**, nicht
+  etwas darunter gehaengt. Sonst stehen die Knoepfe noch da, waehrend
+  darunter schon "Fertig" steht - und man fragt sich, ob man noch einmal
+  klicken muss. Uebrig bleibt ein Satz: "Fertig. Der Trainer ist auf dem
+  neuesten Stand." Und, wenn noetig: "Bitte den Trainer einmal neu
+  starten."
+- **Der Ton kommt einmal.** Browser lassen Ton erst zu, wenn jemand die
+  Seite angefasst hat; beim Start ist das nicht der Fall, und play() wird
+  abgelehnt. Statt den Ton dann stumm ausfallen zu lassen, wird er beim
+  ersten Klick oder Tastendruck nachgeholt - und nur dieses eine Mal.
+  Nachgemessen: ohne Geste 0 Wiedergaben, nach dem ersten Klick 1.
+- **Blinken mit Ruecksicht.** Wer im Betriebssystem "Bewegung reduzieren"
+  eingestellt hat, bekommt statt des Pulsierens einen ruhigen Rahmen.
+  Blinkende Bewegung ist fuer manche Menschen ein echtes Problem, nicht
+  nur Geschmackssache.
+- **"Spaeter" merkt sich nichts.** Frueher wurde der gezeigte Commit in den
+  localStorage geschrieben und derselbe Stand nie wieder angeboten. Jetzt
+  meldet es sich bei jedem Start wieder, bis aktualisiert wurde.
 
 Unveraendert geblieben ist die Regel, auf die es ankommt: **Was hier neuer
 ist als bei GitHub, wird nie angefasst.** Der Trainer merkt sich, wie jede
 Datei aussah, als sie zuletzt mit GitHub gleich war - ein Fingerabdruck
 sagt nur, DASS zwei Dateien verschieden sind, nicht welche die neuere ist.
+Alte Fassungen wandern weiter nach backup/, der Lernstand in data/ wird nie
+angefasst. Das steht jetzt in der README statt in jedem Fenster.
 
-Ersatzlos entfallen sind damit: der Balken (githubHinweisZeigen), die
-Pruefung "passt der Moment gerade?" (githubMomentPasst,
-githubAnderesFensterOffen), der Schalter "nicht mehr von selbst fragen"
-samt seinen beiden localStorage-Schluesseln, und die Kaestchen-Ansicht.
-Rund 130 Zeilen weniger.
+Ersatzlos entfallen: der Balken (githubHinweisZeigen), die Pruefung "passt
+der Moment gerade?" (githubMomentPasst, githubAnderesFensterOffen), der
+Schalter "nicht mehr von selbst fragen" samt seinen beiden
+localStorage-Schluesseln, die Kaestchen-Ansicht und die Dateiliste.
+Rund 190 Zeilen weniger.
 
-Geprueft im Browser, gegen einen nachgebauten Server: Knopf wird nach dem
-Start zu "Update" und blinkt, Ton einmal, Verwerfen gibt den Info-Knopf
-zurueck und das Info-Fenster geht weiter auf, Installieren schickt alle
-drei Dateien mit programmBestaetigt und zeigt die Neustart-Meldung. Keine
-Javascript-Fehler.
+Geprueft im Browser gegen einen nachgebauten Server: Knopf wird zu
+"Update" und blinkt, Ton genau einmal, "Spaeter" gibt den Info-Knopf
+zurueck und das Info-Fenster geht danach weiter auf, "Aktualisieren"
+schickt alle Dateien mit programmBestaetigt und zeigt die
+Neustart-Meldung. Keine Javascript-Fehler.
 
-Die README ist entsprechend neu, mit neuem Bild (bilder/08-updater.png):
-oben der blinkende Knopf in der echten Kopfzeile, darunter das Fenster.
+Neues Bild bilder/08-updater.png: oben der blinkende Knopf in der echten
+Kopfzeile, darunter das Fenster, wie es ueber der weichgezeichneten
+Hauptansicht schwebt.
