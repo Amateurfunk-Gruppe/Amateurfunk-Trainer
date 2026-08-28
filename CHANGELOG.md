@@ -3140,3 +3140,37 @@ Geaendert:
 Die frueheren Begruendungen im Code sind stehengeblieben und um das Datum
 ergaenzt. Wer in einem halben Jahr liest "haengt am Release v1.0", soll
 daneben finden, warum das nicht mehr stimmt.
+
+## 28.08.2026 - Der feste Platz auf dem Rechner fehlte in der README
+
+Dietmar: "Hier fehlt meiner Meinung noch etwas. Das der Trainer in einem
+Ordner unter C:\Program Files verschoben werden kann und mit
+Verknuepfung-Erstellen.bat ein Start Icon erstellt werden kann."
+
+Er hat recht: Die Werkzeuge dafuer liegen seit gestern im Repository -
+Verknuepfung-Erstellen.bat, verknuepfung.ps1, icon.ico -, aber die README
+erwaehnte sie mit keinem Wort. Wer sie nicht kennt, findet sie auch nicht.
+
+Neuer Abschnitt **"Fest auf dem eigenen Rechner - mit Symbol auf dem
+Desktop"**, samt Bild (bilder/11-verknuepfung.png): oben die Ausgabe des
+Werkzeugs, darunter die Verknuepfung, wie sie danach auf dem Desktop liegt,
+mit dem echten Funkgeraet-Symbol aus icon.png.
+
+Zwei Punkte darin sind wichtiger als der Rest:
+
+**Der Lernstand zieht mit.** Er liegt in `data\` im Trainer-Ordner, nicht
+irgendwo in Windows. Wer den Ordner verschiebt, verschiebt ihn mit. Das
+muss dastehen, sonst traut sich niemand, den Ordner anzufassen.
+
+**C:\Program Files ist nicht bedingungslos zu empfehlen.** Bei Dietmar
+funktioniert es - der Lernstand wird dort geschrieben, nachgesehen und
+bestaetigt. Das liegt daran, dass er den Ordner selbst angelegt hat und
+damit Eigentuemer ist. Auf einem Rechner, wo das anders ist, kann der
+Trainer dort nicht schreiben, und der Fortschritt ist nach dem Schliessen
+weg. In der README steht deshalb beides: ein Ordner im Benutzerkonto als
+einfachster Weg, Program Files als moeglich, mit dem Hinweis, woran man ein
+Rechteproblem sofort erkennt.
+
+Bei der Gelegenheit die Reihenfolge geradegezogen: "Loslegen" stand bisher
+HINTER dem USB-Abschnitt. Jetzt kommt erst das Starten, dann das feste
+Einrichten, dann das Weitergeben.
