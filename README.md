@@ -174,6 +174,12 @@ Wer lieber mit git arbeitet, klont statt zu entpacken:
 Danach ebenfalls **START.bat**. Ein eigenes `npm install` ist nicht nötig,
 schadet aber auch nicht.
 
+**Ein Fenster, und das minimiert.** START.bat legt sich beim Start selbst in
+die Taskleiste — der Trainer läuft ja im Browser. Das Fenster wird nur
+gebraucht, wenn etwas schiefgeht, und zum Beenden des Servers. Beim
+allerersten Start bleibt es offen: Dann wird noch nachgeladen, und wer davon
+nichts sieht, hält den Trainer für kaputt.
+
 **Sprachausgabe.** Vorgelesen wird von Haus aus mit der Windows-Stimme. Für
 die natürliche Stimme „Thorsten“ einmal **`piper.bat`** ausführen — rund
 80 MB. Wer einen Stick baut, braucht das nicht: `USB-Stick-Erstellen.bat`

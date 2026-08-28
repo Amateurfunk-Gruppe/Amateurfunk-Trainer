@@ -3341,3 +3341,68 @@ Die Stelle ist mit Bedacht gewaehlt: Wer bis dorthin gelesen hat, weiss,
 worum es geht, und entscheidet dann, ob er es lieber sieht als liest. Ganz
 oben haette es die Leute vertrieben, die einfach nur die drei Schritte
 gebraucht haetten.
+
+## 28.08.2026 - Zwei Fenster waren eines zu viel
+
+Dietmar: "Die 2 Terminal die sich bei start.bat oeffnen sollen im
+Hintergrund minimiert laufen. Evtl bekommt man das auch so hin, das nur ein
+Terminal sich oeffnet."
+
+Man bekommt es hin. Beides.
+
+**Das zweite Fenster ist ersatzlos weg.** In START.bat stand diese Zeile:
+
+    start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul
+    http://localhost:3000 && start http://localhost:3000 && exit /b)
+    || timeout /t 1 /nobreak >nul"
+
+Sie machte ein eigenes Fenster auf und fragte darin bis zu zwanzig Sekunden
+lang im Sekundentakt per curl, ob der Server schon antwortet - um dann den
+Browser zu oeffnen. Ein ganzes Fenster, nur um eine Frage zu stellen, die an
+einer anderen Stelle gar nicht erst entsteht: Wenn `server.listen()`
+zurueckmeldet, IST der Server bereit. Kein Warten, kein Pollen, kein Fenster.
+
+Das macht jetzt **Server.js** selbst, in `browserOeffnen()`, gleich als
+erstes im listen-Rueckruf - und nur, wenn `AFU_BROWSER=1` gesetzt ist.
+Dieselbe Regel wie beim Tunnel (Fix K2): "node Server.js" von Hand reisst
+niemandem ungefragt einen Browser auf; START.bat setzt die Variable, sonst
+niemand.
+
+Beim Bauen zwei Stolperstellen mitgenommen:
+
+- `start` ist ein eingebauter Befehl der Eingabeaufforderung, kein Programm.
+  Es geht nur ueber `cmd /c`. Und der leere Parameter davor ist noetig: Ohne
+  ihn haelt `start` eine Adresse in Anfuehrungszeichen fuer den Fenstertitel
+  und oeffnet gar nichts.
+- Ein Kindprozess, der sich nicht starten laesst, meldet das per
+  'error'-Ereignis. Hoert dort niemand zu, wirft Node die Ausnahme in die
+  Ereignisschleife - und der Server waere wegen eines nicht geoeffneten
+  Browsers beendet gewesen. Jeder Versuch bekommt jetzt einen Zuhoerer.
+  Nachgestellt mit einem absichtlich falschen Befehlsnamen: ENOENT wird
+  gemeldet, der Prozess laeuft weiter.
+
+**Das verbleibende Fenster legt sich selbst in die Taskleiste.** START.bat
+startet sich dafuer einmal neu, minimiert, und gibt sich das Wort
+"minimiert" mit - beim zweiten Durchlauf wird der Block uebersprungen. Ohne
+dieses Merkwort startete sie sich endlos neu.
+
+**Aber nicht beim ersten Mal.** Fehlt Node oder fehlen die Bausteine, laedt
+START.bat erst einmal einige Minuten lang nach. Ein minimiertes Fenster
+waere da genau falsch: Man sieht nichts, haelt den Trainer fuer kaputt und
+klickt noch dreimal. Minimiert wird deshalb nur, wenn `node_modules\\express`
+und Node schon da sind - also ab dem zweiten Start, und beim USB-Stick ab
+dem ersten, weil dort alles mitkommt.
+
+**Die Desktop-Verknuepfung startet gleich minimiert** (WindowStyle 7).
+Sonst blitzte trotzdem kurz ein Fenster auf, weil das erste sich ja erst
+starten muss, um sich zu verkleinern.
+
+**START_MIT_TUNNEL.bat** verliert ebenfalls das zweite Fenster, bleibt aber
+sichtbar. Wer den Rechner ins oeffentliche Netz stellt, soll sehen, was
+dabei passiert - das ist kein Fall fuer die Taskleiste.
+
+**Nebenbei repariert:** Beim ersten Anlauf hatte ich den neuen Block mit
+Unix-Zeilenenden in zwei Dateien geschrieben, die sonst durchgehend
+Windows-Zeilenenden haben. Eine .bat mit gemischten Zeilenenden ist eine
+Falle - besonders bei goto-Marken, die dann ins Leere zeigen koennen. Beide
+Dateien sind jetzt geprueft durchgehend CRLF.

@@ -59,6 +59,11 @@ try {
   $v.TargetPath       = $ziel
   $v.WorkingDirectory = $Wurzel      # sonst sucht START.bat im falschen Ordner
   $v.Description      = 'Amateurfunk-Trainer starten'
+  # 7 = minimiert. START.bat legt sich ohnehin selbst in die Taskleiste;
+  # ohne diese Zeile blitzt vorher aber noch einmal kurz ein Fenster auf,
+  # weil das erste sich erst starten muss, um sich zu verkleinern. So
+  # bleibt es von Anfang an unten.
+  $v.WindowStyle      = 7
   if ($mitIcon) { $v.IconLocation = "$icon,0" }
   $v.Save()
 } catch {

@@ -2,6 +2,41 @@
 title Amateurfunk Trainer - Server
 cd /d "%~dp0"
 
+REM ================================================================
+REM  EIN FENSTER, UND DAS MINIMIERT
+REM
+REM  Der Trainer laeuft im Browser. Das Eingabeaufforderungsfenster
+REM  gehoert deshalb in die Taskleiste und nicht vor die Nase - es
+REM  wird nur gebraucht, wenn etwas schiefgeht, und zum Beenden.
+REM
+REM  Wie das geht: Diese Datei startet sich selbst noch einmal, in
+REM  einem minimierten Fenster, und gibt sich dabei das Wort
+REM  "minimiert" mit. Beim zweiten Durchlauf steht das Wort in %1,
+REM  und dieser Block wird uebersprungen. Ohne dieses Merkwort
+REM  startete sie sich endlos neu.
+REM
+REM  ABER NICHT BEIM ERSTEN MAL: Fehlt Node oder fehlen die
+REM  Bausteine, laedt diese Datei erst einmal einige Minuten lang
+REM  nach. Wer davon nichts sieht, haelt den Trainer fuer kaputt.
+REM  Minimiert wird deshalb nur, wenn alles schon da ist - also ab
+REM  dem zweiten Start, und beim USB-Stick ab dem ersten.
+REM
+REM  Wer aus einem offenen Fenster heraus startet und mitlesen
+REM  will, haengt das Wort einfach selbst an:  START.bat minimiert
+REM ================================================================
+if /i "%~1"=="minimiert"                 goto :fenster_steht
+if not exist "%~dp0node_modules\express" goto :fenster_steht
+if exist "%~dp0node\node.exe"            goto :minimieren
+where node >nul 2>nul
+if errorlevel 1 goto :fenster_steht
+
+:minimieren
+start "Amateurfunk-Trainer" /min "%~f0" minimiert
+exit /b
+
+:fenster_steht
+
+
 echo ============================================================
 echo   Amateurfunk Pruefungstrainer - Server startet
 echo   Der Server laeuft zunaechst NUR lokal auf diesem PC.
@@ -274,7 +309,11 @@ echo.
 echo   (Wer den Tunnel schon beim Start moechte, nutzt START_MIT_TUNNEL.bat)
 echo.
 
-start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul http://localhost:3000 && start http://localhost:3000 && exit /b) || timeout /t 1 /nobreak >nul"
+REM Der Browser wird jetzt vom Server selbst geoeffnet, sobald er wirklich
+REM bereit ist - siehe browserOeffnen() in Server.js. Hier stand bis zum
+REM 28.08.2026 eine Zeile, die dafuer ein zweites Fenster aufmachte und
+REM zwanzig Sekunden lang per curl nachfragte.
+set "AFU_BROWSER=1"
 
 REM Server starten (blockierend)
 "%NODE_EXE%" Server.js

@@ -2930,7 +2930,59 @@ try{
   server=http.createServer(app);
 }
 
+// ================================================================
+// DEN BROWSER AUFMACHEN
+// ================================================================
+// Bis zum 28.08.2026 machte das START.bat - mit einer Zeile, die ein
+// ZWEITES Eingabeaufforderungsfenster oeffnete und darin bis zu zwanzig
+// Sekunden lang per curl fragte, ob der Server schon da ist.
+//
+// Zwei Fenster fuer einen Trainer sind eines zu viel. Und das Pollen war
+// ohnehin nur ein Umweg um die Frage "ist der Server bereit?" - die hier
+// niemand stellen muss: An dieser Stelle IST er bereit, listen() hat
+// gerade zurueckgemeldet.
+//
+// Nur auf ausdrueckliche Bitte (AFU_BROWSER=1), damit "node Server.js"
+// von Hand nicht ungefragt einen Browser aufreisst - dieselbe Regel wie
+// beim Tunnel (AFU_TUNNEL=1, Fix K2).
+function browserOeffnen(url){
+  // Ein Kindprozess, der sich nicht starten laesst, meldet das ueber ein
+  // 'error'-Ereignis. Hoert dort niemand zu, wirft Node die Ausnahme in
+  // die Ereignisschleife - und der Server waere wegen eines nicht
+  // geoeffneten Browsers beendet. Deshalb bekommt jeder Versuch einen
+  // Zuhoerer.
+  const starte = (befehl, args) => {
+    const k = spawn(befehl, args, { detached:true, stdio:'ignore', windowsHide:true });
+    k.on('error', e => {
+      console.warn('[START] Der Browser liess sich nicht oeffnen:', e.message);
+      console.warn('[START] Bitte von Hand aufrufen: ' + url);
+    });
+    k.unref();
+  };
+  try{
+    if(process.platform === 'win32'){
+      // "start" ist ein eingebauter Befehl der Eingabeaufforderung, kein
+      // Programm - deshalb ueber cmd. Der leere Parameter davor ist der
+      // Fenstertitel: Ohne ihn haelt start eine Adresse in
+      // Anfuehrungszeichen faelschlich fuer den Titel und oeffnet nichts.
+      // windowsHide: kein aufblitzendes schwarzes Fenster.
+      starte('cmd', ['/c', 'start', '', url]);
+    }else if(process.platform === 'darwin'){
+      starte('open', [url]);
+    }else{
+      starte('xdg-open', [url]);
+    }
+  }catch(e){
+    console.warn('[START] Der Browser liess sich nicht oeffnen:', e.message);
+    console.warn('[START] Bitte von Hand aufrufen: ' + url);
+  }
+}
+
 server.listen(PORT,'0.0.0.0',async ()=>{
+  // Zuerst der Browser, dann das Uebrige: Der Trainer soll aufgehen,
+  // waehrend im Fenster noch die Tunnel-Zeilen durchlaufen.
+  if(process.env.AFU_BROWSER === '1') browserOeffnen(`http://localhost:${PORT}`);
+
   console.log('[TUNNEL] Prüfe Binary beim Start...');
   const check = checkCloudflaredExists();
   console.log('[TUNNEL] Binary-Check:', check);

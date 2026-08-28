@@ -2,6 +2,7 @@
 title Amateurfunk Trainer - Server + Tunnel sofort
 cd /d "%~dp0"
 
+
 echo ============================================================
 echo   Amateurfunk Pruefungstrainer
 echo   Server + Cloudflare-Tunnel werden SOFORT gestartet.
@@ -142,7 +143,11 @@ echo.
 echo Starte Server mit Tunnel ...
 echo.
 
-start "" cmd /c "for /l %%i in (1,1,20) do (curl -s -o nul http://localhost:3000 && start http://localhost:3000 && exit /b) || timeout /t 1 /nobreak >nul"
+REM Der Browser wird jetzt vom Server selbst geoeffnet, sobald er wirklich
+REM bereit ist - siehe browserOeffnen() in Server.js. Hier stand bis zum
+REM 28.08.2026 eine Zeile, die dafuer ein zweites Fenster aufmachte und
+REM zwanzig Sekunden lang per curl nachfragte.
+set "AFU_BROWSER=1"
 
 REM AFU_TUNNEL=1 schaltet den Auto-Start des Tunnels ein (siehe Fix K2 in BUG_REPORT.md)
 set AFU_TUNNEL=1
