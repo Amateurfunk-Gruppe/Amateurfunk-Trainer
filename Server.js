@@ -1178,6 +1178,11 @@ const PAKET_DATEIEN = [
   // Empfaenger sie sich sonst in zwei Minuten selbst holt, waere
   // schlechter Tausch. Die beiden kleinen Dateien genuegen.
   'Node-Holen.bat', 'node_holen.ps1',
+  // Symbol und Verknuepfung: Wer den Trainer auf einem Stick bekommt,
+  // soll ihn mit einem Doppelklick vom Desktop starten koennen - und
+  // zwar mit dem Funkgeraet statt des grauen Zahnrads, das Windows
+  // fuer .bat-Dateien zeigt.
+  'icon.ico', 'icon.png', 'Verknuepfung-Erstellen.bat', 'verknuepfung.ps1',
   // USB-Stick-Erstellen gehoert AUSDRUECKLICH mit ins Paket. Anders als
   // Hochladen.bat ist das kein Werkzeug nur fuer den Entwickler: Wer den
   // Trainer an einer VHS oder im Ortsverband einsetzt, will Sticks

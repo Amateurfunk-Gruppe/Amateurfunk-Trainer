@@ -2892,3 +2892,78 @@ Die drei stehen jetzt in der RAUS-Liste von github_ausmisten.js. Sie
 bleiben auf Dietmars Platte liegen, nur das Repository fuehrt sie nicht
 mehr. Die Ueberschrift der Ausgabe ist mitgewandert - "Entwicklerwerkzeuge"
 stimmte fuer eine falsche Anleitung und eine Tondatei nicht mehr.
+
+### Ein Symbol auf dem Desktop
+
+Dietmar hat eine icon.png in den Ordner gelegt - ein Funkgeraet mit
+Mikrofon - und wollte eine Desktop-Verknuepfung zu START.bat, die dieses
+Bild traegt.
+
+**Zwei Dinge, an denen es sonst gescheitert waere:**
+
+**Windows nimmt fuer Verknuepfungen keine .png.** Sie wird stumm
+ignoriert; man sieht weiter das graue Zahnrad und sucht den Fehler an der
+falschen Stelle. Also erst eine `icon.ico` gebaut - mit acht Groessen von
+16 bis 256 Pixeln, damit sie in der Detailansicht genauso sauber aussieht
+wie bei grossen Symbolen. Die Vorlage hat 96 Pixel; deshalb wird zuerst
+auf 256 hochgerechnet und von dort heruntergestuft, sonst wuerden die
+kleinen Groessen fransig. Die 32er-Fassung nachgesehen: Mikrofon und
+Geraet sind noch klar zu erkennen.
+
+**Und ein Fehler in meinem eigenen Entwurf, den ich vor dem Ausliefern
+gefunden habe:** Ich hatte den Fragezeichen-Operator benutzt
+(`$a ? 'x' : 'y'`). Den gibt es erst ab PowerShell 7 - Windows startet mit
+`powershell` aber die Fassung 5.1, und die waere mit einem Syntaxfehler
+stehengeblieben, bevor ueberhaupt etwas passiert. Ersetzt durch ein
+schlichtes if/else. Genau dieselbe Falle wie damals das englische
+"LISTENING" in einer deutschen netstat-Ausgabe: Es laeuft auf meinem
+Pruefstand und nirgends sonst.
+
+Neu sind `Verknuepfung-Erstellen.bat` und `verknuepfung.ps1`. Die
+Verknuepfung wird ueber WScript.Shell angelegt - dieselbe Schnittstelle,
+die auch der Explorer benutzt; eine .lnk von Hand zu schreiben waere
+unnoetig heikel. Gesetzt werden Ziel, Arbeitsordner (sonst sucht START.bat
+im falschen Verzeichnis) und das Symbol. Das Werkzeug laesst sich jederzeit
+erneut ausfuehren - nach einem Umzug des Ordners zeigt die Verknuepfung
+danach wieder richtig.
+
+**Es geht mit auf den Stick.** icon.ico, icon.png und die beiden Dateien
+stehen jetzt in der Paketliste, und in der ANLEITUNG-USB.txt steht der
+Hinweis darauf. Wer den Trainer im Ortsverband auf einem Stick bekommt,
+kann ihn damit auf seinem Desktop ablegen - mit dem Funkgeraet statt eines
+Zahnrads. Fuer eine Lernsoftware, die man ueber Wochen taeglich oeffnet,
+ist das mehr als Kosmetik.
+
+## 28.08.2026 - Nach dem Deinstallieren stand Hochladen.bat still
+
+Dietmars Ausgabe:
+
+    Der Befehl ""node"" ist entweder falsch geschrieben oder
+    konnte nicht gefunden werden.
+
+Nachgesehen: Node.js ist deinstalliert, und `node\` gibt es in
+Klasse-N-Trainer nicht. Die Meldung stimmte also - nur half sie niemandem.
+
+**Der Fehler war meine halbe Loesung von gestern.** Ich hatte den
+Werkzeugen beigebracht, `node\node.exe` zu BEVORZUGEN, wenn es da ist.
+Ist es nicht da, brachen sie ab. START.bat und USB-Stick-Erstellen.bat
+holen Node dagegen selbst. Dieselbe Inkonsequenz wie schon einmal, nur
+eine Ebene tiefer - und diesmal an der teuersten Stelle: beim Hochladen.
+
+Alle sieben Werkzeuge holen Node jetzt selbst, wenn keines da ist:
+
+    Hochladen.bat        GitHub-Ausmisten.bat    GitHub-Pruefen.bat
+    Aufraeumen.bat       Stimmen_packen.bat      Update-Pruefen.bat
+    Fehler-Zeigen.bat
+
+Zum Holen wird kein Node gebraucht - node_holen.ps1 ist PowerShell.
+Klappt auch das nicht (kein Internet), steht das da, samt dem Weg von
+Hand. Ein Abbruch mit Erklaerung, nicht mit einer Zeile aus cmd.
+
+**Merkposten fuer mich:** "Bevorzugen, wenn vorhanden" und "holen, wenn
+noetig" sind zwei verschiedene Dinge. Ich hatte das erste eingebaut und
+das zweite gemeint - und es faellt erst auf, wenn der Fall wirklich
+eintritt. Bei Dietmar ist er heute eingetreten.
+
+Die Dateien liegen auch im Ordner Mitnehmen\, damit sie den geplanten
+Umzug ueberstehen.

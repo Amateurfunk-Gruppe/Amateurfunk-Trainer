@@ -88,6 +88,11 @@ const DATEIEN = [
   // ANLEITUNG.txt, auf dem Stick die ANLEITUNG-USB.txt.
   'START.bat', 'piper.bat',
   'Node-Holen.bat', 'node_holen.ps1',
+  // Symbol und Verknuepfung: Wer den Trainer auf einem Stick bekommt,
+  // soll ihn mit einem Doppelklick vom Desktop starten koennen - und
+  // zwar mit dem Funkgeraet statt des grauen Zahnrads, das Windows
+  // fuer .bat-Dateien zeigt.
+  'icon.ico', 'icon.png', 'Verknuepfung-Erstellen.bat', 'verknuepfung.ps1',
   'USB-Stick-Erstellen.bat', 'usb_erstellen.js',
 ];
 const PDF_MUSTER = [/^hilfsmittel.*\.pdf$/i, /^formelsammlung.*\.pdf$/i, /^pruefungsfragen.*\.pdf$/i];
@@ -630,6 +635,11 @@ function pruefeListe() {
       'Beim ersten Start dauert es einen Moment, dann oeffnet sich der',
       'Trainer von selbst im Browser. Zum Beenden das schwarze Fenster',
       'schliessen.',
+      '',
+      'LIEBER EIN SYMBOL AUF DEM DESKTOP?',
+      '  Doppelklick auf   Verknuepfung-Erstellen.bat',
+      '  Danach liegt "Amateurfunk-Trainer" mit einem Funkgeraet-Symbol',
+      '  auf deinem Desktop und startet von dort.',
       '',
       '----------------------------------------------------------------',
       'DEIN LERNSTAND',
