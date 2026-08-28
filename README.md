@@ -120,26 +120,37 @@ aus demselben Fragenkatalog, sie können sich also nicht widersprechen.
 
 ### Aktuell bleiben — ohne etwas kaputtzumachen
 
-Der Trainer sagt beim Start selbst Bescheid, wenn hier auf GitHub etwas Neues
-liegt. Geholt wird nichts von allein: Ein Balken meldet es, das Fenster unter
-**Info → GitHub-Update** zeigt, worum es geht, und erst ein Klick auf
-„Ausgewählte holen" ändert etwas im Ordner.
+Der Trainer sieht beim Start selbst nach, ob hier auf GitHub etwas Neues
+liegt. **Unterbrochen wird dabei nichts** — kein Fenster springt auf, kein
+Balken legt sich über die Seite. Stattdessen wird der **Info**-Knopf oben
+rechts zum **Update**-Knopf: anderer Name, andere Farbe, und er blinkt.
+Dazu spielt einmal ein kurzer Ton.
 
-![Das Fenster „Update von GitHub"](bilder/08-updater.png)
+![Der Update-Knopf und das Fenster dahinter](bilder/08-updater.png)
 
-Drei Dinge sind daran wichtig:
+Ein Klick darauf öffnet ein kleines Fenster mit genau zwei Möglichkeiten:
+**Installieren** oder **Verwerfen**.
 
+- **Keine Liste zum Ankreuzen.** Es gab sie einmal, und sie war ein Fehler:
+  Eine Liste mit Kästchen sieht nach freier Auswahl aus, aber an den
+  Dateinamen kann niemand ablesen, welche Kombination heil ist — `Server.js`
+  ohne `github_update.js` zum Beispiel ist keine. Alles oder nichts ist die
+  einzige Auswahl, bei der nichts Halbes entstehen kann. Welche Dateien es
+  betrifft, steht weiterhin da — zugeklappt, zum Nachsehen, nicht zum
+  Auswählen.
 - **Eigene Änderungen werden nie überschrieben.** Der Trainer merkt sich, wie
-  jede Datei aussah, als sie zuletzt mit GitHub gleich war. Eine Datei, die
-  seither hier geändert wurde, steht im grünen Kasten — sie lässt sich gar
-  nicht erst anhaken. Ein Fingerabdruck sagt nämlich nur, *dass* zwei Dateien
-  verschieden sind, nicht welche die neuere ist.
-- **Programmdateien brauchen eine eigene Bestätigung.** `Server.js`,
-  `hoerbuch.js` und `lame.js` laufen mit vollen Rechten auf dem Rechner und
-  sind deshalb nie vorangehakt.
+  jede Datei aussah, als sie zuletzt mit GitHub gleich war. Was seither hier
+  geändert wurde, bleibt unangetastet und wird im Fenster genannt. Ein
+  Fingerabdruck sagt nämlich nur, *dass* zwei Dateien verschieden sind, nicht
+  welche die neuere ist.
 - **Die alte Fassung wandert vorher nach `backup/`**, und jede geholte Datei
   wird vor dem Schreiben nachgerechnet. Ein abgebrochener Download kommt so
-  nie im Ordner an.
+  nie im Ordner an. Der Lernstand in `data/` wird nie angefasst.
+- **Verwerfen merkt sich nichts.** Beim nächsten Start meldet es sich wieder.
+  Vergessen kann man ein Update damit nicht, wegklicken jederzeit.
+
+Sind Programmdateien dabei (`Server.js`, `hoerbuch.js`, `lame.js`), sagt das
+Fenster es vorher und weist danach auf den nötigen Neustart hin.
 
 ## Loslegen
 

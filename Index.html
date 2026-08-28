@@ -5980,61 +5980,188 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 //
 // WAS HIER ANDERS IST ALS BEIM ABGLEICH:
 // Der Abgleich fragt "ist der Inhalt verschieden?" und bietet alles an, was
-// abweicht. Fuer Dietmar waere das falsch herum: er bekommt neue Dateien
-// direkt in den Ordner, oft Stunden bevor sie bei GitHub liegen. Sein
-// Trainer wuerde ihm die frische Arbeit durch die aeltere Fassung von
+// abweicht. Fuer den Entwickler waere das falsch herum: er bekommt neue
+// Dateien direkt in den Ordner, oft Stunden bevor sie bei GitHub liegen.
+// Sein Trainer wuerde ihm die frische Arbeit durch die aeltere Fassung von
 // GitHub ersetzen.
 //
 // Deshalb kennt der Server hier drei Lagen statt zwei:
-//   neuer_dort  - dort hat sich etwas getan     -> anbieten
-//   neuer_hier  - HIER hat sich etwas getan     -> anzeigen, aber sperren
-//   unbekannt   - nie abgeglichen, keine Aussage -> anbieten, markiert
+//   neuer_dort  - dort hat sich etwas getan      -> holen
+//   neuer_hier  - HIER hat sich etwas getan      -> nennen, nie anfassen
+//   unbekannt   - nie abgeglichen, keine Aussage -> holen, markiert
 //
-// "neuer_hier" bekommt hier bewusst kein Kaestchen zum Ankreuzen. Nicht
-// ausgegraut mit Erklaerung im Kleingedruckten, sondern gar nicht erst da.
+// ---------------------------------------------------------------
+// WIE ES SICH MELDET - neu gebaut am 28.08.2026
+// ---------------------------------------------------------------
+// Vorher: Beim Start sprang ein Fenster auf oder legte sich ein Balken
+// ueber den Seitenkopf, und darin stand eine Liste mit Kaestchen zum
+// Ankreuzen. Dietmar dazu: "Hier ballert man sich schnell was kaputt wenn
+// man alles auswaehlt."
+//
+// Er hat recht, und der Grund ist nicht Unachtsamkeit. Eine Liste mit
+// Kaestchen SIEHT nach freier Auswahl aus, aber an den Dateinamen kann
+// niemand ablesen, welche Kombination heil ist: Server.js ohne
+// github_update.js zum Beispiel ist keine. Wer waehlen darf, waehlt
+// irgendwann falsch - und merkt es erst, wenn der Trainer nicht startet.
+//
+// Jetzt: beim Start kein Fenster, kein Balken, keine Unterbrechung. Der
+// Info-Knopf oben rechts wird zum blinkenden Update-Knopf, und einmal
+// spielt sounds/update.mp3. Erst ein Klick darauf oeffnet ein kleines
+// Fenster mit genau zwei Moeglichkeiten: installieren oder verwerfen.
+// Alles oder nichts ist die einzige Auswahl, bei der nichts Halbes
+// entstehen kann.
+//
+// "Verwerfen" merkt sich absichtlich nichts. Beim naechsten Start meldet
+// es sich wieder - genau so gewuenscht. Vergessen kann man es damit nicht,
+// wegklicken jederzeit.
 // ================================================================
 let githubDaten = null;
-
-// Wurde das Fenster von selbst geoeffnet (Start-Nachschau) oder von Hand
-// (Info -> GitHub-Update)? Davon haengt ab, was beim Schliessen passiert:
-// Was man selbst geoeffnet hat, will man nicht als "spaeter" gewertet sehen.
-let githubVonSelbst = false;
-
-const GITHUB_AUTO_AUS  = 'amateurfunk_githubAutoAus';   // gar nicht von selbst fragen
-const GITHUB_GEMELDET  = 'amateurfunk_githubGemeldet';  // dieser Stand wurde schon gezeigt
-
-function githubAutoErlaubt(){
-    try{ return localStorage.getItem(GITHUB_AUTO_AUS) !== '1'; }catch(e){ return true; }
-}
-function githubAutoSchalten(an){
-    try{
-        if(an) localStorage.removeItem(GITHUB_AUTO_AUS);
-        else   localStorage.setItem(GITHUB_AUTO_AUS, '1');
-    }catch(e){}
-    githubPruefen();   // Fenster neu zeichnen, damit die Zeile unten stimmt
-}
-window.githubAutoSchalten = githubAutoSchalten;
-
-// Schliessen. Kam das Fenster von selbst, gilt das als "spaeter": Dieser
-// Stand wird nicht noch einmal von allein aufgeschlagen. Beim naechsten
-// Update bei GitHub aendert sich der Commit - dann fragt es wieder.
-function githubSchliessen(){
-    const m = document.getElementById('githubModal');
-    if(m) m.style.display = 'none';
-    if(githubVonSelbst && githubDaten && githubDaten.commit){
-        try{ localStorage.setItem(GITHUB_GEMELDET, githubDaten.commit); }catch(e){}
-    }
-    githubVonSelbst = false;
-}
-window.githubSchliessen = githubSchliessen;
+let githubHolbar = [];     // Namen, die geholt werden, wenn man installiert
+let githubProgramm = [];   // davon die Programmdateien - nur fuer den Hinweistext
 
 // Rohdateien des Repositorys. Nur hier, damit ein umbenanntes Repository
 // nicht an mehreren Stellen nachgezogen werden muss.
 const GITHUB_ROH = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
 
+// ---------------------------------------------------------------
+// DER KNOPF OBEN RECHTS
+// ---------------------------------------------------------------
+// Er heisst normalerweise "Info". Liegt ein Update bereit, wird er zum
+// Update-Knopf: anderer Name, andere Farbe, und er blinkt. Der alte
+// Zustand wird gemerkt, damit "Verwerfen" ihn unveraendert zurueckgeben
+// kann - auch das Tooltip, sonst steht dort spaeter die falsche Erklaerung.
+// ---------------------------------------------------------------
+let updateKnopfAlt = null;
 
-async function githubOeffnen(vonSelbst){
-    githubVonSelbst = !!vonSelbst;
+function updateBlinkenEinrichten(){
+    if(document.getElementById('updateBlinkStil')) return;
+    const s = document.createElement('style');
+    s.id = 'updateBlinkStil';
+    // Ein Puls, kein hartes Blinken: Der Knopf soll auffallen, ohne dass
+    // man wegsehen muss. Wer im Betriebssystem "Bewegung reduzieren"
+    // eingestellt hat, bekommt ihn ruhig - das ist keine Kuer, fuer
+    // manche Menschen ist blinkende Bewegung ein echtes Problem.
+    s.textContent =
+        '@keyframes updatePuls{'
+      + '0%,100%{box-shadow:0 0 0 0 rgba(200,90,30,0.55);}'
+      + '55%{box-shadow:0 0 0 8px rgba(200,90,30,0);}}'
+      + '.update-blinkt{animation:updatePuls 1.4s ease-in-out infinite;}'
+      + '@media (prefers-reduced-motion: reduce){.update-blinkt{animation:none;'
+      + 'outline:2px solid rgba(200,90,30,0.8); outline-offset:2px;}}';
+    document.head.appendChild(s);
+}
+
+function updateKnopfAn(){
+    const b = document.getElementById('infoBtn');
+    if(!b || updateKnopfAlt) return;
+    updateBlinkenEinrichten();
+    updateKnopfAlt = {
+        html: b.innerHTML,
+        bg:   b.style.background,
+        tip:  b.getAttribute('data-tooltip') || ''
+    };
+    b.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Update';
+    b.style.background = '#c05621';
+    b.setAttribute('data-tooltip', 'Es liegt ein Update bereit — anklicken');
+    b.setAttribute('onclick', 'githubOeffnen()');
+    b.classList.add('update-blinkt');
+}
+
+function updateKnopfAus(){
+    const b = document.getElementById('infoBtn');
+    if(!b || !updateKnopfAlt) return;
+    b.innerHTML = updateKnopfAlt.html;
+    b.style.background = updateKnopfAlt.bg;
+    b.setAttribute('data-tooltip', updateKnopfAlt.tip);
+    b.setAttribute('onclick', 'infoOeffnen()');
+    b.classList.remove('update-blinkt');
+    updateKnopfAlt = null;
+}
+
+// ---------------------------------------------------------------
+// DER TON
+// ---------------------------------------------------------------
+// Einmal, nie zweimal. Browser lassen Ton erst zu, wenn jemand die Seite
+// angefasst hat - beim Start ist das nicht der Fall, und play() wird
+// abgelehnt. Statt das hinzunehmen (der Ton faellt dann stumm aus, ohne
+// dass es jemand merkt) wird beim ersten Klick oder Tastendruck
+// nachgeholt.
+// ---------------------------------------------------------------
+let updateTonGespielt = false;
+
+function updateTonSpielen(){
+    if(updateTonGespielt) return;
+    updateTonGespielt = true;
+    try{
+        const a = new Audio('sounds/update.mp3');
+        a.volume = 0.55;
+        const p = a.play();
+        if(p && p.catch) p.catch(()=>{
+            const nachholen = ()=>{
+                window.removeEventListener('pointerdown', nachholen);
+                window.removeEventListener('keydown', nachholen);
+                try{ a.currentTime = 0; const q = a.play(); if(q && q.catch) q.catch(()=>{}); }catch(e){}
+            };
+            window.addEventListener('pointerdown', nachholen);
+            window.addEventListener('keydown', nachholen);
+        });
+    }catch(e){}
+}
+
+// ---------------------------------------------------------------
+// DIE NACHSCHAU BEIM START
+// ---------------------------------------------------------------
+// Der Server sieht kurz nach dem Start bei GitHub nach. Was dabei
+// herauskam, holt sich diese Seite ab. Sie oeffnet nichts und legt sich
+// ueber nichts - sie setzt nur den Knopf und spielt einmal den Ton.
+//
+// versuch: Der Server ist unter Umstaenden noch nicht fertig, wenn diese
+// Seite schon steht. Dann steht in letzteLage noch nichts, und es wird in
+// Ruhe nachgefasst - dreimal, dann ist gut.
+// ---------------------------------------------------------------
+async function githubStartNachschau(versuch){
+    if(!laeuftLokal()) return;
+    versuch = versuch || 1;
+    let j = null;
+    try{
+        const res = await fetch('/api/github/stand', {cache:'no-store'});
+        if(!res.ok) return;
+        j = await res.json();
+    }catch(e){ return; }
+
+    const l = j && j.letzteLage;
+    if(!l){
+        if(versuch < 4) setTimeout(()=>{ githubStartNachschau(versuch + 1); }, 8000);
+        return;
+    }
+    // Kein Netz, GitHub bremst, Repository umbenannt: still bleiben. Eine
+    // Fehlermeldung beim Start hilft niemandem - wer nachsehen will,
+    // findet es unter Info.
+    if(l.fehler) return;
+    if(!l.anzahl) return;
+
+    updateKnopfAn();
+    updateTonSpielen();
+}
+window.githubStartNachschau = githubStartNachschau;
+// Alter Name aus der Zeit des Start-Fensters. Es kann noch irgendwo
+// gerufen werden - dann soll es das Richtige tun statt zu scheitern.
+window.githubAutoAngebot = githubStartNachschau;
+
+// ---------------------------------------------------------------
+// DAS KLEINE FENSTER
+// ---------------------------------------------------------------
+function githubSchliessen(){
+    const m = document.getElementById('githubModal');
+    if(m) m.style.display = 'none';
+    // Zumachen heisst verwerfen - und verwerfen heisst: der Knopf ist
+    // wieder der Info-Knopf. Gemerkt wird nichts; beim naechsten Start
+    // meldet es sich wieder.
+    updateKnopfAus();
+}
+window.githubSchliessen = githubSchliessen;
+
+async function githubOeffnen(){
     let modal = document.getElementById('githubModal');
     if(!modal){
         modal = document.createElement('div');
@@ -6042,12 +6169,12 @@ async function githubOeffnen(vonSelbst){
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
             + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML =
-            '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:660px; width:96%; '
-            + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
-            + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem;">'
-            + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
-            + '<i class="fab fa-github"></i> Update von GitHub</h3>'
-            + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
+            '<div style="background:#fff; border-radius:16px; padding:1.15rem 1.25rem; max-width:430px; width:96%; '
+            + 'max-height:86vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+            + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.7rem;">'
+            + '<h3 style="flex:1; margin:0; font-size:1rem; color:var(--panel-navy);">'
+            + '<i class="fas fa-cloud-arrow-down"></i> Update</h3>'
+            + '<button type="button" class="btn btn-outline" style="padding:3px 9px;" '
             + 'onclick="githubSchliessen()">&#10005;</button></div>'
             + '<div id="githubInhalt"></div></div>';
         document.body.appendChild(modal);
@@ -6062,7 +6189,7 @@ async function githubPruefen(){
     const ziel = document.getElementById('githubInhalt');
     if(!ziel) return;
     if(!laeuftLokal()){
-        ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
+        ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.85rem 0.95rem; font-size:0.85rem; line-height:1.6;">'
             + '<b>Das hier ist der Trainer des Entwicklers.</b><br>'
             + 'Ein Update schreibt Dateien in <i>deinen</i> Ordner. Dafür musst du deinen eigenen Trainer '
             + 'öffnen: <span style="font-family:var(--font-mono); background:#eef4fc; padding:1px 6px; border-radius:6px;">http://localhost:3000</span>'
@@ -6079,32 +6206,23 @@ async function githubPruefen(){
         let j = null;
         try{ j = JSON.parse(roh); }catch(e2){ j = null; }
         if(res.status === 404 || (j === null && /not found/i.test(roh))){
-            ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.9rem 1rem; font-size:0.86rem; line-height:1.6;">'
+            ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.85rem 0.95rem; font-size:0.85rem; line-height:1.6;">'
                 + '<b>Dein Trainer-Programm ist älter als diese Funktion.</b><br>'
-                + 'Die Anzeige wurde beim Abgleich mit dem Entwickler erneuert, das Programm '
-                + '(<span style="font-family:var(--font-mono);">Server.js</span>) aber nicht — '
-                + 'Programmdateien werden absichtlich nie automatisch ersetzt, weil sie mit vollen '
-                + 'Rechten auf deinem Rechner laufen.'
+                + 'Die Anzeige wurde erneuert, das Programm '
+                + '(<span style="font-family:var(--font-mono);">Server.js</span>) aber nicht.'
                 + '</div>'
-                + '<div style="margin-top:0.9rem; font-size:0.86rem; line-height:1.7;">'
+                + '<div style="margin-top:0.8rem; font-size:0.85rem; line-height:1.7;">'
                 + '<b>Der kürzeste Weg — zwei Dateien von GitHub:</b><br>'
-                + 'Die beiden Links anklicken, jeweils mit <i>Rechtsklick &rarr; Speichern unter</i> '
-                + 'in deinen Trainer-Ordner legen (vorhandene ersetzen), dann '
+                + 'Beide Links mit <i>Rechtsklick &rarr; Speichern unter</i> in deinen '
+                + 'Trainer-Ordner legen (vorhandene ersetzen), dann '
                 + '<span style="font-family:var(--font-mono);">START.bat</span> neu starten.'
-                + '<div style="margin-top:0.5rem; font-family:var(--font-mono); font-size:0.78rem; line-height:1.9;">'
+                + '<div style="margin-top:0.45rem; font-family:var(--font-mono); font-size:0.78rem; line-height:1.9;">'
                 + '<a href="' + GITHUB_ROH + 'Server.js" target="_blank" rel="noopener">Server.js</a><br>'
                 + '<a href="' + GITHUB_ROH + 'github_update.js" target="_blank" rel="noopener">github_update.js</a>'
                 + '</div>'
-                + '<div style="margin-top:0.5rem; font-size:0.78rem; color:var(--muted);">'
-                + 'Dein Lernstand liegt im Ordner <span style="font-family:var(--font-mono);">data/</span> '
+                + '<div style="margin-top:0.45rem; font-size:0.78rem; color:var(--muted);">'
+                + 'Dein Lernstand liegt in <span style="font-family:var(--font-mono);">data/</span> '
                 + 'und wird dabei nicht angefasst.</div>'
-                + '</div>'
-                + '<div style="margin-top:0.9rem; font-size:0.86rem; line-height:1.7; '
-                + 'border-top:1px solid var(--line); padding-top:0.7rem;">'
-                + '<b>Oder über den Entwickler</b> — nötig nur, wenn er etwas geändert hat, '
-                + 'das noch nicht bei GitHub liegt: Info &rarr; <b>Beim Entwickler nach Neuerungen sehen</b>, '
-                + 'dort die Programmdateien anhaken und ausdrücklich bestätigen. Sein Trainer muss '
-                + 'dafür gerade laufen, und die Tunnel-Adresse ändert sich bei jedem Neustart.'
                 + '</div>';
             return;
         }
@@ -6124,257 +6242,141 @@ function githubZeigen(j){
     const ziel = document.getElementById('githubInhalt');
     if(!ziel) return;
     const alle = j.eintraege || [];
-    const holbar = alle.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
+    const holbar   = alle.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
     const gesperrt = alle.filter(e => e.lage === 'neuer_hier');
 
-    let html = '';
+    githubHolbar   = holbar.map(e => e.name);
+    githubProgramm = holbar.filter(e => e.art === 'programm').map(e => e.name);
 
-    // Kam das Fenster von selbst hoch, steht zuerst da, WARUM es da ist und
-    // dass noch nichts passiert ist. Sonst steht man vor einer Liste und
-    // weiss nicht, ob der Trainer schon etwas getan hat.
-    if(githubVonSelbst && (holbar.length || gesperrt.length)){
-        html += '<div style="border:1px solid #9ec5e8; background:#eef4fc; border-radius:12px; '
-            + 'padding:0.85rem 1rem; margin-bottom:0.9rem; font-size:0.88rem; line-height:1.6; color:#0f2745;">'
-            + '<b>Es gibt Neuerungen bei GitHub.</b><br>'
-            + 'Der Trainer hat beim Start von selbst nachgesehen. <b>Geändert wurde noch nichts</b> — '
-            + 'erst ein Klick auf „Ausgewählte holen" schreibt etwas in deinen Ordner.'
-            + '</div>';
-    }
-
-    html += '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.8rem;">'
+    const quelle = '<div style="margin-top:0.9rem; border-top:1px solid var(--line); padding-top:0.5rem; '
+        + 'font-size:0.72rem; color:var(--muted); line-height:1.5;">'
         + 'Quelle: <span style="font-family:var(--font-mono);">' + j.quelle.replace(/^https:\/\//,'') + '</span>'
-        + (j.zuletzt ? ' · zuletzt abgeglichen ' + j.zuletzt.replace('T',' ').slice(0,16) : ' · noch nie abgeglichen')
+        + (j.zuletzt ? '<br>zuletzt abgeglichen ' + j.zuletzt.replace('T',' ').slice(0,16) : '<br>noch nie abgeglichen')
         + '</div>';
 
-    const fussZeile = '<div style="margin-top:1rem; border-top:1px solid var(--line); padding-top:0.6rem; '
-        + 'font-size:0.76rem; color:var(--muted); line-height:1.6;">'
-        + (githubAutoErlaubt()
-            ? 'Der Trainer sieht beim Start von selbst nach und fragt, wenn es etwas gibt. '
-              + '<a href="#" style="color:var(--muted);" onclick="githubAutoSchalten(false); return false;">Nicht mehr von selbst fragen</a> '
-              + '— dann erscheint nur noch ein schmaler Hinweis oben.'
-            : 'Die Nachschau beim Start ist <b>ausgeschaltet</b>. Es erscheint nur ein schmaler Hinweis oben. '
-              + '<a href="#" style="color:var(--muted);" onclick="githubAutoSchalten(true); return false;">Wieder von selbst fragen lassen</a>')
-        + '</div>';
-
-    if(!holbar.length && !gesperrt.length){
-        html += '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.9rem 1rem; font-size:0.88rem;">'
-            + '<b>Alles auf demselben Stand.</b> Es gibt nichts zu holen.</div>';
-        ziel.innerHTML = html + fussZeile;
+    if(!holbar.length){
+        ziel.innerHTML = '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; '
+            + 'padding:0.85rem 0.95rem; font-size:0.88rem;">'
+            + '<b>Alles auf demselben Stand.</b> Es gibt nichts zu holen.</div>'
+            + '<div style="margin-top:0.9rem;"><button type="button" class="btn btn-outline" '
+            + 'style="padding:6px 14px;" onclick="githubSchliessen()">Schließen</button></div>'
+            + quelle;
         return;
     }
 
-    if(holbar.length){
-        html += '<div style="font-size:0.86rem; font-weight:700; color:var(--panel-navy); margin-bottom:0.5rem;">'
-            + 'Bei GitHub neuer:</div>';
-        holbar.forEach(e => {
-            const prog = e.art === 'programm';
-            html += '<label style="display:flex; align-items:flex-start; gap:9px; padding:0.5rem 0.7rem; '
-                + 'border:1px solid var(--line); border-radius:10px; margin-bottom:0.4rem; cursor:pointer; background:#fff;">'
-                + '<input type="checkbox" class="ghDatei" value="' + e.name + '" data-art="' + e.art + '" '
-                + (prog ? '' : 'checked ') + 'style="margin-top:3px; width:16px; height:16px; cursor:pointer;">'
-                + '<span style="flex:1;">'
-                + '<span style="font-family:var(--font-mono); font-size:0.83rem; color:var(--ink);">' + e.name + '</span>'
-                + (prog ? ' <span style="font-size:0.7rem; background:#fdf1e0; color:#8a6d00; padding:1px 7px; border-radius:8px; font-weight:700;">Programmdatei</span>' : '')
-                + (e.lage === 'fehlt' ? ' <span style="font-size:0.7rem; background:#eef4fc; color:#0f2745; padding:1px 7px; border-radius:8px;">fehlt hier</span>' : '')
-                + (e.lage === 'unbekannt' ? ' <span style="font-size:0.7rem; background:#eef4fc; color:#0f2745; padding:1px 7px; border-radius:8px;">nie abgeglichen</span>' : '')
-                + '<span style="display:block; font-size:0.74rem; color:var(--muted); margin-top:2px;">'
-                + (e.hierGroesse === null ? 'hier nicht vorhanden' : 'hier ' + e.hierGroesse + ' Bytes')
-                + ' · bei GitHub ' + e.fernGroesse + ' Bytes</span>'
-                + '</span></label>';
-        });
+    let html = '';
+
+    html += '<div style="font-size:0.95rem; line-height:1.6; color:var(--ink);">'
+        + '<b>Es gibt ein Update.</b><br>'
+        + '<span style="font-size:0.88rem;">' + holbar.length + ' Datei(en) sind bei GitHub neuer als hier.</span>'
+        + '</div>';
+
+    // Was beim Installieren tatsaechlich passiert - VOR dem Knopf, nicht
+    // in einer Rueckfrage danach. Eine Rueckfrage liest niemand mehr, wer
+    // schon geklickt hat, klickt auch die weg.
+    html += '<div style="margin-top:0.7rem; font-size:0.8rem; color:var(--muted); line-height:1.6;">'
+        + 'Die alten Fassungen wandern vorher nach '
+        + '<span style="font-family:var(--font-mono);">backup/</span>. Dein Lernstand in '
+        + '<span style="font-family:var(--font-mono);">data/</span> wird nicht angefasst.'
+        + '</div>';
+
+    if(githubProgramm.length){
+        html += '<div style="margin-top:0.55rem; border:1px solid #e0b25a; background:#fdf1e0; '
+            + 'border-radius:10px; padding:0.55rem 0.7rem; font-size:0.79rem; color:#7a5c00; line-height:1.55;">'
+            + 'Darunter ' + githubProgramm.length + ' Programmdatei(en). '
+            + 'Danach den Trainer einmal neu starten (START.bat).'
+            + '</div>';
     }
 
-    // Die gesperrten Dateien. Sie stehen hier, damit man sieht, dass sie
-    // nicht vergessen wurden - aber ohne Kaestchen, denn ein Kaestchen
-    // waere eine Einladung, genau das Falsche zu tun.
+    // Die hier neueren Dateien. Ein Satz, keine Liste: Sie sind nicht das
+    // Thema dieses Fensters, aber wer sie nicht erwaehnt, laesst den
+    // Verdacht stehen, sie wuerden ueberschrieben.
     if(gesperrt.length){
-        html += '<div style="margin-top:0.9rem; border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.8rem 1rem;">'
-            + '<div style="font-size:0.86rem; font-weight:700; color:#14663a; margin-bottom:0.35rem;">'
-            + '<i class="fas fa-shield-halved"></i> Hier neuer als bei GitHub — bleibt unangetastet</div>'
-            + '<div style="font-size:0.78rem; color:#14663a; line-height:1.55; margin-bottom:0.45rem;">'
-            + 'Diese Dateien wurden hier geändert, seit zuletzt abgeglichen wurde. Ein Update würde '
-            + 'sie auf einen älteren Stand zurückdrehen. Sie lassen sich deshalb nicht anhaken. '
-            + 'Mit <span style="font-family:var(--font-mono);">Hochladen.bat</span> gehen sie zu GitHub.</div>';
-        gesperrt.forEach(e => {
-            html += '<div style="font-family:var(--font-mono); font-size:0.8rem; color:#14663a;">· ' + e.name + '</div>';
-        });
-        html += '</div>';
+        html += '<div style="margin-top:0.55rem; border:1px solid #9ed0b0; background:#e8f6ed; '
+            + 'border-radius:10px; padding:0.55rem 0.7rem; font-size:0.79rem; color:#14663a; line-height:1.55;">'
+            + '<i class="fas fa-shield-halved"></i> ' + gesperrt.length + ' Datei(en) sind <b>hier</b> neuer. '
+            + 'Die bleiben unangetastet.'
+            + '</div>';
     }
 
-    if(holbar.length){
-        html += '<div style="margin-top:1rem; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">'
-            + '<button class="btn-lernstand" onclick="githubAnwenden()"><i class="fas fa-download"></i> Ausgewählte holen</button>'
-            + (githubVonSelbst
-                ? '<button type="button" class="btn btn-outline" style="padding:6px 14px;" onclick="githubSchliessen()">Später</button>'
-                : '')
-            + '<span style="font-size:0.76rem; color:var(--muted);">Die alten Fassungen wandern vorher nach <span style="font-family:var(--font-mono);">backup/</span>.</span>'
-            + '</div>'
-            + '<div id="githubErgebnis" style="margin-top:0.8rem;"></div>';
+    // Die Namen gibt es weiterhin - aber zugeklappt und ohne Kaestchen.
+    // Wer wissen will, was kommt, klappt auf. Waehlen kann man nichts,
+    // und genau das ist der Punkt.
+    html += '<details style="margin-top:0.7rem;">'
+        + '<summary style="cursor:pointer; font-size:0.8rem; color:var(--muted);">Welche Dateien?</summary>'
+        + '<div style="margin-top:0.45rem; font-family:var(--font-mono); font-size:0.76rem; '
+        + 'line-height:1.75; color:var(--ink); max-height:150px; overflow-y:auto;">';
+    holbar.forEach(e => {
+        html += '<div>' + e.name
+            + (e.art === 'programm' ? ' <span style="color:#8a6d00;">(Programmdatei)</span>' : '')
+            + (e.lage === 'fehlt' ? ' <span style="color:var(--muted);">(fehlt hier)</span>' : '')
+            + '</div>';
+    });
+    if(gesperrt.length){
+        html += '<div style="margin-top:0.4rem; color:#14663a;">bleibt unangetastet:</div>';
+        gesperrt.forEach(e => { html += '<div style="color:#14663a;">' + e.name + '</div>'; });
     }
+    html += '</div></details>';
 
-    // Der Schalter für die Nachschau beim Start. Er steht unten und klein:
-    // Wer ihn sucht, findet ihn - wer ihn nicht sucht, stolpert nicht darüber.
-    html += fussZeile;
+    html += '<div style="margin-top:1rem; display:flex; gap:9px; flex-wrap:wrap;">'
+        + '<button class="btn-lernstand" onclick="githubAnwenden()">'
+        + '<i class="fas fa-cloud-arrow-down"></i> Installieren</button>'
+        + '<button type="button" class="btn btn-outline" style="padding:6px 14px;" '
+        + 'onclick="githubSchliessen()">Verwerfen</button>'
+        + '</div>'
+        + '<div style="margin-top:0.5rem; font-size:0.72rem; color:var(--muted);">'
+        + 'Verwerfen ändert nichts. Beim nächsten Start meldet es sich wieder.</div>'
+        + '<div id="githubErgebnis" style="margin-top:0.7rem;"></div>';
 
-    ziel.innerHTML = html;
+    ziel.innerHTML = html + quelle;
 }
 
 async function githubAnwenden(){
     const erg = document.getElementById('githubErgebnis');
-    const kaesten = Array.from(document.querySelectorAll('.ghDatei:checked'));
-    if(!kaesten.length){ if(erg) erg.innerHTML = '<div style="color:var(--bad); font-size:0.85rem;">Nichts ausgewählt.</div>'; return; }
-    const namen = kaesten.map(k => k.value);
-    const programm = kaesten.some(k => k.dataset.art === 'programm');
-
-    // Programmdateien laufen mit vollen Rechten auf diesem Rechner. Dafuer
-    // reicht ein Haken nicht - es braucht eine ausdrueckliche zweite Zusage.
-    if(programm && !confirm(
-        'Programmdateien werden ersetzt:\n\n  '
-        + kaesten.filter(k => k.dataset.art === 'programm').map(k => k.value).join('\n  ')
-        + '\n\nDiese Dateien laufen mit vollen Rechten auf diesem Rechner.\n'
-        + 'Danach muss der Trainer neu gestartet werden.\n\nWirklich holen?')) return;
-
+    if(!githubHolbar.length){
+        if(erg) erg.innerHTML = '<div style="color:var(--bad); font-size:0.85rem;">Es gibt nichts zu holen.</div>';
+        return;
+    }
     if(erg) erg.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Wird geholt …</div>';
     try{
+        // programmBestaetigt: Der Klick auf "Installieren" IST die Zusage.
+        // Frueher kam hier noch eine Rueckfrage - eine zweite Frage auf
+        // dieselbe Entscheidung erzieht nur zum Wegklicken. Was passiert,
+        // steht stattdessen im Fenster, bevor geklickt wird.
         const res = await fetch('/api/github/anwenden', {
             method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ commit: githubDaten.commit, dateien: namen, programmBestaetigt: programm })
+            body: JSON.stringify({
+                commit: githubDaten.commit,
+                dateien: githubHolbar,
+                programmBestaetigt: githubProgramm.length > 0
+            })
         });
         const j = await res.json();
         if(!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
-        let t = '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.85rem 1rem; font-size:0.85rem; line-height:1.6;">';
+        let t = '<div style="border:1px solid #9ed0b0; background:#e8f6ed; border-radius:12px; padding:0.8rem 0.95rem; font-size:0.85rem; line-height:1.6;">';
         t += '<b>' + j.geschrieben.length + ' Datei(en) geholt.</b>';
-        if(j.geschrieben.length) t += '<br><span style="font-family:var(--font-mono); font-size:0.8rem;">'
-            + j.geschrieben.map(g => g.name).join(', ') + '</span>';
         if(j.uebersprungen && j.uebersprungen.length)
             t += '<br><span style="color:#8a6d00;">Übersprungen: '
                + j.uebersprungen.map(u => u.name + ' (' + u.grund + ')').join(', ') + '</span>';
         if(j.fehler && j.fehler.length)
             t += '<br><span style="color:var(--bad);">Fehlgeschlagen: '
                + j.fehler.map(f => f.name + ' – ' + f.grund).join(', ') + '</span>';
-        t += '<br><span style="color:var(--muted); font-size:0.8rem;">Alte Fassungen: '
+        t += '<br><span style="color:var(--muted); font-size:0.78rem;">Alte Fassungen: '
            + (j.sicherung || 'backup/') + '</span>';
-        if(j.neustartNoetig) t += '<br><b>Der Trainer muss neu gestartet werden (START.bat).</b>';
+        if(j.neustartNoetig) t += '<br><b>Bitte den Trainer neu starten (START.bat).</b>';
         else if(j.geschrieben.length) t += '<br>Seite einmal mit Strg+F5 neu laden.';
         t += '</div>';
+        t += '<div style="margin-top:0.7rem;"><button type="button" class="btn btn-outline" '
+           + 'style="padding:6px 14px;" onclick="githubSchliessen()">Schließen</button></div>';
         erg.innerHTML = t;
-        githubHinweisWeg();
+        // Der Knopf hat seine Aufgabe erfuellt.
+        updateKnopfAus();
     }catch(e){
         erg.innerHTML = '<div style="color:var(--bad); font-size:0.85rem;">Das hat nicht geklappt: '
             + String(e.message).replace(/</g,'&lt;') + '</div>';
     }
 }
 window.githubAnwenden = githubAnwenden;
-
-// ================================================================
-// DIE NACHSCHAU BEIM START
-// ================================================================
-// Der Server sieht vier Sekunden nach dem Start bei GitHub nach. Was dabei
-// herauskam, holt sich diese Seite ab - und entscheidet dann, WIE sie es
-// sagt. Zwei Wege, und welcher genommen wird, haengt allein davon ab, was
-// der Mensch gerade tut:
-//
-//   Fenster  - wenn er auf der Hauptansicht steht und nichts laeuft.
-//              Dann ist eine Frage angebracht, und man muss sie nicht
-//              suchen gehen.
-//   Leiste   - wenn er mitten in einer Frage sitzt, im Pruefungssimulator
-//              oder im Gruppenraum ist. Ein Fenster waere dort eine
-//              Unterbrechung, die niemand bestellt hat - im Simulator
-//              laeuft die Uhr, im Gruppenraum warten andere.
-//
-// Dieselbe Ueberlegung wie beim Fenster "Wo du aufgehoert hast": nur bei
-// Start, nicht im Simulator, nicht im Gruppenraum.
-//
-// Ausserdem: nur einmal je Stand. Wer "Später" geklickt hat, hat geklickt.
-// Erst wenn bei GitHub ein neuer Commit liegt, fragt es wieder.
-// ================================================================
-
-// Steht gerade etwas im Weg? Ein Fenster, das ueber ein anderes Fenster
-// springt, ist schlimmer als gar keins.
-function githubAnderesFensterOffen(){
-    try{
-        const alle = document.querySelectorAll('[id$="Modal"], [id$="modal"]');
-        for(const m of alle){
-            if(m.id === 'githubModal') continue;
-            const st = window.getComputedStyle(m);
-            if(st.display === 'none' || st.visibility === 'hidden') continue;
-            if(m.getBoundingClientRect().height > 0) return true;
-        }
-    }catch(e){}
-    return false;
-}
-
-function githubMomentPasst(){
-    if(!githubAutoErlaubt()) return false;
-    try{ if(typeof isQuizActive !== 'undefined' && isQuizActive) return false; }catch(e){}
-    try{ if(!nurNormalesLernen()) return false; }catch(e){}
-    if(githubAnderesFensterOffen()) return false;
-    return true;
-}
-
-// versuch: der Server ist unter Umstaenden noch nicht fertig mit Nachsehen,
-// wenn diese Seite schon steht. Dann steht in letzteLage noch nichts, und es
-// wird in Ruhe nachgefasst - dreimal, dann ist gut.
-async function githubAutoAngebot(versuch){
-    if(!laeuftLokal()) return;
-    versuch = versuch || 1;
-    let j = null;
-    try{
-        const res = await fetch('/api/github/stand', {cache:'no-store'});
-        if(!res.ok) return;
-        j = await res.json();
-    }catch(e){ return; }
-
-    const l = j && j.letzteLage;
-    if(!l){
-        if(versuch < 4) setTimeout(()=>{ githubAutoAngebot(versuch + 1); }, 8000);
-        return;
-    }
-    // Kein Netz, GitHub bremst, Repository umbenannt: still bleiben. Eine
-    // Fehlermeldung beim Start hilft niemandem - wer nachsehen will, findet
-    // sie unter Info.
-    if(l.fehler) return;
-    if(!l.anzahl) return;
-
-    try{ if(localStorage.getItem(GITHUB_GEMELDET) === l.commit) return; }catch(e){}
-
-    if(githubMomentPasst()) githubOeffnen(true);
-    else                    githubHinweisZeigen(l);
-}
-window.githubAutoAngebot = githubAutoAngebot;
-
-// ---- Der schmale Hinweis auf der Hauptseite ----
-//
-// Der Rueckfallweg: eine Nachricht, kein Auftrag. Er kommt, wenn ein
-// Fenster gerade stoeren wuerde - und wenn die Nachschau abgeschaltet ist.
-function githubHinweisWeg(){
-    const b = document.getElementById('githubHinweis');
-    if(b) b.remove();
-}
-
-function githubHinweisZeigen(l){
-    try{
-        if(!l || !l.anzahl) return;
-        if(document.getElementById('githubHinweis')) return;
-        const b = document.createElement('div');
-        b.id = 'githubHinweis';
-        b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100002; background:#0f2745; color:#ffffff;'
-            + 'padding:9px 14px; font-size:0.85rem; font-weight:600; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.25);';
-        b.innerHTML = 'Bei GitHub liegen ' + l.anzahl + ' neuere Datei(en) bereit.'
-            + (l.eigene ? ' <span style="font-weight:400; opacity:0.85;">(' + l.eigene + ' hier neuer — bleibt unangetastet)</span>' : '')
-            + ' <button type="button" id="githubHinweisAuf" style="margin-left:10px; padding:4px 12px; border:none;'
-            + 'border-radius:8px; background:#ffffff; color:#0f2745; font-weight:700; cursor:pointer;">Ansehen</button>'
-            + ' <button type="button" id="githubHinweisZu" style="margin-left:6px; padding:4px 10px; border:none;'
-            + 'border-radius:8px; background:transparent; color:#ffffff; cursor:pointer; text-decoration:underline;">später</button>';
-        document.body.appendChild(b);
-        document.getElementById('githubHinweisAuf').onclick = ()=>{ githubHinweisWeg(); githubOeffnen(); };
-        document.getElementById('githubHinweisZu').onclick = ()=>{
-            try{ localStorage.setItem(GITHUB_GEMELDET, l.commit); }catch(e){}
-            githubHinweisWeg();
-        };
-    }catch(e){}
-}
-window.githubHinweisZeigen = githubHinweisZeigen;
 
 // ================================================================
 // STANDWACHE - merkt, wenn die offene Seite veraltet ist
@@ -9799,7 +9801,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
-    try{ setTimeout(()=>{ githubAutoAngebot(); }, 6000); }catch(e){}
+    try{ setTimeout(()=>{ githubStartNachschau(); }, 6000); }catch(e){}
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     loadLearnParts();

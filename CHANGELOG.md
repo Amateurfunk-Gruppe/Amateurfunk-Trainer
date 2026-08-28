@@ -3174,3 +3174,70 @@ Rechteproblem sofort erkennt.
 Bei der Gelegenheit die Reihenfolge geradegezogen: "Loslegen" stand bisher
 HINTER dem USB-Abschnitt. Jetzt kommt erst das Starten, dann das feste
 Einrichten, dann das Weitergeben.
+
+## 28.08.2026 - Der Updater fragt nicht mehr, was man anhaken will
+
+Dietmar: "Der Updater gefaellt mir so nicht. Hier ballert man sich schnell
+was kaputt wenn man alles auswaehlt. Der Updater soll melden das es ein
+Update gibt. Installieren oder verwerfen."
+
+**Er hat recht, und der Grund ist nicht Unachtsamkeit.** Eine Liste mit
+Kaestchen SIEHT nach freier Auswahl aus. Aber an den Dateinamen kann
+niemand ablesen, welche Kombination heil ist: Server.js ohne
+github_update.js zum Beispiel ist keine. Wer waehlen darf, waehlt
+irgendwann falsch - und merkt es erst, wenn der Trainer nicht mehr
+startet. Ich hatte eine Entscheidung angeboten, fuer die es keine
+Entscheidungsgrundlage gibt.
+
+**Vorher:** Beim Start sprang ein Fenster auf, oder ein dunkler Balken
+legte sich ueber den Seitenkopf. Darin die Liste mit Kaestchen, ein Knopf
+"Ausgewaehlte holen", und wer Programmdateien angehakt hatte, bekam noch
+eine Rueckfrage per confirm().
+
+**Jetzt:**
+
+- **Kein Fenster und kein Balken beim Start.** Wer mitten in einer Frage
+  sitzt, wird nicht unterbrochen.
+- Der **Info-Knopf oben rechts wird zum Update-Knopf**: anderer Name,
+  andere Farbe, und er blinkt. Wer "Bewegung reduzieren" eingestellt hat,
+  bekommt statt des Pulsierens einen ruhigen Rahmen - blinkende Bewegung
+  ist fuer manche Menschen ein echtes Problem, nicht nur Geschmackssache.
+- **Einmal spielt sounds/update.mp3** (1,7 Sekunden). Browser lassen Ton
+  erst zu, wenn jemand die Seite angefasst hat; beim Start ist das nicht
+  der Fall, und play() wird abgelehnt. Statt den Ton dann stumm ausfallen
+  zu lassen, wird er beim ersten Klick oder Tastendruck nachgeholt - und
+  nur dieses eine Mal. Beides nachgemessen: ohne Geste 0, nach dem ersten
+  Klick 1.
+- **Ein Klick, ein kleines Fenster, zwei Knoepfe:** Installieren oder
+  Verwerfen. Das Fenster ist von 660 auf 430 Pixel geschrumpft.
+- **Keine Rueckfrage mehr bei Programmdateien.** Eine zweite Frage auf
+  dieselbe Entscheidung erzieht nur zum Wegklicken. Was passiert, steht
+  jetzt VOR dem Knopf im Fenster: wie viele Programmdateien dabei sind,
+  dass die alten Fassungen nach backup/ wandern, dass data/ nicht
+  angefasst wird, und dass danach ein Neustart faellig ist.
+- **Die Dateinamen gibt es weiterhin** - unter "Welche Dateien?"
+  zugeklappt. Zum Nachsehen, nicht zum Auswaehlen.
+- **Verwerfen merkt sich nichts.** Frueher wurde der gezeigte Commit in
+  den localStorage geschrieben und derselbe Stand nie wieder angeboten.
+  Jetzt meldet es sich bei jedem Start wieder, bis installiert wurde.
+  Vergessen kann man ein Update damit nicht, wegklicken jederzeit.
+
+Unveraendert geblieben ist die Regel, auf die es ankommt: **Was hier neuer
+ist als bei GitHub, wird nie angefasst.** Der Trainer merkt sich, wie jede
+Datei aussah, als sie zuletzt mit GitHub gleich war - ein Fingerabdruck
+sagt nur, DASS zwei Dateien verschieden sind, nicht welche die neuere ist.
+
+Ersatzlos entfallen sind damit: der Balken (githubHinweisZeigen), die
+Pruefung "passt der Moment gerade?" (githubMomentPasst,
+githubAnderesFensterOffen), der Schalter "nicht mehr von selbst fragen"
+samt seinen beiden localStorage-Schluesseln, und die Kaestchen-Ansicht.
+Rund 130 Zeilen weniger.
+
+Geprueft im Browser, gegen einen nachgebauten Server: Knopf wird nach dem
+Start zu "Update" und blinkt, Ton einmal, Verwerfen gibt den Info-Knopf
+zurueck und das Info-Fenster geht weiter auf, Installieren schickt alle
+drei Dateien mit programmBestaetigt und zeigt die Neustart-Meldung. Keine
+Javascript-Fehler.
+
+Die README ist entsprechend neu, mit neuem Bild (bilder/08-updater.png):
+oben der blinkende Knopf in der echten Kopfzeile, darunter das Fenster.
