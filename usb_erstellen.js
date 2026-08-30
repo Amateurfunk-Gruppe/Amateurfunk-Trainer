@@ -78,6 +78,7 @@ const ja = a => /^[jy]/i.test(a);
 // auseinanderlaeuft, ist genau der Fehler, der mir bei der .gitignore
 // schon einmal passiert ist.
 const DATEIEN = [
+  'formelhilfe.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
@@ -122,7 +123,9 @@ const DATEIEN = [
   'USB-Stick-Erstellen.bat', 'usb_erstellen.js',
 ];
 const PDF_MUSTER = [/^hilfsmittel.*\.pdf$/i, /^formelsammlung.*\.pdf$/i, /^pruefungsfragen.*\.pdf$/i];
-const ORDNER_IMMER = ['svgs', 'sounds', 'node_modules', 'node'];
+// formelsammlung: die Seitenbilder der amtlichen Formelsammlung. Ohne sie
+// zeigt der Formelblatt-Knopf auf dem Stick ins Leere.
+const ORDNER_IMMER = ['svgs', 'sounds', 'formelsammlung', 'node_modules', 'node'];
 // Piper wird gesondert behandelt (siehe piperFragen weiter unten) -
 // die Sprachausgabe gehoert auf den Stick, aber 470 MB Stimmen wollen
 // eine eigene Frage.

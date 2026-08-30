@@ -60,6 +60,30 @@ Videolehrgang mit Zeitmarke.
 
 ![Eine beantwortete Frage im Lernmodus](bilder/03-frage.png)
 
+### Die Formelsammlung an der Frage
+
+In der Prüfung wird die Formelsammlung der Bundesnetzagentur **ausgehändigt**
+— sie ist amtliches Hilfsmittel, kein Schummeln. Wer ohne sie übt, übt
+schwerer als die Prüfung ist.
+
+Bei jeder Frage, zu der es eine passende Stelle gibt, steht deshalb ein Knopf
+**Formelblatt**. Ein Klick zeigt die Seite — und die betreffende Stelle ist
+hervorgehoben, der Rest abgedunkelt.
+
+Das ist der eigentliche Punkt: Man sieht, **wo** im Blatt man ist, nicht nur
+was dort steht. In der Prüfung muss man die Stelle schließlich auch finden.
+Blättern geht trotzdem, und „Ganze Seite" nimmt die Abdunklung weg.
+
+Enthalten ist das vollständige Hilfsmittel: die Formelsammlung, die
+IARU-Bandpläne und die Tabellen mit Frequenzbereichen und zulässigen
+Sendeleistungen. Rund 480 der 1750 Fragen haben einen solchen Hinweis.
+
+Gezeigt wird das amtliche Blatt als Bild, nicht abgetippt. Das PDF benutzt
+Sonderschriften mit eigener Zeichenzuordnung — aus „Nutzungsbedingungen" wird
+beim maschinellen Auslesen `I"/0"'9*-)(>'9"'9)'`. Jede abgetippte Formel wäre
+eine mögliche Fehlerquelle; so steht dort, was auch auf dem Tisch der Prüfung
+liegt.
+
 ### Gruppenraum — für Ortsverbände und Volkshochschulen
 
 Der Trainer ist die passende Ergänzung für alle, die Amateurfunk **unterrichten**:

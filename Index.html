@@ -6432,6 +6432,195 @@ async function githubAnwenden(){
 window.githubAnwenden = githubAnwenden;
 
 // ================================================================
+// FORMELSAMMLUNG ALS HINWEIS AN DER FRAGE
+// ================================================================
+// In der Pruefung wird die Formelsammlung der Bundesnetzagentur
+// ausgehaendigt - sie ist amtliches Hilfsmittel, kein Schummeln. Wer
+// hier ohne sie uebt, uebt schwerer als die Pruefung ist.
+//
+// Bei jeder Frage, zu der es eine passende Stelle gibt, steht deshalb
+// ein Knopf. Ein Klick zeigt die Seite - und die betreffende Stelle
+// ist hervorgehoben, der Rest abgedunkelt. Man sieht also, WO im Blatt
+// man ist, nicht nur WAS dort steht. In der Pruefung muss man die
+// Stelle schliesslich auch finden.
+//
+// WARUM BILDER UND KEIN TEXT:
+// Das PDF benutzt Sonderschriften mit eigener Zeichenzuordnung. Aus
+// "Nutzungsbedingungen" wird beim Auslesen I"/0"'9*-)(>'9"'9)'.
+// Abgetippt waere jede Formel eine moegliche Fehlerquelle - gezeigt
+// wird deshalb das amtliche Blatt selbst.
+//
+// Die Zuordnung Frage -> Stelle steht in formelhilfe.json.
+// ================================================================
+let FORMELHILFE = null;
+
+async function formelhilfeLaden(){
+    if(FORMELHILFE) return FORMELHILFE;
+    try{
+        const r = await fetch('formelhilfe.json', {cache:'force-cache'});
+        if(r.ok) FORMELHILFE = await r.json();
+    }catch(e){ /* ohne Datei gibt es den Knopf eben nicht */ }
+    try{ formelKnopfSetzen(); }catch(e){}
+    return FORMELHILFE;
+}
+
+function formelStelleFuer(fragenId){
+    if(!FORMELHILFE || !fragenId) return null;
+    const k = FORMELHILFE.fragen && FORMELHILFE.fragen[fragenId];
+    if(!k) return null;
+    const s = FORMELHILFE.stellen && FORMELHILFE.stellen[k];
+    return s ? Object.assign({ id:k }, s) : null;
+}
+
+// Der Knopf sitzt in der Kopfzeile der Frage und wird nur eingeblendet,
+// wenn es fuer genau diese Frage etwas zu zeigen gibt. Ein Knopf, der
+// manchmal ins Leere fuehrt, ist schlimmer als keiner.
+function formelKnopfSetzen(){
+    const b = document.getElementById('formelBtn');
+    if(!b) return;
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const st = q ? formelStelleFuer(q.id) : null;
+    if(st){
+        b.style.display = '';
+        b.dataset.stelle = st.id;
+        b.setAttribute('data-tooltip', 'Formelsammlung: ' + st.titel);
+    }else{
+        b.style.display = 'none';
+        b.dataset.stelle = '';
+    }
+}
+
+function formelBtnKlick(){
+    const b = document.getElementById('formelBtn');
+    if(b && b.dataset.stelle) formelOeffnen(b.dataset.stelle);
+}
+window.formelBtnKlick = formelBtnKlick;
+
+let formelSeiteJetzt = 0;
+let formelStelleJetzt = null;
+
+function formelOeffnen(stelleId){
+    if(!FORMELHILFE) return;
+    const st = FORMELHILFE.stellen[stelleId];
+    if(!st) return;
+    formelStelleJetzt = Object.assign({ id:stelleId }, st);
+    formelSeiteJetzt = st.seite;
+
+    let m = document.getElementById('formelModal');
+    if(!m){
+        m = document.createElement('div');
+        m.id = 'formelModal';
+        m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.72); '
+            + 'backdrop-filter:blur(6px); z-index:100001; align-items:center; justify-content:center; padding:0.8rem;';
+        m.innerHTML =
+            '<div style="background:#fff; border-radius:16px; width:min(980px,97vw); max-height:94vh; '
+            + 'display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.45); overflow:hidden;">'
+            + '<div style="display:flex; align-items:center; gap:10px; padding:0.8rem 1rem; border-bottom:1px solid var(--line); flex-wrap:wrap;">'
+            +   '<div style="flex:1; min-width:200px;">'
+            +     '<div id="formelTitel" style="font-weight:700; color:var(--panel-navy); font-size:1rem;"></div>'
+            +     '<div id="formelUnterzeile" style="font-size:0.75rem; color:var(--muted);"></div>'
+            +   '</div>'
+            +   '<button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="formelBlaettern(-1)" title="Seite zurück">&#8249;</button>'
+            +   '<button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="formelBlaettern(1)" title="Seite vor">&#8250;</button>'
+            +   '<button type="button" class="btn btn-outline" id="formelDunkelBtn" style="padding:4px 12px; font-size:0.78rem;" onclick="formelDunkelUm()">Ganze Seite</button>'
+            +   '<button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="formelSchliessen()">&#10005;</button>'
+            + '</div>'
+            + '<div id="formelBuehne" style="overflow:auto; background:#eef2f7; padding:0.8rem; flex:1;">'
+            +   '<div id="formelRahmen" style="position:relative; margin:0 auto; width:fit-content; box-shadow:0 4px 18px rgba(0,0,0,0.18);">'
+            +     '<img id="formelBild" alt="Formelsammlung" style="display:block; max-width:100%; height:auto;">'
+            +     '<div id="formelKasten" style="position:absolute; border:3px solid #c05621; border-radius:4px; pointer-events:none;"></div>'
+            +   '</div>'
+            + '</div>'
+            + '<div style="padding:0.55rem 1rem; border-top:1px solid var(--line); font-size:0.74rem; color:var(--muted); line-height:1.5;">'
+            +   'Amtliches Hilfsmittel der Bundesnetzagentur — in der Prüfung wird es ausgehändigt.'
+            + '</div>'
+            + '</div>';
+        document.body.appendChild(m);
+        m.addEventListener('click', e => { if(e.target === m) formelSchliessen(); });
+    }
+    m.style.display = 'flex';
+    formelDunkel = true;
+    formelZeichnen();
+}
+window.formelOeffnen = formelOeffnen;
+
+function formelSchliessen(){
+    const m = document.getElementById('formelModal');
+    if(m) m.style.display = 'none';
+}
+window.formelSchliessen = formelSchliessen;
+
+let formelDunkel = true;
+function formelDunkelUm(){ formelDunkel = !formelDunkel; formelZeichnen(); }
+window.formelDunkelUm = formelDunkelUm;
+
+// Beim Blaettern verliert die Markierung ihren Sinn - sie gehoert ja zu
+// einer bestimmten Stelle auf einer bestimmten Seite. Deshalb wird sie
+// nur auf der eigenen Seite gezeigt.
+function formelBlaettern(richtung){
+    const n = formelSeiteJetzt + richtung;
+    if(n < 3 || n > 22) return;
+    formelSeiteJetzt = n;
+    formelZeichnen();
+}
+window.formelBlaettern = formelBlaettern;
+
+function formelZeichnen(){
+    const bild  = document.getElementById('formelBild');
+    const kasten= document.getElementById('formelKasten');
+    const titel = document.getElementById('formelTitel');
+    const unter = document.getElementById('formelUnterzeile');
+    const dbtn  = document.getElementById('formelDunkelBtn');
+    if(!bild) return;
+
+    const nr = String(formelSeiteJetzt).padStart(2, '0');
+    bild.src = 'formelsammlung/seite-' + nr + '.jpg';
+
+    const eigene = formelStelleJetzt && formelStelleJetzt.seite === formelSeiteJetzt;
+    titel.textContent = eigene ? formelStelleJetzt.titel : 'Formelsammlung';
+    unter.textContent = 'Seite ' + (formelSeiteJetzt - 2) + ' von 20'
+                      + (eigene ? '' : ' — geblättert, die markierte Stelle liegt auf Seite '
+                                       + (formelStelleJetzt.seite - 2));
+
+    if(eigene && formelDunkel){
+        const s = formelStelleJetzt;
+        kasten.style.display = 'block';
+        kasten.style.left   = (s.x*100) + '%';
+        kasten.style.top    = (s.y*100) + '%';
+        kasten.style.width  = (s.w*100) + '%';
+        kasten.style.height = (s.h*100) + '%';
+        // Ein einziger, sehr grosser Schatten dunkelt alles ausserhalb ab.
+        // Vier Rechtecke drumherum waeren dasselbe mit mehr Aufwand.
+        kasten.style.boxShadow = '0 0 0 9999px rgba(15,39,69,0.55)';
+        if(dbtn) dbtn.textContent = 'Ganze Seite';
+    }else if(eigene){
+        kasten.style.display = 'block';
+        kasten.style.left   = (formelStelleJetzt.x*100) + '%';
+        kasten.style.top    = (formelStelleJetzt.y*100) + '%';
+        kasten.style.width  = (formelStelleJetzt.w*100) + '%';
+        kasten.style.height = (formelStelleJetzt.h*100) + '%';
+        kasten.style.boxShadow = 'none';
+        if(dbtn) dbtn.textContent = 'Nur die Stelle';
+    }else{
+        kasten.style.display = 'none';
+        if(dbtn) dbtn.textContent = 'Ganze Seite';
+    }
+
+    // Zur markierten Stelle scrollen, sobald das Bild seine Hoehe kennt.
+    if(eigene){
+        const hin = ()=>{
+            try{
+                const b = document.getElementById('formelBuehne');
+                const ziel = bild.offsetTop + formelStelleJetzt.y * bild.offsetHeight - 60;
+                b.scrollTop = Math.max(0, ziel);
+            }catch(e){}
+        };
+        if(bild.complete) setTimeout(hin, 30); else bild.onload = ()=> setTimeout(hin, 30);
+    }
+}
+
+// ================================================================
 // STANDWACHE - merkt, wenn die offene Seite veraltet ist
 //
 // Anlass: Jemand hatte den Trainer über den Einladungslink offen und sah
@@ -8696,6 +8885,7 @@ function renderQuestion() {
         <div style="flex-shrink:0; display:flex; gap:6px;">
             <button id="questionGelerntBtn" onclick="toggleGelerntCurrent()" title="Diese Frage als gelernt abhaken (ohne dreimal richtig)" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-circle-check"></i></button>
             <button id="questionFavBtn" onclick="toggleFavoriteCurrent()" title="Frage in die Merkliste aufnehmen" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-heart"></i></button>
+            <button id="formelBtn" onclick="formelBtnKlick()" data-tooltip="Formelsammlung" style="display:none; background:#fdf1e0; color:#8a5a12; border:1px solid #e0b25a; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-file-lines"></i> Formelblatt</button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
@@ -8800,6 +8990,9 @@ function renderQuestion() {
     try{ updateQuestionFavButton(); }catch(e){}
     try{ updateGelerntButton(); }catch(e){}
     try{ updateGoogleButtonHinweis(); }catch(e){}
+    // Der Formelblatt-Knopf wird bei jeder Frage neu entschieden: Er
+    // erscheint nur, wenn es zu genau dieser Frage eine Stelle gibt.
+    try{ formelKnopfSetzen(); }catch(e){}
     updateVisibility();
     if (!answered) maybeAutoReadQuestion();
 
@@ -9854,6 +10047,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
+    try{ formelhilfeLaden(); }catch(e){}
     try{ setTimeout(()=>{ githubStartNachschau(); }, 6000); }catch(e){}
     try{ setTimeout(()=>{ githubNachschauWachhalten(); }, 7000); }catch(e){}
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.

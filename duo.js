@@ -1165,6 +1165,33 @@
         socket.on('you-were-kicked', data=>{ alert(data.message||'Du wurdest entfernt'); document.getElementById('duoModal').style.display='none'; if(roomCode&&socket) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; isHost=false; duoActive=false; chatSichtbarkeitPruefen(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); });
         socket.on('roomDeleted', ()=>{ alert('Raum gelöscht'); roomCode=null; isHost=false; duoActive=false; document.getElementById('duoModal').style.display='none'; });
         socket.on('errorMsg', msg=>{ if(window.showAppAlert) window.showAppAlert(msg); else alert(msg); });
+        // Rueckmeldung nach dem Entfernen. Der Gastgeber hat auf einen Knopf
+        // gedrueckt und soll wissen, was daraus geworden ist - besonders im
+        // Fall "sperren gewollt, aber keine verwertbare Adresse". Der saehe
+        // sonst wie ein Erfolg aus und waere keiner.
+        socket.on('kickErgebnis', e=>{
+            try{
+                if(!e) return;
+                let t;
+                if(e.ohneAdresse && e.grund === 'lokal'){
+                    t = `"${e.name}" wurde entfernt. <b>Gesperrt wurde nicht</b> — dieser Teilnehmer `
+                      + `sitzt in deinem eigenen Netz (WLAN/LAN), nicht draußen im Internet. `
+                      + `Dort wird bewusst nicht gesperrt: Der Router vergibt diese Adressen immer `
+                      + `wieder neu, eine Sperre träfe früher oder später den Falschen. `
+                      + `Wer im selben Netz sitzt, ist meist im Raum nebenan.`;
+                }else if(e.ohneAdresse){
+                    t = `"${e.name}" wurde entfernt. Sperren war hier nicht möglich: Für diesen `
+                      + `Teilnehmer liegt keine verwertbare Adresse vor. Er kann also wiederkommen.`;
+                }else if(e.gesperrt){
+                    t = `"${e.name}" wurde entfernt und gesperrt (${e.adresse}).`
+                      + (e.weitere ? ` ${e.weitere} weitere Fenster vom selben Anschluss wurden mit entfernt.` : '')
+                      + ` Die Sperre gilt für diesen Raum, solange er offen ist.`;
+                }else{
+                    t = `"${e.name}" wurde entfernt. Er kann dem Raum erneut beitreten.`;
+                }
+                if(window.showAppAlert) window.showAppAlert(t); else alert(t);
+            }catch(err){ console.error('[DUO] kickErgebnis', err); }
+        });
         socket.on('duoQuizStarted', data=>{ if(typeof window.startDuoQuizFromServer==='function') window.startDuoQuizFromServer(data); });
 
         // ===== Gruppenchat =====
@@ -1353,18 +1380,48 @@
         startTunnelManually: ()=>startTunnelManually(),
         startTunnelBeiBedarf: ()=>tunnelBeiBedarfStarten(),
         checkTunnelStatus: ()=>checkTunnelStatus(),
+        // Entfernen - wahlweise mit Sperre.
+        //
+        // Die Sperre steht als Haekchen IM Fenster und nicht als zweiter
+        // Knopf daneben. Zwei rote Knoepfe nebeneinander, die fast dasselbe
+        // tun, sind eine Einladung zum Vergreifen; das Haekchen muss man
+        // bewusst setzen und sieht dabei, was es bedeutet.
+        //
+        // Standard ist AUS: Entfernen ist der haeufige Fall (jemand ist
+        // versehentlich im falschen Raum), Sperren der seltene.
         kickUser: function(userId){
             if(!isHost){ alert('Nur Host darf kicken'); return; }
             if(userId===myUserId){ alert('Du kannst dich nicht selbst kicken'); return; }
             const user=duoUsersCache[userId];
             const name=user?.name||'Benutzer';
-            const doKick=()=>{ if(socket) socket.emit('kickUser',{code:roomCode,userIdToKick:userId}); };
+            const doKick=()=>{
+                // Das Haekchen wird beim Klick gelesen, nicht vorher: Das
+                // Fenster steht ja noch, solange man ueberlegt.
+                let sperren=false;
+                try{ const k=document.getElementById('duoSperrenHaken'); sperren=!!(k&&k.checked); }catch(e){}
+                if(socket) socket.emit('kickUser',{code:roomCode,userIdToKick:userId,sperren:sperren});
+            };
             if(typeof window.showAppConfirm === 'function'){
                 window.showAppConfirm(`"${name}" wirklich aus dem Raum entfernen?`, doKick, {
                     title: 'Teilnehmer entfernen?',
                     icon: 'fa-user-slash',
                     iconColor: 'var(--bad)',
-                    details: '• Der Teilnehmer wird sofort aus dem Raum entfernt<br>• Er kann dem Raum später erneut beitreten',
+                    details:
+                        '• Der Teilnehmer wird sofort aus dem Raum entfernt<br>'
+                      + '• Ohne Sperre kann er den Einladungslink erneut anklicken und ist wieder da'
+                      + '<label style="display:flex; gap:9px; align-items:flex-start; margin-top:0.7rem; '
+                      + 'padding:0.55rem 0.7rem; border:1px solid var(--line); border-radius:10px; cursor:pointer;">'
+                      + '<input type="checkbox" id="duoSperrenHaken" style="margin-top:3px; width:16px; height:16px; cursor:pointer;">'
+                      + '<span style="text-align:left; line-height:1.5;">'
+                      + '<b>Zusätzlich sperren</b><br>'
+                      + '<span style="font-size:0.8rem; color:var(--muted);">'
+                      + 'Für diesen Raum kommt von diesem Anschluss niemand mehr herein — auch nicht '
+                      + 'unter anderem Namen. Gedacht für den Fall, dass jemand den Link '
+                      + 'weitergegeben hat. Mit dem Raum endet auch die Sperre.'
+                      + '<span style="display:block; margin-top:0.45rem;">'
+                      + 'Gilt nur für Teilnehmer aus dem Internet. Wer in deinem eigenen '
+                      + 'WLAN sitzt, wird nur entfernt — dort wird nicht gesperrt.</span>'
+                      + '</span></span></label>',
                     confirmLabel: '<i class="fas fa-user-slash"></i> Entfernen',
                     confirmColor: 'var(--bad)'
                 });

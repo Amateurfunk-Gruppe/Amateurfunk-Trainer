@@ -815,15 +815,143 @@ app.use('/svgs', express.static(path.join(__dirname,'svgs'),{setHeaders:(res,fp)
 // Verbindung von 127.0.0.1 kommt UND keiner dieser Proxy-Header gesetzt
 // ist, sitzt der Aufrufer wirklich am Rechner selbst.
 // ================================================================
+// ================================================================
+// IP-ADRESSEN IM PROTOKOLL KUERZEN
+// ================================================================
+// Eine vollstaendige IP-Adresse ist ein personenbezogenes Datum. Im
+// Trainerfenster steht sie ausserdem voellig ohne Not: Wer im
+// Gruppenraum nachsehen will, welcher Rechner sich meldet, erkennt das
+// an den ersten drei Bloecken genauso gut.
+//
+// Aus  47.64.50.123  wird  47.64.50.XXX
+// Bei IPv6 bleiben die ersten vier Bloecke stehen, der Rest wird gekuerzt.
+//
+// Angeregt von Dietmar am 28.08.2026: "Die IP Adresse sollen nicht
+// komplett angezeigt werden."
+function ipKuerzen(roh){
+  let ip = String(roh || '').trim();
+  if(!ip) return 'unbekannt';
+  ip = ip.replace(/^::ffff:/i, '');            // IPv4 im IPv6-Kleid
+  // Der eigene Rechner ZUERST: Sonst wuerde aus 127.0.0.1 ein
+  // 127.0.0.XXX - unnoetig verschleiert, und man erkennt nicht mehr,
+  // dass die Anfrage vom Trainer-PC selbst kam. Genau das ist beim
+  // Nachmessen aufgefallen.
+  if(ip === '::1' || ip === '127.0.0.1') return ip;
+  const v4 = ip.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
+  if(v4) return v4[1] + '.XXX';
+  if(ip.includes(':')){
+    return ip.split(':').slice(0, 4).join(':') + ':...';
+  }
+  return ip;
+}
+
+// Woher kommt dieser Socket? Ueber den Tunnel setzt Cloudflare
+// cf-connecting-ip; im eigenen Netz steht die Adresse in
+// handshake.address. x-forwarded-for kann eine Kette sein - der erste
+// Eintrag darin ist der urspruengliche Absender.
+function socketIp(socket){
+  try{
+    const h = (socket && socket.handshake && socket.handshake.headers) || {};
+    const kette = String(h['x-forwarded-for'] || '').split(',')[0].trim();
+    const roh = h['cf-connecting-ip'] || kette || (socket.handshake && socket.handshake.address) || '';
+    return String(roh).replace(/^::ffff:/i, '').trim() || 'unbekannt';
+  }catch(e){ return 'unbekannt'; }
+}
+
+// ================================================================
+// DARF AUF DIESE ADRESSE UEBERHAUPT EINE SPERRE?
+// ================================================================
+// DIE WICHTIGSTE ZEILE IM GANZEN SPERR-TEIL. Grund:
+//
+// cloudflared verbindet sich SELBST nach http://localhost:3000. Fuer
+// jeden Gast aus dem Tunnel steht in handshake.address deshalb
+// 127.0.0.1 - die echte Adresse steht nur im Kopf cf-connecting-ip.
+// Fehlt der einmal (aelteres cloudflared, anderer Weg, Fehler im
+// Netz), waere die "Adresse des Teilnehmers" 127.0.0.1.
+//
+// Eine Sperre darauf haette dann ALLE Gaeste ausgesperrt - und den
+// Gastgeber gleich mit, denn sein eigener Browser kommt auch von
+// 127.0.0.1. Ein Klick, und der Raum ist tot, ohne dass jemand
+// versteht warum.
+//
+// Deshalb: Auf den eigenen Rechner wird nie gesperrt.
+//
+// UND AUCH NICHT AUF ADRESSEN AUS DEM EIGENEN NETZ. Dietmar am
+// 28.08.2026: "blockieren nur bei einer oeffentlichen IP Adresse, nicht
+// local im WLAN." Das ist richtig, und zwar aus zwei Gruenden:
+//
+//   Die Sperre ist fuer den Fall gedacht, dass jemand den Einladungslink
+//   weitergegeben hat - der Unbekannte kommt dann ueber den Tunnel, also
+//   mit einer oeffentlichen Adresse. Wer im selben WLAN sitzt, ist
+//   dagegen im Raum nebenan: der Ortsverband, die VHS-Gruppe. Da klaert
+//   man das durch Hinsehen und nicht durch eine Sperre.
+//
+//   Und: Adressen im eigenen Netz vergibt der Router (DHCP) immer wieder
+//   neu. Die 192.168.1.42 von heute Nachmittag kann morgen frueh ein
+//   ganz anderes Geraet sein. Eine Sperre darauf traefe irgendwann den
+//   Falschen - und niemand kaeme darauf, warum.
+//
+// Statt einer Sperre, die zu viel oder das Falsche trifft, sagt der
+// Trainer ehrlich, dass er hier nicht sperren kann.
+//
+// Rueckgabe: '' wenn sperrbar, sonst der Grund ('lokal' / 'unbekannt').
+function sperrHindernis(ip){
+  const a = String(ip || '').trim().toLowerCase();
+  if(!a || a === 'unbekannt') return 'unbekannt';
+  if(a === 'localhost' || a === '::1' || a === '::') return 'lokal';
+
+  const v4 = a.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if(v4){
+    const [x, y] = [Number(v4[1]), Number(v4[2])];
+    if(x === 127) return 'lokal';                       // der Rechner selbst
+    if(x === 10) return 'lokal';                        // 10.0.0.0/8
+    if(x === 192 && y === 168) return 'lokal';          // 192.168.0.0/16
+    if(x === 172 && y >= 16 && y <= 31) return 'lokal'; // 172.16.0.0/12
+    if(x === 169 && y === 254) return 'lokal';          // selbst vergeben, ohne Router
+    if(x === 0) return 'unbekannt';
+    return '';                                          // oeffentlich - sperrbar
+  }
+
+  // IPv6: fc00::/7 sind die privaten Adressen, fe80::/10 die des eigenen
+  // Netzstrangs. Beides ist "hier im Haus" und wird nicht gesperrt.
+  if(/^f[cd]/.test(a)) return 'lokal';
+  if(/^fe[89ab]/.test(a)) return 'lokal';
+  if(a.includes(':')) return '';                        // oeffentliches IPv6
+
+  return 'unbekannt';
+}
+function sperrbar(ip){ return sperrHindernis(ip) === ''; }
+
 const PROXY_HEADERS = ['cf-ray','cf-connecting-ip','x-forwarded-for','x-forwarded-host','x-real-ip','forwarded'];
 function isLocalRequest(req){
   const ip = String(req.ip||'').replace(/^::ffff:/,'');
   if(ip !== '127.0.0.1' && ip !== '::1') return false;
   return !PROXY_HEADERS.some(h => req.headers[h]);
 }
+// Anfragen, die der Browser eines Gastes voellig regulaer stellt: Die
+// Seite ist dieselbe wie beim Gastgeber, also fragt sie auch nach dem
+// Lernstand - und bekommt hier zu Recht ein Nein. Das ist der Normalfall
+// und kein Vorfall.
+//
+// Bis zum 28.08.2026 stand dafuer bei JEDEM Beitritt mehrfach
+// "[SEC] Externer Zugriff blockiert" samt vollstaendiger IP-Adresse im
+// Fenster. Dietmar: "Ich habe mich darueber schon erschrocken das ich
+// gehackt werde." Zu Recht - die Meldung klang nach einem Angriff und war
+// doch nur der Schutz, der lautlos seine Arbeit tat.
+const ERWARTET_ABGEWIESEN = [
+  /^\/api\/userdata/,
+  /^\/api\/abgleich\//,
+  /^\/api\/github\//,
+  /^\/api\/tunnel-status/
+];
 function localOnly(req,res,next){
   if(isLocalRequest(req)) return next();
-  console.warn('[SEC] Externer Zugriff blockiert:', req.method, req.originalUrl, 'von', req.headers['cf-connecting-ip']||req.ip);
+  // Nur was WIRKLICH ungewoehnlich ist, kommt ins Fenster - und dann in
+  // ruhigem Ton und mit gekuerzter Adresse.
+  if(!ERWARTET_ABGEWIESEN.some(m => m.test(req.path))){
+    console.log('[GRUPPENRAUM] Nur am Trainer-PC moeglich:', req.originalUrl,
+                '- angefragt von', ipKuerzen(req.headers['cf-connecting-ip'] || req.ip));
+  }
   return res.status(403).json({error:'Diese Funktion ist nur direkt am Trainer-PC verfuegbar.'});
 }
 
@@ -1158,6 +1286,7 @@ app.get('/api/version',(req,res)=>{
 //   cloudflared.exe, tunnel*.log, tunnel_url.txt = Tunnel-Adresse/Werkzeug
 // ================================================================
 const PAKET_DATEIEN = [
+  'formelhilfe.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
@@ -1267,7 +1396,9 @@ function paketPdfsFinden(){
 // laeuft und mit dem Lernen nichts zu tun hat. Wer das Paket bekommt, will
 // Fragen ueben und nicht raten, wofuer ein Ordner "test" gut ist. Im
 // Projekt bleibt er selbstverstaendlich.
-const PAKET_ORDNER = ['svgs', 'sounds'];
+// formelsammlung: die 20 Seitenbilder der amtlichen Formelsammlung, rund
+// 3,6 MB. Ohne sie waere der Formelblatt-Knopf im Paket ein toter Knopf.
+const PAKET_ORDNER = ['svgs', 'sounds', 'formelsammlung'];
 
 // Minimaler ZIP-Schreiber mit Bordmitteln (zlib). Bewusst ohne npm-Paket wie
 // "archiver", damit das Projekt seine drei Abhaengigkeiten behaelt und der
@@ -2155,9 +2286,13 @@ const PUBLIC_FILES = new Set([
   // Zeitstempel - nichts, was jemanden angehen koennte - und steht in der
   // .gitignore. Im Normalfall gibt es sie gar nicht, dann ist das hier
   // schlicht ein Eintrag ins Leere.
-  '/update_test.json'
+  '/update_test.json',
+  // Zuordnung Frage -> Stelle in der Formelsammlung. Enthaelt nur
+  // Fragennummern und Abschnittsnamen; die Seitenbilder liegen in
+  // /formelsammlung/ und sind ueber PUBLIC_DIRS freigegeben.
+  '/formelhilfe.json'
 ]);
-const PUBLIC_DIRS = ['/svgs/', '/sounds/'];
+const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/'];
 
 function isPublicPath(rawPath){
   let p;
@@ -2305,7 +2440,12 @@ try{
         const code=freienRaumcodeFinden();
         const pwd = (data.password||'').toString().trim();
         console.log(`[DUO SERVER V17] createRoom ${code} count=${data.count} part=${data.part} parts=${JSON.stringify(data.parts)} pwd=${pwd?'yes':'no'}`);
-        duoRooms[code]={code, users:{}, questions:[], questionsFull:[], allAnswers:{}, chat:[], hostId:socket.id, password: pwd||null, createdAt:Date.now(), finalResultsSent:false, config:{count:data.count, part:data.part, parts:data.parts}};
+        // ipsVonTeilnehmern und gesperrteIps liegen BEWUSST neben room.users
+        // und nicht darin: room.users geht bei jedem roomUpdate an alle im
+        // Raum. Eine Adresse in room.users waere damit fuer jeden
+        // Teilnehmer sichtbar - fuer den Gastgeber gedacht, an alle
+        // ausgeliefert. Beides bleibt auf dem Server.
+        duoRooms[code]={code, users:{}, ipsVonTeilnehmern:{}, gesperrteIps:[], questions:[], questionsFull:[], allAnswers:{}, chat:[], hostId:socket.id, password: pwd||null, createdAt:Date.now(), finalResultsSent:false, config:{count:data.count, part:data.part, parts:data.parts}};
         // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
@@ -2327,6 +2467,20 @@ try{
       // Argument, um den kompletten Server per TypeError zu beenden.
       if(!data || typeof data !== 'object'){ socket.emit('errorMsg','Ungueltige Anfrage'); return; }
       const room=duoRooms[data.code]; if(!room){ socket.emit('errorMsg','Raum nicht gefunden'); return; }
+
+      // Gesperrt? Dann hier Schluss - vor dem Passwort, damit ein
+      // Gesperrter nicht am Passwort ablesen kann, ob er es richtig hatte.
+      //
+      // Gesperrt wird die Adresse, nicht der Name: Ein Name ist in zwei
+      // Sekunden geaendert. Die Sperre gilt fuer DIESEN Raum und lebt nur,
+      // solange er lebt - mit dem Raum ist auch sie wieder weg.
+      const wo = socketIp(socket);
+      if(sperrbar(wo) && Array.isArray(room.gesperrteIps) && room.gesperrteIps.includes(wo)){
+        socket.emit('errorMsg','Der Gastgeber hat den Zugang von diesem Anschluss gesperrt.');
+        console.log(`[GRUPPENRAUM] Beitritt zu ${data.code} abgelehnt - gesperrt: ${ipKuerzen(wo)}`);
+        return;
+      }
+
       if(room.password){
         const given = (data.password||'').toString().trim();
         if(given !== room.password){
@@ -2338,7 +2492,10 @@ try{
       // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
       const userName = data.name || data.userName || `Benutzer ${idx}`;
       room.users[socket.id]={name:userName, role:`Teilnehmer`};
+      if(!room.ipsVonTeilnehmern) room.ipsVonTeilnehmern = {};
+      room.ipsVonTeilnehmern[socket.id] = wo;
       socket.join(data.code); socket.data.roomCode=data.code;
+      console.log(`[GRUPPENRAUM] ${userName} ist Raum ${data.code} beigetreten (${ipKuerzen(wo)})`);
       // Fragen stehen schon seit Raum-Erstellung fest - jeder Beitretende bekommt dieselbe Basis
       if(!room.questionsFull || room.questionsFull.length===0) generateRoomQuestions(room);
       socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length});
@@ -2832,20 +2989,86 @@ try{
           socket.emit('errorMsg', 'Du kannst dich nicht selbst kicken');
           return;
         }
-        const userSocket = io.sockets.sockets.get(data.userIdToKick);
-        if (userSocket) {
-          userSocket.emit('you-were-kicked', {
-            message: `Du wurdest vom Host (${room.users[socket.id]?.name || 'Host'}) aus dem Raum entfernt.`,
-            roomCode: data.code
-          });
-          userSocket.leave(data.code);
-          // Setze roomCode im Socket-Daten
-          if (userSocket.data) userSocket.data.roomCode = null;
-        }
+        // ---------------------------------------------------------
+        // ENTFERNEN - und auf Wunsch sperren
+        // ---------------------------------------------------------
+        // Dietmar am 28.08.2026: "Blockieren wird benoetigt, wenn einer
+        // meiner Benutzer das mit jemand mir unbekannten den Link teilt."
+        //
+        // Ohne Sperre ist Entfernen wirkungslos: Der Link ist ja noch
+        // gueltig, der Betreffende klickt ihn einfach wieder an. Gesperrt
+        // wird die Adresse und nicht der Name - ein Name ist in zwei
+        // Sekunden geaendert.
+        const sperren = data.sperren === true;
         const kickedName = room.users[data.userIdToKick]?.name || room.users[data.userIdToKick]?.userName || 'Benutzer';
-        delete room.users[data.userIdToKick];
-        if (room.allAnswers && room.allAnswers[data.userIdToKick]) delete room.allAnswers[data.userIdToKick];
-        console.log(`[DUO] ${kickedName} (${data.userIdToKick}) wurde von ${room.users[socket.id]?.name || 'Host'} aus Raum ${data.code} gekickt`);
+        const hostName = room.users[socket.id]?.name || 'Host';
+        const ipRoh = (room.ipsVonTeilnehmern || {})[data.userIdToKick] || null;
+        // Nur eine Adresse, auf die man wirklich sperren darf - siehe die
+        // Begruendung bei sperrHindernis(). Der Grund wird mitgefuehrt,
+        // damit der Gastgeber nicht nur erfaehrt DASS es nicht ging,
+        // sondern auch warum.
+        const hindernis = sperrHindernis(ipRoh);
+        const ipDesGekickten = hindernis === '' ? ipRoh : null;
+
+        if (sperren && ipDesGekickten) {
+          if(!Array.isArray(room.gesperrteIps)) room.gesperrteIps = [];
+          if(!room.gesperrteIps.includes(ipDesGekickten)) room.gesperrteIps.push(ipDesGekickten);
+        }
+
+        // Wer entfernt UND gesperrt wird, soll nicht ueber ein zweites
+        // offenes Fenster im Raum bleiben. Deshalb fliegt jeder Socket mit
+        // derselben Adresse mit - sonst waere die Sperre eine Sperre gegen
+        // das Neuladen und gegen sonst nichts.
+        const treffer = [data.userIdToKick];
+        if (sperren && ipDesGekickten) {
+          Object.keys(room.users).forEach(id => {
+            if (id !== data.userIdToKick && id !== socket.id
+                && (room.ipsVonTeilnehmern || {})[id] === ipDesGekickten) treffer.push(id);
+          });
+        }
+
+        treffer.forEach(id => {
+          const s = io.sockets.sockets.get(id);
+          if (s) {
+            s.emit('you-were-kicked', {
+              message: sperren
+                ? `Du wurdest vom Host (${hostName}) aus dem Raum entfernt und gesperrt.`
+                : `Du wurdest vom Host (${hostName}) aus dem Raum entfernt.`,
+              gesperrt: sperren,
+              roomCode: data.code
+            });
+            s.leave(data.code);
+            if (s.data) s.data.roomCode = null;
+          }
+          delete room.users[id];
+          if (room.allAnswers && room.allAnswers[id]) delete room.allAnswers[id];
+          if (room.ipsVonTeilnehmern) delete room.ipsVonTeilnehmern[id];
+        });
+
+        // Hier zaehlt, was TATSAECHLICH geschehen ist, nicht was gewuenscht
+        // war. Beim Nachmessen stand im Fenster "entfernt und gesperrt
+        // (unbekannt)", obwohl gar nicht gesperrt wurde - ein Protokoll,
+        // das etwas anderes behauptet als der Server getan hat, ist
+        // schlimmer als gar keins.
+        console.log(`[GRUPPENRAUM] ${kickedName} wurde von ${hostName} aus Raum ${data.code} entfernt`
+                    + (!sperren ? ''
+                       : ipDesGekickten ? ` und gesperrt (${ipKuerzen(ipDesGekickten)})`
+                       : ` - sperren nicht moeglich (${hindernis === 'lokal' ? 'eigenes Netz' : 'keine Adresse'})`)
+                    + (treffer.length > 1 ? ` - dazu ${treffer.length - 1} weitere Fenster vom selben Anschluss` : ''));
+
+        // Dem Gastgeber Rueckmeldung geben - er hat auf einen Knopf
+        // gedrueckt und soll wissen, was daraus geworden ist.
+        socket.emit('kickErgebnis', {
+          name: kickedName,
+          gesperrt: sperren && !!ipDesGekickten,
+          adresse: ipDesGekickten ? ipKuerzen(ipDesGekickten) : null,
+          weitere: treffer.length - 1,
+          // Konnte nicht gesperrt werden? Dann ehrlich sagen, dass die
+          // Sperre nicht griff - und warum. "lokal" heisst: derselbe
+          // WLAN-/Netzstrang, da wird bewusst nicht gesperrt.
+          ohneAdresse: sperren && !ipDesGekickten,
+          grund: (sperren && !ipDesGekickten) ? (hindernis || 'unbekannt') : null
+        });
         const remaining = Object.keys(room.users);
         if (remaining.length === 0) {
           delete duoRooms[data.code];

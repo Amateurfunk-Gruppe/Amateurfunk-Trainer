@@ -3406,3 +3406,204 @@ Unix-Zeilenenden in zwei Dateien geschrieben, die sonst durchgehend
 Windows-Zeilenenden haben. Eine .bat mit gemischten Zeilenenden ist eine
 Falle - besonders bei goto-Marken, die dann ins Leere zeigen koennen. Beide
 Dateien sind jetzt geprueft durchgehend CRLF.
+
+## 28.08.2026 - "Ich habe mich erschrocken das ich gehackt werde"
+
+Dietmar, nachdem Teilnehmer seinem Gruppenraum beigetreten waren:
+
+    [SEC] Externer Zugriff blockiert: GET /api/userdata von 47.64.50.123
+
+Mehrfach, bei jedem Beitritt, samt vollstaendiger IP-Adresse.
+
+**Das war meine Meldung, und sie war falsch gebaut.** Was dort geschah,
+war der Normalfall: Ein Gast bekommt dieselbe Seite wie der Gastgeber,
+also fragt sein Browser auch nach dem Lernstand - und bekommt zu Recht ein
+Nein. Der Schutz (Fix K3) tat genau seine Arbeit. Nur klang die Meldung
+nach Angriff. "[SEC]", "blockiert", eine fremde IP-Adresse: Wer das liest,
+denkt an einen Einbruch und nicht an eine Tuer, die planmaessig zu ist.
+
+Eine Sicherheitsmeldung, die bei jedem regulaeren Vorgang anschlaegt, ist
+keine Sicherheitsmeldung. Sie erschreckt beim ersten Mal, wird beim
+zehnten ueberlesen - und beim hundertsten uebersieht man daneben die eine,
+auf die es angekommen waere.
+
+Drei Aenderungen, alle drei von Dietmar angestossen:
+
+**1. Die Schreckmeldung ist weg.** Anfragen, die der Browser eines Gastes
+regulaer stellt (`/api/userdata`, `/api/abgleich/`, `/api/github/`,
+`/api/tunnel-status`), werden weiter abgewiesen - aber lautlos. Nur was
+wirklich ungewoehnlich ist, kommt noch ins Fenster, und dann in ruhigem
+Ton:
+
+    [GRUPPENRAUM] Nur am Trainer-PC moeglich: /api/start-tunnel
+                  - angefragt von 47.64.50.XXX
+
+Kein "[SEC]", kein "blockiert". Am Schutz selbst hat sich nichts geaendert;
+nur daran, wie er darueber spricht.
+
+**2. IP-Adressen werden gekuerzt.** Aus `47.64.50.123` wird
+`47.64.50.XXX`. Bei IPv6 bleiben die ersten vier Bloecke stehen. Eine
+vollstaendige IP-Adresse ist ein personenbezogenes Datum, und im
+Trainerfenster steht sie ohne jeden Nutzen: Wer sehen will, welcher
+Rechner sich meldet, erkennt das an den ersten drei Bloecken genauso gut.
+Die Kuerzung gilt ueberall, wo eine Adresse ausgegeben wird - auch beim
+Paket-Download.
+
+**3. Entfernen bekommt die Option "sperren".** Dietmar: "Blockieren wird
+benoetigt, wenn einer meiner Benutzer das mit jemand mir unbekannten den
+Link teilt."
+
+Ohne Sperre war Entfernen wirkungslos: Der Einladungslink ist ja weiter
+gueltig, der Betreffende klickt ihn einfach wieder an. Im Fenster
+"Teilnehmer entfernen?" steht deshalb jetzt ein Haekchen **"Zusaetzlich
+sperren"**.
+
+**Gesperrt wird nur, wer aus dem Internet kommt.** Dietmar, nachdem er
+den ersten Entwurf gesehen hatte: "blockieren nur bei einer oeffentlichen
+IP Adresse, nicht local im WLAN." Richtig, und aus zwei Gruenden:
+
+  Die Sperre ist fuer den Fall gedacht, dass jemand den Einladungslink
+  weitergegeben hat - der Unbekannte kommt dann ueber den Tunnel, also
+  mit einer oeffentlichen Adresse. Wer im selben WLAN sitzt, ist dagegen
+  im Raum nebenan: der Ortsverband, die VHS-Gruppe. Da klaert man das
+  durch Hinsehen.
+
+  Und Adressen im eigenen Netz vergibt der Router immer wieder neu. Die
+  192.168.1.42 von heute Nachmittag kann morgen frueh ein anderes Geraet
+  sein. Eine Sperre darauf traefe irgendwann den Falschen - und niemand
+  kaeme darauf, warum.
+
+Nicht gesperrt wird deshalb auf 10.x, 172.16-31.x, 192.168.x, 169.254.x,
+127.x sowie fc00::/7 und fe80::/10. Nachgemessen mit 18 Faellen, auch den
+Grenzfaellen 172.15 und 172.32, die beide oeffentlich sind und es auch
+bleiben muessen.
+
+Vier weitere Entscheidungen dahinter, die ich nicht anders treffen wuerde:
+
+- **Ein Haekchen, kein zweiter Knopf.** Zwei rote Knoepfe nebeneinander,
+  die fast dasselbe tun, sind eine Einladung zum Vergreifen. Das Haekchen
+  muss man setzen und sieht dabei, was es bedeutet. Standard ist AUS:
+  Entfernen ist der haeufige Fall, Sperren der seltene.
+- **Gesperrt wird die Adresse, nicht der Name.** Ein Name ist in zwei
+  Sekunden geaendert.
+- **Die Adressen bleiben auf dem Server.** `room.users` geht bei jedem
+  `roomUpdate` an ALLE im Raum - eine Adresse darin waere fuer jeden
+  Teilnehmer sichtbar gewesen. Sie liegen deshalb daneben, in
+  `room.ipsVonTeilnehmern`, und verlassen den Server nie: Der Gastgeber
+  sieht nach dem Sperren nur die gekuerzte Fassung.
+- **Wer gesperrt wird, fliegt mit allen Fenstern.** Sonst waere die Sperre
+  eine Sperre gegen das Neuladen und gegen sonst nichts.
+
+Die Sperre gilt fuer DIESEN Raum und lebt, solange er lebt. Das ist
+Absicht: Eine Liste gesperrter Adressen, die einen Neustart ueberdauert,
+waere eine dauerhaft gespeicherte Personenliste - dafuer gibt es hier
+keinen Grund. Wer sich versehentlich selbst ausgesperrt hat, macht den
+Raum neu.
+
+Und wenn Sperren nicht geht, sagt es das - mit Begruendung. Aus dem
+eigenen WLAN: "entfernt, gesperrt wurde nicht, hier wird bewusst nicht
+gesperrt". Keine verwertbare Adresse: "entfernt, er kann wiederkommen".
+Kein vorgetaeuschter Erfolg.
+
+**Die groesste Falle steckte woanders**, und sie waere erst bei Dietmar
+aufgefallen: cloudflared verbindet sich SELBST nach localhost. Fuer jeden
+Gast aus dem Tunnel steht als Adresse zunaechst 127.0.0.1 da, die echte
+nur im Kopf cf-connecting-ip. Haette der einmal gefehlt, waere beim
+Sperren 127.0.0.1 in die Liste gewandert - und damit jeder Gast draussen
+gewesen, der Gastgeber eingeschlossen, denn sein eigener Browser kommt
+auch von dort. Ein Klick, und der Raum ist tot, ohne dass jemand
+versteht warum. Auf den eigenen Rechner wird jetzt nie gesperrt.
+
+Geprueft mit einem echten Server und mehreren Teilnehmern, 14 Punkte:
+entfernen ohne Sperre (kommt wieder herein), mit Sperre (kommt nicht
+wieder, auch nicht unter anderem Namen), zweites Fenster desselben
+Anschlusses fliegt mit, ein Unbeteiligter von anderer Adresse bleibt
+unberuehrt, WLAN-Gast wird nur entfernt und kommt wieder herein, der
+Gastgeber sperrt sich nicht selbst aus, und in keinem roomUpdate steht
+eine IP-Adresse. Dazu das Fenster im Browser: Haekchen da, Standard aus,
+beim Klick richtig gelesen.
+
+**Nebenbei zwei eigene Fehler gefunden und behoben.** Erstens kuerzte
+ipKuerzen auch 127.0.0.1 zu 127.0.0.XXX - unnoetig verschleiert, man sah
+nicht mehr, dass die Anfrage vom Trainer-PC selbst kam. Zweitens meldete
+das Protokoll "entfernt und gesperrt", wenn Sperren nur GEWOLLT, aber
+nicht moeglich war. Ein Protokoll, das etwas anderes behauptet als der
+Server getan hat, ist schlimmer als gar keins.
+
+## 29.08.2026 - Die Formelsammlung steht jetzt an der Frage
+
+Dietmar: "ist es moeglich das wir von der Formelsammlung.pdf die Formeln
+extrahieren und in Fragen die dafuer geeignet sind, einen Hinweis bei
+Fragen in Form von einem Blatt geben?" Und, nach dem ersten Entwurf: "Es
+gibt da auch einen Frequenzplan mit Sendeleistung. Das hilft auch bei
+vielen Fragen. Es soll alles uebernommen werden. Bei einer Frage wo die
+Formelsammlung hilft, es bei Fragen einen Button gibt der einen darauf
+hinweist. Mit einem klick, oeffnet sich die Stelle in der Formelsammlung.
+Ideal waere mit einer Markierung."
+
+Genau so ist es geworden.
+
+**Warum das ueberhaupt richtig ist:** In der Pruefung wird die
+Formelsammlung ausgehaendigt. Sie ist amtliches Hilfsmittel - das steht
+auf dem Deckblatt: "Amateurfunkpruefungen, Hilfsmittel, BNetzA". Wer beim
+Ueben ohne sie rechnet, uebt schwerer als die Pruefung ist. Deshalb ist
+der Knopf auch im Pruefungssimulator da.
+
+**Die Huerde war das PDF.** Es benutzt Sonderschriften mit eigener
+Zeichenzuordnung. Aus "Nutzungsbedingungen" wird beim Auslesen
+I"/0"'9*-)(>'9"'9)' - unbrauchbar. Abtippen waere bei zehn Seiten Formeln
+eine ernsthafte Fehlerquelle gewesen: Eine falsch abgeschriebene Formel
+merkt niemand, bis jemand danach rechnet und durchfaellt.
+
+Ein Teil liess sich aber knacken. Die UEBERSCHRIFTEN stehen in einer
+eigenen Schrift, deren Zuordnung sich aus bekannten Woertern
+rekonstruieren laesst: Wenn "8F?@PQS<K?@" gleich "Widerstände" ist, dann
+ist 8=W, F=i, ?=d, @=e - und die Probe an "Leistung", "Induktivität" und
+"Reihenschaltung" bestaetigt es. Damit stand der Index: **96 Abschnitte
+mit Seite, Spalte und Position auf den Punkt genau**, automatisch
+ermittelt statt von Hand abgemessen.
+
+**Gezeigt wird das Blatt selbst**, als Bild - 20 Seiten, zusammen 3,6 MB.
+Nicht abgetippt: So steht dort, was in der Pruefung auch auf dem Tisch
+liegt.
+
+**Die Markierung** macht die Seite sichtbar und dunkelt alles ausserhalb
+der Stelle ab. Technisch ein einziger Schatten mit 9999 Pixeln Radius um
+den Rahmen - vier Rechtecke drumherum waeren dasselbe mit mehr Aufwand.
+Das Fenster springt beim Oeffnen gleich zur markierten Stelle. Bloss den
+Ausschnitt zu zeigen waere weniger wert: Man soll sehen, WO im Blatt man
+ist, nicht nur was dort steht. In der Pruefung muss man die Stelle
+schliesslich auch finden.
+
+**Uebernommen ist alles**, wie gewuenscht: Formelsammlung, IARU-Bandplaene
+und die Tabellen mit Frequenzbereichen und zulaessigen Sendeleistungen.
+
+**Die Zuordnung Frage -> Stelle** entsteht aus rund 70 Regeln ueber
+Fragentext und Antworten. 480 der 1750 Fragen haben jetzt einen Hinweis.
+
+**Ein Fehler dabei, gefunden beim Nachsehen im Browser:** Die Frage NB201
+- "Welches Bauteil wird durch das Schaltzeichen symbolisiert?" - bekam das
+Ohmsche Gesetz angeheftet. Grund: Unter den vier Antworten steht
+"Widerstand", und meine Regel suchte auch in den Antworten. Eine Hilfe fuer
+eine Aufgabe, bei der nichts zu rechnen ist.
+
+Die Regeln arbeiten seither auf zwei Stufen. Eindeutige Begriffe (Carson,
+MUF, Stehwellenverhaeltnis) duerfen weiter ueberall suchen. Alltagswoerter
+(Widerstand, Leistung, Frequenz) zaehlen nur, wenn sie in der FRAGE stehen
+und dort auch wirklich gerechnet wird - erkennbar an einer Zahl mit
+Einheit, an "berechnen"/"wie gross", oder daran, dass mindestens drei der
+vier Antworten Zahlen mit Einheit sind. Aus 709 Zuordnungen wurden 480,
+und NB201 hat keinen Knopf mehr.
+
+Geprueft im Browser gegen den laufenden Server: NB201 ohne Knopf, NB604
+(12-V-Bordnetz) mit "Leistung", ND106 mit "Stehwellenverhaeltnis", BC204
+mit dem IARU-Bandplan. Keine Javascript-Fehler.
+
+Mitgeliefert wird es ueberall: formelhilfe.json und der Ordner
+formelsammlung\\ stehen in der Paketliste von Server.js und in der des
+USB-Werkzeugs, und in der Freigabeliste (PUBLIC_FILES/PUBLIC_DIRS) - sonst
+zeigte der Knopf auf dem Stick und im Gruppenraum ins Leere.
+
+**Was noch aussteht:** Die Zuordnung ist maschinell entstanden. Wo ein
+Hinweis nicht passt oder fehlt, genuegt die Fragennummer - dann wird die
+Regel nachgezogen.
