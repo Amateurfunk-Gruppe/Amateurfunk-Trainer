@@ -7,10 +7,10 @@ reviews:
   high_level_summary: true
   poem: false
   collapse_walkthrough: false
-path_instructions:
+  path_instructions:
     - path: "data/**"
-    instructions: "Kritischer Bereich Fragenkatalog. JSON Syntax pruefen. Niemals Inhalte loeschen."
+      instructions: "Kritischer Bereich Fragenkatalog. JSON Syntax pruefen. Niemals Inhalte loeschen."
     - path: "**/*.json"
-    instructions: "Pruefe auf gueltiges JSON."
+      instructions: "Pruefe auf gueltiges JSON."
     - path: "backup/**"
-    instructions: "Backup Ordner nur auf Fehler pruefen."
+      instructions: "Backup Ordner nur auf Fehler pruefen."
