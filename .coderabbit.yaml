@@ -1,0 +1,90 @@
+language: de-DE
+
+# Ton: Verständlich für Hobby-Devs, nicht für Konzern
+tone: 
+  style: chill
+  concise: true
+
+reviews:
+  profile: chill
+  # Er soll nicht bei jedem Leerzeichen meckern, nur bei echten Fehlern
+  high_level_summary: true
+  poem: false
+  # Keine Reviews für kleine Tippfehler-PRs
+  min_lines_changed: 5
+
+# Was er generell über dein Projekt wissen muss
+custom_instructions: |
+  PROJEKT: Amateurfunk-Trainer - Lernprogramm für Amateurfunkprüfung Klasse N/E/A.
+  Zielgruppe: Hobby, Ortsverbände, Volkshochschulen. Läuft offline auf Windows per START.bat.
+  WICHTIGE REGELN:
+    1. data/ (Lernstand) darf NIEMALS überschrieben oder gelöscht werden. Jede Änderung an Code der data/ anfasst ist kritisch.
+    2. Update-Mechanismus (github_update.js / Server.js): Alte Dateien müssen vorher nach backup/ verschoben werden, Download muss verifiziert werden. Kein Update darf den Lernstand beschädigen.
+    3. Offline-First: Keine neuen Pflicht-Online-Abhängigkeiten einführen. Trainer muss ohne Internet laufen.
+    4. Keine Installation: Kein Code der Admin-Rechte, Registry oder feste Pfade wie C:\Program Files verlangt.
+    5. Barrierefreiheit: Tastaturbedienung muss immer funktionieren.
+
+# Pfad-spezifische Checks - das ist das was wirklich prüft
+path_instructions:
+    - path: "Server.js"
+    instructions: |
+      Kern-Server. Prüfe auf: Fehlerbehandlung, Server darf nicht crashen. 
+      Keine Sicherheitslücken (Path Traversal, Code Injection). 
+      Prüfe ob data/ wirklich unangetastet bleibt.
+
+    - path: "data/**"
+    instructions: |
+      ABSOLUTES NO-GO wenn Code hier Dateien löscht oder überschreibt. 
+      Nur lesen/schreiben des Lernfortschritts erlaubt. Warnen wenn ein PR diesen Ordner löscht.
+
+    - path: "**/*frage*.json"
+    instructions: |
+      Fragenkatalog. Prüfe: Doppelte IDs, fehlende Pflichtfelder (Frage, Antworten, richtige Antwort), 
+      falsche Klassen-Zuordnung (N/E/A). 1750 Fragen sind die Wahrheit - keine Frage darf durch Filter verloren gehen.
+
+    - path: "**/fragen/**"
+    instructions: |
+      Siehe oben: Fragenkatalog. Keine Duplikate, kein ungültiges JSON.
+
+    - path: "START.bat"
+    instructions: |
+      Muss simpel bleiben. Prüfe auf harte Pfade, Admin-Pflicht, komplizierte Logik. Soll nur Node starten.
+
+    - path: "USB-Stick-Erstellen.bat"
+    instructions: |
+      Positivliste beachten! Darf data/, .git, node_modules vom User NICHT mitkopieren. 
+      Lernstand des Erstellers darf nie auf den Stick für Teilnehmer kommen.
+
+    - path: "github_update.js"
+    instructions: |
+      KRITISCH: Prüfe Backup-Logik (alte Datei nach backup/), Prüfsummen-Check vor dem Schreiben,
+      "Alles oder nichts" - kein halbfertiges Update. Fingerabdruck-Logik muss korrekt sein.
+
+    - path: "**/*.html"
+    instructions: |
+      Prüfe Tastaturbedienung, keine externen CDNs (offline!), einfache Sprache.
+
+    - path: "piper/**"
+    instructions: |
+      Sprachausgabe. Keine riesigen Binärdateien ins Repo pushen. Prüfe auf Pfade.
+
+# Was er ignorieren soll - spart Geld und Nerven
+ignore:
+    - "node/**"
+    - "backup/**"
+    - "data/**"
+    - "*.onnx"
+    - "piper/models/**"
+
+tools:
+  ast-grep:
+    # Sucht nach typischen JS-Fehlern im Trainer
+    essential_rules:
+            - id: no-console-log-in-prod
+        language: javascript
+        rule: { pattern: "console.log($$$)" }
+        message: "console.log im Produktionscode - besser entfernen oder durch gezieltes Logging ersetzen"
+            - id: no-data-deletion
+        language: javascript
+        rule: { pattern: "fs.rmSync($PATH)", constraints: { PATH: { regex: "data" } } }
+        message: "KRITISCH: Löscht Code im data/ Ordner? Das würde den Lernstand vernichten!"
