@@ -1,7 +1,16 @@
 language: de-DE
-tone_instructions: "Antworte immer auf Deutsch. Freundlicher Mentor."
+tone_instructions: "Freundlicher Mentor fuer Amateurfunk-Trainer. Immer auf Deutsch, kurz und hilfreich."
 early_access: false
 reviews:
   profile: chill
+  request_changes_workflow: false
   high_level_summary: true
   poem: false
+  collapse_walkthrough: false
+path_instructions:
+    - path: "data/**"
+    instructions: "Kritischer Bereich Fragenkatalog. JSON Syntax pruefen. Niemals Inhalte loeschen."
+    - path: "**/*.json"
+    instructions: "Pruefe auf gueltiges JSON."
+    - path: "backup/**"
+    instructions: "Backup Ordner nur auf Fehler pruefen."
