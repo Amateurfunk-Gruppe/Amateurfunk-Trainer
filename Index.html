@@ -593,6 +593,25 @@
            mit 0.52rem sehr klein, und weiss auf dem normalen Gruen ergab nur
            3,5:1. Diese Werte tragen weisse Ziffern mit ueber 4,5:1 und bleiben
            trotzdem eindeutig gruen bzw. rot. */
+        /* Im Pruefungssimulator: beantwortet, aber ohne Wertung.
+           Neutrales Blau statt gruen/rot - man sieht, wo man war,
+           nicht, ob es stimmte. */
+        .dot-sidebar.beantwortet-dot {
+            background: #cfd9e6 !important;
+            color: #2b3a52 !important;
+            border-color: #b3c1d4 !important;
+        }
+        /* Die angekreuzte Antwort im Simulator: markiert, nicht bewertet. */
+        .option.gewaehlt, .option-grid.gewaehlt {
+            border-color: #0f2745 !important;
+            box-shadow: inset 0 0 0 2px #0f2745 !important;
+            background: #eef2f9 !important;
+        }
+        body.dark .option.gewaehlt, body.dark .option-grid.gewaehlt {
+            background: #24354d !important;
+            border-color: #9fc4e8 !important;
+            box-shadow: inset 0 0 0 2px #9fc4e8 !important;
+        }
         .dot-sidebar.correct-dot {
             background: #157f4b;
             border-color: #157f4b;
@@ -1136,7 +1155,11 @@
             .nav-btn, .btn-google { padding: 0.4rem 0.8rem; font-size: 0.7rem; min-height: 36px; }
         }
 
-        .header-right { display: flex; align-items: center; gap: 8px; }
+        /* Umbruch statt Ueberlauf: die Kopfzeile traegt inzwischen zwei
+           Ansichts-Knoepfe (Farbe und Form). Auf schmalen Schirmen rutscht
+           die Reihe damit in eine zweite Zeile, statt die Seite seitlich
+           wegzuschieben. Auf breiten Schirmen aendert die Regel nichts. */
+        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
         .btn-theme {
             background: var(--panel-navy);
             color: #fff !important;
@@ -1290,6 +1313,103 @@
            Die Signalfarben fuer richtig/falsch bleiben kraeftig, damit sie
            sich vom gruenen Untergrund noch deutlich abheben.
            ================================================================ */
+        /* ================================================================
+           GREY MODE - fuer wen es gemacht ist
+           ================================================================
+           Wer in einem Ortsverband unterwegs ist, kennt sachliche graue
+           Oberflaechen ohne Farbspiel. Genau die gibt es hier: hohe
+           Lesbarkeit, klare Kanten der Flaechen zueinander, keine Farbe,
+           die nichts bedeutet.
+
+           Farbe traegt hier ausschliesslich Bedeutung: gruen fuer richtig,
+           rot fuer falsch, ein gedaempftes Stahlblau als Akzent. Alles
+           andere ist Grau - und zwar in fuenf Stufen, damit die Ebenen
+           trotzdem auseinanderzuhalten sind:
+
+             #e8eaec  ganz aussen
+             #ffffff  die Karte (Buehne)
+             #f2f4f5  Inhaltsbloecke
+             #e6e9eb  Leisten und Kacheln
+             #dcdfe2  Tabellenkoepfe
+
+           Nachgerechnet: --muted (#56606b) auf #f2f4f5 liegt bei 6,0:1,
+           deutlich ueber den geforderten 4,5:1. Der Haupttext liegt bei
+           14,4:1.
+           ================================================================ */
+        body.grey {
+            --ink: #1c2024;
+            --muted: #56606b;
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --line: #c3c9cf;
+            --good: #1e7a44;
+            --good-bg: #d8ebdf;
+            --bad: #b8332c;
+            --bad-bg: #f5dedc;
+            --warn: #7d6412;
+            --warn-bg: #f0e8cf;
+            /* Der Akzent ist hier kein Bernstein, sondern gedaempftes
+               Stahlblau - es soll auffallen, ohne bunt zu sein. */
+            --accent-amber: #40525f;
+            --accent-amber-soft: #e7ecef;
+        }
+        body.grey { background: #e8eaec; }
+
+        body.grey .history-col,
+        body.grey .exam-info,
+        body.grey .left-sidebar,
+        body.grey .question-area { background: #f2f4f5; }
+        body.grey .filter-bar,
+        body.grey .left-sidebar .stat-chip { background: #e6e9eb; }
+
+        /* Wie im Green Mode: "body.grey .dot-sidebar" ist spezifischer als
+           ".dot-sidebar.wrong-dot" und wuerde dessen Rot ueberschreiben.
+           Deshalb stehen die Sonderfaelle DANACH. */
+        body.grey .dot-sidebar {
+            background: #dcdfe2;
+            color: #1c2024;
+            border-color: #c3c9cf;
+        }
+        body.grey .dot-sidebar.correct-dot {
+            background: #1e7a44 !important;
+            color: #ffffff !important;
+            border-color: #1e7a44 !important;
+        }
+        body.grey .dot-sidebar.wrong-dot {
+            background: #b8332c !important;
+            color: #ffffff !important;
+            border-color: #b8332c !important;
+        }
+        body.grey .dot-sidebar.beantwortet-dot {
+            background: #c9cfd5 !important;
+            color: #1c2024 !important;
+            border-color: #b4bcc4 !important;
+        }
+        body.grey .dot-sidebar.current-dot {
+            outline: 2px solid #40525f;
+            outline-offset: 1px;
+        }
+
+        body.grey .history-table th,
+        body.grey .exam-info th,
+        body.grey .left-sidebar .result-box.waiting,
+        body.grey .q-meta span,
+        body.grey .progress-stats span { background: #dcdfe2; }
+        body.grey .explanation-box { background: #eceff1; }
+
+        body.grey .option,
+        body.grey .option-grid,
+        body.grey .nav-btn,
+        body.grey .btn-google,
+        body.grey .filter-bar select { background: #ffffff; }
+        body.grey .btn-outline:hover,
+        body.grey .nav-btn:hover:not(:disabled),
+        body.grey .btn-google:hover { background: #e6e9eb; }
+        /* Weniger Schlagschatten als in den bunten Modi - technisch, nicht
+           schwebend. */
+        body.grey .card { box-shadow: 0 10px 28px -18px rgba(28,32,36,0.35); }
+        body.grey #masteryDisplay > div[style*="background"] { background: #f2f4f5 !important; }
+
         body.green {
             --ink: #1b3527;          /* dunkles Tannengruen - Text */
             --muted: #4f6e5a;        /* gedaempft, aber noch klar lesbar */
@@ -2875,6 +2995,11 @@ window.klasseWaehlen = klasseWaehlen;
         else if (gespeichert === 'green' || gespeichert === 'pastell') document.body.classList.add('green');
         else if (gespeichert === 'blue') document.body.classList.add('blue');
         else if (gespeichert === 'orange') document.body.classList.add('orange');
+        else if (gespeichert === 'grey') document.body.classList.add('grey');
+        // Die Form ist keine Wahl mehr, sondern gesetzt. Sie wird hier
+        // vergeben, BEVOR das erste Mal gezeichnet wird - sonst blitzte
+        // beim Laden kurz die runde Fassung auf.
+        document.body.classList.add('eckig');
     } catch (e) {}
 })();
 </script>
@@ -3128,17 +3253,12 @@ window.klasseWaehlen = klasseWaehlen;
                     <button id="hbOrdnerBtn" onclick="hbOrdner()" class="btn-lernstand-hell" data-tooltip="Ordner Hoerbuch im Explorer öffnen"><i class="fas fa-folder-open"></i> Ordner</button>
                     <span id="hbInfo" style="font-size:0.75rem; color:var(--muted);"></span>
                 </div>
-                <!-- Weitergeben: bisher steckte der Download nur im Gruppenraum,
-                     also hinter zwei Klicks und nur dann sichtbar, wenn man
-                     ohnehin gerade zusammen lernt. Hier steht er offen - wer
-                     jemandem im Verein den Trainer mitgeben will, findet ihn.
-                     Der Zaehler daneben kommt vom Server. -->
-                <div style="display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.8rem;">
-                    <span style="font-size:0.8rem; font-weight:600; color:var(--panel-navy);"><i class="fas fa-share-nodes"></i> Weitergeben:</span>
-                    <a href="/api/projekt-paket" download onclick="paketGeladen()" class="btn-lernstand" style="text-decoration:none;" data-tooltip="Den kompletten Trainer als ZIP – zum Weitergeben oder für einen zweiten Rechner. Läuft danach eigenständig, ohne diesen PC."><i class="fas fa-download"></i> Trainer als ZIP</a>
-                    <span id="paketInfo" style="font-size:0.75rem; color:var(--muted);"></span>
-                    <span style="font-size:0.72rem; color:var(--muted); margin-left:auto;">Enthält alle Klassen, Bilder und die Anleitung. Voraussetzung beim Empfänger: Node.js.</span>
-                </div>
+                <!-- HIER STAND BIS ZUM 01.09.2026 "Trainer als ZIP".
+                     Der Trainer wird jetzt als fertiges Setup weitergegeben -
+                     eine EXE, die Node und die Sprachstimme gleich mitbringt.
+                     Ein ZIP, dessen Empfaenger sich Node.js erst selbst
+                     installieren muss, ist daneben kein zweiter Weg, sondern
+                     ein schlechterer. Dietmar: "Die muessen raus!" -->
             </div>
             <!-- Der Platzhalter "Filter wählen und Start tippen" ist entfallen:
                  Er nahm im Hauptmenü Platz weg und sagte nichts, was nicht schon
@@ -3765,6 +3885,9 @@ async function confirmFullReset(){
 
 
 function searchOnGoogle() {
+    // Doppelter Boden: der Knopf ist im Simulator ausgeblendet, die
+    // Funktion aber ueber window erreichbar.
+    try{ if (pruefungStreng()) return; }catch(e){}
     const q = getCurrentQuestion();
     if (!q) {
         alert('Keine Frage zum Suchen verfügbar.');
@@ -4254,6 +4377,88 @@ let sidebarOpen = true;
 let showAllAnswers = false;
 let lastProgressScrollTop = 0;
 let examSimulatorMode = false;
+
+// ================================================================
+// IM PRUEFUNGSSIMULATOR IST STILLE
+// ================================================================
+// In der echten Pruefung sagt niemand "richtig" oder "falsch". Man
+// kreuzt an, geht weiter und erfaehrt das Ergebnis am Ende. Wer beim
+// Ueben nach jeder Frage ein gruenes Haekchen bekommt, uebt etwas
+// anderes als die Pruefung - und merkt am Pruefungstag, dass die
+// Rueckmeldung fehlt, an die er sich gewoehnt hat.
+//
+// Diese eine Funktion entscheidet ueberall. Angehaengt sind:
+//   - keine gruene/rote Faerbung der Antworten
+//   - keine Ansage "Richtig." / "Falsch. Richtig waere ..."
+//   - kein Verlauf, keine Auswertung, kein Knopf "Verlauf ausblenden"
+//   - kein Google-Knopf
+//   - kein F9/F10 (Loesung anzeigen)
+//   - neutrale Fortschrittspunkte statt gruen/rot
+//
+// Sie fragt beides ab: den einfachen Simulator (examSimulatorMode)
+// und den mehrteiligen Pruefungsdurchgang (realisticExam).
+function pruefungStreng(){
+    try{
+        if (typeof examSimulatorMode !== 'undefined' && examSimulatorMode) return true;
+        if (window.realisticExam && window.realisticExam.active) return true;
+    }catch(e){}
+    return false;
+}
+window.pruefungStreng = pruefungStreng;
+
+// Blendet aus, was im Pruefungssimulator nicht hingehoert. Wird am Ende
+// jeder Frage aufgerufen UND von updateVisibility(), damit es auch dann
+// gilt, wenn zwischendurch etwas anderes am Layout dreht.
+function simulatorAufraeumen(){
+    const streng = pruefungStreng();
+    const weg = [
+        'googleSearchBtn',   // Nachschlagen waehrend der Pruefung
+        'historyCol',        // Verlaufsspalte rechts
+        'sidebarToggleBtn'   // "Verlauf ausblenden"
+    ];
+    weg.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('pruefung-aus', streng);
+    });
+    try{
+        const sc = document.querySelector('.sidebar-column');
+        if (sc) sc.classList.toggle('pruefung-aus', streng);
+    }catch(e){}
+}
+window.simulatorAufraeumen = simulatorAufraeumen;
+
+// Beendet den Pruefungsmodus vollstaendig: BEIDE Schalter, die
+// pruefungStreng() abfragt, das Fenster des Durchgangs und der Timer -
+// und danach werden die Klassen neu gerechnet.
+//
+// WARUM ALS EIGENE FUNKTION (Fehler vom 01.09.2026):
+// Es gibt DREI Wege zurueck in die Hauptansicht: backToMain(), die
+// Rueckfrage "Fragerunde abbrechen?" und backToMainRealistic(). Zwei
+// davon setzten examSimulatorMode zurueck, aber nicht
+// realisticExam.active. pruefungStreng() fragt beide ab, meldete also
+// weiter "Pruefung laeuft" - und simulatorAufraeumen() liess die
+// Verlaufsspalte samt Benutzerauswahl ausgeblendet, obwohl man laengst
+// wieder in der Hauptansicht sass. Dietmar: "Benutzer und der Verlauf
+// fehlt." Solange das Aufraeumen an drei Stellen abgeschrieben stand,
+// war es nur eine Frage der Zeit, bis eine wieder vergessen wird.
+function pruefungsmodusBeenden(){
+    try{ examSimulatorMode = false; }catch(e){}
+    try{
+        if (window.realisticExam) {
+            window.realisticExam.active = false;
+            window.realisticExam.timerRunning = false;
+            if (window.realisticExam.timerId) {
+                clearInterval(window.realisticExam.timerId);
+                window.realisticExam.timerId = null;
+            }
+        }
+        const ov = document.getElementById('realisticExamModal');
+        if (ov) ov.classList.remove('open');
+    }catch(e){}
+    // Zum Schluss, wenn alle Schalter stimmen: die Klassen neu rechnen.
+    try{ simulatorAufraeumen(); }catch(e){}
+}
+window.pruefungsmodusBeenden = pruefungsmodusBeenden;
 let examTimerInterval = null;
 let examTimeRemaining = 45 * 60; // 45 Minuten in Sekunden
 let examTimerRunning = false;
@@ -7622,8 +7827,10 @@ async function playTTSSegment(seg, token){
         window._ttsHinweisGezeigt = true;
         console.warn('[TTS] Keine Piper-Stimme verfügbar - keine Sprachausgabe.');
         if(window.showAppAlert) window.showAppAlert(
-            'Für das Vorlesen fehlt eine Stimme im Ordner piper/.\n'
-            + 'Doppelklick auf piper.bat holt sie – danach im Zahnrad neben dem Lautsprecher auswählen.');
+            'Für das Vorlesen fehlt die Stimme im Ordner piper/.\n'
+            + 'Sie gehört zur Installation dazu – wenn sie fehlt, ist beim '
+            + 'Einrichten etwas schiefgegangen. Am einfachsten das Setup noch '
+            + 'einmal ausführen.');
     }
 }
 
@@ -7687,7 +7894,7 @@ async function openTtsSettings() {
         const data = await res.json();
         if (!data.voices || data.voices.length === 0) {
             select.innerHTML = '<option value="">Keine Stimmen gefunden</option>';
-            hint.innerHTML = 'Kein Sprachmodell im <code>piper/</code> Ordner gefunden. <code>install_piper.bat</code> ausführen oder manuell installieren.';
+            hint.innerHTML = 'Kein Sprachmodell im <code>piper/</code> Ordner gefunden. Die Stimme kommt mit dem Setup – am einfachsten das Setup noch einmal ausführen.';
             return;
         }
         let saved = localStorage.getItem('ttsVoice') || data.default || '';
@@ -8409,6 +8616,8 @@ function updateVisibility() {
         if (masteryDisplay) masteryDisplay.style.display = 'flex';
         if (filterBar) filterBar.style.display = 'flex';
     }
+    // Zuletzt: was im Pruefungssimulator nicht hingehoert.
+    try{ simulatorAufraeumen(); }catch(e){}
 }
 
 function toggleSidebar() {
@@ -8687,20 +8896,26 @@ function updateSidebarOnly(){
             const p = progress[qItem.id];
             if(p && p.answered){ isAnswered = true; isCorrect = !!p.correct; }
         }
-        if(isAnswered) cls = isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot';
+        if (isAnswered) cls = pruefungStreng() ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
         if(idx === currentIndex) cls += ' current-dot';
         if(isTrainerViewActive) cls += ' trainer-dot';
         dotsHtml += `<div class="${cls}" onclick="jumpToProgressDot(${idx})" title="Frage ${idx+1}">${idx+1}</div>`;
     });
     
+    // Im Pruefungssimulator gibt es weder Verlauf noch Auswertung - und
+    // damit auch keinen Knopf, der sie ein- und ausblendet. Siehe unten:
+    // die Spalte wird dann schlicht leer gelassen.
     const tabHtml = `<button class="sidebar-tab ${isTrainerViewActive ? 'trainer-mode' : ''}" id="sidebarToggleBtn" onclick="toggleSidebar()" data-tooltip="Verlauf ein-/ausblenden" style="${isTrainerViewActive ? 'background:#e2932f;' : ''}"><i class="fas ${sidebarOpen ? 'fa-chevron-left' : 'fa-chevron-right'}"></i><span class="tab-label">${isTrainerViewActive ? `${trainerName}: Verlauf (${displayCorrectCount}/${displayTotalAnswered})` : (sidebarOpen ? 'Verlauf ausblenden' : 'Verlauf einblenden')}</span></button>`;
     
     const sidebarHtml = `<div class="left-sidebar-wrapper ${sidebarOpen ? '' : 'collapsed'}" id="leftSidebarWrapper"><div class="left-sidebar" style="${isTrainerViewActive ? 'border:2px solid #e2932f; background:#fffaf0;' : ''}"><h3>${isTrainerViewActive ? `👑 Trainer: ${trainerName}` : '📊 Auswertung'} ${isTrainerViewActive ? '<span style="background:#e2932f; color:white; padding:2px 6px; border-radius:8px; font-size:0.55rem;">TRAINER</span>' : ''}</h3><div class="stat-head"><span>${isTrainerViewActive ? trainerName : partLabel2}</span><b>${total} Fragen</b></div><div class="stat-grid"><div class="stat-chip"><span class="label">✅ Richtig</span><span class="value green">${correctSoFar}</span></div><div class="stat-chip"><span class="label">❌ Falsch</span><span class="value red">${wrongSoFar}</span></div><div class="stat-chip"><span class="label">⏳ Offen</span><span class="value orange">${remaining}</span></div><div class="stat-chip"><span class="label">🎯 Quote</span><span class="value">${displayTotalAnswered > 0 ? Math.round((displayCorrectCount/displayTotalAnswered)*100) : 0}%</span></div></div><div class="result-box ${resultClass}">${resultText}</div>${displayTotalAnswered === total && total>0 ? `<div style="margin-top:0.25rem;text-align:center;font-size:0.62rem;color:var(--muted);">${effectivePass ? '✅ 19/25 erreicht' : '❌ 19/25 benötigt'}</div>` : ''}${isTrainerViewActive ? `<div style="margin-top:0.5rem; padding:0.4rem 0.6rem; background:#fdf1e0; border:1px solid #ffe0a0; border-radius:8px; font-size:0.7rem; color:#8a6d00; text-align:center;"><i class="fas fa-eye"></i> Du siehst <b>${trainerName}</b> (${displayCorrectCount}/${displayTotalAnswered})<br><span style="font-size:0.6rem;">Du kannst trotzdem selbst antworten – dein Fortschritt ist unter 👑 Trainer (Du)</span></div>` : ''}<h3 style="margin-top:0.6rem;">📌 Fortschritt</h3><div class="progress-dots-sidebar">${dotsHtml}</div></div></div>`;
     
     const sidebarCol = document.querySelector('.sidebar-column');
+    // Siehe pruefungStreng(): im Simulator bleibt die Spalte leer.
+    const streng = pruefungStreng();
     if(sidebarCol){
-        sidebarCol.innerHTML = tabHtml + sidebarHtml;
-        try{ ResizeObserver_instance?.observe?.(sidebarCol); }catch(e){}
+        sidebarCol.innerHTML = streng ? '' : (tabHtml + sidebarHtml);
+        sidebarCol.style.display = streng ? 'none' : '';
+        try{ if(!streng) ResizeObserver_instance?.observe?.(sidebarCol); }catch(e){}
     }
 }
 
@@ -8817,7 +9032,7 @@ function renderQuestion() {
                 isCorrect = !!p.correct;
             }
         }
-        if (isAnswered) cls = isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot';
+        if (isAnswered) cls = pruefungStreng() ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
         if (idx === currentIndex) cls += ' current-dot';
         if(isTrainerViewActive) cls += ' trainer-dot';
         dotsHtml += `<div class="${cls}" onclick="jumpToProgressDot(${idx})" title="Frage ${label} (${qItem.id})${isTrainerViewActive ? ' - ' + trainerName : ''} öffnen & vorlesen">${label}</div>`;
@@ -8851,9 +9066,15 @@ function renderQuestion() {
     `;
 
     let html = `<div class="main-layout">`;
-    html += `<div class="sidebar-column">`;
-    html += tabHtml;
-    html += sidebarHtml;
+    // Im Pruefungssimulator bleibt die linke Spalte leer: kein Verlauf,
+    // keine laufende Auswertung, kein Knopf "Verlauf ausblenden". In der
+    // echten Pruefung steht daneben ja auch keine Punktetafel.
+    const strengJetzt = pruefungStreng();
+    html += `<div class="sidebar-column"${strengJetzt ? ' style="display:none;"' : ''}>`;
+    if (!strengJetzt) {
+        html += tabHtml;
+        html += sidebarHtml;
+    }
     html += `</div>`;
     html += `<div class="question-area">`;
     
@@ -8863,7 +9084,7 @@ function renderQuestion() {
     }
     
     html += `<div class="q-meta">
-        <span><i class="fas fa-tag"></i> ${q.id} · ${partLabel}</span>
+        <span><i class="fas fa-tag"></i> ${partLabel}</span>
         <span><i class="fas fa-layer-group"></i> ${(typeof klasseAktuell === 'function' ? klasseAktuell().name : 'Klasse N')}</span>
         ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas fa-graduation-cap"></i> SIMULATOR ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
         ${examSimulatorMode && examTimerRunning ? `<span style="font-family:var(--font-mono);font-weight:700;color:${examTimeRemaining <= 300 ? 'var(--bad)' : 'var(--panel-navy)'};"><i class="fas fa-stopwatch"></i> ${String(Math.floor(examTimeRemaining/60)).padStart(2,'0')}:${String(examTimeRemaining%60).padStart(2,'0')}</span>` : ''}
@@ -8881,7 +9102,7 @@ function renderQuestion() {
     }
 
     html += `<div class="q-text-row" style="display:flex; align-items:flex-start; gap:10px; justify-content:space-between;">
-        <div class="q-text">${q.text}</div>
+        <div class="q-text">${q.id}: ${q.text}</div>
         <div style="flex-shrink:0; display:flex; gap:6px;">
             <button id="questionGelerntBtn" onclick="toggleGelerntCurrent()" title="Diese Frage als gelernt abhaken (ohne dreimal richtig)" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-circle-check"></i></button>
             <button id="questionFavBtn" onclick="toggleFavoriteCurrent()" title="Frage in die Merkliste aufnehmen" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-heart"></i></button>
@@ -8908,8 +9129,13 @@ function renderQuestion() {
             }
         } else if (answered) {
             cls += ' disabled';
-            if (opt.correct) cls += ' correct';
-            else if (i === q.userAnswerIndex) cls += ' wrong';
+            if (pruefungStreng()) {
+                // Nur markieren, WAS angekreuzt wurde - nicht, ob es stimmt.
+                if (i === q.userAnswerIndex) cls += ' gewaehlt';
+            } else {
+                if (opt.correct) cls += ' correct';
+                else if (i === q.userAnswerIndex) cls += ' wrong';
+            }
         }
 
         let optionImage = '';
@@ -8947,7 +9173,7 @@ function renderQuestion() {
         html += `<div class="${cls}" data-optindex="${i}" onclick="selectOption(${i})"
              role="button" tabindex="0"${gesperrt} aria-label="${String(ansage).replace(/"/g,'&quot;')}"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectOption(${i});}">
-            <div class="option-label">${labels[i]}.</div>
+            <div class="option-label">${labels[i]}:</div>
             <div class="option-content">
                 ${optionImage}
                 ${optionTextHtml}
@@ -8993,6 +9219,10 @@ function renderQuestion() {
     // Der Formelblatt-Knopf wird bei jeder Frage neu entschieden: Er
     // erscheint nur, wenn es zu genau dieser Frage eine Stelle gibt.
     try{ formelKnopfSetzen(); }catch(e){}
+    // Google und die Verlaufsspalte haben im Pruefungssimulator nichts zu
+    // suchen. Der Formelblatt-Knopf bleibt: die Formelsammlung ist
+    // amtliches Hilfsmittel und liegt in der Pruefung auf dem Tisch.
+    try{ simulatorAufraeumen(); }catch(e){}
     updateVisibility();
     if (!answered) maybeAutoReadQuestion();
 
@@ -9060,9 +9290,16 @@ function selectOption(optIndex) {
     // man sich durch vier Kacheln tasten, um sie zu finden.
     try {
         if (typeof ansagen === 'function') {
-            ansagen(isCorrect
-                ? 'Richtig.'
-                : 'Falsch. Richtig wäre: ' + (q.options.find(o => o.correct) || {}).text);
+            if (pruefungStreng()) {
+                // Auch hier darf die Wertung nicht durchsickern - aber wer
+                // die Kacheln nicht sieht, braucht trotzdem eine Bestaetigung,
+                // DASS gespeichert wurde. Sonst klickt man zweimal.
+                ansagen('Antwort ' + ['A','B','C','D'][optIndex] + ' gespeichert.');
+            } else {
+                ansagen(isCorrect
+                    ? 'Richtig.'
+                    : 'Falsch. Richtig wäre: ' + (q.options.find(o => o.correct) || {}).text);
+            }
         }
     } catch (e) { console.debug('Ansage:', e.message); }
 
@@ -9110,6 +9347,14 @@ function selectOption(optIndex) {
         }
     }, 300);
     setTimeout(() => {
+        // IM PRUEFUNGSSIMULATOR WIRD NICHT VORGELESEN, OB ES STIMMTE.
+        // Dietmar: "Das war die Richtige oder das war leider die falsche
+        // Antwort. Das gibt es in der Pruefung nicht und muss im
+        // Pruefungssimulator raus."
+        // Die Kacheln verraten es dort schon nicht mehr - die Stimme tat
+        // es aber weiter. Am Ende des Teils spricht der Trainer sehr
+        // wohl: dann kommt die Auswertung, und die gehoert dazu.
+        if (pruefungStreng()) return;
         const q = currentQuestions[currentIndex]; if (!q) return;
         let correctText = ''; let correctLabel = '';
         for (let i=0;i<q.options.length;i++){ if(q.options[i].correct){ correctText = q.options[i].text || ('Option ' + ['A','B','C','D'][i]); correctLabel = String.fromCharCode(65+i); break; } }
@@ -9743,6 +9988,7 @@ function backToMain() {
     if (examInfo){ examInfo.classList.remove('hidden-info'); examInfo.style.display=''; }
     if (filterBar) filterBar.style.display='';
     if (masteryDisplay) masteryDisplay.style.display='';
+    pruefungsmodusBeenden();
 }
 
 function resetAll() {
@@ -9795,13 +10041,14 @@ function resetAll() {
 // sich wie eine Beschriftung des aktuellen Zustands liest - dadurch wirkte
 // die Zuordnung vertauscht. Wohin der naechste Klick fuehrt, steht jetzt
 // im Hinweis beim Ueberfahren.
-const STILE = ['light', 'dark', 'green', 'blue', 'orange'];
+const STILE = ['light', 'dark', 'green', 'blue', 'orange', 'grey'];
 const STIL_ANZEIGE = {
     light:  { label: 'Light Mode',  icon: 'fas fa-sun' },
     dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },
     green:  { label: 'Green Mode',  icon: 'fas fa-leaf' },
     blue:   { label: 'Blue Mode',   icon: 'fas fa-water' },
-    orange: { label: 'Orange Mode', icon: 'fas fa-fire' }
+    orange: { label: 'Orange Mode', icon: 'fas fa-fire' },
+    grey:   { label: 'Grey Mode',   icon: 'fas fa-sliders' }
 };
 
 function aktuellerStil() {
@@ -9809,13 +10056,14 @@ function aktuellerStil() {
     if (document.body.classList.contains('green')) return 'green';
     if (document.body.classList.contains('blue')) return 'blue';
     if (document.body.classList.contains('orange')) return 'orange';
+    if (document.body.classList.contains('grey')) return 'grey';
     return 'light';
 }
 
 function stilSetzen(stil) {
     if (stil === 'pastell') stil = 'green';          // alter Name, gespeicherte Werte
     if (STILE.indexOf(stil) === -1) stil = 'light';
-    document.body.classList.remove('dark', 'green', 'blue', 'orange', 'pastell');
+    document.body.classList.remove('dark', 'green', 'blue', 'orange', 'grey', 'pastell');
     if (stil !== 'light') document.body.classList.add(stil);
     try { localStorage.setItem('theme', stil); } catch (e) {}
     applyThemeButtonLabel();
@@ -9834,6 +10082,15 @@ function applyThemeButtonLabel() {
     btn.setAttribute('data-tooltip', 'Aktuell: ' + STIL_ANZEIGE[jetzt].label +
         ' – klicken für ' + STIL_ANZEIGE[naechster].label);
 }
+
+// ================================================================
+// DIE FORM
+// ================================================================
+// Es gab hier bis zum 01.09.2026 zwei Formen zur Auswahl, rund und
+// eckig. Dietmar nach dem ersten Blick: "Rund kannst du komplett
+// ausbauen. Eckig ist viel schoener!" Also ist eckig keine Einstellung
+// mehr, sondern die Ansicht. Die Klasse steht deshalb fest am body
+// (siehe Startskript ganz oben) und laesst sich nicht mehr abwaehlen.
 
 function toggleTheme() {
     const jetzt = aktuellerStil();
@@ -10782,7 +11039,343 @@ if (originalSelectOption) {
   justify-content: center !important;
   flex: 1;
 }
-</style>
+
+        /* ============================================================
+           Was im Pruefungssimulator verschwindet
+           ============================================================
+           Zwei Anlaeufe waren noetig, und beide Fehlschlaege sind lehrreich:
+
+           1. el.style.display = 'none' half nicht. Der Wert stand da,
+              berechnet wurde trotzdem flex - weil .btn-google weiter
+              unten display:inline-flex !important setzt, und !important
+              im Stylesheet schlaegt jeden Inline-Wert ohne !important.
+
+           2. Die Regel als Klasse half auch nicht, solange sie WEITER
+              OBEN stand. Bei gleicher Spezifitaet (beides eine Klasse)
+              und beidem !important gewinnt die spaetere Regel. Deshalb
+              steht sie jetzt hier, ganz am Ende.
+           ============================================================ */
+        .pruefung-aus { display: none !important; }
+
+    
+        /* ================================================================
+           DIE FORM: eckig
+           ================================================================
+           Bis zum 01.09.2026 gab es hier zwei Formen zur Auswahl, rund
+           und eckig, umschaltbar ueber einen zweiten Knopf. Dietmar nach
+           dem ersten Blick: "Rund kannst du komplett ausbauen. Eckig ist
+           viel schoener!" Die Wahl ist damit erledigt - gerade Kanten,
+           keine Schatten, so wie auf den technischen Lernseiten, an die
+           man sich beim Lernen ohnehin gewoehnt.
+
+           WARUM DIESE UMSETZUNG:
+           Die gewachsene Gestaltung setzt border-radius an mehreren hundert
+           Stellen als feste Zahl. Sie alle einzeln zu aendern waere ein
+           Eingriff in jede Regel - viel Flaeche fuer Fehler, und jede
+           uebersehene Stelle bliebe rund. Ein einziger Block am Ende des
+           Stylesheets kehrt stattdessen die gesamte Form um. Die Klasse
+           "eckig" steht fest am body und wird im Startskript vergeben;
+           abwaehlen laesst sie sich nicht mehr.
+           ================================================================ */
+
+        :root {
+            --r-klein: 8px;
+            --r-mittel: 12px;
+            --r-gross: 18px;
+            --r-pille: 40px;
+            --schatten-karte: 0 18px 44px -18px rgba(15,39,69,0.28);
+        }
+        body.eckig {
+            --r-klein: 0px;
+            --r-mittel: 0px;
+            --r-gross: 0px;
+            --r-pille: 0px;
+            --schatten-karte: none;
+        }
+
+        /* Alles wird kantig. Ausgenommen bleiben nur Dinge, die rund sein
+           MUESSEN, um erkannt zu werden: Auswahlknoepfe und Haekchen des
+           Betriebssystems, und Elemente, die ausdruecklich rund bleiben
+           sollen. */
+        body.eckig *,
+        body.eckig *::before,
+        body.eckig *::after { border-radius: 0 !important; }
+        body.eckig input[type="radio"] { border-radius: 50% !important; }
+        body.eckig .rund-behalten,
+        body.eckig .rund-behalten * { border-radius: 50% !important; }
+
+        /* Keine schwebenden Flaechen. Der Rahmen uebernimmt, was vorher der
+           Schatten getan hat: Er trennt die Ebenen voneinander. */
+        body.eckig .card,
+        body.eckig .left-sidebar,
+        body.eckig .question-area,
+        body.eckig .history-col,
+        body.eckig .exam-info,
+        body.eckig .option,
+        body.eckig .option-grid,
+        body.eckig .nav-btn,
+        body.eckig .btn,
+        body.eckig .btn-google,
+        body.eckig .filter-bar,
+        body.eckig .stat-chip,
+        body.eckig .explanation-box { box-shadow: none !important; }
+
+        body.eckig .card,
+        body.eckig .question-area,
+        body.eckig .left-sidebar,
+        body.eckig .history-col,
+        body.eckig .exam-info,
+        body.eckig .explanation-box,
+        body.eckig .filter-bar { border: 1px solid var(--line); }
+
+        /* Antwortfelder: gerade Bloecke, dicht gestapelt - so, wie sie auf
+           den technischen Lernseiten stehen. Die farbige Markierung sitzt
+           links als Balken statt als Flaeche. */
+        body.eckig .option,
+        body.eckig .option-grid {
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--line);
+        }
+        body.eckig .option.correct,
+        body.eckig .option-grid.correct { border-left-color: var(--good); }
+        body.eckig .option.wrong,
+        body.eckig .option-grid.wrong { border-left-color: var(--bad); }
+        body.eckig .option.gewaehlt,
+        body.eckig .option-grid.gewaehlt { border-left-color: var(--ink); }
+
+        /* Ueberschriften technischer: gesperrt und in Versalien, wie in
+           einer Geraetebeschreibung. */
+        body.eckig .left-sidebar h3,
+        body.eckig .exam-info th,
+        body.eckig .history-table th {
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 0.72rem;
+        }
+
+        /* Der Tastatur-Fokus muss sichtbar bleiben. Ohne diese Zeile haette
+           ihn die Regel oben mit weggeraeumt - und wer mit der Tabulator-
+           taste arbeitet, waere blind unterwegs. */
+        body.eckig *:focus-visible { outline: 3px solid var(--accent-amber) !important; outline-offset: 2px; }
+
+        /* ================================================================
+           DIE ANTWORTFELDER - nach dem Vorbild des DARC-Fragenkatalogs
+           ================================================================
+           Dietmar hat einen Ausschnitt aus dem Fragenkatalog des DARC
+           geschickt: "Uebernehme die Schrift und die Felder und Farben
+           fuer richtig oder falsch exakt nach dem Vorbild, auch mit dem
+           Haken und dem Kreuz hinten dran."
+
+           Die Werte sind nicht geschaetzt, sondern aus dem Bild gemessen.
+           Jeder Farbwert unten stammt aus einer Pixelprobe:
+
+             Rahmen und Zwischenraeume  #dddddd
+             Antwortfeld unbeantwortet  #ffffff
+             richtig                    #3bb583
+             falsch                     #fe756c
+             Fragetext                  #212529
+             Antworttext                #000000
+
+           Auch die Masse sind abgemessen: Feldhoehe 34 px, 8 px Abstand
+           zwischen den Feldern, 7 px Rand links und rechts, der Text
+           beginnt 15 px innerhalb des Feldes. Keine Rundungen - im
+           Vorbild ist jede Ecke ein rechter Winkel, nachgesehen an den
+           Eckpixeln.
+
+           Die Schrift ist Arial. Erkennbar am doppelstoeckigen "a" mit
+           Sporn und am waagerechten Balken im "e"; Segoe UI, die andere
+           naheliegende Moeglichkeit, zeichnet beide anders.
+
+           WARUM DIE HOHE SPEZIFITAET:
+           Der Dark Mode setzt eigene Regeln mit !important auf genau
+           dieselben Felder (body.dark .question-area .option.correct).
+           Ohne den Vorspann "body.eckig .question-area" wuerden die hier
+           verlieren - und im Dark Mode saehen die Antworten anders aus
+           als ueberall sonst. Die Signalfarben sind aber der Punkt der
+           Sache: Sie muessen in JEDEM Farbmodus dieselben sein.
+           ================================================================ */
+
+        :root {
+            --darc-rahmen:  #dddddd;
+            --darc-feld:    #ffffff;
+            --darc-richtig: #3bb583;
+            --darc-falsch:  #fe756c;
+            --darc-frage:   #212529;
+            /* Die angekreuzte Antwort im Pruefungssimulator. Kein Urteil,
+               nur eine Markierung - deshalb eine dritte Farbe und weder
+               Haken noch Kreuz. Der Ton ist so gewaehlt, dass er neben
+               den beiden anderen nicht herausfaellt: Rot liegt bei einer
+               relativen Helligkeit von 0,349, Gruen bei 0,356, dieses
+               Orange bei 0,456 - alle drei tragen schwarze Schrift mit
+               mindestens 8:1. Und der Farbton liegt mit 26 Grad weit
+               genug vom Rot (4 Grad) entfernt, dass man die beiden auch
+               nebeneinander nicht verwechselt. */
+            --darc-gewaehlt: #f9a05a;
+            /* Die Antwort, die gerade vorgelesen wird. Leuchtstift-Gelb -
+               es soll nicht "dazugehoeren", sondern auffallen und gleich
+               wieder verschwinden. Kontrast zu schwarzer Schrift 16:1;
+               der Farbton liegt mit 48 Grad weit genug vom Orange der
+               angekreuzten Antwort (26 Grad) entfernt. */
+            --darc-vorgelesen: #ffe066;
+            --darc-schrift: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
+        }
+
+        /* Kopfzeile und Antwortfelder bilden EINEN grauen Block - im
+           Vorbild sitzt die Frage in derselben Flaeche wie die Antworten
+           und nicht darueber. */
+        body.eckig .question-area .q-text-row {
+            background: var(--darc-rahmen);
+            padding: 11px 15px;
+            margin-bottom: 0;
+            align-items: center;
+            gap: 12px;
+        }
+        body.eckig .question-area .q-text {
+            font-family: var(--darc-schrift);
+            font-weight: 700;
+            font-size: 1rem;
+            line-height: 1.35;
+            color: var(--darc-frage) !important;
+        }
+        body.eckig .question-area .options {
+            background: var(--darc-rahmen);
+            padding: 0 7px 8px 7px;
+            gap: 8px;
+            margin-top: 0;
+        }
+
+        body.eckig .question-area .option {
+            background: var(--darc-feld) !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 7px 12px 7px 15px;
+            min-height: 34px;
+            gap: 8px;
+            align-items: center;
+            font-family: var(--darc-schrift);
+            font-size: 0.95rem;
+            line-height: 1.35;
+            color: #000 !important;
+            transition: none;
+        }
+        body.eckig .question-area .option .option-label {
+            font-family: var(--darc-schrift) !important;
+            font-weight: 700;
+            color: #000 !important;
+            min-width: 0;
+        }
+        body.eckig .question-area .option .option-text { color: #000 !important; }
+        body.eckig .question-area .option .option-content { flex: 1; min-width: 0; }
+        body.eckig .question-area .option:hover:not(.disabled) { background: #f2f2f2 !important; }
+        /* opacity 0.9 lag frueher auf beantworteten Feldern. Damit waeren
+           die gemessenen Farben nicht mehr die gemessenen Farben. */
+        body.eckig .question-area .option.disabled { opacity: 1; }
+
+        body.eckig .question-area .option.correct { background: var(--darc-richtig) !important; }
+        body.eckig .question-area .option.wrong   { background: var(--darc-falsch)  !important; }
+        body.eckig .question-area .option.correct .option-label,
+        body.eckig .question-area .option.wrong   .option-label,
+        body.eckig .question-area .option.correct .option-text,
+        body.eckig .question-area .option.wrong   .option-text { color: #000 !important; }
+
+        /* Haken und Kreuz sitzen rechts aussen. Sie kommen aus dem
+           Stylesheet und nicht aus dem HTML: So stehen sie automatisch an
+           jeder bewerteten Antwort, auch in der Wiederholung und im
+           Gruppenraum, ohne dass an vier Stellen im JavaScript daran
+           gedacht werden muss. Vorlesegeraete lesen sie nicht mit - das
+           ist hier richtig, denn "richtig" und "falsch" stehen schon in
+           der Ansage. */
+        body.eckig .question-area .option.correct::after,
+        body.eckig .question-area .option.wrong::after {
+            margin-left: auto;
+            flex-shrink: 0;
+            padding-left: 10px;
+            color: #000;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        body.eckig .question-area .option.correct::after { content: '\2714'; }
+        body.eckig .question-area .option.wrong::after   { content: '\2716'; }
+
+        /* Im Pruefungssimulator wird nicht bewertet. Die angekreuzte
+           Antwort bekommt deshalb Orange - kein Urteil, nur eine
+           Markierung - und weder Haken noch Kreuz. */
+        body.eckig .question-area .option.gewaehlt {
+            background: var(--darc-gewaehlt) !important;
+            box-shadow: none !important;
+        }
+        body.eckig .question-area .option.gewaehlt::after { content: none; }
+
+        /* Bildfragen: dieselben Signalfarben, aber die Kachel behaelt ihre
+           Form. Haken und Kreuz sitzen hier in der Ecke - in der Mitte
+           wuerden sie das Bild verdecken. */
+        body.eckig .question-area .options-grid { background: var(--darc-rahmen); padding: 8px 7px; gap: 8px; }
+        body.eckig .question-area .option-grid {
+            background: var(--darc-feld) !important;
+            border: none !important;
+            box-shadow: none !important;
+            position: relative;
+            font-family: var(--darc-schrift);
+            color: #000 !important;
+        }
+        body.eckig .question-area .option-grid.disabled { opacity: 1; }
+        body.eckig .question-area .option-grid.correct  { background: var(--darc-richtig)  !important; }
+        body.eckig .question-area .option-grid.wrong    { background: var(--darc-falsch)   !important; }
+        body.eckig .question-area .option-grid.gewaehlt { background: var(--darc-gewaehlt) !important; box-shadow: none !important; }
+        body.eckig .question-area .option-grid .option-label,
+        body.eckig .question-area .option-grid .option-text {
+            color: #000 !important;
+            font-family: var(--darc-schrift) !important;
+        }
+        body.eckig .question-area .option-grid.correct::after,
+        body.eckig .question-area .option-grid.wrong::after {
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            color: #000;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        body.eckig .question-area .option-grid.correct::after { content: '\2714'; }
+        body.eckig .question-area .option-grid.wrong::after   { content: '\2716'; }
+        body.eckig .question-area .option-grid.gewaehlt::after { content: none; }
+
+        /* ================================================================
+           WAS GERADE VORGELESEN WIRD
+           ================================================================
+           Dietmar: "Beim Vorlesen einer Antwort soll die Antwort, die
+           vorgelesen wird, gelb markiert sein."
+
+           Die Markierung selbst gab es schon - `tts-highlight` wird beim
+           Vorlesen an die jeweilige Antwort gehaengt und danach wieder
+           entfernt. Sichtbar war sie seit dem Umbau auf die DARC-Felder
+           aber nicht mehr: Meine Regel
+               body.eckig .question-area .option { background: ... }
+           hat drei Klassen und ein Element, die alte Regel
+               .option.tts-highlight { background: ... }
+           nur zwei Klassen. Beide mit !important - dann gewinnt die
+           spezifischere, also meine. Die Markierung wurde also gesetzt
+           und war trotzdem unsichtbar.
+
+           Deshalb steht sie hier neu, mit demselben Vorspann und einer
+           Klasse mehr - und ganz am Ende, damit sie auch gegen richtig,
+           falsch und angekreuzt gewinnt. Haken und Kreuz bleiben stehen:
+           Sie haengen am ::after und werden von der Farbe nicht beruehrt.
+           Wer also eine bereits beantwortete Frage noch einmal vorlesen
+           laesst, verliert die Wertung nicht aus den Augen.
+           ================================================================ */
+        body.eckig .question-area .option.tts-highlight,
+        body.eckig .question-area .option.correct.tts-highlight,
+        body.eckig .question-area .option.wrong.tts-highlight,
+        body.eckig .question-area .option.gewaehlt.tts-highlight,
+        body.eckig .question-area .option-grid.tts-highlight,
+        body.eckig .question-area .option-grid.correct.tts-highlight,
+        body.eckig .question-area .option-grid.wrong.tts-highlight,
+        body.eckig .question-area .option-grid.gewaehlt.tts-highlight {
+            background: var(--darc-vorgelesen) !important;
+        }
+
+    </style>
 
 <script id="finalFixDynamicHeight">
 (function(){
@@ -10968,16 +11561,24 @@ if (originalSelectOption) {
     return e.key === 'F10' || e.code === 'F10' || e.keyCode === 121 || e.which === 121;
   }
 
+  // Im Pruefungssimulator gibt es keine Loesungstaste. Frueher zaehlte
+  // F9 dort "nur" als Fehler - aber die Loesung stand dann trotzdem da,
+  // und wer sie einmal gesehen hat, kann sie nicht mehr nicht wissen.
+  function loesungErlaubt(){
+    try{ return !(typeof pruefungStreng === 'function' && pruefungStreng()); }
+    catch(e){ return true; }
+  }
+
   document.addEventListener('keydown', function(e){
     if(isF9(e) || isF10(e)){
       e.preventDefault();
       e.stopPropagation();
-      toggleHiddenSolution();
+      if(loesungErlaubt()) toggleHiddenSolution();
       return false;
     }
     if(e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'l' || e.code === 'KeyL')){
       e.preventDefault();
-      toggleHiddenSolution();
+      if(loesungErlaubt()) toggleHiddenSolution();
     }
   }, true);
 
@@ -10985,7 +11586,7 @@ if (originalSelectOption) {
     if(isF9(e) || isF10(e)){
       e.preventDefault();
       e.stopPropagation();
-      toggleHiddenSolution();
+      if(loesungErlaubt()) toggleHiddenSolution();
       return false;
     }
   }, true);
@@ -12243,6 +12844,10 @@ function openAbortQuizModal(){
         const filterBar = document.querySelector('.filter-bar'); if(filterBar) filterBar.style.display='';
         const masteryDisplay = document.getElementById('masteryDisplay'); if(masteryDisplay) masteryDisplay.style.display='';
         if(typeof updateVisibility==='function') updateVisibility();
+        // Dieser Weg zurueck ruft backToMain() NICHT - er raeumt selbst
+        // auf. Ohne die naechste Zeile bliebe realisticExam.active stehen
+        // und mit ihm die ausgeblendete Verlaufsspalte.
+        try{ pruefungsmodusBeenden(); }catch(e){}
         try{ updateMasteryDisplay(); }catch(e){}
         try{ updateDifficultBadge(); }catch(e){}
         try{ updateErrorBadge(); }catch(e){}

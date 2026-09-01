@@ -180,137 +180,58 @@ neu gestartet werden muss.
 
 ## Loslegen
 
-Ein Doppelklick. **Installiert wird nichts.**
+**Setup herunterladen, doppelklicken, fertig.**
 
-1. Oben auf **Code → Download ZIP**, das ZIP entpacken
-2. Im entpackten Ordner: Doppelklick auf **`START.bat`**
+Rechts unter [Releases](../../releases) liegt
+`Amateurfunk-Trainer-<Version>.exe`. Herunterladen, doppelklicken, dem
+Assistenten folgen — mehr ist es nicht.
 
-Mehr ist es nicht. Was fehlt, holt START.bat selbst nach: Node.js landet ohne
-Installation im Unterordner `node/`, die Programmbausteine kommen per
-`npm install` dazu. Der erste Start dauert deshalb ein paar Minuten und
-braucht einmal Internet. Danach öffnet sich der Trainer im Browser — und ab
-dann läuft er auch ohne Netz.
+Das Setup bringt alles mit, was der Trainer braucht:
 
-Wer lieber mit git arbeitet, klont statt zu entpacken:
+- **Node.js** im Unterordner `node\` — auf dem Rechner wird nichts
+  installiert und nichts an Windows geändert
+- **die natürliche Sprachausgabe** samt der deutschen Stimme „Thorsten"
+- **die amtlichen Unterlagen** — Fragenkatalog und Formelsammlung als PDF
+- **das Startsymbol** auf dem Desktop, auf Wunsch auch in der Taskleiste
 
-    git clone https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer.git
+Eine Internetverbindung wird beim Einrichten nicht gebraucht. Der Trainer
+läuft danach vollständig ohne Netz; ins Internet geht er nur, wenn Sie
+selbst einen Gruppenraum öffnen oder nach Neuerungen sehen lassen.
 
-Danach ebenfalls **START.bat**. Ein eigenes `npm install` ist nicht nötig,
-schadet aber auch nicht.
+**Wohin installiert wird, fragt der Assistent.** Vorgeschlagen ist
+`C:\Programme\Amateurfunk-Trainer`; jeder andere Ordner geht auch. Wer
+lieber im eigenen Benutzerkonto bleibt, wählt zum Beispiel
+`C:\Users\<Name>\Amateurfunk-Trainer` — dort darf Windows in jedem Fall
+schreiben.
 
-**Ein Fenster, und das minimiert.** START.bat legt sich beim Start selbst in
-die Taskleiste — der Trainer läuft ja im Browser. Das Fenster wird nur
-gebraucht, wenn etwas schiefgeht, und zum Beenden des Servers. Beim
-allerersten Start bleibt es offen: Dann wird noch nachgeladen, und wer davon
-nichts sieht, hält den Trainer für kaputt.
+**Der Lernstand liegt in `data\`** und bleibt bei einem Update erhalten.
+Wer auf einen anderen Rechner wechselt, klickt im Trainer auf „Sichern",
+nimmt die entstandene `...-Lernstand_<Datum>.json` mit und liest sie
+drüben mit „Einlesen" wieder ein.
 
-**Sprachausgabe.** Vorgelesen wird von Haus aus mit der Windows-Stimme. Für
-die natürliche Stimme „Thorsten“ einmal **`piper.bat`** ausführen — rund
-80 MB. Wer einen Stick baut, braucht das nicht: `USB-Stick-Erstellen.bat`
-bringt die Sprachausgabe fertig eingerichtet mit.
+**„Unbekannter Herausgeber".** Windows zeigt diese Warnung bei jedem
+Programm, das nicht mit einem gekauften Zertifikat signiert ist — ein
+solches Zertifikat kostet jährlich mehrere hundert Euro, und der Trainer
+ist ein kostenfreies Feierabendprojekt. Auf „Weitere Informationen" und
+dann „Trotzdem ausführen" klicken. Wem das zu weit geht: Der Quellcode
+liegt vollständig hier, das Setup lässt sich mit
+[Inno Setup](https://jrsoftware.org/isinfo.php) und `Build-DIREKT.bat`
+selbst bauen.
 
-**Zum Weitergeben** gibt es den Weg
-[über den USB-Stick](#auf-einem-usb-stick-weitergeben--ohne-installation) —
-ein Stick, der an jedem Windows-Rechner läuft, ohne dort etwas zu
-installieren.
+**Ohne Setup, direkt aus dem Quellcode.** Wer den Trainer lieber selbst
+startet: Repository klonen oder als ZIP herunterladen, Node.js
+installieren, im Ordner einmal `npm install`, dann `node Server.js`.
+Entwickelt und getestet ist unter Windows; `Server.js` ist gewöhnliches
+Node.js und sollte auch unter macOS und Linux starten — nachgeprüft ist
+das nicht.
 
-Entwickelt und getestet unter Windows. `Server.js` selbst ist gewöhnliches
-Node.js und sollte auch unter macOS und Linux starten — nachgeprüft ist das
-nicht, und START.bat, `piper.bat` und das mitgelieferte Node.js sind
-Windows-Dateien.
+## Beenden und neu starten
 
-## Fest auf dem eigenen Rechner — mit Symbol auf dem Desktop
-
-Der entpackte Ordner darf liegen, wo er will; der Trainer läuft von jedem
-Pfad. Nur ist der Downloads-Ordner ein schlechter Platz — dort ist er beim
-nächsten Aufräumen weg. Und `START.bat` zeigt Windows als graues Zahnrad,
-das man zwischen allen anderen Dateien erst suchen muss.
-
-Zwei Handgriffe schaffen beides ab:
-
-1. Den ganzen Ordner an einen festen Platz verschieben
-2. Dort Doppelklick auf **`Verknuepfung-Erstellen.bat`**
-
-Danach liegt auf dem Desktop eine Verknüpfung mit dem Funkgerät-Symbol, die
-den Trainer startet.
-
-![Verknuepfung-Erstellen.bat legt ein Startsymbol auf den Desktop](bilder/11-verknuepfung.png)
-
-**Der Lernstand zieht mit.** Er liegt im Unterordner `data\` und wandert
-beim Verschieben einfach mit. Wer ganz sichergehen will, klickt vorher im
-Trainer auf „Sichern“ — dann liegt der Stand zusätzlich als eigene
-`...-Lernstand_<Datum>.json` im Ordner.
-
-**Wohin verschieben?** Am unkompliziertesten ist ein Ordner im eigenen
-Benutzerkonto, etwa `C:\Users\<Name>\Amateurfunk-Trainer`.
-`C:\Program Files\Amateurfunk-Trainer` geht ebenfalls — Windows fragt dann
-beim Verschieben einmal nach Administratorrechten. Je nachdem, wie die
-Rechte auf dem Rechner gesetzt sind, kann der Trainer dort allerdings seinen
-Lernstand nicht schreiben. Das fällt sofort auf: Der Fortschritt ist nach
-dem Schließen wieder weg. In dem Fall besser ins Benutzerkonto.
-
-**Später umgezogen?** `Verknuepfung-Erstellen.bat` darf jederzeit erneut
-laufen und richtet die Verknüpfung auf den neuen Ort. Zeigt der Desktop noch
-das alte Symbol: einmal F5 drücken — Windows merkt sich Symbole und frischt
-sie nicht von allein auf.
-
-## Auf einem USB-Stick weitergeben — ohne Installation
-
-Für Ortsverbände und Volkshochschulen: Sticks bespielen, austeilen, fertig.
-Die Teilnehmer stecken ihn zu Hause ein, klicken **START.bat** und lernen los.
-**Auf ihrem Rechner wird nichts installiert** — kein Node.js, kein Konto,
-keine Administratorrechte, keine Änderung an Windows. Nach dem Abziehen
-bleibt nichts zurück.
-
-So wird ein Stick daraus:
-
-1. Dieses Repository herunterladen (**Code → Download ZIP**) und entpacken
-2. Stick einstecken
-3. Im entpackten Ordner: Doppelklick auf **`USB-Stick-Erstellen.bat`**
-
-**Lieber zusehen?** Ein Video zeigt den ganzen Vorgang von Anfang bis Ende:
-
-<a href="https://www.youtube.com/watch?v=Cg5ivdDuCQE">
-  <img src="https://i.ytimg.com/vi/Cg5ivdDuCQE/hqdefault.jpg" width="420"
-       alt="Video: Amateurfunk-Trainer-Installation auf USB-Stick">
-</a>
-
-[Amateurfunk-Trainer-Installation auf USB-Stick](https://www.youtube.com/watch?v=Cg5ivdDuCQE)
-
-Gefragt wird genau eines: **auf welchen Stick.** Und auch das nur, wenn mehr
-als einer steckt — bei einem genügt die Eingabetaste.
-
-Beim ersten Mal holt das Werkzeug selbst nach, was zu groß fürs Repository
-ist: Node.js, die Programmbausteine und die Sprachausgabe samt
-Funktionstest. Dafür wird einmal eine Internetverbindung gebraucht, danach
-nie wieder.
-
-![Der Ablauf von USB-Stick-Erstellen.bat](bilder/10-usb-stick.png)
-
-**Was auf den Stick kommt — und was nicht.** Kopiert wird nach einer
-Positivliste, nicht der ganze Ordner. Der eigene Lernstand (`data/`), die
-Entwickler-Werkzeuge und die Git-Vorgeschichte bleiben zurück. Wer Sticks
-austeilt, verteilt damit nicht versehentlich seinen eigenen Lernfortschritt.
-
-**Der Lernstand wandert mit.** Er wird auf dem Stick gespeichert, nicht auf
-dem fremden Rechner. Wer den Stick an mehreren Rechnern benutzt, findet
-seinen Fortschritt überall wieder.
-
-**Größe:** rund 200 MB mit einer Stimme. Wer mehrere Piper-Stimmen im Ordner
-hat, bekommt sie alle mit — wer Platz sparen will, löscht die überzähligen
-`.onnx`-Dateien im Ordner `piper/`, dann nimmt das Werkzeug automatisch
-weniger mit.
-
-**Eine Grenze, die ehrlich dazugehört:** Die natürliche Sprachausgabe
-braucht auf dem Zielrechner das Microsoft-Laufzeitpaket (Visual C++
-Redistributable). Das lässt sich nicht auf einen Stick kopieren, es muss
-installiert sein. Fehlt es, liest der Trainer mit der Windows-Stimme vor —
-er läuft also, klingt nur weniger natürlich. `piper/piper_reparatur.bat` auf
-dem Stick holt das Paket bei Bedarf nach.
-
-**Auch ohne Stick:** `Node-Holen.bat` legt Node.js allein in den Ordner
-`node/`, wenn der Trainer auf dem eigenen Rechner ohne Installation laufen
-soll.
+Der Trainer läuft im Browser, der Server dahinter unsichtbar im
+Hintergrund. Zum Beenden gibt es **`STOP.bat`** im Programmordner. Und
+wenn beim Start nichts zu passieren scheint, meldet sich der Trainer
+inzwischen selbst: Läuft schon einer auf Port 3000 — etwa aus einem alten
+Ordner —, fragt er nach, ob er ihn beenden und neu starten soll.
 
 ## Herkunft der Fragen
 

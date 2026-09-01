@@ -3607,3 +3607,879 @@ zeigte der Knopf auf dem Stick und im Gruppenraum ins Leere.
 **Was noch aussteht:** Die Zuordnung ist maschinell entstanden. Wo ein
 Hinweis nicht passt oder fehlt, genuegt die Fragennummer - dann wird die
 Regel nachgezogen.
+
+## 01.09.2026 - Setup, Piper und CodeRabbit
+
+Drei Auftraege, drei sehr verschiedene Befunde.
+
+### 1. Der Piper-Fehler: expandTTS is not a function
+
+    Piper Fehler: TypeError: expandTTS is not a function
+        at C:\Program Files\Amateurfunk-Trainer\Server.js:...
+
+**Ursache gefunden, und sie ist eindeutig.** Server.js holt sich in
+Zeile 689:
+
+    const { expandTTS } = require('./tts-expand');
+
+expandTTS ist die Funktion, die aus "145,500 MHz" ein vorlesbares
+"145,500 Megahertz" macht - 12 KB Regeln fuer Einheiten, Abkuerzungen und
+Rufzeichen. Die Datei tts-expand.js wurde durch ein voellig anderes Modul
+ersetzt: einen Piper-Starter mit der einzigen Funktion piperTTS, 2,8 KB,
+unter dem Namen Tts-Expand.js. expandTTS gab es danach nicht mehr.
+
+**Warum es niemandem auffiel:** Windows unterscheidet bei Dateinamen
+keine Gross- und Kleinschreibung. require('./tts-expand') findet also
+auch Tts-Expand.js. Das Modul wurde geladen - es enthielt nur die
+falsche Funktion. Waere der Trainer unter Linux gelaufen, haette schon
+das Laden mit "Cannot find module" abgebrochen, und die Ursache haette
+auf der Hand gelegen.
+
+**Nachgesehen:** piperTTS wird nirgends aufgerufen - weder in Server.js
+noch in hoerbuch.js. Die Sprachausgabe laeuft ueber die Route /api/tts,
+die Piper selbst startet. Das neue Modul war also von Anfang an tot und
+hat dabei ein lebendes ersetzt.
+
+**Behoben:** Der vollstaendige alte Inhalt ist wieder da. piperTTS bleibt
+erhalten und wird mit exportiert, damit nichts verlorengeht:
+
+    module.exports = { expandTTS, piperTTS };
+
+Nachgemessen: "2 m, 70 cm, 145,500 MHz, 750 W ERP, 50 Ohm, SWR 1:1" wird
+zu "2 Meter, 70 Zentimeter, 145,500 Megahertz, 750 Watt Effektive
+Strahlungsleistung, 50 Ohm, Stehwellenverhaeltnis 1:1".
+
+### 2. installer.iss - alle 40 Quellpfade waren absolut
+
+Jede einzelne Zeile zeigte nach `C:\Temp\TrainerMSI\Source\...` - einem
+Ordner, den es nicht mehr gibt. Genau daher kam "START.vbs wurde nicht
+gefunden": Das Setup nahm die Datei nie mit.
+
+Alle 40 Quellangaben sind jetzt **relativ** zum Ordner der .iss. Damit
+ist ausgeschlossen, dass jemals wieder ein fremder Ordner gebaut wird.
+
+Weitere Befunde bei der Durchsicht:
+
+- **`data\*` wurde mit ausgeliefert.** Darin liegt der Lernstand - der
+  eigene. Jede Installation haette fremde Antwortverlaeufe mitgebracht.
+  Raus. Der Ordner wird jetzt leer angelegt, der Trainer fuellt ihn beim
+  ersten Start selbst.
+- **video_embed.json ebenso.** Darin stehen Vornamen echter Menschen.
+  Raus.
+- **github_update.js fehlte.** Server.js braucht es (Zeile 1642) - der
+  Updater war in jeder Installation kaputt. Ebenso fehlten
+  update_pruefen.js, piper.bat, die beiden PDFs und die LICENSE. Die
+  Lizenz muss jeder Kopie beiliegen, so steht es in der PolyForm
+  Noncommercial 1.0.0 unter "Notices".
+- **Schreibrechte:** Unter C:\Program Files darf ein normaler Benutzer
+  nicht schreiben. data\, backup\, tts_cache\ und Hoerbuch\ bekommen
+  jetzt users-modify - sonst waere der Lernstand nach jedem Schliessen
+  weg.
+- **Platzhalter ohne skipifsourcedoesntexist** brechen den Build ab,
+  wenn nichts passt. Alle Ordner-Zeilen haben den Zusatz jetzt.
+- **SetupIconFile ist wieder an.** Es war auskommentiert mit "removed to
+  guarantee compile". Die Ursache lag woanders: icon.ico speicherte
+  seine Bilder PNG-komprimiert, und daran scheitern manche
+  Inno-Fassungen mit "Setup icon file is invalid". Die Datei ist neu
+  gebaut - dasselbe Bild, alle acht Groessen von 16 bis 256, aber als
+  klassisches DIB. Nachgesehen: keine PNG-Signatur mehr enthalten.
+
+**Taskleiste**, wie gewuenscht:
+
+    [Tasks]        desktopicon (angehakt) + taskbaricon (nicht angehakt)
+    [Icons]        ...\User Pinned\TaskBar\Amateurfunk-Trainer
+    [UninstallDelete]  loescht die .lnk wieder
+    [Code]         legt den TaskBar-Ordner an, falls er fehlt
+
+Die Desktop-Verknuepfung ist jetzt **vorangehakt** - vorher stand dort
+`Flags: unchecked`, man musste sie also aktiv anfordern.
+
+**Eine Ehrlichkeit dazu:** Seit Windows 10 laesst Microsoft das Anheften
+an die Taskleiste nicht mehr durch Programme zu. Eine .lnk in den
+TaskBar-Ordner zu legen, war frueher der Weg; heute erscheint sie dort
+nicht mehr zuverlaessig. Der Haken ist da und legt die Verknuepfung an -
+ob Windows sie anzeigt, entscheidet Windows. Deshalb ist er nicht
+vorangehakt: Ein Haken, der oft nichts bewirkt, soll nicht der Standard
+sein.
+
+### 3. START_MIT_TUNNEL.vbs startete keinen Tunnel
+
+Die Datei war Zeichen fuer Zeichen mit START.vbs identisch. Sie sah nur
+so aus, als taete sie etwas anderes. Der Server erkennt den Wunsch an
+`AFU_TUNNEL=1` - und genau die Zeile fehlte.
+
+Beide VBS-Dateien sind neu:
+
+- `AFU_TUNNEL=1` in START_MIT_TUNNEL.vbs, dort und nur dort.
+- `AFU_BROWSER=1` in beiden. Vorher stand da ein starres
+  `WScript.Sleep 1500` und danach ein blindes Oeffnen von
+  localhost:3000. Beim ersten Start nach der Installation reicht
+  anderthalb Sekunden oft nicht - der Browser kam vor dem Server und
+  zeigte eine Fehlerseite. Jetzt macht der Server den Browser selbst
+  auf, wenn er bereit ist.
+- Fehlt node\node.exe, kommt eine Meldung statt gar nichts. Ein
+  Programm, das per wscript startet, ist unsichtbar - ohne diese
+  Abfrage passiert bei einem Fehler schlicht nichts, und niemand weiss
+  warum.
+
+### 4. CodeRabbit
+
+**Es ist sauber - und es ist nichts, was man einbindet.** CodeRabbit ist
+kein Paket und kein Import: Es ist eine GitHub-App, die
+Pull-Requests liest. Die einzige Spur im Projekt ist `.coderabbit.yaml`,
+und die gehoert genau dorthin - ins Repository, im Hauptverzeichnis.
+
+Geprueft: package.json enthaelt keine CodeRabbit-Abhaengigkeit (nur cors,
+express, socket.io - richtig so), Server.js und Index.html rufen nichts
+davon auf. Es gibt also keinen Import, der funktionieren oder scheitern
+koennte.
+
+Die Datei selbst ist gueltiges YAML und sinnvoll eingestellt: deutsch,
+"chill", keine erzwungenen Aenderungen. Ein Hinweis: Sie enthaelt
+Anweisungen fuer `data/**` und `backup/**` - beides steht in der
+.gitignore, CodeRabbit sieht diese Ordner also nie.
+
+**Was noch fehlt, damit CodeRabbit ueberhaupt etwas tut:** Es meldet sich
+nur bei Pull Requests. Wer wie bisher direkt auf main hochlaedt, wird
+nie eine Rueckmeldung sehen.
+
+### 5. Was zu GitHub geht
+
+Neu in .gitignore und in der Schutzliste von hochladen.js:
+
+    Amateurfunk-Trainer-*.exe   das fertige Setup, rund 200 MB
+    Output/                     Inno-Ausgabeordner
+    installer-MINIMAL.iss       Zwischenstand, kann geloescht werden
+    check_json.py               kleines Hilfsskript
+
+Ausdruecklich NICHT ausgeschlossen, weil sie hineingehoeren:
+installer.iss und Build-DIREKT.bat (ohne die Bauanleitung kann niemand,
+auch du selbst nicht, das Setup nachbauen), wizard.bmp und small.bmp
+(zusammen 160 KB), icon.ico, icon.png und .coderabbit.yaml.
+
+cloudflared.exe mit seinen 54 MB war schon vorher ausgeschlossen - ueber
+`*.exe`. Fuers Bauen liegt sie im Ordner, ins Repository gehoert sie
+nicht.
+
+## 01.09.2026 - Zweite Runde: Symbol, Herausgeber, Piper, Pruefungssimulator
+
+### Version 1.1.0
+
+Dietmar: "Version 1.0.1 wird sind wesentlich weiter. Welche Version mit
+eingebunden wird, ueberlasse ich dir."
+
+**1.1.0.** Nicht 1.0.5: Seit 1.0.1 sind echte Funktionen dazugekommen -
+das Formelblatt an der Frage, die Sperre im Gruppenraum, der neue
+Updater, dieser Installer. Die zweite Stelle sagt "es kann mehr als
+vorher", die dritte hiesse "es ist dasselbe, nur repariert".
+
+Die Nummer steht genau EINMAL, als `#define AppVer`. Sie landet damit im
+Dateinamen (Amateurfunk-Trainer-1.1.0.exe), in den Dateieigenschaften und
+in "Apps & Features". package.json steht auf demselben Stand; nebenbei
+ist dort das unsichtbare BOM am Dateianfang weggefallen, das bei jedem
+Werkzeugwechsel eine Aenderung anzeigte, die keine war.
+
+### Das Symbol in der EXE
+
+`SetupIconFile=icon.ico` ist gesetzt - das Setup traegt das Funkgeraet.
+War schon in der Fassung von heute Vormittag drin; zusammen mit dem neu
+gebauten icon.ico (klassisches DIB statt PNG-komprimiert) kompiliert es
+auch zuverlaessig.
+
+### "Herausgeber: Unbekannt" - das laesst sich nicht einstellen
+
+Hier muss ich klar sein: **Kein Eintrag in der .iss aendert das.**
+AppPublisher, VersionInfoCompany und die uebrigen Felder fuellen den
+Eigenschaften-Dialog der Datei. Was Windows in der blauen
+Sicherheitsabfrage anzeigt, kommt ausschliesslich aus einer
+**Code-Signatur**.
+
+Wer dort "Dietmar Reh" lesen will, braucht ein Code-Signing-Zertifikat
+einer anerkannten Stelle und signiert das fertige Setup damit
+(SignTool.exe, oder in Inno ueber SignTool=). Ein selbst erstelltes
+Zertifikat hilft nicht: Windows kennt es nicht und schreibt weiter
+"Unbekannt" - es sei denn, es waere auf jedem Zielrechner als
+vertrauenswuerdig eingetragen, was bei Fremden nicht geht.
+
+Das ist nichts, was ich reparieren kann - es ist der Preis, den
+Microsoft fuer den Namen in dem Fenster verlangt.
+
+### Taskleiste unter "Zusaetzliche Symbole"
+
+Beide Haken stehen jetzt unter derselben Ueberschrift, `{cm:AdditionalIcons}` -
+so heisst der Abschnitt im deutschen Assistenten. Vorher stand dort eine
+eigene Zeile "Verknuepfungen:".
+
+### Piper wird mitinstalliert
+
+Der Ordner piper\ ist vollstaendig: piper.exe, alle DLLs, espeak-ng-data
+und **die Stimme de_DE-thorsten-medium.onnx mit 63 MB**. Der Installer
+nimmt ihn mit `recursesubdirs` komplett mit.
+
+Die Meldung "Fuer das Vorlesen fehlt eine Stimme im Ordner piper/" kam
+also nicht daher, dass etwas fehlte - sie kam vom alten Installer, der
+`C:\Temp\TrainerMSI\Source\piper\*` kopieren wollte. Diesen Ordner gibt
+es nicht, also wurde nichts kopiert. Derselbe absolute Pfad, derselbe
+Schaden wie bei START.vbs.
+
+Damit erklaert sich auch Punkt 5, die Fehlermeldung beim Vorlesen: Die
+Stimme war da (aus einer frueheren Installation), aber expandTTS fehlte
+- siehe oben. Beides ist behoben; nach einem Neubau und einer
+Neuinstallation muss die Sprachausgabe ohne Zutun laufen.
+
+### Der Pruefungssimulator schweigt jetzt
+
+Dietmar: "In einer realen Pruefung erfolgt auch kein das ist Richtig oder
+das ist falsch."
+
+Er hat recht, und es ist mehr als Kosmetik. Wer beim Ueben nach jeder
+Frage ein gruenes Haekchen bekommt, uebt etwas anderes als die Pruefung.
+Am Pruefungstag fehlt dann die Rueckmeldung, an die man sich gewoehnt
+hat - und die Unsicherheit kommt genau dann, wenn sie am teuersten ist.
+
+Eine einzige Funktion entscheidet das jetzt, `pruefungStreng()`. Sie
+fragt beides ab: den einfachen Simulator und den mehrteiligen
+Pruefungsdurchgang. Daran haengen sechs Dinge:
+
+- **keine gruene/rote Faerbung.** Die angekreuzte Antwort wird nur
+  markiert - man sieht, WAS man gewaehlt hat, nicht ob es stimmt.
+- **keine Ansage "Richtig" / "Falsch".** Fuer Vorleseprogramme kommt
+  stattdessen "Antwort B gespeichert." - die Bestaetigung, DASS etwas
+  ankam, ohne die Wertung. Wer die Kacheln nicht sieht, klickt sonst
+  zweimal.
+- **kein Verlauf, keine laufende Auswertung**, kein Knopf "Verlauf
+  ausblenden". In der echten Pruefung steht daneben auch keine
+  Punktetafel.
+- **kein Google-Knopf.**
+- **kein F9/F10.** Frueher zaehlte die Loesungstaste dort "nur" als
+  Fehler - aber die Loesung stand dann trotzdem da, und wer sie einmal
+  gesehen hat, kann sie nicht mehr nicht wissen.
+- **neutrale Fortschrittspunkte** statt gruen/rot.
+
+Das Formelblatt bleibt. Die Formelsammlung ist amtliches Hilfsmittel und
+liegt in der Pruefung auf dem Tisch.
+
+**Zwei Fehlschlaege beim Ausblenden des Google-Knopfs, beide lehrreich:**
+
+1. `el.style.display = 'none'` half nicht. Der Wert stand da, berechnet
+   wurde trotzdem `flex` - weil `.btn-google` weiter unten
+   `display:inline-flex !important` setzt, und !important im Stylesheet
+   schlaegt jeden Inline-Wert ohne !important.
+2. Als CSS-Klasse half es auch nicht, solange die Regel WEITER OBEN
+   stand. Bei gleicher Spezifitaet und beidem !important gewinnt die
+   spaetere Regel. Sie steht jetzt am Ende des Stylesheets.
+
+Beides waere ohne Nachmessen im Browser nicht aufgefallen - im Code sah
+es zweimal richtig aus.
+
+Nachgemessen, Lernmodus gegen Simulator:
+
+    Lernmodus:  Faerbung "wrong"/"correct", Verlauf da, Google sichtbar
+    Simulator:  Faerbung nur "gewaehlt", Verlauf weg, Google weg,
+                F9 ohne Wirkung, Formelblatt bleibt
+
+## 01.09.2026 - Zwei Achsen statt einer Liste: Grey Mode und die Form
+
+Dietmar wollte zweierlei: einen sachlichen Grauton, wie ihn die
+Vereinsseiten haben, und eine kantige Variante nach dem Vorbild der
+technischen Lernseiten - beides frei mit dem kombinierbar, was schon da
+ist. Die naheliegende Loesung waere gewesen, die Liste der Modi zu
+verlaengern: "Grey rund", "Grey eckig", "Dark eckig" und so fort. Bei
+sechs Farben und zwei Formen waeren das zwoelf Eintraege in einem Knopf,
+durch die man sich durchklickt, bis zufaellig das Richtige dasteht.
+
+Deshalb sind es jetzt **zwei getrennte Achsen**:
+
+    Farbe:  Light - Dark - Green - Blue - Orange - Grey
+    Form:   Rundstrahler - Yagi
+
+Zwei Knoepfe nebeneinander in der Kopfzeile, jeder beschriftet mit dem,
+was gerade gilt. Alle zwoelf Kombinationen sind erreichbar, keine muss
+einzeln gepflegt werden. Beide Einstellungen ueberleben den Neustart, in
+zwei eigenen Schluesseln (`amateurfunk_theme`, `amateurfunk_form`), und
+werden gesetzt, BEVOR das erste Mal gezeichnet wird - sonst blitzt beim
+Laden kurz die falsche Ansicht auf.
+
+**Die Namen.** Nicht "DARC-Modus" und nicht "50ohm-Stil": Das sind fremde
+Namen, der eine ein eingetragener Vereinsname. Die Form heisst deshalb
+nach dem, was sie zeigt - **Rundstrahler** ist rund, **Yagi** ist gerade
+und gerichtet. Wer Amateurfunk lernt, muss das nicht erklaert bekommen.
+
+**Grey Mode.** Fuenf Graustufen, vom Aussenrand (#e8eaec) ueber die Karte
+(#ffffff) und die Bloecke (#f2f4f5) bis zu den Leisten (#e6e9eb) und
+Koepfen (#dcdfe2). Als Akzent ein Stahlblau (#40525f) statt der sonst
+ueblichen Farbe. Nachgerechnet: 6,0:1 fuer die gedaempfte Schrift, 14,4:1
+fuer die normale - beides ueber der Anforderung fuer normalen Text.
+
+**Yagi.** Keine Rundungen, keine Schatten. Was vorher der Schatten tat -
+Ebenen voneinander trennen - macht jetzt ein Rahmen. Die Antwortfelder
+tragen die Markierung als farbigen Balken links statt als Flaeche,
+Tabellenkoepfe stehen in Versalien. Ausgenommen von der Kantigkeit bleiben
+Auswahlknoepfe des Betriebssystems: ein eckiger Radiobutton ist als
+solcher nicht mehr erkennbar. Und der Tastatur-Fokusrahmen bleibt stehen -
+ohne diese eine Zeile haette die Regel ihn mit weggeraeumt, und wer mit
+der Tabulatortaste arbeitet, waere blind unterwegs.
+
+**Dark, Green, Blue und Orange sind unveraendert.** Ausdrueckliche
+Vorgabe, und nachgeprueft: Die Farbwerte der vier stehen unberuehrt in
+denselben Bloecken wie vorher. Die Form legt sich darueber, ohne eine
+einzige Farbe anzufassen.
+
+**Fuer neue Regeln gibt es jetzt Variablen**: `--r-klein`, `--r-mittel`,
+`--r-gross`, `--r-pille` und `--schatten-karte`. Wer kuenftig etwas
+hinzufuegt, benutzt sie und muss sich um die Form nicht mehr kuemmern. Die
+vorhandenen Regeln blieben, wie sie waren - sie werden vom Umschalter
+miterfasst. Ein Umbau aller 678 KB haette Fehler eingebaut, wo vorher
+keine waren.
+
+**Ein Fehler nebenbei behoben.** Die Kopfzeile lief auf schmalen Schirmen
+seitlich aus dem Bild - schon vorher, mit dem zweiten Knopf waere es
+schlimmer geworden. Sie bricht jetzt um. Auf breiten Schirmen aendert das
+nichts.
+
+Geprueft im Browser: alle zwoelf Kombinationen einzeln aufgerufen und
+angesehen, dazu die Frageansicht mit beantworteter Frage, ein Fenster ueber
+der Hauptansicht, und die Breiten 390, 768 und 1024 Pixel. Keine
+Skriptfehler in der Konsole. Bei 390 Pixel bleibt ein Rest Ueberlauf von
+209 Pixeln (eine Tabelle und die Lernstand-Zeile) - der war vorher schon
+da, ist in allen zwoelf Kombinationen exakt gleich gross und hat mit der
+Umstellung nichts zu tun.
+
+## 01.09.2026 - Der Doppelklick tat nichts mehr
+
+Dietmar hatte den Trainer in einen neuen Ordner umgezogen. Danach:
+"Jetzt laesst es sich mit start.bat nicht mehr starten." Kein Fenster,
+keine Meldung, kein Browser - beim Doppelklick passierte schlicht nichts.
+
+Es lief noch einer. Der alte Server war beim Umzug nie beendet worden und
+hielt Port 3000 weiter besetzt. Sein Ordner - `C:\Program Files\
+Amateurfunk-Trainer` - war beim Umzug leergeraeumt worden, also fand er
+seine eigene Index.html nicht mehr und antwortete auf jede Anfrage mit
+"Cannot GET /". Sein Socket.IO meldete sich dagegen weiter: daran war er
+zu erkennen.
+
+Der neue Server sah den belegten Port, schrieb `Port 3000 belegt` und
+beendete sich (`server.on('error', ...)` in Server.js, Zeile 3259). Nur:
+START.vbs startet Node mit Fensterstil 0 - unsichtbar. Diese Zeile las
+also niemand. Aus einer klaren Fehlermeldung wurde auf dem Bildschirm ein
+Nichts.
+
+**Beide Startdateien sehen jetzt vorher nach.** START.vbs und
+START_MIT_TUNNEL.vbs fragen Port 3000, bevor sie Node starten:
+
+  - Nichts da? Alles wie bisher, kein Unterschied.
+  - Der Trainer antwortet dort schon? Dann eine Nachfrage im Klartext,
+    mit dem Ordner, um den es geht: alten beenden und hier neu starten,
+    oder nichts anfassen und nur den Browser oeffnen.
+  - Etwas anderes sitzt auf dem Port? Dann wird nichts beendet. `taskkill
+    /f /im node.exe` traefe womoeglich ein fremdes Programm, das mit dem
+    Trainer nichts zu tun hat.
+
+Erkannt wird der Trainer an seiner Socket.IO-Anmeldung: Sie antwortet mit
+einer Kennung, die sonst niemand liefert. Ein blosses "da antwortet
+jemand" haette nicht gereicht - auf 3000 sitzt bei Entwicklern oft etwas
+ganz anderes.
+
+Wenn die Pruefung selbst nicht laufen kann (MSXML nicht vorhanden), wird
+gestartet wie frueher. Eine Vorsichtsmassnahme, die den Start verhindert,
+waere schlimmer als das Problem.
+
+## 01.09.2026 - Eckig, und die Antwortfelder wie beim DARC
+
+Drei Saetze von Dietmar, drei Aenderungen.
+
+**"Rund kannst du komplett ausbauen. Eckig ist viel schoener!"**
+
+Die Wahl zwischen rund und eckig ist seit heute frueh keine 24 Stunden
+alt und schon wieder weg. Das ist kein Verlust: Eine Einstellung, die
+jeder auf denselben Wert stellt, ist keine Einstellung, sondern eine
+Frage, die man sich haette sparen koennen. Der zweite Knopf in der
+Kopfzeile ist verschwunden, ebenso der gespeicherte Schluessel und die
+Funktionen dahinter. Die Klasse heisst jetzt schlicht `eckig`, sitzt fest
+am `body` und wird im Startskript vergeben - vor dem ersten Zeichnen,
+damit nichts aufblitzt.
+
+**"Uebernehme die Schrift und die Felder und Farben fuer richtig oder
+falsch exakt nach dem Vorbild vom DARC, auch mit dem Haken und dem Kreuz
+hinten dran."**
+
+"Exakt" ist hier woertlich zu nehmen. Jeder Wert unten ist aus dem
+geschickten Bild gemessen und nicht nach Augenmass gewaehlt:
+
+    Rahmen und Zwischenraeume   #dddddd
+    Antwortfeld unbeantwortet   #ffffff
+    richtig                     #3bb583
+    falsch                      #fe756c
+    Fragetext                   #212529
+    Antworttext                 #000000
+
+Dazu die Masse: Feldhoehe 34 Pixel, 8 Pixel zwischen den Feldern, 7 Pixel
+Rand, der Text beginnt 15 Pixel innerhalb des Feldes. Und die Ecken: An
+den Eckpixeln nachgesehen, im Vorbild ist jede einzelne ein rechter
+Winkel.
+
+Die Schrift ist Arial. Erkennbar am doppelstoeckigen "a" mit Sporn und am
+waagerechten Balken im "e" - Segoe UI, die andere naheliegende
+Moeglichkeit auf einem Windows-Rechner, zeichnet beide anders.
+
+Uebernommen ist auch die Anordnung: Fragenummer und Frage stehen in
+derselben grauen Flaeche wie die Antworten, nicht darueber, und die
+Antwortbuchstaben tragen einen Doppelpunkt statt eines Punktes. Die
+Nummer ist dafuer aus der Zeile darueber verschwunden - zweimal
+dieselbe Nummer waere Unordnung.
+
+Haken und Kreuz kommen aus dem Stylesheet, nicht aus dem JavaScript. So
+stehen sie an jeder bewerteten Antwort, auch in der Wiederholung und im
+Gruppenraum, ohne dass an vier Stellen im Code daran gedacht werden muss.
+Vorleseprogramme lesen sie nicht mit - richtig so, denn "richtig" und
+"falsch" stehen bereits in der Ansage.
+
+**Die Signalfarben sind in JEDEM Farbmodus dieselben.** Das musste
+erzwungen werden: Der Dark Mode setzt eigene Regeln mit !important auf
+genau dieselben Felder. Ohne den Vorspann `body.eckig .question-area`
+haetten die neuen Regeln dort verloren, und Rot und Gruen saehen im Dark
+Mode anders aus als ueberall sonst. Genau das darf nicht sein - eine
+Signalfarbe, die je nach Ansicht wechselt, ist keine.
+
+Zwei Stellen bleiben bewusst anders:
+
+  - Im Pruefungssimulator gibt es kein Rot und kein Gruen, keinen Haken
+    und kein Kreuz. Die angekreuzte Antwort bekommt nur einen neutralen
+    Balken. In der echten Pruefung sagt auch niemand, ob es stimmte.
+  - Bildfragen behalten ihre Kachelform. Die Farben sind dieselben, Haken
+    und Kreuz sitzen in der Ecke statt in der Mitte - sonst laegen sie
+    ueber dem Bild.
+
+Nachgemessen im Browser: In allen sechs Farbmodi kommen dieselben Werte
+heraus - rgb(254,117,108), rgb(59,181,131), rgb(221,221,221), Arial,
+border-radius 0. Feldhoehe 35 statt der gemessenen 34 Pixel; der eine
+Pixel geht auf die Zeilenhoehe und faellt nicht auf.
+
+**"Nach dem Kompilieren einer exe fehlt das Icon."**
+
+Auf dem Bildschirm stand das weisse Blatt mit dem blauen Pfeil - das
+Standardsymbol von Inno Setup. Die Zeile `SetupIconFile=icon.ico` stand
+aber laengst in der installer.iss, und die icon.ico daneben ist in
+Ordnung: nachgemessen 8 Groessen von 16 bis 256 Pixel, alle als DIB und
+nicht als eingebettetes PNG.
+
+Gebaut wurde aus dem falschen Ordner. Unter `C:\Program Files\
+Amateurfunk-Trainer` lag eine aeltere installer.iss (7 statt 12 KB) und
+eine aeltere icon.ico (61 statt 401 KB). Der Compiler hat nicht gemeckert
+- er hat genau das gebaut, was dort stand.
+
+Zwei Dinge dagegen:
+
+**Build-DIREKT.bat sieht jetzt vorher nach.** Erst der Compiler, dann die
+29 Dateien, die die installer.iss ohne `skipifsourcedoesntexist`
+verlangt, dann die Groesse der icon.ico. Fehlt etwas, steht es
+namentlich da und es wird nicht gebaut. Danach meldet die Datei, was
+entstanden ist und wo es liegt.
+
+**Die Version steht auf 1.2.0.** Nicht nur, weil die Ansicht eine andere
+geworden ist. Windows merkt sich das Symbol einer EXE unter ihrem
+Dateinamen: Baut man zweimal `Amateurfunk-Trainer-1.1.0.exe`, zeigt der
+Explorer beim zweiten Mal womoeglich weiter das alte Symbol, auch wenn
+das neue laengst darin steckt. Unter neuem Namen stellt sich die Frage
+gar nicht.
+
+## 01.09.2026 - "Benutzer und der Verlauf fehlt"
+
+Nach einem Durchgang im Pruefungssimulator blieb die rechte Spalte leer:
+keine Benutzerauswahl, kein Verlauf. Auch der Google-Knopf und der Knopf
+"Verlauf ausblenden" kamen nicht wieder. Erst ein Neuladen der Seite half.
+
+**Das war mein Fehler von heute frueh.** Zum Simulator gehoert, dass
+waehrend der Pruefung Verlauf, Benutzerauswahl und Nachschlagen
+verschwinden - in einer echten Pruefung steht daneben ja auch keine
+Punktetafel. Ob "Pruefung laeuft", entscheidet `pruefungStreng()`, und
+die fragt ZWEI Schalter ab: `examSimulatorMode` und
+`realisticExam.active`.
+
+Zurueck in die Hauptansicht fuehren drei Wege:
+
+    backToMain()                      setzte nur examSimulatorMode
+    Rueckfrage "Fragerunde abbrechen?" setzte nur examSimulatorMode
+    backToMainRealistic()             setzte beide - kam aber nicht durch
+
+Der dritte raeumte richtig auf, rief danach aber `backToMain()`, und das
+steigt bei laufender Runde sofort in die Rueckfrage aus. Bestaetigt man
+sie, uebernimmt der zweite Weg - und der kannte den zweiten Schalter
+nicht. Ergebnis: `realisticExam.active` blieb stehen, `pruefungStreng()`
+meldete weiter "Pruefung laeuft", und die Spalte blieb weg.
+
+Die Ursache war nicht die vergessene Zeile, sondern dass dasselbe
+Aufraeumen an drei Stellen abgeschrieben stand. Dann ist es nur eine
+Frage der Zeit, bis eine davon nicht mitgepflegt wird.
+
+**Es steht jetzt genau einmal da**, als `pruefungsmodusBeenden()`: beide
+Schalter, der Timer, das Fenster des Durchgangs - und danach werden die
+Klassen neu gerechnet. Alle Wege zurueck rufen diese eine Funktion.
+
+Nachgemessen mit einem echten Server, acht Zustaende durchlaufen:
+Startseite, Lernmodus, zurueck, Simulator, zurueck, Lernmodus erneut,
+zurueck, und zuletzt der Weg ueber backToMainRealistic. Geprueft wurde
+jedes Mal, ob Verlaufsspalte, Benutzerauswahl, Google-Knopf und der Knopf
+"Verlauf ausblenden" sichtbar sind - und ob `pruefungStreng()` das sagt,
+was gerade stimmt. Im Simulator sind alle vier weg, ueberall sonst sind
+sie da. Keine Meldung in der Konsole.
+
+## 01.09.2026 - Die Stimme verriet, was die Kacheln verschweigen sollten
+
+Dietmar im Pruefungssimulator: "Beim Pruefungsimulator gibt es eine Piper
+Antwort. Das war die Richtige oder das war leider die falsche Antwort.
+Das gibt es in der Pruefung nicht und muss im Pruefungssimulator raus."
+
+Er hat recht, und der Fehler war meiner. Beim Umbau des Simulators habe
+ich die Kacheln stumm gestellt, den Verlauf, die Wertung, den
+Google-Knopf - und die kurze Ansage fuer Vorleseprogramme gleich mit. Die
+gesprochene Rueckmeldung habe ich uebersehen. Sie haengt an einer zweiten
+Stelle: `vorleseAntwort()` wird 300 Millisekunden nach dem Klick
+aufgerufen, unabhaengig von allem anderen. Was das Auge nicht mehr sah,
+sagte also das Ohr - und damit war die ganze Umstellung wertlos.
+
+Der Aufruf haengt jetzt an derselben Frage wie alles andere:
+`pruefungStreng()`. Am Ende eines Teils spricht der Trainer weiter, denn
+dort gehoert es hin: "Pruefung Vorschriften: 21 von 25 richtig.
+Bestanden." Genau das hatte Dietmar auch verlangt - erst am Ende die
+Auswertung, der Verlauf dazu und ob bestanden.
+
+Nachgemessen mit einem vollstaendigen Durchgang ueber 25 Fragen: kein
+einziger Aufruf von `vorleseAntwort()` waehrend der Pruefung, keine
+Anfrage an Piper, nichts ueber die Sprachausgabe des Browsers. Am Ende
+dagegen die Ansage, das Ergebnisfenster mit 4/25 und "Nicht bestanden",
+ein Eintrag im Verlauf ("Realistisch Vorschriften", 4 von 25) - und
+zurueck in der Hauptansicht sind Verlaufsspalte und Benutzerauswahl
+wieder da, mit drei Zeilen in der Tabelle.
+
+**Die angekreuzte Antwort ist jetzt orange.** Vorher war sie grau mit
+einem dunklen Balken links - das sah aus wie "deaktiviert" und nicht wie
+"das war meine Wahl". Dietmar: "Fuer die ausgewaehlte Antwort moechte ich
+Orange. Die Farbe muss optisch zu dem Rot oder Gruen passen."
+
+Ausgesucht wurde nicht nach Gefuehl, sondern gerechnet:
+
+    falsch     #fe756c   Helligkeit 0,349   Kontrast 8,0:1   Farbton   4 Grad
+    GEWAEHLT   #f9a05a   Helligkeit 0,456   Kontrast 10,1:1  Farbton  26 Grad
+    richtig    #3bb583   Helligkeit 0,356   Kontrast 8,1:1   Farbton 156 Grad
+
+Die ersten Kandidaten waren kraeftige Oranges (#e58f33, #ee8538). Die
+treffen die Helligkeit von Rot und Gruen sogar auf die dritte
+Nachkommastelle - und sehen daneben trotzdem falsch aus: schwerer,
+satter, wie aus einer anderen Sammlung. Das Rot des Vorbilds ist hell und
+weich, und dazu passt ein helles, weiches Orange. Rechnen allein reicht
+hier nicht; angesehen werden muss es trotzdem.
+
+22 Grad Abstand im Farbton sind genug, dass Orange und Rot auch direkt
+untereinander nicht zu verwechseln sind. Haken und Kreuz bekommt das
+Feld nicht: Es ist eine Markierung, kein Urteil.
+
+## 01.09.2026 - Die Markierung beim Vorlesen war da und trotzdem unsichtbar
+
+Dietmar: "Beim Vorlesen einer Antwort soll die Antwort, die vorgelesen
+wird, gelb markiert sein."
+
+Die Markierung gab es laengst. `playTTSQueue()` haengt vor jedem Abschnitt
+die Klasse `tts-highlight` an die Antwort, die gerade dran ist, und nimmt
+sie danach wieder weg. Nur sah man nichts davon - seit dem Umbau auf die
+DARC-Felder heute frueh.
+
+Der Grund ist Spezifitaet, und er ist lehrreich genug, um ihn
+aufzuschreiben. Die neue Regel lautet
+
+    body.eckig .question-area .option { background: ... !important }
+
+und zaehlt drei Klassen plus ein Element. Die alte Markierung lautete
+
+    .option.tts-highlight { background: ... !important }
+
+und zaehlt zwei Klassen. Beide mit `!important` - dann entscheidet nicht
+die Reihenfolge, sondern die Spezifitaet, und die gewinnt meine. Die
+Klasse wurde also brav gesetzt und wieder entfernt, und das Feld blieb
+weiss. Ein Fehler, den man im Code nicht sieht: Dort steht alles richtig.
+
+Die Markierung steht jetzt am Ende des Stylesheets, mit demselben
+Vorspann und einer Klasse mehr - damit sie auch gegen richtig, falsch und
+angekreuzt gewinnt. Farbe: **#ffe066**, Leuchtstift-Gelb. Es soll nicht
+zur Familie gehoeren, sondern auffallen und gleich wieder verschwinden.
+Kontrast zu schwarzer Schrift 16:1, Farbton 48 Grad - weit genug vom
+Orange der angekreuzten Antwort (26 Grad).
+
+Haken und Kreuz bleiben stehen. Sie haengen am `::after` und werden von
+der Hintergrundfarbe nicht beruehrt: Wer eine schon beantwortete Frage
+noch einmal vorlesen laesst, verliert die Wertung nicht aus den Augen,
+auch wenn Rot oder Gruen kurz vom Gelb verdeckt sind.
+
+Geprueft mit dem echten Vorlesen-Knopf: Die Markierung wandert A, B, C, D
+der Reihe nach durch, jedes Mal mit rgb(255, 224, 102), und danach ist
+kein Feld mehr markiert. Dazu von Hand ueber ein richtiges und ein
+falsches Feld gelegt - beide werden gelb, Haken und Kreuz bleiben.
+
+## 01.09.2026 - Was beim Umzug liegengeblieben ist
+
+Der Bau brach ab, und zwar genau so, wie er es soll:
+
+    [ABBRUCH] Diese Dateien fehlen in diesem Ordner:
+         - github_update.js
+         - update_pruefen.js
+         - LICENSE
+         - Formelsammlung.pdf
+         - Pruefungsfragen.pdf
+
+Das ist die Pruefung, die heute frueh in Build-DIREKT.bat dazugekommen
+ist, und sie hat gehalten, was sie sollte: Die Meldung nennt die Dateien
+beim Namen, statt den Compiler mittendrin scheitern zu lassen. Dietmar
+hat daraufhin gefragt, was sonst noch fehlt.
+
+**30 Dateien zurueckgeholt.** Beim Umzug in den neuen Ordner sind alle
+Hilfsprogramme, alle Batch-Dateien und die Unterlagen liegengeblieben -
+und der alte Ordner ist inzwischen geloescht. Wiederhergestellt wurde aus
+den Arbeitskopien, die hier seit Wochen liegen.
+
+**Jede einzelne wurde ueber die Dateigroesse abgeglichen**, Byte fuer
+Byte gegen die Liste des alten Ordners. Nicht "sieht aus wie die
+richtige", sondern: 2065 Bytes verlangt, 2065 Bytes geliefert. Bei
+Dateien mit mehreren Fassungen im Arbeitsordner - github_update.js gab es
+dreimal - waere das sonst ein Ratespiel gewesen, und eine falsche Fassung
+faellt womoeglich erst Wochen spaeter auf.
+
+Die acht JavaScript-Dateien wurden zusaetzlich einzeln durch die
+Syntaxpruefung geschickt.
+
+    Installer-Blocker    github_update.js, update_pruefen.js, LICENSE,
+                         Formelsammlung.pdf
+    GitHub               Hochladen.bat, GitHub-Pruefen.bat,
+                         GitHub-Ausmisten.bat, GitHub-Verbinden.bat
+                         samt der vier zugehoerigen .js
+    Werkzeuge            USB-Stick-Erstellen.bat, Verknuepfung-Erstellen.bat,
+                         Node-Holen.bat, Update-Pruefen.bat,
+                         Programm-Aktualisieren.bat, DNS-Auffrischen.bat,
+                         Fehler-Zeigen.bat, piper.bat, Zurueckholen.bat,
+                         Update-Test.bat, aufraeumen.js
+    Unterlagen           README.md, ZUERST-LESEN.txt,
+                         GITHUB-Einstellungen.md, BUG_REPORT.md
+
+**Vier Dateien bewusst NICHT zurueckgeholt:**
+
+  - `Pruefungsfragen.pdf` - habe ich nicht. 5,5 MB, amtliches Dokument
+    der Bundesnetzagentur. Muss von dort geholt werden.
+  - `package-lock.json` - meine Fassung hat 41806 statt 39783 Bytes. Eine
+    Sperrdatei mit anderen Versionsnummern ist schlimmer als keine: Sie
+    behauptet einen Stand, den es nie gab. `npm install` schreibt sie neu.
+  - `README.txt` - meine Fassungen haben 1907 und 1307 statt 1960 Bytes.
+    Der Installer braucht sie nicht.
+  - `ANLEITUNG-USB.txt` - wird von usb_erstellen.js auf den Stick
+    geschrieben (Zeile 656). Die Kopie im Projektordner war eine Leiche.
+
+**Und das Repository ist weg.** Mit dem alten Ordner ist auch `.git`
+verschwunden - deshalb fand Dietmar keine Datei zum Hochladen. Die Dateien
+sind alle da, nur die Vorgeschichte fehlt. Genau dafuer gibt es
+`GitHub-Verbinden.bat`: git init, Adresse eintragen, Stand von GitHub
+holen, Zeiger daraufsetzen. Schritt vier fasst keine einzige Datei an -
+er sagt git nur, welchen Stand es als "bei GitHub" ansehen soll. Erst
+danach hat `Hochladen.bat` wieder etwas, womit es arbeiten kann.
+
+## 01.09.2026 - Was steckt eigentlich in der EXE?
+
+Dietmar wollte wissen, ob im Setup wirklich nur das landet, was der
+Trainer braucht. Nachgesehen habe ich in beide Richtungen: was ist drin
+und wird nicht gebraucht - und was wird gebraucht und ist nicht drin.
+
+**Die zweite Richtung war die wichtigere.**
+
+`USB-Stick-Erstellen.bat` und `usb_erstellen.js` fehlten im Setup. Das ist
+kein Entwicklerwerkzeug, sondern ein Feature fuer Benutzer - Server.js
+sagt es in der eigenen Paketliste ausdruecklich: "Wer den Trainer an einer
+VHS oder im Ortsverband einsetzt, will Sticks austeilen." Wer den Trainer
+installiert hatte, hatte diese Moeglichkeit schlicht nicht. Dazu
+`Verknuepfung-Erstellen.bat` und `verknuepfung.ps1`, die usb_erstellen.js
+auf den Stick legt, und `Node-Holen.bat` samt `node_holen.ps1` - letztere
+nicht, weil das Setup sie braucht (es bringt node\ ja mit), sondern weil
+START.vbs sie beim Namen nennt, wenn node\node.exe fehlt. Eine Meldung,
+die auf eine nicht vorhandene Datei zeigt, ist schlimmer als 9 KB
+Beiwerk.
+
+Zur Kontrolle laeuft die Paketliste aus Server.js jetzt gegen die
+Source-Zeilen der installer.iss. Vorher fehlten sechs Eintraege, jetzt
+keiner.
+
+**Dabei ist ein aelterer Fehler aufgefallen, der Sticks unbrauchbar
+macht.** In der Paketliste stand `START.bat`, aber nicht `START.vbs`.
+START.bat hat 49 Bytes und tut nichts weiter, als START.vbs aufzurufen -
+seit dem Umbau auf den fensterlosen Start am 28.08.2026. Jeder Stick und
+jedes ZIP seither trug also eine Startdatei, die auf eine Datei zeigt,
+die nicht mitkam: Doppelklick, und es passiert nichts. Dieselbe Sorte
+Fehler wie gestern beim belegten Port, nur an anderer Stelle. `START.vbs`
+und `STOP.bat` stehen jetzt in beiden Listen - in Server.js und in
+usb_erstellen.js, die sich gegenseitig pruefen.
+
+**Und die erste Richtung: was kann raus.**
+
+    node_modules            9,2 MB, davon 5,9 MB Beiwerk
+      *.d.ts                2,9 MB   TypeScript-Deklarationen
+      *.map                 2,1 MB   Quelltextkarten fuer den Debugger
+      Readmes               0,9 MB
+    sounds\fanfare.wav      2,2 MB   Rueckfall fuer Pakete von vor dem
+                                     27.08.2026, die keine MP3 haben
+    piper\pkgconfig\        klein    Baumetadaten fuer den C-Compiler
+
+Zusammen gut 8 MB, die Node zur Laufzeit nie anfasst.
+
+**Beinahe waere dabei ein Lizenzverstoss entstanden.** Der naheliegende
+Ausschluss fuer die Readmes waere `*.md` gewesen. Neun Pakete legen ihre
+Lizenz aber genau so ab: `ms/license.md`, `qs/LICENSE.md` und sechs
+weitere eingebettete ms-Kopien. Die MIT-Lizenz verlangt, dass der
+Hinweis jeder Kopie beiliegt - `*.md` haette also ausgerechnet die
+Dateien entfernt, die mitgehen MUESSEN. Ausgeschlossen wird deshalb
+namentlich (README.md, CHANGELOG.md, History.md und drei weitere): 0,91
+von 0,94 MB gespart, alle 96 Lizenzdateien bleiben drin.
+
+**Was gross ist und trotzdem bleibt:**
+
+    node\node.exe          89 MB   ohne Node laeuft nichts
+    piper\ (deutsche Stimme) 60 MB   Vorlesefunktion
+    cloudflared.exe        52 MB   Gruppenraum ueber das Internet
+    Pruefungsfragen.pdf     5 MB   im Trainer verlinkt
+    Fragen-*.json           3,6 MB die Fragen selbst
+
+**26 MB, an die ich mich nicht herantraue - noch nicht.** In piper\
+liegen `libtashkeel_model.ort` (9,8 MB, Vokalisierung fuer Arabisch) und
+111 fremdsprachige Woerterbuecher (16,4 MB, allein Russisch 8,1 MB).
+espeak-ng laedt ein Woerterbuch erst, wenn es in dieser Sprache sprechen
+soll; fuer einen deutschen Trainer duerfte beides tote Last sein.
+
+Duerfte. Ich kann es von hier aus nicht auf einem Windows-Rechner
+ausprobieren, und eine stumme Vorlesefunktion im fertigen Setup waere
+schlimmer als 26 MB zu viel. Deshalb steht es fertig da, aber
+ausgeschaltet: `#define SchlankesPiper 0` ganz oben in der installer.iss.
+Auf 1 setzen, bauen, installieren, einmal "Vorlesen" druecken - geht es,
+bleibt es an; geht es nicht, wieder auf 0.
+
+**Was NICHT im Setup steht und auch nicht hineingehoert**, zur
+Sicherheit noch einmal nachgesehen: `data\` (der Lernstand),
+`video_embed.json` (echte Vornamen), `Hoerbuch\`, `tts_cache\`,
+`github_stand.json`, `update_test.json`, `tunnel.log`, die
+GitHub-Werkzeuge und `hochladen.js`. Alles sauber draussen.
+
+## 01.09.2026 - Ein Weg statt drei
+
+Fuenf Punkte von Dietmar an einem Nachmittag. Drei davon haben denselben
+Kern: Der Trainer wird ab jetzt als fertiges Setup weitergegeben, und
+alles, was daneben denselben Zweck hatte, ist damit ueberfluessig.
+
+**1. Der Zielordner wird wieder abgefragt.**
+
+"Bei der Installation moechte ich gefragt werden, wohin das installiert
+wird." Die Seite gab es - sie wurde nur uebersprungen. Ohne eigene
+Angabe gilt in Inno Setup `DisableDirPage=auto`, und "auto" heisst: Seite
+weglassen, sobald eine fruehere Installation derselben AppId gefunden
+wird. Beim ersten Mal wurde also gefragt, ab dem zweiten Mal nicht mehr -
+und der Trainer landete stillschweigend wieder unter C:\Program Files.
+
+Jetzt steht `DisableDirPage=no` da. Der zuletzt benutzte Ordner ist
+vorausgefuellt, man muss ihn also nur bestaetigen - aber man kann ihn
+aendern.
+
+**2. und 5. Der USB-Weg und der Stimmen-Download sind aufgegeben.**
+
+Beides stammt aus der Zeit, als der Trainer als ZIP oder auf einem Stick
+weitergereicht wurde: Der Empfaenger musste sich Node.js selbst
+installieren, die Sprachstimme selbst nachladen und sich das Startsymbol
+selbst anlegen. Genau dafuer gab es USB-Stick-Erstellen.bat,
+Verknuepfung-Erstellen.bat, Node-Holen.bat und piper.bat.
+
+Das Setup erledigt alles davon. Damit sind es zwei Wege zum selben Ziel,
+und der ungenutzte ist immer der, der irgendwann nicht mehr funktioniert,
+ohne dass es jemandem auffaellt - dieselbe Sorte Fehler wie die
+Startdatei, die auf ein fehlendes START.vbs zeigte.
+
+Aus dem Setup entfernt: USB-Stick-Erstellen.bat, usb_erstellen.js,
+Verknuepfung-Erstellen.bat, verknuepfung.ps1, Node-Holen.bat,
+node_holen.ps1, piper.bat. Aus der Kopfzeile des Trainers verschwunden:
+der Knopf "Trainer als ZIP".
+
+**Und die Meldungen, die auf diese Dateien zeigten, gleich mit.** Das ist
+der Teil, den man beim Aufraeumen vergisst:
+
+  - START.vbs und START_MIT_TUNNEL.vbs sagten bei fehlendem Node "Bitte
+    den Trainer neu installieren oder Node-Holen.bat ausfuehren."
+  - Der Trainer schrieb bei fehlender Stimme "Doppelklick auf piper.bat
+    holt sie", an anderer Stelle sogar "install_piper.bat ausfuehren" -
+    eine Datei, die es seit Monaten nicht mehr gibt.
+  - Aufraeumen.bat holte Node bei Bedarf mit node_holen.ps1 nach.
+
+Alle drei zeigen jetzt dahin, wo die Sache wirklich herkommt: auf das
+Setup.
+
+**Aufraeumen.bat raeumt den Ordner mit auf.** Die Liste darin war vom
+26.08. und lief ins Leere. Sie kennt jetzt die zehn Dateien, die heute
+keine Aufgabe mehr haben - dazu installer-MINIMAL.iss, ZUERST-LESEN.txt
+(ein Merkzettel vom 27.08., was beim Neuaufsetzen verlorenginge; der
+Ordner ist seither zweimal neu aufgebaut) und check_json.py.
+
+Geloescht wird weiterhin nichts: Alles wandert nach
+`_Aufgeraeumt_<Datum>`, und erst wenn der Trainer danach weiter laeuft,
+kann man den Ordner selbst in den Papierkorb ziehen. Zusaetzlich steht
+jetzt alles, was zum Bauen der EXE gebraucht wird, in der Schutzliste -
+installer.iss, Build-DIREKT.bat, die beiden BMPs, das Symbol. Nachgeprueft:
+keine Datei steht in beiden Listen.
+
+**Nicht angefasst:** Server.js kann den Trainer weiterhin als ZIP
+ausliefern - die Route dahinter ist rund 400 Zeilen und eine Konstante
+daraus (PAKET_PDF_MUSTER) entscheidet mit, welche PDFs der Server
+ueberhaupt herausgibt. Der Knopf ist weg, also ist die Funktion aus der
+Bedienung verschwunden; den Code herauszuoperieren ist ein eigener
+Arbeitsgang mit eigenem Test und keine Beigabe.
+
+**5. Piper spricht jetzt nur noch Deutsch.**
+
+`#define SchlankesPiper` steht auf 1. Damit fallen
+libtashkeel_model.ort (9,8 MB, Vokalisierung fuer Arabisch) und 111
+fremdsprachige Woerterbucher (16,4 MB, allein Russisch 8,1 MB) aus dem
+Setup - zusammen 26 MB.
+
+en_dict bleibt drin (167 KB), obwohl niemand danach gefragt hat:
+espeak-ng greift bei Fremdwoertern und Abkuerzungen gelegentlich auf
+Englisch zurueck. Das ist billige Versicherung gegen genau den Fall, den
+ich nicht ausprobieren kann - hier steht kein Windows-Rechner.
+
+**Nach dem Bau bitte einmal "Vorlesen" druecken.** Kommt die Stimme, ist
+alles gut. Bleibt es still, `#define SchlankesPiper 0` setzen und neu
+bauen; dann war eine der ausgeschlossenen Dateien doch noch noetig.
+
+## 01.09.2026 - Beide Werkzeuge zeigten aufeinander
+
+"Jetzt Hochladen auf GitHub? Wann wird in GitHub aufgeraeumt?"
+
+Nachgesehen, bevor geantwortet: **Das Repository bei GitHub ist leer.**
+Dort steht "This repository is empty" - keine Dateien, keine Historie.
+Damit beantwortet sich die zweite Frage von selbst: In GitHub ist nichts
+mehr aufzuraeumen. Der erste Push legt fest, was drinsteht.
+
+Aufgeraeumt wird stattdessen von der `.gitignore`, und zwar hier auf dem
+Rechner. Durchgerechnet: 48 Eintraege gehen hoch, 22 bleiben liegen -
+darunter `data\` (der Lernstand), `video_embed.json` (echte Vornamen),
+`cloudflared.exe` (52 MB), `Hoerbuch\`, `node\`, `node_modules\`,
+`piper\`, `Update-Test.bat` und die sechs GitHub-Werkzeuge.
+
+**Dabei ist eine Sackgasse aufgefallen.** Dietmars Ordner hat kein `.git`
+mehr, und das Repository ist leer. In dieser Lage zeigte jedes der beiden
+Werkzeuge auf das andere:
+
+  - `Hochladen.bat` sagte "Hier ist kein Repository. Erst
+    GitHub-Neustart.bat ausfuehren" - eine Datei, die es seit dem 28.08.
+    nicht mehr gibt.
+  - `GitHub-Verbinden.bat`, ihr Nachfolger, holt den Stand von GitHub
+    (`git fetch origin main`). Wenn dort nichts liegt, gibt es auch
+    nichts zu holen: Es bricht mit "couldn't find remote ref main" ab.
+
+Es fehlte also genau ein Handgriff - `git init` - und keines der beiden
+konnte ihn machen. `hochladen.js` macht ihn jetzt selbst: nach
+Rueckfrage, mit der Ansage, was dabei geschieht, und mit einer Warnung
+fuer den Fall, dass bei GitHub eben doch schon etwas liegt. Dann naemlich
+ist GitHub-Verbinden.bat das richtige Werkzeug, weil es den dortigen
+Stand erst herunterholt, statt ihn zu ueberschreiben.
+
+Durchgespielt in einem leeren Ordner: anlegen, Zweig main, `git add -A`,
+Commit, und `github_pruefen.js` meldet SAUBER - die ignorierten Werkzeuge
+sind dabei korrekt draussen geblieben.

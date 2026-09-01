@@ -1,5 +1,29 @@
 // ================================================================
 // tts-expand.js
+// ================================================================
+// WAS HIER PASSIERTE (01.09.2026):
+// Diese Datei wurde durch ein voellig anderes Modul ersetzt - einen
+// Piper-Starter mit der einzigen Funktion piperTTS. Dabei ging
+// expandTTS verloren, und Server.js Zeile 689 holt sich genau die:
+//
+//     const { expandTTS } = require('./tts-expand');
+//
+// Ergebnis im laufenden Trainer:
+//     TypeError: expandTTS is not a function
+//
+// Unter Windows faellt der Dateiname nicht auf: Das Dateisystem
+// unterscheidet keine Gross- und Kleinschreibung, deshalb findet
+// require('./tts-expand') auch eine Datei namens Tts-Expand.js. Das
+// Modul wurde also geladen - es enthielt nur die falsche Funktion.
+//
+// Wiederhergestellt ist deshalb der vollstaendige alte Inhalt.
+// piperTTS bleibt erhalten und wird mit exportiert, damit nichts
+// verlorengeht - benutzt wird es derzeit von keiner Stelle im
+// Projekt (nachgesehen in Server.js und hoerbuch.js).
+// ================================================================
+
+// ================================================================
+// tts-expand.js
 //
 // FIX Q7: Aus Server.js ausgelagert. Die Funktion war ein 155-Zeilen-
 // Monolith mit ueber 30 verketteten Regex-Ersetzungen mitten im Server-
@@ -215,4 +239,81 @@ function expandTTS(text){
   return t;
 }
 
-module.exports = { expandTTS };
+
+// ================================================================
+// PIPER STARTEN - uebernommen aus der Fassung vom 01.09.2026
+// ================================================================
+// Derzeit ruft es niemand auf; die Sprachausgabe laeuft ueber die
+// Route /api/tts in Server.js, die Piper selbst startet. Die
+// Funktion steht hier bereit, falls sie gebraucht wird.
+async function piperTTS(text, voiceModel, outputWav) {
+  return new Promise((resolve, reject) => {
+    const piperDir = path.join(__dirname, 'piper');
+    const piperExe = path.join(piperDir, process.platform === 'win32' ? 'piper.exe' : 'piper');
+    
+    // Stelle sicher dass Ausgabeordner existiert
+    const outDir = path.dirname(outputWav);
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, {recursive: true});
+
+    const args = [
+      '--model', voiceModel,
+      '--output_file', outputWav
+    ];
+
+    console.log(`[TTS] Starte Piper: ${piperExe} ${args.join(' ')}`);
+    
+    const proc = spawn(piperExe, args, { cwd: piperDir });
+    
+    let stderrData = '';
+    let stdoutData = '';
+
+    proc.stdin.write(text);
+    proc.stdin.end();
+
+    proc.stdout.on('data', (d) => { stdoutData += d.toString(); });
+    proc.stderr.on('data', (d) => { stderrData += d.toString(); });
+
+    proc.on('close', (code) => {
+      // Piper schreibt IMMER [info] Logs nach stderr, auch bei Erfolg!
+      // Das ist kein Fehler!
+      const cleanedStderr = stderrData
+        .split('\n')
+        .filter(line => {
+          const l = line.toLowerCase();
+          // Ignoriere reine Info-Logs
+          if (l.includes('[info]') || l.includes('[piper]')) return false;
+          if (l.trim() === '') return false;
+          return true;
+        })
+        .join('\n');
+
+      // Pruefe ob WAV wirklich existiert und groesser als 0 ist
+      const wavExists = fs.existsSync(outputWav) && fs.statSync(outputWav).size > 1000;
+
+      if (wavExists) {
+        console.log(`[TTS] Erfolg: ${outputWav} (${fs.statSync(outputWav).size} bytes)`);
+        // Auch wenn stderr Info hatte, ist es Erfolg wenn Datei da ist
+        if (cleanedStderr) {
+          console.log(`[TTS] Warnung (ignoriert): ${cleanedStderr.substring(0,200)}`);
+        }
+        resolve(outputWav);
+      } else {
+        // Nur echter Fehler wenn Datei fehlt UND Exit-Code !=0 oder echte Error-Meldung
+        if (code !== 0 || cleanedStderr.toLowerCase().includes('error')) {
+          console.error(`[TTS] Fehler Code ${code}: ${stderrData}`);
+          reject(new Error(`TTS Fehler ${code}: ${cleanedStderr || stderrData}`));
+        } else {
+          // Fallback: trotzdem versuchen
+          console.log(`[TTS] Piper Exit ${code}, aber keine kritischen Fehler, WAV fehlt? ${outputWav}`);
+          reject(new Error(`TTS: Keine WAV erstellt. Log: ${stderrData.substring(0,500)}`));
+        }
+      }
+    });
+
+    proc.on('error', (err) => {
+      reject(new Error(`Piper konnte nicht gestartet werden: ${err.message}`));
+    });
+  });
+}
+
+module.exports = { expandTTS, piperTTS };

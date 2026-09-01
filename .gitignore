@@ -169,3 +169,33 @@ Mitnehmen/
 README.txt
 bilder/youtube-vorlage.html
 sounds/fanfare.wav
+
+# ================================================================
+#  Rund um den Installer (ab 01.09.2026)
+# ================================================================
+# Was ins Repository GEHOERT und deshalb hier NICHT steht:
+#   installer.iss      - die Bauanleitung. Ohne sie kann niemand,
+#                        auch du selbst nicht, das Setup nachbauen.
+#   Build-DIREKT.bat   - der eine Befehl, der sie uebersetzt.
+#   wizard.bmp, small.bmp - die Bilder im Setup-Fenster, zusammen 160 KB.
+#   icon.ico, icon.png - das Symbol.
+#   .coderabbit.yaml   - MUSS im Repository liegen, sonst liest
+#                        CodeRabbit sie gar nicht. Sie wirkt nur dort.
+#
+# Was hier steht, gehoert nicht hinein:
+
+# Das fertige Setup. Es entsteht bei jedem Build neu und waere im
+# Repository nur totes Gewicht - rund 200 MB je Fassung. Sein Platz
+# ist die Seite "Releases", dort sind 2 GiB je Datei erlaubt.
+Amateurfunk-Trainer-*.exe
+Output/
+
+# Ein Zwischenstand vom 01.09.2026. Dietmar dazu: "Nur installer.iss
+# und Build-DIREKT.bat nutzen, keine installer-CLEAN*, installer-MINIMAL*
+# etc. erstellen." Die Datei liegt noch im Ordner und kann geloescht
+# werden; bis dahin haelt diese Zeile sie aus dem Repository heraus.
+installer-MINIMAL.iss
+
+# Kleines Hilfsskript zum Pruefen der JSON-Dateien. Braucht niemand,
+# der den Trainer benutzt.
+check_json.py

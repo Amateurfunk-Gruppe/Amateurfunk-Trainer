@@ -1295,7 +1295,13 @@ const PAKET_DATEIEN = [
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
   // ANLEITUNG.txt, auf dem Stick die ANLEITUNG-USB.txt.
-  'START.bat', 'piper.bat',
+  // START.bat ist nur die Zuendschnur: Sie ruft START.vbs auf, und erst
+  // die startet node ohne Fenster. Bis zum 01.09.2026 stand hier nur die
+  // .bat - jeder Stick und jedes ZIP hatte damit eine Startdatei, die
+  // auf eine nicht vorhandene Datei zeigt. Doppelklick, und es passiert
+  // nichts. Dazu STOP.bat: Ohne sie gibt es auf dem Stick keinen Weg,
+  // den Trainer wieder zu beenden.
+  'START.bat', 'START.vbs', 'STOP.bat', 'piper.bat',
   // Node-Holen.bat + node_holen.ps1: Damit kommt der Empfaenger ohne
   // Installation von Node.js aus. Genau daran ist am 25.08.2026 ein
   // Benutzer haengengeblieben - "Beim Start seh ich kurz das Terminal
