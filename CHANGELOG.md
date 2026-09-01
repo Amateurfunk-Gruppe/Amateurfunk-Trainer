@@ -4483,3 +4483,58 @@ Stand erst herunterholt, statt ihn zu ueberschreiben.
 Durchgespielt in einem leeren Ordner: anlegen, Zweig main, `git add -A`,
 Commit, und `github_pruefen.js` meldet SAUBER - die ignorierten Werkzeuge
 sind dabei korrekt draussen geblieben.
+
+## 01.09.2026 - "Der Befehl node ... konnte nicht gefunden werden"
+
+Beim Hochladen:
+
+    Pruefe, was hochgeladen wuerde ...
+    Der Befehl "node" ist entweder falsch geschrieben oder
+    konnte nicht gefunden werden.
+    !! ABBRUCH. Die Pruefung meldet kein "SAUBER".
+
+Die Pruefung hat gar nichts gemeldet - sie ist nie gelaufen.
+
+`Hochladen.bat` sucht sich Node ordentlich zusammen: erst `node\node.exe`
+aus dem Ordner, dann ein installiertes. Dietmar hat Node.js deinstalliert,
+weil der Trainer es ja mitbringt - also lief das Skript ueber das Node aus
+dem Ordner. Nur rief es intern
+
+    execSync('node github_pruefen.js')
+
+auf, also ein blankes "node" aus dem Suchpfad. Das gibt es dort nicht
+mehr. Der aeussere Aufruf war sorgfaeltig, der innere nicht - und beim
+zweiten war es nie aufgefallen, solange Node installiert war.
+
+Jetzt steht dort `process.execPath`: genau das Node, das gerade laeuft, mit
+vollem Pfad. Damit kann die Frage gar nicht mehr aufkommen.
+
+**Und die Meldung war irrefuehrend.** "Die Pruefung meldet kein SAUBER"
+klingt, als haette sie etwas gefunden. Kommt gar keine Ausgabe zurueck,
+steht jetzt da, dass sie sich nicht ausfuehren liess - das ist ein anderer
+Fehler und braucht eine andere Suche.
+
+## 01.09.2026 - Loeschungen stehen jetzt vollzaehlig da
+
+Beim Hochladen wurden die ersten 20 offenen Aenderungen gezeigt und der
+Rest als "... und N weitere" zusammengefasst. Das ist genau andersherum
+als noetig.
+
+Eine geaenderte Datei ist der Normalfall. Eine geloeschte nicht - und
+`git push` laedt eine Loeschung mit hoch wie jede andere Aenderung. So
+sind am 28.08.2026 22 Dateien bei GitHub verschwunden, darunter der ganze
+Ordner `bilder\`.
+
+Wer aufraeumt, hat viele Loeschungen. Ausgerechnet dann waere die Liste
+abgeschnitten worden - an der Stelle, an der man sie am dringendsten
+vollstaendig braucht.
+
+Loeschungen stehen deshalb jetzt vorweg, einzeln und vollzaehlig, mit dem
+Hinweis, dass Zurueckholen.bat sie noch holen kann - aber nur vor dem
+Hochladen. Die uebrigen Aenderungen kommen danach und duerfen weiter
+gezaehlt werden.
+
+Durchgespielt in einem Testordner mit zwei geloeschten und einer
+geaenderten Datei, und dabei "node" absichtlich aus dem Suchpfad
+genommen: Die Pruefung laeuft, die beiden Loeschungen stehen namentlich
+da, die Aenderung darunter.
