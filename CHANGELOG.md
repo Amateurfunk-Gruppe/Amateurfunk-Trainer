@@ -4538,3 +4538,45 @@ Durchgespielt in einem Testordner mit zwei geloeschten und einer
 geaenderten Datei, und dabei "node" absichtlich aus dem Suchpfad
 genommen: Die Pruefung laeuft, die beiden Loeschungen stehen namentlich
 da, die Aenderung darunter.
+
+## 01.09.2026 - Die Schlussmeldung zeigte auf ein Werkzeug, das es nicht mehr gibt
+
+Das Hochladen hat geklappt: 823 Dateien, 68 Commits, `172efa1..d63e103`.
+Darunter stand aber:
+
+    Jetzt noch die Stimmen: Stimmen_packen.bat ausfuehren,
+    dann auf der Seite "Releases" -> "Create a new release",
+    Tag v1.0, und Piper-Stimmen.zip ins Feld ziehen.
+
+Der Weg ueber ein Stimmen-ZIP ist am 28.08.2026 aufgegeben worden,
+`Stimmen_packen.bat` gibt es seit heute Nachmittag nicht mehr, und Tag
+v1.0 ist zwei Fassungen alt. Drei falsche Angaben in vier Zeilen - und
+zwar in dem Moment, in dem man einer Anweisung am ehesten folgt: gleich
+nach dem geglueckten Hochladen, wenn man ohnehin gerade dabei ist.
+
+Dieselbe Sorte Fehler wie START.vbs mit Node-Holen.bat und wie die
+Startdatei ohne START.vbs. Wenn etwas wegfaellt, bleiben die Saetze
+stehen, die darauf zeigen - sie stehen ja woanders.
+
+**Jetzt steht dort, was wirklich fehlt.** Das Skript sieht nach, ob eine
+`Amateurfunk-Trainer-*.exe` im Ordner liegt, nimmt die neueste und
+schreibt Version, Groesse und den fertigen Link hin:
+
+    Jetzt noch das Setup: Amateurfunk-Trainer-1.2.0.exe (200 MiB)
+    liegt hier im Ordner. Es gehoert an ein Release:
+
+      https://github.com/.../releases/new
+
+      Tag:   v1.2.0
+      Titel: Amateurfunk-Trainer 1.2.0
+      Die EXE unten ins Feld ziehen, dann "Publish release".
+
+Liegt keine da, steht stattdessen der Hinweis auf Build-DIREKT.bat.
+
+Warum ueberhaupt ein Release und nicht ins Repository: GitHub laesst je
+Datei 100 MiB zu, das Setup ist ein Vielfaches davon. An einem Release
+sind 2 GiB erlaubt.
+
+Beide Faelle durchgespielt - mit zwei EXE-Dateien im Ordner (die neuere
+wird genommen, Version und Groesse richtig gelesen) und mit einer leeren
+Ablage.
