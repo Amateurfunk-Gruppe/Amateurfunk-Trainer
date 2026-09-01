@@ -14,22 +14,32 @@
 ;  gebaut wird.
 ; ================================================================
 
-; Die Versionsnummer steht genau EINMAL. Sie landet damit im Dateinamen
-; (Amateurfunk-Trainer-1.2.0.exe), in den Dateieigenschaften und in der
-; Liste "Apps & Features".
+; ================================================================
+;  DIE VERSIONSNUMMER KOMMT AUS DEM CHANGELOG
+; ================================================================
+;  Dietmar am 01.09.2026: "Beim Erstellen einer exe sind wir derzeit
+;  bei 1.0.1. Schau mal im CHANGELOG.md, das ist bei weitem weiter.
+;  Ich moechte eine hoehere Zahl, an dem CHANGELOG.md angepasst, die
+;  fortlaufend ist."
 ;
-; 1.2.0 am 01.09.2026: Die Ansicht ist eine andere geworden - durchgehend
-; eckig, die Antwortfelder nach dem Vorbild des DARC-Katalogs, dazu der
-; Grey Mode. Das ist mehr als eine Fehlerbehebung, also die mittlere
-; Stelle.
+;  Die Regel:  1.<Anzahl der Eintraege im CHANGELOG>.0
 ;
-; Die neue Nummer hat noch einen zweiten Zweck. Windows merkt sich das
-; Symbol einer EXE unter ihrem Dateinamen. Baut man zweimal
-; "Amateurfunk-Trainer-1.1.0.exe", zeigt der Explorer beim zweiten Mal
-; womoeglich weiter das alte Symbol - auch wenn das neue laengst darin
-; steckt. Mit 1.2.0 heisst die Datei anders, und die Frage stellt sich
-; gar nicht erst.
-#define AppVer "1.2.0"
+;  Build-DIREKT.bat zaehlt die Ueberschriften im Aenderungsprotokoll
+;  und reicht die Nummer hier herein (/DAppVer=...). Wer etwas
+;  aendert, schreibt es ins Protokoll - und damit steigt die Nummer
+;  von selbst. Sie kann nur wachsen, nie fallen, und sie ist an jeder
+;  Stelle dieselbe: im Dateinamen, in den Dateieigenschaften, in
+;  "Apps & Features" und in der package.json.
+;
+;  Eine von Hand gepflegte Nummer laeuft irgendwann aus dem Tritt:
+;  Man baut, vergisst das Hochzaehlen, und zwei verschiedene
+;  Programme heissen gleich. Genau das kann hier nicht passieren.
+;
+;  Der Wert unten greift nur, wenn jemand ISCC direkt aufruft, ohne
+;  ueber Build-DIREKT.bat zu gehen.
+#ifndef AppVer
+  #define AppVer "1.96.0"
+#endif
 
 ; ----------------------------------------------------------------
 ;  SCHLANKES PIPER  -  0 = aus (Voreinstellung), 1 = an
@@ -82,7 +92,12 @@ DisableProgramGroupPage=yes
 ; benutzte Ordner steht dabei schon drin (UsePreviousAppDir gilt weiter),
 ; man muss ihn also nur bestaetigen.
 DisableDirPage=no
-OutputDir=.
+; Alle fertigen Setups sammeln sich in release\. Vorher landeten sie
+; im Projektordner zwischen den Quelldateien - beim Aufraeumen ist das
+; die Sorte Datei, die man versehentlich mitnimmt oder loescht.
+; release\ steht in der .gitignore: 100 MB je Datei laesst GitHub im
+; Repository nicht zu, sie gehoeren an ein Release.
+OutputDir=release
 OutputBaseFilename=Amateurfunk-Trainer-{#AppVer}
 Compression=lzma2/ultra64
 SolidCompression=yes

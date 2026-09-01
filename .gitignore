@@ -190,6 +190,17 @@ sounds/fanfare.wav
 Amateurfunk-Trainer-*.exe
 Output/
 
+# Seit dem 01.09.2026 sammeln sich die fertigen Setups in release\.
+# Sie gehoeren nicht ins Repository - GitHub laesst dort 100 MiB je
+# Datei zu, ein Setup ist groesser. Sein Platz ist ein Release, dort
+# sind 2 GiB erlaubt. Release-Hochladen.bat bringt es dorthin.
+release/
+
+# Die beiden Werkzeuge dazu bleiben ebenfalls hier: Sie sind auf DIESES
+# Repository verdrahtet und fuer jeden anderen nutzlos.
+Release-Hochladen.bat
+release_hochladen.js
+
 # Ein Zwischenstand vom 01.09.2026. Dietmar dazu: "Nur installer.iss
 # und Build-DIREKT.bat nutzen, keine installer-CLEAN*, installer-MINIMAL*
 # etc. erstellen." Die Datei liegt noch im Ordner und kann geloescht

@@ -20,6 +20,34 @@ echo.
 echo   Ordner: %CD%
 echo.
 
+REM ---------- 0. Versionsnummer aus dem CHANGELOG ----------
+REM
+REM  Die Nummer wird nicht von Hand gepflegt, sondern gezaehlt:
+REM  1.<Anzahl der Eintraege im CHANGELOG>.0. Wer etwas aendert,
+REM  schreibt es ins Protokoll - und damit steigt sie von selbst.
+REM  version.js legt sie zusaetzlich in der package.json ab, damit
+REM  beide Stellen nie auseinanderlaufen.
+set "NODE_EXE=node"
+if exist "%~dp0node\node.exe" set "NODE_EXE=%~dp0node\node.exe"
+if not exist "%~dp0version.js" (
+    echo   [ABBRUCH] version.js fehlt - ohne sie gibt es keine Versionsnummer.
+    echo.
+    pause
+    exit /b 1
+)
+for /f "usebackq delims=" %%V in (`"%NODE_EXE%" "%~dp0version.js" --setzen`) do set "APPVER=%%V"
+if not defined APPVER (
+    echo   [ABBRUCH] Die Versionsnummer liess sich nicht ermitteln.
+    echo             Liegt CHANGELOG.md im Ordner?
+    echo.
+    pause
+    exit /b 1
+)
+echo   Version: %APPVER%   ^(aus CHANGELOG.md gezaehlt^)
+
+REM  Alle fertigen Setups sammeln sich hier.
+if not exist "%~dp0release" mkdir "%~dp0release"
+
 REM ---------- 1. Compiler ----------
 set "ISCC=C:\Program Files (x86)\Inno Setup 7\ISCC.exe"
 if not exist "%ISCC%" set "ISCC=C:\Program Files\Inno Setup 7\ISCC.exe"
@@ -84,7 +112,7 @@ REM ---------- 4. Bauen ----------
 echo.
 echo   Baue ... das dauert wegen lzma2/ultra64 ein paar Minuten.
 echo.
-"%ISCC%" "%~dp0installer.iss"
+"%ISCC%" /DAppVer=%APPVER% "%~dp0installer.iss"
 set BAUFEHLER=%ERRORLEVEL%
 
 echo.
@@ -98,15 +126,15 @@ if not "%BAUFEHLER%"=="0" (
 
 REM ---------- 5. Was ist entstanden? ----------
 set GEFUNDEN=
-for %%E in ("Amateurfunk-Trainer-*.exe") do (
+for %%E in ("%~dp0release\Amateurfunk-Trainer-*.exe") do (
     set GEFUNDEN=1
     echo   Fertig: %%~nxE  ^(%%~zE Bytes^)
-    echo   Liegt in: %CD%
+    echo   Liegt in: %~dp0release
 )
 if not defined GEFUNDEN (
-    echo   [MERKWUERDIG] Der Compiler meldet Erfolg, aber hier liegt keine
-    echo                 Amateurfunk-Trainer-*.exe. Bitte OutputDir in der
-    echo                 installer.iss nachsehen.
+    echo   [MERKWUERDIG] Der Compiler meldet Erfolg, aber in release\ liegt
+    echo                 keine Amateurfunk-Trainer-*.exe. Bitte OutputDir in
+    echo                 der installer.iss nachsehen.
 )
 
 echo.
@@ -114,5 +142,7 @@ echo   Das Symbol steckt in der EXE. Zeigt der Explorer trotzdem noch das
 echo   alte, ist es sein Zwischenspeicher: einmal
 echo        ie4uinit.exe -show
 echo   ausfuehren oder den Explorer neu starten.
+echo.
+echo   Zum Veroeffentlichen: Release-Hochladen.bat
 echo.
 pause

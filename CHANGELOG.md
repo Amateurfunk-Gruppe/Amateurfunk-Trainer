@@ -4673,3 +4673,68 @@ zweites Bild, das dasselbe zeigt wie das erste, hilft niemandem.
 Teilnehmerliste "Warten auf Benutzer... Noch kein Raum erstellt" -
 waehrend darueber der Raumcode und drei Teilnehmer stehen. Die Zeile wird
 offenbar nicht mitgefuehrt. Kein Beinbruch, aber verwirrend.
+
+## 01.09.2026 - Die Versionsnummer zaehlt sich selbst
+
+Dietmar: "Beim Erstellen einer exe sind wir derzeit bei 1.0.1. Schau mal
+im CHANGELOG.md, das ist bei weitem weiter als 1.01. Ich moechte eine
+hoehere Zahl, an dem CHANGELOG.md angepasst, die fortlaufend ist."
+
+Er hat recht: In diesem Protokoll stehen inzwischen 96 Abschnitte. Eine
+Nummer wie 1.0.1 behauptet dagegen, es habe seit dem ersten Tag eine
+einzige kleine Korrektur gegeben.
+
+**Die Regel ist jetzt:  1.<Anzahl der Eintraege im CHANGELOG>.0**
+
+Heute also **1.96.0**. Jeder neue Abschnitt im Aenderungsprotokoll hebt
+sie um eins.
+
+Das ist mehr als eine hoehere Zahl - es ist eine, die nicht mehr
+vergessen werden kann. Eine von Hand gepflegte Version laeuft irgendwann
+aus dem Tritt: Man baut, denkt nicht ans Hochzaehlen, und zwei
+verschiedene Programme heissen gleich. Wer dann einem Benutzer helfen
+soll, weiss nicht, was der eigentlich installiert hat. Hier kann das
+nicht passieren: Wer etwas aendert, schreibt es ins Protokoll - und damit
+steigt die Nummer von selbst. Wer nichts hineinschreibt, hat auch nichts
+geaendert, das eine neue Nummer verdient.
+
+`version.js` zaehlt die Ueberschriften, `Build-DIREKT.bat` reicht das
+Ergebnis an den Compiler weiter (`/DAppVer=`), und dieselbe Nummer landet
+in der `package.json`. Vier Stellen, die frueher einzeln gepflegt werden
+mussten, haengen jetzt an einer.
+
+## 01.09.2026 - Ein Ordner fuer die fertigen Setups
+
+"Habe einen neuen Ordner hinzugefuegt: release. Hier moechte ich alle
+kompilierten exe Dateien die erstellt werden, drin haben."
+
+`OutputDir=release` in der installer.iss, und Build-DIREKT.bat legt den
+Ordner an, falls er fehlt. Vorher landeten die Setups zwischen den
+Quelldateien - das ist die Sorte Datei, die man beim Aufraeumen
+versehentlich mitnimmt oder loescht. `release/` steht in der .gitignore:
+Im Repository laesst GitHub 100 MiB je Datei zu, ein Setup ist groesser.
+
+**Und ein Werkzeug zum Veroeffentlichen: `Release-Hochladen.bat`.**
+
+Es sucht das neueste Setup in `release\`, liest die Version aus dem
+Dateinamen, baut die Beschreibung aus dem letzten Abschnitt dieses
+Protokolls plus einer Installationsanleitung - und legt damit ein
+GitHub-Release an. Gibt es das Release schon, wird die Datei dort
+ersetzt.
+
+Nicht zu verwechseln mit `Hochladen.bat`: Das schiebt den Quellcode ins
+Repository. Zwei verschiedene Orte, zwei verschiedene Werkzeuge - und
+deshalb bewusst zwei Dateien und nicht eine mit einer Rueckfrage.
+
+**Zugangsdaten fasst das Skript nicht an.** Angemeldet wird ueber
+`gh auth login`, GitHubs eigenes Verfahren; hier wird nur nachgesehen, OB
+eine Anmeldung besteht. Fehlt die GitHub-Befehlszeile, gibt es keinen
+Fehler, sondern den Weg von Hand: Das Skript oeffnet die Release-Seite im
+Browser und den Ordner release\ im Explorer, mit Tag und Titel zum
+Abschreiben. Ein Werkzeug, das ohne Zusatzsoftware gar nichts tut, waere
+an dieser Stelle nutzlos.
+
+Die fertige Beschreibung liegt vorher als `release\_release-notiz.md`.
+Das Aenderungsprotokoll ist an Dietmar geschrieben, ein Release an
+Fremde - wenn der Ton nicht passt, laesst sich die Datei aendern, bevor
+man bestaetigt.
