@@ -2298,7 +2298,10 @@ const PUBLIC_FILES = new Set([
   // /formelsammlung/ und sind ueber PUBLIC_DIRS freigegeben.
   '/formelhilfe.json'
 ]);
-const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/'];
+// /fontawesome/ kam am 01.09.2026 dazu: die Symbolschrift liegt jetzt im
+// Ordner statt bei einem CDN. Ohne diesen Eintrag waeren die Symbole zwar
+// da, aber nicht abrufbar - der Schutz laesst nur durch, was hier steht.
+const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/', '/fontawesome/'];
 
 function isPublicPath(rawPath){
   let p;

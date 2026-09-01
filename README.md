@@ -104,10 +104,6 @@ Link. Mehr braucht es nicht:
 
 ![Der Gruppenraum mit mehreren Teilnehmern](bilder/05-gruppenraum.png)
 
-Die Übersicht, die nur der Ausbilder sieht:
-
-![Die Teilnehmer-Übersicht des Ausbilders](bilder/06-uebersicht.png)
-
 ### Statistik und Lernfortschritt
 
 Getrennt nach Prüfungsteil: was gelernt ist, wie die Trefferquote über alle je

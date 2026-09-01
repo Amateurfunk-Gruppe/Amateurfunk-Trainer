@@ -135,8 +135,13 @@ Name: "{app}\Hoerbuch";       Permissions: users-modify
 Name: "{app}\node";           Permissions: users-modify
 Name: "{app}\piper";          Permissions: users-modify
 Name: "{app}\piper\voices";   Permissions: users-modify
+; Bleibt leer, wird aber angelegt: Ohne den Ordner !v\ darin wuerde
+; espeak-ng-data\voices\ sonst gar nicht entstehen. Ein Verzeichnis, das
+; ein Programm einliest, sollte da sein - auch wenn nichts drinsteht.
+Name: "{app}\piper\espeak-ng-data\voices"
 Name: "{app}\sounds"
 Name: "{app}\svgs"
+Name: "{app}\fontawesome"
 Name: "{app}\formelsammlung"
 
 [Files]
@@ -221,6 +226,13 @@ Source: "node\*";           DestDir: "{app}\node";           Flags: ignoreversio
 ; ausgeschlossen; die Lizenzen bleiben alle drin.
 Source: "node_modules\*";   DestDir: "{app}\node_modules";   Excludes: "*.d.ts,*.map,README.md,CHANGELOG.md,History.md,SECURITY.md,CONTRIBUTING.md,CODE_OF_CONDUCT.md"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 Source: "svgs\*";           DestDir: "{app}\svgs";           Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+; Die Symbolschrift. Sie lag bis zum 01.09.2026 bei einem CDN - damit
+; brauchte ausgerechnet der Trainer, der "auch ohne Netz laeuft", beim
+; Start doch eine Internetverbindung. Ohne sie blieben saemtliche
+; Knopfsymbole leere Kaesten. 432 KB, davon 300 KB Schriftdateien; die
+; ttf-Ausweichfassungen sind herausgenommen, woff2 kann jeder Browser
+; seit 2016. LICENSE.txt liegt dabei - Font Awesome verlangt das.
+Source: "fontawesome\*";    DestDir: "{app}\fontawesome";    Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 ; fanfare.wav (2,2 MB) faellt raus. Index.html spielt fanfare.mp3 und
 ; greift nur dann auf die WAV zurueck, wenn die MP3 fehlt - das ist der
 ; Fall bei Paketen von vor dem 27.08.2026. Eine frische Installation
@@ -231,7 +243,18 @@ Source: "formelsammlung\*"; DestDir: "{app}\formelsammlung"; Flags: ignoreversio
 ; pkgconfig\ enthaelt Baumetadaten der espeak-Bibliothek (.pc-Dateien
 ; fuer den C-Compiler). Zur Laufzeit liest die niemand.
 #if SchlankesPiper
-Source: "piper\*";          DestDir: "{app}\piper";          Excludes: "\pkgconfig\*,libtashkeel_model.ort,\espeak-ng-data\*_dict"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Permissions: users-modify
+;  espeak-ng-data\voices\!v\ kommt am 01.09.2026 dazu, auf Dietmars
+; Ansage, nachdem die 104 Namen im Baufenster vorbeigerauscht sind.
+; Es sind Stimmvarianten - "whisper", "croak", "robosoft3" und so fort.
+; Zu hoeren bekommt man sie nur, wenn eine Stimme ausdruecklich als
+; Variante angefordert wird (de+m3). Der Trainer tut das nicht: Er nimmt
+; die Piper-Stimme aus der .onnx-Datei, espeak zerlegt nur die Woerter
+; in Laute.
+;
+; Es geht dabei um 50 KB - viele Namen, fast keine Bytes. Der Ordner
+; lang\ bleibt deshalb ausdruecklich drin: Ueber ihn findet espeak die
+; Grundsprache, und 18 KB sind kein Grund, daran zu ruehren.
+Source: "piper\*";          DestDir: "{app}\piper";          Excludes: "\pkgconfig\*,libtashkeel_model.ort,\espeak-ng-data\*_dict,\espeak-ng-data\voices\!v\*"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Permissions: users-modify
 ; Das deutsche Woerterbuch wird einzeln wieder hereingeholt - der
 ; Ausschluss oben nimmt alle *_dict, auch das, welches gebraucht wird.
 Source: "piper\espeak-ng-data\de_dict"; DestDir: "{app}\piper\espeak-ng-data"; Flags: ignoreversion skipifsourcedoesntexist

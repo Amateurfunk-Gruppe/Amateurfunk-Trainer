@@ -4580,3 +4580,96 @@ sind 2 GiB erlaubt.
 Beide Faelle durchgespielt - mit zwei EXE-Dateien im Ordner (die neuere
 wird genommen, Version und Groesse richtig gelesen) und mit einer leeren
 Ablage.
+
+## 01.09.2026 - Auch die Stimmvarianten fliegen raus
+
+Beim Bauen rauschten 104 Zeilen durchs Fenster:
+
+    Compressing: ...\piper\espeak-ng-data\voices\!v\robosoft7
+    Compressing: ...\piper\espeak-ng-data\voices\!v\whisper
+
+Dietmar: "Kann das nicht auch raus?"
+
+Es sind die Stimmvarianten von espeak-ng - "whisper", "croak",
+"robosoft3" und so fort. Zu hoeren bekommt man sie nur, wenn eine Stimme
+ausdruecklich als Variante angefordert wird (de+m3). Der Trainer tut das
+nicht: Er nimmt die Stimme aus der .onnx-Datei, espeak zerlegt nur die
+Woerter in Laute.
+
+**Ehrlich gerechnet sind es 50 KB.** 104 Dateien, zusammen 51.289 Bytes -
+nachgezaehlt, nicht geschaetzt. Die lange Liste im Baufenster taeuscht:
+viele Namen, fast keine Bytes. Bei 105 MiB Setup sind das 0,05 Prozent.
+
+Ich habe erst abgeraten, weil dem Nichts an Ersparnis ein Risiko
+gegenuebersteht, das ich nicht ausraeumen kann - hier steht kein
+Windows-Rechner, auf dem sich das ausprobieren liesse. Dietmar wollte es
+trotzdem, und das ist seine Entscheidung.
+
+**Der Ordner lang\ bleibt drin.** Er sieht aehnlich aus - viele winzige
+Dateien - ist aber etwas anderes: Ueber ihn findet espeak die
+Grundsprache. Achtzehn Kilobyte sind kein Grund, daran zu ruehren.
+
+**Und der Ordner voices\ wird trotzdem angelegt**, obwohl er jetzt leer
+ist. Er stand vorher nur deshalb da, weil !v\ darin lag; ohne einen
+Eintrag in [Dirs] waere er ganz verschwunden. Ein Verzeichnis, das ein
+Programm beim Start einliest, sollte vorhanden sein - auch wenn nichts
+darin steht.
+
+Beides haengt am selben Schalter wie die Woerterbuecher: Sagt der Trainer
+nach dem Bauen nichts mehr, `#define SchlankesPiper 0` und neu bauen -
+dann ist alles wieder da.
+
+## 01.09.2026 - Neue Bilder in Grau - und die Symbole kamen aus dem Internet
+
+"In GitHub benötigt es komplett neue Bilder. Zum Teil sind da noch alte
+Bilder vorhanden. Ich möchte den Style in Grey nicht Light."
+
+Beim ersten Versuch fiel etwas anderes auf: Auf meinen Aufnahmen waren
+statt der Knopfsymbole leere Kaesten. Der Grund stand in Zeile 7 der
+Index.html:
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/...">
+
+**Die Symbolschrift kam von einem CDN.** Ausgerechnet der Trainer, von
+dem die README sagt, er laufe "vollstaendig ohne Netz", brauchte beim
+Start doch eine Internetverbindung - sonst blieben alle Symbole leer. Zu
+bedienen war er weiterhin, die Beschriftungen stehen ja daneben; schoen
+war es nicht, und angekuendigt war es auch nicht.
+
+Font Awesome liegt jetzt im Ordner: `fontawesome\` mit 432 KB, davon 300
+KB Schriftdateien. Die ttf-Ausweichfassungen sind herausgenommen - woff2
+versteht jeder Browser seit 2016, das spart 1,3 MB. LICENSE.txt liegt
+dabei, Font Awesome verlangt das. Alle 94 im Trainer benutzten Symbole
+sind in der mitgelieferten Fassung 6.5.2 vorhanden; nachgeprueft, nicht
+angenommen.
+
+Dazu drei Eintraege, ohne die es nicht ginge: `/fontawesome/` in
+PUBLIC_DIRS (sonst gibt der Server die Dateien nicht heraus), der Ordner
+in der installer.iss und ein Eintrag in [Dirs].
+
+**Und die Bilder.** Neun Aufnahmen, alle im Grey Mode, alle mit der
+eckigen Ansicht und den neuen Antwortfeldern:
+
+    01-hauptansicht        Startseite mit Verlauf und Lernfortschritt
+    02-pruefungsziel       das Fenster "Ziel waehlen"
+    03-frage               beantwortete Frage, rot/gruen mit Haken und Kreuz
+    04-simulator           Pruefungssimulator Klasse N
+    05-gruppenraum         Raum mit drei Teilnehmern und Gruppenchat
+    07-statistik           Auswertung mit Stolpersteinen
+    08-updater             das Update-Fenster
+    09-simulator-klassen   Simulator Klasse A mit allen fuenf Teilen
+
+Vorher lag der Lernstand-Ordner beiseite: Auf den Bildern soll kein
+Fortschritt stehen, der jemandem gehoert. Beim Gruppenraum sind die
+Namen erfunden - Anke, Bernd, Clara.
+
+Zwei Bilder sind ersatzlos entfallen: `10-usb-stick.png` und
+`11-verknuepfung.png` zeigen Wege, die es nicht mehr gibt.
+`06-uebersicht.png` ebenfalls - die Teilnehmer-Uebersicht des Ausbilders
+laesst sich ohne echte Antworten nicht sinnvoll nachstellen, und ein
+zweites Bild, das dasselbe zeigt wie das erste, hilft niemandem.
+
+**Nebenbei aufgefallen, nicht behoben:** Im Gruppenraum steht unter der
+Teilnehmerliste "Warten auf Benutzer... Noch kein Raum erstellt" -
+waehrend darueber der Raumcode und drei Teilnehmer stehen. Die Zeile wird
+offenbar nicht mitgefuehrt. Kein Beinbruch, aber verwirrend.
