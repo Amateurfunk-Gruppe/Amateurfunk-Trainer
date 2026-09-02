@@ -23,13 +23,18 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 - Zu den wichtigsten Knöpfen gibt es für „ausführlich" eigene Erklärungen in
   ganzen Sätzen — nicht nur die Sprechblase, sondern so, wie man es jemandem
   erklärt, der daneben sitzt
-- **„Ziel wählen" spricht mit**: Beim Öffnen sagt der Trainer, worum es geht;
-  fährst du über eine der fünf Karten, nennt er das Ziel, was dort geprüft wird
-  und wie viele Fragen zu lernen sind. Beim CB-Einstieg auch die Rechnung
-  „571 − 138"
+- **„Ziel wählen" spricht mit**: beim Öffnen die Überschrift, auf jeder der
+  fünf Karten deren Name — mehr nicht. Prüfungsteile, Fragenzahl und die
+  CB-Rechnung stehen ohnehin sichtbar auf der Karte
 - „Prüfung starten" nennt jetzt die **Taste F9**, die beim Üben die richtige
   Antwort zeigt. Dass sie anderswo gesperrt ist, sagen die Knöpfe, die es
   betrifft: „Prüfungssimulator" und „Gruppenraum"
+- Die **Benutzer-Auswahl im Verlauf** erklärt sich: drei getrennte Lernstände
+  an einem Rechner, gedacht für den Ortsverband, wo sich mehrere einen Computer
+  teilen. Beschriftung und Auswahlfeld lösen dieselbe Ansage aus
+- Der **Pfeil neben dem Suchfeld** erklärt beim Überfahren, was die Suche kann:
+  Fragennummer zum Hinspringen, Stichwort im Fragetext, mehrere Wörter grenzen
+  ein, Groß- und Kleinschreibung und Umlaute egal
 - „Probe hören" im Einstellungsfenster spielt einen Beispielsatz
 
 ### Entfernt
@@ -78,6 +83,17 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
   unter dem stehenden Mauszeiger ein Aus/Ein-Ereignis an und die Stimme fing
   von vorne an. Verglichen wird jetzt der Satz statt des Elements: was läuft,
   läuft weiter
+- **Klicken las den Text noch einmal vor.** Auffällig beim Knopf „Light Mode",
+  der beim Klicken seine eigene Beschriftung umschreibt. Zwei Gründe: der Klick
+  setzt den Fokus, und die Fokus-Ansage kannte den Unterschied zur Tastatur
+  nicht; außerdem griff der Satzvergleich nicht mehr, sobald der Knopf einen
+  neuen Text trug. Jetzt spricht nur noch der Tabulator beim Fokus
+  (`:focus-visible`), und solange der Zeiger auf demselben Knopf steht, wird
+  nichts neu gestartet. Durchschalten während des Sprechens geht damit
+- Blieb die Sprachausgabe einmal aus (Stimme fehlt, Server antwortet nicht,
+  leere Datei), galt der Satz weiter als „läuft gerade" — dieser eine Knopf
+  blieb dann für den Rest der Sitzung stumm. Jetzt wird die Merkung auf jedem
+  Weg zurückgesetzt, auf dem es nicht bis zum Abspielen kommt
 - Die Stimmen überschnitten sich beim Wischen über die Knopfleiste: der alte
   Knopf verstummte erst, wenn der neue an der Reihe war. Jetzt ist er in dem
   Moment still, in dem der Zeiger den nächsten Knopf erreicht. Nimmst du die

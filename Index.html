@@ -3054,10 +3054,7 @@ function klasseModalOeffnen() {
     try{
         if(einstellungen && einstellungen.knoepfeVorlesen){
             knopfLetzter = '';
-            knopfSprechen(einstellungen.knopfUmfang === 'lang'
-                ? 'Ziel wählen. Ich fange neu an — Direkteinstieg. Fahre über eine der Karten, '
-                  + 'dann sage ich dir, was dich dort erwartet.'
-                : 'Ziel wählen. Ich fange neu an, Direkteinstieg.');
+            knopfSprechen('Ich fange neu an — Direkteinstieg.');
         }
     }catch(e){}
 }
@@ -3095,22 +3092,20 @@ function klasseModalFuellen() {
         // Was diese Karte sagen soll, wenn "Knoepfe vorlesen" an ist.
         // Dietmar am 02.09.2026: "Bei Ich fange neu an - Direkteinstieg
         // unter Ziel waehlen, moechte ich auch eine Stimme."
-        // Kein data-tooltip: die Karte zeigt all das ohnehin schon, eine
-        // Sprechblase daueber waere nur im Weg. data-vorlesen sagt es nur.
-        const sprichKurz = k.titel + (fehlt ? '. Datei fehlt.' : (an ? '. Ausgewählt.' : ''));
-        let sprichLang = k.titel + '. ' + k.note;
-        if(namen.length){
-            sprichLang += ' Geprüft wird ' + namen.join(', ')
-                        + ' — zusammen ' + pruefungsfragen + ' Fragen.';
-        }
-        if(fehlt){
-            sprichLang += ' Die Fragendatei fehlt, dieses Ziel lässt sich gerade nicht wählen.';
-        }else if(zahlText){
-            sprichLang += ' Zu lernen sind ' + zahlText + ' Fragen.';
-            if(k.cb) sprichLang += ' Das sind die ' + zahl + ' Fragen der Klasse N, abzüglich '
-                                 + cbAbzug + ', die du als CB-Funker schon kannst.';
-        }
-        if(an) sprichLang += ' Dieses Ziel ist gerade ausgewählt.';
+        // Und kurz darauf, zur ersten Fassung: "Bei Ziel waehlen folgt zu
+        // viel Text. Ich moechte nur das haben: [die fuenf Namen]."
+        //
+        // Also nur der Name, in beiden Umfaengen gleich. Alles Weitere -
+        // Pruefungsteile, Fragenzahl, CB-Rechnung - steht ohnehin auf der
+        // Karte und braucht nicht vorgelesen zu werden.
+        // Kein data-tooltip: die Karte zeigt all das schon, eine Sprechblase
+        // darueber waere nur im Weg. data-vorlesen sagt es nur.
+        const nurName = String(k.titel).split('·')[0].trim()
+                      + (k.badge ? ' mit ' + k.badge : '');
+        // Einzige Ausnahme: fehlt die Fragendatei, waere der blosse Name
+        // irrefuehrend - die Karte laesst sich dann ja gar nicht waehlen.
+        const sprichKurz = nurName + (fehlt ? '. Datei fehlt.' : '');
+        const sprichLang = sprichKurz;
 
         return '<button onclick="' + (fehlt ? 'return false;' : 'klasseWaehlen(\'' + k.id + '\')') + '"'
             + ' class="klasse-opt' + (an ? ' aktiv' : '') + '"'
@@ -3159,22 +3154,17 @@ function klasseModalFuellen() {
         + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem;">'
         + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;" '
-        + 'data-vorlesen-kurz="Ich fange neu an, Direkteinstieg." '
-        + 'data-vorlesen="Ich fange neu an — Direkteinstieg. Hier legst du fest, worauf du hinarbeitest. '
-        + 'Die Wahl bestimmt, welche Fragen der Trainer dir überhaupt vorlegt.">'
+        + 'data-vorlesen-kurz="Ich fange neu an — Direkteinstieg." '
+        + 'data-vorlesen="Ich fange neu an — Direkteinstieg.">'
         + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Ich fange neu an — Direkteinstieg</h3>'
         + '<button onclick="klasseModalSchliessen()" data-vorlesen-kurz="Fenster schließen." '
         + 'style="background:none; border:none; font-size:1.2rem; '
         + 'cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
-        + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;" '
-        + 'data-vorlesen="Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik '
-        + 'kommt dazu. Wer N oder E schon hat, findet weiter unten die Aufstockung.">'
+        + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;">'
         + 'Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik '
         + 'kommt dazu. Wer N oder E schon hat, findet weiter unten die Aufstockung.</p>'
         + ZEILEN_FOLGE.map(id => KLASSEN.find(k => k.id === id)).filter(Boolean).map(zeile).join('')
-        + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;" '
-        + 'data-vorlesen="Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
-        + 'Umschalten erhalten. Eine laufende Runde wird beendet.">'
+        + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;">'
         + 'Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
         + 'Umschalten erhalten. Eine laufende Runde wird beendet.</p>'
         + '</div>';
@@ -3286,11 +3276,16 @@ window.klasseWaehlen = klasseWaehlen;
                     data-tooltip="Prüfungsziel wählen: Klasse N, Aufstockung N→E oder E→A, Direkteinstieg E oder A"
                     style="border-radius:20px;"><i class="fas fa-graduation-cap"></i> Ziel wählen</button>
             <div style="position:relative;display:inline-flex;align-items:center;gap:4px;">
-                <input type="text" id="searchInput" placeholder="Suche: NC404 oder DX" 
+                <input type="text" id="searchInput" placeholder="Suche: NC404 oder DX"
+                    data-vorlesen-kurz="Suchfeld."
+                    data-vorlesen="Suchfeld. Hier kommt eine Fragennummer hinein oder ein Wort, nach dem im Fragetext gesucht werden soll." 
                     style="padding:0.35rem 0.8rem 0.35rem 2rem;border-radius:20px;border:1px solid #b0c4d8;font-size:0.75rem;width:160px;font-family:var(--font-mono);outline:none;"
                     onkeydown="if(event.key==='Enter') searchQuestion()">
                 <i class="fas fa-search" style="position:absolute;left:8px;color:var(--muted);font-size:0.7rem;"></i>
-                <button onclick="searchQuestion()" style="border:none;background:var(--panel-navy);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="fas fa-arrow-right" style="font-size:0.6rem;"></i></button>
+                <button onclick="searchQuestion()" aria-label="Suche starten"
+                    data-vorlesen-kurz="Suche starten."
+                    data-vorlesen="Suche. Tippst du eine Fragennummer ein, etwa NC404, springt der Trainer direkt zu dieser Frage — ein Teil der Nummer genügt. Tippst du stattdessen ein Wort ein, etwa Antenne oder Bandplan, sucht er es im Fragetext und zeigt dir alle Treffer in einer Liste. Mehrere Wörter grenzen weiter ein: gefunden wird nur, wo alle vorkommen. Groß- und Kleinschreibung und Umlaute spielen keine Rolle. Die Eingabetaste tut dasselbe wie dieser Pfeil."
+                    style="border:none;background:var(--panel-navy);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="fas fa-arrow-right" style="font-size:0.6rem;"></i></button>
                 <button id="favListBtn" onclick="openFavorites()" data-tooltip="❤️ Merkliste – gemerkte Fragen ansehen und der Reihe nach lernen" style="border:1px solid #f0b8c4;background:#fff1f4;color:#b01238;border-radius:20px;padding:0.2rem 0.6rem;height:24px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:0.72rem;font-weight:700;opacity:0.55;"><i class="fas fa-heart" style="font-size:0.7rem;"></i> <span id="favCount">0</span></button>
             </div>
         </div>
@@ -3607,7 +3602,13 @@ window.klasseWaehlen = klasseWaehlen;
                 <span class="stats" id="historyStats"></span>
             </h3>
             
-            <div class="history-user-selector">
+            <!-- Dietmar am 02.09.2026: "Es soll erklaeren, dass wenn man in einem
+                 Ortsverband an einem Computer mehrere Benutzer lernen."
+                 data-vorlesen liegt am Rahmen, damit sowohl die Beschriftung
+                 als auch das Auswahlfeld selbst die Ansage ausloesen. -->
+            <div class="history-user-selector"
+                 data-vorlesen-kurz="Benutzer wechseln. Drei getrennte Lernstände an einem Rechner."
+                 data-vorlesen="Benutzer. An einem einzigen Rechner können drei Leute getrennt voneinander lernen — gedacht für den Ortsverband, wo sich mehrere einen Computer teilen. Jeder Benutzer hat seinen eigenen Lernfortschritt, seinen eigenen Verlauf, Lernbedarf, seine Fehlerliste und Merkliste. Nichts davon vermischt sich, und ein Wechsel hier schaltet alles auf einmal um. Die Namen änderst du im Fenster Gruppenraum; sie erscheinen dann auch hier in der Liste, im Verlauf und bei den Fehlern.">
                 <label for="userSelect"><i class="fas fa-user"></i> Benutzer:</label>
                 <select id="userSelect">
                     <option value="user1">👤 Benutzer 1</option>
@@ -9178,6 +9179,13 @@ async function knopfSprechen(text, vomZeiger){
     let stimme = '';
     try{ stimme = localStorage.getItem('ttsVoice') || ''; }catch(e){}
     try{ if(typeof istBrowserStimme === 'function' && istBrowserStimme(stimme)) stimme = ''; }catch(e){}
+
+    // Kommt es nicht bis zum Abspielen - Stimme fehlt, Server antwortet nicht,
+    // die Datei ist leer -, dann darf der Satz nicht als "laeuft gerade"
+    // stehenbleiben. Sonst bliebe genau dieser Knopf fuer den Rest der Sitzung
+    // stumm, weil jeder neue Versuch ihn fuer schon laufend haelt.
+    const nichtAngekommen = () => { if(token === knopfToken) knopfSatzAktiv = ''; };
+
     try{
         const res = await fetch('/api/tts', {
             method: 'POST',
@@ -9185,12 +9193,13 @@ async function knopfSprechen(text, vomZeiger){
             body: JSON.stringify({ text: satz, voice: stimme })
         });
         if(token !== knopfToken) return;
-        if(!res.ok) return;
+        if(!res.ok) return nichtAngekommen();
         const ct = res.headers.get('content-type') || '';
-        if(!(ct.includes('audio') || ct.includes('wav') || ct.includes('octet'))) return;
+        if(!(ct.includes('audio') || ct.includes('wav') || ct.includes('octet'))) return nichtAngekommen();
         const blob = await res.blob();
-        if(token !== knopfToken || blob.size <= 500) return;
-        try{ if(typeof ttsQueueActive !== 'undefined' && ttsQueueActive) return; }catch(e){}
+        if(token !== knopfToken) return;
+        if(blob.size <= 500) return nichtAngekommen();
+        try{ if(typeof ttsQueueActive !== 'undefined' && ttsQueueActive) return nichtAngekommen(); }catch(e){}
         const url = URL.createObjectURL(blob);
         knopfUrl = url;
         const audio = new Audio(url);
@@ -9204,7 +9213,7 @@ async function knopfSprechen(text, vomZeiger){
         audio.onended = aufraeumen;
         audio.onerror = aufraeumen;
         audio.play().catch(()=>{});
-    }catch(e){}
+    }catch(e){ nichtAngekommen(); }
 }
 window.knopfSprechen = knopfSprechen;
 
@@ -9242,6 +9251,18 @@ const KNOPF_VERZOEGERUNG = 450;
 function knopfZielAnsagen(el){
     if(!einstellungen.knoepfeVorlesen) return;
     if(!el || el.disabled) return;
+    // Dietmar am 02.09.2026: "Bei Mode ist mir was aufgefallen. Es liest zum
+    // Teil beim Anklicken mehrfach den Text vor. 1x langt hier voll und ganz.
+    // Ich moechte in dem YouTube Video durchschalten, waehrend es den Text
+    // spricht."
+    //
+    // Der Knopf "Light Mode" schreibt beim Klicken seinen eigenen Text um
+    // ("Aktuell: Light Mode" -> "Aktuell: Dark Mode"). Der Satzvergleich
+    // weiter unten griff dann nicht mehr, und die Stimme fing von vorne an.
+    // Deshalb hier zuerst der Elementvergleich: Solange der Zeiger auf
+    // DEMSELBEN Knopf steht, wird nichts neu gestartet - was der Knopf
+    // zwischendurch mit seiner Beschriftung macht, ist seine Sache.
+    if(el === knopfZielEl) return;
     const text = knopfSatz(el);
     if(!text) return;
     if(text === knopfSatzAktiv){             // laeuft schon - nicht anfassen
@@ -9278,10 +9299,18 @@ document.addEventListener('mouseout', function(e){
     knopfZielVerlassen();
 }, true);
 
+// Der Tabulator soll ansagen, die Maus nicht: ein Klick setzt den Fokus
+// ebenfalls, und dann haette jeder Klick den Satz noch einmal begonnen -
+// genau das stoerte beim Durchschalten. ":focus-visible" trennt beides
+// zuverlaessig: der Browser setzt es bei Tastaturfokus, beim Mausklick nicht.
 document.addEventListener('focusin', function(e){
     if(!einstellungen.knoepfeVorlesen) return;
     const el = (e.target && e.target.closest) ? e.target.closest('[data-tooltip],[data-vorlesen],[data-vorlesen-kurz]') : null;
-    if(el) knopfZielAnsagen(el);
+    if(!el) return;
+    let perTastatur = true;
+    try{ perTastatur = el.matches(':focus-visible'); }catch(e2){ perTastatur = true; }
+    if(!perTastatur) return;
+    knopfZielAnsagen(el);
 }, true);
 
 document.addEventListener('focusout', function(){ knopfZielVerlassen(); }, true);

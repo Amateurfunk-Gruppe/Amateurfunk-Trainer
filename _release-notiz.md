@@ -11,7 +11,9 @@ Setup herunterladen, ausführen, fertig. Eine vorhandene Installation wird
 - Knöpfe vorlesen — Maus über einen Knopf, der Trainer erklärt ihn; Tabulator ebenso
 - Wahlweise kurz („Lernbedarf") oder ausführlich (ganze Sätze zu rund 40 Knöpfen)
 - Schrift beim Vorlesen vergrößern: die gerade gelesene Antwort tritt hervor
-- „Ziel wählen" spricht mit — jede der fünf Karten mit Prüfungsumfang und Fragenzahl
+- „Ziel wählen" spricht mit — Überschrift und die Namen der fünf Ziele
+- Suchpfeil erklärt beim Überfahren, was die Suche kann
+- Benutzer-Auswahl erklärt die drei getrennten Lernstände am selben Rechner
 - „Probe hören" im Einstellungsfenster
 
 ## Geändert
@@ -27,5 +29,6 @@ Setup herunterladen, ausführen, fertig. Eine vorhandene Installation wird
 
 - Vorlesen brach nach 220 Zeichen mitten im Wort ab
 - Stimmen überschnitten sich beim Wischen über die Knopfleiste
+- Klicken startete die Erklärung noch einmal — Durchschalten während des Sprechens geht jetzt
 - Vergrößerte Antwort schob sich über den rechten Rand der Fragenkarte
 - Zielkarten mit fehlender Fragendatei blieben stumm
