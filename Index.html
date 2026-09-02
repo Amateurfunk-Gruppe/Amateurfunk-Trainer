@@ -2163,6 +2163,52 @@
            am Element - sonst koennte :hover sie nicht ueberschreiben.
            Die Werte sind dieselben wie vorher, das Aussehen aendert sich
            im Ruhezustand nicht. */
+        /* ============================================================
+           BEIM VORLESEN GROESSER
+           ============================================================
+           Dietmar am 02.09.2026: "In dem Fenster koennte man noch
+           hinzufuegen, das beim Vorlesen der Antworten, der Text einem
+           etwas entgegen kommt und sich vergroessert."
+
+           Die Markierung .tts-highlight gibt es laengst - sie haengt
+           waehrend des Vorlesens an der Antwort, die gerade dran ist.
+           Hier kommt nur die Groesse dazu, und nur wenn der Schalter
+           gesetzt ist (body.tts-gross).
+
+           Dietmar am 02.09.2026 zur ersten Fassung: "Rechts ueberlappt es.
+           Die Markierung muss innerhalb von dem Rahmen bleiben. Der Text
+           darf gerne etwas groesser werden."
+
+           Darum KEIN transform: scale() mehr. Ein skaliertes Kaestchen
+           behaelt seine gemessene Breite und schiebt sich rechts ueber den
+           Rand der Karte - genau das war zu sehen. Stattdessen waechst nur
+           die Schrift; das Kaestchen richtet sich neu aus und bleibt in
+           seiner Spalte. Nach vorn kommt die Zeile ueber den Schatten und
+           zwei Pixel nach oben - das laeuft senkrecht und kann nicht
+           ueberlappen.
+           position:relative und z-index: Sonst legt sich die wachsende
+           Zeile UNTER die naechste statt darueber. */
+        body.tts-gross .tts-highlight {
+            position: relative;
+            z-index: 5;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(15, 39, 69, 0.26);
+            transition: transform 0.28s ease, box-shadow 0.28s ease;
+        }
+        body.tts-gross .tts-highlight .option-text,
+        body.tts-gross .tts-highlight .option-label {
+            font-size: 1.3em;
+            font-weight: 600;
+            line-height: 1.35;
+            transition: font-size 0.28s ease;
+        }
+        /* Ohne Bewegung, wenn das Betriebssystem darum bittet. */
+        @media (prefers-reduced-motion: reduce) {
+            body.tts-gross .tts-highlight { transition: none; }
+            body.tts-gross .tts-highlight .option-text,
+            body.tts-gross .tts-highlight .option-label { transition: none; }
+        }
+
         .klasse-opt {
             border: 1px solid #d7e0ec;
             background: #ffffff;
@@ -2177,7 +2223,7 @@
            --darc-gewaehlt ist unter body.eckig definiert, das Fenster
            haengt aber am body selbst. Ueber eine Variable, die hier
            leer waere, gaebe es gar keinen Hover mehr. */
-        .klasse-opt:hover:not(:disabled) {
+        .klasse-opt:hover:not(:disabled):not([aria-disabled="true"]) {
             border-color: #f9a05a;
             background: #fff6ee;
             transform: translateY(-1px);
@@ -2192,7 +2238,8 @@
         .klasse-opt.aktiv:hover { background: #ffefe0; border-color: #f9a05a; }
         /* Die gesperrte Zeile (Datei fehlt) darf nicht so tun, als liesse
            sie sich anklicken. */
-        .klasse-opt:disabled:hover { border-color: #d7e0ec; background: #ffffff; transform: none; }
+        .klasse-opt:disabled:hover,
+        .klasse-opt[aria-disabled="true"]:hover { border-color: #d7e0ec; background: #ffffff; transform: none; }
 
         /* Zeilen im Fenster "Als CB bekannt". Ohne eine sichtbare
            Rueckmeldung sieht man dem Text nicht an, dass er anklickbar
@@ -3002,6 +3049,17 @@ function klasseModalOeffnen() {
     klasseModalFuellen();
     modal.style.display = 'flex';
     klasseZahlenNachladen();
+    // Beim Oeffnen einmal sagen, worum es hier geht - danach spricht jede
+    // Karte fuer sich, sobald die Maus darueber steht.
+    try{
+        if(einstellungen && einstellungen.knoepfeVorlesen){
+            knopfLetzter = '';
+            knopfSprechen(einstellungen.knopfUmfang === 'lang'
+                ? 'Ziel wählen. Ich fange neu an — Direkteinstieg. Fahre über eine der Karten, '
+                  + 'dann sage ich dir, was dich dort erwartet.'
+                : 'Ziel wählen. Ich fange neu an, Direkteinstieg.');
+        }
+    }catch(e){}
 }
 window.klasseModalOeffnen = klasseModalOeffnen;
 
@@ -3034,9 +3092,31 @@ function klasseModalFuellen() {
         const zahlText = (zahl && k.cb) ? (Math.max(0, zahl - cbAbzug) + '')
                        : (zahl ? zahl + '' : '');
 
-        return '<button onclick="klasseWaehlen(\'' + k.id + '\')"'
+        // Was diese Karte sagen soll, wenn "Knoepfe vorlesen" an ist.
+        // Dietmar am 02.09.2026: "Bei Ich fange neu an - Direkteinstieg
+        // unter Ziel waehlen, moechte ich auch eine Stimme."
+        // Kein data-tooltip: die Karte zeigt all das ohnehin schon, eine
+        // Sprechblase daueber waere nur im Weg. data-vorlesen sagt es nur.
+        const sprichKurz = k.titel + (fehlt ? '. Datei fehlt.' : (an ? '. Ausgewählt.' : ''));
+        let sprichLang = k.titel + '. ' + k.note;
+        if(namen.length){
+            sprichLang += ' Geprüft wird ' + namen.join(', ')
+                        + ' — zusammen ' + pruefungsfragen + ' Fragen.';
+        }
+        if(fehlt){
+            sprichLang += ' Die Fragendatei fehlt, dieses Ziel lässt sich gerade nicht wählen.';
+        }else if(zahlText){
+            sprichLang += ' Zu lernen sind ' + zahlText + ' Fragen.';
+            if(k.cb) sprichLang += ' Das sind die ' + zahl + ' Fragen der Klasse N, abzüglich '
+                                 + cbAbzug + ', die du als CB-Funker schon kannst.';
+        }
+        if(an) sprichLang += ' Dieses Ziel ist gerade ausgewählt.';
+
+        return '<button onclick="' + (fehlt ? 'return false;' : 'klasseWaehlen(\'' + k.id + '\')') + '"'
             + ' class="klasse-opt' + (an ? ' aktiv' : '') + '"'
-            + (fehlt ? ' disabled' : '')
+            + ' data-vorlesen-kurz="' + attrText(sprichKurz) + '"'
+            + ' data-vorlesen="' + attrText(sprichLang) + '"'
+            + (fehlt ? ' aria-disabled="true"' : '')
             + ' style="display:flex; align-items:flex-start; gap:0.8rem; width:100%; text-align:left; '
             + 'padding:0.7rem 0.9rem; margin-bottom:0.45rem; border-radius:12px; cursor:' + (fehlt ? 'not-allowed' : 'pointer') + '; '
             + 'font-family:inherit; opacity:' + (fehlt ? '0.5' : '1') + ';">'
@@ -3078,15 +3158,23 @@ function klasseModalFuellen() {
         '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
         + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem;">'
-        + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;">'
+        + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;" '
+        + 'data-vorlesen-kurz="Ich fange neu an, Direkteinstieg." '
+        + 'data-vorlesen="Ich fange neu an — Direkteinstieg. Hier legst du fest, worauf du hinarbeitest. '
+        + 'Die Wahl bestimmt, welche Fragen der Trainer dir überhaupt vorlegt.">'
         + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Ich fange neu an — Direkteinstieg</h3>'
-        + '<button onclick="klasseModalSchliessen()" style="background:none; border:none; font-size:1.2rem; '
+        + '<button onclick="klasseModalSchliessen()" data-vorlesen-kurz="Fenster schließen." '
+        + 'style="background:none; border:none; font-size:1.2rem; '
         + 'cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
-        + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;">'
+        + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;" '
+        + 'data-vorlesen="Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik '
+        + 'kommt dazu. Wer N oder E schon hat, findet weiter unten die Aufstockung.">'
         + 'Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik '
         + 'kommt dazu. Wer N oder E schon hat, findet weiter unten die Aufstockung.</p>'
         + ZEILEN_FOLGE.map(id => KLASSEN.find(k => k.id === id)).filter(Boolean).map(zeile).join('')
-        + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;">'
+        + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;" '
+        + 'data-vorlesen="Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
+        + 'Umschalten erhalten. Eine laufende Runde wird beendet.">'
         + 'Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
         + 'Umschalten erhalten. Eine laufende Runde wird beendet.</p>'
         + '</div>';
@@ -3214,13 +3302,14 @@ window.klasseWaehlen = klasseWaehlen;
                 <button id="trainerRefreshBtn" type="button" style="display:none; background:none; border:1px solid #e0c080; color:#8a6d00; border-radius:50%; width:26px; height:26px; align-items:center; justify-content:center; cursor:pointer; font-size:0.75rem;" onclick="var sel=document.getElementById('trainerParticipantSelect'); if(window.duoTrainerData && window.updateTrainerParticipantSelect) window.updateTrainerParticipantSelect(window.duoTrainerData); if(sel && sel.value) onTrainerParticipantChange(sel.value);" data-tooltip="Ansicht neu laden, falls Wechsel zum Teilnehmer nicht direkt greift"><i class="fas fa-sync-alt"></i></button>
                 <span id="trainerModeBadge" style="display:none; background:#e2932f; color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">TRAINER MODUS</span>
             </div>
+            <button class="btn" id="einstellungenBtn" onclick="einstellungenOeffnen()" style="background:#4b5b73; color:#ffffff; padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Einstellungen: Knöpfe vorlesen, kurz oder ausführlich, und Schrift beim Vorlesen vergrößern" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>
             <button class="btn" id="infoBtn" onclick="infoOeffnen()" style="background:#0a6f78; color:#ffffff; padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Kurze Anleitung: was das Tool kann und wie es bedient wird"><i class="fas fa-circle-info"></i> Info</button>
             <!-- Fehlermeldung per Mail. "Fehler melden" statt "Bug melden" oder
                  "Entwickler kontaktieren": Es soll jeder anklicken, der etwas
                  Merkwürdiges sieht - auch wer mit dem Wort Bug nichts anfängt
                  und wer sich nicht traut, "den Entwickler" zu behelligen. -->
             <button class="btn" id="fehlerBtn" onclick="fehlerMelden()" style="background:#8a5a00; color:#ffffff; padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Etwas stimmt nicht? Schreib mir – die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist."><i class="fas fa-bug"></i> Fehler melden</button>
-            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="background:#0f2745; color:white; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen"><i class="fas fa-users"></i> Raum</button>
+            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="background:#0f2745; color:white; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
             <button class="btn-cache-sm" onclick="clearCacheAndReload()" data-tooltip="🧹 Cache leeren (Verlauf bleibt erhalten)">
                 <i class="fas fa-broom"></i> Cache
             </button>
@@ -3254,16 +3343,16 @@ window.klasseWaehlen = klasseWaehlen;
             <!-- Beschriftungen bleiben ausgeschrieben; Platz wird ueber die
                  Innenabstaende gespart, das ist verstaendlicher als "25". -->
         </select>
-        <button class="btn btn-primary" id="startBtn" data-tooltip="🎯 Prüfung starten"><i class="fas fa-play"></i> Start <span id="startToLearnCount" class="start-badge" style="display:none;">0</span></button>
+        <button class="btn btn-primary" id="startBtn" data-tooltip="🎯 Prüfung starten – F9 zeigt beim Üben die richtige Antwort"><i class="fas fa-play"></i> Start <span id="startToLearnCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn btn-danger" id="repeatErrorsBtn" data-tooltip="❌ Fehler wiederholen"><i class="fas fa-exclamation-triangle"></i> Fehler <span id="repeatErrorsCount" class="error-badge" style="display:none;">0</span></button>
         <button class="btn btn-difficult" id="difficultBtn" onclick="repeatDifficult()" data-tooltip="🔥 Lernbedarf – oft falsch, braucht 3x richtig"><i class="fas fa-fire"></i> Lernbedarf <span id="difficultCount" class="difficult-badge" style="display:none;">0</span></button>
         <button class="btn" id="auffrischenBtn" onclick="auffrischenStarten()" style="background:#0e9aa7; color:white; display:none;" data-tooltip="🔄 Gelerntes auffrischen"><i class="fas fa-rotate"></i> Auffrischen <span id="auffrischenCount" class="start-badge" style="display:none;">0</span></button>
-        <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" style="background:#5b6b8c; color:white;" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> Durchsehen <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
+        <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" style="background:#5b6b8c; color:white;" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> <span id="durchsichtText">Blättern</span> <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" style="background:#34495e; color:white;" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
         <button class="btn btn-abort" id="backToMainTopBtn" onclick="backToMain()" style="display:none;" data-tooltip="Zur Hauptansicht"><i class="fas fa-home"></i> Hauptmenü</button>
         <button class="btn" id="printExamBtn" onclick="printExam()" style="background:#2c3e50; color:white;" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
-        <button class="btn btn-exam" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
-        <button class="btn" id="duoBtn" onclick="window.duoInit()" style="background:#d02076; color:white;" data-tooltip="Gruppenraum für gemeinsames Lernen"><i class="fas fa-users"></i> Gruppenraum</button>
+        <button class="btn btn-exam" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil, F9 abgeschaltet"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
+        <button class="btn" id="duoBtn" onclick="window.duoInit()" style="background:#d02076; color:white;" data-tooltip="Gruppenraum für gemeinsames Lernen – Teilnehmer kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Gruppenraum</button>
     </div>
 
     <!-- APP LAYOUT
@@ -3927,7 +4016,8 @@ async function loadPersistentFromServer(){
                     }));
                     restored = true;
                 });
-                try{ loadCB(); }catch(e){}
+                try{ loadCB();
+    try{ einstellungenLaden(); }catch(e){} }catch(e){}
             }
         }catch(e){ console.warn('CB-Einstieg Restore Fehler', e); }
 
@@ -4133,8 +4223,8 @@ async function confirmFullReset(){
         // UI sofort aktualisieren
         try{
             if (typeof errorBadge !== 'undefined' && errorBadge) errorBadge.style.display = 'none';
-            const repeatBtn = document.getElementById('repeatErrorsBtn');
-            if (repeatBtn) repeatBtn.style.display = 'none';
+            // Der Knopf bleibt stehen und wird gleich von updateErrorBadge()
+            // blass gestellt - ausblenden wuerde die Leiste springen lassen.
         }catch(e){}
         try{ if(typeof updateDifficultBadge==='function') updateDifficultBadge(); }catch(e){}
         try{ if(typeof updateErrorBadge==='function') updateErrorBadge(); }catch(e){}
@@ -5533,7 +5623,12 @@ function saveCB(){
 //  der Runde steht ohnehin in currentPart, und jede andere Runde
 //  ueberschreibt ihn. Ein zweiter Schalter koennte damit aus dem Tritt
 //  geraten - dieser kann es nicht.
-const DURCHSICHT_NAME = 'Durchsicht';
+// Der Name steht auch im Verlauf, deshalb an einer Stelle. Er hiess bis
+// zum 02.09.2026 "Durchsicht"; Dietmar fand "Durchsehen" am Knopf
+// schrecklich, und er hatte recht. Aeltere Verlaufseintraege behalten
+// das alte Wort - umschreiben hiesse gespeicherte Lernstaende anfassen,
+// und dafuer ist der Anlass zu klein.
+const DURCHSICHT_NAME = 'Blättern';
 
 function durchsichtSchluessel(){ return 'amateurfunk_durchsicht_' + currentUser; }
 
@@ -5575,11 +5670,41 @@ function durchsichtBadge(){
     if(!b) return;
     const p = durchsichtPosition();
     const offen = p.ids.length - p.index;
-    if(p.gemerkt && p.index > 0 && offen > 0){
+    const weiter = p.gemerkt && p.index > 0 && offen > 0;
+    if(weiter){
         b.textContent = offen;
         b.style.display = 'inline';
     } else {
         b.style.display = 'none';
+    }
+    // Der Knopf sagt selbst, woran man ist: "Blättern" beim ersten Mal,
+    // "Weiterblättern", sobald ein Lesezeichen liegt. Damit muss das
+    // Wort weniger leisten - der Zustand ist sichtbar statt erklärt.
+    const t = document.getElementById('durchsichtText');
+    if(t) t.textContent = weiter ? 'Weiterblättern' : 'Blättern';
+    const knopf = document.getElementById('durchsichtBtn');
+    if(knopf){
+        knopf.setAttribute('data-tooltip', weiter
+            ? '📖 Weiter bei Frage ' + (p.index + 1) + ' von ' + p.ids.length
+              + ' – alle Fragen der Reihe nach, auch die schon gelernten'
+            : '📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast');
+
+        // Was der Knopf sagt, wenn "Knöpfe vorlesen" an ist. Der Wortlaut ist
+        // Dietmars eigener vom 02.09.2026 - er beschreibt den Zweck besser als
+        // meine erste Fassung: es geht nicht ums Blättern an sich, sondern
+        // darum, den Lernstapel kleiner zu machen.
+        const name = weiter ? 'Weiterblättern' : 'Blättern';
+        knopf.setAttribute('data-vorlesen-kurz', weiter
+            ? 'Weiterblättern. Weiter bei Frage ' + (p.index + 1) + ' von ' + p.ids.length + '.'
+            : 'Blättern.');
+        knopf.setAttribute('data-vorlesen',
+            name + '. Diese Funktion hilft dir, Fragen im Fragenkatalog zu finden, '
+          + 'die du bereits kennst. Die kannst du unter Gelernt abhaken. Das '
+          + 'verkleinert den Stapel der Fragen, die du noch lernen musst. '
+          + 'Es geht der Reihe nach durch den Katalog, ohne zu mischen, und der '
+          + 'Trainer merkt sich, wo du aufgehört hast.'
+          + (weiter ? ' Gerade stehst du bei Frage ' + (p.index + 1)
+                    + ' von ' + p.ids.length + '.' : ''));
     }
 }
 window.durchsichtBadge = durchsichtBadge;
@@ -5628,7 +5753,7 @@ function durchsichtFrageFenster(p){
       + '<div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; '
       + 'border-bottom:1px solid #e3e9f3; background:#f9fbff;">'
       + '<h3 style="margin:0; font-size:1.05rem; color:#0f2745;">'
-      + '<i class="fas fa-book-open" style="color:#5b6b8c;"></i> Durchsicht</h3>'
+      + '<i class="fas fa-book-open" style="color:#5b6b8c;"></i> Blättern</h3>'
       + '<button onclick="durchsichtFensterZu()" aria-label="Schließen" style="width:34px; height:34px; '
       + 'border-radius:50%; border:1px solid #e3e9f3; background:#fff; cursor:pointer; font-size:1.2rem; '
       + 'line-height:1; color:#4b5563;">&#10005;</button></div>'
@@ -5639,7 +5764,7 @@ function durchsichtFrageFenster(p){
             + '(<span style="font-family:var(--font-mono);">' + p.ids[p.index] + '</span>). '
             + 'Von dort sind es noch <b>' + offen + '</b>.')
       + '<div style="font-size:0.78rem; color:#4b5563; margin-top:0.6rem;">'
-      + 'Die Durchsicht geht alle Fragen der Reihe nach durch — auch die schon gelernten. '
+      + 'Blättern geht alle Fragen der Reihe nach durch — auch die schon gelernten. '
       + 'Was du kannst, hakst du an der Frage ab; alles andere klickst du mit „Weiter" durch.</div>'
       + '</div>'
       + '<div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; '
@@ -5647,12 +5772,15 @@ function durchsichtFrageFenster(p){
       + '<button onclick="durchsichtFensterZu(); durchsichtVergessen(); durchsichtLos(0);" class="btn btn-outline" '
       + 'style="min-height:38px; padding:0.5rem 1.1rem; border-radius:20px; font-weight:600; '
       + 'border:1px solid #b0c4d8; background:#fff; cursor:pointer; font-family:inherit;">'
-      + '<i class="fas fa-rotate-left"></i> Von vorn</button>'
+      + '<i class="fas fa-rotate-left"></i> Neu beginnen</button>'
+      // Die Zahl steht schon im Satz darueber ("Zuletzt warst du bei
+      // Frage 13 von 571"). Auf dem Knopf waere sie zum zweiten Mal da -
+      // und der Knopf soll sagen, was PASSIERT, nicht wo man steht.
       + (fertig ? '' :
          '<button onclick="durchsichtFensterZu(); durchsichtLos(' + p.index + ');" class="btn btn-primary" '
        + 'style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; '
        + 'background:#0f2745; color:#fff; border:none; cursor:pointer; font-family:inherit;">'
-       + '<i class="fas fa-play"></i> Weiter bei ' + nr + '</button>')
+       + '<i class="fas fa-book-open"></i> Weiterblättern</button>')
       + '</div></div>';
     modal.style.display = 'flex';
 }
@@ -6221,8 +6349,31 @@ function updateErrorBadge() {
         }
         const btn = document.getElementById('repeatErrorsBtn');
         if (btn) {
-            btn.style.display = count > 0 ? 'inline-flex' : 'none';
-            btn.setAttribute('data-tooltip', count > 0 ? `❌ ${count} Fehlerfrage${count === 1 ? '' : 'n'} wiederholen` : '❌ Fehler wiederholen');
+            // Dietmar am 02.09.2026: "Baue den Button Fehler mit ein. Derzeit
+            // ist er erst bei einem Fehler sichtbar."
+            // Er verschwand komplett, solange nichts falsch war - man konnte
+            // ihn also weder erklaeren noch vorlesen lassen, und die Leiste
+            // sprang bei jedem ersten Fehler um. Jetzt steht er immer da und
+            // ist nur blass, solange es nichts zu wiederholen gibt - genau so,
+            // wie "Lernbedarf" es schon immer gemacht hat.
+            btn.style.display = 'inline-flex';
+            btn.style.opacity = count > 0 ? '1' : '0.6';
+            // Kein aria-disabled: der Knopf bleibt anklickbar (wie "Lernbedarf"
+            // auch), und fuer Vorleseprogramme waere "gesperrt" bei einem Knopf,
+            // der auf einen Klick antwortet, schlicht gelogen. Dass gerade
+            // nichts offen ist, sagt der Text.
+            btn.setAttribute('data-tooltip', count > 0
+                ? `❌ ${count} Fehlerfrage${count === 1 ? '' : 'n'} wiederholen`
+                : '❌ Fehler wiederholen – gerade keine offen');
+            btn.setAttribute('data-vorlesen-kurz', count > 0
+                ? `Fehler wiederholen. ${count} ${count === 1 ? 'Frage' : 'Fragen'}.`
+                : 'Fehler wiederholen. Gerade keine offen.');
+            btn.setAttribute('data-vorlesen',
+                'Fehler wiederholen. Hier kommen nur die Fragen, die du zuletzt falsch '
+              + 'beantwortet hast. Sitzt eine davon wieder, verschwindet sie aus der Liste. '
+              + (count > 0
+                    ? `Gerade ${count === 1 ? 'ist es eine Frage' : 'sind es ' + count + ' Fragen'}.`
+                    : 'Gerade ist keine offen — der Knopf wird von selbst wach, sobald du etwas falsch beantwortest.'));
         }
     } catch(e){}
 }
@@ -6441,6 +6592,7 @@ async function loadQuestions() {
         loadErrors();
         loadDifficult();
         loadCB();
+    try{ einstellungenLaden(); }catch(e){}
     loadMastery();
         resetAll();
     } catch (e) {
@@ -6517,6 +6669,7 @@ userSelect.addEventListener('change', function() {
     loadErrors();
     loadDifficult();
     loadCB();
+    try{ einstellungenLaden(); }catch(e){}
     loadMastery();
     renderHistory();
     updateVisibility();
@@ -8733,6 +8886,498 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
     playTTSQueue(segments, null);
 }
 
+// ============================================================================
+//  EINSTELLUNGEN  (Zahnrad links neben "Info")
+// ============================================================================
+//  Dietmar am 02.09.2026: "Die Buttons zeigen bei Overlay einen Text an.
+//  Ich haette den gerne vorgelesen, was dieser Button fuer eine Funktion hat.
+//  [...] Ich moechte von dem Trainer ein Video fuer YouTube erstellen. Das
+//  Video selbst zu besprechen, klingt schrecklich. Diesen Part soll mir der
+//  Trainer entgegen kommen."
+//
+//  Zwei Schalter, beide pro Benutzer-Slot gespeichert:
+//    1. Knoepfe vorlesen  - der Text, der beim Ueberfahren als Sprechblase
+//       erscheint (data-tooltip), wird zusaetzlich gesprochen.
+//    2. Schrift beim Vorlesen vergroessern - die gerade vorgelesene Antwort
+//       tritt hervor (body.tts-gross, CSS weiter oben).
+//
+//  Das Vorlesen der Frage hat immer Vorrang: laeuft die grosse Warteschlange
+//  (ttsQueueActive), sagt der Knopf-Text gar nichts.
+// ============================================================================
+
+let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false };
+
+function einstellungenSchluessel(){
+    return 'amateurfunk_einstellungen_' + (typeof currentUser !== 'undefined' ? currentUser : 'user1');
+}
+
+function einstellungenLaden(){
+    einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false };
+    try{
+        const raw = localStorage.getItem(einstellungenSchluessel());
+        if(raw){
+            const d = JSON.parse(raw);
+            einstellungen.knoepfeVorlesen = !!(d && d.knoepfeVorlesen);
+            einstellungen.vorlesenGross   = !!(d && d.vorlesenGross);
+            if(d && d.knopfUmfang === 'lang') einstellungen.knopfUmfang = 'lang';
+        }
+    }catch(e){}
+    einstellungenAnwenden();
+}
+window.einstellungenLaden = einstellungenLaden;
+
+function einstellungenSpeichern(){
+    try{ localStorage.setItem(einstellungenSchluessel(), JSON.stringify(einstellungen)); }catch(e){}
+    einstellungenAnwenden();
+}
+
+function einstellungenAnwenden(){
+    try{ document.body.classList.toggle('tts-gross', !!einstellungen.vorlesenGross); }catch(e){}
+    if(!einstellungen.knoepfeVorlesen){ try{ knopfSprechenStoppen(); }catch(e){} }
+    const a = document.getElementById('einstKnoepfeVorlesen');
+    if(a) a.checked = !!einstellungen.knoepfeVorlesen;
+    const b = document.getElementById('einstVorlesenGross');
+    if(b) b.checked = !!einstellungen.vorlesenGross;
+    const kurz = document.getElementById('einstUmfangKurz');
+    const lang = document.getElementById('einstUmfangLang');
+    if(kurz) kurz.checked = einstellungen.knopfUmfang !== 'lang';
+    if(lang) lang.checked = einstellungen.knopfUmfang === 'lang';
+    // Die Wahl zwischen kurz und ausfuehrlich zaehlt nur, wenn ueberhaupt
+    // vorgelesen wird - sonst steht sie blass daneben.
+    const kasten = document.getElementById('einstUmfangKasten');
+    if(kasten){
+        const an = !!einstellungen.knoepfeVorlesen;
+        kasten.style.opacity = an ? '1' : '0.45';
+        kasten.querySelectorAll('input').forEach(i => { i.disabled = !an; });
+    }
+}
+
+function einstellungenUmfang(wert){
+    einstellungen.knopfUmfang = (wert === 'lang') ? 'lang' : 'kurz';
+    einstellungenSpeichern();
+    if(einstellungen.knoepfeVorlesen){
+        knopfLetzter = '';
+        knopfSprechen(einstellungen.knopfUmfang === 'lang'
+            ? 'Ausführliche Erklärung.' : 'Kurze Erklärung.');
+    }
+}
+window.einstellungenUmfang = einstellungenUmfang;
+
+function einstellungenUmschalten(feld, an){
+    einstellungen[feld] = !!an;
+    einstellungenSpeichern();
+    // Beim Einschalten einmal kurz hoerbar machen, dass es jetzt spricht.
+    if(feld === 'knoepfeVorlesen' && an){
+        knopfSprechen('Das Vorlesen der Knopftexte ist eingeschaltet.');
+    }
+}
+window.einstellungenUmschalten = einstellungenUmschalten;
+
+// ---------------------------------------------------------------------------
+//  Die Stimme fuer die Knopftexte. Eigenes Audio-Element und eigener Zaehler,
+//  damit ein neuer Knopf den alten sofort abloest und ein spaet eintreffendes
+//  WAV nicht mehr dazwischenredet.
+// ---------------------------------------------------------------------------
+let knopfAudio = null;
+let knopfUrl = null;
+let knopfToken = 0;
+let knopfTimer = null;
+let knopfLetzter = '';
+let knopfZielEl = null;   // der Knopf, der gerade dran ist
+let knopfSatzAktiv = '';  // der Satz, der gerade laeuft oder gleich laeuft
+
+// Sofort still. Der Zaehler wird hochgezaehlt, damit auch eine Stimme, die
+// gerade noch beim Server erzeugt wird, nicht mehr zu Wort kommt.
+function knopfStimmeAus(){
+    knopfToken++;
+    knopfSatzAktiv = '';
+    if(knopfAudio){
+        try{ knopfAudio.pause(); knopfAudio.currentTime = 0; }catch(e){}
+        knopfAudio = null;
+    }
+    if(knopfUrl){ try{ URL.revokeObjectURL(knopfUrl); }catch(e){} knopfUrl = null; }
+}
+
+function knopfSprechenStoppen(){
+    if(knopfTimer){ clearTimeout(knopfTimer); knopfTimer = null; }
+    knopfStimmeAus();
+    knopfLetzter = '';
+    knopfZielEl = null;
+}
+
+// Sprechblasen enthalten Symbole und Zeilenumbrueche - beides klingt
+// vorgelesen furchtbar. Hier bleibt nur der Satz uebrig.
+// So viel spricht ein Knopf hoechstens. Die laengste eingebaute Erklaerung
+// liegt bei gut 300 Zeichen; die Grenze ist nur da, damit kein versehentlich
+// riesiger Text an die Sprachausgabe geht.
+const KNOPF_MAX_ZEICHEN = 900;
+
+function knopfTextSaeubern(t){
+    if(!t) return '';
+    let s = String(t);
+    // "N\u2192E" liest sich vorgelesen nur als "N nach E" richtig.
+    s = s.replace(/\s*(?:\u2192|->)\s*/g, ' nach ');
+    // "3x richtig" spricht die Stimme sonst als "drei X".
+    s = s.replace(/(\d+)\s*[x\u00d7](?=\s|$)/g, '$1 Mal');
+    s = s.replace(/\bca\.\s*/gi, 'circa ');
+    s = s.replace(/\bz\.\s*B\.\s*/gi, 'zum Beispiel ');
+    s = s.replace(/&\s/g, ' und ');
+    try{
+        s = s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}]/gu, ' ');
+    }catch(e){}
+    // Trennzeichen wie "·" oder "|" spricht die Stimme nicht - als Komma
+    // wird daraus eine kurze Pause, und der Satz klingt wie gesprochen.
+    s = s.replace(/\s*[\u00b7\u2022\u2013\u2014|]\s*/g, ', ');
+    s = s.replace(/\s+/g, ' ').replace(/(,\s*){2,}/g, ', ').trim();
+    s = s.replace(/^,\s*/, '').replace(/[,\s]+$/, '');
+    // Dietmar am 02.09.2026: "Bei Weiterblaettern verschluckt es Silben."
+    // Hier war es: die alte Grenze von 220 Zeichen schnitt einfach mitten im
+    // Wort ab - und die ausfuehrlichen Erklaerungen sind laenger als das.
+    // Jetzt reicht die Grenze fuer jede von ihnen, und falls sie doch einmal
+    // greift, endet der Satz an einem Punkt, sonst wenigstens an einer Luecke.
+    if(s.length > KNOPF_MAX_ZEICHEN){
+        const stueck = s.slice(0, KNOPF_MAX_ZEICHEN);
+        const satzende = Math.max(stueck.lastIndexOf('. '), stueck.lastIndexOf('! '), stueck.lastIndexOf('? '));
+        if(satzende > KNOPF_MAX_ZEICHEN * 0.5){
+            s = stueck.slice(0, satzende + 1);
+        } else {
+            const luecke = stueck.lastIndexOf(' ');
+            s = (luecke > 0 ? stueck.slice(0, luecke) : stueck).replace(/[,;:\s]+$/, '') + '.';
+        }
+    }
+    return s;
+}
+
+// Die Sprechblasen sind fast alle gleich gebaut: erst der Name des Knopfes,
+// dann nach einem Trennzeichen die Erklaerung. Die Kurzfassung nimmt nur den
+// ersten Teil, die ausfuehrliche den ganzen Satz.
+//   "\ud83d\udd25 Lernbedarf \u2013 oft falsch, braucht 3x richtig"
+//        kurz -> "Lernbedarf"
+//        lang -> "Lernbedarf, oft falsch, braucht 3x richtig"
+// Bei "ausfuehrlich" reicht die Sprechblase nicht - die ist fuer das Auge
+// geschrieben, nicht fuers Ohr. Dietmar am 02.09.2026: "Bei Ausfuehrlich
+// haette ich es gerne ausfuehrlicher." Deshalb hier zu jedem wichtigen
+// Knopf ein paar ganze Saetze, so wie man es jemandem erklaeren wuerde,
+// der neben einem sitzt. Was hier fehlt, faellt auf die Sprechblase
+// zurueck - dann ist es eben kuerzer, aber nie falsch.
+const KNOPF_ERKLAERUNG = {
+    startBtn: 'Prüfung starten. Damit beginnt eine Übungsrunde mit den Prüfungsteilen, die du oben angehakt hast. Nach jeder Antwort siehst du sofort, ob sie richtig war; am Ende steht das Ergebnis im Verlauf. Wenn du nicht weiterkommst: die Taste F9 zeigt dir die richtige Antwort. Beim Üben bleibt das folgenlos.',
+    repeatErrorsBtn: 'Fehler wiederholen. Hier kommen nur die Fragen, die du zuletzt falsch beantwortet hast. Sitzt eine davon wieder, verschwindet sie aus der Liste.',
+    difficultBtn: 'Lernbedarf. Das sind die Fragen, die dir auffällig oft danebengehen. Eine solche Frage braucht drei Mal hintereinander die richtige Antwort, erst dann gilt sie wieder als gelernt.',
+    auffrischenBtn: 'Gelerntes auffrischen. Fragen, die du schon konntest und die eine Weile zurückliegen, kommen hier noch einmal. So bleibt der Stoff sitzen, statt langsam zu verblassen.',
+    durchsichtBtn: 'Blättern. Diese Funktion hilft dir, Fragen im Fragenkatalog zu finden, die du bereits kennst. Die kannst du unter Gelernt abhaken. Das verkleinert den Stapel der Fragen, die du noch lernen musst. Es geht der Reihe nach durch den Katalog, ohne zu mischen, und der Trainer merkt sich, wo du aufgehört hast.',
+    statistikBtn: 'Auswertung. Zeigt für jeden Prüfungsteil, wie viel du schon kannst. Von hier aus sicherst du auch deinen Lernstand als Datei oder holst einen gesicherten zurück.',
+    printExamBtn: 'Prüfungsfragen drucken. Der Trainer legt einen Bogen zum Ausfüllen an und dazu eine Schablone mit den Lösungen. Gedruckt wird die Klasse, die du beim Prüfungsziel gewählt hast.',
+    examSimulatorBtn: 'Prüfungssimulator. Das läuft wie die echte Prüfung: je fünfundzwanzig Fragen pro Prüfungsteil und fünfundvierzig Minuten Zeit. Du darfst zurückblättern, die Auflösung gibt es erst am Ende. Die Lösungstaste F9 ist hier abgeschaltet, und nachschlagen geht auch nicht.',
+    favListBtn: 'Merkliste. Hier stehen alle Fragen, die du mit dem Herz markiert hast. Du kannst sie ansehen oder der Reihe nach durchgehen.',
+    duoBtn: 'Gruppenraum. Mehrere Leute lernen gleichzeitig dieselben Fragen, und als Trainer siehst du, wer wo steht. Die Teilnehmer kommen über einen Link herein, im Browser, auf jedem Gerät. Sie brauchen den Trainer nicht zu installieren und laden nichts herunter. Die Lösungstaste F9 ist im Raum abgeschaltet — sonst wäre der gemeinsame Punktestand nichts wert.',
+    duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
+    infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
+    einstellungenBtn: 'Einstellungen. Hier schaltest du das Vorlesen der Knopftexte ein, wählst zwischen kurzer und ausführlicher Erklärung und lässt die Schrift größer werden, während eine Antwort vorgelesen wird.',
+    fehlerBtn: 'Fehler melden. Öffnet eine schon vorbereitete E-Mail. Du musst nur beschreiben, was passiert ist, alles andere trägt der Trainer selbst ein.',
+    themeToggleBtn: 'Heller oder dunkler Hintergrund. Ein Klick schaltet zwischen beiden um; die Wahl bleibt bis zum nächsten Mal erhalten.',
+    sidebarToggleBtn: 'Verlauf ein- oder ausblenden. Die Spalte an der Seite zeigt jede beendete Runde mit Datum, Prüfungsteil und Ergebnis.',
+    clearHistoryBtn: 'Einträge zum Löschen auswählen. Du entscheidest im Verlauf, welche Runden verschwinden sollen. Lernfortschritt, Lernbedarf und Fehler bleiben davon unberührt.',
+    showAnswersBtn: 'Alle richtigen Antworten anzeigen. Gedacht zum schnellen Durchsehen kurz vor der Prüfung, nicht zum Üben.',
+    abortBtn: 'Zurück zur Hauptansicht. Die laufende Runde wird beendet, dein Fortschritt bleibt gespeichert.',
+    homeBtn: 'Zurück zur Hauptansicht.',
+    backToMainTopBtn: 'Zurück zur Hauptansicht.',
+    formelBtn: 'Formelsammlung. Alle Formeln, die in der Prüfung gebraucht werden, zum Nachschlagen.',
+    nurGelernteLabel: 'Nur die schon gelernten Fragen durchgehen. Es kommen ausschließlich Fragen, die du bereits konntest. Antwortest du falsch, gilt die Frage wieder als ungelernt und wandert zurück in den Stapel.',
+    terminLoeschBtn: 'Den eingetragenen Prüfungstermin wieder entfernen.',
+    trainerBtn: 'Trainer-Ansicht ein oder aus. Als Trainer siehst du, wie die Teilnehmer im Gruppenraum vorankommen.',
+    trainerRefreshBtn: 'Ansicht neu laden, falls der Wechsel zu einem anderen Teilnehmer nicht sofort greift.',
+    verlaufAlleHaken: 'Alle Einträge auf einmal an- oder abwählen.',
+    hbOrdnerBtn: 'Öffnet den Ordner Hoerbuch im Explorer. Dort liegen die gesprochenen Dateien, fertig zum Kopieren auf Handy, Radio oder USB-Stick.',
+    hbInhalt: 'Hier wählst du, welche Fragen ins Hörbuch gesprochen werden: alle, nur die noch ungelernten oder nur ein bestimmter Prüfungsteil.',
+    hbAufteilung: 'Wie das Hörbuch aufgeteilt wird. Eine Datei je Lektion: am Radio springt die Titeltaste zur nächsten Lektion. Eine Datei je Frage: dann zeigt das Radio den Fragetext im Display.'
+};
+
+// Fuer die Knoepfe ohne eigene Kennung: der Schluessel ist die gesaeuberte
+// Sprechblase selbst.
+const KNOPF_ERKLAERUNG_TIP = {
+    'Cache leeren (Verlauf bleibt erhalten)':
+        'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
+    'Verlauf, Fehler, Lernbedarf und Lernfortschritt komplett zurücksetzen':
+        'Alles zurücksetzen. Verlauf, Fehler, Lernbedarf und Lernfortschritt dieses Benutzers werden gelöscht, der Trainer fängt bei null an. Das lässt sich nicht rückgängig machen, deshalb fragt er vorher noch einmal nach.',
+    'Lernstand sichern':
+        'Lernstand sichern. Schreibt Verlauf, Lernfortschritt, Lernbedarf und Fehler aller Benutzer in eine einzige Datei. Die kannst du wegkopieren und später auf demselben oder einem anderen Rechner wieder einlesen.',
+    'Gesicherten Lernstand aus einer Datei zurückholen':
+        'Gesicherten Lernstand zurückholen. Du wählst eine vorher gesicherte Datei aus, und der Trainer stellt Verlauf, Lernfortschritt, Lernbedarf und Fehler daraus wieder her.',
+    'Alle 14 Lektionen mit Kapitelmarken und Lernfortschritt':
+        'Lektionen. Der Lehrgang ist in vierzehn Lektionen geteilt. Du siehst zu jeder die Kapitelmarken und wie weit du darin schon gekommen bist.',
+    'Prüfungsziel wählen':
+        'Prüfungsziel wählen. Hier legst du fest, worauf du hinarbeitest: Klasse N als Einstieg, die Aufstockung von N auf E, von E auf A, der Direkteinstieg in Klasse E oder der CB-Einstieg. Die Wahl bestimmt, welche Fragen der Trainer dir überhaupt vorlegt.',
+    'Stille zwischen Frage und Antwort':
+        'Die Pause zwischen Frage und Antwort im Hörbuch. So lange bleibt es still, damit du selbst antworten kannst, bevor die Lösung kommt.',
+    'Welche Fragen sollen gesprochen werden?':
+        'Hier wählst du, welche Fragen ins Hörbuch gesprochen werden.'
+};
+
+// Fuer Texte, die als Attribut in zusammengebautes HTML wandern.
+function attrText(t){
+    return String(t == null ? '' : t)
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+window.attrText = attrText;
+
+const KNOPF_FUELLWORT = /^(aktuell|achtung|hinweis|info|tipp|neu|status|bitte)$/i;
+const KNOPF_TRENNER = /\s+[\u2013\u2014]\s+|\s+-\s+|\s*[\u00b7\u2022|]\s*|:\s+|\n/;
+
+function knopfKurzfassung(roh){
+    if(!roh) return '';
+    let teile = String(roh).split(KNOPF_TRENNER).map(t => t.trim()).filter(Boolean);
+    // Ein vorangestellter Versionsstempel ("Amateurfunk-Trainer 1.110.0")
+    // beschreibt keine Funktion - der faellt weg.
+    while(teile.length > 1 && /\d+\.\d+/.test(teile[0]) && !/[?!]$/.test(teile[0])) teile.shift();
+    // Manche Sprechblasen fangen mit einem Fuellwort an ("Aktuell: Light Mode,
+    // klicken fuer Dark Mode"). Allein gesprochen sagt das gar nichts - dann
+    // ist die ganze Zeile die bessere Kurzfassung.
+    const kopf = knopfTextSaeubern(teile[0] || '');
+    if(KNOPF_FUELLWORT.test(kopf)) return knopfTextSaeubern(roh);
+    return kopf || knopfTextSaeubern(roh);
+}
+
+// Was ein Knopf sagen soll - je nach eingestelltem Umfang.
+function knopfSatz(el){
+    if(!el) return '';
+    // Manche Stellen sollen etwas anderes SAGEN als sie ZEIGEN - die
+    // Zielauswahl zum Beispiel steht schon vollstaendig auf der Karte, eine
+    // Sprechblase waere dort nur im Weg. Dafuer gibt es data-vorlesen
+    // (ausfuehrlich) und data-vorlesen-kurz.
+    const eigenLang = el.getAttribute('data-vorlesen');
+    const eigenKurz = el.getAttribute('data-vorlesen-kurz');
+    if(eigenLang || eigenKurz){
+        if(einstellungen.knopfUmfang === 'lang')
+            return knopfTextSaeubern(eigenLang || eigenKurz);
+        return knopfTextSaeubern(eigenKurz || eigenLang);
+    }
+    const roh = el.getAttribute('data-tooltip') || '';
+    if(einstellungen.knopfUmfang === 'lang'){
+        if(el.id && KNOPF_ERKLAERUNG[el.id]) return KNOPF_ERKLAERUNG[el.id];
+        const nachTip = KNOPF_ERKLAERUNG_TIP[knopfKurzfassung(roh)]
+                     || KNOPF_ERKLAERUNG_TIP[knopfTextSaeubern(roh)];
+        if(nachTip) return nachTip;
+        return knopfTextSaeubern(roh);
+    }
+    const kurz = knopfKurzfassung(roh);
+    if(kurz.length >= 3) return kurz;
+    const ersatz = knopfTextSaeubern(el.getAttribute('aria-label') || '');
+    return ersatz || knopfTextSaeubern(roh);
+}
+
+async function knopfSprechen(text, vomZeiger){
+    const satz = knopfTextSaeubern(text);
+    if(!satz) return;
+    // Die vorgelesene Frage hat Vorrang.
+    try{ if(typeof ttsQueueActive !== 'undefined' && ttsQueueActive) return; }catch(e){}
+    knopfStimmeAus();
+    knopfSatzAktiv = vomZeiger ? text : '';
+    const token = knopfToken;
+    let stimme = '';
+    try{ stimme = localStorage.getItem('ttsVoice') || ''; }catch(e){}
+    try{ if(typeof istBrowserStimme === 'function' && istBrowserStimme(stimme)) stimme = ''; }catch(e){}
+    try{
+        const res = await fetch('/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: satz, voice: stimme })
+        });
+        if(token !== knopfToken) return;
+        if(!res.ok) return;
+        const ct = res.headers.get('content-type') || '';
+        if(!(ct.includes('audio') || ct.includes('wav') || ct.includes('octet'))) return;
+        const blob = await res.blob();
+        if(token !== knopfToken || blob.size <= 500) return;
+        try{ if(typeof ttsQueueActive !== 'undefined' && ttsQueueActive) return; }catch(e){}
+        const url = URL.createObjectURL(blob);
+        knopfUrl = url;
+        const audio = new Audio(url);
+        knopfAudio = audio;
+        const aufraeumen = () => {
+            if(knopfUrl === url){ try{ URL.revokeObjectURL(url); }catch(e){} knopfUrl = null; }
+            if(knopfAudio === audio) knopfAudio = null;
+            // Fertig gesprochen: derselbe Knopf darf wieder von vorn.
+            if(token === knopfToken) knopfSatzAktiv = '';
+        };
+        audio.onended = aufraeumen;
+        audio.onerror = aufraeumen;
+        audio.play().catch(()=>{});
+    }catch(e){}
+}
+window.knopfSprechen = knopfSprechen;
+
+// ---------------------------------------------------------------------------
+//  Ueberfahren und Tastatur-Fokus. Kurze Verzoegerung, damit nicht jeder
+//  Mauszeiger, der ueber die Leiste wischt, eine Kette von Saetzen ausloest.
+// ---------------------------------------------------------------------------
+const KNOPF_VERZOEGERUNG = 450;
+
+// Dietmar am 02.09.2026: "Die Stimme ueberschneidet sich, wenn man ueber die
+// Buttons mit der Maus faehrt. Der letzte Button muss sofort das Vorlesen
+// beenden, wenn ein neuer Button vorgelesen wird."
+//
+// Vorher wurde die alte Stimme erst abgeschaltet, wenn die neue an der Reihe
+// war - also fruehestens eine halbe Sekunde spaeter, bei einem langen Satz
+// entsprechend spaeter. Beim Wischen ueber die Leiste redete deshalb noch der
+// vorige Knopf. Jetzt ist Schluss in dem Moment, in dem der Zeiger den
+// naechsten Knopf erreicht.
+//
+// Das blosse Verlassen schneidet NICHT ab: wer die Maus zur Seite nimmt und
+// zuhoert, soll den Satz zu Ende hoeren.
+//
+// Dietmar am 02.09.2026: "Bei Weiterblaettern verschluckt es Silben."
+// Der Grund lag nicht an der Stimme, sondern an diesem Knopf: er schreibt
+// sich waehrend des Betriebs selbst um (durchsichtBadge setzt Beschriftung
+// und Sprechblase neu, "Blaettern" wird zu "Weiterblaettern"). Dabei fiel
+// unter dem stehenden Mauszeiger ein mouseout/mouseover an - mit
+// relatedTarget = null, also nicht als "derselbe Knopf" erkennbar. Die
+// Stimme wurde mitten im Wort abgeschnitten und fing von vorne an. Genau
+// das hoert sich an, als fehlten Silben.
+//
+// Der Ausweg ist nicht mehr Elementvergleich, sondern SATZvergleich: was
+// gerade laeuft, laeuft weiter, wenn derselbe Satz noch einmal angefordert
+// wird - egal wie oft sich der Knopf dabei neu zeichnet.
+function knopfZielAnsagen(el){
+    if(!einstellungen.knoepfeVorlesen) return;
+    if(!el || el.disabled) return;
+    const text = knopfSatz(el);
+    if(!text) return;
+    if(text === knopfSatzAktiv){             // laeuft schon - nicht anfassen
+        knopfZielEl = el;
+        return;
+    }
+    knopfZielEl = el;
+    if(knopfTimer){ clearTimeout(knopfTimer); knopfTimer = null; }
+    knopfStimmeAus();                        // der vorige ist sofort still
+    knopfSatzAktiv = text;
+    knopfTimer = setTimeout(() => {
+        knopfTimer = null;
+        knopfLetzter = text;
+        knopfSprechen(text, true);
+    }, KNOPF_VERZOEGERUNG);
+}
+
+function knopfZielVerlassen(){
+    if(knopfTimer){ clearTimeout(knopfTimer); knopfTimer = null; }
+    knopfZielEl = null;
+    knopfLetzter = '';
+}
+
+document.addEventListener('mouseover', function(e){
+    if(!einstellungen.knoepfeVorlesen) return;
+    const el = (e.target && e.target.closest) ? e.target.closest('[data-tooltip],[data-vorlesen],[data-vorlesen-kurz]') : null;
+    if(el) knopfZielAnsagen(el);
+}, true);
+
+document.addEventListener('mouseout', function(e){
+    const el = (e.target && e.target.closest) ? e.target.closest('[data-tooltip],[data-vorlesen],[data-vorlesen-kurz]') : null;
+    if(!el) return;
+    if(e.relatedTarget && el.contains(e.relatedTarget)) return;
+    knopfZielVerlassen();
+}, true);
+
+document.addEventListener('focusin', function(e){
+    if(!einstellungen.knoepfeVorlesen) return;
+    const el = (e.target && e.target.closest) ? e.target.closest('[data-tooltip],[data-vorlesen],[data-vorlesen-kurz]') : null;
+    if(el) knopfZielAnsagen(el);
+}, true);
+
+document.addEventListener('focusout', function(){ knopfZielVerlassen(); }, true);
+
+// ---------------------------------------------------------------------------
+//  Das Fenster hinter dem Zahnrad.
+// ---------------------------------------------------------------------------
+function einstellungenOeffnen(){
+    let modal = document.getElementById('einstellungenModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'einstellungenModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+        modal.onclick = e => { if (e.target === modal) einstellungenSchliessen(); };
+        modal.innerHTML =
+            '<div style="background:#fff; border-radius:18px; padding:1.2rem 1.3rem 1rem; max-width:560px; width:96%; '
+          + 'max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+          + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.5rem;">'
+          + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;">'
+          + '<i class="fas fa-gear" style="color:#4b5b73;"></i> Einstellungen</h3>'
+          + '<button onclick="einstellungenSchliessen()" aria-label="Schließen" style="background:none; border:none; '
+          + 'font-size:1.2rem; cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
+
+          + '<label style="display:flex; gap:0.7rem; align-items:flex-start; padding:0.7rem 0.8rem; cursor:pointer; '
+          + 'background:#f8fbfc; border:1px solid #cfe4e7; border-radius:10px; margin-bottom:0.6rem;">'
+          + '<input type="checkbox" id="einstKnoepfeVorlesen" style="margin-top:0.2rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'knoepfeVorlesen\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.9rem;">Knöpfe vorlesen</b>'
+          + '<span style="display:block; font-size:0.78rem; color:#4b5563; line-height:1.5; margin-top:0.2rem;">'
+          + 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext zusätzlich gesprochen. '
+          + 'Gleiches gilt, wenn du mit der Tabulatortaste dorthin springst.</span></span></label>'
+
+          + '<div id="einstUmfangKasten" style="margin:-0.2rem 0 0.7rem 1.6rem; padding:0.6rem 0.8rem; '
+          + 'background:#fff; border-left:3px solid #cfe4e7; border-radius:0 8px 8px 0;">'
+          + '<div style="font-size:0.78rem; font-weight:700; color:#0f2745; margin-bottom:0.35rem;">Wie ausführlich?</div>'
+          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer; margin-bottom:0.35rem;">'
+          + '<input type="radio" name="einstUmfang" id="einstUmfangKurz" style="margin-top:0.2rem; cursor:pointer;" '
+          + 'onchange="einstellungenUmfang(\'kurz\')">'
+          + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">Kurz</b> — '
+          + 'nur der Name des Knopfes. Beispiel: <i>„Lernbedarf"</i></span></label>'
+          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer;">'
+          + '<input type="radio" name="einstUmfang" id="einstUmfangLang" style="margin-top:0.2rem; cursor:pointer;" '
+          + 'onchange="einstellungenUmfang(\'lang\')">'
+          + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">Ausführlich</b> — '
+          + 'in ganzen Sätzen, so wie man es jemandem erklärt, der daneben sitzt. Beispiel: '
+          + '<i>„Lernbedarf. Das sind die Fragen, die dir auffällig oft danebengehen. Eine solche Frage '
+          + 'braucht drei Mal hintereinander die richtige Antwort, erst dann gilt sie wieder als gelernt."</i>'
+          + '</span></label>'
+          + '</div>'
+
+          + '<label style="display:flex; gap:0.7rem; align-items:flex-start; padding:0.7rem 0.8rem; cursor:pointer; '
+          + 'background:#f8fbfc; border:1px solid #cfe4e7; border-radius:10px; margin-bottom:0.6rem;">'
+          + '<input type="checkbox" id="einstVorlesenGross" style="margin-top:0.2rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'vorlesenGross\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.9rem;">Schrift beim Vorlesen vergrößern</b>'
+          + '<span style="display:block; font-size:0.78rem; color:#4b5563; line-height:1.5; margin-top:0.2rem;">'
+          + 'Die Antwort, die gerade vorgelesen wird, tritt hervor und wird etwas größer.</span></span></label>'
+
+          + '<p style="margin:0.2rem 0 0.8rem; font-size:0.74rem; color:#6b7280; line-height:1.5;">'
+          + 'Beides gilt nur für diesen Benutzer. Wird gerade eine Frage vorgelesen, schweigen die Knopftexte. '
+          + 'Stimme und automatisches Vorlesen stellst du wie bisher unter <b>Vorlesen</b> ein.</p>'
+
+          + '<div style="display:flex; justify-content:flex-end; gap:0.5rem;">'
+          + '<button onclick="knopfSprechen(\'So klingt die Stimme, die dir die Knöpfe vorliest.\')" class="btn btn-outline" '
+          + 'style="min-height:34px; padding:0.35rem 1rem; border-radius:18px; font-weight:600; border:1px solid #b0c4d8; '
+          + 'background:#fff; cursor:pointer; font-family:inherit;">Probe hören</button>'
+          + '<button onclick="einstellungenSchliessen()" class="btn btn-outline" style="min-height:34px; padding:0.35rem 1rem; '
+          + 'border-radius:18px; font-weight:600; border:1px solid #b0c4d8; background:#fff; cursor:pointer; '
+          + 'font-family:inherit;">Fertig</button></div>'
+          + '</div>';
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    einstellungenAnwenden();
+}
+window.einstellungenOeffnen = einstellungenOeffnen;
+
+function einstellungenSchliessen(){
+    const modal = document.getElementById('einstellungenModal');
+    if(modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+    knopfZielVerlassen();
+}
+window.einstellungenSchliessen = einstellungenSchliessen;
+
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    const modal = document.getElementById('einstellungenModal');
+    if(modal && modal.style.display === 'flex') einstellungenSchliessen();
+});
+
+try{ einstellungenLaden(); }catch(e){}
+
+
 
 
 async function openTtsSettings() {
@@ -9442,7 +10087,10 @@ function repeatErrors() {
     }
 
     if (errorList.length === 0) {
-        alert('🎉 Keine Fehler zum Wiederholen!');
+        // Seit der Knopf immer sichtbar ist, wird hier oefter geklickt.
+        // Ein blockierendes alert() waere dafuer zu grob.
+        if (window.showAppAlert) window.showAppAlert('Gerade keine Fehler zum Wiederholen.');
+        else alert('Keine Fehler zum Wiederholen!');
         return;
     }
     isQuizActive = true;
@@ -11243,6 +11891,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadErrors();
     loadDifficult();
     loadCB();
+    try{ einstellungenLaden(); }catch(e){}
     loadMastery();
     // Wacht darueber, dass niemand tagelang mit einer alten Seite arbeitet.
     try{ standWacheStarten(); }catch(e){}
@@ -12463,8 +13112,11 @@ if (originalSelectOption) {
   // keine Sperre der Antwort-Buttons. Optisch bleibt F9 exakt wie im normalen Modus (nur die
   // richtige Antwort wird gruen gezeigt). Ein per-Frage-Merker (._f9AlsFehlerGewertet) verhindert,
   // dass wiederholtes Ein-/Ausblenden derselben Frage mehrfach gezaehlt wird.
-  // Kontext-Erkennung: F9 zaehlt als Fehler im Gruppenraum UND im Pruefungssimulator.
-  // Im normalen Lernmodus (ueber "Start" im Hauptmenue) bleibt F9 wertungsfrei.
+  // Kontext-Erkennung. STAND 02.09.2026: Im Pruefungssimulator ist die Taste
+  // inzwischen ganz abgeschaltet (siehe loesungErlaubt weiter unten) - dort
+  // kommt es also gar nicht mehr zu einer Wertung. Uebrig bleibt in der Praxis
+  // der Gruppenraum. Im normalen Lernmodus (ueber "Start" im Hauptmenue)
+  // bleibt F9 wertungsfrei.
   function istF9FehlerKontext(){
     const imGruppenraum = window.duo && typeof window.duo.isActive === 'function' && window.duo.isActive();
     const imPruefungssimulator = window.realisticExam && window.realisticExam.active;
@@ -12564,10 +13216,25 @@ if (originalSelectOption) {
   // Im Pruefungssimulator gibt es keine Loesungstaste. Frueher zaehlte
   // F9 dort "nur" als Fehler - aber die Loesung stand dann trotzdem da,
   // und wer sie einmal gesehen hat, kann sie nicht mehr nicht wissen.
-  function loesungErlaubt(){
-    try{ return !(typeof pruefungStreng === 'function' && pruefungStreng()); }
-    catch(e){ return true; }
+  //
+  // Dietmar am 02.09.2026: "Im Gruppenraum ist die F9 Taste auch nicht mehr
+  // vorhanden." War sie bis hierher noch - pruefungStreng() kennt nur den
+  // Simulator. Im Raum gilt derselbe Grund sogar staerker: dort haengt am
+  // Ergebnis ein gemeinsamer Punktestand, und der Trainer sieht mit, wer wo
+  // steht. Ab jetzt ist die Taste auch dort still. Die Fehlerwertung weiter
+  // oben bleibt als Netz stehen, kommt aber nicht mehr zum Zuge.
+  function imGruppenraum(){
+    try{ return !!(window.duo && typeof window.duo.isActive === 'function' && window.duo.isActive()); }
+    catch(e){ return false; }
   }
+  function loesungErlaubt(){
+    try{
+      if(typeof pruefungStreng === 'function' && pruefungStreng()) return false;
+      if(imGruppenraum()) return false;
+      return true;
+    }catch(e){ return true; }
+  }
+  window.loesungErlaubt = loesungErlaubt;
 
   document.addEventListener('keydown', function(e){
     if(isF9(e) || isF10(e)){
@@ -14302,86 +14969,13 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 </script>
 
-<script id="hinweisOverlay">
-// ================================================================
-// Hinweis-Overlay beim Ueberfahren
-//
-// Im Trainer tragen 23 Knoepfe ein data-tooltip mit einem Erklaertext -
-// angezeigt wurde davon nie einer. Es gab weder eine CSS-Regel noch
-// JavaScript dafuer. Dieses Stueck holt das nach: ein Kaestchen am
-// Mauszeiger, wie man es vom Kopier-Hinweis im Gruppenraum kennt.
-//
-// Beruehrungsbildschirme haben kein "Ueberfahren" - dort passiert nichts,
-// deshalb bleiben die Zahlen an den Knoepfen sichtbar und werden NICHT
-// hinter dem Overlay versteckt.
-// ================================================================
-(function () {
-    'use strict';
-    var VERZOEGERUNG = 350;   // ms, damit beim Queren der Leiste nichts aufblitzt
-    var timer = null;
-    var kaestchen = null;
+<!-- Das Hinweis-Kaestchen beim Ueberfahren ist am 02.09.2026 entfernt worden.
+     Dietmar: "Den Text der unter einem Button kommt, kannst du entfernen.
+     Das Vorlesen erklaert das richtig gut."
 
-    function aufbauen() {
-        if (kaestchen) return kaestchen;
-        var style = document.createElement('style');
-        style.textContent =
-            '#hinweisKaestchen{position:fixed;z-index:99999;pointer-events:none;display:none;' +
-            'max-width:290px;background:rgba(44,44,46,0.95);color:#fff;padding:7px 11px;' +
-            'border-radius:9px;font-size:0.78rem;font-weight:500;line-height:1.35;' +
-            'box-shadow:0 4px 16px rgba(0,0,0,0.3);font-family:inherit;}' +
-            '#hinweisKaestchen.sichtbar{display:block;}';
-        document.head.appendChild(style);
-        kaestchen = document.createElement('div');
-        kaestchen.id = 'hinweisKaestchen';
-        document.body.appendChild(kaestchen);
-        return kaestchen;
-    }
-
-    function zeigen(text, x, y) {
-        var k = aufbauen();
-        k.textContent = text;
-        k.classList.add('sichtbar');
-        var br = k.offsetWidth, ho = k.offsetHeight;
-        var links = x + 16, oben = y + 18;
-        if (links + br > window.innerWidth - 8) links = window.innerWidth - br - 8;
-        if (oben + ho > window.innerHeight - 8) oben = y - ho - 12;
-        k.style.left = Math.max(8, links) + 'px';
-        k.style.top = Math.max(8, oben) + 'px';
-    }
-
-    function verbergen() {
-        if (timer) { clearTimeout(timer); timer = null; }
-        if (kaestchen) kaestchen.classList.remove('sichtbar');
-    }
-
-    document.addEventListener('mouseover', function (e) {
-        var el = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
-        if (!el) return;
-        var text = (el.getAttribute('data-tooltip') || '').trim();
-        if (!text) return;
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(function () { zeigen(text, e.clientX, e.clientY); }, VERZOEGERUNG);
-    });
-
-    document.addEventListener('mousemove', function (e) {
-        if (!kaestchen || !kaestchen.classList.contains('sichtbar')) return;
-        var el = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
-        if (!el) { verbergen(); return; }
-        zeigen((el.getAttribute('data-tooltip') || '').trim(), e.clientX, e.clientY);
-    });
-
-    document.addEventListener('mouseout', function (e) {
-        var el = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
-        if (el) verbergen();
-    });
-
-    // Beim Klicken, Scrollen oder Fensterwechsel wegblenden
-    document.addEventListener('click', verbergen, true);
-    window.addEventListener('scroll', verbergen, true);
-    window.addEventListener('blur', verbergen);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') verbergen(); });
-})();
-</script>
+     Die data-tooltip-Attribute BLEIBEN - sie sind jetzt die Quelle fuer die
+     gesprochene Erklaerung (Zahnrad, "Knoepfe vorlesen"). Wer das Kaestchen
+     zurueckhaben will, findet es in der Versionsgeschichte unter 1.111.0. -->
 
 <script>
 // ================================================================
