@@ -62,6 +62,29 @@ function expandTTS(text){
   // Formen wie "Transceivern" oder "Mobilfunktransceiver".
   t = t.replace(/transceiver/gi, m => m[0] === m[0].toUpperCase() ? 'Transsiewer' : 'transsiewer');
 
+  // FIX (02.09.2026): Der Strich zwischen zwei Frequenzen wird gelesen,
+  // als waere er gar nicht da - aus "3-30 MHz" wird "drei dreissig
+  // Megahertz". Dietmar: "In den Fragen tauchen immer wieder zwischen den
+  // Frequenzen ein - auf. Das muss als 'bis' erweitert werden beim lesen."
+  //
+  // DIE REGEL IST ABSICHTLICH ENG. Sie greift nur, wenn hinter dem zweiten
+  // Wert eine EINHEIT steht. Im Katalog stehen naemlich auch Striche, die
+  // keine Spanne sind:
+  //
+  //     "CEPT-Empfehlung T/R 61-01"   ->  bleibt, wie es ist
+  //     "ECC-Empfehlung (05)06"       ->  bleibt, wie es ist
+  //     "3-30 MHz"                    ->  "3 bis 30 MHz"
+  //
+  // Ohne diese Bedingung wuerde aus der Empfehlung "einundsechzig bis
+  // null eins" - schlimmer als der Fehler, den die Regel behebt.
+  //
+  // Sie laeuft VOR der Einheitenliste weiter unten: Die braucht sie ja
+  // gerade als Erkennungsmerkmal, und danach heisst "MHz" schon
+  // "Megahertz".
+  t = t.replace(
+    /(\d[\d.,]*)\s*[\u2010-\u2015-]\s*(\d[\d.,]*)(?=\s*(?:kHz|MHz|GHz|Hz|kW|mW|nW|pW|W|kV|mV|µV|uV|V|mA|µA|uA|A|dBm|dBi|dB|kOhm|MOhm|Ohm|Ω|km|cm|mm|m|s|min|%)(?![A-Za-zÄÖÜäöüß]))/g,
+    '$1 bis $2');
+
   const paren=[];
   t=t.replace(/\([^)]{1,150}\)/g,m=>{
     const inner = m.slice(1,-1).trim();

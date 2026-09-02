@@ -171,35 +171,51 @@ bilder/youtube-vorlage.html
 sounds/fanfare.wav
 
 # ================================================================
-#  Rund um den Installer (ab 01.09.2026)
+#  DIE BAUANLEITUNG BLEIBT DRAUSSEN (ab 02.09.2026)
 # ================================================================
-# Was ins Repository GEHOERT und deshalb hier NICHT steht:
-#   installer.iss      - die Bauanleitung. Ohne sie kann niemand,
-#                        auch du selbst nicht, das Setup nachbauen.
-#   Build-DIREKT.bat   - der eine Befehl, der sie uebersetzt.
-#   wizard.bmp, small.bmp - die Bilder im Setup-Fenster, zusammen 160 KB.
-#   icon.ico, icon.png - das Symbol.
-#   .coderabbit.yaml   - MUSS im Repository liegen, sonst liest
-#                        CodeRabbit sie gar nicht. Sie wirkt nur dort.
+# Dietmar: "Benoetigt es wirklich den installer.iss? Auf GitHub moechte
+# ich eigentlich nur den Source Code und nicht wie man eine exe
+# kompiliert. [...] Das geht niemand etwas an."
 #
-# Was hier steht, gehoert nicht hinein:
+# Bis zum 02.09.2026 lagen die Baudateien im Repository. Das Argument
+# dafuer war das Backup - und es war ein gutes. Seine Entscheidung ist
+# eine andere, und das ist sein gutes Recht: Es gibt einen Unterschied
+# zwischen "nachbaubar" und "hier ist der Bausatz, bitte sehr".
+#
+# WAS DAS BRINGT UND WAS NICHT - damit sich niemand darauf verlaesst:
+# Wer den oeffentlichen Quelltext hat, hat den Ordner. Daraus ein Setup
+# zu bauen ist mit dem kostenlosen Inno Setup ein Abend Arbeit, auch
+# ohne diese Dateien. Die Huerde steigt von zehn Minuten auf einen
+# Abend, nicht auf "geht nicht". Was kommerzielle Nutzung verbietet,
+# ist die Lizenz (PolyForm Noncommercial), nicht diese Liste.
+#
+# UND SIE SIND JETZT NICHT MEHR GESICHERT. Was hier steht, holt
+# GitHub-Verbinden.bat nicht zurueck. Am 01.09.2026 hat genau das noch
+# 30 Dateien gerettet. Eine Kopie ausserhalb dieses Ordners ist ab
+# sofort Handarbeit.
+#
+# Die alten Fassungen stecken weiter in der Git-Historie - bewusst so
+# gelassen: Sie herauszuschreiben wuerde alle Commit-Kennungen aendern.
+installer.iss
+Build-DIREKT.bat
+version.js
+wizard.bmp
+small.bmp
+icon.ico
+
+# icon.png BLEIBT im Repository: Es ist das Symbol der Seite selbst
+# (Favicon im Browser), nicht Teil der Bauanleitung.
+#
+# .coderabbit.yaml MUSS im Repository liegen, sonst liest CodeRabbit
+# sie gar nicht. Sie wirkt nur dort.
+#
+# Was sonst nicht hineingehoert:
 
 # Das fertige Setup. Es entsteht bei jedem Build neu und waere im
 # Repository nur totes Gewicht - rund 200 MB je Fassung. Sein Platz
 # ist die Seite "Releases", dort sind 2 GiB je Datei erlaubt.
 Amateurfunk-Trainer-*.exe
 Output/
-
-# Seit dem 01.09.2026 sammeln sich die fertigen Setups in release\.
-# Sie gehoeren nicht ins Repository - GitHub laesst dort 100 MiB je
-# Datei zu, ein Setup ist groesser. Sein Platz ist ein Release, dort
-# sind 2 GiB erlaubt. Release-Hochladen.bat bringt es dorthin.
-release/
-
-# Die beiden Werkzeuge dazu bleiben ebenfalls hier: Sie sind auf DIESES
-# Repository verdrahtet und fuer jeden anderen nutzlos.
-Release-Hochladen.bat
-release_hochladen.js
 
 # Ein Zwischenstand vom 01.09.2026. Dietmar dazu: "Nur installer.iss
 # und Build-DIREKT.bat nutzen, keine installer-CLEAN*, installer-MINIMAL*

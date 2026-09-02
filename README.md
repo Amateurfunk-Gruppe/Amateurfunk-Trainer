@@ -18,26 +18,42 @@ Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
 
 **Sechs Prüfungswege**, umschaltbar über „Ziel wählen":
 
-| Auswahl | Inhalt | Fragen |
+| Auswahl | Prüfung | Fragen zum Lernen |
 |---|---|---|
-| Klasse N · Basis | Vorschriften, Betrieb, Technik N | 571 |
+| Direkteinstieg Klasse N · Basis | Vorschriften · Betrieb · Technik N | 571 |
+| Direkteinstieg Klasse E | Vorschriften · Betrieb · Technik N · Technik E | 1034 |
 | Aufstockung N → E | nur Technik E | 463 |
 | Aufstockung E → A | nur Technik A | 716 |
-| Aufstockung N → A | Technik E + A | 1179 |
-| Direkteinstieg Klasse E | alles von N + Technik E | 1034 |
-| Direkteinstieg Klasse A | alles von N + Technik E + A | 1750 |
+| **Einstieg CB → N** | Vorschriften · Betrieb · Technik N | **433** |
 
 Vorschriften und Betrieb sind für alle Klassen gleich — die Klassen unterscheiden
 sich nur im Prüfungsteil Technik. Beim Aufstieg wird deshalb nur dieser Teil
-nachgeschrieben.
+nachgeschrieben. Wer Klasse A anstrebt, geht den Weg N → E → A.
 
-Das Fenster trennt die beiden Fälle, die in der Praxis dauernd verwechselt
-werden: **Direkteinstieg** (noch keine Bescheinigung — je höher die Klasse,
-desto mehr Technik kommt dazu) und **Aufstieg** (Bescheinigung vorhanden — nur
-die fehlende Technik, kein Vorschriften und kein Betrieb mehr). Jede Zeile sagt
-vorher, welche Prüfungsbögen dazugehören.
+Das Fenster trennt die Fälle, die in der Praxis dauernd verwechselt werden:
+**Direkteinstieg** (noch keine Bescheinigung — je höher die Klasse, desto mehr
+Technik kommt dazu) und **Aufstockung** (Bescheinigung vorhanden — nur die
+fehlende Technik, kein Vorschriften und kein Betrieb mehr). Jede Zeile sagt
+vorher, welche Prüfungsbögen dazugehören und wie viele Fragen zu lernen sind.
 
-![Das Fenster „Prüfungsziel wählen" — Direkteinstieg und Aufstieg getrennt](bilder/02-pruefungsziel.png)
+![Das Fenster „Prüfungsziel wählen" mit allen fünf Zielen](bilder/02-pruefungsziel.png)
+
+### Einstieg CB → N
+
+Wer vierzig Jahre CB gefunkt hat, muss nicht bei Null anfangen. Antennenbau,
+S-Meter, SWR, PL/N/SMA/BNC, LSB/USB, AM/FM/SSB, die Q-Gruppen, Plus und Minus,
+Sicherung, Stromkreise und P = U · I — das sitzt.
+
+Dieses Prüfungsziel rechnet genau **138 der 571 Fragen als bekannt an**, der
+Lernstapel schrumpft damit auf **433**. Aus den Vorschriften wird **keine
+einzige** Frage abgezogen: AFuG, AFuV, Bandpläne, Rufzeichen, CEPT und EMVU
+kommen im CB-Funk nicht vor.
+
+Die Regel bei jedem Zweifelsfall war **im Zweifel nicht abziehen** — die
+Prüfung soll ja bestanden werden. Welche 138 es sind und warum, steht mit
+Begründung in [CB-Einstieg.md](CB-Einstieg.md). Im Trainer lässt sich jede
+einzelne Frage per Kästchen zurückholen, und **der Prüfungssimulator zieht
+weiterhin aus allen 571** — genau wie die Bundesnetzagentur.
 
 **Weiter:**
 
@@ -50,6 +66,8 @@ vorher, welche Prüfungsbögen dazugehören.
   Als MP3 für den USB-Stick im Auto
 - **Videolehrgang** — die 14 Lektionen von Michael (DL2YMR) mit den passenden Fragen
 - **Prüfungstermin** eintragen, der Trainer rechnet das Tagespensum aus
+- **Durchsehen** — alle Fragen der Reihe nach, mit Lesezeichen an der Stelle,
+  an der du aufgehört hast
 - **Bedienung per Tastatur** für Menschen, die keine Maus benutzen können
 
 ### Beim Lernen
@@ -76,7 +94,7 @@ Blättern geht trotzdem, und „Ganze Seite" nimmt die Abdunklung weg.
 
 Enthalten ist das vollständige Hilfsmittel: die Formelsammlung, die
 IARU-Bandpläne und die Tabellen mit Frequenzbereichen und zulässigen
-Sendeleistungen. Rund 480 der 1750 Fragen haben einen solchen Hinweis.
+Sendeleistungen. Rund 480 Fragen im gesamten Katalog haben einen solchen Hinweis.
 
 Gezeigt wird das amtliche Blatt als Bild, nicht abgetippt. Das PDF benutzt
 Sonderschriften mit eigener Zeichenzuordnung — aus „Nutzungsbedingungen" wird
@@ -124,14 +142,11 @@ Bögen nicht noch einmal:
 
 | Prüfungsziel | Teile im Simulator |
 |---|---|
-| Klasse N | Vorschriften · Betrieb · Technik N |
+| Klasse N · Basis | Vorschriften · Betrieb · Technik N |
 | Klasse E | Vorschriften · Betrieb · Technik N · Technik E |
-| Klasse A | Vorschriften · Betrieb · Technik N · Technik E · Technik A |
 | Aufstockung N → E | nur Technik E |
-| Aufstockung N → A | Technik E · Technik A |
 | Aufstockung E → A | nur Technik A |
-
-![Der Prüfungssimulator für Klasse A mit allen fünf Teilen](bilder/09-simulator-klassen.png)
+| Einstieg CB → N | Vorschriften · Betrieb · Technik N |
 
 Die Prüfungsübersicht auf der Hauptseite zeigt dieselben Teile — beide lesen
 aus demselben Fragenkatalog, sie können sich also nicht widersprechen.
@@ -181,6 +196,9 @@ neu gestartet werden muss.
 Rechts unter [Releases](../../releases) liegt
 `Amateurfunk-Trainer-<Version>.exe`. Herunterladen, doppelklicken, dem
 Assistenten folgen — mehr ist es nicht.
+
+> **Offizielle Setups gibt es ausschließlich hier unter Releases.** Für
+> Fassungen aus anderen Quellen kann ich nicht sagen, was darin steckt.
 
 Das Setup bringt alles mit, was der Trainer braucht:
 

@@ -2168,19 +2168,37 @@
             background: #ffffff;
             transition: border-color 0.15s, background 0.15s, transform 0.15s;
         }
+        /* Der Zeiger faerbt orange - dasselbe #f9a05a, mit dem im
+           Pruefungssimulator die angekreuzte Antwort markiert wird
+           (--darc-gewaehlt). Dietmar am 02.09.2026: "Klassenwahl Hover
+           orange wie es schon verwendet wird."
+
+           Die Farbe steht hier als Zahl und nicht als Variable:
+           --darc-gewaehlt ist unter body.eckig definiert, das Fenster
+           haengt aber am body selbst. Ueber eine Variable, die hier
+           leer waere, gaebe es gar keinen Hover mehr. */
         .klasse-opt:hover:not(:disabled) {
-            border-color: #0f2745;
-            background: #f8faff;
+            border-color: #f9a05a;
+            background: #fff6ee;
             transform: translateY(-1px);
         }
         .klasse-opt.aktiv {
             border: 2px solid #0f2745;
             background: #eef4fc;
         }
-        .klasse-opt.aktiv:hover { background: #e4eefb; }
+        /* Die bereits gewaehlte Zeile behaelt ihren dunklen Rahmen - man
+           soll weiter sehen, was eingestellt IST, waehrend man ueber die
+           Alternativen faehrt. Nur der Hintergrund zieht mit. */
+        .klasse-opt.aktiv:hover { background: #ffefe0; border-color: #f9a05a; }
         /* Die gesperrte Zeile (Datei fehlt) darf nicht so tun, als liesse
            sie sich anklicken. */
         .klasse-opt:disabled:hover { border-color: #d7e0ec; background: #ffffff; transform: none; }
+
+        /* Zeilen im Fenster "Als CB bekannt". Ohne eine sichtbare
+           Rueckmeldung sieht man dem Text nicht an, dass er anklickbar
+           ist - das Kaestchen daneben sieht aus, als waere es das
+           einzige Bedienelement der Zeile. */
+        .cb-zeile:hover { background: #e9f7f8; }
 
         body.dark #klasseModal,
         body.dark #lektionenModal {
@@ -2632,20 +2650,170 @@ body.dark .realistic-modal-overlay { background:rgba(8,13,20,0.72); }
 // die Funktion zu dem Zeitpunkt noch nicht da, laedt der Trainer stumm
 // wieder Klasse N und die Auswahl waere nach jedem Neuladen vergessen.
 // ================================================================
+//
+// AM 02.09.2026 AUF FUENF ZIELE GEKUERZT. Dietmar: "Das gehört raus:
+// Direkteinstieg auf Klasse A, Aufstockung von N auf A." Beide Karten
+// sind weg. Wer Klasse A will, geht den Weg N -> E -> A; die Karte
+// "Aufstockung E → A" fuehrt weiterhin dorthin.
+//
+// Fragen-A.json und Fragen-N-Auf-A.json bleiben im Ordner liegen -
+// geloescht wird nichts. Wer die beiden Ziele zurueckhaben will, traegt
+// hier zwei Zeilen ein, und alles andere (Simulator, Druck, Uebersicht)
+// zieht von selbst nach: Der Pruefungsumfang steht in KLASSE_LAGE.
 const KLASSEN = [
-    { id:'n',  datei:'fragen.json',         name:'Klasse N',
-      titel:'Klasse N · Basis',        note:'Vorschriften, Betrieb und Technik N — die Einsteigerprüfung.' },
-    { id:'ne', datei:'Fragen-N-Auf-E.json', name:'N → E',
-      titel:'Aufstockung N → E',       note:'Nur Technik E. Vorschriften und Betrieb hast du mit N schon.' },
-    { id:'ea', datei:'Fragen-E-Auf-A.json', name:'E → A',
-      titel:'Aufstockung E → A',       note:'Nur Technik A.' },
-    { id:'na', datei:'Fragen-N-Auf-A.json', name:'N → A',
-      titel:'Aufstockung N → A',       note:'Beide Technikteile auf einmal — E und A.' },
-    { id:'e',  datei:'Fragen-E.json',       name:'Klasse E',
-      titel:'Direkteinstieg Klasse E', note:'Alles von N plus Technik E.' },
-    { id:'a',  datei:'Fragen-A.json',       name:'Klasse A',
-      titel:'Direkteinstieg Klasse A', note:'Alles von N plus Technik E und Technik A.' }
+    { id:'n',   datei:'fragen.json',         name:'Klasse N',
+      titel:'Direkteinstieg Klasse N · Basis',
+      note:'Für Einsteiger ohne Vorkenntnisse.' },
+    { id:'e',   datei:'Fragen-E.json',       name:'Klasse E',
+      titel:'Direkteinstieg Klasse E',
+      note:'Direkt Klasse E. Mehr Technik, mehr Bänder.' },
+    { id:'ne',  datei:'Fragen-N-Auf-E.json', name:'N → E',
+      titel:'Aufstockung N → E',
+      note:'Du hast N bereits bestanden.' },
+    { id:'ea',  datei:'Fragen-E-Auf-A.json', name:'E → A',
+      titel:'Aufstockung E → A',
+      note:'Du hast E bereits bestanden.' },
+    // Derselbe Katalog wie Klasse N - nur der Lernstapel ist kleiner.
+    // Geprueft wird trotzdem alles: Der Simulator zieht aus dem vollen
+    // Katalog, und die BNetzA sowieso.
+    { id:'cbn', datei:'fragen.json',         name:'CB → N', cb:true, badge:'CB-BONUS',
+      titel:'Einstieg CB → N',
+      note:'Für CB-Funker mit langer Erfahrung. Antennenbau, S-Meter, SWR, PL/N/SMA, LSB/USB, Q-Codes, Plus/Minus und Stromkreise sitzen bereits.' }
 ];
+// ================================================================
+//  CB-EINSTIEG - was 40 Jahre CB-Funk schon abdecken
+// ================================================================
+//  Dietmar am 02.09.2026: "Diese Klasse reduziert die 571 Fragen um
+//  genau die Fragen, die ein erfahrener CB-Funker bereits sicher
+//  beherrscht."
+//
+//  138 von 571. Die Regel bei jedem Zweifelsfall war seine eigene:
+//  IM ZWEIFEL NICHT ABZIEHEN. Lieber eine Frage zu viel lernen als in
+//  der Pruefung eine zu wenig gesehen zu haben.
+//
+//  AUS DEN VORSCHRIFTEN WIRD NICHTS ABGEZOGEN - keine einzige der 204
+//  Fragen. AFuG, AFuV, Bandplaene, Rufzeichen, CEPT, EMVU und Gebuehren
+//  kommen im CB-Funk schlicht nicht vor.
+//
+//  Die Begruendung je Gruppe steht hier im Kommentar, ausfuehrlich mit
+//  jeder einzelnen Frage in CB-Einstieg.md. Wer etwas anders sieht,
+//  aendert es an genau einer Stelle: hier.
+//
+//  ES WIRD NICHTS GELOESCHT UND NICHTS UEBERSCHRIEBEN. Der Modus haengt
+//  eine zweite Antwort an die Frage "ist die gelernt?" - mehr nicht.
+//  Ausschalten stellt den alten Zustand vollstaendig wieder her, und
+//  jede einzelne Frage laesst sich von Hand zurueckholen.
+// ================================================================
+const CB_GRUPPEN = [
+  { name: "Buchstabieralphabet",
+    //  NATO-Alphabet. Steht ausdruecklich in Dietmars Liste. BA107
+    //  (DN9RO/p) und BA110 (IG9/DL4 HR) sind NICHT dabei: Dort wird
+    //  zusaetzlich die Nennung von Schraegstrich und Laenderpraefix
+    //  geprueft, und das ist Afu-Praxis.
+    ids: ['BA101', 'BA102', 'BA103', 'BA104', 'BA105', 'BA106', 'BA108', 'BA109'] },
+  { name: "Betriebsabkuerzungen und Q-Gruppen",
+    //  CQ, DX, TX/RX/TRX und die Q-Gruppen QRM QRN QSB QRO QSO QRX QRT
+    //  QRZ QSL QRV QTH QRP QSY - alle aus Dietmars Liste. CW-Abkuerzungen
+    //  (BK, K, R) sind NICHT dabei: Telegrafie ist keine CB-Praxis.
+    ids: ['BB102', 'BB103', 'BB106', 'BB201', 'BB202', 'BB203', 'BB204', 'BB205', 'BB206'] },
+  { name: "Anruf und Antwort",
+    //  CQ rufen und einen CQ-Ruf beantworten, QRZ? - taegliche CB-Praxis.
+    //  BE105 (Frequenz frei?) und BE106 (tote Zone) sind NICHT dabei:
+    //  Beim einen ist der falsche Weg zu verlockend, beim anderen geht es
+    //  um Ausbreitung.
+    ids: ['BE101', 'BE102', 'BE115'] },
+  { name: "RST-Rapport und S-Meter",
+    //  RST-System und das Ablesen des S-Meters bis zum Rapport '59' -
+    //  beides aus Dietmars Liste. BE210 (SSTV-Rapport) ist NICHT dabei.
+    ids: ['BE201', 'BE202', 'BE203', 'BE204', 'BE205', 'BE206', 'BE207', 'BE208', 'BE209'] },
+  { name: "Rechnen und Einheiten",
+    //  Dreisatz am Antennendraht sowie die Einheiten Volt, Ampere, Ohm,
+    //  Watt, Meter, Hertz samt Vorsilben (mV, mA, mW, MHz). NA207 (Hz =
+    //  1/s als Formalismus) ist NICHT dabei.
+    ids: ['NA101', 'NA102', 'NA103', 'NA201', 'NA202', 'NA203', 'NA204', 'NA205', 'NA206', 'NA208', 'NA209', 'NA210', 'NA211', 'NA212', 'NA213'] },
+  { name: "Leiter und Isolatoren",
+    //  Welches Metall leitet am besten, was ist ein Nichtleiter -
+    //  Grundwissen jedes Loetkolbens.
+    ids: ['NB101', 'NB102', 'NB103', 'NB104'] },
+  { name: "Schaltzeichen der Grundbauteile",
+    //  Batterie, Masse, Plus/Minus, Schalter, Widerstand, Antenne, Erde,
+    //  Spannungs- und Strommessgeraet - genau die Begriffe aus Dietmars
+    //  Liste. Kondensator, Spule, Diode, LED und Transistor sind NICHT
+    //  dabei: Sie stehen dort nicht, also wird nicht abgezogen.
+    ids: ['NB201', 'NB202', 'NB203', 'NB701', 'NC101', 'NG101', 'NG102', 'NI101', 'NI102'] },
+  { name: "Spannungsquellen in Reihe und parallel",
+    //  Batterien zusammenschalten und die Spannung ablesen - aus Dietmars
+    //  Liste ('Reihen/Parallel von Widerstaenden/Batterien').
+    ids: ['NB204', 'NB205', 'NB206', 'NB207'] },
+  { name: "Welle, Wellenlaenge, Polarisation",
+    //  Lichtgeschwindigkeit, Umrechnung Frequenz <-> Wellenlaenge (die
+    //  Rechnung hinter jedem Antennenbau) und senkrecht/waagerecht.
+    //  NB402-NB405 (Oszillogramm beschriften) sind NICHT dabei.
+    ids: ['NB301', 'NB302', 'NB303', 'NB304', 'NB401'] },
+  { name: "Ohmsches Gesetz",
+    //  U = R * I in allen Schreibweisen und als Rechenaufgabe - aus
+    //  Dietmars Liste.
+    ids: ['NB501', 'NB502', 'NB503', 'NB504', 'NB505'] },
+  { name: "Leistung P = U * I",
+    //  Ausdruecklich in Dietmars Liste, hier sechsmal als Rechenaufgabe
+    //  (Transceiver am 13,8-V-Netzteil, Vorwiderstand, Leuchtmittel).
+    ids: ['NB601', 'NB602', 'NB603', 'NB604', 'NB605', 'NB606'] },
+  { name: "Geschlossener Stromkreis",
+    //  In welchem Stromkreis fliesst Strom - aus Dietmars Liste
+    //  ('Stromkreise, Kurzschluss'). NB703 (LED-Polung) ist NICHT dabei,
+    //  dafuer braucht es die Diodenrichtung.
+    ids: ['NC404'] },
+  { name: "Stromversorgung, Plus/Minus, Verpolung",
+    //  13,8-V-Netzteil, zweipolige Zuleitung, rote und schwarze Klemme,
+    //  Verpolung, Akkus - die Werkbank jedes CB-Funkers. ND108
+    //  (Schutzschaltungen im Netzteil) und ND109 (Schutzleiter im Schuko-
+    //  Stecker) sind NICHT dabei: Netzseite, nicht Funkseite.
+    ids: ['ND101', 'ND102', 'ND103', 'ND104', 'ND105', 'ND106', 'ND107', 'ND110'] },
+  { name: "Modulation AM, SSB, LSB/USB, FM",
+    //  Was ist Modulation, AM, der Unterschied AM/SSB, LSB/USB, der
+    //  Traeger, die USB-Anzeige am Display, das richtige Seitenband
+    //  einstellen, FM und der Hub - alles aus Dietmars Liste. NE206-NE208
+    //  (Spektrum zeichnen), NE305 (Bandgrenze rechnen) und alles zu
+    //  Relais, Digital und CW sind NICHT dabei.
+    ids: ['NE101', 'NE102', 'NE202', 'NE203', 'NE204', 'NE205', 'NE209', 'NE210', 'NE211', 'NE212', 'NE301', 'NE302', 'NE303', 'NE304', 'NE306'] },
+  { name: "Geraetebedienung",
+    //  SWR-Meter, Power-Meter und S-Meter am Display, nie ohne Antenne
+    //  senden, PTT, VOX, RIT/Clarifier, Rauschsperre - Handgriffe, die
+    //  ein CB-Funker im Schlaf macht. NF104-NF106 (Amplitudenspektrum,
+    //  Wasserfall) sind NICHT dabei.
+    ids: ['NF101', 'NF102', 'NF103', 'NF107', 'NF108', 'NF109', 'NF110', 'NF111', 'NF112', 'NF301', 'NF302'] },
+  { name: "Antennenformen",
+    //  Dipol, Groundplane samt Radials, Yagi und die Rundstrahlantenne -
+    //  aus Dietmars Liste ('Antennen-Grundformen'). Marconi, endgespeist
+    //  und Langdraht sind NICHT dabei.
+    ids: ['NG103', 'NG105', 'NG106', 'NG108', 'NG110'] },
+  { name: "Koaxkabel und Stecker",
+    //  50/75 Ohm, PL, N, BNC, SMA und die Daempfung langer Kabel -
+    //  ausdruecklich in Dietmars Liste. NG206 (welcher Stecker oberhalb
+    //  300 MHz) und NG208 (SWR nach Verlaengerung) sind NICHT dabei.
+    ids: ['NG201', 'NG202', 'NG203', 'NG204', 'NG205', 'NG207'] },
+  { name: "SWR und Stehwellenabgleich",
+    //  Bestes SWR, Fehlanpassung erkennen, und den selbstgebauten Dipol
+    //  kuerzen oder verlaengern - das ist die Kerndisziplin aus 40 Jahren
+    //  CB.
+    ids: ['NG301', 'NG302', 'NG303', 'NG304', 'NG305'] },
+  { name: "Messen",
+    //  Multimeter richtig einschleifen, SWR-Meter zwischen Sender und
+    //  Antenne, Frequenzzaehler. NI401 (Oszillogramm gegen
+    //  Amplitudenspektrum) ist NICHT dabei.
+    ids: ['NI103', 'NI104', 'NI201', 'NI202', 'NI203', 'NI301'] },
+  { name: "Sicherung und Mobileinbau",
+    //  Sicherung gleichen Typs ersetzen, Lichtbogen an der Autobatterie,
+    //  Antennenkabel nicht im Kabelbaum, Antenne auf die Dachmitte - der
+    //  Mobilbetrieb ist CB-Alltag. NK308 (Zulassung) und NK311
+    //  (Aussenantenne) sind NICHT dabei, dort ist die falsche Antwort zu
+    //  verlockend.
+    ids: ['NK305', 'NK307', 'NK309', 'NK310'] },
+];
+const CB_KANN = new Set(CB_GRUPPEN.reduce((a, g) => a.concat(g.ids), []));
+function isCBFrage(id) { return CB_KANN.has(id); }
+window.isCBFrage = isCBFrage;
+
 // ================================================================
 // DER PRUEFUNGSUMFANG - die Regel an einer einzigen Stelle
 // ================================================================
@@ -2689,12 +2857,14 @@ window.getPruefungsUmfang = getPruefungsUmfang;
 
 // Die sechs Kennungen sind nichts anderes als (Lizenz, Ziel).
 const KLASSE_LAGE = {
-    n:  { lizenz:'keine', ziel:'N', art:'erst' },
-    e:  { lizenz:'keine', ziel:'E', art:'erst' },
-    a:  { lizenz:'keine', ziel:'A', art:'erst' },
-    ne: { lizenz:'N',     ziel:'E', art:'auf'  },
-    na: { lizenz:'N',     ziel:'A', art:'auf'  },
-    ea: { lizenz:'E',     ziel:'A', art:'auf'  }
+    n:   { lizenz:'keine', ziel:'N', art:'erst' },
+    e:   { lizenz:'keine', ziel:'E', art:'erst' },
+    ne:  { lizenz:'N',     ziel:'E', art:'auf'  },
+    ea:  { lizenz:'E',     ziel:'A', art:'auf'  },
+    // CB → N ist pruefungsrechtlich dasselbe wie Klasse N: dieselben drei
+    // Boegen, dieselben 75 Fragen. Der Unterschied liegt allein im
+    // Lernstapel.
+    cbn: { lizenz:'keine', ziel:'N', art:'erst' }
 };
 function klasseUmfang(id){
     const l = KLASSE_LAGE[id];
@@ -2737,6 +2907,8 @@ function klasseZahlMerken(id, anzahl) {
 // Fußzeile stehen dort schon, hier kommt der Rest der Anzeige nach.
 function klasseAnzeigeAktualisieren() {
     const kl = klasseAktuell();
+    try{ if(typeof cbPanelAktualisieren === 'function') cbPanelAktualisieren(); }catch(e){}
+    try{ if(typeof durchsichtBadge === 'function') durchsichtBadge(); }catch(e){}
     const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
     if (bank.length) klasseZahlMerken(kl.id, bank.length);
 
@@ -2856,6 +3028,11 @@ function klasseModalFuellen() {
         const teile = klasseUmfang(k.id);
         const namen = teile.map(t => TEIL_NAME[t] || t);
         const pruefungsfragen = teile.length * 25;
+        // Beim CB-Einstieg steht nicht die Katalogzahl an der Karte,
+        // sondern das, was nach dem Abzug wirklich zu lernen ist.
+        const cbAbzug = k.cb ? CB_KANN.size : 0;
+        const zahlText = (zahl && k.cb) ? (Math.max(0, zahl - cbAbzug) + '')
+                       : (zahl ? zahl + '' : '');
 
         return '<button onclick="klasseWaehlen(\'' + k.id + '\')"'
             + ' class="klasse-opt' + (an ? ' aktiv' : '') + '"'
@@ -2867,7 +3044,11 @@ function klasseModalFuellen() {
             + (an ? '<i class="fas fa-circle-check" style="color:#15703c;"></i>'
                   : '<i class="far fa-circle" style="color:#8aa0bb;"></i>') + '</span>'
             + '<span style="flex:1;">'
-            + '<span style="display:block; font-weight:700; font-size:0.9rem; color:#0f2745;">' + k.titel + '</span>'
+            + '<span style="display:block; font-weight:700; font-size:0.9rem; color:#0f2745;">' + k.titel
+            + (k.badge ? ' <span style="display:inline-block; background:#0e9aa7; color:#fff; '
+                       + 'font-size:0.62rem; font-weight:800; letter-spacing:0.04em; border-radius:6px; '
+                       + 'padding:1px 6px; vertical-align:2px;">' + k.badge + '</span>' : '')
+            + '</span>'
             + '<span style="display:block; font-size:0.75rem; color:#4b5563; margin-top:2px;">' + k.note + '</span>'
             + (namen.length
                 ? '<span style="display:block; font-size:0.73rem; color:#0f2745; margin-top:5px;">'
@@ -2879,47 +3060,32 @@ function klasseModalFuellen() {
                 : '')
             + '</span>'
             + '<span style="font-size:0.78rem; font-weight:700; color:#0f2745; white-space:nowrap; margin-top:1px;">'
-            + (fehlt ? 'Datei fehlt' : (zahl ? zahl + '<br><span style="font-weight:400; color:#4b5563;">zum Lernen</span>'
-                                             : '<span style="color:#8aa0bb;font-weight:400;">zähle …</span>'))
+            + (fehlt ? 'Datei fehlt' : (zahl
+                    ? zahlText + '<br><span style="font-weight:400; color:#4b5563;">zum Lernen</span>'
+                      + (k.cb ? '<br><span style="font-weight:400; font-size:0.68rem; color:#0e9aa7;">'
+                                + zahl + ' − ' + cbAbzug + ' CB</span>' : '')
+                    : '<span style="color:#8aa0bb;font-weight:400;">zähle …</span>'))
             + '</span></button>';
     }
 
-    // Die Reihenfolge steht hier und nicht in KLASSEN: Innerhalb der
-    // Gruppen soll sie aufsteigen (N, E, A / N→E, N→A, E→A), nicht der
-    // historisch gewachsenen Reihenfolge der Katalogdateien folgen.
-    const ZEILEN_FOLGE = { erst: ['n','e','a'], auf: ['ne','na','ea'] };
-
-    function gruppe(ueberschrift, erklaerung, art) {
-        const drin = (ZEILEN_FOLGE[art] || [])
-            .map(id => KLASSEN.find(k => k.id === id))
-            .filter(Boolean);
-        if (!drin.length) return '';
-        return '<div style="margin:0.9rem 0 0.5rem;">'
-            + '<div style="font-size:0.82rem; font-weight:700; color:#0f2745;">' + ueberschrift + '</div>'
-            + '<div style="font-size:0.73rem; color:#4b5563; margin-top:1px;">' + erklaerung + '</div>'
-            + '</div>'
-            + drin.map(zeile).join('');
-    }
+    // Die Reihenfolge steht hier und nicht in KLASSEN, damit sie sich
+    // aendern laesst, ohne die Katalogzuordnung anzufassen. Dietmars
+    // Reihenfolge vom 02.09.2026: erst die beiden Direkteinstiege, dann
+    // die beiden Aufstockungen, zuletzt der CB-Einstieg.
+    const ZEILEN_FOLGE = ['n','e','ne','ea','cbn'];
 
     modal.innerHTML =
         '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
         + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem;">'
         + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;">'
-        + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Prüfungsziel wählen</h3>'
+        + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Ich fange neu an — Direkteinstieg</h3>'
         + '<button onclick="klasseModalSchliessen()" style="background:none; border:none; font-size:1.2rem; '
         + 'cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
-        + '<p style="margin:0 0 0.2rem; font-size:0.78rem; color:#4b5563;">'
-        + 'Die Prüfung besteht aus fünf möglichen Bögen zu je 25 Fragen: <b>Vorschriften</b>, '
-        + '<b>Betrieb</b> und die drei Technikbögen <b>N</b>, <b>E</b> und <b>A</b>. '
-        + 'Welche davon du schreibst, hängt davon ab, ob du neu anfängst oder schon eine '
-        + 'Bescheinigung hast.</p>'
-        + gruppe('Ich fange neu an — Direkteinstieg',
-                 'Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik kommt dazu.',
-                 'erst')
-        + gruppe('Ich habe schon eine Bescheinigung — Aufstieg',
-                 'Was du bereits bestanden hast, wird nicht noch einmal geprüft. Es kommt nur die fehlende Technik.',
-                 'auf')
+        + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;">'
+        + 'Noch keine Amateurfunkprüfung bestanden. Je höher die Klasse, desto mehr Technik '
+        + 'kommt dazu. Wer N oder E schon hat, findet weiter unten die Aufstockung.</p>'
+        + ZEILEN_FOLGE.map(id => KLASSEN.find(k => k.id === id)).filter(Boolean).map(zeile).join('')
         + '<p style="margin:0.9rem 0 0; font-size:0.72rem; color:#4b5563;">'
         + 'Lernfortschritt, Fehlerliste und Merkliste hängen an der Fragennummer und bleiben beim '
         + 'Umschalten erhalten. Eine laufende Runde wird beendet.</p>'
@@ -2973,6 +3139,16 @@ async function klasseWaehlen(id) {
     } catch (e) { /* dann wird eben nur umgeschaltet */ }
 
     try { localStorage.setItem(KLASSE_SCHLUESSEL, id); } catch (e) { /* nicht speicherbar */ }
+    // Wer "CB → N" waehlt, will die Anrechnung - sonst haette er
+    // "Klasse N · Basis" genommen. Der Haken geht deshalb beim ersten
+    // Mal von selbst an; abschalten laesst er sich jederzeit, und diese
+    // Entscheidung wird dann auch nicht wieder ueberschrieben.
+    try {
+        if (kl.cb && !localStorage.getItem('amateurfunk_cb_' + currentUser)) {
+            cbModus = true;
+            saveCB();
+        }
+    } catch (e) { /* dann bleibt der Haken eben aus */ }
     klasseModalSchliessen();
     const badge = document.getElementById('bankBadge');
     if (badge) badge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + kl.name + ' · lädt…';
@@ -3048,7 +3224,7 @@ window.klasseWaehlen = klasseWaehlen;
             <button class="btn-cache-sm" onclick="clearCacheAndReload()" data-tooltip="🧹 Cache leeren (Verlauf bleibt erhalten)">
                 <i class="fas fa-broom"></i> Cache
             </button>
-            <button class="btn-reset-danger" onclick="openFullResetModal()" data-tooltip="⚠️ Fehler, Lernbedarf & Lernfortschritt komplett zurücksetzen">
+            <button class="btn-reset-danger" onclick="openFullResetModal()" data-tooltip="⚠️ Verlauf, Fehler, Lernbedarf &amp; Lernfortschritt komplett zurücksetzen">
                 <i class="fas fa-trash-alt"></i> Reset
             </button>
             <button class="btn-theme" id="themeToggleBtn" onclick="toggleTheme()" data-tooltip="Dark Mode umschalten">
@@ -3081,7 +3257,9 @@ window.klasseWaehlen = klasseWaehlen;
         <button class="btn btn-primary" id="startBtn" data-tooltip="🎯 Prüfung starten"><i class="fas fa-play"></i> Start <span id="startToLearnCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn btn-danger" id="repeatErrorsBtn" data-tooltip="❌ Fehler wiederholen"><i class="fas fa-exclamation-triangle"></i> Fehler <span id="repeatErrorsCount" class="error-badge" style="display:none;">0</span></button>
         <button class="btn btn-difficult" id="difficultBtn" onclick="repeatDifficult()" data-tooltip="🔥 Lernbedarf – oft falsch, braucht 3x richtig"><i class="fas fa-fire"></i> Lernbedarf <span id="difficultCount" class="difficult-badge" style="display:none;">0</span></button>
+        <button class="btn" id="verwechslungBtn" onclick="verwechslungStarten()" style="background:#8e44ad; color:white; display:none;" data-tooltip="⚠️ Fragen, die sich zum Verwechseln ähneln"><i class="fas fa-clone"></i> Verwechslungsgefahr <span id="verwechslungCount" class="difficult-badge" style="display:none;">0</span></button>
         <button class="btn" id="auffrischenBtn" onclick="auffrischenStarten()" style="background:#0e9aa7; color:white; display:none;" data-tooltip="🔄 Gelerntes auffrischen"><i class="fas fa-rotate"></i> Auffrischen <span id="auffrischenCount" class="start-badge" style="display:none;">0</span></button>
+        <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" style="background:#5b6b8c; color:white;" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> Durchsehen <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" style="background:#34495e; color:white;" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
         <button class="btn btn-abort" id="backToMainTopBtn" onclick="backToMain()" style="display:none;" data-tooltip="Zur Hauptansicht"><i class="fas fa-home"></i> Hauptmenü</button>
         <button class="btn" id="printExamBtn" onclick="printExam()" style="background:#2c3e50; color:white;" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
@@ -3185,6 +3363,39 @@ window.klasseWaehlen = klasseWaehlen;
                         <button onclick="lernstandDateiWaehlen()" class="btn-lernstand" data-tooltip="📂 Gesicherten Lernstand aus einer Datei zurückholen"><i class="fas fa-upload"></i> Einlesen</button>
                     </div>
                 </div>
+                <!-- ===================================================
+                     CB-EINSTIEG
+                     Sichtbar nur beim Prüfungsziel "CB → N". Wer ein
+                     anderes Ziel wählt, sieht den Kasten gar nicht -
+                     dort gäbe es nichts anzurechnen.
+                     =================================================== -->
+                <div id="cbPanel" style="display:none; background:#e9f7f8; border:1px solid #b6dfe3; border-radius:10px; padding:0.55rem 0.8rem;">
+                    <label style="display:flex; align-items:flex-start; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" id="cbModusCheck" onchange="cbModusUmschalten(this.checked)" style="margin-top:3px;">
+                        <span style="flex:1;">
+                            <span style="font-size:0.82rem; font-weight:700; color:#0f2745;">
+                                CB-Erfahrung anrechnen
+                                <i class="fas fa-circle-info" style="color:#0e9aa7; cursor:help;"
+                                   title="Antennenbau, S-Meter, SWR, PL/N/SMA/BNC, LSB/USB, AM/FM/SSB, Q-Codes, Plus/Minus, Sicherung, Stromkreise und P = U · I gelten als bekannt. Aus den Vorschriften wird nichts abgezogen. Im Prüfungssimulator kommen weiterhin alle Fragen."></i>
+                            </span>
+                            <span id="cbZeile" style="display:block; font-size:0.75rem; color:#0f2745; margin-top:2px;">
+                                Antennenbau, Q-Codes, SWR, S-Meter und Stromkreise gelten als bekannt.
+                            </span>
+                        </span>
+                    </label>
+                    <!-- Die Liste stand bis zum 02.09.2026 hier im Kasten und hat
+                         die Hauptansicht um mehrere hundert Pixel verlaengert.
+                         Jetzt oeffnet der Knopf ein eigenes Fenster - der Kasten
+                         bleibt drei Zeilen hoch. -->
+                    <div id="cbAufklappZeile" style="display:none; margin-top:0.45rem;">
+                        <button type="button" id="cbAufklappBtn" onclick="cbListeOeffnen()"
+                                style="background:none; border:none; padding:0; font-size:0.75rem; font-weight:600;
+                                       color:#0e7c86; cursor:pointer; font-family:inherit;">
+                            <i class="fas fa-list-check"></i> Als CB bekannt – 138 Fragen anzeigen
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Prüfungstermin: aus dem Datum und den noch offenen Fragen wird das
                      Tagespensum ausgerechnet. Der Termin gehört zum Benutzer-Slot, damit
                      drei Leute an einem Rechner nicht denselben Termin sehen. -->
@@ -3617,8 +3828,19 @@ function getAllLocalUserData(){
                 data.errors[u] = raw ? JSON.parse(raw) : [];
             }catch(e){ data.errors[u] = []; }
         });
+        // CB-Einstieg: Haken und die von Hand zurueckgeholten Fragen.
+        data.cb = { user1:{}, user2:{}, user3:{} };
+        ['user1','user2','user3'].forEach(u=>{
+            try{
+                const raw = localStorage.getItem('amateurfunk_cb_' + u);
+                const d = raw ? JSON.parse(raw) : null;
+                data.cb[u] = (d && typeof d === 'object')
+                    ? { modus: !!d.modus, aus: Array.isArray(d.aus) ? d.aus : [] }
+                    : {};
+            }catch(e){ data.cb[u] = {}; }
+        });
         return data;
-    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:{user1:[],user2:[],user3:[]}, mastery:{user1:{},user2:{},user3:{}}, difficult:{user1:{},user2:{},user3:{}}, errors:{user1:[],user2:[],user3:[]} }; }
+    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:{user1:[],user2:[],user3:[]}, mastery:{user1:{},user2:{},user3:{}}, difficult:{user1:{},user2:{},user3:{}}, errors:{user1:[],user2:[],user3:[]}, cb:{user1:{},user2:{},user3:{}} }; }
 }
 
 async function savePersistentToServer(){
@@ -3688,6 +3910,27 @@ async function loadPersistentFromServer(){
                 }
             }
         }catch(e){ console.warn('Verlauf Restore Fehler', e); }
+
+        // CB-Einstieg wiederherstellen - nur, wenn lokal noch nichts
+        // steht. Ein vorhandener Haken hier ist immer der neuere.
+        try{
+            const serverCb = serverData.cb;
+            if(serverCb && typeof serverCb === 'object'){
+                ['user1','user2','user3'].forEach(u=>{
+                    const d = serverCb[u];
+                    if(!d || typeof d !== 'object') return;
+                    if(d.modus === undefined && !Array.isArray(d.aus)) return;
+                    const key = 'amateurfunk_cb_' + u;
+                    if(localStorage.getItem(key)) return;
+                    localStorage.setItem(key, JSON.stringify({
+                        modus: !!d.modus,
+                        aus: Array.isArray(d.aus) ? d.aus : []
+                    }));
+                    restored = true;
+                });
+                try{ loadCB(); }catch(e){}
+            }
+        }catch(e){ console.warn('CB-Einstieg Restore Fehler', e); }
 
         // Lernfortschritt (mastery) wiederherstellen
         ['user1','user2','user3'].forEach(u=>{
@@ -3819,10 +4062,15 @@ function confirmCacheClear(){
 }
 
 
-// ===== VOLLSTÄNDIGER RESET: Fehler, Lernbedarf und Lernfortschritt des aktuellen Benutzers =====
+// ===== VOLLSTÄNDIGER RESET für den aktuellen Benutzer =====
 // Anders als "Cache leeren" (das genau diese Daten schützt), löscht dieser Button sie bewusst -
-// für einen kompletten Neustart des Lernfortschritts. Der Prüfungsverlauf (examHistory) bleibt
-// erhalten, ebenso die Daten der beiden anderen Benutzer.
+// für einen kompletten Neustart.
+//
+// SEIT DEM 02.09.2026 GEHT DER PRÜFUNGSVERLAUF MIT. Dietmar: "Bei einem Reset wird der Verlauf
+// nicht entfernt." Er hatte recht, und der Widerspruch stand im Fenster selbst: Überschrift
+// "Alles zurücksetzen?", darunter "Bleibt erhalten: Prüfungsverlauf". Alles heißt alles.
+// Wer nur den Verlauf loswerden will, hat dafür den Knopf "Löschen" im Verlauf-Feld - der
+// kann sogar einzelne Zeilen. Die beiden anderen Benutzer bleiben unangetastet.
 function openFullResetModal(){
     try{
         const label = document.getElementById('fullResetUserLabel');
@@ -3866,6 +4114,23 @@ async function confirmFullReset(){
         try{ localStorage.setItem('amateurfunk_difficult', JSON.stringify({})); }catch(e){}
         try{ localStorage.setItem('amateurfunk_mastery', JSON.stringify({})); }catch(e){}
 
+        // Prüfungsverlauf des aktuellen Benutzers - nur seiner. Die beiden
+        // anderen Spalten in examHistory bleiben stehen, deshalb wird das
+        // Objekt gelesen, geändert und zurückgeschrieben statt gelöscht.
+        try{
+            if(history && typeof history === 'object') history[currentUser] = [];
+            const roh = localStorage.getItem('examHistory');
+            const h = roh ? JSON.parse(roh) : { user1: [], user2: [], user3: [] };
+            h[currentUser] = [];
+            localStorage.setItem('examHistory', JSON.stringify(h));
+        }catch(e){}
+        // Schlüssel aus früheren Fassungen. loadPersistentFromServer() sieht
+        // in ihnen nach, wenn examHistory leer ist - stehen sie noch da, wäre
+        // der Verlauf beim nächsten Laden wieder vollständig zurück.
+        try{ localStorage.removeItem('examHistory_' + currentUser); }catch(e){}
+        try{ localStorage.removeItem('amateurfunk_history_' + currentUser); }catch(e){}
+        try{ if(typeof renderHistory === 'function') renderHistory(); }catch(e){}
+
         // UI sofort aktualisieren
         try{
             if (typeof errorBadge !== 'undefined' && errorBadge) errorBadge.style.display = 'none';
@@ -3883,6 +4148,7 @@ async function confirmFullReset(){
                 await fetch('/api/userdata', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'errors', user:currentUser, data:[]}) });
                 await fetch('/api/userdata', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'difficult', user:currentUser, data:{}}) });
                 await fetch('/api/userdata', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'mastery', user:currentUser, data:{}}) });
+                await fetch('/api/userdata', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'history', user:currentUser, data:[]}) });
             }
         }catch(e){ console.warn('Konnte Reset nicht an Server senden (offline?):', e.message); }
     }catch(e){ console.error('Fehler beim vollständigen Reset:', e); }
@@ -4296,6 +4562,30 @@ function updateGoogleButtonHinweis(){
 // ============================================================================
 function alsGelerntMarkieren(qId, gelernt){
     if(!qId) return;
+    // Eine per CB angerechnete Frage abzuhaken hiesse, etwas
+    // zurueckzunehmen, das nie in masteryData stand. Der Haken holt sie
+    // stattdessen in den Stapel zurueck - dasselbe, was die Liste unter
+    // dem CB-Schalter tut.
+    if(!gelernt && cbAngerechnet(qId)){
+        cbAus.add(qId);
+        saveCB();
+        try{ updateMasteryDisplay(); }catch(e){}
+        try{ updateGelerntButton(); }catch(e){}
+        try{ cbPanelAktualisieren(); }catch(e){}
+        try{ zeigeFehlerwertungHinweis('fas fa-rotate-left', 'Zurück in den Lernstapel'); }catch(e){}
+        return;
+    }
+    // Und umgekehrt: Wer eine zurueckgeholte CB-Frage wieder abhakt,
+    // bekommt die Anrechnung zurueck statt eines zweiten Eintrags.
+    if(gelernt && cbAktiv() && CB_KANN.has(qId) && cbAus.has(qId)){
+        cbAus.delete(qId);
+        saveCB();
+        try{ updateMasteryDisplay(); }catch(e){}
+        try{ updateGelerntButton(); }catch(e){}
+        try{ cbPanelAktualisieren(); }catch(e){}
+        try{ zeigeFehlerwertungHinweis('fas fa-circle-check', 'Wieder als CB-Wissen angerechnet'); }catch(e){}
+        return;
+    }
     if(!masteryData[qId]) masteryData[qId] = { streak:0, mastered:false, totalCorrect:0, totalWrong:0 };
     if(gelernt){
         masteryData[qId].streak = 3;
@@ -5169,6 +5459,495 @@ function saveMastery() {
     } catch(e){}
     try{ debouncedSavePersistent(); }catch(e){}
 }
+// ================================================================
+//  CB-EINSTIEG: der Zustand
+// ================================================================
+//  cbModus   - der Haken im Lernfortschritt, je Benutzer gespeichert
+//  cbAus     - Fragen, die der Benutzer ausdruecklich zurueckgeholt hat
+//              ("Kann ich doch nicht"), ebenfalls je Benutzer
+//
+//  Beides haengt am Benutzer-Slot wie Verlauf und Lernstand und geht
+//  ueber /api/userdata auch in data\userdata\ - ueberlebt also eine
+//  Neuinstallation.
+let cbModus = false;
+let cbAus   = new Set();
+
+// Der Modus gilt nur beim Pruefungsziel "CB → N". Wer auf ein anderes
+// Ziel umschaltet, lernt wieder den vollen Katalog - ohne dass der
+// Haken dabei verlorenginge.
+function cbKlasseAktiv(){
+    try{ const k = klasseAktuell(); return !!(k && k.cb); }catch(e){ return false; }
+}
+function cbAktiv(){ return cbModus && cbKlasseAktiv(); }
+function cbAngerechnet(id){ return cbAktiv() && CB_KANN.has(id) && !cbAus.has(id); }
+function cbAnzahlAngerechnet(){
+    let n = 0; CB_KANN.forEach(id => { if(!cbAus.has(id)) n++; }); return n;
+}
+window.cbAktiv = cbAktiv;
+window.cbAngerechnet = cbAngerechnet;
+
+function cbSchluessel(){ return 'amateurfunk_cb_' + currentUser; }
+function loadCB(){
+    cbModus = false; cbAus = new Set();
+    try{
+        const raw = localStorage.getItem(cbSchluessel());
+        if(raw){
+            const d = JSON.parse(raw);
+            cbModus = !!(d && d.modus);
+            if(d && Array.isArray(d.aus)) cbAus = new Set(d.aus);
+        }
+    }catch(e){}
+    try{ cbPanelAktualisieren(); }catch(e){}
+}
+function saveCB(){
+    try{
+        localStorage.setItem(cbSchluessel(),
+            JSON.stringify({ modus: cbModus, aus: Array.from(cbAus) }));
+    }catch(e){}
+    try{ debouncedSavePersistent(); }catch(e){}
+}
+
+// ================================================================
+//  VERWECHSLUNGSGEFAHR - Fragen, die gleich aussehen
+// ================================================================
+//  Im Katalog stehen 37 Fragen mit WOERTLICH identischem Fragetext.
+//  Neunmal steht dort nur:
+//
+//      "Welches Bauteil wird durch das Schaltzeichen symbolisiert?"
+//
+//  Neun Fragen, neun verschiedene richtige Antworten - Batterie,
+//  Schalter, Widerstand, Kondensator, Spule, Diode, Leuchtdiode,
+//  Transistor, Antenne. Unterscheiden lassen sie sich NUR am Bild.
+//  Dazu kommen Gruppen, bei denen sich nur eine Zahl unterscheidet:
+//  elf Bandgrenzen-Fragen mit demselben Satz, sechs "Warum sollten Sie
+//  auf 144,x MHz keine Direktverbindung ...". Zusammen 80 von 571.
+//
+//  DAS IST DIE STELLE, AN DER PRUEFUNGEN SCHEITERN. Wer NB201 dreimal
+//  richtig hat, bekommt sie abgehakt - und kann doch nur DIESE eine
+//  Zeichnung. In der Pruefung kommt NC301, derselbe Satz, andere
+//  Zeichnung. Und wer die neun im Lernstapel hintereinander sieht,
+//  merkt sich irgendwann die Reihenfolge statt der Symbole.
+//
+//  GERECHNET, NICHT GEPFLEGT. Die Gruppen entstehen beim Laden aus dem
+//  Katalog selbst. Eine von Hand gepflegte Liste waere nach dem ersten
+//  Katalog-Update falsch, ohne dass es jemandem auffiele.
+//
+//  Zwei Stufen der Aehnlichkeit, beide zaehlen:
+//    1. woertlich gleicher Text
+//    2. gleicher Text, sobald man Zahlen durch # ersetzt
+//  Die zweite faengt die Bandgrenzen und die Frequenz-Fragen.
+// ================================================================
+let verwechslungGruppen = [];      // [[id, id, ...], ...]
+let verwechslungVon = {};          // id -> Gruppe (dieselbe Referenz)
+
+function verwechslungSchluessel(text, mitZahlen){
+    let t = String(text || '').toLowerCase();
+    t = t.replace(/[\u201e\u201c\u201d"\u00bb\u00ab'`]/g, '');
+    if(!mitZahlen) t = t.replace(/\d+([.,]\d+)?/g, '#');
+    t = t.replace(/[^a-zäöüß# ]+/g, ' ');
+    return t.split(/\s+/).filter(Boolean).join(' ');
+}
+
+// Wird von loadQuestions() nach jedem Katalogwechsel gerufen.
+function verwechslungAufbauen(){
+    verwechslungGruppen = [];
+    verwechslungVon = {};
+    const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
+    if(!bank.length) return;
+
+    // Erst woertlich, dann mit vereinheitlichten Zahlen. Eine Frage
+    // landet in der Gruppe, die sie zuerst aufnimmt - so bleibt die
+    // engere Verwandtschaft die massgebliche.
+    const vergeben = new Set();
+    for(const mitZahlen of [true, false]){
+        const topf = new Map();
+        for(const q of bank){
+            if(vergeben.has(q.id)) continue;
+            const k = verwechslungSchluessel(q.text, mitZahlen);
+            if(k.length < 12) continue;              // zu kurz, um aussagekraeftig zu sein
+            if(!topf.has(k)) topf.set(k, []);
+            topf.get(k).push(q.id);
+        }
+        for(const ids of topf.values()){
+            if(ids.length < 2) continue;
+            verwechslungGruppen.push(ids);
+            for(const id of ids){ vergeben.add(id); verwechslungVon[id] = ids; }
+        }
+    }
+    // Groesste Gruppen zuerst - dort ist die Verwechslungsgefahr am groessten.
+    verwechslungGruppen.sort((a,b) => b.length - a.length);
+    try{ verwechslungBadge(); }catch(e){}
+}
+window.verwechslungAufbauen = verwechslungAufbauen;
+
+function verwechslungAnzahl(){
+    return verwechslungGruppen.reduce((n,g) => n + g.length, 0);
+}
+function verwechslungBadge(){
+    const b = document.getElementById('verwechslungCount');
+    const btn = document.getElementById('verwechslungBtn');
+    if(!b || !btn) return;
+    const n = verwechslungAnzahl();
+    if(n > 0){
+        b.textContent = n;
+        b.style.display = 'inline';
+        btn.style.display = '';
+        btn.setAttribute('data-tooltip',
+            '⚠️ ' + n + ' Fragen in ' + verwechslungGruppen.length + ' Gruppen sehen sich zum Verwechseln ähnlich '
+            + '– hier kommen sie direkt hintereinander');
+    } else {
+        btn.style.display = 'none';
+    }
+}
+window.verwechslungBadge = verwechslungBadge;
+
+// Die Runde: Gruppe fuer Gruppe, innerhalb der Gruppe gemischt, aber
+// direkt hintereinander. Genau das ist der Sinn - zwei Fragen mit
+// demselben Wortlaut nacheinander zwingen dazu, aufs Bild zu sehen.
+function verwechslungStarten(){
+    if(!verwechslungGruppen.length){
+        if(window.showAppAlert) showAppAlert('In diesem Katalog gibt es keine Fragen, die sich zum Verwechseln ähneln.');
+        return;
+    }
+    const gemischt = shuffleArray(verwechslungGruppen.slice());
+    const ids = [];
+    for(const g of gemischt) for(const id of shuffleArray(g.slice())) ids.push(id);
+    startQuestionSession(ids, 'Verwechslungsgefahr');
+}
+window.verwechslungStarten = verwechslungStarten;
+
+// ================================================================
+//  DURCHSICHT - alle Fragen der Reihe nach, mit Lesezeichen
+// ================================================================
+//  Dietmar am 02.09.2026: "Ich moechte alle Fragen durchgehen und
+//  schauen ob ich irgendwo noch etwas gelerntes finde. Leider tauchen da
+//  immer wieder Fragen auf, die immer wieder kommen. [...] Dafuer waere
+//  ein Button interessant, der mich alles mal durchgehen laesst, der
+//  speichert wo ich aufgehoert habe."
+//
+//  Jede andere Runde zieht gemischt und faengt jedes Mal neu an - dabei
+//  sieht man dieselben Fragen wieder und andere nie. Die Durchsicht
+//  macht das Gegenteil:
+//
+//    - Katalogreihenfolge, nicht gemischt.
+//    - ALLE Fragen, auch die schon gelernten. Genau darum geht es ja:
+//      nachsehen, was man laengst kann.
+//    - Ein Lesezeichen. Beim naechsten Mal geht es dort weiter.
+//
+//  Das Lesezeichen haengt am Benutzer UND am Pruefungsziel - die
+//  Kataloge sind verschieden lang, eine gemeinsame Nummer waere
+//  wertlos. Gemerkt wird die Frage-KENNUNG, nicht die Position: Wird der
+//  Katalog einmal laenger, steht man trotzdem an der richtigen Stelle.
+//
+//  Es gibt keinen eigenen Schalter fuer "Durchsicht laeuft". Der Name
+//  der Runde steht ohnehin in currentPart, und jede andere Runde
+//  ueberschreibt ihn. Ein zweiter Schalter koennte damit aus dem Tritt
+//  geraten - dieser kann es nicht.
+const DURCHSICHT_NAME = 'Durchsicht';
+
+function durchsichtSchluessel(){ return 'amateurfunk_durchsicht_' + currentUser; }
+
+function durchsichtStand(){
+    try{
+        const r = localStorage.getItem(durchsichtSchluessel());
+        const d = r ? JSON.parse(r) : null;
+        return (d && typeof d === 'object') ? d : {};
+    }catch(e){ return {}; }
+}
+function durchsichtMerken(id){
+    if(!id) return;
+    try{
+        const d = durchsichtStand();
+        d[klasseAktuell().id] = id;
+        localStorage.setItem(durchsichtSchluessel(), JSON.stringify(d));
+    }catch(e){}
+    try{ durchsichtBadge(); }catch(e){}
+}
+function durchsichtVergessen(){
+    try{
+        const d = durchsichtStand();
+        delete d[klasseAktuell().id];
+        localStorage.setItem(durchsichtSchluessel(), JSON.stringify(d));
+    }catch(e){}
+    try{ durchsichtBadge(); }catch(e){}
+}
+function durchsichtPosition(){
+    const ids = (typeof questionBank !== 'undefined' ? questionBank : []).map(q => q.id);
+    const merk = durchsichtStand()[klasseAktuell().id];
+    const i = merk ? ids.indexOf(merk) : -1;
+    return { ids: ids, index: i < 0 ? 0 : i, gemerkt: i >= 0 };
+}
+// Die Zahl am Knopf: wie viele Fragen ab dem Lesezeichen noch kommen.
+// Sie erscheint nur, wenn wirklich eine Stelle gemerkt ist - sonst
+// staende dort immer die Katalogzahl, und das sagt nichts.
+function durchsichtBadge(){
+    const b = document.getElementById('durchsichtCount');
+    if(!b) return;
+    const p = durchsichtPosition();
+    const offen = p.ids.length - p.index;
+    if(p.gemerkt && p.index > 0 && offen > 0){
+        b.textContent = offen;
+        b.style.display = 'inline';
+    } else {
+        b.style.display = 'none';
+    }
+}
+window.durchsichtBadge = durchsichtBadge;
+
+function durchsichtLos(ab){
+    const p = durchsichtPosition();
+    if(!p.ids.length){
+        if(window.showAppAlert) showAppAlert('Der Fragenkatalog ist noch nicht geladen.');
+        return;
+    }
+    const start = Math.max(0, Math.min(ab, p.ids.length - 1));
+    startQuestionSession(p.ids.slice(start), DURCHSICHT_NAME);
+    durchsichtMerken(p.ids[start]);
+}
+
+function durchsichtStarten(){
+    const p = durchsichtPosition();
+    if(!p.ids.length){
+        if(window.showAppAlert) showAppAlert('Der Fragenkatalog ist noch nicht geladen.');
+        return;
+    }
+    // Nichts gemerkt, oder gleich am Anfang: ohne Rueckfrage los.
+    if(!p.gemerkt || p.index === 0){ durchsichtLos(0); return; }
+    durchsichtFrageFenster(p);
+}
+window.durchsichtStarten = durchsichtStarten;
+
+// Zwei Wege, also zwei Knoepfe - eine Ja/Nein-Rueckfrage waere hier die
+// falsche Form. Am Ende des Katalogs steht nur noch "von vorn".
+function durchsichtFrageFenster(p){
+    let modal = document.getElementById('durchsichtModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'durchsichtModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+        modal.onclick = e => { if(e.target === modal) durchsichtFensterZu(); };
+        document.body.appendChild(modal);
+    }
+    const offen = p.ids.length - p.index;
+    const nr = p.index + 1;
+    const fertig = offen <= 1;
+    modal.innerHTML =
+        '<div style="background:#fff; border-radius:22px; width:100%; max-width:460px; overflow:hidden; '
+      + 'box-shadow:0 24px 64px rgba(0,0,0,0.35);">'
+      + '<div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; '
+      + 'border-bottom:1px solid #e3e9f3; background:#f9fbff;">'
+      + '<h3 style="margin:0; font-size:1.05rem; color:#0f2745;">'
+      + '<i class="fas fa-book-open" style="color:#5b6b8c;"></i> Durchsicht</h3>'
+      + '<button onclick="durchsichtFensterZu()" aria-label="Schließen" style="width:34px; height:34px; '
+      + 'border-radius:50%; border:1px solid #e3e9f3; background:#fff; cursor:pointer; font-size:1.2rem; '
+      + 'line-height:1; color:#4b5563;">&#10005;</button></div>'
+      + '<div style="padding:1.1rem 1.2rem; font-size:0.88rem; line-height:1.55; color:#16243a;">'
+      + (fertig
+          ? 'Du warst bei der letzten Frage des Katalogs. Von vorn?'
+          : 'Zuletzt warst du bei <b>Frage ' + nr + ' von ' + p.ids.length + '</b> '
+            + '(<span style="font-family:var(--font-mono);">' + p.ids[p.index] + '</span>). '
+            + 'Von dort sind es noch <b>' + offen + '</b>.')
+      + '<div style="font-size:0.78rem; color:#4b5563; margin-top:0.6rem;">'
+      + 'Die Durchsicht geht alle Fragen der Reihe nach durch — auch die schon gelernten. '
+      + 'Was du kannst, hakst du an der Frage ab; alles andere klickst du mit „Weiter" durch.</div>'
+      + '</div>'
+      + '<div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; '
+      + 'background:#fafbff; border-top:1px solid #e3e9f3;">'
+      + '<button onclick="durchsichtFensterZu(); durchsichtVergessen(); durchsichtLos(0);" class="btn btn-outline" '
+      + 'style="min-height:38px; padding:0.5rem 1.1rem; border-radius:20px; font-weight:600; '
+      + 'border:1px solid #b0c4d8; background:#fff; cursor:pointer; font-family:inherit;">'
+      + '<i class="fas fa-rotate-left"></i> Von vorn</button>'
+      + (fertig ? '' :
+         '<button onclick="durchsichtFensterZu(); durchsichtLos(' + p.index + ');" class="btn btn-primary" '
+       + 'style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; '
+       + 'background:#0f2745; color:#fff; border:none; cursor:pointer; font-family:inherit;">'
+       + '<i class="fas fa-play"></i> Weiter bei ' + nr + '</button>')
+      + '</div></div>';
+    modal.style.display = 'flex';
+}
+function durchsichtFensterZu(){
+    const m = document.getElementById('durchsichtModal');
+    if(m) m.style.display = 'none';
+}
+window.durchsichtFensterZu = durchsichtFensterZu;
+window.durchsichtVergessen = durchsichtVergessen;
+window.durchsichtLos = durchsichtLos;
+
+// ---- Panel, Liste, Schalter ------------------------------------
+function cbPanelAktualisieren(){
+    const panel = document.getElementById('cbPanel');
+    if(!panel) return;
+    if(!cbKlasseAktiv()){ panel.style.display = 'none'; return; }
+    panel.style.display = '';
+
+    const box = document.getElementById('cbModusCheck');
+    if(box) box.checked = cbModus;
+
+    const gesamt = (typeof questionBank !== 'undefined' && questionBank.length) ? questionBank.length : 571;
+    const ab = cbAnzahlAngerechnet();
+    const zurueck = cbAus.size;
+    const zeile = document.getElementById('cbZeile');
+    if(zeile){
+        zeile.innerHTML = cbModus
+            ? '<b>' + gesamt + ' → ' + (gesamt - ab) + ' Fragen</b> (' + ab + ' als CB-Wissen angerechnet'
+              + (zurueck ? ', ' + zurueck + ' selbst zurückgeholt' : '') + ').'
+              + ' Im Prüfungssimulator kommen weiterhin alle ' + gesamt + '.'
+            : 'Antennenbau, Q-Codes, SWR, S-Meter und Stromkreise gelten als bekannt – '
+              + 'das wären ' + ab + ' von ' + gesamt + ' Fragen weniger.';
+    }
+    const zeile2 = document.getElementById('cbAufklappZeile');
+    if(zeile2) zeile2.style.display = cbModus ? '' : 'none';
+    const btn = document.getElementById('cbAufklappBtn');
+    if(btn){
+        btn.innerHTML = '<i class="fas fa-list-check"></i> Als CB bekannt – '
+            + CB_KANN.size + ' Fragen anzeigen';
+    }
+    // Steht das Fenster offen, zieht es sofort nach.
+    const fenster = document.getElementById('cbBekanntModal');
+    if(fenster && fenster.style.display === 'flex'){
+        try{ renderCBListe(); }catch(e){}
+        const kopf = document.getElementById('cbModalZaehler');
+        if(kopf) kopf.textContent = ab + ' von ' + CB_KANN.size + ' angerechnet';
+    }
+}
+
+function cbModusUmschalten(an){
+    cbModus = !!an;
+    saveCB();
+    try{ cbPanelAktualisieren(); }catch(e){}
+    try{ updateMasteryDisplay(); }catch(e){}
+    try{ klasseAnzeigeAktualisieren(); }catch(e){}
+}
+window.cbModusUmschalten = cbModusUmschalten;
+
+// Die Liste in einem eigenen Fenster, gebaut wie "Pruefungsziel
+// waehlen": Klick auf den Hintergrund oder auf das Kreuz schliesst,
+// Escape ebenfalls.
+function cbListeOeffnen(){
+    let modal = document.getElementById('cbBekanntModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'cbBekanntModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+        modal.onclick = e => { if (e.target === modal) cbListeSchliessen(); };
+        modal.innerHTML =
+            '<div style="background:#fff; border-radius:18px; padding:1.2rem 1.3rem 1rem; max-width:720px; width:96%; '
+          + 'max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+          + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.35rem;">'
+          + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;">'
+          + '<i class="fas fa-list-check" style="color:#0e9aa7;"></i> Als CB bekannt '
+          + '<span id="cbModalZaehler" style="font-size:0.78rem; font-weight:400; color:#4b5563;"></span></h3>'
+          + '<button onclick="cbListeSchliessen()" aria-label="Schließen" style="background:none; border:none; '
+          + 'font-size:1.2rem; cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
+          + '<p style="margin:0 0 0.6rem; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Hier kannst du selbst bestimmen: Was davon kannst du wirklich? '
+          + '<b>Haken links weg</b> — die Frage ist sofort wieder im Lernstapel. '
+          + '<b>Klick auf den Text</b> — die Frage öffnet sich.</p>'
+          + '<div id="cbListeInhalt" style="flex:1; overflow-y:auto; background:#f8fbfc; border:1px solid #cfe4e7; '
+          + 'border-radius:10px; padding:0.6rem 0.8rem;"></div>'
+          + '<div style="display:flex; justify-content:flex-end; padding-top:0.7rem;">'
+          + '<button onclick="cbListeSchliessen()" class="btn btn-outline" style="min-height:34px; padding:0.35rem 1rem; '
+          + 'border-radius:18px; font-weight:600; border:1px solid #b0c4d8; background:#fff; cursor:pointer; '
+          + 'font-family:inherit;">Fertig</button></div>'
+          + '</div>';
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    renderCBListe();
+    try{ cbPanelAktualisieren(); }catch(e){}
+}
+window.cbListeOeffnen = cbListeOeffnen;
+
+function cbListeSchliessen(){
+    const modal = document.getElementById('cbBekanntModal');
+    if(modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+window.cbListeSchliessen = cbListeSchliessen;
+
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    const modal = document.getElementById('cbBekanntModal');
+    if(modal && modal.style.display === 'flex') cbListeSchliessen();
+});
+
+// Die Liste der angerechneten Fragen, nach Gruppen sortiert. Jede Zeile
+// hat ein Kaestchen: angehakt heisst "kann ich", weg heisst "will ich
+// doch noch lernen" - dann ist die Frage sofort wieder im Stapel.
+function renderCBListe(){
+    const ziel = document.getElementById('cbListeInhalt');
+    if(!ziel) return;
+    const katalog = {};
+    (typeof questionBank !== 'undefined' ? questionBank : []).forEach(q => { katalog[q.id] = q; });
+
+    let h = '';
+    for(const g of CB_GRUPPEN){
+        const drin = g.ids.filter(id => katalog[id]);
+        if(!drin.length) continue;
+        const offen = drin.filter(id => !cbAus.has(id)).length;
+        h += '<div style="font-size:0.74rem; font-weight:700; color:#0f2745; margin:0.5rem 0 0.2rem;">'
+           + g.name + ' <span style="font-weight:400; color:#4b5563;">(' + offen + '/' + drin.length + ')</span></div>';
+        for(const id of drin){
+            const q = katalog[id];
+            const an = !cbAus.has(id);
+            // Zwei getrennte Klickflaechen, bewusst kein <label> darum:
+            // Das Kaestchen nimmt die Anrechnung zurueck, der Text
+            // oeffnet die Frage - genau wie in der Trefferliste der
+            // Suche. In einem <label> wuerde jeder Klick auf den Text
+            // den Haken umschalten, und beides ginge nicht gleichzeitig.
+            h += '<div class="cb-zeile" style="display:flex; align-items:flex-start; gap:8px; padding:3px 2px; '
+               + 'border-radius:6px;">'
+               + '<input type="checkbox" ' + (an ? 'checked' : '')
+               + ' onchange="cbFrageUmschalten(\'' + id + '\', this.checked)"'
+               + ' title="' + (an ? 'Haken weg: zurück in den Lernstapel' : 'Wieder als CB-Wissen anrechnen') + '"'
+               + ' style="margin-top:3px; flex-shrink:0; cursor:pointer;">'
+               + '<div onclick="cbFrageOeffnen(\'' + id + '\')" title="Frage öffnen"'
+               + ' style="flex:1; min-width:0; cursor:pointer; font-size:0.73rem; line-height:1.4; color:'
+               + (an ? '#4b5563' : '#0f2745') + ';">'
+               + '<b>' + id + '</b> '
+               + (an ? '<span style="display:inline-block; background:#0e9aa7; color:#fff; font-size:0.6rem; '
+                       + 'font-weight:700; border-radius:5px; padding:0 5px; vertical-align:1px;">CB – als gelernt markiert</span> '
+                     : '<span style="display:inline-block; background:#e5edf7; color:#0f2745; font-size:0.6rem; '
+                       + 'font-weight:700; border-radius:5px; padding:0 5px; vertical-align:1px;">wieder im Stapel</span> ')
+               + escapeHtmlCB(q.text).slice(0, 150)
+               + '</div></div>';
+        }
+    }
+    // Die Liste wird nach jedem Haken neu gebaut. Ohne das Merken der
+    // Scrollhoehe springt sie dabei an den Anfang zurueck - bei 138
+    // Zeilen waere das nach jedem Klick eine kleine Zumutung.
+    const hoehe = ziel.scrollTop;
+    ziel.innerHTML = h;
+    ziel.scrollTop = hoehe;
+}
+window.renderCBListe = renderCBListe;
+
+function escapeHtmlCB(t){
+    return String(t == null ? '' : t)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Klick auf den Text: Fenster zu, Frage laden. Denselben Weg nimmt die
+// Trefferliste der Suche (jumpToQuestionId + Fenster schliessen), damit
+// sich beides gleich anfuehlt.
+function cbFrageOeffnen(id){
+    try{ cbListeSchliessen(); }catch(e){}
+    try{ jumpToQuestionId(id); }catch(e){ console.warn('[CB] Frage ' + id + ' nicht ladbar:', e.message); }
+}
+window.cbFrageOeffnen = cbFrageOeffnen;
+
+function cbFrageUmschalten(id, kannIch){
+    if(kannIch) cbAus.delete(id); else cbAus.add(id);
+    saveCB();
+    try{ updateMasteryDisplay(); }catch(e){}
+    try{ cbPanelAktualisieren(); }catch(e){}
+    try{ renderCBListe(); }catch(e){}
+}
+window.cbFrageUmschalten = cbFrageUmschalten;
+
 function loadMastery() {
     try {
         const key = 'amateurfunk_mastery_' + currentUser;
@@ -5198,7 +5977,7 @@ function updateMasteryDisplay() {
         try { if (typeof lektionAusFeldGewaehlt === 'function') lektionAusFeldGewaehlt(); } catch (e) {}
         try { if (typeof lektionenBeschriftungAktualisieren === 'function') lektionenBeschriftungAktualisieren(); } catch (e) {}
         const total = filteredBank.length;
-        const masteredInFilter = filteredBank.filter(q => masteryData[q.id] && masteryData[q.id].mastered).length;
+        const masteredInFilter = filteredBank.filter(q => isMastered(q.id)).length;
         const nochOffen = Math.max(0, total - masteredInFilter);
         // FIX (21.08.2026): Die Zahl richtet sich jetzt nach dem Haken
         // "Gelernte ausblenden". Vorher zeigte sie immer nur die noch nicht
@@ -5208,7 +5987,12 @@ function updateMasteryDisplay() {
         // Drei Zustände: nur Gelerntes prüfen, Gelernte ausblenden, oder alles.
         const imStapel = nurGelernte ? masteredInFilter : (hideMastered ? nochOffen : total);
         const toLearn = imStapel;
-        const masteredTotal = Object.values(masteryData).filter(v => v && v.mastered).length;
+        // Gezaehlt wird jetzt ueber den Katalog statt ueber masteryData:
+        // Sonst blieben die per CB angerechneten Fragen hier aussen vor,
+        // waehrend sie eine Zeile weiter oben mitzaehlen.
+        const masteredTotal = (questionBank && questionBank.length)
+            ? questionBank.filter(q => isMastered(q.id)).length
+            : Object.values(masteryData).filter(v => v && v.mastered).length;
 
         const elToLearn = document.getElementById('toLearnCount');
         const elMastered = document.getElementById('masteredCount');
@@ -5268,9 +6052,9 @@ function updateMasteryDisplay() {
             const countV = questionBank.filter(q=>q.part==='vorschriften').length;
             const countB = questionBank.filter(q=>q.part==='betrieb').length;
             const countT = questionBank.filter(q=>q.part==='technik').length;
-            const masteredV = questionBank.filter(q=>q.part==='vorschriften' && masteryData[q.id] && masteryData[q.id].mastered).length;
-            const masteredB = questionBank.filter(q=>q.part==='betrieb' && masteryData[q.id] && masteryData[q.id].mastered).length;
-            const masteredT = questionBank.filter(q=>q.part==='technik' && masteryData[q.id] && masteryData[q.id].mastered).length;
+            const masteredV = questionBank.filter(q=>q.part==='vorschriften' && isMastered(q.id)).length;
+            const masteredB = questionBank.filter(q=>q.part==='betrieb' && isMastered(q.id)).length;
+            const masteredT = questionBank.filter(q=>q.part==='technik' && isMastered(q.id)).length;
             const elCV = document.getElementById('countVorschriften');
             const elCB = document.getElementById('countBetrieb');
             const elCT = document.getElementById('countTechnik');
@@ -5310,8 +6094,22 @@ function handleMasteryOnAnswer(qId, isCorrect) {
     }
     saveMastery();
 }
+// Die eine Stelle, an der "ist die Frage gelernt?" beantwortet wird -
+// Lernstapel, Zaehler, Lektionsuebersicht und der Haken "Bereits
+// gelernte Fragen" im Pruefungssimulator fragen alle hier.
+//
+// Der CB-Einstieg haengt sich hier an und NUR hier. Er schreibt nichts
+// in masteryData: Ausschalten stellt damit den alten Zustand
+// vollstaendig wieder her, und der echte Lernfortschritt bleibt
+// unterscheidbar von dem, was aus dem CB-Funk mitgebracht wurde.
 function isMastered(qId) {
-    return masteryData[qId] && masteryData[qId].mastered;
+    if (cbAngerechnet(qId)) return true;
+    return !!(masteryData[qId] && masteryData[qId].mastered);
+}
+// Nur der selbst erarbeitete Stand, ohne CB-Anrechnung. Wird gebraucht,
+// wo zwischen beidem unterschieden werden muss.
+function istEchtGelernt(qId) {
+    return !!(masteryData[qId] && masteryData[qId].mastered);
 }
 function getActiveLearnParts() {
     return Object.keys(activeLearnParts).filter(k => activeLearnParts[k]);
@@ -5497,7 +6295,9 @@ function clearMastery() {
     openMasteryClearModal();
 }
 function openMasteryClearModal(){
-    const count = Object.values(masteryData).filter(v=>v.mastered).length;
+    const count = (typeof questionBank !== 'undefined' && questionBank.length)
+        ? questionBank.filter(q => isMastered(q.id)).length
+        : Object.values(masteryData).filter(v=>v.mastered).length;
     const el = document.getElementById('masteryClearCount');
     if(el) el.textContent = count;
     const modal = document.getElementById('masteryClearModal');
@@ -5693,6 +6493,9 @@ async function loadQuestions() {
         window.questionBank = data;
         document.getElementById('bankBadge').innerHTML = `<i class="fas fa-check-circle"></i> ${kl.name} · ${questionBank.length} Fragen`;
         document.getElementById('footerCount').textContent = questionBank.length;
+        // Die Verwechslungsgruppen werden aus dem frisch geladenen Katalog
+        // gerechnet - jedes Pruefungsziel hat seine eigenen.
+        try { verwechslungAufbauen(); } catch(e) { console.debug('Verwechslungsgruppen:', e.message); }
         try { klasseAnzeigeAktualisieren(); } catch(e) { console.debug('Klassenanzeige:', e.message); }
         console.log(`✅ ${questionBank.length} Fragen geladen (${kl.name}, ${kl.datei}).`);
         // DEBUG: Zeige Verteilung der korrekten Antworten in der Roh-Datei
@@ -5750,7 +6553,8 @@ async function loadQuestions() {
         loadHistory();
         loadErrors();
         loadDifficult();
-        loadMastery();
+        loadCB();
+    loadMastery();
         resetAll();
     } catch (e) {
         console.error(e);
@@ -5825,6 +6629,7 @@ userSelect.addEventListener('change', function() {
     loadHistory();
     loadErrors();
     loadDifficult();
+    loadCB();
     loadMastery();
     renderHistory();
     updateVisibility();
@@ -6039,6 +6844,37 @@ window.lektionRundeStarten = lektionRundeStarten;
 // eine weitere rote Zeile, wenn der Zugriff gesperrt ist - und gesperrt ist er
 // in Chrome inzwischen meistens (siehe Kommentar oben).
 const EIGENE_PORTS = [3000];
+
+// ================================================================
+//  "Ich bin noch da" - damit der Server Feierabend machen kann
+// ================================================================
+//  Dietmar am 01.09.2026: "Beim Schliessen von dem Browser bleibt der
+//  Server am laufen." Daher kamen die Fenster "Auf Port 3000 laeuft
+//  bereits ein Trainer": Jeder Start hinterliess einen Server, der nie
+//  wieder aufhoerte.
+//
+//  Diese Seite meldet sich alle zehn Sekunden. Beim Schliessen meldet
+//  sie sich ausdruecklich ab - mit sendBeacon, denn ein normales
+//  fetch() wird in dem Moment abgebrochen, in dem die Seite verschwindet.
+//
+//  Die Kennung gilt fuer diesen einen Tab. Wer zwei Fenster offen hat,
+//  zaehlt zweimal - schliesst er eines, laeuft der Server weiter.
+// ================================================================
+const ZUSCHAUER_KENNUNG = Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+function lebenszeichenStarten(){
+    const melden = () => {
+        try{ fetch('/api/lebenszeichen?id=' + ZUSCHAUER_KENNUNG, { cache:'no-store' }).catch(()=>{}); }catch(e){}
+    };
+    melden();
+    setInterval(melden, 10000);
+    // pagehide statt beforeunload: Es kommt auch dann, wenn der Browser
+    // die Seite in den Ruhezustand schiebt oder das Handy sie wegraeumt.
+    window.addEventListener('pagehide', () => {
+        try{ navigator.sendBeacon('/api/tschuess?id=' + ZUSCHAUER_KENNUNG); }catch(e){}
+    });
+}
+window.lebenszeichenStarten = lebenszeichenStarten;
 
 function laeuftLokal() {
     return ['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) !== -1;
@@ -7355,6 +8191,14 @@ function infoFuellen() {
     const ziel = document.getElementById('infoInhalt');
     if (!ziel) return;
     const gesamt = (typeof questionBank !== 'undefined' && questionBank.length) ? questionBank.length : 571;
+    // Dietmar am 02.09.2026: "Unter Info steht 'Trainer fuer die
+    // Amateurfunkpruefung Klasse N'. Hier muss noch N E und A stehen. Hier
+    // koennte man das aber auch uebernehmen was bei Ziel ausgewaehlt wurde."
+    // Beides: Der Trainer kann alle drei Klassen, und daneben steht, worauf
+    // er gerade eingestellt ist. infoFuellen() laeuft bei jedem Oeffnen des
+    // Fensters, die Angabe ist also nie veraltet.
+    let zielTitel = 'Klasse N · Basis';
+    try { if (typeof klasseAktuell === 'function') zielTitel = klasseAktuell().titel || zielTitel; } catch (e) {}
 
     function block(titel, symbol, zeilen) {
         return '<div style="border:1px solid var(--line); border-radius:12px; padding:0.8rem 1rem; margin-bottom:0.7rem; background:#f8fafd;">'
@@ -7368,9 +8212,12 @@ function infoFuellen() {
 
     ziel.innerHTML =
         `<div style="font-size:0.85rem; color:var(--muted); margin-bottom:0.9rem;">`
-        + `Trainer für die Amateurfunkprüfung Klasse N. Grundlage ist der amtliche Fragenkatalog `
-        + `der Bundesnetzagentur vom März 2024 mit ${gesamt} Fragen. Alles läuft auf deinem Rechner — `
-        + `es gibt keine Anmeldung, und deine Daten verlassen ihn nicht.</div>`
+        + `Trainer für die Amateurfunkprüfung der Klassen N, E und A. `
+        + `Eingestellt ist gerade <b>${zielTitel}</b> — umstellen lässt sich das in der `
+        + `Hauptansicht unter „Ziel wählen". Grundlage ist der amtliche Fragenkatalog `
+        + `der Bundesnetzagentur vom März 2024; für dieses Ziel sind es ${gesamt} Fragen. `
+        + `Alles läuft auf deinem Rechner — es gibt keine Anmeldung, und deine Daten `
+        + `verlassen ihn nicht.</div>`
 
         + block('So läuft eine Lernrunde', '🎯', [
             ['Fragenbereich', 'Alle Teile, Vorschriften, Betrieb oder Technik.'],
@@ -8293,6 +9140,13 @@ function rundeSpeichern(){
     try{
         if(!isQuizActive || !currentQuestions.length) return;
         if(!nurNormalesLernen()) return;
+        // Die Durchsicht bleibt aussen vor. Sie hat ihr eigenes, besseres
+        // Lesezeichen: eine Frage-Kennung statt einer Position in einer
+        // gemischten Liste. Zwei Merkposten fuer dieselbe Sache waeren
+        // nicht nur doppelt, sie widersprechen sich auch - und beim
+        // Testen am 02.09.2026 legte sich der Rueckkehr-Dialog prompt
+        // ueber das Durchsicht-Fenster und fing dessen Klicks ab.
+        if(currentPart === DURCHSICHT_NAME) return;
         const fragen = [];
         for(const q of currentQuestions){
             const roh = questionBank.find(x => x.id === q.id);
@@ -8926,6 +9780,13 @@ function updateSidebarOnly(){
 }
 
 function renderQuestion() {
+    // Lesezeichen der Durchsicht. Haengt am Rundennamen, nicht an einem
+    // eigenen Schalter - siehe Kommentar bei DURCHSICHT_NAME.
+    try{
+        if (currentPart === DURCHSICHT_NAME && currentQuestions[currentIndex]) {
+            durchsichtMerken(currentQuestions[currentIndex].id);
+        }
+    }catch(e){}
     if (!currentQuestions.length || currentIndex >= currentQuestions.length) {
         renderFinishScreen();
         return;
@@ -10278,7 +11139,71 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'ArrowRight') { e.preventDefault(); nextQuestion(); }
 });
 
+// ================================================================
+//  NEUANFANG NACH EINER NEUINSTALLATION
+// ================================================================
+//  Dietmar am 01.09.2026, nachdem er den Programmordner von Hand
+//  geloescht und neu installiert hatte:
+//
+//    "Es sind meine kompletten Verlaeufe in Benutzer und alles andere
+//     ist auch vorhanden. Das darf so nicht sein. Bei einer neuen
+//     Installation muss alles weg sein."
+//
+//  Der Verlauf steht an zwei Stellen: in data\userdata\ auf der
+//  Platte - und hier im Browser, im localStorage. Der Ordner war weg,
+//  der Browser nicht: Sein Speicher haengt nicht am Programmordner,
+//  sondern an der ADRESSE localhost:3000, und die ist nach der
+//  Neuinstallation dieselbe. Beim ersten Aufruf stand also alles wieder
+//  da - und die Seite hat es pflichtschuldig wieder hochgeladen.
+//
+//  Loeschen kann nur der Browser selbst; kein Setup der Welt kommt an
+//  diesen Speicher heran. Also fragt die Seite den Server einmal beim
+//  Laden: "War der Ordner frisch?" Wenn ja, raeumt sie ihre Seite auf.
+//
+//  OHNE MELDUNG UND OHNE SICHERUNGSDATEI. Der erste Entwurf hatte
+//  beides: einen Balken quer ueber den Kopf der Seite und eine Kopie
+//  des alten Standes in data\userdata\. Dietmar: "Das finde ich nicht
+//  schoen" - und dann: "Nimm es bitte komplett raus." Zu Recht. Eine
+//  neue Installation ist einfach leer; das erklaert sich von selbst,
+//  und ein Rest im Ordner widerspricht genau dem, worum es hier geht.
+//
+//  Der Server sagt genau EINMAL ja (siehe /api/neuanfang) - und ein
+//  Gast im Gruppenraum bekommt darauf nie eine Antwort, sonst wuerde
+//  die frische Installation des Gastgebers dem Gast den Browser leeren.
+async function neuanfangPruefen(){
+    let antwort;
+    try{
+        const res = await fetch('/api/neuanfang', { cache: 'no-store' });
+        if(!res.ok) return false;                 // 403 = Gast im Gruppenraum
+        antwort = await res.json();
+    }catch(e){ return false; }
+    if(!antwort || !antwort.noetig) return false;
+
+    // In diesem Tab schon geraeumt? Dann nicht noch einmal - sonst
+    // koennte aus einem misslungenen Versuch eine Schleife werden.
+    try{ if(sessionStorage.getItem('afu_neuanfang')) return false; }catch(e){}
+
+    // Es wird nichts beiseitegelegt. Der erste Entwurf hat den alten
+    // Stand vorher noch als Datei in data\userdata\ gesichert - Dietmar
+    // wollte das nicht, und er hat recht: "Bei einer neuen Installation
+    // muss alles weg sein" heisst eben auch, dass hinterher kein Rest im
+    // Ordner liegt. Ein Rettungsnetz, von dem niemand weiss und das
+    // niemand gewollt hat, ist kein Rettungsnetz, sondern Unordnung.
+    try{ localStorage.clear(); }catch(e){}
+    try{ sessionStorage.clear(); }catch(e){}
+    // Einzige Aufgabe dieses Merkers: die Bremse oben. Er ueberlebt das
+    // Neuladen in diesem Tab, und mehr soll er auch nicht.
+    try{ sessionStorage.setItem('afu_neuanfang', '1'); }catch(e){}
+    location.reload();
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // ERSTES: Ist der Ordner frisch? Dann raeumt die Seite sich selbst
+    // auf und laedt neu - alles Weitere unten liefe sonst auf Daten,
+    // die es gleich nicht mehr gibt.
+    try{ if(await neuanfangPruefen()) return; }catch(e){}
+
     // Benutzer wiederherstellen
     try{
         const savedUser = localStorage.getItem('amateurfunk_currentUser');
@@ -10304,6 +11229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadHistory();
     loadErrors();
     loadDifficult();
+    loadCB();
     loadMastery();
     // Wacht darueber, dass niemand tagelang mit einer alten Seite arbeitet.
     try{ standWacheStarten(); }catch(e){}
@@ -10315,6 +11241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ setTimeout(()=>{ githubNachschauWachhalten(); }, 7000); }catch(e){}
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
+    try{ lebenszeichenStarten(); }catch(e){}
     loadLearnParts();
     lernFilterWiederherstellen();
     updateMasteryDisplay();
@@ -10506,9 +11433,12 @@ function printExam() {
         try { if (typeof stopTTS === 'function') stopTTS(); } catch(e){}
         try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}
 
+        const kl = (typeof klasseAktuell === 'function')
+            ? klasseAktuell() : { id:'n', name:'Klasse N', titel:'Klasse N · Basis' };
+
         const allQs = (typeof questionBank !== 'undefined' && questionBank.length ? questionBank : (window.questionBank || window.allQuestions || []));
         if (!allQs || allQs.length === 0) {
-            alert('Fragenkatalog noch nicht geladen. Bitte warte bis oben "Klasse N · 571 Fragen" steht.');
+            alert('Fragenkatalog noch nicht geladen. Bitte warte, bis oben "' + kl.name + ' · … Fragen" steht.');
             return;
         }
 
@@ -10521,13 +11451,71 @@ function printExam() {
             return a;
         }
 
-        const vPool = allQs.filter(q => q.part === 'vorschriften');
-        const bPool = allQs.filter(q => q.part === 'betrieb');
-        const tPool = allQs.filter(q => q.part === 'technik');
+        // ------------------------------------------------------------
+        //  WELCHE BOEGEN GEDRUCKT WERDEN
+        // ------------------------------------------------------------
+        //  Dietmar am 02.09.2026: "Bei Drucken ist nur die Klasse N
+        //  vorhanden. Hier wuensche ich mir alle Klassen. Eingestellt,
+        //  welche Fragen kommen, laeuft ueber die Hauptansicht bei Ziel
+        //  waehlen."
+        //
+        //  Bis eben standen hier drei feste Boegen - Vorschriften,
+        //  Betrieb, Technik - und der Technikbogen zog aus allem, was
+        //  q.part === 'technik' hat. Bei Klasse A waeren das 1374 Fragen
+        //  aus drei Katalogen in einem einzigen Bogen gewesen, und die
+        //  Boegen Technik E und A haette es gar nicht gegeben.
+        //
+        //  Gefragt wird jetzt dieselbe Stelle wie beim Simulator:
+        //  realisticTeile() sagt, welche Boegen zum eingestellten Ziel
+        //  gehoeren, realisticPool() gibt den passenden Fragentopf. Damit
+        //  drucken Simulator und Drucker dieselbe Pruefung - eine Regel,
+        //  eine Antwort.
+        const DRUCK_TEIL = {
+            vorschriften: { kurz:'V',  farbe:'farbe-gelb',  hex:'#FFFACD', papier:'Hellgelbes', amtlich:true,
+                            beschreibung:'25 Fragen aus Vorschriftenkatalog<br>Hilfsmittel: Anlage 1 AFuV, Bandplan-Auszüge' },
+            betrieb:      { kurz:'B',  farbe:'farbe-rosa',  hex:'#FFE4E1', papier:'Hellrosa',   amtlich:true,
+                            beschreibung:'25 Fragen Betriebliche Kenntnisse<br>Hilfsmittel: Bandplan-Auszüge 2m/70cm' },
+            technik_n:    { kurz:'TN', farbe:'farbe-blau',  hex:'#E0F6FF', papier:'Hellblaues', amtlich:true,
+                            beschreibung:'25 Fragen Technik Klasse N<br>Hilfsmittel: Formelsammlung + Entwurfspapier' },
+            technik_e:    { kurz:'TE', farbe:'farbe-gruen', hex:'#E8F8EC', papier:'Hellgrünes', amtlich:false,
+                            beschreibung:'25 Fragen Technik Klasse E<br>Hilfsmittel: Formelsammlung + Entwurfspapier' },
+            technik_a:    { kurz:'TA', farbe:'farbe-grau',  hex:'#F2F2F2', papier:'Hellgraues', amtlich:false,
+                            beschreibung:'25 Fragen Technik Klasse A<br>Hilfsmittel: Formelsammlung + Entwurfspapier' }
+        };
 
-        const selV = shuffleArray(vPool.length ? vPool : allQs).slice(0, 25);
-        const selB = shuffleArray(bPool.length ? bPool : allQs).slice(0, 25);
-        const selT = shuffleArray(tPool.length ? tPool : allQs).slice(0, 25);
+        // Auf dem Papier steht die Klasse, auf die geprueft wird - nicht
+        // der Weg dorthin. Wer von N auf A aufstockt, schreibt eine
+        // Pruefung der Klasse A, auch wenn im Trainer "N → A" steht.
+        let zielKlasse = 'N';
+        try {
+            const lage = (typeof KLASSE_LAGE !== 'undefined') ? KLASSE_LAGE[kl.id] : null;
+            if (lage && lage.ziel) zielKlasse = lage.ziel;
+        } catch (e) { /* dann bleibt es bei N */ }
+        const klasseText = 'KLASSE ' + zielKlasse;
+
+        const teile = (typeof realisticTeile === 'function') ? realisticTeile() : [];
+        if (!teile.length) {
+            alert('Für "' + (kl.titel || kl.name) + '" ist kein vollständiger Bogen da.\n\n'
+                + 'Ein Bogen braucht 25 Fragen. Bitte in der Hauptansicht unter '
+                + '"Ziel wählen" ein anderes Prüfungsziel einstellen.');
+            return;
+        }
+        const boegen = teile.map(t => {
+            const meta = (window.REALISTIC_PART_META || {})[t] || { name: t, zeit: 45*60 };
+            const d = DRUCK_TEIL[t] || DRUCK_TEIL.technik_n;
+            return {
+                titel:        String(meta.name).toUpperCase(),
+                kurz:         d.kurz,
+                farbe:        d.farbe,
+                hex:          d.hex,
+                papier:       d.papier,
+                amtlich:      d.amtlich,
+                beschreibung: d.beschreibung,
+                minuten:      Math.round((meta.zeit || 45*60) / 60),
+                istTechnik:   t.indexOf('technik') === 0,
+                fragen:       shuffleArray(realisticPool(t)).slice(0, 25)
+            };
+        });
 
         const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')+1);
         const bogenNr = 'B' + String(Math.floor(Math.random()*9000)+1000) + '-23';
@@ -10551,25 +11539,27 @@ function printExam() {
             return `<img src="${src}" alt="" style="max-width:100%; max-height:140px; display:block; margin:4px auto; border:1px solid #ccc; background:white;" onerror="this.style.border='2px solid red'; this.alt='Bild fehlt: '+this.src; this.style.minHeight='40px'; this.style.background='#fee';">`;
         }
 
-        function buildPartDeckblatt(partTitle, partDesc, colorClass, partLetter, farbeText) {
+        function buildPartDeckblatt(bogen) {
             return `
 <div class="page-break"></div>
 <div class="deckblatt">
     <div class="deckblatt-header"><span>Bundesnetzagentur - Referat 225 - Amateurfunk</span><span>Mitteilung Nr. 256/2023 - Ab 24.06.2024</span></div>
-    <div class="deckblatt-title">AMATEURFUNKPRÜFUNG - KLASSE N - ${partTitle}</div>
-    <div class="deckblatt-sub">Amtlicher Fragenkatalog 2023/2024 - 25 Fragen ${partTitle} - Bogen ${bogenNr}-${partLetter} - Datum ${datum} - Original ${farbeText} Papier</div>
-    
+    <div class="deckblatt-title">AMATEURFUNKPRÜFUNG - ${klasseText} - ${bogen.titel}</div>
+    <div class="deckblatt-sub">Amtlicher Fragenkatalog 2023/2024 - 25 Fragen ${bogen.titel} - Bogen ${bogenNr}-${bogen.kurz} - Datum ${datum} - ${bogen.amtlich ? 'Original ' + bogen.papier + ' Papier' : bogen.papier + ' Papier zur Unterscheidung'}</div>
+
     <div class="deckblatt-grid" style="grid-template-columns: 1fr;">
-        <div class="deckblatt-box ${colorClass}" style="min-height:80px;">
-            <b>${partTitle} - ${farbeText} PAPIER</b>
-            ${partDesc}<br>
-            Prüfungsdauer: 45 Minuten<br>
-            Originalfarbe: ${farbeText} (wie im Prüfungsraum 2023)
+        <div class="deckblatt-box ${bogen.farbe}" style="min-height:80px;">
+            <b>${bogen.titel} - ${bogen.papier.toUpperCase()} PAPIER</b>
+            ${bogen.beschreibung}<br>
+            Prüfungsdauer: ${bogen.minuten} Minuten<br>
+            ${bogen.amtlich
+                ? 'Originalfarbe: ' + bogen.papier + ' (wie im Prüfungsraum 2023)'
+                : 'Farbe hier nur zum Auseinanderhalten der Bögen'}
         </div>
     </div>
 
     <div class="wichtig-box">
-        <h4>⚠️ WICHTIG: Bestehensgrenze & Mündliche Nachprüfung - Amtlich §7.3</h4>
+        <h4>⚠️ WICHTIG: Bestehensgrenze &amp; Mündliche Nachprüfung - Amtlich §7.3</h4>
         <b>Bestehensgrenze:</b> Sie müssen in diesem Teil von 25 Fragen mindestens <b>19 richtig beantworten</b> (76%).<br>
         <b>Mündliche Nachprüfung:</b> Haben Sie in diesem Teil nur <b>17 oder 18 Fragen richtig beantwortet</b>, ist der Teil nicht sofort endgültig verloren, sondern es kann eine <b>mündliche Nachprüfung</b> erfolgen.<br>
         <b>Direkt nicht bestanden:</b> Bei weniger als <b>17 richtigen Antworten</b> ist der Prüfungsteil direkt nicht bestanden und muss wiederholt werden.<br>
@@ -10578,50 +11568,47 @@ function printExam() {
 
     <div class="ablauf-box">
         <b>Prüfungsablauf - Amtlich:</b> Zu diesem Fragebogen wird ein Antwortbogen ausgeteilt. Fragebogen und Formelsammlung dürfen nicht beschriftet werden. Antwortbogen, Fragebogen und Entwurfspapier sind nach Ablauf abzugeben.<br>
-        <b>Erlaubte Hilfsmittel:</b> Stift, nicht programmierbarer Taschenrechner, Anlage 1 AFuV, Bandplan-Auszüge${partTitle==='TECHNIK' ? ', Formelsammlung (nur Technik)' : ''}, Entwurfspapier.<br>
+        <b>Erlaubte Hilfsmittel:</b> Stift, nicht programmierbarer Taschenrechner, Anlage 1 AFuV, Bandplan-Auszüge${bogen.istTechnik ? ', Formelsammlung (nur Technik)' : ''}, Entwurfspapier.<br>
         <b>Wertung:</b> Für jede richtig beantwortete Frage 1 Punkt. 19/25 zum Bestehen. Bei 17-18/25 mündliche Nachprüfung möglich.
     </div>
-    <div class="footer">Deckblatt - ${partTitle} - Eigenes Blatt - Bogen ${bogenNr}-${partLetter} - Mitteilung 256/2023</div>
+    <div class="footer">Deckblatt - ${bogen.titel} - Eigenes Blatt - Bogen ${bogenNr}-${bogen.kurz} - Mitteilung 256/2023</div>
 </div>`;
         }
 
-        
-        
         // V16.3: Deckblatt eigenes Blatt, erstes ohne page-break
         let isFirstDeckblatt = true;
-        function buildDeckblattWrapper(...args){
-          let h = buildPartDeckblatt(...args);
+        function buildDeckblattWrapper(bogen){
+          let h = buildPartDeckblatt(bogen);
           if(isFirstDeckblatt){ isFirstDeckblatt=false; h = h.replace('<div class="page-break"></div>', ''); }
           return h;
         }
 
-        function buildAntwortbogen(partTitle, partLetter) {
+        function buildAntwortbogen(bogen) {
             let rows = '';
             for (let i = 1; i <= 25; i++) {
                 rows += `<tr><td class="num">${i}</td><td class="box"></td><td class="box"></td><td class="box"></td><td class="box"></td></tr>`;
             }
-            const farbeText = partTitle==='TECHNIK' ? 'Hellblaues' : partTitle==='BETRIEB' ? 'Hellrosa' : 'Hellgelbes';
             return `
 <div class="page-break"></div>
 <div class="antwortbogen">
-    <div class="antwortbogen-title">ANTWORTBOGEN - KLASSE N - ERSTES BLATT NACH DECKBLATT - ${partTitle}</div>
+    <div class="antwortbogen-title">ANTWORTBOGEN - ${klasseText} - ERSTES BLATT NACH DECKBLATT - ${bogen.titel}</div>
     <div class="antwortbogen-body">
         <div class="bogen-fields">
-            <div class="row"><label>BOGEN:</label><div class="line" style="font-family:Calibri, monospace; font-weight:bold;">${bogenNr}-${partLetter}</div></div>
+            <div class="row"><label>BOGEN:</label><div class="line" style="font-family:Calibri, monospace; font-weight:bold;">${bogenNr}-${bogen.kurz}</div></div>
             <div class="row"><label>NAME:</label><div class="line"></div></div>
             <div class="row"><label>VORNAME:</label><div class="line"></div></div>
             <div class="row"><label>GEBURT:</label><div class="line"></div></div>
             <div class="row"><label>DATUM:</label><div class="line">${datum}</div></div>
             <div class="row"><label>ORT:</label><div class="line"></div></div>
             <div class="row"><label>UNTERSCHRIFT:</label><div class="line"></div></div>
-            <div style="margin-top:10px; padding:8px; border:2px solid #000; background:${partTitle==='TECHNIK' ? '#E0F6FF' : partTitle==='BETRIEB' ? '#FFE4E1' : '#FFFACD'}; font-weight:bold; font-size:11pt; text-align:center; text-transform:uppercase;">
-                ${partTitle}<br><span style="font-size:9pt; font-weight:normal; text-transform:none;">${farbeText} Papier - 25 Fragen - 45 Min - 19/25 zum Bestehen</span>
+            <div style="margin-top:10px; padding:8px; border:2px solid #000; background:${bogen.hex}; font-weight:bold; font-size:11pt; text-align:center; text-transform:uppercase;">
+                ${bogen.titel}<br><span style="font-size:9pt; font-weight:normal; text-transform:none;">${bogen.papier} Papier - 25 Fragen - ${bogen.minuten} Min - 19/25 zum Bestehen</span>
             </div>
             <div class="bogen-hinweis" style="margin-top:10px; font-size:9pt; line-height:1.35;">
-                <b>Dieser Bogen gehört zu: ${partTitle}</b><br>
-                Prüfungsdauer: 45 Minuten<br>
+                <b>Dieser Bogen gehört zu: ${bogen.titel}</b><br>
+                Prüfungsdauer: ${bogen.minuten} Minuten<br>
                 Benötigt: 19/25 zum Bestehen<br>
-                Farbe: ${farbeText}<br><br>
+                Farbe: ${bogen.papier}<br><br>
                 19/25 bestehen,<br>17-18 Nachprüfung,<br>&lt;17 nicht bestanden.
             </div>
         </div>
@@ -10632,16 +11619,16 @@ function printExam() {
             </table>
         </div>
     </div>
-    <div class="footer">Antwortbogen ${partTitle} - ERSTES BLATT NACH DECKBLATT - 25 Fragen - Bogen ${bogenNr}-${partLetter}</div>
+    <div class="footer">Antwortbogen ${bogen.titel} - ERSTES BLATT NACH DECKBLATT - 25 Fragen - Bogen ${bogenNr}-${bogen.kurz}</div>
 </div>`;
         }
 
-
-        function buildFragenBlock(questions, partTitle, partLetter) {
+        function buildFragenBlock(bogen) {
+            const questions = bogen.fragen, partTitle = bogen.titel, partLetter = bogen.kurz;
             let html = `
 <div class="page-break"></div>
 <div style="display:flex; justify-content:space-between; font-size:8pt; font-family:Calibri, Arial, sans-serif; border-bottom:1px solid #000; padding-bottom:3px; margin-bottom:8px;">
-    <span>BNetzA - Klasse N - ${partTitle} - Katalog Stand März 2024 - Bogen ${bogenNr}-${partLetter}</span><span>25 Fragen - ${partTitle}</span>
+    <span>BNetzA - ${klasseText} - ${partTitle} - Katalog Stand März 2024 - Bogen ${bogenNr}-${partLetter}</span><span>25 Fragen - ${partTitle}</span>
 </div>
 `;
             questions.forEach((q, idx) => {
@@ -10651,7 +11638,7 @@ function printExam() {
                 const allTextEmpty = q.options.every(o => !o.text || o.text.trim() === '');
 
                 html += `<div class="question-block">
-                <div class="q-id">${q.id} - Frage ${num} [${{vorschriften:'V', betrieb:'B', technik:'N'}[q.part] || '?'}]</div>
+                <div class="q-id">${q.id} - Frage ${num} [${partLetter}]</div>
                 <div class="q-text">${num}. ${q.text}</div>`;
 
                 if (svgHtml && !hasOptImages) {
@@ -10687,7 +11674,8 @@ function printExam() {
             return html;
         }
 
-        function buildLoesung(questions, partTitle, partLetter, colorHex) {
+        function buildLoesung(bogen) {
+            const questions = bogen.fragen, partTitle = bogen.titel, partLetter = bogen.kurz;
             let grid = '';
             questions.forEach((q, idx) => {
                 const num = idx + 1;
@@ -10697,7 +11685,7 @@ function printExam() {
             const listStr = questions.map((q,i)=> (i+1)+':'+getCorrectLetter(q)).join(', ');
             return `
 <div class="page-break"></div>
-<div class="loesung-header" style="background:${colorHex==='farbe-gelb' ? '#000' : '#000'}">
+<div class="loesung-header">
     <div style="font-size:12pt; font-weight:bold; text-transform:uppercase;">Lösungsschablone - ${partTitle}</div>
     <div style="font-size:8pt; margin-top:2px;">Bogen ${bogenNr}-${partLetter} - Datum ${datum} - 25 Fragen - Zum Abtrennen</div>
 </div>
@@ -10717,7 +11705,7 @@ ${grid}
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>BNetzA Prüfung Klasse N - 3x25 Realistisch</title>
+<title>BNetzA Prüfung ${klasseText} - ${boegen.length}x25 Realistisch</title>
 <style>
     @page { size: A4; margin: 12mm 12mm 12mm 12mm; }
     body { font-family: Calibri, "Calibri 2023", "Segoe UI", Arial, sans-serif; font-size: 11.5pt; line-height: 1.4; color: #000; background: #fff; }
@@ -10733,6 +11721,7 @@ ${grid}
     .farbe-gelb { background: #FFFACD; }
     .farbe-rosa { background: #FFE4E1; }
     .farbe-blau { background: #E0F6FF; }
+    .farbe-gruen { background: #E8F8EC; }
     .farbe-grau { background: #f2f2f2; }
     .wichtig-box { border: 2.5px solid #000; margin: 0; padding: 10px; background: #fff; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; line-height: 1.45; }
     .wichtig-box h4 { margin: 0 0 6px 0; font-size: 11pt; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; }
@@ -10780,23 +11769,14 @@ ${grid}
 <body>
 `;
 
-        // TEIL 1: VORSCHRIFTEN
-        htmlContent += buildDeckblattWrapper('VORSCHRIFTEN', '25 Fragen aus Vorschriftenkatalog<br>Hilfsmittel: Anlage 1 AFuV, Bandplan-Auszüge', 'farbe-gelb', 'V', 'Hellgelbes');
-        htmlContent += buildAntwortbogen('VORSCHRIFTEN', 'V');
-        htmlContent += buildFragenBlock(selV, 'VORSCHRIFTEN', 'V');
-        htmlContent += buildLoesung(selV, 'VORSCHRIFTEN', 'V', 'farbe-gelb');
-
-        // TEIL 2: BETRIEB
-        htmlContent += buildDeckblattWrapper('BETRIEB', '25 Fragen Betriebliche Kenntnisse<br>Hilfsmittel: Bandplan-Auszüge 2m/70cm', 'farbe-rosa', 'B', 'Hellrosa');
-        htmlContent += buildAntwortbogen('BETRIEB', 'B');
-        htmlContent += buildFragenBlock(selB, 'BETRIEB', 'B');
-        htmlContent += buildLoesung(selB, 'BETRIEB', 'B', 'farbe-rosa');
-
-        // TEIL 3: TECHNIK
-        htmlContent += buildDeckblattWrapper('TECHNIK', '25 Fragen Technik Klasse N<br>Hilfsmittel: Formelsammlung + Entwurfspapier', 'farbe-blau', 'N', 'Hellblaues');
-        htmlContent += buildAntwortbogen('TECHNIK', 'N');
-        htmlContent += buildFragenBlock(selT, 'TECHNIK', 'N');
-                htmlContent += buildLoesung(selT, 'TECHNIK', 'N', 'farbe-blau');
+        // Ein Durchgang je Bogen, in der Reihenfolge der Pruefung:
+        // erst das Nichttechnische, dann Technik von unten nach oben.
+        for (const bogen of boegen) {
+            htmlContent += buildDeckblattWrapper(bogen);
+            htmlContent += buildAntwortbogen(bogen);
+            htmlContent += buildFragenBlock(bogen);
+            htmlContent += buildLoesung(bogen);
+        }
 
         htmlContent += `
 <script>
@@ -12632,6 +13612,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
       <div style="background:#fff5f0; border:1px solid #ffc0b0; border-radius:12px; padding:0.75rem 0.9rem; margin-bottom:0.8rem;">
         <div style="font-weight:700; font-size:0.8rem; color:#a04422; margin-bottom:4px;"><i class="fas fa-trash-alt"></i> Wird unwiderruflich gelöscht (für <span id="fullResetUserLabel">diesen Benutzer</span>):</div>
         <div style="font-size:0.82rem; color:var(--ink); line-height:1.6;">
+          • Prüfungsverlauf (alle bisherigen Ergebnisse)<br>
           • Fehlerliste (alle gemerkten falschen Antworten)<br>
           • Lernbedarf (als "schwierig" markierte Fragen)<br>
           • Lernfortschritt (als "beherrscht" markierte Fragen)
@@ -12640,8 +13621,8 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
       <div style="background:#f0f7ff; border:1px solid #c2d6f0; border-radius:12px; padding:0.75rem 0.9rem; margin-bottom:0.8rem;">
         <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-shield-alt" style="color:#1f9d55;"></i> Bleibt erhalten:</div>
         <div style="font-size:0.82rem; color:var(--ink); line-height:1.6;">
-          • Prüfungsverlauf (bisherige Prüfungsergebnisse)<br>
-          • Die anderen beiden Benutzer
+          • Die anderen beiden Benutzer<br>
+          • Benutzernamen, Prüfungstermin und Einstellungen
         </div>
       </div>
       <div style="font-size:0.8rem; color:#a5281b; font-weight:700; background:#fff5f0; border-radius:8px; padding:0.5rem 0.7rem;">
@@ -13013,8 +13994,13 @@ function teilAuswertung() {
         if (!t) return;
         t.gesamt++;
         const m = masteryData[q.id];
-        if (!m) { t.unberuehrt++; return; }
-        if (m.mastered) t.gelernt++;
+        // Per CB angerechnete Fragen haben keinen Eintrag in masteryData
+        // und waeren hier sonst als "unberuehrt" durchgefallen.
+        if (!m) {
+            if (cbAngerechnet(q.id)) t.gelernt++; else t.unberuehrt++;
+            return;
+        }
+        if (m.mastered || cbAngerechnet(q.id)) t.gelernt++;
         t.richtig += (m.totalCorrect || 0);
         t.falsch += (m.totalWrong || 0);
     });

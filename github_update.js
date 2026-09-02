@@ -131,6 +131,52 @@ function einrichten(umgebung) {
     } catch (e) { return false; }
   }
 
+  // ================================================================
+  //  WELCHE DATEIEN UEBERHAUPT ABGEGLICHEN WERDEN
+  // ================================================================
+  //  Dietmar am 02.09.2026: "Wenn ich Dateien auf GitHub aendere oder
+  //  hinzufuege, muss das einen Abgleich 'Update' geben."
+  //
+  //  Bis dahin stand im Server eine feste Liste von 16 Dateinamen. Was
+  //  dort nicht stand, wurde nie abgeglichen - eine neu hinzugefuegte
+  //  Datei bei GitHub war fuer den Trainer unsichtbar. Jetzt wird der
+  //  Baum bei GitHub durchgegangen und HIER entschieden, was mitkommen
+  //  darf.
+  //
+  //  UMGEKEHRTE BEWEISLAST: Erlaubt ist nur, was auf der Liste der
+  //  ungefaehrlichen Endungen steht. Alles andere bleibt draussen -
+  //  auch das, was heute noch niemand kennt. Eine Verbotsliste waere
+  //  hier falsch herum: Wer eine Endung vergisst, hat ein Loch.
+  //
+  //  Ausfuehrbares kommt NIE ueber diesen Weg. .bat, .vbs, .ps1, .exe,
+  //  .cmd, .py, .sh und die Bauanleitung .iss fehlen mit Absicht. Der
+  //  Trainer soll sich Fragen und Seiten nachziehen koennen, keine
+  //  Programme, die Windows dann ausfuehrt.
+  const ABGLEICH_ENDUNGEN = [
+    '.json', '.js', '.html', '.css', '.md', '.txt',
+    '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
+    '.pdf', '.woff2', '.woff', '.mp3', '.wav'
+  ];
+  // Ordner, die nie von aussen beschrieben werden. data\ und backup\ sind
+  // die Lernstaende, Hoerbuch\ die gerechneten MP3s, release\ die fertigen
+  // Setups - alles Eigentum des Rechners, auf dem der Trainer laeuft.
+  const ABGLEICH_TABU = ['data/', 'backup/', 'hoerbuch/', 'node_modules/',
+                         'release/', 'tts_cache/', '.git', 'bilder/'];
+
+  function abgleichbar(pfad) {
+    const p = String(pfad || '').replace(/\\/g, '/');
+    if (!p || p.length > 200) return false;
+    // Kein Ausbrechen aus dem Ordner. Der Pfad kommt aus einer fremden
+    // Quelle - "../../Windows/System32/..." darf gar nicht erst
+    // weitergereicht werden.
+    if (p.startsWith('/') || /^[A-Za-z]:/.test(p) || p.split('/').includes('..')) return false;
+    const klein = p.toLowerCase();
+    if (ABGLEICH_TABU.some(t => klein.startsWith(t))) return false;
+    const punkt = klein.lastIndexOf('.');
+    if (punkt < 0) return false;
+    return ABGLEICH_ENDUNGEN.includes(klein.slice(punkt));
+  }
+
   function hierFingerabdruck(name) {
     try { return blobSha(fs.readFileSync(path.join(WURZEL, name))); }
     catch (e) { return null; }
@@ -146,10 +192,10 @@ function einrichten(umgebung) {
     const ref = await holen(`${API}/repos/${KONTO}/${REPO}/git/ref/heads/${ZWEIG}`);
     const commit = ref && ref.object && ref.object.sha;
     if (!commit) throw new Error('GitHub nennt keinen Stand fuer ' + ZWEIG);
-    const baum = await holen(`${API}/repos/${KONTO}/${REPO}/git/trees/${commit}`);
+    const baum = await holen(`${API}/repos/${KONTO}/${REPO}/git/trees/${commit}?recursive=1`);
     const karte = {};
     for (const e of (baum.tree || [])) {
-      if (e.type === 'blob' && dateien.includes(e.path)) karte[e.path] = { sha: e.sha, groesse: e.size };
+      if (e.type === 'blob' && abgleichbar(e.path)) karte[e.path] = { sha: e.sha, groesse: e.size };
     }
     return { commit, karte };
   }
@@ -159,7 +205,10 @@ function einrichten(umgebung) {
     const { commit, karte } = await fernStand();
     const merk = standLesen();
     const eintraege = [];
-    for (const name of dateien) {
+    // Durchgegangen wird jetzt, was BEI GITHUB liegt - nicht mehr eine
+    // Liste im Programm. Nur so faellt eine dort NEU hinzugekommene
+    // Datei ueberhaupt auf.
+    for (const name of Object.keys(karte)) {
       const fern = karte[name];
       if (!fern) continue;                       // liegt nicht bei GitHub
       const hier = hierFingerabdruck(name);
@@ -192,14 +241,19 @@ function einrichten(umgebung) {
   // ---- Holen und schreiben -----------------------------------------
   async function anwenden(commit, namen, programmBestaetigt) {
     if (!commit || !/^[0-9a-f]{7,40}$/i.test(commit)) throw new Error('Kein gueltiger Stand angegeben');
-    const erlaubt = namen.filter(n => dateien.includes(n));
+    // Frueher: nur was in der festen Liste stand. Jetzt: was die
+    // Endungs- und Ordnerpruefung durchlaesst. Die Liste "dateien" aus
+    // dem Server gilt weiterhin zusaetzlich - was dort steht, ist auf
+    // jeden Fall erlaubt, auch wenn sie einmal eine Endung enthaelt,
+    // die hier nicht auf der Liste steht.
+    const erlaubt = namen.filter(n => abgleichbar(n) || dateien.includes(n));
     if (!erlaubt.length) throw new Error('Keine gueltige Datei angefragt');
     if (erlaubt.some(n => kategorie(n) === 'programm') && programmBestaetigt !== true)
       throw new Error('Fuer Programmdateien fehlt die ausdrueckliche Bestaetigung');
 
     // Noch einmal nachsehen, was bei GitHub steht. Zwischen dem Pruefen
     // und dem Klick koennen Minuten liegen.
-    const baum = await holen(`${API}/repos/${KONTO}/${REPO}/git/trees/${commit}`);
+    const baum = await holen(`${API}/repos/${KONTO}/${REPO}/git/trees/${commit}?recursive=1`);
     const soll = {};
     for (const e of (baum.tree || [])) if (e.type === 'blob') soll[e.path] = e.sha;
 
@@ -237,8 +291,20 @@ function einrichten(umgebung) {
         if (bekommen !== erwartet)
           throw new Error('Inhalt passt nicht zu dem, was GitHub angekuendigt hat (unvollstaendig?)');
 
+        // Zweiter Riegel, kurz vor dem Schreiben: Was hier ankommt, ist
+        // zwischen Pruefung und Klick durch mehrere Haende gegangen.
+        if (!abgleichbar(name)) throw new Error('Diese Datei wird nicht abgeglichen');
         const ziel = path.join(WURZEL, name);
-        if (fs.existsSync(ziel)) fs.copyFileSync(ziel, path.join(sicherung, name));
+        // Seit dem 02.09.2026 koennen auch Dateien aus Unterordnern
+        // kommen (svgs\, formelsammlung\, fontawesome\). Ohne diese
+        // zwei Zeilen scheitert das Schreiben an einem Ordner, den es
+        // hier noch nicht gibt.
+        fs.mkdirSync(path.dirname(ziel), { recursive: true });
+        if (fs.existsSync(ziel)) {
+          const sicherZiel = path.join(sicherung, name);
+          fs.mkdirSync(path.dirname(sicherZiel), { recursive: true });
+          fs.copyFileSync(ziel, sicherZiel);
+        }
         const tmp = ziel + '.github-tmp';
         fs.writeFileSync(tmp, neu);
         fs.renameSync(tmp, ziel);

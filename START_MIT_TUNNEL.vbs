@@ -22,7 +22,7 @@
 '  Zum Beenden: STOP.bat
 ' ================================================================
 Option Explicit
-Dim WshShell, fso, ordner, node, antwort
+Dim WshShell, fso, ordner, node, antwort, code, i
 
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
@@ -54,12 +54,32 @@ If PortBelegt() Then
       WshShell.Run "http://localhost:3000/", 1, False
       WScript.Quit 0
     End If
-    WshShell.Run "taskkill /f /im node.exe", 0, True
-    WScript.Sleep 2000
+    ' taskkill meldet 0, wenn es etwas beendet hat, und 128, wenn gar
+    ' nichts zu beenden war. Alles andere heisst: Windows hat sich
+    ' geweigert - das kommt vor, wenn der alte Server mit hoeheren
+    ' Rechten laeuft, etwa weil er aus C:\Program Files gestartet wurde.
+    code = WshShell.Run("taskkill /f /im node.exe", 0, True)
+    ' Und dann Geduld: Zwischen "Prozess beendet" und "Port wieder frei"
+    ' vergehen unter Windows durchaus ein paar Sekunden. Vorher stand hier
+    ' ein starres WScript.Sleep 2000 - zu kurz, und die Meldung "Port 3000
+    ' ist immer noch belegt" kam, obwohl gleich darauf alles frei war.
+    For i = 1 To 10
+      WScript.Sleep 1000
+      If Not PortBelegt() Then Exit For
+    Next
     If PortBelegt() Then
-      MsgBox "Port 3000 ist immer noch belegt." & vbCrLf & vbCrLf & _
-             "Bitte einmal STOP.bat ausfuehren, kurz warten und" & vbCrLf & _
-             "es dann noch einmal versuchen.", 48, "Amateurfunk-Trainer"
+      If code <> 0 And code <> 128 Then
+        MsgBox "Der alte Trainer liess sich nicht beenden." & vbCrLf & vbCrLf & _
+               "Windows hat das Beenden abgelehnt (Code " & code & "). Das" & vbCrLf & _
+               "passiert, wenn er mit hoeheren Rechten laeuft - zum Beispiel," & vbCrLf & _
+               "weil er aus C:\Program Files heraus gestartet wurde." & vbCrLf & vbCrLf & _
+               "Bitte STOP.bat mit Rechtsklick als Administrator ausfuehren" & vbCrLf & _
+               "und es dann noch einmal versuchen.", 48, "Amateurfunk-Trainer"
+      Else
+        MsgBox "Port 3000 ist auch nach zehn Sekunden noch belegt." & vbCrLf & vbCrLf & _
+               "Dort haengt etwas, das sich nicht beenden liess." & vbCrLf & _
+               "Ein Neustart von Windows raeumt das sicher auf.", 48, "Amateurfunk-Trainer"
+      End If
       WScript.Quit 1
     End If
   Else

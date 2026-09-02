@@ -524,6 +524,11 @@ function getDefaultUserdata(){
     mastery: { user1: {}, user2: {}, user3: {} },
     difficult: { user1: {}, user2: {}, user3: {} },
     errors: { user1: [], user2: [], user3: [] },
+    // CB-Einstieg (02.09.2026): je Benutzer { modus:bool, aus:[IDs] }.
+    // Ohne dieses Feld wuerde normalisiereUserdata() es beim ersten
+    // Speichern stillschweigend wegwerfen - der Haken waere nach jedem
+    // Neustart wieder aus.
+    cb: { user1: {}, user2: {}, user3: {} },
     version: 2,
     updatedAt: new Date().toISOString()
   };
@@ -541,7 +546,8 @@ function normalisiereUserdata(roh){
     ['examHistory', 'array'],
     ['errors',      'array'],
     ['mastery',     'objekt'],
-    ['difficult',   'objekt']
+    ['difficult',   'objekt'],
+    ['cb',          'objekt']
   ];
   for(const [feld, art] of felder){
     if(!istObjekt(roh[feld])) continue;                 // falscher Typ -> Standard behalten
@@ -628,6 +634,35 @@ function saveUserdataFile(data){
     return false;
   }
 }
+// ================================================================
+//  NEUANFANG NACH EINER NEUINSTALLATION
+// ================================================================
+//  Dietmar am 01.09.2026, nachdem er den Ordner von Hand geloescht und
+//  neu installiert hatte:
+//
+//    "Es sind meine kompletten Verlaeufe in Benutzer und alles andere
+//     ist auch vorhanden. Das darf so nicht sein. Bei einer neuen
+//     Installation muss alles weg sein."
+//
+//  Er hatte recht, und die Ursache liegt nicht im Ordner. Der Verlauf
+//  steht an ZWEI Stellen: hier in data\userdata\ - und im Browser, im
+//  localStorage. Der Browser haengt aber nicht am Programmordner,
+//  sondern an der ADRESSE localhost:3000. Die ist nach einer
+//  Neuinstallation dieselbe wie vorher. Also stand beim ersten Aufruf
+//  wieder alles da, und die Seite hat es brav wieder hochgeladen.
+//
+//  Die Datei ist der Beweis dafuer, dass hier schon einmal gelernt
+//  wurde. Fehlt sie beim Start, ist das ein frischer Ordner - und dann
+//  bekommt die Seite einmal den Auftrag, auch ihre Seite aufzuraeumen.
+//
+//  Der Merker lebt nur in diesem Serverlauf. Beim naechsten Start ist
+//  die Datei da (loadUserdataFile legt sie an), und die Sache ist von
+//  selbst erledigt - sie kann sich nicht wiederholen.
+const NEUANFANG_NOETIG =
+  !fs.existsSync(USERDATA_FILE) && !fs.existsSync(USERDATA_FILE + '.bak');
+let neuanfangOffen = NEUANFANG_NOETIG;   // Auskunft: genau einmal "ja"
+if(NEUANFANG_NOETIG) console.log('[NEUANFANG] Frischer Ordner - der Browser wird einmal aufgeraeumt.');
+
 ensureUserdataDir();
 loadUserdataFile();
 
@@ -787,6 +822,27 @@ app.use(cors({
   credentials: false
 }));
 
+// ---- Neuanfang: war der Ordner frisch? --------------------------
+//
+// Eine einzige Auskunft, mehr braucht es nicht. Der erste Entwurf hatte
+// noch eine Gegenrichtung, ueber die die Seite ihren alten Stand als
+// Sicherungsdatei ablieferte. Dietmar wollte das nicht: "Bei einer
+// neuen Installation muss alles weg sein" heisst auch, dass hinterher
+// kein Rest im Ordner liegt. Der Weg ist ersatzlos raus.
+//
+// localOnly: Ein Gast im Gruppenraum darf diese Antwort nie zu sehen
+// bekommen. Sonst wuerde die frische Installation des Gastgebers dem
+// Gast den Browser leerraeumen.
+app.get('/api/neuanfang', localOnly, (req,res)=>{
+  // Beantwortet ist beantwortet. Der Merker faellt HIER, nicht erst bei
+  // der Quittung: Bricht die Seite mitten im Aufraeumen ab, passiert
+  // beim naechsten Laden lieber gar nichts, als dass sie es noch einmal
+  // versucht - und dabei die Arbeit von zwischendurch mitnimmt.
+  const noetig = neuanfangOffen;
+  neuanfangOffen = false;
+  res.json({ noetig });
+});
+
 // FIX Q9: ausdrueckliches Body-Limit statt sich auf den Standard zu verlassen
 app.use(express.json({limit:'256kb'}));
 
@@ -940,6 +996,9 @@ function isLocalRequest(req){
 // doch nur der Schutz, der lautlos seine Arbeit tat.
 const ERWARTET_ABGEWIESEN = [
   /^\/api\/userdata/,
+  // Jede Seite fragt beim Laden einmal nach - auch die eines Gastes im
+  // Gruppenraum. Der bekommt ein Nein, und das ist genau richtig so.
+  /^\/api\/neuanfang/,
   /^\/api\/abgleich\//,
   /^\/api\/github\//,
   /^\/api\/tunnel-status/
@@ -973,12 +1032,13 @@ app.get('/api/userdata', localOnly, (req,res)=>{
 });
 
 // FIX W9: Zuordnung Feldname -> erwarteter Typ, fuer die Validierung unten.
-const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt' };
+const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt', cb:'objekt' };
 const TYP_ALIAS = {
   history:'examHistory', examHistory:'examHistory',
   mastery:'mastery',     lernfortschritt:'mastery',
   difficult:'difficult', lernbedarf:'difficult',
-  errors:'errors'
+  errors:'errors',
+  cb:'cb',               cbEinstieg:'cb'
 };
 function typPasst(wert, art){
   return art === 'array' ? Array.isArray(wert) : istObjekt(wert);
@@ -1035,6 +1095,7 @@ app.post('/api/userdata', localOnly, (req,res)=>{
         mastery:     incoming.mastery     || current.mastery,
         difficult:   incoming.difficult   || current.difficult,
         errors:      incoming.errors      || current.errors,
+        cb:          incoming.cb          || current.cb,
         version: 2,
         updatedAt: new Date().toISOString()
       };
@@ -1120,8 +1181,9 @@ app.get('/api/tts-voices',(req,res)=>{ const v=listVoices(); res.json({voices:v,
 // Er bekommt genau das, was er braucht (Piper, Stimmenliste, Katalog),
 // und nichts weiter; er kennt weder Gruppenraeume noch Lernstaende.
 // ================================================================
+let hoerbuchModul = null;
 try{
-  require('./hoerbuch').einrichten({
+  hoerbuchModul = require('./hoerbuch').einrichten({
     app, localOnly, projektOrdner: __dirname,
     PIPER_DIR, findPiper, listVoices, expandTTS, ladeFragen
   });
@@ -1722,10 +1784,29 @@ const ABGLEICH_BROWSER  = ['Index.html', 'duo.js', 'klick-sound.js', 'tts-expand
 const ABGLEICH_PROGRAMM = ['Server.js', 'hoerbuch.js', 'lame.js'];
 const ABGLEICH_ALLE     = [...ABGLEICH_DATEN, ...ABGLEICH_BROWSER, ...ABGLEICH_PROGRAMM];
 
+// Seit dem 02.09.2026 wird nicht mehr nur diese Liste abgeglichen,
+// sondern alles, was bei GitHub liegt und die Pruefung in
+// github_update.js besteht. Die Einteilung muss deshalb auch fuer
+// Dateien stimmen, die hier oben nicht stehen - sonst faellt jede neue
+// Datei in den Zweig "programm" und verlangt eine Bestaetigung samt
+// Neustart, auch wenn es nur ein Bild ist.
+//
+// Im Zweifel gilt eine .js als Programmdatei: Sie koennte von Server.js
+// geladen werden und liefe dann mit vollen Rechten. Lieber einmal zu
+// viel nachgefragt als einmal zu wenig.
+const ABGLEICH_BROWSER_JS = ['duo.js', 'klick-sound.js', 'video_map_embed.js', 'svg-list.json'];
+
 function abgleichKategorie(name){
   if(ABGLEICH_DATEN.includes(name))   return 'daten';
   if(ABGLEICH_BROWSER.includes(name)) return 'browser';
-  return 'programm';
+  if(ABGLEICH_PROGRAMM.includes(name)) return 'programm';
+
+  const klein = String(name || '').toLowerCase();
+  const datei  = klein.split('/').pop();
+  if(ABGLEICH_BROWSER_JS.includes(datei))         return 'browser';
+  if(klein.endsWith('.js'))                       return 'programm';
+  if(klein.endsWith('.html') || klein.endsWith('.css')) return 'browser';
+  return 'daten';
 }
 
 // Fingerabdruck je Datei: Groesse und Inhalts-Hash. Der Zeitstempel taugt
@@ -2088,6 +2169,41 @@ app.get('/api/lan-info',(req,res)=>{
     port: PORT,
     empfehlung: adressen.length ? `http://${adressen[0].ip}:${PORT}` : null
   });
+});
+
+// ================================================================
+//  WER SIEHT NOCH HIN?
+// ================================================================
+//  Dietmar am 01.09.2026: "Beim Schliessen von dem Browser bleibt der
+//  Server am laufen."
+//
+//  Genau daher kamen die Fenster "Auf Port 3000 laeuft bereits ein
+//  Trainer": Jeder Start hinterliess einen Server, der nie wieder
+//  aufhoerte. Nach ein paar Tagen haengen mehrere davon im Speicher,
+//  und der aus dem NEUEN Ordner kommt nicht mehr an den Port.
+//
+//  Die Seite meldet sich deshalb alle zehn Sekunden, und beim
+//  Schliessen ausdruecklich ab. Meldet sich eine Minute lang niemand
+//  mehr, macht der Server Feierabend.
+//
+//  Absichtlich zaehlt JEDER Zuschauer mit, auch Gaeste im Gruppenraum:
+//  Wer als Gastgeber sein Fenster zumacht, waehrend die Gruppe noch
+//  uebt, soll den anderen nicht den Server unter den Fuessen wegziehen.
+// ================================================================
+const zuschauer = new Map();   // Kennung -> zuletzt gesehen
+
+app.get('/api/lebenszeichen',(req,res)=>{
+  const id = String(req.query.id || '').slice(0, 40);
+  if(id) zuschauer.set(id, Date.now());
+  res.json({ok:true});
+});
+
+// sendBeacon schickt POST. Beim Schliessen der Seite ist das der einzige
+// Weg, der noch ankommt - ein normales fetch() wird abgebrochen.
+app.post('/api/tschuess',(req,res)=>{
+  const id = String(req.query.id || '').slice(0, 40);
+  if(id) zuschauer.delete(id);
+  res.json({ok:true});
 });
 
 app.get('/api/tunnel-status',(req,res)=>{
@@ -3210,6 +3326,47 @@ function browserOeffnen(url){
   }
 }
 
+// ================================================================
+//  FEIERABEND, WENN NIEMAND MEHR HINSIEHT
+// ================================================================
+//  Laeuft nur, wenn der Server den Browser selbst aufgemacht hat
+//  (AFU_BROWSER=1, also der normale Doppelklick auf START.bat). Wer
+//  "node Server.js" von Hand startet oder START_SICHTBAR.bat nimmt,
+//  will einen Server, der stehen bleibt - womoeglich ganz ohne Browser.
+//
+//  Drei Bremsen, damit er nicht zur falschen Zeit aufhoert:
+//    - die ersten zwei Minuten nach dem Start gar nicht (der Browser
+//      braucht seinen Moment, und beim ersten Start dauert es laenger)
+//    - nie, bevor sich ueberhaupt einmal jemand gemeldet hat
+//    - nie waehrend ein Hoerbuch gerechnet wird
+// ================================================================
+const AUFPASSER_TAKT   = 15000;   // wie oft nachgesehen wird
+const ZUSCHAUER_FRIST   = 45000;  // so lange gilt ein Lebenszeichen
+const ANLAUF            = 120000; // Schonzeit nach dem Start
+let jemandWarDa = false;
+const SERVER_START_MS = Date.now();
+
+function feierabendPruefen(){
+  const jetzt = Date.now();
+  for(const [id, wann] of zuschauer){
+    if(jetzt - wann > ZUSCHAUER_FRIST) zuschauer.delete(id);
+  }
+  if(zuschauer.size > 0){ jemandWarDa = true; return; }
+  if(!jemandWarDa) return;
+  if(jetzt - SERVER_START_MS < ANLAUF) return;
+  try{
+    if(hoerbuchModul && hoerbuchModul.laeuftGerade && hoerbuchModul.laeuftGerade()){
+      console.log('[ENDE] Niemand sieht mehr hin - aber es laeuft noch ein Hoerbuch. Ich warte.');
+      return;
+    }
+  }catch(e){}
+  console.log('');
+  console.log('[ENDE] Kein Fenster mehr offen. Der Trainer macht Feierabend.');
+  console.log('[ENDE] Zum Weiterlernen einfach wieder START.bat.');
+  try{ tunnelBeenden(); }catch(e){}
+  setTimeout(()=>process.exit(0), 300);
+}
+
 server.listen(PORT,'0.0.0.0',async ()=>{
   // Zuerst der Browser, dann das Uebrige: Der Trainer soll aufgehen,
   // waehrend im Fenster noch die Tunnel-Zeilen durchlaufen.
@@ -3251,6 +3408,10 @@ server.listen(PORT,'0.0.0.0',async ()=>{
   } else {
     console.log('[TUNNEL] Kein Auto-Start (Fix K2). Der Server ist nur lokal erreichbar.');
     console.log('[TUNNEL] Fuer den Gruppenraum im Browser auf "Tunnel starten" klicken.');
+  }
+  if(process.env.AFU_BROWSER === '1'){
+    setInterval(feierabendPruefen, AUFPASSER_TAKT);
+    console.log('[ENDE] Der Trainer beendet sich selbst, sobald kein Fenster mehr offen ist.');
   }
   console.log('============================================================');
   console.log('  SERVER V18 - Sicherheits-Fixes K1-K7 (17.08.2026)');

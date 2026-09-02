@@ -495,7 +495,11 @@ function einrichten({ app, localOnly, projektOrdner, PIPER_DIR, findPiper, listV
   });
 
   console.log('[HOERBUCH] bereit, Ausgabeordner:', HOERBUCH_DIR);
-  return { HOERBUCH_DIR };
+  // laeuftGerade() sagt dem Server, ob ein MP3-Auftrag im Gange ist.
+  // Er beendet sich seit dem 01.09.2026 selbst, wenn niemand mehr
+  // hinsieht - mitten in einem Hoerbuch waere das aergerlich: eine
+  // halbe Stunde Rechenzeit fuer nichts.
+  return { HOERBUCH_DIR, laeuftGerade: () => !!(auftrag && auftrag.laeuft) };
 }
 
 module.exports = { einrichten, _intern: { wavLesen, umrechnen, id3, sauberName, mp3Kodieren, Mp3Strom, stille, MP3_RATE } };
