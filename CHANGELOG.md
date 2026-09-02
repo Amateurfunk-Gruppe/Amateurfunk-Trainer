@@ -8,6 +8,21 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.110.0] - 2026-09-02
+
+### Entfernt
+- Knopf und Logik „Verwechslungsgefahr" — im Gebrauch ohne Nutzen. Damit passt auch
+  die Knopfleiste wieder: „Gruppenraum" war zuvor halb abgeschnitten
+
+### Behoben
+- Der Verlauf war beim Start und beim Zurückkehren zum Hauptmenü oft zu lang; erst
+  F5 richtete ihn. Die Messung war richtig, ihr Zeitpunkt nicht: Die linke Spalte
+  wächst nach dem Zeichnen noch mehrmals (Prüfungsübersicht, Tagespensum,
+  Hörbuch-Vorschau, CB-Kasten). Jetzt gestaffelt — sofort, nach 250 ms und nach 900 ms
+- Beim Umschalten zwischen Runde und Hauptansicht war die linke Spalte im Moment der
+  Messung ausgeblendet; zurück blieb der Wert von vorhin. Wird jetzt erkannt und
+  übersprungen statt einen falschen Wert zu behalten
+
 ## [1.109.0] - 2026-09-02
 
 ### Behoben

@@ -3257,7 +3257,6 @@ window.klasseWaehlen = klasseWaehlen;
         <button class="btn btn-primary" id="startBtn" data-tooltip="🎯 Prüfung starten"><i class="fas fa-play"></i> Start <span id="startToLearnCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn btn-danger" id="repeatErrorsBtn" data-tooltip="❌ Fehler wiederholen"><i class="fas fa-exclamation-triangle"></i> Fehler <span id="repeatErrorsCount" class="error-badge" style="display:none;">0</span></button>
         <button class="btn btn-difficult" id="difficultBtn" onclick="repeatDifficult()" data-tooltip="🔥 Lernbedarf – oft falsch, braucht 3x richtig"><i class="fas fa-fire"></i> Lernbedarf <span id="difficultCount" class="difficult-badge" style="display:none;">0</span></button>
-        <button class="btn" id="verwechslungBtn" onclick="verwechslungStarten()" style="background:#8e44ad; color:white; display:none;" data-tooltip="⚠️ Fragen, die sich zum Verwechseln ähneln"><i class="fas fa-clone"></i> Verwechslungsgefahr <span id="verwechslungCount" class="difficult-badge" style="display:none;">0</span></button>
         <button class="btn" id="auffrischenBtn" onclick="auffrischenStarten()" style="background:#0e9aa7; color:white; display:none;" data-tooltip="🔄 Gelerntes auffrischen"><i class="fas fa-rotate"></i> Auffrischen <span id="auffrischenCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" style="background:#5b6b8c; color:white;" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> Durchsehen <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" style="background:#34495e; color:white;" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
@@ -5508,115 +5507,6 @@ function saveCB(){
 }
 
 // ================================================================
-//  VERWECHSLUNGSGEFAHR - Fragen, die gleich aussehen
-// ================================================================
-//  Im Katalog stehen 37 Fragen mit WOERTLICH identischem Fragetext.
-//  Neunmal steht dort nur:
-//
-//      "Welches Bauteil wird durch das Schaltzeichen symbolisiert?"
-//
-//  Neun Fragen, neun verschiedene richtige Antworten - Batterie,
-//  Schalter, Widerstand, Kondensator, Spule, Diode, Leuchtdiode,
-//  Transistor, Antenne. Unterscheiden lassen sie sich NUR am Bild.
-//  Dazu kommen Gruppen, bei denen sich nur eine Zahl unterscheidet:
-//  elf Bandgrenzen-Fragen mit demselben Satz, sechs "Warum sollten Sie
-//  auf 144,x MHz keine Direktverbindung ...". Zusammen 80 von 571.
-//
-//  DAS IST DIE STELLE, AN DER PRUEFUNGEN SCHEITERN. Wer NB201 dreimal
-//  richtig hat, bekommt sie abgehakt - und kann doch nur DIESE eine
-//  Zeichnung. In der Pruefung kommt NC301, derselbe Satz, andere
-//  Zeichnung. Und wer die neun im Lernstapel hintereinander sieht,
-//  merkt sich irgendwann die Reihenfolge statt der Symbole.
-//
-//  GERECHNET, NICHT GEPFLEGT. Die Gruppen entstehen beim Laden aus dem
-//  Katalog selbst. Eine von Hand gepflegte Liste waere nach dem ersten
-//  Katalog-Update falsch, ohne dass es jemandem auffiele.
-//
-//  Zwei Stufen der Aehnlichkeit, beide zaehlen:
-//    1. woertlich gleicher Text
-//    2. gleicher Text, sobald man Zahlen durch # ersetzt
-//  Die zweite faengt die Bandgrenzen und die Frequenz-Fragen.
-// ================================================================
-let verwechslungGruppen = [];      // [[id, id, ...], ...]
-let verwechslungVon = {};          // id -> Gruppe (dieselbe Referenz)
-
-function verwechslungSchluessel(text, mitZahlen){
-    let t = String(text || '').toLowerCase();
-    t = t.replace(/[\u201e\u201c\u201d"\u00bb\u00ab'`]/g, '');
-    if(!mitZahlen) t = t.replace(/\d+([.,]\d+)?/g, '#');
-    t = t.replace(/[^a-zäöüß# ]+/g, ' ');
-    return t.split(/\s+/).filter(Boolean).join(' ');
-}
-
-// Wird von loadQuestions() nach jedem Katalogwechsel gerufen.
-function verwechslungAufbauen(){
-    verwechslungGruppen = [];
-    verwechslungVon = {};
-    const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
-    if(!bank.length) return;
-
-    // Erst woertlich, dann mit vereinheitlichten Zahlen. Eine Frage
-    // landet in der Gruppe, die sie zuerst aufnimmt - so bleibt die
-    // engere Verwandtschaft die massgebliche.
-    const vergeben = new Set();
-    for(const mitZahlen of [true, false]){
-        const topf = new Map();
-        for(const q of bank){
-            if(vergeben.has(q.id)) continue;
-            const k = verwechslungSchluessel(q.text, mitZahlen);
-            if(k.length < 12) continue;              // zu kurz, um aussagekraeftig zu sein
-            if(!topf.has(k)) topf.set(k, []);
-            topf.get(k).push(q.id);
-        }
-        for(const ids of topf.values()){
-            if(ids.length < 2) continue;
-            verwechslungGruppen.push(ids);
-            for(const id of ids){ vergeben.add(id); verwechslungVon[id] = ids; }
-        }
-    }
-    // Groesste Gruppen zuerst - dort ist die Verwechslungsgefahr am groessten.
-    verwechslungGruppen.sort((a,b) => b.length - a.length);
-    try{ verwechslungBadge(); }catch(e){}
-}
-window.verwechslungAufbauen = verwechslungAufbauen;
-
-function verwechslungAnzahl(){
-    return verwechslungGruppen.reduce((n,g) => n + g.length, 0);
-}
-function verwechslungBadge(){
-    const b = document.getElementById('verwechslungCount');
-    const btn = document.getElementById('verwechslungBtn');
-    if(!b || !btn) return;
-    const n = verwechslungAnzahl();
-    if(n > 0){
-        b.textContent = n;
-        b.style.display = 'inline';
-        btn.style.display = '';
-        btn.setAttribute('data-tooltip',
-            '⚠️ ' + n + ' Fragen in ' + verwechslungGruppen.length + ' Gruppen sehen sich zum Verwechseln ähnlich '
-            + '– hier kommen sie direkt hintereinander');
-    } else {
-        btn.style.display = 'none';
-    }
-}
-window.verwechslungBadge = verwechslungBadge;
-
-// Die Runde: Gruppe fuer Gruppe, innerhalb der Gruppe gemischt, aber
-// direkt hintereinander. Genau das ist der Sinn - zwei Fragen mit
-// demselben Wortlaut nacheinander zwingen dazu, aufs Bild zu sehen.
-function verwechslungStarten(){
-    if(!verwechslungGruppen.length){
-        if(window.showAppAlert) showAppAlert('In diesem Katalog gibt es keine Fragen, die sich zum Verwechseln ähneln.');
-        return;
-    }
-    const gemischt = shuffleArray(verwechslungGruppen.slice());
-    const ids = [];
-    for(const g of gemischt) for(const id of shuffleArray(g.slice())) ids.push(id);
-    startQuestionSession(ids, 'Verwechslungsgefahr');
-}
-window.verwechslungStarten = verwechslungStarten;
-
-// ================================================================
 //  DURCHSICHT - alle Fragen der Reihe nach, mit Lesezeichen
 // ================================================================
 //  Dietmar am 02.09.2026: "Ich moechte alle Fragen durchgehen und
@@ -6493,9 +6383,6 @@ async function loadQuestions() {
         window.questionBank = data;
         document.getElementById('bankBadge').innerHTML = `<i class="fas fa-check-circle"></i> ${kl.name} · ${questionBank.length} Fragen`;
         document.getElementById('footerCount').textContent = questionBank.length;
-        // Die Verwechslungsgruppen werden aus dem frisch geladenen Katalog
-        // gerechnet - jedes Pruefungsziel hat seine eigenen.
-        try { verwechslungAufbauen(); } catch(e) { console.debug('Verwechslungsgruppen:', e.message); }
         try { klasseAnzeigeAktualisieren(); } catch(e) { console.debug('Klassenanzeige:', e.message); }
         console.log(`✅ ${questionBank.length} Fragen geladen (${kl.name}, ${kl.datei}).`);
         // DEBUG: Zeige Verteilung der korrekten Antworten in der Roh-Datei
@@ -8208,10 +8095,44 @@ function verlaufHoeheAngleichen() {
     // Auf schmalen Bildschirmen stehen die Spalten untereinander; dort
     // gilt die eigene Regel aus dem Media-Query, nicht diese Messung.
     if (window.innerWidth <= 900) { rechts.style.maxHeight = ''; return; }
+    // Wird gerade gar nicht angezeigt? Dann NICHTS setzen und vor allem
+    // den alten Wert nicht stehen lassen - der stammt aus einer anderen
+    // Lage und ist die Ursache des zu langen Verlaufs.
+    if (links.offsetParent === null) return;
     const h = links.getBoundingClientRect().height;
     if (h > 0) rechts.style.maxHeight = Math.round(h) + 'px';
 }
 window.verlaufHoeheAngleichen = verlaufHoeheAngleichen;
+
+// ================================================================
+//  WARUM DAS DREIMAL PASSIERT
+// ================================================================
+//  Dietmar am 02.09.2026: "Bei Start oder zurückkehren zum Hauptmenü
+//  ist oft der Verlauf von dem Benutzer grösser. Erst bei F5 stimmt er
+//  wieder."
+//
+//  Die Messung war richtig, ihr Zeitpunkt nicht. Die linke Spalte
+//  waechst nach dem Zeichnen noch mehrmals: Die Pruefungsuebersicht
+//  bekommt ihre Zeilen aus klasseAnzeigeAktualisieren(), das Tagespensum
+//  kommt vom Pruefungstermin, die Hoerbuch-Vorschau fragt den Server,
+//  der CB-Kasten erscheint erst, wenn das Ziel feststeht. Wer einmal
+//  misst, misst einen Zwischenstand.
+//
+//  Beim Zurueckkehren aus einer Runde kommt es schlimmer: Da ist die
+//  linke Spalte im Moment des Umschaltens noch ausgeblendet und damit
+//  zwar 0 Pixel hoch - aber der ResizeObserver meldet sich fuer den
+//  Wechsel von "nicht sichtbar" auf "sichtbar" nicht zuverlaessig.
+//  Zurueck blieb der Wert von vorhin, und der Verlauf war zu lang.
+//
+//  Deshalb nicht einmal, sondern gestaffelt: sofort, nach 250 ms und
+//  nach 900 ms. Das kostet drei Messungen von unter einer Millisekunde
+//  und trifft alles, was nachkommt.
+function verlaufHoeheNachziehen() {
+    try { requestAnimationFrame(verlaufHoeheAngleichen); } catch (e) { verlaufHoeheAngleichen(); }
+    setTimeout(verlaufHoeheAngleichen, 250);
+    setTimeout(verlaufHoeheAngleichen, 900);
+}
+window.verlaufHoeheNachziehen = verlaufHoeheNachziehen;
 
 // ================================================================
 // ZAEHLER FUER DAS WEITERGEBEN
@@ -8264,8 +8185,11 @@ document.addEventListener('DOMContentLoaded', () => { setTimeout(paketZaehlerAnz
 (function verlaufHoeheWachen() {
     const anstossen = () => requestAnimationFrame(verlaufHoeheAngleichen);
     window.addEventListener('resize', anstossen);
-    window.addEventListener('load', anstossen);
-    document.addEventListener('DOMContentLoaded', anstossen);
+    // load und DOMContentLoaded gestaffelt: Was der Server nachliefert
+    // (Hoerbuch-Vorschau, Pruefungsuebersicht, Tagespensum), ist zu
+    // diesen beiden Zeitpunkten noch nicht da.
+    window.addEventListener('load', verlaufHoeheNachziehen);
+    document.addEventListener('DOMContentLoaded', verlaufHoeheNachziehen);
     try {
         const links = document.querySelector('.main-col');
         if (links && window.ResizeObserver) new ResizeObserver(anstossen).observe(links);
@@ -9564,6 +9488,9 @@ function updateVisibility() {
     }
     // Zuletzt: was im Pruefungssimulator nicht hingehoert.
     try{ simulatorAufraeumen(); }catch(e){}
+    // Hier wird zwischen Runde und Hauptansicht umgeschaltet - also
+    // genau der Moment, in dem die linke Spalte ihre Hoehe aendert.
+    try{ verlaufHoeheNachziehen(); }catch(e){}
 }
 
 function toggleSidebar() {
