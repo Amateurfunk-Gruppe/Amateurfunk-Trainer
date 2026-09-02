@@ -7231,9 +7231,87 @@ async function githubStartNachschau(versuch){
     if(l.fehler) return;
     if(!l.anzahl) return;
 
+    // ---- Von allein geholt? Dann sagen und, wenn noetig, neu laden ----
+    if(l.automatisch && Array.isArray(l.automatisch.geschrieben) && l.automatisch.geschrieben.length){
+        githubAutoMelden(l.automatisch.geschrieben);
+        return;
+    }
+
     githubTest = false;
     updateKnopfAn();
     updateTonSpielen();
+
+    // Programmdateien werden nie von allein getauscht - dafuer sagt es
+    // ein Balken statt einer Markierung, die man uebersieht.
+    if(Array.isArray(l.programm) && l.programm.length) githubBalkenZeigen(l);
+}
+
+// Die Version am Info-Knopf. Dietmar am 02.09.2026: "Bei dem Button
+// Info, soll die Version als Overlay angezeigt werden."
+//
+// Sie kommt aus der package.json und damit aus dem CHANGELOG - dieselbe
+// Nummer, die auch im Dateinamen der EXE und in "Apps & Features"
+// steht. Nichts wird hier zusaetzlich gepflegt.
+async function versionAnKnopf(){
+    const b = document.getElementById('infoBtn');
+    if(!b) return;
+    let v = null;
+    try{
+        const r = await fetch('/api/version', { cache:'no-store' });
+        if(r.ok){ const j = await r.json(); v = j && j.version; }
+    }catch(e){ /* ohne Server keine Nummer - dann bleibt der alte Text */ }
+    if(!v) return;
+    b.setAttribute('data-tooltip',
+        'Amateurfunk-Trainer ' + v + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
+}
+window.versionAnKnopf = versionAnKnopf;
+
+// Was im Hintergrund uebernommen wurde. Eine Karte unten rechts, sechs
+// Sekunden - und wenn die Seite selbst dabei war, laedt sie danach neu.
+// Ohne das Neuladen liefe die alte Seite weiter und niemand saehe etwas
+// von dem Update, das gerade eingetroffen ist.
+function githubAutoMelden(namen){
+    const seiteDabei = namen.some(n => /^(Index\.html|duo\.js|klick-sound\.js)$/i.test(n)
+                                    || /\.(html|css)$/i.test(n));
+    const k = document.createElement('div');
+    k.style.cssText = 'position:fixed; right:18px; bottom:18px; z-index:100002; max-width:320px; '
+        + 'padding:11px 15px; border-radius:10px; background:rgba(20,102,58,0.96); color:#fff; '
+        + 'font-size:0.8rem; line-height:1.45; box-shadow:0 4px 16px rgba(0,0,0,0.3); '
+        + 'opacity:0; transition:opacity 0.4s ease;';
+    k.innerHTML = '<b>Update übernommen</b><br>' + namen.length
+        + (namen.length === 1 ? ' Datei' : ' Dateien') + ' von GitHub: '
+        + namen.slice(0,4).map(n => n.replace(/[<>&]/g,'')).join(', ')
+        + (namen.length > 4 ? ' …' : '')
+        + (seiteDabei ? '<br><span style="opacity:0.85;">Die Seite lädt gleich neu.</span>' : '');
+    document.body.appendChild(k);
+    requestAnimationFrame(()=>{ k.style.opacity = '1'; });
+    if(seiteDabei){
+        setTimeout(()=>{ try{ location.reload(); }catch(e){} }, 4000);
+    } else {
+        setTimeout(()=>{ k.style.opacity = '0'; setTimeout(()=>{ try{ k.remove(); }catch(e){} }, 500); }, 6000);
+    }
+}
+
+// Der Balken fuer den Fall, der einen Klick braucht.
+function githubBalkenZeigen(l){
+    if(document.getElementById('githubBalken')) return;
+    const b = document.createElement('div');
+    b.id = 'githubBalken';
+    b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100002; background:#14663a; '
+        + 'color:#fff; padding:10px 14px; font-size:0.85rem; font-weight:600; text-align:center; '
+        + 'box-shadow:0 2px 10px rgba(0,0,0,0.25);';
+    b.innerHTML = 'Ein Update liegt bereit — ' + l.anzahl
+        + (l.anzahl === 1 ? ' Datei' : ' Dateien') + ', darunter Programmdateien. '
+        + 'Die werden nie von allein getauscht. '
+        + '<button type="button" id="githubBalkenAuf" style="margin-left:10px; padding:4px 12px; border:none; '
+        + 'border-radius:8px; background:#fff; color:#14663a; font-weight:700; cursor:pointer;">Ansehen</button>'
+        + '<button type="button" id="githubBalkenZu" style="margin-left:6px; padding:4px 10px; border:1px solid rgba(255,255,255,0.6); '
+        + 'border-radius:8px; background:transparent; color:#fff; font-weight:600; cursor:pointer;">Später</button>';
+    document.body.appendChild(b);
+    const auf = document.getElementById('githubBalkenAuf');
+    if(auf) auf.onclick = ()=>{ b.remove(); try{ githubUpdateOeffnen(); }catch(e){ try{ infoOeffnen(); }catch(e2){} } };
+    const zu = document.getElementById('githubBalkenZu');
+    if(zu) zu.onclick = ()=> b.remove();
 }
 
 // Alle fuenf Sekunden noch einmal hinsehen, solange der Knopf noch nicht
@@ -7454,9 +7532,17 @@ async function githubAnwenden(){
         const misslungen = (j.fehler && j.fehler.length) ? j.fehler.length : 0;
         let t = '<div style="font-size:0.95rem; line-height:1.65;">';
         if(misslungen && !j.geschrieben.length){
+            // DER GRUND GEHOERT INS FENSTER. Bis zum 02.09.2026 stand hier
+            // nur "Es wurde nichts verändert. Später noch einmal versuchen."
+            // In Dietmars Fall war das falscher Rat: Der Trainer lag in
+            // C:\Program Files und durfte sich dort nicht selbst ersetzen.
+            // Später hätte genauso wenig geklappt. Der Server schickt den
+            // Grund im Klartext mit - er wurde hier nur weggeworfen.
+            const grund = (j.fehler[0] && j.fehler[0].grund) ? String(j.fehler[0].grund) : '';
             t += '<b style="color:var(--bad);">Das hat nicht geklappt.</b><br>'
-               + '<span style="color:var(--muted); font-size:0.88rem;">Es wurde nichts verändert. '
-               + 'Später noch einmal versuchen.</span>';
+               + '<span style="color:var(--muted); font-size:0.88rem;">Es wurde nichts verändert.'
+               + (grund ? '<br><br>' + grund.replace(/</g,'&lt;') : ' Später noch einmal versuchen.')
+               + '</span>';
         }else{
             t += '<b>Fertig.</b> Der Trainer ist auf dem neuesten Stand.';
             if(misslungen) t += '<br><span style="color:#8a6d00; font-size:0.88rem;">'
@@ -11235,6 +11321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ standWacheStarten(); }catch(e){}
     // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
     try{ autoAbgleichMelden(); }catch(e){}
+    try{ versionAnKnopf(); }catch(e){}
     try{ videoEmbedPruefen(); }catch(e){}
     try{ formelhilfeLaden(); }catch(e){}
     try{ setTimeout(()=>{ githubStartNachschau(); }, 6000); }catch(e){}

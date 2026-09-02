@@ -8,6 +8,30 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.109.0] - 2026-09-02
+
+### Behoben
+- **Das Update konnte nie funktionieren.** `{app}` fehlte in den `[Dirs]` des
+  Installers — `data\` und `backup\` waren beschreibbar, der Programmordner nicht.
+  Der Trainer legte seine Sicherung an und scheiterte dann am Ersetzen von
+  `Index.html`. Daher „Es wurde nichts verändert"
+- Die Startprüfung zählte `unbekannt` nicht mit — genau der Zustand jeder frischen
+  Installation, weil `github_stand.json` nicht mitgeliefert wird. Ausgerechnet dort
+  meldete der Start nichts
+- Das Update-Fenster warf den Grund weg und riet „Später noch einmal versuchen".
+  Der Grund steht jetzt da, mit dem echten Ordnerpfad statt einer Vermutung
+
+### Hinzugefügt
+- Automatisches Übernehmen von Fragen, Bildern und Seite — mit Meldung unten rechts
+  und Neuladen, wenn die Seite dabei war. Abschaltbar mit `AFU_AUTO_UPDATE=0`
+- Balken oben, wenn Programmdateien anstehen: die werden nie von allein getauscht
+- Schreibprobe vor dem ersten Zugriff statt Scheitern bei jeder einzelnen Datei
+- Version am Info-Knopf, aus `package.json` und damit aus dem CHANGELOG
+
+### Geändert
+- Alles oder nichts je Stand: Sind Programmdateien dabei, wird auch der Rest nicht
+  automatisch geholt — sonst läuft eine neue `Index.html` auf einem alten `Server.js`
+
 ## [1.108.0] - 2026-09-02
 
 ### Geändert

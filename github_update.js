@@ -177,6 +177,38 @@ function einrichten(umgebung) {
     return ABGLEICH_ENDUNGEN.includes(klein.slice(punkt));
   }
 
+  // Aus "EPERM: operation not permitted, open '...'" wird ein Satz, mit
+  // dem jemand etwas anfangen kann.
+  //
+  // Dietmar am 02.09.2026: Im Update-Fenster stand nur "Das hat nicht
+  // geklappt. Es wurde nichts veraendert." Der Grund - der Trainer lag
+  // in C:\Program Files und durfte sich dort nicht selbst ersetzen -
+  // stand nirgends. Eine Fehlermeldung, die den Grund verschweigt,
+  // kostet mehr Zeit als gar keine: Man sucht an der falschen Stelle.
+  function klartext(e) {
+    const code = e && e.code;
+    if (code === 'EPERM' || code === 'EACCES') {
+      // Den ECHTEN Ordner nennen, nicht C:\Program Files raten. Der
+      // Assistent fragt beim Einrichten, wohin installiert wird - der
+      // Trainer kann ueberall liegen. Wer die Meldung liest, soll den
+      // Pfad sehen, den er selbst gewaehlt hat.
+      return 'Keine Schreibrechte in ' + WURZEL + '. Der Trainer darf sich dort nicht '
+           + 'selbst ersetzen. Abhilfe: das aktuelle Setup neu installieren - es vergibt '
+           + 'die Rechte fuer den gewaehlten Ordner jetzt richtig.';
+    }
+    if (code === 'EBUSY') return 'Die Datei ist gerade in Benutzung. Trainer beenden und noch einmal versuchen.';
+    if (code === 'ENOSPC') return 'Kein Platz mehr auf der Festplatte.';
+    return (e && e.message) ? e.message : String(e);
+  }
+
+  // Kann hier ueberhaupt geschrieben werden? Einmal vorher nachsehen ist
+  // ehrlicher, als bei jeder einzelnen Datei zu scheitern.
+  function ordnerSchreibbar() {
+    const probe = path.join(WURZEL, '.schreibprobe-' + Date.now());
+    try { fs.writeFileSync(probe, 'x'); fs.unlinkSync(probe); return true; }
+    catch (e) { return false; }
+  }
+
   function hierFingerabdruck(name) {
     try { return blobSha(fs.readFileSync(path.join(WURZEL, name))); }
     catch (e) { return null; }
@@ -248,6 +280,14 @@ function einrichten(umgebung) {
     // die hier nicht auf der Liste steht.
     const erlaubt = namen.filter(n => abgleichbar(n) || dateien.includes(n));
     if (!erlaubt.length) throw new Error('Keine gueltige Datei angefragt');
+    // Erst nachsehen, dann anfangen. Sonst liegt hinterher eine Sicherung
+    // in backup\ und sonst nichts ist passiert - genau das Bild, das
+    // Dietmar am 02.09.2026 vor sich hatte.
+    if (!ordnerSchreibbar()) {
+      throw new Error('Keine Schreibrechte in ' + WURZEL + '. Der Trainer darf sich dort '
+        + 'nicht selbst ersetzen. Abhilfe: das aktuelle Setup neu installieren - es vergibt '
+        + 'die Rechte fuer den gewaehlten Ordner jetzt richtig.');
+    }
     if (erlaubt.some(n => kategorie(n) === 'programm') && programmBestaetigt !== true)
       throw new Error('Fuer Programmdateien fehlt die ausdrueckliche Bestaetigung');
 
@@ -314,8 +354,8 @@ function einrichten(umgebung) {
         geschrieben.push({ name, groesse: neu.length });
         console.log(`[GITHUB] ${name} uebernommen (${neu.length} Bytes)`);
       } catch (e) {
-        fehler.push({ name, grund: e.message });
-        console.warn(`[GITHUB] ${name} nicht uebernommen:`, e.message);
+        fehler.push({ name, grund: klartext(e) });
+        console.warn(`[GITHUB] ${name} nicht uebernommen:`, klartext(e));
       }
     }
 
@@ -339,18 +379,71 @@ function einrichten(umgebung) {
   async function beimStartNachsehen() {
     try {
       const j = await pruefen();
-      const echte = j.eintraege.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt');
+      // 'unbekannt' ZAEHLT MIT - und das war ein Fehler, der genau die
+      // Falschen getroffen hat.
+      //
+      // Dietmar am 02.09.2026: "Ich habe die Dateien hochgeladen und
+      // warte bei meiner installierten Version, das es ein Update
+      // gibt." Es kam keins, und das lag hieran:
+      //
+      // 'unbekannt' heisst "Inhalt weicht ab, aber es gab noch nie einen
+      // Abgleich". Genau das ist die Lage JEDER FRISCHEN INSTALLATION -
+      // github_stand.json wird vom Setup nicht mitgeliefert. Der Zustand
+      // war aus der Zaehlung ausgeschlossen, also meldete der Start
+      // ausgerechnet dort nichts, wo am meisten fehlte. Das Fenster
+      // unter Info hat die Dateien die ganze Zeit angezeigt; nur sagte
+      // niemand, dass man hinsehen soll.
+      const echte = j.eintraege.filter(e =>
+        e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
       letzteLage = { zeit: j.geprueft, commit: j.commit, anzahl: echte.length,
-                     eigene: j.eintraege.filter(e => e.lage === 'neuer_hier').length };
+                     eigene: j.eintraege.filter(e => e.lage === 'neuer_hier').length,
+                     programm: echte.filter(e => kategorie(e.name) === 'programm').map(e => e.name),
+                     namen: echte.map(e => e.name) };
       if (echte.length) {
         console.log('');
         console.log('  ============================================================');
         console.log(`   GITHUB: ${echte.length} Datei(en) sind dort neuer.`);
         echte.slice(0, 8).forEach(e => console.log('     - ' + e.name));
-        console.log('   Geholt wird nichts von allein. Im Trainer unter Info >');
-        console.log('   "GitHub-Update" nachsehen und bestaetigen.');
         console.log('  ============================================================');
         console.log('');
+      }
+
+      // ---- Von allein holen, aber nicht alles --------------------
+      //
+      // Dietmar: "Ich moechte, das es im Hintergrund nach einen Update
+      // sucht und den Benutzer darueber informiert und ein Update
+      // macht."
+      //
+      // Fragen, Bilder und die Seite selbst: ja, ohne Rueckfrage.
+      // PROGRAMMDATEIEN NICHT. Server.js laeuft mit den Rechten des
+      // Benutzers auf dessen Rechner; sie ungefragt gegen etwas aus dem
+      // Netz zu tauschen hiesse, dass ein fremder Zugriff auf das
+      // Repository jeden Trainer der Welt uebernimmt. Dafuer bleibt es
+      // beim einen Klick - dann aber mit einem Balken, den man nicht
+      // uebersieht, statt einer Markierung am Info-Knopf.
+      //
+      // ALLES ODER NICHTS je Stand: Sind Programmdateien dabei, wird
+      // auch der Rest nicht automatisch geholt. Sonst haette man eine
+      // neue Index.html auf einem alten Server.js - und genau daran
+      // scheitern Dinge, die einzeln in Ordnung aussehen.
+      letzteLage.automatisch = null;
+      const autoAus = process.env.AFU_AUTO_UPDATE === '0';
+      if (echte.length && !autoAus && !letzteLage.programm.length) {
+        try {
+          const r = await anwenden(j.commit, letzteLage.namen, false);
+          letzteLage.automatisch = {
+            geschrieben: r.geschrieben.map(g => g.name),
+            fehler: r.fehler.length,
+            sicherung: r.sicherung
+          };
+          letzteLage.anzahl = 0;
+          if (r.geschrieben.length) {
+            console.log(`[GITHUB] ${r.geschrieben.length} Datei(en) automatisch uebernommen.`);
+            console.log('[GITHUB] Die alten liegen in ' + r.sicherung + '.');
+          }
+        } catch (e) {
+          console.log('[GITHUB] Automatisches Uebernehmen nicht moeglich: ' + e.message);
+        }
       }
       if (letzteLage.eigene) {
         console.log(`[GITHUB] ${letzteLage.eigene} Datei(en) sind HIER neuer als bei GitHub`

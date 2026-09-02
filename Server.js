@@ -1323,10 +1323,20 @@ function dateiStandErmitteln(){
   return { kennung, dateien };
 }
 
+// Die Programmversion aus der package.json. Sie wird beim Bauen von
+// version.js aus dem CHANGELOG gesetzt - hier wird sie nur gelesen.
+// Einmal beim Start, nicht bei jeder Anfrage: Die Datei aendert sich
+// waehrend des Laufs nicht.
+const PROGRAMM_VERSION = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || null; }
+  catch (e) { return null; }
+})();
+
 app.get('/api/version',(req,res)=>{
   try{
     const stand = dateiStandErmitteln();
-    res.json({ kennung: stand.kennung, dateien: stand.dateien, serverStart: SERVER_START });
+    res.json({ version: PROGRAMM_VERSION, kennung: stand.kennung,
+               dateien: stand.dateien, serverStart: SERVER_START });
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
