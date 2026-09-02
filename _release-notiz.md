@@ -1,5 +1,9 @@
 # Amateurfunk-Trainer 1.111.0
 
+Der Trainer erklärt sich jetzt selbst: Fährt die Maus über einen Knopf, sagt er,
+wofür er da ist. Wahlweise kurz oder in ganzen Sätzen. Gedacht für alle, die
+schlecht sehen — und für Videoaufnahmen.
+
 ## Installation
 
 Setup herunterladen, ausführen, fertig. Eine vorhandene Installation wird
@@ -32,3 +36,4 @@ Setup herunterladen, ausführen, fertig. Eine vorhandene Installation wird
 - Klicken startete die Erklärung noch einmal — Durchschalten während des Sprechens geht jetzt
 - Vergrößerte Antwort schob sich über den rechten Rand der Fragenkarte
 - Zielkarten mit fehlender Fragendatei blieben stumm
+- Nach einer fehlgeschlagenen Sprachausgabe blieb der betroffene Knopf stumm
