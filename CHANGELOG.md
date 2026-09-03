@@ -8,6 +8,27 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.112.0] - 2026-09-03
+
+### Geändert
+- **Ruhige Knopfleiste.** Farbe war bisher ein Kennzeichen: jeder Knopf hatte
+  eine eigene, damit man ihn unterscheiden kann. Wenn alles hervorgehoben ist,
+  ist nichts hervorgehoben — das Auge fand „Start" nicht schneller als
+  „Drucken". Jetzt gilt eine Rangfolge:
+  gefüllt = die Handlung (nur **Start**), weiß = Werkzeug, blauer Rand = eigener
+  Modus (Prüfungssimulator, Gruppenraum), roter Rand = tut weh (Reset)
+- Die Farbe ist nicht verschwunden, sie sitzt jetzt in der **Zahl** — dort steht
+  die Information. Rot für Fehler, Violett für Lernbedarf
+- **Start** in Tiefblau `#123a6b`. Die Farbe steht als `--start-farbe` einmal
+  oben in der Datei; ein Wechsel ist eine Zeile
+- Ecken von 30 px auf 8 px — weniger Bonbon, mehr Werkzeug
+- Betroffen sind nur die beiden Leisten. Knöpfe in Fenstern und in der
+  Frageansicht bleiben unverändert
+- Im dunklen Stil bleibt die Filterleiste ein heller Kasten, wie bisher; dort
+  gilt weiter die helle Fassung. Umgestellt wurde nur die Kopfleiste
+
+---
+
 ## [1.111.0] - 2026-09-02
 
 ### Hinzugefügt
@@ -23,9 +44,12 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 - Zu den wichtigsten Knöpfen gibt es für „ausführlich" eigene Erklärungen in
   ganzen Sätzen — nicht nur die Sprechblase, sondern so, wie man es jemandem
   erklärt, der daneben sitzt
-- **„Ziel wählen" spricht mit**: beim Öffnen die Überschrift, auf jeder der
-  fünf Karten deren Name — mehr nicht. Prüfungsteile, Fragenzahl und die
+- **„Ziel wählen" spricht mit**: beim Öffnen „Wähle eine Klasse aus", auf jeder
+  der fünf Karten deren Name — mehr nicht. Prüfungsteile, Fragenzahl und die
   CB-Rechnung stehen ohnehin sichtbar auf der Karte
+- Stumm bleiben das Kreuz zum Schließen und die Knöpfe zurück zur Hauptansicht.
+  Beides erklärt sich von selbst und würde beim Weiterklicken dazwischenreden.
+  Einzelne Elemente lassen sich mit `data-nicht-vorlesen` stumm stellen
 - „Prüfung starten" nennt jetzt die **Taste F9**, die beim Üben die richtige
   Antwort zeigt. Dass sie anderswo gesperrt ist, sagen die Knöpfe, die es
   betrifft: „Prüfungssimulator" und „Gruppenraum"

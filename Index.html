@@ -20,6 +20,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
+            /* Die Farbe der einen Handlung. Dietmar am 03.09.2026: "Tiefblau
+               #123a6b, das passt glaub ich ganz gut." Steht hier einmal,
+               damit ein Wechsel eine Zeile ist und keine Suche. */
+            --start-farbe: #123a6b;
             --panel-navy: #0f2745;
             --panel-navy-light: #16365e;
             --ink: #162436;
@@ -1274,6 +1278,111 @@
             text-overflow: ellipsis;
         }
 
+
+        /* ================================================================
+           RUHIGE LEISTE  (03.09.2026)
+           ================================================================
+           Dietmar: "Ich finde diese Buttons schrecklich. Es wirkt wie ein
+           Kinderspielzeug. Viele bunte Buttons."
+           Er hatte recht. Farbe war hier ein Kennzeichen, kein Hinweis -
+           jeder Knopf bekam eine eigene, damit man ihn unterscheiden kann.
+           Wenn alles hervorgehoben ist, ist nichts hervorgehoben: das Auge
+           fand "Start" nicht schneller als "Drucken", obwohl das eine
+           hundertmal oefter gedrueckt wird.
+           Jetzt gilt eine Rangfolge:
+             gefuellt      = die Handlung          (nur Start)
+             weiss         = Werkzeug              (alles Uebrige)
+             blauer Rand   = eigener Modus         (Simulator, Gruppenraum)
+             roter Rand    = tut weh               (Reset)
+           Die Farbe ist nicht verschwunden, sie sitzt jetzt in der ZAHL -
+           dort steht die Information. Eine rote 1 auf ruhigem Grund sieht
+           man besser als eine rote 1 auf rotem Grund.
+           Nur die beiden Leisten sind betroffen; Knoepfe in Fenstern und
+           in der Frageansicht bleiben, wie sie waren. */
+
+        .filter-bar .btn,
+        .header-right .btn,
+        .header-right .btn-cache-sm,
+        .header-right .btn-reset-danger,
+        .header-right .btn-theme {
+            background: #ffffff;
+            color: var(--panel-navy) !important;
+            border: 1px solid #d7e0ec;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: none;
+        }
+        .filter-bar .btn i,
+        .header-right .btn i,
+        .header-right .btn-cache-sm i,
+        .header-right .btn-reset-danger i,
+        .header-right .btn-theme i { color: #7e8ea6; }
+
+        .filter-bar .btn:hover,
+        .header-right .btn:hover,
+        .header-right .btn-cache-sm:hover,
+        .header-right .btn-reset-danger:hover,
+        .header-right .btn-theme:hover {
+            background: #f4f7fb;
+            border-color: #b9c8dc;
+            transform: none;
+            box-shadow: none;
+            filter: none;
+        }
+
+        /* Die eine Handlung. Dietmars Farbe vom 03.09.2026. */
+        .filter-bar .btn.btn-primary,
+        .filter-bar .btn.btn-primary:hover {
+            background: var(--start-farbe);
+            border-color: var(--start-farbe);
+            color: #ffffff !important;
+        }
+        .filter-bar .btn.btn-primary i { color: #c7d6ea; }
+        .filter-bar .btn.btn-primary:hover { background: #17497f; border-color: #17497f; }
+
+        /* Eigene Modi: erkennbar, aber nicht laut. */
+        .filter-bar .btn.btn-modus { border-color: #b3c6e0; }
+        .filter-bar .btn.btn-modus i { color: #1c3c63; }
+        .filter-bar .btn.btn-exam { background: #ffffff; }
+
+        /* Das Einzige, was weh tut. */
+        .header-right .btn-reset-danger { border-color: #eec3bd; color: #a5281b !important; }
+        .header-right .btn-reset-danger i { color: #c0392b; }
+        .header-right .btn-reset-danger:hover { background: #fdf3f2; border-color: #dda49c; }
+
+        /* Die Zahlen tragen die Farbe. */
+        .filter-bar .start-badge     { background: #eef2f8; color: #43536b; }
+        .filter-bar .error-badge     { background: #fdecea; color: #b03024; }
+        .filter-bar .difficult-badge { background: #f1eafb; color: #6d3f9e; }
+        .filter-bar .btn.btn-primary .start-badge { background: rgba(255,255,255,0.22); color: #ffffff; }
+
+        /* Dunkler Hintergrund.
+           WICHTIG: Die Filterleiste ist im dunklen Stil absichtlich ein HELLER
+           Kasten (siehe weiter unten, "body.dark .filter-bar"). Dort gilt also
+           weiter die helle Fassung - dunkle Knoepfe auf hellem Grund waeren
+           genau verkehrt. Umgestellt wird nur die Kopfleiste, denn die sitzt
+           auf dem dunklen Rahmen. */
+        body.dark .header-right .btn,
+        body.dark .header-right .btn-cache-sm,
+        body.dark .header-right .btn-reset-danger,
+        body.dark .header-right .btn-theme {
+            background: #16202e !important;
+            color: #dbe5f2 !important;
+            border-color: #2c3a4d !important;
+        }
+        body.dark .header-right .btn i,
+        body.dark .header-right .btn-cache-sm i,
+        body.dark .header-right .btn-reset-danger i,
+        body.dark .header-right .btn-theme i { color: #8fa0b8 !important; }
+        body.dark .header-right .btn:hover,
+        body.dark .header-right .btn-cache-sm:hover,
+        body.dark .header-right .btn-reset-danger:hover,
+        body.dark .header-right .btn-theme:hover {
+            background: #1e2a3b !important; border-color: #3d4d63 !important;
+        }
+        body.dark .header-right .btn-reset-danger { color: #ff9d92 !important; border-color: #5a2b25 !important; }
+        body.dark .header-right .btn-reset-danger i { color: #ff9d92 !important; }
+
         .btn-cache-sm {
             /* Weisse Schrift, dafuer ein satteres Orange: auf dem hellen
                #e67e22 lag Weiss bei 2,85:1, auf diesem Ton sind es 4,8:1. */
@@ -2348,7 +2457,10 @@
         /* Gruppenraum behaelt weisse Schrift - dafuer ein etwas kraeftigeres
            Pink: auf dem hellen #e84393 lag Weiss bei 3,71:1, jetzt 5,1:1.
            Gilt in allen Themes, damit der Knopf ueberall gleich aussieht. */
-        body.dark #duoBtn, body.dark #duoBtn i { color: #ffffff !important; }
+        /* Galt, solange der Gruppenraum-Knopf pink war. In der ruhigen Leiste
+           sitzt er auf hellem Grund - weisse Schrift waere unsichtbar. */
+        body.dark .filter-bar #duoBtn { color: var(--panel-navy) !important; }
+        body.dark .filter-bar #duoBtn i { color: #1c3c63 !important; }
         /* Der Theme-Knopf bekommt Hintergrund und Schrift zusammen gesetzt -
            je nach Zustand griff sonst mal die helle, mal die dunkle Flaeche
            und die Beschriftung passte nicht dazu. */
@@ -2457,7 +2569,7 @@
         }
         body.dark .sidebar-tab { background: #6fa8dc !important; color: #0c1a2b !important; }
         /* Die Zahl im Start-Knopf sitzt auf weissem Grund */
-        body.dark #startBtn .start-badge { background: #0c1a2b !important; color: #ffffff !important; }
+        body.dark .filter-bar #startBtn .start-badge { background: rgba(255,255,255,0.22) !important; color: #ffffff !important; }
         /* Oranger Cache-Knopf: weiss darauf war 2,85:1 */
         body.dark .btn-cache-sm { color: #ffffff !important; }
         body.dark .btn-cache-sm i { color: #ffffff !important; }
@@ -3054,7 +3166,7 @@ function klasseModalOeffnen() {
     try{
         if(einstellungen && einstellungen.knoepfeVorlesen){
             knopfLetzter = '';
-            knopfSprechen('Ich fange neu an — Direkteinstieg.');
+            knopfSprechen('Wähle eine Klasse aus.');
         }
     }catch(e){}
 }
@@ -3154,10 +3266,10 @@ function klasseModalFuellen() {
         + 'max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem;">'
         + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:#0f2745;" '
-        + 'data-vorlesen-kurz="Ich fange neu an — Direkteinstieg." '
-        + 'data-vorlesen="Ich fange neu an — Direkteinstieg.">'
+        + 'data-vorlesen-kurz="Wähle eine Klasse aus." '
+        + 'data-vorlesen="Wähle eine Klasse aus.">'
         + '<i class="fas fa-graduation-cap" style="color:#0e9aa7;"></i> Ich fange neu an — Direkteinstieg</h3>'
-        + '<button onclick="klasseModalSchliessen()" data-vorlesen-kurz="Fenster schließen." '
+        + '<button onclick="klasseModalSchliessen()" '
         + 'style="background:none; border:none; font-size:1.2rem; '
         + 'cursor:pointer; color:#4b5563; line-height:1;">&#10005;</button></div>'
         + '<p style="margin:0 0 0.6rem; font-size:0.78rem; color:#4b5563;">'
@@ -3297,14 +3409,14 @@ window.klasseWaehlen = klasseWaehlen;
                 <button id="trainerRefreshBtn" type="button" style="display:none; background:none; border:1px solid #e0c080; color:#8a6d00; border-radius:50%; width:26px; height:26px; align-items:center; justify-content:center; cursor:pointer; font-size:0.75rem;" onclick="var sel=document.getElementById('trainerParticipantSelect'); if(window.duoTrainerData && window.updateTrainerParticipantSelect) window.updateTrainerParticipantSelect(window.duoTrainerData); if(sel && sel.value) onTrainerParticipantChange(sel.value);" data-tooltip="Ansicht neu laden, falls Wechsel zum Teilnehmer nicht direkt greift"><i class="fas fa-sync-alt"></i></button>
                 <span id="trainerModeBadge" style="display:none; background:#e2932f; color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">TRAINER MODUS</span>
             </div>
-            <button class="btn" id="einstellungenBtn" onclick="einstellungenOeffnen()" style="background:#4b5b73; color:#ffffff; padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Einstellungen: Knöpfe vorlesen, kurz oder ausführlich, und Schrift beim Vorlesen vergrößern" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>
-            <button class="btn" id="infoBtn" onclick="infoOeffnen()" style="background:#0a6f78; color:#ffffff; padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Kurze Anleitung: was das Tool kann und wie es bedient wird"><i class="fas fa-circle-info"></i> Info</button>
+            <button class="btn" id="einstellungenBtn" onclick="einstellungenOeffnen()" style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Einstellungen: Knöpfe vorlesen, kurz oder ausführlich, und Schrift beim Vorlesen vergrößern" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>
+            <button class="btn" id="infoBtn" onclick="infoOeffnen()" style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Kurze Anleitung: was das Tool kann und wie es bedient wird"><i class="fas fa-circle-info"></i> Info</button>
             <!-- Fehlermeldung per Mail. "Fehler melden" statt "Bug melden" oder
                  "Entwickler kontaktieren": Es soll jeder anklicken, der etwas
                  Merkwürdiges sieht - auch wer mit dem Wort Bug nichts anfängt
                  und wer sich nicht traut, "den Entwickler" zu behelligen. -->
-            <button class="btn" id="fehlerBtn" onclick="fehlerMelden()" style="background:#8a5a00; color:#ffffff; padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Etwas stimmt nicht? Schreib mir – die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist."><i class="fas fa-bug"></i> Fehler melden</button>
-            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="background:#0f2745; color:white; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
+            <button class="btn" id="fehlerBtn" onclick="fehlerMelden()" style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Etwas stimmt nicht? Schreib mir – die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist."><i class="fas fa-bug"></i> Fehler melden</button>
+            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
             <button class="btn-cache-sm" onclick="clearCacheAndReload()" data-tooltip="🧹 Cache leeren (Verlauf bleibt erhalten)">
                 <i class="fas fa-broom"></i> Cache
             </button>
@@ -3341,13 +3453,13 @@ window.klasseWaehlen = klasseWaehlen;
         <button class="btn btn-primary" id="startBtn" data-tooltip="🎯 Prüfung starten – F9 zeigt beim Üben die richtige Antwort"><i class="fas fa-play"></i> Start <span id="startToLearnCount" class="start-badge" style="display:none;">0</span></button>
         <button class="btn btn-danger" id="repeatErrorsBtn" data-tooltip="❌ Fehler wiederholen"><i class="fas fa-exclamation-triangle"></i> Fehler <span id="repeatErrorsCount" class="error-badge" style="display:none;">0</span></button>
         <button class="btn btn-difficult" id="difficultBtn" onclick="repeatDifficult()" data-tooltip="🔥 Lernbedarf – oft falsch, braucht 3x richtig"><i class="fas fa-fire"></i> Lernbedarf <span id="difficultCount" class="difficult-badge" style="display:none;">0</span></button>
-        <button class="btn" id="auffrischenBtn" onclick="auffrischenStarten()" style="background:#0e9aa7; color:white; display:none;" data-tooltip="🔄 Gelerntes auffrischen"><i class="fas fa-rotate"></i> Auffrischen <span id="auffrischenCount" class="start-badge" style="display:none;">0</span></button>
-        <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" style="background:#5b6b8c; color:white;" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> <span id="durchsichtText">Blättern</span> <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
-        <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" style="background:#34495e; color:white;" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
+        <button class="btn" id="auffrischenBtn" onclick="auffrischenStarten()" style="display:none;" data-tooltip="🔄 Gelerntes auffrischen"><i class="fas fa-rotate"></i> Auffrischen <span id="auffrischenCount" class="start-badge" style="display:none;">0</span></button>
+        <button class="btn" id="durchsichtBtn" onclick="durchsichtStarten()" data-tooltip="📖 Alle Fragen der Reihe nach durchgehen – merkt sich, wo du aufgehört hast"><i class="fas fa-book-open"></i> <span id="durchsichtText">Blättern</span> <span id="durchsichtCount" class="start-badge" style="display:none;">0</span></button>
+        <button class="btn" id="statistikBtn" onclick="statistikOeffnen()" data-tooltip="📊 Auswertung nach Prüfungsteil und Sicherung des Lernstands"><i class="fas fa-chart-simple"></i> Statistik</button>
         <button class="btn btn-abort" id="backToMainTopBtn" onclick="backToMain()" style="display:none;" data-tooltip="Zur Hauptansicht"><i class="fas fa-home"></i> Hauptmenü</button>
-        <button class="btn" id="printExamBtn" onclick="printExam()" style="background:#2c3e50; color:white;" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
-        <button class="btn btn-exam" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil, F9 abgeschaltet"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
-        <button class="btn" id="duoBtn" onclick="window.duoInit()" style="background:#d02076; color:white;" data-tooltip="Gruppenraum für gemeinsames Lernen – Teilnehmer kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Gruppenraum</button>
+        <button class="btn" id="printExamBtn" onclick="printExam()" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
+        <button class="btn btn-exam btn-modus" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil, F9 abgeschaltet"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
+        <button class="btn btn-modus" id="duoBtn" onclick="window.duoInit()" data-tooltip="Gruppenraum für gemeinsames Lernen – Teilnehmer kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Gruppenraum</button>
     </div>
 
     <!-- APP LAYOUT
@@ -9080,9 +9192,6 @@ const KNOPF_ERKLAERUNG = {
     sidebarToggleBtn: 'Verlauf ein- oder ausblenden. Die Spalte an der Seite zeigt jede beendete Runde mit Datum, Prüfungsteil und Ergebnis.',
     clearHistoryBtn: 'Einträge zum Löschen auswählen. Du entscheidest im Verlauf, welche Runden verschwinden sollen. Lernfortschritt, Lernbedarf und Fehler bleiben davon unberührt.',
     showAnswersBtn: 'Alle richtigen Antworten anzeigen. Gedacht zum schnellen Durchsehen kurz vor der Prüfung, nicht zum Üben.',
-    abortBtn: 'Zurück zur Hauptansicht. Die laufende Runde wird beendet, dein Fortschritt bleibt gespeichert.',
-    homeBtn: 'Zurück zur Hauptansicht.',
-    backToMainTopBtn: 'Zurück zur Hauptansicht.',
     formelBtn: 'Formelsammlung. Alle Formeln, die in der Prüfung gebraucht werden, zum Nachschlagen.',
     nurGelernteLabel: 'Nur die schon gelernten Fragen durchgehen. Es kommen ausschließlich Fragen, die du bereits konntest. Antwortest du falsch, gilt die Frage wieder als ungelernt und wandert zurück in den Stapel.',
     terminLoeschBtn: 'Den eingetragenen Prüfungstermin wieder entfernen.',
@@ -9123,6 +9232,14 @@ function attrText(t){
 }
 window.attrText = attrText;
 
+// Knoepfe, die nichts sagen sollen. Dietmar am 03.09.2026: "Fenster
+// schliessen und zurueck zum Hauptmenue moechte ich ebenfalls raus haben."
+// Beides erklaert sich von selbst, und beim Aufnehmen redet der Trainer
+// sonst genau in dem Moment dazwischen, in dem man weiterklickt.
+// Ein einzelnes Element laesst sich zusaetzlich mit data-nicht-vorlesen
+// stumm stellen, ohne dass es hier stehen muss.
+const KNOPF_STUMM = new Set(['abortBtn', 'homeBtn', 'backToMainTopBtn']);
+
 const KNOPF_FUELLWORT = /^(aktuell|achtung|hinweis|info|tipp|neu|status|bitte)$/i;
 const KNOPF_TRENNER = /\s+[\u2013\u2014]\s+|\s+-\s+|\s*[\u00b7\u2022|]\s*|:\s+|\n/;
 
@@ -9143,6 +9260,8 @@ function knopfKurzfassung(roh){
 // Was ein Knopf sagen soll - je nach eingestelltem Umfang.
 function knopfSatz(el){
     if(!el) return '';
+    if(el.id && KNOPF_STUMM.has(el.id)) return '';
+    if(el.hasAttribute && el.hasAttribute('data-nicht-vorlesen')) return '';
     // Manche Stellen sollen etwas anderes SAGEN als sie ZEIGEN - die
     // Zielauswahl zum Beispiel steht schon vollstaendig auf der Karte, eine
     // Sprechblase waere dort nur im Weg. Dafuer gibt es data-vorlesen
