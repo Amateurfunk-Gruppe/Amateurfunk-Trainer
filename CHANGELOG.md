@@ -8,6 +8,31 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.113.0] - 2026-09-03
+
+### Geändert
+- **Dark Mode im Gerätestil.** Dietmar mit einem Screenshot seines Icom RS-BA1:
+  „Die Farbe und der Style ist wahnsinnig schön. Dagegen wirkt unser Dark Mode
+  ziemlich mickrig." Er hatte recht — der bisherige Dark Mode machte nur den
+  Rand dunkel und ließ die Inhalte weiß. Das war ein heller Trainer in einem
+  dunklen Rahmen
+- Jetzt durchgehend dunkle Flächen, dünne Kanten statt Schatten, ein Glanzlicht
+  an der Oberkante wie bei einem gefrästen Frontpanel
+- **Türkis `#17c3d6` als einziges Signal** — und nur dort, wo etwas an ist:
+  Start, „Weiter", die richtige Antwort, die Antwortbuchstaben
+- Zähler in Monoschrift auf dunklen Feldern, wie eine Anzeige am Gerät
+- **Die vorgelesene Antwort leuchtet türkis** statt gelb. Im hellen Stil bleibt
+  es beim Leuchtstift-Gelb — die Signalfarben für richtig, falsch und
+  angekreuzt sind in allen Modi unverändert
+- Der Fragenblock hat ein eigenes Farbsystem (`--darc-*`); im Dark Mode werden
+  jetzt dessen Variablen umgestellt statt zwanzig Einzelregeln geschrieben
+
+### Behoben
+- Die Antwortbuchstaben A bis D standen im Dark Mode schwarz auf schwarz
+- Der Fragenblock behielt sein helles Grau `#dddddd`
+
+---
+
 ## [1.112.0] - 2026-09-03
 
 ### Geändert

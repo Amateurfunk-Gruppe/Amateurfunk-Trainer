@@ -13172,6 +13172,422 @@ if (originalSelectOption) {
             background: var(--darc-vorgelesen) !important;
         }
 
+
+        /* ================================================================
+           DARK MODE: GERAETESCHWARZ            (03.09.2026)
+           ================================================================
+           Dietmar mit einem Screenshot seines Icom RS-BA1: "Die Farbe und
+           der Style ist wahnsinnig schoen. Auch die Buttons mit dem
+           leuchtenden Tuerkis. Dagegen wirkt unser Dark Mode ziemlich
+           mickrig." - Er hatte recht: der bisherige Dark Mode machte nur
+           den Rand dunkel und liess die Inhalte weiss. Das war ein heller
+           Trainer in einem dunklen Rahmen, kein Dark Mode.
+
+           Vom Geraet uebernommen:
+             - durchgehend dunkle Flaechen, keine hellen Kaesten mehr
+             - duenne Kanten statt Schatten
+             - EIN Signalton, Tuerkis, und nur dort wo etwas AN ist
+             - Zahlen in Monoschrift wie eine Anzeige
+
+           Dieser Block steht bewusst ganz am Ende: er ueberschreibt den
+           aelteren Abschnitt "helle Kaesten im Hauptfenster", ohne dass der
+           angefasst werden muss. Wer das Geraeteschwarz wieder loswerden
+           will, loescht genau diesen Block.
+           ================================================================ */
+
+        body.dark {
+            --geraet-grund:   #0e1114;
+            --geraet-flaeche: #14181c;
+            --geraet-feld:    #181d22;
+            --geraet-tief:    #11161a;
+            --geraet-kante:   #2b3238;
+            --geraet-kante2:  #39424b;
+            --geraet-schrift: #d8dee4;
+            --geraet-hell:    #e7eef4;
+            --geraet-leise:   #8a97a3;
+            --tuerkis:        #17c3d6;
+            --tuerkis-tief:   #0e93a4;
+            background: var(--geraet-grund) !important;
+        }
+
+        /* ---- Flaechen ---- */
+        body.dark .card {
+            background: var(--geraet-flaeche) !important;
+            border: 1px solid var(--geraet-kante) !important;
+            box-shadow: inset 0 1px 0 #333b43, 0 24px 60px -20px rgba(0,0,0,0.75) !important;
+        }
+        body.dark .filter-bar,
+        body.dark .exam-info,
+        body.dark #masteryDisplay,
+        body.dark .history-col,
+        body.dark .left-sidebar,
+        body.dark .question-area {
+            background: var(--geraet-feld) !important;
+            color: var(--geraet-schrift) !important;
+            border-color: var(--geraet-kante) !important;
+            box-shadow: inset 0 1px 0 #313941 !important;
+            --ink: var(--geraet-hell);
+            --muted: var(--geraet-leise);
+            --line: var(--geraet-kante);
+            --card-bg: var(--geraet-feld);
+            --bg: var(--geraet-flaeche);
+            --good: #35d08a;  --good-bg: #0f2e22;
+            --bad:  #ff8f82;  --bad-bg:  #331a17;
+            --warn: #ffc266;  --warn-bg: #33280f;
+        }
+
+        /* ---- Schrift ---- */
+        body.dark .history-col h3,
+        body.dark .exam-info h2,
+        body.dark h1,
+        body.dark h1 i,
+        body.dark .footer-note a,
+        body.dark .footer-note a i { color: var(--geraet-hell) !important; }
+        body.dark .exam-info,
+        body.dark .exam-info div,
+        body.dark .history-col div,
+        body.dark .exam-info td,
+        body.dark .history-table td { color: var(--geraet-schrift) !important; }
+        body.dark .exam-info td,
+        body.dark .history-table td { border-color: var(--geraet-kante) !important; }
+        body.dark .history-table th,
+        body.dark .exam-info th {
+            background: var(--geraet-tief) !important;
+            color: var(--geraet-leise) !important;
+            border-color: var(--geraet-kante) !important;
+        }
+
+        /* ---- Knoepfe: gefraestes Panel ---- */
+        body.dark .filter-bar .btn,
+        body.dark .header-right .btn,
+        body.dark .header-right .btn-cache-sm,
+        body.dark .header-right .btn-reset-danger,
+        body.dark .header-right .btn-theme,
+        body.dark .history-col .btn-outline,
+        body.dark .filter-bar .btn-outline {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        }
+        body.dark .filter-bar .btn i,
+        body.dark .header-right .btn i,
+        body.dark .header-right .btn-cache-sm i,
+        body.dark .header-right .btn-reset-danger i,
+        body.dark .header-right .btn-theme i,
+        body.dark .filter-bar .btn-outline i { color: #7f8d99 !important; }
+        body.dark .filter-bar .btn:hover,
+        body.dark .header-right .btn:hover,
+        body.dark .header-right .btn-cache-sm:hover,
+        body.dark .header-right .btn-reset-danger:hover,
+        body.dark .header-right .btn-theme:hover {
+            background: linear-gradient(#2b333a, #212830) !important;
+            border-color: #4a5661 !important;
+        }
+
+        /* Das eine, was AN ist: leuchtet. */
+        body.dark .filter-bar .btn.btn-primary,
+        body.dark .filter-bar .btn.btn-primary:hover {
+            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
+            border-color: #22d7ec !important;
+            color: #03222a !important;
+            box-shadow: 0 0 0 1px rgba(23,195,214,0.35),
+                        0 0 14px rgba(23,195,214,0.45),
+                        inset 0 1px 0 rgba(255,255,255,0.35) !important;
+        }
+        body.dark .filter-bar .btn.btn-primary i,
+        body.dark .filter-bar .btn-primary,
+        body.dark .filter-bar .btn-primary i { color: #04303a !important; }
+        body.dark .filter-bar #startBtn .start-badge {
+            background: rgba(0,0,0,0.25) !important;
+            border: 1px solid rgba(0,0,0,0.3) !important;
+            color: #04303a !important;
+        }
+        body.dark .filter-bar .btn.btn-modus { border-color: #2a5b66 !important; }
+        body.dark .filter-bar .btn.btn-modus i,
+        body.dark .filter-bar #duoBtn i { color: var(--tuerkis) !important; }
+        body.dark .filter-bar #duoBtn { color: #c6d0d8 !important; }
+        body.dark .header-right .btn-reset-danger,
+        body.dark .header-right .btn-reset-danger i { color: #ff8f82 !important; }
+        body.dark .header-right .btn-reset-danger { border-color: #5c2f2b !important; }
+        body.dark .btn-cache-sm,
+        body.dark .btn-cache-sm i { color: #c6d0d8 !important; }
+
+        /* ---- Zahlen wie eine Anzeige ---- */
+        body.dark .filter-bar .start-badge,
+        body.dark .filter-bar .error-badge,
+        body.dark .filter-bar .difficult-badge {
+            background: var(--geraet-tief) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            border-radius: 4px !important;
+            font-family: var(--font-mono) !important;
+            color: var(--geraet-leise) !important;
+        }
+        body.dark .filter-bar .error-badge { color: #ff8f82 !important; border-color: #5c2f2b !important; }
+        body.dark .filter-bar .difficult-badge { color: #ffc266 !important; border-color: #5c4a2b !important; }
+
+        /* ---- Felder ---- */
+        body.dark .filter-bar select,
+        body.dark .history-user-selector select,
+        body.dark #masteryDisplay input,
+        body.dark #masteryDisplay select,
+        body.dark .exam-info select {
+            background: var(--geraet-tief) !important;
+            color: var(--geraet-schrift) !important;
+            border-color: var(--geraet-kante2) !important;
+        }
+
+        /* ---- Lernfortschritt ---- */
+        body.dark #masteryDisplay > div:nth-child(2),
+        body.dark #masteryDisplay div[style*="background:#f4f7fd"],
+        body.dark #masteryDisplay label {
+            background: var(--geraet-tief) !important;
+            border-color: var(--geraet-kante) !important;
+            color: var(--geraet-schrift) !important;
+        }
+        body.dark #masteryDisplay > div > span,
+        body.dark #masteryDisplay span[style*="var(--panel-navy)"],
+        body.dark #masteryDisplay #activeLearnInfo,
+        body.dark #masteryDisplay #masteryStats { color: var(--geraet-hell) !important; }
+
+        /* ---- Auswertungsspalte ---- */
+        body.dark .left-sidebar .stat-chip,
+        body.dark .dot-sidebar,
+        body.dark .left-sidebar .result-box.waiting {
+            background: var(--geraet-tief) !important;
+            border-color: var(--geraet-kante2) !important;
+            color: var(--geraet-schrift) !important;
+        }
+        body.dark .left-sidebar .stat-head { color: var(--geraet-leise) !important; }
+        body.dark .left-sidebar .stat-head b { color: var(--geraet-hell) !important; }
+        body.dark .sidebar-tab { background: #1b2126 !important; color: var(--tuerkis) !important; }
+
+        /* ---- Frage und Antworten ---- */
+        body.dark .question-area .q-text { color: var(--geraet-hell) !important; }
+        body.dark .question-area .q-meta span {
+            background: var(--geraet-tief) !important;
+            color: var(--geraet-leise) !important;
+            border: 1px solid var(--geraet-kante) !important;
+        }
+        body.dark .question-area .option,
+        body.dark .question-area .option-grid {
+            background: var(--geraet-tief) !important;
+            border-color: var(--geraet-kante) !important;
+            color: #b9c4cd !important;
+        }
+        body.dark .question-area .option .option-text,
+        body.dark .question-area .option-grid .option-text,
+        body.dark .question-area .option-label { color: #b9c4cd !important; }
+        body.dark .question-area .option-label { color: var(--tuerkis) !important; }
+        body.dark .question-area .option:hover:not(.disabled),
+        body.dark .question-area .option-grid:hover:not(.disabled) {
+            background: #1a2126 !important;
+            border-color: var(--geraet-kante2) !important;
+        }
+        body.dark .question-area .option.correct,
+        body.dark .question-area .option-grid.correct {
+            background: #0e2b31 !important;
+            border-color: var(--tuerkis) !important;
+            color: #c9f2f8 !important;
+            box-shadow: 0 0 0 1px rgba(23,195,214,0.3), 0 0 16px rgba(23,195,214,0.18) !important;
+        }
+        body.dark .question-area .option.correct .option-text,
+        body.dark .question-area .option-grid.correct .option-text { color: #c9f2f8 !important; }
+        body.dark .question-area .option.wrong,
+        body.dark .question-area .option-grid.wrong {
+            background: #331a17 !important;
+            border-color: #ff8f82 !important;
+            color: #ffd2cc !important;
+        }
+        body.dark .question-area .option.wrong .option-text,
+        body.dark .question-area .option-grid.wrong .option-text { color: #ffd2cc !important; }
+
+        /* ---- Videokasten ---- */
+        body.dark .question-area .video-link-box {
+            background: var(--geraet-tief) !important;
+            border-color: var(--geraet-kante) !important;
+        }
+        body.dark .question-area .video-link-box div[style*="color:#111827"] { color: var(--geraet-hell) !important; }
+        body.dark .question-area .video-link-box div[style*="color:#6b7280"] { color: var(--geraet-leise) !important; }
+        body.dark .question-area .video-link-box span[style*="background:#f3f4f6"] {
+            background: #11161a !important; color: var(--geraet-leise) !important;
+        }
+
+        /* ---- Vorlesen ---- */
+        body.dark .question-area #ttsBtn {
+            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
+            color: #03222a !important; border: 1px solid #22d7ec !important;
+        }
+        body.dark .question-area button[onclick*="openTtsSettings"] {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border-color: var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+        }
+
+        /* ---- Herz-Zaehler ---- */
+        body.dark #favListBtn {
+            background: var(--geraet-tief) !important;
+            border-color: #5c2f3a !important;
+        }
+        body.dark #favListBtn,
+        body.dark #favListBtn span,
+        body.dark #favListBtn i { color: #ff8fa3 !important; }
+
+        /* ---- Nachtrag Geraeteschwarz: die Frageansicht ----
+           Der Fragenblock hat sein eigenes Farbsystem (--darc-*). Es hier
+           umzustellen ist besser, als zwanzig Einzelregeln zu schreiben:
+           die Signalfarben fuer richtig/falsch/angekreuzt bleiben dieselben,
+           nur Flaeche, Feld und Schrift wechseln.
+           Dietmar am 03.09.2026: "Das Grau hat da genau genommen nichts
+           verloren. Beim Vorlesen moechte ich, dass der Text auch tuerkis
+           wie beim Icom angewendet wird." */
+        body.dark {
+            --darc-rahmen: #11161a;
+            --darc-feld:   #181d22;
+            --darc-frage:  #e7eef4;
+            --darc-vorgelesen: #17c3d6;
+        }
+        body.dark .question-area .q-text-row {
+            background: var(--darc-rahmen) !important;
+            border: 1px solid var(--geraet-kante) !important;
+        }
+        body.dark .question-area .q-text,
+        body.dark .question-area .q-text-row .q-text { color: var(--geraet-hell) !important; }
+        body.dark .question-area .option,
+        body.dark .question-area .option-grid { background: var(--darc-feld) !important; }
+        body.dark .question-area .option-label,
+        body.dark .question-area .option .option-label { color: var(--tuerkis) !important; }
+
+        /* Die vorgelesene Antwort leuchtet tuerkis wie am Geraet.
+           Schwarze Schrift darauf, wie bei den anderen Signalfarben auch. */
+        body.dark .question-area .option.tts-highlight,
+        body.dark .question-area .option-grid.tts-highlight,
+        body.eckig.dark .question-area .option.tts-highlight,
+        body.eckig.dark .question-area .option.correct.tts-highlight,
+        body.eckig.dark .question-area .option.wrong.tts-highlight,
+        body.eckig.dark .question-area .option.gewaehlt.tts-highlight,
+        body.eckig.dark .question-area .option-grid.tts-highlight,
+        body.eckig.dark .question-area .option-grid.correct.tts-highlight,
+        body.eckig.dark .question-area .option-grid.wrong.tts-highlight,
+        body.eckig.dark .question-area .option-grid.gewaehlt.tts-highlight {
+            background: var(--tuerkis) !important;
+            border-color: #22d7ec !important;
+            box-shadow: 0 0 0 1px rgba(23,195,214,0.4), 0 0 18px rgba(23,195,214,0.45) !important;
+        }
+        body.dark .question-area .option.tts-highlight,
+        body.dark .question-area .option.tts-highlight .option-text,
+        body.dark .question-area .option.tts-highlight .option-label,
+        body.dark .question-area .option-grid.tts-highlight,
+        body.dark .question-area .option-grid.tts-highlight .option-text,
+        body.dark .question-area .option-grid.tts-highlight .option-label { color: #03222a !important; }
+
+        /* ---- Knoepfe unter der Frage ---- */
+        body.dark .nav-btn {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        }
+        body.dark .nav-btn i { color: #7f8d99 !important; }
+        body.dark .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(#2b333a, #212830) !important;
+            border-color: #4a5661 !important;
+        }
+        body.dark .nav-btn.nav-btn-primary,
+        body.dark .nav-btn.nav-btn-primary:hover:not(:disabled) {
+            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
+            border-color: #22d7ec !important;
+            color: #03222a !important;
+            box-shadow: 0 0 0 1px rgba(23,195,214,0.35), 0 0 14px rgba(23,195,214,0.45) !important;
+        }
+        body.dark .nav-btn.nav-btn-primary i { color: #04303a !important; }
+
+        /* ---- Kopfzeile: Abzeichen, Suche, kleine Knoepfe ---- */
+        body.dark .badge {
+            background: var(--geraet-tief) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: var(--tuerkis) !important;
+        }
+        body.dark .badge i { color: var(--tuerkis) !important; }
+        body.dark #searchInput {
+            background: var(--geraet-tief) !important;
+            color: var(--geraet-schrift) !important;
+            border-color: var(--geraet-kante2) !important;
+        }
+        body.dark #searchInput::placeholder { color: #6f7d88 !important; }
+        body.dark .btn-lernstand,
+        body.dark .btn-lernstand-hell,
+        body.dark .btn-outline {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+        }
+        body.dark .btn-lernstand i,
+        body.dark .btn-lernstand-hell i,
+        body.dark .btn-outline i { color: #7f8d99 !important; }
+
+        /* ---- Verweise ---- */
+        body.dark a,
+        body.dark .exam-info a,
+        body.dark #masteryDisplay a { color: var(--tuerkis) !important; }
+
+        /* ---- Fortschrittsbalken und Punktereihe ---- */
+        body.dark #masteryBar,
+        body.dark .mastery-bar,
+        body.dark .progress-track { background: var(--geraet-tief) !important; }
+        body.dark .mastery-badge {
+            background: var(--geraet-tief) !important;
+            border: 1px solid #1c4d55 !important;
+            color: var(--tuerkis) !important;
+        }
+
+        /* ---- Letzte helle Reste, mit dem Browser aufgespuert ----
+           Statt zu raten, welche Flaeche noch leuchtet: alle sichtbaren
+           Knoepfe und Felder durchmessen und die hellen herausfischen.
+           Uebrig blieben genau diese drei - der Pfeil an der Suche und die
+           beiden kleinen Knoepfe neben "Vorlesen". */
+        body.dark button[onclick="searchQuestion()"] {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: var(--tuerkis) !important;
+        }
+        body.dark #questionGelerntBtn,
+        body.dark #questionFavBtn,
+        body.dark .btn-google {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+        }
+        body.dark #questionGelerntBtn i,
+        body.dark #questionFavBtn i,
+        body.dark .btn-google i { color: #7f8d99 !important; }
+        /* Gemerkt und gelernt sind Zustaende - die duerfen leuchten. */
+        body.dark #questionFavBtn.aktiv,
+        body.dark #questionFavBtn.active { color: #ff8fa3 !important; border-color: #5c2f3a !important; }
+        body.dark #questionGelerntBtn.aktiv,
+        body.dark #questionGelerntBtn.active { color: var(--tuerkis) !important; border-color: #1c4d55 !important; }
+
+        /* Datumsfeld und Auswahlfelder */
+        body.dark input[type="date"],
+        body.dark select,
+        body.dark .history-user-selector select {
+            background: var(--geraet-tief) !important;
+            color: var(--geraet-schrift) !important;
+            border-color: var(--geraet-kante2) !important;
+        }
+        body.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+
+        /* "Zu lernen: 571" - der einzige gruene Fleck. Am Geraet waere das
+           eine Anzeige, kein Aufkleber. */
+        body.dark #zuLernenBadge,
+        body.dark .zu-lernen-badge,
+        body.dark #masteryDisplay span[style*="background:#dcf3e5"],
+        body.dark #masteryDisplay span[style*="background: #dcf3e5"] {
+            background: var(--geraet-tief) !important;
+            border: 1px solid #1c4d55 !important;
+            color: var(--tuerkis) !important;
+        }
+
     </style>
 
 <script id="finalFixDynamicHeight">
