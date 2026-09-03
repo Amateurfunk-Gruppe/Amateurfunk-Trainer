@@ -8,6 +8,62 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.115.0] - 2026-09-03
+
+### Behoben
+- **Beamer-Modus ließ die Hauptansicht leer zurück.** Wer ihn einschaltete,
+  während keine Runde lief, sah ein weißes Blatt — die Hauptansicht besteht
+  fast nur aus den Teilen, die der Modus ausblendet: Knopfleiste, Verlauf,
+  Prüfungsübersicht, Lernfortschritt. Erst F5 half. Der Modus greift jetzt
+  **nur, solange eine Frage auf dem Schirm steht**. Vorher bleibt alles, wie es
+  ist, und ein Balken am unteren Rand sagt: „Beamer-Modus ist an — er schaltet
+  um, sobald du eine Runde startest." Beim Verlassen wird die Ansicht wieder
+  aufgebaut, ohne Neuladen
+- **Der Ausstieg war praktisch unsichtbar.** „Beamer-Modus verlassen (Esc)"
+  stand mit 25 % Deckkraft in der Ecke und ging auf hellem Grund unter. Jetzt
+  ein deutlicher dunkler Knopf. Außerdem stand er nach dem ersten Gebrauch als
+  weißer Kasten in der **normalen** Ansicht herum — ihm fehlte die Grundregel,
+  die ihn außerhalb des Beamer-Modus wegnimmt
+- **Esc gehört zuerst dem offenen Fenster.** Wer den Modus im Zahnrad-Fenster
+  einschaltete, schloss mit Esc bisher beides auf einmal. Jetzt schließt das
+  erste Esc das Fenster, das zweite verlässt den Beamer-Modus
+- **Die Knopfreihe der Kopfzeile rutschte nach links,** sobald sie durch den
+  neuen Knopf „Beenden" in eine zweite Zeile umbrach. Grund war das
+  `space-between` der Kopfzeile, das den umgebrochenen Block an den linken Rand
+  setzt. Sie bleibt jetzt in jeder Zeile rechtsbündig
+
+---
+
+## [1.114.0] - 2026-09-03
+
+### Hinzugefügt
+- **Beamer-Modus** für den Kursraum. Nur Frage und Antworten, dreimal so groß,
+  alles andere weg — Leisten, Verlauf, Auswertung, Fußzeile. Weiterblättern mit
+  Leertaste, Pfeiltasten oder Presenter (Bild-auf/Bild-ab), **Strg+B** schaltet
+  um, **Esc** beendet ihn. Unten links steht, bei welcher Frage von wie vielen
+  man ist. Schaltbar im Zahnrad-Fenster
+- Die Schriftgröße rechnet in `vw`: auf jeder Leinwand gleich groß im
+  Verhältnis zum Bild, egal ob 1280 oder 4K angeschlossen ist
+- Der Modus wird **nicht** gespeichert. Wer morgen allein am Schreibtisch
+  öffnet, will nicht in Kinoschrift begrüßt werden
+- **Knopf „Beenden"** in der Kopfzeile. Beendet den Server sauber, statt nur
+  das Fenster zuzumachen: der Port wird frei, beim nächsten Start gibt es keine
+  Rückfrage. Mit Rückfrage vorher — sie nennt auch, ob gerade eine Runde läuft
+  oder der Gruppenraum offen ist. Die neue Route `/api/beenden` ist `localOnly`:
+  ein Gast im Gruppenraum kann den Trainer des Gastgebers nicht ausschalten
+- **Der Trainer merkt jetzt, wenn der Server weg ist.** Bisher lief die Wache
+  jede Minute gegen `/api/version` und tat bei ausbleibender Antwort nichts —
+  die Seite sah normal aus, während nichts mehr gespeichert wurde. Nach zwei
+  Fehlversuchen erscheint ein Balken
+
+### Behoben
+- Im Dark Mode war in den Fenstern fast schwarze Schrift auf fast schwarzem
+  Grund. Ursache: Die Fenster setzten sich ihre alten **hellen** Variablen
+  (`--ink: #16232f`), weil sie einmal helle Kästen waren. Jetzt werden die
+  Variablen umgestellt — eine Regel statt fünfzig
+
+---
+
 ## [1.113.0] - 2026-09-03
 
 ### Geändert
@@ -27,9 +83,19 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 - Der Fragenblock hat ein eigenes Farbsystem (`--darc-*`); im Dark Mode werden
   jetzt dessen Variablen umgestellt statt zwanzig Einzelregeln geschrieben
 
+- **Die Fenster ziehen mit.** Dietmar: „Manche Fenster die sich öffnen sind
+  weiß und andere grau." Stimmt — die zwölf Fenster sind über Jahre gewachsen
+  und tragen ihre Farben als `style`-Attribut im HTML; inline schlägt jede
+  Klasse, deshalb blieben sie hell. Welche Farbwerte darin vorkommen, habe ich
+  nicht geraten, sondern alle Fenster im Browser geöffnet und ausmessen lassen
+- Hauptknöpfe in den Fenstern leuchten türkis, Warnkästen behalten ihren Ton
+  nur gedunkelt, Ankreuzfelder bekommen die Gerätefarbe
+
 ### Behoben
 - Die Antwortbuchstaben A bis D standen im Dark Mode schwarz auf schwarz
 - Der Fragenblock behielt sein helles Grau `#dddddd`
+- Die Überschriften der aufklappbaren Gruppen im Gruppenraum waren dunkelblau
+  auf Schwarz und damit unsichtbar
 
 ---
 

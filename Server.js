@@ -833,6 +833,34 @@ app.use(cors({
 // localOnly: Ein Gast im Gruppenraum darf diese Antwort nie zu sehen
 // bekommen. Sonst wuerde die frische Installation des Gastgebers dem
 // Gast den Browser leerraeumen.
+// ================================================================
+// BEENDEN - der Trainer macht selbst Feierabend
+// ================================================================
+// Dietmar am 03.09.2026: "Es wird ein Exit-Button benoetigt, der
+// node.js deaktiviert. Ich habe nach laengeren Pausen oefters ein
+// Problem, weil node.js sich abschaltet."
+//
+// Bisher gab es zum Beenden nur STOP.bat - eine Datei im Ordner, die
+// im laufenden Betrieb niemand sucht. Wer stattdessen einfach das
+// Fenster zumachte, liess den Server weiterlaufen: unsichtbar, mit
+// belegtem Port, und beim naechsten Start kam die Rueckfrage.
+//
+// localOnly: Ein Gast im Gruppenraum darf den Trainer des Gastgebers
+// nicht ausschalten koennen. Das waere sonst der billigste Streich
+// der Welt - Link aufrufen, Knopf druecken, Kursabend vorbei.
+//
+// Die Antwort geht ZUERST raus, erst danach faellt der Prozess. Sonst
+// sieht der Browser nur eine abgerissene Leitung und meldet einen
+// Fehler, obwohl alles genau so gelaufen ist, wie es sollte.
+app.post('/api/beenden', localOnly, (req,res)=>{
+  console.log('[BEENDEN] Ueber den Knopf im Trainer beendet.');
+  res.json({ ok:true });
+  setTimeout(()=>{
+    try{ tunnelBeenden(); }catch(e){}
+    process.exit(0);
+  }, 400);
+});
+
 app.get('/api/neuanfang', localOnly, (req,res)=>{
   // Beantwortet ist beantwortet. Der Merker faellt HIER, nicht erst bei
   // der Quittung: Bricht die Seite mitten im Aufraeumen ab, passiert

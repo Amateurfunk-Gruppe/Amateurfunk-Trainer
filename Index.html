@@ -1169,7 +1169,12 @@
            Ansichts-Knoepfe (Farbe und Form). Auf schmalen Schirmen rutscht
            die Reihe damit in eine zweite Zeile, statt die Seite seitlich
            wegzuschieben. Auf breiten Schirmen aendert die Regel nichts. */
-        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
+        /* margin-left:auto haelt die Reihe auch dann am rechten Rand, wenn
+           sie in eine zweite Zeile rutscht. Ohne die Zeile setzt das
+           space-between der Kopfzeile den umgebrochenen Block nach links -
+           Dietmar am 03.09.2026: "Die Buttons in der ersten Reihe sind
+           jetzt linksbuendig verschoben." */
+        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; margin-left: auto; }
         .btn-theme {
             background: var(--panel-navy);
             color: #fff !important;
@@ -3423,6 +3428,12 @@ window.klasseWaehlen = klasseWaehlen;
             <button class="btn-reset-danger" onclick="openFullResetModal()" data-tooltip="⚠️ Verlauf, Fehler, Lernbedarf &amp; Lernfortschritt komplett zurücksetzen">
                 <i class="fas fa-trash-alt"></i> Reset
             </button>
+            <button class="btn" id="beendenBtn" onclick="beendenFragen()"
+                    style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;"
+                    data-tooltip="⏻ Trainer beenden – schließt den Server sauber"
+                    data-vorlesen-kurz="Trainer beenden."
+                    data-vorlesen="Trainer beenden. Schließt den Server sauber ab, statt nur das Fenster zuzumachen. Der Port wird frei, und beim nächsten Start gibt es keine Rückfrage. Läuft gerade eine Runde, wird sie vorher gespeichert.">
+                <i class="fas fa-power-off"></i> Beenden</button>
             <button class="btn-theme" id="themeToggleBtn" onclick="toggleTheme()" data-tooltip="Dark Mode umschalten">
                 <i class="fas fa-moon"></i> <span id="themeToggleLabel">Dark Mode</span>
             </button>
@@ -3851,7 +3862,24 @@ window.klasseWaehlen = klasseWaehlen;
                     <div id="duoNameHint" style="font-size:0.7rem; color:var(--muted); margin-top:6px;">Gilt für den aktuell gewählten Benutzer – erscheint im Verlauf, bei Fehlern, im Lernbedarf und im Gruppenraum.</div>
                 </div>
             </div>
-            <div class="duo-collapsible pwd-box" id="duoAccPwd">
+            <!-- ================================================================
+                 RAUM-PASSWORT - ausgeblendet am 03.09.2026
+                 ================================================================
+                 Dietmar: "Das Passwort kann ich Gruppenraum raus."
+                 Der Kasten ist weg, das Eingabefeld bleibt aber im Dokument
+                 stehen - und zwar mit Absicht:
+                   - duo.js liest beim Anlegen eines Raums
+                     document.getElementById('duoPasswordInput')?.value.
+                     Leer heisst "ohne Passwort" - genau das ist jetzt immer
+                     der Fall.
+                   - Wer einem Raum ueber einen Link mit ?pwd=... beitritt,
+                     bekommt den Wert von duo.js in genau dieses Feld
+                     geschrieben. Ohne das Feld koennte niemand mehr einen
+                     Raum betreten, der noch mit einer aelteren Fassung
+                     angelegt wurde.
+                 Ausbauen statt ausblenden waere also ein Rueckschritt.
+                 ================================================================ -->
+            <div class="duo-collapsible pwd-box" id="duoAccPwd" style="display:none;">
                 <button class="duo-collapsible-header" onclick="toggleDuoAcc('duoAccPwd')" type="button">
                     <span class="left"><i class="fas fa-lock" style="color:#8a6d00;"></i> Raum-Passwort (optional)</span>
                     <i class="fas fa-chevron-down chevron"></i>
@@ -7941,8 +7969,10 @@ async function standWacheStarten() {
     standWacheStart = j.serverStart || null;
     standWacheKennung = j.kennung || null;
     setInterval(async () => {
-        if (standWacheGemeldet) return;
         const jetzt = await standWacheLesen();
+        // Neu am 03.09.2026: Ein Ausbleiben ist selbst eine Nachricht.
+        try{ serverWegPruefen(!!jetzt); }catch(e){}
+        if (standWacheGemeldet) return;
         if (!jetzt) return;
         const neuGestartet = standWacheStart && jetzt.serverStart && jetzt.serverStart !== standWacheStart;
         const geaendert   = standWacheKennung && jetzt.kennung && jetzt.kennung !== standWacheKennung;
@@ -7969,6 +7999,256 @@ function standWacheMelden(neuGestartet) {
     document.getElementById('standWacheSpaeter').onclick = () => { b.remove(); standWacheGemeldet = false; };
 }
 window.standWacheStarten = standWacheStarten;
+
+// ================================================================
+//  BEENDEN
+// ================================================================
+//  Dietmar am 03.09.2026: "Es wird ein Exit-Button benoetigt, der
+//  node.js deaktiviert. Ich habe nach laengeren Pausen oefters ein
+//  Problem, weil node.js sich abschaltet."
+//
+//  Zwei getrennte Dinge, die er in einem Satz nennt:
+//    1. Es gab keinen Weg, den Trainer aus dem Trainer heraus zu
+//       beenden. Fenster zumachen liess den Server weiterlaufen.
+//    2. Wenn der Server von sich aus verschwindet, merkt die Seite es
+//       nicht - sie sieht normal aus, aber nichts wird mehr gespeichert.
+//  Der Knopf loest das erste, die Wache weiter unten das zweite.
+// ================================================================
+
+function beendenFragen(){
+    const modal = document.getElementById('genericConfirmModal');
+    if(!modal){ trainerBeenden(); return; }
+    const laeuft = (typeof isQuizActive !== 'undefined' && isQuizActive);
+    document.getElementById('genericConfirmTitle').innerHTML =
+        '<span id="genericConfirmIcon"><i class="fas fa-power-off" style="color:#0a6f78;"></i></span> Trainer beenden?';
+    document.getElementById('genericConfirmMessage').innerHTML =
+        'Der Trainer wird vollständig beendet. Zum Weiterlernen musst du ihn neu starten.';
+    document.getElementById('genericConfirmDetails').innerHTML =
+        '• Lernstand, Verlauf und Einstellungen bleiben gespeichert<br>'
+      + '• Der Port wird frei — beim nächsten Start gibt es keine Rückfrage'
+      + (laeuft ? '<br>• <b>Es läuft gerade eine Runde.</b> Sie wird nicht gewertet.' : '')
+      + (window.duo && window.duo.isActive && window.duo.isActive()
+            ? '<br>• <b>Der Gruppenraum ist offen.</b> Alle Teilnehmer fliegen heraus.' : '');
+    const btn = document.getElementById('genericConfirmBtn');
+    btn.innerHTML = '<i class="fas fa-power-off"></i> Beenden';
+    btn.style.background = '#0a6f78';
+    btn.onclick = function(){ closeGenericConfirmModal(); trainerBeenden(); };
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+}
+window.beendenFragen = beendenFragen;
+
+async function trainerBeenden(){
+    // Erst sichern, dann abschalten. Die Reihenfolge ist der ganze Punkt:
+    // was jetzt noch im Browser liegt und nicht beim Server ankommt, ist weg.
+    try{ if(typeof savePersistentNow === 'function') await savePersistentNow(); }catch(e){}
+    try{ if(typeof debouncedSavePersistent === 'function') debouncedSavePersistent.flush?.(); }catch(e){}
+    try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+    try{ if(typeof knopfSprechenStoppen === 'function') knopfSprechenStoppen(); }catch(e){}
+
+    let ok = false;
+    try{
+        const r = await fetch('/api/beenden', { method:'POST' });
+        ok = r.ok;
+    }catch(e){
+        // Genau das ist der Normalfall, wenn der Server schneller weg ist
+        // als die Antwort: kein Fehler, sondern der Beweis, dass es lief.
+        ok = true;
+    }
+    beendenAbschied(ok);
+}
+window.trainerBeenden = trainerBeenden;
+
+function beendenAbschied(ok){
+    try{ document.body.classList.remove('beamer'); }catch(e){}
+    const d = document.createElement('div');
+    d.id = 'beendenAbschied';
+    d.style.cssText = 'position:fixed; inset:0; z-index:100010; display:flex; align-items:center; '
+        + 'justify-content:center; background:#0e1114; color:#d8dee4; '
+        + 'font-family:var(--font-body), "Segoe UI", sans-serif;';
+    d.innerHTML =
+        '<div style="text-align:center; max-width:30rem; padding:2rem;">'
+      + '<div style="font-size:2.4rem; color:#17c3d6; margin-bottom:1rem;">'
+      + '<i class="fas fa-power-off"></i></div>'
+      + '<div style="font-size:1.25rem; font-weight:700; color:#e7eef4; margin-bottom:0.6rem;">'
+      + (ok ? 'Der Trainer ist beendet.' : 'Der Trainer wurde beendet, meldet aber nichts zurück.')
+      + '</div>'
+      + '<div style="font-size:0.9rem; line-height:1.6; color:#8a97a3;">'
+      + 'Dein Lernstand ist gespeichert. Du kannst dieses Fenster jetzt schließen.<br>'
+      + 'Zum Weiterlernen den Trainer über die Verknüpfung neu starten.'
+      + '</div></div>';
+    document.body.appendChild(d);
+    // Nichts soll mehr im Hintergrund weiterlaufen und ins Leere greifen.
+    try{ if(window.duo && window.duo.leave) window.duo.leave(); }catch(e){}
+}
+
+// ================================================================
+//  WACHE: ist der Server ueberhaupt noch da?
+// ================================================================
+//  standWacheStarten() fragt ohnehin jede Minute /api/version ab, um
+//  einen Neustart oder geaenderte Dateien zu bemerken. Kam gar keine
+//  Antwort, hat es bisher nichts getan - stillschweigend. Genau das
+//  ist Dietmars Fall: der Server ist weg, die Seite sieht normal aus,
+//  und erst beim naechsten Speichern faellt es auf.
+//
+//  Zwei Fehlversuche hintereinander, damit ein einzelner Aussetzer
+//  nicht gleich einen Balken erzeugt.
+// ================================================================
+let serverWegZaehler = 0;
+
+function serverWegPruefen(erreichbar){
+    if(erreichbar){
+        serverWegZaehler = 0;
+        const b = document.getElementById('serverWegBanner');
+        if(b){ b.remove(); }
+        return;
+    }
+    serverWegZaehler++;
+    if(serverWegZaehler < 2) return;
+    if(document.getElementById('serverWegBanner')) return;
+    const b = document.createElement('div');
+    b.id = 'serverWegBanner';
+    b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100003; background:#7a2c26; '
+        + 'color:#ffffff; padding:10px 14px; font-size:0.85rem; font-weight:600; text-align:center; '
+        + 'box-shadow:0 2px 10px rgba(0,0,0,0.35);';
+    b.innerHTML = 'Der Trainer läuft nicht mehr — Neues wird gerade <b>nicht</b> gespeichert. '
+        + 'Bitte über die Verknüpfung neu starten.'
+        + '<button type="button" id="serverWegLaden" style="margin-left:10px; padding:5px 12px; border:none; '
+        + 'border-radius:8px; background:#ffffff; color:#5e211c; font-weight:700; cursor:pointer;">Neu laden</button>';
+    document.body.appendChild(b);
+    const k = document.getElementById('serverWegLaden');
+    if(k) k.onclick = () => location.reload();
+}
+window.serverWegPruefen = serverWegPruefen;
+
+// ================================================================
+//  BEAMER-MODUS
+// ================================================================
+//  Er ist bewusst KEIN neuer Betriebsmodus, sondern nur eine andere
+//  Ansicht derselben Runde: dieselben Fragen, dieselbe Wertung,
+//  derselbe Gruppenraum im Hintergrund. Nur die Buehne ist anders.
+//
+//  Warum nicht dauerhaft speichern: Wer den Trainer morgen allein am
+//  Schreibtisch oeffnet, will nicht in Kinoschrift begruesst werden.
+//  Der Modus gilt fuer diesen Abend und ist beim naechsten Start weg.
+//
+//  Bedienung: Strg+B ein und aus, Esc raus. Presenter senden meist
+//  Bild-ab / Bild-auf oder die Pfeiltasten - beides ist belegt.
+// ================================================================
+
+let beamerAn = false;
+
+function beamerUmschalten(){
+    beamerSetzen(!beamerAn);
+}
+window.beamerUmschalten = beamerUmschalten;
+
+function beamerSetzen(an){
+    beamerAn = !!an;
+    document.body.classList.toggle('beamer', beamerAn);
+    beamerBedienungAufbauen();
+    beamerLiveNachziehen();
+    beamerStandAktualisieren();
+    // Beim Verlassen muss die normale Ansicht wieder aufgebaut werden.
+    // Ohne diese Zeile blieb ein leeres Blatt stehen, bis jemand F5 drueckte.
+    try{ if(typeof updateVisibility === 'function') updateVisibility(); }catch(e){}
+    const k = document.getElementById('einstBeamer');
+    if(k) k.checked = beamerAn;
+    // Ein Vorleser oder eine Sprachausgabe soll im Kursraum nicht
+    // mitten hinein reden.
+    if(beamerAn){ try{ knopfSprechenStoppen(); }catch(e){} }
+    try{ if(typeof verlaufHoeheNachziehen === 'function') verlaufHoeheNachziehen(); }catch(e){}
+}
+window.beamerSetzen = beamerSetzen;
+
+// Laeuft gerade eine Runde? Nur dann darf der Beamer-Modus die
+// Hauptansicht ausblenden. Sonst bliebe ein weisses Blatt uebrig -
+// genau der Fehler, den Dietmar am 03.09.2026 gemeldet hat.
+function beamerRundeLaeuft(){
+    try{
+        return !!(typeof isQuizActive !== 'undefined' && isQuizActive
+                  && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0
+                  && typeof currentIndex !== 'undefined' && currentIndex < currentQuestions.length);
+    }catch(e){ return false; }
+}
+
+function beamerLiveNachziehen(){
+    document.body.classList.toggle('beamer-live', beamerAn && beamerRundeLaeuft());
+}
+window.beamerLiveNachziehen = beamerLiveNachziehen;
+
+function beamerBedienungAufbauen(){
+    if(!document.getElementById('beamerWartet')){
+        const w = document.createElement('div');
+        w.id = 'beamerWartet';
+        w.innerHTML = '<i class="fas fa-video"></i> Beamer-Modus ist an \u2013 '
+                    + 'er schaltet um, sobald du eine Runde startest.';
+        document.body.appendChild(w);
+    }
+    if(!document.getElementById('beamerRaus')){
+        const b = document.createElement('button');
+        b.id = 'beamerRaus';
+        b.type = 'button';
+        b.innerHTML = '<i class="fas fa-compress"></i> Beamer-Modus verlassen  (Esc)';
+        b.onclick = () => beamerSetzen(false);
+        document.body.appendChild(b);
+    }
+    if(!document.getElementById('beamerStand')){
+        const d = document.createElement('div');
+        d.id = 'beamerStand';
+        document.body.appendChild(d);
+    }
+}
+
+function beamerStandAktualisieren(){
+    const d = document.getElementById('beamerStand');
+    if(!d) return;
+    try{
+        if(beamerAn && beamerRundeLaeuft()){
+            d.textContent = (currentIndex + 1) + ' / ' + currentQuestions.length;
+        } else {
+            d.textContent = '';
+        }
+    }catch(e){ d.textContent = ''; }
+}
+window.beamerStandAktualisieren = beamerStandAktualisieren;
+
+// Tasten. Nur im Beamer-Modus greifen die Blaettertasten - sonst wuerde
+// eine Leertaste beim normalen Lernen ungewollt weiterspringen.
+document.addEventListener('keydown', function(e){
+    // Strg+B schaltet um, egal wo man ist.
+    if(e.ctrlKey && !e.altKey && (e.key === 'b' || e.key === 'B')){
+        e.preventDefault();
+        beamerUmschalten();
+        return;
+    }
+    if(!beamerAn) return;
+    // In einem Eingabefeld hat das Blaettern nichts verloren.
+    const z = e.target;
+    if(z && (z.tagName === 'INPUT' || z.tagName === 'TEXTAREA' || z.isContentEditable)) return;
+
+    if(e.key === 'Escape'){
+        // Ist das Einstellungsfenster offen, gehoert Esc zuerst dem Fenster.
+        const ef = document.getElementById('einstellungenModal');
+        if(ef && ef.style.display === 'flex') return;
+        e.preventDefault(); beamerSetzen(false); return;
+    }
+
+    const weiter = (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Spacebar');
+    const zurueck = (e.key === 'PageUp' || e.key === 'ArrowLeft');
+    if(weiter || zurueck){
+        // Presenter schicken oft beides kurz hintereinander; der Trainer
+        // hat eigene Knoepfe dafuer - die werden hier nur gedrueckt.
+        const knopf = document.getElementById(weiter ? 'nextBtn' : 'prevBtn');
+        if(knopf && !knopf.disabled && knopf.offsetParent !== null){
+            e.preventDefault();
+            knopf.click();
+            setTimeout(beamerStandAktualisieren, 60);
+        }
+    }
+}, true);
+
+
 
 // ================================================================
 // ABGLEICH MIT DEM GASTGEBER
@@ -9051,6 +9331,10 @@ function einstellungenAnwenden(){
     if(a) a.checked = !!einstellungen.knoepfeVorlesen;
     const b = document.getElementById('einstVorlesenGross');
     if(b) b.checked = !!einstellungen.vorlesenGross;
+    // Der Beamer-Modus wird nicht gespeichert - der Haken zeigt nur,
+    // ob er gerade an ist.
+    const bm = document.getElementById('einstBeamer');
+    if(bm) bm.checked = (typeof beamerAn !== 'undefined') && beamerAn;
     const kurz = document.getElementById('einstUmfangKurz');
     const lang = document.getElementById('einstUmfangLang');
     if(kurz) kurz.checked = einstellungen.knopfUmfang !== 'lang';
@@ -9489,8 +9773,19 @@ function einstellungenOeffnen(){
           + '<span style="display:block; font-size:0.78rem; color:#4b5563; line-height:1.5; margin-top:0.2rem;">'
           + 'Die Antwort, die gerade vorgelesen wird, tritt hervor und wird etwas größer.</span></span></label>'
 
+          + '<label style="display:flex; gap:0.7rem; align-items:flex-start; padding:0.7rem 0.8rem; cursor:pointer; '
+          + 'background:#f8fbfc; border:1px solid #cfe4e7; border-radius:10px; margin-bottom:0.6rem;">'
+          + '<input type="checkbox" id="einstBeamer" style="margin-top:0.2rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="beamerSetzen(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.9rem;">Beamer-Modus</b>'
+          + '<span style="display:block; font-size:0.78rem; color:#4b5563; line-height:1.5; margin-top:0.2rem;">'
+          + 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
+          + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. '
+          + '<b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.</span></span></label>'
+
           + '<p style="margin:0.2rem 0 0.8rem; font-size:0.74rem; color:#6b7280; line-height:1.5;">'
-          + 'Beides gilt nur für diesen Benutzer. Wird gerade eine Frage vorgelesen, schweigen die Knopftexte. '
+          + 'Vorlesen und Schriftgröße gelten nur für diesen Benutzer; der Beamer-Modus nur für diese Sitzung. '
+          + 'Wird gerade eine Frage vorgelesen, schweigen die Knopftexte. '
           + 'Stimme und automatisches Vorlesen stellst du wie bisher unter <b>Vorlesen</b> ein.</p>'
 
           + '<div style="display:flex; justify-content:flex-end; gap:0.5rem;">'
@@ -10282,6 +10577,11 @@ function updateVisibility() {
         if (masteryDisplay) masteryDisplay.style.display = 'flex';
         if (filterBar) filterBar.style.display = 'flex';
     }
+    // Der Beamer-Modus haengt an genau diesem Umschalten: Runde an, Runde
+    // aus. Hier ist der einzige Ort, an dem beides zuverlaessig zusammen
+    // laeuft.
+    try{ if(typeof beamerLiveNachziehen === 'function') beamerLiveNachziehen(); }catch(e){}
+    try{ if(typeof beamerStandAktualisieren === 'function') beamerStandAktualisieren(); }catch(e){}
     // Zuletzt: was im Pruefungssimulator nicht hingehoert.
     try{ simulatorAufraeumen(); }catch(e){}
     // Hier wird zwischen Runde und Hauptansicht umgeschaltet - also
@@ -10614,6 +10914,8 @@ function renderQuestion() {
 
     const q = currentQuestions[currentIndex];
     const total = currentQuestions.length;
+    // Beamer-Modus: Klasse und Zaehler haengen an der laufenden Runde.
+    try{ if(typeof beamerLiveNachziehen === 'function'){ beamerLiveNachziehen(); beamerStandAktualisieren(); } }catch(e){}
 
     // Teilnehmer-Antwort für diese Frage (nur zur Anzeige)
     let participantAnswer = null;
@@ -13587,6 +13889,475 @@ if (originalSelectOption) {
             border: 1px solid #1c4d55 !important;
             color: var(--tuerkis) !important;
         }
+
+        /* ================================================================
+           GERAETESCHWARZ: DIE FENSTER
+           ================================================================
+           Dietmar am 03.09.2026: "Mir ist auch aufgefallen, dass manche
+           Fenster die sich oeffnen weiss sind und andere grau."
+           Stimmt - und der Grund ist Geschichte: Die Fenster sind ueber
+           Jahre entstanden, jedes traegt seine Farben als inline-style im
+           HTML. Inline schlaegt jede Klasse, deshalb blieben sie hell,
+           waehrend der Rest des Trainers dunkel wurde.
+
+           Statt zwoelf Fenster umzubauen, faengt dieser Block genau die
+           Farbwerte ab, die dort vorkommen. Welche das sind, habe ich nicht
+           geraten: alle Fenster im Browser geoeffnet und die hellen
+           Flaechen ausmessen lassen.
+           ================================================================ */
+
+        /* Der Fensterkoerper */
+        body.dark [id$="Modal"] > div,
+        body.dark [id$="modal"] > div {
+            background: var(--geraet-flaeche) !important;
+            color: var(--geraet-schrift) !important;
+            border: 1px solid var(--geraet-kante) !important;
+            box-shadow: inset 0 1px 0 #333b43, 0 24px 60px -20px rgba(0,0,0,0.8) !important;
+        }
+
+        /* Kopf- und Fusszeilen, Hinweiskaesten, eingelassene Felder */
+        body.dark [id$="Modal"] [style*="#f9fbff"],
+        body.dark [id$="Modal"] [style*="#fafbff"],
+        body.dark [id$="Modal"] [style*="#f9fafb"],
+        body.dark [id$="Modal"] [style*="#f9f9f9"],
+        body.dark [id$="Modal"] [style*="#f0f7ff"],
+        body.dark [id$="Modal"] [style*="#eef5ff"],
+        body.dark [id$="Modal"] [style*="#eef4fc"],
+        body.dark [id$="Modal"] [style*="#f8fbfc"],
+        body.dark [id$="Modal"] [style*="#f4f7fd"],
+        body.dark [id$="Modal"] [style*="#f8f9fa"],
+        body.dark [id$="Modal"] [style*="#eef2f8"],
+        body.dark #duoAccName,
+        body.dark #duoAccConfig,
+        body.dark #einstUmfangKasten {
+            background: var(--geraet-tief) !important;
+            border-color: var(--geraet-kante) !important;
+            color: var(--geraet-schrift) !important;
+        }
+
+        /* Warnkaesten behalten ihren Ton, nur gedunkelt */
+        body.dark [id$="Modal"] [style*="#fff5f0"],
+        body.dark [id$="Modal"] [style*="#fff1f4"] {
+            background: #2a1714 !important;
+            border-color: #5c2f2b !important;
+            color: #ff9d92 !important;
+        }
+        body.dark [id$="Modal"] [style*="#fff8e1"],
+        body.dark #duoAccPwd {
+            background: #292215 !important;
+            border-color: #5c4a2b !important;
+            color: #ffc266 !important;
+        }
+
+        /* Weisse Flaechen und Knoepfe im Fenster */
+        body.dark [id$="Modal"] div[style*="background:white"],
+        body.dark [id$="Modal"] div[style*="background: white"],
+        body.dark [id$="Modal"] div[style*="background:#fff"],
+        body.dark [id$="Modal"] div[style*="background: #fff"] {
+            background: var(--geraet-flaeche) !important;
+            color: var(--geraet-schrift) !important;
+        }
+        body.dark [id$="Modal"] button,
+        body.dark [id$="Modal"] select,
+        body.dark [id$="Modal"] input[type="text"],
+        body.dark [id$="Modal"] input[type="password"],
+        body.dark [id$="Modal"] input[type="number"],
+        body.dark [id$="Modal"] textarea {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+        }
+        body.dark [id$="Modal"] select,
+        body.dark [id$="Modal"] input[type="text"],
+        body.dark [id$="Modal"] input[type="password"],
+        body.dark [id$="Modal"] input[type="number"],
+        body.dark [id$="Modal"] textarea {
+            background: var(--geraet-tief) !important;
+        }
+        body.dark [id$="Modal"] input::placeholder,
+        body.dark [id$="Modal"] textarea::placeholder { color: #6f7d88 !important; }
+
+        /* Der Hauptknopf eines Fensters leuchtet - wie am Geraet */
+        body.dark [id$="Modal"] button[style*="var(--panel-navy)"],
+        body.dark [id$="Modal"] .btn-primary,
+        body.dark [id$="Modal"] .btn-danger,
+        body.dark #searchResultsStartBtn {
+            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
+            border-color: #22d7ec !important;
+            color: #03222a !important;
+        }
+        body.dark [id$="Modal"] button[style*="var(--panel-navy)"] i,
+        body.dark [id$="Modal"] .btn-primary i,
+        body.dark #searchResultsStartBtn i { color: #04303a !important; }
+        /* Ausser dem, was weh tut: das bleibt rot. */
+        body.dark [id$="Modal"] .btn-danger,
+        body.dark [id$="Modal"] button[style*="#c0392b"],
+        body.dark [id$="Modal"] button[style*="#a5281b"] {
+            background: linear-gradient(#7a2c26, #5e211c) !important;
+            border-color: #8c3b34 !important;
+            color: #ffd8d3 !important;
+        }
+        /* Das Kreuz oben rechts ist kein Knopf im Sinne einer Flaeche */
+        /* Nur das Kreuz oben rechts ist keine Flaeche. Frueher stand hier
+           auch [onclick*="Schliessen"] - das traf aber ebenso den Knopf
+           "Fertig", der dadurch seinen Rahmen verlor. */
+        body.dark [id$="Modal"] button[style*="background:none"],
+        body.dark [id$="Modal"] button[aria-label="Schließen"] {
+            background: none !important;
+            border: none !important;
+            color: var(--geraet-leise) !important;
+        }
+
+        /* Dunkle Schriftfarben aus den inline-styles aufhellen */
+        body.dark [id$="Modal"] [style*="color:#111827"],
+        body.dark [id$="Modal"] [style*="color:#0f2745"],
+        body.dark [id$="Modal"] [style*="color:#16232f"],
+        body.dark [id$="Modal"] [style*="color:#1f2937"],
+        body.dark [id$="Modal"] [style*="color:#212529"],
+        body.dark [id$="Modal"] [style*="color:#374151"],
+        body.dark [id$="Modal"] h2,
+        body.dark [id$="Modal"] h3,
+        body.dark [id$="Modal"] h4,
+        body.dark [id$="Modal"] b,
+        body.dark [id$="Modal"] strong { color: var(--geraet-hell) !important; }
+        body.dark [id$="Modal"] [style*="color:#4b5563"],
+        body.dark [id$="Modal"] [style*="color:#6b7280"],
+        body.dark [id$="Modal"] [style*="color:#5b6b7f"],
+        body.dark [id$="Modal"] [style*="var(--muted)"] { color: var(--geraet-leise) !important; }
+
+
+        /* ================================================================
+           BEAMER-MODUS
+           ================================================================
+           Dietmar am 03.09.2026 zum Vorschlag: "Bau mir den Beamer-Modus
+           ein." Anlass ist sein eigener Kursabend-Entwurf: Frage an die
+           Wand, Teilnehmer halten A-B-C-D-Kaertchen hoch.
+
+           Dafuer ist die normale Ansicht ungeeignet - nicht weil sie
+           schlecht waere, sondern weil sie fuer EINEN Menschen an EINEM
+           Schirm gebaut ist. Auf einer Leinwand zaehlt nur, was aus zehn
+           Metern lesbar ist. Alles andere - Verlauf, Auswertung, Leisten,
+           Fusszeile - ist im Kursraum Beiwerk und wird ausgeblendet.
+
+           Nichts wird zerstoert: Es ist eine Klasse am body, sonst nichts.
+           Esc raus, und alles steht wieder da.
+           ================================================================ */
+
+        /* Der Beamer-Modus greift NUR, solange eine Runde laeuft.
+           Dietmar am 03.09.2026: "Wenn ich den Beamer Modus verlasse habe
+           ich nur ein weisses Feld." Der Grund war genau hier: Auf der
+           Hauptansicht besteht die Seite fast nur aus den Teilen, die
+           unten ausgeblendet werden - Leiste, Verlauf, Uebersicht,
+           Lernfortschritt. Blieb also ein weisses Blatt.
+
+           Deshalb haengt das Ausblenden jetzt an einer zweiten Klasse:
+           beamer-live setzt der Trainer nur, wenn wirklich eine Frage auf
+           dem Schirm steht. Vorher bleibt die Hauptansicht, wie sie ist,
+           und ein Hinweisbalken sagt, dass der Modus scharf ist. */
+        body.beamer.beamer-live .header,
+        body.beamer.beamer-live .filter-bar,
+        body.beamer.beamer-live .history-col,
+        body.beamer.beamer-live .left-sidebar,
+        /* Die Spalte um die Auswertung herum bleibt sonst als leerer Block
+           stehen und schiebt die Frage aus dem Bild - der Grund, warum die
+           erste Fassung unten klebte. */
+        body.beamer.beamer-live .sidebar-column,
+        body.beamer.beamer-live .footer-note,
+        body.beamer.beamer-live .exam-info,
+        body.beamer.beamer-live #masteryDisplay,
+        body.beamer.beamer-live .video-link-box,
+        body.beamer.beamer-live #sidebarToggleBtn,
+        body.beamer.beamer-live .q-meta,
+        body.beamer.beamer-live .video-quelle,
+        body.beamer.beamer-live .quelle-hinweis { display: none !important; }
+
+        /* Der Ausstieg. Er war blass (Deckkraft 0,25) und auf weissem Grund
+           praktisch unsichtbar - Dietmar: "Der Button Exit fehlt." Jetzt
+           ist er ein deutlicher dunkler Knopf, der auf jeder Leinwand zu
+           sehen ist, aber klein genug bleibt, um nicht zu stoeren.
+           Ausserhalb des Beamer-Modus ist er weg - vorher stand er als
+           weisser Kasten in der Ecke der normalen Ansicht. */
+        #beamerRaus { display: none; }
+        #beamerStand { display: none; }
+        #beamerWartet { display: none; }
+
+        body.beamer #beamerRaus {
+            display: flex !important;
+            position: fixed; top: 12px; right: 14px; z-index: 100005;
+            align-items: center; gap: 7px;
+            padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+            font: 700 0.85rem/1 var(--font-body), "Segoe UI", sans-serif;
+            background: #14181c; color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.28);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+            opacity: 0.9; transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+        body.beamer #beamerRaus:hover { opacity: 1; transform: translateY(1px); }
+
+        /* Hinweisbalken, solange keine Runde laeuft: der Modus ist an,
+           aber es gibt noch nichts an die Wand zu werfen. */
+        body.beamer:not(.beamer-live) #beamerWartet {
+            display: flex !important;
+            align-items: center; justify-content: center; gap: 10px;
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 100004;
+            padding: 0.6rem 1rem;
+            background: #14181c; color: #ffffff;
+            font: 600 0.86rem/1.3 var(--font-body), "Segoe UI", sans-serif;
+            border-top: 2px solid #17c3d6;
+        }
+
+        body.beamer.beamer-live { padding: 0 !important; }
+        body.beamer.beamer-live .card {
+            max-width: none !important; width: 100vw !important;
+            margin: 0 !important;
+            border-radius: 0 !important; border: none !important;
+            padding: 2.2vh 3vw !important; box-shadow: none !important;
+            min-height: 0 !important; height: auto !important;
+            display: block !important;
+        }
+        body.beamer.beamer-live .main-layout {
+            display: block !important;
+            min-height: 0 !important;
+            height: auto !important;
+        }
+        body.beamer.beamer-live .main-col {
+            width: 100% !important; max-width: none !important;
+            min-height: 0 !important; height: auto !important;
+            justify-content: flex-start !important;
+        }
+        body.beamer.beamer-live .question-area {
+            border: none !important; box-shadow: none !important;
+            padding: 0 !important; background: transparent !important;
+        }
+
+        /* Die Frage. 2.5vw heisst: auf jeder Leinwand gleich gross im
+           Verhaeltnis zum Bild - egal ob 1280 oder 4K angeschlossen ist. */
+        body.beamer.beamer-live .q-text-row {
+            padding: 2.2vh 2.4vw !important;
+            border-radius: 10px !important;
+            margin-bottom: 2.4vh !important;
+        }
+        body.beamer.beamer-live .q-text {
+            font-size: clamp(1.4rem, 2.5vw, 3rem) !important;
+            line-height: 1.3 !important;
+        }
+        body.beamer.beamer-live .option,
+        body.beamer.beamer-live .option-grid {
+            padding: 1.7vh 2vw !important;
+            margin-bottom: 1.5vh !important;
+            border-width: 2px !important;
+            border-radius: 10px !important;
+        }
+        body.beamer.beamer-live .option-text {
+            font-size: clamp(1.15rem, 1.95vw, 2.35rem) !important;
+            line-height: 1.35 !important;
+        }
+        body.beamer.beamer-live .option-label {
+            font-size: clamp(1.3rem, 2.2vw, 2.6rem) !important;
+            font-weight: 800 !important;
+            min-width: 2.2ch;
+            letter-spacing: 0.02em;
+        }
+
+        /* Die Knopfreihe unten bleibt, nur groesser: der Ausbilder steht
+           am Rechner und trifft sie auch ohne Brille. */
+        body.beamer.beamer-live .action-row { margin-top: 2.5vh !important; }
+        body.beamer.beamer-live .nav-btn {
+            height: 54px !important; min-height: 54px !important;
+            font-size: 1rem !important; padding: 0 1.7rem !important;
+        }
+
+        /* Standanzeige in der Ecke: welche Frage von wie vielen. */
+        body.beamer.beamer-live #beamerStand {
+            display: block !important;
+            position: fixed; left: 16px; bottom: 12px; z-index: 100004;
+            font: 700 1rem/1 var(--font-mono), Consolas, monospace;
+            color: #8a97a3; opacity: 0.6;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.beamer #beamerRaus { transition: none; }
+        }
+
+        /* Punkt fuer den Tunnelzustand */
+        body.dark #tunnelStatusDot { box-shadow: 0 0 6px currentColor; }
+
+
+        /* ---- Die Fenster bekommen dunkle Variablen ----
+           Dietmar am 03.09.2026 mit sieben Screenshots: "Hier gibt es noch
+           Probleme mit der Schrift." Und zwar ueberall dort, wo im HTML
+           color:var(--ink) oder var(--muted) steht: Die Fenster setzten sich
+           weiter oben ihre HELLEN Werte (--ink:#16232f), weil sie damals
+           helle Kaesten waren. Der Grund ist jetzt dunkel, die Variable war
+           es nicht - also fast schwarze Schrift auf fast schwarzem Grund.
+
+           Eine Regel statt fuenfzig: die Variablen umstellen, dann ziehen
+           alle Texte darin von selbst mit. Die per id gesetzten Faelle
+           brauchen id-Schaerfe, deshalb stehen sie ausgeschrieben da. */
+        body.dark [id$="Modal"],
+        body.dark #cacheClearModal,
+        body.dark #fullResetModal,
+        body.dark #genericAlertModal,
+        body.dark #genericConfirmModal,
+        body.dark #masteryClearModal,
+        body.dark #ttsSettingsModal,
+        body.dark #statistikModal,
+        body.dark #rundeModal,
+        body.dark #abgleichModal,
+        body.dark #infoModal,
+        body.dark #klasseModal,
+        body.dark #lektionenModal,
+        body.dark #duoModal .duo-collapsible {
+            color: var(--geraet-schrift) !important;
+            --ink: #e7eef4;
+            --muted: #8a97a3;
+            --line: #2b3238;
+            --card-bg: #14181c;
+            --bg: #14181c;
+            --panel-navy: #17c3d6;
+            --panel-navy-light: #0e93a4;
+            --good: #35d08a;  --good-bg: #0f2e22;
+            --bad:  #ff8f82;  --bad-bg:  #331a17;
+            --warn: #ffc266;  --warn-bg: #33280f;
+        }
+        /* Ueberschriften eine Spur heller als der Fliesstext. */
+        body.dark [id$="Modal"] h2,
+        body.dark [id$="Modal"] h3,
+        body.dark [id$="Modal"] h4 { color: var(--geraet-hell) !important; }
+        /* Die Warnfarben in den Kaesten waren fuer weissen Grund gewaehlt. */
+        body.dark [id$="Modal"] [style*="color:#a04422"],
+        body.dark [id$="Modal"] [style*="color:#a5281b"],
+        body.dark [id$="Modal"] [style*="color:#b03024"],
+        body.dark [id$="Modal"] [style*="color:#c0392b"] { color: #ff8f82 !important; }
+        body.dark [id$="Modal"] [style*="color:#15703c"],
+        body.dark [id$="Modal"] [style*="color:#1f9d55"] { color: #35d08a !important; }
+        body.dark [id$="Modal"] [style*="color:#6f5500"],
+        body.dark [id$="Modal"] [style*="color:#8a6d00"] { color: #ffc266 !important; }
+
+        /* ---- Was sich mit Kennungen wehrt, braucht Kennungen ----
+           Ein paar aeltere Regeln sprechen die Fenster einzeln mit ihrer id
+           an, etwa "body.dark #cacheClearModal button[onclick*=close]".
+           Eine id schlaegt jeden Attributvergleich, egal wie spaet er steht -
+           deshalb hier dieselbe Schaerfe. */
+        body.dark #ttsSettingsModal input[type="checkbox"],
+        body.dark [id$="Modal"] input[type="checkbox"],
+        body.dark [id$="Modal"] input[type="radio"] { accent-color: #17c3d6 !important; }
+
+        /* Das Auswertungs-Fenster wird per Skript gebaut und setzte sich
+           eigene helle Variablen. */
+        body.dark #statistikModal {
+            color: var(--geraet-schrift) !important;
+            --ink: #e7eef4;
+            --muted: #8a97a3;
+            --line: #2b3238;
+            --card-bg: #14181c;
+            --good: #35d08a;  --good-bg: #0f2e22;
+            --bad:  #ff8f82;  --bad-bg:  #331a17;
+            --warn: #ffc266;  --warn-bg: #33280f;
+        }
+
+        /* Knoepfe, die sich ihre Farbe aus --panel-navy holen: im dunklen
+           Stil wird daraus ein helles Blau, das neben dem Tuerkis fremd
+           aussieht. Im Gruppenraum sind das die Hauptknoepfe. */
+        body.dark #duoModal button[style*="var(--panel-navy)"],
+        body.dark #duoCreateRoomBtn,
+        body.dark #duoStartBtn,
+        body.dark #duoModal .btn-primary,
+        body.dark #searchResultsModal #searchResultsStartBtn {
+            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
+            border: 1px solid #22d7ec !important;
+            color: #03222a !important;
+        }
+        body.dark #duoCreateRoomBtn i,
+        body.dark #duoStartBtn i,
+        body.dark #searchResultsModal #searchResultsStartBtn i { color: #04303a !important; }
+        body.dark #duoRoomCode {
+            background: var(--geraet-tief) !important;
+            border: 1px solid #1c4d55 !important;
+            color: var(--tuerkis) !important;
+        }
+        body.dark #duoConfigSummary {
+            background: var(--geraet-tief) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: var(--geraet-leise) !important;
+        }
+        body.dark #searchResultsModal #searchResultsFavAllBtn {
+            background: var(--geraet-tief) !important;
+            border: 1px solid #5c2f3a !important;
+            color: #ff8fa3 !important;
+        }
+        body.dark #duoModal #duoRoomCode {
+            background: var(--geraet-tief) !important;
+            border: 1px solid #1c4d55 !important;
+            color: var(--tuerkis) !important;
+        }
+
+        /* Der Gruppenraum wehrt sich mit eigenen id-Regeln und setzt sich
+           helle Variablen. Beides hier mit derselben Schaerfe zurueckgeholt -
+           dann ziehen alle Nebentexte darin von selbst mit. */
+        body.dark #duoModal > div,
+        body.dark #ttsSettingsModal > div,
+        body.dark #statistikModal > div,
+        body.dark #lektionenModal > div,
+        body.dark #infoModal > div {
+            background: var(--geraet-flaeche) !important;
+            border: 1px solid var(--geraet-kante) !important;
+            color: var(--geraet-schrift) !important;
+        }
+        body.dark #duoModal {
+            --ink: #e7eef4;
+            --muted: #8a97a3;
+            --line: #2b3238;
+            --card-bg: #181d22;
+            --panel-navy: #17c3d6;
+            --panel-navy-light: #0e93a4;
+        }
+        body.dark #duoModal #duoNameHint,
+        body.dark #duoModal #duoConfigHinweis,
+        body.dark #duoModal label { color: var(--geraet-leise) !important; }
+        body.dark #duoModal code { color: #ffc266 !important; }
+        /* Die aelteren Regeln sind zweistufig (id + Attribut bzw. id + Klasse)
+           und schlagen deshalb einstufige. Also hier genauso zweistufig. */
+        body.dark #duoModal div[style*="background:white"],
+        body.dark #duoModal div[style*="background: white"],
+        body.dark #duoModal div[style*="background:#fff"] {
+            background: var(--geraet-flaeche) !important;
+            color: var(--geraet-schrift) !important;
+        }
+        body.dark #duoModal .duo-collapsible label,
+        body.dark #duoModal .duo-collapsible div,
+        body.dark #duoModal .duo-collapsible span { color: var(--geraet-schrift) !important; }
+        body.dark #duoModal .duo-collapsible label { color: var(--geraet-leise) !important; }
+        body.dark #duoModal .duo-collapsible b,
+        body.dark #duoModal .duo-collapsible strong { color: var(--geraet-hell) !important; }
+        /* Die Ueberschrift einer aufklappbaren Gruppe sitzt in span.left und
+           trug das dunkle Hausblau - auf schwarzem Grund unsichtbar. */
+        body.dark #duoModal .duo-collapsible-header,
+        body.dark #duoModal .duo-collapsible-header .left,
+        body.dark #duoModal .duo-collapsible-header .left * { color: var(--geraet-hell) !important; }
+        body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header,
+        body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left,
+        body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left * { color: #ffc266 !important; }
+
+        /* Abbrechen und Zumachen bleiben Panel, nicht Signal. */
+        body.dark [id$="Modal"] button[style*="min-height:38px"] {
+            background: linear-gradient(#242a30, #1b2126) !important;
+            border: 1px solid var(--geraet-kante2) !important;
+            color: #c6d0d8 !important;
+        }
+        /* Das Schliesskreuz: dieselbe Schaerfe wie die alte Regel. */
+        body.dark #cacheClearModal button[onclick*="close"],
+        body.dark #fullResetModal button[onclick*="close"],
+        body.dark #genericAlertModal button[onclick*="close"],
+        body.dark #genericConfirmModal button[onclick*="close"],
+        body.dark #masteryClearModal button[onclick*="close"],
+        body.dark #ttsSettingsModal button[onclick*="display"] {
+            background: none !important;
+            border-color: var(--geraet-kante2) !important;
+            color: var(--geraet-leise) !important;
+        }
+
+
 
     </style>
 
