@@ -1029,6 +1029,66 @@
         .footer-note a:hover {
             border-bottom: 2px solid var(--panel-navy);
         }
+
+        /* Woher die Erklaerungen kommen. Dietmar am 04.09.2026 zuerst als
+           eigene Zeile gewuenscht, kurz darauf praeziser: "In einer Linie" -
+           also derselbe Satz, angehaengt an die Katalogzeile. Dafuer sind
+           "Basis (Vorschriften, Betrieb, Technik N)" und "571 Fragen im
+           Pool" herausgeflogen; beides stand ohnehin doppelt, in der
+           Pruefungsuebersicht und am Knopf "Start".
+
+           Kein eigener Schriftgrad mehr: Auf einer Linie mit dem Rest waere
+           kleinere Schrift ein Bruch mitten im Satz. Farbe traegt nur das
+           Omega, wie in den Kacheln unter der Frage.
+
+           Beide Namen sind anklickbar: 50ohm.de fuehrt auf den Lehrgang,
+           DARC auf den Verein. Dietmar am 04.09.2026 nach Ruecksprache mit
+           Matthias: "Der DARC soll in dem Text anklickbar sein."
+
+           Das Zeichen "50 Omega" des DARC kommt hier bewusst NICHT vor.
+           Matthias am 04.09.2026: "Das Logo ist markenrechtlich geschuetzt.
+           Ich wuerde erstmal vorschlagen, dass du das draussen laesst."
+           Das Omega in dieser Zeile ist der griechische Buchstabe, kein
+           Zeichen des Vereins.
+
+           Andere Fassungen, falls der DARC eine davon lieber sieht - es ist
+           genau dieser eine Satz im Markup, sonst nichts:
+             "Erklaerungen zu jeder Frage bei 50ohm.de - dem
+              Amateurfunk-Lehrgang des DARC"
+             "Mit freundlicher Unterstuetzung von 50ohm.de (DARC)" */
+        .footer-quelle {
+            white-space: nowrap;
+        }
+        /* Auf schmalen Schirmen darf der Satz doch umbrechen - lieber zwei
+           Zeilen als ein Fenster, das sich seitlich wegschiebt. */
+        @media (max-width: 900px) {
+            .footer-quelle { white-space: normal; }
+        }
+        /* Das Omega traegt KEINE Farbe. Dietmar am 04.09.2026 nach
+           Ruecksprache mit Matthias: "Das blaue Logo ist rechtlich
+           geschuetzt. Das muss in der Vorstandschaft noch abgesprochen
+           werden. Deswegen muss das blaue Logo unten raus und durch ein
+           schwarzes Omega ersetzt werden."
+
+           Geschuetzt ist nicht nur die Form, sondern die Marke als Ganzes -
+           und dazu gehoert das Blau. Ein Omega in der Schriftfarbe ist ein
+           Buchstabe im Satz und nichts weiter. Sobald der Vorstand zustimmt,
+           wird hier auf das richtige Zeichen umgestellt; bis dahin bleibt es
+           schwarz. */
+        .footer-quelle .ohm {
+            font-weight: 700;
+            color: inherit;
+            margin-right: 2px;
+        }
+        .footer-quelle a {
+            color: var(--panel-navy);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dotted var(--panel-navy);
+        }
+        .footer-quelle a:hover {
+            border-bottom: 2px solid var(--panel-navy);
+        }
         .hidden {
             display: none !important;
         }
@@ -1378,10 +1438,12 @@
             display: flex; align-items: center; justify-content: center;
         }
         .lernkachel .lern-zeichen i { font-size: 1.15rem; color: #e11d48; }
-        /* Das Omega steht fuer 50 Ohm. Der Buchstabe, nicht das Logo des
-           DARC - das gehoert ihnen und wird nicht nachgebaut. */
+        /* Das Omega steht fuer 50 Ohm. Der Buchstabe, nicht das Zeichen des
+           DARC - und auch nicht in dessen Blau: Geschuetzt ist die Marke als
+           Ganzes, das Blau gehoert dazu. Deshalb dieselbe Farbe wie die
+           Zeile darunter, siehe die Begruendung bei .footer-quelle .ohm. */
         .lernkachel .lern-zeichen.ohm {
-            font-weight: 700; font-size: 1.05rem; color: #00adef; line-height: 1;
+            font-weight: 700; font-size: 1.05rem; color: var(--panel-navy); line-height: 1;
         }
         .lernkachel .lern-mitte { min-width: 0; flex: 1; }
         .lernkachel .lern-oben {
@@ -3221,7 +3283,18 @@ function klasseAnzeigeAktualisieren() {
             if (teile.betrieb) namen.push('Betrieb');
             if (teile.technik) namen.push('Technik');
         }
-        fuss.textContent = kl.titel + ' (' + namen.join(', ') + ')';
+        // Nur noch der Name des Ziels. Dietmar am 04.09.2026: "Basis
+        // (Vorschriften, Betrieb, Technik N) und 571 Fragen im Pool kann
+        // raus." Beides stand ohnehin doppelt - die Pruefungsuebersicht
+        // nennt die Teile, und die Zahl steht am Knopf "Start".
+        // 'namen' wird oben weiter gebraucht, deshalb bleibt die
+        // Berechnung stehen; sie kostet nichts.
+        // Der Titel der Klasse N heisst "Direkteinstieg Klasse N \u00b7 Basis".
+        // Im Fuss soll nur der vordere Teil stehen; der Zusatz nach dem
+        // Mittelpunkt wiederholt, was die Pruefungsuebersicht ohnehin
+        // auffuehrt. Die anderen Ziele tragen keinen Zusatz, fuer sie
+        // aendert die Zeile nichts.
+        fuss.textContent = String(kl.titel || '').split('\u00b7')[0].trim();
     }
 }
 window.klasseAnzeigeAktualisieren = klasseAnzeigeAktualisieren;
@@ -4087,7 +4160,7 @@ window.klasseWaehlen = klasseWaehlen;
          dort gehört sie hin - direkt neben den Lektionen. Hier unten blieb nur
          die Herkunft des Fragenkatalogs. -->
     <div class="footer-note">
-        <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N · Basis (Vorschriften, Betrieb, Technik)</span> · <span id="footerCount">571</span> Fragen im Pool
+        <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle"><span class="ohm">&#937;</span> In Zusammenarbeit mit <a href="https://www.50ohm.de" target="_blank" rel="noopener">50ohm.de</a> — dem Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span>
     </div>
 </div>
 
@@ -6765,7 +6838,10 @@ async function loadQuestions() {
         questionBank = data;
         window.questionBank = data;
         document.getElementById('bankBadge').innerHTML = `<i class="fas fa-check-circle"></i> ${kl.name} · ${questionBank.length} Fragen`;
-        document.getElementById('footerCount').textContent = questionBank.length;
+        // Die Zahl im Fuss ist am 04.09.2026 herausgeflogen. Falls das
+        // Feld irgendwann zurueckkommt, wird es weiter gefuellt - fehlt
+        // es, passiert hier schlicht nichts.
+        { const fc = document.getElementById('footerCount'); if (fc) fc.textContent = questionBank.length; }
         try { klasseAnzeigeAktualisieren(); } catch(e) { console.debug('Klassenanzeige:', e.message); }
         console.log(`✅ ${questionBank.length} Fragen geladen (${kl.name}, ${kl.datei}).`);
         // DEBUG: Zeige Verteilung der korrekten Antworten in der Roh-Datei
@@ -7165,16 +7241,47 @@ const EIGENE_PORTS = [3000];
 // ================================================================
 const ZUSCHAUER_KENNUNG = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
+//  ----------------------------------------------------------------
+//  04.09.2026 - NACHGEBESSERT. Dietmar: "Der Trainer schmiert nach
+//  kurzer Interaktivitaet immer noch ab."
+//
+//  Zwei Fehler steckten hier:
+//
+//  1. Der Zeitgeber allein reicht nicht. Chrome und Edge bremsen
+//     setInterval in Hintergrund-Tabs aus und legen unbenutzte Tabs
+//     ganz schlafen. Dann kommt minutenlang kein Lebenszeichen, obwohl
+//     das Fenster offen ist. Deshalb meldet sich die Seite jetzt
+//     ZUSAETZLICH, sobald sie wieder sichtbar wird - und der Server
+//     wartet fuenf Minuten statt 45 Sekunden.
+//
+//  2. "pagehide" kommt AUCH, wenn der Browser die Seite nur zur Seite
+//     legt und sie spaeter zurueckholt (bfcache, Energiesparmodus).
+//     Die Seite hat sich dabei jedes Mal abgemeldet - der Server hielt
+//     sie fuer geschlossen und machte Feierabend, waehrend sie in
+//     Wahrheit gleich wiederkam. "event.persisted" unterscheidet
+//     beides: true heisst "ich komme wieder". Dann bleibt der Abschied
+//     aus, und "pageshow" meldet die Rueckkehr.
+//  ----------------------------------------------------------------
 function lebenszeichenStarten(){
     const melden = () => {
         try{ fetch('/api/lebenszeichen?id=' + ZUSCHAUER_KENNUNG, { cache:'no-store' }).catch(()=>{}); }catch(e){}
     };
     melden();
     setInterval(melden, 10000);
-    // pagehide statt beforeunload: Es kommt auch dann, wenn der Browser
-    // die Seite in den Ruhezustand schiebt oder das Handy sie wegraeumt.
-    window.addEventListener('pagehide', () => {
-        try{ navigator.sendBeacon('/api/tschuess?id=' + ZUSCHAUER_KENNUNG); }catch(e){}
+
+    // Zurueck im Bild - sofort melden, ohne auf den Takt zu warten.
+    document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') melden();
+    });
+    window.addEventListener('focus', melden);
+    window.addEventListener('pageshow', melden);
+
+    // Der Abschied gilt nur, wenn die Seite wirklich geht. Wird sie nur
+    // zur Seite gelegt (persisted), kommt sie zurueck - dann waere die
+    // Abmeldung eine Luege, die den Server abschaltet.
+    window.addEventListener('pagehide', (e) => {
+        if(e && e.persisted) return;
+        try{ navigator.sendBeacon('/api/tschuess?id=' + ZUSCHAUER_KENNUNG); }catch(e2){}
     });
 }
 window.lebenszeichenStarten = lebenszeichenStarten;

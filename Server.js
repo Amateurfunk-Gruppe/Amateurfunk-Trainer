@@ -24,6 +24,80 @@ process.on('unhandledRejection', (reason)=>{
   console.error('[FATAL] Unbehandelte Promise-Rejection - Server laeuft weiter:', reason);
 });
 
+// ================================================================
+//  DAS PROTOKOLL                              (04.09.2026)
+// ================================================================
+//  Bis heute gab es keins. START.vbs startet den Server ohne Fenster
+//  ("WshShell.Run ... , 0, False") und ohne Umleitung - alles, was der
+//  Server sagt, faellt ins Nichts. Wenn er dann verschwand, gab es
+//  nichts nachzusehen: keine Zeile, kein Zeitpunkt, kein Grund. Genau
+//  deshalb liess sich Dietmars "er schmiert immer noch ab" so lange
+//  nicht klaeren.
+//
+//  Ab jetzt schreibt er mit. Was in der Konsole steht, steht auch in
+//  server.log, mit Uhrzeit davor. Die Datei liegt bei den Lerndaten,
+//  nicht im Programmordner: Eine Installation unter "Program Files"
+//  ist fuer normale Benutzer nicht beschreibbar, dort waere das
+//  Protokoll still gescheitert.
+//
+//  Bei einem Megabyte faengt sie von vorn an - vorher wird die alte
+//  einmal beiseitegelegt. Zwei Dateien, mehr wird es nie.
+//
+//  Schlaegt das Schreiben fehl, passiert nichts weiter: Ein Trainer,
+//  der wegen seines Protokolls nicht startet, waere die schlechtere
+//  Loesung.
+// ================================================================
+const PROTOKOLL_MAX = 1024 * 1024;
+let protokollStrom = null;
+try {
+  const pOrdner = path.join(__dirname, 'data', 'userdata');
+  fs.mkdirSync(pOrdner, { recursive: true });
+  const pDatei = path.join(pOrdner, 'server.log');
+  try {
+    if (fs.existsSync(pDatei) && fs.statSync(pDatei).size > PROTOKOLL_MAX) {
+      fs.renameSync(pDatei, path.join(pOrdner, 'server.log.alt'));
+    }
+  } catch (e) { /* Rotieren ist Kuer, nicht Pflicht */ }
+  protokollStrom = fs.createWriteStream(pDatei, { flags: 'a' });
+  protokollStrom.on('error', () => { protokollStrom = null; });
+} catch (e) { protokollStrom = null; }
+
+function protokollZeile(stufe, teile){
+  if (!protokollStrom) return;
+  try {
+    const t = new Date();
+    const zz = n => String(n).padStart(2, '0');
+    const zeit = zz(t.getDate()) + '.' + zz(t.getMonth()+1) + '. ' +
+                 zz(t.getHours()) + ':' + zz(t.getMinutes()) + ':' + zz(t.getSeconds());
+    const text = teile.map(x => {
+      if (typeof x === 'string') return x;
+      if (x instanceof Error) return x.stack || x.message;
+      try { return require('util').inspect(x, { depth: 2 }); } catch (e) { return String(x); }
+    }).join(' ');
+    protokollStrom.write(zeit + ' ' + stufe + ' ' + text + '\n');
+  } catch (e) { /* nie den Server wegen einer Logzeile anhalten */ }
+}
+
+['log','warn','error'].forEach(art => {
+  const alt = console[art].bind(console);
+  const stufe = art === 'log' ? '   ' : (art === 'warn' ? '!  ' : '!! ');
+  console[art] = function(){
+    try { alt.apply(null, arguments); } catch (e) {}
+    protokollZeile(stufe, Array.prototype.slice.call(arguments));
+  };
+});
+
+// Der letzte Satz. Beendet sich der Server geordnet, steht hier warum -
+// und wie lange er gelaufen ist. Bleibt diese Zeile aus, wurde er von
+// aussen abgeschossen (Task-Manager, Abmeldung, Stromausfall) oder ist
+// am Arbeitsspeicher gescheitert; auch das ist eine Auskunft.
+const PROTOKOLL_START = Date.now();
+process.on('exit', (code) => {
+  const min = Math.round((Date.now() - PROTOKOLL_START) / 60000);
+  protokollZeile('   ', ['[ENDE] Server beendet, Code ' + code +
+                         ', Laufzeit ' + min + ' Minuten.']);
+});
+
 // ===== TUNNEL AUTO-START (V13) =====
 let tunnelProcess = null;
 let tunnelUrlCache = null;
@@ -2243,7 +2317,10 @@ app.get('/api/lebenszeichen',(req,res)=>{
 // Weg, der noch ankommt - ein normales fetch() wird abgebrochen.
 app.post('/api/tschuess',(req,res)=>{
   const id = String(req.query.id || '').slice(0, 40);
-  if(id) zuschauer.delete(id);
+  if(id && zuschauer.has(id)){
+    zuschauer.delete(id);
+    console.log('[ENDE] Zuschauer ' + id + ' hat sich abgemeldet.');
+  }
   res.json({ok:true});
 });
 
@@ -3387,8 +3464,37 @@ function browserOeffnen(url){
 //    - nie, bevor sich ueberhaupt einmal jemand gemeldet hat
 //    - nie waehrend ein Hoerbuch gerechnet wird
 // ================================================================
+//  ----------------------------------------------------------------
+//  04.09.2026 - DIE FRIST WAR ZU KURZ. Dietmar: "Der Trainer schmiert
+//  nach kurzer Interaktivitaet immer noch ab. Das nervt unwahrscheinlich!"
+//  Symptom: Die Seite ist ploetzlich nicht mehr erreichbar, ohne Muster.
+//
+//  Es war nie ein Absturz. Der Server hat sich selbst beendet, und zwar
+//  zu Unrecht:
+//
+//  Die Seite meldet sich alle zehn Sekunden. Chrome und Edge BREMSEN
+//  aber Zeitgeber in Hintergrund-Tabs aus - nach einigen Minuten nur
+//  noch einmal pro Minute, und beide Browser legen unbenutzte Tabs von
+//  sich aus schlafen ("Energiesparmodus", "Sleeping Tabs"), dann laeuft
+//  gar kein Zeitgeber mehr. Bei 45 Sekunden Frist reicht das:
+//  Der Server sieht eine Luecke, haelt den letzten Zuschauer fuer
+//  gegangen und macht Feierabend - waehrend das Fenster offen daneben
+//  steht.
+//
+//  Verschaerft hat es der neue Kasten unter der Frage: "Video ansehen"
+//  und "Bei 50 Ohm nachlesen" oeffnen einen NEUEN TAB. Damit ist der
+//  Trainer genau in dem Moment im Hintergrund, in dem man etwas
+//  nachliest - und die Bremse greift.
+//
+//  Die Frist steht deshalb auf fuenf Minuten. Das ist immer noch der
+//  Zweck der Sache - "der Browser ist zu, also ist Schluss" -, nur
+//  ohne die Annahme, dass ein Browser Zeitgeber puenktlich ausfuehrt.
+//  Der Preis ist, dass ein herrenloser Server fuenf Minuten statt 45
+//  Sekunden weiterlaeuft. Das faellt niemandem auf; ein Server, der
+//  mitten im Lernen abschaltet, sehr wohl.
+//  ----------------------------------------------------------------
 const AUFPASSER_TAKT   = 15000;   // wie oft nachgesehen wird
-const ZUSCHAUER_FRIST   = 45000;  // so lange gilt ein Lebenszeichen
+const ZUSCHAUER_FRIST   = 300000; // so lange gilt ein Lebenszeichen (5 Min)
 const ANLAUF            = 120000; // Schonzeit nach dem Start
 let jemandWarDa = false;
 const SERVER_START_MS = Date.now();
@@ -3396,7 +3502,13 @@ const SERVER_START_MS = Date.now();
 function feierabendPruefen(){
   const jetzt = Date.now();
   for(const [id, wann] of zuschauer){
-    if(jetzt - wann > ZUSCHAUER_FRIST) zuschauer.delete(id);
+    if(jetzt - wann > ZUSCHAUER_FRIST){
+      // Mitschreiben, wie lange das letzte Lebenszeichen her war. Wenn der
+      // Trainer noch einmal zur falschen Zeit aufhoert, steht hier, warum.
+      console.log('[ENDE] Zuschauer ' + id + ' seit ' +
+                  Math.round((jetzt - wann)/1000) + ' s stumm - ausgetragen.');
+      zuschauer.delete(id);
+    }
   }
   if(zuschauer.size > 0){ jemandWarDa = true; return; }
   if(!jemandWarDa) return;

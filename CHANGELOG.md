@@ -8,6 +8,54 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.121.0] - 2026-09-04
+
+### Behoben
+- **Der Trainer war plötzlich nicht mehr erreichbar — und es war nie ein
+  Absturz.** Der Server hat sich selbst beendet, zu Unrecht. Dietmar: „Der
+  Trainer schmiert nach kurzer Interaktivität immer noch ab. Das nervt
+  unwahrscheinlich!"
+
+  Die Seite meldet sich alle zehn Sekunden beim Server; bleibt sie länger als
+  45 Sekunden stumm, machte er Feierabend. Chrome und Edge **bremsen
+  Zeitgeber in Hintergrund-Tabs aber aus** — nach einigen Minuten nur noch
+  einmal pro Minute — und legen unbenutzte Tabs von sich aus schlafen
+  („Energiesparmodus", „Sleeping Tabs"), dann läuft gar kein Zeitgeber mehr.
+  45 Sekunden waren dagegen chancenlos: Der Server sah eine Lücke, hielt den
+  letzten Zuschauer für gegangen und schaltete ab, während das Fenster offen
+  daneben stand
+- Verschärft hat es der neue Kasten unter der Frage: **„Video ansehen" und
+  „Bei 50 Ohm nachlesen" öffnen einen neuen Tab** — damit ist der Trainer
+  genau in dem Moment im Hintergrund, in dem man etwas nachliest
+- Die Frist steht jetzt auf **fünf Minuten** statt 45 Sekunden. Der Zweck
+  bleibt derselbe — Browser zu, Server aus —, nur ohne die Annahme, dass ein
+  Browser Zeitgeber pünktlich ausführt. Der Preis: Ein herrenloser Server
+  läuft fünf Minuten statt 45 Sekunden weiter
+- **Die Seite meldet sich jetzt auch, sobald sie wieder sichtbar wird** —
+  über `visibilitychange`, `focus` und `pageshow`, statt nur im Takt
+- **Zweiter Fehler an derselben Stelle:** `pagehide` kommt auch dann, wenn
+  der Browser die Seite nur zur Seite legt und gleich wiederholt (bfcache,
+  Energiesparmodus). Die Seite hat sich dabei jedes Mal **abgemeldet** — der
+  Server hielt sie für geschlossen und schaltete ab, obwohl sie wiederkam.
+  Jetzt gilt der Abschied nur, wenn die Seite wirklich geht (`event.persisted`)
+
+### Hinzugefügt
+- **Ein Protokoll.** Bis heute gab es keins: `START.vbs` startet den Server
+  ohne Fenster und ohne Umleitung — alles, was er sagte, fiel ins Nichts.
+  Verschwand er, gab es nichts nachzusehen. Genau deshalb ließ sich das so
+  lange nicht klären. Ab jetzt steht alles zusätzlich in
+  **`data\userdata\server.log`**, mit Uhrzeit; bei einem Megabyte fängt die
+  Datei von vorn an, die alte bleibt als `server.log.alt` liegen
+- Beim Ausscheiden eines Zuschauers steht jetzt dabei, **wie lange** er stumm
+  war — und beim Beenden, mit welchem Code und nach welcher Laufzeit. Bleibt
+  diese letzte Zeile aus, wurde der Server von außen abgeschossen; auch das
+  ist eine Auskunft
+- Das Protokoll liegt bei den Lerndaten, nicht im Programmordner: Eine
+  Installation unter „Program Files" ist für normale Benutzer nicht
+  beschreibbar, dort wäre es still gescheitert
+
+---
+
 ## [1.120.0] - 2026-09-04
 
 ### Hinzugefügt
@@ -24,6 +72,37 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
   verglichen worden — kein Link führt ins Leere
 - `50ohm_map.json` wandert jetzt mit: in den Installer, in das
   Aktualisierungspaket und in den Abgleich, wie die Video-Map daneben
+- **Die Fußzeile nennt jetzt die Herkunft der Erklärungen** — in derselben
+  Zeile, nicht darunter:
+
+  > Offizieller Katalog der Bundesnetzagentur Stand: März 2024 ·
+  > Direkteinstieg Klasse N · **Ω** In Zusammenarbeit mit **50ohm.de** — dem
+  > Amateurfunk-Lehrgang des DARC
+
+  Dafür sind „Basis (Vorschriften, Betrieb, Technik N)" und „571 Fragen im
+  Pool" herausgeflogen. Beides stand ohnehin doppelt: die Prüfungsübersicht
+  führt die Teile auf, und die Zahl steht am Knopf „Start". Farbe trägt nur
+  das Omega, wie in den Kacheln unter der Frage
+- Unterhalb von 900 Pixeln darf der Satz umbrechen — lieber zwei Zeilen als
+  ein Fenster, das sich seitlich wegschiebt. Geprüft bei 1440, 1280, 1024 und
+  820 Pixeln: kein seitlicher Überlauf
+- Beide Namen in der Zeile sind anklickbar: **50ohm.de** führt auf den
+  Lehrgang, **DARC** auf den Verein. Beide öffnen im Browser
+- Zwei vorsichtigere Fassungen des Satzes stehen als Kommentar daneben, falls
+  der DARC eine davon lieber sieht
+
+- **Das Omega trägt keine Farbe mehr.** Es stand in `#00adef`, dem Blau des
+  DARC — und geschützt ist die Marke als Ganzes, das Blau gehört dazu. Jetzt
+  hat es die Farbe der Zeile, in der es steht: in der Fußzeile die
+  Schriftfarbe, in den Kacheln die des Titels daneben. Damit ist es ein
+  Buchstabe im Satz und nichts weiter
+
+### Nicht gemacht
+- **Das Zeichen „50 Ω" des DARC kommt im Trainer nicht vor.** Matthias am
+  04.09.2026: „Das Logo ist markenrechtlich geschützt. Ich würde erstmal
+  vorschlagen, dass du das draußen lässt." Darüber entscheidet der Vorstand.
+  Sobald er zustimmt, wird das Zeichen unten in der Fußzeile und oben in der
+  Kopfzeile eingebaut — bis dahin steht dort das schwarze Omega
 
 ### Bekannte Einschränkung
 - Die Verlinkung geht auf die **Kapitelübersicht**, nicht auf die genaue
