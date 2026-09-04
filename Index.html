@@ -1335,6 +1335,68 @@
             filter: none;
         }
 
+        /* ================================================================
+           DAZU LERNEN - die beiden Wege unter der Frage   (04.09.2026)
+           ================================================================
+           Bisher stand hier nur der Videolehrgang. Mit der Zuordnung des
+           DARC kommt 50 Ohm als zweite Quelle dazu: dieselbe Frage, einmal
+           erklaert im Video und einmal zum Nachlesen im Lehrgang.
+
+           Dietmar hatte den ersten Entwurf abgelehnt - da standen zwei
+           runde farbige Knoepfe und zwei farbige Symbolkacheln, also genau
+           die Bauweise, die im September aus der Knopfleiste geflogen ist
+           ("wirkt wie ein Kinderspielzeug"). Diese Fassung uebernimmt die
+           Werte der Leiste: weiss, Rand #d7e0ec, 8 Pixel Ecke, Hover
+           #f4f7fb. Farbe tragen nur die beiden Zeichen der Quelle - sie
+           sagen auf einen Blick, wohin der Weg fuehrt.
+
+           Der Fragenblock daruber wird nicht angefasst. Dietmar am
+           04.09.2026: "An den Farben und dem Style moechte ich nichts
+           veraendern. Das ist von 50Ohm." Die Werte dort (--darc-rahmen
+           #dddddd, --darc-richtig #3bb583, --darc-falsch #fe756c) stammen
+           aus dem Lehrgang und bleiben, wie sie sind.
+           ================================================================ */
+        .lernpaar {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            margin: 1rem 0 0.2rem 0;
+        }
+        /* Gibt es nur eine Quelle, nimmt sie die ganze Breite - sonst
+           stuende die Haelfte der Zeile leer. */
+        .lernpaar.einzeln { grid-template-columns: 1fr; }
+        @media (max-width: 700px) { .lernpaar { grid-template-columns: 1fr; } }
+
+        .lernkachel {
+            display: flex; align-items: center; gap: 10px; text-align: left;
+            background: #ffffff; border: 1px solid #d7e0ec; border-radius: 8px;
+            padding: 0.6rem 0.8rem; cursor: pointer; min-width: 0;
+            font-family: inherit; font-size: 0.82rem;
+            transition: background 0.12s ease, border-color 0.12s ease;
+        }
+        .lernkachel:hover { background: #f4f7fb; border-color: #b9c8dc; }
+        .lernkachel .lern-zeichen {
+            width: 22px; height: 22px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lernkachel .lern-zeichen i { font-size: 1.15rem; color: #e11d48; }
+        /* Das Omega steht fuer 50 Ohm. Der Buchstabe, nicht das Logo des
+           DARC - das gehoert ihnen und wird nicht nachgebaut. */
+        .lernkachel .lern-zeichen.ohm {
+            font-weight: 700; font-size: 1.05rem; color: #00adef; line-height: 1;
+        }
+        .lernkachel .lern-mitte { min-width: 0; flex: 1; }
+        .lernkachel .lern-oben {
+            display: block; font-size: 0.8rem; font-weight: 600; color: var(--panel-navy);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lernkachel .lern-unten {
+            display: block; font-size: 0.74rem; color: var(--muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lernkachel .lern-pfeil { color: #7e8ea6; flex-shrink: 0; font-size: 0.7rem; }
+        .lernquelle {
+            text-align: center; margin-top: 4px; font-size: 0.65rem; color: var(--muted);
+        }
+
         /* Die eine Handlung. Dietmars Farbe vom 03.09.2026. */
         .filter-bar .btn.btn-primary,
         .filter-bar .btn.btn-primary:hover {
@@ -4586,6 +4648,9 @@ window.zeigeFehlerwertungHinweis = zeigeFehlerwertungHinweis;
 // ================================================================
 let questionBank = [];
 let videoMap = {}; // id -> video info (DL2YMR Zeitmarken) – wird aus Embed + Fetch geladen
+// Die Zuordnung zum Lehrgang des DARC. Leer, solange die Datei fehlt.
+let lernMap = {};
+window.lernMap = lernMap;
 let svgList = [];
 let history = {};
 let currentUser = (()=>{ try{ return localStorage.getItem('amateurfunk_currentUser') || 'user1'; }catch(e){ return 'user1'; } })();
@@ -6714,6 +6779,37 @@ async function loadQuestions() {
             if(cnt.A===questionBank.length) console.warn('⚠️ ALTE DATEI! Noch immer alles auf A - bitte neue fragen.json hochladen!');
         } catch(e){}
         
+        // 1a2. Die Zuordnung zum Lehrgang des DARC.
+        //
+        // Dietmar am 04.09.2026, nach Matthias' Angebot ("ein paar Pointer,
+        // welche Datenquellen du von uns noch einbauen kannst"): "Ziel ist
+        // es, nicht nur auswendig zu lernen, sondern auch richtig zu
+        // lernen." Genau dafuer ist diese Datei da - sie sagt, wo eine
+        // Frage im Lehrgang erklaert wird.
+        //
+        // Sie ist FREIWILLIG. Fehlt sie, faellt nur der zweite Kasten unter
+        // der Frage weg; nichts anderes haengt daran. Deshalb wird ein 404
+        // hier auch nicht als Fehler behandelt - der Trainer laeuft ohne
+        // die Datei genauso.
+        //
+        // Aufbau, eine Zeile je Frage:
+        //   { "NB201": { "kapitel": "Erste Schritte",
+        //                "seite":   "Das RST-System",
+        //                "url":     "https://50ohm.de/N_rst.html" } }
+        try {
+            const r50 = await fetch('50ohm_map.json?v=' + Date.now(), { cache: 'no-store' });
+            if (r50.ok) {
+                const j50 = await r50.json();
+                if (j50 && typeof j50 === 'object') {
+                    lernMap = j50;
+                    window.lernMap = lernMap;
+                    console.log(`✅ 50-Ohm-Zuordnung geladen: ${Object.keys(lernMap).length} Fragen`);
+                }
+            }
+        } catch(e) {
+            console.debug('50ohm_map.json nicht vorhanden – der Lehrgangs-Hinweis bleibt aus.');
+        }
+
         // 1b. Video-Map laden – erst Embedded (garantiert vorhanden), dann Fetch als Update
         try {
             if (window.EMBEDDED_VIDEO_MAP && Object.keys(window.EMBEDDED_VIDEO_MAP).length > 0) {
@@ -9497,6 +9593,8 @@ const KNOPF_ERKLAERUNG = {
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
     einstellungenBtn: 'Einstellungen. Hier schaltest du das Vorlesen der Knopftexte ein, wählst zwischen kurzer und ausführlicher Erklärung und lässt die Schrift größer werden, während eine Antwort vorgelesen wird.',
+    lernVideoBtn: 'Videolehrgang. Michael, DL2YMR, erklärt genau diese Frage in seinem Lehrgang. Der Knopf springt an die Stelle im Video, an der es losgeht.',
+    lernOhmBtn: 'Bei 50 Ohm nachlesen. 50 Ohm ist der Lehrgang des DARC. Dort steht das Kapitel, in dem diese Frage erklärt wird — zum Lesen statt zum Ansehen. Der Knopf öffnet die Seite im Browser.',
     einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
     einstFehlerBtn: 'Fehler melden. Öffnet eine schon vorbereitete E-Mail. Du musst nur beschreiben, was passiert ist, alles andere trägt der Trainer selbst ein.',
     einstResetBtn: 'Alles zurücksetzen. Verlauf, Fehler, Lernbedarf und Lernfortschritt dieses Benutzers werden gelöscht, der Trainer fängt bei null an. Das lässt sich nicht rückgängig machen, deshalb fragt er vorher noch einmal nach.',
@@ -9746,6 +9844,43 @@ document.addEventListener('focusin', function(e){
 }, true);
 
 document.addEventListener('focusout', function(){ knopfZielVerlassen(); }, true);
+
+// ---------------------------------------------------------------------------
+//  Der Weg in den Lehrgang des DARC.
+//
+//  Im Browser, nicht in einem Fenster des Trainers: Die Seite gehoert dem
+//  DARC und soll auch als seine erscheinen, mit seiner Adresse in der
+//  Zeile. Der Videolehrgang darf ins eigene Fenster, weil YouTube das
+//  ausdruecklich anbietet - fuer eine fremde Webseite gilt das nicht.
+//
+//  Ohne Verbindung fuehrt der Knopf ins Leere. Der Trainer lernt bewusst
+//  offline, deshalb sagt er dann, wohin er fuehren WUERDE, statt eine
+//  Fehlerseite zu oeffnen.
+// ---------------------------------------------------------------------------
+function lernSeiteOeffnen(url){
+    if(!url) return;
+    let online = true;
+    try{ online = (navigator.onLine !== false); }catch(e){}
+    if(!online){
+        const text = 'Dafuer wird eine Internetverbindung gebraucht.\n\n'
+                   + 'Die Erklaerung steht im Lehrgang des DARC unter:\n' + url + '\n\n'
+                   + 'Der Trainer selbst laeuft ohne Verbindung weiter - nur dieser '
+                   + 'eine Weg nach draussen nicht.';
+        // showAppAlert ersetzt im Trainer das native alert() und traegt das
+        // Aussehen der uebrigen Fenster.
+        try{
+            if(typeof showAppAlert === 'function'){
+                showAppAlert(text, { title: 'Keine Verbindung' });
+                return;
+            }
+        }catch(e){}
+        alert(text);
+        return;
+    }
+    try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+    try{ window.open(url, '_blank', 'noopener'); }catch(e){}
+}
+window.lernSeiteOeffnen = lernSeiteOeffnen;
 
 // ---------------------------------------------------------------------------
 //  Der Knopf "Raum" in der Kopfzeile.
@@ -11263,19 +11398,59 @@ function renderQuestion() {
         html += `</div>`;
     }
 
+    // ================================================================
+    //  DAZU LERNEN - Videolehrgang und 50 Ohm
+    // ================================================================
+    //  Zwei Quellen, dieselbe Bauart: eine Zuordnung Frage -> Material.
+    //  videoMap gibt es seit Monaten, lernMap kommt vom DARC dazu. Fehlt
+    //  eine der beiden, steht die andere allein und nimmt die volle
+    //  Breite; fehlen beide, steht hier gar nichts.
+    // ================================================================
     const vm = (typeof videoMap !== 'undefined' && videoMap[q.id]) ? videoMap[q.id] : null;
-    if (vm) {
-        html += `<div class="video-link-box" style="margin:1rem 0 0.2rem 0; background: #fff; border:1px solid #e5e7eb; border-radius:12px; padding:0.6rem 0.8rem; display:flex; align-items:center; gap:10px; font-size:0.82rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="width:32px; height:32px; background:#fee2e2; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <i class="fab fa-youtube" style="color:#e11d48; font-size:1.1rem;"></i>
-            </div>
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:600; color:#111827; font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fas fa-graduation-cap" style="color:#6b7280; margin-right:4px;"></i>${vm.lesson}</div>
-                <div style="color:#6b7280; font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${vm.segmentDesc} · <span style="font-family:var(--font-mono); background:#f3f4f6; padding:1px 6px; border-radius:6px; font-weight:600; color:#374151;">${vm.timestamp}</span></div>
-            </div>
-            <button onclick="openVideoModal('${vm.videoId}', ${vm.seconds}, '${(vm.lesson||'').replace(/'/g, "\\'")}', '${(vm.segmentDesc||'').replace(/'/g, "\\'")}'); try{ if(typeof stopTTS==='function') stopTTS(); }catch(e){}" style="flex-shrink:0; background:#111827; color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" title="${(typeof mayUseEmbeddedPlayer==='function' && mayUseEmbeddedPlayer()) ? 'Video im Fenster abspielen' : 'Öffnet den Videolehrgang von DL2YMR auf YouTube (neuer Tab)'}"><i class="fas fa-play" style="font-size:0.65rem;"></i> ${(typeof mayUseEmbeddedPlayer==='function' && mayUseEmbeddedPlayer()) ? 'Video ansehen' : 'Auf YouTube ansehen'}</button>
-        </div>
-        <div style="text-align:center; margin-top:4px; font-size:0.65rem; color:var(--muted);"><i class="fas fa-info-circle"></i> Quelle: Michael DL2YMR – Videolehrgang Klasse N · ohne Seitenleiste im Trainer</div>`;
+    const lm = (typeof lernMap !== 'undefined' && lernMap && lernMap[q.id]) ? lernMap[q.id] : null;
+    if (vm || lm) {
+        const pfeil = '<i class="fas fa-chevron-right lern-pfeil"></i>';
+        const imFenster = (typeof mayUseEmbeddedPlayer === 'function' && mayUseEmbeddedPlayer());
+        const quellen = [];
+        html += `<div class="lernpaar${(vm && lm) ? '' : ' einzeln'}">`;
+
+        if (vm) {
+            quellen.push('Michael DL2YMR – Videolehrgang');
+            // Nur der Lektionsname, ohne "Videolehrgang" davor: Die Namen sind
+            // lang, und das rote Zeichen sagt ohnehin, woher es kommt. Mit
+            // Vorsatz waere die Zeile in der halben Breite abgeschnitten.
+            const lektion = attrText(vm.lesson || 'Videolehrgang');
+            const stelle  = attrText(vm.segmentDesc || '');
+            const auf = `openVideoModal('${String(vm.videoId||'').replace(/'/g, "\\'")}', ${vm.seconds||0}, `
+                      + `'${String(vm.lesson||'').replace(/'/g, "\\'")}', `
+                      + `'${String(vm.segmentDesc||'').replace(/'/g, "\\'")}'); `
+                      + `try{ if(typeof stopTTS==='function') stopTTS(); }catch(e){}`;
+            html += `<button type="button" class="lernkachel" id="lernVideoBtn" onclick="${auf}"
+                data-tooltip="${imFenster ? 'Video im Fenster abspielen' : 'Öffnet den Videolehrgang von DL2YMR auf YouTube (neuer Tab)'}">
+                <span class="lern-zeichen"><i class="fab fa-youtube"></i></span>
+                <span class="lern-mitte">
+                    <span class="lern-oben">${lektion}</span>
+                    <span class="lern-unten">${stelle}${vm.timestamp ? ', ab ' + attrText(vm.timestamp) : ''}</span>
+                </span>${pfeil}</button>`;
+        }
+
+        if (lm) {
+            quellen.push('50ohm.de (DARC)');
+            const kap   = attrText(lm.kapitel || '50 Ohm');
+            const seite = attrText(lm.seite || '');
+            // Die Seite gehoert dem DARC und soll auch als seine erscheinen -
+            // deshalb der Browser und nicht ein Fenster im Trainer.
+            const auf = `lernSeiteOeffnen('${String(lm.url||'').replace(/'/g, "\\'")}')`;
+            html += `<button type="button" class="lernkachel" id="lernOhmBtn" onclick="${auf}"
+                data-tooltip="Öffnet den Lehrgang des DARC im Browser – dort wird genau diese Frage erklärt">
+                <span class="lern-zeichen ohm">&#937;</span>
+                <span class="lern-mitte">
+                    <span class="lern-oben">50 Ohm · ${kap}</span>
+                    <span class="lern-unten">${seite}${seite ? ', ' : ''}Lehrgang des DARC</span>
+                </span>${pfeil}</button>`;
+        }
+
+        html += `</div><div class="lernquelle"><i class="fas fa-info-circle"></i> Quelle${quellen.length>1?'n':''}: ${quellen.join(' · ')}</div>`;
     }
 
     html += `</div>`;
@@ -14224,6 +14399,8 @@ if (originalSelectOption) {
         body.beamer.beamer-live .exam-info,
         body.beamer.beamer-live #masteryDisplay,
         body.beamer.beamer-live .video-link-box,
+        body.beamer.beamer-live .lernpaar,
+        body.beamer.beamer-live .lernquelle,
         body.beamer.beamer-live #sidebarToggleBtn,
         body.beamer.beamer-live .q-meta,
         body.beamer.beamer-live .video-quelle,

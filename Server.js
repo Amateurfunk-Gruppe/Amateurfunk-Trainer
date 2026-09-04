@@ -1388,7 +1388,7 @@ app.get('/api/version',(req,res)=>{
 const PAKET_DATEIEN = [
   'formelhilfe.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
-  'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js',
+  'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js', '50ohm_map.json',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
@@ -1817,7 +1817,10 @@ app.get('/api/projekt-paket',(req,res)=>{
 // was der Aufrufer schickt.
 const ABGLEICH_DATEN    = ['fragen.json', 'svg-list.json', 'video_map_embed.js', 'video_lessons.json',
                            'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json',
-                           'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json'];
+                           'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
+                           // Zuordnung Frage -> Kapitel bei 50ohm.de. Reine
+                           // Kursdaten wie die Video-Map daneben.
+                           '50ohm_map.json'];
 const ABGLEICH_BROWSER  = ['Index.html', 'duo.js', 'klick-sound.js', 'tts-expand.js'];
 const ABGLEICH_PROGRAMM = ['Server.js', 'hoerbuch.js', 'lame.js'];
 const ABGLEICH_ALLE     = [...ABGLEICH_DATEN, ...ABGLEICH_BROWSER, ...ABGLEICH_PROGRAMM];
@@ -2437,6 +2440,12 @@ const PUBLIC_FILES = new Set([
   // der Lektionsuebersicht gelesen; enthaelt nur oeffentliche Kursdaten, keine
   // Nutzerdaten. Ohne diesen Eintrag lief der Abruf in einen 404.
   '/video_lessons.json',
+  // Zuordnung Frage -> Kapitel im Lehrgang des DARC (50ohm.de). Kommt vom
+  // DARC, enthaelt nur oeffentliche Kursdaten - Fragennummer, Kapitelname,
+  // Adresse der Lernseite. Die Datei ist freiwillig: Fehlt sie, faellt in
+  // der Frageansicht nur der zweite Hinweiskasten weg. Ohne diesen Eintrag
+  // liefe der Abruf in einen 404 und der Kasten erschiene nie.
+  '/50ohm_map.json',
   '/klick-sound.js',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von

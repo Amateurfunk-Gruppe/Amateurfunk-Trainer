@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50 Ohm im Trainer — Gestaltung</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --start-farbe: #123a6b;
+        --panel-navy: #0f2745;
+        --ink: #162436;
+        --muted: #5b6b80;
+        --bg: #eef2f9;
+        --line: #e3e9f3;
+        --kante: #d7e0ec;
+        --kante-hover: #b9c8dc;
+        --flaeche-hover: #f4f7fb;
+        --icon: #7e8ea6;
+        --darc-rahmen: #dddddd;
+        --font-body: -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: 'SFMono-Regular', Consolas, monospace;
+    }
+    body {
+        background: radial-gradient(1200px 600px at 15% -10%, #dde7f7 0%, transparent 60%), var(--bg);
+        font-family: var(--font-body); color: var(--ink); line-height: 1.55;
+        padding: 2rem 1rem 4rem;
+    }
+    .huelle { max-width: 940px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.4rem; letter-spacing: -0.01em; }
+    h2 {
+        font-size: 1.05rem; font-weight: 700; margin: 2.4rem 0 0.3rem;
+        padding-bottom: 0.4rem; border-bottom: 2px solid var(--start-farbe);
+    }
+    h3 { font-size: 0.92rem; font-weight: 700; margin: 1.4rem 0 0.5rem; }
+    p { margin-bottom: 0.7rem; max-width: 68ch; }
+    .leise { color: var(--muted); font-size: 0.88rem; }
+    .karte {
+        background: #fff; border: 1px solid var(--line); border-radius: 14px;
+        padding: 1.2rem 1.3rem; margin: 0.9rem 0 1.4rem;
+        box-shadow: 0 8px 24px -18px rgba(15,39,69,0.35);
+    }
+    .marke {
+        display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+        text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+        background: #eef2f9; color: var(--muted); margin-bottom: 0.8rem;
+    }
+    .marke.alt { background: #fbe1df; color: #a5281b; }
+    .marke.neu { background: #123a6b; color: #fff; }
+
+    /* --- Nachbau der Frageansicht --- */
+    .frageblock { background: var(--darc-rahmen); padding: 9px 8px; }
+    .frage-zeile { background: #fff; padding: 0.9rem 1rem; margin-bottom: 8px; }
+    .frage-zeile .nr { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+    .frage-zeile .txt { font-weight: 600; font-size: 0.95rem; margin-top: 2px; }
+    .antwort {
+        background: #fff; padding: 0.65rem 1rem; margin-bottom: 8px;
+        display: flex; gap: 12px; align-items: baseline; font-size: 0.9rem;
+    }
+    .antwort .buchst { font-weight: 700; color: var(--ink); min-width: 1.6ch; }
+    /* Die echten Werte aus dem Lehrgang. Dietmar am 04.09.2026: "An den
+       Farben und dem Style moechte ich nichts veraendern. Das ist von
+       50Ohm." Gemessen aus seinem Bildschirmfoto: Rahmen #dddddd,
+       richtig #3bb583, falsch #fe756c. */
+    .antwort.richtig { background: #3bb583; color: #ffffff; }
+    .antwort.richtig .buchst { color: #ffffff; }
+    .antwort.falsch  { background: #fe756c; color: #ffffff; }
+    .antwort.falsch .buchst { color: #ffffff; }
+    .antwort .zeichen-rechts { margin-left: auto; font-weight: 700; }
+    .zeitmarke {
+        font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted);
+    }
+
+    /* ============ D: zwei gleiche Kacheln ============ */
+    .lernpaar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.9rem; }
+    .lernkachel {
+        display: flex; align-items: center; gap: 10px; text-align: left;
+        background: #fff; border: 1px solid var(--kante); border-radius: 8px;
+        padding: 0.6rem 0.8rem; cursor: pointer; font-family: inherit; min-width: 0;
+    }
+    .lernkachel:hover { background: var(--flaeche-hover); border-color: var(--kante-hover); }
+    .lernkachel svg { flex-shrink: 0; }
+    .lernkachel .mitte { min-width: 0; flex: 1; }
+    .lernkachel .oben {
+        display: block;
+        font-size: 0.8rem; font-weight: 600; color: var(--panel-navy);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lernkachel .unten {
+        display: block;
+        font-size: 0.74rem; color: var(--muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lernkachel .pfeil { margin-left: auto; color: var(--icon); flex-shrink: 0; }
+
+    /* Die beiden Herkunftszeichen. Sie sind die einzige Farbe in der Zeile -
+       deshalb klein und ohne Kachel dahinter. */
+    .zeichen {
+        width: 22px; height: 22px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .zeichen.ohm {
+        font-weight: 700; font-size: 1.05rem; color: #00adef;
+        line-height: 1; letter-spacing: -0.01em;
+    }
+    /* Fassung mit blasser Kachel dahinter */
+    .lernkachel.kachelig .zeichen {
+        width: 28px; height: 28px; border-radius: 6px;
+    }
+    .lernkachel.kachelig .zeichen.tube { background: #fdeaec; }
+    .lernkachel.kachelig .zeichen.ohm  { background: #e6f6fd; font-size: 0.95rem; }
+
+    /* ============ E: eine Zeile wie ein Satz ============ */
+    .lernzeile {
+        margin-top: 0.85rem; padding-top: 0.6rem; border-top: 1px solid var(--line);
+        font-size: 0.8rem; color: var(--muted);
+        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .lernzeile b { color: var(--panel-navy); font-weight: 600; }
+    .lernzeile a {
+        color: var(--start-farbe); font-weight: 600; text-decoration: none;
+        border-bottom: 1px solid #c3d3e6; padding-bottom: 1px;
+    }
+    .lernzeile a:hover { border-bottom-color: var(--start-farbe); }
+    .punkt { color: #b9c8dc; }
+
+    /* ============ F: zwei Knöpfe wie in der Leiste ============ */
+    .lernknoepfe { display: flex; gap: 8px; margin-top: 0.9rem; flex-wrap: wrap; }
+    .lernknopf {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: #fff; color: var(--panel-navy);
+        border: 1px solid var(--kante); border-radius: 8px;
+        padding: 0.5rem 0.9rem; min-height: 38px;
+        font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    }
+    .lernknopf:hover { background: var(--flaeche-hover); border-color: var(--kante-hover); }
+    .lernknopf svg { color: var(--icon); flex-shrink: 0; }
+    .lernknopf .neben { font-weight: 400; color: var(--muted); }
+
+    .quelle { margin-top: 6px; font-size: 0.68rem; color: var(--muted); }
+
+    /* Fehlerfall */
+    .fehlerbox {
+        margin-top: 0.9rem; background: #fbe1df; border-left: 4px solid #d9403a;
+        border-radius: 0 10px 10px 0; padding: 0.7rem 0.9rem; font-size: 0.86rem;
+    }
+    pre {
+        background: #0f2745; color: #e7eef4; padding: 0.9rem 1rem; border-radius: 10px;
+        font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.6;
+        overflow-x: auto; margin: 0.6rem 0 1rem;
+    }
+    pre .k { color: #9fd7f0; } pre .w { color: #ffd28a; } pre .c { color: #8ba6bb; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin: 0.6rem 0 1rem; }
+    th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+    th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+    td.ja { color: #15703c; font-weight: 600; }
+    td.nein { color: #a5281b; font-weight: 600; }
+    code {
+        font-family: var(--font-mono); font-size: 0.78rem;
+        background: #eef2f9; padding: 1px 5px; border-radius: 4px;
+    }
+    ul { margin: 0 0 0.9rem 1.1rem; }
+    li { margin-bottom: 0.35rem; max-width: 66ch; }
+    .empfehlung {
+        background: #f4f7fb; border: 1px solid var(--kante); border-left: 4px solid var(--start-farbe);
+        border-radius: 0 10px 10px 0; padding: 0.8rem 1rem; margin: 0.8rem 0 1.4rem; font-size: 0.9rem;
+    }
+</style>
+</head>
+<body>
+<div class="huelle">
+
+<h1>50 Ohm im Trainer — die Gestaltung</h1>
+<p class="leise">Zweiter Anlauf, 04.09.2026 &middot; „Das finde ich nicht schlecht.
+Die Gestaltung gefällt mir optisch nicht so richtig.“</p>
+
+<h2>Woran es lag</h2>
+<p>Ich hatte gegen deine eigene Entscheidung gearbeitet. Im Kasten standen zwei
+runde, farbige Knöpfe — einer schwarz, einer türkis — dazu zwei farbige
+Symbolkacheln. Das ist genau die Bauweise, die du im September abgeschafft hast:
+<i>„Ich finde diese Buttons schrecklich. Es wirkt wie ein Kinderspielzeug.“</i>
+Die Knopfleiste ist seitdem weiß mit dünnem Rand, 8 Pixel Ecke, und die eine
+Handlung trägt dein Tiefblau. Der Lernkasten hat davon nichts übernommen.</p>
+<p>Dazu ein handfester Fehler: Der Knopf <i>Ansehen</i> stand mitten in der Zeile,
+direkt neben dem 50-Ohm-Symbol. Man konnte nicht sehen, wohin er gehört.</p>
+
+<div class="karte">
+    <span class="marke alt">Der alte Entwurf</span>
+    <div style="border:1px solid #e5e7eb;border-radius:12px;padding:0.6rem 0.8rem;display:flex;align-items:center;gap:10px;font-size:0.82rem;">
+        <div style="width:32px;height:32px;border-radius:8px;background:#fee2e2;flex-shrink:0;"></div>
+        <div style="flex:1;"><b>Video &middot; Lektion 1</b><br><span style="color:#6b7280;">ab 12:40</span></div>
+        <span style="background:#111827;color:#fff;border-radius:20px;padding:0.45rem 0.9rem;font-weight:600;">Ansehen</span>
+        <div style="width:32px;height:32px;border-radius:8px;background:#d8f3fc;flex-shrink:0;"></div>
+        <div style="flex:1;"><b>50 Ohm &middot; Erste Schritte</b><br><span style="color:#6b7280;">Das RST-System</span></div>
+        <span style="background:#00adef;color:#04283a;border-radius:20px;padding:0.45rem 0.9rem;font-weight:600;">Nachlesen</span>
+    </div>
+    <div class="quelle">Vier Farben und zwei Pillen auf 56 Pixel Höhe.</div>
+</div>
+
+<h2>Variante D — zwei gleiche Kacheln, mit den Zeichen der Quelle</h2>
+<p>Zwei gleich breite Felder, sonst nichts. Kein Knopf darin, das Feld selbst ist der
+Knopf. Weiß, dünner Rand, 8 Pixel Ecke — dieselben Werte wie in der Knopfleiste.
+Neu ist, dass die beiden Zeichen ihre eigene Farbe behalten: Sie sind das
+Einzige, was in der Zeile farbig ist, und sagen auf einen Blick, wohin der Weg
+führt. Das <b>Ω</b> steht dabei für 50 Ohm — der Buchstabe, nicht das Logo des
+DARC; das gehört ihnen und wird nicht nachgebaut.</p>
+<div class="karte">
+    <span class="marke neu">Vorschlag D</span>
+    <div class="frageblock">
+        <div class="frage-zeile">
+            <div class="nr">NB201</div>
+            <div class="txt">Was bedeutet die Angabe „RST 599“ bei einem Telegrafie-Kontakt?</div>
+        </div>
+        <div class="antwort richtig"><span class="buchst">A:</span> Readability 5, Signal Strength 9, Tone 9<span class="zeichen-rechts">&#10003;</span></div>
+        <div class="antwort falsch"><span class="buchst">B:</span> 599 Kilohertz Bandbreite<span class="zeichen-rechts">&#10007;</span></div>
+    </div>
+    <div class="lernpaar">
+        <button class="lernkachel">
+            <span class="zeichen tube">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#e11d48" aria-hidden="true">
+                    <path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16 4 12 4 12 4h-.1s-4 0-6.8.3c-.4 0-1.2 0-2 .9-.6.6-.8 2-.8 2S2 8.8 2 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.2.9 1.6.1 6.8.2 6.8.2s4 0 6.8-.3c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.2-.2-3.2zM9.9 14.1V8.4l5.2 2.9-5.2 2.8z"/>
+                </svg>
+            </span>
+            <span class="mitte">
+                <span class="oben">Videolehrgang &middot; Lektion 1</span>
+                <span class="unten">Das RST-System, ab 12:40</span>
+            </span>
+            <svg class="pfeil" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="lernkachel">
+            <span class="zeichen ohm">&#937;</span>
+            <span class="mitte">
+                <span class="oben">50 Ohm &middot; Erste Schritte</span>
+                <span class="unten">Das RST-System, Lehrgang des DARC</span>
+            </span>
+            <svg class="pfeil" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+    </div>
+    <div class="quelle">Quellen: Michael DL2YMR &middot; 50ohm.de (DARC)</div>
+</div>
+
+<h3>Dieselbe Fassung mit blasser Kachel hinter dem Zeichen</h3>
+<p>Falls dir die beiden Zeichen zu frei stehen: eine blasse Fläche dahinter fasst sie
+und lässt die Kachel etwas fester wirken. Mehr ändert sich nicht.</p>
+<div class="karte">
+    <span class="marke neu">Vorschlag D &middot; Fassung 2</span>
+    <div class="frageblock">
+        <div class="frage-zeile">
+            <div class="nr">NB201</div>
+            <div class="txt">Was bedeutet die Angabe „RST 599“ bei einem Telegrafie-Kontakt?</div>
+        </div>
+        <div class="antwort richtig"><span class="buchst">A:</span> Readability 5, Signal Strength 9, Tone 9<span class="zeichen-rechts">&#10003;</span></div>
+        <div class="antwort falsch"><span class="buchst">B:</span> 599 Kilohertz Bandbreite<span class="zeichen-rechts">&#10007;</span></div>
+    </div>
+    <div class="lernpaar">
+        <button class="lernkachel kachelig">
+            <span class="zeichen tube">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="#e11d48" aria-hidden="true">
+                    <path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16 4 12 4 12 4h-.1s-4 0-6.8.3c-.4 0-1.2 0-2 .9-.6.6-.8 2-.8 2S2 8.8 2 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.2.9 1.6.1 6.8.2 6.8.2s4 0 6.8-.3c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.2-.2-3.2zM9.9 14.1V8.4l5.2 2.9-5.2 2.8z"/>
+                </svg>
+            </span>
+            <span class="mitte">
+                <span class="oben">Videolehrgang &middot; Lektion 1</span>
+                <span class="unten">Das RST-System, ab 12:40</span>
+            </span>
+            <svg class="pfeil" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="lernkachel kachelig">
+            <span class="zeichen ohm">&#937;</span>
+            <span class="mitte">
+                <span class="oben">50 Ohm &middot; Erste Schritte</span>
+                <span class="unten">Das RST-System, Lehrgang des DARC</span>
+            </span>
+            <svg class="pfeil" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+    </div>
+    <div class="quelle">Quellen: Michael DL2YMR &middot; 50ohm.de (DARC)</div>
+</div>
+
+<h2>Variante E — eine Zeile, die sich liest wie ein Satz</h2>
+<p>Kein Kasten mehr, nur eine dünne Linie und eine Zeile darunter. Nimmt 26 Pixel
+statt 56 und drängt sich nie vor die Frage. Wer es braucht, findet es; wer die
+Antwort weiß, blättert darüber hinweg.</p>
+<div class="karte">
+    <span class="marke neu">Vorschlag E</span>
+    <div class="frageblock">
+        <div class="frage-zeile">
+            <div class="nr">NB201</div>
+            <div class="txt">Was bedeutet die Angabe „RST 599“ bei einem Telegrafie-Kontakt?</div>
+        </div>
+        <div class="antwort richtig"><span class="buchst">A:</span> Readability 5, Signal Strength 9, Tone 9<span class="zeichen-rechts">&#10003;</span></div>
+        <div class="antwort falsch"><span class="buchst">B:</span> 599 Kilohertz Bandbreite<span class="zeichen-rechts">&#10007;</span></div>
+    </div>
+    <div class="lernzeile">
+        <b>Dazu lernen:</b>
+        <a href="#">Videolehrgang, Lektion 1</a> <span class="zeitmarke">ab 12:40</span>
+        <span class="punkt">&middot;</span>
+        <a href="#">50 Ohm, Das RST-System</a>
+    </div>
+</div>
+
+<h2>Variante F — zwei Knöpfe wie in der Leiste</h2>
+<p>Genau die Knöpfe, die oben in der Leiste stehen: dieselbe Höhe, derselbe Rand,
+dieselbe Schrift. Der Trainer bekommt dadurch kein einziges neues Aussehen dazu —
+die Zeile sieht aus, als wäre sie immer schon da gewesen.</p>
+<div class="karte">
+    <span class="marke neu">Vorschlag F</span>
+    <div class="frageblock">
+        <div class="frage-zeile">
+            <div class="nr">NB201</div>
+            <div class="txt">Was bedeutet die Angabe „RST 599“ bei einem Telegrafie-Kontakt?</div>
+        </div>
+        <div class="antwort richtig"><span class="buchst">A:</span> Readability 5, Signal Strength 9, Tone 9<span class="zeichen-rechts">&#10003;</span></div>
+        <div class="antwort falsch"><span class="buchst">B:</span> 599 Kilohertz Bandbreite<span class="zeichen-rechts">&#10007;</span></div>
+    </div>
+    <div class="lernknoepfe">
+        <button class="lernknopf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/>
+            </svg>
+            Video ansehen <span class="neben">Lektion 1, ab 12:40</span>
+        </button>
+        <button class="lernknopf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7.5h7M8 11.5h7"/>
+            </svg>
+            Bei 50 Ohm nachlesen <span class="neben">Das RST-System</span>
+        </button>
+    </div>
+    <div class="quelle">Quellen: Michael DL2YMR &middot; 50ohm.de (DARC)</div>
+</div>
+
+<div class="empfehlung">
+    <b>D ist gesetzt — bleibt die Frage, ob mit oder ohne blasse Kachel.</b>
+    Ich wäre für <b>ohne</b>: Die Zeichen tragen schon Farbe, eine Fläche dahinter
+    ist ein zweites Signal für dieselbe Sache. Mit Kachel wirkt die Zeile etwas
+    fester und ist auf einem hellen Beamer besser zu treffen — falls du im Kurs
+    daraufklickst, nimm Fassung 2.
+    <br><br>
+    <span style="color:#5b6b80;">Die beiden anderen Fassungen stehen unten nur noch
+    zum Vergleich.</span> <b>F</b>
+    D hat als einzige Platz für die Herkunft — „Lehrgang des DARC“, „ab 12:40“ —
+    ohne dass die Zeile überläuft, und die beiden Wege stehen sichtbar
+    gleichrangig nebeneinander. F ist der risikoärmste Weg: Es kommt kein
+    einziges neues Aussehen in den Trainer. E ist die richtige Wahl, wenn dir die
+    Fragenkarte wichtiger ist als der Hinweis — für das YouTube-Video wäre es
+    allerdings ein Rückschritt gegenüber heute.
+</div>
+
+<h2>Wenn eine Antwort danebengeht</h2>
+<p>Das ist die Stelle, an der aus Auswendiglernen echtes Lernen wird. Heute sieht man
+nur, was richtig gewesen wäre. Mit der Zuordnung kann dort der Weg zur Erklärung
+stehen — ohne neuen Knopf, nur ein Satz mehr in einem Kasten, den es schon gibt.</p>
+<div class="karte">
+    <span class="marke">Später möglich</span>
+    <div class="fehlerbox">
+        <b>Falsch.</b> Richtig wäre <b>A: Readability 5, Signal Strength 9, Tone 9</b>.<br>
+        <span style="font-size:0.82rem;">Erklärt wird das bei 50 Ohm unter
+        <b>Erste Schritte &rsaquo; Das RST-System</b> —
+        <a href="#" style="color:#123a6b;font-weight:600;">jetzt nachlesen</a>.</span>
+    </div>
+</div>
+<p class="leise">Nicht Teil dieses Schritts, sondern was danach möglich wird. Es hängt
+an derselben einen Datei.</p>
+
+<h2>Was gebraucht wird</h2>
+<p>Eine einzige Liste: welche Frage gehört zu welcher Lernseite. Eine Zeile je Frage,
+CSV oder JSON — der DARC hat das vorliegen, die App zeigt es ja bereits.</p>
+<pre><span class="c">// 50ohm_map.json</span>
+{
+  <span class="k">"NB201"</span>: { <span class="k">"kapitel"</span>: <span class="w">"Erste Schritte"</span>,
+              <span class="k">"seite"</span>:   <span class="w">"Das RST-System"</span>,
+              <span class="k">"url"</span>:     <span class="w">"https://50ohm.de/N_rst.html"</span> },
+  <span class="k">"NF103"</span>: { <span class="k">"kapitel"</span>: <span class="w">"Erste Schritte"</span>,
+              <span class="k">"seite"</span>:   <span class="w">"Das RST-System"</span>,
+              <span class="k">"url"</span>:     <span class="w">"https://50ohm.de/N_rst.html"</span> }
+}</pre>
+<p>Als CSV täte es genauso:</p>
+<pre>NB201;Erste Schritte;Das RST-System;N_rst.html
+NF103;Erste Schritte;Das RST-System;N_rst.html
+NA101;Modulation;Amplitudenmodulation;N_am.html</pre>
+
+<h2>Was das im Trainer kostet</h2>
+<p>Wenig, weil die Bauweise schon steht. Der Videolehrgang macht seit Monaten
+dasselbe: eine Zuordnung Frage&nbsp;&rarr;&nbsp;Material, ein Hinweis unter der Frage.</p>
+<table>
+    <tr><th>Baustein</th><th>Vorhanden?</th><th>Anmerkung</th></tr>
+    <tr><td>Zuordnung Frage &rarr; Material laden</td><td class="ja">ja</td>
+        <td><code>videoMap</code> tut das bereits</td></tr>
+    <tr><td>Hinweis unter der Frage zeichnen</td><td class="ja">ja</td>
+        <td><code>.video-link-box</code> als Vorlage</td></tr>
+    <tr><td>Im Simulator ausblenden</td><td class="ja">ja</td>
+        <td>regelt <code>simulatorAufraeumen()</code></td></tr>
+    <tr><td>Im Beamer-Modus ausblenden</td><td class="ja">ja</td>
+        <td>eine Zeile in der Beamer-Regel</td></tr>
+    <tr><td>Vorlesen kennt den Knopf</td><td class="ja">ja</td>
+        <td>ein Eintrag in <code>KNOPF_ERKLAERUNG</code></td></tr>
+    <tr><td>Das Videozeichen</td><td class="ja">ja</td>
+        <td>im Trainer <code>fab fa-youtube</code> wie heute; hier nur nachgezeichnet,
+            weil dieser Entwurf ohne Nachladen auskommt</td></tr>
+    <tr><td>Die Zuordnungsdatei selbst</td><td class="nein">fehlt</td>
+        <td>kommt vom DARC</td></tr>
+</table>
+
+<h3>Zwei Dinge, die vorher geklärt sein sollten</h3>
+<ul>
+    <li><b>Öffnet der Link im Browser oder im Trainer?</b> Der Videokasten kann beides.
+        Bei 50 Ohm wäre der Browser das Ehrlichere: Die Seite gehört dem DARC und soll
+        auch als seine erscheinen, mit seiner Adresse in der Zeile.</li>
+    <li><b>Was, wenn keine Verbindung da ist?</b> Der Trainer lernt bewusst offline. Der
+        Hinweis sollte dann nicht ins Leere führen, sondern sagen, wohin er führen
+        <i>würde</i> — Kapitel und Seitenname stehen ja in der Zuordnung.</li>
+</ul>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "_hinweis": "BEISPIELDATEI ZUM AUSPROBIEREN - NICHT DIE ECHTE ZUORDNUNG. Die Kapitelnamen und Adressen hier sind geraten, nicht vom DARC bestaetigt. Zum Testen: diese Datei nach 50ohm_map.json kopieren, Trainer neu starten, eine der unten genannten Fragen aufschlagen. Sobald die echte Datei von Matthias da ist, ersetzt sie diese hier vollstaendig.",
+  "_aufbau": "Fragennummer: { kapitel, seite, url } - eine Zeile je Frage. Zusaetzliche Schluessel mit Unterstrich davor stoeren nicht, der Trainer sucht nur nach Fragennummern.",
+
+  "VD110": {
+    "kapitel": "Gesetze und Vorschriften",
+    "seite": "Amateurfunkverordnung",
+    "url": "https://50ohm.de/N_chapter_n_gesetze_und_vorschriften.html"
+  },
+  "VD739": {
+    "kapitel": "Gesetze und Vorschriften",
+    "seite": "Frequenznutzungsplan",
+    "url": "https://50ohm.de/N_chapter_n_gesetze_und_vorschriften.html"
+  },
+  "BE201": {
+    "kapitel": "Erste Schritte",
+    "seite": "Das RST-System",
+    "url": "https://50ohm.de/N_rst.html"
+  },
+  "BE202": {
+    "kapitel": "Erste Schritte",
+    "seite": "Das RST-System",
+    "url": "https://50ohm.de/N_rst.html"
+  }
+}

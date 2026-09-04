@@ -8,6 +8,69 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.120.0] - 2026-09-04
+
+### Hinzugefügt
+- **Die 50-Ohm-Zuordnung liegt jetzt für alle 571 Fragen der Klasse N vor.**
+  Jede Frage führt auf das Kapitel im Lehrgang des DARC, in dem ihr Stoff
+  erklärt wird — keine Lücke, kein Rest
+- Hergeleitet ist sie aus dem **Videolehrgang**: Michaels 14 Lektionen folgen
+  den 14 Kapiteln von 50 Ohm, Lektion für Kapitel. Das ist nicht geraten,
+  sondern nachgesehen — die Unterkapitel decken sich wörtlich. Lektion 11
+  „Pileups, Split, Contest, Fuchsjagd, SSTV, Notfunk" gegen Kapitel 11
+  „Betriebsabwicklung" mit Pile-up, Split-Verkehr, Contest, Fuchsjagd, SSTV,
+  Notfunk. Bei Lektion 3 und 13 dasselbe Bild
+- Alle 14 Kapiteladressen sind einzeln aufgerufen und ihre Überschriften
+  verglichen worden — kein Link führt ins Leere
+- `50ohm_map.json` wandert jetzt mit: in den Installer, in das
+  Aktualisierungspaket und in den Abgleich, wie die Video-Map daneben
+
+### Bekannte Einschränkung
+- Die Verlinkung geht auf die **Kapitelübersicht**, nicht auf die genaue
+  Unterseite. Für die feinere Zuordnung braucht es die Liste vom DARC; sobald
+  sie da ist, ersetzt sie die Datei vollständig. Der Kasten sagt das auch:
+  unter dem Kapitelnamen steht „Kapitelübersicht"
+
+---
+
+## [1.119.0] - 2026-09-04
+
+### Hinzugefügt
+- **„Dazu lernen" unter der Frage — jetzt zwei Wege.** Neben dem Videolehrgang
+  steht künftig der Lehrgang des DARC: dieselbe Frage, einmal erklärt im Video
+  und einmal zum Nachlesen auf **50ohm.de**. Anlass ist Dietmars Vorgabe: „Ziel
+  ist es, nicht nur auswendig zu lernen, sondern auch richtig zu lernen"
+- Die Zuordnung kommt aus der neuen Datei **`50ohm_map.json`** — eine Zeile je
+  Frage mit Kapitel, Seitenname und Adresse. Sie ist **freiwillig**: Fehlt sie,
+  bleibt einfach der zweite Hinweis weg, sonst ändert sich nichts. Der Trainer
+  läuft ohne sie genauso
+- Der Weg zu 50 Ohm geht in den **Browser**, nicht in ein Fenster des Trainers:
+  Die Seite gehört dem DARC und soll auch als seine erscheinen, mit ihrer
+  Adresse in der Zeile
+- **Ohne Verbindung** führt der Knopf nicht ins Leere, sondern sagt, wohin er
+  führen *würde* — Kapitel und Seitenname stehen ja in der Zuordnung. Der
+  Trainer lernt bewusst offline
+- Beide Knöpfe erklären sich beim Vorlesen, kurz wie ausführlich
+
+### Geändert
+- **Die Gestaltung des Hinweises folgt jetzt der Knopfleiste.** Bisher war es ein
+  Kasten mit farbiger Symbolkachel und einem schwarzen Pillen-Knopf — also die
+  Bauweise, die im September aus der Leiste geflogen ist („wirkt wie ein
+  Kinderspielzeug"). Jetzt zwei gleich breite Felder, weiß, Rand `#d7e0ec`,
+  8 Pixel Ecke; das Feld selbst ist der Knopf. Farbe tragen nur die beiden
+  Zeichen der Quelle
+- Gibt es nur eine Quelle, nimmt sie die volle Breite; unter 700 Pixeln stehen
+  beide untereinander
+- Das **Ω** steht für 50 Ohm — der Buchstabe, nicht das Logo des DARC. Das
+  gehört ihnen und wird nicht nachgebaut
+- **Am Fragenblock ändert sich nichts.** Dietmar: „An den Farben und dem Style
+  möchte ich nichts verändern. Das ist von 50Ohm." Rahmen `#dddddd`, richtig
+  `#3bb583`, falsch `#fe756c` bleiben, wie sie sind
+- Im Prüfungssimulator und im Beamer-Modus bleiben beide Hinweise ausgeblendet,
+  wie bisher der Videokasten
+
+---
+
 ## [1.118.0] - 2026-09-03
 
 ### Entfernt
