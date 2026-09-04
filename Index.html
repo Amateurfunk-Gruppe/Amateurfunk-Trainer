@@ -618,9 +618,9 @@
             background: #eef2f9 !important;
         }
         body.dark .option.gewaehlt, body.dark .option-grid.gewaehlt {
-            background: #24354d !important;
-            border-color: #9fc4e8 !important;
-            box-shadow: inset 0 0 0 2px #9fc4e8 !important;
+            background: #0f3350 !important;
+            border-color: #4fc9f7 !important;
+            box-shadow: inset 0 0 0 2px #4fc9f7 !important;
         }
         .dot-sidebar.correct-dot {
             background: #157f4b;
@@ -1355,6 +1355,17 @@
         .header-right .btn-reset-danger i { color: #c0392b; }
         .header-right .btn-reset-danger:hover { background: #fdf3f2; border-color: #dda49c; }
 
+        /* "Alles zuruecksetzen" im Zahnrad-Fenster. Die Klasse .btn-outline
+           setzt Farbe und Rand mit !important - eine eigene Regel ist noetig,
+           damit der Knopf rot bleibt. Rot, weil er als einziger im Fenster
+           etwas loescht. */
+        #einstResetBtn { color: #a5281b !important; border-color: #eec3bd !important; }
+        #einstResetBtn i { color: #c0392b !important; }
+        #einstResetBtn:hover { background: #fdf3f2 !important; border-color: #dda49c !important; }
+        body.dark #einstResetBtn { color: #ff8f82 !important; border-color: #5a2f2b !important; }
+        body.dark #einstResetBtn i { color: #ff8f82 !important; }
+        body.dark #einstResetBtn:hover { background: #241618 !important; border-color: #7a3d38 !important; }
+
         /* Die Zahlen tragen die Farbe. */
         .filter-bar .start-badge     { background: #eef2f8; color: #43536b; }
         .filter-bar .error-badge     { background: #fdecea; color: #b03024; }
@@ -1371,19 +1382,19 @@
         body.dark .header-right .btn-cache-sm,
         body.dark .header-right .btn-reset-danger,
         body.dark .header-right .btn-theme {
-            background: #16202e !important;
-            color: #dbe5f2 !important;
-            border-color: #2c3a4d !important;
+            background: #0c2030 !important;
+            color: #dce9f2 !important;
+            border-color: #1d3b52 !important;
         }
         body.dark .header-right .btn i,
         body.dark .header-right .btn-cache-sm i,
         body.dark .header-right .btn-reset-danger i,
-        body.dark .header-right .btn-theme i { color: #8fa0b8 !important; }
+        body.dark .header-right .btn-theme i { color: #8ba6bb !important; }
         body.dark .header-right .btn:hover,
         body.dark .header-right .btn-cache-sm:hover,
         body.dark .header-right .btn-reset-danger:hover,
         body.dark .header-right .btn-theme:hover {
-            background: #1e2a3b !important; border-color: #3d4d63 !important;
+            background: #10293b !important; border-color: #2b5471 !important;
         }
         body.dark .header-right .btn-reset-danger { color: #ff9d92 !important; border-color: #5a2b25 !important; }
         body.dark .header-right .btn-reset-danger i { color: #ff9d92 !important; }
@@ -1774,13 +1785,13 @@
            dunkleren *-bg-Werten fuer die Status-Badges.
            ================================================================ */
         body.dark {
-            --panel-navy: #6fa8dc;
-            --panel-navy-light: #8fbce6;
+            --panel-navy: #00adef;
+            --panel-navy-light: #4fc9f7;
             --ink: #eaeff4;
-            --muted: #b7c5d4;
-            --bg: #31425a;
-            --card-bg: #3b4e68;
-            --line: #6a88a8;
+            --muted: #b3cbdb;
+            --bg: #0d2639;
+            --card-bg: #0f2b40;
+            --line: #2b5471;
             --good: #57c98a;
             --good-bg: #2c4438;
             --bad: #e58880;
@@ -1790,7 +1801,7 @@
             --accent-amber: #e8b787;
             --accent-amber-soft: #42351f;
         }
-        body.dark { background: #31425a; }
+        body.dark { background: #0d2639; }
         body.dark .card { box-shadow: 0 20px 50px -16px rgba(10,16,24,0.45); }
         body.dark .filter-bar,
         body.dark .history-col,
@@ -1805,7 +1816,7 @@
         body.dark .btn-google,
         body.dark .option,
         body.dark .option-grid {
-            background: #46607d;
+            background: #12354c;
             border-color: var(--line);
         }
         body.dark .btn-outline { border-color: var(--line) !important; }
@@ -1815,9 +1826,9 @@
         body.dark .q-meta span,
         body.dark .progress-stats span,
         body.dark .dot-sidebar {
-            background: #4d6884;
-            border-color: #6a88a8;
-            color: #e4eaf1;
+            background: #16405c;
+            border-color: #2b5471;
+            color: #f0f7fc;
         }
         body.dark .dot-sidebar.correct-dot {
             background: var(--good);
@@ -1833,10 +1844,10 @@
             border-color: var(--panel-navy);
             border-width: 3px;
         }
-        body.dark .left-sidebar .stat-chip { background: #4d6884; }
+        body.dark .left-sidebar .stat-chip { background: #16405c; }
         body.dark .left-sidebar .stat-head { color: var(--muted); }
         body.dark .left-sidebar .stat-head b { color: var(--ink); }
-        body.dark .explanation-box { background: #3b5170; }
+        body.dark .explanation-box { background: #123048; }
         body.dark .option:hover:not(.disabled),
         body.dark .option-grid:hover:not(.disabled) { background: var(--accent-amber-soft); }
         body.dark .left-sidebar .result-box.pass,
@@ -1849,120 +1860,120 @@
            DARK MODE - NAV BUTTONS FIX - ALLE GLEICH HOCH
            ============================================================ */
         body.dark .nav-btn {
-            background: #46607d !important;
+            background: #12354c !important;
             color: #eaeff4 !important;
-            border: 1px solid #6a88a8 !important;
+            border: 1px solid #2b5471 !important;
             height: 44px !important;
             min-height: 44px !important;
             max-height: 44px !important;
         }
         body.dark .nav-btn:hover:not(:disabled) {
-            background: #53708f !important;
-            border-color: #7ea0c0 !important;
+            background: #17486a !important;
+            border-color: #3a7ba3 !important;
         }
         body.dark .nav-btn-primary {
-            background: #6fa8dc !important;
-            color: #16233a !important;
-            border-color: #6fa8dc !important;
+            background: #00adef !important;
+            color: #041a24 !important;
+            border-color: #00adef !important;
         }
         body.dark .nav-btn-primary:hover:not(:disabled) {
-            background: #8fbce6 !important;
-            border-color: #8fbce6 !important;
+            background: #4fc9f7 !important;
+            border-color: #4fc9f7 !important;
         }
         body.dark .nav-btn-abort {
-            background: #566f8a !important;
+            background: #1c4a67 !important;
             color: #ffffff !important;
-            border: 1px solid #6a88a8 !important;
+            border: 1px solid #2b5471 !important;
         }
         body.dark .nav-btn-abort:hover:not(:disabled) {
-            background: #6a88a8 !important;
+            background: #2b5471 !important;
         }
         body.dark .nav-btn:disabled {
             opacity: 0.4;
         }
         body.dark .btn-google {
-            background: #46607d !important;
-            border: 1px solid #6a88a8 !important;
+            background: #12354c !important;
+            border: 1px solid #2b5471 !important;
             color: #eaeff4 !important;
             height: 44px !important;
         }
         body.dark .btn-google:hover {
-            background: #53708f !important;
+            background: #17486a !important;
         }
         body.dark .btn-google i {
-            color: #8ab4f8 !important;
+            color: #6cc6f7 !important;
         }
 
 
         /* DARK MODE FIX für Lernfortschritt + Filter-Checkboxen */
         body.dark #masteryDisplay {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
             color: #eaeff4 !important;
         }
         body.dark #masteryDisplay > div:nth-child(2),
         body.dark #masteryDisplay div[style*="background:#f4f7fd"] {
-            background: #46607d !important;
-            border-color: #6a88a8 !important;
+            background: #12354c !important;
+            border-color: #2b5471 !important;
         }
         body.dark #masteryDisplay label {
-            /* war #4d6884 - die kleinen Zaehler darauf lagen bei 4,2:1 */
-            background: #42586f !important;
-            border-color: #7ea0c0 !important;
+            /* war #16405c - die kleinen Zaehler darauf lagen bei 4,2:1 */
+            background: #123048 !important;
+            border-color: #3a7ba3 !important;
             color: #eaeff4 !important;
         }
         body.dark #masteryDisplay #activeLearnInfo,
         body.dark #masteryDisplay #masteryStats {
-            color: #d2dce6 !important;
+            color: #cfe2ee !important;
         }
         body.dark #masteryDisplay .mastery-badge {
             background: #57c98a !important;
             color: #0f2a1c !important;
         }
         body.dark .filter-bar {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
         }
         body.dark .filter-bar::-webkit-scrollbar-thumb {
-            background: #7ea0c0;
+            background: #3a7ba3;
         }
         body.dark .filter-bar select {
-            background: #46607d !important;
+            background: #12354c !important;
             color: #eaeff4 !important;
-            border-color: #7ea0c0 !important;
+            border-color: #3a7ba3 !important;
         }
         body.dark .history-col,
         body.dark .exam-info {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
             color: #eaeff4 !important;
         }
         body.dark .history-col h3,
         body.dark .exam-info h2 {
             color: #eaeff4 !important;
-            border-color: #6a88a8 !important;
+            border-color: #2b5471 !important;
         }
         body.dark .history-table th {
-            background: #4d6884 !important;
+            background: #16405c !important;
             color: #eaeff4 !important;
-            border-color: #6a88a8 !important;
+            border-color: #2b5471 !important;
         }
         body.dark .history-table td {
-            border-color: #6a88a8 !important;
-            color: #d2dce6 !important;
+            border-color: #2b5471 !important;
+            color: #cfe2ee !important;
         }
         body.dark .exam-info th {
-            background: #4d6884 !important;
+            background: #16405c !important;
             color: #eaeff4 !important;
         }
         body.dark .exam-info td {
-            border-color: #6a88a8 !important;
-            color: #d2dce6 !important;
+            border-color: #2b5471 !important;
+            color: #cfe2ee !important;
         }
         body.dark .image-fallback {
-            background: #46607d;
-            color: #b7c5d4;
-            border-color: #6a88a8;
+            background: #12354c;
+            color: #b3cbdb;
+            border-color: #2b5471;
         }
 
         /* Fallback für fehlende Bilder */
@@ -2020,9 +2031,9 @@
         /* DARK MODE FIX für Vorlesen-Einstellungen + Duo-Modal */
         body.dark #ttsSettingsModal > div,
         body.dark #duoModal > div {
-            background: #3b4e68 !important;
+            background: #0f2b40 !important;
             color: #eaeff4 !important;
-            border: 1px solid #6a88a8 !important;
+            border: 1px solid #2b5471 !important;
         }
         body.dark #ttsSettingsModal h2,
         body.dark #duoModal h2,
@@ -2033,12 +2044,12 @@
         body.dark #ttsSettingsModal select,
         body.dark #duoModal select,
         body.dark #duoModal input {
-            background: #46607d !important;
+            background: #12354c !important;
             color: #eaeff4 !important;
-            border-color: #7ea0c0 !important;
+            border-color: #3a7ba3 !important;
         }
         body.dark #ttsSettingsModal #ttsVoiceHint {
-            color: #b7c5d4 !important;
+            color: #b3cbdb !important;
         }
         body.dark #ttsSettingsModal button[onclick*="display='none'"],
         body.dark #duoModal button[onclick*="display='none'"] {
@@ -2046,21 +2057,21 @@
         }
         /* Duo-Modal innere Boxen mit festen Hintergrundfarben */
         body.dark #duoModal div[style*="background:#f4f7fd"] {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
         }
         body.dark #duoModal div[style*="background:white"],
         body.dark #duoModal div[style*="background:#fff"] {
-            background: #46607d !important;
-            border-color: #6a88a8 !important;
+            background: #12354c !important;
+            border-color: #2b5471 !important;
         }
         body.dark #duoModal div[style*="background:#fff8e1"] {
             background: #42351f !important;
             border-color: #7a5a2c !important;
         }
         body.dark #duoModal div[style*="background:#eef5ff"] {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
         }
         /* Im Gruppenraum stehen Hinweistexte auf zweierlei Grund: in den hellen
            Kaesten (Name, Passwort, Konfiguration) und auf den dunklen Flaechen
@@ -2068,7 +2079,7 @@
            gewinnt innerhalb der hellen Kaesten. */
         body.dark #duoModal #duckDnsHint,
         body.dark #duoModal div[style*="color:var(--muted)"] {
-            color: #dbe4ee !important;
+            color: #dce9f2 !important;
         }
         body.dark #duoModal .duo-collapsible #duckDnsHint,
         body.dark #duoModal .duo-collapsible div[style*="color:var(--muted)"],
@@ -2086,25 +2097,25 @@
             color: #7a5c00 !important;
         }
         body.dark #duoModal #duoLink {
-            color: #8fbce6 !important;
+            color: #4fc9f7 !important;
         }
         body.dark #duoModal #duoRoomCode {
-            background: #6fa8dc !important;
-            color: #16233a !important;
+            background: #00adef !important;
+            color: #041a24 !important;
         }
         body.dark #duoModal #duoWait,
         body.dark #duoModal #duoStatus {
-            color: #dbe4ee !important;
+            color: #dce9f2 !important;
         }
         body.dark #duoModal .btn-outline {
-            background: #46607d !important;
+            background: #12354c !important;
             color: #eaeff4 !important;
-            border-color: #7ea0c0 !important;
+            border-color: #3a7ba3 !important;
         }
         /* Video-Link Box Dark Mode – dezentes Design unter den Antworten */
         body.dark .video-link-box {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
             box-shadow: none !important;
         }
         body.dark .video-link-box div[style*="background:#fee2e2"] {
@@ -2114,15 +2125,15 @@
             color: #eaeff4 !important;
         }
         body.dark .video-link-box div[style*="color:#6b7280"] {
-            color: #b7c5d4 !important;
+            color: #b3cbdb !important;
         }
         body.dark .video-link-box span[style*="background:#f3f4f6"] {
-            background: #46607d !important;
-            color: #d2dce6 !important;
+            background: #12354c !important;
+            color: #cfe2ee !important;
         }
         body.dark .video-link-box a[href*="youtube"] {
             background: #eaeff4 !important;
-            color: #16233a !important;
+            color: #041a24 !important;
         }
 
         /* ================================================================
@@ -2183,7 +2194,7 @@
             --muted: #5a6b7d;
             --line: #e3e9f3;
             --panel-navy: #0f2745;
-            --panel-navy-light: #16365e;
+            --panel-navy-light: #0f2b40;
             --card-bg: #ffffff;
             --bg: #eef2f9;
             --good: #1f9d55;  --good-bg: #dcf3e5;
@@ -2235,13 +2246,13 @@
             color: #16232f;
             --ink: #16232f;
             --muted: #3d5266;
-            --line: #cfe3e6;
+            --line: #cfe6f2;
             --panel-navy: #0f2745;
         }
         body.dark #rundeModal .btn-outline {
             background: #ffffff !important;
             color: #16232f !important;
-            border-color: #b7cdd1 !important;
+            border-color: #b3cbdb !important;
         }
         body.dark #rundeModal .btn-primary,
         body.dark #rundeModal .btn-primary i { color: #ffffff !important; }
@@ -2409,7 +2420,7 @@
            dem hellblauen Dark-Mode-Navy (war 2,53:1). */
         body.dark #searchResultsModal #searchResultsStartBtn {
             background: #eaeff4 !important;
-            color: #16233a !important;
+            color: #041a24 !important;
         }
         body.dark #searchResultsModal #searchResultsFavAllBtn {
             background: #fff1f4 !important;
@@ -2420,10 +2431,10 @@
         /* Gruppenraum: die Nebentexte auf den dunklen Flaechen waren zu blass
            (3,70:1). Innerhalb der hellen Kaesten gilt weiter der dunkle Wert
            von weiter oben - die Regel dort ist spezifischer. */
-        body.dark #duoModal { --muted: #dbe4ee; }
+        body.dark #duoModal { --muted: #dce9f2; }
         body.dark #duoModal .btn-primary {
-            background: #6fa8dc !important;
-            color: #0c1a2b !important;
+            background: #00adef !important;
+            color: #041a24 !important;
         }
         /* Das Kreuz sitzt auf dunklem Grund und braucht helle Schrift */
         body.dark #duoModal button[onclick*="display='none'"] { color: #eaeff4 !important; }
@@ -2433,7 +2444,7 @@
         body.dark #masteryClearModal { --bad: #bf332b; }
         /* Grauer Schliessknopf im Gruppenraum (.btn-reset): heller Text auf
            Mittelgrau war 3,0:1 - der dunklere Grauton bringt 7,0:1 */
-        body.dark #duoModal .btn-reset { background: #57616a !important; color: #ffffff !important; }
+        body.dark #duoModal .btn-reset { background: #2b5471 !important; color: #ffffff !important; }
 
         /* ================================================================
            DARK MODE: Kontraste im Hauptfenster (20.08.2026)
@@ -2447,7 +2458,7 @@
                 Fenster) gilt weiter der dunkle Wert von oben.
              3. Gruene und rote Zahlen auf den Statistik-Feldern - 2,3:1.
            ================================================================ */
-        body.dark { --muted: #d3dde8; }
+        body.dark { --muted: #dce9f2; }
 
         body.dark .badge,
         body.dark .btn-primary,
@@ -2455,24 +2466,24 @@
         body.dark .exam-timer,
         body.dark .nav-btn-primary,
         body.dark .start-badge {
-            color: #0c1a2b !important;
+            color: #041a24 !important;
         }
         body.dark .badge i, body.dark .btn-primary i,
-        body.dark .sidebar-tab i, body.dark .exam-timer i { color: #0c1a2b !important; }
+        body.dark .sidebar-tab i, body.dark .exam-timer i { color: #041a24 !important; }
         /* Gruppenraum behaelt weisse Schrift - dafuer ein etwas kraeftigeres
            Pink: auf dem hellen #e84393 lag Weiss bei 3,71:1, jetzt 5,1:1.
            Gilt in allen Themes, damit der Knopf ueberall gleich aussieht. */
         /* Galt, solange der Gruppenraum-Knopf pink war. In der ruhigen Leiste
            sitzt er auf hellem Grund - weisse Schrift waere unsichtbar. */
         body.dark .filter-bar #duoBtn { color: var(--panel-navy) !important; }
-        body.dark .filter-bar #duoBtn i { color: #1c3c63 !important; }
+        body.dark .filter-bar #duoBtn i { color: #04283a !important; }
         /* Der Theme-Knopf bekommt Hintergrund und Schrift zusammen gesetzt -
            je nach Zustand griff sonst mal die helle, mal die dunkle Flaeche
            und die Beschriftung passte nicht dazu. */
         /* Weisse Schrift auf dem hellen Dark-Mode-Blau waere nur 2,5:1 gewesen.
            Statt die Schrift dunkel zu faerben, ist jetzt der Knopf ein
            kraeftigeres Blau - damit bleibt die Beschriftung weiss (4,7:1). */
-        body.dark .btn-theme { background: #3a76b4 !important; color: #ffffff !important; }
+        body.dark .btn-theme { background: #1780b8 !important; color: #ffffff !important; }
         body.dark .btn-theme i { color: #ffffff !important; }
 
         /* ================================================================
@@ -2496,7 +2507,7 @@
             --muted: #4b5563;
             --line: #c3d0de;
             --panel-navy: #0f2745;
-            --panel-navy-light: #16365e;
+            --panel-navy-light: #0f2b40;
             --card-bg: #ffffff;
             --bg: #eef2f9;
             --good: #15703c;  --good-bg: #dcf3e5;
@@ -2510,12 +2521,12 @@
         body.dark .history-table th,
         body.dark .exam-info th {
             background: #dde4ee !important;
-            color: #3c4757 !important;
+            color: #1b3d55 !important;
         }
         body.dark .exam-info td,
         body.dark .history-table td {
             border-color: #c3d0de !important;
-            /* Die aeltere Regel setzt hier #d2dce6 - auf dem hellen Kasten
+            /* Die aeltere Regel setzt hier #cfe2ee - auf dem hellen Kasten
                waren das 1,24:1. */
             color: #16232f !important;
         }
@@ -2566,13 +2577,13 @@
         body.dark .dot-sidebar {
             background: #ffffff !important;
             border-color: #c3d0de !important;
-            color: #3c4757 !important;
+            color: #1b3d55 !important;
         }
         body.dark .left-sidebar .result-box.waiting {
             background: #ffffff !important;
             color: #4b5563 !important;
         }
-        body.dark .sidebar-tab { background: #6fa8dc !important; color: #0c1a2b !important; }
+        body.dark .sidebar-tab { background: #00adef !important; color: #041a24 !important; }
         /* Die Zahl im Start-Knopf sitzt auf weissem Grund */
         body.dark .filter-bar #startBtn .start-badge { background: rgba(255,255,255,0.22) !important; color: #ffffff !important; }
         /* Oranger Cache-Knopf: weiss darauf war 2,85:1 */
@@ -2588,11 +2599,11 @@
         /* (Die frueher hier gesetzte helle Schrift ist entfallen - der
            Lernfortschritt-Kasten ist inzwischen hell, die dunkle Variante
            steht weiter unten.) */
-        body.dark h1 i, body.dark .footer-note a i { color: #bcd8f0 !important; }
+        body.dark h1 i, body.dark .footer-note a i { color: #a8dcf7 !important; }
         /* Zaehler am Herz-Knopf: das Rot auf dem hellen Rosa war 4,3:1 */
         body.dark #favListBtn, body.dark #favListBtn span { color: #b01238 !important; }
         body.dark .question-area .q-text { color: #101c28 !important; }
-        body.dark .question-area .q-meta span { background: #dde4ee !important; color: #3c4757 !important; }
+        body.dark .question-area .q-meta span { background: #dde4ee !important; color: #1b3d55 !important; }
         body.dark .question-area .option,
         body.dark .question-area .option-grid {
             background: #ffffff !important;
@@ -2669,11 +2680,11 @@
             text-align:left;
         }
         body.dark .finish-box {
-            background: #3b4e68 !important;
-            border-color: #6a88a8 !important;
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
             color: #eaeff4 !important;
         }
-        body.dark .finish-box .sub { color: #b7c5d4 !important; }
+        body.dark .finish-box .sub { color: #b3cbdb !important; }
 
 </style>
 
@@ -2766,28 +2777,28 @@
   background:var(--card-bg);
 }
 body.dark .realistic-modal { background:var(--card-bg); border-color:var(--line); }
-body.dark .realistic-modal-header { background:#31425a; border-color:var(--line); }
+body.dark .realistic-modal-header { background:#0d2639; border-color:var(--line); }
 body.dark .realistic-modal-header h3 { color:var(--ink); }
 body.dark .realistic-modal-body { background:var(--card-bg); }
 body.dark .realistic-wrapper { background:transparent; border-color:transparent; }
 body.dark .realistic-header h2 { color:var(--ink); }
-body.dark .realistic-rules .r-rule { background:#46607d; border-color:var(--line); }
+body.dark .realistic-rules .r-rule { background:#12354c; border-color:var(--line); }
 body.dark .realistic-rules .r-rule b { color:var(--ink); }
-body.dark .realistic-part-card { background:#46607d; border-color:var(--line); }
-body.dark .realistic-part-card:hover { background:#53708f; border-color:var(--panel-navy); }
+body.dark .realistic-part-card { background:#12354c; border-color:var(--line); }
+body.dark .realistic-part-card:hover { background:#17486a; border-color:var(--panel-navy); }
 body.dark .realistic-part-card.selected { background:var(--accent-amber-soft); border-color:var(--accent-amber); }
-body.dark .rpc-icon { background:#3b4e68; }
-body.dark .realistic-part-card.selected .rpc-icon { background:#46607d; }
+body.dark .rpc-icon { background:#0f2b40; }
+body.dark .realistic-part-card.selected .rpc-icon { background:#12354c; }
 body.dark .rpc-name { color:var(--ink); }
 body.dark .rpc-desc { color:var(--muted); }
-body.dark .rpc-check { background:#3b4e68; border-color:var(--line); }
-body.dark .realistic-modal-close { background:#46607d; border-color:var(--line); color:var(--muted); }
+body.dark .rpc-check { background:#0f2b40; border-color:var(--line); }
+body.dark .realistic-modal-close { background:#12354c; border-color:var(--line); color:var(--muted); }
 body.dark .realistic-modal-close:hover { background:var(--bad-bg); color:var(--bad); }
 body.dark .realistic-final .finish-box, body.dark .realistic-interim .finish-box { background:var(--card-bg); border-color:var(--line); }
 body.dark .review-part.realistic-review { background:var(--card-bg); border-color:var(--line); }
-body.dark .review-part.realistic-review summary { background:#3b4e68; color:var(--ink); }
+body.dark .review-part.realistic-review summary { background:#0f2b40; color:var(--ink); }
 body.dark .rev-q { border-color:var(--line); }
-body.dark .rev-opt { background:#46607d; border-color:var(--line); color:var(--ink); }
+body.dark .rev-opt { background:#12354c; border-color:var(--line); color:var(--ink); }
 body.dark .realistic-modal-overlay { background:rgba(8,13,20,0.72); }
 </style>
 
@@ -3366,7 +3377,17 @@ window.klasseWaehlen = klasseWaehlen;
 (function() {
     try {
         const gespeichert = localStorage.getItem('theme');
-        if (gespeichert === 'dark') document.body.classList.add('dark');
+        // Der Dark Mode ist am 03.09.2026 abgeschaltet worden. Dietmar:
+        // "Der Dark Mode muss raus. Das ist mit den weissen Bildern bei den
+        // Fragen ueberhaupt nicht stimmig." Der Fragenkatalog der
+        // Bundesnetzagentur bringt seine Schaltbilder mit weissem Grund mit -
+        // auf dunklem Grund stehen sie als leuchtende Kacheln darin, und
+        // daran aendert keine Farbwahl etwas.
+        //
+        // Wer den Modus gespeichert hatte, landet still auf Hell. Der
+        // gespeicherte Wert wird gleich mit umgeschrieben, damit er nicht
+        // fuer immer im Browser liegen bleibt.
+        if (gespeichert === 'dark') { try { localStorage.setItem('theme', 'light'); } catch (e2) {} }
         // 'pastell' war der fruehere Name des Green Mode - weiter akzeptieren,
         // damit eine gespeicherte Einstellung nicht verlorengeht.
         else if (gespeichert === 'green' || gespeichert === 'pastell') document.body.classList.add('green');
@@ -3416,18 +3437,23 @@ window.klasseWaehlen = klasseWaehlen;
             </div>
             <button class="btn" id="einstellungenBtn" onclick="einstellungenOeffnen()" style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Einstellungen: Knöpfe vorlesen, kurz oder ausführlich, und Schrift beim Vorlesen vergrößern" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>
             <button class="btn" id="infoBtn" onclick="infoOeffnen()" style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Kurze Anleitung: was das Tool kann und wie es bedient wird"><i class="fas fa-circle-info"></i> Info</button>
-            <!-- Fehlermeldung per Mail. "Fehler melden" statt "Bug melden" oder
-                 "Entwickler kontaktieren": Es soll jeder anklicken, der etwas
-                 Merkwürdiges sieht - auch wer mit dem Wort Bug nichts anfängt
-                 und wer sich nicht traut, "den Entwickler" zu behelligen. -->
-            <button class="btn" id="fehlerBtn" onclick="fehlerMelden()" style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Etwas stimmt nicht? Schreib mir – die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist."><i class="fas fa-bug"></i> Fehler melden</button>
-            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
-            <button class="btn-cache-sm" onclick="clearCacheAndReload()" data-tooltip="🧹 Cache leeren (Verlauf bleibt erhalten)">
-                <i class="fas fa-broom"></i> Cache
-            </button>
-            <button class="btn-reset-danger" onclick="openFullResetModal()" data-tooltip="⚠️ Verlauf, Fehler, Lernbedarf &amp; Lernfortschritt komplett zurücksetzen">
-                <i class="fas fa-trash-alt"></i> Reset
-            </button>
+            <!-- Dietmar am 03.09.2026: "Die erste Leiste hat sich durch Beenden
+                 verlaengert und nach unten verschoben. Ueberlege dir, ob man aus
+                 der Leiste nicht Funktionen unter Einstellungen hinzufuegen kann."
+
+                 Drei Knoepfe sind ins Zahnrad-Fenster gewandert - "Fehler
+                 melden", "Cache" und "Reset". Alle drei braucht man selten,
+                 zwei davon sind heikel, und keiner gehoert zum Lernen. Oben
+                 bleibt, was man waehrend einer Runde in Reichweite haben will.
+                 Die Funktionen selbst sind unveraendert; sie stehen nur
+                 woanders.
+
+                 "Raum" bleibt in der Kopfzeile, ist aber normalerweise
+                 versteckt: Er zeigt die Statistik der Teilnehmer und ist damit
+                 nur sinnvoll, solange ein Raum laeuft. Dann erscheint er von
+                 selbst - auch mitten in einer Runde, wo die zweite Leiste mit
+                 dem grossen Knopf "Gruppenraum" ausgeblendet ist. -->
+            <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="display:none; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
             <button class="btn" id="beendenBtn" onclick="beendenFragen()"
                     style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;"
                     data-tooltip="⏻ Trainer beenden – schließt den Server sauber"
@@ -8068,7 +8094,7 @@ function beendenAbschied(ok){
         + 'font-family:var(--font-body), "Segoe UI", sans-serif;';
     d.innerHTML =
         '<div style="text-align:center; max-width:30rem; padding:2rem;">'
-      + '<div style="font-size:2.4rem; color:#17c3d6; margin-bottom:1rem;">'
+      + '<div style="font-size:2.4rem; color:#00adef; margin-bottom:1rem;">'
       + '<i class="fas fa-power-off"></i></div>'
       + '<div style="font-size:1.25rem; font-weight:700; color:#e7eef4; margin-bottom:0.6rem;">'
       + (ok ? 'Der Trainer ist beendet.' : 'Der Trainer wurde beendet, meldet aber nichts zurück.')
@@ -9471,6 +9497,9 @@ const KNOPF_ERKLAERUNG = {
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
     einstellungenBtn: 'Einstellungen. Hier schaltest du das Vorlesen der Knopftexte ein, wählst zwischen kurzer und ausführlicher Erklärung und lässt die Schrift größer werden, während eine Antwort vorgelesen wird.',
+    einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
+    einstFehlerBtn: 'Fehler melden. Öffnet eine schon vorbereitete E-Mail. Du musst nur beschreiben, was passiert ist, alles andere trägt der Trainer selbst ein.',
+    einstResetBtn: 'Alles zurücksetzen. Verlauf, Fehler, Lernbedarf und Lernfortschritt dieses Benutzers werden gelöscht, der Trainer fängt bei null an. Das lässt sich nicht rückgängig machen, deshalb fragt er vorher noch einmal nach.',
     fehlerBtn: 'Fehler melden. Öffnet eine schon vorbereitete E-Mail. Du musst nur beschreiben, was passiert ist, alles andere trägt der Trainer selbst ein.',
     themeToggleBtn: 'Heller oder dunkler Hintergrund. Ein Klick schaltet zwischen beiden um; die Wahl bleibt bis zum nächsten Mal erhalten.',
     sidebarToggleBtn: 'Verlauf ein- oder ausblenden. Die Spalte an der Seite zeigt jede beendete Runde mit Datum, Prüfungsteil und Ergebnis.',
@@ -9719,6 +9748,40 @@ document.addEventListener('focusin', function(e){
 document.addEventListener('focusout', function(){ knopfZielVerlassen(); }, true);
 
 // ---------------------------------------------------------------------------
+//  Der Knopf "Raum" in der Kopfzeile.
+//
+//  Dietmar am 03.09.2026 zur Frage, ob der doppelte Knopf weg kann: "In Raum
+//  wird die Statistik von den Benutzer angezeigt. Wenn ein Raum aktiv ist,
+//  sollte der Button zu sehen sein." Also nicht loeschen, sondern einblenden,
+//  sobald er etwas zu zeigen hat.
+//
+//  Warum ein Takt und kein Ereignis: Der Raum wird in duo.js auf mehreren
+//  Wegen betreten und verlassen - erstellen, beitreten, Verbindung weg,
+//  Gastgeber beendet. Ein einziger Punkt, an dem sich das melden liesse,
+//  existiert dort nicht. Zwei Sekunden Takt kosten nichts: gelesen wird ein
+//  Wahrheitswert, geschrieben nur, wenn er sich geaendert hat.
+// ---------------------------------------------------------------------------
+let raumKnopfZuletzt = null;
+
+function raumLaeuft(){
+    try{ return !!(window.duo && typeof window.duo.isActive === 'function' && window.duo.isActive()); }
+    catch(e){ return false; }
+}
+
+function raumKnopfNachziehen(){
+    const k = document.getElementById('duoRoomBtn');
+    if(!k) return;
+    const an = raumLaeuft();
+    if(an === raumKnopfZuletzt) return;
+    raumKnopfZuletzt = an;
+    k.style.display = an ? 'inline-flex' : 'none';
+}
+window.raumKnopfNachziehen = raumKnopfNachziehen;
+
+setInterval(raumKnopfNachziehen, 2000);
+document.addEventListener('DOMContentLoaded', raumKnopfNachziehen);
+
+// ---------------------------------------------------------------------------
 //  Das Fenster hinter dem Zahnrad.
 // ---------------------------------------------------------------------------
 function einstellungenOeffnen(){
@@ -9782,6 +9845,34 @@ function einstellungenOeffnen(){
           + 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
           + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. '
           + '<b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.</span></span></label>'
+
+          // Wartung. Dietmar am 03.09.2026: Die Kopfzeile war durch den Knopf
+          // "Beenden" in eine zweite Zeile gerutscht. Diese drei Knoepfe
+          // braucht man selten, zwei davon sind heikel, und keiner gehoert zum
+          // Lernen - sie stehen jetzt hier. Die Beschriftungen und Hinweistexte
+          // sind dieselben geblieben, damit das Vorlesen sie weiter kennt.
+          + '<div style="border-top:1px solid #e2e8f0; margin:0.9rem 0 0.7rem; padding-top:0.8rem;">'
+          + '<div style="font-size:0.8rem; font-weight:700; color:#0f2745; margin-bottom:0.15rem;">'
+          + '<i class="fas fa-screwdriver-wrench" style="color:#4b5b73;"></i> Wartung</div>'
+          + '<div style="font-size:0.75rem; color:#6b7280; line-height:1.5; margin-bottom:0.55rem;">'
+          + 'Selten gebraucht, deshalb hier und nicht in der Kopfzeile.</div>'
+          + '<div style="display:flex; flex-wrap:wrap; gap:0.45rem;">'
+          + '<button type="button" id="einstCacheBtn" class="btn btn-outline" onclick="clearCacheAndReload()" '
+          + 'data-tooltip="\ud83e\uddf9 Cache leeren (Verlauf bleibt erhalten)" '
+          + 'style="min-height:34px; padding:0.35rem 0.9rem; border-radius:18px; font-weight:600; '
+          + 'border:1px solid #b0c4d8; background:#fff; cursor:pointer; font-family:inherit; font-size:0.78rem;">'
+          + '<i class="fas fa-broom"></i> Cache leeren</button>'
+          + '<button type="button" id="einstFehlerBtn" class="btn btn-outline" onclick="fehlerMelden()" '
+          + 'data-tooltip="Etwas stimmt nicht? Schreib mir \u2013 die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist." '
+          + 'style="min-height:34px; padding:0.35rem 0.9rem; border-radius:18px; font-weight:600; '
+          + 'border:1px solid #b0c4d8; background:#fff; cursor:pointer; font-family:inherit; font-size:0.78rem;">'
+          + '<i class="fas fa-bug"></i> Fehler melden</button>'
+          + '<button type="button" id="einstResetBtn" class="btn btn-outline" onclick="einstellungenSchliessen(); openFullResetModal();" '
+          + 'data-tooltip="\u26a0\ufe0f Verlauf, Fehler, Lernbedarf &amp; Lernfortschritt komplett zur\u00fccksetzen" '
+          + 'style="min-height:34px; padding:0.35rem 0.9rem; border-radius:18px; font-weight:600; '
+          + 'border:1px solid #eec3bd; background:#fff; color:#a5281b; cursor:pointer; font-family:inherit; font-size:0.78rem;">'
+          + '<i class="fas fa-trash-alt"></i> Alles zur\u00fccksetzen</button>'
+          + '</div></div>'
 
           + '<p style="margin:0.2rem 0 0.8rem; font-size:0.74rem; color:#6b7280; line-height:1.5;">'
           + 'Vorlesen und Schriftgröße gelten nur für diesen Benutzer; der Beamer-Modus nur für diese Sitzung. '
@@ -12019,10 +12110,14 @@ function resetAll() {
 // sich wie eine Beschriftung des aktuellen Zustands liest - dadurch wirkte
 // die Zuordnung vertauscht. Wohin der naechste Klick fuehrt, steht jetzt
 // im Hinweis beim Ueberfahren.
-const STILE = ['light', 'dark', 'green', 'blue', 'orange', 'grey'];
+// 'dark' steht am 03.09.2026 nicht mehr in dieser Liste - siehe die
+// Begruendung im Startskript ganz oben. Der Eintrag darunter bleibt stehen:
+// wer den Modus zurueckhaben will, schreibt 'dark' wieder in diese Zeile,
+// dann greifen die Regeln im Stilblock von allein wieder.
+const STILE = ['light', 'green', 'blue', 'orange', 'grey'];
 const STIL_ANZEIGE = {
     light:  { label: 'Light Mode',  icon: 'fas fa-sun' },
-    dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },
+    dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },   /* abgeschaltet */
     green:  { label: 'Green Mode',  icon: 'fas fa-leaf' },
     blue:   { label: 'Blue Mode',   icon: 'fas fa-water' },
     orange: { label: 'Orange Mode', icon: 'fas fa-fire' },
@@ -12030,7 +12125,6 @@ const STIL_ANZEIGE = {
 };
 
 function aktuellerStil() {
-    if (document.body.classList.contains('dark')) return 'dark';
     if (document.body.classList.contains('green')) return 'green';
     if (document.body.classList.contains('blue')) return 'blue';
     if (document.body.classList.contains('orange')) return 'orange';
@@ -12040,7 +12134,11 @@ function aktuellerStil() {
 
 function stilSetzen(stil) {
     if (stil === 'pastell') stil = 'green';          // alter Name, gespeicherte Werte
+    if (stil === 'dark')    stil = 'light';          // abgeschaltet, siehe oben
     if (STILE.indexOf(stil) === -1) stil = 'light';
+    // 'dark' bleibt in dieser Aufraeumzeile: Wer den Modus noch am Koerper
+    // hat, weil er ihn vor der Umstellung eingeschaltet hatte, wird ihn hier
+    // beim ersten Umschalten los.
     document.body.classList.remove('dark', 'green', 'blue', 'orange', 'grey', 'pastell');
     if (stil !== 'light') document.body.classList.add(stil);
     try { localStorage.setItem('theme', stil); } catch (e) {}
@@ -13476,47 +13574,81 @@ if (originalSelectOption) {
 
 
         /* ================================================================
-           DARK MODE: GERAETESCHWARZ            (03.09.2026)
+           DARK MODE: DARC-NACHT               (03.09.2026)
            ================================================================
-           Dietmar mit einem Screenshot seines Icom RS-BA1: "Die Farbe und
-           der Style ist wahnsinnig schoen. Auch die Buttons mit dem
-           leuchtenden Tuerkis. Dagegen wirkt unser Dark Mode ziemlich
-           mickrig." - Er hatte recht: der bisherige Dark Mode machte nur
-           den Rand dunkel und liess die Inhalte weiss. Das war ein heller
-           Trainer in einem dunklen Rahmen, kein Dark Mode.
+           ABGESCHALTET am 03.09.2026, noch am selben Tag. Dietmar: "Der
+           Dark Mode muss raus. Das ist mit den weissen Bildern bei den
+           Fragen ueberhaupt nicht stimmig."
 
-           Vom Geraet uebernommen:
-             - durchgehend dunkle Flaechen, keine hellen Kaesten mehr
-             - duenne Kanten statt Schatten
-             - EIN Signalton, Tuerkis, und nur dort wo etwas AN ist
-             - Zahlen in Monoschrift wie eine Anzeige
+           Er hat recht, und es liegt nicht an der Farbwahl: Die Schaltbilder
+           im Fragenkatalog der Bundesnetzagentur bringen ihren weissen Grund
+           mit. Auf dunklem Grund stehen sie als leuchtende Kacheln in der
+           Frage - bei jeder Technikfrage, und das sind die meisten. Dagegen
+           hilft kein anderes Blau.
+
+           Der Block bleibt trotzdem stehen. Die Klasse "dark" wird nirgends
+           mehr gesetzt (siehe STILE weiter unten im Skript), damit ist jede
+           Regel hier wirkungslos - aber nichts davon ist verloren. Wer den
+           Modus zurueckholen will, schreibt 'dark' wieder in die Liste
+           STILE; alles Weitere greift dann von allein.
+           ================================================================
+           Erste Fassung war "Geraeteschwarz" nach Dietmars Icom RS-BA1:
+           fast schwarze Flaechen, ein leuchtendes Tuerkis als Signalfarbe.
+           Schoen, aber am 03.09.2026 ueberholt: "Der Dark Mode ist schoen,
+           aber passt irgendwie nicht. Ich schreibe derzeit mit dem DARC und
+           wir bauen den Trainer noch um."
+
+           Neue Quelle ist sein Bildschirmfoto der 50-Ohm-App des DARC. Die
+           Farbwerte sind daraus gemessen, nicht geschaetzt:
+
+             #00adef   das Blau im Logo 50 Ohm - die Marke
+             #2fbcf4   Kopfband und Fortschrittsbalken
+             #62ccf6   die helle Pille "44 Fragen"
+             #98def8   der blasse Rahmen um die Karten
+             #e0e0e0   die neutrale Schiene des Fortschritts
+
+           Uebernommen ist nicht das Helle - eine Nachtansicht in Hellblau
+           waere keine - sondern die FAMILIE: derselbe Blauton, nur einmal
+           als Grund weit heruntergezogen und einmal als Signal ganz oben.
+           Aus dem Geraeteschwarz wird ein tiefes Marineblau, aus dem
+           Tuerkis wird #00adef. Die Bauweise bleibt, wie sie war -
+           durchgehend dunkle Flaechen, duenne Kanten statt Schatten, EIN
+           Signalton und nur dort, wo etwas an ist.
+
+           Die Schriftfarben sind gegen die Flaechen gerechnet, nicht
+           geraten: helle Schrift kommt auf jedem Grund ueber 12:1, die
+           leise Schrift ueber 5,9:1, das Signalblau ueber 5,8:1. Alles
+           deutlich ueber den 4,5:1, die als lesbar gelten.
 
            Dieser Block steht bewusst ganz am Ende: er ueberschreibt den
            aelteren Abschnitt "helle Kaesten im Hauptfenster", ohne dass der
-           angefasst werden muss. Wer das Geraeteschwarz wieder loswerden
-           will, loescht genau diesen Block.
+           angefasst werden muss.
            ================================================================ */
 
         body.dark {
-            --geraet-grund:   #0e1114;
-            --geraet-flaeche: #14181c;
-            --geraet-feld:    #181d22;
-            --geraet-tief:    #11161a;
-            --geraet-kante:   #2b3238;
-            --geraet-kante2:  #39424b;
-            --geraet-schrift: #d8dee4;
-            --geraet-hell:    #e7eef4;
-            --geraet-leise:   #8a97a3;
-            --tuerkis:        #17c3d6;
-            --tuerkis-tief:   #0e93a4;
-            background: var(--geraet-grund) !important;
+            /* Flaechen: dasselbe Blau wie #00adef, nur ganz weit unten */
+            --nacht-grund:   #071520;   /* der Grund hinter allem      */
+            --nacht-flaeche: #0c2030;   /* die grosse Karte            */
+            --nacht-feld:    #10293b;   /* Kaesten und Eingabefelder   */
+            --nacht-tief:    #0a1b28;   /* eingelassen, eine Stufe tiefer */
+            --nacht-kante:   #1d3b52;   /* duenne Kante                */
+            --nacht-kante2:  #2b5471;   /* die deutlichere Kante       */
+            --nacht-schrift: #dce9f2;
+            --nacht-hell:    #f0f7fc;
+            --nacht-leise:   #8ba6bb;
+            /* Das Signal: das Blau aus dem Logo der 50-Ohm-App */
+            --darc-blau:        #00adef;
+            --darc-blau-tief:   #0077a8;
+            --darc-blau-hell:   #4fc9f7;
+            --darc-blau-nacht:  #04283a;  /* Blau, bis fast auf den Grund */
+            background: var(--nacht-grund) !important;
         }
 
         /* ---- Flaechen ---- */
         body.dark .card {
-            background: var(--geraet-flaeche) !important;
-            border: 1px solid var(--geraet-kante) !important;
-            box-shadow: inset 0 1px 0 #333b43, 0 24px 60px -20px rgba(0,0,0,0.75) !important;
+            background: var(--nacht-flaeche) !important;
+            border: 1px solid var(--nacht-kante) !important;
+            box-shadow: inset 0 1px 0 #1a4059, 0 24px 60px -20px rgba(0,0,0,0.75) !important;
         }
         body.dark .filter-bar,
         body.dark .exam-info,
@@ -13524,15 +13656,15 @@ if (originalSelectOption) {
         body.dark .history-col,
         body.dark .left-sidebar,
         body.dark .question-area {
-            background: var(--geraet-feld) !important;
-            color: var(--geraet-schrift) !important;
-            border-color: var(--geraet-kante) !important;
-            box-shadow: inset 0 1px 0 #313941 !important;
-            --ink: var(--geraet-hell);
-            --muted: var(--geraet-leise);
-            --line: var(--geraet-kante);
-            --card-bg: var(--geraet-feld);
-            --bg: var(--geraet-flaeche);
+            background: var(--nacht-feld) !important;
+            color: var(--nacht-schrift) !important;
+            border-color: var(--nacht-kante) !important;
+            box-shadow: inset 0 1px 0 #1b3d55 !important;
+            --ink: var(--nacht-hell);
+            --muted: var(--nacht-leise);
+            --line: var(--nacht-kante);
+            --card-bg: var(--nacht-feld);
+            --bg: var(--nacht-flaeche);
             --good: #35d08a;  --good-bg: #0f2e22;
             --bad:  #ff8f82;  --bad-bg:  #331a17;
             --warn: #ffc266;  --warn-bg: #33280f;
@@ -13544,19 +13676,19 @@ if (originalSelectOption) {
         body.dark h1,
         body.dark h1 i,
         body.dark .footer-note a,
-        body.dark .footer-note a i { color: var(--geraet-hell) !important; }
+        body.dark .footer-note a i { color: var(--nacht-hell) !important; }
         body.dark .exam-info,
         body.dark .exam-info div,
         body.dark .history-col div,
         body.dark .exam-info td,
-        body.dark .history-table td { color: var(--geraet-schrift) !important; }
+        body.dark .history-table td { color: var(--nacht-schrift) !important; }
         body.dark .exam-info td,
-        body.dark .history-table td { border-color: var(--geraet-kante) !important; }
+        body.dark .history-table td { border-color: var(--nacht-kante) !important; }
         body.dark .history-table th,
         body.dark .exam-info th {
-            background: var(--geraet-tief) !important;
-            color: var(--geraet-leise) !important;
-            border-color: var(--geraet-kante) !important;
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-leise) !important;
+            border-color: var(--nacht-kante) !important;
         }
 
         /* ---- Knoepfe: gefraestes Panel ---- */
@@ -13567,9 +13699,9 @@ if (originalSelectOption) {
         body.dark .header-right .btn-theme,
         body.dark .history-col .btn-outline,
         body.dark .filter-bar .btn-outline {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         }
         body.dark .filter-bar .btn i,
@@ -13577,53 +13709,53 @@ if (originalSelectOption) {
         body.dark .header-right .btn-cache-sm i,
         body.dark .header-right .btn-reset-danger i,
         body.dark .header-right .btn-theme i,
-        body.dark .filter-bar .btn-outline i { color: #7f8d99 !important; }
+        body.dark .filter-bar .btn-outline i { color: #7d9bb1 !important; }
         body.dark .filter-bar .btn:hover,
         body.dark .header-right .btn:hover,
         body.dark .header-right .btn-cache-sm:hover,
         body.dark .header-right .btn-reset-danger:hover,
         body.dark .header-right .btn-theme:hover {
-            background: linear-gradient(#2b333a, #212830) !important;
-            border-color: #4a5661 !important;
+            background: linear-gradient(#16374f, #0e2436) !important;
+            border-color: #2b5471 !important;
         }
 
         /* Das eine, was AN ist: leuchtet. */
         body.dark .filter-bar .btn.btn-primary,
         body.dark .filter-bar .btn.btn-primary:hover {
-            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
-            border-color: #22d7ec !important;
-            color: #03222a !important;
-            box-shadow: 0 0 0 1px rgba(23,195,214,0.35),
-                        0 0 14px rgba(23,195,214,0.45),
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border-color: #4fc9f7 !important;
+            color: #04283a !important;
+            box-shadow: 0 0 0 1px rgba(0,173,239,0.35),
+                        0 0 14px rgba(0,173,239,0.45),
                         inset 0 1px 0 rgba(255,255,255,0.35) !important;
         }
         body.dark .filter-bar .btn.btn-primary i,
         body.dark .filter-bar .btn-primary,
-        body.dark .filter-bar .btn-primary i { color: #04303a !important; }
+        body.dark .filter-bar .btn-primary i { color: #04283a !important; }
         body.dark .filter-bar #startBtn .start-badge {
             background: rgba(0,0,0,0.25) !important;
             border: 1px solid rgba(0,0,0,0.3) !important;
-            color: #04303a !important;
+            color: #04283a !important;
         }
-        body.dark .filter-bar .btn.btn-modus { border-color: #2a5b66 !important; }
+        body.dark .filter-bar .btn.btn-modus { border-color: #1d5f80 !important; }
         body.dark .filter-bar .btn.btn-modus i,
-        body.dark .filter-bar #duoBtn i { color: var(--tuerkis) !important; }
-        body.dark .filter-bar #duoBtn { color: #c6d0d8 !important; }
+        body.dark .filter-bar #duoBtn i { color: var(--darc-blau) !important; }
+        body.dark .filter-bar #duoBtn { color: #cfe2ee !important; }
         body.dark .header-right .btn-reset-danger,
         body.dark .header-right .btn-reset-danger i { color: #ff8f82 !important; }
         body.dark .header-right .btn-reset-danger { border-color: #5c2f2b !important; }
         body.dark .btn-cache-sm,
-        body.dark .btn-cache-sm i { color: #c6d0d8 !important; }
+        body.dark .btn-cache-sm i { color: #cfe2ee !important; }
 
         /* ---- Zahlen wie eine Anzeige ---- */
         body.dark .filter-bar .start-badge,
         body.dark .filter-bar .error-badge,
         body.dark .filter-bar .difficult-badge {
-            background: var(--geraet-tief) !important;
-            border: 1px solid var(--geraet-kante2) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid var(--nacht-kante2) !important;
             border-radius: 4px !important;
             font-family: var(--font-mono) !important;
-            color: var(--geraet-leise) !important;
+            color: var(--nacht-leise) !important;
         }
         body.dark .filter-bar .error-badge { color: #ff8f82 !important; border-color: #5c2f2b !important; }
         body.dark .filter-bar .difficult-badge { color: #ffc266 !important; border-color: #5c4a2b !important; }
@@ -13634,67 +13766,91 @@ if (originalSelectOption) {
         body.dark #masteryDisplay input,
         body.dark #masteryDisplay select,
         body.dark .exam-info select {
-            background: var(--geraet-tief) !important;
-            color: var(--geraet-schrift) !important;
-            border-color: var(--geraet-kante2) !important;
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-schrift) !important;
+            border-color: var(--nacht-kante2) !important;
         }
 
         /* ---- Lernfortschritt ---- */
         body.dark #masteryDisplay > div:nth-child(2),
         body.dark #masteryDisplay div[style*="background:#f4f7fd"],
         body.dark #masteryDisplay label {
-            background: var(--geraet-tief) !important;
-            border-color: var(--geraet-kante) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
+            color: var(--nacht-schrift) !important;
         }
         body.dark #masteryDisplay > div > span,
         body.dark #masteryDisplay span[style*="var(--panel-navy)"],
         body.dark #masteryDisplay #activeLearnInfo,
-        body.dark #masteryDisplay #masteryStats { color: var(--geraet-hell) !important; }
+        body.dark #masteryDisplay #masteryStats { color: var(--nacht-hell) !important; }
 
         /* ---- Auswertungsspalte ---- */
         body.dark .left-sidebar .stat-chip,
         body.dark .dot-sidebar,
         body.dark .left-sidebar .result-box.waiting {
-            background: var(--geraet-tief) !important;
-            border-color: var(--geraet-kante2) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante2) !important;
+            color: var(--nacht-schrift) !important;
         }
-        body.dark .left-sidebar .stat-head { color: var(--geraet-leise) !important; }
-        body.dark .left-sidebar .stat-head b { color: var(--geraet-hell) !important; }
-        body.dark .sidebar-tab { background: #1b2126 !important; color: var(--tuerkis) !important; }
+        body.dark .left-sidebar .stat-head { color: var(--nacht-leise) !important; }
+        body.dark .left-sidebar .stat-head b { color: var(--nacht-hell) !important; }
+        body.dark .sidebar-tab { background: #0a1e2c !important; color: var(--darc-blau) !important; }
+
+        /* Die Kaestchen richtig / falsch / offen / Quote trugen noch die
+           Signalfarben von damals, als die Spalte ein weisser Kasten war:
+           dunkles Gruen, dunkles Rot, dunkles Ocker, dazu graue Beschriftung.
+           Auf dem naechtlichen Grund kam davon nichts mehr an - gemessen
+           2,3:1 fuer die Beschriftung und 2,6:1 fuer die Zahlen, lesbar
+           beginnt bei 4,5:1. Hier stehen die hellen Gegenstuecke; die
+           Bedeutung bleibt, nur die Helligkeit dreht sich um. */
+        body.dark .left-sidebar,
+        body.dark .left-sidebar .stat-chip,
+        body.dark .left-sidebar .result-box {
+            --good: #35d08a;
+            --bad:  #ff8f82;
+            --warn: #ffc266;
+            --muted: var(--nacht-leise);
+        }
+        body.dark .left-sidebar .stat-chip .label { color: var(--nacht-leise) !important; }
+        body.dark .left-sidebar .stat-chip .value { color: var(--nacht-schrift) !important; }
+        body.dark .left-sidebar .stat-chip.good .value,
+        body.dark .left-sidebar .stat-chip .value.good { color: #35d08a !important; }
+        body.dark .left-sidebar .stat-chip.bad .value,
+        body.dark .left-sidebar .stat-chip .value.bad { color: #ff8f82 !important; }
+        body.dark .left-sidebar .stat-chip.warn .value,
+        body.dark .left-sidebar .stat-chip .value.warn { color: #ffc266 !important; }
 
         /* ---- Frage und Antworten ---- */
-        body.dark .question-area .q-text { color: var(--geraet-hell) !important; }
+        body.dark .question-area .q-text { color: var(--nacht-hell) !important; }
         body.dark .question-area .q-meta span {
-            background: var(--geraet-tief) !important;
-            color: var(--geraet-leise) !important;
-            border: 1px solid var(--geraet-kante) !important;
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-leise) !important;
+            border: 1px solid var(--nacht-kante) !important;
         }
         body.dark .question-area .option,
         body.dark .question-area .option-grid {
-            background: var(--geraet-tief) !important;
-            border-color: var(--geraet-kante) !important;
-            color: #b9c4cd !important;
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
+            color: #b3cbdb !important;
         }
         body.dark .question-area .option .option-text,
         body.dark .question-area .option-grid .option-text,
-        body.dark .question-area .option-label { color: #b9c4cd !important; }
-        body.dark .question-area .option-label { color: var(--tuerkis) !important; }
+        body.dark .question-area .option-label { color: #b3cbdb !important; }
+        body.dark .question-area .option-label { color: var(--darc-blau) !important; }
         body.dark .question-area .option:hover:not(.disabled),
         body.dark .question-area .option-grid:hover:not(.disabled) {
-            background: #1a2126 !important;
-            border-color: var(--geraet-kante2) !important;
+            background: #0d2434 !important;
+            border-color: var(--nacht-kante2) !important;
         }
         body.dark .question-area .option.correct,
         body.dark .question-area .option-grid.correct {
-            background: #0e2b31 !important;
-            border-color: var(--tuerkis) !important;
-            color: #c9f2f8 !important;
-            box-shadow: 0 0 0 1px rgba(23,195,214,0.3), 0 0 16px rgba(23,195,214,0.18) !important;
+            background: #06304a !important;
+            border-color: var(--darc-blau) !important;
+            color: #cdeeff !important;
+            box-shadow: 0 0 0 1px rgba(0,173,239,0.3), 0 0 16px rgba(0,173,239,0.18) !important;
         }
         body.dark .question-area .option.correct .option-text,
-        body.dark .question-area .option-grid.correct .option-text { color: #c9f2f8 !important; }
+        body.dark .question-area .option-grid.correct .option-text { color: #cdeeff !important; }
         body.dark .question-area .option.wrong,
         body.dark .question-area .option-grid.wrong {
             background: #331a17 !important;
@@ -13706,61 +13862,63 @@ if (originalSelectOption) {
 
         /* ---- Videokasten ---- */
         body.dark .question-area .video-link-box {
-            background: var(--geraet-tief) !important;
-            border-color: var(--geraet-kante) !important;
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
         }
-        body.dark .question-area .video-link-box div[style*="color:#111827"] { color: var(--geraet-hell) !important; }
-        body.dark .question-area .video-link-box div[style*="color:#6b7280"] { color: var(--geraet-leise) !important; }
+        body.dark .question-area .video-link-box div[style*="color:#111827"] { color: var(--nacht-hell) !important; }
+        body.dark .question-area .video-link-box div[style*="color:#6b7280"] { color: var(--nacht-leise) !important; }
         body.dark .question-area .video-link-box span[style*="background:#f3f4f6"] {
-            background: #11161a !important; color: var(--geraet-leise) !important;
+            background: #0a1b28 !important; color: var(--nacht-leise) !important;
         }
 
         /* ---- Vorlesen ---- */
         body.dark .question-area #ttsBtn {
-            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
-            color: #03222a !important; border: 1px solid #22d7ec !important;
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            color: #04283a !important; border: 1px solid #4fc9f7 !important;
         }
         body.dark .question-area button[onclick*="openTtsSettings"] {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border-color: var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border-color: var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
         }
 
         /* ---- Herz-Zaehler ---- */
         body.dark #favListBtn {
-            background: var(--geraet-tief) !important;
+            background: var(--nacht-tief) !important;
             border-color: #5c2f3a !important;
         }
         body.dark #favListBtn,
         body.dark #favListBtn span,
         body.dark #favListBtn i { color: #ff8fa3 !important; }
 
-        /* ---- Nachtrag Geraeteschwarz: die Frageansicht ----
+        /* ---- Nachtrag DARC-Nacht: die Frageansicht ----
            Der Fragenblock hat sein eigenes Farbsystem (--darc-*). Es hier
            umzustellen ist besser, als zwanzig Einzelregeln zu schreiben:
            die Signalfarben fuer richtig/falsch/angekreuzt bleiben dieselben,
            nur Flaeche, Feld und Schrift wechseln.
            Dietmar am 03.09.2026: "Das Grau hat da genau genommen nichts
            verloren. Beim Vorlesen moechte ich, dass der Text auch tuerkis
-           wie beim Icom angewendet wird." */
+           wie beim Icom angewendet wird." - aus dem Tuerkis ist inzwischen
+           das Blau der 50-Ohm-App geworden, der Gedanke ist derselbe
+           geblieben: die gerade gelesene Antwort leuchtet. */
         body.dark {
-            --darc-rahmen: #11161a;
-            --darc-feld:   #181d22;
-            --darc-frage:  #e7eef4;
-            --darc-vorgelesen: #17c3d6;
+            --darc-rahmen: #0a1b28;
+            --darc-feld:   #10293b;
+            --darc-frage:  #f0f7fc;
+            --darc-vorgelesen: #00adef;
         }
         body.dark .question-area .q-text-row {
             background: var(--darc-rahmen) !important;
-            border: 1px solid var(--geraet-kante) !important;
+            border: 1px solid var(--nacht-kante) !important;
         }
         body.dark .question-area .q-text,
-        body.dark .question-area .q-text-row .q-text { color: var(--geraet-hell) !important; }
+        body.dark .question-area .q-text-row .q-text { color: var(--nacht-hell) !important; }
         body.dark .question-area .option,
         body.dark .question-area .option-grid { background: var(--darc-feld) !important; }
         body.dark .question-area .option-label,
-        body.dark .question-area .option .option-label { color: var(--tuerkis) !important; }
+        body.dark .question-area .option .option-label { color: var(--darc-blau) !important; }
 
-        /* Die vorgelesene Antwort leuchtet tuerkis wie am Geraet.
+        /* Die vorgelesene Antwort leuchtet im Blau der 50-Ohm-App.
            Schwarze Schrift darauf, wie bei den anderen Signalfarben auch. */
         body.dark .question-area .option.tts-highlight,
         body.dark .question-area .option-grid.tts-highlight,
@@ -13772,75 +13930,75 @@ if (originalSelectOption) {
         body.eckig.dark .question-area .option-grid.correct.tts-highlight,
         body.eckig.dark .question-area .option-grid.wrong.tts-highlight,
         body.eckig.dark .question-area .option-grid.gewaehlt.tts-highlight {
-            background: var(--tuerkis) !important;
-            border-color: #22d7ec !important;
-            box-shadow: 0 0 0 1px rgba(23,195,214,0.4), 0 0 18px rgba(23,195,214,0.45) !important;
+            background: var(--darc-blau) !important;
+            border-color: #4fc9f7 !important;
+            box-shadow: 0 0 0 1px rgba(0,173,239,0.4), 0 0 18px rgba(0,173,239,0.45) !important;
         }
         body.dark .question-area .option.tts-highlight,
         body.dark .question-area .option.tts-highlight .option-text,
         body.dark .question-area .option.tts-highlight .option-label,
         body.dark .question-area .option-grid.tts-highlight,
         body.dark .question-area .option-grid.tts-highlight .option-text,
-        body.dark .question-area .option-grid.tts-highlight .option-label { color: #03222a !important; }
+        body.dark .question-area .option-grid.tts-highlight .option-label { color: #04283a !important; }
 
         /* ---- Knoepfe unter der Frage ---- */
         body.dark .nav-btn {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         }
-        body.dark .nav-btn i { color: #7f8d99 !important; }
+        body.dark .nav-btn i { color: #7d9bb1 !important; }
         body.dark .nav-btn:hover:not(:disabled) {
-            background: linear-gradient(#2b333a, #212830) !important;
-            border-color: #4a5661 !important;
+            background: linear-gradient(#16374f, #0e2436) !important;
+            border-color: #2b5471 !important;
         }
         body.dark .nav-btn.nav-btn-primary,
         body.dark .nav-btn.nav-btn-primary:hover:not(:disabled) {
-            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
-            border-color: #22d7ec !important;
-            color: #03222a !important;
-            box-shadow: 0 0 0 1px rgba(23,195,214,0.35), 0 0 14px rgba(23,195,214,0.45) !important;
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border-color: #4fc9f7 !important;
+            color: #04283a !important;
+            box-shadow: 0 0 0 1px rgba(0,173,239,0.35), 0 0 14px rgba(0,173,239,0.45) !important;
         }
-        body.dark .nav-btn.nav-btn-primary i { color: #04303a !important; }
+        body.dark .nav-btn.nav-btn-primary i { color: #04283a !important; }
 
         /* ---- Kopfzeile: Abzeichen, Suche, kleine Knoepfe ---- */
         body.dark .badge {
-            background: var(--geraet-tief) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: var(--tuerkis) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: var(--darc-blau) !important;
         }
-        body.dark .badge i { color: var(--tuerkis) !important; }
+        body.dark .badge i { color: var(--darc-blau) !important; }
         body.dark #searchInput {
-            background: var(--geraet-tief) !important;
-            color: var(--geraet-schrift) !important;
-            border-color: var(--geraet-kante2) !important;
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-schrift) !important;
+            border-color: var(--nacht-kante2) !important;
         }
-        body.dark #searchInput::placeholder { color: #6f7d88 !important; }
+        body.dark #searchInput::placeholder { color: #7d9bb1 !important; }
         body.dark .btn-lernstand,
         body.dark .btn-lernstand-hell,
         body.dark .btn-outline {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
         }
         body.dark .btn-lernstand i,
         body.dark .btn-lernstand-hell i,
-        body.dark .btn-outline i { color: #7f8d99 !important; }
+        body.dark .btn-outline i { color: #7d9bb1 !important; }
 
         /* ---- Verweise ---- */
         body.dark a,
         body.dark .exam-info a,
-        body.dark #masteryDisplay a { color: var(--tuerkis) !important; }
+        body.dark #masteryDisplay a { color: var(--darc-blau) !important; }
 
         /* ---- Fortschrittsbalken und Punktereihe ---- */
         body.dark #masteryBar,
         body.dark .mastery-bar,
-        body.dark .progress-track { background: var(--geraet-tief) !important; }
+        body.dark .progress-track { background: var(--nacht-tief) !important; }
         body.dark .mastery-badge {
-            background: var(--geraet-tief) !important;
-            border: 1px solid #1c4d55 !important;
-            color: var(--tuerkis) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid #17506e !important;
+            color: var(--darc-blau) !important;
         }
 
         /* ---- Letzte helle Reste, mit dem Browser aufgespuert ----
@@ -13849,33 +14007,33 @@ if (originalSelectOption) {
            Uebrig blieben genau diese drei - der Pfeil an der Suche und die
            beiden kleinen Knoepfe neben "Vorlesen". */
         body.dark button[onclick="searchQuestion()"] {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: var(--tuerkis) !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: var(--darc-blau) !important;
         }
         body.dark #questionGelerntBtn,
         body.dark #questionFavBtn,
         body.dark .btn-google {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
         }
         body.dark #questionGelerntBtn i,
         body.dark #questionFavBtn i,
-        body.dark .btn-google i { color: #7f8d99 !important; }
+        body.dark .btn-google i { color: #7d9bb1 !important; }
         /* Gemerkt und gelernt sind Zustaende - die duerfen leuchten. */
         body.dark #questionFavBtn.aktiv,
         body.dark #questionFavBtn.active { color: #ff8fa3 !important; border-color: #5c2f3a !important; }
         body.dark #questionGelerntBtn.aktiv,
-        body.dark #questionGelerntBtn.active { color: var(--tuerkis) !important; border-color: #1c4d55 !important; }
+        body.dark #questionGelerntBtn.active { color: var(--darc-blau) !important; border-color: #17506e !important; }
 
         /* Datumsfeld und Auswahlfelder */
         body.dark input[type="date"],
         body.dark select,
         body.dark .history-user-selector select {
-            background: var(--geraet-tief) !important;
-            color: var(--geraet-schrift) !important;
-            border-color: var(--geraet-kante2) !important;
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-schrift) !important;
+            border-color: var(--nacht-kante2) !important;
         }
         body.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 
@@ -13885,9 +14043,9 @@ if (originalSelectOption) {
         body.dark .zu-lernen-badge,
         body.dark #masteryDisplay span[style*="background:#dcf3e5"],
         body.dark #masteryDisplay span[style*="background: #dcf3e5"] {
-            background: var(--geraet-tief) !important;
-            border: 1px solid #1c4d55 !important;
-            color: var(--tuerkis) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid #17506e !important;
+            color: var(--darc-blau) !important;
         }
 
         /* ================================================================
@@ -13909,10 +14067,10 @@ if (originalSelectOption) {
         /* Der Fensterkoerper */
         body.dark [id$="Modal"] > div,
         body.dark [id$="modal"] > div {
-            background: var(--geraet-flaeche) !important;
-            color: var(--geraet-schrift) !important;
-            border: 1px solid var(--geraet-kante) !important;
-            box-shadow: inset 0 1px 0 #333b43, 0 24px 60px -20px rgba(0,0,0,0.8) !important;
+            background: var(--nacht-flaeche) !important;
+            color: var(--nacht-schrift) !important;
+            border: 1px solid var(--nacht-kante) !important;
+            box-shadow: inset 0 1px 0 #1a4059, 0 24px 60px -20px rgba(0,0,0,0.8) !important;
         }
 
         /* Kopf- und Fusszeilen, Hinweiskaesten, eingelassene Felder */
@@ -13930,9 +14088,9 @@ if (originalSelectOption) {
         body.dark #duoAccName,
         body.dark #duoAccConfig,
         body.dark #einstUmfangKasten {
-            background: var(--geraet-tief) !important;
-            border-color: var(--geraet-kante) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
+            color: var(--nacht-schrift) !important;
         }
 
         /* Warnkaesten behalten ihren Ton, nur gedunkelt */
@@ -13954,8 +14112,8 @@ if (originalSelectOption) {
         body.dark [id$="Modal"] div[style*="background: white"],
         body.dark [id$="Modal"] div[style*="background:#fff"],
         body.dark [id$="Modal"] div[style*="background: #fff"] {
-            background: var(--geraet-flaeche) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-flaeche) !important;
+            color: var(--nacht-schrift) !important;
         }
         body.dark [id$="Modal"] button,
         body.dark [id$="Modal"] select,
@@ -13963,32 +14121,32 @@ if (originalSelectOption) {
         body.dark [id$="Modal"] input[type="password"],
         body.dark [id$="Modal"] input[type="number"],
         body.dark [id$="Modal"] textarea {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
         }
         body.dark [id$="Modal"] select,
         body.dark [id$="Modal"] input[type="text"],
         body.dark [id$="Modal"] input[type="password"],
         body.dark [id$="Modal"] input[type="number"],
         body.dark [id$="Modal"] textarea {
-            background: var(--geraet-tief) !important;
+            background: var(--nacht-tief) !important;
         }
         body.dark [id$="Modal"] input::placeholder,
-        body.dark [id$="Modal"] textarea::placeholder { color: #6f7d88 !important; }
+        body.dark [id$="Modal"] textarea::placeholder { color: #7d9bb1 !important; }
 
         /* Der Hauptknopf eines Fensters leuchtet - wie am Geraet */
         body.dark [id$="Modal"] button[style*="var(--panel-navy)"],
         body.dark [id$="Modal"] .btn-primary,
         body.dark [id$="Modal"] .btn-danger,
         body.dark #searchResultsStartBtn {
-            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
-            border-color: #22d7ec !important;
-            color: #03222a !important;
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border-color: #4fc9f7 !important;
+            color: #04283a !important;
         }
         body.dark [id$="Modal"] button[style*="var(--panel-navy)"] i,
         body.dark [id$="Modal"] .btn-primary i,
-        body.dark #searchResultsStartBtn i { color: #04303a !important; }
+        body.dark #searchResultsStartBtn i { color: #04283a !important; }
         /* Ausser dem, was weh tut: das bleibt rot. */
         body.dark [id$="Modal"] .btn-danger,
         body.dark [id$="Modal"] button[style*="#c0392b"],
@@ -14005,7 +14163,7 @@ if (originalSelectOption) {
         body.dark [id$="Modal"] button[aria-label="Schließen"] {
             background: none !important;
             border: none !important;
-            color: var(--geraet-leise) !important;
+            color: var(--nacht-leise) !important;
         }
 
         /* Dunkle Schriftfarben aus den inline-styles aufhellen */
@@ -14019,11 +14177,11 @@ if (originalSelectOption) {
         body.dark [id$="Modal"] h3,
         body.dark [id$="Modal"] h4,
         body.dark [id$="Modal"] b,
-        body.dark [id$="Modal"] strong { color: var(--geraet-hell) !important; }
+        body.dark [id$="Modal"] strong { color: var(--nacht-hell) !important; }
         body.dark [id$="Modal"] [style*="color:#4b5563"],
         body.dark [id$="Modal"] [style*="color:#6b7280"],
         body.dark [id$="Modal"] [style*="color:#5b6b7f"],
-        body.dark [id$="Modal"] [style*="var(--muted)"] { color: var(--geraet-leise) !important; }
+        body.dark [id$="Modal"] [style*="var(--muted)"] { color: var(--nacht-leise) !important; }
 
 
         /* ================================================================
@@ -14103,7 +14261,7 @@ if (originalSelectOption) {
             padding: 0.6rem 1rem;
             background: #14181c; color: #ffffff;
             font: 600 0.86rem/1.3 var(--font-body), "Segoe UI", sans-serif;
-            border-top: 2px solid #17c3d6;
+            border-top: 2px solid #00adef;
         }
 
         body.beamer.beamer-live { padding: 0 !important; }
@@ -14208,14 +14366,14 @@ if (originalSelectOption) {
         body.dark #klasseModal,
         body.dark #lektionenModal,
         body.dark #duoModal .duo-collapsible {
-            color: var(--geraet-schrift) !important;
-            --ink: #e7eef4;
-            --muted: #8a97a3;
-            --line: #2b3238;
-            --card-bg: #14181c;
-            --bg: #14181c;
-            --panel-navy: #17c3d6;
-            --panel-navy-light: #0e93a4;
+            color: var(--nacht-schrift) !important;
+            --ink: #f0f7fc;
+            --muted: #8ba6bb;
+            --line: #1d3b52;
+            --card-bg: #0c2030;
+            --bg: #0c2030;
+            --panel-navy: #00adef;
+            --panel-navy-light: #0077a8;
             --good: #35d08a;  --good-bg: #0f2e22;
             --bad:  #ff8f82;  --bad-bg:  #331a17;
             --warn: #ffc266;  --warn-bg: #33280f;
@@ -14223,7 +14381,7 @@ if (originalSelectOption) {
         /* Ueberschriften eine Spur heller als der Fliesstext. */
         body.dark [id$="Modal"] h2,
         body.dark [id$="Modal"] h3,
-        body.dark [id$="Modal"] h4 { color: var(--geraet-hell) !important; }
+        body.dark [id$="Modal"] h4 { color: var(--nacht-hell) !important; }
         /* Die Warnfarben in den Kaesten waren fuer weissen Grund gewaehlt. */
         body.dark [id$="Modal"] [style*="color:#a04422"],
         body.dark [id$="Modal"] [style*="color:#a5281b"],
@@ -14241,55 +14399,55 @@ if (originalSelectOption) {
            deshalb hier dieselbe Schaerfe. */
         body.dark #ttsSettingsModal input[type="checkbox"],
         body.dark [id$="Modal"] input[type="checkbox"],
-        body.dark [id$="Modal"] input[type="radio"] { accent-color: #17c3d6 !important; }
+        body.dark [id$="Modal"] input[type="radio"] { accent-color: #00adef !important; }
 
         /* Das Auswertungs-Fenster wird per Skript gebaut und setzte sich
            eigene helle Variablen. */
         body.dark #statistikModal {
-            color: var(--geraet-schrift) !important;
-            --ink: #e7eef4;
-            --muted: #8a97a3;
-            --line: #2b3238;
-            --card-bg: #14181c;
+            color: var(--nacht-schrift) !important;
+            --ink: #f0f7fc;
+            --muted: #8ba6bb;
+            --line: #1d3b52;
+            --card-bg: #0c2030;
             --good: #35d08a;  --good-bg: #0f2e22;
             --bad:  #ff8f82;  --bad-bg:  #331a17;
             --warn: #ffc266;  --warn-bg: #33280f;
         }
 
         /* Knoepfe, die sich ihre Farbe aus --panel-navy holen: im dunklen
-           Stil wird daraus ein helles Blau, das neben dem Tuerkis fremd
+           Stil wird daraus ein helles Blau, das neben dem DARC-Blau fremd
            aussieht. Im Gruppenraum sind das die Hauptknoepfe. */
         body.dark #duoModal button[style*="var(--panel-navy)"],
         body.dark #duoCreateRoomBtn,
         body.dark #duoStartBtn,
         body.dark #duoModal .btn-primary,
         body.dark #searchResultsModal #searchResultsStartBtn {
-            background: linear-gradient(var(--tuerkis), var(--tuerkis-tief)) !important;
-            border: 1px solid #22d7ec !important;
-            color: #03222a !important;
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border: 1px solid #4fc9f7 !important;
+            color: #04283a !important;
         }
         body.dark #duoCreateRoomBtn i,
         body.dark #duoStartBtn i,
-        body.dark #searchResultsModal #searchResultsStartBtn i { color: #04303a !important; }
+        body.dark #searchResultsModal #searchResultsStartBtn i { color: #04283a !important; }
         body.dark #duoRoomCode {
-            background: var(--geraet-tief) !important;
-            border: 1px solid #1c4d55 !important;
-            color: var(--tuerkis) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid #17506e !important;
+            color: var(--darc-blau) !important;
         }
         body.dark #duoConfigSummary {
-            background: var(--geraet-tief) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: var(--geraet-leise) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: var(--nacht-leise) !important;
         }
         body.dark #searchResultsModal #searchResultsFavAllBtn {
-            background: var(--geraet-tief) !important;
+            background: var(--nacht-tief) !important;
             border: 1px solid #5c2f3a !important;
             color: #ff8fa3 !important;
         }
         body.dark #duoModal #duoRoomCode {
-            background: var(--geraet-tief) !important;
-            border: 1px solid #1c4d55 !important;
-            color: var(--tuerkis) !important;
+            background: var(--nacht-tief) !important;
+            border: 1px solid #17506e !important;
+            color: var(--darc-blau) !important;
         }
 
         /* Der Gruppenraum wehrt sich mit eigenen id-Regeln und setzt sich
@@ -14300,50 +14458,50 @@ if (originalSelectOption) {
         body.dark #statistikModal > div,
         body.dark #lektionenModal > div,
         body.dark #infoModal > div {
-            background: var(--geraet-flaeche) !important;
-            border: 1px solid var(--geraet-kante) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-flaeche) !important;
+            border: 1px solid var(--nacht-kante) !important;
+            color: var(--nacht-schrift) !important;
         }
         body.dark #duoModal {
-            --ink: #e7eef4;
-            --muted: #8a97a3;
-            --line: #2b3238;
-            --card-bg: #181d22;
-            --panel-navy: #17c3d6;
-            --panel-navy-light: #0e93a4;
+            --ink: #f0f7fc;
+            --muted: #8ba6bb;
+            --line: #1d3b52;
+            --card-bg: #10293b;
+            --panel-navy: #00adef;
+            --panel-navy-light: #0077a8;
         }
         body.dark #duoModal #duoNameHint,
         body.dark #duoModal #duoConfigHinweis,
-        body.dark #duoModal label { color: var(--geraet-leise) !important; }
+        body.dark #duoModal label { color: var(--nacht-leise) !important; }
         body.dark #duoModal code { color: #ffc266 !important; }
         /* Die aelteren Regeln sind zweistufig (id + Attribut bzw. id + Klasse)
            und schlagen deshalb einstufige. Also hier genauso zweistufig. */
         body.dark #duoModal div[style*="background:white"],
         body.dark #duoModal div[style*="background: white"],
         body.dark #duoModal div[style*="background:#fff"] {
-            background: var(--geraet-flaeche) !important;
-            color: var(--geraet-schrift) !important;
+            background: var(--nacht-flaeche) !important;
+            color: var(--nacht-schrift) !important;
         }
         body.dark #duoModal .duo-collapsible label,
         body.dark #duoModal .duo-collapsible div,
-        body.dark #duoModal .duo-collapsible span { color: var(--geraet-schrift) !important; }
-        body.dark #duoModal .duo-collapsible label { color: var(--geraet-leise) !important; }
+        body.dark #duoModal .duo-collapsible span { color: var(--nacht-schrift) !important; }
+        body.dark #duoModal .duo-collapsible label { color: var(--nacht-leise) !important; }
         body.dark #duoModal .duo-collapsible b,
-        body.dark #duoModal .duo-collapsible strong { color: var(--geraet-hell) !important; }
+        body.dark #duoModal .duo-collapsible strong { color: var(--nacht-hell) !important; }
         /* Die Ueberschrift einer aufklappbaren Gruppe sitzt in span.left und
            trug das dunkle Hausblau - auf schwarzem Grund unsichtbar. */
         body.dark #duoModal .duo-collapsible-header,
         body.dark #duoModal .duo-collapsible-header .left,
-        body.dark #duoModal .duo-collapsible-header .left * { color: var(--geraet-hell) !important; }
+        body.dark #duoModal .duo-collapsible-header .left * { color: var(--nacht-hell) !important; }
         body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header,
         body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left,
         body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left * { color: #ffc266 !important; }
 
         /* Abbrechen und Zumachen bleiben Panel, nicht Signal. */
         body.dark [id$="Modal"] button[style*="min-height:38px"] {
-            background: linear-gradient(#242a30, #1b2126) !important;
-            border: 1px solid var(--geraet-kante2) !important;
-            color: #c6d0d8 !important;
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
         }
         /* Das Schliesskreuz: dieselbe Schaerfe wie die alte Regel. */
         body.dark #cacheClearModal button[onclick*="close"],
@@ -14353,8 +14511,8 @@ if (originalSelectOption) {
         body.dark #masteryClearModal button[onclick*="close"],
         body.dark #ttsSettingsModal button[onclick*="display"] {
             background: none !important;
-            border-color: var(--geraet-kante2) !important;
-            color: var(--geraet-leise) !important;
+            border-color: var(--nacht-kante2) !important;
+            color: var(--nacht-leise) !important;
         }
 
 

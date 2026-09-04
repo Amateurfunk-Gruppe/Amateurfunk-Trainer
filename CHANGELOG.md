@@ -8,6 +8,77 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.118.0] - 2026-09-03
+
+### Entfernt
+- **Der Dark Mode ist abgeschaltet.** Grund sind nicht die Farben, sondern die
+  Bilder: Die Schaltbilder im Fragenkatalog der Bundesnetzagentur bringen ihren
+  weißen Grund mit. Auf dunklem Grund stehen sie als leuchtende Kacheln in der
+  Frage — bei fast jeder Technikfrage. Dagegen hilft kein anderes Blau
+- Der Umschalter wandert jetzt durch **Light → Green → Blue → Orange → Grey**.
+  Wer „Dunkel" gespeichert hatte, landet still auf Hell; der gespeicherte Wert
+  wird dabei mit umgeschrieben, damit er nicht im Browser liegen bleibt
+- Die Regeln des Dark Mode **bleiben im Stilblock stehen**, wirkungslos, weil
+  die Klasse nirgends mehr gesetzt wird. Nichts davon ist verloren: Wer ihn
+  zurückholen will, schreibt `dark` wieder in die Liste `STILE`, alles Weitere
+  greift dann von allein
+
+---
+
+## [1.117.0] - 2026-09-03
+
+### Geändert
+- **Dark Mode auf DARC-Blau umgestellt.** Der bisherige „Geräteschwarz"-Modus
+  war nach Dietmars Icom RS-BA1 gebaut: fast schwarze Flächen, leuchtendes
+  Türkis. Schön, aber am falschen Ort — der Trainer geht Richtung DARC. Neue
+  Quelle sind die Farben der **50-Ohm-App des DARC**, aus einem Bildschirmfoto
+  gemessen statt geschätzt: `#00adef` das Blau im Logo, `#2fbcf4` Kopfband und
+  Fortschritt, `#98def8` der blasse Rahmen
+- Übernommen ist nicht das Helle — eine Nachtansicht in Hellblau wäre keine —
+  sondern die **Farbfamilie**: derselbe Blauton einmal weit heruntergezogen als
+  Grund (`#071520` … `#10293b`) und einmal ganz oben als Signal (`#00adef`).
+  Aus dem Geräteschwarz wird ein tiefes Marineblau, aus dem Türkis das
+  DARC-Blau. Die Bauweise bleibt: durchgehend dunkle Flächen, dünne Kanten
+  statt Schatten, ein Signalton und nur dort, wo etwas an ist
+- Die vorgelesene Antwort leuchtet jetzt im DARC-Blau statt im Türkis — der
+  Gedanke ist derselbe geblieben
+- Die CSS-Variablen heißen ehrlich nach dem, was sie sind: aus `--geraet-*`
+  wird `--nacht-*`, aus `--tuerkis` wird `--darc-blau`
+- Hell bleibt unverändert. Auch Green, Blue, Orange und Grey sind unberührt
+
+### Behoben
+- **Die Auswertungsspalte war im Dark Mode kaum zu lesen.** „Richtig",
+  „Falsch", „Offen" und „Quote" trugen noch die Signalfarben von damals, als
+  die Spalte ein weißer Kasten war: dunkles Grün, dunkles Rot, dunkles Ocker,
+  graue Beschriftung. Gemessen 2,3:1 für die Beschriftung und 2,6:1 für die
+  Zahlen — lesbar beginnt bei 4,5:1. Jetzt stehen dort die hellen
+  Gegenstücke; die Bedeutung bleibt, nur die Helligkeit dreht sich um
+- Alle Schriftfarben der Nachtansicht sind gegen ihre Flächen gerechnet:
+  helle Schrift über 12:1, leise Schrift über 5,9:1, das Signalblau über 5,8:1
+
+---
+
+## [1.116.0] - 2026-09-03
+
+### Geändert
+- **Die Kopfzeile ist auf vier Knöpfe geschrumpft.** Sie war durch „Beenden" auf
+  acht angewachsen und in eine zweite Zeile gerutscht. Oben bleiben Zahnrad,
+  Info, Beenden und der Farbumschalter — das, was man während einer Runde in
+  Reichweite haben will. Die Reihe ist jetzt 298 statt 640 Pixel breit und
+  bricht erst unterhalb von 1000 Pixeln um
+- **„Cache leeren", „Fehler melden" und „Alles zurücksetzen" stehen jetzt im
+  Zahnrad-Fenster** unter der neuen Überschrift *Wartung*. Selten gebraucht,
+  zwei davon heikel, keiner gehört zum Lernen. Die Funktionen sind
+  unverändert — auch die Rückfrage vor dem Zurücksetzen. Das Vorlesen kennt
+  sie an ihrem neuen Platz genauso
+- **„Raum" erscheint nur noch, wenn ein Raum läuft.** Der Knopf zeigt die
+  Statistik der Teilnehmer und hatte ohne Raum nichts anzuzeigen; der große
+  Knopf „Gruppenraum" in der zweiten Leiste öffnet denselben Dialog. Läuft ein
+  Raum, steht er wieder oben — auch mitten in einer Runde, wo die zweite
+  Leiste ausgeblendet ist
+
+---
+
 ## [1.115.0] - 2026-09-03
 
 ### Behoben
