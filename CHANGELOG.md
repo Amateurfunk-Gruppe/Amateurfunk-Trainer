@@ -8,6 +8,34 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.122.0] - 2026-09-04
+
+### Geändert
+- **Die Fragennummer steht jetzt in einem eigenen weißen Feld.** Dietmar:
+  „Dieses Feld möchte ich ähnlich wie am Anfang in einem weißen Feld umrahmt,
+  damit sich das von der Frage etwas abhebt." Dieselben Werte wie die
+  Antwortfelder darunter — weißer Grund auf dem grauen Block, dünner Rand,
+  Monoschrift. Die Nummer ist eine Fundstelle im Katalog, kein Teil der
+  Frage; bisher steckte der einzige Hinweis darauf im Doppelpunkt dahinter
+- **Die Herkunft steht unter der Kachel, zu der sie gehört.** Vorher standen
+  beide Quellen in einer Zeile unter beiden Kacheln, und man musste raten,
+  was wozu gehört. Jetzt dasselbe Raster wie die Kacheln darüber, jede
+  Angabe mittig unter ihrer eigenen — nachgemessen, die Mittelpunkte liegen
+  auf denselben Pixeln
+
+### Behoben
+- **Nach dem Klick war die Antwort erst gelb, dann grün oder rot.** Dietmar:
+  „Hier wünsche ich mir, dass es gleich rot oder grün ausgibt." Ursache: Der
+  Trainer liest nach dem Klick „Richtig" bzw. „Falsch" vor und markiert dabei
+  die betroffene Antwort gelb — und diese Markierung gewann ausdrücklich
+  gegen Grün und Rot. Zwei Sekunden lang stand Gelb, wo die Antwort längst
+  feststand
+- Das Gelb greift jetzt nur noch dort, wo **noch keine Wertung** steht. Beim
+  Vorlesen der Frage und der offenen Antworten bleibt alles wie gehabt;
+  sobald geklickt ist, gilt Grün und Rot
+
+---
+
 ## [1.121.0] - 2026-09-04
 
 ### Behoben

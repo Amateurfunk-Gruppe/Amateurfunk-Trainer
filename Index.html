@@ -1455,9 +1455,18 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .lernkachel .lern-pfeil { color: #7e8ea6; flex-shrink: 0; font-size: 0.7rem; }
+        /* Die Herkunft steht unter der Kachel, zu der sie gehoert - nicht
+           beides in einer Zeile. Dietmar am 04.09.2026: "Den Text moechte
+           ich weiter auseinander, mittig unter jeder Kachel, damit man es
+           besser zuordnen kann." Dasselbe Raster wie die Kacheln darueber,
+           damit die Spalten uebereinander stehen. */
         .lernquelle {
-            text-align: center; margin-top: 4px; font-size: 0.65rem; color: var(--muted);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            margin-top: 5px; font-size: 0.65rem; color: var(--muted);
         }
+        .lernquelle > span { text-align: center; }
+        .lernquelle.einzeln { grid-template-columns: 1fr; }
+        @media (max-width: 700px) { .lernquelle { grid-template-columns: 1fr; } }
 
         /* Die eine Handlung. Dietmars Farbe vom 03.09.2026. */
         .filter-bar .btn.btn-primary,
@@ -11413,7 +11422,7 @@ function renderQuestion() {
     }
 
     html += `<div class="q-text-row" style="display:flex; align-items:flex-start; gap:10px; justify-content:space-between;">
-        <div class="q-text">${q.id}: ${q.text}</div>
+        <div class="q-text"><span class="q-nummer">${q.id}</span> ${q.text}</div>
         <div style="flex-shrink:0; display:flex; gap:6px;">
             <button id="questionGelerntBtn" onclick="toggleGelerntCurrent()" title="Diese Frage als gelernt abhaken (ohne dreimal richtig)" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-circle-check"></i></button>
             <button id="questionFavBtn" onclick="toggleFavoriteCurrent()" title="Frage in die Merkliste aufnehmen" style="background:#ffffff; color:#7a8ba1; border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer; font-size:0.9rem;"><i class="fas fa-heart"></i></button>
@@ -11557,7 +11566,9 @@ function renderQuestion() {
                 </span>${pfeil}</button>`;
         }
 
-        html += `</div><div class="lernquelle"><i class="fas fa-info-circle"></i> Quelle${quellen.length>1?'n':''}: ${quellen.join(' · ')}</div>`;
+        html += `</div><div class="lernquelle${(vm && lm) ? '' : ' einzeln'}">`
+              + quellen.map(x => `<span>${x}</span>`).join('')
+              + `</div>`;
     }
 
     html += `</div>`;
@@ -13716,6 +13727,33 @@ if (originalSelectOption) {
             line-height: 1.35;
             color: var(--darc-frage) !important;
         }
+        /* Die Fragennummer in einem eigenen weissen Feld. Dietmar am
+           04.09.2026: "Bei den Fragen steht am Anfang die Fragen-Nr. Dieses
+           Feld moechte ich aehnlich wie am Anfang in einem weissen Feld
+           umrahmt, damit sich das von der Frage etwas abhebt."
+
+           Dieselben Werte wie die Antwortfelder darunter - weisser Grund
+           auf dem grauen Block. Die Nummer ist eine Fundstelle im Katalog,
+           kein Teil der Frage; im Doppelpunkt danach steckte bisher der
+           einzige Hinweis darauf.
+
+           display:inline-block, damit das Feld bei einer umbrechenden Frage
+           nicht auseinandergerissen wird, und Monoschrift, weil Nummern in
+           gleichen Breiten leichter zu vergleichen sind. */
+        body.eckig .question-area .q-text .q-nummer {
+            display: inline-block;
+            background: var(--darc-feld);
+            color: var(--darc-frage);
+            font-family: var(--font-mono), Consolas, monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 2px 8px;
+            margin-right: 7px;
+            border: 1px solid #c9c9c9;
+            vertical-align: baseline;
+            white-space: nowrap;
+        }
         body.eckig .question-area .options {
             background: var(--darc-rahmen);
             padding: 0 7px 8px 7px;
@@ -13843,14 +13881,21 @@ if (originalSelectOption) {
            Wer also eine bereits beantwortete Frage noch einmal vorlesen
            laesst, verliert die Wertung nicht aus den Augen.
            ================================================================ */
-        body.eckig .question-area .option.tts-highlight,
-        body.eckig .question-area .option.correct.tts-highlight,
-        body.eckig .question-area .option.wrong.tts-highlight,
-        body.eckig .question-area .option.gewaehlt.tts-highlight,
-        body.eckig .question-area .option-grid.tts-highlight,
-        body.eckig .question-area .option-grid.correct.tts-highlight,
-        body.eckig .question-area .option-grid.wrong.tts-highlight,
-        body.eckig .question-area .option-grid.gewaehlt.tts-highlight {
+        /* NACHTRAG 04.09.2026 - die Wertung geht vor.
+           Dietmar: "Beim Anklicken von einer Antwort ist das Feld zuerst
+           gelb. Hier wuensche ich mir, dass es gleich rot oder gruen
+           ausgibt."
+
+           Ursache: Nach dem Klick liest der Trainer "Richtig" bzw. "Falsch"
+           vor und markiert dabei die betroffene Antwort gelb - die Regel
+           hier gewann ausdruecklich gegen richtig und falsch. Zwei Sekunden
+           lang stand also Gelb, wo die Antwort schon feststand.
+
+           Jetzt greift das Gelb nur noch dort, wo NOCH KEINE Wertung steht.
+           Beim Vorlesen der Frage und der noch offenen Antworten bleibt
+           alles wie gehabt; sobald geklickt ist, gilt Gruen und Rot. */
+        body.eckig .question-area .option.tts-highlight:not(.correct):not(.wrong):not(.gewaehlt),
+        body.eckig .question-area .option-grid.tts-highlight:not(.correct):not(.wrong):not(.gewaehlt) {
             background: var(--darc-vorgelesen) !important;
         }
 
