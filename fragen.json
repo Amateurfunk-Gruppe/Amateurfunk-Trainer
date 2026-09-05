@@ -5799,7 +5799,7 @@
   "id": "BA104",
   "part": "betrieb",
   "class": "1",
-  "text": "Wie wird das Rufzeichen „DL1 FLO“ mit dem internationalen Buchstabieralphabet buchstabiert?",
+  "text": "Wie wird das Rufzeichen „DL1FLO“ mit dem internationalen Buchstabieralphabet buchstabiert?",
   "options": [
    {
     "text": "Delta London 1 Florida London Oscar",
@@ -5967,7 +5967,7 @@
   "id": "BA110",
   "part": "betrieb",
   "class": "1",
-  "text": "Wie wird das Rufzeichen „IG9/DL4 HR“ mit dem internationalen Buchstabieralphabet buchstabiert?",
+  "text": "Wie wird das Rufzeichen „IG9/DL4HR“ mit dem internationalen Buchstabieralphabet buchstabiert?",
   "options": [
    {
     "text": "India Golf 9 Stroke Delta Lima 4 Hotel Romeo",
@@ -9778,12 +9778,12 @@
   "text": "Weshalb sind die Frequenzen 14099–14101 kHz, 18109–18111 kHz, 21149–21151 kHz, 24929–24931 kHz und 28190–28225 kHz freizuhalten?",
   "options": [
    {
-    "text": "Diese Frequenzen sind nach der IARUEmpfehlung besonders für DX-Verkehr vorgesehen und sollen möglichst für Funkverkehr bei „DX-Expeditionen“ genutzt werden.",
+    "text": "Diese Frequenzen sind nach der IARU-Empfehlung besonders für DX-Verkehr vorgesehen und sollen möglichst für Funkverkehr bei „DX-Expeditionen“ genutzt werden.",
     "image": null,
     "correct": false
    },
    {
-    "text": "Diese Frequenzbereiche sind nach der IARUEmpfehlung für HAMNET vorgesehen und sollen für die Beobachtung dieser Sendungen freigehalten werden.",
+    "text": "Diese Frequenzbereiche sind nach der IARU-Empfehlung für HAMNET vorgesehen und sollen für die Beobachtung dieser Sendungen freigehalten werden.",
     "image": null,
     "correct": false
    },
@@ -9793,7 +9793,7 @@
     "correct": false
    },
    {
-    "text": "Diese Frequenzen sind nach der IARUEmpfehlung für das Internationale Bakenprojekt (IBP) vorgesehen und sind für die Beobachtung der Ausbreitungsbedingungen anhand von Bakensignalen freizuhalten.",
+    "text": "Diese Frequenzen sind nach der IARU-Empfehlung für das Internationale Bakenprojekt (IBP) vorgesehen und sind für die Beobachtung der Ausbreitungsbedingungen anhand von Bakensignalen freizuhalten.",
     "image": null,
     "correct": true
    }
