@@ -46,6 +46,27 @@ function expandTTS(text){
   // Anfang zu "Lambda" ausgeschrieben, bevor irgendeine andere Regel laeuft.
   t = t.replace(/λ/g, 'Lambda');
 
+  // FIX (05.09.2026): "DARC" liest Piper als englisches "dark". Dietmar:
+  // "DARC liest es als Dark. Es muss DARC aussprechen. D A R C mit einer
+  // sehr kleinen Pause dazwischen bei allen Sprachen."
+  //
+  // Der Deutsche Amateur-Radio-Club wird buchstabiert, nicht gelesen. Die
+  // Bindestriche sind dieselbe Technik wie bei "Antennen-anlage" ein paar
+  // Zeilen tiefer: Sie trennen, ohne dass ein Wort dazukommt - anders als
+  // ein Komma, das eine deutlich laengere Pause macht, und anders als ein
+  // Schraegstrich, den Piper als "Strich" mitspricht.
+  //
+  // Hier oben, gleich nach Lambda: Spaeter greifen Regeln, die auf
+  // Grossbuchstabenfolgen schauen, und die sollen dieses Wort nicht mehr
+  // vorfinden.
+  t = t.replace(/\bDARC\b/g, 'D-A-R-C');
+
+  // FIX (05.09.2026): Dasselbe fuer das Rufzeichen von Michael. Dietmar:
+  // "DL2YMR muessen als Buchstaben vorgelesen werden." Als Wort gelesen
+  // klingt es wie ein Nieser - buchstabiert ist es das, was jeder Funker
+  // erwartet. Auch diese Regel steht doppelt, hier und in Index.html.
+  t = t.replace(/\bDL2YMR\b/gi, 'D-L-2-Y-M-R');
+
   // FIX: "Antennenanlage" liest Piper wie "Andenanlage" - der mittlere Teil
   // des langen Kompositums geht verloren. Ein Bindestrich an der Nahtstelle
   // zwingt Piper, das Wort in zwei Teilen statt als einen Wortklumpen

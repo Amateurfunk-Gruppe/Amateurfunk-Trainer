@@ -232,6 +232,65 @@ function einrichten(umgebung) {
     return { commit, karte };
   }
 
+  // ================================================================
+  //  WELCHE VERSION LIEGT BEI GITHUB?          (05.09.2026)
+  // ================================================================
+  //  Die Nummer steht in der obersten Ueberschrift des CHANGELOG.md -
+  //  hier wie dort, es ist dieselbe Regel. Damit beantwortet das
+  //  Update-Fenster die Frage, die man wirklich hat: "1.127.0 hier,
+  //  1.129.0 dort" sagt mehr als zwei Fingerabdruecke.
+  //
+  //  GEHOLT WIRD NUR, WENN NOETIG: Das CHANGELOG ist 60 KB gross.
+  //  Stimmt sein Fingerabdruck bei GitHub mit dem hiesigen ueberein,
+  //  ist auch die Nummer dieselbe - dann wird nichts geladen. Nur wenn
+  //  sich dort etwas getan hat, kommt die Datei einmal ueber die
+  //  Leitung. Beim Nachsehen, nicht im Hintergrund.
+  //
+  //  Schlaegt es fehl, faellt nur die Nummer weg. Der Vergleich der
+  //  Dateien haengt nicht daran und laeuft unveraendert weiter.
+  const CHANGELOG = 'CHANGELOG.md';
+
+  function versionAusText(text) {
+    for (const z of String(text || '').split('\n')) {
+      const t = z.match(/^##\s*\[(\d+\.\d+\.\d+)\]/);
+      if (t) return t[1];
+    }
+    return null;
+  }
+
+  function versionHier() {
+    try { return versionAusText(fs.readFileSync(path.join(WURZEL, CHANGELOG), 'utf8')); }
+    catch (e) { return null; }
+  }
+
+  async function versionDort(commit, karte) {
+    const fern = karte[CHANGELOG];
+    if (!fern) return null;                       // liegt dort nicht
+    const hier = hierFingerabdruck(CHANGELOG);
+    if (hier && hier === fern.sha) return versionHier();   // gleich - nichts zu holen
+    try {
+      const roh = await holen(`${RAW}/${KONTO}/${REPO}/${commit}/${CHANGELOG}`, { roh: true, zeit: 12000 });
+      return versionAusText(roh.toString('utf8'));
+    } catch (e) { return null; }
+  }
+
+  // Die dritte Nummer: das fertige Setup, das bei GitHub zum
+  // Herunterladen liegt. Sie hinkt naturgemaess hinterher - ein Setup
+  // wird seltener gebaut als eine Datei geaendert. Genau deshalb ist sie
+  // hier nuetzlich: Dietmar sieht auf einen Blick, ob das, was ein Neuer
+  // sich herunterlaedt, noch zu dem passt, woran er gerade arbeitet.
+  //
+  // Faellt sie aus (kein Netz, GitHub bremst, noch kein Release), fehlt
+  // nur diese eine Zeile. Angezeigt wird dann nichts statt einer Zahl,
+  // auf die kein Verlass ist.
+  async function versionSetup() {
+    try {
+      const r = await holen(`${API}/repos/${KONTO}/${REPO}/releases/latest`, { zeit: 8000 });
+      const t = r && r.tag_name ? String(r.tag_name).replace(/^v/i, '') : null;
+      return /^\d+\.\d+\.\d+$/.test(t || '') ? t : null;
+    } catch (e) { return null; }
+  }
+
   // ---- Der Drei-Wege-Vergleich -------------------------------------
   async function pruefen() {
     const { commit, karte } = await fernStand();
@@ -265,6 +324,9 @@ function einrichten(umgebung) {
       quelle: `https://github.com/${KONTO}/${REPO}`,
       merkposten: !!(merk.dateien && Object.keys(merk.dateien).length),
       zuletzt: merk.zeit || null,
+      versionHier: versionHier(),
+      versionDort: await versionDort(commit, karte),
+      versionSetup: await versionSetup(),
       eintraege,
       geprueft: new Date().toISOString(),
     };

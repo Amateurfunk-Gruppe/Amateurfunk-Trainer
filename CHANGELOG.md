@@ -8,6 +8,1438 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.157.0] - 2026-09-06
+
+### Hinzugefügt
+- **Die Anleitung hat einen eigenen Reiter „Handy & Tablet".** Bisher stand von
+  der ganzen mobilen Seite kein Wort darin — weder das Mitmachen über den Link,
+  noch die neue Runde, noch der Weg auf den Startbildschirm. Zwei Blöcke sind es
+  geworden: **Der Trainer am Handy** (Mitmachen, kein Hauptmenü, neue Runde,
+  Bedienung) und **Als App auf den Startbildschirm** (wie es geht, warum es
+  https braucht, warum die Adressleiste nur so verschwindet, was ohne Netz
+  passiert).
+
+- **Die README beschreibt die mobile Ansicht**, mit Dietmars Bildschirmfoto der
+  beiden Ansichten nebeneinander (`bilder/10-mobile.png`): links das Fenster zum
+  Mitmachen, rechts eine Frage im Gruppenraum. Der Abschnitt steht direkt unter
+  dem Gruppenraum — dort, wo Ausbilder ohnehin nachlesen.
+
+---
+
+## [1.156.0] - 2026-09-06
+
+### Geändert
+- **Auch „Zurück" ist im Gruppenraum am Handy weg.** Dietmar: „Der Button
+  Zurück kann auch raus." Im Raum geht es der Reihe nach vorwärts; wer
+  zurückblättert, sucht meist nur seine schon gegebene Antwort. Beim Gast am
+  Handy bleiben damit genau drei Knöpfe: **Weiter**, **Hauptmenü** und der
+  **Farbstil**. Für den Gastgeber und am Rechner ändert sich nichts.
+
+---
+
+## [1.155.0] - 2026-09-06
+
+### Hinzugefügt
+- **Der Trainer ist jetzt eine Progressive Web App.** Dietmar: „Der Trainer muss
+  sich in der mobilen Version wie eine App anfühlen." Und: „Der Link, ich nenne
+  das mal Adresszeile, sollte ausgeblendet werden."
+
+  Drei Stücke gehören dazu, alle drei sind jetzt da:
+
+  | Datei | wofür |
+  |---|---|
+  | `manifest.webmanifest` | Name, Symbol, Start **ohne Adressleiste** (`display: standalone`) |
+  | `sw.js` | macht die Seite installierbar und lässt sie ohne Netz starten |
+  | `icon-192.png`, `icon-512.png` | was auf dem Startbildschirm liegt |
+
+  **Zur Adressleiste, ehrlich gesagt:** Keine Seite kann sie von sich aus
+  ausblenden — sie gehört dem Browser, und sie zu verstecken wäre die älteste
+  Betrugsmasche des Netzes. Es gibt genau einen erlaubten Weg, und der ist
+  jetzt vorbereitet: Wird der Trainer **auf den Startbildschirm gelegt**,
+  startet er als eigene App, mit eigenem Symbol und ohne Adressleiste.
+
+  Damit das niemand suchen muss, erscheint am Handy nach ein paar Sekunden eine
+  kleine Leiste unten. Sie zeigt drei verschiedene Texte: in Chrome einen Knopf
+  **Einrichten** (das System fragt den Rest), auf dem iPhone den Weg über das
+  Teilen-Zeichen, und im eingebauten Browser von Messenger, Facebook oder
+  Instagram den Hinweis, den Link erst im richtigen Browser zu öffnen — dort
+  geht es prinzipbedingt nicht. Einmal weggetippt, kommt sie nicht wieder.
+
+  Der Service Worker holt **zuerst aus dem Netz** und erst dann aus dem
+  Speicher. Umgekehrt wäre es schneller, aber falsch: Der Trainer bekommt fast
+  täglich eine neue Index.html, und ein Speicher, der gewinnt, würde die alte
+  Fassung festhalten. `/api/`, Gruppenraum und Sprachausgabe werden gar nicht
+  angefasst.
+
+  **Eine Einschränkung, die man kennen muss:** Ein Service Worker läuft nur über
+  **https** oder auf localhost. Über die nackte LAN-Adresse
+  (`http://192.168.…`) meldet ihn kein Browser an. Am Handy heißt das: über den
+  **Tunnel-Link** ja, im heimischen WLAN per IP-Adresse nein. Der Trainer läuft
+  dort trotzdem — nur eben ohne Symbol auf dem Startbildschirm.
+
+- **App-Anmutung im Detail.** Kein graublauer Blitz beim Antippen, keine
+  versehentliche Textmarkierung samt Lupe (Eingabefelder und Fragetext bleiben
+  ausgenommen), kein Gummiband am Rand und kein Neuladen durch Ziehen von oben,
+  und Platz für Kamera-Aussparung und Wischbalken.
+
+- **Neue Runde für alle.** Dietmar: „Wenn man durch ist, bekommt man eine
+  Auswertung. Der Trainer kann, wenn alle fertig sind, eine neue Runde
+  starten." Das ging bisher nicht: `startDuoQuiz` antwortet mit `socket.emit`
+  an **genau einen** Teilnehmer — richtig so, denn im Raum startet jeder für
+  sich. Nur konnte deshalb niemand eine Runde für alle auslösen, und die Fragen
+  blieben dieselben.
+
+  Neu ist `neueRunde`: Es würfelt einen **frischen** Fragensatz und schickt ihn
+  mit `io.to(code)` an alle im Raum. Antworten, Zeiten und die Sperre für die
+  Endauswertung werden zurückgesetzt. Nur der Gastgeber darf das — sonst könnte
+  ein Teilnehmer mitten in der Runde allen anderen den Stand wegreißen. Der
+  Knopf **Neue Runde** steht im Gruppenraum-Fenster und fragt vorher nach, mit
+  der Zahl der Betroffenen.
+
+### Geändert
+- **Kein Hauptmenü mehr für Gäste am Handy.** Dietmar: „In der mobilen Version
+  wird das Hauptmenü nicht benötigt. Nur der Gruppenraum mit den gemeinsamen
+  Fragen." Filterleiste, Startknopf, Prüfungsübersicht, Lernfortschritt,
+  Prüfungstermin, Videolehrgang und Verlauf gehören zum eigenen Lernen am
+  eigenen Rechner — im Raum entscheidet der Gastgeber, was gefragt wird.
+
+- **„Mitmachen" macht jetzt mit.** Dietmar: „Ich lande im Hauptmenü, nicht im
+  Gruppenraum." Vorher wurde nur das Fenster geschlossen, und der Gast stand vor
+  der Hauptansicht. Jetzt wird die Runde gleich mitgestartet: Name eintragen,
+  tippen, erste Frage. Bis der Server antwortet, steht ein grüner Kasten „Du
+  bist im Gruppenraum" da, damit der Knopfdruck nicht ins Leere zu gehen
+  scheint.
+
+- **Der Gruppenchat ist am Handy ausgeblendet.** Dietmar: „Der Gruppenchat kann
+  raus." Er nahm dort die halbe Anzeige ein und legte sich über die Frage. Am
+  Rechner bleibt er.
+
+### Behoben
+- **Die Seite ließ sich am Handy seitlich verschieben.** Ursache war eine
+  einzige Reihe: der Balken des Lernfortschritts zusammen mit zwei Kästchen,
+  dem Zurücksetzen-Pfeil und den Knöpfen „Sichern" und „Einlesen" — alles
+  nebeneinander, ohne Umbruch, 549 Punkte breit bei 412 Punkten Bildschirm.
+  Dazu ein Sicherheitsnetz: Am Handy ist seitliches Scrollen der Seite ganz
+  unterbunden. Was innen scrollen soll — die Filterleiste — hat seinen eigenen
+  Rahmen und bleibt unberührt.
+
+### Geprüft
+Zwei Browser gleichzeitig: Gastgeber am Rechner, Gast am Handy über den
+Einladungslink. Beim Gast steht nur der Namenskasten, kein Hauptmenü, kein Chat,
+nichts läuft seitlich über (`scrollWidth` = `clientWidth` = 412). Nach
+„Mitmachen" beginnt sofort die erste Frage. Nach dem Durchgang steht die
+Auswertung; der Gastgeber drückt **Neue Runde**, und beide bekommen dieselbe
+frische Frage, Zähler wieder bei null. Manifest, Service Worker und beide
+Symbole werden ausgeliefert (HTTP 200), der Service Worker meldet sich an,
+`display` ist `standalone`. Die Hinweisleiste erscheint am Handy, im
+Messenger-Browser mit dem passenden anderen Text, am Rechner gar nicht. Die
+Rechner-Ansicht ist unverändert. Keine Skriptfehler.
+
+---
+
+## [1.154.0] - 2026-09-06
+
+### Geändert
+- **Im Gruppenraum bleibt am Handy und Tablet nur noch, was ein Teilnehmer
+  braucht.** Dietmar: „In der Handy- und Tablet-Edition benötige ich nur die
+  Buttons für den Mode und Hauptmenü im Gruppenraum. Erst wenn ich den
+  Gruppenraum verlasse, benötige ich die Buttons." Auf Nachfrage kamen
+  **Zurück** und **Weiter** dazu — ohne sie käme man in der Runde nicht weiter.
+
+  Es bleiben: **Zurück, Weiter, Hauptmenü, Farbstil**, alles zum Raum (Raum,
+  Teilnehmer, Chat) und die Knöpfe an der Frage selbst (gelernt, Merkliste,
+  Vorlesen, Stimme, Formelblatt).
+
+  Es geht: die Auswertungsspalte samt Umschaltknopf, **Abbrechen**,
+  **Google KI**, **Prüfungsziel**, **Suchfeld**, **Info**, **Einstellungen**
+  und **Beenden**. Mehrere davon waren nicht nur überflüssig, sondern
+  schädlich: Das Prüfungsziel legt der Gastgeber fest, die Suche würde aus der
+  gemeinsamen Runde herausspringen, und Nachschlagen zählt im Raum als Fehler.
+
+  **Für den Gastgeber ändert sich nichts** — er muss den Raum steuern können.
+  Erkannt wird das über `window.duo.isActive()` und `isHost()`; die Seite trägt
+  dann die Klasse `gast-im-raum`. Verlässt man den Raum, fällt sie weg und
+  alles steht wieder da, ohne Neuladen.
+
+- **Das große Fenster des Gruppenraums ist für Gäste am Handy auf einen
+  Namenskasten geschrumpft.** Dietmar: „Das große Fenster nervt. Hier sollte
+  nur ein Fenster für den Namen und Starten vorhanden sein. Ohne Namen kann man
+  nicht starten."
+
+  Wer über den Einladungslink hereinkam, sah auf dem Handy zuerst die
+  Server-Adresse, den Einladungslink zum Weiterreichen, die Raumkonfiguration
+  und „Raum erstellen" — lauter Dinge, die dem Gastgeber gehören. Was er
+  wirklich tun musste, stand ganz unten. Ohne das erschien er bei allen anderen
+  als **„Benutzer 1"**.
+
+  Jetzt steht dort ein Feld, ein Knopf **Mitmachen** und der Weg hinaus. Der
+  Knopf ist gesperrt, solange das Feld leer ist. Ein schon gespeicherter Name
+  wird vorgetragen — „Benutzer 1" allerdings nicht, das ist der Platzhalter des
+  Servers und kein Name.
+
+  Der Name wird über einen **erneuten Beitritt** in den Raum getragen. Das ist
+  kein Umweg, sondern der einzige Weg: Der Name geht nur beim Beitritt mit. Ein
+  zweiter Eintrag entsteht dabei nicht, denn der Server legt seine Teilnehmer
+  unter der Verbindungskennung ab (`room.users[socket.id]`).
+
+### Behoben
+- **Das Fenster des Gruppenraums stand am Handy halb außerhalb des
+  Bildschirms.** Sein Kasten ist auf 480 Punkte ausgelegt, und „100 %" bezog
+  sich auf einen Bezugsrahmen, den der überbreite Inhalt selbst aufgeblasen
+  hatte — gemessen 599 Punkte bei 412 Punkten Bildschirmbreite. Mit `vw` hängt
+  die Breite jetzt fest am sichtbaren Bereich.
+
+### Geprüft
+Mit zwei Browsern gleichzeitig: Gastgeber am Rechner (1500 × 900) legt einen
+Raum an, Gast am Handy (412 × 915) kommt über den Einladungslink herein. Beim
+Gast steht nur der Namenskasten, der Knopf ist gesperrt; nach Eingabe von
+„Klaus" wird er frei, das Fenster schließt sich, und beim Gastgeber steht in
+der Teilnehmerliste **Klaus** statt „Benutzer 1". Die Knopfleiste zeigt beim
+Gast genau Zurück, Weiter, Hauptmenü und Farbstil; beim Gastgeber ist alles
+unverändert. Nach dem Verlassen des Raums sind beim Gast wieder alle Knöpfe da.
+Keine Skriptfehler.
+
+---
+
+## [1.153.0] - 2026-09-06
+
+### Behoben
+- **Das große blaue Feld über der Frage am Handy.** Dietmar hat es auf einem
+  Bildschirmfoto geschickt: ein 554 Punkte hoher dunkelblauer Block, in dessen
+  Mitte klein „Verlauf ausblenden" stand — die Frage begann erst darunter, bei
+  Bildpunkt 715, also außerhalb des Sichtfelds.
+
+  Das Feld war der **Umschaltknopf für den Verlauf**. Am Rechner steht er als
+  schmaler Reiter *neben* der Frage, und ein Skript bringt ihn auf genau deren
+  Höhe, damit die Kante unten stimmt. Am Handy stehen dieselben Elemente
+  *übereinander* — und aus dem Reiter wurde ein Feld von der Höhe der ganzen
+  Frage. Eine style-Angabe aus dem Skript schlägt jede Regel aus dem
+  Stylesheet, deshalb half der vorhandene Media-Query nichts.
+
+  Jetzt hört das Skript auf schmalen Bildschirmen auf zu rechnen und räumt
+  gesetzte Höhen wieder weg. Der Knopf ist 46 Punkte hoch.
+
+- **Alles war am Handy auf 80 Prozent verkleinert.** Die automatische
+  Anzeigegröße rechnet Fensterbreite geteilt durch 1520. Auf einem Handy mit
+  412 Punkten ergibt das 0,27 — gekappt auf die Untergrenze 0,8. Ausgerechnet
+  dort, wo am wenigsten Platz ist, wurde also alles kleiner gemacht. Bis 1024
+  Punkte Breite bleibt es jetzt bei 100 Prozent; ein schmaler Bildschirm
+  braucht ein anderes Layout, keine Lupe rückwärts.
+
+- **Zugeklappt hieß am Handy nicht weg.** Die eingeklappte Auswertungsspalte
+  schrumpft am Rechner auf null Breite. Gestapelt blieb sie null Punkte breit,
+  aber tausend Punkte hoch — ein leeres Feld unter der Frage.
+
+- **Pinch-Zoom war gesperrt.** In der Viewport-Angabe stand `maximum-scale=1.0`;
+  damit lässt sich die Seite auf keinem Handy vergrößern. Für ein Programm, das
+  Wert auf Barrierefreiheit legt, war das die falsche Zeile. Sie ist raus.
+
+### Geändert
+- **Der Trainer erkennt jetzt, wie breit er steht**, und setzt zwei Klassen an
+  die Seite: `schmal` bis 1024 Punkte (Tablet hochkant und Handy) und `handy`
+  bis 640 Punkte. Stylesheet **und** Skript richten sich nach derselben Marke.
+  Gemessen wird die Breite, nicht das Gerät — ein schmales Fenster am Rechner
+  ist dasselbe Problem, und eine Erkennung über die Browserkennung liegt
+  regelmäßig daneben. Umgestellt wird auch beim Drehen des Geräts.
+
+- **Am Handy steht die Frage oben.** Nebeneinander sind Auswertung und Frage
+  gleich gut sichtbar; untereinander gilt das nicht mehr — was oben steht,
+  sieht man, der Rest ist Scrollarbeit. Die Auswertung rutscht deshalb unter
+  die Frage und startet zugeklappt. Die Frage beginnt jetzt bei Bildpunkt 199
+  statt 715.
+
+- **Fingermaße statt Mausmaße:** Antwortkacheln und Navigationsknöpfe sind
+  mindestens 44 bis 48 Punkte hoch. Die Knopfreihe neben dem Fragetext rutscht
+  unter ihn, statt ihm die halbe Breite zu nehmen. Die untere Knopfreihe steht
+  in zwei Spalten, und in anderer Reihenfolge als am Rechner: **Zurück** und
+  **Weiter** oben, wo der Daumen ohnehin ist, **Abbrechen** und **Hauptmenü**
+  unten, wo man sie nicht versehentlich trifft.
+
+- **Kein hängender Schwebezustand mehr.** Wo es keinen Zeiger gibt
+  (`hover: none`), bleibt eine angetippte Antwort nicht mehr eingefärbt stehen,
+  als wäre sie noch ausgewählt.
+
+- **„Beenden" ist am Handy ausgeblendet.** Der Knopf fährt den Trainer auf dem
+  Rechner herunter und ist absichtlich nur von dort erreichbar (`localOnly`).
+  Auf einem Handy, das über den Gruppenraum-Link hereinkommt, hätte er nur eine
+  Fehlermeldung erzeugt.
+
+- Unten bleibt Platz für die Gruppenchat-Leiste, die dort festsitzt.
+
+### Geprüft
+Mit dem Testbrowser bei 1920 × 1080, 820 × 1180 (Tablet), 915 × 412 (Handy
+quer), 412 × 915 und 360 × 640: keine Seite scrollt seitlich, keine
+Skriptfehler. Die Rechner-Ansicht ist unverändert — der Reiter steht dort
+weiterhin als 43 × 495 Punkte großer Streifen neben der Frage. Auch das Ziehen
+des Fensters von breit auf schmal und zurück wurde geprüft: Die gesetzten Höhen
+werden weggeräumt und beim Zurückziehen wieder gesetzt.
+
+---
+
+## [1.152.0] - 2026-09-05
+
+### Geändert
+- **Der Videolehrgang läuft jetzt in einem eigenen Fenster statt im Trainer.**
+  Dietmar: „Video im Fenster abspielen möchte ich ändern. Videolehrgang von
+  DL2YMR in einem neuen Fenster öffnen."
+
+  Bisher gab es zwei Wege: Wer auf der Liste im `video_embed.json` stand, bekam
+  einen eingebetteten Player *innerhalb* des Trainers, alle anderen einen neuen
+  Tab auf YouTube. Jetzt gilt der zweite Weg für alle. Das Video lässt sich
+  neben den Trainer legen, es hat die volle Bedienung von YouTube
+  (Geschwindigkeit, Untertitel, Kapitel, Vollbild) — und der Aufruf zählt
+  regulär für Michael, DL2YMR, samt Werbung.
+
+  Der Schalter bleibt stehen: `VIDEO_IM_FENSTER` in Index.html auf `true`, und
+  der eingebettete Player ist zurück. Geöffnet wird bewusst über den simulierten
+  Klick auf einen Link (`openExternalTab`) und **nicht** über `window.open` mit
+  Feature-Angaben — sobald dort ein dritter Parameter steht, macht Chrome ein
+  echtes Popup daraus, und das fängt der Popup-Blocker ab.
+
+- **Sprechblase und Vorlesetext der Videokachel** sagen jetzt, was passiert:
+  „Videolehrgang von DL2YMR in einem neuen Fenster öffnen."
+
+### Behoben
+- **„DL2YMR" wird buchstabiert statt gelesen.** Dietmar: „DL2YMR müssen als
+  Buchstaben vorgelesen werden." Als Wort gelesen klang das Rufzeichen wie ein
+  Nieser. Die Regel arbeitet wie die für DARC: Bindestriche trennen die
+  Buchstaben, ohne ein Wort dazuzusetzen — `D-L-2-Y-M-R`. Sie steht an beiden
+  Stellen, in `tts-expand.js` (Piper über den Server) und in Index.html
+  (Notstimme des Browsers), und greift auch in Klein- und Mischschreibung.
+
+- Die Anleitung unter **Info** beschreibt das neue Verhalten.
+
+---
+
+## [1.151.0] - 2026-09-05
+
+### Hinzugefügt
+- **Der Knopf neben der Frage führt jetzt wahlweise in die KI.** Dietmar: „Bei
+  dem Google Button, kann man das auch in die KI leiten?"
+
+  Ja — und weil die Meinungen auseinandergehen, was beim Lernen mehr hilft, ist
+  das Ziel unter **Einstellungen ▸ Allgemein ▸ Nachschlagen** wählbar:
+
+  | Ziel | was passiert |
+  |---|---|
+  | **Google KI** (Voreinstellung) | KI-Modus der Google-Suche (`udm=50`) |
+  | Google | die gewohnte Websuche mit Trefferliste |
+  | ChatGPT | chatgpt.com mit fertig eingetragener Frage |
+  | Perplexity | perplexity.ai, antwortet mit Quellenangaben |
+
+  Der Knopf trägt Namen und Zeichen des gewählten Ziels — vor dem Klick ist
+  also zu sehen, wo man landet.
+
+- **Zwei verschiedene Texte gehen hinaus.** An die Suche wie bisher Stichworte.
+  An eine KI dagegen eine ausformulierte Bitte: „Erkläre mir bitte diese Frage
+  aus der deutschen Amateurfunkprüfung … Sag mir, welche Antwort richtig ist,
+  und begründe kurz und verständlich, warum." Eine Aneinanderreihung von
+  Stichworten beantwortet eine KI sonst mit Vermutungen. Bei **Bildfragen**
+  steht ausdrücklich dabei, dass die Antworten als Bilder vorliegen und nicht
+  mitgeschickt werden konnten — sonst rät die KI über Antworten, die sie nie
+  gesehen hat.
+
+### Anmerkung
+- **Gemini steht nicht zur Wahl.** Diese Seite nimmt keine fertige Frage aus
+  der Adresse entgegen; man käme dort auf einer leeren Seite an und müsste die
+  Frage abtippen. Der KI-Modus der Google-Suche kann es und läuft auf demselben
+  Google-Sprachmodell.
+
+- Im **Gruppenraum** und im **Prüfungssimulator** zählt Nachschlagen weiterhin
+  als Fehler — egal welches Ziel eingestellt ist. Der Knopf warnt dort wie
+  bisher mit rotem Rand und Hinweistext.
+
+- Die Anleitung unter **Info** beschreibt den Knopf neu.
+
+---
+
+## [1.150.0] - 2026-09-05
+
+### Hinzugefügt
+- **Hinweis am Link 50ohm.de in der Fußzeile.** Wer mit der Maus darüberfährt,
+  liest jetzt: „Auf der Seite von 50 Ohm findest du Kurse, Trainings-App,
+  Ausbildungspaten und das Buch Klasse N zur Ausbildung." Bisher stand dort nur
+  der nackte Link — was einen dort erwartet, war nicht zu sehen. Der Text ist
+  zugleich Sprechblase (`data-tooltip`) und wird beim Überfahren vorgelesen.
+
+---
+
+## [1.149.0] - 2026-09-05
+
+### Geändert
+- **Bilder wachsen jetzt an ihrer Stelle statt in der Fenstermitte.** Dietmar:
+  „Das Vergrößern mittig finde ich nicht besonders schön. Hier wäre mir ein
+  Vergrößern an der Stelle wo das Bild sitzt angenehmer. Bei den Fragen mit
+  4 Bildern: Hier wäre links oben das Vergrößern auch an Ort und Stelle lieber.
+  Das gleiche bei rechts oben und links unten und rechts unten."
+
+  Bisher wurde das überfahrene Bild in einer Ebene über der Seite **mittig**
+  gezeigt. Der Blick musste jedes Mal von der Kachel zur Fenstermitte springen
+  und wieder zurück — bei vier Bildern nebeneinander vier Mal, immer an
+  dieselbe Stelle, egal welches Bild gemeint war.
+
+  Jetzt bleibt das Bild dort, wo der Zeiger steht. Bei den vier Antwortbildern
+  hängt es an der Ecke, die dem Fensterrand am nächsten liegt, und wächst von
+  dort nach innen: **links oben** nach rechts unten, **rechts oben** nach links
+  unten, **links unten** nach rechts oben, **rechts unten** nach links oben. So
+  läuft die Vergrößerung immer ins Fenster hinein und nie darüber hinaus; zur
+  Sicherheit wird sie am Schluss noch in den sichtbaren Bereich geschoben.
+
+  Das **einzelne Fragebild** hat keinen Nachbarn, dem es ausweichen müsste. Es
+  wächst deshalb um seine eigene Mitte herum — das wirkt ruhiger als ein Bild,
+  das zur Seite wegkippt.
+
+- **Im Vollbild wird größer vergrößert, im Fenster weniger.** Dietmar: „Im
+  Vollbild kann das Vergrößern etwas größer sein. Im normalen Modus etwas
+  weniger." Es gibt jetzt zwei Sätze von Grenzen statt einem: im Fenster
+  38 Prozent der Fensterfläche und höchstens 520 × 300 (Fragebild) bzw.
+  400 × 250 Bildpunkte (Antwortbild), im Vollbild 52 Prozent und höchstens
+  780 × 440 bzw. 620 × 380. Im normalen Fenster stehen daneben noch Verlauf
+  und Seitenleiste — dort war die alte Größe zu üppig.
+
+- **Die Anzeigegröße rechnet jetzt sauber mit.** Die Vergrößerung wird in
+  Bildschirmpunkten berechnet und erst beim Setzen in Seitenpunkte
+  zurückgerechnet. Ohne diese Trennung saß das große Bild bei einer
+  Anzeigegröße von 125 Prozent daneben und wählte die falsche Ecke.
+
+- Die Anleitung unter **Info** beschreibt das neue Verhalten.
+
+---
+
+## [1.148.0] - 2026-09-05
+
+### Behoben
+- **Im Chat ließ sich erst schreiben, nachdem jemand geschrieben hatte.** Dietmar:
+  „Ich kann erst im Chat schreiben, wenn mir davor jemand geschrieben hat."
+
+  Genau so war es gebaut: Das Chatfenster kam **zugeklappt** auf die Welt — nur
+  die Kopfleiste war zu sehen, das Eingabefeld steckte darunter. Aufgeklappt hat
+  es sich erst, wenn eine **fremde** Nachricht eintraf. Wer als Erster schreiben
+  wollte, fand kein Feld und hätte die Kopfleiste anklicken müssen — die aber wie
+  eine Überschrift aussieht, nicht wie ein Knopf
+- Jetzt klappt der Chat beim Betreten des Raums einmal von selbst auf, beim
+  Gastgeber wie beim Gast. Wer ihn zumacht, dem bleibt er zu; ein neu
+  eintreffender Raum-Zustand reißt ihn nicht wieder auf
+- Beim automatischen Aufklappen springt der Schreibcursor **nicht** ins Chatfeld
+  — in dem Moment ist man beim Einladungslink, nicht beim Schreiben
+
+### Geändert
+- **„Schließen" beendet den Gruppenraum wirklich.** Dietmar: „Wenn ich im
+  Gruppenraum den Button schließen betätige, muss auch der Gruppenchat beendet
+  werden" — und auf Nachfrage: den Raum wirklich beenden.
+
+  Bis dahin gab es **überhaupt keinen Weg**, einen Raum absichtlich zu verlassen.
+  Der Knopf machte nur das Fenster zu: Der Raum lief weiter, das Chatfenster
+  blieb am Bildschirm stehen und der Knopf „Raum" in der Kopfzeile ebenso
+- **Nur der Gastgeber beendet den Raum für alle.** Wer zu Gast ist, meldet sich
+  mit demselben Knopf nur selbst ab und lässt den Raum stehen — sonst könnte ein
+  beliebiger Teilnehmer allen anderen den Kursabend beenden
+- Die Gäste bekommen dabei eine Zeile: „Der Gastgeber hat den Gruppenraum
+  beendet." Wer selbst geschlossen hat, sieht nichts — er weiß es
+
+### Geprüft
+Mit zwei Browsern, Gastgeber und Gast:
+
+- Direkt nach dem Erstellen ist das Chatfeld da — beim Gastgeber und, nach dem
+  Beitreten, auch beim Gast
+- „Schließen" beim Gastgeber: Chat weg, Fenster zu, Raum aus — **und beim Gast
+  ebenso**, mit der Meldung auf dem Bildschirm
+- Keine Fehler in beiden Browsern
+
+---
+
+## [1.147.0] - 2026-09-05
+
+### Behoben
+- **Der Verlauf rechts war zu kurz.** Dietmar: „Die Ansicht bei Benutzer ist zu
+  kurz. Im Vollbild passt die Länge. Vermutlich hat sich beim Hinzufügen vom
+  Vollbild was verändert." — Die Spur war richtig, die Ursache lag aber nicht am
+  Vollbild, sondern an der **Anzeigegröße**, die kurz davor dazukam. Seitdem sind
+  zwei Zahlen verschieden, die vorher gleich waren:
+
+  | | bei 125 % |
+  |---|---|
+  | `getBoundingClientRect().height` | 552 — was man **sieht** |
+  | `offsetHeight` | 441 — womit die Seite **rechnet** |
+
+  Geschrieben wird in `style.maxHeight`, und das zählt in der zweiten Einheit.
+  Die erste dort hineinzuschreiben setzt eine Höhe, die noch einmal mit 1,25
+  multipliziert wird. Jetzt wird `offsetHeight` gemessen — beides dieselbe Einheit
+- Aus demselben Grund fragt die Umschaltung auf schmale Bildschirme jetzt
+  `clientWidth` statt `innerWidth`: `innerWidth` nennt den echten Schirm (1920),
+  `clientWidth` den Raum, in dem die Seite rechnet (bei 125 % also 1536) — und
+  mit dem arbeitet auch der Media-Query. Sonst trifft das Programm irgendwann
+  eine andere Entscheidung als das Stylesheet
+- **Ein Knopf wurde beim zweiten Überfahren nicht mehr vorgelesen.** Dietmar:
+  „Erst wenn ich einen anderen Button auswähle und zurück zu dem wechsle, wo er
+  nicht vorgelesen hat, liest es den Button vor." Genau so war es gebaut: Ein
+  Merker hielt den zuletzt gesprochenen Satz fest, wurde beim Verlassen des
+  Knopfes aber nie geleert. Beim nächsten Überfahren sagte der Vergleich „läuft
+  schon" — und es kam nichts. Der Vergleich ist entfallen; den Fall, für den er
+  gedacht war, fängt die Zeile darüber schon ab
+
+### Geändert
+- **Alle Knöpfe heben sich beim Überfahren, nach einer Sekunde.** Dietmar:
+  „Teilweise ist beim Mouse Overlay ein Heben von dem Button aufgefallen und bei
+  anderen ist das nicht. […] Durch dem Heben wird das Vorlesen der Buttons
+  aktiviert." Bisher hob sich nur `.btn` — und sofort. Die Knöpfe im Verlauf, im
+  Lernfortschritt und in den Fenstern lagen still
+- **Die Sekunde ist die Verabredung mit der Sprachausgabe:** Der Knopf hebt sich
+  in dem Moment, in dem der Satz beginnt. Die Vorlese-Verzögerung ist deshalb von
+  450 ms auf 1000 ms gegangen; beide Zahlen verweisen im Quelltext aufeinander
+- Der Weg zurück hat **keine** Verzögerung — wer den Zeiger wegnimmt, will den
+  Knopf sofort wieder flach sehen
+- Ausgenommen bleiben die Punkte im Verlauf (die haben ihr eigenes Vergrößern),
+  die Antwortfelder (dort wäre ein Heben ein falsches Signal) und alles
+  Abgeschaltete
+
+### Geprüft
+- Spaltenhöhen bei 1920×1080 (125 %) und 1366×768 (90 %) mit 60 zusätzlichen
+  Verlaufszeilen: **Unterschied 0 Punkte** in beiden Fällen
+- Heben nachgemessen: nach 0,4 s noch flach, nach 1,4 s um 2 Punkte gehoben —
+  auch am Zahnrad, das sich vorher gar nicht bewegt hat
+- Denselben Knopf zweimal überfahren: **zweimal gesprochen**
+- Antwortfelder heben sich nicht, die Verlaufspunkte vergrößern sich weiter wie
+  bisher
+
+---
+
+## [1.146.0] - 2026-09-05
+
+### Behoben
+- **„DARC" wird buchstabiert, nicht gelesen.** Dietmar: „DARC liest es als Dark.
+  Es muss DARC aussprechen. D A R C mit einer sehr kleinen Pause dazwischen bei
+  allen Sprachen." An die Sprachausgabe geht jetzt **`D-A-R-C`**
+- Die Bindestriche trennen, ohne dass ein Wort dazukommt. Ein Komma machte eine
+  deutlich längere Pause, ein Schrägstrich würde als „Strich" mitgesprochen — es
+  ist dieselbe Technik, mit der hier schon „Antennen-anlage" getrennt wird, damit
+  Piper nicht „Andenanlage" daraus macht
+- **An zwei Stellen eingetragen**, weil es zwei Wege zur Sprachausgabe gibt:
+  `tts-expand.js` auf der Serverseite gilt für alles, was Piper spricht — also
+  für jede Stimme; die Tabelle in `Index.html` deckt zusätzlich die Notstimme des
+  Browsers ab, die nie am Server vorbeikommt. Doppelt angewandt schadet nichts:
+  Nach dem ersten Mal steht dort `D-A-R-C`, und darauf passt die Regel nicht mehr
+- Die Regel steht ganz oben im Ausdruck, gleich nach Lambda — später greifen
+  Regeln, die auf Großbuchstabenfolgen schauen, und die sollen dieses Wort nicht
+  mehr vorfinden
+
+### Geprüft
+- Mitgeschnitten, was wirklich an die Sprachausgabe geht: „… der Lehrgang des
+  **D-A-R-C**. Dort steht das Kapitel …"
+- Sechs Schreibweisen durchgespielt, darunter „DARC-Ortsverband" und „der DARC
+  e.V." — überall richtig getrennt, und kein anderes Wort wird berührt
+
+---
+
+## [1.145.0] - 2026-09-05
+
+### Hinzugefügt
+- **Eine Aussprache-Tabelle für die Sprachausgabe.** Dietmar: „Jetzt sagt
+  Kerstin Mekliste." — das *r* im „rk" fehlte. Zusammengesetzte Wörter getrennt
+  zu schreiben hilft dort: „Merkliste" geht als **„Merk Liste"** an die Stimme,
+  beide Teile werden ausgesprochen statt verschliffen
+- **Die Regel für Einträge in dieser Tabelle:** nur echte Wörter, nur Trennungen
+  von Zusammensetzungen, **keine erfundenen Schreibweisen**. Der Versuch,
+  „Blättern" als „Blettern" zu schreiben, ist genau daran gescheitert — ein Wort,
+  das in keinem Wörterbuch steht, muss die Stimme raten
+- **Ein Wort am Satzanfang, gefolgt von einem Punkt, bekommt jetzt ein Komma.**
+  Das betraf die ausführlichen Erklärungen, die alle mit dem Knopfnamen und
+  einem Punkt beginnen: „Merkliste. Hier stehen …" war dieselbe Form, an der die
+  Stimme schon bei „Blättern." gescheitert ist. Jetzt: „Merkliste, hier stehen …"
+
+### Geändert
+- **Das Suchfeld sagt „Suchen nach Fragen oder Schlagwörtern."** Dietmar: „Beim
+  Suchfeld kommt: ‚Suche Start'. Hier wäre ein ‚Suchen nach Fragen oder
+  Schlagwörter' besser."
+
+### Technisch
+- Die Aussprache läuft als **letzter Schritt**, unmittelbar vor der
+  Sprachausgabe. Beim ersten Versuch stand sie am Anfang — dann sah der Rest des
+  Programms „Merk Liste", zwei Wörter, und die Regel, die einem Einzelwort einen
+  Nachsatz gibt, sprang nicht mehr an
+- Innerhalb der Aussprache kommt **erst der Punkt, dann die Tabelle**. Andersherum
+  wäre aus „Merkliste. Hier stehen …" schon „Merk Liste. Hier …" geworden — zwei
+  Wörter, und die Kommaregel hätte nicht mehr gegriffen. Der Punkt bliebe stehen,
+  und genau der ist das Problem
+- Beide Reihenfolgen sind der Grund, warum es zwei Anläufe brauchte; sie stehen
+  als Merksatz im Quelltext
+
+---
+
+## [1.144.0] - 2026-09-05
+
+### Behoben
+- **Kein Knopf schickt der Sprachausgabe mehr ein nacktes Einzelwort.** Dietmar
+  zu „Merkliste": „bei Merkliste kommt ein Verplisse." Damit ist die Regel von
+  1.142.0 widerlegt — es lag nicht am Punkt. Auch ein Wort **ohne** Punkt gerät
+  daneben; bei „Starten" und „Lernbedarf" hatte es nur zufällig geklappt
+
+  Der Grund ist derselbe wie bei „Blättern": Eine Äußerung aus einem einzigen
+  Wort ist für diese Modelle die unsicherste Form überhaupt — Anfang, Betonung
+  und Ende müssen aus dem Nichts entstehen. Sobald ein zweiter Halbsatz folgt,
+  hat das Modell einen Zusammenhang
+- **Der Nachsatz wird nicht erfunden, er stand schon da:** Es ist der Teil der
+  Sprechblase hinter dem Trennstrich, den die Kurzfassung bisher weggeworfen hat.
+
+  | Knopf | gesprochen |
+  |---|---|
+  | Merkliste | „Merkliste, gemerkte Fragen ansehen und der Reihe nach lernen." |
+  | Lernbedarf | „Lernbedarf, oft falsch." |
+  | Starten | „Starten, 561 von 571 Fragen noch nicht gelernt." |
+  | Prüfungssimulator | „Prüfungssimulator, echte Prüfungsbedingungen." |
+
+- **Geschnitten wird an einem Satzzeichen, nie zwischen zwei Wörtern, die
+  zusammengehören.** Der erste Versuch schnitt nach sechs Wörtern ab und ergab
+  „und der Reihe." und „je 25 Fragen und." — Sätze, die mitten im Satzteil
+  aufhören. Genau das war hier schon einmal ein Fehler („Bei Weiterblättern
+  verschluckt es Silben")
+- Zwei Knöpfe, deren Sprechblase als Aufzählung weitergeht, haben einen eigenen
+  Text bekommen, weil der erste Halbsatz allein ein schiefes Bild ergäbe:
+  **Einstellungen** („Einstellungen für Anzeige, Vorlesen und Update.") und das
+  **Suchfeld** („Suchfeld für Fragennummer oder Stichwort.")
+
+### Geprüft
+- Alle 24 sichtbaren Knopftexte im Kurzmodus durchgezählt: **kein einzelnes Wort
+  mehr**, und keiner endet auf einem Füllwort wie „und", „der" oder „je"
+
+---
+
+## [1.143.0] - 2026-09-05
+
+### Geändert
+- **Der Satz im Band oben und „später" sind jetzt weiß** — so wie bei 50 Ohm
+  selbst. Dietmar: „Am Trainer hat sich etwas geändert, seit diese Seite geladen
+  wurde und später bitte in der Farbe weiss."
+- Ich hatte sie in 1.141.0 dunkel gesetzt, weil Weiß auf diesem Blau nur 2,6:1
+  trägt und damit unter den 4,5:1 liegt, die als lesbar gelten. Das bleibt so —
+  aber es ist Dietmars Programm, und es sieht damit aus wie das Vorbild
+- Was bleibt, um die Zeile trotzdem lesbar zu halten: fette Schrift, eine Zeile
+  allein, und der Knopf **„Jetzt neu laden"** weiterhin weiß mit dunkler Schrift.
+  Der trägt 15:1 — und er ist das, worauf es ankommt, wenn jemand das Band nur
+  streift
+
+---
+
+## [1.142.0] - 2026-09-05
+
+### Geändert
+- **Der Vollbild-Knopf sagt jetzt „Vollbild zum Vergrößern."** Dietmar:
+  „Vollbild spricht Kerstin sehr schnell aus." — und gleich mit dem Wortlaut
+  hinterher
+
+### Behoben
+- **Ein einzelnes Wort bekommt keinen Punkt mehr mitgeschickt.** Aus zwei
+  Rückmeldungen ergibt sich ein klares Muster:
+
+  | ging daneben | kam sauber heraus |
+  |---|---|
+  | „Blättern**.**" · „Vollbild**.**" | „Starten" · „Merkliste" · „Lernbedarf" · „Prüfungssimulator" |
+  | ein Wort **mit** Punkt | ein Wort **ohne** Punkt |
+
+  Der Punkt macht aus dem Wort eine abgeschlossene Äußerung, und eine Äußerung
+  aus einem einzigen Wort ist für diese Modelle die unsicherste Form überhaupt:
+  Sie müssen Anfang, Betonung und Ende aus dem Nichts erzeugen. Ohne Punkt läuft
+  es als Fragment durch und klingt ruhig
+- Die Regel gilt jetzt für alle Knöpfe, nicht nur für die beiden gemeldeten —
+  mit gefangen wird dadurch „Suchfeld.", das denselben Fehler gehabt hätte.
+  Sätze mit mehreren Wörtern behalten ihren Punkt; dort hilft er der Betonung
+
+### Geprüft
+- Alle 24 sichtbaren Knopftexte im Kurzmodus durchgezählt: Kein einziger ist
+  noch ein einzelnes Wort mit Punkt
+
+---
+
+## [1.141.0] - 2026-09-05
+
+### Geändert
+- **„Blättern" ohne das „Zum".** Dietmar: „Jetzt klingt es gut. Zum gehört raus.
+  Nur ‚Blättern, alle Fragen'." — Damit ist auch klar, woran es wirklich lag:
+  **nicht an der Stellung, sondern am Punkt.** „Blättern." war für das Modell
+  eine vollständige, sehr kurze Äußerung, und die geriet ihm daneben. Ein Komma
+  hält den Satz zusammen; das Wort bekommt seinen Klang aus dem, was folgt:
+
+  | | jetzt |
+  |---|---|
+  | kurz | „Blättern, alle Fragen der Reihe nach." |
+  | kurz, mit Lesezeichen | „Weiterblättern, weiter bei Frage 41 von 571." |
+  | ausführlich | „Blättern, diese Funktion hilft dir …" |
+
+- **Das Band oben trägt jetzt die 50-Ohm-Farbe** statt des Brauns. Dietmar: „Bei
+  Update möchte ich oben kein Braun, sondern die 50 Ohm Farbe." Der Wert
+  `#00adef` ist aus dem Knopf „Jetzt starten" auf 50ohm.de gemessen — derselbe,
+  der im Nachtstil des Trainers schon steht
+- **Die Schrift darauf ist dunkel, nicht weiß.** 50 Ohm setzt auf dieses Blau
+  weiße Schrift; die trägt aber nur 2,6:1 und liegt damit weit unter den 4,5:1,
+  die als lesbar gelten. Dunkles Marineblau darauf kommt auf **5,9:1**, der
+  Knopf „Jetzt neu laden" auf 15:1. Die Farbe ist ihre, die Lesbarkeit bleibt
+  unsere — auf einem Band, das jemanden zum Neuladen bewegen soll, wäre schlecht
+  lesbare Schrift ein Widerspruch in sich
+- Zur Sicherheit festgehalten: Das ist die **Farbe**, nicht das Logo. Das blaue
+  50-Ohm-Zeichen ist markenrechtlich geschützt und bleibt draußen, bis die
+  Vorstandschaft es freigibt
+
+---
+
+## [1.140.0] - 2026-09-05
+
+### Geändert
+- **„Blättern" steht der Sprachausgabe nicht mehr am Satzanfang.** Dietmars
+  dritte Rückmeldung war die entscheidende: „Es ist viel mehr so ein Bitttööö
+  alle Fragen der Reihe nach." — Der **Rest des Satzes kommt sauber heraus**,
+  kaputt ist nur das erste Wort.
+
+  Das ist ein bekanntes Verhalten dieser Sprachmodelle: Der Anfang einer
+  Äußerung ist die unsicherste Stelle, weil das Modell noch keinen Klang hat, an
+  dem es sich orientiert. Ein harter Anlaut — hier das „Bl" — trifft genau
+  dorthin, und bei 16 kHz fällt das Ergebnis auseinander. Kerstin ist die
+  einzige verbliebene Stimme mit dieser Rate
+- Das Wort bekommt deshalb einen **Anlauf**: der Satz beginnt mit einem leichten
+  „Zum", das Stichwort steht an zweiter Stelle.
+
+  | | vorher | jetzt |
+  |---|---|---|
+  | kurz | „Blättern. Alle Fragen der Reihe nach." | „**Zum** Blättern durch alle Fragen der Reihe nach." |
+  | kurz, mit Lesezeichen | „Weiterblättern. Weiter bei Frage 41 von 571." | „**Zum** Weiterblättern bei Frage 41 von 571." |
+  | ausführlich | „Blättern. Diese Funktion hilft dir …" | „**Zum** Blättern. Diese Funktion hilft dir …" |
+
+  Für die Augen ändert sich nichts — auf dem Knopf steht weiter „Blättern", und
+  der Hinweistext ist unverändert
+
+### Anmerkung zu den drei Anläufen
+Der Weg dorthin gehört ins Protokoll, weil zwei der drei Versuche danebenlagen:
+„Blettern" zu schreiben war ein Fehlgriff (ein erfundenes Wort steht in keinem
+Wörterbuch), und ein Satz drumherum allein reichte nicht, solange das Wort vorne
+stand. Erst Dietmars Beobachtung, dass der Rest des Satzes stimmt, hat die
+Ursache eingekreist. Nachgehört werden kann hier nicht — die Sprechprobe in den
+Einstellungen enthält das Wort deshalb seit 1.139 mitten im Satz und ist der
+schnellste Weg, eine Stimme darauf zu prüfen.
+
+---
+
+## [1.139.0] - 2026-09-05
+
+### Entfernt
+- **Der untere Kasten „Weitere Stimmen" ist weg.** Dietmar: „Das untere Feld
+  ‚weitere Stimmen' kann raus. Wir haben oben ausgewählt was an Stimmen
+  hinzugefügt wird." Richtig — seit es „Stimmen hinzufügen" neben „Probe hören"
+  gibt, war der Haken darunter ein zweiter Weg zum selben Ziel. Der Code für die
+  Einzelauswahl ist mit herausgenommen, nicht nur der Kasten: toter Code, den
+  niemand mehr aufruft, ist die nächste Falle
+
+### Geändert
+- **„Blättern" wird wieder als „Blättern" gesprochen.** Der Versuch mit
+  „Blettern" war ein Fehlgriff — Dietmars Protokoll zeigt ihn schwarz auf weiß:
+  `[TTS] Model:de_DE-kerstin-low.onnx Text:Blettern.`, und geklungen hat es
+  danach „ungefähr so: Bisssöööö". Ein erfundenes Wort steht in keinem
+  Aussprachewörterbuch; die Stimme muss raten, und das war die schlechtere Wette
+- **Stattdessen bekommt das Wort einen Satz um sich herum:** „Blättern. Alle
+  Fragen der Reihe nach." Sprachmodelle rechnen den Klang aus dem Zusammenhang.
+  Dasselbe Protokoll zeigt auch, dass es nicht an einzelnen Wörtern generell
+  liegt — „Starten" kommt sauber heraus —, sondern an diesem einen mit dieser
+  einen Stimme. Ein kurzer Satz kostet nichts und gibt dem Modell den Halt, den
+  es braucht
+- **Die Sprechprobe enthält das Wort jetzt:** „So klingt die Stimme, die dich
+  durch das Menü führt — zum Beispiel beim Blättern durch den Fragenkatalog."
+  Damit lässt sich mit einem Klick prüfen, ob es bei einer Stimme klappt, statt
+  erst den Knopf zu suchen
+
+### Behoben
+- **„Fehler beim Laden der Stimmen"** war kein Fehler, sondern ein Ende. In
+  Dietmars `server.log` steht eine Minute vor seiner Meldung: *„[ENDE] Kein
+  Fenster mehr offen. Der Trainer macht Feierabend."* Die Seite blieb offen, der
+  Server war weg — und die Auskunft „Server nicht erreichbar oder Fehler beim
+  Abrufen der Stimmen" klang nach Defekt. Jetzt steht dort, was wirklich los
+  ist: *„Der Trainer antwortet nicht mehr. Meist heißt das: Er hat sich beendet,
+  weil kein Fenster mehr offen war. Zum Weiterlernen START noch einmal ausführen
+  und diese Seite neu laden."*
+
+---
+
+## [1.138.0] - 2026-09-05
+
+### Geändert
+- **Die kurze Meldung unten rechts hat jetzt die Farbe ihrer Nachricht.**
+  Dietmar: „Als gelernt abgehakt Popup unten rechts möchte ich das gleiche Grün
+  wie bei der Frage richtig beantwortet, und bei entfernt gelernt in dem Rot wie
+  bei einer falschen Antwort."
+
+  Sie hatte bis jetzt nur eine Farbe: das Rot der Fehlerwertung. Das passte für
+  „Nachgeschlagen — hier als Fehler gewertet", aber nicht für „Als gelernt
+  abgehakt" — da stand eine gute Nachricht in Warnrot
+- Genommen werden **dieselben zwei Farben wie an den Antworten**
+  (`--darc-richtig` und `--darc-falsch`), beide mit schwarzer Schrift, wie dort
+  auch. Wer eine Frage abhakt und aus dem Augenwinkel etwas aufblitzen sieht,
+  weiß damit ohne Lesen, was passiert ist
+- Mit umgestellt: „Wieder als CB-Wissen angerechnet" (grün) und „Zurück in den
+  Lernstapel" (rot) — dieselben zwei Vorgänge, nur bei CB-angerechneten Fragen
+- **Die dritte Farbe bleibt**, wofür sie gedacht war: die Fehlerwertung beim
+  Nachschlagen und beim Anzeigen der Lösung. Das ist kein Ergebnis an einer
+  Antwort, sondern eine Warnung — und soll auch nicht aussehen wie eine
+
+### Geprüft
+- Die Farben Pixel für Pixel gegen die Antworten verglichen: Meldung und
+  richtige Antwort sind beide `rgb(59, 181, 131)`, Meldung und falsche Antwort
+  beide `rgb(254, 117, 108)`, jeweils mit schwarzer Schrift
+- Schwarz auf beiden Farben trägt gut 8:1 — dieselbe Rechnung wie bei den
+  Antworten
+
+---
+
+## [1.137.0] - 2026-09-05
+
+### Hinzugefügt
+- **Anzeigegröße** in den Einstellungen unter *Allgemein*. Dietmar: „Bei
+  Vergrößern wird die Fläche größer auf dem Bildschirm. Hier möchte ich eine
+  dynamische Vergrößerung von dem Trainer. Bei mir wäre zB 125 % gut. Auf meinem
+  Laptop 15 und 17 Zoll vermutlich wieder schlecht. Hier muss es sich
+  verkleinern."
+
+  Er hat den wunden Punkt getroffen: Das Vollbild schafft Platz, macht aber
+  nichts größer — die Schrift bleibt, wie sie war, und der Gewinn ist mehr Weiß
+  am Rand
+- **„Automatisch" rechnet aus dem Fenster.** Der Trainer ist für rund
+  1520 × 870 Punkte entworfen; darüber darf alles im selben Verhältnis wachsen,
+  darunter muss es schrumpfen. Genommen wird die kleinere der beiden Richtungen
+  — ein breiter, flacher Schirm hat trotzdem nur die Höhe, die er hat.
+  Nachgemessen:
+
+  | Bildschirm | Ergebnis |
+  |---|---|
+  | 1280 × 800 | 85 % |
+  | 1366 × 768 (15-Zoll-Laptop) | 90 % |
+  | 1920 × 1080 (Dietmars Schirm) | **125 %** |
+  | 2560 × 1440 | 150 % (Grenze) |
+
+  Gerundet wird auf 5 %, damit ein Fenster, das man um zehn Punkte zieht, nicht
+  dauernd die Schrift verändert
+- Fest wählbar sind 90, 100, 110, 125 und 150 %
+- **Im Beamer-Modus bleibt es bei 100 %.** Der rechnet seine Größen ohnehin aus
+  der Bildschirmgröße; beides zusammen hieße zweimal vergrößern, und die Frage
+  stünde unten aus dem Bild heraus
+
+### Technisch
+- Skaliert wird mit `zoom` auf dem Wurzelelement, nicht mit `transform: scale`.
+  `transform` verschiebt nur das Bild — der Platz darunter bleibt, wie er war,
+  und alles läuft aus dem Fenster. `zoom` rechnet die Größen wirklich um, der
+  Umbruch stimmt danach
+- **Der Haken an `zoom`:** `vh` und `vw` beziehen sich weiter auf den echten
+  Bildschirm und werden anschließend mitskaliert. `max-height:90vh` wäre bei
+  125 % also 112 % der Bildhöhe — jedes Fenster stünde über. Alle 27 Stellen mit
+  `vh` oder `vw` stehen deshalb jetzt als `calc(90vh / var(--afu-zoom))`; die
+  Variable hebt die Skalierung dort wieder auf. Wer eine neue Stelle mit `vh`
+  oder `vw` baut, muss das mitnehmen — es steht als Merksatz im Quelltext
+- Gesetzt wird die Größe **vor dem ersten Zeichnen**, im selben frühen Block wie
+  der Farbstil. Sonst blitzt die Seite einmal in der falschen Größe auf und
+  springt dann
+- `window.innerWidth`/`innerHeight` bleiben von `zoom` unberührt und nennen den
+  echten Ausschnitt — die Rechnung kann sich also nicht selbst aufschaukeln
+
+### Geändert
+- **„Blättern" wird der Sprachausgabe jetzt als „Blettern" übergeben.** Dietmar:
+  „Blättern klingt schrecklich bei Kerstin." Die Stimmen sprechen nicht aus einer
+  Lautschrift, sondern aus dem geschriebenen Wort; wo eine danebengreift, hilft
+  eine andere Schreibung desselben Klangs. Im Deutschen sind beide lautgleich
+  ([blɛtɐn]), aber mit dem *e* kommen die Modelle besser zurecht als mit dem *ä*.
+  Betrifft nur das Gesprochene — auf dem Knopf steht weiterhin „Blättern", und
+  „Weiterblättern" und „Blätter-Stand" gehen denselben Weg
+
+### Geprüft
+- Vier Bildschirmgrößen durchgemessen: Die Werte stimmen, nichts läuft seitlich
+  über, und die Fenster (Einstellungen, Anleitung, **Formelblatt**) passen
+  überall auf den Schirm — das Formelblatt rechnet seine Breite selbst aus der
+  Höhe und war die heikelste Stelle
+- Beamer-Modus an und wieder aus: Die Skalierung fällt auf 100 % und kommt
+  danach zurück
+- Die vollständige Liste aller Funktionen und Konstanten gegen die vorherige
+  Fassung verglichen — es fehlt nichts
+
+---
+
+## [1.136.0] - 2026-09-05
+
+### Entfernt
+- **karlsson, pavoque, ramona, eva_k und thorsten_emotional** werden nicht mehr
+  angeboten. Dietmar, nachdem er sie gehört hatte: „Karlsson und pavoque ramona
+  eva gehört auch raus" — und kurz darauf: „Thorsten emotional auch entfernen."
+  Die ersten vier gibt es nur in `low` oder `x_low`, also 16 kHz; der Trainer
+  warnt bei diesen ohnehin vor dem dumpfen S. `thorsten_emotional` ist derselbe
+  Sprecher wie die mitgelieferte Stimme, nur mit gespielten Gefühlslagen — für
+  Prüfungsfragen ist das nicht Ausdruck, sondern Ablenkung. Übrig bleiben
+  **Thorsten in drei Gütestufen und Kerstin**
+- Ausgewählt wird nach **Sprecher**, nicht nach einzelnem Eintrag: Käme morgen
+  „karlsson" in mittlerer Güte dazu, wäre sie sonst wieder in der Liste — und
+  die Entscheidung galt der Stimme, nicht der Güte
+
+### Hinzugefügt
+- **Wegräumen für Stimmen, die schon im Ordner liegen.** Aus der Liste nehmen
+  genügt nicht: Wer sie geholt hat, hat sie weiter im Ordner und in der Auswahl.
+  Der Reiter *Vorlesen* zeigt jetzt einen Hinweis, sobald so etwas herumliegt —
+  mit den Namen, dem belegten Platz und einem Knopf
+- **Gelöscht wird trotzdem nichts.** Die Dateien wandern nach
+  `_Aufgeraeumt_<Datum>\piper\`, so wie es `Aufraeumen.bat` mit allem anderen
+  auch hält. Zwei Gründe: Ein Modell ist 20 bis 110 MB, und wer es zurückhaben
+  will, müsste es sonst neu über die Leitung ziehen. Und wichtiger — ein
+  Programm, das ungefragt Dateien im Ordner des Benutzers löscht, ist eines, dem
+  man beim nächsten Mal nicht mehr traut. Der Ordner liegt sichtbar daneben; wer
+  Platz braucht, wirft ihn selbst weg. Das steht auch am Knopf, damit niemand
+  einen Klick tut, den er für endgültig hält
+- Liegt im Aufräumordner schon eine gleichnamige Datei aus einem früheren Lauf,
+  bekommt die neue eine Zahl angehängt — überschrieben wird auch dort nichts
+
+### Geprüft
+Mit genau dem Bestand aus Dietmars Ordner nachgestellt (acht Stimmen plus
+`piper.exe`, DLLs und `espeak-ng-data`):
+
+- Erkannt werden die sechs richtigen; **Thorsten und Kerstin bleiben**
+- `thorsten_emotional` wird gefasst, `thorsten-medium` und `thorsten-high`
+  nicht — die Namen werden genau verglichen, nicht als Wortanfang
+- **`piper.exe`, `onnxruntime.dll` und `espeak-ng-data\` werden nie angefasst**
+- Nach dem Wegräumen stehen in der Stimmenauswahl noch drei Stimmen, ohne
+  Neustart
+
+---
+
+## [1.135.0] - 2026-09-05
+
+### Behoben
+- **„Unexpected token 'N', ‚Not found' is not valid JSON"** beim Klick auf
+  *Stimmen hinzufügen*. Das war keine kaputte Datei, sondern die richtige
+  Antwort auf eine Frage, die der laufende Server noch nicht kannte: Die neue
+  `Index.html` lag schon im Ordner, im Speicher lief aber noch die Fassung von
+  vorhin — und die hatte `/api/stimmen/alle` nicht. Express antwortet darauf mit
+  dem schlichten Wort `Not found`, und `res.json()` zerbricht daran mit einer
+  Meldung, die niemandem sagt, was zu tun ist
+- Jetzt wird die Antwort erst als **Text** gelesen und dann gedeutet. Ein 404
+  heißt an dieser Stelle immer dasselbe, und genau das steht nun da: *„Diese
+  Funktion ist neuer als der laufende Trainer. Bitte den Trainer einmal beenden
+  und neu starten."*
+- Die Vorsicht gilt an **allen drei Stellen** — Verzeichnis holen, eine Stimme
+  holen, alle holen. Dieselbe Falle war seit dem 28.08.2026 bei `githubPruefen`
+  schon entschärft; sie gehört an jede Stelle, die eine neue Serverfunktion
+  anspricht
+
+### Geprüft
+- Den Fall nachgestellt: neue Anzeige, alter Server ohne das Stimmen-Modul. Beide
+  Wege — der große Knopf und die Liste — melden jetzt den Klartext statt der
+  Javascript-Meldung, und keine Ausnahme landet mehr in der Konsole
+
+---
+
+## [1.134.0] - 2026-09-05
+
+### Hinzugefügt
+- **„Stimmen hinzufügen"** steht jetzt neben „Probe hören". Ein Klick holt alle
+  weiteren deutschen Stimmen nacheinander — ohne dass etwas auszuwählen wäre.
+  Dietmar: „Ohne auswählen, alle mit einem Rutsch installieren." Und kurz
+  darauf: „Bei Stimmen hinzufügen benötigt es nur einen kleinen kurzen Text und
+  kein weiteres Fenster." Beides so umgesetzt: ein Klick, ein Satz mit Anzahl
+  und Größe, dann der Balken. Keine Rückfrage
+- Geholt wird **nacheinander, nicht gleichzeitig**: Vier Downloads parallel
+  machen die Leitung nicht schneller, aber den Fortschritt unlesbar. Geht einer
+  schief, laufen die übrigen weiter — eine Stimme, die es gerade nicht gibt,
+  soll nicht die anderen verhindern. Was nicht geklappt hat, steht am Ende dabei
+- Bei mehreren steht am Balken, die wievielte gerade läuft. Ein Balken, der
+  zwischendurch stehenbleibt, sähe sonst nach einem Hänger aus
+- Der Haken darunter heißt jetzt **„Einzeln auswählen"** — er ist der Weg für
+  den Fall, dass nicht alle gebraucht werden
+
+### Entfernt
+- **`de_DE-mls-medium` wird nicht mehr angeboten** (auf Dietmars Wunsch). Sie
+  stammt nicht aus einer Studioaufnahme, sondern aus einem Hörbuch-Datensatz
+  (Multilingual LibriSpeech) — viele Sprecher, viele Aufnahmesituationen. Für
+  einen Fragenkatalog, den man stundenlang hört, ist das die falsche Stimme, und
+  eine Auswahl, in der etwas steht, das man ohnehin nicht nehmen soll, ist keine
+  Hilfe
+
+### Geändert
+- Die Probe sagt jetzt **„So klingt die Stimme, die dich durch das Menü
+  führt."** Dietmar über die alte Fassung: „So klingt die Stimme, die dir die
+  Knöpfe vorliest — klingt schrecklich!" Er hat recht: „die dir die Knöpfe
+  vorliest" beschreibt die Technik, nicht den Zweck
+
+### Behoben
+- Der Fortschritt konnte über 100 % hinauslaufen, wenn eine Stimme misslang: Sie
+  zählte doppelt — einmal die Bytes, die schon durch die Leitung gingen, und
+  einmal ihre Größe, die nachgetragen wird, damit der Balken nicht hängenbleibt.
+  Jetzt wird nach jeder Stimme auf die Summe der erledigten gesetzt
+
+### Geprüft
+Am Verzeichnis auf dem eigenen Rechner:
+
+- Drei Stimmen mit einem Klick geholt, geprüft und geschrieben; sie stehen
+  sofort in der Auswahl, ohne Neustart
+- `mls-medium` liegt im Verzeichnis und taucht in der Liste **nicht** auf
+- Eine absichtlich beschädigte Stimme wird verworfen, die beiden anderen kommen
+  trotzdem an, und der Fehler steht am Ende dabei
+- Der Balken endet bei genau 100 %, auch wenn eine misslungen ist
+- **Kein Fenster** geht auf; **keine doppelt vergebene Kennung** im Dokument
+
+---
+
+## [1.133.0] - 2026-09-05
+
+### Geändert
+- **Der Vollbild-Knopf steht jetzt direkt neben dem Zahnrad.** Dietmar:
+  „Bildschirm vergrößern soll direkt neben Einstellungen verschoben werden."
+- **Die Anleitung ist neu gebaut.** Dietmar: „Unter Button Info möchte ich mehr
+  Struktur und eine bessere und nüchterne Anleitung. Bitte ergänze die neuen
+  Funktionen. Ich finde den jetzigen Aufbau schrecklich."
+
+  Er hatte recht, und zwar zweifach. Der Aufbau: dreizehn Kästen mit
+  Emoji-Überschriften, alle untereinander, in einem Fenster, das man vier
+  Bildschirmhöhen weit rollen musste — wer etwas Bestimmtes suchte, hat
+  gescrollt und gelesen, gescrollt und gelesen. Und der Ton: „Los geht's",
+  „fürs Auto", Ausrufezeichen, wo eine Anleitung nüchtern sein soll.
+
+  Jetzt sind es **acht Abschnitte, links anwählbar**, in derselben Form wie die
+  Einstellungen — wer das eine kennt, findet sich im anderen zurecht. Jeder
+  Abschnitt passt auf einen Bildschirm. Keine Emoji in den Überschriften. Zwei
+  Spalten je Zeile: links, wie die Sache heißt; rechts, was sie tut. Wer sucht,
+  überfliegt die linke Spalte
+- Die Abschnitte: **Überblick · Lernen · An der Frage · Prüfung & Kurs · Video &
+  Hörbuch · Einstellungen · Tastatur · Daten & Stand**
+
+### Hinzugefügt
+- Beschrieben sind jetzt auch die Sachen, die seit August dazugekommen sind:
+  **Blättern** samt Blätter-Buch und „Nur die gelernten ansehen", das
+  **Formelblatt** als PDF an der richtigen Stelle, **Dazu lernen** mit
+  Videolehrgang und 50ohm.de, der **Vollbild-Knopf**, die **Einstellungen** mit
+  ihren fünf Reitern, das **Nachholen weiterer Stimmen**, die grünen Punkte im
+  Verlauf und wo der Lernstand liegt
+- Unter *Daten & Stand* steht die **Versionsnummer** statt des Fingerabdrucks —
+  dieselbe Änderung wie im Reiter *Update*. Der Fingerabdruck bleibt klein
+  dahinter
+
+### Behoben
+- Beim Umbau des Anleitungsfensters hatte ich einen Bereich mitgelöscht, der
+  nichts mit ihm zu tun hatte: `dateiStandAnzeigen`, `fehlerMelden`,
+  `fehlerStand`, `verlaufHoeheAngleichen`, `paketZaehlerAnzeigen` und
+  `paketGeladen` lagen zwischen den beiden Funktionen, die ersetzt werden
+  sollten. Aufgefallen ist es daran, dass die Zeile „Welcher Stand läuft hier"
+  auf „wird ermittelt …" stehen blieb. Alle sechs sind wieder da; geprüft wurde
+  danach nicht nur die Anleitung, sondern die **vollständige Liste aller
+  Funktionen und Konstanten** gegen die ausgelieferte Fassung — es fehlt nichts
+  außer dem alten Hilfskästchen, das die neue Form ersetzt
+
+---
+
+## [1.132.0] - 2026-09-05
+
+### Hinzugefügt
+- **Weitere Vorlesestimmen lassen sich nachholen** — in den Einstellungen unter
+  *Vorlesen*. Dietmar: „Ich möchte noch weitere Piper Stimmen mit in das Tool
+  mit aufnehmen. […] Haken setzen und es installiert weitere Natural Stimmen
+  dazu. Ausgeliefert wird nur Standard Thorsten, um die Installations-exe nicht
+  aufzublähen."
+- **Ausgeliefert wird weiter nur Thorsten.** Eine Stimme in mittlerer Güte wiegt
+  63 MB, die hohe 110 MB; alle zehn deutschen zusammen rund 500 MB — in einem
+  Setup von knapp 90 MB. Wer nur lernen will, soll nicht erst eine halbe Stunde
+  Stimmen laden, die er nie benutzt
+- **Der Haken zeigt die Liste, geholt wird einzeln.** Das weicht bewusst von
+  „Haken setzen und es installiert" ab: Ein Haken, der ungefragt eine halbe
+  Stunde Leitung belegt, wäre eine unangenehme Überraschung — und die meisten
+  wollen eine zweite Stimme, nicht neun
+- **Die Güte steht vor dem Laden dabei.** `x_low` und `low` sind 16 kHz und
+  klingen beim S dumpf. Die Stimmenauswahl warnt heute schon davor — aber erst
+  *nach* dem Herunterladen, und das ist zu spät
+- Während des Ladens läuft ein Balken; danach steht die neue Stimme sofort in
+  der Auswahl, ohne Neustart
+
+### Technisch
+- Neue Datei `piper_stimmen.js`, eingehängt wie `github_update.js`. Fehlt sie,
+  entfällt nur die Auswahl — der Trainer läuft weiter
+- **Eine einzige Quelle:** die `voices.json` des Piper-Projekts bei Hugging
+  Face, dieselbe Herkunft wie die mitgelieferte Stimme. Dort steht zu jeder
+  Datei Größe *und* MD5-Prüfsumme. Nichts ist fest verdrahtet; kommt dort eine
+  Stimme dazu, steht sie von selbst zur Wahl
+- **Geholt werden nur `.onnx` und `.onnx.json`** — Sprachmodelle und deren
+  Beschreibung, also Daten. Nie ein Programm, nie eine `.exe`, nie eine `.dll`
+- **Jede Datei wird nachgerechnet.** Stimmt die Prüfsumme nicht, wird sie
+  verworfen und nicht geschrieben; ein abgebrochener Download kommt so nie im
+  Ordner an. Geschrieben wird erst nach `piper\`, wenn alles stimmt — vorher
+  liegt die Datei unter `.teil`
+- Geschrieben wird ausschließlich direkt nach `piper\`, nur unter einem Namen,
+  der zum Muster einer Stimmdatei passt. Kein Unterordner, kein `..`, kein Pfad
+  aus der Antwort des Servers. Als Gegenstelle sind nur `huggingface.co` und
+  `hf.co` zugelassen, auch nach einer Umleitung ans Auslieferungsnetz
+- Der Fortschritt wird abgefragt, nicht gemeldet: Eine Anfrage, die zwei Minuten
+  offen steht, läuft in jeden Zeitablauf — beim Browser, beim Server und beim
+  Virenscanner dazwischen
+
+### Geprüft
+An einem Verzeichnis auf dem eigenen Rechner durchgespielt, statt 63 MB durch
+die Leitung zu ziehen:
+
+- Eine englische Stimme im Verzeichnis taucht in der deutschen Liste **nicht**
+  auf
+- Ein Eintrag mit dem Pfad `../../../piper.exe` wird verworfen, nicht geholt
+- `MODEL_CARD` und Ähnliches fällt weg — nur Modell und Beschreibung kommen mit
+- Eine **absichtlich veränderte** Datei wird an der Prüfsumme erkannt; im Ordner
+  landet nichts, auch keine `.teil`-Datei
+- Der saubere Fall: geladen, geprüft, geschrieben — die Stimme steht sofort in
+  der Auswahl
+
+---
+
+## [1.131.0] - 2026-09-05
+
+### Hinzugefügt
+- **Ein Knopf für das Vollbild** in der Kopfzeile, mit dem Zeichen der vier
+  Pfeile nach außen. Dietmar: „Benötige einen Button oben in der Leiste mit
+  Browser Fenster ‚Maximieren' bzw. das Zeichen mit den 4 Pfeilen. Beim Button
+  vorlesen mit aufnehmen. Danach verschwindet der obere Teil vom Browser."
+- Es ist dasselbe wie **F11** — aber F11 muss man wissen, und im Kursraum sitzt
+  niemand mit der Tastatur vor dem Beamer. Was dabei wegfällt, ist kein Zierrat:
+  Adressleiste, Lesezeichen und Reiter sind auf einem Laptopschirm rund 120
+  Punkte, also zwei bis drei Antwortzeilen mehr für die Frage
+- **Der Knopf ist beim Vorlesen dabei**, kurz wie ausführlich — mit dem Hinweis
+  auf F11 und darauf, dass Escape wieder herausführt
+- **Das Zeichen sagt, was als Nächstes passiert**, nicht wo man ist: vier Pfeile
+  nach außen heißt „groß machen", die vier nach innen „wieder klein"
+
+### Technisch
+- Nachgezogen wird über das Ereignis `fullscreenchange`, nicht nach dem eigenen
+  Klick. Das Vollbild lässt sich auch mit F11 und mit Escape umschalten, ohne
+  dass der Knopf je angefasst wird — wer nur auf den eigenen Klick hört, hat
+  früher oder später ein Zeichen, das das Gegenteil dessen zeigt, was gerade ist
+- Alle vier Schreibweisen der Browser sind berücksichtigt (`webkit`, `moz`,
+  `ms`). Verbietet ein Browser das Umschalten — das kommt in Kioskmodi vor —,
+  sagt der Trainer das und verweist auf F11, statt stumm nichts zu tun
+
+### Geprüft
+- Ein und aus über den Knopf, dazu ein Weg an ihm vorbei (Vollbild von außen
+  beendet): Das Zeichen, der Tooltip, die Vorlesetexte und `aria-label` ziehen
+  jedes Mal mit
+
+---
+
+## [1.130.0] - 2026-09-05
+
+### Geändert
+- **Die gelernten Fragen sind jetzt im Verlauf grün** — in der Punktetafel unter
+  „Fortschritt". Dietmar, nachdem ich es zuerst am Nummernfeld der Frage gemacht
+  hatte: „Mit grün markiert, war eigentlich etwas anderes gemeint. Die gelernten
+  sollen im Verlauf grün markiert sein." Er hat die bessere Stelle gemeint: Am
+  Nummernfeld sieht man den Zustand **einer** Frage — der, die man ohnehin
+  gerade liest. In der Tafel sieht man alle auf einmal, und damit die Frage, die
+  einen beim Blättern wirklich umtreibt: Wie weit bin ich, und was liegt noch
+  vor mir?
+- **Drei Grüntöne, die man auseinanderhalten muss.** Der neue Punkt ist
+  *hellgrün mit grünem Rand*, nicht gefüllt — gefülltes Dunkelgrün heißt
+  weiterhin „in dieser Runde richtig beantwortet". Zwei gleich aussehende Grüns
+  nebeneinander hätten die Auskunft wieder weggenommen, die sie geben sollen
+  (Ziffern #0f5132 auf #d7f0e0 tragen 7,6:1)
+- **Das Ergebnis der laufenden Runde geht vor.** Wer eine gelernte Frage falsch
+  beantwortet, sieht Rot — alles andere wäre gelogen
+- Beim Abhaken oder Zurücknehmen färbt sich der Punkt sofort mit
+- Nicht im Prüfungssimulator: Dort liegt nichts auf dem Tisch, was in der echten
+  Prüfung nicht auch daläge
+
+### Entfernt
+- **Das grüne Nummernfeld an der Frage aus 1.129.0 ist wieder raus.** Es war
+  meine Auslegung von „grün markiert", nicht Dietmars Bitte — und es sagte
+  ohnehin nichts, was der Knopf „Gelernt" daneben nicht schon zeigt. Der
+  knappere Abstand zwischen Nummer und Fragentext bleibt
+
+### Technisch
+- Die Punktetafel wird an zwei Stellen gebaut (`renderQuestion` und
+  `updateSidebarOnly`); beide fragen jetzt dieselbe Funktion `gelerntPunkt()`
+- Die neue Regel trägt `!important`, weil die Farbstile spezifischer sind:
+  `body.grey .dot-sidebar` ist (0,2,1), `.dot-sidebar.gelernt-dot` nur (0,2,0).
+  Ohne das hätte der Punkt in Grau, Grün, Blau und Orange seine Farbe verloren —
+  derselbe Weg wie bei `.beantwortet-dot`, aus demselben Grund
+
+### Geprüft
+- Neun vorab abgehakte Fragen in einer Runde von 28: alle hellgrün. Eine richtig
+  beantwortet → dunkelgrün gefüllt. Eine nicht gelernte falsch beantwortet →
+  rot. Haken zurückgenommen → Punkt sofort wieder blass
+
+---
+
+## [1.129.0] - 2026-09-05
+
+### Geändert
+- **Die Lücke zwischen Fragennummer und Fragentext ist knapper.** Dietmar:
+  „Neben der Nummer aus dem Fragenkatalog ist etwas viel Platz zu dem Text.
+  Hätte das gerne etwas leicht aufgeschlossener." Der Grund war, dass zweimal
+  Abstand entstand: 7 Punkte Rand am Feld **und** ein echtes Leerzeichen der
+  Fragenschrift dahinter, zusammen gut 13 Punkte. Das Leerzeichen ist raus, der
+  Rand steht auf 6 — nachgemessen sind es jetzt genau 6 Punkte
+- **Gilt eine Frage als gelernt, wird das Nummernfeld grün.** Dietmar:
+  „Blätter-Stand / Gelernte ansehen: Hier möchte ich die gelernten Fragen grün
+  markiert." Es ist dasselbe Grün wie am Knopf „Gelernt" daneben, damit man die
+  beiden zusammen liest und nicht als zwei verschiedene Dinge (weiße Schrift
+  darauf trägt 6,3:1)
+- Die Markierung steht **überall**, nicht nur in der Runde „Gelernte ansehen" —
+  dort ist ohnehin alles grün. Nützlich ist sie beim Blättern: Man sieht auf
+  einen Blick, was schon abgehakt ist, ohne den Knopf anzusehen. Eine
+  Markierung, die mal da ist und mal nicht, müsste man sich außerdem erklären
+- **Ausgenommen ist der Prüfungssimulator.** Dort liegt nichts auf dem Tisch,
+  was in der echten Prüfung nicht auch daläge
+- Beim Abhaken färbt sich das Feld sofort mit. Ohne das bliebe es bis zur
+  nächsten Frage stehen, wie es war — und der Klick sähe aus, als hätte er nur
+  den Knopf betroffen
+
+### Geprüft
+- Abstand nachgemessen: vorher gut 13 Punkte, jetzt 6
+- Abhaken, zurücknehmen und die Runde „Gelernte ansehen" durchgespielt; das Feld
+  folgt jedes Mal sofort
+
+---
+
+## [1.128.0] - 2026-09-05
+
+### Geändert
+- **Unter Update steht jetzt die Versionsnummer statt eines Fingerabdrucks.**
+  Dietmar: „Dieser Trainer läuft mit dem Stand 2fe36d2d5e. Kann man da nicht die
+  Version anzeigen lassen? Ich habe nur noch keine Idee dazu, woher man die Nr
+  bekommt." — Sie kommt aus der **obersten Überschrift des `CHANGELOG.md`**,
+  derselben Zeile, aus der auch `version.js` und `Build-DIREKT.bat` rechnen. Das
+  CHANGELOG wandert mit den Dateien; wer einzelne Dateien bei GitHub einstellt,
+  stellt es mit ein. Die Nummer stimmt also auch dann, wenn kein Setup gebaut
+  wurde
+- **Nicht aus der `package.json`.** Die wird nur beim Bauen gesetzt
+  (`version.js --setzen`). In Dietmars Ordner stand dort `1.98.0`, während das
+  CHANGELOG längst bei `1.127.0` war. Eine Nummer, die man glauben soll, darf
+  nicht von einem Arbeitsschritt abhängen, den man vergessen kann
+- Der Fingerabdruck bleibt, klein und darunter. Er beantwortet eine andere
+  Frage: ob zwei Ordner buchstabengenau dasselbe enthalten — bei einer
+  Fehlersuche zu zweit genau die richtige Frage
+
+### Hinzugefügt
+- **Drei Zahlen statt einer**, weil es drei gibt und sie Verschiedenes meinen —
+  das war der Punkt, an dem Dietmar hängen blieb („Derzeit habe ich eine exe mit
+  der Versions Nr. 1.111.0 bei GitHub. Die Version ändert sich aber, wenn ich
+  einzelne Dateien in GitHub einstelle."):
+
+  | Zeile | Was sie sagt |
+  |---|---|
+  | **Hier** | die Dateien in diesem Ordner |
+  | **Bei GitHub** | die Dateien dort — dasselbe CHANGELOG, nur im Repository |
+  | **Setup dort** | das fertige Installationsprogramm, aus dem Release-Tag |
+
+  Dass die dritte hinterherhinkt, ist kein Fehler: Ein Setup wird seltener
+  gebaut als eine Datei geändert. Man sieht jetzt nur, wie weit
+- **„Bei GitHub nachsehen" ohne das große Fenster.** Wer nur wissen will, ob es
+  etwas Neues gibt, bekommt zwei Zahlen und einen Satz — und erst wenn wirklich
+  etwas zu holen ist, den Knopf dorthin. Dateien, die **hier** neuer sind,
+  werden getrennt genannt: Sie bleiben unangetastet und warten aufs Hochladen
+- Im Update-Fenster steht die Gegenüberstellung `1.127.0 → 1.129.0` über den
+  Knöpfen, direkt neben der Entscheidung
+
+### Technisch
+- `GET /api/version` liefert `version` jetzt aus dem CHANGELOG (mit Rückfall auf
+  die `package.json`, falls kein CHANGELOG dabei ist), gelesen nur bei
+  geändertem Zeitstempel — die Standwache fragt jede Minute
+- `GET /api/github/pruefen` liefert zusätzlich `versionHier`, `versionDort` und
+  `versionSetup`. Das ferne CHANGELOG (60 KB) wird **nur** geholt, wenn sein
+  Fingerabdruck von dem hiesigen abweicht; ist er gleich, ist auch die Nummer
+  gleich. Schlägt eines davon fehl, fehlt nur die Zeile — der Dateivergleich
+  hängt nicht daran
+- Ein führendes `v` am Release-Tag wird abgeschnitten, damit sowohl `1.111.0`
+  als auch `v1.111.0` erkannt werden
+
+---
+
+## [1.127.0] - 2026-09-05
+
+### Geändert
+- **Das Formelblatt-Fenster hat jetzt die Form des Blattes.** Dietmar schickte
+  ein Bild, auf dem links und rechts ein breiter grauer Streifen rot
+  angestrichen war: „Das rot markierte an der Seite nimmt viel Platz weg.
+  Besser wäre, wenn es sich automatisch am Monitor anpasst und seitlich
+  schmäler und dafür etwas länglicher wird." Der Grund für das Grau: Die
+  Formelsammlung ist A4 hochkant (Verhältnis 0,707), und ein hochkantes Blatt
+  in einem breiten Fenster lässt links und rechts Platz übrig. Jetzt richtet
+  sich die Höhe nach dem Bildschirm und die Breite rechnet sich daraus. Auf
+  einem 1080er Schirm standen vorher je 270 Punkte grau daneben, jetzt sind es
+  gut 100 — und statt 17 Zeilen der Tabelle sind 36 zu sehen
+- **Der Miniaturstreifen an der Seite ist weg** (`navpanes=0`). Dietmar: „Eine
+  seitliche Übersicht über alle Blätter wird nicht benötigt." Er hat recht —
+  man kommt mit einem Klick auf das richtige Blatt, man sucht es sich nicht aus
+- **Die Werkzeugleiste bleibt vollständig**, samt Stift, Textmarker und
+  Radierer: „Das mit dem Zeichnen und Markieren von einem Text auf dem PDF
+  finde ich richtig gut." Deshalb wird das Fenster nie schmäler als 800 Punkte
+  — darunter klappen Edge und Chrome die Zeichenwerkzeuge in ein Untermenü
+
+### Hinzugefügt
+- **Beim Blättern führt der Trainer jetzt Buch.** Dietmar: „Ich möchte, dass
+  bei Blättern / Weiterblättern eine JSON angelegt wird, die den Stand
+  speichert, den man wieder löschen kann. Gespeichert werden: als gelernt
+  markierte Fragen über den Knopf ‚Gelernt' und Fragen, die man weiterklickt."
+  Bisher merkte sich das Blättern genau eine Frage — die letzte. Jetzt steht in
+  `data\userdata\blaettern.json` je Benutzer und Prüfungsziel, welche Fragen
+  durchgesehen und welche abgehakt wurden
+- **Eine eigene Datei, nicht ein Feld im Lernstand.** Der Lernstand wird
+  gesichert, zurückgeholt und beim Umzug mitgenommen; an ihm hängt viel. Der
+  Blätter-Stand ist ein Arbeitsbuch, das man wegwerfen können soll, ohne um den
+  Verlauf zu bangen. Zwei Dateien heißt: Löschen kann hier nichts anderes
+  mitreißen — und die Rückfrage vor dem Löschen sagt genau das
+- **„Nur die gelernten ansehen"** im Blätter-Fenster und in den Einstellungen.
+  Dietmar am 05.09.2026: „Ich bin alle 571 Fragen durch und habe neu angefangen.
+  Hier möchte ich mir alle grün gelernten Fragen sehen." Diese Runde verschiebt
+  das Lesezeichen des normalen Blätterns **nicht**. Gefragt wird der Lernstand
+  selbst und nicht das neue Buch — wer den Katalog schon durch hat, sähe sonst
+  eine leere Liste
+
+### Geändert
+- **Die Einstellungen sind ein Fenster mit Reitern geworden.** Dietmar:
+  „Ähnlich wie in einem Programm, zB WSJT-X (FT8). […] Das Fenster darf gerne in
+  die Breite gehen. Derzeit ist es doch mehr ein längliches Fenster. […] Hier
+  werden vermutlich noch weitere Einstellungen dazu kommen." Der letzte Satz hat
+  die Form bestimmt: Eine lange Liste wächst nach unten, bis niemand mehr etwas
+  findet; Reiter wachsen in die Breite. Fünf Reiter — **Allgemein, Vorlesen,
+  Lernen, Update, Wartung** — links stehend, nach Dietmars Wahl aus zwei
+  Entwürfen
+- **Vorlesen ist mit hereingezogen.** Es lag hinter dem Zahnrad an der Frage in
+  einem eigenen Fenster. Das Zahnrad gibt es weiter, es öffnet jetzt diesen
+  Reiter — der kurze Weg bleibt. Die Bedienelemente wurden **verschoben, nicht
+  nachgebaut**: Zwei Kästchen mit derselben Kennung wären ein Fehler, den man
+  erst merkt, wenn ein Haken nicht mehr hält
+- **Der Farbstil steht jetzt in den Einstellungen** — fünf Farbfelder statt
+  eines Knopfes, der durchschaltet
+- Jede Einstellung wirkt sofort. Der Knopf „Speichern" aus dem alten
+  Vorlese-Fenster ist damit überflüssig
+
+### Entfernt
+- **„Beim Entwickler nach Neuerungen sehen"** ist aus dem Info-Fenster
+  verschwunden. Dietmar: „Die Option Abgleich mit dem Entwickler wird nicht mehr
+  benötigt, wir arbeiten jetzt über GitHub." Zwei Wege zum selben Ziel waren
+  einer zu viel
+
+### Geprüft
+- Formelblatt an drei Bildschirmgrößen nachgemessen (1920×1080, 1600×900,
+  1366×768); die Werkzeugleiste behält den Stift bei 800 Punkten Breite
+- Blätter-Buch durchgespielt: durchklicken, abhaken, Datei auf der Platte
+  nachgesehen, Fenster wieder geöffnet, Stand gelöscht. Ein Eintrag mit einem
+  Pfad statt einer Fragennummer wird vom Server verworfen
+- Einstellungen: alle fünf Reiter, Esc schließt, Zahnrad an der Frage landet auf
+  Vorlesen, Farbstil schaltet um. **Keine doppelt vergebene Kennung** im ganzen
+  Dokument — das war beim Verschieben der Vorlese-Elemente die Stelle, an der es
+  leicht schiefgeht
+
+---
+
+## [1.126.0] - 2026-09-05
+
+### Geändert
+- **Das Formelblatt ist jetzt das echte PDF, aufgeschlagen auf der richtigen
+  Seite.** Bisher lagen 20 abfotografierte Seiten im Ordner `formelsammlung\`,
+  und der Trainer zeigte davon einen Ausschnitt mit Markierung. Dietmar:
+  „Wir hatten in der letzten Version das PDF als Bilder erstellt. Das kann
+  raus! Besser und realistischer ist, das Formelblatt genau an der Stelle /
+  Seite anzuzeigen. Ziel ist es für die Benutzer, nicht nur die Antwort zu
+  sehen, sondern auch den Umgang damit zu lernen." — Genau so ist es jetzt:
+  ein Klick auf **Formelblatt** schlägt `Formelsammlung.pdf` auf dem Blatt
+  auf, auf dem die Antwort steht. Gesucht wird auf dem Blatt selbst, denn in
+  der Prüfung liegt das Heft auf dem Tisch und niemand zeigt mit dem Finger
+  auf die richtige Zeile
+- Über dem Blatt steht, **welches** es ist: „Blatt 2 · Seite 4 im PDF". Die
+  beiden Zahlen gehen auseinander, weil Deckblatt und Hinweisseite im Heft
+  keine Nummer tragen — wer selbst blättert, braucht beide
+- **Größer** legt dasselbe Blatt in ein eigenes Browserfenster, mit allem,
+  was der Browser für PDFs anbietet: Suche, Zoom, Drucken
+- Eigene Blätter-Knöpfe und die Abdunklung gibt es nicht mehr. Der Betrachter
+  des Browsers kann das alles schon, und eine Markierung wollte Dietmar
+  ausdrücklich nicht
+
+### Entfernt
+- Der Ordner `formelsammlung\` mit den 20 Seitenbildern (rund 3,6 MB) fällt
+  aus dem Installer und aus dem Aktualisierungspaket. `Formelsammlung.pdf`
+  selbst war ohnehin schon dabei. Bei bestehenden Installationen wird nichts
+  gelöscht — der Ordner liegt dort nur nutzlos herum und kann von Hand weg
+
+### Geprüft
+- Neun Fragen durchgespielt: VD730, VD709, VD731, VD732, VD736 → Blatt 2;
+  BC219 → Blatt 10 (IARU 70 cm); NB605 → Blatt 12 (Leistung); bei VA202 und
+  BE103 bleibt der Knopf richtigerweise aus
+- Der Wechsel zwischen zwei Blättern war die Stelle, an der es leicht schief
+  geht: Blatt 2 und Blatt 10 unterscheiden sich in der Adresse nur hinter dem
+  Doppelkreuz, und das allein ist für den Browser keine neue Seite — der
+  Betrachter wäre stehen geblieben, wo er stand. Der Rahmen wird deshalb bei
+  jedem Blattwechsel neu aufgebaut
+- `Formelsammlung.pdf` wird vom Server ausgeliefert (HTTP 200, 919 KB), auch
+  über den Einladungslink
+
+---
+
+## [1.125.0] - 2026-09-05
+
+### Behoben
+- **Der Formelblatt-Knopf blieb aus, obwohl die Zuordnung da war** — Dietmar
+  am Beispiel VD730. Ursache war nicht die Zuordnung, sondern der Abruf:
+  `formelhilfe.json` wurde mit `cache: 'force-cache'` geholt. Das heißt „nimm
+  die gespeicherte Fassung, egal wie alt sie ist, und frag den Server gar
+  nicht erst". Nach einer neuen Datei sah der Browser also weiter die alte —
+  und in der alten stand VD730 nicht. Die Datei wird jetzt mit Zeitstempel
+  und ohne Zwischenspeicher geholt; sie ist klein und wird einmal je Sitzung
+  gelesen
+- Geprüft an sechs Fragen: VD730, VD709 → Blatt 2, BC219 → IARU 70 cm,
+  NB605 → Leistung; bei VA202 und BE103 erscheint der Knopf richtigerweise
+  nicht
+
+---
+
+## [1.124.0] - 2026-09-05
+
+### Behoben
+- **Bei vielen Fragen fehlte das Formelblatt.** Dietmar nannte VD730, VD731,
+  VD732, VD736 und VD709 — alle fünf fragen nach Werten, die in der amtlichen
+  Formelsammlung auf Blatt 2 stehen. Von 571 Fragen der Klasse N hatten nur
+  **60** eine Zuordnung; jetzt sind es **114**
+- **Der Seitenaufbau in `formelhilfe.json` war falsch beschriftet.** Die
+  Einträge für PDF-Seite 5 bis 10 hießen „Frequenzbereiche" und „Zusätzliche
+  Nutzungsbestimmungen", zeigen aber den **Rufzeichenplan**. Wer dort
+  nachschlug, fand etwas anderes. Am PDF nachgesehen und richtiggestellt:
+  S.3 = Anlage 1, S.4 = Frequenzbereiche und maximale Leistung,
+  S.5 = Bandbreiten, S.6–10 = Rufzeichenplan, S.11 = IARU 2 m,
+  S.12 = IARU 70 cm, S.13–24 = Formelsammlung Technik
+- Die beiden Bandpläne hießen „Kurzwelle" und „UKW" — es sind 2 m und 70 cm
+
+### Geändert
+- **Das Formelblatt zeigt nur noch die Seite, ohne Markierung.** Dietmar:
+  „Eine Markierung wird nicht benötigt." Das Abdunkeln drumherum und der
+  Rahmen sind weg, die Seite beginnt oben, der Schalter „Nur die Stelle"
+  entfällt. In der Prüfung liegt die Formelsammlung als Blatt auf dem Tisch,
+  ohne dass jemand die Zeile anstreicht. Die Koordinaten bleiben in der Datei
+  stehen, falls die Markierung je zurückkommen soll
+
+### Zur Zuordnung
+- Die Regeln sind **eng** gefasst. Der erste Entwurf traf auf jedes Wort
+  „Frequenzbereich", „Rufzeichen", „IARU" und hätte 242 Fragen zugeordnet —
+  darunter reine Rechtsfragen wie „Wie ist die Amateurfunkstelle definiert?",
+  bei denen die Antwort in keiner Tabelle steht. Ein Knopf, der die falsche
+  Seite aufschlägt, ist schlimmer als gar keiner: Man sucht dann in der
+  Prüfung an der falschen Stelle weiter. Zugeordnet wird nur, wenn die
+  Antwort wirklich auf dem Blatt steht — erkennbar an Zahlenwerten, Bändern
+  oder einer ausdrücklichen Frage nach dem Plan
+- Dass es „nur" 114 von 571 sind, liegt an der Klasse N selbst: Sie rechnet
+  wenig, und die meisten Technikfragen sind Verständnisfragen
+
+---
+
+## [1.123.0] - 2026-09-05
+
+### Behoben
+- **„Blättern" hat den Filter „Lernen aktiv für" ignoriert.** Dietmar: „Nehme
+  ich bei Lernen aktiv für Technik raus, müsste sich doch Blättern
+  reduzieren?" — Ja, müsste es. Die Zahl am Knopf stimmte zwar (Frage 344 von
+  571 macht 228 Rest), beantwortete aber eine andere Frage als der Zähler
+  daneben: „Start" filtert über `getFilteredQuestions()` nach den aktiven
+  Teilen, das Blättern lief stur durch den ganzen Katalog
+- Beides rechnet jetzt gleich. An Dietmars Stand nachgerechnet: 228 Rest mit
+  allen drei Teilen, **33** ohne Technik. Die schon gelernten Fragen bleiben
+  ausdrücklich drin — das ist der Zweck der Sache und steht auch so im Fenster
+- **Sonderfall mitbehandelt:** Fällt das Lesezeichen durch den Filter, weil
+  die gemerkte Frage zu einem abgewählten Teil gehört — BE404 ist eine
+  Betriebsfrage —, springt der Trainer nicht an den Anfang zurück, sondern zur
+  nächsten Frage danach, die noch im Pool ist. 343 durchgesehene Fragen noch
+  einmal von vorn wären die schlechteste aller Antworten
+- Die Zahl am Knopf zieht beim Umschalten der Teile sofort nach
+
+---
+
 ## [1.122.0] - 2026-09-04
 
 ### Geändert

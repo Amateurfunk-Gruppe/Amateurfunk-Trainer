@@ -1,0 +1,18 @@
+{
+  "name": "Amateurfunk-Trainer",
+  "short_name": "AFu-Trainer",
+  "description": "Fragenkatalog der Bundesnetzagentur zum Üben – Klasse N, E und A.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef2f9",
+  "theme_color": "#0f2745",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

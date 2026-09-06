@@ -709,6 +709,115 @@ function saveUserdataFile(data){
   }
 }
 // ================================================================
+//  BLAETTERN - EIGENER STAND IN EIGENER DATEI     (05.09.2026)
+// ================================================================
+//  Dietmar: "Ich moechte, dass bei Blaettern / Weiterblaettern eine
+//  JSON angelegt wird, die den Stand speichert, den man wieder
+//  loeschen kann. Gespeichert werden: als gelernt markierte Fragen
+//  ueber den Knopf 'Gelernt' und Fragen, die man weiterklickt."
+//
+//  WARUM EINE EIGENE DATEI UND NICHT EIN FELD IN amateurfunk_data.json:
+//  Die grosse Datei ist der Lernstand - Verlauf, Lernfortschritt,
+//  Lernbedarf. Sie wird gesichert, zurueckgeholt und beim Umzug
+//  mitgenommen, und an ihr haengt viel. Der Blaetter-Stand ist etwas
+//  anderes: ein Arbeitsbuch, das man wegwerfen koennen soll, ohne
+//  Angst zu haben, dass am Lernstand etwas kaputtgeht. Zwei Dateien
+//  heisst: Loeschen kann hier nichts anderes mitreissen.
+//
+//  Bis heute stand nur die zuletzt gesehene Frage im Browser-Speicher.
+//  Das reichte, um weiterzumachen, beantwortete aber nicht die Frage,
+//  die Dietmar wirklich hat: Was habe ich beim Durchgehen eigentlich
+//  schon angesehen, und was davon habe ich abgehakt?
+//
+//  AUFBAU:
+//    stand[benutzer][klasse] = {
+//      lesezeichen: "VD730",     zuletzt gesehene Frage
+//      gesehen:  ["VD101", ...]  durchgeklickt
+//      gelernt:  ["VD105", ...]  ueber den Knopf abgehakt
+//      begonnen: "2026-09-05T..." ,  zuletzt: "..."
+//    }
+//  Je Klasse getrennt, weil die Kataloge verschieden lang sind - eine
+//  gemeinsame Liste waere wertlos.
+// ================================================================
+const BLAETTERN_FILE = path.join(USERDATA_DIR, 'blaettern.json');
+// Obergrenze je Liste. Der laengste Katalog hat gut 1300 Fragen; 5000
+// ist reichlich Luft und verhindert trotzdem, dass ein Fehler im Browser
+// die Datei ins Uferlose treibt.
+const BLAETTERN_MAX = 5000;
+
+function blaetternLeer(){
+  return { version: 1, stand: {}, updatedAt: new Date().toISOString() };
+}
+// Nur Zeichen, die in Fragenkennungen und Klassenkuerzeln vorkommen.
+// Alles andere koennte als Schluessel Unfug anrichten.
+function blaetternKuerzel(x){
+  return (typeof x === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(x)) ? x : null;
+}
+function blaetternListe(x){
+  if(!Array.isArray(x)) return [];
+  const raus = [];
+  const gesehen = new Set();
+  for(const e of x){
+    const id = blaetternKuerzel(e);
+    if(!id || gesehen.has(id)) continue;
+    gesehen.add(id);
+    raus.push(id);
+    if(raus.length >= BLAETTERN_MAX) break;
+  }
+  return raus;
+}
+function blaetternSauber(roh){
+  const sauber = blaetternLeer();
+  if(!istObjekt(roh) || !istObjekt(roh.stand)) return sauber;
+  for(const u of USER_IDS){
+    const proBenutzer = roh.stand[u];
+    if(!istObjekt(proBenutzer)) continue;
+    for(const [klasse, eintrag] of Object.entries(proBenutzer)){
+      const k = blaetternKuerzel(klasse);
+      if(!k || !istObjekt(eintrag)) continue;
+      if(!sauber.stand[u]) sauber.stand[u] = {};
+      sauber.stand[u][k] = {
+        lesezeichen: blaetternKuerzel(eintrag.lesezeichen) || '',
+        gesehen: blaetternListe(eintrag.gesehen),
+        gelernt: blaetternListe(eintrag.gelernt),
+        begonnen: typeof eintrag.begonnen === 'string' ? eintrag.begonnen.slice(0, 40) : '',
+        zuletzt:  typeof eintrag.zuletzt  === 'string' ? eintrag.zuletzt.slice(0, 40)  : ''
+      };
+    }
+  }
+  return sauber;
+}
+function blaetternLaden(){
+  ensureUserdataDir();
+  try{
+    if(!fs.existsSync(BLAETTERN_FILE)) return blaetternLeer();
+    return blaetternSauber(JSON.parse(fs.readFileSync(BLAETTERN_FILE, 'utf8')));
+  }catch(e){
+    // Anders als beim Lernstand wird hier NICHT beiseitegelegt und gewarnt:
+    // Der Blaetter-Stand ist ein Arbeitsbuch. Eine kaputte Datei kostet
+    // hoechstens die Lesezeichen, und ein leerer Anfang ist die richtige
+    // Antwort darauf.
+    console.warn('[BLAETTERN] Datei unlesbar, fange leer an:', e.message);
+    return blaetternLeer();
+  }
+}
+function blaetternSchreiben(daten){
+  try{
+    ensureUserdataDir();
+    const sauber = blaetternSauber(daten);
+    sauber.updatedAt = new Date().toISOString();
+    const tmpFp = BLAETTERN_FILE + '.tmp';
+    fs.writeFileSync(tmpFp, JSON.stringify(sauber, null, 2), 'utf8');
+    try{ if(fs.existsSync(BLAETTERN_FILE)) fs.unlinkSync(BLAETTERN_FILE); }catch(e){}
+    fs.renameSync(tmpFp, BLAETTERN_FILE);
+    return true;
+  }catch(e){
+    console.error('[BLAETTERN] Speichern fehlgeschlagen:', e.message);
+    return false;
+  }
+}
+
+// ================================================================
 //  NEUANFANG NACH EINER NEUINSTALLATION
 // ================================================================
 //  Dietmar am 01.09.2026, nachdem er den Ordner von Hand geloescht und
@@ -1098,11 +1207,15 @@ function isLocalRequest(req){
 // doch nur der Schutz, der lautlos seine Arbeit tat.
 const ERWARTET_ABGEWIESEN = [
   /^\/api\/userdata/,
+  // Dasselbe fuer den Blaetter-Stand: Jede Seite fragt beim Laden danach,
+  // auch die eines Gastes. Ein Nein ist hier der Normalfall.
+  /^\/api\/blaettern/,
   // Jede Seite fragt beim Laden einmal nach - auch die eines Gastes im
   // Gruppenraum. Der bekommt ein Nein, und das ist genau richtig so.
   /^\/api\/neuanfang/,
   /^\/api\/abgleich\//,
   /^\/api\/github\//,
+  /^\/api\/stimmen\//,
   /^\/api\/tunnel-status/
 ];
 function localOnly(req,res,next){
@@ -1219,6 +1332,52 @@ app.get('/api/userdata/:category', localOnly, (req,res)=>{
     if(cat==='lernbedarf' || cat==='difficult') return res.json({category:'lernbedarf', data: data.difficult});
     if(cat==='fehler' || cat==='errors') return res.json({category:'fehler', data: data.errors});
     return res.status(404).json({error:'Unbekannte Kategorie'});
+  }catch(e){ res.status(500).json({error: e.message}); }
+});
+
+// ---- Blaetter-Stand (siehe den Block bei BLAETTERN_FILE) ----------------
+// localOnly wie alle Benutzerdaten: Wer ueber den Einladungslink mitmacht,
+// schreibt nicht in fremde Ordner. Der Browser haelt dort seinen eigenen
+// Stand, der Trainer-PC seinen.
+app.get('/api/blaettern', localOnly, (req,res)=>{
+  try{ res.json(blaetternLaden()); }
+  catch(e){ res.status(500).json({error: e.message}); }
+});
+
+app.post('/api/blaettern', localOnly, (req,res)=>{
+  try{
+    const b = req.body;
+    if(!istObjekt(b)) return res.status(400).json({error:'Kein gültiger Body'});
+    if(!USER_IDS.includes(b.user)) return res.status(400).json({error:`Unbekannter Benutzer "${b.user}"`});
+    const klasse = blaetternKuerzel(b.klasse);
+    if(!klasse) return res.status(400).json({error:'Kein gültiges Prüfungsziel'});
+    if(!istObjekt(b.stand)) return res.status(400).json({error:'stand muss ein Objekt sein'});
+
+    const alles = blaetternLaden();
+    if(!alles.stand[b.user]) alles.stand[b.user] = {};
+    alles.stand[b.user][klasse] = b.stand;
+    if(!blaetternSchreiben(alles)) return res.status(500).json({error:'Speichern fehlgeschlagen'});
+    res.json({ok:true});
+  }catch(e){ res.status(500).json({error: e.message}); }
+});
+
+// Loeschen: mit Klasse nur dieses Prüfungsziel, ohne Klasse alles von
+// diesem Benutzer. Andere Benutzer bleiben in jedem Fall unberuehrt -
+// am selben Rechner lernen mehrere.
+app.delete('/api/blaettern/:user/:klasse?', localOnly, (req,res)=>{
+  try{
+    const user = req.params.user;
+    if(!USER_IDS.includes(user)) return res.status(400).json({error:'Ungültiger Benutzer'});
+    const alles = blaetternLaden();
+    if(req.params.klasse){
+      const k = blaetternKuerzel(req.params.klasse);
+      if(!k) return res.status(400).json({error:'Ungültiges Prüfungsziel'});
+      if(alles.stand[user]) delete alles.stand[user][k];
+    } else {
+      delete alles.stand[user];
+    }
+    if(!blaetternSchreiben(alles)) return res.status(500).json({error:'Speichern fehlgeschlagen'});
+    res.json({ok:true});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -1425,19 +1584,80 @@ function dateiStandErmitteln(){
   return { kennung, dateien };
 }
 
-// Die Programmversion aus der package.json. Sie wird beim Bauen von
-// version.js aus dem CHANGELOG gesetzt - hier wird sie nur gelesen.
-// Einmal beim Start, nicht bei jeder Anfrage: Die Datei aendert sich
-// waehrend des Laufs nicht.
-const PROGRAMM_VERSION = (() => {
-  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || null; }
-  catch (e) { return null; }
-})();
+// ================================================================
+//  WELCHE VERSION LAEUFT HIER?           (05.09.2026)
+// ================================================================
+//  Dietmar: "Unter Update: 'Dieser Trainer laeuft mit dem Stand
+//  2fe36d2d5e.' Kann man da nicht die Version anzeigen lassen? Ich
+//  habe nur noch keine Idee dazu, woher man die Nr bekommt. Derzeit
+//  habe ich eine exe mit der Versions Nr. 1.111.0 bei GitHub. Die
+//  Version aendert sich aber, wenn ich einzelne Dateien in GitHub
+//  einstelle."
+//
+//  Das ist der Kern der Sache: Es gibt DREI verschiedene Nummern, und
+//  sie meinen Verschiedenes.
+//
+//    1. Die Nummer der DATEIEN in diesem Ordner.
+//       Sie steht in der obersten Ueberschrift des CHANGELOG.md -
+//       genau die Regel, nach der auch version.js und
+//       Build-DIREKT.bat rechnen. Das CHANGELOG wandert mit den
+//       Dateien; wer einzelne Dateien bei GitHub einstellt, stellt es
+//       mit ein. Diese Nummer ist also immer die der Dateien, die
+//       gerade laufen. DAS ist die Nummer, die hier gehoert.
+//
+//    2. Die Nummer der DATEIEN bei GitHub.
+//       Dasselbe CHANGELOG, nur dort. Steht im Update-Fenster
+//       daneben, sobald nachgesehen wurde.
+//
+//    3. Die Nummer des fertigen SETUPS bei GitHub - Dietmars 1.111.0.
+//       Die aendert sich nur, wenn ein neues Setup gebaut und
+//       hochgeladen wird. Dass sie hinterherhinkt, ist kein Fehler:
+//       Wer sich das Setup heute herunterlaedt, bekommt eben den
+//       Stand von damals und holt sich den Rest ueber das Update.
+//
+//  WARUM NICHT DIE package.json:
+//  Sie wird nur beim Bauen gesetzt (version.js --setzen). Wer Dateien
+//  einzeln weitergibt, ohne zu bauen, hat dort eine alte Zahl stehen -
+//  in diesem Ordner stand 1.98.0, waehrend das CHANGELOG laengst bei
+//  1.127.0 war. Eine Nummer, die man glauben soll, darf nicht von
+//  einem Arbeitsschritt abhaengen, den man vergessen kann.
+//
+//  Die Kennung (der Zehnstellige aus Dateigroessen und Zeitstempeln)
+//  bleibt - sie beantwortet eine andere Frage: ob zwei Ordner
+//  buchstabengenau dasselbe enthalten. Sie steht jetzt klein daneben
+//  statt gross davor.
+// ================================================================
+function versionAusText(text){
+  for(const z of String(text || '').split('\n')){
+    const t = z.match(/^##\s*\[(\d+\.\d+\.\d+)\]/);
+    if(t) return t[1];                      // die erste ist die neueste
+  }
+  return null;
+}
+
+// Gelesen wird die Datei nur, wenn sie sich geaendert hat. Das
+// CHANGELOG ist 60 KB gross, und /api/version wird von der Standwache
+// jede Minute gefragt.
+let _versionMerker = { zeit: 0, wert: null };
+function programmVersion(){
+  const fp = path.join(__dirname, 'CHANGELOG.md');
+  try{
+    const zeit = fs.statSync(fp).mtimeMs;
+    if(_versionMerker.zeit === zeit) return _versionMerker.wert;
+    const wert = versionAusText(fs.readFileSync(fp, 'utf8'));
+    _versionMerker = { zeit, wert };
+    return wert;
+  }catch(e){
+    // Kein CHANGELOG (aelteres Paket) - dann eben die package.json.
+    try{ return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || null; }
+    catch(e2){ return null; }
+  }
+}
 
 app.get('/api/version',(req,res)=>{
   try{
     const stand = dateiStandErmitteln();
-    res.json({ version: PROGRAMM_VERSION, kennung: stand.kennung,
+    res.json({ version: programmVersion(), kennung: stand.kennung,
                dateien: stand.dateien, serverStart: SERVER_START });
   }catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -1465,6 +1685,9 @@ const PAKET_DATEIEN = [
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js', '50ohm_map.json',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
+  // App-Anmutung am Handy: Ohne diese drei fehlt beim "Zum Startbildschirm
+  // hinzufuegen" das Symbol, und der Trainer startet mit Browserleiste.
+  'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
@@ -1495,6 +1718,12 @@ const PAKET_DATEIEN = [
   // dass der Tunnel laeuft. Aufgefallen am 28.08.2026, als Dietmars
   // frisch bespielter Ordner ihn nicht hatte.
   'github_update.js',
+  //
+  // Dasselbe gilt fuer piper_stimmen.js: Server.js laedt es beim Start.
+  // Ohne die Datei im Paket haette ein Empfaenger die Auswahl weiterer
+  // Stimmen nicht - und wuerde sich fragen, warum bei ihm ein
+  // Einstellungspunkt fehlt, von dem hier die Rede ist.
+  'piper_stimmen.js',
   //
   // Die beiden gehoeren dem Empfaenger, nicht dem Entwickler: Damit
   // findet er heraus, warum bei ihm kein Update ankommt. Sie standen
@@ -1576,9 +1805,13 @@ function paketPdfsFinden(){
 // laeuft und mit dem Lernen nichts zu tun hat. Wer das Paket bekommt, will
 // Fragen ueben und nicht raten, wofuer ein Ordner "test" gut ist. Im
 // Projekt bleibt er selbstverstaendlich.
-// formelsammlung: die 20 Seitenbilder der amtlichen Formelsammlung, rund
-// 3,6 MB. Ohne sie waere der Formelblatt-Knopf im Paket ein toter Knopf.
-const PAKET_ORDNER = ['svgs', 'sounds', 'formelsammlung'];
+// 'formelsammlung' ist am 05.09.2026 herausgefallen: Darin lagen die 20
+// abfotografierten Seiten der Formelsammlung, rund 3,6 MB. Der Trainer
+// zeigt jetzt das amtliche PDF selbst, aufgeschlagen auf der richtigen
+// Seite - und Formelsammlung.pdf ist ueber PAKET_PDF_MUSTER ohnehin im
+// Paket. Der Ordner wird also nicht mehr gebraucht; geloescht wird bei
+// bestehenden Installationen nichts, er faellt nur aus dem Paket.
+const PAKET_ORDNER = ['svgs', 'sounds'];
 
 // Minimaler ZIP-Schreiber mit Bordmitteln (zlib). Bewusst ohne npm-Paket wie
 // "archiver", damit das Projekt seine drei Abhaengigkeiten behaelt und der
@@ -1895,7 +2128,7 @@ const ABGLEICH_DATEN    = ['fragen.json', 'svg-list.json', 'video_map_embed.js',
                            // Zuordnung Frage -> Kapitel bei 50ohm.de. Reine
                            // Kursdaten wie die Video-Map daneben.
                            '50ohm_map.json'];
-const ABGLEICH_BROWSER  = ['Index.html', 'duo.js', 'klick-sound.js', 'tts-expand.js'];
+const ABGLEICH_BROWSER  = ['Index.html', 'duo.js', 'klick-sound.js', 'tts-expand.js', 'manifest.webmanifest', 'sw.js'];
 const ABGLEICH_PROGRAMM = ['Server.js', 'hoerbuch.js', 'lame.js'];
 const ABGLEICH_ALLE     = [...ABGLEICH_DATEN, ...ABGLEICH_BROWSER, ...ABGLEICH_PROGRAMM];
 
@@ -2022,6 +2255,26 @@ try{
 }catch(e){
   // Fehlt die Datei (altes ZIP), soll der Trainer trotzdem starten.
   console.warn('[GITHUB] Update-Funktion nicht verfuegbar:', e.message);
+}
+
+// ================================================================
+//  WEITERE VORLESESTIMMEN NACHTRAEGLICH HOLEN     (05.09.2026)
+// ================================================================
+//  Die Arbeit steht in piper_stimmen.js - hier wird nur eingehaengt.
+//  Ausgeliefert wird weiter nur Thorsten in mittlerer Guete; alles
+//  weitere holt sich, wer es haben will. Der Grund steht dort oben:
+//  Eine Stimme wiegt 63 MB, alle zehn deutschen zusammen rund 500 MB -
+//  in einem Setup von knapp 90 MB.
+//
+//  Fehlt die Datei, faellt nur die Auswahl weg. Der Trainer laeuft
+//  weiter, und die mitgelieferte Stimme spricht wie bisher.
+// ================================================================
+try{
+  require('./piper_stimmen').einrichten({
+    app, localOnly, piperOrdner: PIPER_DIR, sprache: 'de_DE'
+  });
+}catch(e){
+  console.warn('[STIMMEN] Nachladen nicht verfuegbar:', e.message);
 }
 
 // ---- Beim EMPFAENGER ------------------------------------------------------
@@ -2524,6 +2777,16 @@ const PUBLIC_FILES = new Set([
   // liefe der Abruf in einen 404 und der Kasten erschiene nie.
   '/50ohm_map.json',
   '/klick-sound.js',
+  // Die drei Stuecke der PWA. Ohne sie meldet der Browser einen 404 und
+  // der Trainer bleibt eine gewoehnliche Seite mit Adressleiste:
+  //   manifest  - Name, Symbol, Start ohne Adressleiste
+  //   sw.js     - macht installierbar und laesst ohne Netz starten
+  //   Symbole   - was auf dem Startbildschirm liegt
+  // Kleingeschrieben eintragen, isPublicPath() vergleicht in Kleinschrift.
+  '/manifest.webmanifest',
+  '/sw.js',
+  '/icon-192.png',
+  '/icon-512.png',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
   // Update-Test.bat. Die Seite sieht regelmaessig nach, ob es ihn gibt;
@@ -2918,6 +3181,54 @@ try{
       if(!room.startTimes[socket.id]) room.startTimes[socket.id] = Date.now();
       sendeTeilnehmerUebersicht(room);
      }catch(e){ console.error('[DUO] startDuoQuiz Fehler', e); }
+    });
+
+    // ================================================================
+    //  NEUE RUNDE FUER ALLE  (06.09.2026)
+    // ----------------------------------------------------------------
+    //  Dietmar: "Wenn man durch ist, bekommt man eine Auswertung. Der
+    //  Trainer kann, wenn alle fertig sind, eine neue Runde starten."
+    //
+    //  Bis hierher gab es das nicht. 'startDuoQuiz' schickt seine Antwort
+    //  mit socket.emit an GENAU EINEN Teilnehmer zurueck - den, der
+    //  gefragt hat. Das ist auch richtig so: Im Raum startet jeder fuer
+    //  sich, wann er mag. Nur konnte deshalb niemand eine Runde fuer alle
+    //  ausloesen, und die Fragen blieben dieselben.
+    //
+    //  'neueRunde' macht beides anders:
+    //    - es wuerfelt einen frischen Fragensatz (generateRoomQuestions),
+    //    - und schickt ihn mit io.to(code) an ALLE im Raum.
+    //
+    //  Nur der Gastgeber darf das. Sonst koennte ein Teilnehmer mitten in
+    //  der Runde allen anderen den Stand wegreissen.
+    // ================================================================
+    socket.on('neueRunde', data=>{
+     try{
+      if(!data || typeof data !== 'object') return;
+      const code = data.code;
+      const room = duoRooms[code]; if(!room) return;
+      if(room.hostId !== socket.id){
+        socket.emit('errorMsg','Nur der Gastgeber kann eine neue Runde starten.');
+        return;
+      }
+      generateRoomQuestions(room);
+      // Der alte Durchgang ist vorbei: Antworten, Zeiten und die Sperre
+      // fuer die Endauswertung gehen mit ihm.
+      room.allAnswers = {};
+      room.startTimes = {};
+      room.finalResultsSent = false;
+      const jetzt = Date.now();
+      Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
+      io.to(code).emit('duoQuizStarted',{
+        questions: room.questions,
+        questionsFull: room.questionsFull,
+        meta:{ code, parts: room.config?room.config.parts:undefined, count: room.config?room.config.count:undefined,
+               part: room.config?room.config.part:undefined, actualCount: room.questions.length, neueRunde:true },
+        users: room.users
+      });
+      console.log(`[GRUPPENRAUM] Neue Runde in ${code}: ${room.questions.length} frische Fragen fuer ${Object.keys(room.users).length} Teilnehmer.`);
+      sendeTeilnehmerUebersicht(room);
+     }catch(e){ console.error('[DUO] neueRunde Fehler', e); }
     });
 
     // ===== KEIN WARTEN: Jeder beantwortet in eigenem Tempo, kein erzwungener Fragenwechsel =====
@@ -3340,6 +3651,35 @@ try{
         console.error('[DUO] kickUser error', err);
         socket.emit('errorMsg', 'Fehler beim Kicken: ' + err.message);
       }
+    });
+
+    // ================================================================
+    //  DER GASTGEBER BEENDET DEN RAUM                (05.09.2026)
+    // ================================================================
+    //  Bis heute gab es keinen Weg, einen Raum absichtlich zu beenden.
+    //  "Schliessen" im Fenster machte nur das Fenster zu; der Raum lief
+    //  weiter, bis der letzte Teilnehmer von selbst ging. Dietmar: "Wenn
+    //  ich im Gruppenraum den Button schliessen betaetige, muss auch der
+    //  Gruppenchat beendet werden" - und auf Nachfrage: den Raum wirklich
+    //  beenden.
+    //
+    //  Nur der Gastgeber darf das. Wer nicht Gastgeber ist, geht ueber
+    //  leaveRoom und verlaesst nur sich selbst - sonst koennte ein
+    //  beliebiger Teilnehmer allen anderen den Abend beenden.
+    socket.on('raumBeenden', data=>{
+      try{
+        const code = (data && typeof data === 'object' ? data.code : null) || socket.data.roomCode;
+        const room = code && duoRooms[code];
+        if(!room) return;
+        if(room.hostId !== socket.id){
+          // Kein Fehler, nur nicht erlaubt: Dann verlaesst er eben sich selbst.
+          socket.emit('errorMsg', 'Nur der Gastgeber kann den Raum beenden.');
+          return;
+        }
+        io.to(code).emit('roomDeleted', { code: code });
+        delete duoRooms[code];
+        console.log(`[DUO] Raum ${code} vom Gastgeber beendet.`);
+      }catch(e){ console.error('[DUO] raumBeenden Fehler', e); }
     });
 
     socket.on('leaveRoom',data=>{

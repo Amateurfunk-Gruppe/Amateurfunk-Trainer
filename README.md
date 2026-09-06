@@ -122,6 +122,34 @@ Link. Mehr braucht es nicht:
 
 ![Der Gruppenraum mit mehreren Teilnehmern](bilder/05-gruppenraum.png)
 
+### Am Handy und am Tablet
+
+Wer über den Einladungslink hereinkommt, bekommt eine eigene, aufgeräumte
+Ansicht — keine verkleinerte Rechnerseite.
+
+<p align="center">
+  <img src="bilder/10-mobile.png" alt="Der Trainer am Handy: links das Fenster zum Mitmachen mit Namensfeld, rechts eine Frage im Gruppenraum" width="760">
+</p>
+
+- **Name eintragen, mitmachen, los.** Ein Feld, ein Knopf. Ohne Namen geht es
+  nicht weiter — sonst steht man bei allen anderen als „Benutzer 1" in der
+  Liste. Nach dem Tippen beginnt sofort die erste Frage.
+- **Nur der Raum, kein Hauptmenü.** Filterleiste, Prüfungsübersicht,
+  Lernfortschritt und Verlauf gehören zum eigenen Lernen am eigenen Rechner —
+  im Raum entscheidet der Ausbilder, was gefragt wird. Übrig bleiben
+  **Weiter**, **Hauptmenü** und der Farbstil.
+- **Am Ende die Auswertung.** Sind alle durch, startet der Ausbilder mit einem
+  Knopf eine **neue Runde** — frische Fragen für alle, jeder wieder bei null.
+- **Fingermaße statt Mausmaße.** Antworten und Knöpfe mindestens 44 Punkte
+  hoch, die Frage steht oben, nichts läuft seitlich aus dem Bild.
+
+**Als App auf dem Startbildschirm.** Der Trainer bringt ein Web-App-Manifest
+und einen Service Worker mit. Über „Zum Startbildschirm hinzufügen" landet er
+mit eigenem Symbol auf dem Handy und startet **ohne Adressleiste** — wie eine
+installierte App. Dafür muss die Seite über **https** erreichbar sein: über den
+Tunnel-Link also ja, über die nackte LAN-Adresse (`http://192.168.…`) nicht.
+Dort läuft der Trainer trotzdem, nur eben ohne Symbol.
+
 ### Statistik und Lernfortschritt
 
 Getrennt nach Prüfungsteil: was gelernt ist, wie die Trefferquote über alle je

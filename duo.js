@@ -955,21 +955,55 @@
         }catch(e){}
     }
 
+    // Merkt sich, fuer welchen Raum der Chat schon einmal von selbst
+    // aufgeklappt wurde. Ohne das wuerde jedes showRoomUI() - und das
+    // laeuft bei jeder Aenderung im Raum - ein zugeklapptes Fenster
+    // wieder aufreissen.
+    let chatSchonAufgeklappt = null;
+
+    // Wer den Raum selbst beendet, bekommt die Rueckmeldung des Servers
+    // ("roomDeleted") natuerlich auch - der soll aber keine Meldung
+    // darueber sehen, was er gerade selbst getan hat.
+    let selbstBeendet = false;
+
     function chatSichtbarkeitPruefen(){
         chatAufbauen();
         const box = document.getElementById('duoChatBox');
         if(!box) return;
         if(roomCode){
             box.classList.add('sichtbar');
+            // DER CHAT STEHT VON ANFANG AN OFFEN.
+            //
+            // Dietmar am 05.09.2026: "Ich kann erst im Chat schreiben,
+            // wenn mir davor jemand geschrieben hat."
+            //
+            // Genau so war es gebaut: Das Fenster kam zugeklappt auf die
+            // Welt - nur die Kopfleiste war zu sehen, das Eingabefeld
+            // steckte darunter. Aufgeklappt hat es sich erst, wenn eine
+            // FREMDE Nachricht eintraf. Wer als Erster schreiben wollte,
+            // fand kein Feld und musste erst die Kopfleiste anklicken -
+            // die aber wie eine Ueberschrift aussieht, nicht wie ein
+            // Knopf.
+            //
+            // Jetzt klappt es beim Betreten des Raums einmal von selbst
+            // auf. Wer es zumacht, dem bleibt es zu.
+            if(chatSchonAufgeklappt !== roomCode && !pruefungLaeuft()){
+                chatSchonAufgeklappt = roomCode;
+                chatUmschalten(true, true);   // ohne den Fokus zu stehlen
+            }
         } else {
             box.classList.remove('sichtbar','offen');
             chatOffen = false;
+            chatSchonAufgeklappt = null;
             chatUngelesen = 0;
             chatBlaseAktualisieren();
         }
     }
 
-    function chatUmschalten(erzwingeOffen){
+    // ohneFokus: beim automatischen Aufklappen soll der Mauszeiger nicht
+    // ins Chatfeld gezogen werden - der Gastgeber ist in dem Moment beim
+    // Einladungslink, nicht beim Schreiben.
+    function chatUmschalten(erzwingeOffen, ohneFokus){
         chatAufbauen();
         const box = document.getElementById('duoChatBox');
         if(!box) return;
@@ -981,8 +1015,10 @@
             chatUngelesen = 0;
             chatBlaseAktualisieren();
             chatNachUntenRollen();
-            const feld = document.getElementById('duoChatEingabe');
-            if(feld) setTimeout(()=>feld.focus(), 60);
+            if(!ohneFokus){
+                const feld = document.getElementById('duoChatEingabe');
+                if(feld) setTimeout(()=>feld.focus(), 60);
+            }
         }
     }
 
@@ -1163,7 +1199,28 @@
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); });
         socket.on('roomUpdate', data=>{ if(data.hostId){ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; } if(data.users) duoUsersCache=data.users; updateRoomUsers(data.users); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateLinkWithTunnel(); });
         socket.on('you-were-kicked', data=>{ alert(data.message||'Du wurdest entfernt'); document.getElementById('duoModal').style.display='none'; if(roomCode&&socket) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; isHost=false; duoActive=false; chatSichtbarkeitPruefen(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); });
-        socket.on('roomDeleted', ()=>{ alert('Raum gelöscht'); roomCode=null; isHost=false; duoActive=false; document.getElementById('duoModal').style.display='none'; });
+        // Der Raum ist weg - entweder weil der Gastgeber ihn beendet hat
+        // oder weil der letzte hinausging. Aufraeumen wie beim eigenen
+        // Verlassen; das Chatfenster gehoert ausdruecklich dazu, es hing
+        // sonst weiter am Bildschirm.
+        //
+        // Wer selbst geschlossen hat, bekommt keine Meldung: Er weiss es.
+        socket.on('roomDeleted', ()=>{
+            const warIchSelbst = selbstBeendet;
+            selbstBeendet = false;
+            roomCode=null; isHost=false; duoActive=false;
+            try{ chatSichtbarkeitPruefen(); }catch(e){}
+            try{ teilnehmerKnopfEinblenden(false); }catch(e){}
+            const m = document.getElementById('duoModal');
+            if(m) m.style.display='none';
+            try{ updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); }catch(e){}
+            if(!warIchSelbst){
+                try{
+                    if(window.showAppAlert) showAppAlert('Der Gastgeber hat den Gruppenraum beendet.');
+                    else alert('Der Gastgeber hat den Gruppenraum beendet.');
+                }catch(e){}
+            }
+        });
         socket.on('errorMsg', msg=>{ if(window.showAppAlert) window.showAppAlert(msg); else alert(msg); });
         // Rueckmeldung nach dem Entfernen. Der Gastgeber hat auf einen Knopf
         // gedrueckt und soll wissen, was daraus geworden ist - besonders im
@@ -1367,6 +1424,14 @@
             if(!socket||!roomCode){ if(window.startQuiz) window.startQuiz(); return; }
             socket.emit('startDuoQuiz',{code:roomCode});
         },
+        // Neue Runde fuer ALLE im Raum - frische Fragen, alle fangen von
+        // vorn an. Nur der Gastgeber darf das; der Server prueft es noch
+        // einmal, hier wird nur der Knopf nicht angeboten.
+        neueRunde: function(){
+            if(!socket||!roomCode) return;
+            if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Gastgeber kann eine neue Runde starten.'); return; }
+            socket.emit('neueRunde',{code:roomCode});
+        },
         saveDuckDns: function(){
             try{
                 const input=document.getElementById('duckDnsInput');
@@ -1445,8 +1510,23 @@
             if(!socket||!roomCode) return;
             try{ socket.emit('requestFinalResults',{code:roomCode}); }catch(e){ console.error(e); }
         },
+        // Raum verlassen - und als Gastgeber: beenden.
+        //
+        // Dietmar am 05.09.2026 hat "Schliessen" zu diesem Weg gemacht.
+        // Wer den Raum aufgemacht hat, macht ihn auch zu; wer nur zu Gast
+        // ist, meldet sich ab und laesst den Raum stehen.
         leave: function(){
-            try{ if(socket&&roomCode) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; chatSichtbarkeitPruefen(); isHost=false; duoActive=false; window._duoHostId=null; duoUsersCache={}; document.getElementById('duoModal').style.display='none'; updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); teilnehmerKnopfEinblenden(false); window.duoTeilnehmerUebersichtData=[]; }catch(e){}
+            try{
+                if(socket && roomCode){
+                    selbstBeendet = true;   // die Rueckmeldung vom Server nicht doppelt melden
+                    socket.emit(isHost ? 'raumBeenden' : 'leaveRoom', { code: roomCode });
+                }
+                roomCode=null; chatSichtbarkeitPruefen(); isHost=false; duoActive=false;
+                window._duoHostId=null; duoUsersCache={};
+                document.getElementById('duoModal').style.display='none';
+                updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton();
+                teilnehmerKnopfEinblenden(false); window.duoTeilnehmerUebersichtData=[];
+            }catch(e){}
         },
         teilnehmerOeffnen: function(){
             try{
