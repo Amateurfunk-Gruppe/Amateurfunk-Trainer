@@ -603,6 +603,10 @@ function getDefaultUserdata(){
     // Speichern stillschweigend wegwerfen - der Haken waere nach jedem
     // Neustart wieder aus.
     cb: { user1: {}, user2: {}, user3: {} },
+    // QSL-Sammelalbum (06.09.2026): je Benutzer die verdienten Karten,
+    // dazu das Rufzeichen, das auf ihnen steht - das gilt fuer alle
+    // Benutzer gemeinsam, weil es am Geraet haengt, nicht am Lernstand.
+    qsl: { user1: {}, user2: {}, user3: {}, rufzeichen: '' },
     version: 2,
     updatedAt: new Date().toISOString()
   };
@@ -621,7 +625,8 @@ function normalisiereUserdata(roh){
     ['errors',      'array'],
     ['mastery',     'objekt'],
     ['difficult',   'objekt'],
-    ['cb',          'objekt']
+    ['cb',          'objekt'],
+    ['qsl',         'objekt']
   ];
   for(const [feld, art] of felder){
     if(!istObjekt(roh[feld])) continue;                 // falscher Typ -> Standard behalten
@@ -630,6 +635,11 @@ function normalisiereUserdata(roh){
       if(art === 'array' && Array.isArray(wert))      sauber[feld][u] = wert;
       else if(art === 'objekt' && istObjekt(wert))    sauber[feld][u] = wert;
     }
+  }
+  // Das Rufzeichen steht neben den Benutzern und muss eigens
+  // uebernommen werden - die Schleife oben kennt nur user1..user3.
+  if(istObjekt(roh.qsl) && typeof roh.qsl.rufzeichen === 'string'){
+    sauber.qsl.rufzeichen = roh.qsl.rufzeichen.slice(0, 12);
   }
   return sauber;
 }
@@ -1247,13 +1257,14 @@ app.get('/api/userdata', localOnly, (req,res)=>{
 });
 
 // FIX W9: Zuordnung Feldname -> erwarteter Typ, fuer die Validierung unten.
-const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt', cb:'objekt' };
+const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt', cb:'objekt', qsl:'objekt' };
 const TYP_ALIAS = {
   history:'examHistory', examHistory:'examHistory',
   mastery:'mastery',     lernfortschritt:'mastery',
   difficult:'difficult', lernbedarf:'difficult',
   errors:'errors',
-  cb:'cb',               cbEinstieg:'cb'
+  cb:'cb',               cbEinstieg:'cb',
+  qsl:'qsl',             sammelalbum:'qsl'
 };
 function typPasst(wert, art){
   return art === 'array' ? Array.isArray(wert) : istObjekt(wert);
@@ -1311,6 +1322,7 @@ app.post('/api/userdata', localOnly, (req,res)=>{
         difficult:   incoming.difficult   || current.difficult,
         errors:      incoming.errors      || current.errors,
         cb:          incoming.cb          || current.cb,
+        qsl:         incoming.qsl         || current.qsl,
         version: 2,
         updatedAt: new Date().toISOString()
       };
@@ -1653,6 +1665,262 @@ function programmVersion(){
     catch(e2){ return null; }
   }
 }
+
+
+// ================================================================
+//  IST DAS RUFZEICHEN SCHON VERGEBEN?
+//  ----------------------------------------------------------------
+//  Dietmar am 06.09.2026: "Kann man das nicht indirekt abfragen?" -
+//  und auf die Rueckfrage: "Nur vergeben und noch frei."
+//
+//  Die Rufzeichensuche der Bundesnetzagentur ist ein ASP.NET-Formular.
+//  Aus dem Browser laesst sie sich nicht abfragen (fremde Herkunft), vom
+//  Server hier aber schon. Der Ablauf ist der eines Menschen, der die
+//  Seite benutzt:
+//
+//    1. Seite holen. Darin stecken versteckte Felder (__VIEWSTATE,
+//       __EVENTVALIDATION ...) und ein Sitzungs-Cookie. Ohne sie weist
+//       ASP.NET jede Eingabe zurueck.
+//    2. Dieselben Felder zurueckschicken, dazu das Rufzeichen im
+//       Suchfeld und den Namen des Suchknopfes.
+//    3. In der Antwort nachsehen, ob eine Trefferzeile darin steht.
+//
+//  WAS HIER BEWUSST NICHT PASSIERT:
+//  - Keine Namen, keine Adressen. Die stehen im Verzeichnis, gehen den
+//    Trainer aber nichts an. Er beantwortet eine Ja-Nein-Frage.
+//  - Kein Sammeln, kein Vorratsabruf. Eine Anfrage je Klick, und die
+//    Antwort liegt hoechstens zehn Minuten im Speicher, damit ein
+//    zweiter Klick die Behoerde nicht noch einmal behelligt.
+//  - Nur vom Trainer-Rechner aus (localOnly). Sonst koennte jeder, der
+//    den Einladungslink hat, ueber diesen Server Anfragen schicken.
+//
+//  UND ES KANN JEDERZEIT AUFHOEREN ZU FUNKTIONIEREN. Feldnamen und
+//  Aufbau gehoeren der Seite, nicht uns. Deshalb raet dieser Code nichts:
+//  Er liest die Feldnamen aus der Seite selbst, und wenn er sich nicht
+//  sicher ist, sagt er "unklar" - dann oeffnet der Trainer wie vorher
+//  die Seite zum Selbstnachsehen. Eine falsche Antwort waere schlimmer
+//  als keine.
+// ================================================================
+// Die Bundesnetzagentur verlinkt ihre eigene Suche auf der Amateurfunk-
+// Seite mit "http://", nicht mit "https://". Dietmar am 06.09.2026: "Es
+// oeffnet sich die Webseite Not found." Genau so sieht es aus, wenn
+// unter der verschluesselten Adresse ein anderer Server antwortet als
+// unter der unverschluesselten.
+//
+// Deshalb wird nicht mehr geraten: Der Server probiert beide, nimmt die
+// erste, die ein Suchformular liefert, und sagt dem Trainer, welche das
+// war - der oeffnet im Notfall dann dieselbe.
+const RUFZEICHEN_URLS = [
+  'https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx',
+  'http://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx'
+];
+const RUFZEICHEN_URL = RUFZEICHEN_URLS[0];
+const rufzeichenCache = new Map();          // RUFZEICHEN -> { vergeben, wann }
+const RUFZEICHEN_CACHE_MS = 10 * 60 * 1000;
+
+function rufzeichenFelder(html){
+  // Alle versteckten Felder einsammeln - die muessen unveraendert zurueck.
+  const felder = {};
+  const re = /<input[^>]*type=["']hidden["'][^>]*>/gi;
+  let m;
+  while((m = re.exec(html)) !== null){
+    const tag = m[0];
+    const name = (tag.match(/name=["']([^"']+)["']/i) || [])[1];
+    const wert = (tag.match(/value=["']([^"']*)["']/i) || [])[1];
+    if(name) felder[name] = wert === undefined ? '' : entzerren(wert);
+  }
+  return felder;
+}
+
+function entzerren(s){
+  return String(s)
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+}
+
+// Das Suchfeld und den Knopf nicht raten, sondern aus der Seite lesen.
+function rufzeichenEingabefeld(html){
+  const re = /<input[^>]*>/gi;
+  let m, ersterText = null;
+  while((m = re.exec(html)) !== null){
+    const tag = m[0];
+    const art = (tag.match(/type=["']([^"']+)["']/i) || [])[1] || 'text';
+    const name = (tag.match(/name=["']([^"']+)["']/i) || [])[1];
+    if(!name) continue;
+    if(/hidden/i.test(art)) continue;
+    if(/text/i.test(art)){
+      if(!ersterText) ersterText = name;
+      const id = (tag.match(/id=["']([^"']+)["']/i) || [])[1] || '';
+      if(/rufzeichen|call/i.test(name + ' ' + id)) return name;
+    }
+  }
+  return ersterText;
+}
+
+// Wohin das Formular geschickt wird, steht im Formular selbst. Meist
+// ist es dieselbe Seite - verlassen sollte man sich darauf nicht.
+function rufzeichenZiel(html, basis){
+  const m = html.match(/<form[^>]*action=["']([^"']+)["']/i);
+  if(!m) return basis;
+  try{ return new URL(entzerren(m[1]), basis).toString(); }catch(e){ return basis; }
+}
+
+// Manche ASP.NET-Seiten haben statt eines Knopfes einen Link, der
+// __doPostBack('name','') aufruft. Dann traegt man den Namen in
+// __EVENTTARGET ein, statt einen Knopf mitzuschicken.
+function rufzeichenPostbackZiel(html){
+  const treffer = [...html.matchAll(/__doPostBack\(\s*['"]([^'"]+)['"]/g)].map(t => t[1]);
+  const passend = treffer.find(t => /such|suche|start|abfrage|button/i.test(t));
+  return passend || treffer[0] || null;
+}
+
+function rufzeichenKnopf(html){
+  const re = /<input[^>]*type=["'](submit|image)["'][^>]*>/gi;
+  let m;
+  while((m = re.exec(html)) !== null){
+    const tag = m[0];
+    const name = (tag.match(/name=["']([^"']+)["']/i) || [])[1];
+    const wert = (tag.match(/value=["']([^"']*)["']/i) || [])[1] || '';
+    if(name && /such|suche|start|abfrage/i.test(name + ' ' + wert)) return { name, wert };
+  }
+  // Kein passender Knopf gefunden? Dann den ersten nehmen, den es gibt.
+  const erster = html.match(/<input[^>]*type=["']submit["'][^>]*>/i);
+  if(erster){
+    const name = (erster[0].match(/name=["']([^"']+)["']/i) || [])[1];
+    const wert = (erster[0].match(/value=["']([^"']*)["']/i) || [])[1] || '';
+    if(name) return { name, wert };
+  }
+  return null;
+}
+
+// In der Antwort zaehlen, was in TABELLEN steht - und nur dort. Das
+// Suchfeld enthaelt das eingetippte Rufzeichen naemlich auch, wenn es
+// nichts gefunden hat; wer im ganzen Text sucht, findet es immer.
+function rufzeichenTrefferAusTabellen(html, ruf){
+  const tabellen = html.match(/<table[\s\S]*?<\/table>/gi) || [];
+  const suchmuster = ruf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[A-Z0-9]');
+  const re = new RegExp('(^|[^A-Z0-9])' + suchmuster + '([^A-Z0-9]|$)');
+  let treffer = 0;
+  tabellen.forEach(t => {
+    const text = t.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').toUpperCase();
+    if(re.test(text)) treffer++;
+  });
+  return treffer;
+}
+
+app.get('/api/rufzeichen', localOnly, async (req, res) => {
+  const ruf = String(req.query.ruf || '').toUpperCase().replace(/[^A-Z0-9/*]/g, '').slice(0, 12);
+  if(!ruf) return res.json({ ok:false, grund:'kein Rufzeichen' });
+
+  const gemerkt = rufzeichenCache.get(ruf);
+  if(gemerkt && (Date.now() - gemerkt.wann) < RUFZEICHEN_CACHE_MS){
+    return res.json({ ok:true, ruf, vergeben:gemerkt.vergeben, ausDemSpeicher:true, seite:gemerkt.quelle || RUFZEICHEN_URL });
+  }
+
+  const abbruch = new AbortController();
+  const wecker = setTimeout(() => abbruch.abort(), 12000);
+  try{
+    // Kopfzeilen wie ein gewoehnlicher Browser. Der erste Versuch am
+    // 06.09.2026 lief mit einer eigenen Kennung - und wurde abgewiesen.
+    // Viele Behoerdenseiten haengen hinter einem Schutzdienst, der
+    // ungewohnte Kennungen aussortiert, bevor die Seite ueberhaupt
+    // gefragt wird.
+    const kopf = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                  + '(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
+      'Upgrade-Insecure-Requests': '1'
+    };
+    // Beide Adressen probieren, bis eine ein Formular liefert.
+    let erst = null, html = '', quelle = '';
+    const versuche = [];
+    for(const kandidat of RUFZEICHEN_URLS){
+      try{
+        const r = await fetch(kandidat, { headers: kopf, redirect: 'follow', signal: abbruch.signal });
+        const t = await r.text();
+        versuche.push(kandidat.split(':')[0] + ' → ' + r.status + (/<form/i.test(t) ? ' (Formular)' : ' (kein Formular)'));
+        if(r.ok && /<form/i.test(t) && /<input[^>]*hidden/i.test(t)){
+          erst = r; html = t; quelle = r.url || kandidat;
+          break;
+        }
+      }catch(e){
+        versuche.push(kandidat.split(':')[0] + ' → ' + (e && e.message ? e.message : 'Fehler'));
+      }
+    }
+    if(!erst) throw new Error('Suchseite nicht erreichbar [' + versuche.join(' | ') + ']');
+    // Das Sitzungs-Cookie einsammeln. getSetCookie() gibt es erst ab
+    // Node 20 - aeltere Fassungen liefern alle Cookies in EINER Zeile,
+    // die dann von Hand zerlegt werden muss. Ohne Cookie weist ASP.NET
+    // die Eingabe zurueck, und zwar ohne zu sagen, warum.
+    let keksListe = [];
+    try{
+      if(typeof erst.headers.getSetCookie === 'function') keksListe = erst.headers.getSetCookie();
+      else if(erst.headers.raw) keksListe = erst.headers.raw()['set-cookie'] || [];
+      else {
+        const eine = erst.headers.get('set-cookie');
+        if(eine) keksListe = eine.split(/,(?=[^;]+?=)/);
+      }
+    }catch(e){ keksListe = []; }
+    const kekse = keksListe.map(c => String(c).split(';')[0].trim()).filter(Boolean).join('; ');
+
+    const felder = rufzeichenFelder(html);
+    const feldName = rufzeichenEingabefeld(html);
+    const knopf = rufzeichenKnopf(html);
+    const ziel = rufzeichenZiel(html, quelle);
+    if(!feldName || !Object.keys(felder).length){
+      throw new Error('Suchformular nicht erkannt (Felder: ' + Object.keys(felder).length
+                    + ', Suchfeld: ' + (feldName || 'keins') + ')');
+    }
+
+    const daten = new URLSearchParams();
+    Object.keys(felder).forEach(k => daten.append(k, felder[k]));
+    daten.set(feldName, ruf);
+    if(knopf && knopf.name){
+      daten.set(knopf.name, knopf.wert || 'Suchen');
+    }else{
+      // Kein Knopf im Formular - dann laeuft die Suche ueber einen Link.
+      const postback = rufzeichenPostbackZiel(html);
+      if(postback){ daten.set('__EVENTTARGET', postback); daten.set('__EVENTARGUMENT', ''); }
+    }
+
+    const zweit = await fetch(ziel, {
+      method: 'POST',
+      headers: Object.assign({}, kopf, {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': quelle,
+        'Cache-Control': 'no-cache',
+        'Origin': new URL(quelle).origin
+      }, kekse ? { 'Cookie': kekse } : {}),
+      body: daten.toString(),
+      signal: abbruch.signal
+    });
+    if(!zweit.ok) throw new Error('Suche antwortet mit ' + zweit.status);
+    const antwort = await zweit.text();
+
+    const treffer = rufzeichenTrefferAusTabellen(antwort, ruf);
+    const ohneTreffer = /(kein|keine)\s+(eintr|treffer|datens|ergebnis)/i.test(
+      antwort.replace(/<[^>]+>/g, ' ')
+    );
+
+    let vergeben = null;
+    if(treffer > 0) vergeben = true;
+    else if(ohneTreffer) vergeben = false;
+    else if(/<table/i.test(antwort)) vergeben = false;   // Ergebnisbereich da, aber ohne unser Rufzeichen
+    if(vergeben === null) throw new Error('Antwort nicht eindeutig');
+
+    rufzeichenCache.set(ruf, { vergeben, wann: Date.now(), quelle });
+    return res.json({ ok:true, ruf, vergeben, seite: quelle });
+  }catch(e){
+    const grund = (e && e.name === 'AbortError')
+      ? 'Zeitueberschreitung nach 12 Sekunden'
+      : (e && e.message) || String(e);
+    console.log('[RUFZEICHEN] Abfrage nicht moeglich:', grund);
+    return res.json({ ok:false, ruf, grund, node:process.version, seite:RUFZEICHEN_URL });
+  }finally{
+    clearTimeout(wecker);
+  }
+});
 
 app.get('/api/version',(req,res)=>{
   try{

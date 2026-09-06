@@ -226,3 +226,28 @@ installer-MINIMAL.iss
 # Kleines Hilfsskript zum Pruefen der JSON-Dateien. Braucht niemand,
 # der den Trainer benutzt.
 check_json.py
+
+# ================================================================
+#  ENTWUERFE UND NOTIZEN - ALLES MIT UNTERSTRICH AM ANFANG
+# ================================================================
+# Dietmar am 06.09.2026, mit einem Bild der Rueckfrage von
+# GitHub-Verbinden.bat: "Aendere das bitte, damit ich keinen Bloedsinn
+# auf GitHub poste."
+#
+# Angeboten wurden dort _auswertung-vorschlag.html,
+# _blaettern-vorschlag.html und _drei-ideen-vorschlag.html - Musterseiten,
+# die ich ihm zum Ansehen gebaut habe. Sie gehoeren in den Ordner, damit
+# er sie oeffnen kann, aber nicht in ein Repository, das andere
+# herunterladen, um zu lernen. Dasselbe gilt fuer Sprechtexte,
+# Notizen und Beispieldateien.
+#
+# Der Unterstrich am Anfang ist dafuer seit Wochen das Zeichen. Ab jetzt
+# reicht er auch aus: Was so heisst, bleibt hier.
+#
+# ACHTUNG, falls doch einmal etwas mit Unterstrich ins Repository soll:
+# Eine Ausnahme schreibt man mit einem Ausrufezeichen davor, zum
+# Beispiel   !_wichtig.md
+_*.html
+_*.md
+_*.json
+_*.txt

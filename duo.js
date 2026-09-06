@@ -16,7 +16,57 @@
     // durch explizites manuelles Speichern (saveDuckDns). KEINE Fallbacks auf Eingabefeld/localStorage
     // hier mehr - genau diese Fallbacks haben eine alte, unbestätigte URL immer wieder "festgeschrieben"
     // und damit den Einladungslink dauerhaft kaputt gemacht, obwohl der Tunnel längst eine neue URL hatte.
+    // ================================================================
+    //  EIGENE FESTE ADRESSE
+    // ----------------------------------------------------------------
+    //  Dietmar am 06.09.2026: "Ich habe einen DNS bei DuckDNS erstellt.
+    //  Ich kann das im Gruppenraum nicht bei dem Link eingeben."
+    //
+    //  Stimmt - das Feld war auf "readonly" gestellt. Es zeigte die
+    //  Adresse, die cloudflared beim Start ausgewuerfelt hat, und sonst
+    //  nichts. Fuer den Regelfall war das richtig: Eine von Hand
+    //  eingetippte Adresse, die auf nichts zeigt, erzeugt Einladungslinks,
+    //  die bei niemandem aufgehen.
+    //
+    //  Wer aber eine eigene feste Adresse hat - DuckDNS, ein benannter
+    //  Cloudflare-Tunnel, eine eigene Domain -, will genau die im Link
+    //  stehen haben. Und zwar dauerhaft: Der Wegwerf-Name von
+    //  trycloudflare.com ist nach jedem Neustart ein anderer, eine
+    //  App-Verknuepfung auf dem Handy zeigt danach ins Leere.
+    //
+    //  Ist eine eigene Adresse gesetzt, hat sie IMMER Vorrang, und keine
+    //  automatische Erkennung ueberschreibt sie mehr.
+    // ================================================================
+    const EIGENE_ADRESSE = 'duo_eigene_adresse';
+
+    function eigeneAdresse(){
+        try{
+            const v = (localStorage.getItem(EIGENE_ADRESSE) || '').trim();
+            // http ist ausdruecklich erlaubt (06.09.2026). Zuerst liess das
+            // Feld nur https zu - mit dem Hinweis, dass die App auf dem
+            // Startbildschirm sonst nicht laeuft. Das stimmt zwar, aber es
+            // machte genau den Test unmoeglich, um den es gerade geht:
+            // "Kommt von aussen ueberhaupt etwas an meinem Anschluss an?"
+            // Dafuer braucht es http://adresse:3000 - und der Trainer selbst
+            // laeuft darueber tadellos. Nur App und Mikrofon nicht.
+            return /^https?:\/\//i.test(v) ? v.replace(/\/+$/, '') : '';
+        }catch(e){ return ''; }
+    }
+
+    // Das Adressfeld nur dann nachfuehren, wenn keine eigene Adresse gilt.
+    function adressFeldSetzen(url){
+        if(eigeneAdresse()) return;
+        const inp = document.getElementById('duckDnsInput');
+        if(inp) inp.value = url;
+    }
+
     function getTunnelUrl(){
+        // Die eigene Adresse gilt, auch wenn sie nur http ist - siehe
+        // eigeneAdresse(). Der automatisch erkannte Tunnel dagegen muss
+        // https sein, denn cloudflared liefert nichts anderes; eine
+        // http-Adresse von dort waere ein Fehler.
+        const eigen = eigeneAdresse();
+        if(eigen) return eigen;
         return (tunnelUrlCache && tunnelUrlCache.startsWith('https://')) ? tunnelUrlCache : null;
     }
 
@@ -219,6 +269,14 @@
         if(!c||!j) return;
         const inRoom=!!roomCode;
         c.style.display=inRoom?'none':''; j.style.display=inRoom?'none':'';
+        // Der Kasten um die beiden Knoepfe steht als Fusszeile der linken
+        // Spalte. Sind beide Knoepfe weg, soll auch der Kasten weg - sonst
+        // bleibt eine leere Zeile mit Innenabstand stehen und macht die
+        // Spalte laenger, als ihr Inhalt es verlangt.
+        try{
+            const kasten = c.closest('.duo-knopfreihe-links');
+            if(kasten) kasten.classList.toggle('leer', inRoom);
+        }catch(e){}
     };
     // Jeder Teilnehmer startet für sich selbst - kein Warten auf den Host, kein Warten auf andere
     window.updateDuoStartButton=function(){
@@ -367,7 +425,14 @@
             }
 
             // Link erst herausgeben, wenn der Server ihn bestaetigt hat.
-            const z = tunnelGeprueft.zustand;
+            //
+            // AUSNAHME: eine eigene feste Adresse. Die kann der Server gar
+            // nicht pruefen - er kennt nur seinen eigenen Tunnel. Ohne diese
+            // Ausnahme haenge der Link fuer immer auf "wird geprueft", und
+            // der Gastgeber bekaeme nie einen zum Verschicken. Wer eine eigene
+            // Adresse eintraegt, sagt damit: die stimmt, ich habe sie
+            // eingerichtet.
+            const z = eigeneAdresse() ? 'ok' : tunnelGeprueft.zustand;
             if(z === 'laeuft' || z === 'unbekannt'){
                 linkEl.href='#';
                 linkEl.textContent='🔎 Link wird geprueft... (ca. 15-40 Sekunden, bitte noch nicht kopieren)';
@@ -399,6 +464,10 @@
             // Alles hinter # wird vom Browser NICHT an den Server oder an Proxys
             // uebertragen und landet damit nicht in Server-Logs oder Referrern.
             // getPassword() liest den Hash-Parameter bereits aus (siehe oben).
+            // Ein Schraegstrich vor dem Fragezeichen: "https://name.de?duo=X"
+            // ist zwar gueltig, sieht aber falsch aus und wird von manchen
+            // Messengern nicht als Link erkannt.
+            if(!/\/[^\/]*$/.test(base.replace(/^https?:\/\//, ''))) base += '/';
             let link=base+'?duo='+encodeURIComponent(roomCode);
             if(pwd) link+='#pwd='+encodeURIComponent(pwd);
 
@@ -641,8 +710,7 @@
                     window.__TUNNEL_URL__=j.url;
                     try{ localStorage.setItem('duo_duckdns',j.url); localStorage.setItem('duo_duckDnsUrl',j.url); }catch(e){}
                 }
-                const inp=document.getElementById('duckDnsInput');
-                if(inp) inp.value=j.url;
+                adressFeldSetzen(j.url);
                 if(hint){
                     if(j.running){
                         hint.innerHTML='✅ <strong>Automatisch erkannt:</strong> '+j.url+'<br><span style="color:#1f9d55;">Tunnel läuft • Quelle: '+(j.source||'cache')+'</span>';
@@ -679,8 +747,7 @@
             if(j.url){
                 if(hint) hint.innerHTML='✅ Tunnel gestartet: '+j.url;
                 if(dot) dot.style.background='#1f9d55';
-                const inp=document.getElementById('duckDnsInput');
-                if(inp) inp.value=j.url;
+                adressFeldSetzen(j.url);
                 try{ localStorage.setItem('duo_duckdns',j.url); }catch(e){}
                 tunnelUrlCache=j.url; window.__TUNNEL_URL__=j.url;
                 updateLinkWithTunnel();
@@ -769,8 +836,7 @@
             if(res.ok && j.url){
                 tunnelUrlCache = j.url; window.__TUNNEL_URL__ = j.url;
                 try{ localStorage.setItem('duo_duckdns', j.url); localStorage.setItem('duo_duckDnsUrl', j.url); }catch(e){}
-                const inp = document.getElementById('duckDnsInput');
-                if(inp) inp.value = j.url;
+                adressFeldSetzen(j.url);
                 zeigeTunnelHinweis('🔎 Tunnel laeuft - Link wird gerade geprueft...', '#f39c12');
                 tunnelGeprueft = { zustand:'laeuft', text:'' };
                 updateLinkWithTunnel();
@@ -1432,6 +1498,36 @@
             if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Gastgeber kann eine neue Runde starten.'); return; }
             socket.emit('neueRunde',{code:roomCode});
         },
+        // Eigene feste Adresse setzen oder wieder loeschen.
+        eigeneAdresseSetzen: function(roh){
+            try{
+                let v = String(roh || '').trim();
+                if(!v){
+                    try{ localStorage.removeItem(EIGENE_ADRESSE); }catch(e){}
+                    tunnelUrlCache = null; window.__TUNNEL_URL__ = null;
+                    fetchAndFillTunnelUrl();
+                    updateLinkWithTunnel();
+                    return { ok:true, geloescht:true };
+                }
+                // Ohne Vorsatz ergaenzen: Wer "meinname.duckdns.org" eintippt,
+                // meint https. Und der abschliessende Schraegstrich muss weg,
+                // sonst entsteht "…org//?duo=ABC".
+                // Ohne Vorsatz meint der Mensch https - das ist der
+                // Regelfall. Wer bewusst "http://" davorschreibt, bekommt es
+                // auch, samt Warnung.
+                if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+                v = v.replace(/\/+$/, '');
+                const unsicher = /^http:\/\//i.test(v);
+                try{ localStorage.setItem(EIGENE_ADRESSE, v); }catch(e){}
+                tunnelUrlCache = v; window.__TUNNEL_URL__ = v;
+                const inp = document.getElementById('duckDnsInput');
+                if(inp) inp.value = v;
+                updateLinkWithTunnel();
+                return { ok:true, adresse:v, unsicher:unsicher };
+            }catch(e){ return { ok:false, grund:'fehler' }; }
+        },
+        eigeneAdresse: () => eigeneAdresse(),
+
         saveDuckDns: function(){
             try{
                 const input=document.getElementById('duckDnsInput');

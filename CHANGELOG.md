@@ -8,6 +8,806 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.188.0] - 2026-09-06
+
+### Behoben
+- **„Not found" statt Suchseite — die Adresse war zu neu.** Dietmar: „Es öffnet
+  sich die Webseite Not found."
+
+  Der Trainer öffnete `https://ans.bundesnetzagentur.de/…`. Die Bundesnetzagentur
+  verlinkt ihre eigene Rufzeichensuche auf der Amateurfunk-Seite aber mit
+  **`http://`** — unter der verschlüsselten Adresse antwortet dort offenbar ein
+  anderer Server, und der kennt die Seite nicht. Link und Rückfall nehmen jetzt
+  dieselbe Adresse wie die Behörde selbst.
+
+  Beim Abfragen probiert der Server weiterhin zuerst https und fällt erst dann
+  auf http zurück; welche Adresse geantwortet hat, schickt er mit, und genau die
+  öffnet der Trainer im Notfall.
+
+### Geändert
+- **Die Diagnose sagt jetzt, woran es lag.** Schlägt die Abfrage fehl, nennt
+  `grund` beide Versuche mit ihrem Ergebnis, zum Beispiel
+  `Suchseite nicht erreichbar [https → 404 (kein Formular) | http → 200 (Formular)]`.
+  Zu sehen unter `http://localhost:3000/api/rufzeichen?ruf=DL1ABC`.
+
+## [1.187.0] - 2026-09-06
+
+### Behoben
+- **Die Rufzeichenabfrage kam nicht durch — drei Ursachen abgestellt.** Dietmar:
+  „Es öffnet sich direkt der Link." Das ist der Rückfall; er greift immer dann,
+  wenn die Abfrage keine eindeutige Antwort liefert.
+
+  **Die Kennung.** Der erste Versuch meldete sich als „Amateurfunk-Trainer".
+  Viele Behördenseiten hängen hinter einem Schutzdienst, der ungewohnte
+  Kennungen aussortiert, bevor die Seite überhaupt gefragt wird. Jetzt meldet
+  sich der Server wie ein gewöhnlicher Browser.
+
+  **Das Sitzungs-Cookie.** `getSetCookie()` gibt es erst ab Node 20 — ältere
+  Fassungen liefern alle Cookies in einer Zeile, die von Hand zerlegt werden
+  muss. Ohne Cookie weist ASP.NET die Eingabe zurück, und zwar ohne zu sagen,
+  warum. Beide Wege werden jetzt bedient.
+
+  **Formularziel und Suchknopf.** Wohin ein Formular schickt, steht im Formular
+  selbst — es muss nicht dieselbe Seite sein. Und statt eines Knopfes kann dort
+  ein Link stehen, der `__doPostBack` aufruft; dann trägt man den Namen in
+  `__EVENTTARGET` ein. Beides liest der Server jetzt aus der Seite, statt es
+  vorauszusetzen.
+
+  Geprüft gegen eine zweite, absichtlich anders gebaute Nachbildung: Link statt
+  Knopf, abweichendes Formularziel, zwei Cookies in einer Zeile — Treffer,
+  Nicht-Treffer und Platzhaltersuche werden richtig gedeutet.
+
+  **Falls es immer noch nicht geht:** `http://localhost:3000/api/rufzeichen?ruf=DL1ABC`
+  im Browser öffnen. Die Antwort nennt unter `grund` genau, woran es hakt.
+
+## [1.186.0] - 2026-09-06
+
+### Hinzugefügt
+- **Der Trainer fragt jetzt selbst nach: „vergeben" oder „noch frei".** Dietmar:
+  „Kann man das nicht indirekt abfragen?" — und auf die Rückfrage: „Nur vergeben
+  und noch frei."
+
+  Neue Schnittstelle `/api/rufzeichen`. Der Server macht das, was ein Mensch auf
+  der Seite auch täte: Seite holen, die versteckten Felder (`__VIEWSTATE`,
+  `__EVENTVALIDATION` …) und das Sitzungs-Cookie mitnehmen, das Rufzeichen ins
+  Suchfeld schreiben, abschicken, im Ergebnis nachsehen. Antwort im Trainer:
+  **„DL1ABC ist vergeben"** in Rot oder **„DL1ABC ist noch frei"** in Grün, mit
+  dem ehrlichen Zusatz, dass eine Sperrfrist trotzdem laufen kann.
+
+  **Was dabei nicht passiert:** keine Namen, keine Adressen — die stehen im
+  Verzeichnis, gehen den Trainer aber nichts an. Kein Sammeln, kein Vorratsabruf:
+  eine Anfrage je Klick, die Antwort liegt höchstens zehn Minuten im Speicher,
+  damit ein zweiter Klick die Behörde nicht noch einmal behelligt. Und nur vom
+  Trainer-Rechner aus (`localOnly`) — sonst könnte jeder mit dem Einladungslink
+  über diesen Server Anfragen schicken.
+
+  **Der Code rät nichts.** Feldnamen und Aufbau gehören der Seite, nicht uns.
+  Deshalb liest er die Namen des Suchfelds und des Knopfes aus der Seite selbst
+  und wertet nur aus, was in Ergebnis-*Tabellen* steht — das Suchfeld enthält das
+  eingetippte Rufzeichen ja auch dann, wenn nichts gefunden wurde. Ist die
+  Antwort nicht eindeutig, sagt er „unklar", und der Trainer fällt auf den alten
+  Weg zurück: Seite öffnen, Rufzeichen in der Zwischenablage. **Eine falsche
+  Auskunft wäre schlimmer als keine.**
+
+  Geprüft gegen ein nachgebautes ASP.NET-Formular: versteckte Felder erkannt,
+  Feld- und Knopfnamen gefunden, Treffer, Nicht-Treffer und Platzhaltersuche
+  (`DB2*K`) richtig gedeutet; in der Anzeige beide Fälle sowie der Rückfall bei
+  fehlender Antwort. **Gegen die echte Seite habe ich nicht testen können** — aus
+  meiner Arbeitsumgebung ist sie nicht erreichbar. Der erste Versuch am
+  Trainer-PC zeigt, ob die Feldnamen passen.
+
+## [1.185.0] - 2026-09-06
+
+### Hinzugefügt
+- **„Rufzeichen prüfen" — eine Zeile unter dem Prüfungstermin.** Dietmar: „Die
+  Bundesnetzagentur hat die Möglichkeit, nach Rufzeichen in Deutschland zu
+  suchen. Hier wäre ein Feld bei Prüfungstermin, wo man schauen kann, ob das
+  Rufzeichen schon vergeben ist."
+
+  Man trägt das Wunschrufzeichen ein und klickt „Nachsehen": Der Trainer legt es
+  in die Zwischenablage und öffnet die
+  [Rufzeichensuche der Bundesnetzagentur](https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx).
+  Dort genügt Strg+V. Der Stern als Platzhalter für ein einzelnes Zeichen
+  (`DB2*K`) ist erlaubt, weil die Suche ihn kennt; alles andere wird aus der
+  Eingabe entfernt.
+
+  **Warum kein Direktlink:** Die Seite der Bundesnetzagentur ist ein
+  ASP.NET-Formular. Solche Seiten schicken ihre Eingaben per POST zusammen mit
+  einem Sitzungsschlüssel — eine Adresse mit angehängtem Rufzeichen gibt es dort
+  nicht. Man könnte eine raten; sie liefe beim nächsten Umbau der Seite still ins
+  Leere, und man sähe nur eine leere Suchmaske ohne zu wissen, warum. Zwei Tasten
+  sind ehrlicher als ein Link, der irgendwann lügt.
+
+  Steht auf den Diplomen schon ein Rufzeichen, ist das Feld beim Start damit
+  vorbelegt. Schlägt die Zwischenablage fehl — der Browser gibt sie nur in
+  sicherem Zusammenhang frei —, gibt es einen zweiten Weg über ein unsichtbares
+  Textfeld, und wenn auch der nicht greift, sagt der Hinweis eben „dort
+  eintragen".
+
+## [1.184.0] - 2026-09-06
+
+### Behoben
+- **Aus dem Diplome-Fenster kamen alle Fragen der Lektion statt nur der
+  fehlenden.** Dietmar: „Bei Diplome steht noch 1 Frage. Ich habe die eine Frage
+  beantwortet und kein Diplom erhalten. Beim nächsten Klick war da eine neue
+  Frage." — und mit Bild nachgereicht: „Da war 1 weiße und 51 hellgrüne", später
+  „Hier fehlen 2 Fragen" bei einer Runde mit dreizehn.
+
+  Der Klick startete die Runde über `lektionRundeStarten()`, und die richtet sich
+  nach den beiden Schaltern der Hauptansicht: „Gelernte ausblenden" und
+  „Gelerntes erneut prüfen". Stand der erste aus, gab `ohneGelernte()` den
+  **ganzen** Stapel zurück — aus „noch 1 Frage" wurden 52. Und weil bei jedem
+  Start neu gemischt wird, stand beim nächsten Klick eine andere Frage da.
+
+  Aus dem Album ist die Absicht eindeutig: Ich will das, was mir zur Karte noch
+  fehlt. Deshalb gelten beide Schalter dort für die Dauer des Starts so, wie es
+  diese Absicht verlangt — danach stehen sie wieder, wie der Benutzer sie gesetzt
+  hat.
+
+- **Ein Klick auf ein Fach, dessen Lektion inzwischen voll ist, gibt die Karte
+  statt einer Runde.** Das Album zeichnet sich nicht von selbst neu, während man
+  daneben lernt. Wer die letzte offene Frage beantwortete und danach dasselbe
+  Fach noch einmal anklickte, klickte auf einen Stand von vorhin — und weil dort
+  nichts mehr offen war, fiel die Runde auf „alles gelernt, dann eben alles
+  wiederholen" zurück. Jetzt wird vorher nachgesehen; ist die Lektion voll,
+  kommt die Karte, bei Bedarf mit Konfetti.
+
+### Werkzeug
+- **Entwürfe und Notizen gehen nicht mehr mit auf GitHub.** Dietmar, mit einem
+  Bild der Rückfrage von `GitHub-Verbinden.bat`: „Ändere das bitte, damit ich
+  keinen Blödsinn auf GitHub poste." Angeboten wurden dort die Musterseiten
+  `_auswertung-vorschlag.html`, `_blaettern-vorschlag.html` und
+  `_drei-ideen-vorschlag.html`. Der Unterstrich am Anfang ist für solche Dateien
+  seit Wochen das Zeichen — ab jetzt reicht er auch aus: `.gitignore` nimmt
+  `_*.html`, `_*.md`, `_*.json` und `_*.txt` heraus. Sie bleiben im Ordner und
+  lassen sich weiter öffnen, tauchen aber in der Rückfrage nicht mehr auf. Soll
+  doch einmal etwas mit Unterstrich hinein, geht das mit einem Ausrufezeichen
+  davor (`!_wichtig.md`).
+
+### Geändert
+- **Die Fächer sagen jetzt, wie viel wirklich noch fehlt.** Eine Frage gilt erst
+  als gelernt, wenn sie **dreimal hintereinander** richtig beantwortet wurde —
+  davon stand im Fach nichts. Auf der Zielgeraden (drei Fragen oder weniger)
+  steht deshalb jetzt „noch 1 Frage · noch 2× richtig". Der Hinweistext beim
+  Überfahren nennt die Regel ebenfalls.
+
+## [1.183.0] - 2026-09-06
+
+### Geändert
+- **Zurück zur Hauptansicht beendet jetzt auch den Gruppenraum.** Dietmar:
+  „Gruppenraum — Raum erstellen — Starten. Wenn ich zurück zum Hauptmenü gehe,
+  muss der Gruppenraum und der Chat beendet werden."
+
+  Bisher galt das nur für „Schließen" im Gruppenraum-Fenster. Wer stattdessen die
+  Runde abbrach, stand wieder in der Hauptansicht — der Raum lief aber weiter,
+  der Chat blieb am Bildschirm, und die Teilnehmer warteten auf einen Gastgeber,
+  der längst woanders war.
+
+  Die Rückfrage sagt vorher, was passiert: beim Gastgeber „Der Gruppenraum wird
+  beendet und der Chat geschlossen — die Teilnehmer werden abgemeldet", beim Gast
+  „Du verlässt den Gruppenraum". Der Lernstand bleibt in beiden Fällen unberührt,
+  er hängt am Benutzer und nicht am Raum.
+
+  Nachgestellt mit zwei Browsern: Gastgeber erstellt den Raum, Gast tritt bei,
+  Runde läuft, Gastgeber bricht ab — Raum zu, Chat weg, Fenster geschlossen, und
+  auch beim Gast ist der Raum beendet.
+
+## [1.182.0] - 2026-09-06
+
+### Behoben
+- **Es sind wieder alle vierzehn Lektionen da — bei jedem Prüfungsziel.** Dietmar,
+  im Bild die Aufstockung E → A: „Es müssten 14 sein! Es fehlen auch die, wo ich
+  noch nicht fertig habe. Anklickbar direkt zu den Fragen. Das Ziel ist, die
+  Benutzer dazu zu bringen, alle Diplome zu erhalten."
+
+  Die Fragen einer Lektion kamen aus `lektionFragen()`, und das durchsucht den
+  **gerade geladenen** Fragenkatalog. Bei einer Aufstockung liegen dort die
+  Fragen der Klasse A — keine einzige Lektion fand ihre Fragen, und übrig blieben
+  nur die schon verdienten Karten. Deshalb lief es vormittags richtig und
+  nachmittags nicht: Dazwischen lag der Wechsel des Prüfungsziels.
+
+  Gezählt wird jetzt aus der Video-Map. Sie enthält genau die 571 Fragen der
+  Klasse N in ihren 14 Lektionen — immer, unabhängig vom geladenen Katalog. Der
+  Lernstand steht ohnehin je Fragennummer, also für alle Kataloge in einem Topf.
+
+- **Ein Klick auf ein leeres Fach führt jetzt auch dann zu den Fragen, wenn ein
+  anderes Ziel eingestellt ist.** Der Trainer fragt einmal nach und schaltet auf
+  Klasse N um, bevor er die fehlenden Fragen der Lektion lädt. Der Kopftext im
+  Fenster sagt vorher, dass das passieren wird.
+
+  Nachgestellt: 14 Fächer bei Klasse N und bei fremdem Katalog, Rückfrage beim
+  Klick, und nach dem Umschalten eine Runde mit genau den offenen Fragen.
+
+## [1.181.0] - 2026-09-06
+
+### Behoben
+- **Der Verlauf war wieder zu lang — und diesmal war die Ursache eine andere.**
+  Dietmar mit einem Bild der Aufstockung E → A: „Der Verlauf von dem Benutzer ist
+  wieder zu lang."
+
+  Zwei Fehler auf einmal:
+
+  **Erstens: Die Messung bestätigte sich selbst.** Beide Spalten stehen
+  nebeneinander in einem Flex-Kasten, und darin wird die kürzere auf die Höhe der
+  längeren gezogen. War der Verlauf einmal zu lang, maß `verlaufHoeheAngleichen()`
+  an der linken Spalte nicht mehr deren Inhalt, sondern genau die zu große Höhe,
+  die sie selbst gesetzt hatte. Der falsche Wert bestätigte sich bei jeder
+  weiteren Messung — kein späterer Aufruf konnte das je geradebiegen. Jetzt wird
+  die Höhenbegrenzung für den Moment der Messung auf null gesetzt: Dann streckt
+  der Verlauf nichts mehr, die linke Spalte fällt auf ihre eigene Höhe zurück,
+  und die wird gelesen. Gezeichnet wird dazwischen nichts.
+
+  **Zweitens: Die drei gestaffelten Messungen decken den Fall nicht ab.** Sie
+  fangen ab, was nach dem Zeichnen noch *dazukommt*. Beim Wechsel des
+  Prüfungsziels passiert das Gegenteil — die linke Spalte wird *kürzer*: Die
+  Prüfungsübersicht der Klasse N hat drei Zeilen, die der Aufstockung E → A nur
+  eine. Statt an jede einzelne Stelle einen Aufruf zu hängen (Zielwechsel,
+  Prüfungstermin, CB-Kasten, Hörbuch-Vorschau, Diplome-Knopf …) schaut jetzt ein
+  Beobachter der linken Spalte beim Wachsen und Schrumpfen zu. Eine Stelle, alle
+  Fälle — auch die, die erst noch dazukommen.
+
+  Nachgestellt: künstlich auf 900 Punkte gesetzt, eine Korrektur später steht
+  wieder der richtige Wert. Beim Wechsel von Klasse N auf E → A liegen beide
+  Unterkanten auf derselben Linie.
+
+## [1.180.0] - 2026-09-06
+
+### Behoben
+- **„0 von 0 Lektionen bestätigt" — die Diplome waren nicht weg, sie standen nur
+  nicht da.** Dietmar: „Meine Diplome sind weg."
+
+  Das Album zeigte ausschließlich Lektionen, die im **gerade eingestellten
+  Prüfungsziel** vorkommen. Die Lektionseinteilung stammt aus dem Videolehrgang,
+  und den gibt es nur für den Katalog der Klasse N — wer auf Klasse E oder eine
+  Aufstockung umschaltet, hat keine einzige Lektion, und damit war die Liste
+  leer, obwohl die Karten unverändert im Lernstand lagen. Dasselbe passierte,
+  wenn das Fenster geöffnet wurde, bevor der Katalog geladen war.
+
+  Jetzt kommen zuerst die verdienten Karten aus dem gespeicherten Stand — immer,
+  egal was eingestellt ist —, und danach die noch offenen Lektionen des
+  aktuellen Ziels. Gibt es für dieses Ziel keine Lektionen, sagt der Kopftext
+  das, statt „0 von 0" zu melden.
+
+## [1.179.0] - 2026-09-06
+
+### Geändert
+- **Die Trennlinie im Beamer-Modus ist jetzt grau statt fast schwarz.** Dietmar:
+  „Grau ist gut. Jetzt ist eine schwarze Linie dabei, die weg muss." Die Farbe
+  der Nebentexte war auf der Leinwand ein schwarzer Balken; die Rahmenfarbe aus
+  dem ersten Versuch war das andere Extrem und verschwand im hellen Grau der
+  Karte. Der neue Wert liegt dazwischen: sichtbar als Trennung, ohne sich
+  vorzudrängen.
+
+## [1.178.0] - 2026-09-06
+
+### Geändert
+- **Aus „Dein Sammelalbum" wird „Deine Diplome 🏆".** Dietmar hat sie von Anfang
+  an Diplome genannt — dann sollen sie auch so heißen. Der Knopf im
+  Lernfortschritt heißt jetzt „Diplome" und trägt einen Pokal statt der
+  Bilderrahmen; Fenstertitel, Hinweis und Vorlesetext sind mitgezogen.
+
+## [1.177.0] - 2026-09-06
+
+### Behoben
+- **Im Beamer-Modus fehlte die Trennlinie zwischen Frage und Antworten.**
+  Dietmar hat sie im Bild rot eingezeichnet: „Im Beamer-Modus fehlt oben eine
+  graue Linie." In der gewöhnlichen Ansicht trennt der Rahmen der Fragenkarte
+  beides — im Beamer-Modus sind Rahmen und Schatten abgeschaltet, damit die
+  Schrift die Leinwand füllt, und damit war auch die Grenze weg.
+
+  Die Linie sitzt jetzt am Antwortenblock, nicht an der Frage: So läuft sie über
+  die volle Breite und nicht nur unter dem grauen Kasten. Sie ist in der
+  Schriftfarbe der Nebentexte gehalten, nicht in der Rahmenfarbe — die Antworten
+  stehen auf demselben hellen Grau wie die Fragenkarte, dort verschwindet eine
+  helle Linie. Nachgesehen in beiden Ansichten, hell und dunkel.
+
+## [1.176.0] - 2026-09-06
+
+### Behoben
+- **„Gelernte ausblenden" wurde nicht vorgelesen.** Dietmar: „In der Hauptansicht
+  fehlt bei ‚Gelernte ausblenden' der Text zum Vorlesen." Der Grund lag eine
+  Ebene tiefer als gedacht: Der Vorleser greift nur bei Elementen mit
+  `data-tooltip`, und dieses Feld hatte keinen — der Nachbar „Gelerntes erneut
+  prüfen" schon, deshalb fiel es auf. Jetzt hat es beides, den kurzen Hinweis
+  für die Maus und den ausführlichen Satz für die Sprachausgabe.
+- **„LAN" klang wie „elan".** Dietmar: „Im gemeinsamen Modus bei der Kachel
+  Offline über LAN sagt es elan oder WLAN." Die Stimme las die drei Buchstaben
+  als Wort. Jetzt wird buchstabiert: L-A-N. „WLAN" bleibt unangetastet — das
+  spricht jeder als ein Wort, und die Stimme trifft es auch. Die Regel steht wie
+  bei DARC und DL2YMR an beiden Stellen: in `Index.html` für die Notstimme des
+  Browsers und in `tts-expand.js` für Piper.
+
+## [1.175.0] - 2026-09-06
+
+### Behoben
+- **„noch 0 Fragen" und trotzdem kein Diplom.** Dietmar: „Es soll den Lernstand
+  übernehmen. Wo 0 Fragen vorhanden sind, sollte auch das Diplom vorhanden
+  sein." Eine Karte fiel bisher nur beim Beantworten einer Frage — wer den
+  Trainer aktualisierte und danach nur das Album öffnete, sah fertige Lektionen
+  als leeres Fach. Jetzt übernimmt das Album beim Öffnen den Lernstand, und beim
+  Start des Trainers geschieht dasselbe einmal still. Ohne Konfetti: Was schon
+  vorher fertig war, wurde nicht gerade eben verdient.
+
+### Hinzugefügt
+- **Leere Fächer sind anklickbar und laden die fehlenden Fragen.** Dietmar: „Die
+  Diplome sollten anklickbar sein und die fehlenden Fragen laden." Ein Klick auf
+  ein noch nicht verdientes Fach schließt das Album und startet eine Runde mit
+  genau den Fragen dieser Lektion, die noch offen sind — das Gelernte bleibt
+  weg. Beim Überfahren hebt sich die Karte und sagt, um wie viele Fragen es
+  geht.
+
+## [1.174.0] - 2026-09-06
+
+### Hinzugefügt
+- **QSL-Karten fürs Sammelalbum.** Dietmar: „Für jede abgeschlossene Lektion
+  bekommst du eine virtuelle QSL-Karte. Sammelalbum im Profil."
+
+  Eine Karte fällt, sobald **jede Frage einer Lektion** abgehakt ist — gezählt
+  wird nur, was im aktuellen Prüfungsziel überhaupt vorkommt. Dann geht ein
+  Fenster mit der Karte auf, mit dem Konfetti, das der Trainer schon hatte.
+
+  **Kein DARC-Design.** Die Vorstandschaft hat entschieden, den Trainer nicht zu
+  übernehmen; das Logo bleibt draußen. Die Karten sind eigene Entwürfe — was
+  ohnehin schöner ist, weil es dann Dietmars Karten sind.
+
+  **Sechs gezeichnete Motive** im Wechsel: Leuchtturm, Burg, Windrad,
+  Gittermast mit Yagi, Küste mit Segelboot, Bake auf dem Berg. Alle als SVG in
+  `Index.html`, keine einzige zusätzliche Bilddatei — was nicht daneben liegt,
+  kann beim Weitergeben auch nicht verlorengehen.
+
+  Die Karte behält die Form einer echten QSL: Rufzeichen groß oben,
+  Bestätigungszeile unten mit Lektionsname, Fragenzahl, Datum, Trefferquote und
+  Klasse. Nur bestätigt sie kein QSO, sondern eine Lektion. Das Rufzeichen ist
+  im Album änderbar; bis dahin steht ein Platzhalter da — die meisten hier haben
+  ja noch keins.
+
+  **Das Album** sitzt neben „Alle Lektionen" im Lernfortschritt. Verdiente
+  Karten zuerst, danach die offenen — und die offenen nach dem, was am wenigsten
+  fehlt, damit oben steht, was als Nächstes zu holen ist. Nicht verdiente Fächer
+  zeigen das Motiv als Schattenriss mit „noch 4 Fragen" und einem Balken: Man
+  ahnt, was einen erwartet, liest aber nicht schon die Bestätigung.
+
+  **Jede Karte lässt sich als PNG speichern** (1000 × 600, also auch gedruckt
+  scharf) — zum Ausdrucken oder in die Gruppe stellen.
+
+  **Beim ersten Mal wird still nachgetragen.** Wer den Trainer seit Wochen
+  benutzt, wird nicht mit vierzehn Karten auf einmal beworfen; die schon
+  fertigen Lektionen liegen einfach im Album.
+
+### Geändert
+- **Die Sicherung nimmt das Sammelalbum mit.** `getAllLocalUserData()` und
+  `data\userdata\amateurfunk_data.json` führen jetzt ein Feld `qsl` — je
+  Benutzer die verdienten Karten, dazu das Rufzeichen. Ohne das wäre die
+  Sammlung beim Wechsel auf einen anderen Rechner weg, und sie ist gerade das,
+  was man nicht noch einmal erarbeiten möchte. Zurückgeholte Karten werden nicht
+  als „gerade eben verdient" gefeiert.
+
+## [1.173.0] - 2026-09-06
+
+### Hinzugefügt
+- **Taschenrechner.** Dietmar: „1. Taschenrechner" — und nach dem Entwurf: „Baue
+  das so ein." Gebaut ist genau der, den die Prüfungsordnung erlaubt. In der
+  Amtsblatt-Verfügung 29/2024 steht als Hilfsmittel „ein einfacher
+  wissenschaftlicher oder nicht programmierbarer Taschenrechner (ohne
+  Textspeicher)": keine Variablen, kein Formelspeicher, keine
+  Wiederholrechnungen. Nicht weil es schwer wäre — sondern weil man sonst etwas
+  übt, das einem im Prüfungsraum weggenommen wird.
+
+  **Die Vorsätze sind der eigentliche Grund** für einen eigenen Rechner. In den
+  Aufgaben steht „4,7 kΩ" und „22 pF", nicht „4700" und „0,000000000022". Hier
+  sind p n µ m k M G eigene Tasten, sie hängen sich direkt an die Zahl, und die
+  Antwort kommt in derselben Sprache zurück.
+
+  **Zwei Schreibweisen gleichzeitig:** groß die, die man an dieser Stelle lesen
+  will, klein darunter die andere. Zwischen 0,1 und 10000 ist das die gewöhnliche
+  Zahl („1024", „0,5"), darüber und darunter der Vorsatz („2,2 µ", „3,5 M").
+
+  **Kein `eval()`.** Der Ausdruck wird selbst zerlegt und nach dem
+  Shunting-Yard-Verfahren gerechnet — in einer Datei, die weitergegeben wird,
+  wäre `eval()` eine offene Tür, und bequemer wäre es hier nicht einmal.
+
+  Der Knopf sitzt in der Fragen-Kopfzeile neben dem Formelblatt und ist auch im
+  Prüfungssimulator erreichbar, denn erlaubt ist der Rechner dort ja auch. Das
+  Fenster schwebt rechts unten statt über der Seite — man muss die Frage lesen
+  können, während man rechnet —, lässt sich am Kopf verschieben und merkt sich
+  seinen Platz. Die Tastatur bedient es mit: Ziffern, Komma, Klammern,
+  Rechenzeichen, Enter, Rücktaste, Esc, und die Vorsatzbuchstaben.
+
+  Durchgerechnet mit dreizehn Proben, darunter `1/(2*π*7,159M*22p)` = 1010,52
+  und `sin(30)` = 0,5, dazu zwei fehlerhafte Eingaben, die sauber „Fehler"
+  ergeben statt etwas Falsches.
+
+## [1.172.0] - 2026-09-06
+
+### Hinzugefügt
+- **„Rest abarbeiten" — ein drittes Feld über die ganze Breite.** Dietmar: „Ich
+  habe 485 Fragen und würde gerne die 86, die noch fehlen, abarbeiten. Darunter
+  ein drittes Feld, was über die ganze Breite von dem Feld geht, wo steht: 86
+  Fragen sind noch zu lernen." Genau das steht jetzt unter den beiden Kacheln,
+  im selben Zuschnitt, aber über die volle Breite und in einem warmen Ton — es
+  ist weder der ganze Katalog noch das Abgehakte, sondern die Arbeit, die noch
+  vor einem liegt. Ein Klick geht nur durch die Fragen, die noch nicht abgehakt
+  sind, in der Reihenfolge des Katalogs; das Lesezeichen des normalen Blätterns
+  bleibt liegen.
+
+### Behoben
+- **Die Zeile „Bei der ersten offenen Frage" aus 1.171.0 zeigte sich bei
+  Dietmar nie.** Sie erschien nur, wenn die erste offene Frage nicht ohnehin die
+  nächste war — und da sein Lesezeichen am Kataloganfang liegt, war genau das
+  immer der Fall. Das neue Feld hat diese Bedingung nicht: Es steht da, solange
+  überhaupt etwas offen ist, und verschwindet erst, wenn alles abgehakt ist.
+
+## [1.171.0] - 2026-09-06
+
+### Geändert
+- **Das Blätter-Fenster ist neu aufgebaut — zwei Kacheln statt vier Knöpfe.**
+  Dietmar: „Blättern gefällt mir so nicht. Mache mir Vorschläge." Nach drei
+  Entwürfen: „B — Zwei Kacheln, aber nicht mit Text, sondern Buttons darunter."
+
+  Vorher standen vier Wege gleichzeitig da, und der breite grüne Kasten „Nur die
+  gelernten ansehen" sah aus wie der Hauptknopf, war es aber nicht. Dazu ein
+  Zahlenkasten „Dein Stand" mit zwei Zahlen ohne Bezug — 8 wovon, 458 von wie
+  vielen?
+
+  Jetzt steht die eigentliche Frage da: ganzer Katalog oder nur das Abgehakte?
+  Beides als gleich große Kachel, jede mit ihrer Zahl und ihrem Balken, und ein
+  Klick auf die Kachel startet. Die Balken laufen beim Öffnen auf. „Neu
+  beginnen" und „Stand löschen" stehen als Knöpfe in der Fußzeile.
+
+  Die linke Kachel sagt drei verschiedene Dinge: „571 Fragen" beim ersten Mal,
+  „8 von 571" mit Lesezeichen, „Am Ende" nach der letzten Frage. Ohne abgehakte
+  Fragen fällt die rechte Kachel weg und die linke füllt die Breite.
+
+### Hinzugefügt
+- **„Bei der ersten offenen Frage" — der dritte Weg aus Vorschlag C, unter den
+  Kacheln.** Dietmar: „C — Wo soll ich anfangen? Das darunter in B mit
+  integrieren." Wer 458 von 571 Fragen abgehakt hat, klickt sich beim Blättern
+  sonst durch hunderte Fragen, die er längst kann. Diese Zeile setzt direkt an
+  der ersten Frage an, die noch nicht abgehakt ist; das Lesezeichen wandert von
+  dort aus weiter wie sonst. Sie steht nur da, wenn sie auch etwas spart.
+
+### Behoben
+- **Ein Satz stand doppelt.** Beim ersten Öffnen — also ohne Lesezeichen —
+  stand „Blättern geht alle Fragen der Reihe nach durch." als Ansage und direkt
+  darunter noch einmal als Erklärung. Jetzt steht er einmal.
+
+## [1.170.0] - 2026-09-06
+
+### Geändert
+- **Die Balken der Prüfungsreife reichen weiter nach links.** Dietmar: „Sieht
+  gut aus. Nach links kann man den noch etwas verlängern?" Die Namensspalte geht
+  von 132 auf 108 Punkte, der Balken wächst damit bei 1500 Punkten Fensterbreite
+  von 206 auf 230. Weiter geht es nicht: „Vorschriften" misst in dieser Schrift
+  rund 90 Punkte, und sobald der Name umbricht, wird die Zeile höher und die
+  drei Balken stehen nicht mehr in gleichem Abstand. Nachgemessen bei 1920,
+  1500, 1280 und 1100 Punkten: alle drei Zeilen gleich hoch, kein Umbruch.
+
+## [1.169.0] - 2026-09-06
+
+### Geändert
+- **Die Balken der Prüfungsreife sind rund ein Drittel länger.** Dietmar: „Bei
+  Vorschriften habe ich den grünen Balken etwas verlängert. Hier ist mehr Platz
+  vorhanden. Bitte nutze ihn." Die Namensspalte ist von 150 auf 132 Punkte
+  zusammengerückt („Vorschriften" ist das längste Wort) und die Zahlenspalte von
+  118 auf 86 — die Zahlen stehen in der Schreibmaschinenschrift, ihre Breite ist
+  bekannt. Der gewonnene Platz geht an den Balken: bei 1500 Punkten
+  Fensterbreite von 156 auf 206 Punkte.
+
+  Die Werte bleiben fest und werden nicht automatisch berechnet: Jede Zeile ist
+  ein eigenes Raster, und bei „auto" wäre die Spalte in der Zeile mit „zu wenig"
+  breiter als in der mit „sitzt" — die Balken stünden dann treppenförmig.
+
+### Hinzugefügt
+- **Die Balken laufen beim Öffnen auf.** Dietmar: „Beim Aufrufen der Statistik
+  soll der Balken so aussehen, als wird er frisch eingelesen." Sie starten bei
+  null und wachsen in 0,9 Sekunden auf ihren Wert, um 0,14 Sekunden versetzt
+  von oben nach unten — so liest es sich als Einlesen und nicht als Ruck.
+
+## [1.168.0] - 2026-09-06
+
+### Geändert
+- **Auswertung & Sicherung: rechts steht jetzt ein eigener Kasten in hellem
+  Grau.** Dietmar: „Hebe die rechte Seite mit einem hellen Hellgrau etwas ab,
+  damit es auch farblich wie zwei Teile aussieht." — und: „Zwischen links und
+  rechts zu den Buttons ist eine Höhendifferenz." Beides erledigt derselbe
+  Handgriff: Der rechte Kasten hat denselben Zuschnitt wie die Prüfungsreife
+  links — gleicher Radius, gleiche Linie, gleicher Innenabstand, nur in Grau
+  statt im hellen Blau. Weil beide Spalten gleich hoch sind, liegen ihre
+  Unterkanten damit genau aufeinander. Vorher verglich das Auge die Kastenkante
+  links mit dem Knopf „Als Datei sichern" rechts — zwei verschiedene Dinge, und
+  darum sah es schief aus.
+
+## [1.167.0] - 2026-09-06
+
+### Geändert
+- **Auswertung & Sicherung: der Kasten „Prüfungsreife" reicht bis nach unten.**
+  Dietmar: „Hier ist auch etwas nicht synchron. Die Auswertung links ist kürzer
+  als die Sicherung. Verlängere die Prüfungsreife etwas in die Tiefe, damit es
+  rechts synchron ist." Die rechte Spalte — Trefferquote, Stolpersteine,
+  Auffrischung, Lernstand sichern — ist fast immer länger; der Rahmen links
+  hörte mitten im Fenster auf, während rechts noch Text kam. Jetzt sind beide
+  Spalten gleich hoch und der Rahmen füllt seine Spalte aus. Einspaltig (Handy,
+  schmales Fenster) behält er seine natürliche Höhe — dort steht ohnehin alles
+  untereinander. Nachgemessen bei 1920, 1280, 900 und 412 Punkten.
+
+## [1.166.0] - 2026-09-06
+
+### Geändert
+- **Die drei Sinnbilder bleiben oben stehen.** Dietmar: „Die drei Bilder
+  switchen mit runter. Die sollen bei bereits gelerntes unterhalb bleiben." —
+  „auf der Höhe von Dein Name." In 1.165.0 waren sie mit an den Fuß der Spalte
+  gerutscht, um dort mit der Knopfreihe einen Block zu bilden. Jetzt stehen sie
+  wieder fest im Textfluss, direkt unter „Bereits gelernte Fragen" und damit auf
+  einer Höhe mit dem Kasten „Dein Name" links. An den Fuß geht nur noch die
+  Knopfreihe; der freie Platz sammelt sich darüber. Die Unterkanten beider
+  Spalten liegen weiterhin auf einer Linie.
+
+## [1.165.0] - 2026-09-06
+
+### Behoben
+- **„Neue Runde": die Schrift lief über den Rand.** Im HTML haben alle drei
+  Knöpfe die Grundbreite `1 1 140px`, `neueRundeKnopfNachziehen()` setzte beim
+  Einblenden aber `1 1 0`. Bei ungleicher Grundbreite bekommt der Knopf mit der
+  kleineren am wenigsten Platz — „Neue Runde" wurde schmaler als seine eigene
+  Beschriftung. Jetzt setzt die Funktion dieselbe Grundbreite wie die anderen.
+- **Die Knöpfe können nicht mehr schmaler werden als ihre Beschriftung.** Das
+  `min-width:0` ist raus; damit greift wieder die eingebaute Untergrenze
+  (Mindestbreite = Textbreite). Zusätzlich rücken die Seitenabstände in diesen
+  beiden Reihen von 1,1 rem auf 0,6 rem zusammen — drei Knöpfe in einer halben
+  Fensterbreite brauchen jeden Punkt. Reicht es trotzdem nicht, rutscht der
+  letzte Knopf in eine zweite Zeile, statt hinauszulaufen. Nachgemessen bei
+  1920, 1600, 1440, 1366, 1280, 1150, 1100, 1024, 900, 768 und 412 Punkten
+  Fensterbreite, jeweils mit erstelltem Raum: nirgends ein Überlauf.
+- **Die rechte Spalte hängt nicht mehr durch.** Dietmar: „Wenn ich das Feld
+  Dein Name öffne, Gruppenraum Konfiguration — ist es auf der rechten Seite
+  nicht mehr synchron." Beim Aufklappen wächst die linke Spalte, die rechte
+  nicht; die Knopfreihe blieb am Fuß stehen und ließ mitten in der rechten
+  Spalte ein Loch. Jetzt bilden die drei Sinnbilder und die Knopfreihe
+  zusammen den Fuß der rechten Spalte — der freie Platz sammelt sich an einer
+  Stelle oberhalb, statt sich dazwischenzuschieben. Die Unterkanten beider
+  Spalten liegen weiterhin auf einer Linie.
+- **Läuft ein Raum, fällt die leere Zeile links weg.** „Raum erstellen" und
+  „Raum beitreten" werden dann ausgeblendet; ihr Kasten blieb mit seinem
+  Innenabstand stehen und machte die linke Spalte länger als nötig.
+
+## [1.164.0] - 2026-09-06
+
+### Geändert
+- **Die Knopfreihen stehen jetzt in ihren Spalten, auf einer Höhe.** Dietmar mit
+  einem Bild dazu: „Baue die Buttons so ein wie auf dem Bild. Schließen nach
+  rechts und Starten nach links. Baue es so ein, dass alle Buttons zu sehen sind
+  und nicht überlaufen."
+
+  „Raum erstellen | Raum beitreten" schließt die linke Spalte ab und liegt bündig
+  an ihrer linken Kante; „Jetzt starten | Neue Runde | Schließen" schließt die
+  rechte Spalte ab und liegt bündig an der rechten. Weil beide Spalten
+  verschieden lang sind, werden sie gleich hoch gezogen und die letzte Reihe
+  jeweils an den Fuß geschoben — so liegen beide Reihen auf einer Linie.
+
+  Die feste Höchstbreite von 560 Punkten ist weg, die Spalte gibt die Breite
+  jetzt vor. Damit nichts seitlich hinausläuft, dürfen die Knöpfe umbrechen:
+  Sind sie zu dritt und ist die Spalte zu schmal — am Handy —, rutscht
+  „Schließen" in eine zweite Zeile, statt aus dem Fenster zu ragen.
+
+  Nachgemessen bei 1600×1000, 1280×800 und 412×915, jeweils mit und ohne „Neue
+  Runde": beide Reihen auf derselben Höhe, bündig an ihren Außenkanten, kein
+  seitlicher Überlauf.
+
+## [1.163.0] - 2026-09-06
+
+### Geändert
+- **Die drei Knöpfe im Gruppenraum sind bündig.** Dietmar: „Jetzt starten, Neue
+  Runde und Schließen muss bündig sein." Vorher nahm sich „Jetzt starten" den
+  ganzen übrigen Platz, die anderen beiden standen in ihrer natürlichen Breite
+  daneben. Jetzt teilen sich alle drei die Zeile zu gleichen Teilen und sind
+  gleich hoch. Fehlt „Neue Runde" — den sieht nur der Gastgeber —, teilen die
+  übrigen zwei die Breite unter sich auf, statt eine Lücke stehen zu lassen.
+
+### Hinzugefügt
+- **Drei Sinnbilder in der rechten Spalte des Gruppenraums.** Dietmar hat sie
+  gezeichnet und weiß geliefert; hier stehen sie im Dunkelblau der Kopfzeile und
+  füllen die Fläche, die durch die neue Zweispaltigkeit frei geworden war.
+
+  | Bild | Beschriftung | beim Überfahren |
+  |---|---|---|
+  | Mensch am Rechner mit Funkwellen | Online übers Internet | „Der Einladungslink führt über den Tunnel zu diesem Rechner. Teilnehmer kommen von überall herein — aus dem Nachbarort genauso wie aus dem Mobilfunk." |
+  | Funkwellen | Offline über LAN | „Im selben WLAN geht es auch ganz ohne Internet: Die Adresse mit 192.168 genügt. Für den Kursabend im Vereinsheim heißt das — kein Netz nötig, und keine Frage verlässt euer Netzwerk." |
+  | Handy mit Funkwellen | Computer, Handy und Tablet | „Jedes Gerät mit einem Browser macht mit: Windows, Mac, Linux, Android, iPhone. Kein Konto, keine Anmeldung, keine App aus dem Store — der Link genügt." |
+
+  Die Bilder wurden auf ihren Inhalt zugeschnitten, quadratisch ausgerichtet, auf
+  192 Punkte gebracht und eingefärbt — die Deckkraft blieb dabei erhalten, nur
+  die Farbe wurde gesetzt. Sie stecken als **Data-URI in Index.html**, nicht als
+  eigene Dateien: So können sie beim Weitergeben nicht verlorengehen und
+  brauchen keinen Eintrag im Installationsprogramm. Index.html wächst dadurch um
+  rund 36 KB.
+
+  Die Beschriftung ist auch die Sprechblase — wer das Vorlesen eingeschaltet
+  hat, bekommt sie mit.
+
+### Geprüft
+Bei 1600 × 1000: drei gleich breite Karten zu je 159 Punkten in der rechten
+Spalte, die Knöpfe je 290 Punkte breit und 42 hoch. Keine Skriptfehler.
+
+---
+
+## [1.162.0] - 2026-09-06
+
+### Geändert
+- **Die beiden großen Fenster sind jetzt breit und zweispaltig.** Dietmar:
+  „Auswertung & Sicherung und Gemeinsamer Modus etwas breiter gestalten.
+  Rechteckig horizontal. Wir haben so viel Platz und ziehen uns da so ein
+  knappes längliches Fenster rein? Das kann man schöner aufbauen."
+
+  Beide waren auf **480** beziehungsweise **560 Punkte** Breite gedeckelt und
+  stapelten alles untereinander — auf einem Bildschirm mit 1900 Punkten eine
+  Röhre, durch die man scrollt. Jetzt **1020** und **1040 Punkte**, und der
+  Inhalt steht nebeneinander:
+
+  | Fenster | links | rechts |
+  |---|---|---|
+  | **Gemeinsamer Modus** | Adresse, Einladungslink, Name, Passwort, Konfiguration, Raum anlegen | Raum-Code, Teilnehmer, Status, gelernte Fragen |
+  | **Auswertung & Sicherung** | Prüfungsreife | Trefferquoten, Stolpersteine, Auffrischung, Lernstand sichern |
+
+  Die Knopfreihe unten im Gruppenraum bleibt bewusst schmal: Ein 900 Punkte
+  breiter Startknopf sieht nicht nach Sorgfalt aus, sondern nach einem
+  Versehen.
+
+  **Am Handy und Tablet fällt alles wieder untereinander** — dort ist eine
+  Spalte richtig. Dasselbe gilt für ein schmal gezogenes Fenster am Rechner
+  (unter 760 Punkten).
+
+### Geprüft
+412 × 915 und 820 × 1180: je eine Spalte, nichts läuft seitlich über.
+1280 × 800 und 1600 × 1000: zwei Spalten zu je rund 480 Punkten, Fenster 867
+bis 1092 Punkte breit. Keine Skriptfehler.
+
+---
+
+## [1.161.0] - 2026-09-06
+
+### Behoben
+- **Die eigene Adresse nimmt jetzt auch http.** Die Prüfung von gestern war zu
+  streng: Sie ließ nur `https` zu, mit dem Hinweis, dass die App auf dem
+  Startbildschirm sonst nicht läuft. Das stimmt — aber sie machte damit genau
+  den Test unmöglich, um den es gerade geht: **Kommt von außen überhaupt etwas
+  an meinem Anschluss an?** Dafür braucht es `http://adresse:3000`, und der
+  Trainer selbst läuft darüber tadellos.
+
+  Statt einer Ablehnung steht jetzt eine Warnung da: „Gesetzt — aber ohne
+  https. Der Trainer läuft darüber, die App auf dem Startbildschirm und das
+  Mikrofon jedoch nicht." Fehlt der Vorsatz ganz, wird weiterhin `https://`
+  ergänzt; wer bewusst `http://` schreibt, bekommt es auch.
+
+### Geprüft
+`http://amateurfunk-trainer.duckdns.org:3000` wird angenommen, der
+Einladungslink lautet danach
+`http://amateurfunk-trainer.duckdns.org:3000/?duo=EYEXWT` und die Warnung steht
+darunter. Eingabe ohne Vorsatz wird weiterhin zu `https://…`, dort mit grüner
+Bestätigung. Keine Skriptfehler.
+
+---
+
+## [1.160.0] - 2026-09-06
+
+### Hinzugefügt
+- **Eigene feste Adresse im Gruppenraum.** Dietmar: „Ich habe einen DNS bei
+  DuckDNS erstellt. Ich kann das im Gruppenraum nicht bei dem Link eingeben."
+
+  Stimmt — das Feld „Server-URL" war auf `readonly` gestellt. Es zeigte nur,
+  was cloudflared beim Start ausgewürfelt hatte. Für den Regelfall war das
+  richtig: Eine von Hand eingetippte Adresse, die auf nichts zeigt, erzeugt
+  Einladungslinks, die bei niemandem aufgehen.
+
+  Jetzt steht ein Knopf **Eigene Adresse** daneben: einmal drücken, Feld ist
+  offen, Adresse eintragen, noch einmal drücken, gespeichert. Sie hat ab dann
+  **Vorrang** vor der automatischen Erkennung — kein Tunnelstart und kein
+  Wächter überschreibt sie mehr. Leer speichern nimmt sie wieder zurück.
+
+  Drei Kleinigkeiten, die dabei nötig waren:
+  - **`https://` wird ergänzt**, wenn es fehlt, und ein Schrägstrich am Ende
+    entfernt — sonst entstünde `…org//?duo=ABC`. Vor dem Fragezeichen kommt
+    einer hinzu, damit Messenger den Link als Link erkennen.
+  - **Nur https wird angenommen.** Über http lässt kein Browser einen Service
+    Worker zu — die App auf dem Startbildschirm liefe also nicht, und das
+    Mikrofon bekäme auch keine Freigabe.
+  - **Die Tunnelprüfung wird übersprungen.** Der Server kann eine fremde
+    Adresse nicht prüfen, er kennt nur seinen eigenen Tunnel. Ohne diese
+    Ausnahme hinge der Link für immer auf „wird geprüft", und der Gastgeber
+    bekäme nie einen zum Verschicken.
+
+- Die Anleitung unter **Info ▸ Prüfung & Kurs** beschreibt das Feld.
+
+### Geprüft
+Eingabe `amateurfunk-trainer.duckdns.org/` wird zu
+`https://amateurfunk-trainer.duckdns.org`, der Einladungslink lautet danach
+`https://amateurfunk-trainer.duckdns.org/?duo=SW2ZKB`. Nach dem Leeren gilt
+wieder der automatisch erkannte Tunnel. Keine Skriptfehler.
+
+---
+
+## [1.159.0] - 2026-09-06
+
+### Geändert
+- **Die Prüfungsreife ist von der Hauptansicht in die Statistik gewandert.**
+  Dietmar: „Zu groß für die Hauptansicht. Besser wäre, wenn wir Prüfungsreife
+  unter Statistik verschieben." Er hat recht — der Kasten ist eine Auswertung,
+  und Auswertungen holt man sich, wenn man sie sehen will, statt sie dauernd vor
+  sich zu haben. Die Hauptansicht ist damit wieder so kurz wie vorher.
+
+  Er steht jetzt **ganz oben** im Fenster „Auswertung & Sicherung" — vor der
+  Tabelle mit den Trefferquoten. Das ist auch inhaltlich die richtige
+  Reihenfolge: erst die Antwort auf „Reicht es?", dann die Einzelheiten.
+
+  Die Knöpfe **Video** und **Üben** schließen das Statistik-Fenster, bevor sie
+  loslegen. Sonst landete man hinter einem offenen Fenster.
+
+- Die Anleitung unter **Info ▸ Lernen** nennt den neuen Ort.
+
+---
+
+## [1.158.0] - 2026-09-06
+
+### Hinzugefügt
+- **Prüfungsreife statt Prozentzahl.** Der neue Kasten steht in der Hauptansicht
+  zwischen der Prüfungsübersicht (was verlangt wird) und dem Lernfortschritt
+  (was schon sitzt) — genau dazwischen liegt die Frage, die er beantwortet:
+  **Reicht es?**
+
+  Bisher stand dort „Technik 61 %". Das ist eine Zahl über die *Vergangenheit*:
+  über alle Antworten, die je gegeben wurden, auch die vom ersten Lernabend.
+  Jetzt steht dort ein erwarteter Punktestand — **„16 von 25"**, daneben die
+  Bestehensgrenze als senkrechter Strich im Balken, und darüber ein Satz in
+  Klartext: *„Heute würdest du an Technik N scheitern. Dir fehlen dort im
+  Schnitt 3,5 Punkte zur Bestehensgrenze."*
+
+  Ist ein **Prüfungstermin** eingetragen, kommt das Tagespensum dazu. Es zählt
+  bewusst genauso wie die Anzeige am Terminfeld darunter — zwei Zahlen
+  nebeneinander, die verschieden zählen, wiegen schwerer als eine, die fehlt.
+
+  Darunter **„Wo es klemmt"**: die drei Lektionen des Videolehrgangs, in denen
+  die meisten offenen Fehler stecken, jede mit einem Knopf ins Video und einem
+  in die Übung. Die Zuordnung Frage → Lektion lag ohnehin schon vor; sie trifft
+  die Themen besser als der grobe Prüfungsteil.
+
+### Wie die Zahl zustande kommt
+Nicht als Trefferquote über alles Bisherige, sondern als **Vorhersage für einen
+echten Bogen**. Für jede Frage des Prüfungsteils wird geschätzt, wie
+wahrscheinlich sie richtig beantwortet würde; der Mittelwert mal 25 ist der
+erwartete Punktestand — denn genau 25 Fragen werden aus diesem Topf gezogen.
+
+| Zustand der Frage | Schätzung |
+|---|---|
+| gilt als gelernt | 0,95 |
+| im Lernbedarf | 0,35 + 0,15 je richtiger Antwort in Folge, höchstens 0,80 |
+| schon beantwortet | aus richtig/falsch, geglättet mit dem Schnitt des Teils; zuletzt richtig hebt auf mindestens 0,75 |
+| noch nie gesehen | der Schnitt des Teils |
+
+Die Glättung ist der wichtige Teil: Eine Frage, die einmal richtig war, ist nicht
+zu hundert Prozent sicher. Ohne sie wäre die Vorhersage nach dem ersten Abend
+viel zu optimistisch.
+
+**Was bewusst nicht dasteht:** keine Prozentzahl mit Nachkommastelle. „73,4 %
+Bestehenswahrscheinlichkeit" wäre eine Genauigkeit, die es nicht gibt. Deshalb
+steht dort eine Punktzahl und ein Wort — sitzt, knapp, zu wenig. Und der Kasten
+erscheint erst, wenn in einem Prüfungsteil **25 Fragen** beantwortet sind; eine
+Vorhersage aus drei Antworten wäre geraten, und geraten hilft niemandem. Teile,
+die noch zu wenig haben, sagen das in ihrer Zeile.
+
+Die Ansage richtet sich immer nach dem **schwächsten** Teil: In der Prüfung muss
+jeder Teil einzeln bestanden werden, ein guter gleicht keinen schlechten aus.
+
+- Die Anleitung unter **Info ▸ Lernen** beschreibt den Kasten.
+
+### Geprüft
+Mit erfundenem Lernstand (Vorschriften stark, Betrieb mittel, Technik schwach):
+24 / 20 / 16 von 25, Ansage und Farben stimmen, das Tagespensum nennt dieselbe
+Zahl wie das Terminfeld darunter (501 offen, 11 am Tag). Der Knopf **Üben**
+startet eine Runde mit genau den 18 Fragen der Lektion. Während einer Runde ist
+der Kasten ausgeblendet, am Handy steht er untereinander und nichts läuft
+seitlich über. Ohne Daten erscheint er gar nicht. Keine Skriptfehler.
+
+---
+
 ## [1.157.0] - 2026-09-06
 
 ### Hinzugefügt

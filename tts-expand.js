@@ -66,6 +66,10 @@ function expandTTS(text){
   // klingt es wie ein Nieser - buchstabiert ist es das, was jeder Funker
   // erwartet. Auch diese Regel steht doppelt, hier und in Index.html.
   t = t.replace(/\bDL2YMR\b/gi, 'D-L-2-Y-M-R');
+  // "LAN" als Wort klingt wie "elan". Buchstabiert ist es eindeutig.
+  // "WLAN" bleibt, wie es ist - das trifft die Stimme von selbst.
+  // Dieselbe Regel steht in Index.html in der Tabelle AUSSPRACHE.
+  t = t.replace(/(?<![A-Za-zÄÖÜäöüß])LAN\b/g, 'L-A-N');
 
   // FIX: "Antennenanlage" liest Piper wie "Andenanlage" - der mittlere Teil
   // des langen Kompositums geht verloren. Ein Bindestrich an der Nahtstelle
