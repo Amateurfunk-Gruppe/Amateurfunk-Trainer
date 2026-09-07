@@ -68,7 +68,9 @@ weiterhin aus allen 571** — genau wie die Bundesnetzagentur.
 - **Prüfungstermin** eintragen, der Trainer rechnet das Tagespensum aus
 - **Durchsehen** — alle Fragen der Reihe nach, mit Lesezeichen an der Stelle,
   an der du aufgehört hast
-- **Bedienung per Tastatur** für Menschen, die keine Maus benutzen können
+- **Nachteilsausgleich** — Vorlesen, Tastaturbedienung, Antwort zurücknehmen,
+  automatisch weiterblättern, größere Bilder und verlängerte Prüfungszeit,
+  alles einzeln an- und abschaltbar ([mehr dazu](#nachteilsausgleich))
 
 ### Beim Lernen
 
@@ -149,6 +151,86 @@ mit eigenem Symbol auf dem Handy und startet **ohne Adressleiste** — wie eine
 installierte App. Dafür muss die Seite über **https** erreichbar sein: über den
 Tunnel-Link also ja, über die nackte LAN-Adresse (`http://192.168.…`) nicht.
 Dort läuft der Trainer trotzdem, nur eben ohne Symbol.
+
+### Nachteilsausgleich
+
+Die Amateurfunkprüfung ist eine schriftliche Prüfung am Bildschirm, und nicht
+jeder kann sie so ablegen, wie sie gedacht ist. Die Bundesnetzagentur trägt dem
+Rechnung: Nach der Amtsblatt-Verfügung 29/2024 sind „Menschen mit Behinderung
+ihrer Behinderung entsprechende Erleichterungen bei der Prüfungsdurchführung zu
+gewähren". Wer das braucht, legt bei der Anmeldung ein ärztliches Attest oder
+einen vergleichbaren Nachweis bei; über Art und Umfang entscheidet die
+zuständige Stelle im Einzelfall — bis hin zur Einzelprüfung oder einer
+mündlichen Abnahme.
+
+Der Trainer bringt alles, was sich davon üben lässt, an **einer** Stelle
+zusammen: **Einstellungen → Nachteilsausgleich**. Nichts davon ist vorgegeben,
+jede Funktion lässt sich einzeln an- und abschalten.
+
+![Der Reiter „Nachteilsausgleich" in den Einstellungen](bilder/11-nachteilsausgleich.png)
+
+**Vorlesen.** Die Sprachausgabe läuft über [Piper](https://github.com/rhasspy/piper)
+— **lokal auf dem eigenen Rechner, ohne Internet**, mit vier deutschen Stimmen
+zur Auswahl und einer Hörprobe. Abkürzungen werden vor dem Sprechen
+ausgeschrieben: aus „145 MHz" wird „145 Megahertz", aus „LAN" nicht „elan".
+Wahlweise wird **jede Frage automatisch** gesprochen, und die **Antwort mit
+Sprachausgabe bestätigt** — bei einem Fehler gleich mit der richtigen Antwort
+dazu, damit man sich nicht durch vier Kacheln tasten muss. Im
+Prüfungssimulator schweigt der Trainer an dieser Stelle: Dass es richtig war,
+erfährt man in der echten Prüfung auch nicht.
+
+**Knöpfe vorlesen.** Wer mit der Maus über einen Knopf fährt oder mit der
+Tabulatortaste dorthin springt, bekommt gesagt, was er tut — wahlweise **kurz**
+(nur der Name) oder **ausführlich** (in ganzen Sätzen, so wie man es jemandem
+erklärt, der daneben sitzt). Jede Funktion im Trainer hat dafür einen eigenen,
+von Hand geschriebenen Satz; im Reiter Nachteilsausgleich selbst hat ihn jedes
+einzelne Kästchen und jedes Auswahlfeld.
+
+**Schrift beim Vorlesen vergrößern.** Die Antwort, die gerade gesprochen wird,
+tritt hervor und wird größer — Auge und Ohr bleiben zusammen.
+
+**Bedienung per Tastatur.** Die Tasten **1 bis 4** beantworten die Frage,
+**Enter** blättert weiter, die **Rücktaste** zurück. Zusätzlich wird jede
+Rückmeldung für Vorleseprogramme angesagt. Ohne Haken bleibt alles wie bisher —
+mit der Tabulatortaste lassen sich die Antworten so oder so anspringen.
+
+**Antwort zurücknehmen.** Ein Fehlklick ist keine falsche Antwort, sondern eine
+verrutschte Hand. Nach dem Antworten steht **Zurücknehmen** in der Knopfreihe
+unter der Frage, alternativ **Strg+Z**. Zurückgenommen wird *alles*, was die
+Antwort ausgelöst hat: die Wertung, die Fehlerliste, der Lernbedarf mit seinen
+Zählern und der Lernfortschritt. Es gilt für die gerade offene Frage — wer
+weiterblättert, lässt die Antwort stehen.
+
+**Automatisch weiterblättern.** Nach der Antwort geht es ohne Klick zur
+nächsten Frage, wahlweise nach 2, 3, 5, 8 oder 12 Sekunden — beim Lernen, im
+Prüfungssimulator und im Gruppenraum. Im Knopf läuft ein sichtbarer Zähler
+mit. Zwei Dinge sind dabei fest eingebaut: Solange **vorgelesen** wird, steht
+der Zähler still — die Ansage wird nie abgeschnitten. Und die **letzte Frage
+bleibt stehen**; ins Ergebnis mit Auswertung und Konfetti geht es nur auf
+Klick. Jede Taste und jeder Klick halten den Zähler an.
+
+**Bilder stärker vergrößern.** Fährt man über ein Schaltzeichen, wächst es an
+seiner Stelle. Wie weit, ist einstellbar — von *ein Drittel größer* bis *so groß
+wie möglich*. Gemessen an einem 120 × 80 großen Schaltzeichen sind das 392
+Punkte in der Grundeinstellung und bis zu 917 Punkte in der größten Stufe.
+
+**Verlängerte Prüfungszeit.** Der Prüfungssimulator und die Prüfungsübersicht
+rechnen dann mit mehr Zeit, damit das Üben dem entspricht, was am Prüfungstag
+gilt. Zur Wahl stehen ein Viertel, ein Drittel (aus 45 Minuten werden 60), die
+Hälfte oder die doppelte Zeit.
+
+> **Wichtig, und im Trainer steht es genauso:** Es gibt **keine feste Zahl**.
+> In der Verfügung 29/2024 stehen nur die regulären Zeiten — 45 Minuten je
+> Teil, 60 Minuten für Technik Klasse A — und der Satz zu den Erleichterungen.
+> *Wie viel* mehr Zeit gewährt wird, entscheidet die Bundesnetzagentur im
+> Einzelfall. Was hier eingestellt ist, gilt also nur zum Üben und ist keine
+> Zusage.
+
+Dazu passt, was an anderer Stelle schon da ist: die **Anzeigegröße** unter
+*Einstellungen → Allgemein*, getrennt für die normale Ansicht und für das
+Vollbild, in Fünferschritten von 60 bis 115 Prozent — der Trainer muss auch auf
+einem 15-Zoll-Laptop vollständig auf den Bildschirm passen. Und der
+**Beamer-Modus** (Strg+B) zeigt nur Frage und Antworten, dreimal so groß.
 
 ### Statistik und Lernfortschritt
 
