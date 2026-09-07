@@ -103,6 +103,74 @@ let tunnelProcess = null;
 let tunnelUrlCache = null;
 let tunnelStarting = false;
 
+// ================================================================
+//  DIE TUNNEL-WACHE
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Ich moechte, dass wenn ich im Gruppenraum
+//  einen Raum starte, der Server laeuft. Der Trainer muss auch ueber
+//  Stunden laufen, ohne dass ich am Rechner aktiv bin. Der Trainer muss
+//  mit Cloudflare Handshake machen und immer wieder sagen 'ich bin da',
+//  damit der zufaellig generierte Raum nicht geschlossen wird."
+//
+//  Was VORHER passierte, wenn cloudflared aus irgendeinem Grund
+//  wegbrach: gar nichts. Der Prozess war weg, tunnel_url.txt geloescht,
+//  der Einladungslink tot - und niemand hat es gemerkt, bis der erste
+//  Teilnehmer anrief. Es gab keinen einzigen Versuch, ihn wieder
+//  aufzubauen.
+//
+//  Jetzt gibt es zwei Dinge:
+//
+//  1. DER PULS. Alle vier Minuten ruft der Server seine EIGENE
+//     oeffentliche Adresse auf (/api/tunnel-status, die einzige Route,
+//     die von aussen erreichbar sein muss). Das ist genau das
+//     "ich bin da" - und es ist mehr als Hoeflichkeit: Diese Anfrage
+//     laeuft ueber die Leitung, die cloudflared zu Cloudflare haelt,
+//     und haelt damit die NAT-Eintraege in Router und Fritzbox offen.
+//     Genau die laufen bei UDP (QUIC) sonst nach ein paar Minuten
+//     Ruhe ab, und dann bricht die Verbindung - der bekannte Fehler
+//     "timeout: no recent network activity".
+//
+//  2. DIE WACHE. Jede Minute wird nachgesehen, ob cloudflared
+//     ueberhaupt noch laeuft. Ist er weg, oder antwortet der Puls
+//     dreimal hintereinander nicht, wird der Tunnel automatisch neu
+//     aufgebaut - und die neue Adresse an alle im Gruppenraum
+//     geschickt, denn ein Quick Tunnel bekommt bei jedem Start einen
+//     neuen Zufallsnamen.
+// ================================================================
+let tunnelGewuenscht  = false;   // wurde bewusst ein Tunnel gestartet?
+let tunnelLetzteUrl   = null;    // die zuletzt bekannte Adresse, ueberlebt den Prozesstod
+let tunnelWacheHandle = null;
+const PULS_TAKT_MS    = 4*60*1000;   // "ich bin da" alle vier Minuten
+const WACHE_TAKT_MS   = 60*1000;     // jede Minute nachsehen
+const PULS_FEHLER_MAX = 3;           // erst nach drei Fehlschlaegen neu bauen
+let tunnelWache = {
+  letzterPuls:     null,   // letzte ERFOLGREICHE Antwort von aussen
+  letzterVersuch:  null,
+  fehlversuche:    0,
+  neustarts:       0,
+  letzterNeustart: null,
+  letzteAdresse:   null,   // die Adresse VOR dem letzten Neustart
+  gestartetUm:     null,   // wann die aktuelle Leitung aufgebaut wurde
+  fehlstarts:      0,      // Neuaufbauten, die sofort wieder zusammenfielen
+  wartetBis:       0,      // Ruhepause nach mehreren Fehlstarts
+  meldung:         ''
+};
+
+// Der Gruppenraum lebt in einem eigenen Block weiter unten; die Wache
+// braucht von dort nur zwei Dinge. Sie werden hier abgelegt, damit sie
+// modulweit erreichbar sind.
+let duoIo      = null;
+let duoRaeume  = null;
+
+function duoTeilnehmerAnzahl(){
+  try{
+    if(!duoRaeume) return 0;
+    let n = 0;
+    for(const raum of Object.values(duoRaeume)) n += Object.keys(raum.users||{}).length;
+    return n;
+  }catch(e){ return 0; }
+}
+
 // FIX (Log-Flut): Der gefundene Pfad wird gemerkt und nur einmal geloggt.
 // Vorher schrieb jeder Aufruf von /api/tunnel-url eine Zeile "Found binary:"
 // ins Terminal - und der Browser fragt diese Route im Sekundentakt ab.
@@ -245,7 +313,7 @@ function tunnelBeenden(){
 process.on('exit', tunnelBeenden);
 ['SIGINT','SIGTERM','SIGBREAK'].forEach(sig=>{
   try{
-    process.on(sig, ()=>{ console.log(`\n[TUNNEL] ${sig} empfangen - raeume auf...`); tunnelBeenden(); process.exit(0); });
+    process.on(sig, ()=>{ console.log(`\n[TUNNEL] ${sig} empfangen - raeume auf...`); tunnelGewuenscht = false; tunnelBeenden(); process.exit(0); });
   }catch(e){ /* SIGBREAK gibt es nur unter Windows */ }
 });
 
@@ -424,6 +492,137 @@ async function tunnelErreichbarkeitPruefen(url){
   return false;
 }
 
+// ================================================================
+//  PULS UND WACHE
+// ================================================================
+
+// Ein "ich bin da" ueber die oeffentliche Adresse. Kommt eine Antwort
+// zurueck, steht die ganze Kette: dieser PC -> cloudflared -> Cloudflare
+// -> zurueck zu diesem PC. Genau das, was der Teilnehmer auch geht.
+async function tunnelPulsSenden(){
+  const url = tunnelUrlCache;
+  if(!url) return false;
+  tunnelWache.letzterVersuch = Date.now();
+  const r = await tunnelEinmalPruefen(url);
+  const gut = (r.status === 200 && r.body && r.body.includes('running'));
+  if(gut){
+    tunnelWache.letzterPuls  = Date.now();
+    tunnelWache.fehlversuche = 0;
+    tunnelWache.meldung      = 'Der Einladungslink ist erreichbar.';
+    tunnelSelbsttest = { zustand:'ok', text:tunnelWache.meldung, geprueftUm:Date.now() };
+    return true;
+  }
+  tunnelWache.fehlversuche++;
+  const grund = r.fehler ? String(r.fehler) : ('HTTP ' + r.status);
+  tunnelWache.meldung = 'Keine Antwort von aussen (' + grund + '), Versuch '
+                      + tunnelWache.fehlversuche + ' von ' + PULS_FEHLER_MAX + '.';
+  console.warn('[WACHE] Puls ohne Antwort (' + grund + ') - '
+             + tunnelWache.fehlversuche + '/' + PULS_FEHLER_MAX);
+  return false;
+}
+
+// Neu aufbauen. Ein Quick Tunnel bekommt dabei IMMER einen neuen
+// Zufallsnamen - der alte Link ist danach tot. Deshalb wird die neue
+// Adresse sofort an alle im Gruppenraum geschickt, statt sie still
+// auszutauschen.
+async function tunnelNeuAufbauen(grund){
+  if(tunnelStarting) return;
+  const jetzt = Date.now();
+
+  // DIE BREMSE.
+  //  Ohne sie liefe die Wache heiss, wenn der Neuaufbau das Problem gar
+  //  nicht loest - etwa weil das Internet ganz weg ist oder Cloudflare
+  //  die kostenlosen Quick Tunnels von dieser Leitung voruebergehend
+  //  ausbremst. Dann alle paar Minuten einen neuen zu verlangen macht es
+  //  nur schlimmer, und der Gastgeber bekommt im Minutentakt neue Links.
+  //
+  //  Regel: Liegt der letzte Neuaufbau weniger als zehn Minuten zurueck,
+  //  hat er offensichtlich nichts gebracht. Dann wird gezaehlt und ab dem
+  //  zweiten Mal gewartet - 1, 2, 4, 8 Minuten, hoechstens eine
+  //  Viertelstunde. Haelt eine Leitung laenger als zehn Minuten, faengt
+  //  die Zaehlung von vorne an.
+  if(tunnelWache.letzterNeustart && (jetzt - tunnelWache.letzterNeustart) < 10*60*1000){
+    tunnelWache.fehlstarts++;
+  } else {
+    tunnelWache.fehlstarts = 0;
+  }
+  if(tunnelWache.fehlstarts >= 2){
+    const pause = Math.min(15*60*1000, 60*1000 * Math.pow(2, tunnelWache.fehlstarts - 2));
+    tunnelWache.wartetBis = jetzt + pause;
+    tunnelWache.meldung = 'Die Leitung kommt nicht zustande (' + grund + '). Naechster Versuch in '
+                        + Math.round(pause/60000) + ' Minuten.';
+    console.warn('[WACHE] ' + tunnelWache.fehlstarts + '. vergeblicher Neuaufbau in Folge - '
+               + Math.round(pause/60000) + ' Minuten Pause, dann wieder.');
+    return;
+  }
+
+  const alt = tunnelUrlCache || tunnelLetzteUrl;
+  console.warn('');
+  console.warn('  [WACHE] ' + grund);
+  console.warn('  [WACHE] Der Tunnel wird neu aufgebaut. Der alte Link ist danach tot.');
+  tunnelWache.fehlversuche = 0;
+  tunnelWache.letzteAdresse = alt;
+  const url = await startTunnelProcess();
+  if(url){
+    tunnelWache.neustarts++;
+    tunnelWache.letzterNeustart = Date.now();
+    tunnelWache.meldung = 'Der Tunnel wurde neu aufgebaut (' + grund + ').';
+    // ACHTUNG: fehlstarts wird hier BEWUSST NICHT zurueckgesetzt. Dass
+    // cloudflared startet, heisst noch lange nicht, dass die Leitung
+    // haelt - genau das war ja der Fall, der die Bremse noetig macht.
+    // Zurueckgesetzt wird erst, wenn sie fuenf Minuten gestanden hat
+    // (siehe tunnelWacheTick).
+    console.warn('  [WACHE] Neue Adresse: ' + url);
+    if(alt && url !== alt) console.warn('  [WACHE] Alte Adresse (tot): ' + alt);
+    console.warn('');
+    try{
+      if(duoIo) duoIo.emit('tunnelNeu', { url: url, alt: alt || null, grund: grund });
+    }catch(e){}
+  }else{
+    tunnelWache.meldung = 'Der Tunnel liess sich nicht neu aufbauen. Naechster Versuch in einer Minute.';
+    console.warn('  [WACHE] Neuaufbau fehlgeschlagen - naechster Versuch in einer Minute.');
+    console.warn('');
+  }
+}
+
+async function tunnelWacheTick(){
+  if(!tunnelGewuenscht) return;
+  if(tunnelStarting) return;
+
+  const jetzt = Date.now();
+
+  // Die Ruhepause der Bremse (siehe tunnelNeuAufbauen) abwarten.
+  if(tunnelWache.wartetBis && jetzt < tunnelWache.wartetBis) return;
+
+  // 1. Laeuft cloudflared ueberhaupt noch?
+  const lebt = !!(tunnelProcess && !tunnelProcess.killed);
+  if(!lebt || !tunnelUrlCache){
+    await tunnelNeuAufbauen('cloudflared laeuft nicht mehr');
+    return;
+  }
+
+  // 2. Ist der Puls faellig?
+  if(tunnelWache.letzterVersuch && (jetzt - tunnelWache.letzterVersuch) < PULS_TAKT_MS) return;
+
+  const gut = await tunnelPulsSenden();
+  if(!gut && tunnelWache.fehlversuche >= PULS_FEHLER_MAX){
+    await tunnelNeuAufbauen('dreimal hintereinander keine Antwort von aussen');
+  }
+}
+
+function tunnelWacheStarten(){
+  if(tunnelWacheHandle) return;
+  // Der erste Puls erst nach einer Minute: Direkt nach dem Start ist der
+  // Name bei Cloudflare noch nicht ueberall im DNS bekannt, und der
+  // Selbsttest laeuft ohnehin gerade.
+  tunnelWache.letzterVersuch = Date.now() - (PULS_TAKT_MS - 60000);
+  tunnelWacheHandle = setInterval(()=>{
+    tunnelWacheTick().catch(e=>console.warn('[WACHE]', e.message));
+  }, WACHE_TAKT_MS);
+  if(tunnelWacheHandle.unref) tunnelWacheHandle.unref();
+  console.log('[WACHE] Tunnel-Wache laeuft: jede Minute nachsehen, alle vier Minuten "ich bin da".');
+}
+
 async function startTunnelProcess(){
   if(tunnelStarting) {
     console.log('[TUNNEL] Start bereits im Gange, warte...');
@@ -434,6 +633,7 @@ async function startTunnelProcess(){
     return tunnelUrlCache;
   }
   tunnelStarting = true;
+  tunnelGewuenscht = true;          // ab jetzt passt die Wache auf
   const meineGeneration = ++tunnelGeneration;
   tunnelSelbsttest = { zustand:'laeuft', text:'Der Tunnel wird geprueft...', geprueftUm:Date.now() };
   try{
@@ -516,6 +716,8 @@ async function startTunnelProcess(){
         // Nur uebernehmen, wenn dieser Start noch der aktuelle ist
         if(meineGeneration === tunnelGeneration){
           tunnelUrlCache = foundUrl;
+          tunnelLetzteUrl = foundUrl;
+          tunnelWache.gestartetUm = Date.now();
           try{ fs.writeFileSync(urlFp, foundUrl); }catch(e){ console.warn('[TUNNEL] tunnel_url.txt nicht schreibbar:', e.code||e.message); }
         }
         console.log(`[TUNNEL] URL gefunden (${quelle}):`, foundUrl);
@@ -564,6 +766,7 @@ async function startTunnelProcess(){
       console.log('[TUNNEL] Started successfully', foundUrl);
       // Selbsttest im Hintergrund - die Antwort an den Browser soll nicht warten
       tunnelErreichbarkeitPruefen(foundUrl).catch(e=>console.warn('[TUNNEL] Selbsttest-Fehler:', e.message));
+      tunnelWacheStarten();
       return foundUrl;
     } else {
       console.warn('[TUNNEL] Could not get URL after 25s');
@@ -1226,7 +1429,8 @@ const ERWARTET_ABGEWIESEN = [
   /^\/api\/abgleich\//,
   /^\/api\/github\//,
   /^\/api\/stimmen\//,
-  /^\/api\/tunnel-status/
+  /^\/api\/tunnel-status/,
+  /^\/api\/tunnel-wache/
 ];
 function localOnly(req,res,next){
   if(isLocalRequest(req)) return next();
@@ -2849,6 +3053,28 @@ app.get('/api/tunnel-status',(req,res)=>{
   res.json({running: !!(tunnelProcess && !tunnelProcess.killed), url: tunnelUrlCache || null, pid: tunnelProcess ? tunnelProcess.pid : null});
 });
 
+// Was die Wache zu berichten hat. localOnly: Das geht nur den Gastgeber
+// etwas an - ein Gast soll nicht sehen, wie oft die Leitung gewackelt hat.
+app.get('/api/tunnel-wache', localOnly, (req,res)=>{
+  res.json({
+    an:              tunnelGewuenscht,
+    laeuft:          !!(tunnelProcess && !tunnelProcess.killed),
+    url:             tunnelUrlCache || null,
+    letzterPuls:     tunnelWache.letzterPuls,
+    letzterVersuch:  tunnelWache.letzterVersuch,
+    fehlversuche:    tunnelWache.fehlversuche,
+    neustarts:       tunnelWache.neustarts,
+    letzterNeustart: tunnelWache.letzterNeustart,
+    letzteAdresse:   tunnelWache.letzteAdresse,
+    fehlstarts:      tunnelWache.fehlstarts,
+    wartetBis:       tunnelWache.wartetBis || 0,
+    meldung:         tunnelWache.meldung,
+    pulsTaktMin:     Math.round(PULS_TAKT_MS/60000),
+    imRaum:          duoTeilnehmerAnzahl(),
+    jetzt:           Date.now()
+  });
+});
+
 // Bekannte Windows-Absturzcodes (NTSTATUS als vorzeichenloser 32-Bit-Exitcode).
 // piper.exe ist eine native .exe - wenn sie sofort ohne stderr-Ausgabe abstürzt,
 // war es kein Text-/Modellfehler, sondern piper.exe selbst ist abgestürzt.
@@ -3055,6 +3281,7 @@ const PUBLIC_FILES = new Set([
   '/sw.js',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon.png',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
   // Update-Test.bat. Die Seite sieht regelmaessig nach, ob es ihn gibt;
@@ -3123,6 +3350,11 @@ try{
     transports: ['websocket', 'polling']
   });
   const duoRooms={};
+  // Der Wache weiter oben bekannt machen: Sie muss die neue Adresse nach
+  // einem Neuaufbau verschicken koennen und wissen, ob gerade jemand im
+  // Raum sitzt.
+  duoIo = io;
+  duoRaeume = duoRooms;
 
   // FIX W7: Raumcode ohne Kollision, aus kryptographisch sicherem Zufall.
   function freienRaumcodeFinden(){
@@ -4104,6 +4336,7 @@ function browserOeffnen(url){
 const AUFPASSER_TAKT   = 15000;   // wie oft nachgesehen wird
 const ZUSCHAUER_FRIST   = 300000; // so lange gilt ein Lebenszeichen (5 Min)
 const ANLAUF            = 120000; // Schonzeit nach dem Start
+const TUNNEL_LEERLAUF   = 4*60*60*1000;  // mit Tunnel: erst nach 4 h Leerlauf Schluss
 let jemandWarDa = false;
 const SERVER_START_MS = Date.now();
 
@@ -4118,9 +4351,61 @@ function feierabendPruefen(){
       zuschauer.delete(id);
     }
   }
-  if(zuschauer.size > 0){ jemandWarDa = true; return; }
+  if(zuschauer.size > 0){
+    jemandWarDa = true;
+    // Wieder jemand da - die Leerlaufuhr des Tunnels faengt von vorn an.
+    feierabendPruefen._leerSeit = null;
+    feierabendPruefen._zuletztGemeldet = null;
+    return;
+  }
   if(!jemandWarDa) return;
   if(jetzt - SERVER_START_MS < ANLAUF) return;
+
+  // ----------------------------------------------------------------
+  //  KEIN FEIERABEND, SOLANGE DER GRUPPENRAUM LEBT
+  //  Dietmar am 07.09.2026: "Der Trainer muss auch ueber Stunden
+  //  laufen, ohne dass ich am Rechner aktiv bin."
+  //
+  //  Das ging bis heute schief: Das Lebenszeichen kommt aus dem
+  //  BROWSER. Legt Windows den Rechner schlafen, oder legt Chrome den
+  //  Trainer-Tab schlafen (das tut er bei einem Fenster, das stundenlang
+  //  im Hintergrund steht), dann hoert es auf - und fuenf Minuten
+  //  spaeter macht der Server Feierabend. Mitten in der Uebungsrunde,
+  //  waehrend die Teilnehmer noch drin sitzen.
+  //
+  //  Deshalb zaehlt jetzt nicht mehr nur der Browser:
+  //    * Sitzt jemand im Gruppenraum, wird gar nicht abgeschaltet.
+  //    * Laeuft ein Tunnel, gilt statt der fuenf Minuten eine Frist von
+  //      vier Stunden. So bleibt der Link auch dann stehen, wenn kurz
+  //      niemand da ist - und ein vergessener oeffentlicher Tunnel
+  //      laeuft trotzdem nicht bis in alle Ewigkeit.
+  // ----------------------------------------------------------------
+  const imRaum = duoTeilnehmerAnzahl();
+  if(imRaum > 0){
+    if(!feierabendPruefen._raumGemeldet){
+      console.log('[ENDE] Kein Fenster offen, aber ' + imRaum + ' Teilnehmer im Gruppenraum - ich bleibe.');
+      feierabendPruefen._raumGemeldet = true;
+    }
+    return;
+  }
+  feierabendPruefen._raumGemeldet = false;
+
+  if(tunnelGewuenscht && tunnelProcess){
+    if(!feierabendPruefen._leerSeit) feierabendPruefen._leerSeit = jetzt;
+    const leerSeit = jetzt - feierabendPruefen._leerSeit;
+    if(leerSeit < TUNNEL_LEERLAUF){
+      const min = Math.round(leerSeit/60000);
+      if(min > 0 && min % 30 === 0 && feierabendPruefen._zuletztGemeldet !== min){
+        feierabendPruefen._zuletztGemeldet = min;
+        console.log('[ENDE] Seit ' + min + ' Minuten niemand da, aber der Tunnel laeuft. '
+                  + 'Feierabend nach ' + (TUNNEL_LEERLAUF/3600000) + ' Stunden Leerlauf.');
+      }
+      return;
+    }
+    console.log('[ENDE] Vier Stunden lang niemand im Gruppenraum - der Tunnel wird geschlossen.');
+  }
+  feierabendPruefen._leerSeit = null;
+  feierabendPruefen._zuletztGemeldet = null;
   try{
     if(hoerbuchModul && hoerbuchModul.laeuftGerade && hoerbuchModul.laeuftGerade()){
       console.log('[ENDE] Niemand sieht mehr hin - aber es laeuft noch ein Hoerbuch. Ich warte.');
@@ -4130,6 +4415,7 @@ function feierabendPruefen(){
   console.log('');
   console.log('[ENDE] Kein Fenster mehr offen. Der Trainer macht Feierabend.');
   console.log('[ENDE] Zum Weiterlernen einfach wieder START.bat.');
+  tunnelGewuenscht = false;   // sonst baut die Wache in der letzten Sekunde neu auf
   try{ tunnelBeenden(); }catch(e){}
   setTimeout(()=>process.exit(0), 300);
 }

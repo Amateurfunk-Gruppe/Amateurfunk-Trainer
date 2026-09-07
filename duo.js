@@ -659,6 +659,8 @@
             if(meinDateiStand && socket && roomCode) socket.emit('duoStandMelden', {code: roomCode, kennung: meinDateiStand});
             updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess();
             teilnehmerKnopfEinblenden(true);
+            wacheAnzeigeStarten();
+            wachHalten();
             const modal=document.getElementById('duoModal');
             if(modal){ modal.style.display='flex'; modal.style.justifyContent='center'; modal.style.alignItems='center'; }
         }catch(e){ console.error('[DUO] showRoomUI Fehler', e); }
@@ -1257,6 +1259,109 @@
         }
     }
 
+    // ================================================================
+    //  DIE TUNNEL-WACHE - WAS DER GASTGEBER DAVON SIEHT
+    //  ----------------------------------------------------------------
+    //  Dietmar am 07.09.2026: "Der Trainer muss auch ueber Stunden
+    //  laufen, ohne dass ich am Rechner aktiv bin."
+    //
+    //  Der Server passt jetzt selbst auf die Leitung auf (siehe
+    //  Server.js, "DIE TUNNEL-WACHE"). Hier wird nur gezeigt, was er
+    //  meldet - denn wenn ein Quick Tunnel neu aufgebaut werden muss,
+    //  bekommt er einen NEUEN Zufallsnamen. Der alte Link ist dann tot,
+    //  und das muss der Gastgeber sofort sehen, statt es beim naechsten
+    //  Anruf zu erfahren.
+    // ================================================================
+    let wacheUhr = null;
+    let wacheZuletzt = null;
+
+    function wacheZeitText(ms, jetzt){
+        if(!ms) return 'noch nicht';
+        const s = Math.max(0, Math.round((jetzt - ms)/1000));
+        if(s < 90) return 'vor ' + s + ' Sekunden';
+        return 'vor ' + Math.round(s/60) + ' Minuten';
+    }
+
+    async function wacheNachsehen(){
+        const zeile = document.getElementById('duoWacheZeile');
+        if(!zeile) return;
+        if(!isHost){ zeile.style.display='none'; return; }
+        let j = null;
+        try{
+            const res = await fetch('/api/tunnel-wache', {cache:'no-store'});
+            if(!res.ok){ zeile.style.display='none'; return; }   // Gast: 403
+            j = await res.json();
+        }catch(e){ return; }
+        if(!j || !j.an){ zeile.style.display='none'; return; }
+        wacheZuletzt = j;
+
+        const gut = j.laeuft && j.fehlversuche === 0;
+        zeile.style.display = 'block';
+        zeile.style.background = gut ? '#eef8f1' : '#fff6e5';
+        zeile.style.border     = '1px solid ' + (gut ? '#bfe3cb' : '#f0d7a0');
+        zeile.style.color      = gut ? '#1c6b3a' : '#7a5a10';
+
+        let t = '';
+        t += (gut ? '🟢' : '🟠') + ' <b>Tunnel-Wache läuft.</b> ';
+        t += 'Der Trainer meldet sich alle ' + (j.pulsTaktMin || 4) + ' Minuten bei Cloudflare — '
+           + 'damit die Leitung nicht wegen Ruhe abgebaut wird.';
+        t += '<br>Zuletzt durchgekommen: <b>' + wacheZeitText(j.letzterPuls, j.jetzt) + '</b>.';
+        if(j.imRaum > 0) t += ' Im Raum: <b>' + j.imRaum + '</b>.';
+        if(j.fehlversuche > 0){
+            t += '<br>⚠️ ' + (j.meldung || 'Keine Antwort von außen.')
+               + ' Nach drei Fehlversuchen baue ich die Leitung von selbst neu auf.';
+        }
+        if(j.neustarts > 0){
+            t += '<br>🔁 Die Leitung wurde ' + j.neustarts + '× neu aufgebaut'
+               + (j.letzterNeustart ? ' (zuletzt ' + wacheZeitText(j.letzterNeustart, j.jetzt) + ')' : '')
+               + '. <b>Jeder Neuaufbau bedeutet einen neuen Link</b> — der oben ist der gültige.';
+        }
+        zeile.innerHTML = t;
+    }
+
+    function wacheAnzeigeStarten(){
+        if(wacheUhr) return;
+        wacheNachsehen();
+        wacheUhr = setInterval(wacheNachsehen, 60000);
+    }
+    function wacheAnzeigeBeenden(){
+        if(wacheUhr){ clearInterval(wacheUhr); wacheUhr = null; }
+        const zeile = document.getElementById('duoWacheZeile');
+        if(zeile) zeile.style.display = 'none';
+    }
+
+    // ----------------------------------------------------------------
+    //  DER BILDSCHIRM DARF NICHT EINSCHLAFEN
+    //  Das Lebenszeichen an den Server kommt aus diesem Tab. Legt Chrome
+    //  den Tab schlafen ("Energiesparmodus" / "Sleeping Tabs") oder geht
+    //  der Rechner in den Ruhezustand, hoert es auf - und der Server
+    //  macht Feierabend, waehrend die Gruppe noch uebt. Der Wake Lock
+    //  haelt Bildschirm und Tab wach, solange ein Raum offen ist.
+    //
+    //  Er gilt nur fuer den Bildschirm, nicht gegen den Ruhezustand von
+    //  Windows selbst: Wer den Deckel zuklappt, schickt den Rechner
+    //  trotzdem schlafen. Das steht so auch im Hinweis unter dem Link.
+    // ----------------------------------------------------------------
+    let wachSchloss = null;
+    async function wachHalten(){
+        try{
+            if(!('wakeLock' in navigator)) return;
+            if(wachSchloss) return;
+            wachSchloss = await navigator.wakeLock.request('screen');
+            wachSchloss.addEventListener('release', ()=>{ wachSchloss = null; });
+            console.log('[DUO] Wake Lock aktiv - der Bildschirm bleibt an, solange der Raum offen ist.');
+        }catch(e){ /* Browser mag nicht (kein HTTPS, kein Fokus) - kein Beinbruch */ }
+    }
+    function wachEnde(){
+        try{ if(wachSchloss) wachSchloss.release(); }catch(e){}
+        wachSchloss = null;
+    }
+    // Nach dem Zurueckholen aus dem Hintergrund gibt der Browser den Wake
+    // Lock von sich aus frei. Also erneut anfordern, sobald man wieder da ist.
+    document.addEventListener('visibilitychange', ()=>{
+        if(document.visibilityState === 'visible' && duoActive) wachHalten();
+    });
+
     function bindEvents(){
         if(!socket) return;
         socket.on('connect',()=>{ myUserId=socket.id; window.myUserId=myUserId; const el=document.getElementById('duoStatus'); if(el) el.textContent='Verbunden: '+socket.id.slice(0,5); });
@@ -1264,7 +1369,7 @@
         socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen(); });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); });
         socket.on('roomUpdate', data=>{ if(data.hostId){ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; } if(data.users) duoUsersCache=data.users; updateRoomUsers(data.users); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateLinkWithTunnel(); });
-        socket.on('you-were-kicked', data=>{ alert(data.message||'Du wurdest entfernt'); document.getElementById('duoModal').style.display='none'; if(roomCode&&socket) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; isHost=false; duoActive=false; chatSichtbarkeitPruefen(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); });
+        socket.on('you-were-kicked', data=>{ alert(data.message||'Du wurdest entfernt'); document.getElementById('duoModal').style.display='none'; if(roomCode&&socket) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; isHost=false; duoActive=false; wacheAnzeigeBeenden(); wachEnde(); chatSichtbarkeitPruefen(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); });
         // Der Raum ist weg - entweder weil der Gastgeber ihn beendet hat
         // oder weil der letzte hinausging. Aufraeumen wie beim eigenen
         // Verlassen; das Chatfenster gehoert ausdruecklich dazu, es hing
@@ -1274,7 +1379,7 @@
         socket.on('roomDeleted', ()=>{
             const warIchSelbst = selbstBeendet;
             selbstBeendet = false;
-            roomCode=null; isHost=false; duoActive=false;
+            roomCode=null; isHost=false; duoActive=false; wacheAnzeigeBeenden(); wachEnde();
             try{ chatSichtbarkeitPruefen(); }catch(e){}
             try{ teilnehmerKnopfEinblenden(false); }catch(e){}
             const m = document.getElementById('duoModal');
@@ -1288,6 +1393,30 @@
             }
         });
         socket.on('errorMsg', msg=>{ if(window.showAppAlert) window.showAppAlert(msg); else alert(msg); });
+
+        // Die Wache hat den Tunnel neu aufgebaut. Ein Quick Tunnel bekommt
+        // dabei einen neuen Zufallsnamen - der alte Link ist tot. Also
+        // sofort die neue Adresse uebernehmen und den Link neu setzen.
+        socket.on('tunnelNeu', d=>{
+            try{
+                if(!d || !d.url) return;
+                console.warn('[DUO] Tunnel neu aufgebaut:', d.url, '(vorher', d.alt || '-', ')');
+                tunnelUrlCache = d.url;
+                window.__TUNNEL_URL__ = d.url;
+                tunnelGeprueft = { zustand:'ok', text:'Die Leitung wurde neu aufgebaut.' };
+                const feld = document.getElementById('duckDnsInput');
+                if(feld && !eigeneAdresse()) feld.value = d.url;
+                updateLinkWithTunnel();
+                wacheNachsehen();
+                if(isHost){
+                    const txt = 'Die Verbindung zu Cloudflare ist abgerissen und wurde automatisch neu '
+                              + 'aufgebaut.\n\nDabei gibt es immer eine NEUE Adresse — der bisher '
+                              + 'verschickte Einladungslink funktioniert nicht mehr.\n\nBitte den neuen '
+                              + 'Link aus dem Fenster an die Teilnehmer schicken.';
+                    if(window.showAppAlert) window.showAppAlert(txt); else alert(txt);
+                }
+            }catch(e){ console.warn('[DUO] tunnelNeu', e); }
+        });
         // Rueckmeldung nach dem Entfernen. Der Gastgeber hat auf einen Knopf
         // gedrueckt und soll wissen, was daraus geworden ist - besonders im
         // Fall "sperren gewollt, aber keine verwertbare Adresse". Der saehe
@@ -1617,7 +1746,7 @@
                     selbstBeendet = true;   // die Rueckmeldung vom Server nicht doppelt melden
                     socket.emit(isHost ? 'raumBeenden' : 'leaveRoom', { code: roomCode });
                 }
-                roomCode=null; chatSichtbarkeitPruefen(); isHost=false; duoActive=false;
+                roomCode=null; chatSichtbarkeitPruefen(); isHost=false; duoActive=false; wacheAnzeigeBeenden(); wachEnde();
                 window._duoHostId=null; duoUsersCache={};
                 document.getElementById('duoModal').style.display='none';
                 updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton();

@@ -26,6 +26,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AFu-Trainer">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Das Zeichen im Browsertab. icon.png fuer alles Moderne, favicon.ico
+         fuer das, was noch danach fragt. -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="alternate icon" href="favicon.ico">
     <script>
     // Der dritte Teil der PWA: der Service Worker. Er macht den Trainer
     // installierbar und laesst ihn auch ohne Netz starten. Er laeuft nur
@@ -45,7 +49,7 @@
         });
     }
     </script>
-    <title>Amateurfunk Prüfung · Klasse N</title>
+    <title>Amateurfunk-Trainer · Klasse N</title>
     <!-- Die Symbolschrift liegt seit dem 01.09.2026 im Ordner, nicht mehr
          bei einem CDN. Vorher stand hier cdnjs.cloudflare.com - damit
          brauchte ausgerechnet der Trainer, der "auch ohne Netz laeuft",
@@ -159,6 +163,58 @@
             align-items: center;
             justify-content: flex-start;
         }
+        /* ================================================================
+           DIE LEISTE RUECKT ZUSAMMEN, STATT UMZUBRECHEN
+           ----------------------------------------------------------------
+           Zwei Anlaeufe, zwei Rueckmeldungen von Dietmar am 07.09.2026:
+
+             1. "Manchmal, nicht immer, ist der Button Gruppenraum nur halb
+                zu sehen." -> Die Leiste war um ein paar Punkte zu breit.
+             2. Daraufhin durfte sie umbrechen. -> "Der Button Gruppenraum
+                verschiebt sich in 2. Reihe." Auch nicht recht - und zu
+                Recht: Eine zweite Reihe fuer einen einzigen Knopf sieht
+                nach Panne aus, nicht nach Absicht.
+
+           Was er will, ist EINE Zeile, in der alles steht. Also wird nicht
+           umgebrochen und nicht abgeschnitten, sondern zusammengerueckt:
+           Passt es nicht, werden Innenabstaende und Luecken enger, in zwei
+           Stufen. Gesteuert wird das nicht hier, sondern gemessen -
+           leisteEngPruefen() im Skript unten setzt die Klassen, weil nur
+           dort bekannt ist, wieviel wirklich fehlt.
+
+           Warum in Stufen und nicht stufenlos: Ein stufenlos berechneter
+           Innenabstand aendert sich bei jedem Zaehler, der auftaucht, und
+           die Leiste zappelte. Zwei feste Stufen sind ruhig und reichen -
+           sie holen zusammen rund 190 Punkte heraus, deutlich mehr als die
+           130, die ihm gefehlt haben.
+
+           Bleibt es trotzdem zu breit (sehr schmales Fenster), greift wie
+           bisher das seitliche Schieben samt Schattenhinweis. Das ist der
+           Notnagel, nicht der Normalfall.
+           ================================================================ */
+        .filter-bar.eng { gap: 4px; padding: 0.6rem 0.7rem; }
+        .filter-bar.eng .btn { padding: 0.4rem 0.55rem; gap: 4px; }
+        .filter-bar.eng select { padding: 0.4rem 0.5rem; }
+
+        .filter-bar.sehr-eng { gap: 3px; padding: 0.55rem 0.55rem; }
+        .filter-bar.sehr-eng .btn {
+            padding: 0.35rem 0.4rem; gap: 3px; font-size: 0.74rem; min-height: 34px;
+        }
+        .filter-bar.sehr-eng .btn i { font-size: 0.72rem; }
+        .filter-bar.sehr-eng select { padding: 0.35rem 0.4rem; font-size: 0.76rem; }
+        .filter-bar.sehr-eng .start-badge,
+        .filter-bar.sehr-eng .error-badge,
+        .filter-bar.sehr-eng .difficult-badge { padding: 1px 5px; font-size: 0.62rem; }
+
+        /* Dritte und letzte Stufe: die Zeichen in den Knoepfen fallen weg.
+           Das holt noch einmal rund 200 Punkte - mehr als die beiden
+           Stufen davor zusammen. Es kostet etwas, deshalb steht es zuletzt:
+           Das Zeichen findet man aus dem Augenwinkel, die Beschriftung muss
+           man lesen. Aber ein Knopf ohne Zeichen ist immer noch besser als
+           ein Knopf, den man nicht sieht. */
+        .filter-bar.ohne-zeichen .btn i { display: none; }
+        .filter-bar.ohne-zeichen .btn { gap: 4px; }
+
         .filter-bar::-webkit-scrollbar { display: none !important; height: 0 !important; width: 0 !important; }
         .filter-bar::-webkit-scrollbar-thumb { display: none !important; }
         .filter-bar > * { flex-shrink: 0; }
@@ -1728,6 +1784,11 @@
         .qsl-schloss-balken > i { display: block; height: 100%; background: #6fd39b; border-radius: 3px; }
         body.schmal .qsl-album { grid-template-columns: 1fr; padding: 0.6rem 1rem 1rem; }
 
+        /* Im Gruppenraum kein Nachschlagen bei der KI - siehe die
+           Anmerkung in geraeteKlasseSetzen(). Mit "!important", weil der
+           Knopf sonst an anderer Stelle wieder eingeblendet wuerde. */
+        body.im-gruppenraum #googleSearchBtn { display: none !important; }
+
         /* ================================================================
            HANDY UND TABLET
            ----------------------------------------------------------------
@@ -2243,6 +2304,34 @@
         .lernquelle.einzeln { grid-template-columns: 1fr; }
         @media (max-width: 700px) { .lernquelle { grid-template-columns: 1fr; } }
 
+        /* ================================================================
+           AM HANDY WENIGER
+           ----------------------------------------------------------------
+           Dietmar am 07.09.2026: "In der mobilen Version steht oben
+           Klasse N 571 Fragen. Das kann in der mobilen Version raus.
+           Ebenso auch die Videolektion und 50 Ohm - NUR in der mobilen
+           Version."
+
+           Es geht um den Platz, nicht um die Sachen selbst: Auf 640
+           Punkten Breite ist jede Zeile, die man nicht braucht, eine
+           Zeile weniger von der Frage. Weg kommen deshalb
+
+             * die Plakette "Klasse N - 571 Fragen" in der Kopfzeile.
+               Welche Klasse eingestellt ist, steht ohnehin im Knopf
+               daneben und in der Pruefungsuebersicht;
+             * die beiden Kacheln unter der Frage (Videolehrgang und
+               50 Ohm) samt der Quellenzeile darunter. Beide oeffnen ein
+               neues Fenster - am Handy also einen Wechsel aus dem
+               Trainer heraus, mitten in der Runde.
+
+           Die Grenze ist body.handy (640 Punkte), NICHT body.schmal:
+           Am Tablet hochkant ist genug Platz, dort bleibt alles.
+           Am Rechner aendert sich gar nichts.
+           ================================================================ */
+        body.handy #bankBadge,
+        body.handy .lernpaar,
+        body.handy .lernquelle { display: none !important; }
+
         /* Die eine Handlung. Dietmars Farbe vom 03.09.2026. */
         .filter-bar .btn.btn-primary,
         .filter-bar .btn.btn-primary:hover {
@@ -2375,12 +2464,33 @@
            deutlich ueber den geforderten 4,5:1. Der Haupttext liegt bei
            14,4:1.
            ================================================================ */
+        /* ================================================================
+           GRAU - UND ZWAR GRAU     (07.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Den Grey Mode wuensche ich mir etwas grauer."
+           Er hatte recht: Die Karten waren reinweiss, nur der Hintergrund
+           war leicht angegraut - das sah aus wie die helle Ansicht mit
+           einem Schatten darunter. Alle Flaechen sind jetzt eine gute
+           Stufe dunkler, die Linien entsprechend kraeftiger, damit die
+           Kanten nicht im Grau verschwinden.
+           Nicht angetastet: Eingabefelder und die Antwortkacheln. Die
+           bleiben weiss - dort wird gelesen und geschrieben, und Papier
+           ist weiss. Genau dieser Unterschied macht das Grau ringsum
+           ueberhaupt erst sichtbar.
+           ================================================================ */
         body.grey {
             --ink: #1c2024;
-            --muted: #56606b;
-            --bg: #ffffff;
-            --card-bg: #ffffff;
-            --line: #c3c9cf;
+            --muted: #4e5862;
+            /* Die Karte eine Spur heller als der Rest. Dietmar am
+               07.09.2026 mit einer Farbprobe der Karte: "Die Farbe kann
+               etwas heller sein, damit sich der Inhalt mehr vom Fenster
+               abhebt." Genau richtig: Seit der Hintergrund das kraeftige
+               Grau seiner Werkzeugleiste hat, muss die Karte nicht mehr
+               selbst grau sein, um grau zu wirken - der Rahmen ringsum
+               macht das. Abhebung von der Seite: 2,06:1 statt 1,95:1. */
+            --bg: #f7f8f9;
+            --card-bg: #f7f8f9;
+            --line: #b4bbc3;
             --good: #1e7a44;
             --good-bg: #d8ebdf;
             --bad: #b8332c;
@@ -2392,20 +2502,30 @@
             --accent-amber: #40525f;
             --accent-amber-soft: #e7ecef;
         }
-        body.grey { background: #e8eaec; }
+        /* Der Seitenhintergrund in der Farbe seiner Browser-Werkzeugleiste.
+           Dietmar am 07.09.2026 mit einer Farbprobe: "In der Farbe ist meine
+           Taskleiste von meinem Browser. Das wuerde gut passen." Gemessen:
+           #aab0b6.
+           Das ist deutlich dunkler als alles bisherige - und genau deshalb
+           steht auf dieser Flaeche kein Text: Die Karte deckt die Seite ab,
+           die Fusszeile sitzt auf ihr drauf. Nachgesehen wurde das eigens
+           (siehe Aenderungsprotokoll), sonst waere die Nebentextfarbe hier
+           mit 3,31:1 zu blass. Die Karte hebt sich mit 1,95:1 ab - fast
+           doppelt so deutlich wie vorher. */
+        body.grey { background: #aab0b6; }
 
         body.grey .history-col,
         body.grey .exam-info,
         body.grey .left-sidebar,
-        body.grey .question-area { background: #f2f4f5; }
+        body.grey .question-area { background: #e7eaec; }
         body.grey .filter-bar,
-        body.grey .left-sidebar .stat-chip { background: #e6e9eb; }
+        body.grey .left-sidebar .stat-chip { background: #dde1e4; }
 
         /* Wie im Green Mode: "body.grey .dot-sidebar" ist spezifischer als
            ".dot-sidebar.wrong-dot" und wuerde dessen Rot ueberschreiben.
            Deshalb stehen die Sonderfaelle DANACH. */
         body.grey .dot-sidebar {
-            background: #dcdfe2;
+            background: #d2d7db;
             color: #1c2024;
             border-color: #c3c9cf;
         }
@@ -2433,8 +2553,8 @@
         body.grey .exam-info th,
         body.grey .left-sidebar .result-box.waiting,
         body.grey .q-meta span,
-        body.grey .progress-stats span { background: #dcdfe2; }
-        body.grey .explanation-box { background: #eceff1; }
+        body.grey .progress-stats span { background: #d2d7db; }
+        body.grey .explanation-box { background: #e2e6e9; }
 
         body.grey .option,
         body.grey .option-grid,
@@ -2443,11 +2563,11 @@
         body.grey .filter-bar select { background: #ffffff; }
         body.grey .btn-outline:hover,
         body.grey .nav-btn:hover:not(:disabled),
-        body.grey .btn-google:hover { background: #e6e9eb; }
+        body.grey .btn-google:hover { background: #dde1e4; }
         /* Weniger Schlagschatten als in den bunten Modi - technisch, nicht
            schwebend. */
         body.grey .card { box-shadow: 0 10px 28px -18px rgba(28,32,36,0.35); }
-        body.grey #masteryDisplay > div[style*="background"] { background: #f2f4f5 !important; }
+        body.grey #masteryDisplay > div[style*="background"] { background: #e7eaec !important; }
 
         body.green {
             --ink: #1b3527;          /* dunkles Tannengruen - Text */
@@ -2711,6 +2831,100 @@
         }
         body.dark { background: #0d2639; }
         body.dark .card { box-shadow: 0 20px 50px -16px rgba(10,16,24,0.45); }
+
+        /* ================================================================
+           AM HANDY KEIN RAHMEN MEHR - DAS FENSTER HAT DIE FARBE DES INHALTS
+           ----------------------------------------------------------------
+           Dietmar am 07.09.2026, mit Bild: "Oben und unten ist ein
+           dunkelgrauer Rand zu sehen. Das soll automatisch mit der
+           gleichen Farbe wie der Inhalt vom Trainer gefuellt werden und
+           soll sich automatisch an das Fenster anpassen."
+
+           Woher der Streifen kam: body hat rundum 1rem Innenabstand. Fuer
+           schmale Geraete ist der Abstand LINKS UND RECHTS laengst auf die
+           Handy-Ecken (safe-area) gesetzt, also praktisch null - oben und
+           unten blieb er stehen. Dort schaute genau die Farbe durch, die
+           den Rahmen macht: im Grey Mode #aab0b6, also der dunkle Balken
+           auf seinem Bild.
+
+           Der Abstand bleibt absichtlich, wo er ist: Unten haengt an ihm
+           der Platz fuer die Gruppenchat-Leiste (56px, siehe weiter oben);
+           wer ihn wegnimmt, schiebt die letzte Zeile unter die Leiste.
+           Geaendert wird nur die FARBE - und zwar nicht als feste Zahl,
+           sondern als die des Karteninhalts. Damit stimmt sie in jedem
+           Farbstil von selbst, auch in einem, den es heute noch nicht
+           gibt. Ist die Seite kuerzer als das Fenster, wird der Rest in
+           derselben Farbe weitergemalt (body hat min-height 100vh). Und
+           weil browserfarbeNachziehen() genau diese Farbe in
+           <meta name="theme-color"> schreibt, zieht die Adressleiste des
+           Handys automatisch mit.
+
+           Runde Ecken, Schatten und Rahmen der Karte fallen am Handy weg:
+           Sie waren dafuer da, die Karte vom Untergrund abzuheben - und
+           den gibt es dort nicht mehr. Am Rechner bleibt alles, wie es
+           ist.
+           ================================================================ */
+        /* Die beiden Anzeigegroessen stehen nebeneinander - ein Raster
+           mit zwei Spalten und vier Zeilen, damit die Auswahlfelder auch
+           dann auf einer Linie bleiben, wenn die Erklaerung darueber
+           unterschiedlich lang umbricht. Die senkrechte Linie trennt die
+           Spalten, ohne Platz zu kosten. */
+        .anzeige-paar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.15rem 1.3rem;
+            align-items: start;
+        }
+        .anzeige-paar > *:nth-child(2n) { padding-left: 1.1rem; border-left: 1px solid #e3e9f3; }
+        .anzeige-paar .ap-titel {
+            font-size: 0.78rem; font-weight: 700; color: #0f2745; margin-bottom: 0.3rem;
+        }
+        .anzeige-paar .ap-titel i { font-size: 0.72rem; color: #5b6b80; margin-right: 5px; }
+        .anzeige-paar .ap-info {
+            font-size: 0.74rem; color: var(--muted); line-height: 1.45; margin-bottom: 0.5rem;
+        }
+        .anzeige-paar .ap-hinweis {
+            font-size: 0.73rem; color: var(--muted); line-height: 1.45; margin-top: 0.4rem;
+        }
+        /* Schmaler als vorher (war 260) - "Automatisch" ist das laengste
+           Wort darin und braucht keine 160 Punkte. Dietmar: "Die Felder
+           koennen in der Breite etwas reduziert werden." */
+        .anzeige-paar .ap-feld {
+            width: 100%; max-width: 160px;
+            padding: 0.45rem 0.6rem; border-radius: 8px;
+            border: 1px solid #b0c4d8; font-family: inherit; font-size: 0.83rem;
+        }
+        /* Am Handy untereinander: Zwei Auswahlfelder nebeneinander waeren
+           auf 412 Punkten unbedienbar schmal.
+
+           ACHTUNG, DIE REIHENFOLGE. Im Quelltext stehen die acht Teile
+           zeilenweise - Ueberschrift links, Ueberschrift rechts,
+           Erklaerung links, Erklaerung rechts, und so fort. In einer
+           einzigen Spalte stuenden sie damit im Reissverschluss:
+           Ueberschrift "Normale Ansicht", Ueberschrift "Im Vollbild",
+           Erklaerung, Erklaerung ... also unlesbar. "order" sortiert sie
+           deshalb wieder zu zwei vollstaendigen Bloecken untereinander. */
+        body.schmal .anzeige-paar { grid-template-columns: 1fr; }
+        body.schmal .anzeige-paar > *:nth-child(2n) { padding-left: 0; border-left: none; }
+        body.schmal .anzeige-paar > *:nth-child(1) { order: 1; }   /* Titel normal   */
+        body.schmal .anzeige-paar > *:nth-child(3) { order: 2; }   /* Erklaerung     */
+        body.schmal .anzeige-paar > *:nth-child(5) { order: 3; }   /* Feld           */
+        body.schmal .anzeige-paar > *:nth-child(7) { order: 4; }   /* Hinweis        */
+        body.schmal .anzeige-paar > *:nth-child(2) { order: 5; }   /* Titel Vollbild */
+        body.schmal .anzeige-paar > *:nth-child(4) { order: 6; }
+        body.schmal .anzeige-paar > *:nth-child(6) { order: 7; }
+        body.schmal .anzeige-paar > *:nth-child(8) { order: 8; }
+        body.schmal .anzeige-paar > *:nth-child(2) {
+            margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid #e3e9f3;
+        }
+        body.schmal .anzeige-paar .ap-feld { max-width: 100%; }
+
+        body.schmal { background: var(--card-bg); }
+        body.schmal .card {
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+        }
         body.dark .filter-bar,
         body.dark .history-col,
         body.dark .exam-info,
@@ -3756,12 +3970,28 @@ const KLASSEN = [
     { id:'ea',  datei:'Fragen-E-Auf-A.json', name:'E → A',
       titel:'Aufstockung E → A',
       note:'Du hast E bereits bestanden.' },
-    // Derselbe Katalog wie Klasse N - nur der Lernstapel ist kleiner.
-    // Geprueft wird trotzdem alles: Der Simulator zieht aus dem vollen
-    // Katalog, und die BNetzA sowieso.
-    { id:'cbn', datei:'fragen.json',         name:'CB → N', cb:true, badge:'CB-BONUS',
-      titel:'Einstieg CB → N',
-      note:'Für CB-Funker mit langer Erfahrung. Antennenbau, S-Meter, SWR, PL/N/SMA, LSB/USB, Q-Codes, Plus/Minus und Stromkreise sitzen bereits.' }
+    // ----------------------------------------------------------------
+    //  "CB → N" IST AM 07.09.2026 HERAUSGENOMMEN WORDEN.
+    //  Dietmar: "Die Klasse von CB auf N kannst du entfernen, da
+    //  Blaettern richtig gut funktioniert und jeder selbst das
+    //  durchgehen kann."
+    //
+    //  Das Ziel hat 138 Fragen als "kann ein CB-Funker schon" vom
+    //  Lernstapel abgezogen. Seit es das Blaettern mit Lesezeichen und
+    //  die Kacheln "Wo soll ich anfangen" gibt, entscheidet das jeder
+    //  besser selbst - und ohne die Unsicherheit, ob die Vorauswahl auf
+    //  ihn passt. Gepruft wurde ohnehin immer alles.
+    //
+    //  ES IST NUR DIESE EINE ZEILE. Der ganze CB-Teil weiter unten
+    //  (CB_GRUPPEN, cbAktiv, cbPanelAktualisieren, das Fenster "Als CB
+    //  bekannt") haengt an k.cb - und das gibt es ohne diesen Eintrag
+    //  nirgends mehr. Alles davon liegt still, ohne dass eine Zeile
+    //  geloescht werden musste; wer das Ziel zurueckhaben will, traegt
+    //  hier wieder ein:
+    //    { id:'cbn', datei:'fragen.json', name:'CB → N', cb:true,
+    //      badge:'CB-BONUS', titel:'Einstieg CB → N', note:'...' }
+    //  und setzt 'cbn' in ZEILEN_FOLGE zurueck.
+    // ----------------------------------------------------------------
 ];
 // ================================================================
 //  CB-EINSTIEG - was 40 Jahre CB-Funk schon abdecken
@@ -3943,11 +4173,9 @@ const KLASSE_LAGE = {
     n:   { lizenz:'keine', ziel:'N', art:'erst' },
     e:   { lizenz:'keine', ziel:'E', art:'erst' },
     ne:  { lizenz:'N',     ziel:'E', art:'auf'  },
-    ea:  { lizenz:'E',     ziel:'A', art:'auf'  },
-    // CB → N ist pruefungsrechtlich dasselbe wie Klasse N: dieselben drei
-    // Boegen, dieselben 75 Fragen. Der Unterschied liegt allein im
-    // Lernstapel.
-    cbn: { lizenz:'keine', ziel:'N', art:'erst' }
+    ea:  { lizenz:'E',     ziel:'A', art:'auf'  }
+    // 'cbn' ist am 07.09.2026 mit dem Ziel "CB → N" herausgefallen
+    // (siehe KLASSEN weiter oben).
 };
 function klasseUmfang(id){
     const l = KLASSE_LAGE[id];
@@ -3970,7 +4198,16 @@ const KLASSE_ZAHLEN_SCHLUESSEL = 'amateurfunk_klasse_anzahl';
 function klasseAktuell() {
     let id = 'n';
     try { id = localStorage.getItem(KLASSE_SCHLUESSEL) || 'n'; } catch (e) { /* privater Modus */ }
-    return KLASSEN.find(k => k.id === id) || KLASSEN[0];
+    // Ein Ziel, das es nicht mehr gibt - bis zum 07.09.2026 war das
+    // "CB → N" -, faellt auf Klasse N zurueck. Der gespeicherte Wert
+    // wird dabei EINMAL richtiggestellt: Bliebe er stehen, zeigte die
+    // Klassenwahl weiter auf ein Ziel, das nirgends mehr auftaucht, und
+    // die gemerkte Fragenzahl (KLASSE_ZAHLEN_SCHLUESSEL) haenge an einem
+    // Namen, den niemand mehr sieht.
+    const k = KLASSEN.find(x => x.id === id);
+    if (k) return k;
+    try { localStorage.setItem(KLASSE_SCHLUESSEL, KLASSEN[0].id); } catch (e) {}
+    return KLASSEN[0];
 }
 window.klasseAktuell = klasseAktuell;
 
@@ -4039,8 +4276,13 @@ function klasseAnzeigeAktualisieren() {
         const meta = window.REALISTIC_PART_META || {};
         koerper.innerHTML = teileListe.map(t => {
             const m = meta[t] || { name: t, zeit: 45 * 60 };
+            const sek = (typeof window.pruefZeit === 'function') ? window.pruefZeit(t) : m.zeit;
+            const lang = (typeof window.naZeitAn === 'function') && window.naZeitAn();
             return '<tr><td><strong>' + m.name + '</strong></td><td>25</td><td>19 (76%)</td>'
-                 + '<td>6</td><td style="text-align:center;">' + Math.round(m.zeit / 60) + ' min</td></tr>';
+                 + '<td>6</td><td style="text-align:center;">' + Math.round(sek / 60) + ' min'
+                 + (lang ? ' <span style="color:#0e7c86; font-weight:700;" '
+                         + 'title="Verlängerte Zeit für den Nachteilsausgleich – in den Einstellungen">+</span>' : '')
+                 + '</td></tr>';
         }).join('');
     } else {
         // Rückfall: die drei festen Zeilen nach Pool ein- oder ausblenden.
@@ -4193,8 +4435,13 @@ function klasseModalFuellen() {
     // Die Reihenfolge steht hier und nicht in KLASSEN, damit sie sich
     // aendern laesst, ohne die Katalogzuordnung anzufassen. Dietmars
     // Reihenfolge vom 02.09.2026: erst die beiden Direkteinstiege, dann
-    // die beiden Aufstockungen, zuletzt der CB-Einstieg.
-    const ZEILEN_FOLGE = ['n','e','ne','ea','cbn'];
+    // die beiden Aufstockungen. Der CB-Einstieg ist am 07.09.2026
+    // herausgenommen worden (siehe KLASSEN).
+    //
+    //  Namen, die es nicht mehr gibt, stoeren hier nicht: Gebaut wird nur,
+    //  was in KLASSEN steht. Sie stehen zu lassen waere trotzdem falsch -
+    //  wer die Liste liest, soll sehen, was es wirklich gibt.
+    const ZEILEN_FOLGE = ['n','e','ne','ea'];
 
     modal.innerHTML =
         '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
@@ -4301,7 +4548,32 @@ window.klasseWaehlen = klasseWaehlen;
     // sie erst spaeter setzt, sieht die Seite einmal in der falschen
     // Groesse aufblitzen und dann springen.
     try {
-        const w = localStorage.getItem('amateurfunk_anzeige') || 'auto';
+        // ZWEI GROESSEN, ZWEI SPEICHERPLAETZE - siehe "ZWEI GROESSEN
+        // STATT EINER" weiter unten. Hier laeuft nur die Kurzfassung:
+        // Die Fullscreen-Schnittstelle sagt vor dem ersten Zeichnen
+        // ohnehin nichts, F11 des Browsers ueberlebt aber ein Neuladen.
+        // Erkannt wird es daran, dass ueber und unter der Seite nichts
+        // mehr Platz wegnimmt.
+        let imVoll = false;
+        try {
+            // Nur am Rechner - am Handy sagt die Fensterhoehe nichts ueber
+            // das Vollbild aus (siehe anzeigeImVollbild weiter unten).
+            const sh = window.screen && window.screen.height;
+            if ((window.innerWidth || 0) > 1024 && sh && window.innerHeight
+                && Math.abs(sh - window.innerHeight) <= 2) imVoll = true;
+        } catch (e2) {}
+        // EINMALIGE UEBERNAHME. Wer bisher einen festen Wert eingestellt
+        // hatte, soll ihn auch im Vollbild wiederfinden - sonst spraenge
+        // der Trainer beim ersten F11 nach dem Update auf etwas ganz
+        // anderes um, ohne dass jemand etwas geaendert haette. Ab dann
+        // sind die beiden Werte unabhaengig.
+        try {
+            if (localStorage.getItem('amateurfunk_anzeige_voll') === null) {
+                localStorage.setItem('amateurfunk_anzeige_voll',
+                    localStorage.getItem('amateurfunk_anzeige') || 'auto');
+            }
+        } catch (e3) {}
+        const w = localStorage.getItem(imVoll ? 'amateurfunk_anzeige_voll' : 'amateurfunk_anzeige') || 'auto';
         let f;
         if (w === 'auto') {
             // Dieselbe Rechnung wie in anzeigeAutomatisch() weiter unten -
@@ -4312,8 +4584,11 @@ window.klasseWaehlen = klasseWaehlen;
             if ((window.innerWidth || 1520) <= 1024) {
                 f = 1;
             } else {
+                // Abrunden und bis 0,6 hinunter - genau wie in
+                // anzeigeAutomatisch(). Waere hier gerundet, blitzte die
+                // Seite eine Stufe zu gross auf und spraenge dann zurueck.
                 f = Math.min((window.innerWidth || 1520) / 1520, (window.innerHeight || 870) / 870);
-                f = Math.round(Math.max(0.8, Math.min(1.5, f)) * 20) / 20;
+                f = Math.floor(Math.max(0.6, Math.min(1.5, f)) * 20) / 20;
             }
         } else {
             f = parseFloat(w);
@@ -4346,6 +4621,12 @@ window.klasseWaehlen = klasseWaehlen;
         // vergeben, BEVOR das erste Mal gezeichnet wird - sonst blitzte
         // beim Laden kurz die runde Fassung auf.
         document.body.classList.add('eckig');
+        // Die Leiste des Browsers gleich mitfaerben - siehe
+        // browserfarbeNachziehen(). Die Funktion steht weiter unten, beim
+        // ersten Zeichnen gibt es sie noch nicht; deshalb hier nur der
+        // Versuch, und der richtige Aufruf kommt aus dem Ereignis
+        // DOMContentLoaded.
+        try { if (typeof browserfarbeNachziehen === 'function') browserfarbeNachziehen(); } catch (e2) {}
     } catch (e) {}
 })();
 </script>
@@ -4353,7 +4634,18 @@ window.klasseWaehlen = klasseWaehlen;
     <!-- HEADER -->
     <div class="header">
         <div class="header-left">
-            <h1><i class="fas fa-satellite-dish" style="color:var(--panel-navy);"></i> Prüfung</h1>
+            <!-- ================================================================
+                 DIE WORTMARKE
+                 ----------------------------------------------------------------
+                 Dietmar am 06.09.2026 nach den Entwuerfen: Wortmarke "das
+                 zweite" - der volle Name ohne Kurzform. Erst stand das
+                 Zahlenzeichen hier mit davor; einen Tag spaeter: "In der
+                 Hauptansicht langt Amateurfunk-Trainer, 55 kann da raus."
+                 Stimmt - der Name traegt sich allein, und das Zeichen hat
+                 seinen Platz dort, wo kein Text danebenpasst: auf der
+                 Taskleiste, im Browsertab und auf dem Startbildschirm.
+                 ================================================================ -->
+            <h1>Amateurfunk<span style="color:#7a8ba1;">-Trainer</span></h1>
             <span class="badge" id="bankBadge"><i class="fas fa-check-circle"></i> Klasse N · lädt…</span>
             <!-- Umschalter auf die höheren Lizenzklassen. Steht direkt neben
                  dem Abzeichen, weil beides dasselbe aussagt: welcher
@@ -4732,6 +5024,14 @@ window.klasseWaehlen = klasseWaehlen;
                     <button class="btn-google" id="googleSearchBtn" onclick="searchOnGoogle()" title="Frage im KI-Modus von Google erklären lassen" data-tooltip="Frage im KI-Modus von Google erklären lassen">
                         <i class="fab fa-google"></i> Google KI
                     </button>
+                    <!-- Antwort zurueckziehen. Steht bewusst VOR "Weiter": Wer
+                         danebengegriffen hat, greift als naechstes hierher, und der
+                         Weg dorthin soll kurz sein. Sichtbar nur, wenn gerade
+                         etwas zurueckzunehmen ist. -->
+                    <button class="nav-btn zurueck-aus" id="zurueckNehmenBtn" onclick="antwortZurueck()"
+                            data-tooltip="Antwort zurücknehmen – die Frage steht wieder offen (Strg+Z)"
+                            data-vorlesen-kurz="Antwort zurücknehmen."
+                            data-vorlesen="Antwort zurücknehmen. Die Wertung wird rückgängig gemacht und die Frage steht wieder offen."><i class="fas fa-rotate-left"></i> Zurücknehmen</button>
                     <button class="nav-btn nav-btn-primary" id="nextBtn">Weiter <i class="fas fa-chevron-right"></i></button>
                     <button class="nav-btn" id="homeBtn" onclick="backToMain()" data-tooltip="Zurück zur Hauptansicht" style="display:none;"><i class="fas fa-home"></i> Hauptmenü</button>
                 </div>
@@ -4801,7 +5101,9 @@ window.klasseWaehlen = klasseWaehlen;
                 <h2 style="font-family:var(--font-display); font-size:1.2rem;"><i class="fas fa-volume-up" style="color:var(--panel-navy);"></i> Vorlesen-Einstellungen</h2>
                 <button onclick="document.getElementById('ttsSettingsModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
-            <div id="ttsBlockStimme" style="margin-bottom:1rem;">
+            <div id="ttsBlockStimme" style="margin-bottom:1rem;"
+                 data-vorlesen-kurz="Stimme auswählen."
+                 data-vorlesen="Stimme. Hier wählst du, wer vorliest. Die Stimmen liegen im Ordner piper auf diesem Rechner, es wird nichts aus dem Netz geholt. Mit dem Knopf Probe hören kannst du sie anhören, bevor du dich entscheidest.">
                 <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:6px;"><i class="fas fa-microphone"></i> Stimme:</label>
                 <select id="ttsVoiceSelect" style="width:100%; padding:0.6rem 0.9rem; border-radius:12px; border:1px solid #b0c4d8; font-size:0.85rem;">
                     <option value="">Lädt Stimmen...</option>
@@ -4809,11 +5111,15 @@ window.klasseWaehlen = klasseWaehlen;
                 <div id="ttsVoiceHint" style="font-size:0.7rem; color:var(--muted); margin-top:4px;"></div>
                 <div id="ttsAktuelleStimme" style="font-size:0.7rem; color:var(--muted); margin-top:4px; font-family:var(--font-mono);"></div>
             </div>
-            <div id="ttsBlockAuto" style="margin-bottom:0.8rem; display:flex; align-items:center; gap:8px;">
+            <div id="ttsBlockAuto" style="margin-bottom:0.8rem; display:flex; align-items:center; gap:8px;"
+                 data-vorlesen-kurz="Jede Frage automatisch vorlesen."
+                 data-vorlesen="Jede Frage automatisch vorlesen. Sobald eine Frage erscheint, wird sie mit ihren vier Antworten gesprochen, ohne dass du etwas anklicken musst.">
                 <input type="checkbox" id="ttsAutoReadCheckbox" style="width:18px; height:18px; cursor:pointer;">
                 <label for="ttsAutoReadCheckbox" style="font-size:0.85rem; cursor:pointer;">Jede Frage automatisch vorlesen</label>
             </div>
-            <div id="ttsBlockAntwort" style="margin-bottom:0.8rem; display:flex; align-items:center; gap:8px;">
+            <div id="ttsBlockAntwort" style="margin-bottom:0.8rem; display:flex; align-items:center; gap:8px;"
+                 data-vorlesen-kurz="Antwort mit Sprachausgabe bestätigen."
+                 data-vorlesen="Antwort mit Sprachausgabe bestätigen. Nach deinem Klick sagt der Trainer, ob es richtig war, und bei einem Fehler gleich die richtige Antwort dazu. Im Prüfungssimulator schweigt er, dort gibt es das auch in der echten Prüfung nicht.">
                 <input type="checkbox" id="ttsAutoReadAnswerCheckbox" style="width:18px; height:18px; cursor:pointer;">
                 <label for="ttsAutoReadAnswerCheckbox" style="font-size:0.85rem; cursor:pointer;">Antwort mit Sprachausgabe bestätigen</label>
             </div>
@@ -4922,6 +5228,11 @@ window.klasseWaehlen = klasseWaehlen;
                 <div style="background:white; border-radius:10px; padding:0.6rem; border:1px solid var(--line);">
                     <div><strong>Einladungs-Link:</strong><br><a id="duoLink" href="#" target="_blank" style="font-family:var(--font-mono); color:var(--panel-navy); word-break:break-all; font-weight:700;"></a></div>
                     <div style="margin-top:4px; color:var(--muted); font-size:0.75rem;">Diesen Link teilen - andere Benutzer öffnen ihn und treten bei.</div>
+                    <!-- Die Tunnel-Wache meldet sich hier: wann zuletzt ein
+                         "ich bin da" durchgekommen ist, und ob die Leitung
+                         zwischendurch neu aufgebaut werden musste. Nur beim
+                         Gastgeber sichtbar, duo.js fuellt sie. -->
+                    <div id="duoWacheZeile" style="display:none; margin-top:8px; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.73rem; line-height:1.5;"></div>
                     <div style="margin-top:8px;"><a id="duoLocalLink" href="#" target="_blank" style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); word-break:break-all; display:none;"></a></div>
                 </div>
             </div>
@@ -5635,8 +5946,85 @@ const NACHSCHLAGEN_ZIELE = {
         hinweis: 'Frage von Perplexity erklären lassen – antwortet mit Quellenangaben',
         ki: true,
         adresse: function(t){ return 'https://www.perplexity.ai/search?q=' + encodeURIComponent(t); }
+    },
+    // Claude nimmt die Frage ueber /new?q= entgegen und beantwortet sie
+    // beim Oeffnen von selbst - wie ChatGPT.
+    claude: {
+        name: 'Claude',
+        zeichen: 'fas fa-robot',
+        hinweis: 'Frage von Claude erklären lassen',
+        ki: true,
+        adresse: function(t){ return 'https://claude.ai/new?q=' + encodeURIComponent(t); }
+    },
+    // ----------------------------------------------------------------
+    //  ZIELE, DIE KEINE FRAGE AUS DER ADRESSE ANNEHMEN
+    //  Dietmar am 07.09.2026: "Hier koennten wir noch Meta KI, DeepSeek
+    //  und Claude einbauen."
+    //
+    //  Claude ging glatt (siehe oben). DeepSeek und Meta KI nicht: Beide
+    //  Seiten kennen keinen Parameter, mit dem man eine fertige Frage
+    //  mitgibt - genau der Grund, aus dem Gemini bis heute nicht in der
+    //  Liste steht. Man kaeme auf einer leeren Seite an.
+    //
+    //  Statt sie deshalb wegzulassen, gibt es hier den Weg ueber die
+    //  Zwischenablage: Die Frage wird kopiert, die Seite geht auf, und
+    //  ein Hinweis sagt, dass jetzt Strg+V dran ist. Ein Handgriff mehr,
+    //  aber die Frage muss niemand abtippen.
+    //
+    //  "kopieren: true" ist das Kennzeichen dafuer. Sollte eine der
+    //  beiden Seiten spaeter doch einen Parameter bekommen, ist es eine
+    //  Zeile: kopieren raus, adresse mit ?q= wie oben.
+    // ----------------------------------------------------------------
+    deepseek: {
+        name: 'DeepSeek',
+        zeichen: 'fas fa-robot',
+        hinweis: 'Frage wird kopiert, DeepSeek geht auf – dort mit Strg+V einfügen',
+        ki: true,
+        kopieren: true,
+        adresse: function(){ return 'https://chat.deepseek.com/'; }
+    },
+    metaki: {
+        name: 'Meta KI',
+        zeichen: 'fab fa-meta',
+        hinweis: 'Frage wird kopiert, Meta KI geht auf – dort mit Strg+V einfügen',
+        ki: true,
+        kopieren: true,
+        adresse: function(){ return 'https://www.meta.ai/'; }
     }
 };
+
+// Die Frage in die Zwischenablage legen. Nutzt den Helfer, den es fuer
+// die Rufzeichensuche schon gibt - ueber window und nicht direkt, weil
+// er in einem anderen Skriptblock steht und beim Laden dieser Zeilen
+// noch nicht bekannt sein muss.
+function nachschlagenKopieren(text){
+    try{
+        if(typeof window.rufzeichenInZwischenablage === 'function')
+            return window.rufzeichenInZwischenablage(text);
+    }catch(e){}
+    try{
+        if(navigator.clipboard && window.isSecureContext){
+            navigator.clipboard.writeText(text);
+            return true;
+        }
+    }catch(e){}
+    return false;
+}
+
+// Kurzer Hinweis unten am Bildschirm - dieselbe Machart wie beim
+// zurueckgesetzten Lernfortschritt.
+function nachschlagenHinweis(text){
+    try{
+        const t = document.createElement('div');
+        t.textContent = text;
+        t.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); '
+            + 'background:var(--panel-navy); color:#fff; padding:0.6rem 1.1rem; border-radius:20px; '
+            + 'font-size:0.85rem; font-weight:600; z-index:99999; max-width:90vw; text-align:center; '
+            + 'box-shadow:0 8px 24px rgba(0,0,0,0.25);';
+        document.body.appendChild(t);
+        setTimeout(()=>{ t.remove(); }, 4000);
+    }catch(e){}
+}
 
 // Voreinstellung ist der KI-Modus: Wer nachschlaegt, will meistens nicht eine
 // Trefferliste, sondern verstehen, warum die eine Antwort richtig ist.
@@ -5694,10 +6082,26 @@ function searchOnGoogle() {
     }
 
     const ziel = NACHSCHLAGEN_ZIELE[nachschlagenZiel()] || NACHSCHLAGEN_ZIELE.googleki;
-    const adresse = ziel.adresse(nachschlagenText(q, ziel.ki));
+    const text = nachschlagenText(q, ziel.ki);
+
+    // Ziele, die keine Frage aus der Adresse annehmen (DeepSeek, Meta KI):
+    // erst kopieren, dann die Seite oeffnen. Das Kopieren muss VOR dem
+    // window.open passieren - danach liegt der Zugriff auf die
+    // Zwischenablage in einem Fenster, das nicht mehr im Vordergrund ist,
+    // und manche Browser verweigern ihn dann.
+    let kopiert = false;
+    if(ziel.kopieren) kopiert = nachschlagenKopieren(text);
+
+    const adresse = ziel.adresse(text);
     // Erst den Tab oeffnen, damit der Klick des Nutzers dafuer noch "frisch" ist -
     // die Wertung baut die Frage neu auf und wuerde sonst dazwischenfunken.
     window.open(adresse, '_blank');
+
+    if(ziel.kopieren){
+        nachschlagenHinweis(kopiert
+            ? '📋 Frage kopiert — bei ' + ziel.name + ' mit Strg+V einfügen'
+            : '⚠️ Kopieren hat nicht geklappt — die Frage muss bei ' + ziel.name + ' eingetippt werden');
+    }
 
     // Nachschlagen ist im Gruppenraum und im Pruefungssimulator kein freier
     // Zug: dort zaehlt es wie F9 als Fehler. Im normalen Lernmodus bleibt es
@@ -5758,6 +6162,79 @@ const BILD_MASS = {
         antwort: { breite: 620, hoehe: 380 }
     }
 };
+// ----------------------------------------------------------------
+//  GROESSERE VERGROESSERUNG - abschaltbar
+//  Dietmar am 07.09.2026: "Fuer Bilder einen groesseren Zoom. Ein und
+//  abschaltbar."
+//
+//  Die Zielgroesse oben (BILD_MASS) ist auf ein Fenster hin gewaehlt,
+//  in dem daneben noch Verlauf und Seitenleiste stehen. Wer schlecht
+//  sieht, braucht das Schaltzeichen groesser als es dort hineinpasst -
+//  und nimmt dafuer in Kauf, dass es fast das ganze Fenster einnimmt.
+//
+//  Multipliziert wird BEIDES: die feste Obergrenze in Punkten und der
+//  Anteil am Fenster. Nur die Obergrenze anzuheben braechte auf einem
+//  kleinen Laptop nichts, weil dort ohnehin der Anteil greift; nur den
+//  Anteil anzuheben braechte auf einem grossen Monitor nichts. Der
+//  Anteil wird bei 0,92 gekappt - ein Bild, das den Rand beruehrt, sieht
+//  aus wie ein Fehler.
+// ----------------------------------------------------------------
+const BILDZOOM_SCHLUESSEL = 'amateurfunk_bildzoom';   // Faktor, '1' = aus
+
+function bildZoomFaktor(){
+    try{
+        const f = parseFloat(localStorage.getItem(BILDZOOM_SCHLUESSEL) || '1');
+        return (f >= 1 && f <= 3) ? f : 1;
+    }catch(e){ return 1; }
+}
+window.bildZoomFaktor = bildZoomFaktor;
+function bildZoomGross(){ return bildZoomFaktor() > 1.001; }
+window.bildZoomGross = bildZoomGross;
+
+function bildZoomSetzen(wert){
+    const f = parseFloat(wert);
+    try{ localStorage.setItem(BILDZOOM_SCHLUESSEL, (f >= 1 && f <= 3) ? String(f) : '1'); }catch(e){}
+    try{ bildZoomFelderNachziehen(); }catch(e){}
+}
+window.bildZoomSetzen = bildZoomSetzen;
+
+function bildZoomUmschalten(an){
+    if(!an){ bildZoomSetzen(1); return; }
+    let f = 1.5;
+    try{ f = parseFloat(localStorage.getItem(BILDZOOM_SCHLUESSEL + '_letzt') || '1.5') || 1.5; }catch(e){}
+    bildZoomSetzen(f);
+}
+window.bildZoomUmschalten = bildZoomUmschalten;
+
+function bildZoomFelderNachziehen(){
+    const an = bildZoomGross();
+    const f  = bildZoomFaktor();
+    if(an){ try{ localStorage.setItem(BILDZOOM_SCHLUESSEL + '_letzt', String(f)); }catch(e){} }
+    const haken = document.getElementById('einstBildZoomAn');
+    if(haken) haken.checked = an;
+    const feld = document.getElementById('einstBildZoom');
+    if(feld){
+        feld.disabled = !an;
+        feld.style.opacity = an ? '1' : '0.45';
+        if(an){
+            let beste = feld.options[0], abstand = 99;
+            for(const o of feld.options){
+                const d = Math.abs(parseFloat(o.value) - f);
+                if(d < abstand){ abstand = d; beste = o; }
+            }
+            feld.value = beste.value;
+        }
+    }
+    const t = document.getElementById('einstBildZoomText');
+    if(t){
+        t.textContent = an
+            ? 'Ein Bild darf jetzt bis zu ' + Math.round(Math.min(0.92, 0.38 * f) * 100)
+              + ' % der Fensterbreite einnehmen (sonst 38 %).'
+            : 'Aus — die Vergrößerung bleibt so, dass daneben noch etwas zu sehen ist.';
+    }
+}
+window.bildZoomFelderNachziehen = bildZoomFelderNachziehen;
+
 const BILD_ZOOM_LOHNT = 1.15;  // darunter bleibt das Bild, wie es ist
 const BILD_ZOOM_MAX   = 12;    // Obergrenze fuer sehr kleine Schaltzeichen
 const BILD_ZOOM_RAND  = 12;    // Mindestabstand zum Fensterrand
@@ -5818,8 +6295,11 @@ function bildZoomAn(img){
         const mass = gross ? BILD_MASS.vollbild : BILD_MASS.normal;
         const imRaster = img.classList.contains('option-image');
         const max  = imRaster ? mass.antwort : mass.frage;
-        const grenzeB = Math.min(vb * mass.anteil, max.breite);
-        const grenzeH = Math.min(vh * mass.anteil, max.hoehe);
+        // Der Wunschfaktor aus den Einstellungen (Nachteilsausgleich).
+        const bz = (typeof bildZoomFaktor === 'function') ? bildZoomFaktor() : 1;
+        const anteil = Math.min(0.92, mass.anteil * bz);
+        const grenzeB = Math.min(vb * anteil, max.breite * bz);
+        const grenzeH = Math.min(vh * anteil, max.hoehe * bz);
         let f = Math.min(grenzeB / bb, grenzeH / bh);
         // Ein Bild, das ohnehin schon so gross wie die Zielgroesse ist, bleibt
         // unveraendert - sonst wurden gerade die breiten Schaltbilder noch
@@ -6536,16 +7016,69 @@ window.gastMitmachen = gastMitmachen;
 //  Mit Rueckfrage, denn es trifft alle: Wer gerade bei Frage 20 von 25
 //  sitzt, faengt wieder bei 1 an. Deshalb steht in der Frage auch, wie
 //  viele gerade im Raum sind.
+// ================================================================
+//  RUECKFRAGEN IM EIGENEN FENSTER
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026 zum grauen Kasten von Chrome: "Das Fenster ist
+//  noch Old School. Das wuensche ich mir angepasst."
+//
+//  Der Trainer hat sein eigenes Rueckfragefenster - dasselbe, das beim
+//  Abbrechen einer Runde und beim Loeschen des Verlaufs erscheint. Es
+//  kennt die hellen und dunklen Ansichten, wird vorgelesen und laesst
+//  sich mit Escape schliessen. confirm() aus dem Browser kann nichts
+//  davon, sieht auf jedem System anders aus und schreibt obendrein
+//  "localhost:3000 enthaelt" darueber.
+//
+//  Diese Hilfe fasst das in einen Aufruf: Titel, Frage, Aufzaehlung,
+//  Beschriftung des Knopfes - und was beim Bestaetigen geschehen soll.
+// ================================================================
+function afuRueckfrage(o){
+    const modal = document.getElementById('genericConfirmModal');
+    const titel = document.getElementById('genericConfirmTitle');
+    const text  = document.getElementById('genericConfirmMessage');
+    const liste = document.getElementById('genericConfirmDetails');
+    const knopf = document.getElementById('genericConfirmBtn');
+    // Fehlt das Fenster (sehr alter Stand), lieber die Notloesung des
+    // Browsers als gar keine Rueckfrage.
+    if(!modal || !titel || !text || !knopf){
+        if(confirm((o.frage || '') + (o.liste ? '\n\n' + String(o.liste).replace(/<[^>]+>/g, ' ') : ''))){
+            try{ o.dann(); }catch(e){}
+        }
+        return;
+    }
+    titel.innerHTML = '<span id="genericConfirmIcon"><i class="fas ' + (o.zeichen || 'fa-circle-question')
+                    + '" style="color:var(--panel-navy);"></i></span> ' + (o.titel || 'Sicher?');
+    text.innerHTML  = o.frage || '';
+    liste.innerHTML = o.liste || '';
+    liste.style.display = o.liste ? '' : 'none';
+    knopf.innerHTML = '<i class="fas ' + (o.knopfZeichen || 'fa-check') + '"></i> ' + (o.knopf || 'Ja');
+    knopf.style.background = o.farbe || 'var(--panel-navy)';
+    knopf.onclick = function(){
+        closeGenericConfirmModal();
+        liste.style.display = '';
+        try{ o.dann(); }catch(e){ console.error('[Rueckfrage]', e); }
+    };
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+}
+window.afuRueckfrage = afuRueckfrage;
+
 function neueRundeFragen(){
     try{
         let wie = 0;
         try{ wie = Object.keys(window.duoUsersCache || {}).length; }catch(e){}
-        const wen = wie > 1 ? ('alle ' + wie + ' Teilnehmer') : 'alle im Raum';
-        const frage = 'Neue Runde für ' + wen + '?\n\n'
-                    + 'Es werden frische Fragen gezogen, und jeder fängt wieder von vorn an. '
-                    + 'Ein laufender Durchgang geht dabei verloren.';
-        if(!confirm(frage)) return;
-        window.duo.neueRunde();
+        const wen = wie > 1 ? ('<b>alle ' + wie + ' Teilnehmer</b>') : '<b>alle im Raum</b>';
+        afuRueckfrage({
+            titel: 'Neue Runde?',
+            zeichen: 'fa-rotate',
+            frage: 'Neue Runde für ' + wen + ' starten?',
+            liste: '• Es werden frische Fragen gezogen — jeder fängt wieder von vorn an<br>'
+                 + '• Ein laufender Durchgang geht dabei verloren<br>'
+                 + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link',
+            knopf: 'Neue Runde starten',
+            knopfZeichen: 'fa-rotate',
+            dann: function(){ window.duo.neueRunde(); }
+        });
     }catch(e){ console.error('[Neue Runde]', e); }
 }
 window.neueRundeFragen = neueRundeFragen;
@@ -6723,6 +7256,25 @@ function eingebauterBrowser(){
 }
 
 function appHinweisZeigen(){
+    // ----------------------------------------------------------------
+    //  ABGESCHALTET AM 07.09.2026. Dietmar, mit Bild vom Handy:
+    //  "Unten kommt ein Hinweis mit einer Verknuepfung ... Diese
+    //  gehoert entfernt."
+    //
+    //  Er hat recht. Der Balken lag fest unten ueber der Seite, verdeckte
+    //  die Fusszeile und stand auch bei jedem im Weg, der den Trainer
+    //  ueber den Einladungslink oeffnet - also bei den Teilnehmern einer
+    //  Runde, die gar nichts einrichten wollen, sondern mitmachen.
+    //
+    //  Die Sache selbst bleibt: Der Trainer laesst sich weiterhin auf den
+    //  Startbildschirm legen, manifest.webmanifest und der Service Worker
+    //  sind unveraendert. Wie es geht, steht im Info-Fenster unter "Als
+    //  App auf den Startbildschirm" - dort sucht man es, wenn man es
+    //  will, statt es aufgedraengt zu bekommen.
+    //
+    //  Zum Wiedereinschalten genuegt es, das return hier zu loeschen.
+    // ----------------------------------------------------------------
+    return;
     try{
         if(laeuftAlsApp()) return;
         if(!document.body.classList.contains('schmal')) return;
@@ -6794,6 +7346,15 @@ function geraeteKlasseSetzen(){
         document.body.classList.toggle('handy', b > 0 && b <= HANDY_GRENZE);
         const gast = gastImGruppenraum();
         document.body.classList.toggle('gast-im-raum', gast);
+        // Laeuft ein Gruppenraum - egal ob als Gastgeber oder als Gast?
+        // Dietmar am 07.09.2026: "Im Gruppenraum muss der Google-KI-Knopf
+        // raus." Er hat recht: Alle bearbeiten dieselben Fragen, und wer
+        // sich die Antwort nebenbei erklaeren laesst, uebt nicht mehr,
+        // sondern sucht. Der Knopf bleibt ausserhalb des Raums, wo er
+        // hingehoert.
+        let imRaum = false;
+        try{ imRaum = !!(window.duo && window.duo.isActive && window.duo.isActive()); }catch(e){}
+        document.body.classList.toggle('im-gruppenraum', imRaum);
         // Raus aus dem Raum heisst auch: der Wartezustand ist vorbei.
         if(!gast) document.body.classList.remove('gast-dabei');
         gastKastenPruefen();
@@ -7233,7 +7794,12 @@ function startExamSimulator() {
     showAllAnswers = false;
     document.getElementById('showAnswersBtn')?.classList.remove('active');
     // Timer reset - angepasst an aktive Teile (15 Min pro Teil)
-    examTimeRemaining = (typeof activeParts !== 'undefined' ? activeParts.length : 3) * 15 * 60;
+    // 15 Minuten je Teil im einfachen Simulator - mit Nachteilsausgleich
+    // entsprechend mehr, sonst liefe hier die kurze und im Bogen-Simulator
+    // daneben die lange Zeit.
+    examTimeRemaining = Math.round(
+        (typeof activeParts !== 'undefined' ? activeParts.length : 3) * 15 * 60
+        * ((typeof window.naZeitFaktor === 'function') ? window.naZeitFaktor() : 1));
     examTimerRunning = false;
     examStartTime = null;
     clearInterval(examTimerInterval);
@@ -9433,15 +9999,24 @@ async function qslLektionUeben(name){
             daheim = ids.some(id => questionBank.some(q => q.id === id));
         }catch(e){}
         if(!daheim){
-            const ja = confirm('Die Lektionen gehören zum Fragenkatalog der Klasse N — '
-                + 'gerade ist ein anderes Prüfungsziel eingestellt.\n\n'
-                + 'Auf Klasse N umschalten und die fehlenden Fragen dieser Lektion üben?');
-            if(!ja) return;
-            qslAlbumZu();
-            qslJubelZu();
-            await klasseWaehlen('n');
-            // Der Katalog ist jetzt geladen; die Runde erst danach.
-            setTimeout(() => { try{ qslLektionRunde(name); }catch(e){} }, 300);
+            afuRueckfrage({
+                titel: 'Auf Klasse N umschalten?',
+                zeichen: 'fa-graduation-cap',
+                frage: 'Die Lektionen gehören zum Fragenkatalog der <b>Klasse N</b> — gerade ist ein '
+                     + 'anderes Prüfungsziel eingestellt.',
+                liste: '• Der Trainer schaltet auf Klasse N um<br>'
+                     + '• Danach kommen die fehlenden Fragen dieser Lektion<br>'
+                     + '• Dein Lernstand bleibt in allen Klassen erhalten',
+                knopf: 'Umschalten und üben',
+                knopfZeichen: 'fa-play',
+                dann: async function(){
+                    qslAlbumZu();
+                    qslJubelZu();
+                    await klasseWaehlen('n');
+                    // Der Katalog ist jetzt geladen; die Runde erst danach.
+                    setTimeout(() => { try{ qslLektionRunde(name); }catch(e){} }, 300);
+                }
+            });
             return;
         }
         qslAlbumZu();
@@ -13766,6 +14341,12 @@ function einstellungenAnwenden(){
     // ob er gerade an ist.
     const bm = document.getElementById('einstBeamer');
     if(bm) bm.checked = (typeof beamerAn !== 'undefined') && beamerAn;
+    // Das Vollbild am Handy steht im localStorage und nicht in den
+    // Einstellungen: Es gehoert zu diesem Geraet, nicht zum Lernstand.
+    try{
+        const vb = document.getElementById('einstVollbildAuto');
+        if(vb){ vb.checked = vollbildAutoAn(); vollbildAutoSetzen(vb.checked); }
+    }catch(e){}
     const kurz = document.getElementById('einstUmfangKurz');
     const lang = document.getElementById('einstUmfangLang');
     if(kurz) kurz.checked = einstellungen.knopfUmfang !== 'lang';
@@ -14415,9 +14996,29 @@ document.addEventListener('DOMContentLoaded', raumKnopfNachziehen);
 //  Zwei Kaestchen mit derselben id waeren ein Fehler, den man erst
 //  merkt, wenn ein Haken nicht mehr haelt.
 // ================================================================
+// Der zweite Reiter hiess bis zum 07.09.2026 "Vorlesen". Dietmar:
+// "Vorlesen wird Nachteilsausgleich. Bedienung fuer Tastatur muss da mit
+// rein." Er hat recht: Vorlesen, Tastaturbedienung und mehr Zeit in der
+// Pruefung sind dasselbe Thema - Wege, die Pruefung fuer jemanden
+// gangbar zu machen, dem der uebliche Weg verstellt ist. Verstreut ueber
+// zwei Reiter findet man sie nur, wenn man schon weiss, dass es sie gibt.
+//
+// Die KENNUNG bleibt 'vorlesen'. Sie steht an einem Dutzend Stellen
+// (einstBlatt_vorlesen, einstellungenOeffnen('vorlesen'), ...); sie
+// mitzuaendern braechte nichts ausser der Gelegenheit, eine davon zu
+// uebersehen.
 const EINST_REITER = [
     { id:'allgemein', name:'Allgemein', symbol:'fa-sliders' },
-    { id:'vorlesen',  name:'Vorlesen',  symbol:'fa-volume-up' },
+    // Das Zeichen ist am 07.09.2026 gewechselt. Dietmar hat das
+    // internationale Sehbehinderten-Zeichen geschickt - das durchgestrichene
+    // Auge auf blauem Grund - und gesagt: "Das Zeichen gefaellt mir gut."
+    //
+    // Sein Bild ist ein genormtes Piktogramm und nicht unseres; nachgebaut
+    // wird es deshalb nicht. Font Awesome bringt aber mit "eye-low-vision"
+    // dieselbe Aussage in derselben Formsprache mit - ein Auge mit
+    // Schraegstrich -, und die Schriftart liegt ohnehin im Ordner. Damit
+    // kommt keine Datei dazu und nichts Fremdes ins Projekt.
+    { id:'vorlesen',  name:'Nachteilsausgleich', symbol:'fa-eye-low-vision' },
     { id:'lernen',    name:'Lernen',    symbol:'fa-graduation-cap' },
     { id:'update',    name:'Update',    symbol:'fa-cloud-arrow-down' },
     { id:'wartung',   name:'Wartung',   symbol:'fa-screwdriver-wrench' }
@@ -14443,7 +15044,14 @@ function einstReiterZeigen(id){
     // als eines, das eine halbe Sekunde braucht.
     if(id === 'lernen')   { try{ einstLernenFuellen(); }catch(e){} }
     if(id === 'update')   { try{ einstUpdateFuellen(); }catch(e){} }
-    if(id === 'vorlesen') { try{ ttsFelderNachziehen(); }catch(e){} try{ einstAlteStimmenPruefen(); }catch(e){} }
+    if(id === 'vorlesen') {
+        try{ ttsFelderNachziehen(); }catch(e){}
+        try{ einstAlteStimmenPruefen(); }catch(e){}
+        try{ naFelderNachziehen(); }catch(e){}
+        try{ autoWeiterFelderNachziehen(); }catch(e){}
+        try{ bildZoomFelderNachziehen(); }catch(e){}
+        try{ zurueckNehmenFelderNachziehen(); }catch(e){}
+    }
 }
 window.einstReiterZeigen = einstReiterZeigen;
 
@@ -14471,14 +15079,35 @@ function einstellungenOeffnen(reiter){
         modal.onclick = e => { if (e.target === modal) einstellungenSchliessen(); };
 
         const reiterLeiste = EINST_REITER.map(r =>
+            // display:flex statt block, dazu white-space:nowrap. Vorher war
+            // der Knopf ein Block mit einem Zeichen davor - solange die
+            // Beschriftungen kurz waren, sah das gleich aus. "Nachteils-
+            // ausgleich" passte dann nicht mehr in eine Zeile, und das
+            // Zeichen stand ueber dem Wort statt daneben. Dietmar:
+            // "Das Zeichen sitzt oberhalb von dem Text."
+            //
+            // Mit flex bleiben Zeichen und Wort in einer Zeile, mit nowrap
+            // bricht nichts mehr um - und die Spalte links ist breit genug
+            // dafuer (siehe width weiter unten).
             '<button type="button" id="einstTab_' + r.id + '" role="tab" onclick="einstReiterZeigen(\'' + r.id + '\')" '
-          + 'style="display:block; width:100%; text-align:left; border:none; background:transparent; '
+          + 'style="display:flex; align-items:center; gap:7px; width:100%; text-align:left; '
+          + 'white-space:nowrap; border:none; background:transparent; '
           + 'padding:0.55rem 0.7rem; font-family:inherit; font-size:0.83rem; font-weight:600; color:#5b6b80; '
           + 'cursor:pointer; border-radius:8px; margin-bottom:2px;">'
-          + '<i class="fas ' + r.symbol + '" style="width:18px;"></i> ' + r.name + '</button>').join('');
+          + '<i class="fas ' + r.symbol + '" style="width:18px; flex-shrink:0; text-align:center;"></i>'
+          + '<span>' + r.name + '</span></button>').join('');
 
         modal.innerHTML =
-            '<div style="background:#fff; border-radius:16px; width:min(860px,calc(97vw / var(--afu-zoom, 1))); max-height:calc(92vh / var(--afu-zoom, 1)); '
+            // Breiter und flacher. Dietmar am 07.09.2026: "Das Fenster
+            // Einstellungen etwas mehr in die Breite ziehen und es kann um
+            // 10 % kuerzer sein."
+            //  860 -> 1040 Punkte: Die Kaesten im Nachteilsausgleich haben
+            //  lange Erklaerungen; auf 860 brachen sie auf fuenf und sechs
+            //  Zeilen um, und das Fenster wurde dadurch hoch statt breit.
+            //  92 -> 83 vom Fenster: das sind die gewuenschten 10 Prozent
+            //  weniger Hoehe. Gescrollt wird ohnehin im Blatt rechts, die
+            //  Reiterspalte links bleibt stehen.
+            '<div style="background:#fff; border-radius:16px; width:min(1040px,calc(97vw / var(--afu-zoom, 1))); max-height:calc(83vh / var(--afu-zoom, 1)); '
           + 'display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
 
           // Kopfzeile
@@ -14492,7 +15121,9 @@ function einstellungenOeffnen(reiter){
 
           // Reiter links, Blatt rechts
           + '<div style="display:flex; flex:1; min-height:0;">'
-          + '<div role="tablist" style="width:180px; flex-shrink:0; background:#f7fafd; '
+          // 210 statt 180: "Nachteilsausgleich" ist das laengste Wort in der
+          // Spalte und braucht mit Zeichen davor rund 176 Punkte.
+          + '<div role="tablist" style="width:210px; flex-shrink:0; background:#f7fafd; '
           + 'border-right:1px solid #e3e9f3; padding:0.6rem;">' + reiterLeiste + '</div>'
           // min-height: Ohne das saehe jeder Reiterwechsel wie ein Sprung aus,
           // weil das Fenster auf die Hoehe des Inhalts zusammenfaellt.
@@ -14536,20 +15167,96 @@ function einstBlaetterFuellen(){
 
     document.getElementById('einstBlatt_allgemein').innerHTML =
         einstKasten('Anzeigegröße',
-            'Wie groß der Trainer auf dem Bildschirm dargestellt wird. '
-          + '„Automatisch" richtet sich nach dem Fenster: auf einem großen Schirm mehr, '
-          + 'auf einem kleinen Laptop weniger.',
-            '<select id="einstAnzeige" onchange="anzeigeSetzen(this.value)" '
-          + 'style="width:100%; max-width:260px; padding:0.45rem 0.7rem; border-radius:8px; '
-          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+            'Wie groß der Trainer dargestellt wird — getrennt für die normale Ansicht und für das '
+          + 'Vollbild, weil dort Adressleiste und Taskleiste fehlen und deshalb mehr hineinpasst. '
+          + 'Umgeschaltet wird von selbst, sobald du das Vollbild ein- oder ausschaltest — '
+          + 'auch mit F11. „Automatisch" richtet sich nach dem Fenster: auf einem großen Schirm '
+          + 'mehr, auf einem kleinen Laptop weniger.',
+          // ------------------------------------------------------------
+          //  ZWEI SPALTEN NEBENEINANDER. Dietmar am 07.09.2026: "Richte
+          //  die Felder bitte nebeneinander an. Die Felder koennen in der
+          //  Breite etwas reduziert werden."
+          //
+          //  Gebaut als EIN Raster mit zwei Spalten und vier Zeilen -
+          //  Ueberschrift, Erklaerung, Feld, Hinweis - und nicht als zwei
+          //  Kaesten nebeneinander. Der Unterschied faellt erst auf, wenn
+          //  ein Text unterschiedlich lang umbricht: Bei zwei Kaesten
+          //  stuenden die Auswahlfelder dann auf verschiedener Hoehe, im
+          //  gemeinsamen Raster bleiben sie auf einer Linie. Die Reihenfolge
+          //  im Quelltext ist deshalb zeilenweise, nicht spaltenweise.
+          //
+          //  Am Handy faellt das Raster auf eine Spalte zurueck (siehe
+          //  .anzeige-paar im Stylesheet) - nebeneinander waeren zwei
+          //  Auswahlfelder auf 412 Punkten unbedienbar schmal.
+          // ------------------------------------------------------------
+            '<div class="anzeige-paar">'
+          + '<div class="ap-titel">'
+          + '<i class="fas fa-window-maximize"></i> Normale Ansicht</div>'
+          + '<div class="ap-titel">'
+          + '<i class="fas fa-expand"></i> Im Vollbild</div>'
+
+          + '<div class="ap-info">Mit Adressleiste und Taskleiste.</div>'
+          + '<div class="ap-info">Ohne beides — rund 130 Punkte mehr Höhe.</div>'
+
+          + '<div><select id="einstAnzeige" class="ap-feld" onchange="anzeigeSetzen(this.value, \'normal\')">'
+          // Feinere Stufen, und vor allem welche nach unten. Dietmar am
+          // 07.09.2026: "Ich wuensche mir in den Einstellungen kleinere
+          // Werte, auch in Richtung verkleinern. Der Trainer muss auf 15
+          // und 17 Zoll Laptops komplett dargestellt werden. Fehlen
+          // kleinere Werte, kann das der Benutzer schlecht selbst
+          // einstellen."
+          // Fuenferschritte von 60 bis 115, darueber groebere - beim
+          // Vergroessern kommt es auf ein Zwanzigstel nicht an, beim
+          // Verkleinern schon: Dort entscheidet eine Stufe darueber, ob
+          // die letzte Zeile noch ins Fenster passt.
           + '<option value="auto">Automatisch</option>'
+          + '<option value="0.6">60 %</option>'
+          + '<option value="0.65">65 %</option>'
+          + '<option value="0.7">70 %</option>'
+          + '<option value="0.75">75 %</option>'
+          + '<option value="0.8">80 %</option>'
+          + '<option value="0.85">85 %</option>'
           + '<option value="0.9">90 %</option>'
+          + '<option value="0.95">95 %</option>'
           + '<option value="1">100 %</option>'
+          + '<option value="1.05">105 %</option>'
           + '<option value="1.1">110 %</option>'
+          + '<option value="1.15">115 %</option>'
           + '<option value="1.25">125 %</option>'
           + '<option value="1.5">150 %</option>'
-          + '</select>'
-          + '<div id="einstAnzeigeText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>')
+          + '</select></div>'
+          + '<div><select id="einstAnzeigeVoll" class="ap-feld" onchange="anzeigeSetzen(this.value, \'voll\')">'
+          + '<option value="auto">Automatisch</option>'
+          + '<option value="0.6">60 %</option>'
+          + '<option value="0.65">65 %</option>'
+          + '<option value="0.7">70 %</option>'
+          + '<option value="0.75">75 %</option>'
+          + '<option value="0.8">80 %</option>'
+          + '<option value="0.85">85 %</option>'
+          + '<option value="0.9">90 %</option>'
+          + '<option value="0.95">95 %</option>'
+          + '<option value="1">100 %</option>'
+          + '<option value="1.05">105 %</option>'
+          + '<option value="1.1">110 %</option>'
+          + '<option value="1.15">115 %</option>'
+          + '<option value="1.25">125 %</option>'
+          + '<option value="1.5">150 %</option>'
+          + '</select></div>'
+
+          + '<div class="ap-hinweis" id="einstAnzeigeText"></div>'
+          + '<div class="ap-hinweis" id="einstAnzeigeVollText"></div>'
+          + '</div>')
+      + einstKasten('Vollbild am Handy',
+            'Am Handy und am Tablet geht der Trainer beim ersten Antippen von selbst ins Vollbild — '
+          + 'dann ist die Adressleiste weg und die Frage hat den ganzen Bildschirm. '
+          + 'Der Browser meldet das einmal von sich aus („zum Beenden des Vollbildmodus …"); '
+          + 'diese Meldung gehört ihm und lässt sich nicht abschalten, sie verschwindet aber von selbst. '
+          + 'Am Rechner ändert der Schalter nichts.',
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
+          + '<input type="checkbox" id="einstVollbildAuto" style="width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="vollbildAutoSetzen(this.checked)">'
+          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beim Öffnen gleich ins Vollbild</span></label>'
+          + '<div id="einstVollbildText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>')
       + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
           + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>')
@@ -14565,17 +15272,27 @@ function einstBlaetterFuellen(){
             '<select id="einstNachschlagen" onchange="nachschlagenZielSetzen(this.value)" '
           + 'style="width:100%; max-width:260px; padding:0.45rem 0.7rem; border-radius:8px; '
           + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<optgroup label="Bekommt die Frage direkt">'
           + '<option value="googleki">Google KI (KI-Modus der Suche)</option>'
           + '<option value="google">Google (Websuche)</option>'
           + '<option value="chatgpt">ChatGPT</option>'
+          + '<option value="claude">Claude</option>'
           + '<option value="perplexity">Perplexity</option>'
+          + '</optgroup>'
+          + '<optgroup label="Frage wird kopiert – dort mit Strg+V einfügen">'
+          + '<option value="deepseek">DeepSeek</option>'
+          + '<option value="metaki">Meta KI</option>'
+          + '</optgroup>'
           + '</select>'
           + '<div style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem; line-height:1.5;">'
           + 'Die <b>Websuche</b> bekommt Stichworte und zeigt eine Trefferliste. '
           + 'Die <b>KI</b> bekommt die Frage samt Antworten als ausformulierte Bitte '
-          + 'um eine Begründung. Gemini steht nicht zur Wahl: Diese Seite nimmt keine '
-          + 'fertige Frage entgegen, man müsste sie dort abtippen.</div>')
-      + einstKasten('Tastatur', '', '<div id="einstZielTastatur"></div>');
+          + 'um eine Begründung.<br>'
+          + '<b>DeepSeek</b> und <b>Meta KI</b> nehmen keine fertige Frage aus dem Link '
+          + 'entgegen. Bei ihnen wird die Frage in die Zwischenablage gelegt und die Seite '
+          + 'geöffnet — dort genügt <b>Strg+V</b> und Eingabe. Aus demselben Grund steht '
+          + '<b>Gemini</b> gar nicht zur Wahl: Dort müsste man die Frage abtippen.</div>')
+      ;   // "Tastatur" ist am 07.09.2026 in den Nachteilsausgleich gewandert.
 
     // ---- Vorlesen ----
     document.getElementById('einstBlatt_vorlesen').innerHTML =
@@ -14583,10 +15300,14 @@ function einstBlaetterFuellen(){
             '<div id="einstZielStimme"></div>'
           + '<div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.5rem;">'
           + '<button type="button" style="' + EINST_KNOPF + '" '
-          + 'onclick="knopfSprechen(\'So klingt die Stimme, die dich durch das Menü führt — zum Beispiel beim Blättern durch den Fragenkatalog.\')">Probe hören</button>'
+          + 'onclick="knopfSprechen(\'So klingt die Stimme, die dich durch das Menü führt — zum Beispiel beim Blättern durch den Fragenkatalog.\')" '
+          + 'data-vorlesen-kurz="Probe hören." '
+          + 'data-vorlesen="Probe hören. Der Trainer spricht einen Beispielsatz mit der eingestellten Stimme, damit du sie hörst, bevor du dich entscheidest.">Probe hören</button>'
           + '<button type="button" id="einstAlleStimmenBtn" style="' + EINST_KNOPF + '" '
           + 'onclick="einstAlleStimmenHolen()" '
-          + 'title="Holt alle weiteren deutschen Stimmen nacheinander in den Ordner piper">'
+          + 'title="Holt alle weiteren deutschen Stimmen nacheinander in den Ordner piper" '
+          + 'data-vorlesen-kurz="Stimmen hinzufügen." '
+          + 'data-vorlesen="Stimmen hinzufügen. Der Trainer holt alle weiteren deutschen Stimmen nacheinander aus dem Netz in den Ordner piper. Danach stehen sie oben zur Auswahl.">'
           + '<i class="fas fa-plus"></i> Stimmen hinzufügen</button></div>'
           + '<div id="einstStimmenLage" style="font-size:0.8rem; line-height:1.6; margin-top:0.5rem;"></div>'
           + '<div id="einstStimmenAlt" style="margin-top:0.5rem;"></div>')
@@ -14594,30 +15315,145 @@ function einstBlaetterFuellen(){
             '<div id="einstZielAuto"></div><div id="einstZielAntwort"></div>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
             + 'Gleiches gilt, wenn du mit der Tabulatortaste dorthin springst.',
-            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin-bottom:0.4rem;">'
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin-bottom:0.4rem;" '
+          + 'data-vorlesen-kurz="Knöpfe vorlesen." '
+          + 'data-vorlesen="Knöpfe vorlesen. Fährst du mit der Maus über einen Knopf, wird sein Hinweistext gesprochen. Dasselbe gilt, wenn du mit der Tabulatortaste dorthin springst.">'
           + '<input type="checkbox" id="einstKnoepfeVorlesen" style="width:18px; height:18px; cursor:pointer;" '
           + 'onchange="einstellungenUmschalten(\'knoepfeVorlesen\', this.checked)">'
           + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Knöpfe vorlesen</span></label>'
           + '<div id="einstUmfangKasten" style="margin-left:1.7rem; padding-left:0.7rem; border-left:3px solid #cfe4e7;">'
-          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer; margin-bottom:0.3rem;">'
+          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer; margin-bottom:0.3rem;" '
+          + 'data-vorlesen-kurz="Kurz." '
+          + 'data-vorlesen="Kurz — nur der Name des Knopfes. Beispiel: Lernbedarf.">'
           + '<input type="radio" name="einstUmfang" id="einstUmfangKurz" style="margin-top:0.2rem; cursor:pointer;" '
           + 'onchange="einstellungenUmfang(\'kurz\')">'
           + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">Kurz</b> — '
           + 'nur der Name des Knopfes. Beispiel: <i>„Lernbedarf"</i></span></label>'
-          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer;">'
+          + '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Ausführlich." '
+          + 'data-vorlesen="Ausführlich — in ganzen Sätzen, so wie man es jemandem erklärt, der daneben sitzt.">'
           + '<input type="radio" name="einstUmfang" id="einstUmfangLang" style="margin-top:0.2rem; cursor:pointer;" '
           + 'onchange="einstellungenUmfang(\'lang\')">'
           + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">Ausführlich</b> — '
           + 'in ganzen Sätzen, so wie man es jemandem erklärt, der daneben sitzt.</span></label></div>')
       + einstKasten('Schrift', '',
-            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;">'
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Schrift beim Vorlesen vergrößern." '
+          + 'data-vorlesen="Schrift beim Vorlesen vergrößern. Die Antwort, die gerade vorgelesen wird, tritt hervor und wird etwas größer.">'
           + '<input type="checkbox" id="einstVorlesenGross" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
           + 'onchange="einstellungenUmschalten(\'vorlesenGross\', this.checked)">'
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Schrift beim Vorlesen vergrößern</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
           + 'Die Antwort, die gerade vorgelesen wird, tritt hervor und wird etwas größer.</span></span></label>')
+      + einstKasten('Tastatur', 'Für alle, die lieber tippen als klicken — und für Vorleseprogramme.',
+            '<div id="einstZielTastatur" data-vorlesen-kurz="Bedienung per Tastatur." '
+          + 'data-vorlesen="Bedienung per Tastatur. Die Tasten eins bis vier beantworten die Frage, Enter blättert weiter, die Rücktaste zurück. Zusätzlich wird jede Rückmeldung für Vorleseprogramme angesagt."></div>')
+      + einstKasten('Antwort zurücknehmen',
+            'Ein Fehlklick ist keine falsche Antwort, sondern eine verrutschte Hand. '
+          + 'Mit dieser Einstellung lässt sich die letzte Antwort wieder aufheben — '
+          + 'beim Lernen, im Prüfungssimulator und im Gruppenraum.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Antwort zurücknehmen erlauben." '
+          + 'data-vorlesen="Antwort zurücknehmen erlauben. Nach dem Antworten erscheint der Knopf Zurücknehmen in der Knopfreihe unter der Frage. Er hebt die Wertung wieder auf, samt Fehlerliste, Lernbedarf und Lernfortschritt. Ein Fehlklick ist damit keine falsche Antwort mehr.">'
+          + '<input type="checkbox" id="einstZurueckNehmen" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="zurueckNehmenSetzen(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Antwort zurücknehmen erlauben</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Nach dem Antworten erscheint <i>Zurücknehmen</i> in der Knopfreihe unter der Frage.'
+          + '</span></span></label>'
+          + '<div id="einstZurueckText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>'
+          + '<div style="font-size:0.74rem; color:#6b7280; margin-top:0.5rem; line-height:1.5; '
+          + 'border-top:1px solid #e3e9f3; padding-top:0.5rem;">'
+          + 'Zurückgenommen wird <b>alles</b>, was die Antwort ausgelöst hat: Wertung, Fehlerliste, '
+          + 'Lernbedarf und Lernfortschritt. Es gilt nur für die gerade offene Frage — wer '
+          + 'weiterblättert, lässt die Antwort stehen.</div>')
+      + einstKasten('Automatisch weiter',
+            'Nach der Antwort blättert der Trainer von selbst zur nächsten Frage — beim Lernen, '
+          + 'im Prüfungssimulator und im Gruppenraum. Für alle, denen das Klicken schwerfällt.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
+          + 'data-vorlesen-kurz="Von selbst weiterblättern." '
+          + 'data-vorlesen="Von selbst weiterblättern. Nach der Antwort geht der Trainer ohne Klick zur nächsten Frage. Im Knopf läuft ein Zähler mit. Solange vorgelesen wird, wartet er; die letzte Frage bleibt stehen.">'
+          + '<input type="checkbox" id="einstAutoWeiterAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="autoWeiterUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Von selbst weiterblättern</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Im Knopf läuft sichtbar ein Zähler — <i>Weiter (3)</i>, <i>(2)</i>, <i>(1)</i>.'
+          + '</span></span></label>'
+          + '<select id="einstAutoWeiter" onchange="autoWeiterSetzen(this.value)" '
+          + 'data-vorlesen-kurz="Wartezeit bis zur nächsten Frage." '
+          + 'data-vorlesen="Hier wählst du, wie lange der Trainer nach der Antwort wartet, bevor er weiterblättert. Zur Wahl stehen zwei, drei, fünf, acht oder zwölf Sekunden." '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="2">nach 2 Sekunden</option>'
+          + '<option value="3">nach 3 Sekunden</option>'
+          + '<option value="5">nach 5 Sekunden</option>'
+          + '<option value="8">nach 8 Sekunden</option>'
+          + '<option value="12">nach 12 Sekunden</option>'
+          + '</select>'
+          + '<div id="einstAutoWeiterText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>'
+          + '<div style="font-size:0.74rem; color:#6b7280; margin-top:0.5rem; line-height:1.5; '
+          + 'border-top:1px solid #e3e9f3; padding-top:0.5rem;">'
+          + 'Zwei Dinge sind eingebaut, damit es nicht überrumpelt: Solange <b>vorgelesen</b> wird, '
+          + 'steht der Zähler still — die Ansage wird nie abgeschnitten. Und die <b>letzte Frage</b> '
+          + 'bleibt stehen; ins Ergebnis geht es nur auf Klick. Jede Taste und jeder Klick halten '
+          + 'den Zähler ebenfalls an.</div>')
+      + einstKasten('Bilder vergrößern',
+            'Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Hier wird '
+          + 'eingestellt, wie weit.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
+          + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
+          + 'data-vorlesen="Stärker vergrößern. Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Mit diesem Haken wird es deutlich größer als bisher.">'
+          + '<input type="checkbox" id="einstBildZoomAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="bildZoomUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Ohne Haken bleibt es beim bisherigen Maß — groß genug zum Erkennen, klein genug, '
+          + 'dass die Frage daneben noch zu sehen ist.</span></span></label>'
+          + '<select id="einstBildZoom" onchange="bildZoomSetzen(this.value)" '
+          + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
+          + 'data-vorlesen="Hier wählst du, wie stark ein Bild beim Überfahren wächst — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1.3">ein Drittel größer</option>'
+          + '<option value="1.5">halb so groß wieder dazu</option>'
+          + '<option value="2">doppelt so groß</option>'
+          + '<option value="2.4">so groß wie möglich</option>'
+          + '</select>'
+          + '<div id="einstBildZoomText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>')
+      + einstKasten('Mehr Zeit in der Prüfung',
+            'Nur für den Prüfungssimulator und die Prüfungsübersicht. Der Trainer rechnet '
+          + 'dann mit der längeren Zeit, damit das Üben dem entspricht, was am Prüfungstag gilt.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
+          + 'data-vorlesen-kurz="Verlängerte Prüfungszeit." '
+          + 'data-vorlesen="Verlängerte Prüfungszeit. Ohne Haken gelten die amtlichen Zeiten: fünfundvierzig Minuten je Teil, Technik Klasse A sechzig Minuten. Mit Haken rechnet der Trainer im Prüfungssimulator und in der Prüfungsübersicht mit der längeren Zeit.">'
+          + '<input type="checkbox" id="einstNaAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="naZeitUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Verlängerte Prüfungszeit</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Ohne Haken gelten die amtlichen Zeiten: 45 Minuten je Teil, Technik&nbsp;A 60&nbsp;Minuten.'
+          + '</span></span></label>'
+          + '<select id="einstNaZeit" onchange="naZeitSetzen(this.value)" '
+          + 'data-vorlesen-kurz="Wie viel mehr Zeit." '
+          + 'data-vorlesen="Hier wählst du, wie viel mehr Zeit gerechnet wird — ein Viertel mehr, ein Drittel mehr, dann werden aus fünfundvierzig Minuten sechzig, die Hälfte mehr oder doppelte Zeit. Wie viel die Bundesnetzagentur wirklich gewährt, entscheidet sie im Einzelfall." '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1.25">ein Viertel mehr (+25 %)</option>'
+          + '<option value="1.3333">ein Drittel mehr — 45 wird 60</option>'
+          + '<option value="1.5">die Hälfte mehr (+50 %)</option>'
+          + '<option value="2">doppelte Zeit (+100 %)</option>'
+          + '</select>'
+          + '<div id="einstNaText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>'
+          + '<div style="font-size:0.74rem; color:#6b7280; margin-top:0.5rem; line-height:1.5; '
+          + 'border-top:1px solid #e3e9f3; padding-top:0.5rem;">'
+          + '<b>Wichtig:</b> Es gibt keine feste Zahl. In der Verfügung 29/2024 steht nur, dass '
+          + '„Menschen mit Behinderung ihrer Behinderung entsprechende Erleichterungen bei der '
+          + 'Prüfungsdurchführung zu gewähren" sind — <b>wie viel</b> mehr Zeit, entscheidet die '
+          + 'Bundesnetzagentur im Einzelfall, und es kann auch eine Einzelprüfung oder eine '
+          + 'mündliche Abnahme sein. Nachweis (ärztliches Attest) gehört zur Anmeldung. '
+          + 'Was hier eingestellt ist, gilt deshalb nur zum Üben.</div>')
       + '<p style="margin:0.2rem 0 0; font-size:0.74rem; color:#6b7280; line-height:1.5;">'
-      + 'Diese Einstellungen gelten nur für den gerade gewählten Benutzer. '
+      + 'Vorlesen und Schrift gelten nur für den gerade gewählten Benutzer, '
+      + 'Tastatur und Prüfungszeit für diesen Rechner. '
       + 'Wird gerade eine Frage vorgelesen, schweigen die Knopftexte.</p>';
 
     // ---- Lernen ----  (Inhalt kommt beim Aufschlagen, siehe einstLernenFuellen)
@@ -16542,6 +17378,10 @@ function renderQuestion() {
     try{ updateQuestionFavButton(); }catch(e){}
     try{ updateGelerntButton(); }catch(e){}
     try{ updateGoogleButtonHinweis(); }catch(e){}
+    // Der Knopf gehoert zur Frage, nicht zur Runde: Beim Blaettern muss er
+    // verschwinden, auch wenn niemand nextQuestion() aufgerufen hat (etwa
+    // ueber die Punktleiste links).
+    try{ zurueckKnopfNachziehen(); }catch(e){}
     // Der Formelblatt-Knopf wird bei jeder Frage neu entschieden: Er
     // erscheint nur, wenn es zu genau dieser Frage eine Stelle gibt.
     try{ formelKnopfSetzen(); }catch(e){}
@@ -16595,6 +17435,9 @@ function selectOption(optIndex) {
     }
     const opt = q.options[optIndex];
     const isCorrect = !!opt.correct;
+
+    // VOR jeder Aenderung: die Kopie fuer "Zuruecknehmen".
+    try{ antwortSicherungNehmen(q); }catch(e){}
 
     q.userAnswerIndex = optIndex;
     answered = true;
@@ -16688,6 +17531,13 @@ function selectOption(optIndex) {
         if(currentTtsUrl){ try{ URL.revokeObjectURL(currentTtsUrl); }catch{} currentTtsUrl=null; }
         vorleseAntwort(isCorrect, correctText, correctLabel);
     }, 300);
+
+    try{ zurueckKnopfNachziehen(); }catch(e){}
+
+    // Erst nach der Rueckmeldung: Die Uhr laeuft ohnehin nur, wenn nicht
+    // gesprochen wird, aber so beginnt sie gar nicht erst mitten in der
+    // Ansage.
+    try{ setTimeout(autoWeiterStarten, 400); }catch(e){}
 }
 
 
@@ -16972,16 +17822,48 @@ window.showDuoFinalResults = function(data){
                 + '</span>'
                 + '</div>';
         }).join('');
+        let istGastgeber = false;
+        try{ istGastgeber = !!(window.duo && window.duo.isHost && window.duo.isHost()); }catch(e){}
         if (body) {
             body.innerHTML = '<div class="finish-box" style="max-width:640px;margin:0 auto;border:none;box-shadow:none;">'
                 + '<i class="fas fa-trophy" style="color:var(--accent-amber);font-size:2.6rem;text-align:center;"></i>'
                 + '<p style="font-size:1.3rem;font-weight:800;text-align:center;margin-top:6px;">Gesamt-Auswertung Gruppenraum</p>'
                 + meBannerHtml
                 + '<div style="margin-top:0.5rem;border:1px solid var(--line);border-radius:12px;overflow:hidden;">' + (rowsHtml || '<div style="padding:1rem;text-align:center;color:var(--muted);">Noch keine Ergebnisse</div>') + '</div>'
-                + '<div class="btn-group" style="margin-top:1.2rem;justify-content:center;">'
-                + '<button class="btn btn-outline" onclick="window._duoFinalShown=false; window.closeRealisticModal();"><i class="fas fa-sync"></i> Aktualisieren später</button>'
-                + '<button class="btn btn-primary" onclick="window._duoFinalShown=false; window.closeRealisticModal(); if(window.duo && window.duo.leave) window.duo.leave(); backToMain();"><i class="fas fa-home"></i> Hauptmenü</button>'
-                + '</div></div>';
+                // ================================================================
+                //  HIER GEHT ES WEITER - OHNE NEUEN RAUM
+                //  ----------------------------------------------------------------
+                //  Dietmar am 06.09.2026: "Im Gruppenraum, wenn die Runde zu Ende
+                //  ist, muss ich jedes Mal einen neuen Raum einstellen und einen
+                //  Link versenden. Kann man das anders aufbauen?"
+                //
+                //  Konnte man schon - der Knopf "Neue Runde" stand nur im
+                //  Gruppenraum-Fenster, und das ist waehrend der Runde zu. Hier
+                //  in der Auswertung steht er jetzt an erster Stelle. Der Raum
+                //  bleibt bestehen, der Code bleibt derselbe, der verschickte
+                //  Link gilt weiter.
+                //
+                //  Und der Weg hinaus heisst jetzt, was er tut: Beim Gastgeber
+                //  "Raum beenden", beim Gast "Raum verlassen". Vorher stand dort
+                //  "Hauptmenue" - und dass damit der Raum zugeht, stand nirgends.
+                // ================================================================
+                + '<div class="btn-group" style="margin-top:1.2rem;justify-content:center; flex-wrap:wrap;">'
+                + (istGastgeber
+                    ? '<button class="btn btn-primary" onclick="window._duoFinalShown=false; window.closeRealisticModal(); neueRundeFragen();" '
+                      + 'data-tooltip="Frische Fragen für alle im Raum – der Raum und der Einladungslink bleiben bestehen">'
+                      + '<i class="fas fa-rotate"></i> Neue Runde für alle</button>'
+                    : '')
+                + '<button class="btn btn-outline" onclick="window._duoFinalShown=false; window.closeRealisticModal();"><i class="fas fa-xmark"></i> Fenster schließen</button>'
+                + '<button class="btn btn-reset" onclick="window._duoFinalShown=false; window.closeRealisticModal(); if(window.duo && window.duo.leave) window.duo.leave(); backToMain();">'
+                + '<i class="fas fa-door-open"></i> ' + (istGastgeber ? 'Raum beenden' : 'Raum verlassen') + '</button>'
+                + '</div>'
+                + (istGastgeber
+                    ? '<div style="margin-top:0.6rem; text-align:center; font-size:0.76rem; color:var(--muted);">'
+                      + 'Bei einer neuen Runde bleibt der Raum bestehen — derselbe Code, derselbe Link. '
+                      + 'Du musst nichts noch einmal verschicken.</div>'
+                    : '<div style="margin-top:0.6rem; text-align:center; font-size:0.76rem; color:var(--muted);">'
+                      + 'Lass das Fenster ruhig zu — startet der Trainer eine neue Runde, bist du automatisch dabei.</div>')
+                + '</div>';
         }
         if (overlay) overlay.classList.add('open');
         // Bestanden? Dann Fanfare und Konfetti - aber nur fuer die eigene Leistung,
@@ -17190,7 +18072,316 @@ function prevQuestion() {
     if (ziel >= 0) { currentIndex = ziel; answered = (currentQuestions[currentIndex].userAnswerIndex !== null); renderQuestion(); }
 }
 
+// ================================================================
+//  ANTWORT ZURUECKNEHMEN
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Bei Zittern oder Tremor ist ein Fehlklick
+//  keine falsche Antwort, sondern eine verrutschte Hand. Das ist fuer
+//  mich der wichtigste Punkt."
+//
+//  WARUM EINE SICHERUNG UND KEINE RUECKRECHNUNG:
+//  Eine Antwort zieht mehr nach sich, als man beim Lesen von
+//  selectOption denkt - Fehlerliste, Lernbedarf mit seinen Zaehlern,
+//  Lernfortschritt mit Streak, der Fortschritt der Runde und die beiden
+//  Zaehler fuer Anzahl und Treffer. Jeden dieser Schritte rueckwaerts
+//  nachzubauen hiesse, handleDifficultOnWrong, handleDifficultOnCorrect
+//  und handleMasteryOnAnswer ein zweites Mal zu schreiben - und beim
+//  naechsten Mal, wenn sich eine davon aendert, hier den Fehler zu
+//  haben. Deshalb wird VOR der Wertung eine Kopie der betroffenen
+//  Stellen gemacht und beim Zuruecknehmen genau diese Kopie
+//  zurueckgeschrieben. Was auch immer die drei Funktionen tun: Es ist
+//  danach wieder so, wie es vorher war.
+//
+//  ES GILT NUR FUER DIE GERADE OFFENE FRAGE. Wer weiterblaettert, kann
+//  nicht mehr zurueck - sonst muesste die Sicherung wandern, und man
+//  wuesste nie, welche Antwort man gerade zurueckholt.
+//
+//  IM GRUPPENRAUM ist die Antwort schon beim Server. Der speichert sie
+//  je Frage und ueberschreibt sie mit der naechsten - eine korrigierte
+//  Antwort kommt also richtig an. Wer zuruecknimmt und dann gar nicht
+//  mehr antwortet, steht dort weiter mit der alten Antwort; das ist
+//  dasselbe, als haette er nie zurueckgenommen, und stoert die Runde
+//  der anderen nicht.
+// ================================================================
+const ZURUECK_SCHLUESSEL = 'amateurfunk_zuruecknehmen';
+
+function zurueckNehmenAn(){
+    try{ return localStorage.getItem(ZURUECK_SCHLUESSEL) === 'ja'; }
+    catch(e){ return false; }
+}
+window.zurueckNehmenAn = zurueckNehmenAn;
+
+function zurueckNehmenSetzen(an){
+    try{ localStorage.setItem(ZURUECK_SCHLUESSEL, an ? 'ja' : 'nein'); }catch(e){}
+    if(!an) antwortSicherung = null;
+    try{ zurueckNehmenFelderNachziehen(); }catch(e){}
+    try{ zurueckKnopfNachziehen(); }catch(e){}
+}
+window.zurueckNehmenSetzen = zurueckNehmenSetzen;
+
+function zurueckNehmenFelderNachziehen(){
+    const h = document.getElementById('einstZurueckNehmen');
+    if(h) h.checked = zurueckNehmenAn();
+    const t = document.getElementById('einstZurueckText');
+    if(t) t.textContent = zurueckNehmenAn()
+        ? 'Nach einer Antwort steht „Zurücknehmen" in der Knopfreihe — auch mit Strg+Z.'
+        : 'Aus — eine angeklickte Antwort steht fest.';
+}
+window.zurueckNehmenFelderNachziehen = zurueckNehmenFelderNachziehen;
+
+let antwortSicherung = null;
+
+function zurueckKnopfNachziehen(){
+    const b = document.getElementById('zurueckNehmenBtn');
+    if(!b) return;
+    const zeigen = !!(antwortSicherung && zurueckNehmenAn()
+                   && antwortSicherung.index === currentIndex);
+    // Ueber eine Klasse und nicht ueber style.display: .nav-btn setzt
+    // display mit !important, dagegen kommt ein Inline-Wert nicht an.
+    b.classList.toggle('zurueck-aus', !zeigen);
+}
+window.zurueckKnopfNachziehen = zurueckKnopfNachziehen;
+
+// Vor der Wertung: eine Kopie von allem, was sie anfasst.
+function antwortSicherungNehmen(q){
+    if(!zurueckNehmenAn()){ antwortSicherung = null; return; }
+    try{
+        const id = q.id;
+        const kopie = (x) => (x === undefined || x === null) ? null : JSON.parse(JSON.stringify(x));
+        antwortSicherung = {
+            id:            id,
+            index:         currentIndex,
+            userAnswerIndex: q.userAnswerIndex,
+            f9:            q._f9AlsFehlerGewertet,
+            answered:      answered,
+            totalAnswered: totalAnswered,
+            correctCount:  correctCount,
+            progress:      kopie(progress[id]),
+            errorList:     errorList.slice(),
+            difficult:     kopie(typeof difficultQuestions !== 'undefined' ? difficultQuestions[id] : null),
+            mastery:       kopie(typeof masteryData !== 'undefined' ? masteryData[id] : null)
+        };
+    }catch(e){ antwortSicherung = null; }
+}
+
+function antwortZurueck(){
+    const sich = antwortSicherung;
+    if(!sich || !zurueckNehmenAn()) return;
+    // Nur die Frage, zu der die Sicherung gehoert.
+    if(sich.index !== currentIndex) { antwortSicherung = null; zurueckKnopfNachziehen(); return; }
+    const q = currentQuestions[currentIndex];
+    if(!q || q.id !== sich.id){ antwortSicherung = null; zurueckKnopfNachziehen(); return; }
+
+    try{ autoWeiterAbbrechen(); }catch(e){}
+    try { if (typeof stopTTS === 'function') stopTTS(); } catch(e){}
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}
+
+    q.userAnswerIndex = sich.userAnswerIndex;
+    if(sich.f9 === undefined) { try{ delete q._f9AlsFehlerGewertet; }catch(e){} }
+    else q._f9AlsFehlerGewertet = sich.f9;
+    answered      = sich.answered;
+    totalAnswered = sich.totalAnswered;
+    correctCount  = sich.correctCount;
+
+    if(sich.progress) progress[sich.id] = sich.progress; else { try{ delete progress[sich.id]; }catch(e){} }
+    // errorList wird an anderer Stelle durchgereicht - deshalb derselbe
+    // Behaelter und nicht ein neuer.
+    errorList.length = 0;
+    sich.errorList.forEach(x => errorList.push(x));
+    try{
+        if(sich.difficult) difficultQuestions[sich.id] = sich.difficult;
+        else delete difficultQuestions[sich.id];
+    }catch(e){}
+    try{
+        if(sich.mastery) masteryData[sich.id] = sich.mastery;
+        else delete masteryData[sich.id];
+    }catch(e){}
+
+    try{ saveErrors(); }catch(e){}
+    try{ saveDifficult(); }catch(e){}
+    try{ saveMastery(); }catch(e){}
+    try{ rundeSichernSpaeter(); }catch(e){}
+
+    antwortSicherung = null;
+    renderQuestion();
+    try{ updateMasteryDisplay(); }catch(e){}
+    try{ updateErrorBadge(); }catch(e){}
+    try{ updateDifficultBadge(); }catch(e){}
+    try{ zurueckKnopfNachziehen(); }catch(e){}
+    try{ if(typeof ansagen === 'function') ansagen('Antwort zurückgenommen. Die Frage steht wieder offen.'); }catch(e){}
+}
+window.antwortZurueck = antwortZurueck;
+
+// Strg+Z - der Griff, den jeder kennt.
+document.addEventListener('keydown', function(e){
+    if(!(e.ctrlKey || e.metaKey) || (e.key !== 'z' && e.key !== 'Z')) return;
+    const z = e.target && e.target.tagName;
+    if(z === 'INPUT' || z === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+    if(!antwortSicherung || !zurueckNehmenAn()) return;
+    e.preventDefault();
+    antwortZurueck();
+});
+
+// ================================================================
+//  AUTOMATISCH WEITER
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Beim Lernen, Pruefungsraum, Gruppenraum
+//  soll es automatisch 'weiter' klicken nach 3 Sekunden. Das gehoert
+//  auch unter Nachteilsausgleich. Ein und abschaltbar."
+//
+//  Es haengt an selectOption - also an dem Augenblick, in dem eine
+//  Antwort steht. Damit gilt es in allen drei Lagen von selbst: beim
+//  Lernen, im Pruefungssimulator und im Gruppenraum, denn alle drei
+//  beantworten Fragen ueber dieselbe Funktion.
+//
+//  VIER DINGE, DIE HIER WICHTIG SIND:
+//
+//  1. ES WARTET AUF DIE STIMME. Wer das Vorlesen braucht, braucht es
+//     ganz. Eine Uhr, die waehrend des Vorlesens weiterlaeuft, schnitte
+//     genau die Hilfe ab, um die es hier geht. Solange gesprochen wird,
+//     steht die Uhr still.
+//
+//  2. DIE LETZTE FRAGE BLEIBT STEHEN. Dort fuehrt "Weiter" nicht zur
+//     naechsten Frage, sondern ins Ergebnis - mit Konfetti und
+//     Auswertung. Da hineinzuspringen, ohne dass jemand geklickt hat,
+//     waere ein Schreck und kein Nachteilsausgleich.
+//
+//  3. MAN SIEHT SIE LAUFEN. Im Knopf steht "Weiter (3)", "Weiter (2)",
+//     "Weiter (1)". Ein Sprung ohne Vorwarnung ist verwirrend, auch
+//     wenn man ihn selbst eingeschaltet hat.
+//
+//  4. JEDE BEDIENUNG BRICHT AB. Wer eine Taste drueckt oder irgendwo
+//     hinklickt, will laenger schauen - dann steht die Uhr. Beim
+//     naechsten Klick auf eine Antwort faengt sie von vorn an.
+// ================================================================
+const AUTOWEITER_SCHLUESSEL = 'amateurfunk_autoweiter';   // Sekunden, '0' = aus
+let autoWeiterUhr  = null;
+let autoWeiterRest = 0;
+
+function autoWeiterSekunden(){
+    try{
+        const n = parseFloat(localStorage.getItem(AUTOWEITER_SCHLUESSEL) || '0');
+        return (n >= 1 && n <= 15) ? n : 0;
+    }catch(e){ return 0; }
+}
+window.autoWeiterSekunden = autoWeiterSekunden;
+function autoWeiterAn(){ return autoWeiterSekunden() > 0; }
+window.autoWeiterAn = autoWeiterAn;
+
+// Wird gerade gesprochen? Drei Wege, auf denen der Trainer redet -
+// die eigene Warteschlange, eine abgespielte Piper-Datei und die
+// Stimme des Browsers.
+function autoWeiterSpricht(){
+    try{ if(window.ttsQueueActive) return true; }catch(e){}
+    try{ if(window.currentTtsAudio && !window.currentTtsAudio.paused) return true; }catch(e){}
+    try{ if('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending)) return true; }catch(e){}
+    return false;
+}
+
+function autoWeiterKnopfText(rest){
+    const b = document.getElementById('nextBtn');
+    if(!b) return;
+    if(rest === null){
+        if(b.dataset.autoOriginal){ b.innerHTML = b.dataset.autoOriginal; delete b.dataset.autoOriginal; }
+        return;
+    }
+    if(!b.dataset.autoOriginal) b.dataset.autoOriginal = b.innerHTML;
+    b.innerHTML = 'Weiter (' + rest + ') <i class="fas fa-chevron-right"></i>';
+}
+
+function autoWeiterAbbrechen(){
+    if(autoWeiterUhr){ clearInterval(autoWeiterUhr); autoWeiterUhr = null; }
+    autoWeiterRest = 0;
+    try{ autoWeiterKnopfText(null); }catch(e){}
+}
+window.autoWeiterAbbrechen = autoWeiterAbbrechen;
+
+function autoWeiterStarten(){
+    autoWeiterAbbrechen();
+    if(!autoWeiterAn()) return;
+    try{
+        // Gibt es ueberhaupt eine naechste Frage? Bereits gelernte werden
+        // uebersprungen - genau wie in nextQuestion().
+        let ziel = currentIndex + 1;
+        while(ziel < currentQuestions.length && currentQuestions[ziel] && currentQuestions[ziel]._autoGelernt) ziel++;
+        if(ziel >= currentQuestions.length) return;   // letzte Frage: stehen bleiben
+    }catch(e){ return; }
+
+    autoWeiterRest = Math.round(autoWeiterSekunden());
+    autoWeiterKnopfText(autoWeiterRest);
+    autoWeiterUhr = setInterval(() => {
+        // Solange gesprochen wird, steht die Uhr still.
+        if(autoWeiterSpricht()) return;
+        autoWeiterRest--;
+        if(autoWeiterRest > 0){ autoWeiterKnopfText(autoWeiterRest); return; }
+        autoWeiterAbbrechen();
+        try{ nextQuestion(); }catch(e){}
+    }, 1000);
+}
+window.autoWeiterStarten = autoWeiterStarten;
+
+function autoWeiterSetzen(wert){
+    const n = parseFloat(wert);
+    try{ localStorage.setItem(AUTOWEITER_SCHLUESSEL, (n >= 1 && n <= 15) ? String(n) : '0'); }catch(e){}
+    // Laeuft gerade eine Uhr, gilt ab sofort der neue Wert - und nicht
+    // erst bei der uebernaechsten Frage.
+    if(autoWeiterUhr) autoWeiterAbbrechen();
+    try{ autoWeiterFelderNachziehen(); }catch(e){}
+}
+window.autoWeiterSetzen = autoWeiterSetzen;
+
+function autoWeiterUmschalten(an){
+    if(!an){ autoWeiterSetzen(0); return; }
+    let n = 3;
+    try{ n = parseFloat(localStorage.getItem(AUTOWEITER_SCHLUESSEL + '_letzt') || '3') || 3; }catch(e){}
+    autoWeiterSetzen(n);
+}
+window.autoWeiterUmschalten = autoWeiterUmschalten;
+
+function autoWeiterFelderNachziehen(){
+    const an = autoWeiterAn();
+    const n  = autoWeiterSekunden();
+    if(an){ try{ localStorage.setItem(AUTOWEITER_SCHLUESSEL + '_letzt', String(n)); }catch(e){} }
+    const haken = document.getElementById('einstAutoWeiterAn');
+    if(haken) haken.checked = an;
+    const feld = document.getElementById('einstAutoWeiter');
+    if(feld){
+        feld.disabled = !an;
+        feld.style.opacity = an ? '1' : '0.45';
+        if(an){
+            let beste = feld.options[0], abstand = 99;
+            for(const o of feld.options){
+                const d = Math.abs(parseFloat(o.value) - n);
+                if(d < abstand){ abstand = d; beste = o; }
+            }
+            feld.value = beste.value;
+        }
+    }
+    const t = document.getElementById('einstAutoWeiterText');
+    if(t){
+        t.textContent = an
+            ? 'Nach der Antwort ' + n + ' Sekunden warten, dann zur nächsten Frage.'
+            : 'Aus — weitergeblättert wird nur auf Klick oder mit Enter.';
+    }
+}
+window.autoWeiterFelderNachziehen = autoWeiterFelderNachziehen;
+
+// Jede Bedienung bricht ab. Capture, damit es auch dann greift, wenn ein
+// Knopf den Klick fuer sich behaelt.
+document.addEventListener('keydown', () => { if(autoWeiterUhr) autoWeiterAbbrechen(); }, true);
+document.addEventListener('pointerdown', (e) => {
+    if(!autoWeiterUhr) return;
+    // Der Klick auf "Weiter" selbst soll weiterblaettern und nicht nur
+    // die Uhr abstellen - das erledigt der Knopf, hier wird nur die Uhr
+    // stillgelegt.
+    autoWeiterAbbrechen();
+}, true);
+
 function nextQuestion() {
+    try{ autoWeiterAbbrechen(); }catch(e){}
+    // Wer weiterblaettert, laesst die Antwort stehen.
+    antwortSicherung = null;
+    try{ zurueckKnopfNachziehen(); }catch(e){}
     try{ rundeSichernSpaeter(); }catch(e){}
     try { if (typeof stopTTS === 'function') stopTTS(); } catch(e){}
     try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e){}
@@ -17441,21 +18632,103 @@ function resetAll() {
 //  die Variable hebt die Skalierung an genau diesen Stellen wieder auf.
 //  Wer eine neue Stelle mit vh oder vw baut, muss das mitnehmen.
 // ================================================================
-const ANZEIGE_SCHLUESSEL = 'amateurfunk_anzeige';
+// ================================================================
+//  ZWEI GROESSEN STATT EINER
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Das benoetige ich 2 x! Einmal fuer
+//  Bildschirm fuer normale Ansicht mit Adressleiste und Taskleiste.
+//  Und 1 x fuer vergroessert!"
+//
+//  Er hat recht, und die Zahlen geben es her - seine eigenen vom
+//  selben Tag: "Bei der normalen Ansicht passt 100 bis 105 Prozent,
+//  beim Vergroessern passt 110 bis 115."
+//
+//  Der Grund ist einfach: Im Vollbild sind Adressleiste, Reiterleiste
+//  und Taskleiste weg. Auf einem 1080er Schirm sind das gut 130 Punkte
+//  Hoehe, also rund 14 Prozent - genau der Unterschied zwischen seinen
+//  beiden Angaben. EINE Zahl kann das nicht abdecken: Wer sie fuers
+//  Vollbild einstellt, bekommt in der normalen Ansicht unten
+//  Abgeschnittenes; wer sie fuer die normale Ansicht einstellt,
+//  verschenkt im Vollbild eine Handbreit Platz.
+//
+//  Deshalb liegen jetzt zwei Werte im Speicher, und beim Umschalten
+//  wird ohne Zutun der passende genommen.
+// ================================================================
+const ANZEIGE_SCHLUESSEL      = 'amateurfunk_anzeige';        // normale Ansicht
+const ANZEIGE_SCHLUESSEL_VOLL = 'amateurfunk_anzeige_voll';   // Vollbild
 const ANZEIGE_BREITE = 1520;
 const ANZEIGE_HOEHE  = 870;
 
-function anzeigeWahl(){
-    try{ return localStorage.getItem(ANZEIGE_SCHLUESSEL) || 'auto'; }
+// Sind wir gerade "vergroessert"?
+//
+//  ZWEI WEGE FUEHREN INS VOLLBILD, UND SIE SEHEN VERSCHIEDEN AUS:
+//    1. Der Knopf im Trainer benutzt die Fullscreen-Schnittstelle.
+//       Dann steht document.fullscreenElement - leicht zu erkennen.
+//    2. F11 ist Sache des BROWSERS. Die Seite erfaehrt davon gar
+//       nichts: fullscreenElement bleibt leer, und es gibt kein
+//       Ereignis. Wer nur auf die Schnittstelle schaut, haelt F11 fuer
+//       die normale Ansicht - und nimmt die falsche Groesse.
+//
+//  Fuer F11 hilft nur der Vergleich mit dem Bildschirm: Bleibt ueber
+//  und unter der Seite nichts mehr uebrig, ist nichts mehr da, was
+//  Platz wegnimmt - weder Adressleiste noch Taskleiste. Zwei Punkte
+//  Spiel, weil manche Browser um einen halben Punkt danebenliegen.
+function anzeigeImVollbild(){
+    try{
+        if(typeof vollbildLaeuft === 'function' && vollbildLaeuft()) return true;
+    }catch(e){}
+    try{
+        if(document.fullscreenElement) return true;
+    }catch(e){}
+    try{
+        // Der Vergleich mit dem Bildschirm gilt NUR AM RECHNER. Am Handy
+        // waechst und schrumpft innerHeight staendig, weil die
+        // Adressleiste beim Scrollen ein- und ausfaehrt - dort waere das
+        // kein verlaessliches Zeichen, sondern eine Muenze. F11 gibt es
+        // auf dem Handy ohnehin nicht, und der Knopf im Trainer meldet
+        // sich sauber ueber die Schnittstelle.
+        if(document.body && document.body.classList.contains('schmal')) return false;
+        const sh = window.screen && window.screen.height;
+        const ih = window.innerHeight;
+        if(sh && ih && Math.abs(sh - ih) <= 2) return true;
+    }catch(e){}
+    return false;
+}
+window.anzeigeImVollbild = anzeigeImVollbild;
+
+// 'normal' oder 'voll' ausdruecklich, sonst die gerade geltende Lage.
+function anzeigeSchluessel(welche){
+    if(welche === 'voll')   return ANZEIGE_SCHLUESSEL_VOLL;
+    if(welche === 'normal') return ANZEIGE_SCHLUESSEL;
+    return anzeigeImVollbild() ? ANZEIGE_SCHLUESSEL_VOLL : ANZEIGE_SCHLUESSEL;
+}
+
+function anzeigeWahl(welche){
+    try{ return localStorage.getItem(anzeigeSchluessel(welche)) || 'auto'; }
     catch(e){ return 'auto'; }
 }
 
 // innerWidth/innerHeight bleiben von zoom unberuehrt - sie nennen den
 // echten Bildschirmausschnitt. Genau deshalb kann hier ohne Rueckkopplung
 // gerechnet werden.
-function anzeigeAutomatisch(){
+// GEMERKTES ERGEBNIS - GEGEN DAS SCHAUKELN.
+//  Die gemessene Hoehe der Karte haengt selbst von der Vergroesserung ab:
+//  Bei 115 Prozent ist das Fenster in gewoehnlichen Punkten schmaler, also
+//  bricht mehr um, also ist die Karte hoeher. Wer daraus einen neuen Faktor
+//  rechnet und den anwendet, misst beim naechsten Mal etwas anderes - und
+//  zwei aufeinander folgende Aufrufe lieferten 80 und 85 Prozent.
+//  Deshalb: gerechnet wird nur, wenn ausdruecklich danach gefragt wird
+//  (das tut allein anzeigeAnwenden, und zwar nur nach unten), sonst kommt
+//  das gemerkte Ergebnis zum selben Fenster zurueck.
+function anzeigeAutomatisch(neuRechnen){
     const b = window.innerWidth  || ANZEIGE_BREITE;
     const h = window.innerHeight || ANZEIGE_HOEHE;
+    // Die Lage gehoert in die Kennung: Normale Ansicht und Vollbild
+    // haben zwar verschiedene Fensterhoehen, aber verlassen sollte man
+    // sich darauf nicht.
+    const kennung = b + 'x' + h + (anzeigeImVollbild() ? 'V' : 'N');
+    if(!neuRechnen && anzeigeAutomatisch._kennung === kennung && anzeigeAutomatisch._wert)
+        return anzeigeAutomatisch._wert;
     // Handy und Tablet: NICHT verkleinern. Die Rechnung unten kam dort
     // immer an der unteren Grenze heraus - auf einem Handy mit 412 Punkten
     // Breite waere der Faktor 0,27, gekappt auf 0,8. Ergebnis: Schrift und
@@ -17463,9 +18736,52 @@ function anzeigeAutomatisch(){
     // wenigsten Platz ist. Ein schmaler Bildschirm braucht ein anderes
     // Layout, keine Lupe rueckwaerts.
     if(b <= SCHMAL_GRENZE) return 1;
-    let f = Math.min(b / ANZEIGE_BREITE, h / ANZEIGE_HOEHE);
-    f = Math.max(0.8, Math.min(1.5, f));
-    return Math.round(f * 20) / 20;
+
+    // ZWEI AENDERUNGEN VOM 07.09.2026. Dietmar: "Habe es auf automatisch.
+    // Das ist etwas zu gross. Unten fehlt etwas."
+    //
+    // ERSTENS WIRD ABGERUNDET, NICHT GERUNDET. Der Faktor geht in
+    // Zwanzigstelschritten. Passte rechnerisch 1,086, machte
+    // Math.round() daraus 1,10 - also eine Stufe MEHR, als hineinpasst,
+    // und unten fehlte genau dieser Rest. Abrunden kann nie zu gross
+    // werden; ein bisschen Luft unten stoert niemanden, ein
+    // abgeschnittener Knopf schon.
+    //
+    // ZWEITENS WIRD DIE HOEHE GEMESSEN STATT ANGENOMMEN. Die 870 Punkte
+    // stammen aus der Zeit, als die Hauptansicht kuerzer war - seitdem
+    // sind Pruefungstermin, Rufzeichen und die Diplome dazugekommen. Wer
+    // mit einer festen Zahl rechnet, rechnet irgendwann falsch. Gemessen
+    // wird die Karte selbst; ihre Hoehe steht in gewoehnlichen Punkten
+    // und aendert sich durch die Vergroesserung nicht.
+    // GEMESSEN WIRD DIE HAUPTANSICHT - IMMER.
+    // Dietmar am 07.09.2026: "Bei der normalen Ansicht passt 100 bis 105
+    // Prozent, beim Vergroessern passt 110 bis 115." Genau das war der
+    // Fehler des ersten Versuchs: Er mass, was gerade auf dem Schirm
+    // stand. In der Fragenansicht ist das wenig, also wurde vergroessert
+    // - und beim Zurueckgehen in die Hauptansicht passte es nicht mehr.
+    // Die Vergroesserung gilt aber fuer die ganze Seite; also muss sich
+    // die laengste Ansicht durchsetzen, und das ist die Hauptansicht.
+    // Ihre Hoehe wird gemerkt, solange sie sichtbar ist, und auch dann
+    // benutzt, wenn gerade eine Runde laeuft.
+    try{
+        const karte = document.getElementById('app');
+        const start = document.getElementById('startArea') || document.querySelector('.filter-bar');
+        const hauptansichtSichtbar = !!(start && start.offsetParent !== null);
+        if(karte && hauptansichtSichtbar){
+            const gemessen = karte.scrollHeight + 46;   // Rand oben und unten
+            if(gemessen > 200) anzeigeAutomatisch._hoehe = gemessen;
+        }
+    }catch(e){}
+    const noetig = Math.max(ANZEIGE_HOEHE, anzeigeAutomatisch._hoehe || 0);
+
+    let f = Math.min(b / ANZEIGE_BREITE, h / noetig);
+    // Nach unten bis 60 Prozent: Auf einem 15-Zoll-Laptop mit 768 Punkten
+    // Hoehe reichen 80 Prozent nicht, um die Hauptansicht ganz zu zeigen.
+    f = Math.max(0.6, Math.min(1.5, f));
+    f = Math.floor(f * 20) / 20;
+    anzeigeAutomatisch._kennung = kennung;
+    anzeigeAutomatisch._wert = f;
+    return f;
 }
 
 function anzeigeFaktor(){
@@ -17481,45 +18797,102 @@ function anzeigeFaktor(){
 }
 
 function anzeigeAnwenden(){
-    const f = anzeigeFaktor();
-    const e = document.documentElement;
-    try{
-        e.style.setProperty('--afu-zoom', String(f));
-        // Bei 1 gar nichts setzen: Ein "zoom:1" ist zwar wirkungslos,
-        // erzeugt aber einen eigenen Zeichenbereich - und damit in
-        // manchen Browsern unscharfe Schrift, wo vorher keine war.
-        e.style.zoom = (Math.abs(f - 1) < 0.001) ? '' : String(f);
-    }catch(err){}
+    const setzen = (f) => {
+        const e = document.documentElement;
+        try{
+            e.style.setProperty('--afu-zoom', String(f));
+            // Bei 1 gar nichts setzen: Ein "zoom:1" ist zwar wirkungslos,
+            // erzeugt aber einen eigenen Zeichenbereich - und damit in
+            // manchen Browsern unscharfe Schrift, wo vorher keine war.
+            e.style.zoom = (Math.abs(f - 1) < 0.001) ? '' : String(f);
+        }catch(err){}
+    };
+    let f = anzeigeFaktor();
+    setzen(f);
+    // NACHMESSEN, ABER NUR NACH UNTEN.
+    //  Erst nach dem Setzen steht die Karte in ihrer endgueltigen Breite -
+    //  und damit in ihrer endgueltigen Hoehe. Faellt dabei heraus, dass es
+    //  doch nicht passt, wird eine Stufe zurueckgegangen. Nur verkleinern:
+    //  So kann sich das nicht aufschaukeln, und nach hoechstens drei
+    //  Runden steht der Wert.
+    if(anzeigeWahl() === 'auto'){
+        for(let i = 0; i < 3; i++){
+            let g;
+            try{ g = anzeigeAutomatisch(true); }catch(err){ break; }
+            if(!(g < f - 0.001)) break;
+            f = g; setzen(f);
+        }
+        anzeigeAutomatisch._wert = f;
+    }
     try{ anzeigeFeldNachziehen(); }catch(err){}
     return f;
 }
 window.anzeigeAnwenden = anzeigeAnwenden;
 
-function anzeigeSetzen(wert){
-    try{ localStorage.setItem(ANZEIGE_SCHLUESSEL, String(wert)); }catch(e){}
+function anzeigeSetzen(wert, welche){
+    // welche: 'normal', 'voll' oder nichts (= die gerade geltende Lage).
+    // Die Einstellungen geben es ausdruecklich mit, damit man beide
+    // Werte setzen kann, ohne dafuer ins Vollbild wechseln zu muessen.
+    try{ localStorage.setItem(anzeigeSchluessel(welche), String(wert)); }catch(e){}
     anzeigeAnwenden();
 }
 window.anzeigeSetzen = anzeigeSetzen;
 
 function anzeigeFeldNachziehen(){
-    const s = document.getElementById('einstAnzeige');
-    if(s) s.value = anzeigeWahl();
-    const t = document.getElementById('einstAnzeigeText');
-    if(t){
-        const f = anzeigeFaktor();
-        t.textContent = (anzeigeWahl() === 'auto')
-            ? 'Automatisch — bei diesem Fenster ' + Math.round(f * 100) + ' %.'
-            : 'Fest auf ' + Math.round(f * 100) + ' %.';
+    const imVoll = anzeigeImVollbild();
+    const f = anzeigeFaktor();
+
+    // Beide Felder bekommen ihren eigenen Wert - unabhaengig davon,
+    // welche Lage gerade gilt.
+    const sn = document.getElementById('einstAnzeige');
+    if(sn) sn.value = anzeigeWahl('normal');
+    const sv = document.getElementById('einstAnzeigeVoll');
+    if(sv) sv.value = anzeigeWahl('voll');
+
+    // Der Prozentwert unter dem Feld gilt immer nur fuer die Lage, in
+    // der man gerade steckt - alles andere waere geraten. Beim anderen
+    // Feld steht deshalb, wofuer es gilt, und nicht eine Zahl, die
+    // niemand nachpruefen kann.
+    const tn = document.getElementById('einstAnzeigeText');
+    if(tn){
+        tn.textContent = !imVoll
+            ? ((anzeigeWahl('normal') === 'auto')
+                ? 'Gilt jetzt — automatisch, bei diesem Fenster ' + Math.round(f * 100) + ' %.'
+                : 'Gilt jetzt — fest auf ' + Math.round(f * 100) + ' %.')
+            : 'Gilt, sobald du das Vollbild verlässt.';
+    }
+    const tv = document.getElementById('einstAnzeigeVollText');
+    if(tv){
+        tv.textContent = imVoll
+            ? ((anzeigeWahl('voll') === 'auto')
+                ? 'Gilt jetzt — automatisch, bei diesem Fenster ' + Math.round(f * 100) + ' %.'
+                : 'Gilt jetzt — fest auf ' + Math.round(f * 100) + ' %.')
+            : 'Gilt, sobald du ins Vollbild gehst (Knopf oben oder F11).';
     }
 }
 
 // Beim Ziehen am Fenster nicht bei jedem Pixel neu rechnen.
+//
+//  DIE ABKUERZUNG "nur wenn automatisch" IST HIER RAUSGEFLOGEN.
+//  Sie stimmte, solange es EINE Groesse gab. Jetzt gibt es zwei, und
+//  der Wechsel zwischen ihnen zeigt sich als Groessenaenderung des
+//  Fensters - bei F11 sogar ausschliesslich so, denn ein
+//  Vollbild-Ereignis gibt es dafuer nicht. Wer hier zu frueh
+//  abbricht, bleibt nach F11 auf der Groesse der normalen Ansicht
+//  sitzen, obwohl fuer das Vollbild eine andere eingestellt ist.
 let anzeigeUhr = null;
 window.addEventListener('resize', () => {
-    if(anzeigeWahl() !== 'auto') return;
     if(anzeigeUhr) clearTimeout(anzeigeUhr);
     anzeigeUhr = setTimeout(anzeigeAnwenden, 150);
 });
+
+// Der Knopf im Trainer meldet sich ueber die Fullscreen-Schnittstelle.
+// Hier kommt die Umschaltung sofort an, ohne den Umweg ueber resize.
+for(const ereignis of ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']){
+    document.addEventListener(ereignis, () => {
+        try{ anzeigeAnwenden(); }catch(e){}
+    });
+}
 
 const STILE = ['light', 'green', 'blue', 'orange', 'grey'];
 const STIL_ANZEIGE = {
@@ -17550,8 +18923,46 @@ function stilSetzen(stil) {
     if (stil !== 'light') document.body.classList.add(stil);
     try { localStorage.setItem('theme', stil); } catch (e) {}
     applyThemeButtonLabel();
+    browserfarbeNachziehen();
 }
 window.stilSetzen = stilSetzen;
+
+// ================================================================
+//  DIE LEISTE DES BROWSERS FAERBT SICH MIT
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Kann man das so aufbauen, dass die Leiste
+//  vom Browser mit die Farbe wechselt?"
+//
+//  Teilweise - und es lohnt sich zu wissen, wo:
+//
+//    Handy (Chrome auf Android): JA. Die Adressleiste nimmt die Farbe
+//      aus <meta name="theme-color">.
+//    Als App auf dem Startbildschirm oder ueber "Verknuepfung
+//      erstellen": JA. Der Fensterrahmen nimmt dieselbe Farbe.
+//    Safari ab Version 15: JA, die Leiste faerbt sich mit.
+//    Gewoehnliches Chrome- oder Edge-Fenster am Rechner: NEIN. Die
+//      Werkzeugleiste dort gehoert dem Browser und richtet sich nach
+//      dessen eigenem Design, nicht nach der Seite. Keine Seite der
+//      Welt kann das aendern - und das ist Absicht, sonst koennte
+//      sich jede Seite als Browser verkleiden.
+//
+//  Statt eine Farbe je Ansicht von Hand zu pflegen, wird schlicht
+//  abgelesen, welchen Hintergrund die Seite gerade hat. Damit stimmt es
+//  auch dann noch, wenn eine Ansicht spaeter umgefaerbt wird.
+// ================================================================
+function browserfarbeNachziehen(){
+    try{
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if(!meta || !document.body) return;
+        const bg = getComputedStyle(document.body).backgroundColor || '';
+        const m = bg.match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+        if(!m) return;
+        const hex = '#' + [1,2,3].map(i => Number(m[i]).toString(16).padStart(2,'0')).join('');
+        meta.setAttribute('content', hex);
+    }catch(e){}
+}
+window.browserfarbeNachziehen = browserfarbeNachziehen;
+document.addEventListener('DOMContentLoaded', browserfarbeNachziehen);
 
 function applyThemeButtonLabel() {
     const btn = document.getElementById('themeToggleBtn');
@@ -17653,6 +19064,78 @@ window.vollbildUm = vollbildUm;
 for(const ereignis of ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']){
     document.addEventListener(ereignis, vollbildKnopfNachziehen);
 }
+
+// ================================================================
+//  AM HANDY GLEICH INS VOLLBILD
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026, zur Meldung "... zum Beenden des
+//  Vollbildmodus: von oben nach unten wischen": "Beim Oeffnen sofort
+//  auf Vollbild."
+//
+//  Die Meldung selbst gehoert Chrome und laesst sich von keiner Seite
+//  unterdruecken. Was sich aendern laesst, ist der ZEITPUNKT: Sie soll
+//  gleich am Anfang kommen und nicht mitten in der Runde, wenn man den
+//  Knopf drueckt.
+//
+//  WARUM NICHT BEIM LADEN, SONDERN BEIM ERSTEN ANTIPPEN:
+//  Kein Browser laesst das Vollbild aus dem Nichts zu - es geht nur als
+//  Antwort auf eine Bedienung. Ein Aufruf beim Laden oder aus einem
+//  Zeitgeber wird abgewiesen ("Permissions check failed"), und zwar
+//  wortlos. Deshalb haengt es hier am allerersten Antippen: Das ist der
+//  frueheste Zeitpunkt, an dem es ueberhaupt erlaubt ist, und aus Sicht
+//  des Benutzers immer noch "beim Oeffnen".
+//
+//  Genau EINMAL pro Seitenaufruf. Sonst kaeme man aus dem Vollbild nie
+//  wieder heraus: Wer es mit dem Knopf verlaesst, tippt danach ja
+//  weiter - und waere sofort wieder drin.
+//
+//  Nicht am Rechner (dort ist der Knopf da, wo er hingehoert), nicht
+//  wenn der Trainer ohnehin schon als App vom Startbildschirm laeuft,
+//  und nicht, wenn der erste Griff dem Vollbild-Knopf selbst gilt -
+//  sonst schaltete er ein und der Klick gleich wieder aus.
+//
+//  Abschaltbar in den Einstellungen; wer es einmal ausschaltet, hat
+//  Ruhe.
+// ================================================================
+const VOLLBILD_AUTO_SCHLUESSEL = 'amateurfunk_vollbild_auto';
+
+function vollbildAutoAn(){
+    try{ return localStorage.getItem(VOLLBILD_AUTO_SCHLUESSEL) !== 'nein'; }
+    catch(e){ return true; }
+}
+window.vollbildAutoAn = vollbildAutoAn;
+
+function vollbildAutoSetzen(an){
+    try{ localStorage.setItem(VOLLBILD_AUTO_SCHLUESSEL, an ? 'ja' : 'nein'); }catch(e){}
+    const t = document.getElementById('einstVollbildText');
+    if(t) t.textContent = an
+        ? 'Der Trainer geht am Handy beim ersten Antippen von selbst ins Vollbild.'
+        : 'Das Vollbild wird nur über den Knopf oben eingeschaltet.';
+}
+window.vollbildAutoSetzen = vollbildAutoSetzen;
+
+(function vollbildAutoVorbereiten(){
+    let schonProbiert = false;
+    const einmal = (e) => {
+        if(schonProbiert) return;
+        // Der erste Griff gilt dem Vollbild-Knopf? Dann macht der das
+        // schon selbst - hier waere es Einschalten und sofort Ausschalten.
+        try{ if(e && e.target && e.target.closest && e.target.closest('#vollbildBtn')) return; }catch(err){}
+        schonProbiert = true;
+        try{
+            if(!vollbildAutoAn()) return;
+            if(!document.body.classList.contains('schmal')) return;
+            if(typeof laeuftAlsApp === 'function' && laeuftAlsApp()) return;
+            if(vollbildLaeuft()) return;
+            // Direkt aufrufen, ohne await davor: Die Erlaubnis des
+            // Browsers gilt nur, solange die Bedienung noch "frisch" ist.
+            vollbildUm();
+        }catch(err){}
+    };
+    document.addEventListener('pointerdown', einmal, true);
+    document.addEventListener('touchend',    einmal, true);
+    document.addEventListener('keydown',     einmal, true);
+})();
 
 function toggleTheme() {
     const jetzt = aktuellerStil();
@@ -18221,7 +19704,8 @@ function printExam() {
                 papier:       d.papier,
                 amtlich:      d.amtlich,
                 beschreibung: d.beschreibung,
-                minuten:      Math.round((meta.zeit || 45*60) / 60),
+                minuten:      Math.round(((typeof window.pruefZeit === 'function')
+                                  ? window.pruefZeit(t) : (meta.zeit || 45*60)) / 60),
                 istTechnik:   t.indexOf('technik') === 0,
                 fragen:       shuffleArray(realisticPool(t)).slice(0, 25)
             };
@@ -18770,6 +20254,14 @@ if (originalSelectOption) {
               steht sie jetzt hier, ganz am Ende.
            ============================================================ */
         .pruefung-aus { display: none !important; }
+
+        /* Aus demselben Grund und an derselben Stelle: Der Knopf
+           "Zuruecknehmen" ist ein .nav-btn, und .nav-btn setzt weiter oben
+           display:inline-flex !important. Ein style="display:none" am
+           Element hat dagegen keine Chance - nachgemessen kam trotz
+           Inline-Wert "none" als berechneter Wert "flex" heraus. Eine
+           Klasse mit !important, ganz am Ende des Stylesheets, gewinnt. */
+        .zurueck-aus { display: none !important; }
 
     
         /* ================================================================
@@ -20448,12 +21940,124 @@ function realisticTeile(){
   return REALISTIC_REIHENFOLGE.filter(t => realisticPool(t).length >= 25);
 }
 function realisticGesamtzeit(teile){
-  return teile.reduce((s,t)=> s + (REALISTIC_PART_META[t] ? REALISTIC_PART_META[t].zeit : REALISTIC_TIME), 0);
+  return teile.reduce((s,t)=> s + pruefZeit(t), 0);
 }
 function realisticZeitText(teil){
-  const z = REALISTIC_PART_META[teil] ? REALISTIC_PART_META[teil].zeit : REALISTIC_TIME;
-  return Math.round(z/60) + ' Minuten';
+  return Math.round(pruefZeit(teil)/60) + ' Minuten';
 }
+// ================================================================
+//  NACHTEILSAUSGLEICH - MEHR ZEIT
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Fuer den Nachteilsausgleich gibt es mehr
+//  Zeit fuer die Pruefung. Bin mir nicht ganz sicher welche Zeit? Ich
+//  vermute 60 Minuten fuer jeden Pruefungsteil. Das muss ein und
+//  ausschaltbar sein."
+//
+//  NACHGESEHEN, UND DIE VERMUTUNG STIMMT SO NICHT:
+//  In der Amtsblatt-Verfuegung 29/2024 der Bundesnetzagentur stehen die
+//  amtlichen Zeiten - 45 Minuten je Teil, 60 Minuten fuer Technik
+//  Klasse A - und zum Nachteilsausgleich nur der Satz, dass "Menschen
+//  mit Behinderung ihrer Behinderung entsprechende Erleichterungen bei
+//  der Pruefungsdurchfuehrung zu gewaehren" sind. WIE VIEL mehr Zeit,
+//  steht dort nicht: Das entscheidet die zustaendige Stelle im
+//  Einzelfall, und es kann statt Zeit auch eine Einzelpruefung oder
+//  eine muendliche Abnahme sein.
+//
+//  Deshalb keine feste Zahl im Code, sondern ein FAKTOR, den der
+//  Benutzer waehlt. Ein Drittel mehr macht aus 45 genau die 60 Minuten,
+//  die Dietmar im Kopf hatte - deshalb steht diese Stufe mit in der
+//  Liste, aber eben als Wahl und nicht als Gesetz.
+//
+//  Der Faktor liegt im localStorage und gehoert zum Rechner, nicht zum
+//  Lernstand: Wer den Nachteilsausgleich braucht, braucht ihn bei jedem
+//  Benutzer-Slot, den er benutzt.
+//
+//  ES GIBT NUR EINE STELLE, DIE ZEITEN AUSRECHNET. Alles, was eine
+//  Pruefungszeit anzeigt oder herunterzaehlt, geht durch pruefZeit() -
+//  Uebersichtstabelle, Simulator, Auswahlkacheln, Ausdruck. Sonst
+//  stuende in der Tabelle 45 und im Simulator liefen 60.
+// ================================================================
+const NA_SCHLUESSEL = 'amateurfunk_na_zeit';   // Faktor als Text, '1' = aus
+
+function naZeitFaktor(){
+    try{
+        const f = parseFloat(localStorage.getItem(NA_SCHLUESSEL) || '1');
+        return (f >= 1 && f <= 3) ? f : 1;
+    }catch(e){ return 1; }
+}
+window.naZeitFaktor = naZeitFaktor;
+function naZeitAn(){ return naZeitFaktor() > 1.001; }
+window.naZeitAn = naZeitAn;
+
+// Die Zeit eines Teils in Sekunden, auf volle Minuten gerundet - eine
+// Pruefungszeit von "56,25 Minuten" waere Unfug auf der Anzeige.
+function pruefZeit(teil){
+    const m = REALISTIC_PART_META[teil];
+    const grund = (m && m.zeit) || REALISTIC_TIME;
+    return Math.round(grund * naZeitFaktor() / 60) * 60;
+}
+window.pruefZeit = pruefZeit;
+
+function naZeitSetzen(wert){
+    const f = parseFloat(wert);
+    try{ localStorage.setItem(NA_SCHLUESSEL, (f >= 1 && f <= 3) ? String(f) : '1'); }catch(e){}
+    naFelderNachziehen();
+    // Die Uebersichtstabelle in der Hauptansicht zeigt die Zeiten mit an -
+    // sie wird von klasseAnzeigeAktualisieren() aufgebaut.
+    try{ if(typeof window.klasseAnzeigeAktualisieren === 'function') window.klasseAnzeigeAktualisieren(); }catch(e){}
+}
+window.naZeitSetzen = naZeitSetzen;
+
+// Der Haken schaltet nur ein und aus; welcher Faktor dann gilt, sagt das
+// Auswahlfeld. Beim Einschalten wird der zuletzt gewaehlte Faktor wieder
+// genommen, damit man ihn nicht jedes Mal neu sucht.
+function naZeitUmschalten(an){
+    if(!an){ naZeitSetzen(1); return; }
+    let f = 1.3333;
+    try{ f = parseFloat(localStorage.getItem(NA_SCHLUESSEL + '_letzt') || '1.3333') || 1.3333; }catch(e){}
+    naZeitSetzen(f);
+}
+window.naZeitUmschalten = naZeitUmschalten;
+
+function naFelderNachziehen(){
+    const an = naZeitAn();
+    const f  = naZeitFaktor();
+    if(an){ try{ localStorage.setItem(NA_SCHLUESSEL + '_letzt', String(f)); }catch(e){} }
+
+    const haken = document.getElementById('einstNaAn');
+    if(haken) haken.checked = an;
+
+    const feld = document.getElementById('einstNaZeit');
+    if(feld){
+        feld.disabled = !an;
+        feld.style.opacity = an ? '1' : '0.45';
+        if(an){
+            // Den naechstliegenden Eintrag waehlen - der gespeicherte Wert
+            // koennte aus einer aelteren Fassung mit anderen Stufen stammen.
+            let beste = feld.options[0], abstand = 99;
+            for(const o of feld.options){
+                const d = Math.abs(parseFloat(o.value) - f);
+                if(d < abstand){ abstand = d; beste = o; }
+            }
+            feld.value = beste.value;
+        }
+    }
+
+    const text = document.getElementById('einstNaText');
+    if(text){
+        if(!an){
+            text.textContent = 'Aus — es gelten die amtlichen Zeiten.';
+        }else{
+            const v45 = Math.round(45 * f);
+            const v60 = Math.round(60 * f);
+            text.innerHTML = 'Damit wird aus <b>45 Minuten ' + v45 + '</b> und aus '
+                           + '<b>60 Minuten ' + v60 + '</b> — das gilt im Simulator, '
+                           + 'in der Prüfungsübersicht und auf dem Ausdruck.';
+        }
+    }
+}
+window.naFelderNachziehen = naFelderNachziehen;
+
 window.realisticTeile = realisticTeile;
 window.realisticPool = realisticPool;
 window.REALISTIC_PART_META = REALISTIC_PART_META;
@@ -20572,7 +22176,9 @@ window.showRealisticSelection = function(){
       <p class="sub">${teile.length === 1
           ? 'Ein Teil · 25 Fragen · ' + realisticZeitText(teile[0])
           : teile.length + ' Teile · je 25 Fragen · '
-            + (teile.some(t=>REALISTIC_PART_META[t].zeit!==45*60) ? 'je 45 Minuten, Technik A 60 Minuten' : 'je 45 Minuten')
+            + (naZeitAn()
+                 ? teile.map(t => Math.round(pruefZeit(t)/60)).join(' / ') + ' Minuten (verlängert)'
+                 : (teile.some(t=>REALISTIC_PART_META[t].zeit!==45*60) ? 'je 45 Minuten, Technik A 60 Minuten' : 'je 45 Minuten'))
         } · ab 19/25 bestanden · Grauzone 17-18</p>
     </div>
     <div class="realistic-rules">
@@ -20589,7 +22195,7 @@ window.showRealisticSelection = function(){
           <div class="rpc-icon">${REALISTIC_PART_META[p].icon}</div>
           <div class="rpc-main">
             <div class="rpc-name">${REALISTIC_PART_META[p].name}</div>
-            <div class="rpc-desc">${REALISTIC_PART_META[p].desc} · Pool: ${poolCounts[p]} Fragen · ${Math.round(REALISTIC_PART_META[p].zeit/60)} Min</div>
+            <div class="rpc-desc">${REALISTIC_PART_META[p].desc} · Pool: ${poolCounts[p]} Fragen · ${Math.round(pruefZeit(p)/60)} Min</div>
           </div>
           <div class="rpc-check"><i class="fas fa-check"></i></div>
         </div>
@@ -20739,7 +22345,7 @@ function startRealisticPart(){
   const part = realisticExam.order[realisticExam.currentIdx];
   realisticExam.currentPart = part;
   const pool = realisticPool(part);
-  const teilZeit = (REALISTIC_PART_META[part] && REALISTIC_PART_META[part].zeit) || REALISTIC_TIME;
+  const teilZeit = pruefZeit(part);
   realisticExam.teilZeit = teilZeit;
   if(pool.length<25){
     const nm = REALISTIC_PART_META[part] ? REALISTIC_PART_META[part].name : part;
@@ -21664,6 +23270,15 @@ window.startDuoQuizFromServer = function(data){
     try{
         const modal=document.getElementById('duoModal');
         if(modal) modal.style.display='none';
+        // Die Auswertung der vorigen Runde muss weg, sonst liegt sie ueber
+        // der ersten Frage der neuen. Und die Merkposten zurueck, sonst
+        // erscheint die naechste Auswertung nicht mehr.
+        try{
+            if(typeof window.closeRealisticModal === 'function') window.closeRealisticModal();
+            window._duoFinalShown = false;
+            window._duoFinalAutoRequested = false;
+            window._duoJubelKennung = null;
+        }catch(e){}
         let questions = data.questionsFull || data.questions || [];
         console.log('[DUO] Fragen aus Server:', questions.length);
         if(window.startDuoQuizWithQuestions){
@@ -22045,9 +23660,64 @@ document.addEventListener('DOMContentLoaded', function () {
     'use strict';
     function leiste() { return document.querySelector('.filter-bar'); }
 
+    // ================================================================
+    //  ZUSAMMENRUECKEN, STATT UMBRECHEN ODER ABSCHNEIDEN
+    //  ----------------------------------------------------------------
+    //  Dietmar am 07.09.2026, in drei Schritten:
+    //    "Manchmal, nicht immer, ist der Button Gruppenraum nur halb zu
+    //     sehen."  -> die Leiste war ein paar Punkte zu breit.
+    //    "Der Button Gruppenraum verschiebt sich in 2. Reihe."
+    //     -> der Umbruch war auch nicht die Loesung.
+    //    "Das war nur bei 90 %."  -> es haengt an der Anzeigegroesse.
+    //
+    //  Er will EINE Zeile, in der alles steht. Also wird gemessen und
+    //  zusammengerueckt: Passt es nicht, werden Innenabstaende und
+    //  Luecken enger - erst eine Stufe, wenn noetig zwei. Reicht auch
+    //  das nicht, bleibt es beim seitlichen Schieben von frueher.
+    //
+    //  DREI DINGE, DIE HIER LEICHT SCHIEFGEHEN:
+    //
+    //  1. Vor jeder Messung muessen BEIDE Klassen weg. Sonst misst man
+    //     die schon zusammengerueckte Leiste und kaeme nie wieder in die
+    //     weite Darstellung zurueck, wenn Platz frei wird - etwa weil ein
+    //     Zaehler verschwindet oder die Anzeigegroesse sich aendert.
+    //
+    //  2. Waehrend einer Runde ist die Leiste ausgeblendet. Dann sind
+    //     alle Breiten null, und die Messung wuerde "passt" sagen, ohne
+    //     etwas gesehen zu haben.
+    //
+    //  3. Die Sperre gegen den Kreisel: Der ResizeObserver weiter unten
+    //     ruft diese Pruefung auf, und die Pruefung aendert die Hoehe der
+    //     Leiste (die enge Stufe macht die Knoepfe flacher) - was den
+    //     Beobachter erneut ausloesen wuerde. _laeuft unterbindet den
+    //     Ruecklauf; der Beobachter selbst meldet sich nur, wenn sich die
+    //     Groesse am Ende wirklich geaendert hat, also ist danach Ruhe.
+    // ================================================================
+    function leisteEngPruefen() {
+        const bar = leiste();
+        if (!bar) return;
+        if (bar.offsetParent === null) return;
+        if (leisteEngPruefen._laeuft) return;
+        leisteEngPruefen._laeuft = true;
+        try {
+            bar.classList.remove('eng', 'sehr-eng', 'ohne-zeichen');
+            if (bar.scrollWidth > bar.clientWidth + 1) {
+                bar.classList.add('eng');
+                if (bar.scrollWidth > bar.clientWidth + 1) {
+                    bar.classList.add('sehr-eng');
+                    if (bar.scrollWidth > bar.clientWidth + 1) bar.classList.add('ohne-zeichen');
+                }
+            }
+        } finally {
+            leisteEngPruefen._laeuft = false;
+        }
+    }
+    window.leisteEngPruefen = leisteEngPruefen;
+
     function randHinweisSetzen() {
         const bar = leiste();
         if (!bar) return;
+        leisteEngPruefen();
         const scrollbar = bar.scrollWidth - bar.clientWidth;
         if (scrollbar <= 2) {
             bar.classList.remove('mehr-links', 'mehr-rechts');
@@ -22075,6 +23745,20 @@ document.addEventListener('DOMContentLoaded', function () {
         window.addEventListener('resize', randHinweisSetzen);
         if (window.ResizeObserver) {
             try { new ResizeObserver(randHinweisSetzen).observe(bar); } catch (e) {}
+        }
+        // Der ResizeObserver meldet sich nur, wenn sich der KASTEN aendert.
+        // Die Knoepfe darin aendern sich aber staendig, ohne dass er
+        // groesser wird: "Blaettern" wird zu "Weiterblaettern", ein Zaehler
+        // taucht auf, "Auffrischen" kommt dazu. Genau daran hing Dietmars
+        // Fehler ("manchmal, nicht immer"). Ein MutationObserver auf den
+        // INHALT faengt das - bewusst ohne attributes, sonst loeste die
+        // Pruefung mit ihrer eigenen Klasse den naechsten Durchlauf aus.
+        if (window.MutationObserver) {
+            try {
+                new MutationObserver(randHinweisSetzen).observe(bar, {
+                    childList: true, characterData: true, subtree: true
+                });
+            } catch (e) {}
         }
         randHinweisSetzen();
     }

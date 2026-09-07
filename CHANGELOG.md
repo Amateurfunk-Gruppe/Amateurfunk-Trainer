@@ -8,6 +8,982 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.213.0] - 2026-09-07
+
+### Hinzugefügt
+- **Antwort zurücknehmen.** Dietmar: „Bei Zittern oder Tremor ist ein Fehlklick
+  keine falsche Antwort, sondern eine verrutschte Hand. Das ist für mich der
+  wichtigste Punkt."
+
+  Nach dem Antworten steht **Zurücknehmen** in der Knopfreihe unter der Frage —
+  oder **Strg+Z**. Es gilt beim Lernen, im Prüfungssimulator und im Gruppenraum.
+
+  **Warum eine Sicherung und keine Rückrechnung:** Eine Antwort zieht mehr nach
+  sich, als man beim Lesen von `selectOption` denkt — Fehlerliste, Lernbedarf mit
+  seinen Zählern, Lernfortschritt mit Streak, der Fortschritt der Runde und die
+  beiden Zähler für Anzahl und Treffer. Jeden dieser Schritte rückwärts
+  nachzubauen hieße, `handleDifficultOnWrong`, `handleDifficultOnCorrect` und
+  `handleMasteryOnAnswer` ein zweites Mal zu schreiben — und beim nächsten Mal,
+  wenn sich eine davon ändert, hier den Fehler zu haben. Stattdessen wird **vor**
+  der Wertung eine Kopie der betroffenen Stellen gemacht und beim Zurücknehmen
+  genau diese Kopie zurückgeschrieben.
+
+  Es gilt nur für die **gerade offene Frage** — wer weiterblättert, lässt die
+  Antwort stehen. Im **Gruppenraum** ist die Antwort schon beim Server; der
+  speichert sie je Frage und überschreibt sie mit der nächsten, eine korrigierte
+  Antwort kommt also richtig an.
+
+  **Nachgemessen** (jeweils vorher / nach der Antwort / nach dem Zurücknehmen):
+
+  | | vorher | nach | zurück |
+  |---|---|---|---|
+  | Antwort | – | 0 | – ✔ |
+  | gezählt / richtig | 0 / 0 | 1 / 0 | 0 / 0 ✔ |
+  | Fortschritt | `answered:false` | `answered:true` | `answered:false` ✔ |
+  | Fehlerliste | 18 | 19 | 18 ✔ |
+  | Lernbedarf | – | `wrongCount:1` | – ✔ |
+  | Lernfortschritt | – | `totalWrong:1` | – ✔ |
+
+- **Gesprochener Text für jede Funktion im Nachteilsausgleich.** Dietmar: „Unter
+  Nachteilsausgleich möchte ich bei jeder Funktion einen gesprochenen Text. Bei
+  Ausführlich soll er das sagen: *Ausführlich — in ganzen Sätzen, so wie man es
+  jemandem erklärt, der daneben sitzt.*"
+
+  Alle **17** Bedienelemente des Reiters tragen jetzt `data-vorlesen` und
+  `data-vorlesen-kurz` — Stimme, Probe hören, Stimmen hinzufügen, beide
+  Vorlese-Schalter, Knöpfe vorlesen, Kurz, Ausführlich, Schrift vergrößern,
+  Tastatur, Zurücknehmen, Automatisch weiter samt Auswahlfeld, Bilder vergrößern
+  samt Auswahlfeld, Prüfungszeit samt Auswahlfeld. „Ausführlich" sagt genau den
+  Satz, den Dietmar vorgegeben hat.
+
+  Die Sätze hängen am umgebenden `<label>` beziehungsweise am Kasten, nicht am
+  Kästchen selbst — der Zuhörer am Dokument sucht das nächste Element mit einem
+  solchen Text, und beim Anfahren landet der Zeiger auf dem Label.
+
+### Behoben
+- **Der Knopf „Zurücknehmen" ließ sich nicht ausblenden.** `style="display:none"`
+  am Element half nicht: `.nav-btn` setzt weiter oben `display:inline-flex`
+  **mit `!important`**, und das schlägt jeden Inline-Wert ohne `!important`.
+  Nachgemessen kam trotz Inline-Wert `none` als berechneter Wert `flex` heraus.
+  Gelöst wie schon bei `.pruefung-aus`: eine eigene Klasse mit `!important`, ganz
+  am Ende des Stylesheets — bei gleicher Spezifität gewinnt die spätere Regel.
+
+---
+
+## [1.212.0] - 2026-09-07
+
+### Geändert
+- **Der Reiter „Nachteilsausgleich" trägt jetzt das durchgestrichene Auge.**
+  Dietmar hat das internationale Sehbehinderten-Zeichen geschickt — das
+  stilisierte Auge mit Schrägstrich auf blauem Grund — und gesagt: „Das Zeichen
+  gefällt mir gut."
+
+  Sein Bild ist ein genormtes Piktogramm und nicht unseres; nachgebaut wird es
+  deshalb nicht. Font Awesome bringt aber mit **`eye-low-vision`** dieselbe
+  Aussage in derselben Formsprache mit — ein Auge mit Schrägstrich —, und die
+  Schriftart liegt ohnehin im Ordner. Damit kommt keine Datei dazu und nichts
+  Fremdes ins Projekt.
+
+  Nachgesehen: In `fontawesome/css/all.min.css` steht
+  `.fa-eye-low-vision:before,.fa-low-vision:before{content:"\f2a8"}` — das
+  Zeichen ist in der **Free**-Ausgabe enthalten und im Stil `fas` erreichbar,
+  also genau so, wie die Reiterleiste ihre Zeichen einbindet.
+
+---
+
+## [1.211.0] - 2026-09-07
+
+### Hinzugefügt
+- **Automatisch weiterblättern.** Dietmar: „Beim Lernen, Prüfungsraum,
+  Gruppenraum soll es automatisch ‚weiter' klicken nach 3 Sekunden. Das gehört
+  auch unter Nachteilsausgleich. Ein und abschaltbar."
+
+  Es hängt an `selectOption` — also an dem Augenblick, in dem eine Antwort steht.
+  Damit gilt es in allen drei Lagen von selbst: beim Lernen, im
+  Prüfungssimulator und im Gruppenraum, denn alle drei beantworten Fragen über
+  dieselbe Funktion. Wählbar sind 2, 3, 5, 8 oder 12 Sekunden.
+
+  **Vier Dinge sind eingebaut, damit es nicht überrumpelt:**
+
+  1. **Es wartet auf die Stimme.** Wer das Vorlesen braucht, braucht es ganz.
+     Eine Uhr, die während des Vorlesens weiterläuft, schnitte genau die Hilfe
+     ab, um die es hier geht. Solange gesprochen wird, steht der Zähler still.
+  2. **Die letzte Frage bleibt stehen.** Dort führt „Weiter" nicht zur nächsten
+     Frage, sondern ins Ergebnis — mit Konfetti und Auswertung. Da
+     hineinzuspringen wäre ein Schreck und kein Nachteilsausgleich.
+  3. **Man sieht ihn laufen:** im Knopf steht *Weiter (3)*, *(2)*, *(1)*.
+  4. **Jede Bedienung bricht ab.** Wer eine Taste drückt oder irgendwo
+     hinklickt, will länger schauen.
+
+- **Bilder stärker vergrößern.** Dietmar: „Für Bilder einen größeren Zoom. Ein
+  und abschaltbar." Vier Stufen von *ein Drittel größer* bis *so groß wie
+  möglich*. Multipliziert wird **beides** — die feste Obergrenze in Punkten und
+  der Anteil am Fenster. Nur die Obergrenze anzuheben brächte auf einem kleinen
+  Laptop nichts, weil dort ohnehin der Anteil greift; nur den Anteil anzuheben
+  brächte auf einem großen Monitor nichts. Der Anteil wird bei 92 % gekappt — ein
+  Bild, das den Rand berührt, sieht aus wie ein Fehler.
+
+  Gemessen an einem 120 × 80 großen Schaltzeichen: aus → **392 px**,
+  ein Drittel → 504, halb → 580, doppelt → 767, so groß wie möglich → **917 px**.
+
+### Behoben
+- **Im Reiter stand das Zeichen über dem Wort.** Dietmar: „Das Zeichen sitzt
+  oberhalb von dem Text." Der Knopf war ein Block mit einem Zeichen davor —
+  solange die Beschriftungen kurz waren, fiel das nicht auf.
+  „Nachteilsausgleich" passte dann nicht mehr in eine Zeile. Jetzt ist der Knopf
+  eine Flex-Zeile mit `white-space: nowrap`, und die Spalte links ist von 180 auf
+  **210 Punkte** verbreitert.
+
+  (Das Zeichen ist übrigens kein Rollstuhl, sondern das allgemeine
+  Barrierefreiheits-Zeichen — eine Figur mit ausgebreiteten Armen im Kreis.)
+
+- **Das Fenster „Einstellungen" ist breiter und flacher.** Dietmar: „Das Fenster
+  Einstellungen etwas mehr in die Breite ziehen und es kann um 10 % kürzer sein."
+  860 → **1040 Punkte** breit, 92 % → **83 %** der Fensterhöhe. Die Kästen im
+  Nachteilsausgleich haben lange Erklärungen; auf 860 brachen sie auf fünf und
+  sechs Zeilen um, und das Fenster wurde dadurch hoch statt breit.
+
+**Gemessen:** Zähler läuft 3 → 2 → 1, dann weiter ✔ · Tastendruck hält ihn an ✔ ·
+letzte Frage bleibt stehen ✔ · Bildvergrößerung in allen fünf Stufen ✔ · Zeichen
+steht neben dem Wort ✔ · Fenster 988 × 830 statt 860 × 920 ✔ · keine
+Fehlermeldung ✔
+
+---
+
+## [1.210.0] - 2026-09-07
+
+### Geändert
+- **Aus dem Reiter „Vorlesen" wird „Nachteilsausgleich", und die
+  Tastaturbedienung zieht dort ein.** Dietmar: „Vorlesen wird
+  Nachteilsausgleich. Bedienung für Tastatur muss da mit rein."
+
+  Er hat recht: Vorlesen, Tastaturbedienung und mehr Zeit in der Prüfung sind
+  dasselbe Thema — Wege, die Prüfung für jemanden gangbar zu machen, dem der
+  übliche Weg verstellt ist. Über zwei Reiter verstreut findet man sie nur, wenn
+  man schon weiß, dass es sie gibt.
+
+  Die interne Kennung bleibt `vorlesen`. Sie steht an einem Dutzend Stellen; sie
+  mitzuändern brächte nichts außer der Gelegenheit, eine davon zu übersehen.
+
+### Hinzugefügt
+- **Verlängerte Prüfungszeit — ein- und ausschaltbar.** Dietmar: „Für den
+  Nachteilsausgleich gibt es mehr Zeit für die Prüfung. Bin mir nicht ganz sicher
+  welche Zeit? Ich vermute 60 Minuten für jeden Prüfungsteil."
+
+  **Nachgesehen — und die Vermutung stimmt so nicht.** In der
+  Amtsblatt-Verfügung **29/2024** der Bundesnetzagentur stehen die amtlichen
+  Zeiten (45 Minuten je Teil, 60 Minuten für Technik Klasse A) und zum
+  Nachteilsausgleich nur der Satz, dass „Menschen mit Behinderung ihrer
+  Behinderung entsprechende Erleichterungen bei der Prüfungsdurchführung zu
+  gewähren" sind. **Wie viel** mehr Zeit, steht dort nicht: Das entscheidet die
+  zuständige Stelle im Einzelfall, und es kann statt Zeit auch eine Einzelprüfung
+  oder eine mündliche Abnahme sein. Der Nachweis (ärztliches Attest) gehört zur
+  Anmeldung.
+
+  Deshalb keine feste Zahl im Code, sondern ein **Faktor zum Auswählen**:
+  +25 % · **ein Drittel mehr (45 → 60)** · +50 % · doppelte Zeit. Die Stufe mit
+  den 60 Minuten steht mit in der Liste, weil sie Dietmars Zahl trifft — aber als
+  Wahl und nicht als Gesetz. Der Kasten sagt das auch dem Benutzer, samt Quelle.
+
+  **Es gibt nur eine Stelle, die Zeiten ausrechnet.** Alles, was eine
+  Prüfungszeit anzeigt oder herunterzählt, geht durch `pruefZeit()` —
+  Übersichtstabelle, Auswahlkacheln, beide Simulatoren, Ausdruck. Sonst stünde in
+  der Tabelle 45 und im Simulator liefen 60. In der Übersichtstabelle steht bei
+  verlängerter Zeit ein kleines **+** hinter den Minuten.
+
+  Die Einstellung gehört zum Rechner, nicht zum Lernstand: Wer den
+  Nachteilsausgleich braucht, braucht ihn in jedem Benutzer-Slot.
+
+**Gemessen** (Simulator über die Oberfläche gestartet):
+
+| Stufe | Übersicht | Kachel | Uhr im Simulator |
+|---|---|---|---|
+| aus | 45 min | 45 Min | **45:00** ✔ |
+| ein Drittel mehr | 60 min + | 60 Min | **60:00** ✔ |
+| +50 % | 68 min + | 68 Min | **68:00** ✔ |
+
+Ausschalten stellt überall 45 wieder her ✔ · beim Wiedereinschalten kommt die
+zuletzt gewählte Stufe zurück ✔ · „Bedienung per Tastatur" steht im neuen Reiter
+und nicht mehr unter „Allgemein" ✔ · keine Fehlermeldung ✔
+
+---
+
+## [1.209.0] - 2026-09-07
+
+### Hinzugefügt
+- **Nachschlagen: Claude, DeepSeek und Meta KI stehen jetzt mit zur Wahl.**
+  Dietmar: „Hier könnten wir noch Meta KI, DeepSeek und Claude einbauen."
+
+  Damit sind es sieben Ziele, in zwei Gruppen — und die Gruppen stehen so im
+  Auswahlfeld, weil sie sich technisch wirklich unterscheiden:
+
+  **Bekommt die Frage direkt** — Google KI · Google · ChatGPT · **Claude** ·
+  Perplexity. Die Frage steht im Link, die Seite antwortet beim Öffnen von
+  selbst. Claude nimmt sie über `claude.ai/new?q=` entgegen, genau wie ChatGPT
+  über `chatgpt.com/?q=`.
+
+  **Frage wird kopiert** — **DeepSeek** · **Meta KI**. Beide Seiten kennen
+  keinen Parameter, mit dem sich eine fertige Frage mitgeben lässt — derselbe
+  Grund, aus dem Gemini bis heute nicht in der Liste steht. Statt sie deshalb
+  wegzulassen, geht es hier über die Zwischenablage: Die Frage wird kopiert, die
+  Seite geht auf, und ein Hinweis unten sagt, dass jetzt **Strg+V** dran ist. Ein
+  Handgriff mehr, aber abtippen muss niemand.
+
+  Ein Detail, das leicht schiefgeht: **Kopiert wird vor `window.open`.** Danach
+  liegt der Zugriff auf die Zwischenablage in einem Fenster, das nicht mehr im
+  Vordergrund ist — manche Browser verweigern ihn dann. Klappt es doch einmal
+  nicht, sagt der Hinweis das ehrlich, statt eine leere Zwischenablage
+  vorzugeben.
+
+  Sollte eine der beiden Seiten später doch einen Parameter bekommen, ist es im
+  Quelltext eine Zeile: `kopieren` raus, `adresse` mit `?q=` wie bei den anderen.
+
+**Gemessen:** alle sieben Adressen richtig aufgebaut ✔ · Knopf neben der Frage
+trägt Namen und Zeichen des Ziels (Meta KI mit eigenem Logo) ✔ · bei DeepSeek
+landet die Frage in der Zwischenablage und die Seite öffnet ✔ · der Hinweis
+erscheint und verschwindet nach vier Sekunden ✔ · keine Fehlermeldung ✔
+
+---
+
+## [1.208.0] - 2026-09-07
+
+### Entfernt
+- **Das Prüfungsziel „CB → N" ist aus der Klassenwahl herausgenommen.**
+  Dietmar: „Die Klasse von CB auf N kannst du entfernen, da Blättern richtig gut
+  funktioniert und jeder selbst das durchgehen kann."
+
+  Das Ziel hat 138 Fragen als „kann ein CB-Funker schon" vom Lernstapel
+  abgezogen. Seit es das Blättern mit Lesezeichen und die Kacheln „Wo soll ich
+  anfangen" gibt, entscheidet das jeder besser selbst — und ohne die
+  Unsicherheit, ob die Vorauswahl auf ihn passt. Geprüft wurde ohnehin immer
+  alles: Der Simulator hat schon vorher aus dem vollen Katalog gezogen.
+
+  In der Klassenwahl stehen jetzt vier Ziele: **Klasse N · Klasse E · N → E ·
+  E → A**.
+
+  **Es ist genau eine Zeile.** Der ganze CB-Teil (`CB_GRUPPEN`, `cbAktiv`,
+  `cbPanelAktualisieren`, das Fenster „Als CB bekannt") hing an `k.cb` — und das
+  gibt es ohne den Eintrag nirgends mehr. Alles davon liegt still, ohne dass eine
+  Zeile gelöscht werden musste. Im Quelltext steht bei `KLASSEN`, welche zwei
+  Zeilen es zurückholen.
+
+  **Wer das Ziel eingestellt hatte**, landet beim nächsten Start auf Klasse N;
+  der gespeicherte Wert wird dabei einmal richtiggestellt. Bliebe er stehen,
+  zeigte die Klassenwahl weiter auf ein Ziel, das nirgends mehr auftaucht.
+
+  **Am Lernstand ändert sich nichts.** Die CB-Anrechnung war nur eine Blende über
+  „gelernt" — sie hat nie in den Lernfortschritt geschrieben. Wer sie benutzt
+  hat, findet die 138 Fragen jetzt wieder im Stapel; abgehakt war keine davon.
+
+**Geprüft:** Klassenwahl ohne CB ✔ · gespeichertes `cbn` fällt auf `n` zurück und
+wird im Speicher richtiggestellt ✔ · CB-Kasten bleibt unsichtbar, `cbAktiv()`
+liefert `false` ✔ · keine Fehlermeldung im Fenster ✔
+
+---
+
+## [1.207.0] - 2026-09-07
+
+### Geändert
+- **Die Knopfleiste rückt zusammen, statt umzubrechen.** Der Umbruch aus 1.204.0
+  ist wieder draußen — er war das Falsche.
+
+  Drei Rückmeldungen von Dietmar am selben Tag haben den Weg gezeigt:
+
+  1. „Manchmal, nicht immer, ist der Button Gruppenraum nur halb zu sehen."
+     → Die Leiste war um ein paar Punkte zu breit.
+  2. Daraufhin durfte sie umbrechen. → „Der Button Gruppenraum verschiebt sich in
+     2. Reihe." Auch nicht recht — und zu Recht: Eine zweite Reihe für **einen**
+     Knopf sieht nach Panne aus, nicht nach Absicht.
+  3. „Das war nur bei 90 %." und „Bei 115 % verschiebt sich der Button
+     Gruppenraum auch in 2. Reihe." → Es hängt an der Anzeigegröße, also an einer
+     Zahl, die sich ändert.
+
+  Er will **eine** Zeile, in der alles steht. Also wird weder umgebrochen noch
+  abgeschnitten, sondern gemessen und zusammengerückt — in drei Stufen, jede erst
+  dann, wenn die vorige nicht reicht:
+
+  | Stufe | was enger wird | bringt |
+  |---|---|---|
+  | **eng** | Innenabstände und Lücken der Knöpfe | rund 90 Punkte |
+  | **sehr eng** | zusätzlich Schrift und Höhe eine Spur kleiner | rund 100 Punkte |
+  | **ohne Zeichen** | die Symbole in den Knöpfen fallen weg | rund 200 Punkte |
+
+  Die letzte Stufe kostet etwas und steht deshalb zuletzt: Das Zeichen findet man
+  aus dem Augenwinkel, die Beschriftung muss man lesen. Aber ein Knopf ohne
+  Zeichen ist immer noch besser als ein Knopf, den man nicht sieht.
+
+  Warum Stufen und nicht stufenlos gerechnet: Ein stufenlos berechneter
+  Innenabstand ändert sich bei jedem Zähler, der auftaucht — die Leiste zappelte.
+  Drei feste Stufen sind ruhig und reichen.
+
+  **Drei Dinge, die dabei leicht schiefgehen — und wie sie gelöst sind:**
+
+  - **Vor jeder Messung müssen alle Stufen weg.** Sonst misst man die schon
+    zusammengerückte Leiste und käme nie wieder in die weite Darstellung zurück,
+    wenn Platz frei wird.
+  - **Der ResizeObserver allein genügt nicht.** Er meldet sich nur, wenn sich der
+    *Kasten* ändert. Die Knöpfe darin ändern sich aber ständig, ohne dass er
+    größer wird: „Blättern" wird zu „Weiterblättern", ein Zähler taucht auf,
+    „Auffrischen" kommt dazu. **Genau daran hing das „manchmal, nicht immer".**
+    Ein MutationObserver auf den Inhalt fängt das jetzt — bewusst ohne
+    `attributes`, sonst löste die Prüfung mit ihrer eigenen Klasse den nächsten
+    Durchlauf aus.
+  - **Während einer Runde ist die Leiste ausgeblendet.** Dann sind alle Breiten
+    null, und die Messung würde „passt" sagen, ohne etwas gesehen zu haben.
+
+  Bleibt es trotzdem zu breit — sehr schmales Fenster bei großer Anzeige —,
+  greift wie bisher das seitliche Schieben samt Schattenhinweis. Das ist der
+  Notnagel, nicht der Normalfall.
+
+**Gemessen** (voll besetzte Leiste: Weiterblättern + Auffrischen + alle Zähler):
+
+| Fenster | 90 % | 95 % | 115 % |
+|---|---|---|---|
+| 1915 × 950 | eng, alles drin | eng, alles drin | eng, alles drin |
+| 1500 × 900 | eng, alles drin | eng, alles drin | sehr eng, alles drin |
+| 1360 × 860 | eng, alles drin | eng, alles drin | sehr eng, alles drin |
+| 1200 × 800 | sehr eng, alles drin | sehr eng, alles drin | schiebbar |
+
+In allen Fällen **eine** Zeile. Die Stufen greifen auch dann, wenn sich nur die
+Beschriftung ändert und der Kasten gleich groß bleibt — der Fall, der vorher
+durchgerutscht ist.
+
+---
+
+## [1.206.0] - 2026-09-07
+
+### Geändert
+- **Die beiden Anzeigegrößen stehen jetzt nebeneinander, die Felder sind
+  schmaler.** Dietmar: „Richte die Felder bitte nebeneinander an. Die Felder
+  können in der Breite etwas reduziert werden."
+
+  Gebaut als **ein** Raster mit zwei Spalten und vier Zeilen — Überschrift,
+  Erklärung, Feld, Hinweis — und nicht als zwei Kästen nebeneinander. Der
+  Unterschied fällt erst auf, wenn ein Text unterschiedlich lang umbricht: Bei
+  zwei Kästen stünden die Auswahlfelder dann auf verschiedener Höhe, im
+  gemeinsamen Raster bleiben sie auf einer Linie. Eine senkrechte Linie trennt
+  die Spalten, ohne Platz zu kosten.
+
+  Die Felder sind von 260 auf **160 Punkte** zurückgenommen — „Automatisch" ist
+  das längste Wort darin und braucht nicht mehr.
+
+  Am Handy fällt das Raster auf **eine** Spalte zurück. Dabei war eine Falle zu
+  umgehen: Im Quelltext stehen die acht Teile zeilenweise (Überschrift links,
+  Überschrift rechts, Erklärung links, Erklärung rechts …). In einer einzigen
+  Spalte stünden sie damit im Reißverschluss und wären unlesbar. `order` sortiert
+  sie deshalb wieder zu zwei vollständigen Blöcken untereinander, mit Trennlinie
+  dazwischen.
+
+**Gemessen:**
+
+| Fenster | Spalten | Felder auf einer Linie | Feldbreite | Reihenfolge |
+|---|---|---|---|---|
+| 1400 px | 2 | ja | 152 px | nebeneinander |
+| 412 px | 1 | — | volle Breite | Normal komplett, dann Vollbild komplett |
+
+---
+
+## [1.205.0] - 2026-09-07
+
+### Hinzugefügt
+- **Die Anzeigegröße gibt es jetzt zweimal: für die normale Ansicht und fürs
+  Vollbild.** Dietmar: „Das benötige ich 2 ×! Einmal für Bildschirm für normale
+  Ansicht mit Adressleiste und Taskleiste. Und 1 × für vergrößert!"
+
+  Seine eigenen Zahlen vom selben Tag geben es her: „Bei der normalen Ansicht
+  passt 100 bis 105 Prozent, beim Vergrößern passt 110 bis 115." Der Grund ist
+  einfach — im Vollbild sind Adressleiste, Reiterleiste und Taskleiste weg. Auf
+  einem 1080er Schirm sind das gut **130 Punkte Höhe**, also rund 14 Prozent:
+  genau der Unterschied zwischen seinen beiden Angaben. **Eine** Zahl kann das
+  nicht abdecken. Wer sie fürs Vollbild einstellt, bekommt in der normalen
+  Ansicht unten Abgeschnittenes; wer sie für die normale Ansicht einstellt,
+  verschenkt im Vollbild eine Handbreit Platz.
+
+  In den Einstellungen stehen beide Felder untereinander im selben Kasten — erst
+  nebeneinander sieht man, dass die zweite Zahl größer sein darf. Unter jedem
+  Feld steht, ob es gerade gilt oder ab wann.
+
+  **Umgeschaltet wird ohne Zutun**, und zwar auf beiden Wegen ins Vollbild:
+
+  - Der **Knopf im Trainer** benutzt die Fullscreen-Schnittstelle — das meldet
+    sich sauber, hier hängt die Umschaltung direkt am Ereignis.
+  - **F11 ist Sache des Browsers.** Die Seite erfährt davon gar nichts:
+    `document.fullscreenElement` bleibt leer, und ein Ereignis gibt es auch
+    nicht. Erkannt wird es am Vergleich mit dem Bildschirm — bleibt über und
+    unter der Seite nichts mehr übrig, nimmt auch nichts mehr Platz weg. Diese
+    Faustregel gilt **nur am Rechner**: Am Handy fährt die Adressleiste beim
+    Scrollen ständig ein und aus, dort wäre sie eine Münze statt eines
+    Anhaltspunkts. F11 gibt es dort ohnehin nicht.
+
+  Dazu ist im Fenster-Beobachter die Abkürzung „nur nachrechnen, wenn auf
+  automatisch" herausgeflogen. Sie stimmte, solange es **eine** Größe gab; jetzt
+  zeigt sich der Wechsel zwischen beiden als Größenänderung des Fensters — bei
+  F11 sogar ausschließlich so.
+
+  **Einmalige Übernahme:** Wer bisher einen festen Wert eingestellt hatte,
+  bekommt ihn auch fürs Vollbild eingetragen — sonst spränge der Trainer beim
+  ersten F11 nach dem Update auf etwas ganz anderes um, ohne dass jemand etwas
+  geändert hätte. Ab dann sind die beiden Werte unabhängig.
+
+**Gemessen** (1915 × 950 Fenster auf einem 1080er Schirm, normal 100 %,
+Vollbild 115 %):
+
+| Lage | erkannt als Vollbild | angewandt |
+|---|---|---|
+| normale Ansicht | nein | 100 % |
+| Vollbild über den Knopf | ja | 115 % |
+| zurück | nein | 100 % |
+| F11 (Fenster = Bildschirmhöhe) | ja | 115 % |
+| F11 aus | nein | 100 % |
+| Handy, `screen.height == innerHeight` | **nein** (richtig) | — |
+
+Mit „Automatisch" in beiden Feldern: normale Ansicht **105 %**, Vollbild
+**120 %** — die Automatik findet den Unterschied von selbst.
+
+---
+
+## [1.204.0] - 2026-09-07
+
+### Behoben
+- **Der Knopf „Gruppenraum" war manchmal nur halb zu sehen.**
+  Dietmar, mit Bild: „Manchmal, nicht immer, ist der Button Gruppenraum nur halb
+  zu sehen. F5 hilft, es kommt aber wieder."
+
+  **Nachgemessen bei seiner Fenstergröße** (1915 × 950, Anzeige automatisch
+  105 %): Die Knopfleiste braucht **1319 Punkte**, sie hat **1372** — also
+  53 Punkte Luft. Genau die ist weg, sobald sich der Blätter-Knopf von
+  „Blättern" in **„Weiterblättern"** umbenennt (rund 57 Punkte). Dann ragt der
+  letzte Knopf — der Gruppenraum — um ein paar Punkte hinaus und steht halb da.
+
+  Damit ist auch das „manchmal" erklärt: **sobald ein Lesezeichen im Blättern
+  liegt.** Kommt „Auffrischen" dazu, fehlt noch mehr. Und F5 half nur so lange,
+  bis der Knopf sich wieder umbenannte.
+
+  Scrollen konnte man zwar — die Leiste ist seitlich verschiebbar, mit Schatten
+  als Hinweis —, aber auf einem 1915 Punkte breiten Bildschirm will niemand nach
+  einem Knopf wischen.
+
+  **Jetzt bricht die Leiste am Rechner um.** Fehlt Platz, rutscht der letzte
+  Knopf in eine zweite Zeile und ist ganz da, statt angeschnitten. Passt alles,
+  sieht man wie bisher eine einzige Zeile — die Regel kostet nichts, solange sie
+  nicht gebraucht wird.
+
+  Zwei Kleinigkeiten, die dabei zählen:
+
+  - `overflow` muss auf **beiden** Achsen `visible` werden. Steht eine Achse auf
+    `auto` oder `hidden`, macht der Browser aus der anderen ebenfalls einen
+    Scrollbereich — die zweite Zeile wäre dann oben und unten abgeschnitten.
+  - **Am Handy bleibt es beim Wischen.** Dort wären aus elf Knöpfen vier Zeilen,
+    und die halbe Anzeige wäre voll mit Leiste, bevor die erste Frage kommt. Eine
+    Leiste, die man seitlich schiebt, ist dort das kleinere Übel — und aus Apps
+    vertraut.
+
+**Gemessen:**
+
+| Fenster | Leiste normal | Leiste voll besetzt | angeschnitten |
+|---|---|---|---|
+| 1915 × 950 | 1 Zeile, 68 px | 2 Zeilen, 116 px | keiner |
+| 1366 × 768 | 1 Zeile, 55 px | 2 Zeilen, 94 px | keiner |
+| 412 px (Handy) | 1 Zeile, wischbar | 1 Zeile, wischbar | unverändert |
+
+„Voll besetzt" heißt: Weiterblättern + Auffrischen + alle vier Zähler.
+
+---
+
+## [1.203.0] - 2026-09-07
+
+### Hinzugefügt
+- **Am Handy geht der Trainer beim ersten Antippen von selbst ins Vollbild.**
+  Dietmar zur Chrome-Meldung „… zum Beenden des Vollbildmodus: von oben nach
+  unten wischen": „Beim Öffnen sofort auf Vollbild."
+
+  **Vorweg, damit es nicht untergeht:** Diese Meldung gehört Chrome und lässt
+  sich von keiner Seite unterdrücken — es gibt dafür keine Schnittstelle. Was
+  sich ändern lässt, ist der **Zeitpunkt**: Sie kommt jetzt gleich am Anfang und
+  nicht mitten in der Runde, wenn man den Knopf drückt. Danach ist Ruhe.
+
+  **Warum beim ersten Antippen und nicht beim Laden:** Kein Browser lässt das
+  Vollbild aus dem Nichts zu — es geht nur als Antwort auf eine Bedienung. Ein
+  Aufruf beim Laden oder aus einem Zeitgeber wird abgewiesen
+  („Permissions check failed"), und zwar wortlos. Das erste Antippen ist der
+  früheste Zeitpunkt, an dem es überhaupt erlaubt ist — und aus Sicht des
+  Benutzers immer noch „beim Öffnen".
+
+  Genau **einmal pro Seitenaufruf**. Sonst käme man nie wieder heraus: Wer das
+  Vollbild mit dem Knopf verlässt, tippt danach ja weiter und wäre sofort wieder
+  drin. Nicht am Rechner, nicht wenn der Trainer ohnehin schon als App vom
+  Startbildschirm läuft, und nicht, wenn der erste Griff dem Vollbild-Knopf
+  selbst gilt — sonst schaltete er ein und der Klick gleich wieder aus.
+
+  Abschaltbar unter **Einstellungen → Vollbild am Handy**. Die Wahl gehört zum
+  Gerät, nicht zum Lernstand.
+
+**Gemessen:**
+
+| Fenster | Automatik | nach 1. Antippen | nach Verlassen + Antippen |
+|---|---|---|---|
+| 412 px | an | Vollbild ✔ (Knopfzeichen wechselt) | bleibt aus ✔ |
+| 412 px | aus | bleibt aus ✔ | bleibt aus ✔ |
+| 768 px (Tablet) | an | Vollbild ✔ | bleibt aus ✔ |
+| 1600 px (Rechner) | an | bleibt aus ✔ | bleibt aus ✔ |
+
+Der Schalter überlebt das Neuladen.
+
+---
+
+## [1.202.0] - 2026-09-07
+
+### Entfernt
+- **Der dunkle Balken „Der Trainer läuft auch als App auf deinem Startbildschirm"
+  kommt nicht mehr.** Dietmar, mit Bild vom Handy: „Unten kommt ein Hinweis mit
+  einer Verknüpfung … Diese gehört entfernt."
+
+  Er lag fest unten über der Seite, verdeckte die Fußzeile und stand auch bei
+  jedem im Weg, der den Trainer über den Einladungslink öffnet — also bei den
+  Teilnehmern einer Runde, die gar nichts einrichten wollen, sondern mitmachen.
+
+  Die Sache selbst bleibt: Der Trainer lässt sich weiterhin auf den
+  Startbildschirm legen, `manifest.webmanifest` und der Service Worker sind
+  unverändert. Wie es geht, steht im **Info-Fenster** unter „Als App auf den
+  Startbildschirm" — dort sucht man es, wenn man es will, statt es aufgedrängt
+  zu bekommen.
+
+### Behoben
+- **Der dunkelgraue Streifen oben und unten am Handy.** Dietmar: „Das soll
+  automatisch mit der gleichen Farbe wie der Inhalt vom Trainer gefüllt werden
+  und soll sich automatisch an das Fenster anpassen."
+
+  Woher er kam: `body` hat rundum 1 rem Innenabstand. Für schmale Geräte war der
+  Abstand **links und rechts** längst auf die Handy-Ecken (`safe-area`) gesetzt,
+  also praktisch null — **oben und unten** blieb er stehen. Dort schaute genau
+  die Farbe durch, die den Rahmen macht: im Grey Mode `#aab0b6`, also der dunkle
+  Balken auf seinem Bild.
+
+  Der Abstand bleibt absichtlich, wo er ist — unten hängt an ihm der Platz für
+  die Gruppenchat-Leiste (56 px); wer ihn wegnimmt, schiebt die letzte Zeile
+  unter die Leiste. Geändert wird nur die **Farbe**, und zwar nicht als feste
+  Zahl, sondern als die des Karteninhalts (`var(--card-bg)`). Damit stimmt sie in
+  jedem Farbstil von selbst, auch in einem, den es heute noch nicht gibt. Ist die
+  Seite kürzer als das Fenster, wird der Rest in derselben Farbe weitergemalt.
+  Und weil `browserfarbeNachziehen()` genau diese Farbe in
+  `<meta name="theme-color">` schreibt, zieht die Adressleiste des Handys
+  automatisch mit.
+
+  Runde Ecken, Schatten und Rahmen der Karte fallen am Handy weg: Sie waren dafür
+  da, die Karte vom Untergrund abzuheben — und den gibt es dort nicht mehr.
+
+**Gemessen** (Farbe von Untergrund und Karteninhalt):
+
+| Fenster | Stil | Untergrund | Karte | gleich | theme-color |
+|---|---|---|---|---|---|
+| 412 px | Grey | `#f7f8f9` | `#f7f8f9` | ✔ | `#f7f8f9` |
+| 412 px | Light / Green / Blue / Orange | `#ffffff` | `#ffffff` | ✔ | `#ffffff` |
+| 768 px (Tablet) | Grey | `#f7f8f9` | `#f7f8f9` | ✔ | `#f7f8f9` |
+| 1600 px (Rechner) | Grey | `#aab0b6` | `#f7f8f9` | — unverändert | `#aab0b6` |
+
+Nachgemessen am Bildpunkt: obere und untere Bildkante am Handy jetzt
+`rgb(247,248,249)` — dieselbe Farbe wie in der Mitte der Seite.
+
+---
+
+## [1.201.0] - 2026-09-07
+
+### Geändert
+- **Am Handy fallen drei Dinge weg, die dort nur Platz kosten.**
+  Dietmar: „In der mobilen Version steht oben Klasse N 571 Fragen. Das kann in
+  der mobilen Version raus. Ebenso auch die Videolektion und 50 Ohm —
+  **nur** in der mobilen Version."
+
+  Weg sind auf schmalen Geräten:
+
+  - die Plakette **„Klasse N · 571 Fragen"** in der Kopfzeile. Welche Klasse
+    eingestellt ist, steht ohnehin im Knopf daneben und in der
+    Prüfungsübersicht;
+  - die beiden Kacheln unter der Frage — **Videolehrgang** (rot, YouTube) und
+    **50 Ohm · Kapitel** — samt der Quellenzeile darunter. Beide öffnen ein
+    neues Fenster, am Handy also einen Wechsel aus dem Trainer heraus mitten in
+    der Runde.
+
+  Die Grenze ist **640 Punkte Breite** (`body.handy`), nicht 1024. Am Tablet
+  hochkant ist genug Platz — dort bleibt alles stehen, am Rechner ändert sich
+  gar nichts.
+
+  Gemessen: 412 px → beides weg · 640 px → beides weg · 768 px (Tablet) →
+  beides da · 1600 px → beides da. Es bleibt kein leerer Kasten zurück.
+
+---
+
+## [1.200.0] - 2026-09-07
+
+### Hinzugefügt
+- **Eine Tunnel-Wache: der Trainer sagt Cloudflare alle vier Minuten „ich bin da".**
+  Dietmar: „Ich möchte, dass wenn ich im Gruppenraum einen Raum starte, der Server
+  läuft. Der Trainer muss auch über Stunden laufen, ohne dass ich am Rechner aktiv
+  bin. Der Trainer muss mit Cloudflare Handshake machen und immer wieder sagen
+  ‚ich bin da', damit der zufällig generierte Raum nicht geschlossen wird."
+
+  Zwei neue Dinge im Server:
+
+  **Der Puls.** Alle vier Minuten ruft der Trainer seine *eigene* öffentliche
+  Adresse auf (`/api/tunnel-status`). Das ist nicht nur Höflichkeit: Diese Anfrage
+  läuft über genau die Leitung, die `cloudflared` zu Cloudflare hält, und hält
+  damit die NAT-Einträge im Router offen. Genau die laufen bei UDP/QUIC nach ein
+  paar Minuten Ruhe ab — das ist die Ursache des bekannten Abbruchs
+  „timeout: no recent network activity". Kommt eine Antwort zurück, steht die
+  ganze Kette: dieser PC → cloudflared → Cloudflare → zurück.
+
+  **Die Wache.** Jede Minute wird nachgesehen, ob `cloudflared` überhaupt noch
+  läuft. Bisher passierte, wenn er wegbrach, **gar nichts**: Prozess weg,
+  `tunnel_url.txt` gelöscht, Einladungslink tot — und niemand merkte es, bis der
+  erste Teilnehmer anrief. Jetzt wird die Leitung automatisch neu aufgebaut,
+  ebenso nach drei Pulsen ohne Antwort.
+
+  **Mit Bremse.** Bringt der Neuaufbau nichts — kein Internet, oder Cloudflare
+  bremst die kostenlosen Quick Tunnels dieser Leitung aus —, würde die Wache heiß
+  laufen und im Minutentakt neue Links erzeugen. Deshalb: Liegt der letzte
+  Neuaufbau keine zehn Minuten zurück, wird gewartet — 1, 2, 4, 8 Minuten,
+  höchstens eine Viertelstunde.
+
+  **Der neue Link wird sofort gemeldet.** Ein Quick Tunnel bekommt bei jedem
+  Start einen neuen Zufallsnamen — der alte Link ist danach tot. Die neue Adresse
+  geht deshalb über die Gruppenraum-Verbindung an alle, der Link im Fenster wird
+  ausgetauscht, und der Gastgeber bekommt einen deutlichen Hinweis, dass er den
+  neuen Link verschicken muss.
+
+  Im Gruppenraum steht dazu eine neue Zeile unter dem Einladungslink: wann der
+  letzte Puls durchgekommen ist, wie viele im Raum sind, und ob die Leitung
+  zwischendurch neu aufgebaut werden musste.
+
+- **Wake Lock: der Bildschirm bleibt an, solange ein Raum offen ist.**
+  Das Lebenszeichen an den Server kommt aus dem Browser-Tab. Legt Chrome ihn
+  schlafen, hört es auf. Solange ein Gruppenraum offen ist, hält der Trainer
+  jetzt einen Wake Lock. Gegen den Ruhezustand von Windows selbst hilft das
+  nicht — wer den Deckel zuklappt, schickt den Rechner trotzdem schlafen.
+
+### Behoben
+- **Der Server machte Feierabend, während die Gruppe noch übte.**
+  Er beendet sich fünf Minuten nach dem letzten Lebenszeichen aus dem Browser.
+  Schläft der Tab ein oder geht der Rechner kurz weg, war der Raum weg — mitten
+  in der Runde.
+
+  Jetzt zählt nicht mehr nur der Browser:
+
+  - Sitzt **jemand im Gruppenraum**, wird überhaupt nicht abgeschaltet.
+  - **Läuft ein Tunnel**, gilt statt der fünf Minuten eine Frist von **vier
+    Stunden** völliger Leere. So bleibt der Link stehen, wenn kurz niemand da
+    ist — und ein vergessener öffentlicher Tunnel läuft trotzdem nicht ewig.
+
+**Gemessen** (mit einem nachgestellten `cloudflared`, der abstürzt bzw. nicht
+antwortet):
+
+| Fall | Erwartet | Ergebnis |
+|---|---|---|
+| cloudflared stirbt | Neuaufbau binnen einer Minute, neue Adresse gemeldet | ✔ |
+| Puls antwortet nicht | Neuaufbau nach 3 Fehlversuchen | ✔ |
+| Neuaufbau bringt nichts | 2. Mal → 1 Min Pause, dann 2, 4, 8 | ✔ |
+| Leitung steht | kein Neuaufbau, `letzterPuls` bleibt frisch | ✔ |
+| Raum offen, kein Fenster | `imRaum` > 0 → kein Feierabend | ✔ |
+
+### Hinweis zur Lebensdauer des Links
+Ein **Quick Tunnel** (`*.trycloudflare.com`) ist kostenlos und ohne Konto,
+Cloudflare sagt dazu ausdrücklich: keine zugesicherte Verfügbarkeit, gedacht zum
+Testen, höchstens 200 gleichzeitige Anfragen. Es gibt **keine feste Ablaufzeit** —
+die Adresse lebt genau so lange, wie der `cloudflared`-Prozess sie hält. Fällt er,
+ist sie für immer weg und die nächste heißt anders. Wer eine Adresse braucht, die
+über Wochen dieselbe bleibt, braucht einen **benannten Tunnel** mit eigener
+Domain; das bleibt offen, bis eine Domain da ist.
+
+---
+
+## [1.199.0] - 2026-09-07
+
+### Geändert
+- **Die Anzeigegröße hat jetzt kleinere Stufen — und welche zum Verkleinern.**
+  Dietmar: „Bei der normalen Ansicht passt 100–105 %. Beim Vergrößern passt
+  110–115. Ich wünsche mir in den Einstellungen kleinere Werte, auch in Richtung
+  verkleinern. Der Trainer muss auf 15- und 17-Zoll-Laptops komplett dargestellt
+  werden. Fehlen kleinere Werte, kann das der Benutzer schlecht selbst
+  einstellen."
+
+  Vorher gab es nach unten nur 80 und 90 Prozent. Jetzt geht es in
+  **Fünferschritten von 60 bis 115 Prozent**, darüber noch 125 und 150:
+
+  `Automatisch · 60 · 65 · 70 · 75 · 80 · 85 · 90 · 95 · 100 · 105 · 110 · 115 · 125 · 150`
+
+  Die feinen Schritte liegen bewusst unten. Beim Vergrößern kommt es auf ein
+  Zwanzigstel nicht an; beim Verkleinern entscheidet eine einzige Stufe
+  darüber, ob die letzte Knopfreihe noch ins Fenster passt.
+
+  Auch die Automatik darf jetzt bis 60 Prozent hinunter (vorher war bei 80
+  Schluss). Auf einem 15-Zoll-Laptop mit 768 Punkten Höhe reichten 80 Prozent
+  nicht immer.
+
+### Behoben
+- **Die Automatik richtete sich nach der gerade sichtbaren Ansicht statt nach
+  der längsten.** Dietmar: „Nicht besser geworden."
+
+  Der Fehler des Vorgängers: Gemessen wurde, was gerade auf dem Schirm stand.
+  In der Fragenansicht ist das wenig — also wurde vergrößert. Beim Zurückgehen
+  in die Hauptansicht passte es dann nicht mehr, und unten fehlte wieder etwas.
+
+  Die Vergrößerung gilt aber für die ganze Seite, also muss sich die **längste**
+  Ansicht durchsetzen — und das ist die Hauptansicht. Ihre Höhe wird jetzt
+  gemerkt, solange sie sichtbar ist, und auch dann benutzt, wenn gerade eine
+  Runde läuft.
+
+- **Zwei Aufrufe hintereinander lieferten zwei verschiedene Werte** (80 % und
+  85 %). Die gemessene Höhe hängt selbst von der Vergrößerung ab: Bei 115
+  Prozent ist das Fenster in gewöhnlichen Punkten schmaler, also bricht mehr
+  um, also ist die Karte höher. Wer daraus einen neuen Faktor rechnet, misst
+  beim nächsten Mal etwas anderes.
+
+  Jetzt wird der Wert zum jeweiligen Fenster gemerkt, und nachgemessen wird
+  **nur nach unten**: Passt es nach dem Setzen doch nicht, geht es eine Stufe
+  zurück — nie nach oben. So kann sich nichts aufschaukeln, und nach höchstens
+  drei Runden steht der Wert.
+
+- **Der Vorab-Block rechnete anders als der Rest.** Der kleine Block ganz oben
+  in der Datei setzt die Größe schon *vor* dem ersten Zeichnen, damit die Seite
+  nicht einmal falsch aufblitzt. Er rundete noch und ging nur bis 80 Prozent
+  hinunter. Jetzt rechnet er genau wie die Hauptfunktion.
+
+**Gemessen** (Hauptansicht mit vollem Verlauf, danach Wechsel in die
+Fragenansicht und zurück):
+
+| Fenster | Faktor | Karte braucht | Fenster hat |
+|---|---|---|---|
+| 1911 × 945 | 105 % | 867 | 945 |
+| 1600 × 900 | 100 % | 829 | 900 |
+| 1440 × 810 | 90 % | 741 | 810 |
+| 1366 × 768 (15 Zoll) | 85 % | 702 | 768 |
+| 1280 × 720 | 80 % | 663 | 720 |
+| 2560 × 1400 | 150 % | 1238 | 1400 |
+
+In allen Fällen: Der Faktor steigt beim Wechsel in die Fragenansicht **nicht**
+mehr, und nach der Rückkehr passt die Hauptansicht vollständig ins Fenster.
+
+---
+
+## [1.198.0] - 2026-09-07
+
+### Behoben
+- **Die automatische Anzeigegröße war eine Stufe zu groß — unten fehlte etwas.**
+  Dietmar: „Habe es auf automatisch. Das ist etwas zu groß. Bei Vergrößern sieht
+  es ähnlich aus. Unten fehlt etwas."
+
+  Zwei Ursachen, beide behoben:
+
+  **Es wurde gerundet statt abgerundet.** Der Faktor geht in
+  Zwanzigstelschritten. Passte rechnerisch 1,086, machte `Math.round()` daraus
+  **1,10** — also eine Stufe *mehr*, als hineinpasst, und unten fehlte genau
+  dieser Rest. Jetzt wird abgerundet: Ein bisschen Luft unten stört niemanden,
+  ein abgeschnittener Knopf schon.
+
+  **Die Höhe wurde angenommen statt gemessen.** Die 870 Punkte im Code stammen
+  aus der Zeit, als die Hauptansicht kürzer war — seitdem sind Prüfungstermin,
+  Rufzeichen prüfen und die Diplome dazugekommen. Wer mit einer festen Zahl
+  rechnet, rechnet irgendwann falsch. Jetzt wird die Karte selbst gemessen; ihre
+  Höhe steht in gewöhnlichen Punkten und ändert sich durch die Vergrößerung
+  nicht.
+
+  Nachgemessen bei sechs Fenstergrößen — 1911×945 (Dietmars), 1920×1080,
+  1600×900, 1366×768, 2560×1440 und 1280×720: überall passt die Karte
+  vollständig ins Fenster. Bei 1911×945 sind es jetzt 1,05 statt 1,10.
+
+## [1.197.0] - 2026-09-07
+
+### Geändert
+- **Grey Mode: die Karte eine Spur heller.** Dietmar mit einer Farbprobe der
+  Karte: „Die Farbe kann etwas heller sein. Damit sich der Inhalt mehr vom
+  Fenster abhebt."
+
+  Von `#f1f2f4` auf `#f7f8f9`. Genau richtig: Seit der Hintergrund das kräftige
+  Grau seiner Werkzeugleiste hat, muss die Karte nicht mehr selbst grau sein, um
+  grau zu wirken — das macht der Rahmen ringsum. Die Abhebung von der Seite
+  steigt auf 2,06:1 (vorher 1,95:1, in 1.193.0 waren es 1,23:1), der Text darauf
+  auf 15,41:1.
+
+  Die Innenflächen bleiben, wie sie sind (Fragenfeld, Verlauf, Auswertung
+  `#e7eaec`): Sie sollen sich von der Karte abheben, nicht mit ihr zusammen
+  heller werden.
+
+## [1.196.0] - 2026-09-07
+
+### Hinzugefügt
+- **Die Leiste des Browsers färbt sich mit — dort, wo das möglich ist.** Dietmar:
+  „Kann man das so aufbauen, dass die Leiste vom Browser mit die Farbe wechselt?"
+
+  Beim Umschalten der Ansicht schreibt der Trainer die aktuelle
+  Hintergrundfarbe in `<meta name="theme-color">`. Wo das wirkt:
+
+  | | färbt sich mit |
+  |---|---|
+  | Chrome auf Android (Adressleiste) | ja |
+  | Als App auf dem Startbildschirm / über „Verknüpfung erstellen" | ja, der Fensterrahmen |
+  | Safari ab 15 | ja |
+  | Gewöhnliches Chrome- oder Edge-Fenster am Rechner | **nein** |
+
+  Die Werkzeugleiste im Desktop-Browser gehört dem Browser und richtet sich nach
+  dessen eigenem Design. Keine Seite kann das ändern — und das ist Absicht, sonst
+  könnte sich jede Seite als Browser verkleiden.
+
+  Die Farbe wird nicht je Ansicht gepflegt, sondern schlicht abgelesen: Was der
+  Seitenhintergrund gerade ist, steht auch in der Leiste. Damit stimmt es auch
+  dann noch, wenn eine Ansicht später umgefärbt wird. Nachgemessen für alle fünf:
+  Hell `#eef2f9`, Grün `#eef8f2`, Blau `#eaf3fb`, Orange `#fdf3e7`, Grau
+  `#aab0b6` — und nach einem Neuladen steht die gespeicherte Farbe wieder da.
+
+## [1.195.0] - 2026-09-07
+
+### Geändert
+- **Grey Mode: der Seitenhintergrund noch eine Stufe dunkler — und nachgemessen.**
+  Dietmar: „Messen das mal durch. Den Hintergrund noch leicht etwas dunkler."
+
+  Erst auf `#c9ced3`, dann — mit einer Farbprobe nachgereicht — auf die Farbe
+  seiner Browser-Werkzeugleiste: „In der Farbe ist meine Taskleiste von meinem
+  Browser. Das würde gut passen." Aus dem Bild gemessen: **`#aab0b6`**.
+
+  | Seitenhintergrund | Text | Nebentext | Karte hebt sich ab |
+  |---|---|---|---|
+  | `#d8dcdf` (1.194.0) | 11,88:1 | 5,26:1 | 1,23:1 |
+  | `#c9ced3` (Zwischenschritt) | 10,34:1 | 4,58:1 | 1,41:1 |
+  | **`#aab0b6` (neu)** | **7,49:1** | 3,31:1 | **1,95:1** |
+
+  Die 3,31:1 beim Nebentext wären zu blass — **wenn dort Text stünde.** Es steht
+  aber keiner: Die Karte deckt die Seite ab, und die Fußzeile sitzt auf ihr
+  drauf. Nachgesehen wurde das eigens, mit einer Prüfung, die jedes sichtbare
+  Textstück durchgeht und fragt, welche Fläche darunter liegt — bei 1400 und bei
+  412 Punkten Breite: null Treffer auf dem Seitenhintergrund.
+
+  Die Flächen darauf bleiben, wie sie sind: Karte 14,63:1, Fragenfeld 13,56:1,
+  Filterleiste 12,46:1, Antwortkacheln 16,39:1 — alle weit über der Schwelle.
+  Die Karte hebt sich vom Hintergrund jetzt fast doppelt so deutlich ab wie
+  vorher (1,95 statt 1,23).
+
+## [1.194.0] - 2026-09-07
+
+### Geändert
+- **Der Grey Mode ist jetzt wirklich grau.** Dietmar: „Den Grey Mode wünsche ich
+  mir etwas grauer." Er hatte recht — die Karten waren reinweiß, nur der
+  Hintergrund war leicht angegraut. Das sah aus wie die helle Ansicht mit einem
+  Schatten darunter.
+
+  Alle Flächen sind eine gute Stufe dunkler: die Seite von `#e8eaec` auf
+  `#d8dcdf`, die Karte von Weiß auf `#f1f2f4`, Fragenfeld, Verlauf und
+  Auswertung von `#f2f4f5` auf `#e7eaec`, Filterleiste und Fortschrittspunkte
+  entsprechend. Die Linien sind kräftiger (`#c3c9cf` → `#b4bbc3`), damit die
+  Kanten nicht im Grau verschwinden.
+
+  **Nicht angetastet: Eingabefelder und Antwortkacheln.** Die bleiben weiß —
+  dort wird gelesen und geschrieben, und Papier ist weiß. Genau dieser
+  Unterschied macht das Grau ringsum überhaupt erst sichtbar.
+
+## [1.193.0] - 2026-09-07
+
+### Geändert
+- **In der Hauptansicht steht nur noch der Name.** Dietmar: „In der Hauptansicht
+  langt Amateurfunk-Trainer, 55 kann da raus." Stimmt — der Name trägt sich
+  allein. Das Zeichen bleibt dort, wo kein Text danebenpasst: auf der Taskleiste,
+  im Browsertab und auf dem Startbildschirm von Handy und Tablet.
+
+## [1.192.0] - 2026-09-07
+
+### Geändert
+- **Aus der 73 wird die 55.** Dietmar: „Das 73 kommt raus, und hier wünsche ich
+  mir 55. 55 bedeutet ‚viel Erfolg'."
+
+  Das trifft es besser: 73 ist der Gruß zum Abschied, 55 der Wunsch für das, was
+  noch kommt — und genau dafür ist der Trainer da. Neu gezeichnet sind alle fünf
+  Dateien: `icon.ico` (sieben Größen von 16 bis 256), `icon.png`, `favicon.ico`,
+  `icon-192.png` und `icon-512.png`. In der Kopfzeile steckt das Zeichen als SVG
+  in der Seite; auch dort steht jetzt 55.
+
+## [1.191.0] - 2026-09-07
+
+### Geändert
+- **Die Rückfrage „Neue Runde?" kommt jetzt im Fenster des Trainers.** Dietmar zum
+  grauen Kasten von Chrome: „Das Fenster ist noch Old School. Das wünsche ich mir
+  angepasst."
+
+  Der Trainer hat sein eigenes Rückfragefenster — dasselbe, das beim Abbrechen
+  einer Runde und beim Löschen des Verlaufs erscheint. Es kennt die hellen und
+  dunklen Ansichten, wird vorgelesen und lässt sich mit Escape schließen.
+  `confirm()` aus dem Browser kann nichts davon, sieht auf jedem System anders
+  aus und schreibt obendrein „localhost:3000 enthält" darüber.
+
+  Dafür gibt es jetzt eine Hilfe `afuRueckfrage()`: Titel, Frage, Aufzählung,
+  Beschriftung des Knopfes, und was beim Bestätigen geschehen soll. Die zweite
+  Stelle, die schon darauf umgestellt ist: die Frage aus dem Diplome-Fenster, ob
+  auf Klasse N umgeschaltet werden soll. Fehlt das Fenster einmal, fällt die
+  Hilfe auf `confirm()` zurück — lieber die Notlösung des Browsers als gar keine
+  Rückfrage.
+
+- **Im Gruppenraum ist der Knopf „Google KI" weg.** Dietmar: „Im Gruppenraum muss
+  der Google-KI-Button raus." Alle bearbeiten dieselben Fragen, und wer sich die
+  Antwort nebenbei erklären lässt, übt nicht mehr, sondern sucht. Außerhalb des
+  Raums bleibt der Knopf, wo er ist. Gilt für Gastgeber und Gäste gleichermaßen,
+  erkannt am laufenden Raum, nicht an der Rolle.
+
+## [1.190.0] - 2026-09-06
+
+### Geändert
+- **Nach der Runde geht es weiter, ohne neuen Raum.** Dietmar: „Im Gruppenraum,
+  wenn die Runde zu Ende ist, muss ich jedes Mal einen neuen Raum einstellen und
+  einen Link versenden. Kann man das anders aufbauen?"
+
+  Konnte man schon — der Knopf „Neue Runde" stand nur im Gruppenraum-Fenster,
+  und das ist während der Runde zu. In der Gesamt-Auswertung am Ende steht er
+  jetzt an erster Stelle: **„Neue Runde für alle"**. Der Raum bleibt bestehen,
+  der Code bleibt derselbe, der verschickte Link gilt weiter — es muss nichts
+  noch einmal verschickt werden. Darunter steht dieser Satz auch so da.
+
+  **Und der Weg hinaus heißt jetzt, was er tut.** Vorher stand dort „Hauptmenü",
+  und dass damit der Raum zugeht, stand nirgends. Jetzt: beim Gastgeber
+  **„Raum beenden"**, beim Gast **„Raum verlassen"** — dazwischen
+  **„Fenster schließen"**, das nur die Auswertung wegräumt und alles laufen
+  lässt. Beim Gast steht daneben: „Lass das Fenster ruhig zu — startet der
+  Trainer eine neue Runde, bist du automatisch dabei."
+
+### Behoben
+- **Die alte Auswertung lag über der neuen Runde.** Startete der Gastgeber eine
+  neue Runde, blieb bei den Teilnehmern das Auswertungsfenster der vorigen offen,
+  und die Merkposten dafür standen noch auf „schon gezeigt" — die nächste
+  Auswertung wäre gar nicht mehr erschienen. Beides wird jetzt beim Start einer
+  Runde zurückgesetzt.
+
+  Nachgestellt mit zwei Browsern: Gastgeber und Gast im selben Raum, Runde
+  durchgespielt, „Neue Runde für alle" — beide stehen danach bei Frage 1 von 25,
+  derselbe Raumcode, kein Auswertungsfenster im Weg.
+
+## [1.189.0] - 2026-09-06
+
+### Geändert
+- **Neuer Name in der Kopfzeile und ein neues Zeichen.** Dietmar nach den
+  Entwürfen: Wortmarke „das zweite", Symbol „F — 73".
+
+  Oben links stand bisher **„Prüfung"** mit einer Satellitenschüssel. Das sagte,
+  was man tut, aber nicht, worum es geht — und als Programmname wäre es beliebig
+  gewesen. Jetzt steht dort der volle Name: **Amateurfunk-Trainer**, das
+  „-Trainer" in Grau abgesetzt. Auch der Titel des Browserfensters heißt so.
+
+  Das Zeichen ist die **73** — der Gruß unter Funkern, weiß auf dem Dunkelblau
+  der Kopfzeile. Dasselbe Bild steht jetzt überall:
+
+  | Datei | wofür |
+  |---|---|
+  | `icon.ico` | die EXE, das Startmenü, die Verknüpfung auf dem Schreibtisch — sieben Größen von 16 bis 256 in einer Datei |
+  | `icon.png` | das Zeichen im Browsertab |
+  | `favicon.ico` | dasselbe für Browser, die noch danach fragen |
+  | `icon-192.png`, `icon-512.png` | die App auf dem Startbildschirm von Handy und Tablet |
+
+  In der Kopfzeile selbst steckt es als SVG in der Seite — keine Bilddatei, die
+  beim Weitergeben fehlen könnte.
+
+  Die sieben Größen sind einzeln gezeichnet und nicht aus einem großen Bild
+  heruntergerechnet: Bei 16 Punkten entscheidet sich, ob ein Symbol in der
+  Taskleiste noch lesbar ist, und dort ist Verkleinern der schnellste Weg zu
+  Matsch.
+
 ## [1.188.0] - 2026-09-06
 
 ### Behoben
