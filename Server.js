@@ -282,15 +282,45 @@ function tunnelDateiLoeschen(fp){
 // aus demselben Grund - der Server tut es jetzt auch.
 // ================================================================
 function verwaisteTunnelProzesseBeenden(){
-  if(process.platform !== 'win32') return Promise.resolve();
+  if(process.platform === 'win32'){
+    return new Promise(resolve=>{
+      execFile('taskkill', ['/IM','cloudflared.exe','/F'], {timeout:5000}, (err, stdout, stderr)=>{
+        const text = String(stdout||'') + String(stderr||'');
+        if(!err && /erfolgreich|SUCCESS/i.test(text)){
+          console.log('[TUNNEL] Uebrig gebliebene cloudflared.exe-Prozesse beendet.');
+        } else if(err && !/nicht gefunden|not found|nicht ausgef|could not be found/i.test(text)){
+          console.debug('[TUNNEL] taskkill:', text.trim().slice(0,120));
+        }
+        resolve();
+      });
+    });
+  }
+  // ----------------------------------------------------------------
+  //  LINUX UND macOS
+  //  Bisher stand hier ein "return" - dort wurde also nie aufgeraeumt,
+  //  und ein cloudflared, der einen Absturz ueberlebt hat, blockierte
+  //  den naechsten Start still.
+  //
+  //  ABER NICHT MIT DER BRECHSTANGE: Die Windows-Fassung erschlaegt
+  //  JEDES cloudflared auf dem Rechner. Das ist dort vertretbar, weil
+  //  dort selten ein zweites laeuft. Auf Linux betreibt mancher einen
+  //  eigenen benannten Tunnel fuer sein Heimnetz - den abzuschiessen,
+  //  weil hier ein Trainer startet, waere ein Uebergriff.
+  //
+  //  Deshalb wird nur beendet, was ein "tunnel --url" ohne Konfiguration
+  //  ist, also ein Quick Tunnel wie unserer. pgrep -f sieht die ganze
+  //  Befehlszeile; -x waere hier falsch.
+  // ----------------------------------------------------------------
   return new Promise(resolve=>{
-    execFile('taskkill', ['/IM','cloudflared.exe','/F'], {timeout:5000}, (err, stdout, stderr)=>{
-      const text = String(stdout||'') + String(stderr||'');
-      if(!err && /erfolgreich|SUCCESS/i.test(text)){
-        console.log('[TUNNEL] Uebrig gebliebene cloudflared.exe-Prozesse beendet.');
-      } else if(err && !/nicht gefunden|not found|nicht ausgef|could not be found/i.test(text)){
-        console.debug('[TUNNEL] taskkill:', text.trim().slice(0,120));
+    execFile('pgrep', ['-f', 'cloudflared.*tunnel.*--url'], {timeout:5000}, (err, stdout)=>{
+      const pids = String(stdout||'').split('\n').map(x=>x.trim()).filter(Boolean);
+      if(!pids.length) return resolve();
+      let weg = 0;
+      for(const pid of pids){
+        if(String(process.pid) === pid) continue;
+        try{ process.kill(Number(pid), 'SIGTERM'); weg++; }catch(e){}
       }
+      if(weg) console.log('[TUNNEL] ' + weg + ' uebrig gebliebene(n) cloudflared-Prozess(e) beendet.');
       resolve();
     });
   });
@@ -1119,7 +1149,51 @@ setInterval(ttsCacheAufraeumen, 60*60*1000).unref();   // stuendlich nachsehen
 // FIX Q7: expandTTS liegt jetzt in tts-expand.js (mit Testsuite)
 const { expandTTS } = require('./tts-expand');
 
-function findPiper(){ const c=[path.join(PIPER_DIR,'piper.exe')]; for(const x of c) if(fs.existsSync(x)) return {type:'binary',path:x}; return {type:'python',path:'python'}; }
+// ================================================================
+//  WO LIEGT PIPER?
+//  ----------------------------------------------------------------
+//  Rueckmeldung eines Linux-Benutzers am 07.09.2026: "Bis auf die
+//  Stimme laeuft es ja."
+//
+//  Und genau das stand hier: gesucht wurde ausschliesslich
+//  piper/piper.exe. Auf Linux und am Mac heisst die Datei "piper",
+//  ohne Endung - also wurde sie nie gefunden. Zurueck kam der
+//  Notnagel {type:'python', path:'python'}, und der ging auf den
+//  meisten heutigen Linux-Systemen ebenfalls ins Leere: Dort gibt es
+//  nur "python3", ein blankes "python" existiert nicht mehr. Ergebnis:
+//  ENOENT, Fehler 500, keine Stimme - und in der Meldung stand etwas
+//  von einer fehlenden DLL und vom Visual-C++-Redistributable, was auf
+//  einem Linux-Rechner niemandem weiterhilft.
+//
+//  Gesucht wird jetzt in dieser Reihenfolge:
+//    1. im Ordner piper/ - unter dem Namen, den das jeweilige System
+//       benutzt (piper.exe bzw. piper),
+//    2. eine Ebene tiefer: Das offizielle Archiv entpackt sich als
+//       Ordner "piper", wer es IN piper/ entpackt, hat piper/piper/piper,
+//    3. auf dem Systempfad - wer piper ueber die Paketverwaltung oder
+//       nach /usr/local/bin installiert hat, ist damit fertig,
+//    4. zuletzt das Python-Modul, und dort mit dem Namen, den es auf
+//       dem jeweiligen System wirklich gibt.
+//
+//  "quelle" wandert bis in die Anzeige: Wer keine Stimme hoert, soll
+//  im Klartext lesen koennen, wonach gesucht wurde.
+// ================================================================
+function findPiper(){
+  const win = process.platform === 'win32';
+  const name = win ? 'piper.exe' : 'piper';
+  const istDatei = (x) => { try{ return fs.existsSync(x) && fs.statSync(x).isFile(); }catch(e){ return false; } };
+
+  const imOrdner = [ path.join(PIPER_DIR, name), path.join(PIPER_DIR, 'piper', name) ];
+  for(const x of imOrdner) if(istDatei(x)) return { type:'binary', path:x, quelle:'Ordner piper/' };
+
+  for(const d of String(process.env.PATH || '').split(path.delimiter)){
+    if(!d) continue;
+    const x = path.join(d, name);
+    if(istDatei(x)) return { type:'binary', path:x, quelle:'Systempfad' };
+  }
+
+  return { type:'python', path: win ? 'python' : 'python3', quelle:'Python-Modul' };
+}
 function findVoices(dir,d=0){ if(d>3) return []; let r=[]; try{ if(!fs.existsSync(dir)) return []; const e=fs.readdirSync(dir,{withFileTypes:true}); for(const f of e){ const full=path.join(dir,f.name); if(f.isFile()&&f.name.endsWith('.onnx')&&fs.existsSync(full+'.json')) r.push(full); else if(f.isDirectory()&&f.name!=='espeak-ng-data') r=r.concat(findVoices(full,d+1)); } }catch(e){ console.debug('[TTS] Stimmen-Suche in', dir, ':', e.code||e.message); } return r; }
 // ================================================================
 // STIMMEN NACH QUALITAET SORTIEREN
@@ -1650,7 +1724,29 @@ app.get('/fragen.json',(req,res)=>{
     res.send(fragenRohCache);
   }catch(e){ console.error('[FRAGEN] Ausliefern fehlgeschlagen:', e.message); res.status(500).json({error:'Fehler'}); }
 });
-app.get('/api/tts-voices',(req,res)=>{ const v=listVoices(); res.json({voices:v, default:v[0]?.file||'de_DE-thorsten-medium.onnx'}); });
+app.get('/api/tts-voices',(req,res)=>{
+  const v = listVoices();
+  // Zwei Dinge muessen stimmen, damit vorgelesen wird: die Stimmen UND das
+  // Programm. Frueher stand hier nur die Stimmenliste - fehlte piper selbst,
+  // sah alles richtig aus und es kam trotzdem kein Ton. Jetzt geht die Lage
+  // des Programms mit, damit die Anzeige den Unterschied benennen kann.
+  let piper = null;
+  try{
+    const p = findPiper();
+    let da = (p.type === 'binary');
+    if(!da){
+      // Das Python-Modul laesst sich nicht am Dateisystem ablesen. Ob
+      // wenigstens der Befehl existiert, schon.
+      for(const d of String(process.env.PATH || '').split(path.delimiter)){
+        if(!d) continue;
+        const x = path.join(d, p.path + (process.platform === 'win32' ? '.exe' : ''));
+        try{ if(fs.existsSync(x)){ da = true; break; } }catch(e){}
+      }
+    }
+    piper = { gefunden: da, art: p.type, quelle: p.quelle, befehl: p.path, system: process.platform };
+  }catch(e){ piper = null; }
+  res.json({voices:v, default:v[0]?.file||'de_DE-thorsten-medium.onnx', piper: piper});
+});
 
 // ================================================================
 // HOERBUCH: Fragen + richtige Antwort als MP3 fuers Autoradio.
@@ -2171,6 +2267,16 @@ const PAKET_DATEIEN = [
   // nichts. Dazu STOP.bat: Ohne sie gibt es auf dem Stick keinen Weg,
   // den Trainer wieder zu beenden.
   'START.bat', 'START.vbs', 'STOP.bat', 'piper.bat',
+  // Dasselbe fuer Linux und den Mac. Dietmar am 07.09.2026:
+  // "start.bat wird vermutlich auf Linux nicht funktionieren?" - richtig,
+  // .bat und .vbs sind Windows. Wer das Paket auf einem anderen System
+  // auspackt, hatte bisher gar keinen Startknopf und musste selbst
+  // herausfinden, dass "node Server.js" der Weg ist.
+  'START.sh', 'STOP.sh',
+  // installieren.sh + INSTALLATION.md: Wer das Paket auf einem frischen
+  // Linux-Rechner auspackt, hat damit denselben Weg vor sich wie jemand,
+  // der es von GitHub holt - und die Anleitung gleich daneben liegen.
+  'installieren.sh', 'INSTALLATION.md',
   // Node-Holen.bat + node_holen.ps1: Damit kommt der Empfaenger ohne
   // Installation von Node.js aus. Genau daran ist am 25.08.2026 ein
   // Benutzer haengengeblieben - "Beim Start seh ich kurz das Terminal
@@ -2196,6 +2302,11 @@ const PAKET_DATEIEN = [
   // Stimmen nicht - und wuerde sich fragen, warum bei ihm ein
   // Einstellungspunkt fehlt, von dem hier die Rede ist.
   'piper_stimmen.js',
+  // Und programme_holen.js: Es holt piper und cloudflared fuer das
+  // jeweilige System nach. Genau der Empfaenger, der das Paket auf
+  // Linux oder am Mac auspackt, braucht es - dort kommt keines der
+  // beiden Programme mit einem Setup.
+  'programme_holen.js',
   //
   // Die beiden gehoeren dem Empfaenger, nicht dem Entwickler: Damit
   // findet er heraus, warum bei ihm kein Update ankommt. Sie standen
@@ -2749,6 +2860,47 @@ try{
   console.warn('[STIMMEN] Nachladen nicht verfuegbar:', e.message);
 }
 
+// ================================================================
+//  DIE BEIDEN HILFSPROGRAMME NACHHOLEN     (07.09.2026)
+// ================================================================
+//  Dietmar: "Baue es mir so auf, dass es auf Windows, Linux und Mac
+//  laeuft."
+//
+//  Der Trainer selbst lief dort laengst - es fehlten die beiden
+//  Programme drumherum, und die kamen bisher nur ueber Windows-Wege:
+//  piper.exe ueber das Setup, cloudflared.exe ueber start-tunnel.bat
+//  mit PowerShell. Beides gibt es fuer Linux und macOS genauso, nur
+//  unter anderem Namen - geholt wird es jetzt in Node, also ueberall
+//  gleich. Die Arbeit steht in programme_holen.js.
+//
+//  Fehlt die Datei, faellt nur der Knopf weg: Wer piper und
+//  cloudflared von Hand hinlegt, kommt zum selben Ergebnis.
+// ================================================================
+try{
+  require('./programme_holen').einrichten({
+    app, localOnly,
+    piperOrdner:   PIPER_DIR,
+    projektOrdner: __dirname,
+    // Die Lage wird HIER bestimmt und nicht im Modul: Wo piper und
+    // cloudflared liegen duerfen, weiss Server.js - findPiper() und
+    // checkCloudflaredExists() suchen an mehr Stellen, als ein
+    // Nachlade-Modul kennen sollte.
+    lagePruefen: () => {
+      let piperDa = false, piperWo = null;
+      try{
+        const pp = findPiper();
+        piperDa = (pp.type === 'binary');
+        piperWo = pp.quelle;
+      }catch(e){}
+      let cfDa = false;
+      try{ cfDa = !!checkCloudflaredExists().exists; }catch(e){}
+      return { piperDa, piperWo, cloudflaredDa: cfDa };
+    }
+  });
+}catch(e){
+  console.warn('[PROGRAMME] Nachholen nicht verfuegbar:', e.message);
+}
+
 // ---- Beim EMPFAENGER ------------------------------------------------------
 
 function quelleSaeubern(roh){
@@ -3170,7 +3322,8 @@ app.post('/api/tts',(req,res)=>{
   // FIX K7: spawn selbst kann synchron werfen - dann wuerde der Slot fuer immer belegt bleiben
   try{
     if(piper.type==='binary') proc=spawn(piper.path,['--model',voice.fullPath,'--output_file',outTmp],opts);
-    else proc=spawn('python',['-m','piper','--model',voice.fullPath,'--output_file',outTmp],opts);
+    // piper.path ist hier "python3" bzw. "python" - siehe findPiper.
+    else proc=spawn(piper.path,['-m','piper','--model',voice.fullPath,'--output_file',outTmp],opts);
   }catch(spawnErr){
     releaseTtsSlot();
     console.error('[TTS] spawn fehlgeschlagen:', spawnErr.message);
@@ -3196,10 +3349,24 @@ app.post('/api/tts',(req,res)=>{
       res.setHeader('Content-Type','audio/wav');
       res.sendFile(out);
     } else {
-      const crashHint = getWinCrashHint(code);
-      console.error(`[TTS] Fehler Exitcode=${code} stderr="${err.slice(0,300)}" piper.path=${piper.path} voice=${voice.fullPath}`);
+      const crashHint = (process.platform === 'win32') ? getWinCrashHint(code) : null;
+      console.error(`[TTS] Fehler Exitcode=${code} stderr="${err.slice(0,300)}" piper.path=${piper.path} (${piper.quelle}) voice=${voice.fullPath}`);
       let msg;
-      if(crashHint){
+      // Auf Linux und am Mac hilft kein Wort ueber DLLs und
+      // Visual-C++-Pakete. Dort steht, was dort wirklich zu tun ist.
+      if(process.platform !== 'win32'){
+        msg = 'Die Sprachausgabe liess sich nicht starten (Code ' + code + ').'
+            + (err ? '\n\nMeldung: ' + err.slice(0,400) : '')
+            + '\n\nGesucht wurde: ' + piper.quelle + ' (' + piper.path + ').'
+            + '\n\nSo kommt Piper auf dieses System:'
+            + '\n1. Fertiges Programm: das Archiv fuer Linux von'
+            + ' github.com/rhasspy/piper/releases holen und so entpacken, dass die Datei'
+            + ' piper im Ordner piper/ liegt. Danach einmal: chmod +x piper/piper'
+            + '\n2. Oder als Python-Modul: pip install piper-tts'
+            + ' - dann muss python3 auf dem Systempfad liegen.'
+            + '\n3. Die Stimmen (.onnx samt .onnx.json) gehoeren in denselben Ordner piper/.'
+            + '\n\nDer Trainer laeuft ohne Piper vollstaendig weiter - nur vorgelesen wird nicht.';
+      } else if(crashHint){
         msg = `piper.exe ist abgestürzt (Code ${code}). ${crashHint}\n\nLösungsvorschläge:\n1. "Microsoft Visual C++ Redistributable x64" installieren (falls nicht vorhanden): aka.ms/vs/17/release/vc_redist.x64.exe\n2. piper.exe + alle Dateien im piper/-Ordner (inkl. onnxruntime.dll, espeak-ng-data/) frisch von github.com/rhasspy/piper/releases neu entpacken.\n3. Virenscanner-Ausnahme für den piper/-Ordner setzen, da piper.exe sonst evtl. blockiert/beschädigt wird.\n4. piper.exe testweise direkt per Kommandozeile starten, um eine ausführlichere Fehlermeldung zu sehen.`;
       } else {
         msg = 'TTS Fehler '+code+(err? ': '+err.slice(0,500) : ' (piper.exe hat keine Fehlerausgabe geliefert - vermutlich Absturz vor jeglicher Ausgabe).');

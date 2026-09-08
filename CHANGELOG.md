@@ -8,6 +8,191 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.215.0] - 2026-09-07
+
+### Hinzugefügt
+- **Windows, Linux und macOS aus einem Guss.** Dietmar: „Baue es mir so auf,
+  dass es auf Windows, Linux und Mac läuft."
+
+  Der Trainer selbst lief dort längst — er ist Node.js. Es fehlten die beiden
+  **Hilfsprogramme**, und die kamen bisher ausschließlich über Windows-Wege:
+  `piper.exe` mit dem Setup, `cloudflared.exe` über `start-tunnel.bat` mit
+  PowerShell. Beides gibt es für Linux und macOS genauso, nur unter anderem
+  Namen.
+
+  Neu ist **`programme_holen.js`**: Es erkennt System und Prozessor und holt die
+  passende Fassung — in Node, also auf allen drei Systemen über denselben Knopf.
+  Zu finden unter **Einstellungen → Wartung → Hilfsprogramme**; dort steht auch,
+  was schon da ist und was fehlt.
+
+  | System | Piper | cloudflared |
+  |---|---|---|
+  | Windows x64 | `piper_windows_amd64.zip` | `cloudflared-windows-amd64.exe` |
+  | Linux x86-64 | `piper_linux_x86_64.tar.gz` | `cloudflared-linux-amd64` |
+  | Linux ARM64 | `piper_linux_aarch64.tar.gz` | `cloudflared-linux-arm64` |
+  | Linux ARMv7 | `piper_linux_armv7l.tar.gz` | `cloudflared-linux-arm` |
+  | macOS Intel | `piper_macos_x64.tar.gz` | `cloudflared-darwin-amd64.tgz` |
+  | macOS Apple Silicon | `piper_macos_aarch64.tar.gz` | `cloudflared-darwin-arm64.tgz` |
+
+  Die Namen sind auf den Release-Seiten der beiden Projekte **nachgesehen und
+  nicht geraten**. Ein System ohne fertige Fassung (etwa FreeBSD) bekommt keinen
+  Knopf, sondern den Satz, dass es dafür nichts Fertiges gibt.
+
+  **Die Vorsichtsmaßnahmen sind dieselben wie beim Stimmen-Nachladen:** nur zwei
+  erlaubte Rechnernamen (`github.com` und der Auslieferungsdienst, an den GitHub
+  weiterreicht), **jede** Umleitung wird erneut geprüft — nicht nur die erste —,
+  eine Obergrenze für die Dateigröße, und geschrieben wird erst unter einem
+  Zwischennamen. Ein Abbruch mitten im Laden hinterlässt damit keine halbe Datei,
+  die beim nächsten Start als „ist ja da" gilt. Entpackt wird mit dem `tar` des
+  Systems statt mit eigenem Code — weniger Fläche für Fehler.
+
+**Gemessen** (ohne Netz, alle Zweige nachgestellt):
+
+| Prüfung | Ergebnis |
+|---|---|
+| Dateiwahl für 7 System/Prozessor-Kombinationen | alle richtig ✔ |
+| Entpacken, Datei finden, `chmod +x`, ausführen | ✔ |
+| `github.com.boese.example` | abgelehnt ✔ |
+| `example.com` | abgelehnt ✔ |
+| `169.254.169.254` (Metadaten-Adresse) | abgelehnt ✔ |
+| Anzeige: beides fehlt / beides da / kein Angebot | alle drei richtig ✔ |
+
+- **Ein Befehl, und Linux und macOS sind eingerichtet.** Dietmar: „Ich gebe
+  den Befehl ins Terminal ein und ziehe mir darüber die Version von GitHub
+  und baue alle Abhängigkeiten ein. Wenn möglich, mit einer Verknüpfung auf
+  dem Desktop."
+
+  ```
+  curl -fsSL https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/HEAD/installieren.sh | bash
+  ```
+
+  Neu ist **`installieren.sh`**. Es prüft Node.js und git und installiert
+  sie bei Bedarf mit dem Paketverwalter des Systems nach (apt, dnf, pacman,
+  zypper, apk, Homebrew), holt den Trainer nach `~/Amateurfunk-Trainer`,
+  richtet die drei Abhängigkeiten ein, lädt Piper und cloudflared passend zu
+  System und Prozessor und legt die Verknüpfung an — unter Linux eine
+  `.desktop`-Datei, die zusätzlich ins Anwendungsmenü kommt, am Mac ein
+  `Amateurfunk-Trainer.app`.
+
+  **`HEAD` statt `main` in der Adresse** — damit hängt der Befehl nicht am
+  Namen des Hauptzweigs und bleibt gültig, falls der sich je ändert.
+
+  **Ein zweiter Aufruf frischt auf** statt neu einzurichten (`git pull`).
+  **`data/` wird dabei nie angefasst** — der Lernstand liegt außerhalb von
+  allem, was das Skript berührt.
+
+  Wer `| bash` nicht mag, lädt das Skript herunter, sieht hinein und ruft es
+  dann auf; der Weg steht in `INSTALLATION.md`. Zwei Schalter gibt es:
+  `AFU_ZIEL=<Pfad>` für einen anderen Ordner, `AFU_OHNE_HILFSPROGRAMME=1`
+  zum Auslassen der beiden Downloads.
+
+  **Unter Windows ändert sich nichts** — dort bleibt das Setup der Weg, und
+  die Anleitung sagt das jetzt auch deutlich.
+
+  **`programme_holen.js` kann jetzt auch von der Konsole**
+  (`node programme_holen.js alles`), damit das Installationsskript dieselbe
+  Mechanik benutzt wie der Knopf im Trainer — eine Stelle, an der geladen
+  wird, nicht zwei.
+
+  Neu dazu: **`INSTALLATION.md`** mit beiden Wegen, den Schaltern und einem
+  Abschnitt „Wenn etwas klemmt", sowie das Bild
+  `bilder/13-installation.png`.
+
+**Gemessen** (Linux, mit einem nachgestellten Repository):
+
+| Prüfung | Ergebnis |
+|---|---|
+| Ersteinrichtung von null | ✔ |
+| zweiter Aufruf frischt auf, `data/` unverändert | ✔ |
+| Zielordner belegt (kein git) | bricht ab, ohne etwas anzufassen ✔ |
+| Node.js fehlt, kein Paketverwalter | nennt den Weg von Hand ✔ |
+| `.desktop` angelegt, ausführbar, im Anwendungsmenü | ✔ |
+| macOS-Zweig: `.app`-Struktur, Info.plist, Starter | ✔ |
+
+### Behoben
+- **Verwaiste `cloudflared`-Prozesse wurden auf Linux und macOS nie
+  aufgeräumt.** Dort stand ein `return` — ein cloudflared, der einen Absturz
+  überlebt hatte, blockierte den nächsten Start still.
+
+  Aufgeräumt wird jetzt auch dort, **aber nicht mit der Brechstange**: Die
+  Windows-Fassung erschlägt *jedes* cloudflared auf dem Rechner. Das ist dort
+  vertretbar; auf Linux betreibt mancher einen eigenen benannten Tunnel für sein
+  Heimnetz, und den abzuschießen, weil hier ein Trainer startet, wäre ein
+  Übergriff. Beendet wird deshalb nur, was ein `tunnel --url` ohne Konfiguration
+  ist — also ein Quick Tunnel wie unserer.
+
+---
+
+## [1.214.0] - 2026-09-07
+
+### Behoben
+- **Auf Linux und am Mac gab es nie eine Stimme — der Server hat nur nach
+  `piper.exe` gesucht.** Rückmeldung eines Linux-Benutzers: „Bis auf die Stimme
+  läuft es ja."
+
+  In `findPiper()` stand genau ein Kandidat: `piper/piper.exe`. Auf Linux und am
+  Mac heißt die Datei **`piper`**, ohne Endung — also wurde sie nie gefunden.
+  Zurück kam der Notnagel `{type:'python', path:'python'}`, und der ging auf den
+  meisten heutigen Linux-Systemen ebenfalls ins Leere: Dort gibt es nur
+  **`python3`**, ein blankes `python` existiert nicht mehr. Ergebnis: `ENOENT`,
+  Fehler 500, keine Stimme.
+
+  Gesucht wird jetzt der Reihe nach: im Ordner `piper/` unter dem Namen, den das
+  jeweilige System benutzt · eine Ebene tiefer (`piper/piper/piper` — so entpackt
+  sich das offizielle Archiv) · auf dem **Systempfad** (wer piper über die
+  Paketverwaltung installiert hat, ist damit fertig) · zuletzt das Python-Modul,
+  mit `python3` statt `python`.
+
+  Nachgestellt und gemessen — alle sechs Fälle richtig:
+
+  | Lage | gefunden als |
+  |---|---|
+  | Linux, `piper/piper` | Ordner piper/ ✔ |
+  | Linux, `piper/piper/piper` | Ordner piper/ ✔ |
+  | Linux, nur auf dem Systempfad | Systempfad ✔ |
+  | Linux, gar nichts | Python-Modul `python3` ✔ |
+  | Windows, `piper/piper.exe` | Ordner piper/ ✔ |
+  | Windows, gar nichts | Python-Modul `python` ✔ |
+
+- **Die Fehlermeldung sprach auf Linux von DLLs und Visual C++.** Sie war für
+  Windows geschrieben und half dort, wo sie am dringendsten gebraucht wurde,
+  überhaupt nicht. Außerhalb von Windows steht jetzt, wonach gesucht wurde und
+  was dort zu tun ist — Archiv entpacken und `chmod +x`, oder
+  `pip install piper-tts`.
+
+- **Die Anzeige verwechselte „keine Stimme" mit „kein Programm".** Es müssen
+  **zwei** Dinge stimmen, damit vorgelesen wird: die Sprachmodelle *und* das
+  Programm. Bisher nannte der Hinweis nur die Modelle — im gemeldeten Fall lagen
+  die aber da. `/api/tts-voices` liefert jetzt die Lage des Programms mit, und
+  der Hinweis benennt den Unterschied.
+
+  (Beim ersten Versuch stand der neue Hinweis **vor** dem Standardtext und wurde
+  eine Zeile später wieder überschrieben — im Test sichtbar geworden, jetzt steht
+  er dahinter.)
+
+### Hinzugefügt
+- **`START.sh` und `STOP.sh` für Linux und den Mac.** Dietmar: „start.bat wird
+  vermutlich auf Linux nicht funktionieren?" — richtig, `.bat` und `.vbs` sind
+  Windows. Wer das Paket auf einem anderen System auspackte, hatte gar keinen
+  Startknopf.
+
+  `START.sh` tut, was `START.vbs` unter Windows tut: nachsehen, ob `node` da ist
+  (mit dem passenden Installationsbefehl je Distribution, falls nicht), nachsehen
+  ob auf Port 3000 schon ein Trainer läuft, dann starten und den Browser öffnen.
+
+  `STOP.sh` beendet **nur, was aus diesem Ordner heraus läuft** — anders als die
+  Windows-Fassung, die pauschal jedes `node.exe` abschießt. Auf einem
+  Linux-Rechner läuft nebenher oft anderes mit node; das darf nicht mitgehen.
+
+  Beide sind ins ZIP-Paket aufgenommen (`PAKET_DATEIEN`), das sich Teilnehmer
+  über den Gruppenraum-Link herunterladen.
+
+  Getestet: frischer Start → Server auf Port 3000 ✔ · zweiter Aufruf erkennt den
+  laufenden Trainer und öffnet nur den Browser ✔ · `STOP.sh` beendet ihn
+  (`Server beendet (PID …)`), danach antwortet der Port nicht mehr ✔
+
+---
+
 ## [1.213.0] - 2026-09-07
 
 ### Hinzugefügt

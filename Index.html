@@ -14330,6 +14330,88 @@ function einstellungenSpeichern(){
     einstellungenAnwenden();
 }
 
+// ================================================================
+//  HILFSPROGRAMME - piper und cloudflared
+//  ----------------------------------------------------------------
+//  Dietmar am 07.09.2026: "Baue es mir so auf, dass es auf Windows,
+//  Linux und Mac laeuft."
+//
+//  Der Trainer ist Node und laeuft ueberall. Die beiden Programme
+//  drumherum kamen bisher nur ueber Windows-Wege - piper.exe mit dem
+//  Setup, cloudflared.exe ueber eine .bat mit PowerShell. Hier steht
+//  jetzt fuer alle drei Systeme derselbe Knopf.
+//
+//  Gezeigt wird IMMER beides, auch wenn es schon da ist: Wer wissen
+//  will, warum keine Stimme kommt, soll an einer Stelle nachsehen
+//  koennen - und dort auch lesen, dass alles in Ordnung ist.
+// ================================================================
+async function einstProgrammeFuellen(){
+    const ziel = document.getElementById('einstProgramme');
+    if(!ziel) return;
+    let j = null;
+    try{
+        const r = await fetch('/api/programme/lage', {cache:'no-store'});
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        j = await r.json();
+    }catch(e){
+        ziel.innerHTML = '<span style="color:var(--muted);">Nicht abrufbar — der Trainer läuft '
+                       + 'vielleicht nicht mehr. (' + String(e.message) + ')</span>';
+        return;
+    }
+
+    const systemName = { win32:'Windows', linux:'Linux', darwin:'macOS' }[j.system] || j.system;
+    const zeile = (titel, da, wofuer, datei, knopfId, ruf, wo) => {
+        return '<div style="display:flex; gap:0.6rem; align-items:flex-start; padding:0.45rem 0; '
+             + 'border-top:1px solid #eef2f7;">'
+             + '<span style="font-size:1rem; line-height:1.4;">' + (da ? '🟢' : '⚪') + '</span>'
+             + '<span style="flex:1; min-width:0;">'
+             + '<b style="color:#0f2745;">' + titel + '</b> — ' + wofuer
+             + '<span style="display:block; font-size:0.75rem; color:var(--muted); margin-top:2px;">'
+             + (da ? ('Vorhanden' + (wo ? ' (' + wo + ')' : '') + '.')
+                   : (datei ? ('Fehlt. Für ' + systemName + ' wäre es <code>' + datei + '</code>.')
+                            : ('Fehlt — und für ' + systemName + ' auf ' + j.arch + ' gibt es keine fertige Fassung.')))
+             + '</span></span>'
+             + (da || !datei ? ''
+                 : '<button type="button" id="' + knopfId + '" style="' + EINST_KNOPF + '" '
+                   + 'onclick="' + ruf + '"><i class="fas fa-download"></i> Holen</button>')
+             + '</div>';
+    };
+
+    ziel.innerHTML =
+          '<div style="font-size:0.78rem; color:var(--muted); margin-bottom:0.3rem;">'
+        + 'Dieses System: <b>' + systemName + '</b> · ' + j.arch + '</div>'
+        + zeile('Piper', !!j.piperDa, 'die Sprachausgabe. Ohne Piper wird nicht vorgelesen.',
+                j.piperDatei, 'einstPiperBtn', 'einstProgrammHolen(\'piper\')', j.piperWo)
+        + zeile('cloudflared', !!j.cloudflaredDa,
+                'der Tunnel für den Gruppenraum. Ohne ihn bleibt der Raum im eigenen Netz.',
+                j.cloudflaredDatei, 'einstCfBtn', 'einstProgrammHolen(\'cloudflared\')', null)
+        + '<div id="einstProgrammeLage" style="font-size:0.78rem; margin-top:0.5rem; line-height:1.5;"></div>';
+}
+window.einstProgrammeFuellen = einstProgrammeFuellen;
+
+async function einstProgrammHolen(was){
+    const lage = document.getElementById('einstProgrammeLage');
+    const knopf = document.getElementById(was === 'piper' ? 'einstPiperBtn' : 'einstCfBtn');
+    if(knopf){ knopf.disabled = true; knopf.innerHTML = '<i class="fas fa-spinner fa-spin"></i> lädt …'; }
+    if(lage) lage.innerHTML = '<span style="color:var(--muted);">Wird geholt — das dauert je nach Leitung '
+                            + 'ein bis zwei Minuten. Das Fenster kann offen bleiben.</span>';
+    try{
+        const r = await fetch('/api/programme/' + was, { method:'POST' });
+        const j = await r.json();
+        if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+        if(lage) lage.innerHTML = '<span style="color:#1c6b3a;">✅ Fertig. '
+            + (was === 'piper'
+                ? 'Die Sprachausgabe ist bereit — im Reiter Nachteilsausgleich eine Stimme wählen.'
+                : 'Der Tunnel steht bereit — im Gruppenraum auf „Tunnel starten".')
+            + '</span>';
+    }catch(e){
+        if(lage) lage.innerHTML = '<span style="color:#a5281b;">Das hat nicht geklappt: '
+            + String(e.message) + '</span>';
+    }
+    try{ await einstProgrammeFuellen(); }catch(e){}
+}
+window.einstProgrammHolen = einstProgrammHolen;
+
 function einstellungenAnwenden(){
     try{ document.body.classList.toggle('tts-gross', !!einstellungen.vorlesenGross); }catch(e){}
     if(!einstellungen.knoepfeVorlesen){ try{ knopfSprechenStoppen(); }catch(e){} }
@@ -15044,6 +15126,7 @@ function einstReiterZeigen(id){
     // als eines, das eine halbe Sekunde braucht.
     if(id === 'lernen')   { try{ einstLernenFuellen(); }catch(e){} }
     if(id === 'update')   { try{ einstUpdateFuellen(); }catch(e){} }
+    if(id === 'wartung')  { try{ einstProgrammeFuellen(); }catch(e){} }
     if(id === 'vorlesen') {
         try{ ttsFelderNachziehen(); }catch(e){}
         try{ einstAlteStimmenPruefen(); }catch(e){}
@@ -15480,7 +15563,12 @@ function einstBlaetterFuellen(){
 
     // ---- Wartung ----
     document.getElementById('einstBlatt_wartung').innerHTML =
-        einstKasten('Aufräumen', 'Selten gebraucht — deshalb hier und nicht in der Kopfzeile.',
+        einstKasten('Hilfsprogramme',
+            'Der Trainer selbst läuft auf Windows, Linux und am Mac gleich. Zwei Programme kommen '
+          + 'von außen dazu — beide sind freiwillig, ohne sie fehlt jeweils nur eine Funktion.',
+            '<div id="einstProgramme" style="font-size:0.82rem; line-height:1.6;">'
+          + '<span style="color:var(--muted);">wird ermittelt …</span></div>')
+      + einstKasten('Aufräumen', 'Selten gebraucht — deshalb hier und nicht in der Kopfzeile.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">'
           + '<button type="button" id="einstCacheBtn" style="' + EINST_KNOPF + '" onclick="clearCacheAndReload()" '
           + 'data-tooltip="🧹 Cache leeren (Verlauf bleibt erhalten)">'
@@ -15948,6 +16036,27 @@ function openTtsSettings() {
     try{ einstellungenOeffnen('vorlesen'); }catch(e){}
 }
 
+// Stimmen da, Programm nicht: der haeufigste Fall ausserhalb von Windows.
+// Der Text sagt, wonach gesucht wurde und was zu tun ist - nicht "es geht
+// nicht".
+function hinweisKeinPiper(hint, p){
+    if(!hint) return;
+    const win = p && p.system === 'win32';
+    hint.innerHTML = '<b style="color:#a5281b;">Die Stimmen sind da, aber das Programm <code>piper</code> wurde nicht gefunden.</b><br>'
+        + 'Gesucht wurde im Ordner <code>piper/</code>, eine Ebene tiefer und auf dem Systempfad; '
+        + 'zuletzt als Python-Modul über <code>' + ((p && p.befehl) || 'python3') + '</code>.<br>'
+        + (win
+            ? 'Am einfachsten das Setup noch einmal ausführen — es bringt <code>piper.exe</code> mit.'
+            : 'Auf Linux und am Mac heißt die Datei <b>piper</b> ohne Endung. Entweder das Archiv von '
+              + '<a href="https://github.com/rhasspy/piper/releases" target="_blank" rel="noopener">github.com/rhasspy/piper/releases</a> '
+              + 'so entpacken, dass <code>piper/piper</code> daliegt (danach einmal <code>chmod +x piper/piper</code>), '
+              + 'oder <code>pip install piper-tts</code> — dann muss <code>python3</code> auf dem Systempfad liegen.')
+        + '<br><b>Am einfachsten:</b> Reiter <i>Wartung</i> → <i>Hilfsprogramme</i> → <b>Holen</b>. '
+        + 'Der Trainer lädt die zu diesem System passende Fassung selbst.'
+        + '<br>Alles andere im Trainer läuft ohne Piper unverändert weiter.';
+}
+window.hinweisKeinPiper = hinweisKeinPiper;
+
 async function ttsFelderNachziehen() {
     if(!document.getElementById('ttsAutoReadCheckbox')) return;
     document.getElementById('ttsAutoReadCheckbox').checked = localStorage.getItem('ttsAutoRead') === '1';
@@ -15968,11 +16077,28 @@ async function ttsFelderNachziehen() {
     try {
         const res = await fetch('/api/tts-voices');
         const data = await res.json();
+        // ZWEI DINGE MUESSEN STIMMEN: die Stimmen UND das Programm.
+        //
+        // Rueckmeldung eines Linux-Benutzers am 07.09.2026: "Bis auf die
+        // Stimme laeuft es ja." Bisher stand hier nur ein Satz ueber
+        // fehlende Sprachmodelle - und der stimmte in seinem Fall gar
+        // nicht: Die Modelle lagen da, gefehlt hat das Programm piper,
+        // weil der Server ausschliesslich nach piper.exe gesucht hat.
+        // Wer den Unterschied nicht genannt bekommt, sucht an der
+        // falschen Stelle.
+        const linux = !!(data.piper && data.piper.system && data.piper.system !== 'win32');
         if (!data.voices || data.voices.length === 0) {
             select.innerHTML = '<option value="">Keine Stimmen gefunden</option>';
-            hint.innerHTML = 'Kein Sprachmodell im <code>piper/</code> Ordner gefunden. Die Stimme kommt mit dem Setup – am einfachsten das Setup noch einmal ausführen.';
+            hint.innerHTML = linux
+                ? 'Kein Sprachmodell im Ordner <code>piper/</code> gefunden. Auf Linux und am Mac '
+                  + 'gehören die Dateien <code>.onnx</code> und <code>.onnx.json</code> von Hand dorthin — '
+                  + 'zu holen bei <a href="https://huggingface.co/rhasspy/piper-voices" target="_blank" rel="noopener">huggingface.co/rhasspy/piper-voices</a>.'
+                : 'Kein Sprachmodell im <code>piper/</code> Ordner gefunden. Die Stimme kommt mit dem Setup – am einfachsten das Setup noch einmal ausführen.';
             return;
         }
+        // Der Hinweis kommt WEITER UNTEN, nachdem der Standardtext steht -
+        // sonst ueberschreibt der ihn eine Zeile spaeter wieder. (Genau so
+        // ist es beim ersten Versuch passiert.)
         let saved = localStorage.getItem('ttsVoice') || data.default || '';
         // ENTFERNT (25.08.2026): die Stimmen des Browsers (Microsoft/Edge).
         // Sie klangen zwar beim S sauberer, lasen aber die Abkuerzungen des
@@ -15994,6 +16120,8 @@ async function ttsFelderNachziehen() {
         if ([...select.options].some(o => o.value === saved)) select.value = saved;
         hint.innerHTML = data.voices.length + ' Stimme(n) im Ordner <code>piper/</code> – lokal, ohne Internet. '
             + 'Abkürzungen werden vor dem Sprechen ausgeschrieben, „MHz" wird also zu „Megahertz".';
+        // Stimmen da, Programm nicht: dann zaehlt nur noch das.
+        if (data.piper && data.piper.gefunden === false) hinweisKeinPiper(hint, data.piper);
     } catch (e) {
         // Der haeufigste Fall ist kein Fehler, sondern ein Ende: Der Trainer
         // macht Feierabend, sobald kein Fenster mehr offen ist. Wer danach

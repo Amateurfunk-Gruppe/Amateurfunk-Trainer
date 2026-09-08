@@ -301,6 +301,45 @@ neu gestartet werden muss.
 
 ## Loslegen
 
+![Installation — zwei Wege](bilder/13-installation.png)
+
+### In Kürze
+
+**Windows** — kein Terminal nötig:
+
+1. Rechts unter [Releases](../../releases) `Amateurfunk-Trainer-<Version>.exe` herunterladen
+2. Doppelklicken. Bei „Unbekannter Herausgeber": *Weitere Informationen* → *Trotzdem ausführen*
+3. Ordner bestätigen — fertig
+
+**Linux und macOS** — Terminal öffnen (Linux `Strg`+`Alt`+`T`, Mac
+`Cmd`+`Leertaste` → *Terminal*), diese Zeile einfügen, Eingabe drücken:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/HEAD/installieren.sh | bash
+```
+
+Das Skript prüft Node.js und git und installiert sie bei Bedarf nach, holt
+den Trainer nach `~/Amateurfunk-Trainer`, richtet die Abhängigkeiten ein,
+lädt Piper und cloudflared und legt eine Verknüpfung auf den Schreibtisch.
+Danach:
+
+```bash
+cd ~/Amateurfunk-Trainer
+./START.sh          # starten - oder Doppelklick auf die Verknüpfung
+./STOP.sh           # beenden
+```
+
+Der Trainer läuft dann unter <http://localhost:3000>.
+
+> **Die ausführliche Anleitung steht in
+> [INSTALLATION.md](INSTALLATION.md)** — beide Wege Schritt für Schritt,
+> die Schalter für einen anderen Zielordner, und ein Abschnitt
+> „Wenn etwas klemmt".
+
+---
+
+### Windows im Einzelnen
+
 **Setup herunterladen, doppelklicken, fertig.**
 
 Rechts unter [Releases](../../releases) liegt
@@ -342,12 +381,63 @@ liegt vollständig hier, das Setup lässt sich mit
 [Inno Setup](https://jrsoftware.org/isinfo.php) und `Build-DIREKT.bat`
 selbst bauen.
 
-**Ohne Setup, direkt aus dem Quellcode.** Wer den Trainer lieber selbst
-startet: Repository klonen oder als ZIP herunterladen, Node.js
-installieren, im Ordner einmal `npm install`, dann `node Server.js`.
-Entwickelt und getestet ist unter Windows; `Server.js` ist gewöhnliches
-Node.js und sollte auch unter macOS und Linux starten — nachgeprüft ist
-das nicht.
+### Auf Linux und am Mac
+
+**Ein Befehl im Terminal.** Er holt den Trainer von GitHub, richtet alles
+ein und legt eine Verknüpfung auf den Schreibtisch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/HEAD/installieren.sh | bash
+```
+
+Das Skript prüft Node.js und git und installiert sie bei Bedarf nach, holt
+den Trainer nach `~/Amateurfunk-Trainer`, richtet die drei Abhängigkeiten
+ein, lädt Piper und cloudflared passend zu System und Prozessor und legt die
+Verknüpfung an — unter Linux zusätzlich im Anwendungsmenü, am Mac als
+`Amateurfunk-Trainer.app`.
+
+**Derselbe Befehl frischt später auf.** Der Lernstand in `data/` wird dabei
+nie angefasst.
+
+Wer lieber erst hineinsieht, wer einen anderen Zielordner möchte oder wem
+etwas klemmt: **[INSTALLATION.md](INSTALLATION.md)** hat den ausführlichen
+Weg, die Schalter und einen Abschnitt „Wenn etwas klemmt".
+
+#### Die beiden Hilfsprogramme
+
+Zwei Programme kommen unter Windows mit dem Setup und fehlen anderswo. Beide
+sind **freiwillig** — ohne sie fällt jeweils genau eine Funktion weg, der
+Trainer läuft im Übrigen vollständig:
+
+| | wofür | ohne es |
+|---|---|---|
+| **Piper** | die Sprachausgabe | es wird nicht vorgelesen |
+| **cloudflared** | der Tunnel für den Gruppenraum | der Raum bleibt im eigenen Netz |
+
+Beide holt der Trainer selbst: **Einstellungen → Wartung → Hilfsprogramme →
+Holen**. Er erkennt System und Prozessor und lädt die passende Fassung —
+Linux x86-64, ARM64 und ARMv7 ebenso wie macOS mit Intel oder Apple Silicon.
+
+![Der Reiter „Wartung" mit den beiden Hilfsprogrammen](bilder/12-hilfsprogramme.png)
+
+Wer es lieber von Hand macht: Die Dateien gehören nach `piper/` (Piper) und
+neben `Server.js` (cloudflared), und die Piper-Datei braucht einmal
+`chmod +x`. Eine **Stimme** fehlt dann noch — die holt der Knopf *Stimmen
+hinzufügen* unter *Einstellungen → Nachteilsausgleich*, oder man legt die
+beiden Dateien `.onnx` und `.onnx.json` von
+[huggingface.co/rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)
+selbst nach `piper/`.
+
+> **Was ich geprüft habe und was nicht:** Server, Startskripte und die
+> Programmerkennung sind unter Linux durchgetestet. Windows läuft im
+> täglichen Gebrauch. **Für macOS sind die Wege gebaut und die Dateinamen
+> geprüft, aber nicht auf echter Hardware ausprobiert** — Rückmeldungen sind
+> willkommen.
+
+### Ohne Setup unter Windows
+
+Repository klonen oder als ZIP herunterladen, Node.js installieren, im Ordner
+einmal `npm install`, dann `node Server.js` — oder `START.bat`.
 
 ## Beenden und neu starten
 
