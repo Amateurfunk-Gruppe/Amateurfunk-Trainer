@@ -201,7 +201,21 @@ Build-DIREKT.bat
 version.js
 wizard.bmp
 small.bmp
-icon.ico
+
+# icon.ico STAND BIS ZUM 09.09.2026 HIER - und das war der Fehler, der
+# Dietmar drei Fassungen lang das alte Zeichen auf dem Schreibtisch
+# gelassen hat.
+#
+# Der Gedanke war: icon.ico gehoert zum Bau des Setups, wie wizard.bmp.
+# Das stimmte einmal. Seit das Zeichen aus zeichen_bauen.py kommt, ist es
+# dieselbe Datei wie icon-512.png, nur in einem anderen Format - und
+# favicon.ico lag ohnehin die ganze Zeit im Repository.
+#
+# Die Folge war nachweisbar: In C:\Program Files\Amateurfunk-Trainer lagen
+# am 09.09.2026 icon-512.png, icon.png und favicon.ico mit dem Datum von
+# heute - und icon.ico mit dem von vor Tagen, 410 KB aus einem alten Bau.
+# Genau aus dieser Datei nimmt Windows das Zeichen der Verknuepfung. Kein
+# Leeren des Zwischenspeichers hilft gegen eine Datei, die nie ankommt.
 
 # icon.png BLEIBT im Repository: Es ist das Symbol der Seite selbst
 # (Favicon im Browser), nicht Teil der Bauanleitung.

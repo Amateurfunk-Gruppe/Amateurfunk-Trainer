@@ -2483,6 +2483,10 @@ const PAKET_DATEIEN = [
   'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
   'icon-512-maskierbar.png', 'icon.icns', 'verknuepfung_auffrischen.js',
   'Zeichen-Auffrischen.bat',
+  // icon.ico und favicon.ico gehoeren mit in die Liste: Aus icon.ico
+  // nimmt Windows das Zeichen der Verknuepfung. Fehlt sie hier, kommt
+  // auf dem Schreibtisch nie ein neues Bild an - siehe .gitignore.
+  'icon.ico', 'favicon.ico', 'icon.png',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige

@@ -8,6 +8,48 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.234.2] - 2026-09-09
+
+### Behoben
+- **`icon.ico` stand in der `.gitignore` — deshalb kam auf dem Schreibtisch
+  nie ein neues Zeichen an.** Dietmar, zum dritten Mal: „Das Icon hat sich
+  bei mir auf meinem Desktop nicht verändert.“
+
+  Ich habe zweimal am Zwischenspeicher gearbeitet und dabei die falsche
+  Ursache angenommen. Der Blick in seinen Ordner hat es entschieden — in
+  `C:\Program Files\Amateurfunk-Trainer`:
+
+| Datei | Stand |
+|---|---|
+| `icon-512.png` | **heute** |
+| `icon.png` | **heute** |
+| `favicon.ico` | **heute** |
+| `Index.html`, `Server.js` | **heute** |
+| **`icon.ico`** | **vor Tagen, 410 KB aus einem alten Bau** |
+
+  Und genau aus `icon.ico` nimmt Windows das Zeichen der Verknüpfung.
+  **Kein Leeren eines Zwischenspeichers hilft gegen eine Datei, die nie
+  ankommt.**
+
+  Der Grund stand in `.gitignore`: `icon.ico` galt als Teil des *Baus* — wie
+  `installer.iss`, `version.js` und `wizard.bmp`. Das stimmte einmal. Seit
+  das Zeichen aus `zeichen_bauen.py` kommt, ist es dieselbe Datei wie
+  `icon-512.png`, nur in einem anderen Format; `favicon.ico` lag ohnehin die
+  ganze Zeit im Repository. Die Zeile war ein Rest, der drei Fassungen lang
+  eine falsche Fehlersuche getragen hat.
+
+  `icon.ico` fährt jetzt mit — aus der `.gitignore` heraus und in
+  `PAKET_DATEIEN` hinein, zusammen mit `favicon.ico` und `icon.png`.
+
+- **Zwei Installationen, und die Verknüpfung zeigt auf die andere.** Auf
+  Dietmars Rechner liegen sechs Trainer-Ordner; der Schreibtisch-Verweis
+  zeigt auf `C:\Program Files\Amateurfunk-Trainer`, während hier seit Tagen
+  der Ordner auf dem Schreibtisch gepflegt wurde. Das neue `icon.ico` ist
+  deshalb in **beide** gelegt worden, dazu `Zeichen-Auffrischen.bat` und
+  `verknuepfung_auffrischen.js` in die installierte Fassung.
+
+---
+
 ## [1.234.1] - 2026-09-09
 
 ### Behoben
