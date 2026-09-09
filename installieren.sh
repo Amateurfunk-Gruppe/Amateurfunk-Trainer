@@ -209,6 +209,7 @@ else
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
+  <key>CFBundleIconFile</key><string>icon</string>
   <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundleDisplayName</key><string>Amateurfunk-Trainer</string>
   <key>CFBundleIdentifier</key><string>de.amateurfunk.trainer</string>
@@ -224,7 +225,25 @@ cd "$ZIEL" || exit 1
 exec ./START.sh
 EOF
   chmod +x "$APP/Contents/MacOS/starten"
+  # Das Zeichen. Ohne icon.icns und den Eintrag in der Info.plist zeigt der
+  # Finder das leere Standardblatt - die .app funktioniert, sieht aber aus
+  # wie nichts.
+  if [ -f "$ZIEL/icon.icns" ]; then
+    cp "$ZIEL/icon.icns" "$APP/Contents/Resources/icon.icns"
+    touch "$APP"
+  fi
   hinweis "angelegt: $APP"
+fi
+
+# ============================================================
+#  7. Das Zeichen auf dem Schreibtisch auffrischen
+# ============================================================
+#  Bei einer Neuinstallation ist das meist ueberfluessig - bei einer
+#  Aktualisierung ueber dasselbe Verzeichnis aber nicht: Windows, Linux und
+#  macOS merken sich Zeichen nach dem Pfad der Bilddatei, nicht nach ihrem
+#  Inhalt. Ohne Anstoss klebt das alte Bild weiter auf dem Schreibtisch.
+if [ -f "$ZIEL/verknuepfung_auffrischen.js" ]; then
+  (cd "$ZIEL" && node verknuepfung_auffrischen.js >/dev/null 2>&1) || true
 fi
 
 # ============================================================

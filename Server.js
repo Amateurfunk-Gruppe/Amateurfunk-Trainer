@@ -2369,6 +2369,57 @@ app.post('/api/50ohm-index-holen', localOnly, async (req, res) => {
 //     laeuft der Trainer vollstaendig; das Fehlen dieser Datei ist kein
 //     Grund fuer eine Meldung.
 // ================================================================
+// ================================================================
+//  DAS ZEICHEN AUF DEM SCHREIBTISCH
+// ----------------------------------------------------------------
+//  Dietmar am 09.09.2026: "Das neue Icon auf dem Desktop muss sich
+//  bei Windows Linux und Mac automatisch erneuern."
+//
+//  Der Weg ueber das Update ist der haeufige Fall und in
+//  github_update.js verdrahtet. Dieser hier faengt die uebrigen ab:
+//  wer die Dateien von Hand austauscht, wer aus einer Sicherung
+//  zurueckholt, wer den Ordner auf einen anderen Rechner kopiert.
+//
+//  Gemerkt wird der Zeitstempel des Zeichens in einer kleinen Datei.
+//  Ist die Bilddatei neuer als das, was dort steht, wird einmal
+//  aufgefrischt - danach steht der neue Stempel drin, und beim
+//  naechsten Start passiert nichts mehr. Ein Auffrischen bei JEDEM
+//  Start waere Unfug: Es schreibt Verknuepfungen an und ruft
+//  Systemprogramme, fuer nichts.
+// ================================================================
+const ZEICHEN_MERK = path.join(__dirname, 'data', 'zeichen_stand.json');
+
+function zeichenAutomatik(){
+  try{
+    const bild = path.join(__dirname, process.platform === 'win32' ? 'icon.ico'
+                                    : (process.platform === 'darwin' ? 'icon.icns' : 'icon-512.png'));
+    let stempel = 0;
+    try{ stempel = fs.statSync(bild).mtimeMs; }catch(e){ return; }   // kein Zeichen, nichts zu tun
+    let gemerkt = 0;
+    try{ gemerkt = (JSON.parse(fs.readFileSync(ZEICHEN_MERK, 'utf8')) || {}).stempel || 0; }catch(e){}
+    if(Math.abs(stempel - gemerkt) < 1000) return;                   // unveraendert
+
+    // Erst nach zwoelf Sekunden, damit der Start frei bleibt. Und der
+    // Stempel wird VOR dem Versuch geschrieben: Klappt das Auffrischen
+    // auf diesem System nicht, soll es nicht bei jedem Start neu
+    // scheitern.
+    const t = setTimeout(() => {
+      try{
+        fs.mkdirSync(path.dirname(ZEICHEN_MERK), { recursive: true });
+        fs.writeFileSync(ZEICHEN_MERK, JSON.stringify({ stempel, datei: path.basename(bild),
+                                                        wann: new Date().toISOString() }));
+      }catch(e){}
+      try{
+        const helfer = path.join(__dirname, 'verknuepfung_auffrischen.js');
+        if(fs.existsSync(helfer)){
+          require(helfer).auffrischen();
+        }
+      }catch(e){ console.warn('[ZEICHEN] nicht aufgefrischt:', e.message); }
+    }, 12000);
+    if(t.unref) t.unref();
+  }catch(e){ /* nie ein Grund, den Start zu stoeren */ }
+}
+
 const OHM_INDEX_FRIST = 30 * 24 * 60 * 60 * 1000;
 
 function ohmIndexAutomatik(){
@@ -2430,7 +2481,7 @@ const PAKET_DATEIEN = [
   // App-Anmutung am Handy: Ohne diese drei fehlt beim "Zum Startbildschirm
   // hinzufuegen" das Symbol, und der Trainer startet mit Browserleiste.
   'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
-  'icon-512-maskierbar.png',
+  'icon-512-maskierbar.png', 'icon.icns', 'verknuepfung_auffrischen.js',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
@@ -3628,6 +3679,7 @@ const PUBLIC_FILES = new Set([
   '/icon-192.png',
   '/icon-512.png',
   '/icon-512-maskierbar.png',
+  '/icon.icns',
   '/icon.png',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
@@ -4846,6 +4898,9 @@ server.listen(PORT,'0.0.0.0',async ()=>{
   // Die Zuordnung des DARC still nachholen, falls sie fehlt oder alt ist.
   // Wartet acht Sekunden und stoert den Start nicht - siehe ohmIndexAutomatik().
   ohmIndexAutomatik();
+
+  // Das Zeichen auf dem Schreibtisch. Siehe zeichenAutomatik() weiter unten.
+  zeichenAutomatik();
 
   console.log('[TUNNEL] Prüfe Binary beim Start...');
   const check = checkCloudflaredExists();

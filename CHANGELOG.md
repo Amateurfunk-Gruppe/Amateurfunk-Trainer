@@ -8,6 +8,67 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.234.0] - 2026-09-09
+
+### Neu
+- **Das Zeichen auf dem Schreibtisch frischt sich von selbst auf — unter
+  Windows, Linux und macOS.** Dietmar: „Das neue Icon auf dem Desktop muss
+  sich bei Windows Linux und Mac automatisch erneuern.“
+
+  **Warum das überhaupt nötig ist:** Alle drei Systeme merken sich Zeichen
+  nach dem **Pfad** der Bilddatei, nicht nach ihrem Inhalt. Der Pfad bleibt
+  bei einem Update derselbe (`icon.ico` liegt immer im Trainer-Ordner) — also
+  sieht das System keinen Grund, noch einmal hinzusehen. Man tauscht die
+  Datei, und auf dem Schreibtisch klebt weiter das alte Bild, oft wochenlang.
+
+  Jedes System braucht seinen eigenen Anstoß, und die stehen jetzt in
+  `verknuepfung_auffrischen.js`:
+
+  - **Windows** — die Verknüpfung (`.lnk`) wird geöffnet und **unverändert**
+    wieder gespeichert. Erst das Speichern gibt ihr einen neuen Zeitstempel,
+    an dem der Explorer merkt, dass er nachsehen muss. Dazu
+    `ie4uinit.exe -show`, der amtliche Weg, den Zwischenspeicher der Shell zu
+    leeren. Gesucht wird auf beiden Schreibtischen (auch dem in OneDrive) und
+    im Startmenü.
+  - **Linux** — die `.desktop`-Datei wird mit demselben Inhalt neu
+    geschrieben (manche Arbeitsumgebungen sehen auf den Inhalt, andere auf
+    den Zeitstempel), dazu `update-desktop-database`, `gtk-update-icon-cache`
+    und `gio set … trusted`.
+  - **macOS** — das neue `icon.icns` kommt in die `.app`, dann wird das
+    Bündel angefasst.
+
+  **Auf dem Mac gab es gar kein Zeichen.** Die `.app`, die `installieren.sh`
+  anlegt, hatte keinen `CFBundleIconFile`-Eintrag und keine Icon-Datei — der
+  Finder zeigte das leere Standardblatt. Beides ist jetzt dabei; ältere
+  Bündel bekommen den fehlenden Eintrag beim Auffrischen nachgetragen.
+
+- **`icon.icns` wird mitgebaut.** Auf dem Mac nimmt man dafür `iconutil` —
+  das gibt es hier nicht, und ein Zeichen, das nur auf einem Mac entstehen
+  kann, könnte niemand nachbauen. `zeichen_bauen.py` schreibt das Format
+  deshalb selbst: Kopf, dann je Bild Typkürzel, Länge und ein PNG. Sieben
+  Größen von 64 bis 1024.
+
+**Drei Wege, auf denen es ausgelöst wird** — der Anstoß muss überall
+hängen, wo ein neues Zeichen ankommen kann:
+
+  1. **Nach einem Update** (`github_update.js`): War eine der Zeichen-Dateien
+     dabei, wird aufgefrischt. Scheitert das, gilt das Update trotzdem als
+     gelungen — die neuen Dateien liegen ja da.
+  2. **Beim Start** (`Server.js`): Der Zeitstempel des Zeichens steht in
+     `data/zeichen_stand.json`. Ist die Bilddatei neuer, wird **einmal**
+     aufgefrischt, zwölf Sekunden nach dem Start. Das fängt die übrigen Fälle
+     ab: von Hand getauscht, aus einer Sicherung geholt, den Ordner kopiert.
+     Der Stempel wird **vor** dem Versuch geschrieben — sonst scheiterte es
+     auf einem widerspenstigen System bei jedem Start neu.
+  3. **Bei der Installation**: `installieren.sh` ruft es am Ende auf, und das
+     Windows-Setup startet `ie4uinit` mit `runasoriginaluser` — der
+     Zwischenspeicher hängt am Benutzer, nicht am Setup.
+
+  Das Skript **legt nichts an und löscht nichts**. Es fasst nur an, was schon
+  da ist; findet es nichts, geht es still wieder hinaus.
+
+---
+
 ## [1.233.0] - 2026-09-09
 
 ### Neu

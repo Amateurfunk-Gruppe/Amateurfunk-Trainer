@@ -30,6 +30,7 @@ WAS ENTSTEHT
   icon-512.png, icon.png (512), icon-192.png     - die Fassung mit Schrift
   icon.ico, favicon.ico                          - acht Stufen, 16 bis 256
   icon-512-maskierbar.png                        - für den Startbildschirm
+  icon.icns                                      - für die .app auf dem Mac
 
 Aufruf:  python3 zeichen_bauen.py
 """
@@ -251,6 +252,41 @@ def maskierbar():
     return hinter
 
 
+# ---------------------------------------------------------------------------
+#  icon.icns - das Format, das macOS fuer eine .app erwartet
+# ---------------------------------------------------------------------------
+#  Auf dem Mac baut man so etwas sonst mit iconutil. Das gibt es hier nicht,
+#  und ein Zeichen, das nur auf einem Mac entstehen kann, waere ein Zeichen,
+#  das niemand nachbauen kann. Also von Hand - das Format ist einfach:
+#
+#     "icns" + Gesamtlaenge(4)   dann fuer jedes Bild:
+#     Typ(4) + Laenge(4) + Nutzlast
+#
+#  Als Nutzlast nimmt macOS seit 10.7 einfache PNG-Dateien. Die Typkuerzel
+#  sind fest vergeben (ic07 = 128, ic08 = 256, ic09 = 512 ...), deshalb
+#  stehen sie unten als Liste.
+# ---------------------------------------------------------------------------
+def icns_schreiben(pfad, gross, mittel, winzig):
+    import struct, io as _io
+    teile = [
+        ('ic12',   64, mittel),   # 32 x 32 @2x
+        ('ic07',  128, gross),
+        ('ic13',  256, gross),    # 128 x 128 @2x
+        ('ic08',  256, gross),
+        ('ic14',  512, gross),    # 256 x 256 @2x
+        ('ic09',  512, gross),
+        ('ic10', 1024, gross),    # 512 x 512 @2x
+    ]
+    bloecke = b''
+    for typ, kante, quelle in teile:
+        puffer = _io.BytesIO()
+        quelle.resize((kante, kante), Image.LANCZOS).save(puffer, format='PNG')
+        daten = puffer.getvalue()
+        bloecke += typ.encode('ascii') + struct.pack('>I', len(daten) + 8) + daten
+    with open(pfad, 'wb') as f:
+        f.write(b'icns' + struct.pack('>I', len(bloecke) + 8) + bloecke)
+
+
 if __name__ == '__main__':
     Z = '/root/work/fix2/'
     g, m, w = voll(), mittel(), winzig()
@@ -269,4 +305,6 @@ if __name__ == '__main__':
         stufen[0].save(Z + datei, format='ICO',
                        sizes=[(i.width, i.height) for i in stufen],
                        append_images=stufen[1:])
+
+    icns_schreiben(Z + 'icon.icns', g, m, w)
     print('Zeichen gebaut')

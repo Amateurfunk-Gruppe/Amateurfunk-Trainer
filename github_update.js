@@ -427,6 +427,31 @@ function einrichten(umgebung) {
     const vollstaendig = !fehler.length && !uebersprungen.some(u => /geaendert/.test(u.grund));
     standSchreiben(vollstaendig ? commit : merk.commit, merk.dateien);
 
+    // ------------------------------------------------------------------
+    //  Kam ein neues Zeichen mit? Dann die Verknuepfung auffrischen.
+    // ------------------------------------------------------------------
+    //  Dietmar am 09.09.2026: "Das neue Icon auf dem Desktop muss sich bei
+    //  Windows Linux und Mac automatisch erneuern."
+    //
+    //  Windows, Linux und macOS merken sich Zeichen nach dem PFAD der
+    //  Bilddatei, nicht nach ihrem Inhalt - und der Pfad bleibt bei einem
+    //  Update derselbe. Ohne diesen Anstoss klebt das alte Bild wochenlang
+    //  auf dem Schreibtisch. Was dabei je System zu tun ist, steht in
+    //  verknuepfung_auffrischen.js.
+    //
+    //  Fehlt die Datei oder scheitert der Versuch, ist das kein Grund, das
+    //  Update als misslungen zu melden: Die neuen Dateien liegen ja da.
+    try {
+      const zeichen = /^(icon(-\d+)?(-maskierbar)?\.(png|ico|icns)|favicon\.ico)$/i;
+      if (geschrieben.some(g => zeichen.test(path.basename(g.name)))) {
+        const helfer = path.join(WURZEL, 'verknuepfung_auffrischen.js');
+        if (fs.existsSync(helfer)) {
+          require(helfer).auffrischen();
+          console.log('[GITHUB] neues Zeichen - Verknuepfung aufgefrischt');
+        }
+      }
+    } catch (e) { console.warn('[GITHUB] Zeichen nicht aufgefrischt:', e.message); }
+
     return {
       ok: !fehler.length,
       geschrieben, fehler, uebersprungen,
