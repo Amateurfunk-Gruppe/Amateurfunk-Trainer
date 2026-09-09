@@ -8,6 +8,38 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.236.0] - 2026-09-09
+
+### Geändert
+- **Der Fragetext läuft jetzt um die Knopfreihe herum.** Dietmar mit einem rot
+  umrandeten Rechteck im leeren Feld unter den sechs Knöpfen: „Der Freiraum
+  unterhalb von den Buttons wäre gut für den Text von der Frage."
+
+  **Was da im Weg stand, war Flexbox.** Text und Knopfreihe standen als zwei
+  Spalten nebeneinander. Eine Spalte ist über ihre *ganze* Höhe schmal — auch
+  dort, wo die Knöpfe längst zu Ende sind. Die Knopfreihe ist 32 Pixel hoch,
+  eine Frage oft sechs Zeilen. Also blieben fünf Zeilen unnötig kurz, und
+  rechts stand ein leeres Feld, das man ansehen musste.
+
+  **`float` löst genau das.** Die Knopfreihe wird aus dem Textfluss
+  herausgenommen und rechts oben angeheftet; der Text läuft daneben und
+  darunter weiter. Dieselbe Mechanik, mit der in jeder Zeitung ein Bild
+  mitten im Artikel steht. Gemessen an NG208 auf 1441 × 913: der Text ist
+  von 540 auf **888 Pixel** breit gewachsen, das sind zwei Zeilen weniger
+  bei gleicher Schriftgröße. Im Beamer-Modus 1698 statt 1230.
+
+  **Eine Regel muss man dabei kennen:** Die schwebende Kiste muss im Quelltext
+  *vor* dem Text stehen, um den sie fließen soll. Deshalb steht die
+  Knopfreihe in `renderQuestion()` jetzt zuerst — im Bild ändert sich dadurch
+  nichts, sie sitzt weiterhin rechts oben.
+
+  **Unter 900 Pixel Fensterbreite fließt nichts.** Sechs Knöpfe sind dort
+  breiter als der halbe Schirm, die ersten Zeilen hätten je vier Wörter.
+  Dann lieber wie bisher: Knöpfe oben, Text darunter über die volle Breite.
+
+  Geprüft in allen sechs Ansichten — hell, dunkel, eckig (DARC), Beamer,
+  1024 und 760 Pixel. Kein Querüberlauf, keine Rollleiste.
+
 ## [1.235.0] - 2026-09-09
 
 ### Neu

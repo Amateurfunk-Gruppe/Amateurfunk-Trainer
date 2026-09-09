@@ -1188,6 +1188,42 @@
                 cursor: zoom-in;
             }
         }
+        /* ================================================================
+           DER TEXT FLIESST UM DIE KNOEPFE
+           ----------------------------------------------------------------
+           Dietmar am 09.09.2026 mit einem rot umrandeten Rechteck unter der
+           Knopfreihe: "Der Freiraum unterhalb von den Buttons waere gut
+           fuer den Text von der Frage."
+
+           Er hat recht, und der Grund ist eine Eigenschaft von Flexbox:
+           Text und Knopfreihe standen als zwei Spalten nebeneinander. Eine
+           Spalte ist ueber ihre GANZE Hoehe schmal - auch dort, wo die
+           Knoepfe laengst zu Ende sind. Bei einer sechszeiligen Frage
+           blieben so fuenf Zeilen unnoetig kurz, und rechts stand ein
+           leeres Feld.
+
+           float loest genau das: Die Knopfreihe wird aus dem Textfluss
+           herausgenommen und rechts oben angeheftet, der Text laeuft
+           daneben und darunter weiter. Das ist dieselbe Mechanik, mit der
+           in jeder Zeitung ein Bild im Artikel steht.
+
+           EINE REGEL MUSS MAN KENNEN: Die schwebende Kiste muss im
+           Quelltext VOR dem Text stehen, um den sie fliessen soll. Deshalb
+           steht die Knopfreihe in renderQuestion() jetzt zuerst.
+           ================================================================ */
+        .q-text-row { display: block; }
+        .q-text-row::after { content: ''; display: block; clear: both; }
+        .q-knopfleiste {
+            float: right; display: flex; gap: 6px;
+            margin: 0 0 8px 14px;
+        }
+        /* Auf schmalen Fenstern kein Fliessen: Sechs Knoepfe sind dort
+           breiter als der halbe Schirm, und die ersten Zeilen der Frage
+           haetten je vier Woerter. Dann lieber alles untereinander. */
+        @media (max-width: 900px) {
+            .q-knopfleiste { float: none; margin: 0 0 8px 0; flex-wrap: wrap; }
+        }
+
         .q-text {
             font-family: var(--font-display);
             font-size: 1.30rem;
@@ -2231,8 +2267,9 @@
                Nebeneinander blieben fuer den Text sonst vierzig Prozent
                der Breite - der Fragetext stand in einer Spalte von vier
                Woertern Breite. */
-            .q-text-row { flex-direction: column; align-items: stretch !important; gap: 8px !important; }
-            .q-text-row > div:last-child { justify-content: flex-start; flex-wrap: wrap; }
+            /* Seit die Knopfreihe schwebt (siehe .q-knopfleiste), regelt
+               das die Media-Regel dort. Hier bleibt nur der Abstand. */
+            .q-text-row { gap: 8px !important; }
 
             /* Zwei gleich breite Knoepfe je Reihe statt fuenf gequetschter.
                Und in einer anderen Reihenfolge als am Rechner: Oben steht,
@@ -19936,9 +19973,8 @@ function renderQuestion() {
         }
     }
 
-    html += `<div class="q-text-row" style="display:flex; align-items:flex-start; gap:10px; justify-content:space-between;">
-        <div class="q-text"><span class="q-nummer">${q.id}</span>${q.text}</div>
-        <div style="flex-shrink:0; display:flex; gap:6px;">
+    html += `<div class="q-text-row">
+        <div class="q-knopfleiste">
             <button id="questionGelerntBtn" class="q-marke q-marke-gelernt" onclick="toggleGelerntCurrent()"
                     aria-label="Als gelernt abhaken"
                     title="Haken = GELERNT — diese Frage nicht mehr abfragen.&#10;(Das Herz daneben ist die Merkliste.)"
@@ -19959,6 +19995,7 @@ function renderQuestion() {
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
+        <div class="q-text"><span class="q-nummer">${q.id}</span>${q.text}</div>
     </div>`;
 
     const optionsClass = hasImages ? 'options-grid' : 'options';
