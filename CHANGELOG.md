@@ -8,6 +8,36 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.234.3] - 2026-09-09
+
+### Geändert
+- **Die ganze Tafel steht jetzt ab 48 Punkten im Zeichen, nicht erst ab 128.**
+  Dietmar, als das neue Zeichen endlich auf dem Schreibtisch stand: „Auf dem
+  ICO fehlt Amateurfunk ----Trainer----“
+
+  Er hat es an der Stelle gesehen, an der Windows mittelgroße Symbole
+  zeichnet — 48 Punkte. Dort stand die mittlere Fassung: Wellen und Zahl,
+  ohne Schrift. Mein Gedanke war, dass „Amateurfunk“ in 48 Punkten nur noch
+  ein grauer Streifen ist.
+
+  **Das stimmt für die Lesbarkeit — nur geht es hier nicht darum.** Ein
+  Symbol wird nicht gelesen, es wird *wiedererkannt*. Und wiedererkannt wird
+  die ganze Tafel: Wellen oben, Zahl, Schriftblock unten — auch wenn die
+  Buchstaben zu Streifen werden. Wer sein Zeichen entworfen hat, will es auf
+  dem Schreibtisch sehen und nicht dessen Kurzfassung.
+
+| Größe | vorher | jetzt |
+|---|---|---|
+| 256, 128 | ganze Tafel | ganze Tafel |
+| **96, 64, 48** | Wellen und Zahl | **ganze Tafel** |
+| 32, 24, 16 | nur die Zahl | nur die Zahl |
+
+  Unter 48 Punkten (Taskleiste, Listen) bleibt die Zahl allein: Dort wäre
+  auch die Welle nur noch Gekrissel, und die 55 ist das, was das Zeichen an
+  dieser Stelle ausmacht.
+
+---
+
 ## [1.234.2] - 2026-09-09
 
 ### Behoben

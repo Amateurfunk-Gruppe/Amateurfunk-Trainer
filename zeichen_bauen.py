@@ -297,9 +297,28 @@ if __name__ == '__main__':
     maskierbar().resize((512, 512), Image.LANCZOS).save(Z + 'icon-512-maskierbar.png')
     g.save('/tmp/icon-vorschau.png')
 
+    # Welche Fassung bei welcher Groesse?
+    #
+    # Dietmar am 09.09.2026, als das neue Zeichen endlich auf dem
+    # Schreibtisch stand: "Auf dem ICO fehlt Amateurfunk ----Trainer----"
+    #
+    # Er hat es an der Stelle gesehen, an der Windows mittelgrosse Symbole
+    # zeichnet - 48 Punkte. Dort stand bisher die mittlere Fassung: Wellen
+    # und Zahl, ohne Schrift. Der Gedanke war, dass "Amateurfunk" in 48
+    # Punkten nur noch ein grauer Streifen ist.
+    #
+    # Das stimmt fuer die LESBARKEIT, aber darum geht es hier nicht: Ein
+    # Symbol wird nicht gelesen, es wird WIEDERERKANNT. Und wiedererkannt
+    # wird die ganze Tafel - Wellen oben, Zahl, Schriftblock unten -, auch
+    # wenn die Buchstaben zu Streifen werden. Wer sein Zeichen entworfen
+    # hat, will es auf dem Schreibtisch sehen und nicht dessen Kurzfassung.
+    #
+    # Ab 48 Punkten also die ganze Tafel. Darunter (32, 24, 16 - Taskleiste
+    # und Listen) bleibt die Zahl allein: Dort waere auch die Welle nur noch
+    # Gekrissel, und die 55 ist das, was das Zeichen dort ausmacht.
     stufen = []
     for s in (256, 128, 96, 64, 48, 32, 24, 16):
-        quelle = g if s >= 128 else (m if s >= 48 else w)
+        quelle = g if s >= 48 else w
         stufen.append(quelle.resize((s, s), Image.LANCZOS))
     for datei in ('icon.ico', 'favicon.ico'):
         stufen[0].save(Z + datei, format='ICO',
