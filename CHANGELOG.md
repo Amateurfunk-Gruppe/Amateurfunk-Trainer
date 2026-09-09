@@ -8,6 +8,57 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.234.1] - 2026-09-09
+
+### Behoben
+- **„Ansehen“ im Update-Balken öffnete die Anleitung.** Dietmar: „bei Ansehen,
+  öffnet sich das Fenster. Das ist falsch. Hier muss sich der Updater sich
+  melden.“
+
+  Dort stand ein Aufruf von `githubUpdateOeffnen()` — **eine Funktion, die es
+  nie gegeben hat.** Der Aufruf löste einen ReferenceError aus, und der
+  Rückfall im `catch` öffnete `infoOeffnen()`, die Anleitung. So wurde aus
+  einem Tippfehler ein Fenster, das aussah, als sei es so gemeint: Es ging ja
+  etwas auf, nur eben das Falsche.
+
+  Jetzt führt der Knopf nach **Einstellungen → Update**. Und der Rückfall ist
+  weg: Ein `catch`, das etwas völlig anderes tut, verdeckt den Fehler, statt
+  ihn zu zeigen. Geht es schief, steht es in der Konsole und der Balken bleibt
+  stehen — dann sieht man, dass etwas nicht stimmt.
+
+  **Danach alle 192 Funktionsaufrufe aus `onclick`/`onchange` gegen die
+  vorhandenen Definitionen geprüft** — sonst hätte ich einen zweiten dieser
+  Art wieder erst durch Zufall gefunden. Kein weiterer Treffer.
+
+- **Das Zeichen unter Windows: jetzt wird es gesetzt, nicht nur angefasst.**
+  Dietmar: „Das alte Icon ist noch immer zu sehen, unter Windows“ — und auf
+  seinem Bild stand ein Zeichen, das der Trainer seit Wochen nicht mehr
+  benutzt.
+
+  1.234.0 hat die Verknüpfung nur **unverändert gespeichert**, damit sie
+  einen neuen Zeitstempel bekommt. Das reicht, solange sie ohnehin auf das
+  richtige Bild zeigt. **Zeigt sie auf eine alte Bilddatei, bleibt sie so
+  alt, wie sie war** — und genau das war hier der Fall.
+
+  Jetzt wird bei jeder Verknüpfung, die in einen Trainer-Ordner zeigt (dort
+  liegen `Index.html` und `icon.ico`), das Zeichen ausdrücklich auf dieses
+  `icon.ico` **gesetzt** — und zwar auf das im Ordner der Verknüpfung selbst,
+  nicht auf unseres: Wer zwei Installationen hat, soll nicht die eine auf die
+  andere zeigen sehen. Dazu `SHChangeNotify`, damit der Explorer den
+  Schreibtisch sofort neu zeichnet, statt erst beim nächsten Anmelden.
+
+  Der Vorgang **berichtet jetzt**, was er gefunden und geändert hat — mit
+  dem alten und dem neuen Pfad je Verknüpfung. Ohne diesen Bericht rät man
+  wieder.
+
+### Neu
+- **`Zeichen-Auffrischen.bat`** für alle, die nicht warten wollen: Doppelklick,
+  und die Verknüpfungen werden sofort nachgezogen — mit Ausgabe, welche
+  angefasst wurde und was vorher darin stand. Ziel, Name und Arbeitsordner
+  bleiben unangetastet.
+
+---
+
 ## [1.234.0] - 2026-09-09
 
 ### Neu

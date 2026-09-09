@@ -15,11 +15,13 @@
 //
 //  Jedes System braucht seinen eigenen Anstoss:
 //
-//    Windows  Die Verknuepfung (.lnk) wird einmal geoeffnet und unveraendert
-//             wieder gespeichert. Dadurch bekommt sie einen neuen Zeitstempel,
-//             und der Explorer liest das Zeichen neu ein. Dazu
-//             "ie4uinit.exe -show", der amtliche Weg, den Zwischenspeicher
-//             der Shell zu leeren.
+//    Windows  Bei jeder Verknuepfung, die in einen Trainer-Ordner zeigt, wird
+//             das Zeichen ausdruecklich auf dessen icon.ico GESETZT und die
+//             Verknuepfung gespeichert. Nur anfassen reicht nicht: Zeigt sie
+//             auf eine alte Bilddatei, bleibt sie so alt, wie sie war. Dazu
+//             "ie4uinit.exe -show" (der amtliche Weg, den Zwischenspeicher
+//             der Shell zu leeren) und SHChangeNotify, damit der Explorer
+//             den Schreibtisch sofort neu zeichnet.
 //
 //    Linux    Die .desktop-Datei wird angefasst (touch) und, wo vorhanden,
 //             update-desktop-database und gtk-update-icon-cache angestossen.
@@ -65,54 +67,76 @@ function ruf(programm, args, optionen) {
 //  WINDOWS
 // ---------------------------------------------------------------------------
 function windows() {
-    let angefasst = 0;
-
-    // Wo koennen Verknuepfungen liegen? Der Schreibtisch des Benutzers, der
-    // gemeinsame Schreibtisch (dorthin legt das Setup sie) und das Startmenue.
+    // Wo koennen Verknuepfungen liegen? Beide Schreibtische (der eigene und
+    // der gemeinsame, dorthin legt das Setup sie), der Schreibtisch in
+    // OneDrive - sehr verbreitet und leicht uebersehen - und das Startmenue.
     const orte = [
         path.join(os.homedir(), 'Desktop'),
-        path.join(os.homedir(), 'OneDrive', 'Desktop'),          // sehr verbreitet
+        path.join(os.homedir(), 'OneDrive', 'Desktop'),
+        path.join(os.homedir(), 'OneDrive - Personal', 'Desktop'),
         path.join(process.env.PUBLIC || 'C:\\Users\\Public', 'Desktop'),
         path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
         path.join(process.env.ProgramData || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs')
     ].filter(Boolean);
 
-    const treffer = [];
-    for (const ort of orte) {
-        if (!still(() => fs.existsSync(ort))) continue;
-        // Auch eine Ebene tiefer nachsehen: Das Setup legt eine eigene Gruppe
-        // im Startmenue an.
-        const kandidaten = [ort];
-        for (const e of still(() => fs.readdirSync(ort, { withFileTypes: true })) || []) {
-            if (e.isDirectory() && /amateurfunk/i.test(e.name)) kandidaten.push(path.join(ort, e.name));
-        }
-        for (const k of kandidaten) {
-            for (const e of still(() => fs.readdirSync(k)) || []) {
-                if (/\.lnk$/i.test(e) && /amateurfunk/i.test(e)) treffer.push(path.join(k, e));
-            }
-        }
-    }
+    // ------------------------------------------------------------------
+    //  DAS ZEICHEN WIRD NEU GESETZT, NICHT NUR ANGEFASST.
+    // ------------------------------------------------------------------
+    //  Der erste Anlauf hat die Verknuepfung nur unveraendert gespeichert,
+    //  damit sie einen neuen Zeitstempel bekommt. Das reicht, solange sie
+    //  ohnehin auf das richtige Bild zeigt. Dietmar am 09.09.2026: "Das
+    //  alte Icon ist noch immer zu sehen, unter Windows" - und auf seinem
+    //  Bild war ein Zeichen zu sehen, das der Trainer seit Wochen nicht
+    //  mehr benutzt. Eine Verknuepfung, die auf eine ALTE Bilddatei zeigt,
+    //  bleibt beim blossen Anfassen so alt, wie sie war.
+    //
+    //  Deshalb: Bei jeder Verknuepfung, die in einen Trainer-Ordner zeigt
+    //  (dort liegen Index.html und icon.ico), wird das Zeichen auf genau
+    //  dieses icon.ico gesetzt - und zwar auf das im Ordner der
+    //  Verknuepfung selbst, nicht auf unseres. Wer zwei Installationen hat,
+    //  soll nicht die eine auf die andere zeigen sehen.
+    //
+    //  Das PowerShell-Stueck sagt hinterher, was es gefunden und was es
+    //  geaendert hat. Ohne diesen Bericht raet man wieder.
+    const ps = [
+        '$ErrorActionPreference = "SilentlyContinue"',
+        '$w = New-Object -ComObject WScript.Shell',
+        '$hier = "' + WURZEL.replace(/"/g, '""') + '"',
+        '$orte = @(' + orte.map(o => '"' + o.replace(/"/g, '""') + '"').join(',') + ')',
+        '$gefunden = 0; $geaendert = 0',
+        'foreach ($ort in $orte) {',
+        '  if (-not (Test-Path -LiteralPath $ort)) { continue }',
+        '  foreach ($f in Get-ChildItem -LiteralPath $ort -Filter *.lnk -Recurse -Depth 2) {',
+        '    $s = $w.CreateShortcut($f.FullName)',
+        '    $ordner = $s.WorkingDirectory',
+        '    if (-not $ordner -and $s.TargetPath) { $ordner = Split-Path -Parent $s.TargetPath }',
+        '    $passt = $false',
+        '    if ($ordner -and (Test-Path -LiteralPath (Join-Path $ordner "Index.html"))) { $passt = $true }',
+        '    if ($s.TargetPath -and $s.TargetPath.StartsWith($hier, "OrdinalIgnoreCase")) { $passt = $true; if (-not $ordner) { $ordner = $hier } }',
+        '    if (-not $passt) { continue }',
+        '    $gefunden++',
+        '    $ico = Join-Path $ordner "icon.ico"',
+        '    if (-not (Test-Path -LiteralPath $ico)) { $ico = Join-Path $hier "icon.ico" }',
+        '    if (-not (Test-Path -LiteralPath $ico)) { Write-Output ("OHNE-BILD " + $f.FullName); continue }',
+        '    $vorher = $s.IconLocation',
+        '    $s.IconLocation = "$ico,0"',
+        '    $s.Save()',
+        '    $geaendert++',
+        '    Write-Output ("GESETZT " + $f.FullName + " | vorher: " + $vorher + " | jetzt: $ico,0")',
+        '  }',
+        '}',
+        'Write-Output ("SUMME gefunden=$gefunden geaendert=$geaendert")'
+    ].join('; ');
 
-    if (treffer.length) {
-        // Die Verknuepfung oeffnen und unveraendert speichern. Das Zeichen
-        // wird dabei ausdruecklich noch einmal gesetzt - auch dann, wenn es
-        // schon vorher richtig eingetragen war: Erst das Speichern gibt der
-        // Datei den neuen Zeitstempel, an dem der Explorer merkt, dass er
-        // nachsehen muss.
-        const ps = [
-            '$ErrorActionPreference = "SilentlyContinue"',
-            '$w = New-Object -ComObject WScript.Shell',
-            '$icon = "' + path.join(WURZEL, 'icon.ico').replace(/"/g, '""') + '"',
-            'foreach ($p in @(' + treffer.map(t => '"' + t.replace(/"/g, '""') + '"').join(',') + ')) {',
-            '  $s = $w.CreateShortcut($p)',
-            '  if ($s.IconLocation -and ($s.IconLocation -like "*icon.ico*")) { $s.IconLocation = "$icon,0" }',
-            '  $s.Save()',
-            '}'
-        ].join('; ');
-        if (ruf('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps])) {
-            angefasst = treffer.length;
-        }
+    let bericht = '';
+    try {
+        bericht = execFileSync('powershell.exe',
+            ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', ps],
+            { encoding: 'utf8', timeout: 40000 }) || '';
+    } catch (e) {
+        sag('PowerShell nicht erreichbar: ' + e.message);
     }
+    for (const zeile of bericht.split(/\r?\n/)) if (zeile.trim()) sag(zeile.trim());
 
     // Der Zwischenspeicher der Shell. "-show" ist der Weg, den Microsoft
     // selbst benutzt; auf aelteren Fassungen hiess er "-ClearIconCache".
@@ -120,9 +144,15 @@ function windows() {
     ruf('ie4uinit.exe', ['-show']);
     ruf('ie4uinit.exe', ['-ClearIconCache']);
 
-    sag(angefasst ? (angefasst + ' Verknuepfung(en) aufgefrischt')
-                  : 'keine Verknuepfung gefunden - nichts zu tun');
-    return angefasst;
+    // Und dem Explorer sagen, dass sich etwas geaendert hat. Ohne diesen
+    // Anstoss zeichnet er den Schreibtisch erst beim naechsten Anmelden neu.
+    ruf('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+        '$sig = \'[DllImport("shell32.dll")] public static extern void SHChangeNotify(int e, uint f, IntPtr a, IntPtr b);\'; '
+      + 'Add-Type -MemberDefinition $sig -Namespace W -Name Shell; '
+      + '[W.Shell]::SHChangeNotify(0x8000000, 0x1000, [IntPtr]::Zero, [IntPtr]::Zero)']);
+
+    const m = /gefunden=(\d+) geaendert=(\d+)/.exec(bericht);
+    return m ? parseInt(m[2], 10) : 0;
 }
 
 // ---------------------------------------------------------------------------

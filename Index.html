@@ -13926,7 +13926,32 @@ function githubBalkenZeigen(l){
         + 'border-radius:8px; background:transparent; color:#fff; font-weight:600; cursor:pointer;">Später</button>';
     document.body.appendChild(b);
     const auf = document.getElementById('githubBalkenAuf');
-    if(auf) auf.onclick = ()=>{ b.remove(); try{ githubUpdateOeffnen(); }catch(e){ try{ infoOeffnen(); }catch(e2){} } };
+    // "Ansehen" fuehrt zum Update, nicht zur Anleitung.
+    //
+    // Dietmar am 09.09.2026: "bei Ansehen, oeffnet sich das Fenster. Das ist
+    // falsch. Hier muss sich der Updater sich melden."
+    //
+    // Hier stand githubUpdateOeffnen() - eine Funktion, die es nie gab. Der
+    // Aufruf loeste einen ReferenceError aus, und der Rueckfall im catch
+    // oeffnete die Anleitung. So wurde aus einem Tippfehler ein Fenster, das
+    // aussah, als sei es so gemeint: Es ging ja etwas auf, nur eben das
+    // Falsche.
+    //
+    // DESHALB KEIN catch MEHR UM DEN AUFRUF. Ein Rueckfall, der etwas
+    // voellig anderes tut, verdeckt den Fehler, statt ihn zu zeigen. Geht
+    // hier etwas schief, steht es in der Konsole und der Balken bleibt
+    // stehen - dann sieht man, dass etwas nicht stimmt.
+    if(auf) auf.onclick = ()=>{
+        try{
+            einstellungenOeffnen('update');
+            b.remove();
+        }catch(e){
+            console.error('[UPDATE] Fenster liess sich nicht oeffnen:', e);
+            if(typeof showAppAlert === 'function')
+                showAppAlert('Das Update-Fenster ließ sich nicht öffnen. '
+                           + 'Es steht auch unter Einstellungen → Update.');
+        }
+    };
     const zu = document.getElementById('githubBalkenZu');
     if(zu) zu.onclick = ()=> b.remove();
 }

@@ -2482,6 +2482,7 @@ const PAKET_DATEIEN = [
   // hinzufuegen" das Symbol, und der Trainer startet mit Browserleiste.
   'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
   'icon-512-maskierbar.png', 'icon.icns', 'verknuepfung_auffrischen.js',
+  'Zeichen-Auffrischen.bat',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
