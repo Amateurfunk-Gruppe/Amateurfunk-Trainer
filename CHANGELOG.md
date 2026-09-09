@@ -8,6 +8,45 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.237.0] - 2026-09-09
+
+### Geändert
+- **Nummer und Knöpfe stehen jetzt in einer eigenen Zeile, der Fragetext
+  darunter über die volle Breite.** Dietmar: „Wir können die erste Reihe
+  komplett ungenutzt lassen. Hier würde Technik und die Fragen Nr. stehen
+  und ganz rechts die Buttons. Darunter kommt der Text, die komplett
+  ausgenutzt wird."
+
+  **Der Weg dahin in drei Schritten — und warum die ersten zwei nicht
+  gereicht haben.**
+
+  *Erst* standen Text und Knopfreihe als zwei **Flex-Spalten**
+  nebeneinander. Eine Spalte ist über ihre ganze Höhe schmal — auch dort,
+  wo die Knöpfe längst zu Ende sind. Bei sechs Zeilen Frage blieben fünf
+  davon unnötig kurz, rechts stand ein leeres Feld.
+
+  *Dann* (1.236.0) floss der Text um die Knöpfe herum. Besser, aber nicht
+  gut, und Dietmar hat sofort gesehen warum: „danach kommt ein ewig
+  grosser Leerraum und geht erst in der nächsten Zeile weiter." Nachgemessen
+  — die Knöpfe sind **32 Pixel** hoch, eine Textzeile knapp **28**. Der
+  8-Pixel-Abstand unter den Knöpfen ragte also immer noch in die *zweite*
+  Zeile hinein und kürzte sie mit, obwohl daneben schon nichts mehr stand.
+  Genau diese halbe Zeile war der markierte Leerraum.
+
+  *Jetzt:* Die Nummer steht links, die Knöpfe stehen rechts, beide in einer
+  eigenen Kopfzeile. Der Text fängt darunter bei null an und läuft über die
+  volle Breite — **jede Zeile gleich lang, kein Rest, keine Pixelrechnerei
+  mit Zeilenhöhen.** Gemessen an NG208 auf 1441 × 913: vier Textzeilen statt
+  sieben, alle bis an den rechten Rand.
+
+  **Die Fragennummer hat den Fragetext verlassen.** Sie stand bisher als
+  erstes Wort *in* der Frage. Damit sie in der Kopfzeile nicht verloren
+  wirkt, trägt sie ihre bekannte Optik jetzt auch außerhalb des DARC-Bildes:
+  weißes Feld, Monoschrift, im Dunkelmodus dunkelblau.
+
+  Geprüft in hell, dunkel, eckig (DARC), Beamer, 1024 und 760 Pixel.
+  Kein Querüberlauf.
+
 ## [1.236.0] - 2026-09-09
 
 ### Geändert

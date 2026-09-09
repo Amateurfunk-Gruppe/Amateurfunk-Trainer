@@ -1189,7 +1189,56 @@
             }
         }
         /* ================================================================
-           DER TEXT FLIESST UM DIE KNOEPFE
+           EINE KOPFZEILE FUER NUMMER UND KNOEPFE - DER TEXT DARUNTER
+           ----------------------------------------------------------------
+           Dietmar am 09.09.2026, mit einem rot umrandeten Rechteck unter
+           der Knopfreihe: "Wir koennen die erste Reihe komplett ungenutzt
+           lassen. Hier wuerde Technik und die Fragen Nr. stehen und ganz
+           rechts die Buttons. Darunter kommt der Text, die komplett
+           ausgenutzt wird."
+
+           Das ist die klarere Loesung, und der Weg dahin ist lehrreich:
+
+           ERST standen Text und Knopfreihe als zwei FLEX-SPALTEN
+           nebeneinander. Eine Spalte ist ueber ihre ganze Hoehe schmal -
+           auch dort, wo die Knoepfe laengst zu Ende sind. Bei sechs Zeilen
+           Frage blieben fuenf davon unnoetig kurz.
+
+           DANN floss der Text um die Knoepfe herum (float). Besser, aber
+           nicht gut: Die Knoepfe sind 32 Pixel hoch, eine Textzeile knapp
+           28 - der Float ragte also immer ein paar Pixel in die ZWEITE
+           Zeile hinein und kuerzte sie mit. Daher der Leerraum, den
+           Dietmar im Bild markiert hat: eine halbe Zeile Text fehlte,
+           obwohl daneben schon nichts mehr stand.
+
+           JETZT: Die Nummer steht links, die Knoepfe stehen rechts, beide
+           in einer eigenen Zeile. Darunter faengt der Text bei null an und
+           laeuft ueber die volle Breite - jede Zeile gleich lang, kein
+           Rest, keine Pixelrechnerei mit Zeilenhoehen.
+           ================================================================ */
+        .q-text-row { display: block; }
+        .q-kopfzeile {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+        }
+        .q-knopfleiste { display: flex; gap: 6px; flex-shrink: 0; }
+
+        /* Die Fragennummer steht jetzt allein in der Kopfzeile und nicht
+           mehr am Anfang des Fragetextes. Damit sie dort nicht verloren
+           wirkt, traegt sie dieselbe Optik wie im DARC-Bild: weisses Feld,
+           Monoschrift, damit sich Nummern gut vergleichen lassen. */
+        .q-nummer {
+            display: inline-block;
+            font-family: var(--font-mono), Consolas, monospace;
+            font-size: 0.86rem; font-weight: 700; letter-spacing: 0.02em;
+            padding: 2px 8px; border-radius: 5px;
+            background: #ffffff; color: var(--panel-navy);
+            border: 1px solid var(--line); white-space: nowrap;
+        }
+        body.dark .q-nummer { background: #10293b; color: #f0f7fc; border-color: #2b4a63; }
+
+        /* ================================================================
+           FRUEHER HIER: DER TEXT FLIESST UM DIE KNOEPFE
            ----------------------------------------------------------------
            Dietmar am 09.09.2026 mit einem rot umrandeten Rechteck unter der
            Knopfreihe: "Der Freiraum unterhalb von den Buttons waere gut
@@ -1207,22 +1256,10 @@
            daneben und darunter weiter. Das ist dieselbe Mechanik, mit der
            in jeder Zeitung ein Bild im Artikel steht.
 
-           EINE REGEL MUSS MAN KENNEN: Die schwebende Kiste muss im
-           Quelltext VOR dem Text stehen, um den sie fliessen soll. Deshalb
-           steht die Knopfreihe in renderQuestion() jetzt zuerst.
+           Beides steht hier nur noch als Merkposten: float loest das
+           Spaltenproblem, handelt sich aber ein neues ein, sobald die
+           schwebende Kiste hoeher ist als eine Textzeile.
            ================================================================ */
-        .q-text-row { display: block; }
-        .q-text-row::after { content: ''; display: block; clear: both; }
-        .q-knopfleiste {
-            float: right; display: flex; gap: 6px;
-            margin: 0 0 8px 14px;
-        }
-        /* Auf schmalen Fenstern kein Fliessen: Sechs Knoepfe sind dort
-           breiter als der halbe Schirm, und die ersten Zeilen der Frage
-           haetten je vier Woerter. Dann lieber alles untereinander. */
-        @media (max-width: 900px) {
-            .q-knopfleiste { float: none; margin: 0 0 8px 0; flex-wrap: wrap; }
-        }
 
         .q-text {
             font-family: var(--font-display);
@@ -2267,9 +2304,11 @@
                Nebeneinander blieben fuer den Text sonst vierzig Prozent
                der Breite - der Fragetext stand in einer Spalte von vier
                Woertern Breite. */
-            /* Seit die Knopfreihe schwebt (siehe .q-knopfleiste), regelt
-               das die Media-Regel dort. Hier bleibt nur der Abstand. */
-            .q-text-row { gap: 8px !important; }
+            /* Auf schmalen Fenstern sind sechs Knoepfe breiter als der
+               halbe Schirm. Dann bricht die Kopfzeile um: Nummer oben,
+               Knopfreihe darunter, beide linksbuendig. */
+            .q-kopfzeile { gap: 8px; }
+            .q-knopfleiste { flex-wrap: wrap; }
 
             /* Zwei gleich breite Knoepfe je Reihe statt fuenf gequetschter.
                Und in einer anderen Reihenfolge als am Rechner: Oben steht,
@@ -19974,6 +20013,8 @@ function renderQuestion() {
     }
 
     html += `<div class="q-text-row">
+        <div class="q-kopfzeile">
+            <span class="q-nummer">${q.id}</span>
         <div class="q-knopfleiste">
             <button id="questionGelerntBtn" class="q-marke q-marke-gelernt" onclick="toggleGelerntCurrent()"
                     aria-label="Als gelernt abhaken"
@@ -19995,7 +20036,8 @@ function renderQuestion() {
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
-        <div class="q-text"><span class="q-nummer">${q.id}</span>${q.text}</div>
+        </div>
+        <div class="q-text">${q.text}</div>
     </div>`;
 
     const optionsClass = hasImages ? 'options-grid' : 'options';
@@ -23335,7 +23377,7 @@ if (originalSelectOption) {
            display:inline-block, damit das Feld bei einer umbrechenden Frage
            nicht auseinandergerissen wird, und Monoschrift, weil Nummern in
            gleichen Breiten leichter zu vergleichen sind. */
-        body.eckig .question-area .q-text .q-nummer {
+        body.eckig .question-area .q-nummer {
             display: inline-block;
             background: var(--darc-feld);
             color: var(--darc-frage);
