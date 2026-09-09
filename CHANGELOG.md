@@ -8,6 +8,55 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.235.0] - 2026-09-09
+
+### Neu
+- **Notizen an der Frage.** Dietmar: „Notizen anlegen. Wie stellst du dir das
+  vor?“ — und auf den Vorschlag hin: nur an der Frage, kein zweiter
+  Notizblock daneben.
+
+  **Warum das etwas anderes ist als das Herz.** Die Merkliste sagt, *dass*
+  eine Frage wichtig ist. Die Notiz sagt, *warum* — und beim zweiten
+  Durchgang ist das der Teil, der zählt: „Verwechslungsgefahr mit NC404“,
+  „Formel steht auf Seite 12“, „Michael erklärt das im Video ab 5:30“.
+
+  Ein dritter Knopf neben Haken und Herz, ein Notizzettel. Er trägt seine
+  Farbe nur, wenn wirklich etwas darin steht — dieselbe Regel wie bei den
+  anderen beiden, aus demselben Grund (1.231.1).
+
+  **Geschrieben wird unter den Antworten, nicht in einem Fenster.** Gelber
+  Grund wie ein Merkzettel, gespeichert wird **zwei Sekunden nach dem
+  letzten Anschlag** und beim Verlassen des Feldes — kein Speichern-Knopf,
+  den man vergessen kann. Bei einer Frage mit Notiz klappt das Feld von
+  selbst auf; leere Notizen werden gelöscht statt als leerer Text abgelegt.
+
+  **Ein Fehler, den der eigene Test gefunden hat.** Die erste Fassung fragte
+  beim Speichern `currentQuestions[currentIndex]` — das ist beim Blättern
+  aber **schon die nächste Frage**, während im Textfeld noch der Text der
+  vorigen steht. Ergebnis im Test: Die Notiz an NB505 stand nach einem Klick
+  auf *Weiter* auch an NC108. Die Fragennummer hängt jetzt am Feld selbst
+  (`data-qid`) und wird mit ihm zusammen ersetzt; was im Feld steht und
+  wohin es gehört, kann so nicht mehr auseinanderlaufen.
+
+  **Wiederfinden** über *Alle Notizen* im Notizfeld: alle untereinander, mit
+  Fragennummer, Fragetext und Sprung zur Frage. Bewusst **kein** weiterer
+  Knopf in der Kopfzeile — der Merkliste-Knopf dort war schon einer zu viel
+  (1.231.2).
+
+  **Auf dem Blatt „Vor der Prüfung“** steht die Notiz unter der richtigen
+  Antwort. Sie ist der einzige Teil des Blattes, den nicht der Katalog
+  geschrieben hat — und am Vorabend der wertvollste.
+
+  **Aufgehoben** wird pro Benutzer wie die Merkliste, in
+  `amateurfunk_notizen_<Platz>`. Der Schlüssel steht in `benutzerSchluessel()`
+  (Zurücksetzen räumt ihn mit weg) und in `preserveKeys` (Cache-Leeren lässt
+  ihn stehen). Im Gruppenraum bleibt die Notiz privat.
+
+**Geprüft**: schreiben, blättern, zurückblättern, sofort weiterblättern ohne
+Pause, Liste öffnen, springen — jede Notiz bleibt bei ihrer Frage.
+
+---
+
 ## [1.234.3] - 2026-09-09
 
 ### Geändert

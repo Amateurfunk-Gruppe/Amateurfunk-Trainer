@@ -1110,6 +1110,53 @@
         .q-marke-gelernt.an { background: #15703c; border-color: #15703c; color: #ffffff; }
         .q-marke-merken.an  { background: #e11d48; border-color: #e11d48; color: #ffffff; }
 
+        /* ================================================================
+           DIE NOTIZ AN DER FRAGE
+           ----------------------------------------------------------------
+           Dietmar am 09.09.2026: "Notizen anlegen. Wie stellst du dir das
+           vor?" - und auf den Vorschlag hin: nur an der Frage, kein zweiter
+           Notizblock daneben.
+
+           Das Herz sagt, DASS eine Frage wichtig ist. Die Notiz sagt,
+           WARUM - und das ist beim zweiten Durchgang das, was zaehlt:
+           "Verwechslungsgefahr mit NC404", "Formel steht auf Seite 12",
+           "Michael erklaert das im Video ab 5:30".
+
+           Gelb wie ein Merkzettel, und der Knopf traegt die Farbe nur,
+           wenn wirklich etwas darin steht - dieselbe Regel wie bei Haken
+           und Herz, aus demselben Grund (siehe 1.231.1).
+           ================================================================ */
+        .q-marke-notiz.an { background: #e2932f; border-color: #e2932f; color: #ffffff; }
+
+        #notizFeld {
+            margin-top: 0.8rem; background: #fffbf0; border: 1px solid #f0d9a8;
+            border-left: 5px solid #e2932f; border-radius: 12px;
+            padding: 0.7rem 0.9rem;
+        }
+        #notizFeld .notiz-kopf {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; margin-bottom: 6px; font-size: 0.74rem; color: #8a6d00;
+            font-weight: 700;
+        }
+        #notizFeld textarea {
+            width: 100%; box-sizing: border-box; min-height: 74px; resize: vertical;
+            border: 1px solid #e8d3a4; border-radius: 8px; padding: 0.55rem 0.7rem;
+            font-family: inherit; font-size: 0.95rem; line-height: 1.45;
+            background: #fffdf8; color: var(--ink); outline: none;
+        }
+        #notizFeld textarea:focus { border-color: #e2932f; }
+        #notizFeld .notiz-fuss {
+            margin-top: 5px; display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; font-size: 0.7rem; color: #9a8350;
+        }
+        #notizFeld .notiz-fuss button {
+            background: none; border: none; color: #8a6d00; cursor: pointer;
+            font-family: inherit; font-size: 0.7rem; font-weight: 700; text-decoration: underline;
+            padding: 0;
+        }
+        body.dark #notizFeld { background: #2a2114; border-color: #5a4a28; }
+        body.dark #notizFeld textarea { background: #1f1a11; color: #f0e6d2; border-color: #5a4a28; }
+
         /* Die kurze Einblendung nach einem Klick auf Merken oder Gelernt.
            Kein Fenster mit Knopf: Wer zwanzig Fragen durchgeht, will nicht
            zwanzigmal etwas wegklicken. */
@@ -6077,7 +6124,8 @@ function confirmCacheClear(){
         USER_SLOTS.forEach(u => {
             preserveKeys.push('amateurfunk_mastery_' + u, 'amateurfunk_difficult_' + u,
                 'amateurfunk_errors_' + u, 'amateurfunk_userName_' + u,
-                'amateurfunk_favorites_' + u, 'amateurfunk_pruefungstermin_' + u,
+                'amateurfunk_favorites_' + u, 'amateurfunk_notizen_' + u,
+                'amateurfunk_pruefungstermin_' + u,
                 'amateurfunk_cb_' + u, 'examHistory_' + u, 'amateurfunk_history_' + u,
                 'amateurfunk_einstellungen_' + u);
         });
@@ -6909,6 +6957,251 @@ window.mayUseEmbeddedPlayer = mayUseEmbeddedPlayer;
 // merken; die Merkliste kann man als eigene Lernrunde durchgehen.
 // Gespeichert wird pro Benutzer-Slot, genau wie Fehler und Lernbedarf.
 // ============================================================================
+// ============================================================================
+//  NOTIZEN AN DER FRAGE
+// ----------------------------------------------------------------------------
+//  Dietmar am 09.09.2026: "Notizen anlegen. Wie stellst du dir das vor?"
+//  Auf den Vorschlag hin: nur an der Frage, kein zweiter Notizblock daneben.
+//
+//  Aufgehoben wird wie die Merkliste - ein Fach je Benutzer, nichts
+//  vermischt sich. Der Schluessel steht in benutzerSchluessel() (Zuruecksetzen)
+//  und in preserveKeys (Cache leeren); wer eine dieser beiden Stellen
+//  vergisst, verliert die Notizen still.
+//
+//  Der Inhalt ist ein einfaches Verzeichnis: Fragennummer -> Text. Leere
+//  Notizen werden nicht aufgehoben, sondern geloescht - sonst wuechse die
+//  Ablage mit jeder Frage, die man einmal aufgeklappt und wieder verlassen
+//  hat.
+// ============================================================================
+const NOTIZ_PREFIX = 'amateurfunk_notizen_';
+let notizen = {};              // { "NB505": "Verwechslung mit ..." }
+
+function notizenKey(){ return NOTIZ_PREFIX + currentUser; }
+
+function loadNotizen(){
+    try{
+        const roh = localStorage.getItem(notizenKey());
+        const o = roh ? JSON.parse(roh) : {};
+        notizen = (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+    }catch(e){ notizen = {}; }
+    try{ notizKnopfNachziehen(); }catch(e){}
+}
+window.loadNotizen = loadNotizen;
+
+function saveNotizen(){
+    try{ localStorage.setItem(notizenKey(), JSON.stringify(notizen)); return null; }
+    catch(e){
+        console.error('[Notiz] nicht gespeichert:', e);
+        return (e && (e.name || e.message)) || 'unbekannt';
+    }
+}
+
+function notizText(id){
+    try{ return (notizen && id && typeof notizen[id] === 'string') ? notizen[id] : ''; }
+    catch(e){ return ''; }
+}
+window.notizText = notizText;
+
+function notizAnzahl(){
+    try{ return Object.keys(notizen).length; }catch(e){ return 0; }
+}
+
+// Der Knopf traegt die Farbe nur, wenn wirklich etwas darin steht.
+function notizKnopfNachziehen(){
+    try{
+        const btn = document.getElementById('questionNotizBtn');
+        if(!btn) return;
+        const q = currentQuestions[currentIndex];
+        const da = q ? notizText(q.id).trim() !== '' : false;
+        btn.classList.toggle('an', da);
+        btn.title = da
+            ? 'Zettel = NOTIZ — es steht etwas zu dieser Frage.\nKlick zeigt sie.'
+            : 'Zettel = NOTIZ — eigene Anmerkung zu dieser Frage.\nSie steht auf dem Blatt „Vor der Prüfung“ mit dabei.';
+    }catch(e){}
+}
+window.notizKnopfNachziehen = notizKnopfNachziehen;
+
+// Auf- und zuklappen. Beim Aufklappen springt der Schreibstrich hinein -
+// wer den Knopf drueckt, will schreiben und nicht erst klicken.
+function notizUmschalten(){
+    try{
+        const feld = document.getElementById('notizFeld');
+        if(!feld) return;
+        const zu = feld.style.display === 'none';
+        if(zu){
+            feld.style.display = '';
+            const t = document.getElementById('notizText');
+            if(t){ t.focus(); try{ t.setSelectionRange(t.value.length, t.value.length); }catch(e){} }
+        }else{
+            notizJetztSichern();
+            // Steht etwas drin, bleibt das Feld offen - sonst waere die
+            // Notiz nach dem Zuklappen unsichtbar, obwohl es sie gibt.
+            const q = currentQuestions[currentIndex];
+            if(!q || notizText(q.id).trim() === '') feld.style.display = 'none';
+        }
+    }catch(e){ console.error('[Notiz] umschalten', e); }
+}
+window.notizUmschalten = notizUmschalten;
+
+// ZU WELCHER FRAGE GEHOERT DAS, WAS GERADE IM FELD STEHT?
+//
+// Nicht currentQuestions[currentIndex] fragen - das ist beim Blaettern
+// bereits die NAECHSTE Frage, waehrend im Textfeld noch der Text der
+// vorigen steht. Der eigene Test hat es sofort gezeigt: Eine Notiz an
+// NB505 stand nach einem Klick auf "Weiter" auch an NC108.
+//
+// Die Nummer haengt deshalb am Feld selbst (data-qid) und wird mit ihm
+// zusammen ersetzt. Was im Feld steht und wohin es gehoert, kann so gar
+// nicht mehr auseinanderlaufen.
+function notizFeldFrage(){
+    try{
+        const t = document.getElementById('notizText');
+        const id = t && t.dataset ? t.dataset.qid : '';
+        if(id) return id;
+        const q = currentQuestions[currentIndex];
+        return q ? q.id : '';
+    }catch(e){ return ''; }
+}
+
+// Getippt wird oft, gespeichert selten: zwei Sekunden nach dem letzten
+// Anschlag. Die Fragennummer wandert MIT in den Zeitgeber - sonst
+// schriebe ein spaet ausloesender Speichervorgang den Text an die
+// naechste Frage, wenn man in der Zwischenzeit weitergeblaettert hat.
+function notizTippen(){
+    try{
+        const t = document.getElementById('notizText');
+        if(!t) return;
+        clearTimeout(notizTippen._t);
+        const id = notizFeldFrage();
+        if(!id) return;
+        const wert = t.value;
+        notizTippen._t = setTimeout(() => notizSchreiben(id, wert, true), 2000);
+        const stand = document.getElementById('notizStand');
+        if(stand) stand.textContent = '…';
+    }catch(e){}
+}
+window.notizTippen = notizTippen;
+
+// Sofort sichern - beim Verlassen des Feldes und bevor die naechste Frage
+// gezeichnet wird.
+function notizJetztSichern(){
+    try{
+        clearTimeout(notizTippen._t);
+        const t = document.getElementById('notizText');
+        const id = notizFeldFrage();
+        if(!t || !id) return;
+        notizSchreiben(id, t.value, false);
+    }catch(e){}
+}
+window.notizJetztSichern = notizJetztSichern;
+
+function notizSchreiben(id, text, ausZeitgeber){
+    try{
+        const sauber = String(text == null ? '' : text).trim();
+        const vorher = notizText(id);
+        if(sauber === vorher){
+            const stand0 = document.getElementById('notizStand');
+            if(stand0) stand0.textContent = sauber ? 'gespeichert' : '';
+            return;
+        }
+        // Leere Notizen werden geloescht, nicht als leerer Text abgelegt.
+        if(sauber === '') delete notizen[id]; else notizen[id] = sauber;
+        const fehler = saveNotizen();
+        const stand = document.getElementById('notizStand');
+        if(stand){
+            stand.textContent = fehler ? ('nicht gespeichert: ' + fehler)
+                                       : (sauber ? 'gespeichert' : 'gelöscht');
+            stand.style.color = fehler ? '#a5281b' : '';
+        }
+        notizKnopfNachziehen();
+        if(fehler && typeof markeHinweisZeigen === 'function')
+            markeHinweisZeigen('Notiz konnte nicht gespeichert werden: ' + fehler);
+    }catch(e){ console.error('[Notiz] schreiben', e); }
+}
+
+// ---------------------------------------------------------------------------
+//  ALLE NOTIZEN AUF EINEN BLICK
+// ---------------------------------------------------------------------------
+//  Erreichbar aus dem Notizfeld selbst. Bewusst kein weiterer Knopf in der
+//  Kopfzeile: Dietmar hat den Merkliste-Knopf dort wieder abbestellt, und
+//  ein zweiter derselben Art waere derselbe Fehler noch einmal.
+function notizenListeOeffnen(){
+    try{
+        notizJetztSichern();
+        let m = document.getElementById('notizenModal');
+        if(!m){
+            m = document.createElement('div');
+            m.id = 'notizenModal';
+            m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + 'backdrop-filter:blur(6px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            m.onclick = e => { if(e.target === m) m.style.display = 'none'; };
+            m.innerHTML = '<div style="background:var(--card-bg); border-radius:18px; padding:1.2rem 1.4rem; '
+                + 'max-width:760px; width:100%; max-height:80vh; overflow-y:auto;">'
+                + '<div style="display:flex; align-items:center; gap:10px; margin-bottom:0.2rem;">'
+                + '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
+                + '<i class="fas fa-note-sticky" style="color:#e2932f;"></i> Meine Notizen</h3>'
+                + '<button type="button" style="background:none; border:none; font-size:1.3rem; cursor:pointer; '
+                + 'color:var(--muted);" onclick="document.getElementById(\'notizenModal\').style.display=\'none\'">✕</button></div>'
+                + '<div id="notizenSub" style="font-size:0.76rem; color:var(--muted); margin-bottom:0.9rem;"></div>'
+                + '<div id="notizenListe"></div></div>';
+            document.body.appendChild(m);
+        }
+        notizenListeFuellen();
+        m.style.display = 'flex';
+    }catch(e){ console.error('[Notiz] Liste', e); }
+}
+window.notizenListeOeffnen = notizenListeOeffnen;
+
+function notizenListeFuellen(){
+    const sub   = document.getElementById('notizenSub');
+    const liste = document.getElementById('notizenListe');
+    if(!liste) return;
+    const ids = Object.keys(notizen).filter(id => String(notizen[id] || '').trim() !== '').sort();
+    const bank = (typeof questionBank !== 'undefined') ? questionBank : [];
+    const gefunden = ids.map(id => ({ id, q: bank.find(x => x.id === id), text: notizen[id] }));
+    const imZiel = gefunden.filter(e => e.q);
+    const fremd  = gefunden.length - imZiel.length;
+
+    if(sub){
+        let t = imZiel.length === 1 ? '1 Notiz' : imZiel.length + ' Notizen';
+        // Dieselbe Ehrlichkeit wie bei der Merkliste: Was zu einem anderen
+        // Pruefungsziel gehoert, ist nicht weg - es steht hier nur nicht.
+        if(fremd > 0) t += ' · ' + fremd + (fremd === 1 ? ' weitere gehört' : ' weitere gehören')
+                          + ' nicht zum gewählten Prüfungsziel';
+        sub.textContent = t;
+    }
+    if(!imZiel.length){
+        liste.innerHTML = '<div style="text-align:center; color:var(--muted); padding:2rem 1rem; font-size:0.85rem;">'
+            + 'Noch nichts notiert.<br>An einer Frage auf den Zettel tippen und losschreiben.</div>';
+        return;
+    }
+    const teile = { vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik' };
+    liste.innerHTML = imZiel.map(e =>
+        '<div style="padding:0.7rem 0.2rem; border-bottom:1px solid var(--line);">'
+        + '<div style="display:flex; align-items:baseline; gap:8px; margin-bottom:3px;">'
+        +   '<span style="font-family:var(--font-mono); font-size:0.72rem; color:var(--muted);">'
+        +     e.id + ' · ' + (teile[e.q.part] || e.q.part || '') + '</span>'
+        +   '<button type="button" style="margin-left:auto; background:none; border:none; cursor:pointer; '
+        +     'color:var(--panel-navy); font-size:0.72rem; font-weight:700; text-decoration:underline; font-family:inherit;" '
+        +     'onclick="notizenSpringen(\'' + e.id + '\')">zur Frage</button>'
+        + '</div>'
+        + '<div style="font-size:0.82rem; color:var(--ink); line-height:1.35; margin-bottom:5px;">'
+        +   plainQuestionText(e.q.text, 160) + '</div>'
+        + '<div style="background:#fffbf0; border-left:4px solid #e2932f; border-radius:6px; '
+        +   'padding:0.45rem 0.65rem; font-size:0.85rem; color:var(--ink); white-space:pre-wrap;">'
+        +   String(e.text).replace(/</g,'&lt;') + '</div>'
+        + '</div>').join('');
+}
+
+function notizenSpringen(id){
+    try{
+        const m = document.getElementById('notizenModal');
+        if(m) m.style.display = 'none';
+        if(typeof jumpToQuestionId === 'function') jumpToQuestionId(id);
+    }catch(e){}
+}
+window.notizenSpringen = notizenSpringen;
+
 const FAVORITES_PREFIX = 'amateurfunk_favorites_';
 let favoriteQuestions = [];               // Liste von Frage-IDs
 let searchResultState = { mode:'search', ids:[], query:'' };
@@ -8663,6 +8956,7 @@ function benutzerSchluessel(slot){
         'amateurfunk_difficult_'      + slot,   // Lernbedarf
         'amateurfunk_errors_'         + slot,   // Fehlerliste
         'amateurfunk_favorites_'      + slot,   // Merkliste
+        'amateurfunk_notizen_'        + slot,   // Notizen an den Fragen
         'amateurfunk_cb_'             + slot,   // CB-Teil
         'amateurfunk_history_'        + slot,   // Verlauf (alte Schreibweise)
         'examHistory_'                + slot,   // Verlauf
@@ -8703,6 +8997,7 @@ function benutzerZuruecksetzen(slot){
                 try{ loadMastery(); }catch(e){}
                 try{ loadCB(); }catch(e){}
                 try{ loadFavorites(); }catch(e){}
+    try{ loadNotizen(); }catch(e){}
                 try{ updateErrorBadge(); }catch(e){}
                 try{ updateDifficultBadge(); }catch(e){}
                 try{ updateMasteryDisplay(); }catch(e){}
@@ -13115,6 +13410,7 @@ async function loadQuestions() {
             const sel = document.getElementById('userSelect');
             if(sel && sel.querySelector('option[value="'+currentUser+'"]')) sel.value = currentUser;
             loadFavorites();
+            loadNotizen();
         }catch(e){}
         loadHistory();
         loadErrors();
@@ -13196,6 +13492,7 @@ userSelect.addEventListener('change', function() {
     // Name des neuen Slots wird auch der Name im Gruppenraum
     try{ syncDuoNameToSlot(); refreshUserLabels(); }catch(e){}
     try{ loadFavorites(); }catch(e){}
+    try{ loadNotizen(); }catch(e){}
     // Alle Benutzer-Daten neu laden
     loadHistory();
     loadErrors();
@@ -19446,6 +19743,8 @@ function updateSidebarOnly(){
 }
 
 function renderQuestion() {
+    // Erst sichern, was im Notizfeld steht - gleich wird es ersetzt.
+    try{ notizJetztSichern(); }catch(e){}
     // Lesezeichen der Durchsicht. Haengt am Rundennamen, nicht an einem
     // eigenen Schalter - siehe Kommentar bei DURCHSICHT_NAME.
     try{
@@ -19650,6 +19949,11 @@ function renderQuestion() {
                     title="Herz = MERKLISTE — diese Frage merken.&#10;Sie steht dann oben unter dem Herzen in der Kopfzeile.&#10;(Der Haken daneben ist etwas anderes.)"
                     data-tooltip="Herz = MERKLISTE: diese Frage merken. Der Haken daneben ist etwas anderes."
                     ><i class="fas fa-heart"></i></button>
+            <button id="questionNotizBtn" class="q-marke q-marke-notiz" onclick="notizUmschalten()"
+                    aria-label="Notiz zu dieser Frage"
+                    title="Zettel = NOTIZ — eigene Anmerkung zu dieser Frage.&#10;Sie steht auf dem Blatt „Vor der Prüfung“ mit dabei."
+                    data-tooltip="Zettel = NOTIZ: eine eigene Anmerkung zu dieser Frage."
+                    ><i class="fas fa-note-sticky"></i></button>
             <button id="rechnerBtn" onclick="rechnerUmschalten()" title="Taschenrechner — nicht programmierbar, wie in der Prüfung erlaubt.&#10;Mit Vorsätzen p n µ m k M G." data-tooltip="Taschenrechner – nicht programmierbar, wie in der Prüfung erlaubt. Mit Vorsätzen p n µ m k M G." style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;"><i class="fas fa-calculator"></i></button>
             <button id="formelBtn" onclick="formelBtnKlick()" title="Formelsammlung — die Stelle zu dieser Frage" data-tooltip="Formelsammlung" style="display:none; background:#fdf1e0; color:#8a5a12; border:1px solid #e0b25a; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-file-lines"></i> Formelblatt</button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
@@ -19727,6 +20031,26 @@ function renderQuestion() {
         </div>`;
     });
     html += `</div>`;
+
+    // Die Notiz. Steht unter den Antworten, weil sie zur Frage gehoert und
+    // nicht zum Beiwerk darunter. Sichtbar ist sie nur, wenn etwas darin
+    // steht - sonst waere bei 571 Fragen 570 Mal ein leeres Feld im Weg.
+    {
+        const nText = (typeof notizText === 'function') ? notizText(q.id) : '';
+        html += `<div id="notizFeld"${nText ? '' : ' style="display:none;"'}>
+            <div class="notiz-kopf">
+                <span><i class="fas fa-note-sticky"></i> Meine Notiz zu ${attrText(q.id)}</span>
+                <span id="notizStand"></span>
+            </div>
+            <textarea id="notizText" rows="3" spellcheck="true" data-qid="${attrText(q.id)}"
+                placeholder="Warum ist diese Frage für dich wichtig? Zum Beispiel: Verwechslungsgefahr mit …, Formel steht auf Seite …, im Video ab …"
+                oninput="notizTippen()" onblur="notizJetztSichern()">${(nText||'').replace(/</g,'&lt;')}</textarea>
+            <div class="notiz-fuss">
+                <span>Wird von selbst gespeichert. Steht auf dem Blatt „Vor der Prüfung“ mit dabei.</span>
+                <span><button type="button" onclick="notizenListeOeffnen()">Alle Notizen</button></span>
+            </div>
+        </div>`;
+    }
 
     if (answered && isTrainerViewActive && participantAnswer) {
         html += `<div class="explanation-box" style="background:#fffaf0;border:1px solid #ffe0a0;"><strong>👁️ ${trainerName}:</strong> ${participantAnswer.isCorrect ? 'richtig ✅' : 'falsch ❌'} (Option ${labels[participantAnswer.optionIndex]})</div>`;
@@ -19848,6 +20172,7 @@ function renderQuestion() {
     container.innerHTML = html;
 
     try{ updateQuestionFavButton(); }catch(e){}
+    try{ notizKnopfNachziehen(); }catch(e){}
     try{ updateGelerntButton(); }catch(e){}
     try{ updateGoogleButtonHinweis(); }catch(e){}
     // Der Knopf gehoert zur Frage, nicht zur Runde: Beim Blaettern muss er
@@ -21890,6 +22215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(sel) sel.value = currentUser;
         refreshUserLabels();
         loadFavorites();
+        loadNotizen();
     }catch(e){}
 
     // ===== NEU: Erst aus Datei laden (Server), dann lokale Daten laden =====
@@ -26337,12 +26663,24 @@ function merkblattDrucken(anzahl, teil){
                 +   '<div class="text">' + e(q.text || '') + '</div>'
                 +   bildFuer(q.id, hatOptionsBilder)
                 +   '<div class="antwort"><span class="hk">&#10003;</span>' + antwortHtml + '</div>'
+                // Die eigene Notiz gehoert auf dieses Blatt. Sie ist der
+                // einzige Teil, den nicht der Katalog geschrieben hat -
+                // und am Vorabend der Pruefung der wertvollste.
+                +   ((typeof notizText === 'function' && notizText(q.id))
+                        ? '<div class="notiz"><span class="nk">Notiz</span>'
+                          + e(notizText(q.id)) + '</div>'
+                        : '')
                 + '</div>';
         });
 
         const html = '<!doctype html><html lang="de"><head><meta charset="utf-8">'
             + '<title>Vor der Prüfung</title><style>'
             + '@page { size:A4; margin:14mm 13mm 12mm; }'
+            + '.notiz { margin:4pt 0 0 0; padding:3pt 6pt; border-left:3pt solid #999;'
+            +   'background:#f4f4f4; font-size:9.5pt; line-height:1.35; white-space:pre-wrap;'
+            +   'break-inside:avoid; page-break-inside:avoid; }'
+            + '.notiz .nk { display:inline-block; font-size:7.5pt; font-weight:bold;'
+            +   'letter-spacing:0.06em; text-transform:uppercase; color:#555; margin-right:6pt; }'
             + '* { box-sizing:border-box; }'
             + 'body { font-family:"Segoe UI",Arial,sans-serif; font-size:10.5pt; color:#111;'
             +        ' margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }'
