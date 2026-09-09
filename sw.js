@@ -35,7 +35,12 @@
 // ================================================================
 'use strict';
 
-const SPEICHER = 'afu-trainer-v1';
+// v2 seit 09.09.2026: Mit dem neuen Zeichen aendern sich icon-192.png,
+// icon-512.png und favicon.ico. Der Name des Speichers ist die einzige
+// Stelle, an der man einem Browser sagen kann, dass er alles Alte
+// wegwerfen soll - beim Aktivieren loescht die Funktion unten jeden
+// Speicher, der nicht so heisst.
+const SPEICHER = 'afu-trainer-v2';
 
 // Was beim ersten Besuch schon einmal mitgenommen wird, damit ein
 // spaeterer Start ohne Netz nicht auf eine leere Seite laeuft.
@@ -46,7 +51,8 @@ const GRUNDSTOCK = [
     './klick-sound.js',
     './manifest.webmanifest',
     './icon-192.png',
-    './icon-512.png'
+    './icon-512.png',
+    './icon-512-maskierbar.png'
 ];
 
 self.addEventListener('install', ereignis => {

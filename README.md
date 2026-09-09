@@ -80,6 +80,33 @@ Videolehrgang mit Zeitmarke.
 
 ![Eine beantwortete Frage im Lernmodus](bilder/03-frage.png)
 
+### Der Lehrgang des DARC an der Frage
+
+Zu jeder Frage führt ein Verweis auf die passende Stelle bei
+**[50ohm.de](https://50ohm.de)**, dem Amateurfunk-Lehrgang des DARC. Und wo
+der DARC einen **gerechneten Lösungsweg** veröffentlicht hat, steht auch der
+dabei: Formel, gegebene Werte, Schritt für Schritt — damit man nicht nur die
+Antwort auswendig lernt, sondern die Rechnung versteht.
+
+Dafür braucht es die Zuordnung, die der DARC selbst veröffentlicht — **die
+holt der Trainer kurz nach dem Start von selbst**, rund 200 Kilobyte, und
+sieht danach nur alle 30 Tage nach, ob etwas dazugekommen ist. Ohne Netz
+unterbleibt der Versuch stillschweigend; der Verweis führt dann wie bisher
+auf die Kapitelübersicht, und Lösungswege werden nicht angeboten. Unter
+**Einstellungen → Wartung → Lehrgang des DARC** steht, was dabei herauskam,
+und ein Knopf frischt sie bei Bedarf sofort auf.
+
+Welche Ausgabe des Lehrgangs geöffnet wird, richtet sich nach dem
+eingestellten Prüfungsziel: Wer auf Klasse N lernt, bekommt die N-Fassung
+des Kapitels, nicht die für Klasse A.
+
+> Nicht zu jeder Frage gibt es einen gerechneten Lösungsweg — wo nichts zu
+> rechnen ist, wäre er auch sinnlos. Wie viele es für das eingestellte
+> Prüfungsziel sind, steht nach dem Holen unter *Wartung*.
+
+> Die Seiten gehören dem DARC. Der Trainer verlinkt nur darauf und öffnet
+> sie im Browser — als das, was sie sind: das Angebot des DARC.
+
 ### Die Formelsammlung an der Frage
 
 In der Prüfung wird die Formelsammlung der Bundesnetzagentur **ausgehändigt**
@@ -123,6 +150,56 @@ Link. Mehr braucht es nicht:
   kompletten Trainer über „Trainer herunterladen" mit nach Hause.
 
 ![Der Gruppenraum mit mehreren Teilnehmern](bilder/05-gruppenraum.png)
+
+#### Die Auswertung für den Kursleiter
+
+Die Rangliste am Ende einer Runde beantwortet *wer war gut*. Der Knopf
+**Auswertung** beantwortet die andere Frage: **was hat die Gruppe nicht
+verstanden** — und die beantwortet man nicht mit Punkten, sondern mit den
+Fragen selbst.
+
+Das Wertvollste daran ist nicht die Fehlerquote, sondern der **gemeinsame
+Irrtum**. Wenn sechs von acht dieselbe falsche Antwort wählen, ist das kein
+Streuverlust, sondern ein Denkfehler, den alle teilen. Genau der lässt sich
+am nächsten Abend geraderücken — und er steht im Klartext da:
+
+> **Meist gewählt:** Contest Query (3×)
+> **Richtig:** Allgemeiner Anruf
+
+Dazu eine Zeile je Prüfungsteil, ein Vorschlag **„Für den nächsten Abend"**
+mit den Fragen, die mindestens zwei falsch hatten, und ein Ausdruck für die
+Kursmappe.
+
+**Namen sind standardmäßig aus.** In einer VHS oder im Ortsverband sitzt
+niemand gern vor der Gruppe am Pranger, und für die Planung des nächsten
+Abends braucht man sie nicht. Ein Schalter blendet sie ein — wer einzeln
+helfen will, muss wissen, wem.
+
+**Nur der Gastgeber kommt daran.** Das prüft der Server, nicht der Browser:
+sonst könnte jeder Teilnehmer mitten in der Runde nachsehen, welche Antwort
+die richtige ist.
+
+Zwei Sorten Meldungen lässt die Auswertung bewusst weg und sagt darunter,
+wie viele es waren: Fragen, die beim Betreten als **schon gelernt**
+vorbelegt wurden, und solche, bei denen jemand **F9 „Lösung zeigen"**
+gedrückt hat. Beides sind keine Antworten der Gruppe.
+
+![Die Auswertung für den Kursleiter](bilder/14-kursleiter-auswertung.png)
+
+#### Aufheben und am Beamer durchgehen
+
+Online üben, am nächsten Kursabend gemeinsam besprechen: **Für später sichern**
+legt die Auswertung ab, unter **Einstellungen → Kursauswertung** stehen die
+gesicherten Abende. Gespeichert wird im Browser des Gastgebers – der Raum
+selbst wird spätestens nach zwölf Stunden weggeräumt, zwischen Online-Abend
+und Kursabend liegen aber Tage.
+
+Die **Beamer-Ansicht** füllt den Bildschirm mit einer Frage. Darunter, einzeln
+aufzudecken: was die Gruppe mehrheitlich gewählt hat, und was richtig ist – so
+überlegt der Kurs erst selbst. Weiter mit `Leertaste` oder `→`, zurück mit `←`,
+aufdecken mit `↓`, Schluss mit `Esc`.
+
+![Die Beamer-Ansicht für den Kursabend](bilder/17-beamer.png)
 
 ### Am Handy und am Tablet
 
@@ -238,7 +315,67 @@ Getrennt nach Prüfungsteil: was gelernt ist, wie die Trefferquote über alle je
 gegebenen Antworten aussieht, und welche Fragen immer wieder danebengehen. Die
 Auffrischung meldet sich nach 3, 7, 21 und 60 Tagen von selbst.
 
-![Die Statistik mit Lernfortschritt und Stolpersteinen](bilder/07-statistik.png)
+**Von zehn Prüfungen bestanden.** Die Punktzahl je Prüfungsteil ist ein
+Mittelwert — und Mittelwerte verschweigen das Zittern: Wer im Schnitt 19,4
+Punkte hat, besteht eben nicht immer. Der Trainer spielt deshalb
+**zweitausend komplette Prüfungen** durch: je Teil 25 Fragen aus dem Topf
+gezogen, für jede einzeln gewürfelt mit ihrer eigenen
+Trefferwahrscheinlichkeit. Bestanden zählt nur, wenn *jeder* Teil auf 19
+Punkte kommt. Der Balken trägt die Farbe seines Wertes — rot bei zwei von
+zehn, gelb bei fünf, grün bei neun.
+
+**Alle Stolpersteine.** Die Liste zeigt fünf; ein Knopf zeigt alle — mit
+vollem Fragetext, der richtigen Antwort und einem Weg direkt in die Übung.
+Die 30 hartnäckigsten lassen sich am Stück vornehmen.
+
+![Die Statistik mit der Vorhersage und den Stolpersteinen](bilder/19-statistik.png)
+
+#### Vor der Prüfung
+
+Zu finden unter **Einstellungen → Vor der Prüfung**. Für die Fahrt zur Prüfung oder
+den Abend davor im Hotel: ein Blatt Papier mit dem, was noch nicht sitzt.
+
+Oben steht **wo du stehst** – Trefferquote je Prüfungsteil, wie viele Fragen
+dort wackeln, wie viele noch nie dran waren, und ein Satz dazu: *„Am meisten
+hakt es bei Vorschriften – 64 % richtig, 12 wacklige Fragen."* Wer im Hotel
+sitzt, hat den Trainer nicht dabei; ohne diesen Kopf wäre das Blatt eine
+Fragenliste ohne Einordnung.
+
+Darunter die Fragen: Fragennummer, Frage, und **nur die richtige Antwort** –
+bei Bildfragen mit dem Bild, denn dort *ist* das Bild die Antwort.
+
+Die drei falschen fehlen mit Absicht — dieselbe Regel wie beim Hörbuch. Wer
+auf der Fahrt zur Prüfung noch einmal quer liest, soll sich nichts Falsches
+einprägen; drei Ablenker auf dem Papier wären genau dafür die beste
+Gelegenheit. Zum Ankreuzen gibt es den Prüfungsbogen unter *Drucken*.
+
+*Wackelkandidat* heißt: **schon einmal falsch gehabt und noch nicht sicher
+gemeistert.** Eine Frage, die man einmal daneben hatte und seitdem dreimal
+sicher konnte, gehört nicht mehr aufs Blatt — sie würde nur den Platz derer
+wegnehmen, die wirklich wackeln.
+
+Anzahl und Prüfungsteil sind wählbar. Steht ein Prüfungstermin, rechnet der
+Kopf die verbleibenden Tage mit aufs Blatt.
+
+![Das Blatt für die Tage vor der Prüfung](bilder/15-merkblatt.png)
+
+### Mehrere Lernende an einem Rechner
+
+Unter **Einstellungen → Benutzer** bekommen bis zu **zehn Plätze** einen
+Namen. Ein Platz ist angelegt, sobald er einen Namen hat – und erscheint dann
+in der Auswahlliste der Hauptansicht. Wer allein lernt, sieht dort weiterhin
+einen Eintrag und nicht zehn.
+
+Jeder Platz hat seinen eigenen Lernfortschritt, Verlauf, Lernbedarf, seine
+Fehlerliste und Merkliste. **Auch das Prüfungsziel gehört zum Platz:** Ein
+Anfänger lernt auf Klasse N, ein Lizenzierter übt auf A – beim Wechsel stellt
+sich der Fragenkatalog mit um.
+
+Das **✕** entfernt nur den Namen. Fehler, Lernbedarf, Verlauf und Merkliste
+bleiben liegen; wer denselben Platz später wieder benennt, findet alles
+unverändert vor.
+
+![Zehn Plätze mit eigenem Namen und eigenem Prüfungsziel](bilder/16-benutzer.png)
 
 ### Prüfungssimulator
 
@@ -358,8 +495,12 @@ Das Setup bringt alles mit, was der Trainer braucht:
 - **das Startsymbol** auf dem Desktop, auf Wunsch auch in der Taskleiste
 
 Eine Internetverbindung wird beim Einrichten nicht gebraucht. Der Trainer
-läuft danach vollständig ohne Netz; ins Internet geht er nur, wenn Sie
-selbst einen Gruppenraum öffnen oder nach Neuerungen sehen lassen.
+läuft danach vollständig ohne Netz. Ins Internet geht er, wenn Sie selbst
+einen Gruppenraum öffnen oder nach Neuerungen sehen lassen — und einmal von
+sich aus: kurz nach dem Start holt er die Zuordnung zum Lehrgang des DARC
+(rund 200 Kilobyte, danach höchstens alle 30 Tage wieder). Ohne Netz
+unterbleibt das stillschweigend, und es fehlt nichts als die Verweise auf
+50ohm.de.
 
 **Wohin installiert wird, fragt der Assistent.** Vorgeschlagen ist
 `C:\Programme\Amateurfunk-Trainer`; jeder andere Ordner geht auch. Wer

@@ -1446,6 +1446,13 @@
         });
         socket.on('duoQuizStarted', data=>{ if(typeof window.startDuoQuizFromServer==='function') window.startDuoQuizFromServer(data); });
 
+        // Auswertung fuer den Kursleiter - kommt nur, wenn der Gastgeber
+        // sie angefordert hat, und nur bei ihm an.
+        socket.on('duoAuswertung', d=>{
+            try{ if(typeof window.kursleiterAuswertungZeigen==='function') window.kursleiterAuswertungZeigen(d); }
+            catch(e){ console.error('[DUO] Auswertung', e); }
+        });
+
         // ===== Gruppenchat =====
         socket.on('duoChatNachricht', n=>{ try{ chatNachrichtAnzeigen(n); }catch(e){ console.error('[CHAT]', e); } });
         socket.on('duoChatVerlauf', d=>{ try{ chatVerlaufSetzen(d && d.nachrichten); }catch(e){ console.error('[CHAT]', e); } });
@@ -1717,14 +1724,28 @@
                 });
             } else if(confirm(`"${name}" entfernen?`)){ doKick(); }
         },
-        answer: function(qId, optIndex, isCorrect){
+        // Der vierte Parameter "art" sagt, WIE die Antwort zustande kam.
+        // Fehlt er, ist es eine echte Antwort - so verhalten sich auch
+        // aeltere Trainer, die noch nichts davon wissen.
+        //
+        //   (nichts)    ein Mensch hat auf eine Antwort geklickt
+        //   'loesung'   F9/F10 hat die Loesung gezeigt; der Server
+        //               bekommt eine bewusst falsche Antwort gemeldet
+        //   'gelernt'   beim Betreten vorbelegt, weil die Frage schon
+        //               als gemeistert galt - niemand hat sie gerade
+        //               beantwortet
+        //
+        // Gebraucht wird das fuer die Auswertung des Gastgebers: eine
+        // Fehlerquote, in der F9-Meldungen und Vorbelegungen mitzaehlen,
+        // beschreibt nicht die Gruppe, sondern die Technik.
+        answer: function(qId, optIndex, isCorrect, art){
             if(!socket||!roomCode){
                 console.warn('[DUO] answer: kein socket/roomCode');
                 return;
             }
             try{
-                console.log('[DUO] emit duoAnswer', {code:roomCode, questionId:qId, optionIndex:optIndex, isCorrect:isCorrect});
-                socket.emit('duoAnswer',{code:roomCode, questionId:qId, optionIndex:optIndex, isCorrect:isCorrect, userId:myUserId});
+                console.log('[DUO] emit duoAnswer', {code:roomCode, questionId:qId, optionIndex:optIndex, isCorrect:isCorrect, art:art||'echt'});
+                socket.emit('duoAnswer',{code:roomCode, questionId:qId, optionIndex:optIndex, isCorrect:isCorrect, userId:myUserId, art:art||''});
                 window._duoHasAnswered=true;
             }catch(e){ console.error('[DUO] answer emit Fehler', e); }
         },
@@ -1734,6 +1755,15 @@
         requestFinalResults: function(){
             if(!socket||!roomCode) return;
             try{ socket.emit('requestFinalResults',{code:roomCode}); }catch(e){ console.error(e); }
+        },
+        // Auswertung fuer den Kursleiter anfordern. Der Server laesst nur
+        // den Gastgeber durch - die Pruefung hier ist nur die Hoeflichkeit,
+        // damit gar nicht erst gefragt wird.
+        auswertungAnfordern: function(){
+            if(!socket||!roomCode) return false;
+            if(!isHost){ console.warn('[DUO] Auswertung nur fuer den Gastgeber'); return false; }
+            try{ socket.emit('duoAuswertungAnfordern',{code:roomCode}); return true; }
+            catch(e){ console.error('[DUO] auswertungAnfordern', e); return false; }
         },
         // Raum verlassen - und als Gastgeber: beenden.
         //

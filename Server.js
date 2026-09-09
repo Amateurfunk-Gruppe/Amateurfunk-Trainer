@@ -2222,6 +2222,176 @@ app.get('/api/rufzeichen', localOnly, async (req, res) => {
   }
 });
 
+// ================================================================
+// DIE ZUORDNUNG VON 50 OHM
+//
+// Dietmar am 09.09.2026, nach einem Gespraech mit einem Entwickler
+// von 50ohm.de: "Diesen Loesungsweg gibt es fuer alle Fragen. Hier
+// aendert sich nur die Nr. hinten dran. … Ziel ist es, das man nicht
+// nur auswendig lernt, sondern auch was lernt."
+//
+// Er hat dann selbst die entscheidende Adresse geliefert:
+//     https://50ohm.de/assets/question_index.json
+//
+// Darin steht je Fragennummer, in welchem Kapitel und Abschnitt sie
+// behandelt wird - und ob es einen Loesungsweg gibt (has_solution).
+// Damit erledigen sich zwei Dinge auf einmal:
+//
+//   1. Der Loesungsweg unter https://50ohm.de/<Nummer>.html wird nur
+//      dort angeboten, wo es ihn wirklich gibt. Vorher waere jeder
+//      zweite Klick auf einer Fehlerseite gelandet - Dietmar: "Nicht
+//      das es am Ende auf 404 laeuft."
+//
+//   2. Der vorhandene Knopf "Bei 50 Ohm nachlesen" fuehrt endlich auf
+//      die GENAUE Seite statt auf die Kapiteluebersicht. In
+//      50ohm_map.json steht seit Monaten der Satz: "Der Link fuehrt
+//      auf die KAPITELUEBERSICHT … dafuer braucht es die Liste des
+//      DARC. Sobald die da ist, ersetzt sie diese Datei vollstaendig."
+//      Das ist jetzt so weit.
+//
+// GEHOLT WIRD NUR AUF KLICK. Der Trainer geht nicht von sich aus ins
+// Netz - diese Zusage steht in der README und gilt auch hier.
+//
+// WARUM DIESE ROUTE HIER STEHT UND NICHT WEITER UNTEN
+// Beim ersten Bau stand sie versehentlich INNERHALB von
+// io.on('connection', ...) - also im Socket-Handler des Gruppenraums.
+// Damit wurde sie erst angemeldet, wenn sich jemand ueber einen Raum
+// verband, und danach bei jeder weiteren Verbindung noch einmal. Wer den
+// Gruppenraum nie oeffnet, bekam auf den Knopf nur "Not found".
+//
+// Dietmar hat drei Neustarts lang gesucht, bevor /api/version zeigte,
+// dass sein Server laengst der neue war. Routen gehoeren auf die oberste
+// Ebene, wo sie einmal beim Start angemeldet werden - hierher.
+// ================================================================
+// Die eigentliche Arbeit - einmal geschrieben, zweimal gebraucht: vom Knopf
+// unter Wartung und beim Start des Servers.
+async function ohmIndexHolen(){
+  const ziel = path.join(__dirname, '50ohm_index.json');
+  {
+    const roh = await new Promise((fertig, schief) => {
+      const r = https.get({
+        host: '50ohm.de', path: '/assets/question_index.json', timeout: 20000,
+        headers: { 'User-Agent': 'Amateurfunk-Trainer (Lehrgangs-Zuordnung)' }
+      }, ant => {
+        if(ant.statusCode !== 200){
+          ant.resume();
+          return schief(new Error('50ohm.de antwortete mit ' + ant.statusCode));
+        }
+        let text = '', menge = 0;
+        ant.setEncoding('utf8');
+        ant.on('data', d => {
+          menge += d.length;
+          // Obergrenze: die Datei ist rund 200 KB. Was deutlich
+          // groesser ankommt, ist nicht das, was wir erwarten.
+          if(menge > 4 * 1024 * 1024){ ant.destroy(); return schief(new Error('Antwort zu gross')); }
+          text += d;
+        });
+        ant.on('end', () => fertig(text));
+      });
+      r.on('timeout', () => { r.destroy(); schief(new Error('Zeitüberschreitung')); });
+      r.on('error', e => schief(e));
+    });
+
+    const j = JSON.parse(roh);
+    if(!j || typeof j !== 'object' || Array.isArray(j)) throw new Error('Unerwarteter Aufbau');
+
+    // Nur uebernehmen, was wir auch brauchen - und nur, was wie eine
+    // Fragennummer aussieht. Fremde Daten wandern nicht ungeprueft in
+    // eine Datei, die der Trainer spaeter ausliefert.
+    const schlank = {};
+    let mitLoesung = 0;
+    for(const [id, e] of Object.entries(j)){
+      if(!/^[A-Z]{2}[0-9]{3}$/.test(id) || !e || typeof e !== 'object') continue;
+      const eintrag = {
+        k: String(e.chapter_title || '').slice(0, 120),
+        a: String(e.section_title || '').slice(0, 120),
+        s: String(e.section || '').replace(/[^a-z0-9_\-]/gi, '').slice(0, 80),
+        e: Array.isArray(e.editions)
+             ? e.editions.filter(x => /^[A-Z]{1,4}$/.test(String(x))).slice(0, 6)
+             : []
+      };
+      if(e.has_solution === true){ eintrag.l = 1; mitLoesung++; }
+      schlank[id] = eintrag;
+    }
+    const anzahl = Object.keys(schlank).length;
+    if(!anzahl) throw new Error('Keine brauchbaren Einträge gefunden');
+
+    const paket = {
+      _hinweis: 'Zuordnung der Fragen zum Lehrgang des DARC. Geholt von '
+              + 'https://50ohm.de/assets/question_index.json - die Daten gehören dem DARC, '
+              + 'der Trainer verlinkt nur darauf. k=Kapitel, a=Abschnitt, s=Seitenname, '
+              + 'e=Ausgaben, l=1 bedeutet: es gibt einen Lösungsweg unter '
+              + 'https://50ohm.de/<Nummer>.html',
+      _geholt: new Date().toISOString().slice(0, 10),
+      _anzahl: anzahl,
+      _mitLoesung: mitLoesung,
+      fragen: schlank
+    };
+    fs.writeFileSync(ziel, JSON.stringify(paket), 'utf8');
+    console.log('[50OHM] Zuordnung geholt: ' + anzahl + ' Fragen, ' + mitLoesung + ' mit Lösungsweg');
+    return { ok:true, anzahl, mitLoesung, geholt: paket._geholt };
+  }
+}
+
+// Der Knopf unter Einstellungen -> Wartung. Er bleibt, auch wenn der Server
+// die Datei von selbst holt: zum Auffrischen, wenn der DARC nachgelegt hat.
+app.post('/api/50ohm-index-holen', localOnly, async (req, res) => {
+  try{
+    res.json(await ohmIndexHolen());
+  }catch(e){
+    console.warn('[50OHM] Zuordnung nicht geholt:', e.message);
+    res.status(502).json({ ok:false, fehler: e.message });
+  }
+});
+
+// ================================================================
+//  … UND VON SELBST, BEIM START
+// ================================================================
+//  Dietmar am 09.09.2026: "Der Server, soll das eigentlich im
+//  Hintergrund machen, ohne Einstellungen."
+//
+//  Er hat recht: Wer den Trainer benutzt, soll die Loesungswege
+//  vorfinden und nicht erst in den Einstellungen danach suchen. Ein
+//  Knopf, den man erst kennen muss, ist fuer die meisten kein Angebot.
+//
+//  DREI REGELN, DAMIT DARAUS KEINE ZUMUTUNG WIRD
+//
+//  1. Nur wenn noetig. Fehlt die Datei oder ist sie aelter als 30 Tage,
+//     wird geholt - sonst nicht. Bei jedem Start nachzufragen hiesse,
+//     einem Verein, der uns nichts schuldet, jede Sitzung eine Anfrage
+//     zu schicken.
+//
+//  2. Nicht beim Hochfahren. Erst acht Sekunden nach dem Start, damit
+//     der Trainer sofort da ist. Wer keine Verbindung hat, merkt von
+//     dem Versuch nichts.
+//
+//  3. Still. Fehler stehen im Log, nicht auf dem Bildschirm. Ohne Netz
+//     laeuft der Trainer vollstaendig; das Fehlen dieser Datei ist kein
+//     Grund fuer eine Meldung.
+// ================================================================
+const OHM_INDEX_FRIST = 30 * 24 * 60 * 60 * 1000;
+
+function ohmIndexAutomatik(){
+  try{
+    const ziel = path.join(__dirname, '50ohm_index.json');
+    let noetig = true;
+    try{
+      const st = fs.statSync(ziel);
+      noetig = (Date.now() - st.mtimeMs) > OHM_INDEX_FRIST;
+    }catch(e){ noetig = true; }          // gar nicht da
+    if(!noetig) return;
+
+    const t = setTimeout(() => {
+      ohmIndexHolen()
+        .then(e => console.log('[50OHM] von selbst geholt: ' + e.anzahl + ' Fragen, '
+                             + e.mitLoesung + ' mit Lösungsweg'))
+        .catch(e => console.log('[50OHM] von selbst nicht geholt (' + e.message
+                             + ') – der Trainer läuft ohne die Datei genauso.'));
+    }, 8000);
+    if(t.unref) t.unref();
+  }catch(e){ /* nie ein Grund, den Start zu stoeren */ }
+}
+
 app.get('/api/version',(req,res)=>{
   try{
     const stand = dateiStandErmitteln();
@@ -2251,11 +2421,16 @@ const PAKET_DATEIEN = [
   'formelhilfe.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js', '50ohm_map.json',
+  // Die genauere Zuordnung vom DARC, sofern sie schon geholt wurde. Wer den
+  // Trainer aus dem Gruppenraum mitnimmt, bekommt sie mit - sonst muesste
+  // jeder Teilnehmer sie einzeln holen.
+  '50ohm_index.json',
   'Fragen-E.json', 'Fragen-A.json', 'Fragen-N-Auf-E.json', 'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
   'klick-sound.js', 'tts-expand.js', 'hoerbuch.js', 'lame.js',
   // App-Anmutung am Handy: Ohne diese drei fehlt beim "Zum Startbildschirm
   // hinzufuegen" das Symbol, und der Trainer startet mit Browserleiste.
   'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
+  'icon-512-maskierbar.png',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
@@ -3437,6 +3612,10 @@ const PUBLIC_FILES = new Set([
   // der Frageansicht nur der zweite Hinweiskasten weg. Ohne diesen Eintrag
   // liefe der Abruf in einen 404 und der Kasten erschiene nie.
   '/50ohm_map.json',
+  // Dieselbe Sorte Daten, nur genauer: die Zuordnung, die der DARC selbst
+  // veroeffentlicht (question_index.json). Sie kommt ueber
+  // /api/50ohm-index-holen in den Ordner und wird von hier gelesen.
+  '/50ohm_index.json',
   '/klick-sound.js',
   // Die drei Stuecke der PWA. Ohne sie meldet der Browser einen 404 und
   // der Trainer bleibt eine gewoehnliche Seite mit Adressleiste:
@@ -3448,6 +3627,7 @@ const PUBLIC_FILES = new Set([
   '/sw.js',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-512-maskierbar.png',
   '/icon.png',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
@@ -3936,7 +4116,19 @@ try{
 
       if(!room.allAnswers) room.allAnswers={};
       if(!room.allAnswers[uid]) room.allAnswers[uid]={};
-      room.allAnswers[uid][data.questionId]={optionIndex:data.optionIndex, isCorrect:verified, userId:uid, answeredAt:Date.now()};
+      // "art" sagt, wie die Antwort zustande kam: leer = ein Mensch hat
+      // geklickt, 'loesung' = F9/F10 hat die Loesung gezeigt, 'gelernt' =
+      // beim Betreten vorbelegt, weil die Frage schon sass. Nur die erste
+      // Sorte beschreibt die Gruppe; die Auswertung des Gastgebers laesst
+      // die anderen beiden deshalb weg.
+      //
+      // Weissliste statt Durchreichen: was der Client schickt, landet nicht
+      // ungeprueft im Raum. Unbekanntes wird zu '' - also zur echten
+      // Antwort, was die vorsichtigere Annahme ist (eine echte Antwort
+      // faelschlich mitzuzaehlen ist harmloser, als eine wegzulassen).
+      const ART_ERLAUBT = ['loesung','gelernt'];
+      const art = ART_ERLAUBT.indexOf(String(data.art||'')) === -1 ? '' : String(data.art);
+      room.allAnswers[uid][data.questionId]={optionIndex:data.optionIndex, isCorrect:verified, userId:uid, answeredAt:Date.now(), art:art};
 
       const totalQuestions = room.questions ? room.questions.length : 0;
       const answeredCount = Object.keys(room.allAnswers[uid]).length;
@@ -4015,6 +4207,65 @@ try{
         const room=duoRooms[data.code]; if(!room) return;
         sendFinalResults(data.code, socket.id);
       }catch(e){ console.error('[DUO] requestFinalResults Fehler', e); }
+    });
+
+    // ================================================================
+    // AUSWERTUNG FUER DEN KURSLEITER
+    //
+    // Dietmar am 09.09.2026: "Kursleiter-Auswertung im Gruppenraum -
+    // welche Fragen hat die Gruppe falsch? Damit weiss ein OV- oder
+    // VHS-Leiter, was am naechsten Abend dran ist."
+    //
+    // Der Gastgeber bekommt ueber duoTrainerLive schon allAnswers - aber
+    // ohne die Antworttexte, und die Fragetexte auf 120 Zeichen gekuerzt.
+    // Fuer "welchen Ablenker hat die Gruppe gewaehlt" reicht das nicht.
+    //
+    // Deshalb ein eigener Abruf statt einer Erweiterung von
+    // duoTrainerLive: Das geht bei JEDER Antwort an den Gastgeber raus.
+    // Alle Antworttexte dort mitzuschicken hiesse, bei einem Raum ueber
+    // den ganzen Katalog rund 180 KB pro Klick durch die Leitung zu
+    // schieben - und der Gruppenraum laeuft oft ueber einen Tunnel.
+    // Hier wird nur geliefert, wenn jemand die Auswertung auch oeffnet.
+    //
+    // Nur der Gastgeber darf das. Sonst koennte jeder Teilnehmer
+    // nachsehen, welche Antwort die richtige ist - der Raum ist auch
+    // eine Pruefungssituation.
+    // ================================================================
+    socket.on('duoAuswertungAnfordern', data => {
+      try{
+        if(!data || typeof data !== 'object') return;
+        const room = duoRooms[data.code];
+        if(!room) return;
+        if(room.hostId !== socket.id){
+          console.warn('[DUO] Auswertung von Nicht-Gastgeber abgewiesen:', socket.id, 'Raum', data.code);
+          socket.emit('errorMsg', { message: 'Die Auswertung kann nur der Gastgeber öffnen.' });
+          return;
+        }
+
+        // Die Fragen kommen mit vollem Text und allen Antworten - in
+        // genau der Reihenfolge, in der der Raum sie gemischt hat
+        // (questionsFull). Nur so passt der gemeldete optionIndex zum
+        // Text, den der Kursleiter dann liest.
+        const fragen = (room.questionsFull || []).map(q => ({
+          id: q.id,
+          text: q.text || q.id,
+          part: q.part || '',
+          options: (q.options || []).map(o => ({ text: o.text || '', correct: !!o.correct }))
+        }));
+
+        const namen = {};
+        Object.entries(room.users || {}).forEach(([uid, u]) => { namen[uid] = (u && u.name) || 'Unbekannt'; });
+
+        socket.emit('duoAuswertung', {
+          code: room.code,
+          fragen: fragen,
+          allAnswers: room.allAnswers || {},
+          namen: namen,
+          teilnehmer: Object.keys(room.users || {}).length,
+          config: room.config || null,
+          zeitpunkt: Date.now()
+        });
+      }catch(e){ console.error('[DUO] duoAuswertungAnfordern Fehler', e); }
     });
 
     // ================================================================
@@ -4591,6 +4842,10 @@ server.listen(PORT,'0.0.0.0',async ()=>{
   // Zuerst der Browser, dann das Uebrige: Der Trainer soll aufgehen,
   // waehrend im Fenster noch die Tunnel-Zeilen durchlaufen.
   if(process.env.AFU_BROWSER === '1') browserOeffnen(`http://localhost:${PORT}`);
+
+  // Die Zuordnung des DARC still nachholen, falls sie fehlt oder alt ist.
+  // Wartet acht Sekunden und stoert den Start nicht - siehe ohmIndexAutomatik().
+  ohmIndexAutomatik();
 
   console.log('[TUNNEL] Prüfe Binary beim Start...');
   const check = checkCloudflaredExists();
