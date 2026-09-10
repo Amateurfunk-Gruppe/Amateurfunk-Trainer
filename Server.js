@@ -840,6 +840,10 @@ function getDefaultUserdata(){
     // dazu das Rufzeichen, das auf ihnen steht - das gilt fuer alle
     // Benutzer gemeinsam, weil es am Geraet haengt, nicht am Lernstand.
     qsl: { user1: {}, user2: {}, user3: {}, rufzeichen: '' },
+    // Die stille Messung (10.09.2026): je Benutzer die gewaehlten
+    // Antworten mit Zeiten, und die geuebten Sekunden je Tag.
+    diagnose:    { user1: {}, user2: {}, user3: {} },
+    uebungszeit: { user1: {}, user2: {}, user3: {} },
     version: 2,
     updatedAt: new Date().toISOString()
   };
@@ -859,7 +863,9 @@ function normalisiereUserdata(roh){
     ['mastery',     'objekt'],
     ['difficult',   'objekt'],
     ['cb',          'objekt'],
-    ['qsl',         'objekt']
+    ['qsl',         'objekt'],
+    ['diagnose',    'objekt'],
+    ['uebungszeit', 'objekt']
   ];
   for(const [feld, art] of felder){
     if(!istObjekt(roh[feld])) continue;                 // falscher Typ -> Standard behalten

@@ -696,6 +696,71 @@
             opacity: 0;
             margin: 0;
         }
+        /* ================================================================
+           DIE VERLAUFSSPALTE DARF DIE SEITE NICHT STRECKEN
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026, mit einem Video: "Beim aufbauen einer
+           Seite streckt sich die Seite erst mal tief nach unten."
+
+           NACHGEMESSEN, eine Runde ueber alle 716 Fragen des Katalogs
+           E auf A, Fenster 590 Pixel hoch:
+
+               Seitenhoehe 2207 px  ->  ueber 75 Bildaufbauten  ->  590 px
+               Dauer: 1,2 Sekunden
+
+           Man sieht die Seite langsam zusammenschnurren. Die Ursache ist
+           diese Spalte: Sie zeigt jede Frage der Runde als Kaestchen, bei
+           716 Fragen sind das 103 Zeilen - rund 1750 Pixel. Begrenzt hat
+           sie bisher NUR das Skript weiter unten (finalFixDynamicHeight).
+           Ein Skript laeuft aber erst NACH dem ersten Bildaufbau. Bis
+           dahin steht die Spalte in voller Laenge da und zieht die ganze
+           Seite mit.
+
+           Deshalb steht die Obergrenze jetzt HIER, im Stilblatt: Sie gilt
+           schon beim allerersten Bildaufbau, ohne dass eine Zeile
+           JavaScript gelaufen sein muss. Die Spalte wird damit nie hoeher
+           als die Karte, in der sie steht - und die passt auf den Schirm.
+           Das Skript rechnet danach die genaue Hoehe aus; den Unterschied
+           sieht man nicht mehr, weil es nur noch um Pixel geht statt um
+           tausend.
+
+           WIE VIEL ABGEZOGEN WIRD, IST GEMESSEN, NICHT GESCHAETZT. Ueber
+           der Spalte steht die Kopfzeile des Trainers, unter ihr die
+           Knopfleiste und die Fusszeile. Nachgemessen auf vier Fenstern
+           war der Rest, um den die Seite sonst zu lang blieb:
+
+               1280x590  (Anzeige 65 %)   261 Punkte
+               1280x686  (Anzeige 75 %)   261 Punkte
+               1440x930  (Anzeige 90 %)   260 Punkte
+               1920x1080 (Anzeige 120 %)  261 Punkte
+
+           Immer derselbe Wert - die Anzeigegroesse rechnet sich heraus,
+           weil hier in derselben Einheit gerechnet wird. Abgezogen werden
+           20rem, also 320 Punkte: knapp sechzig mehr als noetig. Die
+           Richtung ist mit Absicht gewaehlt und nachgemessen. Ist die
+           Grenze ein paar Punkte ZU KLEIN, ist die Spalte fuer einen
+           Sechzigstelmoment kuerzer als moeglich, und das Skript zieht
+           sie gleich darauf auf das genaue Mass - das sieht niemand, weil
+           eine kuerzere Spalte die Seite nicht laenger macht. Waere sie
+           zu GROSS, waere die Seite genau um diese Punkte zu lang, und
+           das sieht man sofort: Mit 17rem blieb noch ein Bildaufbau mit
+           15 bis 25 Punkten Ueberhang, mit 20rem ist es keiner mehr.
+
+           Die Untergrenze von 320 Punkten faengt sehr flache Fenster ab:
+           Dort bliebe von der Rechnung sonst kaum etwas uebrig, und die
+           Auswertung ueber der Kaestchenliste braucht ihren Platz.
+
+           Nur am breiten Schirm: Am Handy stehen Auswertung und Frage
+           untereinander, dort waere eine Deckelung falsch. 1025 Pixel ist
+           dieselbe Grenze, die auch das Skript benutzt.
+           ================================================================ */
+        @media (min-width: 1025px) {
+            .left-sidebar-wrapper,
+            .left-sidebar {
+                max-height: max(320px, calc(100vh / var(--afu-zoom, 1) - 20rem));
+            }
+        }
+
         .left-sidebar {
             background: #f8faff;
             border-radius: 16px;
@@ -998,6 +1063,9 @@
             color: var(--ink);
             min-height: 132px;
         }
+        /* Bei Bildantworten bestimmt das Bild die Hoehe, nicht der
+           Mindestwert - sonst blieben oben und unten Streifen stehen. */
+        .options-grid.bilder-gross .option-grid { min-height: 0; }
         .option-grid:hover:not(.disabled) {
             background: var(--accent-amber-soft);
             border-color: var(--accent-amber);
@@ -1034,17 +1102,45 @@
         .option-grid .option-text {
             font-size: inherit;
         }
+        /* ================================================================
+           BILDANTWORTEN NUTZEN DEN PLATZ
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026 mit einem Bild von AB406, auf dem unter
+           den vier Signalbildern die halbe Flaeche leer stand: "Kann man
+           das so anpassen, das bei Bildern der Raum besser genutzt wird?"
+
+           NACHGEMESSEN, und die Ursache war eine andere als vermutet.
+           Hier stand vorher:
+
+               max-width: 100%; max-height: 100px;
+               width: auto;     height: auto;
+
+           Das sieht nach einer Begrenzung aus, war aber gar keine. Die
+           SVG-Dateien des Katalogs sind winzig deklariert - NB703.svg
+           traegt width="226.771" height="124.793" und hat KEINE viewBox.
+           Ein <img> ohne vorgegebene Breite wird nie groesser als seine
+           natuerliche Groesse. Die 100 Pixel haben also nichts gedeckelt;
+           das Bild war schlicht so klein, wie die Datei es sagt. Gemessen
+           auf 1400x900: Bild 156x90 Pixel in einem Kasten von 448 Pixeln
+           Breite - und 345 Pixel unter dem Raster ungenutzt.
+
+           Deshalb jetzt width:100% und eine gesetzte Hoehe: Damit wird das
+           Bild aktiv vergroessert statt nur nicht verkleinert. object-fit
+           haelt dabei das Seitenverhaeltnis, ohne das die Schaltbilder
+           verzerrt waeren.
+
+           Wie hoch, entscheidet bilderGroesseAnpassen() nach dem freien
+           Platz - siehe dort.
+           ================================================================ */
         .option-grid .option-image {
-            max-width: 100%;
-            max-height: 100px;
-            width: auto;
-            height: auto;
+            width: 100%;
+            height: var(--bild-hoehe, 90px);
+            object-fit: contain;
             border-radius: 6px;
             border: 1px solid #dfe8f2;
             background: white;
             padding: 4px;
             display: block;
-            object-fit: contain;
             position: relative;
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
@@ -1111,6 +1207,255 @@
         .q-marke-merken.an  { background: #e11d48; border-color: #e11d48; color: #ffffff; }
 
         /* ================================================================
+           DER FORMELBLATT-KNOPF MELDET SICH
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026: "hier könnten wir den Button Formelblatt
+           bei den Fragen akustisch und Optisch zb durch 3 mal pulsen
+           darauf aufmerksam machen. 45 oder 60 Minuten ist eine Menge
+           Zeit. wenn man diese Lernhilfe hat, sollten wir die Benutzer
+           darauf aufmerksam machen."
+
+           Der Anlass ist eine Zahl aus der Analyse vom selben Tag: Von
+           den 571 Fragen der Klasse N stehen 112 im Formelblatt, beim
+           Aufstieg auf E sind es 134 von 463, auf A sogar 224 von 716.
+           Wer das Blatt nicht benutzt, verschenkt bei jeder vierten bis
+           fünften Frage die sichere Antwort - und das bei 45 bzw. 60
+           Minuten Prüfungszeit, in denen Nachschlagen fast immer
+           schneller ist als Erinnern.
+
+           DREIMAL, NICHT DAUERND. Eine Animation, die nicht aufhört,
+           liest sich nach der zehnten Frage als Fehler und wird
+           weggeklickt. Drei Schläge sagen "hier ist etwas" und geben
+           dann Ruhe.
+
+           Wer Bewegung im Betriebssystem abgestellt hat, bekommt keine -
+           dafür bleibt der Schein am Rand stehen, damit der Hinweis
+           nicht ganz verlorengeht.
+           ================================================================ */
+        @keyframes formel-puls {
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(226,147,47,0); }
+            35%      { transform: scale(1.16); box-shadow: 0 0 0 7px rgba(226,147,47,0.30); }
+            70%      { transform: scale(0.97); box-shadow: 0 0 0 2px rgba(226,147,47,0.10); }
+        }
+        #formelBtn.merk-mich {
+            animation: formel-puls 0.62s ease-in-out 3;
+            will-change: transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #formelBtn.merk-mich {
+                animation: none;
+                box-shadow: 0 0 0 3px rgba(226,147,47,0.35);
+            }
+        }
+
+        /* ================================================================
+           DER VORSATZ-HINWEIS AN DER FRAGE
+           ----------------------------------------------------------------
+           Erscheint nur, wenn die gewaehlte Antwort DIESELBE Ziffernfolge
+           hat wie die richtige und sich nur im Vorsatz unterscheidet -
+           4200 mV gegen 4200 kV. Dann ist die Rechnung richtig und nur
+           die Groessenordnung daneben, und das ist etwas voellig anderes
+           als eine falsche Antwort.
+
+           Gelb wie eine Randnotiz, nicht rot: Das ist kein zweiter
+           Tadel - die falsche Antwort ist ja schon markiert. Das hier
+           ist der Hinweis, WORAN es lag.
+           ================================================================ */
+        .vorsatz-hinweis {
+            margin-top: 0.7rem; padding: 0.6rem 0.8rem;
+            background: #fff8e8; border: 1px solid #f0d9a8;
+            border-left: 5px solid #e2932f; border-radius: 10px;
+            font-size: 0.86rem; line-height: 1.5; color: #6b5320;
+        }
+        .vorsatz-hinweis b { color: #8a5a12; }
+        .vorsatz-hinweis .vh-kopf {
+            display: block; font-size: 0.72rem; font-weight: 800;
+            color: #8a6d00; margin-bottom: 3px;
+        }
+        body.dark .vorsatz-hinweis { background: #2a2114; border-color: #5a4a28; color: #f0e6d2; }
+        body.dark .vorsatz-hinweis b { color: #ffd68a; }
+
+        /* ================================================================
+           WORAN ES LIEGT - IN DER AUSWERTUNG
+           ================================================================ */
+        /* Ist die Pruefungsreife noch stumm, faellt die linke Spalte weg -
+           siehe statistikFuellen(). */
+        .stat-spalten.ohne-reife { display: block; }
+        .stat-spalten.ohne-reife .stat-links { display: none; }
+
+        .befund { margin-top: 1.1rem; }
+        .befund h4 { margin: 0 0 0.1rem; font-size: 0.85rem; color: var(--panel-navy); }
+        .befund .b-was { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.45rem; }
+        .befund-zeile {
+            display: flex; gap: 9px; align-items: baseline;
+            font-size: 0.78rem; padding: 6px 0; border-top: 1px solid var(--line);
+            line-height: 1.45;
+        }
+        .befund-zeile .b-marke {
+            flex-shrink: 0; font-weight: 800; font-size: 0.7rem;
+            padding: 1px 7px; border-radius: 6px; white-space: nowrap;
+        }
+        .befund-zeile .b-marke.fest   { background: #fdeaea; color: #a33; }
+        .befund-zeile .b-marke.raten  { background: #fdf1e0; color: #8a5a12; }
+        .befund-zeile .b-marke.langsam{ background: #eaf1fb; color: #2c5282; }
+        /* Gruen, weil es eine gute Nachricht ist - siehe
+           hilfsmittelNotieren(). Die anderen drei Marken benennen etwas,
+           das man aendern sollte; diese benennt etwas, das man
+           beibehalten sollte. */
+        .befund-zeile .b-marke.gut    { background: #e4f4ea; color: #1f6b40; }
+        .befund-zeile .b-mitte { min-width: 0; }
+        .befund-zeile .b-was-gewaehlt { color: var(--muted); font-size: 0.72rem; }
+        body.dark .befund-zeile { border-top-color: #2b4a63; }
+
+        /* ================================================================
+           DIE SAEULENREIHE: ACHT WOCHEN UEBUNGSZEIT
+           ----------------------------------------------------------------
+           EINE Farbe, keine Palette - hier gibt es nur eine Groesse zu
+           zeigen, und wo nichts zu unterscheiden ist, unterscheidet man
+           auch nicht mit Farbe. Die laufende Woche ist kraeftig, die
+           vergangenen zurueckhaltend: Das ist der Unterschied, auf den
+           es beim Hinsehen ankommt.
+
+           Beschriftet wird nicht jede Saeule - eine Zahl ueber jeder
+           waere Zahlensalat. Die Zahlen stehen im Hinweisfeld beim
+           Darueberfahren, und die laufende Woche traegt ihre Zahl offen.
+           ================================================================ */
+        .wochen-reihe {
+            display: flex; align-items: flex-end; gap: 2px;
+            height: 54px; margin: 0.5rem 0 0.15rem;
+        }
+        .wochen-reihe .w-spalte {
+            flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
+            height: 100%; cursor: default;
+        }
+        .wochen-reihe .w-saeule {
+            background: #a3c8d0; border-radius: 4px 4px 0 0; min-height: 2px;
+            transition: background 0.15s;
+        }
+        .wochen-reihe .w-spalte:hover .w-saeule { background: var(--tuerkis); }
+        .wochen-reihe .w-spalte.jetzt .w-saeule { background: var(--tuerkis); }
+        /* Eine Woche ohne Uebung ist kein fehlender Wert, sondern eine
+           Aussage. Der Strich am Boden sagt sie, ohne zu schreien. */
+        /* Nicht var(--line): Die Linienfarbe der Stile ist fuer einen
+           2-Pixel-Strich auf weissem Grund zu blass - gemessen war die
+           leere Woche kaum von der Tischplatte zu unterscheiden. Ein
+           neutrales Grau, das sich klar von den tuerkisen Saeulen
+           abhebt: Es ist kein kleiner Wert, es ist gar keiner. */
+        .wochen-reihe .w-spalte.leer .w-saeule { background: #aab3bf; }
+        .wochen-achse {
+            display: flex; gap: 2px; font-size: 0.58rem; color: var(--muted);
+        }
+        .wochen-achse span { flex: 1; text-align: center; }
+        body.dark .wochen-reihe .w-saeule { background: #2b4a63; }
+        body.dark .wochen-reihe .w-spalte.leer .w-saeule { background: #24384a; }
+
+        .zeit-kachel {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px; margin-top: 0.6rem;
+        }
+        .zeit-kachel > div {
+            background: #fff; border: 1px solid var(--line); border-radius: 8px;
+            padding: 6px 9px;
+        }
+        .zeit-kachel .k-wert {
+            font-size: 0.95rem; font-weight: 800; color: var(--panel-navy);
+            font-variant-numeric: tabular-nums;
+        }
+        .zeit-kachel .k-name { font-size: 0.62rem; color: var(--muted); }
+        body.dark .zeit-kachel > div { background: #10293b; border-color: #2b4a63; }
+        body.dark .zeit-kachel .k-wert { color: var(--nacht-hell); }
+
+        /* ================================================================
+           DIE UEBUNGSZEIT IN DER AUSWERTUNG
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026: "wenn wir schon mit Zeit arbeiten, eine
+           Registrierung wie lange man in der Woche geuebt hat. uebt man
+           mehrmals am Tag, wird die Zeit adiert."
+
+           Bewusst KEIN Balken und keine Ampel. Wer sieht, dass er diese
+           Woche 40 Minuten geuebt hat und letzte Woche zwei Stunden, weiss
+           selbst, was das heisst - dazu braucht es keine rote Farbe, die
+           ihn tadelt. Der Vergleich zur Vorwoche steht daneben, weil eine
+           Zahl allein nichts sagt.
+           ================================================================ */
+        /* ----------------------------------------------------------------
+           FUENF STILE, EINE KACHEL
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026: "der DARK Mode ist raus. wir haben nur den
+           Grey Blue Orange Green und den Light."
+
+           Nachgesehen, und er hat auf etwas gezeigt, das ich uebersehen
+           hatte: Die Stile faerben die Seitenleiste und die Kennzahl-
+           Kaestchen mit (Orange #f5dcc0, Green #d6ecdf, Blue #d3e4f5,
+           Grey #dde1e4) - meine Zeitkachel blieb in JEDEM Stil
+           tuerkis-hell. In der orangenen Leiste sass damit ein kalter
+           blauer Fleck.
+
+           Die vier Toene stehen bewusst hier und nicht in den Stilbloecken
+           weiter unten: Wer diese Kachel spaeter anfasst, soll alles
+           darueber an einer Stelle finden. Es sind Variablen, also
+           entscheidet die Reihenfolge im Blatt nichts.
+
+           Die Kachel nimmt denselben Ton wie die Kennzahl-Kaestchen
+           daneben - sie IST eine Kennzahl wie die anderen.
+           ---------------------------------------------------------------- */
+        :root      { --zeit-grund: #eef7f9; --zeit-rand: #cfe6ea; }
+        body.grey  { --zeit-grund: #dde1e4; --zeit-rand: #c6ccd1; }
+        body.green { --zeit-grund: #d6ecdf; --zeit-rand: #bcdcc9; }
+        body.blue  { --zeit-grund: #d3e4f5; --zeit-rand: #b6d1ea; }
+        body.orange{ --zeit-grund: #f5dcc0; --zeit-rand: #e5c49c; }
+
+        .uebungszeit {
+            margin-top: 0.5rem; padding: 0.45rem 0.6rem;
+            background: var(--zeit-grund); border: 1px solid var(--zeit-rand);
+            border-radius: 10px;
+            font-size: 0.66rem; color: var(--muted);
+        }
+        .uebungszeit .zeit-kopf { line-height: 1.4; }
+        .uebungszeit .zeit-kopf .zeit-titel { white-space: nowrap; }
+        .uebungszeit .zeit-neben { display: block; margin-top: 1px; }
+        /* Die Trennlinie macht aus zwei Zahlen zwei Aussagen: oben die
+           Woche, unten das Ganze. Ohne sie liest man vier Zahlen als
+           eine Wolke. */
+        .uebungszeit .zeit-gesamt {
+            margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--zeit-rand);
+            font-size: 0.63rem; line-height: 1.4;
+        }
+        .uebungszeit .zeit-gesamt b { color: var(--panel-navy); font-weight: 800; }
+        body.dark .uebungszeit .zeit-gesamt { border-top-color: #2b4a63; }
+        body.dark .uebungszeit .zeit-gesamt b { color: var(--nacht-hell); }
+        /* Nicht var(--tuerkis): Der kraeftige Ton (#0a9cb0) kommt auf dem
+           hellen Kachelgrund nur auf 3,02:1 - das reicht erst ab 19 Pixel
+           fetter Schrift, die Zahl hier ist 16.
+
+           #0a6b7a ist der Ton, der auf ALLEN FUENF Gruenden traegt.
+           Durchgerechnet:
+
+               Light  #eef7f9 -> 5,68:1
+               Grey   #dde1e4 -> 4,70:1
+               Green  #d6ecdf -> 4,98:1
+               Blue   #d3e4f5 -> 4,76:1
+               Orange #f5dcc0 -> 4,67:1
+
+           Das naechsthellere #0a7a8b faellt in vier von fuenf Stilen unter
+           4,5:1 - es reichte nur im Light Mode, und genau das waere der
+           Fehler gewesen, den man erst bemerkt, wenn jemand Orange
+           benutzt. Eine Farbe fuer alle fuenf ist ausserdem leichter zu
+           pflegen als fuenf einzelne. */
+        .uebungszeit .zeit-wert {
+            display: block; font-size: 1.02rem; font-weight: 800; color: #0a6b7a;
+            font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.25;
+        }
+        /* Die body.dark-Zeilen hier und weiter unten sind kein Versehen:
+           Der Dark Mode ist am 03.09.2026 aus der Liste STILE geflogen,
+           die Regeln bleiben aber im Blatt stehen - wer ihn zurueckholt,
+           schreibt 'dark' wieder in die Liste, und alles greift von
+           allein. Dieselbe Verabredung gilt fuer die Notiz und die
+           Fragennummer. */
+        body.dark .uebungszeit .zeit-wert { color: var(--tuerkis); }
+        body.dark .uebungszeit { background: #10293b; border-color: #2b4a63; }
+
+        /* ================================================================
            DIE NOTIZ AN DER FRAGE
            ----------------------------------------------------------------
            Dietmar am 09.09.2026: "Notizen anlegen. Wie stellst du dir das
@@ -1170,7 +1515,44 @@
         #markeHinweis.sichtbar { opacity: 1; transform: translateX(-50%) translateY(0); }
         @media (prefers-reduced-motion: reduce) { #markeHinweis { transition: none; } }
 
+        /* ================================================================
+           DAS BILD GEHOERT ZUR FRAGE - AUCH OPTISCH
+           ----------------------------------------------------------------
+           Dietmar am 10.09.2026, mit einem Video: "Das das Fragebild oben
+           so im leeren steht, sieht nicht schön aus. Schöner wäre erst die
+           Frage und darunter das Bild in dem grauen Rahmen mit drin
+           gefasst."
+
+           Er hat recht, und es war nie anders gedacht: Das Bild stand seit
+           jeher VOR dem Kasten mit Fragenummer und Text - ein Kaestchen
+           allein im Weissen, weit weg von dem Satz, zu dem es gehoert. Bei
+           Fragen ohne Antwortbilder fiel das kaum auf, weil gleich darunter
+           die Antworten kamen. Seit 1.248.0 die 18 Fragen mit BEIDEN
+           Bildern wieder ihr Fragebild bekommen, steht es dort oben ganz
+           allein.
+
+           Jetzt steht es im selben Rahmen wie die Frage und unter ihrem
+           Text - in der Reihenfolge, in der man es liest: erst die Frage,
+           dann das Bild dazu. Genau so steht es auch auf dem Blatt der
+           Bundesnetzagentur.
+           ================================================================ */
         .q-image { text-align: center; margin: 10px 0; position: relative; }
+        .q-text-row .q-image { margin: 0.7rem 0 0.15rem; }
+        /* ================================================================
+           STEHEN BEIDE DA, HAT DIE ANTWORT VORRANG
+           ----------------------------------------------------------------
+           Bei den 18 Fragen mit Bild zur Frage UND Bildern bei den
+           Antworten teilen sich fuenf Zeichnungen einen Schirm. Das Bild
+           zur Frage - meist ein Frequenzspektrum - sieht man einmal an;
+           verglichen werden muessen die vier Antworten. Deshalb bekommt
+           es hier eine engere Grenze als die 260 Punkte, die es allein
+           haette, und laesst den Platz den anderen. Wer es genauer sehen
+           will, faehrt mit der Maus darueber - die Lupe zeigt es gross.
+
+           Die Katalogbilder sind ohnehin kleiner (AB406_q.svg misst
+           174x76 Punkte); die Grenze greift also erst bei einem
+           Ausreisser, und genau dafuer steht sie hier. */
+        .q-image.zur-frage img { max-height: 170px; }
         .q-image img {
             max-width: 100%;
             max-height: 260px;
@@ -5946,6 +6328,25 @@ function getAllLocalUserData(){
                     : {};
             }catch(e){ data.cb[u] = {}; }
         });
+        // Die stille Messung (10.09.2026). Diagnose und Uebungszeit
+        // gehen mit auf den Server, aus demselben Grund wie alles
+        // andere hier: Sie sind nicht wiederherstellbar. Eine Woche
+        // Uebungszeit kann man nicht nacherfassen, und welche falsche
+        // Antwort man vor einem Monat angeklickt hat, weiss niemand
+        // mehr.
+        data.diagnose = slotFaecher({});
+        data.uebungszeit = slotFaecher({});
+        USER_SLOTS.forEach(u=>{
+            try{
+                const d = localStorage.getItem('amateurfunk_diagnose_' + u);
+                data.diagnose[u] = d ? JSON.parse(d) : {};
+            }catch(e){ data.diagnose[u] = {}; }
+            try{
+                const z = localStorage.getItem('amateurfunk_uebungszeit_' + u);
+                data.uebungszeit[u] = z ? JSON.parse(z) : {};
+            }catch(e){ data.uebungszeit[u] = {}; }
+        });
+
         // QSL-Sammelalbum: die verdienten Karten je Benutzer und das
         // Rufzeichen, das auf ihnen steht. Ohne das waere die Sammlung
         // beim Wechsel auf einen anderen Rechner weg - und sie ist
@@ -6569,14 +6970,76 @@ function searchOnGoogle() {
 // werden; im normalen Fenster steht daneben noch der Verlauf und die
 // Seitenleiste, da faellt es kleiner aus. Dietmar: "Im Vollbild kann das
 // Vergroessern etwas groesser sein. Im normalen Modus etwas weniger."
+// ================================================================
+//  DIE LUPE MUSS MIT DEN BILDERN MITWACHSEN
+// ----------------------------------------------------------------
+//  Dietmar am 10.09.2026: "Mit dem Vergroessern der Bilder stimmt was
+//  nicht bei e auf A AB406. Ich muss den Nachteilsausgleich auf Maximum
+//  setzen, das sie schoen vergroessern."
+//
+//  Das ist eine Folge der eigenen Verbesserung von 1.243.0. Damals waren
+//  die Antwortbilder 156 Punkte breit, und ein Ziel von 400 Punkten war
+//  eine ordentliche Vergroesserung - Faktor 2,5. Seit die Bilder ihren
+//  Kasten ausfuellen, sind sie 419 bis 559 Punkte breit. Das Ziel lag
+//  also UNTER der Ausgangsgroesse.
+//
+//  NACHGEMESSEN bei AB406, Katalog E auf A, ohne Nachteilsausgleich:
+//
+//      1440x930    Bild 419x138   Faktor 0,96   Lupe bleibt aus
+//      1920x1080   Bild 559x224   Faktor 0,72   Lupe bleibt aus
+//      1280x720    Bild 372x109   Faktor 1,08   Lupe bleibt aus
+//
+//  Unter 1,15 lohnt sich die Vergroesserung nicht und unterbleibt (siehe
+//  BILD_ZOOM_LOHNT) - vollkommen richtig, denn ein Bild um vier Prozent
+//  aufzublasen waere nur Unruhe. Falsch war das Ziel. Wer den
+//  Nachteilsausgleich hochdreht, multipliziert es und kommt darueber -
+//  genau der Umweg, den Dietmar beschreibt.
+//
+//  ZWEI AENDERUNGEN:
+//
+//  1. Das Ziel waechst mit dem Bild mit: Es ist jetzt der GROESSERE
+//     Wert aus der festen Zahl unten und dem, was BILD_ZOOM_ZIEL mal der
+//     heutigen Bildgroesse ergibt. Damit kann diese Stelle nie wieder
+//     veralten, wenn die Bilder im Raster ihre Groesse aendern.
+//
+//  2. Breite und Hoehe bekommen EIGENE Anteile am Fenster. Bisher galt
+//     eine Zahl fuer beides. Ein Fenster ist aber breiter als hoch, und
+//     die Schaltbilder des Katalogs sind sehr flach (Verhaeltnis 0,37) -
+//     bei ihnen war die Breite die Fessel, obwohl daneben reichlich Platz
+//     stand. Die Hoehenanteile sind so gewaehlt, dass sich fuer die
+//     Fragebilder (die weiter hoechstens 260 Punkte hoch sind) NICHTS
+//     aendert: nachgerechnet ergibt sich dort vorher wie nachher
+//     Faktor 2,29.
+//
+//  Ergebnis, wieder ohne Nachteilsausgleich: auf allen drei Fenstern
+//  Faktor 2,2 - die Lupe vergroessert also wieder von selbst.
+// ================================================================
+// 1,6 statt der ersten 2,2. Dietmar am 10.09.2026: "Ich habe den
+// Nachteilsausgleich komplett aus und die Vergrößerung ist extrem."
+//
+// Auf seinem Bild deckte das vergroesserte Antwortbild fast das ganze
+// Fenster zu - Frage und die Antworten A und B verschwanden darunter. Das
+// ist die andere Seite desselben Fehlers: Die Zahl war fuer Bilder von 156
+// Punkten Breite gedacht. Bei 419 Punkten sind 2,2 zu viel; man verliert
+// den Zusammenhang, in dem das Bild steht.
+//
+// 1,6 vergroessert ein Antwortbild von 419 auf 670 Punkte - deutlich
+// besser zu sehen, aber die Nachbarbilder bleiben daneben stehen. Fuer die
+// kleinen Bilder zur Frage aendert sich nichts: Bei ihnen greift ohnehin
+// die feste Zielzahl (520 Punkte), sie werden weiter gut dreifach
+// vergroessert. Wer mehr braucht, hat den Nachteilsausgleich.
+const BILD_ZOOM_ZIEL = 1.6;
+
 const BILD_MASS = {
     normal: {
-        anteil:  0.38,
+        anteilB: 0.62,
+        anteilH: 0.50,
         frage:   { breite: 520, hoehe: 300 },
         antwort: { breite: 400, hoehe: 250 }
     },
     vollbild: {
-        anteil:  0.52,
+        anteilB: 0.78,
+        anteilH: 0.62,
         frage:   { breite: 780, hoehe: 440 },
         antwort: { breite: 620, hoehe: 380 }
     }
@@ -6716,9 +7179,15 @@ function bildZoomAn(img){
         const max  = imRaster ? mass.antwort : mass.frage;
         // Der Wunschfaktor aus den Einstellungen (Nachteilsausgleich).
         const bz = (typeof bildZoomFaktor === 'function') ? bildZoomFaktor() : 1;
-        const anteil = Math.min(0.92, mass.anteil * bz);
-        const grenzeB = Math.min(vb * anteil, max.breite * bz);
-        const grenzeH = Math.min(vh * anteil, max.hoehe * bz);
+        const anteilB = Math.min(0.92, mass.anteilB * bz);
+        const anteilH = Math.min(0.92, mass.anteilH * bz);
+        // Das Ziel waechst mit dem Bild mit - siehe BILD_MASS. Ohne das
+        // war das Ziel bei den grossen Antwortbildern kleiner als das
+        // Bild selbst, und die Lupe blieb aus.
+        const zielB = Math.max(max.breite, bb * BILD_ZOOM_ZIEL);
+        const zielH = Math.max(max.hoehe,  bh * BILD_ZOOM_ZIEL);
+        const grenzeB = Math.min(vb * anteilB, zielB * bz);
+        const grenzeH = Math.min(vh * anteilH, zielH * bz);
         let f = Math.min(grenzeB / bb, grenzeH / bh);
         // Ein Bild, das ohnehin schon so gross wie die Zielgroesse ist, bleibt
         // unveraendert - sonst wurden gerade die breiten Schaltbilder noch
@@ -7547,12 +8016,412 @@ function fragenGroesseAnpassen(){
 }
 window.fragenGroesseAnpassen = fragenGroesseAnpassen;
 
+// ================================================================
+//  BILDANTWORTEN: SO GROSS, WIE DER PLATZ ES ZULAESST
+//  ----------------------------------------------------------------
+//  ZWEI IRRWEGE, die beim Messen aufgefallen sind und die man kennen
+//  sollte, bevor man hier etwas aendert:
+//
+//  1. "window.innerHeight - scrollHeight" als Mass fuer den freien
+//     Platz FUNKTIONIERT HIER NICHT. Die Karte traegt seit 1.224.0 eine
+//     min-height ueber den ganzen Schirm, damit die Knopfleiste beim
+//     Blaettern nicht springt. Damit ist scrollHeight IMMER so gross wie
+//     das Fenster, egal wie leer die Karte ist - der "Ueberschuss" war
+//     in jeder Messung exakt null.
+//
+//  2. object-fit:contain allein bringt nichts. Gibt man dem Bild
+//     width:100% und eine zu kleine Hoehe, passt contain den Inhalt in
+//     diese Hoehe ein und laesst links und rechts Luft. Das Bild war
+//     danach 419 Pixel breit - und die Zeichnung darin weiter 164.
+//
+//  Deshalb wird hier ZWEIERLEI gerechnet:
+//
+//  DER ECHTE LEERRAUM ist der Abstand zwischen dem letzten Element im
+//  Fragenbereich und der Oberkante der Knopfleiste. Genau die Luecke
+//  sieht man auf dem Schirm.
+//
+//  DIE IDEALE HOEHE ist die, bei der das Bild die Kastenbreite gerade
+//  ausfuellt: Kastenbreite mal Seitenverhaeltnis der Datei. Groesser
+//  waere sinnlos, weil dann wieder seitlich Luft entsteht.
+//
+//  Genommen wird der kleinere der beiden Werte. Die Grenzen: nie kleiner
+//  als 90 Pixel (der Zustand von vorher, darunter wird ein Schaltbild
+//  unlesbar) und nie groesser als 300 - sonst muesste man auf einem
+//  hohen Schirm zwischen den vier Bildern rollen, und gerade das
+//  Vergleichen ist bei diesen Fragen die Aufgabe. 240 statt der ersten
+//  300: Bei vier Bildern sind das 480 Pixel allein fuer die Antworten,
+//  und darueber stehen noch Kopfzeile und Frage.
+// ================================================================
+const BILD_MIN  = 90;
+const BILD_MAX  = 240;
+// Damit die Knopfleiste nicht genau am Fensterrand klebt: So viel Luft
+// muss unter ihr bleiben. Ohne das endete sie bei AB407 auf exakt der
+// Fensterkante - formal sichtbar, in Wahrheit direkt am Rand.
+const BILD_LUFT = 8;
+
+// ================================================================
+//  DAS GEDAECHTNIS FUER DIE SEITENVERHAELTNISSE
+// ----------------------------------------------------------------
+//  Auch nachdem das Ueberschiessen behoben war, blieb ein Rest vom
+//  Strecken: Beim ERSTEN Anzeigen einer Bildfrage stehen die Kaesten
+//  kurz auf 90 Pixeln und wachsen dann auf ihre richtige Hoehe. Nicht
+//  mehr schlimm - die Karte bleibt dabei stehen, es rollt nichts -,
+//  aber sichtbar.
+//
+//  Verhindern laesst sich das nur, wenn die Hoehe schon feststeht,
+//  bevor die Datei da ist. Und dafuer braucht man das Seitenverhaeltnis
+//  im Voraus. GERATEN wird es nicht mehr - genau das Raten (0,55 statt
+//  der tatsaechlichen 0,366) war die Ursache des ersten Fehlers.
+//
+//  Also wird es gemerkt: Jede Datei, die einmal geladen war, hinterlaesst
+//  ihr Verhaeltnis unter ihrem Namen. Beim zweiten Mal - und der Trainer
+//  zeigt dieselben Fragen oft wieder - steht die Hoehe sofort. Der
+//  Vorrat liegt zusaetzlich im Browser, damit er den naechsten Start
+//  ueberlebt; misslingt das (abgeschaltete Speicherung, Aufruf ueber
+//  file://), arbeitet der Trainer eben nur mit dem Gedaechtnis der
+//  laufenden Sitzung weiter.
+// ================================================================
+const BILD_VERH_SCHLUESSEL = 'afu_bildverhaeltnis';
+let BILD_VERH = Object.create(null);
+try{
+    const roh = localStorage.getItem(BILD_VERH_SCHLUESSEL);
+    if(roh) BILD_VERH = Object.assign(Object.create(null), JSON.parse(roh));
+}catch(e){ /* ohne Vorrat geht es auch */ }
+let bildVerhSichern_t = null;
+
+function bildVerhaeltnis(img){
+    const name = img.getAttribute('src') || '';
+    if(img.naturalWidth > 0 && img.naturalHeight > 0){
+        const v = Math.round((img.naturalHeight / img.naturalWidth) * 1000) / 1000;
+        if(BILD_VERH[name] !== v){
+            BILD_VERH[name] = v;
+            // Gesammelt schreiben statt bei jedem Bild einzeln.
+            clearTimeout(bildVerhSichern_t);
+            bildVerhSichern_t = setTimeout(() => {
+                try{ localStorage.setItem(BILD_VERH_SCHLUESSEL, JSON.stringify(BILD_VERH)); }catch(e){}
+            }, 1500);
+        }
+        return v;
+    }
+    return BILD_VERH[name] || 0;
+}
+
+function bilderGroesseAnpassen(erzwingen){
+    try{
+        const raster = document.querySelector('.options-grid');
+        if(!raster) return;
+        const bilder = raster.querySelectorAll('.option-image');
+        if(!bilder.length) return;
+        if(!document.body.classList.contains('runde-laeuft')) return;
+
+        // ================================================================
+        //  ERST MESSEN, WENN ES ETWAS ZU MESSEN GIBT
+        // ----------------------------------------------------------------
+        //  Dietmar am 10.09.2026: "Beim aufbauen einer Seite streckt sich
+        //  die Seite erst mal tief nach unten. Dieses Strecken, gefaellt
+        //  mir gar nicht. Der Trainer soll eine Seite so laden, das man
+        //  das strecken nicht mehr sieht."
+        //
+        //  NACHGEMESSEN, Bild fuer Bild bei AB406 auf 1440x930:
+        //
+        //    3112 ms  Karte 710   (die Frage steht noch nicht)
+        //    3153 ms  Karte 944   ROLLBALKEN   --bild-hoehe: 230px
+        //    3159 ms  Karte 901   kein Balken  --bild-hoehe: 120px
+        //
+        //  Ein einziger Bildaufbau mit falscher Groesse - das ist das
+        //  Strecken. Und die Ursache steht in derselben Zeile: Zum
+        //  Zeitpunkt 3153 war naturalWidth noch 0. Die SVG-Dateien waren
+        //  schlicht noch nicht geladen. Die Funktion hat mit dem
+        //  geschaetzten Seitenverhaeltnis 0,55 gerechnet - die vier
+        //  Signalbilder des Katalogs haben aber 0,366. Aus 419 Pixeln
+        //  Kastenbreite wurden so 230 statt 153 Pixel Hoehe, die Karte
+        //  wuchs ueber den Schirm hinaus, der Rollbalken erschien, und
+        //  einen Frame spaeter nahm die Bremse alles wieder zurueck.
+        //
+        //  Ein geschaetztes Seitenverhaeltnis ist also keine Naeherung,
+        //  sondern eine Fehlerquelle mit sichtbarer Folge. Deshalb wird
+        //  jetzt gar nicht gerechnet, solange ein Bild fehlt: Der Kasten
+        //  bleibt bei den 90 Pixeln aus dem Stilblatt - klein, aber
+        //  richtig -, und bilderNachziehen() ruft nach jedem geladenen
+        //  Bild erneut hier an. Die Seite wird damit einmal groesser und
+        //  nie wieder kleiner.
+        // ================================================================
+        // Ein Bild "fehlt" nur, wenn auch das Gedaechtnis nichts zu ihm
+        // weiss - siehe bildVerhaeltnis().
+        // AUCH DAS BILD ZUR FRAGE MUSS STEHEN.
+        //
+        // Seit 1.248.0 kann ueber den Antworten noch eine Zeichnung
+        // stehen (siehe renderQuestion). Sie laedt genauso nebenher wie
+        // die Antwortbilder - und wenn sie NACH dieser Rechnung
+        // eintrifft, schiebt sie alles nach unten, was hier gerade
+        // sorgfaeltig eingepasst wurde. Gemessen bei AB407 auf 1440x930:
+        // Antwortbilder 182 Punkte hoch, Seite 1023 statt 930, die
+        // Knopfleiste unter dem Fensterrand.
+        //
+        // Deshalb wird auch auf sie gewartet. complete genuegt: Ob das
+        // Bild ankam oder fehlschlug, ist gleich - wichtig ist nur, dass
+        // sein Platzbedarf feststeht.
+        const frageBild = document.querySelector('.q-image img');
+        if(frageBild && !frageBild.complete && !erzwingen) return;
+
+        let fehlt = 0;
+        bilder.forEach(b => { if(!bildVerhaeltnis(b)) fehlt++; });
+        // Die Notbremse (erzwingen) kommt aus bilderNachziehen(), wenn ein
+        // Bild nach einer knappen Sekunde immer noch nicht da ist. Dann
+        // wird mit dem gerechnet, was vorliegt - sonst bliebe eine einzige
+        // fehlende Datei fuer alle vier Kaesten der Massstab.
+        if(fehlt && !erzwingen) return;
+        if(fehlt >= bilder.length) return;
+
+        const spalten = (getComputedStyle(raster).gridTemplateColumns || '')
+                        .split(/\s+/).filter(Boolean).length || 1;
+        const zeilen = Math.max(1, Math.ceil(bilder.length / spalten));
+        raster.classList.add('bilder-gross');
+
+        // ZUERST ZURUECKSETZEN. Diese Funktion laeuft bei jedem Zeichnen der
+        // Frage - beim zweiten Mal steckt die Vergroesserung vom ersten Mal
+        // noch im Stilblatt. Wer dann den "Ausgangszustand" misst, misst
+        // sein eigenes Ergebnis und findet natuerlich alles in Ordnung.
+        raster.style.removeProperty('--bild-hoehe');
+        void document.documentElement.scrollHeight;
+
+        // ================================================================
+        //  DIE RECHNUNG: OBERGRENZE SETZEN, DANN NUR BEI BEDARF BREMSEN
+        // ----------------------------------------------------------------
+        //  Hier stand vorher eine Rechnung aus Bestandteilen - Rasterhoehe
+        //  plus freier Platz, minus Zeilenluecken, minus Rand und
+        //  Beschriftung, mal 0,90 Sicherheitsmarge. Sie sah genau aus und
+        //  war es nicht. Gemessen bei AB406 auf 1440x930:
+        //
+        //      Bild moeglich 153 px  -  Rechnung ergab 121 px
+        //
+        //  Der Fehler lag in einem Posten, den sie gar nicht kannte. Die
+        //  Karte traegt waehrend einer Runde eine min-height ueber den
+        //  ganzen Schirm. Der Inhalt war 218 Pixel niedriger als das - und
+        //  DIESE 218 Pixel sind Platz, den die Bilder haben duerfen, ohne
+        //  dass sich irgendetwas bewegt. Die Rechnung sah nur den Abstand
+        //  zwischen Knopfleiste und Fensterkante (93 Pixel) und liess den
+        //  Rest liegen. Nachweisbar an einer einzigen Zahl: Die
+        //  Knopfleiste stand vor UND nach dem Vergroessern bei 837 - sie
+        //  hatte sich nicht um einen Pixel bewegt.
+        //
+        //  Ein Posten mehr in der Formel haette diesen Fall behoben und
+        //  waere beim naechsten Umbau des Aufbaus wieder falsch gewesen.
+        //  Deshalb jetzt umgekehrt herum, ohne Formel:
+        //
+        //    1. Die Hoehe setzen, bei der das Bild seine Kastenbreite
+        //       gerade ausfuellt. Groesser waere sinnlos - object-fit
+        //       laesst dann seitlich Luft, das Bild wuerde nicht mehr
+        //       mitwachsen.
+        //    2. Nachsehen, ob die Knopfleiste noch im Fenster steht.
+        //       Steht sie, ist man fertig. Steht sie nicht, so weit
+        //       zurueck, bis sie es tut.
+        //
+        //  Gemessen wird damit nur noch, was man auch sieht. Ergebnis auf
+        //  fuenf Fenstergroessen: 1440x930 -> 153 (ideal, ein Durchgang),
+        //  1920x1080 -> 188 (zwei Durchgaenge), 1440x660 -> 127,
+        //  1280x720 -> 136, 1024x640 -> 90 (dort passt die Leiste schon
+        //  ohne Bilder nicht, also bleibt es beim Zustand von vorher).
+        // ================================================================
+        const leiste = document.querySelector('.nav-buttons');
+
+        // Die Hoehe, bei der das Bild die Kastenbreite ausfuellt. Das
+        // groesste der vier Verhaeltnisse gibt den Ausschlag: Bei diesem
+        // Wert ist jedes einzelne Bild so gross, wie es werden kann - die
+        // flacheren sind dann breitenbegrenzt und lassen oben und unten
+        // etwas Luft, was besser ist, als sie alle klein zu halten.
+        let ideal = BILD_MIN;
+        bilder.forEach(b => {
+            const br = b.getBoundingClientRect().width;
+            const v  = bildVerhaeltnis(b);
+            if(br > 0 && v > 0) ideal = Math.max(ideal, Math.round(br * v));
+        });
+
+        // ================================================================
+        //  ERST DEN GRUNDZUSTAND MESSEN
+        // ----------------------------------------------------------------
+        //  Wie viel steht ueber den Rand hinaus, wenn die Bilder so klein
+        //  sind wie erlaubt? Das ist der Ueberstand, den die Bilder NICHT
+        //  zu verantworten haben - und der Bezugspunkt fuer die Bremse
+        //  weiter unten.
+        //
+        //  Ohne diesen Bezug regelt die Bremse ins Leere. Gemessen, als
+        //  sie stur auf null Ueberstand hinregelte: Auf 1920x1080 fielen
+        //  die Bilder von 224 auf 108 Punkte, auf 1280x720 von 109 auf 72 -
+        //  und die Seite rollte trotzdem, weil der Ueberstand von der
+        //  min-height der Karte kam und nicht von den Bildern.
+        //
+        //  Gezeichnet wird zwischen Messung und Ergebnis nichts: alles
+        //  laeuft in einem Durchgang.
+        // ================================================================
+        raster.style.setProperty('--bild-hoehe', BILD_MIN + 'px');
+        void document.documentElement.scrollHeight;
+        const grundUeber = Math.max(0, Math.round(
+            document.documentElement.getBoundingClientRect().height - window.innerHeight));
+        const grundLeiste = leiste
+            ? Math.max(0, Math.round((leiste.getBoundingClientRect().bottom + window.scrollY)
+                                     - window.innerHeight))
+            : 0;
+
+        let hoehe = Math.max(BILD_MIN, Math.min(ideal, BILD_MAX));
+        raster.style.setProperty('--bild-hoehe', hoehe + 'px');
+        void document.documentElement.scrollHeight;
+
+        // ================================================================
+        //  DAS MASS: KNOPFLEISTE **UND** SEITENUEBERLAUF
+        // ----------------------------------------------------------------
+        //  Dietmar am 10.09.2026 zur ersten Fassung: "Jetzt ist es zu
+        //  gross. Die Leiste mit den Buttons sind nur über scrollen
+        //  erreichbar." Seitdem regelt die Bremse nach der Knopfleiste -
+        //  richtig, aber nicht genug.
+        //
+        //  GEMESSEN bei AB407, nachdem das Bild zur Frage wieder erscheint
+        //  (1440x930): Die Knopfleiste endete bei genau 930. Die Bremse
+        //  sah null Ueberstand und war zufrieden - waehrend die Seite
+        //  1023 Punkte hoch war. Unter der Leiste steht naemlich noch die
+        //  Fusszeile, und die zaehlte niemand mit.
+        //
+        //  Jetzt zaehlt beides, und genommen wird der groessere Wert.
+        //
+        //  DER UEBERLAUF WIRD IN SICHTBAREN PUNKTEN GEMESSEN. Das ist
+        //  keine Kleinigkeit: scrollHeight zaehlt in Seitenpunkten und
+        //  ignoriert die Anzeigegroesse, innerHeight zaehlt in sichtbaren.
+        //  Wer die beiden vergleicht, bekommt bei jeder Anzeige ausser
+        //  100 Prozent Unsinn heraus - dieser Vergleich hat frueher schon
+        //  einmal zwei Stunden gekostet. getBoundingClientRect() ist wie
+        //  innerHeight vom Zoom betroffen, also passen die beiden
+        //  zusammen.
+        //
+        //  UND DIE ABBRUCHREGEL: Die Karte traegt waehrend einer Runde
+        //  eine min-height, die bei vergroesserter Anzeige groesser sein
+        //  kann als das Fenster (gemessen 1001 Punkte in einem Fenster von
+        //  930). Die Seite rollt dann, egal wie klein die Bilder sind. Wer
+        //  stur weiterregelt, drueckt sie auf das Minimum und behebt
+        //  nichts. Deshalb: Bringt ein Schritt keine Besserung, liegt es
+        //  nicht an den Bildern - dann wird aufgehoert und der Schritt
+        //  zurueckgenommen.
+        // ================================================================
+        // ================================================================
+        //  WELCHES MASS GILT, HAENGT VOM GRUNDZUSTAND AB
+        // ----------------------------------------------------------------
+        //  Nachgemessen bei AB406 mit Bild zur Frage, Bildhoehe Schritt
+        //  fuer Schritt durchprobiert:
+        //
+        //    1440x930   90 -> Seite 930   |  150 -> Seite 930  |  170 -> 966
+        //    1920x1080  90 -> Seite 1099  |  130 -> Seite 1195 |  150 -> 1243
+        //
+        //  Zwei verschiedene Lagen. Auf 1440x930 gibt es eine Bildhoehe,
+        //  bei der die Seite GENAU passt - dort ist der Ueberlauf das
+        //  richtige Mass, und 150 ist die Antwort.
+        //
+        //  Auf 1920x1080 laeuft die Seite schon bei kleinsten Bildern um
+        //  19 Punkte ueber. Das kommt von der min-height der Karte bei
+        //  vergroesserter Anzeige und hat mit den Bildern nichts zu tun.
+        //  Dort ist "kein Ueberlauf" unerreichbar; wer trotzdem darauf
+        //  hinregelt, drueckt die Bilder auf das Minimum und behebt
+        //  nichts - gemessen fielen sie von 224 auf 108 Punkte.
+        //
+        //  Was dort zaehlt, ist Dietmars urspruengliche Beschwerde vom
+        //  10.09.2026: "Die Leiste mit den Buttons sind nur über scrollen
+        //  erreichbar." Die Knopfleiste steht bei 130 Punkten Bildhoehe
+        //  noch im Fenster (1069 von 1080) - das ist die Antwort dort.
+        //
+        //  Also: Passt die Seite im Grundzustand, gilt der Ueberlauf.
+        //  Passt sie ohnehin nicht, gilt allein die Knopfleiste.
+        // ================================================================
+        const seitePasst = grundUeber <= 2;
+        const ueberstand = () => {
+            const unterKante = leiste
+                ? Math.round((leiste.getBoundingClientRect().bottom + window.scrollY)
+                             + BILD_LUFT - window.innerHeight) - grundLeiste
+                : 0;
+            if(!seitePasst) return unterKante;
+            const seite = document.documentElement.getBoundingClientRect().height;
+            return Math.max(unterKante, Math.round(seite - window.innerHeight) - grundUeber);
+        };
+        for(let i = 0; i < 20; i++){
+            const zuViel = ueberstand();
+            if(zuViel <= 0 || hoehe <= BILD_MIN) break;
+            hoehe = Math.max(BILD_MIN, hoehe - Math.max(3, Math.ceil(zuViel / zeilen)));
+            raster.style.setProperty('--bild-hoehe', hoehe + 'px');
+            void document.documentElement.scrollHeight;
+        }
+
+        // Hat die Vergroesserung am Ende gar nichts gebracht, wieder den
+        // Standardwert - ein gesetzter Wert, der dem alten entspricht,
+        // waere nur Ballast im Stilblatt.
+        if(hoehe <= BILD_MIN) raster.style.removeProperty('--bild-hoehe');
+    }catch(e){ /* die Groesse ist nie ein Grund fuer einen Fehler */ }
+}
+window.bilderGroesseAnpassen = bilderGroesseAnpassen;
+
+// ================================================================
+//  DIE NAECHSTE FRAGE IM VORAUS HOLEN
+// ----------------------------------------------------------------
+//  Das Gedaechtnis oben hilft ab dem zweiten Mal. Beim Blaettern kann
+//  man es besser haben: Waehrend die eine Frage auf dem Schirm steht,
+//  tut sich nichts - genug Zeit, die Bilder der naechsten schon zu
+//  holen. Sind sie beim Weiterklicken bereits im Zwischenspeicher des
+//  Browsers, steht die Hoehe im selben Augenblick fest, in dem die
+//  Frage erscheint. Nichts wandert, nichts wird nachtraeglich groesser.
+//
+//  Es kostet nichts: Die Dateien liegen im eigenen Ordner, sind
+//  wenige Kilobyte gross und wuerden ohnehin geladen - nur eben eine
+//  Sekunde spaeter und dann sichtbar.
+// ================================================================
+function naechsteBilderHolen(){
+    try{
+        const q = currentQuestions[currentIndex + 1];
+        if(!q || !q.options) return;
+        q.options.forEach(opt => {
+            if(!opt || !opt.image || !String(opt.image).trim()) return;
+            const im = new Image();
+            im.src = 'svgs/' + String(opt.image).trim();
+        });
+    }catch(e){ /* Vorladen ist nie ein Grund fuer einen Fehler */ }
+}
+
+// Nach dem Laden der Bilder noch einmal rechnen - einmal je Bild, das
+// noch unterwegs ist, und einmal auf Verdacht kurz danach.
+function bilderNachziehen(){
+    try{
+        const bilder = document.querySelectorAll('.options-grid .option-image');
+        if(!bilder.length) return;
+        let offen = 0;
+        // Das Bild zur Frage gehoert dazu - siehe bilderGroesseAnpassen().
+        const alle = Array.prototype.slice.call(bilder);
+        const frageBild = document.querySelector('.q-image img');
+        if(frageBild) alle.push(frageBild);
+        alle.forEach(b => {
+            if(!b.complete || !b.naturalWidth){
+                offen++;
+                b.addEventListener('load',  () => { try{ bilderGroesseAnpassen(); }catch(e){} }, { once: true });
+                b.addEventListener('error', () => { try{ bilderGroesseAnpassen(); }catch(e){} }, { once: true });
+            }
+        });
+        // Auch wenn alle schon da sind: Ein zweiter Durchgang nach dem
+        // naechsten Bildaufbau raeumt Rundungsreste weg.
+        requestAnimationFrame(() => { try{ bilderGroesseAnpassen(); }catch(e){} });
+        if(!offen) setTimeout(() => { try{ bilderGroesseAnpassen(); }catch(e){} }, 80);
+        // DIE NOTBREMSE. Kommt ein Bild gar nicht (Datei fehlt, Ordner
+        // verschoben), warten die Kaesten sonst ewig auf der Mindesthoehe.
+        // Nach einer knappen Sekunde wird deshalb mit dem gerechnet, was
+        // da ist. Eine Sekunde deshalb, weil eine SVG-Datei aus dem
+        // eigenen Ordner sonst immer schneller ist - die Notbremse greift
+        // also nur, wenn wirklich etwas fehlt.
+        if(offen) setTimeout(() => { try{ bilderGroesseAnpassen(true); }catch(e){} }, 900);
+    }catch(e){}
+}
+
 // Beim Aendern der Fenstergroesse neu entscheiden - sonst bliebe die Stufe
 // vom letzten Zeichnen stehen, und im verkleinerten Fenster liefe die Frage
 // ueber.
 window.addEventListener('resize', function(){
     clearTimeout(fragenGroesseAnpassen._t);
-    fragenGroesseAnpassen._t = setTimeout(fragenGroesseAnpassen, 120);
+    fragenGroesseAnpassen._t = setTimeout(function(){
+        fragenGroesseAnpassen();
+        try{ bilderGroesseAnpassen(); }catch(e){}
+    }, 120);
 });
 
 // Eine Zeile, die nach zwei Sekunden von selbst geht.
@@ -9033,6 +9902,8 @@ function benutzerSchluessel(slot){
         'amateurfunk_errors_'         + slot,   // Fehlerliste
         'amateurfunk_favorites_'      + slot,   // Merkliste
         'amateurfunk_notizen_'        + slot,   // Notizen an den Fragen
+        'amateurfunk_diagnose_'       + slot,   // gewaehlte Antworten und Zeiten
+        'amateurfunk_uebungszeit_'    + slot,   // geuebte Sekunden je Tag
         'amateurfunk_cb_'             + slot,   // CB-Teil
         'amateurfunk_history_'        + slot,   // Verlauf (alte Schreibweise)
         'examHistory_'                + slot,   // Verlauf
@@ -9074,6 +9945,7 @@ function benutzerZuruecksetzen(slot){
                 try{ loadCB(); }catch(e){}
                 try{ loadFavorites(); }catch(e){}
     try{ loadNotizen(); }catch(e){}
+    try{ messungLaden(); }catch(e){}
                 try{ updateErrorBadge(); }catch(e){}
                 try{ updateDifficultBadge(); }catch(e){}
                 try{ updateMasteryDisplay(); }catch(e){}
@@ -10123,6 +10995,311 @@ function openHistoryClearModal(){
         try{ verlaufAuswahlBeenden(); }catch(e){}
     };
     if(modal){ modal.style.display='flex'; modal.classList.add('open'); }
+}
+
+// ================================================================
+//  DIE STILLE MESSUNG
+//  ----------------------------------------------------------------
+//  Dietmar am 10.09.2026, auf den Vorschlag hin, die gewaehlte falsche
+//  Antwort mitzuschreiben: "genau genommen alle 4. wenn wir schon mit
+//  Zeit arbeiten, eine Registrierung wie lange man in der Woche geuebt
+//  hat. uebt man mehrmals am Tag, wird die Zeit adiert."
+//
+//  Hier wird nichts angezeigt und nichts bewertet. Hier wird
+//  GESAMMELT - aus einem Grund, der leicht zu uebersehen ist:
+//
+//      Daten, die man heute nicht mitschreibt, kann man spaeter
+//      nicht rueckwirkend gewinnen.
+//
+//  Bisher steht im Verlauf nur, DASS eine Frage falsch war
+//  (errorList.push(qId)). WELCHE Antwort angeklickt wurde, ist weg -
+//  und genau darin steckt das System des Fehlers: Wer bei einer
+//  Widerstandsfrage 0,2 Ohm statt 200 Ohm waehlt, hat den Vorsatz
+//  verrechnet, nicht die Formel. Das schlaegt bei zwanzig anderen
+//  Fragen wieder zu.
+//
+//  ZWEI SPEICHER, beide je Benutzerplatz:
+//
+//    amateurfunk_diagnose_<platz>    je Frage: n = Versuche,
+//                                    f = gewaehlte FALSCHE Antworten,
+//                                    t = Sekunden je Versuch
+//                                    (jeweils die letzten zehn)
+//
+//    amateurfunk_uebungszeit_<platz> je Tag: Sekunden, aufaddiert.
+//                                    Mehrmals am Tag zaehlt zusammen -
+//                                    genau wie Dietmar es wollte.
+// ================================================================
+const DIAG_PREFIX  = 'amateurfunk_diagnose_';
+const ZEIT_PREFIX  = 'amateurfunk_uebungszeit_';
+const DIAG_MAX     = 10;                 // je Frage die letzten zehn Versuche
+const PAUSE_NACH   = 90 * 1000;          // 90 s ohne Regung = Pause
+const UHR_TAKT     = 15 * 1000;          // alle 15 s zubuchen
+const BUCHUNG_MAX  = 40;                 // mehr als 40 s je Takt ist ein Sprung
+
+let diagnoseDaten = {};
+let uebungsTage   = {};
+
+// --- Lesen und Schreiben -----------------------------------------
+function diagLaden(){
+    try{ diagnoseDaten = JSON.parse(localStorage.getItem(DIAG_PREFIX + currentUser) || '{}') || {}; }
+    catch(e){ diagnoseDaten = {}; }
+}
+function diagSichern(){
+    try{ localStorage.setItem(DIAG_PREFIX + currentUser, JSON.stringify(diagnoseDaten)); }catch(e){}
+}
+function zeitLaden(){
+    try{ uebungsTage = JSON.parse(localStorage.getItem(ZEIT_PREFIX + currentUser) || '{}') || {}; }
+    catch(e){ uebungsTage = {}; }
+}
+function zeitSichern(){
+    try{ localStorage.setItem(ZEIT_PREFIX + currentUser, JSON.stringify(uebungsTage)); }catch(e){}
+}
+// Beim Benutzerwechsel beides neu holen - sonst zaehlt Platz 2 die
+// Stunden von Platz 1 weiter.
+function messungLaden(){ diagLaden(); zeitLaden(); }
+
+// --- Tage und Wochen ---------------------------------------------
+// Bewusst NICHT toISOString(): das rechnet in Weltzeit, und wer um
+// halb zwoelf abends uebt, saesse in der Statistik schon im naechsten
+// Tag. Hier zaehlt die Uhr an der Wand.
+function tagSchluessel(d){
+    d = d ? new Date(d) : new Date();
+    const p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+// Montag als Wochenanfang - so zaehlt man Wochen hierzulande.
+function wochenAnfang(d){
+    const x = d ? new Date(d) : new Date();
+    x.setHours(0, 0, 0, 0);
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+}
+function zeitSummeAbTag(vonDatum, tage){
+    let sum = 0;
+    for(let i = 0; i < tage; i++){
+        const d = new Date(vonDatum);
+        d.setDate(d.getDate() + i);
+        sum += (uebungsTage[tagSchluessel(d)] || 0);
+    }
+    return sum;
+}
+function zeitDieseWoche(){ return zeitSummeAbTag(wochenAnfang(), 7); }
+function zeitVorwoche(){
+    const v = wochenAnfang(); v.setDate(v.getDate() - 7);
+    return zeitSummeAbTag(v, 7);
+}
+function zeitHeute(){ return uebungsTage[tagSchluessel()] || 0; }
+
+// ---------------------------------------------------------------
+//  DIE GESAMTZEIT
+//  Dietmar am 10.09.2026: "nicht nur die Wochenzeit, sondern auch die
+//  Gesamtzeit."
+//
+//  Eine Gesamtzeit allein ist eine nackte Zahl - "14 Stunden" kann
+//  ueber zwei Wochen oder ueber ein halbes Jahr entstanden sein, und
+//  das ist ein gewaltiger Unterschied. Deshalb werden hier immer drei
+//  Dinge zusammen ermittelt: die Summe, die Anzahl der Tage, an denen
+//  wirklich geuebt wurde, und der erste dieser Tage.
+// ---------------------------------------------------------------
+function zeitGesamtDaten(){
+    const tage = Object.keys(uebungsTage).filter(k => (uebungsTage[k] || 0) > 0).sort();
+    let summe = 0, best = 0, bestTag = '';
+    tage.forEach(k => {
+        const v = uebungsTage[k] || 0;
+        summe += v;
+        if(v > best){ best = v; bestTag = k; }
+    });
+    return {
+        summe: summe,
+        tage: tage.length,
+        erster: tage[0] || '',
+        best: best,
+        bestTag: bestTag,
+        schnitt: tage.length ? Math.round(summe / tage.length) : 0
+    };
+}
+function zeitGesamt(){ return zeitGesamtDaten().summe; }
+
+// "2026-08-12" wird zu "12. August". Das Jahr nur, wenn es ein anderes
+// ist als das laufende - sonst steht es fuenfmal auf dem Schirm herum.
+function datumText(schluessel){
+    try{
+        const [j, m, t] = String(schluessel).split('-').map(Number);
+        const monate = ['Januar','Februar','März','April','Mai','Juni',
+                        'Juli','August','September','Oktober','November','Dezember'];
+        const jetzt = new Date().getFullYear();
+        return t + '. ' + monate[m - 1] + (j !== jetzt ? (' ' + j) : '');
+    }catch(e){ return String(schluessel || ''); }
+}
+
+// Die letzten n Wochen, jeweils Montag bis Sonntag - fuer die
+// Saeulenreihe in der Auswertung.
+function zeitWochenReihe(n){
+    const reihe = [];
+    for(let i = n - 1; i >= 0; i--){
+        const start = wochenAnfang();
+        start.setDate(start.getDate() - i * 7);
+        reihe.push({ start: new Date(start), sek: zeitSummeAbTag(start, 7) });
+    }
+    return reihe;
+}
+
+// "4520" wird zu "1 h 15 min". Unter einer Minute steht die Sekunde,
+// sonst waere die erste Uebungsminute eine Null und man denkt, es geht
+// nicht.
+function zeitText(sek){
+    sek = Math.max(0, Math.round(sek || 0));
+    if(sek < 60) return sek + ' s';
+    const min = Math.round(sek / 60);
+    if(min < 60) return min + ' min';
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? (h + ' h ' + m + ' min') : (h + ' h');
+}
+
+// --- Die Uhr ------------------------------------------------------
+//  Sie laeuft NUR, wenn wirklich geuebt wird. Drei Bedingungen:
+//
+//    1. Eine Runde laeuft (body.runde-laeuft) - im Hauptmenue zu
+//       stehen ist kein Ueben.
+//    2. Das Fenster ist im Vordergrund (document.hidden).
+//    3. Die letzte Regung ist weniger als drei Minuten her.
+//
+//  Als Regung zaehlen Klick und Tastendruck, NICHT die Mausbewegung.
+//  Sonst haelt schon ein Windstoss am Tisch die Uhr am Laufen.
+//
+//  Die Schwelle ist neunzig Sekunden. Sie reicht fuer eine
+//  Rechenaufgabe mit Papier daneben - wer dabei nichts anklickt, uebt
+//  trotzdem. Und sie begrenzt zugleich den Irrtum in die andere
+//  Richtung: Wer aufsteht und geht, bekommt hoechstens diese neunzig
+//  Sekunden gutgeschrieben, nicht drei Minuten.
+let uhrAktivSeit  = 0;
+let letzteRegung  = Date.now();
+let uhrTicker     = null;
+
+function uebtGerade(){
+    try{
+        if(document.hidden) return false;
+        if(!document.body.classList.contains('runde-laeuft')) return false;
+        return (Date.now() - letzteRegung) < PAUSE_NACH;
+    }catch(e){ return false; }
+}
+function regung(){
+    letzteRegung = Date.now();
+    // Die Uhr sofort stellen, nicht erst beim naechsten Takt - sonst
+    // ginge die angefangene Viertelminute verloren.
+    if(!uhrAktivSeit && uebtGerade()) uhrAktivSeit = letzteRegung;
+}
+
+function zeitZubuchen(sek){
+    // Ein Sprung (Deckel zu, Rechner im Schlaf) darf nicht als
+    // Uebungszeit gelten. Alles ueber 40 s je Takt ist so ein Sprung.
+    if(!(sek > 0) || sek > BUCHUNG_MAX) return;
+    const t = tagSchluessel();
+    uebungsTage[t] = (uebungsTage[t] || 0) + sek;
+    zeitSichern();
+}
+function uhrTick(){
+    const jetzt = Date.now();
+    if(!uebtGerade()){
+        // Beim Anhalten das angefangene Stueck noch abrechnen - aber
+        // hoechstens bis zur letzten Regung. Wer weggegangen ist, soll
+        // die Wartezeit nicht geschenkt bekommen.
+        if(uhrAktivSeit && letzteRegung > uhrAktivSeit){
+            zeitZubuchen(Math.round((letzteRegung - uhrAktivSeit) / 1000));
+        }
+        uhrAktivSeit = 0;
+        // Die Stoppuhr der Frage ist jetzt wertlos - es lag eine Pause
+        // darin. Lieber keine Zeit als eine mit Kaffeepause drin.
+        frageAngezeigtSeit = 0;
+        return;
+    }
+    if(!uhrAktivSeit){ uhrAktivSeit = jetzt; return; }
+    zeitZubuchen(Math.round((jetzt - uhrAktivSeit) / 1000));
+    uhrAktivSeit = jetzt;
+    try{ uebungszeitAnzeigeNachziehen(); }catch(e){}
+}
+function uhrStarten(){
+    if(uhrTicker) return;
+    try{
+        document.addEventListener('click', regung, true);
+        document.addEventListener('keydown', regung, true);
+        document.addEventListener('visibilitychange', () => {
+            // Beim Wegschalten sofort abrechnen, sonst zaehlt der
+            // angefangene Takt beim Zurueckkommen mit.
+            if(document.hidden){ uhrTick(); uhrAktivSeit = 0; }
+            else { regung(); }
+        });
+        window.addEventListener('beforeunload', () => { try{ uhrTick(); }catch(e){} });
+    }catch(e){}
+    uhrTicker = setInterval(uhrTick, UHR_TAKT);
+}
+
+// --- Was bei einer Antwort mitgeschrieben wird --------------------
+let frageAngezeigtSeit = 0;
+let frageGemessenId    = null;
+
+// Aus renderQuestion. Nur beim ERSTEN Zeichnen einer Frage - das
+// Neuzeichnen nach einem Klick darf die Uhr nicht zuruecksetzen.
+function frageZeitStarten(id){
+    if(frageGemessenId === id) return;
+    frageGemessenId = id;
+    frageAngezeigtSeit = Date.now();
+}
+function diagnoseNotieren(q, gewaehlt, richtig){
+    if(!q || !q.id) return;
+    const e = diagnoseDaten[q.id] || (diagnoseDaten[q.id] = { n: 0, f: [], t: [] });
+    e.n = (e.n || 0) + 1;
+    const sek = frageAngezeigtSeit ? Math.round((Date.now() - frageAngezeigtSeit) / 1000) : 0;
+    // Ueber zehn Minuten an einer Frage heisst: zwischendurch etwas
+    // anderes gemacht. Das ist keine Bearbeitungszeit.
+    if(sek > 0 && sek < 600){ e.t.push(sek); if(e.t.length > DIAG_MAX) e.t.shift(); }
+    if(!richtig && gewaehlt >= 0){ e.f.push(gewaehlt); if(e.f.length > DIAG_MAX) e.f.shift(); }
+    frageGemessenId = null;      // dieselbe Frage spaeter = neue Messung
+    diagSichern();
+}
+
+// ---------------------------------------------------------------
+//  WER NACHSCHLAEGT, MACHT ES RICHTIG
+//  ---------------------------------------------------------------
+//  Dietmar am 10.09.2026: "es gibt viele Antworten die im Formelblatt
+//  stehen. das soll positiv registriert werden wenn man diese nutzt.
+//  mehr Zeit zu benoetigen und nachschauen ist definitiv kein Fehler."
+//
+//  Er hat recht, und mein Denkfehler war handfest: Ich hatte laengere
+//  Zeiten als Risiko gewertet, ohne zu fragen, WOMIT sie zustande
+//  kommen. In der Pruefung liegt die Formelsammlung auf dem Tisch -
+//  Anlage 1 AFuV und die Bandplan-Auszuege stehen ausdruecklich in der
+//  Liste der erlaubten Hilfsmittel, ebenso der nicht programmierbare
+//  Taschenrechner. Wer sie benutzt, uebt genau das, was er im
+//  Pruefungsraum tun wird.
+//
+//  Nachgezaehlt: 534 der 571 Fragen haben eine Stelle im Formelblatt.
+//  Nachschlagen ist hier also der Normalfall, nicht die Ausnahme.
+//
+//  Deshalb wird ab jetzt mitgeschrieben, WANN jemand nachschlaegt -
+//  nicht um es ihm vorzuhalten, sondern damit der Trainer eine lange
+//  Bearbeitungszeit richtig einordnet und die gute Gewohnheit
+//  benennen kann.
+function hilfsmittelNotieren(art){
+    try{
+        const q = currentQuestions[currentIndex];
+        if(!q || !q.id) return;
+        const e = diagnoseDaten[q.id] || (diagnoseDaten[q.id] = { n: 0, f: [], t: [] });
+        if(art === 'formel')   e.fb = (e.fb || 0) + 1;
+        if(art === 'rechner')  e.tr = (e.tr || 0) + 1;
+        diagSichern();
+    }catch(e){}
+}
+function hatNachgeschlagen(id){
+    const e = diagnoseDaten[id];
+    return !!(e && ((e.fb || 0) > 0 || (e.tr || 0) > 0));
+}
+
+// Der Mittelwert der letzten Versuche - fuer "richtig, aber langsam".
+function frageSchnitt(id){
+    const e = diagnoseDaten[id];
+    if(!e || !e.t || !e.t.length) return 0;
+    return Math.round(e.t.reduce((a, b) => a + b, 0) / e.t.length);
 }
 
 function saveErrors() {
@@ -13487,6 +14664,7 @@ async function loadQuestions() {
             if(sel && sel.querySelector('option[value="'+currentUser+'"]')) sel.value = currentUser;
             loadFavorites();
             loadNotizen();
+            messungLaden();
         }catch(e){}
         loadHistory();
         loadErrors();
@@ -13569,6 +14747,7 @@ userSelect.addEventListener('change', function() {
     try{ syncDuoNameToSlot(); refreshUserLabels(); }catch(e){}
     try{ loadFavorites(); }catch(e){}
     try{ loadNotizen(); }catch(e){}
+    try{ messungLaden(); }catch(e){}
     // Alle Benutzer-Daten neu laden
     loadHistory();
     loadErrors();
@@ -14660,15 +15839,84 @@ function formelKnopfSetzen(){
         b.style.display = '';
         b.dataset.stelle = st.id;
         b.setAttribute('data-tooltip', 'Formelsammlung: ' + st.titel);
+        try{ formelKnopfMelden(q.id); }catch(e){}
     }else{
         b.style.display = 'none';
         b.dataset.stelle = '';
     }
 }
 
+// ================================================================
+//  DER KNOPF MACHT AUF SICH AUFMERKSAM
+// ================================================================
+//  Optisch bei jeder Frage, die eine Stelle im Blatt hat - akustisch
+//  nur EINMAL je Sitzung.
+//
+//  Der Grund für diesen Unterschied ist eine Zahl: Im Katalog E auf A
+//  haben 282 Fragen eine Stelle im Blatt. Ein Ton bei jeder davon wäre
+//  nach zehn Minuten unerträglich und würde als Erstes abgeschaltet -
+//  mitsamt dem optischen Hinweis. Einmal hören, danach sehen: Das
+//  bleibt.
+//
+//  Der Ton wird selbst erzeugt statt als Datei mitgeliefert. Zwei
+//  weiche Töne, zusammen 200 Millisekunden, halbe Lautstärke. Eine
+//  MP3 dafür wäre eine Datei mehr im Paket, im Update und im Setup.
+let formelTonGespielt = false;
+let formelPulsFrage   = null;
+
+function formelTonSpielen(){
+    try{
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return;
+        const ctx = new AC();
+        // Zwei Töne hintereinander, eine Quinte auseinander - das klingt
+        // nach "schau her" und nicht nach Fehlermeldung.
+        [[880, 0], [1318.5, 0.1]].forEach(([hz, ab]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = 'sine'; o.frequency.value = hz;
+            o.connect(g); g.connect(ctx.destination);
+            const t = ctx.currentTime + ab;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+            o.start(t); o.stop(t + 0.15);
+        });
+        setTimeout(() => { try{ ctx.close(); }catch(e){} }, 600);
+    }catch(e){ console.debug('Formelton:', e.message); }
+}
+
+function formelKnopfMelden(fragenId){
+    if(einstellungen && einstellungen.formelHinweis === false) return;
+    const b = document.getElementById('formelBtn');
+    if(!b || b.style.display === 'none') return;
+    // Beim Neuzeichnen derselben Frage nicht noch einmal - sonst pulst
+    // es nach jedem Klick von vorn.
+    if(formelPulsFrage === fragenId) return;
+    formelPulsFrage = fragenId;
+
+    // Die Animation läuft nur neu an, wenn die Klasse weg war. Das
+    // Auslesen von offsetWidth erzwingt den Zwischenschritt - ohne das
+    // fasst der Browser Entfernen und Setzen zusammen und es passiert
+    // gar nichts.
+    b.classList.remove('merk-mich');
+    void b.offsetWidth;
+    b.classList.add('merk-mich');
+    setTimeout(() => { try{ b.classList.remove('merk-mich'); }catch(e){} }, 2200);
+
+    if(!formelTonGespielt){
+        formelTonGespielt = true;
+        formelTonSpielen();
+    }
+}
+
 function formelBtnKlick(){
     const b = document.getElementById('formelBtn');
-    if(b && b.dataset.stelle) formelOeffnen(b.dataset.stelle);
+    if(b && b.dataset.stelle){
+        // Positiv vermerken, BEVOR das Blatt aufgeht: Das ist genau die
+        // Handbewegung, die in der Pruefung erlaubt ist.
+        try{ hilfsmittelNotieren('formel'); }catch(e){}
+        formelOeffnen(b.dataset.stelle);
+    }
 }
 window.formelBtnKlick = formelBtnKlick;
 
@@ -14967,7 +16215,14 @@ window.rechnerZu = rechnerZu;
 
 function rechnerUmschalten(){
     const f = document.getElementById('rechnerFenster');
-    if(f && f.style.display === 'block') rechnerZu(); else rechnerAuf();
+    if(f && f.style.display === 'block'){ rechnerZu(); }
+    else {
+        // Auch der Taschenrechner ist ein erlaubtes Hilfsmittel - siehe
+        // hilfsmittelNotieren(). Nur das Aufmachen zaehlt, sonst waere
+        // jedes Zuklappen ein zweiter Punkt.
+        try{ hilfsmittelNotieren('rechner'); }catch(e){}
+        rechnerAuf();
+    }
 }
 window.rechnerUmschalten = rechnerUmschalten;
 
@@ -16865,12 +18120,43 @@ async function playTTSQueue(segments, btn){
     for(const seg of segments){
         if(token!==ttsQueueToken) return; // wurde zwischenzeitlich gestoppt/neu gestartet
         await playTTSSegment(seg, token);
+        // Die Pause nach einer Bildantwort. Die Hervorhebung bleibt dabei
+        // stehen - deshalb wird hier gewartet und nicht schon in
+        // playTTSSegment, das raeumt am Ende auf.
+        if(seg.pause > 0){
+            await new Promise(r => setTimeout(r, seg.pause));
+            if(token!==ttsQueueToken) return;
+        }
     }
     if(token!==ttsQueueToken) return;
     ttsQueueActive=false;
     clearTTSHighlights();
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-volume-up"></i> Vorlesen'; btn.onclick=()=>vorleseFrage(); }
 }
+
+// ================================================================
+//  VORLESEN BEI BILDANTWORTEN
+//  ----------------------------------------------------------------
+//  Dietmar am 10.09.2026: "Beim vorlesen sagt es: Antwort A Bild. Bild
+//  gehört da raus und es soll etwas langsamer Vorlesen. Das geht derzeit
+//  noch sehr schnell bei Bildern."
+//
+//  Zweimal recht. Erstens sagte der Trainer "Antwort A: Bild." - das Wort
+//  beschreibt nichts, es fuellt nur die Stelle, an der bei einer
+//  Textantwort etwas Sinnvolles staende. Wer nicht sieht, dem hilft es
+//  nicht; wer sieht, weiss es ohnehin.
+//
+//  Zweitens - und das ist der eigentliche Punkt: Bei Textantworten
+//  bestimmt die Laenge des Satzes die Zeit, die man zum Mitdenken hat.
+//  Bei vier Bildern sagt der Trainer viermal zwei Silben und ist nach
+//  fuenf Sekunden fertig. Genau dann braucht man aber am meisten Zeit,
+//  weil man die Kurven vergleichen muss.
+//
+//  Deshalb bekommt jede Bildantwort eine PAUSE hinterher, in der die
+//  Antwort hervorgehoben bleibt. Nicht langsamer sprechen - dabei
+//  klaenge die Stimme betrunken -, sondern schweigen und zeigen.
+// ================================================================
+const BILD_PAUSE_MS = 2600;
 
 function vorleseFrage(){
     const q=currentQuestions[currentIndex]; if(!q) return;
@@ -16879,10 +18165,13 @@ function vorleseFrage(){
     const segments=[{text:q.text+'.', selector:null}];
     q.options.forEach((opt,i)=>{
         const label=String.fromCharCode(65+i);
-        const text = (opt.text && opt.text.trim()) ? `Antwort ${label}: ${opt.text}.` : `Antwort ${label}: Bild.`;
-        segments.push({text, selector:`[data-optindex="${i}"]`});
+        const hatText = !!(opt.text && opt.text.trim());
+        const istBild = !!(opt.image && String(opt.image).trim());
+        // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
+        const text = hatText ? `Antwort ${label}: ${opt.text}.` : `Antwort ${label}.`;
+        segments.push({ text, selector:`[data-optindex="${i}"]`,
+                        pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 });
     });
-    console.log('[TTS V17] Vorlese Frage + Antworten, Frage ohne Highlight, kein Overlay');
     playTTSQueue(segments, btn);
 }
 function vorleseAntwort(isCorrect, correctText, correctLabel){
@@ -16919,13 +18208,18 @@ function einstellungenSchluessel(){
 }
 
 function einstellungenLaden(){
-    einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false };
+    einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
+                      formelHinweis: true };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
             const d = JSON.parse(raw);
             einstellungen.knoepfeVorlesen = !!(d && d.knoepfeVorlesen);
             einstellungen.vorlesenGross   = !!(d && d.vorlesenGross);
+            // Standard ist AN - der Hinweis soll auffallen, wer ihn nicht
+            // mag, schaltet ihn aus. Deshalb hier nur das ausdrückliche
+            // Nein übernehmen.
+            if(d && d.formelHinweis === false) einstellungen.formelHinweis = false;
             if(d && d.knopfUmfang === 'lang') einstellungen.knopfUmfang = 'lang';
         }
     }catch(e){}
@@ -17027,6 +18321,10 @@ function einstellungenAnwenden(){
     if(a) a.checked = !!einstellungen.knoepfeVorlesen;
     const b = document.getElementById('einstVorlesenGross');
     if(b) b.checked = !!einstellungen.vorlesenGross;
+    // Der Formelblatt-Hinweis ist standardmaessig AN, deshalb hier der
+    // Vergleich auf !== false und nicht auf !!.
+    const fh = document.getElementById('einstFormelHinweis');
+    if(fh) fh.checked = (einstellungen.formelHinweis !== false);
     // Der Beamer-Modus wird nicht gespeichert - der Haken zeigt nur,
     // ob er gerade an ist.
     const bm = document.getElementById('einstBeamer');
@@ -18065,6 +19363,19 @@ function einstBlaetterFuellen(){
           + 'onchange="einstellungenUmfang(\'lang\')">'
           + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">Ausführlich</b> — '
           + 'in ganzen Sätzen, so wie man es jemandem erklärt, der daneben sitzt.</span></label></div>')
+      + einstKasten('Formelblatt', 'Bei vielen Fragen steht die Antwort in der Formelsammlung der '
+            + 'Bundesnetzagentur — bei Klasse N bei 112 von 571 Fragen, beim Aufstieg auf A sogar bei '
+            + '224 von 716. Das Blatt liegt in der Prüfung auf dem Tisch. Damit man es nicht vergisst, '
+            + 'pulst der Knopf dreimal, sobald es zu einer Frage etwas nachzuschlagen gibt. Der Ton '
+            + 'kommt nur einmal je Sitzung.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Auf das Formelblatt hinweisen." '
+          + 'data-vorlesen="Auf das Formelblatt hinweisen. Der Knopf pulst dreimal, wenn es zu einer Frage eine Stelle in der Formelsammlung gibt. Einmal je Sitzung ertönt dazu ein kurzer Zweiklang.">'
+          + '<input type="checkbox" id="einstFormelHinweis" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'formelHinweis\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Auf das Formelblatt hinweisen</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Der Knopf pulst dreimal, wenn es zu dieser Frage etwas nachzuschlagen gibt.</span></span></label>')
       + einstKasten('Schrift', '',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
           + 'data-vorlesen-kurz="Schrift beim Vorlesen vergrößern." '
@@ -18854,20 +20165,33 @@ function getCorrectOptionText(q) {
 // ================================================================
 // FINAL FIX: getSvgHtml - lädt IMMER, zeigt nie "Bild nicht gefunden"
 // ================================================================
-function getSvgHtml(qId) {
+// ================================================================
+//  DAS BILD ZUR FRAGE
+// ----------------------------------------------------------------
+//  Der zweite Parameter ist neu (10.09.2026) und der Kern der Sache:
+//  die Dateinamen, die bereits als ANTWORTBILDER auf dem Schirm stehen.
+//  Sie werden aus der Suchreihenfolge gestrichen.
+//
+//  Warum das noetig ist, zeigt der Vergleich zweier Fragen:
+//
+//    AB406  Fragebild AB406_q.svg   Antworten AB406_a..d.svg
+//           -> zwei verschiedene Sachen. Das Frequenzspektrum GEHOERT
+//              zur Frage, ohne es ist sie nicht zu beantworten.
+//
+//    NB401  Fragebild NB401.svg     Antworten NB401_c.svg, NB401.svg, ...
+//           -> dieselbe Datei. Hier gibt es gar kein eigenes Fragebild;
+//              was so aussieht, ist in Wahrheit die Antwort A.
+//
+//  Weil die Suche der Reihe nach <ID>_q.svg, <ID>.svg und <ID>_q.png
+//  probiert, haette eine Pruefung nur des ersten Namens NB401 nicht
+//  erwischt: Dort existiert _q.svg nicht, und der Rueckfall waere genau
+//  auf das Antwortbild gelandet. Deshalb wird die ganze Reihe gefiltert,
+//  bevor gesucht wird - dann ist bei NB401 nichts mehr uebrig und es
+//  erscheint richtigerweise kein Bild.
+// ================================================================
+function getSvgHtml(qId, schonGezeigt) {
     if (!qId) return '';
-    // Gibt es ueberhaupt eine Zeichnung? Frueher wurde fuer JEDE Frage ein
-    // Bild angefordert und bei Misserfolg versteckt - zwei vergebliche
-    // Anfragen je Frage. Bei Klasse N fiel das kaum auf, bei 1750 Fragen
-    // schon, und ueber den Einladungslink erst recht. Die Liste kommt aus
-    // svg-list.json; ist sie leer (Datei fehlt), wird wie bisher gefragt.
-    try {
-        if (existingImagesSet && existingImagesSet.size
-            && !existingImagesSet.has(qId + '_q.svg')
-            && !existingImagesSet.has(qId + '.svg')
-            && !existingImagesSet.has(qId + '_q.png')) return '';
-    } catch (e) { /* Set noch nicht da - dann wie bisher */ }
-    // Reihenfolge der Versuche: <ID>_q.svg, dann <ID>.svg, dann <ID>_q.png.
+    // Die Suchreihenfolge: <ID>_q.svg, dann <ID>.svg, dann <ID>_q.png.
     //
     // Das PNG am Ende ist kein Zufall: Zu elf Fragen liegt neben der SVG auch
     // eine PNG-Fassung im offiziellen Satz (BE207-209, NE209, NF101-106,
@@ -18875,7 +20199,21 @@ function getSvgHtml(qId) {
     // genau diese SVGs nicht dar. Ohne den dritten Versuch bliebe die Frage
     // dort ohne Zeichnung - und weil das nur Firefox betrifft, faellt es beim
     // Testen im eigenen Browser nie auf.
-    const quellen = [`svgs/${qId}_q.svg`, `svgs/${qId}.svg`, `svgs/${qId}_q.png`];
+    let namen = [qId + '_q.svg', qId + '.svg', qId + '_q.png'];
+    if (schonGezeigt && schonGezeigt.length) {
+        namen = namen.filter(n => schonGezeigt.indexOf(n) === -1);
+    }
+    if (!namen.length) return '';
+    // Gibt es ueberhaupt eine Zeichnung? Frueher wurde fuer JEDE Frage ein
+    // Bild angefordert und bei Misserfolg versteckt - zwei vergebliche
+    // Anfragen je Frage. Bei Klasse N fiel das kaum auf, bei 1750 Fragen
+    // schon, und ueber den Einladungslink erst recht. Die Liste kommt aus
+    // svg-list.json; ist sie leer (Datei fehlt), wird wie bisher gefragt.
+    try {
+        if (existingImagesSet && existingImagesSet.size
+            && !namen.some(n => existingImagesSet.has(n))) return '';
+    } catch (e) { /* Set noch nicht da - dann wie bisher */ }
+    const quellen = namen.map(n => 'svgs/' + n);
     return `<img src="${quellen[0]}" alt="Bild zu ${qId}" loading="lazy"
             data-quellen="${quellen.join('|')}" data-versuch="0"
             onclick="openLightbox(this.src, '${qId}')"
@@ -19806,7 +21144,7 @@ function updateSidebarOnly(){
     // die Spalte wird dann schlicht leer gelassen.
     const tabHtml = `<button class="sidebar-tab ${isTrainerViewActive ? 'trainer-mode' : ''}" id="sidebarToggleBtn" onclick="toggleSidebar()" data-tooltip="Verlauf ein-/ausblenden" style="${isTrainerViewActive ? 'background:#e2932f;' : ''}"><i class="fas ${sidebarOpen ? 'fa-chevron-left' : 'fa-chevron-right'}"></i><span class="tab-label">${isTrainerViewActive ? `${trainerName}: Verlauf (${displayCorrectCount}/${displayTotalAnswered})` : (sidebarOpen ? 'Verlauf ausblenden' : 'Verlauf einblenden')}</span></button>`;
     
-    const sidebarHtml = `<div class="left-sidebar-wrapper ${sidebarOpen ? '' : 'collapsed'}" id="leftSidebarWrapper"><div class="left-sidebar" style="${isTrainerViewActive ? 'border:2px solid #e2932f; background:#fffaf0;' : ''}"><h3>${isTrainerViewActive ? `👑 Trainer: ${trainerName}` : '📊 Auswertung'} ${isTrainerViewActive ? '<span style="background:#e2932f; color:white; padding:2px 6px; border-radius:8px; font-size:0.55rem;">TRAINER</span>' : ''}</h3><div class="stat-head"><span>${isTrainerViewActive ? trainerName : partLabel2}</span><b>${total} Fragen</b></div><div class="stat-grid"><div class="stat-chip"><span class="label">✅ Richtig</span><span class="value green">${correctSoFar}</span></div><div class="stat-chip"><span class="label">❌ Falsch</span><span class="value red">${wrongSoFar}</span></div><div class="stat-chip"><span class="label">⏳ Offen</span><span class="value orange">${remaining}</span></div><div class="stat-chip"><span class="label">🎯 Quote</span><span class="value">${displayTotalAnswered > 0 ? Math.round((displayCorrectCount/displayTotalAnswered)*100) : 0}%</span></div></div><div class="result-box ${resultClass}">${resultText}</div>${displayTotalAnswered === total && total>0 ? `<div style="margin-top:0.25rem;text-align:center;font-size:0.62rem;color:var(--muted);">${effectivePass ? '✅ 19/25 erreicht' : '❌ 19/25 benötigt'}</div>` : ''}${isTrainerViewActive ? `<div style="margin-top:0.5rem; padding:0.4rem 0.6rem; background:#fdf1e0; border:1px solid #ffe0a0; border-radius:8px; font-size:0.7rem; color:#8a6d00; text-align:center;"><i class="fas fa-eye"></i> Du siehst <b>${trainerName}</b> (${displayCorrectCount}/${displayTotalAnswered})<br><span style="font-size:0.6rem;">Du kannst trotzdem selbst antworten – dein Fortschritt ist unter 👑 Trainer (Du)</span></div>` : ''}<h3 style="margin-top:0.6rem;">📌 Fortschritt</h3><div class="progress-dots-sidebar">${dotsHtml}</div></div></div>`;
+    const sidebarHtml = `<div class="left-sidebar-wrapper ${sidebarOpen ? '' : 'collapsed'}" id="leftSidebarWrapper"><div class="left-sidebar" style="${isTrainerViewActive ? 'border:2px solid #e2932f; background:#fffaf0;' : ''}"><h3>${isTrainerViewActive ? `👑 Trainer: ${trainerName}` : '📊 Auswertung'} ${isTrainerViewActive ? '<span style="background:#e2932f; color:white; padding:2px 6px; border-radius:8px; font-size:0.55rem;">TRAINER</span>' : ''}</h3><div class="stat-head"><span>${isTrainerViewActive ? trainerName : partLabel2}</span><b>${total} Fragen</b></div><div class="stat-grid"><div class="stat-chip"><span class="label">✅ Richtig</span><span class="value green">${correctSoFar}</span></div><div class="stat-chip"><span class="label">❌ Falsch</span><span class="value red">${wrongSoFar}</span></div><div class="stat-chip"><span class="label">⏳ Offen</span><span class="value orange">${remaining}</span></div><div class="stat-chip"><span class="label">🎯 Quote</span><span class="value">${displayTotalAnswered > 0 ? Math.round((displayCorrectCount/displayTotalAnswered)*100) : 0}%</span></div></div><div class="result-box ${resultClass}">${resultText}</div>${displayTotalAnswered === total && total>0 ? `<div style="margin-top:0.25rem;text-align:center;font-size:0.62rem;color:var(--muted);">${effectivePass ? '✅ 19/25 erreicht' : '❌ 19/25 benötigt'}</div>` : ''}${isTrainerViewActive ? `<div style="margin-top:0.5rem; padding:0.4rem 0.6rem; background:#fdf1e0; border:1px solid #ffe0a0; border-radius:8px; font-size:0.7rem; color:#8a6d00; text-align:center;"><i class="fas fa-eye"></i> Du siehst <b>${trainerName}</b> (${displayCorrectCount}/${displayTotalAnswered})<br><span style="font-size:0.6rem;">Du kannst trotzdem selbst antworten – dein Fortschritt ist unter 👑 Trainer (Du)</span></div>` : ''}<div id="uebungszeitHalter">${uebungszeitHtml()}</div><h3 style="margin-top:0.6rem;">📌 Fortschritt</h3><div class="progress-dots-sidebar">${dotsHtml}</div></div></div>`;
     
     const sidebarCol = document.querySelector('.sidebar-column');
     // Siehe pruefungStreng(): im Simulator bleibt die Spalte leer.
@@ -19816,6 +21154,77 @@ function updateSidebarOnly(){
         sidebarCol.style.display = streng ? 'none' : '';
         try{ if(!streng) ResizeObserver_instance?.observe?.(sidebarCol); }catch(e){}
     }
+}
+
+// ================================================================
+//  DIE UEBUNGSZEIT, SICHTBAR
+//  ----------------------------------------------------------------
+//  Die Zahlen kommen aus der stillen Messung weiter oben. Hier werden
+//  sie nur noch in Worte gefasst.
+//
+//  Vor der ersten Uebung steht die Zeile NICHT da - eine Kachel mit
+//  "0 s" waere kein Ansporn, sondern ein Vorwurf. Sie erscheint mit
+//  der ersten gemessenen Minute von selbst.
+// ================================================================
+function uebungszeitHtml(){
+    try{
+        const woche = zeitDieseWoche(), vor = zeitVorwoche(), heute = zeitHeute();
+        if(!woche && !vor) return '';
+
+        // Der Vergleich zur Vorwoche. Erst ab fuenf Minuten Unterschied -
+        // darunter ist es Rauschen und ein Pfeil waere gelogen.
+        let vergleich = '';
+        if(vor > 0)        vergleich = 'Vorwoche ' + zeitText(vor);
+        else if(woche > 0) vergleich = 'erste Woche';
+
+        // Die Gesamtzeit als zweite Zeile. Sie steht bewusst KLEINER als
+        // die Wochenzeit: Beim Lernen zaehlt, was man diese Woche tut -
+        // die Gesamtsumme ist der Blick zurueck, nicht der Antrieb.
+        // Und sie steht nie ohne ihren Zeitraum da, sonst waere "14 h"
+        // eine Zahl ohne Aussage: ueber zwei Wochen ist das viel, ueber
+        // ein halbes Jahr wenig.
+        const g = zeitGesamtDaten();
+        let gesamtZeile = '';
+        if(g.summe > 0){
+            gesamtZeile = '<div class="zeit-gesamt">'
+                        +   'Insgesamt <b>' + zeitText(g.summe) + '</b> '
+                        +   '<span style="opacity:.85">&middot; an ' + g.tage + ' Tag'
+                        +   (g.tage === 1 ? '' : 'en') + '</span>'
+                        + '</div>';
+        }
+
+        // Heute und Vorwoche stehen als ein Satz unter der grossen Zahl.
+        // Der Mittelpunkt ist die Stelle, an der die Zeile umbrechen
+        // darf, ohne dass es nach Unfall aussieht.
+        const neben = [];
+        if(heute) neben.push('heute ' + zeitText(heute));
+        if(vergleich) neben.push(vergleich);
+
+        return '<div class="uebungszeit" id="uebungszeitZeile" title="Gezählt wird nur, solange wirklich geübt wird: nach 90 Sekunden ohne Klick oder Tastendruck hält die Uhr an.">'
+             +   '<div class="zeit-kopf">'
+             +     '<span class="zeit-titel">⏱ Diese Woche</span>'
+             // Eine fette "0 s" waere genau der Vorwurf, den diese Kachel
+             // nicht machen soll. Wer diese Woche noch nicht dran war,
+             // liest lieber "noch nichts" - das ist dieselbe Auskunft
+             // ohne den erhobenen Zeigefinger.
+             +     '<span class="zeit-wert">' + (woche > 0 ? zeitText(woche) : 'noch nichts') + '</span>'
+             +     (neben.length ? '<span class="zeit-neben">' + neben.join(' &middot; ') + '</span>' : '')
+             +   '</div>'
+             +   gesamtZeile
+             + '</div>';
+    }catch(e){ return ''; }
+}
+
+// Waehrend einer Runde laeuft die Uhr weiter - die Zahl in der
+// Seitenleiste soll das mitmachen, ohne dass die ganze Seite neu
+// gezeichnet wird. Deshalb nur diese eine Kiste tauschen.
+function uebungszeitAnzeigeNachziehen(){
+    try{
+        const halter = document.getElementById('uebungszeitHalter');
+        if(!halter) return;                    // Seitenleiste gerade nicht da
+        const neu = uebungszeitHtml();
+        if(halter.innerHTML !== neu) halter.innerHTML = neu;
+    }catch(e){}
 }
 
 function renderQuestion() {
@@ -19832,6 +21241,9 @@ function renderQuestion() {
         renderFinishScreen();
         return;
     }
+
+    // Stille Messung: wie lange steht diese Frage schon auf dem Schirm?
+    try{ frageZeitStarten(currentQuestions[currentIndex].id); }catch(e){}
 
     const isTrainerViewActive = !!(window.trainerViewUserId && window.duoTrainerData && window.isHostTrainer && window.trainerModeEnabled);
     let trainerViewStats = null;
@@ -20005,12 +21417,49 @@ function renderQuestion() {
 
     const hasImages = q.options.some(opt => opt.image && String(opt.image).trim() !== '');
 
-    if (!hasImages) {
-        const svgHtml = getSvgHtml(q.id);
-        if (svgHtml) {
-            html += `<div class="q-image">${svgHtml}</div>`;
-        }
-    }
+    // ================================================================
+    //  DAS BILD ZUR FRAGE - AUCH WENN DIE ANTWORTEN BILDER HABEN
+    // ----------------------------------------------------------------
+    //  Dietmar am 10.09.2026 mit der Katalogseite zu AB406 und AB407:
+    //  "Bei der Frage AB406 kommt in der Frage ein Bild vor. Das fehlt
+    //  und auch bei vielen anderen Fragen bei E nach A."
+    //
+    //  Hier stand: if (!hasImages) - das Bild zur Frage wurde also
+    //  unterdrueckt, sobald die Antworten Bilder hatten. Gemeint war
+    //  damit, dieselbe Zeichnung nicht zweimal zu zeigen; getroffen hat
+    //  es aber auch die Faelle, in denen Frage und Antworten
+    //  verschiedene Bilder haben.
+    //
+    //  Und dann fehlt nicht irgendein Beiwerk, sondern die Frage selbst:
+    //  Bei AB406 steht dort das Frequenzspektrum, zu dem das passende
+    //  Signal gesucht wird. Ohne dieses Bild ist die Frage
+    //  unbeantwortbar - man sieht vier Kurven und keinen Anhaltspunkt.
+    //
+    //  ALLE SECHS KATALOGE DURCHGEZAEHLT:
+    //
+    //      Klasse N     3 Fragen betroffen  (NE206-208)
+    //      N auf E      1                   (ED304)
+    //      E auf A     14                   (AB404-407, AC405/406,
+    //                                        AD308/406/408/502,
+    //                                        AF626-629)
+    //      Klasse E     4
+    //      Klasse A    18
+    //      N auf A     15
+    //
+    //      18 verschiedene Fragen insgesamt.
+    //
+    //  Sechs weitere Fragen (NB401, NB702, NB703, NC404, NI103, NI104)
+    //  sehen aehnlich aus, sind aber etwas anderes: Dort gibt es KEIN
+    //  eigenes <ID>_q.svg, und die Datei <ID>.svg ist zugleich eines der
+    //  Antwortbilder. Bei ihnen muss es weiter beim einen Bild bleiben -
+    //  darum kuemmert sich getSvgHtml() ueber die Ausschlussliste.
+    // ================================================================
+    const schonGezeigt = q.options
+        .map(opt => (opt.image ? String(opt.image).trim() : ''))
+        .filter(Boolean);
+    const svgHtml = getSvgHtml(q.id, schonGezeigt);
+    // Eingebaut wird es weiter unten, IN den Kasten mit der Frage - siehe
+    // dort. Hier steht nur die Entscheidung, ob es eines gibt.
 
     html += `<div class="q-text-row">
         <div class="q-kopfzeile">
@@ -20038,6 +21487,7 @@ function renderQuestion() {
         </div>
         </div>
         <div class="q-text">${q.text}</div>
+        ${svgHtml ? `<div class="q-image${hasImages ? ' zur-frage' : ''}">${svgHtml}</div>` : ''}
     </div>`;
 
     const optionsClass = hasImages ? 'options-grid' : 'options';
@@ -20096,7 +21546,9 @@ function renderQuestion() {
         // Anklicken. role, tabindex und aria-label aendern optisch NICHTS -
         // der Fokusrahmen erscheint nur, wenn wirklich jemand Tab drueckt.
         // Deshalb sind sie immer an und haengen nicht am Schalter.
-        const ansage = 'Antwort ' + (i + 1) + ': ' + (opt.text || 'Bild ' + labels[i]);
+        // "Bild A" sagt einem Vorleseprogramm nichts, was der Buchstabe
+        // nicht schon sagt - siehe vorleseFrage().
+        const ansage = 'Antwort ' + labels[i] + (opt.text ? ': ' + opt.text : '');
         const gesperrt = answered ? ' aria-disabled="true"' : '';
         html += `<div class="${cls}" data-optindex="${i}" onclick="selectOption(${i})"
              role="button" tabindex="0"${gesperrt} aria-label="${String(ansage).replace(/"/g,'&quot;')}"
@@ -20143,6 +21595,27 @@ function renderQuestion() {
     }
 
     // ================================================================
+    // ================================================================
+    //  WORAN ES LAG: DER VORSATZ
+    // ================================================================
+    //  Nur bei einer falsch beantworteten Frage, nur wenn die gewaehlte
+    //  Antwort dieselbe Ziffernfolge traegt wie die richtige. Im ganzen
+    //  Katalog trifft das auf elf Fragen zu - aber dort ist es der
+    //  nuetzlichste Satz, den der Trainer sagen kann, und er kommt im
+    //  Augenblick des Fehlers statt zwei Wochen spaeter in einer
+    //  Statistik.
+    if (answered && q.userAnswerIndex != null) {
+        const vf = (typeof vorsatzFalle === 'function') ? vorsatzFalle(q, q.userAnswerIndex) : null;
+        if (vf) {
+            html += `<div class="vorsatz-hinweis">
+                <span class="vh-kopf"><i class="fas fa-triangle-exclamation"></i> Die Zahl stimmt, der Vorsatz nicht</span>
+                Du hast <b>${attrText(vf.gewaehlt)}</b> gewählt, richtig ist <b>${attrText(vf.richtig)}</b> —
+                dieselbe Zahl, ein anderer Vorsatz.
+                ${vorsatzSatz(vf)} macht die Antwort ${faktorText(vf.faktor)}.
+            </div>`;
+        }
+    }
+
     //  DAZU LERNEN - Videolehrgang und 50 Ohm
     // ================================================================
     //  Zwei Quellen, dieselbe Bauart: eine Zuordnung Frage -> Material.
@@ -20270,6 +21743,20 @@ function renderQuestion() {
     // hineinpasst. Vor updateVisibility waere die linke Spalte noch nicht
     // entschieden und die Messung falsch.
     try{ fragenGroesseAnpassen(); }catch(e){}
+    // Danach die Bilder: Die Schriftgroesse steht jetzt fest, also auch
+    // der Platz, der fuer die Bilder uebrig bleibt.
+    try{ bilderGroesseAnpassen(); }catch(e){}
+    // UND DANACH NOCH EINMAL. Beim ersten Durchgang sind die SVG-Dateien
+    // oft noch nicht geladen: naturalWidth ist dann 0, das Seitenverhaeltnis
+    // geschaetzt und die Rechnung entsprechend daneben. Sobald die Bilder
+    // stehen, wird nachgerechnet - das kostet nichts und ist der
+    // Unterschied zwischen "passt" und "Knopfleiste weg".
+    try{ bilderNachziehen(); }catch(e){}
+    // Und im Hintergrund schon die Bilder der naechsten Frage holen -
+    // siehe naechsteBilderHolen(). Erst nach kurzer Ruhe, damit das
+    // Laden der aktuellen Frage Vorrang behaelt.
+    clearTimeout(naechsteBilderHolen._t);
+    naechsteBilderHolen._t = setTimeout(naechsteBilderHolen, 350);
     if (!answered) maybeAutoReadQuestion();
 
     // ================================================================
@@ -20369,6 +21856,11 @@ function selectOption(optIndex) {
             }
         }
     } catch (e) { console.debug('Ansage:', e.message); }
+
+    // Die stille Messung. Sie steht VOR der Fehlerliste, weil sie mehr
+    // weiss als diese: nicht nur DASS es falsch war, sondern WELCHE
+    // Antwort es war und wie lange es gedauert hat.
+    try{ diagnoseNotieren(q, optIndex, isCorrect); }catch(e){}
 
     if (!isCorrect) {
         if (!errorList.includes(qId)) errorList.push(qId);
@@ -22295,6 +23787,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshUserLabels();
         loadFavorites();
         loadNotizen();
+        messungLaden();
     }catch(e){}
 
     // ===== NEU: Erst aus Datei laden (Server), dann lokale Daten laden =====
@@ -22332,6 +23825,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     try{ lebenszeichenStarten(); }catch(e){}
+    // Die stille Messung. Ab hier laeuft die Uhr - aber nur, solange
+    // wirklich geuebt wird (siehe uebtGerade()).
+    try{ messungLaden(); }catch(e){}
+    try{ uhrStarten(); }catch(e){}
     loadLearnParts();
     lernFilterWiederherstellen();
     updateMasteryDisplay();
@@ -24593,8 +26090,64 @@ if (originalSelectOption) {
         return;
     }
 
-    var h = qa.offsetHeight;
-    if(!h || h < 50) return;
+    // ================================================================
+    //  ERST WEGNEHMEN, DANN MESSEN
+    // ----------------------------------------------------------------
+    //  Hier lag der eigentliche Fehler, und es ist genau derselbe, der
+    //  bei verlaufHoeheAngleichen() schon einmal steckte - dort steht er
+    //  seit dem 05.09.2026 als Warnung im Kommentar.
+    //
+    //  Spalte und Frage stehen nebeneinander in einem Flex-Kasten, und
+    //  darin wird die kuerzere auf die Hoehe der laengeren GEZOGEN. Ist
+    //  die Spalte zu lang, misst diese Funktion an der Frage also nicht
+    //  deren Inhalt, sondern die zu grosse Hoehe, die die Spalte selbst
+    //  erzeugt. Der falsche Wert bestaetigt sich bei jeder Messung aufs
+    //  Neue.
+    //
+    //  GEMESSEN, Runde ueber alle 716 Fragen, Fenster 590 Pixel:
+    //
+    //      3189 ms   Frage 3084 px   Spalte 3100 px   Seite 2207 px
+    //      3200 ms   Frage 3036 px   Spalte 3052 px   Seite 2176 px
+    //      3210 ms   Frage 2972 px   Spalte 2988 px   Seite 2134 px
+    //        ... 75 Bildaufbauten lang, je 32 Pixel ...
+    //      4423 ms   Frage  596 px   Spalte  596 px   Seite  590 px
+    //
+    //  Jede Messung nahm der Spalte genau eine Kaestchenzeile ab, der
+    //  Beobachter loeste die naechste aus, und so kroch die Seite ueber
+    //  1,2 Sekunden nach oben. Das ist das Strecken.
+    //
+    //  Die Abhilfe ist dieselbe wie damals: Fuer den Moment der Messung
+    //  werden die gesetzten Hoehen weggenommen. Dann streckt die Spalte
+    //  nichts mehr, die Frage faellt auf ihre eigene Hoehe zurueck, und
+    //  die wird gelesen. Gezeichnet wird dazwischen nichts - beides
+    //  passiert im selben Durchgang, der Bildschirm sieht nur das
+    //  Ergebnis. Aus 75 Schritten wird einer.
+    //
+    //  Der Waechter verhindert, dass der ResizeObserver die Funktion
+    //  waehrend ihrer eigenen Messung noch einmal startet - er meldet
+    //  sich ja gerade wegen der Aenderung, die sie selbst vornimmt.
+    // ================================================================
+    if(sync._laeuft) return;
+    sync._laeuft = true;
+    var h;
+    try {
+        [col, tab, wrapper, sidebar].forEach(function(el){
+            if(!el) return;
+            el.style.height = '0px'; el.style.minHeight = '0px'; el.style.maxHeight = '0px';
+        });
+        h = qa.offsetHeight;          // dieses Lesen erzwingt die Neuberechnung
+    } finally {
+        sync._laeuft = false;
+    }
+    if(!h || h < 50){
+        // Nichts Brauchbares gemessen - dann auch nichts stehen lassen,
+        // sonst blieben die drei Nullen von eben die neue Hoehe.
+        [col, tab, wrapper, sidebar].forEach(function(el){
+            if(!el) return;
+            el.style.height = ''; el.style.minHeight = ''; el.style.maxHeight = '';
+        });
+        return;
+    }
     var zu = !!(wrapper && wrapper.classList.contains('collapsed'));
 
     // Die Spalte und der Knopf werden IMMER auf Fragenhoehe gebracht -
@@ -26882,6 +28435,381 @@ function statistikOeffnen() {
 }
 window.statistikOeffnen = statistikOeffnen;
 
+// ================================================================
+//  WAS DIE GESAMMELTEN ANTWORTEN VERRATEN
+//  ----------------------------------------------------------------
+//  Seit 1.238.0 schreibt der Trainer mit, WELCHE falsche Antwort
+//  angeklickt wurde und wie lange die Frage gedauert hat. Hier wird
+//  daraus etwas, das man lesen kann.
+//
+//  VORHER GERECHNET, statt drauflos zu bauen. Die urspruengliche Idee
+//  war: "Wer 0,2 Ohm statt 200 Ohm waehlt, hat den Vorsatz verrechnet."
+//  Der Fragenkatalog sagt dazu etwas Unbequemes - ausgezaehlt am
+//  10.09.2026 ueber alle 571 Fragen:
+//
+//      44 Fragen haben ueberhaupt Zahlenantworten (8 Prozent)
+//      42 Faelle, wo eine falsche Antwort eine Zehnerpotenz der
+//         richtigen ist - aber davon sind die meisten VORSCHRIFTEN
+//         (750 statt 75 W PEP), und da ist nichts verrechnet, da ist
+//         schlicht die falsche Zahl gelernt
+//      19 echte Vorsatzfallen in nur 11 Fragen: gleiche Ziffernfolge,
+//         anderer Vorsatz - 4200 mV gegen 4200 kV gegen 4200 MV
+//
+//  Daraus folgen zwei Dinge:
+//
+//  1. Die Vorsatz-Erkennung ist praezise, aber SCHMAL. Als Statistik
+//     ueber elf Fragen taugt sie nichts. Als Hinweis im Augenblick des
+//     Fehlers taugt sie sehr viel - deshalb steht sie an der Frage und
+//     nicht in der Auswertung.
+//
+//  2. Der tragende Befund ist ein anderer, und er wirkt bei ALLEN 571
+//     Fragen: WELCHE falsche Antwort immer wieder gewaehlt wird.
+//     Dreimal dieselbe falsche Antwort ist etwas anderes als dreimal
+//     eine andere - das erste ist ein Irrtum, der festsitzt, das
+//     zweite ist Raten.
+// ================================================================
+
+// --- Zahl und Vorsatz aus einem Antworttext ----------------------
+const VORSATZ_WERT = { p:1e-12, n:1e-9, 'µ':1e-6, u:1e-6, m:1e-3, c:1e-2, d:1e-1,
+                       '':1, k:1e3, M:1e6, G:1e9, T:1e12 };
+const VORSATZ_NAME = { p:'Piko', n:'Nano', 'µ':'Mikro', u:'Mikro', m:'Milli', c:'Zenti',
+                       d:'Dezi', '':'', k:'Kilo', M:'Mega', G:'Giga', T:'Tera' };
+
+function zahlZerlegen(text){
+    const m = String(text || '').match(/^\s*([+-]?\d+(?:[.,]\d+)?)\s*([pnµumcdkMGT]?)\s*(Ω|V|A|W|Hz|F|H|dB|s|m|B)\b/);
+    if(!m) return null;
+    // Deutsches Komma: "4,200" sind vier Komma zwei, nicht
+    // viertausendzweihundert.
+    const wert = parseFloat(m[1].replace(',', '.'));
+    if(!isFinite(wert)) return null;
+    return { zahl: m[1], wert: wert, vorsatz: m[2] || '', einheit: m[3] };
+}
+
+// DIESELBE ZAHL, anderer Vorsatz - nur das ist eine Vorsatzfalle.
+//
+// Die erste Fassung verglich nur die ZIFFERNFOLGE, und das war zu
+// grosszuegig. Gemessen an NA208: "4,200 µV" und "4200 mV" haben
+// dieselben Ziffern, sind aber 4,2 und 4200 - der Trainer meldete
+// "tausendmal zu klein", richtig war eine Million. Noch schlimmer bei
+// BE402, wo 600 kHz und 7,6 MHz als Vorsatzfehler durchgegangen
+// waeren, obwohl das schlicht zwei verschiedene Frequenzen sind.
+//
+// Mit dem strengen Vergleich bleiben im ganzen Katalog 10 Faelle in
+// 7 Fragen - und bei jedem einzelnen stimmt der Satz "die Zahl stimmt,
+// der Vorsatz nicht" wirklich:
+//
+//     4200 mV <-> 4200 kV / 4200 MV        1000 mW <-> 1000 p/µ/nW
+//     10 mW <-> 10 µW                      144 MHz <-> 144 kHz
+//     9,000 V <-> 9,000 kV                 2,7 kΩ <-> 2,7 MΩ
+//     4,7 kΩ <-> 4,7 MΩ
+//
+// Wenig - aber lieber siebenmal etwas Richtiges sagen als zwanzigmal
+// etwas Ungefaehres.
+function vorsatzFalle(q, gewaehlt){
+    try{
+        if(!q || !q.options || gewaehlt == null) return null;
+        const ri = q.options.findIndex(o => o && o.correct);
+        if(ri < 0 || ri === gewaehlt) return null;
+        const r = zahlZerlegen(q.options[ri].text);
+        const f = zahlZerlegen(q.options[gewaehlt].text);
+        if(!r || !f) return null;
+        if(r.einheit !== f.einheit) return null;
+        if(Math.abs(r.wert - f.wert) > 1e-9) return null;   // andere Zahl -> kein Vorsatzfehler
+        if(r.vorsatz === f.vorsatz) return null;
+        const faktor = (VORSATZ_WERT[r.vorsatz] || 1) / (VORSATZ_WERT[f.vorsatz] || 1);
+        return {
+            richtig: q.options[ri].text,
+            gewaehlt: q.options[gewaehlt].text,
+            vonName: VORSATZ_NAME[f.vorsatz] || '',
+            zuName:  VORSATZ_NAME[r.vorsatz] || '',
+            faktor: faktor
+        };
+    }catch(e){ return null; }
+}
+
+// Der Satz dazu. Ein fehlender Vorsatz ist auch einer - "9,000 V"
+// gegen "9,000 kV" ist genau dieser Fall, und "Kilo statt " waere
+// ein halber Satz.
+function vorsatzSatz(vf){
+    if(vf.vonName && vf.zuName) return '<b>' + vf.vonName + '</b> statt <b>' + vf.zuName + '</b>';
+    if(vf.vonName)              return 'Das <b>' + vf.vonName + '</b>, wo keines hingehört,';
+    return 'Der fehlende Vorsatz';
+}
+
+// "1000000" wird zu "eine Million" - eine Zahl mit sechs Nullen liest
+// niemand als Groessenordnung.
+function faktorText(f){
+    const a = Math.abs(f), gr = a >= 1 ? a : 1 / a;
+    const wort = { 10:'zehnmal', 100:'hundertmal', 1000:'tausendmal',
+                   1000000:'eine Million mal', 1000000000:'eine Milliarde mal' };
+    const rund = Math.round(gr);
+    const w = wort[rund] || (rund.toLocaleString('de-DE') + '-mal');
+    return (a >= 1 ? (w + ' zu klein') : (w + ' zu groß'));
+}
+
+// --- Was in den gesammelten Antworten steht ----------------------
+const DIAG_MIN_FEST  = 2;    // zweimal dieselbe falsche Antwort
+const DIAG_MIN_RATEN = 3;    // dreimal daneben, jedesmal woanders
+const LANGSAM_MIN_S  = 25;   // darunter ist nichts "langsam"
+const LANGSAM_FAKTOR = 2;    // doppelt so lange wie sonst
+
+function diagnoseBefunde(){
+    const fest = [], raten = [], langsam = [], nachgeschlagen = [];
+    let nurNachgeschlagen = 0;
+    try{
+        const bank = (window.questionBank || []);
+        const nachId = {};
+        bank.forEach(q => { nachId[q.id] = q; });
+
+        // Der eigene Schnitt als Massstab: der Median ueber alle Fragen,
+        // fuer die es Zeiten gibt. Nicht der Mittelwert - eine einzige
+        // Frage, bei der jemand nebenbei telefoniert hat, wuerde ihn
+        // verschieben.
+        const alle = [];
+        Object.keys(diagnoseDaten).forEach(id => {
+            const e = diagnoseDaten[id];
+            if(e && e.t && e.t.length) alle.push(frageSchnitt(id));
+        });
+        alle.sort((a,b) => a - b);
+        const median = alle.length ? alle[Math.floor(alle.length / 2)] : 0;
+
+        Object.keys(diagnoseDaten).forEach(id => {
+            const e = diagnoseDaten[id], q = nachId[id];
+            if(!e || !q) return;
+
+            // 1) Derselbe Irrtum, immer wieder
+            if(e.f && e.f.length >= DIAG_MIN_FEST){
+                const letzte = e.f.slice(-3);
+                const einzig = new Set(letzte);
+                if(einzig.size === 1 && letzte.length >= DIAG_MIN_FEST){
+                    const idx = letzte[0];
+                    fest.push({ q: q, wie_oft: letzte.length, gewaehlt: idx,
+                                buchstabe: 'ABCD'[idx] || '?',
+                                text: (q.options[idx] || {}).text || '' });
+                } else if(e.f.length >= DIAG_MIN_RATEN && new Set(e.f).size >= 3){
+                    // 2) Jedesmal woanders danebengegriffen
+                    raten.push({ q: q, wie_oft: e.f.length, verschiedene: new Set(e.f).size });
+                }
+            }
+
+            // 3) Laenger gebraucht. NUR wenn die Frage sitzt - sonst ist
+            //    sie ein Stolperstein und steht schon oben.
+            //
+            //    UND HIER KOMMT DIE UNTERSCHEIDUNG, die Dietmar am
+            //    10.09.2026 eingefordert hat: Wer nachgeschlagen hat,
+            //    hat die laengere Zeit nicht vertroedelt, sondern
+            //    gearbeitet - und zwar genau so, wie es in der Pruefung
+            //    erlaubt ist. Das gehoert auf die andere Seite der
+            //    Rechnung.
+            const m = (typeof masteryData !== 'undefined') ? masteryData[id] : null;
+            const sitzt = m && (m.mastered || (m.streak || 0) >= 1);
+            const schnitt = frageSchnitt(id);
+            const lange = sitzt && schnitt >= LANGSAM_MIN_S && median > 0
+                       && schnitt >= median * LANGSAM_FAKTOR && e.t && e.t.length >= 2;
+            if(lange){
+                if(hatNachgeschlagen(id)){
+                    nachgeschlagen.push({ q: q, schnitt: schnitt,
+                                          fb: (e.fb || 0), tr: (e.tr || 0) });
+                } else {
+                    langsam.push({ q: q, schnitt: schnitt, messungen: e.t.length });
+                }
+            } else if(hatNachgeschlagen(id)){
+                // Auch ohne Zeitauffaelligkeit: Nachgeschlagen ist
+                // nachgeschlagen, und die Summe darueber ist die
+                // eigentliche gute Nachricht.
+                nurNachgeschlagen++;
+            }
+        });
+
+        fest.sort((a,b) => b.wie_oft - a.wie_oft);
+        raten.sort((a,b) => b.wie_oft - a.wie_oft);
+        langsam.sort((a,b) => b.schnitt - a.schnitt);
+        nachgeschlagen.sort((a,b) => b.schnitt - a.schnitt);
+        return { fest: fest, raten: raten, langsam: langsam,
+                 nachgeschlagen: nachgeschlagen,
+                 hilfsmittelGesamt: nachgeschlagen.length + nurNachgeschlagen,
+                 median: median, gemessen: alle.length };
+    }catch(e){
+        console.debug('Diagnose:', e.message);
+        return { fest: [], raten: [], langsam: [], nachgeschlagen: [],
+                 hilfsmittelGesamt: 0, median: 0, gemessen: 0 };
+    }
+}
+
+// ================================================================
+//  WORAN ES LIEGT - DIE DREI BEFUNDE IN DER AUSWERTUNG
+//  ----------------------------------------------------------------
+//  Die Stolpersteine darueber sagen, WELCHE Fragen danebengehen.
+//  Hier steht, WAS dabei passiert - und das sind drei verschiedene
+//  Dinge, die man verschieden angehen muss:
+//
+//    Immer dieselbe falsche Antwort -> ein Irrtum, der festsitzt.
+//        Hier hilft kein Wiederholen, hier muss man einmal nachlesen,
+//        warum die andere Antwort richtig ist.
+//
+//    Jedesmal eine andere -> geraten. Die Frage ist noch gar nicht
+//        angekommen; sie gehoert an den Anfang, nicht in die
+//        Wiederholung.
+//
+//    Richtig, aber langsam -> sitzt, aber nicht sicher. In der
+//        Pruefung ist das ein Risiko, auch wenn die Statistik gruen
+//        aussieht.
+//
+//  Steht nichts drin, steht der ganze Abschnitt nicht da.
+// ================================================================
+function befundeHtml(){
+    try{
+        const b = diagnoseBefunde();
+        const esc = s2 => (window.escapeHtml ? window.escapeHtml(s2) : String(s2 == null ? '' : s2));
+        if(!b.fest.length && !b.raten.length && !b.langsam.length && !b.hilfsmittelGesamt){
+            // Vor den ersten Antworten waere ein leerer Kasten nur eine
+            // Verheissung. Wenn schon gemessen wurde und trotzdem nichts
+            // auffaellt, ist DAS die Nachricht.
+            if(b.gemessen >= 15){
+                return '<div class="befund"><h4>Woran es liegt</h4>'
+                     + '<div class="b-was">Nichts Auffälliges: keine Frage, bei der du immer '
+                     + 'dieselbe falsche Antwort wählst, und keine, für die du auffällig lange brauchst.</div></div>';
+
+            }
+            return '';
+        }
+
+        // Steht nur Gutes drin, passt "woran es liegt" nicht - es liegt
+        // ja an nichts. Dann sagt die Zeile das auch.
+        const nurGutes = !b.fest.length && !b.raten.length && !b.langsam.length;
+        let h = '<div class="befund"><h4>Woran es liegt</h4>'
+              + '<div class="b-was">' + (nurGutes
+                  ? 'Nichts, was dagegen spricht &ndash; und eine Gewohnheit, die für dich spricht:'
+                  : 'Nicht <i>welche</i> Fragen danebengehen &ndash; das steht oben. '
+                    + 'Sondern <i>was</i> dabei passiert.') + '</div>';
+
+        b.fest.slice(0, 5).forEach(x => {
+            h += '<div class="befund-zeile">'
+               +   '<span class="b-marke fest">' + x.wie_oft + '× dieselbe</span>'
+               +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
+               // NICHT kuerzen. Am 09.09.2026 stand hier bei den Stolper-
+               // steinen dasselbe Problem: "Hier werden die Fragen
+               // abgeschnitten. Nach Klasse, ist der Text nur noch Klas."
+               // Ein Satz, der mitten im Wort endet, ist nicht kurz,
+               // sondern unlesbar - und die Antwort ist genau das, was
+               // man hier lesen will.
+               +     '<br><span class="b-was-gewaehlt">Du wählst hier immer <b>'
+               +     x.buchstabe + '</b>: ' + esc(x.text) + '</span></span>'
+               + '</div>';
+        });
+        b.raten.slice(0, 3).forEach(x => {
+            h += '<div class="befund-zeile">'
+               +   '<span class="b-marke raten">geraten</span>'
+               +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
+               +     '<br><span class="b-was-gewaehlt">' + x.wie_oft + '× daneben, '
+               +     x.verschiedene + '× eine andere Antwort &ndash; die Frage ist noch nicht angekommen.</span></span>'
+               + '</div>';
+        });
+        // DAS GUTE ZUERST unter den Zeitzeilen: Wer nachgeschlagen hat,
+        // hat gearbeitet. Gruen, nicht blau - das ist kein Befund, das
+        // ist eine Bestaetigung.
+        if(b.hilfsmittelGesamt){
+            h += '<div class="befund-zeile">'
+               +   '<span class="b-marke gut">' + b.hilfsmittelGesamt + '× nachgeschlagen</span>'
+               +   '<span class="b-mitte">Du hast bei ' + b.hilfsmittelGesamt + ' Frage'
+               +     (b.hilfsmittelGesamt === 1 ? '' : 'n') + ' das Formelblatt oder den Rechner geöffnet.'
+               +     '<br><span class="b-was-gewaehlt">Genau richtig: Beides liegt in der Prüfung '
+               +     'auf dem Tisch. Nachschlagen ist geübte Prüfungstechnik, kein Umweg.</span></span>'
+               + '</div>';
+        }
+        b.nachgeschlagen.slice(0, 3).forEach(x => {
+            h += '<div class="befund-zeile">'
+               +   '<span class="b-marke gut">' + x.schnitt + ' s</span>'
+               +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
+               +     '<br><span class="b-was-gewaehlt">Hat länger gedauert &ndash; aber du hast '
+               +     'nachgeschlagen. Das ist die Zeit wert.</span></span>'
+               + '</div>';
+        });
+        b.langsam.slice(0, 5).forEach(x => {
+            h += '<div class="befund-zeile">'
+               +   '<span class="b-marke langsam">' + x.schnitt + ' s</span>'
+               +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
+               +     '<br><span class="b-was-gewaehlt">Richtig, aber gut doppelt so lange wie sonst '
+               +     '(dein Schnitt: ' + b.median + ' s) &ndash; ohne nachzuschlagen.</span></span>'
+               + '</div>';
+        });
+
+        if(b.langsam.length){
+            h += '<div style="margin-top:0.5rem; font-size:0.7rem; color:var(--muted);">'
+               + 'Länger brauchen ist kein Fehler, und nachschlagen erst recht nicht &ndash; '
+               + 'die Formelsammlung liegt in der Prüfung vor dir. Die Zeilen oben zeigen nur, '
+               + 'wo du ohne Hilfsmittel ins Grübeln kommst; dort lohnt ein Blick ins Formelblatt '
+               + 'vielleicht mehr als weiteres Nachdenken.</div>';
+        }
+        return h + '</div>';
+    }catch(e){ console.debug('Befunde:', e.message); return ''; }
+}
+
+// ================================================================
+//  UEBUNGSZEIT IN DER AUSWERTUNG - AUSFUEHRLICH
+//  ----------------------------------------------------------------
+//  In der Seitenleiste stehen zwei Zahlen, hier steht die Geschichte
+//  dazu: seit wann, an wie vielen Tagen, wie viel je Tag, und der
+//  Verlauf der letzten acht Wochen.
+//
+//  Der Verlauf ist der eigentliche Grund fuer diesen Kasten. Eine
+//  Gesamtzahl sagt nicht, ob man gerade nachlaesst - acht Saeulen
+//  nebeneinander sagen es auf einen Blick, und das ist die Frage, die
+//  vor einer Pruefung zaehlt.
+// ================================================================
+function uebungszeitAuswertungHtml(){
+    try{
+        const g = zeitGesamtDaten();
+        if(!g.summe) return '';
+
+        const wochen = zeitWochenReihe(8);
+        const gipfel = Math.max.apply(null, wochen.map(w => w.sek).concat([1]));
+
+        let saeulen = '', achse = '';
+        wochen.forEach((w, i) => {
+            const jetzt = (i === wochen.length - 1);
+            const anteil = Math.round((w.sek / gipfel) * 100);
+            const klasse = 'w-spalte' + (jetzt ? ' jetzt' : '') + (w.sek ? '' : ' leer');
+            const von = w.start.getDate() + '.' + (w.start.getMonth() + 1) + '.';
+            const hinweis = jetzt
+                ? ('Diese Woche, ab ' + von + ': ' + zeitText(w.sek) + ' — läuft noch')
+                : ('Woche ab ' + von + ': ' + (w.sek ? zeitText(w.sek) : 'nicht geübt'));
+            // Die Hoehe steht am Element und schlaegt damit jede Regel im
+            // Stilblatt - auch die, die der leeren Woche ihren 2-Pixel-
+            // Strich geben sollte. Deshalb wird sie HIER gesetzt, sonst
+            // waere eine Woche ohne Uebung schlicht unsichtbar statt
+            // erkennbar leer. (Gemessen: height:0% gewann gegen die Regel.)
+            const hoehe = w.sek ? (Math.max(anteil, 6) + '%') : '2px';
+            saeulen += '<div class="' + klasse + '" title="' + hinweis + '">'
+                     +   '<div class="w-saeule" style="height:' + hoehe + '"></div>'
+                     + '</div>';
+            // Nicht jede Saeule bekommt eine Beschriftung - bei acht
+            // Datumsangaben nebeneinander liest man keine einzige mehr.
+            achse += '<span>' + (jetzt ? 'jetzt' : (i === 0 ? von : '')) + '</span>';
+        });
+
+        return '<div style="margin-top:1.1rem;">'
+             +   '<h4 style="margin:0 0 0.1rem; font-size:0.85rem; color:var(--panel-navy);">Deine Übungszeit</h4>'
+             +   '<div style="font-size:0.72rem; color:var(--muted);">'
+             +     'Die letzten acht Wochen; die rechte läuft noch. Gezählt wird nur, solange '
+             +     'wirklich geübt wird &ndash; nach 90 Sekunden ohne Klick oder Tastendruck '
+             +     'hält die Uhr an.</div>'
+             +   '<div class="wochen-reihe">' + saeulen + '</div>'
+             +   '<div class="wochen-achse">' + achse + '</div>'
+             +   '<div class="zeit-kachel">'
+             +     '<div><div class="k-wert">' + zeitText(g.summe) + '</div>'
+             +       '<div class="k-name">insgesamt, seit ' + datumText(g.erster) + '</div></div>'
+             +     '<div><div class="k-wert">' + g.tage + '</div>'
+             +       '<div class="k-name">Tag' + (g.tage === 1 ? '' : 'e') + ' geübt</div></div>'
+             +     '<div><div class="k-wert">' + zeitText(g.schnitt) + '</div>'
+             +       '<div class="k-name">im Schnitt je Übungstag</div></div>'
+             +     '<div><div class="k-wert">' + zeitText(g.best) + '</div>'
+             +       '<div class="k-name">längster Tag: ' + datumText(g.bestTag) + '</div></div>'
+             +   '</div>'
+             + '</div>';
+    }catch(e){ console.debug('Übungszeit-Auswertung:', e.message); return ''; }
+}
+
 function statistikFuellen() {
     const ziel = document.getElementById('statistikInhalt');
     if (!ziel) return;
@@ -26957,6 +28885,9 @@ function statistikFuellen() {
     // hier raus und unter Einstellungen in einem extra Reiter." - Zu finden
     // ist es jetzt unter Einstellungen -> Merkblatt.
 
+    html += befundeHtml();
+    html += uebungszeitAuswertungHtml();
+
     const faellig = faelligeFragen().length;
     html += '<div style="margin-top:1rem; padding:8px 10px; border-radius:10px; background:#eef7f8; font-size:0.78rem;">' +
         '<b>Auffrischung:</b> ' + (faellig > 0
@@ -26975,6 +28906,31 @@ function statistikFuellen() {
     ziel.innerHTML = html;
     // Erst jetzt gibt es den Platzhalter im Baum - also jetzt fuellen.
     try{ if(typeof reifeAktualisieren === 'function') reifeAktualisieren(); }catch(e){}
+
+    // ================================================================
+    //  KEINE LEERE SPALTE
+    // ----------------------------------------------------------------
+    //  Dietmar am 10.09.2026 mit einem Bild der Auswertung im Katalog
+    //  E auf A: "Unter Statistik, fehlt die linke Seite komplett."
+    //
+    //  Sie fehlt nicht, sie ist leer - und das ist sogar richtig so: Die
+    //  Pruefungsreife haelt sich zurueck, solange kein Pruefungsteil
+    //  genug Antworten hat (siehe reifeAktualisieren). Im frisch
+    //  geoeffneten A-Katalog stehen 0 von 716, also schweigt sie.
+    //
+    //  Falsch war nur, dass die Spalte trotzdem ihren halben Platz
+    //  behielt. Uebrig blieb ein weisses Feld neben zusammengedraengtem
+    //  Text - das sieht nach Fehler aus, auch wenn keiner vorliegt.
+    //  Steht links nichts, nimmt die rechte Seite jetzt die volle Breite.
+    // ================================================================
+    try{
+        const spalten = ziel.querySelector('.stat-spalten');
+        const kasten  = document.getElementById('reifeKasten');
+        const leer = !kasten
+                  || kasten.style.display === 'none'
+                  || !kasten.innerHTML.trim();
+        if(spalten) spalten.classList.toggle('ohne-reife', leer);
+    }catch(e){}
 }
 
 // ---------------------------------------------------------------

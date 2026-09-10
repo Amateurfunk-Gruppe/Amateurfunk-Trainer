@@ -8,6 +8,843 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.249.0] - 2026-09-10
+
+### Geändert
+- **Das Bild zur Frage steht jetzt im Kasten der Frage.** Dietmar mit einem
+  Video: „Das das Fragebild oben so im leeren steht, sieht nicht schön aus.
+  Schöner wäre erst die Frage und darunter das Bild in dem grauen Rahmen mit
+  drin gefasst."
+
+  Er hat recht, und so war es nie gedacht: Das Bild stand seit jeher **vor**
+  dem Kasten mit Fragenummer und Text — ein Kästchen allein im Weißen, weit weg
+  von dem Satz, zu dem es gehört. Bei Fragen ohne Antwortbilder fiel das kaum
+  auf, weil gleich darunter die Antworten kamen. Seit 1.248.0 die 18 Fragen mit
+  **beiden** Bildern ihr Fragebild zurückbekommen haben, stand es dort oben
+  ganz allein.
+
+  Jetzt steht es im selben grauen Rahmen wie die Frage und unter ihrem Text —
+  in der Reihenfolge, in der man es liest: erst die Frage, dann das Bild dazu.
+  Genau so steht es auch auf dem Blatt der Bundesnetzagentur. Das gilt für alle
+  Fragen mit Bild, nicht nur die 18: Bei BE204 („…zeigt den dargestellten
+  Zeigerausschlag") steht das Instrument jetzt unter dem Satz statt darüber.
+
+- **Die Lupe vergrößert moderater.** Dietmar: „Ich habe den Nachteilsausgleich
+  komplett aus und die Vergrößerung ist extrem."
+
+  Das ist die andere Seite des Fehlers von 1.247.0. Dort war das Ziel zu klein
+  geworden, weil die Bilder gewachsen waren; der Zielfaktor von 2,2 hat es
+  überkorrigiert. Auf seinem Bild deckte das vergrößerte Antwortbild fast das
+  ganze Fenster zu — Frage und die Antworten A und B verschwanden darunter, und
+  man verliert den Zusammenhang, in dem das Bild steht.
+
+  Der Faktor ist jetzt 1,6, der Anteil am Fenster von 76 auf 62 Prozent
+  gesenkt. Ein Antwortbild wächst damit von 419 auf 670 Punkte statt auf 922 —
+  deutlich besser zu sehen, aber Frage und Nachbarbilder bleiben stehen. Für
+  die kleinen Bilder zur Frage ändert sich nichts: Bei ihnen greift die feste
+  Zielzahl, sie werden weiter gut dreifach vergrößert. Wer mehr braucht, hat
+  den Nachteilsausgleich.
+
+### Anmerkung
+- Auf einem sehr hohen Schirm (1920×1080, Anzeige 120 %) bleiben die
+  Antwortbilder bei diesen Fragen klein. Nachgemessen: Die Seite ist dort schon
+  bei kleinsten Bildern randvoll (genau 1080 Punkte), jede Vergrößerung bringt
+  sofort einen Rollbalken. Die Ursache ist die Mindesthöhe der Karte bei
+  vergrößerter Anzeige — sie nimmt das ganze Fenster ein, obwohl darunter noch
+  Knopfleiste und Fußzeile kommen. Das ist eine eigene Baustelle und steht auf
+  der Liste; hier wurde bewusst der ruhige Zustand ohne Rollbalken gewählt.
+
+---
+
+## [1.248.0] - 2026-09-10
+
+### Behoben
+- **Das Bild zur Frage fehlte bei 18 Fragen.** Dietmar mit der Katalogseite zu
+  AB406 und AB407: „Bei der Frage AB406 kommt in der Frage ein Bild vor. Das
+  fehlt und auch bei vielen anderen Fragen bei E nach A." Seine Fundliste:
+  AB405, AB406, AB407, AC405, AC406.
+
+  Im Code stand `if (!hasImages)` — das Bild zur Frage wurde also unterdrückt,
+  sobald die Antworten Bilder hatten. Gemeint war damit, dieselbe Zeichnung
+  nicht zweimal zu zeigen; getroffen hat es aber auch alle Fälle, in denen
+  Frage und Antworten **verschiedene** Bilder haben.
+
+  Und dann fehlt nicht Beiwerk, sondern die Frage selbst: Bei AB406 steht dort
+  das Frequenzspektrum, zu dem das passende Signal gesucht wird. Ohne dieses
+  Bild sieht man vier Kurven und hat keinen Anhaltspunkt — die Frage ist nicht
+  zu beantworten.
+
+  Alle sechs Kataloge durchgezählt:
+
+  | Katalog | betroffene Fragen |
+  |---|---|
+  | Klasse N | 3 — NE206, NE207, NE208 |
+  | N auf E | 1 — ED304 |
+  | **E auf A** | **14** — AB404–AB407, AC405, AC406, AD308, AD406, AD408, AD502, AF626–AF629 |
+  | Klasse E | 4 |
+  | Klasse A | 18 |
+  | N auf A | 15 |
+
+  **18 verschiedene Fragen insgesamt**, Dietmars fünf sind darunter.
+
+  Sechs weitere Fragen sehen ähnlich aus, sind aber etwas anderes: Bei NB401,
+  NB702, NB703, NC404, NI103 und NI104 gibt es kein eigenes `<ID>_q.svg`, und
+  die Datei `<ID>.svg` ist zugleich eines der Antwortbilder. Dort gibt es also
+  gar kein Bild zur Frage — was so aussah, war in Wahrheit die Antwort A. Bei
+  ihnen muss es beim einen Bild bleiben, und das tut es auch: Die Suche nach
+  dem Fragebild bekommt jetzt die Namen der Antwortbilder mit und streicht sie
+  aus ihrer Reihenfolge. Eine Prüfung nur des ersten Namens hätte diese Fälle
+  nicht erwischt — dort existiert `_q.svg` nicht, und der Rückfall wäre genau
+  auf das Antwortbild gelandet.
+
+- **Der Platz reicht jetzt für beide Bilder.** Als das Bild zur Frage wieder
+  erschien, war die Knopfleiste bei AB407 weg: Die Bildrechnung war schon
+  gelaufen, bevor das neue Bild seinen Platz einnahm. Sie wartet jetzt auch auf
+  dieses Bild.
+
+  Dabei kam ein zweiter, älterer Fehler ans Licht. Die Bremse maß nur, ob die
+  Knopfleiste noch im Fenster steht — bei AB407 endete sie auf **exakt** der
+  Fensterkante, was formal genügte, während die Seite 1023 statt 930 Punkte
+  hoch war. Unter der Leiste steht nämlich noch die Fußzeile, und die zählte
+  niemand mit.
+
+  Jetzt zählt beides, aber nicht blind. Nachgemessen, Bildhöhe Schritt für
+  Schritt durchprobiert:
+
+  | Fenster | bei 90 px | bei 150 px |
+  |---|---|---|
+  | 1440×930 | Seite 930 (passt) | Seite 930 (passt) |
+  | 1920×1080 | Seite 1099 (**+19**) | Seite 1243 |
+
+  Zwei verschiedene Lagen. Auf 1440×930 gibt es eine Bildhöhe, bei der die
+  Seite genau passt — dort ist der Überlauf das richtige Maß. Auf 1920×1080
+  läuft die Seite schon bei kleinsten Bildern über; das kommt von der
+  Mindesthöhe der Karte bei vergrößerter Anzeige und hat mit den Bildern nichts
+  zu tun. Wer dort trotzdem auf null Überlauf hinregelt, drückt die Bilder auf
+  das Minimum und behebt nichts — gemessen fielen sie von 224 auf 108 Punkte.
+  Dort zählt allein, was Dietmar ursprünglich beanstandet hatte: dass die
+  Knopfleiste ohne Scrollen erreichbar bleibt.
+
+  Ergebnis bei AB406 mit Bild zur Frage, Knopfleiste überall sichtbar:
+
+  | Fenster | Bildhöhe | Knopfleiste |
+  |---|---|---|
+  | 1440×930 | 135 px | 837 von 930 |
+  | 1920×1080 | 139 px | 1035 von 1080 |
+  | 1280×720 | 102 px | 709 von 720 |
+  | 1440×660 | 88 px | 651 von 660 |
+
+  Stehen beide Bilder da, bekommt das Bild zur Frage eine engere Höhengrenze
+  als allein: Man sieht es einmal an, verglichen werden müssen die vier
+  Antworten. Wer es größer braucht, fährt mit der Maus darüber — die Lupe von
+  1.247.0 zeigt es groß.
+
+---
+
+## [1.247.0] - 2026-09-10
+
+### Behoben
+- **Die Lupe vergrößert wieder von selbst.** Dietmar: „Mit dem Vergrössern der
+  Bilder stimmt was nicht bei e auf A AB406. Ich muss den Nachteilsausgleich
+  auf Maximum setzen, das sie schön vergrössern."
+
+  Das ist eine Folge der eigenen Verbesserung von 1.243.0 — eine Änderung, die
+  eine andere Stelle veralten ließ. Als die Zielgröße der Lupe festgelegt
+  wurde, waren die Antwortbilder 156 Punkte breit; 400 Punkte Ziel bedeuteten
+  damals Faktor 2,5. Seit die Bilder ihren Kasten ausfüllen, sind sie 419 bis
+  559 Punkte breit — das Ziel lag also **unter** der Ausgangsgröße.
+
+  Nachgemessen bei AB406, ohne Nachteilsausgleich:
+
+  | Fenster | Bild im Raster | Faktor | Ergebnis |
+  |---|---|---|---|
+  | 1440×930 | 419×138 | 0,96 | Lupe bleibt aus |
+  | 1920×1080 | 559×224 | 0,72 | Lupe bleibt aus |
+  | 1280×720 | 372×109 | 1,08 | Lupe bleibt aus |
+
+  Unter 1,15 unterbleibt die Vergrößerung — das ist richtig so, ein Bild um
+  vier Prozent aufzublasen wäre nur Unruhe. Falsch war das Ziel. Wer den
+  Nachteilsausgleich hochdreht, multipliziert es und kommt darüber: genau der
+  Umweg, den Dietmar beschreibt.
+
+  Zwei Änderungen:
+
+  **Das Ziel wächst mit dem Bild mit.** Es ist jetzt der größere Wert aus der
+  festen Zahl und dem 2,2-fachen der heutigen Bildgröße. Damit kann diese
+  Stelle nicht wieder veralten, wenn sich die Bilder im Raster ändern.
+
+  **Breite und Höhe bekommen eigene Anteile am Fenster.** Bisher galt eine Zahl
+  für beides. Ein Fenster ist aber breiter als hoch, und die Schaltbilder des
+  Katalogs sind sehr flach (Seitenverhältnis 0,37) — bei ihnen war die Breite
+  die Fessel, obwohl daneben reichlich Platz stand.
+
+  Ergebnis, wieder ohne Nachteilsausgleich: auf allen drei Fenstern **Faktor
+  2,2**. Auf 1440×930 wird aus dem Bild 419×138 eines von 938×320, mit 88
+  Punkten Rand rechts und 298 unten. Für die Fragebilder ändert sich nichts:
+  Sie sind weiter höchstens 260 Punkte hoch, dort greift die feste Zielzahl wie
+  bisher, nachgerechnet vorher wie nachher Faktor 2,55. Nur bei einem
+  ungewöhnlich großen Fragebild springt die Lupe künftig an, wo sie bisher
+  ausblieb.
+
+---
+
+## [1.246.0] - 2026-09-10
+
+### Behoben
+- **Das Strecken beim Laden einer Frage ist weg — diesmal wirklich.** Dietmar
+  hatte 1.245.0 geprüft und gemeldet: „Das strecken beim laden ist noch immer
+  vorhanden." Und mit dem Video, das er dazu geschickt hat, war es in ein paar
+  Minuten gefunden.
+
+  Er hat die Ursache dann selbst benannt, bevor ich die Messung fertig hatte:
+  „Hier fällt mir auf, das der Fortschritt das nach unten zieht und es über den
+  Code erst nach dem laden wieder angepasst wird." Genau so ist es.
+
+  Die Fortschrittsspalte zeigt jede Frage der Runde als Kästchen. Bei einer
+  Runde über alle 716 Fragen des Katalogs E auf A sind das 103 Zeilen, rund
+  1750 Pixel. Begrenzt hat sie bisher **nur** das Skript — und ein Skript läuft
+  erst *nach* dem ersten Bildaufbau.
+
+  Nachgemessen, Fenster 590 Pixel hoch:
+
+  | Zeitpunkt | Seitenhöhe |
+  |---|---|
+  | 3189 ms | **2207 px** |
+  | 3200 ms | 2176 px |
+  | 3210 ms | 2134 px |
+  | … 75 Bildaufbauten lang, je 32 px … | |
+  | 4423 ms | 590 px |
+
+  Über **1,2 Sekunden** kroch die Seite nach oben — man sieht sie
+  zusammenschnurren. Und der Grund für das langsame Kriechen war ein zweiter
+  Fehler, der schon einmal an anderer Stelle steckte: Spalte und Frage stehen
+  nebeneinander in einem Flex-Kasten, in dem die kürzere auf die Höhe der
+  längeren gezogen wird. Das Skript maß also an der Frage nicht deren Inhalt,
+  sondern die zu große Höhe, die die Spalte selbst erzeugte. Der falsche Wert
+  bestätigte sich bei jeder Messung neu; jeder Durchgang nahm der Spalte genau
+  eine Kästchenzeile ab, der Beobachter löste den nächsten aus. Bei der rechten
+  Verlaufsspalte steht die Warnung davor seit dem 05.09.2026 im Kommentar — an
+  dieser Stelle stand sie nicht.
+
+  Zwei Änderungen, beide nötig:
+
+  **Die Obergrenze steht jetzt im Stilblatt.** Sie gilt schon beim allerersten
+  Bildaufbau, ohne dass eine Zeile JavaScript gelaufen sein muss. Wie viel von
+  der Fensterhöhe abzuziehen ist, wurde gemessen statt geschätzt — der Rest für
+  Kopfzeile, Knopfleiste und Fußzeile war auf allen vier geprüften Fenstern
+  derselbe (260 bis 261 Punkte), weil sich die Anzeigegröße herausrechnet.
+  Abgezogen werden 320 Punkte, also knapp sechzig mehr: Ist die Grenze etwas zu
+  klein, ist die Spalte für einen Sechzigstelmoment kürzer als möglich und das
+  Skript zieht sie sofort nach — das sieht niemand, weil eine kürzere Spalte
+  die Seite nicht länger macht. Wäre sie zu groß, wäre die Seite genau um diese
+  Punkte zu lang, und das sieht man sofort.
+
+  **Das Skript misst richtig.** Für den Moment der Messung werden die gesetzten
+  Höhen weggenommen; dann streckt die Spalte nichts mehr und die Frage fällt
+  auf ihre eigene Höhe zurück. Gezeichnet wird dazwischen nichts — aus 75
+  Schritten wird einer.
+
+  Nachgemessen auf vier Fenstergrößen mit einer Runde über alle 716 Fragen:
+
+  | Fenster | vorher | jetzt |
+  |---|---|---|
+  | 1280×590 | 75 Bildaufbauten, bis +1617 px | **kein einziger** |
+  | 1280×686 | dasselbe Bild | **kein einziger** |
+  | 1440×930 | dasselbe Bild | **kein einziger** |
+  | 1920×1080 | dasselbe Bild | **kein einziger** |
+
+  Die Spalte hat am Ende exakt die Höhe der Frage daneben, rollt ihre Kästchen
+  wie bisher intern, und die Knopfleiste steht in jedem Fall im Fenster.
+
+---
+
+## [1.245.0] - 2026-09-10
+
+### Behoben
+- **Die Seite streckt sich beim Aufbauen nicht mehr nach unten.** Dietmar:
+  „Beim aufbauen einer Seite (das hatten wir auch schon davor) streckt sich
+  die Seite erst mal tief nach unten. Dieses Strecken, gefällt mir gar nicht.
+  Der Trainer soll eine Seite so laden, das man das strecken nicht mehr sieht."
+
+  Nachgemessen, Bild für Bild, bei AB406 auf 1440×930:
+
+  | Zeit | Karte | Rollbalken | Bildhöhe |
+  |------|-------|-----------|----------|
+  | 3112 ms | 710 px | nein | (die Frage steht noch nicht) |
+  | 3153 ms | **944 px** | **ja** | **230 px** |
+  | 3159 ms | 901 px | nein | 120 px |
+
+  Ein einziger Bildaufbau mit falscher Größe — das ist das Strecken. Die
+  Ursache stand in derselben Zeile: Zu diesem Zeitpunkt waren die SVG-Dateien
+  noch nicht geladen. Der Trainer hat mit einem **geschätzten**
+  Seitenverhältnis von 0,55 gerechnet; die vier Signalbilder haben aber 0,366.
+  Aus 419 Pixeln Kastenbreite wurden so 230 statt 153 Pixel Höhe, die Karte
+  wuchs über den Schirm hinaus, der Rollbalken erschien — und eine
+  Sechzigstelsekunde später nahm die Bremse alles wieder zurück.
+
+  Ein geschätztes Seitenverhältnis ist also keine Näherung, sondern eine
+  Fehlerquelle mit sichtbarer Folge. Jetzt wird gar nicht gerechnet, solange
+  ein Bild fehlt: Die Kästen bleiben bei ihrer Grundhöhe — klein, aber
+  richtig —, und sobald die Bilder da sind, steht die Größe. Die Seite wird
+  damit einmal größer und nie wieder kleiner.
+
+  Nachgemessen über 25 Fragen je Fenstergröße auf 1280×720, 1440×930 und
+  1920×1080: **keine einzige Ansicht wird zwischendurch höher als am Ende.**
+
+- **Bildantworten nutzen den Platz jetzt wirklich.** Dietmar: „Jetzt haben wir
+  wieder den Anfangszustand mit den Bilder."
+
+  Er hatte recht, und die Rechnung von 1.243.1 war schuld. Sie addierte den
+  Abstand zwischen Knopfleiste und Fensterkante (93 Pixel) und übersah dabei
+  einen Posten, den sie gar nicht kannte: Die Karte ist während einer Runde
+  auf Schirmhöhe gedehnt, und ihr Inhalt war **218 Pixel niedriger als das**.
+  Genau diese 218 Pixel sind Platz, den die Bilder haben dürfen, ohne dass
+  sich irgendetwas bewegt. Nachweisbar an einer einzigen Zahl: Die Knopfleiste
+  stand vor *und* nach dem Vergrößern bei 837 — sie hatte sich nicht um einen
+  Pixel bewegt.
+
+  Ein Posten mehr in der Formel hätte diesen einen Fall behoben und wäre beim
+  nächsten Umbau wieder falsch gewesen. Deshalb rechnet der Trainer jetzt
+  umgekehrt und ohne Formel: Erst wird die Höhe gesetzt, bei der das Bild
+  seine Kastenbreite gerade ausfüllt (größer wäre sinnlos — dann bliebe
+  seitlich Luft). Dann wird nachgesehen, ob die Knopfleiste noch im Fenster
+  steht. Steht sie, ist es fertig; steht sie nicht, geht es so weit zurück,
+  bis sie es tut. Gemessen wird damit nur noch, was man auch sieht.
+
+  | Fenster | vorher | jetzt |
+  |---------|--------|-------|
+  | 1440×930 | 120 px | **153 px** (Bild füllt die Breite) |
+  | 1920×1080 | 163 px | **188 px** |
+  | 1440×660 | 90 px | **127 px** |
+  | 1280×720 | 90 px | **136 px** |
+  | 1024×640 | 90 px | 90 px (dort passt die Knopfleiste schon ohne Bilder nicht) |
+
+### Hinzugefügt
+- **Der Trainer merkt sich die Seitenverhältnisse der Bilder.** Auch nachdem
+  das Überschießen behoben war, blieb ein Rest: Beim *ersten* Anzeigen einer
+  Bildfrage stehen die Kästen kurz auf ihrer Grundhöhe und wachsen dann.
+  Verhindern lässt sich das nur, wenn die Höhe schon feststeht, bevor die
+  Datei da ist — und dafür braucht es das Seitenverhältnis im Voraus.
+
+  Geraten wird es nicht mehr; genau das Raten war ja die Ursache des Fehlers
+  oben. Stattdessen hinterlässt jede Datei, die einmal geladen war, ihr
+  Verhältnis unter ihrem Namen. Beim zweiten Mal — und der Trainer zeigt
+  dieselben Fragen oft wieder — steht die Höhe sofort. Der Vorrat überlebt
+  auch den nächsten Start.
+
+  Nachgemessen, dieselbe Frage zweimal geöffnet: Beim zweiten Mal erscheint
+  sie **ohne jeden Zwischenschritt** in ihrer endgültigen Größe.
+
+- **Die Bilder der nächsten Frage werden im Hintergrund geholt.** Während eine
+  Frage auf dem Schirm steht, tut sich nichts — genug Zeit, die Dateien der
+  nächsten schon zu laden. Beim Weiterklicken steht die Höhe dann im selben
+  Augenblick fest, in dem die Frage erscheint. Es kostet nichts: Die Dateien
+  liegen im eigenen Ordner und wären ohnehin geladen worden, nur eben eine
+  Sekunde später und dann sichtbar.
+
+---
+
+## [1.244.0] - 2026-09-10
+
+### Geändert
+- **Beim Vorlesen fällt das Wort „Bild" weg.** Dietmar: „Beim vorlesen sagt es:
+  Antwort A Bild. Bild gehört da raus."
+
+  Er hat recht — das Wort beschreibt nichts, es füllt nur die Stelle, an der
+  bei einer Textantwort etwas Sinnvolles stünde. Wer nicht sieht, dem hilft es
+  nicht; wer sieht, weiß es ohnehin. Jetzt heißt es schlicht „Antwort A."
+  Dasselbe gilt für die Beschriftung, die Vorleseprogramme auslesen.
+
+- **Bildantworten bekommen eine Pause.** „…und es soll etwas langsamer
+  Vorlesen. Das geht derzeit noch sehr schnell bei Bildern."
+
+  Der eigentliche Punkt daran: Bei Textantworten bestimmt die Länge des Satzes
+  die Zeit zum Mitdenken. Bei vier Bildern sagt der Trainer viermal zwei Silben
+  und ist nach fünf Sekunden fertig — genau dann, wenn man am meisten Zeit
+  braucht, weil man vier Kurven vergleichen muss.
+
+  Deshalb **2,6 Sekunden Pause nach jeder Bildantwort**, in denen die Antwort
+  hervorgehoben stehen bleibt. Nicht langsamer sprechen — dabei klänge die
+  Stimme betrunken —, sondern schweigen und zeigen.
+
+### Behoben
+- **Die Bilder waren zu groß, die Knopfleiste nur noch durch Rollen
+  erreichbar.** Dietmar: „Tut mir Leid, es passt noch immer nicht."
+
+  Die Ursache lag nicht in der Rechnung, sondern im Zeitpunkt: Beim ersten
+  Durchgang sind die SVG-Dateien oft noch nicht geladen. `naturalWidth` ist
+  dann 0, das Seitenverhältnis wird geschätzt — und die Rechnung entsprechend
+  daneben. Jetzt wird nach dem Laden jedes Bildes nachgerechnet.
+
+  Gemessen an AB406 (E → A), Knopfleiste in **allen vier** geprüften Größen
+  sichtbar: 1440 × 930 → Leiste bei 837, 1440 × 660 → 581, 1920 × 1080 → 1011,
+  1280 × 720 → 637. Die Bilder bleiben dabei deutlich größer als vorher
+  (83 → 108 bis 194 Pixel).
+
+  Zwei Sonderfälle wurden dabei verworfen und stehen als Warnung im Code:
+  „wenn die Leiste ohnehin nicht passt, regle nach der Container-Lücke" ergab
+  riesige Bilder **und** Rollbalken; „dann gar nicht vergrößern" scheiterte an
+  drei Pixeln Messunterschied. Es bleibt bei einer Regel ohne Ausnahme: Es
+  wird nach der Knopfleiste geregelt, Untergrenze ist die Ausgangsgröße.
+
+- **In der Auswertung fehlte die linke Seite.** Dietmar mit einem Bild aus dem
+  Katalog E → A: „Unter Statistik, fehlt die linke Seite komplett."
+
+  Sie fehlte nicht, sie war leer — und das ist richtig so: Die Prüfungsreife
+  hält sich zurück, solange kein Prüfungsteil genug Antworten hat. Im frisch
+  geöffneten A-Katalog stehen 0 von 716, also schweigt sie. Falsch war nur,
+  dass die Spalte trotzdem ihren halben Platz behielt: ein weißes Feld neben
+  zusammengedrängtem Text. Steht links nichts, nimmt die rechte Seite jetzt
+  die volle Breite.
+
+## [1.243.1] - 2026-09-10
+
+### Behoben
+- **Die Bilder wurden zu groß — die Knopfleiste war nur noch durch Rollen
+  erreichbar.** Dietmar zu 1.243.0: „Jetzt ist es zu gross. Die Leiste mit den
+  Buttons sind nur über scrollen erreichbar."
+
+  Er hat den Finger auf das gelegt, was wirklich zählt. Die Bremse verglich
+  vorher mit dem Zustand *vor* der Vergrößerung — „nicht schlimmer als
+  vorher". Das ist kein Kriterium, das jemand merkt. Gemerkt wird, ob man den
+  Weiter-Knopf sieht. Genau danach entscheidet auch `fragenGroesseAnpassen()`
+  über die Schriftstufe; dieselbe Regel gilt jetzt für die Bilder.
+
+  Dazu mehr Reserve: 28 statt 14 Pixel Abstand zur Leiste und 90 statt 94
+  Prozent der errechneten Höhe.
+
+  Gemessen an AB406 (E → A) auf 1440 × 930: Bild **181 Pixel**, Knopfleiste
+  endet bei 837 von 930 — sichtbar, **kein Rollen**. Ebenso auf 1440 × 660
+  und 1280 × 720.
+
+- **Die Bremse erkennt jetzt unerreichbare Ziele.** Gemessen auf 1920 × 1080
+  bei einer Anzeigevergrößerung von 1,2: Die Knopfleiste endet 41 Pixel unter
+  der Fensterkante — auch bei kleinsten Bildern, auch bei gar keinen. Ohne
+  diese Prüfung drückte die Bremse die Bilder auf das Minimum, ohne irgendetwas
+  zu erreichen: klein *und* rollen. Jetzt wird bei Minimalgröße nachgesehen,
+  ob das Ziel überhaupt erreichbar ist; wenn nicht, regelt sie nach der Lücke
+  im Container. Gerollt werden muss ohnehin — dann sollen wenigstens die
+  Bilder etwas taugen.
+
+### Anmerkung zur Ursache
+Die Zeile `body.runde-laeuft .card { min-height: calc(100vh / var(--afu-zoom) - 2rem) }`
+liefert bei einer Anzeigevergrößerung von 1,2 eine Karte, die höher ist als
+das Fenster. Das trifft die Bildfragen am stärksten, gilt aber unabhängig von
+ihnen. Nicht angefasst — das gehört getrennt angesehen.
+
+## [1.243.0] - 2026-09-10
+
+### Geändert
+- **Bildantworten nutzen jetzt den Platz.** Dietmar mit einem Bild von AB406,
+  auf dem unter den vier Signalbildern die halbe Fläche leer stand: „Kann man
+  das so anpassen, das bei Bildern der Raum besser genutzt wird?"
+
+  Gemessen an NB703 auf 1400 × 900 ohne Videokachel: Das Schaltbild wächst von
+  **81 auf 159 Pixel** Höhe, die Kastenbreite wird von 156 auf **419 Pixel**
+  ausgenutzt. Die Bilder skalieren mit dem freien Platz und schrumpfen wieder,
+  wenn das Fenster kleiner wird.
+
+  **Die Ursache war eine andere als vermutet.** Im Stilblatt stand
+  `max-height: 100px` neben `width: auto` — das sieht nach einer Begrenzung
+  aus, war aber keine. Die SVG-Dateien des Katalogs sind winzig deklariert
+  (`NB703.svg` trägt `width="226.771"`) und haben **keine viewBox**. Ein
+  `<img>` ohne vorgegebene Breite wird nie größer als seine natürliche Größe.
+  Die 100 Pixel haben also nie etwas gedeckelt; das Bild war schlicht so
+  klein, wie die Datei es sagt.
+
+  Größere SVG-Dateien braucht es deshalb **nicht** — SVG ist Vektorgrafik,
+  dasselbe Bild auf 419 Pixel gezogen ist gestochen scharf.
+
+### Technik
+Die Rechnung hat vier Anläufe gebraucht, und jeder Irrweg steht als Kommentar
+im Code, damit ihn niemand wiederholt:
+
+1. `window.innerHeight − scrollHeight` als Maß für den freien Platz taugt
+   nicht: Die Karte trägt seit 1.224.0 eine `min-height` über den ganzen
+   Schirm, damit die Knopfleiste nicht springt. Der „Überschuss" war in jeder
+   Messung exakt null.
+2. `object-fit: contain` allein bringt nichts — mit zu kleiner Höhe passt es
+   den Inhalt ein und lässt seitlich Luft. Das Bild war 419 Pixel breit, die
+   Zeichnung darin weiter 164.
+3. Alle Nachfahren durchgehen und die tiefste Unterkante nehmen erwischt
+   `main-layout` und die anderen gedehnten Kästen. Wieder null.
+4. Den Ausgangszustand messen, während die Vergrößerung vom vorigen Aufruf
+   noch im Stilblatt steht: Dann vergleicht die Bremse mit ihrem eigenen
+   Ergebnis und findet alles in Ordnung.
+
+Was jetzt gerechnet wird: die Lücke zwischen dem letzten Element, das wirklich
+etwas anzeigt (über die Geschwisterkette gefunden), und dem Ende des
+Fragencontainers — begrenzt durch die ideale Höhe, bei der das Bild die
+Kastenbreite gerade ausfüllt. Grenzen 90 bis 300 Pixel, dazu 6 % Marge und
+eine Bremse, die zurückregelt, falls die Seite weiter überstehen würde als
+vorher.
+
+### Aufgefallen, nicht behoben
+- **Die `min-height` der Karte kann größer sein als das Fenster.** Gemessen
+  bei NB703 auf 1400 × 900: **968 Pixel bei 900 Pixel Fensterhöhe** — die
+  Seite rollt dort um 40 Pixel, ganz ohne Zutun der Bilder. Das ist ein
+  eigener Fehler in der Rechnung von `updateVisibility()` und sollte getrennt
+  angesehen werden.
+
+## [1.242.0] - 2026-09-10
+
+### Neu
+- **Der Formelblatt-Knopf macht auf sich aufmerksam.** Dietmar: „hier könnten
+  wir den Button Formelblatt bei den Fragen akustisch und Optisch zb durch
+  3 mal pulsen darauf aufmerksam machen. 45 oder 60 Minuten ist eine Menge
+  Zeit. wenn man diese Lernhilfe hat, sollten wir die Benutzer darauf
+  aufmerksam machen."
+
+  Sobald es zu einer Frage eine Stelle im Blatt gibt, pulst der Knopf
+  **dreimal** — je 0,62 Sekunden, mit einem orangen Schein am Rand. Dazu
+  **einmal je Sitzung** ein kurzer Zweiklang (880 Hz und 1318 Hz, zusammen
+  200 ms, halbe Lautstärke).
+
+  **Warum optisch immer, akustisch nur einmal.** Im Katalog E → A haben 224
+  Fragen eine Stelle im Blatt. Ein Ton bei jeder davon wäre nach zehn Minuten
+  unerträglich und würde als Erstes abgeschaltet — mitsamt dem optischen
+  Hinweis. Einmal hören, danach sehen: Das bleibt.
+
+  **Warum dreimal und nicht dauernd.** Eine Animation, die nicht aufhört,
+  liest sich nach der zehnten Frage als Fehler. Drei Schläge sagen „hier ist
+  etwas" und geben dann Ruhe. Beim Neuzeichnen derselben Frage pulst nichts
+  erneut; wer `prefers-reduced-motion` gesetzt hat, bekommt statt der
+  Bewegung einen stehenden Schein.
+
+  Der Ton wird selbst erzeugt statt als Datei mitgeliefert — eine MP3 dafür
+  wäre eine Datei mehr im Paket, im Update und im Setup.
+
+  Abschaltbar unter **Einstellungen → Vorlesen → Formelblatt**. Standard ist an.
+
+### Analyse
+- **`_Formelblatt-Analyse.md` neu geschrieben**, jetzt über alle drei Kataloge.
+  Das Ergebnis:
+
+  | Katalog | Fragen | im Blatt | nicht im Blatt |
+  |---|---:|---:|---:|
+  | Klasse N | 571 | 112 | 459 |
+  | Aufstieg N → E | 463 | 134 | 329 |
+  | Aufstieg E → A | 716 | 224 | 492 |
+  | **Summe** | **1750** | **470** | **1280** |
+
+  Je höher die Klasse, desto mehr trägt das Blatt: von 20 % über 29 % auf 31 %.
+  Mit der Klasse wächst der Anteil der Rechenaufgaben, und genau dafür ist die
+  Sammlung gemacht.
+
+- **Zwei Durchgänge waren nötig.** Der erste lief gegen ein zu grobes
+  Inhaltsverzeichnis, in dem Effektivwert, `T = 1/f`, die
+  Transformator-Übersetzung, `E = U/d`, der Widerstands-Farbcode und die
+  Zweierpotenz-Tabelle fehlten — alles Dinge, die im Blatt stehen. Für den
+  zweiten Durchgang wurden alle 22 Blätter als Bild gelesen und Formel für
+  Formel übertragen (der PDF-Text ist zeichenverschlüsselt).
+
+- **Eine Regel hatte ich falsch gefasst:** Fragen mit Schaltbild galten
+  zunächst pauschal als nicht lösbar. In der Prüfung liegt das Bild aber auf
+  dem Aufgabenblatt — eine Schaltung zu *berechnen* zählt daher als lösbar,
+  wenn die Formel im Blatt steht; ein Schaltzeichen zu *erkennen* nicht.
+  Diese Korrektur allein hob den Katalog N → E von 63 auf 97 lösbare Fragen
+  im ersten geprüften Block.
+
+### Geprüft
+- Frage mit Formelstelle: Knopf sichtbar, Animation `formel-puls`, 0,62 s,
+  drei Wiederholungen, Ton einmal.
+- Nach 2,6 s ist die Klasse wieder entfernt; Neuzeichnen derselben Frage löst
+  nichts aus; die nächste Frage pulst wieder, der Ton bleibt einmalig.
+- Frage ohne Formelstelle: Knopf unsichtbar, kein Pulsen.
+- Schalter aus: kein Pulsen.
+
+## [1.241.0] - 2026-09-10
+
+### Neu
+- **Nachschlagen wird positiv vermerkt.** Dietmar: „es gibt viele Antworten
+  die im Formelblatt stehen. das soll positiv registriert werden wenn man
+  diese nutzt. mehr Zeit zu benötigen und nachschauen ist definitiv kein
+  Fehler."
+
+  Er hat recht, und der Denkfehler in 1.240.0 war handfest: Dort wurden
+  längere Zeiten als Risiko gewertet, ohne zu fragen, **womit** sie zustande
+  kommen. In der Prüfung liegt die Formelsammlung auf dem Tisch — Anlage 1
+  AFuV und die Bandplan-Auszüge stehen ausdrücklich in der Liste der
+  erlaubten Hilfsmittel, ebenso der nicht programmierbare Taschenrechner.
+  Wer sie benutzt, übt genau das, was er im Prüfungsraum tun wird.
+
+  Nachgezählt: **114 der 571 Fragen** haben in `formelhilfe.json` eine Stelle
+  im Formelblatt hinterlegt.
+
+  > **Berichtigung vom selben Tag:** Hier stand zuerst „534 der 571". Das war
+  > falsch. Die Datei `formelhilfe.json` enthält 534 Einträge, davon aber
+  > **420 mit IDs der Klassen A und E** (Präfixe AA…AK, EB…EG) — für den
+  > N-Katalog bleiben 114. Die Zahl war aus der Dateigröße abgelesen statt
+  > gegen den Fragenkatalog geprüft. Eine unabhängige Nachanalyse gegen den
+  > Inhalt der Formelsammlung kommt auf **112 beantwortbare Fragen**, siehe
+  > `_Formelblatt-Analyse.md`.
+
+  Ab jetzt schreibt der Trainer mit, wann jemand das Formelblatt oder den
+  Rechner öffnet — nicht um es vorzuhalten, sondern um eine lange
+  Bearbeitungszeit richtig einzuordnen und die gute Gewohnheit zu benennen.
+
+### Geändert
+- **„Richtig, aber langsam" ist in zwei Befunde zerfallen.** Wer bei einer
+  Frage nachgeschlagen hat, steht jetzt in Grün: *„Hat länger gedauert — aber
+  du hast nachgeschlagen. Das ist die Zeit wert."* Nur wer ohne Hilfsmittel
+  ins Grübeln kommt, steht noch in der neutralen blauen Zeile — und auch
+  dort steht kein Tadel, sondern der Hinweis, dass sich dort ein Blick ins
+  Formelblatt vielleicht mehr lohnt als weiteres Nachdenken.
+- **Eine Zusammenfassung oben im Kasten** zählt alle Fragen, bei denen ein
+  Hilfsmittel geöffnet wurde: *„Genau richtig: Beides liegt in der Prüfung
+  auf dem Tisch. Nachschlagen ist geübte Prüfungstechnik, kein Umweg."*
+- **Die Schlusszeile wurde umgeschrieben.** Aus „in der Prüfung ist das ein
+  Risiko" wurde „Länger brauchen ist kein Fehler, und nachschlagen erst recht
+  nicht — die Formelsammlung liegt in der Prüfung vor dir."
+- Stehen nur gute Befunde im Kasten, passt „woran es liegt" nicht mehr; die
+  Einleitung lautet dann „Nichts, was dagegen spricht — und eine Gewohnheit,
+  die für dich spricht."
+
+### Geprüft
+- Ein echter Klick auf das Formelblatt bei NC104 landet als `fb:1` im
+  Speicher, der Taschenrechner als `tr:1`.
+- Bewertung mit erfundenen Verläufen: 3 langsame ohne Hilfsmittel bleiben in
+  der blauen Zeile, 3 langsame mit Nachschlagen wandern in die grüne, und die
+  Zusammenfassung zählt 5 (drei langsame plus zwei zügige mit Nachschlagen).
+- Randfall: nur nachgeschlagen und sonst nichts Auffälliges — der Kasten
+  zeigt allein das Positive, mit angepasster Einleitung.
+
+## [1.240.0] - 2026-09-10
+
+### Neu
+- **„Woran es liegt" in der Auswertung.** Die Stolpersteine darüber sagen,
+  *welche* Fragen danebengehen. Der neue Abschnitt sagt, *was* dabei
+  passiert — und das sind drei verschiedene Dinge, die man verschieden
+  angehen muss:
+
+  **Immer dieselbe falsche Antwort** — ein Irrtum, der festsitzt. Hier hilft
+  kein Wiederholen; hier muss man einmal nachlesen, warum die andere Antwort
+  richtig ist. Der Trainer nennt den Buchstaben und den vollen Text der
+  Antwort, die immer wieder gewählt wird.
+
+  **Jedes Mal eine andere** — geraten. Die Frage ist noch gar nicht
+  angekommen und gehört an den Anfang, nicht in die Wiederholung.
+
+  **Richtig, aber langsam** — sitzt, aber nicht sicher. Fragen, die zuletzt
+  richtig waren, aber gut doppelt so lange dauern wie der eigene Schnitt
+  (Median, nicht Mittelwert: eine einzige Frage, bei der jemand nebenbei
+  telefoniert hat, würde den Mittelwert verschieben). In der Prüfung ist das
+  ein Risiko, auch wenn die Statistik grün aussieht.
+
+  Ist nichts auffällig und wurden mindestens 15 Fragen gemessen, sagt der
+  Kasten genau das. Vor den ersten Antworten steht er gar nicht da.
+
+- **Der Vorsatz-Hinweis an der Frage.** Wenn die gewählte Antwort *dieselbe
+  Zahl* trägt wie die richtige und sich nur im Vorsatz unterscheidet, sagt
+  der Trainer das im Augenblick des Fehlers: *„Die Zahl stimmt, der Vorsatz
+  nicht. Du hast 4200 kV gewählt, richtig ist 4200 mV — Kilo statt Milli
+  macht die Antwort eine Million mal zu groß."*
+
+### Vorher gerechnet
+Die ursprüngliche Idee war weiter gefasst: „Wer 0,2 Ω statt 200 Ω wählt, hat
+den Vorsatz verrechnet." Das Auszählen über alle 571 Fragen sagt dazu etwas
+Unbequemes:
+
+- **44 Fragen** haben überhaupt Zahlenantworten (8 %)
+- **42 Fälle**, wo eine falsche Antwort eine Zehnerpotenz der richtigen ist —
+  aber die meisten davon sind **Vorschriften** (750 statt 75 W PEP), und da
+  ist nichts verrechnet, da ist schlicht die falsche Zahl gelernt
+- **10 echte Vorsatzfallen in 7 Fragen**: gleiche Zahl, anderer Vorsatz
+
+Daraus folgten zwei Entscheidungen. Erstens: Die Vorsatz-Erkennung ist
+präzise, aber schmal — als Statistik über sieben Fragen taugt sie nichts, als
+Hinweis im Augenblick des Fehlers sehr viel. Deshalb steht sie an der Frage
+und nicht in der Auswertung. Zweitens: Der tragende Befund ist ein anderer
+und wirkt bei **allen 571 Fragen** — welche falsche Antwort immer wieder
+gewählt wird.
+
+### Behoben (in der eigenen Arbeit gefunden)
+- **Die erste Fassung der Vorsatzerkennung verglich nur die Ziffernfolge.**
+  Bei NA208 galten damit „4,200 µV" und „4200 mV" als dieselbe Zahl — sie
+  sind aber 4,2 und 4200. Der Trainer meldete „tausendmal zu klein", richtig
+  war eine Million. Schlimmer noch wären BE402/BE403 durchgegangen, wo
+  600 kHz und 7,6 MHz schlicht zwei verschiedene Frequenzen sind. Jetzt wird
+  der **Zahlenwert** verglichen, nicht die Ziffernfolge. Es bleiben weniger
+  Fälle — aber lieber siebenmal etwas Richtiges sagen als zwanzigmal etwas
+  Ungefähres.
+- **Der Antworttext war bei 60 Zeichen abgeschnitten** — derselbe Fehler, der
+  am 09.09. bei den Stolpersteinen behoben wurde („Nach Klasse, ist der Text
+  nur noch Klas"). Ein Satz, der mitten im Wort endet, ist nicht kurz,
+  sondern unlesbar — und die Antwort ist genau das, was man hier lesen will.
+
+### Geprüft
+- Vorsatzerkennung gegen den echten Katalog: 8 Fälle in 5 Fragen der Klasse N
+  erkannt, Gegenprobe VD728 (75 gegen 750 W) schlägt korrekt **nicht** an.
+- Die drei Befunde mit erfundenen Antwortverläufen: 3 festsitzend, 2 geraten,
+  3 langsam bei einem Median von 12 s — alle richtig zugeordnet.
+- Randfälle: ohne Daten kein Kasten, nach drei Fragen kein Kasten, nach
+  zwanzig glatten Fragen die Nachricht „nichts Auffälliges".
+
+## [1.239.1] - 2026-09-10
+
+### Behoben
+- **Die Zeitkachel ging die Farbstile nicht mit.** Dietmar: „der DARK Mode
+  ist raus. wir haben nur den Grey Blue Orange Green und den Light."
+
+  Nachgesehen — und er hat auf etwas gezeigt, das ich übersehen hatte. Die
+  Stile färben Seitenleiste und Kennzahl-Kästchen mit (Orange `#f5dcc0`,
+  Green `#d6ecdf`, Blue `#d3e4f5`, Grey `#dde1e4`), meine neue Zeitkachel
+  blieb aber in **jedem** Stil türkis-hell. In der orangenen Leiste saß
+  damit ein kalter blauer Fleck.
+
+  Sie nimmt jetzt über zwei Variablen (`--zeit-grund`, `--zeit-rand`)
+  denselben Ton wie die Kennzahl-Kästchen daneben — sie *ist* eine Kennzahl
+  wie die anderen.
+
+- **Die Farbe der großen Wochenzahl trug nur im Light Mode.** `#0a7a8b`
+  kommt auf den vier anderen Untergründen nur auf 3,8 bis 4,1:1. Neu ist
+  `#0a6b7a`, durchgerechnet auf allen fünf:
+
+  | Stil | Grund | Kontrast |
+  |---|---|---|
+  | Light | `#eef7f9` | 5,68:1 |
+  | Green | `#d6ecdf` | 4,98:1 |
+  | Blue | `#d3e4f5` | 4,76:1 |
+  | Grey | `#dde1e4` | 4,70:1 |
+  | Orange | `#f5dcc0` | 4,67:1 |
+
+  Eine Farbe für alle fünf ist zudem leichter zu pflegen als fünf einzelne.
+
+- **Eine Woche ohne Übung war im Verlauf unsichtbar.** Der Aufbau setzte
+  `height:0%` direkt am Element, und das schlägt jede Regel im Stilblatt —
+  auch die, die dort einen 2-Pixel-Strich zeichnen sollte. Die Höhe wird
+  jetzt an derselben Stelle bestimmt. Der Strich trägt außerdem ein
+  neutrales Grau statt `var(--line)`, das auf weißem Grund zu blass war:
+  Es ist kein kleiner Wert, es ist gar keiner.
+
+### Anmerkung
+- Die `body.dark`-Regeln in den neuen Blöcken sind kein Versehen. Der Dark
+  Mode ist am 03.09.2026 aus der Liste `STILE` geflogen, die Regeln bleiben
+  aber im Blatt stehen — wer ihn zurückholt, schreibt `'dark'` wieder in die
+  Liste, und alles greift von allein. Die neuen Bauteile (Zeitkachel, Notiz,
+  Fragennummer) halten sich an dieselbe Verabredung.
+
+## [1.239.0] - 2026-09-10
+
+### Neu
+- **Die Gesamtzeit steht jetzt neben der Wochenzeit.** Dietmar: „nicht nur
+  die Wochenzeit, sondern auch die Gesamtzeit."
+
+  In der Auswertung, unter einer Trennlinie: *Insgesamt 15 h 53 min · an
+  28 Tagen*. Die Zahl steht **nie ohne ihren Zeitraum** da — „15 Stunden"
+  kann über zwei Wochen oder über ein halbes Jahr entstanden sein, und das
+  ist ein gewaltiger Unterschied. Sie steht auch bewusst kleiner als die
+  Wochenzeit: Beim Lernen zählt, was man diese Woche tut; die Gesamtsumme
+  ist der Blick zurück, nicht der Antrieb.
+
+- **Ein Kasten „Deine Übungszeit" in der Auswertung** — mit dem Verlauf der
+  letzten acht Wochen als Säulen und vier Zahlen darunter: insgesamt (seit
+  wann), Tage geübt, Schnitt je Übungstag, längster Tag.
+
+  Der Verlauf ist der eigentliche Grund für den Kasten. Eine Gesamtzahl
+  sagt nicht, ob man gerade nachlässt — acht Säulen nebeneinander sagen es
+  auf einen Blick, und das ist die Frage, die vor einer Prüfung zählt.
+
+  **Die laufende Woche ist gekennzeichnet.** Am Montagabend steht die letzte
+  Säule fast auf dem Boden — nicht weil jemand nachlässt, sondern weil die
+  Woche zwei Tage alt ist. Sie neben sieben abgeschlossene Wochen zu stellen
+  und nichts dazu zu sagen, wäre die häufigste stille Lüge in solchen
+  Verläufen. Deshalb trägt sie an der Achse „jetzt" und im Hinweisfeld den
+  Zusatz „läuft noch".
+
+### Geändert
+- **Die Zeitkachel in der Seitenleiste steht jetzt untereinander statt in
+  zwei Spalten.** Gemessen: Die Leiste ist 203 Pixel breit, und „Diese
+  Woche" brach zwischen „Diese" und „Woche" um. Zwei Spalten gehen dort
+  nicht auf, sobald die Zahlen länger werden — und sie werden länger, sobald
+  jemand ernsthaft übt.
+- **Der Vergleich zur Vorwoche ist jetzt eine absolute Zahl.** Aus
+  „−1 h 57 min zur Vorwoche" wurde „Vorwoche 3 h 15 min" — kürzer und
+  aussagekräftiger: eine Zahl, die man einordnen kann, statt einer Differenz,
+  die man erst zurückrechnen muss.
+- **Ist diese Woche noch nichts geübt, steht „noch nichts" statt „0 s".**
+  Eine fette Null wäre genau der Vorwurf, den diese Kachel nicht machen soll.
+
+### Behoben
+- **Kontrast der großen Wochenzahl.** Nachgemessen: das kräftige Türkis
+  (`#0a9cb0`) kommt auf dem hellen Kachelgrund auf **3,02:1** — das reicht
+  erst ab 19 Pixel fetter Schrift, die Zahl ist 16. Sie trägt jetzt den
+  dunkleren Ton `#0a7a8b` mit **4,63:1**. Dieselbe Abwägung steckt schon im
+  1024er-Block, dort für schmale Schirme. Die ruhenden Säulen des Verlaufs
+  wurden aus demselben Grund von `#bcd9de` auf `#a3c8d0` angehoben.
+
+### Geprüft
+- **Zeitumstellung:** Wochenanfang und Tagesschlüssel rund um den 29.03. und
+  den 25.10.2026 in `Europe/Berlin` — Wochenanfang immer Montag, sieben
+  eindeutige Tage, Summe der Umstellungswoche korrekt. Ebenso der
+  Jahreswechsel (29.12.2025 bis 04.01.2026).
+- **Randfälle:** keine Daten (keine Kachel), erster Tag mit 1 Sekunde, 40
+  Sekunden und 12 Minuten, nur Vorwoche, 312 Stunden über 39 Tage — kein
+  Überlauf, Ein- und Mehrzahl stimmen.
+- **Alle fünf Stile** (hell, grün, blau, orange, grau) — die Kachel sieht in
+  allen gleich aus, wie beabsichtigt.
+
+## [1.238.0] - 2026-09-10
+
+### Neu
+- **Die Übungszeit wird gezählt — je Tag, aufaddiert, und wochenweise
+  angezeigt.** Dietmar: „wenn wir schon mit Zeit arbeiten, eine
+  Registrierung wie lange man in der Woche geübt hat. übt man mehrmals am
+  Tag, wird die Zeit adiert."
+
+  In der Auswertung steht jetzt eine Zeile: *Diese Woche 1 h 38 min*,
+  daneben *heute 38 min* und der Vergleich zur Vorwoche. Bewusst **kein
+  Balken und keine Ampel** — wer sieht, dass er diese Woche 40 Minuten
+  geübt hat und letzte Woche zwei Stunden, weiß selbst, was das heißt.
+  Vor der ersten Übung steht die Zeile gar nicht da; eine Kachel mit „0 s"
+  wäre kein Ansporn, sondern ein Vorwurf.
+
+  **Was als Üben zählt, ist die eigentliche Frage.** Die Uhr läuft nur,
+  wenn eine Runde läuft, das Fenster im Vordergrund ist und die letzte
+  Regung weniger als **90 Sekunden** her ist. Als Regung zählen Klick und
+  Tastendruck, **nicht** die Mausbewegung — sonst hielte schon ein
+  Windstoß am Tisch die Uhr am Laufen.
+
+  Die 90 Sekunden waren zuerst drei Minuten. Nachgerechnet: Die Uhr läuft
+  bis zur Schwelle weiter, wer also aufsteht und geht, bekommt die volle
+  Schwelle geschenkt. Fünfmal am Tag kurz reingeschaut, und in der
+  Statistik stünden fünfzehn erfundene Minuten. Neunzig Sekunden reichen
+  für eine Rechenaufgabe mit Papier daneben und halbieren den
+  größtmöglichen Irrtum. Lieber etwas zu wenig zählen als eine Zahl, der
+  man nicht trauen kann.
+
+- **Die gewählte falsche Antwort wird mitgeschrieben — und wie lange die
+  Frage gedauert hat.** Bisher stand im Verlauf nur, *dass* eine Frage
+  falsch war (`errorList.push(qId)`). *Welche* Antwort angeklickt wurde,
+  war weg — und genau darin steckt das System des Fehlers: Wer bei einer
+  Widerstandsfrage 0,2 Ω statt 200 Ω wählt, hat den Vorsatz verrechnet,
+  nicht die Formel. Das schlägt bei zwanzig anderen Fragen wieder zu.
+
+  Der Grund, das **jetzt** einzubauen, obwohl die Auswertung erst folgt:
+  **Daten, die man heute nicht mitschreibt, kann man später nicht
+  rückwirkend gewinnen.**
+
+  Je Frage stehen ab sofort die letzten zehn Versuche im Speicher: Anzahl,
+  die gewählten falschen Antworten, die Sekunden. Eine Frage, bei der die
+  Uhr zwischendurch angehalten hat, wird **ohne** Zeit gespeichert — eine
+  Zahl, die stillschweigend eine Kaffeepause enthält, ist für „richtig,
+  aber langsam" schlimmer als gar keine.
+
+### Technik
+- Zwei neue Speicher je Benutzerplatz: `amateurfunk_diagnose_<platz>` und
+  `amateurfunk_uebungszeit_<platz>`. Beide hängen an `benutzerSchluessel()`
+  (Reset und Benutzerwechsel) und gehen über `/api/userdata` mit auf den
+  Server — `normalisiereUserdata()` in `Server.js` kennt sie jetzt, sonst
+  hätte sie das erste Speichern stillschweigend weggeworfen.
+- Der Tag wird über die lokale Uhr bestimmt, **nicht** über
+  `toISOString()`: das rechnet in Weltzeit, und wer um halb zwölf abends
+  übt, säße in der Statistik schon im nächsten Tag. Wochen beginnen am
+  Montag.
+- Gemessen: 45 s aktives Üben werden erfasst, eine Pause bringt 0 s
+  Zuwachs, die Zeit einer Frage mit Pause darin wird verworfen, eine
+  zügige Frage mit 4 s erfasst, Platz 2 fängt nach dem Benutzerwechsel bei
+  null an.
+
 ## [1.237.0] - 2026-09-09
 
 ### Geändert
