@@ -8,6 +8,47 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.275.0] - 2026-09-11
+
+### Behoben
+- **`Hochladen.bat` ließ Änderungen unbemerkt liegen.** Dietmar: „ich habe ein
+  neues Bild in den Ordner Bilder hochgeladen, es nimmt aber GitHub nicht an."
+
+  Nachgesehen, was tatsächlich im Repository liegt: Der `CHANGELOG.md` dort war
+  von heute, die `README.md` dagegen **steinalt** — sie listete noch
+  „Aufstockung N → A" und „Direkteinstieg Klasse A", beide seit dem 2. September
+  aus dem Trainer heraus, und verwies auf ein Bild, das es nicht mehr gibt. Es
+  ging also nie um die Bilder; es ging bei jedem Hochladen nur ein Teil mit.
+
+  Die Ursache steckt in einer Zeile:
+
+  ```js
+  const ja = (a) => /^j/i.test(a);
+  ```
+
+  Bei „Jetzt mit aufnehmen? [j/n]" sieht diese Prüfung eine **leere Eingabe**
+  — also Enter — und findet kein „j". Das zählt als **Nein**. Der Push nimmt
+  dann nur den zuletzt committeten Stand mit, und das Skript meldet trotzdem
+  „Fertig".
+
+  Vier Änderungen:
+
+  - **Enter zählt jetzt als Ja** (`[J/n] (Enter = ja)`). Bei der Frage, ob
+    überhaupt hochgeladen wird, bleibt es beim ausdrücklichen „j" — ein Push
+    lässt sich nicht zurückholen.
+  - **Wer ablehnt, liest, was das heißt:** „Bei GitHub steht dann weiter der
+    Stand von vorher — auch bei Bildern, README und allem anderen aus der
+    Liste."
+  - **Vor dem Push steht, was hochgeht:** Zahl der Commits und die Liste der
+    Dateien aus `origin/main..HEAD`. Gibt es keinen Unterschied, sagt das
+    Skript das, statt kommentarlos zu pushen.
+  - **Nach dem Push die Gegenprobe:** Liegt im Ordner noch etwas herum, steht
+    es da — auch wenn der Push gerade erfolgreich war.
+
+  `hochladen.js` steht in der `.gitignore` und geht selbst nie mit hoch.
+
+---
+
 ## [1.274.0] - 2026-09-11
 
 ### Behoben
