@@ -11244,12 +11244,24 @@ function frageZeitStarten(id){
     if(frageGemessenId === id) return;
     frageGemessenId = id;
     frageAngezeigtSeit = Date.now();
+    // Die Vorlesezeit gehoert zu GENAU dieser Frage - siehe playTTSQueue.
+    vorleseSummeMs = 0;
 }
 function diagnoseNotieren(q, gewaehlt, richtig){
     if(!q || !q.id) return;
     const e = diagnoseDaten[q.id] || (diagnoseDaten[q.id] = { n: 0, f: [], t: [] });
     e.n = (e.n || 0) + 1;
-    const sek = frageAngezeigtSeit ? Math.round((Date.now() - frageAngezeigtSeit) / 1000) : 0;
+    const roh = frageAngezeigtSeit ? Math.round((Date.now() - frageAngezeigtSeit) / 1000) : 0;
+    // DIE VORLESEZEIT GEHT AB. Wer zuhoert, denkt noch nicht nach - und
+    // wer das Vorlesen braucht, soll dafuer nicht als langsam gelten.
+    // Siehe playTTSQueue: Gezaehlt wird, was tatsaechlich gesprochen
+    // wurde, nicht was gesprochen worden waere.
+    //
+    // Die Uebungszeit in der Auswertung (Woche und gesamt) bleibt davon
+    // unberuehrt: Dort zaehlt die Zeit am Trainer, und Zuhoeren ist
+    // Ueben. Abgezogen wird nur hier, wo eine Zeit BEWERTET wird.
+    const vorlese = Math.round((vorleseSummeMs || 0) / 1000);
+    const sek = Math.max(0, roh - vorlese);
     // Ueber zehn Minuten an einer Frage heisst: zwischendurch etwas
     // anderes gemacht. Das ist keine Bearbeitungszeit.
     if(sek > 0 && sek < 600){ e.t.push(sek); if(e.t.length > DIAG_MAX) e.t.shift(); }
@@ -11287,12 +11299,36 @@ function hilfsmittelNotieren(art){
         const e = diagnoseDaten[q.id] || (diagnoseDaten[q.id] = { n: 0, f: [], t: [] });
         if(art === 'formel')   e.fb = (e.fb || 0) + 1;
         if(art === 'rechner')  e.tr = (e.tr || 0) + 1;
+        // Das Vorlesen wird nur EINMAL je Frage vermerkt, auch wenn man
+        // es zweimal laufen laesst: Die Zahl unten soll sagen, bei wie
+        // vielen Fragen ein Hilfsmittel im Spiel war - nicht, wie oft
+        // geklickt wurde.
+        if(art === 'vorlesen')  e.vl = 1;
         diagSichern();
     }catch(e){}
 }
 function hatNachgeschlagen(id){
     const e = diagnoseDaten[id];
     return !!(e && ((e.fb || 0) > 0 || (e.tr || 0) > 0));
+}
+// Alle drei zusammen: Formelblatt, Rechner, Vorlesen. Das Vorlesen kam
+// am 10.09.2026 dazu, auf Dietmars Hinweis hin.
+function hatHilfsmittel(id){
+    const e = diagnoseDaten[id];
+    return !!(e && ((e.fb || 0) > 0 || (e.tr || 0) > 0 || (e.vl || 0) > 0));
+}
+// Was war im Spiel? Fuer die Formulierung in der Auswertung.
+function hilfsmittelArten(){
+    const arten = { formel: 0, rechner: 0, vorlesen: 0 };
+    try{
+        Object.keys(diagnoseDaten).forEach(id => {
+            const e = diagnoseDaten[id] || {};
+            if((e.fb || 0) > 0) arten.formel++;
+            if((e.tr || 0) > 0) arten.rechner++;
+            if((e.vl || 0) > 0) arten.vorlesen++;
+        });
+    }catch(e){}
+    return arten;
 }
 
 // Der Mittelwert der letzten Versuche - fuer "richtig, aber langsam".
@@ -16310,8 +16346,27 @@ function formelOeffnen(stelleId){
     if(!m){
         m = document.createElement('div');
         m.id = 'formelModal';
-        m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.72); '
-            + 'backdrop-filter:blur(6px); z-index:100001; align-items:center; justify-content:center; padding:0.35rem;';
+        // ================================================================
+        //  DER BLICK AUF DIE FRAGE BLEIBT FREI
+        // ----------------------------------------------------------------
+        //  Dietmar am 10.09.2026: "Bei der Formelsammlung den Hintergrund
+        //  in Blure zu halten ist nicht gut. Hier wäre es auch schön, wenn
+        //  man das Formelblatt verschieben kann."
+        //
+        //  Beides gehoert zusammen und hat denselben Grund: Man schlaegt
+        //  im Blatt nach, WEIL man die Frage beantworten will - und muss
+        //  sie dabei lesen koennen. Hier standen 72 Prozent Abdunklung und
+        //  sechs Punkte Unschaerfe; von der Frage dahinter blieben graue
+        //  Schemen.
+        //
+        //  Jetzt liegt nur noch ein Hauch darueber, gerade genug, damit
+        //  das Fenster als eigene Ebene zu erkennen ist. Die Abgrenzung
+        //  uebernimmt der Schatten. Und weil die Frage trotzdem hinter dem
+        //  Blatt liegen kann, laesst sich das Fenster am Kopf zur Seite
+        //  ziehen - genau wie der Rechner seit 1.216.0.
+        // ================================================================
+        m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.14); '
+            + 'z-index:100001; align-items:center; justify-content:center; padding:0.35rem;';
             // DAS FENSTER HAT DIE FORM DES BLATTES.
             //
             // Dietmar am 05.09.2026 mit einem Bild, auf dem links und
@@ -16341,10 +16396,10 @@ function formelOeffnen(stelleId){
             // die 140 Punkte mehr sind der Preis dafuer, dass der Stift
             // sichtbar bleibt. Vorher standen links und rechts je 270.
         m.innerHTML =
-            '<div style="background:#fff; border-radius:14px; height:calc(96vh / var(--afu-zoom, 1)); '
+            '<div id="formelKasten" style="background:#fff; border-radius:14px; height:calc(96vh / var(--afu-zoom, 1)); '
             + 'width:min(calc(96vw / var(--afu-zoom, 1)), max(800px, calc((calc(96vh / var(--afu-zoom, 1)) - 150px) * 0.707 + 34px))); '
-            + 'display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.45); overflow:hidden;">'
-            + '<div style="display:flex; align-items:center; gap:10px; padding:0.5rem 0.8rem; border-bottom:1px solid var(--line); flex-wrap:wrap;">'
+            + 'display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,0.38), 0 0 0 1px rgba(15,39,69,0.10); overflow:hidden;">'
+            + '<div id="formelKopf" title="Zum Verschieben hier anfassen" style="display:flex; align-items:center; gap:10px; padding:0.5rem 0.8rem; border-bottom:1px solid var(--line); flex-wrap:wrap; cursor:move; user-select:none;">'
             +   '<div style="flex:1; min-width:200px;">'
             +     '<div id="formelTitel" style="font-weight:700; color:var(--panel-navy); font-size:1rem;"></div>'
             +     '<div id="formelUnterzeile" style="font-size:0.75rem; color:var(--muted);"></div>'
@@ -16363,11 +16418,84 @@ function formelOeffnen(stelleId){
             + '</div>';
         document.body.appendChild(m);
         m.addEventListener('click', e => { if(e.target === m) formelSchliessen(); });
+        formelZiehbarMachen(m);
     }
+    // ZURUECK IN DIE MITTE. Dietmar: "Beim nächsten mal öffen, ist es
+    // wieder Zentriert." Der Platz wird also bewusst NICHT gemerkt -
+    // anders als beim Rechner, den man einmal an seine Ecke stellt und
+    // dort stehen laesst. Das Blatt schiebt man nur kurz beiseite, um
+    // etwas nachzusehen; beim naechsten Aufschlagen soll es wieder da
+    // liegen, wo man es erwartet.
+    const kasten = m.querySelector('#formelKasten');
+    if(kasten) kasten.style.transform = '';
     m.style.display = 'flex';
     formelZeichnen();
 }
 window.formelOeffnen = formelOeffnen;
+
+// ================================================================
+//  DAS BLATT LAESST SICH BEISEITE SCHIEBEN
+// ----------------------------------------------------------------
+//  Verschoben wird ueber transform und NICHT ueber left/top: Der Kasten
+//  sitzt in einem Flex-Kasten, der ihn mittig haelt: Wer left setzt,
+//  kaempft gegen diese Zentrierung an. transform verschiebt ihn aus
+//  seiner Mitte heraus, und ein leeres transform bringt ihn genau
+//  dorthin zurueck - das ist auch der ganze Trick beim Zuruecksetzen
+//  oben.
+//
+//  GERECHNET WIRD DURCH DEN ANZEIGEFAKTOR. Die Maus zaehlt in
+//  Bildschirmpunkten, transform in den Punkten der Seite. Bei einer
+//  Anzeige von 90 Prozent liefe das Fenster sonst langsamer als der
+//  Zeiger - dieselbe Umrechnung steht beim Rechner in
+//  rechnerZiehbarMachen().
+//
+//  Die Grenzen sorgen dafuer, dass der Kopf immer greifbar bleibt: Man
+//  kann das Blatt fast ganz aus dem Bild schieben, aber nie so weit,
+//  dass man es nicht mehr zurueckholen kann.
+// ================================================================
+function formelZiehbarMachen(m){
+    const kasten = m.querySelector('#formelKasten');
+    const kopf   = m.querySelector('#formelKopf');
+    if(!kasten || !kopf) return;
+    let start = null;
+    const zoom = () => parseFloat(getComputedStyle(document.documentElement)
+                      .getPropertyValue('--afu-zoom')) || 1;
+    const jetzt = () => {
+        const t = /translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)/.exec(kasten.style.transform || '');
+        return t ? { x: parseFloat(t[1]), y: parseFloat(t[2]) } : { x: 0, y: 0 };
+    };
+    const anfassen = e => {
+        // Auf den Knoepfen im Kopf wird geklickt, nicht gezogen.
+        if(e.target.closest('button')) return;
+        const p = e.touches ? e.touches[0] : e;
+        const v = jetzt();
+        start = { mx: p.clientX, my: p.clientY, x: v.x, y: v.y };
+        e.preventDefault();
+    };
+    const ziehen = e => {
+        if(!start) return;
+        const p = e.touches ? e.touches[0] : e;
+        const z = zoom();
+        let x = start.x + (p.clientX - start.mx) / z;
+        let y = start.y + (p.clientY - start.my) / z;
+        // So weit, dass immer ein Stueck Kopfzeile greifbar bleibt.
+        const b = kasten.offsetWidth, h = kasten.offsetHeight;
+        const fb = window.innerWidth / z, fh = window.innerHeight / z;
+        const grenzeX = Math.max(0, (fb + b) / 2 - 80);
+        const grenzeY = Math.max(0, (fh + h) / 2 - 60);
+        x = Math.max(-grenzeX, Math.min(x, grenzeX));
+        y = Math.max(-grenzeY, Math.min(y, grenzeY));
+        kasten.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
+        e.preventDefault();
+    };
+    const loslassen = () => { start = null; };
+    kopf.addEventListener('mousedown', anfassen);
+    kopf.addEventListener('touchstart', anfassen, { passive:false });
+    document.addEventListener('mousemove', ziehen);
+    document.addEventListener('touchmove', ziehen, { passive:false });
+    document.addEventListener('mouseup', loslassen);
+    document.addEventListener('touchend', loslassen);
+}
 
 function formelSchliessen(){
     const m = document.getElementById('formelModal');
@@ -18112,23 +18240,66 @@ async function playTTSSegment(seg, token){
     }
 }
 
+// ================================================================
+//  DIE VORLESEZEIT WIRD MITGESCHRIEBEN
+// ----------------------------------------------------------------
+//  Dietmar am 10.09.2026: "Vorlesen lassen, gehört auch dazu zum
+//  Auswerten der Zeit bei den Fragen."
+//
+//  Derselbe Gedanke wie beim Formelblatt, und wieder hat er recht. Wer
+//  sich eine Frage samt vier Antworten vorlesen laesst, sitzt zwanzig
+//  bis vierzig Sekunden davor, bevor er ueberhaupt anfangen kann zu
+//  entscheiden. Der Trainer hat diese Sekunden bisher wie Nachdenken
+//  gezaehlt - und die Frage danach als "richtig, aber langsam"
+//  gemeldet. Das ist doppelt falsch: Es stimmt nicht, und es haelt
+//  ausgerechnet denen etwas vor, die das Vorlesen brauchen. Fuer sie
+//  ist es Nachteilsausgleich und in der Pruefung ausdruecklich
+//  vorgesehen.
+//
+//  Deshalb wird hier gestoppt, wie lange gesprochen wurde. Die Zeit
+//  wird von der Bearbeitungszeit abgezogen (siehe diagnoseNotieren) -
+//  uebrig bleibt, was das Nachdenken gedauert hat. Gemessen wird die
+//  tatsaechliche Dauer und nicht die Laenge des Textes: Wer mittendrin
+//  auf Stop drueckt, soll auch nur die gehoerten Sekunden abgezogen
+//  bekommen.
+// ================================================================
+let vorleseSummeMs = 0;
+
 async function playTTSQueue(segments, btn){
     ttsQueueToken++;
     const token=ttsQueueToken;
     ttsQueueActive=true;
+    const vorleseStart = Date.now();
+    // Auch bei vorzeitigem Aussteigen zaehlen die gehoerten Sekunden.
+    //
+    // Die Marke "vorgelesen" bekommt aber nur, wer wirklich zugehoert hat.
+    // Schlaegt die Sprachausgabe fehl - keine Stimme eingerichtet, Datei
+    // nicht da -, ist der ganze Vorgang nach einem Sekundenbruchteil
+    // vorbei; gemessen im Test: 111 Millisekunden. Das als Hilfsmittel zu
+    // verbuchen waere gelogen. Die Zeit selbst wird trotzdem abgezogen,
+    // sie faellt bei so kurzen Vorgaengen ohnehin nicht ins Gewicht.
+    const VORLESEN_ZAEHLT_AB = 1500;
+    const vorleseBuchen = () => {
+        try{
+            const dauer = Math.max(0, Date.now() - vorleseStart);
+            vorleseSummeMs += dauer;
+            if(dauer >= VORLESEN_ZAEHLT_AB) hilfsmittelNotieren('vorlesen');
+        }catch(e){}
+    };
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-stop"></i> Stop'; btn.onclick=()=>stopTTS(); }
     for(const seg of segments){
-        if(token!==ttsQueueToken) return; // wurde zwischenzeitlich gestoppt/neu gestartet
+        if(token!==ttsQueueToken){ vorleseBuchen(); return; } // gestoppt/neu gestartet
         await playTTSSegment(seg, token);
         // Die Pause nach einer Bildantwort. Die Hervorhebung bleibt dabei
         // stehen - deshalb wird hier gewartet und nicht schon in
         // playTTSSegment, das raeumt am Ende auf.
         if(seg.pause > 0){
             await new Promise(r => setTimeout(r, seg.pause));
-            if(token!==ttsQueueToken) return;
+            if(token!==ttsQueueToken){ vorleseBuchen(); return; }
         }
     }
-    if(token!==ttsQueueToken) return;
+    if(token!==ttsQueueToken){ vorleseBuchen(); return; }
+    vorleseBuchen();
     ttsQueueActive=false;
     clearTTSHighlights();
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-volume-up"></i> Vorlesen'; btn.onclick=()=>vorleseFrage(); }
@@ -28607,16 +28778,17 @@ function diagnoseBefunde(){
             const lange = sitzt && schnitt >= LANGSAM_MIN_S && median > 0
                        && schnitt >= median * LANGSAM_FAKTOR && e.t && e.t.length >= 2;
             if(lange){
-                if(hatNachgeschlagen(id)){
+                if(hatHilfsmittel(id)){
                     nachgeschlagen.push({ q: q, schnitt: schnitt,
-                                          fb: (e.fb || 0), tr: (e.tr || 0) });
+                                          fb: (e.fb || 0), tr: (e.tr || 0),
+                                          vl: (e.vl || 0) });
                 } else {
                     langsam.push({ q: q, schnitt: schnitt, messungen: e.t.length });
                 }
-            } else if(hatNachgeschlagen(id)){
-                // Auch ohne Zeitauffaelligkeit: Nachgeschlagen ist
-                // nachgeschlagen, und die Summe darueber ist die
-                // eigentliche gute Nachricht.
+            } else if(hatHilfsmittel(id)){
+                // Auch ohne Zeitauffaelligkeit: Ein Hilfsmittel benutzt zu
+                // haben ist die eigentliche gute Nachricht, und die Summe
+                // darueber gehoert in die Auswertung.
                 nurNachgeschlagen++;
             }
         });
@@ -28628,11 +28800,13 @@ function diagnoseBefunde(){
         return { fest: fest, raten: raten, langsam: langsam,
                  nachgeschlagen: nachgeschlagen,
                  hilfsmittelGesamt: nachgeschlagen.length + nurNachgeschlagen,
+                 arten: hilfsmittelArten(),
                  median: median, gemessen: alle.length };
     }catch(e){
         console.debug('Diagnose:', e.message);
         return { fest: [], raten: [], langsam: [], nachgeschlagen: [],
-                 hilfsmittelGesamt: 0, median: 0, gemessen: 0 };
+                 hilfsmittelGesamt: 0, arten: { formel:0, rechner:0, vorlesen:0 },
+                 median: 0, gemessen: 0 };
     }
 }
 
@@ -28709,20 +28883,64 @@ function befundeHtml(){
         // hat gearbeitet. Gruen, nicht blau - das ist kein Befund, das
         // ist eine Bestaetigung.
         if(b.hilfsmittelGesamt){
+            const a = b.arten || { formel:0, rechner:0, vorlesen:0 };
+            const nachschlagen = a.formel + a.rechner;
+            // Die Marke nennt beim Namen, was ueberwiegt - "nachgeschlagen"
+            // passt nicht auf das Vorlesen, "Hilfsmittel" nicht auf das
+            // Formelblatt allein.
+            const marke = (a.vorlesen && !nachschlagen) ? '× vorgelesen'
+                        : (a.vorlesen ? '× mit Hilfsmittel' : '× nachgeschlagen');
+            // Aufgezaehlt wird nur, was auch vorkam.
+            const teile = [];
+            if(a.formel)   teile.push('das Formelblatt bei ' + a.formel);
+            if(a.rechner)  teile.push('den Rechner bei ' + a.rechner);
+            if(a.vorlesen) teile.push('das Vorlesen bei ' + a.vorlesen);
+            const satz = teile.length === 1
+                ? ('Du hast ' + teile[0] + ' Frage' + (b.hilfsmittelGesamt === 1 ? '' : 'n') + ' genutzt.')
+                : ('Du hast ' + teile.slice(0, -1).join(', ') + ' und ' + teile[teile.length-1]
+                   + ' Fragen genutzt.');
+            // Die Begruendung haengt davon ab, was dabei war: Formelblatt
+            // und Rechner sind erlaubte Hilfsmittel, das Vorlesen ist
+            // Nachteilsausgleich. Beides ist richtig, aber aus
+            // verschiedenen Gruenden.
+            // Benannt wird nur, was auch benutzt wurde. "Beides liegt auf
+            // dem Tisch" ist falsch, wenn nur das Formelblatt im Spiel war -
+            // und den Rechner zu erwaehnen, den niemand angefasst hat, macht
+            // den Satz unglaubwuerdig.
+            const wasLiegt = (a.formel && a.rechner) ? 'Formelsammlung und Rechner liegen'
+                           : (a.formel ? 'Die Formelsammlung liegt' : 'Der Rechner liegt');
+            let warum;
+            if(a.vorlesen && nachschlagen){
+                warum = 'Genau richtig, und beides zählt: ' + wasLiegt + ' in der Prüfung '
+                      + 'auf dem Tisch, das Vorlesen ist Nachteilsausgleich. '
+                      + 'Die Zeit dafür wird dir nirgends angerechnet.';
+            } else if(a.vorlesen){
+                warum = 'Völlig in Ordnung: Vorlesen ist ein anerkannter Nachteilsausgleich, '
+                      + 'und die Zeit fürs Zuhören wird von deiner Bearbeitungszeit abgezogen. '
+                      + 'Die Sekunden oben sind reine Denkzeit.';
+            } else {
+                warum = 'Genau richtig: ' + wasLiegt + ' in der Prüfung auf dem Tisch. '
+                      + 'Nachschlagen ist geübte Prüfungstechnik, kein Umweg.';
+            }
             h += '<div class="befund-zeile">'
-               +   '<span class="b-marke gut">' + b.hilfsmittelGesamt + '× nachgeschlagen</span>'
-               +   '<span class="b-mitte">Du hast bei ' + b.hilfsmittelGesamt + ' Frage'
-               +     (b.hilfsmittelGesamt === 1 ? '' : 'n') + ' das Formelblatt oder den Rechner geöffnet.'
-               +     '<br><span class="b-was-gewaehlt">Genau richtig: Beides liegt in der Prüfung '
-               +     'auf dem Tisch. Nachschlagen ist geübte Prüfungstechnik, kein Umweg.</span></span>'
+               +   '<span class="b-marke gut">' + b.hilfsmittelGesamt + marke + '</span>'
+               +   '<span class="b-mitte">' + satz
+               +     '<br><span class="b-was-gewaehlt">' + warum + '</span></span>'
                + '</div>';
         }
         b.nachgeschlagen.slice(0, 3).forEach(x => {
+            const grund = (x.vl && !(x.fb || x.tr))
+                ? 'Hat länger gedauert &ndash; die Vorlesezeit ist dabei schon abgezogen. '
+                  + 'Kein Grund zur Sorge.'
+                : (x.vl
+                    ? 'Hat länger gedauert &ndash; aber du hast nachgeschlagen und dir vorlesen '
+                      + 'lassen. Das ist die Zeit wert.'
+                    : 'Hat länger gedauert &ndash; aber du hast nachgeschlagen. '
+                      + 'Das ist die Zeit wert.');
             h += '<div class="befund-zeile">'
                +   '<span class="b-marke gut">' + x.schnitt + ' s</span>'
                +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
-               +     '<br><span class="b-was-gewaehlt">Hat länger gedauert &ndash; aber du hast '
-               +     'nachgeschlagen. Das ist die Zeit wert.</span></span>'
+               +     '<br><span class="b-was-gewaehlt">' + grund + '</span></span>'
                + '</div>';
         });
         b.langsam.slice(0, 5).forEach(x => {
@@ -28739,7 +28957,9 @@ function befundeHtml(){
                + 'Länger brauchen ist kein Fehler, und nachschlagen erst recht nicht &ndash; '
                + 'die Formelsammlung liegt in der Prüfung vor dir. Die Zeilen oben zeigen nur, '
                + 'wo du ohne Hilfsmittel ins Grübeln kommst; dort lohnt ein Blick ins Formelblatt '
-               + 'vielleicht mehr als weiteres Nachdenken.</div>';
+               + 'vielleicht mehr als weiteres Nachdenken. '
+               + 'Vorlesezeit ist in keiner dieser Zahlen enthalten &ndash; sie wird abgezogen, '
+               + 'bevor gerechnet wird.</div>';
         }
         return h + '</div>';
     }catch(e){ console.debug('Befunde:', e.message); return ''; }

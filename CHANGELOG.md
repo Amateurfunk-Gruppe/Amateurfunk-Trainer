@@ -8,6 +8,192 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.253.0] - 2026-09-10
+
+### Behoben
+- **43 weitere Fragen bekommen ihren Formelblatt-Knopf.** Dietmar mit dem Bild
+  zu VD721 („Anfangs- und Endfrequenz für das 23 cm Amateurfunkband"): „Hier
+  VD721 fehlt die Formelsammlung. Gibt es davon noch mehr die fehlen?"
+
+  Ja — und mein Suchmuster von 1.252.0 war schuld. Es suchte nach „maximal
+  zulässige … Frequenzbereich" und fand deshalb genau die zwölf Fragen, die so
+  formuliert sind. Die Serie **VD709 bis VD723** fragt aber „Welche Antwort
+  enthält die richtige Anfangs- und Endfrequenz für das … Band?" — fünfzehn
+  Fragen, eine je Band von 160 m bis 13 cm, und alle fielen durch. VD721 stand
+  mittendrin.
+
+  Diesmal ist das Blatt Seite für Seite durchgegangen worden, statt nach
+  Wortmustern zu raten:
+
+  | Fundstelle | + | Fragen |
+  |---|---|---|
+  | Seite 3 — Anlage 1, Absatz (3) | 2 | VD704, VD705 (Definition primärer/sekundärer Funkdienst, im Wortlaut) |
+  | Seite 4 — Tabellarische Übersicht | 18 | **VD709–VD723** (Bandgrenzen), VD727, VD736, VD737 |
+  | Seite 6 — Aufbau der Rufzeichen | 3 | VD201, VD202, VD203 |
+  | Seite 7 — Rufzeichenreihen und Klasse | 3 | BD104, BD105, BD106 (DL1–DL9 = A, DN9 = N, DO1–DO9 = E) |
+  | Seite 8 — Nr. 3, besondere Anlässe | 1 | VD204 (warum „DL250 BTHVN" zulässig ist) |
+  | Seite 9 — Nr. 6, Peilsender | 1 | BD109 (MO, MOE, MOI, MOS, MOH, MO5) |
+  | Seite 10 — Nr. 9–11, Rufzeichenzusätze | 12 | BD201–BD211, VD306 (/m /mm /am /p, /T, /R) |
+  | Seite 17 — EIRP | 2 | VD725, VD726 |
+  | Seite 19 — Wellenlänge und Frequenz | 1 | EG109 |
+
+  **Fünf Seitentitel** wurden dabei präzisiert, weil die Seiten mehr tragen,
+  als bisher dranstand — Seite 9 etwa nicht nur die Notfunk-Klubstationen,
+  sondern auch die Kurzzeitzulassungen und die Peilsender-Kennungen.
+
+  Aus 480 Zuordnungen sind über zwei Durchgänge **535** geworden. Damit hat in
+  der Klasse N jede fünfte Frage einen Knopf, im Aufstieg E auf A jede zweite
+  bis dritte:
+
+  | Katalog | Fragen | mit Knopf |
+  |---|---|---|
+  | Klasse N | 571 | 114 (20 %) |
+  | N auf E | 463 | 139 (30 %) |
+  | E auf A | 716 | 282 (39 %) |
+  | Klasse A | 1750 | 535 (31 %) |
+
+  Nachgeprüft im Trainer: Bei VD721 erscheint der Knopf und öffnet auf „Blatt 2
+  · Seite 4 im PDF".
+
+---
+
+## [1.252.0] - 2026-09-10
+
+### Behoben
+- **Zwölf Fragen hatten keinen Formelblatt-Knopf, obwohl die Antwort im Blatt
+  steht.** Aufgefallen ist es an Dietmars Frage: „Wo finde ich das im
+  Formelblatt?" zu VD742 — der Frage nach dem Frequenzbereich mit 2 MHz
+  Bandbreite bzw. 7 MHz für amplitudenmodulierte Fernsehaussendungen. Die
+  Antwort steht im Blatt, der Knopf erschien trotzdem nicht.
+
+  Die Antwort braucht zwei Seiten: Auf **Seite 5** (B Zusätzliche
+  Nutzungsbestimmungen) sagt **Nummer 7** genau diese beiden Werte; auf
+  **Seite 4** trägt dann Zeile 18 — 430–440 MHz — diese 7 in der letzten
+  Spalte. Die Falle ist Nummer 8 direkt darunter: fast derselbe Wortlaut, aber
+  „amplitudenmoduliert *oder digital* 7 MHz und frequenzmoduliert 18 MHz", und
+  die gehört zu 1240–1300 MHz.
+
+  Zugeordnet wurden:
+
+  | Fundstelle | Fragen |
+  |---|---|
+  | Seite 4 — Tabellarische Übersicht | VD706, VD724, VD728, VD730, VD731, VD732, VD743 |
+  | Seite 5 — Zusätzliche Nutzungsbestimmungen | VD738, VD739, VD740, VD741, VD742 |
+
+- **Sieben 70-cm-Fragen zeigten auf den 2-m-Bandplan.** Beim Nachsehen fiel
+  auf, dass die beiden Bandplan-Stellen falsch benannt waren: Die Stelle hieß
+  „IARU-Bandplan (Kurzwelle)" und zeigte auf Seite 11 — dort steht aber der
+  **2-m-Plan**, und auf Seite 12 der **70-cm-Plan**. Einen Kurzwellen-Bandplan
+  gibt es im Blatt gar nicht.
+
+  Alle 19 Bandplan-Fragen hingen an dieser einen Stelle. Wer bei BC206 („Welche
+  Frequenz empfiehlt der IARU Bandplan für einen allgemeinen Anruf mit analoger
+  FM-Telefonie im 70 cm-Band?") nachschlug, landete im 2-m-Plan und fand die
+  433,500 MHz dort nicht. Betroffen: BC206, BC208, BC212, BC219, BC220, BC221,
+  BC222 — sie zeigen jetzt auf Seite 12.
+
+- **Acht Seitentitel stimmten nicht mit dem PDF überein.** Sie sind Seite für
+  Seite am Original abgelesen und richtiggestellt:
+
+  | Stelle | bisher | jetzt |
+  |---|---|---|
+  | Seite 4 | Frequenzbereiche und Sendeleistung 1 | A Tabellarische Übersicht — Frequenzbereiche und Leistung |
+  | Seite 5 | Frequenzbereiche und Sendeleistung 2 | B Zusätzliche Nutzungsbestimmungen (Nr. 1–17) |
+  | Seite 6 | Frequenzbereiche und Sendeleistung 3 | Rufzeichenplan (Amtsblatt-Verfügung 61/2024) |
+  | Seite 7 | Zusätzliche Nutzungsbestimmungen 1 | Rufzeichen mit 2- oder 3-buchstabigen Suffixen |
+  | Seite 8 | Zusätzliche Nutzungsbestimmungen 2 | Rufzeichen mit 1-buchstabigen Suffixen (Klubstationen) |
+  | Seite 9 | Zusätzliche Nutzungsbestimmungen 3 | Klubstationsrufzeichen für Not- und Katastrophenschutz |
+  | Seite 10 | Zusätzliche Nutzungsbestimmungen 4 | International gebräuchliche Rufzeichenzusätze |
+  | Seite 3 | Nutzungsbestimmungen (Anlage 1) | Anlage 1: Nutzungsbedingungen (P/S, PEP, ERP) |
+
+  Aufgefallen war es bisher nicht, weil auf die Seiten 6 bis 10 keine einzige
+  Frage zeigte — der falsche Titel stand nur in der Datei, nie auf dem Schirm.
+
+  Geändert wurde ausschließlich `formelhilfe.json`: 480 Zuordnungen sind 492
+  geworden, keine ging verloren, und kein Verweis zeigt ins Leere. Nachgeprüft
+  im Trainer: Bei VD742 erscheint der Knopf, das Fenster öffnet auf „Blatt 3 ·
+  Seite 5 im PDF".
+
+---
+
+## [1.251.0] - 2026-09-10
+
+### Geändert
+- **Die Formelsammlung verdeckt die Frage nicht mehr.** Dietmar: „Bei der
+  Formelsammlung den Hintergrund in Blure zu halten ist nicht gut. Hier wäre es
+  auch schön, wenn man das Formelblatt verschieben kann. Beim nächsten mal
+  öffen, ist es wieder Zentriert."
+
+  Drei Sätze, ein Gedanke: Man schlägt im Blatt nach, **weil** man die Frage
+  beantworten will — und muss sie dabei lesen können. Bisher lagen 72 Prozent
+  Abdunklung und sechs Punkte Unschärfe darüber; von der Frage blieben graue
+  Schemen.
+
+  Jetzt liegt nur noch ein Hauch darüber (14 Prozent), gerade genug, damit das
+  Fenster als eigene Ebene zu erkennen ist. Die Abgrenzung übernimmt der
+  Schatten.
+
+  **Und das Blatt lässt sich am Kopf beiseite ziehen** — genau wie der Rechner.
+  Wo es steht, wird bewusst **nicht** gemerkt: Beim nächsten Aufschlagen liegt
+  es wieder in der Mitte, so wie Dietmar es beschrieben hat. Das ist der
+  Unterschied zum Rechner, den man einmal an seine Ecke stellt und dort stehen
+  lässt; das Blatt schiebt man nur kurz zur Seite, um etwas nachzusehen.
+
+  Verschoben wird über `transform` und nicht über `left`/`top`: Der Kasten
+  sitzt in einem Flex-Kasten, der ihn mittig hält — wer `left` setzt, kämpft
+  gegen diese Zentrierung an. Ein leeres `transform` bringt ihn genau in die
+  Mitte zurück, und das ist auch der ganze Trick beim Zurücksetzen. Gerechnet
+  wird durch den Anzeigefaktor, sonst liefe das Fenster bei 90 Prozent Anzeige
+  langsamer als der Zeiger.
+
+  Die Grenzen sorgen dafür, dass der Kopf immer greifbar bleibt: Man kann das
+  Blatt fast ganz aus dem Bild schieben, aber nie so weit, dass man es nicht
+  mehr zurückholen kann. Ein Klick daneben schließt es weiterhin, ein Klick auf
+  den Kopf nicht.
+
+---
+
+## [1.250.0] - 2026-09-10
+
+### Geändert
+- **Vorlesen zählt bei der Zeitauswertung mit.** Dietmar: „Vorlesen lassen,
+  gehört auch dazu zum Auswerten der Zeit bei den Fragen."
+
+  Derselbe Gedanke wie beim Formelblatt am selben Tag, und wieder trifft er
+  einen Denkfehler. Wer sich eine Frage samt vier Antworten vorlesen lässt,
+  sitzt zwanzig bis vierzig Sekunden davor, bevor er überhaupt anfangen kann zu
+  entscheiden. Der Trainer hat diese Sekunden bisher wie Nachdenken gezählt —
+  und die Frage danach unter „richtig, aber langsam" gemeldet. Das ist doppelt
+  falsch: Es stimmt nicht, und es hält ausgerechnet denen etwas vor, die das
+  Vorlesen brauchen. Für sie ist es Nachteilsausgleich und in der Prüfung
+  ausdrücklich vorgesehen.
+
+  **Die Vorlesezeit wird jetzt gestoppt und abgezogen.** Gemessen wird die
+  tatsächliche Dauer, nicht die Länge des Textes: Wer mittendrin auf Stop
+  drückt, bekommt auch nur die gehörten Sekunden abgezogen. Nachgerechnet an
+  einem Beispiel: 30 Sekunden an der Frage, davon 22 Sekunden Vorlesen → **8
+  Sekunden** gehen in die Auswertung. Ohne Vorlesen bleiben 12 Sekunden 12
+  Sekunden.
+
+  **Und das Vorlesen wird als Hilfsmittel vermerkt** — wie Formelblatt und
+  Rechner seit 1.241.0. Bleibt eine Frage trotz Abzug auffällig, steht sie
+  nicht mehr unter „langsam", sondern unter den Zeilen, die eine gute
+  Gewohnheit benennen. Die Marke sagt dabei, was zutraf: „vorgelesen",
+  „nachgeschlagen" oder „mit Hilfsmittel", und der Text nennt nur die Mittel,
+  die auch benutzt wurden.
+
+  Ein fehlgeschlagener Vorlesevorgang zählt nicht mit. Ist keine Stimme
+  eingerichtet, ist der ganze Vorgang nach einem Sekundenbruchteil vorbei —
+  gemessen 111 Millisekunden. Erst ab anderthalb Sekunden gilt es als
+  vorgelesen; die Zeit selbst wird trotzdem abgezogen, sie fällt bei so kurzen
+  Vorgängen ohnehin nicht ins Gewicht.
+
+  **Die Übungszeit bleibt unberührt.** In der Auswertung (diese Woche,
+  insgesamt) zählt weiter jede Minute am Trainer — Zuhören ist Üben. Abgezogen
+  wird nur dort, wo eine Zeit *bewertet* wird.
+
+---
+
 ## [1.249.0] - 2026-09-10
 
 ### Geändert
