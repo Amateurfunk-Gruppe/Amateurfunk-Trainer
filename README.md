@@ -16,7 +16,7 @@ Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
 
 ## Was es kann
 
-**Sechs Prüfungswege**, umschaltbar über „Ziel wählen":
+**Vier Prüfungswege**, umschaltbar über „Ziel wählen":
 
 | Auswahl | Prüfung | Fragen zum Lernen |
 |---|---|---|
@@ -24,7 +24,6 @@ Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
 | Direkteinstieg Klasse E | Vorschriften · Betrieb · Technik N · Technik E | 1034 |
 | Aufstockung N → E | nur Technik E | 463 |
 | Aufstockung E → A | nur Technik A | 716 |
-| **Einstieg CB → N** | Vorschriften · Betrieb · Technik N | **433** |
 
 Vorschriften und Betrieb sind für alle Klassen gleich — die Klassen unterscheiden
 sich nur im Prüfungsteil Technik. Beim Aufstieg wird deshalb nur dieser Teil
@@ -36,24 +35,7 @@ Technik kommt dazu) und **Aufstockung** (Bescheinigung vorhanden — nur die
 fehlende Technik, kein Vorschriften und kein Betrieb mehr). Jede Zeile sagt
 vorher, welche Prüfungsbögen dazugehören und wie viele Fragen zu lernen sind.
 
-![Das Fenster „Prüfungsziel wählen" mit allen fünf Zielen](bilder/02-pruefungsziel.png)
-
-### Einstieg CB → N
-
-Wer vierzig Jahre CB gefunkt hat, muss nicht bei Null anfangen. Antennenbau,
-S-Meter, SWR, PL/N/SMA/BNC, LSB/USB, AM/FM/SSB, die Q-Gruppen, Plus und Minus,
-Sicherung, Stromkreise und P = U · I — das sitzt.
-
-Dieses Prüfungsziel rechnet genau **138 der 571 Fragen als bekannt an**, der
-Lernstapel schrumpft damit auf **433**. Aus den Vorschriften wird **keine
-einzige** Frage abgezogen: AFuG, AFuV, Bandpläne, Rufzeichen, CEPT und EMVU
-kommen im CB-Funk nicht vor.
-
-Die Regel bei jedem Zweifelsfall war **im Zweifel nicht abziehen** — die
-Prüfung soll ja bestanden werden. Welche 138 es sind und warum, steht mit
-Begründung in [CB-Einstieg.md](CB-Einstieg.md). Im Trainer lässt sich jede
-einzelne Frage per Kästchen zurückholen, und **der Prüfungssimulator zieht
-weiterhin aus allen 571** — genau wie die Bundesnetzagentur.
+![Das Fenster „Prüfungsziel wählen" mit allen vier Zielen](bilder/02-pruefungsziel.png)
 
 **Weiter:**
 
@@ -393,7 +375,6 @@ Bögen nicht noch einmal:
 | Klasse E | Vorschriften · Betrieb · Technik N · Technik E |
 | Aufstockung N → E | nur Technik E |
 | Aufstockung E → A | nur Technik A |
-| Einstieg CB → N | Vorschriften · Betrieb · Technik N |
 
 Die Prüfungsübersicht auf der Hauptseite zeigt dieselben Teile — beide lesen
 aus demselben Fragenkatalog, sie können sich also nicht widersprechen.
