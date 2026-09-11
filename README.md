@@ -590,6 +590,13 @@ Die maschinenlesbare Fassung und die Zeichnungen stammen aus
 **Michael, DL2YMR** für seinen Videolehrgang zur Klasse N, auf den der Trainer
 Lektion für Lektion verweist.
 
+**[50ohm.de](https://www.50ohm.de)** für den Online-Lehrgang, zu dem der Trainer
+bei jeder Frage die passende Stelle anbietet — Kapitel und Abschnitt direkt,
+ohne Suchmaschine dazwischen.
+
+**Dem [DARC e. V.](https://www.darc.de)**, der diesen Lehrgang herausgibt und
+die Ausbildung im Amateurfunk seit Jahrzehnten trägt.
+
 ## Mitgelieferte Fremdbestandteile
 
 - `lame.js` — [lamejs](https://github.com/gilmoreorless/lamejs), eine
