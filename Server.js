@@ -4319,10 +4319,16 @@ try{
         const namen = {};
         Object.entries(room.users || {}).forEach(([uid, u]) => { namen[uid] = (u && u.name) || 'Unbekannt'; });
 
+        // Die Startzeiten kommen mit, damit der Gastgeber auch fuer die
+        // ERSTE Frage jedes Teilnehmers eine Bearbeitungszeit hat. Alle
+        // weiteren ergeben sich aus dem Abstand zur vorigen Antwort -
+        // answeredAt steht ohnehin schon in allAnswers. Ohne startTimes
+        // fiele je Teilnehmer eine Frage aus der Tempo-Probe.
         socket.emit('duoAuswertung', {
           code: room.code,
           fragen: fragen,
           allAnswers: room.allAnswers || {},
+          startTimes: room.startTimes || {},
           namen: namen,
           teilnehmer: Object.keys(room.users || {}).length,
           config: room.config || null,

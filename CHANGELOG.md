@@ -8,6 +8,683 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.272.0] - 2026-09-11
+
+### Hinzugefügt
+- **Der Lernbedarf steht jetzt als zweiter Knopf im Abschlussfenster.** Dietmar:
+  „Weiter mit Lernbedarf ist das gleiche? Wenn nicht, auch das als Button mit
+  einbauen."
+
+  Es ist **nicht** dasselbe, und der Unterschied ist der Rede wert:
+
+  | | was drin ist | wann eine Frage rausfällt |
+  |---|---|---|
+  | **Stolpersteine** | jede Frage, bei der jemals etwas danebenging und die noch nicht sitzt | wenn sie gemeistert ist |
+  | **Lernbedarf** | die kleinere, frischere Liste — hinein bei jedem Fehler | nach dreimal richtig in Folge |
+
+  Bei Dietmars Lernstand an diesem Tag: 49 offene Stolpersteine, 36 im
+  Lernbedarf. Beides anzubieten ist also keine Dopplung — und damit niemand
+  zweimal dasselbe sucht und sich über verschiedene Zahlen wundert, steht der
+  Unterschied jetzt als feine Zeile unter den Knöpfen.
+
+  Das Fenster nach „Noch nie geübt" zeigt beide, je mit der aktuellen Zahl, und
+  lässt jeden weg, dessen Liste gerade leer ist. Sind beide leer, sagt es
+  weiterhin nur: „Sauber."
+
+---
+
+## [1.271.0] - 2026-09-11
+
+### Hinzugefügt
+- **Ein Klang, wenn etwas geschafft ist — `sounds/level-up.wav`.** Dietmar hat
+  die Datei selbst in den Ordner gelegt und beschrieben, wo sie hingehört:
+  „Noch nie geübt sind bei mir 6 Fragen. Hier möchte ich einen Sound und im
+  Abschluss ein Fenster … Interessant wäre dieser Sound auch wenn eine Frage 3
+  Mal hintereinander richtig beantwortet wurde. Hier dann ohne Fenster."
+
+  Zwei Anlässe, ein Ton:
+
+  1. **Eine Frage sitzt** — dreimal hintereinander richtig. Genau in diesem
+     Moment wechselt sie vom Lernstapel in den Bestand; das ist die Stelle, an
+     der ein Trainer nickt. Ohne Fenster, ohne Unterbrechung. Nachgemessen: der
+     Ton kommt beim dritten Mal, nicht beim vierten.
+  2. **Die Runde „Noch nie geübt" ist durch** — dazu ein Fenster: „Alle Fragen
+     durch! Es gibt keine Frage mehr, die du noch nie gesehen hast. Jetzt geht
+     es weiter mit den Fragen, bei denen du noch Schwierigkeiten hast." Der
+     Knopf daneben startet die Stolpersteine gleich mit der richtigen Zahl
+     („Weiter mit 12 Stolpersteinen"). Gibt es keine, sagt das Fenster auch das.
+
+  Das Fenster kommt **nur** nach dieser einen Rundenart — nach jeder beliebigen
+  Runde wäre es eine Unterbrechung; hier ist es der Abschluss von etwas, das man
+  sich vorgenommen hat.
+
+  Beides ist unter **Einstellungen → Nachteilsausgleich → Belohnung**
+  abschaltbar: „Ton, wenn eine Frage sitzt" und „Fenster, wenn ‚Noch nie geübt'
+  durch ist". Beim Einschalten erklingt der Ton einmal zur Probe. Nachgemessen
+  mit abgefangenem `play()`: mit Haken ein Aufruf von `level-up.wav`, ohne Haken
+  keiner.
+
+---
+
+## [1.270.0] - 2026-09-11
+
+### Geändert
+- **Der Formelblatt-Ton kommt jetzt bei jeder Frage — und lässt sich einzeln
+  abschalten.** Dietmar: „Der Sound bei Formelblatt muss jedes Mal kommen,
+  sobald ich eine Frage mit Formelblatt habe. Dieser soll unter Einstellungen
+  abschaltbar sein."
+
+  Bisher erklang der Zweiklang nur **einmal je Sitzung** — aus Sorge, er könnte
+  bei 282 Fragen mit Blattbezug (Katalog E → A) auf die Nerven gehen. Dietmars
+  Weg ist der bessere: Wer übt, schaut auf die Frage und nicht auf die
+  Knopfleiste; ein Ton erreicht ihn auch dann. Und wem es zu viel wird, der
+  schaltet **genau diesen Ton** ab, ohne den optischen Hinweis zu verlieren.
+
+  Dafür stehen unter Einstellungen → Nachteilsausgleich → Formelblatt jetzt
+  zwei Haken statt einem: „Auf das Formelblatt hinweisen" (der Knopf pulst) und
+  „Dazu ein kurzer Ton". Ist der erste aus, steht der zweite grau — ohne
+  Hinweis gibt es auch keinen Ton. Beim Einschalten erklingt der Zweiklang
+  einmal zur Probe.
+
+  Nachgemessen über eine Runde von 25 Fragen: 8 Fragen mit Blattbezug, 8 Töne —
+  genau einer je Frage, auch wenn dieselbe Frage mehrfach gezeichnet wird.
+  Ausgeschaltet: kein einziger.
+
+---
+
+## [1.269.0] - 2026-09-11
+
+### Behoben
+- **Beim Blättern fehlten Kacheln, solange ein Ziel frisch war.** Dietmar: „Bei
+  Blättern fehlt eine Kachel bei N nach E."
+
+  Ursache war eine Regel aus 1.267.0: „Rest abarbeiten" und „Noch nie geübt"
+  erschienen nur, wenn ihre Zahl kleiner war als der ganze Katalog — der
+  Gedanke war, dieselbe Zahl nicht dreimal untereinander zu schreiben. Bei
+  E → A hatte Dietmar eine Frage beantwortet, dort stand die Kachel (715 von
+  716); bei N → E keine einzige, dort fehlte sie.
+
+  Eine Kachel, die mal da ist und mal nicht, sieht nach Fehler aus — und „alle
+  463 sind noch unberührt" ist eine Aussage über den Lernstand, keine
+  Dopplung. Beide Kacheln stehen jetzt immer; dass die Menge gerade dem ganzen
+  Katalog entspricht, sagt ein Zusatz in der Erklärzeile: **„Derzeit ist das
+  der ganze Katalog."**
+
+---
+
+## [1.268.0] - 2026-09-11
+
+### Behoben
+- **Die beiden Ankreuzfelder im Prüfungssimulator sind wieder gleich groß.**
+  Dietmar: „2 unterschiedliche Rahmen zum anklicken bei Prüfungssimulator. Die
+  obere Größe gefällt mir gut."
+
+  Beide standen auf `width:17px` — trotzdem war das untere schmaler,
+  nachgemessen 15,3 statt 17 Punkte. Der Grund: Beide sind Flex-Kinder, und ein
+  Flex-Kind **schrumpft**, wenn der Text daneben mehr Platz braucht. Neben dem
+  oberen steht eine Zeile, neben dem unteren drei — also wurde nur dieses
+  zusammengedrückt.
+
+  `width` allein hilft dagegen nicht, `flex:0 0 17px` schon: Damit ist die
+  Breite keine Empfehlung mehr, sondern eine Ansage. Beide Felder messen jetzt
+  17 × 17 Punkte.
+
+---
+
+## [1.267.0] - 2026-09-11
+
+### Geändert
+- **Blättern öffnet jetzt immer das Fenster — auch bei N → E und E → A.**
+  Dietmar: „Wenn ich von N nach E und von E nach A ‚Blättere', möchte ich beim
+  Öffnen auch dieses Fenster haben."
+
+  Im Code stand eine Abkürzung: ohne Lesezeichen und ohne abgehakte Fragen ging
+  es sofort los, ohne Fenster. Sie stammte aus der Zeit, als dort nur zwei
+  Kacheln standen, die dann beide dasselbe gesagt hätten. Bei einem frisch
+  gewechselten Prüfungsziel griff genau diese Abkürzung — man landete ohne ein
+  Wort der Erklärung mitten im Katalog.
+
+  Inzwischen stehen im Fenster die Fragenzahl des Ziels, der Satz, wie Blättern
+  überhaupt funktioniert, und die Knöpfe zum Zurücksetzen. Das gehört gerade
+  beim ersten Mal gesehen.
+
+  Damit dort nicht dreimal dieselbe Zahl untereinander steht, erscheinen „Rest
+  abarbeiten" und „Noch nie geübt" erst, wenn sie etwas anderes sagen als der
+  ganze Katalog. Frisch gewechselt zeigt das Fenster also eine Kachel, mit
+  Lernstand alle vier.
+
+---
+
+## [1.266.0] - 2026-09-11
+
+### Geändert
+- **Alle Schließen-Knöpfe verhalten sich beim Überfahren gleich — und keiner
+  wird mehr rot.** Dietmar: „Bei Prüfungssimulator ist bei MouseOverlay der
+  Button X rot. Eine farbliche Abhebung finde ich gut, aber nicht rot. Die
+  Farbe von dem Mode? Das muss bei allen X für Fenster schließen gleich sein."
+
+  Rot war dort die Farbe für „etwas geht kaputt" (`--bad`) — und ein Fenster zu
+  schließen ist nichts Schlimmes. Dazu hatte fast jedes Fenster sein eigenes
+  Verhalten: mal gar keins, mal ein blasses Blau, beim Simulator eben Rot.
+
+  Jetzt gilt eine Regel für alle: Der Grund nimmt die **Linienfarbe des Modes**
+  (`--line`), Rahmen und Zeichen die **Textfarbe des Modes** (`--ink`). Beide
+  wechseln mit — im Green Mode wird es grünlich, im Orange Mode warm, im Grey
+  Mode grau. Nachgemessen in allen fünf Modes: Simulator und Auswertung liefern
+  exakt dieselben Farbwerte, von `rgb(227,233,243)` im Light Mode bis
+  `rgb(180,187,195)` im Grey Mode.
+
+  Erfasst sind die Schließen-Knöpfe in Auswertung, Stolpersteinen, „Woran es
+  liegt", Übungszeit, Kursleiter-Auswertung, gespeicherten Kursauswertungen,
+  Formelsammlung, Lektionen, GitHub, Abgleich, QSL-Album, Notizen,
+  Vorlese-Einstellungen, Gruppenraum, Blättern, Einstellungen, Anleitung,
+  Rechner und Simulator. Die **Form** der Knöpfe bleibt, wie sie ist — rund,
+  wo sie rund war, eckig, wo sie eckig war; gleich ist, was beim Überfahren
+  passiert.
+
+---
+
+## [1.265.0] - 2026-09-11
+
+### Geändert
+- **Die Auswertung hat in jedem Prüfungsziel dieselbe Größe.** Dietmar, mit
+  zwei Bildern nebeneinander: „Bei der Klasse E nach A möchte ich die gleiche
+  Größe."
+
+  Das Fenster stand auf einer **Höchst**höhe und richtete sich damit nach dem
+  Inhalt — und der ist beim Aufstieg E → A nun einmal kürzer: ein Prüfungsteil
+  statt dreier. Also schrumpfte das Fenster mit, und beim Wechsel des Ziels
+  sprang es.
+
+  Jetzt steht es still: eine **feste** Höhe, genau wie bei den Einstellungen
+  und der Anleitung, die Dietmar am 11.09. schon angeglichen haben wollte.
+  Gerollt würde innen — und innen wird ohnehin nicht mehr gerollt, dafür sorgt
+  seit 1.264.0 das Einpassen. Damit die beiden Spalten die feste Höhe auch
+  ausfüllen und der graue Kasten rechts nicht auf halber Höhe aufhört, nimmt
+  das Spaltenraster mindestens die ganze Höhe des Inhaltsbereichs ein.
+
+  Nachgemessen in allen vier Zielen, jeweils mit und ohne Lernstand: acht Mal
+  774 × 780 Punkte, acht Mal ohne Rollbalken — außen wie innen.
+
+---
+
+## [1.264.0] - 2026-09-11
+
+### Geändert
+- **Der Rollbalken in der Auswertung ist weg — das Fenster passt sich jetzt an,
+  nicht der Leser.** Dietmar: „Der Scrollbalken muss weg. Baue das Fenster so
+  auf, dass er verschwindet. Achte darauf, dass es in allen Klassen vorhanden
+  ist."
+
+  An den Abständen zu feilen war Flickwerk: Die Auswertung ist bei jedem
+  Lernstand anders lang, und jedes Fenster ist anders hoch. Was bei dem einen
+  passt, läuft beim nächsten wieder über.
+
+  Jetzt andersherum — **nach** dem Aufbau wird gemessen, ob der Inhalt in die
+  sichtbare Höhe passt. Tut er es nicht, verschwindet die unterste entbehrliche
+  Zeile, und das so lange, bis er passt. In dieser Reihenfolge: Stolpersteine
+  bis zwei übrig, Befundzeilen bis eine, dann die Erklärtexte, dann die
+  Tempo-Kacheln, zuletzt „Wo es klemmt". **Verloren geht nichts** — über beiden
+  Listen steht jetzt immer der Knopf „Alle … ansehen", der zur vollständigen
+  Fassung führt. Gekürzt wird die Vorschau, nicht der Inhalt.
+
+  Nachgemessen über acht Fenstergrößen von 1920×1080 bis 1152×648: kein
+  Rollbalken mehr, in allen vier Prüfungszielen. Am Handy bleibt alles wie
+  bisher — dort steht die Auswertung einspaltig, und Rollen ist der normale Weg.
+
+- **Die Balken stehen jetzt auch da, wenn es noch nichts vorherzusagen gibt.**
+  Dietmar: „Ich möchte da auch diese Balken wie bei der Klasse N, auch wenn da
+  kein Fortschritt angezeigt wird." Beim Aufstieg N → E und E → A fehlte in der
+  Zeile der Balken, solange keine 25 Antworten vorlagen — die Zeile sah aus, als
+  fehle etwas. Jetzt steht dort ein leerer Balken mit der Bestehensgrenze an
+  ihrem Platz und rechts „– von 25 · offen".
+
+- **Die rechte Seite sieht in jedem Prüfungsziel gleich aus.** Dietmar: „Ich
+  möchte rechts auch diese Buttons, auch wenn nichts angezeigt wird weil man
+  damit noch nie gelernt hat." Die beiden Kästen „Deine häufigsten
+  Stolpersteine" und „Woran es liegt" verschwanden bisher ganz, wenn noch keine
+  Antworten vorlagen. Jetzt stehen sie immer da — mit Kopfzeile, mit Knopf und
+  mit einem Satz, der sagt, was dort später steht.
+
+### Hinzugefügt
+- **„Hier wird es voll, sobald du übst".** Dietmar zum Aufstieg E → A: „Von
+  Klasse E auf A ist so gut wie nichts zu sehen." Wer das Prüfungsziel gerade
+  gewechselt hat, hat dort noch keine Antworten — und die Auswertung sagte das
+  zweimal auf verschiedene Weise, was aussah wie ein Fehler.
+
+  Darunter steht jetzt ein Kasten, der etwas anbietet statt etwas abzusagen:
+  wie viele Fragen das Ziel hat, wie viele davon beantwortet sind, was bis zur
+  ersten Einschätzung fehlt — und zwei Knöpfe, mit denen man an Ort und Stelle
+  loslegt: „Blättern" und „Die … noch nie geübten". Ab zehn beantworteten
+  Fragen verschwindet er von selbst.
+
+---
+
+## [1.263.0] - 2026-09-11
+
+### Hinzugefügt
+- **Prüfungssimulator: „Erschwerte Bedingungen".** Dietmar: „Hier wünsche ich
+  mir eine Prüfung mit erschwerten Bedingungen. Es gibt eine Auswertung mit
+  den Defiziten und hier möchte ich, dass diese Fragen auftauchen, bei denen
+  man Stolpersteine hat. Das Ganze muss realistisch sein."
+
+  Der letzte Satz ist der schwierige. Ein Bogen aus lauter Stolpersteinen wäre
+  keine Prüfung, sondern eine Fehlerrunde — die gibt es schon. Und er wäre
+  irreführend: Wenn alle Schwächen im selben Thema liegen, käme ein Bogen
+  heraus, der zur Hälfte aus einem einzigen Lernziel besteht. So sieht kein
+  Prüfungsbogen aus.
+
+  **Deshalb zwei Schritte, und nur der zweite ist gewichtet:**
+
+  1. Eine ganz normale Ziehung von 25 Fragen liefert die **Schablone** — wie
+     viele Fragen je Lernziel auf den Bogen gehören, mitsamt der Schwankung
+     einer echten Ziehung.
+  2. Innerhalb jedes Lernziels wird dann **gewichtet** gezogen: eine wacklige
+     Frage hat rund die achtfache Chance einer sitzenden.
+
+  Die Gewichte kommen aus `reifeChance()` — also aus genau dem Lernstand, aus
+  dem auch Prüfungsreife und Stolpersteine gerechnet werden. Eine abgehakte
+  Frage steht bei 0,95 und bekommt das kleinste Gewicht; eine mehrfach
+  danebengegangene bei 0,35 oder darunter. Wer bei einer Frage immer wieder
+  dieselbe falsche Antwort wählt, bekommt einen Aufschlag von 35 Prozent.
+
+  **Nachgemessen** mit 200 Bögen aus einem Topf von 204 Fragen, von denen 40
+  als wacklig galten:
+
+  | | wacklige Fragen je Bogen | Abweichung der Themenverteilung |
+  |---|---|---|
+  | normal | 5,0 von 25 | 1,4 % |
+  | erschwert | 16,3 von 25 | 2,4 % |
+
+  Dreimal so viele Stolpersteine, und die Themenverteilung bleibt die eines
+  echten Bogens. Der Haken merkt sich seinen Zustand, die Kopfzeile der
+  laufenden Prüfung trägt den Zusatz „· erschwert", und neben dem Haken steht,
+  wie viele Fragen je Teil derzeit überhaupt als wacklig gelten — ohne
+  Lernstand bringt der Modus nichts, und das soll man vorher wissen.
+
+  **Zur Frage, wie die Bundesnetzagentur ihre Bögen zusammenstellt:** Die
+  Prüfungsordnung (Vfg 29/2024) legt 25 Fragen je Teil und 19 Punkte zum
+  Bestehen fest — über die Zusammenstellung der Bögen steht dort kein Wort,
+  und einen veröffentlichten Schwierigkeitswert je Frage gibt es nicht.
+  Deshalb ist die Schablone oben eine gleichmäßige Zufallsziehung und keine
+  erfundene Gewichtung.
+
+---
+
+## [1.262.0] - 2026-09-11
+
+### Hinzugefügt
+- **Vierte Kachel im Blättern: „Noch nie geübt".** Dietmar: „Ich gehe alle 571
+  Fragen durch und klicke weiter wenn ich eine Antwort nicht kenne. Da steht,
+  noch nie geübt? Genau diese paar Fragen, suche ich! Meiner Meinung nach,
+  muss da noch eine Kachel mit rein."
+
+  Er hat recht, und „Rest abarbeiten" ist etwas anderes: Dort steht alles, was
+  noch nicht abgehakt ist — auch die Frage, die man fünfmal beantwortet hat
+  und immer noch nicht sicher kann. Die hier gesuchten sind eine kleine
+  Teilmenge davon: die, bei denen noch **überhaupt nichts** passiert ist. Beim
+  Blättern mit „Weiter" durchgeklickt, oder nie erreicht.
+
+  Gezählt wird nach **derselben Regel wie in der Prüfungsreife** — kein
+  Eintrag im Lernstand und nicht über den CB-Schein angerechnet. Nur so ergibt
+  die Zahl auf der Kachel dieselbe Summe wie die „noch nie geübt" der drei
+  Prüfungsteile; sonst sucht man sechs Fragen und bekommt sieben. Die Kachel
+  erscheint nur, wenn es solche Fragen gibt, und das Lesezeichen des normalen
+  Blätterns bleibt liegen.
+
+### Geändert
+- **Links ist der Abstand zwischen den Kästen kleiner.** Dietmar: „Oberhalb
+  von Auffrischung ist viel Platz. Wenn man das etwas aufschließt, ist rechts
+  der Scrollbalken komplett entfernt."
+
+  Der Platz war ein Versehen aus 1.261.0: Seit links mehr als ein Kasten
+  steht, zählte der Abstand doppelt — einmal als `gap` der Spalte (1 rem) und
+  noch einmal als `margin-top` jedes Blocks (0,8 rem). Rechts fiel das nie
+  auf, dort sitzen die Blöcke ohne `gap` aneinander. Jetzt gilt links nur noch
+  der `gap`, und der steht auf 0,7 rem: zusammen rund 22 Punkte weniger Höhe.
+
+---
+
+## [1.261.0] - 2026-09-11
+
+### Hinzugefügt
+- **Merken und Üben jetzt auch bei „Woran es liegt".** Dietmar: „Bei
+  Stolpersteine kann ich die Fragen Markieren und Üben. Bei Woran das liegt,
+  würde sich das auch gut ergänzen?"
+
+  Es ergänzt sich sogar besonders gut: Die Stolpersteine sagen, *welche*
+  Fragen danebengehen — hier steht, *warum*. Wer den Grund gerade gelesen hat,
+  ist genau derjenige, der die Frage jetzt vornehmen will; der Weg dorthin war
+  bisher Fenster zu, Liste aufmachen, Frage suchen.
+
+  Jede Zeile im Fenster hat rechts dasselbe Herz und denselben Knopf „Üben"
+  wie die Stolpersteine — dieselbe Merkliste, derselbe Übungsweg, kein zweites
+  Herz mit eigener Meinung. Steht dieselbe Frage in beiden Fenstern, ziehen
+  beide Herzen gemeinsam nach. Die grüne Hilfsmittel-Zeile bekommt keine
+  Knöpfe; sie gehört zu keiner einzelnen Frage.
+
+  In der Vorschau auf der rechten Seite bleiben die Knöpfe weg — dort ist der
+  Platz knapp, und der Kasten sollte gerade flacher werden.
+
+### Geändert
+- **Die Auffrischung steht jetzt links.** Dietmar: „Auffrischung: 408 gelernte
+  Fragen warteten auf Wiederholung. … Das nach links verschieben." Sie war der
+  vierte Kasten der rechten Spalte; jetzt steht sie unter der Tempo-Probe.
+  Links geht es um „wie weit bin ich" — und was als Nächstes dran wäre, gehört
+  dazu. Rechts bleiben die zwei Fragenlisten.
+
+---
+
+## [1.260.0] - 2026-09-11
+
+### Hinzugefügt
+- **„Geraten oder gewusst?" — eine Auswertung, die Raten von Wissen trennt.**
+  Dietmar: „Wenn ich mit meiner Freundin im Gruppenraum lerne, ist sie extrem
+  schnell. Ich würde gerne wissen, ob das alles nur geraten ist. Im
+  allgemeinen, kann man eine Auswertung einbauen, die prüft ob man nur die
+  Frage errät?"
+
+  Man kann — aber nicht so, wie man zuerst denkt. **Schnell allein beweist
+  gar nichts.** Der Fragenkatalog ist öffentlich, und wer ihn oft genug
+  durchgegangen ist, *erkennt* eine Frage in zwei Sekunden wieder. Das ist
+  kein Schummeln, das ist genau das, was in der Prüfung trägt.
+
+  Was Raten von Wissen trennt, ist die **Trefferquote unter genau den
+  Antworten, die zu schnell für ein Lesen kamen**:
+
+  | | schnell + richtig | schnell + falsch |
+  |---|---|---|
+  | **Quote nahe 100 %** | sitzt auswendig | — |
+  | **Quote nahe 25 %** | — | geraten (bei vier Antworten ist ein Viertel der Zufall) |
+
+  Nachgerechnet wird mit der Binomialverteilung: Wie wahrscheinlich ist es,
+  dass reines Raten mindestens so viele Treffer bringt? Ist das gut möglich,
+  taugt die Quote nicht als Nachweis von Wissen. Ist es praktisch
+  ausgeschlossen, dann weiß da jemand etwas. Nachgestellt mit drei
+  Teilnehmern, die alle gleich schnell klicken: Der Rater (28 % Treffer) und
+  der Auswendiglerner (96 %) werden sauber auseinandergehalten.
+
+  Die Schwelle „zu schnell zum Lesen" hängt an der Länge der Frage — gerechnet
+  mit 28 Zeichen je Sekunde, also sehr flüssigem Lesen. Eine kurze Frage
+  bekommt vier Sekunden, eine mit vier langen Antworten neunzehn.
+
+  **Draußen bleibt, was kein Raten sein kann:** Fragen mit Formelblatt,
+  Taschenrechner oder Vorlesen. Wer nachschlägt, rät nicht — und die
+  Vorlesezeit wird ohnehin abgezogen, was die Messung sonst verfälschen würde.
+
+  Dafür schreibt der Trainer ab jetzt Zeit **und** Ergebnis als Paar mit
+  (`amateurfunk_tempo_<Platz>`, die letzten 600 Antworten). Bisher standen
+  beide getrennt — daraus ließ sich nicht mehr ablesen, ob die schnelle
+  Antwort auch die richtige war, und genau darauf kommt es an. Die Probe
+  braucht deshalb ein paar Runden, bevor sie etwas sagen kann.
+
+  Ein zweiter Befund fällt nebenbei ab: Wenn in mehr als der Hälfte der
+  schnellen Fälle dieselbe **Stelle** angeklickt wurde, steht das da. Die
+  Reihenfolge der Antworten wechselt bei jedem Durchgang — das ist dann die
+  Hand, nicht der Kopf.
+
+- **Im Gruppenraum sieht der Gastgeber dasselbe je Teilnehmer.** In der
+  Kursleiter-Auswertung steht jetzt unter „Wo es hakt" eine Tabelle „Wie
+  geantwortet wurde": wie viele Antworten schnell kamen, wie hoch die
+  Trefferquote dabei war, wie hoch sie in Ruhe ist, und der Befund in
+  Klartext.
+
+  Die Bearbeitungszeit muss dafür nicht übertragen werden — sie steckt schon
+  in den Daten: `answeredAt` steht zu jeder Antwort, und der Abstand zur
+  vorigen *ist* die Zeit für diese Frage. Neu ist nur, dass der Server die
+  Startzeiten mitschickt, sonst fiele je Teilnehmer die erste Frage aus der
+  Rechnung.
+
+  **Namen folgen dem vorhandenen Schalter.** Ohne ihn steht dort „Teilnehmer
+  1, 2, 3" — wer schnell und richtig ist, hat nichts zu verbergen; wer
+  schnell und falsch ist, gehört nicht vor der Gruppe vorgeführt.
+
+### Geändert
+- **„Woran es liegt" hat jetzt immer den Knopf „Alle ansehen".** Dietmar: „Bei
+  woran es liegt, fehlt noch immer der Button. Ohne dem, ist das Fenster
+  unnötig in die Tiefe gezogen."
+
+  Zwei Fehler auf einmal: Der Knopf erschien nur, wenn etwas *weggelassen*
+  wurde — bei ihm wurde nichts weggelassen, also gab es auch keinen Weg zur
+  ausführlichen Ansicht. Und die Vorschau zeigte zwei Zeilen je Art, also bis
+  zu acht Zeilen mit vollem Fragetext: der längste Kasten der rechten Spalte.
+
+  Jetzt ist es **eine Zeile je Art** — vier sagen genauso gut, *welche* Arten
+  vorkommen, die Menge steht im Knopf. Die drei Zeilen lange Begründung zum
+  Nachschlagen steht nur noch im Fenster, wo Platz dafür ist. Der Kasten ist
+  damit von 287 auf gut die Hälfte geschrumpft.
+
+- **Die Fenster „Alle Stolpersteine" und „Woran es liegt" haben die Größe der
+  Auswertung.** Dietmar: „Mit ist aufgefallen, das bei dem Button ‚alle
+  ansehen' das Fenster kleiner ist. Hier wünsche ich mir die gleiche Größe wie
+  das Fenster darunter." Beide standen auf 900 Punkten Breite und 83 vh Höhe,
+  die Auswertung dahinter auf 1040 und 90 vh. Jetzt sind es dieselben Maße —
+  nachgemessen bei 1440×930: 936×837 gegen 936×837.
+
+---
+
+## [1.259.0] - 2026-09-11
+
+### Hinzugefügt
+- **Die Übungszeit zeigt jetzt die einzelnen Tage.** Dietmar hatte gefragt:
+  „Ich habe gestern damit geübt. Müsste es nicht einen Balken geben zum
+  10.09.?" — und damit einen wunden Punkt getroffen.
+
+  Der Balken war da; die Säulen waren nur **Wochen**, und der 10. und der 11.
+  September liegen beide in derselben. Nur sagt eine Wochenansicht nach zwei
+  Übungstagen eben fast nichts: acht Balken, davon sieben leer, und die beiden
+  Tage zusammengefasst im achten. Dietmar: „möchte das auf Tage. Nur dann kann
+  ich mein wöchentliches Lernpensum gut erkennen. Hier könnte man auch
+  Wöchentlich noch Hinzufügen."
+
+  **Beides steht jetzt untereinander**: oben die letzten 14 Tage, darunter wie
+  bisher die letzten acht Wochen. Vierzehn Tage sind der Kompromiss — zwei
+  volle Wochen zum Vergleichen, und die Balken bleiben breit genug, um sie
+  auseinanderzuhalten.
+
+  Drei Kleinigkeiten, die den Rhythmus sichtbar machen:
+
+  - Unter jedem Balken steht der Anfangsbuchstabe des Wochentags. Bei vierzehn
+    Spalten ist „Mo" schon zu breit, „M" liest man trotzdem.
+  - **Vor jedem Montag ist eine Fuge.** Wer sein wöchentliches Pensum erkennen
+    will, muss sehen, wo eine Woche aufhört — der Spalt tut das, ohne Linie und
+    ohne Beschriftung.
+  - Samstag und Sonntag sind etwas zurückgenommen. So sieht man auf einen
+    Blick, ob am Wochenende geübt wurde.
+
+  Beim Zeigen auf einen Balken steht die Zahl dazu: „Do 10.9.: 1 h 5 min",
+  „Heute, Fr 11.9.: 1 min" oder „Mi 9.9.: nicht geübt".
+
+---
+
+## [1.258.0] - 2026-09-11
+
+### Geändert
+- **Die Anleitung ist so groß wie die Einstellungen.** Dietmar: „unter Info
+  Anleitung wünsche ich mir auch gleich grosse Fenster so wie es bei
+  Einstellungen vorhanden ist."
+
+  Der Unterschied lag in zwei Zahlen: 900 statt 1040 Punkte breit, und eine
+  **Höchsthöhe** statt einer festen. Das zweite fiel mehr auf als das erste —
+  mit einer Höchsthöhe richtet sich das Fenster nach dem längsten Abschnitt,
+  und beim Blättern durch die Anleitung wuchs und schrumpfte es unter der Maus.
+  Eine feste Höhe steht still; gerollt wird innen, genau wie bei den
+  Einstellungen.
+
+  Nachgemessen auf zwei Fenstergrößen — beide Dialoge jetzt Punkt für Punkt
+  gleich, und die Höhe bleibt beim Wechsel des Abschnitts stehen:
+
+  | Fenster | Einstellungen | Anleitung |
+  |---|---|---|
+  | 1456×930 | 988 × 772 | **988 × 772** |
+  | 1280×720 | 832 × 598 | **832 × 598** |
+
+---
+
+## [1.257.0] - 2026-09-11
+
+### Hinzugefügt
+- **„Woran es liegt" hat jetzt auch einen Knopf „Alle ansehen".** Dietmar:
+  „Bei Woran es liegt … Möchte ich auch so einen Button: Alle ansehen."
+
+  Dahinter steht die vollständige Liste — jeder festsitzende Irrtum, jedes
+  Raten, jede lange Zeit, jedes Nachschlagen. Gebaut wird sie von derselben
+  Funktion wie die Vorschau, nur ohne Grenzen: So gibt es weiterhin nur eine
+  Stelle, an der die Zeilen entstehen.
+
+### Geändert
+- **Die rechte Seite der Auswertung ist aufgeräumt.** Dietmar: „Ich wünsche mir
+  die rechte Seite aufgeräumter."
+
+  Sie war es nicht, weil dort drei verschiedene Sachen ohne Grenze ineinander
+  liefen: die Stolpersteine mit ihren langen Fragetexten, darunter ohne Absatz
+  die Befunde, die genauso aussehen, und ganz unten der Auffrischungskasten —
+  der einzige mit eigenem Rahmen. Man sah nicht, wo das eine aufhörte und das
+  andere anfing.
+
+  Jetzt steht jeder der drei in einem eigenen weißen Kasten auf dem grauen
+  Grund, mit derselben Kopfzeile: Überschrift links, „Alle ansehen" rechts.
+  Gleiche Dinge sehen gleich aus, verschiedene trennt eine Kante.
+
+  **Und der Befund-Block ist kürzer geworden.** Er zeigte bis zu sechzehn
+  Zeilen am Stück — fünf feste Irrtümer, drei geratene, drei nachgeschlagene,
+  fünf langsame — und jede Zeile trägt den vollen Fragetext über zwei Zeilen.
+  Das war die längste Sache auf der rechten Seite und hat sie unruhig gemacht.
+  Jetzt sind es zwei je Art, also höchstens acht Zeilen; der Knopf führt zum
+  Rest. Zwei genügen, um die Art zu zeigen.
+
+---
+
+## [1.256.0] - 2026-09-11
+
+### Geändert
+- **Alle Fenster dunkeln den Hintergrund ab, keines macht ihn mehr unscharf.**
+  Dietmar: „Wir verwenden unterschiedliches Hintergrundverhalten. Bei
+  Einstellungen ist es Blure und bei der Uhrzeit ist es ein abdunkeln. Das
+  abdunkeln gefällt mir besser. Das möchte ich bei jeder Funktion, ausser bei
+  Formelsammlung und Taschenrechner."
+
+  Der Unterschied war nicht gewollt, er ist über die Monate entstanden — jedes
+  neue Fenster hat sich am zuletzt gebauten orientiert, und irgendwann gab es
+  zwei Linien. **25 Fenster** tragen jetzt dieselbe Abdunklung wie das
+  Übungszeit-Fenster, das Dietmar als Vorbild genannt hat:
+
+  | | vorher | jetzt |
+  |---|---|---|
+  | Die meisten Fenster | 62 % dunkel + 8 px unscharf | **62 % dunkel** |
+  | Vorlesen, Gruppenraum | 85 % dunkel + 4 px unscharf | **62 % dunkel** |
+  | Prüfungssimulator | 62 % dunkel + 10 px unscharf | **62 % dunkel** |
+  | Rückfragen (Löschen, Zurücksetzen) | 62 % dunkel + 10 px unscharf | **62 % dunkel** |
+  | QSL-Jubel | 66 % dunkel + 8 px unscharf | **62 % dunkel** |
+
+  Die 85 Prozent waren dabei der größte Ausreißer: Vorlesen-Einstellungen und
+  Gruppenraum verdeckten den Trainer fast ganz.
+
+  **Die beiden Ausnahmen bleiben, wie sie sind.** Die Formelsammlung hat seit
+  1.251.0 nur einen Hauch Abdunklung (14 %) und lässt sich beiseiteschieben —
+  man schlägt schließlich nach, *während* man die Frage liest. Der
+  Taschenrechner hat gar keinen Hintergrund: Er ist ein freies Fenster, das man
+  in die Ecke stellt.
+
+  Unscharf bleiben genau zwei Stellen, und die liegen nicht auf der Seite,
+  sondern auf einem Bild: die Bildunterschrift und der Zoom-Hinweis in der
+  Großansicht. Dort trägt die Unschärfe die Lesbarkeit der weißen Schrift.
+
+---
+
+## [1.255.0] - 2026-09-11
+
+### Geändert
+- **Prüfungsreife und Trefferquoten sind eine Anzeige geworden.** Dietmar, mit
+  beiden untereinander: „Irgendwie ähnelt sich das. Schaue selbst: … Kann man
+  die zwei Funktionen in einer umbauen? Wo es klemmt gehört auf jeden Fall
+  darunter."
+
+  Er hat recht, es war zweimal dasselbe. Oben die Prüfungsreife mit Teil,
+  Fragenzahl und Vorhersage:
+
+  > Vorschriften · 204 Fragen · 23 von 25 · sitzt
+
+  Und darunter eine Tabelle mit Teil, Fragenzahl, Gelernt und Trefferquote:
+
+  > Vorschriften · 187/204 (92 %) · 91 % · 2
+
+  Zweimal „Vorschriften", zweimal „204". Wer die Zahlen zusammenbringen wollte,
+  musste zwischen zwei Kästen hin und her sehen.
+
+  Jetzt steht alles in einer Zeile je Prüfungsteil — Balken und Vorhersage wie
+  bisher, darunter fein der Lernstand:
+
+  > **Vorschriften** · 204 Fragen ▸ ▬▬▬▬▬▬▬▌▬ ▸ **23 von 25**, sitzt
+  > 187 von 204 gelernt (92 %) · Trefferquote 91 % · 2 noch nie geübt
+
+  „Wo es klemmt" steht damit von selbst darunter, wie gewünscht.
+
+  **Gezählt wird aus einem Topf**, und das ist wichtiger, als es aussieht: Die
+  alte Tabelle zählte die ganze Technik unter einem Schlüssel, die
+  Prüfungsreife kennt `technik_n`, `technik_e` und `technik_a` getrennt. In
+  Klasse N kam dasselbe heraus, beim Aufstieg nicht mehr. Aus einem Topf können
+  die beiden Zahlen gar nicht erst auseinanderlaufen.
+
+- **Der Kasten verschwindet nicht mehr, wenn die Vorhersage fehlt.** Bisher
+  blendete sich die ganze Prüfungsreife aus, solange kein Teil 25 beantwortete
+  Fragen hatte — ein leerer Rahmen mit „noch keine Einschätzung" wäre ja nur
+  ein Platzhalter gewesen. Das war auch der Grund für die leere linke Spalte,
+  die Dietmar am 10.09. gemeldet hatte.
+
+  Seit die Zeilen den Lernstand tragen, stimmt die Begründung nicht mehr: Wie
+  viele Fragen gelernt sind und wie viele noch nie drankamen, weiß der Trainer
+  vom ersten Tag an. Statt der Ansage steht jetzt ein Satz, der sagt, was noch
+  fehlt — die Zahlen darunter stehen trotzdem da.
+
+  Damit konnte auch der Handgriff entfallen, der die linke Spalte ausblendete.
+
+---
+
+## [1.254.0] - 2026-09-11
+
+### Geändert
+- **Die Trefferquoten stehen jetzt links.** Dietmar mit einem Bild der Tabelle:
+  „Bei Auswertung, möchte ich das auf die Linke Seite."
+
+  Sie gehört dorthin. Links steht die Frage „Reicht es?" — die Prüfungsreife —,
+  und die Tabelle beantwortet dieselbe Frage nur genauer: Wie viel ist gelernt,
+  wie gut sitzt es, was ist noch nie drangekommen. Beides zusammen ist der
+  Überblick. Rechts bleibt, was man sich im Einzelnen ansieht: Stolpersteine,
+  Befunde, Auffrischung.
+
+  Die Tabelle hat links eine eigene Kachel bekommen, im selben Grau wie die
+  rechte Spalte, und dehnt sich nach unten — so liegen die Unterkanten beider
+  Spalten weiter aufeinander, worum Dietmar am 06.09. gebeten hatte.
+
+  **Eine Regel konnte dabei ganz entfallen.** Seit dem 10.09. gab es einen
+  Handgriff, der die linke Spalte ausblendete, solange die Prüfungsreife noch
+  schweigt — sonst stand dort ein weißes Feld. Jetzt kann die Spalte gar nicht
+  mehr leer sein: Die Tabelle ist vom ersten Augenblick an da, auch wenn in
+  jeder Zeile noch ein Strich steht.
+
+- **Die Übungszeit hat einen eigenen Knopf.** Dietmar: „Übungszeit, kommt aus
+  Auswertung raus und erhält einen Extra Button oben neben Einstellungen."
+
+  Sie hat in der Auswertung auch nie ganz hingehört: Dort steht, **was** man
+  kann — die Übungszeit sagt, **wie lange** man dafür gebraucht hat. Das ist
+  eine eigene Frage, und man stellt sie sich nicht jedes Mal, wenn man die
+  Trefferquoten sehen will.
+
+  Der Knopf mit der Uhr sitzt in der Kopfzeile direkt links neben dem Zahnrad.
+  Dahinter steht unverändert alles, was vorher in der Auswertung stand: die
+  acht Wochenbalken, die Gesamtzeit, die Zahl der Übungstage, der Schnitt je
+  Tag und der längste Tag.
+
+  Gebaut wird der Inhalt weiter von derselben Funktion wie zuvor — es gibt also
+  nach wie vor nur eine Stelle, an der die Säulen und die Kacheln entstehen.
+  Neu ist nur, dass sie die Überschrift weglässt, wenn sie im eigenen Fenster
+  steht: „Deine Übungszeit" zweimal untereinander sah nach Versehen aus. Wer
+  noch nie geübt hat, bekommt kein leeres Fenster, sondern einen Satz, der
+  erklärt, was dort einmal stehen wird.
+
+---
+
 ## [1.253.0] - 2026-09-10
 
 ### Behoben

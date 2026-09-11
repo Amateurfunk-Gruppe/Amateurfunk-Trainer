@@ -403,6 +403,40 @@
         .btn-cache:hover { background: #d35400; }
         .btn-outline { background: transparent; color: var(--ink) !important; border: 1px solid #b0c4d8 !important; }
         .btn-outline:hover { background: #f0f5ff; }
+
+        /* ================================================================
+           ALLE X SEHEN GLEICH AUS
+           ----------------------------------------------------------------
+           Dietmar am 11.09.2026: "Bei Prüfungssimulator ist bei MouseOverlay
+           der Button X rot. Eine farbliche Abhebung finde ich gut, aber nicht
+           rot. Die Farbe von dem Mode? Das muss bei allen X für Fenster
+           schliessen gleich sein."
+
+           Rot war dort die Farbe fuer "etwas geht kaputt" (--bad) - und ein
+           Fenster zu schliessen ist nichts Schlimmes. Ausserdem hatte jedes
+           Fenster sein eigenes Verhalten: mal gar keins, mal ein blasses
+           Blau, beim Simulator eben Rot.
+
+           Jetzt eine Regel fuer alle: Der Grund nimmt die Linienfarbe des
+           Modes (--line), Rahmen und Zeichen die Textfarbe (--ink). Beide
+           wechseln mit dem Mode mit - im Green Mode wird es gruenlich, im
+           Orange Mode warm, im Grey Mode grau. Die Form der Knoepfe bleibt,
+           wie sie ist; gleich ist, was beim Ueberfahren passiert.
+           ================================================================ */
+        .x-zu, .realistic-modal-close, button[aria-label="Schließen"] {
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+        .btn.x-zu:not(:disabled):hover,
+        .x-zu:not(:disabled):hover,
+        .realistic-modal-close:not(:disabled):hover,
+        button[aria-label="Schließen"]:not(:disabled):hover {
+            background: var(--line) !important;
+            border-color: var(--ink) !important;
+            color: var(--ink) !important;
+        }
+        /* Die Lupe im Vollbild hat einen dunklen Grund - dort wuerde die
+           helle Linienfarbe verschwinden. Sie behaelt ihr Wachsen. */
+        .lightbox-close:hover { background: transparent !important; }
         .btn-sm { padding: 0.2rem 0.6rem; font-size: 0.65rem; min-height: 28px; }
         .btn-sound {
             background: #6c5b7b;
@@ -1278,12 +1312,18 @@
         /* ================================================================
            WORAN ES LIEGT - IN DER AUSWERTUNG
            ================================================================ */
-        /* Ist die Pruefungsreife noch stumm, faellt die linke Spalte weg -
-           siehe statistikFuellen(). */
-        .stat-spalten.ohne-reife { display: block; }
-        .stat-spalten.ohne-reife .stat-links { display: none; }
-
-        .befund { margin-top: 1.1rem; }
+        .befund {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 0.8rem 0.9rem;
+            margin-top: 0.8rem;
+        }
+        /* Im eigenen Fenster steht er allein - dort waeren Rahmen und
+           Innenabstand nur doppelt. */
+        #befundeListe .befund {
+            background: none; border: none; padding: 0; margin-top: 0;
+        }
         .befund h4 { margin: 0 0 0.1rem; font-size: 0.85rem; color: var(--panel-navy); }
         .befund .b-was { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.45rem; }
         .befund-zeile {
@@ -1291,19 +1331,28 @@
             font-size: 0.78rem; padding: 6px 0; border-top: 1px solid var(--line);
             line-height: 1.45;
         }
-        .befund-zeile .b-marke {
+        /* Die Marke wird auch ausserhalb einer Befundzeile gebraucht -
+           im Kasten "Geraten oder gewusst?" steht sie in der Kopfzeile.
+           Deshalb haengt der Stil an der Klasse selbst und nicht mehr an
+           der Zeile darum herum. */
+        .b-marke {
             flex-shrink: 0; font-weight: 800; font-size: 0.7rem;
             padding: 1px 7px; border-radius: 6px; white-space: nowrap;
         }
-        .befund-zeile .b-marke.fest   { background: #fdeaea; color: #a33; }
-        .befund-zeile .b-marke.raten  { background: #fdf1e0; color: #8a5a12; }
-        .befund-zeile .b-marke.langsam{ background: #eaf1fb; color: #2c5282; }
+        .b-marke.fest   { background: #fdeaea; color: #a33; }
+        .b-marke.raten  { background: #fdf1e0; color: #8a5a12; }
+        .b-marke.langsam{ background: #eaf1fb; color: #2c5282; }
         /* Gruen, weil es eine gute Nachricht ist - siehe
            hilfsmittelNotieren(). Die anderen drei Marken benennen etwas,
            das man aendern sollte; diese benennt etwas, das man
            beibehalten sollte. */
-        .befund-zeile .b-marke.gut    { background: #e4f4ea; color: #1f6b40; }
+        .b-marke.gut    { background: #e4f4ea; color: #1f6b40; }
         .befund-zeile .b-mitte { min-width: 0; }
+        /* Im Fenster "Woran es liegt" stehen rechts Herz und "Üben". Damit
+           die beiden Knoepfe bei jeder Zeile an derselben Stelle sitzen und
+           nicht dem Textende hinterherlaufen, nimmt die Mitte dort den
+           ganzen Platz dazwischen ein. */
+        #befundeListe .b-mitte { flex: 1 1 auto; }
         .befund-zeile .b-was-gewaehlt { color: var(--muted); font-size: 0.72rem; }
         body.dark .befund-zeile { border-top-color: #2b4a63; }
 
@@ -1345,6 +1394,26 @@
         .wochen-achse {
             display: flex; gap: 2px; font-size: 0.58rem; color: var(--muted);
         }
+        /* Die Ueberschrift ueber jeder der beiden Reihen. Klein genug, um
+           nicht mit "Deine Uebungszeit" zu konkurrieren, gross genug, um
+           die Frage zu beantworten: Sind das Tage oder Wochen? */
+        .zeit-reihe-titel {
+            font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--muted); margin-top: 0.8rem;
+        }
+        /* Bei vierzehn Spalten steht in der Achse je ein Buchstabe - der
+           gehoert mittig ueber seine Saeule. */
+        .tage-achse { justify-content: space-between; text-align: center; }
+        .tage-achse span { flex: 1; }
+        /* Samstag und Sonntag etwas zurueckgenommen: So sieht man den
+           Wochenrhythmus, ohne dass eine Beschriftung ihn erklaeren muss. */
+        .tage-achse span.we { color: #b6bfcb; }
+        /* Die Fuge vor dem Montag - siehe uebungszeitAuswertungHtml(). */
+        .tage-reihe .w-spalte.wochenstart,
+        .tage-achse span.wochenstart { margin-left: 9px; }
+        .tage-reihe .w-spalte.wochenende .w-saeule { background: #c3d9de; }
+        .tage-reihe .w-spalte.wochenende.leer .w-saeule { background: #c8cfd8; }
+        .tage-reihe .w-spalte.jetzt .w-saeule { background: var(--tuerkis); }
         .wochen-achse span { flex: 1; text-align: center; }
         body.dark .wochen-reihe .w-saeule { background: #2b4a63; }
         body.dark .wochen-reihe .w-spalte.leer .w-saeule { background: #24384a; }
@@ -2105,10 +2174,31 @@
            Einspaltig (Handy, schmales Fenster) faellt das von selbst weg -
            dort steht ohnehin alles untereinander. */
         .stat-spalten { align-items: stretch; }
+        /* Das Fenster hat seit dem 11.09.2026 eine feste Hoehe. Damit die
+           beiden Spalten sie auch ausfuellen - der graue Kasten rechts soll
+           bis unten reichen und nicht auf halber Hoehe aufhoeren -, nimmt
+           das Raster mindestens die ganze Hoehe des Inhaltsbereichs ein. */
+        #statistikInhalt > .stat-spalten { min-height: 100%; }
         .stat-links, .stat-rechts { display: flex; flex-direction: column; }
         /* "display:flex" darf hier stehen: Blendet reifeAktualisieren() den
            Kasten aus, setzt es "display:none" direkt am Element - und das
            schlaegt jede Regel aus dem Stilblock. */
+        /* Links steht ein einziger Kasten: die Pruefungsreife, und in ihren
+           Zeilen seit dem 11.09.2026 auch der Lernstand. Er dehnt sich, damit
+           die Unterkanten beider Spalten aufeinander liegen - worum Dietmar
+           am 06.09.2026 gebeten hatte. */
+        .stat-links { gap: 0.7rem; }
+        /* Dietmar am 11.09.2026: "Oberhalb von Auffrischung ist viel Platz.
+           Wenn man das etwas aufschließt, ist rechts der Scrollbalken
+           komplett entfernt."
+           Der Platz war ein Versehen: Seit links mehr als ein Kasten steht,
+           zaehlte der Abstand doppelt - einmal als gap der Spalte (1rem) und
+           noch einmal als margin-top jedes stat-Blocks (0,8rem). Rechts war
+           das nie zu sehen, dort sitzen die Bloecke ohne gap aneinander.
+           Jetzt gilt links nur noch der gap, und der ist auf 0,7rem
+           heruntergegangen: zusammen rund 22 Punkte weniger Hoehe, und genau
+           die fehlten zuletzt am unteren Rand. */
+        .stat-links > .stat-block { margin-top: 0; }
         .stat-links > #reifeKasten { flex: 1 1 auto; display: flex; flex-direction: column; }
         .stat-links > #reifeKasten > .exam-info { flex: 1 1 auto; margin-bottom: 0 !important; }
         /* ================================================================
@@ -2129,8 +2219,22 @@
             background: #f6f7f9;
             border: 1px solid var(--line);
             border-radius: 16px;
-            padding: 1rem 1.2rem;
+            padding: 1rem;
         }
+        /* Jeder Abschnitt ein eigener Kasten - siehe statistikFuellen().
+           Der erste ruecht nicht ab, die folgenden schon. */
+        .stat-block {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 0.8rem 0.9rem;
+            margin-top: 0.8rem;
+        }
+        .stat-rechts > .stat-block:first-child { margin-top: 0; }
+        /* Die erste Zeile im Kasten braucht keine Trennlinie, der Rahmen
+           ist schon eine. */
+        .stat-block .stat-zeile:first-of-type,
+        .stat-block .befund-zeile:first-of-type { border-top: none; }
         body.schmal .stat-rechts { margin-top: 1rem; }
         @media (max-width: 760px) {
             .stat-rechts { margin-top: 1rem; }
@@ -2235,6 +2339,15 @@
             border-top: 1px solid var(--line);
         }
         .reife-zeile:first-of-type { border-top: none; }
+        /* Der Lernstand laeuft unter allen drei Spalten durch - er gehoert
+           zur Zeile darueber und soll sie nicht in die Breite ziehen. */
+        .reife-stand {
+            grid-column: 1 / -1;
+            font-size: 0.73rem;
+            color: var(--muted);
+            margin-top: 1px;
+            line-height: 1.5;
+        }
         .reife-thema {
             display: flex; align-items: center; justify-content: space-between;
             gap: 0.6rem; padding: 0.35rem 0; border-top: 1px solid var(--line);
@@ -2314,6 +2427,16 @@
             .blaetter-kachel.offen:hover { border-color: #b07d18; }
         }
         .bk-balken.orange > i { background: #b07d18; }
+
+        /* Das vierte Feld: die Fragen, die noch nie eine Antwort bekommen
+           haben. Blau, weil es weder Arbeit (orange) noch Erledigtes
+           (gruen) ist, sondern ein weisser Fleck auf der Karte. */
+        .blaetter-kachel.unberuehrt { border-color: #b9d2ef; background: #f0f7ff; }
+        .blaetter-kachel.unberuehrt .bk-titel { color: #1b5a97; }
+        @media (hover: hover) and (pointer: fine) {
+            .blaetter-kachel.unberuehrt:hover { border-color: #1b5a97; }
+        }
+        .bk-balken.blau > i { background: #2c6fb5; }
 
         /* ================================================================
            TASCHENRECHNER
@@ -4541,8 +4664,6 @@
 .realistic-modal-overlay {
   position:fixed; inset:0;
   background:rgba(15,39,69,0.62);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
   z-index:99990;
   display:none;
   align-items:center;
@@ -4580,7 +4701,7 @@
   display:flex; align-items:center; justify-content:center;
   color:var(--muted); transition:0.15s;
 }
-.realistic-modal-close:hover { background:var(--bad-bg); border-color:var(--bad); color:var(--bad); }
+/* Der Hover steht jetzt zentral bei .x-zu - siehe 'ALLE X SEHEN GLEICH AUS'. */
 .realistic-modal-body {
   padding:1.2rem;
   overflow-y:auto;
@@ -5047,7 +5168,7 @@ function klasseModalOeffnen() {
         modal = document.createElement('div');
         modal.id = 'klasseModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99996; align-items:center; justify-content:center; padding:1rem;';
         modal.onclick = e => { if (e.target === modal) klasseModalSchliessen(); };
         document.body.appendChild(modal);
     }
@@ -5403,6 +5524,16 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <button id="trainerRefreshBtn" type="button" style="display:none; background:none; border:1px solid #e0c080; color:#8a6d00; border-radius:50%; width:26px; height:26px; align-items:center; justify-content:center; cursor:pointer; font-size:0.75rem;" onclick="var sel=document.getElementById('trainerParticipantSelect'); if(window.duoTrainerData && window.updateTrainerParticipantSelect) window.updateTrainerParticipantSelect(window.duoTrainerData); if(sel && sel.value) onTrainerParticipantChange(sel.value);" data-tooltip="Ansicht neu laden, falls Wechsel zum Teilnehmer nicht direkt greift"><i class="fas fa-sync-alt"></i></button>
                 <span id="trainerModeBadge" style="display:none; background:#e2932f; color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">TRAINER MODUS</span>
             </div>
+            <!-- DIE UEBUNGSZEIT BEKOMMT EINEN EIGENEN PLATZ
+                 Dietmar am 11.09.2026: "Übungszeit, kommt aus Auswertung raus
+                 und erhält einen Extra Button oben neben Einstellungen."
+
+                 Sie hat in der Auswertung auch nie ganz hingehoert: Dort
+                 steht, WAS man kann - die Uebungszeit sagt, WIE LANGE man
+                 dafuer gebraucht hat. Das ist eine eigene Frage, und man
+                 stellt sie sich nicht jedesmal, wenn man die Trefferquoten
+                 sehen will. -->
+            <button class="btn" id="uebungszeitBtn" onclick="uebungszeitOeffnen()" style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Deine Übungszeit: diese Woche, insgesamt und die letzten acht Wochen" data-vorlesen-kurz="Deine Übungszeit." aria-label="Übungszeit"><i class="fas fa-clock"></i></button>
             <button class="btn" id="einstellungenBtn" onclick="einstellungenOeffnen()" style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Einstellungen: Anzeigegröße, Farbstil, Beamer-Modus, Tastatur, Vorlesen, Blätter-Stand, Update und Wartung" data-vorlesen-kurz="Einstellungen für Anzeige, Vorlesen und Update." aria-label="Einstellungen"><i class="fas fa-gear"></i></button>
             <!-- Vollbild. Dietmar am 05.09.2026: "Benoetige einen Button oben in
                  der Leiste mit Browser Fenster 'Maximieren' bzw. das Zeichen mit
@@ -5832,11 +5963,11 @@ window.klasseFragenNachladen = klasseFragenNachladen;
 
 
     <!-- DUO MODAL -->
-    <div id="ttsSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,39,69,0.85); z-index:9998; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="ttsSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,39,69,0.62); z-index:9998; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:20px; padding:1.5rem; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h2 style="font-family:var(--font-display); font-size:1.2rem;"><i class="fas fa-volume-up" style="color:var(--panel-navy);"></i> Vorlesen-Einstellungen</h2>
-                <button onclick="document.getElementById('ttsSettingsModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <button class="x-zu" aria-label="Schließen" onclick="document.getElementById('ttsSettingsModal').style.display='none'" style="background:none; border:1px solid transparent; border-radius:8px; padding:0 6px; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <div id="ttsBlockStimme" style="margin-bottom:1rem;"
                  data-vorlesen-kurz="Stimme auswählen."
@@ -5879,11 +6010,11 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         </div>
     </div>
 
-    <div id="duoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,39,69,0.85); z-index:9998; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="duoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,39,69,0.62); z-index:9998; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:20px; padding:1.5rem; max-width:1020px; width:94%; max-height:calc(92vh / var(--afu-zoom, 1)); overflow-y:auto; overflow-x:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4); box-sizing:border-box;"><style>#duoModal > div *{max-width:100%;box-sizing:border-box;} #duoModal .btn{flex-shrink:0;white-space:nowrap;} #duoModal div[style*=display:flex]{flex-wrap:wrap;}</style>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h2 style="font-family:var(--font-display); font-size:1.2rem;"><i class="fas fa-users" style="color:#e84393;"></i> Gemeinsamer Modus</h2>
-                <button onclick="document.getElementById('duoModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <button class="x-zu" aria-label="Schließen" onclick="document.getElementById('duoModal').style.display='none'" style="background:none; border:1px solid transparent; border-radius:8px; padding:0 6px; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
 
             <!-- ================================================================
@@ -7678,14 +7809,15 @@ function notizenListeOeffnen(){
             m = document.createElement('div');
             m.id = 'notizenModal';
             m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-                + 'backdrop-filter:blur(6px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+                + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
             m.onclick = e => { if(e.target === m) m.style.display = 'none'; };
             m.innerHTML = '<div style="background:var(--card-bg); border-radius:18px; padding:1.2rem 1.4rem; '
                 + 'max-width:760px; width:100%; max-height:80vh; overflow-y:auto;">'
                 + '<div style="display:flex; align-items:center; gap:10px; margin-bottom:0.2rem;">'
                 + '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
                 + '<i class="fas fa-note-sticky" style="color:#e2932f;"></i> Meine Notizen</h3>'
-                + '<button type="button" style="background:none; border:none; font-size:1.3rem; cursor:pointer; '
+                + '<button type="button" class="x-zu" aria-label="Schließen" style="background:none; '
+                + 'border:1px solid transparent; border-radius:8px; padding:0 6px; font-size:1.3rem; cursor:pointer; '
                 + 'color:var(--muted);" onclick="document.getElementById(\'notizenModal\').style.display=\'none\'">✕</button></div>'
                 + '<div id="notizenSub" style="font-size:0.76rem; color:var(--muted); margin-bottom:0.9rem;"></div>'
                 + '<div id="notizenListe"></div></div>';
@@ -8948,7 +9080,53 @@ function kursleiterRechnen(d){
         teile[t].fragen++;
     });
 
-    return { liste:liste, teile:teile, autoGesamt:autoGesamt, echtGesamt:echtGesamt };
+    // ----------------------------------------------------------------
+    //  WIE SCHNELL WURDE GEANTWORTET - UND HAELT DIE QUOTE DAS AUS?
+    //  ----------------------------------------------------------------
+    //  Dietmar am 11.09.2026: "Wenn ich mit meiner Freundin im
+    //  Gruppenraum lerne, ist sie extrem schnell. Ich wuerde gerne
+    //  wissen, ob das alles nur geraten ist."
+    //
+    //  Die Bearbeitungszeit wird nicht uebertragen - sie muss es auch
+    //  nicht: In allAnswers steht zu jeder Antwort answeredAt, und der
+    //  Abstand zur vorigen Antwort IST die Zeit fuer diese Frage. Fuer
+    //  die erste liefert der Server seit 1.260.0 startTimes mit.
+    //
+    //  Bewertet wird dann mit derselben Rechnung wie in der eigenen
+    //  Auswertung (tempoProbe) - eine Stelle, eine Logik.
+    // ----------------------------------------------------------------
+    const zeichenVon = {}, optVon = {};
+    fragen.forEach(q => {
+        let n = (q.text || '').length;
+        (q.options || []).forEach(o => { n += String((o && o.text) || '').length; });
+        zeichenVon[q.id] = n;
+        optVon[q.id] = Math.max(2, (q.options || []).length || 4);
+    });
+    const startzeiten = (d && d.startTimes) || {};
+    const tempo = Object.keys(alle).map(uid => {
+        const eintraege = Object.keys(alle[uid] || {})
+            .map(qid => ({ qid: qid, a: alle[uid][qid] }))
+            .filter(x => x.a && x.a.answeredAt)
+            .sort((x, y) => x.a.answeredAt - y.a.answeredAt);
+        let vorher = startzeiten[uid] || 0;
+        const einzeln = [];
+        eintraege.forEach(x => {
+            const sek = vorher ? Math.round((x.a.answeredAt - vorher) / 1000) : 0;
+            vorher = x.a.answeredAt;
+            // Vorbelegte und ueber "Loesung zeigen" gemeldete Antworten
+            // fliegen raus - ihr Zeitstempel bleibt aber als Vorgaenger
+            // stehen, sonst waere die naechste Zeit zu gross.
+            if (x.a.art) return;
+            einzeln.push({ sek: sek, richtig: !!x.a.isCorrect,
+                           pos: (x.a.optionIndex >= 0 ? x.a.optionIndex : -1),
+                           opt: optVon[x.qid] || 4, zeichen: zeichenVon[x.qid] || 260,
+                           hilf: false });
+        });
+        return { uid: uid, name: namen[uid] || 'Unbekannt',
+                 probe: (typeof tempoProbe === 'function') ? tempoProbe(einzeln) : null };
+    }).filter(t => t.probe && t.probe.brauchbar > 0);
+
+    return { liste:liste, teile:teile, autoGesamt:autoGesamt, echtGesamt:echtGesamt, tempo:tempo };
 }
 
 // ----------------------------------------------------------------
@@ -8962,14 +9140,14 @@ window.kursleiterAuswertungZeigen = function(d){
             modal = document.createElement('div');
             modal.id = 'kursleiterModal';
             modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); ' +
-                'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+                ' z-index:99996; align-items:center; justify-content:center; padding:1rem;';
             modal.innerHTML =
                 '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:920px; width:95%; ' +
                 'max-height:calc(90vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">' +
                 '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.4rem;">' +
                 '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">' +
                 '<i class="fas fa-chalkboard-user"></i> Auswertung für den Kursleiter</h3>' +
-                '<button type="button" class="btn btn-outline" style="padding:4px 10px;" ' +
+                '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" ' +
                 'onclick="document.getElementById(\'kursleiterModal\').style.display=\'none\'">✕</button></div>' +
                 '<div id="kursleiterInhalt"></div></div>';
             document.body.appendChild(modal);
@@ -9026,6 +9204,63 @@ function kursleiterFuellen(){
             '<td style="color:' + farbe + '; font-weight:700;">' + q + '%</td></tr>';
     });
     html += '</table>';
+
+    // ---- Wie geantwortet wurde ------------------------------------------
+    //  Die Zeile je Teilnehmer beantwortet die Frage, die sich in jeder
+    //  Lerngruppe irgendwann stellt: Der da ist dreimal so schnell -
+    //  weiss der das alles, oder klickt der nur?
+    //
+    //  Namen folgen dem Schalter darunter. Ohne ihn steht hier
+    //  "Teilnehmer 1, 2, 3" - wer schnell und richtig ist, hat nichts zu
+    //  verbergen, wer schnell und falsch ist, gehoert nicht vor der
+    //  Gruppe vorgefuehrt.
+    const tmp = (r.tempo || []).filter(t => t.probe.brauchbar >= 5);
+    if (tmp.length) {
+        html += '<h4 style="margin:1.1rem 0 0.2rem; font-size:0.85rem; color:var(--panel-navy);">'
+             +  'Wie geantwortet wurde</h4>'
+             +  '<div style="font-size:0.72rem; color:var(--muted); margin-bottom:0.4rem;">'
+             +  'Als „schnell“ zählt, was kam, bevor man die Frage samt Antworten gelesen haben '
+             +  'kann. Entscheidend ist nicht das Tempo, sondern die Trefferquote dabei: '
+             +  'Wer rät, landet bei einem Viertel.</div>'
+             +  '<table style="width:100%; border-collapse:collapse; font-size:0.78rem;">'
+             +  '<tr style="text-align:left; color:var(--muted); font-size:0.72rem;">'
+             +  '<th style="padding-bottom:4px;">Wer</th><th>schnell</th><th>davon richtig</th>'
+             +  '<th>in Ruhe richtig</th><th>Befund</th></tr>';
+        tmp.forEach((t, i) => {
+            const e = t.probe;
+            const wer = kursleiterNamen ? kaEsc(t.name) : ('Teilnehmer ' + (i + 1));
+            const farbe = (e.urteil === 'geraten') ? '#c0392b'
+                        : (e.urteil === 'gemischt') ? '#b8860b'
+                        : (e.urteil === 'zu_wenig' || e.urteil === 'keine_schnellen') ? 'var(--muted)'
+                        : '#1f9d55';
+            const befund = (e.urteil === 'geraten') ? 'sieht nach Raten aus'
+                         : (e.urteil === 'auswendig') ? 'sitzt auswendig'
+                         : (e.urteil === 'gewusst') ? 'gewusst'
+                         : (e.urteil === 'gemischt') ? 'teils geraten'
+                         : (e.urteil === 'keine_schnellen') ? 'alles in Ruhe'
+                         : 'zu wenige schnelle';
+            html += '<tr style="border-top:1px solid var(--line);">'
+                 +  '<td style="padding:6px 2px; font-weight:700;">' + wer + '</td>'
+                 +  '<td>' + e.schnell + ' von ' + e.brauchbar + '</td>'
+                 +  '<td>' + (e.schnell ? e.quoteSchnell + '%' : '&ndash;') + '</td>'
+                 +  '<td>' + (e.ruhig ? e.quoteRuhig + '%' : '&ndash;') + '</td>'
+                 +  '<td style="color:' + farbe + '; font-weight:700;">' + befund + '</td></tr>';
+        });
+        html += '</table>';
+
+        // Zu jedem auffaelligen Fall ein ganzer Satz - eine Tabellenzelle
+        // erklaert nichts.
+        const bemerkt = tmp.filter(t => t.probe.urteil === 'geraten'
+                                     || t.probe.urteil === 'gemischt'
+                                     || t.probe.urteil === 'auswendig');
+        bemerkt.forEach((t, i) => {
+            const nr = tmp.indexOf(t) + 1;
+            const wer = kursleiterNamen ? kaEsc(t.name) : ('Teilnehmer ' + nr);
+            html += '<div style="font-size:0.76rem; color:var(--muted); margin-top:0.4rem;">'
+                 +  '<b style="color:var(--panel-navy);">' + wer + ':</b> '
+                 +  tempoSatz(t.probe, wer) + '</div>';
+        });
+    }
 
     // ---- Der Vorschlag für den nächsten Abend ---------------------------
     const top = r.liste.filter(z => z.falsch >= 2).slice(0, 5);
@@ -9268,7 +9503,7 @@ function kursGespeicherteZeigen(id){
         modal = document.createElement('div');
         modal.id = 'kursAnsehenModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99998; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML = '<div style="background:#fff; border-radius:18px; padding:1.4rem; '
             + 'max-width:880px; width:95%; max-height:calc(88vh / var(--afu-zoom,1)); overflow-y:auto; '
             + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
@@ -11056,7 +11291,7 @@ function zeitSichern(){
 }
 // Beim Benutzerwechsel beides neu holen - sonst zaehlt Platz 2 die
 // Stunden von Platz 1 weiter.
-function messungLaden(){ diagLaden(); zeitLaden(); }
+function messungLaden(){ diagLaden(); zeitLaden(); tempoLaden(); }
 
 // --- Tage und Wochen ---------------------------------------------
 // Bewusst NICHT toISOString(): das rechnet in Weltzeit, und wer um
@@ -11134,6 +11369,36 @@ function datumText(schluessel){
 
 // Die letzten n Wochen, jeweils Montag bis Sonntag - fuer die
 // Saeulenreihe in der Auswertung.
+// ================================================================
+//  DIE LETZTEN TAGE, EINZELN
+// ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "möchte das auf Tage. Nur dann kann ich mein
+//  wöchentliches Lernpensum gut erkennen. Hier könnte man auch
+//  Wöchentlich noch Hinzufügen."
+//
+//  Er hat den Punkt getroffen: Acht Wochenbalken sagen nach zwei
+//  Uebungstagen gar nichts - sieben davon sind leer, und die beiden
+//  Tage stecken zusammengefasst im achten. Was man wirklich sehen
+//  will, ist der Rhythmus: An welchen Tagen habe ich gesessen, wo sind
+//  die Luecken, wie sieht eine Woche im Vergleich zur vorigen aus.
+//  Dafuer braucht es einen Balken je Tag.
+//
+//  Vierzehn Tage sind der Kompromiss: zwei volle Wochen zum Vergleichen,
+//  und die Balken bleiben breit genug, um sie auseinanderzuhalten. Die
+//  Wochenansicht bleibt darunter stehen - fuer den Blick ueber Monate
+//  ist sie das richtige Mass.
+// ================================================================
+function zeitTageReihe(n){
+    const reihe = [];
+    const heute = new Date(); heute.setHours(0, 0, 0, 0);
+    for(let i = n - 1; i >= 0; i--){
+        const d = new Date(heute);
+        d.setDate(d.getDate() - i);
+        reihe.push({ tag: new Date(d), sek: (uebungsTage[tagSchluessel(d)] || 0) });
+    }
+    return reihe;
+}
+
 function zeitWochenReihe(n){
     const reihe = [];
     for(let i = n - 1; i >= 0; i--){
@@ -11246,6 +11511,10 @@ function frageZeitStarten(id){
     frageAngezeigtSeit = Date.now();
     // Die Vorlesezeit gehoert zu GENAU dieser Frage - siehe playTTSQueue.
     vorleseSummeMs = 0;
+    // Und der Merker fuer die Tempo-Probe: Ob bei DIESEM Durchgang ein
+    // Hilfsmittel im Spiel war, sagt e.fb/e.tr/e.vl nicht - die zaehlen
+    // ueber alle Versuche hinweg.
+    hilfsmittelDiesmal = false;
 }
 function diagnoseNotieren(q, gewaehlt, richtig){
     if(!q || !q.id) return;
@@ -11266,6 +11535,11 @@ function diagnoseNotieren(q, gewaehlt, richtig){
     // anderes gemacht. Das ist keine Bearbeitungszeit.
     if(sek > 0 && sek < 600){ e.t.push(sek); if(e.t.length > DIAG_MAX) e.t.shift(); }
     if(!richtig && gewaehlt >= 0){ e.f.push(gewaehlt); if(e.f.length > DIAG_MAX) e.f.shift(); }
+    // Fuer die Tempo-Probe wird dasselbe noch einmal anders abgelegt:
+    // Zeit UND Ergebnis als Paar. In e.t und e.f stehen sie getrennt -
+    // daraus laesst sich nicht mehr ablesen, ob die schnelle Antwort
+    // auch die richtige war, und genau darauf kommt es an.
+    try{ tempoNotieren(q, gewaehlt, richtig, sek); }catch(err){}
     frageGemessenId = null;      // dieselbe Frage spaeter = neue Messung
     diagSichern();
 }
@@ -11297,6 +11571,7 @@ function hilfsmittelNotieren(art){
         const q = currentQuestions[currentIndex];
         if(!q || !q.id) return;
         const e = diagnoseDaten[q.id] || (diagnoseDaten[q.id] = { n: 0, f: [], t: [] });
+        hilfsmittelDiesmal = true;
         if(art === 'formel')   e.fb = (e.fb || 0) + 1;
         if(art === 'rechner')  e.tr = (e.tr || 0) + 1;
         // Das Vorlesen wird nur EINMAL je Frage vermerkt, auch wenn man
@@ -11329,6 +11604,210 @@ function hilfsmittelArten(){
         });
     }catch(e){}
     return arten;
+}
+
+// ================================================================
+//  GERATEN ODER GEWUSST - DIE TEMPO-PROBE
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Wenn ich mit meiner Freundin im Gruppenraum
+//  lerne, ist sie extrem schnell. Ich wuerde gerne wissen, ob das alles
+//  nur geraten ist. Im allgemeinen, kann man eine Auswertung einbauen,
+//  die prueft ob man nur die Frage erraet?"
+//
+//  Man kann - aber nicht so, wie man zuerst denkt. "Schnell" allein
+//  beweist gar nichts: Der Fragenkatalog ist oeffentlich, und wer ihn
+//  oft genug durchgegangen ist, ERKENNT eine Frage in zwei Sekunden
+//  wieder. Das ist kein Schummeln, das ist genau das, was in der
+//  Pruefung hilft. Schnell ist also erst einmal nur schnell.
+//
+//  Was Raten von Wissen trennt, ist die TREFFERQUOTE unter genau den
+//  Antworten, die zu schnell fuer ein Lesen kamen:
+//
+//      schnell + fast immer richtig  ->  sitzt auswendig
+//      schnell + rund ein Viertel    ->  geraten (bei vier Antworten
+//                                        ist ein Viertel der Zufall)
+//
+//  Zwischen beiden liegen Welten, und sie sind messbar. Nachgerechnet
+//  wird mit der Binomialverteilung: Wie wahrscheinlich ist es, dass
+//  reines Raten mindestens so viele Treffer liefert? Ist das gut
+//  moeglich, taugt die Quote nicht als Nachweis von Wissen. Ist es
+//  praktisch ausgeschlossen, dann weiss da jemand etwas.
+//
+//  WAS BEWUSST NICHT MITZAEHLT:
+//   - Fragen mit Hilfsmittel (Formelblatt, Rechner, Vorlesen). Wer
+//     nachschlaegt, raet nicht - und das Vorlesen macht die gemessene
+//     Zeit ohnehin kuenstlich kurz, weil die Vorlesezeit abgezogen wird.
+//   - Alles ueber zehn Minuten: da war jemand Kaffee holen.
+//
+//  Die Schwelle "zu schnell zum Lesen" haengt an der Laenge: Eine
+//  Frage mit vier langen Antworten hat leicht 400 Zeichen, eine kurze
+//  keine 150. Gerechnet wird mit 28 Zeichen je Sekunde - das ist sehr
+//  fluessiges Lesen (rund 330 Woerter je Minute). Wer darunter bleibt,
+//  hat nicht gelesen, sondern wiedererkannt oder geklickt.
+// ================================================================
+const TEMPO_PREFIX = 'amateurfunk_tempo_';
+const TEMPO_MAX    = 600;          // die letzten 600 Antworten
+const LESE_ZPS     = 28;           // Zeichen je Sekunde: sehr schnelles Lesen
+const LESE_MIN     = 3;            // darunter geht gar nichts, egal wie kurz
+
+let tempoListe = [];               // [sek, richtig, position, anzahlOptionen, zeichen, hilfsmittel]
+let hilfsmittelDiesmal = false;    // nur fuer DIESEN Durchgang dieser Frage
+
+function tempoLaden(){
+    try{ tempoListe = JSON.parse(localStorage.getItem(TEMPO_PREFIX + currentUser) || '[]') || []; }
+    catch(e){ tempoListe = []; }
+    if(!Array.isArray(tempoListe)) tempoListe = [];
+}
+function tempoSichern(){
+    try{ localStorage.setItem(TEMPO_PREFIX + currentUser, JSON.stringify(tempoListe)); }catch(e){}
+}
+
+// Wie viele Zeichen muss man lesen, um diese Frage beantworten zu koennen?
+function frageZeichen(q){
+    try{
+        let n = (q.text || '').length;
+        (q.options || []).forEach(o => { n += String((o && o.text) || o || '').length; });
+        return n;
+    }catch(e){ return 260; }
+}
+function leseSchwelle(zeichen){
+    return Math.max(LESE_MIN, Math.round((zeichen || 260) / LESE_ZPS));
+}
+
+function tempoNotieren(q, gewaehlt, richtig, sek){
+    try{
+        if(!q || !q.id || !(sek > 0) || sek >= 600) return;
+        const opt = Math.max(2, ((q.options || []).length || 4));
+        tempoListe.push([ sek, richtig ? 1 : 0, (gewaehlt >= 0 ? gewaehlt : -1),
+                          opt, frageZeichen(q), hilfsmittelDiesmal ? 1 : 0 ]);
+        if(tempoListe.length > TEMPO_MAX) tempoListe.splice(0, tempoListe.length - TEMPO_MAX);
+        tempoSichern();
+    }catch(e){}
+}
+
+// ----------------------------------------------------------------
+//  Wie wahrscheinlich ist es, dass reines Raten k oder mehr Treffer
+//  aus n Versuchen bringt? Ueber die Logarithmen gerechnet, sonst
+//  laeuft der Binomialkoeffizient bei n=600 ueber.
+// ----------------------------------------------------------------
+function binomMindestens(k, n, p){
+    if(k <= 0) return 1;
+    if(k > n)  return 0;
+    if(p <= 0) return 0;
+    if(p >= 1) return 1;
+    const lp = Math.log(p), lq = Math.log(1 - p);
+    let logC = 0, summe = 0;
+    // logC(n,0) = 0, dann schrittweise hochzaehlen
+    for(let j = 0; j <= n; j++){
+        if(j > 0) logC += Math.log((n - j + 1) / j);
+        if(j >= k) summe += Math.exp(logC + j * lp + (n - j) * lq);
+    }
+    return Math.min(1, summe);
+}
+
+// ----------------------------------------------------------------
+//  Die eigentliche Probe. Bekommt eine Liste von Antworten und sagt,
+//  was sie ueber das Raten verraet. Wird von der eigenen Auswertung
+//  UND von der Kursleiter-Auswertung im Gruppenraum benutzt - deshalb
+//  steht hier nichts ueber Anzeige drin, nur Zahlen und ein Urteil.
+//
+//  Erwartet je Antwort: { sek, richtig, pos, opt, zeichen, hilf }
+// ----------------------------------------------------------------
+function tempoProbe(liste){
+    const e = {
+        brauchbar: 0, schnell: 0, schnellRichtig: 0, ruhig: 0, ruhigRichtig: 0,
+        zufall: 0.25, quoteSchnell: 0, quoteRuhig: 0, pWert: 1,
+        anteilSchnell: 0, lieblingsplatz: -1, lieblingsAnteil: 0,
+        urteil: 'zu_wenig', schnittSchnell: 0
+    };
+    try{
+        const gut = (liste || []).filter(a => a && a.sek > 0 && a.sek < 600 && !a.hilf);
+        e.brauchbar = gut.length;
+        if(!gut.length) return e;
+
+        let zufallSumme = 0, sekSumme = 0;
+        const plaetze = {};
+        gut.forEach(a => {
+            const opt = Math.max(2, a.opt || 4);
+            if(a.sek < leseSchwelle(a.zeichen)){
+                e.schnell++;
+                if(a.richtig) e.schnellRichtig++;
+                zufallSumme += 1 / opt;
+                sekSumme += a.sek;
+                if(a.pos >= 0) plaetze[a.pos] = (plaetze[a.pos] || 0) + 1;
+            } else {
+                e.ruhig++;
+                if(a.richtig) e.ruhigRichtig++;
+            }
+        });
+
+        e.anteilSchnell = Math.round(e.schnell / gut.length * 100);
+        e.quoteRuhig    = e.ruhig ? Math.round(e.ruhigRichtig / e.ruhig * 100) : 0;
+        if(!e.schnell){ e.urteil = 'keine_schnellen'; return e; }
+
+        e.zufall        = zufallSumme / e.schnell;
+        e.quoteSchnell  = Math.round(e.schnellRichtig / e.schnell * 100);
+        e.schnittSchnell= Math.round(sekSumme / e.schnell);
+        e.pWert         = binomMindestens(e.schnellRichtig, e.schnell, e.zufall);
+
+        // Klickt jemand immer auf dieselbe Stelle? Die Antworten stehen
+        // gemischt, also muesste sich das bei Wissen gleichmaessig
+        // verteilen. Tut es das nicht, klickt da eine Gewohnheit.
+        let bestN = 0, bestP = -1;
+        Object.keys(plaetze).forEach(k => { if(plaetze[k] > bestN){ bestN = plaetze[k]; bestP = Number(k); } });
+        if(e.schnell >= 12 && bestN / e.schnell >= 0.55){
+            e.lieblingsplatz = bestP;
+            e.lieblingsAnteil = Math.round(bestN / e.schnell * 100);
+        }
+
+        // Das Urteil. Die Schwellen sind bewusst vorsichtig: Lieber
+        // einmal "unklar" sagen als jemandem zu Unrecht Raten
+        // unterstellen.
+        if(e.schnell < 8)                                  e.urteil = 'zu_wenig';
+        else if(e.pWert > 0.15)                            e.urteil = 'geraten';
+        else if(e.quoteSchnell >= 85 && e.schnell >= 10)   e.urteil = 'auswendig';
+        else if(e.pWert < 0.01)                            e.urteil = 'gewusst';
+        else                                               e.urteil = 'gemischt';
+    }catch(err){ console.debug('Tempo-Probe:', err.message); }
+    return e;
+}
+
+// Die eigenen Daten in die Form bringen, die tempoProbe erwartet.
+function tempoEigene(){
+    return (tempoListe || []).map(a => ({
+        sek: a[0], richtig: !!a[1], pos: a[2], opt: a[3], zeichen: a[4], hilf: !!a[5]
+    }));
+}
+
+// Ein Satz, der das Urteil in Worte fasst. "du" fuer die eigene
+// Auswertung, ein Name fuer den Gruppenraum.
+function tempoSatz(e, wer){
+    const W = wer || 'du';
+    const gross = W.charAt(0).toUpperCase() + W.slice(1);
+    const hat = (W === 'du') ? 'hast du' : 'hat ' + W;
+    const Hat = (W === 'du') ? 'Du hast' : gross + ' hat';
+    switch(e.urteil){
+        case 'zu_wenig':
+            return 'Dafür sind es noch zu wenige schnelle Antworten &ndash; '
+                 + 'ab acht lässt sich etwas sagen.';
+        case 'keine_schnellen':
+            return Hat + ' keine einzige Frage schneller beantwortet, als man sie lesen kann. '
+                 + 'Da wird nichts geraten.';
+        case 'geraten':
+            return 'Das sieht nach Raten aus: ' + e.quoteSchnell + ' % Treffer bei den schnellen '
+                 + 'Antworten, und reines Raten käme auf ' + Math.round(e.zufall * 100) + ' %. '
+                 + 'Der Unterschied ist zu klein, um Wissen zu belegen.';
+        case 'auswendig':
+            return 'Das ist kein Raten, das sitzt: ' + e.quoteSchnell + ' % Treffer, obwohl für '
+                 + 'ein Lesen keine Zeit war. So sieht ein auswendig gelernter Katalog aus.';
+        case 'gewusst':
+            return 'Geraten ist das nicht: ' + e.quoteSchnell + ' % Treffer liegen deutlich über '
+                 + 'dem Zufall von ' + Math.round(e.zufall * 100) + ' %.';
+        case 'gemischt':
+            return 'Gemischt: ' + e.quoteSchnell + ' % Treffer gegen ' + Math.round(e.zufall * 100)
+                 + ' % beim Raten &ndash; ein Teil sitzt, ein Teil ist geraten.';
+    }
+    return '';
 }
 
 // Der Mittelwert der letzten Versuche - fuer "richtig, aber langsam".
@@ -11897,17 +12376,70 @@ function durchsichtOffeneZahl(ids){
     return n;
 }
 
+// ================================================================
+//  DIE FRAGEN, DIE NOCH NIE EINE ANTWORT BEKOMMEN HABEN
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Ich gehe alle 571 Fragen durch und klicke
+//  weiter wenn ich eine Antwort nicht kenne. Da steht, noch nie geübt?
+//  Genau diese paar Fragen, suche ich! Meiner Meinung nach, muss da
+//  noch eine Kachel mit rein."
+//
+//  Und er hat recht: "Rest abarbeiten" ist etwas anderes. Dort steht
+//  alles, was noch nicht abgehakt ist - auch die Frage, die man
+//  fuenfmal beantwortet hat und immer noch nicht sicher kann. Die hier
+//  gesuchten sind eine kleine Teilmenge davon: die, bei denen noch
+//  ueberhaupt nichts passiert ist. Beim Blaettern mit "Weiter"
+//  durchgeklickt, oder nie erreicht.
+//
+//  Gezaehlt wird nach DERSELBEN Regel wie in der Pruefungsreife (siehe
+//  reifeTeil): kein Eintrag im Lernstand und nicht ueber den CB-Schein
+//  angerechnet. Nur so ergibt die Zahl auf der Kachel dieselbe Summe
+//  wie die "noch nie geübt" der drei Pruefungsteile - sonst sucht man
+//  sechs Fragen und bekommt sieben.
+// ================================================================
+const UNBERUEHRT_NAME = 'Noch nie geübt';
+
+function durchsichtUnberuehrtIds(){
+    try{
+        return durchsichtBank().filter(q => {
+            try{
+                const m  = (typeof masteryData !== 'undefined') ? masteryData[q.id] : null;
+                const cb = (typeof cbAngerechnet === 'function') && cbAngerechnet(q.id);
+                return !m && !cb;
+            }catch(e){ return false; }
+        }).map(q => q.id);
+    }catch(e){ return []; }
+}
+
+function durchsichtUnberuehrtLos(){
+    const ids = durchsichtUnberuehrtIds();
+    if(!ids.length){
+        if(window.showAppAlert) showAppAlert('Jede Frage hat schon einmal eine Antwort bekommen.');
+        return;
+    }
+    startQuestionSession(ids, UNBERUEHRT_NAME);
+}
+window.durchsichtUnberuehrtLos = durchsichtUnberuehrtLos;
+
 function durchsichtStarten(){
     const p = durchsichtPosition();
     if(!p.ids.length){
         if(window.showAppAlert) showAppAlert('Der Fragenkatalog ist noch nicht geladen.');
         return;
     }
-    // Ohne Lesezeichen und ohne abgehakte Fragen gibt es nichts zu
-    // entscheiden - dann ohne Rueckfrage los. Sobald es aber etwas
-    // nachzusehen gibt, gehoert die Wahl ins Fenster.
-    const nichtsGemerkt = !p.gemerkt || p.index === 0;
-    if(nichtsGemerkt && !durchsichtGelernte().length){ durchsichtLos(0); return; }
+    // Bis zum 11.09.2026 stand hier eine Abkuerzung: Ohne Lesezeichen und
+    // ohne abgehakte Fragen ging es sofort los, ohne Fenster. Das stammte
+    // aus der Zeit, als das Fenster nur zwei Kacheln hatte und beide
+    // dasselbe gesagt haetten.
+    //
+    // Dietmar am 11.09.2026: "Wenn ich von N nach E und von E nach A
+    // 'Blättere', möchte ich beim Öffnen auch dieses Fenster haben."
+    //
+    // Und er hat recht: Bei einem frisch gewechselten Pruefungsziel griff
+    // genau diese Abkuerzung - man landete ohne Erklaerung mitten im
+    // Katalog. Im Fenster stehen inzwischen die Fragenzahl, der Satz, wie
+    // Blaettern ueberhaupt funktioniert, und die Knoepfe zum Zuruecksetzen.
+    // Das gehoert gerade beim ersten Mal gesehen.
     durchsichtFrageFenster(p);
 }
 window.durchsichtStarten = durchsichtStarten;
@@ -11920,7 +12452,7 @@ function durchsichtFrageFenster(p){
         modal = document.createElement('div');
         modal.id = 'durchsichtModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
         modal.onclick = e => { if(e.target === modal) durchsichtFensterZu(); };
         document.body.appendChild(modal);
     }
@@ -12019,6 +12551,17 @@ function durchsichtFrageFenster(p){
     // nicht mehr durch alles, sondern nimmt nur die offenen Fragen.
     const offeneN = durchsichtOffeneZahl(p.ids);
     const anteilO = gesamt ? Math.max(1.2, Math.min(100, (offeneN / gesamt) * 100)) : 0;
+    // Am 11.09.2026 hingen diese beiden Kacheln kurz an der Bedingung
+    // "nur zeigen, wenn die Zahl kleiner ist als der ganze Katalog" - der
+    // Gedanke war, dieselbe Zahl nicht dreimal untereinander zu schreiben.
+    //
+    // Dietmar noch am selben Tag: "Bei Blättern fehlt eine Kachel bei N
+    // nach E." Und er hat recht: Eine Kachel, die mal da ist und mal
+    // nicht, sieht nach Fehler aus - und "alle 463 sind noch unberührt"
+    // IST eine Aussage ueber den Lernstand, keine Dopplung. Die Kacheln
+    // stehen jetzt immer; dass die Menge gerade dem ganzen Katalog
+    // entspricht, sagt der Zusatz unten (siehe gleichSatz).
+    const gleichSatz = ' <b>Derzeit ist das der ganze Katalog.</b>';
     const einstieg = offeneN
       ? '<button type="button" class="blaetter-kachel offen" '
         + 'onclick="durchsichtFensterZu(); durchsichtOffeneLos();">'
@@ -12027,7 +12570,24 @@ function durchsichtFrageFenster(p){
         + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen sind noch zu lernen</span></span>'
         + '<span class="bk-balken orange"><i data-ziel="' + anteilO.toFixed(1) + '%"></i></span>'
         + '<span class="bk-klein">Geht nur durch das, was noch nicht abgehakt ist — in der Reihenfolge '
-        + 'des Katalogs. Das Lesezeichen bleibt liegen.</span>'
+        + 'des Katalogs. Das Lesezeichen bleibt liegen.'
+        + (offeneN >= gesamt ? gleichSatz : '') + '</span>'
+        + '</button>'
+      : '';
+
+    // Das vierte Feld: die weissen Flecken. Siehe durchsichtUnberuehrtIds().
+    const unberuehrtN = durchsichtUnberuehrtIds().length;
+    const anteilU = gesamt ? Math.max(1.2, Math.min(100, (unberuehrtN / gesamt) * 100)) : 0;
+    const weiss = unberuehrtN
+      ? '<button type="button" class="blaetter-kachel unberuehrt" '
+        + 'onclick="durchsichtFensterZu(); durchsichtUnberuehrtLos();">'
+        + '<span class="bk-titel"><i class="fas fa-circle-question"></i> Noch nie geübt</span>'
+        + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#1b5a97;">' + unberuehrtN + '</span>'
+        + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen ohne eine einzige Antwort</span></span>'
+        + '<span class="bk-balken blau"><i data-ziel="' + anteilU.toFixed(1) + '%"></i></span>'
+        + '<span class="bk-klein">Beim Blättern mit „Weiter“ durchgeklickt oder nie erreicht &mdash; genau '
+        + 'die, die in der Prüfungsreife als „noch nie geübt“ stehen. Das Lesezeichen bleibt liegen.'
+        + (unberuehrtN >= gesamt ? gleichSatz : '') + '</span>'
         + '</button>'
       : '';
 
@@ -12050,6 +12610,7 @@ function durchsichtFrageFenster(p){
       + 'Der Trainer merkt sich, wo du aufgehört hast.</div>'
       + '<div class="blaetter-kacheln' + (gel ? '' : ' einzeln') + '">' + kachel1 + kachel2 + '</div>'
       + (einstieg ? '<div class="blaetter-rest">' + einstieg + '</div>' : '')
+      + (weiss ? '<div class="blaetter-rest">' + weiss + '</div>' : '')
       + '</div>'
       + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
       + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
@@ -12162,7 +12723,7 @@ function cbListeOeffnen(){
         modal = document.createElement('div');
         modal.id = 'cbBekanntModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99996; align-items:center; justify-content:center; padding:1rem;';
         modal.onclick = e => { if (e.target === modal) cbListeSchliessen(); };
         modal.innerHTML =
             '<div style="background:#fff; border-radius:18px; padding:1.2rem 1.3rem 1rem; max-width:720px; width:96%; '
@@ -12409,6 +12970,10 @@ function handleMasteryOnAnswer(qId, isCorrect) {
             if (!warSchonGemeistert) {
                 console.log(`🏆 ${qId} gemeistert nach 3x richtig!`);
                 masteryData[qId].wiederholStufe = 0;
+                // Dreimal hintereinander richtig - genau hier wechselt die
+                // Frage vom Lernstapel in den Bestand. Der Ton dazu ist
+                // abschaltbar (Einstellungen -> Belohnung).
+                try{ levelUpSpielen(); }catch(e){}
             } else {
                 // Schon gemeisterte Frage erneut richtig -> naechste Stufe,
                 // der Abstand bis zur naechsten Auffrischung waechst.
@@ -12943,8 +13508,8 @@ function qslJubel(name, weitere){
         if(!modal){
             modal = document.createElement('div');
             modal.id = 'qslJubelModal';
-            modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.66); '
-                + 'backdrop-filter:blur(8px); z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+            modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + ' z-index:99998; align-items:center; justify-content:center; padding:1rem;';
             modal.onclick = e => { if(e.target === modal) qslJubelZu(); };
             document.body.appendChild(modal);
         }
@@ -13022,7 +13587,7 @@ function qslAlbumOeffnen(){
         modal = document.createElement('div');
         modal.id = 'qslAlbumModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
         modal.onclick = e => { if(e.target === modal) qslAlbumZu(); };
         document.body.appendChild(modal);
     }
@@ -13145,7 +13710,7 @@ function qslAlbumFuellen(modal){
       + 'font-family:var(--font-mono); font-size:0.82rem; text-transform:uppercase;"></label>'
       + '<button class="btn btn-outline" style="min-height:32px; padding:0.3rem 0.8rem; font-size:0.78rem;" '
       + 'onclick="qslRufzeichenUebernehmen()"><i class="fas fa-save"></i> Übernehmen</button>'
-      + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="qslAlbumZu()">✕</button>'
+      + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" onclick="qslAlbumZu()">✕</button>'
       + '</div>'
       + '<div style="padding:0 1.3rem 0.4rem; font-size:0.82rem; color:var(--muted);">'
       + '<b style="color:var(--panel-navy);">' + habe + ' von ' + lektionen.length + '</b> '
@@ -13660,8 +14225,39 @@ function reifeTeil(teil){
     });
     const schnitt = (richtig + falsch) > 0 ? (richtig / (richtig + falsch)) : 0.5;
 
+    // ================================================================
+    //  DER LERNSTAND KOMMT AUS DEMSELBEN TOPF
+    // ----------------------------------------------------------------
+    //  Dietmar am 11.09.2026, mit beiden Anzeigen untereinander: "Irgendwie
+    //  ähnelt sich das. ... Kann man die zwei Funktionen in einer umbauen?"
+    //
+    //  Er hat recht, es war zweimal dasselbe: Oben die Pruefungsreife mit
+    //  Teil, Fragenzahl und Vorhersage, darunter eine Tabelle mit Teil,
+    //  Fragenzahl, Gelernt und Trefferquote. Wer die Zahlen vergleichen
+    //  wollte, musste zwischen zwei Kaesten hin und her sehen.
+    //
+    //  Gezaehlt wird hier aus DEMSELBEN Pool, aus dem auch die Vorhersage
+    //  entsteht - und das ist wichtiger, als es aussieht: teilAuswertung()
+    //  zaehlt die ganze Technik unter einem Schluessel, die Pruefungsreife
+    //  kennt technik_n, technik_e und technik_a getrennt. Bei Klasse N
+    //  kommt dasselbe heraus, beim Aufstieg nicht mehr. Aus einem Topf
+    //  koennen die beiden Zahlen gar nicht erst auseinanderlaufen.
+    // ================================================================
+    let gelernt = 0, unberuehrt = 0;
+    pool.forEach(q => {
+        const m  = (typeof masteryData !== 'undefined') ? masteryData[q.id] : null;
+        const cb = (typeof cbAngerechnet === 'function') && cbAngerechnet(q.id);
+        if(!m){ if(cb) gelernt++; else unberuehrt++; return; }
+        if(m.mastered || cb) gelernt++;
+    });
+    const stand = {
+        gelernt: gelernt,
+        unberuehrt: unberuehrt,
+        quote: (richtig + falsch) > 0 ? Math.round(schnitt * 100) : null
+    };
+
     if(beantwortet < REIFE_MINDEST){
-        return { teil, pool: pool.length, beantwortet, genug: false };
+        return Object.assign({ teil, pool: pool.length, beantwortet, genug: false }, stand);
     }
 
     let summe = 0;
@@ -13672,7 +14268,7 @@ function reifeTeil(teil){
     if(punkte >= REIFE_SITZT) lage = 'gut';
     else if(punkte >= REIFE_NOETIG) lage = 'knapp';
 
-    return { teil, pool: pool.length, beantwortet, genug: true, punkte, lage };
+    return Object.assign({ teil, pool: pool.length, beantwortet, genug: true, punkte, lage }, stand);
 }
 
 // Wo klemmt es? Gruppiert wird nach den Lektionen des Videolehrgangs - die
@@ -13970,15 +14566,15 @@ function stolpersteineOeffnen(){
             modal = document.createElement('div');
             modal.id = 'stolperModal';
             modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-                + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+                + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
             modal.innerHTML =
-                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:900px; width:95%; '
-                + 'height:calc(83vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
+                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:1040px; width:94%; '
+                + 'height:calc(90vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
                 + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
                 + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem; flex:0 0 auto;">'
                 + '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
                 + '<i class="fas fa-shoe-prints"></i> Alle Stolpersteine</h3>'
-                + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
+                + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
                 + 'onclick="document.getElementById(\'stolperModal\').style.display=\'none\'">✕</button></div>'
                 + '<div id="stolperKopf" style="flex:0 0 auto;"></div>'
                 + '<div id="stolperListe" style="flex:1; overflow-y:auto; margin-top:0.5rem;"></div></div>';
@@ -14071,6 +14667,8 @@ function stolpersteinUeben(id){
     try{
         const m = document.getElementById('stolperModal');
         if(m) m.style.display = 'none';
+        const bf = document.getElementById('befundeModal');
+        if(bf) bf.style.display = 'none';
         const s = document.getElementById('statistikModal');
         if(s) s.style.display = 'none';
         if(typeof reifeThemaUeben === 'function') reifeThemaUeben(id);
@@ -14102,6 +14700,19 @@ function stolpersteinMerken(id){
         }
         const zeile = document.getElementById('stolperZeile_' + id);
         if(zeile) zeile.style.background = jetztGemerkt ? '#fff6f8' : 'transparent';
+
+        // Dieselbe Frage kann gleichzeitig im Fenster "Woran es liegt"
+        // stehen - dann wird auch dort nachgezogen, statt dass zwei
+        // Herzen verschiedener Meinung sind.
+        const k2 = document.getElementById('befundHerz_' + id);
+        if(k2){
+            k2.style.borderColor = jetztGemerkt ? '#f0b8c4' : '#dde5ef';
+            k2.style.background  = jetztGemerkt ? '#fff1f4' : '#fff';
+            k2.style.color       = jetztGemerkt ? '#b01238' : '#9fb0c4';
+            k2.title = jetztGemerkt ? 'Aus der Merkliste nehmen' : 'Auf die Merkliste setzen';
+        }
+        const z2 = document.getElementById('befundZeile_' + id);
+        if(z2) z2.style.background = jetztGemerkt ? '#fff6f8' : 'transparent';
 
         // Nur der Kopf wird neu gerechnet - dort steht die Zahl.
         stolpersteinKopfNachziehen();
@@ -14237,21 +14848,39 @@ function reifeAktualisieren(){
         const werte = teile.map(reifeTeil).filter(Boolean);
         const fertig = werte.filter(w => w.genug);
 
-        // Solange kein einziger Teil genug Antworten hat, schweigt der Kasten
-        // ganz. Ein leerer Rahmen mit "noch keine Einschaetzung" waere nur ein
-        // Platzhalter, der jeden Tag aufs Neue enttaeuscht.
-        if(!fertig.length){ kasten.style.display = 'none'; return; }
+        // ================================================================
+        //  OHNE VORHERSAGE, ABER NICHT OHNE ZAHLEN
+        // ----------------------------------------------------------------
+        //  Bis zum 11.09.2026 verschwand der ganze Kasten, solange kein
+        //  Teil genug Antworten fuer eine Einschaetzung hatte - ein leerer
+        //  Rahmen mit "noch keine Einschaetzung" waere ja nur ein
+        //  Platzhalter gewesen.
+        //
+        //  Seit die Zeilen auch den Lernstand tragen, stimmt das nicht mehr:
+        //  Wie viele Fragen gelernt sind und wie viele noch nie drankamen,
+        //  weiss der Trainer vom ersten Tag an. Diese Zahlen wegzulassen,
+        //  nur weil die Vorhersage noch fehlt, waere Verschwendung - und es
+        //  war der Grund fuer die leere linke Spalte, die Dietmar am
+        //  10.09.2026 gemeldet hat.
+        //
+        //  Also bleibt der Kasten stehen. Statt der Ansage steht dann ein
+        //  Satz, der sagt, was noch fehlt.
+        // ================================================================
+        const ohneVorhersage = !fertig.length;
 
         // Der schwaechste Teil bestimmt die Ansage - in der Pruefung muss
         // JEDER Teil bestanden werden, ein guter gleicht keinen schlechten aus.
         let schlimmster = null;
         fertig.forEach(w => { if(!schlimmster || w.punkte < schlimmster.punkte) schlimmster = w; });
-        const alleGut = fertig.every(w => w.lage === 'gut');
+        const alleGut = fertig.length && fertig.every(w => w.lage === 'gut');
         const einerFaellt = fertig.some(w => w.lage === 'schlecht');
         const nochOffen = werte.length - fertig.length;
 
         let ansage, farbe;
-        if(einerFaellt){
+        if(ohneVorhersage){
+            farbe = 'var(--muted)';
+            ansage = 'Für eine Vorhersage fehlen noch Antworten.';
+        }else if(einerFaellt){
             farbe = 'var(--bad)';
             ansage = 'Heute würdest du an ' + (meta[schlimmster.teil] ? meta[schlimmster.teil].name : schlimmster.teil) + ' scheitern.';
         }else if(alleGut){
@@ -14264,7 +14893,11 @@ function reifeAktualisieren(){
 
         const fehlt = Math.max(0, REIFE_NOETIG - (schlimmster ? schlimmster.punkte : 0));
         let begruendung;
-        if(einerFaellt){
+        if(ohneVorhersage){
+            begruendung = 'Sobald ein Prüfungsteil ' + REIFE_MINDEST + ' beantwortete Fragen hat, '
+                        + 'steht hier, wie du stehst. Der Lernstand darunter zählt schon ab der '
+                        + 'ersten Antwort mit.';
+        }else if(einerFaellt){
             begruendung = 'Dir fehlen dort im Schnitt ' + (Math.round(fehlt * 10) / 10).toString().replace('.', ',')
                         + ' Punkte zur Bestehensgrenze.';
         }else if(alleGut){
@@ -14272,7 +14905,7 @@ function reifeAktualisieren(){
         }else{
             begruendung = 'Ein Teil liegt nur knapp über der Grenze — ein schlechter Tag genügt, und es kippt.';
         }
-        if(nochOffen > 0){
+        if(nochOffen > 0 && !ohneVorhersage){
             begruendung += ' ' + (nochOffen === 1 ? 'Ein Prüfungsteil hat' : nochOffen + ' Prüfungsteile haben')
                         + ' noch zu wenige Antworten für eine Einschätzung.';
         }
@@ -14318,7 +14951,7 @@ function reifeAktualisieren(){
                     +     satz + '</span>'
                     + '</div>'
                     + reifeVerlaufBalken(z.anteil)
-                    + '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.45rem;">'
+                    + '<div class="stat-kuerzbar" data-weg="5" style="font-size:0.72rem; color:var(--muted); margin-top:0.45rem;">'
                     +   'Zweitausend Mal nachgespielt: je Prüfungsteil 25 Fragen gezogen und einzeln '
                     +   'gewürfelt. Bestanden zählt nur, wenn <b>jeder</b> Teil auf ' + REIFE_NOETIG + ' Punkte kommt.'
                     + '</div></div>';
@@ -14360,16 +14993,50 @@ function reifeAktualisieren(){
         }catch(e){}
 
         // ---- Zeilen je Pruefungsteil ----
+        // Die dritte Zeile: der Lernstand, der bis zum 11.09.2026 als
+        // eigene Tabelle darunter stand. Dieselben drei Teile, dieselben
+        // Fragenzahlen - jetzt in einer Zeile statt in zwei Kaesten.
+        const standZeile = (w) => {
+            const teile2 = [];
+            if(w.pool){
+                const anteil = Math.round((w.gelernt / w.pool) * 100);
+                teile2.push('<b>' + w.gelernt + '</b> von ' + w.pool + ' gelernt (' + anteil + '\u202f%)');
+            }
+            if(w.quote !== null && w.quote !== undefined){
+                const f = w.quote >= 76 ? '#1f9d55' : (w.quote >= 60 ? '#b8860b' : '#c0392b');
+                teile2.push('Trefferquote <b style="color:' + f + ';">' + w.quote + '\u202f%</b>');
+            }
+            if(w.unberuehrt) teile2.push(w.unberuehrt + ' noch nie geübt');
+            if(!teile2.length) return '';
+            return '<div class="reife-stand">' + teile2.join(' &middot; ') + '</div>';
+        };
+
         const zeilen = werte.map(w => {
             const name = meta[w.teil] ? meta[w.teil].name : w.teil;
             const links = '<div style="font-weight:600; font-size:0.88rem;">' + name
                         + '<span style="display:block; font-weight:400; font-size:0.72rem; color:var(--muted);">'
                         + w.pool + ' Fragen</span></div>';
             if(!w.genug){
+                // Dietmar am 11.09.2026 zum Aufstieg E auf A: "Ich möchte da
+                // auch diese Balken wie bei der Klasse N, auch wenn da kein
+                // Fortschritt angezeigt wird."
+                //
+                // Der Balken stand hier nicht, weil es noch nichts
+                // vorherzusagen gibt. Aber genau das ist der Punkt: Eine
+                // Zeile ohne Balken sieht aus, als fehle etwas, und die
+                // Bestehensgrenze - der senkrechte Strich - gilt auch dann
+                // schon. Jetzt steht der Balken da, leer, mit der Grenze an
+                // ihrem Platz. Er sagt: Hier geht es los, und so weit ist es
+                // bis zum Ziel.
                 return '<div class="reife-zeile">' + links
-                     + '<div style="font-size:0.8rem; color:var(--muted);">Noch zu wenige Antworten — '
+                     + reifeBalken(0, 'leer')
+                     + '<div style="text-align:right; font-family:var(--font-mono); font-size:0.86rem; '
+                     + 'font-weight:700; color:var(--muted);">&ndash; von ' + REIFE_BOGEN
+                     + '<span style="display:block; font-weight:400; font-size:0.7rem; '
+                     + 'font-family:var(--font-body);">offen</span></div>'
+                     + '<div class="reife-stand" style="color:var(--muted);">Noch zu wenige Antworten &mdash; '
                      + w.beantwortet + ' von ' + REIFE_MINDEST + ' nötig für eine Einschätzung.</div>'
-                     + '<div></div></div>';
+                     + standZeile(w) + '</div>';
             }
             const wort = w.lage === 'gut' ? 'sitzt' : (w.lage === 'knapp' ? 'knapp' : 'zu wenig');
             const farbeT = w.lage === 'gut' ? 'var(--good)' : (w.lage === 'knapp' ? 'var(--warn)' : 'var(--bad)');
@@ -14378,7 +15045,8 @@ function reifeAktualisieren(){
                  + '<div style="text-align:right; font-family:var(--font-mono); font-size:0.86rem; '
                  + 'font-weight:700; color:' + farbeT + ';">' + Math.round(w.punkte) + ' von ' + REIFE_BOGEN
                  + '<span style="display:block; font-weight:400; font-size:0.7rem; color:var(--muted); '
-                 + 'font-family:var(--font-body);">' + wort + '</span></div></div>';
+                 + 'font-family:var(--font-body);">' + wort + '</span></div>'
+                 + standZeile(w) + '</div>';
         }).join('');
 
         // ---- Wo es klemmt ----
@@ -14415,9 +15083,10 @@ function reifeAktualisieren(){
             + '<div style="font-size:0.83rem; color:var(--muted); margin-bottom:0.8rem;">' + begruendung + '</div>'
             + zehnBlock
             + zeilen
-            + '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.5rem;">'
+            + '<div class="stat-kuerzbar" data-weg="4" style="font-size:0.72rem; color:var(--muted); margin-top:0.5rem;">'
             + 'Der senkrechte Strich ist die Bestehensgrenze: <b>' + REIFE_NOETIG + ' von ' + REIFE_BOGEN
-            + '</b> Punkten je Prüfungsteil. Die Zahl ist eine Vorhersage aus deinem Lernstand, keine Garantie.</div>'
+            + '</b> Punkten je Prüfungsteil. Die Zahl ist eine Vorhersage aus deinem Lernstand, keine Garantie. '
+            + 'Die Trefferquote zählt alle je gegebenen Antworten, nicht nur die letzte Runde.</div>'
             + (pensum ? '<div style="margin-top:0.8rem; background:#f4f7fd; border:1px solid #dbe6f5; '
                  + 'border-radius:12px; padding:0.6rem 0.8rem; font-size:0.85rem;">' + pensum + '</div>' : '')
             + themenBlock
@@ -15580,14 +16249,14 @@ async function githubOeffnen(){
         modal = document.createElement('div');
         modal.id = 'githubModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML =
             '<div style="background:#fff; border-radius:16px; padding:1.15rem 1.25rem; max-width:430px; width:96%; '
             + 'max-height:calc(86vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
             + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.7rem;">'
             + '<h3 style="flex:1; margin:0; font-size:1rem; color:var(--panel-navy);">'
             + '<i class="fab fa-github"></i> Update vorhanden</h3>'
-            + '<button type="button" class="btn btn-outline" style="padding:3px 9px;" '
+            + '<button type="button" class="btn btn-outline x-zu" style="padding:3px 9px;" '
             + 'onclick="githubSchliessen()">&#10005;</button></div>'
             + '<div id="githubInhalt"></div></div>';
         document.body.appendChild(modal);
@@ -15885,19 +16554,25 @@ function formelKnopfSetzen(){
 // ================================================================
 //  DER KNOPF MACHT AUF SICH AUFMERKSAM
 // ================================================================
-//  Optisch bei jeder Frage, die eine Stelle im Blatt hat - akustisch
-//  nur EINMAL je Sitzung.
+//  Optisch UND akustisch bei jeder Frage, die eine Stelle im Blatt hat.
 //
-//  Der Grund für diesen Unterschied ist eine Zahl: Im Katalog E auf A
-//  haben 282 Fragen eine Stelle im Blatt. Ein Ton bei jeder davon wäre
-//  nach zehn Minuten unerträglich und würde als Erstes abgeschaltet -
-//  mitsamt dem optischen Hinweis. Einmal hören, danach sehen: Das
-//  bleibt.
+//  Bis zum 11.09.2026 kam der Ton nur EINMAL je Sitzung. Der Gedanke
+//  dahinter: Im Katalog E auf A haben 282 Fragen eine Stelle im Blatt,
+//  und ein Ton bei jeder davon koennte nach zehn Minuten stoeren.
+//
+//  Dietmar hat das anders entschieden: "Der Sound bei Formelblatt muss
+//  jedes Mal kommen, sobald ich eine Frage mit Formelblatt habe. Dieser
+//  soll unter Einstellungen abschaltbar sein."
+//
+//  Das ist der bessere Weg, und zwar aus einem einfachen Grund: Wer
+//  uebt, schaut auf die Frage und nicht auf die Knopfleiste. Ein Ton
+//  erreicht ihn auch dann. Und wem es zu viel wird, der schaltet genau
+//  diesen Ton ab - ohne den optischen Hinweis mit zu verlieren, denn
+//  dafuer gibt es jetzt zwei getrennte Haken.
 //
 //  Der Ton wird selbst erzeugt statt als Datei mitgeliefert. Zwei
 //  weiche Töne, zusammen 200 Millisekunden, halbe Lautstärke. Eine
 //  MP3 dafür wäre eine Datei mehr im Paket, im Update und im Setup.
-let formelTonGespielt = false;
 let formelPulsFrage   = null;
 
 function formelTonSpielen(){
@@ -15939,10 +16614,11 @@ function formelKnopfMelden(fragenId){
     b.classList.add('merk-mich');
     setTimeout(() => { try{ b.classList.remove('merk-mich'); }catch(e){} }, 2200);
 
-    if(!formelTonGespielt){
-        formelTonGespielt = true;
-        formelTonSpielen();
-    }
+    // Der Ton bei JEDER Frage mit Formelblatt-Stelle - abschaltbar unter
+    // Einstellungen -> Formelblatt. Einmal je Frage, nicht bei jedem
+    // Neuzeichnen: Dafuer sorgt die Sperre ueber formelPulsFrage weiter oben.
+    if(einstellungen && einstellungen.formelTon === false) return;
+    formelTonSpielen();
 }
 
 function formelBtnKlick(){
@@ -16405,7 +17081,7 @@ function formelOeffnen(stelleId){
             +     '<div id="formelUnterzeile" style="font-size:0.75rem; color:var(--muted);"></div>'
             +   '</div>'
             +   '<button type="button" class="btn btn-outline" id="formelExternBtn" style="padding:4px 12px; font-size:0.78rem;" onclick="formelExtern()" title="In einem eigenen Fenster öffnen">Größer</button>'
-            +   '<button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="formelSchliessen()">&#10005;</button>'
+            +   '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" onclick="formelSchliessen()">&#10005;</button>'
             + '</div>'
             + '<div id="formelBuehne" style="background:#eef2f7; flex:1; min-height:0; display:flex;">'
             +   '<iframe id="formelPdf" title="Formelsammlung" style="flex:1; width:100%; border:0; background:#fff;"></iframe>'
@@ -16951,14 +17627,14 @@ function abgleichOeffnen() {
         modal = document.createElement('div');
         modal.id = 'abgleichModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML =
             '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
             + 'max-height:calc(90vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
             + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem;">'
             + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
             + '<i class="fas fa-rotate"></i> Abgleich mit dem Entwickler</h3>'
-            + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
+            + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
             + 'onclick="document.getElementById(\'abgleichModal\').style.display=\'none\'">&#10005;</button></div>'
             + '<div id="abgleichInhalt"></div></div>';
         document.body.appendChild(modal);
@@ -17261,14 +17937,27 @@ function infoOeffnen() {
         modal = document.createElement('div');
         modal.id = 'infoModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:0.8rem;';
+            + ' z-index:99996; align-items:center; justify-content:center; padding:0.8rem;';
         const leiste = INFO_ABSCHNITTE.map(a =>
             '<button type="button" id="infoTab_' + a.id + '" onclick="infoAbschnittZeigen(\'' + a.id + '\')" '
           + 'style="display:block; width:100%; text-align:left; border:none; background:transparent; '
           + 'padding:0.5rem 0.7rem; font-family:inherit; font-size:0.83rem; font-weight:600; color:#5b6b80; '
           + 'cursor:pointer; border-radius:8px; margin-bottom:2px;">' + a.name + '</button>').join('');
         modal.innerHTML =
-            '<div style="background:#fff; border-radius:16px; width:min(900px,calc(97vw / var(--afu-zoom, 1))); max-height:calc(92vh / var(--afu-zoom, 1)); '
+            // DIESELBEN MASSE WIE DIE EINSTELLUNGEN
+            // Dietmar am 11.09.2026: "unter Info Anleitung wünsche ich mir
+            // auch gleich grosse Fenster so wie es bei Einstellungen
+            // vorhanden ist."
+            //
+            // Der Unterschied lag in zwei Zahlen: 900 statt 1040 Punkte
+            // breit, und eine HOECHSTHOEHE statt einer festen. Das zweite
+            // fiel mehr auf als das erste - mit einer Hoechsthoehe richtet
+            // sich das Fenster nach dem laengsten Abschnitt, und beim
+            // Blaettern durch die Anleitung wuchs und schrumpfte es unter
+            // der Maus. Eine feste Hoehe steht still; gerollt wird innen,
+            // genau wie bei den Einstellungen.
+            '<div style="background:#fff; border-radius:16px; width:min(1040px,calc(97vw / var(--afu-zoom, 1))); '
+          + 'height:calc(83vh / var(--afu-zoom, 1)); '
           + 'display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
           + '<div style="display:flex; align-items:center; gap:8px; padding:0.7rem 1rem; '
           + 'border-bottom:1px solid #e3e9f3; background:#f7fafd;">'
@@ -17280,7 +17969,7 @@ function infoOeffnen() {
           + '<div style="display:flex; flex:1; min-height:0;">'
           + '<div style="width:172px; flex-shrink:0; background:#f7fafd; border-right:1px solid #e3e9f3; '
           + 'padding:0.6rem; overflow-y:auto;">' + leiste + '</div>'
-          + '<div id="infoBlattRahmen" style="flex:1; min-width:0; overflow-y:auto; padding:1rem 1.2rem; min-height:420px;">'
+          + '<div id="infoBlattRahmen" style="flex:1; min-width:0; overflow-y:auto; padding:1rem 1.2rem;">'
           + INFO_ABSCHNITTE.map(a => '<div id="infoBlatt_' + a.id + '" style="display:none;"></div>').join('')
           + '</div></div>'
           + '<div style="padding:0.55rem 1rem; border-top:1px solid #e3e9f3; background:#fafbff; '
@@ -17941,14 +18630,14 @@ function lektionenOeffnen() {
         modal = document.createElement('div');
         modal.id = 'lektionenModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99996; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML =
             '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:780px; width:96%; '
             + 'max-height:calc(90vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
             + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.4rem;">'
             + '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">'
             + '<i class="fab fa-youtube" style="color:#c4302b;"></i> Videolehrgang von Michael, DL2YMR</h3>'
-            + '<button type="button" class="btn btn-outline" style="padding:4px 10px;" '
+            + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
             + 'onclick="document.getElementById(\'lektionenModal\').style.display=\'none\'">&#10005;</button></div>'
             + '<div id="lektionenInhalt"></div></div>';
         document.body.appendChild(modal);
@@ -18380,7 +19069,8 @@ function einstellungenSchluessel(){
 
 function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
-                      formelHinweis: true };
+                      formelHinweis: true, formelTon: true,
+                      levelUpTon: true, rundeFertig: true };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
@@ -18391,6 +19081,11 @@ function einstellungenLaden(){
             // mag, schaltet ihn aus. Deshalb hier nur das ausdrückliche
             // Nein übernehmen.
             if(d && d.formelHinweis === false) einstellungen.formelHinweis = false;
+            // Auch der Ton ist standardmaessig AN - siehe formelKnopfMelden().
+            if(d && d.formelTon === false) einstellungen.formelTon = false;
+            // Dasselbe beim Level-up und beim Rundenabschluss.
+            if(d && d.levelUpTon === false) einstellungen.levelUpTon = false;
+            if(d && d.rundeFertig === false) einstellungen.rundeFertig = false;
             if(d && d.knopfUmfang === 'lang') einstellungen.knopfUmfang = 'lang';
         }
     }catch(e){}
@@ -18496,6 +19191,19 @@ function einstellungenAnwenden(){
     // Vergleich auf !== false und nicht auf !!.
     const fh = document.getElementById('einstFormelHinweis');
     if(fh) fh.checked = (einstellungen.formelHinweis !== false);
+    const lu = document.getElementById('einstLevelUpTon');
+    if(lu) lu.checked = (einstellungen.levelUpTon !== false);
+    const rf = document.getElementById('einstRundeFertig');
+    if(rf) rf.checked = (einstellungen.rundeFertig !== false);
+    const ft = document.getElementById('einstFormelTon');
+    if(ft){
+        ft.checked  = (einstellungen.formelTon !== false);
+        // Ohne den Hinweis gibt es auch keinen Ton - dann steht der zweite
+        // Haken grau da, statt etwas zu versprechen, das nicht eintritt.
+        ft.disabled = (einstellungen.formelHinweis === false);
+        const z = document.getElementById('einstFormelTonZeile');
+        if(z) z.style.opacity = ft.disabled ? '0.45' : '1';
+    }
     // Der Beamer-Modus wird nicht gespeichert - der Haken zeigt nur,
     // ob er gerade an ist.
     const bm = document.getElementById('einstBeamer');
@@ -18537,6 +19245,19 @@ function einstellungenUmschalten(feld, an){
     // Beim Einschalten einmal kurz hoerbar machen, dass es jetzt spricht.
     if(feld === 'knoepfeVorlesen' && an){
         knopfSprechen('Das Vorlesen der Knopftexte ist eingeschaltet.');
+    }
+    // Dasselbe beim Formelton: Einmal hoeren, was man gerade eingeschaltet
+    // hat - sonst merkt man es erst bei der naechsten passenden Frage.
+    if(feld === 'formelTon' && an){
+        try{ formelTonSpielen(); }catch(e){}
+    }
+    if(feld === 'levelUpTon' && an){
+        try{ levelUpSpielen(); }catch(e){}
+    }
+    // Der Ton haengt am Hinweis: Ist der aus, gibt es auch keinen Ton.
+    // Der zweite Haken wird dann grau - siehe einstellungenAnwenden().
+    if(feld === 'formelHinweis' || feld === 'formelTon'){
+        try{ einstellungenAnwenden(); }catch(e){}
     }
 }
 window.einstellungenUmschalten = einstellungenUmschalten;
@@ -19251,7 +19972,7 @@ function einstellungenOeffnen(reiter){
         modal = document.createElement('div');
         modal.id = 'einstellungenModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:0.8rem;';
+            + ' z-index:99996; align-items:center; justify-content:center; padding:0.8rem;';
         modal.onclick = e => { if (e.target === modal) einstellungenSchliessen(); };
 
         const reiterLeiste = EINST_REITER.map(r =>
@@ -19537,16 +20258,57 @@ function einstBlaetterFuellen(){
       + einstKasten('Formelblatt', 'Bei vielen Fragen steht die Antwort in der Formelsammlung der '
             + 'Bundesnetzagentur — bei Klasse N bei 112 von 571 Fragen, beim Aufstieg auf A sogar bei '
             + '224 von 716. Das Blatt liegt in der Prüfung auf dem Tisch. Damit man es nicht vergisst, '
-            + 'pulst der Knopf dreimal, sobald es zu einer Frage etwas nachzuschlagen gibt. Der Ton '
-            + 'kommt nur einmal je Sitzung.',
+            + 'pulst der Knopf dreimal, sobald es zu einer Frage etwas nachzuschlagen gibt — und ein '
+            + 'kurzer Zweiklang sagt es dazu.',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
           + 'data-vorlesen-kurz="Auf das Formelblatt hinweisen." '
-          + 'data-vorlesen="Auf das Formelblatt hinweisen. Der Knopf pulst dreimal, wenn es zu einer Frage eine Stelle in der Formelsammlung gibt. Einmal je Sitzung ertönt dazu ein kurzer Zweiklang.">'
-          + '<input type="checkbox" id="einstFormelHinweis" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'data-vorlesen="Auf das Formelblatt hinweisen. Der Knopf pulst dreimal, wenn es zu einer Frage eine Stelle in der Formelsammlung gibt.">'
+          + '<input type="checkbox" id="einstFormelHinweis" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
           + 'onchange="einstellungenUmschalten(\'formelHinweis\', this.checked)">'
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Auf das Formelblatt hinweisen</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
-          + 'Der Knopf pulst dreimal, wenn es zu dieser Frage etwas nachzuschlagen gibt.</span></span></label>')
+          + 'Der Knopf pulst dreimal, wenn es zu dieser Frage etwas nachzuschlagen gibt.</span></span></label>'
+          // Der Ton als eigener Haken - Dietmar am 11.09.2026: "Der Sound bei
+          // Formelblatt muss jedes Mal kommen ... Dieser soll unter
+          // Einstellungen abschaltbar sein." Wer den Hinweis sehen, aber nicht
+          // hoeren will, macht hier den Haken weg.
+          + '<label id="einstFormelTonZeile" style="display:flex; gap:0.6rem; align-items:flex-start; '
+          + 'cursor:pointer; margin-top:0.55rem;" '
+          + 'data-vorlesen-kurz="Ton bei jeder Frage mit Formelblatt." '
+          + 'data-vorlesen="Ton bei jeder Frage mit Formelblatt. Ein kurzer Zweiklang erklingt jedes Mal, wenn zu einer Frage eine Stelle in der Formelsammlung gehört.">'
+          + '<input type="checkbox" id="einstFormelTon" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'formelTon\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Dazu ein kurzer Ton</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Ein Zweiklang von zwei Zehntelsekunden, jedes Mal, wenn zu einer Frage etwas im Blatt '
+          + 'steht. Wer lieber still übt, nimmt den Haken weg — der Knopf pulst dann weiter.</span></span></label>')
+      // ================================================================
+      //  BELOHNUNG - die Toene, die sagen "das sitzt"
+      //  Dietmar am 11.09.2026: "Das ganze unter Einstellungen ein und
+      //  abschaltbar." Beides steht hier, direkt unter dem Formelblatt-Ton:
+      //  Wer Toene sucht, findet sie an einer Stelle.
+      // ================================================================
+      + einstKasten('Belohnung', 'Ein kurzer Klang, wenn etwas geschafft ist — '
+            + 'sounds/level-up.wav. Er kommt an zwei Stellen: wenn eine Frage nach dreimal '
+            + 'richtig in Folge sitzt, und wenn die Runde „Noch nie geübt" durchgearbeitet ist.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Ton, wenn eine Frage sitzt." '
+          + 'data-vorlesen="Ton, wenn eine Frage sitzt. Dreimal hintereinander richtig beantwortet, und die Frage wechselt in den Bestand - dazu erklingt ein kurzer Klang.">'
+          + '<input type="checkbox" id="einstLevelUpTon" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'levelUpTon\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Ton, wenn eine Frage sitzt</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Dreimal hintereinander richtig — die Frage wechselt vom Lernstapel in den Bestand. '
+          + 'Kein Fenster, nur der Klang.</span></span></label>'
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.55rem;" '
+          + 'data-vorlesen-kurz="Fenster, wenn eine Runde durch ist." '
+          + 'data-vorlesen="Fenster, wenn eine Runde durch ist. Nach der Runde noch nie geübt meldet sich der Trainer und bietet an, mit den Stolpersteinen weiterzumachen.">'
+          + '<input type="checkbox" id="einstRundeFertig" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'rundeFertig\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Fenster, wenn „Noch nie geübt" durch ist</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Am Ende dieser Runde meldet sich der Trainer und bietet an, gleich mit den '
+          + 'Stolpersteinen weiterzumachen.</span></span></label>')
       + einstKasten('Schrift', '',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
           + 'data-vorlesen-kurz="Schrift beim Vorlesen vergrößern." '
@@ -20819,7 +21581,7 @@ function rundeAngebotZeigen(neuBeginnen){
         modal = document.createElement('div');
         modal.id = 'rundeModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + 'backdrop-filter:blur(8px); z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+            + ' z-index:99998; align-items:center; justify-content:center; padding:1rem;';
         document.body.appendChild(modal);
     }
 
@@ -22435,7 +23197,152 @@ window.showDuoFinalResults = function(data){
     }catch(e){ console.error('showDuoFinalResults error', e); }
 };
 
+// ================================================================
+//  LEVEL-UP: DER TON, WENN ETWAS SITZT
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Unter Sounds hinzugefügt level-up.wav ...
+//  Interessant wäre dieser Sound auch wenn eine Frage 3 Mal
+//  hintereinander richtig beantwortet wurde. Hier dann ohne Fenster
+//  was sich öffnet. Das ganze unter Einstellungen ein und abschaltbar."
+//
+//  Zwei Anlaesse, ein Ton:
+//
+//   1. Eine Frage ist gemeistert - dreimal hintereinander richtig.
+//      Genau in diesem Moment wechselt sie vom Lernstapel in den
+//      Bestand, und genau das ist die Stelle, an der ein Trainer
+//      normalerweise nickt. Ohne Fenster, ohne Unterbrechung.
+//   2. Eine Runde "Noch nie geübt" ist durchgearbeitet - dazu kommt
+//      das Fenster, siehe rundeAbschlussMelden().
+//
+//  Die Datei liegt in sounds/ und wird vom Installer mitgenommen
+//  (sounds\* in installer.iss). Sie wird EINMAL geladen und danach
+//  wiederverwendet: Bei dreissig gemeisterten Fragen in einer Runde
+//  waeren dreissig neue Audio-Objekte sonst dreissig Mal 1,3 MB.
+// ================================================================
+let levelUpAudio = null;
+
+function levelUpSpielen(){
+    try{
+        if(einstellungen && einstellungen.levelUpTon === false) return;
+        if(!levelUpAudio){
+            levelUpAudio = new Audio('sounds/level-up.wav');
+            levelUpAudio.volume = 0.55;
+            levelUpAudio.preload = 'auto';
+        }
+        // Laeuft der Ton noch von der vorigen Frage, faengt er von vorn an -
+        // zwei uebereinander waeren Krach.
+        try{ levelUpAudio.pause(); }catch(e){}
+        levelUpAudio.currentTime = 0;
+        const pr = levelUpAudio.play();
+        if(pr && pr.catch) pr.catch(() => {});
+    }catch(e){ console.debug('Level-up:', e.message); }
+}
+window.levelUpSpielen = levelUpSpielen;
+
+// ================================================================
+//  ALLE FRAGEN DURCH - UND JETZT?
+//  ----------------------------------------------------------------
+//  Dietmar: "Noch nie geübt sind bei mir 6 Fragen. Hier möchte ich
+//  einen Sound und im Abschluss ein Fenster: Alle Fragen durch. Jetzt
+//  gehts weiter mit den Fragen wo du noch Schwierigkeiten hast."
+//
+//  Das Fenster kommt NUR nach dieser einen Rundenart. Nach jeder
+//  beliebigen Runde waere es eine Unterbrechung; hier ist es der
+//  Abschluss von etwas, das man sich vorgenommen hat - und der
+//  naechste Schritt liegt auf der Hand.
+// ================================================================
+function rundeAbschlussMelden(){
+    try{
+        const name = (typeof currentPart !== 'undefined') ? String(currentPart || '') : '';
+        if(name !== 'Noch nie geübt') return;
+        if(einstellungen && einstellungen.rundeFertig === false) return;
+
+        // Wie viele Fragen warten jetzt? Das entscheidet, was die Knoepfe
+        // anbieten - und ob es ueberhaupt etwas anzubieten gibt.
+        //
+        // ZWEI LISTEN, ZWEI KNOEPFE. Dietmar am 11.09.2026: "Weiter mit
+        // Lernbedarf ist das gleiche? Wenn nicht, auch das als Button mit
+        // einbauen." Es ist nicht dasselbe:
+        //
+        //   Stolpersteine = jede Frage, bei der jemals etwas danebenging
+        //                   und die noch nicht sitzt. Ein Langzeitgedaechtnis.
+        //   Lernbedarf    = die kleinere, heissere Liste: Eine Frage kommt
+        //                   hinein, sobald sie falsch beantwortet wird, und
+        //                   faellt nach drei richtigen in Folge wieder
+        //                   heraus (siehe handleDifficultOnCorrect).
+        //
+        // Bei Dietmar am 11.09.2026: 49 offene Stolpersteine, 36 im
+        // Lernbedarf. Beides anzubieten ist also keine Dopplung.
+        let offen = 0, bedarf = 0;
+        try{ offen  = alleStolpersteine().filter(x => !x.sitzt).length; }catch(e){}
+        try{ bedarf = Object.keys(difficultQuestions || {}).length; }catch(e){}
+        const wieviel = Math.min(offen, 30);
+
+        setTimeout(() => {
+            try{ levelUpSpielen(); }catch(e){}
+            let m = document.getElementById('rundeFertigModal');
+            if(!m){
+                m = document.createElement('div');
+                m.id = 'rundeFertigModal';
+                m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                    + 'z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+                document.body.appendChild(m);
+                m.addEventListener('click', e => { if(e.target === m) m.style.display = 'none'; });
+            }
+            m.innerHTML =
+                  '<div style="background:#fff; border-radius:18px; padding:1.6rem 1.7rem; max-width:520px; '
+                + 'width:94%; box-shadow:0 24px 64px rgba(0,0,0,0.38); text-align:center;">'
+                + '<div style="font-size:2.2rem; line-height:1;">🎉</div>'
+                + '<h3 style="margin:0.6rem 0 0.3rem; font-size:1.15rem; color:var(--panel-navy);">'
+                +   'Alle Fragen durch!</h3>'
+                + '<div style="font-size:0.86rem; line-height:1.55; color:var(--ink);">'
+                +   ((wieviel || bedarf)
+                       ? 'Es gibt keine Frage mehr, die du noch nie gesehen hast. '
+                         + 'Jetzt geht es weiter mit den Fragen, bei denen du noch Schwierigkeiten hast.'
+                       : 'Es gibt keine Frage mehr, die du noch nie gesehen hast &ndash; und im Moment '
+                         + 'auch keine, die dir Schwierigkeiten macht. Sauber.')
+                + '</div>'
+                + '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:1.1rem;">'
+                +   (wieviel
+                       ? '<button type="button" class="btn btn-primary" style="font-size:0.82rem; padding:7px 15px;" '
+                         + 'onclick="rundeFertigZu(); stolpersteineUeben();">'
+                         + '<i class="fas fa-play"></i> Weiter mit ' + wieviel + ' Stolpersteinen</button>'
+                       : '')
+                +   (bedarf
+                       ? '<button type="button" class="btn btn-outline" style="font-size:0.82rem; padding:7px 15px;" '
+                         + 'onclick="rundeFertigZu(); repeatDifficult();">'
+                         + '<i class="fas fa-fire" style="color:#c0392b;"></i> Lernbedarf: ' + bedarf
+                         + (bedarf === 1 ? ' Frage' : ' Fragen') + '</button>'
+                       : '')
+                +   '<button type="button" class="btn btn-outline x-zu" style="font-size:0.82rem; padding:7px 15px;" '
+                +     'onclick="rundeFertigZu();">Später</button>'
+                + '</div>'
+                // Der Unterschied in einem Satz - sonst klickt man zweimal
+                // dasselbe zu finden und wundert sich ueber verschiedene Zahlen.
+                +   ((wieviel && bedarf)
+                       ? '<div style="font-size:0.72rem; color:var(--muted); line-height:1.5; margin-top:0.7rem;">'
+                         + '<b>Stolpersteine</b> sind alle Fragen, bei denen jemals etwas danebenging und '
+                         + 'die noch nicht sitzen. Der <b>Lernbedarf</b> ist die kleinere, frischere Liste: '
+                         + 'hinein bei jedem Fehler, heraus nach dreimal richtig in Folge.</div>'
+                       : '')
+                + '</div>';
+            m.style.display = 'flex';
+        }, 500);
+    }catch(e){ console.debug('Rundenabschluss:', e.message); }
+}
+function rundeFertigZu(){
+    const m = document.getElementById('rundeFertigModal');
+    if(m) m.style.display = 'none';
+}
+window.rundeFertigZu = rundeFertigZu;
+
 function renderFinishScreen(isTimeUp = false) {
+    // Die Runde "Noch nie geübt" bekommt ihren eigenen Abschluss - Ton und
+    // Fenster, siehe rundeAbschlussMelden(). Der Aufruf steht hier oben,
+    // die Anzeige selbst kommt eine halbe Sekunde spaeter, damit sie sich
+    // nicht mit dem Aufbau des Abschlussbildschirms ueberschneidet.
+    try{ rundeAbschlussMelden(); }catch(e){}
+
     // Durchgespielt heisst durchgespielt. Bliebe der Merkposten liegen,
     // boete der Trainer beim naechsten Start an, eine fertige Runde
     // "fortzusetzen" - bei der letzten Frage, die schon beantwortet ist.
@@ -26902,8 +27809,21 @@ window.showRealisticSelection = function(){
       `).join('')}
     </div>
     <label id="realisticGelerntZeile" style="display:flex; align-items:center; gap:8px; margin-top:0.9rem; font-size:0.85rem; cursor:pointer;">
-      <input type="checkbox" id="realisticGelerntCheck" onchange="setRealisticGelernt(this.checked)" style="width:17px; height:17px; cursor:pointer;">
+      <!-- flex:0 0 17px, nicht nur width: Beide Kaestchen sind Flex-Kinder, und
+           ein Flex-Kind schrumpft, wenn der Text daneben Platz braucht. Genau
+           das war am 11.09.2026 zu sehen - Dietmar: "2 unterschiedliche Rahmen
+           zum anklicken bei Prüfungssimulator. Die obere Größe gefällt mir
+           gut." Der untere Haken stand neben einem laengeren, mehrzeiligen
+           Text und war deshalb 1,7 Punkte schmaler. -->
+      <input type="checkbox" id="realisticGelerntCheck" onchange="setRealisticGelernt(this.checked)" style="width:17px; height:17px; flex:0 0 17px; cursor:pointer;">
       <span>Bereits gelernte Fragen nicht mehr fragen – sie zählen automatisch als richtig <span id="realisticGelerntInfo" style="color:var(--muted); font-size:0.8rem;"></span></span>
+    </label>
+    <label id="realisticSchwerZeile" style="display:flex; align-items:flex-start; gap:8px; margin-top:0.5rem; font-size:0.85rem; cursor:pointer;">
+      <input type="checkbox" id="realisticSchwerCheck" onchange="setSchwereBedingungen(this.checked)" style="width:17px; height:17px; flex:0 0 17px; margin-top:2px; cursor:pointer;">
+      <span>Erschwerte Bedingungen – deine Stolpersteine kommen häufiger dran
+        <span id="realisticSchwerInfo" style="color:var(--muted); font-size:0.8rem;"></span>
+        <span style="display:block; color:var(--muted); font-size:0.78rem; line-height:1.4;">Die Themenverteilung bleibt die eines echten Bogens; nur innerhalb jedes Lernziels wird zu dem gegriffen, was bei dir noch wackelt.</span>
+      </span>
     </label>
     <div class="realistic-footer">
       <button id="realisticStartBtn" class="btn btn-primary" disabled onclick="beginRealisticExam()"><i class="fas fa-play"></i> Prüfung starten</button>
@@ -26916,6 +27836,7 @@ window.showRealisticSelection = function(){
   </div>`;
   overlay.classList.add('open');
   try{ updateRealisticGelerntInfo(); }catch(e){}
+  try{ schwerInfoAktualisieren(); }catch(e){}
 };
 
 // Im Simulator sind normalerweise ALLE Fragen eines Teils im Topf - so laeuft
@@ -27029,6 +27950,180 @@ function pickRandom(arr,n){
   return shuffled.slice(0,n);
 }
 
+// ================================================================
+//  ERSCHWERTE BEDINGUNGEN - DER BOGEN, DER DEINE LÜCKEN TRIFFT
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Hier wünsche ich mir eine Prüfung mit
+//  erschwerten Bedingungen. Es gibt eine Auswertung mit den Defiziten
+//  und hier möchte ich, dass diese Fragen auftauchen, bei denen man
+//  Stolpersteine hat. Das Ganze muss realistisch sein."
+//
+//  Der letzte Satz ist der schwierige. Ein Bogen aus lauter
+//  Stolpersteinen wäre keine Prüfung, sondern eine Fehlerrunde - die
+//  gibt es schon. Und er wäre in einer Hinsicht sogar irreführend:
+//  Wenn alle Schwächen im selben Thema liegen, käme ein Bogen heraus,
+//  der zur Hälfte aus einem einzigen Lernziel besteht. So sieht kein
+//  Prüfungsbogen aus.
+//
+//  DESHALB ZWEI SCHRITTE, UND NUR DER ZWEITE IST GEWICHTET:
+//
+//   1. Eine ganz normale Ziehung von 25 Fragen liefert die SCHABLONE:
+//      wie viele Fragen je Lernziel auf den Bogen gehören - mitsamt
+//      der Schwankung, die eine echte Ziehung hat.
+//   2. Innerhalb jedes Lernziels wird dann gewichtet gezogen: eine
+//      wacklige Frage hat rund die achtfache Chance einer sitzenden.
+//
+//  Das Ergebnis sieht von außen aus wie ein normaler Bogen - dieselbe
+//  Themenverteilung, dieselben 25 Fragen - trifft aber überall dort
+//  hinein, wo es bei DIR klemmt.
+//
+//  WOHER DIE GEWICHTE KOMMEN: aus reifeChance(), also aus genau dem
+//  Lernstand, aus dem auch die Prüfungsreife und die Stolpersteine
+//  gerechnet werden. Eine abgehakte Frage steht bei 0,95 und bekommt
+//  damit das kleinste Gewicht, eine mehrfach danebengegangene bei 0,35
+//  oder darunter. Wer bei einer Frage immer wieder dieselbe falsche
+//  Antwort wählt (siehe diagnoseDaten), bekommt noch einen Aufschlag.
+//
+//  Und was in der ECHTEN Prüfung passiert, weiß niemand von uns:
+//  Die Prüfungsordnung (Vfg 29/2024) legt 25 Fragen je Teil und 19
+//  Punkte zum Bestehen fest - über die Zusammenstellung der Bögen
+//  steht dort kein Wort, und einen veröffentlichten Schwierigkeitswert
+//  je Frage gibt es nicht. Deshalb ist die Schablone oben eine
+//  gleichmäßige Zufallsziehung und keine erfundene Gewichtung.
+// ================================================================
+const SCHWER_KEY = 'amateurfunk_schwereBedingungen';
+
+function schwereBedingungen(){
+    try{ return localStorage.getItem(SCHWER_KEY) === '1'; }catch(e){ return false; }
+}
+window.schwereBedingungen = schwereBedingungen;
+
+window.setSchwereBedingungen = function(anAus){
+    try{ localStorage.setItem(SCHWER_KEY, anAus ? '1' : '0'); }catch(e){}
+    try{ schwerInfoAktualisieren(); }catch(e){}
+};
+
+// Das Lernziel einer Frage - die beiden ersten Zeichen der Nummer.
+// VD742 gehört zu VD, NC108 zu NC. So ist der Katalog der
+// Bundesnetzagentur gegliedert, und danach richtet sich die Schablone.
+function lernzielVon(id){ return String(id || '').slice(0, 2).toUpperCase(); }
+
+// Der Trefferschnitt eines Topfes - dieselbe Größe, mit der auch
+// reifeTeil() rechnet. Sie dient als Vorwissen für Fragen, zu denen
+// noch nichts vorliegt.
+function schwerSchnitt(pool){
+    let r = 0, f = 0;
+    try{
+        pool.forEach(q => {
+            const m = (typeof masteryData !== 'undefined') ? masteryData[q.id] : null;
+            if(!m) return;
+            r += m.totalCorrect || 0; f += m.totalWrong || 0;
+        });
+    }catch(e){}
+    return (r + f) > 0 ? r / (r + f) : 0.5;
+}
+
+function schwerGewicht(id, schnitt){
+    let w = 1;
+    try{
+        const chance = (typeof reifeChance === 'function') ? reifeChance(id, schnitt) : 0.5;
+        // 0,95 (sitzt) -> 0,40 ; 0,35 (wacklig) -> 3,3 ; 0,20 -> 4,0
+        w = 0.25 + (1 - chance) * 5;
+        const e = (typeof diagnoseDaten !== 'undefined') ? diagnoseDaten[id] : null;
+        if(e && (e.f || []).length >= 2) w *= 1.35;   // immer wieder derselbe Irrtum
+    }catch(x){}
+    return Math.max(0.15, w);
+}
+
+// Gewichtet ziehen, ohne Zurücklegen.
+function schwerZiehen(gruppe, n, schnitt){
+    const rest = Array.isArray(gruppe) ? [...gruppe] : [];
+    const raus = [];
+    for(let k = 0; k < n && rest.length; k++){
+        let summe = 0;
+        const gew = rest.map(q => { const w = schwerGewicht(q.id, schnitt); summe += w; return w; });
+        let wurf = Math.random() * summe, i = 0;
+        while(i < rest.length - 1 && wurf > gew[i]){ wurf -= gew[i]; i++; }
+        raus.push(rest.splice(i, 1)[0]);
+    }
+    return raus;
+}
+
+function pickSchwer(pool, n){
+    try{
+        if(!Array.isArray(pool) || pool.length <= n) return pickRandom(pool, n);
+        const schnitt = schwerSchnitt(pool);
+
+        // Schritt 1: die Schablone.
+        const schablone = {};
+        pickRandom(pool, n).forEach(q => {
+            const g = lernzielVon(q.id);
+            schablone[g] = (schablone[g] || 0) + 1;
+        });
+
+        // Schritt 2: je Lernziel gewichtet nachziehen.
+        const nachZiel = {};
+        pool.forEach(q => {
+            const g = lernzielVon(q.id);
+            (nachZiel[g] = nachZiel[g] || []).push(q);
+        });
+        let raus = [];
+        Object.keys(schablone).forEach(g => {
+            raus = raus.concat(schwerZiehen(nachZiel[g] || [], schablone[g], schnitt));
+        });
+
+        // Sicherheitsnetz: Sollte doch etwas fehlen, mit dem Rest auffüllen.
+        if(raus.length < n){
+            const drin = {};
+            raus.forEach(q => { drin[q.id] = true; });
+            raus = raus.concat(pickRandom(pool.filter(q => !drin[q.id]), n - raus.length));
+        }
+        return pickRandom(raus, n);      // Reihenfolge mischen
+    }catch(e){
+        console.debug('Erschwerte Ziehung:', e.message);
+        return pickRandom(pool, n);
+    }
+}
+// Nach draussen gereicht, damit sich die Ziehung nachmessen laesst - der
+// Simulator lebt in einer eigenen Kapsel.
+window.pickSchwer = pickSchwer;
+
+// Wie viele Fragen eines Teils gelten überhaupt als wacklig? Steht als
+// Hinweis neben dem Haken - ohne Lernstand bringt der Modus nichts, und
+// das soll man vorher wissen und nicht hinterher merken.
+function schwerWacklig(pool){
+    const schnitt = schwerSchnitt(pool);
+    let n = 0;
+    try{
+        pool.forEach(q => {
+            const c = (typeof reifeChance === 'function') ? reifeChance(q.id, schnitt) : 1;
+            if(c < 0.7) n++;
+        });
+    }catch(e){}
+    return n;
+}
+
+function schwerInfoAktualisieren(){
+    try{
+        const box  = document.getElementById('realisticSchwerCheck');
+        const info = document.getElementById('realisticSchwerInfo');
+        if(!box || !info) return;
+        box.checked = schwereBedingungen();
+        const teile = realisticTeile();
+        const zahlen = teile.map(t => schwerWacklig(realisticPool(t)));
+        const summe  = zahlen.reduce((a, b) => a + b, 0);
+        if(!summe){
+            info.textContent = '– dafür fehlt noch der Lernstand: bisher sitzt alles oder es wurde noch nichts geübt.';
+        }else if(box.checked){
+            info.textContent = '– wacklig sind derzeit ' + zahlen.join(' / ') + ' Fragen ('
+                             + teile.map(t => REALISTIC_PART_META[t].name).join(' / ') + ')';
+        }else{
+            info.textContent = '';
+        }
+        info.style.color = 'var(--muted)';
+    }catch(e){}
+}
+
 window.beginRealisticExam = function(){
   const start = window.selectedStartPart;
   if(!start) return;
@@ -27056,10 +28151,15 @@ function startRealisticPart(){
     alert(`Nicht genug Fragen in ${nm}: nur ${pool.length} vorhanden, 25 benötigt`);
     backToMainRealistic(); return;
   }
-  // Gezogen wird immer ganz normal aus dem vollen Topf - genau wie in der
-  // echten Pruefung. Ob bereits gelernte Fragen davon auch gestellt werden,
+  // Gezogen wird ganz normal aus dem vollen Topf - genau wie in der echten
+  // Pruefung. Ob bereits gelernte Fragen davon auch gestellt werden,
   // entscheidet weiter unten gelernteVorbelegen().
-  const picked = pickRandom(pool,25);
+  //
+  // Mit "Erschwerte Bedingungen" bleibt die Themenverteilung dieselbe, nur
+  // innerhalb jedes Lernziels wird zu den wackligen Fragen gegriffen -
+  // siehe pickSchwer().
+  const schwer = (typeof schwereBedingungen === 'function') && schwereBedingungen();
+  const picked = schwer ? pickSchwer(pool,25) : pickRandom(pool,25);
   currentQuestions = picked.map(q=>{ try{ return prepareQuestion(q); }catch(e){ return q; } });
   currentIndex=0;
   answered=false;
@@ -27070,9 +28170,10 @@ function startRealisticPart(){
   examSimulatorMode=true;
   examMode=true;
   if(typeof showSidebar!=='undefined') showSidebar=true;
+  const zusatz = schwer ? ' · erschwert' : '';
   currentPart = realisticExam.order.length === 1
-    ? `Prüfungssimulator – ${REALISTIC_PART_META[part].name}`
-    : `Prüfungssimulator – ${REALISTIC_PART_META[part].name} (Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length})`;
+    ? `Prüfungssimulator – ${REALISTIC_PART_META[part].name}${zusatz}`
+    : `Prüfungssimulator – ${REALISTIC_PART_META[part].name} (Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length})${zusatz}`;
   examFinished=false;
   isQuizActive=true;
   showAllAnswers=false;
@@ -27651,7 +28752,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
 
 
 <!-- V16: CACHE LEEREN MODAL -->
-<div id="cacheClearModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99995; align-items:center; justify-content:center; padding:1rem;">
+<div id="cacheClearModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99995; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
       <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-broom" style="color:#e67e22;"></i> Cache leeren?</h3>
@@ -27686,7 +28787,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
   </div>
 </div>
 
-<div id="fullResetModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99995; align-items:center; justify-content:center; padding:1rem;">
+<div id="fullResetModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99995; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#fff5f0;">
       <h3 style="font-family:var(--font-display); font-size:1.05rem; color:#a5281b; display:flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-exclamation-triangle" style="color:#c0392b;"></i> Alles zurücksetzen?</h3>
@@ -27721,7 +28822,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
 </div>
 
 <!-- V16.1: LERNFORTSCHRITT ZURÜCKSETZEN MODAL -->
-<div id="masteryClearModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99996; align-items:center; justify-content:center; padding:1rem;">
+<div id="masteryClearModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99996; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
       <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-graduation-cap" style="color:#1f9d55;"></i> Lernfortschritt zurücksetzen?</h3>
@@ -27748,7 +28849,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
   </div>
 </div>
 <!-- GENERIC CONFIRM MODAL -->
-<div id="genericConfirmModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99997; align-items:center; justify-content:center; padding:1rem;">
+<div id="genericConfirmModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99997; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
       <h3 id="genericConfirmTitle" style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><span id="genericConfirmIcon"><i class="fas fa-question-circle" style="color:#e2932f;"></i></span> Bestätigen?</h3>
@@ -27768,7 +28869,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
 </div>
 
 <!-- V17: GENERIC ALERT MODAL (ersetzt natives alert()) -->
-<div id="genericAlertModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99998; align-items:center; justify-content:center; padding:1rem;">
+<div id="genericAlertModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99998; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:440px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
       <h3 id="genericAlertTitle" style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><span id="genericAlertIcon"><i class="fas fa-circle-info" style="color:var(--panel-navy);"></i></span> Hinweis</h3>
@@ -28588,21 +29689,36 @@ function statistikOeffnen() {
         modal = document.createElement('div');
         modal.id = 'statistikModal';
         modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); ' +
-            'backdrop-filter:blur(8px); z-index:99996; align-items:center; justify-content:center; padding:1rem;';
+            ' z-index:99996; align-items:center; justify-content:center; padding:1rem;';
         modal.innerHTML =
+            // FESTE HOEHE STATT HOECHSTHOEHE.
+            // Dietmar am 11.09.2026, mit zwei Bildern nebeneinander: "Bei der
+            // Klasse E nach A möchte ich die gleiche Größe."
+            //
+            // Mit einer Hoechsthoehe richtet sich das Fenster nach dem Inhalt -
+            // und der ist beim Aufstieg E auf A nun einmal kuerzer: ein
+            // Pruefungsteil statt dreier. Das Fenster schrumpfte mit, und beim
+            // Wechsel des Ziels sprang es. Jetzt steht es still, genau wie die
+            // Einstellungen und die Anleitung: eine feste Hoehe, gerollt wird
+            // innen - und innen wird ohnehin nicht mehr gerollt, dafuer sorgt
+            // statistikEinpassen().
             '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:1040px; width:94%; ' +
-            'max-height:calc(90vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">' +
-            '<div style="display:flex; align-items:center; gap:8px; margin-bottom:1rem;">' +
+            'height:calc(90vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; overflow:hidden; ' +
+            'box-shadow:0 20px 60px rgba(0,0,0,0.4);">' +
+            '<div style="display:flex; align-items:center; gap:8px; margin-bottom:1rem; flex:0 0 auto;">' +
             '<h3 style="flex:1; margin:0; font-size:1.05rem; color:var(--panel-navy);">' +
             '<i class="fas fa-chart-simple"></i> Auswertung</h3>' +
-            '<button type="button" class="btn btn-outline" style="padding:4px 10px;" ' +
+            '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" ' +
             'onclick="document.getElementById(\'statistikModal\').style.display=\'none\'">✕</button></div>' +
-            '<div id="statistikInhalt"></div></div>';
+            '<div id="statistikInhalt" style="flex:1 1 auto; overflow-y:auto; min-height:0;"></div></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
     }
     statistikFuellen();
     modal.style.display = 'flex';
+    // Erst jetzt hat das Fenster Maße - vorher stand es auf display:none,
+    // und alle Höhen waeren null gewesen.
+    requestAnimationFrame(() => { try{ statistikEinpassen(); }catch(e){} });
 }
 window.statistikOeffnen = statistikOeffnen;
 
@@ -28831,34 +29947,173 @@ function diagnoseBefunde(){
 //
 //  Steht nichts drin, steht der ganze Abschnitt nicht da.
 // ================================================================
-function befundeHtml(){
+// ================================================================
+//  WORAN ES LIEGT - VORSCHAU UND GANZE LISTE
+// ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Bei Woran es liegt ... Möchte ich auch so
+//  einen Button: Alle ansehen. Ich wünsche mir die rechte Seite
+//  aufgeräumter."
+//
+//  Beides zusammen loest dasselbe Problem. Der Block zeigte bis zu
+//  sechzehn Zeilen am Stueck - fuenf feste Irrtuemer, drei geratene,
+//  drei nachgeschlagene, fuenf langsame - und jede Zeile traegt den
+//  vollen Fragetext ueber zwei Zeilen. Das war die laengste Sache auf
+//  der rechten Seite und hat sie unruhig gemacht.
+//
+//  Jetzt stehen dort hoechstens zehn Zeilen, und ein Knopf fuehrt zur
+//  vollstaendigen Liste - genau wie bei den Stolpersteinen darueber.
+//  Zwei Bloecke mit demselben Aufbau lesen sich ruhiger als zwei mit
+//  verschiedenem.
+//
+//  Mit "alle" ist es dieselbe Funktion ohne Grenzen - so gibt es nur
+//  EINE Stelle, an der die Zeilen entstehen.
+// ================================================================
+// ================================================================
+//  MERKEN UND ÜBEN AUCH BEI "WORAN ES LIEGT"
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Bei Stolpersteine kann ich die Fragen
+//  Markieren und Üben. Bei Woran das liegt, würde sich das auch gut
+//  ergänzen?"
+//
+//  Es ergänzt sich sogar besonders gut: Die Stolpersteine sagen,
+//  WELCHE Fragen danebengehen - hier steht, WARUM. Wer den Grund
+//  gerade gelesen hat, ist genau der, der die Frage jetzt vornehmen
+//  will. Der Weg dorthin war bisher: Fenster zu, Liste oben
+//  aufmachen, Frage suchen.
+//
+//  Benutzt werden dieselben zwei Funktionen wie bei den Stolpersteinen
+//  (stolpersteinMerken, stolpersteinUeben) - eine Merkliste, ein
+//  Übungsweg, keine zweite Sorte Herz.
+//
+//  Nur im Fenster, nicht in der Vorschau: Dort ist der Platz knapp,
+//  und der Kasten sollte nach Dietmars Wunsch gerade flacher werden.
+// ================================================================
+function befundZeileAuf(id, alle){
+    if(!alle || !id) return '<div class="befund-zeile">';
+    const gemerkt = (typeof isFavorite === 'function') && isFavorite(id);
+    return '<div class="befund-zeile" id="befundZeile_' + id + '"'
+         + (gemerkt ? ' style="background:#fff6f8;"' : '') + '>';
+}
+function befundKnoepfe(id, alle){
+    if(!alle || !id) return '';
+    const gemerkt = (typeof isFavorite === 'function') && isFavorite(id);
+    return '<span style="flex:0 0 auto; display:flex; gap:6px; align-self:flex-start;">'
+         +   '<button type="button" id="befundHerz_' + id + '" '
+         +     'onclick="stolpersteinMerken(\'' + id + '\')" '
+         +     'title="' + (gemerkt ? 'Aus der Merkliste nehmen' : 'Auf die Merkliste setzen') + '" '
+         +     'style="border:1px solid ' + (gemerkt ? '#f0b8c4' : '#dde5ef') + '; '
+         +     'background:' + (gemerkt ? '#fff1f4' : '#fff') + '; '
+         +     'color:' + (gemerkt ? '#b01238' : '#9fb0c4') + '; '
+         +     'border-radius:20px; width:30px; height:26px; cursor:pointer; font-size:0.78rem; '
+         +     'display:inline-flex; align-items:center; justify-content:center;">'
+         +     '<i class="fas fa-heart"></i></button>'
+         +   '<button type="button" class="btn-lernstand" '
+         +     'onclick="stolpersteinUeben(\'' + id + '\')">Üben</button>'
+         + '</span>';
+}
+
+function befundeOeffnen(){
+    try{
+        let m = document.getElementById('befundeModal');
+        if(!m){
+            m = document.createElement('div');
+            m.id = 'befundeModal';
+            m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + 'z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            m.innerHTML =
+                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:1040px; width:94%; '
+                + 'height:calc(90vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
+                + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+                + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem; flex:0 0 auto;">'
+                + '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
+                + '<i class="fas fa-magnifying-glass-chart"></i> Woran es liegt</h3>'
+                + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
+                + 'onclick="document.getElementById(\'befundeModal\').style.display=\'none\'">&#10005;</button></div>'
+                + '<div id="befundeListe" style="flex:1; overflow-y:auto;"></div></div>';
+            document.body.appendChild(m);
+            m.addEventListener('click', e => { if(e.target === m) m.style.display = 'none'; });
+        }
+        // Derselbe Aufbau wie in der Auswertung, nur ohne Grenzen. Die
+        // eigene Ueberschrift des Blocks faellt weg - der Fensterkopf
+        // traegt sie schon.
+        const inhalt = m.querySelector('#befundeListe');
+        const roh = befundeHtml(true) || '';
+        inhalt.innerHTML = roh.replace(/<h4[^>]*>Woran es liegt<\/h4>/, '');
+        m.style.display = 'flex';
+    }catch(e){ console.debug('Befunde:', e.message); }
+}
+window.befundeOeffnen = befundeOeffnen;
+
+function befundeHtml(alle){
     try{
         const b = diagnoseBefunde();
         const esc = s2 => (window.escapeHtml ? window.escapeHtml(s2) : String(s2 == null ? '' : s2));
         if(!b.fest.length && !b.raten.length && !b.langsam.length && !b.hilfsmittelGesamt){
-            // Vor den ersten Antworten waere ein leerer Kasten nur eine
-            // Verheissung. Wenn schon gemessen wurde und trotzdem nichts
-            // auffaellt, ist DAS die Nachricht.
-            if(b.gemessen >= 15){
-                return '<div class="befund"><h4>Woran es liegt</h4>'
-                     + '<div class="b-was">Nichts Auffälliges: keine Frage, bei der du immer '
-                     + 'dieselbe falsche Antwort wählst, und keine, für die du auffällig lange brauchst.</div></div>';
-
-            }
-            return '';
+            // Dietmar am 11.09.2026: "Ich möchte rechts auch diese Buttons,
+            // auch wenn nichts angezeigt wird weil man damit noch nie
+            // gelernt hat."
+            //
+            // Der Kasten verschwand hier frueher ganz. Wer das Ziel gerade
+            // gewechselt hat, sah rechts eine Luecke und wusste nicht, ob da
+            // etwas fehlt. Jetzt steht der Kasten immer da - mit Kopfzeile,
+            // mit Knopf, und mit dem Satz, der zur Lage passt.
+            const satz = (b.gemessen >= 15)
+                ? 'Nichts Auffälliges: keine Frage, bei der du immer dieselbe falsche Antwort '
+                  + 'wählst, und keine, für die du auffällig lange brauchst.'
+                : 'Sobald du übst, steht hier, <i>was</i> bei den Fehlern passiert &ndash; ob '
+                  + 'du immer dieselbe falsche Antwort wählst, ob geraten wird und wo es lange dauert.';
+            return '<div class="befund">'
+                 + '<div style="display:flex; align-items:baseline; gap:10px;">'
+                 +   '<h4 style="margin:0;">Woran es liegt</h4>'
+                 +   (alle ? '' : '<button type="button" class="btn-lernstand" style="margin-left:auto;" '
+                       + 'onclick="befundeOeffnen()" '
+                       + 'data-tooltip="Alle Befunde zeigen - jeden Irrtum, jedes Raten, jede lange Zeit">'
+                       + 'Alle ansehen</button>')
+                 + '</div>'
+                 + '<div class="b-was">' + satz + '</div></div>';
         }
 
         // Steht nur Gutes drin, passt "woran es liegt" nicht - es liegt
         // ja an nichts. Dann sagt die Zeile das auch.
         const nurGutes = !b.fest.length && !b.raten.length && !b.langsam.length;
-        let h = '<div class="befund"><h4>Woran es liegt</h4>'
+
+        // Wie viele Zeilen zeigt die Vorschau, wie viele gaebe es?
+        //
+        // Dietmar am 11.09.2026: "Ohne dem, ist das Fenster unnoetig in
+        // die Tiefe gezogen. In der jetzigen Form fehlt schlichtweg der
+        // Platz um auf mehr einzugehen."
+        //
+        // Er hat recht, und es waren zwei Fehler auf einmal:
+        //
+        //  1. Zwei Zeilen je Art ergaben bis zu acht Zeilen mit vollem
+        //     Fragetext - der laengste Kasten der ganzen rechten Spalte.
+        //     Jetzt ist es EINE je Art. Vier Zeilen sagen genauso gut,
+        //     WELCHE Arten vorkommen; die Menge steht im Knopf.
+        //  2. Der Knopf erschien nur, wenn etwas weggelassen wurde. Bei
+        //     ihm wurde nichts weggelassen - also kein Knopf, und damit
+        //     auch kein Weg zu der ausfuehrlichen Ansicht. Jetzt steht er
+        //     immer da, sobald es ueberhaupt einen Befund gibt, genau wie
+        //     bei den Stolpersteinen darueber.
+        const G = alle ? { f: 999, r: 999, n: 999, l: 999 } : { f: 1, r: 1, n: 1, l: 1 };
+        const gesamt  = b.fest.length + b.raten.length + b.nachgeschlagen.length + b.langsam.length;
+
+        let h = '<div class="befund">'
+              + '<div style="display:flex; align-items:baseline; gap:10px;">'
+              +   '<h4 style="margin:0;">Woran es liegt</h4>'
+              +   (!alle && gesamt > 0
+                    ? '<button type="button" class="btn-lernstand" style="margin-left:auto;" '
+                      + 'onclick="befundeOeffnen()" '
+                      + 'data-tooltip="Alle Befunde zeigen - jeden Irrtum, jedes Raten, jede lange Zeit">'
+                      + 'Alle ' + gesamt + ' ansehen</button>'
+                    : '')
+              + '</div>'
               + '<div class="b-was">' + (nurGutes
                   ? 'Nichts, was dagegen spricht &ndash; und eine Gewohnheit, die für dich spricht:'
                   : 'Nicht <i>welche</i> Fragen danebengehen &ndash; das steht oben. '
                     + 'Sondern <i>was</i> dabei passiert.') + '</div>';
 
-        b.fest.slice(0, 5).forEach(x => {
-            h += '<div class="befund-zeile">'
+        b.fest.slice(0, G.f).forEach(x => {
+            h += befundZeileAuf(x.q.id, alle)
                +   '<span class="b-marke fest">' + x.wie_oft + '× dieselbe</span>'
                +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
                // NICHT kuerzen. Am 09.09.2026 stand hier bei den Stolper-
@@ -28869,14 +30124,16 @@ function befundeHtml(){
                // man hier lesen will.
                +     '<br><span class="b-was-gewaehlt">Du wählst hier immer <b>'
                +     x.buchstabe + '</b>: ' + esc(x.text) + '</span></span>'
+               + befundKnoepfe(x.q.id, alle)
                + '</div>';
         });
-        b.raten.slice(0, 3).forEach(x => {
-            h += '<div class="befund-zeile">'
+        b.raten.slice(0, G.r).forEach(x => {
+            h += befundZeileAuf(x.q.id, alle)
                +   '<span class="b-marke raten">geraten</span>'
                +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
                +     '<br><span class="b-was-gewaehlt">' + x.wie_oft + '× daneben, '
                +     x.verschiedene + '× eine andere Antwort &ndash; die Frage ist noch nicht angekommen.</span></span>'
+               + befundKnoepfe(x.q.id, alle)
                + '</div>';
         });
         // DAS GUTE ZUERST unter den Zeitzeilen: Wer nachgeschlagen hat,
@@ -28922,13 +30179,18 @@ function befundeHtml(){
                 warum = 'Genau richtig: ' + wasLiegt + ' in der Prüfung auf dem Tisch. '
                       + 'Nachschlagen ist geübte Prüfungstechnik, kein Umweg.';
             }
+            // Die Begruendung ist drei Zeilen lang und stand bisher auch in
+            // der Vorschau - dort war sie der groesste Brocken im Kasten.
+            // Der gruene Satz allein sagt schon, dass es gut war; das
+            // Warum steht im Fenster, wo Platz dafuer ist.
             h += '<div class="befund-zeile">'
                +   '<span class="b-marke gut">' + b.hilfsmittelGesamt + marke + '</span>'
                +   '<span class="b-mitte">' + satz
-               +     '<br><span class="b-was-gewaehlt">' + warum + '</span></span>'
+               +     (alle ? '<br><span class="b-was-gewaehlt">' + warum + '</span>' : '')
+               +   '</span>'
                + '</div>';
         }
-        b.nachgeschlagen.slice(0, 3).forEach(x => {
+        b.nachgeschlagen.slice(0, G.n).forEach(x => {
             const grund = (x.vl && !(x.fb || x.tr))
                 ? 'Hat länger gedauert &ndash; die Vorlesezeit ist dabei schon abgezogen. '
                   + 'Kein Grund zur Sorge.'
@@ -28937,22 +30199,24 @@ function befundeHtml(){
                       + 'lassen. Das ist die Zeit wert.'
                     : 'Hat länger gedauert &ndash; aber du hast nachgeschlagen. '
                       + 'Das ist die Zeit wert.');
-            h += '<div class="befund-zeile">'
+            h += befundZeileAuf(x.q.id, alle)
                +   '<span class="b-marke gut">' + x.schnitt + ' s</span>'
                +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
                +     '<br><span class="b-was-gewaehlt">' + grund + '</span></span>'
+               + befundKnoepfe(x.q.id, alle)
                + '</div>';
         });
-        b.langsam.slice(0, 5).forEach(x => {
-            h += '<div class="befund-zeile">'
+        b.langsam.slice(0, G.l).forEach(x => {
+            h += befundZeileAuf(x.q.id, alle)
                +   '<span class="b-marke langsam">' + x.schnitt + ' s</span>'
                +   '<span class="b-mitte">' + esc(x.q.text || x.q.id)
                +     '<br><span class="b-was-gewaehlt">Richtig, aber gut doppelt so lange wie sonst '
                +     '(dein Schnitt: ' + b.median + ' s) &ndash; ohne nachzuschlagen.</span></span>'
+               + befundKnoepfe(x.q.id, alle)
                + '</div>';
         });
 
-        if(b.langsam.length){
+        if(b.langsam.length && alle){
             h += '<div style="margin-top:0.5rem; font-size:0.7rem; color:var(--muted);">'
                + 'Länger brauchen ist kein Fehler, und nachschlagen erst recht nicht &ndash; '
                + 'die Formelsammlung liegt in der Prüfung vor dir. Die Zeilen oben zeigen nur, '
@@ -28977,11 +30241,91 @@ function befundeHtml(){
 //  nebeneinander sagen es auf einen Blick, und das ist die Frage, die
 //  vor einer Pruefung zaehlt.
 // ================================================================
-function uebungszeitAuswertungHtml(){
+// ================================================================
+//  DAS FENSTER ZUR UEBUNGSZEIT
+// ----------------------------------------------------------------
+//  Derselbe Inhalt wie bisher in der Auswertung, nur an seinem eigenen
+//  Platz. Gebaut wird er weiter von uebungszeitAuswertungHtml() - die
+//  Funktion bleibt, damit es nur EINE Stelle gibt, an der die Saeulen
+//  und die vier Kacheln entstehen.
+//
+//  Wer noch nie geuebt hat, bekommt kein leeres Fenster, sondern einen
+//  Satz. Eine Uebersicht ueber null Minuten waere kein Ansporn.
+// ================================================================
+function uebungszeitOeffnen(){
+    try{
+        let m = document.getElementById('uebungszeitModal');
+        if(!m){
+            m = document.createElement('div');
+            m.id = 'uebungszeitModal';
+            m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + 'z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            m.innerHTML =
+                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:660px; width:95%; '
+                + 'max-height:calc(88vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
+                + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+                + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem; flex:0 0 auto;">'
+                + '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
+                + '<i class="fas fa-clock"></i> Deine Übungszeit</h3>'
+                + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
+                + 'onclick="document.getElementById(\'uebungszeitModal\').style.display=\'none\'">&#10005;</button></div>'
+                + '<div id="uebungszeitInhalt" style="flex:1 1 auto; overflow-y:auto;"></div></div>';
+            document.body.appendChild(m);
+            m.addEventListener('click', e => { if(e.target === m) m.style.display = 'none'; });
+        }
+        const inhalt = m.querySelector('#uebungszeitInhalt');
+        const html = uebungszeitAuswertungHtml(true);
+        inhalt.innerHTML = html || ('<div style="font-size:0.85rem; color:var(--muted); line-height:1.6;">'
+            + 'Hier steht, wie lange du geübt hast &ndash; diese Woche, insgesamt und in den '
+            + 'letzten acht Wochen. Gemessen wird von selbst, sobald du die erste Frage '
+            + 'beantwortest.<br><br>Gezählt wird nur, solange wirklich geübt wird: Nach 90 '
+            + 'Sekunden ohne Klick oder Tastendruck hält die Uhr an.</div>');
+        m.style.display = 'flex';
+    }catch(e){ console.debug('Übungszeit:', e.message); }
+}
+window.uebungszeitOeffnen = uebungszeitOeffnen;
+
+function uebungszeitAuswertungHtml(ohneTitel){
     try{
         const g = zeitGesamtDaten();
         if(!g.summe) return '';
 
+        // ---- Die letzten 14 Tage ----
+        const WOCHENTAG = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+        const tage = zeitTageReihe(14);
+        const tGipfel = Math.max.apply(null, tage.map(t => t.sek).concat([1]));
+        let tSaeulen = '', tAchse = '';
+        tage.forEach((t, i) => {
+            const heute = (i === tage.length - 1);
+            const wt = t.tag.getDay();
+            const wochenende = (wt === 0 || wt === 6);
+            const anteil = Math.round((t.sek / tGipfel) * 100);
+            // Vor jedem Montag eine Fuge. Dietmar wollte die Tage sehen,
+            // "nur dann kann ich mein wöchentliches Lernpensum gut
+            // erkennen" - und dafuer muss man erkennen koennen, wo eine
+            // Woche aufhoert. Der Spalt tut das, ohne eine Linie oder eine
+            // Beschriftung zu brauchen.
+            const klasse = 'w-spalte' + (heute ? ' jetzt' : '') + (t.sek ? '' : ' leer')
+                         + (wochenende ? ' wochenende' : '')
+                         + (wt === 1 && i > 0 ? ' wochenstart' : '');
+            const datum = t.tag.getDate() + '.' + (t.tag.getMonth() + 1) + '.';
+            const hinweis = (heute ? 'Heute, ' : '') + WOCHENTAG[wt] + ' ' + datum + ': '
+                          + (t.sek ? zeitText(t.sek) : 'nicht geübt');
+            // Dieselbe Begruendung wie bei den Wochen: Die Hoehe muss am
+            // Element stehen, sonst gewinnt sie gegen den Strich der
+            // leeren Spalte.
+            const hoehe = t.sek ? (Math.max(anteil, 6) + '%') : '2px';
+            tSaeulen += '<div class="' + klasse + '" title="' + hinweis + '">'
+                      +   '<div class="w-saeule" style="height:' + hoehe + '"></div>'
+                      + '</div>';
+            // Nur der erste Buchstabe: Bei vierzehn Spalten nebeneinander
+            // ist "Mo" schon zu breit, "M" liest man trotzdem.
+            tAchse += '<span class="' + (wochenende ? 'we' : '')
+                    + (wt === 1 && i > 0 ? ' wochenstart' : '') + '">'
+                    + WOCHENTAG[wt].charAt(0) + '</span>';
+        });
+
+        // ---- Die letzten acht Wochen ----
         const wochen = zeitWochenReihe(8);
         const gipfel = Math.max.apply(null, wochen.map(w => w.sek).concat([1]));
 
@@ -29008,12 +30352,19 @@ function uebungszeitAuswertungHtml(){
             achse += '<span>' + (jetzt ? 'jetzt' : (i === 0 ? von : '')) + '</span>';
         });
 
-        return '<div style="margin-top:1.1rem;">'
-             +   '<h4 style="margin:0 0 0.1rem; font-size:0.85rem; color:var(--panel-navy);">Deine Übungszeit</h4>'
+        // Die Ueberschrift steht nur da, wo der Block MITTEN in etwas
+        // anderem sitzt. Im eigenen Fenster traegt sie schon der Kopf -
+        // zweimal "Deine Uebungszeit" untereinander sieht nach Versehen aus.
+        return '<div style="margin-top:' + (ohneTitel ? '0' : '1.1rem') + ';">'
+             + (ohneTitel ? ''
+                : '<h4 style="margin:0 0 0.1rem; font-size:0.85rem; color:var(--panel-navy);">Deine Übungszeit</h4>')
              +   '<div style="font-size:0.72rem; color:var(--muted);">'
-             +     'Die letzten acht Wochen; die rechte läuft noch. Gezählt wird nur, solange '
-             +     'wirklich geübt wird &ndash; nach 90 Sekunden ohne Klick oder Tastendruck '
-             +     'hält die Uhr an.</div>'
+             +     'Gezählt wird nur, solange wirklich geübt wird &ndash; nach 90 Sekunden '
+             +     'ohne Klick oder Tastendruck hält die Uhr an.</div>'
+             +   '<div class="zeit-reihe-titel">Die letzten 14 Tage</div>'
+             +   '<div class="wochen-reihe tage-reihe">' + tSaeulen + '</div>'
+             +   '<div class="wochen-achse tage-achse">' + tAchse + '</div>'
+             +   '<div class="zeit-reihe-titel">Die letzten acht Wochen &middot; die rechte läuft noch</div>'
              +   '<div class="wochen-reihe">' + saeulen + '</div>'
              +   '<div class="wochen-achse">' + achse + '</div>'
              +   '<div class="zeit-kachel">'
@@ -29030,10 +30381,245 @@ function uebungszeitAuswertungHtml(){
     }catch(e){ console.debug('Übungszeit-Auswertung:', e.message); return ''; }
 }
 
+// ================================================================
+//  DER KASTEN "GERATEN ODER GEWUSST?"
+//  ----------------------------------------------------------------
+//  Steht links unter der Pruefungsreife - dort, wo die Quoten wohnen.
+//  Er erscheint erst, wenn genug gemessen wurde: Vorher waere jede
+//  Aussage eine Behauptung. Und er erscheint gar nicht, wenn ohnehin
+//  nie zu schnell geantwortet wurde - dann gibt es nichts zu klaeren.
+// ================================================================
+function tempoBlockHtml(){
+    try{
+        const e = tempoProbe(tempoEigene());
+        if(e.brauchbar < 20) return '';
+        if(e.urteil === 'zu_wenig' || e.urteil === 'keine_schnellen'){
+            // Ein einziger ruhiger Satz statt eines Kastens voller Zahlen.
+            return '<div class="stat-block">'
+                 + '<h4 style="margin:0 0 0.35rem; font-size:0.85rem; color:var(--panel-navy);">'
+                 + 'Geraten oder gewusst?</h4>'
+                 + '<div style="font-size:0.75rem; color:var(--muted);">'
+                 + (e.urteil === 'keine_schnellen'
+                     ? 'Keine deiner Antworten kam schneller, als man die Frage lesen kann. '
+                       + 'Geraten wird hier also nicht.'
+                     : 'Bisher ' + e.schnell + ' Antwort' + (e.schnell === 1 ? '' : 'en')
+                       + ', die schneller kamen als ein Lesen dauert &ndash; ab acht lässt sich '
+                       + 'daraus etwas ablesen.')
+                 + '</div></div>';
+        }
+
+        const farbe = (e.urteil === 'geraten') ? 'raten'
+                    : (e.urteil === 'gemischt') ? 'langsam' : 'gut';
+        const marke = (e.urteil === 'geraten') ? 'geraten'
+                    : (e.urteil === 'auswendig') ? 'sitzt auswendig'
+                    : (e.urteil === 'gemischt') ? 'gemischt' : 'gewusst';
+
+        let h = '<div class="stat-block">'
+              + '<div style="display:flex; align-items:baseline; gap:8px; margin:0 0 0.15rem;">'
+              +   '<h4 style="margin:0; font-size:0.85rem; color:var(--panel-navy);">'
+              +   'Geraten oder gewusst?</h4>'
+              +   '<span class="b-marke ' + farbe + '" style="margin-left:auto;">' + marke + '</span>'
+              + '</div>'
+              + '<div class="stat-kuerzbar" data-weg="3" style="font-size:0.72rem; color:var(--muted);">'
+              +   'Geprüft wird nur, was zu schnell kam, um die Frage gelesen zu haben. '
+              +   'Fragen mit Formelblatt, Rechner oder Vorlesen bleiben draußen.'
+              + '</div>'
+              + '<div class="zeit-kachel stat-kuerzbar" data-weg="6">'
+              +   '<div><div class="k-wert">' + e.schnell + '</div>'
+              +     '<div class="k-name">schnelle Antworten (' + e.anteilSchnell + ' % von allen)</div></div>'
+              +   '<div><div class="k-wert">' + e.quoteSchnell + ' %</div>'
+              +     '<div class="k-name">davon richtig &middot; Raten wäre '
+              +     Math.round(e.zufall * 100) + ' %</div></div>'
+              +   '<div><div class="k-wert">' + e.schnittSchnell + ' s</div>'
+              +     '<div class="k-name">im Schnitt für eine schnelle Antwort</div></div>'
+              +   '<div><div class="k-wert">' + e.quoteRuhig + ' %</div>'
+              +     '<div class="k-name">richtig bei den ' + e.ruhig + ', für die du dir Zeit '
+              +     'genommen hast</div></div>'
+              + '</div>'
+              + '<div style="font-size:0.76rem; margin-top:0.5rem; line-height:1.45;">'
+              +   tempoSatz(e, 'du') + '</div>';
+
+        if(e.lieblingsplatz >= 0){
+            h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.35rem;">'
+               +   'Und noch etwas: In ' + e.lieblingsAnteil + ' % dieser schnellen Fälle war es die '
+               +   (e.lieblingsplatz + 1) + '. Antwort von oben. Die Reihenfolge wechselt bei jedem '
+               +   'Durchgang &ndash; das ist also die Hand, nicht der Kopf.'
+               + '</div>';
+        }
+
+        // Was tun? Eine Zeile, die weiterhilft, statt eines Urteils, das
+        // stehen bleibt.
+        if(e.urteil === 'geraten' || e.urteil === 'gemischt'){
+            h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.35rem;">'
+               +   'In der Prüfung sind es 25 Fragen in 45 Minuten &ndash; über eineinhalb Minuten '
+               +   'je Frage. Die Zeit ist da: erst lesen, dann klicken.'
+               + '</div>';
+        }
+        return h + '</div>';
+    }catch(err){ console.debug('Tempo-Kasten:', err.message); return ''; }
+}
+
+// Der Auffrischungskasten. Steht seit dem 11.09.2026 links unter der
+// Tempo-Probe - er sagt, was als naechstes dran waere, und das gehoert
+// zu "wie weit bin ich" und nicht zu den Einzelheiten rechts.
+function auffrischungBlockHtml(){
+    try{
+        const faellig = (typeof faelligeFragen === 'function') ? faelligeFragen().length : 0;
+        return '<div class="stat-block" style="background:#eef7f8; font-size:0.78rem;">'
+             + '<b>Auffrischung:</b> ' + (faellig > 0
+                 ? faellig + ' gelernte Frage' + (faellig === 1 ? '' : 'n')
+                   + ' wartet' + (faellig === 1 ? '' : 'en') + ' auf Wiederholung.'
+                 : 'Gerade nichts fällig.')
+             + '<span class="stat-kuerzbar" data-weg="7" style="display:block; color:var(--muted);">'
+             + 'Nach dem Lernen erneut nach 3, dann 7, 21 und 60 Tagen.</span></div>';
+    }catch(e){ console.debug('Auffrischung:', e.message); return ''; }
+}
+
+// ================================================================
+//  DAS FENSTER PASST SICH AN, NICHT DER LESER
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026: "Der Scrollbalken muss weg. Baue das Fenster
+//  so auf, dass er verschwindet. Achte darauf, dass es in allen Klassen
+//  vorhanden ist."
+//
+//  Bis hierher wurde an den Abstaenden gefeilt - erst 22 Punkte, dann
+//  noch ein paar. Das ist Flickwerk: Die Auswertung ist bei jedem
+//  Lernstand anders lang, und jedes Fenster ist anders hoch. Was bei
+//  dem einen passt, laeuft beim naechsten wieder ueber.
+//
+//  Deshalb jetzt andersherum: NACH dem Aufbau wird gemessen, ob der
+//  Inhalt in die sichtbare Hoehe passt. Tut er es nicht, verschwindet
+//  jeweils die unterste entbehrliche Zeile - so lange, bis er passt.
+//
+//  WAS ENTBEHRLICH IST, UND IN WELCHER REIHENFOLGE:
+//    1. Stolpersteine, bis zwei uebrig sind
+//    2. Befundzeilen, bis eine uebrig ist
+//    3. "Wo es klemmt", bis eine Zeile uebrig ist
+//  Nichts davon geht verloren: Ueber beiden Bloecken steht seit heute
+//  IMMER der Knopf "Alle ... ansehen", und der fuehrt zur vollstaendigen
+//  Liste. Gekuerzt wird also die Vorschau, nicht der Inhalt.
+//
+//  Gemessen wird mit scrollHeight gegen clientHeight - beide am selben
+//  Element und damit in derselben Einheit (CSS-Pixel). Der Zoom des
+//  Trainers wuerde einen Vergleich mit getBoundingClientRect()
+//  verfaelschen; das ist genau die Falle, in die der Bildaufbau schon
+//  einmal getappt ist.
+// ================================================================
+// ================================================================
+//  WENN NOCH NICHTS DA IST, SAGT DIE AUSWERTUNG, WIE MAN ANFAENGT
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026, mit Bild vom Aufstieg E auf A: "Von Klasse E
+//  auf A ist so gut wie nichts zu sehen."
+//
+//  Stimmt, und es lag nicht an der Klasse, sondern am Lernstand: Wer
+//  ein Pruefungsziel gerade erst gewechselt hat, hat dort noch keine
+//  Antworten. Die rechte Spalte sagte dann zweimal dasselbe auf
+//  verschiedene Weise - "Noch keine falschen Antworten erfasst" und
+//  "Nichts Auffaelliges" - und das sah aus wie ein Fehler.
+//
+//  Statt zweier Absagen jetzt ein Kasten, der etwas anbietet: Wie viele
+//  Fragen das Ziel hat, wie viele davon schon beantwortet sind, was
+//  noch fehlt, bis eine Einschaetzung moeglich ist - und zwei Knoepfe,
+//  mit denen man an Ort und Stelle loslegen kann.
+// ================================================================
+function anfangBlockHtml(){
+    try{
+        const bank = (typeof questionBank !== 'undefined' && questionBank) ? questionBank : [];
+        if(!bank.length) return '';
+        let beantwortet = 0;
+        bank.forEach(q => {
+            const m = (typeof masteryData !== 'undefined') ? masteryData[q.id] : null;
+            if(m && ((m.totalCorrect || 0) + (m.totalWrong || 0)) > 0) beantwortet++;
+        });
+        // Ab zehn beantworteten Fragen traegt die normale Auswertung.
+        if(beantwortet >= 10) return '';
+
+        const kl = (typeof klasseAktuell === 'function') ? klasseAktuell() : null;
+        const ziel = (kl && (kl.titel || kl.name)) ? (kl.titel || kl.name) : 'diesem Prüfungsziel';
+        const nie = (typeof durchsichtUnberuehrtIds === 'function') ? durchsichtUnberuehrtIds().length : 0;
+        const zu = "document.getElementById('statistikModal').style.display='none'; ";
+
+        return '<div class="stat-block">'
+             + '<h4 style="margin:0 0 0.35rem; font-size:0.85rem; color:var(--panel-navy);">'
+             +   'Hier wird es voll, sobald du übst</h4>'
+             + '<div style="font-size:0.78rem; line-height:1.5;">'
+             +   'In <b>' + (window.escapeHtml ? escapeHtml(ziel) : ziel) + '</b> stehen '
+             +   bank.length + ' Fragen. Beantwortet hast du davon bisher '
+             +   (beantwortet === 0 ? '<b>noch keine</b>' : '<b>' + beantwortet + '</b>') + '.'
+             + '</div>'
+             + '<div style="font-size:0.74rem; color:var(--muted); line-height:1.5; margin-top:0.3rem;">'
+             +   'Trefferquoten, Stolpersteine und die Vorhersage brauchen Antworten &ndash; '
+             +   'ab 25 je Prüfungsteil steht hier eine Einschätzung. Bis dahin zählt jede '
+             +   'Antwort schon mit.'
+             + '</div>'
+             + '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:0.6rem;">'
+             +   '<button type="button" class="btn btn-primary" style="font-size:0.78rem; padding:5px 12px;" '
+             +     'onclick="' + zu + 'durchsichtStarten();">'
+             +     '<i class="fas fa-book-open"></i> Blättern</button>'
+             +   (nie
+                   ? '<button type="button" class="btn btn-outline" style="font-size:0.78rem; padding:5px 12px;" '
+                     + 'onclick="' + zu + 'durchsichtUnberuehrtLos();">'
+                     + '<i class="fas fa-circle-question"></i> Die ' + nie + ' noch nie geübten</button>'
+                   : '')
+             + '</div>'
+             + '</div>';
+    }catch(e){ console.debug('Anfangskasten:', e.message); return ''; }
+}
+
+function statistikEinpassen(){
+    try{
+        const modal = document.getElementById('statistikModal');
+        if(!modal || modal.style.display === 'none') return;
+        const kasten = modal.firstElementChild;
+        const ziel   = document.getElementById('statistikInhalt');
+        if(!kasten || !ziel) return;
+
+        // Einspaltig (Handy, schmales Fenster) steht alles untereinander,
+        // und Rollen ist dort der normale Weg. Gekuerzt wird nur, wo zwei
+        // Spalten nebeneinander stehen.
+        if(document.body.classList.contains('schmal')) return;
+        // Gerollt wird seit der festen Fensterhoehe im Inhaltsbereich, nicht
+        // mehr am Kasten - gemessen wird deshalb an beiden.
+        const passt = () => (kasten.scrollHeight <= kasten.clientHeight + 2)
+                         && (ziel.scrollHeight   <= ziel.clientHeight   + 2);
+        if(passt()) return;
+
+        // Erst die Vorschauzeilen, dann die Erklaertexte, zuletzt die
+        // Kacheln - in dieser Reihenfolge tut es am wenigsten weh. Die
+        // Texte tragen dafuer data-weg mit ihrer Nummer; sie stehen an
+        // den Stellen, an denen sie geschrieben werden, und nicht hier
+        // als Liste von Selektoren.
+        const abbau = [
+            { wahl: '.stat-rechts .stat-block .stat-zeile', bleibt: 2 },
+            { wahl: '.stat-rechts .befund-zeile',           bleibt: 1 },
+            { wahl: '[data-weg="3"]',                       bleibt: 0 },
+            { wahl: '[data-weg="4"]',                       bleibt: 0 },
+            { wahl: '[data-weg="5"]',                       bleibt: 0 },
+            { wahl: '[data-weg="6"]',                       bleibt: 0 },
+            { wahl: '[data-weg="7"]',                       bleibt: 0 },
+            { wahl: '#reifeKasten .reife-thema',            bleibt: 1 },
+            { wahl: '.stat-rechts .stat-block .stat-zeile', bleibt: 1 },
+            { wahl: '#reifeKasten .reife-thema',            bleibt: 0 }
+        ];
+        for(let runde = 0; runde < 30 && !passt(); runde++){
+            let weg = false;
+            for(const a of abbau){
+                const liste = ziel.querySelectorAll(a.wahl);
+                if(liste.length > a.bleibt){
+                    liste[liste.length - 1].remove();
+                    weg = true;
+                    break;
+                }
+            }
+            if(!weg) break;      // nichts mehr zu holen - dann eben rollen
+        }
+    }catch(e){ console.debug('Einpassen:', e.message); }
+}
+window.statistikEinpassen = statistikEinpassen;
+
 function statistikFuellen() {
     const ziel = document.getElementById('statistikInhalt');
     if (!ziel) return;
-    const teile = teilAuswertung();
     const esc = s => (window.escapeHtml ? window.escapeHtml(s) : String(s == null ? '' : s));
 
     // Die Pruefungsreife steht ganz oben. Sie stand zuerst in der
@@ -29044,40 +30630,69 @@ function statistikFuellen() {
     // Zwei Spalten: links die Pruefungsreife ("Reicht es?"), rechts die
     // Einzelheiten - Trefferquoten, Stolpersteine, Auffrischung und das
     // Sichern des Lernstands. Am Handy fallen sie untereinander.
+    // ================================================================
+    //  EINE ANZEIGE STATT ZWEIER
+    // ----------------------------------------------------------------
+    //  Hier stand bis zum 11.09.2026 eine Tabelle mit Teil, Gelernt,
+    //  Trefferquote und "noch nie geübt" - direkt unter der
+    //  Pruefungsreife, die dieselben drei Teile mit denselben
+    //  Fragenzahlen schon aufgezaehlt hatte. Dietmar: "Irgendwie ähnelt
+    //  sich das. ... Kann man die zwei Funktionen in einer umbauen?"
+    //
+    //  Man kann. Die Zahlen stehen jetzt als feine Zeile unter dem Balken
+    //  des jeweiligen Teils - siehe reifeAktualisieren(). Damit ist jede
+    //  Zahl zu ihrem Teil einmal da statt zweimal, und "Wo es klemmt"
+    //  steht von selbst darunter, wie Dietmar es wollte.
+    // ================================================================
     let html = '<div class="stat-spalten"><div class="stat-links">'
-             + '<div id="reifeKasten"></div></div><div class="stat-rechts">';
+             + '<div id="reifeKasten"></div>'
+             // Die Tempo-Probe gehoert nach links: Sie beantwortet dieselbe
+             // Frage wie die Pruefungsreife darueber - "reicht das?" - nur
+             // von der anderen Seite. Und sie fuellt die kuerzere Spalte.
+             + tempoBlockHtml()
+             + auffrischungBlockHtml()
+             + '</div><div class="stat-rechts">';
 
-    html += '<div style="font-size:0.72rem; color:var(--muted); margin-bottom:0.5rem;">' +
-        'Trefferquote zählt alle je gegebenen Antworten, nicht nur die letzte Runde.</div>' +
-        '<table style="width:100%; border-collapse:collapse; font-size:0.82rem;">' +
-        '<tr style="text-align:left; color:var(--muted); font-size:0.7rem;">' +
-        '<th style="padding:4px 2px;">Teil</th><th>Gelernt</th><th>Trefferquote</th><th>Noch nie geübt</th></tr>';
-
-    Object.keys(teile).forEach(t => {
-        const d = teile[t];
-        const beantwortet = d.richtig + d.falsch;
-        const quote = beantwortet > 0 ? Math.round((d.richtig / beantwortet) * 100) : null;
-        const farbe = quote === null ? 'var(--muted)' : (quote >= 76 ? '#1f9d55' : (quote >= 60 ? '#b8860b' : '#c0392b'));
-        const anteil = d.gesamt > 0 ? Math.round((d.gelernt / d.gesamt) * 100) : 0;
-        html += '<tr style="border-top:1px solid var(--line);">' +
-            '<td style="padding:7px 2px; font-weight:700;">' + TEIL_NAMEN[t] + '</td>' +
-            '<td>' + d.gelernt + '/' + d.gesamt + ' <span style="color:var(--muted);">(' + anteil + '%)</span></td>' +
-            '<td style="color:' + farbe + '; font-weight:700;">' + (quote === null ? '–' : quote + '%') + '</td>' +
-            '<td style="color:var(--muted);">' + d.unberuehrt + '</td></tr>';
-    });
-    html += '</table>';
-
+    // ================================================================
+    //  DIE RECHTE SEITE: DREI BLOECKE, EINE FORM
+    // ----------------------------------------------------------------
+    //  Dietmar am 11.09.2026: "Ich wünsche mir die rechte Seite
+    //  aufgeräumter."
+    //
+    //  Sie war es nicht, weil hier drei verschiedene Sachen ohne Grenze
+    //  ineinander liefen: die Stolpersteine mit ihren langen Fragetexten,
+    //  darunter ohne Absatz die Befunde, die genauso aussehen, und ganz
+    //  unten der Auffrischungskasten - der einzige mit eigenem Rahmen.
+    //  Man sah nicht, wo das eine aufhoerte und das andere anfing.
+    //
+    //  Jetzt steht jeder der drei in einem eigenen weissen Kasten auf dem
+    //  grauen Grund, mit derselben Kopfzeile: Ueberschrift links, "Alle
+    //  ansehen" rechts. Gleiche Dinge sehen gleich aus, verschiedene
+    //  trennt eine Kante.
+    // ================================================================
     const schwer = schwersteFragen(5);
     const stolperGesamt = (typeof alleStolpersteine === 'function') ? alleStolpersteine().length : schwer.length;
-    if (schwer.length) {
-        html += '<div style="display:flex; align-items:baseline; gap:10px; margin:1.1rem 0 0.4rem;">'
+    // Der Kasten steht immer da - auch ohne einen einzigen Fehlversuch.
+    // Dietmar am 11.09.2026: "Ich möchte rechts auch diese Buttons, auch
+    // wenn nichts angezeigt wird weil man damit noch nie gelernt hat."
+    // Das Fenster dahinter sagt dann selbst, dass noch nichts erfasst ist.
+    {
+        html += '<div class="stat-block">'
+            + '<div style="display:flex; align-items:baseline; gap:10px; margin:0 0 0.4rem;">'
             + '<h4 style="margin:0; font-size:0.85rem; color:var(--panel-navy);">Deine häufigsten Stolpersteine</h4>'
-            + (stolperGesamt > schwer.length
-                ? '<button type="button" class="btn-lernstand" style="margin-left:auto;" '
-                  + 'onclick="stolpersteineOeffnen()" data-tooltip="Alle Fragen zeigen, die schon einmal daneben gingen">'
-                  + 'Alle ' + stolperGesamt + ' ansehen</button>'
-                : '')
-            + '</div>';
+            // Der Knopf steht immer da, sobald es ueberhaupt Stolpersteine
+            // gibt - nicht mehr nur, wenn die Vorschau etwas weglaesst.
+            // Seit dem Einpassen (statistikEinpassen) kann die Vorschau
+            // JEDERZEIT gekuerzt werden, damit das Fenster ohne Rollbalken
+            // auskommt; ohne Knopf gaebe es dann keinen Weg zum Rest.
+            + '<button type="button" class="btn-lernstand" style="margin-left:auto;" '
+            +   'onclick="stolpersteineOeffnen()" data-tooltip="Alle Fragen zeigen, die schon einmal daneben gingen">'
+            +   (stolperGesamt > 0 ? 'Alle ' + stolperGesamt + ' ansehen' : 'Alle ansehen') + '</button>'
+            + '</div>'
+            + (schwer.length ? '' :
+                 '<div style="font-size:0.78rem; color:var(--muted); line-height:1.5;">'
+               + 'Noch keine falsche Antwort erfasst. Hier stehen später die Fragen, die dir '
+               + 'am häufigsten danebengehen &ndash; die hartnäckigsten zuerst.</div>');
         schwer.forEach(x => {
             // Der Text stand hier bis zum 09.09.2026 auf 88 Zeichen gekuerzt.
             // Dietmar: "Hier werden die Fragen abgeschnitten. … Nach Klasse,
@@ -29092,13 +30707,12 @@ function statistikFuellen() {
             // ueberfluessig: Bei fuenf Zeilen ist auch der volle Text kein
             // Platzproblem, und umbrechen darf er.
             const txt = x.q.text || x.q.id;
-            html += '<div style="font-size:0.76rem; padding:6px 0; border-top:1px solid var(--line); ' +
+            html += '<div class="stat-zeile" style="font-size:0.76rem; padding:6px 0; border-top:1px solid var(--line); ' +
                 'display:flex; gap:8px; line-height:1.45;">' +
                 '<span style="color:#c0392b; font-weight:700; flex-shrink:0;">' + (x.m.totalWrong || 0) + '×</span>' +
                 '<span style="min-width:0;">' + esc(txt) + '</span></div>';
         });
-    } else {
-        html += '<div style="margin-top:1rem; font-size:0.78rem; color:var(--muted);">Noch keine falschen Antworten erfasst.</div>';
+        html += '</div>';
     }
 
     // Das Merkblatt stand bis zum 09.09.2026 hier. Dietmar: "Das gehoert
@@ -29106,14 +30720,20 @@ function statistikFuellen() {
     // ist es jetzt unter Einstellungen -> Merkblatt.
 
     html += befundeHtml();
-    html += uebungszeitAuswertungHtml();
+    // Und darunter, solange hier noch kaum etwas steht, der Weg hinein:
+    // Fragenzahl, Stand und zwei Knoepfe zum Loslegen. Siehe
+    // anfangBlockHtml() - er verschwindet von selbst, sobald zehn Fragen
+    // beantwortet sind.
+    html += anfangBlockHtml();
+    // Die Uebungszeit stand bis zum 11.09.2026 hier. Dietmar: "Übungszeit,
+    // kommt aus Auswertung raus und erhält einen Extra Button oben neben
+    // Einstellungen." Zu finden ist sie jetzt ueber die Uhr in der
+    // Kopfzeile - siehe uebungszeitOeffnen().
 
-    const faellig = faelligeFragen().length;
-    html += '<div style="margin-top:1rem; padding:8px 10px; border-radius:10px; background:#eef7f8; font-size:0.78rem;">' +
-        '<b>Auffrischung:</b> ' + (faellig > 0
-            ? faellig + ' gelernte Frage' + (faellig === 1 ? '' : 'n') + ' wartet' + (faellig === 1 ? '' : 'en') + ' auf Wiederholung.'
-            : 'Gerade nichts fällig.') +
-        '<br><span style="color:var(--muted);">Nach dem Lernen erneut nach 3, dann 7, 21 und 60 Tagen.</span></div>';
+    // Die Auffrischung stand bis zum 11.09.2026 hier, als vierter Kasten
+    // der rechten Spalte. Dietmar: "Auffrischung ... Das nach links
+    // verschieben." Sie steht jetzt unter der Tempo-Probe - siehe oben
+    // beim Aufbau der linken Spalte.
 
     // Der Block "Lernstand sichern" stand bis zum 09.09.2026 hier. Dietmar:
     // "Hier moechte ich die Funktion Lernstand Sichern entfernt haben. Das
@@ -29126,31 +30746,25 @@ function statistikFuellen() {
     ziel.innerHTML = html;
     // Erst jetzt gibt es den Platzhalter im Baum - also jetzt fuellen.
     try{ if(typeof reifeAktualisieren === 'function') reifeAktualisieren(); }catch(e){}
+    // Und danach einpassen: Wird das Fenster nachgefuellt, waehrend es
+    // schon offen steht, muss die Vorschau erneut auf die Hoehe kommen.
+    try{ statistikEinpassen(); }catch(e){}
 
     // ================================================================
-    //  KEINE LEERE SPALTE
+    //  DIE LEERE SPALTE GIBT ES NICHT MEHR
     // ----------------------------------------------------------------
-    //  Dietmar am 10.09.2026 mit einem Bild der Auswertung im Katalog
-    //  E auf A: "Unter Statistik, fehlt die linke Seite komplett."
+    //  Hier stand seit dem 10.09.2026 ein Handgriff, der die linke Spalte
+    //  ausblendete, solange die Pruefungsreife schweigt - Dietmar hatte
+    //  im frisch geoeffneten A-Katalog ein weisses Feld neben
+    //  zusammengedraengtem Text gesehen: "Unter Statistik, fehlt die
+    //  linke Seite komplett."
     //
-    //  Sie fehlt nicht, sie ist leer - und das ist sogar richtig so: Die
-    //  Pruefungsreife haelt sich zurueck, solange kein Pruefungsteil
-    //  genug Antworten hat (siehe reifeAktualisieren). Im frisch
-    //  geoeffneten A-Katalog stehen 0 von 716, also schweigt sie.
-    //
-    //  Falsch war nur, dass die Spalte trotzdem ihren halben Platz
-    //  behielt. Uebrig blieb ein weisses Feld neben zusammengedraengtem
-    //  Text - das sieht nach Fehler aus, auch wenn keiner vorliegt.
-    //  Steht links nichts, nimmt die rechte Seite jetzt die volle Breite.
+    //  Seit die Pruefungsreife auch den Lernstand zeigt, kann die Spalte
+    //  gar nicht mehr leer sein: Der Kasten steht vom ersten Augenblick
+    //  an da - notfalls mit dem Satz, dass fuer eine Vorhersage noch
+    //  Antworten fehlen, und den gelernten Fragen darunter. Der Handgriff
+    //  ist damit ueberfluessig und ist raus.
     // ================================================================
-    try{
-        const spalten = ziel.querySelector('.stat-spalten');
-        const kasten  = document.getElementById('reifeKasten');
-        const leer = !kasten
-                  || kasten.style.display === 'none'
-                  || !kasten.innerHTML.trim();
-        if(spalten) spalten.classList.toggle('ohne-reife', leer);
-    }catch(e){}
 }
 
 // ---------------------------------------------------------------
