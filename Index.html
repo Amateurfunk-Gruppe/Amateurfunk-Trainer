@@ -7259,6 +7259,89 @@ const BILD_ZOOM_RAND  = 12;    // Mindestabstand zum Fensterrand
 // Elternelemente bilden eigene Stapelebenen.
 // Die Ebene laesst die Maus durch (pointer-events:none), damit das Verlassen
 // des Bildes sauber erkannt wird.
+// ================================================================
+//  WARUM DIE LUPE EINEN WEISSEN KASTEN ZEIGTE
+//  ----------------------------------------------------------------
+//  Dietmar am 11.09.2026, mit Video: "Bilder vergrössern mit
+//  MouseOverlay zieht den weissen Hintergrund mit hoch und nicht nur
+//  das svg."
+//
+//  Das Video zeigt es genau: Die Lupe blaeht den Kasten auf die halbe
+//  Fensterbreite auf, die Zeichnung darin bleibt winzig in der Mitte.
+//
+//  DIE URSACHE STEHT IN DEN SVG-DATEIEN SELBST. Sie tragen eine feste
+//  Groesse, aber KEINE viewBox:
+//
+//      <svg xmlns="..." width="226.814" height="83.134">
+//
+//  Ohne viewBox weiss der Browser nicht, welcher Ausschnitt der
+//  Zeichnung auf die Flaeche soll - er kann sie also gar nicht
+//  skalieren. Setzt man dem <img> eine groessere Breite, waechst nur
+//  die Box; die Zeichnung bleibt bei ihren 226 x 83 Punkten stehen und
+//  wird von object-fit brav in der Mitte platziert. Der Rest ist der
+//  weisse Grund des Bildes. Genau das war zu sehen.
+//
+//  DIE LOESUNG BERUEHRT KEINE EINZIGE DATEI. 746 SVGs liegen im Ordner
+//  des Trainers; sie alle umzuschreiben waere ein Update von einigen
+//  Megabyte und ein Eingriff in Material, das aus dem Katalog stammt.
+//  Stattdessen wird die Datei beim ersten Vergroessern EINMAL gelesen,
+//  bekommt im Arbeitsspeicher ihre viewBox verpasst und wird als
+//  data:-URL an die grosse Ansicht gegeben. Die Zeichnung skaliert
+//  dann vektoriell mit - scharf in jeder Groesse.
+//
+//  width und height bleiben dabei stehen. Das ist wichtig: Sie geben
+//  dem <img> seine natuerliche Groesse, und die braucht das Layout an
+//  allen anderen Stellen unveraendert.
+//
+//  Gemerkt wird das Ergebnis je Quelle (svgViewBoxCache) - beim
+//  zweiten Hinsehen ist nichts mehr zu holen. Schlaegt das Lesen fehl
+//  (kein Server, anderes Format), bleibt alles beim Alten: dann zeigt
+//  die Lupe eben das, was sie vorher auch gezeigt hat.
+// ================================================================
+const svgViewBoxCache = new Map();
+
+function svgMitViewBox(quelle){
+    return new Promise(fertig => {
+        try{
+            if(!quelle){ fertig(quelle); return; }
+            if(svgViewBoxCache.has(quelle)){ fertig(svgViewBoxCache.get(quelle)); return; }
+            if(!/\.svg(\?|#|$)/i.test(quelle)){ svgViewBoxCache.set(quelle, quelle); fertig(quelle); return; }
+
+            fetch(quelle).then(a => a.ok ? a.text() : null).then(text => {
+                if(!text) throw new Error('leer');
+                const treffer = text.match(/<svg\b[^>]*>/i);
+                if(!treffer) throw new Error('kein svg');
+                const alt = treffer[0];
+                if(/\bviewBox\s*=/i.test(alt)){          // hat schon eine - nichts zu tun
+                    svgViewBoxCache.set(quelle, quelle); fertig(quelle); return;
+                }
+                const b = (alt.match(/\bwidth\s*=\s*"([\d.]+)/i)  || [])[1];
+                const h = (alt.match(/\bheight\s*=\s*"([\d.]+)/i) || [])[1];
+                if(!b || !h) throw new Error('keine Masze');
+                const neu = alt.replace(/<svg\b/i,
+                    '<svg viewBox="0 0 ' + b + ' ' + h + '" preserveAspectRatio="xMidYMid meet"');
+                const url = 'data:image/svg+xml;charset=utf-8,'
+                          + encodeURIComponent(text.replace(alt, neu));
+                svgViewBoxCache.set(quelle, url);
+                fertig(url);
+            }).catch(() => { svgViewBoxCache.set(quelle, quelle); fertig(quelle); });
+        }catch(e){ fertig(quelle); }
+    });
+}
+
+// Vorwaermen: Die Bilder der aktuellen Frage werden gleich beim Zeichnen
+// einmal durchgereicht. Dann liegt die skalierbare Fassung schon bereit,
+// wenn die Maus das erste Mal darueber faehrt - sonst saehe man beim
+// allerersten Hinsehen kurz noch den weissen Kasten.
+function svgViewBoxVorwaermen(){
+    try{
+        document.querySelectorAll('.q-image img, .option-grid .option-image').forEach(b => {
+            const q = b.currentSrc || b.src;
+            if(q && !svgViewBoxCache.has(q)) svgMitViewBox(q);
+        });
+    }catch(e){}
+}
+
 function bildZoomEbene(){
     let o = document.getElementById('bildZoomEbene');
     if(!o){
@@ -7312,14 +7395,47 @@ function bildZoomAn(img){
         const bz = (typeof bildZoomFaktor === 'function') ? bildZoomFaktor() : 1;
         const anteilB = Math.min(0.92, mass.anteilB * bz);
         const anteilH = Math.min(0.92, mass.anteilH * bz);
+        // ================================================================
+        //  GERECHNET WIRD MIT DER ZEICHNUNG, NICHT MIT DEM KASTEN
+        //  ----------------------------------------------------------------
+        //  Dietmar am 11.09.2026: "Es vergrössert noch immer das Feld mit.
+        //  Es soll nur das Bild vergrössern!"
+        //
+        //  Und das war noch ein zweiter, ganz anderer Grund als die
+        //  fehlende viewBox von vorhin. Die Antwortbilder stehen im CSS auf
+        //
+        //      .option-grid .option-image { width:100%; height:90px;
+        //                                   object-fit:contain; }
+        //
+        //  Das Element ist also so breit wie seine Kachel und 90 Punkte
+        //  hoch - und die Zeichnung sitzt mit "contain" mittendrin, mit
+        //  weissem Grund links und rechts. Ein 227x83-Schaltbild in einem
+        //  330x90-Kasten laesst ueber 40 Punkte Weiss an jeder Seite.
+        //
+        //  Die Lupe hat bisher genau diesen KASTEN skaliert - also auch
+        //  das Weiss. Jetzt rechnet sie mit der Flaeche, die die Zeichnung
+        //  darin wirklich einnimmt, und baut das grosse Bild in deren
+        //  Seitenverhaeltnis. Damit waechst nur noch das Bild.
+        // ================================================================
+        const zusatz = 18 * z;                       // Rahmen + Innenabstand
+        const innenB = Math.max(1, bb - zusatz);
+        const innenH = Math.max(1, bh - zusatz);
+        let zb = innenB, zh = innenH;                // die Zeichnung, klein
+        const nw = img.naturalWidth || 0, nh0 = img.naturalHeight || 0;
+        if(nw > 0 && nh0 > 0){
+            const verh = nw / nh0;
+            zb = Math.min(innenB, innenH * verh);
+            zh = zb / verh;
+        }
+
         // Das Ziel waechst mit dem Bild mit - siehe BILD_MASS. Ohne das
         // war das Ziel bei den grossen Antwortbildern kleiner als das
         // Bild selbst, und die Lupe blieb aus.
-        const zielB = Math.max(max.breite, bb * BILD_ZOOM_ZIEL);
-        const zielH = Math.max(max.hoehe,  bh * BILD_ZOOM_ZIEL);
+        const zielB = Math.max(max.breite, zb * BILD_ZOOM_ZIEL);
+        const zielH = Math.max(max.hoehe,  zh * BILD_ZOOM_ZIEL);
         const grenzeB = Math.min(vb * anteilB, zielB * bz);
         const grenzeH = Math.min(vh * anteilH, zielH * bz);
-        let f = Math.min(grenzeB / bb, grenzeH / bh);
+        let f = Math.min(grenzeB / zb, grenzeH / zh);
         // Ein Bild, das ohnehin schon so gross wie die Zielgroesse ist, bleibt
         // unveraendert - sonst wurden gerade die breiten Schaltbilder noch
         // weiter aufgeblasen und liefen aus dem Bild.
@@ -7329,9 +7445,8 @@ function bildZoomAn(img){
         // Rahmen und Innenabstand kommen zur Bildflaeche dazu (box-sizing).
         // Sie stehen im CSS in Seitenpixeln, hier wird in Bildschirmpixeln
         // gerechnet - also mit dem Anzeigefaktor multipliziert.
-        const zusatz = 18 * z;
-        const nb = bb * f + zusatz;
-        const nh = bh * f + zusatz;
+        const nb = zb * f + zusatz;
+        const nh = zh * f + zusatz;
 
         // Die Ecke, an der das Bild haengt: die dem Fensterrand naechste.
         // Links oben haengt links oben und waechst nach rechts unten - und so
@@ -7357,7 +7472,19 @@ function bildZoomAn(img){
 
         const o = bildZoomEbene();
         const gr = o.querySelector('img');
-        gr.src = img.currentSrc || img.src;
+        // Erst die Originalquelle - damit sofort etwas zu sehen ist -, dann
+        // die um eine viewBox ergaenzte Fassung, sobald sie vorliegt. Beim
+        // zweiten Mal kommt sie aus dem Cache und ist sofort da.
+        const quelle = img.currentSrc || img.src;
+        gr.dataset.quelle = quelle;
+        if(svgViewBoxCache.has(quelle)){
+            gr.src = svgViewBoxCache.get(quelle);
+        }else{
+            gr.src = quelle;
+            svgMitViewBox(quelle).then(u => {
+                if(gr.dataset.quelle === quelle && u !== quelle) gr.src = u;
+            });
+        }
         // Zurueck in Seitenpixel, denn in denen rechnet das Stylesheet.
         gr.style.width  = Math.round(nb / z) + 'px';
         gr.style.height = Math.round(nh / z) + 'px';
@@ -8240,6 +8367,10 @@ function bildVerhaeltnis(img){
 
 function bilderGroesseAnpassen(erzwingen){
     try{
+        // Die skalierbaren Fassungen der Bilder dieser Frage schon einmal
+        // bereitlegen - siehe svgViewBoxVorwaermen(). Kostet nichts, wenn
+        // sie schon im Cache liegen.
+        try{ svgViewBoxVorwaermen(); }catch(e){}
         const raster = document.querySelector('.options-grid');
         if(!raster) return;
         const bilder = raster.querySelectorAll('.option-image');

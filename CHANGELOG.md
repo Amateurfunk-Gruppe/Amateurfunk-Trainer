@@ -8,6 +8,87 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.274.0] - 2026-09-11
+
+### Behoben
+- **Die Lupe vergrößerte den Kasten mit — jetzt wächst nur noch die
+  Zeichnung.** Dietmar: „Es vergrössert noch immer das Feld mit. Es soll nur
+  das Bild vergrössern!"
+
+  Das war ein **zweiter** Grund, ganz unabhängig von der fehlenden `viewBox`
+  aus 1.273.0. Die Antwortbilder stehen im CSS auf:
+
+  ```css
+  .option-grid .option-image { width: 100%; height: 90px; object-fit: contain; }
+  ```
+
+  Das Element ist also so breit wie seine Kachel und 90 Punkte hoch — die
+  Zeichnung sitzt mit `contain` mittendrin, mit weißem Grund links und rechts.
+  Ein 227 × 83 großes Schaltbild in einem 427 × 129 großen Feld lässt über 40
+  Punkte Weiß an jeder Seite stehen.
+
+  Die Lupe hat bisher genau diesen **Kasten** skaliert — also auch das Weiß.
+  Jetzt rechnet sie mit der Fläche, die die Zeichnung darin wirklich einnimmt
+  (aus `naturalWidth`/`naturalHeight`), und baut das große Bild in deren
+  Seitenverhältnis.
+
+  Nachgemessen an AB406:
+
+  | | Seitenverhältnis |
+  |---|---|
+  | kleines Feld | 3,32 |
+  | Zeichnung | 2,73 |
+  | große Ansicht **vorher** | 3,32 — der weiße Rand wuchs mit |
+  | große Ansicht **jetzt** | 2,78 |
+
+  Dasselbe gilt für das Fragebild: 2,30 zu 2,33 statt 2,11.
+
+---
+
+## [1.273.0] - 2026-09-11
+
+### Behoben
+- **Die Lupe blies den weißen Kasten auf, nicht die Zeichnung.** Dietmar, mit
+  Video: „Bilder vergrössern mit MouseOverlay zieht den weissen Hintergrund mit
+  hoch und nicht nur das svg."
+
+  Das Video zeigte es genau: Der Kasten wuchs auf halbe Fensterbreite, die
+  Zeichnung blieb winzig in der Mitte stehen.
+
+  **Die Ursache steckt in den SVG-Dateien selbst.** Sie tragen eine feste
+  Größe, aber keine `viewBox`:
+
+  ```
+  <svg xmlns="…" width="226.814" height="83.134">
+  ```
+
+  Ohne `viewBox` weiß der Browser nicht, welcher Ausschnitt der Zeichnung auf
+  die Fläche soll — er kann sie also gar nicht skalieren. Bekommt das `<img>`
+  eine größere Breite, wächst nur die Box; die Zeichnung bleibt bei ihren
+  226 × 83 Punkten und wird brav in der Mitte platziert. Der Rest ist der weiße
+  Grund des Bildes.
+
+  **Die Lösung berührt keine einzige Datei.** 746 SVGs liegen im Ordner des
+  Trainers; sie alle umzuschreiben wäre ein Update von etlichen Megabyte und
+  ein Eingriff in Material, das aus dem Katalog stammt. Stattdessen wird die
+  Datei beim ersten Vergrößern **einmal gelesen**, bekommt im Arbeitsspeicher
+  ihre `viewBox` verpasst und geht als `data:`-URL an die große Ansicht. Die
+  Zeichnung skaliert dann vektoriell mit — scharf in jeder Größe. `width` und
+  `height` bleiben stehen, denn die geben dem Bild überall sonst seine
+  natürliche Größe.
+
+  Das Ergebnis wird je Datei gemerkt, und die Bilder der laufenden Frage werden
+  schon beim Zeichnen vorgewärmt — beim ersten Hinsehen ist also nichts mehr zu
+  laden. Fehlt eine Datei oder lässt sie sich nicht lesen, bleibt alles beim
+  Alten: nachgemessen mit einem unvollständigen Bildordner, kein Fehler, nur
+  der bisherige Weg.
+
+  Nachgemessen an AB406 (vier Antwortbilder, 227 × 83 Punkte natürliche Größe):
+  Die Lupe zeigt jetzt 687 × 218 Punkte **Zeichnung**, nicht 687 × 218 Punkte
+  weißen Kasten mit einem Bildchen darin.
+
+---
+
 ## [1.272.0] - 2026-09-11
 
 ### Hinzugefügt
