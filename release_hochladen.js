@@ -220,6 +220,21 @@ function letzteVeroeffentlichte() {
 // Mac-Anleitung ohne Mac-Paket waere ein Versprechen, das die Seite
 // nicht haelt. "namen" sind die Dateinamen am Release: die, die gerade
 // hochgehen, und die, die schon oben sind.
+//
+// UND SEIT DEM 12.09.2026 ABENDS DEUTLICH KUERZER. Dietmar, zum zweiten
+// Mal: "zu viel bla bla drin." Zum ersten Mal am 01.09.2026: "Ich
+// moechte es nuechterner. Kurze Hinweise wie man es installiert und was
+// sich in dem Release veraendert hat."
+//
+// Ich hatte es am Vormittag wieder aufgeblaeht: drei Schritte je System,
+// dazu warum der Punkt-Schraegstrich wichtig ist, was alles im Paket
+// steckt, und dass eine Apple-Signatur 99 Dollar im Jahr kostet. Alles
+// richtig, alles nachlesbar - aber eine Release-Seite ist keine
+// Anleitung. Wer installieren will, braucht den Befehl, nicht die
+// Begruendung. Von 3.400 auf 900 Zeichen.
+//
+// Die Regel fuer das naechste Mal: Ein Satz oder ein Befehl je System.
+// Was danach kaeme, gehoert in INSTALLATION.md.
 function beschreibung(namen, version, neue) {
   const finde = r => namen.find(n => r.test(n)) || null;
   const exe = finde(/\.exe$/i);
@@ -230,58 +245,32 @@ function beschreibung(namen, version, neue) {
   let s = '## Installation\n\n';
 
   if (exe) {
-    s += '### Windows\n\n' +
-      '1. **' + exe + '** herunterladen und starten.\n' +
-      '2. Der Assistent fragt, wohin installiert wird.\n' +
-      '3. Windows meldet "Unbekannter Herausgeber": *Weitere Informationen* ' +
-      '\u2192 *Trotzdem ausf\u00fchren*.\n\n' +
-      'Enthalten sind Node.js, die Sprachausgabe mit deutscher Stimme, der ' +
-      'amtliche Fragenkatalog und die Formelsammlung. Beim Einrichten wird ' +
-      'keine Internetverbindung gebraucht.\n\n';
+    s += '**Windows** \u2014 `' + exe + '` starten. Bei "Unbekannter Herausgeber": '
+      + '*Weitere Informationen* \u2192 *Trotzdem ausf\u00fchren*.\n\n';
   }
 
   if (deb || rpm) {
-    s += '### Linux\n\n```\n';
-    if (deb) s += '# Debian, Ubuntu, Mint\nsudo apt install ./' + deb + '\n\n';
-    if (rpm) s += '# Fedora\nsudo dnf install ./' + rpm + '\n\n' +
-                  '# openSUSE\nsudo zypper install ./' + rpm + '\n';
-    s += '```\n\n' +
-      'Danach steht "Amateurfunk-Trainer" im Programmmen\u00fc. Oder im ' +
-      'Terminal: `amateurfunk-trainer`.\n\n' +
-      'Gebraucht wird Node.js 18 oder neuer \u2013 das holt die ' +
-      'Paketverwaltung selbst dazu. Der Punkt-Schr\u00e4gstrich vor dem ' +
-      'Dateinamen ist wichtig: `apt install ./datei.deb` l\u00f6st die ' +
-      'Abh\u00e4ngigkeit mit auf, `dpkg -i` nicht.\n\n' +
-      'Fragenkatalog, alle Zeichnungen, Formelsammlung und die ' +
-      'Abh\u00e4ngigkeiten sind mit im Paket. Kein `npm install`, kein Netz ' +
-      'beim Lernen.\n\n';
+    s += '**Linux** \u2014 Node.js 18 oder neuer holt die Paketverwaltung selbst dazu:\n\n```\n';
+    if (deb) s += 'sudo apt install ./' + deb + '\n';
+    if (rpm) s += 'sudo dnf install ./' + rpm + '\n'
+               +  'sudo zypper install ./' + rpm + '\n';
+    s += '```\n\n';
   }
 
   if (zip) {
-    s += '### macOS\n\n' +
-      '1. **' + zip + '** entpacken, `Amateurfunk-Trainer.app` nach ' +
-      '*Programme* ziehen.\n' +
-      '2. **Beim ersten Start:** Rechtsklick auf die App \u2192 ' +
-      '*\u00d6ffnen* \u2192 im Dialog noch einmal *\u00d6ffnen*. Nur einmal ' +
-      'n\u00f6tig. Grund: Die App ist nicht bei Apple signiert \u2013 daf\u00fcr ' +
-      'br\u00e4uchte es ein Entwicklerkonto f\u00fcr 99 US-Dollar im Jahr.\n' +
-      '3. Node.js 18 oder neuer muss da sein: `brew install node` oder von ' +
-      'nodejs.org. Fehlt es, sagt die App es beim Start.\n\n';
+    s += '**macOS** \u2014 ZIP entpacken, App nach *Programme*. Beim ersten Start '
+      + 'Rechtsklick \u2192 *\u00d6ffnen* (nicht bei Apple signiert). Braucht Node.js 18 oder neuer.\n\n';
   }
 
-  s += 'Beim Update bleibt der Lernstand erhalten \u2013 der Ordner ' +
-       'f\u00fcr die Daten wird nicht angefasst.\n\n';
-
+  s += 'Der Lernstand bleibt beim Update erhalten';
   if (deb || rpm || zip) {
-    s += 'Wo er liegt:\n\n```\n' +
-      'Windows : im Installationsordner unter data\\\n' +
-      'Linux   : ~/.local/share/amateurfunk-trainer\n' +
-      'macOS   : ~/Library/Application Support/Amateurfunk-Trainer\n' +
-      '```\n\n' +
-      'Unter Windows wird beim Deinstallieren gefragt, ob er mit weg soll. ' +
-      'Unter Linux und macOS bleibt er liegen \u2013 absichtlich.\n\n';
+    s += ':\n\n```\n'
+      + 'Windows : data\\ im Installationsordner\n'
+      + 'Linux   : ~/.local/share/amateurfunk-trainer\n'
+      + 'macOS   : ~/Library/Application Support/Amateurfunk-Trainer\n'
+      + '```\n\n';
   } else {
-    s += 'Beim Deinstallieren wird gefragt, ob er mit weg soll.\n\n';
+    s += ' \u2013 der Ordner `data\\` wird nicht angefasst.\n\n';
   }
 
   if (neue.length) {

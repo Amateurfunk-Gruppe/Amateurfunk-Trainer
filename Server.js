@@ -2476,6 +2476,9 @@ app.get('/api/version',(req,res)=>{
 // ================================================================
 const PAKET_DATEIEN = [
   'formelhilfe.json',
+  // Die Erklaerungen zu den Fragen mit Zeichnung. Wer den Trainer aus
+  // dem Gruppenraum mitnimmt, soll sie mitbekommen.
+  'erklaerungen.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js', '50ohm_map.json',
   // Die genauere Zuordnung vom DARC, sofern sie schon geholt wurde. Wer den
@@ -2947,7 +2950,12 @@ const ABGLEICH_DATEN    = ['fragen.json', 'svg-list.json', 'video_map_embed.js',
                            'Fragen-E-Auf-A.json', 'Fragen-N-Auf-A.json',
                            // Zuordnung Frage -> Kapitel bei 50ohm.de. Reine
                            // Kursdaten wie die Video-Map daneben.
-                           '50ohm_map.json'];
+                           '50ohm_map.json',
+                           // Die Erklaerungen. Ohne diesen Eintrag fiele die
+                           // Datei in den Zweig "programm" und ein Update
+                           // wollte jedes Mal bestaetigt und neu gestartet
+                           // werden - fuer eine Textdatei.
+                           'erklaerungen.json'];
 const ABGLEICH_BROWSER  = ['Index.html', 'duo.js', 'klick-sound.js', 'tts-expand.js', 'manifest.webmanifest', 'sw.js'];
 const ABGLEICH_PROGRAMM = ['Server.js', 'hoerbuch.js', 'lame.js'];
 const ABGLEICH_ALLE     = [...ABGLEICH_DATEN, ...ABGLEICH_BROWSER, ...ABGLEICH_PROGRAMM];
@@ -3704,7 +3712,17 @@ const PUBLIC_FILES = new Set([
   // Zuordnung Frage -> Stelle in der Formelsammlung. Enthaelt nur
   // Fragennummern und Abschnittsnamen; die Seitenbilder liegen in
   // /formelsammlung/ und sind ueber PUBLIC_DIRS freigegeben.
-  '/formelhilfe.json'
+  '/formelhilfe.json',
+  // Erklaerungen zu den Fragen mit Zeichnung (was im Bild steht, der
+  // Rechenweg, und warum jede falsche Antwort falsch ist). Reine
+  // Kursdaten wie 50ohm_map.json daneben - keine Nutzerdaten.
+  //
+  // Am 13.09.2026 beim Einbau gemerkt: Ohne diesen Eintrag lief der
+  // Abruf in einen 404 und der Erklaerkasten erschien nie. Genau der
+  // Fall, den der Kommentar oben vorhersagt ("eine neue Datei im
+  // Projektordner ist damit automatisch NICHT oeffentlich") - der
+  // Schutz hat funktioniert, ich hatte ihn nur vergessen.
+  '/erklaerungen.json'
 ]);
 // /fontawesome/ kam am 01.09.2026 dazu: die Symbolschrift liegt jetzt im
 // Ordner statt bei einem CDN. Ohne diesen Eintrag waeren die Symbole zwar

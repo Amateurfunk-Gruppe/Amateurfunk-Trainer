@@ -8,6 +8,342 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.279.0] - 2026-09-12
+
+### Geändert
+- **Erklärung und Notiz treten an die Stelle der Antworten.** Dietmar zum
+  Erklärfenster: „Die Position gefällt mir nicht. Schöner wäre es exakt auf der
+  Größe wie die Antworten. Das Fenster soll nicht schwebend sein. Sondern so
+  aussehen, als würde es die Antworten ersetzen. Der Hintergrund soll nicht
+  abgedunkelt werden." Und gleich danach: „Bei Notizen möchte ich das auch so haben.
+  Es öffnet sich ein Fenster, wo man das selbst beschreiben kann. Exakt auf der Länge
+  und Breite von den Antworten und auch ohne abgedunkelten Hintergrund."
+
+  Beides ist jetzt eine **Tafel im Fluss** statt eines Fensters über der Seite: Sie
+  steht an der Stelle des Antwortkastens, der solange verschwindet. Breite und Rand
+  ergeben sich damit von selbst, ohne eine einzige gerechnete Zahl. Kein Schatten,
+  kein abgedunkelter Hintergrund, nichts schwebt.
+
+  Nachgemessen bei 1920×955: Antwortkasten und Tafel sind **deckungsgleich** — oben
+  505, links 562, 1119 × 285 Punkte, beide. Die Seite wird um keinen Punkt länger
+  (`ueber 0`), und die Schriftstufe der Frage bleibt, wo sie war.
+
+  **Die Höhe wird übernommen, nicht neu bestimmt** — genau so hoch wie der Kasten,
+  den sie ersetzt, und längerer Text rollt innerhalb. Sonst wäre die Seite beim
+  Aufschlagen um rund 200 Punkte gewachsen, die Schriftautomatik hätte die Frage
+  verkleinert, und ein Klick auf „Erklärung" hätte die Frage kleiner gemacht.
+  Gerechnet wird mit `offsetHeight` und nicht mit `getBoundingClientRect`:
+  offsetHeight zählt in Satzpunkten, der Rahmen in Bildschirmpunkten — bei 115 % wäre
+  die Tafel sonst 15 % zu hoch.
+
+  Beide Tafeln haben ein Kreuz zum Zumachen, Escape schließt sie, und der Knopf
+  schaltet um: ein zweiter Klick bringt die Antworten zurück. Zwei Tafeln an
+  derselben Stelle gibt es nicht — wer die Erklärung aufschlägt, schließt damit die
+  Notiz und umgekehrt.
+
+  **Eine Folge beim Zettel, die man kennen muss:** Das Notizfeld ist beim Zeichnen
+  der Frage jetzt **immer zu**, auch wenn eine Notiz vorliegt. Vorher stand es offen,
+  „sonst wäre die Notiz nach dem Zuklappen unsichtbar, obwohl es sie gibt" — das geht
+  nicht mehr, es würde die Antworten verdecken. Dass eine Notiz da ist, sagt der
+  orange leuchtende Zettel in der Kopfzeile.
+
+- **Formelblatt und Glühbirne pulsen abwechselnd.** Dietmar: „Erklärung soll
+  Alternierend mit Formelsammlung pulsen."
+
+  Vorher pulste das Formelblatt dreimal hintereinander und die Glühbirne 900
+  Millisekunden später noch dreimal — zusammen fast vier Sekunden, und der zweite
+  Teil kam so spät, dass man ihn verpasste. Jetzt wechseln sie sich ab: Formelblatt,
+  Glühbirne, Formelblatt, Glühbirne, Formelblatt, Glühbirne — je Schlag 620
+  Millisekunden. Ist nur einer der beiden Knöpfe da, pulst er dreimal allein, dann
+  sieht es aus wie vorher.
+
+  **Ein Fehler beim Einbauen, der beim Nachmessen aufflog:** Der Takt stand zuerst in
+  `formelKnopfSetzen()` — und zu diesem Zeitpunkt ist die Glühbirne noch verborgen,
+  weil `erklaerKnopfSetzen()` erst danach läuft. Gemessen pulste deshalb nur das
+  Formelblatt. Der Takt wird jetzt am Ende von `renderQuestion()` angeschlagen, wenn
+  beide Knöpfe stehen. Nachgemessen: F bei 0 ms, G bei 621, F bei 1240, G bei 1860,
+  F bei 2480, G bei 3101.
+
+  Nach einer **falschen** Antwort pulst nur die Glühbirne — im Formelblatt steht
+  nichts Neues, in der Erklärung schon. Nach einer richtigen Antwort pulst nichts.
+
+---
+
+## [1.278.0] - 2026-09-12
+
+### Korrigiert
+- **Die Fragenansicht passt jetzt ins Fenster.** Dietmar, mit Bild von AD806:
+  „Schau mal, das Fenster ist bei den Fragen grösser!" Auf dem Bild war die Fußzeile
+  abgeschnitten und rechts stand der Scrollbalken.
+
+  **Die Knopfleiste war das falsche Maß.** Seit es die drei Schriftstufen für die
+  Frage gibt, entschied `fragenGroesseAnpassen()` nach der Unterkante der
+  Knopfleiste: „Solange die im Fenster bleibt, ist die Frage vollständig zu sehen."
+  Das ist nicht wahr — **unter** der Knopfleiste steht die Fußzeile mit der
+  Katalogquelle, 63 Punkte hoch. Bei AD806 hatte die Knopfleiste 94 Punkte Luft, und
+  die Seite ragte trotzdem 26 Punkte heraus.
+
+  Es ist derselbe Fehler, den ich am Morgen desselben Tages in der Zoom-Automatik
+  beseitigt habe: ein Stellvertreter statt der Sache selbst. Gemessen wird jetzt, ob
+  die **Seite** ins Fenster passt — `scrollHeight` sagt das direkt.
+
+  Nachgemessen bei 1920×955 und 115 %, ohne Zeichnung:
+
+  | Frage | vorher | jetzt |
+  |---|---|---|
+  | AD806 | „groß", 26 Punkte zu viel | „mittel", passt mit 56 Punkten Luft |
+  | AI611 | „groß", 64 zu viel | „klein", passt |
+  | AD212 | „groß", passt | unverändert „groß" |
+  | AK103 | passt auf keiner Stufe | siehe unten |
+
+  Zusätzlich wird nach dem Laden der Zeichnungen noch einmal geprüft: Ein Bild, das
+  erst danach seine endgültige Höhe bekommt, kann die Seite über die Kante schieben.
+  Diese Nachprüfung geht **nur nach unten** — wer dort auch wieder vergrößern würde,
+  baute eine Schaukel aus „kleinere Schrift → mehr Platz → größeres Bild".
+
+### Hinzugefügt
+- **Die Fußzeile ist während der Fragen weg, ein Knopf holt sie.** Dietmar auf die
+  Frage, ob sie ausgeblendet werden soll: „Antwort 1 ausblenden, aber über einen
+  Button Sichtbar machen." Der Knopf ⓘ sitzt am rechten Ende der Knopfleiste, neben
+  „Hauptmenü".
+
+  Eingeblendet liegt die Zeile **am Fensterrand, nicht in der Seite**
+  (`position: fixed`). Sonst wäre die Seite beim Knopfdruck um 63 Punkte gewachsen,
+  die Schriftautomatik hätte die Frage verkleinert — und ein Klick auf „Quelle" hätte
+  die Frage kleiner gemacht. So ändert sich am Satz der Seite nichts. Escape blendet
+  sie wieder aus, und beim Zurückgehen in die Hauptansicht steht sie ohnehin wieder
+  ganz unten.
+
+  Gemessen bringt das 63 Punkte: AG422 und AI306 bekommen dadurch die **größte**
+  Schriftstufe statt „mittel" und „klein" — die Frage ist also besser zu lesen als
+  vorher.
+
+### Geändert
+- **„Automatisch" gibt für eine lange Frage nach.** Bis heute galt: gemessen wird die
+  Hauptansicht, denn sie ist die längste. Das stimmt nicht mehr. Bei 1920×955 passt
+  die Hauptansicht bis 120 %, die Fragenansicht aber nur bis 110 — und mit Zeichnung,
+  wie bei AD806 und AI611, nur bis 105 beziehungsweise 100.
+
+  Dietmar auf die Wahl zwischen „Scrollen ist in Ordnung" und „immer so klein, dass
+  alles passt": **„Immer so klein, dass alles passt."**
+
+  Also: Trifft die Automatik auf eine Frage, die auch in der kleinsten Schriftstufe
+  nicht hineinpasst, geht sie Stufe um Stufe herunter — und der gefundene Wert gilt
+  ab dann für die ganze Seite, auch für die Hauptansicht. Alles andere hieße, bei
+  jedem Wechsel zwischen Frage und Hauptansicht eine andere Größe zu haben.
+
+  Zwei Dinge sind daran wichtig:
+
+  **Erstens die Reihenfolge.** Zuerst die Schriftstufe der Frage — der kleine
+  Eingriff, er betrifft nur Frage und Antworten. Erst wenn selbst die kleinste Stufe
+  nicht reicht, geht die Anzeige der ganzen Seite herunter. Und nach jeder Zoomstufe
+  wird die Schriftstufe neu entschieden: Bei AD806 steht am Ende 100 % Anzeige mit
+  der **größten** Schrift — besser lesbar als die 115 % mit der kleinsten.
+
+  **Zweitens die Grenze: höchstens drei Stufen.** Nicht „nie unter 100 %", denn auf
+  einem 1366×768-Laptop steht die Hauptansicht schon bei 95 %, und eine feste Grenze
+  von 100 hätte dort gar nichts zugelassen (dort gibt es jetzt bis 80 % nach, und
+  AD806 passt). Gerechnet wird die Grenze aus dem Wert **ohne** Deckel — sonst würde
+  sie bei jeder langen Frage drei Stufen tiefer rutschen, und nach dreimal AG424 wäre
+  man bei 70 %.
+
+  Gemerkt wird der Wert je Fenstergröße. **Zurückgesetzt wird er, indem man die
+  Anzeige einmal auf einen festen Wert und wieder auf „Automatisch" stellt** — dann
+  misst die Automatik von vorn. Das ist der Weg, den man ohne Anleitung findet;
+  besser als ein weiterer Knopf in den Einstellungen.
+
+  **Was das in Dietmars Fenster bedeutet, offen gesagt:** Die Hauptansicht stand auf
+  115 %. Nach der ersten Frage mit Zeichnung sind es 100 %, und wer AG424 oder AK103
+  aufruft — die zwei längsten Fragen des Katalogs E → A — landet bei 95 %. Unten
+  bleiben dann rund 190 Punkte leer. Das ist der Preis für „nichts scrollt je", und
+  er ist genau so gewählt worden. Wer es anders will, setzt die Anzeige auf einen
+  festen Wert; dort rührt die Automatik nichts an.
+
+---
+
+## [1.277.0] - 2026-09-12
+
+### Geändert
+- **Die Erklärung hat jetzt einen eigenen Knopf und ein eigenes Fenster.** Dietmar,
+  nachdem er sie in 1.276.0 zweimal nicht gefunden hatte: „Unterhalb von den Fragen,
+  verlängert nur das Fenster. Besser wäre ein eigenes Fenster, das sich öffnet. Ich
+  möchte die Formel nicht nachdem antworten. Hier wäre neben dem Formelblatt Button
+  ein eigener Button mit der Glühbirne. Das erst vorhanden ist, wenn es was zum
+  rechnen gibt und es soll auch Pulsieren wie auch das Formelblatt." Und dazu: „Es
+  soll nicht nur bei Blättern vorhanden sein, sondern auch bei Start im Lernmodus."
+
+  **Zwei Fehler von mir in 1.276.0, und für beide gibt es den Beweis.**
+
+  *Erstens war sie unsichtbar.* Nach einer richtigen Antwort blieb der Kasten
+  zugeklappt, und übrig war eine dünne Zeile in Kapitälchen, die aussah wie eine
+  Überschrift. Dietmar hat sie zweimal nicht gefunden, obwohl sie auf dem Schirm
+  stand — beim zweiten Mal mit Bildschirmfoto, auf dem sie zu sehen ist. Ein
+  Bedienelement, das der Entwickler dem Benutzer zeigen muss, ist keines.
+
+  *Zweitens kam sie zu spät.* Die Erklärung gab es erst nach dem Antworten, aus
+  Sorge, sie wäre sonst die Lösung. Aber eine Lernhilfe, die man erst nach der
+  Antwort bekommt, hilft beim Rechnen nicht — das Formelblatt liegt in der Prüfung
+  ja auch vorher auf dem Tisch.
+
+  **Gebaut ist es jetzt Stück für Stück wie das Formelblatt daneben:** ein Knopf in
+  der Kopfzeile der Frage, violett wie die Kachel „Mit Erklärung", der nur erscheint,
+  wenn es zu genau dieser Frage etwas gibt, dreimal pulst und ein eigenes Fenster
+  aufmacht. Das Fenster lässt sich am Kopf beiseiteschieben, mit Escape, dem Kreuz
+  oder einem Klick daneben schließen und liegt beim nächsten Öffnen wieder mittig —
+  dieselbe Mechanik wie beim Formelblatt, jetzt aus einer Funktion für beide.
+
+  **Der Inhalt hängt daran, ob schon geantwortet ist.** Vorher stehen darin **Im
+  Bild** und **Der Kniff** — was die Zeichnung zeigt und worauf es ankommt. Nach der
+  Antwort kommen **Der Weg** und **Warum die anderen falsch sind** dazu, mit der
+  eigenen falschen Antwort hervorgehoben. Damit ein kurzes Fenster nicht wie ein
+  Fehler aussieht, steht vor der Antwort ein Satz darunter, dass der Rechenweg noch
+  kommt.
+
+  **Das Fenster steht unten, nicht in der Mitte.** Die Zeichnung sitzt oben in der
+  Frage, und „Im Bild. Ein Parallelschwingkreis …" ist ohne den Blick darauf die
+  Hälfte wert. Nachgemessen bei 1920×955: das Fenster beginnt vor der Antwort bei
+  636 Punkten, die Zeichnung endet bei 508 — sie bleibt frei. Bei 1366×768 und
+  1280×800 ebenso.
+
+  **In allen Modi**, nicht nur beim Blättern: Der Knopf wird in `renderQuestion()`
+  entschieden, und die läuft bei jeder Frage — Lernmodus, Blättern, Merkliste,
+  Suche, Gruppenraum.
+
+  **Im Prüfungssimulator bleibt er aus.** Die Formelsammlung ist amtliches
+  Hilfsmittel und liegt in der Prüfung auf dem Tisch; eine Erklärung mit Rechenweg
+  ist keines. Ein offenes Fenster geht beim Start des Durchgangs zu. Der
+  Formelblatt-Knopf bleibt selbstverständlich stehen.
+
+  **Der Puls kommt zweimal je Frage und 900 Millisekunden nach dem des
+  Formelblatts:** einmal, wenn die Frage erscheint, und noch einmal nach einer
+  *falschen* Antwort — dann steht mehr im Fenster als vorher. Wer richtig geantwortet
+  hat, bekommt den zweiten Schlag nicht. Gleichzeitig mit dem Formelblatt sah es in
+  der Kopfzeile nach Zappeln aus; hintereinander liest es sich als zwei Hinweise.
+
+  **Kein Ton.** Fast jede Frage mit Erklärung hat auch eine Stelle im Formelblatt,
+  und zwei Zweiklänge hintereinander bei derselben Frage wären Lärm. Abschaltbar ist
+  das Pulsen über denselben Haken wie beim Formelblatt (Einstellungen → Formelblatt →
+  „Auf das Formelblatt hinweisen"); ein eigener Haken kann dazukommen, wenn er
+  gewünscht ist.
+
+  Der Kasten selbst sieht aus wie vorher — gleiche Maße, gleiche Farben. Er steht
+  jetzt nur woanders. Die Seite wird dadurch nicht mehr länger: in der Fragenansicht
+  waren nach einer falschen Antwort 423 Punkte zu scrollen, jetzt sind es 0.
+
+### Korrigiert
+- Das Datum von 1.276.0 stand auf dem 13.09.2026. Der Tag war der 12.
+
+---
+
+## [1.276.0] - 2026-09-12
+
+### Hinzugefügt
+- **Erklärungen zu den Fragen mit Zeichnung.** Dietmar: „ich kann mir technische
+  Fragen mit Bild erklären lassen?" — und nach der Probe: „Baue mir das mal ein."
+
+  Nach dem Antworten steht unter der Frage ein Kasten mit vier Teilen: **Im Bild**
+  (was in der Zeichnung zu sehen ist und woran man es erkennt), **Der Kniff** (der
+  eine Satz, um den es geht), **Der Weg** (die Rechenschritte) und **Warum die
+  anderen falsch sind** — je falscher Antwort ein Satz. Die gerade gewählte falsche
+  Antwort wird hervorgehoben, damit man nicht sucht, welcher der drei Sätze der
+  eigene ist.
+
+  Den Anfang machen **zwölf Fragen aus der Aufstockung E → A**, die schwersten mit
+  Zeichnung: AD212, AD321, AD803, AD806, AF107, AG115, AG217, AG422, AI306, AI601,
+  AI610, AI611. Jede Lösung wurde nachgerechnet und mit der amtlichen Antwort
+  verglichen — alle zwölf stimmen überein.
+
+  Von 36 falschen Antworten ließen sich **30** auf einen bestimmten Rechenfehler
+  zurückführen, und zwar genau auf die angebotene Zahl. Bei AI610, AD321, AG217 und
+  AF107 trifft jede falsche Antwort einen Fehler. Die sechs übrigen sind Blindwerte
+  ohne Rechenweg — das steht auch so darin, eine erfundene Begründung wäre
+  schlimmer als keine.
+
+  **Die Zuordnung hängt am Antworttext, nicht an a/b/c/d.** Der Trainer mischt die
+  Antworten; eine Erklärung an Position C hätte am nächsten Tag auf die falsche
+  gezeigt. Alle 36 Schlüssel sind gegen den Fragenkatalog geprüft.
+
+  Der Kasten steckt in einem `<details>`: zugeklappt nach einer richtigen Antwort,
+  aufgeklappt nach einer falschen. Wer richtig geraten hat, soll ihn finden können;
+  wer falsch lag, soll ihn nicht suchen müssen.
+
+  `erklaerungen.json` ist freiwillig wie `50ohm_map.json` — fehlt sie, bleibt der
+  Kasten aus und nichts anderes ändert sich.
+
+- **Kachel „Mit Erklärung" beim Blättern.** Dietmar: „sage mir wie ich diese Fragen
+  finde." Sie zählt, zu wie vielen Fragen **des gerade gewählten Prüfungsziels** eine
+  Erklärung vorliegt, und blättert nur durch diese. Sie erscheint nur, wenn es welche
+  gibt — wer auf Klasse N steht, sieht keine Kachel und wundert sich nicht über eine
+  leere Liste.
+
+### Geändert
+- **„Automatisch" sucht die Stufe jetzt selbst — und lief beim Laden vorher gar nicht.**
+  Dietmar, mit Bild: „Automatisch ist zu gross! An der Seite siehst du den Scrollbalken.
+  Das Bild hat exakt die grösse von meinem sichtbaren Fenster." Und davor: „Ich muss
+  jetzt auf 125% hoch damit ich annähernd ein Vollbild habe."
+
+  **Zwei Fehlversuche von mir, bevor es saß.** Erst habe ich „zu groß" als „vergrößert
+  zu stark" gelesen und die Obergrenze auf 100 % gesetzt — das Gegenteil war gemeint.
+  Dann habe ich die 870-Punkt-Untergrenze in der Höhenrechnung entfernt, was richtig
+  war, aber nichts bewirkte. Warum, stand eine Ebene tiefer:
+
+  **`anzeigeAnwenden()` lief beim Laden der Seite nie.** Es hing nur an Größenänderung
+  des Fensters, Vollbild-Wechsel, Beamer-Modus und den Einstellungen. Beim gewöhnlichen
+  Öffnen blieb der grobe Wert aus dem Block vor dem ersten Zeichnen stehen — und der
+  rechnet mit angenommenen 870 Punkten, weil es vor dem Zeichnen nichts zu messen gibt.
+  Die ganze Messtechnik darunter war beim Start wirkungslos. Wer einmal am Fenster zog,
+  sah plötzlich eine andere Größe als beim Öffnen; genau das war das „da muss sich was
+  verändert haben".
+
+  Jetzt läuft es beim Laden — zweimal, einmal wenn die Seite steht und einmal wenn die
+  Schriften geladen sind, weil die Symbolschrift Zeilenhöhen und damit die Kartenhöhe
+  ändert.
+
+  **Und die Stufe wird gesucht, nicht gerechnet.** Eine Formel über die Kartenhöhe ist
+  ein Näherungswert: Auf der Seite steht noch die Fußzeile, es kommen Ränder dazu, und je
+  Rechner ein paar Punkte mehr — bei mir 833, bei ihm über 910. Mit derselben Formel kam
+  bei mir kein Balken heraus und bei ihm einer. Gefragt ist nicht „wie hoch ist die
+  Karte", sondern **„passt die Seite ins Fenster"**, und das sagt `scrollHeight` direkt.
+
+  Die Automatik geht daher vom geschätzten Wert aus stufenweise hinauf, solange die
+  nächste Stufe noch passt, und hinunter, solange sie nicht passt. Geprüft werden
+  **zwei** Bedingungen: kein Scrollbalken **und** unten mindestens 14 Punkte frei
+  („Es soll Minimal unten etwas Abstand haben"). Die Fußzeile allein genügte nicht — bei
+  120 % hatte sie noch 24 Punkte Luft, und trotzdem stand ein Balken da, weil die
+  Verlaufsspalte rechts höher ist.
+
+  Nachgemessen, alles ohne Balken und mit Luft unten:
+
+  | Fenster | vorher | jetzt | Luft unten |
+  |---|---|---|---|
+  | 1920 × 955 (Fenster) | 105 %, mit Balken | **115 %** | 69 px |
+  | 1920 × 1080 (F11) | 115 % | **130 %** | 73 px |
+  | 1366 × 768 | 75 % | **80 %** | 38 px |
+  | 1280 × 800 | 75 % | **80 %** | 68 px |
+  | 1600 × 900 | 90 % | **90 %** | 85 px |
+  | 1920 × 700 | 80 % | **85 %** | 41 px |
+  | 2560 × 1300 | 100 % | **150 %** (Grenze) | 140 px |
+
+  Kleiner ziehen und zurück ergibt wieder denselben Wert — es schaukelt nicht. Feste
+  Werte bleiben unangetastet: 100 % gibt 1,00, 125 % gibt 1,25 samt Balken, wenn man ihn
+  ausdrücklich wählt.
+
+  **Was bleibt:** Die Fragenansicht ist höher als die Hauptansicht (876 statt 790 Punkte).
+  Die Vergrößerung gilt für die ganze Seite und richtet sich nach der Hauptansicht — bei
+  115 % sind in den Fragen also rund 80 Punkte zu scrollen. Das war vorher auch so
+  (bei 105 %: 30 Punkte), fällt jetzt aber stärker auf. Wer das nicht will, wählt einen
+  festen Wert; die Suche ließe sich auch auf die Fragenansicht ausdehnen, dann füllt die
+  Hauptansicht das Fenster nicht mehr.
+
+### Behoben
+- **`erklaerungen.json` wurde vom Server nicht ausgeliefert** (404), der Erklärkasten
+  wäre nie erschienen. Ursache ist die Whitelist aus Fix K1: „eine neue Datei im
+  Projektordner ist damit automatisch NICHT öffentlich." Genau der vorhergesagte Fall
+  — der Schutz hat gearbeitet, der Eintrag fehlte. Die Datei steht jetzt in
+  `PUBLIC_FILES`, in `PAKET_DATEIEN` (damit Gäste aus dem Gruppenraum sie mitbekommen)
+  und in `ABGLEICH_DATEN` (sonst verlangte ein Update für eine Textdatei Bestätigung
+  und Neustart).
+
 ## [1.275.0] - 2026-09-11
 
 ### Hinzugefügt

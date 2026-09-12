@@ -1,0 +1,783 @@
+{
+  "quelle": "Erklärungen zu den Fragen mit Zeichnung, Prüfungsweg E nach A.",
+  "stand": "2026-09-12",
+  "hinweis": "Die Schlüssel unter warum_falsch sind die ANTWORTTEXTE, nicht a/b/c/d. So bleiben die Erklärungen richtig, auch wenn der Trainer die Antworten mischt.",
+  "pruefung": "Jede Lösung wurde nachgerechnet und mit der amtlichen Antwort aus dem Fragenkatalog verglichen. Alle zwölf stimmen überein.",
+  "fragen": {
+    "AI611": {
+      "frage": "Bei der folgenden Schaltung besteht R₁ aus einer Zusammenschaltung von Widerständen, die einen Gesamtwiderstand von 54,1 Ohm hat und etwa 200 W aufnehmen kann. Die Diode ist eine Siliziumdiode mit U_F = 0,7 V. Am Ausgang wird mit einem digitalen Spannungsmessgerät eine Gleichspannung von 14,9 V gemessen. Wie groß ist etwa die HF-Leistung am Eingang der Schaltung?",
+      "richtig": "9,7 W",
+      "bild": "Kunstantenne R1 (54,1 Ohm) am Eingang E. Parallel dazu ein Spannungsteiler aus zwei 330-Ohm-Widerständen; an seinem Mittelpunkt hängt eine Siliziumdiode, dahinter 4,7 nF und 10 kOhm als Last. Das Messgerät an A sieht die gleichgerichtete Spitzenspannung des halben Signals.",
+      "kniff": "54,1 Ohm sind kein Zufall: parallel zu den 660 Ohm des Teilers ergibt das genau 50 Ohm. Mit 50 Ohm wird gerechnet, nicht mit 54,1.",
+      "weg": [
+        "Teilermitte: U = 14,9 V + 0,7 V (Diode) = 15,6 V Spitze",
+        "ganze Kunstantenne: Û = 2 · 15,6 V = 31,2 V Spitze",
+        "U_eff = 31,2 V / √2 = 22,1 V",
+        "P = U_eff² / 50 Ohm = 9,7 W"
+      ],
+      "warum_falsch": {
+        "19,4 W": "Effektivwert vergessen: mit 31,2 V statt 22,1 V gerechnet. 31,2²/50 = 19,5 W.",
+        "37,8 W": "Kein klarer Rechenweg — am nächsten kommt, wer mit der Spitze-Spitze-Spannung rechnet (38,9 W). Eher eine Blindantwort.",
+        "4,9 W": "Der Spannungsteiler übersehen UND der Effektivwert vergessen: (14,9+0,7)²/50 = 4,9 W. Zwei Fehler, die sich zufällig zu einer angebotenen Zahl addieren."
+      }
+    },
+    "AI610": {
+      "frage": "Dem Eingang der folgenden Messschaltung wird eine HF-Leistung von 1 W zugeführt. D ist eine Schottkydiode mit U_F = 0,23 V. Welche Spannung U_A ist am Ausgang A zu erwarten, wenn die Messung mit einem hochohmigen Spannungsmessgerät erfolgt?",
+      "richtig": "4,8 V",
+      "bild": "Zwei 110-Ohm-Widerstände parallel (= 55 Ohm) bilden die Last. Daneben derselbe 330/330-Teiler wie in AI611, Schottkydiode, 4,7 nF. A wird hochohmig gemessen, belastet also nicht.",
+      "kniff": "55 Ohm parallel zu den 660 Ohm des Teilers sind 50,8 Ohm — also praktisch 50 Ohm. Die Schaltung ist dieselbe wie in AI611, nur rückwärts gefragt.",
+      "weg": [
+        "1 W an 50 Ohm: U_eff = √(1 W · 50 Ohm) = 7,07 V",
+        "Û = 7,07 V · √2 = 10,0 V Spitze",
+        "Teilermitte: 5,0 V Spitze",
+        "minus Diode: 5,0 V − 0,23 V = 4,8 V"
+      ],
+      "warum_falsch": {
+        "7,1 V": "Das ist der Effektivwert am Eingang — Teiler und Diode gar nicht angewandt.",
+        "9,8 V": "Den Spannungsteiler übersehen: 10,0 V − 0,23 V = 9,8 V.",
+        "3,3 V": "Den Effektivwert halbiert statt die Spitze: 7,07/2 − 0,23 = 3,3 V. Der Teiler halbiert die Spannung, egal ob Spitze oder Effektivwert — aber gleichgerichtet wird die Spitze."
+      }
+    },
+    "AI601": {
+      "frage": "Die Darstellung zeigt eine aus 150 Ohm / 1 W-Widerständen aufgebaute künstliche Antenne (Dummy Load). Mit dieser Kombination aus Reihen- und Parallelschaltung werden ca. 50 Ohm erreicht. Wie viele Widerstände werden für diesen Aufbau benötigt und welche Dauerleistung verträgt diese künstliche Antenne?",
+      "richtig": "48 Widerstände, 48 W",
+      "bild": "Mehrere gleiche Zweige parallel zwischen Eingang und Masse. Jeder Zweig besteht aus vier 150-Ohm-Widerständen in Reihe. Die gestrichelte Linie heißt: es geht so weiter — wie viele Zweige, muss man ausrechnen.",
+      "kniff": "Erst den Zweig, dann die Anzahl. Jeder Widerstand trägt 1 W, also ist die Gesamtleistung schlicht die Stückzahl in Watt.",
+      "weg": [
+        "ein Zweig: 4 · 150 Ohm = 600 Ohm",
+        "für 50 Ohm: 600 / 50 = 12 Zweige parallel",
+        "12 Zweige · 4 Widerstände = 48 Widerstände",
+        "48 · 1 W = 48 W"
+      ],
+      "warum_falsch": {
+        "16 Widerstände, 16 W": "Vier Zweige mit vier Widerständen gerechnet — das gibt 600/4 = 150 Ohm, nicht 50.",
+        "12 Widerstände, 48 W": "12 ist die Zahl der Zweige, nicht der Widerstände. Die Leistung stimmt, die Stückzahl nicht.",
+        "48 Widerstände, 12 W": "Stückzahl richtig, aber die Leistung mit der Zahl der Zweige verwechselt. Jeder einzelne Widerstand trägt 1 W bei."
+      }
+    },
+    "AD321": {
+      "frage": "Wie groß ist der Wirkungsgrad (η = (P_L)/(P_IN)) der dargestellten Spannungsstabilisierung, wenn durch den Lastwiderstand R_L = 470 Ohm ein Strom von I_L = 10 mA und durch die Z-Diode ein Strom I_Z = 15 mA fließt.",
+      "richtig": "0,14",
+      "bild": "Z-Dioden-Stabilisierung: 13,8 V über den Vorwiderstand R_V auf einen Knoten, von dort die Z-Diode nach Masse (I_Z) und parallel der Lastwiderstand R_L (I_L).",
+      "kniff": "Wirkungsgrad heißt Leistung durch Leistung — nicht Spannung durch Spannung. Und die Quelle liefert beide Ströme: den der Last UND den der Z-Diode.",
+      "weg": [
+        "U_Z = I_L · R_L = 10 mA · 470 Ohm = 4,7 V",
+        "P_L = 4,7 V · 10 mA = 47 mW",
+        "P_IN = 13,8 V · (10 mA + 15 mA) = 345 mW",
+        "η = 47 / 345 = 0,14"
+      ],
+      "warum_falsch": {
+        "0,17": "Mit 20 mA statt 25 mA gerechnet — der Strom der Z-Diode nur halb mitgezählt.",
+        "0,34": "Das Spannungsverhältnis 4,7 V / 13,8 V. Beim Wirkungsgrad zählen Leistungen, und die Z-Diode verbraucht Strom, ohne etwas zu leisten.",
+        "0,21": "I_Z und I_L verwechselt: mit 4,7 V · 15 mA im Zähler kommt 0,20 heraus."
+      }
+    },
+    "AD803": {
+      "frage": "Dargestellt ist ein 20 dB Dämpfungsglied. Wie groß ist das Leistungsverhältnis zwischen der Eingangsleistung P_IN und der Leistung am Lastwiderstand P_RL?",
+      "richtig": "100",
+      "bild": "T-Glied zwischen Quelle (R_i = 50 Ohm) und Last (R_L = 50 Ohm): R1 in Reihe, R2 nach Masse, R3 in Reihe. Zwei Pfeile zeigen, wo P_IN und P_OUT gemeint sind.",
+      "kniff": "20 dB sind Faktor 100 in der Leistung und Faktor 10 in der Spannung. Diese Verwechslung ist der häufigste Fehler im ganzen Kapitel.",
+      "weg": [
+        "P_IN / P_RL = 10^(20 dB / 10) = 100"
+      ],
+      "warum_falsch": {
+        "10": "Das ist das Spannungsverhältnis: 10^(20/20) = 10. Für Leistungen gilt der Zehnerexponent geteilt durch 10, nicht durch 20.",
+        "20": "Die Dezibelzahl selbst als Verhältnis genommen. dB sind ein Logarithmus, kein Faktor.",
+        "50": "Kein Rechenweg führt dahin — eine Blindantwort."
+      }
+    },
+    "AD806": {
+      "frage": "In einem 50 Ohm System wird in ein symmetrisches 20 dB Dämpfungsglied die Leistung von 100 W eingespeist. Der Widerstand R_L = 50 Ohm ist an das Dämpfungsglied angepasst. Welche Leistung wird insgesamt im Dämpfungsglied in Wärme umgesetzt?",
+      "richtig": "99 W",
+      "bild": "Pi-Glied: R1 nach Masse, R2 in Reihe, R3 nach Masse, dahinter R_L = 50 Ohm. Quelle mit 50 Ohm Innenwiderstand. Anders aufgebaut als das T-Glied in AD803 — für die Rechnung gleichwertig.",
+      "kniff": "Gefragt ist, was im Glied in Wärme umgesetzt wird — nicht, was hinten ankommt. Das ist die Differenz.",
+      "weg": [
+        "20 dB = Faktor 100 in der Leistung",
+        "P_RL = 100 W / 100 = 1 W",
+        "im Dämpfungsglied: 100 W − 1 W = 99 W"
+      ],
+      "warum_falsch": {
+        "1 W": "Das ist die Leistung am Lastwiderstand, also gerade die, die NICHT in Wärme umgesetzt wird.",
+        "2 W": "Kein Rechenweg führt dahin.",
+        "50 W": "Die Hälfte geschätzt. Bei 20 dB bleibt ein Hundertstel übrig, nicht die Hälfte."
+      }
+    },
+    "AG422": {
+      "frage": "Dargestellt ist ein HF-Übertrager (Balun). An den Anschlüssen a und b wird ein Faltdipol mit 200 Ohm Impedanz angeschlossen. Welche Impedanz misst man zwischen den Anschlüssen a und m?",
+      "richtig": "50 Ohm",
+      "bild": "Eine Wicklung mit Mittelanzapfung: 8 Windungen von a nach m, weitere 8 von m nach b. Die Anzapfung m liegt an Masse. Der Faltdipol mit 200 Ohm hängt an a und b, also an der ganzen Wicklung (16 Windungen).",
+      "kniff": "Impedanzen gehen mit dem QUADRAT des Windungsverhältnisses. Halbe Windungszahl heißt ein Viertel der Impedanz, nicht die Hälfte.",
+      "weg": [
+        "a–b = 16 Windungen sehen 200 Ohm",
+        "a–m = 8 Windungen, Verhältnis 8/16 = 1/2",
+        "Z = (1/2)² · 200 Ohm = 50 Ohm"
+      ],
+      "warum_falsch": {
+        "100 Ohm": "Das Windungsverhältnis direkt angewandt statt sein Quadrat. Genau der Fehler, den die Frage prüft.",
+        "200 Ohm": "Die Anzapfung übersehen — das wäre der Wert zwischen a und b.",
+        "0 Ohm": "Die Anzapfung liegt an Masse, aber sie schliesst nichts kurz: zwischen a und m liegen 8 Windungen."
+      }
+    },
+    "AG217": {
+      "frage": "Bei einer Yagi-Uda-Antenne mit dem folgenden Strahlungsdiagramm beträgt die ERP in Richtung a 0,6 W und in Richtung b 15 W. Welches Vor-Rück-Verhältnis hat die Antenne?",
+      "richtig": "14 dB",
+      "bild": "Strahlungsdiagramm einer Yagi-Uda: eine lange Hauptkeule in Richtung b, eine kleine Nebenkeule in Richtung a auf der Gegenseite.",
+      "kniff": "Vor-Rück-Verhältnis ist ein Leistungsverhältnis. Also 10 · log, nicht 20 · log.",
+      "weg": [
+        "Verhältnis 15 W / 0,6 W = 25",
+        "10 · log10(25) = 14 dB"
+      ],
+      "warum_falsch": {
+        "25 dB": "Das ist das Verhältnis selbst (25-fach), noch nicht in Dezibel umgerechnet.",
+        "27,9 dB": "Mit 20 · log gerechnet. Die 20 gelten für Spannungen und Feldstärken, hier sind es Leistungen.",
+        "2,8 dB": "Der Faktor 10 vor dem Logarithmus ist unter den Tisch gefallen: 2 · log10(25) = 2,8."
+      }
+    },
+    "AD212": {
+      "frage": "Wie groß ist die Resonanzfrequenz dieser Schaltung, wenn die Kapazitäten C₁ = 0,1 nF, C₂ = 1,5 nF, C₃ = 220 pF und die Induktivität der Spule 1,2 mH betragen?",
+      "richtig": "107,7 kHz",
+      "bild": "Ein Parallelschwingkreis: die Spule und ALLE DREI Kondensatoren liegen zwischen denselben zwei Knoten. C1, C2 und C3 sind also parallel.",
+      "kniff": "Die Zeichnung entscheidet, ob addiert wird oder nicht — parallel heißt Kapazitäten addieren. Und die Einheiten muessen vorher gleich sein: 220 pF sind 0,22 nF.",
+      "weg": [
+        "C = 0,1 nF + 1,5 nF + 0,22 nF = 1,82 nF",
+        "f = 1 / (2π · √(1,2 mH · 1,82 nF))",
+        "f = 107,7 kHz"
+      ],
+      "warum_falsch": {
+        "10,77 kHz": "Faktor 10 daneben — ein Komma verrutscht. Typisch, wenn 220 pF und 1,5 nF ohne Umrechnung addiert werden.",
+        "1,077 MHz": "Faktor 10 nach oben. Die Physik war richtig, die Zehnerpotenz nicht.",
+        "1,077 kHz": "Faktor 100 nach unten. Dieselbe Rechnung, dreimal falsch gestellte Einheiten — deshalb sind drei von vier Antworten reine Zehnerpotenzen."
+      }
+    },
+    "AI306": {
+      "frage": "Das folgende Bild zeigt das Zweiton-SSB-Ausgangssignal eines KW-Senders, das mit einem Oszilloskop ausreichender Bandbreite über einen 10:1-Tastkopf direkt an der angeschlossenen künstlichen 50 Ohm-Antenne gemessen wurde. Welche Ausgangsleistung (PEP) liefert der Sender?",
+      "richtig": "36 W",
+      "bild": "Oszillogramm eines Zweiton-SSB-Signals: die typische Rautenkette. Links steht 3 V/Div. Die Hüllkurve reicht ZWEI Kästchen über die Mittellinie, also 6 V am Schirm. Der Tastkopf teilt 10:1, die echte Spannung ist zehnmal so hoch.",
+      "kniff": "Drei Fallen in einer Frage: den Tastkopf mitrechnen, die Spitze nicht mit Spitze-Spitze verwechseln, und für die Leistung den Effektivwert nehmen.",
+      "weg": [
+        "2 Kästchen · 3 V/Div = 6 V am Schirm",
+        "Tastkopf 10:1: Û = 60 V Spitze",
+        "U_eff = 60 V / √2 = 42,4 V",
+        "PEP = 42,4² / 50 Ohm = 36 W"
+      ],
+      "warum_falsch": {
+        "72 W": "Effektivwert vergessen: 60²/50 = 72 W. Genau doppelt so viel — der √2-Fehler schlägt in der Leistung als Faktor 2 durch.",
+        "144 W": "Spitze-Spitze statt Spitze gelesen (120 V statt 60 V) und dann richtig weitergerechnet: 144 W. Viermal zu viel.",
+        "400 W": "Kein klarer Rechenweg — eine Blindantwort in der Größenordnung einer Endstufe."
+      }
+    },
+    "AG115": {
+      "frage": "Das folgende Bild stellt einen Dreiband-Dipol für die Frequenzbänder 20, 15 und 10 m dar. Die mit b gekennzeichneten Schwingkreise sind abgestimmt auf:",
+      "richtig": "29,0 MHz",
+      "bild": "Trap-Dipol, symmetrisch um den Speisepunkt X in der Mitte. Von X aus nach außen kommt ZUERST der Kreis b, dann der Kreis a, dann läuft der Draht weiter zum Ende.",
+      "kniff": "Der Sperrkreis näher am Speisepunkt trennt das kürzere Stück ab — und kurz heißt hohe Frequenz. b sitzt innen, gehört also zum höchsten Band: 10 m.",
+      "weg": [
+        "b liegt innen → kürzeste wirksame Länge → höchstes Band",
+        "die drei Bänder sind 20 m, 15 m, 10 m",
+        "10 m ≈ 29,0 MHz"
+      ],
+      "warum_falsch": {
+        "21,2 MHz": "Das ist das 15-m-Band und gehört zum ÄUSSEREN Kreis a. Die häufigste Verwechslung: innen und außen vertauscht.",
+        "14,2 MHz": "20 m — dafür braucht es keinen Sperrkreis, da arbeitet der Dipol in voller Länge.",
+        "10,1 MHz": "30 m. Das Band kommt in der Frage gar nicht vor."
+      }
+    },
+    "AF107": {
+      "frage": "Ein Einfachsuperhet-Empfänger ist auf 14,24 MHz eingestellt. Der Lokaloszillator schwingt mit 24,94 MHz und liegt mit dieser Frequenz über der ZF. Wo können Spiegelfrequenzstörungen auftreten?",
+      "richtig": "35,64 MHz",
+      "bild": "Blockschaltbild eines Einfachsupers: Antenne, HF-Vorstufe, Mischer mit VFO, ZF-Verstärker, Demodulator mit BFO, NF-Verstärker, Lautsprecher. Die eine Mischstufe ist der Grund, warum es überhaupt eine Spiegelfrequenz gibt.",
+      "kniff": "Die Spiegelfrequenz liegt so weit ÜBER dem Oszillator, wie die Empfangsfrequenz darunter liegt. Beide erzeugen im Mischer dieselbe ZF.",
+      "weg": [
+        "ZF = 24,94 MHz − 14,24 MHz = 10,70 MHz",
+        "Spiegel = Oszillator + ZF = 24,94 + 10,70",
+        "= 35,64 MHz"
+      ],
+      "warum_falsch": {
+        "10,7 MHz": "Das ist die Zwischenfrequenz selbst, nicht die Störstelle am Antenneneingang.",
+        "24,94 MHz": "Das ist der Oszillator selbst.",
+        "3,54 MHz": "14,24 − 10,70. Die ZF von der Empfangsfrequenz abgezogen statt zum Oszillator addiert — Vorzeichenfehler in der richtigen Formel."
+      }
+    },
+    "AB108": {
+      "frage": "Das folgende Bild zeigt den prinzipiellen Aufbau einer Halbleiterdiode. Wie entsteht die Sperrschicht?",
+      "richtig": "An der Grenzschicht wandern Elektronen aus dem N-Teil in den P-Teil. Dadurch wird auf der N-Seite der Elektronenüberschuss teilweise abgebaut, auf der P-Seite der Elektronenmangel teilweise neutralisiert. Es bildet sich auf beiden Seiten der Grenzfläche eine isolierende Schicht.",
+      "bild": "Der Aufbau einer Halbleiterdiode im Schnitt: links das P-Gebiet mit lauter ⊕ (Löcher, also Elektronenmangel), rechts das N-Gebiet mit lauter ⊖ (freie Elektronen). Dazwischen der grau gezeichnete Streifen — das ist die Sperrschicht. Darunter steht das Diodensymbol, damit man sieht, welche Seite Anode und welche Katode ist.",
+      "kniff": "Es wandern ELEKTRONEN, keine Atome. Atome sitzen im Kristallgitter fest und wandern nicht. Und sie wandern dorthin, wo sie fehlen: vom Überschuss im N-Teil in den Mangel im P-Teil. Was bleibt, ist eine Schicht ohne freie Ladungsträger — also isolierend.",
+      "warum_falsch": {
+        "An der Grenzschicht wandern Atome aus dem P-Teil in den N-Teil. Dadurch wird auf der P-Seite der Atommangel abgebaut, auf der N-Seite der Atommangel vergrößert. Es bildet sich auf beiden Seiten der Grenzfläche eine leitende Schicht.": "Zwei Fehler in einem Satz: Atome wandern nicht (sie sitzen im Gitter), und die entstehende Schicht ist isolierend, nicht leitend. Gerade weil sie isoliert, sperrt die Diode.",
+        "An der Grenzschicht wandern Elektronen aus dem P-Teil in den N-Teil. Dadurch wird auf der P-Seite der Elektronenüberschuss teilweise abgebaut, auf der N-Seite der Elektronenmangel teilweise neutralisiert. Es bildet sich auf beiden Seiten der Grenzfläche eine isolierende Schicht.": "Die richtigen Teilchen, aber die falsche Richtung. Im P-Teil gibt es keinen Elektronenüberschuss — dort ist der Mangel. Der Überschuss sitzt im N-Teil, und von dort wandern die Elektronen los.",
+        "An der Grenzschicht wandern Atome aus dem N-Teil in den P-Teil. Dadurch wird auf der N-Seite der Atommangel abgebaut, auf der P-Seite der Atommangel vergrößert. Es bildet sich auf beiden Seiten der Grenzfläche eine leitende Schicht.": "Richtung richtig geraten, Teilchen falsch: Es sind Elektronen, nicht Atome. Und die Schicht wird isolierend, nicht leitend."
+      }
+    },
+    "AB109": {
+      "frage": "Wie verhält sich die Verarmungszone in der hier dargestellten Halbleiterdiode?",
+      "richtig": "Sie erweitert sich.",
+      "bild": "Dieselbe Diode im Schnitt wie in AB108 — P-Gebiet, N-Gebiet, dazwischen die graue Verarmungszone. Neu sind die Spannungen unter dem Diodensymbol: links 0 V, rechts +5 V. Die Anode (das Dreieck) liegt links, die Katode (der Strich) rechts.",
+      "kniff": "Plus an der Katode heißt Sperrrichtung. Das Feld zieht die freien Ladungsträger von der Grenzschicht weg, und die Zone ohne Ladungsträger wird breiter.",
+      "warum_falsch": {
+        "Sie verändert sich nicht.": "An der Diode liegt Spannung, und die wirkt immer auf die Zone. Unverändert bliebe sie nur ohne angelegte Spannung.",
+        "Sie verschwindet.": "Das wäre Durchlassrichtung mit mehr als etwa 0,7 V — also Plus an der Anode. Hier liegt das Plus auf der anderen Seite.",
+        "Sie verengt sich.": "Das ist die Antwort für Durchlassrichtung. Hier liegen +5 V an der Katode, nicht an der Anode: die Polung ist umgekehrt und damit auch die Wirkung."
+      }
+    },
+    "AB209": {
+      "frage": "Folgende Schaltung eines Akkus besteht aus Zellen von je 2 V. Jede Zelle kann 10 Ah Ladung liefern. Welche Daten hat der Akku?",
+      "richtig": "12 V/10 Ah",
+      "bild": "Sechs Zellen, hintereinandergeschaltet: Die Verbindungen laufen abwechselnd oben und unten von einer Zelle zur nächsten, eine durchgehende Kette von + links bis − rechts. Nirgends hängen zwei Zellen mit beiden Anschlüssen an denselben zwei Punkten — parallel liegt also keine.",
+      "kniff": "In Reihe addieren sich die SPANNUNGEN, die Kapazität in Ah bleibt die einer einzelnen Zelle. Parallel wäre es genau umgekehrt.",
+      "weg": [
+        "6 Zellen in Reihe: U = 6 · 2 V = 12 V",
+        "Kapazität einer Kette = Kapazität einer Zelle = 10 Ah"
+      ],
+      "warum_falsch": {
+        "12 V/60 Ah": "Die Spannung richtig addiert — und die Amperestunden gleich mit. Die addieren sich aber nur bei Parallelschaltung. In Reihe fließt durch alle sechs Zellen derselbe Strom, also bleibt es bei 10 Ah.",
+        "2 V/60 Ah": "Alles parallel gedacht. Dann käme das heraus: 2 V und 6 · 10 Ah. Das Bild zeigt aber eine Kette, keine sechs Zellen an denselben zwei Knoten.",
+        "2 V/10 Ah": "Das sind die Daten EINER Zelle. Die anderen fünf sind mitgezeichnet und zählen mit."
+      }
+    },
+    "AB302": {
+      "frage": "Welche Antwort enthält die richtigen Phasenwinkel der dargestellten sinusförmigen Wechselspannung an der mit X₃ bezeichneten Stelle?",
+      "richtig": "(3π)/2; 270 °",
+      "bild": "Eine ganze Sinusschwingung von 0 bis X₅. Bei 0 beginnt sie im Nulldurchgang und steigt; X₁ liegt auf dem Höchstwert +A, X₂ am absteigenden Nulldurchgang, X₃ im Tiefstwert −A, X₄ am aufsteigenden Nulldurchgang, X₅ wieder bei +A.",
+      "kniff": "Die fünf Marken teilen die Schwingung in Viertel. Eine ganze Schwingung sind 360° oder 2π — der Tiefstwert liegt bei drei Vierteln davon. Und beide Angaben einer Antwort müssen zueinander passen: 270° sind 3π/2.",
+      "weg": [
+        "ganze Schwingung: 360° = 2π",
+        "X₁ = 90° = π/2, X₂ = 180° = π",
+        "X₃ = 270° = 3π/2"
+      ],
+      "warum_falsch": {
+        "(3π)/4; 135 °": "3π/4 sind wirklich 135°, die beiden Angaben passen also zusammen — nur liegt 135° zwischen Höchstwert und Nulldurchgang, irgendwo zwischen X₁ und X₂. Der Tiefstwert ist es nicht.",
+        "π/3; 270 °": "Die Gradzahl stimmt, der Bogenwert nicht: π/3 sind 60°. Wer 270° gefunden hat, muss 3π/2 daneben schreiben.",
+        "3π; 180 °": "Beides daneben und untereinander unpassend: 3π wären 540°, also eineinhalb Schwingungen, und 180° ist X₂ — der Nulldurchgang, nicht der Tiefstwert."
+      }
+    },
+    "AB303": {
+      "frage": "Der Betrag der Phasendifferenz zwischen den beiden in der Abbildung dargestellten Sinussignalen ist ...",
+      "richtig": "45 °.",
+      "bild": "Zwei Sinussignale übereinander. b (grau) beginnt bei 0 und steigt. a (schwarz) steht bei t = 0 schon bei etwa 0,7 seines Höchstwerts und erreicht die Spitze früher — a läuft b voraus.",
+      "kniff": "Gemessen wird der Abstand an derselben Stelle beider Kurven, etwa von Höchstwert zu Höchstwert, und dann ins Verhältnis zur ganzen Periode gesetzt. Hier ist es ein Achtel: 360° / 8 = 45°. Der Startwert von a ist die Gegenprobe — sin 45° = 0,707, und genau dort beginnt a.",
+      "warum_falsch": {
+        "90 °.": "Ein Viertel Periode. Dann müsste a bei t = 0 schon auf seinem HÖCHSTWERT stehen, während b bei Null anfängt. a beginnt aber sichtbar darunter.",
+        "180 °.": "Gegenphase. Dann wäre die eine Kurve das Spiegelbild der anderen — wo a oben ist, wäre b unten. Hier laufen beide in dieselbe Richtung.",
+        "0 °.": "Gleichphasig, die Kurven lägen übereinander. Sie sind aber sichtbar versetzt."
+      }
+    },
+    "AB403": {
+      "frage": "Eine periodische Schwingung, die wie das folgende Signal aussieht, besteht ...",
+      "richtig": "aus der Grundschwingung mit ganzzahligen Vielfachen dieser Frequenz (Oberschwingungen).",
+      "bild": "Ein Rechtecksignal auf dem Schirm — aber die flachen Teile oben und unten sind nicht glatt, sondern gewellt. Auf jedem Dach sitzen vier kleine Schwingungen.",
+      "kniff": "Jede periodische Schwingung, die nicht sinusförmig ist, besteht aus einer Grundschwingung plus Oberschwingungen mit GANZZAHLIGEN Vielfachen der Grundfrequenz. Die Wellen auf den flachen Teilen sind genau diese Oberschwingungen — vier Wellen auf einem halben Dach heißt: eine Oberschwingung mit vielfacher Frequenz.",
+      "warum_falsch": {
+        "aus der Grundschwingung und Teilen dieser Frequenz (Unterschwingungen).": "Teile der Grundfrequenz hätten eine LÄNGERE Periode als das Signal selbst. Dann wäre die Wiederholung nicht die gezeichnete, sondern eine längere — das Bild zeigt aber saubere, gleich lange Perioden.",
+        "aus der Grundschwingung mit zufälligen Frequenzschwankungen.": "Zufall ergibt kein periodisches Bild. Hier wiederholt sich jede Periode sichtbar gleich, samt der Wellen auf den Dächern.",
+        "aus der Grundschwingung ohne weitere Frequenzen.": "Dann wäre es eine reine Sinuskurve, also glatt und rund. Steile Flanken und flache Dächer kann eine einzelne Sinusschwingung nicht bilden — dafür braucht es die Oberschwingungen."
+      }
+    },
+    "AB503": {
+      "frage": "Wie viel Energie wird vom Widerstand innerhalb einer Stunde in Wärme umgewandelt?",
+      "richtig": "1 Wh bzw. 3600 J",
+      "bild": "Ein einfacher Stromkreis: eine Gleichspannungsquelle mit 10 V (Batteriesymbol), daran ein Widerstand mit 100 Ohm. Sonst nichts.",
+      "kniff": "Erst die Leistung, dann die Zeit. Eine Stunde macht aus Watt unmittelbar Wattstunden — und 1 Wh sind 3600 Ws, also 3600 J.",
+      "weg": [
+        "P = U² / R = (10 V)² / 100 Ohm = 1 W",
+        "W = P · t = 1 W · 1 h = 1 Wh",
+        "1 Wh = 3600 Ws = 3600 J"
+      ],
+      "warum_falsch": {
+        "2 Wh bzw. 7200 J": "Die beiden Angaben passen zueinander (2 Wh sind wirklich 7200 J), nur ist die Leistung doppelt so groß wie berechnet. Ein Rechenweg, der auf 2 W führt, ist hier nicht zu erkennen — eher eine Blindantwort.",
+        "0,1 Wh bzw. 360 J": "Das ist der STROM, nicht die Leistung: I = 10 V / 100 Ohm = 0,1 A. Die Zahl stimmt, die Größe nicht.",
+        "0,5 Wh bzw. 1800 J": "So rechnet man mit einem SPITZENWERT: P = Û² / (2R) = 0,5 W. Hier liegt aber eine Gleichspannungsquelle an — bei ihr gibt es keinen Spitzenwert, der halbiert werden müsste."
+      }
+    },
+    "AC211": {
+      "frage": "Das folgende Bild zeigt einen Kern, um den ein Kabel für den Bau einer Drossel gewickelt ist. Der Kern sollte üblicherweise aus ...",
+      "richtig": "Ferrit bestehen.",
+      "bild": "Ein Ringkern, um den ein dickes Kabel in mehreren Windungen gelegt ist — eine Mantelwellendrossel, wie man sie in die Speiseleitung einschleift. Der Kern ist grau gezeichnet, das Kabel schwarz.",
+      "kniff": "Eine Drossel für HF braucht einen Kern mit hoher Permeabilität, der bei hohen Frequenzen nicht heiß wird. Genau das ist Ferrit — ein Presskörper aus Eisenoxid, elektrisch fast ein Isolator, deshalb fast ohne Wirbelströme.",
+      "warum_falsch": {
+        "Kunststoff bestehen.": "Kunststoff hat µr ≈ 1, wirkt also wie Luft. Der Kern brächte dann gar nichts — man legt das Kabel ja gerade deshalb um einen Kern, weil er das Magnetfeld führen soll.",
+        "diamagnetischem Material bestehen.": "Diamagnetische Stoffe haben µr KLEINER als 1, sie schwächen das Feld sogar. Das ist das Gegenteil von dem, was eine Drossel braucht.",
+        "Stahl bestehen.": "Stahl führt das Feld gut, aber bei Kurzwelle entstehen Wirbelströme und Hystereseverluste: Der Kern wird heiß und die Drossel wirkungslos. Eisenblech gehört zu 50 Hz, nicht zu 3,5 bis 30 MHz."
+      }
+    },
+    "AC303": {
+      "frage": "In dieser Schaltung beträgt R=16 kOhm. Die Impedanz zwischen den Anschlüssen a und b beträgt im Idealfall ...",
+      "richtig": "1 kOhm.",
+      "bild": "Ein Übertrager mit dem Übersetzungsverhältnis ü = 1:4. Links die Anschlüsse a und b an der Wicklung mit den WENIGEN Windungen, rechts die Wicklung mit den vielen, und daran der Widerstand R.",
+      "kniff": "Widerstände werden mit dem QUADRAT des Übersetzungsverhältnisses übersetzt, nicht mit dem Verhältnis selbst. 1:4 heißt also Faktor 16. Und die Richtung: R hängt auf der Seite mit den mehr Windungen, nach a und b hin wird er deshalb kleiner.",
+      "weg": [
+        "ü = 1:4, also ü² = 16",
+        "Z(a,b) = R / ü² = 16 kOhm / 16 = 1 kOhm"
+      ],
+      "warum_falsch": {
+        "16 kOhm.": "Das ist R selbst — der Übertrager dazwischen ist übersehen.",
+        "64 kOhm.": "Mit 4 multipliziert statt durch 16 geteilt: das Quadrat vergessen UND die Richtung verkehrt.",
+        "4 kOhm.": "Durch 4 geteilt statt durch 16. Die Richtung ist richtig, nur fehlt das Quadrat."
+      }
+    },
+    "AC304": {
+      "frage": "In dieser Schaltung beträgt R=6,4 kOhm. Die Impedanz zwischen den Anschlüssen a und b beträgt im Idealfall ...",
+      "richtig": "0,4 kOhm.",
+      "bild": "Dieselbe Schaltung wie in AC303: Übertrager mit ü = 1:4, die Anschlüsse a und b an der Seite mit den wenigen Windungen, R an der Seite mit den vielen. Nur der Wert von R ist ein anderer.",
+      "kniff": "Wie bei AC303: Faktor ist ü² = 16, und weil R auf der Seite mit den mehr Windungen liegt, wird er nach a und b hin kleiner — geteilt, nicht multipliziert.",
+      "weg": [
+        "ü = 1:4, also ü² = 16",
+        "Z(a,b) = R / ü² = 6,4 kOhm / 16 = 0,4 kOhm"
+      ],
+      "warum_falsch": {
+        "6,4 kOhm.": "Das ist R selbst — der Übertrager ist übersehen.",
+        "1,6 kOhm.": "Durch 4 geteilt statt durch 16: das Quadrat fehlt.",
+        "26 kOhm.": "Mit 4 multipliziert (6,4 · 4 = 25,6, gerundet 26): falsche Richtung, und das Quadrat fehlt auch hier."
+      }
+    },
+    "AC506": {
+      "frage": "Welches Bauteil wird durch das Schaltzeichen symbolisiert?",
+      "richtig": "Feldeffekttransistor",
+      "bild": "Ein Kreis mit einem senkrechten Strich in der Mitte — das ist der KANAL. Oben und unten gehen im rechten Winkel zwei Anschlüsse ab (Drain und Source), von links kommt ein dritter auf den Kanal zu, und an seinem Ende sitzt ein Pfeil: das Gate.",
+      "kniff": "Der durchgehende senkrechte Strich ist das Erkennungszeichen des Feldeffekttransistors — er steht für den Kanal, durch den der Strom fließt. Der Pfeil am dritten Anschluss heißt: Sperrschicht-FET.",
+      "warum_falsch": {
+        "Lautsprecher": "Ein Lautsprecher wird als Rechteck mit aufgesetztem Trichter gezeichnet und hat zwei Anschlüsse. Hier sind es drei, und es gibt einen Kreis um das Zeichen.",
+        "Bipolartransistor": "Die Verwechslung liegt nahe, denn auch er steht im Kreis. Bei ihm laufen Kollektor und Emitter aber SCHRÄG auf den Basisstrich zu, und der Pfeil sitzt am Emitter. Hier treffen beide Anschlüsse im rechten Winkel auf den Kanal, und der Pfeil sitzt am Gate.",
+        "Diode": "Eine Diode hat zwei Anschlüsse. Hier sind es drei — und es gibt nichts, was wie ein Dreieck mit Strich aussieht."
+      }
+    },
+    "AC507": {
+      "frage": "Welche Bezeichnungen für die Bauelemente sind richtig?",
+      "richtig": "1: Selbstleitender N-Kanal-Sperrschicht-FET 2: Selbstleitender P-Kanal-Sperrschicht-FET",
+      "bild": "Zwei FET-Symbole nebeneinander, mit 1 und 2 bezeichnet. Beide haben einen DURCHGEHENDEN Kanalstrich. Der Unterschied steckt allein im Pfeil am Gate: bei 1 zeigt er zum Kanal HIN, bei 2 vom Kanal WEG.",
+      "kniff": "Zwei Merkmale, zwei Aussagen. Durchgehender Kanalstrich heißt Sperrschicht-FET und selbstLEITEND — ein Kanal ist von sich aus vorhanden. Die Pfeilrichtung sagt den Kanaltyp: zum Kanal hin = N-Kanal, vom Kanal weg = P-Kanal. Selbstsperrende Sperrschicht-FETs gibt es überhaupt nicht.",
+      "warum_falsch": {
+        "1: Selbstleitender P-Kanal-Sperrschicht-FET 2: Selbstleitender N-Kanal-Sperrschicht-FET": "Selbstleitend ist richtig gelesen, die Pfeilrichtung aber verkehrt. Bei 1 zeigt der Pfeil zum Kanal hin, und das ist der N-Kanal.",
+        "1: Selbstsperrender P-Kanal-Sperrschicht-FET 2: Selbstsperrender N-Kanal-Sperrschicht-FET": "Doppelt daneben: Selbstsperrende Sperrschicht-FETs gibt es nicht — und die Kanäle sind zusätzlich vertauscht.",
+        "1: Selbstsperrender N-Kanal-Sperrschicht-FET 2: Selbstsperrender P-Kanal-Sperrschicht-FET": "Die Kanäle stimmen, aber „selbstsperrend\" passt nicht zum Sperrschicht-FET. Selbstsperrend kann nur ein Isolierschicht-FET (MOSFET) sein, und dessen Kanalstrich ist UNTERBROCHEN gezeichnet."
+      }
+    },
+    "AC508": {
+      "frage": "Der folgende Transistor ist ein ...",
+      "richtig": "Selbstsperrender N-Kanal-Isolierschicht-FET (MOSFET).",
+      "bild": "Ein FET im Kreis. Links der Gate-Strich, der den Kanal NICHT berührt — dazwischen liegt die Isolierschicht. Der Kanal ist nicht durchgezogen, sondern in drei kurze Stücke unterbrochen. Aus der Mitte kommt der Substratanschluss mit einem Pfeil, der zum Kanal HIN zeigt; unten verbindet ein dicker Punkt Source und Substrat.",
+      "kniff": "Drei Merkmale, drei Aussagen. Gate berührt den Kanal nicht = Isolierschicht-FET (MOSFET). Kanalstrich UNTERBROCHEN = selbstsperrend, der Kanal muss erst gebildet werden. Substratpfeil zum Kanal hin = N-Kanal.",
+      "warum_falsch": {
+        "Selbstleitender N-Kanal-Isolierschicht-FET (MOSFET).": "Der Kanaltyp ist richtig, „selbstleitend\" nicht: Dann wäre der Kanalstrich DURCHGEHEND gezeichnet. Hier besteht er aus drei getrennten Stücken.",
+        "Selbstleitender P-Kanal-Isolierschicht-FET (MOSFET).": "Beide Merkmale falsch gelesen: Der unterbrochene Strich heißt selbstsperrend, und der Pfeil zeigt zum Kanal hin, also N-Kanal.",
+        "Selbstsperrender P-Kanal-Isolierschicht-FET (MOSFET).": "Selbstsperrend ist richtig erkannt, die Pfeilrichtung nicht. Zum Kanal HIN heißt N-Kanal; beim P-Kanal zeigt er vom Kanal weg."
+      }
+    },
+    "AC513": {
+      "frage": "Wie bezeichnet man die Anschlüsse des abgebildeten Transistors?",
+      "richtig": "1: Drain, 2: Source, 3: Gate",
+      "bild": "Ein Sperrschicht-FET im Kreis. Der durchgehende senkrechte Strich ist der Kanal; oben geht Anschluss 1 ab, unten Anschluss 2, und von links kommt Anschluss 3 mit einem Pfeil auf den Kanal zu.",
+      "kniff": "Der durchgehende Kanalstrich sagt: Feldeffekttransistor. Damit heißen die Anschlüsse Drain, Source und Gate. Der Anschluss mit dem Pfeil ist immer das Gate; oben liegt Drain, unten Source.",
+      "warum_falsch": {
+        "1: Anode, 2: Kollektor, 3: Gate": "Drei Bauteile in einer Antwort gemischt: Anode gehört zur Diode, Kollektor zum Bipolartransistor, Gate zum FET. Ein Bauteil hat Anschlüsse aus EINER Familie.",
+        "1: Anode, 2: Kathode, 3: Gate": "Anode und Katode zusammen wären eine Diode — die hat aber nur zwei Anschlüsse. Mit einem Gate dazu wäre es ein Thyristor, und der wird ganz anders gezeichnet.",
+        "1: Kollektor, 2: Emitter, 3: Basis": "Das sind die Namen beim Bipolartransistor. Der hat aber keinen durchgehenden Kanalstrich: bei ihm laufen Kollektor und Emitter SCHRÄG auf den Basisstrich zu."
+      }
+    },
+    "AC515": {
+      "frage": "Die Betriebsspannung beträgt 12 V, der Kollektorstrom soll 5 mA betragen, die Gleichstromverstärkung des Transistors beträgt 298. Berechnen Sie den Vorwiderstand R₁.",
+      "richtig": "ca. 680 kOhm",
+      "bild": "Ein Verstärker in Emitterschaltung. R₁ geht von der Plusleitung direkt an die Basis — ein Basisspannungsteiler ist NICHT vorhanden, R₁ steht allein. Der Emitter liegt an Masse, im Kollektorzweig sitzt R_C. Der Pfeil mit „0,6 V\" zeigt die Spannung an der Basis-Emitter-Strecke.",
+      "kniff": "Durch R₁ fließt nur der BASISSTROM, und der ist um die Stromverstärkung kleiner als der Kollektorstrom. Über R₁ liegt außerdem nicht die ganze Betriebsspannung, sondern sie minus der 0,6 V an der Basis.",
+      "weg": [
+        "I_B = I_C / B = 5 mA / 298 = 16,8 µA",
+        "Spannung über R₁ = 12 V − 0,6 V = 11,4 V",
+        "R₁ = 11,4 V / 16,8 µA ≈ 680 kOhm"
+      ],
+      "warum_falsch": {
+        "ca. 2,3 kOhm": "Mit dem KOLLEKTORSTROM gerechnet statt mit dem Basisstrom: 11,4 V / 5 mA = 2,28 kOhm. Die Stromverstärkung ist dabei unter den Tisch gefallen — und sie ist der ganze Witz dieser Aufgabe.",
+        "ca. 715 kOhm": "Die 0,6 V vergessen und mit der ganzen Betriebsspannung gerechnet: 12 V / 16,8 µA = 715 kOhm. Der Fehler kostet hier 5 %.",
+        "ca. 68 kOhm": "Faktor 10 daneben — ein Komma verrutscht."
+      }
+    },
+    "AC516": {
+      "frage": "Warum soll bei dem gezeigten Basisspannungsteiler der Strom durch R₂ etwa 10-mal größer als der Basisstrom sein?",
+      "richtig": "Damit der Arbeitspunkt stabil bleibt.",
+      "bild": "Emitterschaltung mit BASISSPANNUNGSTEILER: R₁ von der Plusleitung zur Basis, R₂ von der Basis nach Masse. Der Pfeil mit „0,6 V\" steht an R₂ — das ist die Spannung, die der Teiler an der Basis einstellt. Dazu C₁ am Eingang, R_C und C₂ am Ausgang. Ein Emitterwiderstand ist nicht vorhanden.",
+      "kniff": "Ein Spannungsteiler hält seine Spannung nur, solange der abgezweigte Strom klein gegen den Querstrom ist. Beim zehnfachen Querstrom verschiebt ein schwankender Basisstrom die Basisspannung kaum — und damit bleibt der Arbeitspunkt stehen, auch bei Erwärmung oder beim Tausch gegen einen Transistor mit anderer Stromverstärkung.",
+      "warum_falsch": {
+        "Damit R₂ eine Stromgegenkopplung bewirkt.": "Stromgegenkopplung macht der EMITTERwiderstand, nicht der Querwiderstand des Basisteilers. R₂ liegt nicht im Emitterzweig — in dieser Schaltung gibt es gar keinen Emitterwiderstand.",
+        "Damit sich der Basisstrom bei Erwärmung nicht ändert.": "Der Basisstrom ändert sich trotzdem, und er darf es. Festgehalten wird die Basis-SPANNUNG; dass der Arbeitspunkt dabei stehen bleibt, ist die Folge.",
+        "Damit R₂ eine Spannungsgegenkopplung bewirkt": "Spannungsgegenkopplung führt vom KOLLEKTOR auf die Basis zurück. R₂ geht von der Basis nach Masse — von dort kommt nichts aus dem Ausgang zurück."
+      }
+    },
+    "AC518": {
+      "frage": "Die Betriebsspannung beträgt 10 V, der Kollektorstrom soll 2 mA betragen, die Gleichstromverstärkung des Transistors beträgt 200. Durch den Querwiderstand R₂ soll der zehnfache Basisstrom fließen. Berechnen Sie den Vorwiderstand R₁.",
+      "richtig": "ca. 85,5 kOhm",
+      "bild": "Dieselbe Schaltung wie in AC516: Basisspannungsteiler aus R₁ und R₂, Emitter direkt an Masse, R_C im Kollektorzweig. Ein Emitterwiderstand ist NICHT vorhanden — das ist der Unterschied zur Nachbarfrage AC517.",
+      "kniff": "Zwei Ströme durch R₁: der Querstrom durch R₂ UND der Basisstrom. Also elfmal der Basisstrom. Über R₁ liegt die Betriebsspannung minus der Basisspannung, und die ist hier nur die 0,6 V der Basis-Emitter-Strecke.",
+      "weg": [
+        "I_B = I_C / B = 2 mA / 200 = 10 µA",
+        "I_R2 = 10 · I_B = 100 µA, durch R₁ also 110 µA",
+        "Spannung über R₁ = 10 V − 0,6 V = 9,4 V",
+        "R₁ = 9,4 V / 110 µA ≈ 85,5 kOhm"
+      ],
+      "warum_falsch": {
+        "ca. 76,4 kOhm": "Das ist die Lösung der Nachbarfrage AC517 — gleiche Zahlen, aber dort liegt zusätzlich 1 V an einem Emitterwiderstand, und dann sind es 8,4 V statt 9,4 V. Hier gibt es keinen Emitterwiderstand.",
+        "ca. 940 kOhm": "Den Querstrom durch R₂ vergessen: mit 10 µA statt 110 µA kommt 9,4 V / 10 µA = 940 kOhm heraus — fast das Elffache.",
+        "ca. 540 kOhm": "Zu dieser Zahl führt keine der üblichen Verwechslungen. Sie steht in AC517 und AC518 als dieselbe Blindantwort."
+      }
+    },
+    "AC517": {
+      "frage": "Die Betriebsspannung beträgt 10 V, der Kollektorstrom soll 2 mA betragen, die Gleichstromverstärkung des Transistors beträgt 200. Durch den Querwiderstand R₂ soll der zehnfache Basisstrom fließen. Am Emitterwiderstand soll 1 V abfallen. Berechnen Sie den Vorwiderstand R₁.",
+      "richtig": "ca. 76,4 kOhm",
+      "bild": "Emitterschaltung mit Basisspannungsteiler R₁/R₂ UND einem Emitterwiderstand R_E, der von C_E überbrückt ist. Der Pfeil mit „0,6 V\" zeigt auf die Basis-Emitter-Strecke. C₁ am Eingang, C₂ am Ausgang.",
+      "kniff": "Zwei Summen, und beide werden gern übersehen. Am unteren Ende von R₁ liegt nicht 0,6 V, sondern 0,6 V PLUS der Spannung am Emitterwiderstand, hier also 1,6 V. Und durch R₁ fließt der Querstrom PLUS der Basisstrom, also elfmal der Basisstrom.",
+      "weg": [
+        "I_B = I_C / B = 2 mA / 200 = 10 µA",
+        "I_R2 = 10 · I_B = 100 µA, durch R₁ also 110 µA",
+        "Basisspannung = 1 V (an R_E) + 0,6 V = 1,6 V",
+        "Spannung über R₁ = 10 V − 1,6 V = 8,4 V",
+        "R₁ = 8,4 V / 110 µA ≈ 76,4 kOhm"
+      ],
+      "warum_falsch": {
+        "ca. 940 kOhm": "Querstrom und Emitterwiderstand beide übersehen: 9,4 V / 10 µA = 940 kOhm.",
+        "ca. 540 kOhm": "Zu dieser Zahl führt keine der üblichen Verwechslungen. Sie steht in AC517 und AC518 als dieselbe Blindantwort.",
+        "ca. 85,5 kOhm": "Das ist die Lösung der Nachbarfrage AC518 — dieselben Zahlen, aber ohne Emitterwiderstand. Wer die 1 V an R_E übersieht, rechnet mit 9,4 V statt 8,4 V und landet genau hier."
+      }
+    },
+    "AC519": {
+      "frage": "Was passiert, wenn der Widerstand R₁ durch eine fehlerhafte Lötstelle an einer Seite keinen Kontakt mehr zur Schaltung hat? Welche Beschreibung trifft zu?",
+      "richtig": "Es fließt kein Kollektorstrom mehr. Die Kollektorspannung steigt auf die Betriebsspannung an.",
+      "bild": "Dieselbe Verstärkerschaltung mit Basisspannungsteiler — aber R₁ ist mit einem Kreuz durchgestrichen: die Verbindung von der Plusleitung zur Basis ist unterbrochen.",
+      "kniff": "Ohne R₁ bekommt die Basis keinen Strom mehr aus der Betriebsspannung; R₂ zieht sie nach Masse. Der Transistor sperrt. Und wo kein Kollektorstrom fließt, fällt an R_C nichts ab — am Kollektor steht die vollständige Betriebsspannung.",
+      "warum_falsch": {
+        "Es fließt Kurzschlussstrom. Der Transistor wird zerstört.": "Eine UNTERBRECHUNG kann keinen Kurzschluss machen. Ein fehlender Widerstand nimmt Strom weg, er lässt keinen zusätzlichen fließen.",
+        "Der Kollektorstrom wird nur durch R_C begrenzt. Die Kollektorspannung sinkt auf zirka 0,1 V.": "Das ist der Fall bei fehlendem R₂ (Nachbarfrage AC520): dann hängt die Basis nur noch am Plus und der Transistor ist voll durchgesteuert. Hier ist es genau umgekehrt.",
+        "Der Kollektorstrom steigt stark an. Die Kollektorspannung erhöht sich.": "Die beiden Aussagen widersprechen sich. Mehr Kollektorstrom heißt mehr Abfall an R_C, also WENIGER Spannung am Kollektor. Beides zugleich geht nicht."
+      }
+    },
+    "AC520": {
+      "frage": "Was passiert, wenn der Widerstand R₂ durch eine fehlerhafte Lötstelle an einer Seite keinen Kontakt mehr zur Schaltung hat? In welcher Antwort sind beide Aussagen richtig?",
+      "richtig": "Der Kollektorstrom wird nur durch R_C begrenzt. Die Kollektorspannung sinkt auf zirka 0,1 V.",
+      "bild": "Dieselbe Verstärkerschaltung — hier ist R₂ mit einem Kreuz durchgestrichen: die Verbindung von der Basis nach Masse ist unterbrochen.",
+      "kniff": "Ohne R₂ hängt die Basis nur noch über R₁ am Plus. Der ganze Strom durch R₁ geht jetzt in die Basis, der Transistor wird voll durchgesteuert und kommt in die Sättigung: zwischen Kollektor und Emitter bleiben dann nur noch etwa 0,1 V, und den Strom begrenzt allein R_C.",
+      "warum_falsch": {
+        "Es fließt Kurzschlussstrom. Der Transistor wird zerstört.": "R_C begrenzt den Strom weiter — ein Kurzschluss ist das nicht. Zerstört würde der Transistor nur, wenn R_C dafür zu klein bemessen wäre, und davon steht nichts in der Aufgabe.",
+        "Es fließt kein Kollektorstrom mehr. Die Kollektorspannung steigt auf die Betriebsspannung an.": "Das ist der Fall bei fehlendem R₁ (Nachbarfrage AC519): dann fehlt der Basisstrom. Hier fehlt der Querwiderstand, und der Basisstrom wird dadurch GRÖSSER, nicht kleiner.",
+        "Der Kollektorstrom steigt stark an. Die Kollektorspannung erhöht sich.": "Der erste Teil stimmt sogar — der zweite widerspricht ihm. Mehr Strom durch R_C heißt mehr Abfall dort, also weniger Spannung am Kollektor."
+      }
+    },
+    "AC521": {
+      "frage": "Wie groß ist die Gate-Source-Spannung in der gezeichneten Schaltung? U_B = 44 V; R₁ = 10 kΩ; R₂ = 1 kΩ; R₃ = 2,2 kΩ ...",
+      "richtig": "4 V",
+      "bild": "Ein FET, dessen Source unmittelbar an Masse liegt. Das Gate hängt am Spannungsteiler aus R₁ (von U_B nach unten) und R₂ (weiter nach Masse). R₃ sitzt allein im Drainzweig zwischen U_B und dem Drain.",
+      "kniff": "Weil die Source direkt an Masse liegt, IST U_GS die Spannung am Teiler R₁/R₂. R₃ hat damit nichts zu tun — durch den Teiler fließt der Drainstrom nicht, und in das Gate fließt (fast) kein Strom.",
+      "weg": [
+        "U_GS = U_B · R₂ / (R₁ + R₂)",
+        "= 44 V · 1 kOhm / (10 kOhm + 1 kOhm)",
+        "= 44 V / 11 = 4 V"
+      ],
+      "warum_falsch": {
+        "4,4 V": "Mit R₂/R₁ statt R₂/(R₁+R₂) gerechnet: 44 V · 1/10 = 4,4 V. Im Nenner steht die SUMME beider Widerstände, nicht der obere allein.",
+        "0,7 V": "Das ist die Schwellspannung einer Siliziumdiode bzw. die Basis-Emitter-Spannung eines Bipolartransistors. Ein FET hat keine solche feste Spannung — und gefragt ist ohnehin nur der Teiler.",
+        "8 V": "Mit R₃ statt R₂ gerechnet: 44 V · 2,2/(10+2,2) = 7,9 V. R₃ liegt aber im Drainzweig und nicht im Spannungsteiler."
+      }
+    },
+    "AC522": {
+      "frage": "Wie groß muss R₂ gewählt werden, damit sich eine Spannung von 2,8 V zwischen Gate und Source einstellt? U_B=44 V; R₁=10 kOhm; R₃=2,2 kOhm ...",
+      "richtig": "ca. 680 Ohm",
+      "bild": "Dieselbe Schaltung wie in AC521: Source an Masse, Gate am Teiler R₁/R₂, R₃ allein im Drainzweig. Gesucht ist diesmal R₂.",
+      "kniff": "Dieselbe Teilerformel, nur nach R₂ aufgelöst. Achtung: R₂ steht im Zähler UND im Nenner — man kann nicht einfach „R₂ = 2,8/44 · 10 kOhm\" schreiben.",
+      "weg": [
+        "2,8 V = 44 V · R₂ / (10 kOhm + R₂)",
+        "2,8 · (10 000 + R₂) = 44 · R₂",
+        "28 000 = 41,2 · R₂",
+        "R₂ = 680 Ohm",
+        "Gegenprobe: 44 V · 680 / 10 680 = 2,80 V"
+      ],
+      "warum_falsch": {
+        "ca. 68 Ohm": "Faktor 10 daneben. Gegenprobe: mit 68 Ohm stellt der Teiler nur 0,30 V ein.",
+        "ca. 820 Ohm": "Der nächste Normwert über 680 — und damit verführerisch. Gegenprobe: 44 V · 820/10 820 = 3,33 V, also ein halbes Volt zu viel.",
+        "ca. 1405 Ohm": "Gegenprobe: 44 V · 1405/11 405 = 5,4 V, fast das Doppelte des Verlangten. Ein nachvollziehbarer Rechenweg dorthin ist nicht zu erkennen."
+      }
+    },
+    "AD103": {
+      "frage": "Wie groß ist die Gesamtkapazität dieser Schaltung, wenn C₁ = 0,1 nF, C₂ = 1,5 nF, C₃ = 220 pF und die Eigenkapazität der Spule 1 pF beträgt?",
+      "richtig": "1821 pF",
+      "bild": "Ein Parallelschwingkreis: die Spule in der Mitte, C₁ links, C₂ und C₃ rechts — alle vier Bauteile liegen zwischen denselben zwei Knoten. Die Eigenkapazität der Spule kommt gedanklich als fünftes Bauteil parallel dazu.",
+      "kniff": "Parallel heißt bei Kondensatoren ADDIEREN (bei Widerständen ist es umgekehrt — daher die Verwechslung). Die Eigenkapazität der Spule zählt mit: sie liegt parallel zur Spule und damit parallel zu allem. Vorher auf eine Einheit bringen.",
+      "weg": [
+        "0,1 nF = 100 pF, 1,5 nF = 1500 pF",
+        "C = 100 pF + 1500 pF + 220 pF + 1 pF",
+        "C = 1821 pF"
+      ],
+      "warum_falsch": {
+        "1 pF": "Nur die Eigenkapazität der Spule. Die drei Kondensatoren stehen mit im Bild und liegen parallel dazu.",
+        "1,6 nF": "C₁ und C₂ addiert (0,1 + 1,5 = 1,6 nF) und dabei C₃ und die Spule vergessen — es fehlen 221 pF.",
+        "66 pF": "So rechnet man eine REIHENschaltung: 1/C = 1/100 + 1/1500 + 1/220 ergibt 65,7 pF. Im Bild liegen die drei aber zwischen denselben zwei Knoten, also parallel."
+      }
+    },
+    "AD106": {
+      "frage": "Wie groß ist die Spannung U, wenn durch R₃ ein Strom von 1 mA fließt und alle Widerstände R₁ bis R₃ je 10 kOhm betragen?",
+      "richtig": "30 V",
+      "bild": "Eine Quelle mit der Spannung U, dahinter R₁ in Reihe. Am Knoten hinter R₁ zweigen R₂ und R₃ ab und gehen beide zur Minusleitung — sie liegen also parallel.",
+      "kniff": "R₂ und R₃ liegen parallel: An beiden liegt dieselbe Spannung, und weil sie gleich groß sind, fließt durch beide derselbe Strom. Durch R₁ fließt die SUMME, hier also das Doppelte.",
+      "weg": [
+        "U an R₃ = 1 mA · 10 kOhm = 10 V",
+        "an R₂ liegt dieselbe Spannung, also fließen dort auch 1 mA",
+        "durch R₁ fließen 1 mA + 1 mA = 2 mA",
+        "U an R₁ = 2 mA · 10 kOhm = 20 V",
+        "U = 20 V + 10 V = 30 V"
+      ],
+      "warum_falsch": {
+        "20 V": "Nur der Abfall an R₁ — die 10 V an der Parallelschaltung fehlen. Oder mit nur 1 mA durch R₁ gerechnet, dann kämen 10 V + 10 V heraus: derselbe Zahlenwert aus dem umgekehrten Fehler.",
+        "15 V": "1 mA · 15 kOhm. Der Gesamtwiderstand (10 kOhm + 5 kOhm) ist richtig, aber durch R₁ fließt 1 mA zu wenig: es sind 2 mA.",
+        "40 V": "Doppelt gezählt: 20 V an R₁ plus 10 V an R₂ plus 10 V an R₃. R₂ und R₃ liegen aber parallel — ihre Spannung ist EINMAL zu zählen, nicht zweimal."
+      }
+    },
+    "AD107": {
+      "frage": "Wie groß ist der Strom durch R₃, wenn U = 15 V und alle Widerstände R₁ bis R₃ je 10 kOhm betragen?",
+      "richtig": "0,5 mA",
+      "bild": "Dieselbe Schaltung wie in AD106: R₁ in Reihe, dahinter R₂ und R₃ parallel zur Minusleitung. Diesmal ist U vorgegeben und der Strom gesucht.",
+      "kniff": "Erst den Gesamtwiderstand, dann den Gesamtstrom, dann aufteilen. Zwei gleiche Zweige teilen den Strom in zwei gleiche Hälften.",
+      "weg": [
+        "R₂ ∥ R₃ = 10 kOhm / 2 = 5 kOhm",
+        "R_ges = 10 kOhm + 5 kOhm = 15 kOhm",
+        "I = 15 V / 15 kOhm = 1 mA",
+        "teilt sich gleichmäßig: I durch R₃ = 0,5 mA"
+      ],
+      "warum_falsch": {
+        "4,5 mA": "Alle drei Widerstände parallel gerechnet: 10 kOhm / 3 = 3,33 kOhm und 15 V / 3,33 kOhm = 4,5 mA. R₁ liegt aber in REIHE vor den beiden anderen.",
+        "1,6 mA": "Zu dieser Zahl führt keiner der üblichen Fehler; sie liegt zwischen Gesamtstrom und Teilstrom. Eine Blindantwort.",
+        "1,0 mA": "Das ist der GESAMTSTROM durch R₁ — richtig gerechnet, aber einen Schritt zu früh aufgehört. Er teilt sich noch auf zwei gleiche Zweige."
+      }
+    },
+    "AD108": {
+      "frage": "Welche Leistung tritt in R₂ auf, wenn U = 15 V und alle Widerstände R₁ bis R₃ je 10 kOhm betragen?",
+      "richtig": "2,5 mW",
+      "bild": "Dieselbe Schaltung wie in AD106 und AD107: R₁ in Reihe, dahinter R₂ parallel zu R₃.",
+      "kniff": "Erst die Spannung an der Parallelschaltung ausrechnen, dann die Leistung in EINEM der beiden Widerstände. Wer mit 15 V rechnet, rechnet mit der Spannung der ganzen Schaltung — an R₂ liegt nur ein Drittel davon.",
+      "weg": [
+        "R₂ ∥ R₃ = 5 kOhm, R_ges = 15 kOhm",
+        "U an der Parallelschaltung = 15 V · 5 kOhm / 15 kOhm = 5 V",
+        "P = U² / R = (5 V)² / 10 kOhm = 2,5 mW"
+      ],
+      "warum_falsch": {
+        "0,15 W": "Sechzigmal zu groß. An R₂ liegen 5 V; mehr als 2,5 mW können dort nicht entstehen. Selbst die ganze Schaltung nimmt nur 15 V · 1 mA = 15 mW auf.",
+        "5,0 mW": "Das ist die Leistung der GANZEN Parallelschaltung: (5 V)² / 5 kOhm = 5 mW. Gefragt ist nur R₂ — also die Hälfte davon.",
+        "1,5 mW": "Zu dieser Zahl führt keine der üblichen Verwechslungen. Eine Blindantwort."
+      }
+    },
+    "AD109": {
+      "frage": "In welchem Bereich liegt der Eingangswiderstand der folgenden Schaltung, wenn R alle Werte von 0 Ohm bis 1 kOhm annehmen kann?",
+      "richtig": "267 bis 292 Ohm",
+      "bild": "Von den Eingangsklemmen aus: erst 200 Ohm in Reihe, dann ein Knoten. Von diesem Knoten gehen 100 Ohm nach unten zur anderen Klemme — und weiter nach rechts noch 200 Ohm, hinter denen der veränderliche Widerstand R nach unten geht.",
+      "kniff": "Von links nach rechts aufbauen, aber von rechts nach links rechnen: 200 Ohm plus R sind der rechte Zweig, dieser liegt parallel zu den 100 Ohm, und dazu kommt der erste 200-Ohm-Widerstand in Reihe. Die 100 Ohm sind die Bremse: selbst bei unendlich großem R kämen nur 300 Ohm heraus, deshalb ist der Bereich so schmal.",
+      "weg": [
+        "R = 0: 200 + (100 ∥ 200) = 200 + 66,7 = 267 Ohm",
+        "R = 1 kOhm: 200 + (100 ∥ 1200) = 200 + 92,3 = 292 Ohm",
+        "also 267 bis 292 Ohm"
+      ],
+      "warum_falsch": {
+        "300 bis 367 Ohm": "Die 100 Ohm als in Reihe statt als parallel gerechnet — daher die 300 als Untergrenze. Parallel ergibt immer WENIGER als der kleinere der beiden Widerstände, hier also unter 100 Ohm.",
+        "300 bis 500 Ohm": "Alle festen Widerstände in Reihe addiert: 200 + 100 + 200 = 500. Die 100 Ohm liegen aber quer und nicht im Längszweig.",
+        "292 bis 367 Ohm": "Die 292 Ohm sind richtig gerechnet — nur stehen sie am falschen Ende. Sie gelten für R = 1 kOhm, also für die OBERgrenze. Wird R kleiner, wird auch der Eingangswiderstand kleiner."
+      }
+    },
+    "AD110": {
+      "frage": "Wenn R₁ und R₃ je 2,2 kOhm haben und R₂ und R₄ je 220 Ohm betragen, hat die Schaltung zwischen den Punkten a und b einen Gesamtwiderstand von ...",
+      "richtig": "1210 Ohm.",
+      "bild": "Eine Brückenschaltung zwischen a und b: links R₁ oben und R₂ unten, rechts R₃ oben und R₄ unten. In der Mitte verbindet ein Querzweig die beiden Mittelpunkte; er trägt zwei offene Anschlusspunkte, an die im Betrieb ein Messgerät gehört.",
+      "kniff": "Zwei gleiche Zweige, jeder 2,2 kOhm + 220 Ohm = 2420 Ohm, parallel also die Hälfte. Und die Gegenprobe: Weil die Brücke abgeglichen ist, kommt dasselbe heraus, wenn man den Querzweig als durchverbunden ansieht: (2,2 k ∥ 2,2 k) + (220 ∥ 220) = 1100 + 110 = 1210 Ohm. Bei einer abgeglichenen Brücke ist der Querzweig gleichgültig.",
+      "weg": [
+        "ein Zweig: 2200 Ohm + 220 Ohm = 2420 Ohm",
+        "zwei gleiche Zweige parallel: 2420 / 2 = 1210 Ohm"
+      ],
+      "warum_falsch": {
+        "1540 Ohm.": "Reihe und Parallel vermischt: oben richtig parallel gerechnet (1100 Ohm), unten aber addiert (220 + 220 = 440). Zusammen 1540 Ohm.",
+        "2420 Ohm.": "Nur EIN Zweig. Der zweite, gleich große liegt parallel dazu und halbiert den Wert.",
+        "4840 Ohm.": "Alle vier Widerstände in Reihe addiert: 2 · 2420 Ohm. Sie liegen aber als zwei parallele Zweige zwischen a und b."
+      }
+    },
+    "AD111": {
+      "frage": "In welchem Verhältnis müssen die Widerstände R₁ bis R₄ zueinander stehen, damit das Messinstrument im Brückenzweig keine Spannung anzeigt?",
+      "richtig": "(R₁)/(R₂) = (R₃)/(R₄)",
+      "bild": "Eine Wheatstone-Brücke: links der Generator G, daneben der Zweig aus R₁ (oben) und R₂ (unten) mit dem Abgriff A, rechts der Zweig aus R₃ (oben) und R₄ (unten) mit dem Abgriff B. Zwischen A und B hängt das Messinstrument.",
+      "kniff": "Das Instrument zeigt nichts an, wenn A und B auf gleichem Potential liegen — also wenn beide Spannungsteiler im selben Verhältnis teilen: oben zu unten links wie oben zu unten rechts, R₁/R₂ = R₃/R₄. Ausmultipliziert heißt das R₁ · R₄ = R₂ · R₃, immer über Kreuz. Gleichwertig ist R₁/R₃ = R₂/R₄.",
+      "warum_falsch": {
+        "(R₁)/(R₂) = (R₄)/(R₃)": "Rechts sind Zähler und Nenner vertauscht. Ausmultipliziert steht da R₁ · R₃ = R₂ · R₄ — die falsche Paarung. Über Kreuz gehören R₁ mit R₄ und R₂ mit R₃ zusammen.",
+        "(R₁)/(R₄) = (R₂)/(R₃)": "Führt ebenfalls auf R₁ · R₃ = R₂ · R₄. Hier stehen die diagonal gegenüberliegenden Widerstände im selben Bruch, statt sich im Produkt zu treffen.",
+        "(R₂)/(R₁) = (R₃)/(R₄)": "Links gestürzt, rechts nicht. Auch das ergibt R₁ · R₃ = R₂ · R₄. Nur wenn man BEIDE Seiten stürzt, bleibt die Gleichung richtig: R₂/R₁ = R₄/R₃ wäre erlaubt."
+      }
+    },
+    "AD112": {
+      "frage": "Die Spannung an der Brückenschaltung beträgt 10 V. Alle Widerstände haben einen Wert von 50 Ohm. Wie groß ist die Spannung zwischen A und B im Brückenzweig (gemessen von A nach B)?",
+      "richtig": "0 V",
+      "bild": "Dieselbe Brücke wie in AD111: R₁ und R₂ im linken Zweig mit dem Abgriff A, R₃ und R₄ im rechten mit dem Abgriff B, dazwischen das Messinstrument.",
+      "kniff": "Vier gleiche Widerstände heißt: beide Teiler halbieren. A und B liegen beide auf der halben Betriebsspannung, die Differenz ist null. Das ist genau der abgeglichene Fall aus AD111.",
+      "weg": [
+        "U_A = 10 V · 50 / (50 + 50) = 5 V",
+        "U_B = 10 V · 50 / (50 + 50) = 5 V",
+        "U_AB = 5 V − 5 V = 0 V"
+      ],
+      "warum_falsch": {
+        "2,5 V": "Ein Viertel der Betriebsspannung. Dazu müsste ein Teiler im Verhältnis 1:3 stehen — hier sind alle vier Widerstände gleich.",
+        "-5 V": "Das käme heraus, wenn A auf 0 V und B auf 5 V läge, also bei einem vollständig verstimmten linken Zweig (R₁ kurzgeschlossen oder R₂ unterbrochen).",
+        "5 V": "Das ist die Spannung von A gegen Masse — oder von B gegen Masse. Gefragt ist die Spannung ZWISCHEN A und B, also die Differenz der beiden."
+      }
+    },
+    "AD113": {
+      "frage": "Die Spannung an der Brückenschaltung beträgt 11 V. Die Widerstände haben folgende Werte: R₁ = 1 kOhm; R₂ = 10 kOhm; R₃ = 10 kOhm; R₄ = 1 kOhm. Wie groß ist die Spannung zwischen A und B im Brückenzweig (gemessen von A nach B)?",
+      "richtig": "U_AB = 9 V",
+      "bild": "Dieselbe Brücke wie in AD111 und AD112. Diesmal sind die vier Widerstände ungleich: links 1 kOhm oben und 10 kOhm unten, rechts 10 kOhm oben und 1 kOhm unten — die Brücke ist also kräftig verstimmt.",
+      "kniff": "Jeden Zweig für sich als Spannungsteiler gegen Masse rechnen und erst dann die Differenz bilden — und zwar in der Richtung, die die Frage vorgibt: von A nach B, also U_A minus U_B.",
+      "weg": [
+        "U_A = 11 V · 10 kOhm / (1 kOhm + 10 kOhm) = 10 V",
+        "U_B = 11 V · 1 kOhm / (10 kOhm + 1 kOhm) = 1 V",
+        "U_AB = 10 V − 1 V = 9 V"
+      ],
+      "warum_falsch": {
+        "U_AB = -9 V": "Der Betrag stimmt, das Vorzeichen nicht. A liegt auf 10 V, B auf 1 V — von A nach B gemessen ist das Ergebnis positiv. Minus 9 V wäre die Messung von B nach A.",
+        "U_AB = 10 V": "Das ist die Spannung von A gegen Masse. Die 1 V von B sind noch abzuziehen.",
+        "U_AB = -10 V": "A gegen Masse, und zusätzlich mit falschem Vorzeichen. Zwei Fehler in einer Antwort."
+      }
+    },
+    "AD114": {
+      "frage": "Wie groß ist die Spannung U₂ in der Schaltung mit folgenden Werten: U_B = 12 V, R₁ = 10 kΩ, R₂ = 2,2 kΩ, R_L = 8,2 kΩ",
+      "richtig": "1,8 V",
+      "bild": "Ein belasteter Spannungsteiler: R₁ oben, R₂ unten, und PARALLEL zu R₂ hängt die Last R_L. Eingezeichnet sind I₁ (durch R₁), I₂ (durch R₂) und I_L (durch die Last); U₂ ist die Spannung am unteren Teil.",
+      "kniff": "R_L liegt parallel zu R₂ — erst die beiden zusammenfassen, dann teilen. Wer nur mit R₁ und R₂ rechnet, bekommt die LEERLAUFspannung; die Last zieht den Teiler herunter.",
+      "weg": [
+        "R₂ ∥ R_L = (2,2 · 8,2) / (2,2 + 8,2) = 1,74 kOhm",
+        "U₂ = U_B · 1,74 / (10 + 1,74)",
+        "U₂ = 12 V · 0,148 = 1,8 V"
+      ],
+      "warum_falsch": {
+        "2,2 V": "Die Leerlaufspannung, ohne Last gerechnet: 12 V · 2,2/12,2 = 2,16 V. Genau darum geht es in dieser Aufgabe — und die Zahl sieht zusätzlich vertraut aus, weil R₂ 2,2 kOhm hat.",
+        "5,4 V": "Mit R_L statt R₂ geteilt: 12 V · 8,2/(10 + 8,2) = 5,4 V. R₂ ist dabei ganz verschwunden, obwohl er parallel zur Last liegt.",
+        "8,2 V": "Der Zahlenwert von R_L, als Spannung hingeschrieben. Dahinter steht keine Rechnung."
+      }
+    },
+    "AD115": {
+      "frage": "Wenn der dargestellte Spannungsteiler mit R_L belastet wird, dann ergibt sich folgender Zusammenhang:",
+      "richtig": "I₁ steigt, R₁ setzt mehr Leistung in Wärme um.",
+      "bild": "Derselbe belastete Spannungsteiler wie in AD114: R₁ oben, R₂ unten, R_L parallel zu R₂, mit den Strömen I₁, I₂ und I_L.",
+      "kniff": "Belasten heißt: parallel zu R₂ kommt ein zweiter Weg nach Masse. Der Gesamtwiderstand SINKT, also steigt I₁ — und mehr Strom durch R₁ heißt mehr Verlustleistung dort. An R₂ wird es dagegen weniger: die Spannung U₂ sinkt, und mit ihr der Strom I₂.",
+      "warum_falsch": {
+        "I₁ sinkt, R₂ setzt mehr Leistung in Wärme um.": "Beide Hälften verkehrt. Ein zusätzlicher Widerstand PARALLEL senkt den Gesamtwiderstand, I₁ steigt also. Und an R₂ sinkt die Spannung, damit auch die Leistung.",
+        "I₂ steigt, R₁ setzt weniger Leistung in Wärme um.": "I₂ ist der Strom durch R₂ — der sinkt, weil U₂ sinkt. Und an R₁ wird mehr Leistung frei, nicht weniger.",
+        "I₁ steigt, R₂ setzt mehr Leistung in Wärme um.": "Die erste Hälfte stimmt. Die zweite nicht: an R₂ liegen jetzt 1,8 V statt 2,2 V, und weniger Spannung an gleichem Widerstand heißt weniger Leistung."
+      }
+    },
+    "AD201": {
+      "frage": "Welche Grenzfrequenz ergibt sich bei einem Hochpass mit einem Widerstand von 4,7 kOhm und einem Kondensator von 2,2 nF?",
+      "richtig": "15,4 kHz",
+      "bild": "Im Längszweig ein Kondensator, danach ein Widerstand quer nach unten — der Ausgang liegt über dem Widerstand. Das ist die Form eines Hochpasses: die Spannung am Widerstand steigt mit der Frequenz.",
+      "kniff": "Die Grenzfrequenz ist dieselbe Formel wie beim Tiefpass: f = 1/(2π · R · C). Ob Hoch- oder Tiefpass hängt nur davon ab, an welchem Bauteil der Ausgang liegt — an der Grenzfrequenz ändert das nichts. Die drei falschen Antworten sind reine Zehnerpotenzen; deshalb lohnt es, die Einheiten einmal vollständig hinzuschreiben.",
+      "weg": [
+        "R · C = 4,7 · 10³ Ohm · 2,2 · 10⁻⁹ F = 1,03 · 10⁻⁵ s",
+        "f = 1 / (2π · 1,03 · 10⁻⁵ s)",
+        "f = 15,4 kHz"
+      ],
+      "warum_falsch": {
+        "154 kHz": "Zehnmal zu groß. Genau das kommt heraus, wenn man 220 pF statt 2,2 nF einsetzt.",
+        "154 Hz": "Hundertmal zu klein — das wäre die Grenzfrequenz mit 220 nF.",
+        "1,54 kHz": "Zehnmal zu klein: so rechnet es sich mit 22 nF."
+      }
+    },
+    "AD202": {
+      "frage": "Welche Grenzfrequenz ergibt sich bei einem Tiefpass mit einem Widerstand von 10 kOhm und einem Kondensator von 47 nF?",
+      "richtig": "339 Hz",
+      "bild": "Im Längszweig ein Widerstand, danach ein Kondensator quer nach unten — der Ausgang liegt über dem Kondensator. Das ist die Form eines Tiefpasses: mit steigender Frequenz wird der Kondensator niederohmig und nimmt die Spannung weg.",
+      "kniff": "Dieselbe Formel wie beim Hochpass: f = 1/(2π · R · C). Hier lauern zwei Einheiten übereinander — Kiloohm und Nanofarad — und alle drei falschen Antworten sind nur Zehnerpotenzen davon.",
+      "weg": [
+        "R · C = 10 · 10³ Ohm · 47 · 10⁻⁹ F = 4,7 · 10⁻⁴ s",
+        "f = 1 / (2π · 4,7 · 10⁻⁴ s)",
+        "f = 339 Hz"
+      ],
+      "warum_falsch": {
+        "339 kHz": "Tausendmal zu groß — das wäre die Grenzfrequenz mit 47 pF statt 47 nF.",
+        "3,39 kHz": "Zehnmal zu groß: so rechnet es sich mit 4,7 nF.",
+        "33,9 Hz": "Zehnmal zu klein — mit 470 nF."
+      }
+    },
+    "AD203": {
+      "frage": "Wo liegt die Grenzfrequenz des Audio-Verstärkers, wenn R₁ = 4,7 kΩ, C₁ = 6,8 nF und C₂ = 47 nF betragen? Der Verstärker hat eine Grenzfrequenz von 1 MHz und die Impedanz des Eingangs PIN 2 ist mit 1 MOhm sehr hochohmig.",
+      "richtig": "ca. 5 kHz",
+      "bild": "Ein Audioverstärker-IC im Dreieck. Vom Eingang NF_IN führt R₁ auf den Knoten vor PIN 2; von diesem Knoten geht C₁ nach Masse. C₂ hängt ganz woanders: an der Betriebsspannung V_s, gegen Masse — er ist der Stützkondensator der Versorgung.",
+      "kniff": "Im Signalweg liegen nur R₁ und C₁, und die bilden einen Tiefpass. C₂ gehört zur Betriebsspannung und hat mit dem Signal nichts zu tun. Die 1 MHz des Verstärkers und die 1 MOhm seines Eingangs sind Ablenkung: beide liegen so weit von R₁ und C₁ entfernt, dass sie hier nichts begrenzen.",
+      "weg": [
+        "f = 1 / (2π · R₁ · C₁)",
+        "= 1 / (2π · 4,7 · 10³ Ohm · 6,8 · 10⁻⁹ F)",
+        "≈ 5 kHz"
+      ],
+      "warum_falsch": {
+        "ca. 720 Hz": "Mit C₂ statt C₁ gerechnet: 1/(2π · 4,7 kOhm · 47 nF) = 720 Hz. C₂ sitzt aber an der Betriebsspannung, nicht im Signalweg.",
+        "ca. 2,7 kHz": "Zu dieser Zahl führt keine der naheliegenden Verwechslungen — weder C₁ noch C₂ noch ihre Summe ergeben sie. Eine Blindantwort.",
+        "ca. 294 Hz": "Ebenfalls kein nachvollziehbarer Weg; sie liegt noch unter dem Wert, der mit C₂ herauskäme."
+      }
+    },
+    "AD205": {
+      "frage": "Welche der nachfolgenden Beschreibungen trifft auf diese Schaltung zu und wie nennt man sie?",
+      "richtig": "Es handelt sich um einen Bandpass. Frequenzen oberhalb der oberen Grenzfrequenz und Frequenzen unterhalb der unteren Grenzfrequenz werden bedämpft. Er lässt nur einen bestimmten Frequenzbereich passieren.",
+      "bild": "Im Längszweig liegen ein Kondensator und eine Spule HINTEREINANDER. An zwei Punkten hängt je ein PARALLELschwingkreis (Spule und Kondensator nebeneinander) nach Masse.",
+      "kniff": "Beide Bauarten wirken in dieselbe Richtung. Der Längszweig aus C und L in Reihe ist bei seiner Resonanzfrequenz fast ein Kurzschluss und lässt sie durch. Die Parallelkreise nach Masse sind bei derselben Frequenz fast unendlich hochohmig und leiten sie NICHT ab. Alles daneben wird in beiden Fällen umgekehrt behandelt — das ist ein Bandpass.",
+      "warum_falsch": {
+        "Es handelt sich um einen Hochpass. Frequenzen unterhalb der Grenzfrequenz werden bedämpft, oberhalb der Grenzfrequenz durchgelassen.": "Ein Hochpass hat im Längszweig nur Kondensatoren und quer nur Spulen. Hier stehen im Längszweig beide Bauteile und quer vollständige Schwingkreise — die Schaltung grenzt oben UND unten ab, nicht nur unten.",
+        "Es handelt sich um einen Tiefpass. Frequenzen oberhalb der Grenzfrequenz werden bedämpft, unterhalb der Grenzfrequenz durchgelassen.": "Ein Tiefpass hat im Längszweig Spulen und quer Kondensatoren. Auch hier gilt: quer liegen ganze Schwingkreise, und im Längszweig steht zusätzlich ein Kondensator, der tiefe Frequenzen gerade nicht durchlässt.",
+        "Es handelt sich um eine Bandsperre. Frequenzen oberhalb der oberen Grenzfrequenz und Frequenzen unterhalb der unteren Grenzfrequenz werden durchgelassen. Sie bedämpft nur einen bestimmten Frequenzbereich.": "Die Bandsperre ist genau umgekehrt aufgebaut: Parallelkreis im LÄNGSzweig (der sperrt seine Resonanzfrequenz) und Reihenkreis nach Masse (der leitet sie ab). Hier sind beide Rollen vertauscht — also wird das Band durchgelassen und nicht gesperrt."
+      }
+    },
+    "AD207": {
+      "frage": "Bei der Resonanzfrequenz ist die Impedanz dieser Schaltung ...",
+      "richtig": "gleich dem Wirkwiderstand R.",
+      "bild": "Widerstand, Spule und Kondensator liegen alle drei HINTEREINANDER in einem Zweig — ein Reihenschwingkreis.",
+      "kniff": "Bei Resonanz sind X_L und X_C gleich groß, wirken aber entgegengesetzt und heben sich auf. Übrig bleibt allein der Wirkwiderstand R. Beim Reihenkreis ist das das MINIMUM der Impedanz; beim Parallelkreis wäre dieselbe Bedingung das Maximum.",
+      "warum_falsch": {
+        "gleich dem kapazitiven Widerstand X_C.": "X_C ist bei Resonanz genauso groß wie X_L — aber die beiden heben sich gegenseitig auf. Was sie einzeln sind, steht am Ende nicht mehr in der Rechnung.",
+        "unendlich hoch.": "Das gilt für den PARALLELschwingkreis, im Idealfall. Hier liegen die Bauteile in Reihe, und dort ist die Impedanz bei Resonanz am kleinsten — deshalb fließt gerade dann der größte Strom.",
+        "gleich dem induktiven Widerstand X_L.": "Dasselbe Missverständnis wie bei X_C: gleich groß, aber gegensätzlich. Beide Blindwiderstände verschwinden aus der Summe."
+      }
+    },
+    "AD208": {
+      "frage": "Welche Resonanzfrequenz f_res hat die Reihenschaltung einer Spule von 1,2 μH mit einem Kondensator von 6,8 pF und einem Widerstand von 10 Ohm?",
+      "richtig": "55,7 MHz",
+      "bild": "Ein Reihenschwingkreis: Widerstand, Spule und Kondensator hintereinander in einem Zweig.",
+      "kniff": "Thomson-Formel: f = 1/(2π · √(L · C)). Der Widerstand steht nur dabei — er bestimmt die Güte, nicht die Resonanzfrequenz. Und weil eine Wurzel darin steckt, halbiert sie Zehnerpotenz-Fehler: zwei Stellen daneben bei C ergeben eine Stelle daneben bei f.",
+      "weg": [
+        "L · C = 1,2 · 10⁻⁶ H · 6,8 · 10⁻¹² F = 8,16 · 10⁻¹⁸",
+        "√(L · C) = 2,86 · 10⁻⁹",
+        "f = 1 / (2π · 2,86 · 10⁻⁹) = 55,7 MHz"
+      ],
+      "warum_falsch": {
+        "557 MHz": "Zehnmal zu groß. Dahin kommt man mit 0,068 pF statt 6,8 pF — zwei Stellen bei C, eine bei f.",
+        "5,57 MHz": "Zehnmal zu klein: das wäre der Wert mit 680 pF.",
+        "557 kHz": "Hundertmal zu klein — mit 68 nF statt 6,8 pF, also vier Stellen daneben."
+      }
+    },
+    "AD209": {
+      "frage": "Welche Resonanzfrequenz f_res hat die Reihenschaltung einer Spule von 10 μH mit einem Kondensator von 1 nF und einem Widerstand von 0,1 kOhm?",
+      "richtig": "1,592 MHz",
+      "bild": "Derselbe Reihenschwingkreis wie in AD208: Widerstand, Spule und Kondensator hintereinander.",
+      "kniff": "f = 1/(2π · √(L · C)). Hier gehen die Zehnerpotenzen glatt auf: 10 µH · 1 nF = 10⁻¹⁴, die Wurzel daraus ist 10⁻⁷. Wer das sieht, braucht den Rechner nicht.",
+      "weg": [
+        "L · C = 10 · 10⁻⁶ H · 1 · 10⁻⁹ F = 10⁻¹⁴",
+        "√(L · C) = 10⁻⁷",
+        "f = 1 / (2π · 10⁻⁷) = 1,592 MHz"
+      ],
+      "warum_falsch": {
+        "15,92 kHz": "Hundertmal zu klein — vier Zehnerpotenzen bei L · C daneben.",
+        "159,2 kHz": "Zehnmal zu klein: so kommt es heraus, wenn L · C um zwei Stellen zu groß angesetzt wird.",
+        "15,92 MHz": "Zehnmal zu groß, der Fehler in die andere Richtung."
+      }
+    },
+    "AD210": {
+      "frage": "Welche Resonanzfrequenz f_res hat die Reihenschaltung einer Spule von 100 μH mit einem Kondensator von 0,01 μF und einem Widerstand von 100 Ohm?",
+      "richtig": "159 kHz",
+      "bild": "Derselbe Reihenschwingkreis wie in AD208 und AD209.",
+      "kniff": "Die Falle steckt in der Einheit: 0,01 µF sind 10 nF, also 10⁻⁸ F — nicht 0,01 nF. Danach geht es wieder glatt auf: 100 µH · 10 nF = 10⁻¹², Wurzel 10⁻⁶.",
+      "weg": [
+        "C = 0,01 µF = 10 nF = 10⁻⁸ F",
+        "L · C = 10⁻⁴ H · 10⁻⁸ F = 10⁻¹²",
+        "√(L · C) = 10⁻⁶",
+        "f = 1 / (2π · 10⁻⁶) = 159 kHz"
+      ],
+      "warum_falsch": {
+        "1590 kHz": "Zehnmal zu groß — das wäre der Wert, wenn L · C um zwei Zehnerpotenzen zu klein angesetzt wird, etwa mit 0,1 nF statt 10 nF.",
+        "1,59 kHz": "Hundertmal zu klein.",
+        "15,9 kHz": "Zehnmal zu klein: hier hat die verwechselte Einheit von C zugeschlagen."
+      }
+    }
+  }
+}

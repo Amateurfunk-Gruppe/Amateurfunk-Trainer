@@ -1271,16 +1271,11 @@
             35%      { transform: scale(1.16); box-shadow: 0 0 0 7px rgba(226,147,47,0.30); }
             70%      { transform: scale(0.97); box-shadow: 0 0 0 2px rgba(226,147,47,0.10); }
         }
-        #formelBtn.merk-mich {
-            animation: formel-puls 0.62s ease-in-out 3;
-            will-change: transform;
-        }
-        @media (prefers-reduced-motion: reduce) {
-            #formelBtn.merk-mich {
-                animation: none;
-                box-shadow: 0 0 0 3px rgba(226,147,47,0.35);
-            }
-        }
+        /* DREIMAL steht seit dem 13.09.2026 nicht mehr hier, sondern in
+           hinweisePulsen(): Das Formelblatt teilt den Takt jetzt mit der
+           Gluehbirne daneben, und dafuer muss jeder Schlag einzeln
+           kommen. Die Regeln stehen bei #formelBtn.puls-einmal weiter
+           unten. */
 
         /* ================================================================
            DER VORSATZ-HINWEIS AN DER FRAGE
@@ -1308,6 +1303,161 @@
         }
         body.dark .vorsatz-hinweis { background: #2a2114; border-color: #5a4a28; color: #f0e6d2; }
         body.dark .vorsatz-hinweis b { color: #ffd68a; }
+
+        /* ================================================================
+           DIE ERKLAERUNG: EIN KNOPF UND EIN EIGENES FENSTER
+           ================================================================
+           BIS 1.276.0 STAND SIE UNTER DER FRAGE, in einem <details>, das
+           nach einer falschen Antwort von selbst aufging und nach einer
+           richtigen zugeklappt blieb.
+
+           Dietmar am 12.09.2026: "Unterhalb von den Fragen, verlaengert
+           nur das Fenster. Besser waere ein eigenes Fenster, das sich
+           oeffnet. Ich moechte die Formel nicht nachdem antworten. Hier
+           waere neben dem Formelblatt Button ein eigener Button mit der
+           Gluehbirne. Das erst vorhanden ist, wenn es was zum rechnen
+           gibt und es soll auch Pulsieren wie auch das Formelblatt."
+
+           Zwei Fehler von mir, und fuer beide gibt es den Beweis in
+           derselben Sitzung:
+
+           1. ZUGEKLAPPT WAR SIE UNSICHTBAR. Uebrig blieb eine duenne
+              Zeile in Kapitaelchen, die aussah wie eine Ueberschrift.
+              Dietmar hat die Erklaerung zweimal nicht gefunden, obwohl
+              sie auf dem Schirm stand.
+
+           2. SIE KAM ZU SPAET. Eine Lernhilfe, die es erst nach der
+              Antwort gibt, hilft beim Rechnen nicht. Das Formelblatt
+              liegt ja auch VORHER auf dem Tisch.
+
+           Jetzt ist es gebaut wie das Formelblatt daneben: ein Knopf in
+           der Kopfzeile der Frage, der nur erscheint, wenn es zu genau
+           dieser Frage etwas gibt, der dreimal pulst und ein eigenes
+           Fenster aufmacht. Violett wie die Kachel "Mit Erklaerung",
+           damit man beides als dasselbe erkennt.
+
+           WAS VOR DER ANTWORT DARIN STEHT: nur "Im Bild" und "Der
+           Kniff" - was die Zeichnung zeigt und worauf es ankommt. Der
+           Rechenweg und die Fehler der anderen Antworten kommen dazu,
+           sobald geantwortet ist. Sonst waere der Knopf keine Hilfe,
+           sondern die Loesung.
+
+           Der Kasten selbst sieht aus wie vorher - gleiche Masse,
+           gleiche Farben. Er steht jetzt nur woanders. */
+        @keyframes erklaer-puls {
+            0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(91,63,149,0); }
+            35%      { transform: scale(1.16); box-shadow: 0 0 0 7px rgba(91,63,149,0.30); }
+            70%      { transform: scale(0.97); box-shadow: 0 0 0 2px rgba(91,63,149,0.10); }
+        }
+        /* EIN Schlag, nicht drei. Den Takt gibt hinweisePulsen() vor:
+           Formelblatt, Gluehbirne, Formelblatt, Gluehbirne - abwechselnd.
+           Dietmar am 13.09.2026: "Erklärung soll Alternierend mit
+           Formelsammlung pulsen." Beide gleichzeitig sah in der Kopfzeile
+           nach Zappeln aus, beide hintereinander in Dreierserien dauerte
+           zu lange. */
+        #formelBtn.puls-einmal  { animation: formel-puls  0.62s ease-in-out 1; will-change: transform; }
+        #erklaerBtn.puls-einmal { animation: erklaer-puls 0.62s ease-in-out 1; will-change: transform; }
+        #erklaerBtn.an { background: #5b3f95; border-color: #5b3f95; color: #ffffff; }
+        @media (prefers-reduced-motion: reduce) {
+            #formelBtn.puls-einmal  { animation: none; box-shadow: 0 0 0 3px rgba(226,147,47,0.35); }
+            #erklaerBtn.puls-einmal { animation: none; box-shadow: 0 0 0 3px rgba(91,63,149,0.35); }
+        }
+
+        /* ================================================================
+           DIE ERKLAERUNG STEHT AN DER STELLE DER ANTWORTEN
+           ----------------------------------------------------------------
+           Dietmar am 13.09.2026 zum ersten Entwurf, einem Fenster ueber
+           der Seite: "Die Position gefaellt mir nicht. Schoener waere es
+           exakt auf der Groesse wie die Antworten. Das Fenster soll nicht
+           schwebend sein. Sondern so aussehen, als wuerde es die Antworten
+           ersetzen. Der Hintergrund soll nicht abgedunkelt werden."
+
+           Also kein Fenster mehr, sondern eine Tafel IM FLUSS: Sie wird
+           an die Stelle des Antwortkastens gesetzt, der solange
+           verschwindet. Damit stimmen Breite und Rand von selbst, ohne
+           eine einzige gerechnete Zahl.
+
+           DIE HOEHE WIRD UEBERNOMMEN, nicht neu bestimmt: genau so hoch
+           wie der Antwortkasten, den sie ersetzt, und laengerer Text
+           rollt innerhalb. Sonst waere die Seite beim Aufschlagen um
+           200 Punkte gewachsen, die Schriftautomatik haette die Frage
+           verkleinert - und ein Klick auf "Erklaerung" haette die Frage
+           kleiner gemacht. Gerechnet wird mit offsetHeight und nicht mit
+           getBoundingClientRect: offsetHeight zaehlt in Satzpunkten, der
+           Rahmen in Bildschirmpunkten - bei 115 Prozent waere die Tafel
+           sonst 15 Prozent zu hoch. */
+        .erklaer-tafel {
+            background: #f2f7fd; border: 1px solid #cfe0f2;
+            border-left: 5px solid #2f6ea2; border-radius: 10px;
+            color: #23364d; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .erklaer-tafel .et-kopf {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0.5rem 0.8rem; border-bottom: 1px solid #cfe0f2;
+            flex: 0 0 auto;
+        }
+        .erklaer-tafel .et-titel {
+            flex: 1; font-weight: 700; color: var(--panel-navy); font-size: 0.95rem;
+        }
+        .erklaer-tafel .et-frage { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+        .erklaer-tafel .et-zu {
+            background: #ffffff; border: 1px solid #cfe0f2; color: #23364d;
+            border-radius: 8px; width: 30px; height: 30px; cursor: pointer;
+            flex: 0 0 auto; font-size: 0.9rem; line-height: 1;
+        }
+        .erklaer-tafel .et-zu:hover { border-color: #2f6ea2; }
+        .erklaer-tafel .et-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0.7rem 0.8rem; }
+        body.dark .erklaer-tafel {
+            background: #12283d; border-color: #2c4a68; color: #dce8f4;
+        }
+        body.dark .erklaer-tafel .et-kopf { border-bottom-color: #2c4a68; }
+        body.dark .erklaer-tafel .et-titel { color: #dce8f4; }
+        body.dark .erklaer-tafel .et-zu { background: #12283d; border-color: #2c4a68; color: #dce8f4; }
+        body.eckig .erklaer-tafel { border-radius: 0 !important; }
+
+        .erklaer-kasten {
+            font-size: 0.86rem; line-height: 1.55;
+        }
+        /* Der Satz, der sagt, dass hier noch etwas fehlt - damit ein
+           kurzes Fenster nicht wie ein Fehler aussieht. */
+        .erklaer-kasten .ek-spaeter {
+            margin-top: 0.9rem; padding-top: 0.5rem;
+            border-top: 1px dashed #cfe0f2;
+            font-size: 0.78rem; color: #4b5563;
+        }
+        .erklaer-kasten .ek-zeile { margin-top: 0.55rem; }
+        .erklaer-kasten .ek-zeile:first-child { margin-top: 0; }
+        .erklaer-kasten .ek-marke {
+            font-weight: 700; color: #1b5a97;
+        }
+        .erklaer-kasten ol.ek-weg {
+            margin: 0.3rem 0 0 1.1rem; padding: 0;
+        }
+        .erklaer-kasten ol.ek-weg li { margin: 0.12rem 0; }
+        .erklaer-kasten ul.ek-falsch {
+            margin: 0.3rem 0 0 0; padding: 0; list-style: none;
+        }
+        .erklaer-kasten ul.ek-falsch li {
+            margin: 0.3rem 0; padding-left: 0.75rem;
+            border-left: 2px solid #d8e4f0;
+        }
+        .erklaer-kasten ul.ek-falsch li.gewaehlt {
+            border-left-color: #c0392b; background: #fdf1ef;
+            border-radius: 0 6px 6px 0; padding: 0.2rem 0.5rem 0.2rem 0.75rem;
+        }
+        .erklaer-kasten .ek-du {
+            font-size: 0.72rem; font-weight: 800; color: #a5281b;
+            text-transform: uppercase; letter-spacing: 0.02em;
+        }
+        body.dark .erklaer-kasten .ek-marke { color: #8fc4f0; }
+        body.dark .erklaer-kasten .ek-spaeter { border-top-color: #2c4a68; color: #a8bccf; }
+        body.dark .erklaer-kasten ul.ek-falsch li { border-left-color: #2c4a68; }
+        body.dark .erklaer-kasten ul.ek-falsch li.gewaehlt {
+            background: #3a1c18; border-left-color: #e07a6a;
+        }
+        body.dark .erklaer-kasten .ek-du { color: #ffb3a7; }
+
 
         /* ================================================================
            WORAN ES LIEGT - IN DER AUSWERTUNG
@@ -1542,18 +1692,56 @@
            ================================================================ */
         .q-marke-notiz.an { background: #e2932f; border-color: #e2932f; color: #ffffff; }
 
+        /* ================================================================
+           DAS NOTIZFELD STEHT AN DER STELLE DER ANTWORTEN   (13.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, nachdem die Erklaerung so gebaut war: "Bei Notizen
+           moechte ich das auch so haben. Es oeffnet sich ein Fenster, wo
+           man das selbst beschreiben kann. Exakt auf der Laenge und Breite
+           von den Antworten und auch ohne abgedunkelten Hintergrund."
+
+           Vorher stand es UNTER den Antworten und machte die Seite um
+           rund 160 Punkte laenger - bei langen Fragen war die Notiz damit
+           ausserhalb des Fensters, und die Schriftautomatik verkleinerte
+           die Frage, sobald man den Zettel anklickte.
+
+           Jetzt tritt es an die Stelle des Antwortkastens, genau so hoch
+           wie dieser, und das Schreibfeld nimmt darin den ganzen freien
+           Platz ein - siehe notizUmschalten().
+
+           EINE FOLGE DAVON, die man kennen muss: Das Feld ist jetzt beim
+           Zeichnen der Frage IMMER zu, auch wenn eine Notiz vorliegt.
+           Vorher stand es offen, "sonst waere die Notiz unsichtbar,
+           obwohl es sie gibt" - das ginge nun nicht mehr, es wuerde die
+           Antworten verdecken. Dass eine Notiz da ist, sagt der orange
+           leuchtende Zettel in der Kopfzeile; siehe
+           notizKnopfNachziehen().
+           ================================================================ */
         #notizFeld {
-            margin-top: 0.8rem; background: #fffbf0; border: 1px solid #f0d9a8;
+            background: #fffbf0; border: 1px solid #f0d9a8;
             border-left: 5px solid #e2932f; border-radius: 12px;
             padding: 0.7rem 0.9rem;
+            display: flex; flex-direction: column; overflow: hidden;
         }
         #notizFeld .notiz-kopf {
             display: flex; align-items: center; justify-content: space-between;
             gap: 10px; margin-bottom: 6px; font-size: 0.74rem; color: #8a6d00;
-            font-weight: 700;
+            font-weight: 700; flex: 0 0 auto;
         }
+        #notizFeld .notiz-fuss { flex: 0 0 auto; }
+        /* Derselbe Weg zurueck wie bei der Erklaerung: Wer die Antworten
+           verdeckt, muss sie auch wieder freigeben koennen, ohne den
+           Zettel in der Kopfzeile zu suchen. */
+        #notizFeld .notiz-zu {
+            background: #fffdf8; border: 1px solid #e8d3a4; color: #8a6d00;
+            border-radius: 8px; width: 26px; height: 26px; cursor: pointer;
+            font-size: 0.8rem; line-height: 1; flex: 0 0 auto;
+        }
+        #notizFeld .notiz-zu:hover { border-color: #e2932f; }
+        body.dark #notizFeld .notiz-zu { background: #1f1a11; border-color: #5a4a28; color: #f0e6d2; }
         #notizFeld textarea {
-            width: 100%; box-sizing: border-box; min-height: 74px; resize: vertical;
+            width: 100%; box-sizing: border-box; min-height: 74px;
+            flex: 1 1 auto; resize: none;
             border: 1px solid #e8d3a4; border-radius: 8px; padding: 0.55rem 0.7rem;
             font-family: inherit; font-size: 0.95rem; line-height: 1.45;
             background: #fffdf8; color: var(--ink); outline: none;
@@ -1909,6 +2097,40 @@
         .footer-note a:hover {
             border-bottom: 2px solid var(--panel-navy);
         }
+
+        /* ================================================================
+           DIE FUSSZEILE WAEHREND EINER RUNDE   (13.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit Bild von AD806: "Schau mal, das Fenster ist bei den
+           Fragen groesser!" Die Seite ragte 26 Punkte aus dem Fenster, und
+           genau so viel nahm die Fusszeile ein. Gemessen kostet sie 63
+           Punkte Hoehe - mit Rand und Trennlinie.
+
+           Auf die Frage, ob sie waehrend der Fragen weg soll: "Antwort 1
+           ausblenden, aber ueber einen Button Sichtbar machen." Also weg,
+           aber erreichbar - die Quelle des Katalogs und die Zusammenarbeit
+           mit 50ohm.de sollen nicht verschwinden, nur nicht im Weg stehen.
+
+           SICHTBAR GEMACHT LIEGT SIE AM FENSTER, NICHT IN DER SEITE
+           (position:fixed). Sonst wuerde die Seite beim Knopfdruck um 63
+           Punkte wachsen, die Schriftautomatik wuerde die Frage
+           verkleinern, und ein Klick auf "Quelle" haette die Frage kleiner
+           gemacht. So aendert sich am Satz der Seite nichts.
+           ================================================================ */
+        body.runde-laeuft .footer-note { display: none; }
+        body.runde-laeuft.quelle-zeigen .footer-note {
+            display: block;
+            position: fixed; left: 0; right: 0; bottom: 0;
+            margin: 0; padding: 0.55rem 1rem;
+            background: #ffffff;
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -6px 18px rgba(15,39,69,0.10);
+            z-index: 90;
+        }
+        body.dark.runde-laeuft.quelle-zeigen .footer-note {
+            background: var(--nacht-karte, #12283d);
+        }
+        #quelleBtn.an { background: var(--panel-navy); color: #ffffff; }
 
         /* Woher die Erklaerungen kommen. Dietmar am 04.09.2026 zuerst als
            eigene Zeile gewuenscht, kurz darauf praeziser: "In einer Linie" -
@@ -2437,6 +2659,16 @@
             .blaetter-kachel.unberuehrt:hover { border-color: #1b5a97; }
         }
         .bk-balken.blau > i { background: #2c6fb5; }
+
+        /* Die Kachel "Mit Erklärung". Violett, weil die vier anderen
+           Gruen, Orange, Blau und Weiss schon belegt haben - und weil es
+           kein Lernstand ist, sondern eine Eigenschaft der Frage. */
+        .blaetter-kachel.erklaert { border-color: #d3c6ea; background: #f8f5ff; }
+        .blaetter-kachel.erklaert .bk-titel { color: #5b3f95; }
+        @media (hover: hover) {
+            .blaetter-kachel.erklaert:hover { border-color: #5b3f95; }
+        }
+        .bk-balken.violett > i { background: #6b4bb0; }
 
         /* ================================================================
            TASCHENRECHNER
@@ -5436,6 +5668,12 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 // Abrunden und bis 0,6 hinunter - genau wie in
                 // anzeigeAutomatisch(). Waere hier gerundet, blitzte die
                 // Seite eine Stufe zu gross auf und spraenge dann zurueck.
+                //
+                // HIER MUSS ES BEI 870 BLEIBEN, auch wenn anzeigeAutomatisch()
+                // inzwischen die echte Hoehe misst: Vor dem ersten Zeichnen
+                // gibt es nichts zu messen. Dieser Wert ist nur der erste
+                // Anstrich; anzeigeAnwenden() rechnet gleich danach mit der
+                // gemessenen Hoehe nach und darf dabei auch nach OBEN gehen.
                 f = Math.min((window.innerWidth || 1520) / 1520, (window.innerHeight || 870) / 870);
                 f = Math.floor(Math.max(0.6, Math.min(1.5, f)) * 20) / 20;
             }
@@ -5900,6 +6138,14 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                             data-vorlesen="Antwort zurücknehmen. Die Wertung wird rückgängig gemacht und die Frage steht wieder offen."><i class="fas fa-rotate-left"></i> Zurücknehmen</button>
                     <button class="nav-btn nav-btn-primary" id="nextBtn">Weiter <i class="fas fa-chevron-right"></i></button>
                     <button class="nav-btn" id="homeBtn" onclick="backToMain()" data-tooltip="Zurück zur Hauptansicht" style="display:none;"><i class="fas fa-home"></i> Hauptmenü</button>
+                    <!-- Die Quellenangabe holen, die waehrend der Runde weg ist.
+                         Sie liegt dann am Fensterrand und nicht in der Seite -
+                         siehe body.runde-laeuft.quelle-zeigen im Stylesheet. -->
+                    <button class="nav-btn" id="quelleBtn" onclick="quelleUmschalten()"
+                            data-tooltip="Quelle des Fragenkatalogs und die Zusammenarbeit mit 50ohm.de einblenden"
+                            data-vorlesen-kurz="Quelle einblenden."
+                            data-vorlesen="Quelle einblenden. Zeigt die Herkunft des Fragenkatalogs und die Zusammenarbeit mit 50 Ohm am unteren Rand."
+                            style="padding-left:0.7rem; padding-right:0.7rem;"><i class="fas fa-info-circle"></i></button>
                 </div>
             </div>
         </div>
@@ -7597,6 +7843,28 @@ let videoMap = {}; // id -> video info (DL2YMR Zeitmarken) – wird aus Embed + 
 // Die Zuordnung zum Lehrgang des DARC. Leer, solange die Datei fehlt.
 let lernMap = {};
 window.lernMap = lernMap;
+
+// ================================================================
+//  ERKLAERUNGEN ZU DEN FRAGEN MIT ZEICHNUNG
+// ----------------------------------------------------------------
+//  Dietmar am 12.09.2026: "ich kann mir technische Fragen mit Bild
+//  erklaeren lassen?" - und nach der Probe: "Baue mir das mal ein."
+//
+//  Aufbau von erklaerungen.json, eine Zeile je Frage:
+//    { "fragen": { "AI611": {
+//        "bild":  "was in der Zeichnung zu sehen ist",
+//        "kniff": "der eine Satz, um den es geht",
+//        "weg":   ["Rechenschritt", "Rechenschritt", ...],
+//        "warum_falsch": { "19,4 W": "Effektivwert vergessen ..." } } } }
+//
+//  DIE SCHLUESSEL UNTER warum_falsch SIND DIE ANTWORTTEXTE, nicht
+//  a/b/c/d. Der Trainer mischt die Antworten - eine Erklaerung an
+//  Position C haette morgen auf die falsche Antwort gezeigt.
+//
+//  Freiwillig wie 50ohm_map.json: fehlt die Datei, bleibt der Kasten
+//  unter der Frage einfach aus. Nichts anderes haengt daran.
+let erklaerMap = {};
+window.erklaerMap = erklaerMap;
 let svgList = [];
 let history = {};
 let currentUser = (()=>{ try{ return localStorage.getItem('amateurfunk_currentUser') || 'user1'; }catch(e){ return 'user1'; } })();
@@ -7826,25 +8094,55 @@ window.notizKnopfNachziehen = notizKnopfNachziehen;
 
 // Auf- und zuklappen. Beim Aufklappen springt der Schreibstrich hinein -
 // wer den Knopf drueckt, will schreiben und nicht erst klicken.
+//
+// DAS FELD TRITT AN DIE STELLE DER ANTWORTEN. Dietmar am 13.09.2026:
+// "Exakt auf der Laenge und Breite von den Antworten und auch ohne
+// abgedunkelten Hintergrund." Die Breite ergibt sich von selbst, weil das
+// Feld ohnehin im Fluss darunter steht; die Hoehe wird uebernommen, bevor
+// der Antwortkasten verschwindet. Gerechnet wird mit offsetHeight und
+// nicht mit getBoundingClientRect - offsetHeight zaehlt in Satzpunkten
+// und ist von der Anzeigevergroesserung unabhaengig.
+//
+// Bis zum 13.09.2026 blieb das Feld offen, wenn etwas darin stand. Das
+// geht nicht mehr: Es wuerde die Antworten verdecken. Dass eine Notiz da
+// ist, sagt jetzt allein der orange leuchtende Zettel in der Kopfzeile.
 function notizUmschalten(){
     try{
         const feld = document.getElementById('notizFeld');
         if(!feld) return;
+        const kasten = document.getElementById('optionsContainer');
         const zu = feld.style.display === 'none';
         if(zu){
+            // Zwei Tafeln an derselben Stelle waeren eine zu viel.
+            try{ if(document.getElementById('erklaerTafel')) erklaerSchliessen(); }catch(e){}
+            const hoehe = kasten ? kasten.offsetHeight : 0;
             feld.style.display = '';
+            if(hoehe > 80) feld.style.height = hoehe + 'px';
+            if(kasten) kasten.style.display = 'none';
             const t = document.getElementById('notizText');
             if(t){ t.focus(); try{ t.setSelectionRange(t.value.length, t.value.length); }catch(e){} }
         }else{
             notizJetztSichern();
-            // Steht etwas drin, bleibt das Feld offen - sonst waere die
-            // Notiz nach dem Zuklappen unsichtbar, obwohl es sie gibt.
-            const q = currentQuestions[currentIndex];
-            if(!q || notizText(q.id).trim() === '') feld.style.display = 'none';
+            feld.style.display = 'none';
+            feld.style.height = '';
+            if(kasten) kasten.style.display = '';
+            try{ notizKnopfNachziehen(); }catch(e){}
         }
     }catch(e){ console.error('[Notiz] umschalten', e); }
 }
 window.notizUmschalten = notizUmschalten;
+
+// Escape schliesst den Zettel - wie bei der Erklaerung und beim Rechner.
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    try{
+        const feld = document.getElementById('notizFeld');
+        if(feld && feld.style.display !== 'none'){
+            e.stopPropagation();
+            notizUmschalten();
+        }
+    }catch(err){}
+});
 
 // ZU WELCHER FRAGE GEHOERT DAS, WAS GERADE IM FELD STEHT?
 //
@@ -8241,20 +8539,63 @@ window.lernstandDateiWaehlen = lernstandDateiWaehlen;
 //  DIE GROESSE DER FRAGE NACH DEM VORHANDENEN PLATZ
 // ----------------------------------------------------------------------------
 //  Drei Stufen (siehe body.q-gross / body.q-mittel im Stylesheet). Genommen
-//  wird die groesste, bei der die Knopfleiste noch vollstaendig im Fenster
-//  steht.
+//  wird die groesste, bei der die SEITE noch ganz ins Fenster passt.
 //
 //  ALLES IN EINEM DURCHGANG. Zwischen den Versuchen wird nicht gezeichnet:
 //  Der Browser rechnet die Seite neu, sobald man eine Groesse liest
-//  (getBoundingClientRect), malt aber erst am Ende des Durchgangs. Wer hier
-//  ein setTimeout einbaut, sieht die Schrift dreimal springen.
+//  (scrollHeight, getBoundingClientRect), malt aber erst am Ende des
+//  Durchgangs. Wer hier ein setTimeout einbaut, sieht die Schrift dreimal
+//  springen.
 //
 //  Gemessen wird in derselben Einheit, in der auch innerHeight zaehlt -
 //  beide sind "sichtbare" Punkte und damit vom Zoom gleich betroffen.
 //  clientHeight waere die andere Einheit und ergaebe bei vergroesserter
 //  Anzeige eine falsche Entscheidung.
+//
+// ============================================================================
+//  DIE KNOPFLEISTE WAR DAS FALSCHE MASS   (13.09.2026)
+// ----------------------------------------------------------------------------
+//  Hier stand "leiste.getBoundingClientRect().bottom <= platz", und der
+//  Kommentar darueber behauptete: solange die Knopfleiste im Fenster
+//  bleibt, ist die Frage vollstaendig zu sehen.
+//
+//  Das ist nicht wahr. UNTER der Knopfleiste steht die Fusszeile mit der
+//  Katalogquelle, gut 60 Punkte hoch. Bei AD806 in Dietmars Fenster hatte
+//  die Knopfleiste 94 Punkte Luft - und die Seite ragte trotzdem 26 Punkte
+//  heraus: Fusszeile abgeschnitten, Scrollbalken da. Dietmar mit Bild:
+//  "Schau mal, das Fenster ist bei den Fragen groesser!"
+//
+//  Es ist derselbe Fehler, den ich am Morgen desselben Tages in der
+//  Zoom-Automatik beseitigt habe: ein Stellvertreter statt der Sache
+//  selbst. Gefragt ist nicht, wo die Knopfleiste endet, sondern ob die
+//  SEITE ins Fenster passt - und das sagt scrollHeight direkt.
+//
+//  Nachgemessen bei 1920x955 und 115 Prozent:
+//      AD806   gross: 26 Punkte zu viel   ->  mittel: passt, 56 Punkte Luft
+//      AI611   gross: 64 zu viel, mittel: 27 zu viel  ->  klein: passt
+//      AD212   passt auf jeder Stufe      ->  bleibt gross
+//      AK103   passt auf keiner (159 zu viel selbst klein) -> wird gerollt
+//
+//  Die letzte Zeile ist wichtig: Es gibt Fragen, die in KEINER Schriftstufe
+//  hineinpassen. Deren Text ist einfach zu lang. Dort ist Rollen richtig
+//  und kein Fehler - alles andere hiesse, die Schrift fuer alle 716 Fragen
+//  nach der laengsten zu waehlen.
 // ============================================================================
 const FRAGEN_STUFEN = ['q-gross', 'q-mittel', ''];   // gross zuerst
+const FRAGEN_LUFT   = 8;    // Punkte, die unter der Fusszeile frei bleiben
+
+// Passt die ganze Seite ins Fenster? Zwei Bedingungen, wie in
+// anzeigeAnwenden(): kein Scrollbalken UND unten etwas frei. Die
+// Fusszeile allein genuegt nicht, weil die Verlaufsspalte rechts tiefer
+// reichen kann als sie.
+function fragenPasstInsFenster(){
+    const e = document.documentElement;
+    // Dieses Lesen erzwingt die Neuberechnung.
+    if(e.scrollHeight > (window.innerHeight || 0) + 2) return false;
+    const fuss = document.querySelector('.footer-note');
+    if(!fuss) return true;
+    return ((window.innerHeight || 0) - fuss.getBoundingClientRect().bottom) >= FRAGEN_LUFT;
+}
 
 function fragenGroesseAnpassen(){
     try{
@@ -8263,17 +8604,76 @@ function fragenGroesseAnpassen(){
         if(!leiste || !bereich) return;
         // Nur waehrend einer Runde. In der Hauptansicht gibt es keine Frage.
         if(!document.body.classList.contains('runde-laeuft')) return;
-        const platz = window.innerHeight;
         for(const stufe of FRAGEN_STUFEN){
             document.body.classList.remove('q-gross', 'q-mittel');
             if(stufe) document.body.classList.add(stufe);
-            // Dieses Lesen erzwingt die Neuberechnung.
-            if(leiste.getBoundingClientRect().bottom <= platz) return;
+            if(fragenPasstInsFenster()) return;
         }
         // Keine passt: Es bleibt bei der kleinsten, dann wird gerollt.
     }catch(e){ /* die Groesse ist nie ein Grund fuer einen Fehler */ }
 }
 window.fragenGroesseAnpassen = fragenGroesseAnpassen;
+
+// ============================================================================
+//  UND NOCH EINMAL, WENN DIE BILDER STEHEN
+// ----------------------------------------------------------------------------
+//  Die Reihenfolge in renderQuestion() ist: Schriftstufe waehlen, dann die
+//  Bilder in den freien Platz rechnen, dann nachziehen, sobald die Dateien
+//  da sind. Ein Bild, das dabei waechst, kann die Seite ueber die Kante
+//  schieben, NACHDEM die Stufe entschieden war.
+//
+//  Deshalb diese Nachpruefung - und sie geht AUSSCHLIESSLICH nach unten.
+//  Wer hier auch wieder vergroessern wuerde, baute eine Schaukel: kleinere
+//  Schrift heisst mehr freier Platz heisst groesseres Bild heisst wieder
+//  zu hoch. So kann es hoechstens zwei Stufen nach unten gehen und steht.
+// ============================================================================
+function fragenGroesseNachziehen(){
+    try{
+        if(!document.body.classList.contains('runde-laeuft')) return;
+        if(fragenPasstInsFenster()) return;
+        if(document.body.classList.contains('q-gross')){
+            document.body.classList.remove('q-gross');
+            document.body.classList.add('q-mittel');
+            if(fragenPasstInsFenster()) return;
+        }
+        document.body.classList.remove('q-mittel');
+    }catch(e){}
+}
+window.fragenGroesseNachziehen = fragenGroesseNachziehen;
+
+// ============================================================================
+//  DIE QUELLENANGABE AUF ZURUF
+// ----------------------------------------------------------------------------
+//  Dietmar am 13.09.2026: "Antwort 1 ausblenden, aber ueber einen Button
+//  Sichtbar machen." Gemeint war die Fusszeile mit der Herkunft des
+//  Katalogs; sie kostet 63 Punkte Hoehe und war bei langen Fragen der
+//  Grund fuer den Scrollbalken.
+//
+//  Sie verschwindet also waehrend einer Runde und kommt auf Knopfdruck
+//  zurueck - als Leiste am Fensterrand, nicht als Teil der Seite. Siehe
+//  body.runde-laeuft.quelle-zeigen im Stylesheet: Laege sie in der Seite,
+//  wuerde die Seite beim Knopfdruck um 63 Punkte wachsen und die
+//  Schriftautomatik die Frage verkleinern - ein Klick auf "Quelle" haette
+//  dann die Frage kleiner gemacht.
+// ============================================================================
+function quelleUmschalten(){
+    try{
+        const an = document.body.classList.toggle('quelle-zeigen');
+        const b = document.getElementById('quelleBtn');
+        if(b){
+            b.classList.toggle('an', an);
+            b.setAttribute('data-tooltip', an
+                ? 'Quellenangabe wieder ausblenden'
+                : 'Quelle des Fragenkatalogs und die Zusammenarbeit mit 50ohm.de einblenden');
+        }
+    }catch(e){}
+}
+window.quelleUmschalten = quelleUmschalten;
+
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    if(document.body.classList.contains('quelle-zeigen')) quelleUmschalten();
+});
 
 // ================================================================
 //  BILDANTWORTEN: SO GROSS, WIE DER PLATZ ES ZULAESST
@@ -12552,6 +12952,38 @@ function durchsichtUnberuehrtLos(){
 }
 window.durchsichtUnberuehrtLos = durchsichtUnberuehrtLos;
 
+// ================================================================
+//  DIE FRAGEN, ZU DENEN EINE ERKLAERUNG VORLIEGT
+//  ----------------------------------------------------------------
+//  Dietmar am 13.09.2026: "sage mir wie ich diese Fragen finde."
+//
+//  Genau dafuer diese Kachel. Sie zaehlt, zu wie vielen Fragen DES
+//  GERADE GEWAEHLTEN Prueungsziels eine Erklaerung in
+//  erklaerungen.json steht, und blaettert nur durch diese.
+//
+//  Sie erscheint nur, wenn es welche gibt. Wer auf Klasse N steht und
+//  Erklaerungen nur fuer E -> A hat, sieht keine Kachel und wundert
+//  sich nicht ueber eine leere Liste.
+// ================================================================
+const ERKLAERT_NAME = 'Mit Erklärung';
+
+function durchsichtErklaertIds(){
+    try{
+        if(typeof erklaerMap === 'undefined' || !erklaerMap) return [];
+        return durchsichtBank().filter(q => !!erklaerMap[q.id]).map(q => q.id);
+    }catch(e){ return []; }
+}
+
+function durchsichtErklaertLos(){
+    const ids = durchsichtErklaertIds();
+    if(!ids.length){
+        if(window.showAppAlert) showAppAlert('Zu diesem Prüfungsziel liegt noch keine Erklärung vor.');
+        return;
+    }
+    startQuestionSession(ids, ERKLAERT_NAME);
+}
+window.durchsichtErklaertLos = durchsichtErklaertLos;
+
 function durchsichtStarten(){
     const p = durchsichtPosition();
     if(!p.ids.length){
@@ -12722,6 +13154,25 @@ function durchsichtFrageFenster(p){
         + '</button>'
       : '';
 
+    // Die fuenfte Kachel: die Fragen mit Erklaerung. Siehe
+    // durchsichtErklaertIds(). Steht unten, weil sie keine Aussage
+    // ueber den Lernstand ist, sondern ueber das Material.
+    const erklaertIds = durchsichtErklaertIds();
+    const erklaertN = erklaertIds.length;
+    const anteilE = gesamt ? Math.max(1.2, Math.min(100, (erklaertN / gesamt) * 100)) : 0;
+    const mitBild = erklaertN
+      ? '<button type="button" class="blaetter-kachel erklaert" '
+        + 'onclick="durchsichtFensterZu(); durchsichtErklaertLos();">'
+        + '<span class="bk-titel"><i class="fas fa-lightbulb"></i> Mit Erklärung</span>'
+        + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#5b3f95;">' + erklaertN + '</span>'
+        + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen mit erklärter Zeichnung</span></span>'
+        + '<span class="bk-balken violett"><i data-ziel="' + anteilE.toFixed(1) + '%"></i></span>'
+        + '<span class="bk-klein">Nach dem Antworten steht unter der Frage, was in der Zeichnung zu '
+        + 'sehen ist, der Rechenweg, und warum jede falsche Antwort falsch ist. Das Lesezeichen '
+        + 'bleibt liegen.</span>'
+        + '</button>'
+      : '';
+
     modal.innerHTML =
         '<div style="background:#fff; border-radius:22px; width:100%; max-width:560px; overflow:hidden; '
       + 'box-shadow:0 24px 64px rgba(0,0,0,0.35);">'
@@ -12742,6 +13193,7 @@ function durchsichtFrageFenster(p){
       + '<div class="blaetter-kacheln' + (gel ? '' : ' einzeln') + '">' + kachel1 + kachel2 + '</div>'
       + (einstieg ? '<div class="blaetter-rest">' + einstieg + '</div>' : '')
       + (weiss ? '<div class="blaetter-rest">' + weiss + '</div>' : '')
+      + (mitBild ? '<div class="blaetter-rest">' + mitBild + '</div>' : '')
       + '</div>'
       + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
       + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
@@ -15403,6 +15855,29 @@ async function loadQuestions() {
         }
 
         // ------------------------------------------------------------
+        //  Die Erklaerungen. Siehe erklaerMap oben.
+        // ------------------------------------------------------------
+        try {
+            const rEr = await fetch('erklaerungen.json?v=' + Date.now(), { cache: 'no-store' });
+            if (rEr.ok) {
+                const jEr = await rEr.json();
+                // Zwei Schreibweisen erlaubt: mit "fragen"-Deckel oder flach.
+                const inhalt = (jEr && jEr.fragen && typeof jEr.fragen === 'object') ? jEr.fragen : jEr;
+                if (inhalt && typeof inhalt === 'object') {
+                    erklaerMap = inhalt;
+                    window.erklaerMap = erklaerMap;
+                    console.log(`✅ Erklärungen geladen: ${Object.keys(erklaerMap).length} Fragen`);
+                    // Dieselbe Vorsicht wie bei formelhilfe.json: Steht die
+                    // erste Frage schon auf dem Schirm, waere der Knopf sonst
+                    // bis zur naechsten Frage aus.
+                    try{ erklaerKnopfSetzen(); }catch(e){}
+                }
+            }
+        } catch(e) {
+            console.debug('erklaerungen.json nicht vorhanden – der Erklärkasten bleibt aus.');
+        }
+
+        // ------------------------------------------------------------
         //  Die genauere Zuordnung, die der DARC selbst veroeffentlicht
         // ------------------------------------------------------------
         //  Dietmar hat sie am 09.09.2026 gefunden:
@@ -16736,14 +17211,19 @@ function formelKnopfMelden(fragenId){
     if(formelPulsFrage === fragenId) return;
     formelPulsFrage = fragenId;
 
-    // Die Animation läuft nur neu an, wenn die Klasse weg war. Das
-    // Auslesen von offsetWidth erzwingt den Zwischenschritt - ohne das
-    // fasst der Browser Entfernen und Setzen zusammen und es passiert
-    // gar nichts.
-    b.classList.remove('merk-mich');
-    void b.offsetWidth;
-    b.classList.add('merk-mich');
-    setTimeout(() => { try{ b.classList.remove('merk-mich'); }catch(e){} }, 2200);
+    // DAS PULSEN SELBST STEHT NICHT MEHR HIER, sondern in
+    // hinweiseMelden(): Seit es die Gluehbirne daneben gibt, muessen sich
+    // die beiden Knoepfe den Takt teilen - Dietmar am 13.09.2026:
+    // "Erklärung soll Alternierend mit Formelsammlung pulsen."
+    //
+    // UND DER TAKT KANN ERST LOSGEHEN, WENN BEIDE KNOEPFE ENTSCHIEDEN
+    // SIND. Das war der erste Versuch: Der Aufruf stand hier, in
+    // formelKnopfSetzen() - und zu diesem Zeitpunkt war die Gluehbirne
+    // noch verborgen, weil erklaerKnopfSetzen() erst danach laeuft. Beim
+    // Nachmessen pulste deshalb nur das Formelblatt. Der Takt wird jetzt
+    // am Ende von renderQuestion() angeschlagen, wenn beide stehen.
+    //
+    // Hier bleibt der Ton, denn der gehoert zum Formelblatt allein.
 
     // Der Ton bei JEDER Frage mit Formelblatt-Stelle - abschaltbar unter
     // Einstellungen -> Formelblatt. Einmal je Frage, nicht bei jedem
@@ -16751,6 +17231,92 @@ function formelKnopfMelden(fragenId){
     if(einstellungen && einstellungen.formelTon === false) return;
     formelTonSpielen();
 }
+
+// ================================================================
+//  DER TAKT FUER BEIDE KNOEPFE
+// ----------------------------------------------------------------
+//  Dietmar am 13.09.2026: "Erklärung soll Alternierend mit
+//  Formelsammlung pulsen."
+//
+//  Vorher pulste das Formelblatt dreimal hintereinander und die
+//  Gluehbirne 900 Millisekunden spaeter noch dreimal - zusammen fast
+//  vier Sekunden, und der zweite Teil kam so spaet, dass man ihn
+//  verpasste. Jetzt wechseln sie sich ab:
+//
+//      Formelblatt - Gluehbirne - Formelblatt - Gluehbirne - ...
+//
+//  Je Schlag 620 Millisekunden, dreimal die Runde. Ist nur einer der
+//  beiden Knoepfe da, pulst er dreimal allein - dann sieht es aus wie
+//  vorher.
+//
+//  EIN TAKTGEBER FUER BEIDE, und deshalb ruft ihn auch nur einer auf:
+//  formelKnopfMelden(). Die Gluehbirne meldet sich nur, wenn es das
+//  Formelblatt zu dieser Frage NICHT gibt - sonst pulste es doppelt.
+// ================================================================
+const PULS_TAKT = 620;
+
+function pulsEinmal(el){
+    if(!el || el.style.display === 'none') return;
+    // Die Animation läuft nur neu an, wenn die Klasse weg war. Das
+    // Auslesen von offsetWidth erzwingt den Zwischenschritt - ohne das
+    // fasst der Browser Entfernen und Setzen zusammen und es passiert
+    // gar nichts.
+    el.classList.remove('puls-einmal');
+    void el.offsetWidth;
+    el.classList.add('puls-einmal');
+    setTimeout(() => { try{ el.classList.remove('puls-einmal'); }catch(e){} }, PULS_TAKT + 40);
+}
+
+function hinweisePulsen(nurErklaer){
+    if(einstellungen && einstellungen.formelHinweis === false) return;
+    const da = id => {
+        const el = document.getElementById(id);
+        return (el && el.style.display !== 'none') ? el : null;
+    };
+    const reihe = [];
+    if(!nurErklaer){ const f = da('formelBtn'); if(f) reihe.push(f); }
+    const e = da('erklaerBtn'); if(e) reihe.push(e);
+    if(!reihe.length) return;
+    // Ein laufender Takt wird abgebrochen, damit sich zwei Aufrufe nicht
+    // ueberlagern (etwa Frage zeichnen und gleich darauf antworten).
+    try{ (hinweisePulsen._uhren || []).forEach(clearTimeout); }catch(err){}
+    hinweisePulsen._uhren = [];
+    let t = 0;
+    for(let runde = 0; runde < 3; runde++){
+        for(const el of reihe){
+            hinweisePulsen._uhren.push(setTimeout(() => pulsEinmal(el), t));
+            t += PULS_TAKT;
+        }
+    }
+}
+window.hinweisePulsen = hinweisePulsen;
+
+// Wer, wann und wie oft. Getrennt vom Takt selbst, damit die Sperre gegen
+// doppeltes Pulsen an einer Stelle steht.
+//
+//  BEIM ERSCHEINEN DER FRAGE: beide abwechselnd.
+//  NACH EINER FALSCHEN ANTWORT: nur die Gluehbirne - im Formelblatt steht
+//  jetzt nichts Neues, in der Erklaerung schon (der Rechenweg ist
+//  dazugekommen).
+//  NACH EINER RICHTIGEN ANTWORT: gar nichts. Wer es konnte, braucht
+//  keinen Hinweis.
+function hinweiseMelden(){
+    try{
+        if(einstellungen && einstellungen.formelHinweis === false) return;
+        let q = null;
+        try{ q = currentQuestions[currentIndex]; }catch(e){}
+        if(!q) return;
+        const falschBeantwortet = !!(answered && q.userAnswerIndex != null
+            && q.options[q.userAnswerIndex] && !q.options[q.userAnswerIndex].correct);
+        const lage = !answered ? 'o' : (falschBeantwortet ? 'f' : 'r');
+        const marke = q.id + '|' + lage;
+        if(hinweiseMelden._marke === marke) return;   // nicht bei jedem Neuzeichnen
+        hinweiseMelden._marke = marke;
+        if(lage === 'o')      hinweisePulsen(false);  // beide
+        else if(lage === 'f') hinweisePulsen(true);   // nur die Gluehbirne
+    }catch(e){}
+}
+window.hinweiseMelden = hinweiseMelden;
 
 function formelBtnKlick(){
     const b = document.getElementById('formelBtn');
@@ -16762,6 +17328,213 @@ function formelBtnKlick(){
     }
 }
 window.formelBtnKlick = formelBtnKlick;
+
+// ================================================================
+//  DIE ERKLAERUNG ZUR ZEICHNUNG - KNOPF UND FENSTER
+// ----------------------------------------------------------------
+//  Gebaut wie das Formelblatt daneben, und zwar absichtlich Stueck
+//  fuer Stueck: derselbe Platz in der Kopfzeile, dasselbe Pulsen,
+//  dasselbe Fenster zum Beiseiteschieben. Wer das eine kennt, kennt
+//  das andere. Die Begruendung steht im CSS bei "DIE ERKLAERUNG:
+//  EIN KNOPF UND EIN EIGENES FENSTER".
+//
+//  DER INHALT HAENGT DAVON AB, OB SCHON GEANTWORTET IST:
+//  vorher "Im Bild" und "Der Kniff", nachher zusaetzlich "Der Weg"
+//  und "Warum die anderen falsch sind". Sonst waere der Knopf die
+//  Loesung und keine Hilfe.
+// ================================================================
+
+// Der Inhalt. Getrennt vom Zeichnen, damit beide Faelle - vor und
+// nach der Antwort - an einer Stelle nebeneinander stehen.
+function erklaerInhalt(q, er, alles){
+    const meine = (q && q.userAnswerIndex != null && q.options && q.options[q.userAnswerIndex])
+        ? String(q.options[q.userAnswerIndex].text || '').trim() : '';
+    let ek = '';
+    if (er.bild)  ek += '<div class="ek-zeile"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
+    if (er.kniff) ek += '<div class="ek-zeile"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
+
+    const hatWeg    = Array.isArray(er.weg) && er.weg.length;
+    const wf        = er.warum_falsch || er.falsch || null;
+    const hatFalsch = !!(wf && typeof wf === 'object' && Object.keys(wf).length);
+
+    if (alles) {
+        if (hatWeg) {
+            ek += '<div class="ek-zeile"><span class="ek-marke">Der Weg.</span><ol class="ek-weg">'
+                + er.weg.map(z => '<li>' + attrText(z) + '</li>').join('')
+                + '</ol></div>';
+        }
+        // Die falschen Antworten werden ueber ihren TEXT zugeordnet, nicht
+        // ueber a/b/c/d: der Trainer mischt. Die gerade gewaehlte falsche
+        // Antwort wird hervorgehoben, damit man nicht erst suchen muss,
+        // welcher der drei Saetze der eigene ist.
+        if (hatFalsch) {
+            ek += '<div class="ek-zeile"><span class="ek-marke">Warum die anderen falsch sind.</span>'
+                + '<ul class="ek-falsch">'
+                + Object.keys(wf).map(k => {
+                    const dran = (meine && k.trim() === meine);
+                    return '<li class="' + (dran ? 'gewaehlt' : '') + '">'
+                         + (dran ? '<span class="ek-du">Deine Antwort</span><br>' : '')
+                         + '<b>' + attrText(k) + '</b> &mdash; ' + attrText(wf[k]) + '</li>';
+                  }).join('')
+                + '</ul></div>';
+        }
+    } else if (hatWeg || hatFalsch) {
+        // Ohne diesen Satz sieht ein kurzes Fenster nach einem Fehler aus.
+        ek += '<div class="ek-spaeter">Der Rechenweg'
+            + (hatFalsch ? ' und die Fehler hinter den anderen Antworten' : '')
+            + ' stehen hier, sobald du geantwortet hast. Erst rechnen, dann vergleichen &mdash; '
+            + 'sonst lernt man die Antwort und nicht den Weg.</div>';
+    }
+    return ek;
+}
+
+// Der Knopf erscheint nur, wenn es zu genau dieser Frage etwas gibt -
+// dieselbe Regel wie beim Formelblatt. Ein Knopf, der manchmal ins
+// Leere fuehrt, ist schlimmer als keiner.
+//
+// IM PRUEFUNGSSIMULATOR BLEIBT ER AUS. Die Formelsammlung ist
+// amtliches Hilfsmittel und liegt in der Pruefung auf dem Tisch; eine
+// Erklaerung mit Rechenweg ist keines. Wer den Durchgang ernst nimmt,
+// soll ihn auch ernst haben.
+function erklaerKnopfSetzen(){
+    const b = document.getElementById('erklaerBtn');
+    if(!b) return;
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    const streng = (typeof pruefungStreng === 'function') ? pruefungStreng() : false;
+
+    if(er && !streng){
+        b.style.display = '';
+        b.setAttribute('data-tooltip', answered
+            ? 'Erklärung zur Zeichnung: was im Bild steht, der Rechenweg und warum die anderen Antworten falsch sind'
+            : 'Erklärung zur Zeichnung: was im Bild steht und worauf es ankommt. Der Rechenweg kommt nach deiner Antwort.');
+        // Gepulst wird am Ende von renderQuestion(), siehe hinweiseMelden().
+    }else{
+        b.style.display = 'none';
+    }
+
+    // Die Tafel steht IM Antwortkasten-Bereich und wird von
+    // renderQuestion() ohnehin mit weggeraeumt. Hier bleibt nur, die
+    // Marke zurueckzusetzen, damit der Knopf nicht als "an" haengenbleibt.
+    if(!document.getElementById('erklaerTafel')){
+        erklaerOffenFuer = null;
+        b.classList.remove('an');
+    }
+}
+window.erklaerKnopfSetzen = erklaerKnopfSetzen;
+
+// ================================================================
+//  DER KNOPF MACHT AUF SICH AUFMERKSAM
+// ----------------------------------------------------------------
+//  Dreimal pulsen, wie beim Formelblatt - Dietmar: "es soll auch
+//  Pulsieren wie auch das Formelblatt."
+//
+//  ZWEIMAL JE FRAGE, NICHT EINMAL: einmal, wenn die Frage erscheint
+//  ("hier gibt es eine Hilfe"), und noch einmal nach einer FALSCHEN
+//  Antwort ("jetzt steht auch der Weg darin"). Wer richtig geantwortet
+//  hat, bekommt den zweiten Schlag nicht - der haette ihm nichts Neues
+//  zu sagen.
+//
+//  KEIN TON. Das Formelblatt hat einen, und fast jede Frage mit
+//  Erklaerung hat auch eine Stelle im Blatt - zwei Zweiklaenge
+//  hintereinander bei derselben Frage waeren Laerm. Wenn der Ton
+//  gewuenscht ist, ist es eine Zeile.
+//
+//  UND DER PULS KOMMT 900 MILLISEKUNDEN SPAETER als der des
+//  Formelblatts. Beide gleichzeitig sahen in der Kopfzeile nach
+//  Zappeln aus; hintereinander liest es sich als zwei Hinweise.
+//
+//  Abschaltbar ueber denselben Haken wie beim Formelblatt
+//  (Einstellungen -> Formelblatt -> "Auf das Formelblatt hinweisen"):
+//  Wer keine pulsenden Knoepfe will, will sie ganz sicher auch hier
+//  nicht. Ein eigener Haken kann jederzeit dazukommen.
+// ================================================================
+let erklaerPulsMarke  = null;
+// Solange die Tafel offen steht, steht hier die Fragen-Id. Beim naechsten
+// Zeichnen der Frage ist die Tafel ohnehin weg (renderQuestion baut den
+// Kasten neu) - die Marke sagt nur, ob der Knopf noch als "an" gilt.
+let erklaerOffenFuer  = null;
+
+// Der Knopf schaltet um: Erklaerung auf, Erklaerung zu. Ein zweiter Klick
+// soll die Antworten zurueckbringen und nicht dasselbe noch einmal tun.
+function erklaerBtnKlick(){
+    if(document.getElementById('erklaerTafel')){ erklaerSchliessen(); return; }
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    if(!q) return;
+    const er = (typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!er) return;
+    erklaerOeffnen();
+}
+window.erklaerBtnKlick = erklaerBtnKlick;
+
+function erklaerOeffnen(){
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!q || !er) return;
+    const kasten = document.getElementById('optionsContainer');
+    if(!kasten) return;
+
+    // Die Hoehe wird UEBERNOMMEN, bevor der Antwortkasten verschwindet.
+    // offsetHeight zaehlt in Satzpunkten und ist damit unabhaengig von der
+    // Anzeigevergroesserung - siehe .erklaer-tafel im Stylesheet.
+    const hoehe = kasten.offsetHeight;
+
+    // Zwei Tafeln an derselben Stelle waeren eine zu viel.
+    try{
+        const nf = document.getElementById('notizFeld');
+        if(nf && nf.style.display !== 'none') notizUmschalten();
+    }catch(e){}
+
+    let t = document.getElementById('erklaerTafel');
+    if(!t){
+        t = document.createElement('div');
+        t.id = 'erklaerTafel';
+        t.className = 'erklaer-tafel';
+        kasten.parentNode.insertBefore(t, kasten.nextSibling);
+    }
+    t.innerHTML =
+        '<div class="et-kopf">'
+      +   '<div class="et-titel"><i class="fas fa-lightbulb" style="color:#5b3f95;"></i> '
+      +     'Erklärung zur Zeichnung <span class="et-frage">' + attrText(q.id)
+      +     (answered ? ' · mit Rechenweg' : ' · vor der Antwort') + '</span></div>'
+      +   '<button type="button" class="et-zu" onclick="erklaerSchliessen()" '
+      +     'title="Erklärung zu, Antworten wieder anzeigen" '
+      +     'data-tooltip="Erklärung zu, Antworten wieder anzeigen">&#10005;</button>'
+      + '</div>'
+      + '<div class="et-buehne"><div class="erklaer-kasten">'
+      +   erklaerInhalt(q, er, !!answered)
+      + '</div></div>';
+    if(hoehe > 80) t.style.height = hoehe + 'px';
+    kasten.style.display = 'none';
+    erklaerOffenFuer = q.id;
+    const b = document.getElementById('erklaerBtn');
+    if(b) b.classList.add('an');
+}
+window.erklaerOeffnen = erklaerOeffnen;
+
+function erklaerSchliessen(){
+    const t = document.getElementById('erklaerTafel');
+    if(t) t.parentNode.removeChild(t);
+    const kasten = document.getElementById('optionsContainer');
+    if(kasten) kasten.style.display = '';
+    erklaerOffenFuer = null;
+    const b = document.getElementById('erklaerBtn');
+    if(b) b.classList.remove('an');
+}
+window.erklaerSchliessen = erklaerSchliessen;
+
+// Escape schliesst die Tafel - dieselbe Handbewegung wie beim
+// Formelblatt und beim Rechner.
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    if(document.getElementById('erklaerTafel')){
+        e.stopPropagation();
+        erklaerSchliessen();
+    }
+});
 
 // ================================================================
 //  TASCHENRECHNER
@@ -21883,6 +22656,15 @@ function updateVisibility() {
     // gehoert hierher, weil dies der einzige Ort ist, an dem zwischen
     // Runde und Hauptansicht zuverlaessig umgeschaltet wird.
     try{ document.body.classList.toggle('runde-laeuft', !!(isActive || examFinished)); }catch(e){}
+    // Die eingeblendete Quellenzeile gilt nur fuer die Runde. Wer zurueck
+    // in die Hauptansicht geht, findet sie dort ohnehin ganz unten.
+    try{
+        if(!(isActive || examFinished)){
+            document.body.classList.remove('quelle-zeigen');
+            const qb = document.getElementById('quelleBtn');
+            if(qb) qb.classList.remove('an');
+        }
+    }catch(e){}
     const historyCol = document.getElementById('historyCol');
     const examInfo = document.getElementById('examInfo');
     const backTopBtn = document.getElementById('backToMainTopBtn');
@@ -22546,6 +23328,11 @@ function renderQuestion() {
                     ><i class="fas fa-note-sticky"></i></button>
             <button id="rechnerBtn" onclick="rechnerUmschalten()" title="Taschenrechner — nicht programmierbar, wie in der Prüfung erlaubt.&#10;Mit Vorsätzen p n µ m k M G." data-tooltip="Taschenrechner – nicht programmierbar, wie in der Prüfung erlaubt. Mit Vorsätzen p n µ m k M G." style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;"><i class="fas fa-calculator"></i></button>
             <button id="formelBtn" onclick="formelBtnKlick()" title="Formelsammlung — die Stelle zu dieser Frage" data-tooltip="Formelsammlung" style="display:none; background:#fdf1e0; color:#8a5a12; border:1px solid #e0b25a; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-file-lines"></i> Formelblatt</button>
+            <!-- Die Gluehbirne steht bewusst RECHTS vom Formelblatt: Wer
+                 eine Rechenfrage vor sich hat, greift zuerst zum Blatt -
+                 das ist das Hilfsmittel, das in der Pruefung erlaubt ist.
+                 Siehe erklaerKnopfSetzen(). -->
+            <button id="erklaerBtn" onclick="erklaerBtnKlick()" title="Erklärung zur Zeichnung" data-tooltip="Erklärung zur Zeichnung" style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-lightbulb"></i> Erklärung</button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
@@ -22632,10 +23419,17 @@ function renderQuestion() {
     // steht - sonst waere bei 571 Fragen 570 Mal ein leeres Feld im Weg.
     {
         const nText = (typeof notizText === 'function') ? notizText(q.id) : '';
-        html += `<div id="notizFeld"${nText ? '' : ' style="display:none;"'}>
+        // IMMER ZU. Siehe notizUmschalten(): Offen wuerde es die Antworten
+        // verdecken. Dass eine Notiz vorliegt, zeigt der orange Zettel.
+        html += `<div id="notizFeld" style="display:none;">
             <div class="notiz-kopf">
                 <span><i class="fas fa-note-sticky"></i> Meine Notiz zu ${attrText(q.id)}</span>
-                <span id="notizStand"></span>
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <span id="notizStand"></span>
+                    <button type="button" class="notiz-zu" onclick="notizUmschalten()"
+                        title="Notiz zu, Antworten wieder anzeigen"
+                        data-tooltip="Notiz zu, Antworten wieder anzeigen">&#10005;</button>
+                </span>
             </div>
             <textarea id="notizText" rows="3" spellcheck="true" data-qid="${attrText(q.id)}"
                 placeholder="Warum ist diese Frage für dich wichtig? Zum Beispiel: Verwechslungsgefahr mit …, Formel steht auf Seite …, im Video ab …"
@@ -22679,6 +23473,20 @@ function renderQuestion() {
             </div>`;
         }
     }
+
+    // ================================================================
+    //  HIER STAND DIE ERKLAERUNG ZUR ZEICHNUNG   (bis 1.276.0)
+    // ----------------------------------------------------------------
+    //  Sie steht jetzt in einem eigenen Fenster hinter dem Knopf mit der
+    //  Gluehbirne in der Kopfzeile der Frage. Dietmar am 12.09.2026:
+    //  "Unterhalb von den Fragen, verlaengert nur das Fenster."
+    //
+    //  Das war der Punkt: Der aufgeklappte Kasten machte die Seite um
+    //  470 Punkte laenger, in der Fragenansicht musste man dafuer
+    //  scrollen - und zugeklappt war er nicht zu finden. Gebaut ist es
+    //  jetzt wie beim Formelblatt; der ganze Inhalt steckt in
+    //  erklaerInhalt(), der Knopf in erklaerKnopfSetzen().
+    // ================================================================
 
     //  DAZU LERNEN - Videolehrgang und 50 Ohm
     // ================================================================
@@ -22798,6 +23606,16 @@ function renderQuestion() {
     // Der Formelblatt-Knopf wird bei jeder Frage neu entschieden: Er
     // erscheint nur, wenn es zu genau dieser Frage eine Stelle gibt.
     try{ formelKnopfSetzen(); }catch(e){}
+    // Dasselbe fuer die Gluehbirne. Steht hier und nicht in einer der
+    // Startfunktionen, weil renderQuestion() bei JEDER Frage laeuft -
+    // Dietmar am 12.09.2026: "Es soll nicht nur bei Blaettern vorhanden
+    // sein, sondern auch bei Start im Lernmodus." Von hier aus gilt es
+    // fuer alle Wege: Lernmodus, Blaettern, Merkliste, Suche, Gruppenraum.
+    try{ erklaerKnopfSetzen(); }catch(e){}
+    // Jetzt stehen BEIDE Knoepfe - jetzt darf der Takt losgehen. Siehe
+    // hinweiseMelden(): eine Zeile hoeher waere die Gluehbirne noch
+    // verborgen und es pulste nur das Formelblatt.
+    try{ hinweiseMelden(); }catch(e){}
     // Google und die Verlaufsspalte haben im Pruefungssimulator nichts zu
     // suchen. Der Formelblatt-Knopf bleibt: die Formelsammlung ist
     // amtliches Hilfsmittel und liegt in der Pruefung auf dem Tisch.
@@ -22816,6 +23634,15 @@ function renderQuestion() {
     // stehen, wird nachgerechnet - das kostet nichts und ist der
     // Unterschied zwischen "passt" und "Knopfleiste weg".
     try{ bilderNachziehen(); }catch(e){}
+    // Wenn die Bilder ihre endgueltige Hoehe haben, noch einmal nachsehen,
+    // ob die Seite ins Fenster passt - siehe fragenGroesseNachziehen().
+    clearTimeout(fragenGroesseNachziehen._t);
+    fragenGroesseNachziehen._t = setTimeout(function(){
+        fragenGroesseNachziehen();
+        // Und wenn selbst die kleinste Schrift nicht reicht: die Anzeige
+        // gibt nach. Siehe anzeigeFuerFrageNachgeben().
+        try{ anzeigeFuerFrageNachgeben(); }catch(e){}
+    }, 160);
     // Und im Hintergrund schon die Bilder der naechsten Frage holen -
     // siehe naechsteBilderHolen(). Erst nach kurzer Ruhe, damit das
     // Laden der aktuellen Frage Vorrang behaelt.
@@ -24258,6 +25085,64 @@ const ANZEIGE_SCHLUESSEL_VOLL = 'amateurfunk_anzeige_voll';   // Vollbild
 const ANZEIGE_BREITE = 1520;
 const ANZEIGE_HOEHE  = 870;
 
+// ============================================================================
+//  DIE FRAGENANSICHT DARF DIE ANZEIGE HERUNTERZIEHEN   (13.09.2026)
+// ----------------------------------------------------------------------------
+//  Bis heute galt: gemessen wird die HAUPTANSICHT, denn die war die
+//  laengste. Das stimmt nicht mehr. Nachgemessen bei 1920x955 und 115
+//  Prozent: die Hauptansicht passt bis 120 Prozent, die Fragenansicht
+//  aber nur bis 110 - und mit Zeichnung, wie bei AD806 und AI611, nur bis
+//  105 beziehungsweise 100.
+//
+//  Dietmar auf die Wahl zwischen "Scrollen ist in Ordnung" und "immer so
+//  klein, dass alles passt": "Immer so klein, dass alles passt."
+//
+//  ALSO: Trifft die Automatik in einer Runde auf eine Frage, die auch in
+//  der kleinsten Schriftstufe nicht ins Fenster passt, geht sie Stufe um
+//  Stufe herunter - und der gefundene Wert gilt ab dann fuer die ganze
+//  Seite, auch fuer die Hauptansicht. Sonst haette man bei jedem Wechsel
+//  eine andere Groesse.
+//
+//  ABER NICHT BELIEBIG TIEF - HOECHSTENS DREI STUFEN. Es gibt im Katalog
+//  E->A zwei Fragen (AG424, AK103), deren Text so lang ist, dass selbst 80
+//  Prozent noetig waeren. Die Anzeige fuer alle 716 Fragen nach diesen zwei
+//  zu waehlen, waere falsch - dort wird gerollt, und das ist richtig.
+//
+//  Drei Stufen und nicht eine feste Zahl wie "nie unter 100 Prozent": Auf
+//  einem 1366x768-Laptop steht die Hauptansicht schon bei 95 Prozent, eine
+//  feste Untergrenze von 100 haette dort gar nichts zugelassen. Gemessen
+//  gibt es damit in Dietmars Fenster (Hauptansicht 115) bis 100 Prozent
+//  nach - genau der Wert, bei dem AD806 mit Zeichnung hineinpasst.
+//
+//  GEMERKT WIRD JE FENSTERGROESSE, und die Marke DECKEL_STAND wird
+//  heraufgesetzt, wenn sich am Satz der Seite etwas aendert - dann wird
+//  neu gemessen statt einem alten Wert geglaubt.
+// ============================================================================
+const ANZEIGE_FRAGEN_SPIELRAUM = 0.15;   // drei Stufen von je 5 Prozent
+const DECKEL_SCHLUESSEL  = 'amateurfunk_anzeige_deckel';
+const DECKEL_STAND       = 1;
+
+function deckelAlle(){
+    try{
+        const d = JSON.parse(localStorage.getItem(DECKEL_SCHLUESSEL) || '{}');
+        if(!d || d.stand !== DECKEL_STAND) return {};
+        return d.werte || {};
+    }catch(e){ return {}; }
+}
+function deckelFuer(kennung){
+    const w = deckelAlle()[kennung];
+    return (typeof w === 'number' && w >= 0.6 && w <= 1.5) ? w : null;
+}
+function deckelMerken(kennung, wert){
+    try{
+        const werte = deckelAlle();
+        // Nur nach unten: sonst schaukelt es zwischen kurzen und langen Fragen.
+        if(typeof werte[kennung] === 'number' && werte[kennung] <= wert) return;
+        werte[kennung] = wert;
+        localStorage.setItem(DECKEL_SCHLUESSEL, JSON.stringify({ stand: DECKEL_STAND, werte }));
+    }catch(e){}
+}
+
 // Sind wir gerade "vergroessert"?
 //
 //  ZWEI WEGE FUEHREN INS VOLLBILD, UND SIE SEHEN VERSCHIEDEN AUS:
@@ -24368,19 +25253,86 @@ function anzeigeAutomatisch(neuRechnen){
         const hauptansichtSichtbar = !!(start && start.offsetParent !== null);
         if(karte && hauptansichtSichtbar){
             const gemessen = karte.scrollHeight + 46;   // Rand oben und unten
+            // Nur der STARTWERT. Die endgueltige Stufe sucht
+            // anzeigeAnwenden() selbst, indem es nachsieht, ob ein
+            // Scrollbalken da ist - siehe dort. Ein Math.max ueber alle
+            // Messungen stand hier kurz und war falsch: In der
+            // vergroesserten Ansicht ist das Fenster in gewoehnlichen
+            // Punkten schmaler, es bricht mehr um, die Karte wird hoeher -
+            // die groesste Messung stammt also immer von der groessten
+            // Vergroesserung und zog die Schaetzung nach unten.
             if(gemessen > 200) anzeigeAutomatisch._hoehe = gemessen;
         }
     }catch(e){}
-    const noetig = Math.max(ANZEIGE_HOEHE, anzeigeAutomatisch._hoehe || 0);
+    // ================================================================
+    //  DIE 870 WAR DER FEHLER (13.09.2026)
+    // ----------------------------------------------------------------
+    //  Hier stand Math.max(ANZEIGE_HOEHE, gemessen) - die 870 Punkte
+    //  also als UNTERGRENZE. Der Gedanke war Vorsicht: nie annehmen, die
+    //  Hauptansicht sei kuerzer als 870.
+    //
+    //  Die Wirkung war das Gegenteil von Vorsicht. Die Hauptansicht ist
+    //  inzwischen nur noch 838 Punkte hoch (792 plus Rand). Die Automatik
+    //  rechnete aber weiter mit 870 und kam damit auf 105 Prozent, wo
+    //  110 hineingepasst haetten. In Dietmars Fenster blieben unten
+    //  163 Punkte leer, und er musste von Hand auf 125 Prozent gehen:
+    //  "Ich muss jetzt auf 125% hoch damit ich annaehernd ein Vollbild
+    //  habe."
+    //
+    //  Gemessen wird jetzt wirklich gemessen. Die 870 bleiben nur als
+    //  Rueckfall, solange noch nichts gemessen wurde.
+    // ================================================================
+    const noetig = anzeigeAutomatisch._hoehe || ANZEIGE_HOEHE;
 
     let f = Math.min(b / ANZEIGE_BREITE, h / noetig);
     // Nach unten bis 60 Prozent: Auf einem 15-Zoll-Laptop mit 768 Punkten
     // Hoehe reichen 80 Prozent nicht, um die Hauptansicht ganz zu zeigen.
+    //
+    // AM 13.09.2026 HABE ICH HIER 100 PROZENT EINGETRAGEN UND ES WIEDER
+    // ZURUECKGENOMMEN. Dietmar hatte gesagt "bei automatisch ist es zu
+    // gross", ich habe das als "vergroessert zu stark" gelesen und die
+    // Obergrenze auf 100 gesetzt. Eine Stunde spaeter: "Ich muss jetzt
+    // auf 125% hoch damit ich annaehernd ein Vollbild habe." Genau das
+    // Gegenteil - sein Fenster wurde nicht mehr gefuellt.
+    //
+    // Es bleibt bei 150 Prozent nach oben. Das eigentliche Problem
+    // steckte in der Untergrenze der GEMESSENEN HOEHE, siehe "noetig"
+    // oben.
     f = Math.max(0.6, Math.min(1.5, f));
     f = Math.floor(f * 20) / 20;
+    // DER WERT OHNE DECKEL wird gemerkt, und das ist wichtiger, als es
+    // aussieht: Aus ihm rechnet anzeigeFuerFrageNachgeben() seine
+    // Untergrenze. Wuerde sie aus dem gedeckelten Wert gerechnet, koennte
+    // sie bei jeder langen Frage drei Stufen tiefer rutschen - nach
+    // dreimal AG424 waere man bei 70 Prozent. So steht die Grenze fest.
+    anzeigeAutomatisch._ohneDeckel = f;
+    // DER DECKEL AUS DER FRAGENANSICHT. Steht er, war in diesem Fenster
+    // schon eine Frage da, die bei der vollen Stufe nicht hineinpasste -
+    // siehe ANZEIGE_FRAGEN_SPIELRAUM weiter oben.
+    try{
+        const d = deckelFuer(kennung);
+        if(d && d < f) f = d;
+    }catch(e){}
     anzeigeAutomatisch._kennung = kennung;
     anzeigeAutomatisch._wert = f;
     return f;
+}
+
+// Die Kennung des Fensters - dieselbe Rechnung wie in anzeigeAutomatisch().
+// Als eigene Funktion, weil auch der Deckel sie braucht.
+function anzeigeKennung(){
+    const b = window.innerWidth  || ANZEIGE_BREITE;
+    const h = window.innerHeight || ANZEIGE_HOEHE;
+    return b + 'x' + h + (anzeigeImVollbild() ? 'V' : 'N');
+}
+
+// Eine Stufe setzen, ohne die ganze Sucherei von anzeigeAnwenden().
+function anzeigeStufeSetzen(f){
+    try{
+        const e = document.documentElement;
+        e.style.setProperty('--afu-zoom', String(f));
+        e.style.zoom = (Math.abs(f - 1) < 0.001) ? '' : String(f);
+    }catch(e){}
 }
 
 function anzeigeFaktor(){
@@ -24421,6 +25373,93 @@ function anzeigeAnwenden(){
             if(!(g < f - 0.001)) break;
             f = g; setzen(f);
         }
+        // ================================================================
+        //  UND ZULETZT: IST EIN SCROLLBALKEN DA?
+        // ----------------------------------------------------------------
+        //  Dietmar am 13.09.2026, mit Bild: "Automatisch ist zu gross! An
+        //  der Seite siehst du den Scrollbalken. Das Bild hat exakt die
+        //  groesse von meinem sichtbaren Fenster."
+        //
+        //  Und damit hatte er den Finger auf meinem Denkfehler. Die
+        //  Rechnung oben misst die KARTE (#app) und schlaegt 46 Punkte
+        //  Rand drauf. Auf der Seite steht aber noch mehr: die Fusszeile
+        //  mit der Katalogquelle, die Raender des Koerpers, und je
+        //  Rechner ein paar Punkte mehr oder weniger - bei mir waren es
+        //  833 Punkte, bei ihm ueber 910. Mit derselben Formel kam
+        //  deshalb bei mir kein Balken heraus und bei ihm einer.
+        //
+        //  Ein Proxy ist nie so gut wie die Sache selbst. Gefragt ist
+        //  nicht "wie hoch ist die Karte", sondern "passt die SEITE ins
+        //  Fenster" - und das sagt scrollHeight des Wurzelelements direkt.
+        //
+        //  Also: nach dem Setzen nachsehen und notfalls Stufe um Stufe
+        //  heruntergehen, bis kein Balken mehr da ist. Nur nach unten,
+        //  hoechstens bis 60 Prozent, hoechstens zehn Schritte - damit
+        //  hier unter keinen Umstaenden eine Endlosschleife entsteht.
+        //  Der Balken bleibt, wenn selbst 60 Prozent nicht reichen; dann
+        //  ist Scrollen richtig und nicht ein Fehler.
+        //  UND EIN FINGERBREIT LUFT UNTEN.
+        //  Dietmar gleich danach: "Es soll Minimal unten etwas Abstand
+        //  haben." Also nicht "gerade noch kein Balken", sondern ein
+        //  sichtbarer Rest.
+        //
+        //  WARUM NICHT UEBER scrollHeight: Der Koerper hat
+        //  min-height:calc(100vh / var(--afu-zoom)) - die Seite ist also
+        //  IMMER mindestens fensterhoch. scrollHeight kann deshalb nie
+        //  kleiner als innerHeight werden, und "10 Punkte Luft" waere
+        //  damit nicht messbar. Gemessen wird stattdessen die Unterkante
+        //  des letzten sichtbaren Elements: die Fusszeile. Ihre
+        //  getBoundingClientRect() steht in derselben Rechnung wie
+        //  innerHeight - beide in der vergroesserten Ansicht - und darf
+        //  deshalb direkt verglichen werden.
+        try{
+            const LUFT = 14;   // Punkte, die unten frei bleiben sollen
+
+            // ZWEI BEDINGUNGEN, NICHT EINE.
+            // Die Fusszeile allein genuegt nicht: Bei 120 Prozent hatte sie
+            // noch 24 Punkte Luft, und trotzdem stand ein Scrollbalken da -
+            // rechts die Verlaufsspalte ist hoeher als die Fusszeile tief.
+            // Gefragt ist also beides: kein Balken UND unten etwas frei.
+            const passt = () => {
+                const e = document.documentElement;
+                if(e.scrollHeight > (window.innerHeight || 0) + 2) return false;
+                const fuss = document.querySelector('.footer-note');
+                if(!fuss) return true;
+                return ((window.innerHeight || 0) - fuss.getBoundingClientRect().bottom) >= LUFT;
+            };
+
+            // ERST HINAUF, solange die naechste Stufe noch passt. Die
+            // Schaetzung aus anzeigeAutomatisch() ist nur ein Startwert und
+            // liegt je Rechner mal darueber, mal darunter - bei mir 105,
+            // bei Dietmar mit seiner etwas hoeheren Seite weniger. Wer nur
+            // nach unten sucht, bleibt bei einem zu kleinen Startwert
+            // haengen und laesst unten 178 Punkte leer.
+            // Die Obergrenze ist 150 Prozent - oder der Deckel, wenn in
+            // diesem Fenster schon eine Frage nicht hineingepasst hat.
+            // Ohne das holte die Aufwaertssuche die Stufe sofort wieder
+            // zurueck, die die Fragenansicht gerade weggenommen hat.
+            let obenGrenze = 1.5;
+            try{
+                const d = deckelFuer(anzeigeKennung());
+                if(d) obenGrenze = Math.min(obenGrenze, d);
+            }catch(e){}
+            let schritte = 0;
+            while(f < obenGrenze - 0.0001 && schritte < 18){
+                const probe = Math.min(obenGrenze, Math.round((f + 0.05) * 100) / 100);
+                setzen(probe);
+                if(passt()){ f = probe; schritte++; }
+                else { setzen(f); break; }
+            }
+            // DANN HINUNTER, falls schon der Startwert nicht passte.
+            schritte = 0;
+            while(!passt() && f > 0.6001 && schritte < 18){
+                f = Math.max(0.6, Math.round((f - 0.05) * 100) / 100);
+                setzen(f);
+                schritte++;
+            }
+            // Passt selbst 60 Prozent nicht, bleibt der Balken. Dann ist
+            // Scrollen richtig und kein Fehler.
+        }catch(err){}
         anzeigeAutomatisch._wert = f;
     }
     try{ anzeigeFeldNachziehen(); }catch(err){}
@@ -24428,11 +25467,72 @@ function anzeigeAnwenden(){
 }
 window.anzeigeAnwenden = anzeigeAnwenden;
 
+// ============================================================================
+//  DIE ANZEIGE GIBT FUER EINE LANGE FRAGE NACH
+// ----------------------------------------------------------------------------
+//  Die Reihenfolge ist wichtig und sie ist nicht beliebig:
+//
+//    1. fragenGroesseAnpassen()  - die Schriftstufe der Frage. Das ist der
+//       kleine Eingriff: er betrifft nur Frage und Antworten.
+//    2. Erst wenn selbst die kleinste Stufe nicht reicht, geht die ANZEIGE
+//       herunter. Das betrifft die ganze Seite und ist deshalb der zweite
+//       Griff, nicht der erste.
+//
+//  Nach jeder Zoomstufe wird die Schriftstufe neu entschieden: Bei
+//  kleinerem Zoom passt oft wieder die groessere Schrift, und dann ist die
+//  Frage besser zu lesen als vorher.
+//
+//  Es geht ausschliesslich nach unten, hoechstens drei Stufen weit,
+//  und der gefundene Wert wird gemerkt. Damit kann diese Funktion nicht
+//  schaukeln: Sie wird bei jeder Frage aufgerufen, findet aber nach der
+//  ersten langen Frage nichts mehr zu tun.
+// ============================================================================
+function anzeigeFuerFrageNachgeben(){
+    try{
+        if(anzeigeWahl() !== 'auto') return;
+        if(!document.body.classList.contains('runde-laeuft')) return;
+        if(typeof fragenPasstInsFenster !== 'function') return;
+        if(fragenPasstInsFenster()) return;
+
+        const kennung = anzeigeKennung();
+        let f = anzeigeAutomatisch();
+        // Die Untergrenze haengt am Wert OHNE Deckel, nicht am jetzigen -
+        // sonst rutschte sie bei jeder langen Frage weiter nach unten.
+        const voll  = anzeigeAutomatisch._ohneDeckel || f;
+        const unten = Math.max(0.6, Math.min(f, Math.round((voll - ANZEIGE_FRAGEN_SPIELRAUM) * 100) / 100));
+        if(!(f > unten + 0.0001)) return;   // da ist nichts mehr zu holen
+
+        let schritte = 0;
+        while(f > unten + 0.0001 && schritte < 12){
+            f = Math.max(unten, Math.round((f - 0.05) * 100) / 100);
+            anzeigeStufeSetzen(f);
+            try{ fragenGroesseAnpassen(); }catch(e){}
+            schritte++;
+            if(fragenPasstInsFenster()) break;
+        }
+        deckelMerken(kennung, f);
+        // Damit die Automatik denselben Wert nennt, wenn sie als naechstes
+        // gefragt wird - etwa beim Zurueckgehen in die Hauptansicht.
+        try{ anzeigeAutomatisch._kennung = null; anzeigeAutomatisch(); }catch(e){}
+    }catch(e){}
+}
+window.anzeigeFuerFrageNachgeben = anzeigeFuerFrageNachgeben;
+
 function anzeigeSetzen(wert, welche){
     // welche: 'normal', 'voll' oder nichts (= die gerade geltende Lage).
     // Die Einstellungen geben es ausdruecklich mit, damit man beide
     // Werte setzen kann, ohne dafuer ins Vollbild wechseln zu muessen.
     try{ localStorage.setItem(anzeigeSchluessel(welche), String(wert)); }catch(e){}
+    // WER "AUTOMATISCH" WAEHLT, WILL NEU AUSGEMESSEN HABEN.
+    // Der Deckel aus der Fragenansicht geht nur nach unten und bleibt
+    // gemerkt - sonst haette man bei jeder Frage eine andere Groesse.
+    // Damit er nicht ewig an einer alten Messung klebt, wird er hier
+    // geloescht: Einmal auf einen festen Wert und wieder zurueck auf
+    // Automatisch, und die Automatik faengt von vorn an. Das ist der
+    // Weg, den man ohne Anleitung findet - besser als ein weiterer
+    // Knopf in den Einstellungen.
+    try{ if(String(wert) === 'auto') localStorage.removeItem(DECKEL_SCHLUESSEL); }catch(e){}
+    try{ anzeigeAutomatisch._kennung = null; }catch(e){}
     anzeigeAnwenden();
 }
 window.anzeigeSetzen = anzeigeSetzen;
@@ -24484,6 +25584,40 @@ window.addEventListener('resize', () => {
     if(anzeigeUhr) clearTimeout(anzeigeUhr);
     anzeigeUhr = setTimeout(anzeigeAnwenden, 150);
 });
+
+// ================================================================
+//  BEIM LADEN EINMAL RICHTIG RECHNEN (13.09.2026)
+// ----------------------------------------------------------------
+//  Das war der eigentliche Fehler hinter Dietmars "Automatisch ist zu
+//  gross! An der Seite siehst du den Scrollbalken."
+//
+//  anzeigeAnwenden() lief bisher NUR bei einer Groessenaenderung des
+//  Fensters, beim Vollbild-Wechsel, im Beamer-Modus und wenn man in
+//  den Einstellungen etwas umstellte. Beim gewoehnlichen Laden der
+//  Seite lief es nie. Es blieb also bei dem groben Wert aus dem Block
+//  vor dem ersten Zeichnen - und der rechnet mit den angenommenen 870
+//  Punkten, weil es vor dem Zeichnen nichts zu messen gibt.
+//
+//  Die ganze Messtechnik darunter - gemessene Kartenhoehe, Nachmessen,
+//  Suche nach der passenden Stufe - war damit beim Laden wirkungslos.
+//  Wer einmal am Fenster zog, sah plotzlich eine andere Groesse als
+//  beim Start. Genau das hat Dietmar als "da muss sich was veraendert
+//  haben" gemeldet.
+//
+//  Zweimal, mit Absicht: einmal, sobald die Seite steht, und einmal,
+//  wenn die Schriften geladen sind. FontAwesome kommt aus dem Ordner
+//  und ist schnell, aber die Symbolschrift aendert Zeilenhoehen - und
+//  damit die Hoehe der Karte.
+(function anzeigeBeimLaden(){
+    const einmal = () => { try{ anzeigeAnwenden(); }catch(e){} };
+    if(document.readyState === 'complete') setTimeout(einmal, 60);
+    else window.addEventListener('load', () => setTimeout(einmal, 60));
+    try{
+        if(document.fonts && document.fonts.ready){
+            document.fonts.ready.then(() => setTimeout(einmal, 60));
+        }
+    }catch(e){}
+})();
 
 // Der Knopf im Trainer meldet sich ueber die Fullscreen-Schnittstelle.
 // Hier kommt die Umschaltung sofort an, ohne den Umweg ueber resize.
