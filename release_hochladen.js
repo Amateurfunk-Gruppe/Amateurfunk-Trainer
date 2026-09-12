@@ -1,5 +1,5 @@
 // ================================================================
-//  release_hochladen.js - das fertige Setup als GitHub-Release
+//  release_hochladen.js - die fertigen Pakete als GitHub-Release
 // ================================================================
 //  Aufruf:  Doppelklick auf  Release-Hochladen.bat
 //
@@ -8,6 +8,22 @@
 //  Grenze von 100 MiB je Datei - das Setup ist groesser. Es gehoert an
 //  ein Release, und dort sind 2 GiB erlaubt. Zwei verschiedene Orte,
 //  zwei verschiedene Werkzeuge.
+//
+//  Und deshalb bringt Hochladen.bat die Pakete NICHT mit hoch. Sie
+//  stehen in der .gitignore, mit Absicht: .deb, .rpm und das Mac-ZIP
+//  sind Ergebnisse, nicht Quelltext. Wer sie veroeffentlichen will,
+//  ist hier richtig - und nur hier.
+//
+//  SEIT DEM 12.09.2026 SIND ES VIER DATEIEN, NICHT EINE. Bis dahin kannte
+//  dieses Skript nur die EXE. Dazugekommen sind:
+//
+//     amateurfunk-trainer_<Fassung>_all.deb        Debian, Ubuntu, Mint
+//     amateurfunk-trainer-<Fassung>-1.noarch.rpm   Fedora, openSUSE
+//     Amateurfunk-Trainer-<Fassung>-mac.zip        macOS
+//
+//  Alle vier gehoeren an dasselbe Release: eine Fassung, eine Seite,
+//  vier Dateien zum Herunterladen. Gebaut werden die drei neuen mit
+//  pakete_bauen.sh, die EXE wie immer mit Build-DIREKT.bat.
 //
 //  DIETMAR AM 01.09.2026:
 //    "Ich moechte die aktuelle Version hochladen. New release,
@@ -52,16 +68,77 @@ function fragen(text) {
   return new Promise(a => leitung.question(text, w => a(String(w || '').trim())));
 }
 const ja = w => /^(j|ja|y|yes)$/i.test(w);
-const mb = b => (b / 1024 / 1024).toFixed(0);
 
-// ---- Welches Setup? --------------------------------------------
-function neuestesSetup() {
-  if (!fs.existsSync(ORDNER)) return null;
-  const treffer = fs.readdirSync(ORDNER)
-    .filter(n => /^Amateurfunk-Trainer-.*\.exe$/i.test(n))
-    .map(n => ({ name: n, pfad: path.join(ORDNER, n), stat: fs.statSync(path.join(ORDNER, n)) }))
-    .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
-  return treffer[0] || null;
+// ---- Wieviel Text nimmt GitHub? -------------------------------
+//
+// 125.000 Zeichen im Beschreibungsfeld. Und zwar hart: Mehr wird nicht
+// gekuerzt, sondern abgewiesen - das Release entsteht dann gar nicht.
+//
+// AM 12.09.2026 GEMESSEN, weil es gerade knapp geworden waere. Zuletzt
+// veroeffentlicht ist v1.111.0, im Ordner liegt 1.275.0. Dazwischen
+// stehen 186 Abschnitte im Protokoll, zusammen 355.550 Zeichen - das
+// Dreifache des Erlaubten. Ohne diese Grenze waere der erste Versuch
+// nach einer langen Pause fehlgeschlagen, und zwar erst nach dem
+// Hochladen aller Dateien.
+//
+// Dietmars Regel vom 01.09.2026 bleibt trotzdem gewahrt: Es wird nichts
+// STILL weggelassen. Was nicht mehr hineinpasst, wird unten genannt -
+// wieviele Fassungen und welcher Bereich.
+const PLATZ = 110000;    // der Rest bleibt fuer die Installationsanleitung
+const HOECHSTENS = 12;   // mehr Fassungen liest auf einer Seite niemand
+const mb = b => { const m = b / 1024 / 1024; return m < 100 ? m.toFixed(1) : m.toFixed(0); };
+
+// ---- Was liegt in release\ zum Veroeffentlichen? ---------------
+//
+// Vier Sorten, jede mit ihrem eigenen Namensmuster. Die Muster sind eng
+// gefasst, damit nichts mitgeht, was nur so aehnlich heisst: Ein
+// "Amateurfunk-Trainer-1.275.0-mac.zip" ist kein Setup, und ein
+// "Amateurfunk-Trainer-alt.exe" ist keine Fassung.
+const SORTEN = [
+  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+\.exe$/i,             hinweis: 'Windows 10 und 11' },
+  { regel: /^amateurfunk-trainer_\d+\.\d+\.\d+_all\.deb$/i,          hinweis: 'Debian, Ubuntu, Mint, Raspberry Pi OS' },
+  { regel: /^amateurfunk-trainer-\d+\.\d+\.\d+-\d+\.noarch\.rpm$/i, hinweis: 'Fedora, openSUSE, RHEL' },
+  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-mac\.zip$/i,          hinweis: 'macOS 11 und neuer' },
+];
+
+function fassungAus(name) {
+  const t = String(name).match(/(\d+\.\d+\.\d+)/);
+  return t ? t[1] : null;
+}
+
+// Alles, was in Frage kommt - neueste Datei zuerst.
+function kandidaten() {
+  if (!fs.existsSync(ORDNER)) return [];
+  const liste = [];
+  for (const n of fs.readdirSync(ORDNER)) {
+    const sorte = SORTEN.find(x => x.regel.test(n));
+    if (!sorte) continue;
+    const pfad = path.join(ORDNER, n);
+    let stat;
+    try { stat = fs.statSync(pfad); } catch (e) { continue; }
+    if (!stat.isFile()) continue;
+    liste.push({ name: n, pfad, stat, hinweis: sorte.hinweis, version: fassungAus(n) });
+  }
+  return liste.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
+}
+
+// ---- Was haengt schon an dem Release? --------------------------
+//
+// WARUM DAS NOETIG IST. Angenommen, v1.275.0 steht mit der EXE schon
+// oben, und jetzt sollen die drei Linux- und Mac-Pakete dazu. Ohne
+// diese Abfrage wuerde die Beschreibung neu geschrieben - und weil
+// keine EXE in release\ liegt, faellt der Windows-Abschnitt heraus.
+// Die EXE haengt dann unter einer Anleitung, die sie nicht erwaehnt.
+// Deshalb wird die Beschreibung aus BEIDEM gebaut: was neu hochgeht
+// und was schon oben ist.
+function vorhandeneAnhaenge(tag) {
+  try {
+    const roh = execSync(
+      'gh release view ' + tag + ' --repo ' + KONTO + '/' + REPO + ' --json assets',
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const d = JSON.parse(roh);
+    return (d.assets || []).map(a => String(a.name || '')).filter(Boolean);
+  } catch (e) { return []; }
 }
 
 // ---- Das Aenderungsprotokoll in Abschnitte zerlegen -------------
@@ -137,27 +214,107 @@ function letzteVeroeffentlichte() {
 // unter Hinzugefuegt / Geaendert / Behoben. Sie werden hier
 // uebernommen, wie sie sind - nur eine Ebene tiefer gehaengt, damit sie
 // unter "Aenderungen" stehen und nicht daneben.
-function beschreibung(setup, version, neue) {
-  let s =
-    '## Installation\n\n' +
-    '1. **' + setup.name + '** herunterladen und starten.\n' +
-    '2. Der Assistent fragt, wohin installiert wird.\n' +
-    '3. Windows meldet "Unbekannter Herausgeber": *Weitere Informationen* ' +
-    '\u2192 *Trotzdem ausf\u00fchren*.\n\n' +
-    'Enthalten sind Node.js, die Sprachausgabe mit deutscher Stimme, der ' +
-    'amtliche Fragenkatalog und die Formelsammlung. Beim Einrichten wird ' +
-    'keine Internetverbindung gebraucht.\n\n' +
-    'Beim Update bleibt der Lernstand erhalten \u2013 der Ordner `data\\` ' +
-    'wird nicht angefasst. Beim Deinstallieren wird gefragt, ob er ' +
-    'mit weg soll.\n\n';
+//
+// SEIT DEM 12.09.2026 EIN ABSCHNITT JE SYSTEM - aber nur fuer die
+// Systeme, fuer die auch etwas zum Herunterladen daliegt. Eine
+// Mac-Anleitung ohne Mac-Paket waere ein Versprechen, das die Seite
+// nicht haelt. "namen" sind die Dateinamen am Release: die, die gerade
+// hochgehen, und die, die schon oben sind.
+function beschreibung(namen, version, neue) {
+  const finde = r => namen.find(n => r.test(n)) || null;
+  const exe = finde(/\.exe$/i);
+  const deb = finde(/\.deb$/i);
+  const rpm = finde(/\.rpm$/i);
+  const zip = finde(/-mac\.zip$/i);
+
+  let s = '## Installation\n\n';
+
+  if (exe) {
+    s += '### Windows\n\n' +
+      '1. **' + exe + '** herunterladen und starten.\n' +
+      '2. Der Assistent fragt, wohin installiert wird.\n' +
+      '3. Windows meldet "Unbekannter Herausgeber": *Weitere Informationen* ' +
+      '\u2192 *Trotzdem ausf\u00fchren*.\n\n' +
+      'Enthalten sind Node.js, die Sprachausgabe mit deutscher Stimme, der ' +
+      'amtliche Fragenkatalog und die Formelsammlung. Beim Einrichten wird ' +
+      'keine Internetverbindung gebraucht.\n\n';
+  }
+
+  if (deb || rpm) {
+    s += '### Linux\n\n```\n';
+    if (deb) s += '# Debian, Ubuntu, Mint\nsudo apt install ./' + deb + '\n\n';
+    if (rpm) s += '# Fedora\nsudo dnf install ./' + rpm + '\n\n' +
+                  '# openSUSE\nsudo zypper install ./' + rpm + '\n';
+    s += '```\n\n' +
+      'Danach steht "Amateurfunk-Trainer" im Programmmen\u00fc. Oder im ' +
+      'Terminal: `amateurfunk-trainer`.\n\n' +
+      'Gebraucht wird Node.js 18 oder neuer \u2013 das holt die ' +
+      'Paketverwaltung selbst dazu. Der Punkt-Schr\u00e4gstrich vor dem ' +
+      'Dateinamen ist wichtig: `apt install ./datei.deb` l\u00f6st die ' +
+      'Abh\u00e4ngigkeit mit auf, `dpkg -i` nicht.\n\n' +
+      'Fragenkatalog, alle Zeichnungen, Formelsammlung und die ' +
+      'Abh\u00e4ngigkeiten sind mit im Paket. Kein `npm install`, kein Netz ' +
+      'beim Lernen.\n\n';
+  }
+
+  if (zip) {
+    s += '### macOS\n\n' +
+      '1. **' + zip + '** entpacken, `Amateurfunk-Trainer.app` nach ' +
+      '*Programme* ziehen.\n' +
+      '2. **Beim ersten Start:** Rechtsklick auf die App \u2192 ' +
+      '*\u00d6ffnen* \u2192 im Dialog noch einmal *\u00d6ffnen*. Nur einmal ' +
+      'n\u00f6tig. Grund: Die App ist nicht bei Apple signiert \u2013 daf\u00fcr ' +
+      'br\u00e4uchte es ein Entwicklerkonto f\u00fcr 99 US-Dollar im Jahr.\n' +
+      '3. Node.js 18 oder neuer muss da sein: `brew install node` oder von ' +
+      'nodejs.org. Fehlt es, sagt die App es beim Start.\n\n';
+  }
+
+  s += 'Beim Update bleibt der Lernstand erhalten \u2013 der Ordner ' +
+       'f\u00fcr die Daten wird nicht angefasst.\n\n';
+
+  if (deb || rpm || zip) {
+    s += 'Wo er liegt:\n\n```\n' +
+      'Windows : im Installationsordner unter data\\\n' +
+      'Linux   : ~/.local/share/amateurfunk-trainer\n' +
+      'macOS   : ~/Library/Application Support/Amateurfunk-Trainer\n' +
+      '```\n\n' +
+      'Unter Windows wird beim Deinstallieren gefragt, ob er mit weg soll. ' +
+      'Unter Linux und macOS bleibt er liegen \u2013 absichtlich.\n\n';
+  } else {
+    s += 'Beim Deinstallieren wird gefragt, ob er mit weg soll.\n\n';
+  }
 
   if (neue.length) {
     s += '## \u00c4nderungen\n\n';
+
+    // Neueste zuerst hineinnehmen, solange Platz ist. "neue" kommt
+    // schon in dieser Reihenfolge aus abschnitte().
+    let genommen = 0;
     for (const a of neue) {
-      s += '### ' + a.version + ' \u2013 ' + a.datum + '\n\n'
+      const stueck = '### ' + a.version + ' \u2013 ' + a.datum + '\n\n'
          // "### Geaendert" -> "**Geändert**". \w trifft keine Umlaute,
          // deshalb die ganze Zeile fassen statt das Wort.
          + a.text.replace(/^###[ \t]*(.+?)[ \t]*$/gm, '**$1**') + '\n\n';
+      if (genommen >= HOECHSTENS) break;
+      if (genommen > 0 && s.length + stueck.length > PLATZ) break;
+      s += stueck;
+      genommen++;
+    }
+
+    // Der erste Abschnitt kommt immer mit, auch wenn er allein schon zu
+    // lang ist - eine Seite ohne jede Aenderungsliste waere schlechter.
+    // Dann muss er aber gekuerzt werden, sonst weist GitHub ab.
+    if (s.length > PLATZ) {
+      s = s.slice(0, PLATZ) + '\n\n\u2026 hier abgeschnitten, das Protokoll ist l\u00e4nger als eine Release-Seite fassen kann.\n\n';
+    }
+
+    const rest = neue.slice(genommen);
+    if (rest.length) {
+      const von = rest[rest.length - 1].version;
+      const bis = rest[0].version;
+      s += '_Davor liegen ' + rest.length + ' weitere Fassungen'
+        + (von === bis ? ' (' + von + ')' : ' (' + von + ' bis ' + bis + ')')
+        + '. Sie stehen vollst\u00e4ndig im Protokoll._\n\n';
     }
     s += 'Ausf\u00fchrlich in [CHANGELOG.md](' + SEITE + '/blob/main/CHANGELOG.md).\n';
   }
@@ -167,26 +324,55 @@ function beschreibung(setup, version, neue) {
 (async () => {
   console.log('');
   console.log('  ============================================================');
-  console.log('   Setup als GitHub-Release veroeffentlichen');
+  console.log('   Die Pakete als GitHub-Release veroeffentlichen');
   console.log('  ============================================================');
   console.log('');
 
-  const setup = neuestesSetup();
-  if (!setup) {
-    console.log('  In release\\ liegt kein Setup.');
-    console.log('  Erst Build-DIREKT.bat ausfuehren.');
+  const alleDateien = kandidaten();
+  if (!alleDateien.length) {
+    console.log('  In release\\ liegt nichts zum Veroeffentlichen.');
+    console.log('');
+    console.log('  Das Setup fuer Windows baut Build-DIREKT.bat.');
+    console.log('  Die Pakete fuer Linux und Mac baut pakete_bauen.sh.');
     console.log('');
     leitung && leitung.close();
     return;
   }
-  const version = (setup.name.match(/(\d+\.\d+\.\d+)/) || [, null])[1];
+
+  // Es gilt die HOECHSTE Nummer im Ordner.
+  //
+  // AM 12.09.2026 KORRIGIERT. Zuerst stand hier "die EXE gibt die
+  // Fassung vor, wenn eine daliegt". Das ist in Dietmars Ordner sofort
+  // schiefgegangen: Dort lag noch  Amateurfunk-Trainer-1.111.0.exe  vom
+  // August. Nach jener Regel waere 1.111.0 die Fassung gewesen - und die
+  // drei fertigen Pakete von 1.275.0 haette das Skript als "andere
+  // Fassung" beiseitegelegt. Veroeffentlicht worden waere eine alte EXE
+  // unter einem alten Tag.
+  //
+  // Nach der Nummer zu gehen ist dagegen unempfindlich gegen Altlasten:
+  // Versionsnummern steigen, ein liegengebliebener Bau hat immer die
+  // kleinere. Bei gleicher Nummer entscheidet das Datum.
+  const nummer = v => String(v || '0.0.0').split('.').map(Number);
+  const hoeher = (a, b) => {
+    const x = nummer(a.version), y = nummer(b.version);
+    for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+    return a.stat.mtimeMs > b.stat.mtimeMs;
+  };
+  const leitdatei = alleDateien.reduce((a, b) => (hoeher(b, a) ? b : a));
+  const version = leitdatei.version;
   if (!version) {
     console.log('  Aus dem Dateinamen laesst sich keine Version lesen:');
-    console.log('    ' + setup.name);
+    console.log('    ' + leitdatei.name);
     console.log('');
     leitung && leitung.close();
     return;
   }
+
+  // Nur, was dieselbe Nummer traegt. Ein .deb von 1.270.0 unter der
+  // Ueberschrift "Amateurfunk-Trainer 1.275.0" waere schlimmer als
+  // gar keines: Es sieht richtig aus und ist es nicht.
+  const dateien = alleDateien.filter(d => d.version === version);
+  const daneben = alleDateien.filter(d => d.version !== version);
   const tag   = 'v' + version;
   const titel = 'Amateurfunk-Trainer ' + version;
   const stufe = Number((version.match(/^\d+\.(\d+)\./) || [, 0])[1]);
@@ -208,14 +394,67 @@ function beschreibung(setup, version, neue) {
     if (!neue.length && alle.length) neue = [alle[0]];
   }
 
-  console.log('  Datei       : ' + setup.name + '  (' + mb(setup.stat.size) + ' MiB)');
+  // ---- Gibt es das Release schon, und was haengt dran? ---------
+  //
+  // Muss VOR die Anzeige, denn davon haengt ab, welche Abschnitte in die
+  // Beschreibung passen - und die Anzeige soll genau das melden, was
+  // nachher wirklich hochgeht.
+  let vorhanden = false;
+  if (angemeldet) {
+    try { execSync('gh release view ' + tag + ' --repo ' + KONTO + '/' + REPO, { stdio: 'ignore' }); vorhanden = true; }
+    catch (e) { vorhanden = false; }
+  }
+  const schonDa = vorhanden ? vorhandeneAnhaenge(tag) : [];
+  const namen = dateien.map(d => d.name);
+  for (const n of schonDa) if (!namen.includes(n)) namen.push(n);
+
+  const text = beschreibung(namen, version, neue);
+  // Wieviele Abschnitte haben es hineingeschafft? Am Text abgelesen,
+  // nicht nachgerechnet - dann kann die Anzeige nicht danebenliegen.
+  const drin = (text.match(/^### \d+\.\d+\.\d+ /gm) || []).length;
+
+  console.log('  Dateien     :');
+  for (const d of dateien) {
+    console.log('    ' + d.name);
+    console.log('       ' + mb(d.stat.size) + ' MiB - ' + d.hinweis);
+  }
   console.log('  Tag         : ' + tag);
   console.log('  Titel       : ' + titel);
   if (bisher !== null) console.log('  Zuletzt dort: v1.' + bisher + '.0');
   console.log('');
+  if (daneben.length) {
+    console.log('  DIESE BLEIBEN LIEGEN - andere Fassung als ' + version + ':');
+    for (const d of daneben) console.log('    ' + d.name + '   (' + (d.version || 'ohne Nummer') + ')');
+    console.log('  Wenn eine davon mit soll, erst neu bauen.');
+    console.log('');
+  }
+
+  // Was fehlt, wird benannt. Sonst faellt erst auf der fertigen Seite
+  // auf, dass fuer ein System nichts zum Herunterladen dasteht.
+  const fehlt = [];
+  if (!dateien.some(d => /\.exe$/i.test(d.name)))      fehlt.push('Windows (Build-DIREKT.bat)');
+  if (!dateien.some(d => /\.deb$|\.rpm$/i.test(d.name))) fehlt.push('Linux (pakete_bauen.sh)');
+  if (!dateien.some(d => /-mac\.zip$/i.test(d.name)))   fehlt.push('macOS (pakete_bauen.sh)');
+  if (fehlt.length) {
+    console.log('  Fuer diese Systeme liegt nichts von ' + version + ' da:');
+    for (const f of fehlt) console.log('    - ' + f);
+    console.log('  Das Release entsteht trotzdem - nur ohne diese Dateien.');
+    console.log('  Spaeter nachschieben geht: einfach noch einmal starten.');
+    console.log('');
+  }
   if (neue.length) {
-    console.log('  Beschreibung (wird vollstaendig uebernommen):');
-    for (const a of neue) console.log('    - ' + a.version + '  (' + a.datum + ')');
+    console.log('  Beschreibung - diese Fassungen stehen darin:');
+    for (const a of neue.slice(0, drin)) console.log('    - ' + a.version + '  (' + a.datum + ')');
+    const rest = neue.slice(drin);
+    if (rest.length) {
+      console.log('');
+      console.log('    Dazu ein Hinweis auf ' + rest.length + ' aeltere Fassungen');
+      console.log('    (' + rest[rest.length - 1].version + ' bis ' + rest[0].version + ') mit Verweis aufs Protokoll.');
+      console.log('    Alle auf einmal gehen nicht: GitHub nimmt 125.000 Zeichen');
+      console.log('    im Beschreibungsfeld, diese ' + neue.length + ' Abschnitte sind mehr.');
+    }
+    console.log('');
+    console.log('  Laenge      : ' + text.length.toLocaleString('de-DE') + ' Zeichen (GitHub erlaubt 125.000)');
     console.log('');
   }
 
@@ -226,7 +465,6 @@ function beschreibung(setup, version, neue) {
     // der Adresse der Seite, die Beschreibung liegt in der
     // Zwischenablage. Auf der Seite genuegt Strg+V.
     const notizDatei = path.join(ORDNER, '_release-notiz.md');
-    const text = beschreibung(setup, version, neue);
     fs.writeFileSync(notizDatei, text, 'utf8');
     let inZwischenablage = false;
     try {
@@ -244,7 +482,18 @@ function beschreibung(setup, version, neue) {
     console.log('  Ich mache gleich beides auf: die Release-Seite mit');
     console.log('  bereits gesetztem Tag und Titel, und den Ordner release\\.');
     console.log('');
-    console.log('    1. Die EXE aus dem Explorer in die Seite ziehen.');
+    if (dateien.length === 1) {
+      console.log('    1. ' + dateien[0].name + ' aus dem Explorer in die Seite ziehen.');
+    } else {
+      console.log('    1. Diese ' + dateien.length + ' Dateien aus release\\ in die Seite ziehen:');
+      for (const d of dateien) console.log('         ' + d.name);
+      // Im Ordner liegt immer auch _release-notiz.md, und oft ein
+      // Paket von vorher. "Strg+A" waere dann eine Falle.
+      if (!daneben.length) {
+        console.log('       (Mehrfachauswahl mit Strg und Klick - aber nicht');
+        console.log('        _release-notiz.md, die gehoert nicht dazu.)');
+      }
+    }
     if (inZwischenablage) {
       console.log('    2. In das grosse Textfeld Strg+V - die fertige');
       console.log('       Beschreibung liegt in der Zwischenablage.');
@@ -280,17 +529,20 @@ function beschreibung(setup, version, neue) {
     return;
   }
 
-  // ---- Gibt es das Release schon? ------------------------------
-  let vorhanden = false;
-  try { execSync('gh release view ' + tag + ' --repo ' + KONTO + '/' + REPO, { stdio: 'ignore' }); vorhanden = true; }
-  catch (e) { vorhanden = false; }
-
+  // "vorhanden", "schonDa", "namen" und "text" stehen schon oben - sie
+  // mussten vor die Anzeige.
   const notizDatei = path.join(ORDNER, '_release-notiz.md');
-  fs.writeFileSync(notizDatei, beschreibung(setup, version, neue), 'utf8');
+  fs.writeFileSync(notizDatei, text, 'utf8');
 
   if (vorhanden) {
     console.log('  Das Release ' + tag + ' gibt es schon. Titel und');
-    console.log('  Beschreibung werden aufgefrischt, die Datei ersetzt.');
+    console.log('  Beschreibung werden aufgefrischt, die ' + dateien.length
+                 + (dateien.length === 1 ? ' Datei' : ' Dateien'));
+    console.log('  ersetzt oder neu angehaengt.');
+    const dazu = schonDa.filter(n => !dateien.some(d => d.name === n));
+    if (dazu.length) {
+      console.log('  Schon dort und bleibt unberuehrt: ' + dazu.join(', '));
+    }
   } else {
     console.log('  Das Release ' + tag + ' wird neu angelegt.');
   }
@@ -321,16 +573,21 @@ function beschreibung(setup, version, neue) {
     if (e.status !== 0) fertig = false;
   }
 
+  // gh nimmt beliebig viele Dateien in einem Aufruf. --clobber ersetzt
+  // eine gleichnamige, laesst die anderen stehen.
+  const pfade = dateien.map(d => zitat(d.pfad));
   const argumente = vorhanden
-    ? ['release', 'upload', tag, zitat(setup.pfad), '--clobber', '--repo', KONTO + '/' + REPO]
-    : ['release', 'create', tag, zitat(setup.pfad),
-       '--repo', KONTO + '/' + REPO,
-       '--title', zitat(titel),
-       '--notes-file', zitat(notizDatei),
-       '--latest'];
+    ? ['release', 'upload', tag].concat(pfade,
+       ['--clobber', '--repo', KONTO + '/' + REPO])
+    : ['release', 'create', tag].concat(pfade,
+       ['--repo', KONTO + '/' + REPO,
+        '--title', zitat(titel),
+        '--notes-file', zitat(notizDatei),
+        '--latest']);
 
-  // Durchgereicht, damit gh seinen Fortschritt zeigen kann - 105 MiB
-  // dauern, und ein Fenster ohne Lebenszeichen sieht aus wie ein Haenger.
+  // Durchgereicht, damit gh seinen Fortschritt zeigen kann - die EXE
+  // allein sind 105 MiB, mit den drei Paketen kommen 29 MiB dazu, und
+  // ein Fenster ohne Lebenszeichen sieht aus wie ein Haenger.
   const r = spawnSync('gh', argumente, { cwd: WURZEL, stdio: 'inherit', shell: true });
   if (r.status !== 0) fertig = false;
 

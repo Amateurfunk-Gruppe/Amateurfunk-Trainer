@@ -10,6 +10,68 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ## [1.275.0] - 2026-09-11
 
+### Hinzugefügt
+- **Pakete für Linux und macOS.** Aus einer Frage in einer Facebook-Gruppe:
+  „Wäre jetzt schön, wenn es auch ein deb und rpm Paket gäbe. So muss man das
+  Programm erst compilieren, was für Linux-Einsteiger suboptimal ist."
+
+  Compiliert wird nichts — der Trainer ist Node.js und HTML. Aber der Wunsch
+  dahinter ist berechtigt: `bash installieren.sh` ist für Einsteiger etwas
+  anderes als ein Doppelklick. Neu gibt es daher drei Pakete:
+
+  | Datei | Für |
+  |---|---|
+  | `amateurfunk-trainer_<Fassung>_all.deb` | Debian, Ubuntu, Mint, Raspberry Pi OS |
+  | `amateurfunk-trainer-<Fassung>-1.noarch.rpm` | Fedora, openSUSE, RHEL |
+  | `Amateurfunk-Trainer-<Fassung>-mac.zip` | macOS 11 und neuer |
+
+  Jedes enthält 1798 Dateien: den amtlichen Fragenkatalog, alle 746
+  Zeichnungen, die Formelsammlung, die Töne und express/cors/socket.io. Kein
+  `npm install` beim Benutzer, kein Netz beim Lernen. Node.js 18 zieht die
+  Paketverwaltung selbst mit (`Depends: nodejs (>= 18)`).
+
+  **Wo der Lernstand landet.** Der Server legt `data/` neben `Server.js` — in
+  `/opt` darf ein normaler Benutzer aber nicht schreiben. Der Starter spiegelt
+  das Programm deshalb beim ersten Aufruf und nach jedem Update in den
+  Heimatordner und läuft von dort: `~/.local/share/amateurfunk-trainer` unter
+  Linux, `~/Library/Application Support/Amateurfunk-Trainer` unter macOS.
+  Kopiert werden nur Programmdateien; `data/`, `backup/`, `Hoerbuch/`, `piper/`
+  und `tts_cache/` bleiben liegen. Nachgemessen: Merkdatei in `data/` angelegt,
+  Fassungsmerker auf 1.274.0 zurückgestellt, `Index.html` zerstört, neu
+  gestartet — `Index.html` war wieder echt, die Merkdatei unberührt.
+
+  Die Mac-App ist **nicht signiert**; beim ersten Start braucht es Rechtsklick
+  → „Öffnen". Eine Signatur kostet ein Entwicklerkonto für 99 US-Dollar im
+  Jahr. Der Hinweis liegt als `ZUERST-LESEN.txt` im ZIP.
+
+  Gebaut wird mit `pakete_bauen.sh` (Positivliste wie in `installer.iss`, was
+  nicht eingetragen ist kommt nicht mit). Die Datei steht in der `.gitignore`,
+  aus demselben Grund wie `installer.iss`.
+
+### Geändert
+- **`Release-Hochladen.bat` veröffentlicht jetzt alle Pakete einer Fassung**,
+  nicht mehr nur die EXE. Es sammelt aus `release\` alles, was zu den vier
+  Namensmustern passt, und hängt es in einem Zug an dasselbe Release.
+
+  Drei Dinge, die dabei nötig waren:
+
+  - **Fremde Fassungen bleiben liegen.** Ein `.deb` von 1.270.0 unter der
+    Überschrift „Amateurfunk-Trainer 1.275.0" wäre schlimmer als gar keines:
+    Es sieht richtig aus und ist es nicht. Was nicht dieselbe Nummer trägt,
+    wird genannt und übergangen.
+  - **Die Beschreibung kennt auch, was schon oben hängt.** Wer die
+    Linux-Pakete nachschiebt, hat keine EXE in `release\` — ohne Abfrage der
+    vorhandenen Anhänge wäre der Windows-Abschnitt aus der Anleitung
+    gefallen, während die EXE weiter darunter hing.
+  - **Eine Grenze für die Beschreibung.** GitHub nimmt 125.000 Zeichen, und
+    zwar hart: Mehr wird nicht gekürzt, sondern abgewiesen. Zuletzt
+    veröffentlicht ist v1.111.0; die 186 Abschnitte seitdem sind zusammen
+    355.550 Zeichen, das Dreifache. Ohne diese Grenze wäre der erste Versuch
+    nach der langen Pause fehlgeschlagen — und zwar erst, nachdem alle
+    Dateien übertragen waren. Jetzt kommen die zwölf neuesten Fassungen
+    vollständig mit (19.298 Zeichen), die 174 davor werden mit Bereich und
+    Verweis aufs Protokoll genannt. Still weggelassen wird nichts.
+
 ### Behoben
 - **`Hochladen.bat` ließ Änderungen unbemerkt liegen.** Dietmar: „ich habe ein
   neues Bild in den Ordner Bilder hochgeladen, es nimmt aber GitHub nicht an."

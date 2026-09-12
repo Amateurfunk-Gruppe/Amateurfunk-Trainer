@@ -202,6 +202,31 @@ version.js
 wizard.bmp
 small.bmp
 
+# pakete_bauen.sh baut .deb, .rpm und das Mac-Paket - dieselbe Sorte
+# Datei wie installer.iss, nur fuer Linux und macOS. Also dieselbe Regel:
+# Der Quelltext gehoert nach GitHub, die Bauanleitung nicht.
+#
+# ACHTUNG, DAS HAT EINEN PREIS. Ohne diese Datei im Repository kann kein
+# GitHub-Actions-Ablauf die Pakete bauen - sie muessen also von Hand
+# entstehen (WSL, ein Linux-Rechner, oder hier). Wenn die Pakete einmal
+# bei jedem Release automatisch fallen sollen, muss diese Zeile weg.
+pakete_bauen.sh
+
+# Der Aufraeum-Doppelklick vom 12.09.2026 und seine zwei Protokolle.
+# Ein Werkzeug fuer diesen Ordner, kein Bestandteil des Trainers.
+# (_Ordnung-Lauf.txt und _Ordnung-Bericht.txt deckt schon _*.txt ab -
+#  hier stehen sie der Vollstaendigkeit halber.)
+_Ordnung-Jetzt.bat
+_Ordnung-Lauf.txt
+_Ordnung-Bericht.txt
+
+# Die fertigen Pakete. Sie gehoeren unter "Releases", nicht in den
+# Quelltext - genau wie das Windows-Setup.
+release/
+*.deb
+*.rpm
+*-mac.zip
+
 # icon.ico STAND BIS ZUM 09.09.2026 HIER - und das war der Fehler, der
 # Dietmar drei Fassungen lang das alte Zeichen auf dem Schreibtisch
 # gelassen hat.
@@ -265,3 +290,21 @@ _*.html
 _*.md
 _*.json
 _*.txt
+
+# ================================================================
+#  WERKZEUG FUER VIDEOANSAGEN - bleibt auf Dietmars Rechner
+# ----------------------------------------------------------------
+#  _Ansage.bat + _ansage.js: Freitext eintippen, Piper liest vor, das
+#  Ergebnis landet als WAV in _Ansagen\. Gedacht fuer die Tonspur der
+#  Erklaervideos.
+#
+#  Dietmar am 12.09.2026: "Das darf nicht mit auf github hochgeladen
+#  werden. beim erstellen einer exe darf es auch nicht drin sein."
+#
+#  Hier stehen die drei Zeilen dafuer. Die EXE bleibt ohnehin frei:
+#  installer.iss zaehlt den Hauptordner Datei fuer Datei auf, und dort
+#  ist keine davon eingetragen.
+# ================================================================
+_Ansage.bat
+_ansage.js
+_Ansagen/
