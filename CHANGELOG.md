@@ -8,6 +8,115 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.281.0] - 2026-09-12
+
+### Hinzugefügt
+- **Die Erklärung lässt sich vorlesen.** Dietmar: „Es fehlt noch das was wir jetzt
+  erarbeitet haben, einen Button mit vorlesen." Der Knopf sitzt in der Kopfzeile der
+  Erklärtafel, links vom Kreuz, und sieht aus wie der „Vorlesen"-Knopf an der Frage.
+
+  Gelesen wird in der Reihenfolge, in der es dasteht: **Im Bild**, **Der Kniff**, und —
+  wenn geantwortet ist — **Der Weg** und **Warum die anderen falsch sind**. Vor der
+  Antwort sagt der Trainer am Ende den Satz, dass der Rechenweg noch kommt. Was nicht in
+  der Tafel steht, wird auch nicht gesprochen.
+
+  **Jeder Abschnitt ist ein eigenes Stück der Vorlese-Warteschlange.** Das hat zwei
+  Wirkungen, die zusammen das Platzproblem der Tafel lösen: Der gerade gesprochene
+  Abschnitt wird gelb hervorgehoben, und er rollt von selbst in den Blick. Die Tafel ist
+  nur so hoch wie der Antwortkasten — beim Zuhören blättert sie jetzt mit.
+
+  Der Knopf heißt während des Vorlesens **Stop**. Schließen der Tafel beendet das
+  Vorlesen, ein Klick auf „Weiter" ebenfalls: Was nicht mehr zu sehen ist, soll nicht
+  weitersprechen.
+
+  **Die Formeln mussten erst sprechbar werden**, und das war die eigentliche Arbeit. Auf
+  dem Schirm steht `P = U² / R = (10 V)² / 100 Ohm = 1 W`. Die Einheiten schreibt der
+  Server mit `expandTTS` schon aus („Ohm", „Watt"), aber `=`, `²`, `·`, `√`, `∥`, die
+  Tiefzahlen in `R₂` und der Unterstrich in `U_BE` kommen dort nicht vor — die wären als
+  Zeichen durchgerutscht oder verschluckt worden. Die neue Funktion `sprechbar()` setzt
+  sie vorher in Worte:
+
+  | geschrieben | gesprochen |
+  |---|---|
+  | `P = U² / R` | P ist U zum Quadrat durch R |
+  | `R₂ ∥ R_L` | R 2 parallel zu R L |
+  | `1,2 · 10⁻⁶ H` | 1,2 mal 10 hoch minus 6 H |
+  | `f = 1 / (2π · √(L · C))` | f ist 1 durch (2 pi mal Wurzel aus (L mal C)) |
+  | `ü = 1:4` | ü ist 1 zu 4 |
+
+  **Ein Fehler, den der Probelauf gefunden hat:** Die Regel für Zehnerpotenzen stand
+  zuerst NACH der Regel für `²`. Aus `10⁻¹²` wurde damit „10 hoch minus eins zum
+  Quadrat". Jetzt werden Zehnerpotenzen als Ganzes erkannt, bevor die einzelnen
+  Hochzahlen dran sind. Nachgemessen mit zehn echten Zeilen aus den Erklärungen.
+
+### Geändert
+- **`playTTSQueue()` nimmt jetzt eine dritte Angabe**: wie der Knopf danach aussehen
+  soll. Bis heute stand dort fest „Vorlesen" und `vorleseFrage()` — es gab ja nur einen
+  Vorleseknopf. Ohne diese Angabe bleibt alles wie vorher, der Knopf an der Frage merkt
+  nichts davon. Und `stopTTS()` setzt beide Knöpfe zurück, nicht nur den einen; sonst
+  stünde in der Tafel „Stop", während längst Stille ist.
+
+---
+
+## [1.280.0] - 2026-09-12
+
+### Hinzugefügt
+- **Erklärungen zu ALLEN Fragen mit Zeichnung — 379 Stück.** Dietmar: „Mache bitte
+  alle für die Klasse E nach A fertig. Danach von N nach E und auch N."
+
+  | Prüfungsziel | Fragen mit Zeichnung | erklärt |
+  |---|---|---|
+  | Aufstockung E → A | 226 | 226 |
+  | Aufstockung N → E | 98 | 98 |
+  | Klasse N | 55 | 55 |
+  | **zusammen** | **379** | **379** |
+
+  Damit ist keine Frage mit Zeichnung mehr ohne Erklärung. Vorher waren es zwölf.
+
+  Jeder Eintrag hat **Im Bild** (was die Zeichnung zeigt — was liegt parallel, was in
+  Reihe, wohin zeigt welcher Pfeil), **Der Kniff** (die Stelle, an der man hereinfällt),
+  bei Rechenfragen **Der Weg** (131 Stück, Schritt für Schritt mit Zwischenergebnis) und
+  **Warum die anderen falsch sind** — **1083 einzelne Sätze**, je falsche Antwort einer.
+
+  **Jede Zeichnung wurde angesehen, nicht aus dem Fragentext erraten.** Das war der
+  eigentliche Aufwand: Bei „Wie groß ist die Gesamtkapazität dieser Schaltung" steht die
+  Antwort nicht im Text, sondern im Bild — parallel wird addiert, in Reihe nicht. Die 746
+  Zeichnungen wurden dafür einzeln gerastert und in Kontaktbögen durchgesehen; an
+  strittigen Stellen (Verbindungspunkt oder bloße Kreuzung, Diodenpolung, Mittelanzapfung)
+  wurde die SVG-Quelle ausgelesen und ausgemessen.
+
+  **Maschinell geprüft** ist bei allen 379: der Fragentext steht wörtlich so im Katalog,
+  die als richtig genannte Antwort ist die amtlich richtige, und jeder Schlüssel unter
+  `warum_falsch` ist wörtlich eine der falschen Antworten. Das ist wichtig, weil der
+  Trainer die Antworten mischt — eine Erklärung, die an „Antwort C" hängt, zeigt am
+  nächsten Tag auf die falsche. Der Prüflauf meldet 0 Fehler.
+
+  **Wo kein Rechenweg zu einer falschen Antwort führt, steht das ausdrücklich dabei:**
+  „Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort." Eine
+  erfundene Begründung wäre schlimmer als keine. Rund 40 der 1083 Sätze sind solche
+  ehrlichen Fehlanzeigen, und in einigen Fällen ließ sich zeigen, dass die Zahl aus der
+  NACHBARfrage stammt (etwa AC517/AC518, die sich nur durch den Emitterwiderstand
+  unterscheiden — wer den übersieht, landet genau auf der Antwort der anderen Frage).
+
+  **Die 18 Fragen mit Bild-Antworten** sind der Sonderfall: dort haben die Antworten
+  keinen Text, an dem ein Satz hängen könnte. Für sie beschreibt „Im Bild" alle vier
+  Antwortbilder nach ihrem INHALT (nicht nach ihrem Buchstaben, der wandert beim
+  Mischen), und „Der Kniff" sagt, woran man das richtige erkennt.
+
+  **Für die Klasse N ist der Ton ein anderer**: dort fangen Leute ohne Elektrotechnik an,
+  deshalb wird jeder Fachbegriff im Halbsatz mit erklärt und keine Abkürzung ohne
+  Auflösung benutzt.
+
+### Korrigiert
+- **Elf Zeichnungen tragen die Endung `.svg`, sind aber PNG-Dateien** (`BE207_q.svg`,
+  `BE208_q.svg`, `BE209_q.svg`, `NE209_q.svg`, `NF101_q.svg` bis `NF106_q.svg`,
+  `NG302_q.svg`). Beim Durchsehen fiel außerdem auf, dass mehrere echte SVGs ihren Inhalt
+  nur über einen `feImage`-Filter zeigen; wer sie ohne diesen Filter rastert, sieht ein
+  leeres Bild. Am Trainer ändert das nichts — der Browser zeigt beides richtig an —, aber
+  wer die Dateien weiterverarbeitet, sollte es wissen. Deshalb steht es hier.
+
+---
+
 ## [1.279.0] - 2026-09-12
 
 ### Geändert

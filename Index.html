@@ -1406,6 +1406,36 @@
             border-radius: 8px; width: 30px; height: 30px; cursor: pointer;
             flex: 0 0 auto; font-size: 0.9rem; line-height: 1;
         }
+        /* Der Vorleseknopf sieht aus wie der in der Kopfzeile der Frage -
+           dasselbe Navy, dieselbe Rundung. Dietmar am 13.09.2026: "Es fehlt
+           noch das was wir jetzt erarbeitet haben, einen Button mit
+           vorlesen." */
+        .erklaer-tafel .et-lesen {
+            background: var(--panel-navy); color: #ffffff; border: none;
+            border-radius: 20px; padding: 0.35rem 0.8rem; font-size: 0.78rem;
+            cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+            font-family: inherit;
+        }
+        .erklaer-tafel .et-lesen:hover { filter: brightness(1.15); }
+        /* WÄHREND DES VORLESENS SIEHT MAN, WO ES GERADE IST.
+           Die Klasse .tts-highlight setzt playTTSSegment() ohnehin schon -
+           nur gab es dafür bisher nur eine Regel für die Antwortkacheln.
+           In der Tafel ist sie doppelt nützlich: Bei einer langen Erklärung
+           rollt der Abschnitt von selbst in den Blick (scrollIntoView), und
+           die Farbe sagt, welcher gerade gesprochen wird. */
+        .erklaer-tafel .ek-zeile.tts-highlight {
+            background: var(--accent-amber-soft);
+            border-radius: 8px;
+            padding: 0.3rem 0.5rem;
+            margin-left: -0.5rem; margin-right: -0.5rem;
+            transition: background 0.2s ease;
+        }
+        body.dark .erklaer-tafel .ek-zeile.tts-highlight {
+            background: #3a2f14;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .erklaer-tafel .ek-zeile.tts-highlight { transition: none; }
+        }
         .erklaer-tafel .et-zu:hover { border-color: #2f6ea2; }
         .erklaer-tafel .et-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0.7rem 0.8rem; }
         body.dark .erklaer-tafel {
@@ -17349,9 +17379,12 @@ window.formelBtnKlick = formelBtnKlick;
 function erklaerInhalt(q, er, alles){
     const meine = (q && q.userAnswerIndex != null && q.options && q.options[q.userAnswerIndex])
         ? String(q.options[q.userAnswerIndex].text || '').trim() : '';
+    // Die data-ek-Marken braucht das Vorlesen: playTTSSegment() holt das
+    // gerade gesprochene Stueck mit scrollIntoView in den Blick, und in der
+    // Tafel ist genau das der Weg durch einen langen Text.
     let ek = '';
-    if (er.bild)  ek += '<div class="ek-zeile"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
-    if (er.kniff) ek += '<div class="ek-zeile"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
+    if (er.bild)  ek += '<div class="ek-zeile" data-ek="bild"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
+    if (er.kniff) ek += '<div class="ek-zeile" data-ek="kniff"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
 
     const hatWeg    = Array.isArray(er.weg) && er.weg.length;
     const wf        = er.warum_falsch || er.falsch || null;
@@ -17359,7 +17392,7 @@ function erklaerInhalt(q, er, alles){
 
     if (alles) {
         if (hatWeg) {
-            ek += '<div class="ek-zeile"><span class="ek-marke">Der Weg.</span><ol class="ek-weg">'
+            ek += '<div class="ek-zeile" data-ek="weg"><span class="ek-marke">Der Weg.</span><ol class="ek-weg">'
                 + er.weg.map(z => '<li>' + attrText(z) + '</li>').join('')
                 + '</ol></div>';
         }
@@ -17368,7 +17401,7 @@ function erklaerInhalt(q, er, alles){
         // Antwort wird hervorgehoben, damit man nicht erst suchen muss,
         // welcher der drei Saetze der eigene ist.
         if (hatFalsch) {
-            ek += '<div class="ek-zeile"><span class="ek-marke">Warum die anderen falsch sind.</span>'
+            ek += '<div class="ek-zeile" data-ek="falsch"><span class="ek-marke">Warum die anderen falsch sind.</span>'
                 + '<ul class="ek-falsch">'
                 + Object.keys(wf).map(k => {
                     const dran = (meine && k.trim() === meine);
@@ -17418,6 +17451,11 @@ function erklaerKnopfSetzen(){
     // renderQuestion() ohnehin mit weggeraeumt. Hier bleibt nur, die
     // Marke zurueckzusetzen, damit der Knopf nicht als "an" haengenbleibt.
     if(!document.getElementById('erklaerTafel')){
+        if(erklaerOffenFuer && ttsQueueActive){
+            // Die Tafel ist beim Neuzeichnen mitgegangen (neue Frage oder
+            // Antwort) - ein Vorlesen dazu gehoert beendet.
+            try{ stopTTS(); }catch(e){}
+        }
         erklaerOffenFuer = null;
         b.classList.remove('an');
     }
@@ -17500,6 +17538,12 @@ function erklaerOeffnen(){
       +   '<div class="et-titel"><i class="fas fa-lightbulb" style="color:#5b3f95;"></i> '
       +     'Erklärung zur Zeichnung <span class="et-frage">' + attrText(q.id)
       +     (answered ? ' · mit Rechenweg' : ' · vor der Antwort') + '</span></div>'
+      +   '<button type="button" class="et-lesen" id="erklaerLesenBtn" onclick="erklaerVorlesen()" '
+      +     'title="Erklärung vorlesen" data-tooltip="Erklärung vorlesen" '
+      +     'data-vorlesen-kurz="Erklärung vorlesen." '
+      +     'data-vorlesen="Erklärung vorlesen. Liest der Reihe nach vor, was im Bild steht, '
+      +     'worauf es ankommt, den Rechenweg und warum die anderen Antworten falsch sind.">'
+      +     '<i class="fas fa-volume-up"></i> Vorlesen</button>'
       +   '<button type="button" class="et-zu" onclick="erklaerSchliessen()" '
       +     'title="Erklärung zu, Antworten wieder anzeigen" '
       +     'data-tooltip="Erklärung zu, Antworten wieder anzeigen">&#10005;</button>'
@@ -17516,6 +17560,13 @@ function erklaerOeffnen(){
 window.erklaerOeffnen = erklaerOeffnen;
 
 function erklaerSchliessen(){
+    // Laeuft gerade unser Vorlesen, hoert es hier auf: Was nicht mehr zu
+    // sehen ist, soll auch nicht weitersprechen. Erkannt wird es am Knopf -
+    // er heisst nur waehrend des Vorlesens "Stop".
+    try{
+        const lb = document.getElementById('erklaerLesenBtn');
+        if(lb && /stop/i.test(lb.innerText || '')) stopTTS();
+    }catch(e){}
     const t = document.getElementById('erklaerTafel');
     if(t) t.parentNode.removeChild(t);
     const kasten = document.getElementById('optionsContainer');
@@ -17525,6 +17576,118 @@ function erklaerSchliessen(){
     if(b) b.classList.remove('an');
 }
 window.erklaerSchliessen = erklaerSchliessen;
+
+// ============================================================================
+//  DIE ERKLAERUNG VORLESEN
+// ----------------------------------------------------------------------------
+//  Dietmar am 13.09.2026: "Es fehlt noch das was wir jetzt erarbeitet haben,
+//  einen Button mit vorlesen."
+//
+//  Gelesen wird in derselben Reihenfolge, in der es dasteht: Im Bild, Der
+//  Kniff, Der Weg, Warum die anderen falsch sind. Jedes Stueck ist ein
+//  eigenes Segment der Warteschlange - dadurch holt playTTSSegment() es mit
+//  scrollIntoView in den Blick, und die Tafel blaettert beim Zuhoeren von
+//  selbst weiter. Das loest zugleich das Platzproblem: Die Tafel ist nur so
+//  hoch wie der Antwortkasten, laengere Texte rollen innen mit.
+//
+//  DIE FORMELN MUESSEN ERST SPRECHBAR WERDEN. Auf dem Schirm steht
+//  "P = U² / R = (10 V)² / 100 Ohm = 1 W". Der Server schreibt mit
+//  expandTTS die Einheiten aus ("Ohm", "Watt"), aber "=" und "²" und "·"
+//  kennt er nicht - die kaemen als Zeichen durch oder verschwinden. Deshalb
+//  werden sie hier in Worte gesetzt, bevor der Text den Rechner verlaesst.
+// ============================================================================
+const HOCHZAHL = { '\u2070':'0','\u00b9':'1','\u00b2':'2','\u00b3':'3','\u2074':'4',
+                   '\u2075':'5','\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9' };
+const TIEFZAHL = { '\u2080':'0','\u2081':'1','\u2082':'2','\u2083':'3','\u2084':'4',
+                   '\u2085':'5','\u2086':'6','\u2087':'7','\u2088':'8','\u2089':'9' };
+
+function sprechbar(text){
+    let t = String(text == null ? '' : text);
+    const zahl = (s, tabelle) => Array.from(s).map(z => tabelle[z] || '').join('');
+
+    // 1. ZEHNERPOTENZEN ZUERST. "10⁻¹⁸" muss als Ganzes erkannt werden -
+    //    wer vorher "²" ersetzt, macht daraus "10 hoch minus eins zum
+    //    Quadrat". Genau das stand hier im ersten Versuch, und der Probelauf
+    //    hat es gezeigt.
+    t = t.replace(/10(\u207b?)([\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+)/g,
+        (m, minus, ziffern) => '10 hoch ' + (minus ? 'minus ' : '') + zahl(ziffern, HOCHZAHL));
+
+    // 2. Die uebrigen Hochzahlen.
+    t = t.replace(/\u00b2/g, ' zum Quadrat');
+    t = t.replace(/\u00b3/g, ' hoch drei');
+    t = t.replace(/(\u207b?)([\u2070\u00b9\u2074-\u2079]+)/g,
+        (m, minus, ziffern) => ' hoch ' + (minus ? 'minus ' : '') + zahl(ziffern, TIEFZAHL === null ? {} : HOCHZAHL));
+
+    // 3. Tiefzahlen: "R₂" wird zu "R 2". Ungesprochen waere es ein
+    //    Zeichen, das Piper verschluckt - und dann heissen alle
+    //    Widerstaende gleich.
+    t = t.replace(/[\u2080-\u2089]+/g, m => ' ' + zahl(m, TIEFZAHL));
+
+    // 4. Unterstriche in Bezeichnern: "U_BE" wird zu "U BE", "R_L" zu "R L".
+    t = t.replace(/([A-Za-z])_([A-Za-z0-9]{1,3})/g, '$1 $2');
+
+    // 5. Rechen- und Sonderzeichen in Worte.
+    t = t.replace(/\u2225/g, ' parallel zu ');          // ∥
+    t = t.replace(/[\u00b7\u00d7]/g, ' mal ');          // · ×
+    t = t.replace(/\u00f7/g, ' geteilt durch ');         // ÷
+    t = t.replace(/\u221a/g, ' Wurzel aus ');            // √
+    t = t.replace(/\u2248/g, ' ist etwa ');              // ≈
+    t = t.replace(/\u2192/g, ' ergibt ');                // →
+    t = t.replace(/\u2260/g, ' ist nicht ');             // ≠
+    t = t.replace(/=/g, ' ist ');
+    t = t.replace(/(\d)\s*:\s*(\d)/g, '$1 zu $2');      // Verhaeltnis 1:4
+    t = t.replace(/\u03c0/g, ' pi ');                    // π
+    t = t.replace(/\u2212/g, 'minus ');                 // echtes Minuszeichen
+    t = t.replace(/\s*\/\s*/g, ' durch ');
+    t = t.replace(/\s*[\u2014\u2013]\s*/g, ', ');         // Gedankenstriche samt Abstand
+    t = t.replace(/[\u201e\u201c"]/g, '');               // Anfuehrungszeichen
+    t = t.replace(/\s{2,}/g, ' ');
+    return t.trim();
+}
+
+function erklaerLesenKnopfZurueck(){
+    const b = document.getElementById('erklaerLesenBtn');
+    if(!b) return;
+    b.disabled = false;
+    b.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
+    b.onclick = () => erklaerVorlesen();
+    b.setAttribute('data-tooltip', 'Erklärung vorlesen');
+}
+window.erklaerLesenKnopfZurueck = erklaerLesenKnopfZurueck;
+
+function erklaerVorlesen(){
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!q || !er) return;
+    const b = document.getElementById('erklaerLesenBtn');
+    const stelle = (marke) => '#erklaerTafel [data-ek="' + marke + '"]';
+    const segmente = [];
+    if(er.bild)  segmente.push({ text: 'Im Bild. '   + sprechbar(er.bild),  selector: stelle('bild') });
+    if(er.kniff) segmente.push({ text: 'Der Kniff. ' + sprechbar(er.kniff), selector: stelle('kniff') });
+    // Der Weg und die falschen Antworten nur, wenn sie auch dastehen -
+    // vor der Antwort sind sie nicht in der Tafel, und was man nicht sieht,
+    // soll man auch nicht hören.
+    const alles = !!answered;
+    if(alles && Array.isArray(er.weg) && er.weg.length){
+        segmente.push({ text: 'Der Weg. ' + er.weg.map(z => sprechbar(z)).join('. '),
+                        selector: stelle('weg') });
+    }
+    const wf = er.warum_falsch || er.falsch || null;
+    if(alles && wf && typeof wf === 'object' && Object.keys(wf).length){
+        const teile = Object.keys(wf).map(k => sprechbar(k) + '. ' + sprechbar(wf[k]));
+        segmente.push({ text: 'Warum die anderen falsch sind. ' + teile.join(' '),
+                        selector: stelle('falsch') });
+    }
+    if(!alles){
+        segmente.push({ text: 'Der Rechenweg und die Fehler hinter den anderen Antworten kommen, '
+                            + 'sobald du geantwortet hast.', selector: null });
+    }
+    if(!segmente.length) return;
+    try{ stopTTS(); }catch(e){}
+    playTTSQueue(segmente, b, erklaerLesenKnopfZurueck);
+}
+window.erklaerVorlesen = erklaerVorlesen;
 
 // Escape schliesst die Tafel - dieselbe Handbewegung wie beim
 // Formelblatt und beim Rechner.
@@ -19692,6 +19855,10 @@ function stopTTS(){
     clearTTSHighlights();
     const btn=document.getElementById('ttsBtn');
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-volume-up"></i> Vorlesen'; btn.onclick=()=>vorleseFrage(); }
+    // Der zweite Vorleseknopf sitzt in der Erklaertafel und muss hier mit
+    // zurueckgesetzt werden - sonst steht dort "Stopp", obwohl nichts mehr
+    // laeuft. Siehe erklaerVorlesen().
+    try{ if(typeof erklaerLesenKnopfZurueck === 'function') erklaerLesenKnopfZurueck(); }catch(e){}
 }
 
 // Spielt genau EIN Segment (Frage ODER eine Antwort) ab und wartet, bis das Audio
@@ -19858,7 +20025,7 @@ async function playTTSSegment(seg, token){
 // ================================================================
 let vorleseSummeMs = 0;
 
-async function playTTSQueue(segments, btn){
+async function playTTSQueue(segments, btn, zurueck){
     ttsQueueToken++;
     const token=ttsQueueToken;
     ttsQueueActive=true;
@@ -19895,7 +20062,15 @@ async function playTTSQueue(segments, btn){
     vorleseBuchen();
     ttsQueueActive=false;
     clearTTSHighlights();
-    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-volume-up"></i> Vorlesen'; btn.onclick=()=>vorleseFrage(); }
+    // ZURUECK IN DEN RUHEZUSTAND. Bis zum 13.09.2026 stand hier fest
+    // "Vorlesen" und vorleseFrage() - es gab nur einen Vorleseknopf. Seit
+    // die Erklaertafel einen eigenen hat, sagt der Aufrufer, wie sein
+    // Knopf danach aussehen soll; ohne Angabe bleibt es beim alten.
+    if(btn){
+        btn.disabled=false;
+        if(typeof zurueck === 'function'){ zurueck(btn); }
+        else { btn.innerHTML='<i class="fas fa-volume-up"></i> Vorlesen'; btn.onclick=()=>vorleseFrage(); }
+    }
 }
 
 // ================================================================
