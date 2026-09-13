@@ -8,6 +8,45 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.283.0] - 2026-09-13
+
+### Geändert
+- **Landeskenner und Rufzeichen werden buchstabiert.** Dietmar am 13.09.2026, mit Bild
+  der Antworten A bis D: „Die Buchstaben bei den Landeskenner in der Antwort sollen als
+  Buchstaben vorgelesen werden."
+
+  Und das ist zwingend: „PY, CE und VE" liest eine Sprachausgabe als drei Silben — etwa
+  „pü, tse, we". Wer zuhört, versteht nichts, obwohl genau diese Buchstabenpaare die
+  Frage sind. Jetzt heißt es **„P-Y, C-E und V-E"**, so wie Funker sie ohnehin sprechen.
+
+  Nachgemessen, was an die Sprachausgabe geht:
+
+  | Frage | vorher | jetzt |
+  |---|---|---|
+  | BD317 | PY, CE und VE | P-Y, C-E und V-E |
+  | BD302 | Deutschland (DA-DR) | Deutschland (D-A bis D-R) |
+  | BD315 | K3LR, W3DZZ und K4EAX | K-3-L-R, W-3-D-Z-Z und K-4-E-A-X |
+
+  Ein Bereich wie `DA-DR` wird also nicht zu „D-A-D-R", sondern zu „D-A **bis** D-R" —
+  sonst klingt es wie ein einziger langer Kenner.
+
+  **ZWEI SPERREN, DAMIT ES NUR DORT GREIFT, WO ES HINGEHÖRT.** Zwei Großbuchstaben
+  kommen im Katalog auch ganz anders vor. Erstens gibt es eine feste Liste der
+  Landeskenner — geraten wird nichts. Zweitens wird nur in Fragen buchstabiert, die auch
+  von Landeskennern, Präfixen oder Rufzeichen handeln.
+
+  **Warum die zweite Sperre nötig ist, zeigt „PA":** In BD304 ist das der Landeskenner
+  der Niederlande, in AF414, AF416, AF420 und AF423 aber die **Endstufe** (Power
+  Amplifier). Gegengeprüft über alle 1750 Fragen: betroffen sind **25**, und in **44**
+  weiteren hätte die Regel etwas verändert, das dort nichts zu buchstabieren ist — genau
+  diese 44 bleiben unangetastet.
+
+  Buchstabiert wird an beiden Stellen: beim Vorlesen der Frage samt Antworten und in der
+  Erklärtafel, wo die Sätze unter „warum die anderen falsch sind" die Antworttexte im
+  Original tragen.
+
+---
+
 ## [1.282.0] - 2026-09-13
 
 ### Hinzugefügt

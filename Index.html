@@ -17693,6 +17693,80 @@ function sprechbar(text){
     return t.trim();
 }
 
+// ============================================================================
+//  LANDESKENNER WERDEN BUCHSTABIERT
+// ----------------------------------------------------------------------------
+//  Dietmar am 13.09.2026, mit Bild der Antworten A bis D: "Die Buchstaben bei
+//  den Landeskenner in der Antwort sollen als Buchstaben vorgelesen werden."
+//
+//  Und das ist zwingend. "PY, CE und VE" liest eine Sprachausgabe als drei
+//  Silben - etwa "pü, tse, we". Wer zuhoert, versteht nichts; gefragt sind
+//  aber genau diese Buchstabenpaare. Buchstabiert wird daraus "P-Y, C-E und
+//  V-E", und das ist die Form, in der Funker sie ohnehin sprechen.
+//
+//  NUR WO ES HINGEHOERT. Zwei Buchstaben in Grossschrift kommen im Katalog
+//  auch anders vor - "AM", "FM", "CW", Einheiten, Formelzeichen. Deshalb
+//  zwei Sperren: erstens eine feste LISTE der Landeskenner (nichts wird
+//  geraten), zweitens nur in Fragen, die auch von Landeskennern oder
+//  Rufzeichen handeln (siehe kennerThema).
+//
+//  Die Trennung mit Bindestrich ist dieselbe, mit der im Katalog schon
+//  "D-A-R-C" buchstabiert wird - sie hat sich bei Piper bewaehrt.
+// ============================================================================
+const LANDESKENNER = [
+    // drei Zeichen zuerst, sonst greift die kuerzere Regel vorher
+    'HB0','HB9','4X',
+    'DA','DR','DS','DT','DU','DZ',
+    'OE','ON','OK','OZ','OH','OM','OY',
+    'PA','SM','SP','SV','S5','S0','SZ','BE',
+    'ZS','ZL','GM','CT','LX','LZ','LA',
+    'EA','EI','EK','EM','ES','EU',
+    'CE','LU','PY','XE','VE','VK','VU','JA','BY','BV','YV',
+    'US','UA','AL','K1','W3'
+].filter(k => k.length > 1);
+
+const KENNER_RE = new RegExp('\\b(' +
+    LANDESKENNER.slice().sort((a,b) => b.length - a.length).join('|') + ')\\b', 'g');
+// Rufzeichen: ein bis zwei Buchstaben, eine Ziffer, ein bis vier Buchstaben.
+const RUFZEICHEN_RE = /\b([A-Z]{1,2}[0-9][A-Z]{1,4})\b/g;
+// Ein Bereich wie "DA-DR" soll "D-A bis D-R" heissen und nicht "D-A-D-R".
+const KENNER_BEREICH_RE = /\b([A-Z]{2})\s*-\s*([A-Z]{2})\b/g;
+
+function buchstabieren(wort){
+    return String(wort).split('').join('-');
+}
+
+// Handelt diese Frage von Landeskennern oder Rufzeichen? Nur dann wird
+// buchstabiert.
+function kennerThema(q){
+    try{
+        if(!q) return false;
+        if(kennerThema._merker && kennerThema._merker.id === q.id) return kennerThema._merker.wert;
+        const alles = String(q.text || '') + ' '
+                    + (q.options || []).map(o => String(o.text || '')).join(' ');
+        let wert = /Landeskenner|Präfix/i.test(alles);
+        if(!wert && /Rufzeichen/i.test(alles)){
+            // Antworten, die ueberwiegend aus Rufzeichen bestehen - das sind
+            // im ganzen Katalog genau zwei Fragen (BD211 und BD315).
+            const stuecke = (q.options || []).map(o => String(o.text || ''))
+                              .join(' ').split(/[\s,;]+/).filter(Boolean);
+            const ruf = stuecke.filter(t => /^[A-Z]{1,2}[0-9][A-Z]{1,4}$/.test(t.replace(/[.,]$/, ''))).length;
+            wert = stuecke.length > 0 && ruf >= Math.max(2, stuecke.length * 0.5);
+        }
+        kennerThema._merker = { id: q.id, wert: wert };
+        return wert;
+    }catch(e){ return false; }
+}
+
+function kennerSprechen(text){
+    let t = String(text == null ? '' : text);
+    t = t.replace(KENNER_BEREICH_RE, (m, a, b) => buchstabieren(a) + ' bis ' + buchstabieren(b));
+    t = t.replace(RUFZEICHEN_RE, m => buchstabieren(m));
+    t = t.replace(KENNER_RE, m => buchstabieren(m));
+    return t;
+}
+window.kennerSprechen = kennerSprechen;
+
 function erklaerLesenKnopfZurueck(){
     const b = document.getElementById('erklaerLesenBtn');
     if(!b) return;
@@ -17741,6 +17815,12 @@ function erklaerVorlesen(){
                             + 'sobald du geantwortet hast.', selector: null });
     }
     if(!segmente.length) return;
+    // Auch in der Tafel werden die Kenner buchstabiert. Die Sätze unter
+    // "warum die anderen falsch sind" tragen die Antworttexte im Original -
+    // "PY, CE und VE" waere sonst wieder drei Silben.
+    if((typeof kennerThema === 'function') && kennerThema(q)){
+        segmente.forEach(sg => { sg.text = kennerSprechen(sg.text); });
+    }
     try{ stopTTS(); }catch(e){}
     playTTSQueue(segmente, b, erklaerLesenKnopfZurueck);
 }
@@ -20157,14 +20237,19 @@ const BILD_PAUSE_MS = 2600;
 function vorleseFrage(){
     const q=currentQuestions[currentIndex]; if(!q) return;
     const btn=document.getElementById('ttsBtn');
+    // Landeskenner und Rufzeichen werden buchstabiert - siehe kennerSprechen().
+    // Die Sperre steckt in kennerThema(): in allen anderen Fragen bleibt der
+    // Text unangetastet.
+    const kenner = (typeof kennerThema === 'function') && kennerThema(q);
+    const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
-    const segments=[{text:q.text+'.', selector:null}];
+    const segments=[{text:sprich(q.text)+'.', selector:null}];
     q.options.forEach((opt,i)=>{
         const label=String.fromCharCode(65+i);
         const hatText = !!(opt.text && opt.text.trim());
         const istBild = !!(opt.image && String(opt.image).trim());
         // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
-        const text = hatText ? `Antwort ${label}: ${opt.text}.` : `Antwort ${label}.`;
+        const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
         segments.push({ text, selector:`[data-optindex="${i}"]`,
                         pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 });
     });
