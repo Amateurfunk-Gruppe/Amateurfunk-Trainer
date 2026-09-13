@@ -12116,6 +12116,33 @@ function diagnoseNotieren(q, gewaehlt, richtig){
     // anderes gemacht. Das ist keine Bearbeitungszeit.
     if(sek > 0 && sek < 600){ e.t.push(sek); if(e.t.length > DIAG_MAX) e.t.shift(); }
     if(!richtig && gewaehlt >= 0){ e.f.push(gewaehlt); if(e.f.length > DIAG_MAX) e.f.shift(); }
+    // ================================================================
+    //  DIE FALSCHE ANTWORT ALS TEXT, NICHT ALS NUMMER
+    // ----------------------------------------------------------------
+    //  Dietmar am 13.09.2026, auf die Frage, was man noch einbauen kann:
+    //  "Warum-falsch in den Stolpersteinen".
+    //
+    //  Dafuer muss man wissen, WELCHE Antwort angeklickt wurde. In e.f
+    //  steht nur der Index - und der Trainer mischt die Antworten in
+    //  jeder Runde neu (prepareQuestion). Eine gemerkte 2 bedeutet
+    //  spaeter also nichts mehr. Der Antworttext dagegen bleibt gleich,
+    //  und genau mit ihm sind die Saetze in erklaerungen.json
+    //  verschluesselt - "warum_falsch" hat den Antworttext als
+    //  Schluessel, weil der Trainer mischt.
+    //
+    //  Bei Fragen, deren Antworten Bilder sind, ist der Text leer;
+    //  dort wird nichts gemerkt.
+    // ================================================================
+    if(!richtig && gewaehlt >= 0){
+        try{
+            const tAntw = String((((q.options || [])[gewaehlt]) || {}).text || '').trim();
+            if(tAntw){
+                if(!Array.isArray(e.fa)) e.fa = [];
+                e.fa.push(tAntw);
+                if(e.fa.length > DIAG_MAX) e.fa.shift();
+            }
+        }catch(err){}
+    }
     // Fuer die Tempo-Probe wird dasselbe noch einmal anders abgelegt:
     // Zeit UND Ergebnis als Paar. In e.t und e.f stehen sie getrennt -
     // daraus laesst sich nicht mehr ablesen, ob die schnelle Antwort
@@ -12163,6 +12190,45 @@ function hilfsmittelNotieren(art){
         diagSichern();
     }catch(e){}
 }
+// ================================================================
+//  WARUM WAR MEINE ANTWORT FALSCH?
+// ----------------------------------------------------------------
+//  Die Saetze stehen in erklaerungen.json unter "warum_falsch", mit
+//  dem ANTWORTTEXT als Schluessel. Zusammen mit e.fa - der letzten
+//  tatsaechlich angeklickten falschen Antwort - ergibt das den Satz,
+//  der zu genau diesem Irrtum gehoert.
+//
+//  Gibt null zurueck, wenn nichts mitgeschrieben ist (Fragen aus der
+//  Zeit vor diesem Einbau), wenn es keine Erklaerung gibt, oder wenn
+//  zu dieser Antwort kein Satz vorliegt. Die Liste zeigt dann einfach
+//  keine Zeile - besser nichts als etwas Falsches.
+// ================================================================
+function letzteFalscheAntwort(id){
+    try{
+        const e = diagnoseDaten[id];
+        return (e && Array.isArray(e.fa) && e.fa.length) ? String(e.fa[e.fa.length - 1]) : '';
+    }catch(e){ return ''; }
+}
+function warumFalschSatz(id){
+    try{
+        const antwort = letzteFalscheAntwort(id);
+        if(!antwort) return null;
+        const er = (typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[id] : null;
+        const wf = er && (er.warum_falsch || er.falsch);
+        if(!wf || typeof wf !== 'object') return null;
+        const satz = wf[antwort];
+        return satz ? { antwort: antwort, satz: String(satz) } : null;
+    }catch(e){ return null; }
+}
+window.warumFalschSatz = warumFalschSatz;
+
+// Wie viele der Stolpersteine koennen den Satz schon zeigen? Fuer den
+// Hinweis im Kopf - ohne ihn wundert sich, wer die Liste aus der Zeit
+// davor vor sich hat und nichts Neues sieht.
+function warumFalschVorhanden(liste){
+    try{ return (liste || []).filter(x => !!warumFalschSatz(x.q.id)).length; }catch(e){ return 0; }
+}
+
 function hatNachgeschlagen(id){
     const e = diagnoseDaten[id];
     return !!(e && ((e.fb || 0) > 0 || (e.tr || 0) > 0));
@@ -15224,6 +15290,7 @@ function stolpersteineOeffnen(){
         // Merkliste insgesamt - die kann Fragen enthalten, die hier nichts
         // zu suchen haben.
         const markiert = liste.filter(x => (typeof isFavorite === 'function') && isFavorite(x.q.id)).length;
+        const mitSatz = warumFalschVorhanden(liste);
 
         document.getElementById('stolperKopf').innerHTML =
             liste.length
@@ -15232,6 +15299,11 @@ function stolpersteineOeffnen(){
               + '<b>' + offen + '</b> davon sitzen noch nicht. Sortiert nach der Zahl der Fehlversuche.'
               + '<br>Mit dem <span style="color:#b01238;">&#9829;</span> setzt du eine Frage auf die '
               + '<b>Merkliste</b> – die lässt sich danach als eigene Runde durchgehen.'
+              + (mitSatz
+                ? '<br>Bei <b>' + mitSatz + '</b> Fragen steht auch, warum die Antwort falsch war, '
+                  + 'die du angeklickt hattest.'
+                : '<br>Sobald du eine Frage falsch beantwortest, steht hier künftig auch der Satz, '
+                  + 'warum gerade diese Antwort falsch war.')
               + '</div>'
               + '<div style="margin-top:0.6rem; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">'
               + (offen
@@ -15255,6 +15327,7 @@ function stolpersteineOeffnen(){
         document.getElementById('stolperListe').innerHTML = liste.map((x, i) => {
             const richtig = (x.q.options || []).find(o => o.correct);
             const gemerkt = (typeof isFavorite === 'function') && isFavorite(x.q.id);
+            const wfSatz = warumFalschSatz(x.q.id);
             return '<div id="stolperZeile_' + esc(x.q.id) + '" '
                 +   'style="border-top:1px solid var(--line); padding:9px 2px; display:flex; gap:10px; '
                 +   'background:' + (gemerkt ? '#fff6f8' : 'transparent') + ';">'
@@ -15272,6 +15345,17 @@ function stolpersteineOeffnen(){
                 +   (richtig && richtig.text
                         ? '<span style="display:block; font-size:0.75rem; color:#1f7a48; margin-top:3px;">'
                           + '&#10003; ' + esc(richtig.text) + '</span>'
+                        : '')
+                    // Der Satz zu der Antwort, die tatsaechlich angeklickt
+                    // wurde. Steht nur da, wenn beides vorliegt - die
+                    // gemerkte Antwort und ein Satz dazu in erklaerungen.json.
+                +   (wfSatz
+                        ? '<span style="display:block; font-size:0.75rem; margin-top:4px; '
+                          + 'line-height:1.45; border-left:2px solid #e6c3c3; padding-left:7px;">'
+                          + '<span style="color:#a3302f;">&#10007; Du hattest: '
+                          + '&bdquo;' + esc(wfSatz.antwort) + '&ldquo;</span><br>'
+                          + '<span style="color:var(--muted);">' + esc(wfSatz.satz) + '</span>'
+                          + '</span>'
                         : '')
                 + '</span>'
                 + '<span style="flex:0 0 auto; display:flex; gap:6px; align-self:flex-start;">'

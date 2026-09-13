@@ -8,6 +8,422 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.290.0] - 2026-09-13
+
+### Das Fach Vorschriften der Klasse N ist vollständig
+
+Dietmar am 13.09.2026: „N möchte zuerst fertig machen. Hier kommen Benutzer die am meisten
+Unterstützung benötigen." Richtig — also habe ich nicht das nächste Paket gebaut, sondern
+das ganze Prüfungsfach.
+
+| Fach (Klasse N) | erklärt | von | offen |
+|---|---:|---:|---:|
+| **Vorschriften** | **204** | **204** | **0** |
+| Betrieb | 129 | 172 | 43 |
+| Technik | 91 | 195 | 104 |
+
+**89 neue Erklärungen, zehn neue Begriffsblätter:**
+
+| Blatt | Zeilen | Fragen |
+|---|---:|---:|
+| Wer darf funken, und wozu (AFuG) | 14 | 16 |
+| Funken im Ausland (CEPT, HAREC) | 15 | 13 |
+| Personenschutz: EMVU und BEMFV | 11 | 11 |
+| Remote-Betrieb | 10 | 9 |
+| Störungen: beim Nachbarn und bei mir | 7 | 9 |
+| Klubstation, Relais und Bake: die Zulassung | 8 | 8 |
+| Gerät und Anlage: gekauft, gebaut, geerdet | 7 | 7 |
+| Ausbildungsfunkbetrieb | 6 | 6 |
+| Abhören und Fernmeldegeheimnis | 6 | 4 |
+| Beiträge, Gebühren und Haftung | 3 | 3 |
+
+Dazu kamen drei Zeilen in „Wer regelt was" (FuAG, TTDSG, Frequenzzuteilung), und VE102,
+VE103 und VD703 hängen jetzt dort.
+
+**Die Prinzipien dieses Pakets** — was jeweils der tragende Gedanke ist:
+
+- **AFuG:** Das Gesetz beschreibt den Dienst über seinen ZWECK, und fast alles andere folgt
+  daraus. Nur Amateure mit Amateuren, keine Nachrichten für Dritte, keine gewerbliche
+  Nutzung — alles drei sind Folgen desselben Satzes. Und weil Selbstbau zum Zweck gehört,
+  darf man dort von den Störfestigkeitsanforderungen des EMVG abweichen: die schützen den
+  Markt, nicht den Experimentator.
+- **CEPT:** Es gibt keine Weltlizenz. Deshalb sind bei jeder dieser Fragen drei Dinge zu
+  prüfen — welche Empfehlung passt zu meiner Klasse, hat das Gastland sie umgesetzt, und was
+  gilt dort. Die Empfehlung erspart die Gastzulassung; sie exportiert nicht das deutsche
+  Recht.
+- **BEMFV:** schützt Menschen, nicht Geräte, und ist ganz auf Eigenverantwortung gebaut. Die
+  Anzeige ist eine verbindliche Erklärung, kein Antrag — sie wird nicht genehmigt. Und weil
+  es um das Feld geht, dem ein Mensch ausgesetzt ist, zählt alles zusammen, was gleichzeitig
+  strahlt.
+- **Remote:** Hier fällt die Selbstverständlichkeit weg, dass der Verantwortliche neben
+  seinem Sender sitzt. Jede einzelne Regel zielt darauf, dass die Verantwortung trotzdem
+  zuzuordnen bleibt — erreichbar, abschaltbar, Zugang gesichert, und durchweg Klasse A.
+- **Störungen:** Eine Störung ist nicht automatisch jemandes Schuld. Halten Sender und
+  Empfänger ihre Grenzwerte ein und es funktioniert trotzdem nicht, hat niemand einen Fehler
+  gemacht — und genau dann vermittelt die Behörde, statt zu bestrafen.
+- **Klubstation:** Ein Rufzeichen verleiht kein Recht, die Zulassung tut es. Daraus folgt,
+  dass die niedrigere der beiden Klassen gilt, und dass Relais und Baken eine eigene
+  Zuteilung brauchen — dort sitzt niemand, also muss die Erlaubnis an der Station hängen.
+- **Gerätesicherheit:** Drei Rechtsmassen, die gern verwechselt werden. Darf es verkauft
+  werden? FuAG und CE. Ist meine Anlage sicher? VDE. Darf die Antenne da stehen? Baurecht
+  des Bundeslandes.
+- **Ausbildung:** Der eine Fall, in dem jemand ohne Zulassung sendet — und alles ist so
+  gebaut, dass die Verantwortung beim Ausbilder bleibt. Deshalb darf die Klasse N nicht
+  ausbilden: weitergeben kann man nur, was man selbst hat.
+- **Fernmeldegeheimnis:** Die Trennlinie ist der ADRESSAT, nicht der Inhalt. Und der Schutz
+  reicht weiter als der Inhalt — man darf nicht einmal erwähnen, dass man es empfangen hat.
+- **Gebühren:** Der Beitrag wird für die Freihaltung der Frequenz gezahlt, nicht für ihre
+  Benutzung. Deshalb ist er fällig, solange man eine Zulassung hat.
+
+### Nachgezogen: die sechs ersten Blätter hatten noch kein Prinzip
+Ein Helfer meldete, dass das Feld PRINZIP bei „Wer regelt was" leer sei. Das stimmte — und
+es traf fünf weitere: die Blätter aus den Paketen 1 bis 3 entstanden, bevor das Feld
+existierte (1.285.0). Bei **171 Fragen** zeigte die Tafel also nur Kniff und Liste, das WIE
+ohne das WARUM — genau der Einwand, der das Feld überhaupt veranlasst hatte. Alle sechs
+haben jetzt eines:
+
+- **Leistung:** drei verschiedene Fragen mit drei Messpunkten, und daraus folgt, warum der
+  Gesetzgeber auf Kurzwelle die Senderleistung und bei der Klasse N die gestrahlte begrenzt.
+- **Q-Gruppen:** älter als der Amateurfunk, aus der Zeit, in der jedes Zeichen Zeit kostete
+  und die Gegenstation eine andere Sprache sprach. Daher drei Buchstaben, weltweit
+  vereinbart — und daher die Doppelfunktion mit und ohne Fragezeichen.
+- **Rechtsquellen:** das Recht ist in Ebenen gebaut, und jede regelt nur, was auf ihrer
+  Ebene entschieden werden muss. Erst nach Reichweite sortieren, dann nach Gegenstand.
+- **Bandplan:** keine Willkür, sondern eine Verträglichkeitsfrage — schmale Betriebsarten
+  unten, breite darüber, und eigene Streifen für alles, was nicht ausweichen kann.
+- **Betriebsabwicklung:** eine Funkverbindung ist schwach, kurz und oft ohne gemeinsame
+  Sprache. Die Abkürzungen und die Benimmordnung sind beide Folgen dieser Knappheit.
+- **Betriebsarten:** es gibt nur drei Größen, die man an einem Träger verändern kann —
+  Amplitude, Frequenz, Phase. Die Reihenfolge nach Bandbreite ist das Ergebnis dieser
+  Bauart, keine Liste zum Lernen.
+
+**Damit trägt jedes der 21 Blätter ein Prinzip.**
+
+### Geändert
+- **`erklaerungen.json`:** 1.248.827 → 1.419.331 Bytes, 712 → 801 Erklärungen, 11 → 21
+  Begriffsblätter, 256 → 345 Fragen an einem Blatt. Klasse N: 335 → **424 von 571**.
+- `Index.html` ist unverändert gegenüber 1.289.0.
+
+### Nachgeprüft
+- `eintragen.py` über alle 801 Erklärungen: **0 Fehler.** Jeder Fragentext, jede richtige
+  Antwort und jeder Schlüssel steht wörtlich im Katalog; zu jeder falschen Antwort der 89
+  neuen Fragen steht ein eigener Satz.
+- Im Browser gemessen: 21 Blätter geladen, 801 Erklärungen, 424 davon im Ziel Klasse N. Bei
+  den nachgezogenen Blättern steht das Prinzip jetzt an erster Stelle (BB201 880 Zeichen,
+  VD724 1082). Keine Meldung in der Konsole.
+- Zwei Fragen haben ein eigenes Prinzip, das dem Blatt vorgeht: VD408 (kurzzeitige
+  Standortänderung) und VD703 (CB-Funk).
+
+### Was die Helfer im Katalog gefunden haben
+Nicht von mir, aber der Vollständigkeit halber: VC108 bricht in der vierten Antwort mitten
+im Satz ab („… beträgt"), und bei VD404, VD407, VD609, VE103, VE204, VE309, VE707 sowie
+VB101 und VB102 fehlen Trennzeichen oder es hängen Textfragmente am Antwortende. Alle Texte
+sind wörtlich übernommen, damit die maschinelle Prüfung gegen den Katalog weiter aufgeht.
+
+### Offen in der Klasse N
+- **Betrieb, 43 Fragen:** Buchstabieralphabet (10), Notfunk (8), Contest und DX (6), Logbuch
+  und Locator (4), Relais- und Satellitenbetrieb (aus BE4xx), Reste.
+- **Technik, 104 Fragen:** Einheiten und Vorsätze (15), Relais und Satelliten (15), Kabel
+  und Anpassung (13), Stromversorgung (11), elektrische Sicherheit und Mobileinbau (11),
+  Leitfähigkeit, Wellenlänge und Ohm (11), Wellenausbreitung (8), EMV am eigenen Gerät (7),
+  P = U · I (6), Messgeräte (5), Sender- und Empfängerstufen (5), Reste.
+
+---
+
+## [1.289.0] - 2026-09-13
+
+### Hinzugefügt
+- **„Warum war meine Antwort falsch?" steht jetzt in den Stolpersteinen.** Dietmar am
+  13.09.2026 auf die Frage, was man noch einbauen könne: „Warum-falsch in den
+  Stolpersteinen."
+
+  In der Liste „Alle Stolpersteine" stand bisher die Frage und darunter die richtige
+  Antwort. Jetzt kommt eine dritte Zeile dazu — aber nicht irgendeine: der Satz zu genau
+  der Antwort, die du angeklickt hattest.
+
+  ```
+  1×  VD724  Vorschriften
+      Wie hoch ist die maximal zulässige isotrope Strahlungsleistung (EIRP)
+      für Funkamateure mit der Zulassungsklasse N im 2 m- und 70 cm Band?
+      ✓ 10 W
+      ✗ Du hattest: „100 W"
+        Das ist die Kurzwellengrenze der Klasse E, nicht die der Klasse N.
+  ```
+
+  Die 712 Erklärungen enthalten zu jeder falschen Antwort einen eigenen Satz — bisher war
+  der nur in der Erklärungstafel neben der Frage zu sehen, und zwar in dem Moment, in dem
+  man gerade nicht sortiert, was man noch üben muss. In der Stolpersteinliste sitzt er
+  richtig: dort geht man seine Fehler durch.
+
+### Dazu musste erst etwas mitgeschrieben werden
+- **Die falsche Antwort wird jetzt als TEXT gemerkt, nicht als Nummer.** `diagnoseNotieren`
+  hielt in `e.f` schon fest, welche Antwort angeklickt wurde — aber als Index innerhalb der
+  gerade angezeigten Reihenfolge. Und der Trainer mischt die Antworten in jeder Runde neu
+  (`prepareQuestion`). Eine gemerkte 2 bedeutet in der nächsten Runde also etwas anderes.
+  Deshalb kommt neben `e.f` jetzt `e.fa` dazu: derselbe Vorgang, aber der Antworttext. Der
+  bleibt gleich, und mit ihm sind die Sätze in `erklaerungen.json` verschlüsselt —
+  `warum_falsch` hat aus genau diesem Grund den Antworttext als Schlüssel.
+
+  Das Feld ist rein zusätzlich. Alte Fortschrittsdateien laden unverändert, `e.fa` fehlt
+  dort einfach; die Liste zeigt für solche Fragen keine zusätzliche Zeile, und der Kopf sagt
+  es: „Sobald du eine Frage falsch beantwortest, steht hier künftig auch der Satz, warum
+  gerade diese Antwort falsch war." Steht der Satz schon bei welchen, zählt der Kopf sie.
+
+- **Nebenbefund, den ich nicht angefasst habe:** dieselbe Mischung macht auch die
+  „Geraten oder gewusst"-Probe unscharf. Sie liest `e.f` und schließt aus „immer dieselbe
+  Nummer" auf einen festen Irrtum und aus „drei verschiedene Nummern" auf Raten — beides
+  wird durch das Mischen verwischt. Mit `e.fa` liegt die richtige Grundlage jetzt vor; die
+  Probe darauf umzustellen wäre eine eigene Änderung, und die mache ich nicht ungefragt.
+
+### Eine Abwägung, weil deine eigene Regel dagegen sprach
+Im Merkblatt steht ausdrücklich, dass dort NUR die richtige Antwort erscheint, mit deiner
+Begründung: „Wer kurz vor der Prüfung noch einmal quer liest, soll sich nichts Falsches
+einprägen; drei Ablenker auf dem Blatt wären genau dafür die beste Gelegenheit." Diese neue
+Zeile druckt nun einen falschen Antworttext. Ich halte das hier für richtig, aber der
+Unterschied gehört benannt: das Merkblatt ist zum Querlesen kurz vor der Prüfung, die
+Stolpersteinliste zum Durcharbeiten. Dort ist es der Sinn der Sache, den eigenen Irrtum
+beim Namen zu nennen. Die Zeile ist deshalb unübersehbar als Fehler markiert — rotes ✗,
+rote Schrift, die Worte „Du hattest", und der erklärende Satz in Grau darunter. **Merkblatt
+und Hörbuch bleiben unberührt**, dort steht weiterhin nur die richtige Antwort.
+
+### Geändert
+- **`Index.html`:** `diagnoseNotieren` schreibt `e.fa` mit; neu sind `letzteFalscheAntwort`,
+  `warumFalschSatz` und `warumFalschVorhanden`; `stolpersteineOeffnen` zeigt die Zeile und
+  zählt im Kopf. Sonst keine Änderung am Aussehen.
+- **`erklaerungen.json`** ist unverändert gegenüber 1.288.0.
+
+### Nachgeprüft
+- Im Browser durchgespielt: zwei Fragen über die echten Antwortknöpfe absichtlich falsch
+  beantwortet (VD724 mit „100 W", VD710 mit „3,8–3,9 MHz"), dann die Liste geöffnet. Beide
+  Zeilen stehen da, mit dem jeweils passenden Satz; der Kopf zählt „Bei 2 Fragen". Die drei
+  älteren Stolpersteine aus derselben Liste zeigen erwartungsgemäß nichts Zusätzliches.
+  Keine Meldung in der Konsole.
+- Syntaxprüfung: 17 Script-Blöcke mit `node --check` sauber, 10 Style-Blöcke ausgeglichen.
+
+---
+
+## [1.288.0] - 2026-09-13
+
+### Hinzugefügt
+- **Paket 4: Was die AFuV im Betrieb verlangt. 17 Fragen an einem Blatt.**
+
+  Das elfte Begriffsblatt hat 17 Zeilen und deckt VD102 bis VD119 ab: Empfang ohne
+  Zulassung, offene Sprache und die einzige Ausnahme davon, das Verbot der Notzeichen
+  anderer Funkdienste, die technische Anforderung, unerwünschte Aussendungen, der
+  unmodulierte Träger, der Abgleich ohne freies Abstrahlen, das Logbuch auf Verlangen, die
+  Anzeige von Namens- und Anschriftsänderungen, der Inhalt der Rufzeichenliste, Betrieb in
+  Schiff und Flugzeug, die Ausnahmezuteilung — und die drei Wortlaut-Definitionen
+  Klubstation, Relaisfunkstelle und Funkbake.
+
+  **Das Prinzip: die AFuV nennt Maßstäbe, keine Zahlen.** Sie ist nach einem Grundgedanken
+  gebaut — der Funkamateur entscheidet selbst, WIE er eine Anforderung erfüllt, und steht
+  dafür hinterher ein. Deshalb steht dort „nach den allgemein anerkannten Regeln der
+  Technik", „auf das geringstmögliche Maß", „unverzüglich", „kurzzeitig". Wo eine Antwort
+  eine Dezibelzahl, eine Wochenfrist oder eine Leistungsgrenze anbietet, ist sie mit hoher
+  Wahrscheinlichkeit falsch — und genau so sind die Distraktoren dieses Blocks gebaut:
+  40 dB, 60 dB, 4 Wochen, 14 Tage, 12 Monate, unter 1 W, halbe Sendeleistung. Wo doch eine
+  Zahl in der Verordnung steht, sagt sie etwas über Personen und nicht über Technik: drei
+  Mitglieder für eine Klubstation.
+
+  Dazu die zwei Zwecke, aus denen der Rest folgt. Das Spektrum muss für alle brauchbar
+  bleiben — daher Nebenwellen klein halten, beim Abgleich nicht abstrahlen, den Träger nur
+  kurz senden, und daher darf die Bundesnetzagentur Aufzeichnungen verlangen, wenn eine
+  Störung aufzuklären ist. Und der Amateurfunkdienst muss offen und nicht kommerziell
+  bleiben — daher offene Sprache, keine fremden Notzeichen, eine öffentliche
+  Rufzeichenliste. Begrenzt wird immer nur das Senden; Zuhören braucht keine Erlaubnis.
+
+- **Klasse N steht jetzt bei 335 von 571 Fragen** (vorher 318). Insgesamt 712 Erklärungen,
+  11 Begriffsblätter, 256 Fragen an einem Blatt.
+
+### Geändert
+- **`erklaerungen.json`:** 1.220.630 → 1.248.827 Bytes, 695 → 712 Erklärungen, 10 → 11
+  Begriffsblätter.
+- `Index.html` ist unverändert gegenüber 1.285.0.
+
+### Nachgeprüft
+- **Drei Querverweise gegen den Katalog geprüft**, weil ich in den Kniffen darauf verweise:
+  bei VD111 (Abgleich) sage ich, der andere Grund für einen Abschlusswiderstand sei der
+  Schutz der Endstufe — NF107 nennt genau das („Durch die reflektierte Welle könnte die
+  Senderendstufe beschädigt werden"). Bei VD105 verweise ich darauf, dass SOS und MAYDAY
+  auch im Notfall nicht erlaubt sind — BF102 antwortet dort mit einem klaren Nein. Und bei
+  VD115 nenne ich /am als Zusatz für den Betrieb im Luftfahrzeug — so steht es in BD201.
+- `eintragen.py` über alle 712 Erklärungen: **0 Fehler.** Zu jeder der 51 falschen Antworten
+  dieses Pakets steht ein eigener Satz.
+- Im Browser gemessen: 11 Blätter geladen, 712 Erklärungen, Zeilenfolge `prinzip, kniff,
+  liste, merken`, keine Meldung in der Konsole.
+
+### Offen
+- Klasse N: 236 Fragen ohne Erklärung. Nächste Pakete: AFuG-Begriffe und Rechte (16),
+  Relaisfunkstellen und Satelliten (15), Einheiten und Vorsätze (15), Stromversorgung und
+  Netzteil (11), Personenschutz und EMVU (11), elektrische Sicherheit und Mobileinbau (11),
+  CEPT und HAREC (11), Buchstabieralphabet (10), Störungen beim Nachbarn (9),
+  Remote-Betrieb (9), Notfunk (8).
+
+---
+
+## [1.287.0] - 2026-09-13
+
+### Hinzugefügt
+- **Paket 3: Rufzeichen — Arten und Zusätze. 26 Fragen an einem Blatt.** Dietmar am
+  13.09.2026: „Bitte Paket 3 und die Dateien in den Ordner."
+
+  Das neunte Begriffsblatt heißt **„Deutsche Rufzeichen lesen"** und hat 20 Zeilen: der
+  Aufbau aus Präfix, Ziffer und Suffix; DL für Klasse A, DO für E, DN für N; die Null nach
+  dem Buchstabenpaar für die Klubstation; DA5 für experimentelle Studien und DP0 für
+  exterritorial; das lange Suffix zu besonderen Anlässen; die drei Zuteilungsarten; Nennung
+  am Anfang, am Ende und alle zehn Minuten; das internationale Buchstabieralphabet; und die
+  sechs Zusätze /m, /mm, /p, /R, /T und der Gastkenner nach CEPT. Dazu die
+  Peilsender-Kennungen.
+
+  **Das Prinzip: ein Rufzeichen ist kein Name, sondern eine Zulassung zum Vorlesen.** Jeder
+  Teil trägt eine Auskunft, und die STELLE sagt, welche — was vor dem eigenen Rufzeichen
+  steht, nennt den Ort (der Kenner des Gastlandes), was dahinter steht, einen Umstand dieser
+  Aussendung (unterwegs, tragbar, fernbedient, in Ausbildung). Damit fallen sechs Fragen auf
+  einen Schlag: „Trainee/DL1PZ" und „DO7PR/HB3" sind falsch, weil die Hälften vertauscht
+  sind. Dazu die zweite Einsicht: das Rufzeichen ist das EINZIGE Merkmal, an dem man eine
+  Amateurfunkstelle erkennt — nicht die Frequenz, nicht die Sendeart. Nur weil jede
+  Aussendung zuzuordnen ist, bekommt der Amateurfunkdienst seine Frequenzen überhaupt.
+  Daraus folgen Nennungspflicht, Buchstabieralphabet und der fehlende Anspruch auf ein
+  bestimmtes Rufzeichen von selbst.
+
+  Ein eigenes Prinzip hat BD109 (die Peilsender): eine Kennung muss kurz sein, damit sie
+  sich schnell wiederholt, und sie darf nicht wie ein Rufzeichen aussehen. Und die Endungen
+  zählen die Sender im Morsealphabet durch — E ist ein Punkt, I zwei, S drei, H vier, 5
+  fünf. Damit sind MO, MOE, MOI, MOS, MOH, MO5 keine Liste zum Auswendiglernen mehr.
+
+- **Zusätzlich: der Farbcode am Widerstand. 9 Fragen.** Dietmar mitten in der Arbeit:
+  „Farbcode von den Widerständen möchte ich auch eine Erklärung. Wie man das errechnet."
+
+  Das zehnte Blatt, **„Der Farbcode am Widerstand"**, 16 Zeilen. Und weil er nach dem
+  Rechnen gefragt hat, steht im Prinzip das Verfahren und nicht die Tabelle: erste zwei
+  Ringe sind Ziffern, der dritte sagt die Anzahl der Nullen, der vierte die Toleranz. Der
+  Wert ist immer eine zweistellige Zahl mal einer Zehnerpotenz. Der Schlüssel, der die halbe
+  Arbeit spart: **der dritte Ring trägt dieselbe Zahl wie die Farbe als Ziffer** — rot ist
+  die 2, also mal 100; orange die 3, also mal 1000; grün die 5, also mal 100 000. Für den
+  Multiplikator muss man also nichts Zweites lernen. Und Gold und Silber kommen in der
+  Ziffernreihe nicht vor, können folglich nur Toleranz bedeuten: Gold ±5 %, Silber ±10 %.
+
+  Dazu eine Beobachtung, die die vier Rechenfragen zusammenbindet: NC104 bis NC107 sind
+  genau die vier Kombinationen aus zwei ersten Ziffern (rot 2 oder gelb 4) und zwei
+  Multiplikatoren (rot mal 100 oder orange mal 1000) — 2,7 k, 4,7 k, 27 k, 47 k. Wer eine
+  rechnen kann, kann alle vier; man muss nur sauber hinsehen, welche Farbe an welcher Stelle
+  steht. In allen neun Fragen kommen überhaupt nur sechs Ziffernfarben vor.
+
+  **Wichtig zur Prüfung:** die Farbcode-Tabelle steht auf Blatt 11 der amtlichen
+  Formelsammlung und liegt in der Prüfung vor (nachgesehen in `_Formelblatt-Analyse.md`).
+  Das Prinzip sagt das ausdrücklich — zu können ist nicht die Tabelle, sondern das
+  Verfahren.
+
+- **Klasse N steht jetzt bei 318 von 571 Fragen** (vorher 283). Insgesamt 695 Erklärungen,
+  10 Begriffsblätter, 239 Fragen an einem Blatt.
+
+### Geändert
+- **`erklaerungen.json`:** 1.177.220 → 1.220.630 Bytes, 660 → 695 Erklärungen, 8 → 10
+  Begriffsblätter.
+- `Index.html` ist unverändert gegenüber 1.285.0.
+
+### Nachgeprüft
+- **Der Farbcode maschinell nachgerechnet.** Für NC102 bis NC107 habe ich den Wert aus den
+  genannten Farben mit meinem eigenen Verfahren berechnet — Ziffer, Ziffer, Zehnerpotenz —
+  und mit der richtigen Antwort des Katalogs verglichen: rot-violett-rot 2,7 kΩ,
+  gelb-violett-rot 4,7 kΩ, rot-violett-orange 27 kΩ, gelb-violett-orange 47 kΩ, grün
+  100 000, und rückwärts 1,2 kΩ zu braun-rot-rot. **Alle sechs stimmen.** Ebenso die drei
+  Toleranzwerte.
+- `eintragen.py` über alle 695 Erklärungen: **0 Fehler.** Zu jeder falschen Antwort der
+  beiden Blöcke steht ein eigener Satz; keine blieb offen.
+- Im Browser gemessen: 10 Blätter geladen, 695 Erklärungen, Zeilenfolge `prinzip, kniff,
+  liste, merken`, keine Meldung in der Konsole.
+
+### Offen
+- Klasse N: 253 Fragen ohne Erklärung. Nächste Pakete: AFuV-Pflichten im Betrieb (17),
+  AFuG-Begriffe und Rechte (16), Relaisfunkstellen und Satelliten (15), Einheiten und
+  Vorsätze (15), Stromversorgung und Netzteil (11), Personenschutz und EMVU (11),
+  elektrische Sicherheit und Mobileinbau (11), CEPT und HAREC (11).
+
+---
+
+## [1.286.0] - 2026-09-13
+
+### Hinzugefügt
+- **Paket 2: Bänder und Frequenzbereiche — 29 Fragen an einem Blatt.** Dietmar am
+  13.09.2026: „Bitte jetzt Paket 2."
+
+  Das achte Begriffsblatt heißt **„Die Bänder in Deutschland"** und hat 20 Zeilen: alle
+  vierzehn Bänder von 160 m bis 13 cm mit Anfangs- und Endfrequenz, die vier
+  Bereichsnamen MF, HF, VHF und UHF mit ihren Grenzen, die drei Bänder der Klasse N, und
+  eine Zeile zu primär gegen sekundär. Damit sind gelöst: VD709 bis VD722 (die vierzehn
+  Fragen nach den Bandkanten), VD723 (was die Klasse N darf), VD738 bis VD742 (die
+  Bandbreiten), VD706 bis VD708 (Status und ISM) und BC101 bis BC106 (die Bereichsnamen).
+
+  **Das Prinzip statt vierzehn Zahlen.** Der Bandname ist keine Nummer, sondern die
+  Wellenlänge, und Wellenlänge mal Frequenz ergibt über die Lichtgeschwindigkeit etwa 300:
+  300 geteilt durch 80 sind 3,75 MHz, und das 80-m-Band liegt bei 3,5 bis 3,8. Dazu die
+  Struktur der Kanten — die alten breiten Bänder liegen harmonisch zueinander (7, 14, 21
+  und 28 MHz sind das Doppelte, Vierfache, Sechsfache und Achtfache von 3,5 MHz), die drei
+  schmalen Bänder 10,1, 18,068 und 24,89 MHz kamen später hinzu und haben deshalb krumme
+  Kanten. Und die Bandbreitenregel ist keine Willkür, sondern eine Platzfrage: nach oben
+  werden die Bänder breiter, also darf dort eine Aussendung mehr belegen. Merksatz für die
+  Bereichsnamen: MF bis 3 MHz, HF bis 30, VHF bis 300, UHF bis 3000 — jedes Mal Faktor zehn.
+
+  Zwei Fragen haben ein **eigenes** Prinzip, das dem Blatt vorgeht: VD706 (primärer und
+  sekundärer Status — wer weichen muss und warum das keine Höflichkeit, sondern der Inhalt
+  der Zuweisung ist) und VD738 (warum die erlaubte Bandbreite mit der Bandbreite wächst).
+
+- **Klasse N steht jetzt bei 283 von 571 Fragen** (vorher 254). Insgesamt 660 Erklärungen,
+  8 Begriffsblätter.
+
+### Geändert
+- **`erklaerungen.json`:** 1.143.964 → 1.177.220 Bytes, 631 → 660 Erklärungen, 7 → 8
+  Begriffsblätter.
+- `Index.html` ist unverändert gegenüber 1.285.0 — Paket 2 brauchte keine neue Technik.
+
+### Behoben — meine eigenen Behauptungen, die über den Katalog hinausgingen
+Beim Gegenlesen habe ich neun Stellen gefunden, an denen ich etwas geschrieben hatte, das
+ich nicht belegen kann. Alle berichtigt:
+- Ich hatte behauptet, bei **7,1 MHz** gelte eine engere Bandbreitengrenze. Das steht
+  nirgends im Katalog — die Zahl kommt dort nur in einer FALSCHEN Antwort vor. Jetzt heißt
+  es nur noch, dass 7,1 MHz mitten im Band liegt und keine Kante ist.
+- Bei **21,35 MHz** hatte ich von einer „Marke im Band" geschrieben. Auch unbelegt; die
+  Ziffern stammen erkennbar aus der Oberkante des 20-m-Bandes (14,35 MHz), und genau das
+  steht jetzt da.
+- Bei **432 bis 438 MHz** hatte ich behauptet, um 438 MHz herum begännen die Relaisausgaben.
+  Der Bandplan im Katalog nennt 439,200 MHz, nicht 438. Die Aussage ist weg.
+- Bei **VD738** hatte ich geschrieben, alle drei Bereiche mit 800 Hz Bandbreite seien „nur
+  wenige Kilohertz breit" und „zwei davon liegen unter der Mittelwelle". Beides falsch:
+  135,7–137,8 kHz sind 2 kHz, 472–479 kHz sind 7 kHz, aber 10,1–10,15 MHz sind 50 kHz; und
+  von den drei liegt einer unter der Mittelwelle, einer mitten darin und einer auf der
+  Kurzwelle.
+- Bei **VD741, VD742 und VD706** hatte ich bei den falschen Antworten Bandbreiten und
+  Rangfolgen für Bereiche behauptet, über die der Katalog nichts sagt (13 cm, 3,4 GHz,
+  10 GHz, 23 cm). Die Sätze sagen jetzt nur noch, welches Band gemeint ist und wohin der
+  gefragte Wert gehört.
+- Bei **1850–1890 kHz** hatte ich einen Grund erfunden („gerade deshalb wechselt dort die
+  Leistungsgrenze"). Jetzt steht nur noch die Tatsache: die Zahl 1850 kommt im Katalog vor,
+  weil bis dorthin für die Klasse E 100 W PEP gelten.
+
+Was von außerhalb des Katalogs stammt und bleibt, weil es die falschen Antworten erklärt,
+steht jetzt im Feld `quelle` des Blattes: dass 40 m außerhalb Europas bis 7,3 MHz, 6 m in
+anderen ITU-Regionen bis 54 MHz und 2 m in der ITU-Region 2 bis 148 MHz reicht — genau die
+drei Zahlen, die als Distraktoren auftauchen.
+
+### Nachgeprüft
+- **Maschinell gegen den Katalog:** für alle vierzehn Bänder habe ich die Zahlen im Blatt
+  mit der richtigen Antwort aus VD709 bis VD722 verglichen, Ziffer für Ziffer. **0
+  Abweichungen.** Ebenso die fünf Bandbreitenwerte aus VD738 bis VD742.
+- `eintragen.py` über alle 660 Erklärungen: **0 Fehler**, und zu jeder der 87 falschen
+  Antworten dieses Pakets steht ein eigener Satz — keine einzige blieb offen.
+- Im Browser gemessen: 8 Blätter geladen, 660 Erklärungen, Zeilenfolge `prinzip, kniff,
+  liste, merken`. Bei VD738 und VD706 greift das eigene Prinzip (512 bzw. 517 Zeichen)
+  statt des Blatt-Prinzips (1095 Zeichen) — die Vorrangregel arbeitet also. Keine Meldung
+  in der Konsole.
+
+### Offen
+- Klasse N: 288 Fragen ohne Erklärung. Nächste Pakete in der abgesprochenen Reihenfolge:
+  Rufzeichen — Arten und Zusätze (26), AFuV-Pflichten im Betrieb (17), AFuG-Begriffe und
+  Rechte (16), Relaisfunkstellen und Satelliten (15), Einheiten und Vorsätze (15).
+
+---
+
 ## [1.285.0] - 2026-09-13
 
 ### Hinzugefügt
