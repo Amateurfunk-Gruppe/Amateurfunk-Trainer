@@ -1461,6 +1461,23 @@
         .erklaer-kasten .ek-marke {
             font-weight: 700; color: #1b5a97;
         }
+        /* Die Kennerliste: drei Spalten, schmal gehalten. Kenner fett und
+           einfarbig wie die Marken, damit das Auge die Buchstaben findet;
+           das Land daneben, die Brücke rechts. */
+        .erklaer-kasten table.ek-liste {
+            margin: 0.35rem 0 0 0; border-collapse: collapse; width: 100%;
+        }
+        .erklaer-kasten table.ek-liste th {
+            text-align: left; vertical-align: top; padding: 0.12rem 0.6rem 0.12rem 0;
+            font-family: var(--font-mono, monospace); font-weight: 700; color: #1b5a97;
+            white-space: nowrap; width: 1%;
+        }
+        .erklaer-kasten table.ek-liste td {
+            vertical-align: top; padding: 0.12rem 0.6rem 0.12rem 0;
+        }
+        .erklaer-kasten table.ek-liste td.ek-l-land { font-weight: 600; white-space: nowrap; width: 1%; }
+        body.dark .erklaer-kasten table.ek-liste th { color: #8fc4f0; }
+
         .erklaer-kasten ol.ek-weg {
             margin: 0.3rem 0 0 1.1rem; padding: 0;
         }
@@ -13195,11 +13212,11 @@ function durchsichtFrageFenster(p){
         + 'onclick="durchsichtFensterZu(); durchsichtErklaertLos();">'
         + '<span class="bk-titel"><i class="fas fa-lightbulb"></i> Mit Erklärung</span>'
         + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#5b3f95;">' + erklaertN + '</span>'
-        + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen mit erklärter Zeichnung</span></span>'
+        + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen mit Erklärung</span></span>'
         + '<span class="bk-balken violett"><i data-ziel="' + anteilE.toFixed(1) + '%"></i></span>'
-        + '<span class="bk-klein">Nach dem Antworten steht unter der Frage, was in der Zeichnung zu '
-        + 'sehen ist, der Rechenweg, und warum jede falsche Antwort falsch ist. Das Lesezeichen '
-        + 'bleibt liegen.</span>'
+        + '<span class="bk-klein">Der Knopf mit der Glühbirne in der Kopfzeile der Frage öffnet sie: '
+        + 'was in der Zeichnung zu sehen ist, der Rechenweg oder die Eselsbrücke, und nach dem '
+        + 'Antworten, warum jede falsche Antwort falsch ist. Das Lesezeichen bleibt liegen.</span>'
         + '</button>'
       : '';
 
@@ -17385,6 +17402,30 @@ function erklaerInhalt(q, er, alles){
     let ek = '';
     if (er.bild)  ek += '<div class="ek-zeile" data-ek="bild"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
     if (er.kniff) ek += '<div class="ek-zeile" data-ek="kniff"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
+    // ================================================================
+    //  LISTE UND MERKSATZ - fuer Fragen ohne Zeichnung
+    // ----------------------------------------------------------------
+    //  Dietmar am 13.09.2026: "Bei der Klasse N benötige ich auch eine
+    //  Erklärung für die Landeskenner und Eselbrücken."
+    //
+    //  Bei „Welche Landeskenner sind südamerikanischen Ländern
+    //  zugewiesen?" gibt es kein Bild und nichts zu rechnen. Was hilft,
+    //  ist die Liste der beteiligten Kenner mit ihrem Land - und eine
+    //  Brücke, an der man sie sich merkt. Beides ist freiwillig; wo die
+    //  Felder fehlen, sieht die Tafel aus wie bisher.
+    // ================================================================
+    if (Array.isArray(er.liste) && er.liste.length) {
+        ek += '<div class="ek-zeile" data-ek="liste"><span class="ek-marke">Die Kenner.</span>'
+            + '<table class="ek-liste">'
+            + er.liste.map(z => '<tr><th>' + attrText(z.k || '') + '</th>'
+                              + '<td class="ek-l-land">' + attrText(z.l || '') + '</td>'
+                              + '<td>' + attrText(z.b || '') + '</td></tr>').join('')
+            + '</table></div>';
+    }
+    if (er.merken) {
+        ek += '<div class="ek-zeile" data-ek="merken"><span class="ek-marke">Zum Merken.</span> '
+            + attrText(er.merken) + '</div>';
+    }
 
     const hatWeg    = Array.isArray(er.weg) && er.weg.length;
     const wf        = er.warum_falsch || er.falsch || null;
@@ -17439,9 +17480,13 @@ function erklaerKnopfSetzen(){
 
     if(er && !streng){
         b.style.display = '';
-        b.setAttribute('data-tooltip', answered
-            ? 'Erklärung zur Zeichnung: was im Bild steht, der Rechenweg und warum die anderen Antworten falsch sind'
-            : 'Erklärung zur Zeichnung: was im Bild steht und worauf es ankommt. Der Rechenweg kommt nach deiner Antwort.');
+        b.setAttribute('data-tooltip', er.bild
+            ? (answered
+                ? 'Erklärung zur Zeichnung: was im Bild steht, der Rechenweg und warum die anderen Antworten falsch sind'
+                : 'Erklärung zur Zeichnung: was im Bild steht und worauf es ankommt. Der Rechenweg kommt nach deiner Antwort.')
+            : (answered
+                ? 'Erklärung zu dieser Frage, mit Eselsbrücke und warum die anderen Antworten falsch sind'
+                : 'Erklärung zu dieser Frage, mit Eselsbrücke. Der Rest kommt nach deiner Antwort.'));
         // Gepulst wird am Ende von renderQuestion(), siehe hinweiseMelden().
     }else{
         b.style.display = 'none';
@@ -17536,8 +17581,11 @@ function erklaerOeffnen(){
     t.innerHTML =
         '<div class="et-kopf">'
       +   '<div class="et-titel"><i class="fas fa-lightbulb" style="color:#5b3f95;"></i> '
-      +     'Erklärung zur Zeichnung <span class="et-frage">' + attrText(q.id)
-      +     (answered ? ' · mit Rechenweg' : ' · vor der Antwort') + '</span></div>'
+      +     (er.bild ? 'Erklärung zur Zeichnung' : 'Erklärung')
+      +     ' <span class="et-frage">' + attrText(q.id)
+      +     (!answered ? ' · vor der Antwort'
+                      : ((Array.isArray(er.weg) && er.weg.length) ? ' · mit Rechenweg' : ''))
+      +     '</span></div>'
       +   '<button type="button" class="et-lesen" id="erklaerLesenBtn" onclick="erklaerVorlesen()" '
       +     'title="Erklärung vorlesen" data-tooltip="Erklärung vorlesen" '
       +     'data-vorlesen-kurz="Erklärung vorlesen." '
@@ -17668,6 +17716,15 @@ function erklaerVorlesen(){
     // Der Weg und die falschen Antworten nur, wenn sie auch dastehen -
     // vor der Antwort sind sie nicht in der Tafel, und was man nicht sieht,
     // soll man auch nicht hören.
+    if(Array.isArray(er.liste) && er.liste.length){
+        // Die Liste wird als Satzfolge gelesen: "PY, Brasilien. Pelé, Yes."
+        segmente.push({ text: 'Die Kenner. ' + er.liste.map(z =>
+                            sprechbar([z.k, z.l, z.b].filter(Boolean).join('. '))).join(' '),
+                        selector: stelle('liste') });
+    }
+    if(er.merken){
+        segmente.push({ text: 'Zum Merken. ' + sprechbar(er.merken), selector: stelle('merken') });
+    }
     const alles = !!answered;
     if(alles && Array.isArray(er.weg) && er.weg.length){
         segmente.push({ text: 'Der Weg. ' + er.weg.map(z => sprechbar(z)).join('. '),

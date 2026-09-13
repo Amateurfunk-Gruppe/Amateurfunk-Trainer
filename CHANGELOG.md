@@ -8,6 +8,48 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.282.0] - 2026-09-13
+
+### Hinzugefügt
+- **Erklärungen zu den Landeskennern der Klasse N — 18 Fragen, mit Eselsbrücken.**
+  Dietmar: „Bei der Klasse N benötige ich auch eine Erklärung für die Landeskenner und
+  Eselbrücken." Die Fragen BD301 bis BD318 haben jetzt jede einen Eintrag.
+
+  Das sind die ersten Erklärungen zu Fragen **ohne Zeichnung**, und dafür hat die Tafel
+  zwei neue Teile bekommen:
+
+  - **Die Kenner** — eine kleine Tabelle: Landeskenner, Land, Eselsbrücke. Darin stehen
+    genau die Kenner, die in der Frage und in ihren vier Antworten vorkommen, also auch
+    die falschen. Bei BD317 sind das sechs Zeilen: PY, LU, CE für Südamerika und VE, BY,
+    JA als die drei, mit denen die falschen Antworten arbeiten.
+  - **Zum Merken** — der Satz, an dem man es behält.
+
+  Die Überschrift heißt bei diesen Fragen nur noch „Erklärung" statt „Erklärung zur
+  Zeichnung", und der Zusatz „mit Rechenweg" erscheint nur, wenn wirklich einer dabei
+  ist. Beide neuen Teile werden auch **vorgelesen**: die Tabelle als Satzfolge („PY.
+  Brasilien. Pelé, Yes."), der Merksatz danach.
+
+  **Die Eselsbrücken sind zum Teil Dietmars eigene** — SM als „Schwedisches Mädchen"
+  war sein Einfall und ist der Ausgangspunkt für alle anderen gewesen. Dazu kommen die
+  Brücken, bei denen die Antwort im Landesnamen selbst steckt (EA = España, LX =
+  Luxemburg, XE = meXiko, CE = Chile, ZL = New ZeaLand, PA = Pays-Bas) und zwei
+  übernommene, die besser waren als meine ersten: **„Keiner Will Nach Amerika"** für die
+  vier US-Kenner K, W, N und A — die löst BD312, BD315 und BD316 auf einen Schlag — und
+  **„Hohe Berge"** für HB9.
+
+  **Geprüft gegen zwei unabhängige Quellen.** Dietmar hat auf 12db.de und auf 50ohm.de
+  verwiesen; jede der 34 Zuordnungen stimmt mit beiden überein, und alle 18 richtigen
+  Antworten ebenfalls. Wichtig war das bei den Fällen, die man leicht falsch erinnert:
+  **VE ist Kanada**, nicht Venezuela (das wäre YV). **US ist nicht USA**, sondern die
+  Ukraine. **DA bis DZ ist nicht ganz deutsch** — Deutschland endet bei DR, dann kommen
+  Südkorea (DS–DT) und die Philippinen (DU–DZ).
+
+  Die Kachel „Mit Erklärung" zählt in Klasse N damit **73** statt 55 Fragen, und ihr
+  Untertitel heißt jetzt „Fragen mit Erklärung" statt „Fragen mit erklärter Zeichnung" —
+  Zeichnungen sind nicht mehr die einzigen.
+
+---
+
 ## [1.281.0] - 2026-09-12
 
 ### Hinzugefügt

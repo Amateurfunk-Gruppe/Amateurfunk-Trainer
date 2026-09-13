@@ -4824,6 +4824,588 @@
       "bild": "Oben das Audiospektrum: Leistung über der Frequenz in kHz. Bei 0,3 kHz setzt der Block mit einer senkrechten Kante ein, dort ist die Leistung am höchsten; nach rechts fällt die Obergrenze geradlinig ab und bricht bei 2,7 kHz mit einer senkrechten Kante ab. Unter 0,3 kHz und über 2,7 kHz steht nichts. Darunter vier Spektren um die markierte Trägerfrequenz f_T. Eines zeigt einen einzelnen Block ausschließlich links von f_T, ohne Linie bei f_T; er beginnt links niedrig, steigt nach rechts an und ist dicht an f_T am höchsten, wobei zwischen ihm und f_T eine kleine Lücke bleibt. Eines zeigt einen einzelnen Block ausschließlich rechts von f_T, ohne Linie; er ist dicht an f_T am höchsten und fällt nach rechts ab. Eines zeigt eine hohe dünne Linie bei f_T und dazu den Block links davon. Eines zeigt die Linie bei f_T und dazu den Block rechts davon.",
       "kniff": "Zwei Bedingungen zugleich: bei Einseitenbandmodulation ist der Träger unterdrückt, bei f_T darf also keine Linie stehen — das schließt die beiden Darstellungen mit der dünnen Linie aus. Und LSB heißt unteres Seitenband, die Frequenzen liegen unterhalb von f_T: die Audiofrequenz wird abgezogen, 0,3 kHz wird zu f_T − 0,3 kHz und 2,7 kHz zu f_T − 2,7 kHz. Damit liegt die Frequenzfolge gespiegelt, und weil das Audiospektrum bei 0,3 kHz am stärksten ist, liegt die höchste Leistung dicht unterhalb von f_T — der Block steigt von links nach rechts auf f_T zu. Richtig ist deshalb der einzelne Block links von f_T ohne Linie. Der Block rechts von f_T ist USB (Nachbarfrage NE207); zwischen den beiden Fragen ist nur die Seite vertauscht. Die Lücke an f_T stammt von den fehlenden Audioanteilen unter 0,3 kHz, die Bandbreite ist 2,7 kHz − 0,3 kHz = 2,4 kHz.",
       "warum_falsch": {}
+    },
+    "BD301": {
+      "frage": "Wo können Sie nachschlagen, in welchem Land sich eine Amateurfunkstelle mit einem Ihnen bislang unbekannten Landeskenner befindet?",
+      "richtig": "In der Landeskennerliste der ITU, Amateurfunkhandbüchern und Rufzeichenlisten.",
+      "kniff": "Die Landeskennerliste führt die ITU — die Internationale Fernmeldeunion in Genf. Sie teilt die Blöcke an die Staaten zu, und nur sie hat die vollständige Liste. Abgedruckt findet man sie in Amateurfunkhandbüchern und in Rufzeichenlisten.",
+      "merken": "ITU vergibt, Handbuch druckt ab. Die Bundesnetzagentur ist nur für Deutschland zuständig.",
+      "warum_falsch": {
+        "In der Rufzeichenliste der Bundesnetzagentur.": "Die Bundesnetzagentur führt die DEUTSCHEN Rufzeichen. Ein unbekannter Landeskenner ist gerade kein deutscher — dort steht er nicht.",
+        "Im Frequenzbereichszuweisungsplan der Bundesrepublik Deutschland.": "Der sagt, welcher Funkdienst welche FREQUENZEN benutzen darf. Mit Rufzeichen und Ländern hat er nichts zu tun.",
+        "In den Empfehlungen der IARU.": "Die IARU ist der Dachverband der Amateurfunkverbände. Von ihr kommen Bandpläne und Betriebsempfehlungen — die Landeskenner vergibt sie nicht, das macht die ITU."
+      }
+    },
+    "BD302": {
+      "frage": "Welchem Land bzw. welchen Ländern sind die Landeskenner DA bis DZ zugeordnet?",
+      "richtig": "Deutschland (DA-DR), Südkorea (DS-DT) und Philippinen (DU-DZ)",
+      "kniff": "Die Reihe DA bis DZ ist NICHT ganz deutsch — genau darauf zielt die Frage. Deutschland endet bei DR; danach kommen zwei andere Länder.",
+      "liste": [
+        {
+          "k": "DA–DR",
+          "l": "Deutschland",
+          "b": "Deutschland hört bei R auf"
+        },
+        {
+          "k": "DS–DT",
+          "l": "Südkorea",
+          "b": "Die Südkoreaner"
+        },
+        {
+          "k": "DU–DZ",
+          "l": "Philippinen",
+          "b": "Du fährst bis Zum Strand"
+        }
+      ],
+      "merken": "R wie Reihenende, S wie Südkorea, U wie Urlaub.",
+      "warum_falsch": {
+        "Ausschließlich Deutschland (DA-DZ)": "Die naheliegende Annahme, und sie ist falsch. Die ITU hat den D-Block geteilt: nur DA bis DR gehören Deutschland.",
+        "Deutschland (DA-DT) und Philippinen (DU-DZ)": "Der Schnitt ist zwei Buchstaben zu weit rechts. DS und DT gehören schon Südkorea — genau die beiden fehlen in dieser Antwort.",
+        "Deutschland (DA-DO), Taiwan (DP-DT) und Philippinen (DU-DZ)": "Die Dreiteilung ist richtig gesehen, aber an der falschen Stelle geschnitten, und das Land stimmt nicht: DS und DT gehören Südkorea, nicht Taiwan. Taiwan hat BV."
+      }
+    },
+    "BD303": {
+      "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner OE, ON und OK entsprechen den Ländern ...",
+      "richtig": "Österreich, Belgien und Tschechien.",
+      "kniff": "Vier Landeskenner beginnen mit O, und sie liegen alle vier um Deutschland herum — das ist die Falle dieser Fragengruppe. Nur OE klingt nach seinem Land.",
+      "liste": [
+        {
+          "k": "OE",
+          "l": "Österreich",
+          "b": "OE ist einfach das Ö"
+        },
+        {
+          "k": "ON",
+          "l": "Belgien",
+          "b": "Ostende ist noch Belgien"
+        },
+        {
+          "k": "OK",
+          "l": "Tschechien",
+          "b": "Oh, Kafka! (Prag)"
+        },
+        {
+          "k": "OZ",
+          "l": "Dänemark",
+          "b": "Oh, Zimtschnecke"
+        }
+      ],
+      "merken": "Österreich, Ostende, Oh Kafka — in dieser Reihenfolge fragt BD303. Und die vierte O-Karte ist Dänemark.",
+      "warum_falsch": {
+        "Finnland, Tschechien und Dänemark.": "Alle drei verschoben. Finnland hat OH, nicht OE; Tschechien ist OK und nicht ON; Dänemark ist OZ und nicht OK.",
+        "Dänemark, Belgien und Slowakei.": "Belgien in der Mitte stimmt. Dänemark ist aber OZ, nicht OE — und die Slowakei hat OM, nicht OK.",
+        "Österreich, Dänemark und Belgien.": "Österreich stimmt, dann rutschen die beiden anderen um eine Stelle: ON ist Belgien und nicht Dänemark, OK ist Tschechien und nicht Belgien."
+      }
+    },
+    "BD304": {
+      "frage": "Welche Landeskenner sind der Reihe nach den folgenden Ländern zugeordnet? Die Landeskenner OE, PA, und SM entsprechen den Ländern ...",
+      "richtig": "Österreich, Niederlande und Schweden.",
+      "kniff": "Drei ganz verschiedene Buchstabenpaare, und bei jedem lauert ein Land, das ähnlich anfängt: PA gegen SP (Niederlande gegen Polen) und SM gegen ZS und GM (Schweden gegen Südafrika und Schottland).",
+      "liste": [
+        {
+          "k": "OE",
+          "l": "Österreich",
+          "b": "OE ist einfach das Ö"
+        },
+        {
+          "k": "PA",
+          "l": "Niederlande",
+          "b": "Pommes mit Mayo"
+        },
+        {
+          "k": "SM",
+          "l": "Schweden",
+          "b": "Schwedisches Mädchen"
+        }
+      ],
+      "merken": "Ö — Pommes — Mädchen. Und das Skandinavien-Trio dazu: SM Schweden, LA Norwegen, OZ Dänemark.",
+      "warum_falsch": {
+        "Österreich, Polen und Südafrika.": "Zweimal der ähnliche Buchstabe erwischt: Polen ist SP und nicht PA, Südafrika ist ZS und nicht SM.",
+        "Österreich, Niederlande und Schottland.": "Die ersten zwei stimmen. Schottland hat GM — beim S von SM denkt man leicht an Scotland, aber der Kenner beginnt mit G wie Großbritannien.",
+        "Österreich, Brasilien und Schweiz.": "Brasilien ist PY (nicht PA), die Schweiz ist HB9 (nicht SM). Nur der erste Kenner stimmt."
+      }
+    },
+    "BD305": {
+      "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner F, PA und SP entsprechen den Ländern ...",
+      "richtig": "Frankreich, Niederlande und Polen.",
+      "kniff": "Alle drei Länder grenzen an Deutschland oder liegen gleich daneben. Der Stolperstein steckt beim F: ein einzelner Buchstabe als Landeskenner, und den hat Frankreich.",
+      "liste": [
+        {
+          "k": "F",
+          "l": "Frankreich",
+          "b": "F wie France"
+        },
+        {
+          "k": "PA",
+          "l": "Niederlande",
+          "b": "Pommes mit Mayo"
+        },
+        {
+          "k": "SP",
+          "l": "Polen",
+          "b": "SPolen — man hört es"
+        }
+      ],
+      "merken": "France, Pommes, SPolen.",
+      "warum_falsch": {
+        "Niederlande, Polen und Belgien.": "Um eine Stelle verschoben: PA ist Niederlande, SP ist Polen — aber F ist nicht Niederlande, und Belgien (ON) kommt in der Frage nicht vor.",
+        "Südafrika, Dänemark und Luxemburg.": "Keiner der drei passt. Südafrika ist ZS, Dänemark OZ, Luxemburg LX.",
+        "Schweden, Niederlande und Polen.": "Die naheliegendste Falle: die letzten zwei stimmen, nur vorn steht das falsche Land. Schweden ist SM — F gehört Frankreich."
+      }
+    },
+    "BD306": {
+      "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner SM, SP und ZS entsprechen den Ländern ...",
+      "richtig": "Schweden, Polen und Südafrika.",
+      "kniff": "Drei Kenner mit S am Anfang oder am Ende — und sie führen auf drei ganz verschiedene Erdteile. ZS ist trotz des S kein Skandinavier.",
+      "liste": [
+        {
+          "k": "SM",
+          "l": "Schweden",
+          "b": "Schwedisches Mädchen"
+        },
+        {
+          "k": "SP",
+          "l": "Polen",
+          "b": "SPolen — man hört es"
+        },
+        {
+          "k": "ZS",
+          "l": "Südafrika",
+          "b": "Zulu-Staat"
+        }
+      ],
+      "merken": "Mädchen, SPolen, Zulu. Slowenien wäre S5 und die Slowakei OM — beide stehen hier nicht.",
+      "warum_falsch": {
+        "Schweden, Slowenien und Polen.": "Schweden stimmt. Slowenien hat aber S5, und Polen ist SP — hier ist es an die Stelle von ZS geraten.",
+        "Schweden, Slowakei und Polen.": "Dieselbe Verschiebung, nur mit der Slowakei. Die hat OM, also einen O-Kenner wie ihre Nachbarn.",
+        "Slowenien, Polen und Schweden.": "Alles um eine Stelle gedreht. SM ist Schweden und steht vorn, nicht hinten."
+      }
+    },
+    "BD307": {
+      "frage": "Welche Länder (Gebiete) sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner 4X, F und OZ entsprechen den Ländern (Gebieten) ...",
+      "richtig": "Israel, Frankreich und Dänemark.",
+      "kniff": "Ein Kenner mit Ziffer ist hier der Schlüssel: 4X gehört Israel. Ziffern am Anfang kommen bei den Landeskennern regelmäßig vor, und 4X ist der bekannteste.",
+      "liste": [
+        {
+          "k": "4X",
+          "l": "Israel",
+          "b": "4X liest sich wie Exodus"
+        },
+        {
+          "k": "F",
+          "l": "Frankreich",
+          "b": "F wie France"
+        },
+        {
+          "k": "OZ",
+          "l": "Dänemark",
+          "b": "Oh, Zimtschnecke"
+        }
+      ],
+      "merken": "Exodus, France, Zimtschnecke.",
+      "warum_falsch": {
+        "Italien, Belgien und Slowakei.": "Italien ist I, ein einzelner Buchstabe — verwechselt sich leicht mit dem F, das hier für Frankreich steht. Keiner der drei passt.",
+        "Schweiz, Luxemburg und Polen.": "Auch hier keiner: die Schweiz ist HB9, Luxemburg LX, Polen SP.",
+        "Schweden, Belgien und Schottland.": "Schweden SM, Belgien ON, Schottland GM — drei Länder, drei andere Kenner."
+      }
+    },
+    "BD308": {
+      "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner EA, EI, EK, EM, ES entsprechen den Ländern ...",
+      "richtig": "Spanien, Irland, Armenien, Ukraine, Estland",
+      "kniff": "Fünf Kenner, die alle mit E beginnen — hier hilft nur der zweite Buchstabe. Und der läuft alphabetisch: A, I, K, M, S. Die falschen Antworten vertauschen fast immer EI und EM, also Irland und die Ukraine.",
+      "liste": [
+        {
+          "k": "EA",
+          "l": "Spanien",
+          "b": "España Andalusien"
+        },
+        {
+          "k": "EI",
+          "l": "Irland",
+          "b": "Éire — so heißt Irland auf Irisch"
+        },
+        {
+          "k": "EK",
+          "l": "Armenien",
+          "b": "Eriwan im Kaukasus"
+        },
+        {
+          "k": "EM",
+          "l": "Ukraine",
+          "b": "Euro-Maidan (Kiew)"
+        },
+        {
+          "k": "ES",
+          "l": "Estland",
+          "b": "EStland — steht direkt drin"
+        }
+      ],
+      "merken": "Andalusien, Éire, Kaukasus, Maidan, EStland — in dieser Reihenfolge, weil A, I, K, M, S alphabetisch läuft.",
+      "warum_falsch": {
+        "Spanien, Ukraine, Armenien, Estland, Irland": "Drei Länder rotiert: EI ist Irland (Éire), EM die Ukraine (Maidan), ES Estland. Hier sind alle drei durchgetauscht.",
+        "Spanien, Ukraine, Armenien, Irland, Estland": "Estland am Ende stimmt. Vorne sind Irland und Ukraine vertauscht — genau die Verwechslung, gegen die „Éire\" und „Euro-Maidan\" helfen.",
+        "Spanien, Irland, Armenien, Estland, Ukraine": "Die ersten drei stimmen, die letzten zwei sind getauscht: EM ist die Ukraine, ES ist Estland. Das S steckt im Landesnamen."
+      }
+    },
+    "BD309": {
+      "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner VE, VK und PY entsprechen den Ländern ...",
+      "richtig": "Kanada, Australien und Brasilien.",
+      "kniff": "Zwei V-Kenner nebeneinander, und beide meinen ein großes Land der Südhalbkugel oder des Nordens — VE und VK werden gern vertauscht. PY am Ende ist Brasilien, nicht Japan.",
+      "liste": [
+        {
+          "k": "VE",
+          "l": "Kanada",
+          "b": "Viele Elche"
+        },
+        {
+          "k": "VK",
+          "l": "Australien",
+          "b": "Viele Kängurus"
+        },
+        {
+          "k": "PY",
+          "l": "Brasilien",
+          "b": "Pelé, Yes!"
+        }
+      ],
+      "merken": "Viele Elche in Kanada, viele Kängurus in Australien, und Pelé in Brasilien.",
+      "warum_falsch": {
+        "Kanada, Australien und Japan.": "Die ersten zwei stimmen. Japan ist JA — PY gehört Brasilien.",
+        "Kanada, Brasilien und USA.": "Kanada stimmt, dann rutscht alles: Brasilien ist PY und steht an dritter Stelle, die USA haben W, K, N und A.",
+        "USA, Australien und Brasilien.": "Die letzten zwei stimmen. Vorne aber nicht: VE ist Kanada. Die USA kommen in dieser Frage gar nicht vor."
+      }
+    },
+    "BD310": {
+      "frage": "Welche Gruppe gibt die Landeskenner der Länder Schweiz, Spanien und Belgien für ihre Amateurfunkstellen richtig wieder?",
+      "richtig": "HB9, EA und ON",
+      "kniff": "Hier ist die Richtung umgedreht: gegeben sind die Länder, gesucht die Kenner. Zwei der drei sind leicht, weil der Kenner im Landesnamen steckt (EA für España) oder aus dem alten Namen kommt (HB von Helvetia). Belgien ist die Ausnahme — ON muss man wissen.",
+      "liste": [
+        {
+          "k": "HB9",
+          "l": "Schweiz",
+          "b": "Hohe Berge — und HB kommt von Helvetia"
+        },
+        {
+          "k": "EA",
+          "l": "Spanien",
+          "b": "España"
+        },
+        {
+          "k": "ON",
+          "l": "Belgien",
+          "b": "Ostende ist noch Belgien"
+        }
+      ],
+      "merken": "Hohe Berge, España, Ostende.",
+      "warum_falsch": {
+        "SZ, SP und BE": "SZ und BE sehen nach Schweiz und Belgien aus, sind aber keine Amateurfunk-Landeskenner. Und SP gehört Polen, nicht Spanien.",
+        "EA, SP und BE": "EA für Spanien stimmt — steht nur an der falschen Stelle, gefragt war zuerst die Schweiz. SP ist Polen, BE gibt es nicht.",
+        "SP, ON und EA": "Alle drei Kenner sind echt, aber die Reihenfolge stimmt nicht: gefragt ist Schweiz, Spanien, Belgien. SP ist außerdem Polen und kommt in der Frage gar nicht vor."
+      }
+    },
+    "BD311": {
+      "frage": "Welche Gruppe gibt die Landeskenner der Länder Spanien, Luxemburg und Polen für ihre Amateurfunkstellen richtig wieder?",
+      "richtig": "EA, LX, SP",
+      "kniff": "Drei Länder, deren Kenner man sich aus dem Namen holen kann: España, Luxemburg, und Polen hört man im SP mit. Die falschen Antworten bieten dafür lauter E- und L-Kenner an, die anderen Ländern gehören.",
+      "liste": [
+        {
+          "k": "EA",
+          "l": "Spanien",
+          "b": "España"
+        },
+        {
+          "k": "LX",
+          "l": "Luxemburg",
+          "b": "Lu-x-emburg — beide Buchstaben stecken drin"
+        },
+        {
+          "k": "SP",
+          "l": "Polen",
+          "b": "SPolen — man hört es"
+        }
+      ],
+      "merken": "España, Luxemburg, SPolen — dreimal steht die Antwort im Landesnamen.",
+      "warum_falsch": {
+        "EU, LZ, S0": "Drei andere Länder: EU ist Belarus, LZ Bulgarien, S0 die Westsahara.",
+        "EM, LU, 4X": "Wieder mit E und L angefangen, aber daneben: EM ist die Ukraine, LU Argentinien, 4X Israel.",
+        "EI, LA, SM": "Irland, Norwegen, Schweden. Die Buchstabenpaare sehen den richtigen ähnlich — EI gegen EA und LA gegen LX sind die Verwechslungen, auf die es hier ankommt."
+      }
+    },
+    "BD312": {
+      "frage": "Welche Gruppe gibt Landeskenner der Länder USA, Neuseeland und Argentinien für ihre Amateurfunkstellen richtig wieder?",
+      "richtig": "W, ZL und LU",
+      "kniff": "Die USA haben VIER Kenner: W, K, N und A. Wer nur einen davon kennt, hält die anderen für andere Länder — genau damit arbeiten die falschen Antworten.",
+      "liste": [
+        {
+          "k": "W, K, N, A",
+          "l": "USA",
+          "b": "Keiner Will Nach Amerika — K, W, N, A"
+        },
+        {
+          "k": "ZL",
+          "l": "Neuseeland",
+          "b": "New ZeaLand — Z und L stecken im englischen Namen"
+        },
+        {
+          "k": "LU",
+          "l": "Argentinien",
+          "b": "L wie links, U wie unten — unten links auf der Weltkarte"
+        }
+      ],
+      "merken": "Keiner Will Nach Amerika: K, W, N, A sind alle vier die USA. ZeaLand für Neuseeland, links unten für Argentinien.",
+      "warum_falsch": {
+        "AL, CE und VE": "AL ist Alaska, gehört also zu den USA, meint aber nicht das Festland. CE ist Chile und VE Kanada — von Neuseeland und Argentinien keine Spur.",
+        "K, ZS und A": "K und A sind wirklich USA-Kenner, nur ist A hier an die Stelle von Argentinien geraten. Und ZS ist Südafrika, nicht Neuseeland — das ist ZL.",
+        "N, LU und PY": "N ist USA, das stimmt. LU ist aber Argentinien und steht an der Stelle Neuseelands, und PY ist Brasilien. Die beiden hinteren sind um eine Stelle verschoben."
+      }
+    },
+    "BD313": {
+      "frage": "Welche Gruppe gibt Landeskenner der Länder China, Kanada und Australien für ihre Amateurfunkstellen richtig wieder?",
+      "richtig": "BY, VE und VK",
+      "kniff": "Zwei V-Kenner in einer Antwort — VE und VK — und beide gehören zum Commonwealth. Dazwischen China mit BY. Wer JA sieht, denkt an Japan, und das ist hier nicht gefragt.",
+      "liste": [
+        {
+          "k": "BY",
+          "l": "China",
+          "b": "Bezahlt mit Yuan"
+        },
+        {
+          "k": "VE",
+          "l": "Kanada",
+          "b": "Viele Elche"
+        },
+        {
+          "k": "VK",
+          "l": "Australien",
+          "b": "Viele Kängurus"
+        }
+      ],
+      "merken": "Yuan, Elche, Kängurus.",
+      "warum_falsch": {
+        "BY, JA und VK": "China und Australien stimmen. In der Mitte steht aber Japan (JA) statt Kanada (VE).",
+        "N, VE und VK": "Kanada und Australien stimmen. Vorn steht mit N ein Kenner der USA, nicht Chinas.",
+        "JA, VE und VK": "Dieselben zwei stimmen, und vorn steht Japan statt China. BY und JA sind die beiden Kenner, die in dieser Fragengruppe am häufigsten getauscht werden."
+      }
+    },
+    "BD314": {
+      "frage": "Welche Antwort enthält nur Landeskenner von Ländern, die an die Bundesrepublik Deutschland grenzen?",
+      "richtig": "F, HB9, OZ, SP",
+      "kniff": "Deutschland hat NEUN Nachbarn, und die Frage ist gelöst, wenn man deren Kenner beisammen hat. Alles andere ist Ablenkung — auch Länder, die nah wirken, aber nicht grenzen: Italien und Portugal zum Beispiel.",
+      "liste": [
+        {
+          "k": "OZ",
+          "l": "Dänemark",
+          "b": "Oh, Zimtschnecke"
+        },
+        {
+          "k": "SP",
+          "l": "Polen",
+          "b": "SPolen"
+        },
+        {
+          "k": "OK",
+          "l": "Tschechien",
+          "b": "Oh, Kafka!"
+        },
+        {
+          "k": "OE",
+          "l": "Österreich",
+          "b": "OE ist das Ö"
+        },
+        {
+          "k": "HB9",
+          "l": "Schweiz",
+          "b": "Hohe Berge — und HB kommt von Helvetia"
+        },
+        {
+          "k": "F",
+          "l": "Frankreich",
+          "b": "F wie France"
+        },
+        {
+          "k": "LX",
+          "l": "Luxemburg",
+          "b": "Lu-x-emburg"
+        },
+        {
+          "k": "ON",
+          "l": "Belgien",
+          "b": "Ostende"
+        },
+        {
+          "k": "PA",
+          "l": "Niederlande",
+          "b": "Pays-Bas — so heißt das Land auf Französisch"
+        }
+      ],
+      "merken": "Im Uhrzeigersinn ab Dänemark: OZ, SP, OK, OE, HB9, F, LX, ON, PA. Neun Nachbarn, neun Kenner.",
+      "warum_falsch": {
+        "CT, I, LX, OK": "Luxemburg und Tschechien grenzen wirklich an. Portugal (CT) und Italien (I) aber nicht — Italien liegt hinter Österreich und der Schweiz, Portugal hinter Spanien und Frankreich.",
+        "SM, LA, LZ, HB0": "Kein einziger Nachbar: Schweden, Norwegen, Bulgarien, Liechtenstein. HB0 sieht der Schweiz (HB9) zum Verwechseln ähnlich, ist aber Liechtenstein — und das grenzt an Österreich und die Schweiz, nicht an Deutschland.",
+        "EA, GM, OE, ON": "Österreich und Belgien grenzen an. Spanien (EA) und Schottland (GM) nicht — bei Spanien liegt Frankreich dazwischen, bei Schottland die Nordsee."
+      }
+    },
+    "BD315": {
+      "frage": "Welche Antwort gibt ausschließlich Rufzeichen aus den Vereinigten Staaten (USA) wieder?",
+      "richtig": "K3LR, W3DZZ und K4EAX",
+      "kniff": "Nicht die Länder sind gefragt, sondern die Rufzeichen — man muss also jedes einzelne prüfen. Die USA haben W, K, N und A am Anfang; sobald in einer Antwort ein Rufzeichen mit anderem Anfang steht, fällt die ganze Antwort.",
+      "liste": [
+        {
+          "k": "W, K, N, A",
+          "l": "USA",
+          "b": "Keiner Will Nach Amerika — K, W, N, A"
+        },
+        {
+          "k": "US",
+          "l": "Ukraine",
+          "b": "US ist NICHT USA — der Kenner gehört der Ukraine"
+        },
+        {
+          "k": "UA",
+          "l": "Russland",
+          "b": "Uralte Abkürzung der Union"
+        },
+        {
+          "k": "VE",
+          "l": "Kanada",
+          "b": "Viele Elche"
+        }
+      ],
+      "merken": "Keiner Will Nach Amerika: K, W, N, A. Und US ist NICHT USA, sondern die Ukraine.",
+      "warum_falsch": {
+        "K1TTT, KA7KLE und UA3RUS": "Die ersten zwei sind amerikanisch. UA3RUS ist Russland — und sagt es im Rufzeichen sogar selbst.",
+        "US2ABC, AB0GC und W4EAX": "AB0GC und W4EAX sind amerikanisch. US2ABC sieht nach USA aus, gehört aber der Ukraine. Das ist die Falle dieser Frage.",
+        "W0FKK, N6CAL und VE5VK": "Die ersten zwei sind amerikanisch. VE5VK ist Kanada."
+      }
+    },
+    "BD316": {
+      "frage": "Welche drei Landeskenner sind einem einzigen Kontinent zuzuordnen?",
+      "richtig": "W, VE und XE",
+      "kniff": "Gefragt ist nicht ein bestimmter Kontinent, sondern dass alle drei auf DEMSELBEN liegen. Nordamerika hat drei große Nachbarn: USA, Kanada und Mexiko — und genau die stehen in der richtigen Antwort.",
+      "liste": [
+        {
+          "k": "W",
+          "l": "USA",
+          "b": "Keiner Will Nach Amerika — K, W, N, A"
+        },
+        {
+          "k": "VE",
+          "l": "Kanada",
+          "b": "Viele Elche"
+        },
+        {
+          "k": "XE",
+          "l": "Mexiko",
+          "b": "me-X-iko — das X steckt im Namen"
+        },
+        {
+          "k": "BY",
+          "l": "China",
+          "b": "Asien"
+        },
+        {
+          "k": "JA",
+          "l": "Japan",
+          "b": "Asien"
+        },
+        {
+          "k": "DS",
+          "l": "Südkorea",
+          "b": "Asien"
+        }
+      ],
+      "merken": "Nordamerika von oben nach unten: VE Kanada, W die USA (Keiner Will Nach Amerika), XE Mexiko.",
+      "warum_falsch": {
+        "K, VE und BY": "K und VE liegen in Nordamerika, BY ist China — also Asien. Zwei Kontinente.",
+        "XE, VE und JA": "Mexiko und Kanada liegen in Nordamerika, Japan in Asien.",
+        "N, XE und DS": "USA und Mexiko wieder Nordamerika, Südkorea (DS) Asien. Dieselbe Bauart: zwei richtige, ein Sprung über den Pazifik."
+      }
+    },
+    "BD317": {
+      "frage": "Welche Landeskenner sind südamerikanischen Ländern zugewiesen?",
+      "richtig": "PY, CE und LU",
+      "kniff": "Drei südamerikanische Kenner muss man beisammen haben: PY, LU und CE. Alle falschen Antworten schmuggeln genau einen Kenner von einem anderen Kontinent hinein — Kanada, China oder Japan.",
+      "liste": [
+        {
+          "k": "PY",
+          "l": "Brasilien",
+          "b": "Pelé, Yes!"
+        },
+        {
+          "k": "LU",
+          "l": "Argentinien",
+          "b": "L wie links, U wie unten — unten links auf der Weltkarte"
+        },
+        {
+          "k": "CE",
+          "l": "Chile",
+          "b": "Chil-e — beide Buchstaben stecken drin"
+        },
+        {
+          "k": "VE",
+          "l": "Kanada",
+          "b": "Viele Elche — Nordamerika, nicht Süd"
+        },
+        {
+          "k": "BY",
+          "l": "China",
+          "b": "Asien"
+        },
+        {
+          "k": "JA",
+          "l": "Japan",
+          "b": "Asien"
+        }
+      ],
+      "merken": "Pelé, links unten, Chile. Und Achtung: VE ist Kanada, nicht Venezuela — das wäre YV.",
+      "warum_falsch": {
+        "PY, CE und VE": "Brasilien und Chile stimmen. VE ist aber Kanada. Die Verwechslung liegt nahe, weil VE nach Venezuela klingt — Venezuela hat YV.",
+        "LU, CE und BY": "Argentinien und Chile stimmen. BY ist China.",
+        "CE, LU und JA": "Wieder zwei richtige, und JA ist Japan."
+      }
+    },
+    "BD318": {
+      "frage": "Welche Landeskenner sind asiatischen Ländern zugewiesen?",
+      "richtig": "BY, JA und VU",
+      "kniff": "Drei asiatische Kenner: BY, JA und VU. Die falschen Antworten mischen einen Südamerikaner (LU oder PY) oder einen Amerikaner (K) dazwischen — oder tauschen einen asiatischen gegen einen anderen asiatischen, der nicht gefragt war.",
+      "liste": [
+        {
+          "k": "BY",
+          "l": "China",
+          "b": "Bezahlt mit Yuan"
+        },
+        {
+          "k": "JA",
+          "l": "Japan",
+          "b": "JA-pan — steht direkt drin"
+        },
+        {
+          "k": "VU",
+          "l": "Indien",
+          "b": "Vishnu und der Ganges"
+        },
+        {
+          "k": "DS",
+          "l": "Südkorea",
+          "b": "Die Südkoreaner — auch Asien, hier aber nicht gefragt"
+        },
+        {
+          "k": "LU",
+          "l": "Argentinien",
+          "b": "Südamerika"
+        },
+        {
+          "k": "PY",
+          "l": "Brasilien",
+          "b": "Südamerika"
+        }
+      ],
+      "merken": "Yuan, JA-pan, Vishnu.",
+      "warum_falsch": {
+        "LU, DS und JA": "Südkorea und Japan liegen wirklich in Asien. LU ist aber Argentinien — damit ist die Antwort hin, auch wenn zwei Drittel stimmen.",
+        "JA, VU und PY": "Japan und Indien stimmen. PY ist Brasilien.",
+        "VU, JA und K": "Indien und Japan stimmen. K ist einer der vier Kenner der USA."
+      }
     }
   },
   "umfang": "379 Fragen mit Zeichnung: 226 in E → A, 98 in N → E, 55 in Klasse N. Das sind alle, die der Katalog hat."
