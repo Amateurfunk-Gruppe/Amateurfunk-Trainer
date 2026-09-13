@@ -7912,6 +7912,9 @@ window.lernMap = lernMap;
 //  unter der Frage einfach aus. Nichts anderes haengt daran.
 let erklaerMap = {};
 window.erklaerMap = erklaerMap;
+// Die geteilten Begriffslisten - siehe Lader weiter unten.
+let erklaerGruppen = {};
+window.erklaerGruppen = erklaerGruppen;
 let svgList = [];
 let history = {};
 let currentUser = (()=>{ try{ return localStorage.getItem('amateurfunk_currentUser') || 'user1'; }catch(e){ return 'user1'; } })();
@@ -15913,6 +15916,18 @@ async function loadQuestions() {
                 if (inhalt && typeof inhalt === 'object') {
                     erklaerMap = inhalt;
                     window.erklaerMap = erklaerMap;
+                    // ================================================================
+                    //  BEGRIFFSBLAETTER (13.09.2026)
+                    // ----------------------------------------------------------------
+                    //  Die Liste der Q-Gruppen ist in 29 Fragen dieselbe, die der
+                    //  Rechtsquellen in 79. Sie in jeden Eintrag zu schreiben waere
+                    //  Verschwendung - und eine Korrektur muesste 79 Stellen
+                    //  anfassen. Deshalb stehen solche Listen EINMAL unter
+                    //  "gruppen", und der Eintrag verweist mit "gruppe" darauf.
+                    // ================================================================
+                    erklaerGruppen = (jEr && jEr.gruppen && typeof jEr.gruppen === 'object')
+                                     ? jEr.gruppen : {};
+                    window.erklaerGruppen = erklaerGruppen;
                     console.log(`✅ Erklärungen geladen: ${Object.keys(erklaerMap).length} Fragen`);
                     // Dieselbe Vorsicht wie bei formelhilfe.json: Steht die
                     // erste Frage schon auf dem Schirm, waere der Knopf sonst
@@ -17400,6 +17415,31 @@ function erklaerInhalt(q, er, alles){
     // gerade gesprochene Stueck mit scrollIntoView in den Blick, und in der
     // Tafel ist genau das der Weg durch einen langen Text.
     let ek = '';
+    // ================================================================
+    //  DAS PRINZIP - ZUERST DER GRUND, DANN DER KNIFF
+    // ----------------------------------------------------------------
+    //  Dietmar am 13.09.2026: "Das ist ein Amateurfunk-Trainer und der
+    //  soll Wert auf Ausbildung legen. Nur auswendig lernen, bringt
+    //  nichts. Die Benutzer muessen das auch verstehen."
+    //
+    //  Der Kniff sagt, WIE man die Antwort findet. Das Prinzip sagt,
+    //  WARUM es so ist - und das traegt auch bei der naechsten Frage.
+    //  Bei NI103 etwa lautet die Antwort nicht "B", sondern: ein
+    //  Spannungsmesser ist hochohmig und kommt parallel, ein
+    //  Strommesser ist niederohmig und kommt in Reihe.
+    //
+    //  Wie die Liste kann das Prinzip im Eintrag stehen ODER aus einem
+    //  Begriffsblatt kommen: bei "Messen" ist es in allen Fragen
+    //  dasselbe. Steht beides da, gewinnt der Eintrag.
+    // ================================================================
+    let prinzip = er.prinzip || '';
+    try {
+        if (!prinzip && er.gruppe && typeof erklaerGruppen !== 'undefined' && erklaerGruppen) {
+            const gp = erklaerGruppen[er.gruppe];
+            if (gp && gp.prinzip) prinzip = gp.prinzip;
+        }
+    } catch (e) {}
+    if (prinzip) ek += '<div class="ek-zeile" data-ek="prinzip"><span class="ek-marke">Das Prinzip.</span> ' + attrText(prinzip) + '</div>';
     if (er.bild)  ek += '<div class="ek-zeile" data-ek="bild"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
     if (er.kniff) ek += '<div class="ek-zeile" data-ek="kniff"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
     // ================================================================
@@ -17414,17 +17454,33 @@ function erklaerInhalt(q, er, alles){
     //  Brücke, an der man sie sich merkt. Beides ist freiwillig; wo die
     //  Felder fehlen, sieht die Tafel aus wie bisher.
     // ================================================================
-    if (Array.isArray(er.liste) && er.liste.length) {
-        ek += '<div class="ek-zeile" data-ek="liste"><span class="ek-marke">Die Kenner.</span>'
+    // Die Liste kann im Eintrag stehen ODER aus einem Begriffsblatt kommen.
+    // Steht beides da, gewinnt der Eintrag - so laesst sich eine einzelne
+    // Frage abweichend bestücken, ohne das Blatt zu ändern.
+    let liste  = Array.isArray(er.liste) ? er.liste : null;
+    let merken = er.merken || '';
+    let blattTitel = '';
+    try {
+        const g = (er.gruppe && typeof erklaerGruppen !== 'undefined' && erklaerGruppen)
+                  ? erklaerGruppen[er.gruppe] : null;
+        if (g) {
+            if (!liste && Array.isArray(g.liste)) liste = g.liste;
+            if (!merken && g.merken) merken = g.merken;
+            if (g.titel) blattTitel = g.titel;
+        }
+    } catch (e) {}
+    if (Array.isArray(liste) && liste.length) {
+        ek += '<div class="ek-zeile" data-ek="liste"><span class="ek-marke">'
+            + attrText(blattTitel || 'Die Kenner.') + '</span>'
             + '<table class="ek-liste">'
-            + er.liste.map(z => '<tr><th>' + attrText(z.k || '') + '</th>'
-                              + '<td class="ek-l-land">' + attrText(z.l || '') + '</td>'
-                              + '<td>' + attrText(z.b || '') + '</td></tr>').join('')
+            + liste.map(z => '<tr><th>' + attrText(z.k || '') + '</th>'
+                           + '<td class="ek-l-land">' + attrText(z.l || '') + '</td>'
+                           + '<td>' + attrText(z.b || '') + '</td></tr>').join('')
             + '</table></div>';
     }
-    if (er.merken) {
+    if (merken) {
         ek += '<div class="ek-zeile" data-ek="merken"><span class="ek-marke">Zum Merken.</span> '
-            + attrText(er.merken) + '</div>';
+            + attrText(merken) + '</div>';
     }
 
     const hatWeg    = Array.isArray(er.weg) && er.weg.length;
@@ -17785,19 +17841,49 @@ function erklaerVorlesen(){
     const b = document.getElementById('erklaerLesenBtn');
     const stelle = (marke) => '#erklaerTafel [data-ek="' + marke + '"]';
     const segmente = [];
+    // Das Prinzip zuerst - dieselbe Reihenfolge wie in erklaerInhalt(), und
+    // dieselbe Aufloesung aus dem Begriffsblatt, damit Gelesenes und
+    // Gezeigtes nicht auseinanderlaufen koennen.
+    let vprinzip = er.prinzip || '';
+    try{
+        if(!vprinzip && er.gruppe && typeof erklaerGruppen !== 'undefined' && erklaerGruppen){
+            const gp = erklaerGruppen[er.gruppe];
+            if(gp && gp.prinzip) vprinzip = gp.prinzip;
+        }
+    }catch(e){}
+    if(vprinzip) segmente.push({ text: 'Das Prinzip. ' + sprechbar(vprinzip), selector: stelle('prinzip') });
     if(er.bild)  segmente.push({ text: 'Im Bild. '   + sprechbar(er.bild),  selector: stelle('bild') });
     if(er.kniff) segmente.push({ text: 'Der Kniff. ' + sprechbar(er.kniff), selector: stelle('kniff') });
     // Der Weg und die falschen Antworten nur, wenn sie auch dastehen -
     // vor der Antwort sind sie nicht in der Tafel, und was man nicht sieht,
     // soll man auch nicht hören.
-    if(Array.isArray(er.liste) && er.liste.length){
+    // Liste und Merksatz koennen aus einem Begriffsblatt kommen - siehe
+    // erklaerInhalt(). Hier dieselbe Aufloesung, damit Gelesenes und
+    // Gezeigtes nicht auseinanderlaufen.
+    let vliste = Array.isArray(er.liste) ? er.liste : null;
+    let vmerken = er.merken || '';
+    let vtitel = 'Die Kenner.';
+    try{
+        const g = (er.gruppe && typeof erklaerGruppen !== 'undefined' && erklaerGruppen)
+                  ? erklaerGruppen[er.gruppe] : null;
+        if(g){
+            if(!vliste && Array.isArray(g.liste)) vliste = g.liste;
+            if(!vmerken && g.merken) vmerken = g.merken;
+            if(g.titel) vtitel = g.titel;
+        }
+    }catch(e){}
+    if(Array.isArray(vliste) && vliste.length){
         // Die Liste wird als Satzfolge gelesen: "PY, Brasilien. Pelé, Yes."
-        segmente.push({ text: 'Die Kenner. ' + er.liste.map(z =>
+        // Ohne Punkt liest Piper den Titel in die erste Zeile hinein:
+        // "Einen Stromkreis lesen Batteriesymbol". Die Blatt-Titel haben
+        // keinen Punkt, "Die Kenner." hatte einen - deshalb hier einer.
+        const vtitelGesprochen = /[.!?:]$/.test(vtitel.trim()) ? vtitel.trim() : vtitel.trim() + '.';
+        segmente.push({ text: vtitelGesprochen + ' ' + vliste.map(z =>
                             sprechbar([z.k, z.l, z.b].filter(Boolean).join('. '))).join(' '),
                         selector: stelle('liste') });
     }
-    if(er.merken){
-        segmente.push({ text: 'Zum Merken. ' + sprechbar(er.merken), selector: stelle('merken') });
+    if(vmerken){
+        segmente.push({ text: 'Zum Merken. ' + sprechbar(vmerken), selector: stelle('merken') });
     }
     const alles = !!answered;
     if(alles && Array.isArray(er.weg) && er.weg.length){

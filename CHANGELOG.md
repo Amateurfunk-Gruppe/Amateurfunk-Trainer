@@ -8,6 +8,190 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.285.0] - 2026-09-13
+
+### Hinzugefügt
+- **„Das Prinzip" — eine neue Zeile in der Erklärungstafel.** Dietmar am 13.09.2026:
+  „Das ist ein Amateurfunk-Trainer und der soll Wert auf Ausbildung legen. Nur auswendig
+  lernen, bringt nichts. Die Benutzer müssen das auch verstehen."
+
+  Bis jetzt hatte die Tafel „Im Bild", „Der Kniff", die Liste, den Merksatz, „Der Weg" und
+  „Warum die anderen falsch sind". Der Kniff sagt, WIE man die Antwort findet. Was fehlte,
+  war das WARUM — der Grund, der auch bei der nächsten Frage noch trägt. Bei NI103 lautet
+  die Antwort nicht „B", sondern: ein Spannungsmesser ist hochohmig und kommt parallel zum
+  Messobjekt, ein Strommesser ist niederohmig und kommt in Reihe; wer das vertauscht, hält
+  einmal den Strom an und schließt einmal die Quelle kurz.
+
+  Deshalb gibt es das Feld `prinzip`. Es steht als **erste Zeile** in der Tafel, noch vor
+  „Im Bild", und es wird als erstes vorgelesen. Wie die Liste kann es im Eintrag stehen
+  oder aus einem Begriffsblatt kommen — dann gilt es für alle Fragen der Gruppe, und ein
+  eigenes im Eintrag hat Vorrang. Vor dem Bau habe ich gefragt, weil das die Tafel
+  verändert; Dietmar hat die eigene Zeile gewählt.
+
+- **Paket 1: die 59 Fragen, deren Antworten Bilder sind.** Hier muss ich mich korrigieren:
+  ich hatte gemeldet, alle Fragen mit Zeichnung seien erklärt. Das stimmte für die 379
+  Fragen, bei denen die FRAGE ein Bild hat. Es gibt aber **77 Fragen, bei denen die vier
+  ANTWORTEN Bilder sind**, und davon hatten nur 18 eine Erklärung. Die fehlenden 59 sind
+  jetzt fertig: 6 in Klasse N, 27 in N → E, 26 in E → A. Genau dort ist Auswendiglernen
+  sinnlos — vier Bilder kann man sich nicht merken.
+
+  Jede dieser 59 Fragen hat `prinzip`, `bild` und `kniff`. `warum_falsch` gibt es hier
+  nicht: die Antworten haben keinen Text, über den man sie ansprechen könnte. Und weil der
+  Trainer die Antworten mischt, steht in keinem dieser Texte ein „Antwort C" oder „das
+  dritte Bild" — beschrieben wird, WAS zu sehen ist.
+
+- **Ein siebtes Begriffsblatt: „Einen Stromkreis lesen".** Neun Zeilen, mit geteiltem
+  Prinzip, für die sieben Schaltbildfragen NB702, NB703, NC404, NI103, NI104, AB601 und
+  EI102: Batteriesymbol (langer dünner Strich ist Plus), technische und physikalische
+  Stromrichtung, Diode leitet vom Dreieck zum Strich, Schalter offen oder zu,
+  Spannungsmesser hochohmig und parallel, Strommesser niederohmig und in Reihe, Reihe
+  gegen Parallel. Merksatz: „Lang und schlank ist Plus. A wie Amperemeter kommt in die
+  Reihe, V wie Voltmeter kommt quer davor."
+
+### Geändert
+- **`Index.html`:** `erklaerInhalt()` und `erklaerVorlesen()` lösen `prinzip` auf und
+  stellen es an den Anfang — an beiden Stellen dieselbe Auflösung, damit Gezeigtes und
+  Vorgelesenes nicht auseinanderlaufen. Sonst keine Änderung am Aussehen.
+- **`erklaerungen.json`:** 1.024.140 → 1.143.964 Bytes, 572 → 631 Erklärungen, 6 → 7
+  Begriffsblätter, neues Kopffeld `prinzip_feld`.
+- **Mein Werkzeug:** `bildantworten.py` erzeugt jetzt auch einen Kontaktbogen für Fragen
+  OHNE eigenes Fragenbild — bisher brach es dort ab, und das sind gerade diese 59. Neu ist
+  `lupe.py`: es rendert eine Antwort bei 2400 px und zeigt nur die entscheidenden Ecken
+  groß nebeneinander. Ohne das hätte ich bei NB703 und NC404 nicht sagen können, welcher
+  Strich der Batterie der lange dünne ist — und genau daran hängt die ganze Frage.
+
+### Behoben
+- **Der Blatt-Titel lief beim Vorlesen in die erste Zeile.** „Die Kenner." hatte einen
+  Punkt, die neuen Blatt-Titel haben keinen — Piper las „Einen Stromkreis lesen
+  Batteriesymbol". `erklaerVorlesen()` setzt jetzt einen Punkt, wenn der Titel keinen hat.
+  Am Angezeigten ändert das nichts.
+
+### Nachgeprüft
+- Alle 59 Kontaktbögen wurden angesehen, keiner geraten. Bei den Stromkreisen habe ich mit
+  `lupe.py` zusätzlich Batterie-, Schalter- und Diodenecken vergrößert.
+- `eintragen.py` über alle 631 Erklärungen: **0 Fehler.** Jeder Fragentext und jede richtige
+  Antwort steht wörtlich im Katalog, jedes `"gruppe"` zeigt auf ein Blatt, das es gibt.
+- Im Browser gemessen: 7 Blätter geladen, 631 Erklärungen, die Zeilenfolge in der Tafel ist
+  `prinzip, bild, kniff, liste, merken`, und die Vorleseliste beginnt mit „Das Prinzip."
+  Keine Meldung in der Konsole.
+
+### Zwei Stellen, an denen ich den Katalog für fehlerhaft halte
+- **AD204** („Welcher Schwingkreis passt zu dem dargestellten Verlauf der Impedanz?"): Nach
+  der Regel „Reihe gehört zum Minimum, Parallel zum Maximum" passen ZWEI der vier Bilder in
+  sich zusammen — der Reihenkreis mit dem Minimum und der dreifache Parallelkreis mit dem
+  Maximum. Gewertet wird nur der Reihenkreis. Ich habe die Regel trotzdem so hingeschrieben,
+  wie sie stimmt, und im Kniff ausdrücklich gesagt, dass hier zwei Paare stimmig sind und
+  welches die Prüfung meint. Einen Lernenden, der richtig denkt, darf eine Erklärung nicht
+  im Stich lassen.
+- **AJ208** („Die Oberschwingungen eines Einbandsenders sollen mit einem Ausgangsfilter
+  unterdrückt werden. Welcher Filterkurventyp wird benötigt?"): Unter den vier Kurven ist
+  kein Tiefpass. Richtig ist eine Bandpasskurve mit dem Gipfel auf der Nutzfrequenz — das
+  trifft die Sache auch, ist aber nicht die Antwort, die man nach der üblichen Regel
+  „Oberwellen liegen oben, also Tiefpass" sucht. Die Erklärung begründet deshalb über die
+  Richtung des Frequenzgangs und nicht über das Wort Tiefpass.
+
+### Offen
+- Nach Paket 1 bleiben in der Klasse N 317 Fragen ohne Erklärung. Die nächsten Pakete nach
+  der abgesprochenen Reihenfolge: Bänder und Frequenzbereiche (29), Rufzeichen: Arten und
+  Zusätze (26), AFuV-Pflichten (17), AFuG-Begriffe (16), Relais und Satelliten (15),
+  Einheiten und Vorsätze (15).
+
+---
+
+## [1.284.0] - 2026-09-13
+
+### Hinzugefügt
+- **Begriffsblätter: 175 neue Erklärungen für die Klasse N.** Dietmar am 13.09.2026:
+  „Bei der Klasse N gibt es viele Fachbegriffe und Abkürzungen. Geh die fragen.json durch
+  und ermittle was wir in der Erklärung noch auf nehmen." Ich habe die Durchsicht als
+  `_begriffe-klasse-n.md` geliefert, mit einer Reihenfolge nach Nutzen je Aufwand. Seine
+  Antwort: „ich überlasse dir die entscheidung." Also habe ich die Reihenfolge aus dem
+  Dokument gebaut.
+
+  **Das Problem, das die Blätter lösen.** Von den 571 Fragen der Klasse N hatten 73 eine
+  Erklärung, 498 keine. Die 498 sind aber nicht 498 verschiedene Probleme: die Liste der
+  Q-Gruppen wäre in 9 Fragen dieselbe, die der Rechtsquellen in 56, die des IARU-Bandplans
+  in 22. Diese Liste 56-mal in die Datei zu schreiben, wäre Verschwendung — und bei einer
+  Korrektur müsste man 56 Stellen anfassen und würde eine vergessen.
+
+  **Die Bauart.** `erklaerungen.json` hat einen neuen Abschnitt `gruppen`. Darin steht
+  jedes Blatt genau einmal, mit `titel`, `liste` und `merken` — denselben Feldern, die die
+  Landeskenner-Erklärung schon benutzt. Ein Fragen-Eintrag verweist mit `"gruppe":
+  "q-gruppen"` darauf. Der Trainer zeigt dann die Liste des Blattes und darunter das, was
+  nur zu dieser Frage gehört: `kniff` und die Sätze zu den falschen Antworten. Steht im
+  Eintrag eine eigene `liste`, gewinnt sie — so kann eine einzelne Frage abweichen, ohne
+  das Blatt zu ändern.
+
+  **Die sechs Blätter.**
+
+  | Blatt | Zeilen | Fragen |
+  |---|---|---|
+  | Leistung: die Begriffe und die Grenzen (PEP, ERP, EIRP) | 7 | 18 |
+  | Die Q-Gruppen | 14 | 9 |
+  | Wer regelt was (RR, CEPT, IARU, ETSI, AFuG, AFuV, TKG, BEMFV, EMVG, BNetzA) | 11 | 56 |
+  | IARU-Bandplan: 2 m und 70 cm | 18 | 22 |
+  | Abkürzungen im Funkbetrieb (CQ, DX, RST, QSL, UTC, Split, Pile-Up) | 15 | 37 |
+  | Die Betriebsarten (CW, SSB, AM, FM, LSB/USB, digital) | 9 | 26 |
+
+  Die Spalte „Fragen" zählt, wie viele Fragen auf das Blatt verweisen — 168 zusammen.
+  Mit den sieben Fragen ohne Blatt sind es **175 neue Fragen**; die Klasse N steht damit
+  bei **248 von 571** erklärten
+  Fragen statt bei 73. Diese sieben haben Kniff und Fehlersätze bekommen, aber
+  **kein** Blatt: NA103, NE305, NF108, NF111, NF114 handeln von etwas anderem, und bei
+  BD201/BD202 würde das Betriebsarten-Blatt in die Irre führen — dort ist „/am" der
+  Rufzeichenzusatz für „an Bord eines Luftfahrzeugs", nicht die Amplitudenmodulation.
+  Genau diese Verwechslung ist die Falle der Frage.
+
+### Geändert
+- **`erklaerungen.json`:** neuer Abschnitt `gruppen` vor `fragen`, neues Kopffeld
+  `blaetter`, und `umfang` nennt jetzt auch die Blätter. 795.845 → 1.024.140 Bytes,
+  397 → 572 Erklärungen.
+- **`Index.html`:** `erklaerInhalt()` und `erklaerVorlesen()` lösen `liste`, `merken` und
+  den Titel erst aus dem Eintrag und dann aus `erklaerGruppen[er.gruppe]` auf — dieselbe
+  Auflösung an beiden Stellen, damit Gezeigtes und Vorgelesenes nicht auseinanderlaufen
+  können. Nichts an der Darstellung geändert: kein neues Feld, keine neue Farbe, keine
+  neue Größe.
+
+### Behoben
+- **Mein falscher Merksatz zum 70-cm-Band.** Ich hatte ins Bandplan-Blatt geschrieben, die
+  Reihenfolge sei „immer dieselbe: erst CW, dann SSB, dann die Baken, dann FM und die
+  Relais, und ganz oben der Weltraum". Auf 2 m stimmt das. Auf 70 cm nicht: die
+  Relaisfunkstellen liegen bei 439,200 MHz, der Satellitenfunk bei 435,500 MHz — die
+  Relais liegen also **über** dem Weltraum. Aufgefallen ist es bei der Gegenprobe an
+  BC221 und BC222. Der Merksatz sagt den Unterschied jetzt ausdrücklich.
+- **Der Malpunkt im Vorgelesenen.** In den Blättern hatte ich „TX · RX · TRX" und
+  „144,075 · 144,125" geschrieben. `sprechbar()` macht aus „·" richtigerweise „mal", weil
+  es in den Formeln der Rechenfragen die Multiplikation ist — vorgelesen wäre daraus
+  „TX mal RX mal TRX" geworden. In den Blättern steht jetzt „und" beziehungsweise ein
+  Komma. Die Formeln bleiben unberührt.
+
+### Nachgeprüft
+- `eintragen.py` prüft jetzt auch die Blätter: jede Zeile braucht `k` und `l`, und ein
+  `"gruppe"` muss auf ein Blatt zeigen, das es gibt. Ergebnis über alle 572 Erklärungen:
+  **0 Fehler.** Jeder Fragentext, jede richtige Antwort und jeder Schlüssel unter
+  `warum_falsch` steht wörtlich im Katalog; jede falsche Antwort der 175 neuen Fragen hat
+  einen eigenen Satz.
+- Im Browser gemessen: 6 Blätter geladen, 572 Erklärungen, 248 davon im Ziel Klasse N,
+  keine Fehlermeldung in der Konsole. Die Tafel bleibt deckungsgleich mit den Antworten
+  (bei BC221 oben 416, links 400, 908 × 327 — wie der Antwortkasten).
+- **Die Blätter sind länger als eine Zeichnungserklärung.** Beim Bandplan-Blatt sind es
+  774 px Inhalt in einer 262 px hohen Tafel. Dietmar am 13.09.2026: „Wenn der Platz nicht
+  langt, gerne auch in dem kleinen Fenster zum scrollen." Also bleibt die Tafel, wie sie
+  ist; `.et-buehne` rollt. Vor der Rückfrage hatte ich die Blätter schon einmal gekürzt:
+  die mittlere Spalte ist `white-space: nowrap`, ein langer Text dort quetscht die dritte
+  Spalte auf drei Zeilen. Beim Leistungs-Blatt sank der Inhalt dadurch von 796 auf 433 px.
+
+### Offen
+- Die 140 Fragen der Klasse N, die zu keiner Gruppe gehören, sind weiter ohne Erklärung.
+  Dort lohnt sie nur, wo die Frage wirklich schwer ist — das entscheidet sich je Frage.
+- Die Helfer haben Textfehler im Katalog gemeldet, die nicht von mir kommen: BF109 endet
+  mit „QSL-Karten", VC125 mit „(AFuV)", BG111 mit „Grundkenntnisse und Größen
+  Grundkenntnisse", und BE113 schreibt das Rufzeichen im Fragetext „N4EAX", in den
+  Antworten „N4 EAX". Ich habe die Texte wörtlich gelassen, damit die Prüfung gegen den
+  Katalog weiter aufgeht.
+
+---
+
 ## [1.283.0] - 2026-09-13
 
 ### Geändert
