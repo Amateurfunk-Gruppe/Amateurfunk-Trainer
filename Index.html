@@ -1478,6 +1478,61 @@
         .erklaer-kasten table.ek-liste td.ek-l-land { font-weight: 600; white-space: nowrap; width: 1%; }
         body.dark .erklaer-kasten table.ek-liste th { color: #8fc4f0; }
 
+        /* ================================================================
+             DIE THEMEN-FENSTER
+           ----------------------------------------------------------------
+             Absichtlich mit denselben Maszen wie die Erklaerungstafel:
+             dieselbe Tabellenform (Kuerzel einspaltig, Bedeutung fett und
+             ohne Umbruch, Erlaeuterung im Rest), dieselbe Marke vor dem
+             Absatz. Wer die Tafel kennt, kennt das Blatt.
+           ================================================================ */
+        #blattBuehne .bl-zeile { margin: 0 0 0.7rem 0; }
+        #blattBuehne .bl-marke {
+            font-weight: 700; color: #1b5a97; margin-right: 0.3rem;
+        }
+        body.dark #blattBuehne .bl-marke { color: #8fc4f0; }
+        #blattBuehne table.bl-tab { border-collapse: collapse; width: 100%; margin: 0.3rem 0 0.8rem; }
+        #blattBuehne table.bl-tab th {
+            text-align: left; vertical-align: top; padding: 0.14rem 0.7rem 0.14rem 0;
+            font-family: var(--font-mono, monospace); font-weight: 700; color: #1b5a97;
+            white-space: nowrap; width: 1%;
+        }
+        body.dark #blattBuehne table.bl-tab th { color: #8fc4f0; }
+        #blattBuehne table.bl-tab td { vertical-align: top; padding: 0.14rem 0.7rem 0.14rem 0; }
+        #blattBuehne table.bl-tab td.bl-l { font-weight: 600; white-space: nowrap; width: 1%; }
+        #blattBuehne .bl-stand {
+            margin-top: 0.9rem; padding-top: 0.5rem; border-top: 1px solid var(--line);
+            font-size: 0.78rem; color: var(--muted);
+        }
+        #blattBuehne .bl-quelle { margin-top: 0.4rem; font-size: 0.72rem; color: var(--muted); }
+        #blattBuehne .bl-zeile.tts-highlight, #blattBuehne .bl-tab.tts-highlight {
+            background: #fff8dc; border-radius: 6px;
+        }
+        body.dark #blattBuehne .bl-zeile.tts-highlight,
+        body.dark #blattBuehne .bl-tab.tts-highlight { background: #2a3a22; }
+
+        #themenModal .th-liste { flex: 1; min-height: 0; overflow-y: auto; margin-top: 0.5rem; }
+        #themenModal .th-zeile {
+            display: flex; align-items: center; gap: 10px;
+            border-top: 1px solid var(--line); padding: 8px 2px;
+        }
+        #themenModal .th-name { flex: 1 1 auto; min-width: 0; font-size: 0.84rem; }
+        #themenModal .th-balken {
+            flex: 0 0 110px; height: 8px; border-radius: 5px; background: #e6ecf4; overflow: hidden;
+        }
+        #themenModal .th-balken i { display: block; height: 100%; }
+        #themenModal .th-zahl {
+            flex: 0 0 62px; text-align: right; font-weight: 700; font-size: 0.8rem;
+            font-family: var(--font-mono, monospace);
+        }
+        #themenModal .th-klein { flex: 0 0 130px; font-size: 0.72rem; color: var(--muted); }
+        #themenModal .th-knoepfe { flex: 0 0 auto; display: flex; gap: 6px; }
+        @media (max-width: 760px) {
+            #themenModal .th-zeile { flex-wrap: wrap; }
+            #themenModal .th-name { flex: 1 1 100%; }
+            #themenModal .th-klein { flex: 0 0 auto; }
+        }
+
         .erklaer-kasten ol.ek-weg {
             margin: 0.3rem 0 0 1.1rem; padding: 0;
         }
@@ -6900,6 +6955,70 @@ async function loadPersistentFromServer(){
             }
         }catch(e){ console.warn('QSL Restore Fehler', e); }
 
+        // ================================================================
+        //  UEBUNGSZEIT UND DIAGNOSE ZURUECKHOLEN
+        // ----------------------------------------------------------------
+        //  Die fehlende zweite Haelfte des Fehlers vom 13.09.2026: Der
+        //  Server hat diese beiden Felder bei jedem Speichern
+        //  weggeworfen (behoben), UND hier wurden sie nie
+        //  zurueckgeholt. Damit war die Datei fuer sie in beiden
+        //  Richtungen wirkungslos - wer die Browserdaten verlor oder
+        //  den Trainer unter einer anderen Adresse oeffnete, hatte die
+        //  Uebungszeit unwiederbringlich weg.
+        //
+        //  Zusammengefuehrt, nicht ersetzt, aus demselben Grund wie im
+        //  Server: je Tag der groessere Wert. Ein Uebungstag kann nur
+        //  wachsen. So kann dieses Zurueckholen nichts kaputt machen,
+        //  auch wenn die Datei einmal aelter ist als der Browser.
+        // ================================================================
+        try{
+            const sz = serverData.uebungszeit;
+            if(sz && typeof sz === 'object'){
+                USER_SLOTS.forEach(u=>{
+                    const ausDatei = sz[u];
+                    if(!ausDatei || typeof ausDatei !== 'object') return;
+                    const key = ZEIT_PREFIX + u;
+                    let lokal = {};
+                    try{ lokal = JSON.parse(localStorage.getItem(key) || '{}') || {}; }catch(e){ lokal = {}; }
+                    let geaendert = false;
+                    Object.keys(ausDatei).forEach(tag=>{
+                        const v = Number(ausDatei[tag]);
+                        if(!isFinite(v) || v <= 0) return;
+                        if(!(Number(lokal[tag]) >= v)){ lokal[tag] = v; geaendert = true; }
+                    });
+                    if(geaendert){
+                        try{ localStorage.setItem(key, JSON.stringify(lokal)); }catch(e){}
+                        console.log('🕒 Übungszeit aus Datei ergänzt:', u,
+                                    Object.keys(lokal).length + ' Tage');
+                        restored = true;
+                    }
+                });
+            }
+        }catch(e){ console.warn('Übungszeit Restore Fehler', e); }
+
+        try{
+            const sd = serverData.diagnose;
+            if(sd && typeof sd === 'object'){
+                USER_SLOTS.forEach(u=>{
+                    const ausDatei = sd[u];
+                    if(!ausDatei || typeof ausDatei !== 'object' || !Object.keys(ausDatei).length) return;
+                    const key = DIAG_PREFIX + u;
+                    let lokal = {};
+                    try{ lokal = JSON.parse(localStorage.getItem(key) || '{}') || {}; }catch(e){ lokal = {}; }
+                    let geaendert = false;
+                    // Der Browser hat bei bekannten Fragen recht; fehlende
+                    // kommen aus der Datei dazu.
+                    Object.keys(ausDatei).forEach(id=>{
+                        if(lokal[id] === undefined){ lokal[id] = ausDatei[id]; geaendert = true; }
+                    });
+                    if(geaendert){
+                        try{ localStorage.setItem(key, JSON.stringify(lokal)); }catch(e){}
+                        restored = true;
+                    }
+                });
+            }
+        }catch(e){ console.warn('Diagnose Restore Fehler', e); }
+
         // Lernfortschritt (mastery) wiederherstellen
         USER_SLOTS.forEach(u=>{
             try{
@@ -12036,6 +12155,14 @@ function regung(){
     if(!uhrAktivSeit && uebtGerade()) uhrAktivSeit = letzteRegung;
 }
 
+// Wann ist die Uebungszeit zuletzt in die Datei gegangen? Der
+// localStorage allein ist keine Sicherung: er haengt an Browser und
+// Adresse. Alle fuenf Minuten reicht - haeufiger waere es 146 kB je
+// Viertelminute, und mehr als fuenf Minuten kann man auch verlieren,
+// ohne dass es weh tut.
+let zeitServerZuletzt = 0;
+const ZEIT_SERVER_TAKT = 5 * 60 * 1000;
+
 function zeitZubuchen(sek){
     // Ein Sprung (Deckel zu, Rechner im Schlaf) darf nicht als
     // Uebungszeit gelten. Alles ueber 40 s je Takt ist so ein Sprung.
@@ -12043,6 +12170,11 @@ function zeitZubuchen(sek){
     const t = tagSchluessel();
     uebungsTage[t] = (uebungsTage[t] || 0) + sek;
     zeitSichern();
+    const jetzt = Date.now();
+    if(jetzt - zeitServerZuletzt > ZEIT_SERVER_TAKT){
+        zeitServerZuletzt = jetzt;
+        try{ if(typeof debouncedSavePersistent === 'function') debouncedSavePersistent(); }catch(e){}
+    }
 }
 function uhrTick(){
     const jetzt = Date.now();
@@ -15499,6 +15631,397 @@ function stolpersteineUeben(){
 }
 window.stolpersteineUeben = stolpersteineUeben;
 
+// ================================================================
+//  DIE THEMEN - JEDES BEGRIFFSBLATT ALS LEKTION UND ALS MASSSTAB
+// ----------------------------------------------------------------
+//  Dietmar am 13.09.2026: "koennen wir noch was ergaenzen" - und dann
+//  ausgewaehlt: Begriffsblaetter zum Ausdrucken, Fortschritt je Thema,
+//  Lernen nach Themen.
+//
+//  Alle drei haengen an derselben Sache, deshalb steht sie hier einmal:
+//  seit 1.290.0 zeigt jede erklaerte Frage mit "gruppe" auf eines von
+//  21 Begriffsblaettern, und jedes Blatt traegt ein "prinzip". Damit
+//  laesst sich zum ersten Mal sagen, WAS jemand nicht verstanden hat -
+//  nicht nur, wie viele Fehler er hat. Und der Stoff hat eine
+//  Reihenfolge bekommen, in der er zusammenhaengt.
+//
+//  Gezaehlt wird immer nur im GERADE GEWAEHLTEN Pruefungsziel
+//  (durchsichtBank). Wer auf Klasse N steht, soll nicht die Quote
+//  einer Aufstockung sehen, die er nie geuebt hat.
+// ================================================================
+
+function blattFragen(name){
+    try{
+        if(typeof erklaerMap === 'undefined' || !erklaerMap) return [];
+        const bank = (typeof durchsichtBank === 'function') ? durchsichtBank() : (questionBank || []);
+        return bank.filter(q => { const e = erklaerMap[q.id]; return !!(e && e.gruppe === name); })
+                   .map(q => q.id);
+    }catch(e){ return []; }
+}
+
+// Derselbe Maszstab wie im Merkblatt: "sitzt" heiszt gemeistert oder
+// angerechnet, "wacklig" heiszt schon einmal falsch und noch nicht
+// sicher, "nie dran" heiszt ohne jeden Eintrag.
+function blattStand(name){
+    const ids = blattFragen(name);
+    let sitzt = 0, wacklig = 0, unberuehrt = 0;
+    ids.forEach(id => {
+        const m = (typeof masteryData !== 'undefined' && masteryData) ? masteryData[id] : null;
+        const ang = (typeof cbAngerechnet === 'function') && cbAngerechnet(id);
+        if(!m){ if(ang) sitzt++; else unberuehrt++; return; }
+        if(m.mastered || ang) sitzt++;
+        else if((m.totalWrong || 0) > 0) wacklig++;
+        else unberuehrt++;
+    });
+    return { name: name, ids: ids, gesamt: ids.length, sitzt: sitzt,
+             wacklig: wacklig, unberuehrt: unberuehrt,
+             quote: ids.length ? Math.round(100 * sitzt / ids.length) : null };
+}
+
+// Alle Blaetter, das schwaechste zuerst. Blaetter ohne Frage im
+// aktuellen Ziel fallen weg - sie gehoeren zu einer anderen Klasse.
+function blaetterStand(){
+    try{
+        if(typeof erklaerGruppen === 'undefined' || !erklaerGruppen) return [];
+        return Object.keys(erklaerGruppen)
+            .map(n => { const s = blattStand(n);
+                        s.titel = (erklaerGruppen[n] || {}).titel || n; return s; })
+            .filter(s => s.gesamt > 0)
+            .sort((a, b) => (a.quote - b.quote) || (b.gesamt - a.gesamt));
+    }catch(e){ console.error('[Themen] Stand', e); return []; }
+}
+window.blaetterStand = blaetterStand;
+
+function themenFarbe(quote){
+    if(quote === null) return '#7f8c9b';
+    if(quote >= 76) return '#1f9d55';
+    if(quote >= 60) return '#b8860b';
+    return '#c0392b';
+}
+
+// Die Fragen eines Blattes als Runde. Dieselbe Mechanik wie bei den
+// Stolpersteinen, damit sich nichts anders anfuehlt.
+function blattUeben(name, nurOffene){
+    try{
+        const s = blattStand(name);
+        let ids = s.ids;
+        if(nurOffene){
+            ids = ids.filter(id => {
+                const m = (typeof masteryData !== 'undefined' && masteryData) ? masteryData[id] : null;
+                const ang = (typeof cbAngerechnet === 'function') && cbAngerechnet(id);
+                return !(ang || (m && m.mastered));
+            });
+        }
+        if(!ids.length) return;
+        ['themenModal','blattModal','statistikModal','einstellungenModal'].forEach(i => {
+            const m = document.getElementById(i); if(m) m.style.display = 'none';
+        });
+        if(typeof reifeThemaUeben === 'function') reifeThemaUeben(ids.join(','));
+    }catch(e){ console.error('[Themen] ueben', e); }
+}
+window.blattUeben = blattUeben;
+
+// ----------------------------------------------------------------
+//  EIN BLATT LESEN - die Lektion ohne Frage drumherum
+// ----------------------------------------------------------------
+function blattLesen(name){
+    try{
+        const g = (typeof erklaerGruppen !== 'undefined' && erklaerGruppen) ? erklaerGruppen[name] : null;
+        if(!g) return;
+        const s = blattStand(name);
+        const esc = (t) => String(t == null ? '' : t)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        let modal = document.getElementById('blattModal');
+        if(!modal){
+            modal = document.createElement('div');
+            modal.id = 'blattModal';
+            modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + 'z-index:99998; align-items:center; justify-content:center; padding:1rem;';
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+        }
+        const tab = (g.liste || []).map(z =>
+              '<tr><th>' + esc(z.k || '') + '</th>'
+            + '<td class="bl-l">' + esc(z.l || '') + '</td>'
+            + '<td>' + esc(z.b || '') + '</td></tr>').join('');
+        modal.innerHTML =
+            '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:940px; width:94%; '
+          + 'height:calc(88vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
+          + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+          + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.5rem; flex:0 0 auto;">'
+          +   '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
+          +     '<i class="fas fa-layer-group"></i> ' + esc(g.titel || name) + '</h3>'
+          +   '<button type="button" class="btn-lernstand" onclick="blattVorlesen(\'' + esc(name) + '\')" '
+          +     'id="blattLesenBtn"><i class="fas fa-volume-up"></i> Vorlesen</button>'
+          +   (s.gesamt ? '<button type="button" class="btn btn-primary" style="font-size:0.78rem; '
+          +     'padding:5px 12px;" onclick="blattUeben(\'' + esc(name) + '\')">'
+          +     '<i class="fas fa-play"></i> ' + s.gesamt + ' Fragen üben</button>' : '')
+          +   '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
+          +     'onclick="document.getElementById(\'blattModal\').style.display=\'none\'">✕</button>'
+          + '</div>'
+          + '<div id="blattBuehne" style="flex:1; min-height:0; overflow:auto; font-size:0.86rem; line-height:1.6;">'
+          + (g.prinzip ? '<div class="bl-zeile" data-bl="prinzip"><span class="bl-marke">Das Prinzip.</span> '
+                         + esc(g.prinzip) + '</div>' : '')
+          + (tab ? '<table class="bl-tab" data-bl="liste">' + tab + '</table>' : '')
+          + (g.merken ? '<div class="bl-zeile" data-bl="merken"><span class="bl-marke">Zum Merken.</span> '
+                        + esc(g.merken) + '</div>' : '')
+          + (s.gesamt
+              ? '<div class="bl-stand">' + s.gesamt + ' Fragen hängen an diesem Blatt'
+                + (s.quote !== null ? ' &middot; <b style="color:' + themenFarbe(s.quote) + ';">'
+                                      + s.quote + ' % sitzen</b>' : '')
+                + (s.wacklig ? ' &middot; ' + s.wacklig + ' wacklig' : '')
+                + (s.unberuehrt ? ' &middot; ' + s.unberuehrt + ' nie dran' : '')
+                + '</div>' : '')
+          + (g.quelle ? '<div class="bl-quelle">' + esc(g.quelle) + '</div>' : '')
+          + '</div></div>';
+        modal.style.display = 'flex';
+    }catch(e){ console.error('[Themen] Blatt lesen', e); }
+}
+window.blattLesen = blattLesen;
+
+// Vorlesen wie in der Erklaerungstafel: Prinzip, Liste, Merksatz -
+// dieselbe Reihenfolge, damit man dasselbe hoert wie dort.
+function blattVorlesen(name){
+    try{
+        const g = (typeof erklaerGruppen !== 'undefined' && erklaerGruppen) ? erklaerGruppen[name] : null;
+        if(!g || typeof playTTSQueue !== 'function') return;
+        const st = (marke) => '#blattBuehne [data-bl="' + marke + '"]';
+        const spr = (t) => (typeof sprechbar === 'function') ? sprechbar(t) : String(t == null ? '' : t);
+        const seg = [];
+        seg.push({ text: (g.titel || name) + '.', selector: null });
+        if(g.prinzip) seg.push({ text: 'Das Prinzip. ' + spr(g.prinzip), selector: st('prinzip') });
+        if(Array.isArray(g.liste) && g.liste.length){
+            seg.push({ text: g.liste.map(z =>
+                spr([z.k, z.l, z.b].filter(Boolean).join('. '))).join(' '), selector: st('liste') });
+        }
+        if(g.merken) seg.push({ text: 'Zum Merken. ' + spr(g.merken), selector: st('merken') });
+        playTTSQueue(seg, document.getElementById('blattLesenBtn'), null);
+    }catch(e){ console.error('[Themen] Vorlesen', e); }
+}
+window.blattVorlesen = blattVorlesen;
+
+// ----------------------------------------------------------------
+//  ALLE THEMEN - Fortschritt und Einstieg in einem Fenster
+// ----------------------------------------------------------------
+function themenOeffnen(){
+    try{
+        const liste = blaetterStand();
+        const esc = (t) => String(t == null ? '' : t)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        let modal = document.getElementById('themenModal');
+        if(!modal){
+            modal = document.createElement('div');
+            modal.id = 'themenModal';
+            modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+                + 'z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+        }
+        const gesamt = liste.reduce((a, s) => a + s.gesamt, 0);
+        const sitzen = liste.reduce((a, s) => a + s.sitzt, 0);
+        const schwach = liste.filter(s => s.quote !== null && s.quote < 76 && s.gesamt > 0).slice(0, 3);
+
+        const zeilen = liste.map(s =>
+              '<div class="th-zeile">'
+            + '<span class="th-name">' + esc(s.titel) + '</span>'
+            + '<span class="th-balken"><i style="width:' + (s.quote || 0) + '%; '
+            +   'background:' + themenFarbe(s.quote) + ';"></i></span>'
+            + '<span class="th-zahl" style="color:' + themenFarbe(s.quote) + ';">'
+            +   s.sitzt + ' / ' + s.gesamt + '</span>'
+            + '<span class="th-klein">'
+            +   (s.wacklig ? s.wacklig + ' wacklig' : '')
+            +   (s.wacklig && s.unberuehrt ? ' &middot; ' : '')
+            +   (s.unberuehrt ? s.unberuehrt + ' nie dran' : '')
+            + '</span>'
+            + '<span class="th-knoepfe">'
+            +   '<button type="button" class="btn-lernstand-hell" '
+            +     'onclick="blattLesen(\'' + esc(s.name) + '\')">Blatt lesen</button>'
+            +   '<button type="button" class="btn-lernstand" '
+            +     'onclick="blattUeben(\'' + esc(s.name) + '\')">Üben</button>'
+            + '</span></div>').join('');
+
+        modal.innerHTML =
+            '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:1040px; width:94%; '
+          + 'height:calc(90vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
+          + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+          + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.3rem; flex:0 0 auto;">'
+          +   '<h3 style="flex:1; margin:0; font-size:1.02rem; color:var(--panel-navy);">'
+          +     '<i class="fas fa-layer-group"></i> Themen</h3>'
+          +   '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
+          +     'onclick="document.getElementById(\'themenModal\').style.display=\'none\'">✕</button>'
+          + '</div>'
+          + '<div style="flex:0 0 auto; font-size:0.78rem; color:var(--muted); line-height:1.5;">'
+          + (liste.length
+              ? '<b>' + liste.length + '</b> Begriffsblätter, an denen <b>' + gesamt
+                + '</b> Fragen dieses Prüfungsziels hängen &ndash; davon sitzen <b>' + sitzen + '</b>. '
+                + 'Das schwächste Thema steht oben. Jedes Blatt beginnt mit dem Prinzip: dem Grund, '
+                + 'warum es so ist.'
+                + (schwach.length
+                    ? '<div style="margin-top:0.6rem; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">'
+                      + '<button type="button" class="btn btn-primary" style="font-size:0.78rem; padding:5px 12px;" '
+                      + 'onclick="themenSchwaechsteUeben()"><i class="fas fa-play"></i> '
+                      + 'Die ' + schwach.length + ' schwächsten Themen üben</button></div>'
+                    : '')
+              : 'Zu diesem Prüfungsziel liegt noch kein Begriffsblatt vor.')
+          + '</div>'
+          + '<div class="th-liste">' + zeilen + '</div></div>';
+        modal.style.display = 'flex';
+    }catch(e){ console.error('[Themen] oeffnen', e); }
+}
+window.themenOeffnen = themenOeffnen;
+
+// Die drei schwaechsten Themen zusammen - aber nur die Fragen, die noch
+// nicht sitzen. Sonst uebt man vor allem das, was man schon kann.
+function themenSchwaechsteUeben(){
+    try{
+        const schwach = blaetterStand().filter(s => s.quote !== null && s.quote < 76).slice(0, 3);
+        let ids = [];
+        schwach.forEach(s => {
+            s.ids.forEach(id => {
+                const m = (typeof masteryData !== 'undefined' && masteryData) ? masteryData[id] : null;
+                const ang = (typeof cbAngerechnet === 'function') && cbAngerechnet(id);
+                if(!(ang || (m && m.mastered)) && ids.indexOf(id) < 0) ids.push(id);
+            });
+        });
+        if(!ids.length) return;
+        ['themenModal','blattModal','statistikModal'].forEach(i => {
+            const m = document.getElementById(i); if(m) m.style.display = 'none';
+        });
+        if(typeof reifeThemaUeben === 'function') reifeThemaUeben(ids.join(','));
+    }catch(e){ console.error('[Themen] schwaechste ueben', e); }
+}
+window.themenSchwaechsteUeben = themenSchwaechsteUeben;
+
+// ----------------------------------------------------------------
+//  DIE BEGRIFFSBLAETTER AUF PAPIER
+// ----------------------------------------------------------------
+//  Dietmar hat sie sich zum Ausdrucken gewuenscht, und das ist
+//  folgerichtig: die Blaetter sind der ganze Lehrstoff auf wenigen
+//  Seiten, und wer in der Bahn oder im Kurs sitzt, hat den Trainer
+//  nicht dabei.
+//
+//  Anders als das Merkblatt stehen hier KEINE Fragen und keine
+//  Antworten - nur Prinzip, Tabelle und Merksatz. Damit gilt auch
+//  hier die Regel, die beim Merkblatt aufgeschrieben ist: nichts
+//  Falsches auf Papier, an dem sich etwas einpraegen koennte.
+//
+//  Gedruckt wird in der Reihenfolge des Stoffes, nicht nach Quote -
+//  ein Heft soll immer gleich aussehen, damit man Seiten wiederfindet.
+// ----------------------------------------------------------------
+function blaetterDrucken(nurSchwache){
+    try{
+        if(typeof erklaerGruppen === 'undefined' || !erklaerGruppen
+           || !Object.keys(erklaerGruppen).length){
+            if(window.showAppAlert) showAppAlert('Es sind noch keine Begriffsblätter geladen.');
+            return;
+        }
+        let stand = (typeof blaetterStand === 'function') ? blaetterStand() : [];
+        if(!stand.length){
+            if(window.showAppAlert) showAppAlert('Zu diesem Prüfungsziel liegt noch kein Begriffsblatt vor.');
+            return;
+        }
+        if(nurSchwache){
+            const s = stand.filter(x => x.quote === null || x.quote < 76);
+            if(s.length) stand = s;
+        }
+        // Reihenfolge des Stoffes: so, wie die Blaetter in der Datei stehen.
+        const reihe = Object.keys(erklaerGruppen);
+        stand.sort((a, b) => reihe.indexOf(a.name) - reihe.indexOf(b.name));
+
+        const e = (s) => String(s == null ? '' : s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const datum = new Date().toLocaleDateString('de-DE');
+        const kl = (typeof klasseAktuell === 'function') ? klasseAktuell() : { name: '' };
+        const wer = (typeof getDuoUserName === 'function' && getDuoUserName()) || '';
+
+        let seiten = '';
+        stand.forEach((s, i) => {
+            const g = erklaerGruppen[s.name] || {};
+            const tab = (g.liste || []).map(z =>
+                  '<tr><th>' + e(z.k || '') + '</th>'
+                + '<td class="l">' + e(z.l || '') + '</td>'
+                + '<td>' + e(z.b || '') + '</td></tr>').join('');
+            seiten += '<div class="blatt' + (i === stand.length - 1 ? ' letzt' : '') + '">'
+                + '<div class="bkopf"><span class="bnr">' + (i + 1) + ' / ' + stand.length + '</span>'
+                +   '<span class="btitel">' + e(g.titel || s.name) + '</span></div>'
+                + (g.prinzip ? '<div class="babschnitt"><div class="bmarke">Das Prinzip</div>'
+                               + '<div class="btext">' + e(g.prinzip) + '</div></div>' : '')
+                + (tab ? '<table class="btab">' + tab + '</table>' : '')
+                + (g.merken ? '<div class="babschnitt"><div class="bmarke">Zum Merken</div>'
+                              + '<div class="btext">' + e(g.merken) + '</div></div>' : '')
+                + '<div class="bfuss">' + s.gesamt + ' Prüfungsfragen hängen an diesem Blatt'
+                +   (s.sitzt ? ' &middot; bei dir sitzen ' + s.sitzt + ' davon' : '')
+                +   (g.quelle ? '<br>' + e(g.quelle) : '')
+                + '</div></div>';
+        });
+
+        const html = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+            + '<title>Begriffsblätter' + (kl.name ? ' – ' + e(kl.name) : '') + '</title><style>'
+            + '@page{size:A4;margin:14mm 14mm 12mm;}'
+            + 'body{font-family:Georgia,"Times New Roman",serif;color:#111;font-size:10.5pt;line-height:1.45;margin:0;}'
+            + '.kopf{border-bottom:2px solid #123; padding-bottom:5px; margin-bottom:10px;}'
+            + '.kopf h1{margin:0;font-size:15pt;} .kopf .sub{font-size:8.5pt;color:#555;margin-top:2px;}'
+            + '.hinweis{border:1px solid #bbb;background:#f6f6f6;padding:6px 8px;font-size:8.5pt;'
+            +   'margin-bottom:12px;line-height:1.4;}'
+            + '.blatt{page-break-inside:avoid;break-inside:avoid;'
+            +   'page-break-after:always;break-after:page;'
+            +   'border:1px solid #999;padding:10px 12px 8px;}'
+            + '.blatt.letzt{page-break-after:auto;break-after:auto;}'
+            + '.bkopf{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid #ccc;'
+            +   'padding-bottom:3px;margin-bottom:5px;}'
+            + '.bnr{font-size:8pt;color:#666;font-family:Arial,Helvetica,sans-serif;}'
+            + '.btitel{font-size:12pt;font-weight:bold;}'
+            + '.babschnitt{margin:5px 0;} .bmarke{font-size:8pt;font-weight:bold;color:#123;'
+            +   'text-transform:uppercase;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;}'
+            + '.btext{font-size:9.5pt;text-align:justify;hyphens:auto;}'
+            + '.btab{width:100%;border-collapse:collapse;margin:5px 0;font-size:9pt;}'
+            + '.btab th{text-align:left;vertical-align:top;padding:1.5px 7px 1.5px 0;white-space:nowrap;'
+            +   'font-family:"Courier New",monospace;font-weight:bold;width:1%;}'
+            + '.btab td{vertical-align:top;padding:1.5px 7px 1.5px 0;}'
+            + '.btab td.l{font-weight:bold;white-space:nowrap;width:1%;}'
+            + '.bfuss{font-size:7.5pt;color:#666;border-top:1px solid #eee;padding-top:3px;margin-top:4px;'
+            +   'font-family:Arial,Helvetica,sans-serif;line-height:1.3;}'
+            + '.fuss{margin-top:10px;font-size:8pt;color:#777;text-align:center;'
+            +   'font-family:Arial,Helvetica,sans-serif;}'
+            + '@media print{.blatt{border-color:#777;}}'
+            + '</style></head><body>'
+            + '<div class="kopf"><h1>Begriffsblätter'
+            +   (kl.name ? ' &ndash; ' + e(kl.name) : '') + '</h1>'
+            +   '<div class="sub">' + stand.length + ' Blätter &middot; ' + datum
+            +   (wer ? ' &middot; ' + e(wer) : '')
+            +   ' &middot; Amateurfunk-Trainer</div></div>'
+            + '<div class="hinweis"><b>Auf diesen Blättern stehen keine Prüfungsfragen.</b> '
+            +   'Jedes Blatt beginnt mit dem Prinzip &ndash; dem Grund, warum es so ist &ndash; und '
+            +   'bringt darunter die Begriffe und einen Merksatz. Wer das Prinzip versteht, kann die '
+            +   'zugehörigen Fragen auch dann, wenn sie anders gestellt werden.</div>'
+            + seiten
+            + '<div class="fuss">Amateurfunk-Trainer &middot; '
+            +   'github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer</div>'
+            + '<scr' + 'ipt>(function(){function los(){setTimeout(function(){'
+            + 'try{window.print();}catch(e){}},400);}'
+            + 'if(document.readyState==="complete")los(); else window.addEventListener("load",los);'
+            + 'setTimeout(los,2500);})();</scr' + 'ipt>'
+            + '</body></html>';
+
+        const fenster = window.open('', '_blank');
+        if(!fenster){
+            alert('Der Browser hat das Druckfenster geblockt.\n\n'
+                + 'Bitte Popups für diese Seite erlauben und noch einmal auf '
+                + '"Begriffsblätter drucken" klicken.');
+            return;
+        }
+        fenster.document.open();
+        fenster.document.write(html);
+        fenster.document.close();
+        fenster.focus();
+    }catch(err){
+        console.error('blaetterDrucken', err);
+        alert('Die Blätter ließen sich nicht erstellen: ' + err.message);
+    }
+}
+window.blaetterDrucken = blaetterDrucken;
+
+
 // ============================================================================
 //  LEHRGANG DES DARC - GENAUE SEITE UND LÖSUNGSWEG
 // ============================================================================
@@ -17800,6 +18323,17 @@ function sprechbar(text){
     t = t.replace(/10(\u207b?)([\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+)/g,
         (m, minus, ziffern) => '10 hoch ' + (minus ? 'minus ' : '') + zahl(ziffern, HOCHZAHL));
 
+    // 1b. FLAECHEN- UND RAUMMASSE VOR DEN HOCHZAHLEN. Sonst wird aus
+    //     "16 mm²" ein "16 Millimeter zum Quadrat" - verstaendlich, aber
+    //     keine Einheit, die jemand sagt. Gefunden bei der Gegenpruefung
+    //     der Erdungsquerschnitte (EK210) am 13.09.2026.
+    t = t.replace(/\bmm\u00b2/g, ' Quadratmillimeter');
+    t = t.replace(/\bcm\u00b2/g, ' Quadratzentimeter');
+    t = t.replace(/\bm\u00b2/g,  ' Quadratmeter');
+    t = t.replace(/\bmm\u00b3/g, ' Kubikmillimeter');
+    t = t.replace(/\bcm\u00b3/g, ' Kubikzentimeter');
+    t = t.replace(/\bm\u00b3/g,  ' Kubikmeter');
+
     // 2. Die uebrigen Hochzahlen.
     t = t.replace(/\u00b2/g, ' zum Quadrat');
     t = t.replace(/\u00b3/g, ' hoch drei');
@@ -17825,6 +18359,13 @@ function sprechbar(text){
     t = t.replace(/=/g, ' ist ');
     t = t.replace(/(\d)\s*:\s*(\d)/g, '$1 zu $2');      // Verhaeltnis 1:4
     t = t.replace(/\u03c0/g, ' pi ');                    // π
+    // Omega und Lambda haben hier bis zum 13.09.2026 gefehlt. Piper
+    // verschluckt sie, und dann fiel beim Vorlesen die Einheit weg:
+    // "ein Widerstand mit 10 k" statt "10 kOhm", "5/8" statt
+    // "fuenf Achtel Lambda". Gefunden bei der Gegenpruefung der
+    // Begriffsblaetter der Klasse E.
+    t = t.replace(/\u03a9/g, ' Ohm ');                   // Ω
+    t = t.replace(/\u03bb/g, ' Lambda ');                // λ
     t = t.replace(/\u2212/g, 'minus ');                 // echtes Minuszeichen
     t = t.replace(/\s*\/\s*/g, ' durch ');
     t = t.replace(/\s*[\u2014\u2013]\s*/g, ', ');         // Gedankenstriche samt Abstand
@@ -20267,6 +20808,20 @@ async function playTTSSegment(seg, token){
         } else {
             const err = await res.text();
             console.error('Piper Server Fehler', res.status, err.substring(0,500));
+            // 413 heisst: der Text war zu lang fuer eine Anfrage. Seit der
+            // Zerlegung in ttsInStuecke() darf das nicht mehr vorkommen -
+            // wenn doch, soll es beim Namen genannt werden und nicht als
+            // fehlende Stimme durchgehen. Genau diese Verwechslung hat
+            // Dietmar am 13.09.2026 in die Irre geschickt.
+            if(res.status === 413){
+                console.error('[TTS] Abschnitt zu lang trotz Zerlegung - '
+                    + 'TTS_STUECK_MAX pruefen. Laenge:', (seg.text || '').length);
+                if(window.showAppAlert) window.showAppAlert(
+                    'Ein Abschnitt war zu lang für die Sprachausgabe und wurde '
+                    + 'übersprungen. Die Stimme ist in Ordnung — es ist ein Fehler '
+                    + 'im Trainer. Bitte melden.');
+                return;
+            }
             if(isPiperVoice){
                 // Wenn Piper gewählt, NICHT auf Microsoft fallen, sondern Fehler zeigen
                 console.error('PIPER GEWÄHLT ABER SERVER FEHLER - kein Microsoft Fallback!');
@@ -20332,6 +20887,64 @@ async function playTTSSegment(seg, token){
 // ================================================================
 let vorleseSummeMs = 0;
 
+// ================================================================
+//  LANGE ABSCHNITTE IN SAETZE ZERLEGEN
+//  ----------------------------------------------------------------
+//  Dietmar am 13.09.2026, mit Bildschirmfoto zu NE401: "Nur beim
+//  vorlesen von der Erklärung. Seltsammer weiss überspringt es den
+//  ersten Text und beginnt bei 'der Kniff' da geht das vorlesen"
+//
+//  Mein Fehler, und zwar ein doppelter. Der Server nimmt hoechstens
+//  TTS_MAX_TEXT_LEN = 1000 Zeichen je Anfrage (Server.js, FIX K5). Das
+//  hat jahrelang gereicht - eine Frage mit vier Antworten bleibt darunter.
+//  Seit die Begriffsblaetter ein "prinzip" von 200 bis 400 Woertern
+//  tragen, ist der ERSTE Abschnitt regelmaessig 1500 bis 2800 Zeichen
+//  lang. Der Server antwortete mit 413 "Text zu lang", der Client warf
+//  die Antwort weg und sprang zum naechsten Abschnitt - genau das, was
+//  Dietmar gesehen hat. Nachgemessen: 421 der 948 Erklaerungen hatten
+//  mindestens einen Abschnitt, der so still ausfiel (318 Prinzipien,
+//  277 Listen, 46 mal "warum falsch").
+//
+//  Der zweite Fehler war die Meldung: sie schob es auf eine fehlende
+//  Stimme im Ordner piper/ und schickte ihn damit in die falsche
+//  Richtung. Beides ist hier behoben - die Laenge wird geteilt, und
+//  eine 413 sagt jetzt, was wirklich los ist.
+//
+//  Geteilt wird an SATZENDEN, nicht nach Zeichen: eine Stimme, die
+//  mitten im Satz abbricht, klingt kaputt. Nur wenn ein einzelner Satz
+//  allein zu lang ist, wird am Komma und notfalls hart getrennt -
+//  lieber eine Atempause zu viel als ein Abschnitt, der gar nicht
+//  gesprochen wird. Jedes Stueck ist eine eigene Anfrage und liegt
+//  danach im Cache; beim zweiten Hoeren ist es deshalb sogar schneller.
+// ================================================================
+const TTS_STUECK_MAX = 700;   // Sicherheitsabstand zu den 1000 des Servers
+
+function ttsInStuecke(text){
+    const t = String(text == null ? '' : text).trim();
+    if(!t) return [];
+    if(t.length <= TTS_STUECK_MAX) return [t];
+    const saetze = t.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g) || [t];
+    const aus = [];
+    let jetzt = '';
+    const ablegen = () => { const x = jetzt.trim(); if(x) aus.push(x); jetzt = ''; };
+    for(let s of saetze){
+        s = s.trim();
+        if(!s) continue;
+        while(s.length > TTS_STUECK_MAX){
+            let schnitt = s.lastIndexOf(', ', TTS_STUECK_MAX);
+            if(schnitt < TTS_STUECK_MAX * 0.4) schnitt = s.lastIndexOf(' ', TTS_STUECK_MAX);
+            if(schnitt < TTS_STUECK_MAX * 0.4) schnitt = TTS_STUECK_MAX;
+            ablegen();
+            aus.push(s.slice(0, schnitt).trim());
+            s = s.slice(schnitt).trim();
+        }
+        if((jetzt + ' ' + s).trim().length > TTS_STUECK_MAX) ablegen();
+        jetzt = (jetzt ? jetzt + ' ' : '') + s;
+    }
+    ablegen();
+    return aus.filter(Boolean);
+}
+
 async function playTTSQueue(segments, btn, zurueck){
     ttsQueueToken++;
     const token=ttsQueueToken;
@@ -20354,7 +20967,22 @@ async function playTTSQueue(segments, btn, zurueck){
         }catch(e){}
     };
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-stop"></i> Stop'; btn.onclick=()=>stopTTS(); }
-    for(const seg of segments){
+    // Jeden Abschnitt in sprechbare Stuecke zerlegen. Die Hervorhebung
+    // bleibt dabei auf demselben Element stehen, denn der Leser sieht
+    // weiter den ganzen Abschnitt - er hoert ihn nur in Etappen. Eine
+    // Pause gehoert an das ENDE eines Abschnitts, nicht zwischen seine
+    // Stuecke.
+    const stuecke = [];
+    for(const seg of (segments || [])){
+        const teile = ttsInStuecke(seg && seg.text);
+        if(!teile.length) continue;
+        teile.forEach((t, i) => stuecke.push({
+            text: t,
+            selector: seg.selector,
+            pause: (i === teile.length - 1) ? (seg.pause || 0) : 0
+        }));
+    }
+    for(const seg of stuecke){
         if(token!==ttsQueueToken){ vorleseBuchen(); return; } // gestoppt/neu gestartet
         await playTTSSegment(seg, token);
         // Die Pause nach einer Bildantwort. Die Hervorhebung bleibt dabei
@@ -31144,6 +31772,35 @@ function einstMerkblattFuellen(){
             + 'lässt sich hier ein Blatt drucken.</div>';
     }
 
+    // ================================================================
+    //  DIE BEGRIFFSBLAETTER ZUM AUSDRUCKEN
+    // ----------------------------------------------------------------
+    //  Steht hier, weil es derselbe Handgriff ist: etwas mitnehmen, was
+    //  man ohne Trainer lesen kann. Anders als das Merkblatt haengt es
+    //  aber nicht davon ab, ob schon eine Frage falsch war - der
+    //  Lehrstoff ist von Anfang an da. Deshalb ein eigener Kasten.
+    // ================================================================
+    let blattKnopf = '';
+    try {
+        const th = (typeof blaetterStand === 'function') ? blaetterStand() : [];
+        if(th.length){
+            const schwach = th.filter(x => x.quote === null || x.quote < 76).length;
+            blattKnopf = '<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">'
+                + '<button type="button" onclick="blaetterDrucken(false)" '
+                +   'style="' + EINST_KNOPF + ' background:var(--panel-navy); color:#fff; border-color:var(--panel-navy);">'
+                + '<i class="fas fa-print"></i> Alle ' + th.length + ' Blätter drucken</button>'
+                + (schwach && schwach < th.length
+                    ? '<button type="button" onclick="blaetterDrucken(true)" style="' + EINST_KNOPF + '">'
+                      + '<i class="fas fa-print"></i> Nur die ' + schwach + ' schwachen</button>'
+                    : '')
+                + '<button type="button" onclick="themenOeffnen()" style="' + EINST_KNOPF + '">'
+                + '<i class="fas fa-layer-group"></i> Themen ansehen</button></div>';
+        } else {
+            blattKnopf = '<div style="font-size:0.78rem; color:var(--muted);">'
+                + 'Zu diesem Prüfungsziel liegt noch kein Begriffsblatt vor.</div>';
+        }
+    } catch(e){ console.error('[Merkblatt] Blaetter', e); }
+
     ziel.innerHTML =
         einstKasten('Vor der Prüfung',
             'Für die Fahrt zur Prüfung oder den Abend davor im Hotel: <b>ein Blatt Papier</b> mit '
@@ -31157,6 +31814,13 @@ function einstMerkblattFuellen(){
                   + ' stehen bereit.'
                 : ''),
             knoepfe)
+        + einstKasten('Die Begriffsblätter auf Papier',
+            'Der Lehrstoff statt der Fragen: <b>jedes Begriffsblatt auf einer Seite</b> – oben das '
+            + '<b>Prinzip</b>, also der Grund, warum es so ist, darunter die Begriffe und ein '
+            + 'Merksatz. Prüfungsfragen und Antworten stehen nicht darauf.'
+            + '<br><br>Für die Bahn, den Kurs oder den Küchentisch. Wer das Prinzip versteht, kann '
+            + 'die zugehörigen Fragen auch dann, wenn sie anders gestellt werden.',
+            blattKnopf)
         + (lageHtml
             ? einstKasten('Was oben auf dem Blatt steht',
                 'Damit das Blatt auch ohne Trainer etwas sagt, kommt diese Übersicht mit aufs Papier.',
@@ -32037,6 +32701,52 @@ function uebungszeitOeffnen(){
 }
 window.uebungszeitOeffnen = uebungszeitOeffnen;
 
+// ================================================================
+//  LIEGT DIE ZEIT AUF EINEM ANDEREN PLATZ?
+// ----------------------------------------------------------------
+//  Dietmar am 13.09.2026: "Mit der Uebungszeit stimmt was nicht. Wir
+//  haben das am Freitag eingebaut, Samstag habe ich gelernt und die
+//  Zeit heute fehlt auch."
+//
+//  Die Hauptursache lag im Server (siehe CHANGELOG 1.292.0). Eine
+//  zweite Moeglichkeit bleibt aber und war von aussen nicht zu sehen:
+//  Die Zeit wird JE BENUTZERPLATZ gezaehlt. Wer an einem Tag auf
+//  Platz 3 lernt und danach Platz 1 ansieht, findet dort nichts - und
+//  das Fenster sagte kein Wort darueber.
+//
+//  Diese Zeile erscheint nur, wenn tatsaechlich mehr als ein Platz
+//  Uebungszeit hat. Sonst waere sie eine Erklaerung fuer ein Problem,
+//  das niemand hat.
+// ================================================================
+function zeitAufWelchenPlaetzen(){
+    try{
+        const plaetze = [];
+        (USER_SLOTS || []).forEach(u=>{
+            let tage = {};
+            try{ tage = JSON.parse(localStorage.getItem(ZEIT_PREFIX + u) || '{}') || {}; }catch(e){ return; }
+            let summe = 0, n = 0;
+            Object.keys(tage).forEach(k=>{ const v = Number(tage[k]);
+                if(isFinite(v) && v > 0){ summe += v; n++; } });
+            if(summe > 0) plaetze.push({ slot: u, summe: summe, tage: n });
+        });
+        if(plaetze.length < 2) return '';
+        const nr = (u) => (USER_SLOTS || []).indexOf(u) + 1;
+        const name = (u) => (typeof getUserName === 'function' && getUserName(u)) || '';
+        const zeilen = plaetze.map(x =>
+              '<span style="white-space:nowrap;">'
+            + (x.slot === currentUser ? '<b>' : '')
+            + 'Platz ' + nr(x.slot) + (name(x.slot) ? ' („' + name(x.slot) + '“)' : '')
+            + ': ' + zeitText(x.summe) + ' an ' + x.tage + (x.tage === 1 ? ' Tag' : ' Tagen')
+            + (x.slot === currentUser ? ' – dieser Platz</b>' : '')
+            + '</span>').join(' &middot; ');
+        return '<div style="margin-top:0.7rem; padding-top:0.55rem; border-top:1px solid var(--line); '
+             + 'font-size:0.74rem; color:var(--muted); line-height:1.6;">'
+             + 'Die Zeit wird je Benutzerplatz gezählt. Hier stehen nur die Tage von '
+             + '<b>diesem</b> Platz. Gespeichert ist: ' + zeilen
+             + '</div>';
+    }catch(e){ return ''; }
+}
+
 function uebungszeitAuswertungHtml(ohneTitel){
     try{
         const g = zeitGesamtDaten();
@@ -32129,6 +32839,7 @@ function uebungszeitAuswertungHtml(ohneTitel){
              +     '<div><div class="k-wert">' + zeitText(g.best) + '</div>'
              +       '<div class="k-name">längster Tag: ' + datumText(g.bestTag) + '</div></div>'
              +   '</div>'
+             + zeitAufWelchenPlaetzen()
              + '</div>';
     }catch(e){ console.debug('Übungszeit-Auswertung:', e.message); return ''; }
 }
@@ -32422,6 +33133,51 @@ function statistikFuellen() {
     //  ansehen" rechts. Gleiche Dinge sehen gleich aus, verschiedene
     //  trennt eine Kante.
     // ================================================================
+    // ================================================================
+    //  FORTSCHRITT NACH THEMA
+    // ----------------------------------------------------------------
+    //  Die Zahl der Fehler sagt, WIE VIEL man nicht weisz. Sie sagt
+    //  nicht, WAS. Seit jede erklaerte Frage auf ein Begriffsblatt
+    //  zeigt, laesst sich das beantworten - und zwar in der Sprache des
+    //  Stoffes und nicht in Fragennummern.
+    //
+    //  Hier stehen nur die drei schwaechsten Themen; alles weitere im
+    //  Themen-Fenster, damit die Statistik nicht ueberlaeuft.
+    // ================================================================
+    try {
+        const themen = (typeof blaetterStand === 'function') ? blaetterStand() : [];
+        if(themen.length){
+            const farbe = (typeof themenFarbe === 'function') ? themenFarbe
+                        : (q => q === null ? '#777' : (q >= 76 ? '#1f9d55' : (q >= 60 ? '#b8860b' : '#c0392b')));
+            const gesamtF = themen.reduce((a,x) => a + x.gesamt, 0);
+            const sitzenF = themen.reduce((a,x) => a + x.sitzt, 0);
+            let zeilenTh = '';
+            themen.slice(0, 3).forEach(x => {
+                zeilenTh += '<div style="display:flex; align-items:center; gap:9px; padding:3px 0; font-size:0.78rem;">'
+                    + '<span style="flex:1; min-width:0;">' + esc(x.titel) + '</span>'
+                    + '<span style="flex:0 0 78px; height:7px; border-radius:4px; background:#e6ecf4; overflow:hidden;">'
+                    +   '<i style="display:block; height:100%; width:' + (x.quote || 0) + '%; '
+                    +   'background:' + farbe(x.quote) + ';"></i></span>'
+                    + '<span style="flex:0 0 54px; text-align:right; font-weight:700; '
+                    +   'font-family:var(--font-mono,monospace); color:' + farbe(x.quote) + ';">'
+                    +   x.sitzt + ' / ' + x.gesamt + '</span></div>';
+            });
+            html += '<div class="stat-block">'
+                + '<div style="display:flex; align-items:baseline; gap:10px; margin:0 0 0.4rem;">'
+                + '<h4 style="margin:0; font-size:0.85rem; color:var(--panel-navy);">Wo es beim Verstehen klemmt</h4>'
+                + '<button type="button" class="btn-lernstand" style="margin-left:auto;" '
+                +   'onclick="themenOeffnen()" data-tooltip="Alle Themen mit Fortschritt, Blatt lesen und üben">'
+                +   'Alle ' + themen.length + ' Themen</button>'
+                + '</div>'
+                + '<div style="font-size:0.75rem; color:var(--muted); line-height:1.5; margin-bottom:0.35rem;">'
+                +   'Von ' + gesamtF + ' Fragen mit Begriffsblatt sitzen ' + sitzenF
+                +   '. Die drei schwächsten Themen:'
+                + '</div>'
+                + zeilenTh
+                + '</div>';
+        }
+    } catch(e){ console.error('[Statistik] Themen', e); }
+
     const schwer = schwersteFragen(5);
     const stolperGesamt = (typeof alleStolpersteine === 'function') ? alleStolpersteine().length : schwer.length;
     // Der Kasten steht immer da - auch ohne einen einzigen Fehlversuch.

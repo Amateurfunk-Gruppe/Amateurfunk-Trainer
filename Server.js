@@ -1541,15 +1541,69 @@ app.get('/api/userdata', localOnly, (req,res)=>{
 });
 
 // FIX W9: Zuordnung Feldname -> erwarteter Typ, fuer die Validierung unten.
-const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt', cb:'objekt', qsl:'objekt' };
+// FEHLER VOM 13.09.2026: Hier fehlten diagnose und uebungszeit.
+// Die stille Messung kam am 10.09.2026 dazu, und drei von vier Stellen
+// wurden angefasst: getDefaultUserdata() kennt die Felder,
+// normalisiereUserdata() kennt sie - aber DIESE Liste nicht, und das
+// merged-Objekt in POST /api/userdata auch nicht. Folge: Der Browser
+// schickte die Daten bei jedem Speichern mit, der Server baute sein
+// merged-Objekt ohne sie, und normalisiereUserdata() setzte danach die
+// leeren Standardwerte ein. Die Uebungszeit war also NIE gesichert -
+// obwohl der Kommentar in getDefaultUserdata() genau das behauptete.
+// Dietmar hat es gemerkt: "Mit der Uebungszeit stimmt was nicht."
+const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt',
+                   cb:'objekt', qsl:'objekt', diagnose:'objekt', uebungszeit:'objekt' };
 const TYP_ALIAS = {
   history:'examHistory', examHistory:'examHistory',
   mastery:'mastery',     lernfortschritt:'mastery',
   difficult:'difficult', lernbedarf:'difficult',
   errors:'errors',
   cb:'cb',               cbEinstieg:'cb',
-  qsl:'qsl',             sammelalbum:'qsl'
+  qsl:'qsl',             sammelalbum:'qsl',
+  diagnose:'diagnose',   messung:'diagnose',
+  uebungszeit:'uebungszeit', zeit:'uebungszeit'
 };
+
+// ----------------------------------------------------------------
+//  ZUSAMMENFUEHREN STATT ERSETZEN
+// ----------------------------------------------------------------
+//  Bei den anderen Feldern ist "der Browser hat recht" richtig: Er
+//  haelt den vollstaendigen Stand. Bei diesen zwei nicht. Wer den
+//  Trainer auf einem zweiten Rechner oeffnet oder die Browserdaten
+//  loescht, schickt einen LEEREN Stand - und wuerde damit die
+//  Sicherung ueberschreiben. Genau das darf bei Daten, die man nicht
+//  nacherfassen kann, nicht passieren.
+//
+//  Uebungszeit: je Tag der groessere Wert. Ein Tag kann nur wachsen,
+//  nie schrumpfen - also ist das Maximum immer der richtige Wert, und
+//  nichts geht verloren.
+function zeitVereinen(alt, neu){
+  const aus = {};
+  [alt, neu].forEach(q => {
+    if(!istObjekt(q)) return;
+    for(const tag of Object.keys(q)){
+      const v = Number(q[tag]);
+      if(!isFinite(v) || v <= 0) continue;
+      if(!(aus[tag] > v)) aus[tag] = v;
+    }
+  });
+  return aus;
+}
+//  Diagnose: je Frage gewinnt der Browser, weil er den laufenden
+//  Stand hat. Fragen, die er nicht kennt, bleiben aus der Sicherung
+//  stehen - so ueberlebt die Messung einen Rechnerwechsel.
+function diagnoseVereinen(alt, neu){
+  const aus = istObjekt(alt) ? Object.assign({}, alt) : {};
+  if(istObjekt(neu)) for(const id of Object.keys(neu)) aus[id] = neu[id];
+  return aus;
+}
+function jeBenutzerVereinen(alt, neu, wie){
+  const aus = {};
+  for(const u of USER_IDS){
+    aus[u] = wie(istObjekt(alt) ? alt[u] : null, istObjekt(neu) ? neu[u] : null);
+  }
+  return aus;
+}
 function typPasst(wert, art){
   return art === 'array' ? Array.isArray(wert) : istObjekt(wert);
 }
@@ -1607,6 +1661,10 @@ app.post('/api/userdata', localOnly, (req,res)=>{
         errors:      incoming.errors      || current.errors,
         cb:          incoming.cb          || current.cb,
         qsl:         incoming.qsl         || current.qsl,
+        // Diese zwei werden zusammengefuehrt, nicht ersetzt - siehe
+        // zeitVereinen() und diagnoseVereinen() oben.
+        diagnose:    jeBenutzerVereinen(current.diagnose, incoming.diagnose, diagnoseVereinen),
+        uebungszeit: jeBenutzerVereinen(current.uebungszeit, incoming.uebungszeit, zeitVereinen),
         version: 2,
         updatedAt: new Date().toISOString()
       };

@@ -8,6 +8,570 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.295.0] - 2026-09-13
+
+### Hinzugefügt — der Aufstieg N auf E ist vollständig erklärt
+
+Dietmar am 13.09.2026: „N → E: 338 offen (von 463) Mache das bitte Fertig"
+
+**Alle 463 Fragen des Aufstiegs N → E haben jetzt eine Erklärung.** Damit sind zwei der drei
+Prüfungsziele abgeschlossen. Vorher waren es 125 (nur die Fragen mit Zeichnung), es fehlten
+338 — alle reiner Text, alle aus dem Technikteil.
+
+| | vorher | jetzt |
+|---|---|---|
+| Erklärungen gesamt | 948 | **1286** |
+| Klasse N | 571 von 571 | 571 von 571 |
+| **N → E** | 125 von 463 | **463 von 463** |
+| E → A | 252 von 716 | 252 von 716 |
+| Begriffsblätter | 41 | **76** |
+| Fragen an einem Blatt | 493 | **834** |
+| Fragen mit Rechenweg | 149 | **244** |
+| `erklaerungen.json` | 1.681.598 Bytes | **2.297.060 Bytes** |
+
+Vorschriften und Betrieb waren mit Klasse N schon fertig — die V- und B-Fragen sind für alle
+Klassen dieselben. Übrig war nur Technik.
+
+### Die 35 neuen Begriffsblätter
+
+**Rechnen und Grundlagen (8):** `dezibel` (die vier Werte 3/6/10/20 dB und der Versatz 2,15
+zwischen dBd und dBi) · `zahlensysteme` · `wechselgroessen` (Spitze, Spitze-Spitze,
+Effektivwert) · `leistung-rechnen` (P = I²·R und P = U²/R, und Bauteile mit zwei Grenzen) ·
+`reihe-parallel` · `elektrisches-feld` · `magnetisches-feld` · `uebertrager`
+
+**Bauteile (4):** `widerstaende` (Bauart, Toleranz, SMD-Kennzeichnung) · `blindwiderstand`
+(der Kondensator lässt Hohes durch, die Spule Tiefes) · `diode` · `transistor`
+
+**Geräte (7):** `sender-e` (Linearität) · `oszillatoren` · `mischer` (Summe und Differenz) ·
+`empfaenger` (der Überlagerungsempfänger und seine Baugruppen) · `modulation` (wo die
+Information sitzt) · `datenuebertragung` · `multiplex-netze` · `vna`
+
+**Antennen und Leitungen (7):** `antennen-kennwerte` · `speisepunkt` (Strom- und
+Spannungsverteilung, und daraus die Fußpunktwiderstände) · `kabeldaempfung` ·
+`swr-rechnen` · `mantelwellen` · `eirp-rechnen` (die Kette vom Sender zur Luft)
+
+**Ausbreitung (2):** `ausbreitung-kw` (die Ionisation bricht oben und dämpft unten) ·
+`troposphaere`
+
+**Störungen und Schutz (7):** `einstroemung` · `entstoeren` · `oberwellen` ·
+`bandbreite-begrenzen` · `feldgrenzwerte` · `sicherheitsabstand` · `hf-sicherheit`
+
+Dazu sind **neun bestehende Blätter erweitert** worden — `einheiten`, `welle`, `leistung`,
+`stromversorgung`, `antennenformen`, `kabel-swr`, `ausbreitung`, `messen`, `stoerungen`. Sie
+tragen jetzt Fragen zweier Klassen; der angehängte Absatz beginnt jeweils mit „In der Klasse E
+kommt dazu …", damit sichtbar bleibt, was neu ist. Und drei Fragen, die längst erklärt waren
+aber an keinem Blatt hingen, wurden angehängt: EC115, EF216 und EJ117.
+
+### Wo die Erklärungen ansetzen
+
+Drei Beispiele, was in den Blättern steht statt einer Merkregel:
+
+- **Warum ist die Dipolmitte niederohmig?** Weil an den Enden kein Strom weiterfließen kann —
+  dort ist Stromknoten und Spannungsbauch, in der Mitte umgekehrt. Und weil Widerstand
+  Spannung durch Strom ist, folgt daraus jede Zahl des Abschnitts: Dipol 40 bis 90 Ohm,
+  Groundplane als halbe Antenne 30 bis 50, Faltdipol mit zwei parallelen Hälften 240 bis 300.
+- **Warum gibt es das Dezibel überhaupt?** Weil sich auf dem Weg vom Sender zur Antenne die
+  Faktoren MULTIPLIZIEREN. Im Logarithmus wird daraus Addieren, und damit ist die ganze
+  EIRP-Rechnung ein Strich unter drei Zahlen.
+- **Warum sind 160 m und 80 m tagsüber stumm?** Weil dieselbe Sonne oben bricht und unten
+  dämpft: die F2-Region trägt die Weite, die D-Region frisst die tiefen Bänder — und aus
+  diesem einen Gegensatz folgen MUF, LUF und die tote Zone.
+
+### Behoben — 30 Stellen nach der Gegenprüfung
+
+Drei Prüfer haben die 44 betroffenen Blätter und die 338 Erklärungen gegen den Katalog
+gelesen, 136 Rechenaufgaben unabhängig nachgerechnet und den Sicherheitsteil eigens geprüft.
+**Sie haben 24 Befunde gemeldet.** Die schwerwiegenden waren meine:
+
+1. **„Die Grenzwerte der AFuV sind PEP-Werte" — falsch, und ein Widerspruch zu Fragen auf
+   demselben Blatt.** Für Klasse N und für Relais steht die Grenze als GESTRAHLTE Leistung da:
+   VD724 nennt 10 W EIRP, VD743 10 W ERP, VD503 50 W ERP. Mein Satz hätte einen Lernenden bei
+   genau diesen Fragen in die Irre geführt. Jetzt sagt das Blatt, dass die Einheit des
+   Grenzwerts verrät, welche Frage gestellt ist.
+2. **Der Drehkondensator beruht auf der FLÄCHE, nicht auf dem Abstand.** Ich hatte
+   geschrieben „größerer Abstand heißt weniger Kapazität — genau darauf beruht der
+   Drehkondensator, bei dem die Überdeckung der Platten verändert wird". Der Satz widerlegt
+   sich im eigenen Nebensatz, und die Listenzeile desselben Blattes hatte es richtig.
+3. **„Mitte des Hausdachs" steht nirgends im Katalog.** NG111 sagt nur „auf dem Hausdach". Die
+   Dachmitte kommt aus NK310 — und die meint das FAHRZEUGdach.
+4. **Der Faktor 4 beim Faltdipol trug die eigenen Zahlen nicht.** Vier mal 40 bis 90 Ohm sind
+   160 bis 360, nicht 240 bis 300. Gerechnet wird von den 60 bis 75 Ohm des hoch aufgehängten
+   Dipols; das steht jetzt da.
+5. **Drei falsche „Blindantwort"-Behauptungen.** Bei ED113 („kein Rechenweg führt auf 200 Ohm")
+   führt sehr wohl einer hin: der Parallelblock ergibt 400 Ohm, R₄ hat 600, und 600 minus 400
+   sind genau 200 — derselbe Subtraktionsfehler, den die Datei bei ED104 und ED105 selbst als
+   üblich nennt. Bei EB102 und EB104 nannte mein Satz den Rechenweg und behauptete im nächsten
+   Halbsatz, es gebe keinen. Fünf weitere Behauptungen waren zu stark formuliert und sind
+   entschärft.
+6. **Die Mantelwellendrossel hat einen Ort.** „An beliebiger Stelle im Kabel" hebelte das
+   Nachbarblatt aus, wo EJ119 ausdrücklich „vor dem Rundfunkempfänger" verlangt.
+
+**Zwei sicherheitsrelevante Präzisierungen**, beide vom Sicherheitsprüfer gefunden:
+
+- Die **separate HF-Erdleitung** (EJ111) konnte als vom Haus getrennte zweite Erde gelesen
+  werden — genau der Fall, gegen den EK208 und VDE 0855-300 gerichtet sind. Das Blatt sagt
+  jetzt, dass sie zusätzlich an die Haupterdungsschiene gehört und der Schutzleiter dadurch
+  nie entfällt.
+- Bei **EJ119** stand zum Vorschlag, dem Sender die Erde abzuklemmen, nur „schafft neue
+  Probleme". Jetzt steht da, dass die Erdverbindung eine Schutzmaßnahme ist und zur
+  Entstörung niemals entfernt wird.
+
+**Acht Quellenangaben** ergänzt, wo Zusatzwissen nicht gekennzeichnet war oder die erweiterten
+Blätter noch nach Klasse N aussahen — darunter, dass die 12,7 V eines vollen Bleiakkus nicht
+geprüft werden und dass der Grundsatz der kleinsten ausreichenden Sendeleistung eben DOCH
+geprüft wird (EJ104, EJ105), also kein Zusatzwissen ist.
+
+### Behoben — drei Fehler beim Vorlesen, die den ganzen Bestand betrafen
+
+Die Gegenprüfung hat in `sprechbar()` drei Zeichen gefunden, die Piper verschluckt:
+
+| Zeichen | vorher gehört | jetzt |
+|---|---|---|
+| `Ω` | „ein Widerstand mit 10 k" | „10 kOhm" |
+| `λ` | „eine 5/8-Antenne statt /4" | „fünf Achtel Lambda statt Lambda durch 4" |
+| `mm²` | „16 Millimeter zum Quadrat" | „16 Quadratmillimeter" |
+
+Das erste traf jede Stelle im ganzen Bestand, an der eine Einheit als Ω geschrieben ist — die
+Einheit fiel beim Hören einfach weg. Flächen- und Raummaße werden jetzt vor den Hochzahlen
+ersetzt, sonst würde aus `mm²` weiter „Millimeter zum Quadrat".
+
+Außerdem 54 Stellen auf deutsche Anführungszeichen gebracht. Mein erster Versuch dafür war
+selbst fehlerhaft: er zählte paarweise ab und verrutschte dort, wo im Text schon richtige
+Zeichen standen — 43 Stellen bekamen zwei öffnende Zeichen („Amateurfunkdienst„). Der zweite
+Versuch entscheidet aus dem Kontext (nach Leerraum und vor einem Buchstaben ist öffnend) und
+geht überall auf.
+
+### Behoben — Katalog-Eigenheit beim Eintragen
+
+`eintragen.py` löst die Schlüssel unter `warum_falsch` gegen den Katalog auf. Bei EE404 schlug
+das fehl: der Antworttext enthält **geschützte Leerzeichen** (U+00A0), die beim Abschreiben zu
+normalen werden. Verglichen wird jetzt über eine geglättete Fassung (U+00A0, U+202F und
+U+2009 werden zu normalen Leerzeichen); GESPEICHERT wird weiter der Originaltext, sonst würde
+die Prüfung fehlschlagen.
+
+### Nachgemessen
+
+- `python3 eintragen.py`: 1286 Erklärungen, 76 Begriffsblätter, **0 Fehler**.
+- Im Browser mit dem Ziel N → E: **463 von 463** Fragen der Bank haben eine Erklärung. 45
+  Blätter gelten für dieses Ziel, 342 Fragen hängen daran. Keine Skriptfehler.
+- **Alle 136 Rechenaufgaben unabhängig nachgerechnet** — in keiner einzigen wich das Ergebnis
+  von der amtlich richtigen Antwort ab. Bei den elf EIRP-Aufgaben war der 2,15-dB-Versatz
+  überall richtig angewandt und der Kabelverlust überall abgezogen.
+- Die fünf Aufgaben zum Kabeldämpfungsdiagramm wurden rückwärts erschlossen (das Diagramm ist
+  Blatt 22 der Formelsammlung und liegt nur in der Prüfung vor). Die dabei unterstellten Werte
+  je 100 m sind untereinander widerspruchsfrei: dünneres Kabel dämpft mehr, höhere Frequenz
+  dämpft mehr.
+- Vorlesen geprüft mit mitgeschriebenen Anfragen: bei EB510, EG507 und EG207 je 8 Stücke,
+  längstes 700 Zeichen, keines über der Serverngrenze von 1000, das Prinzip zuerst, und kein
+  Ω oder λ mehr im gesprochenen Text.
+- Druckheft für N → E: **45 Blätter auf 51 Seiten** — Deckblatt plus ein Blatt je Seite, fünf
+  der längeren Blätter brauchen eine zweite Seite. Kein Inhalt geht dabei verloren: für alle
+  45 Blätter wurden Merksatz-Ende und letzte Listenzeile im PDF-Text wiedergefunden.
+- Alle 17 Skriptblöcke in `Index.html` fehlerfrei nach `node --check`.
+
+### Geändert
+
+- `erklaerungen.json`: 338 neue Erklärungen, 35 neue Blätter, 9 erweiterte, Kopffeld `umfang`.
+- `Index.html`: `sprechbar()` kennt jetzt Ω, λ und die Flächen- und Raummaße.
+- Keine Änderung an `Server.js`.
+
+---
+
+## [1.294.0] - 2026-09-13
+
+### Behoben — beim Vorlesen fiel das Prinzip still aus
+
+Dietmar am 13.09.2026, mit Bildschirmfoto zu NE401: „Nur beim vorlesen von der Erklärung.
+Seltsammer weiss überspringt es den ersten Text und beginnt bei „der Kniff" da geht das
+vorlesen"
+
+**Mein Fehler, und ein doppelter.** Der Server nimmt höchstens **1000 Zeichen** je
+Vorlese-Anfrage (`TTS_MAX_TEXT_LEN` in `Server.js`, eingebaut als FIX K5 zum Schutz gegen
+Überlast). Das hat lange gereicht — eine Frage mit vier Antworten bleibt darunter. Seit die
+Begriffsblätter am 13.09.2026 ein `prinzip` von 200 bis 400 Wörtern tragen, ist der **erste**
+Abschnitt aber regelmäßig 1500 bis 2800 Zeichen lang.
+
+Nachgemessen mit einer direkten Anfrage an den laufenden Server:
+
+| Text | Antwort |
+|---|---|
+| Prinzip von NE401 ungeteilt, 1627 Zeichen | **413** `Text zu lang (1627 Zeichen, max. 1000)` |
+| erstes Stück nach der Zerlegung, 549 Zeichen | kommt durch zur Sprachausgabe |
+
+Der Client warf die 413 weg und sprang zum nächsten Abschnitt — genau das, was Dietmar
+gesehen hat. **Betroffen waren 421 der 948 Erklärungen:** 318 Prinzipien, 277 Listen und
+46 mal „Warum die anderen falsch sind". Je länger und je besser ein Blatt, desto sicherer
+fiel es aus.
+
+Der zweite Fehler war die **Meldung**. Sie sagte „Für das Vorlesen fehlt die Stimme im Ordner
+piper/" und schickte ihn damit in die falsche Richtung — die Stimme war völlig in Ordnung.
+
+### Wie es jetzt läuft
+
+Neu in `playTTSQueue`: `ttsInStuecke()` zerlegt jeden Abschnitt vor dem Sprechen in Stücke von
+höchstens **700 Zeichen** (Sicherheitsabstand zu den 1000 des Servers). Geteilt wird an
+**Satzenden** — eine Stimme, die mitten im Satz abbricht, klingt kaputt. Nur wenn ein
+einzelner Satz allein zu lang ist, wird am Komma und notfalls hart getrennt; lieber eine
+Atempause zu viel als ein Abschnitt, der gar nicht gesprochen wird.
+
+Zwei Feinheiten, die dazugehören:
+
+- Die **Hervorhebung** bleibt über alle Stücke eines Abschnitts auf demselben Element stehen.
+  Der Leser sieht weiter den ganzen Abschnitt, er hört ihn nur in Etappen.
+- Eine **Pause** (die nach einer Bildantwort) gehört an das Ende eines Abschnitts, nicht
+  zwischen seine Stücke. Sonst stockte das Vorlesen mitten im Prinzip.
+
+Nebeneffekt: jedes Stück ist eine eigene Anfrage und liegt danach einzeln im Cache. Beim
+zweiten Hören ist das Vorlesen deshalb sogar schneller als vorher.
+
+Und eine 413 sagt jetzt, was wirklich los ist: „Ein Abschnitt war zu lang für die
+Sprachausgabe und wurde übersprungen. Die Stimme ist in Ordnung — es ist ein Fehler im
+Trainer. Bitte melden." Der Hinweis auf die fehlende Stimme kommt nur noch, wenn wirklich
+keine da ist.
+
+### Nachgemessen
+
+Mit einem Browser, der die Vorlese-Anfragen mitschreibt, je eine Runde über das Themenfenster
+gestartet und die Erklärung vorlesen lassen:
+
+| Frage | Anfragen | längste | über 1000 Zeichen | erster Abschnitt |
+|---|---:|---:|---:|---|
+| NK301 (`sicherheit`, längstes Prinzip) | 9 | 672 | **0** | „Das Prinzip. Gefährlich am Strom …" |
+| BA101 (`buchstabieren`, 28 Listenzeilen) | 7 | 700 | **0** | „Das Prinzip. Buchstabieren ist kein Brauch …" |
+| NE401 (Dietmars Bildschirmfoto) | 8 | 685 | **0** | „Das Prinzip. Ein digitales Verfahren ist eine Verabredung …" |
+
+Das Prinzip steht in allen drei Fällen wieder an erster Stelle, und jedes Stück beginnt an
+einem Satzanfang. Alle 17 Skriptblöcke fehlerfrei nach `node --check`.
+
+### Geändert
+
+- `Index.html`: `ttsInStuecke()` und die Zerlegung in `playTTSQueue`; eigener Zweig für 413.
+- Keine Änderung an `Server.js`. Die Grenze von 1000 Zeichen bleibt, wo sie ist — sie schützt
+  vor Überlast, und ein einzelner Riesenauftrag an Piper wäre auch langsamer als mehrere
+  kleine. Der Fehler lag nicht in der Grenze, sondern darin, dass der Client sie nicht kannte.
+
+---
+
+## [1.293.0] - 2026-09-13
+
+### Hinzugefügt — Klasse N ist vollständig erklärt
+
+Dietmar am 13.09.2026: „die Klasse N fertig?" — nach seinem eigenen Plan: „2. Danach machen
+wir die Klasse N fertig. 3. Ausliefern 4. Danach mache die Klasse E nach A fertig."
+
+**Alle 571 Fragen der Klasse N haben jetzt eine Erklärung.** Vorher waren es 424, es fehlten
+147: 43 im Fach Betrieb und 104 im Fach Technik. Damit ist das erste der drei Prüfungsziele
+abgeschlossen.
+
+| | vorher | jetzt |
+|---|---|---|
+| Erklärungen gesamt | 801 | **948** |
+| davon Klasse N | 424 von 571 | **571 von 571** |
+| davon N → E | 125 von 463 | 125 von 463 |
+| davon E → A | 252 von 716 | 252 von 716 |
+| Begriffsblätter | 21 | **41** |
+| Fragen an einem Blatt | 345 | **493** |
+| Fragen mit Rechenweg | 131 | **149** |
+| `erklaerungen.json` | 1.419.331 Bytes | **1.681.385 Bytes** |
+
+### Die 20 neuen Begriffsblätter
+
+Ein Blatt steht einmal in der Datei, viele Fragen verweisen darauf. Jedes beginnt mit dem
+`prinzip` — dem Grund, warum etwas so ist — und endet mit `merken` und `quelle`.
+
+**Betrieb (5):** `buchstabieren` (das internationale Buchstabieralphabet, 28 Zeilen) ·
+`contest` (Wettbewerb, DX-Betrieb, Standortkenner) · `relais-satellit` (Relais, Baken und
+Satelliten: Stationen, die von allein arbeiten) · `notfunk` (helfen, ohne im Weg zu stehen) ·
+`logbuch` (freiwillig, manchmal angeordnet)
+
+**Technik (15):** `rechnen` · `einheiten` · `werkstoffe` · `welle` · `grundformeln` ·
+`stromversorgung` · `sender-stufen` · `geraet` (die Knöpfe und ihre Aufgabe) ·
+`digital-netze` · `antennenformen` · `kabel-swr` · `ausbreitung` (Kurzwelle und UKW) ·
+`messen` · `schirmung` · `sicherheit` (Strom, Akkus, Fahrzeug, Antennenbau)
+
+Vier Fragen sind an **bestehende** Blätter gehängt statt an neue: BE305 und BE308 an
+`betriebsabwicklung` (Split und Pile-Up stehen dort schon in der Liste), NJ102 an
+`stoerungen`, NK201 an `personenschutz`. Dabei hat jedes der drei Blätter eine Zeile
+dazubekommen, damit die neue Frage wirklich getragen wird.
+
+### Wo die Erklärungen ansetzen
+
+Nicht am Auswendiglernen, sondern am Grund. Drei Beispiele:
+
+- **Warum liegt die Relaiseingabe unten?** Weil ein Umsetzer gleichzeitig hören und senden
+  muss und sich sonst selbst zudecken würde. Aus dieser einen Einsicht folgen beide Zahlen —
+  600 kHz auf 2 m, 7,6 MHz auf 70 cm — und die gesamte Benimmordnung am Relais: Pause vor
+  dem Durchgang, ordentliche Übergabe, kurze Durchgänge, Schmalband-FM.
+- **Warum darf ein Funkamateur kein MAYDAY senden, obwohl er helfen soll?** Weil auf einer
+  Amateurfunkfrequenz keine Rettungsleitstelle mithört. Das Zeichen erreicht dort niemanden,
+  der helfen kann. Deshalb wird der Funkamateur zum Boten: er ruft einen anderen Amateur oder
+  greift zum Telefon. Das ist mehr Hilfe, nicht weniger.
+- **Warum sieht ein längeres Kabel das SWR besser?** Weil die rücklaufende Welle das neue
+  Stück ein zweites Mal durchläuft und dabei gedämpft wird. Das Messgerät lügt nicht, es
+  sieht weniger. Die Antenne ist unverändert — wer so ein Anpassgerät bauen wollte, hätte ein
+  Heizgerät gebaut.
+
+### Behoben — 46 Stellen nach der Gegenprüfung
+
+Drei Prüfer haben die 20 Blätter und die 147 Erklärungen gegen den Fragenkatalog gelesen,
+jede Zahl nachgerechnet und jede Behauptung auf ihre Quelle geprüft. **Sie haben 24 Befunde
+gemeldet, und die meisten davon waren meine Fehler.** Sie stehen hier, weil sie zeigen, wo
+solche Texte reißen:
+
+**Sachfehler:**
+
+1. **13,8 V ist nicht die Spannung eines vollen Bleiakkus.** Ich hatte geschrieben, die Zahl
+   sei „kein Zufall: sie ist die Spannung eines vollgeladenen 12-V-Bleiakkus im Auto". Falsch:
+   ein voller Bleiakku hat in Ruhe etwa 12,7 V. 13,8 V ist die Bordnetz- und
+   Ladeerhaltungsspannung bei laufendem Motor. Zwei Prüfer haben es unabhängig gefunden.
+2. **„Bei 12 V ist der Mensch nicht gefährdet"** — so stand es dreimal im Sicherheitsblatt,
+   und das verharmlost. Bei 12 V droht keine **Körperdurchströmung**; Lichtbogen, Knallgas
+   und Elektrolyt treffen den Menschen sehr wohl. Das eigene Blatt sagte zwei Zeilen weiter
+   oben „Verbrennungen, Verätzungen, Vergiftungen" — ich hatte mir selbst widersprochen.
+3. **Bei 50 Hz wechselt der Strom hundertmal je Sekunde die Richtung, nicht fünfzigmal.**
+   Fünfzig ist die Zahl der vollen Perioden.
+4. **Der ISM-Bereich liegt IM 70-cm-Band.** In der Erklärung zu NJ202 stand, eine
+   ISM-Frequenz sei „kein Amateurfunkband; dort zu senden wäre kein zulässiger
+   Amateurfunkbetrieb". Das widerspricht VD708 desselben Katalogs: 433,05 bis 434,79 MHz
+   liegen mitten im 70-cm-Band und werden nur **mitbenutzt**. Der Satz behauptete ein Verbot,
+   das es nicht gibt.
+5. **Eine Probe, die nichts beweist.** Zu NA101 („20 m bei 2/3 zertrennt") hatte ich als
+   Kontrolle empfohlen, die beiden Stücke zusammenzuzählen — „diese Probe entlarvt jede
+   falsche Antwort sofort". Nachgerechnet: **alle vier** angebotenen Antworten ergeben
+   zusammen 20 m. Die Summe unterscheidet also gar nichts; nur das Verhältnis 2 zu 1 tut es.
+   Mein eigener Satz sagte im nächsten Halbsatz das Gegenteil.
+6. **„Zwei Fragen verlangen nur Kopfrechnen"** — es sind drei. NA103 (Dreisatz über das
+   Drahtgewicht) hing an keinem Blatt. Sie hängt jetzt an `rechnen`, und das Blatt hat eine
+   Zeile zum Dreisatz dazubekommen.
+7. **DMR hat zwei Zeitschlitze, TETRA vier.** „Zwei Gespräche auf einer Frequenz" war für
+   TETRA falsch; der Katalog sagt „mehrere".
+8. **„In der Prüfung sind die falschen Antworten immer mit Ländernamen gefüllt"** — nachgezählt
+   sind es auch Kilowatt, Radio, Queen, Baker, Caesar, William, Xavier, Zebra, Ypsilon,
+   Nordpol. Dieselben Wörter standen in den Zeilen meines eigenen Blattes.
+9. **Eine Lötstelle trägt selbstverständlich Strom.** Ich hatte geschrieben, sie solle „halten
+   und Kontakt schaffen, nicht Strom tragen". Sie funktioniert, weil sie kurz ist.
+10. **Kork ist ein Nichtleiter.** Die Antwortgruppe „Polystyrol, Messing, Kork" scheitert
+    allein an **Messing**. Mein Satz hätte einen Lernenden auf die falsche Fährte gesetzt.
+11. **NB302:** der behauptete Rechenfehler zur falschen Antwort „149 MHz" ergibt 150, nicht
+    149. Jetzt steht dort, was zutrifft: eine Blindantwort in der Nähe des richtigen Werts.
+12. **NB503:** „Zwei Antworten haben R links" — es sind drei von vier.
+13. **notfunk, erster Satz:** „Menschenleben zuerst, Vorschriften danach" legt nahe, die
+    Vorschriften stünden im Notfall zur Disposition. Genau das verneint aber BF102. Jetzt:
+    „Die Vorschriften sind genau dafür gemacht: sie erlauben die Hilfe und verbieten nur die
+    fremden Notzeichen."
+14. Drei weitere zu absolute Sätze zurechtgerückt: der Gleichspannungsausgang mancher
+    Netzteile liegt durchaus auf PE-Potential (ND108); Tiefentladung schädigt Zellen sehr
+    wohl (ND110); „Verkochung" ist in der Elektropathologie ein beschriebener Befund und
+    einfach nicht der geprüfte Begriff (NK303).
+
+**Zusatzwissen, das nicht als solches gekennzeichnet war** — acht `quelle`-Felder ergänzt.
+Das ist derselbe Fehler wie bei den Bändern am 12.09.2026, nur milder: die Höhe der
+Ionosphäre (60 bis 400 km) steht in keiner Frage; **300 und 600 Ohm stammen aus einer
+FALSCHEN Antwort** von NG201; die „Hertz-Antenne" kommt im Katalog überhaupt nicht vor; die
+Kurzform „300 geteilt durch f" steht nicht wörtlich auf dem Formelblatt; die vollständige
+Leitfähigkeitsreihe der sieben Metalle wird nicht geprüft, nur der beste oder schlechteste
+Leiter der jeweils **angebotenen** Gruppe.
+
+**Übertreibungen zurückgenommen**, weil der Katalog anders formuliert und eine Ablenkantwort
+genau daran hängen kann: „immer darunter" → „üblicherweise" (BE402, BE403 sagen
+„üblicherweise"); „nur auf Kurzwelle" → „in der Regel nur" (NG109); „diese Reihenfolge ist
+zwingend" → „bei einem einfachen Sender" (NF402 fragt nach einem einfachen Sender); dazu
+„der wirksamste EMV-Griff überhaupt", „tragen den ganzen technischen Teil" und „ausdrücklich
+kein Glücksspiel".
+
+### Nachgemessen
+
+- `python3 eintragen.py`: 948 Erklärungen, 41 Begriffsblätter, **0 Fehler**. Jeder
+  `gruppe`-Verweis zeigt auf ein vorhandenes Blatt, jede Blattzeile hat `k` und `l`, jeder
+  `warum_falsch`-Schlüssel ist wirklich eine falsche Antwort des Katalogs.
+- Im Browser: 948 Erklärungen geladen, 41 Blätter, **571 von 571** Fragen der aktuellen Bank
+  haben eine Erklärung. Kein Blatt ohne `prinzip`, ohne `merken` oder ohne `quelle`. Keine
+  kaputte Zeile. Keine Skriptfehler.
+- Themenfenster: 41 Zeilen, 491 Fragen dieses Prüfungsziels. „Üben" startet eine Runde mit
+  genau den Fragen eines Blattes — geprüft mit `sicherheit`: 11 Fragen, NK301 zuerst.
+- Erklärfenster mit echtem Klick auf eine falsche Antwort: Prinzip, Kniff, Liste, Merksatz
+  und „Warum falsch" stehen da; bei langen Blättern scrollt der Kasten (278 px sichtbar,
+  1645 px Inhalt) — so von Dietmar am 13.09.2026 ausdrücklich erlaubt.
+- Druckheft: **41 Blätter auf 42 Seiten** (Deckblatt plus ein Blatt je Seite), keine leere
+  Seite, keine zerrissene Tabelle. Auf den Blättern steht **keine einzige Prüfungsfrage und
+  keine Antwort** — nur die Begriffe und im Quellenfeld die Nummern, wo sie im Katalog
+  nachzulesen sind.
+- Alle 18 neuen Rechenwege enden im letzten Schritt genau auf der amtlich richtigen Antwort,
+  und die Umwandlung der Vorsätze (mA nach A) ist überall ein eigener Schritt.
+- Der Mittelpunkt „·" steht in den neuen Blättern ausschließlich in echten Formeln
+  (`U = R · I`, `13,8 V · 1,5 A = 20,7 W`). Die Vorlesefunktion liest ihn als „mal", dort
+  also richtig.
+
+### Geändert
+
+- `erklaerungen.json`: Kopffeld `umfang` nennt jetzt den Stand je Prüfungsziel und dass
+  Klasse N vollständig ist; `blaetter` erklärt zusätzlich das Feld `quelle`.
+- Keine Änderung an `Index.html` und `Server.js`. Die Blätter, das Themenfenster und das
+  Druckheft aus 1.290.0 bis 1.292.0 tragen die neuen Inhalte unverändert.
+
+---
+
+## [1.292.0] - 2026-09-13
+
+### Behoben — die Übungszeit wurde nie gesichert
+
+Dietmar am 13.09.2026: „Mit der Übungszeit stimmt was nicht. Wir haben das am Freitag
+eingebaut, Samstag habe ich gelernt und die Zeit heute fehlt auch."
+
+**Der Fehler lag im Server, und er war eindeutig.** Die stille Messung kam am 10.09.2026
+dazu — Diagnose (welche falsche Antwort, wie lange) und Übungszeit (Sekunden je Tag). Dabei
+wurden **drei von vier** Stellen angefasst:
+
+| Stelle | Kennt die zwei Felder? |
+|---|---|
+| `getDefaultUserdata()` | ja |
+| `normalisiereUserdata()` | ja |
+| `FELD_TYP` (Prüfung im POST) | **nein** |
+| das `merged`-Objekt in `POST /api/userdata` | **nein** |
+
+Die Folge: Der Browser schickte die Daten bei jedem Speichern brav mit. Der Server baute
+sein `merged`-Objekt ohne sie, schrieb es in die Datei, und `normalisiereUserdata()` setzte
+danach die leeren Standardwerte ein. **Bei jedem einzelnen Speichern.** In
+`data/userdata/amateurfunk_data.json` stand deshalb `mastery` mit 577 Einträgen — aber
+`uebungszeit` und `diagnose` bei allen drei Plätzen leer.
+
+Besonders ärgerlich: der Kommentar in `getDefaultUserdata()` sagt ausdrücklich, warum diese
+Felder überhaupt in die Datei gehören — „Eine Woche Übungszeit kann man nicht nacherfassen".
+Und drei Zeilen darüber steht die Warnung, die für `cb` geschrieben wurde: „Ohne dieses Feld
+würde `normalisiereUserdata()` es beim ersten Speichern stillschweigend wegwerfen." Genau
+dieser Fehler ist ein Feld weiter noch einmal gemacht worden.
+
+**Die fehlende zweite Hälfte:** `loadPersistentFromServer()` holte die beiden Felder auch
+nie zurück. Jeder andere Speicher hat dort einen Zweig — diese zwei nicht. Die Datei war für
+sie also in **beiden** Richtungen wirkungslos.
+
+### Was jetzt anders ist
+- **`Server.js`:** `FELD_TYP` und `TYP_ALIAS` kennen `diagnose` und `uebungszeit`, und das
+  `merged`-Objekt nimmt sie mit.
+- **Zusammengeführt statt ersetzt.** Bei den anderen Feldern gilt „der Browser hat recht".
+  Bei diesen zwei wäre das gefährlich: Wer den Trainer auf einem zweiten Rechner öffnet oder
+  die Browserdaten löscht, schickt einen LEEREN Stand — und würde damit die Sicherung
+  überschreiben. Deshalb wird je Tag der **größere** Wert genommen (ein Übungstag kann nur
+  wachsen, nie schrumpfen) und bei der Diagnose je Frage der Stand des Browsers, während
+  unbekannte Fragen aus der Sicherung stehen bleiben. Nachgeprüft: ein absichtlich leerer
+  POST räumt die Datei nicht mehr leer.
+- **`Index.html`:** `loadPersistentFromServer()` holt beides zurück, nach derselben Regel.
+  Damit übersteht die Übungszeit jetzt eine Neuinstallation und einen Rechnerwechsel.
+- **Die Uhr sichert mit.** Bisher ging die Zeit nur in den localStorage und wartete auf ein
+  Speichern, das aus anderem Anlass kam. Jetzt löst sie beim Zubuchen höchstens alle fünf
+  Minuten selbst ein Sichern in die Datei aus.
+
+### Nachgeprüft, in dieser Reihenfolge
+1. Zeit erzeugt: 90 s stehen im Arbeitsspeicher und im localStorage.
+2. Gespeichert: in der Datei steht `uebungszeit.user1 = {"2026-09-13": 90}`. **Vor der
+   Korrektur stand dort `{}`.**
+3. Die Zeit im localStorage gelöscht und neu geladen: sie **kommt aus der Datei zurück**
+   (91 s — die 90 wiederhergestellt, eine Sekunde neu getickt).
+4. Eine Frage falsch beantwortet, gespeichert: `diagnose.user1` enthält `VD710`.
+5. Absichtlich einen leeren Stand gesendet: Zeit und Diagnose in der Datei bleiben stehen.
+
+### Dazu: wo die Zeit steckt, ist jetzt ablesbar
+Eine zweite Möglichkeit blieb und war von außen nicht zu sehen: **die Zeit wird je
+Benutzerplatz gezählt.** Wer an einem Tag auf Platz 3 lernt und danach Platz 1 ansieht,
+findet dort nichts — und das Fenster sagte kein Wort darüber. In der Datei hat Platz 3
+tatsächlich 30 Fragen im Lernbedarf, ist also benutzt worden.
+
+Das Übungszeit-Fenster zeigt deshalb unten eine Zeile, **sobald mehr als ein Platz
+Übungszeit hat**: welcher Platz wie viel an wie vielen Tagen hat, und welcher davon der
+gerade gewählte ist. Bei nur einem Platz erscheint sie nicht — sie wäre die Erklärung für
+ein Problem, das niemand hat.
+
+### Was ich nicht retten kann
+**Der Samstag ist weg.** Die Sicherung war wegen dieses Fehlers leer, und was im
+Browserspeicher nicht mehr steht, kann ich nicht wiederherstellen. Ob er dort einmal stand
+und verloren ging, oder auf einem anderen Benutzerplatz gezählt wurde, lässt sich von außen
+nicht mehr feststellen — die neue Zeile im Fenster wird es ab jetzt beantworten. Ab dieser
+Version ist die Zeit in der Datei, und damit sicher.
+
+### Wichtig beim Einbauen
+**`Server.js` ist mitgeändert.** Ein Neuladen der Seite reicht dafür nicht — der Trainer muss
+einmal beendet und neu gestartet werden (`STOP.bat`, dann `START.bat`), sonst läuft der alte
+Server weiter und wirft die Zeit weiter weg.
+
+---
+
+## [1.291.0] - 2026-09-13
+
+### Hinzugefügt
+Dietmar am 13.09.2026: „können wir noch was ergänzen" — und dann drei Sachen ausgewählt:
+Begriffsblätter zum Ausdrucken, Fortschritt je Thema, Lernen nach Themen. Alle drei hängen
+an derselben Grundlage, deshalb sind sie zusammen gebaut: seit 1.290.0 zeigt jede erklärte
+Frage mit `gruppe` auf eines von 21 Begriffsblättern, und jedes Blatt trägt ein `prinzip`.
+
+- **Das Themen-Fenster.** Eine Zeile je Begriffsblatt, das schwächste oben: Titel,
+  Fortschrittsbalken, „sitzen von gesamt", dazu wie viele wacklig und wie viele nie dran
+  waren. Zu jeder Zeile zwei Knöpfe — **Blatt lesen** und **Üben**. Oben ein Knopf „Die
+  schwächsten Themen üben", der aus den drei schwächsten Themen nur die Fragen nimmt, die
+  noch nicht sitzen.
+
+  Damit ist beides erledigt, was gewünscht war: der **Fortschritt je Thema** und das
+  **Lernen nach Themen**. Ich habe es absichtlich in EIN Fenster gelegt statt in zwei —
+  wer sieht, wo es klemmt, will von dort aus sofort dorthin, und ein zweiter Weg über ein
+  anderes Fenster wäre nur ein Umweg.
+
+- **Ein Blatt lesen — die Lektion ohne Frage drumherum.** Ein eigenes Fenster mit Prinzip,
+  Tabelle und Merksatz, in derselben Form wie die Erklärungstafel, damit man sich nicht
+  umstellen muss. Mit **Vorlesen** (dieselbe Reihenfolge wie in der Tafel) und einem Knopf
+  „Fragen üben". Unten steht, wie viele Fragen an diesem Blatt hängen und wie viele davon
+  sitzen, und darunter das Feld `quelle` — woher die Angaben kommen.
+
+- **„Wo es beim Verstehen klemmt" in der Auswertung.** Ein Kasten neben den Stolpersteinen:
+  die drei schwächsten Themen mit Balken, dazu ein Knopf zu allen 21. Der Unterschied zu
+  den Stolpersteinen ist die Sprache — die Stolpersteine zählen Fragennummern, dieser
+  Kasten sagt, welches THEMA nicht sitzt.
+
+- **Die Begriffsblätter auf Papier.** Ein neuer Kasten unter *Vor der Prüfung*: **ein
+  Thema pro Seite**, 21 Seiten — oben das Prinzip, darunter die Tabelle und der Merksatz.
+  Die Seitenzahl steht als „3 / 21" im Kopf jedes Blattes, damit man eine einzelne Seite
+  wiederfindet oder herausziehen kann. Ein zweiter Knopf druckt nur die Themen, die noch
+  nicht sitzen.
+
+  **Auf diesen Blättern stehen keine Prüfungsfragen und keine Antworten.** Damit gilt hier
+  dieselbe Regel, die beim Merkblatt aufgeschrieben ist: nichts Falsches auf Papier, an dem
+  sich etwas einprägen könnte. Gedruckt wird in der Reihenfolge des Stoffes, nicht nach
+  Quote — ein Heft soll immer gleich aussehen.
+
+### Gezählt wird nur im gewählten Prüfungsziel
+`blattFragen()` fragt `durchsichtBank()`, also den Bestand des gerade gewählten Ziels. Wer
+auf Klasse N steht, sieht nicht die Quote einer Aufstockung, die er nie geübt hat. Blätter
+ohne eine einzige Frage im aktuellen Ziel fallen aus der Liste. Als Maßstab gilt derselbe
+wie im Merkblatt: „sitzt" heißt gemeistert oder angerechnet, „wacklig" heißt schon einmal
+falsch und noch nicht sicher, „nie dran" heißt ohne jeden Eintrag.
+
+### Geändert
+- **`Index.html`:** neu sind `blattFragen`, `blattStand`, `blaetterStand`, `themenFarbe`,
+  `blattUeben`, `blattLesen`, `blattVorlesen`, `themenOeffnen`,
+  `themenSchwaechsteUeben` und `blaetterDrucken`; dazu der Themen-Kasten in
+  `statistikOeffnen`, der Druck-Kasten in `einstMerkblattFuellen` und ein Stylesheet-Block
+  für die zwei neuen Fenster.
+- `erklaerungen.json` ist unverändert gegenüber 1.290.0.
+
+### Zwei Fehler von mir, beim Testen gefunden
+- **Die halbe Seite blieb leer.** Mit `page-break-inside: avoid` allein schob jedes Blatt,
+  das nicht mehr ganz auf die Seite passte, sich auf die nächste — und ließ unten die
+  Hälfte frei. 21 Blätter ergaben 19 unruhige Seiten. Jetzt beginnt jedes Blatt eine eigene
+  Seite: 21 Blätter, 21 Seiten, und die Nummer im Kopf stimmt mit der Seite überein.
+- **Eine leere Seite am Ende.** `.blatt:last-of-type` traf nicht das letzte Blatt, sondern
+  die Fußzeile — beide sind `div`, und `:last-of-type` zählt nach Elementtyp, nicht nach
+  Klasse. Deshalb hatte auch das letzte Blatt einen Seitenumbruch hinter sich und der Druck
+  hatte 22 statt 21 Seiten. Jetzt bekommt das letzte Blatt die Klasse `letzt`.
+
+### Nachgeprüft
+- Im Browser durchgespielt: 21 Blätter geladen, 343 Fragen der Klasse N hängen daran (die
+  beiden übrigen von 345 gehören zu anderen Zielen und werden dort gezählt). Themen-Fenster
+  mit 21 Zeilen, Blatt-Fenster mit Prinzip, 20 Tabellenzeilen und Merksatz. Der Kasten in
+  der Auswertung nennt die drei schwächsten Themen. Keine Meldung in der Konsole.
+- Den Druck als PDF gerendert und angesehen: **21 Seiten, ein Thema je Seite**, Kopf und
+  Hinweis auf Seite 1, keine leere Seite am Ende.
+- Syntaxprüfung: 17 Script-Blöcke mit `node --check` sauber, alle Style-Blöcke ausgeglichen.
+
+---
+
 ## [1.290.0] - 2026-09-13
 
 ### Das Fach Vorschriften der Klasse N ist vollständig
