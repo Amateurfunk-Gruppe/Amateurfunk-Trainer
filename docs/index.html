@@ -1,0 +1,444 @@
+<!doctype html>
+<!--
+  ============================================================================
+  DIE SEITE FÜR GITHUB PAGES
+  ----------------------------------------------------------------------------
+  Liegt unter docs/index.html und erscheint nach dem Einschalten unter
+  https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/
+
+  EINSCHALTEN: Settings → Pages → Source „Deploy from a branch“ →
+  Branch: main, Ordner: /docs → Save.
+
+  ZWEI DINGE BEIM ÄNDERN BEACHTEN
+  1. Die Zahlen unten (1286 Erklärungen, 76 Blätter, 244 Rechenwege und die
+     vier Prüfungsziele) gelten für Version 1.295.0. Wer sie ändert, ändert
+     sie an ZWEI Stellen: im Fließtext und in der Tabelle „Prüfungsziele“.
+  2. Die Seite lädt NICHTS von fremden Servern — keine Schriften, kein
+     Zählpixel, kein Rahmenwerk. Das soll so bleiben: dann gibt es keine
+     Cookie-Frage und nichts, was ausfallen kann.
+  ============================================================================
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amateurfunk-Trainer — Prüfung Klasse N, E und A üben</title>
+<meta name="description" content="Kostenloses Lernprogramm für die deutsche Amateurfunkprüfung. Der amtliche Fragenkatalog der Bundesnetzagentur für Klasse N, E und A — mit einer Erklärung zu jeder Frage, Karteikasten, Prüfungssimulator und Kursleiter-Ansicht. Läuft auf dem eigenen Rechner, ohne Konto.">
+<link rel="canonical" href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">
+<meta name="theme-color" content="#0f2745">
+<link rel="icon" href="bilder/zeichen.png" sizes="256x256">
+<link rel="apple-touch-icon" href="bilder/zeichen.png">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Amateurfunk-Trainer">
+<meta property="og:title" content="Amateurfunk-Trainer — Prüfung Klasse N, E und A üben">
+<meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur mit einer Erklärung zu jeder Frage. Kostenlos, läuft auf dem eigenen Rechner, ohne Konto.">
+<meta property="og:url" content="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">
+<meta property="og:image" content="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/bilder/vorschau.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="663">
+<meta property="og:image:alt" content="Amateurfunk-Trainer: drei von vier Prüfungszielen vollständig erklärt">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+:root{
+  --navy:#0f2745; --navy-tief:#0b1d34; --navy-hell:#16365e;
+  --tuerkis:#22e0f2; --tuerkis-dunkel:#0a9cb0; --amber:#f0a93c;
+  --gruen:#1f9d55; --rot:#c0392b;
+  --grund:#eef2f9; --karte:#fff; --linie:#d7e0ec;
+  --text:#17243a; --matt:#5b6b80;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--grund); color:var(--text); line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.bahn{max-width:1060px;margin:0 auto;padding:0 22px}
+h1,h2,h3{line-height:1.16;letter-spacing:-.018em}
+h2{font-size:clamp(1.6rem,3.6vw,2.3rem);font-weight:800;margin-bottom:.5em}
+h3{font-size:1.16rem;font-weight:800;margin-bottom:.35em}
+p{margin-bottom:1em}
+a{color:#0d4f8b}
+img{max-width:100%;height:auto;display:block}
+
+/* ------------------------------------------------------------ Kopf */
+.kopf{
+  background:
+    radial-gradient(900px 560px at 12% 0%, #1d4272 0%, rgba(29,66,114,0) 62%),
+    radial-gradient(760px 520px at 96% 100%, #0a9cb0 0%, rgba(10,156,176,0) 60%),
+    linear-gradient(155deg,#0f2745 0%,#0b1d34 100%);
+  color:#fff; padding:54px 0 60px;
+}
+.kopf-reihe{display:flex;align-items:center;gap:20px;margin-bottom:30px}
+.kopf-reihe img{width:74px;height:74px;border-radius:16px;flex:none}
+.wortmarke{font-size:1.42rem;font-weight:800;letter-spacing:-.01em}
+.wortmarke span{color:var(--tuerkis)}
+.kopf h1{font-size:clamp(2rem,5.4vw,3.35rem);font-weight:800;max-width:17ch}
+.kopf h1 span{color:var(--tuerkis)}
+.kopf .vor{font-size:clamp(1.02rem,2.2vw,1.22rem);color:#c2d7ec;max-width:60ch;margin-top:18px}
+.knoepfe{display:flex;gap:13px;flex-wrap:wrap;margin-top:30px}
+.knopf{
+  display:inline-block;padding:14px 26px;border-radius:10px;font-weight:700;
+  text-decoration:none;font-size:1.02rem;border:2px solid transparent;
+}
+.knopf-haupt{background:var(--tuerkis);color:#08202f}
+.knopf-haupt:hover{background:#4ae9f8}
+.knopf-rand{border-color:rgba(255,255,255,.42);color:#fff}
+.knopf-rand:hover{border-color:#fff;background:rgba(255,255,255,.09)}
+.kopf-fuss{margin-top:26px;font-size:.93rem;color:#8fb4dd}
+
+/* ------------------------------------------------------------ Zahlen */
+.zahlen{background:var(--navy-tief);color:#fff;padding:30px 0}
+.zahlen-gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:22px;text-align:center}
+.zahl{font-size:2.5rem;font-weight:800;color:var(--tuerkis);line-height:1.05;font-variant-numeric:tabular-nums}
+.zahl-name{font-size:.9rem;color:#9fc0e0;letter-spacing:.05em;margin-top:3px}
+
+/* ------------------------------------------------------------ Abschnitte */
+section{padding:62px 0}
+section.hell{background:var(--karte)}
+.blei{font-size:1.1rem;color:var(--matt);max-width:66ch}
+.marke{
+  display:inline-block;font-size:.8rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--tuerkis-dunkel);margin-bottom:9px;
+}
+
+.tabelle-rolle{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:26px 0;font-size:1rem}
+th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--linie)}
+th{font-size:.83rem;letter-spacing:.05em;text-transform:uppercase;color:var(--matt);font-weight:700}
+td.zahlen-zelle{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.fertig{color:var(--gruen);font-weight:700}
+.offen{color:var(--amber);font-weight:700}
+
+figure{margin:30px 0}
+figure img{border-radius:12px;border:1px solid var(--linie);box-shadow:0 18px 44px rgba(15,39,69,.16)}
+figcaption{font-size:.92rem;color:var(--matt);margin-top:11px}
+
+.gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:22px;margin-top:30px}
+.feld{background:var(--karte);border:1px solid var(--linie);border-radius:12px;padding:22px 22px 20px}
+section.hell .feld{background:var(--grund)}
+.feld p{font-size:.97rem;color:var(--matt);margin:0}
+
+/* -------------------------------------------------- Kursleiter, dunkel */
+.dunkel{background:var(--navy);color:#fff}
+.dunkel h2{color:#fff}
+.dunkel .blei{color:#bcd3ea}
+.dunkel .marke{color:var(--tuerkis)}
+.dunkel .feld{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16)}
+.dunkel .feld h3{color:#fff}
+.dunkel .feld p{color:#bcd3ea}
+.dunkel figure img{border-color:rgba(255,255,255,.14)}
+.dunkel figcaption{color:#9fc0e0}
+
+/* ------------------------------------------------------------ Laden */
+.laden{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:26px}
+.laden a{
+  display:block;text-decoration:none;background:var(--karte);border:1px solid var(--linie);
+  border-radius:12px;padding:20px;color:var(--text);
+}
+.laden a:hover{border-color:var(--tuerkis-dunkel);box-shadow:0 8px 22px rgba(15,39,69,.10)}
+.laden b{display:block;font-size:1.06rem;margin-bottom:3px}
+.laden span{font-size:.9rem;color:var(--matt)}
+
+.hinweis{
+  background:#fdf6e8;border:1px solid #eccf9a;border-left:5px solid var(--amber);
+  border-radius:10px;padding:20px 22px;margin-top:30px;
+}
+.hinweis h3{margin-bottom:.3em}
+.hinweis p:last-child{margin-bottom:0}
+
+/* ------------------------------------------------------------ Fuss */
+footer{background:var(--navy-tief);color:#9fc0e0;padding:44px 0 50px;font-size:.94rem}
+footer a{color:#bcd3ea}
+footer .fuss-gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:26px}
+footer h3{color:#fff;font-size:.86rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7em}
+footer ul{list-style:none}
+footer li{margin-bottom:.45em}
+.fuss-strich{border-top:1px solid rgba(255,255,255,.13);margin-top:32px;padding-top:22px;font-size:.88rem;color:#7f9cbb}
+
+@media (max-width:640px){
+  section{padding:44px 0}
+  .kopf{padding:38px 0 44px}
+  .kopf-reihe img{width:58px;height:58px}
+  table{font-size:.93rem}
+  th,td{padding:10px 6px}
+  th{font-size:.76rem;letter-spacing:.02em}
+  th:last-child,td:last-child{padding-right:0}
+  th:first-child,td:first-child{padding-left:0}
+  td.zahlen-zelle{white-space:normal}
+}
+</style>
+</head>
+<body>
+
+<header class="kopf">
+  <div class="bahn">
+    <div class="kopf-reihe">
+      <img src="bilder/zeichen.png" alt="">
+      <div class="wortmarke">Amateurfunk-<span>Trainer</span></div>
+    </div>
+    <h1>Die Amateurfunkprüfung üben — und <span>verstehen</span>.</h1>
+    <p class="vor">
+      Der amtliche Fragenkatalog der Bundesnetzagentur für Klasse N, E und A.
+      Mit einer Erklärung zu jeder Frage: nicht nur die richtige Antwort,
+      sondern der Grund dahinter.
+    </p>
+    <div class="knoepfe">
+      <a class="knopf knopf-haupt" href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">Kostenlos herunterladen</a>
+      <a class="knopf knopf-rand" href="#kursleiter">Für Kursleiter</a>
+    </div>
+    <p class="kopf-fuss">
+      Kostenlos · kein Konto · keine Werbung · läuft ohne Internet auf dem eigenen Rechner
+    </p>
+  </div>
+</header>
+
+<div class="zahlen">
+  <div class="bahn zahlen-gitter">
+    <div><div class="zahl">1286</div><div class="zahl-name">Fragen erklärt</div></div>
+    <div><div class="zahl">76</div><div class="zahl-name">Begriffsblätter</div></div>
+    <div><div class="zahl">244</div><div class="zahl-name">Rechenwege</div></div>
+    <div><div class="zahl">438</div><div class="zahl-name">Bilder beschrieben</div></div>
+  </div>
+</div>
+
+<section>
+  <div class="bahn">
+    <span class="marke">Was das ist</span>
+    <h2>Ein Lernprogramm für die Amateurfunkprüfung</h2>
+    <p class="blei">
+      Wer in Deutschland eine Amateurfunkzulassung will, legt bei der Bundesnetzagentur
+      eine Prüfung ab — Klasse N als Einstieg, darüber Klasse E und Klasse A. Geprüft
+      wird aus einem amtlichen Fragenkatalog, und der ist öffentlich.
+    </p>
+    <p class="blei">
+      Der Amateurfunk-Trainer nimmt genau diesen Katalog (Stand März 2024) und macht ein
+      Lernprogramm daraus: Karteikasten mit Wiederholung nach Abstand, Prüfungssimulator
+      mit echter Zeitnahme, Sprachausgabe zum Anhören, Statistik über den eigenen Stand.
+      Er läuft auf dem eigenen Rechner unter Windows, Linux und macOS, braucht kein Konto
+      und keine Verbindung ins Internet.
+    </p>
+  </div>
+</section>
+
+<section class="hell">
+  <div class="bahn">
+    <span class="marke">Der Stand</span>
+    <h2>Die vier Prüfungsziele</h2>
+    <p class="blei">
+      Du wählst im Programm, worauf du hinarbeitest. Drei der vier Ziele sind vollständig
+      erklärt — bei jeder einzelnen Frage steht, warum die richtige Antwort richtig ist
+      und warum jede falsche falsch ist.
+    </p>
+    <div class="tabelle-rolle">
+    <table>
+      <thead>
+        <tr><th>Prüfungsziel</th><th>Was es ist</th><th>Fragen</th><th>Erklärt</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Klasse N</b></td><td>Direkteinstieg, für Anfänger ohne Vorkenntnisse</td>
+            <td class="zahlen-zelle">571</td><td class="zahlen-zelle fertig">571 — alle</td></tr>
+        <tr><td><b>Klasse E</b></td><td>Direkteinstieg, mehr Technik und mehr Bänder</td>
+            <td class="zahlen-zelle">1034</td><td class="zahlen-zelle fertig">1034 — alle</td></tr>
+        <tr><td><b>N&nbsp;→&nbsp;E</b></td><td>Aufstockung, wenn Klasse N schon bestanden ist</td>
+            <td class="zahlen-zelle">463</td><td class="zahlen-zelle fertig">463 — alle</td></tr>
+        <tr><td><b>E&nbsp;→&nbsp;A</b></td><td>Aufstockung, wenn Klasse E schon bestanden ist</td>
+            <td class="zahlen-zelle">716</td><td class="zahlen-zelle offen">252 — in Arbeit</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="blei" style="font-size:.96rem">
+      Die 1034 Fragen der Klasse E sind die 571 der Klasse N plus die 463 der Aufstockung —
+      wer direkt auf E geht, wird über beides geprüft. Insgesamt sind es 1286 verschiedene
+      Fragen, weil Vorschriften und Betrieb für alle Klassen dieselben sind.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="bahn">
+    <span class="marke">Der Unterschied</span>
+    <h2>Jede Erklärung beginnt mit dem Prinzip</h2>
+    <p class="blei">
+      Fragen abklicken kann jedes Programm. Der Trainer erklärt zuerst den Grund, warum
+      etwas so ist — und erst danach den Kniff für diese eine Frage. Wer das Prinzip
+      verstanden hat, kann die Frage auch dann, wenn sie in der Prüfung anders gestellt
+      wird. Bei Rechenaufgaben steht der Weg mit jedem Zwischenschritt dabei, und zu
+      jeder falschen Antwort ein Satz, welcher Denk- oder Rechenfehler genau dorthin führt.
+    </p>
+    <figure>
+      <img src="bilder/erklaerung.webp" width="1100" height="486"
+           alt="Das Erklärfenster des Trainers: über der Frage die Antwortmöglichkeiten, darunter die Erklärung, die mit dem Abschnitt „Das Prinzip“ beginnt." loading="lazy">
+      <figcaption>Die Erklärung öffnet sich unter der Frage — mit dem Prinzip an erster Stelle.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="hell">
+  <div class="bahn">
+    <span class="marke">Lernen nach Themen</span>
+    <h2>Sehen, wo es klemmt</h2>
+    <p class="blei">
+      Hinter den Erklärungen stehen 76 Begriffsblätter. Ein Blatt fasst ein Thema
+      zusammen — oben das Prinzip, darunter die Begriffe, ein Merksatz und die Quelle.
+      Viele Fragen hängen an demselben Blatt, und im Themenfenster siehst du für jedes
+      davon deinen Stand. Das schwächste steht oben, und ein Klick startet eine Runde
+      mit genau den Fragen dieses Themas.
+    </p>
+    <figure>
+      <img src="bilder/themen.webp" width="1100" height="649"
+           alt="Das Themenfenster: eine Liste der Themen mit Fortschrittsbalken, das schwächste oben, je Zeile die Knöpfe „Blatt lesen“ und „Üben“." loading="lazy">
+      <figcaption>41 Themen für dieses Prüfungsziel, jedes mit eigenem Fortschritt.</figcaption>
+    </figure>
+    <div class="gitter">
+      <div class="feld"><h3>Karteikasten</h3><p>Was sitzt, kommt seltener. Was wackelt, kommt wieder — nach wachsendem Abstand.</p></div>
+      <div class="feld"><h3>Prüfungssimulator</h3><p>Echte Prüfungslänge, echte Zeitnahme, echtes Bestehenskriterium.</p></div>
+      <div class="feld"><h3>Vorlesen</h3><p>Fragen, Antworten und Erklärungen werden vorgelesen — für unterwegs oder als Nachteilsausgleich.</p></div>
+      <div class="feld"><h3>Stolpersteine</h3><p>Die Fragen, bei denen du wiederholt danebenliegst, mit deiner letzten falschen Antwort.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="dunkel" id="kursleiter">
+  <div class="bahn">
+    <span class="marke">Für Ausbilder</span>
+    <h2>Gebaut auch für den Kursraum</h2>
+    <p class="blei">
+      Wer einen Lehrgang leitet, braucht mehr als ein Lernprogramm für sich allein.
+      Der Trainer hat eine Beamer-Ansicht, in der eine Frage groß an der Wand steht
+      und danach zu sehen ist, wofür sich die Gruppe mehrheitlich entschieden hat —
+      lesbar bis in die letzte Reihe. Dazu kommen mehrere Benutzerplätze auf einem
+      Rechner und eine Auswertung über den ganzen Kurs.
+    </p>
+    <figure>
+      <img src="bilder/beamer.webp" width="1100" height="619"
+           alt="Die Beamer-Ansicht: eine Prüfungsfrage in großer Schrift, darunter rot die mehrheitlich gewählte falsche Antwort und grün die richtige." loading="lazy">
+      <figcaption>Beamer-Ansicht: was die Gruppe gewählt hat, und was richtig gewesen wäre.</figcaption>
+    </figure>
+    <div class="gitter">
+      <div class="feld"><h3>Kursauswertung</h3><p>Welche Themen der ganzen Gruppe schwerfallen — und wo sich eine Wiederholung lohnt.</p></div>
+      <div class="feld"><h3>Mehrere Plätze</h3><p>Drei getrennte Lernstände auf einem Rechner, etwa für den Kursraum oder die Familie.</p></div>
+      <div class="feld"><h3>Begriffsblätter auf Papier</h3><p>Alle 76 Blätter als Heft zum Ausdrucken — ein Thema je Seite, ohne Prüfungsfragen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="bahn">
+    <span class="marke">Auf Papier</span>
+    <h2>Der Lehrstoff zum Mitnehmen</h2>
+    <p class="blei">
+      Jedes Begriffsblatt passt auf eine Seite. Oben steht das Prinzip, darunter die
+      Begriffe und ein Merksatz. Auf den Blättern stehen bewusst keine Prüfungsfragen
+      und keine Antworten — nur der Stoff. Für die Bahn, den Kurs oder den Küchentisch.
+      Du kannst alle drucken oder nur die Themen, die bei dir noch wackeln.
+    </p>
+    <figure style="max-width:620px">
+      <img src="bilder/blatt.webp" width="780" height="1104"
+           alt="Eine gedruckte Seite aus dem Begriffsheft: Überschrift, Abschnitt „Das Prinzip“, eine zweispaltige Begriffstabelle und ein Merksatz." loading="lazy">
+      <figcaption>Ein Begriffsblatt, wie es aus dem Drucker kommt.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="hell" id="laden">
+  <div class="bahn">
+    <span class="marke">Herunterladen</span>
+    <h2>Kostenlos, für Windows, Linux und macOS</h2>
+    <p class="blei">
+      Alle Fassungen liegen auf der Release-Seite. Such dir die für dein System aus,
+      lade sie herunter und starte sie — mehr ist nicht nötig.
+    </p>
+    <div class="laden">
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>Windows</b><span>Installationsprogramm (.exe)</span></a>
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>Linux · Debian, Ubuntu</b><span>Paket (.deb)</span></a>
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>Linux · Fedora, openSUSE</b><span>Paket (.rpm)</span></a>
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>macOS</b><span>Archiv (.zip)</span></a>
+    </div>
+
+    <div class="hinweis">
+      <h3>Was der Trainer nicht ist</h3>
+      <p>
+        Er ist kein amtliches Angebot und keine Garantie. Die Fragen stammen aus dem
+        Katalog der Bundesnetzagentur, die Erklärungen sind dazugeschrieben und können
+        Fehler enthalten — wenn dir einer auffällt, melde ihn gern über die
+        <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/issues">Fehlerseite</a>.
+        Er ersetzt auch keinen Kurs: Löten, Antennenbau und der erste eigene Funkspruch
+        stehen in keinem Fragenkatalog.
+      </p>
+      <p>
+        Und er schickt nichts weg. Dein Lernstand bleibt auf deinem Rechner; es gibt
+        kein Konto, keine Anmeldung und keine Auswertung, die irgendwo anders landet.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="bahn">
+    <div class="fuss-gitter">
+      <div>
+        <h3>Das Programm</h3>
+        <ul>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">Herunterladen</a></li>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer">Quelltext auf GitHub</a></li>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/blob/main/CHANGELOG.md">Änderungsprotokoll</a></li>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/issues">Fehler melden</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Zur Prüfung</h3>
+        <ul>
+          <li>Fragenkatalog der Bundesnetzagentur, Stand März 2024</li>
+          <li>Klasse N, E und A</li>
+          <li>Prüfungstermine und Anmeldung: bei der Bundesnetzagentur</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Lizenz</h3>
+        <ul>
+          <li>PolyForm Noncommercial 1.0.0</li>
+          <li>Kostenlos für den privaten Gebrauch, für Vereine und für den Unterricht</li>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/blob/main/LICENSE">Lizenztext</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fuss-strich">
+      Amateurfunk-Trainer · Entwickler und Urheber: Dietmar Reh ·
+      Kein amtliches Angebot der Bundesnetzagentur.
+      <!--
+        IMPRESSUM: Für eine private, nicht gewerbliche Seite ist ein Impressum in
+        der Regel nicht zwingend — sicher ist es trotzdem. Wer eines setzen will,
+        ergänzt hier Name, Anschrift und E-Mail und verlinkt sie. Ich habe bewusst
+        nichts eingetragen, weil ich deine Anschrift nicht erfinden will.
+      -->
+    </div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"Amateurfunk-Trainer",
+  "inLanguage":"de",
+  "applicationCategory":"EducationalApplication",
+  "operatingSystem":"Windows, Linux, macOS",
+  "description":"Lernprogramm für die deutsche Amateurfunkprüfung. Der amtliche Fragenkatalog der Bundesnetzagentur für Klasse N, E und A mit einer Erklärung zu jeder Frage, Karteikasten, Prüfungssimulator und Kursleiter-Ansicht.",
+  "url":"https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
+  "downloadUrl":"https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},
+  "author":{"@type":"Person","name":"Dietmar Reh"},
+  "license":"https://polyformproject.org/licenses/noncommercial/1.0.0/"
+}
+</script>
+
+</body>
+</html>

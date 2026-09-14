@@ -14,7 +14,7 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 Dietmar am 13.09.2026: „N → E: 338 offen (von 463) Mache das bitte Fertig"
 
-**Alle 463 Fragen des Aufstiegs N → E haben jetzt eine Erklärung.** Damit sind zwei der drei
+**Alle 463 Fragen des Aufstiegs N → E haben jetzt eine Erklärung.** Damit sind **drei der vier**
 Prüfungsziele abgeschlossen. Vorher waren es 125 (nur die Fragen mit Zeichnung), es fehlten
 338 — alle reiner Text, alle aus dem Technikteil.
 
@@ -22,15 +22,27 @@ Prüfungsziele abgeschlossen. Vorher waren es 125 (nur die Fragen mit Zeichnung)
 |---|---|---|
 | Erklärungen gesamt | 948 | **1286** |
 | Klasse N | 571 von 571 | 571 von 571 |
+| **Klasse E** | 696 von 1034 | **1034 von 1034** |
 | **N → E** | 125 von 463 | **463 von 463** |
 | E → A | 252 von 716 | 252 von 716 |
 | Begriffsblätter | 41 | **76** |
 | Fragen an einem Blatt | 493 | **834** |
 | Fragen mit Rechenweg | 149 | **244** |
-| `erklaerungen.json` | 1.681.598 Bytes | **2.297.060 Bytes** |
+| `erklaerungen.json` | 1.681.598 Bytes | **2.297.226 Bytes** |
 
 Vorschriften und Betrieb waren mit Klasse N schon fertig — die V- und B-Fragen sind für alle
 Klassen dieselben. Übrig war nur Technik.
+
+**Berichtigung, noch am selben Tag.** Hier stand zuerst „zwei der drei Prüfungsziele". Das war
+falsch, und Dietmar hat es gesehen: „Einstieg in N und von N nach E und von E nach A fehlt
+doch?" Der Trainer kennt **vier** Ziele, nicht drei — Klasse N, Klasse E, N → E und E → A.
+Klasse E war in meiner Auswertung nie aufgetaucht, weil mein Prüfskript nur drei Fragendateien
+kannte und `Fragen-E.json` nicht mitlas.
+
+Der Fehler war reine Buchhaltung, keine fehlende Arbeit: Die 1034 Fragen der Klasse E sind
+genau die 571 der Klasse N plus die 463 des Aufstiegs (nachgerechnet, die Differenz beider
+Mengen ist in beide Richtungen leer). Mit dem Aufstieg ist also auch Klasse E vollständig —
+richtig ist **drei von vier**.
 
 ### Die 35 neuen Begriffsblätter
 
@@ -260,7 +272,7 @@ Dietmar am 13.09.2026: „die Klasse N fertig?" — nach seinem eigenen Plan: �
 wir die Klasse N fertig. 3. Ausliefern 4. Danach mache die Klasse E nach A fertig."
 
 **Alle 571 Fragen der Klasse N haben jetzt eine Erklärung.** Vorher waren es 424, es fehlten
-147: 43 im Fach Betrieb und 104 im Fach Technik. Damit ist das erste der drei Prüfungsziele
+147: 43 im Fach Betrieb und 104 im Fach Technik. Damit ist das erste der vier Prüfungsziele
 abgeschlossen.
 
 | | vorher | jetzt |
