@@ -65,6 +65,20 @@ Alle vier nennen jetzt diesen Weg, erwähnen `piper.exe` und das Setup nur noch 
 und keine davon blockiert mehr. Dazu der Satz, der dem Benutzer am meisten gefehlt hat: dass
 Piper **nicht** zur Installation gehört und nichts schiefgegangen ist.
 
+**Nachtrag, eine Stunde später: es waren fünf.** Der Benutzer meldete, die Meldung komme
+weiter — und er hatte recht. Im Reiter *Nachteilsausgleich*, genau dort, wo er geklickt hat,
+stand eine fünfte: „Kein Sprachmodell im Ordner `piper/` gefunden." Sie unterscheidet zwar
+seit dem 07.09.2026 zwischen Windows und Linux, gibt aber auf beiden Wegen einen Rat, den es
+nicht mehr braucht — unter Windows „am einfachsten das Setup noch einmal ausführen", auf Linux
+„die Dateien `.onnx` und `.onnx.json` gehören von Hand dorthin". Zwei Zeilen darunter sitzt
+der Knopf **„Stimmen hinzufügen"**, der seit demselben 07.09.2026 genau das auf jedem System
+selbst erledigt.
+
+Der Text war schlicht älter als der Knopf und hat Leute zu Handarbeit geschickt, die niemand
+mehr machen muss. Jetzt nennt er zuerst den Knopf, dann den Weg über *Wartung →
+Hilfsprogramme*, falls auch das Programm fehlt — und die Handarbeit nur noch als Fußnote für
+die, die es so wollen.
+
 ### Hinzugefügt — `erklaerungen.json` liegt jetzt in den Paketen
 
 Beim Bau der Pakete für 1.295.0 aufgefallen: `erklaerungen.json` stand **in keiner der beiden

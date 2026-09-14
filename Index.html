@@ -23103,11 +23103,24 @@ async function ttsFelderNachziehen() {
         const linux = !!(data.piper && data.piper.system && data.piper.system !== 'win32');
         if (!data.voices || data.voices.length === 0) {
             select.innerHTML = '<option value="">Keine Stimmen gefunden</option>';
-            hint.innerHTML = linux
-                ? 'Kein Sprachmodell im Ordner <code>piper/</code> gefunden. Auf Linux und am Mac '
-                  + 'gehören die Dateien <code>.onnx</code> und <code>.onnx.json</code> von Hand dorthin — '
-                  + 'zu holen bei <a href="https://huggingface.co/rhasspy/piper-voices" target="_blank" rel="noopener">huggingface.co/rhasspy/piper-voices</a>.'
-                : 'Kein Sprachmodell im <code>piper/</code> Ordner gefunden. Die Stimme kommt mit dem Setup – am einfachsten das Setup noch einmal ausführen.';
+            // AM 14.09.2026 BERICHTIGT, und es war dieselbe Sorte Fehler wie
+            // eine Woche zuvor: Hier stand auf Linux "die Dateien gehoeren von
+            // Hand dorthin" und unter Windows "am einfachsten das Setup noch
+            // einmal ausfuehren" - waehrend zwei Knoepfe weiter oben
+            // "Stimmen hinzufuegen" steht, das genau das seit dem 07.09.2026
+            // auf jedem System selbst erledigt. Der Text war aelter als der
+            // Knopf und hat Leute zu Handarbeit geschickt, die niemand mehr
+            // machen muss.
+            hint.innerHTML =
+                  'Keine Stimme gefunden. <b>Der Trainer holt sie selbst:</b> der Knopf '
+                + '<b>„Stimmen hinzufügen"</b> gleich hier darunter.'
+                + '<br>Fehlt auch das Programm <code>piper</code>, zuerst: Reiter '
+                + '<i>Wartung</i> → <i>Hilfsprogramme</i> → <b>Holen</b>.'
+                + (linux
+                    ? '<br><span style="color:var(--muted);">Von Hand geht es auch: die Dateien '
+                      + '<code>.onnx</code> und <code>.onnx.json</code> in den Ordner <code>piper/</code>, '
+                      + 'zu holen bei <a href="https://huggingface.co/rhasspy/piper-voices" target="_blank" rel="noopener">huggingface.co/rhasspy/piper-voices</a>.</span>'
+                    : '<br><span style="color:var(--muted);">Wahlweise tut es auch das Setup noch einmal — es bringt eine Stimme mit.</span>');
             return;
         }
         // Der Hinweis kommt WEITER UNTEN, nachdem der Standardtext steht -
