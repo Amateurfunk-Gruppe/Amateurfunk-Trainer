@@ -8,6 +8,89 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.296.0] - 2026-09-14
+
+### Behoben — zwei Stimmen auf einmal
+
+Ein Benutzer am 14.09.2026, nachdem er das `.deb` auf seinem Rechner installiert hatte:
+„er liest vor aber irgendwas passt da nicht als ob es doppelt und dreifach kommt die stimme" —
+und kurz darauf: „erst auf schluss passt es".
+
+**Beides stimmte, und beides war ein Fehler in `Index.html`, nicht im Linux-Paket.**
+
+Startete ein zweiter Vorlesevorgang, während der erste noch sprach, wurde der alte nur
+*losgelassen*, nicht angehalten. `ttsQueueToken` sorgte dafür, dass die alte Schleife kein
+**neues** Stück mehr anfängt — das gerade laufende Audio hielt niemand an, weil
+`currentTtsAudio` zu diesem Zeitpunkt längst auf das neue zeigte. Aus demselben Grund
+erreichte auch `stopTTS()` nur das jüngste Audio: Es hält genau eine Variable an, und das
+war die falsche.
+
+Nachgestellt und gemessen, zwei Vorlesevorgänge im Abstand von 1,2 Sekunden:
+
+| | vorher | jetzt |
+|---|---|---|
+| gleichzeitig sprechende Stimmen | **2** | **1** |
+| nach Klick auf „Stop" noch sprechend | **1** | **0** |
+
+Das alte Stück lief im Versuch bis 3,24 s weiter, obwohl längst gestoppt war; jetzt schweigt
+es bei 1,13 s. „Erst auf Schluss passt es" heißt genau das: wenn die verwaisten Stücke von
+selbst zu Ende waren.
+
+Ausgelöst wurde es bei jedem zweiten Vorlesen kurz hintereinander — beim Weiterblättern mit
+automatischem Vorlesen, beim zweiten Klick auf *Vorlesen*, oder wenn Frage und Erklärung
+schnell nacheinander drankamen.
+
+**Was geändert wurde.** Jedes abgespielte Stück steht jetzt in `ttsLaufendeAudios` und wird
+beim Anhalten wieder ausgetragen — ein Satz statt einer einzelnen Variablen, denn es können
+mehrere unterwegs sein. `stopTTS()` und jeder neue Vorlesevorgang bringen **alle** zum
+Schweigen, und der Zweig „inzwischen läuft ein neuerer Vorgang" hält das Audio an, statt es
+loszulassen. Der Normalfall bleibt unberührt: Ein langer Abschnitt zerfällt weiter in vier
+Stücke, die sauber nacheinander kommen, nie mehr als eines gleichzeitig (nachgemessen).
+
+### Behoben — vier Meldungen, die es nur unter Windows gab
+
+Derselbe Benutzer, einen Schritt vorher: Nach der Installation des `.deb` fehlte Piper, und
+der Trainer schickte ihn zum **Setup** — das es auf Linux gar nicht gibt. Nachgesehen: Vier
+Meldungen im Vorlesezweig sprachen von `piper.exe` und vom Setup, zwei davon als
+blockierendes `alert()`, obwohl gleich darüber steht, dass es die nicht mehr geben soll
+(FIX W21).
+
+Schlimmer als der falsche Dateiname war, was fehlte: **Der Weg, der auf jedem System hilft,
+stand in keiner der vier.** Es gibt ihn längst — *Einstellungen → Wartung → Hilfsprogramme →
+Holen*, wo `programme_holen.js` das System erkennt und die passende Fassung selbst holt. Er
+stand nur in einem Hinweis, den man erst zu sehen bekommt, wenn die **Stimmen** schon da sind
+und bloß das Programm fehlt — also nie bei einer frischen Installation.
+
+Alle vier nennen jetzt diesen Weg, erwähnen `piper.exe` und das Setup nur noch unter Windows,
+und keine davon blockiert mehr. Dazu der Satz, der dem Benutzer am meisten gefehlt hat: dass
+Piper **nicht** zur Installation gehört und nichts schiefgegangen ist.
+
+### Hinzugefügt — `erklaerungen.json` liegt jetzt in den Paketen
+
+Beim Bau der Pakete für 1.295.0 aufgefallen: `erklaerungen.json` stand **in keiner der beiden
+Paketlisten** — weder in `installer.iss` noch in `pakete_bauen.sh`. Nachgeprüft am fertigen
+`.deb` von 1.275.0: nicht enthalten. Und es fällt nicht auf, weil nichts knallt — `Index.html`
+schreibt beim 404 nur eine Zeile in die Konsole („der Erklärkasten bleibt aus") und macht
+weiter.
+
+In die installierten Ordner kam die Datei bisher ausschließlich über den GitHub-Updater. Wer
+neu installierte und nicht sofort aktualisierte — oder ohne Netz lernte — hat nie eine
+Erklärung gesehen. Bei einer Fassung, deren Ankündigung „1286 Erklärungen" lautet, ist das
+der Unterschied zwischen Release und Blamage. Beide Listen haben die Zeile jetzt.
+
+### Die Seite für GitHub Pages
+
+Unter `docs/` liegt eine Seite, die GitHub unter
+`amateurfunk-gruppe.github.io/Amateurfunk-Trainer/` veröffentlicht: dreizehn Abschnitte mit
+fünfzehn Bildern, inhaltlich aus der README. Kein fremder Server, keine Schrift von außen,
+kein Zählpixel — also auch keine Cookie-Frage. Eingeschaltet wird sie unter
+*Settings → Pages → Deploy from a branch → main, Ordner `/docs`*.
+
+> Der Ordner ist dabei das Entscheidende: Im Hauptordner heißt die Datei `Index.html` mit
+> großem I, GitHub sucht `index.html` mit kleinem — und meldet sonst „Site not found".
+
+---
+
 ## [1.295.0] - 2026-09-13
 
 ### Hinzugefügt — der Aufstieg N auf E ist vollständig erklärt

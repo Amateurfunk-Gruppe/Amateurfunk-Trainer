@@ -20681,6 +20681,51 @@ function getFilteredQuestions(part) {
 
 let currentTtsAudio = null;
 let currentTtsUrl = null;
+
+// ================================================================
+//  JEDES ABGESPIELTE STUECK BLEIBT GREIFBAR
+//  ----------------------------------------------------------------
+//  Von einem Benutzer gemeldet am 14.09.2026, nach der Installation
+//  des .deb auf Linux: "er liest vor, aber irgendwas passt da nicht,
+//  als ob es doppelt und dreifach kommt die Stimme - erst zum Schluss
+//  passt es."
+//
+//  NACHGESTELLT UND GEMESSEN, nicht vermutet: Startet ein zweiter
+//  Vorlesevorgang, waehrend der erste noch spricht, lief das alte Audio
+//  WEITER. ttsQueueToken sorgte nur dafuer, dass die alte Schleife kein
+//  NEUES Stueck mehr anfaengt - das gerade laufende hat niemand
+//  angehalten, weil currentTtsAudio zu diesem Zeitpunkt schon auf das
+//  neue zeigte. Aus demselben Grund kam auch stopTTS() nicht mehr an
+//  das alte heran: Es haelt genau eine Variable an, und das war die
+//  falsche.
+//
+//  Im Versuch: zwei Stimmen gleichzeitig (Laufzeit 2,64 s und 1,41 s),
+//  und nach "Stop" sprach die aeltere allein weiter. Genau das ist
+//  "doppelt und dreifach" - und "erst zum Schluss passt es" heisst:
+//  wenn die Verwaisten von selbst zu Ende waren.
+//
+//  Deshalb steht hier ein Satz statt einer einzelnen Variablen. Es
+//  koennen mehrere unterwegs sein - das war ja der Fehler.
+// ================================================================
+const ttsLaufendeAudios = new Set();
+function ttsAudioMerken(audio, url){
+    ttsLaufendeAudios.add({ audio, url });
+}
+function ttsAudioAnhalten(audio){
+    for(const e of Array.from(ttsLaufendeAudios)){
+        if(e.audio !== audio) continue;
+        try{ e.audio.pause(); }catch(x){}
+        try{ if(e.url) URL.revokeObjectURL(e.url); }catch(x){}
+        ttsLaufendeAudios.delete(e);
+    }
+}
+function ttsAllesAnhalten(){
+    for(const e of Array.from(ttsLaufendeAudios)){
+        try{ e.audio.pause(); }catch(x){}
+        try{ if(e.url) URL.revokeObjectURL(e.url); }catch(x){}
+    }
+    ttsLaufendeAudios.clear();
+}
 let ttsHighlightTimers = [];
 let ttsQueueActive = false;
 let ttsQueueToken = 0; // wird bei jedem Start/Stop erhöht, um veraltete async-Läufe zu erkennen
@@ -20698,6 +20743,9 @@ function stopTTS(){
     ttsQueueToken++;
     if(currentTtsAudio){ try{ currentTtsAudio.pause(); }catch{} currentTtsAudio=null; }
     if(currentTtsUrl){ try{ URL.revokeObjectURL(currentTtsUrl); }catch{} currentTtsUrl=null; }
+    // Und alles, was sonst noch spricht. Bis zum 14.09.2026 stand hier nur
+    // die Zeile darueber - sie erreicht immer nur das JUENGSTE Audio.
+    ttsAllesAnhalten();
     // Auch eine laufende Browser-Stimme muss der Stop-Knopf zum Schweigen bringen
     try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
     clearTTSHighlights();
@@ -20707,6 +20755,37 @@ function stopTTS(){
     // zurueckgesetzt werden - sonst steht dort "Stopp", obwohl nichts mehr
     // laeuft. Siehe erklaerVorlesen().
     try{ if(typeof erklaerLesenKnopfZurueck === 'function') erklaerLesenKnopfZurueck(); }catch(e){}
+}
+
+// ================================================================
+//  EINE MELDUNG, DIE AUF JEDEM SYSTEM STIMMT
+//  ----------------------------------------------------------------
+//  Ein Benutzer am 14.09.2026, nach der Installation des .deb auf
+//  Linux: Piper fehlte - und der Trainer schickte ihn zum "Setup",
+//  das es auf Linux gar nicht gibt. Vier Meldungen in diesem Zweig
+//  sprachen von piper.exe und vom Setup, zwei davon als blockierendes
+//  alert(), obwohl gleich darueber steht, dass es die nicht mehr geben
+//  soll (FIX W21).
+//
+//  Schlimmer als der falsche Dateiname war, was fehlte: Der Weg, der
+//  auf JEDEM System hilft, stand in keiner der vier Meldungen. Es gibt
+//  ihn laengst - Einstellungen, Wartung, Hilfsprogramme, Holen. Dort
+//  erkennt der Trainer das System und holt die passende Fassung
+//  selbst. Er stand nur in einem Hinweis, den man erst zu sehen
+//  bekommt, wenn die STIMMEN schon da sind und bloss das Programm
+//  fehlt - also nie bei einer frischen Installation.
+// ================================================================
+function ttsIstWindows(){
+    try{ return /Windows/i.test(navigator.userAgent || ''); }catch(e){ return false; }
+}
+function ttsPiperWeg(){
+    return 'So kommt sie dazu: Einstellungen \u2192 Wartung \u2192 Hilfsprogramme \u2192 bei Piper auf \u201eHolen\u201c. '
+         + 'Danach Einstellungen \u2192 Nachteilsausgleich \u2192 Stimme \u2192 \u201eStimmen hinzuf\u00fcgen\u201c.'
+         + (ttsIstWindows() ? ' Wahlweise tut es auch das Setup noch einmal.' : '');
+}
+function ttsMeldung(text){
+    console.warn('[TTS] ' + text);
+    if(window.showAppAlert) window.showAppAlert(text);
 }
 
 // Spielt genau EIN Segment (Frage ODER eine Antwort) ab und wartet, bis das Audio
@@ -20784,12 +20863,22 @@ async function playTTSSegment(seg, token){
                 if(blob.size>500){
                     const url=URL.createObjectURL(blob); currentTtsUrl=url;
                     const audio=new Audio(url); currentTtsAudio=audio;
+                    ttsAudioMerken(audio, url);
                     await new Promise(resolve=>{
-                        audio.onended=()=>{ console.log('[TTS] ✓ PIPER ERFOLG'); resolve(); };
-                        audio.onerror=(e)=>{ console.error('Piper Audio Error', e); resolve(); };
-                        audio.play().then(()=>{ if(token!==ttsQueueToken) resolve(); }).catch(e=>{ console.error('Play Error', e); resolve(); });
+                        // Ein Ausgang fuer alle drei Wege: erst schweigen,
+                        // dann weitermachen.
+                        const fertig=()=>{ ttsAudioAnhalten(audio); resolve(); };
+                        audio.onended=()=>{ console.log('[TTS] ✓ PIPER ERFOLG'); fertig(); };
+                        audio.onerror=(e)=>{ console.error('Piper Audio Error', e); fertig(); };
+                        audio.play().then(()=>{
+                            // Inzwischen hat ein neuer Vorlesevorgang begonnen.
+                            // Dieses Stueck gehoert zum alten und muss ANGEHALTEN
+                            // werden - bis zum 14.09.2026 wurde es hier nur
+                            // losgelassen und sprach weiter.
+                            if(token!==ttsQueueToken) fertig();
+                        }).catch(e=>{ console.error('Play Error', e); fertig(); });
                     });
-                    if(currentTtsUrl){ try{ URL.revokeObjectURL(currentTtsUrl); }catch{} currentTtsUrl=null; }
+                    currentTtsUrl=null;
                     currentTtsAudio=null;
                     return; // ERFOLG - fertig, kein Microsoft!
                 }
@@ -20801,7 +20890,8 @@ async function playTTSSegment(seg, token){
                     // Pruefung. Die vollstaendige Meldung steht in der Konsole, der
                     // Nutzer bekommt einen kurzen, nicht-modalen Hinweis.
                     console.error('[TTS] Piper-Fehler:', txt.substring(0,500));
-                    if(window.showAppAlert) window.showAppAlert('Sprachausgabe nicht verfügbar (piper.exe). Details stehen in der Browser-Konsole.');
+                    ttsMeldung('Die Sprachausgabe ist nicht bereit. ' + ttsPiperWeg()
+                            + ' Einzelheiten stehen in der Browser-Konsole.');
                     return;
                 }
             }
@@ -20826,9 +20916,11 @@ async function playTTSSegment(seg, token){
                 // Wenn Piper gewählt, NICHT auf Microsoft fallen, sondern Fehler zeigen
                 console.error('PIPER GEWÄHLT ABER SERVER FEHLER - kein Microsoft Fallback!');
                 if(err.includes('piper.exe nicht gefunden') || err.includes('defekt_backup')){
-                    alert('FEHLER: piper.exe fehlt!\n\nDu hast nur piper.exe.defekt_backup im Ordner.\nBenenne die Datei um zu piper.exe\nOder lade neue piper.exe von:\nhttps://github.com/rhasspy/piper/releases\n\nDann Server neu starten.');
+                    ttsMeldung('Das Programm Piper wurde nicht gefunden'
+                        + (ttsIstWindows() ? ' — im Ordner liegt nur piper.exe.defekt_backup.' : '.')
+                        + ' ' + ttsPiperWeg());
                 } else {
-                    alert('Piper Fehler: '+err.substring(0,300));
+                    ttsMeldung('Piper meldet einen Fehler: ' + err.substring(0,300));
                 }
                 return; // Kein Microsoft Fallback wenn Piper gewählt!
             }
@@ -20836,7 +20928,7 @@ async function playTTSSegment(seg, token){
     }catch(e){
         console.error('Piper Exception:', e);
         if(isPiperVoice){
-            alert('Piper Exception: '+e.message+'\nServer läuft? piper.exe vorhanden?');
+            ttsMeldung('Die Sprachausgabe hat nicht geantwortet (' + e.message + '). ' + ttsPiperWeg());
             return; // Kein Microsoft wenn Piper gewählt
         }
     }finally{
@@ -20854,11 +20946,10 @@ async function playTTSSegment(seg, token){
     if(!isPiperVoice && !window._ttsHinweisGezeigt){
         window._ttsHinweisGezeigt = true;
         console.warn('[TTS] Keine Piper-Stimme verfügbar - keine Sprachausgabe.');
-        if(window.showAppAlert) window.showAppAlert(
-            'Für das Vorlesen fehlt die Stimme im Ordner piper/.\n'
-            + 'Sie gehört zur Installation dazu – wenn sie fehlt, ist beim '
-            + 'Einrichten etwas schiefgegangen. Am einfachsten das Setup noch '
-            + 'einmal ausführen.');
+        ttsMeldung('Für das Vorlesen fehlt noch die Sprachausgabe.\n'
+            + 'Das ist kein Fehler — Piper und die Stimmen sind nicht Teil der '
+            + 'Installation, weil sie für jedes System anders aussehen.\n'
+            + ttsPiperWeg());
     }
 }
 
@@ -20947,6 +21038,9 @@ function ttsInStuecke(text){
 
 async function playTTSQueue(segments, btn, zurueck){
     ttsQueueToken++;
+    // Was noch aus einem frueheren Vorgang spricht, hoert hier auf. Sonst
+    // ueberlagern sich zwei oder drei Stimmen - siehe ttsLaufendeAudios.
+    ttsAllesAnhalten();
     const token=ttsQueueToken;
     ttsQueueActive=true;
     const vorleseStart = Date.now();
