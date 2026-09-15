@@ -90,12 +90,21 @@ const mb = b => { const m = b / 1024 / 1024; return m < 100 ? m.toFixed(1) : m.t
 
 // ---- Was liegt in release\ zum Veroeffentlichen? ---------------
 //
-// Vier Sorten, jede mit ihrem eigenen Namensmuster. Die Muster sind eng
+// Fuenf Sorten, jede mit ihrem eigenen Namensmuster. Die Muster sind eng
 // gefasst, damit nichts mitgeht, was nur so aehnlich heisst: Ein
 // "Amateurfunk-Trainer-1.275.0-mac.zip" ist kein Setup, und ein
 // "Amateurfunk-Trainer-alt.exe" ist keine Fassung.
+//
+// DIE FUENFTE KAM AM 15.09.2026 DAZU, und ohne sie waere die Arbeit des
+// ganzen Tages unsichtbar geblieben: Build-DIREKT.bat baut jetzt auch
+// ein Windows-ZIP - fuer die Rechner, auf denen "Smart App Control" das
+// Setup abweist, bevor es anfaengt ("Fehler 4551"). Das ZIP lag danach
+// in release\, und dieses Skript hat es stillschweigend uebergangen,
+// weil es in keinem Muster stand. Genau die Sorte Fehler, die man erst
+// merkt, wenn jemand fragt "warum steht das nicht im Release?".
 const SORTEN = [
   { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+\.exe$/i,             hinweis: 'Windows 10 und 11' },
+  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-windows\.zip$/i,      hinweis: 'Windows ohne Installation' },
   { regel: /^amateurfunk-trainer_\d+\.\d+\.\d+_all\.deb$/i,          hinweis: 'Debian, Ubuntu, Mint, Raspberry Pi OS' },
   { regel: /^amateurfunk-trainer-\d+\.\d+\.\d+-\d+\.noarch\.rpm$/i, hinweis: 'Fedora, openSUSE, RHEL' },
   { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-mac\.zip$/i,          hinweis: 'macOS 11 und neuer' },
@@ -241,12 +250,27 @@ function beschreibung(namen, version, neue) {
   const deb = finde(/\.deb$/i);
   const rpm = finde(/\.rpm$/i);
   const zip = finde(/-mac\.zip$/i);
+  const win = finde(/-windows\.zip$/i);
 
   let s = '## Installation\n\n';
 
   if (exe) {
     s += '**Windows** \u2014 `' + exe + '` starten. Bei "Unbekannter Herausgeber": '
       + '*Weitere Informationen* \u2192 *Trotzdem ausf\u00fchren*.\n\n';
+  }
+
+  // Der zweite Windows-Weg. Er steht ABSICHTLICH direkt hinter der EXE
+  // und nicht unten bei den Sonderfaellen: Wer die Warnung gerade
+  // gelesen hat, soll die Alternative im selben Atemzug finden.
+  if (win) {
+    s += '**Windows ohne Installation** \u2014 `' + win + '` auspacken, `START.bat` '
+      + 'doppelklicken. Es ist alles dabei, auch Node und die Sprachausgabe mit Stimmen; '
+      + 'nichts wird nachgeladen und nichts in Windows installiert.\n\n'
+      + '> Dieser Weg ist f\u00fcr alle, bei denen Windows das Setup ganz abweist \u2014 '
+      + '"Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert". '
+      + 'Das ist *Smart App Control*: Jedes Installationsprogramm packt sich beim Start in '
+      + 'den Temp-Ordner aus, und das l\u00e4sst die Richtlinie bei einem Programm ohne '
+      + 'gekaufte Unterschrift nicht zu. Ein Archiv wird nur ausgepackt, nicht ausgef\u00fchrt.\n\n';
   }
 
   if (deb || rpm) {
@@ -263,7 +287,7 @@ function beschreibung(namen, version, neue) {
   }
 
   s += 'Der Lernstand bleibt beim Update erhalten';
-  if (deb || rpm || zip) {
+  if (deb || rpm || zip || win) {
     s += ':\n\n```\n'
       + 'Windows : data\\ im Installationsordner\n'
       + 'Linux   : ~/.local/share/amateurfunk-trainer\n'

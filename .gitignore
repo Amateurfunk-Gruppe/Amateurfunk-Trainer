@@ -291,6 +291,26 @@ _*.md
 _*.json
 _*.txt
 
+# UND BILDER, ab dem 15.09.2026.
+#
+# Hier fehlten sie: In _Titelbilder\ liegen die Vorschaubilder fuer die
+# Videos, rund 3 MB, und das Daumenbild fuer YouTube. Die Regeln oben
+# fassen nur .html, .md, .json und .txt - die PNG waeren beim naechsten
+# Hochladen.bat also mitgegangen, obwohl der Unterstrich das Gegenteil
+# sagt. Aufgefallen beim Bau des Daumenbildes.
+#
+# Geprueft, bevor diese Zeile hier stand: Im Repository liegt keine
+# einzige Datei, die auf _*.png oder _*.jpg passt. Die Regel nimmt also
+# nichts weg, was schon da ist.
+#
+# NICHT betroffen: bilder\ und docs\bilder\ - dort hat keine Datei
+# einen Unterstrich am Anfang. Die Bildschirmfotos der README und der
+# Webseite gehen weiter mit hoch.
+_*.png
+_*.jpg
+_*.jpeg
+_*.webp
+
 # ================================================================
 #  WERKZEUG FUER VIDEOANSAGEN - bleibt auf Dietmars Rechner
 # ----------------------------------------------------------------

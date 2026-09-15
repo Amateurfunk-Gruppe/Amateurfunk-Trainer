@@ -1,0 +1,63 @@
+Amateurfunk-Trainer - die Fassung ohne Installationsprogramm
+============================================================
+
+SO GEHT ES LOS
+
+  1. Diesen Ordner an eine Stelle legen, an der du schreiben darfst -
+     zum Beispiel auf den Schreibtisch oder nach Dokumente.
+     NICHT nach C:\Program Files: dort darf der Trainer seinen
+     Lernstand nicht speichern.
+
+  2. START.bat doppelklicken.
+
+  3. Beim ersten Mal kommt ein Fenster: Node.js fehlt noch und wird
+     nachgeholt, rund 30 MB von nodejs.org. Auf "Ja" klicken.
+     Das ist nur beim ersten Start noetig.
+
+  4. Der Trainer oeffnet sich im Browser unter localhost:3000.
+
+BEENDEN
+
+  STOP.bat doppelklicken, oder im Trainer oben rechts auf "Beenden".
+  Danach ist der Trainer wirklich aus - ein Browserfenster allein
+  bringt ihn nicht zurueck.
+
+WARUM DIESE FASSUNG UEBERHAUPT
+
+  Auf manchen Windows-11-Rechnern weist "Smart App Control" das
+  Installationsprogramm ab, bevor es anfaengt ("Fehler 4551"). Das
+  liegt nicht am Inhalt: Jedes Installationsprogramm packt sich beim
+  Start in den Temp-Ordner aus, und genau das laesst die Richtlinie
+  bei einem Programm ohne gekaufte Unterschrift nicht zu.
+
+  Ein ZIP wird nur ausgepackt. Damit faellt die Blockade weg - und die
+  Frage nach Administratorrechten gleich mit.
+
+WAS HIER NOCH FEHLT UND WIE ES DAZUKOMMT
+
+  Sprachausgabe (Vorlesen):
+    Im Trainer: Einstellungen -> Wartung -> Hilfsprogramme ->
+    bei Piper auf "Holen". Danach Einstellungen ->
+    Nachteilsausgleich -> Stimme -> "Stimmen hinzufuegen".
+
+  Gruppenraum ueber das Internet:
+    Beim ersten Klick auf "Tunnel starten" wird das noetige
+    Hilfsprogramm geholt.
+
+  Beides ist freiwillig. Ohne das eine fehlt das Vorlesen, ohne das
+  andere der Raum ueber das Internet - der Trainer selbst laeuft
+  vollstaendig.
+
+DEIN LERNSTAND
+
+  Er liegt in data\ hier im Ordner. Wer den Ordner kopiert, nimmt ihn
+  mit. Wer den Ordner loescht, loescht ihn - vorher im Trainer ueber
+  "Sichern" eine Kopie anlegen.
+
+AKTUELL BLEIBEN
+
+  Der Trainer sieht beim Start nach, ob auf GitHub etwas Neues liegt,
+  und sagt es oben rechts. Nichts wird ohne Klick geholt.
+
+  Quelltext, Fragen und alles Weitere:
+  github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer

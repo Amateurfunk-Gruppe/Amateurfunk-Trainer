@@ -31,11 +31,66 @@ WshShell.CurrentDirectory = ordner
 
 node = ordner & "\node\node.exe"
 If Not fso.FileExists(node) Then
-  ' Ohne Node laeuft nichts. Lieber eine klare Meldung als ein
-  ' Programm, das sich wortlos nicht meldet.
-  MsgBox "node\node.exe fehlt im Trainer-Ordner:" & vbCrLf & ordner & vbCrLf & vbCrLf & _
-         "Bitte den Trainer neu installieren - das Setup bringt Node mit.", 16, "Amateurfunk-Trainer"
-  WScript.Quit 1
+  ' ================================================================
+  '  BESTANDTEILE NACHHOLEN
+  ' ----------------------------------------------------------------
+  '  Dietmar am 15.09.2026: "beim Start soll ein Fenster kommen, das
+  '  den Benutzer darueber informiert, das Bestandteile nachinstalliert
+  '  werden."
+  '
+  '  Bis dahin stand hier nur "Bitte den Trainer neu installieren - das
+  '  Setup bringt Node mit." Das war richtig, solange es nur den Weg
+  '  ueber das Setup gab. Seit es den ZIP-Weg gibt - weil Smart App
+  '  Control auf frischen Windows-11-Rechnern das Setup abweist, noch
+  '  bevor es anfaengt -, ist es ein Sackgassen-Satz: Der Benutzer hat
+  '  gerade absichtlich KEIN Setup benutzt.
+  '
+  '  Das Fenster sagt deshalb drei Dinge, und zwar vorher:
+  '  was geholt wird, woher, und was dabei NICHT passiert.
+  ' ================================================================
+  If Not fso.FileExists(ordner & "\node_holen.ps1") Then
+    MsgBox "node\node.exe fehlt im Trainer-Ordner:" & vbCrLf & ordner & vbCrLf & vbCrLf & _
+           "Und node_holen.ps1 fehlt auch - damit kann ich es nicht nachholen." & vbCrLf & _
+           "Bitte den Trainer noch einmal herunterladen.", 16, "Amateurfunk-Trainer"
+    WScript.Quit 1
+  End If
+
+  antwort = MsgBox( _
+    "Beim ersten Start fehlt noch ein Bestandteil." & vbCrLf & vbCrLf & _
+    "Der Trainer braucht Node.js. In dieser Fassung ohne" & vbCrLf & _
+    "Installationsprogramm ist es nicht dabei - es wird jetzt" & vbCrLf & _
+    "nachgeholt. Das ist nur beim ersten Mal noetig." & vbCrLf & vbCrLf & _
+    "Was geschieht:" & vbCrLf & _
+    "  - rund 30 MB werden von nodejs.org geladen" & vbCrLf & _
+    "  - die Pruefsumme wird verglichen" & vbCrLf & _
+    "  - entpackt wird in den Ordner node\ hier im Trainer" & vbCrLf & vbCrLf & _
+    "Was NICHT geschieht:" & vbCrLf & _
+    "  - nichts wird in Windows installiert" & vbCrLf & _
+    "  - es werden keine Administratorrechte gebraucht" & vbCrLf & _
+    "  - beim Loeschen dieses Ordners ist auch Node wieder weg" & vbCrLf & vbCrLf & _
+    "Dauert etwa eine Minute. Jetzt holen?", _
+    vbYesNo + vbInformation + vbDefaultButton1, "Amateurfunk-Trainer - Bestandteile nachholen")
+
+  If antwort <> vbYes Then
+    MsgBox "Gut - dann ein andermal." & vbCrLf & vbCrLf & _
+           "Ohne Node.js kann der Trainer nicht starten. Beim naechsten" & vbCrLf & _
+           "Doppelklick auf START.bat wird wieder gefragt.", 64, "Amateurfunk-Trainer"
+    WScript.Quit 0
+  End If
+
+  ' Sichtbar laufen lassen, nicht im Verborgenen: Ein Fenster, in dem
+  ' ein Fortschritt zu sehen ist, ist einem stillen Warten von einer
+  ' Minute vorzuziehen. True = warten, bis es durch ist.
+  code = WshShell.Run("powershell -NoProfile -ExecutionPolicy Bypass -File """ & _
+                      ordner & "\node_holen.ps1""", 1, True)
+
+  If Not fso.FileExists(node) Then
+    MsgBox "Node.js konnte nicht nachgeholt werden." & vbCrLf & vbCrLf & _
+           "Im Fenster, das sich gerade geschlossen hat, stand der Grund -" & vbCrLf & _
+           "und darunter, wie es von Hand geht." & vbCrLf & vbCrLf & _
+           "Haeufigster Grund: keine Verbindung ins Internet.", 16, "Amateurfunk-Trainer"
+    WScript.Quit 1
+  End If
 End If
 
 If PortBelegt() Then

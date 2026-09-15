@@ -92,6 +92,102 @@ neu installierte und nicht sofort aktualisierte — oder ohne Netz lernte — ha
 Erklärung gesehen. Bei einer Fassung, deren Ankündigung „1286 Erklärungen" lautet, ist das
 der Unterschied zwischen Release und Blamage. Beide Listen haben die Zeile jetzt.
 
+### Behoben — zwei Windows-Warnungen, die der Trainer selbst ausgelöst hat
+
+Aus einer Facebook-Runde am 14.09.2026: „Mein PC Sagt.! Achtung Virus und nicht Sicher" —
+darauf ein zweiter: „Da bist du nicht alleine. Habe auch Abstand davon genommen, bzw wurde das
+automatisch geblockt." — „Besser ist!"
+
+Zwei Leute reden dort andere davon ab. Nachgesehen, was Windows tatsächlich meldet, und es
+waren drei verschiedene Dinge, von denen **zwei auf unsere Kappe gehen**:
+
+**1. `cloudflared.exe` liegt nicht mehr im Setup.** Ein unsigniertes Installationsprogramm von
+330 MB, in dem ein 54-MB-Tunnelprogramm steckt, ist genau das Muster, auf das Virenscanner
+anspringen: cloudflared baut eine Verbindung von außen in den Rechner — für den Gruppenraum
+richtig, für einen Scanner nicht von Fernwartung zu unterscheiden. Nötig war es ohnehin nicht
+mehr, `programme_holen.js` holt es seit dem 07.09.2026 auf jedem System selbst. Der Preis:
+Beim ersten Klick auf „Tunnel starten" wird es nachgeladen, ein bis zwei Minuten. Wer den
+Gruppenraum nie benutzt — die meisten — hat 54 MB weniger und eine Warnung weniger.
+
+**2. `ie4uinit.exe -ClearIconCache` ist heraus**, aus `installer.iss` und aus
+`verknuepfung_auffrischen.js`. Dietmar schickte den Eintrag aus dem Schutzverlauf:
+
+> Zugriff auf geschützten Ordner blockiert · Blockierte APP oder Prozess: `ie4uinit.exe` ·
+> Geschützter Ordner: `%userprofile%\Favorites` · Blockiert durch: Überwachter Ordnerzugriff
+
+Also eine Sicherheitswarnung **unmittelbar nach der Installation**. Stufe „Niedrig",
+technisch belanglos — aber wer sie liest, versteht „der Trainer wollte an meine Dateien".
+`-ClearIconCache` stand hier nur als Gürtel zum Hosenträger (es ist der alte Name von `-show`
+bis Windows 8) und räumt quer durch die Shell-Ordner des Benutzers auf, darunter `Favorites`
+— genau das, was der überwachte Ordnerzugriff schützt. `-show` tut das nicht und erledigt die
+Aufgabe; der Explorer zeichnet über `SHChangeNotify` weiter sofort neu.
+
+**3. Was nicht zu beheben ist, steht jetzt wenigstens da.** Der rote SmartScreen-Kasten
+(„Der Computer wurde durch Windows geschützt") bleibt, solange das Setup nicht mit einem
+gekauften Zertifikat unterschrieben ist — und selbst dann: Microsoft schreibt, dass
+EV-Zertifikate SmartScreen nicht mehr umgehen; der Ruf baut sich erst über Wochen auf.
+Deshalb steht in der README und auf der Webseite jetzt ein eigener Abschnitt mit Dietmars
+Bildschirmfoto der Warnung, und darin die drei Dinge, die wirklich helfen:
+
+- **Es ist keine Virenmeldung.** SmartScreen prüft den Ruf, nicht den Inhalt. Ein leeres
+  Programm, heute geschrieben, bekommt denselben Kasten.
+- **Der Knopf zum Weitermachen ist versteckt** — und das ist der Grund, warum Leute
+  aufgeben. Sichtbar ist nur *Nicht ausführen*; *Trotzdem ausführen* erscheint erst nach
+  einem Klick auf den kleinen Link *Weitere Informationen*.
+- **Man muss niemandem glauben:** Quelltext offen, jede Datei vorher bei VirusTotal prüfbar,
+  offizielle Setups nur unter Releases. Und ausdrücklich **nicht** „schalte deinen
+  Virenscanner aus" — wer das bei einem Download rät, gleich bei welchem, will nichts Gutes.
+
+Am Ende des Abschnitts steht ein Satz, den man selten liest: Wenn es dir zu unsicher ist,
+lass es. Es ist ein kostenloses Lernprogramm, kein Muss.
+
+### Hinzugefügt — ein Windows-Archiv für die Rechner, die das Setup abweisen
+
+Noch am 15.09.2026, mit einem Bildschirmfoto:
+
+> Die Datei konnte nicht im temporären Ordner ausgeführt werden. Das Setup wurde abgebrochen.
+> **Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert.**
+
+Das ist **Smart App Control** auf Windows 11 — und es bricht die Installation ab, bevor sie
+anfängt. Der Grund liegt im Aufbau jedes Inno-Setups: Die EXE ist eine Hülle, die sich beim
+Doppelklick in den Temp-Ordner auspackt und sich von dort startet. Ein unsigniertes Programm
+aus dem Temp-Ordner lässt die Richtlinie nicht laufen.
+
+**Das ist nicht umzubauen.** Es liegt nicht am Inhalt des Setups, sondern an seiner Hülle.
+Dietmars Frage „Wäre eine MSI besser?" war naheliegend, aber nein: Smart App Control blockiert
+unsignierte MSI genauso — das Format ist nicht das Problem, die fehlende Unterschrift ist es.
+Bleiben zwei Wege: unterschreiben, oder nichts ausführen.
+
+**Ein ZIP wird ausgepackt, nicht ausgeführt.** `Build-DIREKT.bat` baut deshalb ab jetzt neben
+der EXE ein `Amateurfunk-Trainer-<Fassung>-windows.zip`. Auspacken, `START.bat`
+doppelklicken — fertig. Kein 4551, keine Rechteabfrage, kein roter SmartScreen-Kasten.
+
+Der erste Versuch war ein schlankes Archiv, bei dem Node beim ersten Start nachgeholt wurde,
+mit einem Fenster, das vorher erklärt, was geschieht. Dietmar hat es abgelehnt, und zu Recht:
+„Damit kommen viele doch gar nicht klar. Da muss alles rein, was es braucht." **Jetzt ist
+alles drin** — Node, die Sprachausgabe mit Stimmen, der Fragenkatalog samt Erklärungen und
+Zeichnungen. Draußen bleibt nur das Persönliche: `data\`, `backup\`, `tts_cache\`, `Hoerbuch\`.
+
+**Getestet auf dem Rechner, auf dem die EXE scheitert** — Smart App Control an. Dietmar:
+„Läuft, ohne Probleme!"
+
+Drei Dinge hängen daran:
+
+- **`node_holen.ps1` ist zurück** (am 01.09.2026 gelöscht). Es holt Node bei Bedarf von
+  nodejs.org als ZIP — kein MSI, also keine Administratorrechte — und **vergleicht die
+  Prüfsumme** gegen `SHASUMS256.txt`. Das kann `programme_holen.js` noch nicht; hier geht es,
+  weil die Quelle die Summen veröffentlicht. Im vollen Archiv wird es nie gebraucht: Es ist
+  das Netz für den Fall, dass `node\` einmal fehlt, statt der Sackgasse „bitte neu
+  installieren". Nebenbei behoben: `Fehler-Zeigen.bat` rief die Datei schon die ganze Zeit
+  auf, nur fehlte sie.
+- **`release_hochladen.js` kennt die fünfte Sorte.** Ohne diese Zeile wäre das ZIP in
+  `release\` liegen geblieben und stillschweigend übergangen worden — es stand in keinem
+  Namensmuster. Genau die Sorte Fehler, die man erst merkt, wenn jemand fragt, warum das nicht
+  im Release steht.
+- **Das Setup fragt jetzt, für wen installiert wird.** `PrivilegesRequiredOverridesAllowed=dialog`:
+  „für alle Benutzer" wie bisher, oder „nur für mich" ohne Rechteabfrage. Das behebt 4551
+  nicht — die Hülle packt sich immer nach Temp aus —, nimmt aber eine Abfrage weniger.
+
 ### Die Seite für GitHub Pages
 
 Unter `docs/` liegt eine Seite, die GitHub unter

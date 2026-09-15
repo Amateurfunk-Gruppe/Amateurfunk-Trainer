@@ -737,6 +737,8 @@ footer li{margin-bottom:.45em}
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
         <b>Windows</b><span>Installationsprogramm (.exe)</span></a>
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>Windows ohne Installation</b><span>Archiv (.zip) — alles dabei, wenn Windows das Setup blockiert</span></a>
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
         <b>Linux · Debian, Ubuntu</b><span>Paket (.deb)</span></a>
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
         <b>Linux · Fedora, openSUSE</b><span>Paket (.rpm)</span></a>
@@ -772,10 +774,20 @@ footer li{margin-bottom:.45em}
       <p>
         Wer sich darauf nicht verlassen mag, muss es nicht: Der vollständige Quelltext liegt
         offen auf <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer">GitHub</a>,
-        Zeile für Zeile nachlesbar. Und jede heruntergeladene Datei lässt sich bei
-        <a href="https://www.virustotal.com" target="_blank" rel="noopener">VirusTotal</a>
-        von rund siebzig Virenscannern gleichzeitig prüfen, bevor man sie öffnet — kostenlos
-        und ohne Anmeldung. Das ist ohnehin die bessere Gewohnheit, bei jedem Programm aus
+        Zeile für Zeile nachlesbar.
+      </p>
+      <p style="background:#e8f6ed;border:1px solid #a9d9bd;border-radius:8px;padding:14px 16px">
+        <b style="color:#1c6b3a">Bei VirusTotal geprüft — kein einziger Fund.</b><br>
+        <code>Amateurfunk-Trainer-1.296.0-windows.zip</code>, 336,96 MB, geprüft am 15.09.2026
+        von rund siebzig Virenscannern gleichzeitig:
+        <i>„No security vendors flagged this file as malicious."</i><br>
+        <a href="https://www.virustotal.com/gui/file/1b11f22b0f059abe89182fc773e3cd6aa362cd19b726d452fb010a936505fd19" target="_blank" rel="noopener"><b>Ergebnis selbst ansehen →</b></a>
+      </p>
+      <p>
+        Und verlass dich nicht auf meinen Link, sondern auf deinen: Bei
+        <a href="https://www.virustotal.com" target="_blank" rel="noopener">virustotal.com</a>
+        kostet das nichts und braucht keine Anmeldung — Datei hineinziehen, Ergebnis ansehen,
+        bevor man sie öffnet. Das ist ohnehin die bessere Gewohnheit, bei jedem Programm aus
         dem Netz und nicht nur bei diesem.
       </p>
       <p>
@@ -784,6 +796,15 @@ footer li{margin-bottom:.45em}
         genauen Wortlaut in ein
         <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/issues">Issue</a>
         — das wird angesehen.
+      </p>
+      <p>
+        <b>Und wenn Windows das Setup ganz abweist</b> — „Fehler 4551: Eine
+        Anwendungssteuerungsrichtlinie hat diese Datei blockiert" —, dann ist es nicht
+        SmartScreen, sondern <i>Smart App Control</i>. Jedes Installationsprogramm packt sich
+        beim Start in den Temp-Ordner aus, und genau das lässt diese Richtlinie bei einem
+        Programm ohne gekaufte Unterschrift nicht zu. Dagegen hilft kein anderes
+        Installationsprogramm — aber das <b>Archiv (.zip)</b> oben: Es wird nur ausgepackt,
+        nicht ausgeführt. Auspacken, <code>START.bat</code> doppelklicken, fertig.
       </p>
       <p style="margin-bottom:0">
         Für Linux und macOS stellt sich die Frage nicht: Dort kommen die Pakete aus der

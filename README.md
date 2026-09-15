@@ -455,11 +455,16 @@ Ich kann viel behaupten. Prüfen kannst du es selbst, und das ist besser:
   Repository — `Server.js` und `Index.html` sind Textdateien, die jeder
   lesen kann. Auch jemand, der nicht programmiert, kann die Suchfunktion
   benutzen.
-- **Prüfe die Datei bei [VirusTotal](https://www.virustotal.com).** Dort
-  laufen rund siebzig Virenscanner gleichzeitig darüber, kostenlos und ohne
-  Anmeldung. Datei hineinziehen, Ergebnis ansehen — *bevor* du sie öffnest.
-  Das ist ohnehin die bessere Gewohnheit, bei jedem Programm aus dem Netz,
-  nicht nur bei diesem.
+- **Das Archiv ist bei VirusTotal geprüft — ohne Befund.**
+  `Amateurfunk-Trainer-1.296.0-windows.zip`, 336,96 MB, geprüft am
+  15.09.2026: *„No security vendors flagged this file as malicious."*
+  **[Ergebnis selbst ansehen →](https://www.virustotal.com/gui/file/1b11f22b0f059abe89182fc773e3cd6aa362cd19b726d452fb010a936505fd19)**
+  Dort laufen rund siebzig Virenscanner gleichzeitig über die Datei.
+- **Prüfe es ruhig selbst.** Bei [VirusTotal](https://www.virustotal.com)
+  kostet das nichts und braucht keine Anmeldung: Datei hineinziehen,
+  Ergebnis ansehen — *bevor* du sie öffnest. Das ist ohnehin die bessere
+  Gewohnheit, bei jedem Programm aus dem Netz und nicht nur bei diesem.
+  Verlass dich nicht auf meinen Link, sondern auf deinen.
 - **Offizielle Setups gibt es ausschließlich hier unter
   [Releases](../../releases).** Für Fassungen aus anderen Quellen kann ich
   nicht sagen, was darin steckt.
@@ -474,15 +479,56 @@ Scanner etwas meldet, schreib mir ein
 > macOS stellt sich die Frage ohnehin nicht — dort kommen die Pakete über
 > die Paketverwaltung des Systems.
 
+### Und wenn das Setup gar nicht startet
+
+Auf manchen Windows-11-Rechnern bleibt es nicht bei einer Warnung. Dort bricht
+die Installation ab:
+
+> Die Datei konnte nicht im temporären Ordner ausgeführt werden. Das Setup wurde
+> abgebrochen.
+> **Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert.**
+
+Das ist nicht SmartScreen, sondern **Smart App Control** — und es liegt wieder
+nicht am Inhalt. Jedes Installationsprogramm packt sich beim Doppelklick in den
+Temp-Ordner aus und startet sich von dort. Genau das lässt diese Richtlinie bei
+einem Programm ohne gekaufte Unterschrift nicht zu. Ein anderes
+Installationsprogramm hilft dagegen nicht: Eine unsignierte `.msi` wird genauso
+blockiert.
+
+**Dafür gibt es das Archiv.** `Amateurfunk-Trainer-<Version>-windows.zip` wird
+nur ausgepackt und nicht ausgeführt — damit fällt die Blockade weg, und die
+Frage nach Administratorrechten gleich mit. Auspacken, `START.bat`
+doppelklicken, fertig. Es ist derselbe Inhalt wie im Setup.
+
+Nur eines ist wichtig: **Den Ordner an eine Stelle legen, an der du schreiben
+darfst** — Schreibtisch oder Dokumente, nicht `C:\Program Files`. Der Trainer
+speichert deinen Lernstand neben sich, und in `Program Files` darf er das nicht.
+
 ---
 
 ### In Kürze
 
-**Windows** — kein Terminal nötig:
+**Windows** — kein Terminal nötig. Es gibt **zwei Wege, beide vollständig**:
+
+*Mit Installationsprogramm:*
 
 1. Rechts unter [Releases](../../releases) `Amateurfunk-Trainer-<Version>.exe` herunterladen
 2. Doppelklicken. Bei „Unbekannter Herausgeber": *Weitere Informationen* → *Trotzdem ausführen*
 3. Ordner bestätigen — fertig
+
+*Ohne Installationsprogramm:*
+
+1. `Amateurfunk-Trainer-<Version>-windows.zip` herunterladen
+2. Auspacken, zum Beispiel auf den Schreibtisch — **nicht** nach `C:\Program Files`
+3. `START.bat` doppelklicken — fertig
+
+Im Archiv ist genau dasselbe drin wie im Setup: Node, die Sprachausgabe mit
+Stimmen, der ganze Fragenkatalog. Es wird nichts nachgeladen und nichts in
+Windows installiert.
+
+> **Nimm das Archiv, wenn das Setup gar nicht erst startet** und stattdessen
+> „Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert"
+> erscheint. Warum das passiert, steht [weiter unten](#und-wenn-das-setup-gar-nicht-startet).
 
 **Linux und macOS** — Terminal öffnen (Linux `Strg`+`Alt`+`T`, Mac
 `Cmd`+`Leertaste` → *Terminal*), diese Zeile einfügen, Eingabe drücken:
@@ -521,6 +567,13 @@ Assistenten folgen — mehr ist es nicht.
 
 > **Offizielle Setups gibt es ausschließlich hier unter Releases.** Für
 > Fassungen aus anderen Quellen kann ich nicht sagen, was darin steckt.
+
+**Oder ohne Installationsprogramm:** Daneben liegt
+`Amateurfunk-Trainer-<Version>-windows.zip`. Auspacken, `START.bat`
+doppelklicken — derselbe Inhalt, nur ohne Assistenten und ohne
+Administratorrechte. Wer das Archiv nimmt, legt den Ordner an eine Stelle, an
+der er schreiben darf: Schreibtisch oder Dokumente, nicht `C:\Program Files`.
+Beim ersten Start erklärt eine `LIESMICH-ZUERST.txt` im Ordner das Nötigste.
 
 Das Setup bringt alles mit, was der Trainer braucht:
 
