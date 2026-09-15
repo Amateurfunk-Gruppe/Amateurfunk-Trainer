@@ -423,7 +423,7 @@ neu gestartet werden muss.
 
 > ### 🎬 In zwei Minuten einsatzbereit — das Video
 >
-> **[AMATEURFUNK-TRAINER — in zwei Minuten einsatzbereit. Ohne Installation.](https://www.youtube.com/watch?v=6s-awZhYfyw)**
+> **[AMATEURFUNK-TRAINER — in zwei Minuten einsatzbereit. Ohne Installation.](https://www.youtube.com/watch?v=k80u5clY1VI)**
 >
 > Herunterladen, entpacken, Verknüpfung anlegen, starten. Wer lieber zusieht
 > als liest, fängt hier an.

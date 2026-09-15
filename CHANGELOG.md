@@ -222,7 +222,7 @@ kein Zählpixel — also auch keine Cookie-Frage. Eingeschaltet wird sie unter
 
 Vier Handgriffe — herunterladen, entpacken, Verknüpfung anlegen, starten — lassen sich
 beschreiben oder zeigen. Gezeigt ist es kürzer:
-**[In zwei Minuten einsatzbereit](https://www.youtube.com/watch?v=6s-awZhYfyw)**. Der Link
+**[In zwei Minuten einsatzbereit](https://www.youtube.com/watch?v=k80u5clY1VI)**. Der Link
 steht jetzt in der README, auf der Seite unter `docs/` und auf der Release-Seite, jeweils
 über den Download-Knöpfen — nicht statt der Anleitung, sondern daneben: Wer lieber liest,
 liest weiter.
