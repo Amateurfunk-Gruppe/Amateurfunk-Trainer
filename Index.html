@@ -1501,6 +1501,46 @@
         body.dark .ek-loesung .ekl-marke { color: #8fe0b0; }
 
         /* ================================================================
+             FORMELN WIE IM PRUEFUNGSKATALOG
+           ----------------------------------------------------------------
+             Dietmar am 15.09.2026, mit Bild von AG214: "Es sieht anders aus
+             als in Pruefungsfragen.pdf. Das muss unbedingt berichtigt
+             werden." / "Die Fragen und Antworten muessen exakt
+             uebereinstimmen. Die Quelle liegt im Ordner Pruefungsfragen.pdf"
+
+             Im Katalog stehen die Formelzeichen als reiner Text: P_V fuer
+             P mit tiefgestelltem V, 10^(0,5) fuer die Zehnerpotenz,
+             (R_1)/(R_2) fuer den Bruch, Wurzel(P) fuer die Wurzel. Gedruckt
+             ist das ein tiefgestellter Index, ein Bruchstrich, ein
+             Wurzelzeichen mit Ueberstrich. Hier wird aus dem Text wieder
+             das gedruckte Bild - der gespeicherte Text bleibt unberuehrt,
+             gesucht und vorgelesen wird weiterhin die Textfassung.
+
+             Keine vw/vh-Einheiten und keine festen Pixelmasse: die
+             Anzeigeskalierung setzt document.documentElement.style.zoom,
+             und em rechnet dabei richtig mit.
+           ================================================================ */
+        .fm-idx, .fm-exp { font-size: 0.72em; line-height: 0; font-weight: inherit; }
+        .fm-idx { vertical-align: -0.28em; }
+        .fm-exp { vertical-align: 0.5em; }
+        /* Der Bruch: Zaehler ueber Nenner, Strich dazwischen. inline-flex
+           haelt ihn in der Zeile, ohne die Zeilenhoehe zu sprengen. */
+        .fm-bruch {
+            display: inline-block; vertical-align: middle;
+            margin: 0 0.18em; text-align: center;
+        }
+        .fm-bruch > .fm-z, .fm-bruch > .fm-n {
+            display: block; line-height: 1.18; padding: 0 0.22em;
+            font-size: 0.92em; white-space: nowrap;
+        }
+        .fm-bruch > .fm-z { border-bottom: 1px solid currentColor; }
+        /* Die Wurzel: Haken plus Ueberstrich ueber dem, was darunter liegt. */
+        .fm-wz { padding-right: 0.06em; }
+        .fm-wzarg {
+            border-top: 1px solid currentColor; padding: 0 0.12em 0 0.06em;
+        }
+
+        /* ================================================================
              DAS GROSSE FENSTER
            ----------------------------------------------------------------
              Kein eigener Inhalt - dieselbe erklaerInhalt() wie im Kasten,
@@ -18185,9 +18225,9 @@ function erklaerInhalt(q, er, alles){
             if (gp && gp.prinzip) prinzip = gp.prinzip;
         }
     } catch (e) {}
-    if (prinzip) ek += '<div class="ek-zeile" data-ek="prinzip"><span class="ek-marke">Das Prinzip.</span> ' + attrText(prinzip) + '</div>';
-    if (er.bild)  ek += '<div class="ek-zeile" data-ek="bild"><span class="ek-marke">Im Bild.</span> ' + attrText(er.bild) + '</div>';
-    if (er.kniff) ek += '<div class="ek-zeile" data-ek="kniff"><span class="ek-marke">Der Kniff.</span> ' + attrText(er.kniff) + '</div>';
+    if (prinzip) ek += '<div class="ek-zeile" data-ek="prinzip"><span class="ek-marke">Das Prinzip.</span> ' + formelText(prinzip) + '</div>';
+    if (er.bild)  ek += '<div class="ek-zeile" data-ek="bild"><span class="ek-marke">Im Bild.</span> ' + formelText(er.bild) + '</div>';
+    if (er.kniff) ek += '<div class="ek-zeile" data-ek="kniff"><span class="ek-marke">Der Kniff.</span> ' + formelText(er.kniff) + '</div>';
     // ================================================================
     //  LISTE UND MERKSATZ - fuer Fragen ohne Zeichnung
     // ----------------------------------------------------------------
@@ -18226,7 +18266,7 @@ function erklaerInhalt(q, er, alles){
     }
     if (merken) {
         ek += '<div class="ek-zeile" data-ek="merken"><span class="ek-marke">Zum Merken.</span> '
-            + attrText(merken) + '</div>';
+            + formelText(merken) + '</div>';
     }
 
     const hatWeg    = Array.isArray(er.weg) && er.weg.length;
@@ -18236,7 +18276,7 @@ function erklaerInhalt(q, er, alles){
     if (alles) {
         if (hatWeg) {
             ek += '<div class="ek-zeile" data-ek="weg"><span class="ek-marke">Der Weg.</span><ol class="ek-weg">'
-                + er.weg.map(z => '<li>' + attrText(z) + '</li>').join('')
+                + er.weg.map(z => '<li>' + formelText(z) + '</li>').join('')
                 + '</ol></div>';
         }
         // Die falschen Antworten werden ueber ihren TEXT zugeordnet, nicht
@@ -18250,7 +18290,7 @@ function erklaerInhalt(q, er, alles){
                     const dran = (meine && k.trim() === meine);
                     return '<li class="' + (dran ? 'gewaehlt' : '') + '">'
                          + (dran ? '<span class="ek-du">Deine Antwort</span><br>' : '')
-                         + '<b>' + attrText(k) + '</b> &mdash; ' + attrText(wf[k]) + '</li>';
+                         + '<b>' + formelText(k) + '</b> &mdash; ' + formelText(wf[k]) + '</li>';
                   }).join('')
                 + '</ul></div>';
         }
@@ -18508,8 +18548,20 @@ function sprechbar(text){
     //    Widerstaende gleich.
     t = t.replace(/[\u2080-\u2089]+/g, m => ' ' + zahl(m, TIEFZAHL));
 
-    // 4. Unterstriche in Bezeichnern: "U_BE" wird zu "U BE", "R_L" zu "R L".
-    t = t.replace(/([A-Za-z])_([A-Za-z0-9]{1,3})/g, '$1 $2');
+    // 4. Unterstriche in Bezeichnern: "U_BE" wird zu "U B-E", "R_L" zu
+    //    "R L", "P_Sender" zu "P Sender". Bis zum 15.09.2026 war der Index
+    //    auf drei Zeichen begrenzt - "P_Sender" und "P_Verluste" (EG502)
+    //    rutschten samt Unterstrich durch, und Piper verschluckt ihn.
+    //    Zwei- und dreibuchstabige Indizes werden getrennt gesprochen,
+    //    damit aus "U_AB" nicht das Wort "ab" wird.
+    t = t.replace(/([A-Za-z])_\{([A-Za-z0-9]{1,16})\}/g, '$1 $2');
+    t = t.replace(/([A-Za-z])_([A-Za-z0-9]{1,16})/g, (m, zeichen, index) =>
+        zeichen + ' ' + (/^[A-Z0-9]{2,3}$/.test(index) ? index.split('').join('-') : index));
+
+    // 4b. Exponenten in Textschreibweise: "10^(0,5)" wird zu "10 hoch 0,5".
+    t = t.replace(/\^\{([^}]{1,16})\}/g, ' hoch $1 ');
+    t = t.replace(/\^\(([^)]{1,16})\)/g, ' hoch $1 ');
+    t = t.replace(/\^(-?\d+(?:[.,]\d+)?|[A-Za-z])/g, ' hoch $1 ');
 
     // 5. Rechen- und Sonderzeichen in Worte.
     t = t.replace(/\u2225/g, ' parallel zu ');          // ∥
@@ -18841,7 +18893,7 @@ function erklaerLoesungZeigen(){
     const html = '<div class="ek-loesung" data-ek="loesung">'
                + '<span class="ekl-marke">Die Lösung.</span> '
                + (buchstabe ? '<span class="ekl-buchstabe">' + buchstabe + '</span> ' : '')
-               + (richtig ? attrText(richtig) : 'Die richtige Antwort ist eine der Zeichnungen.')
+               + (richtig ? formelText(richtig) : 'Die richtige Antwort ist eine der Zeichnungen.')
                + '</div>';
     ziele.forEach(z => {
         if(z.querySelector('.ek-loesung')) return;   // schon aufgedeckt
@@ -22083,6 +22135,154 @@ function attrText(t){
 }
 window.attrText = attrText;
 
+// ============================================================================
+//  FORMELN ANZEIGEN WIE IM PRUEFUNGSKATALOG   (15.09.2026)
+// ----------------------------------------------------------------------------
+//  Dietmar am 15.09.2026, mit dem Bild von AG214 aus Pruefungsfragen.pdf:
+//  "Es sieht anders aus als in Pruefungsfragen.pdf. Das muss unbedingt
+//  berichtigt werden." Und gleich danach: "Die Fragen und Antworten muessen
+//  exakt uebereinstimmen. Die Quelle liegt im Ordner Pruefungsfragen.pdf"
+//
+//  DER KATALOG HAT RECHT, DIE ANZEIGE HATTE UNRECHT. In AG214 steht in
+//  fragen.json "von P_V zu P_R." - im amtlichen Katalog ist das ein P mit
+//  tiefgestelltem V und ein P mit tiefgestelltem R. Der Unterstrich ist also
+//  die Textschreibweise fuer den Index, kein Tippfehler. Angezeigt wurde er
+//  aber als Unterstrich, und damit sah die Frage anders aus als in der
+//  Pruefung. Dasselbe gilt fuer 10^(0,5) (Zehnerpotenz), (R_1)/(R_2) (Bruch)
+//  und das Wurzelzeichen mit Klammer (Wurzel mit Ueberstrich).
+//
+//  WAS HIER NICHT PASSIERT: Der gespeicherte Text bleibt Zeichen fuer Zeichen
+//  derselbe. Gesucht, verglichen, gezaehlt und vorgelesen wird weiterhin die
+//  Textfassung - nur die Darstellung wechselt. Deshalb passen auch die
+//  Schluessel in erklaerungen.json weiter; die tragen den Antworttext.
+//
+//  EIN BRUCH ENTSTEHT NUR, WENN EINE SEITE GEKLAMMERT IST. Sonst wuerde aus
+//  "bit/s", "km/h", "A/D-Umsetzer" und "5/8 Lambda" ein Bruch - alles
+//  Schreibweisen, die im Katalog einzeilig gedruckt sind.
+//
+//  Die Platzhalter heissen @@n@@ und nicht Steuerzeichen: der Katalog und die
+//  Erklaerungen enthalten nachgesehen kein einziges "@@".
+// ============================================================================
+function formelHtml(text){
+    let s = String(text == null ? '' : text);
+    if(!/[_^√]/.test(s) && !/\)\s*\//.test(s) && !/\/\s*\(/.test(s)) return s;
+
+    const ablage = [];
+    const halten = (html) => { ablage.push(html); return '@@' + (ablage.length - 1) + '@@'; };
+    // Zeichen, die zu einem ungeklammerten Zaehler oder Nenner gehoeren.
+    const TEIL = /[A-Za-z0-9@πλ²³⁰-⁹₀-₉_^{}.,]/;
+
+    const klammerZu = (t, von) => {
+        let tief = 0;
+        for(let i = von; i < t.length; i++){
+            if(t[i] === '(') tief++;
+            else if(t[i] === ')'){ tief--; if(tief === 0) return i; }
+        }
+        return -1;
+    };
+    const klammerAuf = (t, von) => {           // von zeigt auf ')'
+        let tief = 0;
+        for(let i = von; i >= 0; i--){
+            if(t[i] === ')') tief++;
+            else if(t[i] === '('){ tief--; if(tief === 0) return i; }
+        }
+        return -1;
+    };
+
+    // 1. WURZELN, von innen nach aussen.
+    const wurzeln = (t) => {
+        let schutz = 0, i;
+        while((i = t.lastIndexOf('√')) >= 0 && schutz++ < 30){
+            let j = i + 1;
+            while(j < t.length && t[j] === ' ') j++;
+            const k = (t[j] === '(') ? klammerZu(t, j) : -1;
+            if(k < 0){
+                t = t.slice(0, i) + halten('<span class="fm-wz">√</span>') + t.slice(i + 1);
+                continue;
+            }
+            t = t.slice(0, i)
+              + halten('<span class="fm-wz">√</span><span class="fm-wzarg">'
+                       + wurzeln(t.slice(j + 1, k)) + '</span>')
+              + t.slice(k + 1);
+        }
+        return t;
+    };
+    s = wurzeln(s);
+
+    // 2. BRUECHE.
+    for(let schutz = 0; schutz < 30; schutz++){
+        let getroffen = false;
+        for(let i = 0; i < s.length; i++){
+            if(s[i] !== '/') continue;
+            let l = i - 1;
+            while(l >= 0 && s[l] === ' ') l--;
+            let zStart, zText, zKlammer = false;
+            if(l >= 0 && s[l] === ')'){
+                const a = klammerAuf(s, l);
+                if(a < 0) continue;
+                zStart = a; zText = s.slice(a + 1, l); zKlammer = true;
+            } else {
+                let a = l;
+                while(a >= 0 && TEIL.test(s[a])) a--;
+                zStart = a + 1; zText = s.slice(a + 1, l + 1);
+            }
+            let r = i + 1;
+            while(r < s.length && s[r] === ' ') r++;
+            let nEnde, nText, nKlammer = false;
+            if(s[r] === '('){
+                const b = klammerZu(s, r);
+                if(b < 0) continue;
+                nEnde = b; nText = s.slice(r + 1, b); nKlammer = true;
+            } else {
+                let b = r;
+                while(b < s.length && TEIL.test(s[b])) b++;
+                nEnde = b - 1; nText = s.slice(r, b);
+            }
+            if(!zText || !nText) continue;
+            if(!zKlammer && !nKlammer) continue;     // "bit/s" bleibt "bit/s"
+            s = s.slice(0, zStart)
+              + halten('<span class="fm-bruch"><span class="fm-z">' + zText
+                       + '</span><span class="fm-n">' + nText + '</span></span>')
+              + s.slice(nEnde + 1);
+            getroffen = true;
+            break;
+        }
+        if(!getroffen) break;
+    }
+
+    // 3. PLATZHALTER EINSETZEN. Erst danach kommen die Indizes dran, sonst
+    //    bliebe ein "R_1" im Zaehler eines Bruchs unbehandelt - der Zaehler
+    //    lag zu dem Zeitpunkt noch in der Ablage. Gefunden beim Probelauf
+    //    mit (R_1)/(R_2) am 15.09.2026.
+    for(let n = 0; n < 15 && s.indexOf('@@') >= 0; n++){
+        const vorher = s;
+        s = s.replace(/@@(\d+)@@/g, (m, k) => (ablage[+k] === undefined ? m : ablage[+k]));
+        if(s === vorher) break;
+    }
+
+    // 4. TIEF- UND HOCHGESTELLTES. Nur direkt hinter einem Formelzeichen -
+    //    ein Unterstrich im Fliesstext bleibt, was er ist. In den eigenen
+    //    span-Namen steht weder _ noch ^, deshalb ist das hier gefahrlos.
+    const VOR = '([A-Za-z0-9)π])';
+    s = s.replace(new RegExp(VOR + '_\\{([^}]{1,20})\\}', 'g'),
+                  (m, v, x) => v + '<span class="fm-idx">' + x + '</span>');
+    s = s.replace(new RegExp(VOR + '_([A-Za-z0-9]{1,20})', 'g'),
+                  (m, v, x) => v + '<span class="fm-idx">' + x + '</span>');
+    s = s.replace(new RegExp(VOR + '\\^\\{([^}]{1,20})\\}', 'g'),
+                  (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
+    s = s.replace(new RegExp(VOR + '\\^\\(([^)]{1,20})\\)', 'g'),
+                  (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
+    s = s.replace(new RegExp(VOR + '\\^(-?[A-Za-z0-9][A-Za-z0-9,.]{0,7})', 'g'),
+                  (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
+    return s;
+}
+window.formelHtml = formelHtml;
+
+// Fuer Stellen, an denen der Text erst entschaerft werden muss (attrText)
+// und danach die Formeln gesetzt werden sollen.
+function formelText(t){ return formelHtml(attrText(t)); }
+window.formelText = formelText;
+
 // Knoepfe, die nichts sagen sollen. Dietmar am 03.09.2026: "Fenster
 // schliessen und zurueck zum Hauptmenue moechte ich ebenfalls raus haben."
 // Beides erklaert sich von selbst, und beim Aufnehmen redet der Trainer
@@ -25035,7 +25235,7 @@ function renderQuestion() {
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
         </div>
-        <div class="q-text">${q.text}</div>
+        <div class="q-text">${formelHtml(q.text)}</div>
         ${svgHtml ? `<div class="q-image${hasImages ? ' zur-frage' : ''}">${svgHtml}</div>` : ''}
     </div>`;
 
@@ -25072,10 +25272,10 @@ function renderQuestion() {
 
         let optionTextHtml = '';
         if (!hasImages) {
-            optionTextHtml = opt.text ? `<span class="option-text">${opt.text}</span>` : '';
+            optionTextHtml = opt.text ? `<span class="option-text">${formelHtml(opt.text)}</span>` : '';
         } else {
             if (opt.text && opt.text.trim()) {
-                optionTextHtml = `<span class="option-text">${opt.text}</span>`;
+                optionTextHtml = `<span class="option-text">${formelHtml(opt.text)}</span>`;
             }
         }
         if (!optionImage && !optionTextHtml) {
@@ -28270,7 +28470,7 @@ function printExam() {
 
                 html += `<div class="question-block">
                 <div class="q-id">${q.id} - Frage ${num} [${partLetter}]</div>
-                <div class="q-text">${num}. ${q.text}</div>`;
+                <div class="q-text">${num}. ${formelHtml(q.text)}</div>`;
 
                 if (svgHtml && !hasOptImages) {
                     const optNames = q.options.map(o => o.image ? String(o.image).trim() : '').filter(Boolean);
@@ -28285,7 +28485,7 @@ function printExam() {
                     q.options.forEach((opt, i) => {
                         const label = String.fromCharCode(65 + i);
                         const imgHtml = getOptionImageHtml(opt);
-                        const textHtml = opt.text ? `<div style="font-size:9pt; margin-top:3px; font-family:Calibri, Arial, sans-serif;">${opt.text}</div>` : '';
+                        const textHtml = opt.text ? `<div style="font-size:9pt; margin-top:3px; font-family:Calibri, Arial, sans-serif;">${formelHtml(opt.text)}</div>` : '';
                         html += `<div class="option-image-block"><div class="label">${label}</div>${imgHtml}${textHtml}</div>`;
                     });
                     html += `</div>`;
@@ -28293,7 +28493,7 @@ function printExam() {
                     html += `<div class="options">`;
                     q.options.forEach((opt, i) => {
                         const label = String.fromCharCode(65 + i);
-                        html += `<div class="option"><span class="option-label">${label}</span><span class="option-text">${opt.text || ''}</span></div>`;
+                        html += `<div class="option"><span class="option-label">${label}</span><span class="option-text">${formelHtml(opt.text || '')}</span></div>`;
                     });
                     html += `</div>`;
                 }

@@ -10,6 +10,99 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ## [1.297.0] - 2026-09-15
 
+### Der Fragenkatalog stimmt jetzt Zeichen für Zeichen mit der Prüfung überein
+
+Dietmar schickte das Bild der Frage AG214 aus `Pruefungsfragen.pdf` und schrieb: „Es sieht
+anders aus als in Pruefungsfragen.pdf. Das muss unbedingt berichtigt werden." Und gleich
+danach: „Die Fragen und Antworten müssen exakt übereinstimmen. Die Quelle liegt im Ordner
+Pruefungsfragen.pdf"
+
+Daraufhin sind **alle 1750 Fragen mit je vier Antworten** aus dem amtlichen PDF
+zeichengenau ausgelesen und gegen den Katalog gestellt worden — zweispaltig, mit Erkennung
+der tief- und hochgestellten Zeichen über Schriftgröße und Grundlinie, und mit Auflösung
+der Trennstriche am Zeilenende.
+
+**Das Wichtigste zuerst: die richtige Antwort stimmt überall.** Im amtlichen Katalog ist
+Antwort A stets die richtige. Bei allen 1673 Fragen mit Textantworten ist die im Trainer
+als richtig markierte Antwort wortgleich diese Antwort A. Null Abweichungen.
+
+**Berichtigt wurden 784 Stellen in 363 Fragen.** Darunter echte Fehler, die auf dem
+Bildschirm standen:
+
+- **Bei 21 Fragen hing fremder Text an der letzten Antwort** — beim Einlesen des PDF war
+  jeweils die nächste Kapitelüberschrift mit hineingerutscht. VA407 endete auf
+  „… Organisation für Normung (ISO) (Europäische Konferenz der Verwaltungen für Post und
+  Telekommunikation)", NJ202 auf „… zu vermeiden. Verträglichkeit, Anwendung, Personen- und
+  Sachschutz", BA110 auf „… Hotel Romeo Q-Gruppen".
+- **Eine Antwort war abgeschnitten.** VC108, Antwort D lautete „Das Mindestalter für die
+  Antragstellung beträgt" — ohne die „15 Jahre.".
+- **Bei 72 Fragen fehlte ein Bindestrich**, immer dort, wo im PDF am Zeilenende getrennt
+  wurde: „IARU Bandplan" statt „IARU-Bandplan", „QSLKarte", „GraylineBedingungen",
+  „IARUEmpfehlung", „RemoteStationen", „Amateurfunkzeugnisklasse".
+- **Satzzeichen fehlten** in BB201 (Komma), BE113 (Punkt) und NG107 (Fragezeichen).
+- **In BE416 stand ein arabisches Schriftzeichen** statt „fb": die Antwort las sich
+  „auﮓereitet" statt „aufbereitet". In EE405 standen LaTeX-Reste im Text
+  („répondez s\'il vous pla\^it"). In AH209 stand „45^°" statt „45°". In AA116 stand eine
+  Null zuviel.
+- **In NB505 waren die Beschriftungen aus der Zeichnung in den Fragetext geraten**
+  („Welcher Widerstandswert liegt vor? 0,3 A 12 V").
+- **In NB203 stand ein Leerzeichen am Antwortanfang.** Das hatte eine stille Folge: der
+  Trainer fand den Satz „Warum die anderen falsch sind" zu dieser Antwort nicht mehr.
+- **Rufzeichen waren auseinandergerissen**: „DL1 FLO", „N4 EAX", „C4 FM".
+
+Und die Stellen, die inhaltlich richtig waren, aber anders aussahen als die Prüfung:
+**Ω statt „Ohm"** (405 Stellen in 119 Fragen — die Prüfung schreibt 5,6 kΩ), **Gedankenstrich
+statt „bis"** („5040–6160 Ω"), **Zifferngruppen** („144 000 000 Hz"), **deutsche
+Anführungszeichen**, **„z. B." mit Abstand**, **„bit/s" klein**, **„±5 %" mit Abstand**,
+**„180°" ohne Abstand**.
+
+Das Wort „Ohm" dort, wo es auch die Prüfung ausschreibt — in „Ohm (Ω)" oder „in Ohm pro
+Farad" —, ist unangetastet geblieben.
+
+Mitgezogen sind die **Erklärungen**: dort tragen `richtig` und die Schlüssel unter
+`warum_falsch` den Antworttext, sie würden sonst nicht mehr finden, wozu sie gehören.
+Nachgeprüft über alle 1750: keine Erklärung ohne Frage, kein Schlüssel ohne Antwort.
+
+### Formeln sehen aus wie gedruckt
+
+Der Auslöser war der Unterstrich in AG214. Im Katalog steht „von P_V zu P_R." — und das ist
+**richtig**: der Unterstrich ist die Textschreibweise für den tiefgestellten Index, in der
+Prüfung steht dort ein P mit kleinem V darunter. Falsch war die Anzeige.
+
+Der Trainer setzt es jetzt wie gedruckt:
+
+- **P_V** wird zu P mit tiefgestelltem V — 60 Fragen.
+- **(R_1)/(R_2)** wird zum Bruch mit Bruchstrich, Zähler über Nenner.
+- **√(P · R)** wird zur Wurzel mit Überstrich über dem, was darunter gehört.
+- **10^(0,5)** wird zur Zehnerpotenz mit hochgestelltem Exponenten.
+
+**Ein Bruch entsteht nur, wenn eine Seite geklammert ist.** Sonst würde aus „bit/s",
+„km/h", „A/D-Umsetzer" und „5/8 λ" ein Bruch — alles Schreibweisen, die auch in der Prüfung
+einzeilig gedruckt sind.
+
+Der gespeicherte Text bleibt dabei Zeichen für Zeichen derselbe. Gesucht, verglichen,
+gezählt und vorgelesen wird weiter die Textfassung; nur die Darstellung wechselt.
+
+### Der Unterstrich wird auch vorgelesen
+
+Er ging bis jetzt ungefiltert an die Sprachausgabe. Das Protokoll zeigte es schwarz auf
+weiß:
+
+```
+[PRE V15] Antwort A: von P_V zu P_R.. -> Antwort A: von P_V zu P_R..
+```
+
+Links der Text vor der Aufbereitung, rechts danach — unverändert. Piper bekam also den
+nackten Unterstrich und verschluckt ihn. Bei 60 Fragen sind das genau die Rechenaufgaben,
+bei denen jemand mit schwachen Augen das Vorlesen braucht.
+
+Jetzt wird daraus „von P V zu P R". Zwei- und dreibuchstabige Indizes werden getrennt
+gesprochen („U_AB" → „U A-B"), damit daraus nicht das Wort „ab" wird; ein ausgeschriebener
+Index bleibt ein Wort („P_Sender" → „P Sender"). „10^(0,5)" wird zu „10 hoch 0,5". In den
+Erklärungen war der Index bis jetzt auf drei Zeichen begrenzt — „P_Sender" und
+„P_Verluste" rutschten samt Unterstrich durch.
+
+
 ### Der Fragenkatalog ist vollständig erklärt
 
 Die letzten 464 Fragen des Aufstiegs **E → A** haben eine Erklärung bekommen. Damit sind

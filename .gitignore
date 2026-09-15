@@ -328,3 +328,20 @@ _*.webp
 _Ansage.bat
 _ansage.js
 _Ansagen/
+
+# ================================================================
+#  DOPPELTE DOWNLOADS - bleiben draussen
+# ----------------------------------------------------------------
+#  Speichert der Browser eine Datei, die es im Ordner schon gibt,
+#  haengt Windows "-1" oder " (1)" an den Namen. Am 15.09.2026 lagen
+#  so sechs Fragendateien als fragen-1.json, Fragen-A-1.json usw. im
+#  Ordner - der Trainer las sie nicht, und Hochladen.bat haette sie
+#  mit auf GitHub genommen. Solche Reste gehoeren nirgendwohin.
+# ================================================================
+*-1.json
+*-1.html
+*-1.js
+*-1.md
+*-1.txt
+* (1).*
+* - Kopie.*

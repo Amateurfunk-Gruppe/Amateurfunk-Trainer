@@ -46,6 +46,46 @@ function expandTTS(text){
   // Anfang zu "Lambda" ausgeschrieben, bevor irgendeine andere Regel laeuft.
   t = t.replace(/λ/g, 'Lambda');
 
+  // ================================================================
+  // TIEFGESTELLTE INDIZES UND ZEHNERPOTENZEN   (15.09.2026)
+  // ----------------------------------------------------------------
+  // Dietmar am 15.09.2026: "Bitte pruefe ob das so stimmt mit dem _
+  // dazwischen" - mit dem Bild von AG214, wo "von P_V zu P_R." steht.
+  //
+  // Der Unterstrich ist die Textschreibweise fuer den tiefgestellten
+  // Index; im amtlichen Katalog steht dort ein kleines V bzw. R unter
+  // dem P. Die Anzeige setzt das jetzt als echten Index (formelHtml in
+  // Index.html) - fuer Piper musste es noch aufgeloest werden. Das
+  // Protokoll zeigte den Mangel schwarz auf weiss:
+  //
+  //   [PRE V15] Antwort A: von P_V zu P_R.. -> Antwort A: von P_V zu P_R..
+  //
+  // Links der Text vor der Aufbereitung, rechts danach - unveraendert.
+  // Piper bekam also den nackten Unterstrich und verschluckt ihn. Bei
+  // 60 Fragen sind das genau die Rechenaufgaben, bei denen jemand mit
+  // schwachen Augen das Vorlesen braucht.
+  //
+  // GANZ OBEN, gleich nach Lambda: spaeter greifen Regeln, die auf
+  // Grossbuchstabenfolgen und auf Einheiten schauen. Die sollen ein
+  // "P V" schon vorfinden und nicht mehr ein "P_V".
+  //
+  // Zwei Buchstaben Index werden getrennt gesprochen ("U_AB" -> "U A-B"),
+  // ein ausgeschriebener Index bleibt ein Wort ("P_Sender" -> "P Sender").
+  // Der Bindestrich ist dieselbe Technik wie bei DARC weiter unten: er
+  // trennt, ohne dass ein Wort dazukommt.
+  // ================================================================
+  t = t.replace(/([A-Za-z])_\{([A-Za-z0-9]{1,16})\}/g, '$1 $2');
+  t = t.replace(/([A-Za-z])_([A-Za-z0-9]{1,16})/g, (m, zeichen, index) =>
+      zeichen + ' ' + (/^[A-Z0-9]{2,3}$/.test(index) ? index.split('').join('-') : index));
+
+  // Zehnerpotenzen und Exponenten in Klammerschreibweise: "10^(0,5)" wird
+  // zu "10 hoch 0,5", "I^2" zu "I hoch 2". Ohne diese Regel liest Piper
+  // das Dach als Zeichen oder ueberspringt es.
+  t = t.replace(/\^\{([^}]{1,16})\}/g, ' hoch $1 ');
+  t = t.replace(/\^\(([^)]{1,16})\)/g, ' hoch $1 ');
+  t = t.replace(/\^(-?\d+(?:[.,]\d+)?|[A-Za-z])/g, ' hoch $1 ');
+
+
   // FIX (05.09.2026): "DARC" liest Piper als englisches "dark". Dietmar:
   // "DARC liest es als Dark. Es muss DARC aussprechen. D A R C mit einer
   // sehr kleinen Pause dazwischen bei allen Sprachen."

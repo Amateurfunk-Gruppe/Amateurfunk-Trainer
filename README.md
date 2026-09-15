@@ -39,6 +39,13 @@ vorher, welche Prüfungsbögen dazugehören und wie viele Fragen zu lernen sind.
 
 **Weiter:**
 
+- **Eine Erklärung zu jeder Frage** — alle 1750, in allen vier Prüfungszielen.
+  Zuerst das Prinzip, dann der Kniff für diese eine Frage, bei 390 Rechenaufgaben
+  der Weg mit jedem Zwischenschritt, und zu jeder falschen Antwort ein Satz, welcher
+  Denk- oder Rechenfehler genau dorthin führt. Hinter den Erklärungen stehen
+  76 Begriffsblätter. Für Augen, die nicht mehr die besten sind: ein großes Fenster
+  mit größerer Schrift, Vorlesen ohne Aufklappen (**F8**) und die Lösung samt
+  Buchstabe (**F9**) — F8 hört, F9 sieht
 - **Lernmodus** mit Lernfortschritt, Fehlerliste, Merkliste und Auffrischung
 - **Prüfungssimulator** — 25 Fragen, 45 Minuten, 19 zum Bestehen, wie in der echten Prüfung
 - **Gruppenraum** — gemeinsam lernen, jeder in seinem Tempo, am Ende die Auswertung aller
@@ -646,6 +653,14 @@ Die Daten wurden verändert: Formeln sind von LaTeX nach Unicode umgesetzt, die
 Antworten sind gemischt (im Katalog steht die Lösung immer an erster Stelle),
 und sechs Fragen mit beim Auslesen zerfallenen Brüchen wurden aus dem
 maschinenlesbaren Katalog neu aufgebaut.
+
+Am 15. September 2026 wurde der gesamte Katalog gegen das amtliche PDF geprüft —
+alle 1750 Fragen mit allen Antworten, Zeichen für Zeichen. Dabei wurden 784 Stellen
+in 363 Fragen berichtigt: angehängte Kapitelüberschriften, eine abgeschnittene
+Antwort, fehlende Bindestriche und Satzzeichen, „Ohm" statt Ω, „bis" statt
+Gedankenstrich. Bei jeder Frage mit Textantworten ist die als richtig markierte
+Antwort wortgleich die amtliche Antwort A. Formelzeichen zeigt der Trainer seither
+wie gedruckt: Indizes tiefgestellt, Brüche mit Bruchstrich, Wurzeln mit Überstrich.
 
 Die maschinenlesbare Fassung und die Zeichnungen stammen aus
 [fritzsche/afu_test](https://github.com/fritzsche/afu_test).
