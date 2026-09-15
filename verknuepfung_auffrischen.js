@@ -139,10 +139,33 @@ function windows() {
     for (const zeile of bericht.split(/\r?\n/)) if (zeile.trim()) sag(zeile.trim());
 
     // Der Zwischenspeicher der Shell. "-show" ist der Weg, den Microsoft
-    // selbst benutzt; auf aelteren Fassungen hiess er "-ClearIconCache".
-    // Beides versuchen, beides darf fehlschlagen.
+    // selbst benutzt.
+    //
+    // "-ClearIconCache" IST AM 15.09.2026 HERAUSGEFLOGEN. Es war nur der
+    // alte Name derselben Sache und stand hier als Guertel zum Hosentraeger.
+    // Bezahlt hat das der Benutzer: Dietmar hat den Eintrag aus dem
+    // Schutzverlauf geschickt -
+    //
+    //     Zugriff auf geschuetzten Ordner blockiert
+    //     Blockierte APP oder Prozess: ie4uinit.exe
+    //     Geschuetzter Ordner: %userprofile%\Favorites
+    //     Blockiert durch: Ueberwachter Ordnerzugriff
+    //
+    // - also eine Sicherheitswarnung von Windows unmittelbar nach der
+    // Installation. Harmlos ("Niedrig"), aber wer sie sieht, liest sie als
+    // "der Trainer wollte an meine Dateien". An einem Tag, an dem in einer
+    // Facebook-Runde schon "Achtung Virus" stand, ist das teuer.
+    //
+    // -ClearIconCache raeumt quer durch die Shell-Ordner des Benutzers auf,
+    // darunter Favorites - genau das, was der ueberwachte Ordnerzugriff
+    // schuetzt. "-show" tut das nicht und erledigt die Aufgabe; zusammen mit
+    // SHChangeNotify darunter zeichnet der Explorer sofort neu.
+    //
+    // Falls das Zeichen doch einmal klebt: Der Grund war beim letzten Mal
+    // NICHT der Zwischenspeicher, sondern dass icon.ico gar nicht erst
+    // mitinstalliert wurde (behoben am 09.09.2026). Dann dort nachsehen,
+    // nicht hier den Hammer wieder auspacken.
     ruf('ie4uinit.exe', ['-show']);
-    ruf('ie4uinit.exe', ['-ClearIconCache']);
 
     // Und dem Explorer sagen, dass sich etwas geaendert hat. Ohne diesen
     // Anstoss zeichnet er den Schreibtisch erst beim naechsten Anmelden neu.

@@ -421,6 +421,61 @@ neu gestartet werden muss.
 
 ![Installation — zwei Wege](bilder/13-installation.png)
 
+### Windows warnt beim Start. Das ist normal — und hier steht, warum
+
+<p align="center">
+  <img src="bilder/21-smartscreen.png" alt="Der rote SmartScreen-Hinweis von Windows: „Der Computer wurde durch Windows geschützt. Von Microsoft Defender SmartScreen wurde der Start einer unbekannten App verhindert." Sichtbar ist nur der Knopf „Nicht ausführen“." width="470">
+</p>
+
+Diesen roten Kasten bekommt **jeder**, der das Setup zum ersten Mal
+doppelklickt. Er sieht schlimmer aus, als er ist.
+
+**Es ist keine Virenmeldung.** SmartScreen prüft nicht den Inhalt, sondern
+den *Ruf*: Ist diese Datei schon oft heruntergeladen worden, und ist der
+Herausgeber bekannt? Bei einem neuen Programm ohne gekauftes
+Code-Signing-Zertifikat lautet die Antwort zweimal nein — unabhängig davon,
+was darin steckt. Ein leeres Programm, heute geschrieben, bekommt denselben
+Kasten.
+
+**Und jetzt der Punkt, an dem die meisten aufgeben:** Auf dem Bild oben
+steht nur ein Knopf, und der heißt *Nicht ausführen*. Der andere ist
+versteckt:
+
+1. Auf **Weitere Informationen** klicken — den kleinen Link im Text
+2. Darunter erscheint jetzt **Trotzdem ausführen**
+3. Darauf klicken, fertig
+
+Das ist Absicht von Microsoft: Man soll einen Moment nachdenken müssen.
+
+### Muss man mir das glauben? Nein
+
+Ich kann viel behaupten. Prüfen kannst du es selbst, und das ist besser:
+
+- **Der Quelltext liegt offen.** Alles, was der Trainer tut, steht in diesem
+  Repository — `Server.js` und `Index.html` sind Textdateien, die jeder
+  lesen kann. Auch jemand, der nicht programmiert, kann die Suchfunktion
+  benutzen.
+- **Prüfe die Datei bei [VirusTotal](https://www.virustotal.com).** Dort
+  laufen rund siebzig Virenscanner gleichzeitig darüber, kostenlos und ohne
+  Anmeldung. Datei hineinziehen, Ergebnis ansehen — *bevor* du sie öffnest.
+  Das ist ohnehin die bessere Gewohnheit, bei jedem Programm aus dem Netz,
+  nicht nur bei diesem.
+- **Offizielle Setups gibt es ausschließlich hier unter
+  [Releases](../../releases).** Für Fassungen aus anderen Quellen kann ich
+  nicht sagen, was darin steckt.
+
+**Was ich nicht sage:** „Schalte deinen Virenscanner aus.“ Wer dir das bei
+einem Download rät, gleich bei welchem, will nichts Gutes. Wenn dein
+Scanner etwas meldet, schreib mir ein
+[Issue](../../issues) mit dem genauen Wortlaut — ich sehe mir das an.
+
+> **Und wenn dir das alles zu unsicher ist**, ist das völlig in Ordnung:
+> Lass es. Es ist ein kostenloses Lernprogramm, kein Muss. Unter Linux und
+> macOS stellt sich die Frage ohnehin nicht — dort kommen die Pakete über
+> die Paketverwaltung des Systems.
+
+---
+
 ### In Kürze
 
 **Windows** — kein Terminal nötig:
