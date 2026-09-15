@@ -8,6 +8,39 @@ Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie vo
 
 ---
 
+## [1.297.0] - 2026-09-15
+
+### Der Fragenkatalog ist vollständig erklärt
+
+Die letzten 464 Fragen des Aufstiegs **E → A** haben eine Erklärung bekommen. Damit sind
+alle vier Prüfungsziele durch — Klasse N, Klasse E, N → E und E → A —, zusammen
+**1750 Erklärungen**. Vorher waren es 1286; offen war allein dieser Aufstieg.
+
+Jede der 464 folgt derselben Form wie die übrigen:
+
+- **Das Prinzip zuerst.** Warum es so ist, allgemein genug, dass es bei der nächsten Frage
+  wieder trägt. Erst danach der Kniff — die Stelle, an der man hereinfällt.
+- **Zu jeder falschen Antwort ein eigener Satz**, der den konkreten Rechen- oder Denkfehler
+  benennt: „Der Faktor 2 fehlt", „mit der Leerlaufspannung gerechnet", „das ist die Lösung
+  der Nachbarfrage AD105". Wo keine Verwechslung auf die Zahl führt, steht das
+  ausdrücklich da statt einer erfundenen Begründung.
+- **146 Rechenwege** mit jedem Zwischenschritt und jeder Einheit — vom Blindwiderstand
+  über die Carson-Formel und Shannon-Hartley bis zum Personenschutz-Sicherheitsabstand.
+
+Abgedeckt sind damit auch die Gebiete, die es nur in der Klasse A gibt: Betriebsarten der
+Verstärker, Doppelsuper und Roofing-Filter, digitale Signalverarbeitung mit I/Q und
+Abtasttheorem, Leitungstransformation, Ausbreitung über Aurora und Sporadic E,
+Messtechnik mit dem vektoriellen Netzwerkanalysator und die Feldstärkerechnungen des
+Personenschutzes.
+
+**Maschinell geprüft**, wie bei allen Erklärungen zuvor: Jeder Fragentext, jede richtige
+Antwort und jeder Schlüssel unter `warum_falsch` steht wörtlich so im amtlichen Katalog —
+0 Abweichungen bei allen 1750 Einträgen. Jede der 146 Rechnungen wurde nachgerechnet und
+gegen die amtliche Antwort gehalten. Die Datei wurde über HTTP aus dem laufenden Trainer
+geladen, um zu sehen, dass sie dort ankommt, wie sie gemeint ist.
+
+---
+
 ## [1.296.0] - 2026-09-14
 
 ### Behoben — zwei Stimmen auf einmal
