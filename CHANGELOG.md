@@ -79,6 +79,25 @@ zweiter, eigener Text wäre eine Stelle mehr, die bei jeder Korrektur vergessen 
 > Punkten. Nachgemessen bei 1400, 1024 und 400 Punkten Breite: nichts steht über dem Rand,
 > nirgends muss quer gescrollt werden.
 
+**F8 hört, F9 sieht.** Dietmar: *„Verwende F8."* Die Taste tut dasselbe wie der
+Lautsprecher-Knopf — Erklärung vorlesen, ohne dass sich etwas öffnet; zweites Drücken hält
+an. Steht der Kasten oder das große Fenster schon offen, liest F8 dort, damit nicht zwei
+Vorgänge gleichzeitig sprechen. In einem Eingabefeld — Suche, Notiz, Rufzeichen — tut sie
+nichts, dort gehört das F8 in den Text. Im Prüfungssimulator ist sie aus, wie der Knopf.
+Sie steht jetzt bei den anderen Tasten unter *Einstellungen → Nachteilsausgleich →
+Bedienung per Tastatur*.
+
+**Die Lösung nennt den Buchstaben.** Dietmar: *„Bei Lösung wünsche ich mir, das es die
+Antwort und den Buchstaben dazu sagt."* In der Zeile steht er grün abgesetzt vor dem Text
+— `Die Lösung. [C] 7,1 m` —, und beim Vorlesen wird er mitgesprochen: *„Die Lösung.
+Antwort C. 7,1 m."*
+
+> Der Buchstabe kommt aus der **aktuellen** Reihenfolge, nicht aus dem Katalog: Der Trainer
+> mischt die Antworten, und ein fester Buchstabe wäre danach falsch. Genommen wird derselbe
+> Index, den auch die Kacheln als `data-optindex` tragen und den das Vorlesen der Frage
+> benutzt. Bei sechs Stichproben aus verschiedenen Sachgebieten stimmte der angezeigte
+> Buchstabe jedes Mal mit dem auf der Kachel überein.
+
 ---
 
 ## [1.296.0] - 2026-09-14

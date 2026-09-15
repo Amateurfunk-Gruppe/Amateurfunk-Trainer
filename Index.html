@@ -1486,6 +1486,15 @@
             border-left: 4px solid #2e8b57; border-radius: 8px;
         }
         .ek-loesung .ekl-marke { font-weight: 700; color: #1f6b41; }
+        /* Der Buchstabe wie auf der Antwortkachel: quadratisch, einfarbig,
+           auf den ersten Blick zu finden. */
+        .ek-loesung .ekl-buchstabe {
+            display: inline-block; min-width: 1.6em; text-align: center;
+            background: #2e8b57; color: #ffffff; font-weight: 700;
+            border-radius: 6px; padding: 0.05em 0.35em; margin-right: 0.15em;
+            font-family: var(--font-mono, monospace);
+        }
+        body.dark .ek-loesung .ekl-buchstabe { background: #3f8f68; }
         body.dark .ek-loesung {
             background: #14301f; border-color: #2f5f42; border-left-color: #4caf7d;
         }
@@ -6477,7 +6486,12 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <b>Rücktaste</b> zurück. Zusätzlich wird jede Rückmeldung für Vorleseprogramme
                 angesagt („Richtig" / „Falsch – richtig wäre …").<br>
                 Ohne Haken bleibt alles wie bisher. Mit der <b>Tabulatortaste</b> lassen sich die
-                Antworten so oder so anspringen.
+                Antworten so oder so anspringen.<br>
+                <!-- F8 AM 15.09.2026 DAZU. Dietmar: "Verwende F8." Er steht
+                     hier bei den anderen Tasten, damit man ihn findet, ohne
+                     danach zu suchen. -->
+                <b>F8</b> liest die Erklärung vor, ohne dass sie sich öffnet — nochmals drücken hält an.
+                <b>F9</b> zeigt die Lösung. Merkhilfe: <b>F8 hört, F9 sieht.</b>
             </div>
             <button id="ttsBlockSpeichern" onclick="saveTtsSettings()" class="btn btn-primary" style="width:100%; justify-content:center;"><i class="fas fa-save"></i> Speichern</button>
         </div>
@@ -18622,7 +18636,7 @@ function erklaerLesenKnopfZurueck(){
         n.disabled = false;
         n.innerHTML = '<i class="fas fa-volume-up"></i>';
         n.onclick = () => erklaerNurVorlesen();
-        n.setAttribute('data-tooltip', 'Erklärung vorlesen, ohne sie aufzuklappen. Noch einmal klicken hält an.');
+        n.setAttribute('data-tooltip', 'Erklärung vorlesen, ohne sie aufzuklappen — oder Taste F8. Noch einmal klicken hält an.');
     }
 }
 window.erklaerLesenKnopfZurueck = erklaerLesenKnopfZurueck;
@@ -18650,6 +18664,24 @@ function erklaerVorlesen(knopfId){
         if(!vprinzip && er.gruppe && typeof erklaerGruppen !== 'undefined' && erklaerGruppen){
             const gp = erklaerGruppen[er.gruppe];
             if(gp && gp.prinzip) vprinzip = gp.prinzip;
+        }
+    }catch(e){}
+    // IST DIE LOESUNG AUFGEDECKT, WIRD SIE MITGESPROCHEN (15.09.2026).
+    // Dietmar: "Bei Lösung wünsche ich mir, das es die Antwort und den
+    // Buchstaben dazu sagt." Sie steht ganz vorn, weil sie auch ganz oben
+    // steht - gelesen wird, was zu sehen ist, in derselben Reihenfolge.
+    // Wer sie nicht aufgedeckt hat, hoert sie auch nicht: Der Knopf
+    // "Lösung" bleibt der einzige Weg dorthin.
+    try{
+        const lz = wurzel ? document.querySelector(wurzel + ' .ek-loesung') : null;
+        if(lz){
+            const bu = lz.querySelector('.ekl-buchstabe');
+            const rest = lz.textContent.replace(/^\s*Die Lösung\.\s*/, '')
+                                       .replace(bu ? bu.textContent : '###', '')
+                                       .trim();
+            segmente.push({ text: 'Die Lösung. ' + (bu ? ('Antwort ' + bu.textContent.trim() + '. ') : '')
+                                  + sprechbar(rest),
+                            selector: stelle('loesung') });
         }
     }catch(e){}
     if(vprinzip) segmente.push({ text: 'Das Prinzip. ' + sprechbar(vprinzip), selector: stelle('prinzip') });
@@ -18776,6 +18808,21 @@ function erklaerLoesungZeigen(){
         }catch(e){}
     }
 
+    // DER BUCHSTABE DAZU (15.09.2026). Dietmar: "Bei Lösung wünsche ich
+    // mir, das es die Antwort und den Buchstaben dazu sagt."
+    //
+    // Er wird aus der AKTUELLEN Reihenfolge genommen, nicht aus dem
+    // Katalog: Der Trainer mischt die Antworten (siehe [SHUFFLE]), und
+    // q.options steht danach so, wie es auf dem Schirm steht. Genau
+    // deshalb tragen auch die Schluessel unter warum_falsch die
+    // Antworttexte und nicht a/b/c/d - ein fester Buchstabe waere nach
+    // dem Mischen falsch.
+    let buchstabe = '';
+    try{
+        const i = (q.options || []).findIndex(x => x && x.correct);
+        if(i >= 0) buchstabe = String.fromCharCode(65 + i);
+    }catch(e){}
+
     // Wie F9 werten - dieselbe Funktion, damit es dieselbe Regel ist.
     try{
         if(typeof window.alsFehlerImGruppenraumWerten === 'function')
@@ -18793,6 +18840,7 @@ function erklaerLoesungZeigen(){
 
     const html = '<div class="ek-loesung" data-ek="loesung">'
                + '<span class="ekl-marke">Die Lösung.</span> '
+               + (buchstabe ? '<span class="ekl-buchstabe">' + buchstabe + '</span> ' : '')
                + (richtig ? attrText(richtig) : 'Die richtige Antwort ist eine der Zeichnungen.')
                + '</div>';
     ziele.forEach(z => {
@@ -18900,6 +18948,54 @@ function erklaerGrossSchliessen(){
     if(h && h.parentNode) h.parentNode.removeChild(h);
 }
 window.erklaerGrossSchliessen = erklaerGrossSchliessen;
+
+// ================================================================
+//  F8 - DIE ERKLAERUNG HOEREN
+// ----------------------------------------------------------------
+//  Dietmar am 15.09.2026: "Verwende F8."
+//
+//  F9 und F10 zeigen die Lösung, Strg+Shift+L auch. F8 liegt gleich
+//  daneben und war frei: F8 hört, F9 sieht.
+//
+//  Dieselbe Regel wie beim Knopf: Gibt es zu dieser Frage keine
+//  Erklaerung, passiert nichts; im Pruefungssimulator ebenso wenig -
+//  dort ist der Knopf ausgeblendet, und eine Taste, die dasselbe tut,
+//  waere eine Hintertuer. Zweites Druecken haelt an.
+//
+//  Und wer gerade in ein Feld schreibt - Suche, Notiz, Rufzeichen -,
+//  will ein F8 im Text und nicht die Stimme. Deshalb die Abfrage auf
+//  das gerade aktive Element.
+// ================================================================
+document.addEventListener('keydown', function(e){
+    if(!(e.key === 'F8' || e.code === 'F8' || e.keyCode === 119)) return;
+    try{
+        const a = document.activeElement;
+        if(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
+    }catch(x){}
+    try{ if(typeof pruefungStreng === 'function' && pruefungStreng()) return; }catch(x){}
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(x){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!er) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // Steht der Kasten oder das grosse Fenster offen, liest der Knopf
+    // dort - sonst faengt ein zweiter Vorgang an, waehrend der erste
+    // noch spricht.
+    if(document.getElementById('erklaerGross')){
+        const gb = document.getElementById('erklaerGrossLesenBtn');
+        if(gb && /fa-stop/.test(gb.innerHTML || '')){ try{ stopTTS(); }catch(x){} return; }
+        erklaerVorlesen('erklaerGrossLesenBtn');
+        return;
+    }
+    if(document.getElementById('erklaerTafel')){
+        const tb = document.getElementById('erklaerLesenBtn');
+        if(tb && /fa-stop/.test(tb.innerHTML || '')){ try{ stopTTS(); }catch(x){} return; }
+        erklaerVorlesen('erklaerLesenBtn');
+        return;
+    }
+    erklaerNurVorlesen();
+}, true);
 
 // Escape schliesst die Tafel - dieselbe Handbewegung wie beim
 // Formelblatt und beim Rechner.
@@ -24934,7 +25030,7 @@ function renderQuestion() {
                  Antworten bleiben dabei stehen. Zweiter Klick haelt an.
                  Er steht gleich neben der Gluehbirne, weil er zu ihr
                  gehoert; sichtbar wird er mit ihr in erklaerKnopfSetzen(). -->
-            <button id="erklaerLesenNurBtn" onclick="erklaerNurVorlesen()" title="Erklärung vorlesen, ohne sie aufzuklappen" data-tooltip="Erklärung vorlesen, ohne sie aufzuklappen. Noch einmal klicken hält an." style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; width:36px; height:36px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-size:0.85rem;"><i class="fas fa-volume-up"></i></button>
+            <button id="erklaerLesenNurBtn" onclick="erklaerNurVorlesen()" title="Erklärung vorlesen, ohne sie aufzuklappen (F8)" data-tooltip="Erklärung vorlesen, ohne sie aufzuklappen — oder Taste F8. Noch einmal klicken hält an." style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; width:36px; height:36px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-size:0.85rem;"><i class="fas fa-volume-up"></i></button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
@@ -30323,7 +30419,7 @@ if (originalSelectOption) {
   // Pruefungssimulator genauso als Fehler wie F9. Die Frage wird dabei nur
   // EINMAL gezaehlt, egal ob per F9, per Google oder per beidem.
   window.alsFehlerImGruppenraumWerten = alsFehlerImGruppenraumWerten;
-  console.log('%c💡 Tipp: Drücke F9 für versteckte Lösungen | Ctrl+Shift+L Alternative | showSolution() in Konsole', 'background:#0f2745;color:white;padding:4px 8px;border-radius:8px;');
+  console.log('%c💡 Tipp: F9 zeigt die Lösung, F8 liest die Erklärung vor | Ctrl+Shift+L Alternative | showSolution() in Konsole', 'background:#0f2745;color:white;padding:4px 8px;border-radius:8px;');
 })();
 </script>
 
