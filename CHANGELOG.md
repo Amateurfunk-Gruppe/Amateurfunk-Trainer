@@ -41,6 +41,46 @@ geladen, um zu sehen, dass sie dort ankommt, wie sie gemeint ist.
 
 ---
 
+### Die Erklärung für Augen, die nicht mehr die besten sind
+
+Ein Benutzer nach den ersten Klasse-A-Erklärungen: *„ich finde es gut mit den Erklärungen,
+nur etwas klein geschrieben. Aber vlt sollte ich mir doch mal wieder eine passende Brille
+besorgen."* Dietmar dazu: *„Funkamateure, die von E auf A gehen, sind sehr oft schon älter
+und die tun sich schwer bei dem Lesen."*
+
+Drei Knöpfe kommen dazu. Der Erklärkasten selbst bleibt, wie er war — wer ihn so mag,
+merkt von der Änderung nichts.
+
+- **Ganz rechts im Kopf des Kastens das Symbol zum Aufziehen.** Ein Klick, und die
+  Erklärung steht groß über der Seite: **1,35 rem statt 0,86 rem**, also gut das
+  Anderthalbfache, dazu mehr Zeilenabstand. Kein Wort auf dem Knopf, nur das Zeichen —
+  Dietmar: *„Gross klingt nicht gut. Es würde auch das hier langen."*
+  Zu geht es mit dem Zeichen zum Zusammenschieben, mit dem ✕, mit *Esc* oder mit einem
+  Klick neben das Fenster.
+- **Ein Knopf „Lösung" neben „Vorlesen".** Bei offenem Erklärkasten sind die
+  Antwortkacheln ausgeblendet — F9 würde also etwas aufdecken, das man gar nicht sieht.
+  Der Knopf schreibt die richtige Antwort stattdessen in den Kasten, grün abgesetzt.
+  **Gewertet wird über dieselbe Funktion wie F9**: im Gruppenraum und im
+  Prüfungssimulator als Fehler, beim Lernen zu Hause nicht. So kann es nicht
+  auseinanderlaufen.
+- **Ein Lautsprecher-Knopf neben der Glühbirne.** Er liest die Erklärung vor, **ohne dass
+  sich etwas aufklappt** — die Antworten bleiben stehen. Dietmar: *„Ein Button, der die
+  Erklärung vorliest ohne das diese sich öffnet."* Zweiter Klick hält an. Vor der Antwort
+  liest er nur Prinzip und Kniff, genau wie der Kasten sie zeigt; sonst wäre er ein Weg,
+  sich die Lösung vorsagen zu lassen.
+
+Der Inhalt des großen Fensters kommt aus derselben `erklaerInhalt()` wie der Kasten. Ein
+zweiter, eigener Text wäre eine Stelle mehr, die bei jeder Korrektur vergessen werden kann.
+
+> **Gemessen und nicht geschätzt:** Auf einem 400 Punkte breiten Fenster war das große
+> Fenster zunächst nur 231 Punkte breit — gut die Hälfte des Schirms blieb leer.
+> Ursache: Der Trainer setzt auf `<html>` ein `zoom` (dort 0,6), und eine Angabe in `vw`
+> wird dann zweimal klein gerechnet. Mit Prozenten statt `vw` sind es jetzt 375 von 400
+> Punkten. Nachgemessen bei 1400, 1024 und 400 Punkten Breite: nichts steht über dem Rand,
+> nirgends muss quer gescrollt werden.
+
+---
+
 ## [1.296.0] - 2026-09-14
 
 ### Behoben — zwei Stimmen auf einmal

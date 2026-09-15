@@ -1444,6 +1444,131 @@
         body.dark .erklaer-tafel .et-kopf { border-bottom-color: #2c4a68; }
         body.dark .erklaer-tafel .et-titel { color: #dce8f4; }
         body.dark .erklaer-tafel .et-zu { background: #12283d; border-color: #2c4a68; color: #dce8f4; }
+        /* ================================================================
+             DREI KNOEPFE MEHR IM KOPF DER ERKLAERUNG (15.09.2026)
+           ----------------------------------------------------------------
+             Ein Benutzer: "ich finde es gut mit den Erklärungen, nur etwas
+             klein geschrieben. Aber vlt sollte ich mir doch mal wieder eine
+             passende Brille besorgen." Dietmar dazu: "Funkamateure, die von
+             E auf A gehen, sind sehr oft schon älter und die tun sich
+             schwer bei dem Lesen."
+
+             Deshalb:
+               .et-loesung  - zeigt die richtige Antwort im Kasten. Gewertet
+                              wird wie bei F9, ueber dieselbe Funktion.
+               .et-gross    - zieht die Erklaerung gross auf. Nur das Symbol,
+                              kein Wort: Dietmar am 15.09.2026 "Gross klingt
+                              nicht gut" - und der Platz im Kopf ist knapp.
+                              Es steht ganz rechts, unmittelbar vor dem X.
+           ================================================================ */
+        .erklaer-tafel .et-loesung {
+            background: #fdf1e0; color: #8a5a12; border: 1px solid #e0b25a;
+            border-radius: 20px; padding: 0.35rem 0.8rem; font-size: 0.78rem;
+            cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+            font-family: inherit;
+        }
+        .erklaer-tafel .et-loesung:hover { filter: brightness(1.04); }
+        .erklaer-tafel .et-gross {
+            background: #ffffff; border: 1px solid #cfe0f2; color: #23364d;
+            border-radius: 8px; width: 30px; height: 30px; cursor: pointer;
+            flex: 0 0 auto; font-size: 0.85rem; line-height: 1;
+        }
+        .erklaer-tafel .et-gross:hover { border-color: #2f6ea2; }
+        body.dark .erklaer-tafel .et-gross { background: #12283d; border-color: #2c4a68; color: #dce8f4; }
+        body.dark .erklaer-tafel .et-loesung { background: #3a2c14; border-color: #7a5a1e; color: #f0d9a8; }
+
+        /* Die aufgedeckte Loesung - im Kasten und im grossen Fenster
+           dieselbe Form. Gruen wie eine richtige Antwort, damit sie sich
+           auf den ersten Blick von der Erklaerung abhebt. */
+        .ek-loesung {
+            margin: 0 0 0.7rem 0; padding: 0.5rem 0.7rem;
+            background: #eaf7ee; border: 1px solid #a9d8b8;
+            border-left: 4px solid #2e8b57; border-radius: 8px;
+        }
+        .ek-loesung .ekl-marke { font-weight: 700; color: #1f6b41; }
+        body.dark .ek-loesung {
+            background: #14301f; border-color: #2f5f42; border-left-color: #4caf7d;
+        }
+        body.dark .ek-loesung .ekl-marke { color: #8fe0b0; }
+
+        /* ================================================================
+             DAS GROSSE FENSTER
+           ----------------------------------------------------------------
+             Kein eigener Inhalt - dieselbe erklaerInhalt() wie im Kasten,
+             nur in einer Schrift, die man ohne Brille lesen kann. Waere es
+             ein zweiter Text, muesste jede Korrektur zweimal gemacht
+             werden; so kann das nicht auseinanderlaufen.
+           ================================================================ */
+        /* KEINE vw/vh-EINHEITEN HIER (15.09.2026 gemessen). Der Trainer
+           setzt auf <html> ein style.zoom - auf einem 400 Punkt breiten
+           Fenster steht dort 0,6. Ein "96vw" wird dann zweimal klein
+           gerechnet: erst 96 % der 400 Punkte, dann noch mit 0,6 - gemessen
+           blieben 231 von 400 Punkten, also gut die Haelfte des Schirms
+           leer. Prozente beziehen sich dagegen auf die Huelle, die schon
+           im selben Maszstab liegt, und das stimmt dann. */
+        #erklaerGross {
+            position: fixed; inset: 0; z-index: 100040;
+            box-sizing: border-box;
+            background: rgba(10, 22, 38, 0.55);
+            display: flex; align-items: center; justify-content: center;
+            padding: 14px;
+        }
+        #erklaerGross .eg-fenster {
+            background: #f2f7fd; border: 1px solid #cfe0f2;
+            border-left: 6px solid #2f6ea2; border-radius: 14px;
+            color: #23364d; width: min(1100px, 100%); max-height: 100%;
+            box-sizing: border-box;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+        }
+        #erklaerGross .eg-kopf {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            padding: 0.75rem 1rem; border-bottom: 1px solid #cfe0f2; flex: 0 0 auto;
+        }
+        #erklaerGross .eg-titel {
+            flex: 1 1 200px; font-weight: 700; color: var(--panel-navy); font-size: 1.25rem;
+        }
+        #erklaerGross .eg-frage { font-size: 0.95rem; color: var(--muted); font-weight: 400; }
+        #erklaerGross .eg-lesen {
+            background: var(--panel-navy); color: #ffffff; border: none;
+            border-radius: 22px; padding: 0.55rem 1.1rem; font-size: 1rem;
+            cursor: pointer; white-space: nowrap; flex: 0 0 auto; font-family: inherit;
+        }
+        #erklaerGross .eg-loesung {
+            background: #fdf1e0; color: #8a5a12; border: 1px solid #e0b25a;
+            border-radius: 22px; padding: 0.55rem 1.1rem; font-size: 1rem;
+            cursor: pointer; white-space: nowrap; flex: 0 0 auto; font-family: inherit;
+        }
+        #erklaerGross .eg-klein, #erklaerGross .eg-zu {
+            background: #ffffff; border: 1px solid #cfe0f2; color: #23364d;
+            border-radius: 10px; width: 42px; height: 42px; cursor: pointer;
+            flex: 0 0 auto; font-size: 1.05rem; line-height: 1;
+        }
+        #erklaerGross .eg-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1.1rem 1.3rem 1.4rem; }
+        /* DIE EIGENTLICHE SACHE: die Schrift. 1,35rem gegenüber 0,86rem im
+           Kasten - gut das Anderthalbfache -, dazu mehr Zeilenabstand. */
+        #erklaerGross .erklaer-kasten { font-size: 1.35rem; line-height: 1.75; }
+        #erklaerGross .erklaer-kasten .ek-zeile { margin-top: 1.1rem; }
+        #erklaerGross .erklaer-kasten .ek-spaeter { font-size: 1.05rem; margin-top: 1.4rem; }
+        #erklaerGross .erklaer-kasten table.ek-liste th,
+        #erklaerGross .erklaer-kasten table.ek-liste td { padding: 0.3rem 0.9rem 0.3rem 0; }
+        #erklaerGross .ek-loesung { font-size: 1.3rem; padding: 0.8rem 1rem; }
+        body.dark #erklaerGross .eg-fenster {
+            background: #0e2033; border-color: #2c4a68; color: #dce8f4;
+        }
+        body.dark #erklaerGross .eg-kopf { border-bottom-color: #2c4a68; }
+        body.dark #erklaerGross .eg-titel { color: #dce8f4; }
+        body.dark #erklaerGross .eg-klein, body.dark #erklaerGross .eg-zu {
+            background: #12283d; border-color: #2c4a68; color: #dce8f4;
+        }
+        body.eckig #erklaerGross .eg-fenster { border-radius: 0 !important; }
+        @media (max-width: 560px) {
+            #erklaerGross { padding: 8px; }
+            #erklaerGross .eg-kopf { padding: 0.6rem 0.7rem; gap: 8px; }
+            #erklaerGross .eg-titel { font-size: 1.05rem; flex-basis: 100%; }
+            #erklaerGross .eg-buehne { padding: 0.9rem 0.9rem 1.1rem; }
+        }
+
         body.eckig .erklaer-tafel { border-radius: 0 !important; }
 
         .erklaer-kasten {
@@ -18141,6 +18266,12 @@ function erklaerKnopfSetzen(){
     const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
     const streng = (typeof pruefungStreng === 'function') ? pruefungStreng() : false;
 
+    // Der reine Vorleseknopf geht immer mit der Gluehbirne: Wo es keine
+    // Erklaerung gibt, gibt es auch nichts vorzulesen, und im
+    // Pruefungssimulator gibt es beides nicht.
+    const vb = document.getElementById('erklaerLesenNurBtn');
+    if(vb) vb.style.display = (er && !streng) ? 'inline-flex' : 'none';
+
     if(er && !streng){
         b.style.display = '';
         b.setAttribute('data-tooltip', er.bild
@@ -18159,6 +18290,11 @@ function erklaerKnopfSetzen(){
     // renderQuestion() ohnehin mit weggeraeumt. Hier bleibt nur, die
     // Marke zurueckzusetzen, damit der Knopf nicht als "an" haengenbleibt.
     if(!document.getElementById('erklaerTafel')){
+        // DAS GROSSE FENSTER HAENGT AN document.body, NICHT AM KASTEN
+        // (15.09.2026). renderQuestion() raeumt den Kasten mit weg, das
+        // Fenster aber nicht - es waere ueber der naechsten Frage stehen
+        // geblieben und haette die Erklaerung der vorigen gezeigt.
+        try{ if(document.getElementById('erklaerGross')) erklaerGrossSchliessen(); }catch(e){}
         if(erklaerOffenFuer && ttsQueueActive){
             // Die Tafel ist beim Neuzeichnen mitgegangen (neue Frage oder
             // Antwort) - ein Vorlesen dazu gehoert beendet.
@@ -18255,6 +18391,16 @@ function erklaerOeffnen(){
       +     'data-vorlesen="Erklärung vorlesen. Liest der Reihe nach vor, was im Bild steht, '
       +     'worauf es ankommt, den Rechenweg und warum die anderen Antworten falsch sind.">'
       +     '<i class="fas fa-volume-up"></i> Vorlesen</button>'
+      +   '<button type="button" class="et-loesung" id="erklaerLoesungBtn" onclick="erklaerLoesungZeigen()" '
+      +     'title="Die richtige Antwort anzeigen - wird wie F9 gewertet" '
+      +     'data-tooltip="Die richtige Antwort anzeigen. Wird genauso gewertet wie die Taste F9." '
+      +     'data-vorlesen-kurz="Die richtige Antwort anzeigen.">'
+      +     '<i class="fas fa-key"></i> Lösung</button>'
+      +   '<button type="button" class="et-gross" onclick="erklaerGrossOeffnen()" '
+      +     'title="Erklärung größer anzeigen" '
+      +     'data-tooltip="Erklärung größer anzeigen - in einem Fenster über der Seite." '
+      +     'data-vorlesen-kurz="Erklärung größer anzeigen.">'
+      +     '<i class="fas fa-expand"></i></button>'
       +   '<button type="button" class="et-zu" onclick="erklaerSchliessen()" '
       +     'title="Erklärung zu, Antworten wieder anzeigen" '
       +     'data-tooltip="Erklärung zu, Antworten wieder anzeigen">&#10005;</button>'
@@ -18271,6 +18417,9 @@ function erklaerOeffnen(){
 window.erklaerOeffnen = erklaerOeffnen;
 
 function erklaerSchliessen(){
+    // Steht das grosse Fenster offen, geht es mit - es zeigt dieselbe
+    // Erklaerung, und ohne den Kasten darunter haette es keinen Bezug.
+    try{ if(document.getElementById('erklaerGross')) erklaerGrossSchliessen(); }catch(e){}
     // Laeuft gerade unser Vorlesen, hoert es hier auf: Was nicht mehr zu
     // sehen ist, soll auch nicht weitersprechen. Erkannt wird es am Knopf -
     // er heisst nur waehrend des Vorlesens "Stop".
@@ -18449,22 +18598,49 @@ function kennerSprechen(text){
 window.kennerSprechen = kennerSprechen;
 
 function erklaerLesenKnopfZurueck(){
+    // ES SIND DREI KNOEPFE, DIE VORLESEN KOENNEN (15.09.2026): der im
+    // Kasten, der im grossen Fenster und der neben der Gluehbirne, der
+    // nichts aufklappt. stopTTS() ruft diese Funktion, ohne zu wissen,
+    // welcher gedrueckt wurde - deshalb wird jeder zurueckgesetzt, der
+    // gerade da ist. Was nicht existiert, wird uebersprungen.
     const b = document.getElementById('erklaerLesenBtn');
-    if(!b) return;
-    b.disabled = false;
-    b.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
-    b.onclick = () => erklaerVorlesen();
-    b.setAttribute('data-tooltip', 'Erklärung vorlesen');
+    if(b){
+        b.disabled = false;
+        b.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
+        b.onclick = () => erklaerVorlesen();
+        b.setAttribute('data-tooltip', 'Erklärung vorlesen');
+    }
+    const g = document.getElementById('erklaerGrossLesenBtn');
+    if(g){
+        g.disabled = false;
+        g.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
+        g.onclick = () => erklaerVorlesen('erklaerGrossLesenBtn');
+        g.setAttribute('data-tooltip', 'Erklärung vorlesen');
+    }
+    const n = document.getElementById('erklaerLesenNurBtn');
+    if(n){
+        n.disabled = false;
+        n.innerHTML = '<i class="fas fa-volume-up"></i>';
+        n.onclick = () => erklaerNurVorlesen();
+        n.setAttribute('data-tooltip', 'Erklärung vorlesen, ohne sie aufzuklappen. Noch einmal klicken hält an.');
+    }
 }
 window.erklaerLesenKnopfZurueck = erklaerLesenKnopfZurueck;
 
-function erklaerVorlesen(){
+function erklaerVorlesen(knopfId){
     let q = null;
     try{ q = currentQuestions[currentIndex]; }catch(e){}
     const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
     if(!q || !er) return;
-    const b = document.getElementById('erklaerLesenBtn');
-    const stelle = (marke) => '#erklaerTafel [data-ek="' + marke + '"]';
+    const b = document.getElementById(knopfId || 'erklaerLesenBtn');
+    // DIE HERVORHEBUNG SUCHT DORT, WO DER TEXT WIRKLICH STEHT (15.09.2026).
+    // Seit es das grosse Fenster gibt, kann derselbe Abschnitt an zwei
+    // Stellen liegen. Ein festes '#erklaerTafel ...' haette im grossen
+    // Fenster ins Leere gezeigt: gelesen haette er, aber nichts waere
+    // mitgewandert. Deshalb wird der Vorsatz danach gewaehlt, was offen ist.
+    const wurzel = document.getElementById('erklaerGross') ? '#erklaerGross'
+                 : (document.getElementById('erklaerTafel') ? '#erklaerTafel' : null);
+    const stelle = (marke) => wurzel ? (wurzel + ' [data-ek="' + marke + '"]') : null;
     const segmente = [];
     // Das Prinzip zuerst - dieselbe Reihenfolge wie in erklaerInhalt(), und
     // dieselbe Aufloesung aus dem Begriffsblatt, damit Gelesenes und
@@ -18537,10 +18713,206 @@ function erklaerVorlesen(){
 }
 window.erklaerVorlesen = erklaerVorlesen;
 
+// ================================================================
+//  VORLESEN, OHNE ETWAS AUFZUKLAPPEN
+// ----------------------------------------------------------------
+//  Dietmar am 15.09.2026: "Ein Button, der die Erklärung vorliest
+//  ohne das diese sich öffnet."
+//
+//  Es ist dieselbe erklaerVorlesen() - nur mit einem anderen Knopf
+//  und ohne die Tafel. Die Hervorhebung faellt dabei weg, weil kein
+//  Text zu sehen ist; stelle() gibt dann null zurueck und
+//  playTTSSegment() laesst es einfach bleiben.
+//
+//  Vor der Antwort wird auch hier nur das vorgelesen, was im Kasten
+//  stehen wuerde - Prinzip und Kniff. Sonst waere der Knopf ein Weg,
+//  sich die Loesung vorlesen zu lassen, und das soll er nicht sein.
+// ================================================================
+function erklaerNurVorlesen(){
+    const n = document.getElementById('erklaerLesenNurBtn');
+    // Zweiter Klick haelt an. Erkannt wird es am Stop-Symbol im Knopf -
+    // dieselbe Handbewegung wie beim Vorlesen der Frage.
+    if(n && /fa-stop/.test(n.innerHTML || '')){
+        try{ stopTTS(); }catch(e){}
+        return;
+    }
+    erklaerVorlesen('erklaerLesenNurBtn');
+}
+window.erklaerNurVorlesen = erklaerNurVorlesen;
+
+// ================================================================
+//  DIE LOESUNG IM ERKLAERKASTEN
+// ----------------------------------------------------------------
+//  Dietmar am 15.09.2026: "ich hätte da auch gerne die Lösung. Das
+//  aber über den Button neben Vorlesen."
+//
+//  Warum die Loesung nicht einfach dasteht: Steht der Kasten offen,
+//  sind die Antwortkacheln ausgeblendet (erklaerOeffnen blendet
+//  optionsContainer aus). Die Taste F9 wuerde also etwas aufdecken,
+//  das man gar nicht sieht. Deshalb wird die richtige Antwort HIER
+//  hineingeschrieben - aus er.richtig, das in jedem Eintrag steht.
+//
+//  GEWERTET WIRD WIE BEI F9, und zwar ueber genau dieselbe Funktion:
+//  alsFehlerImGruppenraumWerten(). Damit kann es nicht auseinander-
+//  laufen - im Gruppenraum und im Pruefungssimulator zaehlt es als
+//  Fehler, beim Lernen zu Hause nicht, so wie die Taste es auch tut.
+//  Nach der Antwort ist ohnehin nichts mehr zu werten; die Funktion
+//  steigt dann von selbst aus.
+// ================================================================
+function erklaerLoesungZeigen(){
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!q || !er) return;
+
+    // Die richtige Antwort steht in der Erklaerung. Fehlt sie dort - bei
+    // den Fragen mit Bildantworten gibt es keinen Text -, wird sie aus
+    // dem Katalog geholt.
+    let richtig = er.richtig || '';
+    if(!richtig){
+        try{
+            const o = (q.options || []).find(x => x && x.correct);
+            if(o && o.text) richtig = o.text;
+        }catch(e){}
+    }
+
+    // Wie F9 werten - dieselbe Funktion, damit es dieselbe Regel ist.
+    try{
+        if(typeof window.alsFehlerImGruppenraumWerten === 'function')
+            window.alsFehlerImGruppenraumWerten();
+    }catch(e){}
+
+    // In jeden offenen Behaelter schreiben: Kasten und grosses Fenster
+    // koennen beide dastehen, und dann soll es an beiden Stellen stehen.
+    const ziele = [];
+    const gr = document.querySelector('#erklaerGross .erklaer-kasten');
+    if(gr) ziele.push(gr);
+    const ta = document.querySelector('#erklaerTafel .erklaer-kasten');
+    if(ta) ziele.push(ta);
+    if(!ziele.length) return;
+
+    const html = '<div class="ek-loesung" data-ek="loesung">'
+               + '<span class="ekl-marke">Die Lösung.</span> '
+               + (richtig ? attrText(richtig) : 'Die richtige Antwort ist eine der Zeichnungen.')
+               + '</div>';
+    ziele.forEach(z => {
+        if(z.querySelector('.ek-loesung')) return;   // schon aufgedeckt
+        z.insertAdjacentHTML('afterbegin', html);
+    });
+
+    // Die Knoepfe sagen danach, dass es getan ist - zweimal aufdecken
+    // gibt es nicht.
+    ['erklaerLoesungBtn','erklaerGrossLoesungBtn'].forEach(id => {
+        const b = document.getElementById(id);
+        if(!b) return;
+        b.disabled = true;
+        b.style.opacity = '0.55';
+        b.style.cursor = 'default';
+    });
+}
+window.erklaerLoesungZeigen = erklaerLoesungZeigen;
+
+// ================================================================
+//  DIE ERKLAERUNG GROSS
+// ----------------------------------------------------------------
+//  Ein Benutzer am 15.09.2026: "ich finde es gut mit den Erklärungen,
+//  nur etwas klein geschrieben." Dietmar: "Funkamateure, die von E auf
+//  A gehen, sind sehr oft schon älter und die tun sich schwer bei dem
+//  Lesen. Hier würde ich mir ein Fenster wünschen, das sich öffnet und
+//  die Erklärung grösser darstellt."
+//
+//  Der Knopf traegt nur das Symbol zum Aufziehen, kein Wort - Dietmar:
+//  "Gross klingt nicht gut. Es würde auch das hier langen." Und er
+//  steht ganz rechts, unmittelbar vor dem X.
+//
+//  DER INHALT IST DERSELBE. erklaerInhalt() wird ein zweites Mal
+//  gerufen, die Schrift macht die CSS. Ein zweiter, eigener Text waere
+//  eine Stelle mehr, die bei jeder Korrektur vergessen werden kann.
+// ================================================================
+function erklaerGrossOeffnen(){
+    let q = null;
+    try{ q = currentQuestions[currentIndex]; }catch(e){}
+    const er = (q && typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+    if(!q || !er) return;
+    if(document.getElementById('erklaerGross')) return;
+
+    // Laeuft gerade ein Vorlesen aus dem kleinen Kasten, hoert es auf:
+    // Der Knopf, der "Stop" heisst, verschwindet hinter dem Fenster.
+    try{
+        const lb = document.getElementById('erklaerLesenBtn');
+        if(lb && /fa-stop/.test(lb.innerHTML || '')) stopTTS();
+    }catch(e){}
+
+    const loesungSchon = !!document.querySelector('#erklaerTafel .ek-loesung');
+    const h = document.createElement('div');
+    h.id = 'erklaerGross';
+    h.innerHTML =
+        '<div class="eg-fenster" role="dialog" aria-modal="true" aria-label="Erklärung">'
+      +   '<div class="eg-kopf">'
+      +     '<div class="eg-titel"><i class="fas fa-lightbulb" style="color:#5b3f95;"></i> '
+      +       (er.bild ? 'Erklärung zur Zeichnung' : 'Erklärung')
+      +       ' <span class="eg-frage">' + attrText(q.id)
+      +       (!answered ? ' · vor der Antwort'
+                        : ((Array.isArray(er.weg) && er.weg.length) ? ' · mit Rechenweg' : ''))
+      +       '</span></div>'
+      +     '<button type="button" class="eg-lesen" id="erklaerGrossLesenBtn" '
+      +       'onclick="erklaerVorlesen(\'erklaerGrossLesenBtn\')" '
+      +       'title="Erklärung vorlesen" data-tooltip="Erklärung vorlesen">'
+      +       '<i class="fas fa-volume-up"></i> Vorlesen</button>'
+      +     '<button type="button" class="eg-loesung" id="erklaerGrossLoesungBtn" '
+      +       'onclick="erklaerLoesungZeigen()" '
+      +       'title="Die richtige Antwort anzeigen - wird wie F9 gewertet" '
+      +       'data-tooltip="Die richtige Antwort anzeigen. Wird genauso gewertet wie die Taste F9.">'
+      +       '<i class="fas fa-key"></i> Lösung</button>'
+      +     '<button type="button" class="eg-klein" onclick="erklaerGrossSchliessen()" '
+      +       'title="Wieder klein" data-tooltip="Wieder klein - zurück in den Kasten.">'
+      +       '<i class="fas fa-compress"></i></button>'
+      +     '<button type="button" class="eg-zu" onclick="erklaerGrossSchliessen()" '
+      +       'title="Zu" data-tooltip="Fenster zu.">&#10005;</button>'
+      +   '</div>'
+      +   '<div class="eg-buehne" id="erklaerGrossBuehne"><div class="erklaer-kasten">'
+      +     erklaerInhalt(q, er, !!answered)
+      +   '</div></div>'
+      + '</div>';
+    document.body.appendChild(h);
+
+    // Auf den Hintergrund klicken schliesst - wie bei den anderen Fenstern.
+    h.addEventListener('click', function(ev){
+        if(ev.target === h) erklaerGrossSchliessen();
+    });
+
+    // War die Loesung im kleinen Kasten schon aufgedeckt, steht sie auch
+    // hier. Sonst muesste man sie zweimal aufdecken, und beim zweiten Mal
+    // waere es womoeglich ein zweiter Fehler.
+    if(loesungSchon) erklaerLoesungZeigen();
+
+    try{ h.querySelector('.eg-zu').focus(); }catch(e){}
+}
+window.erklaerGrossOeffnen = erklaerGrossOeffnen;
+
+function erklaerGrossSchliessen(){
+    // Was hier gesprochen hat, hoert hier auf.
+    try{
+        const gb = document.getElementById('erklaerGrossLesenBtn');
+        if(gb && /fa-stop/.test(gb.innerHTML || '')) stopTTS();
+    }catch(e){}
+    const h = document.getElementById('erklaerGross');
+    if(h && h.parentNode) h.parentNode.removeChild(h);
+}
+window.erklaerGrossSchliessen = erklaerGrossSchliessen;
+
 // Escape schliesst die Tafel - dieselbe Handbewegung wie beim
 // Formelblatt und beim Rechner.
 document.addEventListener('keydown', function(e){
     if(e.key !== 'Escape') return;
+    // Das grosse Fenster liegt OBEN, also geht es zuerst zu. Sonst
+    // verschwaende man einen Escape auf den Kasten darunter, den man
+    // gar nicht sieht.
+    if(document.getElementById('erklaerGross')){
+        e.stopPropagation();
+        erklaerGrossSchliessen();
+        return;
+    }
     if(document.getElementById('erklaerTafel')){
         e.stopPropagation();
         erklaerSchliessen();
@@ -24555,6 +24927,14 @@ function renderQuestion() {
                  das ist das Hilfsmittel, das in der Pruefung erlaubt ist.
                  Siehe erklaerKnopfSetzen(). -->
             <button id="erklaerBtn" onclick="erklaerBtnKlick()" title="Erklärung zur Zeichnung" data-tooltip="Erklärung zur Zeichnung" style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-lightbulb"></i> Erklärung</button>
+            <!-- VORLESEN, OHNE DASS SICH ETWAS OEFFNET (15.09.2026).
+                 Dietmar: "Ein Button, der die Erklärung vorliest ohne
+                 das diese sich öffnet." Fuer den, der sowieso lieber
+                 hoert als liest: ein Klick, und es wird gelesen - die
+                 Antworten bleiben dabei stehen. Zweiter Klick haelt an.
+                 Er steht gleich neben der Gluehbirne, weil er zu ihr
+                 gehoert; sichtbar wird er mit ihr in erklaerKnopfSetzen(). -->
+            <button id="erklaerLesenNurBtn" onclick="erklaerNurVorlesen()" title="Erklärung vorlesen, ohne sie aufzuklappen" data-tooltip="Erklärung vorlesen, ohne sie aufzuklappen. Noch einmal klicken hält an." style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; width:36px; height:36px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-size:0.85rem;"><i class="fas fa-volume-up"></i></button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
