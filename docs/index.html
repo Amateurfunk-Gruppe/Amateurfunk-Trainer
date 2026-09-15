@@ -728,16 +728,21 @@ footer li{margin-bottom:.45em}
     <span class="marke">Herunterladen</span>
     <h2>Kostenlos, für Windows, Linux und macOS</h2>
     <p class="blei">
-      Alle Fassungen liegen auf der Release-Seite. Such dir die für dein System aus,
-      lade sie herunter und starte sie — mehr ist nicht nötig. Unter Windows braucht es
-      kein Terminal; bei „Unbekannter Herausgeber" führt <i>Weitere Informationen →
-      Trotzdem ausführen</i> weiter. Linux und macOS brauchen Node.js 18 oder neuer.
+      Alle Fassungen liegen auf der Release-Seite. Such dir die für dein System aus —
+      mehr ist nicht nötig. Unter Windows ist es ein Archiv: auspacken, Ordner hinlegen,
+      wo du willst, <code>START.bat</code> doppelklicken. Kein Terminal, keine
+      Administratorrechte, nichts wird in Windows eingetragen. Linux und macOS brauchen
+      Node.js 18 oder neuer.
+    </p>
+    <p class="blei" style="font-size:1.04rem;background:#fff;border:1px solid var(--linie);
+              border-left:5px solid var(--rot);border-radius:10px;padding:16px 20px;max-width:none">
+      <b>Lieber zusehen als lesen?</b>
+      <a href="https://www.youtube.com/watch?v=6s-awZhYfyw" target="_blank" rel="noopener">Das Video zeigt es in zwei Minuten</a> —
+      herunterladen, entpacken, Verknüpfung anlegen, starten.
     </p>
     <div class="laden">
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
-        <b>Windows</b><span>Installationsprogramm (.exe)</span></a>
-      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
-        <b>Windows ohne Installation</b><span>Archiv (.zip) — alles dabei, wenn Windows das Setup blockiert</span></a>
+        <b>Windows</b><span>Archiv (.zip) — auspacken und starten, ohne Installation</span></a>
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
         <b>Linux · Debian, Ubuntu</b><span>Paket (.deb)</span></a>
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
@@ -746,35 +751,35 @@ footer li{margin-bottom:.45em}
         <b>macOS</b><span>Archiv (.zip)</span></a>
     </div>
     <p class="blei" style="margin-top:22px">
-      Der Lernstand bleibt beim Update erhalten — unter Windows im Installationsordner,
-      unter Linux und macOS im eigenen Heimatordner.
+      Der Lernstand bleibt beim Update erhalten — unter Windows im Ordner
+      <code>data\</code> neben dem Trainer, unter Linux und macOS im eigenen Heimatordner.
     </p>
 
     <div class="hinweis" style="background:#eef4fb;border-color:#b9cfe6;border-left-color:#0a9cb0">
-      <h3>„Windows sagt, das sei nicht sicher“</h3>
+      <h3>Warum es kein Installationsprogramm gibt</h3>
       <p>
-        Beim Start des Installationsprogramms meldet Windows <b>„Unbekannter Herausgeber"</b>
-        oder <b>„Der Computer wurde geschützt"</b>. Das ist keine Virenmeldung, sondern eine
-        Rufabfrage: Windows kennt die Datei noch nicht und den Herausgeber auch nicht. Diese
-        Warnung bekommt <b>jedes</b> neue Programm, das nicht mit einem gekauften Zertifikat
-        unterschrieben ist — unabhängig davon, was darin steckt.
-      </p>
-      <figure style="max-width:440px;margin:22px 0">
-        <img src="bilder/smartscreen.webp" width="532" height="495"
-             alt="Der rote SmartScreen-Hinweis von Windows: „Der Computer wurde durch Windows geschützt. Von Microsoft Defender SmartScreen wurde der Start einer unbekannten App verhindert.“ Sichtbar ist nur der Knopf „Nicht ausführen“." loading="lazy">
-        <figcaption>So sieht es aus. Der Knopf zum Weitermachen fehlt hier — er ist versteckt.</figcaption>
-      </figure>
-      <p>
-        <b>Und das ist die Stelle, an der die meisten aufgeben:</b> Zu sehen ist nur
-        <i>Nicht ausführen</i>. Der andere Knopf erscheint erst, wenn man auf den kleinen
-        Link <b>Weitere Informationen</b> klickt — darunter steht dann
-        <b>Trotzdem ausführen</b>. Das ist Absicht von Microsoft: Man soll einen Moment
-        nachdenken müssen.
+        Es gab eines. Auf Windows-11-Rechnern mit <i>Smart App Control</i> wurde es
+        abgewiesen, bevor es anfing — nicht wegen seines Inhalts, sondern weil jedes
+        Installationsprogramm sich beim Start in den Temp-Ordner auspackt und von dort
+        startet. Genau das lässt diese Richtlinie bei einem Programm ohne gekaufte
+        Unterschrift nicht zu, und dagegen hilft auch kein anderes Format.
       </p>
       <p>
-        Wer sich darauf nicht verlassen mag, muss es nicht: Der vollständige Quelltext liegt
-        offen auf <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer">GitHub</a>,
-        Zeile für Zeile nachlesbar.
+        <b>Ein Archiv wird nur ausgepackt, nicht ausgeführt.</b> Damit fällt die Blockade
+        weg, die Rechteabfrage gleich mit — und es bleibt ein Weg, der überall funktioniert,
+        statt zweier, von denen einer bei manchen scheitert.
+      </p>
+      <p>
+        Was bleibt, ist die Meldung des Browsers, die Datei werde „nicht häufig
+        heruntergeladen". Das ist keine Virenmeldung, sondern eine Rufabfrage: Windows kennt
+        die Datei noch nicht. <b>Ein Handgriff erspart die nächste Warnung:</b> vor dem
+        Auspacken Rechtsklick auf das ZIP → <i>Eigenschaften</i> → Haken bei
+        <b>Zulassen</b> → <i>OK</i>.
+      </p>
+      <p>
+        Und leg den Ordner an eine Stelle, an der du schreiben darfst — Schreibtisch,
+        Dokumente oder ein USB-Stick, nicht <code>C:\Program Files</code>. Der Trainer
+        speichert deinen Lernstand neben sich. Auf dem Stick wandert er mit.
       </p>
       <p style="background:#e8f6ed;border:1px solid #a9d9bd;border-radius:8px;padding:14px 16px">
         <b style="color:#1c6b3a">Bei VirusTotal geprüft — kein einziger Fund.</b><br>
@@ -783,32 +788,13 @@ footer li{margin-bottom:.45em}
         <i>„No security vendors flagged this file as malicious."</i><br>
         <a href="https://www.virustotal.com/gui/file/1b11f22b0f059abe89182fc773e3cd6aa362cd19b726d452fb010a936505fd19" target="_blank" rel="noopener"><b>Ergebnis selbst ansehen →</b></a>
       </p>
-      <p>
-        Und verlass dich nicht auf meinen Link, sondern auf deinen: Bei
-        <a href="https://www.virustotal.com" target="_blank" rel="noopener">virustotal.com</a>
-        kostet das nichts und braucht keine Anmeldung — Datei hineinziehen, Ergebnis ansehen,
-        bevor man sie öffnet. Das ist ohnehin die bessere Gewohnheit, bei jedem Programm aus
-        dem Netz und nicht nur bei diesem.
-      </p>
-      <p>
-        Was hier nicht steht: „Schalte deinen Virenscanner aus.“ Wer das bei einem Download
-        rät, gleich bei welchem, will nichts Gutes. Meldet dein Scanner etwas, schreib den
-        genauen Wortlaut in ein
-        <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/issues">Issue</a>
-        — das wird angesehen.
-      </p>
-      <p>
-        <b>Und wenn Windows das Setup ganz abweist</b> — „Fehler 4551: Eine
-        Anwendungssteuerungsrichtlinie hat diese Datei blockiert" —, dann ist es nicht
-        SmartScreen, sondern <i>Smart App Control</i>. Jedes Installationsprogramm packt sich
-        beim Start in den Temp-Ordner aus, und genau das lässt diese Richtlinie bei einem
-        Programm ohne gekaufte Unterschrift nicht zu. Dagegen hilft kein anderes
-        Installationsprogramm — aber das <b>Archiv (.zip)</b> oben: Es wird nur ausgepackt,
-        nicht ausgeführt. Auspacken, <code>START.bat</code> doppelklicken, fertig.
-      </p>
       <p style="margin-bottom:0">
-        Für Linux und macOS stellt sich die Frage nicht: Dort kommen die Pakete aus der
-        Paketverwaltung des Systems.
+        Verlass dich nicht auf meinen Link, sondern auf deinen: Bei
+        <a href="https://www.virustotal.com" target="_blank" rel="noopener">virustotal.com</a>
+        kostet das nichts und braucht keine Anmeldung. Und was hier nicht steht: „Schalte
+        deinen Virenscanner aus." Wer das bei einem Download rät, gleich bei welchem, will
+        nichts Gutes. Für Linux und macOS stellt sich die Frage ohnehin nicht — dort kommen
+        die Pakete aus der Paketverwaltung des Systems.
       </p>
     </div>
 

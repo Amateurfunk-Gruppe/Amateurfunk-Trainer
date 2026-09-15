@@ -421,114 +421,76 @@ neu gestartet werden muss.
 
 ![Installation — zwei Wege](bilder/13-installation.png)
 
-### Windows warnt beim Start. Das ist normal — und hier steht, warum
+> ### 🎬 In zwei Minuten einsatzbereit — das Video
+>
+> **[AMATEURFUNK-TRAINER — in zwei Minuten einsatzbereit. Ohne Installation.](https://www.youtube.com/watch?v=6s-awZhYfyw)**
+>
+> Herunterladen, entpacken, Verknüpfung anlegen, starten. Wer lieber zusieht
+> als liest, fängt hier an.
 
-<p align="center">
-  <img src="bilder/21-smartscreen.png" alt="Der rote SmartScreen-Hinweis von Windows: „Der Computer wurde durch Windows geschützt. Von Microsoft Defender SmartScreen wurde der Start einer unbekannten App verhindert." Sichtbar ist nur der Knopf „Nicht ausführen“." width="470">
-</p>
+### Wenn Windows beim Herunterladen warnt
 
-Diesen roten Kasten bekommt **jeder**, der das Setup zum ersten Mal
-doppelklickt. Er sieht schlimmer aus, als er ist.
+Der Browser meldet beim Archiv unter Umständen, die Datei werde *„nicht häufig
+heruntergeladen"*. Das ist keine Virenmeldung, sondern eine Rufabfrage: Windows
+kennt die Datei noch nicht. Jede neue Datei ohne gekaufte Unterschrift bekommt
+das — unabhängig davon, was darin steckt. Im Browser auf *Behalten* gehen.
 
-**Es ist keine Virenmeldung.** SmartScreen prüft nicht den Inhalt, sondern
-den *Ruf*: Ist diese Datei schon oft heruntergeladen worden, und ist der
-Herausgeber bekannt? Bei einem neuen Programm ohne gekauftes
-Code-Signing-Zertifikat lautet die Antwort zweimal nein — unabhängig davon,
-was darin steckt. Ein leeres Programm, heute geschrieben, bekommt denselben
-Kasten.
-
-**Und jetzt der Punkt, an dem die meisten aufgeben:** Auf dem Bild oben
-steht nur ein Knopf, und der heißt *Nicht ausführen*. Der andere ist
-versteckt:
-
-1. Auf **Weitere Informationen** klicken — den kleinen Link im Text
-2. Darunter erscheint jetzt **Trotzdem ausführen**
-3. Darauf klicken, fertig
-
-Das ist Absicht von Microsoft: Man soll einen Moment nachdenken müssen.
+**Ein Handgriff erspart dir die nächste Warnung.** Windows merkt sich bei
+heruntergeladenen Dateien, dass sie aus dem Netz stammen, und vererbt das beim
+Auspacken an jede Datei darin. Deshalb: **vor dem Auspacken** Rechtsklick auf
+das ZIP → *Eigenschaften* → unten bei *Sicherheit* den Haken bei **Zulassen**
+setzen → *OK*. Danach ist das Archiv ein ganz normaler Ordner.
 
 ### Muss man mir das glauben? Nein
 
 Ich kann viel behaupten. Prüfen kannst du es selbst, und das ist besser:
 
 - **Der Quelltext liegt offen.** Alles, was der Trainer tut, steht in diesem
-  Repository — `Server.js` und `Index.html` sind Textdateien, die jeder
-  lesen kann. Auch jemand, der nicht programmiert, kann die Suchfunktion
-  benutzen.
+  Repository — `Server.js` und `Index.html` sind Textdateien, die jeder lesen
+  kann. Auch jemand, der nicht programmiert, kann die Suchfunktion benutzen.
 - **Das Archiv ist bei VirusTotal geprüft — ohne Befund.**
   `Amateurfunk-Trainer-1.296.0-windows.zip`, 336,96 MB, geprüft am
   15.09.2026: *„No security vendors flagged this file as malicious."*
   **[Ergebnis selbst ansehen →](https://www.virustotal.com/gui/file/1b11f22b0f059abe89182fc773e3cd6aa362cd19b726d452fb010a936505fd19)**
   Dort laufen rund siebzig Virenscanner gleichzeitig über die Datei.
-- **Prüfe es ruhig selbst.** Bei [VirusTotal](https://www.virustotal.com)
-  kostet das nichts und braucht keine Anmeldung: Datei hineinziehen,
-  Ergebnis ansehen — *bevor* du sie öffnest. Das ist ohnehin die bessere
-  Gewohnheit, bei jedem Programm aus dem Netz und nicht nur bei diesem.
-  Verlass dich nicht auf meinen Link, sondern auf deinen.
-- **Offizielle Setups gibt es ausschließlich hier unter
-  [Releases](../../releases).** Für Fassungen aus anderen Quellen kann ich
-  nicht sagen, was darin steckt.
+- **Prüf es ruhig selbst.** Bei [VirusTotal](https://www.virustotal.com) kostet
+  das nichts und braucht keine Anmeldung: Datei hineinziehen, Ergebnis ansehen —
+  *bevor* du sie öffnest. Verlass dich nicht auf meinen Link, sondern auf deinen.
+- **Offizielle Fassungen gibt es ausschließlich hier unter
+  [Releases](../../releases).** Für Archive aus anderen Quellen kann ich nicht
+  sagen, was darin steckt.
 
-**Was ich nicht sage:** „Schalte deinen Virenscanner aus.“ Wer dir das bei
-einem Download rät, gleich bei welchem, will nichts Gutes. Wenn dein
-Scanner etwas meldet, schreib mir ein
-[Issue](../../issues) mit dem genauen Wortlaut — ich sehe mir das an.
+**Was ich nicht sage:** „Schalte deinen Virenscanner aus." Wer dir das bei einem
+Download rät, gleich bei welchem, will nichts Gutes. Wenn dein Scanner etwas
+meldet, schreib mir ein [Issue](../../issues) mit dem genauen Wortlaut — ich
+sehe mir das an.
 
-> **Und wenn dir das alles zu unsicher ist**, ist das völlig in Ordnung:
-> Lass es. Es ist ein kostenloses Lernprogramm, kein Muss. Unter Linux und
-> macOS stellt sich die Frage ohnehin nicht — dort kommen die Pakete über
-> die Paketverwaltung des Systems.
-
-### Und wenn das Setup gar nicht startet
-
-Auf manchen Windows-11-Rechnern bleibt es nicht bei einer Warnung. Dort bricht
-die Installation ab:
-
-> Die Datei konnte nicht im temporären Ordner ausgeführt werden. Das Setup wurde
-> abgebrochen.
-> **Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert.**
-
-Das ist nicht SmartScreen, sondern **Smart App Control** — und es liegt wieder
-nicht am Inhalt. Jedes Installationsprogramm packt sich beim Doppelklick in den
-Temp-Ordner aus und startet sich von dort. Genau das lässt diese Richtlinie bei
-einem Programm ohne gekaufte Unterschrift nicht zu. Ein anderes
-Installationsprogramm hilft dagegen nicht: Eine unsignierte `.msi` wird genauso
-blockiert.
-
-**Dafür gibt es das Archiv.** `Amateurfunk-Trainer-<Version>-windows.zip` wird
-nur ausgepackt und nicht ausgeführt — damit fällt die Blockade weg, und die
-Frage nach Administratorrechten gleich mit. Auspacken, `START.bat`
-doppelklicken, fertig. Es ist derselbe Inhalt wie im Setup.
-
-Nur eines ist wichtig: **Den Ordner an eine Stelle legen, an der du schreiben
-darfst** — Schreibtisch oder Dokumente, nicht `C:\Program Files`. Der Trainer
-speichert deinen Lernstand neben sich, und in `Program Files` darf er das nicht.
-
+> **Und wenn dir das alles zu unsicher ist**, ist das völlig in Ordnung: Lass
+> es. Es ist ein kostenloses Lernprogramm, kein Muss.
 ---
 
 ### In Kürze
 
-**Windows** — kein Terminal nötig. Es gibt **zwei Wege, beide vollständig**:
+**Windows** — kein Terminal nötig, kein Installationsprogramm:
 
-*Mit Installationsprogramm:*
+1. Rechts unter [Releases](../../releases)
+   `Amateurfunk-Trainer-<Version>-windows.zip` herunterladen
+2. Rechtsklick auf das ZIP → *Eigenschaften* → Haken bei **Zulassen** → *OK*
+3. Auspacken, zum Beispiel auf den Schreibtisch oder nach *Dokumente* —
+   **nicht** nach `C:\Program Files`
+4. `START.bat` doppelklicken — fertig
 
-1. Rechts unter [Releases](../../releases) `Amateurfunk-Trainer-<Version>.exe` herunterladen
-2. Doppelklicken. Bei „Unbekannter Herausgeber": *Weitere Informationen* → *Trotzdem ausführen*
-3. Ordner bestätigen — fertig
+Es ist alles dabei: Node, die Sprachausgabe mit Stimmen, der ganze
+Fragenkatalog samt Erklärungen und Zeichnungen. **Es wird nichts nachgeladen
+und nichts in Windows installiert.** Zum Entfernen genügt es, den Ordner zu
+löschen.
 
-*Ohne Installationsprogramm:*
-
-1. `Amateurfunk-Trainer-<Version>-windows.zip` herunterladen
-2. Auspacken, zum Beispiel auf den Schreibtisch — **nicht** nach `C:\Program Files`
-3. `START.bat` doppelklicken — fertig
-
-Im Archiv ist genau dasselbe drin wie im Setup: Node, die Sprachausgabe mit
-Stimmen, der ganze Fragenkatalog. Es wird nichts nachgeladen und nichts in
-Windows installiert.
-
-> **Nimm das Archiv, wenn das Setup gar nicht erst startet** und stattdessen
-> „Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert"
-> erscheint. Warum das passiert, steht [weiter unten](#und-wenn-das-setup-gar-nicht-startet).
+> **Warum kein Setup mehr?** Auf Windows-11-Rechnern mit *Smart App Control*
+> wurde das Installationsprogramm abgewiesen, bevor es anfing — nicht wegen
+> seines Inhalts, sondern weil jedes Setup sich beim Start in den Temp-Ordner
+> auspackt und von dort startet. Ein Archiv wird nur ausgepackt. Ein Weg, der
+> überall funktioniert, ist zwei Wegen vorzuziehen, von denen einer bei
+> manchen scheitert.
 
 **Linux und macOS** — Terminal öffnen (Linux `Strg`+`Alt`+`T`, Mac
 `Cmd`+`Leertaste` → *Terminal*), diese Zeile einfügen, Eingabe drücken:
@@ -559,29 +521,24 @@ Der Trainer läuft dann unter <http://localhost:3000>.
 
 ### Windows im Einzelnen
 
-**Setup herunterladen, doppelklicken, fertig.**
+**Herunterladen, auspacken, starten.**
 
 Rechts unter [Releases](../../releases) liegt
-`Amateurfunk-Trainer-<Version>.exe`. Herunterladen, doppelklicken, dem
-Assistenten folgen — mehr ist es nicht.
+`Amateurfunk-Trainer-<Version>-windows.zip`. Vor dem Auspacken einmal
+Rechtsklick auf das ZIP → *Eigenschaften* → Haken bei **Zulassen** → *OK*;
+danach auspacken, `START.bat` doppelklicken. Im Ordner liegt eine
+`LIESMICH-ZUERST.txt` mit demselben in vier Schritten.
 
-> **Offizielle Setups gibt es ausschließlich hier unter Releases.** Für
-> Fassungen aus anderen Quellen kann ich nicht sagen, was darin steckt.
+> **Offizielle Fassungen gibt es ausschließlich hier unter Releases.** Für
+> Archive aus anderen Quellen kann ich nicht sagen, was darin steckt.
 
-**Oder ohne Installationsprogramm:** Daneben liegt
-`Amateurfunk-Trainer-<Version>-windows.zip`. Auspacken, `START.bat`
-doppelklicken — derselbe Inhalt, nur ohne Assistenten und ohne
-Administratorrechte. Wer das Archiv nimmt, legt den Ordner an eine Stelle, an
-der er schreiben darf: Schreibtisch oder Dokumente, nicht `C:\Program Files`.
-Beim ersten Start erklärt eine `LIESMICH-ZUERST.txt` im Ordner das Nötigste.
+Im Archiv ist alles, was der Trainer braucht:
 
-Das Setup bringt alles mit, was der Trainer braucht:
-
-- **Node.js** im Unterordner `node\` — auf dem Rechner wird nichts
-  installiert und nichts an Windows geändert
+- **Node.js** im Unterordner `node\` — auf dem Rechner wird nichts installiert
+  und nichts an Windows geändert
 - **die natürliche Sprachausgabe** samt der deutschen Stimme „Thorsten"
 - **die amtlichen Unterlagen** — Fragenkatalog und Formelsammlung als PDF
-- **das Startsymbol** auf dem Desktop, auf Wunsch auch in der Taskleiste
+- **den ganzen Fragenkatalog** mit allen Erklärungen und Zeichnungen
 
 Eine Internetverbindung wird beim Einrichten nicht gebraucht. Der Trainer
 läuft danach vollständig ohne Netz. Ins Internet geht er, wenn Sie selbst
@@ -591,25 +548,24 @@ sich aus: kurz nach dem Start holt er die Zuordnung zum Lehrgang des DARC
 unterbleibt das stillschweigend, und es fehlt nichts als die Verweise auf
 50ohm.de.
 
-**Wohin installiert wird, fragt der Assistent.** Vorgeschlagen ist
-`C:\Programme\Amateurfunk-Trainer`; jeder andere Ordner geht auch. Wer
-lieber im eigenen Benutzerkonto bleibt, wählt zum Beispiel
-`C:\Users\<Name>\Amateurfunk-Trainer` — dort darf Windows in jedem Fall
-schreiben.
+**Wohin der Ordner kommt, entscheidest du selbst** — Schreibtisch, *Dokumente*,
+`C:\Amateurfunk-Trainer` oder ein USB-Stick. Nur nicht nach `C:\Program Files`:
+Dort darf ein normales Benutzerkonto nicht schreiben, und der Trainer legt
+seinen Lernstand neben sich ab. Auf dem Stick wandert der Lernstand übrigens
+mit — einstecken und an jedem Windows-Rechner weiterlernen.
 
 **Der Lernstand liegt in `data\`** und bleibt bei einem Update erhalten.
 Wer auf einen anderen Rechner wechselt, klickt im Trainer auf „Sichern",
 nimmt die entstandene `...-Lernstand_<Datum>.json` mit und liest sie
 drüben mit „Einlesen" wieder ein.
 
-**„Unbekannter Herausgeber".** Windows zeigt diese Warnung bei jedem
-Programm, das nicht mit einem gekauften Zertifikat signiert ist — ein
-solches Zertifikat kostet jährlich mehrere hundert Euro, und der Trainer
-ist ein kostenfreies Feierabendprojekt. Auf „Weitere Informationen" und
-dann „Trotzdem ausführen" klicken. Wem das zu weit geht: Der Quellcode
-liegt vollständig hier, das Setup lässt sich mit
-[Inno Setup](https://jrsoftware.org/isinfo.php) und `Build-DIREKT.bat`
-selbst bauen.
+**Warnungen von Windows.** Sie kommen bei jeder Datei, die nicht mit einem
+gekauften Zertifikat unterschrieben ist — so eines kostet jährlich mehrere
+hundert Euro, und der Trainer ist ein kostenfreies Feierabendprojekt. Beim
+Archiv bleibt davon nur die Meldung des Browsers, die Datei werde „nicht
+häufig heruntergeladen"; der Haken bei *Zulassen* in den Eigenschaften des
+ZIP erledigt den Rest. Wem das zu weit geht: Der Quelltext liegt vollständig
+hier und lässt sich Zeile für Zeile nachlesen.
 
 ### Auf Linux und am Mac
 
@@ -635,7 +591,7 @@ Weg, die Schalter und einen Abschnitt „Wenn etwas klemmt".
 
 #### Die beiden Hilfsprogramme
 
-Zwei Programme kommen unter Windows mit dem Setup und fehlen anderswo. Beide
+Zwei Programme kommen unter Windows im Archiv mit und fehlen anderswo. Beide
 sind **freiwillig** — ohne sie fällt jeweils genau eine Funktion weg, der
 Trainer läuft im Übrigen vollständig:
 
@@ -664,10 +620,11 @@ selbst nach `piper/`.
 > geprüft, aber nicht auf echter Hardware ausprobiert** — Rückmeldungen sind
 > willkommen.
 
-### Ohne Setup unter Windows
+### Aus dem Quelltext unter Windows
 
-Repository klonen oder als ZIP herunterladen, Node.js installieren, im Ordner
-einmal `npm install`, dann `node Server.js` — oder `START.bat`.
+Für alle, die ohnehin entwickeln: Repository klonen oder als ZIP
+herunterladen, Node.js installieren, im Ordner einmal `npm install`, dann
+`node Server.js` — oder `START.bat`.
 
 ## Beenden und neu starten
 

@@ -158,9 +158,17 @@ Dietmars Frage „Wäre eine MSI besser?" war naheliegend, aber nein: Smart App 
 unsignierte MSI genauso — das Format ist nicht das Problem, die fehlende Unterschrift ist es.
 Bleiben zwei Wege: unterschreiben, oder nichts ausführen.
 
-**Ein ZIP wird ausgepackt, nicht ausgeführt.** `Build-DIREKT.bat` baut deshalb ab jetzt neben
-der EXE ein `Amateurfunk-Trainer-<Fassung>-windows.zip`. Auspacken, `START.bat`
-doppelklicken — fertig. Kein 4551, keine Rechteabfrage, kein roter SmartScreen-Kasten.
+**Ein ZIP wird ausgepackt, nicht ausgeführt.** `Build-DIREKT.bat` baut deshalb ab jetzt ein
+`Amateurfunk-Trainer-<Fassung>-windows.zip`. Auspacken, `START.bat` doppelklicken — fertig.
+Kein 4551, keine Rechteabfrage, kein roter SmartScreen-Kasten.
+
+**Und die EXE entfällt.** Erst sollten beide Wege nebeneinander stehen. Zwei Wege bedeuten
+aber, dass jeder Benutzer zuerst eine Entscheidung treffen muss, die er nicht treffen kann —
+er weiß ja nicht, ob auf seinem Rechner Smart App Control läuft. Und der eine Weg, der überall
+funktioniert, ist das Archiv. Also nur noch das Archiv. Das Setup mit seinem roten Kasten, dem
+*Weitere Informationen → Trotzdem ausführen* und der Rechteabfrage ist damit aus README,
+Release-Seite und der Seite unter `docs/` verschwunden — zusammen mit dem Bild vom
+SmartScreen-Fenster, das keine Anleitung mehr braucht, wenn es das Fenster nicht mehr gibt.
 
 Der erste Versuch war ein schlankes Archiv, bei dem Node beim ersten Start nachgeholt wurde,
 mit einem Fenster, das vorher erklärt, was geschieht. Dietmar hat es abgelehnt, und zu Recht:
@@ -180,13 +188,24 @@ Drei Dinge hängen daran:
   das Netz für den Fall, dass `node\` einmal fehlt, statt der Sackgasse „bitte neu
   installieren". Nebenbei behoben: `Fehler-Zeigen.bat` rief die Datei schon die ganze Zeit
   auf, nur fehlte sie.
-- **`release_hochladen.js` kennt die fünfte Sorte.** Ohne diese Zeile wäre das ZIP in
-  `release\` liegen geblieben und stillschweigend übergangen worden — es stand in keinem
-  Namensmuster. Genau die Sorte Fehler, die man erst merkt, wenn jemand fragt, warum das nicht
-  im Release steht.
-- **Das Setup fragt jetzt, für wen installiert wird.** `PrivilegesRequiredOverridesAllowed=dialog`:
-  „für alle Benutzer" wie bisher, oder „nur für mich" ohne Rechteabfrage. Das behebt 4551
-  nicht — die Hülle packt sich immer nach Temp aus —, nimmt aber eine Abfrage weniger.
+- **`release_hochladen.js` kennt jetzt das ZIP — und die EXE nicht mehr.** Zuerst fehlte das
+  ZIP im Namensmuster; es wäre in `release\` liegen geblieben und stillschweigend übergangen
+  worden. Genau die Sorte Fehler, die man erst merkt, wenn jemand fragt, warum das nicht im
+  Release steht. Umgekehrt ist das EXE-Muster gestrichen: Eine alte EXE, die noch im Ordner
+  liegt, wird nicht gelöscht, aber auch nicht mehr gesehen — sie kann nicht aus Versehen
+  wieder mitgehen.
+- **`Build-DIREKT.bat` kann das alte Archiv nicht mehr zerstören.** Zuerst stand dort
+  „altes ZIP löschen, dann packen" — und als das Packen einmal nicht durchlief, lag in
+  `release\` gar kein Archiv mehr. Jetzt wird unter einem Zwischennamen gepackt und erst nach
+  einer Größenprobe umbenannt; ein halbes Archiv kommt nicht unter dem richtigen Namen an.
+  Und gemeldet wird nur, was gerade entstanden ist — sonst hätte ein Fehlschlag „Fertig"
+  gemeldet und dabei auf das Archiv vom Vortag gezeigt.
+- **`installer.iss` bleibt im Repository, wird aber nicht mehr veröffentlicht.** Die Datei ist
+  gepflegt (`PrivilegesRequiredOverridesAllowed=dialog`: „für alle Benutzer" oder „nur für
+  mich" ohne Rechteabfrage; `cloudflared.exe` und der Aufruf von `ie4uinit.exe` sind
+  herausgenommen), falls es später einmal eine Unterschrift gibt. Gelöscht wird nichts — die
+  Arbeit war richtig, sie hilft nur gegen 4551 nicht: Die Hülle packt sich immer nach Temp
+  aus.
 
 ### Die Seite für GitHub Pages
 
@@ -198,6 +217,15 @@ kein Zählpixel — also auch keine Cookie-Frage. Eingeschaltet wird sie unter
 
 > Der Ordner ist dabei das Entscheidende: Im Hauptordner heißt die Datei `Index.html` mit
 > großem I, GitHub sucht `index.html` mit kleinem — und meldet sonst „Site not found".
+
+### Ein Video statt eines Absatzes
+
+Vier Handgriffe — herunterladen, entpacken, Verknüpfung anlegen, starten — lassen sich
+beschreiben oder zeigen. Gezeigt ist es kürzer:
+**[In zwei Minuten einsatzbereit](https://www.youtube.com/watch?v=6s-awZhYfyw)**. Der Link
+steht jetzt in der README, auf der Seite unter `docs/` und auf der Release-Seite, jeweils
+über den Download-Knöpfen — nicht statt der Anleitung, sondern daneben: Wer lieber liest,
+liest weiter.
 
 ---
 

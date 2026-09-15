@@ -90,21 +90,23 @@ const mb = b => { const m = b / 1024 / 1024; return m < 100 ? m.toFixed(1) : m.t
 
 // ---- Was liegt in release\ zum Veroeffentlichen? ---------------
 //
-// Fuenf Sorten, jede mit ihrem eigenen Namensmuster. Die Muster sind eng
+// Vier Sorten, jede mit ihrem eigenen Namensmuster. Die Muster sind eng
 // gefasst, damit nichts mitgeht, was nur so aehnlich heisst: Ein
-// "Amateurfunk-Trainer-1.275.0-mac.zip" ist kein Setup, und ein
-// "Amateurfunk-Trainer-alt.exe" ist keine Fassung.
+// "Amateurfunk-Trainer-1.275.0-mac.zip" ist kein Windows-Archiv.
 //
-// DIE FUENFTE KAM AM 15.09.2026 DAZU, und ohne sie waere die Arbeit des
-// ganzen Tages unsichtbar geblieben: Build-DIREKT.bat baut jetzt auch
-// ein Windows-ZIP - fuer die Rechner, auf denen "Smart App Control" das
-// Setup abweist, bevor es anfaengt ("Fehler 4551"). Das ZIP lag danach
-// in release\, und dieses Skript hat es stillschweigend uebergangen,
-// weil es in keinem Muster stand. Genau die Sorte Fehler, die man erst
-// merkt, wenn jemand fragt "warum steht das nicht im Release?".
+// AM 15.09.2026 IST DAS EXE-MUSTER GEFLOGEN, und zwar mit Absicht.
+// Bis dahin gab es zwei Windows-Wege: das Setup und das ZIP. Auf
+// Windows-11-Rechnern mit "Smart App Control" wurde das Setup gar nicht
+// erst gestartet ("Fehler 4551"), weil sich jedes Installationsprogramm
+// beim Start in den Temp-Ordner auspackt. Dagegen half kein Klick. Also
+// gibt es nur noch das ZIP - ein Archiv wird ausgepackt, nicht
+// ausgefuehrt.
+//
+// Wichtig: Das Muster steht hier NICHT mehr, damit eine alte EXE, die
+// noch in release\ herumliegt, nicht aus Versehen wieder mit
+// hochgeht. Sie wird nicht geloescht, sie wird nur nicht mehr gesehen.
 const SORTEN = [
-  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+\.exe$/i,             hinweis: 'Windows 10 und 11' },
-  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-windows\.zip$/i,      hinweis: 'Windows ohne Installation' },
+  { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-windows\.zip$/i,      hinweis: 'Windows 10 und 11, ohne Installation' },
   { regel: /^amateurfunk-trainer_\d+\.\d+\.\d+_all\.deb$/i,          hinweis: 'Debian, Ubuntu, Mint, Raspberry Pi OS' },
   { regel: /^amateurfunk-trainer-\d+\.\d+\.\d+-\d+\.noarch\.rpm$/i, hinweis: 'Fedora, openSUSE, RHEL' },
   { regel: /^Amateurfunk-Trainer-\d+\.\d+\.\d+-mac\.zip$/i,          hinweis: 'macOS 11 und neuer' },
@@ -246,7 +248,6 @@ function letzteVeroeffentlichte() {
 // Was danach kaeme, gehoert in INSTALLATION.md.
 function beschreibung(namen, version, neue) {
   const finde = r => namen.find(n => r.test(n)) || null;
-  const exe = finde(/\.exe$/i);
   const deb = finde(/\.deb$/i);
   const rpm = finde(/\.rpm$/i);
   const zip = finde(/-mac\.zip$/i);
@@ -254,23 +255,26 @@ function beschreibung(namen, version, neue) {
 
   let s = '## Installation\n\n';
 
-  if (exe) {
-    s += '**Windows** \u2014 `' + exe + '` starten. Bei "Unbekannter Herausgeber": '
-      + '*Weitere Informationen* \u2192 *Trotzdem ausf\u00fchren*.\n\n';
-  }
-
-  // Der zweite Windows-Weg. Er steht ABSICHTLICH direkt hinter der EXE
-  // und nicht unten bei den Sonderfaellen: Wer die Warnung gerade
-  // gelesen hat, soll die Alternative im selben Atemzug finden.
+  // Windows ist seit dem 15.09.2026 nur noch das Archiv. Der Satz sagt
+  // zuerst, was zu tun ist, und erst danach, warum es kein Setup mehr
+  // gibt - wer installieren will, braucht den Handgriff, nicht die
+  // Begruendung.
   if (win) {
-    s += '**Windows ohne Installation** \u2014 `' + win + '` auspacken, `START.bat` '
-      + 'doppelklicken. Es ist alles dabei, auch Node und die Sprachausgabe mit Stimmen; '
-      + 'nichts wird nachgeladen und nichts in Windows installiert.\n\n'
-      + '> Dieser Weg ist f\u00fcr alle, bei denen Windows das Setup ganz abweist \u2014 '
-      + '"Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert". '
-      + 'Das ist *Smart App Control*: Jedes Installationsprogramm packt sich beim Start in '
-      + 'den Temp-Ordner aus, und das l\u00e4sst die Richtlinie bei einem Programm ohne '
-      + 'gekaufte Unterschrift nicht zu. Ein Archiv wird nur ausgepackt, nicht ausgef\u00fchrt.\n\n';
+    s += '**Windows** \u2014 `' + win + '` auspacken, den Ordner hinlegen, wo du willst '
+      + '(Programme, Dokumente oder USB-Stick), `START.bat` doppelklicken. Zum Lernen ist '
+      + 'alles dabei, auch Node und die Sprachausgabe mit Stimmen. Nichts wird in Windows '
+      + 'installiert, keine Administratorrechte, keine Spuren in der Registrierung. Zum '
+      + 'Entfernen den Ordner l\u00f6schen.\n\n'
+      + '> **Warum kein Installationsprogramm mehr?** Bei einem Teil der Benutzer hat '
+      + 'Windows das Setup gar nicht erst gestartet \u2014 "Fehler 4551: Eine '
+      + 'Anwendungssteuerungsrichtlinie hat diese Datei blockiert". Das ist *Smart App '
+      + 'Control*: Jedes Installationsprogramm packt sich beim Start in den Temp-Ordner '
+      + 'aus, und genau das l\u00e4sst die Richtlinie bei einem Programm ohne gekaufte '
+      + 'Unterschrift nicht zu. Dagegen hilft kein Klick und keine Einstellung. Ein Archiv '
+      + 'wird nur ausgepackt, nicht ausgef\u00fchrt.\n\n'
+      + '> **Ein Handgriff erspart die Warnung des Browsers:** vor dem Auspacken '
+      + 'Rechtsklick auf das ZIP \u2192 *Eigenschaften* \u2192 unten bei *Sicherheit* den '
+      + 'Haken bei **Zulassen** setzen \u2192 *OK*.\n\n';
   }
 
   if (deb || rpm) {
@@ -289,7 +293,7 @@ function beschreibung(namen, version, neue) {
   s += 'Der Lernstand bleibt beim Update erhalten';
   if (deb || rpm || zip || win) {
     s += ':\n\n```\n'
-      + 'Windows : data\\ im Installationsordner\n'
+      + 'Windows : data\\ im Trainer-Ordner\n'
       + 'Linux   : ~/.local/share/amateurfunk-trainer\n'
       + 'macOS   : ~/Library/Application Support/Amateurfunk-Trainer\n'
       + '```\n\n';
@@ -345,7 +349,7 @@ function beschreibung(namen, version, neue) {
   if (!alleDateien.length) {
     console.log('  In release\\ liegt nichts zum Veroeffentlichen.');
     console.log('');
-    console.log('  Das Setup fuer Windows baut Build-DIREKT.bat.');
+    console.log('  Das Archiv fuer Windows baut Build-DIREKT.bat.');
     console.log('  Die Pakete fuer Linux und Mac baut pakete_bauen.sh.');
     console.log('');
     leitung && leitung.close();
@@ -445,7 +449,7 @@ function beschreibung(namen, version, neue) {
   // Was fehlt, wird benannt. Sonst faellt erst auf der fertigen Seite
   // auf, dass fuer ein System nichts zum Herunterladen dasteht.
   const fehlt = [];
-  if (!dateien.some(d => /\.exe$/i.test(d.name)))      fehlt.push('Windows (Build-DIREKT.bat)');
+  if (!dateien.some(d => /-windows\.zip$/i.test(d.name))) fehlt.push('Windows (Build-DIREKT.bat)');
   if (!dateien.some(d => /\.deb$|\.rpm$/i.test(d.name))) fehlt.push('Linux (pakete_bauen.sh)');
   if (!dateien.some(d => /-mac\.zip$/i.test(d.name)))   fehlt.push('macOS (pakete_bauen.sh)');
   if (fehlt.length) {
