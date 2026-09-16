@@ -191,6 +191,20 @@
         }
         body.runde-laeuft #questionContainer { flex: 1 0 auto; }
         body.runde-laeuft .app-layout { flex: 1 0 auto; }
+        /* DIE ANTWORTFELDER SIND NUR SO HOCH WIE IHR TEXT (16.09.2026).
+           Dietmar, mit dem Bild von AD319: "Bei den Antworten sind die
+           Felder relativ gross zu dem Text." Bis dahin reichte die Kette
+           bis in die vier Felder hinein - .question-area nahm sich den
+           ganzen Platz bis zur Knopfleiste, .options gab ihn an die Felder
+           weiter, und "4,32 W" stand in einem Feld von 120 Punkten Hoehe.
+           Jetzt endet die Kette bei .main-layout: Die Zeile nimmt sich den
+           Platz (damit die Knopfleiste unten stehen bleibt), die Fragekarte
+           darin steht oben und ist so hoch wie ihr Inhalt (align-self statt
+           stretch). Der Rest bleibt unter der Karte frei - ruhiger Grund,
+           kein leeres Feld. Bei langen Fragen aendert sich nichts: Die
+           Karte waechst mit dem Text wie zuvor, und die Schriftautomatik
+           (fragenGroesseAnpassen) greift wie zuvor. */
+        body.runde-laeuft .main-layout > .question-area { align-self: flex-start; }
         .header {
             display: flex;
             justify-content: space-between;
@@ -21352,7 +21366,9 @@ async function playTTSSegment(seg, token){
         try{ localStorage.removeItem('ttsVoice'); }catch(e){}
         selectedVoice = '';
     }
-    const isPiperVoice = selectedVoice.includes('.onnx') || selectedVoice.includes('(Piper)') || selectedVoice.includes('thorsten') || selectedVoice.includes('ramona') || selectedVoice.includes('kerstin') || selectedVoice.includes('karlsson') || selectedVoice.includes('eva');
+    // "kokoro/..." ist die zweite Sprachausgabe (16.09.2026) - sie laeuft
+    // ueber denselben Weg zum Server und zaehlt hier wie Piper.
+    const isPiperVoice = selectedVoice.includes('.onnx') || selectedVoice.startsWith('kokoro/') || selectedVoice.includes('(Piper)') || selectedVoice.includes('thorsten') || selectedVoice.includes('ramona') || selectedVoice.includes('kerstin') || selectedVoice.includes('karlsson') || selectedVoice.includes('eva');
     
     // 1. PIPER MUSS VERWENDET WERDEN WENN PIPER STIMME GEWÄHLT IST
     try{
@@ -22760,6 +22776,7 @@ function einstReiterZeigen(id){
     if(id === 'vorlesen') {
         try{ ttsFelderNachziehen(); }catch(e){}
         try{ einstAlteStimmenPruefen(); }catch(e){}
+        try{ einstKokoroFuellen(); }catch(e){}
         try{ naFelderNachziehen(); }catch(e){}
         try{ autoWeiterFelderNachziehen(); }catch(e){}
         try{ bildZoomFelderNachziehen(); }catch(e){}
@@ -23046,6 +23063,19 @@ function einstBlaetterFuellen(){
           + '<i class="fas fa-plus"></i> Stimmen hinzufügen</button></div>'
           + '<div id="einstStimmenLage" style="font-size:0.8rem; line-height:1.6; margin-top:0.5rem;"></div>'
           + '<div id="einstStimmenAlt" style="margin-top:0.5rem;"></div>')
+      // ================================================================
+      //  KOKORO - die zweite Sprachausgabe (16.09.2026)
+      //  Dietmar: "Ich wuerde mir gerne dieses Kokoro in dem Trainer
+      //  anhoeren." Ein Kasten, ein Knopf, ein Balken - und danach steht
+      //  die Stimme oben in der Auswahl. Was der Kasten zeigt, kommt vom
+      //  Server (/api/kokoro/lage); siehe einstKokoroFuellen().
+      // ================================================================
+      + einstKasten('Kokoro — eine zweite Sprachausgabe',
+            'Ein neueres Sprachmodell mit natürlicherer Satzmelodie, auf Deutsch nachtrainiert '
+          + '(kokoro-deutsch, Apache 2.0). Rund 360 MB, nur auf Klick. Piper bleibt die Vorgabe; '
+          + 'oben in der Auswahl lässt sich jederzeit wechseln.',
+            '<div id="einstKokoro" style="font-size:0.8rem; line-height:1.6;">'
+          + '<span style="color:var(--muted);">Nachsehen …</span></div>')
       + einstKasten('Fragen und Antworten', 'Was von selbst gesprochen wird.',
             '<div id="einstZielAuto"></div><div id="einstZielAntwort"></div>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
@@ -23536,6 +23566,111 @@ function einstStimmenFortschritt(){
                         + 'Nicht geklappt hat: ' + String(j.fehler).replace(/</g,'&lt;') + '</div>' : ''));
             }
         }catch(e){ clearInterval(einstStimmenUhr); einstStimmenUhr = null; }
+    }, 700);
+}
+
+// ================================================================
+//  KOKORO - holen, Fortschritt zeigen, danach die Auswahl nachziehen
+// ----------------------------------------------------------------
+//  Derselbe Bau wie bei "Stimmen hinzufuegen": ein Klick startet, der
+//  Server arbeitet, der Browser fragt alle 700 ms nach. Vier Schritte
+//  laufen dabei nacheinander (Laufwerk, Lautdaten, Modell, Probelauf),
+//  und der Balken sagt, welcher gerade dran ist - sonst saehe der
+//  Sprung von 20 MB auf 326 MB nach einem Haenger aus.
+// ================================================================
+let einstKokoroUhr = null;
+
+function einstKokoroSetzen(html){
+    const el = document.getElementById('einstKokoro');
+    if(el) el.innerHTML = html;
+}
+
+async function einstKokoroFuellen(){
+    const el = document.getElementById('einstKokoro');
+    if(!el) return;
+    let j;
+    try{
+        j = await stimmenAntwort(await fetch('/api/kokoro/lage', {cache:'no-store'}));
+    }catch(e){
+        einstKokoroSetzen('<span style="color:#8a5a12;">' + String(e.message).replace(/</g,'&lt;') + '</span>');
+        return;
+    }
+    if(j.fortschritt && j.fortschritt.laeuft){ einstKokoroFortschritt(); return; }
+    if(!j.archiv){
+        einstKokoroSetzen('Für dieses System (' + String(j.system).replace(/</g,'&lt;')
+            + ') gibt es kein fertiges Laufwerk. Piper bleibt.');
+        return;
+    }
+    let html = '';
+    for(const st of (j.stimmen || [])){
+        const wer = (st.geschlecht === 'w' ? 'Frauenstimme' : 'Männerstimme');
+        html += '<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:0.35rem;">'
+            + '<b>' + st.name + '</b> <span style="color:var(--muted);">— ' + wer + ', 24 kHz, ' + st.lizenz + '</span>';
+        if(st.installiert){
+            html += '<span style="color:#15703c;">ist da — oben in der Auswahl als „' + st.label + '“.</span>';
+        }else{
+            html += '<button type="button" id="einstKokoroBtn_' + st.id + '" style="' + EINST_KNOPF + '" '
+                + 'onclick="einstKokoroHolen(\'' + st.id + '\')" '
+                + 'data-vorlesen-kurz="' + st.name + ' holen." '
+                + 'data-vorlesen="' + st.name + ' holen. Der Trainer lädt das Laufwerk und das Modell aus dem Netz, rund 360 Megabyte, und stellt die Stimme danach oben zur Auswahl.">'
+                + '<i class="fas fa-download"></i> ' + st.name + ' holen (' + st.groesseMB + ' MB)</button>';
+        }
+        html += '</div>';
+    }
+    // Eine Frauenstimme gibt es noch nicht als fertigen Export - das steht
+    // hier, damit niemand danach sucht.
+    html += '<div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">'
+        + 'Eine Frauenstimme („Victoria“) gibt es bei kokoro-deutsch bisher nur als PyTorch-Gewichte, '
+        + 'nicht als fertigen Export — sobald es einen gibt, steht sie hier.</div>';
+    if(j.fortschritt && j.fortschritt.fehler && !j.fortschritt.fertig){
+        html += '<div style="color:#8a5a12; font-size:0.78rem; margin-top:0.3rem;">Zuletzt: '
+            + String(j.fortschritt.fehler).replace(/</g,'&lt;') + '</div>';
+    }
+    einstKokoroSetzen(html);
+}
+window.einstKokoroFuellen = einstKokoroFuellen;
+
+async function einstKokoroHolen(id){
+    const knopf = document.getElementById('einstKokoroBtn_' + id);
+    if(knopf) knopf.disabled = true;
+    try{
+        await stimmenAntwort(await fetch('/api/kokoro/holen', { method:'POST',
+            headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id }) }));
+        einstKokoroSetzen('<span style="color:var(--muted);">Wird geholt …</span>');
+        einstKokoroFortschritt();
+    }catch(e){
+        einstKokoroSetzen('<span style="color:#8a5a12;">' + String(e.message).replace(/</g,'&lt;') + '</span>');
+        if(knopf) knopf.disabled = false;
+    }
+}
+window.einstKokoroHolen = einstKokoroHolen;
+
+function einstKokoroFortschritt(){
+    if(einstKokoroUhr) clearInterval(einstKokoroUhr);
+    einstKokoroUhr = setInterval(async () => {
+        if(!document.getElementById('einstKokoro')){ clearInterval(einstKokoroUhr); einstKokoroUhr = null; return; }
+        try{
+            const r = await fetch('/api/kokoro/lage', {cache:'no-store'});
+            const j = await r.json();
+            const f = j.fortschritt || {};
+            if(f.laeuft){
+                const teil = f.gesamt ? Math.min(100, Math.round(f.geladen / f.gesamt * 100)) : 0;
+                const mb = f.gesamt ? ' — ' + Math.round(f.geladen/1048576) + ' von ' + Math.round(f.gesamt/1048576) + ' MB' : '';
+                einstKokoroSetzen('<b>' + String(f.schritt || '').replace(/</g,'&lt;') + '</b>' + mb
+                    + (f.gesamt ? '<div style="height:6px; background:#e3e9f3; border-radius:3px; margin-top:0.3rem; overflow:hidden;">'
+                    + '<div style="height:100%; width:' + teil + '%; background:#0f2745;"></div></div>' : ''));
+                return;
+            }
+            clearInterval(einstKokoroUhr); einstKokoroUhr = null;
+            try{ await ttsFelderNachziehen(); }catch(e){}
+            if(f.fertig){
+                einstKokoroSetzen('<span style="color:#15703c;"><b>Fertig.</b> Die Stimme steht oben in der Auswahl — '
+                    + 'auswählen und „Probe hören“.</span>');
+                setTimeout(() => { try{ einstKokoroFuellen(); }catch(e){} }, 4000);
+            }else{
+                einstKokoroFuellen();
+            }
+        }catch(e){ clearInterval(einstKokoroUhr); einstKokoroUhr = null; }
     }, 700);
 }
 

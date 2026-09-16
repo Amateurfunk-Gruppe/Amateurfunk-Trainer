@@ -245,6 +245,16 @@ dazu, damit man sich nicht durch vier Kacheln tasten muss. Im
 Prüfungssimulator schweigt der Trainer an dieser Stelle: Dass es richtig war,
 erfährt man in der echten Prüfung auch nicht.
 
+**Kokoro — eine zweite Sprachausgabe.** Wer die Satzmelodie von Piper zu flach
+findet, holt sich unter *Einstellungen → Vorlesen → Kokoro* die Stimme „Martin"
+(rund 360 MB, nur auf Klick): [Kokoro-82M](https://github.com/hexgrad/kokoro),
+auf Deutsch nachtrainiert vom Projekt
+[kokoro-deutsch](https://github.com/semidark/kokoro-deutsch), gerechnet über
+[sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) — alles Apache 2.0, alles
+lokal. Sie steht danach oben in der Stimmenauswahl; Piper bleibt die Vorgabe.
+Beide hören denselben aufbereiteten Text, „Wurzel aus P durch R" klingt bei
+beiden gleich verständlich — nur eben mit anderer Stimme.
+
 **Knöpfe vorlesen.** Wer mit der Maus über einen Knopf fährt oder mit der
 Tabulatortaste dorthin springt, bekommt gesagt, was er tut — wahlweise **kurz**
 (nur der Name) oder **ausführlich** (in ganzen Sätzen, so wie man es jemandem

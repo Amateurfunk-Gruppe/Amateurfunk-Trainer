@@ -813,6 +813,10 @@ const app = express();
 const SERVER_START = new Date().toISOString();
 const PORT = process.env.PORT || 3000;
 const PIPER_DIR = path.join(__dirname, 'piper');
+// Kokoro, die zweite Sprachausgabe (16.09.2026) - eingehaengt weiter unten
+// neben piper_stimmen.js; bis dahin bleibt es null, und listVoices()
+// liefert nur Piper.
+let kokoroModul = null;
 const TTS_CACHE_DIR = path.join(__dirname, 'tts_cache');
 if (!fs.existsSync(TTS_CACHE_DIR)) { try { fs.mkdirSync(TTS_CACHE_DIR, {recursive:true}); } catch(e){ console.error('[CACHE] tts_cache/ nicht anlegbar:', e.message); } }
 
@@ -1243,7 +1247,10 @@ function listVoices(){
         return { file: path.relative(PIPER_DIR,p).replace(/\\/g,'/'), fullPath: p,
                  label: f + khz + warnung, name: f, sampleRate: q.rate, _rang: q.rang };
       })
-      .sort((a,b) => (b.sampleRate - a.sampleRate) || (b._rang - a._rang) || a.name.localeCompare(b.name));
+      .sort((a,b) => (b.sampleRate - a.sampleRate) || (b._rang - a._rang) || a.name.localeCompare(b.name))
+      // Die Kokoro-Stimmen dahinter - nur wenn sie geholt sind. Die
+      // Vorgabe (voices[0]) bleibt damit Piper/Thorsten.
+      .concat(kokoroModul ? kokoroModul.stimmen() : []);
   }catch{ return []; }
 }
 
@@ -3164,6 +3171,33 @@ try{
 }
 
 // ================================================================
+//  KOKORO - EINE ZWEITE SPRACHAUSGABE NEBEN PIPER     (16.09.2026)
+// ================================================================
+//  Dietmar: "Ich wuerde mir gerne dieses Kokoro in dem Trainer
+//  anhoeren. Kannst du mir das einbauen?"
+//
+//  Kokoro-82M ist ein neueres Sprachmodell (Apache 2.0), dessen
+//  Satzmelodie natuerlicher klingt als die von Piper. Deutsch kann es
+//  nur durch das Nachtraining der Gemeinschaft (kokoro-deutsch); die
+//  Stimme "Martin" gibt es als fertigen Export. Gerechnet wird ueber
+//  sherpa-onnx, ein fertiges Programm, das der Trainer je Satz startet
+//  wie piper.exe - mit demselben Zwischenspeicher, derselben
+//  Warteschlange und demselben tts-expand.js davor. Alles dazu steht in
+//  kokoro_stimme.js: holen (nur auf Klick, rund 360 MB), umwandeln,
+//  starten.
+//
+//  Fehlt die Datei, faellt nur die Stimme weg. Piper spricht wie bisher.
+// ================================================================
+try{
+  kokoroModul = require('./kokoro_stimme').einrichten({
+    app, localOnly, ordner: path.join(__dirname, 'kokoro')
+  });
+}catch(e){
+  kokoroModul = null;
+  console.warn('[KOKORO] nicht verfuegbar:', e.message);
+}
+
+// ================================================================
 //  DIE BEIDEN HILFSPROGRAMME NACHHOLEN     (07.09.2026)
 // ================================================================
 //  Dietmar: "Baue es mir so auf, dass es auf Windows, Linux und Mac
@@ -3685,7 +3719,10 @@ app.post('/api/tts',async (req,res)=>{
   // Antwort, die schon einmal gefragt wurde, spricht Piper nicht zweimal.
   if(fs.existsSync(out)){ ttsPlatzFrei(); console.log(`[TTS] Cache Hit ${hash} (nach Warten)`); res.setHeader('Content-Type','audio/wav'); return res.sendFile(out); }
   const piper=findPiper();
-  console.log(`[TTS] ${piper.type} Model:${voice.file} Text:${original.slice(0,60)} -> ${text.slice(0,80)}`);
+  // Kokoro-Stimme? Dann startet sherpa-onnx statt piper.exe - siehe
+  // kokoro_stimme.js. Der Text geht als Argument mit, nicht ueber stdin.
+  const kokoro = (voice.engine === 'kokoro' && kokoroModul);
+  console.log(`[TTS] ${kokoro ? 'kokoro' : piper.type} Model:${voice.file} Text:${original.slice(0,60)} -> ${text.slice(0,80)}`);
   let proc,done=false,err='';
   // Platz ist belegt (ttsPlatzHolen) und wird garantiert genau einmal wieder frei
   let slotReleased = false;
@@ -3693,7 +3730,13 @@ app.post('/api/tts',async (req,res)=>{
   const opts={cwd:PIPER_DIR, env:{...process.env, PYTHONIOENCODING:'utf-8', PYTHONUTF8:'1'}};
   // FIX K7: spawn selbst kann synchron werfen - dann wuerde der Slot fuer immer belegt bleiben
   try{
-    if(piper.type==='binary') proc=spawn(piper.path,['--model',voice.fullPath,'--output_file',outTmp],opts);
+    if(kokoro){
+      const b = kokoroModul.befehl(voice, text, outTmp);
+      // stdout wird nicht gelesen (sherpa schreibt dort seinen Bericht) -
+      // deshalb 'ignore', sonst koennte ein voller Puffer den Prozess anhalten.
+      proc = spawn(b.exe, b.args, { cwd: b.cwd, env: { ...process.env }, stdio: ['pipe','ignore','pipe'] });
+    }
+    else if(piper.type==='binary') proc=spawn(piper.path,['--model',voice.fullPath,'--output_file',outTmp],opts);
     // piper.path ist hier "python3" bzw. "python" - siehe findPiper.
     else proc=spawn(piper.path,['-m','piper','--model',voice.fullPath,'--output_file',outTmp],opts);
   }catch(spawnErr){
@@ -3726,7 +3769,13 @@ app.post('/api/tts',async (req,res)=>{
       let msg;
       // Auf Linux und am Mac hilft kein Wort ueber DLLs und
       // Visual-C++-Pakete. Dort steht, was dort wirklich zu tun ist.
-      if(process.platform !== 'win32'){
+      if(kokoro){
+        msg = 'Die Kokoro-Stimme liess sich nicht starten (Code ' + code + ').'
+            + (err ? '\n\nMeldung: ' + err.trim().slice(-400) : '')
+            + (crashHint ? '\n\n' + crashHint : '')
+            + '\n\nPiper ist davon nicht betroffen: unter Einstellungen - Vorlesen eine Piper-Stimme waehlen.'
+            + ' Hilft ein erneutes Holen unter "Kokoro" nicht, bitte diese Meldung weitergeben.';
+      } else if(process.platform !== 'win32'){
         msg = 'Die Sprachausgabe liess sich nicht starten (Code ' + code + ').'
             + (err ? '\n\nMeldung: ' + err.slice(0,400) : '')
             + '\n\nGesucht wurde: ' + piper.quelle + ' (' + piper.path + ').'
@@ -3758,9 +3807,12 @@ app.post('/api/tts',async (req,res)=>{
     res.status(500).json({error:'Piper konnte nicht gestartet werden: '+(e.code||e.message)});
   });
   try{
-    proc.stdin.setDefaultEncoding('utf-8');
-    proc.stdin.write(text,'utf-8');
-    proc.stdin.end();
+    if(kokoro){ proc.stdin.end(); }              // der Text steht schon im Aufruf
+    else{
+      proc.stdin.setDefaultEncoding('utf-8');
+      proc.stdin.write(text,'utf-8');
+      proc.stdin.end();
+    }
   }catch(e){
     console.error('[TTS] stdin-Schreibfehler:', e.message);
     if(!done){ done = true; releaseTtsSlot(); res.status(500).json({error:'Piper stdin: '+e.message}); }

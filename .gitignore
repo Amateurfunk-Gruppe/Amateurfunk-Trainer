@@ -24,6 +24,9 @@ data/
 # Grosse Binaerdateien, werden bei Bedarf heruntergeladen
 cloudflared.exe
 piper/
+# Kokoro, die zweite Sprachausgabe (16.09.2026): Laufwerk, Lautdaten und
+# 326 MB Modell je Stimme - holt sich der Trainer auf Klick, nie ueber GitHub.
+kokoro/
 *.exe
 *.dll
 *.onnx

@@ -220,6 +220,61 @@ Wort — „<u>nicht</u> abhängig" (EC205) —, und Piper sprach „u nicht u";
 („(2 Wh sind 7200 J)" in AB503). „RX/TX" und „√(L / A_L)" (AC207) blieben halb. Alles in
 `tts-expand.js` behoben; der zweite Lauf ist leer.
 
+### Die Antwortfelder sind nur noch so hoch wie ihr Text
+
+Dietmar, mit dem Bild von AD319: „Bei den Antworten sind die Felder relativ groß zu dem
+Text." Stimmt — „4,32 W" stand in einem Feld von 120 Punkten Höhe. Das kam von der
+Kette, die die Knopfleiste unten festhält: Die Fragekarte nahm sich den ganzen Platz bis
+zur Leiste, gab ihn an die vier Felder weiter, und die teilten ihn sich zu gleichen Teilen
+(seit dem 09.09.). Auf die Frage, ob die Felder schrumpfen oder der Text wachsen soll,
+kam: die Felder.
+
+Die Kette endet jetzt eine Stufe früher. Die Zeile nimmt sich den Platz, damit „Weiter"
+unten stehen bleibt; die Fragekarte darin ist so hoch wie ihr Inhalt, ein einzeiliges Feld
+misst rund 57 Punkte, der Rest bleibt unter der Karte als ruhiger Grund. Bei langen Fragen
+(VD707) und bei Bildantworten ändert sich nichts — die Karte wächst mit dem Text wie zuvor,
+und die Schriftautomatik greift wie zuvor. Eine Zeile CSS.
+
+### Kokoro — eine zweite Sprachausgabe zum Anhören
+
+Dietmar: „Es gibt auch noch andere Stimmen außer Piper. Wäre das was für uns?" — und nach
+dem Vergleich: „Ich würde mir gerne dieses Kokoro in dem Trainer anhören. Kannst du mir
+das einbauen? Würde mir auch noch eine Frauenstimme wünschen."
+
+Von den drei genannten (F5-TTS, Kokoro, Fish-Speech) kommt nur Kokoro-82M für einen
+Rechner ohne Grafikkarte in Frage: 82 Millionen Parameter, Apache 2.0, auf dem Prozessor
+etwa halb so schnell wie Echtzeit. Deutsch kann es nur durch das Nachtraining der
+Gemeinschaft (kokoro-deutsch, 51 Stunden, zwei Stimmen). Von „Martin" gibt es einen
+fertigen ONNX-Export — der wird geholt.
+
+**So läuft es.** Kein Python. Das fertige Programm sherpa-onnx (k2-fsa, Apache 2.0)
+rechnet das Modell und benutzt denselben Lautbildner wie Piper (espeak-ng). Der Trainer
+startet es je Satz wie `piper.exe`, mit demselben Zwischenspeicher, derselben
+Warteschlange und demselben `tts-expand.js` davor — „Wurzel aus P durch R" ist bei beiden
+dieselbe Silbenfolge. Neu sind `kokoro_stimme.js` (holen, umwandeln, starten) und
+`bz2tar.js` (ein eigener Entpacker für `.tar.bz2`, weil Node keins hat und das `tar` von
+Windows 10 je nach Ausgabe auch nicht — gegen `bzcat` Byte für Byte nachgemessen). In
+`Server.js` hängt die Stimme hinter der Piper-Liste, `listVoices()` kennt sie als
+`kokoro/martin`, `/api/tts` startet das andere Programm; das Hörbuch bleibt bei Piper.
+
+**Holen nur auf Klick**, unter *Einstellungen → Vorlesen → Kokoro*: das Laufwerk (20 MB)
+und die Lautdaten (7 MB) von GitHub, das Modell (326 MB) und die Stimmdatei von
+Hugging Face — mit denselben Vorsichtsmaßnahmen wie bei den Piper-Stimmen: nur die
+bekannten Rechnernamen, jede Umleitung geprüft, SHA-256 und Größe aus dem Verzeichnis,
+Zwischenname, dann Umbenennen. Der Export aus Hugging Face ist für ein Python-Paket
+gemacht; die Angaben, die sherpa-onnx im Kopf des Modells braucht, hängt der Trainer
+selbst an (Protobuf erlaubt das), und die Stimmdatei `.npz` wird zur `voices.bin`
+umgeschrieben. Am Ende ein Probelauf. Das ist mit dem amtlichen Kokoro-Modell von
+sherpa-onnx nachgemessen: Modell ohne Kopf + Anhängung + umgeschriebene Stimme = spricht,
+durch den Trainer, mit Zwischenspeicher, 4,5 Sekunden für 10 Sekunden Sprache.
+
+**Die Frauenstimme:** „Victoria" gibt es bei kokoro-deutsch bisher nur als
+PyTorch-Gewichte, nicht als fertigen Export. Der Kasten in den Einstellungen sagt das;
+sobald ein Export da ist, ist es ein Eintrag in der Liste in `kokoro_stimme.js`.
+
+`kokoro/` steht in der `.gitignore` und kommt nicht ins ZIP. `Aufraeumen.bat` fasst den
+Ordner nie an.
+
 ### `Build-DIREKT.bat` baut nur noch das, was veröffentlicht wird
 
 Seit 1.296.0 gibt es kein Setup mehr — `release_hochladen.js` sieht keine EXE, die README
