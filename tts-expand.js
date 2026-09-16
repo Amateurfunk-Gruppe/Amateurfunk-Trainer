@@ -46,6 +46,150 @@ function expandTTS(text){
   // Anfang zu "Lambda" ausgeschrieben, bevor irgendeine andere Regel laeuft.
   t = t.replace(/λ/g, 'Lambda');
 
+  // HTML RAUS, BEVOR PIPER ES LIEST (16.09.2026). Der Katalog unterstreicht
+  // an 29 Stellen ein Wort - "<u>nicht</u> abhaengig" (EC205) -, und die
+  // Anfuehrungszeichen bei AF305 stehen als &bdquo;?&ldquo; im Text. Die
+  // Anzeige setzt das als HTML; die Sprachausgabe bekam es roh und sprach
+  // "u nicht u" und "und bdquo". Gefunden mit der Sprachprobe.
+  t = t.replace(/<\/?[a-zA-Z][^<>]{0,40}>/g, ' ');
+  t = t.replace(/&nbsp;/g, ' ').replace(/&bdquo;/g, '„').replace(/&ldquo;/g, '“')
+       .replace(/&rdquo;/g, '”').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+       .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+
+  // ================================================================
+  // FORMELN HOERBAR MACHEN   (16.09.2026)
+  // ----------------------------------------------------------------
+  // Bei der Nachpruefung des ganzen Katalogs wurde jeder Text durch
+  // diese Funktion und dann durch den Lautbildner von Piper (espeak-ng,
+  // deutsch) geschickt. Ergebnis: Piper laesst Wurzel, Malpunkt,
+  // Bruchstrich und Hochzahlen einfach WEG. Gehoert hat man dann:
+  //
+  //     "U = √(P ⋅ R)"     ->  "U gleich P R"
+  //     "U = √(P/R)"       ->  "U gleich"            (EB504 - Antwort leer!)
+  //     "R = U/I"          ->  "R gleich U I"        (NB503 - wie "R = I/U")
+  //     "10⁻⁶ W"           ->  "zehn W"              (Exponent verschwunden)
+  //     "16 mm²"           ->  "sechzehn Millimeter zwei"
+  //     "28 V/m"           ->  "28 Volt Strich m"    (Regel fuer /m-Rufzeichen)
+  //     "0,22 μF"          ->  "null komma zwei zwei mi ef"
+  //     "14 081,20 kHz"    ->  "vierzehn null einundachtzig komma zwanzig"
+  //
+  // Die Ohmschen Gesetze der Klasse N (NB501-NB503) und die Leistungs-
+  // formeln der Klasse E (EB504-EB506) waren mit dem Ohr nicht zu
+  // unterscheiden - wer das Vorlesen braucht, konnte sie nicht loesen.
+  //
+  // WARUM GANZ OBEN: Weiter unten werden Klammern mit einem einzelnen
+  // Kuerzel darin entfernt ("Volt (V)" -> "Volt"). Das traf auch
+  // "√(P/R)" - die Klammer war leer, bevor jemand die Wurzel sprach.
+  // Hier oben ist aus "(P/R)" schon "P durch R" geworden, und das
+  // bleibt stehen.
+  //
+  // Zu "μ": Der Katalog schreibt das Mikro als griechisches My (U+03BC),
+  // die Einheitenliste unten kennt nur das Mikrozeichen (U+00B5). Deshalb
+  // fanden sich "μF", "μH", "μW" nirgends wieder - 220 Stellen.
+  // ================================================================
+
+  // Zahlengruppen: Das schmale geschuetzte Leerzeichen in "14 081,20"
+  // macht aus einer Zahl zwei. Ohne Trenner liest Piper sie richtig.
+  t = t.replace(/(\d)[   ](?=\d)/g, '$1');
+  t = t.replace(/[   ]/g, ' ');
+
+  // Mikro vereinheitlichen, damit die Einheitenliste es findet.
+  t = t.replace(/μ/g, 'µ');
+
+  // Einheiten mit Bruchstrich - VOR der Regel "/m = Rufzeichenzusatz"
+  // und vor den Hochzahlen (wegen m²). "V/m" ist Feldstaerke, kein
+  // Rufzeichen.
+  const ZAEHLER = { 'V':'Volt','kV':'Kilovolt','mV':'Millivolt','µV':'Mikrovolt',
+    'A':'Ampere','mA':'Milliampere','µA':'Mikroampere','W':'Watt','mW':'Milliwatt',
+    'kW':'Kilowatt','H':'Henry','S':'Siemens','MS':'Megasiemens','J':'Joule','dB':'Dezibel' };
+  const NENNER = { 'm':'Meter','cm':'Zentimeter','mm':'Millimeter','m²':'Quadratmeter',
+    'cm²':'Quadratzentimeter','s':'Sekunde','h':'Stunde','A':'Ampere','km':'Kilometer','Hz':'Hertz' };
+  // Nicht in einer Klammer, die nur das Kuerzel enthaelt: "Volt pro Meter (V/m)"
+  // wird unten ohnehin auf das Wort gekuerzt.
+  t = t.replace(/(?<![A-Za-zÄÖÜäöüß(])(kV|mV|µV|mA|µA|mW|kW|MS|dB|V|A|W|H|S|J)\/(m²|cm²|mm²|cm|mm|km|Hz|m|s|h|A)(?![A-Za-zÄÖÜäöüß)])/g,
+      (m, z, n) => ' ' + ZAEHLER[z] + ' pro ' + NENNER[n] + ' ');
+  t = t.replace(/(?<![A-Za-zÄÖÜäöüß(])(k|M|G)?[Bb]it\/s(?![A-Za-zÄÖÜäöüß)])/g,
+      (m, v) => ' ' + ({ k:'Kilobit', M:'Megabit', G:'Gigabit' }[v] || 'Bit') + ' pro Sekunde ');
+
+  // Hochzahlen. "10⁻⁶" als Ganzes zuerst - wer vorher "²" ersetzt, macht
+  // aus "10⁻¹⁸" ein "zehn hoch minus eins zum Quadrat".
+  const HOCH = { '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9' };
+  const TIEF = { '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9' };
+  const ziffern = (s, tab) => Array.from(s).map(z => tab[z] || '').join('');
+  t = t.replace(/10(⁻?)([⁰¹²³⁴-⁹]+)/g,
+      (m, minus, z) => '10 hoch ' + (minus ? 'minus ' : '') + ziffern(z, HOCH) + ' ');
+  t = t.replace(/\bmm²/g, ' Quadratmillimeter');
+  t = t.replace(/\bcm²/g, ' Quadratzentimeter');
+  t = t.replace(/\bkm²/g, ' Quadratkilometer');
+  t = t.replace(/\bm²/g,  ' Quadratmeter');
+  t = t.replace(/\bmm³/g, ' Kubikmillimeter');
+  t = t.replace(/\bcm³/g, ' Kubikzentimeter');
+  t = t.replace(/\bm³/g,  ' Kubikmeter');
+  t = t.replace(/²/g, ' zum Quadrat ');
+  t = t.replace(/³/g, ' hoch drei ');
+  t = t.replace(/(⁻?)([⁰¹⁴-⁹]+)/g,
+      (m, minus, z) => ' hoch ' + (minus ? 'minus ' : '') + ziffern(z, HOCH) + ' ');
+  // Tiefzahlen: "R₁" -> "R 1". Piper liest sie zwar, aber nicht jede Stimme.
+  t = t.replace(/[₀-₉]+/g, m => ' ' + ziffern(m, TIEF));
+
+  // Griechische Buchstaben mit Namen - Piper schaltet sonst mitten im Satz
+  // auf Griechisch um ("η" -> "ita"). Omega und Lambda haben eigene Regeln.
+  const GRIECHISCH = { 'α':'Alpha','β':'Beta','γ':'Gamma','δ':'Delta','Δ':'Delta','ε':'Epsilon',
+    'η':'Eta','ϑ':'Theta','θ':'Theta','π':'Pi','ρ':'Rho','σ':'Sigma','Σ':'Sigma','τ':'Tau',
+    'φ':'Phi','ϕ':'Phi','Φ':'Phi','ω':'Omega' };
+  t = t.replace(/[αβγδΔεηϑθπρσΣτφϕΦω]/g, (g, i, str) => ' ' + GRIECHISCH[g] + (str[i + 1] === '_' ? '' : ' '));
+  // Ein My ohne Einheit dahinter ("µ_r") ist die Permeabilitaet.
+  t = t.replace(/\u00b5(?![A-Za-z])/g, 'Mü');
+
+  // Wurzel. Eine einfache Klammer dahinter wird gleich aufgeloest, damit die
+  // Klammer-Regel unten sie nicht fuer ein Kuerzel haelt.
+  t = t.replace(/√\s*\(([^()]{1,40})\)/g, ' Wurzel aus $1 ');
+  t = t.replace(/√\s*\(/g, ' Wurzel aus (');
+  t = t.replace(/√/g, ' Wurzel aus ');
+
+  // Malpunkt (beide Schreibweisen) - Piper laesst ihn weg.
+  t = t.replace(/\s*[⋅·∙]\s*/g, ' mal ');
+
+  // Bruchstriche in Formeln. Die Regel ist eng: Rufzeichen ("DL1PZ/T"),
+  // Empfehlungen ("T/R 61-01"), Paare ("A/D-Umsetzer", "und/oder") und
+  // Aktenzeichen ("13/2005") bleiben, wie sie sind.
+  const ZAHLWORT = ['', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'];
+  const TEILWORT = { 2:'halb', 3:'Drittel', 4:'Viertel', 5:'Fünftel', 6:'Sechstel', 7:'Siebtel', 8:'Achtel', 9:'Neuntel' };
+  t = t.replace(/\bT\/R (?=\d)/g, 'T R ');
+  t = t.replace(/\bRX\/TX\b/g, 'RX und TX').replace(/\bTX\/RX\b/g, 'TX und RX');
+  // " / " mit Abstand zwischen zwei Formelzeichen - "L / A_L" (AC207).
+  // Nicht zwischen zwei Groessen mit Einheit: "150 Ω / 1 W" ist eine
+  // Angabe "150 Ohm, 1 Watt", kein Bruch.
+  t = t.replace(/(?<![A-Za-zÄÖÜäöüß0-9])([A-Za-z]|\))\s+\/\s+(?=[A-Za-z(](?![A-Za-zÄÖÜäöüß0-9]))/g, '$1 durch ');
+  t = t.replace(/(?<![\d,.])([1-9])\/([2-9])(?![\d,.])/g,
+      (m, z, n) => ' ' + ZAHLWORT[+z] + ' ' + TEILWORT[+n] + ' ');
+  t = t.replace(/(halb|Drittel|Viertel|Fünftel|Sechstel|Siebtel|Achtel|Neuntel) -(?=[A-Za-z])/g, '$1 ');
+  t = t.replace(/Lambda\s*\/\s*2\b/g, 'Lambda halbe');
+  t = t.replace(/Lambda\s*\/\s*4\b/g, 'Lambda Viertel');
+  t = t.replace(/Lambda\s*\/\s*(\d+)/g, 'Lambda durch $1');
+  t = t.replace(/\)\s*\/\s*/g, ') durch ');
+  t = t.replace(/\/\s*\(/g, ' durch (');
+  t = t.replace(/\/\s*(?=Wurzel)/g, ' durch ');
+  t = t.replace(/(?<![A-Za-zÄÖÜäöüß0-9\-(])([A-Za-z]|\d+(?:[.,]\d+)?)\s*\/\s*([A-Za-z])(?![A-Za-zÄÖÜäöüß0-9\-)])/g, '$1 durch $2');
+
+  // Vergleichs- und Sonderzeichen, die Piper verschluckt oder falsch nennt.
+  // "<" und ">" laesst Piper stumm weg - "d > λ/(2π)" (AK103) war "d Lambda".
+  // Die HTML-Marken sind oben schon entfernt, hier bleiben nur Vergleiche.
+  t = t.replace(/(^|[\s(])<=\s*/g, '$1kleiner gleich ');
+  t = t.replace(/(^|[\s(])>=\s*/g, '$1größer gleich ');
+  t = t.replace(/(^|[\s(])<\s*(?=[\d(A-Za-zλ])/g, '$1kleiner als ');
+  t = t.replace(/(^|[\s(])>\s*(?=[\d(A-Za-zλ])/g, '$1größer als ');
+  // ("Û" wird "U Zirkumflex" - Funker sagen "U Dach").
+  t = t.replace(/∥/g, ' parallel zu ');
+  t = t.replace(/Û/g, 'U Dach').replace(/Î/g, 'I Dach');
+  t = t.replace(/≪/g, ' viel kleiner als ');
+  t = t.replace(/≫/g, ' viel größer als ');
+
+  // Aufzaehlungen "(1) ... (2) ... (3)" (VC124): Die Klammer-Regel unten
+  // wuerde die Ziffern streichen, und die drei Punkte liefen ineinander.
+  const ORDNUNG = ['', 'erstens', 'zweitens', 'drittens', 'viertens', 'fünftens', 'sechstens', 'siebtens', 'achtens', 'neuntens'];
+  t = t.replace(/\((\d)\)(?=\s*[A-ZÄÖÜ])/g, (m, z) => ORDNUNG[+z] + ':');
+
   // ================================================================
   // TIEFGESTELLTE INDIZES UND ZEHNERPOTENZEN   (15.09.2026)
   // ----------------------------------------------------------------
@@ -74,8 +218,8 @@ function expandTTS(text){
   // Der Bindestrich ist dieselbe Technik wie bei DARC weiter unten: er
   // trennt, ohne dass ein Wort dazukommt.
   // ================================================================
-  t = t.replace(/([A-Za-z])_\{([A-Za-z0-9]{1,16})\}/g, '$1 $2');
-  t = t.replace(/([A-Za-z])_([A-Za-z0-9]{1,16})/g, (m, zeichen, index) =>
+  t = t.replace(/([A-Za-zäöüÄÖÜ])_\{([A-Za-z0-9]{1,16})\}/g, '$1 $2');
+  t = t.replace(/([A-Za-zäöüÄÖÜ])_([A-Za-z0-9]{1,16})/g, (m, zeichen, index) =>
       zeichen + ' ' + (/^[A-Z0-9]{2,3}$/.test(index) ? index.split('').join('-') : index));
 
   // Zehnerpotenzen und Exponenten in Klammerschreibweise: "10^(0,5)" wird
@@ -155,6 +299,8 @@ function expandTTS(text){
     const inner = m.slice(1,-1).trim();
     const isPureAbbr = /^[A-Za-zÄÖÜäöü0-9\/\.\-Ωµμ]{1,20}$/.test(inner) && !/\s/.test(inner);
     const isKnownAbbrInParen = /^(RR|IARU|ITU|ETSI|CEPT|BEMFV|AFuG|AFuV|TKG|EMVG|EMV|VDE|VO|ISO|HAREC|ECC|WRC|QSO|QTH|QSL|QRG|QRM|QSB|QRZ|QSY|QRV|CW|SSB|FM|AM|VHF|UHF|SHF|DC|AC|UTC|MEZ|MESZ|BNetzA|WPM|ERP|EIRP|SWR|VSWR|A|V|W|Ah|Ω|Ohm|Hz|kHz|MHz|GHz)$/i.test(inner);
+    // Reine Zahlen bleiben hoerbar - "ECC-Empfehlung (05)06" (16.09.2026).
+    if(/^\d+$/.test(inner)) return ' ' + inner + ' ';
     if(isPureAbbr || isKnownAbbrInParen){
       return ' ';
     }
@@ -179,7 +325,7 @@ function expandTTS(text){
     'kA':'Kiloampere','mA':'Milliampere','µA':'Mikroampere','uA':'Mikroampere',
     'MW':'Megawatt','kW':'Kilowatt','mW':'Milliwatt','µW':'Mikrowatt','uW':'Mikrowatt',
     'MOhm':'Megaohm','kOhm':'Kiloohm','Ohm':'Ohm','µH':'Mikrohenry','uH':'Mikrohenry','mH':'Millihenry','µF':'Mikrofarad','uF':'Mikrofarad','nF':'Nanofarad','pF':'Pikofarad',
-    'dBm':'De Be Em','dBi':'De Be I','dB':'Dezibel','µs':'Mikrosekunden','μs':'Mikrosekunden','us':'Mikrosekunden','ms':'Millisekunden',
+    'dBm':'De Be Em','dBi':'De Be I','dBd':'De Be De','dBµV':'Dezibel Mikrovolt','dB':'Dezibel','Ah':'Amperestunden','mAh':'Milliamperestunden','Wh':'Wattstunden','kWh':'Kilowattstunden','nH':'Nanohenry','kbit':'Kilobit','Mbit':'Megabit','Gbit':'Gigabit','µs':'Mikrosekunden','μs':'Mikrosekunden','us':'Mikrosekunden','ms':'Millisekunden',
     'km/h':'Kilometer pro Stunde','km/s':'Kilometer pro Sekunde','km':'Kilometer','cm':'Zentimeter','mm':'Millimeter','pps':'Perioden pro Sekunde',
     'BEMFV':'Begrenzung von elektromagnetischen Feldern',
     'IARU':'Internationale Amateurfunk Union',
@@ -235,11 +381,21 @@ function expandTTS(text){
     return `${num} Meter`;
   });
 
-  t=t.replace(/(\d+[.,]?\d*)\s*(GHz|MHz|MHZ|kHz|Hz|kV|MV|mV|µV|uV|kA|mA|µA|uA|MW|kW|mW|µW|uW|MOhm|kOhm|µH|uH|mH|µF|uF|nF|pF|dBm|dBi|dB|µs|μs|us|ms|km\/h|km\/s|km|cm|mm|pps)\b/g,(m,num,u)=>`${num} ${map[u]}`);
-
-  t=t.replace(/(\d+[.,]?\d*)\s*W\b/g,(m,n)=>`${n} Watt`);
-  t=t.replace(/(\d+[.,]?\d*)\s*V\b/g,(m,n)=>`${n} Volt`);
-  t=t.replace(/(\d+[.,]?\d*)\s*A\b/g,(m,n)=>`${n} Ampere`);
+  // EINE Liste fuer Zahl + Einheit - sie gilt unten auch fuer den Text in
+  // Klammern. Bis zum 16.09.2026 gab es dort eine zweite, aeltere Kopie,
+  // und "(2 Wh sind 7200 J)" blieb halb buchstabiert (AB503).
+  const EINHEIT_RE = /(\d+[.,]?\d*)\s*(GHz|MHz|MHZ|kHz|Hz|kV|MV|mV|µV|uV|kA|mA|µA|uA|MW|kW|mW|µW|uW|MOhm|kOhm|µH|uH|nH|mH|µF|uF|nF|pF|dBµV|dBm|dBi|dBd|dB|µs|μs|us|ms|km\/h|km\/s|km|cm|mm|pps|mAh|Ah|kWh|Wh|kbit|Mbit|Gbit)\b/g;
+  const einheiten = (s) => s
+    .replace(EINHEIT_RE, (m,num,u)=>`${num} ${map[u]||u}`)
+    .replace(/(\d+[.,]?\d*)\s*W\b/g,(m,n)=>`${n} Watt`)
+    .replace(/(\d+[.,]?\d*)\s*V\b/g,(m,n)=>`${n} Volt`)
+    .replace(/(\d+[.,]?\d*)\s*A\b/g,(m,n)=>`${n} Ampere`)
+    .replace(/(\d+[.,]?\d*)\s*J\b/g,(m,n)=>`${n} Joule`);
+  t=einheiten(t);
+  // Mikro-Einheiten ohne Zahl davor ("von µF nach nF") und die
+  // Permeabilitaet "µr" (16.09.2026).
+  t=t.replace(/µ(F|H|A|V|W|s)\b/g,(m,u)=>({F:'Mikrofarad',H:'Mikrohenry',A:'Mikroampere',V:'Mikrovolt',W:'Mikrowatt',s:'Mikrosekunden'})[u]);
+  t=t.replace(/µr\b/g,'Mü r');
 
   // FIX Q6: Rufzeichenzusaetze "/m" (mobil) und "/mm" (maritim mobil).
   // Im Fragenkatalog geht es dabei NICHT um die Einheit "pro Meter",
@@ -318,6 +474,12 @@ function expandTTS(text){
   paren.forEach((p,i)=>{
     let inner=p;
     inner=inner.replace(/(\d+[.,]?\d*)\s*(MHz|kHz|Hz|GHz)\b/g,(m,num,u)=>`${num} ${map[u]||u}`);
+    // Auch die uebrigen Einheiten in Klammern - "(100 V)" hiess bis zum
+    // 16.09.2026 "hundert fau" (16.09.2026).
+    inner=einheiten(inner);
+    inner=inner.replace(/kΩ/g, 'Kilo Ohm');
+    inner=inner.replace(/MΩ/g, 'Mega Ohm');
+    inner=inner.replace(/Ω/g, 'Ohm');
     t=t.replace(`__P${i}__`,inner);
   });
 

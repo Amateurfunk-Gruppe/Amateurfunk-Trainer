@@ -1515,7 +1515,7 @@
     "id": "VC124",
     "part": "vorschriften",
     "class": "1",
-    "text": "Welche der folgenden Handlungen sind Ordnungswidrigkeiten im Sinne des Amateurfunkgesetzes (AFuG) und können mit Bußgeldern von bis zu 5000 bzw. 10 000 Euro geahndet werden?",
+    "text": "Welche der folgenden Handlungen sind Ordnungswidrigkeiten im Sinne des Amateurfunkgesetzes (AFuG) und können mit Bußgeldern von bis zu 5000 bzw. 10000 Euro geahndet werden?",
     "options": [
       {
         "text": "(1) Überschreiten der zulässigen Sendeleistung; (2) Dauerhafte Verlegung der Amateurfunkstelle an einen anderen Standort; (3) Funkbetrieb ohne Mitführen der Zulassungsurkunde",
@@ -2187,7 +2187,7 @@
     "id": "VD204",
     "part": "vorschriften",
     "class": "1",
-    "text": "Warum ist „DL250 BTHVN“ ein zulässiges deutsches Amateurfunkrufzeichen?",
+    "text": "Warum ist „DL250BTHVN“ ein zulässiges deutsches Amateurfunkrufzeichen?",
     "options": [
       {
         "text": "Weil der Rufzeichenplan zu besonderen allgemeinen Anlässen auch Rufzeichen mit bis zu 7 Zeichen langem Suffix vorsieht, der Ziffern enthalten kann und mit einem Buchstaben endet.",
@@ -8439,7 +8439,7 @@
         "correct": false
       },
       {
-        "text": "Ich freue mich auf eine Antwort aus 7 R - Algerien.",
+        "text": "Ich freue mich auf eine Antwort aus 7R - Algerien.",
         "image": null,
         "correct": false
       },
@@ -9383,7 +9383,7 @@
     "id": "BE309",
     "part": "betrieb",
     "class": "1",
-    "text": "Was bedeutet es, wenn eine begehrte Station CQ ruft und den Anruf mit „split up 14 270 to 14 280“ beendet? Die Station ...",
+    "text": "Was bedeutet es, wenn eine begehrte Station CQ ruft und den Anruf mit „split up 14270 to 14280“ beendet? Die Station ...",
     "options": [
       {
         "text": "hört oberhalb ihrer Sendefrequenz auf wechselnden Frequenzen im angegebenen Bereich.",
@@ -9414,7 +9414,7 @@
     "text": "Eine Station gibt am Ende ihres CQ-Rufes „5 up“. Was bedeutet diese Angabe und was ist zu beachten?",
     "options": [
       {
-        "text": "Die rufende Station behandelt meinen Anruf an 5 ter Stelle. Ich muss also bei meinem Anruf 4 andere Funkverbindungen abwarten.",
+        "text": "Die rufende Station behandelt meinen Anruf an 5ter Stelle. Ich muss also bei meinem Anruf 4 andere Funkverbindungen abwarten.",
         "image": null,
         "correct": false
       },

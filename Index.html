@@ -22191,7 +22191,7 @@ function formelHtml(text){
     const ablage = [];
     const halten = (html) => { ablage.push(html); return '@@' + (ablage.length - 1) + '@@'; };
     // Zeichen, die zu einem ungeklammerten Zaehler oder Nenner gehoeren.
-    const TEIL = /[A-Za-z0-9@πλ²³⁰-⁹₀-₉_^{}.,]/;
+    const TEIL = /[\p{L}\p{N}@²³⁰-⁹₀-₉_^{}.,]/u;
 
     const klammerZu = (t, von) => {
         let tief = 0;
@@ -22246,6 +22246,12 @@ function formelHtml(text){
                 let a = l;
                 while(a >= 0 && TEIL.test(s[a])) a--;
                 zStart = a + 1; zText = s.slice(a + 1, l + 1);
+                // Steht vor dem Lauf eine Klammer - "(100 V)²" -, gehoert
+                // sie zum Zaehler. Sonst bliebe nur das ² uebrig (AI305).
+                if(a >= 0 && s[a] === ')'){
+                    const o = klammerAuf(s, a);
+                    if(o >= 0){ zStart = o; zText = s.slice(o, l + 1); zKlammer = true; }
+                }
             }
             let r = i + 1;
             while(r < s.length && s[r] === ' ') r++;
@@ -22261,6 +22267,14 @@ function formelHtml(text){
             }
             if(!zText || !nText) continue;
             if(!zKlammer && !nKlammer) continue;     // "bit/s" bleibt "bit/s"
+            // Prosa in Klammern ist kein Bruch: "(von +13 V) / 33 Ω (nach
+            // Masse)" - ein kleingeschriebenes Wort mit Leerzeichen davor
+            // kommt in einer Formel nicht vor, wohl aber in einem Satz.
+            const WORT = /(^|\s)[a-zäöüß]{3,}(\s|$)/;
+            if((zKlammer && WORT.test(zText)) || (nKlammer && WORT.test(nText))) continue;
+            // "ECC/REC/(05)06": haengt an der Klammer noch etwas dran, ist es
+            // eine Kennung und kein Nenner.
+            if(nKlammer && nEnde + 1 < s.length && /[\p{L}\p{N}]/u.test(s[nEnde + 1])) continue;
             s = s.slice(0, zStart)
               + halten('<span class="fm-bruch"><span class="fm-z">' + zText
                        + '</span><span class="fm-n">' + nText + '</span></span>')
@@ -22293,7 +22307,7 @@ function formelHtml(text){
                   (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
     s = s.replace(new RegExp(VOR + '\\^\\(([^)]{1,20})\\)', 'g'),
                   (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
-    s = s.replace(new RegExp(VOR + '\\^(-?[A-Za-z0-9][A-Za-z0-9,.]{0,7})', 'g'),
+    s = s.replace(new RegExp(VOR + '\\^(-?\\d+(?:[.,]\\d+)?|[A-Za-z])', 'g'),
                   (m, v, x) => v + '<span class="fm-exp">' + x + '</span>');
     return s;
 }

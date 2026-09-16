@@ -3,8 +3,8 @@
 Entwickler und Urheber: Dietmar Reh. Lizenz: [PolyForm Noncommercial 1.0.0](LICENSE).
 
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), SemVer.
-Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie von hier,
-`Build-DIREKT.bat` übernimmt sie in EXE-Name, Dateieigenschaften und `package.json`.
+Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie von hier
+und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Namen des Windows-ZIP.
 
 ---
 
@@ -146,6 +146,95 @@ Speichert der Browser eine Datei, die es im Ordner schon gibt, hängt Windows �
 „ (1)" an den Namen. So lagen sechs Fragendateien als `fragen-1.json` usw. neben den
 alten — der Trainer las sie nicht, und `Hochladen.bat` hätte sie mit auf GitHub genommen.
 Die `.gitignore` lässt solche Reste jetzt nicht mehr durch.
+
+### Nachprüfung am 16.09. — Formeln waren mit dem Ohr nicht zu unterscheiden
+
+Dietmar: „Möchtest du nochmal alles prüfen, ob du einen Fehler in irgendeiner Art findest?"
+Also noch einmal von vorn: alle 1750 Fragen gegen das PDF, alle Erklärungen gegen die
+Antworttexte, alle Skriptblöcke durch den Parser, der Trainer im Browser mit genau den
+Dateien, die auf dem Rechner liegen — und zum ersten Mal **jeder Text durch die
+Sprachausgabe**, so wie Piper ihn bekommt. 37 536 Texte, geprüft mit dem Lautbildner von
+Piper (espeak-ng, deutsch).
+
+**Das Ergebnis der Sprachprobe war deutlich.** Piper lässt Wurzel, Malpunkt, Bruchstrich
+und Hochzahlen einfach weg — nicht falsch gesprochen, sondern gar nicht:
+
+```
+U = √(P ⋅ R)      ->  „U gleich P R"
+U = √(P/R)        ->  „U gleich"                     (EB504, Antwort B: leer)
+R = U/I           ->  „R gleich U I"                 (NB503 — klingt wie R = I/U)
+10⁻⁶ W            ->  „zehn W"                       (der Exponent fehlt)
+16 mm²            ->  „sechzehn Millimeter zwei"
+28 V/m            ->  „28 Volt Strich m"             (die Regel für Rufzeichen „/m")
+0,22 μF           ->  „null komma zwei zwei mi ef"   (220 Stellen)
+14 081,20 kHz     ->  „vierzehn null einundachtzig komma zwanzig"
+```
+
+Die Ohmschen Gesetze der Klasse N (NB501–NB503) und die Leistungsformeln der Klasse E
+(EB504–EB506) waren beim Vorlesen nicht zu unterscheiden — wer das Vorlesen braucht,
+konnte sie nicht lösen. Bei „μF" lag es an einem Zeichen: Der Katalog schreibt das Mikro
+als griechisches My, die Einheitenliste kannte nur das Mikrozeichen. Und die Zahlengruppen
+mit schmalem Leerzeichen („14 081,20"), die seit gestern wie in der Prüfung aussehen, las
+Piper als zwei Zahlen. Dieselbe Ursache hatte noch eine zweite Folge: „10 100–10 150 kHz"
+wurde nicht als Spanne erkannt, das „bis" fehlte.
+
+Jetzt heißt es „U gleich Wurzel aus P mal R", „R gleich U durch I", „10 hoch minus 6
+Watt", „16 Quadratmillimeter", „28 Volt pro Meter", „0,22 Mikrofarad",
+„14081,20 Kilohertz" und „10100 bis 10150 Kilohertz". Dazu „λ/4" als „Lambda Viertel",
+„5/8" als „fünf Achtel", „η" als „Eta" statt griechisch „ita", „Û" als „U Dach" statt
+„U Zirkumflex", „R₁ ∥ R₂" als „R 1 parallel zu R 2", „≪" als „viel kleiner als", und die
+Aufzählung „(1) … (2) … (3)" in VC124 als „erstens, zweitens, drittens" — die Ziffern in
+Klammern fielen vorher der Regel zum Opfer, die „Volt (V)" auf „Volt" kürzt. Amperestunden,
+Wattstunden, Nanohenry, dBd und Megabit werden ausgeschrieben. Rufzeichen („DL1PZ/T"),
+Empfehlungen („T/R 61-01"), Paare („A/D-Umsetzer", „und/oder") und Aktenzeichen
+(„13/2005") bleiben, wie sie sind — die Regel für den Bruchstrich ist absichtlich eng.
+Alles in `tts-expand.js`, damit es für Fragen und Erklärungen gleichermaßen gilt.
+
+**Sechs Stellen im Katalog** hatten die Zifferngruppierung von gestern zu weit getrieben
+oder waren in `fragen.json` anders als in den Klassendateien: BE309 „14 270 to 14 280" →
+„14270 to 14280" (das PDF gruppiert dort nicht), VC124 „10 000 Euro" → „10000 Euro",
+BE310 „an 5 ter Stelle" → „an 5ter Stelle", BE103 „aus 7 R - Algerien" → „aus 7R -
+Algerien", VD204 „DL250 BTHVN" → „DL250BTHVN", NG208 „2 m Amateurfunkstation" →
+„2 m-Amateurfunkstation". Die Erklärungen sind nachgezogen.
+
+**Die Formeldarstellung ist nachgeschärft**, nachdem alle 24 581 Texte durch sie gelaufen
+sind: „(100 V)²" behält die Klammer im Zähler (AI305), „Û²" wird nicht zerrissen, ein
+Exponent nimmt das Satzzeichen nicht mit, und ein Schrägstrich im Fließtext („REC/(05)06",
+„von +13 V) / 33 Ω") wird nicht mehr zum Bruch.
+
+### Die Sprachprobe läuft jetzt bei jedem Bau
+
+Dietmar: „Gut, dann bau die Sprachprobe auch in Build-DIREKT.bat ein." Die Probe von oben
+ist jetzt eine Datei, `sprachprobe.js`: Sie schickt jeden Text des Katalogs und der
+Erklärungen (44 141) durch `tts-expand.js` und sieht nach, was danach noch dasteht und von
+Piper nachweislich verschluckt wird — Wurzel, Malpunkt, Bruchstrich in einer Formel, Hoch-
+und Tiefzahlen, Unterstrich, griechische Buchstaben, HTML-Marken, Einheiten ohne Wort,
+Zahlengruppen mit schmalem Leerzeichen, `<` und `>`. `Build-DIREKT.bat` ruft sie als
+Schritt 3 auf, vor dem Packen; bei Fundstellen fragt er, ob trotzdem gebaut werden soll,
+die Liste mit Textausschnitt liegt in `_Sprachprobe.txt`. Von Hand: `node sprachprobe.js`.
+
+Der erste Lauf fand gleich sieben Stellen: An 29 Stellen unterstreicht der Katalog ein
+Wort — „<u>nicht</u> abhängig" (EC205) —, und Piper sprach „u nicht u"; bei AF305 stand
+„und bdquo" für die Anführungszeichen. „<" und „>" waren stumm („d > λ/(2π)" in AK103 war
+„d Lambda"). „7200 J" war „jot", und in Klammern galt noch eine ältere Einheitenliste
+(„(2 Wh sind 7200 J)" in AB503). „RX/TX" und „√(L / A_L)" (AC207) blieben halb. Alles in
+`tts-expand.js` behoben; der zweite Lauf ist leer.
+
+### `Build-DIREKT.bat` baut nur noch das, was veröffentlicht wird
+
+Seit 1.296.0 gibt es kein Setup mehr — `release_hochladen.js` sieht keine EXE, die README
+sagt „Warum kein Setup mehr?". `Build-DIREKT.bat` baute es trotzdem weiter: Es verlangte
+Inno Setup 7, `cloudflared.exe` und `Tts-Expand.js`, brach ohne sie ab und rechnete
+einige Minuten an einer EXE, die niemand hochlud. Auf jedem anderen Rechner als dem, auf
+dem es entstand, wäre es an der ersten Prüfung gescheitert, bevor das ZIP an der Reihe war.
+
+Der Abschnitt ist ausgebaut. Geprüft wird jetzt, was das **ZIP** braucht — und zwar
+namentlich, denn beim Packen wird mit „wenn vorhanden" kopiert, und eine fehlende
+Fragendatei wäre dort nicht aufgefallen: die Programmdateien, alle sechs Fragendateien,
+`erklaerungen.json`, die Zeichnungen, `node\node.exe`, die Servermodule, Piper mit
+mindestens einer Stimme. Dazu ein Hinweis, wenn doppelte Downloads („fragen-1.json") im
+Ordner liegen. `installer.iss` bleibt liegen, als Vorlage für den Fall, dass es je wieder
+ein Setup geben soll.
 
 ### Der Fragenkatalog ist vollständig erklärt
 

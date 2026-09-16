@@ -10887,8 +10887,8 @@
       "gruppe": "q-gruppen",
       "warum_falsch": {
         "Ich antworte: „Bitte QSL!“": "QSL bestätigt einen Empfang. Bestätigt ist hier aber noch nichts — es ist nicht einmal klar, ob der Anruf an einen selbst ging.",
-        "Ich freue mich auf eine Antwort aus 7 R - Algerien.": "„7 Romeo Whiskey\" ist buchstabiertes Rufzeichenende, kein Landeskenner. Und ein Landeskenner steht immer am Anfang eines Rufzeichens, nicht am Ende.",
-        "Ich antworte: „Bitte QSY!“.": "QSY bittet um einen Frequenzwechsel. Dafür gibt es keinen Grund — zuerst muss geklärt werden, wer wen gerufen hat."
+        "Ich antworte: „Bitte QSY!“.": "QSY bittet um einen Frequenzwechsel. Dafür gibt es keinen Grund — zuerst muss geklärt werden, wer wen gerufen hat.",
+        "Ich freue mich auf eine Antwort aus 7R - Algerien.": "„7 Romeo Whiskey\" ist buchstabiertes Rufzeichenende, kein Landeskenner. Und ein Landeskenner steht immer am Anfang eines Rufzeichens, nicht am Ende."
       }
     },
     "BE107": {
@@ -12025,7 +12025,7 @@
       }
     },
     "BE309": {
-      "frage": "Was bedeutet es, wenn eine begehrte Station CQ ruft und den Anruf mit „split up 14 270 to 14 280“ beendet? Die Station ...",
+      "frage": "Was bedeutet es, wenn eine begehrte Station CQ ruft und den Anruf mit „split up 14270 to 14280“ beendet? Die Station ...",
       "richtig": "hört oberhalb ihrer Sendefrequenz auf wechselnden Frequenzen im angegebenen Bereich.",
       "kniff": "Split heißt: senden und hören auf verschiedenen Frequenzen. Die Station sendet weiter dort, wo sie gerufen hat, und hört im genannten Bereich; „up“ sagt, dass dieser Bereich oberhalb liegt. So vereinbart ist das, weil die vielen Anrufer sich dann über 10 kHz verteilen und die begehrte Station auf ihrer eigenen Frequenz frei hörbar bleibt.",
       "gruppe": "betriebsabwicklung",
@@ -12041,9 +12041,9 @@
       "kniff": "Zerlege die Angabe: „5“ ist der Abstand in Kilohertz, „up“ die Richtung nach oben. Die Station hört also 5 kHz über ihrer Sendefrequenz, und genau dort musst du senden, während du sie weiter auf ihrer Frequenz hörst. Zwei falsche Antworten deuten die 5 als Anzahl oder als Minuten, eine vertauscht Senden und Hören.",
       "gruppe": "betriebsabwicklung",
       "warum_falsch": {
-        "Die rufende Station behandelt meinen Anruf an 5 ter Stelle. Ich muss also bei meinem Anruf 4 andere Funkverbindungen abwarten.": "Liest die 5 als Platz in einer Warteschlange. Beim Split geht es um einen Frequenzabstand; Nummern werden nicht vergeben, und niemand könnte sie zählen.",
         "Die rufende Station hört 5 Minuten später auf ihrer eigenen Sendefrequenz. Ich muss also bei meinem Anruf 5 Minuten später senden und vorher prüfen, ob die Frequenz frei ist.": "Deutet die 5 als Zeitangabe. „up“ ist eine Richtung im Band und hat mit der Uhr nichts zu tun; eine Station, die 5 Minuten schweigt, findet ihre Frequenz danach meist besetzt.",
-        "Die rufende Station sendet 5 kHz oberhalb ihrer eigenen Sendefrequenz. Ich muss also bei meinem Anruf 5 kHz höher empfangen und vorher prüfen, ob die Frequenz frei ist.": "Vertauscht Senden und Hören — und widerspricht sich dabei selbst: eine Station kann nicht 5 kHz oberhalb ihrer eigenen Sendefrequenz senden. Die Sendefrequenz bleibt, die Hörfrequenz ist verschoben."
+        "Die rufende Station sendet 5 kHz oberhalb ihrer eigenen Sendefrequenz. Ich muss also bei meinem Anruf 5 kHz höher empfangen und vorher prüfen, ob die Frequenz frei ist.": "Vertauscht Senden und Hören — und widerspricht sich dabei selbst: eine Station kann nicht 5 kHz oberhalb ihrer eigenen Sendefrequenz senden. Die Sendefrequenz bleibt, die Hörfrequenz ist verschoben.",
+        "Die rufende Station behandelt meinen Anruf an 5ter Stelle. Ich muss also bei meinem Anruf 4 andere Funkverbindungen abwarten.": "Liest die 5 als Platz in einer Warteschlange. Beim Split geht es um einen Frequenzabstand; Nummern werden nicht vergeben, und niemand könnte sie zählen."
       }
     },
     "BE311": {
@@ -13570,7 +13570,7 @@
       }
     },
     "VD204": {
-      "frage": "Warum ist „DL250 BTHVN“ ein zulässiges deutsches Amateurfunkrufzeichen?",
+      "frage": "Warum ist „DL250BTHVN“ ein zulässiges deutsches Amateurfunkrufzeichen?",
       "richtig": "Weil der Rufzeichenplan zu besonderen allgemeinen Anlässen auch Rufzeichen mit bis zu 7 Zeichen langem Suffix vorsieht, der Ziffern enthalten kann und mit einem Buchstaben endet.",
       "kniff": "Der Rufzeichenplan lässt zu besonderen Anlässen ein längeres Suffix zu — bis zu sieben Zeichen, es darf Ziffern enthalten und muss mit einem Buchstaben enden. „250 BTHVN“ erfüllt genau das. Es ist also keine Ausnahme und keine Sonderverfügung, sondern eine Regel, die im Plan selbst steht.",
       "gruppe": "rufzeichen",
@@ -14076,7 +14076,7 @@
       }
     },
     "VC124": {
-      "frage": "Welche der folgenden Handlungen sind Ordnungswidrigkeiten im Sinne des Amateurfunkgesetzes (AFuG) und können mit Bußgeldern von bis zu 5000 bzw. 10 000 Euro geahndet werden?",
+      "frage": "Welche der folgenden Handlungen sind Ordnungswidrigkeiten im Sinne des Amateurfunkgesetzes (AFuG) und können mit Bußgeldern von bis zu 5000 bzw. 10000 Euro geahndet werden?",
       "richtig": "(1) Betrieb ohne Zulassung und Zuteilung eines Rufzeichens; (2) Geschäftsmäßiges Erbringen von Telekommunikationsdiensten; (3) Nachrichtenübermittlung an Dritte",
       "kniff": "Bußgeld bedeutet Ordnungswidrigkeit, nicht Straftat, und die Frage prüft, ob du die drei Tatbestände des AFuG kennst: Betrieb ohne Zulassung und ohne zugeteiltes Rufzeichen, geschäftsmäßiges Erbringen von Telekommunikationsdiensten, Nachrichtenübermittlung an Dritte. Es sind genau die Verstöße gegen die Grundsätze, die aus dem Zweck folgen — wer keine Erlaubnis hat, wer Dienste verkauft, wer für Fremde übermittelt. Halte jede Dreiergruppe daneben: alle anderen Aufzählungen nennen betriebliche und technische Einzelheiten, also Pflichten aus anderen Vorschriften, und lassen alle drei Tatbestände des Gesetzes aus.",
       "gruppe": "afug",
