@@ -21357,7 +21357,21 @@ async function playTTSSegment(seg, token){
     // 1. PIPER MUSS VERWENDET WERDEN WENN PIPER STIMME GEWÄHLT IST
     try{
         console.log('[TTS] PIPER GEWÄHLT:', selectedVoice, 'Text:', seg.text.substring(0,60));
-        const res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice})});
+        // AUSGELASTET HEISST WARTEN, NICHT AUFGEBEN (15.09.2026). Dietmar
+        // bekam bei AC519 ein Fehlerfenster "Sprachausgabe gerade
+        // ausgelastet" - weil neben der Frage noch die Knopf-Ansagen
+        // sprachen und der Server nur zwei piper.exe zugleich zulaesst.
+        // Der Server stellt solche Anfragen seit heute in eine Reihe;
+        // kommt trotzdem ein 429, ist die Reihe voll - dann kurz warten
+        // und noch einmal, statt dem Lernenden ein Fenster hinzustellen.
+        let res;
+        for(let versuch = 0; ; versuch++){
+            res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice})});
+            if(res.status !== 429 || versuch >= 4) break;
+            console.warn('[TTS] ausgelastet - warte kurz und versuche es noch einmal (' + (versuch+1) + ')');
+            await new Promise(r => setTimeout(r, 800 * (versuch + 1)));
+            if(token!==ttsQueueToken) return;
+        }
         console.log('[TTS] Server Status:', res.status, 'Content-Type:', res.headers.get('content-type'));
         if(token!==ttsQueueToken) return;
         if(res.ok){
@@ -21430,6 +21444,13 @@ async function playTTSSegment(seg, token){
                     'Ein Abschnitt war zu lang für die Sprachausgabe und wurde '
                     + 'übersprungen. Die Stimme ist in Ordnung — es ist ein Fehler '
                     + 'im Trainer. Bitte melden.');
+                return;
+            }
+            // Auch nach dem Warten noch ausgelastet: dieses Stueck faellt aus,
+            // die Reihe geht weiter. Kein Fenster - das stuende mitten in der
+            // Frage und muesste weggeklickt werden.
+            if(res.status === 429){
+                console.warn('[TTS] Stueck uebersprungen - Sprachausgabe dauerhaft ausgelastet');
                 return;
             }
             if(isPiperVoice){

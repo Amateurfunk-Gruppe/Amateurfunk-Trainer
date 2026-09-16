@@ -3556,6 +3556,69 @@ const TTS_MAX_PER_MINUTE = 60;    // NEUE Synthesen pro Client und Minute (Cache
 let ttsActive = 0;
 const ttsRateMap = new Map();
 
+// ================================================================
+//  WARTEN STATT ABSAGEN   (15.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar am 15.09.2026, mit Bildschirmfoto von AC519: ein Fenster
+//  "Piper meldet einen Fehler: Sprachausgabe gerade ausgelastet.
+//  Bitte einen Moment warten." - mitten in der Frage, modal, mit
+//  OK-Knopf.
+//
+//  Was dahinter steckte: Die Frage wird in Stuecken gesprochen, und
+//  wer dabei mit der Maus ueber die Knoepfe faehrt, loest mit
+//  "Knoepfe vorlesen" weitere Anfragen aus. Jede davon ist ein
+//  eigener piper.exe-Prozess. Die dritte Anfrage traf auf zwei
+//  laufende Prozesse (TTS_MAX_PARALLEL) und bekam ein glattes Nein -
+//  und aus dem Nein machte der Browser ein Fehlerfenster.
+//
+//  Das Nein war nie der Sinn der Grenze. Die Grenze soll den Rechner
+//  vor hundert gleichzeitigen piper.exe schuetzen, nicht die dritte
+//  Anfrage abweisen. Deshalb wartet eine Anfrage jetzt kurz auf einen
+//  freien Platz, statt abgelehnt zu werden. Abgelehnt wird erst, wenn
+//  die Warteschlange voll ist oder das Warten zu lange dauert - das
+//  ist der Fall "hundert Anfragen", nicht der Fall "dritter Satz".
+//
+//  Geht der Browser waehrend des Wartens weg (naechste Frage, Vorlesen
+//  angehalten), wird der Eintrag ausgetragen. Sonst spraeche Piper
+//  spaeter fuer niemanden.
+// ================================================================
+const TTS_MAX_WARTEND     = 16;      // Anfragen, die auf einen Platz warten duerfen
+const TTS_MAX_WARTEZEIT_MS = 25000;  // laenger wartet niemand auf einen Satz
+const ttsWarteschlange = [];
+
+function ttsPlatzHolen(req, res){
+  return new Promise((resolve, reject) => {
+    if(ttsActive < TTS_MAX_PARALLEL){ ttsActive++; return resolve(); }
+    if(ttsWarteschlange.length >= TTS_MAX_WARTEND) return reject(new Error('voll'));
+    const eintrag = { resolve, reject, timer: null, weg: false };
+    const austragen = () => {
+      const i = ttsWarteschlange.indexOf(eintrag);
+      if(i >= 0) ttsWarteschlange.splice(i, 1);
+      clearTimeout(eintrag.timer);
+    };
+    eintrag.timer = setTimeout(() => { austragen(); reject(new Error('zeit')); }, TTS_MAX_WARTEZEIT_MS);
+    // Der Browser hat die Anfrage aufgegeben - dann wartet hier niemand mehr.
+    // Gehorcht wird der ANTWORT, nicht der Anfrage: req meldet 'close' schon,
+    // sobald der Text eingelesen ist (Node 16+), und das waere hier jedes Mal.
+    // res meldet 'close' erst, wenn die Verbindung weg ist - solange wir noch
+    // nichts gesendet haben, heisst das: der Browser ist gegangen.
+    res.on('close', () => { if(!eintrag.weg){ eintrag.weg = true; austragen(); reject(new Error('weg')); } });
+    ttsWarteschlange.push(eintrag);
+  });
+}
+function ttsPlatzFrei(){
+  ttsActive = Math.max(0, ttsActive - 1);
+  while(ttsWarteschlange.length){
+    const n = ttsWarteschlange.shift();
+    clearTimeout(n.timer);
+    if(n.weg) continue;
+    n.weg = true;
+    ttsActive++;
+    n.resolve();
+    break;
+  }
+}
+
 function clientKey(req){
   return String(req.headers['cf-connecting-ip'] || req.ip || 'unbekannt');
 }
@@ -3579,7 +3642,7 @@ app.post('/api/tts-preview',(req,res)=>{
   const txt=String(req.body.text||'').slice(0, TTS_MAX_TEXT_LEN);
   res.json({original:txt, expanded:expandTTS(txt)});
 });
-app.post('/api/tts',(req,res)=>{
+app.post('/api/tts',async (req,res)=>{
   let text=String(req.body.text||'').trim(); if(!text) return res.status(400).json({error:'Kein Text'});
   // FIX K5: Laengenbegrenzung
   if(text.length > TTS_MAX_TEXT_LEN){
@@ -3609,18 +3672,24 @@ app.post('/api/tts',(req,res)=>{
     console.warn('[TTS] Rate-Limit erreicht fuer', clientKey(req));
     return res.status(429).json({error:'Zu viele neue Vorlese-Anfragen. Bitte kurz warten.'});
   }
-  // FIX K5: Begrenzung der gleichzeitig laufenden piper.exe-Prozesse
-  if(ttsActive >= TTS_MAX_PARALLEL){
-    console.warn(`[TTS] Abgelehnt - bereits ${ttsActive} Prozesse aktiv`);
+  // FIX K5: Begrenzung der gleichzeitig laufenden piper.exe-Prozesse -
+  // seit dem 15.09.2026 als Warteschlange, siehe oben bei ttsPlatzHolen.
+  try{
+    await ttsPlatzHolen(req, res);
+  }catch(e){
+    if(e.message === 'weg') return;          // Browser ist schon weiter, keine Antwort noetig
+    console.warn(`[TTS] Abgelehnt (${e.message}) - ${ttsActive} Prozesse aktiv, ${ttsWarteschlange.length} wartend`);
     return res.status(429).json({error:'Sprachausgabe gerade ausgelastet. Bitte einen Moment warten.'});
   }
+  // Waehrend des Wartens kann sich der Cache gefuellt haben - dieselbe
+  // Antwort, die schon einmal gefragt wurde, spricht Piper nicht zweimal.
+  if(fs.existsSync(out)){ ttsPlatzFrei(); console.log(`[TTS] Cache Hit ${hash} (nach Warten)`); res.setHeader('Content-Type','audio/wav'); return res.sendFile(out); }
   const piper=findPiper();
   console.log(`[TTS] ${piper.type} Model:${voice.file} Text:${original.slice(0,60)} -> ${text.slice(0,80)}`);
   let proc,done=false,err='';
-  // Slot belegen und garantiert genau einmal wieder freigeben
-  ttsActive++;
+  // Platz ist belegt (ttsPlatzHolen) und wird garantiert genau einmal wieder frei
   let slotReleased = false;
-  const releaseTtsSlot = ()=>{ if(slotReleased) return; slotReleased = true; ttsActive = Math.max(0, ttsActive-1); };
+  const releaseTtsSlot = ()=>{ if(slotReleased) return; slotReleased = true; ttsPlatzFrei(); };
   const opts={cwd:PIPER_DIR, env:{...process.env, PYTHONIOENCODING:'utf-8', PYTHONUTF8:'1'}};
   // FIX K7: spawn selbst kann synchron werfen - dann wuerde der Slot fuer immer belegt bleiben
   try{

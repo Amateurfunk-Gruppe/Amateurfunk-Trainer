@@ -103,6 +103,50 @@ Erklärungen war der Index bis jetzt auf drei Zeichen begrenzt — „P_Sender" 
 „P_Verluste" rutschten samt Unterstrich durch.
 
 
+### Die Sprachausgabe sagt nicht mehr Nein
+
+Dietmar bekam bei AC519 ein Fehlerfenster mitten in der Frage: „Piper meldet einen
+Fehler: Sprachausgabe gerade ausgelastet. Bitte einen Moment warten." — modal, mit
+OK-Knopf.
+
+Der Server lässt aus gutem Grund nur zwei `piper.exe` zugleich laufen (FIX K5, sonst
+könnten hundert Anfragen den Rechner erschöpfen). Bisher bekam aber schon die dritte
+Anfrage ein glattes Nein — und die dritte kommt schnell zusammen: die Frage wird in
+Stücken gesprochen, und wer dabei mit der Maus über die Knöpfe fährt, löst mit „Knöpfe
+vorlesen" weitere Anfragen aus. Aus dem Nein machte der Browser ein Fehlerfenster.
+
+Jetzt **wartet** eine Anfrage auf einen freien Platz, statt abgewiesen zu werden.
+Abgewiesen wird erst, wenn sechzehn Anfragen warten oder eine länger als 25 Sekunden —
+das ist der Fall „hundert Anfragen", nicht der Fall „dritter Satz". Geht der Browser
+während des Wartens weiter (nächste Frage, Vorlesen angehalten), wird der Eintrag
+ausgetragen; Piper spricht dann nicht für niemanden. Und kommt trotzdem einmal ein
+Nein, versucht es der Browser bis zu viermal mit kurzer Pause noch einmal, bevor er das
+Stück auslässt — ein Fenster gibt es dafür nicht mehr.
+
+Nachgemessen mit acht gleichzeitigen Anfragen: alle acht beantwortet, keine abgewiesen,
+zwei zugleich in Arbeit. Eine abgebrochene Anfrage in der Reihe wird nicht mehr
+gesprochen, die nächste dahinter schon.
+
+### START.sh findet node im Ordner und den fremden Server auf dem Port
+
+„Bei Start.sh kommt kurz das Terminal, danach nichts mehr." — die Datei suchte node nur
+im System; unter Windows liegt es aber im Trainer-Ordner unter `node\node.exe`. Jetzt
+sucht sie dort zuerst, und kein Fenster schließt sich mehr wortlos.
+
+Und: „Es gibt einen gewaltigen Unterschied zwischen start.sh und start.bat." Der kam
+vom alten Server, der noch aus einem anderen Ordner auf Port 3000 hing — START.vbs fragt
+mit Ja als Vorgabe, ob er beendet werden soll, START.sh fragte mit Nein. Jetzt fragt
+START.sh den laufenden Server, welche `Index.html` er benutzt, vergleicht mit der Datei
+im Ordner und beendet einen fremden mit Ja als Vorgabe — wie START.vbs. Ist es derselbe
+Stand, geht ohne Frage nur der Browser auf.
+
+### Doppelte Downloads bleiben draußen
+
+Speichert der Browser eine Datei, die es im Ordner schon gibt, hängt Windows „-1" oder
+„ (1)" an den Namen. So lagen sechs Fragendateien als `fragen-1.json` usw. neben den
+alten — der Trainer las sie nicht, und `Hochladen.bat` hätte sie mit auf GitHub genommen.
+Die `.gitignore` lässt solche Reste jetzt nicht mehr durch.
+
 ### Der Fragenkatalog ist vollständig erklärt
 
 Die letzten 464 Fragen des Aufstiegs **E → A** haben eine Erklärung bekommen. Damit sind
