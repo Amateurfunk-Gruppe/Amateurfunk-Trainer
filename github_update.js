@@ -36,7 +36,12 @@
 // WEITERE GRENZEN, BEWUSST GESETZT
 // ----------------------------------------------------------------
 //   - Geholt wird nur auf ausdruecklichen Klick. Der Start meldet
-//     hoechstens, DASS es etwas gibt.
+//     hoechstens, DASS es etwas gibt - seit dem 17.09.2026 wieder ohne
+//     Ausnahme: Das stille Nachholen von Fragen und Bildern im
+//     Hintergrund (02.09.2026) ist weg. Dietmar wollte ein Fenster beim
+//     Start, das sagt, was sich geaendert hat, und fragt. Ein Fenster,
+//     das fragt, waehrend im Hintergrund schon geholt wird, waere eine
+//     Frage ohne Antwort.
 //   - Programmdateien (Server.js, hoerbuch.js, lame.js) laufen mit vollen
 //     Rechten. Sie brauchen eine zweite, eigene Bestaetigung.
 //   - Jede geholte Datei wird nachgerechnet, bevor sie geschrieben wird.
@@ -263,15 +268,117 @@ function einrichten(umgebung) {
     catch (e) { return null; }
   }
 
+  // Seit dem 17.09.2026 kommt der Text mit zurueck: Aus ihm liest das
+  // Update-Fenster, was sich geaendert hat (aenderungenAus unten). Ist
+  // das CHANGELOG hier und dort gleich, gibt es nichts Neues zu erzaehlen
+  // - dann bleibt text leer.
   async function versionDort(commit, karte) {
     const fern = karte[CHANGELOG];
-    if (!fern) return null;                       // liegt dort nicht
+    if (!fern) return { version: null, text: null };          // liegt dort nicht
     const hier = hierFingerabdruck(CHANGELOG);
-    if (hier && hier === fern.sha) return versionHier();   // gleich - nichts zu holen
+    if (hier && hier === fern.sha) return { version: versionHier(), text: null };   // gleich
     try {
       const roh = await holen(`${RAW}/${KONTO}/${REPO}/${commit}/${CHANGELOG}`, { roh: true, zeit: 12000 });
-      return versionAusText(roh.toString('utf8'));
-    } catch (e) { return null; }
+      const text = roh.toString('utf8');
+      return { version: versionAusText(text), text };
+    } catch (e) { return { version: null, text: null }; }
+  }
+
+  // ================================================================
+  //  WAS SICH GEAENDERT HAT                      (17.09.2026)
+  // ================================================================
+  //  Dietmar: "Bei der Software RigOne kommt beim Start ein Fenster
+  //  'Update' und was geaendert wurde. Das gefaellt mir gut und das
+  //  moechte ich auch haben."
+  //
+  //  Die Liste dafuer kommt aus dem CHANGELOG bei GitHub - nicht aus
+  //  einer zweiten, eigens gepflegten Datei, die frueher oder spaeter
+  //  vergessen wuerde. Genommen werden alle Abschnitte, die NEUER sind
+  //  als die Fassung hier, und aus jedem Abschnitt:
+  //
+  //    - jede "### Ueberschrift", die ein Satz ist ("Formeln sehen aus
+  //      wie gedruckt") - so sind die Abschnitte seit Wochen geschrieben;
+  //    - unter Sammelueberschriften ("### Behoben", "### Geaendert")
+  //      dagegen die Punkte darunter, jeweils nur der Anfang: der fett
+  //      gesetzte Vorspann, wenn es einen gibt, sonst der erste Satz.
+  //
+  //  Das Fenster zeigt Ueberschriften, keine Absaetze. Wer die
+  //  Begruendung lesen will, findet sie hinter "Bei GitHub ansehen".
+  function versionVergleich(a, b) {         // > 0: a ist neuer als b
+    const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
+    for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d; }
+    return 0;
+  }
+
+  const SAMMEL = /^(hinzugef\u00fcgt|ge\u00e4ndert|behoben|gepr\u00fcft|entfernt|neu|nachgepr\u00fcft|technisch|technik|offen|nachgemessen|korrigiert|anmerkung|sicherheit|added|changed|fixed|removed|deprecated|security)$/i;
+
+  function ohneAuszeichnung(s) {
+    return String(s || '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')      // [Text](Link) -> Text
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/<[^>]{1,40}>/g, '')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  // Ein Punkt unter einer Sammelueberschrift, auf Ueberschriftenlaenge
+  // gebracht.
+  function punktKuerzen(roh) {
+    const fett = String(roh || '').match(/^\*\*(.+?)\*\*/);
+    if (fett) return ohneAuszeichnung(fett[1]).replace(/[\s.:,;\u2014\u2013-]+$/, '');
+    let t = ohneAuszeichnung(roh);
+    const satz = t.search(/[.!?](\s|$)/);
+    if (satz > 30) t = t.slice(0, satz + 1);
+    if (t.length > 160) t = t.slice(0, t.lastIndexOf(' ', 157)).replace(/[\s,;:\u2014\u2013-]+$/, '') + ' \u2026';
+    return t;
+  }
+
+  function aenderungenAus(text, abVersion) {
+    const aus = [];
+    let v = null, sammel = null, code = false;
+    // Ein Punkt kann ueber mehrere Zeilen gehen (eingerueckt weiter).
+    // Er wird erst abgeschlossen, wenn etwas anderes kommt - sonst
+    // endet "Die fuenf Aufgaben zum Kabeldaempfungsdiagramm wurden
+    // rueckwaerts erschlossen (das Diagramm ist" mitten im Satz.
+    let offen = null;
+    const abschliessen = () => {
+      if (offen && v && v.punkte.length < 40) {
+        const t = punktKuerzen(offen.text);
+        if (t) v.punkte.push({ art: offen.sammel, text: t });
+      }
+      offen = null;
+    };
+    for (const z of String(text || '').split('\n')) {
+      if (/^```/.test(z)) { abschliessen(); code = !code; continue; }
+      if (code) continue;
+      if (offen && /^\s+\S/.test(z)) { offen.text += ' ' + z.trim(); continue; }
+      abschliessen();
+      const mv = z.match(/^##\s*\[(\d+\.\d+\.\d+)\]\s*-?\s*(\d{4}-\d{2}-\d{2})?/);
+      if (mv) {
+        // Das CHANGELOG steht neueste zuerst. Ab der ersten Fassung, die
+        // nicht neuer ist als die hiesige, ist Schluss. Ist die hiesige
+        // Nummer unbekannt (kein CHANGELOG im Ordner), zaehlt nur die
+        // oberste.
+        if (abVersion ? versionVergleich(mv[1], abVersion) <= 0 : aus.length >= 1) break;
+        if (aus.length >= 12) break;
+        v = { version: mv[1], datum: mv[2] || '', punkte: [] };
+        aus.push(v);
+        sammel = null;
+        continue;
+      }
+      if (!v || v.punkte.length >= 40) continue;
+      const mh = z.match(/^###\s+(.+?)\s*$/);
+      if (mh) {
+        const t = ohneAuszeichnung(mh[1]);
+        if (SAMMEL.test(t)) sammel = t;
+        else { sammel = null; if (t) v.punkte.push({ art: null, text: t }); }
+        continue;
+      }
+      const mb = z.match(/^[-*]\s+(.+)$/);
+      if (mb && sammel) offen = { sammel, text: mb[1] };
+    }
+    abschliessen();
+    return aus;
   }
 
   // Die dritte Nummer: das fertige Setup, das bei GitHub zum
@@ -319,22 +426,34 @@ function einrichten(umgebung) {
         hierGroesse: (() => { try { return fs.statSync(path.join(WURZEL, name)).size; } catch (e) { return null; } })(),
       });
     }
+    const vHier = versionHier();
+    const dort = await versionDort(commit, karte);
     return {
       commit,
       quelle: `https://github.com/${KONTO}/${REPO}`,
       merkposten: !!(merk.dateien && Object.keys(merk.dateien).length),
       zuletzt: merk.zeit || null,
-      versionHier: versionHier(),
-      versionDort: await versionDort(commit, karte),
+      versionHier: vHier,
+      versionDort: dort.version,
       versionSetup: await versionSetup(),
+      // Was sich geaendert hat - fuer das Fenster beim Start.
+      aenderungen: dort.text ? aenderungenAus(dort.text, vHier) : [],
       eintraege,
       geprueft: new Date().toISOString(),
     };
   }
 
   // ---- Holen und schreiben -----------------------------------------
+  //
+  // Der Fortschritt steht waehrenddessen hier, und das Fenster fragt ihn
+  // alle paar hundert Millisekunden ab (/api/github/fortschritt). Ein
+  // Update mit 40 Dateien dauert eine halbe Minute - so lange soll nicht
+  // "Wird geholt ..." ohne Regung dastehen.
+  const fortschritt = { laeuft: false, gesamt: 0, fertig: 0, aktuell: null, seit: null };
+
   async function anwenden(commit, namen, programmBestaetigt) {
     if (!commit || !/^[0-9a-f]{7,40}$/i.test(commit)) throw new Error('Kein gueltiger Stand angegeben');
+    if (fortschritt.laeuft) throw new Error('Es wird gerade schon geholt');
     // Frueher: nur was in der festen Liste stand. Jetzt: was die
     // Endungs- und Ordnerpruefung durchlaesst. Die Liste "dateien" aus
     // dem Server gilt weiterhin zusaetzlich - was dort steht, ist auf
@@ -365,7 +484,11 @@ function einrichten(umgebung) {
     fs.mkdirSync(sicherung, { recursive: true });
 
     const geschrieben = [], fehler = [], uebersprungen = [];
+    fortschritt.laeuft = true; fortschritt.gesamt = erlaubt.length; fortschritt.fertig = 0;
+    fortschritt.aktuell = null; fortschritt.seit = new Date().toISOString();
+    try {
     for (const name of erlaubt) {
+      fortschritt.aktuell = name;
       try {
         const erwartet = soll[name];
         if (!erwartet) throw new Error('liegt bei GitHub nicht mehr vor');
@@ -419,7 +542,9 @@ function einrichten(umgebung) {
         fehler.push({ name, grund: klartext(e) });
         console.warn(`[GITHUB] ${name} nicht uebernommen:`, klartext(e));
       }
+      fortschritt.fertig++;
     }
+    } finally { fortschritt.laeuft = false; fortschritt.aktuell = null; }
 
     // Den Commit nur festhalten, wenn wirklich alles Angefragte geklappt
     // hat. Sonst stuende im Merkposten ein Stand, den der Ordner gar nicht
@@ -461,13 +586,27 @@ function einrichten(umgebung) {
   }
 
   // ---- Was der Start herausgefunden hat ----------------------------
+  //
+  // Der Start sieht einmal nach und legt das Ergebnis hier ab. Die Seite
+  // holt es sich ueber /api/github/stand und macht daraus das Fenster
+  // "Neue Version": Nummern, Aenderungsliste, drei Knoepfe. Geholt wird
+  // erst, wenn jemand auf "Jetzt aktualisieren" klickt.
+  //
+  // BIS ZUM 17.09.2026 STAND HIER MEHR: Fragen, Bilder und die Seite
+  // selbst wurden beim Start still im Hintergrund nachgezogen, nur
+  // Programmdateien warteten auf den Klick (Dietmar am 02.09.2026: "Ich
+  // moechte, dass es im Hintergrund nach einem Update sucht und den
+  // Benutzer darueber informiert und ein Update macht."). Mit dem Fenster
+  // ist das vorbei - auf seine Frage hin: "Nein, das Fenster fragt." Ein
+  // Fenster, das "Jetzt aktualisieren?" fragt, waehrend die Haelfte schon
+  // geholt ist, waere eine Frage ohne Antwort. Und die Sicherheitsregel
+  // dahinter gilt weiter: Nichts aus dem Netz landet ungefragt im Ordner.
   let letzteLage = null;
 
   async function beimStartNachsehen() {
     try {
       const j = await pruefen();
-      // 'unbekannt' ZAEHLT MIT - und das war ein Fehler, der genau die
-      // Falschen getroffen hat.
+      // 'unbekannt' ZAEHLT MIT.
       //
       // Dietmar am 02.09.2026: "Ich habe die Dateien hochgeladen und
       // warte bei meiner installierten Version, das es ein Update
@@ -477,60 +616,28 @@ function einrichten(umgebung) {
       // Abgleich". Genau das ist die Lage JEDER FRISCHEN INSTALLATION -
       // github_stand.json wird vom Setup nicht mitgeliefert. Der Zustand
       // war aus der Zaehlung ausgeschlossen, also meldete der Start
-      // ausgerechnet dort nichts, wo am meisten fehlte. Das Fenster
-      // unter Info hat die Dateien die ganze Zeit angezeigt; nur sagte
-      // niemand, dass man hinsehen soll.
+      // ausgerechnet dort nichts, wo am meisten fehlte.
       const echte = j.eintraege.filter(e =>
         e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
-      letzteLage = { zeit: j.geprueft, commit: j.commit, anzahl: echte.length,
-                     eigene: j.eintraege.filter(e => e.lage === 'neuer_hier').length,
-                     programm: echte.filter(e => kategorie(e.name) === 'programm').map(e => e.name),
-                     namen: echte.map(e => e.name) };
+      letzteLage = {
+        zeit: j.geprueft, commit: j.commit,
+        anzahl: echte.length,
+        eigene: j.eintraege.filter(e => e.lage === 'neuer_hier').length,
+        programm: echte.filter(e => kategorie(e.name) === 'programm').map(e => e.name),
+        namen: echte.map(e => e.name),
+        versionHier: j.versionHier, versionDort: j.versionDort, versionSetup: j.versionSetup,
+        aenderungen: j.aenderungen || [],
+      };
       if (echte.length) {
         console.log('');
         console.log('  ============================================================');
-        console.log(`   GITHUB: ${echte.length} Datei(en) sind dort neuer.`);
+        console.log(`   GITHUB: ${echte.length} Datei(en) sind dort neuer`
+          + (j.versionDort && j.versionDort !== j.versionHier
+              ? ` (${j.versionHier || '?'} -> ${j.versionDort}).` : '.'));
         echte.slice(0, 8).forEach(e => console.log('     - ' + e.name));
+        console.log('   Das Fenster im Trainer fragt, ob sie geholt werden sollen.');
         console.log('  ============================================================');
         console.log('');
-      }
-
-      // ---- Von allein holen, aber nicht alles --------------------
-      //
-      // Dietmar: "Ich moechte, das es im Hintergrund nach einen Update
-      // sucht und den Benutzer darueber informiert und ein Update
-      // macht."
-      //
-      // Fragen, Bilder und die Seite selbst: ja, ohne Rueckfrage.
-      // PROGRAMMDATEIEN NICHT. Server.js laeuft mit den Rechten des
-      // Benutzers auf dessen Rechner; sie ungefragt gegen etwas aus dem
-      // Netz zu tauschen hiesse, dass ein fremder Zugriff auf das
-      // Repository jeden Trainer der Welt uebernimmt. Dafuer bleibt es
-      // beim einen Klick - dann aber mit einem Balken, den man nicht
-      // uebersieht, statt einer Markierung am Info-Knopf.
-      //
-      // ALLES ODER NICHTS je Stand: Sind Programmdateien dabei, wird
-      // auch der Rest nicht automatisch geholt. Sonst haette man eine
-      // neue Index.html auf einem alten Server.js - und genau daran
-      // scheitern Dinge, die einzeln in Ordnung aussehen.
-      letzteLage.automatisch = null;
-      const autoAus = process.env.AFU_AUTO_UPDATE === '0';
-      if (echte.length && !autoAus && !letzteLage.programm.length) {
-        try {
-          const r = await anwenden(j.commit, letzteLage.namen, false);
-          letzteLage.automatisch = {
-            geschrieben: r.geschrieben.map(g => g.name),
-            fehler: r.fehler.length,
-            sicherung: r.sicherung
-          };
-          letzteLage.anzahl = 0;
-          if (r.geschrieben.length) {
-            console.log(`[GITHUB] ${r.geschrieben.length} Datei(en) automatisch uebernommen.`);
-            console.log('[GITHUB] Die alten liegen in ' + r.sicherung + '.');
-          }
-        } catch (e) {
-          console.log('[GITHUB] Automatisches Uebernehmen nicht moeglich: ' + e.message);
-        }
       }
       if (letzteLage.eigene) {
         console.log(`[GITHUB] ${letzteLage.eigene} Datei(en) sind HIER neuer als bei GitHub`
@@ -550,6 +657,8 @@ function einrichten(umgebung) {
   app.get('/api/github/stand', localOnly, (req, res) => {
     res.json({ letzteLage, quelle: `https://github.com/${KONTO}/${REPO}`, zweig: ZWEIG });
   });
+
+  app.get('/api/github/fortschritt', localOnly, (req, res) => { res.json(fortschritt); });
 
   app.get('/api/github/pruefen', localOnly, async (req, res) => {
     try { res.json(await pruefen()); }
@@ -578,7 +687,7 @@ function einrichten(umgebung) {
   });
 
   setTimeout(() => { beimStartNachsehen(); }, 4000);
-  return { pruefen, anwenden, standLesen, standSchreiben, fernStand, blobSha };
+  return { pruefen, anwenden, standLesen, standSchreiben, fernStand, blobSha, aenderungenAus };
 }
 
 module.exports = { einrichten, blobSha, KONTO, REPO, ZWEIG, STAND_DATEI };

@@ -184,27 +184,60 @@
            zusammengedrueckt. */
         #questionContainer { display: flex; flex-direction: column; }
 
-        /* Die Kette, die die Knopfleiste unten festhaelt - und die es nur
-           waehrend einer Runde geben darf. */
+        /* Die Kette, die die Karte fensterhoch haelt und den Fragenkasten
+           bis unten reichen laesst - und die es nur waehrend einer Runde
+           geben darf. */
         body.runde-laeuft .card {
             min-height: calc(100vh / var(--afu-zoom, 1) - 2rem);
         }
         body.runde-laeuft #questionContainer { flex: 1 0 auto; }
         body.runde-laeuft .app-layout { flex: 1 0 auto; }
-        /* DIE ANTWORTFELDER SIND NUR SO HOCH WIE IHR TEXT (16.09.2026).
-           Dietmar, mit dem Bild von AD319: "Bei den Antworten sind die
-           Felder relativ gross zu dem Text." Bis dahin reichte die Kette
-           bis in die vier Felder hinein - .question-area nahm sich den
-           ganzen Platz bis zur Knopfleiste, .options gab ihn an die Felder
-           weiter, und "4,32 W" stand in einem Feld von 120 Punkten Hoehe.
-           Jetzt endet die Kette bei .main-layout: Die Zeile nimmt sich den
-           Platz (damit die Knopfleiste unten stehen bleibt), die Fragekarte
-           darin steht oben und ist so hoch wie ihr Inhalt (align-self statt
-           stretch). Der Rest bleibt unter der Karte frei - ruhiger Grund,
-           kein leeres Feld. Bei langen Fragen aendert sich nichts: Die
-           Karte waechst mit dem Text wie zuvor, und die Schriftautomatik
-           (fragenGroesseAnpassen) greift wie zuvor. */
-        body.runde-laeuft .main-layout > .question-area { align-self: flex-start; }
+        /* ================================================================
+           DIE KNOPFLEISTE STEHT FEST - AM FENSTER, NICHT IN DER SEITE
+           ----------------------------------------------------------------
+           17.09.2026: "Jetzt ist
+           die Knopfleiste wieder mal hoch und mal tief. Sie muss auf einer
+           Hoehe unten bleiben." Und am Tag davor: "Liegt genau unten auf."
+           Und am 09.09.: "Wenn eine Frage kuerzer ist, soll dazwischen in
+           der Fensterfarbe ein Leerraum hinzugefuegt werden."
+
+           Alle drei zusammen gehen nur so: Die Leiste haengt am FENSTER
+           (position: fixed), ein Stueck ueber der Unterkante, als eigene
+           kleine Karte. "Weiter" sitzt damit bei JEDER Frage an derselben
+           Stelle, auch bei langen, wo die Leiste bisher nach unten aus dem
+           Fenster wanderte; die Seite rollt dann unter ihr durch, und die
+           Karte haelt unten Platz frei, damit die letzte Antwort nicht
+           unter der Leiste verschwindet. (Ein Zwischenstand mit
+           Fensterfarbe unter der Karte hielt eine Stunde: "muss die Farbe
+           von dem Inhalt haben.")
+
+           Nur auf breiten Fenstern. Auf schmalen (Handy, halbes Fenster)
+           bleibt die Leiste im Fluss - dort waere eine feste Leiste ein
+           Balken ueber dem Text. Und nicht im Beamerbild, das seine eigene
+           Leiste hat. */
+        @media (min-width: 1025px) {
+            /* Die Karte bleibt fensterhoch (so hat der Grund unter dem
+               Fragenkasten die Farbe des Inhalts, nicht die des Fensters -
+               Dietmar am 17.09.: "Rot markiert muss die Farbe von dem
+               Inhalt haben") und haelt unten Platz frei, in dem die Leiste
+               schwebt. Der Fragenkasten reicht bis an diesen Platz, und mit
+               ihm die Spalte links samt Knopf "Verlauf ausblenden"
+               (finalFixDynamicHeight gleicht sie an). */
+            body.runde-laeuft:not(.beamer-live) .card { padding-bottom: 6.5rem; }
+            body.runde-laeuft:not(.beamer-live) #navArea {
+                position: fixed; left: 50%; transform: translateX(-50%);
+                bottom: 1.4rem; z-index: 80;
+                width: calc(100% - 2rem); max-width: 1440px; box-sizing: border-box;
+                margin: 0; padding: 0.55rem 1.2rem;
+                background: var(--card-bg);
+                border: 1px solid var(--line); border-radius: 18px;
+                box-shadow: 0 12px 30px -14px rgba(15,39,69,0.28);
+            }
+            /* Ist die Quellenzeile eingeblendet (liegt fest am unteren
+               Rand), rueckt die Leiste um deren Hoehe nach oben. */
+            body.runde-laeuft.quelle-zeigen:not(.beamer-live) #navArea { bottom: calc(1.4rem + 50px); }
+            body.dark.runde-laeuft:not(.beamer-live) #navArea { background: var(--nacht-flaeche, #0f2b40); border-color: var(--nacht-kante, #2b5471); }
+        }
         .header {
             display: flex;
             justify-content: space-between;
@@ -1010,15 +1043,19 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
-            /* Der uebrige Platz gehoert den Antworten. Was danach kommt
-               (Videolehrgang, 50 Ohm) bleibt dadurch unten stehen. */
-            flex: 1 0 auto;
+            /* Bis zum 17.09.2026 nahm sich der Antwortblock den uebrigen
+               Platz (flex: 1 0 auto) - der graue Rahmen reichte dann als
+               leere Flaeche bis unten. Jetzt endet er nach der letzten
+               Antwort; der Rest des Kastens bleibt in seiner eigenen,
+               hellen Farbe. */
+            flex: 0 0 auto;
         }
-        /* Die vier Felder teilen sich den Zuwachs zu gleichen Teilen.
-           flex-basis:auto, damit ein Feld mit zwei Textzeilen seine
-           groessere Grundhoehe behaelt und nicht auf dieselbe Hoehe
-           gedrueckt wird wie eines mit einer Zeile. */
-        .options > .option { flex: 1 1 auto; }
+        /* Bis zum 16.09.2026 teilten sich die vier Felder den Zuwachs zu
+           gleichen Teilen (flex: 1 1 auto) - "4,32 W" stand dann in einem
+           Feld von 120 Punkten. Dietmar: "Die Felder sind relativ gross zu
+           dem Text." Jetzt ist ein Feld so hoch wie sein Text; der Zuwachs
+           bleibt als ruhiger Grund unten in der Karte. */
+        .options > .option { flex: 0 0 auto; }
         .option {
             display: flex;
             align-items: center;
@@ -2151,6 +2188,14 @@
             gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
         }
         .q-knopfleiste { display: flex; gap: 6px; flex-shrink: 0; }
+        /* Seit dem 17.09.2026 steht die fruehere Zeile "Technik ... E -> A"
+           hier zwischen Nummer und Knoepfen statt als eigene Leiste ueber
+           dem Kasten. Sie nimmt sich den Platz dazwischen und darf bei
+           schmalen Fenstern umbrechen. */
+        .q-kopfzeile .q-meta {
+            margin-bottom: 0; flex: 1 1 auto; min-width: 0;
+            justify-content: flex-start; align-items: center;
+        }
 
         /* Die Fragennummer steht jetzt allein in der Kopfzeile und nicht
            mehr am Anfang des Fragetextes. Damit sie dort nicht verloren
@@ -17380,152 +17425,92 @@ window.autoAbgleichMelden = autoAbgleichMelden;
 //   unbekannt   - nie abgeglichen, keine Aussage -> holen, markiert
 //
 // ---------------------------------------------------------------
-// WIE ES SICH MELDET - neu gebaut am 28.08.2026
+// WIE ES SICH MELDET - neu gebaut am 17.09.2026
 // ---------------------------------------------------------------
-// Vorher: Beim Start sprang ein Fenster auf oder legte sich ein Balken
-// ueber den Seitenkopf, und darin stand eine Liste mit Kaestchen zum
-// Ankreuzen. Dietmar dazu: "Hier ballert man sich schnell was kaputt wenn
-// man alles auswaehlt."
+// Dietmar, mit zwei Bildern aus einem anderen Programm: "Beim Start der
+// App kommt ein Fenster 'Update' und was geaendert wurde. Das gefaellt
+// mir gut und das moechte ich auch haben. Das andere mit dem Update
+// koennen wir entfernen."
 //
-// Er hat recht, und der Grund ist nicht Unachtsamkeit. Eine Liste mit
-// Kaestchen SIEHT nach freier Auswahl aus, aber an den Dateinamen kann
-// niemand ablesen, welche Kombination heil ist: Server.js ohne
-// github_update.js zum Beispiel ist keine. Wer waehlen darf, waehlt
-// irgendwann falsch - und merkt es erst, wenn der Trainer nicht startet.
+// Das Fenster hat, was dort auch steht: die Ueberschrift, einen Satz mit
+// beiden Nummern ("Version 1.298.0 ist verfuegbar. Du benutzt gerade
+// 1.297.0."), darunter "Was sich geaendert hat" als Liste zum Blaettern,
+// eine Zeile fuer den Fortschritt, ein Haekchen "An Version 1.298.0 nicht
+// mehr erinnern" und die Knoepfe. Drei statt vier: Der Trainer hat keinen
+// Installer, den man getrennt herunterladen koennte - "Jetzt
+// aktualisieren" holt die geaenderten Dateien in den Ordner, so wie es
+// "Aktualisieren" vorher tat.
 //
-// Jetzt: beim Start kein Fenster, kein Balken, keine Unterbrechung. Der
-// Info-Knopf oben rechts wird zum blinkenden Update-Knopf, und einmal
-// spielt sounds/update.mp3. Erst ein Klick darauf oeffnet ein kleines
-// Fenster: "Update vorhanden", ein Satz, und zwei Knoepfe - Aktualisieren
-// oder Spaeter. Alles oder nichts ist die einzige Auswahl, bei der nichts
-// Halbes entstehen kann.
+// Die Liste kommt aus dem CHANGELOG bei GitHub, nicht aus einer zweiten
+// Datei: der Server liest die Ueberschriften der Abschnitte, die neuer
+// sind als die Fassung hier (github_update.js, aenderungenAus).
 //
-// Und ohne Dateinamen, Byte-Zahlen und Quellenangabe. Dietmar dazu: "Ich
-// wuensche ein kleines Fenster ohne Code und dergleichen." Das ist keine
-// Vereinfachung um der Kuerze willen: "video_map_embed.js, 211892 Bytes"
-// hilft bei der Entscheidung, die hier ansteht, kein Stueck weiter. Es
-// sieht nur nach Fachkunde aus und macht unsicher.
+// WAS WEGGEFALLEN IST, auf seine Antwort hin:
+//   - der blinkende Info-Knopf und der Ton (sounds/update.mp3)
+//   - der gruene Balken am Seitenkopf
+//   - der Knopf "Bei GitHub nachsehen" im Info-Fenster
+//   - das stille Nachholen von Fragen und Bildern beim Start. "Nein, das
+//     Fenster fragt." Nichts aus dem Netz landet mehr ungefragt im Ordner.
 //
-// "Spaeter" merkt sich absichtlich nichts. Beim naechsten Start meldet
-// es sich wieder - genau so gewuenscht. Vergessen kann man es damit nicht,
-// wegklicken jederzeit.
+// WAS GEBLIEBEN IST: der Reiter "Update" in den Einstellungen mit den
+// Nummern und "Bei GitHub nachsehen" - von dort geht dasselbe Fenster auf.
+// Und das Sicherheitsnetz dahinter: Was hier neuer ist als bei GitHub,
+// wird nie angefasst, die alten Fassungen wandern nach backup/, der
+// Lernstand in data/ bleibt unberuehrt. Alles oder nichts, keine
+// Kaestchen: an Dateinamen kann niemand ablesen, welche Kombination heil
+// ist (Server.js ohne github_update.js zum Beispiel ist keine).
+//
+// "Spaeter" merkt sich nichts - beim naechsten Start meldet es sich
+// wieder. Wer das nicht will, setzt das Haekchen: dann schweigt das
+// Fenster fuer genau diese Version und meldet sich bei der naechsten.
 // ================================================================
-let githubDaten = null;
-let githubHolbar = [];     // Namen, die geholt werden, wenn man aktualisiert
-let githubProgramm = [];   // davon die Programmdateien - fuer die Neustart-Meldung
+let updateLage = null;        // was zuletzt bei GitHub stand
+let updateLaeuft = false;     // gerade wird geholt - Fenster nicht schliessen
+let updateGezeigt = false;    // das Fenster war in dieser Sitzung schon auf
+let versionHierBekannt = null; // aus /api/version, fuer den Probelauf
 
 // Probelauf. Liegt update_test.json im Trainer-Ordner, tut der Trainer so,
-// als laege ein Update bereit: Der Knopf wechselt, der Ton spielt, das
-// Fenster geht auf. Geholt wird nichts, geschrieben wird nichts.
+// als laege eine neue Version bereit: Das Fenster geht auf, mit Nummern
+// und Liste, und "Jetzt aktualisieren" zaehlt einen Fortschritt hoch.
+// Geholt wird nichts, geschrieben wird nichts.
 //
 // Wozu: Ein Update gibt es selten, und wenn es eines gibt, will man nicht
-// erst herausfinden, ob die Meldung ueberhaupt funktioniert. Angelegt wird
-// die Datei von Update-Test.bat.
-//
-// Die Datei steht in der .gitignore und geht nie zu GitHub. Dieser
-// Programmteil schon - er ist ohne die Datei schlicht untaetig.
-let githubTest = false;
-let githubTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
+// erst herausfinden, ob das Fenster ueberhaupt funktioniert. Angelegt wird
+// die Datei von Update-Test.bat. Sie steht in der .gitignore und geht nie
+// zu GitHub; dieser Programmteil schon - er ist ohne die Datei untaetig.
+let updateTest = false;
+let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 
-// Rohdateien des Repositorys. Nur hier, damit ein umbenanntes Repository
-// nicht an mehreren Stellen nachgezogen werden muss.
-const GITHUB_ROH = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
+// Rohdateien und Seite des Repositorys. Nur hier, damit ein umbenanntes
+// Repository nicht an mehreren Stellen nachgezogen werden muss.
+const GITHUB_ROH   = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
+const GITHUB_SEITE = 'https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer';
 
-// ---------------------------------------------------------------
-// DER KNOPF OBEN RECHTS
-// ---------------------------------------------------------------
-// Er heisst normalerweise "Info". Liegt ein Update bereit, wird er zum
-// Update-Knopf: anderer Name, andere Farbe, und er blinkt. Der alte
-// Zustand wird gemerkt, damit "Spaeter" ihn unveraendert zurueckgeben
-// kann - auch das Tooltip, sonst steht dort spaeter die falsche Erklaerung.
-// ---------------------------------------------------------------
-let updateKnopfAlt = null;
+// "An Version x nicht mehr erinnern" - je Browser, nicht je Benutzer. Es
+// ist eine Eigenschaft dieses Rechners: Wer hier das Haekchen setzt, will
+// das Fenster hier nicht mehr sehen.
+const UPDATE_STUMM = 'afuUpdateStumm';
+function updateStummKennung(){ try{ return localStorage.getItem(UPDATE_STUMM) || ''; }catch(e){ return ''; } }
+function updateStummSetzen(k){ try{ if(k) localStorage.setItem(UPDATE_STUMM, k); else localStorage.removeItem(UPDATE_STUMM); }catch(e){} }
 
-function updateBlinkenEinrichten(){
-    if(document.getElementById('updateBlinkStil')) return;
-    const s = document.createElement('style');
-    s.id = 'updateBlinkStil';
-    // Ein Puls, kein hartes Blinken: Der Knopf soll auffallen, ohne dass
-    // man wegsehen muss. Wer im Betriebssystem "Bewegung reduzieren"
-    // eingestellt hat, bekommt ihn ruhig - das ist keine Kuer, fuer
-    // manche Menschen ist blinkende Bewegung ein echtes Problem.
-    s.textContent =
-        '@keyframes updatePuls{'
-      + '0%,100%{box-shadow:0 0 0 0 rgba(200,90,30,0.55);}'
-      + '55%{box-shadow:0 0 0 8px rgba(200,90,30,0);}}'
-      + '.update-blinkt{animation:updatePuls 1.4s ease-in-out infinite;}'
-      + '@media (prefers-reduced-motion: reduce){.update-blinkt{animation:none;'
-      + 'outline:2px solid rgba(200,90,30,0.8); outline-offset:2px;}}';
-    document.head.appendChild(s);
+// Woran das Fenster eine Fassung erkennt: an der Nummer, wenn sie sich
+// aendert - sonst (Berichtigungen ohne neue Nummer) am Stand bei GitHub.
+function updateKennung(l){
+    if(l.versionDort && l.versionDort !== l.versionHier) return l.versionDort;
+    return 'stand-' + String(l.commit || '').slice(0, 10);
 }
 
-function updateKnopfAn(){
-    const b = document.getElementById('infoBtn');
-    if(!b || updateKnopfAlt) return;
-    updateBlinkenEinrichten();
-    updateKnopfAlt = {
-        html: b.innerHTML,
-        bg:   b.style.background,
-        tip:  b.getAttribute('data-tooltip') || ''
-    };
-    b.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Update';
-    b.style.background = '#c05621';
-    b.setAttribute('data-tooltip', 'Es liegt ein Update bereit — anklicken');
-    b.setAttribute('onclick', 'githubOeffnen()');
-    b.classList.add('update-blinkt');
-}
-
-function updateKnopfAus(){
-    const b = document.getElementById('infoBtn');
-    if(!b || !updateKnopfAlt) return;
-    b.innerHTML = updateKnopfAlt.html;
-    b.style.background = updateKnopfAlt.bg;
-    b.setAttribute('data-tooltip', updateKnopfAlt.tip);
-    b.setAttribute('onclick', 'infoOeffnen()');
-    b.classList.remove('update-blinkt');
-    updateKnopfAlt = null;
-}
-
-// ---------------------------------------------------------------
-// DER TON
-// ---------------------------------------------------------------
-// Einmal, nie zweimal. Browser lassen Ton erst zu, wenn jemand die Seite
-// angefasst hat - beim Start ist das nicht der Fall, und play() wird
-// abgelehnt. Statt das hinzunehmen (der Ton faellt dann stumm aus, ohne
-// dass es jemand merkt) wird beim ersten Klick oder Tastendruck
-// nachgeholt.
-// ---------------------------------------------------------------
-let updateTonGespielt = false;
-
-function updateTonSpielen(){
-    if(updateTonGespielt) return;
-    updateTonGespielt = true;
-    try{
-        const a = new Audio('sounds/update.mp3');
-        a.volume = 0.55;
-        const p = a.play();
-        if(p && p.catch) p.catch(()=>{
-            const nachholen = ()=>{
-                window.removeEventListener('pointerdown', nachholen);
-                window.removeEventListener('keydown', nachholen);
-                try{ a.currentTime = 0; const q = a.play(); if(q && q.catch) q.catch(()=>{}); }catch(e){}
-            };
-            window.addEventListener('pointerdown', nachholen);
-            window.addEventListener('keydown', nachholen);
-        });
-    }catch(e){}
-}
+function updateEsc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ---------------------------------------------------------------
 // DIE NACHSCHAU BEIM START
 // ---------------------------------------------------------------
 // Der Server sieht kurz nach dem Start bei GitHub nach. Was dabei
-// herauskam, holt sich diese Seite ab. Sie oeffnet nichts und legt sich
-// ueber nichts - sie setzt nur den Knopf und spielt einmal den Ton.
+// herauskam, holt sich diese Seite ab - und macht daraus das Fenster.
 //
 // versuch: Der Server ist unter Umstaenden noch nicht fertig, wenn diese
 // Seite schon steht. Dann steht in letzteLage noch nichts, und es wird in
-// Ruhe nachgefasst - dreimal, dann ist gut.
+// Ruhe nachgefasst.
 // ---------------------------------------------------------------
 // Liegt ein Probelauf bereit? Gibt es die Datei nicht, kommt ein 404 -
 // das ist der Normalfall und kostet nichts. Die Datei steht in der
@@ -17547,11 +17532,10 @@ async function githubStartNachschau(versuch){
     // Probelauf geht vor: Wer testet, will das Ergebnis des Tests sehen
     // und nicht den echten Stand.
     const stempel = await githubTestFlagge();
-    if(stempel && stempel !== githubTestGesehen){
-        githubTestGesehen = stempel;
-        githubTest = true;
-        updateKnopfAn();
-        updateTonSpielen();
+    if(stempel && stempel !== updateTestGesehen){
+        updateTestGesehen = stempel;
+        updateTest = true;
+        updateFensterZeigen(updateProbeLage());
         return;
     }
 
@@ -17564,36 +17548,55 @@ async function githubStartNachschau(versuch){
 
     const l = j && j.letzteLage;
     if(!l){
-        if(versuch < 4) setTimeout(()=>{ githubStartNachschau(versuch + 1); }, 8000);
+        if(versuch < 8) setTimeout(()=>{ githubStartNachschau(versuch + 1); }, 8000);
         return;
     }
     // Kein Netz, GitHub bremst, Repository umbenannt: still bleiben. Eine
     // Fehlermeldung beim Start hilft niemandem - wer nachsehen will,
-    // findet es unter Info.
+    // findet es in den Einstellungen unter Update.
     if(l.fehler) return;
     if(!l.anzahl) return;
+    if(updateGezeigt) return;
 
-    // ---- Von allein geholt? Dann sagen und, wenn noetig, neu laden ----
-    if(l.automatisch && Array.isArray(l.automatisch.geschrieben) && l.automatisch.geschrieben.length){
-        githubAutoMelden(l.automatisch.geschrieben);
-        return;
-    }
+    const lage = {
+        commit: l.commit, namen: l.namen || [], programm: l.programm || [],
+        anzahl: l.anzahl, eigene: l.eigene || 0,
+        versionHier: l.versionHier || null, versionDort: l.versionDort || null,
+        aenderungen: l.aenderungen || []
+    };
+    // Das Haekchen von neulich: fuer genau diese Fassung schweigen.
+    if(updateStummKennung() === updateKennung(lage)) return;
 
-    githubTest = false;
-    updateKnopfAn();
-    updateTonSpielen();
+    // Nicht mitten in eine Runde platzen. Kommt die Antwort von GitHub
+    // erst, wenn schon geuebt wird (langsames Netz), wartet das Fenster,
+    // bis die Runde vorbei ist - die Nachschau alle fuenf Sekunden
+    // (githubNachschauWachhalten) bringt es dann. Dasselbe, wenn gerade
+    // ein anderes Fenster offen ist: zwei uebereinander sind keins.
+    if(updateStoertGerade()) return;
 
-    // Programmdateien werden nie von allein getauscht - dafuer sagt es
-    // ein Balken statt einer Markierung, die man uebersieht.
-    if(Array.isArray(l.programm) && l.programm.length) githubBalkenZeigen(l);
+    updateTest = false;
+    updateFensterZeigen(lage);
+}
+
+function updateStoertGerade(){
+    try{
+        if(document.body.classList.contains('runde-laeuft')) return true;
+        for(const m of document.querySelectorAll('[id$="Modal"], [id$="modal"]')){
+            if(m.id === 'updateModal') continue;
+            // getClientRects statt offsetParent: fuer position:fixed - und
+            // das sind die Fenster hier - ist offsetParent immer null.
+            if(getComputedStyle(m).display !== 'none' && m.getClientRects().length) return true;
+        }
+    }catch(e){}
+    return false;
 }
 
 // Die Version am Info-Knopf. Dietmar am 02.09.2026: "Bei dem Button
 // Info, soll die Version als Overlay angezeigt werden."
 //
 // Sie kommt aus der package.json und damit aus dem CHANGELOG - dieselbe
-// Nummer, die auch im Dateinamen der EXE und in "Apps & Features"
-// steht. Nichts wird hier zusaetzlich gepflegt.
+// Nummer, die auch im Namen des ZIP steht. Nichts wird hier zusaetzlich
+// gepflegt.
 async function versionAnKnopf(){
     const b = document.getElementById('infoBtn');
     if(!b) return;
@@ -17603,173 +17606,284 @@ async function versionAnKnopf(){
         if(r.ok){ const j = await r.json(); v = j && j.version; }
     }catch(e){ /* ohne Server keine Nummer - dann bleibt der alte Text */ }
     if(!v) return;
+    versionHierBekannt = v;
     b.setAttribute('data-tooltip',
         'Amateurfunk-Trainer ' + v + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
 }
 window.versionAnKnopf = versionAnKnopf;
 
-// Was im Hintergrund uebernommen wurde. Eine Karte unten rechts, sechs
-// Sekunden - und wenn die Seite selbst dabei war, laedt sie danach neu.
-// Ohne das Neuladen liefe die alte Seite weiter und niemand saehe etwas
-// von dem Update, das gerade eingetroffen ist.
-function githubAutoMelden(namen){
-    const seiteDabei = namen.some(n => /^(Index\.html|duo\.js|klick-sound\.js)$/i.test(n)
-                                    || /\.(html|css)$/i.test(n));
-    const k = document.createElement('div');
-    k.style.cssText = 'position:fixed; right:18px; bottom:18px; z-index:100002; max-width:320px; '
-        + 'padding:11px 15px; border-radius:10px; background:rgba(20,102,58,0.96); color:#fff; '
-        + 'font-size:0.8rem; line-height:1.45; box-shadow:0 4px 16px rgba(0,0,0,0.3); '
-        + 'opacity:0; transition:opacity 0.4s ease;';
-    k.innerHTML = '<b>Update übernommen</b><br>' + namen.length
-        + (namen.length === 1 ? ' Datei' : ' Dateien') + ' von GitHub: '
-        + namen.slice(0,4).map(n => n.replace(/[<>&]/g,'')).join(', ')
-        + (namen.length > 4 ? ' …' : '')
-        + (seiteDabei ? '<br><span style="opacity:0.85;">Die Seite lädt gleich neu.</span>' : '');
-    document.body.appendChild(k);
-    requestAnimationFrame(()=>{ k.style.opacity = '1'; });
-    if(seiteDabei){
-        setTimeout(()=>{ try{ location.reload(); }catch(e){} }, 4000);
-    } else {
-        setTimeout(()=>{ k.style.opacity = '0'; setTimeout(()=>{ try{ k.remove(); }catch(e){} }, 500); }, 6000);
-    }
-}
-
-// Der Balken fuer den Fall, der einen Klick braucht.
-function githubBalkenZeigen(l){
-    if(document.getElementById('githubBalken')) return;
-    const b = document.createElement('div');
-    b.id = 'githubBalken';
-    b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:100002; background:#14663a; '
-        + 'color:#fff; padding:10px 14px; font-size:0.85rem; font-weight:600; text-align:center; '
-        + 'box-shadow:0 2px 10px rgba(0,0,0,0.25);';
-    b.innerHTML = 'Ein Update liegt bereit — ' + l.anzahl
-        + (l.anzahl === 1 ? ' Datei' : ' Dateien') + ', darunter Programmdateien. '
-        + 'Die werden nie von allein getauscht. '
-        + '<button type="button" id="githubBalkenAuf" style="margin-left:10px; padding:4px 12px; border:none; '
-        + 'border-radius:8px; background:#fff; color:#14663a; font-weight:700; cursor:pointer;">Ansehen</button>'
-        + '<button type="button" id="githubBalkenZu" style="margin-left:6px; padding:4px 10px; border:1px solid rgba(255,255,255,0.6); '
-        + 'border-radius:8px; background:transparent; color:#fff; font-weight:600; cursor:pointer;">Später</button>';
-    document.body.appendChild(b);
-    const auf = document.getElementById('githubBalkenAuf');
-    // "Ansehen" fuehrt zum Update, nicht zur Anleitung.
-    //
-    // Dietmar am 09.09.2026: "bei Ansehen, oeffnet sich das Fenster. Das ist
-    // falsch. Hier muss sich der Updater sich melden."
-    //
-    // Hier stand githubUpdateOeffnen() - eine Funktion, die es nie gab. Der
-    // Aufruf loeste einen ReferenceError aus, und der Rueckfall im catch
-    // oeffnete die Anleitung. So wurde aus einem Tippfehler ein Fenster, das
-    // aussah, als sei es so gemeint: Es ging ja etwas auf, nur eben das
-    // Falsche.
-    //
-    // DESHALB KEIN catch MEHR UM DEN AUFRUF. Ein Rueckfall, der etwas
-    // voellig anderes tut, verdeckt den Fehler, statt ihn zu zeigen. Geht
-    // hier etwas schief, steht es in der Konsole und der Balken bleibt
-    // stehen - dann sieht man, dass etwas nicht stimmt.
-    if(auf) auf.onclick = ()=>{
-        try{
-            einstellungenOeffnen('update');
-            b.remove();
-        }catch(e){
-            console.error('[UPDATE] Fenster liess sich nicht oeffnen:', e);
-            if(typeof showAppAlert === 'function')
-                showAppAlert('Das Update-Fenster ließ sich nicht öffnen. '
-                           + 'Es steht auch unter Einstellungen → Update.');
-        }
-    };
-    const zu = document.getElementById('githubBalkenZu');
-    if(zu) zu.onclick = ()=> b.remove();
-}
-
-// Alle fuenf Sekunden noch einmal hinsehen, solange der Knopf noch nicht
-// umgesprungen ist. Zwei Dinge kommen dadurch an:
+// Alle fuenf Sekunden noch einmal hinsehen, solange das Fenster noch
+// nicht auf war. Zwei Dinge kommen dadurch an:
 //   - der Probelauf, der ja waehrend des laufenden Trainers angelegt wird
 //   - ein Stand, den der Server erst spaeter von GitHub erfahren hat
 // Es ist eine Anfrage an den eigenen Rechner, keine an GitHub - sie kostet
-// nichts und faellt weg, sobald der Knopf steht.
+// nichts und faellt weg, sobald das Fenster einmal auf war.
 function githubNachschauWachhalten(){
     setInterval(()=>{
-        if(updateKnopfAlt) return;          // Knopf steht schon
+        if(updateGezeigt) return;
         try{ githubStartNachschau(9); }catch(e){}   // 9 = nicht noch einmal nachfassen
     }, 5000);
 }
 window.githubStartNachschau = githubStartNachschau;
-// Alter Name aus der Zeit des Start-Fensters. Es kann noch irgendwo
+// Alter Name aus der Zeit des ersten Start-Fensters. Es kann noch irgendwo
 // gerufen werden - dann soll es das Richtige tun statt zu scheitern.
 window.githubAutoAngebot = githubStartNachschau;
 
 // ---------------------------------------------------------------
-// DAS KLEINE FENSTER
+// DAS FENSTER
 // ---------------------------------------------------------------
-function githubSchliessen(){
-    const m = document.getElementById('githubModal');
-    if(m) m.style.display = 'none';
-    // Zumachen heisst "spaeter" - und das heisst: der Knopf ist wieder
-    // der Info-Knopf. Gemerkt wird nichts; beim naechsten Start meldet es
-    // sich wieder.
-    updateKnopfAus();
+function updateFensterBauen(){
+    let m = document.getElementById('updateModal');
+    if(m) return m;
+    m = document.createElement('div');
+    m.id = 'updateModal';
+    m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+        + 'z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+    m.innerHTML =
+        '<div role="dialog" aria-modal="true" aria-labelledby="updateTitel" '
+      + 'style="background:var(--card-bg, #fff); color:var(--ink); border-radius:16px; width:100%; max-width:580px; '
+      + 'max-height:calc(92vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; overflow:hidden; '
+      + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
+
+      // Kopf
+      + '<div style="display:flex; align-items:center; gap:12px; padding:1.05rem 1.3rem 0.5rem;">'
+      + '<i class="fas fa-cloud-arrow-down" aria-hidden="true" style="font-size:1.6rem; color:var(--panel-navy);"></i>'
+      + '<h3 id="updateTitel" style="flex:1; margin:0; font-size:1.08rem; line-height:1.3; color:var(--panel-navy);"></h3>'
+      + '<button type="button" class="btn btn-outline x-zu" style="padding:3px 9px;" '
+      + 'aria-label="Schließen" onclick="updateFensterSchliessen()">&#10005;</button></div>'
+
+      // Der Satz mit den Nummern
+      + '<div id="updateSatz" style="padding:0 1.3rem; font-size:0.9rem; line-height:1.6;"></div>'
+
+      // Was sich geaendert hat
+      + '<div style="padding:0.85rem 1.3rem 0; font-size:0.74rem; font-weight:700; letter-spacing:0.05em; '
+      + 'text-transform:uppercase; color:var(--muted);">Was sich geändert hat</div>'
+      + '<div id="updateListe" tabindex="0" style="margin:0.35rem 1.3rem 0; flex:1 1 auto; min-height:110px; '
+      + 'max-height:calc(38vh / var(--afu-zoom, 1)); overflow-y:auto; border:1px solid var(--line); border-radius:10px; '
+      + 'background:#f9fbff; padding:0.6rem 0.9rem; font-size:0.84rem; line-height:1.5;"></div>'
+
+      // Fortschritt / Ergebnis
+      + '<div id="updateStatus" aria-live="polite" style="padding:0.6rem 1.3rem 0; min-height:1.5rem; '
+      + 'font-size:0.82rem; line-height:1.5; color:var(--muted);"></div>'
+
+      // Das Haekchen
+      + '<label id="updateStummZeile" style="display:flex; align-items:center; gap:8px; padding:0.45rem 1.3rem 0; '
+      + 'font-size:0.8rem; color:var(--muted); cursor:pointer; user-select:none;">'
+      + '<input type="checkbox" id="updateStumm" style="width:16px; height:16px; margin:0;">'
+      + '<span id="updateStummText">An diese Version nicht mehr erinnern</span></label>'
+
+      // Die Knoepfe
+      + '<div id="updateKnoepfe" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; '
+      + 'padding:0.9rem 1.3rem 1.1rem;">'
+      + '<button type="button" class="btn btn-outline" id="updateSpaeter" style="padding:7px 16px;" '
+      + 'onclick="updateFensterSchliessen()">Später</button>'
+      + '<button type="button" class="btn btn-outline" id="updateSeite" style="padding:7px 16px;" '
+      + 'onclick="updateSeiteOeffnen()"><i class="fab fa-github"></i> Bei GitHub ansehen</button>'
+      + '<button type="button" class="btn-lernstand" id="updateJetzt" '
+      + 'style="font-size:0.86rem; padding:0.45rem 1.05rem;" onclick="updateJetzt()">'
+      + '<i class="fas fa-cloud-arrow-down"></i> Jetzt aktualisieren</button>'
+      + '<button type="button" class="btn-lernstand" id="updateZu" style="display:none; font-size:0.86rem; '
+      + 'padding:0.45rem 1.05rem;" onclick="updateFensterSchliessen()">Schließen</button>'
+      + '</div></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', e => { if(e.target === m) updateFensterSchliessen(); });
+    return m;
 }
-window.githubSchliessen = githubSchliessen;
 
-async function githubOeffnen(){
-    let modal = document.getElementById('githubModal');
-    if(!modal){
-        modal = document.createElement('div');
-        modal.id = 'githubModal';
-        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
-            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
-        modal.innerHTML =
-            '<div style="background:#fff; border-radius:16px; padding:1.15rem 1.25rem; max-width:430px; width:96%; '
-            + 'max-height:calc(86vh / var(--afu-zoom, 1)); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
-            + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.7rem;">'
-            + '<h3 style="flex:1; margin:0; font-size:1rem; color:var(--panel-navy);">'
-            + '<i class="fab fa-github"></i> Update vorhanden</h3>'
-            + '<button type="button" class="btn btn-outline x-zu" style="padding:3px 9px;" '
-            + 'onclick="githubSchliessen()">&#10005;</button></div>'
-            + '<div id="githubInhalt"></div></div>';
-        document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if(e.target === modal) githubSchliessen(); });
-    }
-    modal.style.display = 'flex';
-    githubPruefen();
+function updateDatumDeutsch(iso){
+    const t = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return t ? (t[3] + '.' + t[2] + '.' + t[1]) : '';
 }
-window.githubOeffnen = githubOeffnen;
 
-async function githubPruefen(){
-    const ziel = document.getElementById('githubInhalt');
-    if(!ziel) return;
-
-    // Probelauf: dasselbe Fenster, dieselben Knoepfe - nur wird nichts
-    // geholt. Der Hinweis darauf steht klein darunter, damit man beim
-    // Vorfuehren nicht aus Versehen den Probelauf fuer den Ernstfall haelt.
-    if(githubTest){
-        githubHolbar = ['(Probelauf)'];
-        githubProgramm = [];
-        ziel.innerHTML =
-            '<div style="font-size:0.95rem; line-height:1.65; color:var(--ink);">'
-          + 'Für den Amateurfunk-Trainer liegt eine neuere Fassung bereit.'
-          + '</div>'
-          + '<div style="margin-top:1.1rem; display:flex; gap:10px; flex-wrap:wrap;">'
-          + '<button class="btn-lernstand" onclick="githubAnwenden()">Aktualisieren</button>'
-          + '<button type="button" class="btn btn-outline" style="padding:6px 16px;" '
-          + 'onclick="githubSchliessen()">Später</button>'
-          + '</div>'
-          + '<div style="margin-top:0.9rem; font-size:0.72rem; color:var(--muted);">'
-          + 'Probelauf — es wird nichts geholt und nichts geschrieben.</div>';
-        return;
-    }
-
-    if(!laeuftLokal()){
-        ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.85rem 0.95rem; font-size:0.85rem; line-height:1.6;">'
-            + '<b>Das hier ist der Trainer des Entwicklers.</b><br>'
-            + 'Ein Update schreibt Dateien in <i>deinen</i> Ordner. Dafür musst du deinen eigenen Trainer '
-            + 'öffnen: <span style="font-family:var(--font-mono); background:#eef4fc; padding:1px 6px; border-radius:6px;">http://localhost:3000</span>'
+function updateListeHtml(l){
+    const a = l.aenderungen || [];
+    if(!a.length){
+        const dateien = l.anzahl + (l.anzahl === 1 ? ' Datei' : ' Dateien');
+        return '<div style="color:var(--muted);">'
+            + ((l.versionDort && l.versionHier && l.versionDort !== l.versionHier)
+                ? 'Das Änderungsprotokoll ließ sich gerade nicht lesen. Was neu ist, steht bei GitHub.'
+                : 'Berichtigungen ohne neue Versionsnummer — ' + dateien + ', etwa Fragen, Erklärungen oder Bilder.')
             + '</div>';
+    }
+    let h = '';
+    for(const v of a){
+        h += '<div style="font-weight:700; color:var(--panel-navy); margin:' + (h ? '0.75rem' : '0') + ' 0 0.25rem;">'
+           + 'Version ' + updateEsc(v.version)
+           + (v.datum ? ' <span style="font-weight:400; font-size:0.78rem; color:var(--muted);">· '
+                      + updateDatumDeutsch(v.datum) + '</span>' : '')
+           + '</div><ul style="margin:0; padding-left:1.15rem;">';
+        for(const p of (v.punkte || [])){
+            h += '<li style="margin:0.18rem 0;">'
+               + (p.art ? '<b>' + updateEsc(p.art) + ':</b> ' : '')
+               + updateEsc(p.text) + '</li>';
+        }
+        h += '</ul>';
+    }
+    return h;
+}
+
+function updateFensterZeigen(l){
+    const m = updateFensterBauen();
+    updateLage = l;
+    updateGezeigt = true;
+    const neu = l.versionDort, hier = l.versionHier;
+    const neueNummer = !!(neu && hier && neu !== hier) || !!(neu && !hier);
+
+    document.getElementById('updateTitel').textContent = neueNummer
+        ? 'Neue Version des Amateurfunk-Trainers'
+        : 'Aktualisierte Dateien für den Amateurfunk-Trainer';
+
+    let satz;
+    if(neu && hier && neu !== hier){
+        satz = 'Version <b>' + updateEsc(neu) + '</b> ist verfügbar. Du benutzt gerade <b>' + updateEsc(hier) + '</b>. '
+             + 'Das Update bringt den Trainer von ' + updateEsc(hier) + ' auf ' + updateEsc(neu) + '.';
+    } else if(neu && !hier){
+        satz = 'Version <b>' + updateEsc(neu) + '</b> ist verfügbar. Welche Fassung hier läuft, ließ sich nicht feststellen.';
+    } else {
+        satz = 'Bei GitHub liegen <b>' + l.anzahl + (l.anzahl === 1 ? ' berichtigte Datei' : ' berichtigte Dateien') + '</b>'
+             + (hier ? ' für Version ' + updateEsc(hier) + ' — die Version, die du gerade benutzt.' : '.');
+    }
+    if((l.programm || []).length){
+        satz += '<div style="margin-top:0.4rem; font-size:0.82rem; color:var(--muted);">'
+              + 'Programmdateien sind dabei — danach muss der Trainer einmal neu gestartet werden.</div>';
+    }
+    if(l.eigene){
+        satz += '<div style="margin-top:0.4rem; font-size:0.82rem; color:var(--muted);">'
+              + l.eigene + (l.eigene === 1 ? ' Datei ist' : ' Dateien sind') + ' hier neuer als bei GitHub — die bleiben unangetastet.</div>';
+    }
+    document.getElementById('updateSatz').innerHTML = satz;
+    document.getElementById('updateListe').innerHTML = updateListeHtml(l);
+    document.getElementById('updateListe').scrollTop = 0;
+
+    const status = document.getElementById('updateStatus');
+    status.innerHTML = l.probelauf
+        ? '<span style="color:#8a5a12;">Probelauf — es wird nichts geholt und nichts geschrieben.</span>'
+        : '';
+
+    const kasten = document.getElementById('updateStumm');
+    kasten.checked = false;
+    kasten.disabled = false;
+    document.getElementById('updateStummText').textContent = neueNummer
+        ? 'An Version ' + neu + ' nicht mehr erinnern'
+        : 'An diese Berichtigungen nicht mehr erinnern';
+    document.getElementById('updateStummZeile').style.display = 'flex';
+
+    ['updateSpaeter','updateSeite','updateJetzt'].forEach(id => {
+        const k = document.getElementById(id);
+        k.style.display = '';
+        k.style.opacity = '';
+        k.style.cursor = '';
+        k.disabled = false;
+    });
+    document.getElementById('updateZu').style.display = 'none';
+
+    m.style.display = 'flex';
+    try{ document.getElementById('updateJetzt').focus(); }catch(e){}
+}
+window.updateFensterZeigen = updateFensterZeigen;
+
+function updateFensterSchliessen(){
+    if(updateLaeuft) return;      // waehrend des Holens bleibt es auf
+    const m = document.getElementById('updateModal');
+    if(!m) return;
+    const kasten = document.getElementById('updateStumm');
+    if(kasten && kasten.checked && updateLage && !updateLage.probelauf) updateStummSetzen(updateKennung(updateLage));
+    m.style.display = 'none';
+}
+window.updateFensterSchliessen = updateFensterSchliessen;
+
+document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    const m = document.getElementById('updateModal');
+    if(m && m.style.display === 'flex') updateFensterSchliessen();
+});
+
+function updateSeiteOeffnen(){
+    // Die Seite mit den Veroeffentlichungen: dort stehen die Aenderungen
+    // ausfuehrlich, und das ZIP fuer die, die lieber neu auspacken.
+    try{ window.open(GITHUB_SEITE + '/releases', '_blank', 'noopener'); }catch(e){}
+}
+window.updateSeiteOeffnen = updateSeiteOeffnen;
+
+// Der Probelauf: erfundene Nummern, erfundene Liste, ein Fortschritt, der
+// nur zaehlt.
+function updateProbeLage(){
+    const hier = versionHierBekannt || '1.297.0';
+    const t = hier.split('.').map(Number);
+    const neu = t[0] + '.' + ((t[1] || 0) + 1) + '.0';
+    const heute = new Date().toISOString().slice(0, 10);
+    return {
+        probelauf: true, commit: null, namen: [], programm: [], anzahl: 7, eigene: 0,
+        versionHier: hier, versionDort: neu,
+        aenderungen: [{ version: neu, datum: heute, punkte: [
+            { art: null, text: 'Probelauf — so sieht das Fenster aus, wenn eine neue Version bereitliegt' },
+            { art: null, text: 'Die Liste kommt aus dem Änderungsprotokoll bei GitHub, Überschrift für Überschrift' },
+            { art: 'Behoben', text: 'Unter Sammelüberschriften stehen die einzelnen Punkte, jeweils nur der Anfang' },
+            { art: null, text: '„Jetzt aktualisieren" zählt im Probelauf nur hoch — es wird nichts geholt und nichts geschrieben' }
+        ]}]
+    };
+}
+
+// ---------------------------------------------------------------
+// JETZT AKTUALISIEREN
+// ---------------------------------------------------------------
+// Der Klick ist die Zusage - auch fuer Programmdateien. Eine zweite
+// Frage auf dieselbe Entscheidung erzieht nur zum Wegklicken.
+//
+// Waehrenddessen: Knoepfe aus, Fenster bleibt auf, die Statuszeile
+// zaehlt mit ("12 von 40 Dateien"). Ohne Dateinamen - Dietmar am
+// 28.08.2026: "Ich wuensche ein kleines Fenster ohne Code und
+// dergleichen."
+// ---------------------------------------------------------------
+async function updateJetzt(){
+    if(updateLaeuft || !updateLage) return;
+    const status = document.getElementById('updateStatus');
+    const kasten = document.getElementById('updateStumm');
+    updateLaeuft = true;
+    // Aus heisst aus - und soll auch so aussehen. disabled allein laesst
+    // die Knoepfe stehen, als warteten sie auf den Klick.
+    ['updateSpaeter','updateSeite','updateJetzt'].forEach(id => {
+        const k = document.getElementById(id); k.disabled = true; k.style.opacity = '0.45'; k.style.cursor = 'default';
+    });
+    if(kasten) kasten.disabled = true;
+    const zeile = (n, g) => '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Wird geholt … '
+        + (g ? n + ' von ' + g + (g === 1 ? ' Datei' : ' Dateien') : '');
+    status.innerHTML = zeile(0, 0);
+
+    // Probelauf: hier ist Schluss. Kein Aufruf an den Server, keine Datei.
+    if(updateLage.probelauf){
+        let n = 0; const gesamt = updateLage.anzahl || 7;
+        const uhr = setInterval(()=>{
+            n++;
+            status.innerHTML = zeile(n, gesamt) + ' <span style="color:#8a5a12;">(Probelauf)</span>';
+            if(n >= gesamt){
+                clearInterval(uhr);
+                updateLaeuft = false;
+                updateFertigZeigen({ ok: true, geschrieben: [], fehler: [], neustartNoetig: false, probelauf: true });
+            }
+        }, 350);
         return;
     }
-    ziel.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">Bei GitHub nachsehen …</div>';
+
+    // Der Server zaehlt mit; alle halbe Sekunde nachsehen.
+    const uhr = setInterval(async ()=>{
+        try{
+            const r = await fetch('/api/github/fortschritt', {cache:'no-store'});
+            if(!r.ok) return;
+            const f = await r.json();
+            if(f && f.laeuft) status.innerHTML = zeile(f.fertig, f.gesamt);
+        }catch(e){}
+    }, 500);
+
     try{
-        const res = await fetch('/api/github/pruefen', {cache:'no-store'});
+        const res = await fetch('/api/github/anwenden', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                commit: updateLage.commit,
+                dateien: updateLage.namen,
+                programmBestaetigt: (updateLage.programm || []).length > 0
+            })
+        });
         // Erst als Text lesen. Ein aelterer Server antwortet hier mit dem
         // schlichten Wort "Not found", und res.json() wuerde daran mit
         // einer Javascript-Meldung zerbrechen, die niemandem hilft.
@@ -17777,173 +17891,105 @@ async function githubPruefen(){
         let j = null;
         try{ j = JSON.parse(roh); }catch(e2){ j = null; }
         if(res.status === 404 || (j === null && /not found/i.test(roh))){
-            ziel.innerHTML = '<div style="border:1px solid #e0b25a; background:#fdf1e0; border-radius:12px; padding:0.85rem 0.95rem; font-size:0.85rem; line-height:1.6;">'
-                + '<b>Dein Trainer-Programm ist älter als diese Funktion.</b><br>'
-                + 'Die Anzeige wurde erneuert, das Programm '
-                + '(<span style="font-family:var(--font-mono);">Server.js</span>) aber nicht.'
-                + '</div>'
-                + '<div style="margin-top:0.8rem; font-size:0.85rem; line-height:1.7;">'
-                + '<b>Der kürzeste Weg — zwei Dateien von GitHub:</b><br>'
-                + 'Beide Links mit <i>Rechtsklick &rarr; Speichern unter</i> in deinen '
-                + 'Trainer-Ordner legen (vorhandene ersetzen), dann '
-                + '<span style="font-family:var(--font-mono);">START.bat</span> neu starten.'
-                + '<div style="margin-top:0.45rem; font-family:var(--font-mono); font-size:0.78rem; line-height:1.9;">'
-                + '<a href="' + GITHUB_ROH + 'Server.js" target="_blank" rel="noopener">Server.js</a><br>'
-                + '<a href="' + GITHUB_ROH + 'github_update.js" target="_blank" rel="noopener">github_update.js</a>'
-                + '</div>'
-                + '<div style="margin-top:0.45rem; font-size:0.78rem; color:var(--muted);">'
-                + 'Dein Lernstand liegt in <span style="font-family:var(--font-mono);">data/</span> '
-                + 'und wird dabei nicht angefasst.</div>'
-                + '</div>';
-            return;
+            throw new Error('Dein Trainer-Programm (Server.js) ist älter als diese Funktion. '
+                + 'Bitte das aktuelle ZIP von GitHub auspacken — der Lernstand in data/ bleibt dabei erhalten.');
         }
-        if(!res.ok) throw new Error((j && j.error) || ('HTTP ' + res.status));
-        githubDaten = j;
-        // Die Nummern merken, damit der Reiter "Update" in den
-        // Einstellungen sie zeigen kann, ohne noch einmal nachzufragen.
-        try{ einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null }; }catch(e2){}
-        githubZeigen(j);
+        if(!res.ok || !j) throw new Error((j && j.error) || ('HTTP ' + res.status));
+        updateFertigZeigen(j);
     }catch(e){
-        ziel.innerHTML = '<div style="border:1px solid var(--line); border-radius:12px; padding:0.8rem; background:#fdf1e0; font-size:0.83rem;">'
-            + '<b>Nachsehen nicht möglich.</b><br>' + String(e.message).replace(/</g,'&lt;') + '<br>'
-            + '<span style="color:var(--muted);">Besteht eine Internetverbindung? GitHub lässt pro Stunde nur '
-            + 'eine begrenzte Zahl Anfragen zu — dann hilft abwarten.</span></div>';
+        updateFertigZeigen({ ok: false, geschrieben: [], fehler: [{ grund: e.message }], neustartNoetig: false });
+    }finally{
+        clearInterval(uhr);
+        updateLaeuft = false;
     }
 }
-window.githubPruefen = githubPruefen;
+window.updateJetzt = updateJetzt;
 
-function githubZeigen(j){
-    const ziel = document.getElementById('githubInhalt');
-    if(!ziel) return;
-    const alle = j.eintraege || [];
-    const holbar = alle.filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
-
-    githubHolbar   = holbar.map(e => e.name);
-    githubProgramm = holbar.filter(e => e.art === 'programm').map(e => e.name);
-
-    if(!holbar.length){
-        ziel.innerHTML = '<div style="font-size:0.92rem; line-height:1.6;">'
-            + 'Alles auf demselben Stand. Es gibt nichts zu holen.</div>'
-            + '<div style="margin-top:1rem;"><button type="button" class="btn btn-outline" '
-            + 'style="padding:6px 16px;" onclick="githubSchliessen()">Schließen</button></div>';
-        return;
+// Das Ergebnis - an derselben Stelle, an der vorher der Fortschritt
+// stand. Interessant ist genau eines: Hat es geklappt, und muss ich noch
+// etwas tun?
+function updateFertigZeigen(j){
+    const status = document.getElementById('updateStatus');
+    const misslungen = (j.fehler && j.fehler.length) ? j.fehler.length : 0;
+    const geholt = (j.geschrieben && j.geschrieben.length) ? j.geschrieben.length : 0;
+    let t;
+    if(misslungen && !geholt && !j.probelauf){
+        // DER GRUND GEHOERT INS FENSTER. Bis zum 02.09.2026 stand hier
+        // nur "Es wurde nichts veraendert." In Dietmars Fall war das
+        // falscher Rat: Der Trainer lag in C:\Program Files und durfte
+        // sich dort nicht selbst ersetzen. Der Server schickt den Grund
+        // im Klartext mit.
+        const grund = (j.fehler[0] && j.fehler[0].grund) ? String(j.fehler[0].grund) : '';
+        t = '<b style="color:var(--bad);">Das hat nicht geklappt.</b> Es wurde nichts verändert.'
+          + (grund ? '<br>' + updateEsc(grund) : '');
+    } else {
+        t = '<b style="color:#15703c;">Fertig — der Trainer ist auf dem neuesten Stand.</b>';
+        if(misslungen) t += '<br><span style="color:#8a6d00;">' + misslungen + ' Datei(en) blieben zurück: '
+                          + updateEsc((j.fehler[0] && j.fehler[0].grund) || '') + '</span>';
+        if(j.probelauf){
+            t += '<br><span style="color:#8a5a12;">Probelauf — es wurde nichts geholt und nichts geschrieben.</span>';
+        } else if(j.neustartNoetig){
+            t += '<br>Bitte den Trainer einmal <b>beenden und neu starten</b>, damit das Programm die neuen Dateien lädt.';
+        } else {
+            t += '<br>Die Seite lädt gleich neu.';
+            setTimeout(()=>{ try{ location.reload(); }catch(e){} }, 3500);
+        }
     }
-
-    // Bewusst ohne Dateinamen, ohne Groessen, ohne Quellenangabe.
-    //
-    // Dietmar am 28.08.2026: "Ich wuensche ein kleines Fenster ohne Code und
-    // dergleichen." Er hat recht - "video_map_embed.js, 211892 Bytes" ist fuer
-    // die Entscheidung, die hier ansteht, vollkommen wertlos. Wer den Trainer
-    // benutzt, will wissen: Gibt es was Neues, ja oder nein. Alles andere ist
-    // Ausstattung, die nur Unsicherheit erzeugt.
-    //
-    // Was dabei geschieht, ist deshalb nicht weniger sicher: Was hier neuer
-    // ist als bei GitHub, wird nach wie vor nie angefasst, die alten
-    // Fassungen wandern nach backup/, und der Lernstand in data/ bleibt
-    // unberuehrt. Das steht jetzt in der README statt in jedem Fenster.
-    // Zwei Zahlen statt eines Satzes ins Blaue. Dietmar am 05.09.2026 wollte
-    // die Version sehen statt eines Fingerabdrucks - hier ist sie am
-    // nuetzlichsten, weil daneben die Entscheidung ansteht. Fehlen die
-    // Nummern (altes CHANGELOG dort, GitHub bremst), bleibt es beim Satz.
-    const vHier = j.versionHier, vDort = j.versionDort;
-    const nummern = (vHier && vDort && vHier !== vDort)
-        ? '<div style="margin-top:0.6rem; font-family:var(--font-mono); font-size:0.95rem; color:var(--panel-navy);">'
-          + vHier + ' &rarr; <b>' + vDort + '</b></div>'
-        : '';
-
-    ziel.innerHTML =
-        '<div style="font-size:0.95rem; line-height:1.65; color:var(--ink);">'
-      + 'Für den Amateurfunk-Trainer liegt eine neuere Fassung bereit.'
-      + '</div>'
-      + nummern
-      + '<div style="margin-top:1.1rem; display:flex; gap:10px; flex-wrap:wrap;">'
-      + '<button class="btn-lernstand" onclick="githubAnwenden()">Aktualisieren</button>'
-      + '<button type="button" class="btn btn-outline" style="padding:6px 16px;" '
-      + 'onclick="githubSchliessen()">Später</button>'
-      + '</div>'
-      ;
+    status.innerHTML = t;
+    // Diese Fassung ist jetzt da - ein altes Haekchen dazu ist gegenstandslos.
+    if(geholt) updateStummSetzen('');
+    document.getElementById('updateStummZeile').style.display = 'none';
+    ['updateSpaeter','updateSeite','updateJetzt'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+    const zu = document.getElementById('updateZu');
+    zu.style.display = '';
+    zu.disabled = false;
+    try{ zu.focus(); }catch(e){}
 }
 
-async function githubAnwenden(){
-    const ziel = document.getElementById('githubInhalt');
-    if(!ziel) return;
-    if(!githubHolbar.length){
-        ziel.innerHTML = '<div style="font-size:0.92rem;">Es gibt nichts zu holen.</div>';
+// ---------------------------------------------------------------
+// VON HAND NACHSEHEN (Einstellungen -> Update)
+// ---------------------------------------------------------------
+// Dasselbe Fenster, nur jetzt gefragt statt beim Start - und deshalb auch
+// dann, wenn es nichts zu holen gibt: Dann sagt es das.
+async function githubOeffnen(){
+    if(!laeuftLokal()){
+        if(typeof showAppAlert === 'function')
+            showAppAlert('Das hier ist der Trainer des Entwicklers. Ein Update schreibt Dateien in deinen '
+                       + 'Ordner — dafür musst du deinen eigenen Trainer öffnen: http://localhost:3000');
         return;
     }
-    // Der ganze Fensterinhalt wird ersetzt, nicht nur etwas darunter
-    // gehaengt. Sonst stehen die Knoepfe "Aktualisieren" und "Spaeter"
-    // noch da, waehrend darunter schon "Fertig" steht - und man fragt
-    // sich, ob man noch einmal klicken muss.
-    ziel.innerHTML = '<div style="color:var(--muted); font-size:0.92rem;">Wird geholt …</div>';
-
-    const schliessKnopf = '<div style="margin-top:1rem;"><button type="button" class="btn btn-outline" '
-        + 'style="padding:6px 16px;" onclick="githubSchliessen()">Schließen</button></div>';
-
-    // Probelauf: hier ist Schluss. Kein Aufruf an den Server, keine Datei.
-    if(githubTest){
-        setTimeout(()=>{
-            ziel.innerHTML = '<div style="font-size:0.95rem; line-height:1.65;">'
-                + '<b>Fertig.</b> Der Trainer ist auf dem neuesten Stand.'
-                + '<br><br>Bitte den Trainer einmal <b>neu starten</b>.</div>'
-                + '<div style="margin-top:0.9rem; font-size:0.72rem; color:var(--muted);">'
-                + 'Probelauf — es wurde nichts geholt und nichts geschrieben.</div>'
-                + schliessKnopf;
-            updateKnopfAus();
-        }, 900);
-        return;
-    }
+    let j = null;
     try{
-        // programmBestaetigt: Der Klick auf "Aktualisieren" IST die Zusage.
-        // Frueher kam hier noch eine Rueckfrage per confirm() - eine zweite
-        // Frage auf dieselbe Entscheidung erzieht nur zum Wegklicken.
-        const res = await fetch('/api/github/anwenden', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-                commit: githubDaten.commit,
-                dateien: githubHolbar,
-                programmBestaetigt: githubProgramm.length > 0
-            })
-        });
-        const j = await res.json();
-        if(!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
-
-        // Auch hier keine Dateiliste. Interessant ist genau eines: Hat es
-        // geklappt, und muss ich noch etwas tun?
-        const misslungen = (j.fehler && j.fehler.length) ? j.fehler.length : 0;
-        let t = '<div style="font-size:0.95rem; line-height:1.65;">';
-        if(misslungen && !j.geschrieben.length){
-            // DER GRUND GEHOERT INS FENSTER. Bis zum 02.09.2026 stand hier
-            // nur "Es wurde nichts verändert. Später noch einmal versuchen."
-            // In Dietmars Fall war das falscher Rat: Der Trainer lag in
-            // C:\Program Files und durfte sich dort nicht selbst ersetzen.
-            // Später hätte genauso wenig geklappt. Der Server schickt den
-            // Grund im Klartext mit - er wurde hier nur weggeworfen.
-            const grund = (j.fehler[0] && j.fehler[0].grund) ? String(j.fehler[0].grund) : '';
-            t += '<b style="color:var(--bad);">Das hat nicht geklappt.</b><br>'
-               + '<span style="color:var(--muted); font-size:0.88rem;">Es wurde nichts verändert.'
-               + (grund ? '<br><br>' + grund.replace(/</g,'&lt;') : ' Später noch einmal versuchen.')
-               + '</span>';
-        }else{
-            t += '<b>Fertig.</b> Der Trainer ist auf dem neuesten Stand.';
-            if(misslungen) t += '<br><span style="color:#8a6d00; font-size:0.88rem;">'
-               + misslungen + ' Datei(en) blieben zurück.</span>';
-            t += (j.neustartNoetig)
-               ? '<br><br>Bitte den Trainer einmal <b>neu starten</b>.'
-               : '<br><br>Bitte die Seite einmal mit <b>Strg+F5</b> neu laden.';
-        }
-        t += '</div>';
-        ziel.innerHTML = t + schliessKnopf;
-        // Der Knopf oben hat seine Aufgabe erfuellt.
-        updateKnopfAus();
+        const res = await fetch('/api/github/pruefen', {cache:'no-store'});
+        const roh = await res.text();
+        try{ j = JSON.parse(roh); }catch(e2){ j = null; }
+        if(!res.ok || !j) throw new Error((j && j.error) || ('Das Nachsehen hat nicht geklappt (HTTP ' + res.status + ').'));
     }catch(e){
-        ziel.innerHTML = '<div style="font-size:0.92rem; line-height:1.6;">'
-            + '<b style="color:var(--bad);">Das hat nicht geklappt.</b><br>'
-            + '<span style="color:var(--muted); font-size:0.85rem;">'
-            + String(e.message).replace(/</g,'&lt;') + '</span></div>' + schliessKnopf;
+        if(typeof showAppAlert === 'function')
+            showAppAlert('Nachsehen nicht möglich: ' + e.message + ' — Besteht eine Internetverbindung? '
+                       + 'GitHub lässt pro Stunde nur eine begrenzte Zahl Anfragen zu; dann hilft abwarten.');
+        return;
     }
+    try{ einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null }; }catch(e2){}
+    const holbar = (j.eintraege || []).filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
+    if(!holbar.length){
+        if(typeof showAppAlert === 'function')
+            showAppAlert('Alles auf demselben Stand — es gibt nichts zu holen.'
+                       + (j.versionHier ? ' (Version ' + j.versionHier + ')' : ''));
+        return;
+    }
+    updateTest = false;
+    updateFensterZeigen({
+        commit: j.commit,
+        namen: holbar.map(e => e.name),
+        programm: holbar.filter(e => e.art === 'programm').map(e => e.name),
+        anzahl: holbar.length,
+        eigene: (j.eintraege || []).filter(e => e.lage === 'neuer_hier').length,
+        versionHier: j.versionHier || null, versionDort: j.versionDort || null,
+        aenderungen: j.aenderungen || []
+    });
 }
-window.githubAnwenden = githubAnwenden;
+window.githubOeffnen = githubOeffnen;
 
 // ================================================================
 // FORMELSAMMLUNG ALS HINWEIS AN DER FRAGE
@@ -21000,8 +21046,7 @@ function infoFuellen() {
             [
             '<span id="infoDateiStand" style="color:var(--muted);">wird ermittelt …</span>',
             'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Gastgeber — dort ist der Stand immer aktuell.',
-            'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer Momentaufnahme: Der eigene Ordner erfährt von späteren Änderungen nichts, bis ein Update geholt wird.',
-            '<button class="btn-lernstand" id="githubUpdateBtn" style="margin-top:0.5rem;" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; githubOeffnen();"><i class="fab fa-github"></i> Bei GitHub nachsehen</button>'
+            'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer Momentaufnahme: Der eigene Ordner erfährt von späteren Änderungen nichts, bis ein Update geholt wird. Liegt eines bereit, meldet es sich beim Start in einem eigenen Fenster; nachsehen kann man jederzeit in den Einstellungen unter Update.'
         ]));
 }
 
@@ -23280,8 +23325,8 @@ function einstBlaetterFuellen(){
 
     // ---- Update ----
     document.getElementById('einstBlatt_update').innerHTML =
-        einstKasten('Version', 'Der Trainer sieht bei GitHub nach, ob es eine neuere Fassung gibt. '
-            + 'Geholt wird nichts, ohne dass du es sagst.',
+        einstKasten('Version', 'Der Trainer sieht beim Start bei GitHub nach, ob es eine neuere Fassung gibt, '
+            + 'und meldet sie in einem Fenster mit dem, was sich geändert hat. Geholt wird nichts, ohne dass du es sagst.',
             '<div id="einstVersion" style="font-size:0.84rem; line-height:1.7; color:var(--ink);">'
           + '<span style="color:var(--muted);">wird ermittelt …</span></div>'
           + '<div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.7rem;">'
@@ -23784,7 +23829,9 @@ async function einstGithubNachsehen(){
         einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null };
         await einstUpdateFuellen();
 
-        const holbar = (j.eintraege || []).filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt');
+        // Dieselbe Zaehlung wie im Fenster: 'unbekannt' (nie abgeglichen,
+        // die Lage jeder frischen Installation) zaehlt mit.
+        const holbar = (j.eintraege || []).filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
         const eigene = (j.eintraege || []).filter(e => e.lage === 'neuer_hier');
         let t = '';
         if(holbar.length){
@@ -25312,7 +25359,16 @@ function renderQuestion() {
         html += `<div style="margin-bottom:0.8rem; background:#fffaf0; border:2px solid #e2932f; border-radius:12px; padding:0.6rem 0.9rem; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;"><div><span style="background:#e2932f;color:white;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;"><i class="fas fa-eye"></i> TRAINER SICHT</span> <b>${trainerName}</b> <span style="color:var(--muted);font-size:0.8rem;">${pAnsText}</span> <span style="color:var(--muted);font-size:0.75rem;">– ${displayCorrectCount}/${displayTotalAnswered}</span></div><div style="display:flex;gap:6px;"><span style="font-size:0.65rem;background:#0f2745;color:white;padding:2px 8px;border-radius:10px;">Du kannst selbst antworten!</span><button onclick="onTrainerParticipantChange('__trainer__')" style="background:#0f2745;color:white;border:none;border-radius:20px;padding:0.3rem 0.7rem;font-size:0.7rem;cursor:pointer;">👑 Mein Verlauf</button></div></div>`;
     }
     
-    html += `<div class="q-meta">
+    // ================================================================
+    //  DIE ZEILE "TECHNIK ... E -> A" ZIEHT IN DIE KOPFZEILE (17.09.2026)
+    //  Dietmar, mit rot umrandeter Leiste: "Links steht Technik und rechts
+    //  E nach A. Koennen wir das entfernen und wo anders einbauen? Das
+    //  wuerde uns mehr Platz geben." Die Leiste kostete eine ganze Zeile
+    //  ueber dem Kasten - fuer zwei Angaben, die in die Kopfzeile neben
+    //  die Fragennummer passen, wo ohnehin Platz bis zu den Knoepfen ist.
+    //  Auch der Simulator-Zaehler und die Uhr stehen jetzt dort.
+    // ================================================================
+    const metaHtml = `<div class="q-meta">
         <span><i class="fas fa-tag"></i> ${partLabel}</span>
         <span><i class="fas fa-layer-group"></i> ${(typeof klasseAktuell === 'function' ? klasseAktuell().name : 'Klasse N')}</span>
         ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas fa-graduation-cap"></i> SIMULATOR ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
@@ -25370,6 +25426,7 @@ function renderQuestion() {
     html += `<div class="q-text-row">
         <div class="q-kopfzeile">
             <span class="q-nummer">${q.id}</span>
+            ${metaHtml}
         <div class="q-knopfleiste">
             <button id="questionGelerntBtn" class="q-marke q-marke-gelernt" onclick="toggleGelerntCurrent()"
                     aria-label="Als gelernt abhaken"

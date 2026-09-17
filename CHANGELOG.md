@@ -235,6 +235,36 @@ misst rund 57 Punkte, der Rest bleibt unter der Karte als ruhiger Grund. Bei lan
 (VD707) und bei Bildantworten ändert sich nichts — die Karte wächst mit dem Text wie zuvor,
 und die Schriftautomatik greift wie zuvor. Eine Zeile CSS.
 
+**Und die Knopfleiste hängt jetzt am Fenster** (17.09.). Drei Wünsche, die sich zu
+widersprechen schienen: am 09.09. „Der Bereich soll immer auf gleicher Höhe sitzen" und
+„dazwischen in der Fensterfarbe ein Leerraum"; am 16.09. „der Platz dazwischen ist
+schrecklich — die Knopfleiste sitzt zu tief, liegt genau unten auf"; und als sie eine
+Stunde lang dem Inhalt folgte: „Jetzt ist die Knopfleiste wieder mal hoch und mal tief. Sie
+muss auf einer Höhe unten bleiben."
+
+Alle drei gehen nur so: Die Leiste hängt am Fenster (`position: fixed`), ein Stück über
+der Unterkante, als eigene kleine Karte in Kartenbreite. „Weiter" sitzt damit bei jeder
+Frage an derselben Stelle, auch bei langen, wo die Leiste bisher nach unten aus dem Fenster
+wanderte; die Seite rollt dann unter ihr durch, und die Karte hält unten Platz frei, damit
+die letzte Antwort nicht darunter verschwindet. Die Schriftautomatik rechnet mit diesem
+Platz. Nur auf breiten Fenstern (ab 1025 Punkten) — am Handy bleibt die Leiste im Fluss,
+im Beamerbild gilt dessen eigene. Ist die Quellenzeile eingeblendet, rückt die Leiste um
+deren Höhe nach oben.
+
+Ein Zwischenstand, bei dem die Karte am Inhalt endete und darunter Fensterfarbe stand,
+hielt eine Stunde: „Rot markiert muss die Farbe von dem Inhalt haben … Der Button Verlauf
+ausblenden muss weiter runter." Also bleibt die Karte fensterhoch, der Fragenkasten reicht
+wieder bis unten, und mit ihm die Spalte links samt dem Knopf. Nur die Antwortfelder
+wachsen nicht mehr mit, und der graue Rahmen um sie endet nach der letzten Antwort — der
+Rest des Kastens bleibt in seiner hellen Farbe. Nachgemessen bei 1907 × 944 (AE407) und
+1278 × 939 (AC406, VD707).
+
+**Und die Zeile „Technik … E → A" über dem Kasten ist weg.** Dietmar, mit rot umrandeter
+Leiste: „Können wir das entfernen und wo anders einbauen? Das würde uns mehr Platz geben."
+Die beiden Angaben stehen jetzt in der Kopfzeile des Kastens neben der Fragennummer, wo bis
+zu den Knöpfen ohnehin Platz ist — mit ihnen der Simulator-Zähler und die Uhr. Eine Zeile
+gewonnen, nichts verloren.
+
 ### Kokoro — eine zweite Sprachausgabe zum Anhören
 
 Dietmar: „Es gibt auch noch andere Stimmen außer Piper. Wäre das was für uns?" — und nach
@@ -290,6 +320,60 @@ Fragendatei wäre dort nicht aufgefallen: die Programmdateien, alle sechs Fragen
 mindestens einer Stimme. Dazu ein Hinweis, wenn doppelte Downloads („fragen-1.json") im
 Ordner liegen. `installer.iss` bleibt liegen, als Vorlage für den Fall, dass es je wieder
 ein Setup geben soll.
+
+### Beim Start meldet sich das Update in einem Fenster — mit dem, was sich geändert hat
+
+Dietmar schickte zwei Bilder aus einem anderen Programm: Beim Start ein Fenster „Update",
+darin beide Versionsnummern, die Liste der Änderungen, ein Häkchen „nicht mehr erinnern"
+und die Knöpfe. „Das gefällt mir gut und das möchte ich auch haben. Das andere mit dem
+Update, können wir entfernen."
+
+So sieht es jetzt aus: **„Neue Version des Amateurfunk-Trainers"** — „Version 1.298.0 ist
+verfügbar. Du benutzt gerade 1.297.0. Das Update bringt den Trainer von 1.297.0 auf
+1.298.0." Darunter **Was sich geändert hat**: die Überschriften aus diesem Protokoll,
+Fassung für Fassung, für alles, was neuer ist als die Fassung im Ordner — in einem Kasten
+zum Blättern. Unter Sammelüberschriften („Behoben", „Geändert") stehen die einzelnen
+Punkte, jeweils nur der Anfang. Dann eine Zeile für den Fortschritt, das Häkchen **„An
+Version 1.298.0 nicht mehr erinnern"** und drei Knöpfe: **Später**, **Bei GitHub
+ansehen** (die Seite mit den Veröffentlichungen), **Jetzt aktualisieren**.
+
+Drei Knöpfe statt vier: Der Trainer hat keinen Installer, den man getrennt herunterladen
+könnte. „Jetzt aktualisieren" holt die geänderten Dateien in den Ordner, so wie es
+„Aktualisieren" vorher tat — mit demselben Schutz: Was hier neuer ist als bei GitHub,
+bleibt unangetastet, die alten Fassungen wandern nach `backup/`, jede Datei wird vor dem
+Schreiben nachgerechnet, `data/` wird nie angefasst. Neu ist die Zählung dabei („12 von
+40 Dateien", `/api/github/fortschritt`), und danach lädt die Seite von selbst neu; waren
+Programmdateien dabei, bittet das Fenster um einen Neustart. Kommt die Antwort von
+GitHub erst, wenn schon eine Runde läuft oder ein anderes Fenster offen ist, wartet das
+Fenster, bis beides vorbei ist.
+
+Die Liste kommt aus dem `CHANGELOG.md` bei GitHub — `github_update.js` liest die
+`###`-Überschriften der neueren Abschnitte (`aenderungenAus`). Keine zweite Datei, die
+gepflegt werden müsste. Sind Dateien neuer, ohne dass die Nummer sich geändert hat
+(berichtigte Fragen, Bilder), heißt das Fenster „Aktualisierte Dateien" und sagt das.
+
+**Weggefallen**, auf Dietmars Antwort hin: der blinkende Info-Knopf und der Ton
+(`sounds/update.mp3` bleibt liegen, wird aber nicht mehr gespielt), der grüne Balken am
+Seitenkopf, der Knopf „Bei GitHub nachsehen" im Info-Fenster — und das stille Nachholen
+von Fragen und Bildern beim Start. „Nein — das Fenster fragt." Nichts aus dem Netz
+landet mehr ungefragt im Ordner. Geblieben ist der Reiter **Update** in den
+Einstellungen; „Ansehen und holen" öffnet dort dasselbe Fenster. `Update-Test.bat`
+zeigt das Fenster mit erfundenen Nummern und Liste; „Jetzt aktualisieren" zählt dann
+nur hoch.
+
+Geprüft gegen ein nachgebautes GitHub (`AFU_GITHUB_API`/`AFU_GITHUB_RAW` auf einen
+lokalen Server): 1.296.0 → 1.297.0 mit 13 Überschriften, gleiche Nummer mit zwei
+berichtigten Dateien, eine hier neuere Datei (unangetastet), Holen mit Fortschritt und
+Sicherung in `backup/`, Häkchen gesetzt → beim nächsten Start still, von Hand aus den
+Einstellungen trotzdem offen, Nachtmodus, 1278×939 und 1907×944. Alle 17 Skriptblöcke
+nach `node --check` fehlerfrei.
+
+### Mitautor am Commit
+
+Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent
+nicht, ein Mitarbeiter im Repository geht also nicht. `hochladen.js` hängt jedem Commit
+jetzt die Zeile `Co-Authored-By: Claude <noreply@anthropic.com>` an — GitHub zeigt sie am
+Commit als zweiten Autor —, und die README nennt es unter „Urheberrecht".
 
 ### Der Fragenkatalog ist vollständig erklärt
 

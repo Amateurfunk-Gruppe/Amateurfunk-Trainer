@@ -401,25 +401,25 @@ aus demselben Fragenkatalog, sie können sich also nicht widersprechen.
 ### Aktuell bleiben — ohne etwas kaputtzumachen
 
 Der Trainer sieht beim Start selbst nach, ob hier auf GitHub etwas Neues
-liegt. **Unterbrochen wird dabei nichts** — kein Fenster springt auf, kein
-Balken legt sich über die Seite. Stattdessen wird der **Info**-Knopf oben
-rechts zum **Update**-Knopf: anderer Name, andere Farbe, und er blinkt.
-Dazu spielt einmal ein kurzer Ton.
+liegt. Gibt es eine neuere Fassung, meldet sie sich in einem Fenster: beide
+Nummern („Version 1.298.0 ist verfügbar. Du benutzt gerade 1.297.0."), darunter
+**Was sich geändert hat** — die Überschriften aus dem Änderungsprotokoll, Fassung
+für Fassung, zum Blättern —, und drei Knöpfe: **Später**, **Bei GitHub ansehen**,
+**Jetzt aktualisieren**.
 
-![Der Update-Knopf und das Fenster dahinter](bilder/08-updater.png)
+![Das Update-Fenster beim Start](bilder/08-updater.png)
 
-Ein Klick darauf öffnet ein kleines Fenster: *Update vorhanden*, ein Satz,
-zwei Knöpfe — **Aktualisieren** oder **Später**. Keine Dateinamen, keine
-Byte-Zahlen, keine Kästchen zum Ankreuzen.
-
-Die Kästchen gab es einmal, und sie waren ein Fehler: Eine Liste mit
-Kästchen sieht nach freier Auswahl aus, aber an den Dateinamen kann niemand
-ablesen, welche Kombination heil ist — `Server.js` ohne `github_update.js`
-zum Beispiel ist keine. Alles oder nichts ist die einzige Auswahl, bei der
-nichts Halbes entstehen kann.
+Keine Dateinamen, keine Byte-Zahlen, keine Kästchen zum Ankreuzen. Die Kästchen
+gab es einmal, und sie waren ein Fehler: Eine Liste mit Kästchen sieht nach
+freier Auswahl aus, aber an den Dateinamen kann niemand ablesen, welche
+Kombination heil ist — `Server.js` ohne `github_update.js` zum Beispiel ist
+keine. Alles oder nichts ist die einzige Auswahl, bei der nichts Halbes
+entstehen kann.
 
 Was dabei geschieht, ist deshalb nicht weniger sorgfältig:
 
+- **Nichts wird ungefragt geholt.** Erst der Klick auf *Jetzt aktualisieren*
+  holt etwas; das Fenster zählt dabei mit („12 von 40 Dateien").
 - **Eigene Änderungen werden nie überschrieben.** Der Trainer merkt sich, wie
   jede Datei aussah, als sie zuletzt mit GitHub gleich war. Was seither hier
   geändert wurde, bleibt unangetastet. Ein Fingerabdruck sagt nämlich nur,
@@ -429,10 +429,13 @@ Was dabei geschieht, ist deshalb nicht weniger sorgfältig:
   nie im Ordner an.
 - **Der Lernstand in `data/` wird nie angefasst.**
 - **„Später" merkt sich nichts.** Beim nächsten Start meldet es sich wieder.
-  Vergessen kann man ein Update damit nicht, wegklicken jederzeit.
+  Wer das nicht will, setzt das Häkchen *An Version … nicht mehr erinnern* —
+  dann schweigt das Fenster für genau diese Fassung und meldet sich bei der
+  nächsten.
 
 Waren Programmdateien dabei, sagt das Fenster danach, dass der Trainer einmal
-neu gestartet werden muss.
+neu gestartet werden muss; sonst lädt die Seite von selbst neu. Wer zwischendurch
+nachsehen will, findet dasselbe Fenster in den **Einstellungen** unter **Update**.
 
 ## Loslegen
 
@@ -703,7 +706,9 @@ eingetragen sind. Oder hier ein Issue aufmachen.
 ## Urheberrecht, Nutzung und Kontakt
 
 Der Amateurfunk-Trainer ist von **Dietmar Reh** entwickelt worden. Programmcode,
-Texte, Aufbau und Gestaltung stehen unter seinem Urheberrecht.
+Texte, Aufbau und Gestaltung stehen unter seinem Urheberrecht. Bei der Entwicklung
+hat **Claude** (Anthropic) mitgearbeitet — die Commits tragen den Assistenten als
+Mitautor.
 
 **Der Trainer ist und bleibt kostenfrei.** Er darf benutzt, kopiert, verändert
 und weitergegeben werden — solange damit kein Geld verdient wird. Ausdrücklich
