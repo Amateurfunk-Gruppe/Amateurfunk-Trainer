@@ -368,6 +368,38 @@ Sicherung in `backup/`, Häkchen gesetzt → beim nächsten Start still, von Han
 Einstellungen trotzdem offen, Nachtmodus, 1278×939 und 1907×944. Alle 17 Skriptblöcke
 nach `node --check` fehlerfrei.
 
+### Ausgelassene Fragen sind kein „Nicht bestanden"
+
+Dietmar, mit einem Bild vom Abschluss: „Wenn ich Fragen im Lernmodus unter Start nur
+durchklicke, kommt nicht bestanden. Kann man da nicht nicht bestanden entfernen und eine
+Übersicht einbauen, was man ausgelassen hat."
+
+Bis jetzt zählte jede nicht beantwortete Frage als Fehler: „0 von 25 richtig, 25 Fehler,
+Sie benötigen 19 richtige" — für jemanden, der die Fragen nur einmal durchgesehen hat, eine
+Ohrfeige ohne Aussage. Eine offene Frage ist kein Fehler.
+
+Jetzt: Sobald im Lernmodus auch nur eine Frage offen geblieben ist, gibt es keine Wertung
+„19 von 25" mehr. Der Abschluss heißt **„Runde beendet"**, sagt „22 von 25 Fragen sind offen
+geblieben", nennt die Quote nur über die beantworteten („2 von 3 beantworteten Fragen
+richtig (67 %) – 1 Fehler") und zeigt darunter die **offenen Fragen als Liste** — Nummer,
+Frageanfang, Prüfungsteil, zum Blättern. **Ein Klick auf eine Zeile öffnet die Frage** in
+derselben Runde; wer sie beantwortet und weitergeht, sieht den Abschluss noch einmal, mit
+einer offenen Frage weniger. Der Knopf **„Ausgelassene jetzt üben"** startet eine neue Runde
+nur aus diesen Fragen, so wie „Fehler" eine aus den Fehlern macht. Sind alle beantwortet,
+bleibt der Abschluss, wie er war — mit Bestanden oder Nicht bestanden.
+
+Der Verlauf bekommt einen Eintrag über die beantworteten Fragen („Alle Teile (Übung)
+(22 ausgelassen)", 2 von 3), wenn selbst etwas beantwortet wurde — wie bei einer
+abgebrochenen Runde. Wer nur durchgeklickt hat, bekommt keinen Eintrag; „0 von 25" im
+Verlauf wäre derselbe Unsinn. Geht jemand über die Liste noch einmal in die Runde, wird
+derselbe Eintrag auf den neuen Stand gebracht statt ein zweiter angehängt
+(`verlaufEintragSetzen`); das gilt auch für den gewöhnlichen Abschluss.
+
+Geprüft im Browser: 3 von 25 beantwortet → „Runde beendet", 22 Zeilen, ein Verlaufseintrag
+3 von 3; Klick auf eine Zeile öffnet genau diese Frage; nach dem Beantworten und Durchgehen
+steht derselbe Eintrag auf 4 von 4 „(21 ausgelassen)"; „Ausgelassene jetzt üben" startet
+eine Runde mit 21 Fragen. 0 von 25 beantwortet → kein Verlaufseintrag. Hell und Nachtmodus.
+
 ### Mitautor am Commit
 
 Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent

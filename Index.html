@@ -5186,6 +5186,15 @@
             color: #eaeff4 !important;
         }
         body.dark .finish-box .sub { color: #b3cbdb !important; }
+        /* Die Liste der ausgelassenen Fragen am Abschluss (17.09.2026) */
+        .ausgelassen-zeile {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            padding: 0.42rem 0.6rem; border: none; border-radius: 8px;
+            background: transparent; color: var(--ink); font-family: inherit;
+            font-size: 0.86rem; text-align: left; cursor: pointer;
+        }
+        .ausgelassen-zeile:hover, .ausgelassen-zeile:focus-visible { background: var(--card-bg); outline: 1px solid var(--line); }
+        .ausgelassen-zeile + .ausgelassen-zeile { border-top: 1px solid var(--line); border-radius: 0; }
 
 </style>
 
@@ -24384,6 +24393,7 @@ function neueRundeVorbereiten(){
     totalAnswered = 0;
     correctCount = 0;
     rundeGewertet = false;
+    rundeVerlaufEintrag = null;
 }
 
 // ================================================================
@@ -26578,6 +26588,27 @@ function renderFinishScreen(isTimeUp = false) {
             </div>`;
         if(correct>=required) { triggerConfetti(true); } else { /* Sprache entfernt */ }
     } else {
+        // ---- Ausgelassene Fragen: keine Wertung, eine Uebersicht ----
+        //
+        // Dietmar am 17.09.2026: "Wenn ich Fragen im Lernmodus unter
+        // Start nur durchklicke, kommt 'Nicht bestanden'. Kann man da
+        // nicht 'Nicht bestanden' entfernen und eine Uebersicht einbauen,
+        // was man ausgelassen hat."
+        //
+        // Er hat recht: "0 von 25 richtig, 25 Fehler, nicht bestanden" ist
+        // fuer jemanden, der die Fragen nur einmal durchgesehen hat, eine
+        // Ohrfeige ohne Aussage. Eine Frage, die nicht beantwortet wurde,
+        // ist kein Fehler - sie ist offen. Sobald auch nur eine offen ist,
+        // gibt es deshalb keine Wertung "19 von 25" mehr, sondern die
+        // Quote der beantworteten Fragen und die Liste der offenen. Das
+        // Weitere steht bei abschlussMitAusgelassenen().
+        const ausgelassen = currentQuestions.filter(q => !q._autoGelernt && !(progress[q.id] && progress[q.id].answered));
+        if (ausgelassen.length) {
+            abschlussMitAusgelassenen(ausgelassen);
+            isQuizActive = false;
+            updateVisibility();
+            return;
+        }
         const requiredNormal = total === 25 ? 19 : Math.ceil(total * 0.76);
         const pass = correct >= requiredNormal;
         let speech='';
@@ -26585,12 +26616,12 @@ function renderFinishScreen(isTimeUp = false) {
         else speech=`Sie haben Ihre Prüfung nicht bestanden. ${correct} von ${total} richtig, ${total-correct} Fehler. Sie benötigen ${requiredNormal} richtige.`;
         if (!examFinished) {
             const status = pass ? 'pass' : 'fail';
-            const lekName = (typeof gewaehlteLektion === 'function') ? gewaehlteLektion() : null;
-            const teilName = lekName ? lekName.split('–')[0].trim()
-                : (filterPart.value === 'all' ? 'Alle Teile' : ({ vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' }[filterPart.value] || filterPart.value));
-            const partName = nurGelernte ? (teilName + ' (Gelerntes geprüft)')
-                                         : (lekName ? teilName : (filterPart.value === 'all' ? 'Alle Teile (Übung)' : teilName));
-            addHistoryEntry(partName, total, correct, status);
+            const partName = rundenName();
+            // Ersetzen statt anhaengen: Wer nach dem Abschluss ueber die
+            // Liste der ausgelassenen Fragen noch einmal in die Runde
+            // gegangen ist, hat schon einen Eintrag - der bekommt jetzt
+            // das vollstaendige Ergebnis, statt dass ein zweiter dazukommt.
+            verlaufEintragSetzen(partName, total, correct, status);
             examFinished = true;
         }
 
@@ -26613,6 +26644,124 @@ function renderFinishScreen(isTimeUp = false) {
     isQuizActive = false;
     updateVisibility();
 }
+
+// ================================================================
+//  DER ABSCHLUSS MIT AUSGELASSENEN FRAGEN            (17.09.2026)
+// ================================================================
+//  Kein rotes Kreuz, kein "Nicht bestanden". Stattdessen:
+//    - "Runde beendet" und wie viele Fragen offen geblieben sind
+//    - die Quote nur ueber die beantworteten Fragen
+//    - die offenen Fragen als Liste: Nummer und Frageanfang. Ein Klick
+//      oeffnet die Frage in derselben Runde - beantworten, weiter, und
+//      am Ende steht der Abschluss noch einmal, mit einer offenen Frage
+//      weniger.
+//    - "Ausgelassene jetzt ueben": eine neue Runde nur aus diesen Fragen.
+//
+//  Der Verlauf bekommt einen Eintrag ueber die beantworteten Fragen,
+//  wenn selbst etwas beantwortet wurde - genau wie bei einer
+//  abgebrochenen Runde (verlaufBeiAbbruch). Wer nur durchgeklickt hat,
+//  hat nichts geleistet und bekommt keinen Eintrag; "0 von 25" im
+//  Verlauf waere derselbe Unsinn wie "Nicht bestanden" auf dem Schirm.
+// ================================================================
+let ausgelasseneZuletzt = [];      // Nummern, fuer "Ausgelassene jetzt ueben"
+let rundeVerlaufEintrag = null;    // der Verlaufseintrag dieser Runde, falls schon geschrieben
+
+// Der Name der Runde im Verlauf - an einer Stelle, nicht an dreien.
+function rundenName(){
+    const lekName = (typeof gewaehlteLektion === 'function') ? gewaehlteLektion() : null;
+    const teilName = lekName ? lekName.split('–')[0].trim()
+        : (filterPart.value === 'all' ? 'Alle Teile' : ({ vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' }[filterPart.value] || filterPart.value));
+    return nurGelernte ? (teilName + ' (Gelerntes geprüft)')
+                       : (lekName ? teilName : (filterPart.value === 'all' ? 'Alle Teile (Übung)' : teilName));
+}
+
+// Schreibt den Eintrag dieser Runde - oder bringt ihn auf den neuen
+// Stand, wenn es ihn schon gibt.
+function verlaufEintragSetzen(part, total, correct, status){
+    try{
+        const liste = (history && Array.isArray(history[currentUser])) ? history[currentUser] : null;
+        if (rundeVerlaufEintrag && liste && liste.indexOf(rundeVerlaufEintrag) >= 0) {
+            Object.assign(rundeVerlaufEintrag, { date: new Date().toISOString(), part, total, correct, status });
+            saveHistory();
+            rundeGewertet = true;
+            return true;
+        }
+    }catch(e){}
+    addHistoryEntry(part, total, correct, status);
+    try{ rundeVerlaufEintrag = history[currentUser][history[currentUser].length - 1] || null; }catch(e){ rundeVerlaufEintrag = null; }
+    return true;
+}
+
+function abschlussMitAusgelassenen(ausgelassen){
+    const gesamt = currentQuestions.length;
+    const beantwortet = currentQuestions.filter(q => progress[q.id] && progress[q.id].answered);
+    const selbst = beantwortet.filter(q => !q._autoGelernt);
+    const richtig = beantwortet.filter(q => progress[q.id].correct).length;
+    const falsch = beantwortet.length - richtig;
+    const offen = ausgelassen.length;
+    ausgelasseneZuletzt = ausgelassen.map(q => q.id);
+
+    // Verlauf: nur, wenn selbst etwas beantwortet wurde.
+    if (!examFinished && selbst.length) {
+        const status = (richtig / beantwortet.length) >= 0.76 ? 'pass' : 'fail';
+        verlaufEintragSetzen(rundenName() + ' (' + offen + ' ausgelassen)', beantwortet.length, richtig, status);
+    }
+    examFinished = true;
+
+    const quote = beantwortet.length
+        ? `${richtig} von ${beantwortet.length} beantworteten Fragen richtig (${Math.round(richtig / beantwortet.length * 100)} %) – ${falsch} Fehler`
+        : 'Keine Frage beantwortet.';
+    const teile = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+    const zeilen = ausgelassen.map(q =>
+        '<button type="button" class="ausgelassen-zeile" onclick="jumpToQuestionId(\'' + q.id + '\')" '
+      + 'title="Diese Frage jetzt beantworten">'
+      + '<span style="font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); flex:0 0 auto;">' + q.id + '</span>'
+      + '<span style="flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'
+      + plainQuestionText(q.text, 140) + '</span>'
+      + '<span style="font-size:0.72rem; color:var(--muted); flex:0 0 auto;">' + (teile[q.part] || '') + '</span>'
+      + '</button>').join('');
+
+    container.innerHTML = `
+        <div class="finish-box">
+            <i class="fas fa-list-check" style="color:var(--panel-navy);font-size:3rem;"></i>
+            <p style="font-size:1.3rem;font-weight:700;color:var(--panel-navy);">Runde beendet</p>
+            <div class="sub" style="font-weight:600; color:var(--ink);">${offen} von ${gesamt} Fragen ${offen === 1 ? 'ist' : 'sind'} offen geblieben – keine Wertung, solange nicht alle beantwortet sind.</div>
+            <div class="sub" style="margin-top:6px;">${quote}</div>
+            <div style="margin:1rem auto 0; max-width:640px; text-align:left;">
+                <div style="font-size:0.74rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin-bottom:0.35rem;">Ausgelassen – anklicken zum Beantworten</div>
+                <div style="max-height:calc(38vh / var(--afu-zoom, 1)); overflow-y:auto; border:1px solid var(--line); border-radius:12px; background:var(--bg); padding:0.35rem;">${zeilen}</div>
+            </div>
+            <div class="btn-group" style="margin-top:1rem;">
+                <button class="btn btn-primary" onclick="backToMain()"><i class="fas fa-home"></i> Hauptmenü</button>
+                <button class="btn btn-primary" onclick="ausgelasseneUeben()"><i class="fas fa-forward"></i> Ausgelassene jetzt üben (${offen})</button>
+                ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
+            </div>
+        </div>`;
+}
+
+// Eine neue Runde nur aus den ausgelassenen Fragen - so wie repeatErrors
+// eine aus den Fehlern macht.
+function ausgelasseneUeben(){
+    const pool = ausgelasseneZuletzt
+        .map(id => (questionBank || []).find(q => q.id === id))
+        .filter(Boolean)
+        .map(q => { try{ return prepareQuestion(q); }catch(e){ return q; } });
+    if (!pool.length) {
+        if (window.showAppAlert) showAppAlert('Es gibt gerade keine ausgelassenen Fragen.');
+        return;
+    }
+    isQuizActive = true;
+    examFinished = false;
+    currentQuestions = pool;
+    examMode = false;
+    showSidebar = true;
+    currentPart = 'all';
+    neueRundeVorbereiten();
+    renderQuestion();
+    navArea.style.display = 'flex';
+    updateVisibility();
+}
+window.ausgelasseneUeben = ausgelasseneUeben;
 
 function prevQuestion() {
     try{ rundeSichernSpaeter(); }catch(e){}
