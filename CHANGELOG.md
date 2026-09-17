@@ -701,6 +701,53 @@ im Abschnitt „Im Bild", 82 im „Kniff", beide von vorn bis hinten durchlaufen
 null Seitenfehler. Nach „Stop" ist die Marke weg, ein zweiter Durchgang beginnt wieder beim ersten
 Wort.
 
+### Ein Klick auf ein Antwortbild wählt die Antwort
+
+Dietmar, und genauso ein Mitleser mit demselben Erlebnis: „Bei den Bildern, die größer werden
+beim Drüberfahren, sollte man mal die Fläche zum Anklicken markieren! Ich habe mich gewundert,
+verdammt noch mal, wo klicke ich die Lösung an!" Und sein Vorschlag: „Maus Overlay Bild
+vergrößern, draufklicken Frage beantwortet."
+
+**Es war nicht nur unklar — es ging gar nicht.** Am Bild stand
+
+```
+onclick="event.stopPropagation(); openLightbox(...)"
+title="Klick zum Vergrößern"
+```
+
+und im Stilblatt dazu `cursor: zoom-in`. Drei Dinge, die alle dasselbe Falsche sagten: *der Klick
+vergrößert.* Das `stopPropagation` hat ihn sogar aktiv daran gehindert, bei der Kachel anzukommen
+— eine Bildantwort war mit der Maus nur zu treffen, indem man den schmalen Rand **neben** dem Bild
+erwischte. Nachgemessen bei AD408: Klick mitten auf Antwort C, `userAnswerIndex` blieb `null`.
+
+Jetzt trägt das Bild keinen eigenen Klick mehr. Er läuft dorthin, wo er hingehört — zur Kachel mit
+`selectOption()`. Groß wird das Bild weiter vom Draufstehenbleiben (die Lupe, ohne Klick), und weil
+das ohne Klick geschieht, stehen sich die beiden nicht mehr im Weg: **Bleib stehen, sieh es groß an,
+klick — Antwort gewählt.** Der Hinweistext sagt es jetzt auch („Antwort C wählen"), und der
+Mauszeiger ist eine Hand statt einer Lupe.
+
+Das Fragebild behält seine Lightbox. Es ist keine Antwort; ein Klick darauf wählt nichts aus.
+
+**Und beim Vorlesen wird das Bild markiert.** Dietmar: „Das Bild soll beim Vorlesen natürlich
+markiert werden." Bisher färbte sich nur der **Grund der Kachel**. Bei einer Textantwort sieht man
+das sofort; bei einer Bildantwort liegt das Bild mit seinem eigenen weißen Grund darüber und deckt
+fast die ganze Kachel ab — vom Bernstein blieb ein Saum von wenigen Punkten. Und gerade dort zählt
+es: Bei einer Bildantwort spricht der Trainer nur „Antwort C" und lässt eine Pause zum Hinsehen —
+in dieser Pause muss zu sehen sein, *welches* Bild gemeint ist.
+
+Das Bild bekommt deshalb jetzt selbst einen Ring, drei Punkte breit. Er liegt als `box-shadow`
+außen an und nimmt keinen Platz weg; ein dickerer Rahmen hätte die Bildfläche verschoben. Im
+hellen Stil ist er bernsteinfarben, im Dark Mode erscheint er im 50-Ohm-Blau — derselben Farbe, in
+der auch die Lupe und das gerade gesprochene Wort leuchten. Dort steht er im Stilblatt als
+`#ff5210`, weil die Zeichnungen im Dark Mode ins Negativ gedreht sind und der Filter den Rahmen
+mit umkehrt.
+
+Nachgemessen an AD408 mit allen vier Kacheln, bei größter Vergrößerung und mit abgeschalteter Lupe:
+Jeder Klick trifft genau seine eigene Antwort, auch mitten im großen Bild. Ein zweiter Klick auf
+eine andere Kachel ändert nichts mehr, die Tastatur (Enter auf der Kachel) tut wie bisher dasselbe,
+und das Fragebild öffnet weiter die Lightbox. Die Marke beim Vorlesen sitzt in beiden Stilen am
+Bild. Null Seitenfehler.
+
 ### Mitautor am Commit
 
 Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent

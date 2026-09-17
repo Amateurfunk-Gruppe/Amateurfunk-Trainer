@@ -1237,7 +1237,10 @@
                 z-index: 60;
                 box-shadow: 0 16px 44px rgba(0,0,0,0.35);
                 border-color: var(--panel-navy);
-                cursor: zoom-in;
+                /* Eine Hand, keine Lupe: Der Klick waehlt die Antwort -
+                   gross wird das Bild von selbst, ohne Klick. Siehe
+                   renderOptionImage(). */
+                cursor: pointer;
             }
         }
 
@@ -4606,6 +4609,45 @@
         .option.correct.tts-highlight, .option.wrong.tts-highlight {
             background: var(--accent-amber-soft) !important;
             border-color: var(--accent-amber) !important;
+        }
+
+        /* ================================================================
+           BEI EINER BILDANTWORT WIRD DAS BILD MARKIERT     (17.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Das Bild soll beim Vorlesen natuerlich markiert
+           werden."
+
+           Die Regel darueber faerbt den GRUND der Kachel. Bei einer
+           Textantwort sieht man das sofort; bei einer Bildantwort liegt
+           das Bild mit seinem eigenen weissen Grund darueber und deckt
+           fast die ganze Kachel ab - vom Bernstein blieb ein Saum von
+           wenigen Punkten. Und gerade bei Bildantworten zaehlt es: Dort
+           spricht der Trainer nur "Antwort C" und laesst eine Pause zum
+           Hinsehen (BILD_PAUSE_MS) - in dieser Pause muss zu sehen sein,
+           WELCHES Bild gemeint ist.
+
+           Deshalb bekommt das Bild selbst einen Ring. Er liegt als
+           box-shadow aussen an und nimmt keinen Platz weg; ein dickerer
+           Rahmen haette die Bildflaeche verschoben.
+
+           IM DARK MODE STEHEN DIE FARBEN VERKEHRT. Die Zeichnungen sind
+           dort ins Negativ gedreht (filter: invert(1)), und der Filter
+           kehrt Rahmen und Schatten mit um. #ff5210 erscheint deshalb als
+           das 50-Ohm-Blau #00adef - dieselbe Farbe, in der auch die Lupe
+           und das gerade gesprochene Wort leuchten.
+           ================================================================ */
+        .option-grid.tts-highlight .option-image {
+            border-color: var(--accent-amber) !important;
+            box-shadow: 0 0 0 3px var(--accent-amber),
+                        0 6px 18px rgba(226,147,47,0.35) !important;
+        }
+        body.dark .option-grid.tts-highlight .option-image {
+            border-color: #ff5210 !important;
+            box-shadow: 0 0 0 3px #ff5210,
+                        0 6px 18px rgba(255,82,16,0.45) !important;
+        }
+        @media print {
+            .option-grid.tts-highlight .option-image { box-shadow: none !important; }
         }
 
         /* DARK MODE FIX für Vorlesen-Einstellungen + Duo-Modal */
@@ -24778,11 +24820,39 @@ function renderOptionImage(opt, label) {
     const altSrc = /_q\.svg$/i.test(raw)
         ? `svgs/${raw.replace(/_q\.svg$/i, '.svg')}`
         : `svgs/${raw.replace(/\.svg$/i, '_q.svg')}`;
-    const caption = `${label}: ${opt.text || opt.image}`;
+    // ================================================================
+    //  EIN KLICK AUF DAS BILD WAEHLT DIE ANTWORT        (17.09.2026)
+    // ----------------------------------------------------------------
+    //  Dietmar, und genauso ein Mitleser: "Bei den Bildern, die groesser
+    //  werden beim Drueberfahren, sollte man mal die Flaeche zum Anklicken
+    //  markieren! Ich habe mich gewundert, verdammt noch mal, wo klicke
+    //  ich die Loesung an!" Und sein Vorschlag dazu: "Maus Overlay Bild
+    //  vergroessern, draufklicken Frage beantwortet."
+    //
+    //  HIER STAND DER GRUND. Das Bild trug
+    //      onclick="event.stopPropagation(); openLightbox(...)"
+    //      title="Klick zum Vergroessern"
+    //  und dazu im Stilblatt cursor:zoom-in. Drei Dinge, die alle
+    //  dasselbe Falsche sagten: Der Klick VERGROESSERT. Das
+    //  stopPropagation hat ihn sogar aktiv daran gehindert, bei der
+    //  Kachel anzukommen - man konnte eine Bildantwort mit der Maus also
+    //  ueberhaupt nur treffen, indem man den schmalen Rand NEBEN dem Bild
+    //  erwischte. Nachgemessen bei AD408: Klick mitten auf Antwort C,
+    //  userAnswerIndex blieb null.
+    //
+    //  Jetzt traegt das Bild keinen eigenen Klick mehr. Er laeuft dorthin,
+    //  wo er hingehoert - zur Kachel mit selectOption(). Gross wird das
+    //  Bild weiter beim Draufstehenbleiben (die Lupe, siehe bildZoomAn),
+    //  und weil das ohne Klick geschieht, stehen sich die beiden nicht
+    //  mehr im Weg. Der Hinweistext und der Mauszeiger sagen es jetzt
+    //  auch: eine Hand, nicht eine Lupe.
+    //
+    //  Das Fragebild behaelt seine Lightbox - es ist keine Antwort, ein
+    //  Klick darauf waehlt nichts aus. Siehe getSvgHtml().
+    // ================================================================
     return `<img src="${src}" alt="Bild zu Option ${label}" class="option-image"
             data-fallback="${altSrc}" data-fallback-tried="0" data-orig-name="${raw}"
-            onclick="event.stopPropagation(); openLightbox(this.src, '${caption}')"
-            title="Klick zum Vergrößern"
+            title="Antwort ${label} wählen"
             onerror="handleOptionImageError(this)">`;
 }
 
