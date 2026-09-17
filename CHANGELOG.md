@@ -265,46 +265,6 @@ Die beiden Angaben stehen jetzt in der Kopfzeile des Kastens neben der Fragennum
 zu den Knöpfen ohnehin Platz ist — mit ihnen der Simulator-Zähler und die Uhr. Eine Zeile
 gewonnen, nichts verloren.
 
-### Kokoro — eine zweite Sprachausgabe zum Anhören
-
-Dietmar: „Es gibt auch noch andere Stimmen außer Piper. Wäre das was für uns?" — und nach
-dem Vergleich: „Ich würde mir gerne dieses Kokoro in dem Trainer anhören. Kannst du mir
-das einbauen? Würde mir auch noch eine Frauenstimme wünschen."
-
-Von den drei genannten (F5-TTS, Kokoro, Fish-Speech) kommt nur Kokoro-82M für einen
-Rechner ohne Grafikkarte in Frage: 82 Millionen Parameter, Apache 2.0, auf dem Prozessor
-etwa halb so schnell wie Echtzeit. Deutsch kann es nur durch das Nachtraining der
-Gemeinschaft (kokoro-deutsch, 51 Stunden, zwei Stimmen). Von „Martin" gibt es einen
-fertigen ONNX-Export — der wird geholt.
-
-**So läuft es.** Kein Python. Das fertige Programm sherpa-onnx (k2-fsa, Apache 2.0)
-rechnet das Modell und benutzt denselben Lautbildner wie Piper (espeak-ng). Der Trainer
-startet es je Satz wie `piper.exe`, mit demselben Zwischenspeicher, derselben
-Warteschlange und demselben `tts-expand.js` davor — „Wurzel aus P durch R" ist bei beiden
-dieselbe Silbenfolge. Neu sind `kokoro_stimme.js` (holen, umwandeln, starten) und
-`bz2tar.js` (ein eigener Entpacker für `.tar.bz2`, weil Node keins hat und das `tar` von
-Windows 10 je nach Ausgabe auch nicht — gegen `bzcat` Byte für Byte nachgemessen). In
-`Server.js` hängt die Stimme hinter der Piper-Liste, `listVoices()` kennt sie als
-`kokoro/martin`, `/api/tts` startet das andere Programm; das Hörbuch bleibt bei Piper.
-
-**Holen nur auf Klick**, unter *Einstellungen → Vorlesen → Kokoro*: das Laufwerk (20 MB)
-und die Lautdaten (7 MB) von GitHub, das Modell (326 MB) und die Stimmdatei von
-Hugging Face — mit denselben Vorsichtsmaßnahmen wie bei den Piper-Stimmen: nur die
-bekannten Rechnernamen, jede Umleitung geprüft, SHA-256 und Größe aus dem Verzeichnis,
-Zwischenname, dann Umbenennen. Der Export aus Hugging Face ist für ein Python-Paket
-gemacht; die Angaben, die sherpa-onnx im Kopf des Modells braucht, hängt der Trainer
-selbst an (Protobuf erlaubt das), und die Stimmdatei `.npz` wird zur `voices.bin`
-umgeschrieben. Am Ende ein Probelauf. Das ist mit dem amtlichen Kokoro-Modell von
-sherpa-onnx nachgemessen: Modell ohne Kopf + Anhängung + umgeschriebene Stimme = spricht,
-durch den Trainer, mit Zwischenspeicher, 4,5 Sekunden für 10 Sekunden Sprache.
-
-**Die Frauenstimme:** „Victoria" gibt es bei kokoro-deutsch bisher nur als
-PyTorch-Gewichte, nicht als fertigen Export. Der Kasten in den Einstellungen sagt das;
-sobald ein Export da ist, ist es ein Eintrag in der Liste in `kokoro_stimme.js`.
-
-`kokoro/` steht in der `.gitignore` und kommt nicht ins ZIP. `Aufraeumen.bat` fasst den
-Ordner nie an.
-
 ### `Build-DIREKT.bat` baut nur noch das, was veröffentlicht wird
 
 Seit 1.296.0 gibt es kein Setup mehr — `release_hochladen.js` sieht keine EXE, die README
@@ -399,6 +359,347 @@ Geprüft im Browser: 3 von 25 beantwortet → „Runde beendet", 22 Zeilen, ein 
 3 von 3; Klick auf eine Zeile öffnet genau diese Frage; nach dem Beantworten und Durchgehen
 steht derselbe Eintrag auf 4 von 4 „(21 ausgelassen)"; „Ausgelassene jetzt üben" startet
 eine Runde mit 21 Fragen. 0 von 25 beantwortet → kein Verlaufseintrag. Hell und Nachtmodus.
+
+### Der Dark Mode ist zurück — die Zeichnungen stehen im Negativ
+
+Dietmar, nachdem er die dunklen Testbilder gesehen hatte: „Dieser ist doch deaktiviert! Mir
+fällt da aber was ein. Die svg sind doch Vektorgrafiken. Diese sind Standard in weiß mit
+schwarzer Schrift und Zeichnung. Diese könnten wir ins Negative bestimmt ändern. Dann wäre
+die Schrift weiß und der Hintergrund zu dem Bild an den Dark Mode angepasst. Dann könnten
+wir den Dark Mode doch wieder verwenden."
+
+Genau daran war er am 03.09. gescheitert (1.118.0): Die Schaltbilder standen als weiße
+Kacheln in jeder Technikfrage. Vorher nachgezählt, ob die Umkehr überhaupt geht — über alle
+746 Dateien in `svgs/`: Striche `#000`, Flächen `#fff` und Grautöne, dazu 22 Rasterbilder,
+alle ohne einen einzigen farbigen Bildpunkt. Eine rote Leitung würde nach der Umkehr türkis;
+hier gibt es keine.
+
+Jetzt kehrt im Dark Mode ein CSS-Filter (`invert(1)`) die Zeichnungen um — weiße Linien auf
+dem tiefen Blau des Dark Mode, mit blauer Kante, im Fragebild, in den Bildantworten und in
+der Vergrößerung. Beim Drucken bleibt es bei Schwarz auf Weiß. `dark` steht wieder in der
+Liste `STILE` (Light → Dark → Green → Blue → Orange → Grey), ein gespeichertes „dark" gilt
+wieder, und die Farbkachel dafür steht in den Einstellungen unter Farbstil.
+
+Zwei Wochen ohne Dark Mode hatten Spuren hinterlassen — Fenster, die seither entstanden sind,
+hatten ihn nie gesehen: Im **Einstellungen**-Fenster war „Einstellungen" in der Kopfzeile
+unsichtbar (helle Schrift auf hellem Grund), die Reiterspalte blieb hell, die Farbkacheln des
+Farbstils trugen alle denselben Knopfverlauf, „Normale Ansicht" und „Im Vollbild" standen
+dunkel auf dunkel. Grund: `#f7fafd` als Kopfzeilenfarbe fehlte in der Liste der abgefangenen
+Töne — dasselbe traf das Info-Fenster und die Auswertung. In der **Auswertung** war die rechte
+Spalte samt Kästen fest weiß, und „von 10 Prüfungen bestanden" stand marineblau auf dunkel.
+Und der **Taschenrechner** (vom 06.09.) leuchtete in Kopf und Anzeige im Signalblau, die Ziffern
+standen fast unsichtbar auf den Tasten — Dietmar: „der Taschenrechner passt nicht." Jetzt wie
+ein Gerät: dunkle Tafel, Anzeige mit leuchtenden Ziffern, Tasten im Knopfverlauf der übrigen
+Fenster, „=" als Hauptknopf, die Vorsätze p n µ m k M G bernsteinfarben.
+Alles nachgezogen; nachgesehen sind Hauptseite, Frage mit Zeichnung (NC101), Bildantworten
+(NB702), Vergrößerung, Erklärung klein und groß, alle acht Reiter der Einstellungen, Info,
+Auswertung, Ziel wählen, Themen, Stolpersteine, Übungszeit, Prüfungssimulator, Diplome,
+Taschenrechner, Abschluss und das Update-Fenster.
+
+Fünf Nachträge am Abend, nach Dietmars Bildern: „die Knöpfe sollten noch angepasst werden" —
+in der Kopfzeile der Frage waren Zettel und Taschenrechner weiß, Erklärung und
+Vorlesen-ohne-Aufklappen in Flieder; jetzt alle im Knopfverlauf, ihre Farbe nur noch in Zeichen
+und Rand (Notiz vorhanden bernstein, Erklärung offen violett). „Der Knopf Verlauf Ausblenden ist
+zu dunkel" — die Leiste ist jetzt eine Stufe heller als der Grund, mit Kante, Pfeil und Schrift
+im hellen Signalblau. „Neu beginnen ist weiß" — ein Rest aus der Zeit, als „Weiterlernen?"
+bewusst hell blieb; jetzt im Knopfverlauf wie alle. „Die Bilder sind auch weiß im
+Gruppenraum" — die drei Sinnbilder stehen auf dunklen Kacheln, die blauen Zeichen darauf
+umgekehrt und im Farbton zurückgedreht, also hellblau. „Beim Vergrößern von einem Bild in den
+Fragen ist das Bild weiß" — das war die Lupe (`bildZoomEbene`), die ihr Weiß inline trug;
+sie kehrt die Zeichnung jetzt genauso um wie das Bild selbst.
+
+Und der Schatten der Lupe: „Der Schatten beim Vergrößern ist gut. Der Verlauf ist aber
+ziemlich groß. Dezenter, ähnlich wie bei Windows. Evtl. eine andere Farbe? Was hältst du von
+der 50-Ohm-Farbe?" Der Filter kehrt den Schatten mit um — aus dem großen schwarzen Verlauf
+(18/50 Punkte, 45 %) war im Dark Mode ein weißer Hof über der halben Frage geworden. Jetzt:
+im Hellen ein Schatten wie ein Fenster unter Windows (6/18 Punkte, 28 %, dazu eine feine
+Linie), im Dark Mode dasselbe in 50-Ohm-Blau — im Stilblatt steht seine Umkehr `#ff5210`,
+nach dem Filter leuchtet ein schmaler blauer Saum. Die Vergrößerung per Klick (Lightbox)
+bekommt denselben Saum.
+
+### Fünf Bilder liefen über — die Seitenspalte hielt die Karte fest
+
+Dietmar, mit AD408 (Bild zur Frage, vier Bildantworten): „bei 5 Bilder flippt der Trainer
+aus. Es läuft über!" Die Antwortbilder standen auf 240 Punkten, die Seite war 1473 hoch bei
+936 Fenster, und die Bremse in `bilderGroesseAnpassen()` hatte nichts getan.
+
+Zwei Gründe, beide nachgemessen. Erstens: `finalFixDynamicHeight` setzt der Seitenspalte
+(Verlauf samt Umschaltknopf) eine feste Höhe — die der Frage im Moment seiner Messung, mit den
+großen Bildern also 1056 Punkte. Frage und Spalte stehen in einem Flex-Kasten, der die kürzere
+auf die längere zieht. Wird die Bildhöhe verkleinert, schrumpft die Frage, die Spalte aber
+nicht; die Seite bleibt gleich hoch, und die Bremse hält das für ein Problem, das nicht an den
+Bildern liegt. Jetzt setzt die Rechnung die Spalte für ihre Dauer auf null — dasselbe Mittel,
+das der Nachbar bei seiner eigenen Messung benutzt — und bringt sie am Ende mit `afuSync()` auf
+die neue Fragenhöhe. Zweitens: Seit die Knopfleiste fest am Fensterrand sitzt (16.09.), steht
+sie immer im Fenster; als Maß taugt sie nicht mehr. Bei fester Leiste zählt jetzt allein der
+Überlauf der Seite.
+
+Dazu eine bessere Verteilung: Bisher bekam das Bild zur Frage seine 260 Punkte zuerst, die
+vier Antwortbilder den Rest — bei AD408 90 Punkte in Kästen, die dreimal so breit sind. Jetzt
+fängt das Bild zur Frage mit 170 an, die Antwortbilder bekommen den Platz, und was frei bleibt,
+holt sich das Bild zur Frage zurück. Passt die Seite selbst mit kleinsten Antwortbildern nicht,
+wird das Bild zur Frage bis auf 120 verkleinert. Gemessen: 1564×936 bei 90 % → Antworten 135,
+Frage 170, Seite 936 von 936; 1920×1080 → 157/170; 1440×660 bei 60 % → 165/170; überall ohne
+Rollbalken.
+
+### Welcher Ordner läuft hier — Einstellungen und `START.sh` sagen es
+
+Dietmar: „Über START.sh, wenn ich den Trainer im Arbeitsordner starte, ist das Update, was in
+dem Arbeitsordner drin ist, nicht verwendet. Bei START.bat ist es vorhanden. Beide zeigen die
+gleiche Version." Zwei Fenster, dieselbe Nummer, verschiedene Fingerabdrücke und
+Index.html-Zeiten — das sind zwei Ordner, und welcher es ist, stand nirgends. Jetzt: Der Server
+nennt dem eigenen Rechner unter `/api/version` seinen Ordner (nicht dem Gast über den
+Einladungslink), die Einstellungen zeigen ihn unter **Update** in der Zeile „Ordner". Und
+`START.sh` vergleicht den laufenden Trainer nicht mehr nach der Größe der Index.html, sondern
+nach ihrem Fingerabdruck (SHA-256, wie ihn der Server meldet) und schreibt dazu, aus welchem
+Ordner der laufende kommt. Eine gleich große Index.html mit anderem Inhalt fällt so nicht mehr
+durch.
+
+### Der Knopf, der sich hebt, leuchtet im 50-Ohm-Blau
+
+Dietmar: „Bei MouseOverlay, wenn der Knopf sich hebt, wünsche ich mir die 50-Ohm-Farbe mit
+leicht dezentem Schlagschatten." Im Dark Mode hob sich der Knopf bisher mit dem marineblauen
+Schatten des hellen Stils, den man auf dunklem Grund kaum sah. Jetzt bekommen Rand und ein
+feiner Saum das 50-Ohm-Blau, darunter ein kurzer, weicher Schatten im selben Blau — mit
+derselben Verzögerung wie das Heben, damit nichts vor dem Knopf aufleuchtet. Was schon
+leuchtet (Start, Weiter, Vorlesen), behält seinen Schein.
+
+### Die Lupe wartet, bis die Maus steht
+
+Dietmar: „Die Bilder sollen nicht sofort aufpoppen, wenn ich mit der Maus darüber fahre. So
+lang sich die Maus bewegt, soll das nicht passieren. Erst wenn ich mit der Maus auf einem Bild
+stehen bleibe. Das bringt in der Form so Unruhe rein."
+
+Derselbe Gedanke wie beim Tooltip von Windows: Wer mit der Maus quer über vier Antwortbilder
+fährt, um zum fünften zu kommen, will nicht vier Vergrößerungen aufblitzen sehen. Gezählt wird
+deshalb nicht mehr das Darüberfahren, sondern das Stehenbleiben — **350 ms Ruhe**, dann kommt
+die Lupe. Jede Bewegung fängt die Wartezeit von vorn an; steht sie einmal, bleibt sie, solange
+die Maus auf dem Bild ist.
+
+**Ein Zittern ist dabei keine Bewegung.** Unter vier Punkten Weg wird die Wartezeit nicht
+zurückgesetzt — sonst ginge die Lupe bei einer unruhigen Hand nie auf. Dietmar am 07.09.2026
+zum Zurücknehmen einer Antwort: „Bei Zittern oder Tremor ist ein Fehlklick keine falsche
+Antwort, sondern eine verrutschte Hand." Dasselbe gilt hier.
+
+Geprüft im Browser an AD408 mit vier Bildantworten: schnell quer über alle vier — kein
+einziges Aufblitzen; stehen bleiben — nach 200 ms noch zu, nach 600 ms offen; zwölfmal um zwei
+Punkte zittern — geht trotzdem auf; langsam über das Bild wandern — bleibt zu und öffnet erst
+beim Anhalten; Bild verlassen — geht zu.
+
+### Die große Erklärung ist so breit wie der Trainer
+
+Dietmar: „Beim Vergrößern einer Erklärung ist die Schrift zwar schön groß, das Fenster wird
+aber nicht richtig ausgenutzt. Es könnte breiter sein." Und gleich danach: „mache es bitte
+nicht breiter als der Trainer ist."
+
+Gemessen auf 1920×1020: Das Fenster war 1100 Punkte breit, die Karte des Trainers 1440 — gut
+dreihundert Punkte blieben links und rechts liegen. Jetzt wird die Karte gemessen und genau
+ihre Breite genommen. **Die Schrift wächst mit**, von 21,6 auf 26 Punkte: sonst stünden bei
+voller Breite 116 Zeichen in einer Zeile statt der bisherigen 88, und am Zeilenende muss das
+Auge den Anfang der nächsten wiederfinden — je länger der Weg, desto öfter verrutscht es eine
+Zeile. Für Augen, für die dieses Fenster gemacht ist, gilt das doppelt.
+
+**Und es lief über.** Dietmar: „Erklärfenster rechts über den Bildschirmrand hinaus. Ja, das
+Vergrößern ist größer als das Fenster darunter." Nachgemessen und die Ursache gefunden: Die
+Hülle des Fensters lässt 14 Punkte Rand, die Karte des Trainers 32. Sobald der Platz schmaler
+wurde als 1128 Punkte — auf einem kleinen Fenster oder bei großer Anzeigeeinstellung —, war
+das Erklärfenster **immer** breiter als die Karte und stand links und rechts über sie hinaus.
+Gemessen bei 1100×800, 1280×800 bei 125 %, 1920×1020 bei 175 % und 1500×900 bei 140 %: jedes
+Mal vier bis sechsunddreißig Punkte zu breit. Jetzt gilt die Kartenbreite, und gerechnet wird
+am Fenster des Browsers (`window.innerWidth` geteilt durch die Anzeigegröße) statt an der
+Hülle — auch die Höhe. Nachgeprüft bei sechs Kombinationen von Fenstergröße und Anzeige bis
+200 %: nirgends mehr ein Überstand.
+
+### Kein weißer Hof mehr vor der Lupe
+
+Dietmar: „Bevor sich ein Bild vergrößert, kommt erst weiß und danach die 50-Ohm-Farbe. Hier
+wünsche ich mir anstatt weiß auch die DARC-Farbe."
+
+Der Grund war derselbe Filter, der die Zeichnungen ins Negativ kehrt: Unter der Maus liegt auf
+dem Bild ein schwarzer Schatten, und `invert(1)` macht aus Schwarz Weiß. Ein weißer Hof also,
+und erst wenn die Lupe aufging, kam das Blau. Jetzt tragen beide dieselbe Farbe — im Stilblatt
+steht `#ff5210`, die Umkehr von `#00adef`, nach dem Filter leuchtet das 50-Ohm-Blau. Das gilt
+auch für die Kante, die sonst aus dem Blau ein Orange gemacht hätte.
+
+### Die Kacheln unter der Frage
+
+Videolehrgang, 50 Ohm und der Lösungsweg — bis zu drei Kacheln nebeneinander, vom 04.09.2026
+und damit aus der Zeit ohne Dark Mode: weiße Flächen mit dunkelblauer Schrift, die einzigen
+hellen Flecken unter der Frage. Dietmar: „Die 3 Buttons sollten auch noch angepasst werden."
+
+Sie tragen jetzt denselben Knopfverlauf wie die übrigen Knöpfe, mit hellem Titel und leiser
+Unterzeile, und beim Darüberfahren leuchtet die Kante im 50-Ohm-Blau wie überall sonst. Die
+Zeichen behalten ihre Farbe, denn sie sagen, wohin der Weg führt: das Rot von YouTube, eine
+Spur heller als vorher, weil es jetzt auf Dunkelblau steht statt auf Weiß, und das Omega im
+50-Ohm-Blau. Nachgesehen mit zwei Kacheln (BD307, NB205, NC404) und mit dreien (NB505), hell
+und dunkel.
+
+### Richtig und falsch bleiben grün und rot
+
+Dietmar, mit einem Bild von AD213: „richtig und falsch, erkennt man fast nicht. Das soll in
+dem rot und grün bleiben."
+
+Im Dark Mode wurde die richtige Antwort **blau** markiert (ein dunkles Blau mit blauem Rand
+und einem leisen Schein), die falsche in einem sehr dunklen Rotbraun mit blassrosa Schrift.
+Auf dem nächtlichen Grund war davon fast nichts zu sehen — und gerade hier darf nichts zu
+raten sein.
+
+Jetzt gelten genau die Farben aus dem Lehrgang des DARC, dieselben wie im hellen Stil:
+`--darc-richtig` #3bb583 und `--darc-falsch` #fe756c, beide mit schwarzer Schrift (Kontrast
+8:1 und 7:1), dazu Haken und Kreuz in Schwarz. Der Absatz über den Signalfarben sagt es selbst:
+„Sie müssen in **jedem** Farbmodus dieselben sein." Auch der Buchstabe der Antwort wird auf
+diesen Flächen schwarz — er trug sonst das Signalblau, das auf Grün und Rot verschwindet. Und
+die angekreuzte Antwort im Prüfungssimulator, die kein Urteil trägt, steht wieder im Orange
+des Lehrgangs statt in einem dunklen Blau.
+
+Nachgesehen mit Textantworten (AD213) und Bildantworten (NB702), im Simulator und beim
+Vorlesen (dort bleibt die gelesene Antwort blau, solange noch keine Wertung steht).
+
+### Die Lupe bleibt im Fenster des Trainers
+
+Dietmar, mit zwei Bildern derselben Schaltung: „Beim Vergrössern ist das Fenster asynchron.
+Oben kann es 1 mm weiter runter. Links ca. 1 mm weiter nach links. Rechts läuft es über.
+Maximale Vergrösserung. Muss innerhalb von dem Fenster darunter liegen. Bei kleineren
+Vergrösserungen muss es mittig bleiben. Ich meine das Bild in der Frage."
+
+Gerechnet hat die Lupe bisher gegen das **Browserfenster**. Die Karte des Trainers steht darin
+aber nicht mittig — links bleibt mehr Rand als rechts. Nachgemessen bei 1082 × 532 Punkten mit
+der Einstellung „so groß wie möglich": Karte von 102 bis 966, Lupe von 125 bis **1070**. Also
+104 Punkte über die Karte hinaus nach rechts, während links 23 Punkte frei standen, und oben
+2 Punkte gegen 10 unten. Genau die Schiefe, die er beschreibt.
+
+Bezugsfläche ist jetzt die **Karte selbst**, geschnitten mit dem sichtbaren Fenster — eine Karte
+kann länger sein als der Bildschirm, und was darunter liegt, sieht niemand. Aus ihr kommen beide
+Grenzen: wie groß das Bild höchstens wird und wohin es gesetzt wird. Ist keine brauchbare Karte
+da (Beamer, Vollbild, fremde Ansicht), bleibt es beim Fenster wie bisher.
+
+Und die Mitte: Eine kleine Vergrößerung wächst weiter aus ihrem eigenen Bild heraus und bleibt
+darüber stehen — das ist ruhiger als ein Bild, das zur Seite wegkippt. Passt sie an dieser Stelle
+nicht mehr in die Karte, klebte sie bisher an einem Rand, während am anderen Platz blieb. Jetzt
+setzt sie sich in die Mitte der Karte.
+
+**Und „so groß wie möglich" heißt jetzt wirklich so groß.** Dietmar, mit einer Aufnahme vom
+Bildschirm: „Ich bin damit nicht zufrieden. Maximale Größe bedeutet so groß wie das Programm im
+Hintergrund." Auf der obersten Stufe galt bis dahin immer noch die Zielgröße in Punkten
+(520 für ein Fragebild) und ein Anteil von höchstens 92 Prozent — ringsum blieb ein Streifen
+stehen. Ab dieser Stufe zählt nur noch die Karte: Das Blatt wird genau so groß wie sie, Kante
+auf Kante, in der Breite **und** in der Höhe. Die Zeichnung behält dabei ihr Seitenverhältnis
+und sitzt mit `object-fit: contain` mittendrin; die Schaltbilder liegen breiter als die Karte,
+also bestimmt die Breite, wie groß sie wird.
+
+Die Stufen darunter bleiben, wie sie waren — sonst wären „doppelt so groß" und „so groß wie
+möglich" dasselbe. Der Hinweistext unter der Auswahl sagt es jetzt auch richtig; er nannte
+bisher 38 Prozent, gerechnet wurde längst mit 62.
+
+Nachgemessen mit „so groß wie möglich", Ränder zur Karte in Punkten links/rechts/oben/unten:
+1554 × 931 → 0/0/0/0. 1082 × 532, 1280 × 800 und 1920 × 1080 ebenso (ein Punkt Rundung durch
+die Anzeigegröße). Auch die vier Antwortbilder (AD408) füllen die Karte genau. Auf den Stufen
+darunter steht das Bild weiter über seiner Zeichnung: bei 1554 × 931 mit „doppelt so groß"
+1058 × 618 Punkte, ohne Nachteilsausgleich 538 × 318.
+
+### „Zurücknehmen" gilt auch für die Antwort, die schon steht
+
+Dietmar: „Ich habe in Nachteilsausgleich, Antwort zurücknehmen aktiviert. Der Button fehlt."
+
+Er hatte die Frage schon beantwortet und den Haken erst danach gesetzt. Die Sicherung, aus der
+das Zurücknehmen lebt, wurde bis dahin nur angelegt, **wenn der Haken schon gesetzt war** — der
+erste Satz in `antwortSicherungNehmen()` stieg sonst gleich wieder aus. Ohne Sicherung kein
+Knopf; erst die nächste Frage hat funktioniert. Wer die Einstellung einschaltet, weil er sich
+gerade verklickt hat, steht damit genau in dem Fall da, für den sie gedacht ist.
+
+Die Kopie wird jetzt **immer** angelegt, auch bei ausgeschaltetem Haken. Sie kostet ein paar
+hundert Byte je Antwort und lebt nur bis zum nächsten Weiterblättern. Der Haken entscheidet
+seither allein darüber, ob Knopf und Strg+Z angeboten werden — und ein nachträglich gesetzter
+Haken bringt den Knopf sofort für die Antwort, die auf dem Bildschirm steht. Auch das Ausschalten
+wirft die Sicherung nicht mehr weg: Wer den Haken versehentlich entfernt und wieder setzt, findet
+seine Antwort noch vor.
+
+Nachgemessen an AI613 (Klasse E → A) und im Lernen: ohne Haken kein Knopf, mit nachträglich
+gesetztem Haken ist er da, und ein Klick stellt alles wieder her — Anzahl, Treffer, Fehlerliste,
+Lernbedarf, Lernfortschritt und die Kacheln ohne Wertung. Danach verschwindet der Knopf von
+selbst. Strg+Z tut dasselbe. Beim Weiterblättern bleibt die Antwort stehen, wie bisher.
+
+### Die große Erklärung deckt den Trainer genau ab
+
+Dietmar, mit einem Bild der vergrößerten Erklärung: „Unten sehe ich die Hälfte von der
+Knopfleiste."
+
+Das Fenster war nur so hoch wie sein Text und stand mittig im Bildschirm. Sein unterer Rand
+endete dadurch mitten über der Knopfreihe, und von den Knöpfen lugte die obere Hälfte hervor —
+halb verdeckt sieht kaputt aus. Auf die Frage, wie es abschließen soll, hat er sich für dasselbe
+entschieden wie bei der Lupe: genau so groß wie der Trainer.
+
+Das Fenster liegt jetzt **Kante auf Kante** über der Karte: links, rechts, oben und unten. Die
+Breite kam schon von der Karte, jetzt auch die Höhe und die Lage — gesetzt über `position: fixed`
+mit den Maßen der Karte, denn die steht in ihrer Hülle nicht mittig. Gerechnet wird wieder über
+die Anzeigegröße, dieselbe Umrechnung wie bei der Lupe. Eine Karte, die länger ist als der Schirm,
+wird vorher mit dem sichtbaren Fenster geschnitten. Ist der Text kürzer als die Karte, bleibt
+unten Platz frei; dafür lugt nichts mehr halb hervor, und ein längerer Text rollt wie bisher.
+
+Nachgemessen an AI612, Ränder zur Karte in Punkten: 1560 × 936 → 0/0/0/0, ebenso bei 1082 × 532,
+1280 × 800 und 1920 × 1080 (ein Punkt Rundung durch die Anzeigegröße). Die Schrift bleibt bei
+26 Punkten, gerechnet auf rund 95 Zeichen je Zeile.
+
+### Gemerkt ist rot, gelernt ist grün — auch im Dark Mode
+
+Dietmar: „Frage Merken möchte ich in rot. Hier gibt es keinen farblichen Unterschied."
+
+Und es war keiner zu sehen: Im Dark Mode blieb das Herz auch dann grau, wenn die Frage in der
+Merkliste stand. Der Grund lag im Stilblatt. Die Nachtregel setzt den Grund der beiden Knöpfe
+mit `!important` und über eine **Kennung** (`#questionFavBtn`) — das schlägt
+`.q-marke-merken.an`, das nur zwei Klassen wiegt. Ein Auffangversuch stand schon da, traf aber
+die falschen Namen: `.aktiv` und `.active` gibt es an diesen Knöpfen nicht, die Klasse heißt
+`an`. Er lief ins Leere, und ein gemerktes Herz sah aus wie ein nicht gemerktes.
+
+Jetzt gelten nachts dieselben Farben wie am Tag: **#e11d48** für die Merkliste, **#15703c** für
+„gelernt", Zeichen in Weiß. Der Haken war von derselben Regel betroffen und ist mit berichtigt.
+Der Notizzettel daneben hatte seine Nachtregel schon — an ihm ist nichts geändert.
+
+Und die alte Regel gilt weiter, die 1.230.1 einmal gekostet hat: **Farbe heißt genau eines —
+eingeschaltet.** Ein rotes Herz auf einem Knopf, der nichts gemerkt hat, liest sich als
+„gesetzt"; deshalb ist der Ruhezustand grau geblieben.
+
+Nachgemessen im hellen und im dunklen Stil, an und aus: gemerkt rgb(225, 29, 72) mit weißem
+Zeichen, gelernt rgb(21, 112, 60) mit weißem Zeichen, in beiden Stilen gleich.
+
+### Beim Vorlesen wandert eine Marke über die Wörter
+
+Dietmar: „Beim Vorlesen bei der Erklärung würde ich mir noch wünschen, das das Wort, was gerade
+vorgelesen wird, farblich hervorgehoben wird."
+
+Es ist ein Leuchtstift, kein zweiter Kasten: Nur der Grund des einen Wortes färbt sich, die Zeile
+bleibt, wo sie ist. Am Tag ist es das Gelb des Lehrgangs, nachts das 50-Ohm-Blau mit dunkler
+Schrift — dieselbe Markierung, die auch die gerade gelesene Antwort trägt. Es gilt in der kleinen
+Tafel und im großen Fenster; wandert die Marke aus dem Sichtbaren, rollt der Text nach. Beim Knopf
+„nur vorlesen" bleibt alles still: Dort ist kein Text zu sehen, also gibt es auch nichts
+hervorzuheben.
+
+**Warum geschätzt und nicht gemessen.** Der Browser kennt bei seiner eigenen Stimme die
+Wortgrenzen; die ist hier aber seit dem 25.08.2026 nicht mehr in Gebrauch, weil sie „MHz"
+buchstabiert. Piper liefert eine fertige Tondatei und sonst nichts — kein Zeitraster, keine
+Marken. Was der Trainer hat, ist ihre **Länge** und der Text, der darin steckt. Daraus lässt sich
+die Stelle gut genug schätzen; es geht ums Mitlesen, nicht um Millisekunden.
+
+**Wie geschätzt wird.** Jedes Wort bekommt ein Gewicht, und die Dauer wird im Verhältnis dieser
+Gewichte verteilt. Ein Zeichen zählt eins — allerdings erst, nachdem `sprechbar()` darüber
+gelaufen ist: Aus „MHz" werden so neun Zeichen statt drei, aus dem Ω vier. Eine **Ziffer zählt
+fünf**, denn „330" spricht sich als „dreihundertdreißig": drei Zeichen, achtzehn Laute. Und ein
+Satzzeichen ist eine Pause — Punkt sechs, Komma drei.
+
+Zwei Fallen lagen dabei im Weg. Ein Abschnitt wird in mehrere Tondateien zerlegt, damit kein
+Stück zu lang wird; ohne Gegenmaßnahme fing die Marke bei jedem Stück wieder vorn an. Jedes Stück
+weiß deshalb jetzt, welchen **Anteil** am Abschnitt es trägt — gerechnet mit demselben Gewicht,
+nicht mit der reinen Zeichenzahl, sonst sprang die Marke an jeder Zahl zurück. Und weil auch das
+noch um ein Wort danebenliegen kann, merkt sich der Lauf, wie weit er gekommen ist: **Zurück geht
+die Marke nie.** Ein neues Vorlesen fängt wieder vorn an.
+
+Die Wörter werden dafür einmal in eigene `<span>` gefasst. Am Aussehen ändert das nichts, und sie
+bleiben danach stehen, statt den Abschnitt nach jedem Vorlesen neu aufzubauen.
+
+Nachgemessen an AI612 im hellen und im dunklen Stil, in der Tafel und im großen Fenster: 95 Wörter
+im Abschnitt „Im Bild", 82 im „Kniff", beide von vorn bis hinten durchlaufen, **null Rücksprünge**,
+null Seitenfehler. Nach „Stop" ist die Marke weg, ein zweiter Durchgang beginnt wieder beim ersten
+Wort.
 
 ### Mitautor am Commit
 

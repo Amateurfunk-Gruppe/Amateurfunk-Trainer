@@ -459,11 +459,7 @@ function einrichten({ app, localOnly, projektOrdner, PIPER_DIR, findPiper, listV
     }
     if(!gruppen.length) return res.status(400).json({error:'Keine vorlesbaren Fragen dabei (alle ohne Text-Antwort).'});
 
-    // Nur Piper-Stimmen: Das Hoerbuch startet piper.exe selbst (siehe oben).
-    // Die Kokoro-Stimmen (16.09.2026, kokoro_stimme.js) laufen ueber ein
-    // anderes Programm und bleiben hier aussen vor - waere eine gewaehlt,
-    // spraeche Thorsten.
-    const stimmen = listVoices().filter(v => v.engine !== 'kokoro');
+    const stimmen = listVoices();
     if(!stimmen.length) return res.status(500).json({error:'Keine Sprachausgabe installiert (Ordner piper/ ist leer).'});
     const stimme = stimmen.find(v => v.file === req.body.stimme) || stimmen[0];
 

@@ -233,31 +233,73 @@ browser_auf() {
 #  Trainer - dann reicht der Browser. Weicht sie ab, laeuft ein
 #  anderer, und die Vorgabe ist jetzt wie bei START.vbs: beenden.
 # ----------------------------------------------------------------
-laufende_groesse() {
-    ANTW=""
+#  SEIT DEM 17.09.2026 NICHT MEHR NACH DER GROESSE, SONDERN NACH DEM
+#  FINGERABDRUCK - UND MIT DEM ORDNER.
+#  Dietmar: "Ueber START.sh, wenn ich den Trainer im Arbeitsordner
+#  starte, ist das Update, was in dem Arbeitsordner drin ist, nicht
+#  verwendet. Bei START.bat ist es vorhanden. Beide zeigen die gleiche
+#  Version." Zwei Trainer, dieselbe Nummer, verschiedene Fingerabdruecke.
+#  Die Groesse zweier Index.html kann gleich sein, obwohl der Inhalt es
+#  nicht ist - der Fingerabdruck (SHA-256, die ersten 16 Zeichen, so wie
+#  ihn der Server unter /api/abgleich/stand meldet) kann das nicht.
+#  Und der laufende Server nennt dem eigenen Rechner unter /api/version
+#  seinen Ordner: Dann steht hier, WO der andere laeuft, statt nur, dass
+#  er es tut.
+holen() {
     if command -v curl >/dev/null 2>&1; then
-        ANTW=$(curl -s --max-time 3 "http://127.0.0.1:$PORT/api/abgleich/stand" 2>/dev/null)
+        curl -s --max-time 3 "$1" 2>/dev/null
     elif command -v wget >/dev/null 2>&1; then
-        ANTW=$(wget -q -O - -T 3 "http://127.0.0.1:$PORT/api/abgleich/stand" 2>/dev/null)
+        wget -q -O - -T 3 "$1" 2>/dev/null
     fi
-    printf '%s' "$ANTW" | sed -n 's/.*"Index\.html":{"groesse":\([0-9]*\).*/\1/p' | head -n 1
+}
+laufende_groesse() {
+    holen "http://127.0.0.1:$PORT/api/abgleich/stand" \
+        | sed -n 's/.*"Index\.html":{"groesse":\([0-9]*\).*/\1/p' | head -n 1
+}
+laufender_hash() {
+    holen "http://127.0.0.1:$PORT/api/abgleich/stand" \
+        | sed -n 's/.*"Index\.html":{"groesse":[0-9]*,"hash":"\([0-9a-f]*\)".*/\1/p' | head -n 1
+}
+laufender_ordner() {
+    holen "http://127.0.0.1:$PORT/api/version" \
+        | sed -n 's/.*"ordner":"\([^"]*\)".*/\1/p' | head -n 1 | sed 's/\\\\/\\/g'
+}
+hier_hash() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$ORDNER/Index.html" 2>/dev/null | cut -c1-16
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$ORDNER/Index.html" 2>/dev/null | cut -c1-16
+    fi
 }
 
 HIER_GROESSE=$(wc -c < "$ORDNER/Index.html" 2>/dev/null | tr -d ' ')
+HIER_HASH=$(hier_hash)
 
 if port_belegt; then
     DORT_GROESSE=$(laufende_groesse)
+    DORT_HASH=$(laufender_hash)
+    DORT_ORDNER=$(laufender_ordner)
     echo ""
     echo "  Auf Port $PORT laeuft bereits ein Trainer."
-    if [ -n "$DORT_GROESSE" ] && [ "$DORT_GROESSE" = "$HIER_GROESSE" ]; then
-        echo "  Es ist dieser hier - gleicher Stand (Index.html $HIER_GROESSE Bytes)."
+    [ -n "$DORT_ORDNER" ] && echo "  Sein Ordner: $DORT_ORDNER"
+    GLEICH=""
+    if [ -n "$DORT_HASH" ] && [ -n "$HIER_HASH" ]; then
+        [ "$DORT_HASH" = "$HIER_HASH" ] && GLEICH="ja"
+    elif [ -n "$DORT_GROESSE" ] && [ "$DORT_GROESSE" = "$HIER_GROESSE" ]; then
+        GLEICH="ja"
+    fi
+    if [ -n "$GLEICH" ]; then
+        echo "  Es ist derselbe Stand wie hier (Index.html: Fingerabdruck ${HIER_HASH:-$HIER_GROESSE Bytes})."
         echo "  Es wird nur der Browser geoeffnet."
         echo ""
         browser_auf
         exit 0
     fi
     echo ""
-    if [ -n "$DORT_GROESSE" ]; then
+    if [ -n "$DORT_HASH" ] && [ -n "$HIER_HASH" ]; then
+        echo "  Aber NICHT dieser Stand: Der laufende hat eine Index.html mit dem"
+        echo "  Fingerabdruck $DORT_HASH, in diesem Ordner liegt eine mit $HIER_HASH."
+    elif [ -n "$DORT_GROESSE" ]; then
         echo "  Aber NICHT dieser hier: Der laufende hat eine Index.html mit"
         echo "  $DORT_GROESSE Bytes, in diesem Ordner liegt eine mit $HIER_GROESSE Bytes."
     else
@@ -313,7 +355,7 @@ echo "  Amateurfunk-Trainer startet ..."
 echo "  System : $SYSTEM"
 echo "  node   : $NODE"
 echo "  Ordner : $ORDNER"
-echo "  Stand  : Index.html $HIER_GROESSE Bytes"
+echo "  Stand  : Index.html $HIER_GROESSE Bytes${HIER_HASH:+, Fingerabdruck $HIER_HASH}"
 echo "  Adresse: http://localhost:$PORT"
 echo ""
 echo "  Dieses Fenster offen lassen. Beenden mit Strg+C oder ./STOP.sh"

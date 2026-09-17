@@ -1487,6 +1487,40 @@
         @media (prefers-reduced-motion: reduce) {
             .erklaer-tafel .ek-zeile.tts-highlight { transition: none; }
         }
+
+        /* ================================================================
+           DAS WORT, DAS GERADE GESPROCHEN WIRD             (17.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Beim Vorlesen bei der Erklaerung wuerde ich mir noch
+           wuenschen, das das Wort, was gerade vorgelesen wird, farblich
+           hervorgehoben wird."
+
+           Es ist ein Leuchtstift, kein zweiter Kasten: Nur der Grund des
+           einen Wortes faerbt sich, die Zeile bleibt, wo sie ist. Der
+           Schatten ringsum macht aus dem engen Kasten einen, der auch die
+           Ober- und Unterlaengen mitnimmt - ohne dass sich die Zeile dabei
+           verschiebt, denn ein box-shadow nimmt keinen Platz weg. Genau
+           deshalb steht hier auch kein padding.
+
+           Die Farben sind die des Vorlesens: das Leuchtstift-Gelb des
+           Lehrgangs am Tag, nachts das 50-Ohm-Blau mit dunkler Schrift -
+           dieselbe Markierung, die auch die gerade gelesene Antwort traegt.
+           ================================================================ */
+        .tts-wort-an {
+            background: #ffe066;
+            color: #0f2745;
+            border-radius: 3px;
+            box-shadow: 0 0 0 2px #ffe066;
+        }
+        body.dark .tts-wort-an {
+            background: #00adef;
+            color: #04283a;
+            box-shadow: 0 0 0 2px #00adef;
+        }
+        /* Auf Papier hat ein Leuchtstift nichts verloren. */
+        @media print {
+            .tts-wort-an { background: none !important; color: inherit !important; box-shadow: none !important; }
+        }
         .erklaer-tafel .et-zu:hover { border-color: #2f6ea2; }
         .erklaer-tafel .et-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0.7rem 0.8rem; }
         body.dark .erklaer-tafel {
@@ -1616,7 +1650,15 @@
         #erklaerGross .eg-fenster {
             background: #f2f7fd; border: 1px solid #cfe0f2;
             border-left: 6px solid #2f6ea2; border-radius: 14px;
-            color: #23364d; width: min(1100px, 100%); max-height: 100%;
+            /* Genau so breit wie die Karte des Trainers, nie breiter -
+               Dietmar am 17.09.2026: "Beim Vergroessern einer Erklaerung
+               ist die Schrift zwar schoen gross, das Fenster wird aber
+               nicht richtig ausgenutzt. Es koennte breiter sein." Und
+               gleich danach: "mache es bitte nicht breiter als der
+               Trainer ist." Die 1440 sind die max-width der Karte; auf
+               schmaleren Schirmen ist sie selbst schmaler, dann misst
+               erklaerGrossBreite() nach und nimmt genau deren Breite. */
+            color: #23364d; width: min(1440px, 100%); max-height: 100%;
             box-sizing: border-box;
             display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 24px 64px rgba(0,0,0,0.35);
@@ -1646,7 +1688,12 @@
         }
         #erklaerGross .eg-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1.1rem 1.3rem 1.4rem; }
         /* DIE EIGENTLICHE SACHE: die Schrift. 1,35rem gegenüber 0,86rem im
-           Kasten - gut das Anderthalbfache -, dazu mehr Zeilenabstand. */
+           Kasten - gut das Anderthalbfache -, dazu mehr Zeilenabstand.
+           Auf breiten Schirmen wird daraus mehr: erklaerGrossBreite()
+           rechnet sie so, dass eine Zeile bei rund 95 Zeichen bleibt.
+           Sonst stuenden bei voller Trainerbreite 116 Zeichen in einer
+           Zeile, und beim Zeilenwechsel verliert man die Spur - fuer
+           Augen, fuer die dieses Fenster gedacht ist, erst recht. */
         #erklaerGross .erklaer-kasten { font-size: 1.35rem; line-height: 1.75; }
         #erklaerGross .erklaer-kasten .ek-zeile { margin-top: 1.1rem; }
         #erklaerGross .erklaer-kasten .ek-spaeter { font-size: 1.05rem; margin-top: 1.4rem; }
@@ -1992,12 +2039,10 @@
             display: block; font-size: 1.02rem; font-weight: 800; color: #0a6b7a;
             font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.25;
         }
-        /* Die body.dark-Zeilen hier und weiter unten sind kein Versehen:
-           Der Dark Mode ist am 03.09.2026 aus der Liste STILE geflogen,
-           die Regeln bleiben aber im Blatt stehen - wer ihn zurueckholt,
-           schreibt 'dark' wieder in die Liste, und alles greift von
-           allein. Dieselbe Verabredung gilt fuer die Notiz und die
-           Fragennummer. */
+        /* Die body.dark-Zeilen hier und weiter unten: Der Dark Mode war
+           vom 03.09. bis zum 17.09.2026 aus der Liste STILE gestrichen,
+           die Regeln blieben im Blatt stehen - und genau deshalb griff
+           beim Zurueckholen alles von allein. */
         body.dark .uebungszeit .zeit-wert { color: var(--tuerkis); }
         body.dark .uebungszeit { background: #10293b; border-color: #2b4a63; }
 
@@ -4351,8 +4396,45 @@
         body.dark .left-sidebar .result-box.pass,
         body.dark .left-sidebar .result-box.fail,
         body.dark .left-sidebar .result-box.grauzone { color: var(--ink); }
+        /* ============================================================
+           DIE ZEICHNUNGEN IM DARK MODE: INS NEGATIVE       (17.09.2026)
+           ------------------------------------------------------------
+           Bis hierher stand: background #ffffff - die Schaltbilder als
+           weisse Kacheln, und genau daran ist der Dark Mode am
+           03.09.2026 gescheitert. Dietmar: "Die svg sind doch Vektor-
+           grafiken. Diese sind Standard in weiss mit schwarzer Schrift
+           und Zeichnung. Diese koennten wir ins Negative bestimmt
+           aendern. Dann waere die Schrift weiss und der Hintergrund zu
+           dem Bild an den Dark Mode angepasst."
+
+           invert(1) kehrt jede Farbe um: schwarz wird weiss, weiss wird
+           schwarz. Das geht nur, weil die Zeichnungen keine Farbe
+           enthalten - nachgezaehlt ueber alle 746 Dateien im Ordner
+           svgs/: Striche #000, Flaechen #fff und Grautoene, dazu 22
+           Rasterbilder in Graustufen. Eine rote Leitung gaebe es nach
+           der Umkehr als tuerkise; hier gibt es keine.
+
+           Der Filter kehrt auch Hintergrund und Rand des <img> mit um.
+           Deshalb stehen die beiden Farben hier VERKEHRT herum: #f5e4d7
+           ist die Umkehr von #0a1b28 (die tiefe Flaeche des Dark Mode),
+           #d4ab8e die von #2b5471 (die deutliche Kante). Auf dem Schirm
+           erscheint also dunkles Blau mit blauer Kante - und weissen
+           Linien darauf. Ein anderer Weg (mix-blend-mode) haette die
+           Grautoene verfaelscht.
+
+           Drucken bleibt Papier: schwarze Linien auf weiss (siehe
+           @media print am Ende des Blocks). */
         body.dark .q-image img,
-        body.dark .option-grid .option-image { background: #ffffff; }
+        body.dark .option-grid .option-image,
+        body.dark .lightbox-overlay img {
+            filter: invert(1);
+            background: #f5e4d7 !important;
+            border-color: #d4ab8e !important;
+        }
+        @media print {
+            body.dark .q-image img,
+            body.dark .option-grid .option-image { filter: none; background: #fff !important; border-color: #dfe8f2 !important; }
+        }
 
         /* ============================================================
            DARK MODE - NAV BUTTONS FIX - ALLE GLEICH HOCH
@@ -6031,17 +6113,13 @@ window.klasseFragenNachladen = klasseFragenNachladen;
 
     try {
         const gespeichert = localStorage.getItem('theme');
-        // Der Dark Mode ist am 03.09.2026 abgeschaltet worden. Dietmar:
-        // "Der Dark Mode muss raus. Das ist mit den weissen Bildern bei den
-        // Fragen ueberhaupt nicht stimmig." Der Fragenkatalog der
-        // Bundesnetzagentur bringt seine Schaltbilder mit weissem Grund mit -
-        // auf dunklem Grund stehen sie als leuchtende Kacheln darin, und
-        // daran aendert keine Farbwahl etwas.
-        //
-        // Wer den Modus gespeichert hatte, landet still auf Hell. Der
-        // gespeicherte Wert wird gleich mit umgeschrieben, damit er nicht
-        // fuer immer im Browser liegen bleibt.
-        if (gespeichert === 'dark') { try { localStorage.setItem('theme', 'light'); } catch (e2) {} }
+        // Der Dark Mode war vom 03.09. bis zum 17.09.2026 abgeschaltet -
+        // Dietmar: "Das ist mit den weissen Bildern bei den Fragen
+        // ueberhaupt nicht stimmig." Seit dem 17.09. werden die
+        // Schaltbilder im Dark Mode ins Negative gekehrt (siehe den
+        // Dark-Mode-Block im Stilblatt), und ein gespeichertes 'dark'
+        // gilt wieder.
+        if (gespeichert === 'dark') document.body.classList.add('dark');
         // 'pastell' war der fruehere Name des Green Mode - weiter akzeptieren,
         // damit eine gespeicherte Einstellung nicht verlorengeht.
         else if (gespeichert === 'green' || gespeichert === 'pastell') document.body.classList.add('green');
@@ -7899,14 +7977,31 @@ function bildZoomFelderNachziehen(){
     }
     const t = document.getElementById('einstBildZoomText');
     if(t){
-        t.textContent = an
-            ? 'Ein Bild darf jetzt bis zu ' + Math.round(Math.min(0.92, 0.38 * f) * 100)
-              + ' % der Fensterbreite einnehmen (sonst 38 %).'
-            : 'Aus — die Vergrößerung bleibt so, dass daneben noch etwas zu sehen ist.';
+        t.textContent = !an
+            ? 'Aus — die Vergrößerung bleibt so, dass daneben noch etwas zu sehen ist.'
+            : (f >= BILD_ZOOM_VOLL
+                ? 'Ein Bild wird jetzt so groß wie das Fenster des Trainers — Kante auf Kante.'
+                : 'Ein Bild darf jetzt bis zu ' + Math.round(Math.min(0.92, 0.62 * f) * 100)
+                  + ' % der Breite des Trainerfensters einnehmen (sonst 62 %).');
     }
 }
 window.bildZoomFelderNachziehen = bildZoomFelderNachziehen;
 
+// ----------------------------------------------------------------
+//  "SO GROSS WIE MOEGLICH" HEISST: SO GROSS WIE DER TRAINER
+// ----------------------------------------------------------------
+//  Dietmar am 17.09.2026, mit einer Aufnahme vom Bildschirm: "Ich bin
+//  damit nicht zufrieden. Maximale Groesse bedeutet so gross wie das
+//  Programm im Hintergrund."
+//
+//  Bis hierher galt auch auf der obersten Stufe noch die Zielgroesse in
+//  Punkten (BILD_MASS) und ein Anteil von hoechstens 92 Prozent. Beides
+//  liess ringsum einen Rand stehen. Ab dieser Stufe zaehlt deshalb nur
+//  noch die Karte des Trainers: das Bild wird genau so gross wie sie,
+//  Kante auf Kante. Es ist der oberste Eintrag der Auswahl unter
+//  Einstellungen - Nachteilsausgleich (siehe einstBildZoom).
+// ----------------------------------------------------------------
+const BILD_ZOOM_VOLL  = 2.4;   // ab hier: so gross wie das Trainerfenster
 const BILD_ZOOM_LOHNT = 1.15;  // darunter bleibt das Bild, wie es ist
 const BILD_ZOOM_MAX   = 12;    // Obergrenze fuer sehr kleine Schaltzeichen
 const BILD_ZOOM_RAND  = 12;    // Mindestabstand zum Fensterrand
@@ -8012,9 +8107,15 @@ function bildZoomEbene(){
         // sich um dasselbe Bild handelt, nur groesser. Der Ursprung des
         // Aufwachsens (transform-origin) wird beim Anzeigen auf die Ecke
         // gesetzt, an der das Bild haengt.
+        // Der Schatten: dezent wie ein Fenster unter Windows, nicht der
+        // grosse weiche Verlauf von vorher (18/50 Punkte, 45 %). Dietmar
+        // am 17.09.2026: "Der Verlauf ist aber ziemlich gross. Dezenter,
+        // aehnlich wie bei Windows." Im Dark Mode faerbt er sich ins
+        // 50-Ohm-Blau - die Regel dazu steht beim Dark-Mode-Block
+        // (body.dark #bildZoomEbene img).
         o.innerHTML = '<img alt="" style="position:absolute; box-sizing:border-box; background:#fff; '
             + 'border:1px solid #c3d0de; border-radius:12px; padding:8px; '
-            + 'box-shadow:0 18px 50px rgba(0,0,0,0.45); object-fit:contain; '
+            + 'box-shadow:0 6px 18px rgba(0,0,0,0.28), 0 0 0 1px rgba(15,39,69,0.10); object-fit:contain; '
             + 'transform:scale(0.75); opacity:0; transition:transform 0.18s ease-out, opacity 0.18s ease-out;">';
         document.body.appendChild(o);
     }
@@ -8092,8 +8193,56 @@ function bildZoomAn(img){
         // Bild selbst, und die Lupe blieb aus.
         const zielB = Math.max(max.breite, zb * BILD_ZOOM_ZIEL);
         const zielH = Math.max(max.hoehe,  zh * BILD_ZOOM_ZIEL);
-        const grenzeB = Math.min(vb * anteilB, zielB * bz);
-        const grenzeH = Math.min(vh * anteilH, zielH * bz);
+
+        // ================================================================
+        //  DIE LUPE BLEIBT IM TRAINERFENSTER              (17.09.2026)
+        // ----------------------------------------------------------------
+        //  Dietmar: "Beim Vergroessern ist das Fenster asynchron. Oben
+        //  kann es 1 mm weiter runter. Links ca. 1 mm weiter nach links.
+        //  Rechts laeuft es ueber. Maximale Vergroesserung. Muss
+        //  innerhalb von dem Fenster darunter liegen. Bei kleineren
+        //  Vergroesserungen muss es mittig bleiben."
+        //
+        //  Gerechnet wurde bisher gegen das BROWSERFENSTER (vb/vh). Die
+        //  Karte des Trainers steht darin aber nicht mittig - links und
+        //  rechts bleibt unterschiedlich viel Rand. Beim groessten Bild
+        //  lief die Lupe deshalb rechts ueber die Karte hinaus, waehrend
+        //  links noch Platz stand. Gemessen bei 1082x532 mit
+        //  "so gross wie moeglich": Karte 102 bis 966, Lupe 125 bis 1070.
+        //
+        //  Bezugsflaeche ist jetzt die Karte selbst, geschnitten mit dem
+        //  sichtbaren Fenster - denn eine Karte kann laenger sein als der
+        //  Bildschirm, und was darunter liegt, sieht niemand. Ist keine
+        //  brauchbare Karte da (Beamer, Vollbild, fremde Ansicht), bleibt
+        //  es beim Fenster wie bisher.
+        // ================================================================
+        let rl = 0, ro = 0, rr = vb, ru = vh, aufKarte = false;
+        try{
+            const karte = (img.closest && img.closest('.card')) || document.getElementById('app');
+            if(karte){
+                const k = karte.getBoundingClientRect();
+                const sl = Math.max(0, k.left),  so = Math.max(0, k.top);
+                const sr = Math.min(vb, k.right), su = Math.min(vh, k.bottom);
+                // Eine winzige Karte waere schlimmer als das Fenster: die
+                // Lupe koennte dann gar nicht mehr wachsen.
+                if(sr - sl >= 320 && su - so >= 200){ rl = sl; ro = so; rr = sr; ru = su; aufKarte = true; }
+            }
+        }catch(e){}
+        const raumB = rr - rl, raumH = ru - ro;
+        // Gegen die Karte wird Kante auf Kante gerechnet - sie haelt selbst
+        // schon Abstand zum Bildschirmrand. Nur wenn keine Karte da ist und
+        // gegen das nackte Fenster gerechnet wird, bleibt der Mindestabstand.
+        const rand = aufKarte ? 0 : BILD_ZOOM_RAND;
+
+        // Was nach Rand und Rahmen fuer die Zeichnung bleibt.
+        const platzB = Math.max(40, raumB - 2 * rand - zusatz);
+        const platzH = Math.max(40, raumH - 2 * rand - zusatz);
+        // Oberste Stufe: die Karte ist das Mass, sonst nichts. Darunter
+        // gelten weiter die Zielgroesse und der Anteil - sonst waeren
+        // "doppelt so gross" und "so gross wie moeglich" dasselbe.
+        const ganzeKarte = aufKarte && bz >= BILD_ZOOM_VOLL;
+        const grenzeB = ganzeKarte ? platzB : Math.min(platzB, raumB * anteilB, zielB * bz);
+        const grenzeH = ganzeKarte ? platzH : Math.min(platzH, raumH * anteilH, zielH * bz);
         let f = Math.min(grenzeB / zb, grenzeH / zh);
         // Ein Bild, das ohnehin schon so gross wie die Zielgroesse ist, bleibt
         // unveraendert - sonst wurden gerade die breiten Schaltbilder noch
@@ -8104,8 +8253,13 @@ function bildZoomAn(img){
         // Rahmen und Innenabstand kommen zur Bildflaeche dazu (box-sizing).
         // Sie stehen im CSS in Seitenpixeln, hier wird in Bildschirmpixeln
         // gerechnet - also mit dem Anzeigefaktor multipliziert.
-        const nb = zb * f + zusatz;
-        const nh = zh * f + zusatz;
+        let nb = zb * f + zusatz;
+        let nh = zh * f + zusatz;
+        // Auf der obersten Stufe ist das Blatt genau die Karte - auch in der
+        // Hoehe. Die Zeichnung behaelt dabei ihr Seitenverhaeltnis: sie sitzt
+        // mit object-fit:contain mittendrin. Ohne das blieb oben und unten ein
+        // Streifen stehen, weil die Schaltbilder breiter liegen als die Karte.
+        if(ganzeKarte){ nb = raumB; nh = raumH; }
 
         // Die Ecke, an der das Bild haengt: die dem Fensterrand naechste.
         // Links oben haengt links oben und waechst nach rechts unten - und so
@@ -8124,10 +8278,17 @@ function bildZoomAn(img){
         }else{
             x = mitteX - nb / 2;
             y = mitteY - nh / 2;
+            // Kleine Vergroesserungen bleiben ueber ihrem Bild stehen -
+            // sie wachsen aus ihm heraus, und das soll man sehen. Passt
+            // die Lupe an dieser Stelle NICHT mehr in die Karte, klebte
+            // sie bisher an einem Rand, waehrend am anderen Platz blieb.
+            // Dann setzt sie sich jetzt in die Mitte der Karte.
+            if(x < rl + rand || x + nb > rr - rand) x = rl + (raumB - nb) / 2;
+            if(y < ro + rand || y + nh > ru - rand) y = ro + (raumH - nh) / 2;
         }
-        // Nur so weit verschieben, dass nichts aus dem Fenster ragt.
-        x = Math.max(BILD_ZOOM_RAND, Math.min(x, vb - nb - BILD_ZOOM_RAND));
-        y = Math.max(BILD_ZOOM_RAND, Math.min(y, vh - nh - BILD_ZOOM_RAND));
+        // Und zuletzt: nichts ragt aus der Karte heraus.
+        x = Math.max(rl + rand, Math.min(x, rr - nb - rand));
+        y = Math.max(ro + rand, Math.min(y, ru - nh - rand));
 
         const o = bildZoomEbene();
         const gr = o.querySelector('img');
@@ -8181,18 +8342,77 @@ function bildZoomAus(){
         if(bildZoomOriginal){ bildZoomOriginal.style.opacity = ''; bildZoomOriginal = null; }
     }catch(e){}
 }
+// ================================================================
+//  DIE LUPE WARTET, BIS DIE MAUS STEHT             (17.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Die Bilder sollen nicht sofort aufpoppen, wenn ich mit
+//  der Maus darueber fahre. So lang sich die Maus bewegt, soll das
+//  nicht passieren. Erst wenn ich mit der Maus auf einem Bild stehen
+//  bleibe. Das bringt in der Form so Unruhe rein."
+//
+//  Er hat recht, und es ist derselbe Gedanke wie beim Tooltip von
+//  Windows: Wer mit der Maus quer ueber vier Antwortbilder faehrt, um
+//  zum fuenften zu kommen, will nicht vier Vergroesserungen
+//  aufblitzen sehen. Gezaehlt wird deshalb nicht mehr das
+//  Darueberfahren, sondern das Stehenbleiben.
+//
+//  ZWEI DINGE, DIE DABEI ZAEHLEN:
+//    - Die Wartezeit beginnt bei jeder Bewegung von vorn. Erst wenn
+//      die Maus 350 ms ruhig auf dem Bild liegt, kommt die Lupe.
+//    - EIN ZITTERN IST KEINE BEWEGUNG. Unter vier Punkten Weg wird
+//      die Wartezeit nicht zurueckgesetzt - sonst ginge die Lupe bei
+//      einer unruhigen Hand nie auf. Dietmar am 07.09.2026 zum
+//      Zuruecknehmen einer Antwort: "Bei Zittern oder Tremor ist ein
+//      Fehlklick keine falsche Antwort, sondern eine verrutschte
+//      Hand." Dasselbe gilt hier.
+//
+//  Steht die Lupe einmal, bleibt sie, solange die Maus auf dem Bild
+//  ist. Sie bei jeder weiteren Bewegung wieder zuzumachen waere genau
+//  das Flackern, das hier abgestellt wird.
+// ================================================================
+const BILD_LUPE_WARTEN  = 350;   // Millisekunden Ruhe, bevor die Lupe kommt
+const BILD_LUPE_ZITTERN = 4;     // Punkte Weg, die noch als "steht" gelten
+let bildLupeUhr = null, bildLupeZiel = null, bildLupeX = 0, bildLupeY = 0;
+
+function bildLupeAbbrechen(){
+    if(bildLupeUhr){ clearTimeout(bildLupeUhr); bildLupeUhr = null; }
+    bildLupeZiel = null;
+}
+function bildLupeVormerken(img, x, y){
+    if(bildLupeUhr){ clearTimeout(bildLupeUhr); bildLupeUhr = null; }
+    bildLupeZiel = img; bildLupeX = x; bildLupeY = y;
+    bildLupeUhr = setTimeout(function(){
+        bildLupeUhr = null;
+        // In den 350 ms kann die Frage weitergeblaettert worden sein -
+        // dann haengt das Bild nicht mehr im Dokument, und die Lupe
+        // haette nichts mehr zu vergroessern.
+        if(bildLupeZiel && document.body.contains(bildLupeZiel)) bildZoomAn(bildLupeZiel);
+    }, BILD_LUPE_WARTEN);
+}
+function bildLupeZu(){ bildLupeAbbrechen(); bildZoomAus(); }
+
 // Ein Zuhoerer am Dokument statt an jedem Bild - die Fragen werden staendig
 // neu gezeichnet, einzeln angehaengte Zuhoerer waeren jedes Mal weg.
 document.addEventListener('mouseover', function(e){
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
-    if(img) bildZoomAn(img); else bildZoomAus();
+    if(img){ if(!bildZoomOriginal) bildLupeVormerken(img, e.clientX, e.clientY); }
+    else bildLupeZu();
+}, true);
+document.addEventListener('mousemove', function(e){
+    // Steht die Lupe schon, aendert Bewegung nichts mehr. Und wo kein
+    // Bild vorgemerkt ist, gibt es auch nichts zurueckzusetzen - die
+    // beiden Zeilen sind der Normalfall und kosten nichts.
+    if(bildZoomOriginal || !bildLupeZiel) return;
+    if(Math.abs(e.clientX - bildLupeX) < BILD_LUPE_ZITTERN &&
+       Math.abs(e.clientY - bildLupeY) < BILD_LUPE_ZITTERN) return;
+    bildLupeVormerken(bildLupeZiel, e.clientX, e.clientY);
 }, true);
 document.addEventListener('mouseout', function(e){
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
-    if(img) bildZoomAus();
+    if(img) bildLupeZu();
 }, true);
-window.addEventListener('scroll', bildZoomAus, true);
-window.addEventListener('resize', bildZoomAus);
+window.addEventListener('scroll', bildLupeZu, true);
+window.addEventListener('resize', bildLupeZu);
 
 // Kurzer, nicht blockierender Hinweis, wenn im Gruppenraum oder im
 // Pruefungssimulator ein Blick auf die Loesung als Fehler gezaehlt wurde -
@@ -9257,11 +9477,71 @@ function bilderGroesseAnpassen(erzwingen){
         const zeilen = Math.max(1, Math.ceil(bilder.length / spalten));
         raster.classList.add('bilder-gross');
 
+        // ================================================================
+        //  DIE SEITENSPALTE DARF WAEHREND DER MESSUNG NICHTS STUETZEN
+        // ----------------------------------------------------------------
+        //  Dietmar am 17.09.2026, AD408 mit Bild zur Frage und vier
+        //  Bildantworten: "bei 5 Bilder flippt der Trainer aus. Es laeuft
+        //  ueber!" Die Bilder standen auf 240 Punkten, die Seite war 1473
+        //  hoch bei 936 Fenster - und die Bremse unten hatte nichts getan.
+        //
+        //  Der Grund sitzt nebenan: finalFixDynamicHeight setzt der
+        //  Seitenspalte (Verlauf samt Umschaltknopf) eine feste Hoehe,
+        //  naemlich die der Frage im Moment seiner Messung - mit den
+        //  grossen Bildern also 1056 Punkte. Frage und Spalte stehen in
+        //  einem Flex-Kasten, der die kuerzere auf die laengere zieht.
+        //  Wird die Bildhoehe hier verkleinert, schrumpft die Frage - die
+        //  Spalte aber nicht, der Kasten bleibt 1056, die Seite bleibt
+        //  gleich hoch. Jede Messung unten sagt dann "kein Unterschied",
+        //  schon der Grundzustand mit 90 Punkten laeuft ueber, und die
+        //  Bremse haelt das fuer ein Problem, das nicht an den Bildern
+        //  liegt. Der Nachbar zieht erst NACH dieser Funktion nach - und
+        //  bis dahin ist die Entscheidung gefallen.
+        //
+        //  Deshalb dasselbe Mittel, das der Nachbar bei seiner eigenen
+        //  Messung benutzt: Fuer die Dauer dieser Rechnung wird die Spalte
+        //  auf null gesetzt. Dann folgt der Kasten allein der Frage, und
+        //  gemessen wird, was die Bilder wirklich ausmachen. Gezeichnet
+        //  wird dazwischen nichts - alles laeuft in einem Durchgang. Am
+        //  Ende bringt afuSync() die Spalte auf die neue Fragenhoehe.
+        // ================================================================
+        const seitenteile = ['.sidebar-column', '#sidebarToggleBtn', '#leftSidebarWrapper', '.left-sidebar']
+            .map(sel => document.querySelector(sel)).filter(Boolean);
+        const seitenteileVorher = seitenteile.map(el => [el.style.height, el.style.minHeight, el.style.maxHeight]);
+        seitenteile.forEach(el => { el.style.height = '0px'; el.style.minHeight = '0px'; el.style.maxHeight = '0px'; });
+        const seitenteileZurueck = () => {
+            if(typeof window.afuSync === 'function'){ try{ window.afuSync(); return; }catch(e){} }
+            seitenteile.forEach((el, i) => { el.style.height = seitenteileVorher[i][0]; el.style.minHeight = seitenteileVorher[i][1]; el.style.maxHeight = seitenteileVorher[i][2]; });
+        };
+        try {
+
         // ZUERST ZURUECKSETZEN. Diese Funktion laeuft bei jedem Zeichnen der
         // Frage - beim zweiten Mal steckt die Vergroesserung vom ersten Mal
         // noch im Stilblatt. Wer dann den "Ausgangszustand" misst, misst
         // sein eigenes Ergebnis und findet natuerlich alles in Ordnung.
         raster.style.removeProperty('--bild-hoehe');
+        // Auch das Bild zur Frage faengt bei seinem Ausgangsmass an -
+        // die zweite Stufe unten kann es verkleinert haben.
+        // ================================================================
+        //  FUENF BILDER: ERST DIE ANTWORTEN, DANN DAS BILD ZUR FRAGE
+        // ----------------------------------------------------------------
+        //  Bis hierher bekam das Bild zur Frage seine 260 Punkte zuerst,
+        //  und die vier Antwortbilder mussten sich mit dem Rest begnuegen
+        //  - bei AD408 auf 1564x936 waren das 90 Punkte, in Kaesten, die
+        //  dreimal so breit sind. Jetzt faengt das Bild zur Frage mit
+        //  einem mittleren Mass an, die Antwortbilder bekommen den Platz,
+        //  und was danach noch frei ist, holt sich das Bild zur Frage
+        //  wieder (Stufe drei unten). Auf einem grossen Schirm landet es
+        //  so wieder bei 260, auf einem knappen teilen sich alle fuenf
+        //  den Platz.
+        // ================================================================
+        const FRAGE_BILD_MITTE = 170;
+        let frageBildZiel = 0;
+        if(frageBild){
+            if(frageBild.dataset.maxVorher === undefined) frageBild.dataset.maxVorher = frageBild.style.maxHeight || '';
+            frageBildZiel = parseFloat(frageBild.dataset.maxVorher) || 260;
+            frageBild.style.maxHeight = Math.min(frageBildZiel, FRAGE_BILD_MITTE) + 'px';
+        }
         void document.documentElement.scrollHeight;
 
         // ================================================================
@@ -9303,6 +9583,14 @@ function bilderGroesseAnpassen(erzwingen){
         //  ohne Bilder nicht, also bleibt es beim Zustand von vorher).
         // ================================================================
         const leiste = document.querySelector('.nav-buttons');
+        // Seit dem 16.09.2026 sitzt die Knopfleiste am Rechner fest am
+        // unteren Fensterrand (position: fixed). Dann steht sie IMMER im
+        // Fenster, egal wie hoch die Seite ist - als Mass taugt sie nicht
+        // mehr, und die Karte traegt unten einen Innenabstand, der ihr
+        // den Platz freihaelt. Massgeblich ist dann allein, ob die Seite
+        // hoeher wird als das Fenster.
+        const navArea = document.getElementById('navArea');
+        const leisteFest = !!(navArea && getComputedStyle(navArea).position === 'fixed');
 
         // Die Hoehe, bei der das Bild die Kastenbreite ausfuellt. Das
         // groesste der vier Verhaeltnisse gibt den Ausschlag: Bei diesem
@@ -9410,11 +9698,15 @@ function bilderGroesseAnpassen(erzwingen){
         // ================================================================
         const seitePasst = grundUeber <= 2;
         const ueberstand = () => {
-            const unterKante = leiste
+            const unterKante = (leiste && !leisteFest)
                 ? Math.round((leiste.getBoundingClientRect().bottom + window.scrollY)
                              + BILD_LUFT - window.innerHeight) - grundLeiste
                 : 0;
-            if(!seitePasst) return unterKante;
+            // Feste Leiste: nur der Ueberlauf der Seite zaehlt - und zwar
+            // der Teil, den die Bilder verursachen (ueber den Grundzustand
+            // hinaus). Was schon bei kleinsten Bildern ueberlief, liegt
+            // nicht an ihnen.
+            if(!seitePasst && !leisteFest) return unterKante;
             const seite = document.documentElement.getBoundingClientRect().height;
             return Math.max(unterKante, Math.round(seite - window.innerHeight) - grundUeber);
         };
@@ -9430,6 +9722,58 @@ function bilderGroesseAnpassen(erzwingen){
         // Standardwert - ein gesetzter Wert, der dem alten entspricht,
         // waere nur Ballast im Stilblatt.
         if(hoehe <= BILD_MIN) raster.style.removeProperty('--bild-hoehe');
+
+        // ================================================================
+        //  ZWEITE STUFE: DAS BILD ZUR FRAGE                (17.09.2026)
+        // ----------------------------------------------------------------
+        //  Sind die Antwortbilder schon auf dem Mindestmass und die Seite
+        //  laeuft trotzdem ueber, bleibt nur noch das Bild zur Frage (bis
+        //  260 Punkte hoch). Gemessen bei AD408 auf 1907x944: Antwort-
+        //  bilder auf 90, Seite 972 - 28 Punkte zu viel, und die kamen
+        //  vom Bild zur Frage. Es wird so weit verkleinert, bis die Seite
+        //  passt, aber nie unter 120 Punkte: Darunter ist eine Schaltung
+        //  nicht mehr zu lesen, und dann ist Rollen das kleinere Uebel.
+        // ================================================================
+        if(frageBild && hoehe <= BILD_MIN){
+            const z = bildZoomFaktorAnzeige();
+            let fb = Math.round(frageBild.getBoundingClientRect().height / z);
+            // Hier zaehlt der GANZE Ueberlauf, nicht der ueber den
+            // Grundzustand hinaus - das Bild zur Frage gehoert ja zum
+            // Grundzustand. Bei fester Leiste ist das die Seitenhoehe
+            // gegen das Fenster, sonst die Leiste selbst.
+            const ganz = () => leisteFest
+                ? Math.round(document.documentElement.getBoundingClientRect().height - window.innerHeight)
+                : ueberstand();
+            for(let i = 0; i < 20 && fb > 120; i++){
+                const zuViel = ganz();
+                if(zuViel <= 0) break;
+                fb = Math.max(120, fb - Math.max(4, Math.ceil(zuViel / z)));
+                frageBild.style.maxHeight = fb + 'px';
+                void document.documentElement.scrollHeight;
+            }
+        }
+
+        // ================================================================
+        //  DRITTE STUFE: WAS FREI BLEIBT, BEKOMMT DAS BILD ZUR FRAGE
+        // ----------------------------------------------------------------
+        //  Haben die Antwortbilder ihren Platz (mehr als das Mindestmass),
+        //  waechst das Bild zur Frage vom mittleren Mass wieder Richtung
+        //  Ausgangsmass - Schritt fuer Schritt, solange die Seite passt.
+        // ================================================================
+        if(frageBild && hoehe > BILD_MIN && frageBildZiel > FRAGE_BILD_MITTE){
+            const ganz = () => leisteFest
+                ? Math.round(document.documentElement.getBoundingClientRect().height - window.innerHeight)
+                : ueberstand();
+            let fb = parseFloat(frageBild.style.maxHeight) || FRAGE_BILD_MITTE;
+            for(let i = 0; i < 20 && fb < frageBildZiel; i++){
+                const probe = Math.min(frageBildZiel, fb + 10);
+                frageBild.style.maxHeight = probe + 'px';
+                void document.documentElement.scrollHeight;
+                if(ganz() > 0){ frageBild.style.maxHeight = fb + 'px'; void document.documentElement.scrollHeight; break; }
+                fb = probe;
+            }
+        }
+        } finally { seitenteileZurueck(); }
     }catch(e){ /* die Groesse ist nie ein Grund fuer einen Fehler */ }
 }
 window.bilderGroesseAnpassen = bilderGroesseAnpassen;
@@ -18861,6 +19205,10 @@ function erklaerVorlesen(knopfId){
     if((typeof kennerThema === 'function') && kennerThema(q)){
         segmente.forEach(sg => { sg.text = kennerSprechen(sg.text); });
     }
+    // Wo der Text zu sehen ist, laeuft die Marke ueber die Woerter mit.
+    // Beim Knopf "nur vorlesen" ist selector null - dort gibt es nichts
+    // hervorzuheben, und es bleibt beim reinen Ton.
+    segmente.forEach(sg => { if(sg.selector) sg.worte = true; });
     try{ stopTTS(); }catch(e){}
     playTTSQueue(segmente, b, erklaerLesenKnopfZurueck);
 }
@@ -19056,8 +19404,139 @@ function erklaerGrossOeffnen(){
     if(loesungSchon) erklaerLoesungZeigen();
 
     try{ h.querySelector('.eg-zu').focus(); }catch(e){}
+    try{ erklaerGrossBreite(); }catch(e){}
 }
 window.erklaerGrossOeffnen = erklaerGrossOeffnen;
+
+// ================================================================
+//  SO BREIT WIE DER TRAINER - UND DIE SCHRIFT DAZU  (17.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Beim Vergroessern einer Erklaerung ist die Schrift zwar
+//  schoen gross, das Fenster wird aber nicht richtig ausgenutzt. Es
+//  koennte breiter sein." - und gleich danach: "mache es bitte nicht
+//  breiter als der Trainer ist."
+//
+//  Gemessen auf 1920x1020: Das Fenster war 1100 Punkte breit, die
+//  Karte des Trainers 1440. Gut dreihundert Punkte blieben links und
+//  rechts liegen.
+//
+//  Also wird die Karte gemessen und genau ihre Breite genommen. Auf
+//  einem schmalen Schirm ist sie selbst schmaler (1300 Punkte bei
+//  einem 1280er Fenster), und dann stimmt es dort genauso.
+//
+//  UND DIE SCHRIFT WAECHST MIT. Bei 1440 Punkten Breite und der alten
+//  Schrift stuenden 116 Zeichen in einer Zeile statt der bisherigen
+//  88. So lange Zeilen liest niemand gern: Am Ende der Zeile muss das
+//  Auge den Anfang der naechsten wiederfinden, und je laenger der Weg,
+//  desto oefter verrutscht es eine Zeile. Fuer Augen, fuer die dieses
+//  Fenster gemacht ist, gilt das doppelt. Deshalb wird die Schrift so
+//  gross gerechnet, dass es bei rund 95 Zeichen bleibt: aus 21,6
+//  Punkten werden auf einem breiten Schirm 26. Die Breite ist genutzt,
+//  die Schrift groesser, die Zeile bleibt lesbar.
+//
+//  Gerechnet wird in Layout-Punkten (offsetWidth, style.fontSize) -
+//  die Anzeigegroesse skaliert beides gemeinsam und faellt damit
+//  heraus.
+// ================================================================
+function erklaerGrossBreite(){
+    const h = document.getElementById('erklaerGross');
+    if(!h) return;
+    const fenster = h.querySelector('.eg-fenster');
+    const buehne  = h.querySelector('.eg-buehne');
+    const kasten  = h.querySelector('.erklaer-kasten');
+    if(!fenster || !buehne || !kasten) return;
+
+    // ----------------------------------------------------------------
+    //  GEMESSEN WIRD AM FENSTER DES BROWSERS, NICHT AN DER HUELLE
+    // ----------------------------------------------------------------
+    //  Dietmar am 17.09.2026: "Erklaerfenster rechts ueber den
+    //  Bildschirmrand hinaus. Ja, das Vergroessern ist groesser als das
+    //  Fenster darunter."
+    //
+    //  Die Huelle liegt auf position:fixed mit inset:0. Bei
+    //  vergroesserter Anzeige ist sie nicht verlaesslich so gross wie
+    //  das sichtbare Fenster - genau daran ist die alte Rechnung
+    //  vorbeigegangen: "100 %" der Huelle koennen mehr sein, als man
+    //  sieht, und dann steht der rechte Rand des Fensters ausserhalb
+    //  des Bildschirms.
+    //
+    //  window.innerWidth zaehlt dagegen in sichtbaren Punkten. Geteilt
+    //  durch die Anzeigegroesse ergibt das die Breite in denselben
+    //  Layout-Punkten, in denen style.width und offsetWidth zaehlen -
+    //  dieselbe Umrechnung wie bei der Lupe (bildZoomAn) und bei den
+    //  uebrigen Fenstern, die mit calc(... / var(--afu-zoom)) rechnen.
+    // ----------------------------------------------------------------
+    const karte = document.querySelector('.card');
+    const hs = getComputedStyle(h);
+    const z = (typeof bildZoomFaktorAnzeige === 'function') ? (bildZoomFaktorAnzeige() || 1) : 1;
+    const randB = parseFloat(hs.paddingLeft) + parseFloat(hs.paddingRight);
+    const randH = parseFloat(hs.paddingTop)  + parseFloat(hs.paddingBottom);
+    const platz  = Math.floor(window.innerWidth  / z) - randB;
+    const hoehe  = Math.floor(window.innerHeight / z) - randH;
+
+    // ----------------------------------------------------------------
+    //  GENAU SO GROSS WIE DER TRAINER                  (17.09.2026)
+    // ----------------------------------------------------------------
+    //  Dietmar, mit einem Bild der vergroesserten Erklaerung: "Unten
+    //  sehe ich die Haelfte von der Knopfleiste." Das Fenster war nur so
+    //  hoch wie sein Text und stand mittig im Bildschirm - sein unterer
+    //  Rand endete dadurch mitten ueber der Knopfreihe, und von den
+    //  Knoepfen lugte die obere Haelfte hervor.
+    //
+    //  Auf die Frage, wie es abschliessen soll, hat er sich fuer
+    //  dasselbe entschieden wie bei der Lupe: genau so gross wie der
+    //  Trainer. Das Fenster liegt jetzt Kante auf Kante ueber der Karte
+    //  - links, rechts, oben und unten. Ist der Text kuerzer, bleibt
+    //  unten Platz frei; dafuer lugt nichts mehr halb hervor.
+    //
+    //  Gesetzt wird position:fixed mit den Masszen der Karte, denn die
+    //  Karte steht in der Huelle nicht mittig. Gerechnet wird wieder
+    //  ueber die Anzeigegroesse: getBoundingClientRect zaehlt in
+    //  sichtbaren Punkten, style.left/top/width/height in Layout-Punkten
+    //  - dieselbe Umrechnung wie bei der Lupe (bildZoomAn). Die Karte
+    //  wird dabei mit dem sichtbaren Fenster geschnitten; eine Karte,
+    //  die laenger ist als der Schirm, wuerde das Fenster sonst unter
+    //  den unteren Rand schieben.
+    // ----------------------------------------------------------------
+    let aufKarte = false;
+    if(karte){
+        const k = karte.getBoundingClientRect();
+        const kl = Math.max(0, k.left), ko = Math.max(0, k.top);
+        const kr = Math.min(window.innerWidth,  k.right);
+        const ku = Math.min(window.innerHeight, k.bottom);
+        if(kr - kl >= 320 && ku - ko >= 200){
+            fenster.style.position  = 'fixed';
+            fenster.style.left      = Math.round(kl / z) + 'px';
+            fenster.style.top       = Math.round(ko / z) + 'px';
+            fenster.style.width     = Math.round((kr - kl) / z) + 'px';
+            fenster.style.height    = Math.round((ku - ko) / z) + 'px';
+            fenster.style.maxWidth  = 'none';
+            fenster.style.maxHeight = 'none';
+            aufKarte = true;
+        }
+    }
+    if(!aufKarte){
+        // Ohne brauchbare Karte bleibt es beim alten Weg: mittig in der
+        // Huelle, so breit und so hoch wie der Platz es zulaesst.
+        fenster.style.position = '';
+        fenster.style.left = ''; fenster.style.top = ''; fenster.style.height = '';
+        if(platz > 280){ fenster.style.width = platz + 'px'; fenster.style.maxWidth = 'none'; }
+        if(hoehe > 200) fenster.style.maxHeight = hoehe + 'px';
+    }
+
+    const cs = getComputedStyle(buehne);
+    const innen = buehne.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if(!(innen > 100)) return;
+    // 1,8 ist das gemessene Verhaeltnis von Schriftgroesse zu mittlerer
+    // Zeichenbreite dieser Schrift (21,6 Punkte Schrift, 12,0 Punkte je
+    // Zeichen). Untergrenze ist der Wert aus dem Stilblatt - kleiner
+    // soll es nie werden, auch auf einem schmalen Schirm nicht.
+    const px = Math.max(21.6, Math.min(30, Math.round(innen / 95 * 1.8)));
+    kasten.style.fontSize = px + 'px';
+}
+window.erklaerGrossBreite = erklaerGrossBreite;
+// Zieht jemand am Fenster, stimmt beides wieder.
+window.addEventListener('resize', function(){ try{ erklaerGrossBreite(); }catch(e){} });
 
 function erklaerGrossSchliessen(){
     // Was hier gesprochen hat, hoert hier auf.
@@ -21318,11 +21797,192 @@ let ttsHighlightTimers = [];
 let ttsQueueActive = false;
 let ttsQueueToken = 0; // wird bei jedem Start/Stop erhöht, um veraltete async-Läufe zu erkennen
 
+// ================================================================
+//  DAS WORT, DAS GERADE GESPROCHEN WIRD             (17.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Beim Vorlesen bei der Erklaerung wuerde ich mir noch
+//  wuenschen, das das Wort, was gerade vorgelesen wird, farblich
+//  hervorgehoben wird."
+//
+//  WARUM GESCHAETZT UND NICHT GEMESSEN. Der Browser kennt bei seiner
+//  eigenen Stimme die Wortgrenzen (onboundary) - die ist hier aber seit
+//  dem 25.08.2026 nicht mehr in Gebrauch, weil sie "MHz" buchstabiert.
+//  Piper liefert eine fertige WAV-Datei und sonst nichts: kein Zeitraster,
+//  keine Marken. Was der Trainer hat, ist die LAENGE dieser Datei und der
+//  Text, der darin steckt. Daraus laesst sich die Stelle gut genug
+//  schaetzen - es geht darum, die Zeile mitzulesen, nicht um Millisekunden.
+//
+//  WIE GESCHAETZT WIRD. Jedes Wort bekommt ein Gewicht, und die Dauer
+//  wird im Verhaeltnis dieser Gewichte verteilt:
+//    - jedes Zeichen zaehlt eins, NACHDEM sprechbar() darueber gelaufen
+//      ist; aus "MHz" werden so neun Zeichen ("Megahertz") statt drei,
+//      aus dem Omega vier ("Ohm").
+//    - eine ZIFFER zaehlt fuenf. "330" spricht sich als
+//      "dreihundertdreissig" - drei Zeichen, achtzehn Laute. Ohne diese
+//      Regel rannte die Marke bei jeder Zahl davon.
+//    - ein Satzzeichen ist eine Pause: Punkt sechs, Komma drei. Piper
+//      macht sie hoerbar, und ohne sie liefe die Marke dem Ton voraus.
+//
+//  DIE WOERTER WERDEN EINMAL EINGEPACKT. Jedes Wort bekommt ein eigenes
+//  <span class="tts-wort"> - das aendert am Aussehen nichts (ein span ist
+//  inline) und bleibt danach stehen, statt den Abschnitt nach jedem
+//  Vorlesen neu aufzubauen. Gefaerbt wird immer nur eines.
+//
+//  Und es rollt mit: Wandert die Marke aus dem sichtbaren Teil des
+//  Fensters, holt ttsWortInsBild() sie zurueck.
+// ================================================================
+let ttsWortLauf = null;
+// Wie weit die Marke in DIESEM Abschnitt schon gekommen ist. Ein Abschnitt
+// wird in mehrere Tondateien zerlegt (ttsInStuecke); ohne diesen Stand
+// finge die Marke bei jedem Stueck von vorn an, und sie darf nie
+// zurueckspringen - das liest sich wie ein Fehler.
+let ttsWortStand = null;
+
+function ttsWorteEinpacken(el){
+    if(!el) return null;
+    if(el.dataset && el.dataset.ttsWorte === '1') return el.querySelectorAll('.tts-wort');
+    const laeufer = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const knoten = [];
+    while(laeufer.nextNode()) knoten.push(laeufer.currentNode);
+    for(const t of knoten){
+        const txt = t.nodeValue;
+        if(!txt || !/\S/.test(txt)) continue;
+        if(t.parentNode && t.parentNode.classList && t.parentNode.classList.contains('tts-wort')) continue;
+        const frag = document.createDocumentFragment();
+        txt.split(/(\s+)/).forEach(stueck => {
+            if(!stueck) return;
+            if(/^\s+$/.test(stueck)){ frag.appendChild(document.createTextNode(stueck)); return; }
+            const sp = document.createElement('span');
+            sp.className = 'tts-wort';
+            sp.textContent = stueck;
+            frag.appendChild(sp);
+        });
+        try{ t.parentNode.replaceChild(frag, t); }catch(e){}
+    }
+    try{ el.dataset.ttsWorte = '1'; }catch(e){}
+    return el.querySelectorAll('.tts-wort');
+}
+
+// Dieselbe Regel fuer ein ganzes Stueck gesprochenen Text. Sie wird
+// gebraucht, um den Anteil eines Stuecks am Abschnitt zu bestimmen -
+// mit der reinen Zeichenzahl gerechnet sprang die Marke an jeder Zahl
+// zurueck, weil "330" drei Zeichen hat und achtzehn Laute.
+function ttsTextGewicht(text){
+    const t = String(text == null ? '' : text);
+    let g = 0;
+    for(const z of t){
+        if(z >= '0' && z <= '9') g += 5;
+        else if(/\s/.test(z)) g += 0.5;
+        else g += 1;
+    }
+    const punkte = t.match(/[.!?\u2026]/g); if(punkte) g += 6 * punkte.length;
+    const kommas = t.match(/[,;:]/g);        if(kommas) g += 3 * kommas.length;
+    return g;
+}
+
+function ttsWortGewicht(wort){
+    let t = wort;
+    try{ if(typeof sprechbar === 'function') t = String(sprechbar(wort) || wort); }catch(e){ t = wort; }
+    let g = 1;
+    for(const z of t){
+        if(z >= '0' && z <= '9') g += 5;
+        else if(/\s/.test(z)) g += 0.5;
+        else g += 1;
+    }
+    if(/[.!?\u2026]$/.test(wort)) g += 6;
+    else if(/[,;:]$/.test(wort)) g += 3;
+    return g;
+}
+
+// Der Kasten, in dem gerollt wird - die Buehne des Fensters oder der Tafel.
+function ttsRollBehaelter(el){
+    let p = el;
+    while(p && p !== document.body){
+        try{
+            const st = getComputedStyle(p);
+            if(/(auto|scroll)/.test(st.overflowY) && p.scrollHeight > p.clientHeight + 4) return p;
+        }catch(e){}
+        p = p.parentElement;
+    }
+    return null;
+}
+
+function ttsWortInsBild(sp, behaelter){
+    if(!sp || !behaelter) return;
+    try{
+        const r = sp.getBoundingClientRect(), b = behaelter.getBoundingClientRect();
+        if(r.top < b.top + 8 || r.bottom > b.bottom - 8){
+            sp.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }catch(e){}
+}
+
+function ttsWorteStarten(el, audio, von, bis){
+    ttsWorteEnde();
+    const spans = ttsWorteEinpacken(el);
+    if(!spans || !spans.length) return;
+    const liste = Array.prototype.slice.call(spans);
+    const grenzen = []; let summe = 0;
+    for(const sp of liste){ summe += ttsWortGewicht(sp.textContent || ''); grenzen.push(summe); }
+    if(!(summe > 0)) return;
+    const a = (typeof von === 'number' && isFinite(von)) ? Math.max(0, Math.min(1, von)) : 0;
+    const e = (typeof bis === 'number' && isFinite(bis)) ? Math.max(a, Math.min(1, bis)) : 1;
+    const lauf = { liste, grenzen, gesamt: summe, audio, letzter: -1, raf: 0, von: a, bis: e,
+                   el: el, behaelter: ttsRollBehaelter(el) };
+    // Weiter, wo das vorige Stueck desselben Abschnitts aufgehoert hat.
+    if(ttsWortStand && ttsWortStand.el === el
+       && ttsWortStand.index >= 0 && ttsWortStand.index < liste.length){
+        lauf.letzter = ttsWortStand.index;
+        liste[lauf.letzter].classList.add('tts-wort-an');
+    }else{
+        ttsWortStand = { el: el, index: -1 };
+    }
+    ttsWortLauf = lauf;
+    const schritt = function(){
+        if(ttsWortLauf !== lauf) return;
+        const d = audio.duration;
+        if(d && isFinite(d) && d > 0){
+            const t = Math.max(0, Math.min(1, audio.currentTime / d));
+            const ziel = (lauf.von + (lauf.bis - lauf.von) * t) * lauf.gesamt;
+            let i = lauf.letzter < 0 ? 0 : lauf.letzter;
+            while(i < lauf.grenzen.length - 1 && lauf.grenzen[i] < ziel) i++;
+            if(i !== lauf.letzter){
+                if(lauf.letzter >= 0) lauf.liste[lauf.letzter].classList.remove('tts-wort-an');
+                lauf.liste[i].classList.add('tts-wort-an');
+                lauf.letzter = i;
+                ttsWortStand = { el: lauf.el, index: i };
+                ttsWortInsBild(lauf.liste[i], lauf.behaelter);
+            }
+        }
+        lauf.raf = requestAnimationFrame(schritt);
+    };
+    lauf.raf = requestAnimationFrame(schritt);
+}
+window.ttsWorteStarten = ttsWorteStarten;
+
+function ttsWorteEnde(){
+    if(ttsWortLauf){
+        try{ cancelAnimationFrame(ttsWortLauf.raf); }catch(e){}
+        ttsWortLauf = null;
+    }
+    try{ document.querySelectorAll('.tts-wort-an').forEach(sp => sp.classList.remove('tts-wort-an')); }catch(e){}
+}
+window.ttsWorteEnde = ttsWorteEnde;
+
+// Ende UND vergessen, wie weit es war - bei einem neuen Vorlesevorgang.
+function ttsWorteVergessen(){
+    ttsWorteEnde();
+    ttsWortStand = null;
+}
+window.ttsWorteVergessen = ttsWorteVergessen;
+
 function clearTTSHighlightsOnly(){
     document.querySelectorAll('.tts-highlight').forEach(el=>el.classList.remove('tts-highlight'));
+    ttsWorteEnde();
 }
 function clearTTSHighlights(){
     clearTTSHighlightsOnly();
+    ttsWorteVergessen();
     ttsHighlightTimers.forEach(t=>clearTimeout(t));
     ttsHighlightTimers=[];
 }
@@ -21420,9 +22080,7 @@ async function playTTSSegment(seg, token){
         try{ localStorage.removeItem('ttsVoice'); }catch(e){}
         selectedVoice = '';
     }
-    // "kokoro/..." ist die zweite Sprachausgabe (16.09.2026) - sie laeuft
-    // ueber denselben Weg zum Server und zaehlt hier wie Piper.
-    const isPiperVoice = selectedVoice.includes('.onnx') || selectedVoice.startsWith('kokoro/') || selectedVoice.includes('(Piper)') || selectedVoice.includes('thorsten') || selectedVoice.includes('ramona') || selectedVoice.includes('kerstin') || selectedVoice.includes('karlsson') || selectedVoice.includes('eva');
+    const isPiperVoice = selectedVoice.includes('.onnx') || selectedVoice.includes('(Piper)') || selectedVoice.includes('thorsten') || selectedVoice.includes('ramona') || selectedVoice.includes('kerstin') || selectedVoice.includes('karlsson') || selectedVoice.includes('eva');
     
     // 1. PIPER MUSS VERWENDET WERDEN WENN PIPER STIMME GEWÄHLT IST
     try{
@@ -21468,10 +22126,17 @@ async function playTTSSegment(seg, token){
                     const url=URL.createObjectURL(blob); currentTtsUrl=url;
                     const audio=new Audio(url); currentTtsAudio=audio;
                     ttsAudioMerken(audio, url);
+                    // Die Marke laeuft ueber die Woerter mit - nur dort, wo
+                    // der Text auch zu sehen ist (seg.worte, gesetzt in
+                    // erklaerVorlesen).
+                    if(seg.worte && seg.selector){
+                        try{ ttsWorteStarten(document.querySelector(seg.selector), audio,
+                                             seg.wortVon, seg.wortBis); }catch(e){}
+                    }
                     await new Promise(resolve=>{
                         // Ein Ausgang fuer alle drei Wege: erst schweigen,
                         // dann weitermachen.
-                        const fertig=()=>{ ttsAudioAnhalten(audio); resolve(); };
+                        const fertig=()=>{ try{ ttsWorteEnde(); }catch(e){} ttsAudioAnhalten(audio); resolve(); };
                         audio.onended=()=>{ console.log('[TTS] ✓ PIPER ERFOLG'); fertig(); };
                         audio.onerror=(e)=>{ console.error('Piper Audio Error', e); fertig(); };
                         audio.play().then(()=>{
@@ -21652,6 +22317,7 @@ async function playTTSQueue(segments, btn, zurueck){
     // Was noch aus einem frueheren Vorgang spricht, hoert hier auf. Sonst
     // ueberlagern sich zwei oder drei Stimmen - siehe ttsLaufendeAudios.
     ttsAllesAnhalten();
+    try{ ttsWorteVergessen(); }catch(e){}
     const token=ttsQueueToken;
     ttsQueueActive=true;
     const vorleseStart = Date.now();
@@ -21681,11 +22347,30 @@ async function playTTSQueue(segments, btn, zurueck){
     for(const seg of (segments || [])){
         const teile = ttsInStuecke(seg && seg.text);
         if(!teile.length) continue;
-        teile.forEach((t, i) => stuecke.push({
-            text: t,
-            selector: seg.selector,
-            pause: (i === teile.length - 1) ? (seg.pause || 0) : 0
-        }));
+        // ----------------------------------------------------------------
+        //  WELCHER TEIL DES ABSCHNITTS STECKT IN DIESEM STUECK
+        // ----------------------------------------------------------------
+        //  Ein Abschnitt wird in mehrere Tondateien zerlegt. Die Marke, die
+        //  ueber die Woerter laeuft, muss deshalb wissen, WO im Abschnitt
+        //  dieses Stueck liegt - sonst finge sie bei jedem Stueck wieder
+        //  vorn an. Genommen wird der Anteil an der gesprochenen Laenge:
+        //  beides, Text und Woerter, haengt an derselben Zeichenzahl, also
+        //  passen die Anteile zueinander.
+        const gew = teile.map(t => ttsTextGewicht(t));
+        const gesamt = gew.reduce((a, g) => a + g, 0) || 1;
+        let vorher = 0;
+        teile.forEach((t, i) => {
+            const von = vorher / gesamt;
+            vorher += gew[i];
+            stuecke.push({
+                text: t,
+                selector: seg.selector,
+                worte: seg.worte,
+                wortVon: von,
+                wortBis: vorher / gesamt,
+                pause: (i === teile.length - 1) ? (seg.pause || 0) : 0
+            });
+        });
     }
     for(const seg of stuecke){
         if(token!==ttsQueueToken){ vorleseBuchen(); return; } // gestoppt/neu gestartet
@@ -22830,7 +23515,6 @@ function einstReiterZeigen(id){
     if(id === 'vorlesen') {
         try{ ttsFelderNachziehen(); }catch(e){}
         try{ einstAlteStimmenPruefen(); }catch(e){}
-        try{ einstKokoroFuellen(); }catch(e){}
         try{ naFelderNachziehen(); }catch(e){}
         try{ autoWeiterFelderNachziehen(); }catch(e){}
         try{ bildZoomFelderNachziehen(); }catch(e){}
@@ -22964,12 +23648,12 @@ window.einstellungenOeffnen = einstellungenOeffnen;
 // ---------------------------------------------------------------
 function einstBlaetterFuellen(){
     // ---- Allgemein ----
-    const farben = { light:'#eef2f9', green:'#dff0e4', blue:'#dde9f7', orange:'#fbe8d4', grey:'#e6e6e6' };
+    const farben = { light:'#eef2f9', dark:'#0f2b40', green:'#dff0e4', blue:'#dde9f7', orange:'#fbe8d4', grey:'#e6e6e6' };
     const stilKnoepfe = STILE.map(st =>
         '<button type="button" id="einstStil_' + st + '" onclick="einstStilWaehlen(\'' + st + '\')" '
       + 'title="' + ((STIL_ANZEIGE[st] && STIL_ANZEIGE[st].label) || st) + '" '
       + 'style="width:40px; height:34px; border-radius:8px; border:2px solid #e3e9f3; cursor:pointer; '
-      + 'background:' + (farben[st] || '#eee') + ';"></button>').join(' ');
+      + '--kachel:' + (farben[st] || '#eee') + '; background:' + (farben[st] || '#eee') + ';"></button>').join(' ');
 
     document.getElementById('einstBlatt_allgemein').innerHTML =
         einstKasten('Anzeigegröße',
@@ -23117,19 +23801,6 @@ function einstBlaetterFuellen(){
           + '<i class="fas fa-plus"></i> Stimmen hinzufügen</button></div>'
           + '<div id="einstStimmenLage" style="font-size:0.8rem; line-height:1.6; margin-top:0.5rem;"></div>'
           + '<div id="einstStimmenAlt" style="margin-top:0.5rem;"></div>')
-      // ================================================================
-      //  KOKORO - die zweite Sprachausgabe (16.09.2026)
-      //  Dietmar: "Ich wuerde mir gerne dieses Kokoro in dem Trainer
-      //  anhoeren." Ein Kasten, ein Knopf, ein Balken - und danach steht
-      //  die Stimme oben in der Auswahl. Was der Kasten zeigt, kommt vom
-      //  Server (/api/kokoro/lage); siehe einstKokoroFuellen().
-      // ================================================================
-      + einstKasten('Kokoro — eine zweite Sprachausgabe',
-            'Ein neueres Sprachmodell mit natürlicherer Satzmelodie, auf Deutsch nachtrainiert '
-          + '(kokoro-deutsch, Apache 2.0). Rund 360 MB, nur auf Klick. Piper bleibt die Vorgabe; '
-          + 'oben in der Auswahl lässt sich jederzeit wechseln.',
-            '<div id="einstKokoro" style="font-size:0.8rem; line-height:1.6;">'
-          + '<span style="color:var(--muted);">Nachsehen …</span></div>')
       + einstKasten('Fragen und Antworten', 'Was von selbst gesprochen wird.',
             '<div id="einstZielAuto"></div><div id="einstZielAntwort"></div>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
@@ -23623,111 +24294,6 @@ function einstStimmenFortschritt(){
     }, 700);
 }
 
-// ================================================================
-//  KOKORO - holen, Fortschritt zeigen, danach die Auswahl nachziehen
-// ----------------------------------------------------------------
-//  Derselbe Bau wie bei "Stimmen hinzufuegen": ein Klick startet, der
-//  Server arbeitet, der Browser fragt alle 700 ms nach. Vier Schritte
-//  laufen dabei nacheinander (Laufwerk, Lautdaten, Modell, Probelauf),
-//  und der Balken sagt, welcher gerade dran ist - sonst saehe der
-//  Sprung von 20 MB auf 326 MB nach einem Haenger aus.
-// ================================================================
-let einstKokoroUhr = null;
-
-function einstKokoroSetzen(html){
-    const el = document.getElementById('einstKokoro');
-    if(el) el.innerHTML = html;
-}
-
-async function einstKokoroFuellen(){
-    const el = document.getElementById('einstKokoro');
-    if(!el) return;
-    let j;
-    try{
-        j = await stimmenAntwort(await fetch('/api/kokoro/lage', {cache:'no-store'}));
-    }catch(e){
-        einstKokoroSetzen('<span style="color:#8a5a12;">' + String(e.message).replace(/</g,'&lt;') + '</span>');
-        return;
-    }
-    if(j.fortschritt && j.fortschritt.laeuft){ einstKokoroFortschritt(); return; }
-    if(!j.archiv){
-        einstKokoroSetzen('Für dieses System (' + String(j.system).replace(/</g,'&lt;')
-            + ') gibt es kein fertiges Laufwerk. Piper bleibt.');
-        return;
-    }
-    let html = '';
-    for(const st of (j.stimmen || [])){
-        const wer = (st.geschlecht === 'w' ? 'Frauenstimme' : 'Männerstimme');
-        html += '<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:0.35rem;">'
-            + '<b>' + st.name + '</b> <span style="color:var(--muted);">— ' + wer + ', 24 kHz, ' + st.lizenz + '</span>';
-        if(st.installiert){
-            html += '<span style="color:#15703c;">ist da — oben in der Auswahl als „' + st.label + '“.</span>';
-        }else{
-            html += '<button type="button" id="einstKokoroBtn_' + st.id + '" style="' + EINST_KNOPF + '" '
-                + 'onclick="einstKokoroHolen(\'' + st.id + '\')" '
-                + 'data-vorlesen-kurz="' + st.name + ' holen." '
-                + 'data-vorlesen="' + st.name + ' holen. Der Trainer lädt das Laufwerk und das Modell aus dem Netz, rund 360 Megabyte, und stellt die Stimme danach oben zur Auswahl.">'
-                + '<i class="fas fa-download"></i> ' + st.name + ' holen (' + st.groesseMB + ' MB)</button>';
-        }
-        html += '</div>';
-    }
-    // Eine Frauenstimme gibt es noch nicht als fertigen Export - das steht
-    // hier, damit niemand danach sucht.
-    html += '<div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">'
-        + 'Eine Frauenstimme („Victoria“) gibt es bei kokoro-deutsch bisher nur als PyTorch-Gewichte, '
-        + 'nicht als fertigen Export — sobald es einen gibt, steht sie hier.</div>';
-    if(j.fortschritt && j.fortschritt.fehler && !j.fortschritt.fertig){
-        html += '<div style="color:#8a5a12; font-size:0.78rem; margin-top:0.3rem;">Zuletzt: '
-            + String(j.fortschritt.fehler).replace(/</g,'&lt;') + '</div>';
-    }
-    einstKokoroSetzen(html);
-}
-window.einstKokoroFuellen = einstKokoroFuellen;
-
-async function einstKokoroHolen(id){
-    const knopf = document.getElementById('einstKokoroBtn_' + id);
-    if(knopf) knopf.disabled = true;
-    try{
-        await stimmenAntwort(await fetch('/api/kokoro/holen', { method:'POST',
-            headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id }) }));
-        einstKokoroSetzen('<span style="color:var(--muted);">Wird geholt …</span>');
-        einstKokoroFortschritt();
-    }catch(e){
-        einstKokoroSetzen('<span style="color:#8a5a12;">' + String(e.message).replace(/</g,'&lt;') + '</span>');
-        if(knopf) knopf.disabled = false;
-    }
-}
-window.einstKokoroHolen = einstKokoroHolen;
-
-function einstKokoroFortschritt(){
-    if(einstKokoroUhr) clearInterval(einstKokoroUhr);
-    einstKokoroUhr = setInterval(async () => {
-        if(!document.getElementById('einstKokoro')){ clearInterval(einstKokoroUhr); einstKokoroUhr = null; return; }
-        try{
-            const r = await fetch('/api/kokoro/lage', {cache:'no-store'});
-            const j = await r.json();
-            const f = j.fortschritt || {};
-            if(f.laeuft){
-                const teil = f.gesamt ? Math.min(100, Math.round(f.geladen / f.gesamt * 100)) : 0;
-                const mb = f.gesamt ? ' — ' + Math.round(f.geladen/1048576) + ' von ' + Math.round(f.gesamt/1048576) + ' MB' : '';
-                einstKokoroSetzen('<b>' + String(f.schritt || '').replace(/</g,'&lt;') + '</b>' + mb
-                    + (f.gesamt ? '<div style="height:6px; background:#e3e9f3; border-radius:3px; margin-top:0.3rem; overflow:hidden;">'
-                    + '<div style="height:100%; width:' + teil + '%; background:#0f2745;"></div></div>' : ''));
-                return;
-            }
-            clearInterval(einstKokoroUhr); einstKokoroUhr = null;
-            try{ await ttsFelderNachziehen(); }catch(e){}
-            if(f.fertig){
-                einstKokoroSetzen('<span style="color:#15703c;"><b>Fertig.</b> Die Stimme steht oben in der Auswahl — '
-                    + 'auswählen und „Probe hören“.</span>');
-                setTimeout(() => { try{ einstKokoroFuellen(); }catch(e){} }, 4000);
-            }else{
-                einstKokoroFuellen();
-            }
-        }catch(e){ clearInterval(einstKokoroUhr); einstKokoroUhr = null; }
-    }, 700);
-}
-
 function einstStilWaehlen(stil){
     try{ stilSetzen(stil); }catch(e){}
     einstStilKnoepfeNachziehen();
@@ -23885,6 +24451,19 @@ async function einstUpdateFuellen(){
 
         let html = zeile('Hier', j.version || 'unbekannt',
             datum ? 'Index.html vom ' + datum : '');
+        // Aus welchem Ordner dieser Trainer laeuft. Dietmar am 17.09.2026:
+        // "Ueber START.sh ... ist das Update, was in dem Arbeitsordner
+        // drin ist, nicht verwendet. Bei START.bat ist es vorhanden.
+        // Beide zeigen die gleiche Version." Zwei Fenster, dieselbe
+        // Nummer, verschiedene Fingerabdruecke - das sind zwei Ordner,
+        // und welcher es ist, stand nirgends. Jetzt steht er hier. Der
+        // Server nennt ihn nur dem eigenen Rechner (localOnly).
+        if(j.ordner){
+            html += '<div style="display:flex; gap:0.6rem; align-items:baseline;">'
+                  + '<span style="min-width:112px; color:var(--muted); font-size:0.78rem;">Ordner</span>'
+                  + '<span style="font-family:var(--font-mono); font-size:0.78rem; word-break:break-all;">'
+                  + String(j.ordner).replace(/</g,'&lt;') + '</span></div>';
+        }
 
         const f = einstVersionFern;
         if(f && f.dort){
@@ -26813,7 +27392,9 @@ window.zurueckNehmenAn = zurueckNehmenAn;
 
 function zurueckNehmenSetzen(an){
     try{ localStorage.setItem(ZURUECK_SCHLUESSEL, an ? 'ja' : 'nein'); }catch(e){}
-    if(!an) antwortSicherung = null;
+    // Die Sicherung bleibt liegen, auch beim Ausschalten. Wer den Haken
+    // wieder setzt, findet die gerade gegebene Antwort noch vor - siehe
+    // antwortSicherungNehmen().
     try{ zurueckNehmenFelderNachziehen(); }catch(e){}
     try{ zurueckKnopfNachziehen(); }catch(e){}
 }
@@ -26842,9 +27423,24 @@ function zurueckKnopfNachziehen(){
 }
 window.zurueckKnopfNachziehen = zurueckKnopfNachziehen;
 
-// Vor der Wertung: eine Kopie von allem, was sie anfasst.
+// ----------------------------------------------------------------
+//  Vor der Wertung: eine Kopie von allem, was sie anfasst.
+//
+//  DIE KOPIE WIRD IMMER GEMACHT - auch wenn der Haken aus ist.
+//  Dietmar am 17.09.2026: "Ich habe in Nachteilsausgleich, Antwort
+//  zuruecknehmen aktiviert. Der Button fehlt." Er hatte die Frage schon
+//  beantwortet und den Haken erst danach gesetzt. Hier stand bis dahin
+//  ein Ausstieg gleich in der ersten Zeile: ohne Haken keine Kopie - und
+//  ohne Kopie laesst sich auch nachtraeglich nichts mehr zuruecknehmen.
+//  Der Knopf blieb also weg, obwohl die Einstellung an war, und erst die
+//  naechste Frage hat funktioniert. Das sieht wie ein Fehler aus, und im
+//  Sinne dessen, wofuer die Einstellung da ist, ist es auch einer.
+//
+//  Die Kopie kostet ein paar hundert Byte je Antwort und lebt nur bis
+//  zum naechsten Weiterblaettern. Der Haken entscheidet jetzt nur noch
+//  darueber, ob Knopf und Strg+Z angeboten werden.
+// ----------------------------------------------------------------
 function antwortSicherungNehmen(q){
-    if(!zurueckNehmenAn()){ antwortSicherung = null; return; }
     try{
         const id = q.id;
         const kopie = (x) => (x === undefined || x === null) ? null : JSON.parse(JSON.stringify(x));
@@ -27901,10 +28497,19 @@ for(const ereignis of ['fullscreenchange','webkitfullscreenchange','mozfullscree
     });
 }
 
-const STILE = ['light', 'green', 'blue', 'orange', 'grey'];
+// 'dark' ist seit dem 17.09.2026 wieder dabei. Er flog am 03.09.2026
+// heraus, weil die Schaltbilder ihren weissen Grund mitbrachten und als
+// leuchtende Kacheln in der Frage standen. Dietmar: "Die svg sind doch
+// Vektorgrafiken. Diese sind Standard in weiss mit schwarzer Schrift und
+// Zeichnung. Diese koennten wir ins Negative bestimmt aendern." Genau so:
+// Die Zeichnungen sind reine Graustufen (nachgezaehlt ueber alle 746
+// Dateien - schwarze Linien, weisse und graue Flaechen, keine Farbe), und
+// im Dark Mode werden sie per CSS-Filter umgekehrt - weisse Linien auf
+// dunklem Grund. Die Regel steht beim Stilblock des Dark Mode.
+const STILE = ['light', 'dark', 'green', 'blue', 'orange', 'grey'];
 const STIL_ANZEIGE = {
     light:  { label: 'Light Mode',  icon: 'fas fa-sun' },
-    dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },   /* abgeschaltet */
+    dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },
     green:  { label: 'Green Mode',  icon: 'fas fa-leaf' },
     blue:   { label: 'Blue Mode',   icon: 'fas fa-water' },
     orange: { label: 'Orange Mode', icon: 'fas fa-fire' },
@@ -27912,6 +28517,7 @@ const STIL_ANZEIGE = {
 };
 
 function aktuellerStil() {
+    if (document.body.classList.contains('dark'))  return 'dark';
     if (document.body.classList.contains('green')) return 'green';
     if (document.body.classList.contains('blue')) return 'blue';
     if (document.body.classList.contains('orange')) return 'orange';
@@ -27921,11 +28527,7 @@ function aktuellerStil() {
 
 function stilSetzen(stil) {
     if (stil === 'pastell') stil = 'green';          // alter Name, gespeicherte Werte
-    if (stil === 'dark')    stil = 'light';          // abgeschaltet, siehe oben
     if (STILE.indexOf(stil) === -1) stil = 'light';
-    // 'dark' bleibt in dieser Aufraeumzeile: Wer den Modus noch am Koerper
-    // hat, weil er ihn vor der Umstellung eingeschaltet hatte, wird ihn hier
-    // beim ersten Umschalten los.
     document.body.classList.remove('dark', 'green', 'blue', 'orange', 'grey', 'pastell');
     if (stil !== 'light') document.body.classList.add(stil);
     try { localStorage.setItem('theme', stil); } catch (e) {}
@@ -29721,11 +30323,11 @@ if (originalSelectOption) {
            Frage - bei jeder Technikfrage, und das sind die meisten. Dagegen
            hilft kein anderes Blau.
 
-           Der Block bleibt trotzdem stehen. Die Klasse "dark" wird nirgends
-           mehr gesetzt (siehe STILE weiter unten im Skript), damit ist jede
-           Regel hier wirkungslos - aber nichts davon ist verloren. Wer den
-           Modus zurueckholen will, schreibt 'dark' wieder in die Liste
-           STILE; alles Weitere greift dann von allein.
+           Der Block blieb trotzdem stehen, zwei Wochen lang wirkungslos -
+           und seit dem 17.09.2026 ist der Modus zurueck: Die Zeichnungen
+           werden im Dark Mode ins Negative gekehrt (weisse Linien auf
+           dunklem Grund, Regel bei ".q-image img" im Dark-Mode-Block
+           weiter oben), 'dark' steht wieder in STILE.
            ================================================================
            Erste Fassung war "Geraeteschwarz" nach Dietmars Icom RS-BA1:
            fast schwarze Flaechen, ein leuchtendes Tuerkis als Signalfarbe.
@@ -29977,23 +30579,67 @@ if (originalSelectOption) {
             background: #0d2434 !important;
             border-color: var(--nacht-kante2) !important;
         }
+        /* ================================================================
+           RICHTIG UND FALSCH BLEIBEN GRUEN UND ROT      (17.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "richtig und falsch, erkennt man fast nicht. Das soll
+           in dem rot und gruen bleiben."
+
+           Hier stand bis eben etwas anderes: Die richtige Antwort wurde
+           im Dark Mode BLAU markiert (#06304a mit blauem Rand und einem
+           leisen Schein), die falsche in einem sehr dunklen Rotbraun. Auf
+           dem naechtlichen Grund war davon fast nichts zu sehen - und
+           gerade hier darf nichts zu raten sein.
+
+           Es sind jetzt genau die Farben aus dem Lehrgang des DARC, die
+           auch im hellen Stil gelten: --darc-richtig #3bb583 und
+           --darc-falsch #fe756c, beide mit schwarzer Schrift (Kontrast 8:1
+           und 7:1). Eine Signalfarbe, die je nach Farbstil anders aussieht,
+           ist keine Signalfarbe - der Absatz weiter oben sagt es selbst:
+           "Sie muessen in JEDEM Farbmodus dieselben sein." Nur Haken und
+           Kreuz bleiben schwarz, so wie auf den hellen Flaechen auch.
+           ================================================================ */
         body.dark .question-area .option.correct,
         body.dark .question-area .option-grid.correct {
-            background: #06304a !important;
-            border-color: var(--darc-blau) !important;
-            color: #cdeeff !important;
-            box-shadow: 0 0 0 1px rgba(0,173,239,0.3), 0 0 16px rgba(0,173,239,0.18) !important;
+            background: var(--darc-richtig) !important;
+            border-color: var(--darc-richtig) !important;
+            color: #000 !important;
+            box-shadow: none !important;
         }
-        body.dark .question-area .option.correct .option-text,
-        body.dark .question-area .option-grid.correct .option-text { color: #cdeeff !important; }
         body.dark .question-area .option.wrong,
         body.dark .question-area .option-grid.wrong {
-            background: #331a17 !important;
-            border-color: #ff8f82 !important;
-            color: #ffd2cc !important;
+            background: var(--darc-falsch) !important;
+            border-color: var(--darc-falsch) !important;
+            color: #000 !important;
+            box-shadow: none !important;
         }
+        /* Schrift, Buchstabe und Zeichen auf den beiden Flaechen: schwarz.
+           Der Buchstabe traegt sonst das Signalblau, das auf Gruen und Rot
+           verschwindet. */
+        body.dark .question-area .option.correct .option-text,
+        body.dark .question-area .option.correct .option-label,
+        body.dark .question-area .option.correct::after,
+        body.dark .question-area .option-grid.correct .option-text,
+        body.dark .question-area .option-grid.correct .option-label,
+        body.dark .question-area .option-grid.correct::after,
         body.dark .question-area .option.wrong .option-text,
-        body.dark .question-area .option-grid.wrong .option-text { color: #ffd2cc !important; }
+        body.dark .question-area .option.wrong .option-label,
+        body.dark .question-area .option.wrong::after,
+        body.dark .question-area .option-grid.wrong .option-text,
+        body.dark .question-area .option-grid.wrong .option-label,
+        body.dark .question-area .option-grid.wrong::after { color: #000 !important; }
+        /* Dasselbe fuer die angekreuzte Antwort im Pruefungssimulator:
+           kein Urteil, aber sichtbar - das Orange des Lehrgangs. */
+        body.dark .question-area .option.gewaehlt,
+        body.dark .question-area .option-grid.gewaehlt {
+            background: var(--darc-gewaehlt) !important;
+            border-color: var(--darc-gewaehlt) !important;
+            box-shadow: none !important;
+        }
+        body.dark .question-area .option.gewaehlt .option-text,
+        body.dark .question-area .option.gewaehlt .option-label,
+        body.dark .question-area .option-grid.gewaehlt .option-text,
+        body.dark .question-area .option-grid.gewaehlt .option-label { color: #000 !important; }
 
         /* ---- Videokasten ---- */
         body.dark .question-area .video-link-box {
@@ -30156,11 +30802,43 @@ if (originalSelectOption) {
         body.dark #questionGelerntBtn i,
         body.dark #questionFavBtn i,
         body.dark .btn-google i { color: #7d9bb1 !important; }
-        /* Gemerkt und gelernt sind Zustaende - die duerfen leuchten. */
-        body.dark #questionFavBtn.aktiv,
-        body.dark #questionFavBtn.active { color: #ff8fa3 !important; border-color: #5c2f3a !important; }
-        body.dark #questionGelerntBtn.aktiv,
-        body.dark #questionGelerntBtn.active { color: var(--darc-blau) !important; border-color: #17506e !important; }
+        /* ----------------------------------------------------------------
+           GEMERKT IST ROT, GELERNT IST GRUEN - AUCH NACHTS   (17.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Frage Merken moechte ich in rot. Hier gibt es keinen
+           farblichen Unterschied."
+
+           Er hat recht: Im Dark Mode war keiner zu sehen. Die Regel
+           darueber setzt den Grund der beiden Knoepfe mit !important und
+           ueber eine Kennung (#questionFavBtn) - das schlaegt
+           .q-marke-merken.an aus dem Hauptstilblatt, das nur zwei Klassen
+           wiegt. Der Versuch, das aufzufangen, stand schon hier, traf aber
+           die falschen Namen: .aktiv und .active gibt es an diesen
+           Knoepfen nicht, die Klasse heisst "an" (siehe
+           favoritenKnopfNachziehen und gelerntKnopfNachziehen). Er lief
+           also ins Leere, und ein gemerktes Herz sah aus wie ein nicht
+           gemerktes.
+
+           Es gelten jetzt dieselben Farben wie im hellen Stil: #e11d48
+           fuer die Merkliste, #15703c fuer "gelernt", Zeichen in Weiss.
+           Farbe heisst hier wie dort genau eines - EINGESCHALTET.
+           ---------------------------------------------------------------- */
+        body.dark #questionFavBtn.an,
+        body.dark .question-area #questionFavBtn.an {
+            background: #e11d48 !important;
+            border: 1px solid #e11d48 !important;
+            border-color: #e11d48 !important;
+            color: #ffffff !important;
+        }
+        body.dark #questionFavBtn.an i { color: #ffffff !important; }
+        body.dark #questionGelerntBtn.an,
+        body.dark .question-area #questionGelerntBtn.an {
+            background: #15703c !important;
+            border: 1px solid #15703c !important;
+            border-color: #15703c !important;
+            color: #ffffff !important;
+        }
+        body.dark #questionGelerntBtn.an i { color: #ffffff !important; }
 
         /* Datumsfeld und Auswahlfelder */
         body.dark input[type="date"],
@@ -30570,6 +31248,11 @@ if (originalSelectOption) {
             --muted: #8ba6bb;
             --line: #1d3b52;
             --card-bg: #0c2030;
+            /* Der aeltere Block weiter oben setzt --panel-navy hier auf das
+               helle Marineblau - "von 10 Pruefungen bestanden" stand damit
+               dunkel auf dunkel (17.09.2026). */
+            --panel-navy: #00adef;
+            --panel-navy-light: #0077a8;
             --good: #35d08a;  --good-bg: #0f2e22;
             --bad:  #ff8f82;  --bad-bg:  #331a17;
             --warn: #ffc266;  --warn-bg: #33280f;
@@ -30676,8 +31359,287 @@ if (originalSelectOption) {
             color: var(--nacht-leise) !important;
         }
 
+        /* ================================================================
+           DAS EINSTELLUNGEN-FENSTER IM DARK MODE           (17.09.2026)
+           ----------------------------------------------------------------
+           Das Fenster ist vom 05.09.2026, der Dark Mode war seit dem
+           03.09. abgeschaltet - die beiden haben sich also nie gesehen.
+           Beim Zurueckholen des Modus stand die Kopfzeile hell mit heller
+           Schrift ("Einstellungen" war unsichtbar), die Reiterspalte
+           blieb hell, die Farbkacheln des Farbstils trugen alle denselben
+           Knopfverlauf, und "Normale Ansicht" stand dunkel auf dunkel.
+           Grund: Das Fenster traegt seine Farben als inline-style, und
+           #f7fafd stand nicht in der Liste der abgefangenen Toene oben.
+           ================================================================ */
+        /* #f7fafd tragen auch die Kopfzeilen des Info-Fensters und der
+           Auswertung - deshalb fuer alle Fenster, nicht nur fuer dieses. */
+        body.dark [id$="Modal"] [style*="#f7fafd"],
+        body.dark [id$="Modal"] [style*="#f7faff"] {
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
+        }
+        body.dark [id$="Modal"] h3 { color: var(--nacht-hell) !important; }
+        body.dark [id$="Modal"] h3 i { color: var(--nacht-leise) !important; }
+        /* Die Auswertung: rechte Spalte und ihre Kaesten waren fest weiss */
+        body.dark #statistikModal .stat-rechts {
+            background: var(--nacht-tief) !important;
+            border-color: var(--nacht-kante) !important;
+        }
+        body.dark #statistikModal .stat-block,
+        body.dark #statistikModal .befund {
+            background: var(--nacht-feld) !important;
+            border-color: var(--nacht-kante) !important;
+        }
+        /* Die Reiter: nicht gewaehlt leise und flach, gewaehlt auf Signalblau */
+        body.dark #einstellungenModal [role="tab"] {
+            background: transparent !important;
+            border: none !important;
+            color: var(--nacht-leise) !important;
+        }
+        body.dark #einstellungenModal [role="tab"][aria-selected="true"] {
+            background: var(--darc-blau) !important;
+            color: #04283a !important;
+        }
+        /* Die Farbkacheln: jede zeigt ihre eigene Farbe - die steht als
+           Variable --kachel am Knopf, weil der Knopfverlauf oben jede
+           inline gesetzte Farbe ueberschreibt. */
+        body.dark #einstellungenModal button[id^="einstStil_"] {
+            background: var(--kachel, #333) !important;
+            border-color: var(--nacht-kante2) !important;
+        }
+        /* Inline-Farben, die fuer weissen Grund gewaehlt waren */
+        body.dark #einstellungenModal [style*="color:#0f2745"] { color: var(--nacht-hell) !important; }
+        body.dark #einstellungenModal [style*="color:#4b5563"],
+        body.dark #einstellungenModal [style*="color:#4b5b73"],
+        body.dark #einstellungenModal [style*="color:#5b6b80"],
+        body.dark #einstellungenModal [style*="color:#6b7280"] { color: var(--nacht-leise) !important; }
+        body.dark #einstellungenModal [style*="color:#8a5a12"] { color: #ffc266 !important; }
+        body.dark #einstellungenModal .anzeige-paar .ap-titel { color: var(--nacht-hell) !important; }
+        body.dark #einstellungenModal .anzeige-paar .ap-titel i { color: var(--nacht-leise) !important; }
+        body.dark #einstellungenModal .anzeige-paar > *:nth-child(2n) { border-left-color: var(--nacht-kante) !important; }
+        body.dark #einstellungenModal [style*="background:#e3e9f3"] { background: var(--nacht-kante) !important; }
+        body.dark #einstellungenModal [style*="background:#fdf1e0"] {
+            background: #33280f !important;
+            border-color: #5c4a2b !important;
+        }
+        /* ---- Der Taschenrechner (06.09.2026) hatte den Dark Mode nie
+           gesehen: Kopf und Anzeige leuchteten im Signalblau, die Ziffern
+           standen fast unsichtbar auf den Tasten. Dietmar am 17.09.2026:
+           "der Taschenrechner passt nicht." Jetzt wie ein Geraet: dunkle
+           Tafel, Anzeige mit leuchtenden Ziffern, Tasten im Knopfverlauf
+           der uebrigen Fenster, das Gleichheitszeichen als Hauptknopf. */
+        body.dark .rechner-fenster {
+            background: var(--nacht-flaeche) !important;
+            border-color: var(--nacht-kante2) !important;
+            box-shadow: 0 22px 52px rgba(0,0,0,0.65) !important;
+        }
+        body.dark .rechner-kopf {
+            background: var(--nacht-tief) !important;
+            color: var(--nacht-hell) !important;
+            border-bottom: 1px solid var(--nacht-kante);
+        }
+        body.dark .rechner-kopf button { background: rgba(255,255,255,0.1) !important; color: var(--nacht-hell) !important; }
+        body.dark .rechner-anzeige {
+            background: var(--nacht-grund) !important;
+            color: var(--darc-blau-hell) !important;
+            border: 1px solid var(--nacht-kante);
+        }
+        body.dark .rechner-anzeige .r-verlauf,
+        body.dark .rechner-anzeige .r-einheit { color: var(--nacht-leise) !important; }
+        body.dark .rechner-vorsatz button {
+            background: #33280f !important;
+            border-color: #5c4a2b !important;
+            color: #ffc266 !important;
+        }
+        body.dark .rechner-tasten button {
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border-color: var(--nacht-kante2) !important;
+            color: var(--nacht-hell) !important;
+        }
+        body.dark .rechner-tasten button.f,
+        body.dark .rechner-tasten button.op { color: var(--darc-blau-hell) !important; }
+        body.dark .rechner-tasten button.c {
+            background: linear-gradient(#7a2c26, #5e211c) !important;
+            border-color: #8c3b34 !important;
+            color: #ffd8d3 !important;
+        }
+        body.dark .rechner-tasten button.gl {
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border-color: #4fc9f7 !important;
+            color: #04283a !important;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            body.dark .rechner-tasten button:hover,
+            body.dark .rechner-vorsatz button:hover { filter: brightness(1.18); }
+        }
+        body.dark .rechner-fuss { color: var(--nacht-leise) !important; }
+        /* ================================================================
+           FUENF NACHTRAEGE ZUM DARK MODE               (17.09.2026, abends)
+           ----------------------------------------------------------------
+           Dietmar, mit vier Bildern:
+             1. "die Knoepfe sollten noch angepasst werden" - die Kopfzeile
+                der Frage: Zettel und Taschenrechner weiss, Erklaerung und
+                Vorlesen-ohne-Aufklappen in Flieder. Jetzt alle im
+                Knopfverlauf, mit ihrer Farbe nur noch in Zeichen und Rand.
+             2. "Der Knopf Verlauf Ausblenden ist zu dunkel" - die Leiste
+                war fast so dunkel wie der Grund.
+             3. "Neu beginnen ist weiss" - ein Rest aus der Zeit, als das
+                Fenster "Weiterlernen?" bewusst hell blieb.
+             4. "Die Bilder sind auch weiss im Gruppenraum" - die drei
+                Sinnbilder standen auf weissen Kacheln.
+             5. "Beim Vergroessern von einem Bild in den Fragen ist das
+                Bild weiss" - die Lupe (bildZoomEbene) hatte ihr Weiss
+                inline und war von der Umkehr nicht erfasst.
+           ================================================================ */
+        /* 1. die Kopfzeile der Frage */
+        body.dark #questionNotizBtn,
+        body.dark #rechnerBtn,
+        body.dark #formelBtn,
+        body.dark #erklaerBtn,
+        body.dark #erklaerLesenNurBtn {
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border: 1px solid var(--nacht-kante2) !important;
+            color: #cfe2ee !important;
+        }
+        body.dark #questionNotizBtn i,
+        body.dark #rechnerBtn i { color: #7d9bb1 !important; }
+        body.dark #formelBtn { color: #ffc266 !important; border-color: #5c4a2b !important; }
+        body.dark #erklaerBtn,
+        body.dark #erklaerLesenNurBtn { color: #c9b8f0 !important; border-color: #4a3b73 !important; }
+        /* Zustaende duerfen leuchten: Notiz vorhanden, Erklaerung offen */
+        body.dark #questionNotizBtn.an {
+            background: linear-gradient(#b8762a, #8a5a12) !important;
+            border-color: #e2932f !important; color: #ffffff !important;
+        }
+        body.dark #questionNotizBtn.an i { color: #ffffff !important; }
+        body.dark #erklaerBtn.an {
+            background: linear-gradient(#6d4fb0, #4a3480) !important;
+            border-color: #9f86e0 !important; color: #ffffff !important;
+        }
 
+        /* 2. die Leiste "Verlauf einblenden" - eine Stufe heller als der
+              Grund, mit Kante, das Zeichen im Signalblau */
+        body.dark .sidebar-tab {
+            background: linear-gradient(#1b4d6c, #143850) !important;
+            border: 1px solid #2f6a8f !important;
+            color: var(--darc-blau-hell) !important;
+        }
+        body.dark .sidebar-tab i { color: var(--darc-blau-hell) !important; }
+        body.dark .sidebar-tab.trainer-mode { background: #e2932f !important; color: #041a24 !important; }
 
+        /* 3. "Neu beginnen" im Fenster "Weiterlernen?" */
+        body.dark #rundeModal .btn-outline {
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            color: #cfe2ee !important;
+            border-color: var(--nacht-kante2) !important;
+        }
+
+        /* 4. die drei Sinnbilder im Gruppenraum. Die Zeichen sind blau
+              auf durchsichtigem Grund - umgekehrt und im Farbton
+              zurueckgedreht werden sie hellblau. */
+        body.dark .raum-sinnbild {
+            background: var(--nacht-feld) !important;
+            border-color: var(--nacht-kante2) !important;
+        }
+        body.dark .raum-sinnbild img { filter: invert(1) hue-rotate(180deg) brightness(1.1); }
+        body.dark .raum-sinnbild span { color: var(--darc-blau) !important; }
+
+        /* 5. die Lupe ueber den Zeichnungen - dieselbe Umkehr wie beim Bild
+              selbst, mit denselben verkehrt herum gesetzten Farben */
+        /* Der Schatten wird vom Filter MIT umgekehrt: Aus dem schwarzen
+           Schatten von vorher wurde ein weisser Hof - "der Verlauf ist
+           ziemlich gross". Dietmar: "Evtl. eine andere Farbe? Was haeltst
+           du von der 50-Ohm-Farbe?" Genau die: Das Blau #00adef ist die
+           Signalfarbe des Dark Mode. Hier steht seine Umkehr, #ff5210
+           (255-0, 255-173, 255-239) - nach dem Filter leuchtet ein
+           schmaler blauer Saum. Dezent: 18 Punkte weich, dazu eine feine
+           Linie, kein Verlauf mehr ueber die halbe Frage. */
+        body.dark #bildZoomEbene img {
+            filter: invert(1);
+            background: #f5e4d7 !important;
+            border-color: #d4ab8e !important;
+            box-shadow: 0 6px 18px rgba(255,82,16,0.55), 0 0 0 1px rgba(255,82,16,0.7) !important;
+        }
+        /* ================================================================
+           DIE KACHELN UNTER DER FRAGE                     (17.09.2026)
+           ----------------------------------------------------------------
+           Videolehrgang, 50 Ohm und der Loesungsweg - bis zu drei
+           Kacheln nebeneinander. Sie sind vom 04.09.2026 und haben den
+           Dark Mode nie gesehen: weisse Flaechen mit dunkelblauer
+           Schrift, die einzigen hellen Flecken unter der Frage. Dietmar
+           am 17.09.2026: "Die 3 Buttons sollten auch noch angepasst
+           werden."
+
+           Sie bekommen denselben Knopfverlauf wie die uebrigen Knoepfe.
+           Die Zeichen behalten ihre Farbe - sie sagen, wohin der Weg
+           fuehrt: das Rot von YouTube, das Omega im 50-Ohm-Blau. Nur
+           das Rot eine Spur heller, weil es jetzt auf Dunkelblau steht
+           statt auf Weiss. */
+        body.dark .lernkachel {
+            background: linear-gradient(#133048, #0a1e2c) !important;
+            border-color: var(--nacht-kante2) !important;
+        }
+        body.dark .lernkachel:hover { background: linear-gradient(#16374f, #0e2436) !important; }
+        body.dark .lernkachel .lern-oben  { color: var(--nacht-hell) !important; }
+        body.dark .lernkachel .lern-unten { color: var(--nacht-leise) !important; }
+        body.dark .lernkachel .lern-pfeil { color: var(--nacht-leise) !important; }
+        body.dark .lernkachel .lern-zeichen i { color: #ff5a72 !important; }
+        body.dark .lernkachel .lern-zeichen.ohm { color: var(--darc-blau) !important; }
+        body.dark .lernquelle { color: var(--nacht-leise) !important; }
+
+        /* ---- Und dasselbe fuer den Schatten, den das Bild SELBST beim
+           Darueberfahren bekommt. Dietmar am 17.09.2026: "Bevor sich ein
+           Bild vergroessert, kommt erst weiss und danach die 50-Ohm-
+           Farbe. Hier wuensche ich mir anstatt weiss auch die DARC-
+           Farbe."
+
+           Der Grund war derselbe Filter: Unter der Maus liegt auf dem
+           Bild ein schwarzer Schatten (0 16px 44px rgba(0,0,0,0.35)) -
+           und invert(1) macht aus Schwarz Weiss. Ein weisser Hof also,
+           und erst wenn die Lupe aufging, kam das Blau. Jetzt tragen
+           beide dieselbe Farbe: #ff5210 ist die Umkehr von #00adef, nach
+           dem Filter leuchtet das 50-Ohm-Blau. Auch die Kante beim
+           Darueberfahren, die sonst aus --panel-navy (dem Blau) ein
+           Orange gemacht haette. */
+        body.dark .option-grid .option-image:hover,
+        body.dark .q-image img:hover {
+            box-shadow: 0 6px 18px rgba(255,82,16,0.45),
+                        0 0 0 1px rgba(255,82,16,0.6) !important;
+            border-color: #ff5210 !important;
+        }
+        body.dark .lightbox-overlay img {
+            box-shadow: 0 8px 28px rgba(255,82,16,0.5), 0 0 0 1px rgba(255,82,16,0.7) !important;
+        }
+        /* ================================================================
+           DER KNOPF, DER SICH HEBT                        (17.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Bei MouseOverlay, wenn der Knopf sich hebt, wuensche
+           ich mir die 50-Ohm-Farbe mit leicht dezentem Schlagschatten."
+           Bis hierher hob sich der Knopf im Dark Mode mit dem
+           marineblauen Schatten des hellen Stils, den man auf dem
+           dunklen Grund kaum sah, und der Rand blieb, wie er war. Jetzt:
+           Rand und ein feiner Saum im 50-Ohm-Blau, darunter ein kurzer,
+           weicher Schatten im selben Blau - und all das mit derselben
+           Verzoegerung wie das Heben selbst, damit nichts vor dem Knopf
+           aufleuchtet. Was schon leuchtet (Start, Weiter, Vorlesen),
+           behaelt seinen eigenen Schein - die Regeln dafuer stehen mit
+           hoeherem Gewicht weiter oben. */
+        body.dark button:not(:disabled):not(.dot-sidebar):not(.option):not(.option-grid):hover,
+        body.dark a.btn:hover,
+        body.dark .btn:not(:disabled):hover,
+        body.dark .btn-lernstand:not(:disabled):hover,
+        body.dark .btn-theme:not(:disabled):hover,
+        body.dark .btn-outline:not(:disabled):hover {
+            border-color: var(--darc-blau) !important;
+            box-shadow: 0 6px 14px -4px rgba(0,173,239,0.42),
+                        0 0 0 1px rgba(0,173,239,0.55) !important;
+            transition: transform 0.18s ease 1s, box-shadow 0.18s ease 1s,
+                        border-color 0.18s ease 1s !important;
+        }
+        body.dark #einstellungenModal [style*="border-top:1px solid #e3e9f3"],
+        body.dark #einstellungenModal [style*="border-bottom:1px solid #e3e9f3"],
+        body.dark #einstellungenModal [style*="border-right:1px solid #e3e9f3"],
+        body.dark #einstellungenModal [style*="border:1px solid #e3e9f3"] { border-color: var(--nacht-kante) !important; }
     </style>
 
 <script id="finalFixDynamicHeight">
