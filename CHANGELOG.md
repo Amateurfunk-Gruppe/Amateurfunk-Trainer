@@ -748,6 +748,31 @@ eine andere Kachel ändert nichts mehr, die Tastatur (Enter auf der Kachel) tut 
 und das Fragebild öffnet weiter die Lightbox. Die Marke beim Vorlesen sitzt in beiden Stilen am
 Bild. Null Seitenfehler.
 
+### Das Zeichen im Dock hüpft nicht mehr anderthalb Minuten
+
+Eine Rückmeldung vom Mac, macOS 15.7.9 mit Safari 26.6: „Unter macOS hört das App-Symbol ewig
+(ca. 1,5 Minuten) nicht auf, munter im Dock auf und ab zu springen."
+
+Die anderthalb Minuten sind der Hinweis auf die Ursache: Es ist genau die Frist, die der Launch
+Service von macOS einem startenden Programm gibt. `CFBundlePackageType APPL` in der `Info.plist`
+sagt dem System: *Das ist ein Programm mit Fenstern.* Es legt daraufhin ein Zeichen ins Dock und
+lässt es hüpfen, **bis sich das Programm beim Fensterdienst meldet**. Unser Starter im `.app` ist
+aber ein Shell-Skript, das `node Server.js` startet — es macht nie ein Fenster auf und meldet sich
+deshalb nie. Also hüpfte das Zeichen, bis macOS von selbst aufgab: rund neunzig Sekunden.
+
+Der Eintrag dagegen heißt `LSUIElement` und bedeutet „Programm ohne eigene Oberfläche". Dann gibt
+es kein Dock-Zeichen, das hüpfen könnte — und weil die Oberfläche des Trainers im Browser steht,
+fehlt auch nichts. Der Hinweis auf fehlendes Node.js kommt weiter: `LSUIElement` verbietet nur die
+eigene Oberfläche, nicht die Dialoge.
+
+`installieren.sh` macht es von Anfang an so; nur die `.app` aus `pakete_bauen.sh` hatte die Zeile
+nicht. Es traf also genau die, die das Mac-ZIP geladen haben. Nachgerechnet: Die erzeugte
+`Info.plist` ist gültig und trägt `LSUIElement` als `true`.
+
+Die beiliegende Anleitung und `INSTALLATION.md` sagen es jetzt auch: Die Mac-App legt **absichtlich**
+kein Zeichen ins Dock. Und der Satz „für macOS nicht auf echter Hardware ausprobiert" steht nicht
+mehr in der Installationsanleitung — seit dem 17.09.2026 ist der Trainer dort gelaufen.
+
 ### Mitautor am Commit
 
 Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent

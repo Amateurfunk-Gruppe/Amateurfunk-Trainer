@@ -188,6 +188,12 @@ angelegten `.desktop`-Dateien.
 Das Installationsskript ist **unter Linux durchgetestet** — Ersteinrichtung,
 zweiter Aufruf zum Auffrischen, belegter Zielordner, fehlendes Node.js,
 Verknüpfung und Anwendungsmenü. **Windows** läuft im täglichen Gebrauch.
-Für **macOS** sind die Wege gebaut, die Dateinamen geprüft und die
-`.app`-Struktur nachgerechnet, **aber nicht auf echter Hardware
-ausprobiert** — Rückmeldungen sind willkommen.
+
+**macOS ist seit dem 17.09.2026 auf echter Hardware gelaufen** — ein
+Mac-Nutzer hat das Mac-ZIP unter macOS 15.7.9 mit Safari 26.6
+ausprobiert. Der Trainer lief; eine Sache kam dabei heraus und ist
+behoben: Das Zeichen der App hüpfte rund anderthalb Minuten im Dock, weil
+der `.app` im Paket der Eintrag `LSUIElement` fehlte. Die App hat keine
+eigene Oberfläche (die steht im Browser), also darf sie auch kein
+Dock-Zeichen haben. Weitere Rückmeldungen von Mac-Rechnern sind
+willkommen.
