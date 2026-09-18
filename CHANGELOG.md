@@ -8,6 +8,43 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 
 ---
 
+## [1.298.0] - 2026-09-18
+
+### Der Verlauf springt nicht mehr beim Antworten
+
+Dietmar, mit einer Aufnahme: „Sieh dir seitlich den Verlauf an. Klicke ich auf eine Antwort,
+springt der Verlauf. Das hätte ich gerne abbestellt."
+
+In der Aufnahme, Bild für Bild: Die Spalte zeigt die Punkte 78 bis 245. Klick auf die Antwort —
+ein Bild später stehen dort 15 bis 182, zwei Bilder später wieder 78 bis 245. Ein Ruck nach oben
+und ein weiches Zurückrollen, in einer Drittelsekunde.
+
+**Der Grund:** Nach jeder Antwort wird die Spalte samt Punkten als neues HTML aufgebaut — zweimal
+sogar, einmal von der Frage und einmal vom Haken „gelernt". Ein neues Element beginnt oben, Rollstand
+null. Hundert Millisekunden später sieht der Nachzieher nach, ob der aktuelle Punkt zu sehen ist,
+und rollt ihn weich zurück in den Blick. Dieses Zurückrollen war das Springen. Der Punkt war die
+ganze Zeit derselbe; nur die Spalte hatte vergessen, wo sie stand.
+
+Jetzt merkt sie es sich: Vor dem Neuaufbau wird der Rollstand gelesen und danach im selben Zug
+wieder gesetzt, unsichtbar vor dem nächsten Bildaufbau. Dabei kam ein zweiter Haken ans Licht: Die
+Spalte trägt `scroll-behavior: smooth`, und damit wird auch ein gesetzter `scrollTop` zur Fahrt —
+gemessen 0, 59, 245, 544, 886. Für diesen einen Griff wird das weiche Rollen abgeschaltet und gleich
+wieder erlaubt.
+
+**Und ein alter Rechenfehler gleich mit.** Der Nachzieher maß den Punkt mit `offsetTop` — das zählt
+vom `offsetParent`, und das ist hier der `body`, nicht die Spalte. Der erste Punkt stand so bei
+„330", obwohl er in der Spalte bei 4 liegt; die 326 darüber sind die Auswertung. Folge: Wer zu
+Frage 1 zurückblätterte, dessen Punkt blieb oben verdeckt, weil die Rechnung ihn für sichtbar
+hielt. Jetzt wird der Abstand zwischen Punkt und Spalte direkt gemessen, in Layout-Punkten.
+
+Nachgemessen mit 716 Fragen (E → A), Spalte auf Punkt 429 gerollt: beim Antworten bleibt der
+Rollstand über 43 Proben in 700 ms exakt stehen — vorher fiel er auf 0 und fuhr zurück. Dreißigmal
+„Weiter": die Spalte rückt nur nach, nie zurück, der Punkt bleibt sichtbar. Sprung zu Frage 1:
+Rollstand 0, Punkt sichtbar — vorher 306, Punkt verdeckt. Null Seitenfehler in allen vier
+Prüfungszielen.
+
+---
+
 ## [1.297.0] - 2026-09-15
 
 ### Der Fragenkatalog stimmt jetzt Zeichen für Zeichen mit der Prüfung überein

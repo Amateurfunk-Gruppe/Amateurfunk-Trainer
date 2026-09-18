@@ -25689,6 +25689,55 @@ window.updateTrainerParticipantSelect = function(data){
 
 
 // Schnelle Sidebar-Aktualisierung ohne kompletten Rerender (für sofortiges Feedback beim Trainer-Wechsel)
+// ================================================================
+//  DER VERLAUF SPRINGT NICHT MEHR BEIM ANTWORTEN          (18.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar, mit einer Aufnahme: "Sieh dir seitlich den Verlauf an.
+//  Klicke ich auf eine Antwort, springt der Verlauf. Das haette ich
+//  gerne abbestellt."
+//
+//  In der Aufnahme, Bild fuer Bild: Die Spalte zeigt die Punkte 78 bis
+//  245. Klick auf die Antwort - ein Bild spaeter stehen dort 15 bis 182,
+//  zwei Bilder spaeter wieder 78 bis 245. Ein Sprung nach oben und ein
+//  weiches Zurueckrollen, in einer Drittelsekunde.
+//
+//  DER GRUND: Nach jeder Antwort wird die Spalte samt Punkten als neues
+//  HTML aufgebaut. Ein neues Element beginnt oben - Rollstand null. Erst
+//  hundert Millisekunden spaeter sieht der Nachzieher weiter unten nach,
+//  ob der aktuelle Punkt zu sehen ist, und rollt ihn weich zurueck in
+//  den Blick. Genau dieses Zurueckrollen ist das Springen. Der Punkt
+//  war die ganze Zeit derselbe; nur die Spalte hatte vergessen, wo sie
+//  stand.
+//
+//  Jetzt merkt sie es sich: Vor dem Neuaufbau wird der Rollstand gelesen
+//  und danach sofort wieder gesetzt - im selben Zug, vor dem naechsten
+//  Bildaufbau, also unsichtbar. Der Nachzieher findet den Punkt dann an
+//  seinem Platz und laesst alles stehen. Beim Weiterblaettern rollt er
+//  weiter wie bisher, wenn der naechste Punkt ausserhalb liegt - das ist
+//  gewollt und war nie das Problem.
+// ================================================================
+function dotsRollstandMerken(){
+    try{ const d = document.querySelector('.progress-dots-sidebar'); return d ? d.scrollTop : 0; }
+    catch(e){ return 0; }
+}
+function dotsRollstandSetzen(stand){
+    if(!(stand > 0)) return;
+    try{
+        const d = document.querySelector('.progress-dots-sidebar');
+        if(!d) return;
+        // OHNE WEICHES ROLLEN. Die Spalte traegt im Stilblatt
+        // scroll-behavior:smooth - damit wird auch ein gesetzter scrollTop
+        // zu einer Fahrt von oben nach unten, sichtbar ueber eine
+        // Drittelsekunde. Gemessen: 0, 59, 245, 544, 886 ... Genau das
+        // Springen, das weg soll. Fuer diesen einen Griff wird das weiche
+        // Rollen deshalb abgeschaltet und gleich danach wieder erlaubt.
+        const vorher = d.style.scrollBehavior;
+        d.style.scrollBehavior = 'auto';
+        d.scrollTop = stand;
+        d.style.scrollBehavior = vorher;
+    }catch(e){}
+}
+
 function updateSidebarOnly(){
     const total = currentQuestions.length;
     const isTrainerViewActive = !!(window.trainerViewUserId && window.duoTrainerData && window.isHostTrainer && window.trainerModeEnabled);
@@ -25762,7 +25811,9 @@ function updateSidebarOnly(){
     // Siehe pruefungStreng(): im Simulator bleibt die Spalte leer.
     const streng = pruefungStreng();
     if(sidebarCol){
+        const dotsStand = dotsRollstandMerken();
         sidebarCol.innerHTML = streng ? '' : (tabHtml + sidebarHtml);
+        dotsRollstandSetzen(dotsStand);
         sidebarCol.style.display = streng ? 'none' : '';
         try{ if(!streng) ResizeObserver_instance?.observe?.(sidebarCol); }catch(e){}
     }
@@ -26377,7 +26428,11 @@ function renderQuestion() {
 
     html += `</div>`;
     html += `</div>`;
+    // Rollstand der Fortschrittsspalte ueber den Neuaufbau retten -
+    // siehe dotsRollstandMerken().
+    const dotsStand = dotsRollstandMerken();
     container.innerHTML = html;
+    dotsRollstandSetzen(dotsStand);
 
     try{ updateQuestionFavButton(); }catch(e){}
     try{ notizKnopfNachziehen(); }catch(e){}
@@ -26460,16 +26515,28 @@ function renderQuestion() {
         const currentDot = dotsContainer ? dotsContainer.querySelector('.current-dot') : null;
         if (!dotsContainer || !currentDot) return;
         try{
-            const oben = currentDot.offsetTop;
-            const unten = oben + currentDot.offsetHeight;
-            const sicht = dotsContainer.clientHeight;
+            // GEMESSEN WIRD GEGEN DIE SPALTE, NICHT GEGEN DIE SEITE (18.09.2026).
+            // offsetTop zaehlt vom offsetParent - und das ist hier der body,
+            // nicht die Spalte. Der erste Punkt stand so bei "330", obwohl er
+            // in der Spalte bei 4 liegt: die 326 darueber sind die Auswertung.
+            // Folge: Wer zu Frage 1 zurueckblaetterte, dessen Punkt blieb
+            // oben verdeckt, weil die Rechnung ihn fuer sichtbar hielt.
+            // Jetzt wird der Abstand zwischen Punkt und Spalte direkt
+            // gemessen - in Layout-Punkten, deshalb durch die Anzeigegroesse.
+            const z  = (typeof bildZoomFaktorAnzeige === 'function') ? (bildZoomFaktorAnzeige() || 1) : 1;
+            const kr = dotsContainer.getBoundingClientRect();
+            const pr = currentDot.getBoundingClientRect();
+            const hoehe = pr.height / z;
             const stand = dotsContainer.scrollTop;
+            const oben  = (pr.top - kr.top) / z + stand;
+            const unten = oben + hoehe;
+            const sicht = dotsContainer.clientHeight;
             let ziel = stand;
             // Nur wenn er wirklich nicht zu sehen ist, und dann so wenig
             // wie noetig - mit einer Zeile Luft nach oben.
-            if (oben < stand)              ziel = Math.max(0, oben - currentDot.offsetHeight);
-            else if (unten > stand + sicht) ziel = unten - sicht + currentDot.offsetHeight;
-            if (ziel !== stand) dotsContainer.scrollTo({ top: ziel, behavior: 'smooth' });
+            if (oben < stand)              ziel = Math.max(0, oben - hoehe);
+            else if (unten > stand + sicht) ziel = unten - sicht + hoehe;
+            if (Math.abs(ziel - stand) > 1) dotsContainer.scrollTo({ top: ziel, behavior: 'smooth' });
         }catch(e){ /* der Verlauf ist Beiwerk, nie ein Grund fuer einen Fehler */ }
     }, 100);
 }
