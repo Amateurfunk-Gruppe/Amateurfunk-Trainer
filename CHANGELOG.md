@@ -773,6 +773,29 @@ Die beiliegende Anleitung und `INSTALLATION.md` sagen es jetzt auch: Die Mac-App
 kein Zeichen ins Dock. Und der Satz „für macOS nicht auf echter Hardware ausprobiert" steht nicht
 mehr in der Installationsanleitung — seit dem 17.09.2026 ist der Trainer dort gelaufen.
 
+### `erklaerungen.json` war wieder aus den Linux- und Mac-Paketen verschwunden
+
+Beim Bau der Pakete für 1.297.0 nachgezählt, weil die Gelegenheit da war: Die Positivliste in
+`pakete_bauen.sh` führte **40 Dateien**, das ausgelieferte Mac-ZIP von 1.296.0 enthält **41**.
+Die eine, die fehlte, war `erklaerungen.json` — 2,8 MB, der ganze Erklärteil.
+
+Dieselbe Datei, dieselbe Liste, derselbe Grund wie am 15.09. in 1.296.0. Sie kam dort herein,
+weil sie in keiner der beiden Paketlisten stand; irgendwann zwischen jenem Bau und heute ist die
+Zeile wieder aus `pakete_bauen.sh` gefallen. Aufgefallen wäre es nicht: Fehlt die Datei, schreibt
+`Index.html` beim 404 eine Zeile in die Konsole („der Erklärkasten bleibt aus") und macht weiter.
+Wer neu installiert und nicht sofort aktualisiert — oder ohne Netz lernt —, hätte in 1.297.0 auf
+Linux und am Mac wieder **keine einzige Erklärung** gesehen.
+
+Die Zeile steht wieder drin, diesmal mit einem Merkzettel darüber, dass sie schon einmal
+verlorengegangen ist. Und weil Zählen besser ist als Hoffen: Die Dateiliste des neuen Mac-ZIP ist
+gegen die von 1.296.0 gestellt — **keine Datei verloren, keine dazu**, und `erklaerungen.json`
+liegt mit 2.819.194 Bytes im `.zip`, im `.deb` und im `.rpm`.
+
+Gebaut sind die drei Pakete für 1.297.0 damit auch: `mac.zip`, `.deb` und `.rpm`, je 1804
+Programmdateien, 37 MB entpackt. Größen und Prüfsummen stehen nicht hier — sie können es nicht:
+Dieses Protokoll liegt in den Paketen, seine eigene Prüfsumme kann es also nicht enthalten. Sie
+gehören auf die Release-Seite. Das Windows-ZIP entsteht weiter mit `Build-DIREKT.bat`.
+
 ### Mitautor am Commit
 
 Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent

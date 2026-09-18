@@ -27,6 +27,17 @@ piper/
 # Kokoro, die zweite Sprachausgabe (16.09.2026): Laufwerk, Lautdaten und
 # 326 MB Modell je Stimme - holt sich der Trainer auf Klick, nie ueber GitHub.
 kokoro/
+# Und am 18.09.2026 gehoert auch der Rest heraus. Dietmar: "Martin
+# gehoert raus." Ausgebaut ist die zweite Sprachausgabe seit dem
+# 17.09.: Server.js laedt sie nicht mehr, in den Einstellungen steht
+# kein Kasten, das ZIP nimmt sie nicht mit. Die zwei Dateien lagen
+# aber weiter IM REPOSITORY - eine .gitignore wirkt nur auf Neues,
+# was git einmal aufgenommen hat, nimmt es weiter mit. Mit diesen
+# Zeilen findet Hochladen.bat sie als Nachzuegler und bietet an, sie
+# auszutragen ("git rm --cached"): dann sind sie bei GitHub weg und
+# liegen hier weiter im Ordner, bis Aufraeumen.bat sie wegschiebt.
+kokoro_stimme.js
+bz2tar.js
 *.exe
 *.dll
 *.onnx
