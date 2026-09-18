@@ -1,8 +1,8 @@
 # Installation
 
 Der Amateurfunk-Trainer läuft auf **Windows, Linux und macOS**. Es gibt
-zwei Wege, keinen dritten: unter Windows das Setup, unter Linux und am Mac
-einen Befehl im Terminal.
+zwei Wege, keinen dritten: unter Windows ein Archiv zum Auspacken, unter
+Linux und am Mac einen Befehl im Terminal.
 
 ![Installation — zwei Wege](bilder/13-installation.png)
 
@@ -10,26 +10,51 @@ einen Befehl im Terminal.
 
 ## Windows
 
-**Keine Konsole nötig.**
+**Keine Konsole nötig, kein Installationsprogramm.**
 
 1. Auf der Projektseite rechts unter [Releases](../../releases) liegt
-   `Amateurfunk-Trainer-<Version>.exe`. Herunterladen.
-2. Doppelklicken. Meldet Windows **„Unbekannter Herausgeber"**: auf
-   *Weitere Informationen* klicken, dann auf *Trotzdem ausführen*. Die
-   Meldung erscheint bei jedem Programm ohne gekauftes Zertifikat — ein
-   solches kostet jährlich mehrere hundert Euro, und der Trainer ist ein
-   kostenfreies Feierabendprojekt.
-3. Ordner bestätigen. Vorgeschlagen ist `C:\Programme\Amateurfunk-Trainer`;
-   jeder andere geht auch. Wer sichergehen will, dass Windows schreiben
-   darf, wählt etwas unter `C:\Users\<Name>\`.
+   `Amateurfunk-Trainer-<Version>-windows.zip` — die **große Datei, rund
+   340 MB**. Herunterladen.
+
+   > **Nicht** die beiden Einträge *Source code (zip)* und *Source code
+   > (tar.gz)* weiter unten auf derselben Seite, und auch nicht den grünen
+   > Knopf *Code → Download ZIP* auf der Projektseite. Das ist der
+   > Quelltext — ohne Node, ohne die Module des Servers, ohne Stimmen. Wer
+   > ihn auspackt, bekommt beim Start die Frage nach Node.js, und danach
+   > passiert beim Doppelklick nichts mehr. Seit 1.298.0 sagt `START.bat`
+   > das im Klartext; vorher blieb es stumm.
+
+2. Meldet der Browser, die Datei werde *„nicht häufig heruntergeladen"*:
+   auf *Behalten* gehen. Das ist keine Virenmeldung — Windows kennt die
+   Datei nur noch nicht.
+3. Rechtsklick auf das ZIP → *Eigenschaften* → unten bei *Sicherheit* den
+   Haken bei **Zulassen** → *OK*. Das erspart die nächste Warnung: Windows
+   merkt sich bei heruntergeladenen Dateien, dass sie aus dem Netz stammen,
+   und vererbt das beim Auspacken an jede Datei darin.
+4. Auspacken — auf den Schreibtisch, nach *Dokumente* oder auf einen
+   USB-Stick. **Nicht** nach `C:\Program Files`: dort darf der Trainer
+   seinen Lernstand nicht speichern.
+5. Im ausgepackten Ordner `START.bat` doppelklicken. Der Trainer öffnet
+   sich im Browser unter `localhost:3000`.
 
 Fertig. Node.js liegt im Unterordner `node\`, die Sprachausgabe samt der
-Stimme „Thorsten", cloudflared und die amtlichen PDF sind ebenfalls dabei.
-**An Windows selbst wird nichts installiert und nichts geändert.** Eine
-Internetverbindung braucht das Einrichten nicht.
+Stimme „Thorsten" und die amtlichen PDF sind ebenfalls dabei.
+**An Windows selbst wird nichts installiert und nichts geändert**, keine
+Administratorrechte, keine Spuren in der Registrierung. Zum Entfernen
+genügt es, den Ordner zu löschen. Eine Internetverbindung braucht das
+Einrichten nicht.
 
-> **Offizielle Setups gibt es ausschließlich hier unter Releases.** Für
-> Fassungen aus anderen Quellen kann ich nicht sagen, was darin steckt.
+**Beenden:** `STOP.bat` doppelklicken, oder im Trainer oben rechts auf
+*Beenden*. Ein geschlossenes Browserfenster allein beendet ihn nicht.
+
+> **Warum kein Setup mehr?** Auf Windows-11-Rechnern mit *Smart App
+> Control* wurde das Installationsprogramm abgewiesen, bevor es anfing
+> („Fehler 4551"). Jedes Setup packt sich beim Start in den Temp-Ordner
+> aus, und genau das lässt die Richtlinie bei einem Programm ohne gekaufte
+> Unterschrift nicht zu. Ein Archiv wird nur ausgepackt.
+
+> **Offizielle Fassungen gibt es ausschließlich hier unter Releases.** Für
+> Archive aus anderen Quellen kann ich nicht sagen, was darin steckt.
 
 ---
 
@@ -147,6 +172,22 @@ Nach Piper fehlt noch eine **Stimme**: der Knopf *Stimmen hinzufügen* unter
 ---
 
 ## Wenn etwas klemmt
+
+**Windows: Beim ersten Start kommt die Frage nach Node.js** — obwohl laut
+Anleitung alles dabei sein soll. Dann ist es nicht das Windows-Archiv,
+sondern der Quelltext (*Source code (zip)* oder *Code → Download ZIP*),
+oder das Archiv wurde nur zum Teil ausgepackt. Erkennbar daran, dass im
+Ordner `node\`, `node_modules\` und `piper\` fehlen und er nur wenige
+Dutzend MB groß ist statt rund 450. Abhilfe: unter Releases die Datei
+`Amateurfunk-Trainer-<Version>-windows.zip` laden und die auspacken.
+
+**Windows: Nach dem Doppelklick auf `START.bat` passiert nichts** — kein
+Browser, keine Meldung. Seit 1.298.0 sieht `START.bat` selbst nach und
+sagt, wenn der Server gleich wieder ausgegangen ist. Kommt trotzdem
+nichts: `Fehler-Zeigen.bat` im Trainer-Ordner doppelklicken. Sie startet
+den Server in einem Fenster, das offen bleibt — dort steht der Grund. Das
+Fenster abfotografieren und als [Issue](../../issues) schicken, dann ist
+die Ursache schnell geklärt.
 
 **`curl: command not found`** — selten, aber möglich. Dann
 `sudo apt install curl` (bzw. `dnf`, `pacman`, `zypper`), oder das Skript

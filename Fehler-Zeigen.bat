@@ -66,26 +66,39 @@ echo   Warum startet der Trainer nicht?
 echo ============================================================
 echo.
 
+REM  Bis zum 18.09.2026 stand hier "where node" - das fand nur ein in
+REM  Windows installiertes Node und meldete NICHT GEFUNDEN, obwohl
+REM  node\node.exe laengst da war. Gefragt wird jetzt das, womit oben
+REM  auch gestartet wird.
 echo [1] Node.js
-where node >nul 2>nul
+echo     %NODE_EXE%
+"%NODE_EXE%" -v
 if errorlevel 1 (
-  echo     NICHT GEFUNDEN. Ohne Node.js laeuft der Trainer nicht.
-  echo     Zu holen bei https://nodejs.org
+  echo     LAEUFT NICHT. Ohne Node.js laeuft der Trainer nicht.
   echo.
   pause
   exit /b 1
 )
-node -v
 echo.
 
-echo [2] Sind die Dateien da, und wie gross sind sie?
-echo     ^(Server.js sollte rund 139.000 Bytes haben,
-echo      github_update.js rund 15.500^)
+echo [2] Sind die Dateien da?
 echo.
 if exist "Server.js"        (for %%f in ("Server.js")        do echo     Server.js         %%~zf Bytes) else echo     Server.js         FEHLT
 if exist "github_update.js" (for %%f in ("github_update.js") do echo     github_update.js  %%~zf Bytes) else echo     github_update.js  FEHLT
 if exist "Index.html"       (for %%f in ("Index.html")       do echo     Index.html        %%~zf Bytes) else echo     Index.html        FEHLT
-if exist "node_modules"     (echo     node_modules      vorhanden) else echo     node_modules      FEHLT - bitte "npm install" ausfuehren
+if exist "erklaerungen.json" (for %%f in ("erklaerungen.json") do echo     erklaerungen.json %%~zf Bytes) else echo     erklaerungen.json FEHLT
+if exist "node_modules\express\" (echo     node_modules      vorhanden) else (
+  echo     node_modules      FEHLT
+  echo.
+  echo     Dann ist das hier der QUELLTEXT, nicht das fertige Programm -
+  echo     so sieht "Source code (zip)" von der Release-Seite aus, oder
+  echo     "Code - Download ZIP". Das fertige Programm heisst
+  echo         Amateurfunk-Trainer-^<Version^>-windows.zip
+  echo     ^(rund 340 MB^) und liegt auf der Release-Seite ganz oben:
+  echo         github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases
+  echo     Wer den Quelltext absichtlich hat: npm install ausfuehren.
+)
+if exist "piper\piper.exe"  (echo     piper             vorhanden) else echo     piper             FEHLT - dann wird nicht vorgelesen, sonst nichts
 echo.
 
 echo [3] Womit faengt die Server.js an?

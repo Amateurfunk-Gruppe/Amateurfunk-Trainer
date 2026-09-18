@@ -1,52 +1,46 @@
-Amateurfunk-Trainer - die Fassung ohne Installationsprogramm
-============================================================
+Amateurfunk-Trainer - das hier ist der QUELLTEXT
+================================================
 
-SO GEHT ES LOS
+Wenn du diese Datei liest, hast du vermutlich auf GitHub "Source code
+(zip)" oder "Code - Download ZIP" geladen. Das ist der Quelltext des
+Trainers - zum Lesen, Pruefen und Mitentwickeln. Es fehlen darin drei
+Dinge, die nicht in ein Quelltext-Archiv gehoeren:
 
-  1. Diesen Ordner an eine Stelle legen, an der du schreiben darfst -
-     zum Beispiel auf den Schreibtisch oder nach Dokumente.
-     NICHT nach C:\Program Files: dort darf der Trainer seinen
-     Lernstand nicht speichern.
+  - node\          Node.js, das den Server ausfuehrt (rund 90 MB)
+  - node_modules\  die drei Module des Servers (express, socket.io, cors)
+  - piper\         die Sprachausgabe mit den Stimmen (mehrere hundert MB)
 
-  2. START.bat doppelklicken.
+Ohne node_modules\ startet der Server nicht. START.bat sagt das seit
+1.298.0 in einem Fenster; davor kam nur die Frage nach Node.js, und
+danach tat sich nichts mehr.
 
-  3. Beim ersten Mal kommt ein Fenster: Node.js fehlt noch und wird
-     nachgeholt, rund 30 MB von nodejs.org. Auf "Ja" klicken.
-     Das ist nur beim ersten Start noetig.
+DAS FERTIGE PROGRAMM
 
-  4. Der Trainer oeffnet sich im Browser unter localhost:3000.
+  Liegt auf der Release-Seite ganz oben und heisst
 
-BEENDEN
+      Amateurfunk-Trainer-<Version>-windows.zip     (rund 340 MB)
 
-  STOP.bat doppelklicken, oder im Trainer oben rechts auf "Beenden".
-  Danach ist der Trainer wirklich aus - ein Browserfenster allein
-  bringt ihn nicht zurueck.
+  github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases
 
-WARUM DIESE FASSUNG UEBERHAUPT
+  Darin ist alles: Node, die Module, die Stimmen, der ganze Katalog.
+  Auspacken (nicht nach C:\Program Files), START.bat doppelklicken,
+  fertig. Nichts wird in Windows installiert.
 
-  Auf manchen Windows-11-Rechnern weist "Smart App Control" das
-  Installationsprogramm ab, bevor es anfaengt ("Fehler 4551"). Das
-  liegt nicht am Inhalt: Jedes Installationsprogramm packt sich beim
-  Start in den Temp-Ordner aus, und genau das laesst die Richtlinie
-  bei einem Programm ohne gekaufte Unterschrift nicht zu.
+WER DEN QUELLTEXT ABSICHTLICH HAT
 
-  Ein ZIP wird nur ausgepackt. Damit faellt die Blockade weg - und die
-  Frage nach Administratorrechten gleich mit.
+  Windows:  Node.js 18 oder neuer installieren (nodejs.org - npm ist
+            dabei). Dann im Ordner einmal
 
-WAS HIER NOCH FEHLT UND WIE ES DAZUKOMMT
+                npm install
 
-  Sprachausgabe (Vorlesen):
-    Im Trainer: Einstellungen -> Wartung -> Hilfsprogramme ->
-    bei Piper auf "Holen". Danach Einstellungen ->
-    Nachteilsausgleich -> Stimme -> "Stimmen hinzufuegen".
+            ausfuehren, danach START.bat. Beim ersten Mal fragt es,
+            ob es sich ein eigenes Node in den Ordner node\ holen
+            darf - START.bat benutzt nur dieses, nie das installierte.
+            Die Sprachausgabe holt der Trainer bei Bedarf:
+            Einstellungen -> Wartung -> Hilfsprogramme -> Piper "Holen".
 
-  Gruppenraum ueber das Internet:
-    Beim ersten Klick auf "Tunnel starten" wird das noetige
-    Hilfsprogramm geholt.
-
-  Beides ist freiwillig. Ohne das eine fehlt das Vorlesen, ohne das
-  andere der Raum ueber das Internet - der Trainer selbst laeuft
-  vollstaendig.
+  Linux und Mac:  installieren.sh macht alles in einem Rutsch, siehe
+            INSTALLATION.md. Von Hand: npm install, dann ./START.sh.
 
 DEIN LERNSTAND
 
@@ -54,10 +48,8 @@ DEIN LERNSTAND
   mit. Wer den Ordner loescht, loescht ihn - vorher im Trainer ueber
   "Sichern" eine Kopie anlegen.
 
-AKTUELL BLEIBEN
+BEENDEN
 
-  Der Trainer sieht beim Start nach, ob auf GitHub etwas Neues liegt,
-  und sagt es oben rechts. Nichts wird ohne Klick geholt.
-
-  Quelltext, Fragen und alles Weitere:
-  github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer
+  STOP.bat doppelklicken, oder im Trainer oben rechts auf "Beenden".
+  Danach ist der Trainer wirklich aus - ein Browserfenster allein
+  bringt ihn nicht zurueck.

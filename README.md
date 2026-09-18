@@ -484,7 +484,10 @@ sehe mir das an.
 **Windows** — kein Terminal nötig, kein Installationsprogramm:
 
 1. Rechts unter [Releases](../../releases)
-   `Amateurfunk-Trainer-<Version>-windows.zip` herunterladen
+   `Amateurfunk-Trainer-<Version>-windows.zip` herunterladen — die **große
+   Datei, rund 340 MB**. Nicht *Source code (zip)* weiter unten und nicht
+   den grünen Knopf *Code → Download ZIP*: das ist der Quelltext ohne Node
+   und ohne Stimmen, damit fragt der Trainer beim Start nach Node.js
 2. Rechtsklick auf das ZIP → *Eigenschaften* → Haken bei **Zulassen** → *OK*
 3. Auspacken, zum Beispiel auf den Schreibtisch oder nach *Dokumente* —
    **nicht** nach `C:\Program Files`
@@ -541,6 +544,15 @@ danach auspacken, `START.bat` doppelklicken. Im Ordner liegt eine
 
 > **Offizielle Fassungen gibt es ausschließlich hier unter Releases.** Für
 > Archive aus anderen Quellen kann ich nicht sagen, was darin steckt.
+
+> **Das falsche Archiv erkennt man am ersten Start.** Auf derselben
+> Release-Seite hängt GitHub ungefragt *Source code (zip)* und *Source code
+> (tar.gz)* an, und auf der Projektseite gibt es den grünen Knopf *Code →
+> Download ZIP*. Beides ist der Quelltext — wenige Dutzend MB, ohne `node\`,
+> ohne `node_modules\`, ohne `piper\`. Wer den auspackt, bekommt beim Start
+> die Frage nach Node.js, und danach tut sich nichts mehr. Seit 1.298.0
+> sagt `START.bat` in diesem Fall im Klartext, welche Datei die richtige ist,
+> und bietet an, die Release-Seite zu öffnen.
 
 Im Archiv ist alles, was der Trainer braucht:
 

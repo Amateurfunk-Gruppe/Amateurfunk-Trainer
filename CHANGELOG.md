@@ -43,6 +43,63 @@ Rollstand über 43 Proben in 700 ms exakt stehen — vorher fiel er auf 0 und fu
 Rollstand 0, Punkt sichtbar — vorher 306, Punkt verdeckt. Null Seitenfehler in allen vier
 Prüfungszielen.
 
+### START.bat sagt, wenn es der Quelltext ist — und wenn der Server stirbt
+
+Rückmeldung aus einer Facebook-Gruppe, jemand bereitet die Aufstockung N → E vor: „Ich habe die
+Zip heruntergeladen und entpackt sowie eine Verknüpfung auf dem Desktop erstellt. Nach dem Start
+wurde ich aufgefordert node nachzuinstallieren. Das ging nur manuell. Ich habe einen Ordner ‚node'
+im Stammverzeichnis des extrahierten Ordners des Trainers erstellt. Wenn ich jetzt starte,
+passiert leider nichts und ich erhalte auch keine Fehlermeldung."
+
+**Beides hat dieselbe Ursache, und die liegt nicht bei ihm.** Auf der Release-Seite hängt GitHub
+an jedes Release ungefragt *Source code (zip)* und *Source code (tar.gz)* an, und auf der
+Projektseite steht der grüne Knopf *Code → Download ZIP*. Beides ist der Quelltext: ohne `node\`,
+ohne `node_modules\`, ohne `piper\` — die stehen mit gutem Grund in der `.gitignore`. Wer den
+auspackt, bekommt beim Start die Frage nach Node.js, weil `node\node.exe` fehlt (das Windows-Archiv
+hat es seit 1.296.0 dabei). Und wenn Node dann von Hand da ist, stirbt `Server.js` in der ersten
+Zeile an `require('express')` — in einem Fenster, das `START.vbs` mit Absicht nicht zeigt. Von
+außen: nichts, keine Meldung. Genau die Beschreibung.
+
+**Drei Prüfungen mehr in `START.vbs`:**
+
+- **Vor der Frage nach Node** wird nachgesehen, ob `node_modules\express`, `socket.io` und `cors`
+  da sind. Fehlen sie, sagt ein Fenster, dass dies der Quelltext ist, wie die richtige Datei heißt
+  (`Amateurfunk-Trainer-<Version>-windows.zip`, rund 340 MB, auf der Release-Seite ganz oben)
+  und bietet an, die Release-Seite im Browser zu öffnen. Die Frage nach Node.js in einem
+  Quelltext-Ordner wäre eine Sackgasse mit freundlichem Gesicht gewesen.
+- **Liegt Node eine Ebene zu tief** (`node\node-v22.x-win-x64\node.exe` — der häufigste Fehler
+  beim Nachholen von Hand, weil das Archiv von nodejs.org einen Ordner enthält), sagt das Fenster
+  genau das und welcher Inhalt wohin muss, statt ein zweites Mal nach Node zu fragen.
+- **Nach dem Start wird bis zu 30 Sekunden zugesehen.** Antwortet Port 3000, ist alles gut.
+  Antwortet er nicht und es läuft keine `node.exe` mehr mit `Server.js` (nachgesehen über WMI),
+  ist der Server gestorben — dann sagt ein Fenster das und bietet an, ihn über `Fehler-Zeigen.bat`
+  sichtbar zu starten; dort bleibt das Fenster stehen, und der Grund steht drin. Läuft er noch und
+  braucht nur länger (Virenscanner, langsame Platte), passiert nichts. Steht WMI nicht zur
+  Verfügung, schweigt die Prüfung, statt falschen Alarm zu schlagen.
+
+`START.bat` ruft `START.vbs` jetzt mit `start` auf, damit sein schwarzes Fenster nicht die
+Wartezeit über stehen bleibt.
+
+**`Fehler-Zeigen.bat` hatte einen eigenen Fehler:** Schritt 1 fragte `where node` — das findet nur
+ein in Windows installiertes Node und meldete „NICHT GEFUNDEN", obwohl `node\node.exe` längst da
+war, und brach ab. Jetzt wird das Node gefragt, mit dem auch gestartet wird. Die veralteten
+Größenangaben („Server.js sollte rund 139.000 Bytes haben") sind weg; bei fehlendem
+`node_modules` steht dort dieselbe Auskunft wie im Fenster.
+
+**Anleitungen:** `INSTALLATION.md` beschrieb für Windows noch das Setup (`.exe`), das es seit
+1.296.0 nicht mehr gibt — jetzt der Weg über das Archiv, mit dem Hinweis auf die beiden
+Quelltext-Einträge, und unter „Wenn etwas klemmt" die zwei Windows-Fälle „Frage nach Node.js"
+und „nach START.bat passiert nichts". README (In Kürze und Windows im Einzelnen) und die
+Release-Beschreibung aus `release_hochladen.js` sagen es ebenfalls in einem Satz.
+
+**Und die `LIESMICH-ZUERST.txt` im Repository** — die, die im Quelltext-Archiv liegt — stammte
+noch vom 15.09., als das Windows-ZIP ohne Node kam: „Beim ersten Mal kommt ein Fenster: Node.js
+fehlt noch und wird nachgeholt. Auf ‚Ja' klicken." Genau das hat der Nutzer gelesen und getan;
+der Zettel hat den falschen Weg bestätigt. Jetzt sagt er als Erstes, dass dies der Quelltext ist,
+was darin fehlt, wo das fertige Programm liegt, und was zu tun ist, wenn man den Quelltext
+absichtlich hat (`npm install`). Das Windows-Archiv bekommt beim Bau weiterhin seine eigene
+LIESMICH aus `Build-DIREKT.bat`.
+
 ---
 
 ## [1.297.0] - 2026-09-15

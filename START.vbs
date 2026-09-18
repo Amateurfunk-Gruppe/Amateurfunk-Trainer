@@ -19,18 +19,92 @@
 '  ueberhaupt nichts. Deshalb wird jetzt VORHER nachgesehen und
 '  im Klartext gefragt, statt wortlos aufzugeben.
 '
+'  NEU AM 18.09.2026 - zwei Pruefungen mehr, aus einer Rueckmeldung:
+'  "Nach dem Start wurde ich aufgefordert node nachzuinstallieren.
+'  Das ging nur manuell. [...] Wenn ich jetzt starte, passiert leider
+'  nichts und ich erhalte auch keine Fehlermeldung."
+'  Erstens wird VOR der Frage nach Node nachgesehen, ob das hier
+'  ueberhaupt das fertige Programm ist und nicht der Quelltext
+'  ("Source code (zip)" von der Release-Seite). Zweitens wird nach
+'  dem Start bis zu 30 Sekunden zugesehen, ob der Server hochkommt -
+'  stirbt er, sagt ein Fenster das und bietet den sichtbaren Start an.
+'
 '  Zum Beenden: STOP.bat
 ' ================================================================
 Option Explicit
-Dim WshShell, fso, ordner, node, antwort, code, i
+Dim WshShell, fso, ordner, node, antwort, code, i, uo
 
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 ordner = fso.GetParentFolderName(WScript.ScriptFullName)
 WshShell.CurrentDirectory = ordner
 
+' ================================================================
+'  IST DAS UEBERHAUPT DAS FERTIGE PROGRAMM?
+' ----------------------------------------------------------------
+'  Rueckmeldung vom 18.09.2026 (siehe oben). Beides - die Frage nach
+'  Node und das stumme Nichts danach - hat dieselbe Ursache: Auf der
+'  Release-Seite haengt GitHub an jedes Release "Source code (zip)"
+'  und "Source code (tar.gz)" an, ungefragt; und auf der Projektseite
+'  gibt es den gruenen Knopf "Code - Download ZIP". Beides ist der
+'  Quelltext: ohne node\, ohne node_modules\, ohne piper\ - die
+'  stehen mit gutem Grund in der .gitignore. Wer den auspackt,
+'  bekommt beim Start erst die Frage nach Node.js. Und wenn Node dann
+'  da ist, stirbt der Server nach einer Zehntelsekunde an
+'  require('express') - in einem Fenster, das mit Absicht nicht zu
+'  sehen ist. Von aussen: nichts.
+'
+'  Deshalb wird das ZUERST geprueft, noch vor Node. Die Frage nach
+'  Node.js in einem Quelltext-Ordner waere eine Sackgasse mit
+'  freundlichem Gesicht.
+' ================================================================
+If Not fso.FileExists(ordner & "\node_modules\express\package.json") _
+   Or Not fso.FileExists(ordner & "\node_modules\socket.io\package.json") _
+   Or Not fso.FileExists(ordner & "\node_modules\cors\package.json") Then
+  antwort = MsgBox( _
+    "In diesem Ordner fehlt ein Teil des Trainers:" & vbCrLf & _
+    ordner & vbCrLf & vbCrLf & _
+    "Der Ordner node_modules\ ist nicht da. So sieht der QUELLTEXT" & vbCrLf & _
+    "aus - nicht das fertige Programm. Das passiert, wenn auf GitHub" & vbCrLf & _
+    """Source code (zip)"" oder ""Code - Download ZIP"" geladen wurde." & vbCrLf & vbCrLf & _
+    "Das fertige Programm heisst" & vbCrLf & _
+    "    Amateurfunk-Trainer-<Version>-windows.zip" & vbCrLf & _
+    "(rund 340 MB) und liegt auf der Release-Seite ganz oben. Darin" & vbCrLf & _
+    "ist alles: Node, die Module, die Stimmen. Auspacken, START.bat." & vbCrLf & vbCrLf & _
+    "(Wer den Quelltext absichtlich hat: im Ordner npm install ausfuehren.)" & vbCrLf & vbCrLf & _
+    "Die Release-Seite jetzt im Browser oeffnen?", _
+    vbYesNo + vbExclamation + vbDefaultButton1, "Amateurfunk-Trainer - das ist der Quelltext")
+  If antwort = vbYes Then
+    WshShell.Run "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest", 1, False
+  End If
+  WScript.Quit 1
+End If
+
 node = ordner & "\node\node.exe"
 If Not fso.FileExists(node) Then
+  ' ----------------------------------------------------------------
+  '  Liegt node.exe eine Ebene zu tief? Das ist der haeufigste Fehler
+  '  beim Nachholen von Hand: Das Archiv von nodejs.org enthaelt einen
+  '  Ordner node-v22.x-win-x64\, und der landet als Ganzes in node\.
+  '  Dann steht node\node-v22.x-win-x64\node.exe da - und die Frage
+  '  nach Node kaeme ein zweites Mal, obwohl Node laengst da ist.
+  '  Deshalb nachsehen und sagen, was genau wohin muss.
+  ' ----------------------------------------------------------------
+  If fso.FolderExists(ordner & "\node") Then
+    For Each uo In fso.GetFolder(ordner & "\node").SubFolders
+      If fso.FileExists(uo.Path & "\node.exe") Then
+        MsgBox "Node.js liegt da - aber eine Ebene zu tief:" & vbCrLf & _
+               uo.Path & "\node.exe" & vbCrLf & vbCrLf & _
+               "Gebraucht wird:" & vbCrLf & node & vbCrLf & vbCrLf & _
+               "Bitte den INHALT des Ordners" & vbCrLf & _
+               "    " & uo.Name & vbCrLf & _
+               "direkt nach node\ verschieben (node.exe, npm, node_modules und" & vbCrLf & _
+               "die uebrigen Dateien), den leeren Ordner danach loeschen -" & vbCrLf & _
+               "und START.bat noch einmal doppelklicken.", 48, "Amateurfunk-Trainer - Node.js liegt zu tief"
+        WScript.Quit 1
+      End If
+    Next
+  End If
   ' ================================================================
   '  BESTANDTEILE NACHHOLEN
   ' ----------------------------------------------------------------
@@ -150,6 +224,80 @@ End If
 
 WshShell.Environment("PROCESS")("AFU_BROWSER") = "1"
 WshShell.Run """" & node & """ Server.js", 0, False
+
+' ================================================================
+'  UND KOMMT ER AUCH HOCH?
+' ----------------------------------------------------------------
+'  Der Server laeuft mit Absicht in einem Fenster, das niemand sieht.
+'  Der Preis dafuer: Stirbt er in der ersten Sekunde - fehlendes
+'  Modul, kaputte Datei, was auch immer -, sieht man auch das nicht.
+'  Genau das war die Rueckmeldung vom 18.09.2026: "passiert leider
+'  nichts und ich erhalte auch keine Fehlermeldung".
+'
+'  Deshalb wird bis zu 30 Sekunden zugesehen. Antwortet Port 3000,
+'  ist alles gut, und dieses Skript geht. Antwortet er nicht UND es
+'  gibt keine node.exe mehr, die Server.js ausfuehrt, ist er
+'  gestorben - dann sagt das ein Fenster und bietet an, ihn sichtbar
+'  zu starten: Fehler-Zeigen.bat laesst das Fenster stehen, und die
+'  Meldung steht drin. Laeuft er noch und braucht nur laenger
+'  (langsame Platte, Virenscanner, grosser Katalog), passiert nichts -
+'  der Browser kommt, sobald er bereit ist.
+'
+'  START.bat ruft dieses Skript mit "start" auf, damit sein schwarzes
+'  Fenster nicht die ganze Wartezeit ueber stehen bleibt.
+' ================================================================
+For i = 1 To 30
+  WScript.Sleep 1000
+  If PortBelegt() Then Exit For
+  If Not ServerLaeuft() Then
+    antwort = MsgBox( _
+      "Der Trainer ist gleich nach dem Start wieder ausgegangen." & vbCrLf & vbCrLf & _
+      "Warum, stand in einem Fenster, das START.bat mit Absicht nicht" & vbCrLf & _
+      "zeigt. Fehler-Zeigen.bat startet ihn noch einmal sichtbar und" & vbCrLf & _
+      "laesst das Fenster stehen - dort steht dann der Grund." & vbCrLf & vbCrLf & _
+      "Jetzt sichtbar starten?", _
+      vbYesNo + vbExclamation + vbDefaultButton1, "Amateurfunk-Trainer - Start fehlgeschlagen")
+    If antwort = vbYes Then
+      If fso.FileExists(ordner & "\Fehler-Zeigen.bat") Then
+        WshShell.Run "cmd /c """ & ordner & "\Fehler-Zeigen.bat""", 1, False
+      Else
+        ' Ohne Fehler-Zeigen.bat: der nackte Start in einem Fenster,
+        ' das offen bleibt (/k).
+        WshShell.Run "cmd /k """"" & node & """ Server.js""", 1, False
+      End If
+    End If
+    WScript.Quit 1
+  End If
+Next
+
+' ----------------------------------------------------------------
+'  Laeuft noch eine node.exe, die Server.js ausfuehrt?
+'  Im Zweifel (kein WMI, kein Zugriff) heisst die Antwort "ja" -
+'  lieber schweigen als falschen Alarm schlagen.
+' ----------------------------------------------------------------
+Function ServerLaeuft()
+  Dim wmi, liste, p
+  ServerLaeuft = True
+  On Error Resume Next
+  Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Exit Function
+  End If
+  Set liste = wmi.ExecQuery("SELECT CommandLine FROM Win32_Process WHERE Name = 'node.exe'")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Exit Function
+  End If
+  ServerLaeuft = False
+  For Each p In liste
+    If InStr(1, p.CommandLine & "", "Server.js", vbTextCompare) > 0 Then ServerLaeuft = True
+  Next
+  If Err.Number <> 0 Then
+    Err.Clear
+    ServerLaeuft = True
+  End If
+End Function
 
 ' ----------------------------------------------------------------
 '  Antwortet ueberhaupt jemand auf Port 3000?
