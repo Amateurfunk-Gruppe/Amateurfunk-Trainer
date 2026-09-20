@@ -299,15 +299,26 @@
     // aber jetzt erst, wenn wirklich jemand anderes im Raum ist.
     window.updateDuoConfigAccess=function(){
         const c=document.getElementById('duoFilterCount'), p=document.getElementById('duoFilterPart');
+        const haken=document.getElementById('duoPruefungCheck');
         const hinweis=document.getElementById('duoConfigHinweis');
         const imRaum = !!roomCode;
         const gesperrt = imRaum && (!isHost || andereImRaum() > 0);
+        const pruefung = pruefungGewaehlt();
         [c,p].forEach(el=>{
             if(!el) return;
-            el.disabled = gesperrt;
-            el.style.opacity = gesperrt ? '0.5' : '1';
-            el.style.cursor = gesperrt ? 'not-allowed' : 'pointer';
+            // Im Pruefungsraum sind Anzahl und Bereich festgelegt (3 x 25,
+            // alle drei Teile) - die Felder bleiben stehen, damit man sieht,
+            // was sonst gelten wuerde, sind aber nicht zu bedienen.
+            const aus = gesperrt || pruefung;
+            el.disabled = aus;
+            el.style.opacity = aus ? '0.5' : '1';
+            el.style.cursor = aus ? 'not-allowed' : 'pointer';
         });
+        if(haken){
+            haken.disabled = gesperrt;
+            const zeile = haken.closest('label');
+            if(zeile){ zeile.style.opacity = gesperrt ? '0.6' : '1'; zeile.style.cursor = gesperrt ? 'not-allowed' : 'pointer'; }
+        }
         if(hinweis){
             if(!imRaum){
                 hinweis.textContent = 'Wird beim Erstellen aus dem Hauptmenü übernommen – hier änderbar.';
@@ -331,9 +342,34 @@
         const part = document.getElementById('duoFilterPart')?.value || 'all';
         const count = document.getElementById('duoFilterCount')?.value || '25';
         const parts = part==='all' ? ['vorschriften','betrieb','technik'] : [part];
-        socket.emit('duoConfigAendern', {code: roomCode, part: part, count: count, parts: parts});
+        socket.emit('duoConfigAendern', {code: roomCode, part: part, count: count, parts: parts, pruefung: pruefungGewaehlt()});
     }
+    // Der Schalter "Pruefungssimulator" im Raum-Fenster (20.09.2026).
+    // An = drei Boegen zu 25 Fragen, Vorschriften - Betrieb - Technik,
+    // je 45 Minuten, Aufloesung erst am Ende. Anzahl und Bereich gelten
+    // dann nicht; die Felder werden ausgegraut (pruefungFelderNachziehen).
+    function pruefungGewaehlt(){
+        try{ return !!document.getElementById('duoPruefungCheck')?.checked; }catch(e){ return false; }
+    }
+    window.duoPruefungGewaehlt = pruefungGewaehlt;
+    function pruefungFelderNachziehen(){
+        const an = pruefungGewaehlt();
+        ['duoFilterCount','duoFilterPart'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(!el) return;
+            el.dataset.pruefungAus = an ? '1' : '';
+        });
+        try{ if(typeof window.updateDuoConfigSummary==='function') window.updateDuoConfigSummary(); }catch(e){}
+        try{ window.updateDuoConfigAccess(); }catch(e){}
+    }
+    window.pruefungFelderNachziehen = pruefungFelderNachziehen;
     function konfigFelderVerdrahten(){
+        const haken=document.getElementById('duoPruefungCheck');
+        if(haken && !haken.dataset.duoVerdrahtet){
+            haken.dataset.duoVerdrahtet='1';
+            haken.addEventListener('change', ()=>{ pruefungFelderNachziehen(); konfigAenderungMelden(); });
+            pruefungFelderNachziehen();
+        }
         ['duoFilterCount','duoFilterPart'].forEach(id=>{
             const el=document.getElementById(id);
             if(!el || el.dataset.duoVerdrahtet) return;
@@ -1295,11 +1331,18 @@
         if(!j || !j.an){ zeile.style.display='none'; return; }
         wacheZuletzt = j;
 
+        // Die Farben stehen im Stilblock (.duo-wache.gut / .warn), nicht mehr
+        // hier. Grund, 20.09.2026: Dietmar aus dem Gruppenraum - "kann man
+        // das noch schlecht erkennen". Der Kasten wurde von hier aus hell
+        // eingefaerbt (#eef8f1), im Dark Mode blieb er hell, und fett
+        // Gedrucktes traegt dort per Regel ein helles Weiss - "Tunnel-Wache
+        // laeuft", "vor 19 Sekunden" und die Zahl der Teilnehmer standen
+        // damit weiss auf Hellgruen. Aus JavaScript gesetzte Farben gewinnen
+        // gegen jeden Stil; nur aus dem Stilblock heraus kann die Nachtsicht
+        // ueberhaupt mitreden.
         const gut = j.laeuft && j.fehlversuche === 0;
         zeile.style.display = 'block';
-        zeile.style.background = gut ? '#eef8f1' : '#fff6e5';
-        zeile.style.border     = '1px solid ' + (gut ? '#bfe3cb' : '#f0d7a0');
-        zeile.style.color      = gut ? '#1c6b3a' : '#7a5a10';
+        zeile.className = 'duo-wache ' + (gut ? 'gut' : 'warn');
 
         let t = '';
         t += (gut ? '🟢' : '🟠') + ' <b>Tunnel-Wache läuft.</b> ';
@@ -1364,10 +1407,28 @@
 
     function bindEvents(){
         if(!socket) return;
-        socket.on('connect',()=>{ myUserId=socket.id; window.myUserId=myUserId; const el=document.getElementById('duoStatus'); if(el) el.textContent='Verbunden: '+socket.id.slice(0,5); });
+        // socket.id kann beim Verbinden noch fehlen - dann warf die Zeile
+        // "Cannot read properties of undefined (reading 'slice')" und der
+        // ganze Handler brach ab, womit myUserId leer blieb. Aufgefallen
+        // am 20.09.2026 beim Pruefungsraum-Test, wenn ein zweiter Rechner
+        // waehrend einer laufenden Runde beitritt.
+        socket.on('connect',()=>{ myUserId=socket.id||''; window.myUserId=myUserId; const el=document.getElementById('duoStatus'); if(el) el.textContent = myUserId ? ('Verbunden: '+myUserId.slice(0,5)) : 'Verbunden'; });
         socket.on('hostChanged', data=>{ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateRoomUsers(duoUsersCache); updateLinkWithTunnel(); });
         socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen(); });
-        socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); });
+        socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
+            // Den Haken so stellen, wie der Raum gebaut ist - sonst sieht der
+            // Gast "Fragerunde" und bekommt dann eine Pruefung.
+            try{
+                const h=document.getElementById('duoPruefungCheck');
+                if(h && data.config) h.checked = data.config.pruefung === true;
+                const c=document.getElementById('duoFilterCount'), p=document.getElementById('duoFilterPart');
+                if(data.config){
+                    if(c && data.config.count!=null) c.value=String(data.config.count);
+                    if(p && data.config.part) p.value=String(data.config.part);
+                }
+                pruefungFelderNachziehen();
+            }catch(e){}
+            updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); });
         socket.on('roomUpdate', data=>{ if(data.hostId){ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; } if(data.users) duoUsersCache=data.users; updateRoomUsers(data.users); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateLinkWithTunnel(); });
         socket.on('you-were-kicked', data=>{ alert(data.message||'Du wurdest entfernt'); document.getElementById('duoModal').style.display='none'; if(roomCode&&socket) socket.emit('leaveRoom',{code:roomCode}); roomCode=null; isHost=false; duoActive=false; wacheAnzeigeBeenden(); wachEnde(); chatSichtbarkeitPruefen(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); });
         // Der Raum ist weg - entweder weil der Gastgeber ihn beendet hat
@@ -1464,12 +1525,17 @@
                     const c=document.getElementById('duoFilterCount'), p=document.getElementById('duoFilterPart');
                     if(c && d.config.count!=null) c.value=String(d.config.count);
                     if(p && d.config.part) p.value=String(d.config.part);
+                    const haken=document.getElementById('duoPruefungCheck');
+                    if(haken) haken.checked = d.config.pruefung === true;
+                    pruefungFelderNachziehen();
                     const zus=document.getElementById('duoConfigSummary');
-                    if(zus) zus.textContent = (d.totalQuestions||0) + ' • ' +
+                    if(zus && !(d.config.pruefung === true)) zus.textContent = (d.totalQuestions||0) + ' • ' +
                         (d.config.part==='all' ? 'Alle' : (d.config.part||'Alle'));
                 }
                 updateDuoConfigAccess();
-                if(d && !d.gesperrt) chatSystemmeldung('Konfiguration geändert: ' + (d.totalQuestions||0) + ' Fragen.');
+                if(d && !d.gesperrt) chatSystemmeldung(d.config && d.config.pruefung === true
+                    ? 'Konfiguration geändert: Prüfungssimulator – 3 Runden zu 25 Fragen.'
+                    : 'Konfiguration geändert: ' + (d.totalQuestions||0) + ' Fragen.');
             }catch(e){ console.error('[DUO] duoConfigGeaendert', e); }
         });
 
@@ -1513,6 +1579,13 @@
                 const meineZeile = ranking.find(r=>r.userId===window.myUserId);
                 const ichBinFertig = !!(meineZeile && meineZeile.finished);
                 if(!ichBinFertig) return;
+                // Pruefungsraum (20.09.2026): Nach der dritten Runde steht
+                // die EIGENE Auswertung mit den falschen Antworten im
+                // Fenster. Die Rangliste darf sie nicht ueberdecken - sie
+                // kommt erst, wenn jemand auf "Rangliste der Gruppe" klickt
+                // (window._duoRanglisteGewuenscht, gesetzt in Index.html).
+                if(window._duoPruefung && !window._duoRanglisteGewuenscht) return;
+                window._duoRanglisteGewuenscht = false;
                 if(typeof window.showDuoFinalResults==='function'){
                     window.showDuoFinalResults(data);
                 } else if(typeof window.showDuoFinalModal==='function' && window.duoTrainerData){
@@ -1603,7 +1676,7 @@
             console.log('[DUO] Erstelle Raum', name, part, count);
             // Fragen-Konfiguration wird EINMAL bei Raum-Erstellung festgelegt - alle Teilnehmer
             // bekommen danach exakt dieses Fragen-Set, egal wann sie beitreten oder starten.
-            socket.emit('createRoom',{name:name,password:pwd,part:part,count:count,parts:parts});
+            socket.emit('createRoom',{name:name,password:pwd,part:part,count:count,parts:parts,pruefung:pruefungGewaehlt()});
             // FIX: Der Raum ist da - jetzt parallel den Tunnel hochfahren, damit
             // der Einladungslink von selbst erscheint. Bewusst NICHT abwarten,
             // damit die Raum-Oberflaeche sofort aufgeht.
@@ -1781,6 +1854,11 @@
                 document.getElementById('duoModal').style.display='none';
                 updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton();
                 teilnehmerKnopfEinblenden(false); window.duoTeilnehmerUebersichtData=[];
+                // Die Merker des Pruefungsraums gehoeren zum Raum, nicht zum
+                // Rechner: Wer ihn verlaesst, soll danach den ganz normalen
+                // Pruefungssimulator und die ganz normale Gruppenrunde haben.
+                window._duoPruefung=false; window._duoRanglisteGewuenscht=false; window._duoPruefungFinalHtml=null;
+                try{ if(window.realisticExam){ window.realisticExam.duo=false; window.realisticExam.duoFragen=null; } }catch(e){}
             }catch(e){}
         },
         teilnehmerOeffnen: function(){

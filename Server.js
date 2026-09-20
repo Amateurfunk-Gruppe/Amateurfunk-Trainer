@@ -3969,6 +3969,48 @@ try{
         const qb = ladeFragen() || [];
         let pool=qb;
         const cfg = room.config||{};
+
+        // ================================================================
+        //  PRUEFUNGSRAUM  (20.09.2026)
+        // ----------------------------------------------------------------
+        //  Dietmar: "im Gruppenraum moechte ich einen Pruefungssimulator.
+        //  Aktiviere ich das, laufen 25 Fragen aus Betrieb, Vorschriften
+        //  und Technik rein. Mit dem passenden Counter (Zeit) Pruefung
+        //  starten im Fenster. [...] Nach der ersten Runde soll die Frage
+        //  kommen: Zur naechsten Runde."
+        //
+        //  Wie die echte Pruefung: drei Boegen, je 25 Fragen, in der
+        //  amtlichen Reihenfolge Vorschriften - Betrieb - Technik. Der
+        //  Raum haelt alle 75 in EINEM Satz (questionsFull), damit die
+        //  bestehende Buchfuehrung - duoAnswer, Fortschritt, Auswertung
+        //  des Kursleiters - unveraendert weiterlaeuft. Wo ein Bogen
+        //  anfaengt und aufhoert, steht in room.pruefungTeile; der Client
+        //  schneidet daraus seine drei Runden. Innerhalb eines Bogens ist
+        //  gemischt, die Boegen selbst bleiben getrennt - sonst saesse
+        //  Runde 1 vor einer Betriebsfrage.
+        //
+        //  Ein Bogen ohne 25 Fragen ist keine Pruefung und faellt weg
+        //  (bei fragen.json - Klasse N - kommt das nicht vor: 204/172/195).
+        // ================================================================
+        if(cfg.pruefung){
+          const BOEGEN = ['vorschriften','betrieb','technik'];
+          const teile = [];
+          let alle = [];
+          BOEGEN.forEach(teil => {
+            const topf = qb.filter(q => q && q.part === teil);
+            if(topf.length < 25) return;
+            const gezogen = fisherYates(topf).slice(0, 25);
+            teile.push({ teil, von: alle.length, bis: alle.length + gezogen.length });
+            alle = alle.concat(gezogen);
+          });
+          room.pruefungTeile = teile;
+          room.questions = alle.map(q=>q.id);
+          room.questionsFull = alle.map(shuffleOptions);
+          console.log(`[DUO SERVER V17] Pruefungsraum ${room.code}: ${teile.length} Boegen, ${room.questions.length} Fragen (${teile.map(t=>t.teil).join(' - ')})`);
+          return;
+        }
+        room.pruefungTeile = null;
+
         const parts = (cfg.parts && cfg.parts.length>0) ? cfg.parts : (cfg.part && cfg.part!=='all' ? [cfg.part] : ['vorschriften','betrieb','technik']);
         if(parts.length>0 && parts.length<3) pool=pool.filter(q=>parts.includes(q.part));
         let n;
@@ -4016,13 +4058,13 @@ try{
         // einem fremden Raum.
         const code=freienRaumcodeFinden();
         const pwd = (data.password||'').toString().trim();
-        console.log(`[DUO SERVER V17] createRoom ${code} count=${data.count} part=${data.part} parts=${JSON.stringify(data.parts)} pwd=${pwd?'yes':'no'}`);
+        console.log(`[DUO SERVER V17] createRoom ${code} count=${data.count} part=${data.part} parts=${JSON.stringify(data.parts)} pruefung=${data.pruefung===true} pwd=${pwd?'yes':'no'}`);
         // ipsVonTeilnehmern und gesperrteIps liegen BEWUSST neben room.users
         // und nicht darin: room.users geht bei jedem roomUpdate an alle im
         // Raum. Eine Adresse in room.users waere damit fuer jeden
         // Teilnehmer sichtbar - fuer den Gastgeber gedacht, an alle
         // ausgeliefert. Beides bleibt auf dem Server.
-        duoRooms[code]={code, users:{}, ipsVonTeilnehmern:{}, gesperrteIps:[], questions:[], questionsFull:[], allAnswers:{}, chat:[], hostId:socket.id, password: pwd||null, createdAt:Date.now(), finalResultsSent:false, config:{count:data.count, part:data.part, parts:data.parts}};
+        duoRooms[code]={code, users:{}, ipsVonTeilnehmern:{}, gesperrteIps:[], questions:[], questionsFull:[], allAnswers:{}, chat:[], hostId:socket.id, password: pwd||null, createdAt:Date.now(), finalResultsSent:false, config:{count:data.count, part:data.part, parts:data.parts, pruefung: data.pruefung === true}};
         // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
@@ -4075,7 +4117,10 @@ try{
       console.log(`[GRUPPENRAUM] ${userName} ist Raum ${data.code} beigetreten (${ipKuerzen(wo)})`);
       // Fragen stehen schon seit Raum-Erstellung fest - jeder Beitretende bekommt dieselbe Basis
       if(!room.questionsFull || room.questionsFull.length===0) generateRoomQuestions(room);
-      socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length});
+      // config kommt mit: Nur so sieht der Beitretende, dass er in einen
+      // PRUEFUNGSRAUM kommt und nicht in eine Fragerunde - der Haken im
+      // Fenster steht dann von selbst richtig (20.09.2026).
+      socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length, config: room.config || null});
       // Chatverlauf gleich mitschicken, damit spaeter Beitretende den Faden kennen
       socket.emit('duoChatVerlauf', { code: data.code, nachrichten: Array.isArray(room.chat) ? room.chat : [] });
       // Automatische Begruessung - geht NUR an den Beitretenden und wird bewusst
@@ -4106,7 +4151,26 @@ try{
         const answered = Object.keys(userAnswers).length;
         const finished = totalQs>0 && answered>=totalQs;
         let examStatus = null;
-        if(finished){
+        // Pruefungsraum: jeder Bogen wird fuer sich gewertet, wie bei der
+        // Bundesnetzagentur - drei Ergebnisse, und bestanden ist nur, wer
+        // alle drei hat. Die Summe ueber 75 Fragen sagt darueber nichts:
+        // 60/75 koennen 25+25+10 sein.
+        let teile = null;
+        if(room.pruefungTeile && room.pruefungTeile.length && room.questionsFull){
+          teile = room.pruefungTeile.map(t => {
+            const ids = room.questionsFull.slice(t.von, t.bis).map(q => q.id);
+            let r = 0, b = 0;
+            ids.forEach(id => { const a = userAnswers[id]; if(!a) return; b++; if(a.isCorrect) r++; });
+            const fertig = b >= ids.length;
+            const status = !fertig ? null : (r >= 19 ? 'bestanden' : (r >= 17 ? 'nachpruefung' : 'nicht_bestanden'));
+            return { teil: t.teil, correct: r, answered: b, total: ids.length, finished: fertig, status };
+          });
+          if(finished){
+            if(teile.some(t => t.status === 'nicht_bestanden')) examStatus = 'nicht_bestanden';
+            else if(teile.some(t => t.status === 'nachpruefung')) examStatus = 'nachpruefung';
+            else examStatus = 'bestanden';
+          }
+        } else if(finished){
           if(totalQs===25){
             // Exakte amtliche Regel für einen vollständigen 25-Fragen-Prüfungsteil
             examStatus = correct>=19 ? 'bestanden' : (correct>=17 ? 'nachpruefung' : 'nicht_bestanden');
@@ -4119,7 +4183,7 @@ try{
           name: u.name||'Unbekannt', role: u.role||'', isHost: uid===room.hostId,
           correct, wrong, answered, total: totalQs,
           accuracy: answered>0 ? Math.round((correct/answered)*100) : 0,
-          finished, examStatus
+          finished, examStatus, teile
         };
       });
       return stats;
@@ -4236,7 +4300,8 @@ try{
       socket.emit('duoQuizStarted',{
         questions:room.questions,
         questionsFull:room.questionsFull,
-        meta:{code:data.code, parts:room.config?room.config.parts:undefined, count:room.config?room.config.count:undefined, part:room.config?room.config.part:undefined, actualCount:room.questions.length},
+        meta:{code:data.code, parts:room.config?room.config.parts:undefined, count:room.config?room.config.count:undefined, part:room.config?room.config.part:undefined, actualCount:room.questions.length,
+              pruefung: !!(room.config && room.config.pruefung), teile: room.pruefungTeile || null},
         users:room.users
       });
       // Startzeit fuer die Zeitmessung in der Teilnehmer-Uebersicht - nur beim
@@ -4288,7 +4353,8 @@ try{
         questions: room.questions,
         questionsFull: room.questionsFull,
         meta:{ code, parts: room.config?room.config.parts:undefined, count: room.config?room.config.count:undefined,
-               part: room.config?room.config.part:undefined, actualCount: room.questions.length, neueRunde:true },
+               part: room.config?room.config.part:undefined, actualCount: room.questions.length, neueRunde:true,
+               pruefung: !!(room.config && room.config.pruefung), teile: room.pruefungTeile || null },
         users: room.users
       });
       console.log(`[GRUPPENRAUM] Neue Runde in ${code}: ${room.questions.length} frische Fragen fuer ${Object.keys(room.users).length} Teilnehmer.`);
@@ -4344,7 +4410,11 @@ try{
       // ungeprueft im Raum. Unbekanntes wird zu '' - also zur echten
       // Antwort, was die vorsichtigere Annahme ist (eine echte Antwort
       // faelschlich mitzuzaehlen ist harmloser, als eine wegzulassen).
-      const ART_ERLAUBT = ['loesung','gelernt'];
+      // 'zeit' (20.09.2026): Im Pruefungsraum ist die Zeit abgelaufen, und
+      // die Frage blieb unbeantwortet. Sie zaehlt fuer den Teilnehmer als
+      // Fehler - fuer die Auswertung des Kursleiters aber nicht als
+      // "die Gruppe hat das falsch", denn geantwortet hat niemand.
+      const ART_ERLAUBT = ['loesung','gelernt','zeit'];
       const art = ART_ERLAUBT.indexOf(String(data.art||'')) === -1 ? '' : String(data.art);
       room.allAnswers[uid][data.questionId]={optionIndex:data.optionIndex, isCorrect:verified, userId:uid, answeredAt:Date.now(), art:art};
 
@@ -4394,7 +4464,11 @@ try{
               name: (room.users[uid] && room.users[uid].name) || 'Ein Teilnehmer',
               istHost: uid === room.hostId,
               automatisch: true,
-              text: '🏁 ist mit allen Fragen fertig: ' + meineStats.correct + '/' + meineStats.total + ' richtig (' + statusText + ').',
+              text: (meineStats.teile && meineStats.teile.length)
+                ? '🏁 hat die Prüfung abgegeben: ' + meineStats.teile.map(t =>
+                    ({vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik'}[t.teil] || t.teil) + ' ' + t.correct + '/' + t.total).join(', ')
+                  + ' (' + statusText + ').'
+                : '🏁 ist mit allen Fragen fertig: ' + meineStats.correct + '/' + meineStats.total + ' richtig (' + statusText + ').',
               zeit: Date.now()
             };
             if(!Array.isArray(room.chat)) room.chat = [];
@@ -4659,10 +4733,10 @@ try{
           socket.emit('duoConfigGeaendert', { config: room.config, totalQuestions: room.questions.length, gesperrt: true });
           return;
         }
-        room.config = { count: data.count, part: data.part, parts: data.parts };
+        room.config = { count: data.count, part: data.part, parts: data.parts, pruefung: data.pruefung === true };
         room.finalResultsSent = false;
         generateRoomQuestions(room);
-        console.log(`[DUO] Konfiguration von Raum ${room.code} geaendert: count=${data.count} parts=${JSON.stringify(data.parts)} -> ${room.questions.length} Fragen`);
+        console.log(`[DUO] Konfiguration von Raum ${room.code} geaendert: count=${data.count} parts=${JSON.stringify(data.parts)} pruefung=${data.pruefung===true} -> ${room.questions.length} Fragen`);
         io.to(data.code).emit('duoConfigGeaendert', {
           config: room.config,
           totalQuestions: room.questions.length,

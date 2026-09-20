@@ -4682,6 +4682,15 @@
             background: #0f2b40 !important;
             border-color: #2b5471 !important;
         }
+        /* Der Pruefungsschalter ist ein <label>, kein <div> - die Regel
+           darueber greift bei ihm also nicht. */
+        body.dark #duoModal #duoPruefungZeile {
+            background: #0f2b40 !important;
+            border-color: #2b5471 !important;
+            color: #eaeff4 !important;
+        }
+        body.dark #duoModal #duoPruefungZeile b { color: #7fc4f0 !important; }
+        body.dark #duoModal #duoPruefungZeile span span { color: #b9cbd8 !important; }
         body.dark #duoModal div[style*="background:white"],
         body.dark #duoModal div[style*="background:#fff"] {
             background: #12354c !important;
@@ -6820,6 +6829,25 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 </div>
             </div>
             <style>
+                /* ================================================================
+                   DIE TUNNEL-WACHE                              (20.09.2026)
+                   ----------------------------------------------------------------
+                   Dietmar, mit einem Bild aus dem Gruppenraum: "Im Gruppenraum
+                   kann man das noch schlecht erkennen."
+
+                   Die Farben standen bis eben in duo.js und wurden dem Kasten
+                   direkt angehaengt: hellgruen, mit dunkelgruener Schrift. Im
+                   hellen Stil stimmt das. Im Dark Mode blieb der Kasten hell -
+                   aus JavaScript gesetzte Farben gewinnen gegen jeden Stil -,
+                   und fett Gedrucktes traegt in jedem Fenster ein helles Weiss.
+                   "Tunnel-Wache laeuft", "vor 19 Sekunden" und die Zahl der
+                   Teilnehmer standen also weiss auf Hellgruen: genau die drei
+                   Angaben, um die es geht, waren die unsichtbaren.
+
+                   Jetzt stehen sie hier, wo die Nachtsicht mitreden kann.
+                   duo.js setzt nur noch, ob es gut aussieht oder nicht. */
+                .duo-wache.gut  { background:#eef8f1; border:1px solid #bfe3cb; color:#1c6b3a; }
+                .duo-wache.warn { background:#fff6e5; border:1px solid #f0d7a0; color:#7a5a10; }
                 .duo-collapsible{border-radius:12px; margin-bottom:0.7rem; overflow:hidden; border:1px solid #c2d6f0; background:#fff;}
                 .duo-collapsible.name-box{border-color:#a8c0de; background:#eef5ff;}
                 .duo-collapsible.pwd-box{border-color:#ffe0a0; background:#fff8e1;}
@@ -6909,6 +6937,25 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                         </div>
                     </div>
                     <!-- Lernen aktiv entfernt - Auswahl via Anzahl/Bereich -->
+                    <!-- ================================================================
+                         PRUEFUNGSSIMULATOR IM RAUM  (20.09.2026)
+                         ----------------------------------------------------------------
+                         Dietmar: "im Gruppenraum moechte ich einen Pruefungssimulator.
+                         Aktiviere ich das, laufen 25 Fragen aus Betrieb, Vorschriften
+                         und Technik rein. Mit dem passenden Counter (Zeit) Pruefung
+                         starten im Fenster. Danach werden die Fragen angezeigt. Nach
+                         der ersten Runde soll die Frage kommen: Zur naechsten Runde.
+                         Eine Auswertung gibt es in dem Pruefungssimulator, zum Schluss
+                         mit Angabe, was falsch gewesen ist. Das muss auch unter Fehler
+                         und Lernbedarf gespeichert werden."
+                         Der Haken schaltet den Raum um: Der Server zieht drei Boegen zu
+                         25 Fragen (Vorschriften - Betrieb - Technik), jeder Teilnehmer
+                         schreibt sie als drei Runden, jede mit eigenem Startfenster und
+                         45-Minuten-Uhr. Anzahl und Bereich sind dann ausgegraut.
+                         ================================================================ -->
+                    <div id="duoPruefungHinweisKonfig" style="display:none; font-size:0.68rem; color:#8a6d00; margin:6px 0 0;">
+                        Der Prüfungssimulator ist eingeschaltet — Anzahl und Bereich gelten dann nicht.
+                    </div>
                     <div id="duoConfigHinweis" style="font-size:0.68rem; color:var(--muted); margin-top:6px;">Wird beim Erstellen aus dem Hauptmenü übernommen – hier änderbar.</div>
                 </div>
             </div>
@@ -6925,6 +6972,10 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                         const p = document.getElementById('duoFilterPart');
                         const sum = document.getElementById('duoConfigSummary');
                         if(!c||!p||!sum) return;
+                        const pr = document.getElementById('duoPruefungCheck');
+                        const hk = document.getElementById('duoPruefungHinweisKonfig');
+                        if(hk) hk.style.display = (pr && pr.checked) ? '' : 'none';
+                        if(pr && pr.checked){ sum.textContent = 'Prüfung • 3 × 25'; return; }
                         const partMap = {all:'Alle', vorschriften:'Vorschr.', betrieb:'Betrieb', technik:'Technik'};
                         const cnt = c.value==='all' ? 'Alle' : c.value;
                         sum.textContent = cnt + ' • ' + (partMap[p.value]||p.value);
@@ -6943,6 +6994,25 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     }catch(e){}
                 })();
             </script>
+            <!-- ================================================================
+                 DER SCHALTER STEHT OFFEN, NICHT IM ZUGEKLAPPTEN KASTEN
+                 ----------------------------------------------------------------
+                 Zuerst lag er in "Gruppenraum Konfiguration" bei Anzahl und
+                 Bereich - fachlich richtig, praktisch unsichtbar: Der Kasten
+                 ist zugeklappt, und wer den Raum als Pruefung anlegen will,
+                 sucht dort nicht. Er steht deshalb hier, direkt ueber "Raum
+                 erstellen" - genau an der Stelle, an der die Entscheidung
+                 faellt.
+                 Auch der Gast sieht ihn (nur nicht bedienbar): So weiss er
+                 beim Beitreten, dass er in eine Pruefung kommt und nicht in
+                 eine Fragerunde.
+                 ================================================================ -->
+            <label id="duoPruefungZeile" style="display:flex; align-items:flex-start; gap:10px; margin:0 0 10px; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:14px; background:#f4f7fd; font-size:0.8rem; line-height:1.45; cursor:pointer;"
+                   data-tooltip="Wie die echte Prüfung: drei Runden Vorschriften, Betrieb, Technik – je 25 Fragen und 45 Minuten. Rückmeldung erst in der Auswertung, zurückblättern erlaubt, F9 und Nachschlagen aus. Falsche Antworten landen bei jedem Teilnehmer unter Fehler und Lernbedarf.">
+                <input type="checkbox" id="duoPruefungCheck" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;">
+                <span><b style="color:var(--panel-navy);"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</b> — drei Runden <b>Vorschriften · Betrieb · Technik</b>, je 25 Fragen und 45 Minuten.
+                    <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Auflösung erst in der Auswertung · jeder startet die nächste Runde selbst · falsche Antworten kommen bei jedem unter Fehler und Lernbedarf</span></span>
+            </label>
             <div class="nur-gastgeber duo-knopfreihe-links" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <button id="duoCreateRoomBtn" class="btn btn-primary" onclick="window.duo.createRoom()" style="justify-content:center;"><i class="fas fa-plus"></i> Raum erstellen</button>
                 <button id="duoJoinRoomBtn" class="btn btn-outline" onclick="window.duo.joinRoom()" style="justify-content:center;"><i class="fas fa-sign-in-alt"></i> Raum beitreten</button>
@@ -10211,15 +10281,23 @@ function neueRundeFragen(){
         let wie = 0;
         try{ wie = Object.keys(window.duoUsersCache || {}).length; }catch(e){}
         const wen = wie > 1 ? ('<b>alle ' + wie + ' Teilnehmer</b>') : '<b>alle im Raum</b>';
+        // Im Pruefungsraum heisst dasselbe anders: Es kommen drei frische
+        // Boegen, nicht eine Fragerunde.
+        const pruefung = !!window._duoPruefung;
         afuRueckfrage({
-            titel: 'Neue Runde?',
-            zeichen: 'fa-rotate',
-            frage: 'Neue Runde für ' + wen + ' starten?',
-            liste: '• Es werden frische Fragen gezogen — jeder fängt wieder von vorn an<br>'
-                 + '• Ein laufender Durchgang geht dabei verloren<br>'
-                 + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link',
-            knopf: 'Neue Runde starten',
-            knopfZeichen: 'fa-rotate',
+            titel: pruefung ? 'Neue Prüfung?' : 'Neue Runde?',
+            zeichen: pruefung ? 'fa-graduation-cap' : 'fa-rotate',
+            frage: (pruefung ? 'Neue Prüfung für ' : 'Neue Runde für ') + wen + ' starten?',
+            liste: pruefung
+                 ? '• Drei frische Bögen — Vorschriften, Betrieb, Technik, je 25 Fragen<br>'
+                   + '• Jeder fängt wieder bei Runde 1 an; ein laufender Bogen geht verloren<br>'
+                   + '• Die bisherigen Ergebnisse bleiben im Verlauf stehen<br>'
+                   + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link'
+                 : '• Es werden frische Fragen gezogen — jeder fängt wieder von vorn an<br>'
+                   + '• Ein laufender Durchgang geht dabei verloren<br>'
+                   + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link',
+            knopf: pruefung ? 'Neue Prüfung starten' : 'Neue Runde starten',
+            knopfZeichen: pruefung ? 'fa-graduation-cap' : 'fa-rotate',
             dann: function(){ window.duo.neueRunde(); }
         });
     }catch(e){ console.error('[Neue Runde]', e); }
@@ -12519,6 +12597,10 @@ function addHistoryEntry(part, total, correct, status) {
 // ================================================================
 function duoVerlaufSchreiben(quelle) {
     try {
+        // Im Pruefungsraum schreibt jede Runde ihren eigenen Eintrag
+        // (finishRealisticPart) - ein zweiter "Gruppenraum 25" daneben
+        // waere derselbe Bogen noch einmal.
+        if (window._duoPruefung) return false;
         const fragen = (typeof currentQuestions !== 'undefined' && Array.isArray(currentQuestions)) ? currentQuestions : [];
         const gesamt = fragen.length;
         if (gesamt === 0) return false;
@@ -26081,9 +26163,9 @@ function renderQuestion() {
     const metaHtml = `<div class="q-meta">
         <span><i class="fas fa-tag"></i> ${partLabel}</span>
         <span><i class="fas fa-layer-group"></i> ${(typeof klasseAktuell === 'function' ? klasseAktuell().name : 'Klasse N')}</span>
-        ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas fa-graduation-cap"></i> SIMULATOR ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
+        ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas ${(window.realisticExam && window.realisticExam.duo) ? 'fa-users' : 'fa-graduation-cap'}"></i> ${(window.realisticExam && window.realisticExam.duo) ? 'PRÜFUNG' : 'SIMULATOR'} ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
         ${examSimulatorMode && examTimerRunning ? `<span style="font-family:var(--font-mono);font-weight:700;color:${examTimeRemaining <= 300 ? 'var(--bad)' : 'var(--panel-navy)'};"><i class="fas fa-stopwatch"></i> ${String(Math.floor(examTimeRemaining/60)).padStart(2,'0')}:${String(examTimeRemaining%60).padStart(2,'0')}</span>` : ''}
-        ${examSimulatorMode && !examTimerRunning ? `<span style="font-size:0.7rem;color:var(--muted);"><i class="fas fa-clock"></i> Timer startet bei 1. Antwort</span>` : ''}
+        ${examSimulatorMode && !examTimerRunning ? `<span style="font-size:0.7rem;color:var(--muted);"><i class="fas fa-clock"></i> ${(window.realisticExam && window.realisticExam.duo) ? 'Uhr läuft ab „Prüfung starten"' : 'Timer startet bei 1. Antwort'}</span>` : ''}
         ${isTrainerViewActive ? `<span style="background:#e2932f;color:white;padding:2px 8px;border-radius:10px;font-size:0.65rem;"><i class="fas fa-eye"></i> ${trainerName}: ${displayCorrectCount}/${displayTotalAnswered}</span>` : ''}
     </div>`;
 
@@ -26944,6 +27026,19 @@ window.showDuoFinalResults = function(data){
         const rowsHtml = ranking.map(function(r,i){
             const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
             const meText = (r.userId===window.myUserId) ? ' <span style="color:var(--panel-navy);">(Du)</span>' : '';
+            // Pruefungsraum: jeder Bogen einzeln - 60/75 sagt nichts darueber,
+            // ob alle drei bestanden sind.
+            let boegen = '';
+            if(Array.isArray(r.teile) && r.teile.length){
+                const NAME = {vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik'};
+                boegen = '<div style="flex-basis:100%; font-size:0.78rem; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap;">'
+                    + r.teile.map(t => {
+                        const farbe = !t.finished ? 'var(--muted)' : t.status==='bestanden' ? '#14663a' : t.status==='nachpruefung' ? '#8a5a12' : '#a4262c';
+                        const zeichen = !t.finished ? '' : t.status==='bestanden' ? ' ✓' : t.status==='nachpruefung' ? ' ~' : ' ✗';
+                        return '<span>' + (NAME[t.teil]||t.teil) + ' <b style="color:' + farbe + ';">' + (t.finished ? t.correct : t.answered + '…') + '/' + t.total + zeichen + '</b></span>';
+                      }).join('')
+                    + '</div>';
+            }
             return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0.8rem;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:6px;">'
                 + '<span style="font-weight:700;">' + medal + ' ' + escapeHtmlDuo(r.name||'Teilnehmer') + meText + '</span>'
                 + '<span style="display:flex;align-items:center;gap:10px;">'
@@ -26952,6 +27047,7 @@ window.showDuoFinalResults = function(data){
                 + '<span style="color:var(--muted); font-weight:500;"> (' + (r.accuracy||0) + '%)</span></span>'
                 + duoExamStatusBadge(r.examStatus, r.finished)
                 + '</span>'
+                + boegen
                 + '</div>';
         }).join('');
         let istGastgeber = false;
@@ -26959,7 +27055,7 @@ window.showDuoFinalResults = function(data){
         if (body) {
             body.innerHTML = '<div class="finish-box" style="max-width:640px;margin:0 auto;border:none;box-shadow:none;">'
                 + '<i class="fas fa-trophy" style="color:var(--accent-amber);font-size:2.6rem;text-align:center;"></i>'
-                + '<p style="font-size:1.3rem;font-weight:800;text-align:center;margin-top:6px;">Gesamt-Auswertung Gruppenraum</p>'
+                + '<p style="font-size:1.3rem;font-weight:800;text-align:center;margin-top:6px;">' + (window._duoPruefung ? 'Rangliste – Prüfung im Gruppenraum' : 'Gesamt-Auswertung Gruppenraum') + '</p>'
                 + meBannerHtml
                 + '<div style="margin-top:0.5rem;border:1px solid var(--line);border-radius:12px;overflow:hidden;">' + (rowsHtml || '<div style="padding:1rem;text-align:center;color:var(--muted);">Noch keine Ergebnisse</div>') + '</div>'
                 // ================================================================
@@ -26980,10 +27076,15 @@ window.showDuoFinalResults = function(data){
                 //  "Hauptmenue" - und dass damit der Raum zugeht, stand nirgends.
                 // ================================================================
                 + '<div class="btn-group" style="margin-top:1.2rem;justify-content:center; flex-wrap:wrap;">'
+                // Pruefungsraum: zurueck zur eigenen Auswertung mit den
+                // falschen Antworten - die Rangliste hat sie ueberdeckt.
+                + ((window._duoPruefung && window._duoPruefungFinalHtml)
+                    ? '<button class="btn btn-outline" onclick="duoPruefungZurueckZurAuswertung()"><i class="fas fa-arrow-left"></i> Meine Auswertung</button>'
+                    : '')
                 + (istGastgeber
                     ? '<button class="btn btn-primary" onclick="window._duoFinalShown=false; window.closeRealisticModal(); neueRundeFragen();" '
                       + 'data-tooltip="Frische Fragen für alle im Raum – der Raum und der Einladungslink bleiben bestehen">'
-                      + '<i class="fas fa-rotate"></i> Neue Runde für alle</button>'
+                      + '<i class="fas fa-rotate"></i> ' + (window._duoPruefung ? 'Neue Prüfung für alle' : 'Neue Runde für alle') + '</button>'
                     : '')
                 + '<button class="btn btn-outline" onclick="window._duoFinalShown=false; window.closeRealisticModal();"><i class="fas fa-xmark"></i> Fenster schließen</button>'
                 + '<button class="btn btn-reset" onclick="window._duoFinalShown=false; window.closeRealisticModal(); if(window.duo && window.duo.leave) window.duo.leave(); backToMain();">'
@@ -27157,6 +27258,18 @@ function renderFinishScreen(isTimeUp = false) {
     // "fortzusetzen" - bei der letzten Frage, die schon beantwortet ist.
     try{ rundeVerwerfen(); }catch(e){}
 
+    // Pruefungsraum: Das Ende einer Runde wertet finishRealisticPart aus -
+    // mit Zwischenergebnis und der Frage nach der naechsten Runde. Der
+    // Wartebildschirm des Gruppenraums (samt Rangliste) gehoert hier nicht
+    // hin; er wuerde die Auswertung ueberdecken.
+    if (window._duoPruefung) {
+        try{ navArea.style.display = 'none'; }catch(e){}
+        try{ document.getElementById('examTimerDisplay').style.display = 'none'; }catch(e){}
+        if (window.realisticExam && window.realisticExam.active && typeof finishRealisticPart === 'function') {
+            finishRealisticPart(false);
+        }
+        return;
+    }
     if (window.duo && window.duo.isActive && window.duo.isActive()) {
         renderDuoWaitingScreen();
         return;
@@ -29266,6 +29379,9 @@ window.startDuoQuizWithQuestions = function(questionsFromServer, meta) {
       window.examSimulatorMode=false;
       window._duoFinalShown=false;
       window._realisticAutoFinishTriggered=false;
+      window.realisticExam.duo=false;
+      window.realisticExam.duoFragen=null;
+      window._duoPruefung=false;
       var ov = document.getElementById('realisticExamModal');
       if(ov) ov.classList.remove('open');
     }catch(e){}
@@ -30670,6 +30786,64 @@ if (originalSelectOption) {
         body.dark .left-sidebar .stat-head b { color: var(--nacht-hell) !important; }
         body.dark .sidebar-tab { background: #0a1e2c !important; color: var(--darc-blau) !important; }
 
+        /* ================================================================
+           DIE PUNKTE IM VERLAUF BLEIBEN GRUEN UND ROT     (20.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit einem Bild aus dem Dark Mode: "Im Dark Mode ist der
+           Verlauf farblich nicht sichtbar. Hier moechte ich Rot und Gruen
+           sichtbar."
+
+           Er hatte recht, und der Grund stand drei Zeilen weiter oben: Die
+           Regel "body.dark .dot-sidebar" faerbt ALLE Punkte mit !important
+           in das Nachtblau. Die Farben stehen in ".dot-sidebar.correct-dot"
+           und ".dot-sidebar.wrong-dot" - das ist (0,2,0), die Nachtregel
+           (0,2,1) und obendrein spaeter in der Datei. Zwei Gruende, aus
+           denen sie verlor; im Bild war zwischen richtig, falsch und noch
+           offen kein Unterschied zu sehen.
+
+           Es sind dieselben Farben wie bei den Antworten darunter, die am
+           17.09. aus demselben Anlass gruen und rot geblieben sind
+           (--darc-richtig, --darc-falsch). Die Ziffern sind mit 0,52rem
+           sehr klein, deshalb dunkle Schrift auf der hellen Flaeche:
+           gemessen 6,0:1 auf Gruen und 6,3:1 auf Rot - lesbar beginnt
+           bei 4,5:1.
+
+           Die drei anderen Zustaende hatten dasselbe Problem und stehen
+           deshalb gleich mit hier:
+             gelernt      - gruen umrandet, aber nicht gefuellt: sass schon
+                            vor dieser Runde, gefragt wurde sie noch nicht
+             beantwortet  - im Pruefungssimulator angekreuzt, ohne Wertung;
+                            neutral, denn die Aufloesung kommt erst am Ende
+             aktuell      - die Frage, auf der man gerade steht: heller
+                            Ring, weil das Dunkelblau von Tag hier nicht
+                            gegen den Grund ankommt
+           ================================================================ */
+        body.dark .dot-sidebar.correct-dot {
+            background: var(--darc-richtig) !important;
+            border-color: var(--darc-richtig) !important;
+            color: #06281a !important;
+        }
+        body.dark .dot-sidebar.wrong-dot {
+            background: var(--darc-falsch) !important;
+            border-color: var(--darc-falsch) !important;
+            color: #3a0f0a !important;
+        }
+        body.dark .dot-sidebar.gelernt-dot {
+            background: #0d3326 !important;
+            border-color: var(--darc-richtig) !important;
+            color: #7ee0b4 !important;
+        }
+        body.dark .dot-sidebar.beantwortet-dot {
+            background: #1d3b52 !important;
+            border-color: #3d7aa0 !important;
+            color: #dce9f2 !important;
+        }
+        body.dark .dot-sidebar.current-dot {
+            border-color: var(--darc-blau) !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 0 2px rgba(0,173,239,0.25) !important;
+        }
+
         /* Die Kaestchen richtig / falsch / offen / Quote trugen noch die
            Signalfarben von damals, als die Spalte ein weisser Kasten war:
            dunkles Gruen, dunkles Rot, dunkles Ocker, dazu graue Beschriftung.
@@ -31469,6 +31643,26 @@ if (originalSelectOption) {
         body.dark #duoModal .duo-collapsible label { color: var(--nacht-leise) !important; }
         body.dark #duoModal .duo-collapsible b,
         body.dark #duoModal .duo-collapsible strong { color: var(--nacht-hell) !important; }
+        /* Die Tunnel-Wache: dunkler Kasten statt hellgruener Flaeche, und das
+           fett Gedruckte darin bekommt seine eigene Farbe - die Regel
+           "body.dark [id$=Modal] b" faerbt es sonst fast weiss, und weiss auf
+           hellgruen war genau der Punkt, den Dietmar gemeldet hat. Die id
+           macht diese Regeln spezifisch genug, um sie zu schlagen.
+           Gemessen: 9,4:1 fuer den Fliesstext und 13:1 fuer das Fette. */
+        body.dark #duoWacheZeile.gut {
+            background: #0d2e20 !important;
+            border: 1px solid #1f6b46 !important;
+            color: #8fe3b8 !important;
+        }
+        body.dark #duoWacheZeile.gut b,
+        body.dark #duoWacheZeile.gut strong { color: #d6f7e6 !important; }
+        body.dark #duoWacheZeile.warn {
+            background: #3a2f14 !important;
+            border: 1px solid #7a5f28 !important;
+            color: #ffc266 !important;
+        }
+        body.dark #duoWacheZeile.warn b,
+        body.dark #duoWacheZeile.warn strong { color: #ffe0a8 !important; }
         /* Die Ueberschrift einer aufklappbaren Gruppe sitzt in span.left und
            trug das dunkle Hausblau - auf schwarzem Grund unsichtbar. */
         body.dark #duoModal .duo-collapsible-header,
@@ -32315,7 +32509,12 @@ window.realisticExam = {
   currentPart:null,
   timerId:null,
   timeLeft: REALISTIC_TIME,
-  timerRunning:false
+  timerRunning:false,
+  // Pruefungsraum (20.09.2026): true, wenn die Boegen vom Gruppenraum
+  // kommen. duoFragen haelt sie je Teil, in der Reihenfolge und mit der
+  // Antwortreihenfolge, die der Server fuer ALLE im Raum festgelegt hat.
+  duo:false,
+  duoFragen:null
 };
 
 function getPartStatus(correct){
@@ -32781,10 +32980,11 @@ function startRealisticPart(){
   try{ closeRealisticModal(); }catch(e){}
   const part = realisticExam.order[realisticExam.currentIdx];
   realisticExam.currentPart = part;
-  const pool = realisticPool(part);
+  const duo = !!realisticExam.duo;
+  const pool = duo ? [] : realisticPool(part);
   const teilZeit = pruefZeit(part);
   realisticExam.teilZeit = teilZeit;
-  if(pool.length<25){
+  if(!duo && pool.length<25){
     const nm = REALISTIC_PART_META[part] ? REALISTIC_PART_META[part].name : part;
     alert(`Nicht genug Fragen in ${nm}: nur ${pool.length} vorhanden, 25 benötigt`);
     backToMainRealistic(); return;
@@ -32796,20 +32996,38 @@ function startRealisticPart(){
   // Mit "Erschwerte Bedingungen" bleibt die Themenverteilung dieselbe, nur
   // innerhalb jedes Lernziels wird zu den wackligen Fragen gegriffen -
   // siehe pickSchwer().
-  const schwer = (typeof schwereBedingungen === 'function') && schwereBedingungen();
-  const picked = schwer ? pickSchwer(pool,25) : pickRandom(pool,25);
-  currentQuestions = picked.map(q=>{ try{ return prepareQuestion(q); }catch(e){ return q; } });
+  //
+  // Im Pruefungsraum wird NICHT gezogen: Die Boegen kommen vom Server,
+  // fuer alle im Raum dieselben, samt Antwortreihenfolge - deshalb
+  // prepareQuestion(q, true), sonst mischte jeder Rechner die Antworten
+  // anders, und der gemeldete Antwortindex passte beim Server nicht mehr.
+  const schwer = !duo && (typeof schwereBedingungen === 'function') && schwereBedingungen();
+  let picked;
+  if(duo){
+    picked = (realisticExam.duoFragen && realisticExam.duoFragen[part]) || [];
+    if(!picked.length){
+      alert('Für diese Runde sind keine Fragen vom Raum angekommen. Bitte im Raum noch einmal auf „Jetzt starten" klicken.');
+      backToMainRealistic(); return;
+    }
+  } else {
+    picked = schwer ? pickSchwer(pool,25) : pickRandom(pool,25);
+  }
+  currentQuestions = picked.map(q=>{ try{ return prepareQuestion(q, duo); }catch(e){ return q; } });
   currentIndex=0;
   answered=false;
   rundeGewertet = false;
   progress={};
   currentQuestions.forEach(q=>{ progress[q.id]={answered:false, correct:false}; q.userAnswerIndex=null; q._autoGelernt=false; });
-  const autoGewertet = gelernteVorbelegen(false);
+  // Im Raum gehen vorbelegte (schon gelernte) Fragen als 'gelernt' an den
+  // Server, damit der Raum meinen Stand richtig zaehlt.
+  const autoGewertet = gelernteVorbelegen(duo);
   examSimulatorMode=true;
   examMode=true;
   if(typeof showSidebar!=='undefined') showSidebar=true;
   const zusatz = schwer ? ' · erschwert' : '';
-  currentPart = realisticExam.order.length === 1
+  currentPart = duo
+    ? `Prüfung im Gruppenraum – ${REALISTIC_PART_META[part].name} (Runde ${realisticExam.currentIdx+1}/${realisticExam.order.length})`
+    : realisticExam.order.length === 1
     ? `Prüfungssimulator – ${REALISTIC_PART_META[part].name}${zusatz}`
     : `Prüfungssimulator – ${REALISTIC_PART_META[part].name} (Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length})${zusatz}`;
   examFinished=false;
@@ -32827,12 +33045,178 @@ function startRealisticPart(){
   if(timerDisp) timerDisp.style.display='inline-flex';
   const nav = document.getElementById('navArea');
   if(nav) nav.style.display='flex';
+  // Pruefungsraum: Die Uhr laeuft ab "Pruefung starten" im Startfenster -
+  // nicht erst ab dem ersten Klick auf eine Antwort. Dietmar: "Mit dem
+  // passenden Counter (Zeit) Pruefung starten im Fenster. Danach werden
+  // die Fragen angezeigt."
+  // Sie wird VOR dem ersten Zeichnen gestartet, sonst stuende in der
+  // Kopfzeile der ersten Frage noch "Timer startet bei 1. Antwort".
+  if(duo && currentIndex < currentQuestions.length) startRealisticTimer();
   renderQuestion();
   if(typeof updateVisibility==='function') updateVisibility();
   if(autoGewertet > 0){
       zeigeGelerntHinweis(autoGewertet, 25);
   }
+  // Waren ausnahmslos alle Fragen der Runde schon gelernt, ist sie sofort um.
+  if(duo && currentIndex >= currentQuestions.length){
+    setTimeout(()=>{ try{ finishRealisticPart(false); }catch(e){} }, 400);
+  }
 }
+
+// ================================================================
+//  PRUEFUNG IM GRUPPENRAUM  (20.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "im Gruppenraum moechte ich einen Pruefungssimulator.
+//  Aktiviere ich das, laufen 25 Fragen aus Betrieb, Vorschriften und
+//  Technik rein. Mit dem passenden Counter (Zeit) Pruefung starten im
+//  Fenster. Danach werden die Fragen angezeigt. Nach der ersten Runde
+//  soll die Frage kommen: Zur naechsten Runde. Eine Auswertung gibt es
+//  in dem Pruefungssimulator, zum Schluss mit Angabe, was falsch
+//  gewesen ist. Das muss auch unter Fehler und Lernbedarf gespeichert
+//  werden."
+//
+//  Auf Nachfrage entschieden: wie die echte Pruefung - Runde 1
+//  Vorschriften, Runde 2 Betrieb, Runde 3 Technik, je 25 Fragen und
+//  45 Minuten; jeder Teilnehmer loest die naechste Runde selbst aus;
+//  Rueckmeldung erst am Ende.
+//
+//  WAS HIER NEU IST UND WAS NICHT. Der Ablauf einer Pruefung - Uhr,
+//  keine Rueckmeldung, Zwischenergebnis, Gesamtergebnis mit jeder
+//  falschen Antwort - steht seit langem im Pruefungssimulator darueber
+//  (startRealisticPart, finishRealisticPart, showRealisticInterim,
+//  showRealisticFinal). Das wird nicht ein zweites Mal geschrieben.
+//  Neu sind nur drei Dinge:
+//    1. Die Boegen kommen vom Raum statt aus dem eigenen Topf
+//       (realisticExam.duo, realisticExam.duoFragen). Alle im Raum
+//       schreiben dieselben Fragen in derselben Reihenfolge.
+//    2. Vor jeder Runde ein Startfenster mit der Zeit und dem Knopf
+//       "Pruefung starten" - die Uhr laeuft ab diesem Klick.
+//    3. Jede Antwort geht wie in jeder Gruppenrunde an den Server
+//       (selectOption -> duo.answer), also stimmen Teilnehmer-Uebersicht,
+//       Rangliste und die Auswertung des Kursleiters weiterhin.
+//
+//  Fehler und Lernbedarf: selectOption traegt jede falsche Antwort in
+//  errorList und difficultQuestions ein - im Simulator genauso wie beim
+//  Lernen, nur die Anzeige schweigt (pruefungStreng). Dazu kommt hier:
+//  Was bei Zeitablauf unbeantwortet blieb, zaehlt als Fehler und wird
+//  ebenfalls eingetragen (finishRealisticPart).
+//
+//  Der Katalog des Raums ist fragen.json, also Klasse N - "technik"
+//  vom Server ist deshalb Technik N.
+// ================================================================
+const DUO_TEIL_SCHLUESSEL = { vorschriften:'vorschriften', betrieb:'betrieb', technik:'technik_n' };
+
+window.startDuoPruefung = function(fragen, meta){
+  try{ stopRealisticTimer(); }catch(e){}
+  const teile = (meta && Array.isArray(meta.teile)) ? meta.teile : [];
+  if(!Array.isArray(fragen) || !fragen.length || !teile.length){
+    alert('Der Raum hat keine Prüfungsbögen geschickt. Bitte im Raum noch einmal auf „Jetzt starten" klicken.');
+    return;
+  }
+  try{ const m = document.getElementById('duoModal'); if(m) m.style.display='none'; }catch(e){}
+  realisticExam.order = [];
+  realisticExam.duoFragen = {};
+  teile.forEach(t => {
+    const k = DUO_TEIL_SCHLUESSEL[t.teil] || t.teil;
+    const stueck = fragen.slice(t.von, t.bis).filter(q => q && q.id && Array.isArray(q.options));
+    if(!stueck.length || !REALISTIC_PART_META[k]) return;
+    realisticExam.order.push(k);
+    realisticExam.duoFragen[k] = stueck;
+  });
+  if(!realisticExam.order.length){
+    alert('Die Prüfungsbögen des Raums sind unvollständig angekommen.');
+    return;
+  }
+  realisticExam.duo = true;
+  realisticExam.active = false;        // laeuft erst ab "Pruefung starten"
+  realisticExam.currentIdx = 0;
+  realisticExam.results = {};
+  realisticExam.currentPart = null;
+  window._duoPruefung = true;
+  window._duoRanglisteGewuenscht = false;
+  window._duoPruefungFinalHtml = null;
+  window._duoFinalShown = false;
+  window._duoVerlaufKennung = null;
+  window._realisticAutoFinishTriggered = false;
+  examSimulatorMode = false;
+  duoPruefungStartFenster();
+};
+
+// Das Startfenster einer Runde: Name des Bogens, Fragen, Zeit, Regeln,
+// und der Knopf, mit dem die Uhr losgeht. Solange es offen ist, laeuft
+// nichts (realisticExam.active = false) - wer es schliesst, hat nichts
+// verloren und kann im Raum wieder auf "Jetzt starten" gehen.
+function duoPruefungStartFenster(){
+  const idx = realisticExam.currentIdx;
+  const n = realisticExam.order.length;
+  const part = realisticExam.order[idx];
+  const meta = REALISTIC_PART_META[part] || {name:part, icon:'📋', desc:''};
+  const sek = pruefZeit(part);
+  const min = Math.round(sek/60);
+  const zeitText = String(min).padStart(2,'0') + ':00';
+  realisticExam.active = false;
+  examSimulatorMode = false;
+  try{ const t = document.getElementById('examTimerDisplay'); if(t) t.style.display='none'; }catch(e){}
+  let raum = '';
+  try{ raum = (window.duo && window.duo.raumCode) ? window.duo.raumCode() : ''; }catch(e){}
+  const overlay = ensureRealisticModal();
+  const body = document.getElementById('realisticModalBody');
+  if(!body) return;
+  // "realistic-wrapper" steht hier mit Absicht: closeRealisticModal
+  // erkennt daran das Auswahlfenster und raeumt beim Schliessen NICHT
+  // in die Hauptansicht zurueck (das wuerde den Raum verlassen).
+  body.innerHTML = `
+  <div class="realistic-wrapper duo-pruefung-start" style="border:none; box-shadow:none; padding:0;">
+    <div class="realistic-header">
+      <h2><i class="fas fa-users"></i> Prüfung im Gruppenraum${raum ? ' <span style="font-family:var(--font-mono); font-size:0.8em; color:var(--muted);">' + escapeHtml(raum) + '</span>' : ''}</h2>
+      <p class="sub">Runde ${idx+1} von ${n} · wie die echte Prüfung · ab 19/25 bestanden · Grauzone 17–18</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px; margin:0.9rem 0; padding:0.9rem 1rem; border:2px solid var(--panel-navy); border-radius:14px; background:var(--card-bg, #fff);">
+      <div style="font-size:2.2rem; line-height:1;">${meta.icon}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-family:var(--font-display); font-size:1.25rem; font-weight:800; color:var(--panel-navy);">${escapeHtml(meta.name)}</div>
+        <div class="sub" style="margin-top:2px;">${escapeHtml(meta.desc || '')}</div>
+      </div>
+      <div style="text-align:center; min-width:96px;">
+        <div id="duoPruefungUhr" style="font-family:var(--font-mono); font-size:1.7rem; font-weight:800; color:var(--panel-navy); letter-spacing:1px;">${zeitText}</div>
+        <div class="sub" style="font-size:0.72rem;">Minuten</div>
+      </div>
+    </div>
+    <div class="realistic-rules">
+      <div class="r-rule"><b>25 Fragen</b><span>${escapeHtml(meta.name)}</span></div>
+      <div class="r-rule"><b>${min} Min</b><span>ab dem Start</span></div>
+      <div class="r-rule"><b>19/25</b><span>= 76% bestanden</span></div>
+      <div class="r-rule"><b>Runde ${idx+1}/${n}</b><span>${n > 1 ? realisticExam.order.map(p=>REALISTIC_PART_META[p] ? REALISTIC_PART_META[p].name : p).join(' → ') : 'ein Bogen'}</span></div>
+    </div>
+    <div class="sub" style="margin:0.9rem 0 0.2rem; font-size:0.82rem; line-height:1.5;">
+      Die Uhr läuft ab dem Klick auf <b>Prüfung starten</b>. Ob eine Antwort richtig war, erfährst du erst in der Auswertung —
+      zurückblättern und ändern ist bis zum Ende erlaubt. Bei Zeitablauf wird die Runde automatisch gewertet;
+      was dann offen ist, zählt als Fehler. Alle im Raum schreiben dieselben Fragen, jeder in seinem Tempo.
+    </div>
+    <div class="realistic-footer" style="margin-top:0.9rem;">
+      <button id="duoPruefungStartBtn" class="btn btn-primary" onclick="duoPruefungTeilStarten()"><i class="fas fa-play"></i> Prüfung starten</button>
+      <span class="sub" style="font-weight:500;">${idx === 0 ? 'Danach folgen ' + (n-1) + ' weitere Runden – jede mit eigener Uhr.' : 'Deine bisherigen Runden sind gewertet und bleiben stehen.'}</span>
+      <button class="btn btn-outline" onclick="closeRealisticModal()" style="margin-left:auto;"><i class="fas fa-clock"></i> Später</button>
+    </div>
+  </div>`;
+  overlay.classList.add('open');
+  try{ const b = document.getElementById('duoPruefungStartBtn'); if(b) b.focus(); }catch(e){}
+  try{
+    if(typeof ansagen === 'function') ansagen('Prüfung im Gruppenraum, Runde ' + (idx+1) + ' von ' + n + ': ' + meta.name + '. 25 Fragen, ' + min + ' Minuten. Prüfung starten.');
+  }catch(e){}
+}
+window.duoPruefungStartFenster = duoPruefungStartFenster;
+
+window.duoPruefungTeilStarten = function(){
+  if(!realisticExam.duo) return;
+  // Wie in beginRealisticExam: Das Schliessen des Fensters darf jetzt
+  // nicht als "Abbruch" gelesen werden.
+  window._isStartingRealistic = true;
+  realisticExam.active = true;
+  try{ closeRealisticModal(); }catch(e){}
+  setTimeout(()=>{ window._isStartingRealistic = false; }, 500);
+  startRealisticPart();
+};
 
 // Kurze Einblendung am Rundenstart: sagt klar, wie viele Fragen bereits
 // abgehakt waren - sonst wundert man sich ueber die 25 Punkte in der Anzeige.
@@ -32899,6 +33283,27 @@ window.stopRealisticTimer = stopRealisticTimer;
 window.finishRealisticPart = function(isTimeUp){
   stopRealisticTimer();
   const part = realisticExam.currentPart;
+  // Pruefungsraum: Was bei Zeitablauf offen blieb, ist ein Fehler - und
+  // gehoert wie jeder andere unter Fehler und Lernbedarf. An den Server
+  // geht es als 'zeit', damit der Raum den Bogen als abgegeben zaehlt,
+  // die Auswertung des Kursleiters es aber nicht als "die Gruppe hat das
+  // falsch" liest - geantwortet hat ja niemand.
+  if(realisticExam.duo){
+    let offen = 0;
+    currentQuestions.forEach(q => {
+      if(progress[q.id] && progress[q.id].answered) return;
+      offen++;
+      try{ if(typeof errorList !== 'undefined' && Array.isArray(errorList) && !errorList.includes(q.id)) errorList.push(q.id); }catch(e){}
+      try{ if(typeof handleDifficultOnWrong === 'function') handleDifficultOnWrong(q.id); }catch(e){}
+      try{ if(window.duo && window.duo.answer) window.duo.answer(q.id, -1, false, 'zeit'); }catch(e){}
+    });
+    if(offen){
+      try{ if(typeof saveErrors === 'function') saveErrors(); }catch(e){}
+      try{ if(typeof saveDifficult === 'function') saveDifficult(); }catch(e){}
+      try{ if(typeof updateErrorBadge === 'function') updateErrorBadge(); }catch(e){}
+      try{ if(typeof updateDifficultBadge === 'function') updateDifficultBadge(); }catch(e){}
+    }
+  }
   const correct = currentQuestions.filter(q=>progress[q.id]&&progress[q.id].correct).length;
   const total = 25;
   const errors = total-correct;
@@ -32912,7 +33317,7 @@ window.finishRealisticPart = function(isTimeUp){
   };
   const histStatus = status==='bestanden'?'pass': status==='nachpruefung'?'grauzone':'fail';
   if(typeof addHistoryEntry==='function'){
-    addHistoryEntry(`Realistisch ${REALISTIC_PART_META[part].name}`, total, correct, histStatus);
+    addHistoryEntry(`${realisticExam.duo ? 'Gruppenprüfung' : 'Realistisch'} ${REALISTIC_PART_META[part].name}`, total, correct, histStatus);
   }
   if(realisticExam.currentIdx+1 < realisticExam.order.length){
     showRealisticInterim(isTimeUp);
@@ -32938,16 +33343,16 @@ function showRealisticInterim(isTimeUp){
       <div class="realistic-interim">
         <div class="finish-box" style="max-width:620px; margin:0 auto; border:none; box-shadow:none;">
           <div style="font-size:2.8rem; text-align:center;">${res.status==='bestanden'?'✅':res.status==='nachpruefung'?'⚠️':'❌'}</div>
-          <p style="font-size:1.35rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">Teil ${realisticExam.currentIdx+1}/${realisticExam.order.length} – ${REALISTIC_PART_META[part].name} ${isTimeUp?'(Zeit abgelaufen)':''}</p>
+          <p style="font-size:1.35rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">${realisticExam.duo ? 'Runde' : 'Teil'} ${realisticExam.currentIdx+1}/${realisticExam.order.length} – ${REALISTIC_PART_META[part].name} ${isTimeUp?'(Zeit abgelaufen)':''}</p>
           <div style="margin:0.9rem 0; background:${statusBg}; border:2px solid ${statusColor}; border-radius:14px; padding:1rem; text-align:center;">
             <div style="font-size:1.6rem;font-weight:800;color:${statusColor};">${res.correct}/25 richtig – ${res.errors} Fehler</div>
             <div style="margin-top:4px;font-weight:600; font-size:1rem;">${getPartStatusLabel(res.status,res.correct)}</div>
             <div style="font-size:0.82rem;color:var(--muted);margin-top:4px;">${res.unanswered>0?`${res.unanswered} unbeantwortet (zählen als Fehler)`:'Alle Fragen beantwortet'}</div>
           </div>
-          <div class="sub" style="margin:0.8rem 0; text-align:center;">Weiter geht es mit <b>${REALISTIC_PART_META[nextPart].icon} ${REALISTIC_PART_META[nextPart].name}</b><br>25 Fragen · ${realisticZeitText(nextPart)}</div>
+          <div class="sub" style="margin:0.8rem 0; text-align:center;">${realisticExam.duo ? 'Zur nächsten Runde?' : 'Weiter geht es mit'} <b>${REALISTIC_PART_META[nextPart].icon} ${REALISTIC_PART_META[nextPart].name}</b><br>25 Fragen · ${realisticZeitText(nextPart)}${realisticExam.duo ? ' · die Uhr läuft erst, wenn du sie startest' : ''}</div>
           <div class="btn-group" style="margin-top:1rem; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="nextRealisticPart()"><i class="fas fa-arrow-right"></i> Weiter zu ${REALISTIC_PART_META[nextPart].name}</button>
-            <button class="btn btn-outline" onclick="backToMainRealistic()"><i class="fas fa-home"></i> Hauptmenü</button>
+            <button class="btn btn-primary" onclick="nextRealisticPart()"><i class="fas fa-arrow-right"></i> ${realisticExam.duo ? 'Zur nächsten Runde: ' : 'Weiter zu '}${REALISTIC_PART_META[nextPart].name}</button>
+            <button class="btn btn-outline" onclick="backToMainRealistic()"><i class="fas ${realisticExam.duo ? 'fa-door-open' : 'fa-home'}"></i> ${realisticExam.duo ? (duoIstGastgeber() ? 'Raum beenden' : 'Raum verlassen') : 'Hauptmenü'}</button>
           </div>
         </div>
       </div>`;
@@ -32992,9 +33397,21 @@ window.nextRealisticPart = function(){
   window._isTransitioningRealistic = true;
   try{ closeRealisticModal(); }catch(e){}
   realisticExam.currentIdx++;
+  if(realisticExam.duo){
+    // Pruefungsraum: erst das Startfenster der naechsten Runde - die Uhr
+    // laeuft ab "Pruefung starten", nicht ab jetzt.
+    duoPruefungStartFenster();
+    setTimeout(()=>{ window._isTransitioningRealistic = false; }, 600);
+    return;
+  }
   startRealisticPart();
   setTimeout(()=>{ window._isTransitioningRealistic = false; }, 600);
 };
+
+// Bin ich der Gastgeber des Raums? (fuer die Beschriftung der Knoepfe)
+function duoIstGastgeber(){
+  try{ return !!(window.duo && window.duo.isHost && window.duo.isHost()); }catch(e){ return false; }
+}
 
 function showRealisticFinal(){
   const order = realisticExam.order && realisticExam.order.length ? realisticExam.order : realisticTeile();
@@ -33059,6 +33476,16 @@ function showRealisticFinal(){
     const r = results[0];
     const pName = REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0];
     overallText = r.status==='bestanden' ? `Teil ${pName} mit ${r.correct}/25 bestanden.` : r.status==='nachpruefung' ? `Teil ${pName}: ${r.correct}/25 – Grauzone.` : `Teil ${pName}: ${r.correct}/25 – nicht bestanden.`;
+  } else if(realisticExam.duo){
+    // Im Pruefungsraum sagt die Summe ueber 75 Fragen nichts: 57/75 sind
+    // 76 Prozent und sehen nach "bestanden" aus, koennen aber 25+16+16
+    // sein. Gezaehlt wird deshalb in Boegen, nicht in Prozent.
+    const geschafft = results.filter(r=>r.status==='bestanden').length;
+    const offen = completedOrder.filter((p,i)=>results[i].status!=='bestanden')
+                                .map(p=>REALISTIC_PART_META[p]?.name || p);
+    overallText = totalStatus==='bestanden'
+      ? `Alle ${results.length} Bögen bestanden — Vorschriften, Betrieb und Technik.`
+      : `${geschafft} von ${results.length} Bögen bestanden. Offen: ${offen.join(' und ')}.`;
   } else {
     overallText = totalStatus==='bestanden' ? `Alle ${results.length} geprüften Teile bestanden. Gesamt ${totalCorrect}/${totalQuestions}.` : `Gesamt ${totalCorrect}/${totalQuestions}, ${totalErrors} Fehler.`;
   }
@@ -33070,24 +33497,37 @@ function showRealisticFinal(){
         <div class="finish-box" style="max-width:760px; margin:0 auto; border:none; box-shadow:none;">
           <div style="font-size:3.2rem; text-align:center;">${statusIcon}</div>
           <p style="font-size:1.6rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">${statusText}</p>
+          ${realisticExam.duo ? `<div class="sub" style="text-align:center; font-weight:700; color:var(--panel-navy);"><i class="fas fa-users"></i> Prüfung im Gruppenraum – dein Ergebnis</div>` : ''}
           <div class="sub" style="margin-top:8px;font-weight:600;color:var(--ink); text-align:center;">${overallText}</div>
-          <div class="sub" style="margin-top:8px; text-align:center;">Gesamt: <b>${totalCorrect}/${totalQuestions}</b> richtig (${Math.round(totalCorrect/totalQuestions*100)}%) – <b>${totalErrors} Fehler</b></div>
+          <div class="sub" style="margin-top:8px; text-align:center;">${realisticExam.duo
+            ? `Zusammen <b>${totalCorrect}/${totalQuestions}</b> richtig – aber gewertet wird <b>jeder Bogen für sich</b>: bestanden ist nur, wer überall mindestens 19 von 25 hat.`
+            : `Gesamt: <b>${totalCorrect}/${totalQuestions}</b> richtig (${Math.round(totalCorrect/totalQuestions*100)}%) – <b>${totalErrors} Fehler</b>`}</div>
           <div style="margin:1.1rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">${partsHtml}</div>
           <div style="margin-top:8px;font-size:0.85rem;background:#f4f7fd;border:1px solid var(--line);border-radius:10px;padding:0.7rem;">${results.length===1 ? `<b>📊 Nur ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}:</b> ${totalCorrect >= 19 ? '✅ Bestanden' : totalCorrect >= 17 ? '⚠️ Grauzone' : '❌ Nicht bestanden'} – Nur dieser Teil wurde geprüft.` : `BNetzA: ≥19 bestanden, 17-18 Grauzone, <17 nicht bestanden.`}</div>
           <div class="btn-group" style="margin-top:1rem; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="showRealisticSelection()"><i class="fas fa-redo"></i> Nochmal Simulator</button>
-            <button class="btn btn-primary" onclick="backToMainRealistic()" style="background:#0f2745;"><i class="fas fa-home"></i> Hauptmenü</button>
+            ${realisticExam.duo
+              ? `<button class="btn btn-primary" onclick="duoPruefungRangliste()" data-tooltip="Wie die anderen im Raum abgeschnitten haben – jeder Bogen einzeln"><i class="fas fa-trophy"></i> Rangliste der Gruppe</button>`
+                + (duoIstGastgeber()
+                    ? `<button class="btn btn-outline" onclick="window._duoFinalShown=false; window.closeRealisticModal(); neueRundeFragen();" data-tooltip="Frische Bögen für alle im Raum – der Raum und der Einladungslink bleiben bestehen"><i class="fas fa-rotate"></i> Neue Prüfung für alle</button>`
+                    : '')
+                + `<button class="btn btn-reset" onclick="backToMainRealistic()"><i class="fas fa-door-open"></i> ${duoIstGastgeber() ? 'Raum beenden' : 'Raum verlassen'}</button>`
+              : `<button class="btn btn-primary" onclick="showRealisticSelection()"><i class="fas fa-redo"></i> Nochmal Simulator</button>
+            <button class="btn btn-primary" onclick="backToMainRealistic()" style="background:#0f2745;"><i class="fas fa-home"></i> Hauptmenü</button>`}
           </div>
+          ${(realisticExam.duo && totalErrors > 0) ? `<div class="sub" style="margin-top:0.7rem; text-align:center; font-size:0.8rem;"><i class="fas fa-circle-check" style="color:var(--good);"></i> Deine ${totalErrors === 1 ? 'falsche Antwort steht' : totalErrors + ' falschen Antworten stehen'} jetzt unter <b>Fehler</b> und <b>Lernbedarf</b> — dort kannst du sie gezielt nacharbeiten.</div>` : ''}
           <h3 style="margin:1.4rem 0 0.6rem;">📋 Detaillierte Auswertung</h3>
           ${detailHtml}
         </div>
       </div>`;
+    // Damit die Rangliste zurueck zu dieser Auswertung findet.
+    if(realisticExam.duo) window._duoPruefungFinalHtml = body.innerHTML;
   }
   if(overlay) overlay.classList.add('open');
   try{ const qc=document.getElementById('questionContainer'); if(qc) qc.innerHTML=''; }catch(e){}
   const histStatus = totalStatus==='bestanden'?'pass': totalStatus==='nachpruefung'?'grauzone':'fail';
   if(typeof addHistoryEntry==='function'){
-    let histName = results.length === 1 ? `Realistisch ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}` : results.length === 2 ? `Realistisch ${results.length} Teile` : 'Realistisch 3x25';
+    const vorn = realisticExam.duo ? 'Gruppenprüfung' : 'Realistisch';
+    let histName = results.length === 1 ? `${vorn} ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}` : results.length === 2 ? `${vorn} ${results.length} ${realisticExam.duo ? 'Runden' : 'Teile'}` : `${vorn} 3x25`;
     addHistoryEntry(histName, totalQuestions, totalCorrect, histStatus);
   }
   // Piper Ansage für Gesamt
@@ -33239,10 +33679,32 @@ window.showDuoFinalModal = function(trainerData){
   }catch(e){ console.error('showDuoFinalModal error', e); window._duoFinalShown=false; }
 };
 
+// Rangliste des Raums aus der eigenen Auswertung heraus. Der Merker
+// sagt duo.js, dass das Fenster diesmal erwuenscht ist (sonst wird die
+// Antwort des Servers im Pruefungsraum verworfen, damit sie nicht die
+// eigene Auswertung ueberdeckt).
+window.duoPruefungRangliste = function(){
+  window._duoRanglisteGewuenscht = true;
+  try{ if(window.duo && window.duo.requestFinalResults) window.duo.requestFinalResults(); }
+  catch(e){ window._duoRanglisteGewuenscht = false; }
+};
+window.duoPruefungZurueckZurAuswertung = function(){
+  const body = document.getElementById('realisticModalBody');
+  if(body && window._duoPruefungFinalHtml){
+    body.innerHTML = window._duoPruefungFinalHtml;
+    const ov = ensureRealisticModal(); if(ov) ov.classList.add('open');
+  }
+};
+
 window.backToMainRealistic = function(){
   closeRealisticModal();
   stopRealisticTimer();
   realisticExam.active=false;
+  realisticExam.duo=false;
+  realisticExam.duoFragen=null;
+  window._duoPruefung=false;
+  window._duoRanglisteGewuenscht=false;
+  window._duoPruefungFinalHtml=null;
   realisticExam.order=[];
   realisticExam.currentIdx=0;
   realisticExam.results={};
@@ -33300,7 +33762,7 @@ window.stopExamTimer = function(){
 
 window.finishExamByTime = function(){
   if(window.realisticExam && realisticExam.active){
-    alert('⏰ Zeit abgelaufen! Der aktuelle Teil wird jetzt ausgewertet.');
+    alert(realisticExam.duo ? '⏰ Zeit abgelaufen! Die Runde wird jetzt gewertet – was offen blieb, zählt als Fehler.' : '⏰ Zeit abgelaufen! Der aktuelle Teil wird jetzt ausgewertet.');
     finishRealisticPart(true);
   } else {
     alert('⏰ Zeit abgelaufen! Die Prüfung wird jetzt ausgewertet.');
@@ -33724,6 +34186,12 @@ window.startDuoQuizFromServer = function(data){
         }catch(e){}
         let questions = data.questionsFull || data.questions || [];
         console.log('[DUO] Fragen aus Server:', questions.length);
+        // Pruefungsraum: drei Boegen als drei Runden, mit Startfenster und
+        // Uhr - siehe startDuoPruefung im Block "realistic-exam-logic".
+        if(data.meta && data.meta.pruefung && typeof window.startDuoPruefung === 'function'){
+            window.startDuoPruefung(questions, data.meta);
+            return;
+        }
         if(window.startDuoQuizWithQuestions){
             window.startDuoQuizWithQuestions(questions, data.meta || {code: data.code || roomCode, parts: ['vorschriften','betrieb','technik'], count: questions.length});
         } else {

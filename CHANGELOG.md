@@ -8,7 +8,130 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 
 ---
 
-## [1.298.0] - 2026-09-18
+## [1.298.0] - 2026-09-20
+
+### Der Prüfungssimulator im Gruppenraum
+
+Dietmar: „Im Gruppenraum möchte ich einen Prüfungssimulator. Aktiviere ich das, laufen 25 Fragen aus
+Betrieb, Vorschriften und Technik rein. Mit dem passenden Counter (Zeit) Prüfung starten im Fenster.
+Danach werden die Fragen angezeigt. Nach der ersten Runde soll die Frage kommen: Zur nächsten Runde.
+Eine Auswertung gibt es in dem Prüfungssimulator, zum Schluss mit Angabe, was falsch gewesen ist.
+Das muss auch unter Fehler und Lernbedarf gespeichert werden."
+
+Im Raum-Fenster steht jetzt über „Raum erstellen" ein Haken: **Prüfungssimulator**. Ist er gesetzt,
+wird aus der Fragerunde eine Prüfung — wie die echte, mit drei Bögen nacheinander:
+
+    Runde 1  Vorschriften   25 Fragen   45 Minuten
+    Runde 2  Betrieb        25 Fragen   45 Minuten
+    Runde 3  Technik        25 Fragen   45 Minuten
+
+Vor jeder Runde geht ein Fenster auf: welcher Bogen ansteht, wie viele Fragen, wie viel Zeit, und
+was gilt. **Die Uhr läuft ab dem Klick auf „Prüfung starten"** — nicht ab der ersten Antwort wie im
+Simulator allein. Danach kommen die Fragen. Ob eine Antwort richtig war, erfährt niemand vorher;
+zurückblättern und ändern ist bis zum Ende der Runde erlaubt, F9 und Nachschlagen sind aus. Läuft
+die Zeit ab, wird die Runde gewertet, und was offen blieb, zählt als Fehler.
+
+Am Ende einer Runde steht das Ergebnis des Bogens — `19/25` bestanden, `17–18` Grauzone — und
+darunter die Frage **„Zur nächsten Runde?"** mit dem Namen des nächsten Bogens. Jeder klickt sie
+selbst: Im Raum geht ohnehin jeder in seinem Tempo, und so wartet niemand auf den Langsamsten.
+
+Nach der dritten Runde kommt die **Gesamtauswertung**: die drei Bögen nebeneinander, jeder mit
+seinem eigenen Urteil, und darunter jede einzelne Frage mit der angekreuzten und der richtigen
+Antwort. Gezählt wird dabei **in Bögen, nicht in Prozent** — 57 von 75 sind rechnerisch 76 Prozent
+und sehen nach Bestehen aus, können aber 25 + 16 + 16 sein. Deshalb steht dort „1 von 3 Bögen
+bestanden. Offen: Vorschriften und Technik N." und nicht eine Prozentzahl, die niemandem hilft.
+
+**Fehler und Lernbedarf.** Jede falsch beantwortete Frage landet wie beim Lernen in der Fehlerliste
+und im Lernbedarf — im Prüfungsmodus schweigt nur die Anzeige, gebucht wird ganz normal. Dazu kommt,
+was bei Zeitablauf offen blieb: auch das ist ein Fehler und wird eingetragen. Nach der Prüfung steht
+unter der Auswertung, wie viele es waren und wo sie zu finden sind. Jede Runde schreibt außerdem
+ihren eigenen Verlaufseintrag („Gruppenprüfung Vorschriften 16/25"), am Ende einer für die ganze
+Prüfung.
+
+**Für den Kursleiter:** Die Rangliste zeigt jeden Teilnehmer mit allen drei Bögen einzeln
+(`Vorschriften 16/25 ✗ · Betrieb 25/25 ✓ · Technik 16/25 ✗`) statt nur mit einer Summe. Wer abgibt,
+meldet sein Ergebnis in den Gruppenchat, ebenfalls nach Bögen aufgeschlüsselt. Und „Neue Prüfung für
+alle" zieht drei frische Bögen, ohne dass der Raum neu angelegt und der Link noch einmal verschickt
+werden müsste.
+
+**Wie es gebaut ist.** Der Ablauf einer Prüfung — Uhr, keine Rückmeldung, Zwischenergebnis,
+Gesamtergebnis mit jeder falschen Antwort — steht seit Langem im Prüfungssimulator. Der ist nicht
+ein zweites Mal geschrieben worden; er bekommt seine Fragen nur aus einer anderen Quelle. Neu sind
+drei Dinge: Die Bögen zieht der Server einmal für den ganzen Raum, damit **alle dieselben Fragen in
+derselben Reihenfolge** schreiben (auch die Antworten stehen bei allen gleich — sonst passte der
+gemeldete Antwortindex nicht mehr zum Text). Vor jeder Runde steht das Startfenster mit der Uhr. Und
+jede Antwort geht wie in jeder Gruppenrunde an den Server, weshalb Teilnehmer-Übersicht, Rangliste
+und die Auswertung des Kursleiters unverändert weiterarbeiten.
+
+Der Haken steht bewusst **nicht** im zugeklappten Kasten „Gruppenraum Konfiguration", wo er
+fachlich hingehörte: Dort sieht ihn niemand. Er steht offen über „Raum erstellen" — und auch der
+Gast sieht ihn (nur nicht bedienbar), damit er beim Beitreten weiß, dass er in eine Prüfung kommt
+und nicht in eine Fragerunde. Anzahl und Bereich sind dann ausgegraut; für eine Prüfung sind sie
+festgelegt.
+
+Nachgemessen mit zwei Rechnern im selben Raum: beide bekommen dieselben 25 Fragen je Bogen in
+derselben Reihenfolge, die Uhr steht vor dem Start und läuft danach sekundengenau, die Rückmeldung
+bleibt bis zur Auswertung aus, 18 falsche Antworten stehen anschließend zu 18 in der Fehlerliste und
+zu 18 im Lernbedarf, bei Zeitablauf ebenso 22 offene Fragen. Null Seitenfehler. Die normale
+Gruppenrunde ohne Haken und der Prüfungssimulator allein laufen unverändert.
+
+### Im Dark Mode sind richtig und falsch wieder zu sehen
+
+Dietmar, mit einem Bild aus dem Dark Mode: „Im Dark Mode ist der Verlauf farblich nicht sichtbar.
+Hier möchte ich Rot und Grün sichtbar."
+
+Stimmte: In der Spalte **Fortschritt** sahen alle Kästchen gleich aus — richtig beantwortet, falsch
+beantwortet, noch offen, kein Unterschied. Im hellen Stil waren sie immer grün und rot.
+
+**Der Grund** steht im Stilblock für die Nachtansicht. Dort werden die Kästchen zusammen mit den
+übrigen Feldern der Auswertungsspalte in das Nachtblau gesetzt — mit `!important`, damit die hellen
+Vorgaben nicht durchschlagen. Die Farben für richtig und falsch stehen aber in `.dot-sidebar.correct-dot`
+und `.dot-sidebar.wrong-dot`, und die sind weniger spezifisch (0,2,0 gegen 0,2,1) *und* stehen weiter
+oben in der Datei. Zwei Gründe, aus denen sie verloren. In den anderen Farbstilen — Grau, Grün, Blau,
+Orange — ist dasselbe früher schon einmal aufgefallen; dort tragen die Farben deshalb seit Langem ein
+`!important`. Bei der Nachtansicht war es vergessen worden.
+
+Jetzt sind es dieselben Farben wie bei den Antworten darunter, die am 17.09. aus genau demselben
+Anlass grün und rot geblieben sind: `#3bb583` und `#fe756c`. Die Ziffern in den Kästchen sind mit
+0,52 rem sehr klein, deshalb dunkle Schrift auf der hellen Fläche — gemessen 6,1:1 auf Grün und
+6,4:1 auf Rot, lesbar beginnt bei 4,5:1.
+
+Drei weitere Zustände hatten dasselbe Problem und sind gleich mit behoben:
+
+- **gelernt** — grün umrandet, aber nicht gefüllt: sie saß schon vor dieser Runde, gefragt wurde sie
+  noch nicht (8,7:1)
+- **im Prüfungssimulator beantwortet** — ein neutrales Blaugrau ohne Wertung, denn dort kommt die
+  Auflösung erst am Ende
+- **die aktuelle Frage** — ein heller Ring im DARC-Blau mit leisem Schein; das Dunkelblau aus dem
+  hellen Stil kam gegen den nächtlichen Grund nicht an
+
+Nachgemessen: vier unterscheidbare Farben unter den Kästchen statt einer, alle über 4,5:1, keine
+Änderung am hellen Stil.
+
+### Die Tunnel-Wache ist im Dark Mode wieder zu lesen
+
+Dietmar, mit einem Bild aus dem Gruppenraum: „Im Gruppenraum kann man das noch schlecht erkennen."
+
+Gemeint ist der grüne Kasten unter dem Einladungs-Link. Drei Angaben fehlten dort schlicht:
+„**Tunnel-Wache läuft.**", „zuletzt durchgekommen **vor 19 Sekunden**" und „im Raum: **2**" — genau
+die drei, um die es in dem Kasten geht. Der Rest des Satzes war lesbar.
+
+**Warum ausgerechnet die drei:** Sie stehen fett. Und fett Gedrucktes bekommt im Dark Mode in jedem
+Fenster ein helles Weiß (`body.dark [id$="Modal"] b`) — was überall richtig ist, nur nicht hier: Der
+Kasten selbst blieb hell. Seine Farben wurden nämlich aus `duo.js` heraus direkt an das Element
+gehängt (`zeile.style.background = '#eef8f1'`), und was aus JavaScript kommt, gewinnt gegen jeden
+Stil. Die Nachtsicht konnte gar nicht mitreden. Weiß auf Hellgrün, gemessen 1,1:1.
+
+Die Farben stehen jetzt im Stilblock, wo sie hingehören; `duo.js` setzt nur noch, ob die Leitung gut
+aussieht oder nicht (`.duo-wache.gut` beziehungsweise `.warn`). Im hellen Stil sieht der Kasten aus
+wie bisher. Im Dark Mode ist er dunkelgrün mit hellgrüner Schrift, im Warnfall dunkelbraun mit
+Bernstein — gemessen 9,7:1 für den Fließtext und 12,8:1 für das Fette, im Warnfall 8,2:1 und 10,3:1.
+
+### Kleinigkeit am Rande
+
+Im Gruppenraum konnte eine Zeile beim Verbinden mit einer Fehlermeldung abbrechen
+(`socket.id` war noch nicht vergeben), wodurch die eigene Kennung leer blieb. Aufgefallen ist das
+beim Test der Prüfung, wenn ein zweiter Rechner während einer laufenden Runde beitritt.
 
 ### Der Verlauf springt nicht mehr beim Antworten
 
