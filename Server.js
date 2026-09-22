@@ -283,14 +283,42 @@ function tunnelDateiLoeschen(fp){
 // ================================================================
 function verwaisteTunnelProzesseBeenden(){
   if(process.platform === 'win32'){
+    // ----------------------------------------------------------------
+    //  NUR DIE EIGENEN, NICHT JEDES cloudflared    (21.09.2026)
+    //  ----------------------------------------------------------------
+    //  Hier stand ein "taskkill /IM cloudflared.exe /F" - es erschlug
+    //  JEDES cloudflared auf dem Rechner. Das war vertretbar, solange
+    //  es dort nur den Quick Tunnel des Trainers gab.
+    //
+    //  Dietmar hat am 21.09.2026 amateurfunk-trainer.com gekauft, um
+    //  einen BENANNTEN Tunnel als Windows-Dienst zu betreiben - damit
+    //  die Adresse einen Neustart des Trainers uebersteht und der
+    //  geteilte Link gueltig bleibt. Dieser Dienst laeuft ebenfalls als
+    //  cloudflared.exe. Die alte Zeile haette ihn bei JEDEM Start des
+    //  Trainers abgeschossen, und niemand haette verstanden, warum die
+    //  eigene Adresse immer wieder wegbricht.
+    //
+    //  Deshalb wird jetzt die Befehlszeile gelesen und nur beendet, was
+    //  ein Quick Tunnel ist - also "--url" enthaelt. Genau so macht es
+    //  der Linux-Zweig weiter unten schon lange, aus demselben Grund.
+    //
+    //  Get-CimInstance und nicht wmic: wmic ist in aktuellen
+    //  Windows-Fassungen nicht mehr an Bord. Geht die Abfrage schief,
+    //  wird NICHTS beendet - lieber ein Waisenprozess zu viel als ein
+    //  erschlagener Dienst.
+    // ----------------------------------------------------------------
     return new Promise(resolve=>{
-      execFile('taskkill', ['/IM','cloudflared.exe','/F'], {timeout:5000}, (err, stdout, stderr)=>{
-        const text = String(stdout||'') + String(stderr||'');
-        if(!err && /erfolgreich|SUCCESS/i.test(text)){
-          console.log('[TUNNEL] Uebrig gebliebene cloudflared.exe-Prozesse beendet.');
-        } else if(err && !/nicht gefunden|not found|nicht ausgef|could not be found/i.test(text)){
-          console.debug('[TUNNEL] taskkill:', text.trim().slice(0,120));
+      const ps = 'Get-CimInstance Win32_Process -Filter "Name=\'cloudflared.exe\'" '
+               + '| Where-Object { $_.CommandLine -like \'*--url*\' } '
+               + '| ForEach-Object { Write-Output $_.ProcessId; Stop-Process -Id $_.ProcessId -Force }';
+      execFile('powershell', ['-NoProfile','-NonInteractive','-Command', ps], {timeout:8000}, (err, stdout, stderr)=>{
+        const text = String(stdout||'').trim();
+        if(err){
+          console.debug('[TUNNEL] Aufraeumen uebersprungen:', String(stderr||err.message).trim().slice(0,120));
+          return resolve();
         }
+        const pids = text.split(/\s+/).filter(x => /^\d+$/.test(x));
+        if(pids.length) console.log('[TUNNEL] ' + pids.length + ' uebrig gebliebene(n) Quick Tunnel beendet (PID ' + pids.join(', ') + ').');
         resolve();
       });
     });
@@ -1362,6 +1390,361 @@ app.use((err, req, res, next)=>{
   }
   return next(err);
 });
+// ================================================================
+//  DIE LAENDERSPERRE
+//  ----------------------------------------------------------------
+//  Dietmar am 21.09.2026, mit einer Liste voller Aufrufe aus Chicago
+//  und Amsterdam: "diese Anklopfer gefallen mir gar nicht. Kann man da
+//  nicht eine Sperre einbauen? Deutschland, Oesterreich und die
+//  Schweiz? Ggf mit einer Anfrage?"
+//
+//  Die Anklopfer sind Zertifikat-Scanner (siehe die lange Erklaerung
+//  weiter unten bei echt:false). Sie stehen in Rechenzentren, und die
+//  stehen fast nie in DACH. Eine Laenderpruefung trifft sie deshalb
+//  ziemlich genau - ohne dass ein einziger Funkamateur etwas merkt.
+//
+//  Cloudflare schickt das Herkunftsland bei jeder Anfrage mit
+//  (cf-ipcountry). Es braucht also keinen fremden Dienst und keine
+//  Datenbank im Ordner.
+//
+//  WER NIE GEPRUEFT WIRD:
+//    - der Trainer-PC selbst,
+//    - alles im eigenen WLAN (dort gibt es gar kein Herkunftsland),
+//    - die Vorschau-Crawler beim Teilen (sonst gaebe es in Facebook
+//      und WhatsApp keine Kachel mehr - die holen von US-Adressen),
+//    - Suchmaschinen (Dietmar: "Den Google Bot haette ich schon ganz
+//      gerne mit drin"),
+//    - und wer von Dietmar freigegeben wurde.
+//
+//  Wer abgewiesen wird, bekommt keine tote Leitung, sondern eine
+//  hoefliche Seite mit einem Knopf. Der Knopf meldet die Anfrage beim
+//  Gastgeber, und der entscheidet im Besucherfenster.
+// ================================================================
+const LAENDER_FREI = ['DE', 'AT', 'CH'];
+
+// Suchmaschinen sollen die Seite finden duerfen. Sie werden allerdings
+// auch NICHT als Besucher gezaehlt - eine Kennung laesst sich faelschen,
+// und wer sich als Googlebot ausgibt, soll sich damit hoechstens die
+// Seite abholen, aber nicht in Dietmars Liste auftauchen.
+const SUCHMASCHINEN = /googlebot|google-inspectiontool|storebot-google|bingbot|adidxbot|duckduckbot|yandex(bot|images)|baiduspider|slurp|sogou|exabot|ia_archiver|petalbot|seznambot|qwantify|ahrefsbot|semrushbot/i;
+
+// Freigaben und Anfragen leben im Arbeitsspeicher - Dietmars Wunsch:
+// "Bis zum Neustart". Damit gibt es keine neue Datei, nichts zu pflegen
+// und nichts, was versehentlich ins Repository wandert.
+const zutrittFrei     = new Map();   // volle IP -> Zeitpunkt der Freigabe
+const zutrittAnfragen = new Map();   // volle IP -> { land, stadt, geraet, wann }
+let   zutrittAbgewiesen = 0;         // nur eine Zahl, keine Liste
+
+function ipRoh(req){
+  return String(req.headers['cf-connecting-ip'] || req.ip || '').replace(/^::ffff:/i, '').trim();
+}
+
+function landErlaubt(req){
+  const land = String(req.headers['cf-ipcountry'] || '').toUpperCase().slice(0, 2);
+  // Kein Land bekannt? Dann kam die Anfrage nicht ueber Cloudflare -
+  // also aus dem eigenen Netz. Die war noch nie das Problem.
+  if(!land || land === 'XX' || land === 'T1') return true;
+  return LAENDER_FREI.indexOf(land) !== -1;
+}
+
+// ----------------------------------------------------------------
+//  DAS VORSCHAUBILD GEHOERT ALLEN                   (21.09.2026)
+//  Dietmar, mit dem Facebook-Debugger: "Jetzt ist das Bild da, es
+//  aendert sich aber nicht wenn ich Online bin." Beim Nachsehen im
+//  Debugger stand alles richtig da - nur die Bildflaeche blieb grau.
+//
+//  Der Grund war meine eigene Laendersperre. Die Seite selbst kam
+//  durch, weil der Crawler an seiner Kennung erkannt wird. Das BILD
+//  holt Facebook aber in einem zweiten Anlauf, und dabei ist die
+//  Kennung nicht immer dieselbe - kommt der Abruf dann von einer
+//  US-Adresse, wurde er abgewiesen. Ergebnis: eine Kachel ohne Bild.
+//
+//  Ein Vorschaubild ist nichts Schuetzenswertes - es ist Werbung. Es
+//  geht deshalb immer hinaus, aus jedem Land und unter jeder Kennung.
+//  Dasselbe gilt fuer das Symbol der Seite, das manche Dienste in der
+//  Kachel mit anzeigen.
+// ----------------------------------------------------------------
+const WACHE_BILDER = /^\/(vorschau(-raum)?\.jpg|favicon\.ico|icon(-192|-512|-512-maskierbar)?\.png|apple-touch-icon\.png)$/i;
+
+// ----------------------------------------------------------------
+//  EIN BILD DARF ZWISCHENGESPEICHERT WERDEN         (21.09.2026)
+//  Dietmar, nach dem dritten Anlauf: "kein Bild!"
+//
+//  Gefunden wurde es mit einem Blick auf die Kopfzeilen des Bildes.
+//  Das Bild selbst war in Ordnung - image/jpeg, 1200x630, 116 KB -,
+//  aber darueber stand:
+//
+//      Cache-Control: no-store, no-cache, must-revalidate, private
+//
+//  Diese Zeile setzt der Trainer pauschal fuer ALLES. Fuer Lernstaende
+//  und Fragenkataloge ist das richtig: nichts davon gehoert in fremde
+//  Zwischenspeicher. Fuer ein Vorschaubild ist es toedlich. Facebook,
+//  WhatsApp und die uebrigen holen es einmal ab und legen es in ihren
+//  eigenen Speicher; "no-store, private" heisst fuer sie "behalte das
+//  nicht", und daran halten sie sich. Ergebnis: eine Kachel ohne Bild.
+//
+//  Die Bilder aus WACHE_BILDER duerfen deshalb eine Stunde lang
+//  zwischengespeichert werden. Geheim ist daran nichts - es ist
+//  Werbung, sie soll ja gerade weitergetragen werden.
+// ----------------------------------------------------------------
+app.use((req, res, next) => {
+  try{
+    if(WACHE_BILDER.test(String(req.path || ''))){
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  }catch(e){}
+  next();
+});
+
+function wacheDurchlaesst(req){
+  if(isLocalRequest(req)) return true;
+  if(WACHE_BILDER.test(String(req.path || ''))) return true;
+  const kennung = String(req.headers['user-agent'] || '');
+  if(VORSCHAU_CRAWLER.test(kennung)) return true;
+  if(SUCHMASCHINEN.test(kennung)) return true;
+  if(landErlaubt(req)) return true;
+  if(zutrittFrei.has(ipRoh(req))) return true;
+  return false;
+}
+
+// Diese beiden Wege muss auch ein Abgewiesener gehen duerfen - sonst
+// koennte er seine Anfrage gar nicht erst stellen.
+// ================================================================
+//  DIE TUER: STEHT DER TRAINER NACH AUSSEN OFFEN?
+//  ----------------------------------------------------------------
+//  Dietmar am 22.09.2026: "Ich moechte in der Hauptansicht einen
+//  Button. Nachdem wir eine feste Adresse haben, moechte ich den
+//  Trainer online zur Verfuegung stellen, wenn der Button aktiviert
+//  ist."
+//
+//  Bis gestern war das keine Frage: Der Quick Tunnel lief nur, wenn
+//  man ihn startete. Seit cloudflared als Windows-Dienst laeuft, ist
+//  der Trainer erreichbar, sobald er ueberhaupt laeuft - ohne dass
+//  Dietmar das je entschieden haette.
+//
+//  Der Schalter holt diese Entscheidung zurueck. Nach jedem Start ist
+//  zu (seine Wahl): Es soll nicht passieren, dass der Trainer ueber
+//  Nacht offensteht, weil man es vergessen hat.
+//
+//  Absichtlich NICHT betroffen, auch bei geschlossener Tuer:
+//    - der eigene Rechner und das eigene WLAN,
+//    - die Vorschau-Crawler und die Vorschaubilder. Sonst zerfiele
+//      die Facebook-Kachel jedes Mal, wenn zu ist - und die soll
+//      gerade dann stimmen, wenn jemand den Beitrag findet.
+//
+//  Was Besucher bei geschlossener Tuer bekommen: den Code 503. Das
+//  ist kein Zufall - genau darauf reagiert der Worker bei Cloudflare
+//  und zeigt die Auffangseite mit dem Weg zur GitHub-Fassung. Wer
+//  den Worker nicht eingerichtet hat, bekommt die schlichte Seite
+//  weiter unten; beides sagt dasselbe.
+// ================================================================
+let tuerOffen      = false;   // nach jedem Start zu
+let tuerSchliesstUm = 0;      // 0 = kein Countdown laeuft
+
+function tuerGleichZu(){ return tuerSchliesstUm > 0 && Date.now() < tuerSchliesstUm; }
+
+function tuerAufFuer(req){
+  if(isLocalRequest(req)) return true;
+  if(WACHE_BILDER.test(String(req.path || ''))) return true;
+  const kennung = String(req.headers['user-agent'] || '');
+  if(VORSCHAU_CRAWLER.test(kennung)) return true;
+  if(SUCHMASCHINEN.test(kennung)) return true;
+  if(tuerOffen) return true;
+  if(tuerGleichZu()) return true;    // waehrend der Vorwarnung bleibt offen
+  return false;
+}
+
+app.use((req, res, next) => {
+  try{
+    if(req.path === '/api/tuer') return next();     // sonst kaeme der Gastgeber nicht mehr dran
+    if(tuerAufFuer(req)) return next();
+    const ziel = String(req.headers['sec-fetch-dest'] || '').toLowerCase();
+    if((ziel && ziel !== 'document') || req.path.indexOf('/api/') === 0){
+      return res.status(503).json({ ok:false, zu:true });
+    }
+    res.status(503).type('html').send(TUER_ZU_SEITE);
+  }catch(e){ return next(); }
+});
+
+const TUER_ZU_SEITE = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+  + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+  + '<meta name="robots" content="noindex">'
+  + '<title>Amateurfunk-Trainer — gerade nicht offen</title><style>'
+  + 'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;'
+  + 'background:#0f172a;color:#e2e8f0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px;}'
+  + '.k{max-width:520px;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:30px 28px;}'
+  + 'h1{margin:0 0 14px;font-size:1.3rem;color:#f1f5f9;}'
+  + 'p{margin:0 0 14px;line-height:1.65;color:#cbd5e1;font-size:0.97rem;}'
+  + 'a{color:#7dd3fc;}'
+  + '</style></head><body><div class="k">'
+  + '<h1>Der Trainer ist gerade nicht geöffnet</h1>'
+  + '<p>Der Amateurfunk-Trainer wird von einem privaten Rechner aus geteilt, und der '
+  + 'Gastgeber hat gerade zu. Später noch einmal vorbeischauen lohnt sich.</p>'
+  + '<p>Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung unter '
+  + '<a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">'
+  + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. Dann läuft er auf deinem '
+  + 'eigenen Rechner, unabhängig von allen anderen.</p>'
+  + '</div></body></html>';
+
+// Auskunft und Schalter. localOnly: Das entscheidet nur der Gastgeber.
+app.get('/api/tuer', localOnly, (req, res) => {
+  res.json({ offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0 });
+});
+
+app.post('/api/tuer', localOnly, (req, res) => {
+  const auf = String(req.query.auf || '') === '1';
+  if(auf){
+    tuerOffen = true; tuerSchliesstUm = 0;
+    tuerMelden(null);
+    console.log('[TUER] Der Trainer ist jetzt offen.');
+  } else {
+    const sek = Math.max(0, Math.min(600, Number(req.query.sek || 60)));
+    if(sek === 0){
+      tuerOffen = false; tuerSchliesstUm = 0;
+      tuerMelden({ zu: true });
+      console.log('[TUER] Zu.');
+    } else {
+      tuerSchliesstUm = Date.now() + sek*1000;
+      tuerMelden({ schliesstUm: tuerSchliesstUm });
+      console.log('[TUER] Schliesst in ' + sek + ' Sekunden.');
+      setTimeout(function(){
+        if(tuerSchliesstUm && Date.now() >= tuerSchliesstUm - 200){
+          tuerOffen = false; tuerSchliesstUm = 0;
+          tuerMelden({ zu: true });
+          console.log('[TUER] Zu.');
+        }
+      }, sek*1000 + 250);
+    }
+  }
+  res.json({ ok:true, offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0 });
+});
+
+// Allen Verbundenen Bescheid sagen. null = Entwarnung.
+function tuerMelden(a){
+  try{
+    if(!duoIo) return;
+    duoIo.sockets.sockets.forEach(function(sock){ try{ sock.emit('tuerAnsage', a); }catch(e){} });
+  }catch(e){}
+}
+
+const WACHE_OFFEN = ['/api/zutritt-anfragen', '/api/zutritt-stand'];
+
+app.use((req, res, next) => {
+  try{
+    if(WACHE_OFFEN.indexOf(req.path) !== -1) return next();
+    if(wacheDurchlaesst(req)) return next();
+
+    zutrittAbgewiesen++;
+    const land = String(req.headers['cf-ipcountry'] || '').toUpperCase().slice(0, 2);
+
+    // Alles, was kein Seitenaufruf ist, bekommt eine kurze Absage. Eine
+    // ganze HTML-Seite als Antwort auf ein fetch() waere nur Unsinn.
+    const ziel = String(req.headers['sec-fetch-dest'] || '').toLowerCase();
+    const istSeite = (!ziel || ziel === 'document');
+    if(!istSeite || req.path.indexOf('/api/') === 0){
+      return res.status(403).json({ ok:false, gesperrt:true, land: land });
+    }
+
+    // Bewusst 200 und nicht 403: Manche Browser zeigen bei einem Fehler-
+    // code lieber ihre eigene Seite als unsere. Hier soll aber genau
+    // unser Text stehen, samt Knopf.
+    res.status(200).type('html').send(sperrSeite(land, ipRoh(req)));
+  }catch(e){ return next(); }
+});
+
+function sperrSeite(land, ip){
+  const wartet = zutrittAnfragen.has(ip);
+  return '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<meta name="robots" content="noindex">'
+    + '<title>Amateurfunk-Trainer</title><style>'
+    + 'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;'
+    + 'background:#0f172a;color:#e2e8f0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px;}'
+    + '.k{max-width:520px;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:30px 28px;}'
+    + 'h1{margin:0 0 14px;font-size:1.35rem;color:#f1f5f9;}'
+    + 'p{margin:0 0 14px;line-height:1.65;color:#cbd5e1;font-size:0.97rem;}'
+    + '.z{font-size:0.85rem;color:#94a3b8;border-top:1px solid #334155;padding-top:14px;margin-top:20px;}'
+    + 'a{color:#7dd3fc;}'
+    + 'button{background:#2563eb;color:#fff;border:0;border-radius:9px;padding:12px 20px;'
+    + 'font-size:0.97rem;cursor:pointer;font-family:inherit;}'
+    + 'button:hover{background:#1d4ed8;} button:disabled{background:#475569;cursor:default;}'
+    + '#m{margin-top:14px;font-size:0.9rem;color:#86efac;min-height:1.2em;}'
+    + '</style></head><body><div class="k">'
+    + '<h1>Der Trainer läuft gerade nur für den deutschsprachigen Raum</h1>'
+    + '<p>Der Amateurfunk-Trainer wird von einem privaten Rechner aus geteilt. '
+    + 'Damit die Leitung für die Funkamateure frei bleibt, für die er gedacht ist, '
+    + 'nimmt er im Moment nur Aufrufe aus Deutschland, Österreich und der Schweiz an.</p>'
+    + '<p>Du bist trotzdem willkommen — frag einfach kurz an. Der Gastgeber sieht die '
+    + 'Anfrage sofort und kann dich freischalten. Diese Seite merkt es von selbst und lädt dann neu.</p>'
+    + '<button id="b"' + (wartet ? ' disabled' : '') + '>'
+    + (wartet ? 'Anfrage läuft …' : 'Zutritt anfragen') + '</button>'
+    + '<div id="m">' + (wartet ? 'Deine Anfrage liegt beim Gastgeber.' : '') + '</div>'
+    + '<p class="z">Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung '
+    + 'unter <a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. '
+    + 'Dann läuft er auf deinem eigenen Rechner, ganz ohne Sperre.'
+    + (land ? '<br>Erkanntes Land: ' + htmlText(land) : '') + '</p>'
+    + '</div><script>'
+    + 'var b=document.getElementById("b"),m=document.getElementById("m"),lauf=' + (wartet ? 'true' : 'false') + ';'
+    + 'b.onclick=function(){b.disabled=true;b.textContent="Anfrage läuft …";'
+    + 'fetch("/api/zutritt-anfragen",{method:"POST"}).then(function(r){return r.json();})'
+    + '.then(function(j){m.textContent=j&&j.ok?"Deine Anfrage liegt beim Gastgeber.":'
+    + '"Das hat nicht geklappt. Versuch es in einer Minute noch einmal.";lauf=true;})'
+    + '.catch(function(){m.textContent="Keine Verbindung zum Trainer.";b.disabled=false;'
+    + 'b.textContent="Zutritt anfragen";});};'
+    + 'setInterval(function(){fetch("/api/zutritt-stand",{cache:"no-store"})'
+    + '.then(function(r){return r.json();}).then(function(j){if(j&&j.frei)location.reload();})'
+    + '.catch(function(){});},5000);'
+    + '<\/script></body></html>';
+}
+
+// Der Knopf auf der Sperrseite. Oeffentlich erreichbar - er MUSS es sein.
+app.post('/api/zutritt-anfragen', (req, res) => {
+  try{
+    const ip = ipRoh(req);
+    if(!ip) return res.status(400).json({ ok:false });
+    if(zutrittFrei.has(ip)) return res.json({ ok:true, frei:true });
+
+    const da = zutrittAnfragen.get(ip);
+    // Zweimal druecken bringt nichts, und ein Skript soll die Liste des
+    // Gastgebers nicht vollschreiben: eine Anfrage je Adresse und Minute.
+    if(da && (Date.now() - da.wann) < 60000) return res.json({ ok:true, schon:true });
+    // Mehr als 30 offene Anfragen sind kein Andrang, sondern ein Angriff.
+    if(!da && zutrittAnfragen.size >= 30) return res.status(429).json({ ok:false });
+
+    zutrittAnfragen.set(ip, {
+      land:   String(req.headers['cf-ipcountry'] || '').toUpperCase().slice(0, 2),
+      stadt:  kopfText(req.headers['cf-ipcity']).slice(0, 40),
+      geraet: geraetArt(req.headers['user-agent']),
+      wann:   Date.now()
+    });
+    console.log('[ZUTRITT] Anfrage von ' + ipKuerzen(ip)
+              + ' (' + (zutrittAnfragen.get(ip).land || '??') + ').');
+    res.json({ ok:true });
+  }catch(e){ res.status(500).json({ ok:false }); }
+});
+
+// Die Sperrseite fragt im Takt nach, ob sie gehen darf.
+app.get('/api/zutritt-stand', (req, res) => {
+  res.json({ frei: zutrittFrei.has(ipRoh(req)) });
+});
+
+// Freigeben und ablehnen darf nur der Gastgeber, an seinem eigenen PC.
+app.post('/api/zutritt-freigeben', localOnly, (req, res) => {
+  const ip = String(req.query.ip || '').trim();
+  if(!ip) return res.status(400).json({ ok:false });
+  zutrittFrei.set(ip, Date.now());
+  zutrittAnfragen.delete(ip);
+  console.log('[ZUTRITT] ' + ipKuerzen(ip) + ' freigegeben (bis zum Neustart).');
+  res.json({ ok:true });
+});
+
+app.post('/api/zutritt-ablehnen', localOnly, (req, res) => {
+  const ip = String(req.query.ip || '').trim();
+  zutrittAnfragen.delete(ip);
+  console.log('[ZUTRITT] Anfrage von ' + ipKuerzen(ip) + ' abgelehnt.');
+  res.json({ ok:true });
+});
+
 app.use('/svgs', express.static(path.join(__dirname,'svgs'),{setHeaders:(res,fp)=>{ if(fp.endsWith('.svg')) res.setHeader('Content-Type','image/svg+xml'); }}));
 
 // ================================================================
@@ -1388,6 +1771,41 @@ app.use('/svgs', express.static(path.join(__dirname,'svgs'),{setHeaders:(res,fp)
 //
 // Angeregt von Dietmar am 28.08.2026: "Die IP Adresse sollen nicht
 // komplett angezeigt werden."
+// ================================================================
+//  UMLAUTE AUS DEN KOPFZEILEN                        (21.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar, mit einem Bild seiner Besucherliste: "Mit Umlaute
+//  scheint es ein Problem zu geben." Dort stand "DA1/4sseldorf"
+//  statt "Duesseldorf" - genauer: "D", dann "A" mit Schlange und
+//  ein Bruchzeichen.
+//
+//  Das ist kein Fehler von Cloudflare, sondern eine Altlast des
+//  HTTP-Protokolls. Kopfzeilen sind dort als Latin-1 festgelegt, ein
+//  Zeichensatz mit 256 Plaetzen. Cloudflare schickt den Stadtnamen
+//  aber als UTF-8, und darin besteht ein "ue" aus ZWEI Bytes. Node
+//  liest die Kopfzeile normgetreu als Latin-1 und macht aus den zwei
+//  Bytes zwei Zeichen - fertig ist der Buchstabensalat.
+//
+//  Rueckgaengig machen heisst: die Zeichen wieder als Bytes nehmen
+//  und diesmal als UTF-8 lesen.
+//
+//  Vorsichtig, damit nichts kaputtgeht, was schon in Ordnung war:
+//    - Reiner ASCII-Text ("Hamburg", "Berlin") wird nicht angefasst.
+//    - Das Ergebnis wird geprueft. Kommt ein Ersetzungszeichen dabei
+//      heraus, war die Kopfzeile eben doch echtes Latin-1 - dann
+//      bleibt der Urtext stehen. Lieber ein Name mit Schoenheits-
+//      fehler als einer aus Fragezeichen.
+// ================================================================
+function kopfText(roh){
+  const t = String(roh || '');
+  if(!/[\u0080-\u00FF]/.test(t)) return t;        // nichts Verdaechtiges drin
+  try{
+    const wieder = Buffer.from(t, 'latin1').toString('utf8');
+    if(wieder.indexOf('\uFFFD') === -1) return wieder;
+  }catch(e){}
+  return t;
+}
+
 function ipKuerzen(roh){
   let ip = String(roh || '').trim();
   if(!ip) return 'unbekannt';
@@ -3497,9 +3915,59 @@ app.get('/api/lan-info',(req,res)=>{
 // ================================================================
 const zuschauer = new Map();   // Kennung -> zuletzt gesehen
 
+// ----------------------------------------------------------------
+//  WER IST GERADE DA?                               (21.09.2026)
+//  Dietmar: "Moechte auch sehen, wer aktiv ist."
+//
+//  Die Antwort lag schon hier: Jeder offene Tab meldet sich alle zehn
+//  Sekunden, damit der Server nicht abschaltet. Bisher wurde davon nur
+//  die Uhrzeit behalten. Daneben liegt jetzt eine zweite Karte mit dem
+//  Wenigen, das die Anzeige braucht - gekuerzte Adresse, Geraeteart,
+//  seit wann.
+//
+//  BEWUSST EINE ZWEITE KARTE und nicht ein Objekt in der ersten: An
+//  zuschauer haengt die Abschaltlogik ("meldet sich eine Minute
+//  niemand, ist Feierabend"). Die rechnet mit einer Zahl. Ein Objekt
+//  darin haette den Server im besten Fall nie mehr abschalten lassen.
+// ----------------------------------------------------------------
+const zuschauerInfo = new Map();   // Kennung -> {ip, geraet, extern, erst, letzt}
+
 app.get('/api/lebenszeichen',(req,res)=>{
   const id = String(req.query.id || '').slice(0, 40);
-  if(id) zuschauer.set(id, Date.now());
+  if(id){
+    zuschauer.set(id, Date.now());
+    try{
+      const vorher = zuschauerInfo.get(id);
+      // Wer sich meldet, war wirklich da: den juengsten Aufruf von
+      // dieser Adresse als echt markieren.
+      try{
+        if(!isLocalRequest(req)){
+          const wer = ipKuerzen(req.headers['cf-connecting-ip'] || req.ip);
+          const b = besucherLesen();
+          const grenze = Date.now() - 5*60*1000;
+          for(let i = b.liste.length - 1; i >= 0; i--){
+            const e = b.liste[i];
+            if(e.zeit < grenze) break;
+            if(e.ip === wer && !e.echt){ e.echt = true; besucherSchreiben(false); break; }
+          }
+        }
+      }catch(e){}
+
+      zuschauerInfo.set(id, {
+        ip:     ipKuerzen(req.headers['cf-connecting-ip'] || req.ip),
+        land:   String(req.headers['cf-ipcountry'] || '').toUpperCase().slice(0, 2),
+        stadt:  kopfText(req.headers['cf-ipcity']).slice(0, 40),
+        // Der Name kommt vom Besucher selbst, aus dem Willkommensfenster.
+        // Steuerzeichen und spitze Klammern raus: Er landet in der Liste
+        // des Gastgebers, und was dort steht, darf nichts anrichten.
+        name:   String(req.query.name || '').replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 20),
+        geraet: geraetArt(req.headers['user-agent']),
+        extern: !isLocalRequest(req),
+        erst:   vorher ? vorher.erst : Date.now(),
+        letzt:  Date.now()
+      });
+    }catch(e){}
+  }
   res.json({ok:true});
 });
 
@@ -3509,6 +3977,7 @@ app.post('/api/tschuess',(req,res)=>{
   const id = String(req.query.id || '').slice(0, 40);
   if(id && zuschauer.has(id)){
     zuschauer.delete(id);
+    zuschauerInfo.delete(id);
     console.log('[ENDE] Zuschauer ' + id + ' hat sich abgemeldet.');
   }
   res.json({ok:true});
@@ -3859,7 +4328,16 @@ const PUBLIC_FILES = new Set([
   // Fall, den der Kommentar oben vorhersagt ("eine neue Datei im
   // Projektordner ist damit automatisch NICHT oeffentlich") - der
   // Schutz hat funktioniert, ich hatte ihn nur vergessen.
-  '/erklaerungen.json'
+  '/erklaerungen.json',
+  // Das Bild fuer die Link-Vorschau (1200x630). Es muss oeffentlich sein,
+  // sonst holt Facebook es nicht: Der Crawler kommt ohne alles, was der
+  // Browser eines Gastes mitbringt, und bekaeme sonst einen 404 - die
+  // Kachel bliebe leer. Im Bild steht nichts als Programmzahlen.
+  '/vorschau.jpg',
+  // Dieselbe Kachel, aber mit "Anklicken. Mitmachen." - sie kommt, wenn im
+  // Link ein Raumcode steht. Wer eine Einladung bekommt, soll auch eine
+  // Einladung sehen.
+  '/vorschau-raum.jpg'
 ]);
 // /fontawesome/ kam am 01.09.2026 dazu: die Symbolschrift liegt jetzt im
 // Ordner statt bei einem CDN. Ohne diesen Eintrag waeren die Symbole zwar
@@ -3885,6 +4363,162 @@ function isPublicPath(rawPath){
   return PUBLIC_DIRS.some(d => p.startsWith(d));
 }
 
+// localOnly: Die Besucherliste geht nur den Gastgeber an seinem eigenen
+// Rechner etwas an. Ein Gast ueber den Einladungslink bekommt hier 403 -
+// auch dann, wenn er sich im Trainer "Dietmar" nennt. Der Name im
+// Programm entscheidet nur, OB die Liste angezeigt wird; erreichbar ist
+// sie ausschliesslich von diesem PC.
+app.get('/api/besucher', localOnly, (req, res) => {
+  const b = besucherLesen();
+  let raeume = 0;
+  try{ raeume = Object.keys(duoRaeume || {}).length; }catch(e){}
+  // Wer ist JETZT da? Der Takt ist zehn Sekunden; wer sich vierzig
+  // Sekunden nicht gemeldet hat, hat den Tab zugemacht (oder die
+  // Verbindung ist weg - beides heisst "nicht mehr da").
+  const grenze = Date.now() - 40000;
+  const aktive = [];
+  try{
+    zuschauerInfo.forEach((v, k) => {
+      if(!v || v.letzt < grenze) return;
+      aktive.push({ kennung: String(k).slice(0, 6), ip: v.ip, land: v.land || '', stadt: v.stadt || '',
+                    name: v.name || '', geraet: v.geraet,
+                    extern: !!v.extern, seit: v.erst, letzt: v.letzt });
+    });
+    aktive.sort((x, y) => y.letzt - x.letzt);
+  }catch(e){}
+
+  // Aufrufe sind nicht Besucher: Wer zweimal laedt, steht zweimal in der
+  // Liste. Fuer "wie weit reicht die Werbung" ist die Zahl der
+  // verschiedenen Adressen die ehrlichere Auskunft.
+  let verschiedene = 0, echte = 0, angeklopft = 0;
+  try{
+    verschiedene = new Set(b.liste.filter(x => x.echt).map(x => x.ip)).size;
+    echte = b.liste.filter(x => x.echt).length;
+    angeklopft = b.liste.length - echte;
+  }catch(e){}
+
+  // Wer an die Tuer geklopft hat und wartet. Die volle Adresse muss mit -
+  // der Gastgeber schickt sie beim Freigeben zurueck. Sie verlaesst
+  // diesen PC nicht: /api/besucher ist localOnly.
+  const anfragen = [];
+  try{
+    zutrittAnfragen.forEach((v, ip) => {
+      anfragen.push({ ip: ip, kurz: ipKuerzen(ip), land: v.land || '', stadt: v.stadt || '',
+                      geraet: v.geraet || '', wann: v.wann });
+    });
+    anfragen.sort((x, y) => y.wann - x.wann);
+  }catch(e){}
+
+  res.json({
+    gesamt: b.gesamt,
+    echte: echte,
+    angeklopft: angeklopft,
+    verschiedene: verschiedene,
+    // Die Laendersperre: wie viele Aufrufe sie seit dem Start abgewiesen
+    // hat, wer gerade anfragt und wer schon freigegeben ist.
+    abgewiesen: zutrittAbgewiesen,
+    anfragen: anfragen,
+    freigegeben: zutrittFrei.size,
+    seit: b.seit,
+    aktive: aktive,
+    aktivExtern: aktive.filter(x => x.extern).length,
+    // duoTeilnehmerAnzahl() gibt es schon - sie zaehlt die Leute in allen
+    // offenen Raeumen und ist die Zahl, die auch die Tunnel-Wache benutzt.
+    imRaum: duoTeilnehmerAnzahl(),
+    raeume: raeume,
+    // SERVER_START gibt es schon weiter oben - als ISO-Text vom Start des
+    // Servers. Genau das ist gemeint: so lange ist der Link offen.
+    laeuftSeit: SERVER_START,
+    tunnel: tunnelUrlCache || null,
+    liste: b.liste.slice(-60).reverse()
+  });
+});
+
+// ================================================================
+//  DIE ANSAGE VOR DEM NEUSTART                      (21.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Nur so kann ich als Host schreiben, ich starte neu. So
+//  reisst es einfach ab und die Benutzer aergern sich." Und gleich
+//  darauf der Vorschlag: "Hier koennte man einen Button einbauen
+//  Neustart. Danach bekommen alle einen Hinweis: Der Server wird neu
+//  gestartet in 3 Minuten. Der Link dazu wird erneut geteilt."
+//
+//  Genau das macht diese Ansage. Sie startet nichts - sie sagt es nur
+//  allen, die gerade da sind, und zeigt einen Countdown. Neu gestartet
+//  wird von Hand, wie bisher.
+//
+//  Warum nicht der Server selbst? Weil ein Programm, das sich unter
+//  Windows selbst neu startet, ein Fenster, einen Node-Pfad und einen
+//  Starter braucht, den es hier in drei Varianten gibt (START.vbs,
+//  START.bat, der Installer-Eintrag). Das waere die unzuverlaessigste
+//  Stelle im ganzen Trainer. Ein Mensch, der auf X klickt und neu
+//  startet, ist hier das robustere Bauteil.
+//
+//  Die Ansage steht auch fuer den, der erst danach dazukommt: Wer in
+//  Minute zwei den Link anklickt, soll nicht in einen Abbruch laufen,
+//  von dem alle anderen wussten.
+// ================================================================
+let neustartAnsage = null;   // { um, min, gesetzt, fest }
+
+function neustartAnsageGueltig(){
+  if(!neustartAnsage) return null;
+  // Eine Viertelstunde nach dem angesagten Zeitpunkt ist sie nichts mehr
+  // wert - dann wurde offenbar doch nicht neu gestartet.
+  if(Date.now() > neustartAnsage.um + 15*60*1000){ neustartAnsage = null; return null; }
+  return neustartAnsage;
+}
+
+app.post('/api/neustart-ansage', localOnly, (req, res) => {
+  const min = Math.max(1, Math.min(60, Number(req.query.min || 3)));
+  // ----------------------------------------------------------------
+  //  BLEIBT DIE ADRESSE?                             (21.09.2026)
+  //  Dietmar: "Die Adresse aendert sich doch jetzt nicht mehr ^^"
+  //
+  //  Stimmt - seit der benannte Tunnel laeuft, steht der Link fest.
+  //  Der Balken behauptete trotzdem noch das Gegenteil, weil er aus
+  //  der Zeit der Wegwerf-Adressen stammt.
+  //
+  //  Wissen kann das nur der Gastgeber: Die eigene Adresse steht in
+  //  SEINEM Browser. Also sagt er es beim Ansagen mit, und der Server
+  //  reicht es an alle weiter.
+  // ----------------------------------------------------------------
+  const fest = (String(req.query.fest || '') === '1');
+  neustartAnsage = { um: Date.now() + min*60*1000, min: min, gesetzt: Date.now(), fest: fest };
+  let n = 0;
+  try{
+    if(duoIo){
+      duoIo.sockets.sockets.forEach(function(sock){
+        try{ sock.emit('neustartAnsage', neustartAnsage); n++; }catch(e){}
+      });
+    }
+  }catch(e){}
+  console.log('[NEUSTART] Ansage an ' + n + ' Verbundene: in ' + min + ' Minuten'
+            + (fest ? ', Adresse bleibt.' : ', neue Adresse danach.'));
+  res.json({ ok: true, um: neustartAnsage.um, min: min, fest: fest, erreicht: n });
+});
+
+app.post('/api/neustart-ansage-weg', localOnly, (req, res) => {
+  neustartAnsage = null;
+  try{
+    if(duoIo) duoIo.sockets.sockets.forEach(function(sock){
+      try{ sock.emit('neustartAnsage', null); }catch(e){}
+    });
+  }catch(e){}
+  console.log('[NEUSTART] Ansage zurueckgenommen.');
+  res.json({ ok: true });
+});
+
+// Zaehler auf Null. Dietmar am 21.09.2026: "hier fehlt ein Reset Knopf."
+// Stimmt - nach einem Probelauf steht sonst eine Zahl da, die nichts mit
+// der Werbung zu tun hat, die gerade laeuft. localOnly wie das Lesen: Ein
+// Gast soll die Zahlen des Gastgebers weder sehen noch loeschen koennen.
+app.post('/api/besucher/reset', localOnly, (req, res) => {
+  besucherStand = { gesamt: 0, seit: Date.now(), liste: [] };
+  besucherSchreiben(true);
+  console.log('[BESUCHER] Zaehler zurueckgesetzt.');
+  res.json({ ok: true, gesamt: 0, seit: besucherStand.seit });
+});
+
 app.use((req,res,next)=>{
   if(isPublicPath(req.path)) return next();
   // Nur dann warnen, wenn wirklich eine vorhandene Datei blockiert wurde -
@@ -3897,6 +4531,308 @@ app.use((req,res,next)=>{
   }catch(e){}
   return res.status(404).send('Not found');
 });
+// ================================================================
+//  DIE KACHEL BEIM TEILEN - UND WER VORBEIGEKOMMEN IST
+//  ----------------------------------------------------------------
+//  Dietmar am 21.09.2026, mit zwei Bildern aus Facebook: "Wenn ich den
+//  Trainer Link vom Gruppenraum teilen moechte, gibt es keine Vorschau.
+//  Kann man das einbauen? Auch wenn ich E nach A eingestellt habe, es
+//  zeigt Amateurfunk Trainer Klasse N in der Vorschau."
+//
+//  Beides hat denselben Grund: Im Kopf von Index.html stand nichts, was
+//  Facebook lesen koennte. Ohne og:-Zeilen nimmt der Crawler notgedrungen
+//  den <title> - und der ist seit jeher fest auf "Klasse N" geschrieben.
+//  Das eingestellte Pruefungsziel liegt ausserdem nur im Browser des
+//  Gastgebers; ein Crawler fuehrt kein JavaScript aus und kann es gar
+//  nicht sehen.
+//
+//  WARUM EINE EIGENE SEITE FUER DIE CRAWLER und nicht einfach og:-Zeilen
+//  in Index.html: Die absolute Adresse des Bildes muss mit im Kopf stehen
+//  (relative Pfade nimmt Facebook nicht), und die kennt niemand im
+//  Voraus - der Tunnel heisst nach jedem Neustart anders. Sie steht erst
+//  im Augenblick der Anfrage fest, im Host-Kopf. Index.html ist knapp
+//  zwei Megabyte; die bei jedem Aufruf durch eine Textersetzung zu
+//  jagen, waere Verschwendung. Also bekommt nur der Crawler eine eigene,
+//  winzige Seite - ein Mensch bekommt wie bisher den Trainer. Wer doch
+//  einmal mit so einer Kennung vorbeikommt, wird weitergeleitet.
+// ================================================================
+const VORSCHAU_CRAWLER = /facebookexternalhit|facebookcatalog|facebot|twitterbot|whatsapp|telegrambot|discordbot|slackbot|linkedinbot|skypeuripreview|redditbot|applebot|iframely|vkshare|pinterest|mastodon|embedly|quora link preview|bitlybot|nuzzel|xing|threadsbot|bluesky/i;
+
+function htmlText(x){
+  return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// Unter welcher Adresse hat uns der Crawler erreicht? Genau die gehoert in
+// die Kachel - beim Tunnel ist das die trycloudflare-Adresse, im WLAN die
+// des Rechners.
+function adresseAusAnfrage(req){
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  if(!host) return '';
+  let proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
+  // Ueber den Tunnel kommt die Anfrage innen als http an, aussen ist sie
+  // https. Facebook holt das Bild nur ueber https, wenn die Seite so kam.
+  if(/trycloudflare\.com$|\.cfargotunnel\.com$/i.test(host)) proto = 'https';
+  return proto + '://' + host;
+}
+
+app.get('/', (req, res, next) => {
+  const kennung = String(req.headers['user-agent'] || '');
+  if(!VORSCHAU_CRAWLER.test(kennung)) return next();   // Menschen bekommen den Trainer
+
+  const basis = adresseAusAnfrage(req);
+  const raum  = String(req.query.duo || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 12);
+  const titel = 'Amateurfunk-Trainer \u2014 Pr\u00fcfung Klasse N, E und A \u00fcben';
+  // Der Demo-Hinweis steht bewusst mit drin. Dietmar am 21.09.2026:
+  // "Demo Mode - Der Trainer ist nur so lange aktiv, wie der Trainer
+  // laeuft." Wer den Link in vier Wochen anklickt, laeuft sonst in eine
+  // tote Seite und haelt das Programm fuer kaputt. So weiss er vorher,
+  // woran er ist - und wo er es zum Behalten bekommt.
+  // "Demo" ja, aber ohne Behauptung ueber den, der sie betreibt - und
+  // ohne "die Adresse aendert sich", was mit eigener Domain nicht mehr
+  // stimmt. Siehe der lange Kommentar am Willkommensfenster.
+  const demo = ' Der Trainer l\u00e4uft auf einem privaten Rechner und ist erreichbar, solange '
+             + 'dieser eingeschaltet ist. Zum Behalten gibt es das Programm kostenlos auf '
+             + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
+  const text  = (raum
+    ? 'Einladung in den Gruppenraum: gemeinsam \u00fcben, Frage f\u00fcr Frage, mit Punktestand. '
+      + 'Der amtliche Fragenkatalog der Bundesnetzagentur mit einer Erkl\u00e4rung zu jeder Frage.'
+    : 'Der amtliche Fragenkatalog der Bundesnetzagentur mit einer Erkl\u00e4rung zu jeder Frage. '
+      + 'Klasse N, E und A \u2014 ohne Konto, ohne Anmeldung.') + demo;
+  const ziel = basis + (raum ? '/?duo=' + encodeURIComponent(raum) : '/');
+  const bild = basis + (raum ? '/vorschau-raum.jpg' : '/vorschau.jpg');
+
+  console.log('[VORSCHAU] Kachel ausgeliefert an ' + kennung.slice(0, 60)
+              + (raum ? ' (Raum ' + raum + ')' : ''));
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.set('Cache-Control', 'no-store');   // die Adresse wechselt mit dem Tunnel
+  res.send('<!DOCTYPE html>\n<html lang="de"><head><meta charset="utf-8">'
+    + '<title>' + htmlText(titel) + '</title>'
+    + '<meta name="description" content="' + htmlText(text) + '">'
+    + '<meta property="og:type" content="website">'
+    + '<meta property="og:locale" content="de_DE">'
+    + '<meta property="og:site_name" content="Amateurfunk-Trainer">'
+    + '<meta property="og:title" content="' + htmlText(titel) + '">'
+    + '<meta property="og:description" content="' + htmlText(text) + '">'
+    + '<meta property="og:url" content="' + htmlText(ziel) + '">'
+    + '<meta property="og:image" content="' + htmlText(bild) + '">'
+    + '<meta property="og:image:type" content="image/jpeg">'
+    + '<meta property="og:image:width" content="1200">'
+    + '<meta property="og:image:height" content="630">'
+    + '<meta property="og:image:alt" content="Amateurfunk-Trainer: der Fragenkatalog mit Erkl\u00e4rung zu jeder Frage">'
+    + '<meta name="twitter:card" content="summary_large_image">'
+    + '<meta name="twitter:title" content="' + htmlText(titel) + '">'
+    + '<meta name="twitter:description" content="' + htmlText(text) + '">'
+    + '<meta name="twitter:image" content="' + htmlText(bild) + '">'
+    // KEINE Weiterleitung mehr (21.09.2026). Hier stand
+    //   <meta http-equiv="refresh" content="0; url=...">
+    // und zeigte auf dieselbe Adresse, von der die Seite gerade kam.
+    // Gedacht war es als Rueckweg fuer Menschen - nur bekommt ein
+    // Mensch diese Seite nie zu sehen, sie geht ausschliesslich an
+    // Crawler. Facebooks Debugger meldete sie als Weiterleitung
+    // ("http-equiv=refresh Meta-Tag"), und eine Kachelseite, die den
+    // Crawler im Kreis schickt, ist ein Risiko ohne jeden Nutzen.
+    // Der Textlink unten bleibt - der schadet nicht.
+    + '</head><body><p>' + htmlText(titel) + ' \u2014 <a href="' + htmlText(ziel) + '">weiter zum Trainer</a></p>'
+    + '</body></html>');
+});
+
+// ----------------------------------------------------------------
+//  BESUCHER
+//  Dietmar: "Ich moechte als Host die Anzahl der Besucher sehen."
+//  Gezaehlt wird ein Aufruf der Startseite von AUSSEN - also ueber den
+//  Einladungslink oder den Tunnel. Der eigene Rechner zaehlt nicht mit,
+//  sonst stuende der Zaehler nach einem Vormittag Arbeit bei 40, ohne
+//  dass ein Besucher da war. Crawler zaehlen auch nicht: Facebook holt
+//  die Seite beim Teilen selbst ab, und das ist kein Gast.
+//
+//  Was gespeichert wird: Uhrzeit, gekuerzte Adresse (die letzten Ziffern
+//  fallen weg, wie ueberall sonst im Trainer), woher der Klick kam,
+//  Handy oder Rechner, und ob ein Raumcode im Link stand. Keine Namen,
+//  keine Kennungen, nichts, womit man jemanden wiederfindet. Die Liste
+//  haelt die letzten 200 Aufrufe; die Datei steht in .gitignore und
+//  verlaesst den Rechner nicht.
+// ----------------------------------------------------------------
+const BESUCHER_FP = path.join(USERDATA_DIR, 'besucher.json');
+let besucherStand = null;
+let besucherSchreibZeit = 0;
+
+function besucherLesen(){
+  if(besucherStand) return besucherStand;
+  try{
+    besucherStand = JSON.parse(fs.readFileSync(BESUCHER_FP, 'utf8'));
+    if(!besucherStand || typeof besucherStand !== 'object') throw new Error('leer');
+    if(!Array.isArray(besucherStand.liste)) besucherStand.liste = [];
+    // Die Eintraege von vor dem 21.09.2026 tragen den Buchstabensalat
+    // noch in sich (siehe kopfText). Einmal beim Lesen geradeziehen -
+    // dann sieht auch die alte Liste richtig aus, und beim naechsten
+    // Schreiben steht es sauber in der Datei.
+    try{
+      besucherStand.liste.forEach(function(e){
+        if(!e) return;
+        if(e.stadt)  e.stadt  = kopfText(e.stadt);
+        if(e.region) e.region = kopfText(e.region);
+      });
+    }catch(e2){}
+  }catch(e){
+    besucherStand = { gesamt: 0, seit: Date.now(), liste: [] };
+  }
+  return besucherStand;
+}
+function besucherSchreiben(sofort){
+  const jetzt = Date.now();
+  // Hoechstens alle 20 Sekunden auf die Platte - ein Aufruf soll keine
+  // Schreiboperation ausloesen.
+  if(!sofort && jetzt - besucherSchreibZeit < 5000) return;
+  besucherSchreibZeit = jetzt;
+  try{
+    fs.mkdirSync(USERDATA_DIR, { recursive: true });
+    const tmp = BESUCHER_FP + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(besucherStand));
+    fs.renameSync(tmp, BESUCHER_FP);
+  }catch(e){ console.warn('[BESUCHER] nicht schreibbar:', e.message); }
+}
+function geraetArt(kennung){
+  const k = String(kennung || '');
+  if(/iPad|Tablet/i.test(k)) return 'Tablet';
+  if(/Mobi|Android|iPhone/i.test(k)) return 'Handy';
+  if(/Macintosh/i.test(k)) return 'Mac';
+  if(/Windows/i.test(k)) return 'Windows';
+  if(/Linux/i.test(k)) return 'Linux';
+  return 'unbekannt';
+}
+function herkunft(roh){
+  try{
+    const h = new URL(String(roh)).hostname.replace(/^www\./, '');
+    return h || '';
+  }catch(e){ return ''; }
+}
+
+app.get('/', (req, res, next) => {
+  try{
+    const kennung = String(req.headers['user-agent'] || '');
+    if(isLocalRequest(req)) return next();               // der eigene Rechner
+    if(VORSCHAU_CRAWLER.test(kennung)) return next();    // der Crawler beim Teilen
+    // Suchmaschinen duerfen die Seite holen (Dietmar wollte den Googlebot
+    // dabeihaben), stehen aber nicht in der Besucherliste. Eine Kennung
+    // laesst sich faelschen - wer sich als Googlebot ausgibt, bekommt
+    // hoechstens die Seite und keinen Eintrag.
+    if(SUCHMASCHINEN.test(kennung)) return next();
+
+    // ----------------------------------------------------------------
+    //  NUR ECHTE SEITENAUFRUFE                          (21.09.2026)
+    //  Dietmar: "Mir ist auch aufgefallen, dass erst Facebook und dann
+    //  direkt kommt."
+    //
+    //  Das war kein Zufall und kein zweiter Besucher, sondern immer
+    //  derselbe - zweimal gezaehlt. Der Grund steht in sw.js: Der
+    //  Service Worker legt sich beim ersten Besuch einen Vorrat an, und
+    //  in dieser Liste steht './' - die Startseite. Der Browser holt sie
+    //  also ein zweites Mal, diesmal aus dem Hintergrund und ohne
+    //  Referrer. In der Liste sah das aus wie zwei Leute: einer "ueber
+    //  facebook.com", einer "direkt". Der Zaehler stand damit fuer jeden
+    //  Besucher auf zwei.
+    //
+    //  sec-fetch-dest unterscheidet beides und wird vom Browser gesetzt,
+    //  nicht von der Seite: "document" heisst, da hat wirklich jemand
+    //  eine Seite aufgeschlagen. Alles andere - "empty" fuer einen
+    //  fetch(), "image", "script" - ist Beiwerk und zaehlt nicht mit.
+    //  Fehlt der Kopf ganz (aeltere Browser), wird gezaehlt wie bisher;
+    //  lieber einer zu viel als eine leere Liste.
+    // ----------------------------------------------------------------
+    const ziel = String(req.headers['sec-fetch-dest'] || '').toLowerCase();
+    if(ziel && ziel !== 'document') return next();
+
+    // Einmal je Serverstart: Welche cf-Koepfe kommen hier wirklich an?
+    if(!cfKoepfeGezeigt){
+      cfKoepfeGezeigt = true;
+      const cf = Object.keys(req.headers).filter(function(k){ return k.indexOf('cf-') === 0; }).sort();
+      if(cf.length){
+        console.log('[GEO] Cloudflare schickt: ' + cf.map(function(k){
+          // Die Adresse selbst nicht ins Log - sie steht gekuerzt in der
+          // Besucherliste und gehoert nicht doppelt in die Datei.
+          if(k === 'cf-connecting-ip') return k + '=(Adresse)';
+          return k + '=' + String(req.headers[k]).slice(0, 40);
+        }).join(' \u00b7 '));
+      } else {
+        console.log('[GEO] Keine cf-Koepfe in dieser Anfrage - der Besucher kam nicht ueber Cloudflare.');
+      }
+    }
+
+    const b = besucherLesen();
+    b.gesamt++;
+    b.liste.push({
+      zeit: Date.now(),
+      // ----------------------------------------------------------------
+      //  MENSCH ODER MASCHINE?                        (21.09.2026)
+      //  Dietmar, mit einer Liste voller Aufrufe aus Warschau und
+      //  Amsterdam: "meine IP ist nicht in Polen" - und kurz darauf der
+      //  entscheidende Satz: "habe den Link noch nicht geteilt."
+      //
+      //  Damit war klar, was das war. Sobald Cloudflare fuer eine neue
+      //  Domain ein Zertifikat ausstellt, steht der Name oeffentlich in
+      //  den Certificate-Transparency-Protokollen. Es gibt Dienste, die
+      //  diese Protokolle im Minutentakt auslesen und jede frische
+      //  Adresse sofort abklopfen. Die laufen in Rechenzentren, geben
+      //  sich als Windows- oder Mac-Browser aus und landeten damit in
+      //  der Liste wie richtige Besucher.
+      //
+      //  Unterschieden wird an etwas, das kein Scanner tut: Ein echter
+      //  Browser meldet sich nach dem Laden alle zehn Sekunden beim
+      //  Server (das Lebenszeichen, das den Trainer am Leben haelt).
+      //  Dafuer braucht es JavaScript und eine offene Seite. Ein
+      //  Scanner holt die Startseite und ist weg.
+      //
+      //  Also: Jeder Aufruf faengt als "nur angeklopft" an und wird zum
+      //  Besucher, sobald von derselben Adresse ein Lebenszeichen
+      //  eintrifft. Lieber jemanden eine Minute lang zu wenig zaehlen
+      //  als die Werbezahlen mit Maschinen aufblasen.
+      // ----------------------------------------------------------------
+      echt: false,
+      ip: ipKuerzen(req.headers['cf-connecting-ip'] || req.ip),
+      // Das Land kommt von Cloudflare selbst: Der Tunnel laeuft ueber
+      // deren Netz, und dort wird cf-ipcountry gesetzt. Es braucht also
+      // keinen fremden Dienst, dem man die Adressen der Besucher
+      // schicken muesste, und keine 70-MB-Datenbank im Ordner. Im
+      // eigenen WLAN fehlt der Kopf - dann bleibt es bei der Adresse.
+      land: String(req.headers['cf-ipcountry'] || '').toUpperCase().slice(0, 2),
+      // ----------------------------------------------------------------
+      //  STADT? WENN CLOUDFLARE SIE SCHICKT           (21.09.2026)
+      //  Dietmar: "Gibt Cloudflare auch noch die Stadt bekannt?"
+      //
+      //  Das Land (cf-ipcountry) kommt bei jedem Tunnel. Stadt, Region
+      //  und Zeitzone gibt es nur, wenn in der Cloudflare-Zone die
+      //  "Managed Transforms -> Add visitor location headers"
+      //  eingeschaltet sind. Bei einem Quick Tunnel auf
+      //  trycloudflare.com gehoert die Zone Cloudflare und nicht uns -
+      //  einschalten kann das dort niemand. Mit einem eigenen benannten
+      //  Tunnel auf eigener Domain waere es moeglich.
+      //
+      //  Deshalb wird hier nicht behauptet, sondern genommen, was da
+      //  ist: Kommt der Kopf, steht die Stadt in der Liste; kommt er
+      //  nicht, bleibt es beim Land. Und die Diagnose unten schreibt
+      //  einmal je Serverstart auf, was wirklich ankam - damit die
+      //  Antwort auf diese Frage nachlesbar ist und nicht geraten.
+      // ----------------------------------------------------------------
+      stadt:  kopfText(req.headers['cf-ipcity']).slice(0, 40),
+      // Zwei Schreibweisen, weil die Quellen sich uneinig sind: Cloudflares
+      // eigener Assistent nannte am 21.09.2026 "CF-IPRegion", die
+      // Dokumentation an anderer Stelle "cf-region". Statt zu raten, werden
+      // beide gelesen - die eine ist da, die andere leer, und welche es
+      // war, steht ohnehin in der [GEO]-Zeile im Serverfenster.
+      region: kopfText(req.headers['cf-ipregion'] || req.headers['cf-region']).slice(0, 40),
+      woher: herkunft(req.headers.referer || ''),
+      geraet: geraetArt(kennung),
+      raum: String(req.query.duo || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 12)
+    });
+    if(b.liste.length > 200) b.liste = b.liste.slice(-200);
+    besucherSchreiben(false);
+    console.log('[BESUCHER] Aufruf Nr. ' + b.gesamt + ' von ' + b.liste[b.liste.length-1].ip
+                + ' (' + b.liste[b.liste.length-1].geraet + ')'
+                + (b.liste[b.liste.length-1].woher ? ' ueber ' + b.liste[b.liste.length-1].woher : ''));
+  }catch(e){}
+  return next();
+});
+
 app.use(express.static(path.join(__dirname), {
   index: 'Index.html',   // Datei heisst mit grossem I - unter Windows egal, so aber eindeutig
   dotfiles: 'deny'
@@ -3915,6 +4851,90 @@ try{
     transports: ['websocket', 'polling']
   });
   const duoRooms={};
+
+  // ================================================================
+  //  DER CHAT OHNE RAUM                              (21.09.2026)
+  //  ----------------------------------------------------------------
+  //  Dietmar: "Wenn ich einen Link teile, moechte ich dass der Chat
+  //  vorhanden ist, auch ohne dem Duo."
+  //
+  //  Bisher hing der Chat am Raumcode: io.to(code) - kein Raum, kein
+  //  Chat. Wer die nackte Adresse anklickt, stand in der Hauptansicht
+  //  und hatte keine Moeglichkeit, etwas zu fragen.
+  //
+  //  Dieser Kanal ist kein Raum in duoRooms, sondern schlicht "alle,
+  //  die in keinem Raum sind". Deshalb braucht es kein join/leave an
+  //  fuenf Stellen im Socket-Teil - es genuegt, beim Senden zu fragen,
+  //  wer gerade ohne Raum dasitzt. Wer einem Raum beitritt, bekommt von
+  //  da an den Raum-Chat und hier nichts mehr; wer ihn verlaesst, ist
+  //  wieder dabei.
+  //
+  //  Nachrichten stehen nur im Arbeitsspeicher - die letzten hundert.
+  //  Beim Beenden des Trainers sind sie weg, und das ist richtig so:
+  //  Es ist ein Zuruf im Vorbeigehen, kein Postfach.
+  // ================================================================
+  const HAUS_CHAT_MAX = 100;
+  const hausChat = [];
+
+  // ----------------------------------------------------------------
+  //  "IST DAZUGEKOMMEN"                              (21.09.2026)
+  //  Dietmar, mit drei Leuten gleichzeitig auf der Seite: "Hier waere
+  //  eine Begruessung mit Namen gut."
+  //
+  //  Wer ueber den nackten Link kommt, ist in keinem Raum - es gibt
+  //  also keine Teilnehmerliste, in der er auftauchen koennte. Im Chat
+  //  stand er erst, wenn er von sich aus etwas schrieb. Und das tut
+  //  kaum jemand als Erster.
+  //
+  //  Jetzt meldet der Chat jede Ankunft. Mit Namen, wenn einer
+  //  eingetragen wurde - sonst ohne. Beides ist besser als Stille:
+  //  Dietmar kann ansprechen, wer da ist, und die Besucher sehen, dass
+  //  sie nicht allein sind.
+  //
+  //  Gegen Wiederholung: eine Begruessung je Adresse und Viertelstunde.
+  //  Sonst meldet jedes Neuladen denselben Menschen noch einmal.
+  // ----------------------------------------------------------------
+  const hausBegruesst = new Map();          // gekuerzte IP -> Zeitpunkt
+  const BEGRUESSUNG_PAUSE = 15 * 60 * 1000;
+
+  function hausLeute(){
+    const raus = [];
+    try{
+      io.sockets.sockets.forEach(function(s){
+        // Wer in keinem Raum sitzt, ist dabei.
+        if(!s.data || !s.data.roomCode){ raus.push(s); return; }
+        // UND der Gastgeber an seinem eigenen Rechner, auch wenn er
+        // gerade eine Runde im Raum hat. Dietmar am 21.09.2026: "Habe
+        // jetzt auch schon einen Chat. Hier kann nur niemand schreiben,
+        // weil es nicht ueber Duo laeuft." Genau daran haette die erste
+        // Fassung gescheitert: Er sitzt in seinem Raum und saehe die
+        // Frage am Link nicht. Ein fremder Teilnehmer im Raum bleibt
+        // aussen vor - der hat seinen Raum-Chat.
+        if(!s.data.vonAussen) raus.push(s);
+      });
+    }catch(e){}
+    return raus;
+  }
+  // Nur die OHNE Raum - fuer die Zaehlung und fuer die Kopie einer
+  // Gastgeber-Nachricht aus dem Raum nach draussen.
+  function hausOhneRaum(){
+    return hausLeute().filter(function(s){ return !(s.data && s.data.roomCode); });
+  }
+  function hausSenden(ereignis, daten){
+    hausLeute().forEach(function(s){ try{ s.emit(ereignis, daten); }catch(e){} });
+  }
+  // Wie viele sitzen gerade ohne Raum da - und wie viele davon von
+  // aussen? Danach entscheidet der Gastgeber-Client, ob er das
+  // Chatfenster aufmacht: Wenn niemand da ist, soll es nicht im Weg
+  // stehen.
+  function hausVolkMelden(){
+    try{
+      const ohneRaum = hausOhneRaum();
+      const vonAussen = ohneRaum.filter(function(s){ return s.data && s.data.vonAussen; }).length;
+      const daten = { anzahl: ohneRaum.length, vonAussen: vonAussen };
+      hausLeute().forEach(function(s){ try{ s.emit('hausVolk', daten); }catch(e){} });
+    }catch(e){}
+  }
   // Der Wache weiter oben bekannt machen: Sie muss die neue Adresse nach
   // einem Neuaufbau verschicken koennen und wissen, ob gerade jemand im
   // Raum sitzt.
@@ -3949,6 +4969,89 @@ try{
   io.on('connection',socket=>{
     const connectTime = new Date().toISOString();
     console.log(`[SOCKET] ${socket.id} verbunden um ${connectTime}`);
+
+    // ----------------------------------------------------------------
+    //  WER VON AUSSEN KOMMT, EROEFFNET KEINEN RAUM      (21.09.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Im Gruppenraum duerfen Besucher keinen Zugriff haben,
+    //  wenn ich nur den Link ohne Duo und Code poste. Diese starten sonst
+    //  einen neuen Gruppenraum und der Link ist nicht mehr aktiv."
+    //
+    //  Er hat recht, und der Schaden ist groesser, als es klingt: Wer den
+    //  nackten Trainer-Link anklickt, steht in der vollen Hauptansicht -
+    //  mit dem Knopf "Gruppenraum". Ein Klick auf "Raum erstellen", und
+    //  auf dem Rechner des Gastgebers laeuft ein zweiter Raum, dessen
+    //  Gastgeber irgendwo im Internet sitzt. Verlaesst der ihn wieder,
+    //  raeumt der Server auf - und reisst dabei den Raum ab, um den es
+    //  eigentlich ging. Der Link, den Dietmar gerade in die Gruppe
+    //  gestellt hat, ist tot.
+    //
+    //  sperrbar() gibt es schon: Es unterscheidet oeffentliche Adressen
+    //  von denen aus dem eigenen Haus. Wer ueber den Tunnel kommt, hat
+    //  eine oeffentliche - der ist ein Besucher. Wer im WLAN des
+    //  Gastgebers sitzt oder am Rechner selbst, bleibt unberuehrt: dort
+    //  soll ein zweiter Raum weiterhin moeglich sein.
+    const vonAussen = sperrbar(socketIp(socket));
+    socket.data.vonAussen = vonAussen;
+    // Der Client sperrt daraufhin den Knopf und schreibt hin, warum.
+    // Verlassen wuerde ich mich darauf nicht - die Pruefung unten in
+    // createRoom ist die, die haelt.
+    socket.emit('zugangsart', { vonAussen: vonAussen, demo: vonAussen });
+
+    // Die Ankunft im Haus-Chat ansagen. Der Client ruft das, sobald der
+    // Name feststeht - also nach dem Willkommensfenster, oder sofort,
+    // wenn es diesmal gar nicht gezeigt wurde.
+    socket.on('hausHallo', function(data){
+      try{
+        // Nur Besucher von aussen. Der Gastgeber und sein WLAN begruessen
+        // sich nicht selbst.
+        if(!socket.data || !socket.data.vonAussen) return;
+        // Wer in einem Raum sitzt, steht dort in der Teilnehmerliste.
+        if(socket.data.roomCode) return;
+
+        const wer = ipKuerzen(socketIp(socket));
+        const jetzt = Date.now();
+        if(jetzt - (hausBegruesst.get(wer) || 0) < BEGRUESSUNG_PAUSE) return;
+        hausBegruesst.set(wer, jetzt);
+        // Die Karte nicht wachsen lassen: Abgelaufenes wegraeumen.
+        if(hausBegruesst.size > 200){
+          hausBegruesst.forEach(function(z, k){
+            if(jetzt - z > BEGRUESSUNG_PAUSE) hausBegruesst.delete(k);
+          });
+        }
+
+        const name = String((data && data.name) || '')
+          .replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 20);
+        const n = {
+          id:     crypto.randomBytes(8).toString('hex'),
+          userId: socket.id,     // damit der Ankoemmling sich selbst nicht anpiept
+          system: true,
+          haus:   true,
+          // Dietmars Wortlaut vom 21.09.2026: "Herzlich Willkommen, Name
+          // betritt den Server."
+          text:   name ? ('\uD83D\uDC4B Herzlich willkommen, ' + name + ' betritt den Server.')
+                       : '\uD83D\uDC4B Herzlich willkommen, ein Besucher betritt den Server.',
+          zeit:   jetzt
+        };
+        hausChat.push(n);
+        while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+        hausSenden('duoChatNachricht', n);
+        console.log('[CHAT] ' + n.text);
+      }catch(e){}
+    });
+
+    // Der Chat ohne Raum: Verlauf mitgeben und allen sagen, wer da ist.
+    // Beides erst im naechsten Takt, damit dieser Socket in
+    // io.sockets.sockets schon gefuehrt wird.
+    setTimeout(function(){
+      try{
+        if(!socket.connected) return;
+        socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+        hausVolkMelden();
+        const ansage = neustartAnsageGueltig();
+        if(ansage) socket.emit('neustartAnsage', ansage);
+      }catch(e){}
+    }, 50);
     
     let lastActivity = Date.now();
     const activityTimeout = setInterval(()=>{
@@ -4052,6 +5155,20 @@ try{
 
     socket.on('createRoom',data=>{
       try{
+        // Der Riegel von oben. Er steht hier und nicht nur im Browser,
+        // weil ein gesperrter Knopf in der Entwicklerkonsole wieder
+        // aufgeht - diese Zeile nicht.
+        if(socket.data && socket.data.vonAussen){
+          console.log('[DUO] Raum-Eroeffnung von aussen abgelehnt (' + ipKuerzen(socketIp(socket)) + ')');
+          socket.emit('raumAbgelehnt', {
+            grund: 'demo',
+            text: 'Dieser Trainer laeuft auf einem fremden Rechner. '
+                + 'Ein eigener Gruppenraum laesst sich hier nicht eroeffnen - er wuerde die '
+                + 'Verbindung des Gastgebers stoeren. Einem Raum beitreten geht: dafuer den '
+                + 'Einladungslink oder den Raum-Code benutzen.'
+          });
+          return;
+        }
         // FIX W7: 6 Zeichen statt 4 und Kollisionspruefung. Vorher konnte ein
         // zufaellig doppelter Code einen laufenden Raum samt aller Antworten
         // kommentarlos ueberschreiben - die Teilnehmer darin sassen dann in
@@ -4069,6 +5186,7 @@ try{
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
         socket.join(code); socket.data.roomCode=code;
+        hausVolkMelden();   // dieser hier ist ab jetzt im Raum, nicht mehr im Haus
 
         // WICHTIG: Fragen-Set wird SOFORT bei Raum-Erstellung fix vergeben (nicht erst bei "Start").
         // Dadurch gibt es kein Warten auf den Host - jeder Teilnehmer kann später jederzeit für sich
@@ -4114,6 +5232,7 @@ try{
       if(!room.ipsVonTeilnehmern) room.ipsVonTeilnehmern = {};
       room.ipsVonTeilnehmern[socket.id] = wo;
       socket.join(data.code); socket.data.roomCode=data.code;
+      hausVolkMelden();
       console.log(`[GRUPPENRAUM] ${userName} ist Raum ${data.code} beigetreten (${ipKuerzen(wo)})`);
       // Fragen stehen schon seit Raum-Erstellung fest - jeder Beitretende bekommt dieselbe Basis
       if(!room.questionsFull || room.questionsFull.length===0) generateRoomQuestions(room);
@@ -4621,6 +5740,41 @@ try{
     socket.on('duoChat', data=>{
       try{
         if(!data || typeof data !== 'object') return;
+
+        // --- Der Chat ohne Raum ---
+        if(data.code === '__haus'){
+          if(socket.data && socket.data.roomCode) return;   // der sitzt in einem Raum
+          let t = String(data.text || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g,' ').trim();
+          if(!t) return;
+          if(t.length > CHAT_MAX_LAENGE) t = t.slice(0, CHAT_MAX_LAENGE);
+          if(chatRateLimit(socket)){
+            socket.emit('duoChatHinweis','Bitte etwas langsamer schreiben.');
+            return;
+          }
+          // Der Name kommt vom Client. Steuerzeichen raus, Laenge
+          // begrenzen, und wer keinen eingetragen hat, ist "Besucher" -
+          // hier "Teilnehmer" zu schreiben waere falsch, es ist ja kein
+          // Raum. Der eigene Rechner heisst "Gastgeber", damit ein
+          // Besucher sieht, mit wem er spricht.
+          let name = String((data.name || '')).replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20);
+          const drinnen = !(socket.data && socket.data.vonAussen);
+          if(!name) name = drinnen ? 'Gastgeber' : 'Besucher';
+          const n = {
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: socket.id,
+            name: name,
+            istHost: drinnen,
+            text: t,
+            zeit: Date.now()
+          };
+          n.haus = true;      // der Client schreibt "am Link" dazu
+          hausChat.push(n);
+          while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+          hausSenden('duoChatNachricht', n);
+          console.log('[CHAT] ohne Raum - ' + n.name + ': ' + t.slice(0, 60));
+          return;
+        }
+
         const room = duoRooms[data.code];
         if(!room) return;
         const user = room.users[socket.id];
@@ -4649,6 +5803,30 @@ try{
         while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
 
         io.to(data.code).emit('duoChatNachricht', nachricht);
+
+        // Die Antwort des Gastgebers geht auch an die, die am Link
+        // haengen - sonst fragt dort jemand und bekommt nie eine
+        // Antwort, weil der Gastgeber in seinem Raum sitzt.
+        //
+        // Dieselbe id in beiden Kanaelen: Der Client fuehrt eine Liste
+        // der schon gezeigten Nachrichten (chatGesehen) und wirft
+        // Doppelte weg. Deshalb sieht niemand sie zweimal, auch der
+        // Gastgeber nicht, der in beiden Kanaelen sitzt.
+        //
+        // NUR der Gastgeber, und nur was er selbst schreibt: Was die
+        // Teilnehmer im Raum untereinander schreiben, bleibt im Raum.
+        if(socket.id === room.hostId){
+          const draussen = hausOhneRaum();
+          if(draussen.length){
+            const kopie = Object.assign({}, nachricht, { haus: true });
+            if(!hausChat.some(function(x){ return x.id === kopie.id; })){
+              hausChat.push(kopie);
+              while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+            }
+            draussen.forEach(function(s){ try{ s.emit('duoChatNachricht', kopie); }catch(e){} });
+            console.log('[CHAT] Antwort des Gastgebers auch an ' + draussen.length + ' am Link.');
+          }
+        }
         console.log(`[CHAT] ${room.code} ${nachricht.name}: ${text.slice(0,60)}`);
       }catch(e){ console.error('[CHAT] Fehler', e); }
     });
@@ -4657,6 +5835,10 @@ try{
     socket.on('duoChatVerlaufAnfordern', data=>{
       try{
         if(!data || typeof data !== 'object') return;
+        if(data.code === '__haus'){
+          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+          return;
+        }
         const room = duoRooms[data.code];
         if(!room || !room.users[socket.id]) return;
         socket.emit('duoChatVerlauf', { code: room.code, nachrichten: Array.isArray(room.chat) ? room.chat : [] });
@@ -4907,6 +6089,14 @@ try{
         // leaveRoom und disconnect liessen sie liegen.
         if(duoRooms[code].allAnswers) delete duoRooms[code].allAnswers[socket.id];
         socket.leave(code);
+        // Ohne diese Zeile blieb der Merker stehen: Der Trainer haette
+        // denjenigen fuer immer als "im Raum" gefuehrt, und er waere aus
+        // dem Chat ohne Raum ausgeschlossen geblieben.
+        socket.data.roomCode = null;
+        setTimeout(function(){ try{
+          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+          hausVolkMelden();
+        }catch(e){} }, 30);
         if(duoRooms[code].hostId===socket.id){
           const remaining = Object.keys(duoRooms[code].users);
           if(remaining.length>0){ duoRooms[code].hostId = remaining[0]; io.to(code).emit('hostChanged',{hostId: duoRooms[code].hostId}); }
@@ -4950,6 +6140,9 @@ try{
         }
         cleanupRoomIfEmpty(code);
       }
+      // Einer weniger im Haus - die Anzahl gilt fuer alle neu. Erst im
+      // naechsten Takt, sonst zaehlt der gerade Gegangene noch mit.
+      setTimeout(hausVolkMelden, 30);
     });
   });
   server=srv;
@@ -5054,6 +6247,7 @@ const ZUSCHAUER_FRIST   = 300000; // so lange gilt ein Lebenszeichen (5 Min)
 const ANLAUF            = 120000; // Schonzeit nach dem Start
 const TUNNEL_LEERLAUF   = 4*60*60*1000;  // mit Tunnel: erst nach 4 h Leerlauf Schluss
 let jemandWarDa = false;
+let cfKoepfeGezeigt = false;   // die Geo-Diagnose laeuft einmal je Start
 const SERVER_START_MS = Date.now();
 
 function feierabendPruefen(){

@@ -10,6 +10,400 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 
 ## [1.298.0] - 2026-09-20
 
+### Der Server-Knopf: Tür auf, Tür zu
+
+Dietmar am 22.09.2026: „Ich möchte in der Hauptansicht einen Button. Nachdem wir eine feste Adresse
+haben, möchte ich den Trainer online zur Verfügung stellen, wenn der Button aktiviert ist."
+
+Bis gestern war das keine Frage: Der Quick Tunnel lief nur, wenn man ihn startete. Seit cloudflared
+als Windows-Dienst läuft, ist der Trainer erreichbar, sobald er überhaupt läuft — ohne dass Dietmar
+das je entschieden hätte. Der Schalter holt diese Entscheidung zurück.
+
+In der Kopfzeile, zwischen „Info" und „Beenden", steht jetzt **Server**. Dietmars Wortlaut zur
+Farbe: „Rot ist aus und Grün ist Online."
+
+    Server aus          rot       nur für dich
+    Server online       grün      Besucher kommen über den geteilten Link herein
+    Schließt in 47 s    orange    Vorwarnung läuft, ein Klick nimmt sie zurück
+
+**Nach jedem Start steht er auf Rot.** Das war Dietmars ausdrückliche Wahl: Es soll nicht passieren,
+dass der Trainer über Nacht offensteht, weil man es vergessen hat.
+
+**Beim Zumachen gibt es eine Minute Vorwarnung.** Wer gerade auf der Seite ist, bekommt oben einen
+Balken — „Der Gastgeber schließt den Trainer in 58 Sekunden. Du kannst deine Frage noch zu Ende
+bringen." — und kann fertig werden, statt mitten im Satz vor einer Auffangseite zu stehen. Ein
+zweiter Klick auf den Knopf nimmt das Zumachen zurück, und der Balken verschwindet bei allen.
+
+**Was bei geschlossener Tür trotzdem hinausgeht:** der eigene Rechner und das eigene WLAN, die
+Vorschau-Crawler und die Vorschaubilder. Sonst zerfiele die Facebook-Kachel jedes Mal, wenn zu ist
+— und die soll gerade dann stimmen, wenn jemand den Beitrag findet.
+
+Besucher bekommen bei geschlossener Tür den Code **503**. Das ist kein Zufall: Genau darauf reagiert
+der Worker bei Cloudflare und zeigt die Auffangseite mit dem Weg zur GitHub-Fassung. Wer den Worker
+nicht eingerichtet hat, bekommt eine schlichte eigene Seite; beide sagen dasselbe.
+
+**Ein Stolperstein beim Bauen.** Die Farben standen zuerst als style-Attribut im Code. Nachgemessen
+kam dabei 2,81:1 heraus — im Green Mode sogar 1,55:1. Der Grund: `.header-right .btn` färbt jeden
+Knopf der Kopfzeile weiß mit dunkelblauer Schrift, und zwar mit `!important`. Inline gesetzte Farben
+verlieren dagegen; die Schrift blieb dunkelblau, obwohl im Code `color:#fff` stand. Mit eigenen
+Regeln auf die ID (eine ID wiegt schwerer als zwei Klassen) stimmt es in allen vier Farbwelten:
+
+    Server aus        7,18:1        Server online     5,35:1        Schließt in …   6,79:1
+
+Dasselbe Muster wie beim Dark-Mode-Fehler vom 21.09. — inline gesetzte Farben sind in diesem
+Programm kein verlässliches Mittel, solange irgendwo `!important` steht. Gemessen wird, nicht
+angenommen.
+
+### Warum Facebook das Bild nicht annahm
+
+Dietmar, nach dem dritten vergeblichen Anlauf: „kein Bild!"
+
+Drei Erklärungen hatte ich schon geliefert — die Ländersperre, die falsche Adresse, die
+Weiterleitung im Kreis. Alle drei waren echte Fehler, aber keiner davon war *dieser* Fehler. Erst
+ein Blick auf die Kopfzeilen des Bildes brachte es:
+
+    HTTP/1.1 200 OK
+    Cache-Control: no-store, no-cache, must-revalidate, private
+    Content-Type: image/jpeg
+    Content-Length: 116406
+
+Das Bild war tadellos — 1200×630, richtiger Typ, richtige Größe. Die Zeile darüber war das Problem.
+
+Der Trainer setzt `no-store, private` pauschal für **alles**. Für Lernstände und Fragenkataloge ist
+das genau richtig: nichts davon gehört in fremde Zwischenspeicher. Für ein Vorschaubild ist es
+tödlich. Facebook, WhatsApp und die übrigen holen das Bild einmal ab und legen es in ihren eigenen
+Speicher; „no-store, private" heißt für sie „behalte das nicht", und daran halten sie sich.
+Ergebnis: eine Kachel ohne Bild.
+
+Die Bilder dürfen jetzt eine Stunde lang zwischengespeichert werden. Geheim ist daran nichts — es
+ist Werbung, sie soll ja gerade weitergetragen werden. Nachgemessen:
+
+    /vorschau.jpg        Cache-Control: public, max-age=3600     image/jpeg
+    /vorschau-raum.jpg   Cache-Control: public, max-age=3600     image/jpeg
+    /favicon.ico         Cache-Control: public, max-age=3600     image/x-icon
+    /                    Cache-Control: no-store                 (unveraendert)
+    /fragen.json         Cache-Control: no-store, no-cache, ...  (unveraendert)
+    /duo.js              Cache-Control: no-store, no-cache, ...  (unveraendert)
+
+**Was daran lehrreich war:** Ich habe dreimal eine Ursache genannt und dreimal „jetzt müsste es
+gehen" gesagt, ohne die eine Stelle anzusehen, an der die Antwort stand. Die Kopfzeilen einer
+Antwort sind bei so einer Frage das Erste, was man liest, nicht das Letzte.
+
+### Die Kachelseite schickte den Crawler im Kreis
+
+Im Facebook-Debugger stand unter „Redirect-Pfad" ein Eintrag, der dort nicht hingehört:
+
+    http-equiv="refresh" Meta-Tag  ->  https://amateurfunk-trainer.com/
+
+Die Kachelseite enthielt `<meta http-equiv="refresh" content="0; url=...">`, und zwar auf genau die
+Adresse, von der sie gerade abgerufen wurde. Gedacht war das als Rückweg für Menschen — nur
+bekommt ein Mensch diese Seite nie zu sehen, sie geht ausschließlich an Crawler. Für Facebook war
+es eine Weiterleitung auf sich selbst.
+
+Eine Kachelseite, die den Crawler im Kreis schickt, ist ein Risiko ohne jeden Nutzen. Die Zeile ist
+raus; der Textlink „weiter zum Trainer" im Seitenkörper bleibt, der schadet nicht.
+
+*Nebenbei, weil es im Debugger als Warnung auftaucht:* Das fehlende `fb:app_id` ist **nicht** die
+Ursache einer leeren Kachel. Es wird nur gebraucht, wenn man Facebooks Statistiken für die eigene
+Seite nutzen will.
+
+### Die Ländersperre verschluckte das Vorschaubild
+
+Dietmar, mit einer leeren weißen Kachel aus Facebook: „ärgerlich, dass Meta ein weißes Feld
+anzeigt, wenn der Trainer offline ist." Und kurz darauf, aus dem Facebook-Debugger bei laufendem
+Trainer: „Jetzt ist das Bild da, es ändert sich aber nicht wenn ich Online bin."
+
+Zwei Beobachtungen, zwei verschiedene Ursachen — die zweite war die unangenehmere.
+
+**Im Debugger stand alles richtig**: Titel, Beschreibung, `og:image` auf
+`amateurfunk-trainer.com/vorschau.jpg`. Nur die Bildfläche blieb grau. Der Grund war die
+Ländersperre, also eine Änderung von heute Mittag: Die *Seite* kommt durch, weil der Crawler an
+seiner Kennung erkannt wird. Das *Bild* holt Facebook aber in einem zweiten Anlauf, und dabei ist
+die Kennung nicht immer dieselbe — kommt der Abruf dann von einer US-Adresse, wurde er abgewiesen.
+
+Ein Vorschaubild ist nichts Schützenswertes, es ist Werbung. Es geht jetzt immer hinaus, aus jedem
+Land und unter jeder Kennung; dasselbe gilt für das Symbol der Seite. Nachgemessen mit einem Abruf
+aus den USA ohne Crawler-Kennung:
+
+    vorschau.jpg        HTTP 200   116406 Bytes
+    vorschau-raum.jpg   HTTP 200   116207 Bytes
+    Startseite          HTTP 200     2632 Bytes   (die Sperrseite - richtig so)
+    Fragenkatalog       HTTP 200     2632 Bytes   (die Sperrseite - richtig so)
+
+Die Sperre hält also unverändert, nur die Bilder sind ausgenommen.
+
+**Die leere Kachel bei ausgeschaltetem Rechner** hatte eine eigene Ursache: Die Auffangseite bei
+Cloudflare hatte Titel und Text, aber kein Bild. Es durfte auch keines vom Trainer sein — der ist
+in dem Moment ja aus. Jetzt zeigt sie auf das Bild der GitHub-Seite, die rund um die Uhr läuft.
+
+Und noch etwas: Die Vorschau-Crawler bekommen von der Auffangseite jetzt **immer** die richtige
+Kachel, nicht die Offline-Meldung. Facebook liest einen Link nämlich genau einmal ein und friert
+die Kachel dann ein. Liest es ausgerechnet dann, wenn der Rechner aus ist, stünde ab sofort
+„gerade offline" unter dem Beitrag — auch wenn der Trainer eine Minute später wieder läuft. Genau
+das war passiert.
+
+### Der Knopf zur Projektseite führte ins Leere
+
+Dietmar, mit zwei Bildern: die Auffangseite, und daneben GitHubs „There isn't a GitHub Pages site
+here." — „Fehler 404 kommt, wenn ich auf den blauen Button klicke."
+
+Die Adresse war falsch, und zwar überall dort, wo ich sie hingeschrieben hatte. Ich hatte
+`amateurfunk-gruppe.github.io` verwendet. Unter dieser kurzen Form gäbe es die Seite nur, wenn ein
+Repository genau so hieße. Die Projektseite liegt aber im Ordner `docs/` des Trainer-Repositorys,
+und GitHub Pages veröffentlicht sie deshalb unter
+
+    https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/
+
+Vier Stellen waren betroffen: der Knopf auf der Auffangseite (`worker.js`), der Hinweis auf der
+Sperrseite der Ländersperre und der Vorschautext beim Teilen (beide `Server.js`), der Hinweis im
+Gruppenraum (`duo.js`) und der Text im Willkommensfenster (`Index.html`).
+
+Ärgerlich daran ist nicht der Tippfehler, sondern dass ich die Adresse nie aufgerufen habe, bevor
+ich sie an fünf Stellen eingebaut und als fertig gemeldet habe. Genau dafür wäre ein einziger
+Abruf nötig gewesen.
+
+### Die Begrüßung kam nie an — ein Denkfehler von mir
+
+Dietmar, mit zwei Besuchern auf der Seite und einem leeren Chat: „Im Chat kommt nichts, wenn ein
+Benutzer in den Trainer kommt."
+
+Er hatte recht, und der Fehler war meiner. Ich hatte die Ankunftsmeldung daran gehängt, dass der
+Merker `demo_hinweis_gesehen` gesetzt ist — also daran, dass jemand das Willkommensfenster
+weggeklickt hat. Dieses Fenster erscheint aber nur unter einer Bedingung (`ueberGeteiltenLink()`).
+**Wer es nie zu sehen bekommt, setzte den Merker nie und meldete sich damit auch nie an.**
+
+Nachgewiesen mit einem Horchposten im Browser, der `window.io` über einen Setter abfängt und
+mitschreibt, was wirklich abgeschickt wird:
+
+    vorher:   Abgeschickt beim Start: []
+    nachher:  Abgeschickt beim Start: ["hausHallo"]
+
+Ein erster, unzuverlässiger Versuch desselben Horchpostens hatte den Socket verpasst, weil er zu
+spät ansetzte, und lieferte ein falsches „nichts abgeschickt" für beide Fassungen. Erst der Setter
+trifft garantiert vor dem ersten `io()`.
+
+Jetzt entscheidet kein Merker mehr, sondern das Fenster selbst: Steht es offen, wartet die Meldung
+auf das Bestätigen — dann ist der Name dabei. Steht es nicht offen, geht sie sofort hinaus. Wer
+wirklich gemeldet wird, entscheidet ohnehin der Server: nur Besucher von außen.
+
+**Der Wortlaut** kommt von Dietmar: „Herzlich Willkommen, Name betritt den Server." Ohne Namen heißt
+es „Herzlich willkommen, ein Besucher betritt den Server."
+
+**Und „am Link" ist raus.** Hinter dem Namen im Chat stand bisher „· am Link", damit der Gastgeber
+Raumteilnehmer von Link-Besuchern unterscheiden konnte. Dietmar: „mit Link klingt doof im Chat."
+Seit es die Ankunftsmeldung gibt, weiß er ohnehin, wer hereingekommen ist.
+
+### Maja konnte lesen, aber nicht schreiben
+
+Dietmar: „Ich übe mit meiner Freundin Maja zusammen im Gruppenraum. Sie sagt, dass der Chat manchmal
+nicht geht. Kommt mir so vor, dass wenn sie fertig ist er nicht mehr geht."
+
+Die Beobachtung war genau richtig, und zwar in beiden Teilen — dem „manchmal" und dem „wenn sie
+fertig ist".
+
+**Was geschah.** Reißt die Verbindung länger ab, als der Server wartet, nimmt er den Teilnehmer aus
+dem Raum. Die Grenze liegt bei anderthalb Minuten (`pingTimeout` 60 s plus `pingInterval` 30 s).
+Socket.IO verbindet danach von selbst wieder — aber mit **neuer Kennung**, und die kennt der Raum
+nicht. Es gab keine Stelle, die den Teilnehmer zurückgeholt hätte.
+
+**Warum es so heimtückisch war.** Lesen ging weiter, denn die Nachrichten des Gastgebers werden
+ohnehin nach draußen kopiert, damit Besucher am nackten Link mitlesen können. Schreiben ging nicht:
+Der Server antwortete mit „Du bist nicht in diesem Raum" — ein Satz, der nicht sagt, was zu tun ist.
+Maja sah also Dietmars Zeilen hereinkommen, tippte eine Antwort, und die verschwand. Für sie war der
+Chat kaputt, für ihn wurde sie einfach still.
+
+**Und „wenn sie fertig ist" passt genau dazu:** Ein Tab, in dem nicht mehr geklickt wird, ist der,
+den Windows, das Handy oder das WLAN als Erstes schlafen legen.
+
+Nachgestellt mit zwei Browsern und echtem Netzausfall:
+
+    95 Sekunden offline, vorher:   Maja schreibt -> kommt an: NEIN
+                                   Meldung: "Du bist nicht in diesem Raum"
+    95 Sekunden offline, nachher:  Maja schreibt -> kommt an: JA
+
+Ein erster Versuch mit sechs Sekunden Ausfall zeigte übrigens nichts — der Server ist geduldig. Erst
+jenseits der anderthalb Minuten tritt der Fehler auf. Ohne diesen zweiten, längeren Versuch wäre die
+Sache als „nicht nachvollziehbar" liegengeblieben.
+
+**Zwei Netze.** Beim Wiederverbinden meldet sich der Trainer selbst zurück in den Raum — nur beim
+*Wieder*verbinden, beim ersten Mal gibt es keinen Raum, in den man zurückkehren könnte. Und wer in
+genau der Sekunde danach tippt und den Server noch vor der Rückmeldung erwischt, bekommt statt des
+nackten Satzes eine Erklärung: dass die Verbindung kurz weg war, dass gerade neu angemeldet wird und
+er es in ein paar Sekunden noch einmal abschicken soll. Angeklopft wird dabei höchstens einmal je
+Viertelminute.
+
+Hat der Gastgeber den Raum inzwischen geschlossen, steht das jetzt auch dort — vorher kam „Raum
+nicht gefunden", und der Chat blieb sichtbar, als wäre nichts.
+
+### Das Formelblatt fehlte beim ohmschen Gesetz
+
+Dietmar, mit einer Frage aus dem Gruppenraum vor sich: „Fehlt hier nicht das Formelblatt?"
+
+NB501 — *„Welcher der nachfolgenden Ausdrücke stellt den Zusammenhang zwischen Strom, Spannung und
+Widerstand korrekt dar?"* Also das ohmsche Gesetz, und das steht auf Seite 13 der Formelsammlung.
+Der Knopf war trotzdem nicht da.
+
+Der Knopf erscheint nur, wenn für genau diese Frage in `formelhilfe.json` eine Stelle eingetragen
+ist — ein Knopf, der manchmal ins Leere führt, wäre schlimmer als keiner. Für NB501 war keine
+eingetragen. Für die Nachbarfrage NB504, die dieselbe Formel zum Rechnen braucht, schon.
+
+Nachgetragen wurden die neun Fragen, bei denen die Stelle zweifelsfrei ist:
+
+    NB501, NB502, NB503, NB505   ->  Ohmsches Gesetz   (Seite 13)
+    NB601, NB602, NB603,
+    NB605, NB606                 ->  Leistung          (Seite 14)
+
+Damit sind die beiden Familien vollständig: NB501–505 und NB601–606. Nachgeprüft im Browser, dass
+der Knopf bei allen elf erscheint und bei NA101, ND101 und NK302 weiterhin ausbleibt.
+
+**Zwei Irrwege, die zum Ergebnis gehören.** Der erste Versuch suchte die Lücken über
+Fragen-Familien — „einige Geschwister haben eine Stelle, andere nicht" — und meldete 77 Treffer.
+Die meisten davon waren Unsinn: Bei ND101–109 hätte er „Stehwellenverhältnis" an Fragen über
+Netzteile, Verpolung und Sicherungen geklebt, weil dort zufällig eine SWR-Frage in derselben
+Nummerngruppe sitzt. Brauchbar wurde es erst mit einem anderen Signal: ob die **Antworten**
+Rechenwerte mit Einheit oder Gleichungen sind. Das sind Rechenaufgaben, und nur die brauchen das
+Blatt.
+
+**Und eine Richtigstellung.** In `Index.html` stand bei der Begründung, warum Nachschlagen positiv
+gewertet wird: „Nachgezaehlt: 534 der 571 Fragen haben eine Stelle im Formelblatt." Das war falsch,
+und zwar nicht knapp — das Wort „nachgezählt" stand dort, ohne dass gezählt worden war. Wirklich
+gezählt sind es, nach dem Nachtragen:
+
+    Klasse N     123 von  571   (22 %)        N auf E    139 von  463   (30 %)
+    Klasse E     262 von 1034   (25 %)        E auf A    328 von  716   (46 %)
+    Klasse A     590 von 1750   (34 %)        N auf A    467 von 1179   (40 %)
+
+Nachschlagen ist also nicht der Normalfall, sondern betrifft je nach Katalog ein Fünftel bis knapp
+die Hälfte der Fragen. An der Entscheidung ändert das nichts — sie hing nie an der Häufigkeit,
+sondern daran, dass die Formelsammlung in der Prüfung auf dem Tisch liegt. Nur die Begründung war
+erfunden.
+
+Klasse N ist damit weiterhin der am dünnsten erfasste Katalog. Die 195 Technik-Fragen dort einmal
+vollständig durchzugehen, steht noch aus.
+
+### „Herzlich willkommen, DL1ABC betritt den Server."
+
+Dietmar, mit drei Leuten gleichzeitig auf der Seite: „Hier wäre eine Begrüßung mit Namen gut."
+
+Wer über den nackten Link kommt, ist in keinem Raum — es gibt also keine Teilnehmerliste, in der
+er auftauchen könnte. Im Chat stand er erst, wenn er von sich aus etwas schrieb, und das tut kaum
+jemand als Erster. Drei Besucher auf der Seite, und im Chat war Stille.
+
+Jetzt meldet der Chat jede Ankunft, für alle sichtbar: **„👋 DL1ABC ist dazugekommen."** Hat
+jemand keinen Namen eingetragen, heißt es **„👋 Jemand ist dazugekommen."** — auch das ist besser
+als nichts, denn dann weiß Dietmar, dass da jemand ist, und kann ihn ansprechen. Viele tippen erst
+etwas, wenn sie angesprochen werden.
+
+Die Ansage geht bewusst **nicht** beim Verbinden hinaus, sondern erst, wenn das Willkommensfenster
+durch ist. Andersherum wäre sie eine Sekunde zu früh gekommen und damit immer namenlos. War das
+Fenster bei diesem Besucher schon einmal da, meldet er sich sofort beim Verbinden — mit dem Namen,
+den er damals eingetragen hat.
+
+**Eine Begrüßung je Adresse und Viertelstunde.** Ohne diese Sperre würde jedes Neuladen denselben
+Menschen noch einmal ankündigen. Der Gastgeber und sein WLAN begrüßen sich nicht selbst, und wer in
+einem Raum sitzt, steht dort ohnehin in der Teilnehmerliste.
+
+Angezeigt wird es als Systemzeile: mittig, schmal, ohne Absender — es ist ja niemandes Nachricht.
+Die Klasse dafür gab es schon, sie wurde bisher nur lokal benutzt. Kontrast in allen vier
+Farbwelten geprüft: 14:1 hell, 9,4:1 dunkel, 11,3:1 grün und blau.
+
+### Düsseldorf hieß eine Weile DÃ¼sseldorf
+
+Dietmar, mit einem Bild seiner Besucherliste: „Mit Umlaute scheint es ein Problem zu geben."
+
+Dort stand `DÃ¼sseldorf`. Das ist das Muster, das entsteht, wenn UTF-8-Bytes als Latin-1 gelesen
+werden: Ein „ü" besteht in UTF-8 aus zwei Bytes, und die erscheinen einzeln als `Ã` und `¼`.
+
+Die Ursache liegt nicht bei Cloudflare, sondern im HTTP-Protokoll selbst: Kopfzeilen sind dort
+als Latin-1 festgelegt, ein Zeichensatz mit 256 Plätzen. Cloudflare schickt den Stadtnamen in
+`cf-ipcity` aber als UTF-8, und Node liest die Kopfzeile normgetreu als Latin-1. Aus zwei Bytes
+werden zwei Zeichen, und fertig ist der Buchstabensalat.
+
+`kopfText()` macht es rückgängig — die Zeichen wieder als Bytes nehmen und diesmal als UTF-8
+lesen. Zweimal abgesichert, damit nichts kaputtgeht, was vorher in Ordnung war: Reiner
+ASCII-Text (`Hamburg`, `Berlin`) wird gar nicht erst angefasst, und kommt bei der Umdeutung ein
+Ersetzungszeichen heraus, war die Kopfzeile eben doch echtes Latin-1 — dann bleibt der Urtext
+stehen. Lieber ein Name mit Schönheitsfehler als einer aus Fragezeichen.
+
+Geprüft an Düsseldorf, München, Köln, Zürich, Genève, Osnabrück und Sankt Pölten, dazu an
+Hamburg, Berlin, Chicago und Amsterdam, die unverändert bleiben müssen.
+
+Die schon gespeicherten Einträge werden beim Lesen von `besucher.json` mit geradegezogen — die
+alte Liste sieht damit nach einem Neustart ebenfalls richtig aus. Namen von Besuchern waren nie
+betroffen: Die reisen im Adressteil, und den entschlüsselt Express als UTF-8.
+
+### Die Ländersperre — und wer anklopft
+
+Dietmar, mit einer Besucherliste voller Aufrufe aus Chicago und Amsterdam: „diese Anklopfer gefallen
+mir gar nicht. Kann man da nicht eine Sperre einbauen? Deutschland, Österreich und die Schweiz?
+Ggf mit einer Anfrage?"
+
+Die Anklopfer sind Zertifikat-Scanner. Sobald Cloudflare für eine neue Domain ein Zertifikat
+ausstellt, steht der Name öffentlich in den Certificate-Transparency-Protokollen, und es gibt
+Dienste, die diese Protokolle im Minutentakt auslesen und jede frische Adresse abklopfen. Die
+laufen in Rechenzentren — und Rechenzentren stehen fast nie in DACH. Eine Länderprüfung trifft sie
+deshalb ziemlich genau, ohne dass ein einziger Funkamateur etwas merkt.
+
+Das Herkunftsland liefert Cloudflare bei jeder Anfrage mit (`cf-ipcountry`). Es braucht also keinen
+fremden Dienst, dem man die Adressen der Besucher schicken müsste, und keine Datenbank im Ordner.
+
+**Nie geprüft werden:** der Trainer-PC selbst, alles im eigenen WLAN (dort gibt es gar kein
+Herkunftsland), die Vorschau-Crawler von Facebook und WhatsApp — sonst gäbe es beim Teilen keine
+Kachel mehr — und die Suchmaschinen. Dietmar: „Den Google Bot hätte ich schon ganz gerne mit drin."
+Googlebot, Bingbot und die übrigen kommen durch, **stehen aber nicht in der Besucherliste**: Eine
+Kennung lässt sich fälschen, und wer sich als Googlebot ausgibt, soll sich damit höchstens die
+Seite abholen können.
+
+Wer abgewiesen wird, bekommt keine tote Leitung, sondern eine höfliche Seite: der Trainer läuft
+gerade nur für den deutschsprachigen Raum, dazu der Hinweis, dass es ihn auf
+`amateurfunk-gruppe.github.io` kostenlos zum Mitnehmen gibt. Und einen Knopf: **Zutritt anfragen.**
+
+Die Anfrage landet beim Gastgeber — oben im Besucherfenster, gelb, mit Gerät, Standort und Wartezeit,
+daneben *Hereinlassen* und *Ablehnen*. Es klingelt dabei mit demselben Ton wie bei einem neuen
+Besucher, denn das Fenster ist meistens zu. Lässt Dietmar jemanden herein, lädt sich dessen Seite
+innerhalb weniger Sekunden von selbst neu — sie fragt im Takt nach, ob sie gehen darf.
+
+**Die Freigabe gilt bis zum Neustart des Trainers.** Das war Dietmars Wahl: keine neue Datei, nichts
+zu pflegen, und nach einem Neustart ist der Zettel wieder leer. Freigeben und ablehnen darf
+ausschließlich der Trainer-PC selbst — beide Wege sind `localOnly`, genau wie der Besucherzähler.
+Ein Gast über den Einladungslink bekommt dort 403.
+
+In der Kopfzeile des Besucherfensters steht seitdem, wie viele Aufrufe die Sperre abgewiesen hat und
+wie viele davon Dietmar durchgelassen hat.
+
+### Der Name reist mit
+
+Dietmar: „ich möchte den Nackten Link in der Facebook Gruppe teilen und jeden sehen, der auf dem
+Trainer ist."
+
+Sehen konnte er sie schon — Gerät, Standort, seit wann —, aber ohne Namen. Der Server kennt Namen
+nämlich nur von Leuten, die einem Raum beigetreten sind, und wer über den nackten Link kommt, ist in
+keinem Raum.
+
+Das Lebenszeichen, das jeder offene Trainer alle zehn Sekunden hinausschickt, nimmt den Namen jetzt
+mit — den aus dem Willkommensfenster. Damit steht er im grünen Kasten „wer ist gerade da", und ein
+später eingetragener Name erscheint beim nächsten Takt von selbst. Freiwillig bleibt es: Wer nichts
+einträgt, heißt dort „Besucher". Steuerzeichen und spitze Klammern werden entfernt, und nach zwanzig
+Zeichen ist Schluss.
+
+Zu beachten: Die **Teilnehmerliste des Raums** zeigt weiterhin nur, wer dem Raum mit `?duo=CODE`
+beigetreten ist. Der grüne Kasten zeigt alle, die die Seite offen haben.
+
+### Die Adresse ändert sich nicht mehr
+
+Dietmar, als der Neustart-Balken über seinen eigenen Bildschirm lief: „Die Adresse ändert sich doch
+jetzt nicht mehr ^^"
+
+Stimmte — seit der benannte Tunnel läuft, steht der Link fest. Der Balken behauptete trotzdem noch
+das Gegenteil, weil sein Text aus der Zeit der Wegwerf-Adressen von `trycloudflare.com` stammt.
+
+Wissen kann das nur der Gastgeber: Die eigene Adresse steht in *seinem* Browser. Also sagt er es beim
+Ansagen mit, und der Server reicht es an alle weiter. Steht die Adresse fest, heißt es jetzt „die
+Adresse bleibt dieselbe — einfach die Seite neu laden, sobald er wieder da ist"; sonst wie bisher
+„der neue Link wird gleich danach in der Gruppe geteilt". Antwortet ein älterer Server ohne diese
+Angabe, entscheidet der Hostname: Nur `trycloudflare.com` vergibt bei jedem Start einen neuen Namen.
+
+
 ### Der Prüfungssimulator im Gruppenraum
 
 Dietmar: „Im Gruppenraum möchte ich einen Prüfungssimulator. Aktiviere ich das, laufen 25 Fragen aus
@@ -74,6 +468,526 @@ derselben Reihenfolge, die Uhr steht vor dem Start und läuft danach sekundengen
 bleibt bis zur Auswertung aus, 18 falsche Antworten stehen anschließend zu 18 in der Fehlerliste und
 zu 18 im Lernbedarf, bei Zeitablauf ebenso 22 offene Fragen. Null Seitenfehler. Die normale
 Gruppenrunde ohne Haken und der Prüfungssimulator allein laufen unverändert.
+
+### Im Raum liegen die Lernkacheln nicht mehr auf dem Tisch
+
+Dietmar, mit einem Bild aus dem Gruppenraum: „Im Gruppenraum gehören die 3 Knöpfe Videolehrgang und
+2 Mal 50 Ohm raus."
+
+Er hat recht, und zwar aus demselben Grund, aus dem dort schon F9 und Nachschlagen abgeschaltet
+sind: Diese Kacheln führen auf die Lektion und auf die Lehrgangsseite, auf der genau diese Frage
+erklärt wird — eine davon sogar auf den gerechneten Lösungsweg. Wer im Raum sitzt, spielt gegen
+andere: am Ergebnis hängt ein gemeinsamer Punktestand, und der Trainer sieht mit, wer wo steht.
+
+Die erste Fassung war zu eng gefasst und hing nur an `pruefungStreng()`, also am Prüfungssimulator
+und an der Prüfungsrunde im Raum. In der **normalen** Gruppenrunde — 25 Fragen, „Alle Teile", kein
+Haken — standen die Kacheln weiter da, und genau die hatte Dietmar fotografiert. Jetzt entscheiden
+zwei Gründe in einer Zeile: `pruefungStreng()` nimmt den Prüfungssimulator allein mit (dieselbe
+Lücke, nur ohne Zeugen), `window.duo.isActive()` den Gruppenraum in jeder Betriebsart. Genau dieses
+Paar entscheidet weiter unten auch, ob die Lösungstaste noch etwas verrät.
+
+Beim Lernen allein, beim Blättern durch den Katalog und in der Fehlerliste bleibt alles, wie es war —
+dort gehören sie hin.
+
+Nachgemessen an fünf Stellen: Prüfungssimulator 0 Kacheln, Gruppenprüfung 0, normale Gruppenrunde 0,
+nach dem Verlassen des Raums wieder 2, Lernrunde 2.
+
+### Eine Empfehlung ist keine Zusammenarbeit
+
+In der Fußzeile stand seit dem 04.09.2026 „In Zusammenarbeit mit 50ohm.de — dem Amateurfunk-Lehrgang
+des DARC". Als dieselbe Zeile im neuen Werbebild groß dastand, fiel sie Dietmar auf: „Es ist keine
+Zusammenarbeit. Möchte mehr eine Empfehlung." Und kurz darauf der Grund: „Zusammenarbeit klingt
+danach, dass 50 Ohm das mit entwickelt hat."
+
+Er hat recht, und es ist mehr als eine Geschmacksfrage. Der Trainer verlinkt den Lehrgang, mehr nicht
+— niemand beim DARC hat an diesem Programm mitgearbeitet. Auf einem Bild, das durch Facebook-Gruppen
+geht, wäre aus der freundlichen Formulierung schnell eine Behauptung geworden, die jemand
+richtigstellen muss.
+
+Jetzt steht dort: **„Empfehlung: 50ohm.de — der Amateurfunk-Lehrgang des DARC"**. Beide Namen bleiben
+anklickbar.
+
+Und das Omega davor ist ebenfalls weg — Dietmar, gleich darauf: „Ω gehört das nicht rein." Auch das
+stimmt, und zwar aus demselben Grund, der seit dem 04.09.2026 im Kommentar daneben steht: Das Zeichen
+„50 Ω" des DARC ist markenrechtlich geschützt und kommt im Trainer bewusst nicht vor. Ein
+griechischer Buchstabe als Zierde direkt vor „50ohm.de" rückt aber genau dorthin, wo er nicht
+hingehört. Ohne ihn ist die Zeile schlicht ein Satz. Es ist genau dieser eine Satz im Markup; die
+Werbebilder wurden mit der neuen Zeile neu aufgenommen.
+
+### Der geteilte Link hat jetzt eine Kachel
+
+Dietmar, mit zwei Bildern aus Facebook: „Wenn ich den Trainer Link vom Gruppenraum teilen möchte, gibt
+es keine Vorschau. Kann man das einbauen? Auch wenn ich E nach A eingestellt habe, es zeigt
+Amateurfunk Trainer Klasse N in der Vorschau."
+
+Beides hatte denselben Grund: Im Kopf von `Index.html` stand nichts, was ein Crawler lesen könnte.
+Ohne `og:`-Zeilen nimmt Facebook notgedrungen den `<title>` — und der steht seit jeher fest auf
+„Klasse N". Das eingestellte Prüfungsziel liegt außerdem nur im Browser des Gastgebers; ein Crawler
+führt kein JavaScript aus und kann es gar nicht sehen.
+
+Jetzt bekommt nur der Crawler eine eigene, winzige Seite mit allen Angaben — Titel, Beschreibung,
+Bild, Adresse. Ein Mensch bekommt wie bisher den Trainer. Der Umweg ist nötig, weil die absolute
+Adresse des Bildes mit im Kopf stehen muss und die erst im Augenblick der Anfrage feststeht: Der
+Tunnel heißt nach jedem Neustart anders. `Index.html` bei jedem Aufruf durch eine Textersetzung zu
+jagen, wäre bei knapp zwei Megabyte Verschwendung.
+
+Steht ein Raumcode im Link, zeigt die Kachel eine Einladung in den Gruppenraum; sonst die allgemeine
+Fassung. Beide Bilder sind 1200 × 630 groß — das Format, das Facebook, WhatsApp, Telegram und Signal
+erwarten. Das Bild der GitHub-Seite war 1200 × 663 und wurde beschnitten; es ist jetzt ebenfalls
+630 hoch, ohne dass etwas fehlt: Die 33 Zeilen kamen aus einer Fläche, deren Streuung bei 0,06 lag.
+
+In der Beschreibung steht ausdrücklich, dass der Zugang eine Demo ist und nur läuft, solange der
+Trainer läuft. Dietmar: „Demo Mode — Der Trainer ist nur so lange aktiv, wie der Trainer läuft." Wer
+den Link in vier Wochen anklickt, läuft sonst in eine tote Seite und hält das Programm für kaputt.
+
+### Wer war da?
+
+„Ich möchte für den Trainer Werbung machen und dazu einen Gruppenraum starten. Ich möchte als Host die
+Anzahl der Besucher sehen."
+
+Unter dem Einladungslink steht jetzt eine zweite Zeile neben der Tunnel-Wache: wie viele den Link
+aufgerufen haben, wie viele gerade im Raum sind, und wie lange der Trainer schon läuft. Gezählt wird
+nur, was von außen kommt — der eigene Rechner zählt nicht mit, sonst stünde der Zähler nach einem
+Vormittag Arbeit bei 40, ohne dass ein Besucher da war. Die Vorschau-Abrufe von Facebook und WhatsApp
+zählen ebenfalls nicht: Das sind Maschinen, keine Gäste.
+
+Die Liste, **wer** gekommen ist, zeigt der Trainer nur dem Entwickler — erkannt am Benutzernamen. Der
+Name ist dabei nur der Schalter für die Anzeige, nicht der Schutz: `/api/besucher` antwortet
+ausschließlich dem Trainer-PC selbst. Ein Gast über den Einladungslink bekommt dort 403, auch wenn er
+sich im Trainer „Dietmar" nennt (nachgemessen).
+
+In der Liste steht nichts, womit man jemanden wiederfindet: Uhrzeit, Geräteart, von welcher Seite der
+Klick kam, und die Adresse gekürzt wie überall sonst im Trainer. Keine Namen, keine Kennungen. Die
+Datei steht in der `.gitignore` und verlässt den Rechner nicht.
+
+**Nachgebessert, noch am selben Tag.** Dietmar, mit einem Bild der ersten Fassung: „Hier fehlt ein
+Reset-Knopf. Ich finde das irgendwie sehr reingedrückt. Ein Button zum Öffnen von einem Fenster wäre
+besser." Beides stimmte. Die Liste saß in einem Feld von 168 Punkten Höhe mit Bildlaufleiste, und
+IPv6-Adressen sind lang genug, dass jede Zeile dreimal umbrach.
+
+Jetzt steht unter dem Link nur noch der Satz mit den Zahlen und daneben ein Knopf „Besucher ansehen".
+Der öffnet ein Fenster mit einer richtigen Tabelle — Zeit, Gerät, gekommen über, Raum, Adresse, jedes
+in seiner eigenen Spalte. Darin sitzt auch der fehlende Knopf: **Zähler zurücksetzen**, mit
+Rückfrage. Sinnvoll, bevor eine neue Runde Werbung losgeht — dann zählt, was danach kommt, und nicht
+der Probelauf von gestern.
+
+Dabei wäre beinahe derselbe Fehler passiert wie schon zweimal in dieser Version: Der Kopfkasten im
+Fenster trägt sein Hellblau aus dem Markup, und die Regel `body.dark [id$=Modal] b` färbt das Fette
+darin fast weiß. Gemessen: 240,247,252 auf 238,244,251 — **1,01:1**, die Zahl, um die es in dem Satz
+geht, wäre im Dark Mode unsichtbar gewesen. Mit eigener Nachtfassung sind es jetzt 8,9:1 für den Text
+und 13,2:1 für das Fette.
+
+### Es klingelt, wenn jemand kommt — und man sieht, wer da ist
+
+Drei Wünsche auf einmal, während die erste Werbung schon lief: „Das Fenster bitte genau so groß wie
+das Fenster darunter. Wenn jemand auf dem Server joint, möchte ich den Level-Up-Sound. Möchte auch
+sehen, wer aktiv ist."
+
+**Die Größe.** Das Besucherfenster schrumpfte auf seinen Inhalt: mit drei Zeilen Liste war es 371
+Punkte hoch, das Gruppenraum-Fenster darunter 676. Genau das sah reingedrückt aus.
+
+Der erste Versuch waren feste Werte im Stilblatt — 94 % Breite, höchstens 1020 Punkte, Höhe 74 bis
+92 vh. Auf meinem Bildschirm traf das die Größe des anderen Fensters, auf Dietmars nicht: „Das Fenster
+hat nicht die gleiche Größe." Feste Werte können das auch nicht leisten, denn die Höhe des anderen
+Fensters hängt an seinem Inhalt. Also wird sie im Augenblick des Öffnens gemessen und übernommen; ist
+der Gruppenraum nicht offen, gelten wieder die Werte aus dem Stilblatt.
+
+Beim Messen lag noch eine Falle: `getBoundingClientRect()` liefert Punkte auf dem Bildschirm, ein
+gesetztes `style.width` wird aber als CSS-Punkt gelesen und anschließend mitgezoomt — der Trainer
+skaliert die ganze Seite über die Einstellung „Größe". Bei 80 % stand deshalb ein Fenster von 653
+neben einem von 816, genau die 0,8 zu viel. Mit `offsetWidth`/`offsetHeight` wird in derselben
+Einheit gezählt, in der auch geschrieben wird. Nachgemessen auf drei Bildschirmgrößen: 1020 × 710,
+816 × 569 und 1122 × 782 — jedes Mal auf den Punkt gleich.
+
+**Der Ton.** `levelUpSpielen()` gibt es seit dem 11.09.2026 — derselbe Ton, der eine gemeisterte Frage
+quittiert. Genau deshalb wird er hier benutzt und kein zweiter eingeführt: Wer ihn in den
+Einstellungen abgeschaltet hat, will ihn auch hier nicht hören. Er hängt an der Zahl, nicht am
+Ereignis; kommen zwischen zwei Blicken drei Leute, klingelt es einmal. Der Takt der Abfrage ist dafür
+von 30 auf 12 Sekunden verkürzt worden: Der Ton soll kommen, während der Besucher noch da ist.
+
+**Wer aktiv ist.** Die Antwort lag schon im Programm. Jeder offene Tab meldet sich alle zehn Sekunden
+beim Server, damit der nicht abschaltet — bisher wurde davon nur die Uhrzeit behalten. Daneben liegt
+jetzt eine zweite Karte mit dem Wenigen, das die Anzeige braucht: gekürzte Adresse, Geräteart, seit
+wann. Wer sich 40 Sekunden nicht gemeldet hat, ist weg. Bewusst eine zweite Karte und nicht ein
+Objekt in der ersten: An der ersten hängt die Abschaltlogik, und die rechnet mit einer Zahl.
+
+Im Fenster steht das in einem eigenen grünen Kasten über der Liste — die eine Frage ist „wer ist
+gerade drin", die andere „wer war heute da". Unter dem Einladungslink steht die Zahl mit dabei.
+
+### Drei Besucher aus Polen, bevor der Link geteilt war
+
+Kaum stand die feste Adresse, meldete Dietmar: „meine IP ist nicht in Polen." In der Besucherliste
+standen zwei Aufrufe aus Warschau und einer aus Amsterdam, alle um 18:01 und 18:02. Und dann der Satz,
+der es entschied: „habe den Link noch nicht geteilt."
+
+Damit war klar, was das war. Sobald Cloudflare für eine neue Domain ein Zertifikat ausstellt, steht
+der Name öffentlich in den Certificate-Transparency-Protokollen. Es gibt Dienste, die diese
+Protokolle im Minutentakt auslesen und jede frische Adresse sofort abklopfen. Die laufen in
+Rechenzentren — Warschau, Amsterdam, Ashburn —, geben sich in der Kennung als Windows- oder
+Mac-Browser aus und landeten damit in der Liste wie richtige Besucher. Bei einem Quick Tunnel fiel das
+nie auf: Dessen Adresse war am nächsten Tag ohnehin eine andere.
+
+Unterschieden wird jetzt an etwas, das kein Scanner tut: Ein echter Browser meldet sich nach dem Laden
+alle zehn Sekunden beim Server — das Lebenszeichen, das den Trainer am Leben hält. Dafür braucht es
+JavaScript und eine offene Seite. Ein Scanner holt die Startseite und ist weg.
+
+Jeder Aufruf fängt deshalb als „nur angeklopft" an und wird zum Besucher, sobald von derselben Adresse
+ein Lebenszeichen eintrifft. Lieber jemanden eine Minute lang zu wenig zählen als die Werbezahlen mit
+Maschinen aufzublähen. In der Liste stehen die Anklopfer ausgegraut mit dem Vermerk „nur angeklopft",
+im Kopf steht ihre Zahl getrennt daneben.
+
+Der Level-Up-Ton hängt ab jetzt ebenfalls an den echten Besuchern. Sonst hätte es am ersten Tag
+dreimal geklingelt, ohne dass ein Mensch da war.
+
+Nachgemessen mit zwei gestellten Aufrufen: Der eine holt nur die Seite → „klopf". Der andere holt die
+Seite und meldet sich → „ECHT". Gezählt: 1 Besucher, 1 Anklopfer.
+
+### Kein „Demo-Zugang", und kein Funkamateur, der noch keiner ist
+
+Zwei Sätze im Willkommensfenster, beide von Dietmar beanstandet, beide zu Recht.
+
+„Eines Funkamateurs klingt doof, da ich noch keiner bin." Im Text stand „Der Trainer läuft gerade auf
+dem Rechner eines Funkamateurs". Er hat die Prüfung noch nicht abgelegt — und ausgerechnet daran hat
+sich wenige Tage zuvor jemand in einer Facebook-Gruppe hochgezogen. Ein Satz, der in jedem
+Besucher-Browser steht, darf so etwas nicht behaupten. Jetzt heißt es „auf einem privaten Rechner":
+sagt dasselbe über die Verfügbarkeit, erhebt aber keinen Anspruch.
+
+„Demo-Zugang klingt auch doof. Das klingt nach bezahlen." Auch das stimmt: „Demo" heißt sonst
+abgespeckte Fassung mit Bezahlschranke dahinter, und hier ist das Gegenteil der Fall. Das Wort ist
+aus dem ganzen Programm verschwunden — aus dem Willkommensfenster („Hier ist alles offen und
+kostenlos"), aus der Link-Vorschau, aus der Sperre im Gruppenraum („Das ist nicht dein Trainer") und
+aus der Fußzeile der beiden Werbebilder („Offen und kostenlos — erreichbar, solange der Trainer
+läuft").
+
+Mit weg ist der Halbsatz „die Adresse ändert sich bei jedem Start". Mit dem benannten Tunnel auf
+eigener Domain stimmt er nicht mehr; was bleibt, gilt in beiden Fällen.
+
+### Eine feste Adresse — und der Trainer hält sich daran
+
+Am Nachmittag des 21.09.2026 hat Dietmar `amateurfunk-trainer.com` gekauft, um den Trainer über einen
+benannten Cloudflare-Tunnel erreichbar zu machen. Der läuft als Windows-Dienst, hält die Leitung
+unabhängig vom Trainer und trägt einen festen Namen — damit überlebt ein geteilter Link jeden
+Neustart. Zwei Stellen im Programm standen dem im Weg.
+
+**Der Trainer hätte den Dienst erschlagen.** Beim Start räumt er übrig gebliebene Tunnel auf, unter
+Windows mit `taskkill /IM cloudflared.exe /F` — und das trifft *jedes* cloudflared auf dem Rechner,
+auch den Dienst. Bei jedem Start des Trainers wäre die feste Adresse weggebrochen, und niemand hätte
+verstanden, warum. Jetzt wird die Befehlszeile gelesen und nur beendet, was ein Quick Tunnel ist
+(`--url`). Genau so macht es der Linux-Zweig seit jeher, aus demselben Grund. Gelesen wird sie mit
+`Get-CimInstance` und nicht mit `wmic` — das ist in aktuellen Windows-Fassungen nicht mehr an Bord.
+Geht die Abfrage schief, wird **nichts** beendet: lieber ein Waisenprozess zu viel als ein
+erschlagener Dienst.
+
+**Und er hätte trotzdem einen Quick Tunnel hochgefahren.** `tunnelBeiBedarfStarten()` fragte nicht, ob
+überhaupt eine eigene Adresse eingetragen ist. Bei jedem „Raum erstellen" wäre ein zweites cloudflared
+neben dem Dienst gestartet — für eine Adresse, die niemand benutzt. Schlimmer als unnötig: Cloudflare
+drosselt Quick Tunnels, wenn sich mehrere von derselben Anschlussadresse stapeln; ausgerechnet die
+Notlösung hätte die Hauptleitung stören können.
+
+Unter dem Einladungslink steht bei eingetragener Adresse jetzt nicht mehr die Tunnel-Wache, sondern
+die Auskunft, die dort hingehört: welche Adresse gilt, dass kein Tunnel nötig ist und dass ein
+Neustart den Link nicht ändert.
+
+Nachgemessen mit `https://trainer.amateurfunk-trainer.com` im Feld: Einladungslink
+`https://trainer.amateurfunk-trainer.com/?duo=7M7T2W`, kein Tunnelstart im Serverfenster, keine
+Seitenfehler.
+
+### Der Chat ist jetzt auch ohne Gruppenraum da
+
+„Wenn ich einen Link teile, möchte ich, dass der Chat vorhanden ist, auch ohne dem Duo." Und kurz
+darauf, beim Ausprobieren: „Habe jetzt auch schon einen Chat. Hier kann nur niemand schreiben, weil es
+nicht über Duo läuft."
+
+Bisher hing der Chat am Raumcode — `io.to(code)`, kein Raum, kein Chat. Wer die nackte Adresse
+anklickte, stand in der Hauptansicht und konnte nichts fragen. Jetzt gibt es einen Kanal daneben:
+„alle, die in keinem Raum sind". Er ist kein Raum, sondern eine Frage beim Senden — deshalb brauchte es
+kein `join`/`leave` an fünf Stellen im Socket-Teil.
+
+**Der Gastgeber ist immer dabei**, auch wenn er gerade eine Runde in seinem Raum hat. Daran wäre die
+erste Fassung gescheitert: Er sitzt im Raum und sähe die Frage am Link nicht. Und seine Antwort geht
+umgekehrt auch an die am Link hinaus — mit derselben Nachrichten-Kennung, weshalb sie niemand doppelt
+sieht. Was die Teilnehmer im Raum untereinander schreiben, bleibt im Raum.
+
+Nachgemessen über die ganze Kette: Gastgeber allein → kein Chatfenster. Besucher von außen verbindet
+sich → Fenster erscheint. Besucher fragt → kommt an, markiert „· am Link". Gastgeber antwortet, erst
+ohne und dann aus seinem Raum heraus → beides kommt beim Besucher an. Keine Seitenfehler.
+
+Dabei fiel noch eine Lücke auf: Die Verbindung zum Server wurde überhaupt erst aufgebaut, wenn jemand
+den Gruppenraum aufschlug. Wer nur den Link angeklickt hatte, hatte gar keine Leitung. Sie wird jetzt
+zwei Sekunden nach dem Start im Hintergrund aufgebaut — für den Chat und für Ansagen.
+
+### Willkommen am geteilten Link, mit Namensfrage
+
+„In dem Fall, wenn ich den Trainer zB. in Facebook teile, soll ein Hinweis kommen." Und: „Hier wäre
+ein PopUp gut, wo man sein Rufzeichen oder Benutzernamen eingeben kann."
+
+Beides steht in **einem** Fenster — zwei hintereinander wären ein Hindernis. Es sagt, dass der Trainer
+auf dem Rechner eines Funkamateurs läuft und nur erreichbar ist, solange der an ist, wo es das
+Programm zum Behalten gibt, und dass der Lernstand im eigenen Browser bleibt. Darunter das Feld für
+Rufzeichen oder Namen, freiwillig, mit „Ohne Namen" als gleichwertigem Ausgang.
+
+Der Merker wird erst beim Schließen gesetzt, nicht beim Anzeigen: Wer neu lädt, ohne geantwortet zu
+haben, wird wieder gefragt. Am eigenen Rechner kommt das Fenster nie — es hängt an derselben Frage wie
+der Blue Mode: Ist der Name in der Adresszeile ein öffentlicher?
+
+### Die Ansage vor dem Neustart
+
+„Nur so kann ich als Host schreiben, ich starte neu. So reißt es einfach ab und die Benutzer ärgern
+sich." Und der Vorschlag gleich dazu: „Hier könnte man einen Button einbauen Neustart. Danach bekommen
+alle einen Hinweis: Der Server wird neu gestartet in 3 Minuten. Der Link dazu wird erneut geteilt."
+
+Genau das tut der Knopf „Neustart ankündigen" im Besucherfenster. Alle Verbundenen bekommen oben einen
+Balken mit Countdown, samt dem Hinweis, dass der neue Link danach in der Gruppe steht und der
+Lernstand im eigenen Browser bleibt. Die Ansage gilt auch für den, der erst in Minute zwei dazukommt —
+er soll nicht in einen Abbruch laufen, von dem alle anderen wussten.
+
+Gestartet wird dadurch nichts. „Den Trainer möchte ich selbst neu starten", und das ist auch die
+robustere Lösung: Ein Programm, das sich unter Windows selbst neu startet, bräuchte Fenster,
+Node-Pfad und einen Starter, den es hier in drei Varianten gibt.
+
+### Die Stadt schickt Cloudflare nicht mit — nachgesehen statt geraten
+
+„Gibt Cloudflare auch noch die Stadt bekannt?" Das Land (`cf-ipcountry`) kommt bei jedem Tunnel. Stadt,
+Region und Zeitzone gibt es nur, wenn in der Cloudflare-Zone die „Managed Transforms → Add visitor
+location headers" eingeschaltet sind — und bei einem Quick Tunnel auf trycloudflare.com gehört die Zone
+Cloudflare, nicht dem Gastgeber. Mit einem eigenen benannten Tunnel auf eigener Domain wäre es
+möglich.
+
+Behauptet wird davon nichts: Die Anzeige nimmt, was da ist — kommt der Kopf, steht die Stadt vor dem
+Land, kommt er nicht, bleibt es beim Land. Und einmal je Serverstart schreibt das Serverfenster auf,
+welche `cf-`Köpfe wirklich angekommen sind. Im Probelauf: `cf-connecting-ip`, `cf-ipcountry`, `cf-ray` —
+keine Stadt.
+
+### Standort statt Adresse — und jeder Besucher zählt nur einmal
+
+Zwei Rückmeldungen aus dem laufenden Betrieb: „Kann man anstatt der IP das in Standort ändern? Mir ist
+auch aufgefallen, dass erst Facebook und dann direkt kommt."
+
+**Der Standort.** In der Spalte stand `2a00:20:73b9:d84a:...` — richtig, aber es sagt nichts. Jetzt
+steht dort 🇩🇪 Deutschland. Der Ländercode kommt von Cloudflare selbst: Der Tunnel läuft über deren
+Netz, und dort wird `cf-ipcountry` gesetzt. Es braucht also keinen fremden Dienst, dem man die
+Adressen der Besucher schicken müsste, und keine 70-MB-Datenbank im Ordner. Den Namen zum Code liefert
+der Browser (`Intl.DisplayNames`), die Fahne wird aus den zwei Buchstaben gerechnet. Fehlt der Code —
+etwa bei einem Besucher aus dem eigenen WLAN, wo kein Cloudflare dazwischen ist —, bleibt die gekürzte
+Adresse stehen.
+
+**Der doppelte Besucher.** Das war kein zweiter Gast, sondern immer derselbe, zweimal gezählt. Der
+Grund steht in `sw.js`: Der Service Worker legt sich beim ersten Besuch einen Vorrat an, und in dieser
+Liste steht `'./'` — die Startseite. Der Browser holt sie also ein zweites Mal, aus dem Hintergrund
+und ohne Referrer. In der Liste sah das aus wie zwei Leute: einer „über facebook.com", einer
+„direkt". Der Zähler stand damit für jeden Besucher auf zwei.
+
+`sec-fetch-dest` unterscheidet beides und wird vom Browser gesetzt, nicht von der Seite: „document"
+heißt, da hat wirklich jemand eine Seite aufgeschlagen; „empty" ist ein Abruf im Hintergrund. Nur das
+erste zählt. Fehlt der Kopf ganz (ältere Browser), wird gezählt wie bisher — lieber einer zu viel als
+eine leere Liste. Nachgemessen: Der Aufruf mit `document` steht in der Liste, der des Service Workers
+aus derselben Adresse nicht.
+
+Dazu steht im Kopf jetzt beides: „16 Aufrufe über den Link von 9 verschiedenen Adressen". Wer zweimal
+lädt, ist ein Besucher und zwei Aufrufe — für die Frage, wie weit die Werbung reicht, ist die zweite
+Zahl die ehrlichere.
+
+### „Nur am Trainer-PC möglich" — und er stand am Trainer-PC
+
+Dietmar wollte den Zähler zurücksetzen, am eigenen Rechner, unter `localhost:3000`, und bekam zu
+lesen: „Zurücksetzen nicht möglich: Nur am Trainer-PC möglich."
+
+Der Grund war nicht die Sperre, sondern ein halber Neustart: Die Seite war neu, der Server noch alt.
+`Server.js` wird nur beim Start gelesen — ein F5 holt die neue Oberfläche, aber nicht die neue Route.
+Die gab es also noch nicht, der Aufruf lief in einen 404, und mein Client warf beides in einen Satz.
+
+Jetzt werden die Fälle getrennt: 404 heißt „der Server läuft noch mit einer älteren Fassung, bitte den
+Trainer einmal beenden und neu starten", 403 heißt „das geht nur direkt am Trainer-PC". Dasselbe gilt
+für die Anzeige, wer gerade da ist: Fehlt die Auskunft in der Antwort, steht das im Fenster, statt
+dass der Kasten einfach wegbleibt und niemand weiß, warum.
+
+### Wer über den Link kommt, sieht zuerst Blau
+
+„Ich möchte bei einem Join, dass er den Trainer im Blue Mode zuerst sieht."
+
+Erkannt wird das am Namen in der Adresszeile, nicht am Server: Gefärbt wird, bevor das erste Mal
+gezeichnet wird — eine Frage an den Server wäre zu spät, der Besucher sähe erst Weiß und dann Blau.
+Wer über localhost oder eine Adresse aus dem eigenen Netz kommt, sitzt am Rechner oder im WLAN und
+behält seinen Stil. Und es gilt nur beim ersten Besuch: Sobald jemand selbst einen Stil gewählt hat,
+hat der Vorrang.
+
+Nachgemessen mit drei Browsern: über `demo.trycloudflare.com` kommt Blau, über `heimat.local` und über
+localhost bleibt es beim gewohnten Stil.
+
+### Im Demo-Zugang eröffnet niemand einen zweiten Raum
+
+Dietmar, kurz darauf: „Im Gruppenraum dürfen Besucher keinen Zugriff haben, wenn ich nur den Link ohne
+Duo und Code poste. Diese starten sonst einen neuen Gruppenraum und der Link ist nicht mehr aktiv."
+
+Er hat recht, und der Schaden ist größer, als es klingt. Wer die nackte Trainer-Adresse anklickt,
+steht in der vollen Hauptansicht — mit dem Knopf „Gruppenraum". Ein Klick auf „Raum erstellen", und
+auf Dietmars Rechner läuft ein zweiter Raum, dessen Gastgeber irgendwo im Internet sitzt; dabei wird
+auch der Tunnel angefasst. Der Link, den er gerade in die Gruppe gestellt hat, wäre tot.
+
+Ab jetzt gilt: Wer über den Tunnel kommt, kann beitreten, aber keinen eigenen Raum eröffnen. Der Knopf
+ist gesperrt und sagt, warum; der Riegel selbst liegt aber im Server, denn ein gesperrter Knopf geht
+in der Entwicklerkonsole wieder auf. Unterschieden wird nach der Adresse — `sperrbar()` gab es dafür
+schon. Wer am Rechner selbst sitzt oder im eigenen WLAN, merkt nichts davon.
+
+Nachgemessen mit drei Verbindungen: Besucher über den Tunnel abgelehnt, Gastgeber am eigenen PC Raum
+eröffnet, Handy im eigenen WLAN Raum eröffnet. Und die andere Hälfte stimmt auch: Ein Besucher von
+außen tritt mit dem Code weiterhin bei.
+
+### Der gelernte Punkt war der eigentliche Grund
+
+Nach der ersten Runde meldete Dietmar zurück: „Derzeit nur bei Start. Im Gruppenraum, Fehler,
+Lernbedarf, Blättern und Weiterblättern fehlt es." Dazu ein Bild mit 25 fast gleichen Kästchen.
+
+Gemessen wurde es aus seinem Bild heraus: 23 der 25 Punkte trugen `.gelernt-dot`. Deren Farbe
+#d7f0e0 steht auf der Spalte #e0f1e8 mit **1,03:1** — das ist kein Unterschied mehr. Die Regel steht
+weit oben im Stil und trägt `!important`, damit der Punkt in Grau, Blau und Orange seine Farbe
+behält; im Green Mode hieß das aber hellgrün auf hellgrün. Der Tag davor hatte den offenen und den
+beantworteten Punkt repariert — den gelernten nicht, und der ist bei einem, der neun von zehn Fragen
+abgehakt hat, der häufigste von allen.
+
+Daher auch „bei Start geht es": Der Startknopf legt fällige und neue Fragen vor, also ungelernte, und
+die sind weiß mit kräftigem Rand. Gruppenraum, Fehler, Lernbedarf und Blättern ziehen aus dem ganzen
+Katalog. Nachgemessen: Raum 21 von 25 Punkten gelernt, Fehler 22 von 25, Lernbedarf 60 von 66,
+Blättern 516 von 571. Richtig und falsch färbten sich dort übrigens die ganze Zeit — die zwei, drei
+farbigen Punkte gingen nur in der blassen Masse unter.
+
+Aus drei Entwürfen hat Dietmar den gefüllten gewählt: Mittelgrün #7cc4a0 statt #d7f0e0, also 1,75:1
+gegen die Spalte statt 1,03:1, mit dunkelgrüner Ziffer #0f5132 darauf (4,57:1). Vom gefüllten
+Dunkelgrün des richtig beantworteten Punktes trennen es 2,46:1 und die Ziffer: dort weiß, hier
+dunkel.
+
+Mitgenommen: Der aktuelle Punkt behält jetzt seinen dunkelblauen Rand auch dann, wenn er zugleich als
+gelernt gilt. Beide Regeln sind gleich spezifisch, und die letzte gewinnt nur, wenn sie ebenfalls
+`!important` trägt — das galt bis heute schon für den beantworteten Punkt in der Prüfung.
+
+### Im Green Mode war der Verlauf grün auf grünem Grund
+
+Dietmar, mit einem Bild der Fortschrittsspalte: „Im Green Mode erkennt man den Verlauf nur schwer.
+Grün auf grünem Grund?"
+
+Das war es, und zwar an zwei Stellen. Das noch nicht beantwortete Kästchen lag mit `#f3fbf6` auf
+einer Spalte in `#e0f1e8` — gemessen **1,11:1**, also praktisch dieselbe Fläche —, und sein Rand trug
+2,12:1. Ein Kästchen, dessen Fläche aussieht wie der Grund und dessen Rand kaum dunkler ist, hat
+keine Form. Und das Kästchen „im Prüfungssimulator beantwortet, ohne Wertung" lag mit einem hellen
+Blaugrau bei 1,22:1 — es war schlicht weg.
+
+Jetzt ist das offene Kästchen **weiß** mit kräftigem grünem Rand (4,17:1). Weiß ist auf der grünen
+Spalte das, was ein Formularfeld auf einem Blatt ist: eine Fläche, die auf etwas wartet. Dadurch
+heben sich die gefüllten Zustände ab, ohne dass an ihren Farben etwas geändert werden musste —
+dunkelgrün für richtig (4,3:1 gegen die Spalte), dunkelrot für falsch (5,19:1). Das beantwortete
+Kästchen bleibt blaugrau, denn es *muss* aus der Reihe fallen — es sagt „beantwortet, aber das Urteil
+kommt erst am Ende" —, nur dunkler und mit sichtbarem Rand (5,3:1).
+
+### Das Zeichen des Trainers ist jetzt Dietmars eigenes
+
+Dietmar, mit einem Bild des Beenden-Knopfes aus der Kopfzeile seines eigenen Programms: „Dieses
+Zeichen finde ich für den Trainer gar nicht mal so schlecht als Icon. Es ist ein vertikaler Strahler
+mit einer Funkwelle."
+
+Er hat recht mit dem, was er sieht: Der senkrechte Strich ist der Strahler, der offene Ring die
+abgehende Welle. Mein Einwand war, dass es zugleich das Ein/Aus-Zeichen ist und im Dock mancher
+„beenden" liest; dazu gab es zwei Runden Gegenvorschläge — Mast mit Wellen, Dipol, Funkturm, die drei
+Klassen als Stufen, Antenne aus dem Buch. Seine Entscheidung: „nimm mein Zeichen als Icon." Also
+dieses.
+
+Gezeichnet wird es in `zeichen_bauen.py`, mit demselben Aufbau wie bisher: dunkler Verlauf,
+Türkis, der doppelte Schein einmal weit und schwach, einmal eng und kräftig. Ab 48 Punkten steht
+die ganze Tafel mit der Wortmarke „Amateurfunk — TRAINER" darunter, bei 32 und 16 nur noch das
+Zeichen. Zwei Kleinigkeiten waren dabei zu lösen: PIL trägt die Strichbreite eines Bogens nach
+**innen** auf, weshalb die runden Enden zunächst als zwei Ohren über dem Ring standen — sie sitzen
+jetzt eine halbe Strichbreite weiter innen. Und in 16 Punkten wären aus der Strichbreite noch
+anderthalb Bildpunkte geworden; dort trägt der Strich deshalb dicker auf, sonst verschwände der Ring
+zu einem Schatten.
+
+**Die 55 ist nicht gelöscht.** Ihre Zeichenfunktionen stehen unverändert in der Datei; wer sie
+zurückholen will, ändert in `voll()`, `mittel()` und `winzig()` je eine Zeile. Und `zeichen_bauen.py`
+schrieb seine Dateien bisher in einen festen Pfad aus der Entwicklung — auf jedem anderen Rechner
+lief es damit ins Leere. Jetzt schreibt es in den Ordner, in dem es selbst liegt; ein angehängter
+Pfad überschreibt das.
+
+Neu gebaut sind `icon.png`, `icon-512.png`, `icon-192.png`, `icon-512-maskierbar.png`, `icon.ico`,
+`favicon.ico` und `icon.icns` — dieselben Namen wie vorher, also ziehen Installer, Bauskript und die
+Verknüpfung auf dem Schreibtisch von selbst nach.
+
+### Auf dem Mac hüpft das Zeichen, bis der Trainer da ist
+
+Zweite Rückmeldung desselben Mac-Nutzers: Das ewige Hüpfen ist weg, aber jetzt fehlt ihm das
+Hüpfen ganz — „er hätte es gerne 3 Mal". Das ist nachvollziehbar: Seit `LSUIElement` gibt es gar
+kein Dock-Zeichen mehr und damit keinerlei Hinweis, dass der Doppelklick angekommen ist. Bis der
+Browser aufgeht, scheint nichts zu passieren.
+
+**Dreimal ist keine Einstellung.** macOS lässt das Zeichen hüpfen, solange es darauf wartet, dass
+sich das Programm beim Fensterdienst meldet; es hört auf, wenn das geschieht — oder wenn der Vorgang
+endet. Ein Shell-Skript meldet sich nie. Steuerbar ist also nur, wie lange der Starter lebt.
+
+Zuerst stand hier deshalb eine feste Zahl: 1,8 Sekunden, das ergibt etwa drei Hüpfer. Dann kam
+Karstens eigentliche Frage nach: „Kann man die App dazu bringen, auf die geöffnete Seite im Browser
+zu warten und bei Erfolg das Springen zu beenden?" — und die ist besser als jede Zahl. Eine feste
+Zeit ist immer falsch: Auf einem schnellen Rechner hüpft es noch, wenn der Trainer längst steht; auf
+einem langsamen hört es auf, bevor überhaupt etwas zu sehen ist.
+
+So ist es jetzt gebaut: `LSUIElement` ist wieder draußen, es gibt also ein Zeichen im Dock. Der
+Starter setzt den Server abgekoppelt in Gang (`nohup`, damit er das Ende des Skripts überlebt) und
+fragt danach alle 0,2 Sekunden bei Port 3000 nach. Antwortet der Trainer, geht der Starter — das
+Zeichen verschwindet **in dem Moment, in dem der Trainer da ist**. Das Hüpfen dauert also genau so
+lange wie der Start und hört bei Erfolg auf, nicht nach Stoppuhr.
+
+Zwei Grenzen gibt es trotzdem. Eine Mindestzeit von 1,2 Sekunden, weil ein Zeichen, das kurz
+aufblitzt und weg ist, keine Rückmeldung wäre — auf einem flotten Mac antwortet der Server in einer
+halben Sekunde. Und eine Obergrenze von 25 Sekunden, damit es nicht wieder anderthalb Minuten hüpft,
+wenn gar nichts kommt; dann meldet sich ein Fenster. Ebenso, wenn der Server gleich wieder stirbt —
+Port belegt, Datei fehlt. Bisher fiel so ein Fehlstart gar nicht auf, weil der Starter unsichtbar war.
+
+Die alte Falle darf dabei nicht zurückkommen: Bis 1.296.0 fehlte `LSUIElement` **und** der Starter
+führte node per `exec` aus, lebte also weiter und meldete sich nie — daher die anderthalb Minuten.
+Ohne `LSUIElement` muss sich der Starter zwingend selbst beenden; das steht als Warnung im Bauskript.
+
+Einen Mac gibt es in der Entwicklung nicht, den Warteteil kann man aber auch hier laufen lassen.
+Nachgemessen mit vier gestellten Servern: Einer, der nach 1,6 Sekunden antwortet — der Starter geht
+nach 1,9. Einer, der sofort antwortet — 1,2 Sekunden, die Mindestzeit greift. Einer, der beim Start
+stirbt — 0,2 Sekunden, Rückgabe 1, Fenster kommt. Und einer, der läuft, aber nie antwortet — 26
+Sekunden, dann das Fenster. Ob macOS daraus die erhofften zwei bis drei Hüpfer macht, sagt uns der
+nächste Bericht aus der Runde.
+
+### Hilfe vor Ort: Ausbildungspaten, Kurse und die Unterlagen des DARC
+
+Dietmar: „Können wir von der Seite von 50 Ohm etwas bei uns einbauen?"
+
+In der Hauptansicht steht jetzt unter dem Videolehrgang eine Zeile **Hilfe & Unterlagen**:
+**Ausbildungspaten**, **Kurse vor Ort** und **Unterlagen**. Der erste führt zu den
+Ausbildungspaten des DARC — erfahrenen Funkamateuren, die beim Einstieg helfen. Der zweite zu den
+Kursen vor Ort, die meist einmal in der Woche abends stattfinden, mit Liste und Kartenansicht. Der
+dritte auf die Seite mit den Ausbildungsunterlagen: Bücher für N, E und A, Foliensätze,
+Karteikarten, Fragenkatalog.
+
+**Warum ausgerechnet diese drei.** Der Trainer kann einem alles beibringen außer dem, was ein Mensch
+kann: nachfragen, wenn man etwas nicht versteht. Genau diese Lücke schließen Paten und Kurse — und
+wer allein vor dem Bildschirm sitzt, weiß meist gar nicht, dass es sie gibt. Die Unterlagenseite
+steht daneben für alle, die lieber etwas Gedrucktes in der Hand haben. Die Zeile sitzt unter dem
+Videolehrgang, weil beides dasselbe ist: Lernen, das nicht aus diesem Programm kommt.
+
+Ein vierter Knopf führt zu den **Folien**: den Foliensätzen zum Lehrgang als fertige PDF, die der
+DARC auf GitHub veröffentlicht. Für Ausbilder sind sie das Material für den Kursabend. Sie sind
+nebenbei das einzige der hier verlinkten Angebote mit einer klaren Lizenz — **CC-BY 4.0**, also
+weitergeben und benutzen unter Namensnennung. Mitliefern wäre damit sogar erlaubt; der Link ist
+trotzdem besser, weil drüben immer der aktuelle Stand liegt und der Trainer nicht um ein paar
+hundert MB PDF wächst. Der Weg geht auf „latest" und damit stets auf die neueste Veröffentlichung.
+
+Dazu kommt bei **Klasse N** ein fünfter Knopf: **Buch Klasse N**, der zum gedruckten
+DARC-Amateurfunklehrgang von Matthias Jung (DL9MJ) und Björn Swierczek (DL1PZ) bei Amazon führt.
+Dietmar: „Einen Button zu dem Buch bei Amazon hätte ich gerne dabei. Dieser sollte aber nur bei der
+Klasse N dabei sein." Genau so ist er gebaut — er hängt am Prüfungsziel, nicht an der Zeile, und
+verschwindet, sobald man auf E, N → E oder E → A umstellt. Für diese Ziele gibt es andere Bände; ein
+Knopf zum N-Buch wäre dort ein Hinweis auf ein Buch zur falschen Prüfung. Wer sie lernt, findet
+seinen Band unter „Unterlagen" daneben. Mit dem Knopf wechselt auch die Herkunftszeile rechts: Steht
+er da, heißt es „DARC und Amazon", sonst „beim DARC" — bei einem Knopf, der in einen Laden führt,
+soll vorher klar sein, wohin er geht.
+
+**Es sind Links, keine Kopien.** Die Seiten gehören dem DARC und werden im Browser geöffnet, als das,
+was sie sind: sein Angebot. Der Trainer zeigt von ihrem Inhalt nichts an. Genauso wird es seit
+Wochen bei den Ω-Kacheln an der Frage gehalten. Texte, Bilder oder Foliensätze zu übernehmen wäre
+etwas völlig anderes und kommt nicht in Frage: Auf der Unterlagenseite steht kein Lizenzhinweis, und
+das heißt nicht „frei", sondern „alle Rechte beim DARC".
 
 ### Im Dark Mode sind richtig und falsch wieder zu sehen
 

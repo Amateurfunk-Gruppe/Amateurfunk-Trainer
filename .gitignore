@@ -359,3 +359,41 @@ _Ansagen/
 *-1.txt
 * (1).*
 * - Kopie.*
+
+# ----------------------------------------------------------------
+#  WER DEN LINK ANGEKLICKT HAT                       (21.09.2026)
+# ----------------------------------------------------------------
+#  Der Besucherzaehler unter dem Einladungslink schreibt hierhin:
+#  Uhrzeit, gekuerzte Adresse, Geraeteart, woher der Klick kam. Das
+#  sind Daten von Leuten, die Dietmars Rechner besucht haben - sie
+#  bleiben da, wo sie entstanden sind, und gehen niemanden sonst
+#  etwas an. Wie github_stand.json und video_embed.json: laeuft mit,
+#  wird nie hochgeladen.
+data/userdata/besucher.json
+besucher.json
+
+# ----------------------------------------------------------------
+#  DIE CLOUDFLARE-EINRICHTUNG                        (22.09.2026)
+# ----------------------------------------------------------------
+#  Dietmar: "Richte es ein, damit nichts falsches bei GitHub
+#  hochgeladen wird."
+#
+#  Diese drei beschreiben, wie Dietmars EIGENE Adresse eingerichtet
+#  ist - sein benannter Tunnel, seine Auffangseite bei Cloudflare,
+#  sein Worker. In allen dreien steht amateurfunk-trainer.com fest
+#  eingetragen.
+#
+#  Geheim ist daran nichts: nachgesehen am 22.09.2026, kein Schluessel,
+#  kein Passwort, keine Zugangsdatei - nur Pfade und Hostnamen. Sie
+#  gehoeren trotzdem nicht ins Programm. Wer den Trainer herunterlaedt,
+#  bekaeme eine Anleitung fuer eine Domain, die ihm nicht gehoert, und
+#  einen Worker, der auf eine fremde Seite zeigt.
+#
+#  Rueckgaengig gemacht ist das jederzeit: Zeilen loeschen, fertig.
+#  Sinnvoller waere, sie vorher allgemein zu fassen - mit einem
+#  Platzhalter statt der eigenen Adresse. Dann sind sie fuer jeden
+#  brauchbar, der seinen Trainer genauso teilen moechte.
+# ----------------------------------------------------------------
+worker.js
+Auffangseite-einrichten.md
+Tunnel-Einrichten.bat

@@ -2,6 +2,19 @@
 (function(){
     'use strict';
     let socket=null, roomCode=null, isHost=false, myUserId=null, duoActive=false;
+    // Kommt dieser Browser von aussen - also ueber den Tunnel? Dann laeuft
+    // der Trainer hier auf einem fremden Rechner, und ein eigener
+    // Raum wuerde dem Gastgeber die Leitung wegziehen. Der Server sagt es
+    // uns gleich beim Verbinden ('zugangsart'), und er laesst es auch gar
+    // nicht erst zu; hier wird nur der Knopf entsprechend gesetzt.
+    let vonAussen = false;
+    // Wie viele sitzen gerade ohne Raum auf dem Server, und wie viele
+    // davon sind von aussen gekommen? Der Server meldet es ('hausVolk').
+    // Danach entscheidet sich, ob beim Gastgeber das Chatfenster aufgeht.
+    let hausVolk = { anzahl: 0, vonAussen: 0 };
+    // Wurde ohne Raum schon etwas geschrieben? Dann bleibt der Chat
+    // stehen, auch wenn der Besucher wieder gegangen ist.
+    let hausChatHatNachrichten = false;
     let duoUsersCache = {};
     let tunnelUrlCache = null;
     window._duoHasAnswered=false;
@@ -833,6 +846,26 @@
     }
 
     async function tunnelBeiBedarfStarten(){
+        // ----------------------------------------------------------------
+        //  MIT EIGENER ADRESSE BRAUCHT ES KEINEN TUNNEL   (21.09.2026)
+        //  ----------------------------------------------------------------
+        //  Dietmar hat amateurfunk-trainer.com gekauft und richtet einen
+        //  benannten Tunnel als Windows-Dienst ein. Ohne diese Abfrage
+        //  haette der Trainer bei jedem "Raum erstellen" trotzdem einen
+        //  Quick Tunnel hochgefahren: ein zweites cloudflared neben dem
+        //  Dienst, fuer eine Adresse, die niemand benutzt.
+        //
+        //  Schlimmer als unnoetig: Cloudflare drosselt Quick Tunnels von
+        //  derselben Adresse, wenn sich mehrere stapeln - ausgerechnet
+        //  die Notloesung haette also die Hauptleitung stoeren koennen.
+        // ----------------------------------------------------------------
+        const fest = eigeneAdresse();
+        if(fest){
+            console.log('[DUO] Eigene Adresse eingetragen (' + fest + ') - kein Quick Tunnel noetig.');
+            tunnelUrlCache = null;
+            try{ updateLinkWithTunnel(); }catch(e){}
+            return fest;
+        }
         // KORREKTUR: Hier stand vorher "if(getTunnelUrl()) return getTunnelUrl();".
         // Damit hat der zweite Versuch NIE einen neuen Tunnel gestartet - sobald
         // dieser Browser-Tab einmal eine URL kannte, galt sie als gueltig, auch
@@ -1095,6 +1128,30 @@
                 chatSchonAufgeklappt = roomCode;
                 chatUmschalten(true, true);   // ohne den Fokus zu stehlen
             }
+        } else if(hausChatZeigen()){
+            // ----------------------------------------------------------------
+            //  DER CHAT OHNE RAUM                          (21.09.2026)
+            //  Dietmar: "Wenn ich einen Link teile, moechte ich dass der
+            //  Chat vorhanden ist, auch ohne dem Duo."
+            //
+            //  Beim BESUCHER steht er von Anfang an da - er soll fragen
+            //  koennen, ohne erst einen Raum zu betreten.
+            //  Beim GASTGEBER erscheint er, sobald wirklich jemand von
+            //  aussen auf der Seite ist. Sitzt er allein am Rechner,
+            //  bleibt das Fenster weg; es soll nicht im Weg stehen,
+            //  wenn niemand da ist.
+            //
+            //  Aufgeklappt wird nur beim Besucher von selbst. Beim
+            //  Gastgeber genuegt der Reiter mit der Blase: Er sitzt
+            //  vielleicht in einer Uebungsrunde, und ein Fenster, das
+            //  sich von allein aufmacht, weil jemand die Seite geoeffnet
+            //  hat, wuerde ihn herausreissen.
+            // ----------------------------------------------------------------
+            box.classList.add('sichtbar');
+            if(vonAussen && chatSchonAufgeklappt !== '__haus' && !pruefungLaeuft()){
+                chatSchonAufgeklappt = '__haus';
+                chatUmschalten(true, true);
+            }
         } else {
             box.classList.remove('sichtbar','offen');
             chatOffen = false;
@@ -1102,6 +1159,16 @@
             chatUngelesen = 0;
             chatBlaseAktualisieren();
         }
+    }
+
+    // Wann gibt es den Chat ohne Raum? Der Besucher hat ihn immer, der
+    // Gastgeber, sobald jemand von aussen da ist - oder sobald etwas
+    // geschrieben wurde, denn dann steht schon etwas drin.
+    function hausChatZeigen(){
+        if(roomCode) return false;
+        if(vonAussen) return true;
+        if(hausVolk && hausVolk.vonAussen > 0) return true;
+        return hausChatHatNachrichten;
     }
 
     // ohneFokus: beim automatischen Aufklappen soll der Mauszeiger nicht
@@ -1151,6 +1218,13 @@
         // bevor showRoomUI() das Fenster sichtbar gemacht hat.
         if(roomCode) chatSichtbarkeitPruefen();
         if(!n || !n.text) return;
+        // Ohne Raum: Sobald etwas geschrieben wurde, bleibt der Chat da -
+        // auch wenn der Besucher danach wieder geht. Sonst waere die
+        // Frage weg, bevor der Gastgeber sie lesen konnte.
+        if(!roomCode){
+            hausChatHatNachrichten = true;
+            try{ chatSichtbarkeitPruefen(); }catch(e){}
+        }
         if(n.id && chatGesehen.has(n.id)) return;      // Doppelte vermeiden
         if(n.id) chatGesehen.add(n.id);
 
@@ -1161,12 +1235,24 @@
 
         const eigen = n.userId && n.userId === myUserId;
         const zeile = document.createElement('div');
-        zeile.className = 'duo-chat-zeile ' +
-            (n.automatisch ? 'duo-chat-willkommen' : (eigen ? 'duo-chat-eigen' : 'duo-chat-fremd'));
+        // Eine Systemzeile ("... ist dazugekommen") ist keine Nachricht
+        // von jemandem: mittig, schmal, ohne Absender. Die Klasse dafuer
+        // gab es schon, sie wurde bisher nur lokal benutzt.
+        zeile.className = 'duo-chat-zeile ' + (n.system ? 'duo-chat-system' :
+            (n.automatisch ? 'duo-chat-willkommen' : (eigen ? 'duo-chat-eigen' : 'duo-chat-fremd')));
         // escapeHtml ist Pflicht - der Text kommt von anderen Teilnehmern
-        const absender = (eigen && !n.automatisch) ? '' :
+        // "am Link" steht dabei, wenn die Nachricht aus dem Chat ohne Raum
+        // kommt. Fuer den Gastgeber ist das der Unterschied zwischen
+        // "einer meiner Teilnehmer" und "jemand, der gerade die Seite
+        // gefunden hat" - und der bestimmt, wie man antwortet.
+        // "am Link" stand hier bis zum 21.09.2026 hinter dem Namen, damit
+        // der Gastgeber Raumteilnehmer von Link-Besuchern unterscheiden
+        // konnte. Dietmar: "mit Link klingt doof im Chat." Seit es die
+        // Ankunftsmeldung gibt, weiss er ohnehin, wer hereingekommen ist.
+        const woher = '';
+        const absender = (n.system || (eigen && !n.automatisch)) ? '' :
             '<span class="duo-chat-absender">' + escapeHtml(n.name || 'Teilnehmer') +
-            (n.istHost ? ' · Host' : '') + '</span>';
+            (n.istHost ? ' · Host' : '') + woher + '</span>';
         zeile.innerHTML = absender + smileysErsetzen(escapeHtml(n.text)) +
             '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>';
         verlauf.appendChild(zeile);
@@ -1189,13 +1275,40 @@
         if(!feld) return;
         const text = feld.value.trim();
         if(!text) return;
-        if(!socket || !roomCode){
-            chatSystemmeldung('Keine Verbindung zum Raum - Nachricht nicht gesendet.');
+        if(!socket){
+            chatSystemmeldung('Keine Verbindung - Nachricht nicht gesendet.');
             return;
         }
-        socket.emit('duoChat', { code: roomCode, text: text });
+        if(roomCode){
+            socket.emit('duoChat', { code: roomCode, text: text });
+        } else {
+            // Ohne Raum geht die Nachricht in den Kanal aller, die gerade
+            // ohne Raum auf dem Server sind. Der Name wird mitgeschickt:
+            // Der Server kennt ihn nicht, weil es keinen Raum mit
+            // Teilnehmerliste gibt.
+            socket.emit('duoChat', { code: '__haus', text: text, name: getDuoUserName() });
+        }
         feld.value = '';
         feld.focus();
+    }
+
+    // ----------------------------------------------------------------
+    //  ANKUNFT ANSAGEN                                (21.09.2026)
+    //  Dietmar: "Hier waere eine Begruessung mit Namen gut."
+    //  Der Server entscheidet, ob daraus wirklich eine Zeile im Chat
+    //  wird - er kennt die Wiederholungssperre und weiss, wer von
+    //  aussen kommt. Hier wird nur gesagt: Ich bin da, und so heisse ich.
+    // ----------------------------------------------------------------
+    let halloGesagt = false;
+    function hausHalloSenden(){
+        try{
+            if(halloGesagt) return;          // einmal je Seitenaufruf reicht
+            if(!socket || !socket.connected) return;
+            let wer = '';
+            try{ wer = (localStorage.getItem('duo_userName') || '').trim().slice(0, 20); }catch(e){}
+            socket.emit('hausHallo', { name: wer });
+            halloGesagt = true;
+        }catch(e){}
     }
 
     function chatSystemmeldung(text){
@@ -1328,7 +1441,22 @@
             if(!res.ok){ zeile.style.display='none'; return; }   // Gast: 403
             j = await res.json();
         }catch(e){ return; }
-        if(!j || !j.an){ zeile.style.display='none'; return; }
+        if(!j || !j.an){
+            // Kein Quick Tunnel gewuenscht. Mit eigener Adresse ist das
+            // der Normalfall und kein Mangel - dann gehoert hier hin,
+            // woran der Gastgeber ist, statt einer leeren Stelle.
+            const fest = eigeneAdresse();
+            if(fest){
+                zeile.style.display = 'block';
+                zeile.className = 'duo-wache gut';
+                zeile.innerHTML = '\uD83D\uDD17 <b>Feste Adresse:</b> ' + escapeHtml(fest.replace(/^https?:\/\//,''))
+                    + '. Kein Tunnel noetig \u2014 die Leitung haelt der cloudflared-Dienst, '
+                    + 'unabh\u00e4ngig vom Trainer. <b>Ein Neustart \u00e4ndert den Link nicht.</b>';
+                return;
+            }
+            zeile.style.display='none';
+            return;
+        }
         wacheZuletzt = j;
 
         // Die Farben stehen im Stilblock (.duo-wache.gut / .warn), nicht mehr
@@ -1365,12 +1493,713 @@
     function wacheAnzeigeStarten(){
         if(wacheUhr) return;
         wacheNachsehen();
+        besucherNachsehen();
         wacheUhr = setInterval(wacheNachsehen, 60000);
+        // 12 Sekunden statt 30: Der Ton soll kommen, waehrend der Besucher
+        // noch da ist, nicht eine halbe Minute spaeter. Die Anfrage geht an
+        // den eigenen Rechner und kostet nichts.
+        besucherUhr = setInterval(besucherNachsehen, 12000);
     }
     function wacheAnzeigeBeenden(){
         if(wacheUhr){ clearInterval(wacheUhr); wacheUhr = null; }
+        if(besucherUhr){ clearInterval(besucherUhr); besucherUhr = null; }
         const zeile = document.getElementById('duoWacheZeile');
         if(zeile) zeile.style.display = 'none';
+        const bz = document.getElementById('duoBesucherZeile');
+        if(bz) bz.style.display = 'none';
+    }
+
+    // ----------------------------------------------------------------
+    //  WER IST VORBEIGEKOMMEN?                        (21.09.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Ich moechte fuer den Trainer Werbung machen und dazu
+    //  einen Gruppenraum starten. Ich moechte als Host die Anzahl der
+    //  Besucher sehen."
+    //
+    //  Die ZAHL sieht jeder Gastgeber - sie steht unter dem Link, den er
+    //  gerade verteilt hat. Die LISTE, wer gekommen ist, zeigt der
+    //  Trainer nur dem Entwickler; erkannt am Benutzernamen "Dietmar".
+    //
+    //  Der Name ist dabei nur der Schalter fuer die Anzeige, nicht der
+    //  Schutz: /api/besucher antwortet ausschliesslich dem Trainer-PC
+    //  selbst (localOnly). Ein Gast ueber den Einladungslink bekommt dort
+    //  403 - auch wenn er sich im Trainer "Dietmar" nennt.
+    //
+    //  In der Liste steht nichts, womit man jemanden wiederfindet: die
+    //  Adresse ist gekuerzt wie ueberall sonst im Trainer, dazu Uhrzeit,
+    //  Geraeteart und - falls vorhanden - von welcher Seite der Klick kam.
+    //  Keine Namen, keine Kennungen.
+    // ----------------------------------------------------------------
+    let besucherUhr = null;
+    // Wie viele Aufrufe standen beim letzten Blick da? null heisst "noch
+    // nie geschaut" - beim ersten Mal darf es keinen Ton geben, sonst
+    // klingelt es beim Oeffnen des Raums fuer alles, was vorher war.
+    let besucherStandVorher = null;
+    // Wie viele Anfragen auf Zutritt standen beim letzten Blick an? Auch
+    // hier heisst null "noch nie geschaut" - sonst klingelt es beim
+    // Oeffnen des Raums fuer alles, was vorher schon da war.
+    let anfragenVorher = null;
+
+    // ----------------------------------------------------------------
+    //  DAS BESUCHERFENSTER
+    //  Alles, was hier steht, kommt aus /api/besucher - und das antwortet
+    //  nur dem Trainer-PC selbst. Die Funktionen haengen an window, weil
+    //  die Knoepfe im Fenster per onclick darauf zugreifen.
+    // ----------------------------------------------------------------
+    function besucherFuellen(j){
+        const kopf = document.getElementById('besucherModalKopf');
+        const koerper = document.getElementById('besucherTabelleKoerper');
+        const leer = document.getElementById('besucherLeer');
+        const tab = document.getElementById('besucherTabelle');
+        if(!kopf || !koerper) return;
+        const jetzt = Date.now();
+        const offenSeit = j.laeuftSeit ? new Date(j.laeuftSeit).getTime() : 0;
+        const seit = j.seit ? new Date(j.seit) : null;
+
+        const echt = (typeof j.echte === 'number') ? j.echte : (j.gesamt || 0);
+        const klopf = (typeof j.angeklopft === 'number') ? j.angeklopft : 0;
+        kopf.innerHTML = '<b>' + echt + '</b> ' + (echt === 1 ? 'Besucher' : 'Besucher')
+            + ' über den Link'
+            + (j.verschiedene ? ' von <b>' + j.verschiedene + '</b> verschiedenen '
+                + (j.verschiedene === 1 ? 'Adresse' : 'Adressen') : '')
+            + (j.imRaum ? ', <b>' + j.imRaum + '</b> gerade im Raum' : '')
+            + (offenSeit ? '. Der Trainer läuft seit <b>' + dauerText(offenSeit, jetzt) + '</b>' : '')
+            + (seit ? '.<br><span style="opacity:.8;">Gezählt seit ' + seit.toLocaleString('de-DE',
+                {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) + ' Uhr.</span>' : '.')
+            + (klopf ? '<br><span style="opacity:.8;">Dazu <b>' + klopf + '</b> '
+                + (klopf === 1 ? 'Aufruf, der' : 'Aufrufe, die') + ' nur angeklopft '
+                + (klopf === 1 ? 'hat' : 'haben') + ' — unten ausgegraut. '
+                + 'Das sind Maschinen, die neue Adressen abklopfen; sie zählen nicht als Besucher.</span>' : '')
+            + (j.abgewiesen ? '<br><span style="opacity:.8;">Die Ländersperre hat <b>' + j.abgewiesen + '</b> '
+                + (j.abgewiesen === 1 ? 'Aufruf' : 'Aufrufe')
+                + ' von außerhalb von Deutschland, Österreich und der Schweiz abgewiesen'
+                + (j.freigegeben ? ' — <b>' + j.freigegeben + '</b> davon hast du freigegeben' : '')
+                + '.</span>' : '');
+
+        // ----------------------------------------------------------------
+        //  WER ANKLOPFT UND WARTET                      (21.09.2026)
+        //  Dietmar: "Ggf mit einer Anfrage?" - hier ist sie. Das Einzige
+        //  in diesem Fenster, das eine Entscheidung verlangt, also steht
+        //  es oben und in Gelb.
+        //
+        //  Die volle Adresse steht im data-Attribut, weil sie beim
+        //  Freigeben zurueck an den Server muss. Angezeigt wird die
+        //  gekuerzte - das reicht, um jemanden auseinanderzuhalten.
+        // ----------------------------------------------------------------
+        const anfragenKasten = document.getElementById('besucherAnfragen');
+        if(anfragenKasten){
+            const an = (j.anfragen || []);
+            if(!an.length){
+                anfragenKasten.style.display = 'none';
+            } else {
+                anfragenKasten.style.display = 'block';
+                anfragenKasten.innerHTML = '\u270B <b>' + an.length + '</b> '
+                    + (an.length === 1
+                        ? 'Anfrage auf Zutritt — jemand von außerhalb des deutschsprachigen '
+                          + 'Raums möchte hereingelassen werden.'
+                        : 'Anfragen auf Zutritt — sie kommen von außerhalb des deutschsprachigen '
+                          + 'Raums und möchten hereingelassen werden.')
+                    + '<div style="margin-top:7px; display:flex; flex-direction:column; gap:6px;">'
+                    + an.map(function(x){
+                        const adr = escapeHtml(String(x.ip || ''));
+                        return '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">'
+                            + '<span style="font-family:var(--font-mono); font-size:0.78rem;">'
+                            + (x.geraet || '?') + ' \u00b7 ' + standortText(x.land, x.kurz, x.stadt)
+                            + ' \u00b7 vor ' + dauerText(x.wann, Date.now()) + '</span>'
+                            + '<button onclick="window.zutrittEntscheiden(\'' + adr + '\', true)" '
+                            + 'style="background:#1c7a46; color:#fff; border:0; border-radius:7px; '
+                            + 'padding:4px 11px; font-size:0.76rem; cursor:pointer; font-family:inherit;">'
+                            + 'Hereinlassen</button>'
+                            + '<button onclick="window.zutrittEntscheiden(\'' + adr + '\', false)" '
+                            + 'style="background:transparent; color:inherit; border:1px solid currentColor; '
+                            + 'border-radius:7px; padding:4px 11px; font-size:0.76rem; cursor:pointer; '
+                            + 'opacity:.75; font-family:inherit;">Ablehnen</button>'
+                            + '</div>';
+                      }).join('')
+                    + '</div>';
+            }
+        }
+
+        // Wer ist JETZT da? Die Kennung ist eine Zufallsnummer des Tabs,
+        // nichts Persoenliches - sie steht hier nur, damit man zwei
+        // Besucher hinter derselben gekuerzten Adresse auseinanderhalten
+        // kann (etwa zwei Handys im selben Mobilfunknetz).
+        const aktivKasten = document.getElementById('besucherAktiv');
+        if(aktivKasten){
+            // Fehlt das Feld ganz (nicht: ist es leer), dann antwortet ein
+            // Server, der diese Auskunft noch nicht kennt. Das gehoert
+            // hingeschrieben - sonst fehlt der Kasten und niemand weiss,
+            // warum.
+            // KEIN return hier: Die Liste darunter soll in jedem Fall
+            // gefuellt werden - auch wenn der Server diese eine Auskunft
+            // noch nicht kennt. Beim ersten Versuch stand hier eines, und
+            // damit waere die Tabelle leer geblieben.
+            const alterServer = (typeof j.aktive === 'undefined');
+            const a = alterServer ? [] : (j.aktive || []).filter(function(x){ return x.extern; });
+            if(alterServer){
+                aktivKasten.style.display = 'block';
+                aktivKasten.style.background = '#fff8e6';
+                aktivKasten.style.borderColor = '#ecd9a4';
+                aktivKasten.style.color = '#6f5410';
+                aktivKasten.innerHTML = '\u2139\uFE0F Der Server l\u00e4uft noch mit einer \u00e4lteren Fassung. '
+                    + 'Nach einem Neustart des Trainers steht hier, wer gerade auf der Seite ist.';
+            } else if(!a.length){
+                aktivKasten.style.display = 'none';
+            } else {
+                aktivKasten.style.background = '';
+                aktivKasten.style.borderColor = '';
+                aktivKasten.style.color = '';
+                aktivKasten.style.display = 'block';
+                aktivKasten.innerHTML = '\uD83D\uDFE2 <b>' + a.length + '</b> '
+                    + (a.length === 1 ? 'Besucher ist' : 'Besucher sind') + ' gerade auf der Seite'
+                    + (j.imRaum ? ', <b>' + j.imRaum + '</b> davon im Raum' : '') + '.'
+                    + '<div style="margin-top:5px; font-family:var(--font-mono); font-size:0.75rem; line-height:1.7;">'
+                    + a.map(function(x){
+                        // Der Name zuerst, wenn es einen gibt - danach fragt
+                        // der Gastgeber als Erstes. Wer keinen eingetragen
+                        // hat, heisst hier "Besucher".
+                        const wer = String(x.name || '').trim();
+                        return '\u00b7 <b>' + escapeHtml(wer || 'Besucher') + '</b> \u00b7 '
+                             + (x.geraet || '?') + ' \u00b7 ' + standortText(x.land, x.ip, x.stadt)
+                             + ' \u00b7 seit ' + dauerText(x.seit, Date.now())
+                             + ' \u00b7 <span style="opacity:.7;">' + (x.kennung || '') + '</span>';
+                      }).join('<br>')
+                    + '</div>';
+            }
+        }
+
+        const liste = (j.liste || []);
+        if(tab) tab.style.display = liste.length ? '' : 'none';
+        if(leer) leer.style.display = liste.length ? 'none' : '';
+        koerper.innerHTML = liste.map(function(x){
+            const d = new Date(x.zeit);
+            const nurKlopf = (x.echt === false);
+            const zelle = 'padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top;'
+                        + (nurKlopf ? ' opacity:0.5;' : '');
+            return '<tr' + (nurKlopf ? ' title="Nur die Seite abgerufen, kein Browser dahinter"' : '') + '>'
+                + '<td style="' + zelle + ' white-space:nowrap;">'
+                    + d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'}) + ' '
+                    + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + '</td>'
+                + '<td style="' + zelle + '">' + (x.geraet || '—') + '</td>'
+                + '<td style="' + zelle + '">' + (x.woher ? String(x.woher).slice(0, 34)
+                      : (nurKlopf ? '<span style="opacity:.75;">nur angeklopft</span>'
+                                  : '<span style="opacity:.55;">direkt</span>')) + '</td>'
+                + '<td style="' + zelle + '">' + (x.raum ? String(x.raum).slice(0, 12) : '<span style="opacity:.55;">—</span>') + '</td>'
+                + '<td style="' + zelle + '" title="' + (x.ip || '') + '">'
+                    + standortText(x.land, x.ip, x.stadt, x.region) + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    // ----------------------------------------------------------------
+    //  GENAU SO GROSS WIE DAS FENSTER DARUNTER        (21.09.2026)
+    //  Erst standen hier feste Werte aus dem Stilblatt - 94 %, hoechstens
+    //  1020 Punkte, Hoehe 74 bis 92 vh. Auf meinem Bildschirm traf das
+    //  die Groesse des Gruppenraum-Fensters, auf Dietmars nicht: Dort ist
+    //  es hoeher, weil mehr darin steht. "Das Fenster hat nicht die
+    //  gleiche Groesse."
+    //
+    //  Feste Werte koennen das nicht leisten, denn die Hoehe des anderen
+    //  Fensters haengt an seinem Inhalt. Also wird sie gemessen, im
+    //  Augenblick des Oeffnens, und uebernommen. Ist der Gruppenraum
+    //  nicht offen, gelten wieder die Werte aus dem Stilblatt.
+    // ----------------------------------------------------------------
+    function besucherGroesseAngleichen(){
+        const kasten = document.querySelector('#besucherModal > div');
+        if(!kasten) return;
+        const vorbild = document.querySelector('#duoModal > div');
+        const duoOffen = vorbild && vorbild.offsetParent !== null;
+        if(!duoOffen){
+            // Zurueck auf die Werte aus dem Stilblatt
+            ['width','maxWidth','height','minHeight','maxHeight'].forEach(function(k){ kasten.style[k] = ''; });
+            return;
+        }
+        // offsetWidth/offsetHeight und NICHT getBoundingClientRect: Der
+        // Trainer skaliert die ganze Seite ueber zoom (Einstellung
+        // "Groesse", --afu-zoom). getBoundingClientRect liefert dann die
+        // Punkte auf dem Bildschirm, ein gesetztes style.width aber wird
+        // als CSS-Punkt gelesen und anschliessend mitgezoomt. Beim ersten
+        // Versuch stand deshalb bei 80 % Zoom ein Fenster von 653 neben
+        // einem von 816 - genau die 0,8 zu viel. offsetWidth zaehlt in
+        // derselben Einheit, in der auch geschrieben wird.
+        const b = Math.round(vorbild.offsetWidth), h = Math.round(vorbild.offsetHeight);
+        if(!b || !h) return;
+        kasten.style.width = b + 'px';
+        kasten.style.maxWidth = b + 'px';
+        kasten.style.height = h + 'px';
+        kasten.style.minHeight = h + 'px';
+        kasten.style.maxHeight = h + 'px';
+        console.log('[BESUCHER] Fenster auf ' + b + 'x' + h + ' gesetzt (wie der Gruppenraum).');
+    }
+
+    window.besucherFensterOeffnen = async function(){
+        const m = document.getElementById('besucherModal');
+        if(!m) return;
+        m.style.display = 'flex';
+        m.classList.add('open');
+        besucherGroesseAngleichen();
+        await window.besucherFensterAuffrischen();
+    };
+    window.besucherFensterZu = function(){
+        const m = document.getElementById('besucherModal');
+        if(m){ m.style.display = 'none'; m.classList.remove('open'); }
+    };
+    window.besucherFensterAuffrischen = async function(){
+        try{
+            const res = await fetch('/api/besucher', {cache:'no-store'});
+            if(!res.ok){
+                if(window.showAppAlert) window.showAppAlert('Die Besucherliste gibt es nur am Trainer-PC selbst.');
+                window.besucherFensterZu();
+                return;
+            }
+            besucherFuellen(await res.json());
+        }catch(e){}
+    };
+    window.besucherZaehlerZuruecksetzen = function(){
+        const weiter = async function(){
+            try{
+                const res = await fetch('/api/besucher/reset', {method:'POST'});
+                if(!res.ok){
+                    // 404 und 403 bedeuten voellig Verschiedenes, und die
+                    // erste Fassung hat beides in einen Satz geworfen:
+                    // "Nur am Trainer-PC moeglich". Dietmar stand damit am
+                    // Trainer-PC und las, er sei es nicht.
+                    //
+                    // 404: Die Seite ist neu, der SERVER noch alt - dann
+                    //      gibt es die Route gar nicht. Der Trainer muss
+                    //      einmal neu gestartet werden, ein F5 reicht
+                    //      nicht: Server.js liest sich nur beim Start.
+                    // 403: Die Anfrage kam von aussen. Das ist Absicht.
+                    if(res.status === 404){
+                        throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                            + 'diese Funktion kennt er noch nicht.\n\nEinmal den Trainer beenden und '
+                            + 'neu starten (nicht nur die Seite neu laden): Server.js wird nur beim '
+                            + 'Start gelesen.');
+                    }
+                    if(res.status === 403){
+                        throw new Error('Das geht nur direkt am Trainer-PC. Über den Einladungslink '
+                            + 'ist der Zähler nicht erreichbar.');
+                    }
+                    throw new Error('Der Server hat mit ' + res.status + ' geantwortet.');
+                }
+                await window.besucherFensterAuffrischen();
+                besucherNachsehen();
+                if(window.showAppAlert) window.showAppAlert('Der Besucherzähler steht wieder auf null.');
+            }catch(e){
+                if(window.showAppAlert) window.showAppAlert('Zurücksetzen nicht möglich: ' + e.message);
+            }
+        };
+        if(window.showAppConfirm){
+            window.showAppConfirm('Den Besucherzähler auf null setzen?', weiter, {
+                title: 'Zähler zurücksetzen?',
+                details: 'Die Liste der bisherigen Aufrufe wird dabei gelöscht. '
+                       + 'Sinnvoll, bevor eine neue Runde Werbung losgeht — dann zählt, was danach kommt.',
+                confirmLabel: '<i class="fas fa-rotate-left"></i> Zurücksetzen',
+                icon: 'fa-rotate-left'
+            });
+        } else { weiter(); }
+    };
+
+    // ----------------------------------------------------------------
+    //  DER GASTGEBER MACHT GLEICH ZU                  (22.09.2026)
+    //  Gegenstueck zum Server-Knopf in der Hauptansicht. Wer gerade
+    //  auf der Seite ist, soll seine Frage zu Ende bringen koennen und
+    //  nicht mitten im Satz vor einer Auffangseite stehen.
+    //
+    //  Eigener Balken, nicht der von der Neustart-Ansage: Beide koennen
+    //  theoretisch gleichzeitig laufen, und dann soll nicht einer den
+    //  anderen ueberschreiben.
+    // ----------------------------------------------------------------
+    let tuerZuUm = 0;
+    let tuerUhrBesucher = null;
+
+    function tuerBalkenZeigen(){
+        const balken = document.getElementById('tuerBalken');
+        const text = document.getElementById('tuerBalkenText');
+        if(!balken || !text) return;
+        if(!tuerZuUm){ balken.style.display = 'none'; return; }
+        const rest = tuerZuUm - Date.now();
+        if(rest <= -5*60*1000){ balken.style.display = 'none'; return; }
+        balken.style.display = 'block';
+        if(rest > 0){
+            const sek = Math.ceil(rest / 1000);
+            const zeit = sek >= 60 ? (Math.floor(sek/60) + ' Min ' + String(sek%60).padStart(2,'0') + ' s')
+                                   : (sek + ' Sekunden');
+            text.innerHTML = '\uD83D\uDD12 <b>Der Gastgeber schließt den Trainer in ' + zeit + '.</b> '
+                + 'Du kannst deine Frage noch zu Ende bringen. Dein Lernstand liegt in deinem '
+                + 'Browser und bleibt erhalten — und den Trainer gibt es auch zum Mitnehmen.';
+        } else {
+            text.innerHTML = '\uD83D\uDD12 <b>Der Trainer ist jetzt geschlossen.</b> '
+                + 'Später noch einmal vorbeischauen lohnt sich. Dein Lernstand bleibt erhalten.';
+        }
+    }
+
+    function tuerAnsageSetzen(a){
+        // null = Entwarnung, { zu:true } = ab jetzt zu, { schliesstUm } = Countdown
+        if(!a){ tuerZuUm = 0; }
+        else if(a.zu){ tuerZuUm = Date.now(); }
+        else { tuerZuUm = a.schliesstUm || 0; }
+        if(tuerUhrBesucher){ clearInterval(tuerUhrBesucher); tuerUhrBesucher = null; }
+        tuerBalkenZeigen();
+        if(tuerZuUm){
+            tuerUhrBesucher = setInterval(tuerBalkenZeigen, 1000);
+            try{ if(typeof window.levelUpSpielen === 'function') window.levelUpSpielen(); }catch(e){}
+        }
+    }
+
+    // ----------------------------------------------------------------
+    //  HEREINLASSEN ODER NICHT                        (21.09.2026)
+    //  Der Gegenpart zum Knopf auf der Sperrseite. Freigeben darf nur
+    //  der Trainer-PC selbst - /api/zutritt-freigeben ist localOnly,
+    //  genau wie der Besucherzaehler.
+    //
+    //  Die Freigabe gilt bis zum Neustart des Trainers. Das war Dietmars
+    //  Wahl: keine Datei, nichts zu pflegen, und nach einem Neustart ist
+    //  der Zettel wieder leer.
+    // ----------------------------------------------------------------
+    window.zutrittEntscheiden = async function(ip, herein){
+        try{
+            const weg = herein ? 'freigeben' : 'ablehnen';
+            const res = await fetch('/api/zutritt-' + weg + '?ip=' + encodeURIComponent(ip), { method:'POST' });
+            if(!res.ok){
+                if(res.status === 404) throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                    + 'einmal den Trainer neu starten, danach gibt es die Ländersperre.');
+                if(res.status === 403) throw new Error('Das geht nur direkt am Trainer-PC.');
+                throw new Error('Der Server hat mit ' + res.status + ' geantwortet.');
+            }
+            await window.besucherFensterAuffrischen();
+            besucherNachsehen();
+            if(window.showAppAlert) window.showAppAlert(herein
+                ? 'Freigegeben. Die Seite des Besuchers lädt sich in wenigen Sekunden von selbst neu.\n\n'
+                  + 'Die Freigabe gilt, bis du den Trainer neu startest.'
+                : 'Abgelehnt. Die Anfrage ist aus der Liste verschwunden.');
+        }catch(e){
+            if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
+        }
+    };
+
+    // ----------------------------------------------------------------
+    //  DIE ANSAGE VOR DEM NEUSTART                    (21.09.2026)
+    //  Der Gastgeber drueckt einen Knopf, alle sehen einen Balken mit
+    //  Countdown. Der Text sagt zwei Dinge: dass es gleich abreisst und
+    //  dass der neue Link in der Gruppe steht. Ohne den zweiten Teil
+    //  waere die Ansage nur eine schlechte Nachricht.
+    // ----------------------------------------------------------------
+    let neustartUm = 0;
+    let neustartUhr = null;
+    let neustartWeggeklickt = false;
+    let neustartFest = null;   // null = unbekannt, true = Adresse bleibt
+
+    // ----------------------------------------------------------------
+    //  BLEIBT DER LINK NACH DEM NEUSTART DERSELBE?     (21.09.2026)
+    //  Dietmar: "Die Adresse aendert sich doch jetzt nicht mehr ^^"
+    //
+    //  Drei Auskuenfte, von der besten zur schlechtesten:
+    //
+    //  1. Der Gastgeber hat es beim Ansagen mitgeschickt (fest). Das ist
+    //     die einzige Stelle, die es wirklich weiss - die eigene Adresse
+    //     steht in seinem Browser, nicht im Browser der Besucher.
+    //  2. Wir SIND der Gastgeber und haben eine eigene Adresse gesetzt.
+    //  3. Kein Server-Hinweis (aeltere Fassung): Dann verraet der
+    //     Hostname genug. Nur trycloudflare.com vergibt bei jedem Start
+    //     einen neuen Namen; eine eigene Domain tut das nie.
+    // ----------------------------------------------------------------
+    function adresseBleibt(){
+        if(neustartFest === true) return true;
+        if(neustartFest === false) return false;
+        try{ if(eigeneAdresse()) return true; }catch(e){}
+        try{ return !/(^|\.)trycloudflare\.com$/i.test(location.hostname); }catch(e){}
+        return false;
+    }
+
+    function neustartBalkenZeigen(){
+        const balken = document.getElementById('neustartBalken');
+        const text = document.getElementById('neustartBalkenText');
+        if(!balken || !text) return;
+        if(!neustartUm || neustartWeggeklickt){ balken.style.display = 'none'; return; }
+        const rest = neustartUm - Date.now();
+        if(rest <= -10*60*1000){ balken.style.display = 'none'; return; }   // lange vorbei
+        balken.style.display = 'block';
+        if(rest > 0){
+            const min = Math.floor(rest / 60000), sek = Math.floor((rest % 60000) / 1000);
+            const zeit = min > 0 ? (min + ' Min ' + String(sek).padStart(2,'0') + ' s') : (sek + ' Sekunden');
+            text.innerHTML = '\u26A0\uFE0F <b>Der Trainer wird in ' + zeit + ' neu gestartet.</b> '
+                + (adresseBleibt()
+                    ? 'Die Verbindung reißt dabei kurz ab — die Adresse bleibt dieselbe. '
+                      + 'Einfach die Seite neu laden, sobald er wieder da ist. '
+                    : 'Die Verbindung reißt dabei kurz ab, und die Adresse ändert sich. '
+                      + 'Der neue Link wird gleich danach in der Gruppe geteilt. ')
+                + 'Dein Lernstand liegt in deinem Browser und bleibt erhalten.';
+        } else {
+            text.innerHTML = '\u26A0\uFE0F <b>Der Trainer startet gerade neu.</b> '
+                + (adresseBleibt()
+                    ? 'In einer Minute ist er wieder da — unter derselben Adresse. '
+                      + 'Diese Seite dann einmal neu laden. '
+                    : 'In einer Minute ist er wieder da — der neue Link steht dann in der Gruppe. ')
+                + 'Dein Lernstand bleibt erhalten.';
+        }
+    }
+    function neustartAnsageSetzen(a){
+        neustartUm = (a && a.um) ? a.um : 0;
+        // Nur uebernehmen, wenn der Server es wirklich sagt. Eine aeltere
+        // Fassung schickt das Feld nicht mit - dann bleibt es unbekannt,
+        // und adresseBleibt() entscheidet selbst.
+        neustartFest = (a && typeof a.fest === 'boolean') ? a.fest : null;
+        neustartWeggeklickt = false;
+        if(neustartUhr){ clearInterval(neustartUhr); neustartUhr = null; }
+        neustartBalkenZeigen();
+        if(neustartUm){
+            neustartUhr = setInterval(neustartBalkenZeigen, 1000);
+            // Ein Ton dazu: Der Balken sitzt oben, und wer unten in einer
+            // Frage liest, sieht ihn sonst nicht.
+            try{ if(typeof window.levelUpSpielen === 'function') window.levelUpSpielen(); }catch(e){}
+        }
+    }
+    // Global und am Knopf im HTML, nicht hier zugewiesen: duo.js wird
+    // dynamisch geladen, und beim ersten Versuch hing der Handler an
+    // einem Element, das zu diesem Zeitpunkt zwar da war - der Klick
+    // aber trotzdem ins Leere ging. Ein onclick im Markup trifft immer.
+    window.neustartBalkenWeg = function(){
+        try{ neustartWeggeklickt = true; neustartBalkenZeigen(); }catch(e){
+            const el = document.getElementById('neustartBalken');
+            if(el) el.style.display = 'none';
+        }
+    };
+
+    // Der Knopf beim Gastgeber
+    window.neustartAnkuendigen = function(){
+        const senden = async function(min){
+            try{
+                // Der Gastgeber weiss als Einziger, ob eine feste Adresse
+                // eingetragen ist - also sagt er es mit.
+                let fest = '0';
+                try{ fest = eigeneAdresse() ? '1' : '0'; }catch(e){}
+                const res = await fetch('/api/neustart-ansage?min=' + min + '&fest=' + fest, { method:'POST' });
+                if(!res.ok){
+                    if(res.status === 404) throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                        + 'einmal den Trainer neu starten, danach gibt es diesen Knopf.');
+                    throw new Error('Der Server hat mit ' + res.status + ' geantwortet.');
+                }
+                const j = await res.json();
+                if(window.showAppAlert) window.showAppAlert('Angesagt: Neustart in ' + min + ' Minuten. '
+                    + (j.erreicht ? j.erreicht + ' Verbundene haben es bekommen.' : 'Im Moment ist niemand verbunden.')
+                    + '\n\nDen Balken sehen auch die, die in den nächsten Minuten noch dazukommen.');
+            }catch(e){
+                if(window.showAppAlert) window.showAppAlert('Ansage nicht möglich: ' + e.message);
+            }
+        };
+        if(window.showAppConfirm){
+            window.showAppConfirm('Allen ansagen, dass der Trainer in 3 Minuten neu startet?', function(){ senden(3); }, {
+                title: 'Neustart ankündigen?',
+                details: 'Jeder, der gerade auf der Seite ist, bekommt oben einen Balken mit Countdown. '
+                       + (function(){
+                            try{ return eigeneAdresse()
+                                ? 'Dabei steht, dass die Adresse dieselbe bleibt und ein Neuladen reicht. '
+                                : 'Dabei steht, dass der neue Link danach in der Gruppe geteilt wird. '; }
+                            catch(e){ return ''; }
+                         })()
+                       + 'Neu gestartet wird dadurch nichts; das machst du danach selbst.',
+                confirmLabel: '<i class="fas fa-bullhorn"></i> Ansagen',
+                icon: 'fa-bullhorn'
+            });
+        } else { senden(3); }
+    };
+
+    // ----------------------------------------------------------------
+    //  DEMO-ZUGANG: BEITRETEN JA, EROEFFNEN NEIN
+    // ----------------------------------------------------------------
+    const DEMO_TEXT = 'Dieser Trainer läuft auf einem fremden Rechner. '
+        + 'Ein eigener Gruppenraum lässt sich hier nicht eröffnen — er würde die Verbindung '
+        + 'des Gastgebers stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink oder '
+        + 'den Raum-Code benutzen. Und wer den Trainer behalten will, bekommt ihn kostenlos '
+        + 'auf amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
+
+    function demoKnopfNachziehen(){
+        const knopf = document.getElementById('duoCreateRoomBtn');
+        if(!knopf) return;
+        if(!vonAussen){
+            knopf.disabled = false;
+            knopf.style.opacity = '';
+            knopf.style.cursor = '';
+            knopf.removeAttribute('data-demo');
+            const alt = document.getElementById('duoDemoHinweis');
+            if(alt) alt.remove();
+            return;
+        }
+        knopf.disabled = true;
+        knopf.style.opacity = '0.45';
+        knopf.style.cursor = 'not-allowed';
+        knopf.setAttribute('data-demo', '1');
+        knopf.setAttribute('data-tooltip', 'Auf einem fremden Trainer nicht möglich — einem Raum beitreten geht');
+        if(!document.getElementById('duoDemoHinweis')){
+            const hinweis = document.createElement('div');
+            hinweis.id = 'duoDemoHinweis';
+            hinweis.className = 'duo-demo-hinweis';
+            hinweis.innerHTML = '🔒 <b>Das ist nicht dein Trainer.</b> Ein eigener Raum lässt sich hier nicht eröffnen — '
+                + 'er würde die Verbindung des Gastgebers stören. <b>Beitreten geht:</b> Einladungslink '
+                + 'anklicken oder Raum-Code eintragen.';
+            knopf.parentNode.insertBefore(hinweis, knopf.nextSibling);
+        }
+    }
+
+    function dauerText(vonMs, bisMs){
+        let m = Math.max(0, Math.round((bisMs - vonMs) / 60000));
+        if(m < 1)  return 'weniger als eine Minute';
+        if(m < 60) return m + (m === 1 ? ' Minute' : ' Minuten');
+        const st = Math.floor(m / 60); m = m % 60;
+        return st + (st === 1 ? ' Stunde' : ' Stunden') + (m ? ' ' + m + ' Min' : '');
+    }
+    // ----------------------------------------------------------------
+    //  AUS "DE" WIRD "Deutschland"                     (21.09.2026)
+    //  Dietmar: "Kann man anstatt der IP das in Standort aendern?"
+    //
+    //  Cloudflare schickt den Laendercode mit (cf-ipcountry). Der Name
+    //  dazu kommt aus dem Browser selbst - Intl.DisplayNames kennt alle
+    //  Laender in jeder Sprache, es braucht also keine Tabelle im
+    //  Programm. Die Flagge wird aus den zwei Buchstaben gerechnet: A
+    //  bis Z liegen im Unicode als "Regional Indicator" noch einmal
+    //  hinten, und zwei davon nebeneinander zeigt jeder Browser als
+    //  Fahne.
+    //
+    //  Fehlt der Code - etwa bei einem Besucher aus dem eigenen WLAN,
+    //  wo kein Cloudflare dazwischen ist -, bleibt die gekuerzte Adresse
+    //  stehen. Besser etwas als ein leeres Feld.
+    // ----------------------------------------------------------------
+    let landNamen = null;
+    function standortText(land, ip, stadt, region){
+        const code = String(land || '').toUpperCase();
+        const ort = String(stadt || '').trim();
+        if(!/^[A-Z]{2}$/.test(code)) return ort || (ip ? String(ip) : '—');
+        // T1 ist Cloudflares Kuerzel fuer "ueber Tor gekommen"
+        if(code === 'T1') return '\uD83E\uDDC5 Tor-Netz';
+        let name = code;
+        try{
+            if(!landNamen) landNamen = new Intl.DisplayNames(['de'], { type: 'region' });
+            name = landNamen.of(code) || code;
+        }catch(e){}
+        // ----------------------------------------------------------------
+        //  KEINE FAHNEN AUF WINDOWS                     (21.09.2026)
+        //  Hier stand das Fahnen-Emoji, aus den zwei Buchstaben
+        //  gerechnet. Auf Handy und Mac sieht man es, auf Windows nicht:
+        //  Microsoft liefert in seiner Emoji-Schrift bewusst keine
+        //  Laenderflaggen, und der Browser zeigt ersatzweise die zwei
+        //  Buchstaben in Kleinschrift. Dietmar: "die Fahnen werden nicht
+        //  angezeigt" - und zwar auf genau dem System, auf dem der
+        //  Trainer zu Hause ist.
+        //
+        //  Also kein Emoji, sondern ein gesetztes Kuerzel: sieht
+        //  ueberall gleich aus, ist auf einen Blick als Laendercode zu
+        //  erkennen und kostet keine Schriftart.
+        // ----------------------------------------------------------------
+        const fahne = '<span class="land-kuerzel">' + code + '</span> ';
+        // Stadt davor, wenn Cloudflare sie mitschickt - bei einem Quick
+        // Tunnel tut es das nicht, bei einem eigenen benannten Tunnel mit
+        // eingeschalteten "visitor location headers" schon.
+        if(ort) return fahne + ort + ', ' + name;
+        const teil = String(region || '').trim();
+        if(teil && teil !== name) return fahne + teil + ', ' + name;
+        return fahne + name;
+    }
+
+    function istEntwickler(){
+        try{
+            const n = (localStorage.getItem('duo_userName') || '').trim();
+            return /^dietmar$/i.test(n);
+        }catch(e){ return false; }
+    }
+
+    async function besucherNachsehen(){
+        const zeile = document.getElementById('duoBesucherZeile');
+        if(!zeile) return;
+        if(!isHost || !duoActive){ zeile.style.display = 'none'; return; }
+        let j = null;
+        try{
+            const res = await fetch('/api/besucher', {cache:'no-store'});
+            if(!res.ok){ zeile.style.display = 'none'; return; }   // Gast: 403
+            j = await res.json();
+        }catch(e){ return; }
+        if(!j) return;
+
+        // ----------------------------------------------------------------
+        //  ES KLINGELT, WENN JEMAND KOMMT               (21.09.2026)
+        //  Dietmar: "Wenn jemand auf dem Server joint moechte ich den
+        //  Level Up Sound."
+        //
+        //  levelUpSpielen() gibt es seit dem 11.09.2026 - derselbe Ton,
+        //  der eine gemeisterte Frage quittiert, und er laesst sich in
+        //  den Einstellungen abschalten. Genau deshalb wird er hier
+        //  benutzt und kein zweiter eingefuehrt: Wer den Ton abgestellt
+        //  hat, will ihn auch hier nicht hoeren.
+        //
+        //  Der Ton haengt an der ZAHL, nicht am Ereignis: Der Server
+        //  zaehlt jeden Aufruf von aussen, egal ob jemand nur die Seite
+        //  oeffnet oder in den Raum kommt. Kommen zwischen zwei Blicken
+        //  drei Leute, klingelt es einmal - das ist gewollt.
+        // Der Ton haengt an den ECHTEN Besuchern, nicht an allen Aufrufen.
+        // Sonst klingelt es bei jedem Scanner, der die Adresse abklopft -
+        // und davon kamen am ersten Tag drei, bevor der Link ueberhaupt
+        // geteilt war.
+        const jetztEcht = (typeof j.echte === 'number') ? j.echte : j.gesamt;
+        if(besucherStandVorher !== null && jetztEcht > besucherStandVorher){
+            console.log('[BESUCHER] ' + (jetztEcht - besucherStandVorher) + ' neu - Ton.');
+            try{ if(typeof window.levelUpSpielen === 'function') window.levelUpSpielen(); }catch(e){}
+        }
+        besucherStandVorher = jetztEcht;
+
+        // Dasselbe fuer die Anfragen an der Laendersperre: Wer anklopft,
+        // wartet vor einer verschlossenen Tuer. Das soll Dietmar hoeren,
+        // auch wenn das Besucherfenster gerade zu ist.
+        const anfragenJetzt = (j.anfragen || []).length;
+        if(anfragenVorher !== null && anfragenJetzt > anfragenVorher){
+            console.log('[ZUTRITT] ' + (anfragenJetzt - anfragenVorher) + ' neue Anfrage(n) - Ton.');
+            try{ if(typeof window.levelUpSpielen === 'function') window.levelUpSpielen(); }catch(e){}
+        }
+        anfragenVorher = anfragenJetzt;
+
+        zeile.style.display = 'block';
+        zeile.className = 'duo-besucher';
+        const jetzt = Date.now();
+        const offenSeit = j.laeuftSeit ? new Date(j.laeuftSeit).getTime() : 0;
+
+        const echte = (typeof j.echte === 'number') ? j.echte : j.gesamt;
+        let t = '\uD83D\uDC65 ';
+        if(!echte){
+            t += '<b>Noch kein Besucher</b> \u00fcber den Link.';
+        } else {
+            t += '<b>' + echte + '</b> ' + (echte === 1 ? 'Besucher' : 'Besucher') + ' \u00fcber den Link';
+            t += j.imRaum ? ', <b>' + j.imRaum + '</b> gerade im Raum.' : '.';
+        }
+        const aktivJetzt = (j.aktivExtern || 0);
+        if(aktivJetzt) t += ' <b>' + aktivJetzt + '</b> ' + (aktivJetzt === 1 ? 'ist' : 'sind')
+                          + ' gerade auf der Seite.';
+        if(offenSeit) t += ' Der Trainer l\u00e4uft seit <b>' + dauerText(offenSeit, jetzt) + '</b>.';
+        t += '<br><span style="opacity:.75;">Gez\u00e4hlt werden Aufrufe von au\u00dfen \u2014 der eigene Rechner und die '
+           + 'Vorschau-Abrufe von Facebook und WhatsApp z\u00e4hlen nicht mit.</span>';
+
+        // Die Liste stand bis zum 21.09.2026 hier drin, in einem Feld mit
+        // Bildlaufleiste. Dietmar: "Ich finde das irgendwie sehr rein
+        // gedrueckt. Ein Button zum oeffnen von einem Fenster waere
+        // besser." Seitdem steht hier nur der Knopf; die Liste hat im
+        // Fenster Platz fuer eigene Spalten.
+        // Eine wartende Anfrage gehoert nicht ins Kleingedruckte. Sie steht
+        // deshalb auch hier, nicht nur im Fenster - Dietmar sieht sonst
+        // erst beim naechsten Oeffnen, dass jemand vor der Tuer steht.
+        const offeneAnfragen = (j.anfragen || []).length;
+        if(offeneAnfragen){
+            t += '<br><span style="color:#8a6a10; font-weight:600;">\u270B ' + offeneAnfragen + ' '
+               + (offeneAnfragen === 1 ? 'Anfrage' : 'Anfragen') + ' auf Zutritt von außerhalb des '
+               + 'deutschsprachigen Raums — im Besucherfenster zu entscheiden.</span>';
+        }
+
+        if(istEntwickler()){
+            t += '<div style="margin-top:7px;">'
+               + '<button type="button" onclick="besucherFensterOeffnen()" class="btn btn-outline" '
+               + 'style="padding:0.3rem 0.8rem; font-size:0.72rem; border-radius:14px; '
+               + 'border:1px solid #9fc0e0; background:#ffffff; color:#1f3f66; cursor:pointer; font-weight:600;">'
+               + '<i class="fas fa-list"></i> Besucher ansehen'
+               + (j.gesamt ? ' (' + j.gesamt + ')' : '') + '</button></div>';
+        }
+        zeile.innerHTML = t;
     }
 
     // ----------------------------------------------------------------
@@ -1412,8 +2241,90 @@
         // ganze Handler brach ab, womit myUserId leer blieb. Aufgefallen
         // am 20.09.2026 beim Pruefungsraum-Test, wenn ein zweiter Rechner
         // waehrend einer laufenden Runde beitritt.
-        socket.on('connect',()=>{ myUserId=socket.id||''; window.myUserId=myUserId; const el=document.getElementById('duoStatus'); if(el) el.textContent = myUserId ? ('Verbunden: '+myUserId.slice(0,5)) : 'Verbunden'; });
+        socket.on('connect',()=>{
+            const ersteVerbindung = !myUserId;
+            myUserId=socket.id||''; window.myUserId=myUserId;
+            const el=document.getElementById('duoStatus'); if(el) el.textContent = myUserId ? ('Verbunden: '+myUserId.slice(0,5)) : 'Verbunden';
+
+            // ----------------------------------------------------------------
+            //  ZURUECK IN DEN RAUM NACH EINEM ABRISS         (21.09.2026)
+            //  Dietmar: "Ich uebe mit meiner Freundin Maja zusammen im
+            //  Gruppenraum. Sie sagt, dass der Chat manchmal nicht geht.
+            //  Kommt mir so vor, dass wenn sie fertig ist er nicht mehr geht."
+            //
+            //  Nachgestellt und gefunden: Reisst die Verbindung laenger ab,
+            //  als der Server wartet (pingTimeout 60 s plus pingInterval
+            //  30 s), nimmt er den Teilnehmer aus dem Raum. Socket.IO
+            //  verbindet danach von selbst wieder - aber mit NEUER Kennung,
+            //  und die kennt der Raum nicht.
+            //
+            //  Die Folge war heimtueckisch: Lesen ging weiter (die
+            //  Nachrichten des Gastgebers werden ohnehin nach draussen
+            //  kopiert), Schreiben nicht. Maja sah also Dietmars Zeilen
+            //  hereinkommen, tippte eine Antwort - und die verschwand. Fuer
+            //  sie "geht der Chat nicht", fuer ihn wird sie einfach still.
+            //
+            //  Und "wenn sie fertig ist" passt genau: Ein Tab, in dem nicht
+            //  mehr geklickt wird, ist der, den Windows, das Handy oder das
+            //  WLAN als Erstes schlafen legen.
+            //
+            //  Jetzt meldet sich der Trainer beim Wiederverbinden selbst
+            //  zurueck. Nur beim WIEDERverbinden - beim ersten Mal gibt es
+            //  noch keinen Raum, in den man zurueckkehren koennte.
+            // ----------------------------------------------------------------
+            if(!ersteVerbindung && roomCode){
+                try{
+                    console.log('[DUO] Verbindung war weg - melde mich zurueck in Raum ' + roomCode);
+                    socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() });
+                }catch(e){}
+            }
+
+            // ----------------------------------------------------------------
+            //  WANN DIE ANKUNFT GEMELDET WIRD               (21.09.2026)
+            //  Erster Versuch haengte das an den Merker des
+            //  Willkommensfensters ("demo_hinweis_gesehen"). Das war ein
+            //  Denkfehler: Dietmar hatte zwei Besucher auf der Seite und
+            //  im Chat stand nichts. Das Fenster erscheint naemlich nur,
+            //  wenn jemand ueber eine oeffentliche Adresse kommt - wer es
+            //  nie zu sehen bekommt, setzte den Merker nie, und meldete
+            //  sich damit auch nie an.
+            //
+            //  Jetzt entscheidet nicht ein Merker, sondern das Fenster
+            //  selbst: Steht es gerade offen, wartet die Meldung auf
+            //  willkommenFertig() - dann ist der Name dabei. Steht es
+            //  nicht offen, geht sie sofort hinaus.
+            //
+            //  Wer wirklich gemeldet wird, entscheidet ohnehin der Server:
+            //  nur Besucher von aussen, nicht der Gastgeber und nicht sein
+            //  WLAN.
+            // ----------------------------------------------------------------
+            try{
+                const m = document.getElementById('willkommenModal');
+                const fensterOffen = !!m && m.style.display !== 'none' && m.offsetHeight > 0;
+                if(!fensterOffen) hausHalloSenden();
+            }catch(e){ hausHalloSenden(); }
+        });
         socket.on('hostChanged', data=>{ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateRoomUsers(duoUsersCache); updateLinkWithTunnel(); });
+        socket.on('neustartAnsage', a=>{ try{ neustartAnsageSetzen(a); }catch(e){} });
+        socket.on('tuerAnsage', a=>{ try{ tuerAnsageSetzen(a); }catch(e){} });
+        socket.on('hausVolk', data=>{
+            hausVolk = { anzahl: (data && data.anzahl) || 0, vonAussen: (data && data.vonAussen) || 0 };
+            try{ chatSichtbarkeitPruefen(); }catch(e){}
+        });
+        socket.on('zugangsart', data=>{
+            vonAussen = !!(data && data.vonAussen);
+            if(vonAussen) console.log('[DUO] Von aussen: eigener Raum gesperrt, Beitreten geht.');
+            demoKnopfNachziehen();
+            // Erst mit dieser Auskunft steht fest, ob der Chat ohne Raum
+            // gezeigt wird - hintergrundVerbinden() hat vorher geprueft,
+            // da war die Antwort noch nicht da.
+            try{ chatSichtbarkeitPruefen(); }catch(e){}
+        });
+        socket.on('raumAbgelehnt', data=>{
+            const t = (data && data.text) || 'Ein eigener Raum laesst sich hier nicht eroeffnen.';
+            if(window.showAppAlert) window.showAppAlert(t);
+            demoKnopfNachziehen();
+        });
         socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen(); });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
             // Den Haken so stellen, wie der Raum gebaut ist - sonst sieht der
@@ -1453,7 +2364,44 @@
                 }catch(e){}
             }
         });
-        socket.on('errorMsg', msg=>{ if(window.showAppAlert) window.showAppAlert(msg); else alert(msg); });
+        // ----------------------------------------------------------------
+        //  WENN DER RAUM EINEN NICHT MEHR KENNT            (21.09.2026)
+        //  Zweites Netz hinter der Rueckmeldung beim Wiederverbinden: Wer
+        //  in genau der Sekunde nach dem Wiederverbinden tippt, kann den
+        //  Server noch vor der Rueckmeldung erwischen.
+        //
+        //  Statt des nackten "Du bist nicht in diesem Raum" - das niemand
+        //  einordnen kann und das keinen Ausweg nennt - wird hier still
+        //  noch einmal angeklopft und in verstaendlichen Worten gesagt,
+        //  was zu tun ist. Nur einmal je Viertelminute, sonst klopfen wir
+        //  gegen eine Tuer, die es nicht mehr gibt.
+        // ----------------------------------------------------------------
+        let letzteRueckkehr = 0;
+        socket.on('errorMsg', msg=>{
+            const t = String(msg || '');
+            if(/nicht in diesem Raum/i.test(t) && roomCode){
+                const jetzt = Date.now();
+                if(jetzt - letzteRueckkehr > 15000){
+                    letzteRueckkehr = jetzt;
+                    try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() }); }catch(e){}
+                    if(window.showAppAlert) window.showAppAlert(
+                        'Die Verbindung war kurz weg — deine Nachricht ist nicht angekommen.\n\n'
+                        + 'Der Trainer meldet dich gerade wieder im Raum an. Schick sie in ein paar '
+                        + 'Sekunden einfach noch einmal ab.');
+                }
+                return;
+            }
+            if(/Raum nicht gefunden/i.test(t) && roomCode){
+                // Der Gastgeber hat zugemacht, waehrend die Verbindung weg war.
+                roomCode = null;
+                try{ chatSichtbarkeitPruefen(); }catch(e){}
+                if(window.showAppAlert) window.showAppAlert(
+                    'Der Gruppenraum ist nicht mehr offen — der Gastgeber hat ihn beendet, '
+                    + 'während deine Verbindung weg war.\n\nDein Lernstand bleibt erhalten.');
+                return;
+            }
+            if(window.showAppAlert) window.showAppAlert(t); else alert(t);
+        });
 
         // Die Wache hat den Tunnel neu aufgebaut. Ein Quick Tunnel bekommt
         // dabei einen neuen Zufallsnamen - der alte Link ist tot. Also
@@ -1629,6 +2577,33 @@
     }
 
     window.duo={
+        // ----------------------------------------------------------------
+        //  IM HINTERGRUND VERBINDEN                     (21.09.2026)
+        //  Dietmar: "Ich moechte, dass wenn Nutzer ueber den Link und nur
+        //  ueber den Link kommen, auch schreiben koennen."
+        //
+        //  Daran haette der Chat ohne Raum noch gescheitert: Die
+        //  Verbindung zum Server wurde erst aufgebaut, wenn jemand den
+        //  Gruppenraum aufschlug - vorher gab es keinen Socket, also auch
+        //  keine Nachrichten. Wer nur den Link angeklickt hat, sass ohne
+        //  Leitung da.
+        //
+        //  Diese Fassung baut die Leitung im Hintergrund auf, ohne ein
+        //  Fenster zu oeffnen: fuer den Chat und fuer Ansagen des
+        //  Gastgebers. Fehler werden geschluckt - laeuft kein Server,
+        //  bleibt es beim Lernen ohne Gruppe, genau wie bisher.
+        // ----------------------------------------------------------------
+        hausHallo: () => hausHalloSenden(),
+        hintergrundVerbinden: async function(){
+            try{
+                await ensureSocket();
+                myUserId = socket.id; window.myUserId = myUserId;
+                chatAufbauen();
+                chatSichtbarkeitPruefen();
+                return true;
+            }catch(e){ console.debug('[DUO] Hintergrund-Verbindung nicht moeglich:', e && e.message); return false; }
+        },
+        chatSenden: function(){ try{ chatSenden(); }catch(e){} },
         init: async function(){
             try{ await ensureSocket(); }catch(e){ console.warn('[DUO] Socket offline, Quiz trotzdem lokal'); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); fetchAndFillTunnelUrl(); return; }
             try{
@@ -1661,6 +2636,14 @@
             fetchAndFillTunnelUrl(); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess();
         },
         createRoom: async function(){
+            // Erst fragen, dann tun: Ohne diese Zeile liefe unten
+            // tunnelBeiBedarfStarten() - und genau das ist der Griff, der
+            // dem Gastgeber die Adresse unter dem laufenden Raum wegzieht.
+            if(vonAussen){
+                if(window.showAppAlert) window.showAppAlert(DEMO_TEXT);
+                demoKnopfNachziehen();
+                return;
+            }
             try{ await ensureSocket(); }catch(e){
                 const fakeCode=Math.random().toString(36).substring(2,6).toUpperCase();
                 roomCode=fakeCode; isHost=true; duoActive=true; myUserId='local'; window._duoHostId='local';

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Wegweiser fuer Suchmaschinen: was es hier zu holen gibt.
+  In der Google Search Console unter "Sitemaps" eintragen als:
+      sitemap.xml
+  Die Projektseite besteht aus einer einzigen Seite; die Unterkapitel
+  sind Sprungmarken darin und gehoeren deshalb nicht einzeln hier hinein.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

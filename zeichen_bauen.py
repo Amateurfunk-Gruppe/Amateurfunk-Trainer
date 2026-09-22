@@ -26,6 +26,23 @@ WIE ES SICH ENTWICKELT HAT
    irgendwo hinfallen. Und eine weisse Zahl bleibt auf 16 Punkten lesbar,
    wo ein Verlauf zu Grau verrührt.
 
+DAS ZEICHEN VON HEUTE (21.09.2026)
+Dietmar, mit einem Bild des Beenden-Knopfes aus der Kopfzeile seines
+eigenen Programms: "Dieses Zeichen finde ich für den Trainer gar nicht
+mal so schlecht als Icon. Es ist ein vertikaler Strahler mit einer
+Funkwelle. Darunter [der Schriftzug] vom Funk-Trainer."
+
+Er hat recht mit dem, was er sieht: Der senkrechte Strich ist der
+Strahler, der offene Ring die abgehende Welle. Ich hatte Bedenken - es
+ist zugleich das Ein/Aus-Zeichen, und im Dock liest das mancher als
+"beenden" - und habe zwei Runden Gegenvorschläge gezeichnet. Seine
+Entscheidung: "nimm mein Zeichen als Icon." Also dieses.
+
+Die 55 mit Wellenlinie und Skala, die hier bis heute stand, ist damit
+nicht gelöscht: Ihre Zeichenfunktionen bleiben weiter unten stehen
+(welle, wellen_auftragen, zahl, skala). Wer sie zurückholen will,
+ändert in voll(), mittel() und winzig() je eine Zeile.
+
 WAS ENTSTEHT
   icon-512.png, icon.png (512), icon-192.png     - die Fassung mit Schrift
   icon.ico, favicon.ico                          - acht Stufen, 16 bis 256
@@ -174,6 +191,60 @@ def skala(bild, y):
     bild.alpha_composite(s)
 
 
+def zeichen(bild, mitte_y, gross, staerke=0.285):
+    """Der Strahler mit Welle: senkrechter Strich in einem offenen Ring.
+
+    gross = Radius des Rings, als Anteil der Kantenlaenge.
+
+    DIE LUECKE OBEN IST DAS GANZE ZEICHEN. Sie steht fuer den Strahler,
+    der aus dem Ring heraussteht; ohne sie waere es ein durchgestrichener
+    Kreis. Sie ist 70 Grad breit und liegt genau oben - in PIL wird von
+    3 Uhr aus im Uhrzeigersinn gemessen, 12 Uhr ist also 270 Grad. Von
+    305 nach 235 gezeichnet laeuft der Bogen ueber 0, 90 und 180 herum
+    und laesst genau diese 70 Grad frei.
+
+    Der Strich steht bewusst NICHT in der Mitte des Rings, sondern reicht
+    von oberhalb des Rings bis knapp in ihn hinein. Endet er in der
+    Mitte, sieht das Zeichen aus wie ein Schluesselloch.
+    """
+    r    = G * gross
+    cx, cy = G // 2, mitte_y
+    dick = max(8, int(r * staerke))
+
+    e = Image.new('RGBA', (G, G), (0, 0, 0, 0))
+    d = ImageDraw.Draw(e)
+
+    kasten = [cx - r, cy - r, cx + r, cy + r]
+    d.arc(kasten, start=305, end=235, fill=TUERK + (255,), width=dick)
+
+    # Runde Enden: PIL zeichnet Boegen und Linien stumpf ab. Zwei Kreise
+    # an den Bogenenden und ein abgerundetes Rechteck fuer den Strich -
+    # sonst wirkt das Zeichen abgehackt, gerade in kleinen Stufen.
+    #
+    # r - dick/2, nicht r: PIL traegt die Strichbreite eines Bogens NACH
+    # INNEN auf. Die Aussenkante liegt also auf r, die Mitte des Strichs
+    # eine halbe Strichbreite weiter innen. Mit r sassen die beiden Kreise
+    # ein Stueck zu weit aussen und standen als zwei Ohren ueber dem Ring.
+    mitte_r = r - dick / 2
+    for winkel in (305, 235):
+        bx = cx + mitte_r * math.cos(math.radians(winkel))
+        by = cy + mitte_r * math.sin(math.radians(winkel))
+        d.ellipse([bx - dick / 2, by - dick / 2, bx + dick / 2, by + dick / 2],
+                  fill=TUERK + (255,))
+
+    oben  = cy - r - r * 0.42
+    unten = cy - r * 0.12
+    d.rounded_rectangle([cx - dick / 2, oben, cx + dick / 2, unten],
+                        radius=dick / 2, fill=TUERK + (255,))
+
+    # Derselbe Schein wie bei den Wellen frueher: einmal weit und schwach,
+    # einmal eng und kraeftig. Er macht aus der flachen Form ein Zeichen,
+    # das auch auf dunklem Grund noch leuchtet.
+    bild.alpha_composite(leuchten(e, 26, 1.7))
+    bild.alpha_composite(leuchten(e, 8, 1.0))
+    bild.alpha_composite(e)
+
+
 def schrift(bild):
     """Amateurfunk, darunter --- TRAINER ---."""
     d = ImageDraw.Draw(bild)
@@ -206,28 +277,30 @@ def schrift(bild):
 # ---------------------------------------------------------------------------
 def voll():                       # ab 128 Punkten
     b = grund()
-    # Die Hoehen sind gegeneinander abgewogen: Ueber der Zahl soll so viel
-    # Luft sein wie zwischen Skala und Wortmarke, sonst kippt die Tafel
-    # optisch nach oben.
-    my = int(G * 0.375)
-    wellen_auftragen(b, my, G * 0.090)
-    zahl(b, my, 0.255)
-    skala(b, int(G * 0.552))
+    # Der Ring sitzt etwas ueber der Mitte: Der Strich steht ueber ihm
+    # hinaus, das Zeichen wiegt oben also mehr. Saesse der Ring mittig,
+    # haenge das Ganze optisch nach unten.
+    zeichen(b, int(G * 0.360), 0.150)
     schrift(b)
     return b
 
 
 def mittel():                     # 48 bis 96 Punkte
     b = grund()
-    my = int(G * 0.42)
-    wellen_auftragen(b, my, G * 0.125)
-    zahl(b, my, 0.32)
+    # Ohne Wortmarke darf das Zeichen fast die ganze Flaeche nehmen -
+    # mittig, mit Luft nach dem Rand.
+    zeichen(b, int(G * 0.545), 0.245, staerke=0.32)
     return b
 
 
 def winzig():                     # bis 32 Punkte
     b = grund()
-    zahl(b, G // 2, 0.46)
+    # In 16 Punkten zaehlt nur noch die Silhouette. Groesser als 0,285
+    # geht nicht - der Strich steht oben ueber den Ring hinaus und braucht
+    # dort Platz -, dafuer traegt der Strich dicker auf: Bei 16 Punkten
+    # sind aus 0,285 Strichbreite noch anderthalb Bildpunkte, aus 0,40
+    # werden gut zwei. Darunter verschwindet der Ring zu einem Schatten.
+    zeichen(b, int(G * 0.560), 0.285, staerke=0.40)
     return b
 
 
@@ -248,7 +321,10 @@ def maskierbar():
         verlauf.putpixel((0, y), tuple(
             int(NAVY_O[i] + (NAVY_U[i] - NAVY_O[i]) * t) for i in range(3)))
     hinter.paste(verlauf.resize((G, G)).convert('RGBA'), (0, 0))
-    zahl(hinter, G // 2, 0.34)
+    # 0,195 statt 0,280: Android schneidet bis auf 80 Prozent zu, und der
+    # Strich steht oben ueber den Ring hinaus - er braucht den Rand, der
+    # bei den anderen Fassungen nicht gebraucht wird.
+    zeichen(hinter, int(G * 0.545), 0.195)
     return hinter
 
 
@@ -288,7 +364,15 @@ def icns_schreiben(pfad, gross, mittel, winzig):
 
 
 if __name__ == '__main__':
-    Z = '/root/work/fix2/'
+    # Wohin die Dateien geschrieben werden. Hier stand bis zum 21.09.2026
+    # ein fester Pfad aus der Entwicklung - auf einem anderen Rechner lief
+    # das Skript damit ins Leere. Jetzt: der Ordner, in dem das Skript
+    # selbst liegt, und wer es anders will, haengt den Zielordner an:
+    #     python3 zeichen_bauen.py /pfad/zum/trainer
+    import os, sys
+    Z = (sys.argv[1] if len(sys.argv) > 1
+         else os.path.dirname(os.path.abspath(__file__)))
+    Z = Z.rstrip('/\\') + os.sep
     g, m, w = voll(), mittel(), winzig()
 
     g.resize((512, 512), Image.LANCZOS).save(Z + 'icon-512.png')

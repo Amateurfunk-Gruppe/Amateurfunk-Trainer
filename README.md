@@ -12,6 +12,15 @@ Der Lernfortschritt bleibt dort, wo er entsteht: auf dem eigenen Rechner.
 Entwickelt von **Dietmar Reh**. Kostenfrei für Lernende, Ortsverbände und
 Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
 
+**→ [Projektseite: alle Funktionen im Überblick](https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/)**
+
+> **Die Lizenz in einem Satz:** Der Quelltext ist einsehbar und jede
+> nicht-kommerzielle Nutzung ist frei — auch in Ortsverbänden, Schulen und
+> Volkshochschulen. Gewerbliche Verwertung nur mit Erlaubnis. Das ist
+> **nicht** dasselbe wie „Open Source"; maßgeblich ist die
+> [PolyForm Noncommercial License 1.0.0](LICENSE), Einzelheiten unter
+> [Urheberrecht, Nutzung und Kontakt](#urheberrecht-nutzung-und-kontakt).
+
 ![Die Hauptansicht des Trainers](bilder/01-hauptansicht.png)
 
 ## Was es kann

@@ -2533,8 +2533,27 @@
            Das Zeichen "50 Omega" des DARC kommt hier bewusst NICHT vor.
            Matthias am 04.09.2026: "Das Logo ist markenrechtlich geschuetzt.
            Ich wuerde erstmal vorschlagen, dass du das draussen laesst."
-           Das Omega in dieser Zeile ist der griechische Buchstabe, kein
-           Zeichen des Vereins.
+
+           UND SEIT DEM 21.09.2026 AUCH KEIN OMEGA MEHR. Dietmar: "Omega
+           gehoert das nicht rein." Richtig: Der Buchstabe stand hier als
+           Zierde vor dem Namen - und genau davor warnt der Satz darueber.
+           Wer "Omega" neben "50ohm.de" sieht, denkt an das geschuetzte
+           Zeichen, nicht an eine Einheit. Der Abstand zum Logo wird
+           groesser, wenn der Buchstabe gar nicht erst danebensteht. Die
+           Klasse .ohm bleibt im Stilblock, sie faerbt die Zeichen in den
+           Lernkacheln unter der Frage.
+
+           EMPFEHLUNG, NICHT ZUSAMMENARBEIT       (21.09.2026)
+           Bis heute stand hier "In Zusammenarbeit mit 50ohm.de". Dietmar,
+           als die Zeile im Werbebild gross dastand: "Es ist keine
+           Zusammenarbeit. Moechte mehr eine Empfehlung."
+
+           Das ist die richtige Korrektur, und sie ist mehr als eine
+           Geschmacksfrage: "Zusammenarbeit" behauptet eine Abstimmung mit
+           dem DARC, die es so nicht gibt - der Trainer verlinkt den
+           Lehrgang, mehr nicht. Auf einem Bild, das durch Facebook-Gruppen
+           geht, waere aus der freundlichen Formulierung schnell eine
+           Behauptung geworden, die jemand richtigstellen muss.
 
            Andere Fassungen, falls der DARC eine davon lieber sieht - es ist
            genau dieser eine Satz im Markup, sonst nichts:
@@ -3620,6 +3639,31 @@
             box-shadow: none;
         }
         .filter-bar .btn i,
+        /* ================================================================
+           DER SERVER-KNOPF FAERBT SICH SELBST              (22.09.2026)
+           Rot = zu, gruen = offen, orange = schliesst gleich.
+
+           Warum hier und nicht per style-Attribut im Code: Die Regel
+           ".header-right .btn" faerbt JEDEN Knopf der Kopfzeile weiss mit
+           dunkelblauer Schrift - und zwar mit !important. Inline gesetzte
+           Farben verlieren dagegen. Beim Nachmessen kam weisse Schrift auf
+           gruener Flaeche als 2,81:1 heraus, weil die Schrift in Wahrheit
+           dunkelblau blieb; im Green Mode sogar 1,55:1.
+
+           Eine ID wiegt schwerer als zwei Klassen, deshalb gewinnen diese
+           Regeln - in allen vier Farbwelten, ohne Sonderfaelle.
+           ================================================================ */
+        /* Fuer "Server aus" gibt es bewusst KEINE eigene Regel: Der Knopf
+           soll dann aussehen wie jeder andere in der Kopfzeile - auch im
+           Dark Mode, wo "body.dark .header-right .btn" ihn mitnimmt.
+           Gefaerbt wird nur, was gerade eine Aussage macht. */
+        #tuerBtn.tuer-an         { background:#1c7a46 !important; border-color:#1c7a46 !important; color:#ffffff !important; }
+        #tuerBtn.tuer-an i       { color:#ffffff !important; }
+        #tuerBtn.tuer-an:hover   { background:#16633a !important; border-color:#16633a !important; }
+        #tuerBtn.tuer-gleich     { background:#8a4b10 !important; border-color:#8a4b10 !important; color:#ffffff !important; }
+        #tuerBtn.tuer-gleich i   { color:#ffffff !important; }
+        #tuerBtn.tuer-gleich:hover { background:#74400e !important; border-color:#74400e !important; }
+
         .header-right .btn i,
         .header-right .btn-cache-sm i,
         .header-right .btn-reset-danger i,
@@ -4039,10 +4083,34 @@
            gemessene 1,24:1 statt der noetigen 4,5:1, also unlesbar. Fuer den
            Dark Mode gab es diese Ausnahmen laengst; fuer Green fehlten sie.
            ---------------------------------------------------------------- */
+        /* ----------------------------------------------------------------
+           GRUEN AUF GRUENEM GRUND                        (21.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit einem Bild der Fortschrittsspalte: "Im Green Mode
+           erkennt man den Verlauf nur schwer. Gruen auf gruenem Grund?"
+
+           Genau das war es, und zwar an zwei Stellen. Der noch nicht
+           beantwortete Punkt lag mit #f3fbf6 auf der Spalte #e0f1e8 -
+           gemessen 1,11:1, also praktisch dieselbe Flaeche -, und sein
+           Rand trug 2,12:1. Ein Kaestchen, dessen Flaeche wie der Grund
+           aussieht und dessen Rand kaum dunkler ist, hat keine Form. Und
+           der Punkt "im Pruefungssimulator beantwortet, ohne Wertung" lag
+           mit einem hellen Blaugrau bei 1,22:1 - er war schlicht weg.
+
+           Jetzt: Das offene Kaestchen ist WEISS mit kraeftigem gruenem
+           Rand (4,17:1). Weiss ist auf der gruenen Spalte das, was ein
+           Formularfeld auf einem Blatt ist - eine Flaeche, die auf etwas
+           wartet. Damit heben sich die gefuellten Zustaende ab, ohne dass
+           an ihren Farben etwas geaendert werden muss: dunkelgruen fuer
+           richtig (4,3:1 gegen die Spalte), dunkelrot fuer falsch (5,19:1).
+           Der beantwortete Punkt bleibt blaugrau - er MUSS aus der Reihe
+           fallen, denn er sagt "beantwortet, aber das Urteil kommt erst
+           am Ende" -, nur dunkler und mit sichtbarem Rand (5,3:1).
+           ---------------------------------------------------------------- */
         body.green .dot-sidebar {
-            background: #f3fbf6;
-            border-color: #7bb08f;
-            color: #33513f;
+            background: #ffffff;
+            border-color: #3f7d5c;
+            color: #245a3c;
         }
         body.green .dot-sidebar.correct-dot {
             background: #157f4b;
@@ -4054,9 +4122,54 @@
             border-color: #b5322a;
             color: #ffffff;
         }
+        /* !important, weil die Grundregel .dot-sidebar.beantwortet-dot
+           selbst eines traegt - ohne kaeme hier das helle Blaugrau von
+           dort zurueck. */
+        body.green .dot-sidebar.beantwortet-dot {
+            background: #c6d4e2 !important;
+            border-color: #46647d !important;
+            color: #1f3549 !important;
+        }
+        /* ----------------------------------------------------------------
+           DER GELERNTE PUNKT WAR DER EIGENTLICHE GRUND  (21.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, nach der ersten Runde: "Derzeit nur bei Start. Im
+           Gruppenraum, Fehler, Lernbedarf, Blaettern und Weiterblaettern
+           fehlt es." Das Bild dazu zeigte 25 fast gleiche Kaestchen.
+
+           Gemessen: 23 davon trugen ".gelernt-dot" - #d7f0e0 auf der
+           Spalte #e0f1e8 sind 1,03:1, also praktisch nichts. Die Regel
+           steht weit oben und traegt !important, damit der Punkt in Grau,
+           Blau und Orange seine Farbe behaelt; im Green Mode hiess das
+           aber: hellgruen auf hellgruen.
+
+           Und genau daher kommt "bei Start geht es": Der Startknopf legt
+           faellige und neue Fragen vor, also UNgelernte - die sind seit
+           gestern weiss mit kraeftigem Rand. Gruppenraum, Fehler,
+           Lernbedarf und Blaettern ziehen aus dem ganzen Katalog, und wer
+           neun von zehn Fragen abgehakt hat, sieht dort fast nur den
+           blassen Punkt. Nachgemessen: Raum 21 von 25, Fehler 22 von 25,
+           Lernbedarf 60 von 66, Blaettern 516 von 571.
+
+           Dietmar hat aus drei Entwuerfen den gefuellten gewaehlt:
+           Mittelgruen #7cc4a0 (1,75:1 gegen die Spalte statt 1,03:1),
+           dunkelgruene Ziffer #0f5132 darauf mit 4,57:1. Zum gefuellten
+           Dunkelgruen von "richtig beantwortet" bleiben 2,46:1 plus der
+           Unterschied der Ziffer: dort weiss, hier dunkel.
+           ---------------------------------------------------------------- */
+        body.green .dot-sidebar.gelernt-dot {
+            background: #7cc4a0 !important;
+            border-color: #157f4b !important;
+            color: #0f5132 !important;
+        }
+        /* !important und ganz am Ende: Sonst nimmt die Zeile darueber dem
+           aktuellen Punkt seinen dunkelblauen Rand, sobald er zugleich als
+           gelernt gilt - beide Regeln sind gleich spezifisch, und die
+           letzte gewinnt nur, wenn sie ebenfalls !important traegt. Galt
+           bis heute schon fuer den beantworteten Punkt in der Pruefung. */
         body.green .dot-sidebar.current-dot {
-            border-color: var(--panel-navy);
-            border-width: 3px;
+            border-color: var(--panel-navy) !important;
+            border-width: 3px !important;
         }
         body.green .history-table th,
         body.green .exam-info th,
@@ -5868,8 +5981,48 @@ function klasseAnzeigeAktualisieren() {
         // aendert die Zeile nichts.
         fuss.textContent = String(kl.titel || '').split('\u00b7')[0].trim();
     }
+
+    // Das gedruckte Buch gibt es nur zur Klasse N - mit dem Ziel kommt
+    // und geht der Knopf.
+    try{ buchKnopfNachziehen(); }catch(e){}
 }
 window.klasseAnzeigeAktualisieren = klasseAnzeigeAktualisieren;
+
+// ================================================================
+//  DAS BUCH ZUR KLASSE N                            (21.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Einen Button zu dem Buch bei Amazon haette ich gerne
+//  dabei. Dieser sollte aber nur bei der Klasse N dabei sein."
+//
+//  Der DARC-Amateurfunklehrgang Klasse N ist das gedruckte Gegenstueck
+//  zum Lehrgang auf 50ohm.de. Fuer die uebrigen Ziele gibt es andere
+//  Baende - dieser eine Knopf waere dort ein Hinweis auf ein Buch, das
+//  die falsche Pruefung behandelt. Deshalb haengt er am Ziel und nicht
+//  an der Zeile: sichtbar bei "Direkteinstieg Klasse N", sonst weg.
+//  Wer E oder A lernt, findet seinen Band unter "Unterlagen" daneben.
+//
+//  Aufgerufen wird das aus klasseAnzeigeAktualisieren() heraus - der
+//  einen Stelle, die bei jedem Wechsel des Pruefungsziels ohnehin
+//  laeuft. Eine zweite Stelle, die dasselbe tut, waere die, die beim
+//  naechsten Umbau vergessen wird.
+// ================================================================
+function buchKnopfNachziehen(){
+    try{
+        const b = document.getElementById('buchKlasseNBtn');
+        if(!b) return;
+        const id = (typeof klasseAktuell === 'function') ? klasseAktuell().id : 'n';
+        const an = (id === 'n');
+        b.style.display = an ? '' : 'none';
+        // Die Herkunftszeile muss mitziehen: Drei der Knoepfe fuehren zum
+        // DARC, der vierte zu Amazon. Stuende dort weiter nur "beim DARC",
+        // waere das eine kleine Unwahrheit - und gerade bei einem Knopf,
+        // der in einen Laden fuehrt, soll vorher klar sein, wohin er geht.
+        const q = document.getElementById('hilfeQuelleText');
+        if(q) q.textContent = an ? 'DARC und Amazon · öffnet im Browser'
+                                 : 'beim DARC · öffnet im Browser';
+    }catch(e){}
+}
+window.buchKnopfNachziehen = buchKnopfNachziehen;
 
 function klasseModalOeffnen() {
     let modal = document.getElementById('klasseModal');
@@ -6163,7 +6316,46 @@ window.klasseFragenNachladen = klasseFragenNachladen;
     } catch (e) { /* ohne localStorage bleibt es bei 100 % */ }
 
     try {
-        const gespeichert = localStorage.getItem('theme');
+        let gespeichert = localStorage.getItem('theme');
+        // ----------------------------------------------------------------
+        //  WER UEBER DEN LINK KOMMT, SIEHT ZUERST BLAU   (21.09.2026)
+        //  Dietmar: "Ich moechte bei einem join, dass er den Trainer im
+        //  Blue Mode zuerst sieht."
+        //
+        //  Erkannt wird das am Namen in der Adresszeile, nicht am Server:
+        //  Hier wird gefaerbt, BEVOR das erste Mal gezeichnet wird - eine
+        //  Frage an den Server waere zu spaet, der Besucher saehe erst
+        //  Weiss und dann Blau. Wer ueber localhost oder eine Adresse aus
+        //  dem eigenen Netz kommt, sitzt am Rechner oder im WLAN und
+        //  behaelt seinen Stil.
+        //
+        //  Nur beim ERSTEN Besuch: Sobald jemand selbst einen Stil
+        //  gewaehlt hat, steht der in 'theme' und hat Vorrang. Die Wahl
+        //  wird gleich gespeichert, sonst wuerde sie bei jedem Laden neu
+        //  gefaellt und ueberschriebe spaeter nichts, aber fuehlte sich
+        //  wackelig an.
+        if(!gespeichert){
+            try{
+                // Dieselbe Frage wie beim Demo-Hinweis weiter unten: Kommt
+                // dieser Browser ueber den geteilten Link? Die Regel steht
+                // dort als ueberGeteiltenLink(), hier aber laeuft sie
+                // VOR dem ersten Zeichnen - da gibt es die Funktion noch
+                // nicht. Deshalb hier noch einmal in kurz; beide Stellen
+                // fragen dasselbe: Ist der Name in der Adresszeile ein
+                // oeffentlicher?
+                const h = String(location.hostname || '').toLowerCase();
+                const eigenesNetz = !h || h === 'localhost' || h === '127.0.0.1' || h === '::1'
+                    || h === '[::1]' || h.endsWith('.local')
+                    || /^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)
+                    || /^172\.(1[6-9]|2\d|3[01])\./.test(h)
+                    || /^169\.254\./.test(h)
+                    || location.protocol === 'file:';
+                if(!eigenesNetz){
+                    gespeichert = 'blue';
+                    localStorage.setItem('theme', 'blue');
+                }
+            }catch(e){}
+        }
         // Der Dark Mode war vom 03.09. bis zum 17.09.2026 abgeschaltet -
         // Dietmar: "Das ist mit den weissen Bildern bei den Fragen
         // ueberhaupt nicht stimmig." Seit dem 17.09. werden die
@@ -6280,6 +6472,22 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  selbst - auch mitten in einer Runde, wo die zweite Leiste mit
                  dem grossen Knopf "Gruppenraum" ausgeblendet ist. -->
             <button class="btn" id="duoRoomBtn" onclick="window.duoInit()" style="display:none; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Gruppenraum öffnen – Teilnehmer verwalten & entfernen. Sie kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Raum</button>
+            <!-- ================================================================
+                 DER SERVER-KNOPF                                 (22.09.2026)
+                 Dietmar: "Ich moechte in der Hauptansicht einen Button.
+                 Nachdem wir eine feste Adresse haben, moechte ich den Trainer
+                 online zur Verfuegung stellen, wenn der Button aktiviert ist."
+
+                 Rot heisst zu, gruen heisst offen - seine Wahl. Der Knopf
+                 erscheint nur auf dem Rechner, auf dem der Trainer laeuft;
+                 ein Besucher soll ihn gar nicht erst sehen.
+                 ================================================================ -->
+            <button class="btn" id="tuerBtn" onclick="tuerUmschalten()"
+                    style="display:none; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;"
+                    data-tooltip="Server freigeben – nur wenn dies grün ist, erreichen Besucher den Trainer über den geteilten Link"
+                    data-vorlesen-kurz="Server freigeben."
+                    data-vorlesen="Server. Rot heißt: Der Trainer läuft nur für dich. Grün heißt: Besucher erreichen ihn über den geteilten Link. Nach jedem Start steht er auf Rot.">
+                <i class="fas fa-server"></i> <span id="tuerBtnText">Server</span></button>
             <button class="btn" id="beendenBtn" onclick="beendenFragen()"
                     style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;"
                     data-tooltip="⏻ Trainer beenden – schließt den Server sauber"
@@ -6532,6 +6740,67 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     <span id="lektionFeldInfo" style="font-size:0.75rem; color:var(--muted);"></span>
                     <button id="diplomeBtn" onclick="qslAlbumOeffnen()" class="btn-lernstand-hell" style="margin-left:auto;" data-tooltip="🏆 Deine Diplome – für jede abgeschlossene Lektion eine QSL-Karte"><i class="fas fa-trophy"></i> Diplome</button>
                     <button onclick="lektionenOeffnen()" class="btn-lernstand-hell" data-tooltip="Alle 14 Lektionen mit Kapitelmarken und Lernfortschritt"><i class="fas fa-list-ul"></i> Übersicht</button>
+                </div>
+                <!-- ================================================================
+                     HILFE UND UNTERLAGEN                          (21.09.2026)
+                     ----------------------------------------------------------------
+                     Dietmar: "Koennen wir von der Seite von 50 Ohm etwas bei uns
+                     einbauen?" - und auf die Frage, was genau: die Ausbildungspaten,
+                     die Kurse vor Ort und die Unterlagenseite des DARC, in die
+                     Hauptansicht.
+
+                     ES SIND LINKS, KEINE KOPIEN. Die Seiten gehoeren dem DARC. Der
+                     Trainer zeigt nichts von ihrem Inhalt an, er oeffnet sie im
+                     Browser - als das, was sie sind: das Angebot des DARC. Genauso
+                     wird es seit Wochen bei den Omega-Kacheln an der Frage
+                     gehalten. Texte, Bilder oder Foliensaetze in den Trainer zu
+                     uebernehmen waere etwas voellig anderes und steht hier
+                     ausdruecklich nicht zur Debatte: Auf der Unterlagenseite steht
+                     kein Lizenzhinweis, und das heisst nicht "frei", sondern "alle
+                     Rechte beim DARC".
+
+                     WARUM DIESE DREI. Der Trainer kann einem alles beibringen
+                     ausser dem, was ein Mensch kann: nachfragen, wenn man etwas
+                     nicht versteht. Die Ausbildungspaten und die Kurse vor Ort
+                     schliessen genau diese Luecke - und wer allein vor dem
+                     Bildschirm sitzt, weiss meist gar nicht, dass es sie gibt. Die
+                     Unterlagenseite steht daneben fuer alle, die lieber etwas
+                     Gedrucktes in der Hand haben.
+
+                     Die Zeile steht unter dem Videolehrgang, weil beides dasselbe
+                     ist: Lernen, das nicht aus diesem Programm kommt.
+                     ================================================================ -->
+                <div style="display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.8rem;">
+                    <span style="font-size:0.8rem; font-weight:600; color:var(--panel-navy);"><span class="ohm">&#937;</span> Hilfe &amp; Unterlagen:</span>
+                    <button onclick="lernSeiteOeffnen('https://50ohm.de/patenkarte.html')" class="btn-lernstand-hell"
+                            data-tooltip="Ausbildungspaten des DARC – erfahrene Funkamateure, die beim Einstieg helfen. Fragen kostet nichts, und ein Mensch erklärt manches in zwei Minuten, woran man allein einen Abend sitzt."><i class="fas fa-user-graduate"></i> Ausbildungspaten</button>
+                    <button onclick="lernSeiteOeffnen('https://50ohm.de/kurse_vor_ort_liste.html')" class="btn-lernstand-hell"
+                            data-tooltip="Kurse in deiner Nähe – meist einmal in der Woche abends, im Ortsverband oder an der Volkshochschule. Auf der Seite gibt es auch eine Kartenansicht."><i class="fas fa-chalkboard-user"></i> Kurse vor Ort</button>
+                    <button onclick="lernSeiteOeffnen('https://www.darc.de/der-club/referate/ajw/ausbildungsunterlagen-n-e-a')" class="btn-lernstand-hell"
+                            data-tooltip="Ausbildungsunterlagen des DARC: Bücher zu den Klassen N, E und A, Foliensätze, Karteikarten und der Fragenkatalog."><i class="fas fa-book"></i> Unterlagen</button>
+                    <!-- Die Foliensaetze zum Lehrgang. Dietmar am 21.09.2026:
+                         "Einen Button fuer Folien." Sie liegen beim DARC auf
+                         GitHub als fertige PDF und tragen als einziges der hier
+                         verlinkten Angebote eine klare Lizenz: CC-BY 4.0, also
+                         weitergeben und benutzen unter Namensnennung. Mitliefern
+                         waere damit sogar erlaubt - der Link ist trotzdem besser:
+                         Bei jedem neuen Stand liegt drueben die aktuelle Fassung,
+                         und der Trainer waechst nicht um ein paar hundert MB PDF.
+                         Der Weg geht auf "latest" und damit immer auf die neueste
+                         Veroeffentlichung, nicht auf eine, die heute stimmt und in
+                         einem halben Jahr veraltet ist. -->
+                    <button onclick="lernSeiteOeffnen('https://github.com/DARC-e-V/50ohm-pdf-slides/releases/latest')" class="btn-lernstand-hell"
+                            data-tooltip="Foliensätze zum Lehrgang als PDF – vom DARC auf GitHub, unter CC-BY 4.0. Für Ausbilder: fertige Folien für den Kursabend."><i class="fas fa-file-pdf"></i> Folien</button>
+                    <!-- Das gedruckte Buch zur Klasse N. Steht NUR bei Klasse N -
+                         siehe buchKnopfNachziehen(). Dietmar am 21.09.2026:
+                         "Einen Button zu dem Buch bei Amazon haette ich gerne
+                         dabei. Dieser sollte aber nur bei der Klasse N dabei
+                         sein." Bei den anderen Zielen waere er ein Hinweis auf
+                         ein Buch, das die falsche Pruefung behandelt. -->
+                    <button id="buchKlasseNBtn" style="display:none;" class="btn-lernstand-hell"
+                            onclick="lernSeiteOeffnen('https://www.amazon.de/dp/388692100X')"
+                            data-tooltip="DARC-Amateurfunklehrgang Klasse N von Matthias Jung (DL9MJ) und Björn Swierczek (DL1PZ) – das gedruckte Buch zum Lehrgang, bei Amazon."><i class="fas fa-book-open"></i> Buch Klasse N</button>
+                    <span id="hilfeQuelleText" style="font-size:0.75rem; color:var(--muted); margin-left:auto;">beim DARC · öffnet im Browser</span>
                 </div>
                 <!-- Hörbuch: Frage - Denkpause - richtige Antwort, als MP3 für den
                      USB-Stick im Auto. Steht bewusst unter dem Videolehrgang: Beides
@@ -6825,6 +7094,13 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                          zwischendurch neu aufgebaut werden musste. Nur beim
                          Gastgeber sichtbar, duo.js fuellt sie. -->
                     <div id="duoWacheZeile" style="display:none; margin-top:8px; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.73rem; line-height:1.5;"></div>
+                    <!-- Wer war da? Dietmar am 21.09.2026: "Ich moechte als
+                         Host die Anzahl der Besucher sehen." Die Zahl sieht
+                         jeder Gastgeber; die Liste, WER gekommen ist, nur
+                         der Entwickler - erkennbar am Benutzernamen. Gefuellt
+                         von duo.js aus /api/besucher, und die Antwort gibt es
+                         nur am Trainer-PC selbst. -->
+                    <div id="duoBesucherZeile" style="display:none; margin-top:8px; padding:0.45rem 0.6rem; border-radius:8px; font-size:0.73rem; line-height:1.5;"></div>
                     <div style="margin-top:8px;"><a id="duoLocalLink" href="#" target="_blank" style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); word-break:break-all; display:none;"></a></div>
                 </div>
             </div>
@@ -6848,6 +7124,30 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                    duo.js setzt nur noch, ob es gut aussieht oder nicht. */
                 .duo-wache.gut  { background:#eef8f1; border:1px solid #bfe3cb; color:#1c6b3a; }
                 .duo-wache.warn { background:#fff6e5; border:1px solid #f0d7a0; color:#7a5a10; }
+                /* Die Besucherzeile: blau, damit sie sich von der gruenen
+                   Wache unterscheidet - die eine sagt "die Leitung steht",
+                   die andere "es kommt jemand". */
+                .duo-besucher { background:#eef4fb; border:1px solid #c2d6f0; color:#1f3f66; }
+                /* Das Laenderkuerzel in der Besucherliste. Kein
+                   Fahnen-Emoji: Windows zeigt keine Laenderflaggen. */
+                .land-kuerzel { display:inline-block; min-width:24px; text-align:center;
+                    font-family:var(--font-mono); font-size:0.68rem; font-weight:700;
+                    letter-spacing:0.02em; padding:1px 4px; border-radius:4px;
+                    background:#dbe6f2; border:1px solid #b6cade; color:#28496e;
+                    vertical-align:1px; }
+                /* Der Hinweis, wenn jemand ueber den Demo-Link kommt: kein
+                   Rot, keine Warnfarbe - es ist kein Fehler, sondern eine
+                   Ansage. Gelb-braun wie die anderen Hinweise im Raum. */
+                /* flex-basis 100%: Die beiden Knoepfe stehen in einer Reihe
+                   nebeneinander; ohne das quetscht sich der Hinweis als
+                   dritte Spalte dazwischen. So bekommt er seine eigene
+                   Zeile unter beiden. */
+                .duo-demo-hinweis { margin-top:8px; padding:0.5rem 0.65rem; border-radius:8px;
+                    font-size:0.74rem; line-height:1.55; flex:1 0 100%; width:100%; grid-column:1 / -1;
+                    background:#fff8e6; border:1px solid #ecd9a4; color:#6f5410; }
+                .duo-besucher .liste { margin-top:6px; border-top:1px solid #c2d6f0; padding-top:5px;
+                                       max-height:168px; overflow:auto; font-family:var(--font-mono); font-size:0.68rem; }
+                .duo-besucher .liste div { padding:1.5px 0; }
                 .duo-collapsible{border-radius:12px; margin-bottom:0.7rem; overflow:hidden; border:1px solid #c2d6f0; background:#fff;}
                 .duo-collapsible.name-box{border-color:#a8c0de; background:#eef5ff;}
                 .duo-collapsible.pwd-box{border-color:#ffe0a0; background:#fff8e1;}
@@ -7132,9 +7432,9 @@ window.klasseFragenNachladen = klasseFragenNachladen;
          dort gehört sie hin - direkt neben den Lektionen. Hier unten blieb nur
          die Herkunft des Fragenkatalogs. -->
     <div class="footer-note">
-        <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle"><span class="ohm">&#937;</span> In Zusammenarbeit mit <a href="https://www.50ohm.de" target="_blank" rel="noopener"
+        <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
                title="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung."
-               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — dem Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span>
+               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span>
     </div>
 </div>
 
@@ -13014,8 +13314,34 @@ function diagnoseNotieren(q, gewaehlt, richtig){
 //  Taschenrechner. Wer sie benutzt, uebt genau das, was er im
 //  Pruefungsraum tun wird.
 //
-//  Nachgezaehlt: 534 der 571 Fragen haben eine Stelle im Formelblatt.
-//  Nachschlagen ist hier also der Normalfall, nicht die Ausnahme.
+//  RICHTIGSTELLUNG (21.09.2026): Hier stand "Nachgezaehlt: 534 der 571
+//  Fragen haben eine Stelle im Formelblatt." Das war falsch, und zwar
+//  nicht knapp - kein Katalog kommt dieser Zahl nahe. Sie stand hier
+//  mit dem Wort "nachgezaehlt" davor, ohne dass gezaehlt worden war.
+//
+//  Aufgefallen ist es Dietmar am 21.09.2026 an einer einzelnen Frage:
+//  "Fehlt hier nicht das Formelblatt?" - NB501, das ohmsche Gesetz.
+//  Beim Nachsehen fehlte nicht nur diese eine Zuordnung.
+//
+//  Wirklich gezaehlt, nach dem Nachtragen der ohmschen und der
+//  Leistungsfamilie:
+//
+//      Klasse N     123 von  571   (22 %)
+//      Klasse E     262 von 1034   (25 %)
+//      Klasse A     590 von 1750   (34 %)
+//      N auf E      139 von  463   (30 %)
+//      E auf A      328 von  716   (46 %)
+//      N auf A      467 von 1179   (40 %)
+//
+//  Nachschlagen ist also NICHT der Normalfall, sondern betrifft je
+//  nach Katalog ein Fuenftel bis knapp die Haelfte der Fragen. Die
+//  Entscheidung darueber, dass Nachschlagen positiv gewertet wird,
+//  bleibt davon unberuehrt - sie war nie von der Haeufigkeit abhaengig,
+//  sondern davon, dass die Formelsammlung in der Pruefung auf dem
+//  Tisch liegt. Nur die Begruendung stimmte nicht.
+//
+//  Klasse N ist der am duennsten erfasste Katalog. Die Technik-Fragen
+//  dort einmal vollstaendig durchzugehen, steht noch aus.
 //
 //  Deshalb wird ab jetzt mitgeschrieben, WANN jemand nachschlaegt -
 //  nicht um es ihm vorzuhalten, sondern damit der Trainer eine lange
@@ -17717,8 +18043,32 @@ const ZUSCHAUER_KENNUNG = Math.random().toString(36).slice(2) + Date.now().toStr
 //     aus, und "pageshow" meldet die Rueckkehr.
 //  ----------------------------------------------------------------
 function lebenszeichenStarten(){
+    // ----------------------------------------------------------------
+    //  DER NAME REIST MIT                             (21.09.2026)
+    //  Dietmar: "Ich moechte den nackten Link in der Facebook-Gruppe
+    //  teilen und jeden sehen, der auf dem Trainer ist."
+    //
+    //  Sehen konnte er sie schon - Geraet, Standort, seit wann -, aber
+    //  ohne Namen: Der Server kennt ihn nur von Leuten, die einem Raum
+    //  beigetreten sind. Wer ueber den nackten Link kommt, ist in
+    //  keinem Raum.
+    //
+    //  Das Lebenszeichen geht ohnehin alle zehn Sekunden hinaus. Es
+    //  nimmt den Namen jetzt mit - den, den der Besucher im
+    //  Willkommensfenster eingetragen hat. Damit steht er in der
+    //  Anwesenheitsliste des Gastgebers, und ein spaeter eingetragener
+    //  Name erscheint beim naechsten Takt von selbst.
+    //
+    //  Freiwillig bleibt es: Wer nichts eingetragen hat, schickt nichts
+    //  und heisst "Besucher".
+    // ----------------------------------------------------------------
     const melden = () => {
-        try{ fetch('/api/lebenszeichen?id=' + ZUSCHAUER_KENNUNG, { cache:'no-store' }).catch(()=>{}); }catch(e){}
+        try{
+            let wer = '';
+            try{ wer = (localStorage.getItem('duo_userName') || '').trim().slice(0, 20); }catch(e){}
+            const anhang = wer ? '&name=' + encodeURIComponent(wer) : '';
+            fetch('/api/lebenszeichen?id=' + ZUSCHAUER_KENNUNG + anhang, { cache:'no-store' }).catch(()=>{});
+        }catch(e){}
     };
     melden();
     setInterval(melden, 10000);
@@ -17739,6 +18089,119 @@ function lebenszeichenStarten(){
     });
 }
 window.lebenszeichenStarten = lebenszeichenStarten;
+
+// ================================================================
+//  DER SERVER-KNOPF: TUER AUF, TUER ZU              (22.09.2026)
+//  ----------------------------------------------------------------
+//  Rot = nur fuer dich. Gruen = Besucher kommen ueber den geteilten
+//  Link herein. Nach jedem Start steht er auf Rot; das war Dietmars
+//  ausdrueckliche Wahl ("Immer zu"), damit der Trainer nicht ueber
+//  Nacht offensteht, ohne dass es jemand wollte.
+//
+//  Beim ZUMACHEN gibt es eine Minute Vorwarnung: Wer gerade in einer
+//  Frage steckt, soll sie zu Ende bringen koennen. In dieser Minute
+//  zeigt der Knopf den Countdown, und ein weiterer Klick nimmt das
+//  Zumachen zurueck.
+//
+//  Der Knopf erscheint nur dort, wo der Trainer laeuft. Er fragt den
+//  Server, statt sich den Zustand zu merken: Ein zweiter Tab oder ein
+//  Neuladen soll dieselbe Wahrheit zeigen.
+// ================================================================
+let tuerStand = { offen:false, schliesstUm:0 };
+let tuerUhr = null;
+
+function tuerKnopfZeichnen(){
+    const b = document.getElementById('tuerBtn');
+    const t = document.getElementById('tuerBtnText');
+    if(!b || !t) return;
+    if(!laeuftLokal()){ b.style.display = 'none'; return; }
+    b.style.display = '';
+
+    const rest = tuerStand.schliesstUm ? (tuerStand.schliesstUm - Date.now()) : 0;
+    // Klassen statt style-Attribut: siehe die Begruendung bei #tuerBtn im
+    // Stilblock. Inline gesetzte Farben verlieren hier gegen !important.
+    b.classList.remove('tuer-an', 'tuer-gleich');
+    // Die Beschriftung bleibt immer "Server" - Dietmar am 22.09.2026:
+    // "Nur Server, kein Server Ein oder Aus". Den Zustand sagt die Farbe,
+    // die Einzelheiten stehen in der Sprechblase.
+    t.textContent = 'Server';
+    if(rest > 0){
+        const sek = Math.ceil(rest / 1000);
+        b.classList.add('tuer-gleich');
+        b.setAttribute('data-tooltip', 'Schließt in ' + sek + ' Sekunden – noch einmal klicken, um offen zu lassen');
+    } else if(tuerStand.offen){
+        b.classList.add('tuer-an');
+        b.setAttribute('data-tooltip', 'Besucher erreichen den Trainer gerade. Klicken schließt ihn – mit einer Minute Vorwarnung.');
+    } else {
+        // keine Klasse - der Knopf sieht aus wie seine Nachbarn
+        b.setAttribute('data-tooltip', 'Der Trainer läuft nur für dich. Klicken gibt ihn für Besucher frei.');
+    }
+}
+
+async function tuerNachsehen(){
+    if(!laeuftLokal()) return;
+    try{
+        const r = await fetch('/api/tuer', { cache:'no-store' });
+        if(!r.ok) return;                       // aeltere Fassung: Knopf bleibt, wie er ist
+        const j = await r.json();
+        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0 };
+        tuerKnopfZeichnen();
+    }catch(e){}
+}
+
+window.tuerUmschalten = async function(){
+    const laeuft = tuerStand.schliesstUm && (tuerStand.schliesstUm - Date.now() > 0);
+
+    // Mitten im Countdown: zurueck auf offen, ohne Rueckfrage.
+    if(laeuft){ await tuerSetzen(true); return; }
+
+    if(!tuerStand.offen){ await tuerSetzen(true); return; }
+
+    // Zumachen - mit Vorwarnung fuer die, die gerade da sind.
+    const weiter = () => tuerSetzen(false, 60);
+    if(window.showAppConfirm){
+        window.showAppConfirm('Den Server für Besucher schließen?', weiter, {
+            title: 'Server schließen?',
+            details: 'Wer gerade auf der Seite ist, bekommt eine Minute Vorwarnung und kann seine '
+                   + 'Frage zu Ende bringen. Danach führt der geteilte Link auf die Auffangseite. '
+                   + 'Für dich ändert sich nichts.',
+            confirmLabel: '<i class="fas fa-server"></i> Schließen',
+            icon: 'fa-server'
+        });
+    } else { weiter(); }
+};
+
+async function tuerSetzen(auf, sek){
+    try{
+        const url = '/api/tuer?auf=' + (auf ? '1' : '0') + (sek ? '&sek=' + sek : '');
+        const r = await fetch(url, { method:'POST' });
+        if(!r.ok){
+            if(r.status === 404) throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                + 'einmal den Trainer neu starten, danach gibt es diesen Knopf.');
+            if(r.status === 403) throw new Error('Das geht nur direkt am Trainer-PC.');
+            throw new Error('Der Server hat mit ' + r.status + ' geantwortet.');
+        }
+        const j = await r.json();
+        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0 };
+        tuerKnopfZeichnen();
+    }catch(e){
+        if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
+    }
+}
+
+function tuerKnopfStarten(){
+    if(!laeuftLokal()) return;
+    tuerNachsehen();
+    if(tuerUhr) clearInterval(tuerUhr);
+    // Jede Sekunde neu zeichnen (wegen des Countdowns), aber nur alle zehn
+    // Sekunden wirklich beim Server nachfragen.
+    let takt = 0;
+    tuerUhr = setInterval(function(){
+        tuerKnopfZeichnen();
+        if((++takt % 10) === 0) tuerNachsehen();
+    }, 1000);
+}
+window.tuerKnopfStarten = tuerKnopfStarten;
 
 function laeuftLokal() {
     return ['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) !== -1;
@@ -26412,8 +26875,38 @@ function renderQuestion() {
     //  eine der beiden, steht die andere allein und nimmt die volle
     //  Breite; fehlen beide, steht hier gar nichts.
     // ================================================================
-    const vm = (typeof videoMap !== 'undefined' && videoMap[q.id]) ? videoMap[q.id] : null;
-    const lm = (typeof lernMap !== 'undefined' && lernMap && lernMap[q.id]) ? lernMap[q.id] : null;
+    //  IM RAUM UND IN DER PRUEFUNG STEHEN SIE NICHT DA   (21.09.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit einem Bild aus dem Gruppenraum: "Im Gruppenraum
+    //  gehoeren die 3 Knoepfe Videolehrgang und 2 Mal 50 Ohm raus."
+    //
+    //  Er hat recht, und der Grund ist derselbe, aus dem dort schon F9
+    //  und Nachschlagen abgeschaltet sind: Diese Kacheln fuehren auf die
+    //  Seite, auf der genau diese Frage erklaert wird - eine davon sogar
+    //  auf den gerechneten Loesungsweg. Wer im Raum sitzt, spielt gegen
+    //  andere: am Ergebnis haengt ein gemeinsamer Punktestand, und der
+    //  Trainer sieht mit, wer wo steht.
+    //
+    //  ERSTE FASSUNG WAR ZU ENG (21.09.2026, nachmittags): Da stand hier
+    //  nur pruefungStreng(), also Pruefungssimulator und Pruefungsrunde
+    //  im Raum. In der normalen Gruppenrunde - 25 Fragen, "Alle Teile",
+    //  kein Haken - standen die Kacheln weiter da, und genau die hatte
+    //  Dietmar fotografiert. Gemeint war der Raum als Ganzes.
+    //
+    //  Zwei Gruende, eine Zeile: pruefungStreng() nimmt den Simulator
+    //  allein mit (dieselbe Luecke, nur ohne Zeugen), raumStill() den
+    //  Gruppenraum in jeder Betriebsart. Genau dieses Paar entscheidet
+    //  weiter unten auch, ob die Loesungstaste noch etwas verraet.
+    //  Beim Lernen allein, beim Blaettern durch den Katalog und in der
+    //  Fehlerliste bleibt alles, wie es war - dort gehoeren sie hin.
+    let lernStreng = false;
+    try{
+        if (typeof pruefungStreng === 'function' && pruefungStreng()) lernStreng = true;
+        else if (window.duo && typeof window.duo.isActive === 'function'
+                 && window.duo.isActive()) lernStreng = true;
+    }catch(e){}
+    const vm = (!lernStreng && typeof videoMap !== 'undefined' && videoMap[q.id]) ? videoMap[q.id] : null;
+    const lm = (!lernStreng && typeof lernMap !== 'undefined' && lernMap && lernMap[q.id]) ? lernMap[q.id] : null;
     if (vm || lm) {
         const pfeil = '<i class="fas fa-chevron-right lern-pfeil"></i>';
         // Erst sammeln, dann setzen. Wieviele Spalten die Zeile bekommt,
@@ -29294,6 +29787,108 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Zu Gast beim Entwickler? Dann anbieten, den eigenen Ordner nachzuziehen.
     try{ setTimeout(()=>{ ordnerAbgleichAnbieten().catch(()=>{}); }, 2500); }catch(e){}
     try{ lebenszeichenStarten(); }catch(e){}
+    // Der Server-Knopf: nur auf dem Rechner, auf dem der Trainer laeuft.
+    try{ tuerKnopfStarten(); }catch(e){}
+    // ----------------------------------------------------------------
+    //  DIE LEITUNG FUER CHAT UND ANSAGEN              (21.09.2026)
+    //  duo.js wurde bisher erst geladen, wenn jemand den Gruppenraum
+    //  aufschlug. Wer nur den geteilten Link angeklickt hat, hatte damit
+    //  keine Verbindung - und konnte im Chat nichts schreiben und keine
+    //  Ansage des Gastgebers empfangen.
+    //
+    //  Zwei Sekunden Verzug, damit der Start der Seite davon nichts
+    //  merkt: Erst zeichnen und die Fragen zeigen, dann die Leitung.
+    //  Geht es nicht (kein Server, keine Datei), bleibt alles wie vorher.
+    // ----------------------------------------------------------------
+    // ----------------------------------------------------------------
+    //  DER HINWEIS FUER DEN, DER UEBER DEN LINK KOMMT   (21.09.2026)
+    //  Dietmar: "In dem Fall, wenn ich den Trainer zB. in Facebook teile,
+    //  soll ein Hinweis kommen."
+    //
+    //  Er hat recht, und es ist eine Frage der Fairness: Wer in einer
+    //  Facebook-Gruppe einen Link anklickt, landet in einem fertigen
+    //  Programm und haelt es fuer eine Webseite. Sie ist aber der
+    //  Rechner eines Menschen, der gerade laeuft - morgen ist die
+    //  Adresse weg. Das gehoert gesagt, samt dem Weg zum eigenen Paket.
+    //
+    //  Einmal je Browser: Der Merker steht in localStorage. Wer den Link
+    //  zum zweiten Mal anklickt, weiss es schon.
+    // ----------------------------------------------------------------
+    function ueberGeteiltenLink(){
+        try{
+            const h = String(location.hostname || '').toLowerCase();
+            if(!h || h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') return false;
+            if(h.endsWith('.local')) return false;
+            if(/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)) return false;
+            if(/^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^169\.254\./.test(h)) return false;
+            if(location.protocol === 'file:') return false;
+            return true;
+        }catch(e){ return false; }
+    }
+    window.ueberGeteiltenLink = ueberGeteiltenLink;
+
+    function demoHinweisZeigen(){
+        try{
+            if(!ueberGeteiltenLink()) return;
+            if(localStorage.getItem('demo_hinweis_gesehen')) return;
+            const m = document.getElementById('willkommenModal');
+            if(!m) return;
+            // Steht schon ein Name aus einem frueheren Besuch? Dann ins
+            // Feld damit, statt ihn erneut zu erfragen.
+            try{
+                const alt = localStorage.getItem('duo_userName') || '';
+                const feld = document.getElementById('willkommenName');
+                if(feld && alt && !/^Besucher$/i.test(alt)) feld.value = alt;
+            }catch(e){}
+            m.style.display = 'flex';
+            m.classList.add('open');
+            try{ document.getElementById('willkommenName').focus(); }catch(e){}
+        }catch(e){}
+    }
+
+    // "Los geht's" oder "Ohne Namen" - beides schliesst das Fenster und
+    // merkt sich, dass es gezeigt wurde. Der Merker wird erst HIER
+    // gesetzt, nicht beim Anzeigen: Wer die Seite neu laedt, ohne
+    // geantwortet zu haben, soll wieder gefragt werden.
+    window.willkommenFertig = function(mitNamen){
+        try{
+            const m = document.getElementById('willkommenModal');
+            if(m){ m.style.display = 'none'; m.classList.remove('open'); }
+            localStorage.setItem('demo_hinweis_gesehen', '1');
+            if(mitNamen){
+                const feld = document.getElementById('willkommenName');
+                let v = feld ? String(feld.value || '').trim().slice(0, 20) : '';
+                // Steuerzeichen und spitze Klammern raus - der Name landet
+                // im Chat anderer Leute.
+                v = v.replace(/[\u0000-\u001F\u007F<>]/g, '').trim();
+                if(v){
+                    localStorage.setItem('duo_userName', v);
+                    // Auch als Name des Trainer-Benutzers, damit er im
+                    // Verlauf und in der Statistik auftaucht.
+                    try{ if(typeof setUserName === 'function') setUserName(v); }catch(e){}
+                    try{ if(window.duo && window.duo.nameNachziehen) window.duo.nameNachziehen(v); }catch(e){}
+                    console.log('[WILLKOMMEN] Name gesetzt: ' + v);
+                }
+            }
+            // Jetzt steht der Name fest - jetzt darf die Ankunft in den
+            // Chat. Andersherum waere sie immer namenlos gewesen.
+            try{ if(window.duo && window.duo.hausHallo) window.duo.hausHallo(); }catch(e){}
+        }catch(e){}
+    };
+
+    setTimeout(function(){
+        try{
+            demoHinweisZeigen();
+            if(window.duo && window.duo.hintergrundVerbinden){ window.duo.hintergrundVerbinden(); return; }
+            const s = document.createElement('script');
+            s.src = '/duo.js';
+            s.onload = function(){
+                try{ if(window.duo && window.duo.hintergrundVerbinden) window.duo.hintergrundVerbinden(); }catch(e){}
+            };
+            s.onerror = function(){};
+            document.head.appendChild(s);
+        }catch(e){}
+    }, 2000);
     // Die stille Messung. Ab hier laeuft die Uhr - aber nur, solange
     // wirklich geuebt wird (siehe uebtGerade()).
     try{ messungLaden(); }catch(e){}
@@ -31663,6 +32258,56 @@ if (originalSelectOption) {
         }
         body.dark #duoWacheZeile.warn b,
         body.dark #duoWacheZeile.warn strong { color: #ffe0a8 !important; }
+        /* Dieselbe Vorsichtsmassnahme fuer die Besucherzeile: dunkler
+           Kasten, und das Fette bekommt seine eigene Farbe, sonst faerbt
+           "body.dark [id$=Modal] b" es fast weiss. */
+        body.dark #duoBesucherZeile.duo-besucher {
+            background: #10243c !important;
+            border: 1px solid #2c5580 !important;
+            color: #9cc8f0 !important;
+        }
+        body.dark #duoBesucherZeile.duo-besucher b,
+        body.dark #duoBesucherZeile.duo-besucher strong { color: #dbeeff !important; }
+        body.dark #duoBesucherZeile .liste { border-top-color: #2c5580 !important; }
+        /* Und derselbe Fehler haette im Besucherfenster gewartet: Der
+           Kopfkasten traegt sein Hellblau aus dem Markup, und
+           "body.dark [id$=Modal] b" faerbt das Fette darin fast weiss -
+           gemessen 240,247,252 auf 238,244,251, also 1,01:1. Die Zahl,
+           um die es in dem Satz geht, waere unsichtbar gewesen. */
+        body.dark #besucherModalKopf {
+            background: #10243c !important;
+            border: 1px solid #2c5580 !important;
+            color: #9cc8f0 !important;
+        }
+        body.dark #besucherModalKopf b,
+        body.dark #besucherModalKopf strong { color: #dbeeff !important; }
+        body.dark #besucherAktiv {
+            background: #0d2e20 !important;
+            border: 1px solid #1f6b46 !important;
+            color: #8fe3b8 !important;
+        }
+        body.dark #besucherAktiv b,
+        body.dark #besucherAktiv strong { color: #d6f7e6 !important; }
+        body.dark #besucherAnfragen {
+            background: #33270a !important;
+            border: 1px solid #7a6320 !important;
+            color: #f0d79a !important;
+        }
+        body.dark #besucherAnfragen b,
+        body.dark #besucherAnfragen strong { color: #fdf0d0 !important; }
+        body.dark .land-kuerzel {
+            background: #17324e !important;
+            border-color: #2f5a80 !important;
+            color: #a8cdf0 !important;
+        }
+        /* Und derselbe Handgriff fuer den Demo-Hinweis. */
+        body.dark #duoDemoHinweis.duo-demo-hinweis {
+            background: #3a2f14 !important;
+            border: 1px solid #7a5f28 !important;
+            color: #ffd79a !important;
+        }
+        body.dark #duoDemoHinweis.duo-demo-hinweis b,
+        body.dark #duoDemoHinweis.duo-demo-hinweis strong { color: #ffe9c4 !important; }
         /* Die Ueberschrift einer aufklappbaren Gruppe sitzt in span.left und
            trug das dunkle Hausblau - auf schwarzem Grund unsichtbar. */
         body.dark #duoModal .duo-collapsible-header,
@@ -33964,6 +34609,163 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
     <div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
       <button onclick="closeGenericConfirmModal()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1.1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;">Abbrechen</button>
       <button id="genericConfirmBtn" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;"><i class="fas fa-check"></i> Bestätigen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     WILLKOMMEN AM GETEILTEN LINK                    (21.09.2026)
+     ----------------------------------------------------------------
+     Dietmar: "In dem Fall, wenn ich den Trainer zB. in Facebook teile,
+     soll ein Hinweis kommen." Und kurz darauf: "Hier waere ein PopUp
+     gut, wo man sein Rufzeichen oder Benutzernamen eingeben kann."
+
+     Beides steht hier in EINEM Fenster. Zwei Fenster hintereinander
+     haette der Besucher als Hindernis empfunden; so ist es ein Satz zur
+     Einordnung und eine Frage, die er beantworten oder ueberspringen
+     kann.
+
+     Der Name ist freiwillig. Er wird nur gebraucht, damit im Chat und
+     in der Teilnehmerliste etwas Lesbares steht - ohne ihn heisst man
+     "Besucher", und das ist auch in Ordnung.
+
+     KEIN "DEMO-ZUGANG" (21.09.2026). Dietmar: "Demo-Zugang klingt auch
+     doof. Das klingt nach bezahlen." Er hat recht: "Demo" heisst sonst
+     abgespeckte Fassung mit Bezahlschranke dahinter - und hier ist das
+     Gegenteil der Fall. Jetzt steht da, was wirklich gilt: offen und
+     kostenlos. Das Wort ist aus dem ganzen Programm verschwunden, auch
+     aus der Link-Vorschau und aus der Sperre im Gruppenraum.
+
+     "AUF EINEM PRIVATEN RECHNER" und nicht "auf dem Rechner eines
+     Funkamateurs" (21.09.2026). Dietmar: "eines Funkamateurs klingt
+     doof, da ich noch keiner bin." Genau - er hat die Pruefung noch
+     nicht abgelegt, und ausgerechnet daran hat sich kurz zuvor jemand
+     in einer Facebook-Gruppe hochgezogen. Ein Satz, der in jedem
+     Browser steht, darf so etwas nicht behaupten. "Privat" sagt
+     dasselbe ueber die Verfuegbarkeit, ohne einen Anspruch zu erheben.
+
+     Der Halbsatz "die Adresse aendert sich bei jedem Start" ist
+     ebenfalls weg: Mit dem benannten Tunnel auf eigener Domain stimmt
+     er nicht mehr. Was bleibt, gilt in beiden Faellen - erreichbar,
+     solange der Rechner an ist.
+
+     Nur beim ERSTEN Besuch, und nur, wenn der Trainer ueber einen
+     geteilten Link geoeffnet wurde. Am eigenen Rechner kommt es nie.
+     ================================================================ -->
+<div id="willkommenModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.66); z-index:99995; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:white; border-radius:22px; width:100%; max-width:520px; box-shadow:0 24px 64px rgba(0,0,0,0.4); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
+    <div style="padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
+      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); margin:0; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-hand-wave" style="color:#e2932f;"></i><span style="font-size:1.15rem;">👋</span> Willkommen beim Amateurfunk-Trainer</h3>
+    </div>
+    <div style="padding:1.1rem 1.2rem; font-size:0.87rem; line-height:1.6; color:var(--ink);">
+      <div style="background:#fff8e6; border:1px solid #ecd9a4; border-radius:12px; padding:0.7rem 0.9rem; color:#6f5410; margin-bottom:0.9rem;">
+        <b>Hier ist alles offen und kostenlos.</b> Der Trainer läuft auf einem privaten Rechner und
+        ist nur erreichbar, solange dieser eingeschaltet ist. <b>Zum Behalten</b> gibt es das Programm
+        ohne Konto auf <span style="white-space:nowrap;">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</span>; dann
+        läuft es bei dir, auch ohne Internet.
+      </div>
+      <div style="margin-bottom:0.5rem;">Ausprobieren kannst du alles: die Prüfungsfragen der Bundesnetzagentur
+        für Klasse N, E und A, zu jeder Frage eine Erklärung, den Prüfungssimulator. Dein Lernstand bleibt
+        in deinem Browser, nicht auf dem fremden Rechner.</div>
+      <label for="willkommenName" style="display:block; font-weight:700; margin:0.9rem 0 0.35rem;">
+        Wie sollen wir dich nennen? <span style="font-weight:400; color:var(--muted);">(freiwillig)</span></label>
+      <input id="willkommenName" type="text" maxlength="20" placeholder="Rufzeichen oder Vorname, z. B. DL1ABC"
+             style="width:100%; padding:0.6rem 0.75rem; border:1px solid var(--line); border-radius:12px;
+                    font-size:0.92rem; font-family:var(--font-mono);">
+      <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;">
+        Steht nur im Chat und in der Teilnehmerliste dieses Trainers. Ohne Eintrag heißt du „Besucher".</div>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
+      <button onclick="willkommenFertig(false)" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;">Ohne Namen</button>
+      <button onclick="willkommenFertig(true)" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;"><i class="fas fa-check"></i> Los geht's</button>
+    </div>
+  </div>
+</div>
+
+<!-- Die Ansage vor dem Neustart. Liegt ueber allem, auch ueber den
+     Fenstern - wer gerade eine Frage liest, soll es trotzdem sehen.
+     duo.js fuellt und zeigt sie. -->
+<!-- Der Gastgeber macht gleich zu. Eigener Balken, damit er der
+     Neustart-Ansage nicht ins Gehege kommt - beide koennen theoretisch
+     gleichzeitig laufen. -->
+<div id="tuerBalken" style="display:none; position:fixed; left:0; right:0; top:0; z-index:99999;
+     background:#8a4b10; color:#fff; padding:0.65rem 1rem; font-size:0.86rem; line-height:1.5;
+     box-shadow:0 2px 12px rgba(0,0,0,0.3); text-align:center;">
+  <span id="tuerBalkenText"></span>
+</div>
+<div id="neustartBalken" style="display:none; position:fixed; left:0; right:0; top:0; z-index:99999;
+     background:#8a4b00; color:#fff; padding:0.6rem 1rem; font-size:0.86rem; line-height:1.45;
+     box-shadow:0 6px 20px rgba(0,0,0,0.35); text-align:center;">
+  <span id="neustartBalkenText"></span>
+  <button id="neustartBalkenZu" onclick="try{ neustartBalkenWeg(); }catch(e){ this.parentNode.style.display='none'; }" style="margin-left:12px; background:rgba(255,255,255,0.18); color:#fff;
+          border:1px solid rgba(255,255,255,0.45); border-radius:14px; padding:2px 10px; cursor:pointer;
+          font-size:0.78rem;">verstanden</button>
+</div>
+
+<!-- ================================================================
+     WER WAR DA - DAS FENSTER                        (21.09.2026)
+     ----------------------------------------------------------------
+     Dietmar, mit einem Bild der Liste unter dem Einladungslink: "hier
+     fehlt ein Reset Knopf. Ich finde das irgendwie sehr rein gedrueckt.
+     Ein Button zum oeffnen von einem Fenster waere besser."
+
+     Beides stimmt. Die Liste stand im Kasten unter dem Link, in einem
+     Feld von 168 Punkten Hoehe, mit Bildlaufleiste - IPv6-Adressen sind
+     lang, und jede Zeile brach dreimal um. Hier hat sie Platz: eine
+     Tabelle mit eigenen Spalten, in der die Adresse nicht mehr in den
+     naechsten Eintrag laeuft.
+
+     Unter dem Einladungslink steht jetzt nur noch der Satz mit den
+     Zahlen und daneben ein Knopf. Den Knopf sieht nur der Entwickler -
+     wie vorher die Liste.
+     ================================================================ -->
+<div id="besucherModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99996; align-items:center; justify-content:center; padding:1rem;">
+  <!-- Breite und Hoehe wie beim Gruppenraum-Fenster darunter. Dietmar am
+       21.09.2026: "das Fenster bitte genau so gross wie das Fenster
+       darunter." Die Werte sind von dort uebernommen, samt der
+       Zoom-Rechnung: max-width 1020, width 94 %, und die Hoehe geteilt
+       durch den eingestellten Zoom, damit das Fenster bei 125 % nicht
+       ueber den Bildschirm hinauswaechst. -->
+  <div style="background:white; border-radius:22px; width:94%; max-width:1020px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden; display:flex; flex-direction:column; min-height:calc(74vh / var(--afu-zoom, 1)); max-height:calc(92vh / var(--afu-zoom, 1));">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
+      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;">
+        <i class="fas fa-users" style="color:var(--panel-navy);"></i> Besucher über den Link</h3>
+      <button onclick="besucherFensterZu()" style="width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:white; cursor:pointer; font-size:1.2rem; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--muted);">×</button>
+    </div>
+    <div style="padding:1rem 1.2rem 0.2rem;">
+      <div id="besucherModalKopf" style="background:#eef4fb; border:1px solid #c2d6f0; border-radius:12px; padding:0.7rem 0.9rem; font-size:0.86rem; line-height:1.55; color:#1f3f66;"></div>
+      <!-- Wer vor der Laendersperre steht und anklopft. Gelb, weil es
+           das Einzige in diesem Fenster ist, das eine Entscheidung
+           verlangt - alles andere ist nur Auskunft. Deshalb sitzt es
+           ganz oben, noch vor "wer ist gerade da". -->
+      <div id="besucherAnfragen" style="display:none; margin-top:0.6rem; background:#fff8e6; border:1px solid #ecd9a4; border-radius:12px; padding:0.6rem 0.9rem; font-size:0.83rem; line-height:1.55; color:#6f5410;"></div>
+      <!-- Wer JETZT da ist. Steht bewusst oben und getrennt von der
+           Liste darunter: Die eine Frage ist "wer ist gerade drin", die
+           andere "wer war heute da". -->
+      <div id="besucherAktiv" style="display:none; margin-top:0.6rem; background:#eef8f1; border:1px solid #bfe3cb; border-radius:12px; padding:0.6rem 0.9rem; font-size:0.83rem; line-height:1.5; color:#1c6b3a;"></div>
+    </div>
+    <div style="padding:0.8rem 1.2rem 0.2rem; overflow:auto; flex:1 1 auto;">
+      <table id="besucherTabelle" style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+        <thead><tr>
+          <th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--muted); font-size:0.72rem; letter-spacing:0.04em;">ZEIT</th>
+          <th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--muted); font-size:0.72rem; letter-spacing:0.04em;">GERÄT</th>
+          <th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--muted); font-size:0.72rem; letter-spacing:0.04em;">GEKOMMEN ÜBER</th>
+          <th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--muted); font-size:0.72rem; letter-spacing:0.04em;">RAUM</th>
+          <th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--muted); font-size:0.72rem; letter-spacing:0.04em;">STANDORT</th>
+        </tr></thead>
+        <tbody id="besucherTabelleKoerper"></tbody>
+      </table>
+      <div id="besucherLeer" style="display:none; padding:1.6rem 0.5rem; text-align:center; color:var(--muted); font-size:0.86rem;">
+        Noch niemand da. Sobald jemand den Link anklickt, steht er hier.
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
+      <button onclick="besucherZaehlerZuruecksetzen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;"><i class="fas fa-rotate-left"></i> Zähler zurücksetzen</button>
+      <button onclick="neustartAnkuendigen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #d8b477; background:white; color:#8a5a10; cursor:pointer;" data-tooltip="Allen sagen, dass der Trainer gleich neu startet – dann reißt es nicht unangekündigt ab"><i class="fas fa-bullhorn"></i> Neustart ankündigen</button>
+      <div style="flex:1 1 auto;"></div>
+      <button onclick="besucherFensterAuffrischen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;"><i class="fas fa-rotate"></i> Aktualisieren</button>
+      <button onclick="besucherFensterZu()" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Schließen</button>
     </div>
   </div>
 </div>
