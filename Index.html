@@ -3638,7 +3638,6 @@
             font-weight: 600;
             box-shadow: none;
         }
-        .filter-bar .btn i,
         /* ================================================================
            DER SERVER-KNOPF FAERBT SICH SELBST              (22.09.2026)
            Rot = zu, gruen = offen, orange = schliesst gleich.
@@ -3664,6 +3663,12 @@
         #tuerBtn.tuer-gleich i   { color:#ffffff !important; }
         #tuerBtn.tuer-gleich:hover { background:#74400e !important; border-color:#74400e !important; }
 
+        /* Am 22.09.2026 hierher zurueckgeholt: Diese Zeile stand vorher
+           allein ueber dem Server-Knopf-Block und haengte damit an
+           "#tuerBtn.tuer-an" - jedes Zeichen in der Modusleiste bekam eine
+           gruene Flaeche und weisse Schrift. Ein Komma am Zeilenende reicht,
+           damit ein eingeschobener Block einen Selektor mitnimmt. */
+        .filter-bar .btn i,
         .header-right .btn i,
         .header-right .btn-cache-sm i,
         .header-right .btn-reset-danger i,
