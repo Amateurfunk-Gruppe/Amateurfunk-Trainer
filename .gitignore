@@ -397,3 +397,35 @@ besucher.json
 worker.js
 Auffangseite-einrichten.md
 Tunnel-Einrichten.bat
+
+# ----------------------------------------------------------------
+#  DASSELBE, SEIT DEM 22.09.2026                        (22.09.2026)
+#  Dietmar vor dem Hochladen: "damit ich nicht versehentlich auch
+#  falsche Dinge mit hochlade." Vier Dinge, die nach derselben Regel
+#  wie worker.js draussen bleiben:
+#
+#  support.html          nennt Dietmar Reh als Verantwortlichen und
+#                        beschreibt SEINEN Server (Cloudflare,
+#                        Laendersperre, Besucherliste). Wer den Trainer
+#                        selbst betreibt, braeuchte seine eigene. Ohne
+#                        die Datei verschwinden die zwei Verweise in
+#                        der Fusszeile von selbst (siehe Index.html).
+#  ThinkPad-als-Server.md die Anleitung fuer den eigenen Server-Rechner,
+#                        mit der eigenen Adresse darin - wie
+#                        Auffangseite-einrichten.md.
+#  _Titelbilder/         Arbeitsmaterial fuer die Videos. Die Muster
+#                        _*.png usw. treffen nur Dateien, deren Name
+#                        mit _ beginnt - nicht den Inhalt eines
+#                        Ordners, der so heisst.
+#  neu 1.txt             eine Notiz vom 21.09.2026, kein Programmteil.
+#
+#  Im Repository bleiben dagegen START-SERVER.bat und
+#  Server-Autostart.bat: Die sind allgemein und fuer jeden brauchbar,
+#  der seinen Trainer als Dauerlaeufer betreiben moechte. Ebenso
+#  fonts/ und confetti.browser.js - ohne sie fehlen dem Trainer die
+#  Schriften und das Konfetti.
+# ----------------------------------------------------------------
+support.html
+ThinkPad-als-Server.md
+_Titelbilder/
+neu 1.txt

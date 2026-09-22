@@ -160,6 +160,7 @@ let tunnelWache = {
 // braucht von dort nur zwei Dinge. Sie werden hier abgelegt, damit sie
 // modulweit erreichbar sind.
 let duoIo      = null;
+let duoHausZahl = null;     // wird im Duo-Aufbau gesetzt
 let duoRaeume  = null;
 
 function duoTeilnehmerAnzahl(){
@@ -1390,6 +1391,151 @@ app.use((err, req, res, next)=>{
   }
   return next(err);
 });
+
+// ================================================================
+//  DIE ANFRAGEBREMSE                                    (22.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar, zur Fassung auf dem ThinkPad: "Ja, baue beides ein" -
+//  eine Bremse je Adresse, "damit jemand mit einem Skript den Server
+//  nicht lahmlegen kann".
+//
+//  Was ein Skript anrichten koennte, ohne eine einzige Luecke: den
+//  Rechner mit Anfragen zudecken, oder - schlimmer fuer einen Anschluss
+//  zu Hause - die Leitung nach oben vollziehen. Ein Seitenaufruf des
+//  Trainers sind 6,6 MB (gemessen am 22.09.2026: 37 Anfragen, das
+//  meiste sind erklaerungen.json und Index.html). Hundert Aufrufe in
+//  der Minute waeren 660 MB, mehr als die meisten Anschluesse nach oben
+//  schaffen. Dann ist der Trainer fuer alle anderen weg, ohne dass
+//  jemand "gehackt" haette.
+//
+//  Deshalb vier Eimer je Adresse, nach dem Token-Bucket-Verfahren: Jeder
+//  Eimer hat eine Groesse (das ist der erlaubte Schwall) und laeuft mit
+//  fester Rate wieder voll. Was in den Eimer passt, geht durch; ist er
+//  leer, gibt es 429 und "Retry-After".
+//
+//    Anfragen  900 Schwall, 300 je Minute   - ein OV-Abend mit 20 Leuten
+//                                             hinter EINER Adresse laedt
+//                                             20 x 37 = 740 Anfragen und
+//                                             braucht danach ~200/min
+//    Bytes     250 MB Schwall, 60 MB/min    - 20 x 6,6 MB = 132 MB
+//    Vorlesen  60 Schwall, 40 je Minute     - jede Frage ein Piper-Lauf,
+//                                             das kostet Rechenzeit
+//    Paket     3 Schwall, 1 je 10 Minuten   - das ZIP wird im Speicher
+//                                             gebaut, das ist teuer
+//
+//  Die Zahlen sind so gewaehlt, dass ein Vereinsabend hinter einem
+//  gemeinsamen Anschluss nie anstoesst, ein Skript aber nach wenigen
+//  Sekunden steht. Sie gelten NUR fuer Anfragen von aussen; der eigene
+//  Rechner und das eigene Netz werden nie gebremst. Gezaehlt wird die
+//  Adresse, die Cloudflare mitschickt (die oeffentliche des Besuchers).
+//
+//  Die Bytes werden NACH der Antwort abgezogen (man weiss vorher nicht,
+//  wie gross sie wird) - der Eimer kann deshalb kurz ins Minus gehen.
+//  Das ist gewollt: Die eine grosse Antwort geht noch raus, die
+//  naechsten warten.
+// ================================================================
+const BREMSE = {
+  anfragen: { schwall: 900,             proMinute: 300 },
+  bytes:    { schwall: 250*1024*1024,   proMinute: 60*1024*1024 },
+  vorlesen: { schwall: 60,              proMinute: 40 },
+  paket:    { schwall: 3,               proMinute: 0.1 }
+};
+const bremseStand = new Map();   // Adresse -> { anfragen, bytes, vorlesen, paket, zuletzt, gemeldet }
+const BREMSE_HOECHSTENS = 5000;  // mehr Adressen merkt sich die Bremse nicht
+
+function bremseEimer(ip){
+  let e = bremseStand.get(ip);
+  const jetzt = Date.now();
+  if(!e){
+    if(bremseStand.size >= BREMSE_HOECHSTENS){
+      // Voll - die aelteste Adresse fliegt raus. Wer so viele
+      // Adressen mitbringt, hat andere Mittel als ein Skript.
+      let aeltester = null, wann = Infinity;
+      bremseStand.forEach((v, k) => { if(v.zuletzt < wann){ wann = v.zuletzt; aeltester = k; } });
+      if(aeltester !== null) bremseStand.delete(aeltester);
+    }
+    e = { anfragen: BREMSE.anfragen.schwall, bytes: BREMSE.bytes.schwall,
+          vorlesen: BREMSE.vorlesen.schwall, paket: BREMSE.paket.schwall,
+          zuletzt: jetzt, gemeldet: 0 };
+    bremseStand.set(ip, e);
+    return e;
+  }
+  // Nachfuellen, anteilig zur verstrichenen Zeit, hoechstens bis zum Rand.
+  const min = (jetzt - e.zuletzt) / 60000;
+  if(min > 0){
+    for(const k of ['anfragen','bytes','vorlesen','paket']){
+      e[k] = Math.min(BREMSE[k].schwall, e[k] + min * BREMSE[k].proMinute);
+    }
+    e.zuletzt = jetzt;
+  }
+  return e;
+}
+
+// Abgelaufene Eintraege alle fuenf Minuten wegraeumen: Wer eine halbe
+// Stunde nicht da war, hat sowieso wieder volle Eimer.
+setInterval(function(){
+  const grenze = Date.now() - 30*60*1000;
+  bremseStand.forEach((v, k) => { if(v.zuletzt < grenze) bremseStand.delete(k); });
+}, 5*60*1000).unref();
+
+function bremseAntwort(req, res, was, sekunden){
+  res.setHeader('Retry-After', String(sekunden));
+  res.setHeader('Cache-Control', 'no-store');
+  const ziel = String(req.headers['sec-fetch-dest'] || '').toLowerCase();
+  const istSeite = (!ziel || ziel === 'document') && req.path.indexOf('/api/') !== 0;
+  if(!istSeite) return res.status(429).json({ ok:false, gebremst:true, was: was, wartenSek: sekunden });
+  res.status(429).type('html').send('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">'
+    + '<title>Amateurfunk-Trainer — kurz warten</title><style>'
+    + 'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;'
+    + 'background:#0f172a;color:#e2e8f0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px;}'
+    + '.k{max-width:520px;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:30px 28px;}'
+    + 'h1{margin:0 0 14px;font-size:1.3rem;color:#f1f5f9;} p{margin:0 0 14px;line-height:1.65;color:#cbd5e1;}'
+    + '</style></head><body><div class="k"><h1>Einen Moment bitte</h1>'
+    + '<p>Von deiner Adresse kamen gerade sehr viele Anfragen. Der Trainer läuft auf einem privaten '
+    + 'Rechner und bremst deshalb kurz. In etwa ' + sekunden + ' Sekunden geht es weiter — einfach die Seite neu laden.</p>'
+    + '</div></body></html>');
+}
+
+app.use((req, res, next) => {
+  try{
+    if(isLocalRequest(req)) return next();
+    const ip = ipRoh(req) || 'unbekannt';
+    const e = bremseEimer(ip);
+
+    // Welche Eimer braucht diese Anfrage?
+    const p = String(req.path || '');
+    const eimer = ['anfragen'];
+    if(p === '/api/tts' || p === '/api/tts-preview') eimer.push('vorlesen');
+    if(p === '/api/projekt-paket') eimer.push('paket');
+
+    for(const k of eimer){
+      if(e[k] < 1 || (k === 'anfragen' && e.bytes < 0)){
+        const leer = (k === 'anfragen' && e.bytes < 0) ? 'bytes' : k;
+        // Wie lange, bis wieder etwas im Eimer ist? Beim Byte-Eimer bis
+        // er wieder ueber Null steht.
+        const fehlt = (leer === 'bytes') ? -e.bytes : (1 - e[leer]);
+        const sek = Math.max(5, Math.min(600, Math.ceil(fehlt / BREMSE[leer].proMinute * 60)));
+        if(Date.now() - e.gemeldet > 60000){
+          e.gemeldet = Date.now();
+          console.log('[BREMSE] ' + ipKuerzen(ip) + ' gebremst (' + leer + ' erschoepft), ' + sek + ' s Pause. ' + req.method + ' ' + p);
+        }
+        return bremseAntwort(req, res, leer, sek);
+      }
+    }
+    for(const k of eimer) e[k] -= 1;
+
+    // Die Bytes dieser Antwort mitzaehlen - was auch immer der Weg ist
+    // (json, send, sendFile, static): alles laeuft ueber write/end.
+    let gesendet = 0;
+    const write0 = res.write, end0 = res.end;
+    res.write = function(chunk){ try{ if(chunk) gesendet += Buffer.byteLength(chunk); }catch(x){} return write0.apply(this, arguments); };
+    res.end   = function(chunk){ try{ if(chunk && typeof chunk !== 'function') gesendet += Buffer.byteLength(chunk); }catch(x){} return end0.apply(this, arguments); };
+    res.on('finish', function(){ try{ e.bytes -= gesendet; }catch(x){} });
+  }catch(err){ /* Die Bremse darf nie selbst zum Ausfall werden */ }
+  next();
+});
+
 // ================================================================
 //  DIE LAENDERSPERRE
 //  ----------------------------------------------------------------
@@ -1426,7 +1572,16 @@ const LAENDER_FREI = ['DE', 'AT', 'CH'];
 // auch NICHT als Besucher gezaehlt - eine Kennung laesst sich faelschen,
 // und wer sich als Googlebot ausgibt, soll sich damit hoechstens die
 // Seite abholen, aber nicht in Dietmars Liste auftauchen.
-const SUCHMASCHINEN = /googlebot|google-inspectiontool|storebot-google|bingbot|adidxbot|duckduckbot|yandex(bot|images)|baiduspider|slurp|sogou|exabot|ia_archiver|petalbot|seznambot|qwantify|ahrefsbot|semrushbot/i;
+//
+// Seit dem 22.09.2026 auch die Leser der KI-Suchen. Dietmar, mit einer
+// Google-KI-Antwort, die von "Umgehung von Laendersperren" sprach:
+// "Google findet ihn nicht." Google selbst kommt als Googlebot und war
+// schon drin. Aber die KI-Antworten von Google, OpenAI, Perplexity und
+// Anthropic holen die Seite mit EIGENEN Kennungen und fast immer aus
+// den USA - und bekamen bisher die Sperrseite. Wer die Seite fuer eine
+// KI-Antwort liest, soll den Trainer sehen, nicht "nur fuer den
+// deutschsprachigen Raum". Auch sie zaehlen nicht als Besucher.
+const SUCHMASCHINEN = /googlebot|google-inspectiontool|storebot-google|googleother|google-cloudvertexbot|bingbot|adidxbot|duckduckbot|duckassistbot|yandex(bot|images)|baiduspider|slurp|sogou|exabot|ia_archiver|petalbot|seznambot|qwantify|ahrefsbot|semrushbot|oai-searchbot|chatgpt-user|gptbot|perplexitybot|perplexity-user|claudebot|claude-searchbot|claude-user|amazonbot|meta-externalagent|youbot|mistralai-user/i;
 
 // Freigaben und Anfragen leben im Arbeitsspeicher - Dietmars Wunsch:
 // "Bis zum Neustart". Damit gibt es keine neue Datei, nichts zu pflegen
@@ -1434,6 +1589,74 @@ const SUCHMASCHINEN = /googlebot|google-inspectiontool|storebot-google|bingbot|a
 const zutrittFrei     = new Map();   // volle IP -> Zeitpunkt der Freigabe
 const zutrittAnfragen = new Map();   // volle IP -> { land, stadt, geraet, wann }
 let   zutrittAbgewiesen = 0;         // nur eine Zahl, keine Liste
+
+// ----------------------------------------------------------------
+//  ANFRAGEN NUR VON DER SPERRSEITE                     (22.09.2026)
+//  Dietmar: "Ich habe schon wieder Anfragen aus Singapur ueber
+//  Windows."
+//
+//  Ein Mensch aus Singapur, der dreimal am Tag um Zutritt bittet, ist
+//  unwahrscheinlich. Wahrscheinlich ist ein Scanner: Er holt die
+//  Sperrseite, liest aus ihrem Skript die Adresse /api/zutritt-anfragen
+//  heraus und schickt dorthin blind ein POST - so probieren solche
+//  Programme jede Adresse durch, die sie finden. Und jedes dieser POSTs
+//  stand als "Anfrage" im Besucherfenster.
+//
+//  Drei Riegel:
+//    1. Die Sperrseite bekommt ein Kennwort mit, das nur zu der Adresse
+//       passt, fuer die sie ausgeliefert wurde (HMAC aus einem Geheimnis,
+//       das bei jedem Start neu gewuerfelt wird). Der Knopf schickt es
+//       zurueck. Ein blindes POST hat es nicht - und legt keine Anfrage
+//       an. Wer die Seite wirklich vor sich hat, merkt davon nichts.
+//    2. Eine Anfrage, ueber die eine halbe Stunde lang niemand
+//       entschieden hat, verfaellt. Die Sperrseite des Wartenden fragt
+//       weiter nach; er kann jederzeit neu druecken.
+//    3. Wer abgelehnt wurde, kann von derselben Adresse einen Tag lang
+//       nicht noch einmal fragen. Vorher ging das jede Minute.
+// ----------------------------------------------------------------
+const ZUTRITT_GEHEIM      = crypto.randomBytes(32);
+const ZUTRITT_VERFALL     = 30*60*1000;        // offene Anfrage: eine halbe Stunde
+const ZUTRITT_ABLEHN_FRIST = 24*60*60*1000;    // nach Ablehnen: ein Tag Ruhe
+const zutrittAbgelehnt = new Map();            // volle IP -> bis wann Ruhe
+const zutrittBlind     = new Map();            // volle IP -> wann zuletzt gemeldet (blinde POSTs)
+
+function zutrittKennwort(ip){
+  return crypto.createHmac('sha256', ZUTRITT_GEHEIM).update(String(ip || '')).digest('hex').slice(0, 24);
+}
+function zutrittAufraeumen(){
+  const jetzt = Date.now();
+  zutrittAnfragen.forEach((v, ip) => {
+    if(jetzt - v.wann > ZUTRITT_VERFALL){
+      zutrittAnfragen.delete(ip);
+      console.log('[ZUTRITT] Anfrage von ' + ipKuerzen(ip) + ' verfallen (30 Minuten ohne Entscheidung).');
+    }
+  });
+  zutrittAbgelehnt.forEach((bis, ip) => { if(jetzt > bis) zutrittAbgelehnt.delete(ip); });
+}
+setInterval(zutrittAufraeumen, 60*1000).unref();
+
+// ----------------------------------------------------------------
+//  DIE SPERRE LAESST SICH AUSSCHALTEN                  (22.09.2026)
+//  Dietmar: "Ich moechte die Laenderfilter auch ausschalten koennen."
+//
+//  Ein Schalter im Besucherfenster, neben dem fuer den Server. Aus
+//  heisst: Jeder kommt herein, aus jedem Land, ohne Anfrage. Wer in
+//  dem Moment noch auf der Sperrseite wartet, wird beim naechsten
+//  Nachfragen (alle fuenf Sekunden) durchgelassen - die Seite laedt
+//  von selbst neu. Seine offene Anfrage ist damit erledigt und
+//  verschwindet aus der Liste des Gastgebers.
+//
+//  Nach jedem Start ist die Sperre wieder AN - wie die Tuer. Dietmars
+//  Wahl: Ausschalten ist die Ausnahme fuer einen Abend, nicht die
+//  Regel. Deshalb auch keine Datei dafuer.
+//
+//  Was beim Ausschalten NICHT passiert: Niemand wird dauerhaft
+//  freigegeben. Geht die Sperre wieder an, gilt sie fuer alle, die
+//  nicht aus DE/AT/CH kommen - auch fuer die, die zwischendurch drin
+//  waren. Wer dann noch auf der Seite sitzt, behaelt seine Verbindung;
+//  erst der naechste Seitenaufruf trifft wieder auf die Sperrseite.
+// ----------------------------------------------------------------
+let laenderSperreAn = true;
 
 function ipRoh(req){
   return String(req.headers['cf-connecting-ip'] || req.ip || '').replace(/^::ffff:/i, '').trim();
@@ -1499,9 +1722,11 @@ app.use((req, res, next) => {
 function wacheDurchlaesst(req){
   if(isLocalRequest(req)) return true;
   if(WACHE_BILDER.test(String(req.path || ''))) return true;
+  if(String(req.path || '').toLowerCase() === '/support.html') return true;   // s. tuerAufFuer
   const kennung = String(req.headers['user-agent'] || '');
   if(VORSCHAU_CRAWLER.test(kennung)) return true;
   if(SUCHMASCHINEN.test(kennung)) return true;
+  if(!laenderSperreAn) return true;            // Schalter aus: jeder darf
   if(landErlaubt(req)) return true;
   if(zutrittFrei.has(ipRoh(req))) return true;
   return false;
@@ -1538,14 +1763,44 @@ function wacheDurchlaesst(req){
 //  den Worker nicht eingerichtet hat, bekommt die schlichte Seite
 //  weiter unten; beides sagt dasselbe.
 // ================================================================
+// support.html liegt nicht im Repository (sie nennt Dietmar als
+// Verantwortlichen). Wer den Trainer selbst betreibt, hat sie nicht -
+// dann gibt es auch keine Verweise darauf. (22.09.2026)
+function supportSeiteDa(){
+  try{ return fs.existsSync(path.join(__dirname, 'support.html')); }catch(e){ return false; }
+}
+
 let tuerOffen      = false;   // nach jedem Start zu
 let tuerSchliesstUm = 0;      // 0 = kein Countdown laeuft
+
+// ----------------------------------------------------------------
+//  DER DAUERLAEUFER                                    (22.09.2026)
+//  Dietmar: "Ich habe mehrere Lenovo ThinkPad und da moechte ich
+//  einen als Server laufen lassen."
+//
+//  Auf einem Rechner, der nur Server ist, sitzt niemand davor, der
+//  nach jedem Neustart auf "Server ein" klickt. START-SERVER.bat setzt
+//  deshalb AFU_TUER=1, und dann ist die Tuer von Anfang an offen.
+//  Alles andere bleibt: Der Schalter im Besucherfenster funktioniert
+//  wie gehabt, die Laendersperre ist an, und ohne AFU_BROWSER gibt es
+//  keinen Feierabend - der Trainer laeuft, bis ihn jemand beendet.
+//  Auf dem Trainer-PC selbst aendert sich nichts: START.vbs setzt die
+//  Variable nicht, dort bleibt es bei "nach jedem Start zu".
+// ----------------------------------------------------------------
+if(process.env.AFU_TUER === '1'){
+  tuerOffen = true;
+  console.log('[TUER] AFU_TUER=1 - der Trainer ist von Anfang an offen (Dauerlaeufer).');
+}
 
 function tuerGleichZu(){ return tuerSchliesstUm > 0 && Date.now() < tuerSchliesstUm; }
 
 function tuerAufFuer(req){
   if(isLocalRequest(req)) return true;
   if(WACHE_BILDER.test(String(req.path || ''))) return true;
+  // Support und Datenschutz gehen immer raus - auch bei geschlossener
+  // Tuer. Wer vor verschlossener Tuer steht, soll nachlesen koennen,
+  // wer hier wohnt und was mit seinen Daten geschieht. (22.09.2026)
+  if(String(req.path || '').toLowerCase() === '/support.html') return true;
   const kennung = String(req.headers['user-agent'] || '');
   if(VORSCHAU_CRAWLER.test(kennung)) return true;
   if(SUCHMASCHINEN.test(kennung)) return true;
@@ -1553,6 +1808,35 @@ function tuerAufFuer(req){
   if(tuerGleichZu()) return true;    // waehrend der Vorwarnung bleibt offen
   return false;
 }
+
+// ----------------------------------------------------------------
+//  ROBOTS.TXT UND SITEMAP.XML                          (22.09.2026)
+//  Dietmar: "Ich moechte den Trainer SEO optimieren." Beides gab es
+//  nicht; robots.txt kam als 404 (Google liest das als "alles
+//  erlaubt", aber auch als "der weiss nicht, was er tut"). Die Sitemap
+//  nennt die zwei Seiten, die es gibt. Beide stehen VOR der Tuer und
+//  der Laendersperre: Sie muessen immer herausgehen, sonst haelt Google
+//  die Seite fuer weg. /api/ ist fuer Crawler tabu - dort ist nichts,
+//  was in einen Index gehoert, und das Lebenszeichen soll kein Bot
+//  ausloesen.
+// ----------------------------------------------------------------
+const SEO_ADRESSE = 'https://amateurfunk-trainer.com';
+app.get('/robots.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /socket.io/\n\nSitemap: ' + SEO_ADRESSE + '/sitemap.xml\n');
+});
+app.get('/sitemap.xml', (req, res) => {
+  let stand = '';
+  try{ stand = fs.statSync(path.join(__dirname, 'Index.html')).mtime.toISOString().slice(0, 10); }catch(e){}
+  res.set('Content-Type', 'application/xml; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send('<?xml version="1.0" encoding="UTF-8"?>\n'
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    + '  <url><loc>' + SEO_ADRESSE + '/</loc>' + (stand ? '<lastmod>' + stand + '</lastmod>' : '') + '<changefreq>weekly</changefreq><priority>1.0</priority></url>\n'
+    + (supportSeiteDa() ? '  <url><loc>' + SEO_ADRESSE + '/support.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n' : '')
+    + '</urlset>\n');
+});
 
 app.use((req, res, next) => {
   try{
@@ -1584,11 +1868,29 @@ const TUER_ZU_SEITE = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8
   + '<a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">'
   + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. Dann läuft er auf deinem '
   + 'eigenen Rechner, unabhängig von allen anderen.</p>'
+  + (supportSeiteDa() ? '<p style="font-size:0.85rem;color:#94a3b8;margin:0;"><a href="/support.html">Support und Datenschutz</a></p>' : '')
   + '</div></body></html>';
 
 // Auskunft und Schalter. localOnly: Das entscheidet nur der Gastgeber.
 app.get('/api/tuer', localOnly, (req, res) => {
-  res.json({ offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0 });
+  let draussen = 0;
+  try{ if(duoHausZahl) draussen = duoHausZahl(); }catch(e){}
+  // Die Zahl der echten Besucher faehrt mit. Daran haengt seit dem
+  // 22.09.2026 der Hinweiston: Vorher hing er an der Besucherabfrage im
+  // Gruppenraum-Fenster, und die laeuft nur, solange ein Raum offen ist.
+  // Wer nur den Server freigegeben hat, hoerte deshalb nichts.
+  let echte = 0;
+  try{ echte = besucherLesen().echte || 0; }catch(e){}
+  // Sitzt gerade jemand im Gruppenraum? Danach richtet sich die Warnung
+  // beim Zumachen: Wer einen Kurs laufen hat, soll nicht mit einem Klick
+  // allen die Tuer vor der Nase zuziehen, ohne es zu merken.
+  let imRaum = 0;
+  try{ imRaum = duoTeilnehmerAnzahl(); }catch(e){}
+  // sperre: der Schalter fuer die Laendersperre faehrt hier mit, damit
+  // der Knopf im Besucherfenster im selben Takt stimmt wie der Server-
+  // Schalter daneben - ohne eine zweite Abfrage.
+  res.json({ offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0,
+             draussen: draussen, echte: echte, imRaum: imRaum, sperre: laenderSperreAn });
 });
 
 app.post('/api/tuer', localOnly, (req, res) => {
@@ -1600,24 +1902,43 @@ app.post('/api/tuer', localOnly, (req, res) => {
   } else {
     const sek = Math.max(0, Math.min(600, Number(req.query.sek || 60)));
     if(sek === 0){
-      tuerOffen = false; tuerSchliesstUm = 0;
-      tuerMelden({ zu: true });
-      console.log('[TUER] Zu.');
+      tuerZumachen();
     } else {
       tuerSchliesstUm = Date.now() + sek*1000;
       tuerMelden({ schliesstUm: tuerSchliesstUm });
       console.log('[TUER] Schliesst in ' + sek + ' Sekunden.');
       setTimeout(function(){
-        if(tuerSchliesstUm && Date.now() >= tuerSchliesstUm - 200){
-          tuerOffen = false; tuerSchliesstUm = 0;
-          tuerMelden({ zu: true });
-          console.log('[TUER] Zu.');
-        }
+        if(tuerSchliesstUm && Date.now() >= tuerSchliesstUm - 200) tuerZumachen();
       }, sek*1000 + 250);
     }
   }
   res.json({ ok:true, offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0 });
 });
+
+// ------------------------------------------------------------------
+//  ZU HEISST ZU                                        (22.09.2026)
+//  Dietmar, mit Bild: "Server zeigt 1 an obwohl er aus ist."
+//
+//  Die Tuer hielt bisher nur neue Anfragen auf. Wer schon auf der Seite
+//  war, blieb per Socket verbunden - und zaehlte weiter als Besucher, mit
+//  Chat und allem. Der weisse Knopf mit einer 1 daneben war die ehrliche
+//  Anzeige eines unehrlichen Zustands.
+//
+//  Jetzt werden beim Zumachen die Verbindungen von aussen getrennt, und
+//  der Handschlag weiter unten (io.use) laesst keine neue herein, solange
+//  die Tuer zu ist. Wer drin sitzt, hat die Minute Vorwarnung gehabt.
+// ------------------------------------------------------------------
+function tuerZumachen(){
+  tuerOffen = false; tuerSchliesstUm = 0;
+  tuerMelden({ zu: true });
+  let getrennt = 0;
+  try{
+    if(duoIo) duoIo.sockets.sockets.forEach(function(sock){
+      try{ if(sock.data && sock.data.vonAussen){ sock.disconnect(true); getrennt++; } }catch(e){}
+    });
+  }catch(e){}
+  console.log('[TUER] Zu.' + (getrennt ? ' ' + getrennt + ' Verbindung(en) von aussen getrennt.' : ''));
+}
 
 // Allen Verbundenen Bescheid sagen. null = Entwarnung.
 function tuerMelden(a){
@@ -1682,11 +2003,13 @@ function sperrSeite(land, ip){
     + '<p class="z">Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung '
     + 'unter <a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. '
     + 'Dann läuft er auf deinem eigenen Rechner, ganz ohne Sperre.'
-    + (land ? '<br>Erkanntes Land: ' + htmlText(land) : '') + '</p>'
+    + (land ? '<br>Erkanntes Land: ' + htmlText(land) : '')
+    + (supportSeiteDa() ? '<br><a href="/support.html">Support und Datenschutz</a>' : '') + '</p>'
     + '</div><script>'
     + 'var b=document.getElementById("b"),m=document.getElementById("m"),lauf=' + (wartet ? 'true' : 'false') + ';'
+    + 'var k="' + zutrittKennwort(ip) + '";'
     + 'b.onclick=function(){b.disabled=true;b.textContent="Anfrage läuft …";'
-    + 'fetch("/api/zutritt-anfragen",{method:"POST"}).then(function(r){return r.json();})'
+    + 'fetch("/api/zutritt-anfragen",{method:"POST",headers:{"X-Zutritt":k}}).then(function(r){return r.json();})'
     + '.then(function(j){m.textContent=j&&j.ok?"Deine Anfrage liegt beim Gastgeber.":'
     + '"Das hat nicht geklappt. Versuch es in einer Minute noch einmal.";lauf=true;})'
     + '.catch(function(){m.textContent="Keine Verbindung zum Trainer.";b.disabled=false;'
@@ -1703,6 +2026,24 @@ app.post('/api/zutritt-anfragen', (req, res) => {
     const ip = ipRoh(req);
     if(!ip) return res.status(400).json({ ok:false });
     if(zutrittFrei.has(ip)) return res.json({ ok:true, frei:true });
+
+    // Riegel 1: ohne das Kennwort der Sperrseite keine Anfrage. Die
+    // Antwort sieht aus wie ein Erfolg (ok:true) - ein Scanner soll
+    // nicht erfahren, dass hier etwas geprueft wird. Im Fenster steht
+    // es hoechstens einmal je Adresse und Stunde.
+    const kennwort = String(req.headers['x-zutritt'] || '');
+    if(kennwort !== zutrittKennwort(ip)){
+      if(!zutrittBlind.has(ip) || Date.now() - zutrittBlind.get(ip) > 3600000){
+        zutrittBlind.set(ip, Date.now());
+        if(zutrittBlind.size > 500) zutrittBlind.clear();
+        console.log('[ZUTRITT] Blindes POST ohne Sperrseite von ' + ipKuerzen(ip)
+                  + ' (' + (String(req.headers['cf-ipcountry'] || '??').toUpperCase().slice(0, 2)) + ') - keine Anfrage angelegt.');
+      }
+      return res.json({ ok:true });
+    }
+    // Riegel 3: nach einer Ablehnung einen Tag Ruhe.
+    const ruheBis = zutrittAbgelehnt.get(ip);
+    if(ruheBis && Date.now() < ruheBis) return res.json({ ok:true, schon:true });
 
     const da = zutrittAnfragen.get(ip);
     // Zweimal druecken bringt nichts, und ein Skript soll die Liste des
@@ -1723,9 +2064,30 @@ app.post('/api/zutritt-anfragen', (req, res) => {
   }catch(e){ res.status(500).json({ ok:false }); }
 });
 
-// Die Sperrseite fragt im Takt nach, ob sie gehen darf.
+// Die Sperrseite fragt im Takt nach, ob sie gehen darf. Ist die Sperre
+// inzwischen ausgeschaltet, darf sie - ohne Freigabe fuer die Adresse.
 app.get('/api/zutritt-stand', (req, res) => {
-  res.json({ frei: zutrittFrei.has(ipRoh(req)) });
+  res.json({ frei: !laenderSperreAn || zutrittFrei.has(ipRoh(req)) });
+});
+
+// Der Schalter. localOnly wie alles, was der Gastgeber entscheidet.
+app.get('/api/laendersperre', localOnly, (req, res) => {
+  res.json({ an: laenderSperreAn, anfragen: zutrittAnfragen.size, abgewiesen: zutrittAbgewiesen });
+});
+app.post('/api/laendersperre', localOnly, (req, res) => {
+  const an = String(req.query.an || '') === '1';
+  laenderSperreAn = an;
+  if(!an){
+    // Wer gerade wartet, kommt gleich von selbst herein (siehe
+    // /api/zutritt-stand). Die Anfrage ist damit beantwortet.
+    const n = zutrittAnfragen.size;
+    zutrittAnfragen.clear();
+    console.log('[ZUTRITT] Laendersperre AUS - jeder darf herein.'
+              + (n ? ' ' + n + ' offene Anfrage(n) damit erledigt.' : ''));
+  } else {
+    console.log('[ZUTRITT] Laendersperre AN - nur DE, AT, CH und Freigegebene.');
+  }
+  res.json({ ok: true, an: laenderSperreAn });
 });
 
 // Freigeben und ablehnen darf nur der Gastgeber, an seinem eigenen PC.
@@ -1741,7 +2103,8 @@ app.post('/api/zutritt-freigeben', localOnly, (req, res) => {
 app.post('/api/zutritt-ablehnen', localOnly, (req, res) => {
   const ip = String(req.query.ip || '').trim();
   zutrittAnfragen.delete(ip);
-  console.log('[ZUTRITT] Anfrage von ' + ipKuerzen(ip) + ' abgelehnt.');
+  if(ip) zutrittAbgelehnt.set(ip, Date.now() + ZUTRITT_ABLEHN_FRIST);
+  console.log('[ZUTRITT] Anfrage von ' + ipKuerzen(ip) + ' abgelehnt - von dort einen Tag lang keine neue.');
   res.json({ ok:true });
 });
 
@@ -2966,6 +3329,10 @@ const PAKET_DATEIEN = [
   // dem Gruppenraum mitnimmt, soll sie mitbekommen.
   'erklaerungen.json',
   'Index.html', 'duo.js', 'Server.js', 'package.json',
+  // Support und Datenschutz (22.09.2026): Die Fusszeile verweist darauf,
+  // also muss die Seite im Paket liegen - sonst fuehrt der Verweis auf
+  // dem mitgenommenen Trainer ins Leere.
+  'support.html', 'confetti.browser.js',
   'fragen.json', 'svg-list.json', 'video_lessons.json', 'video_map_embed.js', '50ohm_map.json',
   // Die genauere Zuordnung vom DARC, sofern sie schon geholt wurde. Wer den
   // Trainer aus dem Gruppenraum mitnimmt, bekommt sie mit - sonst muesste
@@ -3120,7 +3487,9 @@ function paketPdfsFinden(){
 // Seite - und Formelsammlung.pdf ist ueber PAKET_PDF_MUSTER ohnehin im
 // Paket. Der Ordner wird also nicht mehr gebraucht; geloescht wird bei
 // bestehenden Installationen nichts, er faellt nur aus dem Paket.
-const PAKET_ORDNER = ['svgs', 'sounds'];
+// fonts seit dem 22.09.2026: Ohne die Schriften saehe der mitgenommene
+// Trainer anders aus als der geteilte - und holte sie sich sonst nirgends.
+const PAKET_ORDNER = ['svgs', 'sounds', 'fonts'];
 
 // Minimaler ZIP-Schreiber mit Bordmitteln (zlib). Bewusst ohne npm-Paket wie
 // "archiver", damit das Projekt seine drei Abhaengigkeiten behaelt und der
@@ -3948,7 +4317,16 @@ app.get('/api/lebenszeichen',(req,res)=>{
           for(let i = b.liste.length - 1; i >= 0; i--){
             const e = b.liste[i];
             if(e.zeit < grenze) break;
-            if(e.ip === wer && !e.echt){ e.echt = true; besucherSchreiben(false); break; }
+            if(e.ip === wer && !e.echt){
+              e.echt = true;
+              // Genau hier wird aus einem Aufruf ein Besucher - und nur
+              // hier zaehlt die Fusszeile mit.
+              zaehlerFrisch(b, Date.now());
+              b.echte = (b.echte || 0) + 1;
+              b.heute = (b.heute || 0) + 1;
+              besucherSchreiben(false);
+              break;
+            }
           }
         }
       }catch(e){}
@@ -4262,6 +4640,11 @@ app.post('/api/tts',async (req,res)=>{
 const PUBLIC_FILES = new Set([
   '/',
   '/index.html',
+  // Support und Datenschutz (22.09.2026). Kleingeschrieben, wie alles
+  // hier; die Datei heisst support.html.
+  '/support.html',
+  // Das Konfetti, seit dem 22.09.2026 im Ordner statt bei jsDelivr.
+  '/confetti.browser.js',
   '/duo.js',
   '/fragen.json',
   // Die Fragenpools der hoeheren Klassen. fragen.json (Klasse N) bleibt
@@ -4342,7 +4725,8 @@ const PUBLIC_FILES = new Set([
 // /fontawesome/ kam am 01.09.2026 dazu: die Symbolschrift liegt jetzt im
 // Ordner statt bei einem CDN. Ohne diesen Eintrag waeren die Symbole zwar
 // da, aber nicht abrufbar - der Schutz laesst nur durch, was hier steht.
-const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/', '/fontawesome/'];
+// /fonts/ seit dem 22.09.2026: die Textschriften, vorher von Google.
+const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/', '/fontawesome/', '/fonts/'];
 
 function isPublicPath(rawPath){
   let p;
@@ -4411,7 +4795,15 @@ app.get('/api/besucher', localOnly, (req, res) => {
 
   res.json({
     gesamt: b.gesamt,
-    echte: echte,
+    // Seit dem 22.09.2026 der Zaehlstand aus der Datei, nicht mehr die
+    // Zahl der echten Eintraege in der Liste. Beides war gleich, solange
+    // niemand die Liste anfasste. Seit "Verlauf loeschen" die Liste leert
+    // und die Zahlen stehen laesst, stand oben im Besucherfenster "0
+    // Besucher ueber den Link", waehrend die Fusszeile weiter zaehlte.
+    // Die Kopfzeile zeigt jetzt dieselbe Zahl wie die Fusszeile; nur
+    // "von n verschiedenen Adressen" und "angeklopft" kommen weiter aus
+    // der Liste - woher sonst.
+    echte: (typeof b.echte === 'number') ? b.echte : echte,
     angeklopft: angeklopft,
     verschiedene: verschiedene,
     // Die Laendersperre: wie viele Aufrufe sie seit dem Start abgewiesen
@@ -4419,6 +4811,7 @@ app.get('/api/besucher', localOnly, (req, res) => {
     abgewiesen: zutrittAbgewiesen,
     anfragen: anfragen,
     freigegeben: zutrittFrei.size,
+    sperre: laenderSperreAn,
     seit: b.seit,
     aktive: aktive,
     aktivExtern: aktive.filter(x => x.extern).length,
@@ -4508,15 +4901,45 @@ app.post('/api/neustart-ansage-weg', localOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+// Die drei Zahlen fuer die Fusszeile. Bewusst OHNE localOnly: Sie soll
+// jeder sehen, der den Trainer vor sich hat - auch der Besucher ueber den
+// geteilten Link. Herausgegeben werden nur Zahlen, keine Adressen, keine
+// Staedte, keine Namen; die Besucherliste selbst bleibt localOnly.
+app.get('/api/besucherzahl', (req, res) => {
+  try{
+    const b = zaehlerFrisch(besucherLesen(), Date.now());
+    res.set('Cache-Control', 'no-store');
+    res.json({ heute: b.heute || 0, gestern: b.gestern || 0,
+               gesamt: b.echte || 0, seit: b.seit || 0 });
+  }catch(e){ res.json({ heute:0, gestern:0, gesamt:0, seit:0 }); }
+});
+
 // Zaehler auf Null. Dietmar am 21.09.2026: "hier fehlt ein Reset Knopf."
 // Stimmt - nach einem Probelauf steht sonst eine Zahl da, die nichts mit
 // der Werbung zu tun hat, die gerade laeuft. localOnly wie das Lesen: Ein
 // Gast soll die Zahlen des Gastgebers weder sehen noch loeschen koennen.
 app.post('/api/besucher/reset', localOnly, (req, res) => {
-  besucherStand = { gesamt: 0, seit: Date.now(), liste: [] };
+  // Seit dem 22.09.2026 nur noch die ZAHLEN. Die Liste bleibt stehen -
+  // fuer sie gibt es darunter einen eigenen Weg. Dietmar: "Zaehler
+  // zuruecksetzen? Ist das der Zaehler fuer Besucher? Wenn ja, dann
+  // benoetigen wir einen Button, den Verlauf loeschen." Vorher raeumte
+  // dieser Knopf beides auf einmal weg, ohne es zu sagen.
+  const b = besucherLesen();
+  b.gesamt = 0; b.echte = 0; b.heute = 0; b.gestern = 0;
+  b.tag = tagSchluessel(Date.now()); b.seit = Date.now();
   besucherSchreiben(true);
-  console.log('[BESUCHER] Zaehler zurueckgesetzt.');
-  res.json({ ok: true, gesamt: 0, seit: besucherStand.seit });
+  console.log('[BESUCHER] Zaehler zurueckgesetzt (Liste bleibt).');
+  res.json({ ok: true, gesamt: 0, seit: b.seit });
+});
+
+// Die Liste leeren - wer wann von wo da war. Die Zahlen bleiben.
+app.post('/api/besucher/verlauf-loeschen', localOnly, (req, res) => {
+  const b = besucherLesen();
+  const n = b.liste.length;
+  b.liste = [];
+  besucherSchreiben(true);
+  console.log('[BESUCHER] Verlauf geloescht (' + n + ' Eintraege).');
+  res.json({ ok: true, geloescht: n });
 });
 
 app.use((req,res,next)=>{
@@ -4656,6 +5079,42 @@ const BESUCHER_FP = path.join(USERDATA_DIR, 'besucher.json');
 let besucherStand = null;
 let besucherSchreibZeit = 0;
 
+// ------------------------------------------------------------------
+//  DER BESUCHERZAEHLER IN DER FUSSZEILE            (22.09.2026)
+//  Dietmar: "Ich moechte einen Besucherzaehler" - Wortlaut "heute: 57,
+//  gestern: 63, gesamt: 25.643", unten in der Leiste, fuer alle sichtbar.
+//  Und zur Frage, wer mitzaehlt: "Der Zaehler soll alle zaehlen, die
+//  ueber den Link kommen. Ich komme nicht ueber den Link, deshalb werde
+//  ich nicht gezaehlt."
+//
+//  Beides ist schon gebaut: Der Zaehler weiter unten laesst
+//  isLocalRequest() vorher durch (der eigene Rechner zaehlt nicht mit),
+//  und "echt" wird erst gesetzt, wenn von derselben Adresse ein
+//  Lebenszeichen eintrifft - ein Scanner, der nur die Startseite holt,
+//  bleibt draussen. Der Zaehler in der Fusszeile nimmt deshalb nicht
+//  "gesamt" (das sind alle Aufrufe, auch die Anklopfer), sondern die
+//  echten.
+//
+//  "heute" und "gestern" richten sich nach der Uhr des Rechners, auf
+//  dem der Trainer laeuft - nicht nach UTC. Es ist sein Zaehler.
+// ------------------------------------------------------------------
+function tagSchluessel(t){
+  const d = new Date(t);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+                         + '-' + String(d.getDate()).padStart(2,'0');
+}
+// Vor jedem Blick und vor jedem Hochzaehlen: Stimmt der Tag noch?
+// Lief der Trainer gestern, rutscht der Tageswert eine Stelle weiter.
+// Lag ein Tag ohne Betrieb dazwischen, war gestern eine Null - und nicht
+// die Zahl von vorletzter Woche, die sonst als "gestern" stehenbliebe.
+function zaehlerFrisch(b, jetzt){
+  const heute = tagSchluessel(jetzt);
+  if(b.tag === heute) return b;
+  b.gestern = (b.tag === tagSchluessel(jetzt - 24*3600*1000)) ? (b.heute || 0) : 0;
+  b.heute = 0;
+  b.tag = heute;
+  return b;
+}
 function besucherLesen(){
   if(besucherStand) return besucherStand;
   try{
@@ -4673,8 +5132,23 @@ function besucherLesen(){
         if(e.region) e.region = kopfText(e.region);
       });
     }catch(e2){}
+    // Die Zaehlstaende fuer die Fusszeile gab es vor dem 22.09.2026 noch
+    // nicht. Fehlen sie, werden sie einmal aus der Liste abgeleitet -
+    // die reicht 200 Aufrufe zurueck. Was davor liegt, ist nicht mehr
+    // zu ermitteln; es wird geschaetzt und nicht behauptet.
+    if(typeof besucherStand.echte !== 'number'){
+      besucherStand.echte = besucherStand.liste.filter(function(e){ return e && e.echt; }).length;
+      const heute = tagSchluessel(Date.now());
+      const gestern = tagSchluessel(Date.now() - 24*3600*1000);
+      besucherStand.tag = heute;
+      besucherStand.heute = besucherStand.liste.filter(function(e){
+        return e && e.echt && tagSchluessel(e.zeit) === heute; }).length;
+      besucherStand.gestern = besucherStand.liste.filter(function(e){
+        return e && e.echt && tagSchluessel(e.zeit) === gestern; }).length;
+    }
   }catch(e){
-    besucherStand = { gesamt: 0, seit: Date.now(), liste: [] };
+    besucherStand = { gesamt: 0, echte: 0, seit: Date.now(), liste: [],
+                      tag: tagSchluessel(Date.now()), heute: 0, gestern: 0 };
   }
   return besucherStand;
 }
@@ -4852,6 +5326,21 @@ try{
   });
   const duoRooms={};
 
+  // Der Handschlag geht nicht durch die Express-Kette, die Tuer weiter
+  // oben sieht ihn also nicht. Deshalb hier noch einmal: Ist die Tuer zu
+  // und kommt die Verbindung von einer oeffentlichen Adresse, wird sie
+  // abgewiesen. Der Browser des Besuchers versucht es dann in immer
+  // laengeren Abstaenden wieder - und kommt herein, sobald aufgemacht
+  // wird. Der eigene Rechner und das eigene WLAN sind nie betroffen.
+  io.use(function(socket, next){
+    try{
+      if(!tuerOffen && !tuerGleichZu() && sperrbar(socketIp(socket))){
+        return next(new Error('Der Server ist gerade geschlossen.'));
+      }
+    }catch(e){}
+    next();
+  });
+
   // ================================================================
   //  DER CHAT OHNE RAUM                              (21.09.2026)
   //  ----------------------------------------------------------------
@@ -4931,7 +5420,11 @@ try{
     try{
       const ohneRaum = hausOhneRaum();
       const vonAussen = ohneRaum.filter(function(s){ return s.data && s.data.vonAussen; }).length;
-      const daten = { anzahl: ohneRaum.length, vonAussen: vonAussen };
+      // Der Tuerzustand faehrt mit. Dietmar am 22.09.2026: "Server ein =
+      // Chat ein und Server aus = Chat aus." Der Client koennte ihn auch
+      // einzeln erfragen - aber er hoert hier ohnehin schon zu, und so
+      // kommt beides in einem Stueck an, ohne zusaetzlichen Abruf.
+      const daten = { anzahl: ohneRaum.length, vonAussen: vonAussen, tuer: !!tuerOffen };
       hausLeute().forEach(function(s){ try{ s.emit('hausVolk', daten); }catch(e){} });
     }catch(e){}
   }
@@ -4940,6 +5433,14 @@ try{
   // Raum sitzt.
   duoIo = io;
   duoRaeume = duoRooms;
+  // Wie viele sitzen GERADE von aussen auf der Seite, ohne Gruppenraum?
+  // Genau diese Zahl steht am Server-Knopf. Dietmar am 22.09.2026 auf die
+  // Frage, wer mitzaehlt: "Nur die ohne Gruppenraum" - wer im Raum sitzt,
+  // steht ohnehin in der Teilnehmerliste.
+  duoHausZahl = function(){
+    try{ return hausOhneRaum().filter(function(s){ return s.data && s.data.vonAussen; }).length; }
+    catch(e){ return 0; }
+  };
 
   // FIX W7: Raumcode ohne Kollision, aus kryptographisch sicherem Zufall.
   function freienRaumcodeFinden(){
@@ -6330,7 +6831,19 @@ function feierabendPruefen(){
   setTimeout(()=>process.exit(0), 300);
 }
 
-server.listen(PORT,'0.0.0.0',async ()=>{
+// ----------------------------------------------------------------
+//  NUR LOOPBACK AUF DEM SERVER-RECHNER                 (22.09.2026)
+//  Auf dem Trainer-PC hoert der Trainer auch im WLAN (0.0.0.0), damit
+//  Tablets im selben Netz mitmachen koennen. Auf dem ThinkPad, das nur
+//  Server ist, kommt alles ueber cloudflared herein - und das spricht
+//  localhost. START-SERVER.bat setzt deshalb AFU_NUR_LOKAL=1: Dann
+//  hoert der Trainer nur noch auf 127.0.0.1, und wer im WLAN des
+//  ThinkPads sitzt, sieht auf Port 3000 gar nichts. Eine Angriffs-
+//  flaeche weniger, ohne dass draussen etwas fehlt.
+// ----------------------------------------------------------------
+const NUR_LOKAL = (process.env.AFU_NUR_LOKAL === '1');
+server.listen(PORT, NUR_LOKAL ? '127.0.0.1' : '0.0.0.0', async ()=>{
+  if(NUR_LOKAL) console.log('[NETZ] AFU_NUR_LOKAL=1 - der Trainer hoert nur auf 127.0.0.1 (kein WLAN-Zugang).');
   // Zuerst der Browser, dann das Uebrige: Der Trainer soll aufgehen,
   // waehrend im Fenster noch die Tunnel-Zeilen durchlaufen.
   if(process.env.AFU_BROWSER === '1') browserOeffnen(`http://localhost:${PORT}`);
@@ -6386,7 +6899,7 @@ server.listen(PORT,'0.0.0.0',async ()=>{
   console.log('============================================================');
   console.log('  SERVER V18 - Sicherheits-Fixes K1-K7 (17.08.2026)');
   console.log(`  http://localhost:${PORT}`);
-  const lan = lokaleAdressen();
+  const lan = NUR_LOKAL ? [] : lokaleAdressen();
   if(lan.length){
     console.log(`  Im gleichen Netz (WLAN/LAN) erreichbar unter:`);
     lan.slice(0,3).forEach(a=>console.log(`    http://${a.ip}:${PORT}`));

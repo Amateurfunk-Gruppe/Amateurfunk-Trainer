@@ -12,6 +12,19 @@
     // davon sind von aussen gekommen? Der Server meldet es ('hausVolk').
     // Danach entscheidet sich, ob beim Gastgeber das Chatfenster aufgeht.
     let hausVolk = { anzahl: 0, vonAussen: 0 };
+    // War dieser Client schon einmal drin? Erst dann heisst "Raum nicht
+    // gefunden" wirklich "der Gastgeber hat zugemacht". Vorher heisst es
+    // nur: noch nicht eroeffnet - dann wird gewartet, nicht gemeldet.
+    let imRaumGewesen = false;
+    let beitrittWiederholung = null;
+    let beitrittVersuche = 0;
+    // Wer ueber den Link kommt und "Los geht's" drueckt, bevor der Raum da
+    // ist, soll nicht noch einmal klicken muessen: Sobald der Beitritt
+    // gelingt, geht die Runde von selbst los.
+    let startSobaldDrin = false;
+    // Steht der Server fuer Besucher offen? null = noch nicht gesagt
+    // (aeltere Fassung oder die erste Meldung ist noch unterwegs).
+    let tuerAuf = null;
     // Wurde ohne Raum schon etwas geschrieben? Dann bleibt der Chat
     // stehen, auch wenn der Besucher wieder gegangen ist.
     let hausChatHatNachrichten = false;
@@ -1166,7 +1179,26 @@
     // geschrieben wurde, denn dann steht schon etwas drin.
     function hausChatZeigen(){
         if(roomCode) return false;
+        // Der Besucher behaelt seinen Chat in jedem Fall - auch waehrend
+        // der Minute Vorwarnung, in der die Tuer schon zugeht. Wer gerade
+        // dabei ist, soll sich noch verabschieden koennen.
         if(vonAussen) return true;
+        // ----------------------------------------------------------------
+        //  AM SERVER-KNOPF                              (22.09.2026)
+        //  Dietmar: "Server ein = Chat ein und Server aus = Chat aus.
+        //  Achtung: Das ist nur der Chat, den wir ohne Gruppenraum haben."
+        //
+        //  Vorher hing das Fenster daran, ob gerade wirklich jemand von
+        //  aussen da war. Das hiess: Knopf auf Gruen, und trotzdem kein
+        //  Chat, bis der erste Besuch kam - und beim Zumachen blieb es
+        //  stehen, solange noch etwas darin stand. Jetzt sagt der Knopf,
+        //  was gilt: offen heisst da, zu heisst weg.
+        //
+        //  Meldet der Server die Tuer nicht (tuerAuf === null, also eine
+        //  aeltere Fassung), bleibt es beim alten Weg darunter.
+        // ----------------------------------------------------------------
+        if(tuerAuf === true) return true;
+        if(tuerAuf === false) return false;
         if(hausVolk && hausVolk.vonAussen > 0) return true;
         return hausChatHatNachrichten;
     }
@@ -1574,7 +1606,13 @@
                 + (j.abgewiesen === 1 ? 'Aufruf' : 'Aufrufe')
                 + ' von außerhalb von Deutschland, Österreich und der Schweiz abgewiesen'
                 + (j.freigegeben ? ' — <b>' + j.freigegeben + '</b> davon hast du freigegeben' : '')
-                + '.</span>' : '');
+                + '.</span>' : '')
+            // Der Schalter unten sagt es in Farbe, hier steht es noch einmal
+            // in Worten - damit niemand raetselt, warum ploetzlich Chicago
+            // in der Liste steht. Nur wenn die Sperre AUS ist; an ist der
+            // Normalfall und braucht keinen Satz.
+            + (j.sperre === false ? '<br><span style="opacity:.8;">⚠️ Die Ländersperre ist '
+                + '<b>ausgeschaltet</b> — gerade kommt jeder herein, aus jedem Land, ohne Anfrage.</span>' : '');
 
         // ----------------------------------------------------------------
         //  WER ANKLOPFT UND WARTET                      (21.09.2026)
@@ -1625,6 +1663,9 @@
         // Besucher hinter derselben gekuerzten Adresse auseinanderhalten
         // kann (etwa zwei Handys im selben Mobilfunknetz).
         const aktivKasten = document.getElementById('besucherAktiv');
+        // Wie viele sitzen gerade von aussen auf der Seite? Das braucht
+        // weiter unten auch der Satz unter der leeren Liste.
+        let geradeDa = 0;
         if(aktivKasten){
             // Fehlt das Feld ganz (nicht: ist es leer), dann antwortet ein
             // Server, der diese Auskunft noch nicht kennt. Das gehoert
@@ -1636,6 +1677,7 @@
             // damit waere die Tabelle leer geblieben.
             const alterServer = (typeof j.aktive === 'undefined');
             const a = alterServer ? [] : (j.aktive || []).filter(function(x){ return x.extern; });
+            geradeDa = a.length;
             if(alterServer){
                 aktivKasten.style.display = 'block';
                 aktivKasten.style.background = '#fff8e6';
@@ -1670,7 +1712,39 @@
 
         const liste = (j.liste || []);
         if(tab) tab.style.display = liste.length ? '' : 'none';
-        if(leer) leer.style.display = liste.length ? 'none' : '';
+        if(leer){
+            leer.style.display = liste.length ? 'none' : '';
+            // ----------------------------------------------------------------
+            //  WAS UNTER DER LEEREN LISTE STEHT               (22.09.2026)
+            //  Dietmar, mit einem Bild nach "Verlauf loeschen" - im gruenen
+            //  Kasten darueber sass ein Besucher: "ist das so in Ordnung?
+            //  Noch niemand da. Sobald jemand den Link anklickt, steht er
+            //  hier."
+            //
+            //  Nein. Der Satz behauptete "noch niemand", waehrend direkt
+            //  darueber jemand sass; die Liste war nur geleert. Und wer
+            //  schon auf der Seite ist, kommt nicht von selbst wieder in
+            //  den Verlauf - dort steht der Seitenaufruf, und der ist
+            //  vorbei. Erst der naechste Klick auf den Link legt wieder
+            //  eine Zeile an. Also drei Saetze, je nach Lage:
+            //    - jemand ist gerade da     -> Verlauf geleert, der oben
+            //                                  bleibt oben
+            //    - schon Besucher gezaehlt  -> Verlauf geleert
+            //    - wirklich noch nie jemand -> der alte Satz
+            // ----------------------------------------------------------------
+            if(!liste.length){
+                let satz;
+                if(geradeDa > 0){
+                    satz = 'Der Verlauf ist leer. Wer gerade auf der Seite ist, steht oben im grünen Kasten '
+                         + '— der nächste Aufruf über den Link kommt wieder hier hinein.';
+                } else if(echt > 0){
+                    satz = 'Der Verlauf ist leer. Der nächste Aufruf über den Link steht wieder hier.';
+                } else {
+                    satz = 'Noch niemand da. Sobald jemand den Link anklickt, steht er hier.';
+                }
+                leer.textContent = satz;
+            }
+        }
         koerper.innerHTML = liste.map(function(x){
             const d = new Date(x.zeit);
             const nurKlopf = (x.echt === false);
@@ -1744,6 +1818,12 @@
         const m = document.getElementById('besucherModal');
         if(m){ m.style.display = 'none'; m.classList.remove('open'); }
     };
+    // Steht das Fenster gerade offen? Der Server-Schalter darin frischt
+    // die Liste nach dem Umschalten auf - aber nur, wenn jemand hinsieht.
+    window.besucherFensterOffen = function(){
+        const m = document.getElementById('besucherModal');
+        return !!(m && m.classList.contains('open'));
+    };
     window.besucherFensterAuffrischen = async function(){
         try{
             const res = await fetch('/api/besucher', {cache:'no-store'});
@@ -1792,10 +1872,50 @@
         if(window.showAppConfirm){
             window.showAppConfirm('Den Besucherzähler auf null setzen?', weiter, {
                 title: 'Zähler zurücksetzen?',
-                details: 'Die Liste der bisherigen Aufrufe wird dabei gelöscht. '
+                details: 'Heute, gestern und gesamt stehen danach auf null. Die Liste unten bleibt — '
+                       + 'dafür gibt es den Knopf daneben. '
                        + 'Sinnvoll, bevor eine neue Runde Werbung losgeht — dann zählt, was danach kommt.',
                 confirmLabel: '<i class="fas fa-rotate-left"></i> Zurücksetzen',
                 icon: 'fa-rotate-left'
+            });
+        } else { weiter(); }
+    };
+
+    // Die Liste leeren - wer wann von wo da war. Der Zaehler bleibt.
+    // Dietmar am 22.09.2026: "dann benoetigen wir einen Button, den
+    // Verlauf loeschen fuer die Benutzer die auf dem Server gewesen sind."
+    window.besucherVerlaufLoeschen = function(){
+        const weiter = async function(){
+            try{
+                const res = await fetch('/api/besucher/verlauf-loeschen', {method:'POST'});
+                if(!res.ok){
+                    if(res.status === 404){
+                        throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                            + 'diese Funktion kennt er noch nicht.\n\nEinmal den Trainer beenden und '
+                            + 'neu starten (nicht nur die Seite neu laden): Server.js wird nur beim '
+                            + 'Start gelesen.');
+                    }
+                    if(res.status === 403){
+                        throw new Error('Das geht nur direkt am Trainer-PC.');
+                    }
+                    throw new Error('Der Server hat mit ' + res.status + ' geantwortet.');
+                }
+                const j = await res.json();
+                await window.besucherFensterAuffrischen();
+                besucherNachsehen();
+                if(window.showAppAlert) window.showAppAlert('Der Verlauf ist gelöscht'
+                    + (j && j.geloescht ? ' — ' + j.geloescht + ' Einträge.' : '.'));
+            }catch(e){
+                if(window.showAppAlert) window.showAppAlert('Löschen nicht möglich: ' + e.message);
+            }
+        };
+        if(window.showAppConfirm){
+            window.showAppConfirm('Die Besucherliste löschen?', weiter, {
+                title: 'Verlauf löschen?',
+                details: 'Die Liste unten — wer wann von wo da war — wird geleert. '
+                       + 'Der Zähler in der Fußzeile bleibt, wie er ist.',
+                confirmLabel: '<i class="fas fa-trash"></i> Löschen',
+                icon: 'fa-trash'
             });
         } else { weiter(); }
     };
@@ -1839,6 +1959,10 @@
         if(!a){ tuerZuUm = 0; }
         else if(a.zu){ tuerZuUm = Date.now(); }
         else { tuerZuUm = a.schliesstUm || 0; }
+        // Waehrend des Countdowns steht die Tuer noch offen - der Chat
+        // bleibt bis zum letzten Augenblick.
+        tuerAuf = !(a && a.zu);
+        try{ chatSichtbarkeitPruefen(); }catch(e){}
         if(tuerUhrBesucher){ clearInterval(tuerUhrBesucher); tuerUhrBesucher = null; }
         tuerBalkenZeigen();
         if(tuerZuUm){
@@ -2139,9 +2263,19 @@
         // Sonst klingelt es bei jedem Scanner, der die Adresse abklopft -
         // und davon kamen am ersten Tag drei, bevor der Link ueberhaupt
         // geteilt war.
+        //
+        // Seit dem 22.09.2026 klingelt es nicht mehr hier, sondern in
+        // besucherTonPruefen() (Index.html). Grund: Diese Funktion laeuft
+        // nur, solange ein Gruppenraum offen ist - Dietmar hatte aber
+        // Besuch auf dem blossen Server und hoerte nichts. Den Takt gibt
+        // jetzt die Uhr des Server-Knopfes vor; gemerkt wird der Stand
+        // nur an einer Stelle, deshalb klingelt es auch dann einmal, wenn
+        // beide Wege zugleich laufen.
         const jetztEcht = (typeof j.echte === 'number') ? j.echte : j.gesamt;
-        if(besucherStandVorher !== null && jetztEcht > besucherStandVorher){
-            console.log('[BESUCHER] ' + (jetztEcht - besucherStandVorher) + ' neu - Ton.');
+        if(typeof window.besucherTonPruefen === 'function'){
+            window.besucherTonPruefen(jetztEcht);
+        } else if(besucherStandVorher !== null && jetztEcht > besucherStandVorher){
+            // Aeltere Index.html: dann eben wie bisher.
             try{ if(typeof window.levelUpSpielen === 'function') window.levelUpSpielen(); }catch(e){}
         }
         besucherStandVorher = jetztEcht;
@@ -2241,7 +2375,28 @@
         // ganze Handler brach ab, womit myUserId leer blieb. Aufgefallen
         // am 20.09.2026 beim Pruefungsraum-Test, wenn ein zweiter Rechner
         // waehrend einer laufenden Runde beitritt.
+        // ----------------------------------------------------------------
+        //  WIEDER HEREIN, WENN DER GASTGEBER WIEDER AUFMACHT (22.09.2026)
+        //  Beim Zumachen trennt der Server die Verbindungen von aussen
+        //  (Server.js, tuerZumachen). Socket.IO baut nach einer Trennung
+        //  DURCH DEN SERVER von sich aus nicht wieder auf - das ist so
+        //  vorgesehen, sonst klopfte jeder Hinausgeworfene ewig an. Hier
+        //  soll er aber genau das: alle zehn Sekunden leise anklopfen,
+        //  hoechstens eine halbe Stunde lang. Macht der Gastgeber wieder
+        //  auf, ist der Besucher drin, ohne die Seite neu zu laden.
+        // ----------------------------------------------------------------
+        let wiederAnklopfen = null;
+        socket.on('disconnect', (grund)=>{
+            if(grund !== 'io server disconnect') return;
+            if(wiederAnklopfen) return;
+            let versuche = 0;
+            wiederAnklopfen = setInterval(()=>{
+                if(socket.connected || ++versuche > 180){ clearInterval(wiederAnklopfen); wiederAnklopfen = null; return; }
+                try{ socket.connect(); }catch(e){}
+            }, 10000);
+        });
         socket.on('connect',()=>{
+            if(wiederAnklopfen){ clearInterval(wiederAnklopfen); wiederAnklopfen = null; }
             const ersteVerbindung = !myUserId;
             myUserId=socket.id||''; window.myUserId=myUserId;
             const el=document.getElementById('duoStatus'); if(el) el.textContent = myUserId ? ('Verbunden: '+myUserId.slice(0,5)) : 'Verbunden';
@@ -2309,6 +2464,10 @@
         socket.on('tuerAnsage', a=>{ try{ tuerAnsageSetzen(a); }catch(e){} });
         socket.on('hausVolk', data=>{
             hausVolk = { anzahl: (data && data.anzahl) || 0, vonAussen: (data && data.vonAussen) || 0 };
+            // Der Anfangszustand der Tuer kommt hier mit - die 'tuerAnsage'
+            // wird nur beim Umschalten verschickt, und wer sich erst
+            // danach verbindet, haette sie sonst nie gehoert.
+            if(data && typeof data.tuer === 'boolean') tuerAuf = data.tuer;
             try{ chatSichtbarkeitPruefen(); }catch(e){}
         });
         socket.on('zugangsart', data=>{
@@ -2325,8 +2484,22 @@
             if(window.showAppAlert) window.showAppAlert(t);
             demoKnopfNachziehen();
         });
-        socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen(); });
+        socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen();
+            // Ein Raum ohne offene Tuer ist ein Link ins Leere - siehe
+            // tuerFuerRaumOeffnen() in Index.html. Der Aufruf prueft selbst,
+            // ob er am richtigen Rechner sitzt und ob ueberhaupt etwas zu
+            // tun ist.
+            try{ if(typeof window.tuerFuerRaumOeffnen === 'function') window.tuerFuerRaumOeffnen(); }catch(e){}
+        });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
+            imRaumGewesen = true;
+            if(beitrittWiederholung){ clearInterval(beitrittWiederholung); beitrittWiederholung = null; }
+            try{ const w = document.getElementById('willkommenWarte'); if(w) w.style.display = 'none'; }catch(e){}
+            if(startSobaldDrin){
+                startSobaldDrin = false;
+                try{ if(window.willkommenWartenFertig) window.willkommenWartenFertig(); }catch(e){}
+                setTimeout(()=>{ try{ window.duo.startDuoQuiz(); }catch(e){} }, 300);
+            }
             // Den Haken so stellen, wie der Raum gebaut ist - sonst sieht der
             // Gast "Fragerunde" und bekommt dann eine Pruefung.
             try{
@@ -2392,6 +2565,35 @@
                 return;
             }
             if(/Raum nicht gefunden/i.test(t) && roomCode){
+                // ----------------------------------------------------------------
+                //  ZWEI FAELLE, DIE VORHER EINER WAREN            (22.09.2026)
+                //  Dietmar, mit Bild vom Handy: "es kommt ein Hinweis. Der
+                //  Gruppenraum war offen, war danach auch drin." Der Hinweis
+                //  sagte "der Gastgeber hat ihn beendet, waehrend deine
+                //  Verbindung weg war" - und er hatte den Raum gerade erst
+                //  betreten wollen. Dazu setzte die alte Fassung roomCode auf
+                //  null, und damit war "Jetzt starten" ausgegraut: "Ich musste
+                //  eben das Fenster ueber x schliessen."
+                //
+                //  Wer noch NIE drin war, hat nur einen Link, dessen Raum noch
+                //  nicht eroeffnet ist - oder eine Sekunde zu frueh geklopft.
+                //  Dann wird still alle fuenf Sekunden noch einmal angeklopft,
+                //  hoechstens zehn Minuten lang, und nichts gemeldet. Sobald
+                //  der Gastgeber den Raum aufmacht, ist der Gast drin.
+                // ----------------------------------------------------------------
+                if(!imRaumGewesen){
+                    if(!beitrittWiederholung){
+                        beitrittVersuche = 0;
+                        beitrittWiederholung = setInterval(()=>{
+                            if(!roomCode || !socket || !socket.connected || ++beitrittVersuche > 120){
+                                clearInterval(beitrittWiederholung); beitrittWiederholung = null; return;
+                            }
+                            try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() }); }catch(e){}
+                        }, 5000);
+                    }
+                    try{ const w = document.getElementById('willkommenWarte'); if(w) w.style.display = ''; }catch(e){}
+                    return;
+                }
                 // Der Gastgeber hat zugemacht, waehrend die Verbindung weg war.
                 roomCode = null;
                 try{ chatSichtbarkeitPruefen(); }catch(e){}
@@ -2594,6 +2796,14 @@
         //  bleibt es beim Lernen ohne Gruppe, genau wie bisher.
         // ----------------------------------------------------------------
         hausHallo: () => hausHalloSenden(),
+        // "Los geht's" im Willkommensfenster, wenn ein Raumcode im Link
+        // steht: drin -> sofort starten; noch nicht drin -> starten, sobald
+        // der Beitritt gelingt (siehe roomJoined).
+        losGehts: function(){
+            if(roomCode && imRaumGewesen){ try{ window.duo.startDuoQuiz(); }catch(e){} return true; }
+            if(roomCode){ startSobaldDrin = true; return false; }
+            return false;
+        },
         hintergrundVerbinden: async function(){
             try{
                 await ensureSocket();
@@ -2620,9 +2830,17 @@
                     roomCode=urlCode;
                     console.log('[DUO] WhatsApp Link erkannt, trete bei:', urlCode);
                     setTimeout(()=>{ try{ const name=getDuoUserName(), pwd=getPassword(); if(socket) socket.emit('joinRoom',{code:urlCode,name:name,password:pwd}); }catch(e){} }, 500);
-                    // Automatisch Modal öffnen bei WhatsApp Link!
+                    // Automatisch Modal öffnen bei WhatsApp Link - aber nur
+                    // fuer den, der zu Hause sitzt. Wer ueber den geteilten
+                    // Link kommt, bekommt das kleine Willkommensfenster: Name,
+                    // Los geht's, fertig. Dietmar am 22.09.2026: "Ueber dem
+                    // Link mit Duo moechte ich ein Fenster ohne viel Text.
+                    // Einfach nur den Benutzernamen eingeben. und danach
+                    // Start." Das grosse Fenster bleibt ueber den Knopf
+                    // "Raum" erreichbar.
                     const modal=document.getElementById('duoModal');
-                    if(modal){ modal.style.display='flex'; }
+                    const vonDraussen = (typeof window.ueberGeteiltenLink === 'function') && window.ueberGeteiltenLink();
+                    if(modal && !vonDraussen){ modal.style.display='flex'; }
                 }
             }catch(e){}
             lanAdresseHolen().then(()=>updateLinkWithTunnel());
@@ -2925,7 +3143,8 @@
                 // Modal nach kurzer Zeit öffnen, damit duo.js geladen ist
                 setTimeout(()=>{
                     const modal=document.getElementById('duoModal');
-                    if(modal){ modal.style.display='flex'; console.log('[DUO] Modal automatisch geöffnet für WhatsApp Link'); }
+                    const vonDraussen = (typeof window.ueberGeteiltenLink === 'function') && window.ueberGeteiltenLink();
+                    if(modal && !vonDraussen){ modal.style.display='flex'; console.log('[DUO] Modal automatisch geöffnet für WhatsApp Link'); }
                     // Duo initialisieren
                     if(window.duo && window.duo.init) window.duo.init();
                     else {

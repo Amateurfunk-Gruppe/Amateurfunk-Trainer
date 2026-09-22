@@ -25,6 +25,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AFu-Trainer">
+    <!-- Fuer die Suchmaschinen. Dietmar am 22.09.2026: "Google findet ihn
+         nicht." Die Kachel fuer Facebook und WhatsApp baut der Server
+         eigens (siehe VORSCHAU_CRAWLER in Server.js) - Google aber holt
+         sich diese Seite hier, und die hatte bisher keine Beschreibung.
+         Dann sucht sich Google irgendeinen Satz aus dem Text. Derselbe
+         Wortlaut wie in der Kachel. -->
+    <meta name="description" content="Amateurfunkprüfung üben: alle Prüfungsfragen der Bundesnetzagentur für Klasse N, E und A mit Erklärung zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum. Kostenlos, ohne Konto.">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Das Zeichen im Browsertab. icon.png fuer alles Moderne, favicon.ico
          fuer das, was noch danach fragt. -->
@@ -49,7 +56,65 @@
         });
     }
     </script>
-    <title>Amateurfunk-Trainer · Klasse N</title>
+    <!-- ================================================================
+         FUER DIE SUCHMASCHINEN                              22.09.2026
+         ----------------------------------------------------------------
+         Dietmar: "Ich moechte den Trainer SEO optimieren." Bis heute hiess
+         die Seite fuer Google schlicht "Amateurfunk-Trainer · Klasse N" -
+         und "Klasse N" stimmte seit den hoeheren Klassen ohnehin nicht
+         mehr. Jetzt steht im Titel, wonach jemand sucht, der den Trainer
+         noch nicht kennt: Pruefungsfragen, Klasse N, E, A, kostenlos.
+         Der Browsertab zeigt davon nur den Anfang, das ist in Ordnung.
+
+         Dazu: die Beschreibung fuer das Suchergebnis, die kanonische
+         Adresse (damit Google localhost-, Tunnel- und Domain-Fassung als
+         eine Seite versteht), og:-Zeilen fuer alle Crawler, die nicht in
+         VORSCHAU_CRAWLER stehen (die bekommen vom Server eine eigene
+         Kachel mit der Adresse des Augenblicks), und strukturierte Daten
+         als WebApplication - damit Google weiss, dass das hier ein
+         Programm ist und kein Blogeintrag. robots.txt und sitemap.xml
+         liefert Server.js.
+         ================================================================ -->
+    <title>Amateurfunk-Trainer – Prüfungsfragen Klasse N, E und A kostenlos üben</title>
+    <link rel="canonical" href="https://amateurfunk-trainer.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:site_name" content="Amateurfunk-Trainer">
+    <meta property="og:title" content="Amateurfunk-Trainer – Prüfungsfragen Klasse N, E und A kostenlos üben">
+    <meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung – mit Erklärung zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.">
+    <meta property="og:url" content="https://amateurfunk-trainer.com/">
+    <meta property="og:image" content="https://amateurfunk-trainer.com/vorschau.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Amateurfunk-Trainer",
+      "alternateName": "AFu-Trainer",
+      "url": "https://amateurfunk-trainer.com/",
+      "description": "Lernprogramm für die deutsche Amateurfunkprüfung: der amtliche Fragenkatalog der Bundesnetzagentur für Klasse N, E und A mit einer Erklärung zu jeder Frage, Prüfungssimulation, Karteikasten, Vorlesen und Gruppenraum für den OV-Abend.",
+      "inLanguage": "de",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web, Windows, Linux, macOS",
+      "browserRequirements": "Benötigt JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Dietmar Reh" },
+      "image": "https://amateurfunk-trainer.com/vorschau.jpg",
+      "downloadUrl": "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",
+      "installUrl": "https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
+      "softwareHelp": { "@type": "CreativeWork", "url": "https://amateurfunk-trainer.com/support.html" },
+      "keywords": "Amateurfunk, Amateurfunkprüfung, Prüfungsfragen, Fragenkatalog, Bundesnetzagentur, Klasse N, Klasse E, Klasse A, Amateurfunkzeugnis, Lernprogramm, Prüfungssimulator",
+      "about": [
+        { "@type": "Thing", "name": "Amateurfunkprüfung" },
+        { "@type": "Thing", "name": "Amateurfunkzeugnis Klasse N" },
+        { "@type": "Thing", "name": "Amateurfunkzeugnis Klasse E" },
+        { "@type": "Thing", "name": "Amateurfunkzeugnis Klasse A" }
+      ]
+    }
+    </script>
     <!-- Die Symbolschrift liegt seit dem 01.09.2026 im Ordner, nicht mehr
          bei einem CDN. Vorher stand hier cdnjs.cloudflare.com - damit
          brauchte ausgerechnet der Trainer, der "auch ohne Netz laeuft",
@@ -57,11 +122,19 @@
          Knopfsymbole leere Kaesten. 432 KB sind der Preis dafuer, dass
          das nicht mehr passieren kann. -->
     <link rel="stylesheet" href="/fontawesome/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Dasselbe seit dem 22.09.2026 fuer die Textschriften: Inter, Space
+         Grotesk und IBM Plex Mono kamen von fonts.googleapis.com, und damit
+         erfuhr Google bei jedem Aufruf die IP-Adresse des Besuchers. Beim
+         Schreiben der Datenschutzerklaerung fiel das auf - das Landgericht
+         Muenchen hat 2022 genau dafuer Schadenersatz zugesprochen. Jetzt
+         liegen die Schriften in fonts/ (SIL Open Font License, siehe
+         fonts/LICENSE-OFL.txt), 18 Dateien, rund 370 KB. -->
+    <link rel="stylesheet" href="/fonts/fonts.css">
     <script src="video_map_embed.js?v=20260730b"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+    <!-- Das Konfetti kam von cdn.jsdelivr.net - derselbe Grund, dieselbe
+         Loesung (22.09.2026): canvas-confetti 1.9.4, ISC-Lizenz, 25 KB,
+         liegt jetzt im Ordner. -->
+    <script src="confetti.browser.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -249,6 +322,12 @@
             gap: 10px;
         }
         .header-left { display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
+        /* Der Satz unter der Wortmarke (22.09.2026, siehe das Markup vor
+           der Filterleiste). Er sitzt im Abstand zwischen Kopfzeile und
+           Leiste und nimmt so gut wie keine Hoehe weg. */
+        .start-satz { margin: -0.1rem 0 0.75rem; font-size: 0.8rem; line-height: 1.45; color: var(--muted); }
+        body.runde-laeuft .start-satz, body.handy .start-satz { display: none; }
+        body.dark .start-satz { color: #a6b4c6; }
         .header h1 {
             font-family: var(--font-display);
             font-size: 1.5rem;
@@ -2471,6 +2550,93 @@
             font-size: 0.8rem;
             color: var(--ink);
         }
+        /* ----------------------------------------------------------------
+           DER BESUCHERZAEHLER                            (22.09.2026)
+           Dietmar, mit dem Bild eines klassischen Zaehlerkaestchens: "So
+           ein Zaehler wuerde schoener aussehen." Und zum Platz: rechts in
+           der Fusszeile.
+
+           Absolut gesetzt statt in die Zeile gehaengt: Der Hinweis auf den
+           Katalog soll genau mittig stehen bleiben. Ein Kaestchen im
+           Textfluss haette ihn nach links geschoben - unauffaellig, aber
+           schief, und schief faellt auf.
+
+           Am Handy ist rechts kein Platz. Unter 900 Punkten rutscht es
+           deshalb unter den Text und stellt sich mittig.
+           ---------------------------------------------------------------- */
+        /* Die Zeile wird um ein paar Punkte hoeher, damit das Kaestchen
+           nicht unten heraussteht. Mehr als das kostet es nicht - der
+           Text darin bleibt, wo er war. */
+        /* Zahl RECHTS neben der Ueberschrift, nicht darunter - Dietmar am
+           22.09.2026: "In dem Style wie gehabt, aber die Zahl nicht
+           unterhalb, sondern rechts davon." Damit ist das Kaestchen nur
+           noch eine Zeile hoch und die Fusszeile braucht keine Extrahoehe
+           mehr. */
+        .footer-note { position: relative; padding-bottom: 6px; }
+        /* Platz fuer das Kaestchen rechts: Seit den Verweisen "Support"
+           und "Datenschutz" (22.09.2026) ist die Zeile so lang, dass sie
+           bei 1300 Punkten Breite unter das Kaestchen lief. Rechts wird
+           deshalb so viel freigehalten, wie das Kaestchen breit ist.
+           Links NICHT dasselbe: Die erste Fassung hielt beidseitig 190
+           Punkte frei, damit der Text genau in der Mitte bleibt - und
+           brach damit auf Dietmars Bildschirm in zwei Zeilen um. "Haette
+           das gerne in einer Reihe." Der Text sitzt jetzt mittig im
+           Platz links vom Kaestchen; die paar Punkte neben der Mitte
+           sieht man ihm nicht an, den Umbruch schon. Unter 900 Punkten
+           steht das Kaestchen ohnehin darunter (siehe unten). */
+        @media (min-width: 901px){
+            .footer-note { padding-right: 180px; }
+        }
+        .footer-zaehler {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-top: 5px;   /* die Trennlinie oben hat 16px Abstand, der Text sitzt darunter */
+            display: inline-flex;
+            align-items: stretch;
+            border: 1px solid #d7e0ec;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15,39,69,0.08);
+            line-height: 1.2;
+            text-align: center;
+            white-space: nowrap;
+        }
+        /* Beide Zeilen so gross wie der Text daneben. Dietmar: "Die Zahl
+           und die Schriftgroesse moechte ich in der gleichen Groesse wie
+           der Text in der Fussleiste." Das sind 0.8rem - dieselbe Angabe
+           steht oben bei .footer-note. Unterschieden wird jetzt ueber das
+           Gewicht: die Ueberschrift halbfett, die Zahl fett. */
+        .fz-kopf {
+            display: block;
+            background: #eef2f8;
+            color: #5b6b80;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 3px 11px;
+            border-right: 1px solid #d7e0ec;
+        }
+        .fz-zahl {
+            display: block;
+            padding: 3px 13px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0f2745;
+            /* Tabellenziffern: Sonst huepft die Zahl beim Hochzaehlen in
+               der Breite, weil die 1 schmaler ist als die 8. */
+            font-variant-numeric: tabular-nums;
+        }
+        @media (max-width: 900px){
+            /* display:table statt inline-block: Als inline-block blieb das
+               Kaestchen am Ende der Textzeile haengen und legte sich auf
+               das Wort davor. Eine Tabelle schrumpft genauso auf ihren
+               Inhalt, bricht aber die Zeile und laesst sich mit margin:auto
+               mitten hinstellen. */
+            .footer-zaehler { position: static; transform: none; display: table; margin: 12px auto 0; }
+            .footer-zaehler .fz-kopf, .footer-zaehler .fz-zahl { display: table-cell; vertical-align: middle; }
+        }
         .footer-note a {
             color: var(--panel-navy);
             font-weight: 600;
@@ -3378,9 +3544,28 @@
            480 Punkte ausgelegt, und "100 %" bezieht sich auf einen
            Bezugsrahmen, den der ueberbreite Inhalt selbst aufgeblasen
            hatte. Mit vw haengt die Breite dagegen fest am sichtbaren
-           Bereich und kann gar nicht mehr davonlaufen. */
-        body.schmal #duoModal { width: 100vw !important; max-width: 100vw !important; }
-        body.schmal #duoModal > div { width: 94vw !important; max-width: 94vw !important; padding: 1rem !important; }
+           Bereich und kann gar nicht mehr davonlaufen.
+
+           Nachtrag 22.09.2026: vw allein war noch zu kurz gesprungen.
+           Dietmar, mit einem Bild vom Handy: "Bild 1 ist von Links etwas
+           eingeblendet." Der Trainer skaliert die ganze Seite ueber zoom
+           auf <html>, am Handy mit dem Faktor 0,6 - und vw zaehlt den
+           Bildschirm in UNgezoomten Punkten. Aus 100vw wurden so 412
+           Punkte, die anschliessend auf 247 zusammenschrumpften: genau
+           die 60 Prozent Breite, die auf seinem Bild abgedunkelt waren,
+           mit dem Fenster links daneben. Geteilt durch --afu-zoom stimmt
+           es wieder - derselbe Handgriff wie beim Konfetti-Feld und bei
+           den Hoehen der anderen Fenster. Nachgemessen: vorher 247 von
+           412 Punkten, danach 412. */
+        body.schmal #duoModal {
+            width: calc(100vw / var(--afu-zoom, 1)) !important;
+            max-width: calc(100vw / var(--afu-zoom, 1)) !important;
+        }
+        body.schmal #duoModal > div {
+            width: calc(94vw / var(--afu-zoom, 1)) !important;
+            max-width: calc(94vw / var(--afu-zoom, 1)) !important;
+            padding: 1rem !important;
+        }
 
         /* Im Gruppenraum am Handy bleibt vom grossen Fenster nur der
            Namenskasten und der Weg hinaus. */
@@ -3663,6 +3848,30 @@
         #tuerBtn.tuer-gleich i   { color:#ffffff !important; }
         #tuerBtn.tuer-gleich:hover { background:#74400e !important; border-color:#74400e !important; }
 
+        /* Der Schalter unten im Besucherfenster. "ein" ist die einladende
+           Handlung und deshalb gruen gefuellt; "aus" ist ein Eingriff und
+           bleibt zurueckhaltend - weiss mit rotem Rand, wie der Knopf zum
+           Zuruecksetzen daneben. Wieder ueber die ID: Die Regeln fuer .btn
+           tragen !important und wuerden inline gesetzte Farben schlagen. */
+        /* Seit dem 22.09.2026 gelten dieselben Regeln fuer den zweiten
+           Schalter daneben, den fuer die Laendersperre (#sperreSchalter).
+           Dietmar: "Ich moechte die Laenderfilter auch ausschalten
+           koennen." Gleiche Farben, gleiche Lesart: gruen an, rot aus.
+           Die Selektoren stehen je Zeile beisammen - ein Komma am
+           Zeilenende hat hier schon einmal einen fremden Block
+           mitgenommen (siehe unten). */
+        #serverSchalter.schalter-ein, #sperreSchalter.schalter-ein   { background:#1c7a46 !important; border:1px solid #1c7a46 !important; color:#ffffff !important; }
+        #serverSchalter.schalter-ein i, #sperreSchalter.schalter-ein i { color:#ffffff !important; }
+        #serverSchalter.schalter-ein:hover, #sperreSchalter.schalter-ein:hover { background:#16633a !important; border-color:#16633a !important; }
+        /* "aus" ist jetzt rot gefuellt, nicht mehr weiss mit rotem Rand:
+           Der Knopf zeigt den Zustand, und der soll auf einen Blick zu
+           lesen sein - rot zu, gruen offen, wie der Knopf oben. */
+        #serverSchalter.schalter-aus, #sperreSchalter.schalter-aus   { background:#a33227 !important; border:1px solid #a33227 !important; color:#ffffff !important; }
+        #serverSchalter.schalter-aus i, #sperreSchalter.schalter-aus i { color:#ffffff !important; }
+        #serverSchalter.schalter-aus:hover, #sperreSchalter.schalter-aus:hover { background:#8a2a20 !important; border-color:#8a2a20 !important; }
+        #serverSchalter.schalter-gleich   { background:#8a4b10 !important; border:1px solid #8a4b10 !important; color:#ffffff !important; }
+        #serverSchalter.schalter-gleich i { color:#ffffff !important; }
+
         /* Am 22.09.2026 hierher zurueckgeholt: Diese Zeile stand vorher
            allein ueber dem Server-Knopf-Block und haengte damit an
            "#tuerBtn.tuer-an" - jedes Zeichen in der Modusleiste bekam eine
@@ -3804,6 +4013,172 @@
         body.handy #bankBadge,
         body.handy .lernpaar,
         body.handy .lernquelle { display: none !important; }
+
+        /* ================================================================
+           DIE SCHLANKE HANDY-ANSICHT BEIM UEBEN            (22.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit dem Bild einer aelteren Fassung: "So hat mir die
+           mobile Version gut gefallen." Und zum Ziel: "Ich moechte das
+           uebersichtlich fuer einen OV Abend usw. gestalten."
+
+           body.handy und NICHT body.schmal - das ist hier der ganze
+           Unterschied: schmal beginnt schon bei 1024 Punkten und wuerde
+           das Tablet mitnehmen. Dietmar: "Am Tablet, Laptop oder am PC
+           soll es normal aussehen." handy hoert bei 640 auf.
+
+           Und nur waehrend einer Runde. In der Hauptansicht bleibt die
+           Kopfzeile stehen, sonst kaeme man an Einstellungen, Suche und
+           Merkliste gar nicht mehr heran.
+           ================================================================ */
+
+        /* Die Kopfzeile geht beim Ueben aus dem Weg - drei Reihen Knoepfe
+           ueber einer Frage sind am Handy zwei zu viel. Zurueck fuehrt der
+           Knopf "Hauptmenue" unten. */
+        body.handy.runde-laeuft .header { display: none !important; }
+
+        /* Die Karte wird beim Ueben sonst auf Fensterhoehe gezogen
+           (body.runde-laeuft .card). Am Rechner fuellt sie damit den
+           Bildschirm; am Handy ist der Inhalt kuerzer als der Bildschirm,
+           und die Differenz stand als leeres Feld unter den Antworten -
+           nachgemessen 146 Punkte. */
+        body.handy.runde-laeuft .card { min-height: 0 !important; }
+
+        /* Der weisse Rand um die Frage. Dietmar: "Bei den Fragen, ist
+           aussen ein weisser Rand. Kann man das noch fuellen?" Gemessen:
+           16 Punkte Innenabstand der Karte, 24 Punkte im Fragebereich, 16
+           oben am Koerper. Am Handy ist jeder Punkt Breite Lesebreite -
+           beim Ueben ruecken die Raender deshalb zusammen. */
+        body.handy.runde-laeuft { padding-top: 4px; }
+        body.handy.runde-laeuft #app { padding: 6px; }
+        body.handy.runde-laeuft .question-area { padding: 14px 12px; }
+
+        /* An der Frage bleiben vier Knoepfe: Haken, Herz, Vorlesen und das
+           Zahnrad fuer die Stimme - genau die vier vom Vorbild. Notiz,
+           Taschenrechner, Formelblatt, Erklaerung und der kleine
+           Lautsprecher daneben treten am Handy zurueck.
+           Mit !important, weil formelBtn und erklaerBtn ihr display per
+           Skript gesetzt bekommen. */
+        body.handy.runde-laeuft #questionNotizBtn,
+        body.handy.runde-laeuft #rechnerBtn,
+        body.handy.runde-laeuft #formelBtn,
+        body.handy.runde-laeuft #erklaerBtn,
+        body.handy.runde-laeuft #erklaerLesenNurBtn { display: none !important; }
+
+        /* Der Vollbild-Knopf an der Frage - nur am Handy, wo die Kopfzeile
+           beim Ueben fehlt. Am Rechner und am Tablet bleibt er oben. */
+        body.handy #vollbildBtnFrage { display: inline-flex !important; }
+
+        /* Unten bleiben drei: Zurueck, Weiter, Hauptmenue. Abbrechen fuehrt
+           ueber das Hauptmenue, Google KI und die Quellenangabe sind beim
+           Ueben am Handy kein Erstbedarf. */
+        body.handy.runde-laeuft #abortBtn,
+        body.handy.runde-laeuft #googleSearchBtn,
+        body.handy.runde-laeuft #quelleBtn { display: none !important; }
+
+        /* Die untere Reihe ist ein Raster aus zwei Spalten. Mit drei
+           Knoepfen bliebe "Hauptmenue" als halber Knopf allein in der
+           zweiten Zeile stehen; ueber beide Spalten sieht es aus wie
+           gewollt. */
+        body.handy.runde-laeuft .nav-buttons #homeBtn { grid-column: 1 / -1; }
+
+        /* ----------------------------------------------------------------
+           DIE KOPFZEILE STEHT IM ZICKZACK                  (22.09.2026)
+           Dietmar: "Sieh dir die obere Reihe an. Amateurfunk-Trainer und
+           darunter weitere Buttons. Das ist so ein zick zack was optisch
+           schrecklich aussieht."
+
+           Er hat recht, und der Grund steht in zwei Zeilen weiter oben:
+           .header-left beginnt links, .header-right hat
+           "justify-content: flex-end" und "margin-left: auto" und endet
+           rechts. Am breiten Bildschirm stehen beide in derselben Zeile,
+           da faellt das nicht auf. Am Handy brechen sie untereinander -
+           und dann springt das Auge von links nach rechts und zurueck.
+
+           Am Handy nimmt deshalb jede Reihe die volle Breite ein: der
+           Titel mit "Ziel waehlen", die Suche darunter, die Knopfreihe
+           gleichmaessig verteilt. Drei Zeilen, eine linke und eine rechte
+           Kante.
+           ---------------------------------------------------------------- */
+        body.handy .header-left  { width: 100%; }
+        body.handy .header-right { width: 100%; justify-content: flex-start; margin-left: 0; flex-wrap: nowrap; }
+        /* Erste Fassung hatte space-between - Dietmar: "Die Leiste oben
+           sieht jetzt noch schlimmer aus." Fuenf Knoepfe mit Luft dazwischen
+           ueber die ganze Breite verstreut. Jetzt teilen sie sich die Zeile
+           zu gleichen Teilen, ohne Luecken, wie eine Werkzeugleiste. */
+        body.handy .header-right > * { flex: 1 1 0; min-width: 0; justify-content: center; }
+        /* Die Suche bekommt am Handy eine eigene Zeile ueber die volle
+           Breite - so, wie man es von jeder Handy-Seite kennt. Grund: Die
+           Eingabefelder muessen am Handy 16 Punkte gross sein (siehe
+           unten), und in einer Zeile mit Titel und "Ziel waehlen" war
+           dafuer kein Platz mehr. Das Herz rueckt dafuer neben den Titel.
+           Drei Zeilen, alle buendig links und rechts - kein Zickzack. */
+        body.handy .header-left .suchfeld-huelle { order: 10; width: 100%; flex: 1 1 100%; display: flex; }
+        body.handy .header-left .suchfeld-huelle #searchInput { flex: 1 1 auto; min-width: 0; width: auto; }
+        body.handy .header-left #favListBtn { margin-left: auto; }
+
+        /* ----------------------------------------------------------------
+           WARUM DAS WILLKOMMENSFENSTER "IRRE GROSS" WAR      (22.09.2026)
+           Dietmar, mit einem Bild vom Handy: "bei Eintritt zeigt es einem
+           ein irre grosses Fenster an." Auf dem Bild ist das Namensfeld
+           fokussiert - und die ganze Seite hineingezoomt.
+
+           Das macht der Browser, nicht der Trainer: Chrome und Safari am
+           Handy zoomen von selbst auf ein Eingabefeld, dessen Schrift
+           kleiner als 16 Punkte ist, damit man sieht, was man tippt. Der
+           Trainer skaliert die Seite am Handy mit 0,6 - und damit lag
+           JEDES seiner 34 Eingabefelder darunter, das Namensfeld bei
+           8,8 Punkten. Das Willkommensfenster setzt den Fokus beim
+           Oeffnen von selbst ins Feld, also sprang der Zoom sofort an.
+
+           Geteilt durch --afu-zoom kommt jedes Feld auf genau 16 Punkte
+           auf dem Bildschirm, und der Browser laesst die Seite in Ruhe.
+           Nur am Handy - am Rechner gibt es dieses Verhalten nicht, und
+           die Felder sollen dort bleiben, wie sie sind.
+           ---------------------------------------------------------------- */
+        body.handy input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        body.handy select,
+        body.handy textarea {
+            font-size: calc(16px / var(--afu-zoom, 1)) !important;
+        }
+
+        /* ----------------------------------------------------------------
+           MEHR SCHRIFT AM HANDY                            (22.09.2026)
+           Dietmar: "In Bild 2 wird viel Platz verschenkt. Das kann alles
+           etwas groesser sein."
+
+           Der Grund ist eine Regel im 1024er Block weiter unten: Sie
+           nimmt die Schrift auf schmalen Fenstern wieder auf 1,08rem
+           zurueck - sinnvoll, solange der Trainer dort die volle
+           Kopfzeile und zwei Spalten trug. Beim Ueben am Handy ist die
+           Frage jetzt allein auf dem Bildschirm, da darf sie groesser
+           sein. Hoehere Spezifitaet als die Regel darunter, deshalb
+           gewinnt sie unabhaengig von der Reihenfolge - nachgemessen.
+           ---------------------------------------------------------------- */
+        body.handy.runde-laeuft .question-area .q-text {
+            font-size: 1.28rem;
+            line-height: 1.45;
+        }
+        body.handy.runde-laeuft .question-area .option {
+            font-size: 1.14rem;
+            min-height: 48px;
+            padding: 11px 14px 11px 16px;
+        }
+        body.handy.runde-laeuft .question-area .options { gap: 10px; }
+
+        /* Bei der ersten Frage einer Runde gibt es kein "Zurueck" - dann
+           stand "Weiter" als halber Knopf da und rechts daneben Luft.
+           Ist der Nachbar weg, nimmt Weiter die ganze Zeile.
+           :has() kennt jeder Browser der letzten Jahre; wo es fehlt,
+           bleibt es beim halben Knopf - falsch sieht dabei nichts aus. */
+        body.handy.runde-laeuft .nav-buttons:not(:has(#prevBtn:not([style*="display: none"]))) #nextBtn {
+            grid-column: 1 / -1;
+        }
+        /* Denselben Fall gibt es noch auf einem zweiten Weg: Wer als Gast
+           in einem Gruppenraum sitzt, dem nimmt eine Regel weiter oben das
+           Zurueckblaettern ganz weg ("Der Button Zurueck kann auch raus",
+           06.09.2026). Dort haengt das display am Stilblatt und nicht am
+           Element, deshalb greift der Selektor darueber nicht. */
+        body.handy.runde-laeuft.gast-im-raum .nav-buttons #nextBtn { grid-column: 1 / -1; }
 
         /* Die eine Handlung. Dietmars Farbe vom 03.09.2026. */
         .filter-bar .btn.btn-primary,
@@ -6483,16 +6858,24 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  Nachdem wir eine feste Adresse haben, moechte ich den Trainer
                  online zur Verfuegung stellen, wenn der Button aktiviert ist."
 
-                 Rot heisst zu, gruen heisst offen - seine Wahl. Der Knopf
+                 Gruen heisst offen, weiss heisst zu - seine Wahl. Der Knopf
                  erscheint nur auf dem Rechner, auf dem der Trainer laeuft;
                  ein Besucher soll ihn gar nicht erst sehen.
+
+                 Seit dem 22.09.2026 schaltet der Klick nicht mehr selbst um,
+                 sondern macht das Besucherfenster auf. Dietmar: "Wie kann ich
+                 sehen, das jemand auf meinem Server ueber dem Link aktiv ist?
+                 Derzeit haben wir nur ein und aus. Mein Vorschlag: Wir bauen
+                 das Fenster in den Button ein." Der Schalter sitzt jetzt unten
+                 im Fenster, und die Zahl am Knopf sagt vorher schon, wie viele
+                 gerade da sind - ohne die im Gruppenraum, so wollte er es.
                  ================================================================ -->
-            <button class="btn" id="tuerBtn" onclick="tuerUmschalten()"
+            <button class="btn" id="tuerBtn" onclick="serverFensterOeffnen()"
                     style="display:none; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;"
-                    data-tooltip="Server freigeben – nur wenn dies grün ist, erreichen Besucher den Trainer über den geteilten Link"
-                    data-vorlesen-kurz="Server freigeben."
-                    data-vorlesen="Server. Rot heißt: Der Trainer läuft nur für dich. Grün heißt: Besucher erreichen ihn über den geteilten Link. Nach jedem Start steht er auf Rot.">
-                <i class="fas fa-server"></i> <span id="tuerBtnText">Server</span></button>
+                    data-tooltip="Server – wer gerade über den Link da ist, und der Schalter zum Freigeben"
+                    data-vorlesen-kurz="Server."
+                    data-vorlesen="Server. Grün heißt: Besucher erreichen den Trainer über den geteilten Link. Weiß heißt: Er läuft nur für dich. Die Zahl daneben sagt, wie viele gerade auf der Seite sind, ohne im Gruppenraum zu sein. Ein Klick öffnet das Besucherfenster; der Schalter steht dort unten.">
+                <i class="fas fa-server"></i> <span id="tuerBtnText">Server</span> <span id="tuerBtnZahl" class="start-badge" style="display:none;">0</span></button>
             <button class="btn" id="beendenBtn" onclick="beendenFragen()"
                     style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;"
                     data-tooltip="⏻ Trainer beenden – schließt den Server sauber"
@@ -6504,6 +6887,14 @@ window.klasseFragenNachladen = klasseFragenNachladen;
             </button>
         </div>
     </div>
+
+    <!-- DER SATZ UNTER DER WORTMARKE                       (22.09.2026)
+         Dietmar zur Suchmaschinen-Frage: "Ja, einen Satz unter der
+         Wortmarke." Google liest vor allem sichtbaren Text, und die
+         Startansicht bestand bisher aus Knoepfen und Kacheln. Ein Satz,
+         klein und in der Farbe der Nebentexte; waehrend einer Runde und
+         am Handy ausgeblendet (siehe .start-satz im Stilblock). -->
+    <p class="start-satz" id="startSatz">Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung Klasse N, E und A – mit einer Erklärung zu jeder Frage, Prüfungssimulation und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.</p>
 
     <!-- FILTER -->
     <div class="filter-bar">
@@ -6544,6 +6935,39 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         <button class="btn btn-exam btn-modus" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil, F9 abgeschaltet"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
         <button class="btn btn-modus" id="duoBtn" onclick="window.duoInit()" data-tooltip="Gruppenraum für gemeinsames Lernen – Teilnehmer kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Gruppenraum</button>
     </div>
+    <script>
+    // ================================================================
+    //  DIE LEISTE SOLL NICHT SPRINGEN                    (22.09.2026)
+    //  Dietmar, mit einem Video: "Die Taskleiste mit den Buttons. die
+    //  ruecken jedes mal auf und werden kleiner."
+    //
+    //  Im Video ist es genau ein Wechsel: Erst steht die Leiste ohne
+    //  "Auffrischen" da, breit und bequem. Dann kommen die Lerndaten vom
+    //  Server, der Knopf wird eingeblendet, die Leiste ist zu breit, und
+    //  alles rueckt auf die enge Stufe zusammen. Jeder Seitenaufruf, jedes
+    //  Mal derselbe Ruck.
+    //
+    //  Ob es etwas aufzufrischen gibt, weiss der Trainer erst nach dem
+    //  Laden - aber er weiss, wie es beim letzten Mal war. Das reicht:
+    //  Stand beim letzten Mal eine Zahl am Knopf, wird er sofort gezeigt,
+    //  und die Leiste rechnet von Anfang an mit ihm. Stimmt es hinterher
+    //  nicht mehr, nimmt updateAuffrischenBadge() ihn wieder weg - dann
+    //  wird die Leiste breiter, und das faellt nicht auf.
+    //
+    //  Steht hier und nicht im Hauptskript, weil es VOR dem ersten Messen
+    //  der Leiste laufen muss.
+    // ================================================================
+    (function(){
+        try{
+            const n = parseInt(localStorage.getItem('auffrischen_zuletzt') || '0', 10);
+            if(!(n > 0)) return;
+            const b = document.getElementById('auffrischenBtn');
+            const z = document.getElementById('auffrischenCount');
+            if(b) b.style.display = 'inline-flex';
+            if(z){ z.textContent = String(n); z.style.display = 'inline'; }
+        }catch(e){}
+    })();
+    </script>
 
     <!-- APP LAYOUT
          role="main" statt eines <main>-Elements: Das Umstellen des Tags
@@ -7008,7 +7432,11 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         </div>
     </div>
 
-    <div id="duoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,39,69,0.62); z-index:9998; justify-content:center; align-items:center;">
+    <!-- inset:0 statt width/height:100% - so wie die sieben anderen
+         Fenster im Trainer es auch halten. Den Handy-Fehler vom
+         22.09.2026 hat allerdings nicht diese Zeile ausgeloest, sondern
+         die vw-Regel weiter oben im Stilblatt (siehe dort). -->
+    <div id="duoModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:9998; justify-content:center; align-items:center;">
         <div style="background:white; border-radius:20px; padding:1.5rem; max-width:1020px; width:94%; max-height:calc(92vh / var(--afu-zoom, 1)); overflow-y:auto; overflow-x:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4); box-sizing:border-box;"><style>#duoModal > div *{max-width:100%;box-sizing:border-box;} #duoModal .btn{flex-shrink:0;white-space:nowrap;} #duoModal div[style*=display:flex]{flex-wrap:wrap;}</style>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h2 style="font-family:var(--font-display); font-size:1.2rem;"><i class="fas fa-users" style="color:#e84393;"></i> Gemeinsamer Modus</h2>
@@ -7439,9 +7867,30 @@ window.klasseFragenNachladen = klasseFragenNachladen;
     <div class="footer-note">
         <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
                title="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung."
-               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span>
+               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support">Support</a> · <a href="support.html#datenschutz" class="footer-support">Datenschutz</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
     </div>
 </div>
+<script>
+// ----------------------------------------------------------------
+//  GIBT ES DIE SUPPORT-SEITE HIER UEBERHAUPT?             (22.09.2026)
+//  support.html nennt Dietmar als Verantwortlichen und beschreibt
+//  SEINEN Server. Sie liegt deshalb nicht im Repository (.gitignore) -
+//  wer den Trainer von GitHub holt und selbst betreibt, hat sie nicht,
+//  und die zwei Verweise in der Fusszeile fuehrten bei ihm ins Leere.
+//  Also einmal nachsehen: Gibt es die Datei nicht, verschwinden die
+//  Verweise. Auf Dietmars Rechnern und ueber seinen Link ist sie da.
+// ----------------------------------------------------------------
+(function(){
+    var h = document.querySelector('.footer-support-huelle');
+    if(!h) return;
+    var weg = function(){ h.style.display = 'none'; };
+    try{
+        fetch('support.html', { method:'HEAD', cache:'no-store' })
+            .then(function(r){ if(!r.ok) weg(); })
+            .catch(function(){ /* keine Verbindung: Verweise bleiben, die Seite kommt dann mit */ });
+    }catch(e){}
+})();
+</script>
 
 <!-- LIGHTBOX -->
 <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
@@ -18112,7 +18561,9 @@ window.lebenszeichenStarten = lebenszeichenStarten;
 //  Server, statt sich den Zustand zu merken: Ein zweiter Tab oder ein
 //  Neuladen soll dieselbe Wahrheit zeigen.
 // ================================================================
-let tuerStand = { offen:false, schliesstUm:0 };
+// sperre: die Laendersperre - true an, false aus, null "der Server sagt
+// es nicht" (aeltere Fassung; dann bleibt der Schalter dafuer weg).
+let tuerStand = { offen:false, schliesstUm:0, draussen:0, imRaum:0, sperre:null };
 let tuerUhr = null;
 
 function tuerKnopfZeichnen(){
@@ -18122,7 +18573,29 @@ function tuerKnopfZeichnen(){
     if(!laeuftLokal()){ b.style.display = 'none'; return; }
     b.style.display = '';
 
+    // Die Zahl der Anwesenden - dieselbe Bauart wie die Zaehler an
+    // "Fehler" und "Lernbedarf". Bei Null bleibt sie weg: Ein Knopf, an
+    // dem dauernd eine 0 klebt, sagt weniger als einer ohne.
+    const z = document.getElementById('tuerBtnZahl');
+    if(z){
+        const n = tuerStand.draussen || 0;
+        if(n > 0){ z.textContent = String(n); z.style.display = ''; }
+        else { z.style.display = 'none'; }
+    }
+
+    serverSchalterZeichnen();
+    sperreSchalterZeichnen();
+
     const rest = tuerStand.schliesstUm ? (tuerStand.schliesstUm - Date.now()) : 0;
+    // Ist der Countdown abgelaufen, stimmt der gemerkte Zustand nicht mehr:
+    // Der Server hat gerade zugemacht, der Knopf wuesste es aber erst beim
+    // naechsten Nachsehen - bis zu zehn Sekunden lang stuende er auf Gruen.
+    // Also gleich nachfragen. Die Null davor verhindert, dass dieser Zweig
+    // beim naechsten Zeichnen noch einmal auslaest.
+    if(tuerStand.schliesstUm && rest <= 0){
+        tuerStand.schliesstUm = 0;
+        setTimeout(tuerNachsehen, 400);
+    }
     // Klassen statt style-Attribut: siehe die Begruendung bei #tuerBtn im
     // Stilblock. Inline gesetzte Farben verlieren hier gegen !important.
     b.classList.remove('tuer-an', 'tuer-gleich');
@@ -18136,10 +18609,16 @@ function tuerKnopfZeichnen(){
         b.setAttribute('data-tooltip', 'Schließt in ' + sek + ' Sekunden – noch einmal klicken, um offen zu lassen');
     } else if(tuerStand.offen){
         b.classList.add('tuer-an');
-        b.setAttribute('data-tooltip', 'Besucher erreichen den Trainer gerade. Klicken schließt ihn – mit einer Minute Vorwarnung.');
+        const n = tuerStand.draussen || 0;
+        b.setAttribute('data-tooltip', 'Der Server ist offen. '
+            + (n === 0 ? 'Gerade ist niemand da. '
+                       : (n === 1 ? 'Einer ist gerade auf der Seite. '
+                                  : n + ' sind gerade auf der Seite. '))
+            + 'Klicken zeigt, wer – und den Schalter zum Schließen.');
     } else {
         // keine Klasse - der Knopf sieht aus wie seine Nachbarn
-        b.setAttribute('data-tooltip', 'Der Trainer läuft nur für dich. Klicken gibt ihn für Besucher frei.');
+        b.setAttribute('data-tooltip', 'Der Trainer läuft nur für dich. '
+            + 'Klicken zeigt die Besucherliste – und den Schalter zum Freigeben.');
     }
 }
 
@@ -18149,10 +18628,116 @@ async function tuerNachsehen(){
         const r = await fetch('/api/tuer', { cache:'no-store' });
         if(!r.ok) return;                       // aeltere Fassung: Knopf bleibt, wie er ist
         const j = await r.json();
-        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0 };
+        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0,
+                      draussen: Number(j.draussen) || 0,
+                      imRaum: Number(j.imRaum) || 0,
+                      sperre: (typeof j.sperre === 'boolean') ? j.sperre : null };
         tuerKnopfZeichnen();
+        // Hier haengt der Hinweiston. Diese Uhr laeuft, solange der
+        // Trainer auf diesem Rechner offen ist - unabhaengig davon, ob
+        // gerade ein Gruppenraum besteht.
+        if(typeof j.echte === 'number' && window.besucherTonPruefen){
+            window.besucherTonPruefen(j.echte);
+        }
     }catch(e){}
 }
+
+// Der Schalter unten im Besucherfenster - Beschriftung, Farbe, Zustand.
+// Er wird aus tuerKnopfZeichnen() mitgezogen, also jede Sekunde: so laeuft
+// auch der Countdown darauf mit, ohne eine zweite Uhr.
+function serverSchalterZeichnen(){
+    const k = document.getElementById('serverSchalter');
+    const t = document.getElementById('serverSchalterText');
+    if(!k || !t) return;
+    if(!laeuftLokal()){ k.style.display = 'none'; return; }
+    k.style.display = '';
+    k.classList.remove('schalter-ein', 'schalter-aus', 'schalter-gleich');
+    const rest = tuerStand.schliesstUm ? (tuerStand.schliesstUm - Date.now()) : 0;
+    // Der Schalter zeigt den ZUSTAND, nicht die Handlung. Dietmar am
+    // 22.09.2026: "Server ein oder ist er aus? Er ist aus. Es muss in Rot
+    // angezeigt mit dem Text: Server aus. Klicke ich da drauf, wird der
+    // Button Gruen und der Text: Server ein." Die erste Fassung hatte es
+    // andersherum - gruen "Server ein" als Einladung zum Einschalten -,
+    // und genau das hat er als "ist er an?" gelesen.
+    if(rest > 0){
+        k.classList.add('schalter-gleich');
+        t.textContent = 'Schließt in ' + Math.ceil(rest / 1000) + ' s';
+        k.setAttribute('data-tooltip', 'Noch einmal klicken, um den Server doch offen zu lassen');
+    } else if(tuerStand.offen){
+        k.classList.add('schalter-ein');
+        t.textContent = 'Server ein';
+        k.setAttribute('data-tooltip', 'Der Server ist offen. Klicken schließt ihn – mit einer Minute Vorwarnung für alle, die gerade da sind.');
+    } else {
+        k.classList.add('schalter-aus');
+        t.textContent = 'Server aus';
+        k.setAttribute('data-tooltip', 'Der Server ist zu. Klicken gibt ihn für Besucher über den geteilten Link frei.');
+    }
+}
+
+// ----------------------------------------------------------------
+//  DER SCHALTER FUER DIE LAENDERSPERRE                 (22.09.2026)
+//  Dietmar: "Ich moechte die Laenderfilter auch ausschalten koennen."
+//  Gleiche Lesart wie der Server-Schalter links daneben: Der Knopf
+//  zeigt den ZUSTAND - gruen "Laendersperre ein", rot "Laendersperre
+//  aus" -, und ein Klick kippt ihn. Nach jedem Neustart des Trainers
+//  ist die Sperre wieder ein (seine Wahl, wie bei der Tuer).
+//
+//  Kennt der Server den Schalter noch nicht (aeltere Fassung, sperre
+//  ist dann null), bleibt der Knopf weg statt etwas Falsches zu zeigen.
+// ----------------------------------------------------------------
+function sperreSchalterZeichnen(){
+    const k = document.getElementById('sperreSchalter');
+    const t = document.getElementById('sperreSchalterText');
+    if(!k || !t) return;
+    if(!laeuftLokal() || tuerStand.sperre === null){ k.style.display = 'none'; return; }
+    k.style.display = '';
+    k.classList.remove('schalter-ein', 'schalter-aus');
+    if(tuerStand.sperre){
+        k.classList.add('schalter-ein');
+        t.textContent = 'Sperre ein';
+        k.setAttribute('data-tooltip', 'Nur Aufrufe aus Deutschland, Österreich und der Schweiz kommen herein; '
+            + 'alle anderen sehen eine Seite mit „Zutritt anfragen“. Klicken schaltet die Sperre aus.');
+    } else {
+        k.classList.add('schalter-aus');
+        t.textContent = 'Sperre aus';
+        k.setAttribute('data-tooltip', 'Die Sperre ist aus – gerade kommt jeder herein, aus jedem Land, ohne Anfrage. '
+            + 'Klicken schaltet sie wieder ein. Nach einem Neustart ist sie von selbst wieder ein.');
+    }
+}
+
+window.laenderSperreUmschalten = async function(){
+    if(tuerStand.sperre === null) return;
+    const an = !tuerStand.sperre;
+    try{
+        const r = await fetch('/api/laendersperre?an=' + (an ? '1' : '0'), { method:'POST' });
+        if(!r.ok){
+            if(r.status === 404) throw new Error('Der Server läuft noch mit einer älteren Fassung — '
+                + 'einmal den Trainer neu starten, danach gibt es diesen Schalter.');
+            if(r.status === 403) throw new Error('Das geht nur direkt am Trainer-PC.');
+            throw new Error('Der Server hat mit ' + r.status + ' geantwortet.');
+        }
+        const j = await r.json();
+        tuerStand.sperre = !!j.an;
+        sperreSchalterZeichnen();
+        // Das Fenster zeigt oben die Anfragen und den Satz zur Sperre -
+        // beides aendert sich mit dem Schalter.
+        try{ if(window.besucherFensterOffen && window.besucherFensterOffen())
+                 window.besucherFensterAuffrischen(); }catch(e){}
+    }catch(e){
+        if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
+    }
+};
+
+// Der Klick auf den Server-Knopf macht jetzt das Besucherfenster auf.
+// Geschaltet wird dort unten. Faellt das Fenster aus irgendeinem Grund aus
+// (aeltere duo.js), bleibt der alte Weg: dann schaltet der Knopf selbst.
+window.serverFensterOeffnen = function(){
+    if(typeof window.besucherFensterOeffnen === 'function'){
+        window.besucherFensterOeffnen();
+        return;
+    }
+    window.tuerUmschalten();
+};
 
 window.tuerUmschalten = async function(){
     const laeuft = tuerStand.schliesstUm && (tuerStand.schliesstUm - Date.now() > 0);
@@ -18165,15 +18750,59 @@ window.tuerUmschalten = async function(){
     // Zumachen - mit Vorwarnung fuer die, die gerade da sind.
     const weiter = () => tuerSetzen(false, 60);
     if(window.showAppConfirm){
+        // Laeuft gerade ein Gruppenraum? Dann steht das VORNE. Dietmar am
+        // 22.09.2026 auf die Frage, was beim Schliessen waehrend eines
+        // Raums passieren soll: "Warnen." Wer einen Kurs laufen hat, soll
+        // nicht mit einem Klick allen die Tuer zuziehen, ohne es zu merken.
+        const n = tuerStand.imRaum || 0;
+        let text = 'Wer gerade auf der Seite ist, bekommt eine Minute Vorwarnung und kann seine '
+                 + 'Frage zu Ende bringen. Danach führt der geteilte Link auf die Auffangseite. '
+                 + 'Für dich ändert sich nichts.';
+        if(n > 0){
+            text = '<b>Im Gruppenraum ' + (n === 1 ? 'sitzt gerade noch 1 Teilnehmer'
+                                                   : 'sitzen gerade noch ' + n + ' Teilnehmer') + '.</b> '
+                 + text;
+        }
         window.showAppConfirm('Den Server für Besucher schließen?', weiter, {
             title: 'Server schließen?',
-            details: 'Wer gerade auf der Seite ist, bekommt eine Minute Vorwarnung und kann seine '
-                   + 'Frage zu Ende bringen. Danach führt der geteilte Link auf die Auffangseite. '
-                   + 'Für dich ändert sich nichts.',
+            details: text,
             confirmLabel: '<i class="fas fa-server"></i> Schließen',
             icon: 'fa-server'
         });
     } else { weiter(); }
+};
+
+// ================================================================
+//  EIN RAUM BRAUCHT EINE OFFENE TUER               (22.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar hatte einen Gruppenraum eroeffnet, den Link geteilt - und
+//  bekam die Auffangseite: "Der Trainer ist gerade nicht online."
+//  Der Trainer lief, nur die Tuer stand zu. Ein Abruf der Adresse
+//  antwortete mit 503, und genau diesen Fehler zeigt Cloudflare als
+//  "gerade offline".
+//
+//  Das ist eine Falle, die der Server-Knopf selbst mitgebracht hat:
+//  Vorher gab es die Tuer nicht, ein Raumlink ging immer. Auf die
+//  Frage, was passieren soll, seine Antwort: "Server geht von selbst
+//  auf." Wer einen Raum eroeffnet, will Leute hereinlassen - alles
+//  andere waere eine Ruecksicht, um die niemand gebeten hat.
+//
+//  Nur beim EROEFFNEN, nicht beim Beitreten: Ein Gast hat auf dem
+//  fremden Rechner ohnehin nichts zu schalten, und localOnly laesst
+//  ihn auch gar nicht.
+// ================================================================
+window.tuerFuerRaumOeffnen = async function(){
+    try{
+        if(!laeuftLokal()) return;
+        await tuerNachsehen();                 // erst den Stand holen
+        if(tuerStand.offen) return;            // schon offen: nichts zu tun
+        await tuerSetzen(true);
+        console.log('[TUER] Gruppenraum eroeffnet - Server fuer Besucher freigegeben.');
+        // Hier stand kurz ein Hinweisfenster ("Der Server ist jetzt offen -
+        // der Einladungslink funktioniert"). Dietmar: "Der Hinweis kann
+        // komplett raus." Der gruene Knopf oben sagt dasselbe, ohne dass
+        // man ihn wegklicken muss.
+    }catch(e){}
 };
 
 async function tuerSetzen(auf, sek){
@@ -18187,8 +18816,16 @@ async function tuerSetzen(auf, sek){
             throw new Error('Der Server hat mit ' + r.status + ' geantwortet.');
         }
         const j = await r.json();
-        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0 };
+        // Die Antwort auf das Umschalten sagt nichts ueber die Anwesenden -
+        // die bisherige Zahl bleibt stehen, bis das naechste Nachsehen sie
+        // auffrischt. Sonst blitzte sie bei jedem Klick kurz weg.
+        tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0,
+                      draussen: tuerStand.draussen || 0,
+                      imRaum: tuerStand.imRaum || 0,
+                      sperre: tuerStand.sperre };
         tuerKnopfZeichnen();
+        try{ if(window.besucherFensterOffen && window.besucherFensterOffen())
+                 window.besucherFensterAuffrischen(); }catch(e){}
     }catch(e){
         if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
     }
@@ -18207,6 +18844,60 @@ function tuerKnopfStarten(){
     }, 1000);
 }
 window.tuerKnopfStarten = tuerKnopfStarten;
+
+// ================================================================
+//  DER BESUCHERZAEHLER IN DER FUSSZEILE            (22.09.2026)
+//  Dietmar: "Ich moechte einen Besucherzaehler" - und auf die Frage
+//  nach dem Platz: "Hier in der Leiste, haben wir genug Platz fuer
+//  den Zaehler", mit einem Bild der Fusszeile. Wortlaut seiner Wahl:
+//  "heute: 57, gestern: 63, gesamt: 25.643".
+//
+//  Gezaehlt wird serverseitig und nur, wer ueber den geteilten Link
+//  kommt - seine eigenen Aufrufe am Rechner sind draussen, so wollte
+//  er es. Was der Server herausgibt, sind drei Zahlen und sonst
+//  nichts; die Besucherliste mit Adressen und Staedten bleibt, wo sie
+//  ist: bei ihm.
+//
+//  Solange nie jemand da war, steht die Zeile nicht da. Eine Reihe
+//  Nullen in der Fusszeile sagt nichts und sieht nach Panne aus - wer
+//  den Trainer nur fuer sich benutzt, soll sie gar nicht erst sehen.
+// ================================================================
+let zaehlerUhr = null;
+
+async function besucherZaehlerHolen(){
+    const feld = document.getElementById('besucherZaehler');
+    if(!feld) return;
+    try{
+        const r = await fetch('/api/besucherzahl', { cache:'no-store' });
+        if(!r.ok) return;                       // aeltere Fassung: Zeile bleibt weg
+        const j = await r.json();
+        const heute   = Number(j.heute)   || 0;
+        const gestern = Number(j.gestern) || 0;
+        const gesamt  = Number(j.gesamt)  || 0;
+        // Hier stand: bei Null gar nicht zeigen. Dietmar hat den Zaehler
+        // zurueckgesetzt und ihn dann gesucht: "Der Besucherzaehler ist
+        // nicht mehr vorhanden." Eine Null ist die ehrlichere Auskunft als
+        // ein leerer Platz.
+        const z = n => n.toLocaleString('de-DE');
+        const zahl = document.getElementById('besucherZaehlerZahl');
+        if(zahl) zahl.textContent = z(gesamt);
+        // Im Kaestchen steht nur die Gesamtzahl - Dietmars Wahl. Heute und
+        // gestern stehen in der Sprechblase; wer es genauer wissen will,
+        // faehrt darueber, und die Fusszeile bleibt ruhig.
+        feld.setAttribute('data-tooltip',
+            'Heute ' + z(heute) + ', gestern ' + z(gestern) + ', insgesamt ' + z(gesamt)
+            + ' — Besucher über den geteilten Link. Eigene Aufrufe an diesem Rechner zählen nicht mit.');
+        feld.style.display = '';
+    }catch(e){}
+}
+
+function besucherZaehlerStarten(){
+    besucherZaehlerHolen();
+    if(zaehlerUhr) clearInterval(zaehlerUhr);
+    // Eine Minute reicht: Die Zahl ist eine Randnotiz, kein Messgeraet.
+    zaehlerUhr = setInterval(besucherZaehlerHolen, 60000);
+}
+window.besucherZaehlerStarten = besucherZaehlerStarten;
 
 function laeuftLokal() {
     return ['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) !== -1;
@@ -26719,6 +27410,16 @@ function renderQuestion() {
                  gehoert; sichtbar wird er mit ihr in erklaerKnopfSetzen(). -->
             <button id="erklaerLesenNurBtn" onclick="erklaerNurVorlesen()" title="Erklärung vorlesen, ohne sie aufzuklappen (F8)" data-tooltip="Erklärung vorlesen, ohne sie aufzuklappen — oder Taste F8. Noch einmal klicken hält an." style="display:none; background:#f2eefb; color:#5b3f95; border:1px solid #bba9dd; border-radius:20px; width:36px; height:36px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-size:0.85rem;"><i class="fas fa-volume-up"></i></button>
             <button id="ttsBtn" onclick="vorleseFrage()" title="Frage und Antworten vorlesen" style="background:var(--panel-navy); color:white; border:none; border-radius:20px; padding:0.45rem 0.9rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-volume-up"></i> Vorlesen</button>
+            <!-- Vollbild, nur am Handy. Dietmar am 22.09.2026: "Links neben
+                 dem Zahnrad moechte ich Fenster vergroessern Icon."
+                 Grund: Beim Ueben ist die Kopfzeile am Handy jetzt
+                 ausgeblendet - und mit ihr war der Knopf verschwunden, der
+                 dort seinen Platz hatte. Am Rechner bleibt er oben, deshalb
+                 steht dieser hier auf display:none und wird nur von der
+                 handy-Regel im Stilblatt eingeblendet. Das Zeichen wird beim
+                 Bauen gesetzt, damit es nach einem Frage-Wechsel gleich
+                 richtig steht. -->
+            <button id="vollbildBtnFrage" onclick="vollbildUm()" title="Vollbild – der obere Teil des Browsers verschwindet" data-tooltip="Vollbild – der obere Teil des Browsers verschwindet" style="display:none; background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;"><i class="fas ${(typeof vollbildLaeuft === 'function' && vollbildLaeuft()) ? 'fa-compress' : 'fa-expand'}"></i></button>
             <button onclick="openTtsSettings()" title="Stimme & Vorlese-Einstellungen" style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; cursor:pointer;"><i class="fas fa-cog"></i></button>
         </div>
         </div>
@@ -27642,10 +28343,95 @@ function levelUpSpielen(){
         try{ levelUpAudio.pause(); }catch(e){}
         levelUpAudio.currentTime = 0;
         const pr = levelUpAudio.play();
-        if(pr && pr.catch) pr.catch(() => {});
+        // Nicht mehr stumm verschlucken: Wenn der Browser ablehnt, soll
+        // das im Log stehen - sonst sucht man den Fehler beim Server.
+        if(pr && pr.catch) pr.catch(function(e){
+            // Die beiden Faelle sehen gleich aus und haben nichts
+            // miteinander zu tun. Beim ersten Mal habe ich sie selbst
+            // verwechselt, weil in der Arbeitskopie die Klangdateien
+            // fehlten und der Browser daraufhin NotSupportedError meldete.
+            const art = (e && e.name) || 'unbekannt';
+            if(art === 'NotAllowedError'){
+                console.debug('[TON] Der Browser laesst noch keinen Klang zu (Autoplay-Sperre). '
+                            + 'Einmal irgendwo auf die Seite klicken, dann geht es.');
+            } else if(art === 'NotSupportedError'){
+                console.debug('[TON] sounds/level-up.wav laesst sich nicht abspielen - '
+                            + 'fehlt die Datei im Ordner sounds?');
+            } else {
+                console.debug('[TON] Klang abgelehnt: ' + art);
+            }
+        });
     }catch(e){ console.debug('Level-up:', e.message); }
 }
 window.levelUpSpielen = levelUpSpielen;
+
+// ================================================================
+//  ES KLINGELT, WENN JEMAND KOMMT - AN EINER STELLE  (22.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Ich habe Besuch auf dem Server und bekomme keinen
+//  Hinweiston oder erst viel spaeter."
+//
+//  Der Ton hing bisher an besucherNachsehen() in duo.js. Diese
+//  Funktion steigt gleich in der zweiten Zeile aus, wenn kein
+//  Gruppenraum offen ist (!isHost || !duoActive), und ihre Uhr wird
+//  ueberhaupt erst beim Oeffnen eines Raums gestartet. Seit es den
+//  Server-Knopf gibt, ist der Trainer aber oft ohne Raum online -
+//  dann lief gar nichts, und sobald spaeter doch ein Raum aufging,
+//  klingelte es erst beim naechsten Besucher danach. Genau das
+//  beschreibt "keinen Ton oder erst viel spaeter".
+//
+//  Jetzt fragt die Uhr des Server-Knopfes mit (alle zehn Sekunden,
+//  an den eigenen Rechner, kostet nichts), und beide Wege melden
+//  hierher. Der gemerkte Stand steht nur einmal, deshalb klingelt es
+//  auch dann genau einmal, wenn beide zugleich laufen.
+// ================================================================
+let besucherStandTon = null;
+
+window.besucherTonPruefen = function(echte){
+    const n = Number(echte);
+    if(!isFinite(n) || n < 0) return;
+    // Beim ersten Blick nur merken. Sonst klingelte es bei jedem Start
+    // des Trainers fuer alles, was gestern war.
+    if(besucherStandTon === null){ besucherStandTon = n; return; }
+    if(n > besucherStandTon){
+        console.log('[BESUCHER] ' + (n - besucherStandTon) + ' neu - Ton.');
+        try{ levelUpSpielen(); }catch(e){}
+    }
+    // Auch nach unten nachziehen: Der Knopf "Zaehler zuruecksetzen" darf
+    // nicht dazu fuehren, dass es danach nie wieder klingelt.
+    besucherStandTon = n;
+};
+
+// ----------------------------------------------------------------
+//  WARUM DER TON MANCHMAL VERSCHLUCKT WIRD
+//  Browser lassen Klaenge erst zu, nachdem jemand die Seite einmal
+//  angefasst hat (Autoplay-Sperre). Wer den Trainer oeffnet und dann
+//  nur zusieht, hoert nichts - und play() wird still abgelehnt.
+//  Einmal beim ersten Klick oder Tastendruck lautlos anspielen
+//  genuegt, danach laesst der Browser den Ton durch.
+// ----------------------------------------------------------------
+let tonFreigeschaltet = false;
+function tonFreischalten(){
+    if(tonFreigeschaltet) return;
+    tonFreigeschaltet = true;
+    try{
+        if(!levelUpAudio){
+            levelUpAudio = new Audio('sounds/level-up.wav');
+            levelUpAudio.volume = 0.55;
+            levelUpAudio.preload = 'auto';
+        }
+        const laut = levelUpAudio.volume;
+        levelUpAudio.volume = 0;
+        const zurueck = () => { try{ levelUpAudio.pause(); levelUpAudio.currentTime = 0;
+                                     levelUpAudio.volume = laut; }catch(e){} };
+        const pr = levelUpAudio.play();
+        if(pr && pr.then) pr.then(zurueck).catch(zurueck);
+        else zurueck();
+    }catch(e){}
+}
+['pointerdown', 'keydown', 'touchstart'].forEach(function(art){
+    document.addEventListener(art, tonFreischalten, { once: true, passive: true });
+});
 
 // ================================================================
 //  ALLE FRAGEN DURCH - UND JETZT?
@@ -28984,6 +29770,32 @@ function anzeigeAnwenden(){
     //  doch nicht passt, wird eine Stufe zurueckgegangen. Nur verkleinern:
     //  So kann sich das nicht aufschaukeln, und nach hoechstens drei
     //  Runden steht der Wert.
+    // ================================================================
+    //  AM HANDY UND TABLET WIRD NICHT GESUCHT            (22.09.2026)
+    // ----------------------------------------------------------------
+    //  anzeigeAutomatisch() gibt auf schmalen Bildschirmen 1 zurueck -
+    //  mit der Begruendung "keine Lupe rueckwaerts" (siehe dort). Die
+    //  Suche hier unten kannte diese Ausnahme nicht: Sie sah den
+    //  Scrollbalken, den es am Handy IMMER gibt, und ging Stufe um Stufe
+    //  hinunter, bis sie bei 60 Prozent ankam. Nachverfolgt mit einer
+    //  Spur auf --afu-zoom: 1 -> 0,95 -> ... -> 0,6 in anderthalb
+    //  Sekunden, jedes Mal aus dieser Funktion.
+    //
+    //  Die Folgen hatte Dietmar alle auf dem Handy vor sich: winzige
+    //  Schrift, "viel Platz verschenkt", das Namensfeld bei 8,8 Punkten
+    //  und deshalb der Zoom des Browsers ins Feld hinein, das Fenster
+    //  des Gruppenraums mit 100vw nur zu 60 Prozent gedeckt. Alles
+    //  Symptome derselben Zahl.
+    //
+    //  Am schmalen Bildschirm ist Scrollen richtig und kein Fehler - die
+    //  Seite ist dort einspaltig und laenger als das Fenster, das soll
+    //  sie auch sein. Also endet die Automatik hier beim Startwert.
+    // ================================================================
+    if(anzeigeWahl() === 'auto' && (window.innerWidth || 0) > 0 && (window.innerWidth || 0) <= SCHMAL_GRENZE){
+        anzeigeAutomatisch._wert = f;
+        try{ anzeigeFeldNachziehen(); }catch(err){}
+        return f;
+    }
     if(anzeigeWahl() === 'auto'){
         for(let i = 0; i < 3; i++){
             let g;
@@ -29378,6 +30190,15 @@ function vollbildLaeuft(){
 }
 
 function vollbildKnopfNachziehen(){
+    // Seit dem 22.09.2026 gibt es zwei: den in der Kopfzeile und den an
+    // der Frage, der am Handy einspringt. Beide zeigen dasselbe Zeichen.
+    const f = document.getElementById('vollbildBtnFrage');
+    if(f){
+        const anF = vollbildLaeuft();
+        f.innerHTML = anF ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+        f.setAttribute('title', anF ? 'Vollbild verlassen' : 'Vollbild – der obere Teil des Browsers verschwindet');
+        f.setAttribute('data-tooltip', f.getAttribute('title'));
+    }
     const b = document.getElementById('vollbildBtn');
     if(!b) return;
     const an = vollbildLaeuft();
@@ -29396,7 +30217,19 @@ function vollbildKnopfNachziehen(){
 }
 window.vollbildKnopfNachziehen = vollbildKnopfNachziehen;
 
-async function vollbildUm(){
+// Steckt die Seite im eigenen Fenster einer App (Facebook, Instagram und
+// ihresgleichen)? Diese Fenster sind abgespeckte Browser und lassen das
+// Vollbild nicht zu - daran ist nichts zu machen, aber man kann sagen,
+// wie man herauskommt.
+function imAppFenster(){
+    try{ return /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|Twitter/i.test(navigator.userAgent || ''); }
+    catch(e){ return false; }
+}
+
+// leise = der Trainer hat es von sich aus versucht, nicht der Benutzer.
+// Dann wird geschwiegen, wenn es nicht geht: Wer nur irgendwo hingetippt
+// hat, bekommt keine Fehlermeldung ueber etwas, das er nie wollte.
+async function vollbildUm(leise){
     try{
         if(vollbildLaeuft()){
             const raus = document.exitFullscreen || document.webkitExitFullscreen
@@ -29410,9 +30243,34 @@ async function vollbildUm(){
             else throw new Error('Dieser Browser kennt kein Vollbild.');
         }
     }catch(e){
-        // Kommt vor, wenn der Browser es verbietet (manche Kioskmodi) oder
-        // die Seite in einem Rahmen ohne Erlaubnis steckt. Dann hilft F11.
-        try{ if(window.showAppAlert) showAppAlert('Das Vollbild lässt sich hier nicht umschalten. Mit der Taste <b>F11</b> geht es trotzdem.'); }catch(e2){}
+        // ----------------------------------------------------------------
+        //  Dietmar am 22.09.2026, mit einem Bild aus dem Facebook-Fenster:
+        //  "In der Einstellung ist Vollbild in der Handy version an. Es
+        //  gibt eine Meldung aus."
+        //
+        //  Zwei Fehler auf einmal. Erstens stand da "mit der Taste F11" -
+        //  an einem Handy gibt es keine F11. Zweitens kam die Meldung,
+        //  ohne dass er etwas angefordert hatte: Das Vollbild wird am
+        //  Handy beim ersten Antippen von selbst versucht, und das
+        //  Facebook-Fenster laesst es nicht zu.
+        //
+        //  Das <b> im Text war noch ein dritter: showAppAlert maskiert
+        //  HTML (zu Recht), also stand "<b>F11</b>" woertlich auf dem
+        //  Bildschirm.
+        // ----------------------------------------------------------------
+        if(leise !== true){
+            let text;
+            if(imAppFenster()){
+                text = 'Dieses Fenster gehört zu der App, aus der du den Link geöffnet hast, '
+                     + 'und lässt kein Vollbild zu. Oben rechts auf die drei Punkte tippen und '
+                     + '"Im Browser öffnen" wählen — dort geht es.';
+            } else if(document.body.classList.contains('schmal')){
+                text = 'Dieser Browser lässt das Vollbild nicht zu.';
+            } else {
+                text = 'Das Vollbild lässt sich hier nicht umschalten. Mit der Taste F11 geht es trotzdem.';
+            }
+            try{ if(window.showAppAlert) showAppAlert(text); }catch(e2){}
+        }
     }
     vollbildKnopfNachziehen();
 }
@@ -29473,20 +30331,44 @@ window.vollbildAutoSetzen = vollbildAutoSetzen;
 
 (function vollbildAutoVorbereiten(){
     let schonProbiert = false;
+    // ----------------------------------------------------------------
+    //  Dietmar am 22.09.2026: "Noch besser waere es, wenn es das
+    //  automatisch macht." Das versucht der Trainer schon - nur war der
+    //  eine Versuch verbraucht, sobald irgendwo getippt wurde, auch wenn
+    //  er gar nicht durchkam. Genau das passiert beim ersten Griff:
+    //  Der gilt oft einem Knopf in einem Fenster, das noch offen ist,
+    //  und der Browser laesst das Vollbild aus einer solchen Bedienung
+    //  heraus nicht immer zu.
+    //
+    //  Jetzt gilt: geklappt = Ruhe. Nicht geklappt = beim naechsten
+    //  Antippen noch einmal, hoechstens dreimal. Danach ist Schluss,
+    //  damit es nicht bei jeder Beruehrung von Neuem versucht.
+    // ----------------------------------------------------------------
+    let versuche = 0;
+    const HOECHSTENS = 3;
     const einmal = (e) => {
         if(schonProbiert) return;
         // Der erste Griff gilt dem Vollbild-Knopf? Dann macht der das
         // schon selbst - hier waere es Einschalten und sofort Ausschalten.
-        try{ if(e && e.target && e.target.closest && e.target.closest('#vollbildBtn')) return; }catch(err){}
+        try{ if(e && e.target && e.target.closest
+                && (e.target.closest('#vollbildBtn') || e.target.closest('#vollbildBtnFrage'))) return; }catch(err){}
         schonProbiert = true;
         try{
             if(!vollbildAutoAn()) return;
             if(!document.body.classList.contains('schmal')) return;
             if(typeof laeuftAlsApp === 'function' && laeuftAlsApp()) return;
             if(vollbildLaeuft()) return;
+            versuche++;
             // Direkt aufrufen, ohne await davor: Die Erlaubnis des
             // Browsers gilt nur, solange die Bedienung noch "frisch" ist.
-            vollbildUm();
+            // Mit "leise": Schlaegt es fehl, sagt der Trainer nichts - der
+            // Benutzer hat nur irgendwo hingetippt, nicht das Vollbild
+            // angefordert.
+            vollbildUm(true);
+            // Kurz darauf nachsehen, ob es wirklich geklappt hat.
+            setTimeout(function(){
+                if(!vollbildLaeuft() && versuche < HOECHSTENS) schonProbiert = false;
+            }, 400);
         }catch(err){}
     };
     document.addEventListener('pointerdown', einmal, true);
@@ -29794,6 +30676,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ lebenszeichenStarten(); }catch(e){}
     // Der Server-Knopf: nur auf dem Rechner, auf dem der Trainer laeuft.
     try{ tuerKnopfStarten(); }catch(e){}
+    try{ besucherZaehlerStarten(); }catch(e){}
     // ----------------------------------------------------------------
     //  DIE LEITUNG FUER CHAT UND ANSAGEN              (21.09.2026)
     //  duo.js wurde bisher erst geladen, wenn jemand den Gruppenraum
@@ -29838,6 +30721,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(localStorage.getItem('demo_hinweis_gesehen')) return;
             const m = document.getElementById('willkommenModal');
             if(!m) return;
+            // Mit Raumcode im Link: nur Name und Knopf. Der Rest des Textes
+            // erklaert den Trainer - wer in einen Raum eingeladen wurde,
+            // will hinein, nicht lesen.
+            try{
+                const mitRaum = !!(new URLSearchParams(location.search).get('duo'));
+                m.querySelectorAll('.willkommen-text').forEach(el => { el.style.display = mitRaum ? 'none' : ''; });
+                const los = document.getElementById('willkommenLosBtn');
+                if(los) los.innerHTML = mitRaum ? '<i class="fas fa-play"></i> Start' : '<i class="fas fa-check"></i> Los geht\'s';
+            }catch(e){}
             // Steht schon ein Name aus einem frueheren Besuch? Dann ins
             // Feld damit, statt ihn erneut zu erfragen.
             try{
@@ -29878,6 +30770,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Jetzt steht der Name fest - jetzt darf die Ankunft in den
             // Chat. Andersherum waere sie immer namenlos gewesen.
             try{ if(window.duo && window.duo.hausHallo) window.duo.hausHallo(); }catch(e){}
+            // Mit Raumcode im Link heisst der Knopf "Start" - und er soll
+            // auch starten. Ist der Raum noch nicht eroeffnet, bleibt das
+            // Fenster mit dem Wartehinweis offen und geht von selbst
+            // weiter, sobald der Beitritt gelingt (duo.js, roomJoined).
+            try{
+                const mitRaum = !!(new URLSearchParams(location.search).get('duo'));
+                if(mitNamen && mitRaum && window.duo && window.duo.losGehts){
+                    const sofort = window.duo.losGehts();
+                    if(!sofort && m){
+                        m.style.display = 'flex'; m.classList.add('open');
+                        const w = document.getElementById('willkommenWarte'); if(w) w.style.display = '';
+                        const los = document.getElementById('willkommenLosBtn'); if(los) los.disabled = true;
+                    }
+                }
+            }catch(e){}
+        }catch(e){}
+    };
+    // duo.js ruft das, sobald der Beitritt gelungen ist: Fenster zu, Knopf
+    // wieder frei - die Runde startet dort von selbst.
+    window.willkommenWartenFertig = function(){
+        try{
+            const m = document.getElementById('willkommenModal');
+            if(m){ m.style.display = 'none'; m.classList.remove('open'); }
+            const los = document.getElementById('willkommenLosBtn'); if(los) los.disabled = false;
         }catch(e){}
     };
 
@@ -31267,6 +32183,15 @@ if (originalSelectOption) {
         body.dark h1 i,
         body.dark .footer-note a,
         body.dark .footer-note a i { color: var(--nacht-hell) !important; }
+
+        /* Das Zaehlerkaestchen im Dunkelmodus. Eigener Block, nichts
+           angehaengt: Am 22.09.2026 hat genau das schon einmal die Zeichen
+           in der Modusleiste gruen eingefaerbt, weil eine Zeile darueber
+           mit einem Komma endete. */
+        body.dark .footer-zaehler { background: #0e2436 !important; border-color: #2a4c66 !important; }
+        body.dark .fz-kopf        { background: #17344c !important; color: #a6c6dc !important; border-right-color: #2a4c66 !important; }
+        body.dark .fz-zahl        { color: #4ec3f7 !important; }
+
         body.dark .exam-info,
         body.dark .exam-info div,
         body.dark .history-col div,
@@ -32279,6 +33204,33 @@ if (originalSelectOption) {
            "body.dark [id$=Modal] b" faerbt das Fette darin fast weiss -
            gemessen 240,247,252 auf 238,244,251, also 1,01:1. Die Zahl,
            um die es in dem Satz geht, waere unsichtbar gewesen. */
+        /* ================================================================
+           DIE GROESSE DES BESUCHERFENSTERS                 (22.09.2026)
+           Diese Werte standen bis heute als style-Attribut im Markup.
+           besucherGroesseAngleichen() setzt beim Oeffnen die Masse des
+           Gruppenraum-Fensters ein und raeumt sie wieder weg, wenn kein
+           Raum offen ist - mit style.maxHeight = '' . Und genau das hat
+           die Begrenzung geloescht, weil sie ja selbst ein style-Attribut
+           war. Der Kommentar dort sprach von "den Werten aus dem
+           Stilblatt"; die gab es nur nicht.
+
+           Aufgefallen ist es erst, seit der Server-Knopf das Fenster ohne
+           Gruppenraum oeffnet. Dietmar: "das Fenster wird immer groesser.
+           Hier fehlt jetzt die Moeglichkeit zu scrollen." Es fehlte nicht
+           die Rolle - der Bereich um die Tabelle hat sie laengst -,
+           sondern die Hoehe, an der sie sich haette ausrichten koennen.
+
+           Geteilt durch --afu-zoom, weil der Trainer die ganze Seite
+           skaliert: Bei 125 % waere das Fenster sonst ueber den Rand
+           hinausgewachsen.
+           ================================================================ */
+        #besucherModal > div {
+            width: 94%;
+            max-width: 1020px;
+            min-height: calc(74vh / var(--afu-zoom, 1));
+            max-height: calc(92vh / var(--afu-zoom, 1));
+        }
+
         body.dark #besucherModalKopf {
             background: #10243c !important;
             border: 1px solid #2c5580 !important;
@@ -34664,13 +35616,19 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
         <i class="fas fa-hand-wave" style="color:#e2932f;"></i><span style="font-size:1.15rem;">👋</span> Willkommen beim Amateurfunk-Trainer</h3>
     </div>
     <div style="padding:1.1rem 1.2rem; font-size:0.87rem; line-height:1.6; color:var(--ink);">
-      <div style="background:#fff8e6; border:1px solid #ecd9a4; border-radius:12px; padding:0.7rem 0.9rem; color:#6f5410; margin-bottom:0.9rem;">
+      <!-- Die beiden Absaetze tragen die Klasse "willkommen-text": Wer ueber
+           einen Link mit Raumcode kommt, bekommt sie nicht zu sehen.
+           Dietmar am 22.09.2026: "Ueber dem Link mit Duo moechte ich ein
+           Fenster ohne viel Text. Einfach nur den Benutzernamen eingeben.
+           und danach Start." Ohne Raumcode bleibt der Text - dann weiss
+           der Besucher sonst nicht, wo er gelandet ist. -->
+      <div class="willkommen-text" style="background:#fff8e6; border:1px solid #ecd9a4; border-radius:12px; padding:0.7rem 0.9rem; color:#6f5410; margin-bottom:0.9rem;">
         <b>Hier ist alles offen und kostenlos.</b> Der Trainer läuft auf einem privaten Rechner und
         ist nur erreichbar, solange dieser eingeschaltet ist. <b>Zum Behalten</b> gibt es das Programm
         ohne Konto auf <span style="white-space:nowrap;">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</span>; dann
         läuft es bei dir, auch ohne Internet.
       </div>
-      <div style="margin-bottom:0.5rem;">Ausprobieren kannst du alles: die Prüfungsfragen der Bundesnetzagentur
+      <div class="willkommen-text" style="margin-bottom:0.5rem;">Ausprobieren kannst du alles: die Prüfungsfragen der Bundesnetzagentur
         für Klasse N, E und A, zu jeder Frage eine Erklärung, den Prüfungssimulator. Dein Lernstand bleibt
         in deinem Browser, nicht auf dem fremden Rechner.</div>
       <label for="willkommenName" style="display:block; font-weight:700; margin:0.9rem 0 0.35rem;">
@@ -34680,10 +35638,14 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
                     font-size:0.92rem; font-family:var(--font-mono);">
       <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;">
         Steht nur im Chat und in der Teilnehmerliste dieses Trainers. Ohne Eintrag heißt du „Besucher".</div>
+      <!-- Erscheint nur, wenn der Raum aus dem Link noch nicht eroeffnet
+           ist. duo.js blendet ihn ein und wieder aus. -->
+      <div id="willkommenWarte" style="display:none; margin-top:0.8rem; padding:0.55rem 0.8rem; border-radius:10px; background:#eef4fb; border:1px solid #c2d6f0; font-size:0.8rem; color:#1f3f66;">
+        <i class="fas fa-hourglass-half"></i> Der Gastgeber hat den Raum noch nicht eröffnet — sobald er da ist, geht es von selbst los.</div>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
       <button onclick="willkommenFertig(false)" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;">Ohne Namen</button>
-      <button onclick="willkommenFertig(true)" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;"><i class="fas fa-check"></i> Los geht's</button>
+      <button id="willkommenLosBtn" onclick="willkommenFertig(true)" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;"><i class="fas fa-check"></i> Los geht's</button>
     </div>
   </div>
 </div>
@@ -34732,7 +35694,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
        Zoom-Rechnung: max-width 1020, width 94 %, und die Hoehe geteilt
        durch den eingestellten Zoom, damit das Fenster bei 125 % nicht
        ueber den Bildschirm hinauswaechst. -->
-  <div style="background:white; border-radius:22px; width:94%; max-width:1020px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden; display:flex; flex-direction:column; min-height:calc(74vh / var(--afu-zoom, 1)); max-height:calc(92vh / var(--afu-zoom, 1));">
+  <div style="background:white; border-radius:22px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden; display:flex; flex-direction:column;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
       <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;">
         <i class="fas fa-users" style="color:var(--panel-navy);"></i> Besucher über den Link</h3>
@@ -34765,12 +35727,48 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
         Noch niemand da. Sobald jemand den Link anklickt, steht er hier.
       </div>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
-      <button onclick="besucherZaehlerZuruecksetzen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;"><i class="fas fa-rotate-left"></i> Zähler zurücksetzen</button>
-      <button onclick="neustartAnkuendigen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #d8b477; background:white; color:#8a5a10; cursor:pointer;" data-tooltip="Allen sagen, dass der Trainer gleich neu startet – dann reißt es nicht unangekündigt ab"><i class="fas fa-bullhorn"></i> Neustart ankündigen</button>
-      <div style="flex:1 1 auto;"></div>
-      <button onclick="besucherFensterAuffrischen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;"><i class="fas fa-rotate"></i> Aktualisieren</button>
-      <button onclick="besucherFensterZu()" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.2rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Schließen</button>
+    <!-- Seit dem 22.09.2026 sieben Knoepfe in dieser Leiste. Mit
+         "Laendersperre ein" brachen sie bei 1020 Punkten Breite um;
+         Dietmar: "Mach Laendersperre zu Sperre, damit alles in eine
+         Reihe passt." Das allein reichte nicht (mit Arial-Massen fehlten
+         noch rund 40 Punkte), deshalb dazu: Abstand 6 statt 8, seitliche
+         Polster der Knoepfe und der Leiste eine Spur schmaler. Gemessen
+         mit Arial - Segoe UI auf Windows ist schmaler, da bleibt Luft.
+         flex-wrap bleibt als Netz: Wird es doch einmal eng (grosse
+         Schrift, schmaler Gruppenraum), brechen Aktualisieren und
+         Schliessen gemeinsam rechts in eine zweite Reihe um, statt dass
+         etwas abgeschnitten wird. -->
+    <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:0.8rem 1rem; background:#fafbff; border-top:1px solid var(--line);">
+      <!-- Der Schalter fuer den Server. Dietmar am 22.09.2026: "Wenn ich es
+           oeffne, kommt unten ein Button rein. Server Ein / Aus." Er steht
+           vorn, weil er von allem hier das Wichtigste ist; Beschriftung und
+           Farbe setzt serverSchalterZeichnen() im Sekundentakt. -->
+      <button id="serverSchalter" onclick="tuerUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-server"></i> <span id="serverSchalterText">Server ein</span></button>
+      <!-- Der Schalter fuer die Laendersperre. Dietmar am 22.09.2026: "Ich
+           moechte die Laenderfilter auch ausschalten koennen." Gleiche
+           Bauart wie der Server-Schalter: gruen "Sperre ein", rot "Sperre
+           aus". Erst hiess es "Laendersperre ein/aus" - damit brach die
+           Leiste um. Dietmar: "Mach Laendersperre zu Sperre, damit alles
+           in eine Reihe passt." Nach jedem Neustart wieder ein. Zeichnet
+           sperreSchalterZeichnen(), im selben Takt. -->
+      <button id="sperreSchalter" onclick="laenderSperreUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-earth-europe"></i> <span id="sperreSchalterText">Sperre ein</span></button>
+      <!-- Zwei Knoepfe, zwei Dinge. Dietmar am 22.09.2026: "Zaehler
+           zuruecksetzen? Ist das der Zaehler fuer Besucher? Wenn ja, dann
+           benoetigen wir einen Button, den Verlauf loeschen." Vorher tat
+           der eine Knopf beides auf einmal - Zahlen UND Liste -, ohne es
+           zu sagen. Jetzt: links die Zahlen, rechts die Liste. -->
+      <button onclick="besucherZaehlerZuruecksetzen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Stellt den Besucherzähler auf null – heute, gestern, gesamt. Die Liste unten bleibt."><i class="fas fa-rotate-left"></i> Zähler zurücksetzen</button>
+      <button onclick="besucherVerlaufLoeschen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Leert die Liste unten – wer wann von wo da war. Der Zähler bleibt."><i class="fas fa-trash"></i> Verlauf löschen</button>
+      <button onclick="neustartAnkuendigen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #d8b477; background:white; color:#8a5a10; cursor:pointer;" data-tooltip="Allen sagen, dass der Trainer gleich neu startet – dann reißt es nicht unangekündigt ab"><i class="fas fa-bullhorn"></i> Neustart ankündigen</button>
+      <!-- Aktualisieren und Schliessen als Paar mit margin-left:auto statt
+           eines Abstandhalters davor: So wandern sie beim Umbruch ZUSAMMEN
+           nach rechts in die zweite Reihe. Mit dem Abstandhalter blieb
+           Aktualisieren oben rechts und Schliessen stand allein unten
+           links. -->
+      <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+        <button onclick="besucherFensterAuffrischen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;"><i class="fas fa-rotate"></i> Aktualisieren</button>
+        <button onclick="besucherFensterZu()" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.05rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Schließen</button>
+      </div>
     </div>
   </div>
 </div>
@@ -35078,6 +36076,10 @@ function updateAuffrischenBadge() {
             btn.style.display = faellig.length > 0 ? 'inline-flex' : 'none';
             btn.setAttribute('data-tooltip', `🔄 ${faellig.length} gelernte Frage${faellig.length === 1 ? '' : 'n'} zur Auffrischung fällig`);
         }
+        // Fuer den naechsten Start merken - siehe das kleine Skript direkt
+        // unter der Leiste: Es zeigt den Knopf sofort, statt ihn erst nach
+        // dem Laden der Lerndaten nachzuschieben.
+        try { localStorage.setItem('auffrischen_zuletzt', String(faellig.length)); } catch (e2) {}
     } catch (e) {}
 }
 window.updateAuffrischenBadge = updateAuffrischenBadge;
