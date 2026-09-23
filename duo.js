@@ -1598,6 +1598,14 @@
             + (offenSeit ? '. Der Trainer läuft seit <b>' + dauerText(offenSeit, jetzt) + '</b>' : '')
             + (seit ? '.<br><span style="opacity:.8;">Gezählt seit ' + seit.toLocaleString('de-DE',
                 {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) + ' Uhr.</span>' : '.')
+            // Seit dem 23.09.2026: Besucher, die auf der Seite "gerade nicht
+            // online" standen, zaehlen mit (worker.js). Wie viele das waren,
+            // steht hier - in der Liste darunter tauchen sie nicht auf, der
+            // Trainer hat sie ja nicht gesehen.
+            + (j.offlineUebernommen ? '<br><span style="opacity:.8;">Davon <b>' + j.offlineUebernommen + '</b> '
+                + (j.offlineUebernommen === 1 ? 'Besucher, der vor verschlossener Tür stand'
+                                             : 'Besucher, die vor verschlossener Tür standen')
+                + ' (Seite „gerade nicht online“).</span>' : '')
             + (klopf ? '<br><span style="opacity:.8;">Dazu <b>' + klopf + '</b> '
                 + (klopf === 1 ? 'Aufruf, der' : 'Aufrufe, die') + ' nur angeklopft '
                 + (klopf === 1 ? 'hat' : 'haben') + ' — unten ausgegraut. '

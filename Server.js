@@ -1853,7 +1853,7 @@ const SEO_ADRESSE = 'https://amateurfunk-trainer.com';
 app.get('/robots.txt', (req, res) => {
   res.set('Content-Type', 'text/plain; charset=utf-8');
   res.set('Cache-Control', 'public, max-age=3600');
-  res.send('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /socket.io/\n\nSitemap: ' + SEO_ADRESSE + '/sitemap.xml\n');
+  res.send('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /socket.io/\nDisallow: /__auffang/\n\nSitemap: ' + SEO_ADRESSE + '/sitemap.xml\n');
 });
 app.get('/sitemap.xml', (req, res) => {
   let stand = '';
@@ -4851,6 +4851,8 @@ app.get('/api/besucher', localOnly, (req, res) => {
     // Die Laendersperre: wie viele Aufrufe sie seit dem Start abgewiesen
     // hat, wer gerade anfragt und wer schon freigegeben ist.
     abgewiesen: zutrittAbgewiesen,
+    // Wie viele davon vor verschlossener Tuer standen (Auffangseite).
+    offlineUebernommen: b.offlineUebernommen || 0,
     anfragen: anfragen,
     freigegeben: zutrittFrei.size,
     sperre: laenderSperreAn,
@@ -4947,12 +4949,53 @@ app.post('/api/neustart-ansage-weg', localOnly, (req, res) => {
 // jeder sehen, der den Trainer vor sich hat - auch der Besucher ueber den
 // geteilten Link. Herausgegeben werden nur Zahlen, keine Adressen, keine
 // Staedte, keine Namen; die Besucherliste selbst bleibt localOnly.
+// ----------------------------------------------------------------
+//  BESUCHER, DIE VOR VERSCHLOSSENER TUER STANDEN        (23.09.2026)
+//  Dietmar: "wenn mein Server nicht eingeschaltet ist, koennen wir auf
+//  der Seite, dass ich derzeit nicht On bin, einen Counter einbauen?" -
+//  derselbe Zaehler wie hier.
+//
+//  Die Auffangseite zaehlt bei Cloudflare mit (worker.js, DER
+//  BESUCHERZAEHLER). Kommt diese Abfrage ueber die eigene Domain, haengt
+//  der Worker den Stand dort an (x-auffang-offline: so viele insgesamt).
+//  Was davon neu ist, wird hier uebernommen; offlineAbgeholt merkt sich,
+//  bis wohin. In der Antwort steht beides, und der Worker merkt es sich
+//  fuer die naechste Auffangseite.
+//
+//  Die Kopfzeile wird nur geglaubt, wenn die Anfrage durch Cloudflare
+//  kam (cf-ray), und je Abfrage werden hoechstens 1000 uebernommen -
+//  eine Sicherung fuer den Fall, dass jemand sie am Worker vorbei selbst
+//  setzt. Ohne Worker oder ohne Kopfzeile aendert sich nichts.
+// ----------------------------------------------------------------
+function auffangUebernehmen(req, b){
+  const roh = req.headers['x-auffang-offline'];
+  if(roh === undefined || !req.headers['cf-ray']) return;
+  const offline = Math.floor(Number(roh));
+  if(!isFinite(offline) || offline < 0) return;
+  const abgeholt = b.offlineAbgeholt || 0;
+  if(offline > abgeholt){
+    const neu = Math.min(offline - abgeholt, 1000);
+    b.echte = (b.echte || 0) + neu;
+    b.offlineUebernommen = (b.offlineUebernommen || 0) + neu;
+    b.offlineAbgeholt = abgeholt + neu;
+    besucherSchreiben(true);
+    console.log('[BESUCHER] ' + neu + (neu === 1 ? ' Besuch' : ' Besuche')
+              + ' von der Auffangseite uebernommen (waehrend der Trainer nicht erreichbar war).');
+  } else if(offline < abgeholt){
+    // Der Speicher bei Cloudflare wurde neu angelegt - von vorn.
+    b.offlineAbgeholt = offline;
+    besucherSchreiben(true);
+  }
+}
+
 app.get('/api/besucherzahl', (req, res) => {
   try{
     const b = zaehlerFrisch(besucherLesen(), Date.now());
+    try{ auffangUebernehmen(req, b); }catch(e){}
     res.set('Cache-Control', 'no-store');
     res.json({ heute: b.heute || 0, gestern: b.gestern || 0,
-               gesamt: b.echte || 0, seit: b.seit || 0 });
+               gesamt: b.echte || 0, seit: b.seit || 0,
+               offlineAbgeholt: b.offlineAbgeholt || 0 });
   }catch(e){ res.json({ heute:0, gestern:0, gesamt:0, seit:0 }); }
 });
 
@@ -4967,7 +5010,7 @@ app.post('/api/besucher/reset', localOnly, (req, res) => {
   // benoetigen wir einen Button, den Verlauf loeschen." Vorher raeumte
   // dieser Knopf beides auf einmal weg, ohne es zu sagen.
   const b = besucherLesen();
-  b.gesamt = 0; b.echte = 0; b.heute = 0; b.gestern = 0;
+  b.gesamt = 0; b.echte = 0; b.heute = 0; b.gestern = 0; b.offlineUebernommen = 0;
   b.tag = tagSchluessel(Date.now()); b.seit = Date.now();
   besucherSchreiben(true);
   console.log('[BESUCHER] Zaehler zurueckgesetzt (Liste bleibt).');
