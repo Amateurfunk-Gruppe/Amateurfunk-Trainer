@@ -1830,6 +1830,12 @@ function tuerAufFuer(req){
   // Tuer. Wer vor verschlossener Tuer steht, soll nachlesen koennen,
   // wer hier wohnt und was mit seinen Daten geschieht. (22.09.2026)
   if(String(req.path || '').toLowerCase() === '/support.html') return true;
+  // Die Zaehlerabfrage auch: Ueber sie gleicht der Worker bei Cloudflare
+  // den Besucherzaehler der Auffangseite ab (23.09.2026). Bei zu-er Tuer
+  // kam hier sonst 503, und der Abgleich blieb aus - genau dann, wenn
+  // die Auffangseite die Zahl am dringendsten braucht. Herausgegeben
+  // werden nur drei Zahlen.
+  if(String(req.path || '') === '/api/besucherzahl') return true;
   const kennung = String(req.headers['user-agent'] || '');
   if(VORSCHAU_CRAWLER.test(kennung)) return true;
   if(SUCHMASCHINEN.test(kennung)) return true;

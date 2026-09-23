@@ -18862,9 +18862,46 @@ window.tuerKnopfStarten = tuerKnopfStarten;
 // ================================================================
 let zaehlerUhr = null;
 
+// ----------------------------------------------------------------
+//  DER ABGLEICH MIT DER AUFFANGSEITE                    (23.09.2026)
+//  Dietmar: "es gibt keinen Besucherzaehler" - auf der Seite "gerade
+//  nicht online". Der Worker bei Cloudflare kennt die Zahl nur, wenn
+//  die Zaehlerabfrage einmal UEBER DIE DOMAIN gelaufen ist. Dietmar
+//  selbst oeffnet den Trainer aber ueber localhost - da kommt der
+//  Worker nie vorbei, und die Auffangseite blieb ohne Kaestchen.
+//
+//  Deshalb fragt die Seite am Trainer-PC zusaetzlich einmal in der
+//  Minute ueber die eigene Adresse nach (Gruppenraum -> "Eigene
+//  Adresse"). Die Anfrage laeuft durch Cloudflare und den Worker zum
+//  eigenen Trainer zurueck; dabei gleichen sich beide ab. Aus einem
+//  Browser, nicht vom Server aus: Der Bot Fight Mode wuerde eine
+//  Anfrage ohne Browser abweisen.
+//
+//  Nur am Trainer-PC selbst und nur, wenn eine eigene Adresse
+//  eingetragen ist - bei allen anderen, die den Trainer von GitHub
+//  holen, passiert hier nichts. Schlaegt es fehl (Rechner offline,
+//  Tunnel aus), merkt es niemand.
+// ----------------------------------------------------------------
+async function auffangAbgleichen(){
+    try{
+        if(!laeuftLokal()) return;
+        const eigen = String(localStorage.getItem('duo_eigene_adresse') || '').trim().replace(/\/+$/, '');
+        if(!/^https?:\/\//i.test(eigen)) return;
+        if(eigen.toLowerCase() === location.origin.toLowerCase()) return;
+        const abbruch = new AbortController();
+        const uhr = setTimeout(() => abbruch.abort(), 6000);
+        await fetch(eigen + '/api/besucherzahl', { cache:'no-store', credentials:'omit', signal: abbruch.signal });
+        clearTimeout(uhr);
+    }catch(e){}
+}
+
 async function besucherZaehlerHolen(){
     const feld = document.getElementById('besucherZaehler');
     if(!feld) return;
+    // Erst ueber die Domain (dabei uebernimmt der Trainer, was vor
+    // verschlossener Tuer gezaehlt wurde), dann hier die Zahl holen -
+    // so steht sie in der Fusszeile gleich richtig.
+    await auffangAbgleichen();
     try{
         const r = await fetch('/api/besucherzahl', { cache:'no-store' });
         if(!r.ok) return;                       // aeltere Fassung: Zeile bleibt weg
