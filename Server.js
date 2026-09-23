@@ -1719,6 +1719,35 @@ app.use((req, res, next) => {
   next();
 });
 
+// ----------------------------------------------------------------
+//  SCHRIFTEN, SYMBOLE, BILDER DUERFEN IM BROWSER BLEIBEN (22.09.2026)
+//  Bei der Suchmaschinen-Pruefung aufgefallen: Auch Schriften, die
+//  Symbolschrift, die Fragenbilder und die Klaenge standen unter
+//  "no-store". Jeder Besucher holte sie bei jedem Aufruf neu - ueber
+//  die Leitung nach oben des Anschlusses zu Hause. Googles
+//  Geschwindigkeitspruefung (PageSpeed) wertet das ab.
+//
+//  Diese Dateien aendern sich praktisch nie. Schriften und die
+//  Symbolschrift duerfen deshalb eine Woche im Browser bleiben, die
+//  Fragenbilder und Klaenge einen Tag. "public" heisst ausserdem: Auch
+//  Cloudflare darf sie vorhalten und muss sie nicht jedes Mal bei
+//  diesem Rechner abholen.
+//
+//  Index.html, duo.js, die Fragen und alles unter /api/ bleiben bei
+//  "no-store" - ein Update muss beim naechsten Laden sofort da sein.
+// ----------------------------------------------------------------
+app.use((req, res, next) => {
+  try{
+    const p = String(req.path || '').toLowerCase();
+    if(p.indexOf('/fonts/') === 0 || p.indexOf('/fontawesome/') === 0){
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    } else if(p.indexOf('/svgs/') === 0 || p.indexOf('/sounds/') === 0 || p.indexOf('/formelsammlung/') === 0){
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }catch(e){}
+  next();
+});
+
 function wacheDurchlaesst(req){
   if(isLocalRequest(req)) return true;
   if(WACHE_BILDER.test(String(req.path || ''))) return true;
@@ -2561,11 +2590,24 @@ function ladeFragen(){
 }
 ladeFragen();
 
+// Gepackt wie alles andere auch (siehe GEPACKT AUSLIEFERN weiter
+// unten, 22.09.2026) - diese Route antwortet selbst und kaeme dort
+// nie an. 434 KB werden so 62 KB.
+let fragenGz = null;
 app.get('/fragen.json',(req,res)=>{
   try{
     ladeFragen();
     if(!fragenRohCache) return res.status(404).json({error:'nicht gefunden'});
     res.setHeader('Content-Type','application/json');
+    if(/\bgzip\b/i.test(String(req.headers['accept-encoding'] || ''))){
+      if(!fragenGz || fragenGz.quelle !== fragenRohCache){
+        fragenGz = { quelle: fragenRohCache, daten: zlib.gzipSync(Buffer.from(fragenRohCache), { level: 6 }) };
+      }
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Vary', 'Accept-Encoding');
+      res.setHeader('Content-Length', fragenGz.daten.length);
+      return res.end(fragenGz.daten);
+    }
     res.send(fragenRohCache);
   }catch(e){ console.error('[FRAGEN] Ausliefern fehlgeschlagen:', e.message); res.status(500).json({error:'Fehler'}); }
 });
@@ -5305,6 +5347,68 @@ app.get('/', (req, res, next) => {
                 + (b.liste[b.liste.length-1].woher ? ' ueber ' + b.liste[b.liste.length-1].woher : ''));
   }catch(e){}
   return next();
+});
+
+// ================================================================
+//  GEPACKT AUSLIEFERN                                   (22.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar, mit einem Seobility-Bericht: "Verbessere die Antwortzeit
+//  Deiner Seite."
+//
+//  Der Trainer schickte alles ungepackt. Ein Seitenaufruf sind 6,6 MB,
+//  und die gehen ueber die Leitung NACH OBEN des Anschlusses zu Hause -
+//  der langsamsten Stelle der ganzen Strecke. Text laesst sich aber gut
+//  packen: Index.html 2037 -> 586 KB, erklaerungen.json 2753 -> 760 KB,
+//  fragen.json 434 -> 62 KB. Zusammen etwa ein Viertel.
+//
+//  Ohne npm-Paket (wie beim ZIP und den Sicherheitskoepfen): zlib ist
+//  in Node eingebaut, und so muss auf keinem Rechner "npm install" neu
+//  laufen. Gepackt wird nur, was der Browser ausdruecklich annimmt
+//  (Accept-Encoding: gzip - Cloudflare fragt so an, jeder Browser
+//  auch), nur Text, und nur Dateien ab 1,5 KB. Das gepackte Ergebnis
+//  bleibt im Speicher, bis sich die Datei aendert; beim zweiten Aufruf
+//  kostet es also nichts mehr. Alles andere - Bilder, Klaenge,
+//  Schriften, die sind schon gepackt - laeuft wie bisher ueber
+//  express.static darunter. Faellt hier irgendetwas aus, ebenfalls.
+//
+//  Die Tuer, die Laendersperre, die Bremse und die Liste der
+//  oeffentlichen Dateien stehen alle WEITER OBEN. Hier kommt nur an,
+//  was ohnehin ausgeliefert wuerde.
+// ================================================================
+const GZ_ARTEN = { '.html':'text/html; charset=UTF-8', '.js':'application/javascript; charset=UTF-8',
+                   '.json':'application/json; charset=UTF-8', '.css':'text/css; charset=UTF-8',
+                   '.svg':'image/svg+xml', '.txt':'text/plain; charset=UTF-8',
+                   '.xml':'application/xml; charset=UTF-8', '.webmanifest':'application/manifest+json' };
+const gzSpeicher = new Map();   // voller Pfad -> { mtime, groesse, daten }
+app.use((req, res, next) => {
+  try{
+    if(req.method !== 'GET' && req.method !== 'HEAD') return next();
+    if(!/\bgzip\b/i.test(String(req.headers['accept-encoding'] || ''))) return next();
+    let rel;
+    try{ rel = decodeURIComponent(req.path); }catch(e){ return next(); }
+    if(rel === '/' || rel === '') rel = '/Index.html';
+    if(rel.indexOf('\0') !== -1 || rel.split(/[\\/]/).includes('..')) return next();
+    const voll = path.join(__dirname, rel);
+    if(!voll.startsWith(__dirname + path.sep)) return next();
+    const ext = path.extname(voll).toLowerCase();
+    const art = GZ_ARTEN[ext];
+    if(!art) return next();
+    let st;
+    try{ st = fs.statSync(voll); }catch(e){ return next(); }
+    if(!st.isFile() || st.size < 1500) return next();
+    let e = gzSpeicher.get(voll);
+    if(!e || e.mtime !== st.mtimeMs || e.groesse !== st.size){
+      e = { mtime: st.mtimeMs, groesse: st.size, daten: zlib.gzipSync(fs.readFileSync(voll), { level: 6 }) };
+      gzSpeicher.set(voll, e);
+    }
+    res.setHeader('Content-Type', art);
+    res.setHeader('Content-Encoding', 'gzip');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('Last-Modified', new Date(st.mtimeMs).toUTCString());
+    res.setHeader('Content-Length', e.daten.length);
+    if(req.method === 'HEAD') return res.end();
+    return res.end(e.daten);
+  }catch(err){ return next(); }
 });
 
 app.use(express.static(path.join(__dirname), {

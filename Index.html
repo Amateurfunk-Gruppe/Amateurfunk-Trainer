@@ -31,7 +31,7 @@
          sich diese Seite hier, und die hatte bisher keine Beschreibung.
          Dann sucht sich Google irgendeinen Satz aus dem Text. Derselbe
          Wortlaut wie in der Kachel. -->
-    <meta name="description" content="Amateurfunkprüfung üben: alle Prüfungsfragen der Bundesnetzagentur für Klasse N, E und A mit Erklärung zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum. Kostenlos, ohne Konto.">
+    <meta name="description" content="Alle Prüfungsfragen der Bundesnetzagentur für die Amateurfunkprüfung Klasse N, E und A – mit Erklärung zu jeder Frage. Kostenlos, ohne Konto.">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Das Zeichen im Browsertab. icon.png fuer alles Moderne, favicon.ico
          fuer das, was noch danach fragt. -->
@@ -74,13 +74,19 @@
          als WebApplication - damit Google weiss, dass das hier ein
          Programm ist und kein Blogeintrag. robots.txt und sitemap.xml
          liefert Server.js.
+
+         Am Abend desselben Tages gekuerzt, nach Dietmars Seobility-Test:
+         Titel 69 Zeichen und Beschreibung 187 Zeichen (1207 von hoechstens
+         1000 Pixeln) waren zu lang - Google schneidet dann mit "..." ab.
+         Jetzt 55 und 141 Zeichen. "Prüfungsfragen" und "Klasse N" stehen
+         auch im sichtbaren Text der Seite; das prueft der Test ebenfalls.
          ================================================================ -->
-    <title>Amateurfunk-Trainer – Prüfungsfragen Klasse N, E und A kostenlos üben</title>
+    <title>Amateurfunk-Trainer: Prüfungsfragen Klasse N, E, A üben</title>
     <link rel="canonical" href="https://amateurfunk-trainer.com/">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Amateurfunk-Trainer">
-    <meta property="og:title" content="Amateurfunk-Trainer – Prüfungsfragen Klasse N, E und A kostenlos üben">
+    <meta property="og:title" content="Amateurfunk-Trainer: Prüfungsfragen Klasse N, E, A üben">
     <meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung – mit Erklärung zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.">
     <meta property="og:url" content="https://amateurfunk-trainer.com/">
     <meta property="og:image" content="https://amateurfunk-trainer.com/vorschau.jpg">
@@ -322,12 +328,6 @@
             gap: 10px;
         }
         .header-left { display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
-        /* Der Satz unter der Wortmarke (22.09.2026, siehe das Markup vor
-           der Filterleiste). Er sitzt im Abstand zwischen Kopfzeile und
-           Leiste und nimmt so gut wie keine Hoehe weg. */
-        .start-satz { margin: -0.1rem 0 0.75rem; font-size: 0.8rem; line-height: 1.45; color: var(--muted); }
-        body.runde-laeuft .start-satz, body.handy .start-satz { display: none; }
-        body.dark .start-satz { color: #a6b4c6; }
         .header h1 {
             font-family: var(--font-display);
             font-size: 1.5rem;
@@ -6888,13 +6888,11 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         </div>
     </div>
 
-    <!-- DER SATZ UNTER DER WORTMARKE                       (22.09.2026)
-         Dietmar zur Suchmaschinen-Frage: "Ja, einen Satz unter der
-         Wortmarke." Google liest vor allem sichtbaren Text, und die
-         Startansicht bestand bisher aus Knoepfen und Kacheln. Ein Satz,
-         klein und in der Farbe der Nebentexte; waehrend einer Runde und
-         am Handy ausgeblendet (siehe .start-satz im Stilblock). -->
-    <p class="start-satz" id="startSatz">Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung Klasse N, E und A – mit einer Erklärung zu jeder Frage, Prüfungssimulation und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.</p>
+    <!-- Hier stand vom 22.09.2026 an kurz ein Satz fuer die Suchmaschinen
+         ("Der amtliche Fragenkatalog der Bundesnetzagentur ..."). Dietmar,
+         mit Bild: "Das sieht oben doof aus." Er ist wieder raus. Dasselbe
+         steht fuer Google in der Beschreibung und den strukturierten Daten
+         im Kopf der Seite; sichtbar muss es dafuer nicht sein. -->
 
     <!-- FILTER -->
     <div class="filter-bar">
