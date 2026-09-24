@@ -1,6 +1,6 @@
 {
   "quelle": "Erklärungen zu den Fragen der Klasse N, der Aufstockung N nach E und der Aufstockung E nach A.",
-  "stand": "2026-09-15",
+  "stand": "2026-09-24",
   "umfang": "1750 Fragen: 571 in Klasse N, 463 in N → E und 716 in E → A. Damit sind ALLE VIER Prüfungsziele vollständig erklärt — Klasse N, Klasse E, der Aufstieg N → E und der Aufstieg E → A; die 1034 Fragen der Klasse E sind genau die 571 der Klasse N plus die 463 des Aufstiegs. Darunter alle 379 Fragen mit Zeichnung und alle 77 Fragen, deren Antworten Bilder sind. 834 Fragen hängen an einem der 76 Begriffsblätter; jedes Blatt trägt ein \"prinzip\". 529 Fragen haben darüber hinaus ein eigenes \"prinzip\"; bei 15 davon steht es neben dem des Blattes und hat dort Vorrang. 390 Fragen haben einen Rechenweg.",
   "hinweis": "Die Schlüssel unter warum_falsch sind die ANTWORTTEXTE, nicht a/b/c/d. So bleiben die Erklärungen richtig, auch wenn der Trainer die Antworten mischt. Bei den 18 Fragen, deren Antworten Bilder sind, gibt es keine Schlüssel — dort stehen die vier Bilder in \"bild\" und die Unterscheidung in \"kniff\".",
   "blaetter": "Ein Begriffsblatt steht nur einmal in dieser Datei; die Frage verweist mit \"gruppe\" darauf. Der Trainer zeigt dann die Liste des Blattes und darunter das, was nur zu dieser Frage gehört. Eine eigene \"liste\" im Eintrag hat Vorrang — so kann eine einzelne Frage abweichen, ohne das Blatt zu ändern. Eine Korrektur am Blatt gilt sofort bei allen Fragen, die darauf verweisen. Das Feld \"quelle\" eines Blattes nennt, woher die Angaben kommen, und kennzeichnet ausdrücklich, was Zusatzwissen ist und nicht geprüft wird.",
@@ -5277,7 +5277,7 @@
       "warum_falsch": {
         "0,17": "Mit 20 mA statt 25 mA gerechnet — der Strom der Z-Diode nur halb mitgezählt.",
         "0,34": "Das Spannungsverhältnis 4,7 V / 13,8 V. Beim Wirkungsgrad zählen Leistungen, und die Z-Diode verbraucht Strom, ohne etwas zu leisten.",
-        "0,21": "I_Z und I_L verwechselt: mit 4,7 V · 15 mA im Zähler kommt 0,20 heraus."
+        "0,21": "Durch die Leistung im Vorwiderstand statt durch die aufgenommene Leistung geteilt: 47 mW / (9,1 V · 25 mA) = 0,21."
       }
     },
     "AD803": {
@@ -5345,14 +5345,14 @@
       "frage": "Wie groß ist die Resonanzfrequenz dieser Schaltung, wenn die Kapazitäten C₁ = 0,1 nF, C₂ = 1,5 nF, C₃ = 220 pF und die Induktivität der Spule 1,2 mH betragen?",
       "richtig": "107,7 kHz",
       "bild": "Ein Parallelschwingkreis: die Spule und ALLE DREI Kondensatoren liegen zwischen denselben zwei Knoten. C1, C2 und C3 sind also parallel.",
-      "kniff": "Die Zeichnung entscheidet, ob addiert wird oder nicht — parallel heißt Kapazitäten addieren. Und die Einheiten muessen vorher gleich sein: 220 pF sind 0,22 nF.",
+      "kniff": "Die Zeichnung entscheidet, ob addiert wird oder nicht — parallel heißt Kapazitäten addieren. Und die Einheiten müssen vorher gleich sein: 220 pF sind 0,22 nF.",
       "weg": [
         "C = 0,1 nF + 1,5 nF + 0,22 nF = 1,82 nF",
         "f = 1 / (2π · √(1,2 mH · 1,82 nF))",
         "f = 107,7 kHz"
       ],
       "warum_falsch": {
-        "10,77 kHz": "Faktor 10 daneben — ein Komma verrutscht. Typisch, wenn 220 pF und 1,5 nF ohne Umrechnung addiert werden.",
+        "10,77 kHz": "Zehnmal zu klein — das entspricht einer hundertfach zu großen Kapazität (182 nF statt 1,82 nF), also einer verrutschten Zehnerpotenz beim Umrechnen.",
         "1,077 MHz": "Faktor 10 nach oben. Die Physik war richtig, die Zehnerpotenz nicht.",
         "1,077 kHz": "Faktor 100 nach unten. Dieselbe Rechnung, dreimal falsch gestellte Einheiten — deshalb sind drei von vier Antworten reine Zehnerpotenzen."
       }
@@ -5403,7 +5403,7 @@
       "warum_falsch": {
         "10,7 MHz": "Das ist die Zwischenfrequenz selbst, nicht die Störstelle am Antenneneingang.",
         "24,94 MHz": "Das ist der Oszillator selbst.",
-        "3,54 MHz": "14,24 − 10,70. Die ZF von der Empfangsfrequenz abgezogen statt zum Oszillator addiert — Vorzeichenfehler in der richtigen Formel."
+        "3,54 MHz": "14,24 − 10,70: die ZF von der Empfangsfrequenz abgezogen statt zum Oszillator addiert. Das wäre die Oszillatorfrequenz bei einem Oszillator unterhalb der Empfangsfrequenz — eine Spiegelfrequenz ist es nicht."
       }
     },
     "AB108": {
@@ -5446,8 +5446,8 @@
     "AB302": {
       "frage": "Welche Antwort enthält die richtigen Phasenwinkel der dargestellten sinusförmigen Wechselspannung an der mit X₃ bezeichneten Stelle?",
       "richtig": "(3π)/2; 270°",
-      "bild": "Eine ganze Sinusschwingung von 0 bis X₅. Bei 0 beginnt sie im Nulldurchgang und steigt; X₁ liegt auf dem Höchstwert +A, X₂ am absteigenden Nulldurchgang, X₃ im Tiefstwert −A, X₄ am aufsteigenden Nulldurchgang, X₅ wieder bei +A.",
-      "kniff": "Die fünf Marken teilen die Schwingung in Viertel. Eine ganze Schwingung sind 360° oder 2π — der Tiefstwert liegt bei drei Vierteln davon. Und beide Angaben einer Antwort müssen zueinander passen: 270° sind 3π/2.",
+      "bild": "Eine Sinusschwingung von 0 bis X₅, also eine und eine Viertel Periode. Bei 0 beginnt sie im Nulldurchgang und steigt; X₁ liegt auf dem Höchstwert +A, X₂ am absteigenden Nulldurchgang, X₃ im Tiefstwert −A, X₄ am aufsteigenden Nulldurchgang — dort endet die erste Periode —, X₅ wieder bei +A.",
+      "kniff": "Die Marken liegen im Abstand einer Viertelperiode. Eine ganze Schwingung sind 360° oder 2π — der Tiefstwert liegt bei drei Vierteln davon. Und beide Angaben einer Antwort müssen zueinander passen: 270° sind 3π/2.",
       "weg": [
         "ganze Schwingung: 360° = 2π",
         "X₁ = 90° = π/2, X₂ = 180° = π",
@@ -5786,7 +5786,7 @@
     "AD110": {
       "frage": "Wenn R₁ und R₃ je 2,2 kΩ haben und R₂ und R₄ je 220 Ω betragen, hat die Schaltung zwischen den Punkten a und b einen Gesamtwiderstand von ...",
       "richtig": "1210 Ω.",
-      "bild": "Eine Brückenschaltung zwischen a und b: links R₁ oben und R₂ unten, rechts R₃ oben und R₄ unten. In der Mitte verbindet ein Querzweig die beiden Mittelpunkte; er trägt zwei offene Anschlusspunkte, an die im Betrieb ein Messgerät gehört.",
+      "bild": "Eine Brückenschaltung zwischen a und b: links R₁ oben und R₂ unten, rechts R₃ oben und R₄ unten. In der Mitte verbindet ein Querzweig die beiden Mittelpunkte; auf ihm sitzen zwei kleine Kreise als Anschlusspunkte, etwa für ein Messgerät.",
       "kniff": "Zwei gleiche Zweige, jeder 2,2 kΩ + 220 Ω = 2420 Ω, parallel also die Hälfte. Und die Gegenprobe: Weil die Brücke abgeglichen ist, kommt dasselbe heraus, wenn man den Querzweig als durchverbunden ansieht: (2,2 k ∥ 2,2 k) + (220 ∥ 220) = 1100 + 110 = 1210 Ω. Bei einer abgeglichenen Brücke ist der Querzweig gleichgültig.",
       "weg": [
         "ein Zweig: 2200 Ω + 220 Ω = 2420 Ω",
@@ -5821,7 +5821,7 @@
       ],
       "warum_falsch": {
         "2,5 V": "Ein Viertel der Betriebsspannung. Dazu müsste ein Teiler im Verhältnis 1:3 stehen — hier sind alle vier Widerstände gleich.",
-        "-5 V": "Das käme heraus, wenn A auf 0 V und B auf 5 V läge, also bei einem vollständig verstimmten linken Zweig (R₁ kurzgeschlossen oder R₂ unterbrochen).",
+        "-5 V": "Das käme heraus, wenn A auf 0 V und B auf 5 V läge, also bei einem vollständig verstimmten linken Zweig (R₂ kurzgeschlossen oder R₁ unterbrochen).",
         "5 V": "Das ist die Spannung von A gegen Masse — oder von B gegen Masse. Gefragt ist die Spannung ZWISCHEN A und B, also die Differenz der beiden."
       }
     },
@@ -5865,7 +5865,7 @@
       "warum_falsch": {
         "I₁ sinkt, R₂ setzt mehr Leistung in Wärme um.": "Beide Hälften verkehrt. Ein zusätzlicher Widerstand PARALLEL senkt den Gesamtwiderstand, I₁ steigt also. Und an R₂ sinkt die Spannung, damit auch die Leistung.",
         "I₂ steigt, R₁ setzt weniger Leistung in Wärme um.": "I₂ ist der Strom durch R₂ — der sinkt, weil U₂ sinkt. Und an R₁ wird mehr Leistung frei, nicht weniger.",
-        "I₁ steigt, R₂ setzt mehr Leistung in Wärme um.": "Die erste Hälfte stimmt. Die zweite nicht: an R₂ liegen jetzt 1,8 V statt 2,2 V, und weniger Spannung an gleichem Widerstand heißt weniger Leistung."
+        "I₁ steigt, R₂ setzt mehr Leistung in Wärme um.": "Die erste Hälfte stimmt. Die zweite nicht: an R₂ sinkt die Spannung (im Zahlenbeispiel von AD114: 1,8 V statt 2,2 V), und weniger Spannung an gleichem Widerstand heißt weniger Leistung."
       }
     },
     "AD201": {
@@ -5984,7 +5984,7 @@
       "warum_falsch": {
         "1590 kHz": "Zehnmal zu groß — das wäre der Wert, wenn L · C um zwei Zehnerpotenzen zu klein angesetzt wird, etwa mit 0,1 nF statt 10 nF.",
         "1,59 kHz": "Hundertmal zu klein.",
-        "15,9 kHz": "Zehnmal zu klein: hier hat die verwechselte Einheit von C zugeschlagen."
+        "15,9 kHz": "Zehnmal zu klein: Hier ist L · C um zwei Zehnerpotenzen zu groß angesetzt, etwa mit C = 1 µF statt 0,01 µF."
       }
     },
     "AD211": {
@@ -6102,13 +6102,13 @@
       "kniff": "Ein Kondensator hinter einer Diode lädt sich nicht auf den Effektivwert, sondern auf den Spitzenwert der Sekundärspannung auf. Das Übersetzungsverhältnis gilt für die Effektivwerte, der Faktor 1,41 kommt danach.",
       "weg": [
         "Sekundärspannung: 230 V / 20 = 11,5 V (Effektivwert)",
-        "Der Kondensator lädt sich auf den Spitzenwert: 11,5 V · 1,41 = 16,3 V",
-        "Sicherheitsaufschlag 50 %: 16,3 V · 1,5 = 24,4 V",
+        "Der Kondensator lädt sich auf den Spitzenwert: 11,5 V · √2 = 16,3 V",
+        "Sicherheitsaufschlag 50 %: 16,3 V · 1,5 ≈ 24,5 V",
         "Nächster erhältlicher Wert darüber: 25 V"
       ],
       "warum_falsch": {
         "16 V": "Das ist der Spitzenwert 16,3 V allein — der Aufschlag von 50 % fehlt.",
-        "10 V": "Zu klein: 10 V liegt sogar unter dem Effektivwert von 11,5 V. Auf diese Zahl führt am ehesten der Aufschlag in die falsche Richtung, 16,3 V / 1,5 = 10,8 V statt · 1,5.",
+        "10 V": "Zu klein: 10 V liegt sogar unter dem Effektivwert von 11,5 V. Auf diese Zahl führt am ehesten der Aufschlag in die falsche Richtung, 16,3 V / 1,5 ≈ 10,9 V statt · 1,5.",
         "35 V": "Mit dem Faktor 2 statt 1,41 gerechnet, also mit dem Spitze-Spitze-Wert: 11,5 V · 2 = 23 V, · 1,5 = 34,5 V, aufgerundet 35 V."
       }
     },
@@ -6133,15 +6133,15 @@
       "frage": "Wenn man folgendes Signal an den Eingang der gezeigten Schaltung anlegt, beträgt die Ausgangsspannung zwischen A und B ungefähr ...",
       "richtig": "5 V.",
       "bild": "Oben ein Oszillogramm: 2 V je Teilung, die unterste Rasterlinie ist mit 0 V beschriftet. Der Sägezahn steigt langsam an und fällt steil ab; seine Spitzen liegen auf der fünften Linie über 0 V (10 V), seine Täler auf der vierten (8 V). Das Signal pendelt also zwischen 8 V und 10 V und wird nie negativ. Unten die Schaltung: von der Eingangsklemme links läuft die obere Leitung zum Kollektor des NPN-Transistors, dessen Emitter rechts auf Punkt A geht. Vom Eingang führt ein 470-Ohm-Widerstand nach unten auf einen Knoten, an dem die Z-Diode 5,6 V (Kathode oben) nach B liegt; derselbe Knoten geht auf die Basis, dort zusätzlich der Elko 47 µF (Plus oben) nach B. Von A liegt 1 kΩ als Last nach B.",
-      "kniff": "Der Transistor arbeitet als Emitterfolger: die Z-Diode legt die Basis auf 5,6 V, der Emitter folgt ihr, bleibt aber um die Basis-Emitter-Spannung von etwa 0,7 V darunter. Abziehen, nicht addieren. Der Sägezahn ist nur die Stütze — solange er über der Z-Spannung bleibt, hat seine Form auf den Ausgang keinen Einfluss.",
+      "kniff": "Der Transistor arbeitet als Emitterfolger: die Z-Diode legt die Basis auf 5,6 V, der Emitter folgt ihr, bleibt aber um die Basis-Emitter-Spannung von etwa 0,6 V darunter. Abziehen, nicht addieren. Der Sägezahn ist nur die Stütze — solange er über der Z-Spannung bleibt, hat seine Form auf den Ausgang keinen Einfluss.",
       "weg": [
         "Die Z-Diode hält die Basis auf 5,6 V",
-        "Basis-Emitter-Spannung des leitenden Transistors: etwa 0,7 V",
-        "Ausgang: 5,6 V − 0,7 V = 4,9 V, also ungefähr 5 V"
+        "Basis-Emitter-Spannung des leitenden Transistors: etwa 0,6 V",
+        "Ausgang: 5,6 V − 0,6 V = 5,0 V, also ungefähr 5 V"
       ],
       "warum_falsch": {
-        "5,6 V.": "Die Z-Spannung direkt übernommen — der Spannungsabfall von 0,7 V zwischen Basis und Emitter fehlt.",
-        "6,2 V.": "Die 0,7 V addiert statt abgezogen: 5,6 V + 0,7 V = 6,3 V. Ein Emitterfolger hebt die Spannung nie an.",
+        "5,6 V.": "Die Z-Spannung direkt übernommen — der Spannungsabfall von rund 0,6 V zwischen Basis und Emitter fehlt.",
+        "6,2 V.": "Die 0,6 V addiert statt abgezogen: 5,6 V + 0,6 V = 6,2 V. Ein Emitterfolger hebt die Spannung nie an.",
         "11,2 V.": "Die Z-Spannung verdoppelt: 2 · 5,6 V = 11,2 V. Das liegt sogar über dem höchsten Eingangswert von 10 V — mehr als am Eingang ansteht kann hinten nie herauskommen."
       }
     },
@@ -6173,9 +6173,9 @@
       "bild": "Oben die Plus-Schiene, unten die Minus-Schiene (mit Massezeichen), links oben die Batterie als Stromversorgung. Der NPN-Transistor sitzt rechts: sein Kollektor geht auf kürzestem Weg nach oben an Plus, ohne jeden Widerstand. Vom Emitter führt ein Widerstand nach unten an Minus. Die Basis hängt am Spannungsteiler aus zwei Widerständen, der obere von Plus zum Basisknoten, der untere vom Basisknoten nach Minus. Der Eingang E kommt über einen Koppelkondensator auf diesen Basisknoten. Der Ausgang A wird über einen Koppelkondensator am Emitterknoten abgegriffen, nicht am Kollektor.",
       "kniff": "Am Eingang wirkt nur der kleine Basisstrom, deshalb ist die Basis hochohmig. Am Emitter fließt der ganze Kollektorstrom, und jede Änderung der Ausgangsspannung wird sofort über die Basis-Emitter-Strecke gegengekoppelt — der Ausgang ist niederohmig, oft nur einige Ohm. Genau deshalb nimmt man diese Schaltung: zum Anpassen von hochohmig auf niederohmig, nicht zum Verstärken der Spannung.",
       "warum_falsch": {
-        "sehr hoch im Vergleich zur Eingangsimpedanz.": "Genau verdreht. Eine hochohmige Quelle mit niederohmigem Eingang hat der Transistor in dieser Beschaltung nicht; die Basis nimmt kaum Strom auf, der Emitter kann viel liefern.",
+        "sehr hoch im Vergleich zur Eingangsimpedanz.": "Genau verdreht: Die Basis nimmt kaum Strom auf und ist deshalb hochohmig, der Emitter kann viel Strom liefern und ist niederohmig.",
         "in etwa gleich der Eingangsimpedanz und hochohmig.": "Gleiche Impedanzen an beiden Enden würden die Schaltung sinnlos machen — sie soll ja umsetzen. Hochohmig ist nur der Eingang.",
-        "in etwa gleich der Eingangsimpedanz und niederohmig.": "Niederohmig ist nur der Ausgang. Der Eingang liegt an der Basis und ist hochohmig, sonst würde der Koppelkondensator die Quelle belasten."
+        "in etwa gleich der Eingangsimpedanz und niederohmig.": "Niederohmig ist nur der Ausgang. Der Eingang liegt an der Basis und ist hochohmig, sonst würde die Stufe die Signalquelle belasten."
       }
     },
     "AD404": {
@@ -6641,7 +6641,7 @@
       "kniff": "Im Leerlauf fließt kein Strom, also fällt an der Drossel nichts ab und die Kondensatoren bleiben auf dem Höchstwert stehen. Das Windungsverhältnis gilt für die Effektivwerte; geladen wird aber auf den Spitzenwert, und bei der Brücke wird jede Halbwelle genutzt.",
       "weg": [
         "Sekundärspannung: 230 V / 8 = 28,75 V (Effektivwert)",
-        "Spitzenwert: 28,75 V · 1,41 = 40,6 V",
+        "Spitzenwert: 28,75 V · √2 = 40,7 V",
         "Im Leerlauf kein Strom, kein Abfall an der Drossel: C_S steht auf diesem Wert",
         "Ergebnis: etwa 40 V"
       ],
@@ -6677,7 +6677,7 @@
       "frage": "Bei dieser Schaltung handelt es sich um ...",
       "richtig": "einen Verstärker in Emitterschaltung.",
       "bild": "In der Mitte ein NPN-Transistor, Basis links. Am Basisknoten hängt links das Eingangssignal E über einen Koppelkondensator; vom selben Knoten geht ein Widerstand nach oben zur +-Leitung und einer nach unten zur −-Leitung — der Basisspannungsteiler. Der Kollektor führt über einen Widerstand nach oben zur +-Leitung; vom Kollektorknoten geht das Ausgangssignal A über einen zweiten Koppelkondensator nach rechts. Der Emitter führt über einen Widerstand nach unten zur −-Leitung, und parallel zu diesem Widerstand liegt ein Kondensator. Links oben noch ein Kondensator von der +-Leitung nach Masse (Betriebsspannung abblocken).",
-      "kniff": "Den Namen bestimmt die Elektrode, die für das Wechselsignal Eingang und Ausgang gemeinsam ist. Der Emitterkondensator legt den Emitter wechselstrommäßig auf die Betriebsspannungsleitung — der Emitter ist die gemeinsame Elektrode. Eingang an der Basis, Ausgang am Kollektor: Emitterschaltung.",
+      "kniff": "Den Namen bestimmt die Elektrode, die für das Wechselsignal Eingang und Ausgang gemeinsam ist. Der Emitterkondensator legt den Emitter wechselstrommäßig auf Masse — der Emitter ist die gemeinsame Elektrode. Eingang an der Basis, Ausgang am Kollektor: Emitterschaltung.",
       "warum_falsch": {
         "einen Verstärker als Emitterfolger.": "Beim Emitterfolger wird das Signal am Emitter abgenommen. Hier liegt der Emitter über den Kondensator fest, und A hängt am Kollektor.",
         "einen Verstärker in Kollektorschaltung.": "Kollektorschaltung ist nur der andere Name für den Emitterfolger. Dazu müsste der Kollektor die gemeinsame Elektrode sein; er hängt hier aber am Arbeitswiderstand und trägt den Ausgang.",
@@ -6690,7 +6690,7 @@
       "bild": "In der Mitte ein NPN-Transistor, Basis links. Am Basisknoten hängt links das Eingangssignal E über einen Koppelkondensator; vom selben Knoten geht ein Widerstand nach oben zur +-Leitung und einer nach unten zur −-Leitung — der Basisspannungsteiler. Der Kollektor führt über einen Widerstand nach oben zur +-Leitung; vom Kollektorknoten geht das Ausgangssignal A über einen zweiten Koppelkondensator nach rechts. Der Emitter führt über einen Widerstand nach unten zur −-Leitung, und parallel zu diesem Widerstand liegt ein Kondensator. Links oben noch ein Kondensator von der +-Leitung nach Masse (Betriebsspannung abblocken).",
       "kniff": "Der Emitterkondensator hebt die Gegenkopplung auf, deshalb bleibt die Verstärkung groß. Das Vorzeichen steckt im Kollektorwiderstand: mehr Basisspannung heißt mehr Kollektorstrom, mehr Abfall am Kollektorwiderstand, also weniger Spannung am Kollektor. Der Ausgang läuft dem Eingang entgegen — 180 °. Diese Umkehr ist das Kennzeichen der Emitterschaltung.",
       "warum_falsch": {
-        "v_U ist groß (z. B. 100 ... 300) und φ = 0°": "Der Betrag stimmt, die Phase nicht. Eine Emitterschaltung dreht immer um 180 °; ohne Umkehr käme man nur über zwei Stufen hintereinander.",
+        "v_U ist groß (z. B. 100 ... 300) und φ = 0°": "Der Betrag stimmt, die Phase nicht. Eine Emitterschaltung dreht immer um 180 °. Große Verstärkung ohne Phasendrehung liefert die Basisschaltung — hier wird aber an der Basis eingespeist und am Kollektor abgenommen.",
         "v_U ist klein (z. B. 0,9 ... 0,98) und φ = 0°.": "Das sind die Werte der Kollektorschaltung (Emitterfolger) — dort hängt der Ausgang am Emitter. Hier hängt er am Kollektor.",
         "v_U ist klein (z. B. 0,9 ... 0,98) und φ = 180°.": "Diese Verbindung gibt es bei keiner der drei Grundschaltungen: knapp unter 1 verstärkt nur der Emitterfolger, und der dreht die Phase gerade nicht. Eine Blindantwort."
       }
@@ -7128,7 +7128,7 @@
       ],
       "warum_falsch": {
         "13,5 V ±1,5 V; 100 Hz": "Die Frequenz stimmt, aber 13,5 V ±1,5 V ist die Ausgangsspannung samt Gleichanteil (Täler 12 V, Spitzen 15 V). Gefragt ist die Restwelligkeit allein, und die wird Spitze zu Spitze angegeben: 3 V.",
-        "13,5 V ±1,5 V; 50 Hz": "Doppelt daneben: der Gleichanteil steckt noch in der Spannungsangabe, und die Periode ist von Tal zu Spitze abgelesen (1 Div = 5 ms) beziehungsweise die Netzfrequenz einfach übernommen.",
+        "13,5 V ±1,5 V; 50 Hz": "Doppelt daneben: Der Gleichanteil steckt noch in der Spannungsangabe, und die Frequenz ist ungeprüft von der Netzfrequenz übernommen.",
         "3 V; 50 Hz": "Die Welligkeit ist richtig abgelesen, die Frequenz aber nicht: hier sind 50 Hz ungeprüft von der Netzfrequenz übernommen. Das Raster zeigt 10 ms pro Periode, und 10 ms sind 100 Hz — der Brumm einer Zweiweggleichrichtung hat die doppelte Netzfrequenz."
       }
     },
@@ -7266,7 +7266,7 @@
       "warum_falsch": {
         "Sie stabilisiert die Betriebsspannung für den Oszillator, um diesen von der Stromversorgung der anderen Stufen zu entkoppeln.": "Zum Stabilisieren müsste die Diode im Durchbruch arbeiten und quer über der Betriebsspannung liegen, also vom Pluspunkt nach Masse. Sie liegt aber hinter einem Koppelkondensator am Signalknoten, und durch den Widerstand fließt nur der winzige Sperrstrom. Entkoppelt wird hier nichts.",
         "Sie begrenzt die Amplituden des Eingangssignals und vermeidet so die Übersteuerung der Oszillatorstufe.": "Begrenzen könnte nur eine Diode, die leitet — dafür bräuchte es zwei gegensinnig gepolte Dioden oder eine in Durchlassrichtung. Diese eine ist gesperrt und bleibt es; sie schneidet nichts ab.",
-        "Sie dient zur Erzeugung von Amplitudenmodulation in Abhängigkeit von den Frequenzen im Basisband.": "Die Diode sitzt am Schwingkreis, der die Frequenz bestimmt, und verändert dessen Kapazität. Damit wandert die Frequenz, nicht die Amplitude. Für AM müsste die NF die Amplitude eines schon vorhandenen Trägers steuern; einen Träger gibt es an dieser Stelle noch nicht, der Oszillator kommt erst danach."
+        "Sie dient zur Erzeugung von Amplitudenmodulation in Abhängigkeit von den Frequenzen im Basisband.": "Die Diode sitzt am Schwingkreis, der die Frequenz bestimmt, und verändert dessen Kapazität. Damit wandert die Frequenz, nicht die Amplitude. Für AM müsste die NF die Amplitude des Trägers steuern — hier ändert sie nur seine Frequenz."
       }
     },
     "AF408": {
@@ -7455,13 +7455,13 @@
       "weg": [
         "Zwei Dioden, entgegengesetzt geladen: 15,3 V = 2 · (Û − 0,23 V)",
         "Spitzenwert an der Anzapfung: Û = (15,3 V + 0,46 V) / 2 = 7,88 V",
-        "Effektivwert an der Anzapfung: 7,88 V / 1,41 = 5,57 V",
+        "Effektivwert an der Anzapfung: 7,88 V / √2 = 5,57 V",
         "Anzapfung bei 5 Ω von 50 Ω, also ein Zehntel: Gesamtspannung 5,57 V · 10 = 55,7 V",
         "P = U² / R = 55,7 V · 55,7 V / 50 Ω = 62 W, also zirka 60 W"
       ],
       "warum_falsch": {
-        "Zirka 240 W": "Die Verdoppelung durch die zweite Diode ist vergessen: 15,3 V + 0,23 V = 15,53 V als Spitzenwert genommen, / 1,41 = 10,98 V, · 10 = 109,8 V, daraus 109,8 · 109,8 / 50 = 241 W. Die Schaltung liefert aber die Summe beider Halbwellen, der Spitzenwert ist nur halb so groß.",
-        "Zirka 480 W": "Hier fehlen beide Schritte: die Verdoppelung und der Effektivwert. 15,53 V direkt als Effektivwert an der Anzapfung, · 10 = 155,3 V, daraus 155,3 · 155,3 / 50 = 482 W. Das ist genau viermal zu viel — zweimal wegen der Dioden, zweimal wegen des fehlenden 1,41.",
+        "Zirka 240 W": "Die Verdoppelung durch die zweite Diode ist vergessen: 15,3 V + 0,23 V = 15,53 V als Spitzenwert genommen, / √2 = 10,98 V, · 10 = 109,8 V, daraus 109,8 · 109,8 / 50 = 241 W. Die Schaltung liefert aber die Summe beider Halbwellen, der Spitzenwert ist nur halb so groß.",
+        "Zirka 480 W": "Hier fehlen beide Schritte: die Verdoppelung und der Effektivwert. 15,53 V direkt als Effektivwert an der Anzapfung, · 10 = 155,3 V, daraus 155,3 · 155,3 / 50 = 482 W. Das ist knapp achtmal zu viel: Die fehlende Halbierung der Spannung vervierfacht die Leistung, der fehlende Faktor 1,41 verdoppelt sie noch einmal.",
         "Zirka 340 W": "Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort. Sie liegt zwischen den beiden nachvollziehbaren Fehlwegen (241 W und 482 W), ohne dass eine der Umrechnungen sie ergibt."
       }
     },
@@ -7601,7 +7601,7 @@
       "frage": "Was zeigt diese Schaltung?",
       "richtig": "Dämpfungsglied",
       "bild": "Zwei waagerechte Leitungen, links das Klemmenpaar des Eingangs, rechts das des Ausgangs. Am Eingang liegt R₁ quer von der oberen zur unteren Leitung. In der oberen Leitung folgt R₂ in Reihe. Am Ausgang liegt R₃ wieder quer zwischen oben und unten. Die untere Leitung läuft durch. Drei Widerstände in dieser Anordnung heißen Pi-Glied; Spulen oder Kondensatoren kommen nicht vor.",
-      "kniff": "Nur Widerstände — kein Blindwiderstand, also nichts, was von der Frequenz abhängt. Die Schaltung dämpft alle Frequenzen gleich stark und tut dabei noch etwas Zweites: durch die Wahl der drei Werte bleibt der Eingangswiderstand gleich, egal ob man mit 50 Ω abschließt oder das Glied umdreht.",
+      "kniff": "Nur Widerstände — kein Blindwiderstand, also nichts, was von der Frequenz abhängt. Die Schaltung dämpft alle Frequenzen gleich stark und tut dabei noch etwas Zweites: richtig bemessen, zeigt es mit 50 Ω abgeschlossen am Eingang wieder 50 Ω.",
       "warum_falsch": {
         "Tiefpass": "Ein Tiefpass braucht ein frequenzabhängiges Bauteil — eine Spule in Reihe oder einen Kondensator quer. Beides fehlt: R₂ liegt in Reihe, R₁ und R₃ quer, alle drei sind Widerstände.",
         "Hochpass": "Für einen Hochpass müsste ein Kondensator in Reihe liegen (hier liegt R₂) oder eine Spule quer (hier R₁ bzw. R₃). Ohne Blindwiderstände gibt es keine Grenzfrequenz.",
@@ -7693,7 +7693,7 @@
       "warum_falsch": {
         "8,9970 MHz": "Mit dem doppelten Abstand nach unten gerechnet: 9,0000 − 3 kHz (oder 9,0015 − 4,5 kHz). Gespiegelt wird aber um die Filtermitte, also nur um dieselben 1,5 kHz.",
         "9,0000 MHz": "Das ist die Filtermitte selbst. Dort liegen beide Seitenbänder im Durchlassbereich, das Filter kann keines abschneiden — heraus käme DSB statt SSB.",
-        "9,0030 MHz": "Um 1,5 kHz verschoben, aber in dieselbe Richtung weiter nach oben statt auf die andere Seite. Der Träger liegt dann noch weiter über dem Filter; übrig bleibt wieder das untere Seitenband, nur schwächer."
+        "9,0030 MHz": "Um 1,5 kHz verschoben, aber in dieselbe Richtung weiter nach oben statt auf die andere Seite. Der Träger liegt dann noch weiter über dem Filter; vom unteren Seitenband bliebe nur ein beschnittener Rest im Filter — ein oberes Seitenband entsteht so nicht."
       }
     },
     "AF312": {
@@ -7737,7 +7737,7 @@
       "warum_falsch": {
         "Zur Anpassung von 50 Ω an die hochohmige Eingangsimpedanz der Transistoren und die hochohmige Ausgangsimpedanz der Transistoren an 50 Ω.": "Beide Übertrager falsch herum gelesen. Mit 4:1 als Aufwärtstransformation kämen 200 Ω am Gate heraus und mit 1:9 als Abwärtstransformation 450 Ω am Drain — bei 50 V Betriebsspannung wären daraus nur wenige Watt zu holen.",
         "Zur Anpassung von 50 Ω an die niederohmige Eingangsimpedanz der Transistoren und die hochohmige Ausgangsimpedanz der Transistoren an 50 Ω.": "Die Eingangsseite stimmt, die Ausgangsseite nicht: T₂ ist mit 1:9 angeschrieben, transformiert also von wenigen Ohm an den Drains auf 50 Ω hinauf. Hochohmig wäre die Drainseite nur bei umgekehrter Richtung.",
-        "Zur Anpassung von 50 Ω an die hochohmige Eingangsimpedanz der Transistoren und die niederohmige Ausgangsimpedanz der Transistoren an 50 Ω.": "Die Ausgangsseite stimmt, die Eingangsseite nicht: T₁ mit 4:1 macht aus 50 Ω 12,5 Ω. Der Gate-Eingang einer HF-Endstufe wird zudem absichtlich niederohmig gehalten (R₅ = 51 Ω), damit die Stufe breitbandig und stabil bleibt."
+        "Zur Anpassung von 50 Ω an die hochohmige Eingangsimpedanz der Transistoren und die niederohmige Ausgangsimpedanz der Transistoren an 50 Ω.": "Die Ausgangsseite stimmt, die Eingangsseite nicht: T₁ mit 4:1 macht aus 50 Ω 12,5 Ω. Ein Leistungs-FET ist nur bei Gleichspannung hochohmig — bei HF bilden seine großen Gate-Kapazitäten einen kleinen Blindwiderstand, der Eingang ist also niederohmig."
       }
     },
     "AF418": {
@@ -7820,7 +7820,7 @@
       ],
       "warum_falsch": {
         "820 Ω": "Rechnet man ohne Abzug von U_D, kommen 13,8 V / 15 mA = 920 Ω heraus; davon der nächste Normwert nach unten ist 820 Ω. Genau getroffen wird die Zahl nur mit dieser doppelten Nachlässigkeit.",
-        "270 Ω": "Mit U_D statt mit der Differenz gerechnet: 4 V / 15 mA = 267 Ω ≈ 270 Ω. Damit flösse mehr als der dreifache Sollstrom.",
+        "270 Ω": "Mit U_D statt mit der Differenz gerechnet: 4 V / 15 mA = 267 Ω ≈ 270 Ω. Damit flössen 9,8 V / 270 Ω = 36 mA, rund das 2,4-Fache des Sollstroms.",
         "560 Ω": "Die 653 Ω zum nächstkleineren Normwert abgerundet. Dann fließen 9,8 V / 560 Ω = 17,5 mA statt 15 mA — der Arbeitspunkt liegt zu hoch."
       }
     },
@@ -7904,13 +7904,13 @@
       "weg": [
         "Halbe Leistung: E/E_max = 1/√2 = 0,707 (Punkt c auf der Skala)",
         "Kreisbogen durch c schlagen und die Schnittpunkte mit der Keule ablesen",
-        "Oberer Schnittpunkt bei etwa 27 °, unterer bei etwa 333 °, also 27 ° unterhalb der Achse",
-        "Halbwertsbreite = 27 ° + 27 ° ≈ 55 °"
+        "Oberer Schnittpunkt bei etwa 27,5 °, unterer bei etwa 332,5 °, also 27,5 ° unterhalb der Achse",
+        "Halbwertsbreite = 27,5 ° + 27,5 ° = 55 °"
       ],
       "warum_falsch": {
-        "Etwa 69°": "Bei E/E_max = 0,5 statt 0,707 abgelesen: dort liegen die Schnittpunkte bei etwa ±34 °, zusammen 69 °. 0,5 ist die halbe Feldstärke, aber nur ein Viertel der Leistung.",
-        "Etwa 27°": "Nur eine Hälfte gezählt: 27 ° ist der Winkel von der Achse bis zum oberen Schnittpunkt. Die Halbwertsbreite umfasst beide Seiten, also das Doppelte.",
-        "Etwa 34°": "Beide Fehler zusammen: bei 0,5 abgelesen (±34 °) und dann nur eine Hälfte genommen."
+        "Etwa 69°": "Bei E/E_max = 0,5 statt 0,707 abgelesen: dort liegen die Schnittpunkte bei etwa ±34,5 °, zusammen 69 °. 0,5 ist die halbe Feldstärke, aber nur ein Viertel der Leistung.",
+        "Etwa 27°": "Nur eine Hälfte gezählt: Rund 27 ° ist der Winkel von der Achse bis zum oberen Schnittpunkt. Die Halbwertsbreite umfasst beide Seiten, also das Doppelte.",
+        "Etwa 34°": "Beide Fehler zusammen: bei 0,5 abgelesen (±34,5 °) und dann nur eine Hälfte genommen."
       }
     },
     "AG410": {
@@ -8874,7 +8874,7 @@
       ],
       "warum_falsch": {
         "3 dB": "Nur Kabel 2 gezählt. Die 2 dB von Kabel 1 zwischen TX und Endstufe sind ein Verlust wie jeder andere und gehören dazu.",
-        "-5 dB": "Der Betrag ist richtig, das Vorzeichen dreht die Aussage um. Gefragt ist der Verlust, und ein Verlust von 5 dB wird als 5 dB Dämpfung angegeben. Mit −5 dB hätte man eine Pegeländerung hingeschrieben, also den Gewinn — und −5 dB Verlust wäre eine Verstärkung.",
+        "-5 dB": "Der Betrag ist richtig, das Vorzeichen dreht die Aussage um. Gefragt ist der Verlust, und ein Verlust von 5 dB wird als 5 dB Dämpfung angegeben. Mit −5 dB hätte man die Pegeländerung hingeschrieben; gefragt ist aber das Dämpfungsmaß, und das wird positiv angegeben — −5 dB Verlust wäre eine Verstärkung.",
         "-3 dB": "Hier stecken beide Fehler zusammen: nur ein Kabel gezählt und dazu das Minuszeichen einer Pegeländerung, obwohl nach dem Verlust gefragt ist."
       }
     },
@@ -12891,7 +12891,7 @@
       "richtig": "",
       "prinzip": "Oberschwingungen sind ganzzahlige Vielfache der Sendefrequenz und liegen damit immer oberhalb von ihr. Ein Ausgangsfilter muss deshalb bei der Nutzfrequenz durchlassen und oberhalb davon dämpfen; ob das eine Tiefpasskurve mit Grenzfrequenz über dem Band oder eine Durchlasskurve mit Maximum auf dem Band leistet, ist zweitrangig, entscheidend ist die Richtung. Ein Sender, der nur auf einem Band arbeitet, braucht nur diese eine Frequenz, die Durchlasskurve darf dort also schmal sein. Falsch ist jede Kurve, die an der Nutzfrequenz dämpft oder nach höheren Frequenzen hin ansteigt: sie schwächt das Nutzsignal und begünstigt die Oberschwingungen.",
       "bild": "Das richtige Bild zeigt eine Resonanzkurve: die Spannung steigt zur gestrichelt markierten Frequenz hin an, hat dort ihr Maximum und fällt nach beiden Seiten wieder ab, oberhalb also auch. Eines der anderen zeigt einen Hochpassverlauf, der unten bei null liegt, an der Marke ansteigt und dann bis zum rechten Rand oben bleibt. Die zwei übrigen zeigen Sperrkurven: durchgehend hoher Verlauf mit einem Einbruch bis fast auf null genau an der Marke, einmal schmal und steilwandig, einmal breit und rund.",
-      "kniff": "Lege den Finger auf die markierte Frequenz, das ist die Sendefrequenz, und sieh nach, was die Kurve dort und rechts davon tut. Gesucht ist hoch an der Marke und fallend nach rechts. Die drei anderen haben an der Marke zwar auch eine auffällige Form, aber in die falsche Richtung: zwei brechen dort ein und dämpfen damit das Nutzsignal, eine steigt erst oberhalb an und lässt gerade die Oberschwingungen durch.",
+      "kniff": "Lege den Finger auf die markierte Frequenz, das ist die Sendefrequenz, und sieh nach, was die Kurve dort und rechts davon tut. Gesucht ist hoch an der Marke und fallend nach rechts. Die drei anderen haben an der Marke zwar auch eine auffällige Form, aber in die falsche Richtung: zwei brechen dort ein und dämpfen damit das Nutzsignal, eine steigt erst oberhalb an und lässt gerade die Oberschwingungen durch. Die gesuchte Kurve ist die eines Bandpasses (Resonanzkurve).",
       "warum_falsch": {}
     },
     "ED210": {
@@ -20965,7 +20965,7 @@
       ],
       "warum_falsch": {
         "32 dB.": "Mit dem Faktor 20 gerechnet: 20 · log(40) = 32 dB. Der Faktor 20 gilt für Spannungs- und Stromverhältnisse, hier geht es um Leistung.",
-        "36,8 dB.": "Mit dem natürlichen Logarithmus gerechnet: 10 · ln(40) = 36,9. In der dB-Rechnung steht immer der Zehnerlogarithmus.",
+        "36,8 dB.": "Mit dem natürlichen Logarithmus gerechnet: 10 · ln(40) = 36,89 — im Katalog als 36,8 angegeben. In der dB-Rechnung steht immer der Zehnerlogarithmus.",
         "73,8 dB.": "Beide Fehler zusammen: 20 · ln(40) = 73,8. Falscher Faktor und falscher Logarithmus."
       }
     },
@@ -21060,8 +21060,8 @@
         "20 · 1,176 = 23,5 dB"
       ],
       "warum_falsch": {
-        "54 dB.": "Mit dem natürlichen Logarithmus gerechnet: 20 · ln(15) = 54,1. In dB steht der Zehnerlogarithmus.",
-        "11,7 dB.": "Mit dem Faktor 10 gerechnet: 10 · log(15) = 11,8. Der gilt für Leistungen, gefragt ist ein Spannungsverhältnis.",
+        "54 dB.": "Mit dem natürlichen Logarithmus gerechnet: 20 · ln(15) = 54,2, im Katalog gerundet auf 54 dB. In dB steht der Zehnerlogarithmus.",
+        "11,7 dB.": "Mit dem Faktor 10 gerechnet: 10 · log(15) = 11,76 — im Katalog als 11,7 angegeben. Der Faktor 10 gilt für Leistungen, gefragt ist ein Spannungsverhältnis.",
         "15 dB.": "Das Verhältnis direkt als dB-Wert abgeschrieben."
       }
     },
@@ -21169,14 +21169,14 @@
       "prinzip": "Dieselbe Formel rückwärts: aus R = ρ · l / A wird l = R · A / ρ.",
       "kniff": "Hier ist der Querschnitt schon gegeben — 0,5 mm² ist eine Fläche, kein Durchmesser. Wer daraus noch eine Fläche rechnet, rechnet einen Schritt zu viel.",
       "weg": [
-        "l = R · A / ρ",
-        "l = 1,5 · 0,5 / 0,018",
-        "l = 0,75 / 0,018 = 41,7 m"
+        "l = R · A / ρ, mit ρ(Kupfer) ≈ 0,018 Ω·mm²/m",
+        "l = 1,5 Ω · 0,5 mm² / 0,018 Ω·mm²/m",
+        "l = 0,75 / 0,018 m = 41,7 m"
       ],
       "warum_falsch": {
         "3,0 m": "R durch A geteilt: 1,5 / 0,5 = 3. Das spezifische ρ fehlt in der Rechnung ganz.",
         "4,2 m": "Zehnerpotenz daneben — richtig gerechnet wären es 41,7 m.",
-        "16,5 m": "Die 0,5 als Durchmesser gelesen und daraus erst eine Fläche gerechnet: π · 0,25² = 0,196 mm² ergibt 16,5 m. 0,5 mm² ist die Fläche selbst."
+        "16,5 m": "Die 0,5 als Durchmesser gelesen und daraus erst eine Fläche gerechnet: π · 0,25² = 0,196 mm² ergibt 16,4 m (mit ρ = 0,0178 genau 16,5 m). 0,5 mm² ist die Fläche selbst."
       }
     },
     "AB103": {
@@ -21196,7 +21196,7 @@
       "prinzip": "Ein reiner Halbleiterkristall hat bei Zimmertemperatur kaum freie Ladungsträger — er isoliert. Erst Fremdatome oder Wärme lösen Träger heraus und machen ihn leitend.",
       "kniff": "Der Anfang der Antwort entscheidet: rein ist der Halbleiter ein Isolator, nicht ein Leiter. Drei der vier Antworten fangen mit dem Gegenteil an.",
       "warum_falsch": {
-        "Einige Stoffe (z. B. Silizium) sind in reinem Zustand bei Raumtemperatur gute Elektrolyten. Durch geringfügige Zusätze von geeigneten anderen Stoffen (z. B. Bismut, Tellur) kann man daraus entweder N-leitendes- oder P-leitendes Material für Anoden bzw. Kathoden von Batterien herstellen.": "Ein Elektrolyt leitet über Ionen in einer Flüssigkeit. Ein Halbleiterkristall leitet über Elektronen und Löcher im Festkörper — und Bismut und Tellur sind nicht die Dotierstoffe für Silizium.",
+        "Einige Stoffe (z. B. Silizium) sind in reinem Zustand bei Raumtemperatur gute Elektrolyten. Durch geringfügige Zusätze von geeigneten anderen Stoffen (z. B. Bismut, Tellur) kann man daraus entweder N-leitendes- oder P-leitendes Material für Anoden bzw. Kathoden von Batterien herstellen.": "Ein Elektrolyt leitet über Ionen in einer Flüssigkeit. Ein Halbleiterkristall leitet über Elektronen und Löcher im Festkörper — und Bismut und Tellur sind nicht die üblichen Dotierstoffe für Silizium — das sind Bor und Phosphor.",
         "Einige Stoffe (z. B. Silizium) sind in reinem Zustand bei Raumtemperatur gute Leiter. Durch geringfügige Zusätze von geeigneten anderen Stoffen (z. B. Bor, Phosphor) oder bei hohen Temperaturen nimmt jedoch ihre Leitfähigkeit ab.": "Die Richtung stimmt nicht: Dotierung und Wärme machen den Halbleiter besser leitend, nicht schlechter.",
         "Einige Stoffe (z. B. Silizium) sind in reinem Zustand bei Raumtemperatur gute Leiter. Durch geringfügige Zusätze von geeigneten anderen Stoffen (z. B. Bismut, Tellur) fällt ihr Widerstand auf den halben Wert.": "Zweimal falsch: rein ist Silizium kein Leiter, und einen festen Faktor zwei gibt es nicht — die Leitfähigkeit lässt sich über viele Zehnerpotenzen einstellen."
       }
@@ -21209,7 +21209,7 @@
       "warum_falsch": {
         "Das Entfernen von Atomen aus dem Halbleitergrundstoff, um die elektrische Leitfähigkeit zu senken.": "Umgekehrt. Beim Dotieren kommen Atome hinzu; Lücken im Gitter sind ein Kristallfehler und nichts, was man absichtlich erzeugt.",
         "Das Entfernen von Verunreinigungen aus einem Halbleitergrundstoff, um Elektronen zu generieren.": "Das ist das Reinigen des Grundstoffs, der Schritt VOR dem Dotieren. Danach ist der Kristall besonders rein — und gerade deshalb ein Isolator.",
-        "Das Einbringen von magnetischen Nord- oder Südpolen in einen Halbleitergrundstoff, um die Induktivität zu erhöhen.": "Erfunden. Mit Magnetismus und Induktivität hat ein Halbleiter nichts zu tun."
+        "Das Einbringen von magnetischen Nord- oder Südpolen in einen Halbleitergrundstoff, um die Induktivität zu erhöhen.": "Erfunden. Mit Magnetismus und Induktivität hat die Dotierung nichts zu tun."
       }
     },
     "AB106": {
@@ -21313,7 +21313,7 @@
     "AB207": {
       "frage": "Die Leerlaufspannung einer Gleichspannungsquelle beträgt 13,5 V. Wenn die Spannungsquelle einen Strom von 2 A abgibt, sinkt die Klemmenspannung auf 13 V. Wie groß ist der Innenwiderstand der Spannungsquelle?",
       "richtig": "0,25 Ω",
-      "prinzip": "Wieder R_i = ΔU / I. Dieselbe Quelle wie in AB206, nur stärker belastet.",
+      "prinzip": "Wieder R_i = ΔU / I. Die Leerlaufspannung ist dieselbe wie in AB206, die Quelle aber eine andere: Ihr Innenwiderstand ist viel kleiner — sie bricht bei 2 A nur um 0,5 V ein.",
       "kniff": "Ein halbes Volt Einbruch bei 2 A — das sind 0,25 Ω. Die Zahlen sind klein, die Fehlerwege dieselben wie immer: multiplizieren statt teilen, oder den Bruch umdrehen.",
       "weg": [
         "ΔU = 13,5 V − 13 V = 0,5 V",
@@ -21409,7 +21409,7 @@
       "warum_falsch": {
         "13,9 %": "Spannungen und Ströme über Kreuz genommen: 5 V · 1 A durch 12 V · 3 A. Zusammen gehören immer die Werte einer Seite.",
         "125 %": "Bruch umgedreht: 15 / 12. Mehr als 100 % gibt es nicht.",
-        "28,6 %": "Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort."
+        "28,6 %": "Differenzen statt Leistungen ins Verhältnis gesetzt: (3 A − 1 A) / (12 V − 5 V) = 0,286. Zusammen gehören aber Spannung und Strom einer Seite — als Leistung."
       }
     },
     "AB301": {
@@ -21518,7 +21518,7 @@
       "frage": "Ein verlustloser Kondensator wird an eine Wechselspannungsquelle angeschlossen. Welche Phasenverschiebung zwischen Spannung und Strom stellt sich ein?",
       "richtig": "Der Strom eilt der Spannung um 90° voraus.",
       "prinzip": "Ein Kondensator muss erst geladen werden, bevor Spannung an ihm steht. Der Strom ist deshalb schon da, wenn die Spannung noch bei null liegt — beim idealen Kondensator genau eine Viertelperiode früher.",
-      "kniff": "Merkregel: Bei der Kapazität eilt der Strom voraus (C wie \"Strom kommt zuerst\"), bei der Induktivität die Spannung. Und es sind immer 90 °, solange kein Wirkwiderstand dabei ist — 45 ° kämen nur heraus, wenn Wirk- und Blindwiderstand gleich groß wären.",
+      "kniff": "Merkregel: „Beim Kondensator eilt der Strom vor, bei Induktivitäten wird er sich verspäten.“ Und es sind immer 90 °, solange kein Wirkwiderstand dabei ist — 45 ° kämen nur heraus, wenn Wirk- und Blindwiderstand gleich groß wären.",
       "warum_falsch": {
         "Die Spannung eilt dem Strom um 90° voraus.": "Das gilt für die Spule, nicht für den Kondensator. Die beiden verhalten sich genau entgegengesetzt.",
         "Der Strom eilt der Spannung um 45° voraus.": "Richtung richtig, Winkel falsch. 45 ° ergäben sich erst, wenn zum Blindwiderstand ein gleich großer Wirkwiderstand käme — der Kondensator ist hier aber verlustlos.",
@@ -21642,7 +21642,7 @@
       "frage": "Neben dem kapazitiven Blindwiderstand treten im von Wechselstrom durchflossenen Kondensator auch Verluste auf, die rechnerisch in einem parallelgeschalteten Verlustwiderstand zusammengefasst werden können. Die Kondensatorverluste werden oft durch ...",
       "richtig": "den Verlustfaktor tan δ angegeben, der dem Kehrwert des Gütefaktors entspricht.",
       "prinzip": "Der Verlustfaktor tan δ misst, wie weit der Strom von den idealen 90 ° abweicht. δ ist dieser Fehlwinkel, und tan δ ist genau der Kehrwert der Güte Q.",
-      "kniff": "tan δ und cos φ sind zwei verschiedene Dinge. cos φ ist der Leistungsfaktor eines ganzen Netzes, tan δ die Verlustkennzahl eines Bauteils. Die Frage prüft, ob man beides auseinanderhält.",
+      "kniff": "tan δ und cos φ sind zwei verschiedene Dinge. cos φ ist der Leistungsfaktor einer Last oder Schaltung, tan δ die Verlustkennzahl eines Bauteils. Die Frage prüft, ob man beides auseinanderhält.",
       "warum_falsch": {
         "den Verlustfaktor cos φ angegeben, der dem Kehrwert des Gütefaktors entspricht.": "cos φ ist der Leistungsfaktor und beschreibt das Verhältnis von Wirk- zu Scheinleistung. Der Kehrwert der Güte ist tan δ.",
         "den relativen Verlustwiderstand in Ohm pro Farad angegeben, mit dem die Kondensatorgüte berechnet werden kann.": "Ohm pro Farad ist keine gebräuchliche Angabe. Der Verlustwiderstand wird nicht auf die Kapazität bezogen, sondern über den Winkel ausgedrückt.",
@@ -21702,7 +21702,7 @@
       "frage": "Wie groß ist der Betrag des induktiven Blindwiderstands einer Spule mit 3 μH Induktivität bei einer Frequenz von 100 MHz?",
       "richtig": "ca. 1885 Ω",
       "prinzip": "X_L = 2π · f · L. Anders als beim Kondensator wird hier multipliziert, nicht geteilt.",
-      "kniff": "3 μH sind bei 100 MHz schon fast 2 kΩ — bei Kurzwelle wären es nur ein paar Ohm. Der Blindwiderstand einer Spule wächst mit der Frequenz, und genau deshalb wirkt dieselbe Drossel oben ganz anders als unten.",
+      "kniff": "3 μH sind bei 100 MHz schon fast 2 kΩ — auf 80 m (3,5 MHz) wären es nur rund 66 Ω. Der Blindwiderstand einer Spule wächst mit der Frequenz, und genau deshalb wirkt dieselbe Drossel oben ganz anders als unten.",
       "weg": [
         "X_L = 2π · f · L",
         "X_L = 6,283 · 100 · 10^6 Hz · 3 · 10^-6 H",
@@ -21734,7 +21734,7 @@
       "frage": "Wie groß ist die Induktivität einer Spule mit 300 Windungen, die auf einen Kern mit einer Induktivitätskonstante (A_L-Wert) von 1250 nH gewickelt ist?",
       "richtig": "112,5 mH",
       "prinzip": "Wieder L = A_L · N². Bei 300 Windungen ist N² schon 90 000 — deshalb werden aus Nanohenry schnell Millihenry.",
-      "kniff": "Die Umrechnung am Ende ist die eigentliche Hürde: 112 500 000 nH sind 112,5 mH. Drei Sprünge von nH über μH nach mH, und bei jedem kann eine Zehnerpotenz verloren gehen.",
+      "kniff": "Die Umrechnung am Ende ist die eigentliche Hürde: 112 500 000 nH sind 112,5 mH. Zwei Sprünge von nH über μH nach mH, und bei jedem kann eine Zehnerpotenz verloren gehen.",
       "weg": [
         "N² = 300² = 90 000",
         "L = 1250 nH · 90 000 = 112 500 000 nH",
@@ -21750,7 +21750,7 @@
       "frage": "Mit einem Ringkern, dessen Induktivitätskonstante (A_L-Wert) mit 250 nH angegeben ist, soll eine Spule mit einer Induktivität von 2 mH hergestellt werden. Wie groß ist die erforderliche Windungszahl etwa?",
       "richtig": "89",
       "prinzip": "Dieselbe Formel rückwärts: aus L = A_L · N² wird N = Wurzel aus (L / A_L).",
-      "kniff": "Beide Werte auf dieselbe Einheit bringen, bevor geteilt wird — 2 mH sind 2 000 000 nH. Und am Ende steht die Wurzel; wer sie vergisst, landet bei 2828 oder bei einer noch größeren Zahl.",
+      "kniff": "Beide Werte auf dieselbe Einheit bringen, bevor geteilt wird — 2 mH sind 2 000 000 nH. Und am Ende steht die Wurzel; wer sie vergisst, landet bei 8000 Windungen — die stehen nicht einmal zur Auswahl.",
       "weg": [
         "L / A_L = 2 · 10^-3 H / 250 · 10^-9 H = 8000",
         "N = Wurzel aus 8000",
@@ -21781,12 +21781,12 @@
     "AC209": {
       "frage": "Neben dem induktiven Blindwiderstand treten in der mit Wechselstrom durchflossenen Spule auch Verluste auf, die rechnerisch in einem seriellen Verlustwiderstand zusammengefasst werden können. Als Maß für die Verluste in einer Spule wird auch ...",
       "richtig": "der Verlustfaktor tan δ angegeben, der dem Kehrwert des Gütefaktors entspricht.",
-      "prinzip": "Auch bei der Spule ist tan δ das Maß für die Verluste, und auch hier ist es der Kehrwert der Güte Q.",
+      "prinzip": "Auch bei der Spule ist tan δ das Maß für die Verluste: Die Güte ist Q = X_L / R_S, der Verlustfaktor tan δ = R_S / X_L — also genau der Kehrwert der Güte.",
       "kniff": "Dieselbe Frage wie AC110, nur für die Spule — und mit denselben Ablenkungen. Beim Kondensator liegt der Verlustwiderstand rechnerisch parallel, bei der Spule in Reihe; an der Kennzahl ändert das nichts.",
       "warum_falsch": {
         "der relative Blindwiderstand in Ohm pro Henry angegeben, mit dem die Spulengüte berechnet werden kann.": "Der Blindwiderstand ist gerade der verlustfreie Anteil. Und Ohm pro Henry gibt es als Kennzahl nicht.",
         "der relative Verlustwiderstand in Ohm pro Henry angegeben, mit dem die Spulengüte berechnet werden kann.": "Ohm pro Henry ist keine gebräuchliche Angabe. Die Verluste werden über den Winkel ausgedrückt, nicht auf die Induktivität bezogen.",
-        "der Verlustfaktor cos φ angegeben, der dem Kehrwert des Gütefaktors entspricht.": "cos φ ist der Leistungsfaktor eines Netzes. Der Kehrwert der Güte ist tan δ."
+        "der Verlustfaktor cos φ angegeben, der dem Kehrwert des Gütefaktors entspricht.": "cos φ ist der Leistungsfaktor einer Last. Der Kehrwert der Güte ist tan δ."
       }
     },
     "AC210": {
@@ -21796,7 +21796,7 @@
       "kniff": "Schirmen kann nur Metall. Kunststoff ist für magnetische und elektrische Wechselfelder durchsichtig, gleich wie dick er ist. Der Preis der Schirmung: Die Güte sinkt etwas, weil im Blech Verluste entstehen.",
       "warum_falsch": {
         "einen abgestimmten Kunststoffkern aufweisen.": "Ein Kern verändert die Induktivität, er schirmt nicht. Und \"abgestimmt\" gibt es bei einem Kern nicht.",
-        "einen hohlen Kupferkern aufweisen.": "Kupfer im Inneren der Spule dämpft den Kreis stark und verstimmt ihn — genau deshalb dient ein Kupferkern als Abgleichmittel, nicht als Schirm. Abgestrahlt wird trotzdem.",
+        "einen hohlen Kupferkern aufweisen.": "Ein Kupferkern in der Spule verringert durch Wirbelströme die Induktivität und verstimmt den Kreis — deshalb dient er zum Abgleich, nicht als Schirm. Das Feld nach außen bleibt, abgestrahlt wird trotzdem.",
         "in einem isolierenden Kunststoffgehäuse untergebracht werden.": "Kunststoff hält das Feld nicht auf. Er schützt gegen Berührung, nicht gegen Abstrahlung."
       }
     },
@@ -21822,8 +21822,8 @@
         "I = 0,03 A = 30 mA"
       ],
       "warum_falsch": {
-        "33,3 mA": "Liegt nah am richtigen Wert, ist aber durch keinen sauberen Rechenweg zu erreichen — eine Blindantwort.",
-        "22,7 mA": "Auch hier führt keine der üblichen Verwechslungen auf diese Zahl — eine Blindantwort.",
+        "33,3 mA": "Rechnerisch der Kehrwert des richtigen Ergebnisses: 230 V / 6,9 W = 33,3 — der Bruch wurde umgedreht (1 / 0,03 = 33,3). Ein Strom ist das nicht.",
+        "22,7 mA": "Formel verdreht: 6 V / (230 V · 1,15 A) = 0,0227. Der Sekundärstrom gehört in den Zähler, nicht in den Nenner.",
         "0,83 mA": "Durch beide Spannungen geteilt: 1,15 / (230 · 6) = 0,00083 A. Geteilt wird nur durch die Primärspannung, nachdem mit der Sekundärspannung multipliziert wurde."
       }
     },
@@ -21922,7 +21922,7 @@
     "AC407": {
       "frage": "Welches Bauteil kann durch Lichteinfall elektrischen Strom erzeugen?",
       "richtig": "Fotodiode",
-      "prinzip": "Eine Fotodiode ist ein in Sperrrichtung betriebener PN-Übergang. Licht löst dort Ladungsträgerpaare heraus, und die fließen als Strom ab — ohne Hilfsspannung.",
+      "prinzip": "Eine Fotodiode ist ein PN-Übergang, auf den Licht fallen kann. Das Licht erzeugt in der Sperrschicht Ladungsträgerpaare, und das Feld der Sperrschicht trennt sie — es fließt ein Strom, auch ganz ohne äußere Spannung. So arbeitet auch die Solarzelle; als Lichtsensor betreibt man die Fotodiode meist zusätzlich in Sperrrichtung.",
       "kniff": "Erzeugen und Steuern sind zwei verschiedene Dinge. Der Fotowiderstand ändert nur seinen Wert; Strom erzeugt er nicht, dafür braucht er eine Quelle.",
       "warum_falsch": {
         "Kapazitätsdiode": "Die ändert unter Sperrspannung ihre Kapazität. Mit Licht hat sie nichts zu tun; sie ist meist lichtdicht vergossen.",
@@ -21949,7 +21949,7 @@
       "warum_falsch": {
         "feldgesteuert.": "Das ist der Feldeffekttransistor. Beim bipolaren fließt tatsächlich ein Steuerstrom.",
         "thermisch gesteuert.": "Erfunden. Wärme beeinflusst den Arbeitspunkt, steuert aber nicht.",
-        "spannungsgesteuert.": "Auch das ist der Feldeffekttransistor. Die Basis-Emitter-Spannung liegt beim bipolaren Transistor ohnehin fest bei rund 0,7 V."
+        "spannungsgesteuert.": "Auch das ist der Feldeffekttransistor. Beim bipolaren Transistor ändert sich die Basis-Emitter-Spannung nur wenig (rund 0,6 bis 0,7 V) — gesteuert wird über den Basisstrom."
       }
     },
     "AC502": {
@@ -22136,7 +22136,7 @@
       "weg": [
         "X_L = 2π · 1 MHz · 100 μH = 628 Ω",
         "|Z| = Wurzel aus (100² + 628²)",
-        "|Z| = Wurzel aus (10 000 + 394 800) = Wurzel aus 404 800",
+        "|Z| = Wurzel aus (10 000 + 394 384) = Wurzel aus 404 384",
         "|Z| = 636 Ω"
       ],
       "warum_falsch": {
@@ -22273,7 +22273,7 @@
         "B = 14,34 MHz / 5,05 = 2,84 MHz"
       ],
       "warum_falsch": {
-        "28,4 MHz": "Eine Zehnerpotenz zu groß. Eine Bandbreite, die doppelt so groß wäre wie die Resonanzfrequenz, kann es nicht geben.",
+        "28,4 MHz": "Eine Zehnerpotenz zu groß — das entspräche einer Güte von nur etwa 0,5, also einem Parallelwiderstand von rund 100 Ω statt 1 kΩ.",
         "284 kHz": "Eine Zehnerpotenz zu klein — das wäre eine Güte von rund 50.",
         "28,4 kHz": "Zwei Zehnerpotenzen zu klein."
       }
@@ -22333,7 +22333,7 @@
       ],
       "warum_falsch": {
         "50 Hz": "Das ist die Welligkeit beim EINWEGgleichrichter — dort wird nur eine Halbwelle genutzt.",
-        "200 Hz": "Verdoppelt wird einmal, nicht zweimal. 200 Hz wären die zweite Oberwelle der Welligkeit.",
+        "200 Hz": "Verdoppelt wird einmal, nicht zweimal. 200 Hz wären die zweite Harmonische, also die erste Oberwelle der Welligkeit.",
         "25 Hz": "Halbiert statt verdoppelt. Ein Gleichrichter kann die Frequenz nicht herunterteilen."
       }
     },
@@ -22376,7 +22376,7 @@
       ],
       "warum_falsch": {
         "0,64": "Das ist der Verlustanteil: 1 − 0,36. Gefragt ist der Anteil, der ankommt.",
-        "0,56": "Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort.",
+        "0,56": "Durch die Verlustleistung statt durch die aufgenommene Leistung geteilt: 2,25 W / (6,28 W − 2,25 W) = 0,56.",
         "0,99": "Nur die Ströme verglichen: 450 / 455. Die Spannungen fehlen, und gerade sie machen den Verlust aus."
       }
     },
@@ -22581,7 +22581,7 @@
         "η = 10 W / 25 W = 0,4, also 40 %"
       ],
       "warum_falsch": {
-        "10 %": "Das ist das Verhältnis von Eingangs- zu Ausgangsleistung (1 W zu 10 W), also die Verstärkung, nicht der Wirkungsgrad.",
+        "10 %": "Das ist 1 W zu 10 W, also der Kehrwert der Leistungsverstärkung (Faktor 10) — nicht der Wirkungsgrad.",
         "25 %": "Die 25 aus \"25 W\" als Prozentzahl abgeschrieben.",
         "15 %": "Das sind die 15 W Verlustleistung (25 − 10), als Prozentzahl gelesen."
       }
@@ -23022,17 +23022,18 @@
     "AE310": {
       "frage": "Der typische Spitzenhub eines NBFM-Signals im 12,5 kHz Kanalraster beträgt ...",
       "richtig": "2,5 kHz.",
-      "prinzip": "Im 12,5-kHz-Raster muss das ganze Signal in diesen Kanal passen. Nach Carson bleibt bei rund 3 kHz Sprachbandbreite ein Spitzenhub von etwa 2,5 kHz übrig.",
+      "prinzip": "Im 12,5-kHz-Raster muss das ganze Signal in diesen Kanal passen. Nach Carson ist die belegte Bandbreite B ≈ 2 · (Hub + höchste NF-Frequenz). Bei rund 3 kHz Sprachbandbreite bleiben für den Hub höchstens gut 3 kHz — üblich sind 2,5 kHz, mit etwas Reserve.",
       "kniff": "Der Hub ist immer deutlich kleiner als das Kanalraster — sonst passte das Signal nicht hinein. Wer Hub und Kanalbreite gleichsetzt, greift zu 12,5 kHz.",
       "weg": [
         "Kanalraster: 12,5 kHz",
-        "Carson: 12,5 = 2 · (Hub + 3 kHz)",
-        "Hub = 6,25 − 3 = rund 2,5 kHz"
+        "Carson: B ≈ 2 · (Hub + 3 kHz) muss unter 12,5 kHz bleiben",
+        "Also Hub + 3 kHz ≤ 6,25 kHz, der Hub höchstens 3,25 kHz",
+        "Üblich sind 2,5 kHz: 2 · (2,5 + 3) kHz = 11 kHz — passt mit Reserve in den Kanal"
       ],
       "warum_falsch": {
         "25 kHz.": "Das ist das alte, breite Kanalraster — und als Hub wäre es das Zehnfache des Zulässigen.",
         "12,5 kHz.": "Das Kanalraster selbst als Hub genommen. Das Signal wäre dann mehr als doppelt so breit wie sein Kanal.",
-        "6,25 kHz.": "Die halbe Kanalbreite. Die Modulationsfrequenz wurde dabei vergessen — sie muss noch abgezogen werden."
+        "6,25 kHz.": "Die halbe Kanalbreite. Nach Carson muss davon noch die höchste NF-Frequenz (rund 3 kHz) abgezogen werden — für den Hub bleiben dann höchstens gut 3 kHz."
       }
     },
     "AE311": {
@@ -23351,7 +23352,7 @@
       ],
       "warum_falsch": {
         "Um vier S-Stufen": "Der Faktor 4 wurde als Zahl der Stufen genommen. Vier S-Stufen wären 24 dB, also der Faktor 250 in der Leistung.",
-        "Um acht S-Stufen": "Acht Stufen wären 48 dB — das Sechzigtausendfache der Leistung.",
+        "Um acht S-Stufen": "Acht Stufen wären 48 dB — rund das 63 000-Fache der Leistung.",
         "Um zwei S-Stufen": "Zwei Stufen sind 12 dB, also der Faktor 16. Aus 25 W müssten dafür 400 W werden."
       }
     },
@@ -23400,7 +23401,7 @@
         "20 dB = Faktor 10^(20/10) = 100"
       ],
       "warum_falsch": {
-        "120-fach": "Die 12 dB und die 8 dB nicht addiert, sondern getrennt umgerechnet und multipliziert — dabei aber die S-Stufen falsch gewichtet.",
+        "120-fach": "Zu 120 führt keine saubere Rechnung. 20 dB sind genau der Faktor 100 — auch getrennt gerechnet: 12 dB ≈ Faktor 15,85 und 8 dB ≈ Faktor 6,31, zusammen 15,85 · 6,31 = 100.",
         "10-fach": "Das wären 10 dB. Nur die Hälfte des Weges gerechnet.",
         "20-fach": "Die 20 dB direkt als Faktor genommen. dB sind ein Logarithmus."
       }
@@ -23562,7 +23563,7 @@
       "frage": "Welche ungefähren Werte sollte die Bandbreite der ZF-Verstärker eines Amateurfunkempfängers für folgende Übertragungsverfahren aufweisen: SSB-Sprechfunk, RTTY (Shift 170 Hz), FM-Sprechfunk?",
       "richtig": "SSB: 2,7 kHz; RTTY: 500 Hz; FM: 12 kHz",
       "prinzip": "Die Bandbreite muss zur Sendeart passen: so breit wie nötig, so schmal wie möglich. SSB rund 2,7 kHz, RTTY mit 170 Hz Shift einige hundert Hertz, Schmalband-FM rund 12 kHz.",
-      "kniff": "Der Wert für RTTY ist größer als die Shift — gebraucht werden beide Töne plus ihre Seitenbänder, also rund 500 Hz. Und FM ist mit Abstand die breiteste der drei.",
+      "kniff": "Der Wert für RTTY ist größer als die Shift — gebraucht werden beide Töne plus ihre Seitenbänder, also rund 500 Hz. Und FM ist mit Abstand die breiteste der drei. Die drei Werte der richtigen Antwort stehen so auch im IARU-Bandplan der Prüfungshilfsmittel, in der Spalte für die maximale Bandbreite — dort lässt sich die Antwort in der Prüfung nachschlagen.",
       "warum_falsch": {
         "SSB: 2,7 kHz; RTTY: 340 Hz; FM: 3,6 kHz": "FM mit 3,6 kHz ist viel zu schmal — Schmalband-FM belegt rund 12 kHz.",
         "SSB: 3,6 kHz; RTTY: 170 Hz; FM: 25 kHz": "RTTY mit genau 170 Hz wäre zu schmal: Die Shift ist der ABSTAND der beiden Töne, die Bandbreite muss beide samt Seitenbändern fassen.",
@@ -23857,7 +23858,7 @@
     "AF314": {
       "frage": "Ein quarzgesteuertes Funkgerät mit einer Ausgangsfrequenz von 432 MHz verursacht Störungen bei 144 MHz. Der Quarzoszillator des Funkgeräts schwingt auf einer Grundfrequenz bei 12 MHz. Bei welcher Vervielfachungskombination kann die Störfrequenz von 144 MHz auftreten?",
       "richtig": "Grundfrequenz ⋅ 2 ⋅ 2 ⋅ 3 ⋅ 3",
-      "prinzip": "Bei einer Vervielfacherkette liegt hinter jeder Stufe eine Zwischenfrequenz. Eine Störung kann auf jeder dieser Zwischenstufen abgestrahlt werden — nicht nur am Ende.",
+      "prinzip": "Bei einer Vervielfacherkette entsteht hinter jeder Stufe ein eigener Zwischenstand. Eine Störung kann auf jedem dieser Zwischenstände abgestrahlt werden — nicht nur am Ende.",
       "kniff": "Die Reihenfolge der Faktoren entscheidet, obwohl das Produkt immer gleich ist. Gesucht ist die Kette, bei der unterwegs einmal genau 144 MHz entsteht — also 12 mal 12.",
       "weg": [
         "144 MHz / 12 MHz = 12, also muss ein Zwischenstand bei 12-fach liegen",
@@ -24306,7 +24307,7 @@
         "f = 300 / 42,1 = 7,125 MHz"
       ],
       "warum_falsch": {
-        "6,768 MHz": "Hier wurde mit 0,95 multipliziert statt geteilt — der Verkürzungsfaktor in die falsche Richtung angewandt.",
+        "6,768 MHz": "Hier wurde der Verkürzungsfaktor doppelt angewandt: 7,125 MHz · 0,95 = 6,77 MHz (gleichbedeutend 7,5 MHz · 0,95²). Wer mit 0,95 multipliziert statt teilt, käme auf 7,89 MHz — die steht gar nicht zur Wahl.",
         "7,500 MHz": "Ohne Verkürzungsfaktor gerechnet: 300 / 40 = 7,5 MHz.",
         "7,000 MHz": "Eine glatte Bandgrenze, aber aus diesen Zahlen ergibt sie sich nicht."
       }
@@ -24331,7 +24332,7 @@
       "frage": "Eine 5/8-λ-Vertikalantenne soll für 14,2 MHz aus Draht hergestellt werden. Es soll mit einem Verkürzungsfaktor von 0,97 gerechnet werden. Wie lang muss der Draht insgesamt sein?",
       "richtig": "12,80 m",
       "prinzip": "5/8 λ heißt: 0,625 mal die Wellenlänge. Es ist ein DURCHGEHENDER Draht, keine zwei Schenkel — geteilt wird also nicht.",
-      "kniff": "Der Verkürzungsfaktor ist hier 0,97, nicht 0,95. Wer ihn vergisst, landet bei 13,20 m; wer den Bruch falsch ansetzt, bei 10,03 m. Beide Zahlen stehen zur Auswahl.",
+      "kniff": "Der Verkürzungsfaktor ist hier 0,97, nicht 0,95. Wer ihn vergisst, landet bei 13,20 m; wer wie beim Halbwellendipol mit λ/2 und 0,95 rechnet, bei 10,03 m. Beide Zahlen stehen zur Auswahl.",
       "weg": [
         "λ = 300 / 14,2 = 21,13 m",
         "5/8 λ = 21,13 · 0,625 = 13,20 m",
@@ -24524,14 +24525,14 @@
       "prinzip": "Nach hinten strahlt die Antenne um das Vor-Rück-Verhältnis weniger ab als nach vorn. In Dezibel gerechnet: Gewinn nach vorn, davon das Vor-Rück-Verhältnis abgezogen.",
       "kniff": "Alles im Pegel rechnen, dann ist es eine Addition. 100 W sind 20 dBW, plus 10 dB Gewinn, minus 20 dB nach hinten — bleiben 10 dBW, also 10 W.",
       "weg": [
-        "ERP nach vorn: 100 W · 10 dB = 100 · 10 = 1000 W",
+        "ERP nach vorn: 10 dB Gewinn = Faktor 10, also 100 W · 10 = 1000 W",
         "Nach hinten 20 dB weniger: Faktor 100",
         "1000 W / 100 = 10 W"
       ],
       "warum_falsch": {
-        "0,1 W": "Hier wurde der Gewinn nicht berücksichtigt: 100 W minus 30 dB. Der Gewinn von 10 dB gehört dazu.",
+        "0,1 W": "Hier wurde der Gewinn abgezogen statt addiert: 20 dBW − 10 dB − 20 dB = −10 dBW, also 0,1 W.",
         "100 W": "Das ist die Sendeleistung selbst. Gewinn und Vor-Rück-Verhältnis heben sich nur scheinbar auf — 10 minus 20 ergibt minus 10 dB, also ein Zehntel.",
-        "1 W": "Um eine Zehnerpotenz zu wenig. Das entspräche einem Vor-Rück-Verhältnis von 30 dB."
+        "1 W": "Hier wurde der Gewinn vergessen: 100 W − 20 dB = 1 W."
       }
     },
     "AG216": {
@@ -24545,9 +24546,9 @@
         "6 W · 0,1 = 0,6 W"
       ],
       "warum_falsch": {
-        "0,19 W": "Entspräche rund −15 dB. Zu dieser Zahl führt keine der üblichen Verwechslungen.",
-        "0,019 W": "Um eine weitere Zehnerpotenz daneben.",
-        "60 W": "Hier wurde multipliziert statt geteilt. Nach hinten kann nie mehr abgestrahlt werden als vorn eingespeist wurde."
+        "0,19 W": "Entspräche −15 dB statt −10 dB.",
+        "0,019 W": "Hier wurde der Gewinn vergessen: 6 W − 25 dB = 0,019 W.",
+        "60 W": "Hier wurde multipliziert statt geteilt. Weil das Vor-Rück-Verhältnis (25 dB) größer ist als der Gewinn (15 dB), muss die ERP nach hinten unter der Sendeleistung liegen."
       }
     },
     "AG218": {
@@ -24942,10 +24943,16 @@
       "prinzip": "Mit der künstlichen Antenne zeigt sich am Eingang ein Stehwellenverhältnis von 1 — die Leitung ist also in Ordnung. Bleibt nur die Antenne als Fehlerquelle.",
       "kniff": "Die Dämpfung verschleiert die Wahrheit: 3 dB Kabeldämpfung machen aus einem katastrophalen Stehwellenverhältnis an der Antenne ein harmlos aussehendes von 3 am Eingang. Je länger das Kabel, desto besser sieht jede Fehlanpassung aus.",
       "warum_falsch": {
-        "Die Antennenanlage ist in Ordnung. Es werden etwa 3,75 W HF-Leistung abgestrahlt.": "Die Anlage ist nicht in Ordnung — das Stehwellenverhältnis von 3 am Eingang bedeutet an der Antenne ein Vielfaches davon.",
+        "Die Antennenanlage ist in Ordnung. Es werden etwa 3,75 W HF-Leistung abgestrahlt.": "Das wäre richtig, wenn das SWR von 3 direkt an der Antenne gemessen wäre: Dann würden 25 % der ankommenden 5 W reflektiert und 3,75 W abgestrahlt. Gemessen wurde aber am Eingang — und die 2,5 W, die dort zurückkommen, sind nach der Kabeldämpfung genau die gesamte an der Antenne reflektierte Leistung.",
         "Die Antennenanlage ist in Ordnung. Es werden etwa 5 W HF-Leistung abgestrahlt.": "Das wäre die Leistung nach 3 dB Dämpfung bei einer einwandfreien Antenne. Hier wird so gut wie nichts abgestrahlt.",
         "Die Antennenleitung ist fehlerhaft, an der Antenne kommt so gut wie keine HF-Leistung an.": "Die Leitung wurde gerade mit der künstlichen Antenne geprüft und zeigte ein Stehwellenverhältnis von 1. Sie ist in Ordnung."
-      }
+      },
+      "weg": [
+        "SWR 3 am Eingang: Reflexionsfaktor r = (3 − 1) / (3 + 1) = 0,5",
+        "Rücklaufende Leistung am Eingang: r² · 10 W = 0,25 · 10 W = 2,5 W",
+        "An der Antenne kommen nach 3 dB Dämpfung 5 W an",
+        "Werden dort alle 5 W reflektiert, kommen nach weiteren 3 dB genau 2,5 W am Eingang an — die Antenne reflektiert also praktisch alles"
+      ]
     },
     "AG404": {
       "frage": "Am Eingang einer Antennenleitung mit einer Dämpfung von 5 dB werden 10 W HF-Leistung eingespeist. Mit der am Leitungsende angeschlossenen Antenne misst man am Leitungseingang ein SWR von 1. Welches SWR ist am Leitungseingang zu erwarten, wenn die Antenne abgeklemmt wird?",
@@ -24954,8 +24961,9 @@
       "kniff": "Genau darum lässt sich ein Stehwellenverhältnis nicht am Senderende beurteilen: Je mehr Dämpfung dazwischen liegt, desto harmloser sieht das Ende aus. Unendlich wäre es nur bei dämpfungsfreiem Kabel.",
       "weg": [
         "Dämpfung hin und zurück: 2 · 5 dB = 10 dB",
-        "Reflexionsfaktor am Eingang: 10^(−10/20) = 0,32",
-        "SWR = (1 + 0,32) / (1 − 0,32) = 1,32 / 0,68",
+        "Rücklaufende Leistung am Eingang: 10 W · 10^(−10/10) = 1 W",
+        "Der Reflexionsfaktor ist ein Spannungsverhältnis: r = √(1 W / 10 W) = 0,316 — dasselbe wie 10^(−10/20)",
+        "SWR = (1 + 0,316) / (1 − 0,316) = 1,316 / 0,684",
         "SWR = 1,92"
       ],
       "warum_falsch": {
@@ -25847,7 +25855,7 @@
       "warum_falsch": {
         "2": "Das entspräche 100 Ω Last.",
         "2,5": "Das entspräche 125 Ω Last.",
-        "3,33": "Hier wurde 150 durch 45 geteilt oder anders gerundet — das Verhältnis 150 zu 50 ist genau 3."
+        "3,33": "Das entspräche einer Last von rund 167 Ω. 150 Ω durch 50 Ω ergibt genau 3."
       }
     },
     "AI501": {
@@ -26177,11 +26185,11 @@
     "AJ113": {
       "frage": "In der Nähe eines 144 MHz-Senders befindet sich die passive Antenne eines DVB-T2-Fernsehempfängers. Es kommt zu einer Übersteuerung des Empfängers. Das Problem lässt sich durch den Einbau eines ...",
       "richtig": "Hochpassfilters ab 460 MHz in das Antennenzuführungskabel des Fernsehempfängers lösen.",
-      "prinzip": "Der Störer liegt bei 144 MHz, der Nutzempfang darüber. Ein Hochpass ab 460 MHz lässt die Fernsehkanäle durch und sperrt alles darunter — auch die 144 MHz.",
+      "prinzip": "Der Störer liegt bei 144 MHz, DVB-T2 bei 470 bis 694 MHz. Ein Hochpass ab 460 MHz lässt die Fernsehkanäle durch und sperrt alles darunter — auch die 144 MHz. Die Grenze liegt bewusst etwas unter 470 MHz, weil ein Filter keine beliebig steile Flanke hat.",
       "kniff": "Die Grenzfrequenz muss zwischen Störer und Nutzsignal liegen, und der Filtertyp muss in die richtige Richtung sperren. Ein Tiefpass bis 460 MHz ließe die 144 MHz gerade durch.",
       "warum_falsch": {
         "Bandpassfilters für das 2 m-Band vor dem Tuner des Fernsehempfängers lösen.": "Das ließe genau die Störfrequenz durch und sperrte den Fernsehempfang.",
-        "460 MHz-Notchfilters hinter dem Tuner des Fernsehempfängers lösen.": "Hinter dem Tuner ist es zu spät — die Übersteuerung entsteht davor. Und ein Notch bei 460 MHz träfe das Nutzsignal, nicht den Störer.",
+        "460 MHz-Notchfilters hinter dem Tuner des Fernsehempfängers lösen.": "Hinter dem Tuner ist es zu spät — die Übersteuerung entsteht davor. Und ein Notch bei 460 MHz läge weder auf dem Störer (144 MHz) noch würde er die Übersteuerung beseitigen.",
         "Tiefpassfilters bis 460 MHz in das Antennenzuführungskabel des Fernsehempfängers lösen.": "Genau falsch herum: Der Tiefpass lässt die 144 MHz durch und sperrt die Fernsehkanäle."
       }
     },
@@ -26244,7 +26252,7 @@
       "frage": "Die zweite Harmonische der Frequenz 3,730 MHz befindet sich auf ...",
       "richtig": "7,460 MHz.",
       "prinzip": "Die Grundwelle zählt als erste Harmonische. Die zweite Harmonische ist also das Doppelte der Grundfrequenz.",
-      "kniff": "Bei diesem Beispiel liegt die zweite Harmonische von 3,730 MHz mitten im 40-m-Band — ein Sender mit schlechter Oberwellendämpfung stört also ausgerechnet die eigenen Bandnachbarn.",
+      "kniff": "7,460 MHz liegt knapp oberhalb des 40-m-Bands (7,000 bis 7,200 MHz) und damit außerhalb der Amateurfunkbänder — ein Sender mit schlechter Oberwellendämpfung stört dort andere Funkdienste.",
       "weg": [
         "2. Harmonische = 2 · Grundfrequenz",
         "2 · 3,730 MHz",
@@ -26569,11 +26577,12 @@
         "P_EIRP = 100 W · 1,64 = 164 W",
         "30 · 164 = 4920",
         "Wurzel aus 4920 = 70,1",
-        "d = 70,1 / 28 V/m = 2,50 m"
+        "d = 70,1 / 28 V/m = 2,50 m",
+        "Kontrolle: 2,50 m liegen über λ/(2π) ≈ 10 m / 6,28 ≈ 1,6 m — die Fernfeldformel darf verwendet werden"
       ],
       "warum_falsch": {
-        "13,7 m": "Weit zu groß — das entspräche rund 3 kW EIRP.",
-        "1,96 m": "Hier fehlt der Dipolgewinn: Mit 100 W statt 164 W kämen 1,95 m heraus.",
+        "13,7 m": "Weit zu groß — das entspräche rund 4,9 kW EIRP, also etwa 3 kW Senderleistung am Dipol.",
+        "1,96 m": "Hier fehlt der Dipolgewinn: Mit 100 W statt 164 W kommen 1,96 m heraus.",
         "5,01 m": "Das Doppelte des richtigen Werts, also das Vierfache der Leistung."
       }
     },
@@ -26590,8 +26599,8 @@
       ],
       "warum_falsch": {
         "ca. 75 W": "Zu wenig — damit bliebe man deutlich unter dem Grenzwert und verschenkte Leistung.",
-        "ca. 160 W": "Damit würde der Grenzwert bei 5 m überschritten.",
-        "ca. 265 W": "Weit über dem Zulässigen — das wäre rund die vierfache Leistung."
+        "ca. 160 W": "Hier fehlt der Dipolfaktor 1,64: 653 W / 3,98 = 164 W. Damit würde der Grenzwert bei 5 m überschritten.",
+        "ca. 265 W": "Weit über dem Zulässigen — gut das 2,6-Fache der erlaubten Leistung."
       }
     },
     "AK108": {
@@ -26607,8 +26616,8 @@
       ],
       "warum_falsch": {
         "4,97 m": "Zu groß — das entspräche rund 440 W Senderleistung.",
-        "2,39 m": "Hier fehlt der Dipolfaktor 1,64 und dazu noch etwas mehr.",
-        "3,20 m": "Zu klein. Entweder wurde die Dämpfung zu hoch angesetzt oder der Dipolgewinn nur teilweise berücksichtigt."
+        "2,39 m": "Noch kleiner — hier fehlt mehr als nur der Dipolfaktor.",
+        "3,20 m": "Hier fehlt der Dipolfaktor 1,64: Wurzel(30 · 267) / 28 = 3,20 m."
       }
     },
     "AK109": {
@@ -26640,9 +26649,9 @@
         "d = Wurzel(30 · 1230) / 28 = 192 / 28 = 6,86 m"
       ],
       "warum_falsch": {
-        "2,17 m": "Hier wurde der Antennengewinn ganz weggelassen.",
-        "22,09 m": "Weit zu groß — hier wurde vermutlich mit einer viel höheren Leistung oder einem zu großen Gewinn gerechnet.",
-        "5,35 m": "Zu klein. Entweder fehlt der Dipolfaktor 1,64 oder die Dämpfung wurde zu hoch angesetzt."
+        "2,17 m": "Hier fehlen Antennengewinn und Kabeldämpfung — gerechnet wurde nur mit 75 W und dem Dipolfaktor.",
+        "22,09 m": "Weit zu groß — das entspräche rund 12,8 kW EIRP, etwa dem Zehnfachen.",
+        "5,35 m": "Hier fehlt der Dipolfaktor 1,64: Ohne ihn kommen rund 5,35 m heraus."
       }
     },
     "AK111": {
@@ -26674,9 +26683,9 @@
         "d = Wurzel(30 · 2612) / 61 = 280 / 61 = 4,6 m"
       ],
       "warum_falsch": {
-        "3,6 m": "Zu klein — das entspräche rund 1600 W EIRP.",
-        "14,5 m": "Hier wurde offenbar mit dem Grenzwert 28 V/m für die unteren Bänder gerechnet oder die Kabeldämpfung weggelassen.",
-        "5,8 m": "Zu groß — das entspräche rund 4100 W EIRP."
+        "3,6 m": "Hier fehlt der Dipolfaktor 1,64: Ohne ihn kommen 3,6 m heraus.",
+        "14,5 m": "Weit zu groß — das entspräche rund 26 kW EIRP, also etwa dem Zehnfachen.",
+        "5,8 m": "Hier wurde die Kabeldämpfung von 2 dB vergessen: Mit 40 W an der Antenne kommen 5,8 m heraus."
       }
     },
     "AK113": {
@@ -26731,7 +26740,7 @@
     "AK201": {
       "frage": "Bei der Fehlersuche in einer defekten Senderendstufe sollte vor Beginn von Reparaturarbeiten aus Sicherheitsgründen das Gerät vom Netz getrennt werden und die Netzteilkondensatoren ...",
       "richtig": "über einen hochohmigen Widerstand mit ausreichender Leistung dauerhaft entladen werden.",
-      "prinzip": "Netzteilkondensatoren halten ihre Ladung lange. Sie müssen dauerhaft und kontrolliert entladen werden — über einen Widerstand, der die gespeicherte Energie verträgt.",
+      "prinzip": "Netzteilkondensatoren halten ihre Ladung lange. Sie müssen dauerhaft und kontrolliert entladen werden: über einen hochohmigen Widerstand, damit der Entladestrom klein bleibt und kein Funke entsteht, und mit ausreichender Belastbarkeit — zu Beginn gilt P = U² / R, bei 400 V an 100 kΩ also schon 1,6 W.",
       "kniff": "Dauerhaft ist das Stichwort: Der Widerstand bleibt während der ganzen Arbeit dran. Sonst laden sich große Kondensatoren durch den sogenannten Erholungseffekt von selbst wieder ein Stück auf.",
       "warum_falsch": {
         "durch Kurzschluss über ein Strommessgerät sicher entladen werden.": "Das Messgerät wäre sofort zerstört, und der Lichtbogen ist gefährlich.",
@@ -26745,7 +26754,7 @@
       "prinzip": "Der Potentialausgleich sorgt dafür, dass zwischen berührbaren Gehäusen keine gefährliche Spannung entstehen kann. Je niederohmiger die Verbindung, desto kleiner die mögliche Berührungsspannung.",
       "kniff": "Es geht um Menschen, nicht um Geräte. Die anderen Antworten nennen Nebenwirkungen — der Zweck des Potentialausgleichs ist der Schutz von Personen.",
       "warum_falsch": {
-        "Zur Begrenzung von Kurzschlussströmen bei Gerätefehlern": "Der Potentialausgleich begrenzt Ströme nicht, er sorgt im Gegenteil dafür, dass die Sicherung sicher auslöst.",
+        "Zur Begrenzung von Kurzschlussströmen bei Gerätefehlern": "Der Potentialausgleich begrenzt keine Ströme. Er verbindet die Gehäuse niederohmig, damit zwischen berührbaren Teilen keine Spannung entstehen kann.",
         "Zur Vermeidung von Geräteschäden bei Überspannungen": "Das ist Aufgabe des Überspannungsschutzes. Ein Nebeneffekt, nicht der Zweck.",
         "Zur Symmetrierung bei paralleldrahtgespeisten Antennen": "Symmetrieren ist Aufgabe eines Baluns, nicht des Potentialausgleichs."
       }

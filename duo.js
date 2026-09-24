@@ -404,13 +404,34 @@
         });
     }
 
+    // ----------------------------------------------------------------
+    //  EINE KENNUNG JE SEITENAUFRUF                      (23.09.2026)
+    //  Dietmar: "Neue Benutzer sollten nicht sehen, was davor schon
+    //  geschrieben wurde."
+    //
+    //  Der Server zeigt jedem nur den Chat seit seiner Ankunft. Damit er
+    //  einen kurzen Leitungsabriss (gleiche Seite, neue Verbindung) von
+    //  einem Neuladen (neuer Besucher) unterscheiden kann, wuerfelt die
+    //  Seite beim Laden diese Kennung aus. Sie steht NUR hier im
+    //  Speicher der Seite - nicht im localStorage, nicht im
+    //  sessionStorage -, und ist beim Neuladen deshalb eine andere.
+    // ----------------------------------------------------------------
+    const CHAT_SITZUNG = (function(){
+        try{
+            const a = new Uint8Array(16);
+            crypto.getRandomValues(a);
+            return Array.from(a, function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+        }catch(e){ return ''; }
+    })();
+
     function ensureSocket(){
         return new Promise((resolve,reject)=>{
             if(socket?.connected) return resolve(socket);
             const load=()=>{
                 if(!window.io){ reject(new Error('Socket.IO fehlt')); return; }
                 try{
-                    socket=io(getBaseUrl(),{transports:['websocket','polling'], timeout:5000});
+                    // auth.sitzung: siehe CHAT_SITZUNG oben (23.09.2026)
+                    socket=io(getBaseUrl(),{transports:['websocket','polling'], timeout:5000, auth:{ sitzung: CHAT_SITZUNG }});
                     bindEvents(); resolve(socket);
                 }catch(e){ reject(e); }
             };
@@ -1046,6 +1067,38 @@
         '#duoChatSenden{background:var(--panel-navy);color:#fff;border:none;border-radius:999px;width:36px;height:36px;',
         '  cursor:pointer;font-size:0.95rem;flex-shrink:0;}',
         '#duoChatSenden:disabled{opacity:0.4;cursor:default;}',
+        /* Gruen = "Link zum Herunterladen senden" (23.09.2026, siehe
+           downloadKnopfZeichnen). Dasselbe Gruen wie "Server ein". */
+        '#duoChatSenden.download{background:#1c7a46;}',
+        '#duoChatSenden.download:hover{background:#16633a;}',
+        /* Links im Chat - nur die eigenen Adressen des Trainers werden
+           dazu, siehe chatLinks(). Farbe vom Text der Blase, damit sie
+           auf der dunklen eigenen Blase genauso lesbar sind. */
+        '.duo-chat-zeile a{color:inherit;text-decoration:underline;word-break:break-all;}',
+        /* Die Haken wie bei WhatsApp (23.09.2026): einer = gesendet,
+           zwei grau = angekommen, zwei blau = gelesen. */
+        '.duo-chat-haken{margin-left:5px;font-size:0.72rem;letter-spacing:-3px;padding-right:3px;opacity:0.7;white-space:nowrap;cursor:default;}',
+        '.duo-chat-haken.gelesen{color:#53bdeb;opacity:1;font-weight:700;}',
+        /* Sprachnachrichten (23.09.2026) */
+        '#duoChatMikro{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;',
+        '  cursor:pointer;font-size:0.95rem;flex-shrink:0;display:none;}',
+        '#duoChatMikro:hover{border-color:var(--panel-navy);}',
+        '#duoChatEingabeZeile.nimmt-auf #duoChatEingabe,#duoChatEingabeZeile.nimmt-auf #duoChatMikro,#duoChatEingabeZeile.nimmt-auf #duoChatSenden{display:none !important;}',
+        '#duoChatAufnahme{display:none;flex:1;align-items:center;gap:8px;min-width:0;}',
+        '#duoChatEingabeZeile.nimmt-auf #duoChatAufnahme{display:flex;}',
+        '#duoChatAufnahme .punkt{width:10px;height:10px;border-radius:50%;background:#d9403a;flex-shrink:0;animation:duoAufnahmePuls 1s infinite;}',
+        '@keyframes duoAufnahmePuls{0%,100%{opacity:1}50%{opacity:0.25}}',
+        '#duoChatAufnahme .zeit{flex:1;font-size:0.85rem;font-variant-numeric:tabular-nums;}',
+        '#duoChatAufnahme button{border:none;border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:0.95rem;flex-shrink:0;}',
+        '#duoChatAufnahmeWeg{background:transparent;color:var(--ink);border:1px solid var(--line) !important;}',
+        '#duoChatAufnahmeSenden{background:#1c7a46;color:#fff;}',
+        '.duo-sprache{display:inline-flex;align-items:center;gap:8px;min-width:170px;vertical-align:middle;}',
+        '.duo-sprache-knopf{border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:0.8rem;flex-shrink:0;',
+        '  background:var(--panel-navy);color:#fff;}',
+        '.duo-chat-eigen .duo-sprache-knopf{background:#fff;color:var(--panel-navy);}',
+        '.duo-sprache-balken{flex:1;height:4px;border-radius:2px;background:currentColor;opacity:0.25;position:relative;overflow:hidden;}',
+        '.duo-sprache-balken span{position:absolute;left:0;top:0;bottom:0;width:0;background:currentColor;}',
+        '.duo-sprache-dauer{font-size:0.72rem;opacity:0.8;font-variant-numeric:tabular-nums;}',
         '@media (max-width:520px){#duoChatBox{right:10px;bottom:10px;width:calc(100vw - 20px);}',
         '  #duoChatKoerper{height:45vh;}}'
         ].join('\n');
@@ -1058,7 +1111,7 @@
         '  <span style="font-size:1rem;">💬</span>',
         '  <span class="titel">Gruppenchat</span>',
         '  <span id="duoChatBlase">0</span>',
-        '  <button id="duoChatAbgleich" type="button" title="Alle Teilnehmer neu laden lassen (nur Host)" ',
+        '  <button id="duoChatAbgleich" type="button" title="Alle Teilnehmer neu laden lassen (nur am Server)" ',
         '     style="display:none;background:transparent;border:none;color:#fff;font-size:0.95rem;cursor:pointer;padding:2px 4px;">⟳</button>',
         '  <button id="duoChatKnopf" type="button" title="Minimieren/Aufklappen">▾</button>',
         '</div>',
@@ -1066,6 +1119,10 @@
         '  <div id="duoChatVerlauf"><div id="duoChatLeer">Noch keine Nachrichten.<br>Schreib etwas an alle im Raum.</div></div>',
         '  <div id="duoChatEingabeZeile">',
         '    <input id="duoChatEingabe" type="text" maxlength="500" placeholder="Nachricht an alle..." autocomplete="off">',
+        '    <button id="duoChatMikro" type="button" title="Sprachnachricht aufnehmen">🎤</button>',
+        '    <div id="duoChatAufnahme"><span class="punkt"></span><span class="zeit" id="duoChatAufnahmeZeit">Aufnahme 0:00</span>',
+        '      <button id="duoChatAufnahmeWeg" type="button" title="Verwerfen">✕</button>',
+        '      <button id="duoChatAufnahmeSenden" type="button" title="Senden">➤</button></div>',
         '    <button id="duoChatSenden" type="button" title="Senden">➤</button>',
         '  </div>',
         '</div>'
@@ -1076,12 +1133,28 @@
         const abg = document.getElementById('duoChatAbgleich');
         if(abg) abg.addEventListener('click', e=>{ e.stopPropagation(); alleNeuLadenLassen(); });
         document.getElementById('duoChatKnopf').addEventListener('click', e=>{ e.stopPropagation(); chatUmschalten(); });
-        document.getElementById('duoChatSenden').addEventListener('click', chatSenden);
+        // Der Knopf darf bei leerem Feld den Download-Link senden, die
+        // Eingabetaste nicht: Ein versehentliches Enter im leeren Feld
+        // soll nichts an alle schicken.
+        document.getElementById('duoChatSenden').addEventListener('click', ()=>chatSenden(true));
         const feld = document.getElementById('duoChatEingabe');
         feld.addEventListener('keydown', e=>{
-            if(e.key === 'Enter'){ e.preventDefault(); chatSenden(); }
+            if(e.key === 'Enter'){ e.preventDefault(); chatSenden(false); }
             e.stopPropagation();          // Hotkeys des Trainers nicht ausloesen
         });
+        feld.addEventListener('input', downloadKnopfZeichnen);
+        downloadKnopfZeichnen();
+        document.getElementById('duoChatMikro').addEventListener('click', aufnahmeStarten);
+        document.getElementById('duoChatAufnahmeWeg').addEventListener('click', ()=>aufnahmeBeenden(false));
+        document.getElementById('duoChatAufnahmeSenden').addEventListener('click', ()=>aufnahmeBeenden(true));
+        // Abspielen: ein Klick auf irgendeinen Knopf in einer Sprachblase
+        document.getElementById('duoChatVerlauf').addEventListener('click', e=>{
+            const k = e.target && e.target.closest ? e.target.closest('.duo-sprache-knopf') : null;
+            if(!k) return;
+            const b = k.closest('.duo-sprache');
+            if(b && b.dataset.spracheId) spracheAbspielen(b.dataset.spracheId);
+        });
+        mikroZeichnen();
         feld.addEventListener('keypress', e=>e.stopPropagation());
         feld.addEventListener('keyup', e=>e.stopPropagation());
     }
@@ -1120,6 +1193,8 @@
         chatAufbauen();
         const box = document.getElementById('duoChatBox');
         if(!box) return;
+        try{ downloadKnopfZeichnen(); }catch(e){}
+        try{ mikroZeichnen(); }catch(e){}
         if(roomCode){
             box.classList.add('sichtbar');
             // DER CHAT STEHT VON ANFANG AN OFFEN.
@@ -1218,6 +1293,7 @@
             chatUngelesen = 0;
             chatBlaseAktualisieren();
             chatNachUntenRollen();
+            gelesenMelden();
             if(!ohneFokus){
                 const feld = document.getElementById('duoChatEingabe');
                 if(feld) setTimeout(()=>feld.focus(), 60);
@@ -1242,6 +1318,250 @@
             const d = new Date(ms);
             return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
         }catch(e){ return ''; }
+    }
+
+    // ----------------------------------------------------------------
+    //  ANKLICKBARE LINKS - ABER NUR DIE EIGENEN            (23.09.2026)
+    //  Damit der Download-Link aus dem gruenen Knopf beim Besucher auch
+    //  anklickbar ankommt. Bewusst NICHT jede Adresse: Im Chat ohne Raum
+    //  schreibt jeder, der die Seite gefunden hat, und ein anklickbarer
+    //  fremder Link waere eine Einladung fuer Werbung und Schlimmeres.
+    //  Anklickbar werden nur die Adressen des Trainers selbst; alles
+    //  andere bleibt Text, den man abschreiben muss.
+    //  Arbeitet auf dem bereits maskierten Text (escapeHtml vorher).
+    // ----------------------------------------------------------------
+    const CHAT_LINK_RE = /https:\/\/(?:amateurfunk-gruppe\.github\.io\/Amateurfunk-Trainer|github\.com\/Amateurfunk-Gruppe\/Amateurfunk-Trainer|(?:www\.)?amateurfunk-trainer\.com)(?:\/[^\s<"']*)?/g;
+    function chatLinks(html){
+        try{
+            return String(html).replace(CHAT_LINK_RE, function(url){
+                // Satzzeichen am Ende gehoeren nicht zur Adresse.
+                const rest = (url.match(/[.,;:!?)]+$/) || [''])[0];
+                const adr = rest ? url.slice(0, -rest.length) : url;
+                return '<a href="' + adr + '" target="_blank" rel="noopener">' + adr + '</a>' + rest;
+            });
+        }catch(e){ return html; }
+    }
+
+    // ----------------------------------------------------------------
+    //  GELESEN, WIE BEI WHATSAPP                       (23.09.2026)
+    //  Dietmar: "im Chat waere wie bei WhatsApp schoen, wenn ich sehe,
+    //  ob meine Nachricht gelesen wurde."
+    //
+    //  An jeder eigenen Nachricht stehen Haken:
+    //    ✓   gesendet - gerade war niemand sonst da, der sie bekommt
+    //    ✓✓  grau: angekommen, noch von niemandem gelesen
+    //    ✓✓  blau: gelesen; wer, steht in der Sprechblase beim Zeigen
+    //  In der Gruppe genuegt einer, der gelesen hat, damit es blau wird -
+    //  die Zahl steht in der Sprechblase.
+    //
+    //  "Gelesen" meldet ein Browser nur, wenn der Chat offen ist und der
+    //  Tab gerade zu sehen ist. Wer das Fenster zugeklappt hat oder in
+    //  einem anderen Tab ist, hat es noch nicht gelesen.
+    // ----------------------------------------------------------------
+    const gelesenStand = new Map();   // eigene Nachrichten-id -> {anzahl, namen}
+    const zuMelden = new Set();       // fremde Nachrichten-ids, die ich noch als gelesen melden muss
+    let meldeUhr = null;
+
+    function hakenSetzen(id, stand, empfaenger){
+        try{
+            const el = document.querySelector('.duo-chat-haken[data-haken="' + String(id).replace(/[^a-f0-9]/gi, '') + '"]');
+            if(!el) return;
+            if(typeof empfaenger === 'number') el.dataset.empfaenger = String(empfaenger);
+            const emp = Number(el.dataset.empfaenger || 0);
+            if(stand && stand.anzahl > 0){
+                el.textContent = '\u2713\u2713';
+                el.classList.add('gelesen');
+                const namen = (stand.namen || []).join(', ');
+                el.title = 'Gelesen' + (namen ? ' von ' + namen : '')
+                         + (emp > 1 ? ' (' + stand.anzahl + ' von ' + emp + ')' : '');
+            } else if(emp > 0){
+                el.textContent = '\u2713\u2713';
+                el.classList.remove('gelesen');
+                el.title = 'Angekommen, noch nicht gelesen';
+            } else {
+                el.textContent = '\u2713';
+                el.classList.remove('gelesen');
+                el.title = 'Gesendet \u2013 gerade ist niemand sonst da';
+            }
+        }catch(e){}
+    }
+
+    function gelesenMelden(){
+        if(meldeUhr) return;
+        meldeUhr = setTimeout(function(){
+            meldeUhr = null;
+            try{
+                if(!zuMelden.size || !socket || !socket.connected) return;
+                const box = document.getElementById('duoChatBox');
+                const zuSehen = chatOffen && box && box.classList.contains('sichtbar')
+                              && document.visibilityState === 'visible';
+                if(!zuSehen) return;
+                const ids = Array.from(zuMelden).slice(0, 50);
+                ids.forEach(function(id){ zuMelden.delete(id); });
+                socket.emit('chatGelesen', { ids: ids, name: getDuoUserName() });
+                if(zuMelden.size) gelesenMelden();
+            }catch(e){}
+        }, 700);
+    }
+    document.addEventListener('visibilitychange', function(){
+        if(document.visibilityState === 'visible') gelesenMelden();
+    });
+    window.addEventListener('focus', function(){ gelesenMelden(); });
+
+    // ----------------------------------------------------------------
+    //  SPRACHNACHRICHTEN                                  (23.09.2026)
+    //  Dietmar: "Kann man da auch einen Sprachchat einbauen?" - "Im
+    //  Gruppenraum sollte jeder sprechen koennen."
+    //
+    //  Ein Klick aufs Mikrofon startet die Aufnahme; statt des Eingabe-
+    //  felds steht dann ein roter Punkt mit der Zeit, daneben Verwerfen
+    //  und Senden. Nach einer Minute wird von selbst gesendet. Kein
+    //  "gedrueckt halten" wie bei WhatsApp: Am Handy loest langes
+    //  Druecken gern ein Kontextmenue aus, und mit der Maus ist Klicken
+    //  ohnehin bequemer.
+    //
+    //  Das Mikrofon gibt es im Gruppenraum fuer jeden, im Chat ohne Raum
+    //  nur am Trainer-PC selbst (siehe Server.js, SPRACHNACHRICHTEN).
+    //  Und nur, wo der Browser es erlaubt: ueber https oder am eigenen
+    //  Rechner. Ueber eine WLAN-Adresse (http://192.168...) gibt der
+    //  Browser das Mikrofon nicht heraus - dann fehlt der Knopf.
+    // ----------------------------------------------------------------
+    const SPRACHE_MAX_SEK = 60;
+    let aufnahme = null;             // { rec, stream, teile, start, uhr, weg }
+    const spracheAudio = new Map();  // id -> Audio
+    const spracheWartet = new Set(); // ids, die gerade geholt werden
+
+    function dauerMinSek(sek){
+        sek = Math.max(0, Math.round(Number(sek) || 0));
+        return Math.floor(sek / 60) + ':' + String(sek % 60).padStart(2, '0');
+    }
+    function darfSprechen(){
+        try{
+            if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+            if(typeof window.MediaRecorder === 'undefined') return false;
+            if(roomCode) return true;
+            if(typeof window.laeuftLokal === 'function') return !!window.laeuftLokal();
+            return !vonAussen;
+        }catch(e){ return false; }
+    }
+    function mikroZeichnen(){
+        const m = document.getElementById('duoChatMikro');
+        if(!m) return;
+        const ja = darfSprechen();
+        m.style.display = ja ? 'inline-block' : 'none';
+        if(!ja && aufnahme) aufnahmeBeenden(false);
+    }
+    function aufnahmeLeiste(an){
+        const z = document.getElementById('duoChatEingabeZeile');
+        if(z) z.classList.toggle('nimmt-auf', !!an);
+    }
+
+    async function aufnahmeStarten(){
+        if(aufnahme || !darfSprechen()) return;
+        let stream;
+        try{
+            stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+        }catch(e){
+            chatSystemmeldung(e && e.name === 'NotAllowedError'
+                ? 'Kein Zugriff aufs Mikrofon. Bitte im Browser erlauben (Schloss-Symbol links neben der Adresse).'
+                : 'Kein Mikrofon gefunden.');
+            return;
+        }
+        const arten = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
+        let art = '';
+        try{ art = arten.find(a => MediaRecorder.isTypeSupported(a)) || ''; }catch(e){}
+        let rec;
+        try{ rec = new MediaRecorder(stream, art ? { mimeType: art, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 }); }
+        catch(e){ try{ rec = new MediaRecorder(stream); }catch(e2){ stream.getTracks().forEach(t => t.stop()); chatSystemmeldung('Aufnehmen geht in diesem Browser nicht.'); return; } }
+        const a = { rec: rec, stream: stream, teile: [], start: Date.now(), uhr: null, weg: false };
+        aufnahme = a;
+        rec.ondataavailable = e => { if(e.data && e.data.size) a.teile.push(e.data); };
+        rec.onstop = () => {
+            try{ a.stream.getTracks().forEach(t => t.stop()); }catch(e){}
+            if(a.uhr) clearInterval(a.uhr);
+            if(aufnahme === a) aufnahme = null;
+            aufnahmeLeiste(false);
+            if(a.weg) return;
+            const dauer = (Date.now() - a.start) / 1000;
+            if(dauer < 1 || !a.teile.length){ chatSystemmeldung('Zu kurz - nichts gesendet.'); return; }
+            const typ = (a.rec.mimeType || art || 'audio/webm').replace(/\s+/g, '');
+            const blob = new Blob(a.teile, { type: typ });
+            blob.arrayBuffer().then(buf => {
+                if(!socket || !socket.connected){ chatSystemmeldung('Keine Verbindung - Sprachnachricht nicht gesendet.'); return; }
+                socket.emit('duoSprache', { code: roomCode || '__haus', mime: typ, dauer: Math.min(SPRACHE_MAX_SEK, dauer),
+                                            daten: buf, name: getDuoUserName() });
+            }).catch(() => chatSystemmeldung('Die Aufnahme ging verloren.'));
+        };
+        rec.start(1000);
+        aufnahmeLeiste(true);
+        const zeit = document.getElementById('duoChatAufnahmeZeit');
+        const tick = () => {
+            const s = (Date.now() - a.start) / 1000;
+            if(zeit) zeit.textContent = 'Aufnahme ' + dauerMinSek(s) + ' / 1:00';
+            if(s >= SPRACHE_MAX_SEK) aufnahmeBeenden(true);
+        };
+        tick();
+        a.uhr = setInterval(tick, 250);
+    }
+    function aufnahmeBeenden(senden){
+        const a = aufnahme;
+        if(!a) return;
+        a.weg = !senden;
+        try{ if(a.rec.state !== 'inactive') a.rec.stop(); else a.rec.onstop(); }catch(e){ aufnahme = null; aufnahmeLeiste(false); }
+    }
+
+    function spracheKnopf(id, zeichen, titel){
+        const b = document.querySelector('.duo-sprache[data-sprache-id="' + String(id).replace(/[^a-f0-9]/gi, '') + '"]');
+        const k = b && b.querySelector('.duo-sprache-knopf');
+        if(k){ k.textContent = zeichen; if(titel) k.title = titel; }
+        return b;
+    }
+    function spracheAbspielen(id){
+        const vorhanden = spracheAudio.get(id);
+        if(vorhanden){
+            if(vorhanden.paused){ spracheAlleAnhalten(id); vorhanden.play().catch(()=>{}); }
+            else vorhanden.pause();
+            return;
+        }
+        if(spracheWartet.has(id) || !socket) return;
+        spracheWartet.add(id);
+        spracheKnopf(id, '…', 'Wird geladen');
+        socket.emit('spracheHolen', { id: id });
+    }
+    function spracheAlleAnhalten(ausser){
+        spracheAudio.forEach((au, k) => { if(k !== ausser && !au.paused) au.pause(); });
+    }
+    function spracheDatenAngekommen(d){
+        if(!d || !d.id) return;
+        const id = String(d.id);
+        spracheWartet.delete(id);
+        if(d.fehlt || !d.daten){ spracheKnopf(id, '✕', 'Nicht mehr verfügbar - der Trainer wurde inzwischen neu gestartet'); return; }
+        const typ = String(d.mime || 'audio/webm');
+        const au = new Audio();
+        if(au.canPlayType && au.canPlayType(typ.split(';')[0]) === ''){
+            spracheKnopf(id, '✕', 'Dieser Browser kann die Aufnahme nicht abspielen (' + typ.split(';')[0] + ')');
+            return;
+        }
+        au.src = URL.createObjectURL(new Blob([d.daten], { type: typ }));
+        spracheAudio.set(id, au);
+        const b = spracheKnopf(id, '▶', 'Abspielen');
+        const balken = b ? b.querySelector('.duo-sprache-balken span') : null;
+        const dauerFeld = b ? b.querySelector('.duo-sprache-dauer') : null;
+        const gesamt = dauerFeld ? dauerFeld.textContent : '';
+        au.addEventListener('play', () => spracheKnopf(id, '⏸', 'Anhalten'));
+        au.addEventListener('pause', () => spracheKnopf(id, '▶', 'Abspielen'));
+        au.addEventListener('timeupdate', () => {
+            const d2 = isFinite(au.duration) && au.duration > 0 ? au.duration : 0;
+            if(balken && d2) balken.style.width = Math.min(100, 100 * au.currentTime / d2) + '%';
+            if(dauerFeld) dauerFeld.textContent = dauerMinSek(au.currentTime) + ' / ' + gesamt;
+        });
+        au.addEventListener('ended', () => {
+            if(balken) balken.style.width = '0';
+            if(dauerFeld) dauerFeld.textContent = gesamt;
+            spracheKnopf(id, '▶', 'Abspielen');
+        });
+        spracheAlleAnhalten(id);
+        au.play().catch(() => spracheKnopf(id, '▶', 'Abspielen'));
     }
 
     function chatNachrichtAnzeigen(n, stumm){
@@ -1282,30 +1602,149 @@
         // konnte. Dietmar: "mit Link klingt doof im Chat." Seit es die
         // Ankunftsmeldung gibt, weiss er ohnehin, wer hereingekommen ist.
         const woher = '';
+        // " · Host" hinter dem Namen des Gastgebers: Dietmar am 23.09.2026:
+        // "Das Wort Host im Chat klingt doof." Auf die Rueckfrage, was
+        // stattdessen dastehen soll, seine Antwort: "Server".
         const absender = (n.system || (eigen && !n.automatisch)) ? '' :
             '<span class="duo-chat-absender">' + escapeHtml(n.name || 'Teilnehmer') +
-            (n.istHost ? ' · Host' : '') + woher + '</span>';
-        zeile.innerHTML = absender + smileysErsetzen(escapeHtml(n.text)) +
-            '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>';
+            (n.istHost ? ' · Server' : '') + woher + '</span>';
+        const mitHaken = eigen && !n.system && !n.automatisch && n.id;
+        const koerper = (n.sprache && n.id)
+            ? '<span class="duo-sprache" data-sprache-id="' + escapeHtml(n.id) + '">'
+              + '<button type="button" class="duo-sprache-knopf" title="Abspielen">▶</button>'
+              + '<span class="duo-sprache-balken"><span></span></span>'
+              + '<span class="duo-sprache-dauer">' + dauerMinSek(n.sprache.dauer) + '</span></span>'
+            : chatLinks(smileysErsetzen(escapeHtml(n.text)));
+        zeile.innerHTML = absender + koerper +
+            '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>' +
+            (mitHaken ? '<span class="duo-chat-haken" data-haken="' + escapeHtml(n.id) + '"></span>' : '');
         verlauf.appendChild(zeile);
+        if(mitHaken){
+            hakenSetzen(n.id, gelesenStand.get(n.id) || null, n.empfaenger);
+        } else if(!eigen && !n.system && !n.automatisch && n.id){
+            zuMelden.add(n.id);
+            gelesenMelden();
+        }
 
         while(verlauf.children.length > 200) verlauf.removeChild(verlauf.firstChild);
         chatNachUntenRollen();
 
         if(stumm || eigen) return;
 
+        // Ton und Aufklappen nur bei echten Nachrichten - nicht bei den
+        // Zeilen, die der Server selbst schreibt ("betritt den Server").
+        const echteNachricht = !n.system && !n.automatisch;
+        if(echteNachricht && !pruefungLaeuft()) chatTonSpielen();
+
         if(!chatOffen){
             chatUngelesen++;
             chatBlaseAktualisieren();
-            // Aufklappen - aber nicht mitten in einer laufenden Pruefung
-            if(!pruefungLaeuft()) chatUmschalten(true);
+            // Aufklappen - aber nicht mitten in einer laufenden Pruefung.
+            // Ohne den Fokus ins Eingabefeld zu ziehen (23.09.2026): Wer
+            // gerade eine Frage per Tastatur beantwortet, soll nicht auf
+            // einmal in den Chat tippen.
+            if(!pruefungLaeuft()) chatUmschalten(true, true);
         }
     }
 
-    function chatSenden(){
+    // ----------------------------------------------------------------
+    //  DER TON FUER EINGEHENDE NACHRICHTEN                (23.09.2026)
+    //  Dietmar: "chat-eingang.mp3 ist drin. Der Sound soll abgespielt
+    //  werden, wenn ein Benutzer etwas schreibt. Der Chat soll sich
+    //  dabei oeffnen."
+    //
+    //  Die Datei hat er bei Pixabay ausgesucht ("Soft Notification");
+    //  die Lizenz dort erlaubt den Einbau ohne Namensnennung.
+    //
+    //  Hoechstens alle zweieinhalb Sekunden: Schreiben drei Leute
+    //  gleichzeitig, klingt es einmal und nicht dreimal. Waehrend einer
+    //  Pruefung still, so wie der Chat dann auch nicht aufspringt.
+    //
+    //  Browser lassen Toene erst nach dem ersten Klick oder Tastendruck
+    //  auf der Seite zu. Deshalb wird der Ton bei der ersten Beruehrung
+    //  einmal lautlos angespielt - danach darf er (siehe tonFreischalten
+    //  in Index.html, dasselbe Verfahren).
+    // ----------------------------------------------------------------
+    let chatTon = null;
+    let chatTonZuletzt = 0;
+    function chatTonHolen(){
+        if(!chatTon){
+            chatTon = new Audio('sounds/chat-eingang.mp3');
+            chatTon.preload = 'auto';
+            chatTon.volume = 0.7;
+        }
+        return chatTon;
+    }
+    function chatTonSpielen(){
+        try{
+            const jetzt = Date.now();
+            if(jetzt - chatTonZuletzt < 2500) return;
+            chatTonZuletzt = jetzt;
+            const a = chatTonHolen();
+            a.volume = 0.7;
+            a.currentTime = 0;
+            const pr = a.play();
+            if(pr && pr.catch) pr.catch(function(e){ console.log('[CHAT] Ton nicht abgespielt: ' + (e && e.name)); });
+        }catch(e){}
+    }
+    function chatTonFreischalten(){
+        try{
+            const a = chatTonHolen();
+            a.volume = 0;
+            const zurueck = function(){ try{ a.pause(); a.currentTime = 0; a.volume = 0.7; }catch(e){} };
+            const pr = a.play();
+            if(pr && pr.then) pr.then(zurueck).catch(zurueck); else zurueck();
+        }catch(e){}
+    }
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function(art){
+        document.addEventListener(art, chatTonFreischalten, { once: true, passive: true });
+    });
+
+    // ----------------------------------------------------------------
+    //  DER GRUENE KNOPF: LINK ZUM HERUNTERLADEN              (23.09.2026)
+    //  Dietmar, mit einem Bild aus dem Chat - ein Besucher fragte "wo
+    //  kann ich den Trainer downloaden?": "Hier wuensche ich mir einen
+    //  gruenen Button zum Senden, wenn noch nichts im Chat geschrieben
+    //  wurde. Klicke ich da drauf, geht der Link zum Download raus.
+    //  Schreibe ich was, aendert sich die Farbe in Standard."
+    //
+    //  Nur beim Gastgeber: am Trainer-PC selbst (Chat ohne Raum) oder als
+    //  Host eines Gruppenraums. Ein Besucher hat den gewoehnlichen Knopf.
+    //  Verschickt wird die GitHub-Seite, nicht die Datei selbst: Dort
+    //  steht der Knopf zum Herunterladen fuer Windows, Linux und Mac,
+    //  dazu, was man mit der Datei macht.
+    // ----------------------------------------------------------------
+    const DOWNLOAD_SEITE = 'https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/';
+    const DOWNLOAD_TEXT  = 'Den Amateurfunk-Trainer zum Herunterladen gibt es hier: ' + DOWNLOAD_SEITE
+                         + ' \u2013 kostenlos, ohne Anmeldung, f\u00fcr Windows, Linux und Mac.';
+    let downloadZuletzt = 0;
+
+    function darfDownloadSenden(){
+        try{
+            if(roomCode) return !!isHost;
+            if(typeof window.laeuftLokal === 'function') return !!window.laeuftLokal();
+            return !vonAussen;
+        }catch(e){ return false; }
+    }
+    function downloadKnopfZeichnen(){
+        const k = document.getElementById('duoChatSenden');
+        const feld = document.getElementById('duoChatEingabe');
+        if(!k || !feld) return;
+        const gruen = darfDownloadSenden() && !feld.value.trim();
+        k.classList.toggle('download', gruen);
+        k.title = gruen ? 'Link zum Herunterladen an alle senden' : 'Senden';
+    }
+
+    function chatSenden(ausKnopf){
         const feld = document.getElementById('duoChatEingabe');
         if(!feld) return;
-        const text = feld.value.trim();
+        let text = feld.value.trim();
+        if(!text && ausKnopf === true && darfDownloadSenden()){
+            // Doppelklick soll den Link nicht zweimal schicken.
+            if(Date.now() - downloadZuletzt < 3000) return;
+            downloadZuletzt = Date.now();
+            text = DOWNLOAD_TEXT;
+        }
         if(!text) return;
         if(!socket){
             chatSystemmeldung('Keine Verbindung - Nachricht nicht gesendet.');
@@ -1322,6 +1761,7 @@
         }
         feld.value = '';
         feld.focus();
+        downloadKnopfZeichnen();
     }
 
     // ----------------------------------------------------------------
@@ -2674,7 +3114,21 @@
 
         // ===== Gruppenchat =====
         socket.on('duoChatNachricht', n=>{ try{ chatNachrichtAnzeigen(n); }catch(e){ console.error('[CHAT]', e); } });
-        socket.on('duoChatVerlauf', d=>{ try{ chatVerlaufSetzen(d && d.nachrichten); }catch(e){ console.error('[CHAT]', e); } });
+        socket.on('spracheDaten', d=>{ try{ spracheDatenAngekommen(d); }catch(e){ console.error('[CHAT] Sprache', e); } });
+        socket.on('chatGelesenStand', d=>{
+            try{
+                if(!d || !d.id) return;
+                const st = { anzahl: Number(d.anzahl) || 0, namen: Array.isArray(d.namen) ? d.namen.map(String) : [] };
+                gelesenStand.set(String(d.id), st);
+                hakenSetzen(String(d.id), st);
+            }catch(e){}
+        });
+        socket.on('duoChatVerlauf', d=>{ try{
+            // Im Raum zaehlt nur der Raumverlauf; einer aus dem Haus, der
+            // nach einem Abriss zu spaet eintrifft, wuerde ihn ersetzen.
+            if(roomCode && d && d.code === '__haus') return;
+            chatVerlaufSetzen(d && d.nachrichten);
+        }catch(e){ console.error('[CHAT]', e); } });
         socket.on('duoChatHinweis', t=>{ try{ chatSystemmeldung(t); }catch(e){} });
 
         socket.on('duoConfigGeaendert', d=>{
@@ -2700,7 +3154,7 @@
         // ===== Abgleich =====
         socket.on('duoNeuLaden', d=>{
             try{
-                chatSystemmeldung('Der Host gleicht alle Teilnehmer ab - die Seite wird neu geladen...');
+                chatSystemmeldung('Der Server gleicht alle Teilnehmer ab - die Seite wird neu geladen...');
                 setTimeout(()=>location.reload(), 1200);
             }catch(e){ location.reload(); }
         });

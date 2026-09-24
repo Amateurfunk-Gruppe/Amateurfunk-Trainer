@@ -3249,8 +3249,8 @@ app.post('/api/50ohm-index-holen', localOnly, async (req, res) => {
 //
 //  DREI REGELN, DAMIT DARAUS KEINE ZUMUTUNG WIRD
 //
-//  1. Nur wenn noetig. Fehlt die Datei oder ist sie aelter als 30 Tage,
-//     wird geholt - sonst nicht. Bei jedem Start nachzufragen hiesse,
+//  1. Nur wenn noetig. Fehlt die Datei oder ist sie aelter als 7 Tage
+//     (bis 24.09.2026: 30), wird geholt - sonst nicht. Bei jedem Start nachzufragen hiesse,
 //     einem Verein, der uns nichts schuldet, jede Sitzung eine Anfrage
 //     zu schicken.
 //
@@ -3313,9 +3313,25 @@ function zeichenAutomatik(){
   }catch(e){ /* nie ein Grund, den Start zu stoeren */ }
 }
 
-const OHM_INDEX_FRIST = 30 * 24 * 60 * 60 * 1000;
+// ----------------------------------------------------------------
+//  SIEBEN TAGE STATT DREISSIG, UND AUCH IM DAUERBETRIEB  (24.09.2026)
+//  Dietmar: "Der DARC arbeitet daran und moechte zu jeder Frage eine
+//  Loesung anbieten. Die muessen in allen Klassen vorhanden sein."
+//
+//  Solange der DARC nachlegt, waeren dreissig Tage zu lang: Ein neuer
+//  Loesungsweg stuende bis zu einem Monat beim DARC, bevor der Trainer
+//  ihn anbietet. Sieben Tage sind eine Anfrage je Woche - fuer den
+//  Verein nicht der Rede wert.
+//
+//  Und bisher wurde nur beim START nachgesehen. Ein Server, der
+//  wochenlang durchlaeuft (das ThinkPad), haette nie aufgefrischt. Jetzt
+//  schaut er einmal am Tag nach, ob die Datei aelter als sieben Tage ist
+//  - geholt wird trotzdem hoechstens einmal je Woche.
+// ----------------------------------------------------------------
+const OHM_INDEX_FRIST = 7 * 24 * 60 * 60 * 1000;
+const OHM_INDEX_NACHSEHEN = 24 * 60 * 60 * 1000;
 
-function ohmIndexAutomatik(){
+function ohmIndexWennNoetig(){
   try{
     const ziel = path.join(__dirname, '50ohm_index.json');
     let noetig = true;
@@ -3324,15 +3340,20 @@ function ohmIndexAutomatik(){
       noetig = (Date.now() - st.mtimeMs) > OHM_INDEX_FRIST;
     }catch(e){ noetig = true; }          // gar nicht da
     if(!noetig) return;
+    ohmIndexHolen()
+      .then(e => console.log('[50OHM] von selbst geholt: ' + e.anzahl + ' Fragen, '
+                           + e.mitLoesung + ' mit Lösungsweg'))
+      .catch(e => console.log('[50OHM] von selbst nicht geholt (' + e.message
+                           + ') – der Trainer läuft ohne die Datei genauso.'));
+  }catch(e){ /* nie ein Grund, den Betrieb zu stoeren */ }
+}
 
-    const t = setTimeout(() => {
-      ohmIndexHolen()
-        .then(e => console.log('[50OHM] von selbst geholt: ' + e.anzahl + ' Fragen, '
-                             + e.mitLoesung + ' mit Lösungsweg'))
-        .catch(e => console.log('[50OHM] von selbst nicht geholt (' + e.message
-                             + ') – der Trainer läuft ohne die Datei genauso.'));
-    }, 8000);
+function ohmIndexAutomatik(){
+  try{
+    const t = setTimeout(ohmIndexWennNoetig, 8000);
     if(t.unref) t.unref();
+    const tag = setInterval(ohmIndexWennNoetig, OHM_INDEX_NACHSEHEN);
+    if(tag.unref) tag.unref();
   }catch(e){ /* nie ein Grund, den Start zu stoeren */ }
 }
 
@@ -5519,6 +5540,143 @@ try{
   const hausChat = [];
 
   // ----------------------------------------------------------------
+  //  GELESEN, WIE BEI WHATSAPP                        (23.09.2026)
+  //  Dietmar: "im Chat waere wie bei WhatsApp schoen, wenn ich sehe, ob
+  //  meine Nachricht gelesen wurde."
+  //
+  //  Jede Nachricht bekommt beim Verschicken mit, an wie viele sie ging
+  //  (empfaenger). Hat jemand sie auf dem Bildschirm gehabt - Chat
+  //  offen, Tab sichtbar -, meldet sein Browser das (chatGelesen). Der
+  //  Server merkt sich, wer, und sagt es NUR dem Absender
+  //  (chatGelesenStand). Die anderen erfahren nicht, wer was gelesen hat.
+  //
+  //  Alles im Arbeitsspeicher, hoechstens fuer 2000 Nachrichten; beim
+  //  Neustart ist es weg, wie der Chat selbst.
+  // ----------------------------------------------------------------
+  const chatLeser = new Map();      // Nachrichten-id -> Map(socket-id -> Name)
+  const CHAT_LESER_MAX = 2000;
+
+  // ----------------------------------------------------------------
+  //  SPRACHNACHRICHTEN                                  (23.09.2026)
+  //  Dietmar: "Kann man da auch einen Sprachchat einbauen?" - und auf
+  //  die Rueckfrage, wer sprechen darf: "Im Gruppenraum sollte jeder
+  //  sprechen koennen."
+  //
+  //  Also: Im Gruppenraum darf jeder eine Sprachnachricht schicken. Im
+  //  Chat ohne Raum nur der Gastgeber an seinem eigenen Rechner (und
+  //  wer in seinem WLAN sitzt) - wer nur ueber den Link kommt, kann
+  //  sie anhoeren, aber selbst nur schreiben. Eine Aufnahme von einem
+  //  Unbekannten spielt man ab, ohne zu wissen, was drauf ist.
+  //
+  //  Die Aufnahme selbst geht NICHT an alle mit der Nachricht mit. Die
+  //  Nachricht sagt nur "Sprachnachricht, 0:12"; wer auf Abspielen
+  //  drueckt, holt sie sich (spracheHolen). So laeuft nur ueber die
+  //  Leitung nach oben, was wirklich jemand hoeren will.
+  //
+  //  Nur im Arbeitsspeicher: hoechstens 60 Aufnahmen und 15 MB, die
+  //  aeltesten fallen heraus. Beim Neustart ist alles weg.
+  // ----------------------------------------------------------------
+  const sprachSpeicher = new Map();    // Nachrichten-id -> { buf, mime }
+  const SPRACHE_MAX_ANZAHL = 60;
+  const SPRACHE_MAX_GESAMT = 15 * 1024 * 1024;
+  const SPRACHE_MAX_GROESSE = 450 * 1024;    // eine Minute Opus sind rund 200 KB
+  const SPRACHE_MAX_SEK = 62;
+  const SPRACHE_ARTEN = /^audio\/(webm|ogg|mp4|mpeg|aac)(;\s*codecs=[a-z0-9.,"' -]+)?$/i;
+  let sprachGesamt = 0;
+  function spracheMerken(id, buf, mime){
+    sprachSpeicher.set(id, { buf: buf, mime: mime });
+    sprachGesamt += buf.length;
+    while(sprachSpeicher.size > SPRACHE_MAX_ANZAHL || sprachGesamt > SPRACHE_MAX_GESAMT){
+      const alt = sprachSpeicher.keys().next().value;
+      const e = sprachSpeicher.get(alt);
+      sprachGesamt -= (e && e.buf ? e.buf.length : 0);
+      sprachSpeicher.delete(alt);
+    }
+  }
+  // ----------------------------------------------------------------
+  //  WER NEU KOMMT, SIEHT NICHTS VON VORHER             (23.09.2026)
+  //  Dietmar: "Der Chat und Sprachnachrichten muessen nach einem
+  //  Neustart geloescht werden. Neue Benutzer sollten nicht sehen, was
+  //  davor schon geschrieben wurde."
+  //
+  //  Das Erste war schon so: Chat, Aufnahmen und Haken liegen nur im
+  //  Arbeitsspeicher, nach einem Neustart ist alles weg. Das Zweite
+  //  nicht: Bisher bekam jeder, der dazukam, die letzten hundert
+  //  Nachrichten nachgeliefert ("damit spaeter Beitretende den Faden
+  //  kennen"). Jetzt sieht jeder nur, was geschrieben wurde, seit er da
+  //  ist - im Chat ohne Raum seit dem Aufruf der Seite, im Gruppenraum
+  //  seit dem Beitritt.
+  //
+  //  "Seit er da ist" haengt an einer Kennung, die der Browser beim
+  //  Laden der Seite auswuerfelt und bei jeder Verbindung mitschickt
+  //  (auth.sitzung). Reisst die Leitung kurz ab und Socket.IO verbindet
+  //  neu, ist es dieselbe Kennung - der Faden bleibt stehen. Laedt
+  //  jemand die Seite neu, ist es eine neue - dann ist er ein neuer
+  //  Besucher und faengt leer an. Den Zeitpunkt setzt immer der Server;
+  //  eine ausgedachte Kennung bringt also nichts als einen leeren Chat.
+  //
+  //  Dasselbe gilt fuer Sprachnachrichten und Lesehaken: Wer eine
+  //  Nachricht nicht sehen darf, kann sie weder abspielen noch als
+  //  gelesen melden (chatNachrichtFinden).
+  // ----------------------------------------------------------------
+  const chatSitzungen = new Map();     // Kennung -> { seit, raeume: { schluessel: seit } }
+  const CHAT_SITZUNGEN_MAX = 3000;
+  function chatSitzungFuer(sock){
+    if(sock.data.chatSitzung) return sock.data.chatSitzung;
+    let kennung = '';
+    try{ kennung = String((sock.handshake && sock.handshake.auth && sock.handshake.auth.sitzung) || ''); }catch(e){}
+    let s = null;
+    if(/^[a-f0-9]{32}$/.test(kennung)){
+      s = chatSitzungen.get(kennung) || null;
+      if(s) chatSitzungen.delete(kennung);          // ans Ende: zuletzt benutzt
+      else s = { seit: Date.now(), raeume: {} };
+      chatSitzungen.set(kennung, s);
+      while(chatSitzungen.size > CHAT_SITZUNGEN_MAX) chatSitzungen.delete(chatSitzungen.keys().next().value);
+    } else {
+      // Eine Seite von vor dem Update schickt keine Kennung - dann
+      // gilt diese eine Verbindung.
+      s = { seit: Date.now(), raeume: {} };
+    }
+    sock.data.chatSitzung = s;
+    return s;
+  }
+  // Ein Raumcode kann nach dem Schliessen neu vergeben werden - deshalb
+  // gehoert der Zeitpunkt der Erstellung mit zum Schluessel.
+  function raumSchluessel(room){ return room.code + ':' + (room.createdAt || 0); }
+  function raumBeitrittMerken(sock, room){
+    const s = chatSitzungFuer(sock);
+    const k = raumSchluessel(room);
+    if(!s.raeume[k]){
+      const alle = Object.keys(s.raeume);
+      if(alle.length >= 20) delete s.raeume[alle[0]];
+      s.raeume[k] = Date.now();
+    }
+  }
+  function chatSichtbarAb(sock, room){
+    const s = chatSitzungFuer(sock);
+    if(!room) return s.seit;
+    return s.raeume[raumSchluessel(room)] || Infinity;
+  }
+  function chatFuer(sock, room, liste){
+    const ab = chatSichtbarAb(sock, room);
+    return (Array.isArray(liste) ? liste : []).filter(function(n){ return n && (n.zeit || 0) >= ab; });
+  }
+  function chatNachrichtFinden(sock, id){
+    const code = sock.data && sock.data.roomCode;
+    if(code && duoRooms[code] && Array.isArray(duoRooms[code].chat)){
+      const n = duoRooms[code].chat.find(function(x){ return x.id === id; });
+      if(n) return ((n.zeit || 0) >= chatSichtbarAb(sock, duoRooms[code])) ? n : null;
+    }
+    // Aus dem Chat ohne Raum darf lesen, wer dort mitliest: ohne Raum,
+    // oder der Gastgeber am eigenen Rechner (siehe hausLeute).
+    if(hausLeute().indexOf(sock) !== -1){
+      const n = hausChat.find(function(x){ return x.id === id; });
+      return (n && (n.zeit || 0) >= chatSichtbarAb(sock, null)) ? n : null;
+    }
+    return null;
+  }
+
+  // ----------------------------------------------------------------
   //  "IST DAZUGEKOMMEN"                              (21.09.2026)
   //  Dietmar, mit drei Leuten gleichzeitig auf der Seite: "Hier waere
   //  eine Begruessung mit Namen gut."
@@ -5647,6 +5805,9 @@ try{
     //  soll ein zweiter Raum weiterhin moeglich sein.
     const vonAussen = sperrbar(socketIp(socket));
     socket.data.vonAussen = vonAussen;
+    // Ab wann dieser Besucher den Chat sieht - gleich jetzt festhalten,
+    // vor jeder Nachricht (siehe "WER NEU KOMMT").
+    chatSitzungFuer(socket);
     // Der Client sperrt daraufhin den Knopf und schreibt hin, warum.
     // Verlassen wuerde ich mich darauf nicht - die Pruefung unten in
     // createRoom ist die, die haelt.
@@ -5696,11 +5857,18 @@ try{
 
     // Der Chat ohne Raum: Verlauf mitgeben und allen sagen, wer da ist.
     // Beides erst im naechsten Takt, damit dieser Socket in
-    // io.sockets.sockets schon gefuehrt wird.
+    // io.sockets.sockets schon gefuehrt wird. Der Verlauf ist fuer einen
+    // Neuen leer; nur nach einem kurzen Abriss steht darin, was er
+    // schon hatte (23.09.2026).
     setTimeout(function(){
       try{
         if(!socket.connected) return;
-        socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+        // Wer nach einem Abriss sofort wieder seinem Raum beigetreten
+        // ist, bekommt dessen Verlauf - der aus dem Haus wuerde ihn
+        // sonst ueberschreiben (gefunden beim Testen am 23.09.2026).
+        if(!socket.data.roomCode){
+          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: chatFuer(socket, null, hausChat) });
+        }
         hausVolkMelden();
         const ansage = neustartAnsageGueltig();
         if(ansage) socket.emit('neustartAnsage', ansage);
@@ -5840,6 +6008,7 @@ try{
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
         socket.join(code); socket.data.roomCode=code;
+        raumBeitrittMerken(socket, duoRooms[code]);
         hausVolkMelden();   // dieser hier ist ab jetzt im Raum, nicht mehr im Haus
 
         // WICHTIG: Fragen-Set wird SOFORT bei Raum-Erstellung fix vergeben (nicht erst bei "Start").
@@ -5886,6 +6055,7 @@ try{
       if(!room.ipsVonTeilnehmern) room.ipsVonTeilnehmern = {};
       room.ipsVonTeilnehmern[socket.id] = wo;
       socket.join(data.code); socket.data.roomCode=data.code;
+      raumBeitrittMerken(socket, room);
       hausVolkMelden();
       console.log(`[GRUPPENRAUM] ${userName} ist Raum ${data.code} beigetreten (${ipKuerzen(wo)})`);
       // Fragen stehen schon seit Raum-Erstellung fest - jeder Beitretende bekommt dieselbe Basis
@@ -5894,8 +6064,10 @@ try{
       // PRUEFUNGSRAUM kommt und nicht in eine Fragerunde - der Haken im
       // Fenster steht dann von selbst richtig (20.09.2026).
       socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length, config: room.config || null});
-      // Chatverlauf gleich mitschicken, damit spaeter Beitretende den Faden kennen
-      socket.emit('duoChatVerlauf', { code: data.code, nachrichten: Array.isArray(room.chat) ? room.chat : [] });
+      // Chatverlauf mitschicken - seit 23.09.2026 nur, was seit dem
+      // eigenen Beitritt geschrieben wurde. Wer neu kommt, bekommt also
+      // einen leeren Chat; wer nach einem Abriss zurueckkehrt, seinen.
+      socket.emit('duoChatVerlauf', { code: data.code, nachrichten: chatFuer(socket, room, room.chat) });
       // Automatische Begruessung - geht NUR an den Beitretenden und wird bewusst
       // nicht im Raumverlauf gespeichert, sonst saehe jeder sie mehrfach.
       willkommenSenden(socket, room);
@@ -6358,7 +6530,7 @@ try{
     function willkommenSenden(sock, room){
         try{
             if(!room) return;
-            const hostName = (room.users && room.hostId && room.users[room.hostId] && room.users[room.hostId].name) || 'Host';
+            const hostName = (room.users && room.hostId && room.users[room.hostId] && room.users[room.hostId].name) || 'Trainer';   // nicht "Host" - Dietmar 23.09.2026: "klingt doof"
             // Kleine Verzoegerung, damit die Raum-Oberflaeche im Browser schon
             // aufgebaut ist - sonst kaeme die Nachricht an, bevor das Chatfenster
             // ueberhaupt sichtbar ist.
@@ -6422,10 +6594,13 @@ try{
             zeit: Date.now()
           };
           n.haus = true;      // der Client schreibt "am Link" dazu
+          n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
           hausChat.push(n);
           while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
           hausSenden('duoChatNachricht', n);
-          console.log('[CHAT] ohne Raum - ' + n.name + ': ' + t.slice(0, 60));
+          // Nur wer und wie lang, nicht was: server.log ueberlebt jeden
+          // Neustart, der Chat soll es nicht (23.09.2026).
+          console.log('[CHAT] ohne Raum - ' + n.name + ' schreibt (' + t.length + ' Zeichen)');
           return;
         }
 
@@ -6456,6 +6631,14 @@ try{
         room.chat.push(nachricht);
         while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
 
+        // An wie viele geht sie? Die anderen im Raum - und, wenn der
+        // Gastgeber schreibt, dazu die am Link (siehe unten).
+        try{
+          let anz = Object.keys(room.users || {}).filter(function(k){ return k !== socket.id; }).length;
+          if(socket.id === room.hostId) anz += hausOhneRaum().filter(function(x){ return x.id !== socket.id; }).length;
+          nachricht.empfaenger = anz;
+        }catch(e){}
+
         io.to(data.code).emit('duoChatNachricht', nachricht);
 
         // Die Antwort des Gastgebers geht auch an die, die am Link
@@ -6481,8 +6664,121 @@ try{
             console.log('[CHAT] Antwort des Gastgebers auch an ' + draussen.length + ' am Link.');
           }
         }
-        console.log(`[CHAT] ${room.code} ${nachricht.name}: ${text.slice(0,60)}`);
+        console.log(`[CHAT] ${room.code} ${nachricht.name} schreibt (${text.length} Zeichen)`);
       }catch(e){ console.error('[CHAT] Fehler', e); }
+    });
+
+    // Der Browser meldet: Diese Nachrichten hatte ich auf dem Bildschirm.
+    socket.on('chatGelesen', data=>{
+      try{
+        if(!data || !Array.isArray(data.ids)) return;
+        let name = String(data.name || '').replace(/[\u0000-\u001F\u007F<>]/g, ' ').trim().slice(0, 20);
+        const code = socket.data && socket.data.roomCode;
+        if(code && duoRooms[code] && duoRooms[code].users[socket.id]){
+          name = duoRooms[code].users[socket.id].name || name;
+        }
+        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Gastgeber';
+        data.ids.slice(0, 50).forEach(function(id){
+          id = String(id || '').slice(0, 32);
+          if(!id) return;
+          const n = chatNachrichtFinden(socket, id);
+          if(!n || !n.userId || n.userId === socket.id) return;   // eigene zaehlen nicht
+          let leser = chatLeser.get(id);
+          if(!leser){
+            leser = new Map();
+            chatLeser.set(id, leser);
+            if(chatLeser.size > CHAT_LESER_MAX) chatLeser.delete(chatLeser.keys().next().value);
+          }
+          if(leser.has(socket.id)) return;
+          leser.set(socket.id, name);
+          const absender = io.sockets.sockets.get(n.userId);
+          if(absender){
+            absender.emit('chatGelesenStand', { id: id, anzahl: leser.size,
+                                                namen: Array.from(leser.values()).slice(0, 20) });
+          }
+        });
+      }catch(e){ console.error('[CHAT] Gelesen-Fehler', e); }
+    });
+
+    // Eine Sprachnachricht kommt an.
+    socket.on('duoSprache', data=>{
+      try{
+        if(!data || typeof data !== 'object') return;
+        let buf = data.daten;
+        if(buf instanceof ArrayBuffer) buf = Buffer.from(buf);
+        if(!Buffer.isBuffer(buf) || buf.length < 200) return;
+        if(buf.length > SPRACHE_MAX_GROESSE){ socket.emit('duoChatHinweis', 'Die Aufnahme ist zu lang.'); return; }
+        const mime = String(data.mime || '').slice(0, 60);
+        if(!SPRACHE_ARTEN.test(mime)) return;
+        const dauer = Math.max(1, Math.min(SPRACHE_MAX_SEK, Math.round(Number(data.dauer) || 0)));
+        // Hoechstens eine Aufnahme alle drei Sekunden je Teilnehmer
+        const jetzt = Date.now();
+        if(socket.data.spracheZuletzt && jetzt - socket.data.spracheZuletzt < 3000){
+          socket.emit('duoChatHinweis', 'Bitte etwas langsamer.'); return;
+        }
+        socket.data.spracheZuletzt = jetzt;
+        const text = '\uD83C\uDFA4 Sprachnachricht (' + Math.floor(dauer / 60) + ':' + String(dauer % 60).padStart(2, '0') + ')';
+
+        // --- Im Chat ohne Raum: nur der Gastgeber ---
+        if(data.code === '__haus'){
+          if(socket.data && socket.data.roomCode) return;
+          if(socket.data && socket.data.vonAussen) return;     // Besucher hoeren nur zu
+          let name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || 'Gastgeber';
+          const n = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id, name: name, istHost: true,
+                      text: text, zeit: jetzt, haus: true, sprache: { mime: mime, dauer: dauer } };
+          n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
+          spracheMerken(n.id, buf, mime);
+          hausChat.push(n);
+          while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+          hausSenden('duoChatNachricht', n);
+          console.log('[CHAT] Sprachnachricht ohne Raum - ' + name + ', ' + dauer + ' s, ' + Math.round(buf.length / 1024) + ' KB');
+          return;
+        }
+
+        // --- Im Gruppenraum: jeder ---
+        const room = duoRooms[data.code];
+        if(!room) return;
+        const user = room.users[socket.id];
+        if(!user){ socket.emit('errorMsg','Du bist nicht in diesem Raum'); return; }
+        const nachricht = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id,
+                            name: user.name || 'Teilnehmer', istHost: socket.id === room.hostId,
+                            text: text, zeit: jetzt, sprache: { mime: mime, dauer: dauer } };
+        try{
+          let anz = Object.keys(room.users || {}).filter(function(k){ return k !== socket.id; }).length;
+          if(socket.id === room.hostId) anz += hausOhneRaum().filter(function(x){ return x.id !== socket.id; }).length;
+          nachricht.empfaenger = anz;
+        }catch(e){}
+        spracheMerken(nachricht.id, buf, mime);
+        if(!Array.isArray(room.chat)) room.chat = [];
+        room.chat.push(nachricht);
+        while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
+        io.to(data.code).emit('duoChatNachricht', nachricht);
+        // Wie beim Text: Was der Gastgeber spricht, hoeren auch die am Link.
+        if(socket.id === room.hostId){
+          const draussen = hausOhneRaum();
+          if(draussen.length){
+            const kopie = Object.assign({}, nachricht, { haus: true });
+            if(!hausChat.some(function(x){ return x.id === kopie.id; })){
+              hausChat.push(kopie);
+              while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+            }
+            draussen.forEach(function(x){ try{ x.emit('duoChatNachricht', kopie); }catch(e){} });
+          }
+        }
+        console.log('[CHAT] ' + room.code + ' Sprachnachricht - ' + nachricht.name + ', ' + dauer + ' s, ' + Math.round(buf.length / 1024) + ' KB');
+      }catch(e){ console.error('[CHAT] Sprache-Fehler', e); }
+    });
+
+    // Abspielen: Die Aufnahme holen - nur, wer die Nachricht auch sehen darf.
+    socket.on('spracheHolen', data=>{
+      try{
+        const id = String((data && data.id) || '').slice(0, 32);
+        if(!id) return;
+        const n = chatNachrichtFinden(socket, id);
+        const e = sprachSpeicher.get(id);
+        if(!n || !e){ socket.emit('spracheDaten', { id: id, fehlt: true }); return; }
+        socket.emit('spracheDaten', { id: id, mime: e.mime, daten: e.buf });
+      }catch(e){ console.error('[CHAT] Sprache-holen-Fehler', e); }
     });
 
     // Verlauf auf Anfrage - wird vom Client nach Beitritt/Neuladen geholt
@@ -6490,12 +6786,12 @@ try{
       try{
         if(!data || typeof data !== 'object') return;
         if(data.code === '__haus'){
-          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: chatFuer(socket, null, hausChat) });
           return;
         }
         const room = duoRooms[data.code];
         if(!room || !room.users[socket.id]) return;
-        socket.emit('duoChatVerlauf', { code: room.code, nachrichten: Array.isArray(room.chat) ? room.chat : [] });
+        socket.emit('duoChatVerlauf', { code: room.code, nachrichten: chatFuer(socket, room, room.chat) });
       }catch(e){ console.error('[CHAT] Verlauf-Fehler', e); }
     });
 
@@ -6748,7 +7044,7 @@ try{
         // dem Chat ohne Raum ausgeschlossen geblieben.
         socket.data.roomCode = null;
         setTimeout(function(){ try{
-          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: hausChat });
+          socket.emit('duoChatVerlauf', { code: '__haus', nachrichten: chatFuer(socket, null, hausChat) });
           hausVolkMelden();
         }catch(e){} }, 30);
         if(duoRooms[code].hostId===socket.id){

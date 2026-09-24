@@ -2679,7 +2679,59 @@
         body.dark.runde-laeuft.quelle-zeigen .footer-note {
             background: var(--nacht-karte, #12283d);
         }
-        #quelleBtn.an { background: var(--panel-navy); color: #ffffff; }
+        /* DER ZAEHLER RUECKT IN DER LEISTE AUF             (24.09.2026)
+           Dietmar: "Ganz unten in der Leiste sitzt nach dem Einblenden der
+           Besucherzaehler sehr weit rechts. Ich moechte, dass er in der
+           Leiste weiter nach links aufrueckt."
+           In der Seite steht das Kaestchen absichtlich am rechten Rand der
+           Fusszeile (siehe DER BESUCHERZAEHLER). In der eingeblendeten
+           Leiste geht diese Fusszeile aber ueber das ganze Fenster - dort
+           hiess "rechter Rand" ganz aussen, halb unter dem Gruppenchat.
+           Hier steht es deshalb im Textfluss, direkt hinter "Datenschutz". */
+        body.runde-laeuft.quelle-zeigen .footer-zaehler {
+            position: static;
+            transform: none;
+            display: inline-flex;
+            vertical-align: middle;
+            margin: -2px 0 0 14px;
+        }
+        /* DAS (i) IST AUCH EINGESCHALTET ZU SEHEN          (24.09.2026)
+           Dietmar: "Nach dem Einblenden ist das (i) fuer Information nicht
+           mehr zu erkennen." Die Regel hier stand ohne !important, .nav-btn
+           setzt die Schriftfarbe aber MIT - der Grund wurde dunkelblau,
+           das Zeichen blieb dunkelblau. Im Dark Mode war es umgekehrt: Dort
+           kam der dunkelblaue Grund gar nicht erst an. Jetzt sieht der
+           eingeschaltete Knopf aus wie "Weiter" daneben - in jedem Stil. */
+        /* KEIN RUCKELN BEIM LADEN                          (24.09.2026)
+           Dietmar, mit einem Video: "Undefinierbares Ruckeln in der Groesse
+           der Hauptansicht. Vor allem, wenn ich auf Support/Datenschutz
+           klicke."
+           Nachgemessen: Die Seite erschien in der geschaetzten Groesse,
+           dann kamen nacheinander die Fragen der Klasse, die Zeilen darunter
+           und zuletzt die ausgemessene Anzeigegroesse - drei, vier Spruenge
+           in einer knappen Sekunde, bei JEDEM Laden. Und Support/Datenschutz
+           ersetzten den Trainer im selben Fenster; der Weg zurueck war ein
+           neues Laden, also dasselbe noch einmal.
+           Jetzt bleibt der Inhalt unsichtbar, bis alles steht (siehe
+           aufbauFertig weiter unten) - hoechstens 2,5 Sekunden, und
+           notfalls gibt der Block vor dem ersten Zeichnen nach 3 Sekunden
+           von selbst frei. Der Hintergrund bleibt dabei stehen, es blitzt
+           nichts Weisses auf. */
+        html.afu-aufbau body > * { opacity: 0 !important; }
+        #quelleBtn.an,
+        #quelleBtn.an:hover:not(:disabled) {
+            background: var(--panel-navy) !important;
+            border-color: var(--panel-navy) !important;
+            color: #ffffff !important;
+        }
+        #quelleBtn.an i { color: #ffffff !important; }
+        body.dark #quelleBtn.an,
+        body.dark #quelleBtn.an:hover:not(:disabled) {
+            background: linear-gradient(var(--darc-blau), var(--darc-blau-tief)) !important;
+            border-color: #4fc9f7 !important;
+            color: #04283a !important;
+        }
+        body.dark #quelleBtn.an i { color: #04283a !important; }
 
         /* Woher die Erklaerungen kommen. Dietmar am 04.09.2026 zuerst als
            eigene Zeile gewuenscht, kurz darauf praeziser: "In einer Linie" -
@@ -3961,6 +4013,25 @@
             display: block; font-size: 0.8rem; font-weight: 600; color: var(--panel-navy);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        /* DER LOESUNGSWEG IN 50-OHM-BLAU                   (24.09.2026)
+           Dietmar: "Das haette ich gerne in 50 Ohm blau." Auf den Hinweis,
+           dass ein blaues "50 Omega" genau das ist, wovon Matthias abgeraten
+           hat, seine Loesung: "50 Ohm - Loesungsweg". Ausgeschrieben ist es
+           ein Wort und kein Zeichen - das Blau darf dann dran, das Omega
+           links bleibt dunkel wie bisher. Fett, weil #00adef auf Weiss
+           duenn wenig traegt.
+           Gleich danach fuer die Kachel daneben, die zur Seite im Lehrgang
+           fuehrt: "Bitte rechts und links." Also beide gleich. */
+        .lernkachel .lern-oben.lern-blau { color: #00adef; font-weight: 700; }
+        body.dark .lernkachel .lern-oben.lern-blau { color: #00adef !important; }
+        /* Doktorhut und Wurzel statt Omega (24.09.2026, siehe beim
+           Loesungsweg im Skript) - im selben Blau wie die Ueberschrift.
+           Beim Ueberfahren steht "Oeffnet die Seite von 50 Ohm." - Dietmars
+           Wortlaut, als title-Attribut, also die kleine Sprechblase des
+           Browsers. Das eigene Hinweiskaestchen des Trainers ist seit dem
+           02.09.2026 ab; data-tooltip bleibt die Quelle fuers Vorlesen. */
+        .lernkachel .lern-zeichen.lern-50 i { color: #00adef; font-size: 1.05rem; }
+        body.dark .lernkachel .lern-zeichen.lern-50 i { color: #00adef !important; }
         .lernkachel .lern-unten {
             display: block; font-size: 0.74rem; color: var(--muted);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -6694,6 +6765,14 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         document.documentElement.style.setProperty('--afu-zoom', String(f));
         if (Math.abs(f - 1) > 0.001) document.documentElement.style.zoom = String(f);
     } catch (e) { /* ohne localStorage bleibt es bei 100 % */ }
+    // Unsichtbar aufbauen, bis die Groesse steht (24.09.2026, siehe
+    // "KEIN RUCKELN BEIM LADEN" im Stilblock). Der Rueckfall hier ist
+    // Absicht: Laeuft das Hauptskript aus irgendeinem Grund nicht zu Ende,
+    // darf die Seite trotzdem nicht unsichtbar bleiben.
+    try {
+        document.documentElement.classList.add('afu-aufbau');
+        setTimeout(function(){ document.documentElement.classList.remove('afu-aufbau'); }, 3000);
+    } catch (e) {}
 
     try {
         let gespeichert = localStorage.getItem('theme');
@@ -6882,6 +6961,39 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     data-vorlesen-kurz="Trainer beenden."
                     data-vorlesen="Trainer beenden. Schließt den Server sauber ab, statt nur das Fenster zuzumachen. Der Port wird frei, und beim nächsten Start gibt es keine Rückfrage. Läuft gerade eine Runde, wird sie vorher gespeichert.">
                 <i class="fas fa-power-off"></i> Beenden</button>
+            <!-- ============================================================
+                 BEENDEN FUER BESUCHER                        (23.09.2026)
+                 Dietmar, mit dem Bild vom schwarzen Abschied: "Bei einem
+                 Benutzer, wenn er den Trainer beendet, sieht das verwirrend
+                 aus." Und dann: "hier waere die Option mit dem Download
+                 gut" - auf seine Wahl hin fuer Besucher.
+                 Ein Besucher ueber den Link bekam "Der Trainer wurde
+                 beendet, meldet aber nichts zurueck" - obwohl gar nichts
+                 beendet war: /api/beenden geht nur am Trainer-PC (localOnly)
+                 und hat ihm zu Recht Nein gesagt. Und "ueber die
+                 Verknuepfung neu starten" hat er gar nicht.
+                 Jetzt hat der Knopf zwei Bedeutungen: Am Trainer-PC
+                 (localhost) beendet er den Server wie bisher. Ueberall sonst
+                 verabschiedet er nur diesen Besucher - der Server laeuft
+                 weiter - und bietet ihm den Trainer zum Herunterladen an
+                 (besucherAbschied weiter unten). Hier werden nur Tooltip und
+                 Vorlesetext passend gemacht.
+                 ============================================================ -->
+            <script>
+            (function(){
+                try{
+                    var h = location.hostname;
+                    if(['localhost','127.0.0.1','[::1]','::1'].indexOf(h) === -1){
+                        var b = document.getElementById('beendenBtn');
+                        if(b){
+                            b.setAttribute('data-tooltip', '\u23FB Beenden \u2013 dein Lernstand bleibt in diesem Browser gespeichert');
+                            b.setAttribute('data-vorlesen-kurz', 'Beenden.');
+                            b.setAttribute('data-vorlesen', 'Beenden. Du verl\u00e4sst den Trainer. Dein Lernstand bleibt in diesem Browser gespeichert, beim n\u00e4chsten Besuch geht es dort weiter.');
+                        }
+                    }
+                }catch(e){}
+            })();
+            </script>
             <button class="btn-theme" id="themeToggleBtn" onclick="toggleTheme()" data-tooltip="Dark Mode umschalten">
                 <i class="fas fa-moon"></i> <span id="themeToggleLabel">Dark Mode</span>
             </button>
@@ -7865,7 +7977,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
     <div class="footer-note">
         <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
                title="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung."
-               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support">Support</a> · <a href="support.html#datenschutz" class="footer-support">Datenschutz</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
+               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support" target="_blank" rel="noopener">Support</a> · <a href="support.html#datenschutz" class="footer-support" target="_blank" rel="noopener">Datenschutz</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
     </div>
 </div>
 <script>
@@ -12087,10 +12199,12 @@ function einstOhmLageFuellen(){
                 ? '<b style="color:#1f9d55;">' + imZiel + '</b> davon gehören zu deinem Ziel '
                   + '<b>' + (zielName || 'dieser Klasse') + '</b>.'
                 : '<b style="color:#b8860b;">Für dein Ziel ' + (zielName || 'diese Klasse')
-                  + ' ist keine darunter.</b> Nicht zu jeder Frage gibt es einen gerechneten '
-                  + 'Lösungsweg – wo nichts zu rechnen ist, wäre er auch sinnlos. '
+                  + ' ist noch keine darunter.</b> Der DARC ergänzt die Lösungswege nach und nach – '
+                  + 'neue übernimmt der Trainer von selbst. '
                   + 'Der Verweis auf den Lehrgang bleibt davon unberührt.')
-            + '<br><span style="color:var(--muted);">Der Trainer sieht von selbst alle 30 Tage nach. '
+            // 24.09.2026: einmal je Woche statt alle 30 Tage, siehe
+            // OHM_INDEX_FRIST in Server.js
+            + '<br><span style="color:var(--muted);">Der Trainer sieht von selbst einmal in der Woche nach. '
             + 'Der Knopf holt sie sofort – etwa wenn der DARC gerade nachgelegt hat.</span>';
         if(btn) btn.innerHTML = '<i class="fas fa-rotate"></i> Auffrischen';
     } else {
@@ -21670,10 +21784,35 @@ window.standWacheStarten = standWacheStarten;
 //  Der Knopf loest das erste, die Wache weiter unten das zweite.
 // ================================================================
 
+// Der Knopf wirkt nur am Trainer-PC selbst (Server: localOnly). Wer die
+// Seite ueber den Link, die Domain oder das WLAN offen hat, ist hier
+// Besucher - fuer ihn heisst "Beenden": sich verabschieden (23.09.2026).
+function beendenAmTrainerPc(){
+    return ['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) !== -1;
+}
+
 function beendenFragen(){
     const modal = document.getElementById('genericConfirmModal');
     if(!modal){ trainerBeenden(); return; }
     const laeuft = (typeof isQuizActive !== 'undefined' && isQuizActive);
+    if(!beendenAmTrainerPc()){
+        document.getElementById('genericConfirmTitle').innerHTML =
+            '<span id="genericConfirmIcon"><i class="fas fa-power-off" style="color:#0a6f78;"></i></span> Beenden?';
+        document.getElementById('genericConfirmMessage').innerHTML =
+            'Du verlässt den Trainer. Beim nächsten Besuch geht es dort weiter, wo du aufgehört hast.';
+        document.getElementById('genericConfirmDetails').innerHTML =
+            '• Dein Lernstand bleibt in diesem Browser gespeichert'
+          + (laeuft ? '<br>• <b>Es läuft gerade eine Runde.</b> Sie wird nicht gewertet.' : '')
+          + (window.duo && window.duo.isActive && window.duo.isActive()
+                ? '<br>• Du verlässt damit auch den Gruppenraum.' : '');
+        const bb = document.getElementById('genericConfirmBtn');
+        bb.innerHTML = '<i class="fas fa-power-off"></i> Beenden';
+        bb.style.background = '#0a6f78';
+        bb.onclick = function(){ closeGenericConfirmModal(); trainerBeenden(); };
+        modal.style.display = 'flex';
+        modal.classList.add('open');
+        return;
+    }
     document.getElementById('genericConfirmTitle').innerHTML =
         '<span id="genericConfirmIcon"><i class="fas fa-power-off" style="color:#0a6f78;"></i></span> Trainer beenden?';
     document.getElementById('genericConfirmMessage').innerHTML =
@@ -21701,16 +21840,28 @@ async function trainerBeenden(){
     try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
     try{ if(typeof knopfSprechenStoppen === 'function') knopfSprechenStoppen(); }catch(e){}
 
-    let ok = false;
+    // Ein Besucher beendet nicht den Server, sondern nur seinen Besuch.
+    if(!beendenAmTrainerPc()){ besucherAbschied(); return; }
+
+    let status = 0;
     try{
         const r = await fetch('/api/beenden', { method:'POST' });
-        ok = r.ok;
+        status = r.status;
     }catch(e){
         // Genau das ist der Normalfall, wenn der Server schneller weg ist
         // als die Antwort: kein Fehler, sondern der Beweis, dass es lief.
-        ok = true;
+        status = 200;
     }
-    beendenAbschied(ok);
+    // Bis 23.09.2026 kam bei JEDER Antwort der schwarze Abschied, auch
+    // bei einem Nein - dann mit "meldet aber nichts zurueck". Das war
+    // falsch: Ein Nein heisst, der Trainer laeuft weiter. Der Abschied
+    // kommt jetzt nur noch, wenn er wirklich beendet ist.
+    if(status >= 200 && status < 300){ beendenAbschied(true); return; }
+    const hinweis = (status === 403)
+        ? 'Beenden geht nur direkt am Trainer-PC. Hier kannst du einfach das Fenster schließen – '
+          + 'dein Lernstand bleibt in diesem Browser gespeichert.'
+        : 'Der Trainer ließ sich gerade nicht beenden (Antwort ' + status + '). Er läuft weiter.';
+    if(typeof showAppAlert === 'function') showAppAlert(hinweis); else alert(hinweis);
 }
 window.trainerBeenden = trainerBeenden;
 
@@ -21726,7 +21877,7 @@ function beendenAbschied(ok){
       + '<div style="font-size:2.4rem; color:#00adef; margin-bottom:1rem;">'
       + '<i class="fas fa-power-off"></i></div>'
       + '<div style="font-size:1.25rem; font-weight:700; color:#e7eef4; margin-bottom:0.6rem;">'
-      + (ok ? 'Der Trainer ist beendet.' : 'Der Trainer wurde beendet, meldet aber nichts zurück.')
+      + 'Der Trainer ist beendet.'
       + '</div>'
       + '<div style="font-size:0.9rem; line-height:1.6; color:#8a97a3;">'
       + 'Dein Lernstand ist gespeichert. Du kannst dieses Fenster jetzt schließen.<br>'
@@ -21736,6 +21887,58 @@ function beendenAbschied(ok){
     // Nichts soll mehr im Hintergrund weiterlaufen und ins Leere greifen.
     try{ if(window.duo && window.duo.leave) window.duo.leave(); }catch(e){}
 }
+
+// ----------------------------------------------------------------
+//  DER ABSCHIED FUER BESUCHER                         (23.09.2026)
+//  Dietmar: "Der Trainer wurde beendet. Dein Lernstand ... hier waere
+//  die Option mit dem Download gut." Seine Wahl: der Trainer zum
+//  Herunterladen, fuer Besucher.
+//
+//  Derselbe dunkle Bildschirm wie am Trainer-PC, aber ehrlich: Beendet
+//  ist nur dieser Besuch, der Trainer laeuft fuer alle anderen weiter.
+//  Der Lernstand liegt beim Besucher ohnehin im Browser. Dazu der
+//  gruene Knopf zur Download-Seite - dieselbe Adresse und dasselbe
+//  Gruen wie der Download-Knopf im Chat. "Doch weiterlernen" laedt die
+//  Seite neu, falls der Klick auf Beenden ein Versehen war.
+// ----------------------------------------------------------------
+const BESUCHER_DOWNLOAD = 'https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/';
+
+function besucherAbschied(){
+    try{ document.body.classList.remove('beamer'); }catch(e){}
+    if(document.getElementById('beendenAbschied')) return;
+    const d = document.createElement('div');
+    d.id = 'beendenAbschied';
+    d.style.cssText = 'position:fixed; inset:0; z-index:100010; display:flex; align-items:center; '
+        + 'justify-content:center; background:#0e1114; color:#d8dee4; overflow-y:auto; '
+        + 'font-family:var(--font-body), "Segoe UI", sans-serif;';
+    d.innerHTML =
+        '<div style="text-align:center; max-width:30rem; padding:2rem 1rem;">'
+      + '<div style="font-size:2.4rem; color:#00adef; margin-bottom:1rem;">'
+      + '<i class="fas fa-power-off"></i></div>'
+      + '<div style="font-size:1.25rem; font-weight:700; color:#e7eef4; margin-bottom:0.6rem;">'
+      + 'Danke fürs Üben!'
+      + '</div>'
+      + '<div style="font-size:0.9rem; line-height:1.6; color:#8a97a3;">'
+      + 'Dein Lernstand bleibt in diesem Browser gespeichert – beim nächsten Besuch geht es dort weiter, '
+      + 'wo du aufgehört hast. Du kannst dieses Fenster jetzt schließen.'
+      + '</div>'
+      + '<a href="' + BESUCHER_DOWNLOAD + '" target="_blank" rel="noopener" id="besucherDownload" '
+      + 'style="display:inline-flex; align-items:center; gap:0.5rem; margin-top:1.6rem; padding:0.75rem 1.3rem; '
+      + 'border-radius:10px; background:#1c7a46; color:#ffffff; font-weight:700; font-size:0.95rem; '
+      + 'text-decoration:none; box-shadow:0 2px 10px rgba(0,0,0,0.35);">'
+      + '<i class="fas fa-download"></i> Trainer kostenlos herunterladen</a>'
+      + '<div style="font-size:0.8rem; color:#8a97a3; margin-top:0.6rem;">'
+      + 'Für Windows, Linux und Mac – ohne Anmeldung.</div>'
+      + '<div style="margin-top:1.8rem;">'
+      + '<button type="button" id="besucherWeiter" style="background:none; border:none; color:#8a97a3; '
+      + 'text-decoration:underline; cursor:pointer; font-size:0.85rem; font-family:inherit;">Doch weiterlernen</button>'
+      + '</div></div>';
+    document.body.appendChild(d);
+    const w = document.getElementById('besucherWeiter');
+    if(w) w.onclick = function(){ location.reload(); };
+    try{ if(window.duo && window.duo.leave) window.duo.leave(); }catch(e){}
+}
+window.besucherAbschied = besucherAbschied;
 
 // ================================================================
 //  WACHE: ist der Server ueberhaupt noch da?
@@ -22333,8 +22536,16 @@ window.dateiStandAnzeigen = dateiStandAnzeigen;
 // Es wird NICHTS ohne Zutun verschickt: Der Knopf öffnet nur das
 // Mailprogramm mit einem Entwurf. Was drinsteht, sieht man vorher, und
 // wer nicht will, schließt das Fenster wieder.
+//
+// DIE ADRESSE DES TRAINERS STATT DER PRIVATEN        (24.09.2026)
+// Dietmar: "Richte bitte die Adresse kontakt@amateurfunk-trainer.com in
+// dem Trainer ein." Bis heute stand hier seine private Adresse - und
+// damit in jedem heruntergeladenen Paket, auf GitHub und bei jedem
+// Besucher im Browser. kontakt@ ist eine Weiterleitung bei Cloudflare
+// (Email Routing) in sein Postfach; ankommen tut es also am selben Ort,
+// nur die private Adresse steht nirgends mehr.
 // ================================================================
-const FEHLER_MAIL = 'reh.dietmar@me.com';
+const FEHLER_MAIL = 'kontakt@amateurfunk-trainer.com';
 
 async function fehlerStand() {
     try {
@@ -22360,7 +22571,7 @@ async function fehlerMelden() {
 
     const text =
         'Hallo Dietmar,\n\n'
-        + 'mir ist im Klasse-N-Trainer etwas aufgefallen:\n\n'
+        + 'mir ist im Amateurfunk-Trainer etwas aufgefallen:\n\n'
         + '\n\n'
         + '(Bitte hier beschreiben, was passiert ist und was du erwartet hättest.)\n\n'
         + '------------------------------------------------\n'
@@ -22372,7 +22583,7 @@ async function fehlerMelden() {
         + 'Zeitpunkt:    ' + new Date().toLocaleString('de-DE') + '\n';
 
     const url = 'mailto:' + FEHLER_MAIL
-        + '?subject=' + encodeURIComponent('Klasse-N-Trainer: Fehler melden')
+        + '?subject=' + encodeURIComponent('Amateurfunk-Trainer: Fehler melden')
         + '&body=' + encodeURIComponent(text);
 
     // Sehr lange Mailtexte schneiden manche Programme ab. Passiert hier
@@ -25351,7 +25562,7 @@ function einstBlaetterFuellen(){
             'Der Trainer verweist bei jeder Frage auf die passende Stelle im Lehrgang von '
           + '<b>50ohm.de</b>. Die genaue Zuordnung veröffentlicht der DARC selbst; damit führt der '
           + 'Verweis auf den <b>Abschnitt</b> statt aufs Kapitel, und bei Rechenaufgaben kommt der '
-          + '<b>Lösungsweg</b> dazu. <b>Der Trainer holt sie beim Start von selbst</b> — hier steht '
+          + '<b>Lösungsweg</b> dazu. <b>Der Trainer holt sie von selbst</b>, beim Start und danach einmal in der Woche — hier steht '
           + 'nur, was dabei herauskam, und der Knopf frischt sie bei Bedarf auf.',
             '<div id="einstOhmLage" style="font-size:0.82rem; line-height:1.6; margin-bottom:0.6rem;">'
           + '<span style="color:var(--muted);">wird ermittelt …</span></div>'
@@ -27648,7 +27859,27 @@ function renderQuestion() {
     }catch(e){}
     const vm = (!lernStreng && typeof videoMap !== 'undefined' && videoMap[q.id]) ? videoMap[q.id] : null;
     const lm = (!lernStreng && typeof lernMap !== 'undefined' && lernMap && lernMap[q.id]) ? lernMap[q.id] : null;
-    if (vm || lm) {
+    // ----------------------------------------------------------------
+    //  DIE SEITE UND DER LOESUNGSWEG DES DARC ZAEHLEN MIT  (24.09.2026)
+    //  Dietmar: "Der DARC arbeitet daran und moechte zu jeder Frage eine
+    //  Loesung anbieten. Die muessen in allen Klassen vorhanden sein."
+    //
+    //  Bis heute kam die Kachelreihe nur, wenn es zur Frage ein Video
+    //  (videoMap) oder einen Eintrag in der alten Kapitelliste
+    //  (50ohm_map.json) gab. Beides gibt es nur fuer Klasse N und E. Die
+    //  Zuordnung des DARC (ohmIndex) kennt dagegen alle 1750 Fragen, und
+    //  272 der 277 Loesungswege gehoeren zur Aufstockung E auf A - dort
+    //  stand unter der Frage: nichts. Aufgefallen, als Dietmar fragte,
+    //  bei welcher Frage die dritte Kachel zu sehen ist; in ganz Klasse N
+    //  ist es genau eine, NB505.
+    //
+    //  Jetzt reicht jede der vier Quellen fuer die Reihe. Und dieselbe
+    //  Sperre im Raum und in der Pruefung (lernStreng) gilt auch fuer die
+    //  beiden DARC-Kacheln - vorher hing sie nur an vm und lm.
+    // ----------------------------------------------------------------
+    const os = (!lernStreng && typeof ohmSeite === 'function') ? ohmSeite(q.id) : null;
+    const ow = (!lernStreng && typeof ohmLoesungsweg === 'function') ? ohmLoesungsweg(q.id) : null;
+    if (vm || lm || os || ow) {
         const pfeil = '<i class="fas fa-chevron-right lern-pfeil"></i>';
         // Erst sammeln, dann setzen. Wieviele Spalten die Zeile bekommt,
         // steht erst fest, wenn alle Kacheln beisammen sind - und die
@@ -27679,7 +27910,6 @@ function renderQuestion() {
         // abgeleiteten Kapiteluebersicht aus 50ohm_map.json: Sie fuehrt auf
         // den Abschnitt, in dem genau diese Frage erklaert wird, nicht auf
         // den Anfang eines Kapitels mit zwanzig Abschnitten.
-        const os = (typeof ohmSeite === 'function') ? ohmSeite(q.id) : null;
         if (os || lm) {
             const kap   = attrText(os ? (os.kapitel || '50 Ohm') : (lm.kapitel || '50 Ohm'));
             const seite = attrText(os ? (os.abschnitt || '') : (lm.seite || ''));
@@ -27689,10 +27919,11 @@ function renderQuestion() {
             const auf = `lernSeiteOeffnen('${String(url).replace(/'/g, "\\'")}')`;
             kacheln.push({ quelle: '50ohm.de (DARC)', html:
                 `<button type="button" class="lernkachel" id="lernOhmBtn" onclick="${auf}"
+                title="Öffnet die Seite von 50 Ohm."
                 data-tooltip="Öffnet den Lehrgang des DARC im Browser – dort wird genau diese Frage erklärt">
-                <span class="lern-zeichen ohm">&#937;</span>
+                <span class="lern-zeichen lern-50"><i class="fas fa-graduation-cap"></i></span>
                 <span class="lern-mitte">
-                    <span class="lern-oben">50&#937; · ${kap}</span>
+                    <span class="lern-oben lern-blau">50 Ohm – ${kap}</span>
                     <span class="lern-unten">${seite}${seite ? ', ' : ''}Lehrgang des DARC</span>
                 </span>${pfeil}</button>` });
         }
@@ -27701,21 +27932,23 @@ function renderQuestion() {
         // Dietmar: "Ziel ist es, das man nicht nur auswendig lernt, sondern
         // auch was lernt." Auf diesen Seiten steht kein Ergebnis, sondern
         // die Herleitung: Formel, gegebene Werte, Rechenschritte.
-        const ow = (typeof ohmLoesungsweg === 'function') ? ohmLoesungsweg(q.id) : null;
         if (ow) {
             const auf = `lernSeiteOeffnen('${String(ow).replace(/'/g, "\\'")}')`;
-            // Dasselbe Omega wie nebenan, und das mit Absicht: Beide Seiten
-            // gehoeren dem DARC, und wer das Zeichen einmal zugeordnet hat,
-            // erkennt die Herkunft ohne zu lesen. Dietmar am 09.09.2026:
-            // "Ich wuerde es besser finden wenn da das Omega Zeichen mit
-            // dabei ist." Vorher stand hier ein Wurzelzeichen - es meinte
-            // "gerechnet", sagte aber nichts darueber, woher es kommt.
+            // Das Zeichen hat eine Geschichte: Am 09.09.2026 wurde aus dem
+            // Wurzelzeichen ein Omega, weil die Wurzel nichts darueber
+            // sagte, woher der Weg kommt. Seit dem 24.09.2026 sagt das die
+            // blaue Ueberschrift "50 Ohm - ..." - und Dietmar fand das Omega
+            // davor "doof". Seine Wahl aus vier Entwuerfen: Doktorhut fuer
+            // den Lehrgang, Wurzel fuer den Loesungsweg, beide im Blau der
+            // Ueberschrift. Die Herkunft steht jetzt im Text, das Zeichen
+            // sagt, was einen erwartet.
             kacheln.push({ quelle: '50ohm.de (DARC)', html:
                 `<button type="button" class="lernkachel" id="lernLoesungBtn" onclick="${auf}"
+                title="Öffnet die Seite von 50 Ohm."
                 data-tooltip="Der gerechnete Lösungsweg beim DARC: Formel, gegebene Werte, Schritt für Schritt">
-                <span class="lern-zeichen ohm">&#937;</span>
+                <span class="lern-zeichen lern-50"><i class="fas fa-square-root-variable"></i></span>
                 <span class="lern-mitte">
-                    <span class="lern-oben">50&#937; · Lösungsweg</span>
+                    <span class="lern-oben lern-blau">50 Ohm – Lösungsweg</span>
                     <span class="lern-unten">Schritt für Schritt gerechnet</span>
                 </span>${pfeil}</button>` });
         }
@@ -30082,6 +30315,41 @@ window.addEventListener('resize', () => {
             document.fonts.ready.then(() => setTimeout(einmal, 60));
         }
     }catch(e){}
+
+    // ------------------------------------------------------------
+    //  ERST ZEIGEN, WENN ALLES STEHT                  (24.09.2026)
+    //  Siehe "KEIN RUCKELN BEIM LADEN" im Stilblock. Die beiden Aufrufe
+    //  oben kamen oft zu frueh: Gemessen stand die Anzeigegroesse nach
+    //  0,4 Sekunden fest, die Fragen der Klasse kamen erst nach 0,6 -
+    //  und mit ihnen eine andere Hoehe, nach der niemand mehr neu
+    //  gerechnet hat.
+    //
+    //  Bereit heisst: Seite geladen, Schriften da, Fragen da. Danach
+    //  muss die Hoehe der Karte noch 200 ms lang stillhalten - dann
+    //  wird EINMAL ausgemessen und die Seite gezeigt. Laenger als 2,5
+    //  Sekunden wird nie gewartet.
+    // ------------------------------------------------------------
+    const beginn = Date.now();
+    let letzteHoehe = -1, stillSeit = 0;
+    const aufbauFertig = () => {
+        const html = document.documentElement;
+        if(!html.classList.contains('afu-aufbau')) return;          // schon frei
+        const bereit = document.readyState === 'complete'
+            && !!(window.questionBank && window.questionBank.length)
+            && (!document.fonts || document.fonts.status === 'loaded');
+        const app = document.getElementById('app');
+        const h = app ? app.scrollHeight : 0;
+        const jetzt = Date.now();
+        if(h !== letzteHoehe){ letzteHoehe = h; stillSeit = jetzt; }
+        const zuLange = (jetzt - beginn) > 2500;
+        if((bereit && jetzt - stillSeit >= 200) || zuLange){
+            einmal();
+            requestAnimationFrame(() => requestAnimationFrame(() => html.classList.remove('afu-aufbau')));
+            return;
+        }
+        setTimeout(aufbauFertig, 40);
+    };
+    aufbauFertig();
 })();
 
 // Der Knopf im Trainer meldet sich ueber die Fullscreen-Schnittstelle.
