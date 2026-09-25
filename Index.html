@@ -5958,6 +5958,46 @@
 .rev-tag.t-ok { background:var(--good); color:white; }
 .rev-tag.t-no { background:var(--bad); color:white; }
 .rev-tag.t-you { background:var(--accent-amber); color:#000; }
+/* 25.09.2026 - DER VERLAUF ZUM ANKLICKEN (siehe verlaufEintragOeffnen).
+   Dietmar: "Ich moechte den Verlauf anklickbar." Die Zeile zeigt beim
+   Drueberfahren, dass sie sich oeffnen laesst; das Fenster nimmt die
+   Kacheln der "Detaillierten Auswertung" (.rev-q, .rev-opt). */
+.history-table tr.verlauf-zeile { cursor:pointer; }
+.history-table tr.verlauf-zeile:hover td { background:rgba(29,95,158,0.10); }
+.history-table tr.verlauf-zeile:focus { outline:none; }
+.history-table tr.verlauf-zeile:focus-visible td { background:rgba(29,95,158,0.18); }
+.realistic-modal.verlauf-fenster { max-width:760px; }
+.vf-kopf { margin-bottom:0.7rem; }
+.vf-datum { font-size:0.8rem; color:var(--muted); }
+.vf-ergebnis { font-size:1rem; color:var(--ink); margin-top:2px; }
+.vf-pass { color:var(--good); font-weight:700; }
+.vf-fail { color:var(--bad); font-weight:700; }
+.vf-grauzone { color:var(--warn); font-weight:700; }
+.vf-knoepfe { display:flex; flex-wrap:wrap; gap:8px; margin:0.2rem 0 0.35rem; }
+.vf-stand { font-size:0.8rem; color:var(--muted); margin-bottom:0.3rem; }
+.vf-abschnitt { font-size:0.74rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin:1rem 0 0; }
+.vf-frage-kopf { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:0.74rem; color:var(--muted); margin-bottom:5px; }
+.vf-id { font-family:var(--font-mono); font-weight:700; color:var(--ink); }
+.vf-marke { font-size:0.68rem; font-weight:700; padding:1px 7px; border-radius:99px; border:1px solid var(--line); white-space:nowrap; }
+.vf-marke-fehler { color:var(--bad); border-color:var(--bad); }
+.vf-marke-lern { color:#b45309; border-color:#f59e0b; }
+.vf-frage-bild { margin:0 0 8px; }
+.vf-frage-bild img { max-height:200px !important; }
+.vf-antwort { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
+.vf-antwort-bild { max-width:220px; max-height:110px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:3px; }
+.vf-hinweis { display:flex; gap:10px; align-items:flex-start; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.7rem 0.9rem; font-size:0.88rem; color:var(--ink); line-height:1.45; }
+.vf-hinweis > i { color:var(--panel-navy); margin-top:3px; }
+.review-part.realistic-review.vf-offen { margin-top:1rem; }
+.vf-offen-zeile { display:flex; gap:10px; align-items:baseline; padding:6px 0; border-top:1px solid var(--line); font-size:0.85rem; color:var(--ink); }
+.vf-offen-zeile .vf-id { font-weight:400; color:var(--muted); font-size:0.78rem; flex:0 0 auto; }
+.vf-offen-text { flex:1 1 auto; min-width:0; }
+.vf-teil { flex:0 0 auto; font-size:0.72rem; color:var(--muted); }
+body.dark .vf-hinweis { background:#12354c; }
+/* Im dunklen Stil verlor die Auswertung ihr Rot und Gruen: "body.dark
+   .rev-opt" wiegt schwerer als ".rev-opt.correct". Das traf auch die
+   "Detaillierte Auswertung" nach der Pruefung - hier fuer beide. */
+body.dark .rev-opt.correct { border-color:var(--good); background:rgba(34,197,94,0.16); }
+body.dark .rev-opt.wrong { border-color:var(--bad); background:rgba(239,68,68,0.16); }
 #examTimerDisplay.realistic-timer { font-size:1.05rem; letter-spacing:0.02em; }
 .realistic-modal-overlay {
   position:fixed; inset:0;
@@ -13429,7 +13469,14 @@ function renderHistory() {
         // Die Tabelle laeuft rueckwaerts (neueste oben). Fuer das Loeschen zaehlt
         // aber die Stelle im gespeicherten Array - das ist num - 1.
         const stelle = num - 1;
-        html += `<tr>
+        // Seit dem 25.09.2026 oeffnet ein Klick auf die Zeile das Fenster mit
+        // den Fehlern dieser Runde (siehe DER VERLAUF ZUM ANKLICKEN). Im
+        // Loesch-Modus nicht - da gehoert der Klick dem Kaestchen.
+        const zeile = verlaufAuswahl ? '<tr>'
+            : `<tr class="verlauf-zeile" tabindex="0" title="Anklicken: Fehler dieser Runde ansehen und erneut üben"
+                 onclick="verlaufEintragOeffnen(${stelle})"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();verlaufEintragOeffnen(${stelle});}">`;
+        html += `${zeile}
             ${verlaufAuswahl ? `<td style="text-align:center;"><input type="checkbox" class="verlauf-haken" value="${stelle}" onchange="verlaufAuswahlZaehlen()" style="cursor:pointer;"></td>` : ''}
             <td>${dateStr}</td>
             <td style="font-size:0.6rem;">${entry.part || 'Alle'}</td>
@@ -13455,7 +13502,10 @@ function renderHistory() {
 // Runde ein zweiter, durchgefallener Eintrag.
 var rundeGewertet = false;
 
-function addHistoryEntry(part, total, correct, status) {
+// einzel (seit 25.09.2026): die einzelnen Fragen der Runde, siehe
+// DER VERLAUF ZUM ANKLICKEN. Fehlt es, wird es aus der laufenden Runde
+// (currentQuestions/progress) ermittelt; null heisst: nichts mitschreiben.
+function addHistoryEntry(part, total, correct, status, einzel) {
     // FIX: Vorher wurde in das Ergebnis von getCurrentHistory() geschrieben. Fehlte
     // der Benutzer im Verlaufsobjekt, lieferte das ein frisch erzeugtes, freies Array -
     // der Eintrag landete darin und war nach dem Speichern spurlos verschwunden.
@@ -13463,16 +13513,24 @@ function addHistoryEntry(part, total, correct, status) {
     if (!history || typeof history !== 'object') history = slotFaecher([]);
     else slotFaecherErgaenzen(history, []);
     if (!Array.isArray(history[currentUser])) history[currentUser] = [];
-    history[currentUser].push({
+    const eintrag = {
         date: new Date().toISOString(),
         part: part,
         total: total,
         correct: correct,
         status: status
-    });
+    };
+    if (einzel === undefined) {
+        try{ einzel = verlaufEinzelheiten(verlaufRundeFragen(), verlaufRundeStand(), total, correct); }catch(e){ einzel = null; }
+    }
+    if (einzel) Object.assign(eintrag, einzel);
+    history[currentUser].push(eintrag);
     if (history[currentUser].length > 100) {
         history[currentUser] = history[currentUser].slice(-100);
     }
+    // Was in einer Pruefung bei abgelaufener Zeit offen blieb, zaehlt als
+    // Fehler - und gehoert damit auch unter Fehler und Lernbedarf.
+    try{ verlaufZeitFehlerBuchen(einzel); }catch(e){}
     saveHistory();
     rundeGewertet = true;      // diese Runde ist erledigt - kein zweiter Eintrag
     return true;
@@ -13516,6 +13574,396 @@ function duoVerlaufSchreiben(quelle) {
     } catch (e) { console.warn('[DUO] Verlaufseintrag fehlgeschlagen', e); return false; }
 }
 window.duoVerlaufSchreiben = duoVerlaufSchreiben;
+
+// ================================================================
+//  DER VERLAUF ZUM ANKLICKEN                            25.09.2026
+//  ----------------------------------------------------------------
+//  Dietmar: "Ich moechte den Verlauf anklickbar. Oeffne ich ihn,
+//  moechte ich meine Fehler sehen und ggf. erneut durchgehen koennen.
+//  Fehler, muessen in Fehler und Lernbedarf uebernommen werden."
+//
+//  Bis heute stand im Verlauf je Runde nur die Zahl - welche Fragen
+//  falsch waren, war mit dem Ende der Runde weg. Seit heute schreibt
+//  addHistoryEntry je Eintrag zusaetzlich mit:
+//
+//    f  die Fehler, je [Kennung, gewaehlte Antwort]. Die Antwort steht
+//       als Platz im Fragenkatalog (0 bis 3), nicht als Platz in der
+//       gemischten Runde - so zeigt das Fenster sie spaeter richtig an.
+//         -1  keine Antwort (die Zeit war um, die Frage zaehlt als Fehler)
+//         -2  Loesung angesehen (F9 im Gruppenraum)
+//         -3  die Antwort liess sich nicht mehr zuordnen
+//    a  die offenen Fragen, wenn sie NICHT als Fehler zaehlen - also
+//       ausgelassen oder bei einer abgebrochenen Runde nicht mehr dran.
+//
+//  Etwa zwoelf Zeichen je Fehler; Fragetext und Antworten stehen ja im
+//  Katalog. Ob Offene als Fehler zaehlen, sagt das Ergebnis selbst:
+//  Rechnet es sie mit (Pruefung: 25 Fragen, gewertet wird alles), sind
+//  sie Fehler, sonst ausgelassen.
+//
+//  Aeltere Eintraege haben kein f. Ein Klick darauf oeffnet das Fenster
+//  trotzdem und sagt, dass es dazu keine Einzelheiten gibt (Dietmars
+//  Wahl: "Hinweis im Fenster").
+//
+//  FEHLER UND LERNBEDARF (Dietmars Wahl: "Automatisch + Knopf"):
+//   - Eine falsche Antwort landet wie bisher sofort dort (selectOption).
+//     Neu: Was in einer Pruefung bei abgelaufener Zeit offen blieb und
+//     als Fehler zaehlt, kommt beim Schreiben des Eintrags dazu.
+//   - Im Fenster holt "In Fehler und Lernbedarf uebernehmen" zurueck,
+//     was inzwischen herausgefallen ist, weil es seitdem richtig war.
+//     Gezaehlt wird dabei nichts doppelt - die falsche Antwort steht
+//     laengst in der Statistik.
+//
+//  Weitere Wahl von Dietmar: im Fenster je Fehler alle Antworten, die
+//  eigene rot, die richtige gruen; die ausgelassenen in einem eigenen,
+//  zugeklappten Abschnitt mit "Ausgelassene ueben".
+// ================================================================
+const VERLAUF_EINZEL_MAX = 300;     // mehr Fragen hat keine Runde, die man ernst meint
+
+function verlaufRundeFragen(){
+    try{ return (typeof currentQuestions !== 'undefined' && Array.isArray(currentQuestions)) ? currentQuestions : []; }
+    catch(e){ return []; }
+}
+function verlaufRundeStand(){
+    try{ return (typeof progress !== 'undefined' && progress && typeof progress === 'object') ? progress : {}; }
+    catch(e){ return {}; }
+}
+
+// Welche Antwort wurde gewaehlt - als Platz im Katalog.
+function verlaufAntwortPlatz(q){
+    try{
+        const i = q.userAnswerIndex;
+        if(typeof i !== 'number' || !Array.isArray(q.options) || !q.options[i]){
+            return q._f9AlsFehlerGewertet ? -2 : -1;
+        }
+        const roh = (questionBank || []).find(x => x.id === q.id);
+        if(!roh || !Array.isArray(roh.options)) return -3;
+        const s = antwortSchluessel(q.options[i]);
+        const platz = roh.options.findIndex(o => antwortSchluessel(o) === s);
+        return platz >= 0 ? platz : -3;
+    }catch(e){ return -3; }
+}
+
+function verlaufEinzelheiten(fragen, stand, total, correct){
+    try{
+        if(!Array.isArray(fragen) || !fragen.length) return null;
+        stand = stand || {};
+        const falsch = [], offen = [], gesehen = new Set();
+        fragen.forEach(q => {
+            if(!q || !q.id || gesehen.has(q.id)) return;
+            gesehen.add(q.id);
+            const p = stand[q.id];
+            if(p && p.answered){
+                if(!p.correct) falsch.push([q.id, verlaufAntwortPlatz(q)]);
+            } else if(!q._autoGelernt){
+                offen.push(q.id);
+            }
+        });
+        const e = { f: falsch.slice(0, VERLAUF_EINZEL_MAX) };
+        if(offen.length){
+            const fehlerLautErgebnis = Math.max(0, (total || 0) - (correct || 0));
+            if(falsch.length + offen.length <= fehlerLautErgebnis){
+                offen.forEach(id => { if(e.f.length < VERLAUF_EINZEL_MAX) e.f.push([id, -1]); });
+            } else {
+                e.a = offen.slice(0, VERLAUF_EINZEL_MAX);
+            }
+        }
+        return e;
+    }catch(x){ return null; }
+}
+
+// Offene Fragen, die als Fehler zaehlen, unter Fehler und Lernbedarf.
+// Nur, was dort noch fehlt: Der Pruefungsraum im Gruppenraum hat seine
+// abgelaufenen Fragen schon selbst eingetragen (finishRealisticPart),
+// und der Gesamteintrag nach drei Teilen enthaelt dieselben noch einmal.
+function verlaufZeitFehlerBuchen(einzel){
+    if(!einzel || !Array.isArray(einzel.f)) return;
+    let neu = 0;
+    einzel.f.forEach(x => {
+        if(!x || x[1] !== -1) return;
+        const id = x[0];
+        if(errorList.includes(id)) return;
+        errorList.push(id);
+        handleDifficultOnWrong(id);
+        neu++;
+    });
+    if(neu){
+        try{ saveErrors(); }catch(e){}
+        try{ saveDifficult(); }catch(e){}
+        try{ updateErrorBadge(); }catch(e){}
+        try{ updateDifficultBadge(); }catch(e){}
+    }
+}
+
+// ---------------- das Fenster ----------------
+let verlaufOffen = null;            // { eintrag } - der gerade geoeffnete Eintrag
+
+function verlaufEsc(t){
+    return String(t == null ? '' : t).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function verlaufFrage(id){
+    try{ return (questionBank || []).find(q => q.id === id) || null; }catch(e){ return null; }
+}
+function verlaufImLernbedarf(id){
+    try{ return !!(difficultQuestions && difficultQuestions[id]); }catch(e){ return false; }
+}
+// Die Fehler des Eintrags, die gerade NICHT in beiden Listen stehen.
+function verlaufFehlendeIds(e){
+    if(!e || !Array.isArray(e.f)) return [];
+    return e.f.map(x => x && x[0]).filter(id => id && verlaufFrage(id)
+        && (!errorList.includes(id) || !verlaufImLernbedarf(id)));
+}
+
+function verlaufFenster(){
+    let ov = document.getElementById('verlaufModal');
+    if(ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'verlaufModal';
+    ov.className = 'realistic-modal-overlay';
+    ov.innerHTML =
+          '<div class="realistic-modal verlauf-fenster" role="dialog" aria-modal="true" aria-labelledby="verlaufFensterTitel">'
+        +   '<div class="realistic-modal-header">'
+        +     '<h3 id="verlaufFensterTitel"></h3>'
+        +     '<button class="realistic-modal-close x-zu" onclick="verlaufFensterSchliessen()" aria-label="Schließen">×</button>'
+        +   '</div>'
+        +   '<div class="realistic-modal-body" id="verlaufFensterBody"></div>'
+        + '</div>';
+    ov.addEventListener('click', ev => { if(ev.target === ov) verlaufFensterSchliessen(); });
+    document.body.appendChild(ov);
+    return ov;
+}
+
+function verlaufEintragOeffnen(stelle){
+    try{
+        if(verlaufAuswahl) return;
+        const e = getCurrentHistory()[stelle];
+        if(!e) return;
+        verlaufOffen = { eintrag: e };
+        const ov = verlaufFenster();
+        verlaufFensterZeichnen();
+        ov.classList.add('open');
+        const body = document.getElementById('verlaufFensterBody');
+        if(body) body.scrollTop = 0;
+        setTimeout(() => {
+            try{
+                const ziel = ov.querySelector('.vf-knoepfe .btn') || ov.querySelector('.x-zu');
+                if(ziel) ziel.focus({ preventScroll: true });
+            }catch(x){}
+        }, 40);
+    }catch(x){ console.warn('[VERLAUF] Fenster', x); }
+}
+window.verlaufEintragOeffnen = verlaufEintragOeffnen;
+
+function verlaufFensterSchliessen(){
+    const ov = document.getElementById('verlaufModal');
+    if(ov) ov.classList.remove('open');
+    verlaufOffen = null;
+}
+window.verlaufFensterSchliessen = verlaufFensterSchliessen;
+
+// Escape schliesst; die Pfeiltasten gehoeren solange dem Fenster.
+document.addEventListener('keydown', function(ev){
+    const ov = document.getElementById('verlaufModal');
+    if(!ov || !ov.classList.contains('open')) return;
+    if(ev.key === 'Escape'){ ev.stopPropagation(); ev.preventDefault(); verlaufFensterSchliessen(); }
+    else if(ev.key === 'ArrowLeft' || ev.key === 'ArrowRight'){ ev.stopPropagation(); }
+}, true);
+
+function verlaufAntwortBild(o, platz){
+    if(!o || !o.image || !String(o.image).trim()) return '';
+    const raw = String(o.image).trim();
+    const alt = /_q\.svg$/i.test(raw) ? raw.replace(/_q\.svg$/i, '.svg') : raw.replace(/\.svg$/i, '_q.svg');
+    return '<img class="vf-antwort-bild" src="svgs/' + verlaufEsc(raw) + '" alt="Bild zu Antwort ' + 'ABCD'.charAt(platz) + '"'
+         + ' data-fallback="svgs/' + verlaufEsc(alt) + '" data-fallback-tried="0" data-orig-name="' + verlaufEsc(raw) + '"'
+         + ' onerror="handleOptionImageError(this)">';
+}
+
+function verlaufFehlerHtml(x, nr){
+    const id = x[0], w = x[1];
+    const q = verlaufFrage(id);
+    if(!q){
+        return '<div class="rev-q"><div class="vf-frage-kopf"><span class="vf-id">' + nr + '. ' + verlaufEsc(id) + '</span></div>'
+             + '<div class="qtext" style="font-weight:400; color:var(--muted);">Diese Frage steht nicht im gewählten Fragenkatalog – der Eintrag stammt vermutlich aus einer anderen Prüfungsklasse.</div></div>';
+    }
+    const teile = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+    let marken = '';
+    if(errorList.includes(id)) marken += '<span class="vf-marke vf-marke-fehler"><i class="fas fa-exclamation-triangle"></i> unter Fehler</span>';
+    if(verlaufImLernbedarf(id)) marken += '<span class="vf-marke vf-marke-lern"><i class="fas fa-fire"></i> im Lernbedarf</span>';
+    const zusatz = w === -1 ? '<span class="rev-tag t-no">nicht beantwortet</span>'
+                 : w === -2 ? '<span class="rev-tag t-no">Lösung angesehen</span>' : '';
+    let h = '<div class="rev-q">'
+          + '<div class="vf-frage-kopf"><span class="vf-id">' + nr + '. ' + verlaufEsc(id) + '</span>'
+          + (teile[q.part] ? '<span>· ' + teile[q.part] + '</span>' : '') + marken + '</div>'
+          + '<div class="qtext">' + formelHtml(q.text) + (zusatz ? ' ' + zusatz : '') + '</div>';
+    // Wie in renderQuestion: Ein Antwortbild darf nicht noch einmal als
+    // Bild zur Frage erscheinen (NB401 und fuenf weitere).
+    let bild = '';
+    try{
+        const schonGezeigt = (q.options || []).map(o => (o && o.image ? String(o.image).trim() : '')).filter(Boolean);
+        bild = getSvgHtml(q.id, schonGezeigt);
+    }catch(e){}
+    if(bild) h += '<div class="vf-frage-bild">' + bild + '</div>';
+    (q.options || []).forEach((o, oi) => {
+        const richtig = !!(o && o.correct);
+        const meine = oi === w;
+        const cls = 'rev-opt' + (richtig ? ' correct' : (meine ? ' wrong' : ''));
+        const inhalt = (o && o.text ? '<span>' + formelHtml(o.text) + '</span>' : '') + verlaufAntwortBild(o, oi);
+        const marke = richtig ? '<span class="rev-tag t-ok">Richtige Antwort</span>'
+                    : (meine ? '<span class="rev-tag t-you">Deine Antwort</span>' : '');
+        h += '<div class="' + cls + '"><span class="vf-antwort">' + inhalt + '</span>' + marke + '</div>';
+    });
+    return h + '</div>';
+}
+
+function verlaufFensterZeichnen(){
+    const e = verlaufOffen && verlaufOffen.eintrag;
+    const titel = document.getElementById('verlaufFensterTitel');
+    const body = document.getElementById('verlaufFensterBody');
+    if(!e || !titel || !body) return;
+
+    const d = new Date(e.date);
+    let wann = '';
+    try{
+        wann = d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
+             + ', ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+    }catch(x){}
+    titel.innerHTML = '<i class="fas fa-clock-rotate-left"></i> ' + verlaufEsc(e.part || 'Alle');
+
+    const total = e.total || 0, correct = e.correct || 0;
+    const fehler = Math.max(0, total - correct);
+    const quote = total ? Math.round(correct / total * 100) : 0;
+    const st = e.status === 'pass' ? ['pass', '✅ bestanden']
+             : e.status === 'fail' ? ['fail', '❌ nicht bestanden']
+             : ['grauzone', '⚠️ Grauzone'];
+    let h = '<div class="vf-kopf">'
+          + (wann ? '<div class="vf-datum">' + verlaufEsc(wann) + '</div>' : '')
+          + '<div class="vf-ergebnis"><b>' + correct + ' von ' + total + ' richtig</b> (' + quote + ' %) · '
+          + fehler + ' Fehler · <span class="vf-' + st[0] + '">' + st[1] + '</span></div>'
+          + '</div>';
+
+    // Ein Eintrag von vor dem 25.09.2026
+    if(!Array.isArray(e.f)){
+        const n = errorList.length;
+        h += '<div class="vf-hinweis"><i class="fas fa-circle-info"></i><div>'
+           + 'Zu diesem Eintrag sind keine einzelnen Fragen gespeichert. Der Trainer schreibt sie erst seit dem 25.09.2026 mit. '
+           + 'Jede Runde ab jetzt lässt sich hier öffnen – mit deinen Fehlern und einem Knopf, um sie erneut durchzugehen.</div></div>';
+        if(n){
+            h += '<div class="vf-knoepfe" style="margin-top:0.9rem;">'
+               + '<button class="btn btn-outline" onclick="verlaufFensterSchliessen(); repeatErrors();"><i class="fas fa-exclamation-triangle"></i> Deine aktuellen Fehler üben (' + n + ')</button></div>';
+        }
+        body.innerHTML = h;
+        return;
+    }
+
+    const f = e.f.filter(x => Array.isArray(x) && x[0]);
+    const a = Array.isArray(e.a) ? e.a.filter(Boolean) : [];
+    const fehlen = verlaufFehlendeIds(e);
+    const imKatalog = f.filter(x => verlaufFrage(x[0])).length;
+
+    h += '<div class="vf-knoepfe">';
+    if(imKatalog) h += '<button class="btn btn-primary" onclick="verlaufFragenUeben(\'f\')"><i class="fas fa-rotate-right"></i> Fehler erneut üben (' + imKatalog + ')</button>';
+    if(fehlen.length) h += '<button class="btn btn-outline" onclick="verlaufInFehlerUebernehmen()"><i class="fas fa-plus"></i> In Fehler und Lernbedarf übernehmen (' + fehlen.length + ')</button>';
+    h += '</div>';
+
+    let stand;
+    if(!f.length) stand = '🎯 In dieser Runde war keine Frage falsch.';
+    else if(verlaufOffen.uebernommen && !fehlen.length) stand = '<i class="fas fa-circle-check" style="color:var(--good);"></i> Übernommen – alle ' + (f.length === 1 ? 'Fehler stehen' : f.length + ' Fehler stehen') + ' jetzt unter Fehler und im Lernbedarf.';
+    else if(!fehlen.length) stand = '<i class="fas fa-circle-check" style="color:var(--good);"></i> ' + (f.length === 1 ? 'Der Fehler steht' : 'Alle ' + f.length + ' Fehler stehen') + ' unter Fehler und im Lernbedarf.';
+    else stand = (fehlen.length === 1 ? 'Eine Frage steht' : fehlen.length + ' Fragen stehen')
+               + ' nicht mehr unter Fehler und im Lernbedarf, weil du sie seitdem richtig hattest. Der Knopf holt sie zurück.';
+    h += '<div class="vf-stand">' + stand + '</div>';
+
+    if(f.length){
+        h += '<div class="vf-abschnitt">Fehler (' + f.length + ')</div>';
+        f.forEach((x, i) => { h += verlaufFehlerHtml(x, i + 1); });
+    }
+
+    if(a.length){
+        const teile = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+        const zeilen = a.map(id => {
+            const q = verlaufFrage(id);
+            return '<div class="vf-offen-zeile"><span class="vf-id">' + verlaufEsc(id) + '</span>'
+                 + '<span class="vf-offen-text">' + (q ? plainQuestionText(q.text, 140) : 'nicht im gewählten Fragenkatalog') + '</span>'
+                 + '<span class="vf-teil">' + (q && teile[q.part] ? teile[q.part] : '') + '</span></div>';
+        }).join('');
+        const ueben = a.filter(id => verlaufFrage(id)).length;
+        h += '<details class="review-part realistic-review vf-offen"><summary><i class="fas fa-circle-question"></i> Ausgelassen (' + a.length + ') – zählen nicht als Fehler</summary>'
+           + '<div class="review-body">'
+           + (ueben ? '<div class="vf-knoepfe" style="margin:0.7rem 0 0.4rem;"><button class="btn btn-outline" onclick="verlaufFragenUeben(\'a\')"><i class="fas fa-forward"></i> Ausgelassene üben (' + ueben + ')</button></div>' : '')
+           + zeilen + '</div></details>';
+    }
+    body.innerHTML = h;
+}
+
+// Eine neue Runde nur aus diesen Fragen - wie "Ausgelassene jetzt ueben".
+function verlaufFragenUeben(art){
+    const e = verlaufOffen && verlaufOffen.eintrag;
+    if(!e) return;
+    try{
+        if(window.duo && window.duo.isActive && window.duo.isActive()){
+            if(window.showAppAlert) showAppAlert('Solange du im Gruppenraum bist, geht das nicht. Verlasse zuerst den Raum.');
+            return;
+        }
+    }catch(x){}
+    const ids = art === 'a' ? (e.a || []) : (e.f || []).map(x => x && x[0]);
+    const pool = [];
+    ids.forEach(id => { const q = verlaufFrage(id); if(q && pool.indexOf(q) === -1) pool.push(q); });
+    if(!pool.length){
+        if(window.showAppAlert) showAppAlert('Diese Fragen stehen nicht im gewählten Fragenkatalog – der Eintrag stammt vermutlich aus einer anderen Prüfungsklasse.');
+        return;
+    }
+    let tag = '';
+    try{
+        const d = new Date(e.date);
+        tag = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+    }catch(x){}
+    verlaufFensterSchliessen();
+    isQuizActive = true;
+    examFinished = false;
+    examMode = false;
+    showSidebar = true;
+    currentPart = 'all';
+    currentQuestions = pool.map(q => { try{ return prepareQuestion(q); }catch(x){ return q; } });
+    neueRundeVorbereiten();
+    rundeNameFest = { name: (art === 'a' ? 'Ausgelassene' : 'Fehler') + (tag ? ' vom ' + tag : ' aus dem Verlauf'), fragen: currentQuestions };
+    renderQuestion();
+    navArea.style.display = 'flex';
+    updateVisibility();
+}
+window.verlaufFragenUeben = verlaufFragenUeben;
+
+// Zurueck unter Fehler und Lernbedarf - ohne etwas doppelt zu zaehlen.
+function verlaufInFehlerUebernehmen(){
+    const e = verlaufOffen && verlaufOffen.eintrag;
+    if(!e || !Array.isArray(e.f)) return;
+    try{
+        verlaufFehlendeIds(e).forEach(id => {
+            if(!errorList.includes(id)) errorList.push(id);
+            if(!verlaufImLernbedarf(id)){
+                difficultQuestions[id] = { wrongCount: 1, correctStreak: 0, lastWrong: new Date().toISOString() };
+            }
+            // Eine inzwischen gelernte Frage kommt wieder zum Ueben - sonst
+            // blendete "Gelernte ausblenden" sie gleich wieder aus.
+            const m = masteryData[id];
+            if(m && m.mastered){
+                m.mastered = false;
+                m.streak = 0;
+                m.wiederholStufe = 0;
+                m.gemeistertAm = null;
+            }
+        });
+        saveErrors();
+        saveDifficult();
+        saveMastery();
+        try{ updateErrorBadge(); }catch(x){}
+        try{ updateDifficultBadge(); }catch(x){}
+        try{ if(typeof updateMasteryDisplay === 'function') updateMasteryDisplay(); }catch(x){}
+        verlaufOffen.uebernommen = true;
+        verlaufFensterZeichnen();
+    }catch(x){
+        if(window.showAppAlert) showAppAlert('Übernehmen fehlgeschlagen: ' + x.message);
+    }
+}
+window.verlaufInFehlerUebernehmen = verlaufInFehlerUebernehmen;
 
 // ================================================================
 //  FEHLER MITNEHMEN                                      24.09.2026
@@ -29560,9 +30008,15 @@ function renderFinishScreen(isTimeUp = false) {
 // ================================================================
 let ausgelasseneZuletzt = [];      // Nummern, fuer "Ausgelassene jetzt ueben"
 let rundeVerlaufEintrag = null;    // der Verlaufseintrag dieser Runde, falls schon geschrieben
+var rundeNameFest = null;          // { name, fragen } - Runde aus dem Verlauf-Fenster (25.09.2026)
 
 // Der Name der Runde im Verlauf - an einer Stelle, nicht an dreien.
 function rundenName(){
+    // Eine Runde aus dem Verlauf-Fenster ("Fehler vom 24.09.") behaelt
+    // ihren Namen - aber nur, solange es noch dieselben Fragen sind.
+    try{
+        if (rundeNameFest && rundeNameFest.fragen === currentQuestions) return rundeNameFest.name;
+    }catch(e){}
     const lekName = (typeof gewaehlteLektion === 'function') ? gewaehlteLektion() : null;
     const teilName = lekName ? lekName.split('–')[0].trim()
         : (filterPart.value === 'all' ? 'Alle Teile' : ({ vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' }[filterPart.value] || filterPart.value));
@@ -29577,6 +30031,15 @@ function verlaufEintragSetzen(part, total, correct, status){
         const liste = (history && Array.isArray(history[currentUser])) ? history[currentUser] : null;
         if (rundeVerlaufEintrag && liste && liste.indexOf(rundeVerlaufEintrag) >= 0) {
             Object.assign(rundeVerlaufEintrag, { date: new Date().toISOString(), part, total, correct, status });
+            // Die Einzelheiten ebenfalls auf den neuen Stand (25.09.2026) -
+            // eine eben nachgeholte Frage ist nicht mehr "ausgelassen".
+            delete rundeVerlaufEintrag.f;
+            delete rundeVerlaufEintrag.a;
+            try{
+                const einzel = verlaufEinzelheiten(verlaufRundeFragen(), verlaufRundeStand(), total, correct);
+                if (einzel) Object.assign(rundeVerlaufEintrag, einzel);
+                verlaufZeitFehlerBuchen(einzel);
+            }catch(e){}
             saveHistory();
             rundeGewertet = true;
             return true;
@@ -30073,7 +30536,9 @@ function verlaufBeiAbbruch() {
             : (filterPart.value === 'all'
                 ? 'Alle Teile'
                 : ({ vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' }[filterPart.value] || filterPart.value));
-        addHistoryEntry(teil + (nurGelernte ? ' (Gelerntes, Teilrunde)' : ' (Teilrunde)'), gesamt, richtig, status);
+        const fest = (rundeNameFest && rundeNameFest.fragen === currentQuestions) ? rundeNameFest.name : '';
+        addHistoryEntry(fest ? fest + ' (Teilrunde)'
+                             : teil + (nurGelernte ? ' (Gelerntes, Teilrunde)' : ' (Teilrunde)'), gesamt, richtig, status);
         examFinished = true;
         console.log('[VERLAUF] Teilrunde gespeichert:', richtig + '/' + gesamt);
         return true;
@@ -35995,7 +36460,20 @@ function showRealisticFinal(){
   if(typeof addHistoryEntry==='function'){
     const vorn = realisticExam.duo ? 'Gruppenprüfung' : 'Realistisch';
     let histName = results.length === 1 ? `${vorn} ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}` : results.length === 2 ? `${vorn} ${results.length} ${realisticExam.duo ? 'Runden' : 'Teile'}` : `${vorn} 3x25`;
-    addHistoryEntry(histName, totalQuestions, totalCorrect, histStatus);
+    // Der Gesamteintrag umfasst alle Teile - in currentQuestions steht aber
+    // nur noch der letzte. Die Fragen der anderen liegen in results (25.09.2026).
+    let einzel;
+    try{
+      const alle = [], stand = {};
+      completedOrder.forEach(p => {
+        const r = realisticExam.results[p];
+        if(!r) return;
+        (r.questions || []).forEach(q => alle.push(q));
+        Object.assign(stand, r.progress || {});
+      });
+      einzel = (typeof verlaufEinzelheiten === 'function') ? verlaufEinzelheiten(alle, stand, totalQuestions, totalCorrect) : undefined;
+    }catch(e){ einzel = undefined; }
+    addHistoryEntry(histName, totalQuestions, totalCorrect, histStatus, einzel);
   }
   // Piper Ansage für Gesamt
   try{

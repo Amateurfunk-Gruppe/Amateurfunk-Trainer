@@ -27,6 +27,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Chat: dritter Haken, wenn bei mehreren Empfängern alle die Nachricht gelesen haben
 - Sprachnachrichten wie bei WhatsApp: laufende Balken bei der Aufnahme, Pause, Welle in der Sprechblase mit Springen per Klick
 - Besucherfenster: Zeitschaltuhr – zu einer Uhrzeit Server aus, wahlweise danach PC herunterfahren (eine Minute Vorlauf, abbrechbar), Besucher 5 Minuten vorher gewarnt
+- Verlauf anklickbar: Ein Klick auf einen Eintrag zeigt die Fehler der Runde mit eigener und richtiger Antwort, „Fehler erneut üben“, „Ausgelassene üben“ und „In Fehler und Lernbedarf übernehmen“ für inzwischen herausgefallene Fragen
 
 ### Geändert
 - Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
@@ -47,6 +48,8 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Hinweisbalken für Besucher (Schließen, Neustart) und Server-Knopf im Countdown gelb statt braun
 - Einstellungen: Knopf „Einstellungen übernehmen“ statt „Fertig“
 - Chat ohne Gruppenraum: Sprachnachrichten jetzt auch für Besucher am geteilten Link
+- Prüfungen: Fragen, die bei abgelaufener Zeit offen blieben, kommen wie falsche Antworten unter Fehler und Lernbedarf
+- Lernstand: Die Sicherung am Trainer-PC darf größer werden (8 MB statt 256 KB), damit auch drei Benutzer samt Verlauf Platz haben
 
 ### Behoben
 - Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
@@ -66,6 +69,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Windows-Start: Hinweise bei Quelltext-Download, falsch abgelegtem Node und abgestürztem Server statt stillem Abbruch
 - Prüfungssimulator: zwei Teile in der Grauzone gelten als nicht bestanden, Ansage nannte bei Technik N „undefined“
 - Wer während des Countdowns zum Schließen dazukommt, sieht jetzt den Hinweisbalken
+- Dark Mode: Die Detaillierte Auswertung nach der Prüfung zeigt die eigene und die richtige Antwort wieder rot und grün
 
 ## [1.297.0] - 2026-09-15
 

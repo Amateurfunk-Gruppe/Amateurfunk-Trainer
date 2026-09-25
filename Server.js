@@ -1377,7 +1377,22 @@ app.get('/api/neuanfang', localOnly, (req,res)=>{
 });
 
 // FIX Q9: ausdrueckliches Body-Limit statt sich auf den Standard zu verlassen
-app.use(express.json({limit:'256kb'}));
+//
+// 25.09.2026: Der Lernstand bekommt mehr Luft. Dietmar: "Ich moechte den
+// Verlauf anklickbar. Oeffne ich ihn, moechte ich meine Fehler sehen" -
+// dafuer traegt jeder Verlaufseintrag jetzt seine Fehler mit. Der ganze
+// Lernstand geht in EINER Anfrage an POST /api/userdata, und schon heute
+// sind es mit einem einzigen Benutzer rund 100 KB (der Lernfortschritt
+// allein 74 KB). Mit drei Benutzern waeren 256 KB bald erreicht - und
+// dann wird still nicht mehr gesichert. Die groessere Grenze gilt nur
+// fuer diese eine Adresse und nur am Trainer-PC selbst; alles andere,
+// auch alles, was ueber den Einladungslink kommt, bleibt bei 256 KB.
+const jsonAllgemein = express.json({limit:'256kb'});
+const jsonLernstand = express.json({limit:'8mb'});
+app.use((req, res, next) => {
+  if(req.method === 'POST' && req.path === '/api/userdata' && isLocalRequest(req)) return jsonLernstand(req, res, next);
+  return jsonAllgemein(req, res, next);
+});
 
 // FIX Q9/Q8: Fehlerhaftes JSON sauber beantworten statt mit einer
 // HTML-Fehlerseite von Express (die vorher als 400 mit Stacktrace kam).
