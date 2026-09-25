@@ -3911,9 +3911,10 @@
         #tuerBtn.tuer-an         { background:#1c7a46 !important; border-color:#1c7a46 !important; color:#ffffff !important; }
         #tuerBtn.tuer-an i       { color:#ffffff !important; }
         #tuerBtn.tuer-an:hover   { background:#16633a !important; border-color:#16633a !important; }
-        #tuerBtn.tuer-gleich     { background:#8a4b10 !important; border-color:#8a4b10 !important; color:#ffffff !important; }
-        #tuerBtn.tuer-gleich i   { color:#ffffff !important; }
-        #tuerBtn.tuer-gleich:hover { background:#74400e !important; border-color:#74400e !important; }
+        /* Bernstein statt Braun (25.09.2026, siehe GELB STATT BRAUN) */
+        #tuerBtn.tuer-gleich     { background:#f59e0b !important; border-color:#f59e0b !important; color:#1f1300 !important; }
+        #tuerBtn.tuer-gleich i   { color:#1f1300 !important; }
+        #tuerBtn.tuer-gleich:hover { background:#d97706 !important; border-color:#d97706 !important; }
 
         /* Der Schalter unten im Besucherfenster. "ein" ist die einladende
            Handlung und deshalb gruen gefuellt; "aus" ist ein Eingriff und
@@ -3936,8 +3937,17 @@
         #serverSchalter.schalter-aus, #sperreSchalter.schalter-aus   { background:#a33227 !important; border:1px solid #a33227 !important; color:#ffffff !important; }
         #serverSchalter.schalter-aus i, #sperreSchalter.schalter-aus i { color:#ffffff !important; }
         #serverSchalter.schalter-aus:hover, #sperreSchalter.schalter-aus:hover { background:#8a2a20 !important; border-color:#8a2a20 !important; }
-        #serverSchalter.schalter-gleich   { background:#8a4b10 !important; border:1px solid #8a4b10 !important; color:#ffffff !important; }
-        #serverSchalter.schalter-gleich i { color:#ffffff !important; }
+        #serverSchalter.schalter-gleich   { background:#f59e0b !important; border:1px solid #f59e0b !important; color:#1f1300 !important; }
+        #serverSchalter.schalter-gleich i { color:#1f1300 !important; }
+        #serverSchalter.schalter-gleich:hover { background:#d97706 !important; border-color:#d97706 !important; }
+        /* Die Zeitschaltuhr (25.09.2026): weiss, wenn aus; blau, wenn sie
+           gestellt ist; rot, solange der PC auf das Herunterfahren wartet -
+           dann bricht ein Klick es ab. */
+        #uhrSchalter.uhr-an         { background:#1d5f9e !important; border:1px solid #1d5f9e !important; color:#ffffff !important; }
+        #uhrSchalter.uhr-an i       { color:#ffffff !important; }
+        #uhrSchalter.uhr-an:hover   { background:#174d80 !important; border-color:#174d80 !important; }
+        #uhrSchalter.uhr-herunter   { background:#a33227 !important; border:1px solid #a33227 !important; color:#ffffff !important; }
+        #uhrSchalter.uhr-herunter i { color:#ffffff !important; }
 
         /* Am 22.09.2026 hierher zurueckgeholt: Diese Zeile stand vorher
            allein ueber dem Server-Knopf-Block und haengte damit an
@@ -7595,7 +7605,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     </div>
                     <div style="font-size:0.8rem; color:#4b5563; line-height:1.5; margin-bottom:0.7rem;">
                         Trag deinen Namen oder dein Rufzeichen ein, damit dich der
-                        Gastgeber und die anderen im Raum erkennen.
+                        Kursleiter und die anderen im Raum erkennen.
                     </div>
                     <input type="text" id="duoGastName" maxlength="20" autocomplete="name"
                         placeholder="z.B. dein Vorname oder Rufzeichen"
@@ -7618,7 +7628,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     <i class="fas fa-circle-check"></i> Du bist im Gruppenraum
                 </div>
                 <div id="duoGastWarteText" style="font-size:0.82rem; color:#2f5d45; line-height:1.5;">
-                    Sobald der Gastgeber die Runde startet, geht es hier von selbst los.
+                    Sobald der Kursleiter die Runde startet, geht es hier von selbst los.
                 </div>
             </div>
             <!-- ================================================================
@@ -12112,7 +12122,7 @@ function kursleiterAuswertungHolen(){
     try{
         if (!(window.duo && window.duo.auswertungAnfordern)) return;
         if (!window.duo.auswertungAnfordern()) {
-            alert('Die Auswertung kann nur der Gastgeber des Raums öffnen.');
+            alert('Die Auswertung kann nur der Kursleiter des Raums öffnen.');
         }
     }catch(e){ console.error('[Kursleiter] holen', e); }
 }
@@ -18990,7 +19000,7 @@ window.lebenszeichenStarten = lebenszeichenStarten;
 // ================================================================
 // sperre: die Laendersperre - true an, false aus, null "der Server sagt
 // es nicht" (aeltere Fassung; dann bleibt der Schalter dafuer weg).
-let tuerStand = { offen:false, schliesstUm:0, draussen:0, imRaum:0, sperre:null };
+let tuerStand = { offen:false, schliesstUm:0, draussen:0, imRaum:0, sperre:null, uhr:null };
 let tuerUhr = null;
 
 function tuerKnopfZeichnen(){
@@ -19012,6 +19022,7 @@ function tuerKnopfZeichnen(){
 
     serverSchalterZeichnen();
     sperreSchalterZeichnen();
+    uhrSchalterZeichnen();
 
     const rest = tuerStand.schliesstUm ? (tuerStand.schliesstUm - Date.now()) : 0;
     // Ist der Countdown abgelaufen, stimmt der gemerkte Zustand nicht mehr:
@@ -19058,7 +19069,9 @@ async function tuerNachsehen(){
         tuerStand = { offen: !!j.offen, schliesstUm: j.schliesstUm || 0,
                       draussen: Number(j.draussen) || 0,
                       imRaum: Number(j.imRaum) || 0,
-                      sperre: (typeof j.sperre === 'boolean') ? j.sperre : null };
+                      sperre: (typeof j.sperre === 'boolean') ? j.sperre : null,
+                      // Die Zeitschaltuhr (25.09.2026); null bei aelterem Server
+                      uhr: (j.uhr && typeof j.uhr === 'object') ? j.uhr : null };
         tuerKnopfZeichnen();
         // Hier haengt der Hinweiston. Diese Uhr laeuft, solange der
         // Trainer auf diesem Rechner offen ist - unabhaengig davon, ob
@@ -19088,7 +19101,12 @@ function serverSchalterZeichnen(){
     // und genau das hat er als "ist er an?" gelesen.
     if(rest > 0){
         k.classList.add('schalter-gleich');
-        t.textContent = 'Schließt in ' + Math.ceil(rest / 1000) + ' s';
+        // Bei der Zeitschaltuhr sind es fuenf Minuten - dann "4:37" statt
+        // "277 s" (25.09.2026).
+        const sekRest = Math.ceil(rest / 1000);
+        t.textContent = 'Schließt in ' + (sekRest >= 60
+            ? Math.floor(sekRest / 60) + ':' + String(sekRest % 60).padStart(2, '0') + ' min'
+            : sekRest + ' s');
         k.setAttribute('data-tooltip', 'Noch einmal klicken, um den Server doch offen zu lassen');
     } else if(tuerStand.offen){
         k.classList.add('schalter-ein');
@@ -19131,6 +19149,129 @@ function sperreSchalterZeichnen(){
             + 'Klicken schaltet sie wieder ein. Nach einem Neustart ist sie von selbst wieder ein.');
     }
 }
+
+// ----------------------------------------------------------------
+//  DIE ZEITSCHALTUHR                                  (25.09.2026)
+//  Dietmar: "Ich moechte die Option, dass der Kursleiter eine bestimmte
+//  Uhrzeit eingeben kann und dann der Server sich abschaltet und die
+//  Option PC/Laptop beim Kursleiter sich herunterfaehrt." Die Uhr selbst
+//  laeuft im Server (siehe DIE ZEITSCHALTUHR in Server.js) - sie soll
+//  auch dann schalten, wenn hier kein Fenster mehr offen ist. Hier gibt
+//  es nur den Knopf und das kleine Fenster zum Stellen.
+// ----------------------------------------------------------------
+function uhrZeitText(ms){
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function uhrSchalterZeichnen(){
+    const k = document.getElementById('uhrSchalter');
+    const t = document.getElementById('uhrSchalterText');
+    const z = document.getElementById('uhrSchalterZeichen');
+    if(!k || !t) return;
+    // Kennt der Server die Uhr noch nicht (aeltere Fassung), bleibt der Knopf weg.
+    if(!laeuftLokal() || !tuerStand.uhr){ k.style.display = 'none'; return; }
+    k.style.display = '';
+    k.classList.remove('uhr-an', 'uhr-herunter');
+    const u = tuerStand.uhr;
+    const jetzt = Date.now();
+    if(u.herunterUm && u.herunterUm > jetzt){
+        k.classList.add('uhr-herunter');
+        if(z) z.className = 'fas fa-power-off';
+        t.textContent = 'PC fährt herunter in ' + Math.ceil((u.herunterUm - jetzt) / 1000) + ' s – abbrechen';
+        k.setAttribute('data-tooltip', 'Klicken bricht das Herunterfahren ab.');
+    } else if(u.aktiv && u.um){
+        k.classList.add('uhr-an');
+        if(z) z.className = (u.aktion === 'pc') ? 'fas fa-power-off' : 'fas fa-clock';
+        const morgen = new Date(u.um).toDateString() !== new Date().toDateString();
+        t.textContent = (u.aktion === 'pc' ? 'PC aus um ' : 'Aus um ') + uhrZeitText(u.um) + (morgen ? ' (morgen)' : '');
+        k.setAttribute('data-tooltip', 'Um ' + uhrZeitText(u.um) + ' Uhr'
+            + (morgen ? ' (morgen)' : '') + ': Server aus'
+            + (u.aktion === 'pc' ? ' und danach der PC herunterfahren' : '')
+            + '. Klicken zum Ändern oder Ausschalten.');
+    } else {
+        if(z) z.className = 'fas fa-clock';
+        t.textContent = 'Zeitschaltuhr';
+        k.setAttribute('data-tooltip', 'Zu einer Uhrzeit den Server ausschalten – auf Wunsch auch den PC herunterfahren.');
+    }
+}
+function uhrFensterZeichnen(){
+    const an = document.getElementById('uhrAn');
+    const txt = document.getElementById('uhrAnText');
+    const felder = document.getElementById('uhrFelder');
+    if(txt) txt.textContent = (an && an.checked) ? 'Ein' : 'Aus';
+    if(felder){ felder.style.opacity = (an && an.checked) ? '1' : '0.5'; }
+}
+window.uhrFensterZeichnen = uhrFensterZeichnen;
+window.uhrSchalterKlick = function(){
+    const u = tuerStand.uhr;
+    // Wartet der PC gerade auf das Herunterfahren, bricht der Klick es ab.
+    if(u && u.herunterUm && u.herunterUm > Date.now()){ window.pcHerunterfahrenAbbrechen(); return; }
+    const f = document.getElementById('uhrFenster');
+    if(!f) return;
+    if(f.style.display === 'block'){ window.zeitschaltuhrZu(); return; }
+    // Die Felder mit dem aktuellen Stand fuellen - oder mit dem, was
+    // zuletzt eingestellt war.
+    let zeit = '23:00', aktion = 'server';
+    try{ zeit = localStorage.getItem('afu_uhr_zeit') || zeit; aktion = localStorage.getItem('afu_uhr_aktion') || aktion; }catch(e){}
+    if(u && u.aktiv && u.um){ zeit = uhrZeitText(u.um); aktion = u.aktion === 'pc' ? 'pc' : 'server'; }
+    const an = document.getElementById('uhrAn');
+    // Beim Oeffnen steht der Haken auf "Ein": Wer das Fenster aufmacht,
+    // will die Uhr stellen - oder sie mit einem Klick ausschalten.
+    if(an) an.checked = true;
+    const feld = document.getElementById('uhrZeit');
+    if(feld) feld.value = zeit;
+    document.querySelectorAll('input[name="uhrAktion"]').forEach(function(r){ r.checked = (r.value === aktion); });
+    uhrFensterZeichnen();
+    f.style.display = 'block';
+    try{ if(feld) feld.focus(); }catch(e){}
+};
+window.zeitschaltuhrZu = function(){
+    const f = document.getElementById('uhrFenster');
+    if(f) f.style.display = 'none';
+};
+window.zeitschaltuhrUebernehmen = async function(){
+    const an = !!(document.getElementById('uhrAn') || {}).checked;
+    const zeit = String((document.getElementById('uhrZeit') || {}).value || '').trim();
+    const gewaehlt = document.querySelector('input[name="uhrAktion"]:checked');
+    const aktion = gewaehlt ? gewaehlt.value : 'server';
+    try{
+        let url = '/api/zeitschaltuhr?an=' + (an ? '1' : '0');
+        if(an){
+            if(!/^\d{1,2}:\d{2}$/.test(zeit)) throw new Error('Bitte eine Uhrzeit eintragen, zum Beispiel 23:30.');
+            url += '&uhrzeit=' + encodeURIComponent(zeit) + '&aktion=' + (aktion === 'pc' ? 'pc' : 'server');
+            try{ localStorage.setItem('afu_uhr_zeit', zeit); localStorage.setItem('afu_uhr_aktion', aktion); }catch(e){}
+        }
+        const r = await fetch(url, { method: 'POST' });
+        if(!r.ok){
+            if(r.status === 404) throw new Error('Der Server läuft noch mit einer älteren Fassung – '
+                + 'einmal den Trainer neu starten, danach gibt es die Zeitschaltuhr.');
+            if(r.status === 403) throw new Error('Das geht nur direkt am Trainer-PC.');
+            let text = '';
+            try{ text = (await r.json()).fehler || ''; }catch(e){}
+            throw new Error(text || ('Der Server hat mit ' + r.status + ' geantwortet.'));
+        }
+        const j = await r.json();
+        tuerStand.uhr = j.uhr || null;
+        uhrSchalterZeichnen();
+        window.zeitschaltuhrZu();
+    }catch(e){
+        if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
+    }
+};
+window.pcHerunterfahrenAbbrechen = async function(){
+    try{
+        const r = await fetch('/api/zeitschaltuhr/abbrechen', { method: 'POST' });
+        if(!r.ok) throw new Error('Der Server hat mit ' + r.status + ' geantwortet.');
+        const j = await r.json();
+        tuerStand.uhr = j.uhr || tuerStand.uhr;
+        uhrSchalterZeichnen();
+        if(window.showAppAlert) window.showAppAlert(j.abgebrochen
+            ? 'Das Herunterfahren ist abgebrochen. Der PC bleibt an.'
+            : 'Da lief gerade kein Herunterfahren mehr.');
+    }catch(e){
+        if(window.showAppAlert) window.showAppAlert('Nicht möglich: ' + e.message);
+    }
+};
 
 window.laenderSperreUmschalten = async function(){
     if(tuerStand.sperre === null) return;
@@ -23249,7 +23390,7 @@ function infoFuellen() {
             'Raum erstellen, Link weitergeben — wer ihn bekommt, macht im Browser mit, ohne etwas zu installieren.',
             [
             'Alle bekommen dieselben Fragen, jeder in seinem Tempo.',
-            ['Trainer-Ansicht', 'Der Gastgeber sieht, wie es bei den anderen läuft, und kann jemanden entfernen.'],
+            ['Trainer-Ansicht', 'Der Kursleiter sieht, wie es bei den anderen läuft, und kann jemanden entfernen.'],
             ['Am Ende', 'Eine Auswertung für alle. Über „Trainer herunterladen" kann sich jeder das Programm mitnehmen.'],
             ['Raum-Knopf', 'Er erscheint in der Kopfzeile, solange ein Raum läuft — auch mitten in einer Runde.'],
             ['Eigene Adresse', 'Der Einladungslink trägt normalerweise die Adresse, die der Tunnel beim Start auswürfelt — sie ist nach jedem Neustart eine andere. Wer eine <b>feste</b> Adresse hat (DuckDNS, eigene Domain, benannter Cloudflare-Tunnel), trägt sie über den Knopf <b>Eigene Adresse</b> neben dem Feld ein. Sie muss mit <b>https</b> beginnen und auf diesen Rechner zeigen; ab dann steht sie in jedem Einladungslink, und eine App-Verknüpfung auf dem Handy bleibt gültig.']
@@ -23288,8 +23429,8 @@ function infoFuellen() {
             'Teilnehmer kommen über den Einladungslink des Gruppenraums herein — in jedem Browser, ohne Installation. Sie bekommen dort eine eigene Ansicht, keine verkleinerte Rechnerseite.',
             [
             ['Mitmachen', 'Ein Feld für den Namen, ein Knopf. Ohne Namen geht es nicht weiter — sonst steht man bei allen anderen als „Benutzer 1" in der Liste. Nach dem Tippen beginnt sofort die erste Frage.'],
-            ['Kein Hauptmenü', 'Filterleiste, Prüfungsübersicht, Lernfortschritt und Verlauf gehören zum eigenen Lernen am eigenen Rechner. Im Raum entscheidet der Gastgeber, was gefragt wird. Übrig bleiben Weiter, Hauptmenü und der Farbstil.'],
-            ['Neue Runde', 'Sind alle durch, startet der Gastgeber mit einem Knopf eine neue Runde: frische Fragen für alle, jeder wieder bei null. Der Knopf steht im Gruppenraum-Fenster und fragt vorher nach.'],
+            ['Kein Hauptmenü', 'Filterleiste, Prüfungsübersicht, Lernfortschritt und Verlauf gehören zum eigenen Lernen am eigenen Rechner. Im Raum entscheidet der Kursleiter, was gefragt wird. Übrig bleiben Weiter, Hauptmenü und der Farbstil.'],
+            ['Neue Runde', 'Sind alle durch, startet der Kursleiter mit einem Knopf eine neue Runde: frische Fragen für alle, jeder wieder bei null. Der Knopf steht im Gruppenraum-Fenster und fragt vorher nach.'],
             ['Bedienung', 'Antworten und Knöpfe sind fingergroß, die Frage steht oben, nichts läuft seitlich aus dem Bild. Der Gruppenchat bleibt am Handy zu — er verdeckte sonst die halbe Frage.']
         ])
       + infoBlock('Als App auf den Startbildschirm',
@@ -23377,7 +23518,7 @@ function infoFuellen() {
             'Die Version steht in den Einstellungen unter Update, zusammen mit der bei GitHub.',
             [
             '<span id="infoDateiStand" style="color:var(--muted);">wird ermittelt …</span>',
-            'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Gastgeber — dort ist der Stand immer aktuell.',
+            'Wer über den Einladungslink mitmacht, lädt die Dateien bei jedem Aufruf frisch vom Kursleiter — dort ist der Stand immer aktuell.',
             'Wer den Trainer über „Trainer herunterladen" mitgenommen hat, arbeitet mit einer Momentaufnahme: Der eigene Ordner erfährt von späteren Änderungen nichts, bis ein Update geholt wird. Liegt eines bereit, meldet es sich beim Start in einem eigenen Fenster; nachsehen kann man jederzeit in den Einstellungen unter Update.'
         ]));
 }
@@ -23887,7 +24028,7 @@ function ttsIstWindows(){
 // ----------------------------------------------------------------
 function ttsPiperWeg(){
     if(!laeuftLokal()){
-        return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Gastgebers \u2013 dort fehlt sie gerade. '
+        return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Kursleiters \u2013 dort fehlt sie gerade. '
              + 'An deinem Ger\u00e4t musst du nichts einstellen.';
     }
     return 'So kommt sie dazu: Einstellungen \u2192 Wartung \u2192 Hilfsprogramme \u2192 bei Piper auf \u201eHolen\u201c. '
@@ -36365,7 +36506,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
       <!-- Erscheint nur, wenn der Raum aus dem Link noch nicht eroeffnet
            ist. duo.js blendet ihn ein und wieder aus. -->
       <div id="willkommenWarte" style="display:none; margin-top:0.8rem; padding:0.55rem 0.8rem; border-radius:10px; background:#eef4fb; border:1px solid #c2d6f0; font-size:0.8rem; color:#1f3f66;">
-        <i class="fas fa-hourglass-half"></i> Der Gastgeber hat den Raum noch nicht eröffnet — sobald er da ist, geht es von selbst los.</div>
+        <i class="fas fa-hourglass-half"></i> Der Kursleiter hat den Raum noch nicht eröffnet — sobald er da ist, geht es von selbst los.</div>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid var(--line);">
       <button onclick="willkommenFertig(false)" class="btn btn-outline" style="min-height:38px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;">Ohne Namen</button>
@@ -36380,17 +36521,23 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
 <!-- Der Gastgeber macht gleich zu. Eigener Balken, damit er der
      Neustart-Ansage nicht ins Gehege kommt - beide koennen theoretisch
      gleichzeitig laufen. -->
+<!-- GELB STATT BRAUN (25.09.2026). Dietmar: "Das sieht sehr gut aus,
+     bis auf dieses schreckliche Braun. Mache mir Vorschlaege." Aus vier
+     Vorschlaegen gewaehlt: "B: Gelber Hinweis" - hellgelb mit dunkler
+     Schrift und bernsteinfarbener Kante; die Knoepfe im Countdown in
+     Bernstein. Gilt fuer beide Balken und fuer den Server-Knopf oben und
+     im Besucherfenster. -->
 <div id="tuerBalken" style="display:none; position:fixed; left:0; right:0; top:0; z-index:99999;
-     background:#8a4b10; color:#fff; padding:0.65rem 1rem; font-size:0.86rem; line-height:1.5;
-     box-shadow:0 2px 12px rgba(0,0,0,0.3); text-align:center;">
+     background:#fef3c7; color:#78350f; border-bottom:2px solid #f59e0b; padding:0.65rem 1rem; font-size:0.86rem; line-height:1.5;
+     box-shadow:0 2px 12px rgba(0,0,0,0.18); text-align:center;">
   <span id="tuerBalkenText"></span>
 </div>
 <div id="neustartBalken" style="display:none; position:fixed; left:0; right:0; top:0; z-index:99999;
-     background:#8a4b00; color:#fff; padding:0.6rem 1rem; font-size:0.86rem; line-height:1.45;
-     box-shadow:0 6px 20px rgba(0,0,0,0.35); text-align:center;">
+     background:#fef3c7; color:#78350f; border-bottom:2px solid #f59e0b; padding:0.6rem 1rem; font-size:0.86rem; line-height:1.45;
+     box-shadow:0 6px 20px rgba(0,0,0,0.2); text-align:center;">
   <span id="neustartBalkenText"></span>
-  <button id="neustartBalkenZu" onclick="try{ neustartBalkenWeg(); }catch(e){ this.parentNode.style.display='none'; }" style="margin-left:12px; background:rgba(255,255,255,0.18); color:#fff;
-          border:1px solid rgba(255,255,255,0.45); border-radius:14px; padding:2px 10px; cursor:pointer;
+  <button id="neustartBalkenZu" onclick="try{ neustartBalkenWeg(); }catch(e){ this.parentNode.style.display='none'; }" style="margin-left:12px; background:#ffffff; color:#78350f;
+          border:1px solid #f59e0b; border-radius:14px; padding:2px 10px; cursor:pointer;
           font-size:0.78rem;">verstanden</button>
 </div>
 
@@ -36481,36 +36628,66 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
          Schrift, schmaler Gruppenraum), brechen Aktualisieren und
          Schliessen gemeinsam rechts in eine zweite Reihe um, statt dass
          etwas abgeschnitten wird. -->
-    <!-- Seit dem 25.09.2026 stehen hier unten rechts Server, Sperre,
-         Aktualisieren und Schliessen; Zaehler, Verlauf und Neustart sind
-         nach oben gewandert (siehe DIE KNOEPFE OBEN). -->
-    <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:0.8rem 1rem; background:#fafbff; border-top:1px solid var(--line);">
+    <!-- Die Leiste unten (25.09.2026): links Server, Zeitschaltuhr und
+         Sperre, rechts Aktualisieren und Schliessen. Zaehler, Verlauf und
+         Neustart stehen oben (siehe DIE KNOEPFE OBEN).
+         SERVER UND SPERRE WIEDER UNTEN: Dietmar, mit einem Bild der beiden
+         gruenen Knoepfe: "Diese zwei Buttons moechte ich wieder unten rechts
+         in alter Groesse haben." Wenig spaeter, mit der Zeitschaltuhr:
+         "Verschiebe das zusammen mit dem Server-Start und Filter nach links
+         und fuege die Option neben dem Server starten mit ein." Also links,
+         38 Punkte hoch wie vorher. -->
+    <div style="position:relative; display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:0.8rem 1rem; background:#fafbff; border-top:1px solid var(--line);">
+      <!-- Das kleine Fenster der Zeitschaltuhr. Es steht ueber der Leiste,
+           links, wo sein Knopf ist. -->
+      <div id="uhrFenster" role="dialog" aria-label="Zeitschaltuhr" style="display:none; position:absolute; left:1rem; bottom:calc(100% + 8px); width:340px; max-width:calc(100% - 2rem); z-index:5; background:var(--card-bg, #fff); color:var(--ink); border:1px solid var(--line); border-radius:14px; box-shadow:0 14px 40px rgba(15,39,69,0.28); padding:0.9rem 1rem; font-size:0.86rem; line-height:1.45;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.7rem;">
+          <i class="fas fa-clock" style="color:var(--panel-navy);"></i>
+          <b style="flex:1; font-size:0.97rem;">Zeitschaltuhr</b>
+          <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:700;"><input type="checkbox" id="uhrAn" onchange="uhrFensterZeichnen()" style="width:18px; height:18px; accent-color:#1d5f9e; margin:0;"> <span id="uhrAnText">Aus</span></label>
+          <button onclick="zeitschaltuhrZu()" aria-label="Schließen" style="width:28px; height:28px; border-radius:50%; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; font-size:1rem; line-height:1;">×</button>
+        </div>
+        <div id="uhrFelder">
+          <label style="display:flex; align-items:center; gap:10px; margin-bottom:0.7rem; font-weight:600;">Uhrzeit
+            <input type="time" id="uhrZeit" value="23:00" style="font:inherit; font-size:1rem; padding:0.3rem 0.5rem; border:1px solid var(--line); border-radius:8px; background:var(--card-bg, #fff); color:var(--ink);"></label>
+          <div style="font-weight:600; margin-bottom:0.35rem;">Was passiert um diese Uhrzeit?</div>
+          <label style="display:flex; gap:8px; align-items:flex-start; margin-bottom:0.4rem; cursor:pointer;"><input type="radio" name="uhrAktion" value="server" checked style="margin-top:3px;"> <span><b>Server aus</b> – von außen kommt niemand mehr herein, der Trainer läuft am PC weiter.</span></label>
+          <label style="display:flex; gap:8px; align-items:flex-start; margin-bottom:0.4rem; cursor:pointer;"><input type="radio" name="uhrAktion" value="pc" style="margin-top:3px;"> <span><b>Server aus und PC herunterfahren</b> – eine Minute danach fährt der Rechner herunter.</span></label>
+          <div style="font-size:0.78rem; color:var(--muted); margin:0.35rem 0 0;">Die Besucher bekommen 5 Minuten vorher einen Hinweis mit Countdown. Die Uhr schaltet einmal und ist danach wieder aus; nach einem Neustart des Trainers ist sie ebenfalls aus.</div>
+        </div>
+        <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:0.8rem;">
+          <button onclick="zeitschaltuhrZu()" class="btn btn-outline" style="min-height:34px; padding:0.4rem 0.9rem; border-radius:18px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;">Abbrechen</button>
+          <button onclick="zeitschaltuhrUebernehmen()" class="btn btn-primary" style="min-height:34px; padding:0.4rem 1rem; border-radius:18px; font-weight:700; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Übernehmen</button>
+        </div>
+      </div>
+      <!-- Der Schalter fuer den Server. Dietmar am 22.09.2026: "Wenn ich es
+           oeffne, kommt unten ein Button rein. Server Ein / Aus." Er steht
+           vorn, weil er von allem hier das Wichtigste ist; Beschriftung und
+           Farbe setzt serverSchalterZeichnen() im Sekundentakt. -->
+      <button id="serverSchalter" onclick="tuerUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-server"></i> <span id="serverSchalterText">Server ein</span></button>
+      <!-- Der Knopf fuer die Zeitschaltuhr (25.09.2026, siehe DIE
+           ZEITSCHALTUHR in Server.js). Dietmar: "Verschiebe das zusammen mit
+           dem Server-Start und Filter nach links und fuege die Option neben
+           dem Server starten mit ein. Hier soll es ein kleines Fenster
+           geben, wo ich auswaehlen kann, was passiert, wenn die Uhrzeit
+           erreicht wird. Natuerlich zum Ein- und Ausschalten." Aus: weiss
+           "Zeitschaltuhr". An: blau "Aus um 23:00". Beschriftung und Farbe
+           setzt uhrSchalterZeichnen() im Sekundentakt, wie beim Server. -->
+      <button id="uhrSchalter" onclick="uhrSchalterKlick()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; border:1px solid #b0c4d8; background:white; cursor:pointer; display:none;"><i id="uhrSchalterZeichen" class="fas fa-clock"></i> <span id="uhrSchalterText">Zeitschaltuhr</span></button>
+      <!-- Der Schalter fuer die Laendersperre. Dietmar am 22.09.2026: "Ich
+           moechte die Laenderfilter auch ausschalten koennen." Gleiche
+           Bauart wie der Server-Schalter: gruen "Sperre ein", rot "Sperre
+           aus". Erst hiess es "Laendersperre ein/aus" - damit brach die
+           Leiste um. Dietmar: "Mach Laendersperre zu Sperre, damit alles
+           in eine Reihe passt." Nach jedem Neustart wieder ein. Zeichnet
+           sperreSchalterZeichnen(), im selben Takt. -->
+      <button id="sperreSchalter" onclick="laenderSperreUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-earth-europe"></i> <span id="sperreSchalterText">Sperre ein</span></button>
       <!-- Aktualisieren und Schliessen als Paar mit margin-left:auto statt
            eines Abstandhalters davor: So wandern sie beim Umbruch ZUSAMMEN
            nach rechts in die zweite Reihe. Mit dem Abstandhalter blieb
            Aktualisieren oben rechts und Schliessen stand allein unten
            links. -->
       <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
-        <!-- SERVER UND SPERRE WIEDER UNTEN (25.09.2026). Dietmar, mit einem
-             Bild der beiden gruenen Knoepfe: "Diese zwei Buttons moechte ich
-             wieder unten rechts in alter Groesse haben." Mittags waren sie
-             mit den drei anderen in die Kopfzeile gewandert (siehe DIE
-             KNOEPFE OBEN); die drei bleiben dort, diese zwei stehen wieder
-             hier, 38 Punkte hoch wie vorher, vor Aktualisieren und
-             Schliessen. -->
-        <!-- Der Schalter fuer den Server. Dietmar am 22.09.2026: "Wenn ich es
-             oeffne, kommt unten ein Button rein. Server Ein / Aus." Er steht
-             vorn, weil er von allem hier das Wichtigste ist; Beschriftung und
-             Farbe setzt serverSchalterZeichnen() im Sekundentakt. -->
-        <button id="serverSchalter" onclick="tuerUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-server"></i> <span id="serverSchalterText">Server ein</span></button>
-        <!-- Der Schalter fuer die Laendersperre. Dietmar am 22.09.2026: "Ich
-             moechte die Laenderfilter auch ausschalten koennen." Gleiche
-             Bauart wie der Server-Schalter: gruen "Sperre ein", rot "Sperre
-             aus". Erst hiess es "Laendersperre ein/aus" - damit brach die
-             Leiste um. Dietmar: "Mach Laendersperre zu Sperre, damit alles
-             in eine Reihe passt." Nach jedem Neustart wieder ein. Zeichnet
-             sperreSchalterZeichnen(), im selben Takt. -->
-        <button id="sperreSchalter" onclick="laenderSperreUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-earth-europe"></i> <span id="sperreSchalterText">Sperre ein</span></button>
         <button onclick="besucherFensterAuffrischen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;"><i class="fas fa-rotate"></i> Aktualisieren</button>
         <button onclick="besucherFensterZu()" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.05rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Schließen</button>
       </div>

@@ -3084,7 +3084,7 @@
             const sek = Math.ceil(rest / 1000);
             const zeit = sek >= 60 ? (Math.floor(sek/60) + ' Min ' + String(sek%60).padStart(2,'0') + ' s')
                                    : (sek + ' Sekunden');
-            text.innerHTML = '\uD83D\uDD12 <b>Der Gastgeber schließt den Trainer in ' + zeit + '.</b> '
+            text.innerHTML = '\uD83D\uDD12 <b>Der Kursleiter schließt den Trainer in ' + zeit + '.</b> '
                 + 'Du kannst deine Frage noch zu Ende bringen. Dein Lernstand liegt in deinem '
                 + 'Browser und bleibt erhalten — und den Trainer gibt es auch zum Mitnehmen.';
         } else {
@@ -3273,7 +3273,7 @@
     // ----------------------------------------------------------------
     const DEMO_TEXT = 'Dieser Trainer läuft auf einem fremden Rechner. '
         + 'Ein eigener Gruppenraum lässt sich hier nicht eröffnen — er würde die Verbindung '
-        + 'des Gastgebers stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink oder '
+        + 'des Kursleiters stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink oder '
         + 'den Raum-Code benutzen. Und wer den Trainer behalten will, bekommt ihn kostenlos '
         + 'auf amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
 
@@ -3299,7 +3299,7 @@
             hinweis.id = 'duoDemoHinweis';
             hinweis.className = 'duo-demo-hinweis';
             hinweis.innerHTML = '🔒 <b>Das ist nicht dein Trainer.</b> Ein eigener Raum lässt sich hier nicht eröffnen — '
-                + 'er würde die Verbindung des Gastgebers stören. <b>Beitreten geht:</b> Einladungslink '
+                + 'er würde die Verbindung des Kursleiters stören. <b>Beitreten geht:</b> Einladungslink '
                 + 'anklicken oder Raum-Code eintragen.';
             knopf.parentNode.insertBefore(hinweis, knopf.nextSibling);
         }
@@ -3671,8 +3671,8 @@
             try{ updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); }catch(e){}
             if(!warIchSelbst){
                 try{
-                    if(window.showAppAlert) showAppAlert('Der Gastgeber hat den Gruppenraum beendet.');
-                    else alert('Der Gastgeber hat den Gruppenraum beendet.');
+                    if(window.showAppAlert) showAppAlert('Der Kursleiter hat den Gruppenraum beendet.');
+                    else alert('Der Kursleiter hat den Gruppenraum beendet.');
                 }catch(e){}
             }
         });
@@ -3737,7 +3737,7 @@
                 roomCode = null;
                 try{ chatSichtbarkeitPruefen(); }catch(e){}
                 if(window.showAppAlert) window.showAppAlert(
-                    'Der Gruppenraum ist nicht mehr offen — der Gastgeber hat ihn beendet, '
+                    'Der Gruppenraum ist nicht mehr offen — der Kursleiter hat ihn beendet, '
                     + 'während deine Verbindung weg war.\n\nDein Lernstand bleibt erhalten.');
                 return;
             }
@@ -4078,7 +4078,7 @@
         // einmal, hier wird nur der Knopf nicht angeboten.
         neueRunde: function(){
             if(!socket||!roomCode) return;
-            if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Gastgeber kann eine neue Runde starten.'); return; }
+            if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Kursleiter kann eine neue Runde starten.'); return; }
             socket.emit('neueRunde',{code:roomCode});
         },
         // Eigene feste Adresse setzen oder wieder loeschen.
@@ -4212,7 +4212,7 @@
         // damit gar nicht erst gefragt wird.
         auswertungAnfordern: function(){
             if(!socket||!roomCode) return false;
-            if(!isHost){ console.warn('[DUO] Auswertung nur fuer den Gastgeber'); return false; }
+            if(!isHost){ console.warn('[DUO] Auswertung nur fuer den Kursleiter'); return false; }
             try{ socket.emit('duoAuswertungAnfordern',{code:roomCode}); return true; }
             catch(e){ console.error('[DUO] auswertungAnfordern', e); return false; }
         },

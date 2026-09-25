@@ -1898,7 +1898,7 @@ const TUER_ZU_SEITE = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8
   + '</style></head><body><div class="k">'
   + '<h1>Der Trainer ist gerade nicht geöffnet</h1>'
   + '<p>Der Amateurfunk-Trainer wird von einem privaten Rechner aus geteilt, und der '
-  + 'Gastgeber hat gerade zu. Später noch einmal vorbeischauen lohnt sich.</p>'
+  + 'Kursleiter hat gerade zu. Später noch einmal vorbeischauen lohnt sich.</p>'
   + '<p>Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung unter '
   + '<a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">'
   + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. Dann läuft er auf deinem '
@@ -1925,29 +1925,178 @@ app.get('/api/tuer', localOnly, (req, res) => {
   // der Knopf im Besucherfenster im selben Takt stimmt wie der Server-
   // Schalter daneben - ohne eine zweite Abfrage.
   res.json({ offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0,
-             draussen: draussen, echte: echte, imRaum: imRaum, sperre: laenderSperreAn });
+             draussen: draussen, echte: echte, imRaum: imRaum, sperre: laenderSperreAn,
+             uhr: zsuStand() });
 });
 
 app.post('/api/tuer', localOnly, (req, res) => {
   const auf = String(req.query.auf || '') === '1';
   if(auf){
+    // Macht der Gastgeber waehrend der Vorwarnung der Zeitschaltuhr
+    // wieder auf, ist er offensichtlich da - dann ist die Uhr aus
+    // (25.09.2026, siehe DIE ZEITSCHALTUHR).
+    if(zeitschaltuhr.aktiv && zeitschaltuhr.gewarnt){
+      zeitschaltuhr.aktiv = false;
+      console.log('[ZEITSCHALTUHR] Aus - der Kursleiter hat den Server waehrend der Vorwarnung wieder geoeffnet.');
+    }
     tuerOffen = true; tuerSchliesstUm = 0;
     tuerMelden(null);
     console.log('[TUER] Der Trainer ist jetzt offen.');
   } else {
     const sek = Math.max(0, Math.min(600, Number(req.query.sek || 60)));
-    if(sek === 0){
-      tuerZumachen();
-    } else {
-      tuerSchliesstUm = Date.now() + sek*1000;
-      tuerMelden({ schliesstUm: tuerSchliesstUm });
-      console.log('[TUER] Schliesst in ' + sek + ' Sekunden.');
-      setTimeout(function(){
-        if(tuerSchliesstUm && Date.now() >= tuerSchliesstUm - 200) tuerZumachen();
-      }, sek*1000 + 250);
-    }
+    if(sek === 0) tuerZumachen();
+    else tuerSchliessenIn(sek);
   }
   res.json({ ok:true, offen: tuerOffen, schliesstUm: tuerGleichZu() ? tuerSchliesstUm : 0 });
+});
+
+// Zumachen mit Countdown - die Besucher sehen den Balken "Der Gastgeber
+// schliesst den Trainer in ...". Seit dem 25.09.2026 eine eigene
+// Funktion, weil die Zeitschaltuhr sie auch braucht.
+function tuerSchliessenIn(sek){
+  tuerSchliesstUm = Date.now() + sek*1000;
+  tuerMelden({ schliesstUm: tuerSchliesstUm });
+  console.log('[TUER] Schliesst in ' + sek + ' Sekunden.');
+  setTimeout(function(){
+    if(tuerSchliesstUm && Date.now() >= tuerSchliesstUm - 200) tuerZumachen();
+  }, sek*1000 + 250);
+}
+
+// ================================================================
+//  DIE ZEITSCHALTUHR                                   (25.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Ich moechte die Option, dass der Kursleiter eine bestimmte
+//  Uhrzeit eingeben kann und dann der Server sich abschaltet und die
+//  Option PC/Laptop beim Kursleiter sich herunterfaehrt. So kann der
+//  Kursleiter den Trainer starten und zum Beispiel zur Arbeit oder ins
+//  Bett gehen." Auf die Rueckfragen: zwei Moeglichkeiten - "Server aus"
+//  und "Server aus und PC herunterfahren" -, eingestellt in einem
+//  kleinen Fenster neben dem Server-Schalter im Besucherfenster, zum
+//  Ein- und Ausschalten; die Besucher 5 Minuten vorher warnen.
+//
+//  Die Uhr laeuft hier im Server, nicht im Browser: Sie soll auch dann
+//  schalten, wenn am Trainer-PC kein Fenster mehr offen ist.
+//    - 5 Minuten vorher: Steht die Tuer offen, beginnt der gewohnte
+//      Countdown - die Besucher sehen den Balken "Der Gastgeber
+//      schliesst den Trainer in ...".
+//    - Zur Uhrzeit: Tuer zu. Bei "PC herunterfahren" danach der Befehl
+//      ans Betriebssystem, mit einer Minute Vorlauf; unter Windows zeigt
+//      Windows das selbst an. In dieser Minute laesst es sich im
+//      Trainer abbrechen.
+//    - Die Uhr schaltet einmal und ist danach aus. Macht der Gastgeber
+//      waehrend der Vorwarnung wieder auf, ist sie ebenfalls aus.
+//    - Nur im Arbeitsspeicher: Nach einem Neustart ist sie aus. Ein
+//      Trainer, der nach einem Absturz neu startet, soll nicht
+//      ueberraschend den Rechner herunterfahren.
+//  Die Uhrzeit gilt nach der Uhr dieses Rechners - liegt sie heute schon
+//  zurueck, ist morgen gemeint.
+// ================================================================
+let zeitschaltuhr = { aktiv: false, um: 0, aktion: 'server', gewarnt: false };
+let pcHerunter = { um: 0, uhr: null };        // laeuft gerade der Vorlauf zum Herunterfahren?
+const ZSU_VORWARNUNG = 5 * 60 * 1000;
+const PC_VORLAUF_SEK = 60;
+
+function zsuNaechsterZeitpunkt(hhmm){
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '').trim());
+  if(!m) return 0;
+  const h = Number(m[1]), min = Number(m[2]);
+  if(h > 23 || min > 59) return 0;
+  const d = new Date();
+  d.setHours(h, min, 0, 0);
+  if(d.getTime() <= Date.now() + 30 * 1000) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+function zsuStand(){
+  return { aktiv: zeitschaltuhr.aktiv, um: zeitschaltuhr.aktiv ? zeitschaltuhr.um : 0,
+           aktion: zeitschaltuhr.aktion, herunterUm: pcHerunter.um || 0 };
+}
+
+// Den Rechner herunterfahren - mit einer Minute Vorlauf. Unter Windows
+// zaehlt Windows selbst herunter und zeigt eine Meldung ("shutdown /s
+// /t 60"); abbrechen: "shutdown /a". Unter Linux und macOS wartet der
+// Trainer die Minute selbst ab und gibt erst dann den Befehl.
+function pcHerunterfahren(){
+  const { execFile } = require('child_process');
+  try{ besucherSchreiben(true); }catch(e){}
+  pcHerunter.um = Date.now() + PC_VORLAUF_SEK * 1000;
+  const fehler = function(err){
+    if(err){
+      pcHerunter.um = 0;
+      console.warn('[ZEITSCHALTUHR] Herunterfahren nicht moeglich: ' + err.message);
+    }
+  };
+  if(process.platform === 'win32'){
+    execFile('shutdown', ['/s', '/t', String(PC_VORLAUF_SEK), '/c',
+      'Amateurfunk-Trainer, Zeitschaltuhr: Der PC wird in einer Minute heruntergefahren.'],
+      { windowsHide: true }, fehler);
+  } else {
+    pcHerunter.uhr = setTimeout(function(){
+      pcHerunter.uhr = null;
+      if(process.platform === 'darwin'){
+        execFile('osascript', ['-e', 'tell application "System Events" to shut down'], fehler);
+      } else {
+        execFile('systemctl', ['poweroff'], fehler);
+      }
+    }, PC_VORLAUF_SEK * 1000);
+  }
+  console.log('[ZEITSCHALTUHR] Der PC wird in ' + PC_VORLAUF_SEK + ' Sekunden heruntergefahren.');
+}
+function pcHerunterfahrenAbbrechen(){
+  if(!pcHerunter.um) return false;
+  pcHerunter.um = 0;
+  if(pcHerunter.uhr){ clearTimeout(pcHerunter.uhr); pcHerunter.uhr = null; }
+  if(process.platform === 'win32'){
+    try{ require('child_process').execFile('shutdown', ['/a'], { windowsHide: true }, function(){}); }catch(e){}
+  }
+  console.log('[ZEITSCHALTUHR] Herunterfahren abgebrochen.');
+  return true;
+}
+
+function zsuTakt(){
+  // Der Vorlauf zum Herunterfahren ist vorbei - dann ist auch die Anzeige vorbei.
+  if(pcHerunter.um && Date.now() > pcHerunter.um + 30 * 1000) pcHerunter.um = 0;
+  if(!zeitschaltuhr.aktiv) return;
+  const jetzt = Date.now(), um = zeitschaltuhr.um;
+  if(!zeitschaltuhr.gewarnt && jetzt >= um - ZSU_VORWARNUNG){
+    zeitschaltuhr.gewarnt = true;
+    if(tuerOffen && !tuerGleichZu()){
+      const sek = Math.max(1, Math.round((um - jetzt) / 1000));
+      console.log('[ZEITSCHALTUHR] Vorwarnung an die Besucher.');
+      tuerSchliessenIn(sek);
+    }
+  }
+  if(jetzt >= um){
+    zeitschaltuhr.aktiv = false;
+    if(tuerOffen || tuerGleichZu()) tuerZumachen();
+    console.log('[ZEITSCHALTUHR] Es ist so weit - Server aus'
+              + (zeitschaltuhr.aktion === 'pc' ? ', der PC faehrt herunter.' : '.'));
+    if(zeitschaltuhr.aktion === 'pc') pcHerunterfahren();
+  }
+}
+setInterval(zsuTakt, 5000);
+
+// Stellen und Ausschalten. localOnly: Das entscheidet nur der Gastgeber.
+//   an=1&uhrzeit=HH:MM&aktion=server|pc   stellen
+//   an=0                                  ausschalten
+app.post('/api/zeitschaltuhr', localOnly, (req, res) => {
+  const an = String(req.query.an || '') === '1';
+  if(!an){
+    if(zeitschaltuhr.aktiv) console.log('[ZEITSCHALTUHR] Ausgeschaltet.');
+    zeitschaltuhr.aktiv = false;
+    return res.json({ ok: true, uhr: zsuStand() });
+  }
+  const um = zsuNaechsterZeitpunkt(req.query.uhrzeit);
+  if(!um) return res.status(400).json({ ok: false, fehler: 'Bitte eine Uhrzeit wie 23:30 angeben.' });
+  const aktion = String(req.query.aktion || '') === 'pc' ? 'pc' : 'server';
+  zeitschaltuhr = { aktiv: true, um: um, aktion: aktion, gewarnt: false };
+  const d = new Date(um);
+  console.log('[ZEITSCHALTUHR] Gestellt auf ' + String(d.getHours()).padStart(2, '0') + ':'
+            + String(d.getMinutes()).padStart(2, '0') + ' - '
+            + (aktion === 'pc' ? 'Server aus und PC herunterfahren.' : 'Server aus.'));
+  res.json({ ok: true, uhr: zsuStand() });
+});
+app.post('/api/zeitschaltuhr/abbrechen', localOnly, (req, res) => {
+  res.json({ ok: true, abgebrochen: pcHerunterfahrenAbbrechen(), uhr: zsuStand() });
 });
 
 // ------------------------------------------------------------------
@@ -2030,11 +2179,11 @@ function sperrSeite(land, ip){
     + '<p>Der Amateurfunk-Trainer wird von einem privaten Rechner aus geteilt. '
     + 'Damit die Leitung für die Funkamateure frei bleibt, für die er gedacht ist, '
     + 'nimmt er im Moment nur Aufrufe aus Deutschland, Österreich und der Schweiz an.</p>'
-    + '<p>Du bist trotzdem willkommen — frag einfach kurz an. Der Gastgeber sieht die '
+    + '<p>Du bist trotzdem willkommen — frag einfach kurz an. Der Kursleiter sieht die '
     + 'Anfrage sofort und kann dich freischalten. Diese Seite merkt es von selbst und lädt dann neu.</p>'
     + '<button id="b"' + (wartet ? ' disabled' : '') + '>'
     + (wartet ? 'Anfrage läuft …' : 'Zutritt anfragen') + '</button>'
-    + '<div id="m">' + (wartet ? 'Deine Anfrage liegt beim Gastgeber.' : '') + '</div>'
+    + '<div id="m">' + (wartet ? 'Deine Anfrage liegt beim Kursleiter.' : '') + '</div>'
     + '<p class="z">Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung '
     + 'unter <a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. '
     + 'Dann läuft er auf deinem eigenen Rechner, ganz ohne Sperre.'
@@ -2045,7 +2194,7 @@ function sperrSeite(land, ip){
     + 'var k="' + zutrittKennwort(ip) + '";'
     + 'b.onclick=function(){b.disabled=true;b.textContent="Anfrage läuft …";'
     + 'fetch("/api/zutritt-anfragen",{method:"POST",headers:{"X-Zutritt":k}}).then(function(r){return r.json();})'
-    + '.then(function(j){m.textContent=j&&j.ok?"Deine Anfrage liegt beim Gastgeber.":'
+    + '.then(function(j){m.textContent=j&&j.ok?"Deine Anfrage liegt beim Kursleiter.":'
     + '"Das hat nicht geklappt. Versuch es in einer Minute noch einmal.";lauf=true;})'
     + '.catch(function(){m.textContent="Keine Verbindung zum Trainer.";b.disabled=false;'
     + 'b.textContent="Zutritt anfragen";});};'
@@ -3654,7 +3803,7 @@ function paketDateienSammeln(herkunftUrl){
       '  Index.html  : ' + (idx ? new Date(idx.geaendert).toLocaleString('de-DE') + '  (' + idx.groesse + ' Bytes)' : 'unbekannt'),
       '',
       '  Dieser Ordner ist eine Momentaufnahme. Spaetere Aenderungen beim',
-      '  Gastgeber kommen hier NICHT von allein an. Fuer ein Update das Paket',
+      '  Kursleiter kommen hier NICHT von allein an. Fuer ein Update das Paket',
       '  neu herunterladen und daraus Index.html und Server.js in diesen',
       '  Ordner kopieren - der Lernstand im Ordner data/ bleibt erhalten.',
       '',
@@ -4132,7 +4281,7 @@ app.get('/api/abgleich/pruefen', localOnly, async (req,res)=>{
     res.json({ quelle, unterschiede, geprueft: new Date().toISOString() });
   }catch(e){
     console.warn('[ABGLEICH] Pruefen fehlgeschlagen:', e.message);
-    res.status(502).json({error:'Der Gastgeber ist nicht erreichbar: ' + e.message});
+    res.status(502).json({error:'Der Kursleiter ist nicht erreichbar: ' + e.message});
   }
 });
 
@@ -4245,7 +4394,7 @@ async function autoAbgleich(){
     // nichts abzugleichen. Das ist der Normalfall und keine Meldung wert.
     return;
   }
-  console.log(`[ABGLEICH] Sehe beim Gastgeber nach: ${quelle}`);
+  console.log(`[ABGLEICH] Sehe beim Kursleiter nach: ${quelle}`);
   try{
     const fremd = JSON.parse(await holen(quelle + '/api/abgleich/stand', true));
     const eigen = abgleichStand();
@@ -4291,7 +4440,7 @@ async function autoAbgleich(){
     if(geschrieben.length){
       console.log('');
       console.log('  ============================================================');
-      console.log(`   ABGLEICH: ${geschrieben.length} Datei(en) vom Gastgeber uebernommen`);
+      console.log(`   ABGLEICH: ${geschrieben.length} Datei(en) vom Kursleiter uebernommen`);
       geschrieben.forEach(n=>console.log('     - ' + n));
       console.log(`   Die alten liegen in backup/autoabgleich_${stempel}`);
       if(programmWeicht){
@@ -4303,7 +4452,7 @@ async function autoAbgleich(){
       console.log('');
     }
   }catch(e){
-    console.log(`[ABGLEICH] Gastgeber nicht erreichbar (${e.message}) - es bleibt beim eigenen Stand.`);
+    console.log(`[ABGLEICH] Kursleiter nicht erreichbar (${e.message}) - es bleibt beim eigenen Stand.`);
     letzterAutoAbgleich = { zeit:new Date().toISOString(), quelle, fehler:e.message };
   }
 }
@@ -4319,7 +4468,7 @@ app.post('/api/abgleich/herkunft', localOnly, (req,res)=>{
   const quelle = quelleSaeubern(req.body && req.body.quelle);
   if(!quelle) return res.status(400).json({error:'Keine gueltige Adresse'});
   if(!herkunftSchreiben(quelle)) return res.status(500).json({error:'Konnte nicht gespeichert werden'});
-  console.log('[ABGLEICH] Adresse des Gastgebers gemerkt:', quelle);
+  console.log('[ABGLEICH] Adresse des Kursleiters gemerkt:', quelle);
   res.json({ok:true, quelle});
 });
 
@@ -5909,6 +6058,12 @@ try{
     const connectTime = new Date().toISOString();
     console.log(`[SOCKET] ${socket.id} verbunden um ${connectTime}`);
 
+    // Laeuft gerade der Countdown vor dem Zumachen, bekommt ihn auch, wer
+    // erst jetzt dazukommt (25.09.2026). Bisher ging die Ansage nur beim
+    // Umschalten hinaus - wer waehrend der fuenf Minuten Vorwarnung der
+    // Zeitschaltuhr kam, sah keinen Balken.
+    try{ if(tuerGleichZu()) socket.emit('tuerAnsage', { schliesstUm: tuerSchliesstUm }); }catch(e){}
+
     // ----------------------------------------------------------------
     //  WER VON AUSSEN KOMMT, EROEFFNET KEINEN RAUM      (21.09.2026)
     //  ----------------------------------------------------------------
@@ -6113,7 +6268,7 @@ try{
             grund: 'demo',
             text: 'Dieser Trainer laeuft auf einem fremden Rechner. '
                 + 'Ein eigener Gruppenraum laesst sich hier nicht eroeffnen - er wuerde die '
-                + 'Verbindung des Gastgebers stoeren. Einem Raum beitreten geht: dafuer den '
+                + 'Verbindung des Kursleiters stoeren. Einem Raum beitreten geht: dafuer den '
                 + 'Einladungslink oder den Raum-Code benutzen.'
           });
           return;
@@ -6163,7 +6318,7 @@ try{
       // solange er lebt - mit dem Raum ist auch sie wieder weg.
       const wo = socketIp(socket);
       if(sperrbar(wo) && Array.isArray(room.gesperrteIps) && room.gesperrteIps.includes(wo)){
-        socket.emit('errorMsg','Der Gastgeber hat den Zugang von diesem Anschluss gesperrt.');
+        socket.emit('errorMsg','Der Kursleiter hat den Zugang von diesem Anschluss gesperrt.');
         console.log(`[GRUPPENRAUM] Beitritt zu ${data.code} abgelehnt - gesperrt: ${ipKuerzen(wo)}`);
         return;
       }
@@ -6417,7 +6572,7 @@ try{
       const code = data.code;
       const room = duoRooms[code]; if(!room) return;
       if(room.hostId !== socket.id){
-        socket.emit('errorMsg','Nur der Gastgeber kann eine neue Runde starten.');
+        socket.emit('errorMsg','Nur der Kursleiter kann eine neue Runde starten.');
         return;
       }
       generateRoomQuestions(room);
@@ -6608,8 +6763,8 @@ try{
         const room = duoRooms[data.code];
         if(!room) return;
         if(room.hostId !== socket.id){
-          console.warn('[DUO] Auswertung von Nicht-Gastgeber abgewiesen:', socket.id, 'Raum', data.code);
-          socket.emit('errorMsg', { message: 'Die Auswertung kann nur der Gastgeber öffnen.' });
+          console.warn('[DUO] Auswertung von Nicht-Kursleiter abgewiesen:', socket.id, 'Raum', data.code);
+          socket.emit('errorMsg', { message: 'Die Auswertung kann nur der Kursleiter öffnen.' });
           return;
         }
 
@@ -6718,7 +6873,7 @@ try{
           // Besucher sieht, mit wem er spricht.
           let name = String((data.name || '')).replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20);
           const drinnen = !(socket.data && socket.data.vonAussen);
-          if(!name) name = drinnen ? 'Gastgeber' : 'Besucher';
+          if(!name) name = drinnen ? 'Kursleiter' : 'Besucher';
           const n = {
             id: crypto.randomBytes(8).toString('hex'),
             userId: socket.id,
@@ -6797,7 +6952,7 @@ try{
               while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
             }
             draussen.forEach(function(s){ try{ s.emit('duoChatNachricht', kopie); }catch(e){} });
-            console.log('[CHAT] Antwort des Gastgebers auch an ' + draussen.length + ' am Link.');
+            console.log('[CHAT] Antwort des Kursleiters auch an ' + draussen.length + ' am Link.');
           }
         }
         console.log(`[CHAT] ${room.code} ${nachricht.name} schreibt (${text.length} Zeichen)`);
@@ -6813,7 +6968,7 @@ try{
         if(code && duoRooms[code] && duoRooms[code].users[socket.id]){
           name = duoRooms[code].users[socket.id].name || name;
         }
-        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Gastgeber';
+        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Kursleiter';
         const ich = chatSitzungFuer(socket);
         data.ids.slice(0, 50).forEach(function(id){
           id = String(id || '').slice(0, 32);
@@ -6887,7 +7042,7 @@ try{
           // Wer von aussen kommt, heisst wie beim Schreiben "Besucher" und
           // bekommt kein " · Server" hinter den Namen.
           const drinnen = !(socket.data && socket.data.vonAussen);
-          let name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || (drinnen ? 'Gastgeber' : 'Besucher');
+          let name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || (drinnen ? 'Kursleiter' : 'Besucher');
           const n = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id, name: name, istHost: drinnen,
                       text: text, zeit: jetzt, haus: true, sprache: sprache };
           n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
@@ -6980,7 +7135,7 @@ try{
         const meldung = { id: id, von: von };
         raeume.forEach(function(code){ io.to(code).emit('chatGeloescht', meldung); });
         if(imHaus) hausSenden('chatGeloescht', meldung);
-        console.log('[CHAT] Nachricht geloescht (' + (vomAbsender ? 'vom Absender' : 'vom Gastgeber') + ')');
+        console.log('[CHAT] Nachricht geloescht (' + (vomAbsender ? 'vom Absender' : 'vom Kursleiter') + ')');
       }catch(e){ console.error('[CHAT] Loeschen-Fehler', e); }
     });
 
@@ -7001,7 +7156,7 @@ try{
         socket.data.reaktZeiten.push(jetzt);
         let name = String((data && data.name) || '').replace(/[\u0000-\u001F\u007F<>]/g, ' ').trim().slice(0, 20);
         if(ort.room && ort.room.users && ort.room.users[socket.id]) name = ort.room.users[socket.id].name || name;
-        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Gastgeber';
+        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Kursleiter';
         const ich = chatSitzungFuer(socket);
         let r = chatReaktionen.get(id);
         if(!r){
@@ -7262,12 +7417,12 @@ try{
         if(!room) return;
         if(room.hostId !== socket.id){
           // Kein Fehler, nur nicht erlaubt: Dann verlaesst er eben sich selbst.
-          socket.emit('errorMsg', 'Nur der Gastgeber kann den Raum beenden.');
+          socket.emit('errorMsg', 'Nur der Kursleiter kann den Raum beenden.');
           return;
         }
         io.to(code).emit('roomDeleted', { code: code });
         delete duoRooms[code];
-        console.log(`[DUO] Raum ${code} vom Gastgeber beendet.`);
+        console.log(`[DUO] Raum ${code} vom Kursleiter beendet.`);
       }catch(e){ console.error('[DUO] raumBeenden Fehler', e); }
     });
 

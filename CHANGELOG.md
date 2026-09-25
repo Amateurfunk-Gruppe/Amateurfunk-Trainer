@@ -26,6 +26,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Chat: Reaktionen mit Emojis wie bei WhatsApp (Daumen hoch/runter, lustig, traurig, grünes Herz, Kleeblatt, erstaunt, Lächeln) und Löschen eigener Nachrichten, der Gastgeber kann jede löschen
 - Chat: dritter Haken, wenn bei mehreren Empfängern alle die Nachricht gelesen haben
 - Sprachnachrichten wie bei WhatsApp: laufende Balken bei der Aufnahme, Pause, Welle in der Sprechblase mit Springen per Klick
+- Besucherfenster: Zeitschaltuhr – zu einer Uhrzeit Server aus, wahlweise danach PC herunterfahren (eine Minute Vorlauf, abbrechbar), Besucher 5 Minuten vorher gewarnt
 
 ### Geändert
 - Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
@@ -41,7 +42,9 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Besucherzählung: nur Aufrufe mit Lebenszeichen, Scanner als angeklopft, Land/Stadt statt IP-Adresse, Suchmaschinen nicht gelistet
 - Online-Zugang: feste Adresse wird bevorzugt, kein zusätzlicher Tunnel, Neustart-Hinweis ohne Adresswechsel
 - Programmsymbol: neues Zeichen (Strahler mit Funkwelle), unter macOS hüpft es im Dock, bis der Trainer bereit ist
-- Besucherfenster: Server, Sperre, Zähler, Verlauf und Neustart als kleinere Knöpfe oben in der Kopfzeile
+- Besucherfenster: Zähler, Verlauf und Neustart als kleinere Knöpfe oben in der Kopfzeile, Server, Zeitschaltuhr und Sperre unten links
+- Texte: „Kursleiter“ statt „Gastgeber“
+- Hinweisbalken für Besucher (Schließen, Neustart) und Server-Knopf im Countdown gelb statt braun
 - Einstellungen: Knopf „Einstellungen übernehmen“ statt „Fertig“
 - Chat ohne Gruppenraum: Sprachnachrichten jetzt auch für Besucher am geteilten Link
 
@@ -62,6 +65,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Formelblatt-Knopf bei NB501–NB505 und NB601–NB606 ergänzt, Anteilsangabe im Hilfetext korrigiert
 - Windows-Start: Hinweise bei Quelltext-Download, falsch abgelegtem Node und abgestürztem Server statt stillem Abbruch
 - Prüfungssimulator: zwei Teile in der Grauzone gelten als nicht bestanden, Ansage nannte bei Technik N „undefined“
+- Wer während des Countdowns zum Schließen dazukommt, sieht jetzt den Hinweisbalken
 
 ## [1.297.0] - 2026-09-15
 
