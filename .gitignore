@@ -393,6 +393,14 @@ data/userdata/besucher.json
 besucher.json
 
 # ----------------------------------------------------------------
+#  AUFSCHLAG AUF DEN BESUCHERZAEHLER                  (25.09.2026)
+# ----------------------------------------------------------------
+#  Wird am Rechner des Gastgebers von Hand gesetzt und gilt nur dort.
+#  Ausgeliefert wird ohne - dann ist der Aufschlag 0.
+Besucherzaehler-Aufschlag.bat
+besucher_aufschlag.txt
+
+# ----------------------------------------------------------------
 #  DIE CLOUDFLARE-EINRICHTUNG                        (22.09.2026)
 # ----------------------------------------------------------------
 #  Dietmar: "Richte es ein, damit nichts falsches bei GitHub

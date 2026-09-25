@@ -5015,13 +5015,39 @@ function auffangUebernehmen(req, b){
   }
 }
 
+// ----------------------------------------------------------------
+//  DER AUFSCHLAG AUF DEN ZAEHLER                       (25.09.2026)
+//  Dietmar: "Hier waere auch eine Bat gut, wo ich das selbst setzen
+//  kann. So bleibt das aus dem Hauptcode raus."
+//
+//  Auf Wunsch kommt zur Zahl der Besucher ein fester Aufschlag dazu. Er
+//  steht NICHT hier im Code, sondern in besucher_aufschlag.txt neben
+//  Server.js, und wird am Rechner des Gastgebers von Hand gesetzt. Hier
+//  ist nur die Stelle, die ihn liest. Fehlt die Datei - so wird der
+//  Trainer ausgeliefert, sie steht in keiner Paketliste und in
+//  .gitignore -, ist der Aufschlag 0.
+//
+//  Er kommt nur auf "gesamt", die Zahl in der Fusszeile - und, weil der
+//  Worker seine Zahl von hier holt, auf der Startseite bei Cloudflare.
+//  Die Besucherliste im Fenster des Gastgebers zaehlt weiter nur die
+//  echten. "Zaehler zuruecksetzen" setzt ihn auf 0 (/api/besucher/reset).
+//  Gelesen wird bei jeder Abfrage neu, ein Neustart ist nicht noetig.
+// ----------------------------------------------------------------
+const AUFSCHLAG_FP = path.join(__dirname, 'besucher_aufschlag.txt');
+function besucherAufschlag(){
+  try{
+    const n = parseInt(String(fs.readFileSync(AUFSCHLAG_FP, 'utf8')).replace(/[^0-9]/g, ''), 10);
+    return (isFinite(n) && n > 0) ? Math.min(n, 999999999) : 0;
+  }catch(e){ return 0; }
+}
+
 app.get('/api/besucherzahl', (req, res) => {
   try{
     const b = zaehlerFrisch(besucherLesen(), Date.now());
     try{ auffangUebernehmen(req, b); }catch(e){}
     res.set('Cache-Control', 'no-store');
     res.json({ heute: b.heute || 0, gestern: b.gestern || 0,
-               gesamt: b.echte || 0, seit: b.seit || 0,
+               gesamt: (b.echte || 0) + besucherAufschlag(), seit: b.seit || 0,
                offlineAbgeholt: b.offlineAbgeholt || 0 });
   }catch(e){ res.json({ heute:0, gestern:0, gesamt:0, seit:0 }); }
 });
@@ -5040,6 +5066,12 @@ app.post('/api/besucher/reset', localOnly, (req, res) => {
   b.gesamt = 0; b.echte = 0; b.heute = 0; b.gestern = 0; b.offlineUebernommen = 0;
   b.tag = tagSchluessel(Date.now()); b.seit = Date.now();
   besucherSchreiben(true);
+  // Der Aufschlag geht mit auf Null (25.09.2026, siehe DER AUFSCHLAG
+  // AUF DEN ZAEHLER). Nur wenn es die Datei gibt - sonst entstuende sie
+  // hier erst.
+  try{
+    if(fs.existsSync(AUFSCHLAG_FP)) fs.writeFileSync(AUFSCHLAG_FP, '0\r\n');
+  }catch(e){ console.warn('[BESUCHER] Aufschlag nicht zurueckgesetzt:', e.message); }
   console.log('[BESUCHER] Zaehler zurueckgesetzt (Liste bleibt).');
   res.json({ ok: true, gesamt: 0, seit: b.seit });
 });
@@ -5553,7 +5585,12 @@ try{
   //  Alles im Arbeitsspeicher, hoechstens fuer 2000 Nachrichten; beim
   //  Neustart ist es weg, wie der Chat selbst.
   // ----------------------------------------------------------------
-  const chatLeser = new Map();      // Nachrichten-id -> Map(socket-id -> Name)
+  //  25.09.2026, abends: Gezaehlt wird je Sitzung (chatSitzungFuer), nicht
+  //  je Verbindung. Vorher zaehlte ein Leser nach einem Neuverbinden
+  //  doppelt - mit dem dritten Haken ("alle haben gelesen") haette das
+  //  zu frueh "alle" gemeldet. Und der Absender bekommt den Stand auch
+  //  nach einem Neuverbinden noch, im Verlauf und live.
+  const chatLeser = new Map();      // Nachrichten-id -> Map(Sitzung -> Name)
   const CHAT_LESER_MAX = 2000;
 
   // ----------------------------------------------------------------
@@ -5563,10 +5600,20 @@ try{
   //  sprechen koennen."
   //
   //  Also: Im Gruppenraum darf jeder eine Sprachnachricht schicken. Im
-  //  Chat ohne Raum nur der Gastgeber an seinem eigenen Rechner (und
-  //  wer in seinem WLAN sitzt) - wer nur ueber den Link kommt, kann
-  //  sie anhoeren, aber selbst nur schreiben. Eine Aufnahme von einem
-  //  Unbekannten spielt man ab, ohne zu wissen, was drauf ist.
+  //  Chat ohne Raum zuerst nur der Gastgeber an seinem eigenen Rechner
+  //  (und wer in seinem WLAN sitzt) - wer nur ueber den Link kam, konnte
+  //  sie anhoeren, aber selbst nur schreiben.
+  //
+  //  25.09.2026: Jetzt darf dort auch jeder sprechen. Dietmar: "Ich habe
+  //  gestern mit meiner Freundin zusammen trainiert und sie findet
+  //  uebrigens diesen Sprachnachricht super. ... Und ich haette den
+  //  Sprach Chat gerne auch noch, wenn ich nur den Link ohne Gruppenraum
+  //  teile. So das jeder Sprechen kann." Die Sorge von damals - eine
+  //  Aufnahme von einem Unbekannten - fangen jetzt drei Dinge auf: die
+  //  Grenzen unten (Groesse, drei Sekunden Abstand, hoechstens zwoelf in
+  //  fuenf Minuten), die Tuer (von aussen kommt nur herein, wenn der
+  //  Server-Knopf an ist) und das Loeschen: Der Gastgeber kann jede
+  //  Nachricht wieder herausnehmen (siehe LOESCHEN UND REAGIEREN).
   //
   //  Die Aufnahme selbst geht NICHT an alle mit der Nachricht mit. Die
   //  Nachricht sagt nur "Sprachnachricht, 0:12"; wer auf Abspielen
@@ -5657,23 +5704,103 @@ try{
     if(!room) return s.seit;
     return s.raeume[raumSchluessel(room)] || Infinity;
   }
+  // Der Verlauf fuer genau diesen Browser. Seit dem 25.09.2026 mit zwei
+  // Zusaetzen, die fuer jeden anders aussehen (siehe LOESCHEN UND
+  // REAGIEREN): "meine" an den eigenen Nachrichten und die Reaktionen
+  // mit der eigenen darin. Deshalb Kopien - die gespeicherte Nachricht
+  // bleibt, wie sie ist.
   function chatFuer(sock, room, liste){
     const ab = chatSichtbarAb(sock, room);
-    return (Array.isArray(liste) ? liste : []).filter(function(n){ return n && (n.zeit || 0) >= ab; });
+    const ich = chatSitzungFuer(sock);
+    return (Array.isArray(liste) ? liste : []).filter(function(n){ return n && (n.zeit || 0) >= ab; })
+      .map(function(n){
+        const zusatz = {};
+        if(n.id && chatBesitzer.get(n.id) === ich) zusatz.meine = true;
+        const r = n.id ? reaktionenFuer(sock, n.id) : null;
+        if(r) zusatz.reaktionen = r;
+        if(zusatz.meine){
+          const l = chatLeser.get(n.id);
+          if(l && l.size) zusatz.gelesen = { anzahl: l.size, namen: Array.from(l.values()).slice(0, 20) };
+        }
+        return Object.keys(zusatz).length ? Object.assign({}, n, zusatz) : n;
+      });
   }
-  function chatNachrichtFinden(sock, id){
+  // Wo steht die Nachricht, die dieser Browser meint - und darf er sie
+  // ueberhaupt sehen? { n, room } oder null; room ist null im Chat ohne
+  // Raum.
+  function chatNachrichtOrt(sock, id){
     const code = sock.data && sock.data.roomCode;
     if(code && duoRooms[code] && Array.isArray(duoRooms[code].chat)){
       const n = duoRooms[code].chat.find(function(x){ return x.id === id; });
-      if(n) return ((n.zeit || 0) >= chatSichtbarAb(sock, duoRooms[code])) ? n : null;
+      if(n) return ((n.zeit || 0) >= chatSichtbarAb(sock, duoRooms[code])) ? { n: n, room: duoRooms[code] } : null;
     }
     // Aus dem Chat ohne Raum darf lesen, wer dort mitliest: ohne Raum,
     // oder der Gastgeber am eigenen Rechner (siehe hausLeute).
     if(hausLeute().indexOf(sock) !== -1){
       const n = hausChat.find(function(x){ return x.id === id; });
-      return (n && (n.zeit || 0) >= chatSichtbarAb(sock, null)) ? n : null;
+      return (n && (n.zeit || 0) >= chatSichtbarAb(sock, null)) ? { n: n, room: null } : null;
     }
     return null;
+  }
+  function chatNachrichtFinden(sock, id){
+    const o = chatNachrichtOrt(sock, id);
+    return o ? o.n : null;
+  }
+
+  // ----------------------------------------------------------------
+  //  LOESCHEN UND REAGIEREN                             (25.09.2026)
+  //  Dietmar: "Ich moechte auch Nachrichten loeschen und Liken koennen.
+  //  Bitte kein Rotes Herz, sondern in Gruen Daumen Hoch und Daumen
+  //  runter. Lustig und traurig."
+  //
+  //  Loeschen darf, wer die Nachricht geschrieben hat - und der
+  //  Gastgeber jede: im Gruppenraum der Host, im Chat ohne Raum der
+  //  Trainer-PC (wer nicht von aussen kommt). Seit dort jeder sprechen
+  //  darf, braucht der Gastgeber das zum Aufraeumen.
+  //
+  //  Wer geschrieben hat, erkennt der Server an der Sitzung
+  //  (chatSitzungFuer), nicht an der Socket-id: Reisst die Leitung ab
+  //  und Socket.IO verbindet neu, bleibt die eigene Nachricht die
+  //  eigene. Die Sitzung selbst verlaesst den Server nie - an den
+  //  Browser geht nur "meine: true".
+  //
+  //  Geloescht wird richtig: Text und Aufnahme sind weg, auch aus dem
+  //  Speicher. Stehen bleibt ein Platzhalter "Nachricht geloescht", wie
+  //  bei WhatsApp - sonst haengt eine Antwort darunter in der Luft.
+  //
+  //  Reaktionen: vier Arten, eine je Person und Nachricht. Dieselbe noch
+  //  einmal nimmt sie zurueck, eine andere ersetzt sie. Jeder sieht die
+  //  Zahlen und die Namen dazu; welche die eigene ist, erfaehrt jeder
+  //  nur fuer sich. Alles im Arbeitsspeicher, wie der Chat.
+  // ----------------------------------------------------------------
+  const chatBesitzer = new Map();      // Nachrichten-id -> Sitzung (das Objekt aus chatSitzungFuer)
+  const CHAT_BESITZER_MAX = 2000;
+  function chatBesitzerMerken(sock, id){
+    try{
+      chatBesitzer.set(id, chatSitzungFuer(sock));
+      while(chatBesitzer.size > CHAT_BESITZER_MAX) chatBesitzer.delete(chatBesitzer.keys().next().value);
+    }catch(e){}
+  }
+  // 25.09.2026, abends: dazu ein gruenes Herz. Dietmar: "Nachrichten
+  // Liken. Daumen hoch und runter. Lustig Traurig und ein Gruenes Herz."
+  // Und: "4 Blaetteriges Kleeblatt. Erstaunt und :) haette ich gerne noch
+  // mit drin." Die Bilder dazu (Emojis) stehen in duo.js, REAKT_ARTEN.
+  const REAKTIONEN = ['hoch', 'runter', 'lustig', 'traurig', 'herz', 'klee', 'staunen', 'laecheln'];
+  const chatReaktionen = new Map();    // Nachrichten-id -> Map(Sitzung -> { art, name })
+  const CHAT_REAKTIONEN_MAX = 2000;
+  function reaktionenFuer(sock, id){
+    const r = chatReaktionen.get(id);
+    if(!r || !r.size) return null;
+    const ich = chatSitzungFuer(sock);
+    const zaehler = {}, namen = {};
+    let meine = null;
+    r.forEach(function(v, wer){
+      zaehler[v.art] = (zaehler[v.art] || 0) + 1;
+      if(!namen[v.art]) namen[v.art] = [];
+      if(namen[v.art].length < 20) namen[v.art].push(v.name);
+      if(wer === ich) meine = v.art;
+    });
+    return { zaehler: zaehler, namen: namen, meine: meine };
   }
 
   // ----------------------------------------------------------------
@@ -6111,8 +6238,15 @@ try{
             return { teil: t.teil, correct: r, answered: b, total: ids.length, finished: fertig, status };
           });
           if(finished){
+            // Nachgeprueft wird nur, wenn LEDIGLICH EIN Teil knapp daneben
+            // liegt (Amtsblattverfuegung 29/2024). Zwei Teile mit 17 oder 18
+            // Punkten sind nicht bestanden - bis zum 25.09.2026 stand hier
+            // "Grauzone". Dieselbe Regel steht in Index.html
+            // (pruefGesamtStatus).
+            const grau = teile.filter(t => t.status === 'nachpruefung').length;
             if(teile.some(t => t.status === 'nicht_bestanden')) examStatus = 'nicht_bestanden';
-            else if(teile.some(t => t.status === 'nachpruefung')) examStatus = 'nachpruefung';
+            else if(grau >= 2) examStatus = 'nicht_bestanden';
+            else if(grau === 1) examStatus = 'nachpruefung';
             else examStatus = 'bestanden';
           }
         } else if(finished){
@@ -6595,6 +6729,7 @@ try{
           };
           n.haus = true;      // der Client schreibt "am Link" dazu
           n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
+          chatBesitzerMerken(socket, n.id);
           hausChat.push(n);
           while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
           hausSenden('duoChatNachricht', n);
@@ -6628,6 +6763,7 @@ try{
           zeit: Date.now()
         };
         if(!Array.isArray(room.chat)) room.chat = [];
+        chatBesitzerMerken(socket, nachricht.id);
         room.chat.push(nachricht);
         while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
 
@@ -6678,23 +6814,34 @@ try{
           name = duoRooms[code].users[socket.id].name || name;
         }
         if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Gastgeber';
+        const ich = chatSitzungFuer(socket);
         data.ids.slice(0, 50).forEach(function(id){
           id = String(id || '').slice(0, 32);
           if(!id) return;
           const n = chatNachrichtFinden(socket, id);
           if(!n || !n.userId || n.userId === socket.id) return;   // eigene zaehlen nicht
+          const besitzer = chatBesitzer.get(id);
+          if(besitzer && besitzer === ich) return;                // auch nicht nach Neuverbinden
           let leser = chatLeser.get(id);
           if(!leser){
             leser = new Map();
             chatLeser.set(id, leser);
             if(chatLeser.size > CHAT_LESER_MAX) chatLeser.delete(chatLeser.keys().next().value);
           }
-          if(leser.has(socket.id)) return;
-          leser.set(socket.id, name);
-          const absender = io.sockets.sockets.get(n.userId);
-          if(absender){
-            absender.emit('chatGelesenStand', { id: id, anzahl: leser.size,
-                                                namen: Array.from(leser.values()).slice(0, 20) });
+          if(leser.has(ich)) return;
+          leser.set(ich, name);
+          const stand = { id: id, anzahl: leser.size, namen: Array.from(leser.values()).slice(0, 20) };
+          // An den Absender - an jede seiner Verbindungen, auch nach einem
+          // Neuverbinden mit neuer Socket-id.
+          let gesendet = false;
+          if(besitzer){
+            io.sockets.sockets.forEach(function(s){
+              if(s.data && s.data.chatSitzung === besitzer){ try{ s.emit('chatGelesenStand', stand); gesendet = true; }catch(e){} }
+            });
+          }
+          if(!gesendet){
+            const absender = io.sockets.sockets.get(n.userId);
+            if(absender) absender.emit('chatGelesenStand', stand);
           }
         });
       }catch(e){ console.error('[CHAT] Gelesen-Fehler', e); }
@@ -6711,22 +6858,40 @@ try{
         const mime = String(data.mime || '').slice(0, 60);
         if(!SPRACHE_ARTEN.test(mime)) return;
         const dauer = Math.max(1, Math.min(SPRACHE_MAX_SEK, Math.round(Number(data.dauer) || 0)));
+        // Die kleine Welle fuer die Sprechblase (25.09.2026, "wie in
+        // WhatsApp"): 4 bis 64 Zahlen von 0 bis 100, die der Browser beim
+        // Aufnehmen gemessen hat. Alles andere wird nicht mitgenommen.
+        const sprache = { mime: mime, dauer: dauer };
+        if(Array.isArray(data.welle) && data.welle.length >= 4 && data.welle.length <= 64){
+          sprache.welle = data.welle.map(function(v){ return Math.max(0, Math.min(100, Math.round(Number(v) || 0))); });
+        }
         // Hoechstens eine Aufnahme alle drei Sekunden je Teilnehmer
         const jetzt = Date.now();
         if(socket.data.spracheZuletzt && jetzt - socket.data.spracheZuletzt < 3000){
           socket.emit('duoChatHinweis', 'Bitte etwas langsamer.'); return;
         }
         socket.data.spracheZuletzt = jetzt;
+        // Und hoechstens zwoelf in fuenf Minuten (25.09.2026) - seit im
+        // Chat ohne Raum jeder sprechen darf, soll niemand mit einer Flut
+        // von Aufnahmen die der anderen aus dem Speicher draengen.
+        socket.data.spracheZeiten = (socket.data.spracheZeiten || []).filter(function(t){ return jetzt - t < 5 * 60 * 1000; });
+        if(socket.data.spracheZeiten.length >= 12){
+          socket.emit('duoChatHinweis', 'Das waren viele Sprachnachrichten – bitte ein paar Minuten warten.'); return;
+        }
+        socket.data.spracheZeiten.push(jetzt);
         const text = '\uD83C\uDFA4 Sprachnachricht (' + Math.floor(dauer / 60) + ':' + String(dauer % 60).padStart(2, '0') + ')';
 
-        // --- Im Chat ohne Raum: nur der Gastgeber ---
+        // --- Im Chat ohne Raum: jeder (bis 24.09.2026 nur der Gastgeber) ---
         if(data.code === '__haus'){
           if(socket.data && socket.data.roomCode) return;
-          if(socket.data && socket.data.vonAussen) return;     // Besucher hoeren nur zu
-          let name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || 'Gastgeber';
-          const n = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id, name: name, istHost: true,
-                      text: text, zeit: jetzt, haus: true, sprache: { mime: mime, dauer: dauer } };
+          // Wer von aussen kommt, heisst wie beim Schreiben "Besucher" und
+          // bekommt kein " · Server" hinter den Namen.
+          const drinnen = !(socket.data && socket.data.vonAussen);
+          let name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || (drinnen ? 'Gastgeber' : 'Besucher');
+          const n = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id, name: name, istHost: drinnen,
+                      text: text, zeit: jetzt, haus: true, sprache: sprache };
           n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
+          chatBesitzerMerken(socket, n.id);
           spracheMerken(n.id, buf, mime);
           hausChat.push(n);
           while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
@@ -6742,12 +6907,13 @@ try{
         if(!user){ socket.emit('errorMsg','Du bist nicht in diesem Raum'); return; }
         const nachricht = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id,
                             name: user.name || 'Teilnehmer', istHost: socket.id === room.hostId,
-                            text: text, zeit: jetzt, sprache: { mime: mime, dauer: dauer } };
+                            text: text, zeit: jetzt, sprache: sprache };
         try{
           let anz = Object.keys(room.users || {}).filter(function(k){ return k !== socket.id; }).length;
           if(socket.id === room.hostId) anz += hausOhneRaum().filter(function(x){ return x.id !== socket.id; }).length;
           nachricht.empfaenger = anz;
         }catch(e){}
+        chatBesitzerMerken(socket, nachricht.id);
         spracheMerken(nachricht.id, buf, mime);
         if(!Array.isArray(room.chat)) room.chat = [];
         room.chat.push(nachricht);
@@ -6779,6 +6945,81 @@ try{
         if(!n || !e){ socket.emit('spracheDaten', { id: id, fehlt: true }); return; }
         socket.emit('spracheDaten', { id: id, mime: e.mime, daten: e.buf });
       }catch(e){ console.error('[CHAT] Sprache-holen-Fehler', e); }
+    });
+
+    // Loeschen (25.09.2026, siehe LOESCHEN UND REAGIEREN): die eigene
+    // Nachricht - oder als Gastgeber jede.
+    socket.on('chatLoeschen', data=>{
+      try{
+        const id = String((data && data.id) || '').slice(0, 32);
+        if(!id) return;
+        const ort = chatNachrichtOrt(socket, id);
+        if(!ort || ort.n.geloescht) return;
+        const besitzer = chatBesitzer.get(id);
+        const vomAbsender = !!besitzer && besitzer === chatSitzungFuer(socket);
+        const vomGastgeber = ort.room ? (socket.id === ort.room.hostId) : !(socket.data && socket.data.vonAussen);
+        if(!vomAbsender && !vomGastgeber){
+          socket.emit('duoChatHinweis', 'Löschen kann nur, wer die Nachricht geschrieben hat – oder der Server.');
+          return;
+        }
+        const von = vomAbsender ? 'absender' : 'server';
+        // Ueberall, wo sie steht: im Raum und - hat der Host sie
+        // geschrieben - als Kopie im Chat ohne Raum. Dieselbe id.
+        const raeume = [];
+        let imHaus = false;
+        function platzhalter(n){ n.geloescht = von; n.text = ''; delete n.sprache; }
+        Object.keys(duoRooms).forEach(function(code){
+          const r = duoRooms[code];
+          if(r && Array.isArray(r.chat)) r.chat.forEach(function(n){ if(n.id === id){ platzhalter(n); raeume.push(code); } });
+        });
+        hausChat.forEach(function(n){ if(n.id === id){ platzhalter(n); imHaus = true; } });
+        const e = sprachSpeicher.get(id);
+        if(e){ sprachGesamt -= (e.buf ? e.buf.length : 0); sprachSpeicher.delete(id); }
+        chatLeser.delete(id);
+        chatReaktionen.delete(id);
+        const meldung = { id: id, von: von };
+        raeume.forEach(function(code){ io.to(code).emit('chatGeloescht', meldung); });
+        if(imHaus) hausSenden('chatGeloescht', meldung);
+        console.log('[CHAT] Nachricht geloescht (' + (vomAbsender ? 'vom Absender' : 'vom Gastgeber') + ')');
+      }catch(e){ console.error('[CHAT] Loeschen-Fehler', e); }
+    });
+
+    // Reagieren (25.09.2026): Daumen hoch, Daumen runter, lustig, traurig,
+    // gruenes Herz, Kleeblatt, erstaunt, Laecheln.
+    // art leer oder dieselbe wie bisher = zuruecknehmen.
+    socket.on('chatReagieren', data=>{
+      try{
+        const id = String((data && data.id) || '').slice(0, 32);
+        const art = String((data && data.art) || '');
+        if(!id || (art && REAKTIONEN.indexOf(art) === -1)) return;
+        const ort = chatNachrichtOrt(socket, id);
+        if(!ort || ort.n.geloescht || ort.n.system || ort.n.automatisch) return;
+        // Hoechstens 20 Klicks in 10 Sekunden
+        const jetzt = Date.now();
+        socket.data.reaktZeiten = (socket.data.reaktZeiten || []).filter(function(t){ return jetzt - t < 10000; });
+        if(socket.data.reaktZeiten.length >= 20) return;
+        socket.data.reaktZeiten.push(jetzt);
+        let name = String((data && data.name) || '').replace(/[\u0000-\u001F\u007F<>]/g, ' ').trim().slice(0, 20);
+        if(ort.room && ort.room.users && ort.room.users[socket.id]) name = ort.room.users[socket.id].name || name;
+        if(!name) name = (socket.data && socket.data.vonAussen) ? 'Besucher' : 'Gastgeber';
+        const ich = chatSitzungFuer(socket);
+        let r = chatReaktionen.get(id);
+        if(!r){
+          r = new Map();
+          chatReaktionen.set(id, r);
+          while(chatReaktionen.size > CHAT_REAKTIONEN_MAX) chatReaktionen.delete(chatReaktionen.keys().next().value);
+        }
+        const bisher = r.get(ich);
+        if(!art || (bisher && bisher.art === art)) r.delete(ich);
+        else r.set(ich, { art: art, name: name });
+        // Jeder, der die Nachricht sieht, bekommt seine eigene Fassung.
+        io.sockets.sockets.forEach(function(s){
+          try{
+            if(!chatNachrichtFinden(s, id)) return;
+            s.emit('chatReaktionen', { id: id, reaktionen: reaktionenFuer(s, id) });
+          }catch(e){}
+        });
+      }catch(e){ console.error('[CHAT] Reaktion-Fehler', e); }
     });
 
     // Verlauf auf Anfrage - wird vom Client nach Beitritt/Neuladen geholt

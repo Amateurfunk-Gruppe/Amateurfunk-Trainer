@@ -716,8 +716,25 @@
                 (t.isHost ? ' <span style="background:#0f2745;color:white;padding:1px 6px;border-radius:8px;font-size:0.6rem;">Host</span>' : '') +
                 (isMe ? ' <span style="color:#0f2745;">(Du)</span>' : '') + '</span>' +
                 '<span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' + punkte + teilnehmerStatusHtml(t) + zeit + '</span>' +
+                muendlichKnopfFuer(t) +
             '</div>';
         }).join('');
+    }
+
+    // Muendliche Nachpruefung (25.09.2026): Nur der Gastgeber bekommt den
+    // Knopf, und nur bei jemandem, der genau einen Teil mit 17 oder 18
+    // Punkten hat. Die Teile je Teilnehmer stehen in den Daten, die der
+    // Server dem Gastgeber ohnehin schickt (duoTrainerData.usersStats).
+    // Ob der Knopf erscheint, entscheidet Index.html (Skript
+    // "muendlicheNachpruefung") - hier wird er nur eingesetzt.
+    function muendlichKnopfFuer(t){
+        try{
+            if(!isHost || typeof window.muendlichKursleiterKnopfHtml !== 'function') return '';
+            const s = window.duoTrainerData && window.duoTrainerData.usersStats && window.duoTrainerData.usersStats[t.userId];
+            if(!s) return '';
+            const html = window.muendlichKursleiterKnopfHtml({ userId: t.userId, name: t.name, finished: s.finished, teile: s.teile });
+            return html ? '<div style="flex-basis:100%;">' + html + '</div>' : '';
+        }catch(e){ return ''; }
     }
 
     function teilnehmerBadgeAktualisieren(){
@@ -1051,7 +1068,7 @@
         '#duoChatKoerper{display:none;flex-direction:column;height:300px;}',
         '#duoChatBox.offen #duoChatKoerper{display:flex;}',
         '#duoChatVerlauf{flex:1;overflow-y:auto;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:7px;}',
-        '.duo-chat-zeile{max-width:85%;padding:6px 10px;border-radius:12px;font-size:0.82rem;line-height:1.35;word-break:break-word;}',
+        '.duo-chat-zeile{max-width:85%;padding:6px 10px;border-radius:12px;font-size:0.82rem;line-height:1.35;word-break:break-word;position:relative;}',
         /* Jede Blase bringt ihre eigene Textfarbe mit - nichts wird mehr geerbt */
         '.duo-chat-fremd{align-self:flex-start;background:var(--card-bg);border:1px solid var(--line);color:var(--ink);}',
         '.duo-chat-eigen{align-self:flex-end;background:var(--panel-navy);color:#fff;}',
@@ -1083,14 +1100,29 @@
         '#duoChatMikro{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;',
         '  cursor:pointer;font-size:0.95rem;flex-shrink:0;display:none;}',
         '#duoChatMikro:hover{border-color:var(--panel-navy);}',
+        /* Das Mikrofon als gruenes Symbol (25.09.2026). Dietmar, mit einem
+           Bild: "Fuer Sprachnachricht moechte ich so ein Symbol." - ein
+           Standmikrofon, gruen. Vorher stand hier das Emoji. Im dunklen
+           Stil ein helleres Gruen, damit es sich vom Grund abhebt. */
+        '#duoChatMikro i{color:#16a34a;font-size:1.05rem;}',
+        'body.dark #duoChatMikro i{color:#4ade80;}',
         '#duoChatEingabeZeile.nimmt-auf #duoChatEingabe,#duoChatEingabeZeile.nimmt-auf #duoChatMikro,#duoChatEingabeZeile.nimmt-auf #duoChatSenden{display:none !important;}',
-        '#duoChatAufnahme{display:none;flex:1;align-items:center;gap:8px;min-width:0;}',
+        '#duoChatAufnahme{display:none;flex:1;align-items:center;gap:6px;min-width:0;}',
         '#duoChatEingabeZeile.nimmt-auf #duoChatAufnahme{display:flex;}',
         '#duoChatAufnahme .punkt{width:10px;height:10px;border-radius:50%;background:#d9403a;flex-shrink:0;animation:duoAufnahmePuls 1s infinite;}',
         '@keyframes duoAufnahmePuls{0%,100%{opacity:1}50%{opacity:0.25}}',
-        '#duoChatAufnahme .zeit{flex:1;font-size:0.85rem;font-variant-numeric:tabular-nums;}',
+        '#duoChatAufnahme .zeit{flex:0 0 auto;font-size:0.9rem;font-variant-numeric:tabular-nums;white-space:nowrap;}',
+        '#duoChatAufnahme .zeit.knapp{color:#d9403a;font-weight:700;}',
+        /* Die Aufnahmeleiste wie bei WhatsApp (25.09.2026): Papierkorb,
+           roter Punkt, Zeit, Balken-Welle, Pause, gruener Senden-Knopf.
+           Die Welle nimmt die gedaempfte Schriftfarbe des Stils an. */
+        '#duoChatWelle{flex:1 1 auto;min-width:40px;height:28px;display:block;color:var(--muted);}',
         '#duoChatAufnahme button{border:none;border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:0.95rem;flex-shrink:0;}',
-        '#duoChatAufnahmeWeg{background:transparent;color:var(--ink);border:1px solid var(--line) !important;}',
+        '#duoChatAufnahmeWeg,#duoChatAufnahmePause{background:transparent;width:30px !important;font-size:1.02rem !important;padding:0;}',
+        '#duoChatAufnahmeWeg{color:var(--muted);}',
+        '#duoChatAufnahmeWeg:hover{color:#dc2626;}',
+        '#duoChatAufnahmePause{color:#e5484d;}',
+        '#duoChatAufnahme.pausiert .punkt{animation:none;opacity:0.35;}',
         '#duoChatAufnahmeSenden{background:#1c7a46;color:#fff;}',
         '.duo-sprache{display:inline-flex;align-items:center;gap:8px;min-width:170px;vertical-align:middle;}',
         '.duo-sprache-knopf{border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:0.8rem;flex-shrink:0;',
@@ -1099,6 +1131,68 @@
         '.duo-sprache-balken{flex:1;height:4px;border-radius:2px;background:currentColor;opacity:0.25;position:relative;overflow:hidden;}',
         '.duo-sprache-balken span{position:absolute;left:0;top:0;bottom:0;width:0;background:currentColor;}',
         '.duo-sprache-dauer{font-size:0.72rem;opacity:0.8;font-variant-numeric:tabular-nums;}',
+        /* Die Welle in der Sprechblase (25.09.2026), wie bei WhatsApp: der
+           gespielte Teil wird gruen. Ein Klick springt an die Stelle. */
+        '.duo-sprache-welle{flex:1;display:flex;align-items:center;gap:2px;height:26px;min-width:100px;cursor:pointer;}',
+        '.duo-sprache-welle i{flex:1 1 0;min-width:2px;max-width:3px;background:currentColor;opacity:0.35;border-radius:2px;display:block;}',
+        '.duo-sprache-welle i.gespielt{opacity:1;background:#16a34a;}',
+        '.duo-chat-eigen .duo-sprache-welle i.gespielt{background:#86efac;}',
+        /* Loeschen und Reaktionen (25.09.2026). Das Smiley neben der Blase
+           (beim Zeigen mit der Maus, am Handy immer blass zu sehen) oder
+           ein Klick auf die Blase klappt die Leiste auf: vier Reaktionen,
+           und - wo erlaubt - der Papierkorb. Keine roten Herzen: Dietmar
+           wollte Daumen hoch und runter in Gruen, dazu lustig und traurig.
+           Am Abend dann bunte Emojis wie bei WhatsApp (siehe REAKT_ARTEN). */
+        '.duo-chat-mehr{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;',
+        '  border:1px solid var(--line);background:var(--card-bg);color:var(--muted);font-size:0.8rem;cursor:pointer;',
+        '  display:flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .15s;}',
+        '.duo-chat-fremd .duo-chat-mehr{right:-30px;}',
+        '.duo-chat-eigen .duo-chat-mehr{left:-30px;}',
+        '.duo-chat-zeile:hover .duo-chat-mehr,.duo-chat-zeile.aktiv .duo-chat-mehr,.duo-chat-mehr:focus-visible{opacity:1;}',
+        '@media (hover:none){.duo-chat-mehr{opacity:0.6;}}',
+        '.duo-chat-leiste{display:none;gap:2px;margin-top:6px;padding-top:5px;border-top:1px solid rgba(127,127,127,0.3);align-items:center;flex-wrap:wrap;}',
+        /* Acht Emojis und der Papierkorb passen in eine Reihe, wenn die
+           Blase mindestens so breit ist - kurze Blasen wachsen dafuer,
+           solange die Leiste offen ist (25.09.2026). */
+        '.duo-chat-zeile.aktiv{min-width:min(244px, calc(100% - 32px));max-width:calc(100% - 32px);}',
+        '.duo-chat-zeile.aktiv .duo-chat-leiste{display:flex;}',
+        '.duo-chat-leiste button{border:none;background:transparent;cursor:pointer;font-size:1rem;padding:4px 1px;border-radius:8px;line-height:1;color:inherit;}',
+        '.duo-chat-leiste button:hover{background:rgba(127,127,127,0.2);}',
+        '.duo-chat-leiste button.meine{background:rgba(34,197,94,0.22);}',
+        '.duo-chat-leiste .weg{margin-left:auto;font-size:0.88rem;opacity:0.75;}',
+        '.duo-chat-leiste .weg:hover{color:#dc2626;opacity:1;}',
+        '.duo-chat-eigen .duo-chat-leiste .weg:hover{color:#fca5a5;}',
+        '.duo-chat-reaktionen{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}',
+        '.duo-chat-reaktionen:empty{display:none;}',
+        '.duo-reakt{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--bg);color:var(--ink);',
+        '  border-radius:999px;padding:1px 8px;font-size:0.72rem;font-weight:700;cursor:pointer;line-height:1.6;font-family:inherit;}',
+        /* Auf der eigenen Blase ein dunkler Grund - im dunklen Stil ist die
+           eigene Blase hellblau, darauf waere Gruen kaum zu sehen. */
+        '.duo-chat-eigen .duo-reakt{background:rgba(0,0,0,0.28);border-color:rgba(255,255,255,0.35);color:#fff;}',
+        '.duo-reakt.meine{border-color:#16a34a;box-shadow:inset 0 0 0 1px #16a34a;}',
+        '.duo-chat-eigen .duo-reakt.meine{border-color:#4ade80;box-shadow:inset 0 0 0 1px #4ade80;}',
+        /* Die Emojis in der Farbschrift des Systems - unter Windows Segoe
+           UI Emoji, am Mac Apple, unter Linux und Android Noto. */
+        '.duo-emoji{font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif;',
+        '  font-style:normal;font-weight:400;line-height:1;display:inline-block;}',
+        '.duo-chat-leiste .duo-emoji{font-size:1.02rem;}',
+        '.duo-reakt .duo-emoji{font-size:0.9rem;}',
+        '.duo-chat-geloescht{font-style:italic;opacity:0.72;}',
+        /* DER CHAT BLEIBT RUND (25.09.2026). Dietmar: "Dieser runde Style
+           finde ich sehr schoen" - und auf die Rueckfrage, ob der Chat auch
+           im Blue Mode rund bleiben soll: "bitte ueberall in Rund".
+           Der Blue Mode macht mit body.eckig alles kantig (Index.html,
+           "Alles wird kantig", border-radius:0 !important fuer jedes
+           Element). Fuer den Chat gelten hier wieder seine eigenen
+           Rundungen - mit hoeherer Spezifitaet, damit sie gewinnen. Der
+           uebrige Blue Mode bleibt, wie er ist. */
+        'body.eckig #duoChatBox{border-radius:14px !important;}',
+        'body.eckig #duoChatBlase,body.eckig #duoChatEingabe,body.eckig #duoChatSenden,body.eckig #duoChatMikro,',
+        '  body.eckig #duoChatAufnahme button,body.eckig #duoChatBox .duo-reakt{border-radius:999px !important;}',
+        'body.eckig #duoChatBox .duo-chat-zeile{border-radius:12px !important;}',
+        'body.eckig #duoChatAufnahme .punkt,body.eckig #duoChatBox .duo-sprache-knopf,body.eckig #duoChatBox .duo-chat-mehr{border-radius:50% !important;}',
+        'body.eckig #duoChatBox .duo-chat-leiste button{border-radius:8px !important;}',
+        'body.eckig #duoChatBox .duo-sprache-balken,body.eckig #duoChatBox .duo-sprache-welle i{border-radius:2px !important;}',
         '@media (max-width:520px){#duoChatBox{right:10px;bottom:10px;width:calc(100vw - 20px);}',
         '  #duoChatKoerper{height:45vh;}}'
         ].join('\n');
@@ -1119,10 +1213,14 @@
         '  <div id="duoChatVerlauf"><div id="duoChatLeer">Noch keine Nachrichten.<br>Schreib etwas an alle im Raum.</div></div>',
         '  <div id="duoChatEingabeZeile">',
         '    <input id="duoChatEingabe" type="text" maxlength="500" placeholder="Nachricht an alle..." autocomplete="off">',
-        '    <button id="duoChatMikro" type="button" title="Sprachnachricht aufnehmen">🎤</button>',
-        '    <div id="duoChatAufnahme"><span class="punkt"></span><span class="zeit" id="duoChatAufnahmeZeit">Aufnahme 0:00</span>',
-        '      <button id="duoChatAufnahmeWeg" type="button" title="Verwerfen">✕</button>',
-        '      <button id="duoChatAufnahmeSenden" type="button" title="Senden">➤</button></div>',
+        '    <button id="duoChatMikro" type="button" title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht aufnehmen"><i class="fa-solid fa-microphone"></i></button>',
+        '    <div id="duoChatAufnahme">',
+        '      <button id="duoChatAufnahmeWeg" type="button" title="Verwerfen" aria-label="Verwerfen"><i class="fa-solid fa-trash-can"></i></button>',
+        '      <span class="punkt" title="Aufnahme läuft"></span>',
+        '      <span class="zeit" id="duoChatAufnahmeZeit" title="Höchstens eine Minute">0:00</span>',
+        '      <canvas id="duoChatWelle" aria-hidden="true"></canvas>',
+        '      <button id="duoChatAufnahmePause" type="button" title="Pause" aria-label="Pause"><i class="fa-solid fa-pause"></i></button>',
+        '      <button id="duoChatAufnahmeSenden" type="button" title="Senden" aria-label="Senden">➤</button></div>',
         '    <button id="duoChatSenden" type="button" title="Senden">➤</button>',
         '  </div>',
         '</div>'
@@ -1147,13 +1245,46 @@
         document.getElementById('duoChatMikro').addEventListener('click', aufnahmeStarten);
         document.getElementById('duoChatAufnahmeWeg').addEventListener('click', ()=>aufnahmeBeenden(false));
         document.getElementById('duoChatAufnahmeSenden').addEventListener('click', ()=>aufnahmeBeenden(true));
-        // Abspielen: ein Klick auf irgendeinen Knopf in einer Sprachblase
+        document.getElementById('duoChatAufnahmePause').addEventListener('click', aufnahmePause);
+        // Abspielen: ein Klick auf irgendeinen Knopf in einer Sprachblase.
+        // Seit 25.09.2026 auch: Reaktionen, Loeschen und das Aufklappen
+        // der Leiste (siehe LOESCHEN UND REAGIEREN).
         document.getElementById('duoChatVerlauf').addEventListener('click', e=>{
-            const k = e.target && e.target.closest ? e.target.closest('.duo-sprache-knopf') : null;
-            if(!k) return;
-            const b = k.closest('.duo-sprache');
-            if(b && b.dataset.spracheId) spracheAbspielen(b.dataset.spracheId);
+            const t = e.target;
+            if(!t || !t.closest) return;
+            const k = t.closest('.duo-sprache-knopf');
+            if(k){
+                const b = k.closest('.duo-sprache');
+                if(b && b.dataset.spracheId) spracheAbspielen(b.dataset.spracheId);
+                return;
+            }
+            // Ein Klick in die Welle einer Sprachnachricht springt an die
+            // Stelle (25.09.2026, wie bei WhatsApp).
+            const wl = t.closest('.duo-sprache-welle');
+            if(wl){
+                const b = wl.closest('.duo-sprache');
+                const rr = wl.getBoundingClientRect();
+                if(b && b.dataset.spracheId) spracheSpringen(b.dataset.spracheId, (e.clientX - rr.left) / Math.max(1, rr.width));
+                return;
+            }
+            const zeile = t.closest('.duo-chat-zeile[data-id]');
+            if(!zeile) return;
+            const r = t.closest('[data-reagieren]');
+            if(r){ reagieren(zeile.dataset.id, r.dataset.reagieren); zeile.classList.remove('aktiv'); return; }
+            if(t.closest('[data-loeschen]')){ zeile.classList.remove('aktiv'); nachrichtLoeschen(zeile.dataset.id); return; }
+            if(t.closest('a')) return;                 // Links bleiben Links
+            if(!zeile.querySelector('.duo-chat-leiste')) return;
+            // Wer gerade Text markiert, will die Leiste nicht.
+            try{ const sel = window.getSelection(); if(sel && String(sel).length && !t.closest('.duo-chat-mehr')) return; }catch(err){}
+            leisteUmschalten(zeile);
         });
+        // Ein Klick irgendwo anders klappt die Leiste wieder zu.
+        document.addEventListener('click', e=>{
+            const offen = document.querySelectorAll('#duoChatVerlauf .duo-chat-zeile.aktiv');
+            if(!offen.length) return;
+            const drin = e.target && e.target.closest ? e.target.closest('.duo-chat-zeile.aktiv') : null;
+            offen.forEach(z => { if(z !== drin) z.classList.remove('aktiv'); });
+        }, true);
         mikroZeichnen();
         feld.addEventListener('keypress', e=>e.stopPropagation());
         feld.addEventListener('keyup', e=>e.stopPropagation());
@@ -1351,6 +1482,8 @@
     //    ✓   gesendet - gerade war niemand sonst da, der sie bekommt
     //    ✓✓  grau: angekommen, noch von niemandem gelesen
     //    ✓✓  blau: gelesen; wer, steht in der Sprechblase beim Zeigen
+    //    ✓✓✓ blau: von ALLEN gelesen - nur wenn mehrere im Chat sind
+    //               (seit 25.09.2026, siehe hakenSetzen)
     //  In der Gruppe genuegt einer, der gelesen hat, damit es blau wird -
     //  die Zahl steht in der Sprechblase.
     //
@@ -1368,10 +1501,21 @@
             if(!el) return;
             if(typeof empfaenger === 'number') el.dataset.empfaenger = String(empfaenger);
             const emp = Number(el.dataset.empfaenger || 0);
-            if(stand && stand.anzahl > 0){
+            const namen = (stand && stand.namen || []).join(', ');
+            if(stand && emp > 1 && stand.anzahl >= emp){
+                // DER DRITTE HAKEN (25.09.2026). Dietmar: "3 Haekchen, wenn
+                // die Nachricht gelesen wurde. Der 3. ist fuer, wenn mehrere
+                // im Chat sind. Ist der dritte Haken da, haben alle die
+                // Nachricht erhalten." Also: Sind mehrere im Chat, heisst
+                // zweimal blau "gelesen - aber noch nicht von allen", dreimal
+                // blau "alle haben sie gelesen". Bei nur einem Empfaenger
+                // bleibt es bei zwei Haken - da ist einer schon alle.
+                el.textContent = '\u2713\u2713\u2713';
+                el.classList.add('gelesen');
+                el.title = 'Von allen gelesen (' + emp + ')' + (namen ? ': ' + namen : '');
+            } else if(stand && stand.anzahl > 0){
                 el.textContent = '\u2713\u2713';
                 el.classList.add('gelesen');
-                const namen = (stand.namen || []).join(', ');
                 el.title = 'Gelesen' + (namen ? ' von ' + namen : '')
                          + (emp > 1 ? ' (' + stand.anzahl + ' von ' + emp + ')' : '');
             } else if(emp > 0){
@@ -1420,9 +1564,10 @@
     //  Druecken gern ein Kontextmenue aus, und mit der Maus ist Klicken
     //  ohnehin bequemer.
     //
-    //  Das Mikrofon gibt es im Gruppenraum fuer jeden, im Chat ohne Raum
-    //  nur am Trainer-PC selbst (siehe Server.js, SPRACHNACHRICHTEN).
-    //  Und nur, wo der Browser es erlaubt: ueber https oder am eigenen
+    //  Das Mikrofon gab es im Gruppenraum fuer jeden, im Chat ohne Raum
+    //  zuerst nur am Trainer-PC selbst. Seit 25.09.2026 auch dort fuer
+    //  jeden - Dietmar: "So das jeder Sprechen kann." (siehe Server.js,
+    //  SPRACHNACHRICHTEN). Und nur, wo der Browser es erlaubt: ueber https oder am eigenen
     //  Rechner. Ueber eine WLAN-Adresse (http://192.168...) gibt der
     //  Browser das Mikrofon nicht heraus - dann fehlt der Knopf.
     // ----------------------------------------------------------------
@@ -1439,9 +1584,8 @@
         try{
             if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
             if(typeof window.MediaRecorder === 'undefined') return false;
-            if(roomCode) return true;
-            if(typeof window.laeuftLokal === 'function') return !!window.laeuftLokal();
-            return !vonAussen;
+            // Bis 24.09.2026 stand hier: ohne Raum nur am eigenen Rechner.
+            return true;
         }catch(e){ return false; }
     }
     function mikroZeichnen(){
@@ -1637,31 +1781,46 @@
         let rec;
         try{ rec = new MediaRecorder(stream, art ? { mimeType: art, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 }); }
         catch(e){ try{ rec = new MediaRecorder(stream); }catch(e2){ stream.getTracks().forEach(t => t.stop()); chatSystemmeldung('Aufnehmen geht in diesem Browser nicht.'); return; } }
-        const a = { rec: rec, stream: stream, teile: [], start: Date.now(), uhr: null, weg: false };
+        const a = { rec: rec, stream: stream, teile: [], start: Date.now(), uhr: null, weg: false,
+                    pausiert: false, pauseSeit: 0, pauseGesamt: 0, pegel: [] };
         aufnahme = a;
         rec.ondataavailable = e => { if(e.data && e.data.size) a.teile.push(e.data); };
         rec.onstop = () => {
+            welleStoppen(a);
             try{ a.stream.getTracks().forEach(t => t.stop()); }catch(e){}
             if(a.uhr) clearInterval(a.uhr);
             if(aufnahme === a) aufnahme = null;
             aufnahmeLeiste(false);
+            pauseKnopfZeichnen(null);
             if(a.weg) return;
-            const dauer = (Date.now() - a.start) / 1000;
+            // Ohne die Pausen (25.09.2026)
+            const dauer = aufnahmeSekunden(a);
+            const welle = spracheWelleAus(a.pegel || []);
             if(dauer < 1 || !a.teile.length){ chatSystemmeldung('Zu kurz - nichts gesendet.'); return; }
             const typ = (a.rec.mimeType || art || 'audio/webm').replace(/\s+/g, '');
             const blob = new Blob(a.teile, { type: typ });
             blob.arrayBuffer().then(buf => {
                 if(!socket || !socket.connected){ chatSystemmeldung('Keine Verbindung - Sprachnachricht nicht gesendet.'); return; }
-                socket.emit('duoSprache', { code: roomCode || '__haus', mime: typ, dauer: Math.min(SPRACHE_MAX_SEK, dauer),
-                                            daten: buf, name: getDuoUserName() });
+                const paket = { code: roomCode || '__haus', mime: typ, dauer: Math.min(SPRACHE_MAX_SEK, dauer),
+                                daten: buf, name: getDuoUserName() };
+                if(welle) paket.welle = welle;
+                socket.emit('duoSprache', paket);
             }).catch(() => chatSystemmeldung('Die Aufnahme ging verloren.'));
         };
         rec.start(1000);
         aufnahmeLeiste(true);
+        pauseKnopfZeichnen(a);
+        welleStarten(a);
         const zeit = document.getElementById('duoChatAufnahmeZeit');
         const tick = () => {
-            const s = (Date.now() - a.start) / 1000;
-            if(zeit) zeit.textContent = 'Aufnahme ' + dauerMinSek(s) + ' / 1:00';
+            const s = aufnahmeSekunden(a);
+            // Nur die laufende Zeit, wie bei WhatsApp (25.09.2026). Die
+            // letzten zehn Sekunden vor der Minute wird sie rot - dann
+            // wird von selbst gesendet.
+            if(zeit){
+                zeit.textContent = dauerMinSek(Math.floor(s));
+                zeit.classList.toggle('knapp', s >= SPRACHE_MAX_SEK - 10);
+            }
             if(s >= SPRACHE_MAX_SEK) aufnahmeBeenden(true);
         };
         tick();
@@ -1671,13 +1830,209 @@
         const a = aufnahme;
         if(!a) return;
         a.weg = !senden;
-        try{ if(a.rec.state !== 'inactive') a.rec.stop(); else a.rec.onstop(); }catch(e){ aufnahme = null; aufnahmeLeiste(false); }
+        try{ if(a.rec.state !== 'inactive') a.rec.stop(); else a.rec.onstop(); }catch(e){ welleStoppen(a); aufnahme = null; aufnahmeLeiste(false); pauseKnopfZeichnen(null); }
+    }
+    // Aufgenommene Sekunden - die Pausen zaehlen nicht mit.
+    function aufnahmeSekunden(a){
+        const j = Date.now();
+        return Math.max(0, (j - a.start - (a.pauseGesamt || 0) - (a.pausiert ? j - a.pauseSeit : 0)) / 1000);
+    }
+    // PAUSE (25.09.2026), wie bei WhatsApp: anhalten und weiter
+    // aufnehmen, ohne neu anzufangen. Der Knopf wird dann zum Mikrofon.
+    function aufnahmePause(){
+        const a = aufnahme;
+        if(!a || !a.rec) return;
+        try{
+            if(!a.pausiert){
+                if(a.rec.state !== 'recording' || typeof a.rec.pause !== 'function') return;
+                a.rec.pause();
+                a.pausiert = true;
+                a.pauseSeit = Date.now();
+            } else {
+                if(a.rec.state === 'paused') a.rec.resume();
+                a.pauseGesamt += Date.now() - a.pauseSeit;
+                a.pausiert = false;
+            }
+        }catch(e){ return; }
+        pauseKnopfZeichnen(a);
+    }
+    function pauseKnopfZeichnen(a){
+        const box = document.getElementById('duoChatAufnahme');
+        const k = document.getElementById('duoChatAufnahmePause');
+        const pause = !!(a && a.pausiert);
+        if(box) box.classList.toggle('pausiert', pause);
+        if(!k) return;
+        // Kann der Browser nicht anhalten, gibt es den Knopf nicht.
+        k.style.display = (a && a.rec && typeof a.rec.pause !== 'function') ? 'none' : '';
+        k.innerHTML = pause ? '<i class="fa-solid fa-microphone"></i>' : '<i class="fa-solid fa-pause"></i>';
+        k.title = pause ? 'Weiter aufnehmen' : 'Pause';
+        k.setAttribute('aria-label', k.title);
     }
 
+    // ----------------------------------------------------------------
+    //  DIE WELLE WAEHREND DER AUFNAHME                    (25.09.2026)
+    //  Dietmar am Vormittag: "Bei WhatsApp und Facebook Messenger sehe
+    //  ich, wenn ich spreche, so eine Wellenform wie an einem Oszillator.
+    //  Das haette ich auch gerne, wenn Sprache vom Mikrofon ankommt."
+    //  Die erste Fassung war deshalb eine Oszilloskop-Spur. Am Abend
+    //  schickte er ein Video der Aufnahmeleiste von WhatsApp: "So moechte
+    //  ich den Sprachchat haben wie in WhatsApp."
+    //
+    //  Also jetzt wie dort: Zehnmal in der Sekunde ein senkrechter
+    //  Balken, so hoch, wie laut gesprochen wurde. Der neueste steht
+    //  rechts, die aelteren wandern nach links hinaus; Stille und der
+    //  noch leere Teil sind Punkte. Gemessen wird in Dezibel - leise wie
+    //  laute Stimmen sind gut zu sehen, Rauschen bleibt ein Punkt. Die
+    //  Welle hoert am selben Mikrofon mit wie die Aufnahme und zeigt so
+    //  auch gleich, ob ueberhaupt etwas ankommt.
+    //
+    //  Aus denselben Pegeln entsteht beim Senden die kleine Welle in der
+    //  Sprechblase (spracheWelleAus): 32 Werte von 0 bis 100.
+    // ----------------------------------------------------------------
+    const WELLE_TAKT = 100;       // ms je Balken
+    const WELLE_BLASE = 32;       // Balken in der Sprechblase
+    function pegelAus(daten){
+        let summe = 0;
+        for(let i = 0; i < daten.length; i++) summe += daten[i] * daten[i];
+        const db = 20 * Math.log10(Math.max(Math.sqrt(summe / daten.length), 1e-6));
+        return Math.max(0, Math.min(1, (db + 50) / 38));       // -50 dB = 0, -12 dB = voll
+    }
+    function spracheWelleAus(pegel){
+        const n = pegel.length;
+        if(n < 4) return null;
+        const aus = [];
+        for(let i = 0; i < WELLE_BLASE; i++){
+            const von = Math.floor(i * n / WELLE_BLASE);
+            const bis = Math.max(von + 1, Math.floor((i + 1) * n / WELLE_BLASE));
+            let m = 0;
+            for(let k = von; k < bis && k < n; k++) if(pegel[k] > m) m = pegel[k];
+            aus.push(Math.round(m * 100));
+        }
+        return aus;
+    }
+    function welleStarten(a){
+        a.pegel = [];
+        try{
+            const cv = document.getElementById('duoChatWelle');
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if(!cv || !AC || !a || !a.stream) return;
+            const ctx = new AC();
+            if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+            const an = ctx.createAnalyser();
+            an.fftSize = 1024;
+            an.smoothingTimeConstant = 0;
+            ctx.createMediaStreamSource(a.stream).connect(an);
+            const daten = new Float32Array(an.fftSize);
+            const g = cv.getContext('2d');
+            let farbe = '', farbeZuletzt = 0, takt = 0, hoechst = 0;
+            a.welle = { ctx: ctx, bild: 0 };
+            const malen = () => {
+                if(aufnahme !== a || !a.welle) return;
+                const dpr = window.devicePixelRatio || 1;
+                const w = Math.max(1, Math.round(cv.clientWidth * dpr));
+                const h = Math.max(1, Math.round(cv.clientHeight * dpr));
+                if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+                const jetzt = Date.now();
+                if(!farbe || jetzt - farbeZuletzt > 1000){
+                    try{ farbe = getComputedStyle(cv).color || '#888'; }catch(e){ farbe = '#888'; }
+                    farbeZuletzt = jetzt;
+                }
+                // Waehrend der Pause steht die Welle still.
+                if(!a.pausiert){
+                    an.getFloatTimeDomainData(daten);
+                    const p = pegelAus(daten);
+                    if(p > hoechst) hoechst = p;
+                    const t = Math.floor(aufnahmeSekunden(a) * 1000 / WELLE_TAKT);
+                    if(takt < t){
+                        while(takt < t){ a.pegel.push(hoechst); takt++; }
+                        hoechst = 0;
+                        if(a.pegel.length > 800) a.pegel.splice(0, a.pegel.length - 800);
+                    }
+                }
+                g.clearRect(0, 0, w, h);
+                g.fillStyle = farbe;
+                const breit = 2 * dpr, schritt = 4 * dpr, mitte = h / 2;
+                const anzahl = Math.floor(w / schritt);
+                for(let k = 0; k < anzahl; k++){
+                    const idx = a.pegel.length - 1 - k;
+                    const x = w - (k + 1) * schritt + (schritt - breit) / 2;
+                    const p = idx >= 0 ? a.pegel[idx] : -1;
+                    if(p < 0.08){
+                        // Stille - oder noch nichts aufgenommen: ein Punkt
+                        g.globalAlpha = idx >= 0 ? 0.85 : 0.45;
+                        g.beginPath();
+                        g.arc(x + breit / 2, mitte, breit / 2, 0, Math.PI * 2);
+                        g.fill();
+                    } else {
+                        g.globalAlpha = 0.9;
+                        const hb = Math.max(breit * 1.5, p * (h - 2 * dpr));
+                        g.beginPath();
+                        if(typeof g.roundRect === 'function') g.roundRect(x, mitte - hb / 2, breit, hb, breit / 2);
+                        else g.rect(x, mitte - hb / 2, breit, hb);
+                        g.fill();
+                    }
+                }
+                g.globalAlpha = 1;
+                a.welle.bild = requestAnimationFrame(malen);
+            };
+            a.welle.bild = requestAnimationFrame(malen);
+        }catch(e){}
+    }
+    function welleStoppen(a){
+        if(!a || !a.welle) return;
+        const w = a.welle;
+        a.welle = null;
+        try{ if(w.bild) cancelAnimationFrame(w.bild); }catch(e){}
+        try{ if(w.ctx) w.ctx.close(); }catch(e){}
+        try{ const cv = document.getElementById('duoChatWelle'); if(cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); }catch(e){}
+    }
+
+    function spracheBlase(id){
+        return document.querySelector('.duo-sprache[data-sprache-id="' + String(id).replace(/[^a-f0-9]/gi, '') + '"]');
+    }
+    // Wie weit ist abgespielt? Faerbt die Balken der Welle (oder den
+    // schmalen Balken bei Nachrichten ohne Welle).
+    function spracheFortschritt(b, anteil){
+        if(!b) return;
+        anteil = Math.max(0, Math.min(1, Number(anteil) || 0));
+        const balken = b.querySelector('.duo-sprache-balken span');
+        if(balken) balken.style.width = (100 * anteil) + '%';
+        const striche = b.querySelectorAll('.duo-sprache-welle i');
+        if(striche.length){
+            const bis = Math.round(anteil * striche.length);
+            striche.forEach((st, i) => st.classList.toggle('gespielt', i < bis));
+        }
+    }
+    // Die Laenge: vom Browser, sonst aus der Nachricht. Aufnahmen aus dem
+    // Browser (webm) nennen ihre Laenge oft nicht - dann "Infinity".
+    function spracheLaenge(au, b){
+        if(au && isFinite(au.duration) && au.duration > 0) return au.duration;
+        return Number(b && b.dataset.dauer) || 0;
+    }
+    const spracheSprung = new Map();   // id -> Anteil, falls die Aufnahme erst geholt wird
+    function spracheSpringen(id, anteil){
+        anteil = Math.max(0, Math.min(1, Number(anteil) || 0));
+        const au = spracheAudio.get(id);
+        if(!au){ spracheSprung.set(id, anteil); spracheAbspielen(id); return; }
+        const b = spracheBlase(id);
+        const d2 = spracheLaenge(au, b);
+        if(!d2) return;
+        try{ au.currentTime = Math.min(Math.max(0, d2 - 0.05), anteil * d2); }catch(e){}
+        spracheFortschritt(b, anteil);
+        if(au.paused){ spracheAlleAnhalten(id); au.play().catch(()=>{}); }
+    }
+    // Die Zeichen im runden Knopf als Symbole statt als Schriftzeichen
+    // (25.09.2026): Das Pausenzeichen war als Buchstabe winzig - bei
+    // WhatsApp sind Abspielen und Anhalten deutlich zu sehen.
+    const SPRACHE_ZEICHEN = { '▶': 'fa-play', '⏸': 'fa-pause', '…': 'fa-spinner fa-spin', '✕': 'fa-xmark' };
     function spracheKnopf(id, zeichen, titel){
-        const b = document.querySelector('.duo-sprache[data-sprache-id="' + String(id).replace(/[^a-f0-9]/gi, '') + '"]');
+        const b = spracheBlase(id);
         const k = b && b.querySelector('.duo-sprache-knopf');
-        if(k){ k.textContent = zeichen; if(titel) k.title = titel; }
+        if(k){
+            k.innerHTML = SPRACHE_ZEICHEN[zeichen] ? '<i class="fa-solid ' + SPRACHE_ZEICHEN[zeichen] + '"></i>' : zeichen;
+            k.dataset.zeichen = zeichen;
+            if(titel){ k.title = titel; k.setAttribute('aria-label', titel); }
+        }
         return b;
     }
     function spracheAbspielen(id){
@@ -1708,23 +2063,43 @@
         }
         au.src = URL.createObjectURL(new Blob([d.daten], { type: typ }));
         spracheAudio.set(id, au);
-        const b = spracheKnopf(id, '▶', 'Abspielen');
-        const balken = b ? b.querySelector('.duo-sprache-balken span') : null;
-        const dauerFeld = b ? b.querySelector('.duo-sprache-dauer') : null;
-        const gesamt = dauerFeld ? dauerFeld.textContent : '';
-        au.addEventListener('play', () => spracheKnopf(id, '⏸', 'Anhalten'));
-        au.addEventListener('pause', () => spracheKnopf(id, '▶', 'Abspielen'));
-        au.addEventListener('timeupdate', () => {
-            const d2 = isFinite(au.duration) && au.duration > 0 ? au.duration : 0;
-            if(balken && d2) balken.style.width = Math.min(100, 100 * au.currentTime / d2) + '%';
-            if(dauerFeld) dauerFeld.textContent = dauerMinSek(au.currentTime) + ' / ' + gesamt;
-        });
+        spracheKnopf(id, '▶', 'Abspielen');
+        // Die Blase wird bei jedem Schritt neu gesucht: Nach einem
+        // Neuverbinden wird der Verlauf neu gezeichnet, dann ist es eine
+        // andere.
+        const gesamtText = () => { const b = spracheBlase(id); return dauerMinSek(Number(b && b.dataset.dauer) || 0); };
+        const anzeigen = () => {
+            const b = spracheBlase(id);
+            if(!b) return;
+            const d2 = spracheLaenge(au, b);
+            if(d2) spracheFortschritt(b, au.currentTime / d2);
+            // Waehrend des Abspielens die laufende Zeit, sonst die Laenge -
+            // wie bei WhatsApp (25.09.2026).
+            const f = b.querySelector('.duo-sprache-dauer');
+            if(f) f.textContent = (au.paused && !au.currentTime) ? gesamtText() : dauerMinSek(Math.floor(au.currentTime));
+        };
+        let lauf = 0;
+        const schleife = () => { anzeigen(); if(!au.paused && !au.ended) lauf = requestAnimationFrame(schleife); };
+        au.addEventListener('play', () => { spracheKnopf(id, '⏸', 'Anhalten'); cancelAnimationFrame(lauf); lauf = requestAnimationFrame(schleife); });
+        au.addEventListener('pause', () => { spracheKnopf(id, '▶', 'Abspielen'); cancelAnimationFrame(lauf); anzeigen(); });
+        au.addEventListener('timeupdate', anzeigen);
         au.addEventListener('ended', () => {
-            if(balken) balken.style.width = '0';
-            if(dauerFeld) dauerFeld.textContent = gesamt;
+            cancelAnimationFrame(lauf);
+            try{ au.currentTime = 0; }catch(e){}
+            const b = spracheBlase(id);
+            spracheFortschritt(b, 0);
+            const f = b && b.querySelector('.duo-sprache-dauer');
+            if(f) f.textContent = gesamtText();
             spracheKnopf(id, '▶', 'Abspielen');
         });
         spracheAlleAnhalten(id);
+        const sprung = spracheSprung.get(id);
+        spracheSprung.delete(id);
+        if(sprung){
+            const b = spracheBlase(id);
+            const d2 = Number(b && b.dataset.dauer) || 0;
+            if(d2) try{ au.currentTime = Math.min(Math.max(0, d2 - 0.05), sprung * d2); }catch(e){}
+        }
         au.play().catch(() => spracheKnopf(id, '▶', 'Abspielen'));
     }
 
@@ -1733,7 +2108,7 @@
         // Robust gegen Reihenfolge: die automatische Begruessung kann eintreffen,
         // bevor showRoomUI() das Fenster sichtbar gemacht hat.
         if(roomCode) chatSichtbarkeitPruefen();
-        if(!n || !n.text) return;
+        if(!n || (!n.text && !n.geloescht)) return;
         // Ohne Raum: Sobald etwas geschrieben wurde, bleibt der Chat da -
         // auch wenn der Besucher danach wieder geht. Sonst waere die
         // Frage weg, bevor der Gastgeber sie lesen konnte.
@@ -1749,8 +2124,12 @@
         const leer = document.getElementById('duoChatLeer');
         if(leer) leer.remove();
 
-        const eigen = n.userId && n.userId === myUserId;
+        // "meine" setzt der Server im Verlauf (25.09.2026): Nach einem
+        // Neuverbinden hat der Browser eine neue Socket-id, die eigenen
+        // Nachrichten von vorher bleiben trotzdem die eigenen.
+        const eigen = !!((n.userId && n.userId === myUserId) || n.meine);
         const zeile = document.createElement('div');
+        if(n.id) zeile.dataset.id = String(n.id);
         // Eine Systemzeile ("... ist dazugekommen") ist keine Nachricht
         // von jemandem: mittig, schmal, ohne Absender. Die Klasse dafuer
         // gab es schon, sie wurde bisher nur lokal benutzt.
@@ -1772,19 +2151,42 @@
         const absender = (n.system || (eigen && !n.automatisch)) ? '' :
             '<span class="duo-chat-absender">' + escapeHtml(n.name || 'Teilnehmer') +
             (n.istHost ? ' · Server' : '') + woher + '</span>';
-        const mitHaken = eigen && !n.system && !n.automatisch && n.id;
+        const mitHaken = eigen && !n.system && !n.automatisch && n.id && !n.geloescht;
+        if(n.geloescht){
+            zeile.innerHTML = absender + geloeschtHtml(n.geloescht)
+                + '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>';
+            verlauf.appendChild(zeile);
+            while(verlauf.children.length > 200) verlauf.removeChild(verlauf.firstChild);
+            chatNachUntenRollen();
+            return;
+        }
+        // Reagieren kann man auf alles, was jemand geschrieben oder
+        // gesprochen hat - nicht auf die Zeilen, die der Server selbst
+        // schreibt.
+        const mitLeiste = !n.system && !n.automatisch && n.id;
+        // Mit Welle, wenn der Absender sie mitgeschickt hat (seit
+        // 25.09.2026) - sonst der schmale Balken wie bisher.
+        const welleWerte = (n.sprache && Array.isArray(n.sprache.welle) && n.sprache.welle.length >= 4) ? n.sprache.welle.slice(0, 64) : null;
         const koerper = (n.sprache && n.id)
-            ? '<span class="duo-sprache" data-sprache-id="' + escapeHtml(n.id) + '">'
-              + '<button type="button" class="duo-sprache-knopf" title="Abspielen">▶</button>'
-              + '<span class="duo-sprache-balken"><span></span></span>'
+            ? '<span class="duo-sprache" data-sprache-id="' + escapeHtml(n.id) + '" data-dauer="' + (Number(n.sprache.dauer) || 0) + '">'
+              + '<button type="button" class="duo-sprache-knopf" title="Abspielen" aria-label="Abspielen" data-zeichen="▶"><i class="fa-solid fa-play"></i></button>'
+              + (welleWerte
+                  ? '<span class="duo-sprache-welle" title="Anklicken: an diese Stelle springen">'
+                    + welleWerte.map(v => '<i style="height:' + Math.max(12, Math.min(100, Math.round(Number(v) || 0))) + '%"></i>').join('')
+                    + '</span>'
+                  : '<span class="duo-sprache-balken"><span></span></span>')
               + '<span class="duo-sprache-dauer">' + dauerMinSek(n.sprache.dauer) + '</span></span>'
             : chatLinks(smileysErsetzen(escapeHtml(n.text)));
         zeile.innerHTML = absender + koerper +
             '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>' +
-            (mitHaken ? '<span class="duo-chat-haken" data-haken="' + escapeHtml(n.id) + '"></span>' : '');
+            (mitHaken ? '<span class="duo-chat-haken" data-haken="' + escapeHtml(n.id) + '"></span>' : '') +
+            (mitLeiste ? leisteHtml(darfLoeschen(eigen)) : '');
         verlauf.appendChild(zeile);
+        if(mitLeiste && (n.reaktionen || reaktStand.has(String(n.id)))){
+            reaktionenZeichnen(String(n.id), n.reaktionen || reaktStand.get(String(n.id)));
+        }
         if(mitHaken){
-            hakenSetzen(n.id, gelesenStand.get(n.id) || null, n.empfaenger);
+            hakenSetzen(n.id, gelesenStand.get(n.id) || n.gelesen || null, n.empfaenger);
         } else if(!eigen && !n.system && !n.automatisch && n.id){
             zuMelden.add(n.id);
             gelesenMelden();
@@ -1809,6 +2211,131 @@
             // einmal in den Chat tippen.
             if(!pruefungLaeuft()) chatUmschalten(true, true);
         }
+    }
+
+    // ----------------------------------------------------------------
+    //  LOESCHEN UND REAGIEREN                             (25.09.2026)
+    //  Dietmar: "Ich moechte auch Nachrichten loeschen und Liken koennen.
+    //  Bitte kein Rotes Herz, sondern in Gruen Daumen Hoch und Daumen
+    //  runter. Lustig und traurig."
+    //
+    //  Loeschen: die eigene Nachricht - und als Gastgeber jede (im
+    //  Gruppenraum der Host, im Chat ohne Raum der Trainer-PC). Der
+    //  Server prueft das noch einmal; hier geht es nur darum, keinen
+    //  Papierkorb zu zeigen, der dann nichts tut. Nach dem Loeschen steht
+    //  bei allen "Nachricht geloescht" an der Stelle.
+    //
+    //  Reaktionen: eine je Person. Noch einmal dieselbe nimmt sie zurueck,
+    //  eine andere ersetzt sie. Unter der Blase stehen die Zahlen; wer
+    //  reagiert hat, steht im Hinweis beim Zeigen darauf.
+    // ----------------------------------------------------------------
+    //  25.09.2026, abends: dazu ein gruenes Herz. Dietmar: "Nachrichten
+    //  Liken. Daumen hoch und runter. Lustig Traurig und ein Gruenes
+    //  Herz." Und statt der Symbole (Daumen gruen, Gesichter orange) auf
+    //  die Rueckfrage mit beiden Bildern: "nimm bitte B." - "wie bei
+    //  WhatsApp". Also bunte Emojis; die Daumen sind damit gelb, das
+    //  Herz bleibt gruen, ein rotes gibt es weiterhin nicht.
+    // ----------------------------------------------------------------
+    const REAKT_ARTEN = [
+        { art: 'hoch',    zeichen: '\u{1F44D}', titel: 'Daumen hoch' },     // 👍
+        { art: 'runter',  zeichen: '\u{1F44E}', titel: 'Daumen runter' },   // 👎
+        { art: 'lustig',  zeichen: '\u{1F602}', titel: 'Lustig' },          // 😂
+        { art: 'traurig', zeichen: '\u{1F622}', titel: 'Traurig' },         // 😢
+        { art: 'herz',    zeichen: '\u{1F49A}', titel: 'Grünes Herz' },     // 💚
+        // Und noch drei. Dietmar: "4 Blaetteriges Kleeblatt. Erstaunt und :)
+        // haette ich gerne noch mit drin."
+        { art: 'klee',    zeichen: '\u{1F340}', titel: 'Kleeblatt' },       // 🍀
+        { art: 'staunen', zeichen: '\u{1F62E}', titel: 'Erstaunt' },        // 😮
+        { art: 'laecheln', zeichen: '\u{1F642}', titel: 'Lächeln' }         // 🙂
+    ];
+    const reaktStand = new Map();       // Nachrichten-id -> { zaehler, namen, meine }
+
+    function darfLoeschen(eigen){
+        if(eigen) return true;
+        return roomCode ? !!isHost : !vonAussen;
+    }
+    function leisteHtml(mitLoeschen){
+        return '<button type="button" class="duo-chat-mehr" title="Reagieren' + (mitLoeschen ? ' oder löschen' : '') + '" aria-label="Reagieren">'
+             + '<i class="fa-regular fa-face-smile"></i></button>'
+             + '<span class="duo-chat-reaktionen"></span>'
+             + '<span class="duo-chat-leiste">'
+             + REAKT_ARTEN.map(a => '<button type="button" data-reagieren="' + a.art + '" title="' + a.titel + '" aria-label="' + a.titel + '">'
+                                  + '<span class="duo-emoji r-' + a.art + '">' + a.zeichen + '</span></button>').join('')
+             + (mitLoeschen ? '<button type="button" class="weg" data-loeschen="1" title="Löschen" aria-label="Löschen"><i class="fa-solid fa-trash-can"></i></button>' : '')
+             + '</span>';
+    }
+    function geloeschtHtml(von){
+        return '<span class="duo-chat-geloescht"><i class="fa-solid fa-ban"></i> '
+             + (von === 'server' ? 'Vom Server gelöscht' : 'Nachricht gelöscht') + '</span>';
+    }
+    function zeileFuer(id){
+        return document.querySelector('#duoChatVerlauf .duo-chat-zeile[data-id="' + String(id).replace(/[^a-f0-9]/gi, '') + '"]');
+    }
+    function leisteUmschalten(zeile){
+        const auf = !zeile.classList.contains('aktiv');
+        document.querySelectorAll('#duoChatVerlauf .duo-chat-zeile.aktiv').forEach(z => z.classList.remove('aktiv'));
+        if(auf){
+            zeile.classList.add('aktiv');
+            // Die unterste Blase: Leiste nicht unter den Rand rutschen lassen.
+            try{ zeile.scrollIntoView({ block: 'nearest' }); }catch(e){}
+        }
+    }
+    function reagieren(id, art){
+        if(!id || !socket || !socket.connected) return;
+        socket.emit('chatReagieren', { id: String(id), art: String(art || ''), name: getDuoUserName() });
+    }
+    function reaktionenZeichnen(id, r){
+        id = String(id);
+        if(r && r.zaehler) reaktStand.set(id, r); else { reaktStand.delete(id); r = null; }
+        const z = zeileFuer(id);
+        if(!z) return;
+        const feld = z.querySelector('.duo-chat-reaktionen');
+        if(!feld) return;
+        let html = '';
+        REAKT_ARTEN.forEach(a => {
+            const anz = r ? Number(r.zaehler[a.art] || 0) : 0;
+            if(!anz) return;
+            const namen = (r.namen && Array.isArray(r.namen[a.art]) ? r.namen[a.art] : []).map(String).join(', ');
+            html += '<button type="button" class="duo-reakt' + (r.meine === a.art ? ' meine' : '') + '" data-reagieren="' + a.art + '"'
+                  + ' title="' + escapeHtml(a.titel + (namen ? ': ' + namen : '')) + '">'
+                  + '<span class="duo-emoji r-' + a.art + '">' + a.zeichen + '</span>' + anz + '</button>';
+        });
+        feld.innerHTML = html;
+        z.querySelectorAll('.duo-chat-leiste [data-reagieren]').forEach(b => {
+            b.classList.toggle('meine', !!(r && r.meine === b.dataset.reagieren));
+        });
+    }
+    function nachrichtLoeschen(id){
+        if(!id) return;
+        const weiter = () => {
+            if(!socket || !socket.connected){ chatSystemmeldung('Keine Verbindung – nicht gelöscht.'); return; }
+            socket.emit('chatLoeschen', { id: String(id) });
+        };
+        if(typeof window.showAppConfirm === 'function'){
+            // Der Dialog lag bisher UNTER dem Chatfenster (99997 gegen
+            // 99998) - bei kleinem Fenster haette der Chat ihn verdeckt.
+            try{ const m = document.getElementById('genericConfirmModal'); if(m) m.style.zIndex = '100000'; }catch(e){}
+            window.showAppConfirm('Diese Nachricht für alle löschen?', weiter, {
+                title: 'Nachricht löschen?',
+                details: 'Sie verschwindet bei allen im Chat. An ihrer Stelle steht dann „Nachricht gelöscht“.',
+                confirmLabel: '<i class="fas fa-trash-can"></i> Löschen',
+                confirmColor: '#b91c1c',
+                icon: 'fa-trash-can'
+            });
+        } else if(window.confirm('Diese Nachricht für alle löschen?')) weiter();
+    }
+    function nachrichtGeloescht(d){
+        if(!d || !d.id) return;
+        const id = String(d.id);
+        reaktStand.delete(id);
+        const au = spracheAudio.get(id);
+        if(au){ try{ au.pause(); URL.revokeObjectURL(au.src); }catch(e){} spracheAudio.delete(id); }
+        const z = zeileFuer(id);
+        if(!z) return;
+        const abs = z.querySelector('.duo-chat-absender');
+        const zeit = z.querySelector('.duo-chat-zeit');
+        z.classList.remove('aktiv');
+        z.innerHTML = (abs ? abs.outerHTML : '') + geloeschtHtml(d.von) + (zeit ? zeit.outerHTML : '');
     }
 
     // ----------------------------------------------------------------
@@ -3294,6 +3821,8 @@
             chatVerlaufSetzen(d && d.nachrichten);
         }catch(e){ console.error('[CHAT]', e); } });
         socket.on('duoChatHinweis', t=>{ try{ chatSystemmeldung(t); }catch(e){} });
+        socket.on('chatGeloescht', d=>{ try{ nachrichtGeloescht(d); }catch(e){ console.error('[CHAT] Loeschen', e); } });
+        socket.on('chatReaktionen', d=>{ try{ if(d && d.id) reaktionenZeichnen(String(d.id), d.reaktionen || null); }catch(e){ console.error('[CHAT] Reaktion', e); } });
 
         socket.on('duoConfigGeaendert', d=>{
             try{
@@ -3384,6 +3913,13 @@
         socket.on('duoTrainerLive', data=>{
             console.log('[DUO] duoTrainerLive', data);
             window.duoTrainerData=data;
+            // Die Teilnehmerliste zeigt dem Gastgeber seit dem 25.09.2026
+            // den Knopf "Muendlich nachpruefen" - der haengt an diesen
+            // Daten, also ist sie neu zu zeichnen, wenn sie offen steht.
+            try{
+                const tm = document.getElementById('duoTeilnehmerModal');
+                if(tm && tm.style.display !== 'none') teilnehmerListeRendern();
+            }catch(e){}
             try{
                 if(typeof window.updateTrainerParticipantSelect==='function'){
                     window.updateTrainerParticipantSelect(data);
@@ -3440,6 +3976,17 @@
             }catch(e){ console.debug('[DUO] Hintergrund-Verbindung nicht moeglich:', e && e.message); return false; }
         },
         chatSenden: function(){ try{ chatSenden(); }catch(e){} },
+        // Eine fertige Nachricht in den Chat des Raums schreiben - fuer das
+        // Ergebnis der muendlichen Nachpruefung (25.09.2026), das der
+        // Kursleiter auf Wunsch weitergibt. Nur im Raum, nie in den Kanal
+        // ohne Raum.
+        nachrichtSenden: function(text){
+            try{
+                if(!socket || !roomCode || !text) return false;
+                socket.emit('duoChat', { code: roomCode, text: String(text) });
+                return true;
+            }catch(e){ return false; }
+        },
         init: async function(){
             try{ await ensureSocket(); }catch(e){ console.warn('[DUO] Socket offline, Quiz trotzdem lokal'); updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); fetchAndFillTunnelUrl(); return; }
             try{

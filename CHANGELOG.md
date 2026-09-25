@@ -22,6 +22,10 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Vorschaukachel für geteilte Links (Facebook, WhatsApp), mit Raumcode als Einladung in den Gruppenraum
 - Hauptansicht: Hilfe & Unterlagen mit DARC-Ausbildungspaten, Kursen vor Ort, Unterlagen und Folien, bei Klasse N Buch-Link
 - 50ohm.de-Kacheln Kapitel und Lösungsweg in allen Klassen, Index wöchentlich aktualisiert
+- Prüfungssimulator: Übung zur mündlichen Nachprüfung (Klasse N, Betrieb/Vorschriften) mit Vorlesen, Tastatur und Selbsturteil, im Gruppenraum prüft der Kursleiter
+- Chat: Reaktionen mit Emojis wie bei WhatsApp (Daumen hoch/runter, lustig, traurig, grünes Herz, Kleeblatt, erstaunt, Lächeln) und Löschen eigener Nachrichten, der Gastgeber kann jede löschen
+- Chat: dritter Haken, wenn bei mehreren Empfängern alle die Nachricht gelesen haben
+- Sprachnachrichten wie bei WhatsApp: laufende Balken bei der Aufnahme, Pause, Welle in der Sprechblase mit Springen per Klick
 
 ### Geändert
 - Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
@@ -37,6 +41,9 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Besucherzählung: nur Aufrufe mit Lebenszeichen, Scanner als angeklopft, Land/Stadt statt IP-Adresse, Suchmaschinen nicht gelistet
 - Online-Zugang: feste Adresse wird bevorzugt, kein zusätzlicher Tunnel, Neustart-Hinweis ohne Adresswechsel
 - Programmsymbol: neues Zeichen (Strahler mit Funkwelle), unter macOS hüpft es im Dock, bis der Trainer bereit ist
+- Besucherfenster: Server, Sperre, Zähler, Verlauf und Neustart als kleinere Knöpfe oben in der Kopfzeile
+- Einstellungen: Knopf „Einstellungen übernehmen“ statt „Fertig“
+- Chat ohne Gruppenraum: Sprachnachrichten jetzt auch für Besucher am geteilten Link
 
 ### Behoben
 - Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
@@ -54,6 +61,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Dark und Green Mode: Fortschrittsspalte, Server-Knopf, Tunnel-Wache und Besucherfenster wieder kontrastreich
 - Formelblatt-Knopf bei NB501–NB505 und NB601–NB606 ergänzt, Anteilsangabe im Hilfetext korrigiert
 - Windows-Start: Hinweise bei Quelltext-Download, falsch abgelegtem Node und abgestürztem Server statt stillem Abbruch
+- Prüfungssimulator: zwei Teile in der Grauzone gelten als nicht bestanden, Ansage nannte bei Technik N „undefined“
 
 ## [1.297.0] - 2026-09-15
 

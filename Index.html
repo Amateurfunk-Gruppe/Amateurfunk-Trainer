@@ -24743,7 +24743,10 @@ const KNOPF_ERKLAERUNG = {
     verlaufAlleHaken: 'Alle Einträge auf einmal an- oder abwählen.',
     hbOrdnerBtn: 'Öffnet den Ordner Hoerbuch im Explorer. Dort liegen die gesprochenen Dateien, fertig zum Kopieren auf Handy, Radio oder USB-Stick.',
     hbInhalt: 'Hier wählst du, welche Fragen ins Hörbuch gesprochen werden: alle, nur die noch ungelernten oder nur ein bestimmter Prüfungsteil.',
-    hbAufteilung: 'Wie das Hörbuch aufgeteilt wird. Eine Datei je Lektion: am Radio springt die Titeltaste zur nächsten Lektion. Eine Datei je Frage: dann zeigt das Radio den Fragetext im Display.'
+    hbAufteilung: 'Wie das Hörbuch aufgeteilt wird. Eine Datei je Lektion: am Radio springt die Titeltaste zur nächsten Lektion. Eine Datei je Frage: dann zeigt das Radio den Fragetext im Display.',
+    // Muendliche Nachpruefung ueben (25.09.2026), Modul "muendlicheNachpruefung"
+    muendlichStartBtn: 'Mündliche Nachprüfung üben. Fehlen in genau einem Prüfungsteil ein oder zwei Punkte, kann in der echten Prüfung eine mündliche Nachprüfung folgen. Hier spielst du sie durch: Ein Prüfer schaut sich zwei deiner Fehler noch einmal mit dir an und stellt dann ein paar Fragen quer durch den Teil. Du antwortest laut, deckst auf und sagst selbst, ob es gestimmt hat.',
+    muendlichUebenLink: 'Mündliche Nachprüfung üben, ohne vorher einen ganzen Bogen zu beantworten. Du wählst Betrieb oder Vorschriften, und der Prüfer tut so, als hättest du dort achtzehn von fünfundzwanzig Punkten. Die Fragen zum genauen Hinsehen kommen aus deiner Fehlerliste.'
 };
 
 // Fuer die Knoepfe ohne eigene Kennung: der Schluessel ist die gesaeuberte
@@ -25489,10 +25492,16 @@ function einstellungenOeffnen(reiter){
           + '<div id="einstBlatt_wartung"  style="display:none;"></div>'
           + '</div></div>'
 
-          // Fusszeile
+          // Fusszeile. Der Knopf hiess "Fertig" (25.09.2026). Dietmar: "In
+          // Einstellungen steht Fertig. Hier moechte ich entweder
+          // Einstellungen speichern oder Einstellung uebernehmen." Es wurde
+          // "uebernehmen": Gespeichert ist jede Aenderung schon im
+          // Augenblick, in dem man sie macht (siehe einstellungenLaden) -
+          // der Knopf schliesst das Fenster und laesst sie gelten. Das
+          // Kreuz oben und Esc tun dasselbe.
           + '<div style="display:flex; justify-content:flex-end; gap:0.5rem; padding:0.7rem 1rem; '
           + 'border-top:1px solid #e3e9f3; background:#fafbff;">'
-          + '<button onclick="einstellungenSchliessen()" style="' + EINST_KNOPF + '">Fertig</button>'
+          + '<button onclick="einstellungenSchliessen()" style="' + EINST_KNOPF + '">Einstellungen übernehmen</button>'
           + '</div></div>';
         document.body.appendChild(modal);
         einstBlaetterFuellen();
@@ -26457,7 +26466,10 @@ async function ttsFelderNachziehen() {
                     ? '<br><span style="color:var(--muted);">Von Hand geht es auch: die Dateien '
                       + '<code>.onnx</code> und <code>.onnx.json</code> in den Ordner <code>piper/</code>, '
                       + 'zu holen bei <a href="https://huggingface.co/rhasspy/piper-voices" target="_blank" rel="noopener">huggingface.co/rhasspy/piper-voices</a>.</span>'
-                    : '<br><span style="color:var(--muted);">Wahlweise tut es auch das Setup noch einmal — es bringt eine Stimme mit.</span>');
+                    // Unter Windows stand hier noch "Wahlweise tut es auch das
+                    // Setup noch einmal" - aelter als der Knopf, siehe WER DIE
+                    // MELDUNG LIEST (25.09.2026). Der Weg darueber gilt ueberall.
+                    : '');
             return;
         }
         // Der Hinweis kommt WEITER UNTEN, nachdem der Standardtext steht -
@@ -28709,7 +28721,10 @@ function buildSimulatorSpeech(counts, statusMap, testedParts){
     // statusMap: {vorschriften, betrieb, technik} - 'bestanden' | 'nachpruefung' | 'nicht_bestanden' | null (nicht geprüft)
     // testedParts: Array der tatsächlich geprüften Teile
     testedParts = testedParts || ['vorschriften','betrieb','technik'];
-    const labelOf = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+    // Der Simulator nennt seine Teile technik_n, technik_e, technik_a - bis
+    // zum 25.09.2026 wurde daraus "undefined 21 von 25" gesprochen.
+    const namen = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+    const labelOf = new Proxy(namen, { get: (o, p) => o[p] || (window.REALISTIC_PART_META && window.REALISTIC_PART_META[p] && window.REALISTIC_PART_META[p].name) || String(p) });
 
     const passedParts = testedParts.filter(p => statusMap[p]==='bestanden');
     const grayParts = testedParts.filter(p => statusMap[p]==='nachpruefung');
@@ -28721,13 +28736,18 @@ function buildSimulatorSpeech(counts, statusMap, testedParts){
     if(failParts.length===0 && grayParts.length===0){
         return `Herzlichen Glückwunsch, Sie haben ${testedParts.length===3 ? 'Ihre Prüfung' : (testedParts.length===1 ? 'den geprüften Teil' : 'die geprüften Teile')} bestanden! ${detail}. Insgesamt ${totalCorrect} von ${totalQuestions} richtig.`;
     }
-    if(failParts.length===0 && grayParts.length>0){
-        return `Sie haben in ${grayParts.length===1 ? 'einem Teil' : 'mehreren Teilen'} die Grauzone erreicht: ${grayParts.map(p=>labelOf[p]).join(' und ')} mit 17 oder 18 von 25 richtigen Antworten. Hier ist eine mündliche Nachprüfung möglich. ${detail}.${passedParts.length>0 ? ' ' + passedParts.map(p=>labelOf[p]).join(' und ') + ' direkt bestanden.' : ''}`;
+    if(failParts.length===0 && grayParts.length===1){
+        return `Sie haben im Teil ${labelOf[grayParts[0]]} die Grauzone erreicht, mit ${counts[grayParts[0]]} von 25 richtigen Antworten. Hier ist eine mündliche Nachprüfung möglich. ${detail}.${passedParts.length>0 ? ' ' + passedParts.map(p=>labelOf[p]).join(' und ') + ' direkt bestanden.' : ''}`;
+    }
+    // Zwei oder mehr Teile knapp daneben: keine Nachpruefung (25.09.2026,
+    // siehe pruefGesamtStatus).
+    if(failParts.length===0 && grayParts.length>1){
+        return `Sie haben die Prüfung nicht bestanden. In ${grayParts.map(p=>labelOf[p]).join(' und ')} fehlten nur ein oder zwei Punkte. Eine mündliche Nachprüfung gibt es aber nur, wenn lediglich ein Teil knapp daneben liegt. ${detail}.${passedParts.length>0 ? ' ' + passedParts.map(p=>labelOf[p]).join(' und ') + ' bestanden.' : ''}`;
     }
     // mindestens ein Teil direkt durchgefallen (unter 17)
     let msg = `Sie haben die Prüfung nicht bestanden. ${detail}. `;
     msg += `${failParts.map(p=>labelOf[p]).join(' und ')} mit unter 17 richtigen Antworten direkt nicht bestanden. `;
-    if(grayParts.length) msg += `${grayParts.map(p=>labelOf[p]).join(' und ')} in der Grauzone bei 17-18, jedoch entfällt die mündliche Nachprüfung meist, wenn zusätzlich weitere Teile durchgefallen sind. `;
+    if(grayParts.length) msg += `${grayParts.map(p=>labelOf[p]).join(' und ')} in der Grauzone bei 17-18 – eine mündliche Nachprüfung gibt es aber nicht, weil ein weiterer Teil nicht bestanden ist. `;
     if(passedParts.length) msg += `${passedParts.map(p=>labelOf[p]).join(' und ')} bestanden. `;
     return msg.trim();
 }
@@ -28827,8 +28847,15 @@ window.showDuoFinalResults = function(data){
                     + '<span style="color:var(--muted);"> von ' + (me.total||data.totalQuestions||0) + ' · ' + (me.accuracy||0) + '%</span></div>'
             + '</div>'
         ) : '';
+        // Muendliche Nachpruefung (25.09.2026): Der Gastgeber bekommt neben
+        // jedem, der genau einen Teil in der Grauzone hat, einen Knopf -
+        // er ist dann der Pruefer. Siehe Skript "muendlicheNachpruefung".
+        let mnpGastgeber = false;
+        try{ mnpGastgeber = !!(window._duoPruefung && window.duo && window.duo.isHost && window.duo.isHost()
+                               && typeof window.muendlichKursleiterKnopfHtml === 'function'); }catch(e){}
         const rowsHtml = ranking.map(function(r,i){
             const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+            const mnpKnopf = mnpGastgeber ? window.muendlichKursleiterKnopfHtml(r) : '';
             const meText = (r.userId===window.myUserId) ? ' <span style="color:var(--panel-navy);">(Du)</span>' : '';
             // Pruefungsraum: jeder Bogen einzeln - 60/75 sagt nichts darueber,
             // ob alle drei bestanden sind.
@@ -28852,6 +28879,7 @@ window.showDuoFinalResults = function(data){
                 + duoExamStatusBadge(r.examStatus, r.finished)
                 + '</span>'
                 + boegen
+                + (mnpKnopf ? '<div style="flex-basis:100%;">' + mnpKnopf + '</div>' : '')
                 + '</div>';
         }).join('');
         let istGastgeber = false;
@@ -29207,6 +29235,8 @@ function renderFinishScreen(isTimeUp = false) {
         let overallStatus;
         if (testedParts.length === 0) overallStatus = 'nicht_bestanden';
         else if (failParts.length > 0) overallStatus = 'nicht_bestanden';
+        // Zwei Teile knapp daneben: keine Nachpruefung (25.09.2026, siehe pruefGesamtStatus)
+        else if (grayParts.length > 1) overallStatus = 'nicht_bestanden';
         else if (grayParts.length > 0) overallStatus = 'nachpruefung';
         else overallStatus = 'bestanden';
 
@@ -29252,6 +29282,8 @@ function renderFinishScreen(isTimeUp = false) {
         const uebersichtText = testedParts.length===0 ? 'Keine Teile geprüft.'
             : overallStatus==='bestanden' ? `✅ Alle geprüften Teile (${testedParts.map(p=>labelOf[p]).join(', ')}) mit mind. 19/25 bestanden! Gesamt ${testedErrors} Fehler.`
             : overallStatus==='nachpruefung' ? `⚠️ Kein Teil unter 17/25, aber mindestens ein Teil (${grayParts.map(p=>labelOf[p]).join(', ')}) in der Grauzone 17-18/25 → mündliche Nachprüfung möglich.${passedParts.length ? ' Direkt bestanden: ' + passedParts.map(p=>labelOf[p]).join(', ') + '.' : ''}`
+            : !failParts.length
+              ? `❌ ${grayParts.map(p=>labelOf[p]).join(' und ')} je 17 oder 18/25 – eine mündliche Nachprüfung gibt es nur, wenn lediglich ein Teil knapp daneben liegt. Die Teile lassen sich einzeln wiederholen.${passedParts.length ? ' Bestanden: ' + passedParts.map(p=>labelOf[p]).join(', ') + '.' : ''} Gesamt ${testedErrors} Fehler.`
             : `❌ Mindestens ein Teil (${failParts.map(p=>labelOf[p]).join(', ')}) unter 17/25 → direkt nicht bestanden.${grayParts.length ? ' In der Grauzone: ' + grayParts.map(p=>labelOf[p]).join(', ') + '.' : ''}${passedParts.length ? ' Bestanden: ' + passedParts.map(p=>labelOf[p]).join(', ') + '.' : ''} Gesamt ${testedErrors} Fehler.`;
 
         container.innerHTML = `
@@ -34776,6 +34808,34 @@ function getPartStatusLabel(status, correct){
   if(status==='nachpruefung') return `⚠️ Nachprüfung möglich (${correct}/25)`;
   return `❌ Nicht bestanden (${correct}/25)`;
 }
+// ================================================================
+//  DAS GESAMTERGEBNIS UEBER MEHRERE TEILE                (25.09.2026)
+// ----------------------------------------------------------------
+//  Bis heute hiess es bei ZWEI Teilen mit 17 oder 18 Punkten
+//  "Nachpruefung moeglich". Das stimmt nicht. Amtsblattverfuegung
+//  29/2024: "Sofern lediglich in einem Pruefungsteil die erforderliche
+//  Mindestpunktzahl nicht erreicht wurde, jedoch mindestens 17 der
+//  erreichbaren 25 Punkte erreicht wurden, kann der Bewerber in diesem
+//  Pruefungsteil muendlich nachgeprueft werden."
+//
+//  Dietmar am 25.09.2026, ohne die Verfuegung gelesen zu haben: "Also
+//  ich persoenlich gehe nicht davon aus, dass wenn es in Betrieb und in
+//  Technik jeweils einen Fehler zu viel gab, dass Betrieb und Technik
+//  geprueft wird." Genau so. Zwei Teile knapp daneben: beide nicht
+//  bestanden, sie lassen sich einzeln wiederholen.
+//
+//  Eine Stelle fuer die Regel - der Server rechnet fuer den
+//  Pruefungsraum dasselbe (computeUserStats in Server.js).
+// ================================================================
+function pruefGesamtStatus(liste){
+  const st = (liste || []).filter(Boolean);
+  if(!st.length) return 'nicht_bestanden';
+  if(st.some(x => x === 'nicht_bestanden')) return 'nicht_bestanden';
+  const grau = st.filter(x => x === 'nachpruefung').length;
+  if(grau >= 2) return 'nicht_bestanden';
+  return grau === 1 ? 'nachpruefung' : 'bestanden';
+}
+window.pruefGesamtStatus = pruefGesamtStatus;
 // FIX: Export für globalen Scope – wird in renderFinishScreen außerhalb des IIFE benötigt
 window.getPartStatus = getPartStatus;
 window.getPartStatusLabel = getPartStatusLabel;
@@ -34919,7 +34979,11 @@ window.showRealisticSelection = function(){
     <div class="sub" style="margin-top:0.9rem; font-size:0.8rem;">💡 ${teile.length === 1
         ? 'Ablauf: 25 Fragen, dann das Ergebnis.'
         : 'Ablauf: ' + teile.map((t,i)=>'Teil '+(i+1)).join(' → Ergebnis → ') + ' → Gesamt-Ergebnis.'} Bei Zeitablauf wird der Teil automatisch gewertet.</div>
+    ${(typeof window.muendlichLinkHtml === 'function') ? window.muendlichLinkHtml() : ''}
   </div>`;
+  // Die Zeile darueber (25.09.2026): der Weg in die Uebung "Muendliche
+  // Nachpruefung", ohne vorher einen ganzen Bogen zu beantworten. Nur bei
+  // Klasse N - das entscheidet muendlichLinkHtml() selbst.
   overlay.classList.add('open');
   try{ updateRealisticGelerntInfo(); }catch(e){}
   try{ schwerInfoAktualisieren(); }catch(e){}
@@ -35676,12 +35740,13 @@ function showRealisticFinal(){
     if(overlay) overlay.classList.add('open');
     return;
   }
-  const anyFail = results.some(r=>r.status==='nicht_bestanden');
   const anyGray = results.some(r=>r.status==='nachpruefung');
-  let totalStatus;
-  if(anyFail) totalStatus='nicht_bestanden';
-  else if(anyGray) totalStatus='nachpruefung';
-  else totalStatus='bestanden';
+  // Seit 25.09.2026 ueber pruefGesamtStatus: zwei Teile in der Grauzone
+  // sind NICHT "Nachpruefung moeglich", sondern nicht bestanden.
+  const totalStatus = pruefGesamtStatus(results.map(r=>r.status));
+  // Grauzone, aber ohne Nachpruefung - weil ein zweiter Teil knapp
+  // daneben liegt oder ein Teil durchgefallen ist.
+  const grauOhneNachpruefung = anyGray && totalStatus !== 'nachpruefung';
   const totalCorrect = results.reduce((s,r)=>s+r.correct,0);
   const totalQuestions = results.length * 25;
   const totalErrors = totalQuestions - totalCorrect;
@@ -35697,7 +35762,7 @@ function showRealisticFinal(){
     const col = r.status==='bestanden' ? 'var(--good)' : r.status==='nachpruefung' ? 'var(--warn)' : 'var(--bad)';
     const bg = r.status==='bestanden' ? 'var(--good-bg)' : r.status==='nachpruefung' ? 'var(--warn-bg)' : 'var(--bad-bg)';
     const meta = REALISTIC_PART_META[p] || {name:p, icon:'📋'};
-    return `<div style="background:${bg};border:2px solid ${col};padding:0.9rem;border-radius:14px;text-align:center;"><div style="font-weight:800; font-size:0.95rem;">${meta.icon} ${meta.name}</div><div style="font-size:1.35rem;font-weight:800;color:${col}; margin-top:2px;">${r.correct}/25</div><div style="font-size:0.75rem;font-weight:600;">${r.errors} Fehler${r.isTimeUp?' · ⏱ abgelaufen':''}</div><div style="font-size:0.75rem;margin-top:2px;font-weight:600;">${r.status==='bestanden'?'✅ bestanden': r.status==='nachpruefung'?'⚠️ Nachprüfung':'❌ nicht bestanden'}</div></div>`;
+    return `<div style="background:${bg};border:2px solid ${col};padding:0.9rem;border-radius:14px;text-align:center;"><div style="font-weight:800; font-size:0.95rem;">${meta.icon} ${meta.name}</div><div style="font-size:1.35rem;font-weight:800;color:${col}; margin-top:2px;">${r.correct}/25</div><div style="font-size:0.75rem;font-weight:600;">${r.errors} Fehler${r.isTimeUp?' · ⏱ abgelaufen':''}</div><div style="font-size:0.75rem;margin-top:2px;font-weight:600;">${r.status==='bestanden'?'✅ bestanden': r.status==='nachpruefung'?(grauOhneNachpruefung?'⚠️ knapp – keine Nachprüfung':'⚠️ Nachprüfung'):'❌ nicht bestanden'}</div></div>`;
   }).join('');
   let detailHtml = '';
   completedOrder.forEach(p=>{
@@ -35741,6 +35806,14 @@ function showRealisticFinal(){
   } else {
     overallText = totalStatus==='bestanden' ? `Alle ${results.length} geprüften Teile bestanden. Gesamt ${totalCorrect}/${totalQuestions}.` : `Gesamt ${totalCorrect}/${totalQuestions}, ${totalErrors} Fehler.`;
   }
+  // MUENDLICHE NACHPRUEFUNG UEBEN (25.09.2026) - Dietmar: "Ja, bau mal
+  // den Prototyp fuer Betrieb und Vorschriften erst Mal fuer den Einstieg
+  // in die Klasse N". Der Kasten mit dem Knopf kommt nur, wenn genau ein
+  // Teil in der Grauzone liegt und alle anderen bestanden sind - das
+  // Modul steht ganz unten im Skript "muendlicheNachpruefung" und
+  // entscheidet das selbst. Im Gruppenraum nie. Die Knoepfe darunter
+  // bleiben, wie sie waren.
+  const muendlichAngebot = (!realisticExam.duo && typeof window.muendlichAngebotHtml === 'function') ? window.muendlichAngebotHtml() : '';
   const overlay = ensureRealisticModal();
   const body = document.getElementById('realisticModalBody');
   if(body){
@@ -35755,7 +35828,8 @@ function showRealisticFinal(){
             ? `Zusammen <b>${totalCorrect}/${totalQuestions}</b> richtig – aber gewertet wird <b>jeder Bogen für sich</b>: bestanden ist nur, wer überall mindestens 19 von 25 hat.`
             : `Gesamt: <b>${totalCorrect}/${totalQuestions}</b> richtig (${Math.round(totalCorrect/totalQuestions*100)}%) – <b>${totalErrors} Fehler</b>`}</div>
           <div style="margin:1.1rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">${partsHtml}</div>
-          <div style="margin-top:8px;font-size:0.85rem;background:#f4f7fd;border:1px solid var(--line);border-radius:10px;padding:0.7rem;">${results.length===1 ? `<b>📊 Nur ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}:</b> ${totalCorrect >= 19 ? '✅ Bestanden' : totalCorrect >= 17 ? '⚠️ Grauzone' : '❌ Nicht bestanden'} – Nur dieser Teil wurde geprüft.` : `BNetzA: ≥19 bestanden, 17-18 Grauzone, <17 nicht bestanden.`}</div>
+          <div style="margin-top:8px;font-size:0.85rem;background:#f4f7fd;border:1px solid var(--line);border-radius:10px;padding:0.7rem;">${results.length===1 ? `<b>📊 Nur ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}:</b> ${totalCorrect >= 19 ? '✅ Bestanden' : totalCorrect >= 17 ? '⚠️ Grauzone' : '❌ Nicht bestanden'} – Nur dieser Teil wurde geprüft.` : `BNetzA: ≥19 bestanden, 17-18 Grauzone, <17 nicht bestanden.${grauOhneNachpruefung ? ' Mündlich nachgeprüft wird nur, wenn <b>lediglich ein Teil</b> knapp daneben liegt und alle anderen bestanden sind – die knappen Teile lassen sich einzeln wiederholen.' : ''}`}</div>
+          ${muendlichAngebot}
           <div class="btn-group" style="margin-top:1rem; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
             ${realisticExam.duo
               ? `<button class="btn btn-primary" onclick="duoPruefungRangliste()" data-tooltip="Wie die anderen im Raum abgeschnitten haben – jeder Bogen einzeln"><i class="fas fa-trophy"></i> Rangliste der Gruppe</button>`
@@ -36345,10 +36419,29 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
        durch den eingestellten Zoom, damit das Fenster bei 125 % nicht
        ueber den Bildschirm hinauswaechst. -->
   <div style="background:white; border-radius:22px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden; display:flex; flex-direction:column;">
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
-      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;">
+    <!-- DIE KNOEPFE OBEN (25.09.2026). Dietmar: "Die Buttons unten sollen
+         nach oben verschoben werden. Ggf. kann man diese etwas kleiner
+         gestalten." Server, Sperre, Zaehler, Verlauf und Neustart standen
+         danach in der Kopfzeile zwischen Titel und Kreuz, eine Spur
+         kleiner (30 statt 38 Punkte hoch). Server und Sperre sind am
+         selben Tag wieder nach unten rechts gezogen (siehe SERVER UND
+         SPERRE WIEDER UNTEN); oben bleiben Zaehler, Verlauf und
+         Neustart. Wird es eng, brechen die Knoepfe innerhalb ihres
+         Feldes um - Titel und Kreuz bleiben, wo sie sind. -->
+    <div style="display:flex; align-items:center; gap:12px; padding:0.7rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
+      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0; flex:0 0 auto; white-space:nowrap;">
         <i class="fas fa-users" style="color:var(--panel-navy);"></i> Besucher über den Link</h3>
-      <button onclick="besucherFensterZu()" style="width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:white; cursor:pointer; font-size:1.2rem; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--muted);">×</button>
+      <div id="besucherKopfKnoepfe" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:flex-end; flex:1 1 auto; min-width:0;">
+        <!-- Zwei Knoepfe, zwei Dinge. Dietmar am 22.09.2026: "Zaehler
+             zuruecksetzen? Ist das der Zaehler fuer Besucher? Wenn ja, dann
+             benoetigen wir einen Button, den Verlauf loeschen." Vorher tat
+             der eine Knopf beides auf einmal - Zahlen UND Liste -, ohne es
+             zu sagen. Jetzt: links die Zahlen, rechts die Liste. -->
+        <button onclick="besucherZaehlerZuruecksetzen()" class="btn btn-outline" style="min-height:30px; padding:0.28rem 0.58rem; font-size:0.78rem; border-radius:16px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Stellt den Besucherzähler auf null – heute, gestern, gesamt. Die Liste unten bleibt."><i class="fas fa-rotate-left"></i> Zähler zurücksetzen</button>
+        <button onclick="besucherVerlaufLoeschen()" class="btn btn-outline" style="min-height:30px; padding:0.28rem 0.58rem; font-size:0.78rem; border-radius:16px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Leert die Liste unten – wer wann von wo da war. Der Zähler bleibt."><i class="fas fa-trash"></i> Verlauf löschen</button>
+        <button onclick="neustartAnkuendigen()" class="btn btn-outline" style="min-height:30px; padding:0.28rem 0.58rem; font-size:0.78rem; border-radius:16px; font-weight:600; border:1px solid #d8b477; background:white; color:#8a5a10; cursor:pointer;" data-tooltip="Allen sagen, dass der Trainer gleich neu startet – dann reißt es nicht unangekündigt ab"><i class="fas fa-bullhorn"></i> Neustart ankündigen</button>
+      </div>
+      <button onclick="besucherFensterZu()" style="width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:white; cursor:pointer; font-size:1.2rem; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--muted); flex:0 0 auto;">×</button>
     </div>
     <div style="padding:1rem 1.2rem 0.2rem;">
       <div id="besucherModalKopf" style="background:#eef4fb; border:1px solid #c2d6f0; border-radius:12px; padding:0.7rem 0.9rem; font-size:0.86rem; line-height:1.55; color:#1f3f66;"></div>
@@ -36388,34 +36481,36 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
          Schrift, schmaler Gruppenraum), brechen Aktualisieren und
          Schliessen gemeinsam rechts in eine zweite Reihe um, statt dass
          etwas abgeschnitten wird. -->
+    <!-- Seit dem 25.09.2026 stehen hier unten rechts Server, Sperre,
+         Aktualisieren und Schliessen; Zaehler, Verlauf und Neustart sind
+         nach oben gewandert (siehe DIE KNOEPFE OBEN). -->
     <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:0.8rem 1rem; background:#fafbff; border-top:1px solid var(--line);">
-      <!-- Der Schalter fuer den Server. Dietmar am 22.09.2026: "Wenn ich es
-           oeffne, kommt unten ein Button rein. Server Ein / Aus." Er steht
-           vorn, weil er von allem hier das Wichtigste ist; Beschriftung und
-           Farbe setzt serverSchalterZeichnen() im Sekundentakt. -->
-      <button id="serverSchalter" onclick="tuerUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-server"></i> <span id="serverSchalterText">Server ein</span></button>
-      <!-- Der Schalter fuer die Laendersperre. Dietmar am 22.09.2026: "Ich
-           moechte die Laenderfilter auch ausschalten koennen." Gleiche
-           Bauart wie der Server-Schalter: gruen "Sperre ein", rot "Sperre
-           aus". Erst hiess es "Laendersperre ein/aus" - damit brach die
-           Leiste um. Dietmar: "Mach Laendersperre zu Sperre, damit alles
-           in eine Reihe passt." Nach jedem Neustart wieder ein. Zeichnet
-           sperreSchalterZeichnen(), im selben Takt. -->
-      <button id="sperreSchalter" onclick="laenderSperreUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-earth-europe"></i> <span id="sperreSchalterText">Sperre ein</span></button>
-      <!-- Zwei Knoepfe, zwei Dinge. Dietmar am 22.09.2026: "Zaehler
-           zuruecksetzen? Ist das der Zaehler fuer Besucher? Wenn ja, dann
-           benoetigen wir einen Button, den Verlauf loeschen." Vorher tat
-           der eine Knopf beides auf einmal - Zahlen UND Liste -, ohne es
-           zu sagen. Jetzt: links die Zahlen, rechts die Liste. -->
-      <button onclick="besucherZaehlerZuruecksetzen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Stellt den Besucherzähler auf null – heute, gestern, gesamt. Die Liste unten bleibt."><i class="fas fa-rotate-left"></i> Zähler zurücksetzen</button>
-      <button onclick="besucherVerlaufLoeschen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #e0b4ae; background:white; color:#a33227; cursor:pointer;" data-tooltip="Leert die Liste unten – wer wann von wo da war. Der Zähler bleibt."><i class="fas fa-trash"></i> Verlauf löschen</button>
-      <button onclick="neustartAnkuendigen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #d8b477; background:white; color:#8a5a10; cursor:pointer;" data-tooltip="Allen sagen, dass der Trainer gleich neu startet – dann reißt es nicht unangekündigt ab"><i class="fas fa-bullhorn"></i> Neustart ankündigen</button>
       <!-- Aktualisieren und Schliessen als Paar mit margin-left:auto statt
            eines Abstandhalters davor: So wandern sie beim Umbruch ZUSAMMEN
            nach rechts in die zweite Reihe. Mit dem Abstandhalter blieb
            Aktualisieren oben rechts und Schliessen stand allein unten
            links. -->
       <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+        <!-- SERVER UND SPERRE WIEDER UNTEN (25.09.2026). Dietmar, mit einem
+             Bild der beiden gruenen Knoepfe: "Diese zwei Buttons moechte ich
+             wieder unten rechts in alter Groesse haben." Mittags waren sie
+             mit den drei anderen in die Kopfzeile gewandert (siehe DIE
+             KNOEPFE OBEN); die drei bleiben dort, diese zwei stehen wieder
+             hier, 38 Punkte hoch wie vorher, vor Aktualisieren und
+             Schliessen. -->
+        <!-- Der Schalter fuer den Server. Dietmar am 22.09.2026: "Wenn ich es
+             oeffne, kommt unten ein Button rein. Server Ein / Aus." Er steht
+             vorn, weil er von allem hier das Wichtigste ist; Beschriftung und
+             Farbe setzt serverSchalterZeichnen() im Sekundentakt. -->
+        <button id="serverSchalter" onclick="tuerUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-server"></i> <span id="serverSchalterText">Server ein</span></button>
+        <!-- Der Schalter fuer die Laendersperre. Dietmar am 22.09.2026: "Ich
+             moechte die Laenderfilter auch ausschalten koennen." Gleiche
+             Bauart wie der Server-Schalter: gruen "Sperre ein", rot "Sperre
+             aus". Erst hiess es "Laendersperre ein/aus" - damit brach die
+             Leiste um. Dietmar: "Mach Laendersperre zu Sperre, damit alles
+             in eine Reihe passt." Nach jedem Neustart wieder ein. Zeichnet
+             sperreSchalterZeichnen(), im selben Takt. -->
+        <button id="sperreSchalter" onclick="laenderSperreUmschalten()" class="btn" style="min-height:38px; padding:0.5rem 0.95rem; border-radius:20px; font-weight:700; cursor:pointer; display:none;"><i class="fas fa-earth-europe"></i> <span id="sperreSchalterText">Sperre ein</span></button>
         <button onclick="besucherFensterAuffrischen()" class="btn btn-outline" style="min-height:38px; padding:0.5rem 0.85rem; border-radius:20px; font-weight:600; border:1px solid #b0c4d8; background:white; cursor:pointer;"><i class="fas fa-rotate"></i> Aktualisieren</button>
         <button onclick="besucherFensterZu()" class="btn btn-primary" style="min-height:38px; padding:0.5rem 1.05rem; border-radius:20px; font-weight:600; background:var(--panel-navy); color:white; border:none; cursor:pointer;">Schließen</button>
       </div>
@@ -38995,6 +39090,1125 @@ window.hbAbfragen = hbAbfragen;
         if (feld) feld.classList.add('hb-an');   // nicht style.display, siehe CSS
         hbAbfragen();
     } catch (e) { /* ohne Server (Datei direkt geöffnet) bleibt das Feld aus */ }
+})();
+</script>
+
+<style id="muendlich-style">
+/* Muendliche Nachpruefung ueben (25.09.2026) - siehe den Kommentar im
+   Skript "muendlicheNachpruefung" gleich darunter. Das Fenster selbst
+   benutzt die Klassen des Pruefungssimulators (realistic-modal ...),
+   hier steht nur, was es dort nicht gibt. */
+#muendlichModal { z-index: 99995; }
+#muendlichModal .realistic-modal { max-width: 700px; }
+.mnp-kopf-rechts { display:flex; align-items:center; gap:8px; }
+.mnp-ton { width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--card-bg);
+           cursor:pointer; color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:0.9rem; }
+.mnp-ton:hover { color:var(--panel-navy); border-color:var(--panel-navy); }
+.mnp-fortschritt { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:0.8rem; color:var(--muted); font-weight:700; }
+.mnp-punkte { display:flex; gap:5px; }
+.mnp-punkt { width:11px; height:11px; border-radius:50%; background:var(--line); }
+.mnp-punkt.jetzt { background:var(--accent-amber); box-shadow:0 0 0 3px var(--accent-amber-soft); }
+.mnp-punkt.ok { background:var(--good); }
+.mnp-punkt.nein { background:var(--bad); }
+.mnp-stumm-hinweis { font-size:0.78rem; color:var(--muted); margin:-4px 0 10px; }
+.mnp-pruefer { display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; }
+.mnp-bild { width:46px; height:46px; border-radius:50%; background:var(--panel-navy); color:#fff; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.mnp-blase-rahmen { flex:1; min-width:0; }
+.mnp-name { font-size:0.75rem; font-weight:700; color:var(--muted); margin-bottom:3px; display:flex; align-items:center; gap:7px; }
+.mnp-blase { background:#f4f7fd; border:1px solid var(--line); border-radius:4px 14px 14px 14px; padding:0.75rem 0.9rem;
+             font-size:0.95rem; line-height:1.55; color:var(--ink); }
+.mnp-blase b { color:var(--panel-navy); }
+.mnp-tipp { margin-top:8px; background:var(--accent-amber-soft); border:1px solid var(--accent-amber); border-radius:10px;
+            padding:0.55rem 0.8rem; font-size:0.9rem; color:var(--ink); line-height:1.45; }
+.mnp-welle { display:inline-flex; gap:2px; align-items:flex-end; height:10px; visibility:hidden; }
+.mnp-welle.an { visibility:visible; }
+.mnp-welle i { display:block; width:3px; height:3px; background:var(--accent-amber); border-radius:1px; animation:mnpWelle 0.9s ease-in-out infinite; }
+.mnp-welle i:nth-child(2) { animation-delay:0.15s; }
+.mnp-welle i:nth-child(3) { animation-delay:0.3s; }
+@keyframes mnpWelle { 0%,100% { height:3px; } 50% { height:10px; } }
+.mnp-frage { border:1px solid var(--line); border-radius:14px; padding:0.9rem; background:var(--card-bg); }
+.mnp-frage .mnp-qtext { font-weight:600; margin-bottom:10px; color:var(--ink); line-height:1.45; }
+.mnp-opt { display:flex; gap:8px; align-items:flex-start; width:100%; text-align:left; border:1px solid var(--line); border-radius:9px;
+           padding:9px 11px; margin-bottom:6px; font-size:0.9rem; background:#f8fafd; color:var(--ink); cursor:pointer; font-family:inherit; }
+.mnp-opt:hover:not(:disabled) { border-color:var(--panel-navy); }
+.mnp-opt:disabled { cursor:default; }
+.mnp-opt.richtig { border-color:var(--good); background:var(--good-bg); }
+.mnp-opt.falsch { border-color:var(--bad); background:var(--bad-bg); }
+.mnp-bu { font-weight:800; color:var(--muted); }
+.mnp-mark { background:var(--accent-amber-soft); color:inherit; border-bottom:2px solid var(--accent-amber); padding:0 2px; border-radius:3px; font-weight:800; }
+.mnp-antwort { margin-top:12px; border:2px solid var(--good); background:var(--good-bg); border-radius:12px; padding:0.7rem 0.9rem; color:var(--ink); line-height:1.45; }
+.mnp-antwort .mnp-klein { font-size:0.74rem; font-weight:700; color:var(--muted); margin-bottom:3px; }
+.mnp-warum { margin-top:8px; font-size:0.86rem; line-height:1.5; color:var(--ink); }
+.mnp-warum summary { cursor:pointer; font-weight:700; color:var(--panel-navy); }
+.mnp-warum div { margin-top:6px; }
+#mnpFrageText:focus, #mnpAntwortKasten:focus { outline:none; }
+.mnp-knoepfe { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.mnp-hinweis { margin-top:14px; font-size:0.8rem; color:var(--muted); line-height:1.5; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.6rem 0.8rem; }
+.mnp-ergebnis { border-radius:14px; padding:0.9rem; text-align:center; margin:4px 0 12px; border:2px solid var(--good); background:var(--good-bg); }
+.mnp-ergebnis.nein { border-color:var(--bad); background:var(--bad-bg); }
+.mnp-ergebnis .mnp-gross { font-size:1.35rem; font-weight:800; color:var(--good); }
+.mnp-ergebnis.nein .mnp-gross { color:var(--bad); }
+.mnp-liste { margin-top:10px; }
+.mnp-zeile { border-top:1px solid var(--line); padding:9px 0; font-size:0.86rem; color:var(--ink); line-height:1.45; }
+.mnp-zeile .mnp-art { font-size:0.72rem; font-weight:700; color:var(--muted); }
+.mnp-zeile .mnp-loes { color:var(--muted); margin-top:2px; }
+.mnp-tag { font-size:0.68rem; font-weight:800; padding:1px 7px; border-radius:99px; background:var(--accent-amber-soft); color:var(--ink); margin-left:6px; white-space:nowrap; }
+/* .finish-box i macht Zeichen 2,5rem gross und zum Block - fuer den
+   grossen Status oben gedacht. Im eigenen Kasten soll der Knopf aussehen
+   wie jeder andere. */
+.mnp-angebot .btn i { font-size:inherit; display:inline; margin:0 6px 0 0; }
+.mnp-klknopf { font-size:0.78rem !important; padding:0.3rem 0.7rem !important; min-height:30px; }
+.mnp-klknopf i { font-size:inherit !important; display:inline !important; margin:0 5px 0 0 !important; }
+.mnp-angebot { margin-top:1rem; background:var(--warn-bg); border:2px solid var(--warn); border-radius:12px; padding:0.7rem 0.9rem; font-size:0.9rem; text-align:center; color:var(--ink); }
+body.dark .mnp-ton { background:#12354c; border-color:var(--line); }
+body.dark .mnp-blase, body.dark .mnp-hinweis { background:#12354c; border-color:var(--line); }
+body.dark .mnp-blase b, body.dark .mnp-warum summary { color:var(--ink); }
+body.dark .mnp-opt { background:#12354c; border-color:var(--line); color:var(--ink); }
+body.dark .mnp-frage { background:transparent; border-color:var(--line); }
+</style>
+<script id="muendlicheNachpruefung">
+// ================================================================
+//  MUENDLICHE NACHPRUEFUNG UEBEN                        (25.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar am 25.09.2026: "Ja, bau mal den Prototyp fuer Betrieb und
+//  Vorschriften erst Mal fuer den Einstieg in die Klasse N".
+//
+//  WANN ES SIE GIBT. Amtsblattverfuegung 29/2024: "Sofern lediglich in
+//  einem Pruefungsteil die erforderliche Mindestpunktzahl nicht erreicht
+//  wurde, jedoch mindestens 17 der erreichbaren 25 Punkte erreicht
+//  wurden, kann der Bewerber in diesem Pruefungsteil muendlich
+//  nachgeprueft werden." Entscheiden tut die oder der Vorsitzende. WIE
+//  sie ablaeuft, steht nirgends: keine Fragenzahl, keine Grenze.
+//
+//  WIE DIETMAR SIE SICH VORSTELLT - freundlich, und:
+//    "wenn man zum Beispiel ein Wort ueberlesen hat, zum Beispiel, was
+//     darf ein Funkamateur nicht, ... dass man da explizit dann nochmal
+//     auf diese eine Frage genau angeht und bei anderen Themen ... wird
+//     auch mal quer gefragt, ja, was bedeutet QRZ, QSO, QRM, QRN oder
+//     auch Landeskenner von anderen Laendern"
+//
+//  DER ABLAUF HIER:
+//   1. Begruessung mit der Punktzahl aus dem Simulator.
+//   2. Bis zu zwei Fragen "noch einmal genau hingeschaut": falsch
+//      beantwortete Fragen des Teils, bevorzugt mit "nicht", "kein",
+//      "nur" (das Wort wird markiert) oder solche, die beim Ueben schon
+//      sassen. Hier wird wieder angekreuzt. Was man im Bogen angekreuzt
+//      hatte, steht NICHT dabei - das erfaehrt man in der echten
+//      Pruefung auch nicht.
+//   3. Querfragen ohne Antwortvorgaben, wie am Tisch. Man antwortet
+//      laut, deckt auf und sagt selbst, ob es gestimmt hat - eine
+//      Spracherkennung gibt es bewusst nicht. Zwei davon aus den Themen
+//      der eigenen Fehler, der Rest quer durch den Teil. Ein Tipp des
+//      Pruefers ist erlaubt und zaehlt trotzdem.
+//   4. Ergebnis nach einer UEBUNGSREGEL: 4 von 6. Die echte Pruefung hat
+//      keine solche Zahl - das steht auch so im Fenster.
+//
+//  DER PRUEFER IST KEINE BEHOERDE: kein Logo, kein "wir von der
+//  Bundesnetzagentur", in der Kopfzeile steht "Uebung". Er spricht mit
+//  einer ANDEREN Piper-Stimme als der eigenen Vorlesestimme (Thorsten
+//  <-> Kerstin), damit man hoert, wer redet. Alles Gesprochene steht
+//  auch als Text da; fehlt die Sprachausgabe, geht es schriftlich
+//  weiter, ohne Fehlerfenster.
+//
+//  DIE ANTWORTEN KOMMEN AUS DEM KATALOG. Jede Querfrage zeigt auf eine
+//  Katalognummer, und aufgedeckt wird die richtige Antwort so, wie sie
+//  in fragen.json steht. Formuliert ist hier nur die Frage - so, wie
+//  ein Pruefer sie am Tisch stellen wuerde - und der Tipp. Der Tipp
+//  darf die Antwort nicht verraten; die Kniffe aus erklaerungen.json
+//  tun das oft, deshalb stehen sie erst NACH dem Aufdecken unter
+//  "Warum?".
+//
+//  ES WIRD NICHTS GESPEICHERT. Fehlerliste, Lernstand und Verlauf
+//  bleiben unberuehrt.
+//
+//  Eingebaut in Index.html statt als eigene Datei: So braucht es keinen
+//  Eintrag in der Liste der erlaubten Dateien des Servers, im
+//  installer.iss oder in pakete_bauen.sh.
+// ================================================================
+(function(){
+'use strict';
+
+const REGEL = { fragen: 6, noetig: 4, nochmal: 2 };
+
+// Querfragen je Teil: [Katalognummer, Frage des Pruefers, Tipp, gesprochen]
+// Was in eckigen Klammern steht, wird buchstabiert gesprochen - "[OE]"
+// wird zu "O E". Piper laese "OK" sonst als "okay" und "JA" als "ja",
+// und der Server macht aus "0 A" "null Ampere". Ziffern darin werden
+// deshalb als Wort gesprochen. Die vierte Angabe ersetzt den
+// gesprochenen Text ganz, wo die Klammern nicht reichen (Uhrzeiten).
+const QUER = {
+  betrieb: [
+    ['BA108', 'Buchstabieren Sie mir bitte das Rufzeichen [DN9STV] – mit dem internationalen Buchstabieralphabet.', 'Nicht das deutsche Alphabet mit Dora und Nordpol, sondern das internationale, wie es auch der Flugfunk benutzt.'],
+    ['BA107', 'Wie buchstabieren Sie [DN9RO/p]?', 'Der Schrägstrich hat im Funk ein eigenes englisches Wort, und das p wird als ganzes Wort gesprochen.'],
+    ['BA110', 'Buchstabieren Sie bitte [IG9/DL4HR].', 'Vorn steht der Kenner des Gastlandes, dann der Schrägstrich, dann das deutsche Rufzeichen.'],
+    ['BB102', 'Was bedeutet [CQ]?', 'Wer so ruft, meint niemanden Bestimmten.'],
+    ['BB103', 'Was bedeutet [DX]?', 'Wer „[CQ] [DX]“ ruft, möchte nicht mit dem Nachbarort sprechen.'],
+    ['BB106', 'Was bedeuten [TX], [RX] und [TRX] – in dieser Reihenfolge?', 'Denken Sie an die englischen Wörter transmit und receive.'],
+    ['BB107', 'Wofür steht [CW]?', 'Zwei englische Wörter – gemeint ist die Art, wie in der Telegrafie gesendet wird.'],
+    ['BB109', 'In der Telegrafie steht am Ende eines Durchgangs ein [K]. Was bedeutet das?', 'Danach schaltet man selbst auf Empfang.'],
+    ['BB201', 'Was bedeuten die Q-Gruppen [QRM], [QRN] und [QSB] – das letzte mit Fragezeichen?', 'Zwei davon sind Störungen: Die eine machen Menschen, die andere macht die Natur.'],
+    ['BB202', 'Was bedeuten [QRO], [QSO] und [QRX] – alle drei mit Fragezeichen?', 'Alle drei sind Fragen. Bei [QRO] denken Sie an „oben“.'],
+    ['BB203', 'Was bedeuten [QRT], [QRZ] mit Fragezeichen und [QSL] mit Fragezeichen?', '[QRT] hört man, wenn jemand für heute Schluss macht.'],
+    ['BB204', 'Was bedeuten [QRV], [QRM] mit Fragezeichen und [QTH]?', 'Bei [QRV] denken Sie an „vorbereitet“.'],
+    ['BB205', 'Ihre Gegenstation gibt „[PSE] [QRP]“. Was tun Sie?', 'P wie piano – leise spielen.'],
+    ['BB206', 'Was tun Sie, wenn Sie „[PSE] [QSY]“ aufnehmen?', 'Es geht nicht um die Leistung, sondern um den Platz auf der Skala.'],
+    ['BC101', 'Wie heißt der Frequenzbereich, in dem das 10-m-Band liegt?', '28 bis 29,7 Megahertz – das liegt noch unter 30 Megahertz.'],
+    ['BC102', 'Wie heißt der Frequenzbereich, in dem das 2-m-Band liegt?', 'Das 2-m-Band liegt bei 144 bis 146 Megahertz, also zwischen 30 und 300.'],
+    ['BC103', 'Wie heißt der Frequenzbereich, in dem das 70-cm-Band liegt?', '430 bis 440 Megahertz – das ist schon über 300 Megahertz.'],
+    ['BC201', 'Wie verbindlich sind die Bandpläne der [IARU]?', 'Die [IARU] ist ein Verband der Funkamateure, keine Behörde.'],
+    ['BC202', 'Welches Seitenband nimmt man bei SSB im 80-m-Band üblicherweise?', 'Unterhalb von 10 Megahertz ist es das eine, darüber das andere.'],
+    ['BC204', 'Wo in den Amateurfunkbändern empfiehlt der Bandplan der [IARU] die Morsetelegrafie?', 'Im 2-m-Band empfiehlt der Bandplan bei 144,075 Megahertz Telegrafie – und das Band beginnt bei 144.'],
+    ['BC205', 'Auf welcher Frequenz ruft man im 2-m-Band in FM allgemein an – nach dem Bandplan der [IARU]?', 'Sie liegt in der oberen Hälfte des Bandes, über 145 Megahertz.'],
+    ['BC206', 'Auf welcher Frequenz ruft man im 70-cm-Band in FM allgemein an?', 'Hinter dem Komma steht dasselbe wie beim Anruf im 2-m-Band.'],
+    ['BD101', 'Sie hören die Station [DA0ABC]. Was für eine Station ist das?', 'Achten Sie auf die Ziffer nach dem Präfix.'],
+    ['BD104', 'Rufzeichen, die mit [DL1] bis [DL9] beginnen – welche Klasse ist das?', 'Es ist die höchste Klasse.'],
+    ['BD105', 'Sie hören eine Station, deren Rufzeichen mit [DN9] beginnt. Was für ein Rufzeichen ist das?', 'Es ist genau die Klasse, für die Sie heute hier sitzen.'],
+    ['BD106', 'Rufzeichen, die mit [DO1] bis [DO9] beginnen – welche Klasse ist das?', 'Es ist die Klasse zwischen N und A.'],
+    ['BD107', 'Sie hören [DP0GVN]. Was für eine Station ist das?', 'Das Rufzeichen gehört zur deutschen Forschungsstation Neumayer in der Antarktis.'],
+    ['BD201', 'Was bedeutet der Zusatz [/am]?', 'Das a kommt vom englischen aeronautical.'],
+    ['BD203', 'Was kann der Zusatz [/m] bedeuten?', 'm wie mobil – also unterwegs.'],
+    ['BD205', 'Sie hören [DC4LW/mm]. Was sagt Ihnen das über den Betriebsort?', 'Das zweite m steht für maritim.'],
+    ['BD206', 'Was bedeutet der Zusatz [/p] hinter einem Rufzeichen?', 'p wie portabel.'],
+    ['BD208', 'Mit welchem Zusatz kennzeichnet man Remote-Betrieb?', 'Der Zusatz kommt direkt vom englischen Wort.'],
+    ['BD209', '[DL1PZ] macht Ausbildungsfunkbetrieb im Sprechfunk. Welches Rufzeichen verwendet der Auszubildende?', 'Im Sprechfunk wird der Zusatz als ganzes Wort gesprochen.'],
+    ['BD303', 'Sie hören Stationen mit [OE], [ON] und [OK]. Aus welchen Ländern kommen sie – der Reihe nach?', 'Alle drei Länder grenzen an Deutschland.'],
+    ['BD304', '[OE], [PA] und [SM] – welche Länder sind das?', 'Eines liegt im Süden, eines an der Nordsee, eines in Skandinavien.'],
+    ['BD305', '[F], [PA] und [SP] – welche Länder sind das?', 'Alle drei sind Nachbarländer Deutschlands.'],
+    ['BD306', '[SM], [SP] und [ZS] – welche Länder sind das?', '[ZS] liegt auf der Südhalbkugel, die anderen beiden an der Ostsee.'],
+    ['BD307', '[4X], [F] und [OZ] – welche Länder oder Gebiete sind das?', '[OZ] ist ein nördlicher Nachbar Deutschlands.'],
+    ['BD309', '[VE], [VK] und [PY] – welche Länder sind das?', 'Drei große Länder auf drei verschiedenen Kontinenten.'],
+    ['BD310', 'Andersherum: Welche Landeskenner haben die Schweiz, Spanien und Belgien?', 'Im Kenner der Schweiz steckt eine Ziffer.'],
+    ['BD311', 'Welche Landeskenner haben Spanien, Luxemburg und Polen?', 'Der Kenner von Luxemburg fängt mit L an.'],
+    ['BD312', 'Welche Landeskenner haben die USA, Neuseeland und Argentinien?', 'Für die USA reicht ein einziger Buchstabe.'],
+    ['BD313', 'Welche Landeskenner haben China, Kanada und Australien?', 'Kanada und Australien beginnen beide mit V.'],
+    ['BD314', 'Nennen Sie mir ein paar Landeskenner von Ländern, die an Deutschland grenzen.', 'Gehen Sie einmal im Kreis um Deutschland: Frankreich, Schweiz, Dänemark, Polen …'],
+    ['BD317', 'Welche Landeskenner aus Südamerika kennen Sie?', 'Denken Sie an Brasilien, Chile und Argentinien.'],
+    ['BD318', 'Welche Landeskenner aus Asien kennen Sie?', 'Denken Sie an China, Japan und Indien.'],
+    ['BE102', 'Jemand ruft in Telefonie [CQ]. Wie antworten Sie?', 'Zuerst kommt der, der gerufen hat – dann Sie.'],
+    ['BE103', 'Ihr Rufzeichen ist [DH7RW]. Sie hören nur „… 7 Romeo Whiskey“. Wie reagieren Sie?', 'Vielleicht waren Sie gemeint – sicher ist es aber nicht.'],
+    ['BE105', 'Sie möchten im 10-m-Band [CQ] rufen und finden eine Frequenz, auf der Sie nichts hören. Wie gehen Sie vor?', 'Nicht jede Station, die die Frequenz benutzt, können Sie auch hören.'],
+    ['BE110', 'Sie hören [4U1ITU] rufen: „[CQ] [VK/ZL]“. Sollten Sie antworten, wenn Sie gern eine Verbindung hätten?', 'Hören Sie genau hin, wen die Station ausdrücklich ruft.'],
+    ['BE111', 'Was ist der Maidenhead-Locator?', 'Er hat noch zwei andere Namen: [QTH]-Locator und Standortkenner.'],
+    ['BE113', '[N4EAX] ruft in Telegrafie „[CQ] [DL] [CQ] [DL]“. Was möchte die Station?', '[DL] ist ein Landeskenner.'],
+    ['BE202', 'Was bedeuten die Buchstaben [RST] beim Rapport?', 'Die drei Buchstaben stammen aus dem Englischen.'],
+    ['BE203', 'In welchen Stufen werden Lesbarkeit, Signalstärke und Ton nach dem [RST]-System beurteilt?', 'Der beste Rapport in Telefonie lautet 59.'],
+    ['BE208', 'Sie hören Ihre Gegenstation in SSB einwandfrei, das S-Meter zeigt S9. Welchen Rapport geben Sie?', 'Einwandfrei lesbar ist die höchste Stufe der Lesbarkeit.'],
+    ['BE302', 'Warum sind die Verbindungen in einem Contest so kurz?', 'Bei einem Wettbewerb zählt jede einzelne Verbindung.'],
+    ['BE305', 'Was ist ein Pile-up?', 'Pile heißt auf Englisch Stapel oder Haufen.'],
+    ['BE308', 'Was ist Split-Verkehr?', 'Split heißt teilen.'],
+    ['BE312', 'Was ist eine [DX]-Pedition?', 'Das Wort steckt schon im Namen: [DX] und Expedition.'],
+    ['BE313', 'Was ist eine Fuchsjagd?', 'Die englische Abkürzung lautet [ARDF]: Amateur Radio Direction Finding.'],
+    ['BE401', 'Ein Relais hat eine Eingabe- und eine Ausgabefrequenz. Was heißt das?', 'Überlegen Sie, was das Relais mit Ihrem Signal macht.'],
+    ['BE402', 'Wo liegt bei deutschen 2-m-Relais die Eingabefrequenz?', 'Beim 70-cm-Band sind es 7,6 Megahertz – beim 2-m-Band deutlich weniger.'],
+    ['BE404', 'Wie erleichtern Sie es anderen, sich in eine laufende Funkrunde auf einem Relais einzumelden?', 'Wer dazukommen will, braucht eine Lücke.'],
+    ['BE408', 'Wie beurteilen Sie eine Verbindung, die über ein Relais läuft?', 'Überlegen Sie, wessen Signal Ihr S-Meter eigentlich misst.'],
+    ['BE409', 'Wozu sind Amateurfunkbaken häufig da?', 'Eine Bake sendet automatisch immer dasselbe.'],
+    ['BE411', 'Was bedeutet Uplink beim Satellitenfunk?', 'Up heißt nach oben.'],
+    ['BF101', 'Wie heißen die internationalen Notzeichen außerhalb des Amateurfunks?', 'Eines stammt aus dem Sprechfunk, eines aus der Telegrafie.'],
+    ['BF102', 'Dürfen Sie im Notfall [SOS] oder Mayday im Amateurfunk benutzen?', 'Diese Zeichen gehören dem See- und dem Flugfunk.'],
+    ['BF104', 'Sie hören eine Notmeldung. Was tun Sie als Erstes?', 'Bevor Sie helfen können, müssen Sie wissen, was los ist.'],
+    ['BG101', 'Was ist ein Logbuch?', 'Eine Pflicht ist es nur in besonderen Fällen.'],
+    ['BG104', 'Was ist eine [QSL]-Karte?', 'Man tauscht sie nach einer Verbindung aus, per Post oder elektronisch.'],
+    ['BG106', 'In welcher Zeit tragen Sie die Uhrzeit auf der [QSL]-Karte ein?', 'Ihre Funkpartner sitzen in anderen Zeitzonen.'],
+    ['BG107', 'Ihre Verbindung war um 15:30 Uhr MEZ. Welche Uhrzeit schreiben Sie auf die [QSL]-Karte?', 'Im Winter ist die mitteleuropäische Zeit der Weltzeit eine Stunde voraus.',
+      'Ihre Verbindung war um fünfzehn Uhr dreißig mitteleuropäischer Zeit. Welche Uhrzeit schreiben Sie auf die Q S L Karte?'],
+    ['BG108', 'Ihre Verbindung war um 13:30 Uhr MESZ. Welche Uhrzeit schreiben Sie auf die [QSL]-Karte?', 'Im Sommer sind es zwei Stunden Unterschied.',
+      'Ihre Verbindung war um dreizehn Uhr dreißig mitteleuropäischer Sommerzeit. Welche Uhrzeit schreiben Sie auf die Q S L Karte?']
+  ],
+  vorschriften: [
+    ['VA101', 'In welchem internationalen Regelwerk ist der Amateurfunkdienst definiert?', 'Es ist das Regelwerk der Internationalen Fernmeldeunion.'],
+    ['VA402', 'In wie viele Regionen ist die Welt für die Zuweisung der Frequenzen eingeteilt?', 'Ganz Amerika bildet eine davon.'],
+    ['VA403', 'Zu welcher Region nach den Radio Regulations gehört Deutschland?', 'Europa und Afrika liegen in derselben Region.'],
+    ['VA404', 'Zu welcher Region nach den Radio Regulations gehört Kanada?', 'Ganz Amerika ist eine Region für sich.'],
+    ['VA407', 'Wo kann man die Bedeutung der Q-Gruppen nachschlagen?', 'Die Q-Gruppen gelten international – also steht es in einem internationalen Regelwerk.'],
+    ['VB102', 'Was ist [HAREC]?', 'Die Buchstaben stehen für Harmonized Amateur Radio Examination Certificate.'],
+    ['VB105', 'Dürfen Sie mit der Klasse N auch in anderen CEPT-Ländern funken?', 'Überlegen Sie, für welche Klassen es eine CEPT-Empfehlung gibt.'],
+    ['VB109', 'Wie lange darf ein Funkamateur nach der CEPT-Regelung je Aufenthalt im Ausland funken?', 'Gedacht ist das für eine Reise, nicht für einen Umzug.'],
+    ['VB110', 'Ein Funkamateur aus einem CEPT-Land funkt vorübergehend in Deutschland. Was stellt er seinem Rufzeichen voran?', 'Es ist ein deutscher Landeskenner mit Schrägstrich.'],
+    ['VB111', 'Ein Funkamateur funkt in einem Land, das die CEPT-Empfehlungen umgesetzt hat. Welche Regeln muss er dort beachten?', 'Es sind zwei Dinge zugleich.'],
+    ['VC101', 'Welches Gesetz regelt in Deutschland den Amateurfunk?', 'Abgekürzt hat es vier Buchstaben: [AFuG].'],
+    ['VC104', 'Welche Behörde ist in Deutschland für den Amateurfunk zuständig?', 'Dieselbe Behörde teilt auch die Rufzeichen zu.'],
+    ['VC106', 'Sie haben die Prüfung bestanden. Was brauchen Sie noch, bevor Sie eine Amateurfunkstelle betreiben dürfen?', 'Das Zeugnis allein reicht dafür nicht.'],
+    ['VC107', 'Dürfen Sie Ihre Zulassung für eine Weile einem Freund überlassen?', 'Denken Sie an einen Führerschein.'],
+    ['VC108', 'Gibt es für die Amateurfunkzulassung ein Mindestalter?', 'Entscheidend ist, ob man die Prüfung besteht.'],
+    ['VC111', 'Mit welchen Funkstellen dürfen Sie Funkverkehr abwickeln?', 'Mit dem CB-Funk zum Beispiel nicht.'],
+    ['VC112', 'Dürfen Sie Nachrichten für andere übermitteln, die mit dem Amateurfunk nichts zu tun haben?', 'Normalerweise nicht – es gibt aber eine Ausnahme.'],
+    ['VC114', 'Dürfen Sie Ihre Amateurfunkstelle zu gewerblichen Zwecken betreiben, etwa für Ihre Firma?', 'Amateur heißt: aus Liebhaberei.'],
+    ['VC116', 'Welche personengebundenen Rufzeichen dürfen Sie benutzen?', 'Ausdenken kann man sich keines.'],
+    ['VC123', 'Was droht einem Funkamateur, der fortgesetzt gegen AFuG oder AFuV verstößt?', 'Es ist die härteste Folge, die es gibt.'],
+    ['VC125', 'Was droht einem Funkamateur, der seine Station ordnungswidrig betreibt?', 'Ordnungswidrigkeiten kennt man vom Falschparken.'],
+    ['VD102', 'Brauchen Sie eine Zulassung, um Amateurfunk nur zu empfangen?', 'Zuhören ist etwas anderes als Senden.'],
+    ['VD103', 'Im Amateurfunk gilt offene Sprache. Was ist deshalb unzulässig?', 'Jeder soll mithören und verstehen können.'],
+    ['VD105', 'Dürfen Sie im Amateurfunk MAYDAY, PAN PAN oder SÉCURITÉ aussenden?', 'Diese Zeichen gehören anderen Funkdiensten.'],
+    ['VD106', 'Welche technischen Anforderungen stellt die AFuV an Ihre Station?', 'Die Verordnung nennt dafür keine Zahlen, sondern einen Maßstab.'],
+    ['VD109', 'Wann müssen Sie Angaben über Ihren Funkbetrieb schriftlich festhalten, zum Beispiel als Logbuch?', 'Eine allgemeine Pflicht gibt es nicht.'],
+    ['VD110', 'Was sagt die AFuV über unerwünschte Aussendungen?', 'Die Verordnung nennt keine Dezibelzahl.'],
+    ['VD112', 'Wann dürfen Sie einen unmodulierten Träger aussenden?', 'Als Dauerträger jedenfalls nicht.'],
+    ['VD113', 'Sie ziehen um. Bis wann müssen Sie der Bundesnetzagentur die neue Anschrift mitteilen?', 'Nicht vorher – und auch nicht erst Monate später.'],
+    ['VD114', 'Was steht über Sie in der Rufzeichenliste der Bundesnetzagentur?', 'Einem Teil davon kann man widersprechen.'],
+    ['VD117', 'Was ist eine Klubstation?', 'Es geht um eine Gruppe – und die Mindestzahl ist klein.'],
+    ['VD203', 'Wie ist ein deutsches personengebundenes Rufzeichen aufgebaut?', 'Nehmen Sie [DN9STV] als Beispiel.'],
+    ['VD205', 'Wann müssen Sie Ihr Rufzeichen nennen?', 'Drei Gelegenheiten – eine davon in festen Abständen.'],
+    ['VD206', 'Welches Buchstabieralphabet benutzen Sie, wenn Sie Ihr Rufzeichen nennen?', 'Nicht das deutsche mit Anton, Berta, Cäsar.'],
+    ['VD207', 'Woran erkennt man eine Amateurfunkstelle im Funkbetrieb?', 'Nicht an der Frequenz und nicht an der Sendeart.'],
+    ['VD208', 'Haben Sie Anspruch auf ein bestimmtes Rufzeichen?', 'Wünschen darf man sich eines.'],
+    ['VD303', 'Dürfen Nicht-Funkamateure am Ausbildungsfunkbetrieb teilnehmen?', 'Allein senden dürfen sie jedenfalls nicht.'],
+    ['VD306', 'Wer benutzt beim Ausbildungsfunkbetrieb den Zusatz „/T“ oder „/Trainee“?', 'Der Zusatz zeigt, wer gerade am Mikrofon lernt.',
+      'Wer benutzt beim Ausbildungsfunkbetrieb den Zusatz Schrägstrich T oder Schrägstrich Trainee?'],
+    ['VD503', 'Wie viel Leistung darf ein Relais oberhalb von 30 MHz abstrahlen?', 'Gemessen wird als [ERP], also bezogen auf den Dipol.'],
+    ['VD603', 'Wer darf eine Remote-Station betreiben?', 'Nur eine einzige Klasse.'],
+    ['VD703', 'Dürfen Sie mit Ihrem Amateurfunkgerät auch im CB-Funk senden?', 'Der CB-Funk ist ein eigener Funkdienst mit eigenen Regeln.'],
+    ['VD717', 'Von wo bis wo reicht das 10-m-Band in Deutschland?', 'Es beginnt bei einer glatten Zahl und endet knapp unter 30 Megahertz.'],
+    ['VD719', 'Von wo bis wo reicht das 2-m-Band in Deutschland?', 'In anderen Teilen der Welt reicht es weiter – bei uns nicht.'],
+    ['VD720', 'Von wo bis wo reicht das 70-cm-Band in Deutschland?', 'Es ist zehn Megahertz breit.'],
+    ['VD723', 'Auf welchen Frequenzbereichen darf die Klasse N senden?', 'Drei Bänder: 10 Meter, 2 Meter und 70 Zentimeter.'],
+    ['VD724', 'Wie viel EIRP darf die Klasse N auf 2 m und 70 cm abstrahlen?', 'Eine runde Zahl – und der Gewinn der Antenne zählt mit.'],
+    ['VD743', 'Wie viel ERP darf die Klasse N im 10-m-Band abstrahlen?', 'Die Zahl ist dieselbe wie auf 2 m und 70 cm – nur der Bezug ist ein anderer.'],
+    ['VE102', 'Braucht jede Frequenznutzung eine Frequenzzuteilung?', 'Frequenzen sind knapp und werden verteilt.'],
+    ['VE201', 'Dürfen Sie mit Ihrer Station Gespräche abhören, die nicht öffentlich sind?', 'Das ist mehr als eine Ordnungswidrigkeit.'],
+    ['VE203', 'Sie empfangen zufällig eine Nachricht, die nicht für Funkamateure bestimmt ist. Was tun Sie damit?', 'Stichwort Fernmeldegeheimnis.'],
+    ['VE301', 'Ihr Nachbar sagt, sein Radio ist gestört, wenn Sie senden. Was können Sie sofort tun, noch bevor die Bundesnetzagentur eingeschaltet wird?', 'Die einfachste Maßnahme, die sofort wirkt.'],
+    ['VE302', 'Die Störung beim Nachbarn lässt sich mit Ihren Mitteln nicht beseitigen. Was empfehlen Sie ihm?', 'Es gibt eine Behörde, die solche Störungen prüft.'],
+    ['VE307', 'Ihr Empfang ist auf allen Bändern gestört. Was tun Sie als Erstes?', 'Die Ursache liegt oft näher, als man denkt.'],
+    ['VE501', 'Was bedeutet [EMVU]?', '[EMV] kennen Sie – was kommt durch das U dazu?'],
+    ['VE502', 'Wer ist für die elektromagnetische Umweltverträglichkeit verantwortlich?', 'Das Stichwort heißt Eigenverantwortung.'],
+    ['VE508', 'Wer muss seine Station nach der [BEMFV] bei der Bundesnetzagentur anzeigen?', 'Die Grenze liegt bei derselben Zahl wie die Leistung der Klasse N.'],
+    ['VE701', 'Welche regelmäßigen Beiträge zahlen Sie als Funkamateur?', 'Sie werden jedes Jahr fällig.'],
+    ['VE705', 'Was brauchen Sie, um an Bord eines Flugzeugs zu funken?', 'An Bord hat einer das Sagen.'],
+    ['VE707', 'Wer haftet, wenn Ihre Antennenanlage einem anderen Schaden zufügt?', 'Die Bundesnetzagentur ist es nicht.']
+  ]
+};
+
+const TEILNAME = { betrieb: 'Betrieb', vorschriften: 'Vorschriften' };
+const QUER_WORT = { betrieb: 'quer durch den Betrieb', vorschriften: 'quer durch die Vorschriften' };
+const TEIL_ICON = { betrieb: '📡', vorschriften: '⚖️' };
+// Was ein Pruefer fast sicher fragt - mindestens eine Querfrage kommt
+// aus diesen Themen (erste drei Zeichen der Katalognummer).
+const TYPISCH = { betrieb: ['BB2', 'BD3'], vorschriften: ['VD2', 'VD7'] };
+
+let mnp = null;          // der laufende Durchgang
+let tonToken = 0;        // jede neue Ansage macht aeltere ungueltig
+let tonFertig = null;    // beendet die gerade laufende Ansage
+let wellenToken = 0;     // welche Ansage die Anzeige "spricht" gerade an hat
+let prueferStimme = null;
+let stimmeFehlt = false;
+
+// ---------------- kleine Helfer ----------------
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function mischen(a){
+  for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function eins(liste){ return liste[Math.floor(Math.random() * liste.length)]; }
+function warte(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+// Funker sagen "zwo" - das haelt die Zwei von der Drei auseinander.
+const ZIFFERN = ['null','eins','zwo','drei','vier','fünf','sechs','sieben','acht','neun'];
+function buchstabiert(s){
+  return String(s).split('').map(c => {
+    if(/[0-9]/.test(c)) return ZIFFERN[+c];
+    if(c === '/') return 'Schrägstrich';
+    if(c === '-' || c === ' ') return '';
+    return c.toUpperCase();
+  }).filter(Boolean).join(' ');
+}
+function anzeigeText(t){ return String(t == null ? '' : t).replace(/\[([^\]]+)\]/g, '$1'); }
+function anzeigeHtml(t){ return esc(anzeigeText(t)); }
+function sprechText(t){ return String(t == null ? '' : t).replace(/\[([^\]]+)\]/g, (m, x) => buchstabiert(x)); }
+
+function katalog(){
+  const m = {};
+  try{ (window.questionBank || []).forEach(q => { if(q && q.id) m[q.id] = q; }); }catch(e){}
+  return m;
+}
+function richtigeAntwort(q){
+  const o = (q && q.options || []).find(o => o && o.correct);
+  return o ? String(o.text || '').trim() : '';
+}
+// Endet die Katalogfrage mit "...", ist die Antwort nur das Satzende.
+// Dann wird der Satzanfang davorgesetzt, sonst liest sich
+// "voruebergehend ortsfest betrieben wird" ohne Zusammenhang.
+function antwortSatz(q){
+  const a = richtigeAntwort(q);
+  const t = String(q && q.text || '').replace(/\s+/g, ' ').trim();
+  if(!/(\.\.\.|…)\s*$/.test(t)) return a;
+  let stamm = t.replace(/(\.\.\.|…)\s*$/, '').trim();
+  const i = stamm.lastIndexOf('?');
+  if(i >= 0) stamm = stamm.slice(i + 1).trim();
+  return stamm ? stamm + ' ' + a : a;
+}
+function ohnePunkt(s){ return String(s || '').trim().replace(/[.!?]+$/, ''); }
+function kniff(id){
+  try{ const e = (window.erklaerMap || {})[id]; return e && e.kniff ? String(e.kniff) : ''; }catch(e){ return ''; }
+}
+function hatBild(q){
+  try{
+    if((q.options || []).some(o => o && o.image)) return true;
+    if(typeof existingImagesSet !== 'undefined' && existingImagesSet &&
+       (existingImagesSet.has(q.id + '_q.svg') || existingImagesSet.has(q.id + '_q.png') || existingImagesSet.has(q.id + '.svg'))) return true;
+  }catch(e){}
+  return false;
+}
+// Das Wort, an dem man sich verliest. Eine Verneinung wiegt schwerer
+// als "nur": "Was darf ein Funkamateur NICHT" ist der Fall, den Dietmar
+// vor Augen hatte. "Nicht-Funkamateure" zaehlt nicht - der Bindestrich
+// gehoert zum Wort.
+const RAND = '[^A-Za-z0-9ÄÖÜäöüß-]';
+const WORT_STARK = new RegExp('(^|' + RAND + ')(nicht|keine[nmrs]?|kein|niemals|nie|unzulässig)(?=$|' + RAND + ')', 'i');
+const WORT_NUR   = new RegExp('(^|' + RAND + ')(ausschließlich|nur)(?=$|' + RAND + ')', 'i');
+// Gesucht wird NUR im Fragesatz. Beim ersten Versuch schlug die Regel bei
+// BF103 an: "... da das Mobiltelefonnetz nicht verfuegbar ist. Wie
+// verhalten Sie sich?" - dort ist "nicht" Teil der Lage, keine Falle,
+// und der Pruefer haette auf das falsche Wort gezeigt. Ein Fragesatz ist
+// einer mit Fragezeichen oder einer, der mit "..." auf die Antwort
+// wartet.
+function saetze(text){ return String(text || '').split(/(?<=[.?!])\s+(?=[A-ZÄÖÜ„"])/); }
+function istFragesatz(s){ return /\?/.test(s) || /(\.\.\.|…)\s*$/.test(s); }
+function schluesselwort(text){
+  const frage = saetze(text).filter(istFragesatz).join(' ');
+  const s = WORT_STARK.exec(frage);
+  if(s) return { wort: s[2], stark: true };
+  const n = WORT_NUR.exec(frage);
+  if(n) return { wort: n[2], stark: false };
+  return null;
+}
+function markiert(text, wort){
+  if(!wort) return esc(text);
+  const re = new RegExp('(^|' + RAND + ')(' + wort + ')(?=$|' + RAND + ')', 'gi');
+  return saetze(text).map(s => istFragesatz(s) ? esc(s).replace(re, '$1<mark class="mnp-mark">$2</mark>') : esc(s)).join(' ');
+}
+function thema(id){ return String(id).slice(0, 3); }
+
+// ---------------- wann das Angebot erscheint ----------------
+// Nur Klasse N, nur ausserhalb des Gruppenraums, und nur so, wie es die
+// Pruefungsordnung vorsieht: GENAU EIN Teil in der Grauzone, alle
+// anderen bestanden. Technik gibt es in diesem Prototyp noch nicht.
+function moeglich(){
+  try{
+    const re = window.realisticExam;
+    if(!re || re.duo) return null;
+    const k = (typeof klasseAktuell === 'function') ? klasseAktuell() : null;
+    if(!k || k.id !== 'n') return null;
+    const res = re.results || {};
+    const teile = Object.keys(res).filter(p => res[p]);
+    if(!teile.length) return null;
+    if(teile.some(p => res[p].status === 'nicht_bestanden')) return null;
+    const grau = teile.filter(p => res[p].status === 'nachpruefung');
+    if(grau.length !== 1 || !QUER[grau[0]]) return null;
+    return grau[0];
+  }catch(e){ return null; }
+}
+window.muendlichMoeglich = moeglich;
+
+// Hinweis und Knopf auf der Auswertung des Simulators.
+window.muendlichAngebotHtml = function(){
+  const teil = moeglich();
+  if(!teil) return '';
+  const r = window.realisticExam.results[teil];
+  const fehlen = 19 - r.correct;
+  return '<div class="mnp-angebot">⚠️ <b>' + esc(TEILNAME[teil]) + ': ' + r.correct + ' von 25</b> – '
+       + (fehlen === 1 ? 'ein Punkt fehlt' : 'zwei Punkte fehlen') + '. In der echten Prüfung kann jetzt eine '
+       + '<b>mündliche Nachprüfung</b> folgen. Die kannst du hier üben.'
+       + '<div style="margin-top:0.6rem;">' + window.muendlichKnopfHtml() + '</div></div>';
+};
+window.muendlichKnopfHtml = function(){
+  if(!moeglich()) return '';
+  return '<button class="btn btn-primary" id="muendlichStartBtn" onclick="muendlichAusPruefung()" '
+       + 'data-tooltip="Ein Prüfer stellt dir sechs Fragen – so, wie es in einer mündlichen Nachprüfung sein könnte">'
+       + '<i class="fas fa-comments"></i> Mündliche Nachprüfung üben</button>';
+};
+// Der Weg ohne vorherigen Simulatorlauf - im Auswahlfenster des Simulators.
+window.muendlichLinkHtml = function(){
+  try{
+    const k = (typeof klasseAktuell === 'function') ? klasseAktuell() : null;
+    if(!k || k.id !== 'n') return '';
+  }catch(e){ return ''; }
+  return '<div class="sub" style="margin-top:0.5rem; font-size:0.8rem;">🗣️ '
+       + '<a href="#" id="muendlichUebenLink" onclick="muendlichOhnePruefung(); return false;" '
+       + 'data-tooltip="Üben, wie eine mündliche Nachprüfung ablaufen könnte – ohne vorher 25 Fragen zu beantworten">'
+       + 'Mündliche Nachprüfung üben</a> – für Betrieb oder Vorschriften, ohne vorher einen ganzen Bogen.</div>';
+};
+
+// ---------------- die Stimme des Pruefers ----------------
+function stumm(){ try{ return localStorage.getItem('amateurfunk_muendlichStumm') === '1'; }catch(e){ return false; } }
+function stummSetzen(an){ try{ localStorage.setItem('amateurfunk_muendlichStumm', an ? '1' : '0'); }catch(e){} }
+function sprecherVon(datei){
+  const m = /^[a-z]{2}_[A-Z]{2}-([^-]+)-/.exec(String(datei || ''));
+  return (m ? m[1] : String(datei || '')).split('_')[0].toLowerCase();
+}
+function guete(datei){ return /-high/.test(datei) ? 3 : /-medium/.test(datei) ? 2 : /-low/.test(datei) ? 1 : 0; }
+// Eine andere Person als die eigene Vorlesestimme - in der besten
+// vorhandenen Qualitaet. Gibt es nur eine Person, spricht eben die.
+async function stimmeWaehlen(){
+  if(prueferStimme !== null) return prueferStimme;
+  let eigene = '';
+  try{ eigene = localStorage.getItem('ttsVoice') || ''; }catch(e){}
+  try{
+    const r = await fetch('/api/tts-voices');
+    const d = await r.json();
+    const liste = (d.voices || []).map(v => v && v.file).filter(Boolean);
+    if(!eigene || (typeof istBrowserStimme === 'function' && istBrowserStimme(eigene))) eigene = d.default || liste[0] || '';
+    const ich = sprecherVon(eigene);
+    const andere = liste.filter(f => sprecherVon(f) !== ich).sort((a, b) => guete(b) - guete(a));
+    prueferStimme = andere[0] || eigene || '';
+  }catch(e){ prueferStimme = eigene || ''; }
+  return prueferStimme;
+}
+function welle(an){
+  const w = document.getElementById('mnpWelle');
+  if(w) w.classList.toggle('an', !!an);
+}
+function verstummen(){
+  tonToken++;
+  if(tonFertig){ try{ tonFertig(); }catch(e){} }
+  tonFertig = null;
+  welle(false);
+}
+async function sprich(text){
+  verstummen();
+  const token = tonToken;
+  if(stumm() || stimmeFehlt || !text) return;
+  // Die eigene Vorlesestimme (Frage, Erklaerung, Knopfansagen) schweigt,
+  // solange der Pruefer redet.
+  try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+  let t = String(text);
+  try{ if(typeof aussprache === 'function') t = aussprache(t); }catch(e){}
+  const stuecke = (typeof ttsInStuecke === 'function') ? ttsInStuecke(t) : [t];
+  const stimme = await stimmeWaehlen();
+  if(token !== tonToken) return;
+  welle(true);
+  wellenToken = token;
+  try{
+    for(const s of stuecke){
+      if(token !== tonToken) return;
+      let res = null;
+      for(let v = 0; ; v++){
+        res = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ text: s, voice: stimme }) });
+        if(res.status !== 429 || v >= 4) break;
+        await warte(800 * (v + 1));
+        if(token !== tonToken) return;
+      }
+      if(token !== tonToken) return;
+      const art = (res && res.headers.get('content-type')) || '';
+      if(!res || !res.ok || !/audio|wav|octet/.test(art)){ stimmeFehltMelden(); return; }
+      const blob = await res.blob();
+      if(token !== tonToken) return;
+      if(blob.size <= 500) continue;
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      try{ if(typeof ttsAudioMerken === 'function') ttsAudioMerken(audio, url); }catch(e){}
+      await new Promise(fertig => {
+        let zu = false;
+        const ende = () => {
+          if(zu) return; zu = true;
+          try{ if(typeof ttsAudioAnhalten === 'function') ttsAudioAnhalten(audio); else { audio.pause(); URL.revokeObjectURL(url); } }catch(e){}
+          fertig();
+        };
+        tonFertig = ende;
+        audio.onended = ende;
+        audio.onerror = ende;
+        // Haelt jemand anderes alles an (Stopp, ttsAllesAnhalten), kommt
+        // nur ein "pause" - ohne das hier wartete die Schleife ewig. Dann
+        // ist die ganze Ansage vorbei, nicht nur dieses Stueck. Das "zu"
+        // zuerst: Das pause-Ereignis aus unserem eigenen Anhalten kommt
+        // spaeter an und darf eine inzwischen NEUE Ansage nicht abwuergen.
+        audio.onpause = () => {
+          if(zu) return;
+          if(!audio.ended) tonToken++;
+          ende();
+        };
+        audio.play().catch(ende);
+      });
+      tonFertig = null;
+    }
+  }catch(e){
+    console.warn('[Muendlich] Sprachausgabe:', e);
+    stimmeFehltMelden();
+  }finally{
+    if(wellenToken === token){ welle(false); wellenToken = 0; }
+  }
+}
+// Keine Stimme: kein Fenster, keine Unterbrechung - der Pruefer spricht
+// dann eben nur schriftlich, und das steht einmal oben im Fenster.
+function stimmeFehltMelden(){
+  if(stimmeFehlt) return;
+  stimmeFehlt = true;
+  welle(false);
+  const h = document.getElementById('mnpStummHinweis');
+  if(h){ h.textContent = 'Die Sprachausgabe antwortet gerade nicht – der Prüfer spricht diesmal nur schriftlich.'; h.style.display = ''; }
+}
+function tonKnopfSetzen(){
+  const b = document.getElementById('mnpTonBtn');
+  if(!b) return;
+  const aus = stumm();
+  b.innerHTML = aus ? '<i class="fas fa-volume-xmark"></i>' : '<i class="fas fa-volume-high"></i>';
+  b.setAttribute('aria-label', aus ? 'Prüfer ist stumm – einschalten' : 'Prüfer spricht – stumm schalten');
+  b.setAttribute('data-tooltip', aus ? 'Der Prüfer ist stumm geschaltet. Klick: wieder sprechen lassen' : 'Der Prüfer spricht. Klick: stumm schalten, nur Text');
+}
+window.muendlichTon = function(){
+  const aus = !stumm();
+  stummSetzen(aus);
+  tonKnopfSetzen();
+  if(aus) verstummen();
+  else if(mnp && mnp.zuletzt) sprich(mnp.zuletzt);
+};
+
+// ---------------- das Fenster ----------------
+function fenster(){
+  let ov = document.getElementById('muendlichModal');
+  if(ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'muendlichModal';
+  ov.className = 'realistic-modal-overlay';
+  ov.innerHTML =
+      '<div class="realistic-modal" role="dialog" aria-modal="true" aria-labelledby="mnpTitel">'
+    +   '<div class="realistic-modal-header">'
+    +     '<h3 id="mnpTitel"><i class="fas fa-comments"></i> Übung: Mündliche Nachprüfung</h3>'
+    +     '<div class="mnp-kopf-rechts">'
+    +       '<button id="mnpTonBtn" class="mnp-ton" onclick="muendlichTon()"></button>'
+    +       '<button class="realistic-modal-close x-zu" onclick="muendlichSchliessen()" aria-label="Schließen">×</button>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="realistic-modal-body" id="mnpBody"></div>'
+    + '</div>';
+  ov.addEventListener('click', e => { if(e.target === ov) muendlichSchliessen(); });
+  document.body.appendChild(ov);
+  return ov;
+}
+// ---------------- Tastatur ----------------
+// Dietmar am 25.09.2026: "Wie antworte ich in der muendlichen Pruefung an
+// unserem Trainer mit Tastatur A, B, C, D, E oder 1, 2, 3, 4 oder
+// muendlich?"
+//
+// Wie ueberall im Trainer: Enter und Leertaste loesen den Knopf aus, der
+// gerade den Fokus hat - der Hauptknopf jedes Schritts bekommt ihn. Die
+// Kurztasten haengen am Schalter "Bedienung per Tastatur" (siehe
+// tastaturBedienung), damit niemand beim Lesen versehentlich antwortet:
+//   1 bis 4 oder A bis D  ankreuzen (bei "noch einmal hingeschaut")
+//   T  Tipp vom Pruefer        W  bitte wiederholen
+//   J  hatte ich richtig       N  hatte ich nicht richtig
+// Die Pfeiltasten werden geschluckt, solange das Fenster offen ist: Ein
+// Handler weiter oben blaettert damit sonst im Fragenbogen dahinter.
+function taste(e){
+  const ov = document.getElementById('muendlichModal');
+  if(!ov || !ov.classList.contains('open')) return;
+  if(e.key === 'Escape'){ e.stopPropagation(); muendlichSchliessen(); return; }
+  if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.stopPropagation(); return; }
+  const z = e.target;
+  if(z && (z.tagName === 'INPUT' || z.tagName === 'TEXTAREA' || z.tagName === 'SELECT' || z.isContentEditable)) return;
+  if(e.ctrlKey || e.altKey || e.metaKey) return;
+  if(!mnp || typeof tastaturBedienung !== 'function' || !tastaturBedienung()) return;
+  const f = mnp.fragen[mnp.pos];
+  if(!f) return;
+  const k = String(e.key || '').toLowerCase();
+  let erledigt = false;
+  if(f.art === 'nochmal' && !mnp.antworten[mnp.pos]){
+    let i = -1;
+    if(k >= '1' && k <= '4') i = parseInt(k, 10) - 1;
+    else if(k.length === 1 && k >= 'a' && k <= 'd') i = k.charCodeAt(0) - 97;
+    if(i >= 0 && i < (f.q.options || []).length){ muendlichWahl(i); erledigt = true; }
+  }
+  if(!erledigt && k === 'w' && !mnp.antworten[mnp.pos]){ muendlichWiederholen(); erledigt = true; }
+  if(!erledigt && f.art === 'quer' && !mnp.antworten[mnp.pos]){
+    const offen = !!document.getElementById('mnpRichtigBtn');
+    if(k === 't' && (!offen || kursleiter())){ muendlichTipp(); erledigt = true; }
+    else if(k === 'j' && offen){ muendlichSelbst(true); erledigt = true; }
+    else if(k === 'n' && offen){ muendlichSelbst(false); erledigt = true; }
+  }
+  if(erledigt){ e.preventDefault(); e.stopPropagation(); }
+}
+// Den Hauptknopf eines Schritts in den Fokus holen - dann tut Enter das
+// Naheliegende. Beim Selbsturteil bewusst NICHT: Ein versehentliches
+// Enter waere dort gleich eine Bewertung.
+function fokus(sel){
+  setTimeout(() => {
+    const el = document.querySelector('#muendlichModal.open ' + sel);
+    if(el) try{ el.focus({ preventScroll: true }); }catch(e){ el.focus(); }
+  }, 30);
+}
+function oeffnen(){
+  const ov = fenster();
+  // Immer als letztes Kind von body - dann liegt es sicher ueber dem
+  // Fenster des Simulators, aus dem es geoeffnet wurde.
+  if(ov !== document.body.lastElementChild) document.body.appendChild(ov);
+  ov.classList.add('open');
+  tonKnopfSetzen();
+  document.addEventListener('keydown', taste, true);
+}
+window.muendlichSchliessen = function(){
+  verstummen();
+  const ov = document.getElementById('muendlichModal');
+  if(ov) ov.classList.remove('open');
+  document.removeEventListener('keydown', taste, true);
+};
+
+function koerper(html){
+  const b = document.getElementById('mnpBody');
+  if(b){ b.innerHTML = html; b.scrollTop = 0; }
+}
+function prueferHtml(innen, tippHtml){
+  return '<div class="mnp-pruefer">'
+       +   '<div class="mnp-bild" aria-hidden="true"><i class="fas fa-user-tie"></i></div>'
+       +   '<div class="mnp-blase-rahmen">'
+       +     '<div class="mnp-name">Prüfer <span class="mnp-welle" id="mnpWelle"><i></i><i></i><i></i></span></div>'
+       +     '<div class="mnp-blase" id="mnpBlase" aria-live="polite">' + innen + '</div>'
+       +     '<div id="mnpTippFeld">' + (tippHtml || '') + '</div>'
+       +   '</div>'
+       + '</div>';
+}
+function fortschrittHtml(){
+  if(!mnp) return '';
+  const punkte = mnp.fragen.map((f, i) => {
+    const a = mnp.antworten[i];
+    const k = a ? (a.ok ? ' ok' : ' nein') : (i === mnp.pos ? ' jetzt' : '');
+    return '<span class="mnp-punkt' + k + '"></span>';
+  }).join('');
+  const f = mnp.fragen[mnp.pos];
+  const art = !f ? '' : f.art === 'nochmal' ? 'Noch einmal genau hingeschaut' : 'Querfrage';
+  return '<div class="mnp-fortschritt"><span class="mnp-punkte">' + punkte + '</span>'
+       + '<span>' + (f ? 'Frage ' + (mnp.pos + 1) + ' von ' + mnp.fragen.length + ' · ' + art : '') + '</span>'
+       + '<span style="margin-left:auto;">' + (mnp.name ? esc(mnp.name) + ' · ' : '') + TEIL_ICON[mnp.teil] + ' ' + TEILNAME[mnp.teil] + '</span></div>'
+       + '<div class="mnp-stumm-hinweis" id="mnpStummHinweis" style="' + (stimmeFehlt ? '' : 'display:none;') + '">'
+       + (stimmeFehlt ? 'Die Sprachausgabe antwortet gerade nicht – der Prüfer spricht diesmal nur schriftlich.' : '') + '</div>';
+}
+
+// ---------------- einen Durchgang zusammenstellen ----------------
+// fehler: [{ q, frueher }] - frueher ist die Nummer der angekreuzten
+// Antwort im Simulator (oder null).
+function durchgangBauen(teil, quelle, punkte, fehler, pruefIds, schonGefragt){
+  const km = katalog();
+  const gefragt = schonGefragt || new Set();
+
+  // 1. Noch einmal hingeschaut
+  let kand = fehler.filter(x => x && x.q && km[x.q.id] && !hatBild(x.q)).map(x => {
+    const w = schluesselwort(x.q.text);
+    let m = null;
+    try{ m = (typeof masteryData !== 'undefined' && masteryData) ? masteryData[x.q.id] : null; }catch(e){}
+    const gekonnt = !!(m && (m.totalCorrect || 0) > 0);
+    return { q: x.q, frueher: x.frueher, wort: w ? w.wort : null, gekonnt,
+             wert: (w ? (w.stark ? 3 : 2) : 0) + (gekonnt ? 2 : 0) + Math.random() };
+  }).sort((a, b) => b.wert - a.wert);
+  const frisch = kand.filter(x => !gefragt.has(x.q.id));
+  if(frisch.length >= REGEL.nochmal) kand = frisch;
+  const nochmal = kand.slice(0, REGEL.nochmal);
+
+  // 2. Querfragen
+  const nNah = 2, nQuer = REGEL.fragen - nochmal.length;
+  const nochmalIds = new Set(nochmal.map(x => x.q.id));
+  let pool = (QUER[teil] || []).filter(e => km[e[0]] && !nochmalIds.has(e[0]));
+  const ohneBogen = pool.filter(e => !pruefIds.has(e[0]) && !gefragt.has(e[0]));
+  if(ohneBogen.length >= nQuer + 4) pool = ohneBogen;
+  pool = mischen(pool.slice());
+  const fehlerThemen = new Set(fehler.map(x => x && x.q ? thema(x.q.id) : ''));
+  const wahl = [], themen = new Set();
+  for(const e of pool){
+    if(wahl.length >= Math.min(nNah, nQuer)) break;
+    if(fehlerThemen.has(thema(e[0])) && !themen.has(thema(e[0]))){ wahl.push({ e, nah: true }); themen.add(thema(e[0])); }
+  }
+  for(const e of pool){
+    if(wahl.length >= nQuer) break;
+    if(!themen.has(thema(e[0]))){ wahl.push({ e, nah: false }); themen.add(thema(e[0])); }
+  }
+  for(const e of pool){
+    if(wahl.length >= nQuer) break;
+    if(!wahl.some(w => w.e === e)) wahl.push({ e, nah: false });
+  }
+  const typ = TYPISCH[teil] || [];
+  if(wahl.length && !wahl.some(w => typ.includes(thema(w.e[0])))){
+    const ersatz = pool.find(e => typ.includes(thema(e[0])) && !wahl.some(w => w.e === e));
+    if(ersatz){
+      let i = wahl.length - 1;
+      for(let j = wahl.length - 1; j >= 0; j--){ if(!wahl[j].nah){ i = j; break; } }
+      wahl[i] = { e: ersatz, nah: false };
+    }
+  }
+  // Die "nahen" zuerst - sie schliessen an das an, was eben falsch war.
+  wahl.sort((a, b) => (b.nah ? 1 : 0) - (a.nah ? 1 : 0));
+
+  const fragen = nochmal.map(x => ({ art: 'nochmal', q: x.q, frueher: x.frueher, wort: x.wort, gekonnt: x.gekonnt }))
+    .concat(wahl.map(w => ({ art: 'quer', id: w.e[0], f: w.e[1], t: w.e[2], s: w.e[3] || null, nah: w.nah, q: km[w.e[0]] })));
+  fragen.forEach(f => gefragt.add(f.q.id));
+  return { teil, quelle, punkte, fehler, pruefIds, gefragt, fragen, pos: -1, antworten: [], zuletzt: '' };
+}
+
+// ---------------- Einstieg ----------------
+window.muendlichAusPruefung = function(){
+  const teil = moeglich();
+  if(!teil) return;
+  const r = window.realisticExam.results[teil];
+  const fehler = (r.questions || [])
+    .filter(q => !(r.progress && r.progress[q.id] && r.progress[q.id].correct))
+    .map(q => ({ q, frueher: (q.userAnswerIndex === null || q.userAnswerIndex === undefined) ? null : q.userAnswerIndex }));
+  const pruefIds = new Set((r.questions || []).map(q => q.id));
+  mnp = durchgangBauen(teil, 'pruefung', r.correct, fehler, pruefIds, null);
+  oeffnen();
+  begruessung();
+};
+
+window.muendlichOhnePruefung = function(){
+  mnp = null;
+  oeffnen();
+  const karte = t => '<div class="realistic-part-card" data-part="' + t + '" onclick="muendlichUebungStarten(\'' + t + '\')" tabindex="0" '
+    + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();muendlichUebungStarten(\'' + t + '\');}">'
+    + '<div class="rpc-icon">' + TEIL_ICON[t] + '</div><div class="rpc-main"><div class="rpc-name">' + TEILNAME[t] + '</div>'
+    + '<div class="rpc-desc">' + (t === 'betrieb' ? 'Q-Gruppen, Landeskenner, Rufzeichen, Bandplan …' : 'AFuG, AFuV, Rufzeichen, Frequenzen und Leistung …') + '</div></div>'
+    + '<div class="rpc-check" style="color:var(--muted);"><i class="fas fa-arrow-right"></i></div></div>';
+  koerper(
+      '<p style="margin:0 0 0.6rem; line-height:1.5;">Fehlen in <b>genau einem</b> Prüfungsteil ein oder zwei Punkte – '
+    + '17 oder 18 von 25 –, kann eine <b>mündliche Nachprüfung</b> folgen. Hier spielst du sie durch, als hättest du 18 Punkte. '
+    + 'Die Fragen zum genauen Hinsehen kommen aus deiner Fehlerliste.</p>'
+    + '<h3 style="margin:0.9rem 0 0.6rem; font-family:var(--font-display); font-size:1.05rem;">Welcher Teil?</h3>'
+    + '<div class="realistic-parts">' + karte('vorschriften') + karte('betrieb') + '</div>'
+    + hinweisHtml());
+};
+
+// Fehler aus dem Lernstand: erst die Fehlerliste, dann was oefter
+// danebenging.
+function fehlerAusLernstand(teil){
+  const km = katalog();
+  let ids = [];
+  try{ if(typeof errorList !== 'undefined' && Array.isArray(errorList)) ids = errorList.slice(); }catch(e){}
+  ids = ids.filter(id => km[id] && km[id].part === teil);
+  try{
+    if(ids.length < REGEL.nochmal && typeof masteryData !== 'undefined' && masteryData){
+      const mehr = Object.keys(masteryData)
+        .filter(id => km[id] && km[id].part === teil && (masteryData[id].totalWrong || 0) > 0 && !ids.includes(id))
+        .sort((a, b) => (masteryData[b].totalWrong || 0) - (masteryData[a].totalWrong || 0));
+      ids = ids.concat(mehr);
+    }
+  }catch(e){}
+  return ids.map(id => ({ q: km[id], frueher: null }));
+}
+window.muendlichUebungStarten = function(teil){
+  if(!QUER[teil]) return;
+  mnp = durchgangBauen(teil, 'uebung', 18, fehlerAusLernstand(teil), new Set(), null);
+  begruessung();
+};
+
+function kursleiter(){ return !!(mnp && mnp.quelle === 'kursleiter'); }
+function hinweisHtml(){
+  if(kursleiter()){
+    const n = esc(mnp.name || 'Der Teilnehmer');
+    return '<div class="mnp-hinweis"><b>Du bist der Prüfer.</b> Der Trainer spricht die Fragen – oder du liest sie selbst vor und schaltest ihn oben stumm. '
+         + n + ' antwortet mündlich, du bewertest mit „Richtig“ oder „Nicht richtig“. Bei „noch einmal hingeschaut“ sagt ' + n + ' den Buchstaben, und du klickst ihn an. '
+         + 'Die Lösung aus dem Katalog kannst du einblenden – steht das Bild auf dem Beamer, sieht ' + n + ' sie dann auch. '
+         + '<b>Übungsregel:</b> ' + REGEL.noetig + ' von ' + REGEL.fragen + ' – entscheiden tust du.'
+         + (tastaturAn() ? '<br><b>Tasten:</b> 1 bis 4 oder A bis D kreuzen an, T Tipp, W wiederholen, J richtig, N nicht richtig.' : '')
+         + '</div>';
+  }
+  return '<div class="mnp-hinweis"><b>So geht die Übung:</b> Antworte laut, so wie am Prüfungstisch. Dann deckst du die Antwort auf '
+       + 'und sagst selbst, ob sie gestimmt hat. <b>Übungsregel:</b> ' + REGEL.noetig + ' von ' + REGEL.fragen + ' Fragen müssen sitzen. '
+       + 'In der echten Prüfung gibt es keine feste Zahl – dort entscheiden die Prüfer im Gespräch.'
+       + (tastaturAn() ? '<br><b>Tasten:</b> 1 bis 4 oder A bis D kreuzen an, T holt den Tipp, W lässt wiederholen, '
+                       + 'J und N sagen „richtig“ oder „nicht richtig“, Enter geht weiter.' : '')
+       + '</div>';
+}
+function tastaturAn(){ try{ return typeof tastaturBedienung === 'function' && tastaturBedienung(); }catch(e){ return false; } }
+
+// ---------------- Begruessung ----------------
+function begruessung(){
+  const n = mnp.fragen.filter(f => f.art === 'nochmal').length;
+  const fehlen = 19 - mnp.punkte;
+  let t = 'Guten Tag' + (mnp.name ? ', ' + mnp.name : '') + ', nehmen Sie bitte Platz. '
+        + (mnp.quelle === 'uebung' ? 'Stellen wir uns vor, Sie hatten' : 'Sie hatten heute')
+        + ' im schriftlichen Teil ' + TEILNAME[mnp.teil] + ' ' + mnp.punkte + ' von 25 Punkten – '
+        + (fehlen === 1 ? 'einer fehlt' : 'zwei fehlen') + ' zum Bestehen. '
+        + 'Deshalb stellen wir Ihnen noch ein paar Fragen mündlich. Keine Sorge, wir unterhalten uns einfach ein wenig. ';
+  if(n) t += 'Zuerst schauen wir uns ' + (n === 1 ? 'eine Ihrer Fragen' : 'zwei Ihrer Fragen') + ' gemeinsam noch einmal an, '
+           + 'danach frage ich ein bisschen ' + QUER_WORT[mnp.teil] + '. ';
+  else t += 'Ich frage Sie ein bisschen ' + QUER_WORT[mnp.teil] + '. ';
+  t += 'Wenn Sie etwas nicht verstanden haben, fragen Sie ruhig nach.';
+  mnp.pos = -1;
+  koerper(fortschrittHtml() + prueferHtml(esc(t))
+    + '<div class="mnp-knoepfe"><button class="btn btn-primary" id="mnpBereitBtn" onclick="muendlichWeiter()"><i class="fas fa-chair"></i> '
+    + (kursleiter() ? 'Anfangen' : 'Ich bin bereit') + '</button></div>'
+    + hinweisHtml());
+  fokus('#mnpBereitBtn');
+  mnp.zuletzt = t;
+  sprich(t);
+}
+
+// ---------------- Fragen ----------------
+window.muendlichWeiter = function(vorspann){ naechste(typeof vorspann === 'string' ? vorspann : ''); };
+function naechste(vorspann){
+  mnp.pos++;
+  if(mnp.pos >= mnp.fragen.length){ ende(vorspann); return; }
+  const f = mnp.fragen[mnp.pos];
+  const vorher = mnp.fragen[mnp.pos - 1];
+  let v = vorspann || '';
+  if(f.art === 'quer'){
+    if(!vorher) v += 'Dann fangen wir an. ';
+    else if(vorher.art === 'nochmal') v += 'Gut, danke. Dann jetzt ein paar Fragen ' + QUER_WORT[mnp.teil]
+         + ' – antworten Sie einfach so, wie Sie es mir hier am Tisch sagen würden. ';
+    else if(mnp.pos === mnp.fragen.length - 1) v += 'Und noch eine letzte Frage: ';
+    else v += eins(['Nächste Frage: ', 'Weiter geht es: ', 'Dann etwas anderes: ']);
+    frageQuer(f, v);
+  } else {
+    if(vorher) v += 'Dann die nächste. ';
+    frageNochmal(f, v);
+  }
+}
+
+function nochmalIntro(f){
+  let t = mnp.quelle === 'pruefung'
+    ? 'Diese Frage hatten Sie im schriftlichen Teil nicht richtig. '
+    : 'Diese Frage ist Ihnen beim Üben schon einmal danebengegangen. ';
+  if(f.wort){
+    t += 'Lesen Sie sie bitte noch einmal ganz in Ruhe – und achten Sie besonders auf das Wort „' + f.wort.toLowerCase() + '“.';
+    if(f.gekonnt) t += ' Beim Üben konnten Sie sie übrigens schon.';
+  } else if(f.gekonnt){
+    t += 'Beim Üben konnten Sie sie aber schon – vielleicht war es nur die Aufregung. Lesen Sie sie bitte noch einmal in Ruhe.';
+  } else {
+    t += 'Lesen Sie sie bitte noch einmal in Ruhe, auch alle Antworten bis zum Ende.';
+  }
+  return t;
+}
+function optionenHtml(f, gewaehlt){
+  const q = f.q;
+  return (q.options || []).map((o, i) => {
+    let k = 'mnp-opt';
+    if(gewaehlt !== null && gewaehlt !== undefined){
+      if(o.correct) k += ' richtig';
+      else if(i === gewaehlt) k += ' falsch';
+    }
+    // Die im Bogen angekreuzte Antwort wird NICHT gezeigt (25.09.2026).
+    // Dietmar: "ein Freund von mir war in Nuernberg bei der Pruefung ...
+    // bei Betrieb und Vorschriften hat man ihm nicht mal gesagt, wo er
+    // seine Fehler hatte." Man erfaehrt nur, DASS die Frage falsch war.
+    return '<button class="' + k + '" ' + (gewaehlt !== null && gewaehlt !== undefined ? 'disabled' : 'onclick="muendlichWahl(' + i + ')"') + '>'
+         + '<span class="mnp-bu">' + String.fromCharCode(65 + i) + ')</span><span>' + esc(o.text || '') + '</span></button>';
+  }).join('');
+}
+function frageNochmal(f, vorspann){
+  const intro = nochmalIntro(f);
+  f.gesprochen = sprechText(f.q.text);
+  koerper(fortschrittHtml()
+    + prueferHtml(esc(vorspann + intro))
+    + '<div class="mnp-frage"><div class="mnp-qtext" id="mnpFrageText" tabindex="-1">' + markiert(f.q.text, f.wort) + '</div>'
+    + '<div id="mnpOptionen">' + optionenHtml(f, null) + '</div></div>'
+    + '<div class="mnp-knoepfe" id="mnpKnoepfe">'
+    +   '<button class="btn btn-outline" onclick="muendlichWiederholen()"><i class="fas fa-rotate-left"></i> Bitte wiederholen</button>'
+    + '</div>');
+  fokus('#mnpFrageText');
+  mnp.zuletzt = vorspann + intro + ' Die Frage lautet: ' + f.gesprochen;
+  sprich(mnp.zuletzt);
+}
+window.muendlichWahl = function(i){
+  const f = mnp && mnp.fragen[mnp.pos];
+  if(!f || f.art !== 'nochmal' || mnp.antworten[mnp.pos]) return;
+  const ok = !!(f.q.options[i] && f.q.options[i].correct);
+  mnp.antworten[mnp.pos] = { ok, gewaehlt: i };
+  const loesung = ohnePunkt(richtigeAntwort(f.q));
+  const t = ok
+    ? (f.wort ? 'Genau, das ist richtig. Dann war es im schriftlichen Teil wohl wirklich nur das eine Wort.'
+              : eins(['Richtig. Sehen Sie – Sie wissen es ja.', 'Genau so. Das war es.']))
+    : 'Das ist leider nicht richtig. Richtig ist: „' + loesung + '“. Schauen Sie sich das später noch einmal in Ruhe an.';
+  const o = document.getElementById('mnpOptionen');
+  if(o) o.innerHTML = optionenHtml(f, i);
+  const b = document.getElementById('mnpBlase');
+  if(b) b.innerHTML = esc(t);
+  const k = kniff(f.q.id);
+  const kn = document.getElementById('mnpKnoepfe');
+  if(kn) kn.outerHTML =
+      (k ? '<details class="mnp-warum"><summary>Warum? – die Erklärung aus dem Trainer</summary><div>' + esc(k) + '</div></details>' : '')
+    + '<div class="mnp-knoepfe"><button class="btn btn-primary" id="mnpWeiterBtn" onclick="muendlichWeiter()"><i class="fas fa-arrow-right"></i> Weiter</button></div>';
+  fokus('#mnpWeiterBtn');
+  const pk = document.querySelector('#mnpBody .mnp-fortschritt');
+  if(pk) pk.outerHTML = fortschrittHtml().replace(/<div class="mnp-stumm-hinweis"[\s\S]*$/, '');
+  mnp.zuletzt = t;
+  sprich(t);
+};
+
+function frageQuer(f, vorspann){
+  f.gesprochen = f.s || sprechText(f.f);
+  koerper(fortschrittHtml()
+    + prueferHtml(esc(vorspann) + '<b>' + anzeigeHtml(f.f) + '</b>')
+    + '<div id="mnpAufgedeckt"></div>'
+    + '<div class="mnp-knoepfe" id="mnpKnoepfe">'
+    +   '<button class="btn btn-outline" onclick="muendlichWiederholen()"><i class="fas fa-rotate-left"></i> Bitte wiederholen</button>'
+    +   '<button class="btn btn-outline" id="mnpTippBtn" onclick="muendlichTipp()"><i class="fas fa-lightbulb"></i> Tipp vom Prüfer</button>'
+    +   (kursleiter()
+          ? '<button class="btn btn-outline" id="mnpZeigenBtn" onclick="muendlichAufdecken()"><i class="fas fa-eye"></i> Lösung einblenden</button>'
+          : '<button class="btn btn-primary" id="mnpZeigenBtn" onclick="muendlichAufdecken()"><i class="fas fa-eye"></i> Antwort zeigen</button>')
+    + '</div>'
+    // Der Kursleiter bewertet, sobald die Antwort gesagt ist - die beiden
+    // Knoepfe stehen deshalb von Anfang an da, in einer eigenen Zeile.
+    + (kursleiter() ? '<div class="mnp-knoepfe" style="margin-top:8px;">' + bewertungHtml() + '</div>' : ''));
+  // Beim Kursleiter kein Fokus auf "Loesung einblenden": Ein Enter aus
+  // Versehen braechte die Loesung auf den Beamer.
+  if(!kursleiter()) fokus('#mnpZeigenBtn');
+  mnp.zuletzt = sprechText(vorspann) + f.gesprochen;
+  sprich(mnp.zuletzt);
+}
+window.muendlichWiederholen = function(){
+  const f = mnp && mnp.fragen[mnp.pos];
+  if(!f) return;
+  let t = 'Gern. ' + f.gesprochen;
+  if(f.art === 'nochmal'){
+    t += ' Die Antworten: ' + (f.q.options || []).map((o, i) => String.fromCharCode(65 + i) + ': ' + ohnePunkt(o.text) + '.').join(' ');
+  }
+  mnp.zuletzt = t;
+  sprich(t);
+};
+window.muendlichTipp = function(){
+  const f = mnp && mnp.fragen[mnp.pos];
+  if(!f || f.art !== 'quer' || f.tippGenutzt) return;
+  f.tippGenutzt = true;
+  const feld = document.getElementById('mnpTippFeld');
+  if(feld) feld.innerHTML = '<div class="mnp-tipp"><i class="fas fa-lightbulb" style="color:var(--accent-amber);"></i> ' + anzeigeHtml(f.t) + '</div>';
+  const b = document.getElementById('mnpTippBtn');
+  if(b) b.disabled = true;
+  const t = 'Ein kleiner Tipp: ' + sprechText(f.t);
+  mnp.zuletzt = t;
+  sprich(t);
+};
+window.muendlichAufdecken = function(){
+  const f = mnp && mnp.fragen[mnp.pos];
+  if(!f || f.art !== 'quer') return;
+  verstummen();
+  const k = kniff(f.id);
+  const a = document.getElementById('mnpAufgedeckt');
+  if(a) a.innerHTML =
+      '<div class="mnp-antwort" id="mnpAntwortKasten" tabindex="-1"><div class="mnp-klein">So steht es im Fragenkatalog (' + esc(f.id) + '):</div>'
+    + esc(antwortSatz(f.q)) + '</div>'
+    + (k ? '<details class="mnp-warum"><summary>Warum? – die Erklärung aus dem Trainer</summary><div>' + esc(k) + '</div></details>' : '');
+  const kn = document.getElementById('mnpKnoepfe');
+  if(kn && kursleiter()){
+    const z = document.getElementById('mnpZeigenBtn');
+    if(z) z.remove();
+  } else if(kn) kn.innerHTML = bewertungHtml();
+  fokus('#mnpAntwortKasten');
+};
+function bewertungHtml(){
+  const kl = kursleiter();
+  return '<button class="btn btn-primary" id="mnpRichtigBtn" onclick="muendlichSelbst(true)" style="background:var(--good);"><i class="fas fa-check"></i> '
+       + (kl ? 'Richtig' : 'Hatte ich richtig') + '</button>'
+       + '<button class="btn btn-outline" id="mnpFalschBtn" onclick="muendlichSelbst(false)"><i class="fas fa-xmark"></i> '
+       + (kl ? 'Nicht richtig' : 'Hatte ich nicht richtig') + '</button>';
+}
+window.muendlichSelbst = function(ok){
+  const f = mnp && mnp.fragen[mnp.pos];
+  if(!f || f.art !== 'quer' || mnp.antworten[mnp.pos]) return;
+  mnp.antworten[mnp.pos] = { ok: !!ok, tipp: !!f.tippGenutzt };
+  let r;
+  if(ok) r = f.tippGenutzt ? 'Mit dem Tipp hat es geklappt – gut. ' : eins(['Richtig. ', 'Sehr gut. ', 'Genau. ', 'Das stimmt. ']);
+  else r = eins(['Macht nichts. ', 'Nicht schlimm. ', 'Schade – schauen Sie sich das später noch einmal an. ']);
+  naechste(r);
+};
+
+// ---------------- Ergebnis ----------------
+function ende(vorspann){
+  verstummen();
+  const n = mnp.fragen.length;
+  const richtig = mnp.antworten.filter(a => a && a.ok).length;
+  const bestanden = richtig >= REGEL.noetig;
+  mnp.ergebnis = { richtig, n, bestanden };
+  const t = (vorspann || '') + 'Vielen Dank' + (mnp.name ? ', ' + mnp.name : '') + ', das war es schon. ' + (bestanden
+    ? 'Sie haben ' + richtig + ' von ' + n + ' Fragen richtig beantwortet. Nach unserer Übungsregel wäre die Nachprüfung damit bestanden – herzlichen Glückwunsch!'
+    : 'Heute waren es ' + richtig + ' von ' + n + '. Nach unserer Übungsregel hat es noch nicht ganz gereicht. Schauen Sie sich die Themen unten noch einmal an – beim nächsten Mal klappt es.');
+  const zeilen = mnp.fragen.map((f, i) => {
+    const a = mnp.antworten[i] || {};
+    const text = f.art === 'nochmal' ? f.q.text : anzeigeText(f.f);
+    return '<div class="mnp-zeile">'
+      + '<div class="mnp-art">' + (a.ok ? '<span style="color:var(--good);">✔</span>' : '<span style="color:var(--bad);">✘</span>') + ' '
+      + (f.art === 'nochmal' ? 'Noch einmal hingeschaut' : 'Querfrage') + ' · ' + esc(f.q.id)
+      + (a.tipp ? '<span class="mnp-tag">mit Tipp</span>' : '') + '</div>'
+      + '<div>' + esc(text) + '</div>'
+      + '<div class="mnp-loes">→ ' + esc(antwortSatz(f.q)) + '</div></div>';
+  }).join('');
+  koerper(prueferHtml(esc(t))
+    + '<div class="mnp-ergebnis' + (bestanden ? '' : ' nein') + '">'
+    +   '<div class="mnp-gross">' + (bestanden ? '✅ Übung bestanden' : '❌ Noch nicht bestanden') + ' – ' + richtig + ' von ' + n + '</div>'
+    +   '<div style="font-size:0.8rem; margin-top:4px;">Übungsregel: mindestens ' + REGEL.noetig + ' von ' + n + '. '
+    +   'In der echten Prüfung gibt es keine feste Zahl – dort entscheiden die Prüfer im Gespräch.</div>'
+    + '</div>'
+    + '<div class="mnp-knoepfe" style="margin-top:0;">'
+    +   (kursleiter()
+          ? '<button class="btn btn-primary" id="mnpNochBtn" onclick="muendlichInDenChat()" '
+            + 'data-tooltip="Schreibt das Ergebnis in den Chat des Gruppenraums – alle im Raum sehen es"><i class="fas fa-comment"></i> Ergebnis in den Gruppenchat</button>'
+            + '<button class="btn btn-outline" onclick="muendlichSchliessen()"><i class="fas fa-arrow-left"></i> Zurück zur Rangliste</button>'
+          : '<button class="btn btn-primary" id="mnpNochBtn" onclick="muendlichNochEinmal()"><i class="fas fa-redo"></i> Noch eine Runde</button>'
+            + '<button class="btn btn-outline" onclick="muendlichSchliessen()"><i class="fas fa-times"></i> Schließen</button>')
+    + '</div>'
+    + '<h3 style="margin:1.1rem 0 0.3rem; font-family:var(--font-display); font-size:1rem;">Die Fragen dieser Runde</h3>'
+    + '<div class="mnp-liste">' + zeilen + '</div>');
+  fokus('#mnpNochBtn');
+  mnp.zuletzt = t;
+  sprich(t);
+}
+window.muendlichNochEinmal = function(){
+  if(!mnp) return;
+  mnp = durchgangBauen(mnp.teil, mnp.quelle, mnp.punkte, mnp.fehler, mnp.pruefIds, mnp.gefragt);
+  begruessung();
+};
+
+// ---------------- Im Gruppenraum: der Kursleiter prueft ----------------
+// Dietmar am 25.09.2026: "Das moechte ich unbedingt auch im Gruppenraum
+// haben." Auf die Frage, wie, hat er gewaehlt: der Kursleiter prueft.
+//
+// Der Gastgeber sieht in der Rangliste und in der Teilnehmerliste neben
+// jedem, der GENAU einen Teil mit 17 oder 18 Punkten hat (alles andere
+// bestanden), den Knopf "Muendlich nachpruefen". Dann laeuft dieselbe
+// Uebung auf SEINEM Bildschirm (oder dem Beamer): Der Trainer spricht oder
+// der Kursleiter liest vor, der Teilnehmer antwortet muendlich im Raum,
+// der Kursleiter bewertet. Welche Fragen falsch waren, weiss der Gastgeber
+// schon - der Server schickt ihm alle Antworten des Raums mit
+// (duoTrainerLive, window.duoTrainerData.allAnswers). Am Server musste
+// dafuer nichts geaendert werden.
+//
+// Auf dem Geraet des Teilnehmers erscheint nichts - wie in der echten
+// Pruefung sitzt er einfach da und redet. Das Ergebnis kann der
+// Kursleiter danach in den Gruppenchat schreiben, wenn er will.
+const kursleiterListe = {};
+window.muendlichKursleiterKnopfHtml = function(r){
+  try{
+    if(!r || !r.finished || !Array.isArray(r.teile) || !r.teile.length) return '';
+    if(r.userId === window.myUserId) return '';
+    const k = (typeof klasseAktuell === 'function') ? klasseAktuell() : null;
+    if(!k || k.id !== 'n') return '';
+    if(r.teile.some(t => !t.finished || t.status === 'nicht_bestanden')) return '';
+    const grau = r.teile.filter(t => t.status === 'nachpruefung');
+    if(grau.length !== 1 || !QUER[grau[0].teil]) return '';
+    const uid = String(r.userId || '').replace(/[^A-Za-z0-9_-]/g, '');
+    if(!uid) return '';
+    kursleiterListe[uid] = { name: String(r.name || 'Teilnehmer'), teil: grau[0].teil, punkte: grau[0].correct };
+    return '<button type="button" class="btn btn-outline mnp-klknopf" onclick="muendlichKursleiter(\'' + uid + '\')" '
+         + 'data-tooltip="Mündliche Nachprüfung mit diesem Teilnehmer – du bist der Prüfer">'
+         + '<i class="fas fa-comments"></i> Mündlich nachprüfen (' + esc(TEILNAME[grau[0].teil]) + ')</button>';
+  }catch(e){ return ''; }
+};
+window.muendlichKursleiter = function(uid){
+  const w = kursleiterListe[uid];
+  if(!w) return;
+  const km = katalog();
+  const td = window.duoTrainerData || {};
+  const antworten = (td.allAnswers && td.allAnswers[uid]) || {};
+  const ids = (td.questions || []).filter(q => q && q.part === w.teil).map(q => q.id);
+  // Falsch ist, was nicht als richtig gezaehlt wurde - auch was bei
+  // Zeitablauf offen blieb.
+  const fehler = ids.filter(id => km[id] && !(antworten[id] && antworten[id].isCorrect)).map(id => ({ q: km[id], frueher: null }));
+  mnp = durchgangBauen(w.teil, 'kursleiter', w.punkte, fehler, new Set(ids), null);
+  mnp.name = w.name;
+  oeffnen();
+  begruessung();
+};
+window.muendlichInDenChat = function(){
+  if(!mnp || !mnp.ergebnis) return;
+  const e = mnp.ergebnis;
+  const text = '🗣️ Mündliche Nachprüfung (Übung) mit ' + (mnp.name || 'Teilnehmer') + ', Teil ' + TEILNAME[mnp.teil] + ': '
+             + (e.bestanden ? 'bestanden' : 'noch nicht bestanden') + ' – ' + e.richtig + ' von ' + e.n + ' Fragen.';
+  let ok = false;
+  try{ ok = !!(window.duo && typeof window.duo.nachrichtSenden === 'function' && window.duo.nachrichtSenden(text)); }catch(x){}
+  const b = document.getElementById('mnpNochBtn');
+  if(b){ b.disabled = true; b.innerHTML = ok ? '<i class="fas fa-check"></i> Steht im Chat' : 'Chat gerade nicht erreichbar'; }
+};
+
+// Fuer den Test und die Fehlersuche.
+window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText, schluesselwort, antwortSatz };
 })();
 </script>
 
