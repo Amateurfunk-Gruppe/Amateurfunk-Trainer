@@ -99,6 +99,12 @@ img{max-width:100%;height:auto;display:block}
    eigene Schriftfarbe. */
 .dunkel a.knopf-haupt{color:#08202f}
 .dunkel a.knopf-rand{color:#fff}
+/* 25.09.2026 - Dietmar: "Die 4 Felder moechte ich wie auf einem Wuerfel."
+   Die vier Wege im Abschnitt "Lernen" stehen deshalb zwei neben zwei,
+   statt drei in der ersten Reihe und einer allein darunter. Auf dem
+   Handy bleibt es bei einem Feld je Reihe. */
+#lernen .gitter{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){#lernen .gitter{grid-template-columns:1fr}}
 .kopf-fuss{margin-top:26px;font-size:.93rem;color:#8fb4dd}
 .kopf-bild{margin-top:44px}
 .kopf-bild img{
