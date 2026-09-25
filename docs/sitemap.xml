@@ -5,12 +5,20 @@
       sitemap.xml
   Die Projektseite besteht aus einer einzigen Seite; die Unterkapitel
   sind Sprungmarken darin und gehoeren deshalb nicht einzeln hier hinein.
+  Seit dem 25.09.2026 dazu der Ratgeber "Der Weg zur Amateurfunklizenz"
+  als eigene Seite.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/</loc>
-    <lastmod>2026-09-22</lastmod>
+    <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/amateurfunklizenz.html</loc>
+    <lastmod>2026-09-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

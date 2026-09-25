@@ -325,6 +325,26 @@ _*.jpg
 _*.jpeg
 _*.webp
 
+# UND ALLES UEBRIGE MIT UNTERSTRICH, ab dem 25.09.2026.
+#
+# Dietmar am 25.09.2026: "wenn ich spaeter hochlade auf GitHub, achte
+# bitte darauf, dass nichts hochgeht, was nicht hochgehen darf."
+#
+# Beim Nachsehen gefunden: _Begriffsblaetter-Probe.pdf und
+# _Begriffsblaetter-N-auf-E.pdf liegen seit dem 15.09.2026 bei GitHub.
+# Die Regeln oben kannten .html, .md, .json, .txt und Bilder - aber
+# keine PDF. Der Unterstrich sagt seit dem 06.09.2026 "bleibt hier",
+# also gilt er ab jetzt fuer JEDE Endung und jeden Ordner im
+# Hauptordner, nicht nur fuer die aufgezaehlten.
+#
+# Hochladen.bat bietet beim naechsten Mal an, die zwei PDF aus dem
+# Repository auszutragen ("Jetzt aus dem Repository austragen? [j/n]").
+# In deinem Ordner bleiben sie liegen.
+#
+# Ausnahme wie oben: eine Zeile mit Ausrufezeichen, etwa  !/_wichtig.pdf
+_*.pdf
+/_*
+
 # ================================================================
 #  WERKZEUG FUER VIDEOANSAGEN - bleibt auf Dietmars Rechner
 # ----------------------------------------------------------------

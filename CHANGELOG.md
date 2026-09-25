@@ -2,11598 +2,2067 @@
 
 Entwickler und Urheber: Dietmar Reh. Lizenz: [PolyForm Noncommercial 1.0.0](LICENSE).
 
-Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), SemVer.
+Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), SemVer. Je Version: Hinzugefügt, Geändert, Behoben.
 Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie von hier
 und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Namen des Windows-ZIP.
 
 ---
 
-## [1.298.0] - 2026-09-20
-
-### Der Server-Knopf: Tür auf, Tür zu
-
-Dietmar am 22.09.2026: „Ich möchte in der Hauptansicht einen Button. Nachdem wir eine feste Adresse
-haben, möchte ich den Trainer online zur Verfügung stellen, wenn der Button aktiviert ist."
-
-Bis gestern war das keine Frage: Der Quick Tunnel lief nur, wenn man ihn startete. Seit cloudflared
-als Windows-Dienst läuft, ist der Trainer erreichbar, sobald er überhaupt läuft — ohne dass Dietmar
-das je entschieden hätte. Der Schalter holt diese Entscheidung zurück.
-
-In der Kopfzeile, zwischen „Info" und „Beenden", steht jetzt **Server**. Dietmars Wortlaut zur
-Farbe: „Rot ist aus und Grün ist Online."
-
-    Server aus          rot       nur für dich
-    Server online       grün      Besucher kommen über den geteilten Link herein
-    Schließt in 47 s    orange    Vorwarnung läuft, ein Klick nimmt sie zurück
-
-**Nach jedem Start steht er auf Rot.** Das war Dietmars ausdrückliche Wahl: Es soll nicht passieren,
-dass der Trainer über Nacht offensteht, weil man es vergessen hat.
-
-**Beim Zumachen gibt es eine Minute Vorwarnung.** Wer gerade auf der Seite ist, bekommt oben einen
-Balken — „Der Gastgeber schließt den Trainer in 58 Sekunden. Du kannst deine Frage noch zu Ende
-bringen." — und kann fertig werden, statt mitten im Satz vor einer Auffangseite zu stehen. Ein
-zweiter Klick auf den Knopf nimmt das Zumachen zurück, und der Balken verschwindet bei allen.
-
-**Was bei geschlossener Tür trotzdem hinausgeht:** der eigene Rechner und das eigene WLAN, die
-Vorschau-Crawler und die Vorschaubilder. Sonst zerfiele die Facebook-Kachel jedes Mal, wenn zu ist
-— und die soll gerade dann stimmen, wenn jemand den Beitrag findet.
-
-Besucher bekommen bei geschlossener Tür den Code **503**. Das ist kein Zufall: Genau darauf reagiert
-der Worker bei Cloudflare und zeigt die Auffangseite mit dem Weg zur GitHub-Fassung. Wer den Worker
-nicht eingerichtet hat, bekommt eine schlichte eigene Seite; beide sagen dasselbe.
-
-**Ein Stolperstein beim Bauen.** Die Farben standen zuerst als style-Attribut im Code. Nachgemessen
-kam dabei 2,81:1 heraus — im Green Mode sogar 1,55:1. Der Grund: `.header-right .btn` färbt jeden
-Knopf der Kopfzeile weiß mit dunkelblauer Schrift, und zwar mit `!important`. Inline gesetzte Farben
-verlieren dagegen; die Schrift blieb dunkelblau, obwohl im Code `color:#fff` stand. Mit eigenen
-Regeln auf die ID (eine ID wiegt schwerer als zwei Klassen) stimmt es in allen vier Farbwelten:
-
-    Server aus        7,18:1        Server online     5,35:1        Schließt in …   6,79:1
-
-Dasselbe Muster wie beim Dark-Mode-Fehler vom 21.09. — inline gesetzte Farben sind in diesem
-Programm kein verlässliches Mittel, solange irgendwo `!important` steht. Gemessen wird, nicht
-angenommen.
-
-### Warum Facebook das Bild nicht annahm
-
-Dietmar, nach dem dritten vergeblichen Anlauf: „kein Bild!"
-
-Drei Erklärungen hatte ich schon geliefert — die Ländersperre, die falsche Adresse, die
-Weiterleitung im Kreis. Alle drei waren echte Fehler, aber keiner davon war *dieser* Fehler. Erst
-ein Blick auf die Kopfzeilen des Bildes brachte es:
-
-    HTTP/1.1 200 OK
-    Cache-Control: no-store, no-cache, must-revalidate, private
-    Content-Type: image/jpeg
-    Content-Length: 116406
-
-Das Bild war tadellos — 1200×630, richtiger Typ, richtige Größe. Die Zeile darüber war das Problem.
-
-Der Trainer setzt `no-store, private` pauschal für **alles**. Für Lernstände und Fragenkataloge ist
-das genau richtig: nichts davon gehört in fremde Zwischenspeicher. Für ein Vorschaubild ist es
-tödlich. Facebook, WhatsApp und die übrigen holen das Bild einmal ab und legen es in ihren eigenen
-Speicher; „no-store, private" heißt für sie „behalte das nicht", und daran halten sie sich.
-Ergebnis: eine Kachel ohne Bild.
-
-Die Bilder dürfen jetzt eine Stunde lang zwischengespeichert werden. Geheim ist daran nichts — es
-ist Werbung, sie soll ja gerade weitergetragen werden. Nachgemessen:
-
-    /vorschau.jpg        Cache-Control: public, max-age=3600     image/jpeg
-    /vorschau-raum.jpg   Cache-Control: public, max-age=3600     image/jpeg
-    /favicon.ico         Cache-Control: public, max-age=3600     image/x-icon
-    /                    Cache-Control: no-store                 (unveraendert)
-    /fragen.json         Cache-Control: no-store, no-cache, ...  (unveraendert)
-    /duo.js              Cache-Control: no-store, no-cache, ...  (unveraendert)
-
-**Was daran lehrreich war:** Ich habe dreimal eine Ursache genannt und dreimal „jetzt müsste es
-gehen" gesagt, ohne die eine Stelle anzusehen, an der die Antwort stand. Die Kopfzeilen einer
-Antwort sind bei so einer Frage das Erste, was man liest, nicht das Letzte.
-
-### Die Kachelseite schickte den Crawler im Kreis
-
-Im Facebook-Debugger stand unter „Redirect-Pfad" ein Eintrag, der dort nicht hingehört:
-
-    http-equiv="refresh" Meta-Tag  ->  https://amateurfunk-trainer.com/
-
-Die Kachelseite enthielt `<meta http-equiv="refresh" content="0; url=...">`, und zwar auf genau die
-Adresse, von der sie gerade abgerufen wurde. Gedacht war das als Rückweg für Menschen — nur
-bekommt ein Mensch diese Seite nie zu sehen, sie geht ausschließlich an Crawler. Für Facebook war
-es eine Weiterleitung auf sich selbst.
-
-Eine Kachelseite, die den Crawler im Kreis schickt, ist ein Risiko ohne jeden Nutzen. Die Zeile ist
-raus; der Textlink „weiter zum Trainer" im Seitenkörper bleibt, der schadet nicht.
-
-*Nebenbei, weil es im Debugger als Warnung auftaucht:* Das fehlende `fb:app_id` ist **nicht** die
-Ursache einer leeren Kachel. Es wird nur gebraucht, wenn man Facebooks Statistiken für die eigene
-Seite nutzen will.
-
-### Die Ländersperre verschluckte das Vorschaubild
-
-Dietmar, mit einer leeren weißen Kachel aus Facebook: „ärgerlich, dass Meta ein weißes Feld
-anzeigt, wenn der Trainer offline ist." Und kurz darauf, aus dem Facebook-Debugger bei laufendem
-Trainer: „Jetzt ist das Bild da, es ändert sich aber nicht wenn ich Online bin."
-
-Zwei Beobachtungen, zwei verschiedene Ursachen — die zweite war die unangenehmere.
-
-**Im Debugger stand alles richtig**: Titel, Beschreibung, `og:image` auf
-`amateurfunk-trainer.com/vorschau.jpg`. Nur die Bildfläche blieb grau. Der Grund war die
-Ländersperre, also eine Änderung von heute Mittag: Die *Seite* kommt durch, weil der Crawler an
-seiner Kennung erkannt wird. Das *Bild* holt Facebook aber in einem zweiten Anlauf, und dabei ist
-die Kennung nicht immer dieselbe — kommt der Abruf dann von einer US-Adresse, wurde er abgewiesen.
-
-Ein Vorschaubild ist nichts Schützenswertes, es ist Werbung. Es geht jetzt immer hinaus, aus jedem
-Land und unter jeder Kennung; dasselbe gilt für das Symbol der Seite. Nachgemessen mit einem Abruf
-aus den USA ohne Crawler-Kennung:
-
-    vorschau.jpg        HTTP 200   116406 Bytes
-    vorschau-raum.jpg   HTTP 200   116207 Bytes
-    Startseite          HTTP 200     2632 Bytes   (die Sperrseite - richtig so)
-    Fragenkatalog       HTTP 200     2632 Bytes   (die Sperrseite - richtig so)
-
-Die Sperre hält also unverändert, nur die Bilder sind ausgenommen.
-
-**Die leere Kachel bei ausgeschaltetem Rechner** hatte eine eigene Ursache: Die Auffangseite bei
-Cloudflare hatte Titel und Text, aber kein Bild. Es durfte auch keines vom Trainer sein — der ist
-in dem Moment ja aus. Jetzt zeigt sie auf das Bild der GitHub-Seite, die rund um die Uhr läuft.
-
-Und noch etwas: Die Vorschau-Crawler bekommen von der Auffangseite jetzt **immer** die richtige
-Kachel, nicht die Offline-Meldung. Facebook liest einen Link nämlich genau einmal ein und friert
-die Kachel dann ein. Liest es ausgerechnet dann, wenn der Rechner aus ist, stünde ab sofort
-„gerade offline" unter dem Beitrag — auch wenn der Trainer eine Minute später wieder läuft. Genau
-das war passiert.
-
-### Der Knopf zur Projektseite führte ins Leere
-
-Dietmar, mit zwei Bildern: die Auffangseite, und daneben GitHubs „There isn't a GitHub Pages site
-here." — „Fehler 404 kommt, wenn ich auf den blauen Button klicke."
-
-Die Adresse war falsch, und zwar überall dort, wo ich sie hingeschrieben hatte. Ich hatte
-`amateurfunk-gruppe.github.io` verwendet. Unter dieser kurzen Form gäbe es die Seite nur, wenn ein
-Repository genau so hieße. Die Projektseite liegt aber im Ordner `docs/` des Trainer-Repositorys,
-und GitHub Pages veröffentlicht sie deshalb unter
-
-    https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/
-
-Vier Stellen waren betroffen: der Knopf auf der Auffangseite (`worker.js`), der Hinweis auf der
-Sperrseite der Ländersperre und der Vorschautext beim Teilen (beide `Server.js`), der Hinweis im
-Gruppenraum (`duo.js`) und der Text im Willkommensfenster (`Index.html`).
-
-Ärgerlich daran ist nicht der Tippfehler, sondern dass ich die Adresse nie aufgerufen habe, bevor
-ich sie an fünf Stellen eingebaut und als fertig gemeldet habe. Genau dafür wäre ein einziger
-Abruf nötig gewesen.
-
-### Die Begrüßung kam nie an — ein Denkfehler von mir
-
-Dietmar, mit zwei Besuchern auf der Seite und einem leeren Chat: „Im Chat kommt nichts, wenn ein
-Benutzer in den Trainer kommt."
-
-Er hatte recht, und der Fehler war meiner. Ich hatte die Ankunftsmeldung daran gehängt, dass der
-Merker `demo_hinweis_gesehen` gesetzt ist — also daran, dass jemand das Willkommensfenster
-weggeklickt hat. Dieses Fenster erscheint aber nur unter einer Bedingung (`ueberGeteiltenLink()`).
-**Wer es nie zu sehen bekommt, setzte den Merker nie und meldete sich damit auch nie an.**
-
-Nachgewiesen mit einem Horchposten im Browser, der `window.io` über einen Setter abfängt und
-mitschreibt, was wirklich abgeschickt wird:
-
-    vorher:   Abgeschickt beim Start: []
-    nachher:  Abgeschickt beim Start: ["hausHallo"]
-
-Ein erster, unzuverlässiger Versuch desselben Horchpostens hatte den Socket verpasst, weil er zu
-spät ansetzte, und lieferte ein falsches „nichts abgeschickt" für beide Fassungen. Erst der Setter
-trifft garantiert vor dem ersten `io()`.
-
-Jetzt entscheidet kein Merker mehr, sondern das Fenster selbst: Steht es offen, wartet die Meldung
-auf das Bestätigen — dann ist der Name dabei. Steht es nicht offen, geht sie sofort hinaus. Wer
-wirklich gemeldet wird, entscheidet ohnehin der Server: nur Besucher von außen.
-
-**Der Wortlaut** kommt von Dietmar: „Herzlich Willkommen, Name betritt den Server." Ohne Namen heißt
-es „Herzlich willkommen, ein Besucher betritt den Server."
-
-**Und „am Link" ist raus.** Hinter dem Namen im Chat stand bisher „· am Link", damit der Gastgeber
-Raumteilnehmer von Link-Besuchern unterscheiden konnte. Dietmar: „mit Link klingt doof im Chat."
-Seit es die Ankunftsmeldung gibt, weiß er ohnehin, wer hereingekommen ist.
-
-### Maja konnte lesen, aber nicht schreiben
-
-Dietmar: „Ich übe mit meiner Freundin Maja zusammen im Gruppenraum. Sie sagt, dass der Chat manchmal
-nicht geht. Kommt mir so vor, dass wenn sie fertig ist er nicht mehr geht."
-
-Die Beobachtung war genau richtig, und zwar in beiden Teilen — dem „manchmal" und dem „wenn sie
-fertig ist".
-
-**Was geschah.** Reißt die Verbindung länger ab, als der Server wartet, nimmt er den Teilnehmer aus
-dem Raum. Die Grenze liegt bei anderthalb Minuten (`pingTimeout` 60 s plus `pingInterval` 30 s).
-Socket.IO verbindet danach von selbst wieder — aber mit **neuer Kennung**, und die kennt der Raum
-nicht. Es gab keine Stelle, die den Teilnehmer zurückgeholt hätte.
-
-**Warum es so heimtückisch war.** Lesen ging weiter, denn die Nachrichten des Gastgebers werden
-ohnehin nach draußen kopiert, damit Besucher am nackten Link mitlesen können. Schreiben ging nicht:
-Der Server antwortete mit „Du bist nicht in diesem Raum" — ein Satz, der nicht sagt, was zu tun ist.
-Maja sah also Dietmars Zeilen hereinkommen, tippte eine Antwort, und die verschwand. Für sie war der
-Chat kaputt, für ihn wurde sie einfach still.
-
-**Und „wenn sie fertig ist" passt genau dazu:** Ein Tab, in dem nicht mehr geklickt wird, ist der,
-den Windows, das Handy oder das WLAN als Erstes schlafen legen.
-
-Nachgestellt mit zwei Browsern und echtem Netzausfall:
-
-    95 Sekunden offline, vorher:   Maja schreibt -> kommt an: NEIN
-                                   Meldung: "Du bist nicht in diesem Raum"
-    95 Sekunden offline, nachher:  Maja schreibt -> kommt an: JA
-
-Ein erster Versuch mit sechs Sekunden Ausfall zeigte übrigens nichts — der Server ist geduldig. Erst
-jenseits der anderthalb Minuten tritt der Fehler auf. Ohne diesen zweiten, längeren Versuch wäre die
-Sache als „nicht nachvollziehbar" liegengeblieben.
-
-**Zwei Netze.** Beim Wiederverbinden meldet sich der Trainer selbst zurück in den Raum — nur beim
-*Wieder*verbinden, beim ersten Mal gibt es keinen Raum, in den man zurückkehren könnte. Und wer in
-genau der Sekunde danach tippt und den Server noch vor der Rückmeldung erwischt, bekommt statt des
-nackten Satzes eine Erklärung: dass die Verbindung kurz weg war, dass gerade neu angemeldet wird und
-er es in ein paar Sekunden noch einmal abschicken soll. Angeklopft wird dabei höchstens einmal je
-Viertelminute.
-
-Hat der Gastgeber den Raum inzwischen geschlossen, steht das jetzt auch dort — vorher kam „Raum
-nicht gefunden", und der Chat blieb sichtbar, als wäre nichts.
-
-### Das Formelblatt fehlte beim ohmschen Gesetz
-
-Dietmar, mit einer Frage aus dem Gruppenraum vor sich: „Fehlt hier nicht das Formelblatt?"
-
-NB501 — *„Welcher der nachfolgenden Ausdrücke stellt den Zusammenhang zwischen Strom, Spannung und
-Widerstand korrekt dar?"* Also das ohmsche Gesetz, und das steht auf Seite 13 der Formelsammlung.
-Der Knopf war trotzdem nicht da.
-
-Der Knopf erscheint nur, wenn für genau diese Frage in `formelhilfe.json` eine Stelle eingetragen
-ist — ein Knopf, der manchmal ins Leere führt, wäre schlimmer als keiner. Für NB501 war keine
-eingetragen. Für die Nachbarfrage NB504, die dieselbe Formel zum Rechnen braucht, schon.
-
-Nachgetragen wurden die neun Fragen, bei denen die Stelle zweifelsfrei ist:
-
-    NB501, NB502, NB503, NB505   ->  Ohmsches Gesetz   (Seite 13)
-    NB601, NB602, NB603,
-    NB605, NB606                 ->  Leistung          (Seite 14)
-
-Damit sind die beiden Familien vollständig: NB501–505 und NB601–606. Nachgeprüft im Browser, dass
-der Knopf bei allen elf erscheint und bei NA101, ND101 und NK302 weiterhin ausbleibt.
-
-**Zwei Irrwege, die zum Ergebnis gehören.** Der erste Versuch suchte die Lücken über
-Fragen-Familien — „einige Geschwister haben eine Stelle, andere nicht" — und meldete 77 Treffer.
-Die meisten davon waren Unsinn: Bei ND101–109 hätte er „Stehwellenverhältnis" an Fragen über
-Netzteile, Verpolung und Sicherungen geklebt, weil dort zufällig eine SWR-Frage in derselben
-Nummerngruppe sitzt. Brauchbar wurde es erst mit einem anderen Signal: ob die **Antworten**
-Rechenwerte mit Einheit oder Gleichungen sind. Das sind Rechenaufgaben, und nur die brauchen das
-Blatt.
-
-**Und eine Richtigstellung.** In `Index.html` stand bei der Begründung, warum Nachschlagen positiv
-gewertet wird: „Nachgezaehlt: 534 der 571 Fragen haben eine Stelle im Formelblatt." Das war falsch,
-und zwar nicht knapp — das Wort „nachgezählt" stand dort, ohne dass gezählt worden war. Wirklich
-gezählt sind es, nach dem Nachtragen:
-
-    Klasse N     123 von  571   (22 %)        N auf E    139 von  463   (30 %)
-    Klasse E     262 von 1034   (25 %)        E auf A    328 von  716   (46 %)
-    Klasse A     590 von 1750   (34 %)        N auf A    467 von 1179   (40 %)
-
-Nachschlagen ist also nicht der Normalfall, sondern betrifft je nach Katalog ein Fünftel bis knapp
-die Hälfte der Fragen. An der Entscheidung ändert das nichts — sie hing nie an der Häufigkeit,
-sondern daran, dass die Formelsammlung in der Prüfung auf dem Tisch liegt. Nur die Begründung war
-erfunden.
-
-Klasse N ist damit weiterhin der am dünnsten erfasste Katalog. Die 195 Technik-Fragen dort einmal
-vollständig durchzugehen, steht noch aus.
-
-### „Herzlich willkommen, DL1ABC betritt den Server."
-
-Dietmar, mit drei Leuten gleichzeitig auf der Seite: „Hier wäre eine Begrüßung mit Namen gut."
-
-Wer über den nackten Link kommt, ist in keinem Raum — es gibt also keine Teilnehmerliste, in der
-er auftauchen könnte. Im Chat stand er erst, wenn er von sich aus etwas schrieb, und das tut kaum
-jemand als Erster. Drei Besucher auf der Seite, und im Chat war Stille.
-
-Jetzt meldet der Chat jede Ankunft, für alle sichtbar: **„👋 DL1ABC ist dazugekommen."** Hat
-jemand keinen Namen eingetragen, heißt es **„👋 Jemand ist dazugekommen."** — auch das ist besser
-als nichts, denn dann weiß Dietmar, dass da jemand ist, und kann ihn ansprechen. Viele tippen erst
-etwas, wenn sie angesprochen werden.
-
-Die Ansage geht bewusst **nicht** beim Verbinden hinaus, sondern erst, wenn das Willkommensfenster
-durch ist. Andersherum wäre sie eine Sekunde zu früh gekommen und damit immer namenlos. War das
-Fenster bei diesem Besucher schon einmal da, meldet er sich sofort beim Verbinden — mit dem Namen,
-den er damals eingetragen hat.
-
-**Eine Begrüßung je Adresse und Viertelstunde.** Ohne diese Sperre würde jedes Neuladen denselben
-Menschen noch einmal ankündigen. Der Gastgeber und sein WLAN begrüßen sich nicht selbst, und wer in
-einem Raum sitzt, steht dort ohnehin in der Teilnehmerliste.
-
-Angezeigt wird es als Systemzeile: mittig, schmal, ohne Absender — es ist ja niemandes Nachricht.
-Die Klasse dafür gab es schon, sie wurde bisher nur lokal benutzt. Kontrast in allen vier
-Farbwelten geprüft: 14:1 hell, 9,4:1 dunkel, 11,3:1 grün und blau.
-
-### Düsseldorf hieß eine Weile DÃ¼sseldorf
-
-Dietmar, mit einem Bild seiner Besucherliste: „Mit Umlaute scheint es ein Problem zu geben."
-
-Dort stand `DÃ¼sseldorf`. Das ist das Muster, das entsteht, wenn UTF-8-Bytes als Latin-1 gelesen
-werden: Ein „ü" besteht in UTF-8 aus zwei Bytes, und die erscheinen einzeln als `Ã` und `¼`.
-
-Die Ursache liegt nicht bei Cloudflare, sondern im HTTP-Protokoll selbst: Kopfzeilen sind dort
-als Latin-1 festgelegt, ein Zeichensatz mit 256 Plätzen. Cloudflare schickt den Stadtnamen in
-`cf-ipcity` aber als UTF-8, und Node liest die Kopfzeile normgetreu als Latin-1. Aus zwei Bytes
-werden zwei Zeichen, und fertig ist der Buchstabensalat.
-
-`kopfText()` macht es rückgängig — die Zeichen wieder als Bytes nehmen und diesmal als UTF-8
-lesen. Zweimal abgesichert, damit nichts kaputtgeht, was vorher in Ordnung war: Reiner
-ASCII-Text (`Hamburg`, `Berlin`) wird gar nicht erst angefasst, und kommt bei der Umdeutung ein
-Ersetzungszeichen heraus, war die Kopfzeile eben doch echtes Latin-1 — dann bleibt der Urtext
-stehen. Lieber ein Name mit Schönheitsfehler als einer aus Fragezeichen.
-
-Geprüft an Düsseldorf, München, Köln, Zürich, Genève, Osnabrück und Sankt Pölten, dazu an
-Hamburg, Berlin, Chicago und Amsterdam, die unverändert bleiben müssen.
-
-Die schon gespeicherten Einträge werden beim Lesen von `besucher.json` mit geradegezogen — die
-alte Liste sieht damit nach einem Neustart ebenfalls richtig aus. Namen von Besuchern waren nie
-betroffen: Die reisen im Adressteil, und den entschlüsselt Express als UTF-8.
-
-### Die Ländersperre — und wer anklopft
-
-Dietmar, mit einer Besucherliste voller Aufrufe aus Chicago und Amsterdam: „diese Anklopfer gefallen
-mir gar nicht. Kann man da nicht eine Sperre einbauen? Deutschland, Österreich und die Schweiz?
-Ggf mit einer Anfrage?"
-
-Die Anklopfer sind Zertifikat-Scanner. Sobald Cloudflare für eine neue Domain ein Zertifikat
-ausstellt, steht der Name öffentlich in den Certificate-Transparency-Protokollen, und es gibt
-Dienste, die diese Protokolle im Minutentakt auslesen und jede frische Adresse abklopfen. Die
-laufen in Rechenzentren — und Rechenzentren stehen fast nie in DACH. Eine Länderprüfung trifft sie
-deshalb ziemlich genau, ohne dass ein einziger Funkamateur etwas merkt.
-
-Das Herkunftsland liefert Cloudflare bei jeder Anfrage mit (`cf-ipcountry`). Es braucht also keinen
-fremden Dienst, dem man die Adressen der Besucher schicken müsste, und keine Datenbank im Ordner.
-
-**Nie geprüft werden:** der Trainer-PC selbst, alles im eigenen WLAN (dort gibt es gar kein
-Herkunftsland), die Vorschau-Crawler von Facebook und WhatsApp — sonst gäbe es beim Teilen keine
-Kachel mehr — und die Suchmaschinen. Dietmar: „Den Google Bot hätte ich schon ganz gerne mit drin."
-Googlebot, Bingbot und die übrigen kommen durch, **stehen aber nicht in der Besucherliste**: Eine
-Kennung lässt sich fälschen, und wer sich als Googlebot ausgibt, soll sich damit höchstens die
-Seite abholen können.
-
-Wer abgewiesen wird, bekommt keine tote Leitung, sondern eine höfliche Seite: der Trainer läuft
-gerade nur für den deutschsprachigen Raum, dazu der Hinweis, dass es ihn auf
-`amateurfunk-gruppe.github.io` kostenlos zum Mitnehmen gibt. Und einen Knopf: **Zutritt anfragen.**
-
-Die Anfrage landet beim Gastgeber — oben im Besucherfenster, gelb, mit Gerät, Standort und Wartezeit,
-daneben *Hereinlassen* und *Ablehnen*. Es klingelt dabei mit demselben Ton wie bei einem neuen
-Besucher, denn das Fenster ist meistens zu. Lässt Dietmar jemanden herein, lädt sich dessen Seite
-innerhalb weniger Sekunden von selbst neu — sie fragt im Takt nach, ob sie gehen darf.
-
-**Die Freigabe gilt bis zum Neustart des Trainers.** Das war Dietmars Wahl: keine neue Datei, nichts
-zu pflegen, und nach einem Neustart ist der Zettel wieder leer. Freigeben und ablehnen darf
-ausschließlich der Trainer-PC selbst — beide Wege sind `localOnly`, genau wie der Besucherzähler.
-Ein Gast über den Einladungslink bekommt dort 403.
-
-In der Kopfzeile des Besucherfensters steht seitdem, wie viele Aufrufe die Sperre abgewiesen hat und
-wie viele davon Dietmar durchgelassen hat.
-
-### Der Name reist mit
-
-Dietmar: „ich möchte den Nackten Link in der Facebook Gruppe teilen und jeden sehen, der auf dem
-Trainer ist."
-
-Sehen konnte er sie schon — Gerät, Standort, seit wann —, aber ohne Namen. Der Server kennt Namen
-nämlich nur von Leuten, die einem Raum beigetreten sind, und wer über den nackten Link kommt, ist in
-keinem Raum.
-
-Das Lebenszeichen, das jeder offene Trainer alle zehn Sekunden hinausschickt, nimmt den Namen jetzt
-mit — den aus dem Willkommensfenster. Damit steht er im grünen Kasten „wer ist gerade da", und ein
-später eingetragener Name erscheint beim nächsten Takt von selbst. Freiwillig bleibt es: Wer nichts
-einträgt, heißt dort „Besucher". Steuerzeichen und spitze Klammern werden entfernt, und nach zwanzig
-Zeichen ist Schluss.
-
-Zu beachten: Die **Teilnehmerliste des Raums** zeigt weiterhin nur, wer dem Raum mit `?duo=CODE`
-beigetreten ist. Der grüne Kasten zeigt alle, die die Seite offen haben.
-
-### Die Adresse ändert sich nicht mehr
-
-Dietmar, als der Neustart-Balken über seinen eigenen Bildschirm lief: „Die Adresse ändert sich doch
-jetzt nicht mehr ^^"
-
-Stimmte — seit der benannte Tunnel läuft, steht der Link fest. Der Balken behauptete trotzdem noch
-das Gegenteil, weil sein Text aus der Zeit der Wegwerf-Adressen von `trycloudflare.com` stammt.
-
-Wissen kann das nur der Gastgeber: Die eigene Adresse steht in *seinem* Browser. Also sagt er es beim
-Ansagen mit, und der Server reicht es an alle weiter. Steht die Adresse fest, heißt es jetzt „die
-Adresse bleibt dieselbe — einfach die Seite neu laden, sobald er wieder da ist"; sonst wie bisher
-„der neue Link wird gleich danach in der Gruppe geteilt". Antwortet ein älterer Server ohne diese
-Angabe, entscheidet der Hostname: Nur `trycloudflare.com` vergibt bei jedem Start einen neuen Namen.
-
-
-### Der Prüfungssimulator im Gruppenraum
-
-Dietmar: „Im Gruppenraum möchte ich einen Prüfungssimulator. Aktiviere ich das, laufen 25 Fragen aus
-Betrieb, Vorschriften und Technik rein. Mit dem passenden Counter (Zeit) Prüfung starten im Fenster.
-Danach werden die Fragen angezeigt. Nach der ersten Runde soll die Frage kommen: Zur nächsten Runde.
-Eine Auswertung gibt es in dem Prüfungssimulator, zum Schluss mit Angabe, was falsch gewesen ist.
-Das muss auch unter Fehler und Lernbedarf gespeichert werden."
-
-Im Raum-Fenster steht jetzt über „Raum erstellen" ein Haken: **Prüfungssimulator**. Ist er gesetzt,
-wird aus der Fragerunde eine Prüfung — wie die echte, mit drei Bögen nacheinander:
-
-    Runde 1  Vorschriften   25 Fragen   45 Minuten
-    Runde 2  Betrieb        25 Fragen   45 Minuten
-    Runde 3  Technik        25 Fragen   45 Minuten
-
-Vor jeder Runde geht ein Fenster auf: welcher Bogen ansteht, wie viele Fragen, wie viel Zeit, und
-was gilt. **Die Uhr läuft ab dem Klick auf „Prüfung starten"** — nicht ab der ersten Antwort wie im
-Simulator allein. Danach kommen die Fragen. Ob eine Antwort richtig war, erfährt niemand vorher;
-zurückblättern und ändern ist bis zum Ende der Runde erlaubt, F9 und Nachschlagen sind aus. Läuft
-die Zeit ab, wird die Runde gewertet, und was offen blieb, zählt als Fehler.
-
-Am Ende einer Runde steht das Ergebnis des Bogens — `19/25` bestanden, `17–18` Grauzone — und
-darunter die Frage **„Zur nächsten Runde?"** mit dem Namen des nächsten Bogens. Jeder klickt sie
-selbst: Im Raum geht ohnehin jeder in seinem Tempo, und so wartet niemand auf den Langsamsten.
-
-Nach der dritten Runde kommt die **Gesamtauswertung**: die drei Bögen nebeneinander, jeder mit
-seinem eigenen Urteil, und darunter jede einzelne Frage mit der angekreuzten und der richtigen
-Antwort. Gezählt wird dabei **in Bögen, nicht in Prozent** — 57 von 75 sind rechnerisch 76 Prozent
-und sehen nach Bestehen aus, können aber 25 + 16 + 16 sein. Deshalb steht dort „1 von 3 Bögen
-bestanden. Offen: Vorschriften und Technik N." und nicht eine Prozentzahl, die niemandem hilft.
-
-**Fehler und Lernbedarf.** Jede falsch beantwortete Frage landet wie beim Lernen in der Fehlerliste
-und im Lernbedarf — im Prüfungsmodus schweigt nur die Anzeige, gebucht wird ganz normal. Dazu kommt,
-was bei Zeitablauf offen blieb: auch das ist ein Fehler und wird eingetragen. Nach der Prüfung steht
-unter der Auswertung, wie viele es waren und wo sie zu finden sind. Jede Runde schreibt außerdem
-ihren eigenen Verlaufseintrag („Gruppenprüfung Vorschriften 16/25"), am Ende einer für die ganze
-Prüfung.
-
-**Für den Kursleiter:** Die Rangliste zeigt jeden Teilnehmer mit allen drei Bögen einzeln
-(`Vorschriften 16/25 ✗ · Betrieb 25/25 ✓ · Technik 16/25 ✗`) statt nur mit einer Summe. Wer abgibt,
-meldet sein Ergebnis in den Gruppenchat, ebenfalls nach Bögen aufgeschlüsselt. Und „Neue Prüfung für
-alle" zieht drei frische Bögen, ohne dass der Raum neu angelegt und der Link noch einmal verschickt
-werden müsste.
-
-**Wie es gebaut ist.** Der Ablauf einer Prüfung — Uhr, keine Rückmeldung, Zwischenergebnis,
-Gesamtergebnis mit jeder falschen Antwort — steht seit Langem im Prüfungssimulator. Der ist nicht
-ein zweites Mal geschrieben worden; er bekommt seine Fragen nur aus einer anderen Quelle. Neu sind
-drei Dinge: Die Bögen zieht der Server einmal für den ganzen Raum, damit **alle dieselben Fragen in
-derselben Reihenfolge** schreiben (auch die Antworten stehen bei allen gleich — sonst passte der
-gemeldete Antwortindex nicht mehr zum Text). Vor jeder Runde steht das Startfenster mit der Uhr. Und
-jede Antwort geht wie in jeder Gruppenrunde an den Server, weshalb Teilnehmer-Übersicht, Rangliste
-und die Auswertung des Kursleiters unverändert weiterarbeiten.
-
-Der Haken steht bewusst **nicht** im zugeklappten Kasten „Gruppenraum Konfiguration", wo er
-fachlich hingehörte: Dort sieht ihn niemand. Er steht offen über „Raum erstellen" — und auch der
-Gast sieht ihn (nur nicht bedienbar), damit er beim Beitreten weiß, dass er in eine Prüfung kommt
-und nicht in eine Fragerunde. Anzahl und Bereich sind dann ausgegraut; für eine Prüfung sind sie
-festgelegt.
-
-Nachgemessen mit zwei Rechnern im selben Raum: beide bekommen dieselben 25 Fragen je Bogen in
-derselben Reihenfolge, die Uhr steht vor dem Start und läuft danach sekundengenau, die Rückmeldung
-bleibt bis zur Auswertung aus, 18 falsche Antworten stehen anschließend zu 18 in der Fehlerliste und
-zu 18 im Lernbedarf, bei Zeitablauf ebenso 22 offene Fragen. Null Seitenfehler. Die normale
-Gruppenrunde ohne Haken und der Prüfungssimulator allein laufen unverändert.
-
-### Im Raum liegen die Lernkacheln nicht mehr auf dem Tisch
-
-Dietmar, mit einem Bild aus dem Gruppenraum: „Im Gruppenraum gehören die 3 Knöpfe Videolehrgang und
-2 Mal 50 Ohm raus."
-
-Er hat recht, und zwar aus demselben Grund, aus dem dort schon F9 und Nachschlagen abgeschaltet
-sind: Diese Kacheln führen auf die Lektion und auf die Lehrgangsseite, auf der genau diese Frage
-erklärt wird — eine davon sogar auf den gerechneten Lösungsweg. Wer im Raum sitzt, spielt gegen
-andere: am Ergebnis hängt ein gemeinsamer Punktestand, und der Trainer sieht mit, wer wo steht.
-
-Die erste Fassung war zu eng gefasst und hing nur an `pruefungStreng()`, also am Prüfungssimulator
-und an der Prüfungsrunde im Raum. In der **normalen** Gruppenrunde — 25 Fragen, „Alle Teile", kein
-Haken — standen die Kacheln weiter da, und genau die hatte Dietmar fotografiert. Jetzt entscheiden
-zwei Gründe in einer Zeile: `pruefungStreng()` nimmt den Prüfungssimulator allein mit (dieselbe
-Lücke, nur ohne Zeugen), `window.duo.isActive()` den Gruppenraum in jeder Betriebsart. Genau dieses
-Paar entscheidet weiter unten auch, ob die Lösungstaste noch etwas verrät.
-
-Beim Lernen allein, beim Blättern durch den Katalog und in der Fehlerliste bleibt alles, wie es war —
-dort gehören sie hin.
-
-Nachgemessen an fünf Stellen: Prüfungssimulator 0 Kacheln, Gruppenprüfung 0, normale Gruppenrunde 0,
-nach dem Verlassen des Raums wieder 2, Lernrunde 2.
-
-### Eine Empfehlung ist keine Zusammenarbeit
-
-In der Fußzeile stand seit dem 04.09.2026 „In Zusammenarbeit mit 50ohm.de — dem Amateurfunk-Lehrgang
-des DARC". Als dieselbe Zeile im neuen Werbebild groß dastand, fiel sie Dietmar auf: „Es ist keine
-Zusammenarbeit. Möchte mehr eine Empfehlung." Und kurz darauf der Grund: „Zusammenarbeit klingt
-danach, dass 50 Ohm das mit entwickelt hat."
-
-Er hat recht, und es ist mehr als eine Geschmacksfrage. Der Trainer verlinkt den Lehrgang, mehr nicht
-— niemand beim DARC hat an diesem Programm mitgearbeitet. Auf einem Bild, das durch Facebook-Gruppen
-geht, wäre aus der freundlichen Formulierung schnell eine Behauptung geworden, die jemand
-richtigstellen muss.
-
-Jetzt steht dort: **„Empfehlung: 50ohm.de — der Amateurfunk-Lehrgang des DARC"**. Beide Namen bleiben
-anklickbar.
-
-Und das Omega davor ist ebenfalls weg — Dietmar, gleich darauf: „Ω gehört das nicht rein." Auch das
-stimmt, und zwar aus demselben Grund, der seit dem 04.09.2026 im Kommentar daneben steht: Das Zeichen
-„50 Ω" des DARC ist markenrechtlich geschützt und kommt im Trainer bewusst nicht vor. Ein
-griechischer Buchstabe als Zierde direkt vor „50ohm.de" rückt aber genau dorthin, wo er nicht
-hingehört. Ohne ihn ist die Zeile schlicht ein Satz. Es ist genau dieser eine Satz im Markup; die
-Werbebilder wurden mit der neuen Zeile neu aufgenommen.
-
-### Der geteilte Link hat jetzt eine Kachel
-
-Dietmar, mit zwei Bildern aus Facebook: „Wenn ich den Trainer Link vom Gruppenraum teilen möchte, gibt
-es keine Vorschau. Kann man das einbauen? Auch wenn ich E nach A eingestellt habe, es zeigt
-Amateurfunk Trainer Klasse N in der Vorschau."
-
-Beides hatte denselben Grund: Im Kopf von `Index.html` stand nichts, was ein Crawler lesen könnte.
-Ohne `og:`-Zeilen nimmt Facebook notgedrungen den `<title>` — und der steht seit jeher fest auf
-„Klasse N". Das eingestellte Prüfungsziel liegt außerdem nur im Browser des Gastgebers; ein Crawler
-führt kein JavaScript aus und kann es gar nicht sehen.
-
-Jetzt bekommt nur der Crawler eine eigene, winzige Seite mit allen Angaben — Titel, Beschreibung,
-Bild, Adresse. Ein Mensch bekommt wie bisher den Trainer. Der Umweg ist nötig, weil die absolute
-Adresse des Bildes mit im Kopf stehen muss und die erst im Augenblick der Anfrage feststeht: Der
-Tunnel heißt nach jedem Neustart anders. `Index.html` bei jedem Aufruf durch eine Textersetzung zu
-jagen, wäre bei knapp zwei Megabyte Verschwendung.
-
-Steht ein Raumcode im Link, zeigt die Kachel eine Einladung in den Gruppenraum; sonst die allgemeine
-Fassung. Beide Bilder sind 1200 × 630 groß — das Format, das Facebook, WhatsApp, Telegram und Signal
-erwarten. Das Bild der GitHub-Seite war 1200 × 663 und wurde beschnitten; es ist jetzt ebenfalls
-630 hoch, ohne dass etwas fehlt: Die 33 Zeilen kamen aus einer Fläche, deren Streuung bei 0,06 lag.
-
-In der Beschreibung steht ausdrücklich, dass der Zugang eine Demo ist und nur läuft, solange der
-Trainer läuft. Dietmar: „Demo Mode — Der Trainer ist nur so lange aktiv, wie der Trainer läuft." Wer
-den Link in vier Wochen anklickt, läuft sonst in eine tote Seite und hält das Programm für kaputt.
-
-### Wer war da?
-
-„Ich möchte für den Trainer Werbung machen und dazu einen Gruppenraum starten. Ich möchte als Host die
-Anzahl der Besucher sehen."
-
-Unter dem Einladungslink steht jetzt eine zweite Zeile neben der Tunnel-Wache: wie viele den Link
-aufgerufen haben, wie viele gerade im Raum sind, und wie lange der Trainer schon läuft. Gezählt wird
-nur, was von außen kommt — der eigene Rechner zählt nicht mit, sonst stünde der Zähler nach einem
-Vormittag Arbeit bei 40, ohne dass ein Besucher da war. Die Vorschau-Abrufe von Facebook und WhatsApp
-zählen ebenfalls nicht: Das sind Maschinen, keine Gäste.
-
-Die Liste, **wer** gekommen ist, zeigt der Trainer nur dem Entwickler — erkannt am Benutzernamen. Der
-Name ist dabei nur der Schalter für die Anzeige, nicht der Schutz: `/api/besucher` antwortet
-ausschließlich dem Trainer-PC selbst. Ein Gast über den Einladungslink bekommt dort 403, auch wenn er
-sich im Trainer „Dietmar" nennt (nachgemessen).
-
-In der Liste steht nichts, womit man jemanden wiederfindet: Uhrzeit, Geräteart, von welcher Seite der
-Klick kam, und die Adresse gekürzt wie überall sonst im Trainer. Keine Namen, keine Kennungen. Die
-Datei steht in der `.gitignore` und verlässt den Rechner nicht.
-
-**Nachgebessert, noch am selben Tag.** Dietmar, mit einem Bild der ersten Fassung: „Hier fehlt ein
-Reset-Knopf. Ich finde das irgendwie sehr reingedrückt. Ein Button zum Öffnen von einem Fenster wäre
-besser." Beides stimmte. Die Liste saß in einem Feld von 168 Punkten Höhe mit Bildlaufleiste, und
-IPv6-Adressen sind lang genug, dass jede Zeile dreimal umbrach.
-
-Jetzt steht unter dem Link nur noch der Satz mit den Zahlen und daneben ein Knopf „Besucher ansehen".
-Der öffnet ein Fenster mit einer richtigen Tabelle — Zeit, Gerät, gekommen über, Raum, Adresse, jedes
-in seiner eigenen Spalte. Darin sitzt auch der fehlende Knopf: **Zähler zurücksetzen**, mit
-Rückfrage. Sinnvoll, bevor eine neue Runde Werbung losgeht — dann zählt, was danach kommt, und nicht
-der Probelauf von gestern.
-
-Dabei wäre beinahe derselbe Fehler passiert wie schon zweimal in dieser Version: Der Kopfkasten im
-Fenster trägt sein Hellblau aus dem Markup, und die Regel `body.dark [id$=Modal] b` färbt das Fette
-darin fast weiß. Gemessen: 240,247,252 auf 238,244,251 — **1,01:1**, die Zahl, um die es in dem Satz
-geht, wäre im Dark Mode unsichtbar gewesen. Mit eigener Nachtfassung sind es jetzt 8,9:1 für den Text
-und 13,2:1 für das Fette.
-
-### Es klingelt, wenn jemand kommt — und man sieht, wer da ist
-
-Drei Wünsche auf einmal, während die erste Werbung schon lief: „Das Fenster bitte genau so groß wie
-das Fenster darunter. Wenn jemand auf dem Server joint, möchte ich den Level-Up-Sound. Möchte auch
-sehen, wer aktiv ist."
-
-**Die Größe.** Das Besucherfenster schrumpfte auf seinen Inhalt: mit drei Zeilen Liste war es 371
-Punkte hoch, das Gruppenraum-Fenster darunter 676. Genau das sah reingedrückt aus.
-
-Der erste Versuch waren feste Werte im Stilblatt — 94 % Breite, höchstens 1020 Punkte, Höhe 74 bis
-92 vh. Auf meinem Bildschirm traf das die Größe des anderen Fensters, auf Dietmars nicht: „Das Fenster
-hat nicht die gleiche Größe." Feste Werte können das auch nicht leisten, denn die Höhe des anderen
-Fensters hängt an seinem Inhalt. Also wird sie im Augenblick des Öffnens gemessen und übernommen; ist
-der Gruppenraum nicht offen, gelten wieder die Werte aus dem Stilblatt.
-
-Beim Messen lag noch eine Falle: `getBoundingClientRect()` liefert Punkte auf dem Bildschirm, ein
-gesetztes `style.width` wird aber als CSS-Punkt gelesen und anschließend mitgezoomt — der Trainer
-skaliert die ganze Seite über die Einstellung „Größe". Bei 80 % stand deshalb ein Fenster von 653
-neben einem von 816, genau die 0,8 zu viel. Mit `offsetWidth`/`offsetHeight` wird in derselben
-Einheit gezählt, in der auch geschrieben wird. Nachgemessen auf drei Bildschirmgrößen: 1020 × 710,
-816 × 569 und 1122 × 782 — jedes Mal auf den Punkt gleich.
-
-**Der Ton.** `levelUpSpielen()` gibt es seit dem 11.09.2026 — derselbe Ton, der eine gemeisterte Frage
-quittiert. Genau deshalb wird er hier benutzt und kein zweiter eingeführt: Wer ihn in den
-Einstellungen abgeschaltet hat, will ihn auch hier nicht hören. Er hängt an der Zahl, nicht am
-Ereignis; kommen zwischen zwei Blicken drei Leute, klingelt es einmal. Der Takt der Abfrage ist dafür
-von 30 auf 12 Sekunden verkürzt worden: Der Ton soll kommen, während der Besucher noch da ist.
-
-**Wer aktiv ist.** Die Antwort lag schon im Programm. Jeder offene Tab meldet sich alle zehn Sekunden
-beim Server, damit der nicht abschaltet — bisher wurde davon nur die Uhrzeit behalten. Daneben liegt
-jetzt eine zweite Karte mit dem Wenigen, das die Anzeige braucht: gekürzte Adresse, Geräteart, seit
-wann. Wer sich 40 Sekunden nicht gemeldet hat, ist weg. Bewusst eine zweite Karte und nicht ein
-Objekt in der ersten: An der ersten hängt die Abschaltlogik, und die rechnet mit einer Zahl.
-
-Im Fenster steht das in einem eigenen grünen Kasten über der Liste — die eine Frage ist „wer ist
-gerade drin", die andere „wer war heute da". Unter dem Einladungslink steht die Zahl mit dabei.
-
-### Drei Besucher aus Polen, bevor der Link geteilt war
-
-Kaum stand die feste Adresse, meldete Dietmar: „meine IP ist nicht in Polen." In der Besucherliste
-standen zwei Aufrufe aus Warschau und einer aus Amsterdam, alle um 18:01 und 18:02. Und dann der Satz,
-der es entschied: „habe den Link noch nicht geteilt."
-
-Damit war klar, was das war. Sobald Cloudflare für eine neue Domain ein Zertifikat ausstellt, steht
-der Name öffentlich in den Certificate-Transparency-Protokollen. Es gibt Dienste, die diese
-Protokolle im Minutentakt auslesen und jede frische Adresse sofort abklopfen. Die laufen in
-Rechenzentren — Warschau, Amsterdam, Ashburn —, geben sich in der Kennung als Windows- oder
-Mac-Browser aus und landeten damit in der Liste wie richtige Besucher. Bei einem Quick Tunnel fiel das
-nie auf: Dessen Adresse war am nächsten Tag ohnehin eine andere.
-
-Unterschieden wird jetzt an etwas, das kein Scanner tut: Ein echter Browser meldet sich nach dem Laden
-alle zehn Sekunden beim Server — das Lebenszeichen, das den Trainer am Leben hält. Dafür braucht es
-JavaScript und eine offene Seite. Ein Scanner holt die Startseite und ist weg.
-
-Jeder Aufruf fängt deshalb als „nur angeklopft" an und wird zum Besucher, sobald von derselben Adresse
-ein Lebenszeichen eintrifft. Lieber jemanden eine Minute lang zu wenig zählen als die Werbezahlen mit
-Maschinen aufzublähen. In der Liste stehen die Anklopfer ausgegraut mit dem Vermerk „nur angeklopft",
-im Kopf steht ihre Zahl getrennt daneben.
-
-Der Level-Up-Ton hängt ab jetzt ebenfalls an den echten Besuchern. Sonst hätte es am ersten Tag
-dreimal geklingelt, ohne dass ein Mensch da war.
-
-Nachgemessen mit zwei gestellten Aufrufen: Der eine holt nur die Seite → „klopf". Der andere holt die
-Seite und meldet sich → „ECHT". Gezählt: 1 Besucher, 1 Anklopfer.
-
-### Kein „Demo-Zugang", und kein Funkamateur, der noch keiner ist
-
-Zwei Sätze im Willkommensfenster, beide von Dietmar beanstandet, beide zu Recht.
-
-„Eines Funkamateurs klingt doof, da ich noch keiner bin." Im Text stand „Der Trainer läuft gerade auf
-dem Rechner eines Funkamateurs". Er hat die Prüfung noch nicht abgelegt — und ausgerechnet daran hat
-sich wenige Tage zuvor jemand in einer Facebook-Gruppe hochgezogen. Ein Satz, der in jedem
-Besucher-Browser steht, darf so etwas nicht behaupten. Jetzt heißt es „auf einem privaten Rechner":
-sagt dasselbe über die Verfügbarkeit, erhebt aber keinen Anspruch.
-
-„Demo-Zugang klingt auch doof. Das klingt nach bezahlen." Auch das stimmt: „Demo" heißt sonst
-abgespeckte Fassung mit Bezahlschranke dahinter, und hier ist das Gegenteil der Fall. Das Wort ist
-aus dem ganzen Programm verschwunden — aus dem Willkommensfenster („Hier ist alles offen und
-kostenlos"), aus der Link-Vorschau, aus der Sperre im Gruppenraum („Das ist nicht dein Trainer") und
-aus der Fußzeile der beiden Werbebilder („Offen und kostenlos — erreichbar, solange der Trainer
-läuft").
-
-Mit weg ist der Halbsatz „die Adresse ändert sich bei jedem Start". Mit dem benannten Tunnel auf
-eigener Domain stimmt er nicht mehr; was bleibt, gilt in beiden Fällen.
-
-### Eine feste Adresse — und der Trainer hält sich daran
-
-Am Nachmittag des 21.09.2026 hat Dietmar `amateurfunk-trainer.com` gekauft, um den Trainer über einen
-benannten Cloudflare-Tunnel erreichbar zu machen. Der läuft als Windows-Dienst, hält die Leitung
-unabhängig vom Trainer und trägt einen festen Namen — damit überlebt ein geteilter Link jeden
-Neustart. Zwei Stellen im Programm standen dem im Weg.
-
-**Der Trainer hätte den Dienst erschlagen.** Beim Start räumt er übrig gebliebene Tunnel auf, unter
-Windows mit `taskkill /IM cloudflared.exe /F` — und das trifft *jedes* cloudflared auf dem Rechner,
-auch den Dienst. Bei jedem Start des Trainers wäre die feste Adresse weggebrochen, und niemand hätte
-verstanden, warum. Jetzt wird die Befehlszeile gelesen und nur beendet, was ein Quick Tunnel ist
-(`--url`). Genau so macht es der Linux-Zweig seit jeher, aus demselben Grund. Gelesen wird sie mit
-`Get-CimInstance` und nicht mit `wmic` — das ist in aktuellen Windows-Fassungen nicht mehr an Bord.
-Geht die Abfrage schief, wird **nichts** beendet: lieber ein Waisenprozess zu viel als ein
-erschlagener Dienst.
-
-**Und er hätte trotzdem einen Quick Tunnel hochgefahren.** `tunnelBeiBedarfStarten()` fragte nicht, ob
-überhaupt eine eigene Adresse eingetragen ist. Bei jedem „Raum erstellen" wäre ein zweites cloudflared
-neben dem Dienst gestartet — für eine Adresse, die niemand benutzt. Schlimmer als unnötig: Cloudflare
-drosselt Quick Tunnels, wenn sich mehrere von derselben Anschlussadresse stapeln; ausgerechnet die
-Notlösung hätte die Hauptleitung stören können.
-
-Unter dem Einladungslink steht bei eingetragener Adresse jetzt nicht mehr die Tunnel-Wache, sondern
-die Auskunft, die dort hingehört: welche Adresse gilt, dass kein Tunnel nötig ist und dass ein
-Neustart den Link nicht ändert.
-
-Nachgemessen mit `https://trainer.amateurfunk-trainer.com` im Feld: Einladungslink
-`https://trainer.amateurfunk-trainer.com/?duo=7M7T2W`, kein Tunnelstart im Serverfenster, keine
-Seitenfehler.
-
-### Der Chat ist jetzt auch ohne Gruppenraum da
-
-„Wenn ich einen Link teile, möchte ich, dass der Chat vorhanden ist, auch ohne dem Duo." Und kurz
-darauf, beim Ausprobieren: „Habe jetzt auch schon einen Chat. Hier kann nur niemand schreiben, weil es
-nicht über Duo läuft."
-
-Bisher hing der Chat am Raumcode — `io.to(code)`, kein Raum, kein Chat. Wer die nackte Adresse
-anklickte, stand in der Hauptansicht und konnte nichts fragen. Jetzt gibt es einen Kanal daneben:
-„alle, die in keinem Raum sind". Er ist kein Raum, sondern eine Frage beim Senden — deshalb brauchte es
-kein `join`/`leave` an fünf Stellen im Socket-Teil.
-
-**Der Gastgeber ist immer dabei**, auch wenn er gerade eine Runde in seinem Raum hat. Daran wäre die
-erste Fassung gescheitert: Er sitzt im Raum und sähe die Frage am Link nicht. Und seine Antwort geht
-umgekehrt auch an die am Link hinaus — mit derselben Nachrichten-Kennung, weshalb sie niemand doppelt
-sieht. Was die Teilnehmer im Raum untereinander schreiben, bleibt im Raum.
-
-Nachgemessen über die ganze Kette: Gastgeber allein → kein Chatfenster. Besucher von außen verbindet
-sich → Fenster erscheint. Besucher fragt → kommt an, markiert „· am Link". Gastgeber antwortet, erst
-ohne und dann aus seinem Raum heraus → beides kommt beim Besucher an. Keine Seitenfehler.
-
-Dabei fiel noch eine Lücke auf: Die Verbindung zum Server wurde überhaupt erst aufgebaut, wenn jemand
-den Gruppenraum aufschlug. Wer nur den Link angeklickt hatte, hatte gar keine Leitung. Sie wird jetzt
-zwei Sekunden nach dem Start im Hintergrund aufgebaut — für den Chat und für Ansagen.
-
-### Willkommen am geteilten Link, mit Namensfrage
-
-„In dem Fall, wenn ich den Trainer zB. in Facebook teile, soll ein Hinweis kommen." Und: „Hier wäre
-ein PopUp gut, wo man sein Rufzeichen oder Benutzernamen eingeben kann."
-
-Beides steht in **einem** Fenster — zwei hintereinander wären ein Hindernis. Es sagt, dass der Trainer
-auf dem Rechner eines Funkamateurs läuft und nur erreichbar ist, solange der an ist, wo es das
-Programm zum Behalten gibt, und dass der Lernstand im eigenen Browser bleibt. Darunter das Feld für
-Rufzeichen oder Namen, freiwillig, mit „Ohne Namen" als gleichwertigem Ausgang.
-
-Der Merker wird erst beim Schließen gesetzt, nicht beim Anzeigen: Wer neu lädt, ohne geantwortet zu
-haben, wird wieder gefragt. Am eigenen Rechner kommt das Fenster nie — es hängt an derselben Frage wie
-der Blue Mode: Ist der Name in der Adresszeile ein öffentlicher?
-
-### Die Ansage vor dem Neustart
-
-„Nur so kann ich als Host schreiben, ich starte neu. So reißt es einfach ab und die Benutzer ärgern
-sich." Und der Vorschlag gleich dazu: „Hier könnte man einen Button einbauen Neustart. Danach bekommen
-alle einen Hinweis: Der Server wird neu gestartet in 3 Minuten. Der Link dazu wird erneut geteilt."
-
-Genau das tut der Knopf „Neustart ankündigen" im Besucherfenster. Alle Verbundenen bekommen oben einen
-Balken mit Countdown, samt dem Hinweis, dass der neue Link danach in der Gruppe steht und der
-Lernstand im eigenen Browser bleibt. Die Ansage gilt auch für den, der erst in Minute zwei dazukommt —
-er soll nicht in einen Abbruch laufen, von dem alle anderen wussten.
-
-Gestartet wird dadurch nichts. „Den Trainer möchte ich selbst neu starten", und das ist auch die
-robustere Lösung: Ein Programm, das sich unter Windows selbst neu startet, bräuchte Fenster,
-Node-Pfad und einen Starter, den es hier in drei Varianten gibt.
-
-### Die Stadt schickt Cloudflare nicht mit — nachgesehen statt geraten
-
-„Gibt Cloudflare auch noch die Stadt bekannt?" Das Land (`cf-ipcountry`) kommt bei jedem Tunnel. Stadt,
-Region und Zeitzone gibt es nur, wenn in der Cloudflare-Zone die „Managed Transforms → Add visitor
-location headers" eingeschaltet sind — und bei einem Quick Tunnel auf trycloudflare.com gehört die Zone
-Cloudflare, nicht dem Gastgeber. Mit einem eigenen benannten Tunnel auf eigener Domain wäre es
-möglich.
-
-Behauptet wird davon nichts: Die Anzeige nimmt, was da ist — kommt der Kopf, steht die Stadt vor dem
-Land, kommt er nicht, bleibt es beim Land. Und einmal je Serverstart schreibt das Serverfenster auf,
-welche `cf-`Köpfe wirklich angekommen sind. Im Probelauf: `cf-connecting-ip`, `cf-ipcountry`, `cf-ray` —
-keine Stadt.
-
-### Standort statt Adresse — und jeder Besucher zählt nur einmal
-
-Zwei Rückmeldungen aus dem laufenden Betrieb: „Kann man anstatt der IP das in Standort ändern? Mir ist
-auch aufgefallen, dass erst Facebook und dann direkt kommt."
-
-**Der Standort.** In der Spalte stand `2a00:20:73b9:d84a:...` — richtig, aber es sagt nichts. Jetzt
-steht dort 🇩🇪 Deutschland. Der Ländercode kommt von Cloudflare selbst: Der Tunnel läuft über deren
-Netz, und dort wird `cf-ipcountry` gesetzt. Es braucht also keinen fremden Dienst, dem man die
-Adressen der Besucher schicken müsste, und keine 70-MB-Datenbank im Ordner. Den Namen zum Code liefert
-der Browser (`Intl.DisplayNames`), die Fahne wird aus den zwei Buchstaben gerechnet. Fehlt der Code —
-etwa bei einem Besucher aus dem eigenen WLAN, wo kein Cloudflare dazwischen ist —, bleibt die gekürzte
-Adresse stehen.
-
-**Der doppelte Besucher.** Das war kein zweiter Gast, sondern immer derselbe, zweimal gezählt. Der
-Grund steht in `sw.js`: Der Service Worker legt sich beim ersten Besuch einen Vorrat an, und in dieser
-Liste steht `'./'` — die Startseite. Der Browser holt sie also ein zweites Mal, aus dem Hintergrund
-und ohne Referrer. In der Liste sah das aus wie zwei Leute: einer „über facebook.com", einer
-„direkt". Der Zähler stand damit für jeden Besucher auf zwei.
-
-`sec-fetch-dest` unterscheidet beides und wird vom Browser gesetzt, nicht von der Seite: „document"
-heißt, da hat wirklich jemand eine Seite aufgeschlagen; „empty" ist ein Abruf im Hintergrund. Nur das
-erste zählt. Fehlt der Kopf ganz (ältere Browser), wird gezählt wie bisher — lieber einer zu viel als
-eine leere Liste. Nachgemessen: Der Aufruf mit `document` steht in der Liste, der des Service Workers
-aus derselben Adresse nicht.
-
-Dazu steht im Kopf jetzt beides: „16 Aufrufe über den Link von 9 verschiedenen Adressen". Wer zweimal
-lädt, ist ein Besucher und zwei Aufrufe — für die Frage, wie weit die Werbung reicht, ist die zweite
-Zahl die ehrlichere.
-
-### „Nur am Trainer-PC möglich" — und er stand am Trainer-PC
-
-Dietmar wollte den Zähler zurücksetzen, am eigenen Rechner, unter `localhost:3000`, und bekam zu
-lesen: „Zurücksetzen nicht möglich: Nur am Trainer-PC möglich."
-
-Der Grund war nicht die Sperre, sondern ein halber Neustart: Die Seite war neu, der Server noch alt.
-`Server.js` wird nur beim Start gelesen — ein F5 holt die neue Oberfläche, aber nicht die neue Route.
-Die gab es also noch nicht, der Aufruf lief in einen 404, und mein Client warf beides in einen Satz.
-
-Jetzt werden die Fälle getrennt: 404 heißt „der Server läuft noch mit einer älteren Fassung, bitte den
-Trainer einmal beenden und neu starten", 403 heißt „das geht nur direkt am Trainer-PC". Dasselbe gilt
-für die Anzeige, wer gerade da ist: Fehlt die Auskunft in der Antwort, steht das im Fenster, statt
-dass der Kasten einfach wegbleibt und niemand weiß, warum.
-
-### Wer über den Link kommt, sieht zuerst Blau
-
-„Ich möchte bei einem Join, dass er den Trainer im Blue Mode zuerst sieht."
-
-Erkannt wird das am Namen in der Adresszeile, nicht am Server: Gefärbt wird, bevor das erste Mal
-gezeichnet wird — eine Frage an den Server wäre zu spät, der Besucher sähe erst Weiß und dann Blau.
-Wer über localhost oder eine Adresse aus dem eigenen Netz kommt, sitzt am Rechner oder im WLAN und
-behält seinen Stil. Und es gilt nur beim ersten Besuch: Sobald jemand selbst einen Stil gewählt hat,
-hat der Vorrang.
-
-Nachgemessen mit drei Browsern: über `demo.trycloudflare.com` kommt Blau, über `heimat.local` und über
-localhost bleibt es beim gewohnten Stil.
-
-### Im Demo-Zugang eröffnet niemand einen zweiten Raum
-
-Dietmar, kurz darauf: „Im Gruppenraum dürfen Besucher keinen Zugriff haben, wenn ich nur den Link ohne
-Duo und Code poste. Diese starten sonst einen neuen Gruppenraum und der Link ist nicht mehr aktiv."
-
-Er hat recht, und der Schaden ist größer, als es klingt. Wer die nackte Trainer-Adresse anklickt,
-steht in der vollen Hauptansicht — mit dem Knopf „Gruppenraum". Ein Klick auf „Raum erstellen", und
-auf Dietmars Rechner läuft ein zweiter Raum, dessen Gastgeber irgendwo im Internet sitzt; dabei wird
-auch der Tunnel angefasst. Der Link, den er gerade in die Gruppe gestellt hat, wäre tot.
-
-Ab jetzt gilt: Wer über den Tunnel kommt, kann beitreten, aber keinen eigenen Raum eröffnen. Der Knopf
-ist gesperrt und sagt, warum; der Riegel selbst liegt aber im Server, denn ein gesperrter Knopf geht
-in der Entwicklerkonsole wieder auf. Unterschieden wird nach der Adresse — `sperrbar()` gab es dafür
-schon. Wer am Rechner selbst sitzt oder im eigenen WLAN, merkt nichts davon.
-
-Nachgemessen mit drei Verbindungen: Besucher über den Tunnel abgelehnt, Gastgeber am eigenen PC Raum
-eröffnet, Handy im eigenen WLAN Raum eröffnet. Und die andere Hälfte stimmt auch: Ein Besucher von
-außen tritt mit dem Code weiterhin bei.
-
-### Der gelernte Punkt war der eigentliche Grund
-
-Nach der ersten Runde meldete Dietmar zurück: „Derzeit nur bei Start. Im Gruppenraum, Fehler,
-Lernbedarf, Blättern und Weiterblättern fehlt es." Dazu ein Bild mit 25 fast gleichen Kästchen.
-
-Gemessen wurde es aus seinem Bild heraus: 23 der 25 Punkte trugen `.gelernt-dot`. Deren Farbe
-#d7f0e0 steht auf der Spalte #e0f1e8 mit **1,03:1** — das ist kein Unterschied mehr. Die Regel steht
-weit oben im Stil und trägt `!important`, damit der Punkt in Grau, Blau und Orange seine Farbe
-behält; im Green Mode hieß das aber hellgrün auf hellgrün. Der Tag davor hatte den offenen und den
-beantworteten Punkt repariert — den gelernten nicht, und der ist bei einem, der neun von zehn Fragen
-abgehakt hat, der häufigste von allen.
-
-Daher auch „bei Start geht es": Der Startknopf legt fällige und neue Fragen vor, also ungelernte, und
-die sind weiß mit kräftigem Rand. Gruppenraum, Fehler, Lernbedarf und Blättern ziehen aus dem ganzen
-Katalog. Nachgemessen: Raum 21 von 25 Punkten gelernt, Fehler 22 von 25, Lernbedarf 60 von 66,
-Blättern 516 von 571. Richtig und falsch färbten sich dort übrigens die ganze Zeit — die zwei, drei
-farbigen Punkte gingen nur in der blassen Masse unter.
-
-Aus drei Entwürfen hat Dietmar den gefüllten gewählt: Mittelgrün #7cc4a0 statt #d7f0e0, also 1,75:1
-gegen die Spalte statt 1,03:1, mit dunkelgrüner Ziffer #0f5132 darauf (4,57:1). Vom gefüllten
-Dunkelgrün des richtig beantworteten Punktes trennen es 2,46:1 und die Ziffer: dort weiß, hier
-dunkel.
-
-Mitgenommen: Der aktuelle Punkt behält jetzt seinen dunkelblauen Rand auch dann, wenn er zugleich als
-gelernt gilt. Beide Regeln sind gleich spezifisch, und die letzte gewinnt nur, wenn sie ebenfalls
-`!important` trägt — das galt bis heute schon für den beantworteten Punkt in der Prüfung.
-
-### Im Green Mode war der Verlauf grün auf grünem Grund
-
-Dietmar, mit einem Bild der Fortschrittsspalte: „Im Green Mode erkennt man den Verlauf nur schwer.
-Grün auf grünem Grund?"
-
-Das war es, und zwar an zwei Stellen. Das noch nicht beantwortete Kästchen lag mit `#f3fbf6` auf
-einer Spalte in `#e0f1e8` — gemessen **1,11:1**, also praktisch dieselbe Fläche —, und sein Rand trug
-2,12:1. Ein Kästchen, dessen Fläche aussieht wie der Grund und dessen Rand kaum dunkler ist, hat
-keine Form. Und das Kästchen „im Prüfungssimulator beantwortet, ohne Wertung" lag mit einem hellen
-Blaugrau bei 1,22:1 — es war schlicht weg.
-
-Jetzt ist das offene Kästchen **weiß** mit kräftigem grünem Rand (4,17:1). Weiß ist auf der grünen
-Spalte das, was ein Formularfeld auf einem Blatt ist: eine Fläche, die auf etwas wartet. Dadurch
-heben sich die gefüllten Zustände ab, ohne dass an ihren Farben etwas geändert werden musste —
-dunkelgrün für richtig (4,3:1 gegen die Spalte), dunkelrot für falsch (5,19:1). Das beantwortete
-Kästchen bleibt blaugrau, denn es *muss* aus der Reihe fallen — es sagt „beantwortet, aber das Urteil
-kommt erst am Ende" —, nur dunkler und mit sichtbarem Rand (5,3:1).
-
-### Das Zeichen des Trainers ist jetzt Dietmars eigenes
-
-Dietmar, mit einem Bild des Beenden-Knopfes aus der Kopfzeile seines eigenen Programms: „Dieses
-Zeichen finde ich für den Trainer gar nicht mal so schlecht als Icon. Es ist ein vertikaler Strahler
-mit einer Funkwelle."
-
-Er hat recht mit dem, was er sieht: Der senkrechte Strich ist der Strahler, der offene Ring die
-abgehende Welle. Mein Einwand war, dass es zugleich das Ein/Aus-Zeichen ist und im Dock mancher
-„beenden" liest; dazu gab es zwei Runden Gegenvorschläge — Mast mit Wellen, Dipol, Funkturm, die drei
-Klassen als Stufen, Antenne aus dem Buch. Seine Entscheidung: „nimm mein Zeichen als Icon." Also
-dieses.
-
-Gezeichnet wird es in `zeichen_bauen.py`, mit demselben Aufbau wie bisher: dunkler Verlauf,
-Türkis, der doppelte Schein einmal weit und schwach, einmal eng und kräftig. Ab 48 Punkten steht
-die ganze Tafel mit der Wortmarke „Amateurfunk — TRAINER" darunter, bei 32 und 16 nur noch das
-Zeichen. Zwei Kleinigkeiten waren dabei zu lösen: PIL trägt die Strichbreite eines Bogens nach
-**innen** auf, weshalb die runden Enden zunächst als zwei Ohren über dem Ring standen — sie sitzen
-jetzt eine halbe Strichbreite weiter innen. Und in 16 Punkten wären aus der Strichbreite noch
-anderthalb Bildpunkte geworden; dort trägt der Strich deshalb dicker auf, sonst verschwände der Ring
-zu einem Schatten.
-
-**Die 55 ist nicht gelöscht.** Ihre Zeichenfunktionen stehen unverändert in der Datei; wer sie
-zurückholen will, ändert in `voll()`, `mittel()` und `winzig()` je eine Zeile. Und `zeichen_bauen.py`
-schrieb seine Dateien bisher in einen festen Pfad aus der Entwicklung — auf jedem anderen Rechner
-lief es damit ins Leere. Jetzt schreibt es in den Ordner, in dem es selbst liegt; ein angehängter
-Pfad überschreibt das.
-
-Neu gebaut sind `icon.png`, `icon-512.png`, `icon-192.png`, `icon-512-maskierbar.png`, `icon.ico`,
-`favicon.ico` und `icon.icns` — dieselben Namen wie vorher, also ziehen Installer, Bauskript und die
-Verknüpfung auf dem Schreibtisch von selbst nach.
-
-### Auf dem Mac hüpft das Zeichen, bis der Trainer da ist
-
-Zweite Rückmeldung desselben Mac-Nutzers: Das ewige Hüpfen ist weg, aber jetzt fehlt ihm das
-Hüpfen ganz — „er hätte es gerne 3 Mal". Das ist nachvollziehbar: Seit `LSUIElement` gibt es gar
-kein Dock-Zeichen mehr und damit keinerlei Hinweis, dass der Doppelklick angekommen ist. Bis der
-Browser aufgeht, scheint nichts zu passieren.
-
-**Dreimal ist keine Einstellung.** macOS lässt das Zeichen hüpfen, solange es darauf wartet, dass
-sich das Programm beim Fensterdienst meldet; es hört auf, wenn das geschieht — oder wenn der Vorgang
-endet. Ein Shell-Skript meldet sich nie. Steuerbar ist also nur, wie lange der Starter lebt.
-
-Zuerst stand hier deshalb eine feste Zahl: 1,8 Sekunden, das ergibt etwa drei Hüpfer. Dann kam
-Karstens eigentliche Frage nach: „Kann man die App dazu bringen, auf die geöffnete Seite im Browser
-zu warten und bei Erfolg das Springen zu beenden?" — und die ist besser als jede Zahl. Eine feste
-Zeit ist immer falsch: Auf einem schnellen Rechner hüpft es noch, wenn der Trainer längst steht; auf
-einem langsamen hört es auf, bevor überhaupt etwas zu sehen ist.
-
-So ist es jetzt gebaut: `LSUIElement` ist wieder draußen, es gibt also ein Zeichen im Dock. Der
-Starter setzt den Server abgekoppelt in Gang (`nohup`, damit er das Ende des Skripts überlebt) und
-fragt danach alle 0,2 Sekunden bei Port 3000 nach. Antwortet der Trainer, geht der Starter — das
-Zeichen verschwindet **in dem Moment, in dem der Trainer da ist**. Das Hüpfen dauert also genau so
-lange wie der Start und hört bei Erfolg auf, nicht nach Stoppuhr.
-
-Zwei Grenzen gibt es trotzdem. Eine Mindestzeit von 1,2 Sekunden, weil ein Zeichen, das kurz
-aufblitzt und weg ist, keine Rückmeldung wäre — auf einem flotten Mac antwortet der Server in einer
-halben Sekunde. Und eine Obergrenze von 25 Sekunden, damit es nicht wieder anderthalb Minuten hüpft,
-wenn gar nichts kommt; dann meldet sich ein Fenster. Ebenso, wenn der Server gleich wieder stirbt —
-Port belegt, Datei fehlt. Bisher fiel so ein Fehlstart gar nicht auf, weil der Starter unsichtbar war.
-
-Die alte Falle darf dabei nicht zurückkommen: Bis 1.296.0 fehlte `LSUIElement` **und** der Starter
-führte node per `exec` aus, lebte also weiter und meldete sich nie — daher die anderthalb Minuten.
-Ohne `LSUIElement` muss sich der Starter zwingend selbst beenden; das steht als Warnung im Bauskript.
-
-Einen Mac gibt es in der Entwicklung nicht, den Warteteil kann man aber auch hier laufen lassen.
-Nachgemessen mit vier gestellten Servern: Einer, der nach 1,6 Sekunden antwortet — der Starter geht
-nach 1,9. Einer, der sofort antwortet — 1,2 Sekunden, die Mindestzeit greift. Einer, der beim Start
-stirbt — 0,2 Sekunden, Rückgabe 1, Fenster kommt. Und einer, der läuft, aber nie antwortet — 26
-Sekunden, dann das Fenster. Ob macOS daraus die erhofften zwei bis drei Hüpfer macht, sagt uns der
-nächste Bericht aus der Runde.
-
-### Hilfe vor Ort: Ausbildungspaten, Kurse und die Unterlagen des DARC
-
-Dietmar: „Können wir von der Seite von 50 Ohm etwas bei uns einbauen?"
-
-In der Hauptansicht steht jetzt unter dem Videolehrgang eine Zeile **Hilfe & Unterlagen**:
-**Ausbildungspaten**, **Kurse vor Ort** und **Unterlagen**. Der erste führt zu den
-Ausbildungspaten des DARC — erfahrenen Funkamateuren, die beim Einstieg helfen. Der zweite zu den
-Kursen vor Ort, die meist einmal in der Woche abends stattfinden, mit Liste und Kartenansicht. Der
-dritte auf die Seite mit den Ausbildungsunterlagen: Bücher für N, E und A, Foliensätze,
-Karteikarten, Fragenkatalog.
-
-**Warum ausgerechnet diese drei.** Der Trainer kann einem alles beibringen außer dem, was ein Mensch
-kann: nachfragen, wenn man etwas nicht versteht. Genau diese Lücke schließen Paten und Kurse — und
-wer allein vor dem Bildschirm sitzt, weiß meist gar nicht, dass es sie gibt. Die Unterlagenseite
-steht daneben für alle, die lieber etwas Gedrucktes in der Hand haben. Die Zeile sitzt unter dem
-Videolehrgang, weil beides dasselbe ist: Lernen, das nicht aus diesem Programm kommt.
-
-Ein vierter Knopf führt zu den **Folien**: den Foliensätzen zum Lehrgang als fertige PDF, die der
-DARC auf GitHub veröffentlicht. Für Ausbilder sind sie das Material für den Kursabend. Sie sind
-nebenbei das einzige der hier verlinkten Angebote mit einer klaren Lizenz — **CC-BY 4.0**, also
-weitergeben und benutzen unter Namensnennung. Mitliefern wäre damit sogar erlaubt; der Link ist
-trotzdem besser, weil drüben immer der aktuelle Stand liegt und der Trainer nicht um ein paar
-hundert MB PDF wächst. Der Weg geht auf „latest" und damit stets auf die neueste Veröffentlichung.
-
-Dazu kommt bei **Klasse N** ein fünfter Knopf: **Buch Klasse N**, der zum gedruckten
-DARC-Amateurfunklehrgang von Matthias Jung (DL9MJ) und Björn Swierczek (DL1PZ) bei Amazon führt.
-Dietmar: „Einen Button zu dem Buch bei Amazon hätte ich gerne dabei. Dieser sollte aber nur bei der
-Klasse N dabei sein." Genau so ist er gebaut — er hängt am Prüfungsziel, nicht an der Zeile, und
-verschwindet, sobald man auf E, N → E oder E → A umstellt. Für diese Ziele gibt es andere Bände; ein
-Knopf zum N-Buch wäre dort ein Hinweis auf ein Buch zur falschen Prüfung. Wer sie lernt, findet
-seinen Band unter „Unterlagen" daneben. Mit dem Knopf wechselt auch die Herkunftszeile rechts: Steht
-er da, heißt es „DARC und Amazon", sonst „beim DARC" — bei einem Knopf, der in einen Laden führt,
-soll vorher klar sein, wohin er geht.
-
-**Es sind Links, keine Kopien.** Die Seiten gehören dem DARC und werden im Browser geöffnet, als das,
-was sie sind: sein Angebot. Der Trainer zeigt von ihrem Inhalt nichts an. Genauso wird es seit
-Wochen bei den Ω-Kacheln an der Frage gehalten. Texte, Bilder oder Foliensätze zu übernehmen wäre
-etwas völlig anderes und kommt nicht in Frage: Auf der Unterlagenseite steht kein Lizenzhinweis, und
-das heißt nicht „frei", sondern „alle Rechte beim DARC".
-
-### Im Dark Mode sind richtig und falsch wieder zu sehen
-
-Dietmar, mit einem Bild aus dem Dark Mode: „Im Dark Mode ist der Verlauf farblich nicht sichtbar.
-Hier möchte ich Rot und Grün sichtbar."
-
-Stimmte: In der Spalte **Fortschritt** sahen alle Kästchen gleich aus — richtig beantwortet, falsch
-beantwortet, noch offen, kein Unterschied. Im hellen Stil waren sie immer grün und rot.
-
-**Der Grund** steht im Stilblock für die Nachtansicht. Dort werden die Kästchen zusammen mit den
-übrigen Feldern der Auswertungsspalte in das Nachtblau gesetzt — mit `!important`, damit die hellen
-Vorgaben nicht durchschlagen. Die Farben für richtig und falsch stehen aber in `.dot-sidebar.correct-dot`
-und `.dot-sidebar.wrong-dot`, und die sind weniger spezifisch (0,2,0 gegen 0,2,1) *und* stehen weiter
-oben in der Datei. Zwei Gründe, aus denen sie verloren. In den anderen Farbstilen — Grau, Grün, Blau,
-Orange — ist dasselbe früher schon einmal aufgefallen; dort tragen die Farben deshalb seit Langem ein
-`!important`. Bei der Nachtansicht war es vergessen worden.
-
-Jetzt sind es dieselben Farben wie bei den Antworten darunter, die am 17.09. aus genau demselben
-Anlass grün und rot geblieben sind: `#3bb583` und `#fe756c`. Die Ziffern in den Kästchen sind mit
-0,52 rem sehr klein, deshalb dunkle Schrift auf der hellen Fläche — gemessen 6,1:1 auf Grün und
-6,4:1 auf Rot, lesbar beginnt bei 4,5:1.
-
-Drei weitere Zustände hatten dasselbe Problem und sind gleich mit behoben:
-
-- **gelernt** — grün umrandet, aber nicht gefüllt: sie saß schon vor dieser Runde, gefragt wurde sie
-  noch nicht (8,7:1)
-- **im Prüfungssimulator beantwortet** — ein neutrales Blaugrau ohne Wertung, denn dort kommt die
-  Auflösung erst am Ende
-- **die aktuelle Frage** — ein heller Ring im DARC-Blau mit leisem Schein; das Dunkelblau aus dem
-  hellen Stil kam gegen den nächtlichen Grund nicht an
-
-Nachgemessen: vier unterscheidbare Farben unter den Kästchen statt einer, alle über 4,5:1, keine
-Änderung am hellen Stil.
-
-### Die Tunnel-Wache ist im Dark Mode wieder zu lesen
-
-Dietmar, mit einem Bild aus dem Gruppenraum: „Im Gruppenraum kann man das noch schlecht erkennen."
-
-Gemeint ist der grüne Kasten unter dem Einladungs-Link. Drei Angaben fehlten dort schlicht:
-„**Tunnel-Wache läuft.**", „zuletzt durchgekommen **vor 19 Sekunden**" und „im Raum: **2**" — genau
-die drei, um die es in dem Kasten geht. Der Rest des Satzes war lesbar.
-
-**Warum ausgerechnet die drei:** Sie stehen fett. Und fett Gedrucktes bekommt im Dark Mode in jedem
-Fenster ein helles Weiß (`body.dark [id$="Modal"] b`) — was überall richtig ist, nur nicht hier: Der
-Kasten selbst blieb hell. Seine Farben wurden nämlich aus `duo.js` heraus direkt an das Element
-gehängt (`zeile.style.background = '#eef8f1'`), und was aus JavaScript kommt, gewinnt gegen jeden
-Stil. Die Nachtsicht konnte gar nicht mitreden. Weiß auf Hellgrün, gemessen 1,1:1.
-
-Die Farben stehen jetzt im Stilblock, wo sie hingehören; `duo.js` setzt nur noch, ob die Leitung gut
-aussieht oder nicht (`.duo-wache.gut` beziehungsweise `.warn`). Im hellen Stil sieht der Kasten aus
-wie bisher. Im Dark Mode ist er dunkelgrün mit hellgrüner Schrift, im Warnfall dunkelbraun mit
-Bernstein — gemessen 9,7:1 für den Fließtext und 12,8:1 für das Fette, im Warnfall 8,2:1 und 10,3:1.
-
-### Kleinigkeit am Rande
-
-Im Gruppenraum konnte eine Zeile beim Verbinden mit einer Fehlermeldung abbrechen
-(`socket.id` war noch nicht vergeben), wodurch die eigene Kennung leer blieb. Aufgefallen ist das
-beim Test der Prüfung, wenn ein zweiter Rechner während einer laufenden Runde beitritt.
-
-### Der Verlauf springt nicht mehr beim Antworten
-
-Dietmar, mit einer Aufnahme: „Sieh dir seitlich den Verlauf an. Klicke ich auf eine Antwort,
-springt der Verlauf. Das hätte ich gerne abbestellt."
-
-In der Aufnahme, Bild für Bild: Die Spalte zeigt die Punkte 78 bis 245. Klick auf die Antwort —
-ein Bild später stehen dort 15 bis 182, zwei Bilder später wieder 78 bis 245. Ein Ruck nach oben
-und ein weiches Zurückrollen, in einer Drittelsekunde.
-
-**Der Grund:** Nach jeder Antwort wird die Spalte samt Punkten als neues HTML aufgebaut — zweimal
-sogar, einmal von der Frage und einmal vom Haken „gelernt". Ein neues Element beginnt oben, Rollstand
-null. Hundert Millisekunden später sieht der Nachzieher nach, ob der aktuelle Punkt zu sehen ist,
-und rollt ihn weich zurück in den Blick. Dieses Zurückrollen war das Springen. Der Punkt war die
-ganze Zeit derselbe; nur die Spalte hatte vergessen, wo sie stand.
-
-Jetzt merkt sie es sich: Vor dem Neuaufbau wird der Rollstand gelesen und danach im selben Zug
-wieder gesetzt, unsichtbar vor dem nächsten Bildaufbau. Dabei kam ein zweiter Haken ans Licht: Die
-Spalte trägt `scroll-behavior: smooth`, und damit wird auch ein gesetzter `scrollTop` zur Fahrt —
-gemessen 0, 59, 245, 544, 886. Für diesen einen Griff wird das weiche Rollen abgeschaltet und gleich
-wieder erlaubt.
-
-**Und ein alter Rechenfehler gleich mit.** Der Nachzieher maß den Punkt mit `offsetTop` — das zählt
-vom `offsetParent`, und das ist hier der `body`, nicht die Spalte. Der erste Punkt stand so bei
-„330", obwohl er in der Spalte bei 4 liegt; die 326 darüber sind die Auswertung. Folge: Wer zu
-Frage 1 zurückblätterte, dessen Punkt blieb oben verdeckt, weil die Rechnung ihn für sichtbar
-hielt. Jetzt wird der Abstand zwischen Punkt und Spalte direkt gemessen, in Layout-Punkten.
-
-Nachgemessen mit 716 Fragen (E → A), Spalte auf Punkt 429 gerollt: beim Antworten bleibt der
-Rollstand über 43 Proben in 700 ms exakt stehen — vorher fiel er auf 0 und fuhr zurück. Dreißigmal
-„Weiter": die Spalte rückt nur nach, nie zurück, der Punkt bleibt sichtbar. Sprung zu Frage 1:
-Rollstand 0, Punkt sichtbar — vorher 306, Punkt verdeckt. Null Seitenfehler in allen vier
-Prüfungszielen.
-
-### START.bat sagt, wenn es der Quelltext ist — und wenn der Server stirbt
-
-Rückmeldung aus einer Facebook-Gruppe, jemand bereitet die Aufstockung N → E vor: „Ich habe die
-Zip heruntergeladen und entpackt sowie eine Verknüpfung auf dem Desktop erstellt. Nach dem Start
-wurde ich aufgefordert node nachzuinstallieren. Das ging nur manuell. Ich habe einen Ordner ‚node'
-im Stammverzeichnis des extrahierten Ordners des Trainers erstellt. Wenn ich jetzt starte,
-passiert leider nichts und ich erhalte auch keine Fehlermeldung."
-
-**Beides hat dieselbe Ursache, und die liegt nicht bei ihm.** Auf der Release-Seite hängt GitHub
-an jedes Release ungefragt *Source code (zip)* und *Source code (tar.gz)* an, und auf der
-Projektseite steht der grüne Knopf *Code → Download ZIP*. Beides ist der Quelltext: ohne `node\`,
-ohne `node_modules\`, ohne `piper\` — die stehen mit gutem Grund in der `.gitignore`. Wer den
-auspackt, bekommt beim Start die Frage nach Node.js, weil `node\node.exe` fehlt (das Windows-Archiv
-hat es seit 1.296.0 dabei). Und wenn Node dann von Hand da ist, stirbt `Server.js` in der ersten
-Zeile an `require('express')` — in einem Fenster, das `START.vbs` mit Absicht nicht zeigt. Von
-außen: nichts, keine Meldung. Genau die Beschreibung.
-
-**Drei Prüfungen mehr in `START.vbs`:**
-
-- **Vor der Frage nach Node** wird nachgesehen, ob `node_modules\express`, `socket.io` und `cors`
-  da sind. Fehlen sie, sagt ein Fenster, dass dies der Quelltext ist, wie die richtige Datei heißt
-  (`Amateurfunk-Trainer-<Version>-windows.zip`, rund 340 MB, auf der Release-Seite ganz oben)
-  und bietet an, die Release-Seite im Browser zu öffnen. Die Frage nach Node.js in einem
-  Quelltext-Ordner wäre eine Sackgasse mit freundlichem Gesicht gewesen.
-- **Liegt Node eine Ebene zu tief** (`node\node-v22.x-win-x64\node.exe` — der häufigste Fehler
-  beim Nachholen von Hand, weil das Archiv von nodejs.org einen Ordner enthält), sagt das Fenster
-  genau das und welcher Inhalt wohin muss, statt ein zweites Mal nach Node zu fragen.
-- **Nach dem Start wird bis zu 30 Sekunden zugesehen.** Antwortet Port 3000, ist alles gut.
-  Antwortet er nicht und es läuft keine `node.exe` mehr mit `Server.js` (nachgesehen über WMI),
-  ist der Server gestorben — dann sagt ein Fenster das und bietet an, ihn über `Fehler-Zeigen.bat`
-  sichtbar zu starten; dort bleibt das Fenster stehen, und der Grund steht drin. Läuft er noch und
-  braucht nur länger (Virenscanner, langsame Platte), passiert nichts. Steht WMI nicht zur
-  Verfügung, schweigt die Prüfung, statt falschen Alarm zu schlagen.
-
-`START.bat` ruft `START.vbs` jetzt mit `start` auf, damit sein schwarzes Fenster nicht die
-Wartezeit über stehen bleibt.
-
-**`Fehler-Zeigen.bat` hatte einen eigenen Fehler:** Schritt 1 fragte `where node` — das findet nur
-ein in Windows installiertes Node und meldete „NICHT GEFUNDEN", obwohl `node\node.exe` längst da
-war, und brach ab. Jetzt wird das Node gefragt, mit dem auch gestartet wird. Die veralteten
-Größenangaben („Server.js sollte rund 139.000 Bytes haben") sind weg; bei fehlendem
-`node_modules` steht dort dieselbe Auskunft wie im Fenster.
-
-**Anleitungen:** `INSTALLATION.md` beschrieb für Windows noch das Setup (`.exe`), das es seit
-1.296.0 nicht mehr gibt — jetzt der Weg über das Archiv, mit dem Hinweis auf die beiden
-Quelltext-Einträge, und unter „Wenn etwas klemmt" die zwei Windows-Fälle „Frage nach Node.js"
-und „nach START.bat passiert nichts". README (In Kürze und Windows im Einzelnen) und die
-Release-Beschreibung aus `release_hochladen.js` sagen es ebenfalls in einem Satz.
-
-**Und die `LIESMICH-ZUERST.txt` im Repository** — die, die im Quelltext-Archiv liegt — stammte
-noch vom 15.09., als das Windows-ZIP ohne Node kam: „Beim ersten Mal kommt ein Fenster: Node.js
-fehlt noch und wird nachgeholt. Auf ‚Ja' klicken." Genau das hat der Nutzer gelesen und getan;
-der Zettel hat den falschen Weg bestätigt. Jetzt sagt er als Erstes, dass dies der Quelltext ist,
-was darin fehlt, wo das fertige Programm liegt, und was zu tun ist, wenn man den Quelltext
-absichtlich hat (`npm install`). Das Windows-Archiv bekommt beim Bau weiterhin seine eigene
-LIESMICH aus `Build-DIREKT.bat`.
-
----
+## [1.298.0] - 2026-09-25
+
+### Hinzugefügt
+- Server-Knopf in der Kopfzeile: Online-Zugang ein/aus (rot/grün), nach Start aus, beim Schließen eine Minute Vorwarnung für Besucher
+- Ländersperre: Zugriff nur aus Deutschland, Österreich und der Schweiz, Zutritt anfragen mit Freigabe durch den Gastgeber
+- Gruppenraum: Prüfungssimulator mit drei Bögen à 25 Fragen/45 Minuten, Auswertung je Bogen, Fehler in Fehlerliste und Lernbedarf
+- Chat und Gruppenraum: Sprachnachrichten, Mikrofon mit automatischer Suche eines funktionierenden Eingangs und Fehlerhinweisen
+- Chat auch ohne Gruppenraum für Besucher am geteilten Link, Ankunftsmeldung mit Namen
+- Gruppenraum: Fehler mitnehmen – Fehler der Runde als lesbare Textdatei, Lernstand einlesen übernimmt sie (auch `.txt`)
+- Geteilter Link: Willkommensfenster mit freiwilligem Rufzeichen/Namen, Abschiedsseite mit Download-Hinweis beim Beenden
+- Besucherfenster: Tabelle mit Standort und Name, aktive Besucher, Zähler zurücksetzen, Signalton, Neustart ankündigen mit Countdown
+- Vorschaukachel für geteilte Links (Facebook, WhatsApp), mit Raumcode als Einladung in den Gruppenraum
+- Hauptansicht: Hilfe & Unterlagen mit DARC-Ausbildungspaten, Kursen vor Ort, Unterlagen und Folien, bei Klasse N Buch-Link
+- 50ohm.de-Kacheln Kapitel und Lösungsweg in allen Klassen, Index wöchentlich aktualisiert
+
+### Geändert
+- Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
+- Fußleiste: Besucherzähler und Info-Knopf, 50ohm.de als Empfehlung statt Zusammenarbeit
+- Erklärungen: Abgleich mit allen 277 DARC-Lösungswegen, 67 Erklärungen überarbeitet (31 Fehler, 36 Unschärfen)
+- Projektseite, Ratgeber und Suchmaschinen-Beschreibung: eigener Lösungsweg zu allen 1750 Fragen vorn, DARC-Lösungswege dazu
+- Vorschaubilder für geteilte Links und Projektseite: 1750 Erklärungen, alle vier Prüfungsziele vollständig
+- Bilder in README und auf der Projektseite: Fußzeile mit Empfehlung statt Zusammenarbeit, Installationsbild zeigt das Windows-ZIP
+- Repository: Arbeitsdateien mit Unterstrich am Anfang bleiben ausnahmslos draußen, auch PDF
+- Batch-Dateien einheitlich mit Windows-Zeilenenden; STOP.bat beendet nur noch die Tunnel des Trainers, andere cloudflared-Prozesse bleiben
+- Gruppenraum und Prüfungssimulator: keine Kacheln zu Videolehrgang und 50ohm.de
+- Besucher über den Link: Blue Mode beim ersten Besuch, kein eigener Gruppenraum, Texte ohne Demo-Begriff
+- Besucherzählung: nur Aufrufe mit Lebenszeichen, Scanner als angeklopft, Land/Stadt statt IP-Adresse, Suchmaschinen nicht gelistet
+- Online-Zugang: feste Adresse wird bevorzugt, kein zusätzlicher Tunnel, Neustart-Hinweis ohne Adresswechsel
+- Programmsymbol: neues Zeichen (Strahler mit Funkwelle), unter macOS hüpft es im Dock, bis der Trainer bereit ist
+
+### Behoben
+- Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
+- Gruppenraum: nach Neuverbindung wieder Schreiben möglich, Raumchat nicht mehr überschrieben
+- Besucher: Meldung beendet erscheint nicht mehr fälschlich
+- DARC-Kacheln bei Klasse E und E→A ergänzt
+- Info-Symbol wieder sichtbar
+- Projektseite und Ratgeber zeigten noch das alte Programmsymbol
+- Zahl der Rechenwege auf 391 berichtigt (README, Projektseite, Kopf von erklaerungen.json)
+- README: fehlendes Bild der Handy-Ansicht ergänzt, Beschreibung des Namensfelds an die aktuelle Fassung angepasst
+- Gruppenraum: Gäste bekommen bei fehlender Sprachausgabe keinen Weg in die Einstellungen des Gastgebers mehr gezeigt, Setup-Hinweis entfernt
+- Vorschaukachel: Bild erscheint (Zwischenspeicher erlaubt, von Ländersperre ausgenommen, keine Weiterleitung auf sich selbst)
+- Besucherliste: Umlaute in Ortsnamen, keine Doppelzählung durch den Service Worker
+- Link zur Projektseite auf GitHub Pages korrigiert
+- Dark und Green Mode: Fortschrittsspalte, Server-Knopf, Tunnel-Wache und Besucherfenster wieder kontrastreich
+- Formelblatt-Knopf bei NB501–NB505 und NB601–NB606 ergänzt, Anteilsangabe im Hilfetext korrigiert
+- Windows-Start: Hinweise bei Quelltext-Download, falsch abgelegtem Node und abgestürztem Server statt stillem Abbruch
 
 ## [1.297.0] - 2026-09-15
 
-### Der Fragenkatalog stimmt jetzt Zeichen für Zeichen mit der Prüfung überein
-
-Dietmar schickte das Bild der Frage AG214 aus `Pruefungsfragen.pdf` und schrieb: „Es sieht
-anders aus als in Pruefungsfragen.pdf. Das muss unbedingt berichtigt werden." Und gleich
-danach: „Die Fragen und Antworten müssen exakt übereinstimmen. Die Quelle liegt im Ordner
-Pruefungsfragen.pdf"
-
-Daraufhin sind **alle 1750 Fragen mit je vier Antworten** aus dem amtlichen PDF
-zeichengenau ausgelesen und gegen den Katalog gestellt worden — zweispaltig, mit Erkennung
-der tief- und hochgestellten Zeichen über Schriftgröße und Grundlinie, und mit Auflösung
-der Trennstriche am Zeilenende.
-
-**Das Wichtigste zuerst: die richtige Antwort stimmt überall.** Im amtlichen Katalog ist
-Antwort A stets die richtige. Bei allen 1673 Fragen mit Textantworten ist die im Trainer
-als richtig markierte Antwort wortgleich diese Antwort A. Null Abweichungen.
-
-**Berichtigt wurden 784 Stellen in 363 Fragen.** Darunter echte Fehler, die auf dem
-Bildschirm standen:
-
-- **Bei 21 Fragen hing fremder Text an der letzten Antwort** — beim Einlesen des PDF war
-  jeweils die nächste Kapitelüberschrift mit hineingerutscht. VA407 endete auf
-  „… Organisation für Normung (ISO) (Europäische Konferenz der Verwaltungen für Post und
-  Telekommunikation)", NJ202 auf „… zu vermeiden. Verträglichkeit, Anwendung, Personen- und
-  Sachschutz", BA110 auf „… Hotel Romeo Q-Gruppen".
-- **Eine Antwort war abgeschnitten.** VC108, Antwort D lautete „Das Mindestalter für die
-  Antragstellung beträgt" — ohne die „15 Jahre.".
-- **Bei 72 Fragen fehlte ein Bindestrich**, immer dort, wo im PDF am Zeilenende getrennt
-  wurde: „IARU Bandplan" statt „IARU-Bandplan", „QSLKarte", „GraylineBedingungen",
-  „IARUEmpfehlung", „RemoteStationen", „Amateurfunkzeugnisklasse".
-- **Satzzeichen fehlten** in BB201 (Komma), BE113 (Punkt) und NG107 (Fragezeichen).
-- **In BE416 stand ein arabisches Schriftzeichen** statt „fb": die Antwort las sich
-  „auﮓereitet" statt „aufbereitet". In EE405 standen LaTeX-Reste im Text
-  („répondez s\'il vous pla\^it"). In AH209 stand „45^°" statt „45°". In AA116 stand eine
-  Null zuviel.
-- **In NB505 waren die Beschriftungen aus der Zeichnung in den Fragetext geraten**
-  („Welcher Widerstandswert liegt vor? 0,3 A 12 V").
-- **In NB203 stand ein Leerzeichen am Antwortanfang.** Das hatte eine stille Folge: der
-  Trainer fand den Satz „Warum die anderen falsch sind" zu dieser Antwort nicht mehr.
-- **Rufzeichen waren auseinandergerissen**: „DL1 FLO", „N4 EAX", „C4 FM".
-
-Und die Stellen, die inhaltlich richtig waren, aber anders aussahen als die Prüfung:
-**Ω statt „Ohm"** (405 Stellen in 119 Fragen — die Prüfung schreibt 5,6 kΩ), **Gedankenstrich
-statt „bis"** („5040–6160 Ω"), **Zifferngruppen** („144 000 000 Hz"), **deutsche
-Anführungszeichen**, **„z. B." mit Abstand**, **„bit/s" klein**, **„±5 %" mit Abstand**,
-**„180°" ohne Abstand**.
-
-Das Wort „Ohm" dort, wo es auch die Prüfung ausschreibt — in „Ohm (Ω)" oder „in Ohm pro
-Farad" —, ist unangetastet geblieben.
-
-Mitgezogen sind die **Erklärungen**: dort tragen `richtig` und die Schlüssel unter
-`warum_falsch` den Antworttext, sie würden sonst nicht mehr finden, wozu sie gehören.
-Nachgeprüft über alle 1750: keine Erklärung ohne Frage, kein Schlüssel ohne Antwort.
-
-### Formeln sehen aus wie gedruckt
-
-Der Auslöser war der Unterstrich in AG214. Im Katalog steht „von P_V zu P_R." — und das ist
-**richtig**: der Unterstrich ist die Textschreibweise für den tiefgestellten Index, in der
-Prüfung steht dort ein P mit kleinem V darunter. Falsch war die Anzeige.
-
-Der Trainer setzt es jetzt wie gedruckt:
-
-- **P_V** wird zu P mit tiefgestelltem V — 60 Fragen.
-- **(R_1)/(R_2)** wird zum Bruch mit Bruchstrich, Zähler über Nenner.
-- **√(P · R)** wird zur Wurzel mit Überstrich über dem, was darunter gehört.
-- **10^(0,5)** wird zur Zehnerpotenz mit hochgestelltem Exponenten.
-
-**Ein Bruch entsteht nur, wenn eine Seite geklammert ist.** Sonst würde aus „bit/s",
-„km/h", „A/D-Umsetzer" und „5/8 λ" ein Bruch — alles Schreibweisen, die auch in der Prüfung
-einzeilig gedruckt sind.
-
-Der gespeicherte Text bleibt dabei Zeichen für Zeichen derselbe. Gesucht, verglichen,
-gezählt und vorgelesen wird weiter die Textfassung; nur die Darstellung wechselt.
-
-### Der Unterstrich wird auch vorgelesen
-
-Er ging bis jetzt ungefiltert an die Sprachausgabe. Das Protokoll zeigte es schwarz auf
-weiß:
-
-```
-[PRE V15] Antwort A: von P_V zu P_R.. -> Antwort A: von P_V zu P_R..
-```
-
-Links der Text vor der Aufbereitung, rechts danach — unverändert. Piper bekam also den
-nackten Unterstrich und verschluckt ihn. Bei 60 Fragen sind das genau die Rechenaufgaben,
-bei denen jemand mit schwachen Augen das Vorlesen braucht.
-
-Jetzt wird daraus „von P V zu P R". Zwei- und dreibuchstabige Indizes werden getrennt
-gesprochen („U_AB" → „U A-B"), damit daraus nicht das Wort „ab" wird; ein ausgeschriebener
-Index bleibt ein Wort („P_Sender" → „P Sender"). „10^(0,5)" wird zu „10 hoch 0,5". In den
-Erklärungen war der Index bis jetzt auf drei Zeichen begrenzt — „P_Sender" und
-„P_Verluste" rutschten samt Unterstrich durch.
-
-
-### Die Sprachausgabe sagt nicht mehr Nein
-
-Dietmar bekam bei AC519 ein Fehlerfenster mitten in der Frage: „Piper meldet einen
-Fehler: Sprachausgabe gerade ausgelastet. Bitte einen Moment warten." — modal, mit
-OK-Knopf.
-
-Der Server lässt aus gutem Grund nur zwei `piper.exe` zugleich laufen (FIX K5, sonst
-könnten hundert Anfragen den Rechner erschöpfen). Bisher bekam aber schon die dritte
-Anfrage ein glattes Nein — und die dritte kommt schnell zusammen: die Frage wird in
-Stücken gesprochen, und wer dabei mit der Maus über die Knöpfe fährt, löst mit „Knöpfe
-vorlesen" weitere Anfragen aus. Aus dem Nein machte der Browser ein Fehlerfenster.
-
-Jetzt **wartet** eine Anfrage auf einen freien Platz, statt abgewiesen zu werden.
-Abgewiesen wird erst, wenn sechzehn Anfragen warten oder eine länger als 25 Sekunden —
-das ist der Fall „hundert Anfragen", nicht der Fall „dritter Satz". Geht der Browser
-während des Wartens weiter (nächste Frage, Vorlesen angehalten), wird der Eintrag
-ausgetragen; Piper spricht dann nicht für niemanden. Und kommt trotzdem einmal ein
-Nein, versucht es der Browser bis zu viermal mit kurzer Pause noch einmal, bevor er das
-Stück auslässt — ein Fenster gibt es dafür nicht mehr.
-
-Nachgemessen mit acht gleichzeitigen Anfragen: alle acht beantwortet, keine abgewiesen,
-zwei zugleich in Arbeit. Eine abgebrochene Anfrage in der Reihe wird nicht mehr
-gesprochen, die nächste dahinter schon.
-
-### START.sh findet node im Ordner und den fremden Server auf dem Port
-
-„Bei Start.sh kommt kurz das Terminal, danach nichts mehr." — die Datei suchte node nur
-im System; unter Windows liegt es aber im Trainer-Ordner unter `node\node.exe`. Jetzt
-sucht sie dort zuerst, und kein Fenster schließt sich mehr wortlos.
-
-Und: „Es gibt einen gewaltigen Unterschied zwischen start.sh und start.bat." Der kam
-vom alten Server, der noch aus einem anderen Ordner auf Port 3000 hing — START.vbs fragt
-mit Ja als Vorgabe, ob er beendet werden soll, START.sh fragte mit Nein. Jetzt fragt
-START.sh den laufenden Server, welche `Index.html` er benutzt, vergleicht mit der Datei
-im Ordner und beendet einen fremden mit Ja als Vorgabe — wie START.vbs. Ist es derselbe
-Stand, geht ohne Frage nur der Browser auf.
-
-### Doppelte Downloads bleiben draußen
-
-Speichert der Browser eine Datei, die es im Ordner schon gibt, hängt Windows „-1" oder
-„ (1)" an den Namen. So lagen sechs Fragendateien als `fragen-1.json` usw. neben den
-alten — der Trainer las sie nicht, und `Hochladen.bat` hätte sie mit auf GitHub genommen.
-Die `.gitignore` lässt solche Reste jetzt nicht mehr durch.
-
-### Nachprüfung am 16.09. — Formeln waren mit dem Ohr nicht zu unterscheiden
-
-Dietmar: „Möchtest du nochmal alles prüfen, ob du einen Fehler in irgendeiner Art findest?"
-Also noch einmal von vorn: alle 1750 Fragen gegen das PDF, alle Erklärungen gegen die
-Antworttexte, alle Skriptblöcke durch den Parser, der Trainer im Browser mit genau den
-Dateien, die auf dem Rechner liegen — und zum ersten Mal **jeder Text durch die
-Sprachausgabe**, so wie Piper ihn bekommt. 37 536 Texte, geprüft mit dem Lautbildner von
-Piper (espeak-ng, deutsch).
-
-**Das Ergebnis der Sprachprobe war deutlich.** Piper lässt Wurzel, Malpunkt, Bruchstrich
-und Hochzahlen einfach weg — nicht falsch gesprochen, sondern gar nicht:
-
-```
-U = √(P ⋅ R)      ->  „U gleich P R"
-U = √(P/R)        ->  „U gleich"                     (EB504, Antwort B: leer)
-R = U/I           ->  „R gleich U I"                 (NB503 — klingt wie R = I/U)
-10⁻⁶ W            ->  „zehn W"                       (der Exponent fehlt)
-16 mm²            ->  „sechzehn Millimeter zwei"
-28 V/m            ->  „28 Volt Strich m"             (die Regel für Rufzeichen „/m")
-0,22 μF           ->  „null komma zwei zwei mi ef"   (220 Stellen)
-14 081,20 kHz     ->  „vierzehn null einundachtzig komma zwanzig"
-```
-
-Die Ohmschen Gesetze der Klasse N (NB501–NB503) und die Leistungsformeln der Klasse E
-(EB504–EB506) waren beim Vorlesen nicht zu unterscheiden — wer das Vorlesen braucht,
-konnte sie nicht lösen. Bei „μF" lag es an einem Zeichen: Der Katalog schreibt das Mikro
-als griechisches My, die Einheitenliste kannte nur das Mikrozeichen. Und die Zahlengruppen
-mit schmalem Leerzeichen („14 081,20"), die seit gestern wie in der Prüfung aussehen, las
-Piper als zwei Zahlen. Dieselbe Ursache hatte noch eine zweite Folge: „10 100–10 150 kHz"
-wurde nicht als Spanne erkannt, das „bis" fehlte.
-
-Jetzt heißt es „U gleich Wurzel aus P mal R", „R gleich U durch I", „10 hoch minus 6
-Watt", „16 Quadratmillimeter", „28 Volt pro Meter", „0,22 Mikrofarad",
-„14081,20 Kilohertz" und „10100 bis 10150 Kilohertz". Dazu „λ/4" als „Lambda Viertel",
-„5/8" als „fünf Achtel", „η" als „Eta" statt griechisch „ita", „Û" als „U Dach" statt
-„U Zirkumflex", „R₁ ∥ R₂" als „R 1 parallel zu R 2", „≪" als „viel kleiner als", und die
-Aufzählung „(1) … (2) … (3)" in VC124 als „erstens, zweitens, drittens" — die Ziffern in
-Klammern fielen vorher der Regel zum Opfer, die „Volt (V)" auf „Volt" kürzt. Amperestunden,
-Wattstunden, Nanohenry, dBd und Megabit werden ausgeschrieben. Rufzeichen („DL1PZ/T"),
-Empfehlungen („T/R 61-01"), Paare („A/D-Umsetzer", „und/oder") und Aktenzeichen
-(„13/2005") bleiben, wie sie sind — die Regel für den Bruchstrich ist absichtlich eng.
-Alles in `tts-expand.js`, damit es für Fragen und Erklärungen gleichermaßen gilt.
-
-**Sechs Stellen im Katalog** hatten die Zifferngruppierung von gestern zu weit getrieben
-oder waren in `fragen.json` anders als in den Klassendateien: BE309 „14 270 to 14 280" →
-„14270 to 14280" (das PDF gruppiert dort nicht), VC124 „10 000 Euro" → „10000 Euro",
-BE310 „an 5 ter Stelle" → „an 5ter Stelle", BE103 „aus 7 R - Algerien" → „aus 7R -
-Algerien", VD204 „DL250 BTHVN" → „DL250BTHVN", NG208 „2 m Amateurfunkstation" →
-„2 m-Amateurfunkstation". Die Erklärungen sind nachgezogen.
-
-**Die Formeldarstellung ist nachgeschärft**, nachdem alle 24 581 Texte durch sie gelaufen
-sind: „(100 V)²" behält die Klammer im Zähler (AI305), „Û²" wird nicht zerrissen, ein
-Exponent nimmt das Satzzeichen nicht mit, und ein Schrägstrich im Fließtext („REC/(05)06",
-„von +13 V) / 33 Ω") wird nicht mehr zum Bruch.
-
-### Die Sprachprobe läuft jetzt bei jedem Bau
-
-Dietmar: „Gut, dann bau die Sprachprobe auch in Build-DIREKT.bat ein." Die Probe von oben
-ist jetzt eine Datei, `sprachprobe.js`: Sie schickt jeden Text des Katalogs und der
-Erklärungen (44 141) durch `tts-expand.js` und sieht nach, was danach noch dasteht und von
-Piper nachweislich verschluckt wird — Wurzel, Malpunkt, Bruchstrich in einer Formel, Hoch-
-und Tiefzahlen, Unterstrich, griechische Buchstaben, HTML-Marken, Einheiten ohne Wort,
-Zahlengruppen mit schmalem Leerzeichen, `<` und `>`. `Build-DIREKT.bat` ruft sie als
-Schritt 3 auf, vor dem Packen; bei Fundstellen fragt er, ob trotzdem gebaut werden soll,
-die Liste mit Textausschnitt liegt in `_Sprachprobe.txt`. Von Hand: `node sprachprobe.js`.
-
-Der erste Lauf fand gleich sieben Stellen: An 29 Stellen unterstreicht der Katalog ein
-Wort — „<u>nicht</u> abhängig" (EC205) —, und Piper sprach „u nicht u"; bei AF305 stand
-„und bdquo" für die Anführungszeichen. „<" und „>" waren stumm („d > λ/(2π)" in AK103 war
-„d Lambda"). „7200 J" war „jot", und in Klammern galt noch eine ältere Einheitenliste
-(„(2 Wh sind 7200 J)" in AB503). „RX/TX" und „√(L / A_L)" (AC207) blieben halb. Alles in
-`tts-expand.js` behoben; der zweite Lauf ist leer.
-
-### Die Antwortfelder sind nur noch so hoch wie ihr Text
-
-Dietmar, mit dem Bild von AD319: „Bei den Antworten sind die Felder relativ groß zu dem
-Text." Stimmt — „4,32 W" stand in einem Feld von 120 Punkten Höhe. Das kam von der
-Kette, die die Knopfleiste unten festhält: Die Fragekarte nahm sich den ganzen Platz bis
-zur Leiste, gab ihn an die vier Felder weiter, und die teilten ihn sich zu gleichen Teilen
-(seit dem 09.09.). Auf die Frage, ob die Felder schrumpfen oder der Text wachsen soll,
-kam: die Felder.
-
-Die Kette endet jetzt eine Stufe früher. Die Zeile nimmt sich den Platz, damit „Weiter"
-unten stehen bleibt; die Fragekarte darin ist so hoch wie ihr Inhalt, ein einzeiliges Feld
-misst rund 57 Punkte, der Rest bleibt unter der Karte als ruhiger Grund. Bei langen Fragen
-(VD707) und bei Bildantworten ändert sich nichts — die Karte wächst mit dem Text wie zuvor,
-und die Schriftautomatik greift wie zuvor. Eine Zeile CSS.
-
-**Und die Knopfleiste hängt jetzt am Fenster** (17.09.). Drei Wünsche, die sich zu
-widersprechen schienen: am 09.09. „Der Bereich soll immer auf gleicher Höhe sitzen" und
-„dazwischen in der Fensterfarbe ein Leerraum"; am 16.09. „der Platz dazwischen ist
-schrecklich — die Knopfleiste sitzt zu tief, liegt genau unten auf"; und als sie eine
-Stunde lang dem Inhalt folgte: „Jetzt ist die Knopfleiste wieder mal hoch und mal tief. Sie
-muss auf einer Höhe unten bleiben."
-
-Alle drei gehen nur so: Die Leiste hängt am Fenster (`position: fixed`), ein Stück über
-der Unterkante, als eigene kleine Karte in Kartenbreite. „Weiter" sitzt damit bei jeder
-Frage an derselben Stelle, auch bei langen, wo die Leiste bisher nach unten aus dem Fenster
-wanderte; die Seite rollt dann unter ihr durch, und die Karte hält unten Platz frei, damit
-die letzte Antwort nicht darunter verschwindet. Die Schriftautomatik rechnet mit diesem
-Platz. Nur auf breiten Fenstern (ab 1025 Punkten) — am Handy bleibt die Leiste im Fluss,
-im Beamerbild gilt dessen eigene. Ist die Quellenzeile eingeblendet, rückt die Leiste um
-deren Höhe nach oben.
-
-Ein Zwischenstand, bei dem die Karte am Inhalt endete und darunter Fensterfarbe stand,
-hielt eine Stunde: „Rot markiert muss die Farbe von dem Inhalt haben … Der Button Verlauf
-ausblenden muss weiter runter." Also bleibt die Karte fensterhoch, der Fragenkasten reicht
-wieder bis unten, und mit ihm die Spalte links samt dem Knopf. Nur die Antwortfelder
-wachsen nicht mehr mit, und der graue Rahmen um sie endet nach der letzten Antwort — der
-Rest des Kastens bleibt in seiner hellen Farbe. Nachgemessen bei 1907 × 944 (AE407) und
-1278 × 939 (AC406, VD707).
-
-**Und die Zeile „Technik … E → A" über dem Kasten ist weg.** Dietmar, mit rot umrandeter
-Leiste: „Können wir das entfernen und wo anders einbauen? Das würde uns mehr Platz geben."
-Die beiden Angaben stehen jetzt in der Kopfzeile des Kastens neben der Fragennummer, wo bis
-zu den Knöpfen ohnehin Platz ist — mit ihnen der Simulator-Zähler und die Uhr. Eine Zeile
-gewonnen, nichts verloren.
-
-### `Build-DIREKT.bat` baut nur noch das, was veröffentlicht wird
-
-Seit 1.296.0 gibt es kein Setup mehr — `release_hochladen.js` sieht keine EXE, die README
-sagt „Warum kein Setup mehr?". `Build-DIREKT.bat` baute es trotzdem weiter: Es verlangte
-Inno Setup 7, `cloudflared.exe` und `Tts-Expand.js`, brach ohne sie ab und rechnete
-einige Minuten an einer EXE, die niemand hochlud. Auf jedem anderen Rechner als dem, auf
-dem es entstand, wäre es an der ersten Prüfung gescheitert, bevor das ZIP an der Reihe war.
-
-Der Abschnitt ist ausgebaut. Geprüft wird jetzt, was das **ZIP** braucht — und zwar
-namentlich, denn beim Packen wird mit „wenn vorhanden" kopiert, und eine fehlende
-Fragendatei wäre dort nicht aufgefallen: die Programmdateien, alle sechs Fragendateien,
-`erklaerungen.json`, die Zeichnungen, `node\node.exe`, die Servermodule, Piper mit
-mindestens einer Stimme. Dazu ein Hinweis, wenn doppelte Downloads („fragen-1.json") im
-Ordner liegen. `installer.iss` bleibt liegen, als Vorlage für den Fall, dass es je wieder
-ein Setup geben soll.
-
-### Beim Start meldet sich das Update in einem Fenster — mit dem, was sich geändert hat
-
-Dietmar schickte zwei Bilder aus einem anderen Programm: Beim Start ein Fenster „Update",
-darin beide Versionsnummern, die Liste der Änderungen, ein Häkchen „nicht mehr erinnern"
-und die Knöpfe. „Das gefällt mir gut und das möchte ich auch haben. Das andere mit dem
-Update, können wir entfernen."
-
-So sieht es jetzt aus: **„Neue Version des Amateurfunk-Trainers"** — „Version 1.298.0 ist
-verfügbar. Du benutzt gerade 1.297.0. Das Update bringt den Trainer von 1.297.0 auf
-1.298.0." Darunter **Was sich geändert hat**: die Überschriften aus diesem Protokoll,
-Fassung für Fassung, für alles, was neuer ist als die Fassung im Ordner — in einem Kasten
-zum Blättern. Unter Sammelüberschriften („Behoben", „Geändert") stehen die einzelnen
-Punkte, jeweils nur der Anfang. Dann eine Zeile für den Fortschritt, das Häkchen **„An
-Version 1.298.0 nicht mehr erinnern"** und drei Knöpfe: **Später**, **Bei GitHub
-ansehen** (die Seite mit den Veröffentlichungen), **Jetzt aktualisieren**.
-
-Drei Knöpfe statt vier: Der Trainer hat keinen Installer, den man getrennt herunterladen
-könnte. „Jetzt aktualisieren" holt die geänderten Dateien in den Ordner, so wie es
-„Aktualisieren" vorher tat — mit demselben Schutz: Was hier neuer ist als bei GitHub,
-bleibt unangetastet, die alten Fassungen wandern nach `backup/`, jede Datei wird vor dem
-Schreiben nachgerechnet, `data/` wird nie angefasst. Neu ist die Zählung dabei („12 von
-40 Dateien", `/api/github/fortschritt`), und danach lädt die Seite von selbst neu; waren
-Programmdateien dabei, bittet das Fenster um einen Neustart. Kommt die Antwort von
-GitHub erst, wenn schon eine Runde läuft oder ein anderes Fenster offen ist, wartet das
-Fenster, bis beides vorbei ist.
-
-Die Liste kommt aus dem `CHANGELOG.md` bei GitHub — `github_update.js` liest die
-`###`-Überschriften der neueren Abschnitte (`aenderungenAus`). Keine zweite Datei, die
-gepflegt werden müsste. Sind Dateien neuer, ohne dass die Nummer sich geändert hat
-(berichtigte Fragen, Bilder), heißt das Fenster „Aktualisierte Dateien" und sagt das.
-
-**Weggefallen**, auf Dietmars Antwort hin: der blinkende Info-Knopf und der Ton
-(`sounds/update.mp3` bleibt liegen, wird aber nicht mehr gespielt), der grüne Balken am
-Seitenkopf, der Knopf „Bei GitHub nachsehen" im Info-Fenster — und das stille Nachholen
-von Fragen und Bildern beim Start. „Nein — das Fenster fragt." Nichts aus dem Netz
-landet mehr ungefragt im Ordner. Geblieben ist der Reiter **Update** in den
-Einstellungen; „Ansehen und holen" öffnet dort dasselbe Fenster. `Update-Test.bat`
-zeigt das Fenster mit erfundenen Nummern und Liste; „Jetzt aktualisieren" zählt dann
-nur hoch.
-
-Geprüft gegen ein nachgebautes GitHub (`AFU_GITHUB_API`/`AFU_GITHUB_RAW` auf einen
-lokalen Server): 1.296.0 → 1.297.0 mit 13 Überschriften, gleiche Nummer mit zwei
-berichtigten Dateien, eine hier neuere Datei (unangetastet), Holen mit Fortschritt und
-Sicherung in `backup/`, Häkchen gesetzt → beim nächsten Start still, von Hand aus den
-Einstellungen trotzdem offen, Nachtmodus, 1278×939 und 1907×944. Alle 17 Skriptblöcke
-nach `node --check` fehlerfrei.
-
-### Ausgelassene Fragen sind kein „Nicht bestanden"
-
-Dietmar, mit einem Bild vom Abschluss: „Wenn ich Fragen im Lernmodus unter Start nur
-durchklicke, kommt nicht bestanden. Kann man da nicht nicht bestanden entfernen und eine
-Übersicht einbauen, was man ausgelassen hat."
-
-Bis jetzt zählte jede nicht beantwortete Frage als Fehler: „0 von 25 richtig, 25 Fehler,
-Sie benötigen 19 richtige" — für jemanden, der die Fragen nur einmal durchgesehen hat, eine
-Ohrfeige ohne Aussage. Eine offene Frage ist kein Fehler.
-
-Jetzt: Sobald im Lernmodus auch nur eine Frage offen geblieben ist, gibt es keine Wertung
-„19 von 25" mehr. Der Abschluss heißt **„Runde beendet"**, sagt „22 von 25 Fragen sind offen
-geblieben", nennt die Quote nur über die beantworteten („2 von 3 beantworteten Fragen
-richtig (67 %) – 1 Fehler") und zeigt darunter die **offenen Fragen als Liste** — Nummer,
-Frageanfang, Prüfungsteil, zum Blättern. **Ein Klick auf eine Zeile öffnet die Frage** in
-derselben Runde; wer sie beantwortet und weitergeht, sieht den Abschluss noch einmal, mit
-einer offenen Frage weniger. Der Knopf **„Ausgelassene jetzt üben"** startet eine neue Runde
-nur aus diesen Fragen, so wie „Fehler" eine aus den Fehlern macht. Sind alle beantwortet,
-bleibt der Abschluss, wie er war — mit Bestanden oder Nicht bestanden.
-
-Der Verlauf bekommt einen Eintrag über die beantworteten Fragen („Alle Teile (Übung)
-(22 ausgelassen)", 2 von 3), wenn selbst etwas beantwortet wurde — wie bei einer
-abgebrochenen Runde. Wer nur durchgeklickt hat, bekommt keinen Eintrag; „0 von 25" im
-Verlauf wäre derselbe Unsinn. Geht jemand über die Liste noch einmal in die Runde, wird
-derselbe Eintrag auf den neuen Stand gebracht statt ein zweiter angehängt
-(`verlaufEintragSetzen`); das gilt auch für den gewöhnlichen Abschluss.
-
-Geprüft im Browser: 3 von 25 beantwortet → „Runde beendet", 22 Zeilen, ein Verlaufseintrag
-3 von 3; Klick auf eine Zeile öffnet genau diese Frage; nach dem Beantworten und Durchgehen
-steht derselbe Eintrag auf 4 von 4 „(21 ausgelassen)"; „Ausgelassene jetzt üben" startet
-eine Runde mit 21 Fragen. 0 von 25 beantwortet → kein Verlaufseintrag. Hell und Nachtmodus.
-
-### Der Dark Mode ist zurück — die Zeichnungen stehen im Negativ
-
-Dietmar, nachdem er die dunklen Testbilder gesehen hatte: „Dieser ist doch deaktiviert! Mir
-fällt da aber was ein. Die svg sind doch Vektorgrafiken. Diese sind Standard in weiß mit
-schwarzer Schrift und Zeichnung. Diese könnten wir ins Negative bestimmt ändern. Dann wäre
-die Schrift weiß und der Hintergrund zu dem Bild an den Dark Mode angepasst. Dann könnten
-wir den Dark Mode doch wieder verwenden."
-
-Genau daran war er am 03.09. gescheitert (1.118.0): Die Schaltbilder standen als weiße
-Kacheln in jeder Technikfrage. Vorher nachgezählt, ob die Umkehr überhaupt geht — über alle
-746 Dateien in `svgs/`: Striche `#000`, Flächen `#fff` und Grautöne, dazu 22 Rasterbilder,
-alle ohne einen einzigen farbigen Bildpunkt. Eine rote Leitung würde nach der Umkehr türkis;
-hier gibt es keine.
-
-Jetzt kehrt im Dark Mode ein CSS-Filter (`invert(1)`) die Zeichnungen um — weiße Linien auf
-dem tiefen Blau des Dark Mode, mit blauer Kante, im Fragebild, in den Bildantworten und in
-der Vergrößerung. Beim Drucken bleibt es bei Schwarz auf Weiß. `dark` steht wieder in der
-Liste `STILE` (Light → Dark → Green → Blue → Orange → Grey), ein gespeichertes „dark" gilt
-wieder, und die Farbkachel dafür steht in den Einstellungen unter Farbstil.
-
-Zwei Wochen ohne Dark Mode hatten Spuren hinterlassen — Fenster, die seither entstanden sind,
-hatten ihn nie gesehen: Im **Einstellungen**-Fenster war „Einstellungen" in der Kopfzeile
-unsichtbar (helle Schrift auf hellem Grund), die Reiterspalte blieb hell, die Farbkacheln des
-Farbstils trugen alle denselben Knopfverlauf, „Normale Ansicht" und „Im Vollbild" standen
-dunkel auf dunkel. Grund: `#f7fafd` als Kopfzeilenfarbe fehlte in der Liste der abgefangenen
-Töne — dasselbe traf das Info-Fenster und die Auswertung. In der **Auswertung** war die rechte
-Spalte samt Kästen fest weiß, und „von 10 Prüfungen bestanden" stand marineblau auf dunkel.
-Und der **Taschenrechner** (vom 06.09.) leuchtete in Kopf und Anzeige im Signalblau, die Ziffern
-standen fast unsichtbar auf den Tasten — Dietmar: „der Taschenrechner passt nicht." Jetzt wie
-ein Gerät: dunkle Tafel, Anzeige mit leuchtenden Ziffern, Tasten im Knopfverlauf der übrigen
-Fenster, „=" als Hauptknopf, die Vorsätze p n µ m k M G bernsteinfarben.
-Alles nachgezogen; nachgesehen sind Hauptseite, Frage mit Zeichnung (NC101), Bildantworten
-(NB702), Vergrößerung, Erklärung klein und groß, alle acht Reiter der Einstellungen, Info,
-Auswertung, Ziel wählen, Themen, Stolpersteine, Übungszeit, Prüfungssimulator, Diplome,
-Taschenrechner, Abschluss und das Update-Fenster.
-
-Fünf Nachträge am Abend, nach Dietmars Bildern: „die Knöpfe sollten noch angepasst werden" —
-in der Kopfzeile der Frage waren Zettel und Taschenrechner weiß, Erklärung und
-Vorlesen-ohne-Aufklappen in Flieder; jetzt alle im Knopfverlauf, ihre Farbe nur noch in Zeichen
-und Rand (Notiz vorhanden bernstein, Erklärung offen violett). „Der Knopf Verlauf Ausblenden ist
-zu dunkel" — die Leiste ist jetzt eine Stufe heller als der Grund, mit Kante, Pfeil und Schrift
-im hellen Signalblau. „Neu beginnen ist weiß" — ein Rest aus der Zeit, als „Weiterlernen?"
-bewusst hell blieb; jetzt im Knopfverlauf wie alle. „Die Bilder sind auch weiß im
-Gruppenraum" — die drei Sinnbilder stehen auf dunklen Kacheln, die blauen Zeichen darauf
-umgekehrt und im Farbton zurückgedreht, also hellblau. „Beim Vergrößern von einem Bild in den
-Fragen ist das Bild weiß" — das war die Lupe (`bildZoomEbene`), die ihr Weiß inline trug;
-sie kehrt die Zeichnung jetzt genauso um wie das Bild selbst.
-
-Und der Schatten der Lupe: „Der Schatten beim Vergrößern ist gut. Der Verlauf ist aber
-ziemlich groß. Dezenter, ähnlich wie bei Windows. Evtl. eine andere Farbe? Was hältst du von
-der 50-Ohm-Farbe?" Der Filter kehrt den Schatten mit um — aus dem großen schwarzen Verlauf
-(18/50 Punkte, 45 %) war im Dark Mode ein weißer Hof über der halben Frage geworden. Jetzt:
-im Hellen ein Schatten wie ein Fenster unter Windows (6/18 Punkte, 28 %, dazu eine feine
-Linie), im Dark Mode dasselbe in 50-Ohm-Blau — im Stilblatt steht seine Umkehr `#ff5210`,
-nach dem Filter leuchtet ein schmaler blauer Saum. Die Vergrößerung per Klick (Lightbox)
-bekommt denselben Saum.
-
-### Fünf Bilder liefen über — die Seitenspalte hielt die Karte fest
-
-Dietmar, mit AD408 (Bild zur Frage, vier Bildantworten): „bei 5 Bilder flippt der Trainer
-aus. Es läuft über!" Die Antwortbilder standen auf 240 Punkten, die Seite war 1473 hoch bei
-936 Fenster, und die Bremse in `bilderGroesseAnpassen()` hatte nichts getan.
-
-Zwei Gründe, beide nachgemessen. Erstens: `finalFixDynamicHeight` setzt der Seitenspalte
-(Verlauf samt Umschaltknopf) eine feste Höhe — die der Frage im Moment seiner Messung, mit den
-großen Bildern also 1056 Punkte. Frage und Spalte stehen in einem Flex-Kasten, der die kürzere
-auf die längere zieht. Wird die Bildhöhe verkleinert, schrumpft die Frage, die Spalte aber
-nicht; die Seite bleibt gleich hoch, und die Bremse hält das für ein Problem, das nicht an den
-Bildern liegt. Jetzt setzt die Rechnung die Spalte für ihre Dauer auf null — dasselbe Mittel,
-das der Nachbar bei seiner eigenen Messung benutzt — und bringt sie am Ende mit `afuSync()` auf
-die neue Fragenhöhe. Zweitens: Seit die Knopfleiste fest am Fensterrand sitzt (16.09.), steht
-sie immer im Fenster; als Maß taugt sie nicht mehr. Bei fester Leiste zählt jetzt allein der
-Überlauf der Seite.
-
-Dazu eine bessere Verteilung: Bisher bekam das Bild zur Frage seine 260 Punkte zuerst, die
-vier Antwortbilder den Rest — bei AD408 90 Punkte in Kästen, die dreimal so breit sind. Jetzt
-fängt das Bild zur Frage mit 170 an, die Antwortbilder bekommen den Platz, und was frei bleibt,
-holt sich das Bild zur Frage zurück. Passt die Seite selbst mit kleinsten Antwortbildern nicht,
-wird das Bild zur Frage bis auf 120 verkleinert. Gemessen: 1564×936 bei 90 % → Antworten 135,
-Frage 170, Seite 936 von 936; 1920×1080 → 157/170; 1440×660 bei 60 % → 165/170; überall ohne
-Rollbalken.
-
-### Welcher Ordner läuft hier — Einstellungen und `START.sh` sagen es
-
-Dietmar: „Über START.sh, wenn ich den Trainer im Arbeitsordner starte, ist das Update, was in
-dem Arbeitsordner drin ist, nicht verwendet. Bei START.bat ist es vorhanden. Beide zeigen die
-gleiche Version." Zwei Fenster, dieselbe Nummer, verschiedene Fingerabdrücke und
-Index.html-Zeiten — das sind zwei Ordner, und welcher es ist, stand nirgends. Jetzt: Der Server
-nennt dem eigenen Rechner unter `/api/version` seinen Ordner (nicht dem Gast über den
-Einladungslink), die Einstellungen zeigen ihn unter **Update** in der Zeile „Ordner". Und
-`START.sh` vergleicht den laufenden Trainer nicht mehr nach der Größe der Index.html, sondern
-nach ihrem Fingerabdruck (SHA-256, wie ihn der Server meldet) und schreibt dazu, aus welchem
-Ordner der laufende kommt. Eine gleich große Index.html mit anderem Inhalt fällt so nicht mehr
-durch.
-
-### Der Knopf, der sich hebt, leuchtet im 50-Ohm-Blau
-
-Dietmar: „Bei MouseOverlay, wenn der Knopf sich hebt, wünsche ich mir die 50-Ohm-Farbe mit
-leicht dezentem Schlagschatten." Im Dark Mode hob sich der Knopf bisher mit dem marineblauen
-Schatten des hellen Stils, den man auf dunklem Grund kaum sah. Jetzt bekommen Rand und ein
-feiner Saum das 50-Ohm-Blau, darunter ein kurzer, weicher Schatten im selben Blau — mit
-derselben Verzögerung wie das Heben, damit nichts vor dem Knopf aufleuchtet. Was schon
-leuchtet (Start, Weiter, Vorlesen), behält seinen Schein.
-
-### Die Lupe wartet, bis die Maus steht
-
-Dietmar: „Die Bilder sollen nicht sofort aufpoppen, wenn ich mit der Maus darüber fahre. So
-lang sich die Maus bewegt, soll das nicht passieren. Erst wenn ich mit der Maus auf einem Bild
-stehen bleibe. Das bringt in der Form so Unruhe rein."
-
-Derselbe Gedanke wie beim Tooltip von Windows: Wer mit der Maus quer über vier Antwortbilder
-fährt, um zum fünften zu kommen, will nicht vier Vergrößerungen aufblitzen sehen. Gezählt wird
-deshalb nicht mehr das Darüberfahren, sondern das Stehenbleiben — **350 ms Ruhe**, dann kommt
-die Lupe. Jede Bewegung fängt die Wartezeit von vorn an; steht sie einmal, bleibt sie, solange
-die Maus auf dem Bild ist.
-
-**Ein Zittern ist dabei keine Bewegung.** Unter vier Punkten Weg wird die Wartezeit nicht
-zurückgesetzt — sonst ginge die Lupe bei einer unruhigen Hand nie auf. Dietmar am 07.09.2026
-zum Zurücknehmen einer Antwort: „Bei Zittern oder Tremor ist ein Fehlklick keine falsche
-Antwort, sondern eine verrutschte Hand." Dasselbe gilt hier.
-
-Geprüft im Browser an AD408 mit vier Bildantworten: schnell quer über alle vier — kein
-einziges Aufblitzen; stehen bleiben — nach 200 ms noch zu, nach 600 ms offen; zwölfmal um zwei
-Punkte zittern — geht trotzdem auf; langsam über das Bild wandern — bleibt zu und öffnet erst
-beim Anhalten; Bild verlassen — geht zu.
-
-### Die große Erklärung ist so breit wie der Trainer
-
-Dietmar: „Beim Vergrößern einer Erklärung ist die Schrift zwar schön groß, das Fenster wird
-aber nicht richtig ausgenutzt. Es könnte breiter sein." Und gleich danach: „mache es bitte
-nicht breiter als der Trainer ist."
-
-Gemessen auf 1920×1020: Das Fenster war 1100 Punkte breit, die Karte des Trainers 1440 — gut
-dreihundert Punkte blieben links und rechts liegen. Jetzt wird die Karte gemessen und genau
-ihre Breite genommen. **Die Schrift wächst mit**, von 21,6 auf 26 Punkte: sonst stünden bei
-voller Breite 116 Zeichen in einer Zeile statt der bisherigen 88, und am Zeilenende muss das
-Auge den Anfang der nächsten wiederfinden — je länger der Weg, desto öfter verrutscht es eine
-Zeile. Für Augen, für die dieses Fenster gemacht ist, gilt das doppelt.
-
-**Und es lief über.** Dietmar: „Erklärfenster rechts über den Bildschirmrand hinaus. Ja, das
-Vergrößern ist größer als das Fenster darunter." Nachgemessen und die Ursache gefunden: Die
-Hülle des Fensters lässt 14 Punkte Rand, die Karte des Trainers 32. Sobald der Platz schmaler
-wurde als 1128 Punkte — auf einem kleinen Fenster oder bei großer Anzeigeeinstellung —, war
-das Erklärfenster **immer** breiter als die Karte und stand links und rechts über sie hinaus.
-Gemessen bei 1100×800, 1280×800 bei 125 %, 1920×1020 bei 175 % und 1500×900 bei 140 %: jedes
-Mal vier bis sechsunddreißig Punkte zu breit. Jetzt gilt die Kartenbreite, und gerechnet wird
-am Fenster des Browsers (`window.innerWidth` geteilt durch die Anzeigegröße) statt an der
-Hülle — auch die Höhe. Nachgeprüft bei sechs Kombinationen von Fenstergröße und Anzeige bis
-200 %: nirgends mehr ein Überstand.
-
-### Kein weißer Hof mehr vor der Lupe
-
-Dietmar: „Bevor sich ein Bild vergrößert, kommt erst weiß und danach die 50-Ohm-Farbe. Hier
-wünsche ich mir anstatt weiß auch die DARC-Farbe."
-
-Der Grund war derselbe Filter, der die Zeichnungen ins Negativ kehrt: Unter der Maus liegt auf
-dem Bild ein schwarzer Schatten, und `invert(1)` macht aus Schwarz Weiß. Ein weißer Hof also,
-und erst wenn die Lupe aufging, kam das Blau. Jetzt tragen beide dieselbe Farbe — im Stilblatt
-steht `#ff5210`, die Umkehr von `#00adef`, nach dem Filter leuchtet das 50-Ohm-Blau. Das gilt
-auch für die Kante, die sonst aus dem Blau ein Orange gemacht hätte.
-
-### Die Kacheln unter der Frage
-
-Videolehrgang, 50 Ohm und der Lösungsweg — bis zu drei Kacheln nebeneinander, vom 04.09.2026
-und damit aus der Zeit ohne Dark Mode: weiße Flächen mit dunkelblauer Schrift, die einzigen
-hellen Flecken unter der Frage. Dietmar: „Die 3 Buttons sollten auch noch angepasst werden."
-
-Sie tragen jetzt denselben Knopfverlauf wie die übrigen Knöpfe, mit hellem Titel und leiser
-Unterzeile, und beim Darüberfahren leuchtet die Kante im 50-Ohm-Blau wie überall sonst. Die
-Zeichen behalten ihre Farbe, denn sie sagen, wohin der Weg führt: das Rot von YouTube, eine
-Spur heller als vorher, weil es jetzt auf Dunkelblau steht statt auf Weiß, und das Omega im
-50-Ohm-Blau. Nachgesehen mit zwei Kacheln (BD307, NB205, NC404) und mit dreien (NB505), hell
-und dunkel.
-
-### Richtig und falsch bleiben grün und rot
-
-Dietmar, mit einem Bild von AD213: „richtig und falsch, erkennt man fast nicht. Das soll in
-dem rot und grün bleiben."
-
-Im Dark Mode wurde die richtige Antwort **blau** markiert (ein dunkles Blau mit blauem Rand
-und einem leisen Schein), die falsche in einem sehr dunklen Rotbraun mit blassrosa Schrift.
-Auf dem nächtlichen Grund war davon fast nichts zu sehen — und gerade hier darf nichts zu
-raten sein.
-
-Jetzt gelten genau die Farben aus dem Lehrgang des DARC, dieselben wie im hellen Stil:
-`--darc-richtig` #3bb583 und `--darc-falsch` #fe756c, beide mit schwarzer Schrift (Kontrast
-8:1 und 7:1), dazu Haken und Kreuz in Schwarz. Der Absatz über den Signalfarben sagt es selbst:
-„Sie müssen in **jedem** Farbmodus dieselben sein." Auch der Buchstabe der Antwort wird auf
-diesen Flächen schwarz — er trug sonst das Signalblau, das auf Grün und Rot verschwindet. Und
-die angekreuzte Antwort im Prüfungssimulator, die kein Urteil trägt, steht wieder im Orange
-des Lehrgangs statt in einem dunklen Blau.
-
-Nachgesehen mit Textantworten (AD213) und Bildantworten (NB702), im Simulator und beim
-Vorlesen (dort bleibt die gelesene Antwort blau, solange noch keine Wertung steht).
-
-### Die Lupe bleibt im Fenster des Trainers
-
-Dietmar, mit zwei Bildern derselben Schaltung: „Beim Vergrössern ist das Fenster asynchron.
-Oben kann es 1 mm weiter runter. Links ca. 1 mm weiter nach links. Rechts läuft es über.
-Maximale Vergrösserung. Muss innerhalb von dem Fenster darunter liegen. Bei kleineren
-Vergrösserungen muss es mittig bleiben. Ich meine das Bild in der Frage."
-
-Gerechnet hat die Lupe bisher gegen das **Browserfenster**. Die Karte des Trainers steht darin
-aber nicht mittig — links bleibt mehr Rand als rechts. Nachgemessen bei 1082 × 532 Punkten mit
-der Einstellung „so groß wie möglich": Karte von 102 bis 966, Lupe von 125 bis **1070**. Also
-104 Punkte über die Karte hinaus nach rechts, während links 23 Punkte frei standen, und oben
-2 Punkte gegen 10 unten. Genau die Schiefe, die er beschreibt.
-
-Bezugsfläche ist jetzt die **Karte selbst**, geschnitten mit dem sichtbaren Fenster — eine Karte
-kann länger sein als der Bildschirm, und was darunter liegt, sieht niemand. Aus ihr kommen beide
-Grenzen: wie groß das Bild höchstens wird und wohin es gesetzt wird. Ist keine brauchbare Karte
-da (Beamer, Vollbild, fremde Ansicht), bleibt es beim Fenster wie bisher.
-
-Und die Mitte: Eine kleine Vergrößerung wächst weiter aus ihrem eigenen Bild heraus und bleibt
-darüber stehen — das ist ruhiger als ein Bild, das zur Seite wegkippt. Passt sie an dieser Stelle
-nicht mehr in die Karte, klebte sie bisher an einem Rand, während am anderen Platz blieb. Jetzt
-setzt sie sich in die Mitte der Karte.
-
-**Und „so groß wie möglich" heißt jetzt wirklich so groß.** Dietmar, mit einer Aufnahme vom
-Bildschirm: „Ich bin damit nicht zufrieden. Maximale Größe bedeutet so groß wie das Programm im
-Hintergrund." Auf der obersten Stufe galt bis dahin immer noch die Zielgröße in Punkten
-(520 für ein Fragebild) und ein Anteil von höchstens 92 Prozent — ringsum blieb ein Streifen
-stehen. Ab dieser Stufe zählt nur noch die Karte: Das Blatt wird genau so groß wie sie, Kante
-auf Kante, in der Breite **und** in der Höhe. Die Zeichnung behält dabei ihr Seitenverhältnis
-und sitzt mit `object-fit: contain` mittendrin; die Schaltbilder liegen breiter als die Karte,
-also bestimmt die Breite, wie groß sie wird.
-
-Die Stufen darunter bleiben, wie sie waren — sonst wären „doppelt so groß" und „so groß wie
-möglich" dasselbe. Der Hinweistext unter der Auswahl sagt es jetzt auch richtig; er nannte
-bisher 38 Prozent, gerechnet wurde längst mit 62.
-
-Nachgemessen mit „so groß wie möglich", Ränder zur Karte in Punkten links/rechts/oben/unten:
-1554 × 931 → 0/0/0/0. 1082 × 532, 1280 × 800 und 1920 × 1080 ebenso (ein Punkt Rundung durch
-die Anzeigegröße). Auch die vier Antwortbilder (AD408) füllen die Karte genau. Auf den Stufen
-darunter steht das Bild weiter über seiner Zeichnung: bei 1554 × 931 mit „doppelt so groß"
-1058 × 618 Punkte, ohne Nachteilsausgleich 538 × 318.
-
-### „Zurücknehmen" gilt auch für die Antwort, die schon steht
-
-Dietmar: „Ich habe in Nachteilsausgleich, Antwort zurücknehmen aktiviert. Der Button fehlt."
-
-Er hatte die Frage schon beantwortet und den Haken erst danach gesetzt. Die Sicherung, aus der
-das Zurücknehmen lebt, wurde bis dahin nur angelegt, **wenn der Haken schon gesetzt war** — der
-erste Satz in `antwortSicherungNehmen()` stieg sonst gleich wieder aus. Ohne Sicherung kein
-Knopf; erst die nächste Frage hat funktioniert. Wer die Einstellung einschaltet, weil er sich
-gerade verklickt hat, steht damit genau in dem Fall da, für den sie gedacht ist.
-
-Die Kopie wird jetzt **immer** angelegt, auch bei ausgeschaltetem Haken. Sie kostet ein paar
-hundert Byte je Antwort und lebt nur bis zum nächsten Weiterblättern. Der Haken entscheidet
-seither allein darüber, ob Knopf und Strg+Z angeboten werden — und ein nachträglich gesetzter
-Haken bringt den Knopf sofort für die Antwort, die auf dem Bildschirm steht. Auch das Ausschalten
-wirft die Sicherung nicht mehr weg: Wer den Haken versehentlich entfernt und wieder setzt, findet
-seine Antwort noch vor.
-
-Nachgemessen an AI613 (Klasse E → A) und im Lernen: ohne Haken kein Knopf, mit nachträglich
-gesetztem Haken ist er da, und ein Klick stellt alles wieder her — Anzahl, Treffer, Fehlerliste,
-Lernbedarf, Lernfortschritt und die Kacheln ohne Wertung. Danach verschwindet der Knopf von
-selbst. Strg+Z tut dasselbe. Beim Weiterblättern bleibt die Antwort stehen, wie bisher.
-
-### Die große Erklärung deckt den Trainer genau ab
-
-Dietmar, mit einem Bild der vergrößerten Erklärung: „Unten sehe ich die Hälfte von der
-Knopfleiste."
-
-Das Fenster war nur so hoch wie sein Text und stand mittig im Bildschirm. Sein unterer Rand
-endete dadurch mitten über der Knopfreihe, und von den Knöpfen lugte die obere Hälfte hervor —
-halb verdeckt sieht kaputt aus. Auf die Frage, wie es abschließen soll, hat er sich für dasselbe
-entschieden wie bei der Lupe: genau so groß wie der Trainer.
-
-Das Fenster liegt jetzt **Kante auf Kante** über der Karte: links, rechts, oben und unten. Die
-Breite kam schon von der Karte, jetzt auch die Höhe und die Lage — gesetzt über `position: fixed`
-mit den Maßen der Karte, denn die steht in ihrer Hülle nicht mittig. Gerechnet wird wieder über
-die Anzeigegröße, dieselbe Umrechnung wie bei der Lupe. Eine Karte, die länger ist als der Schirm,
-wird vorher mit dem sichtbaren Fenster geschnitten. Ist der Text kürzer als die Karte, bleibt
-unten Platz frei; dafür lugt nichts mehr halb hervor, und ein längerer Text rollt wie bisher.
-
-Nachgemessen an AI612, Ränder zur Karte in Punkten: 1560 × 936 → 0/0/0/0, ebenso bei 1082 × 532,
-1280 × 800 und 1920 × 1080 (ein Punkt Rundung durch die Anzeigegröße). Die Schrift bleibt bei
-26 Punkten, gerechnet auf rund 95 Zeichen je Zeile.
-
-### Gemerkt ist rot, gelernt ist grün — auch im Dark Mode
-
-Dietmar: „Frage Merken möchte ich in rot. Hier gibt es keinen farblichen Unterschied."
-
-Und es war keiner zu sehen: Im Dark Mode blieb das Herz auch dann grau, wenn die Frage in der
-Merkliste stand. Der Grund lag im Stilblatt. Die Nachtregel setzt den Grund der beiden Knöpfe
-mit `!important` und über eine **Kennung** (`#questionFavBtn`) — das schlägt
-`.q-marke-merken.an`, das nur zwei Klassen wiegt. Ein Auffangversuch stand schon da, traf aber
-die falschen Namen: `.aktiv` und `.active` gibt es an diesen Knöpfen nicht, die Klasse heißt
-`an`. Er lief ins Leere, und ein gemerktes Herz sah aus wie ein nicht gemerktes.
-
-Jetzt gelten nachts dieselben Farben wie am Tag: **#e11d48** für die Merkliste, **#15703c** für
-„gelernt", Zeichen in Weiß. Der Haken war von derselben Regel betroffen und ist mit berichtigt.
-Der Notizzettel daneben hatte seine Nachtregel schon — an ihm ist nichts geändert.
-
-Und die alte Regel gilt weiter, die 1.230.1 einmal gekostet hat: **Farbe heißt genau eines —
-eingeschaltet.** Ein rotes Herz auf einem Knopf, der nichts gemerkt hat, liest sich als
-„gesetzt"; deshalb ist der Ruhezustand grau geblieben.
-
-Nachgemessen im hellen und im dunklen Stil, an und aus: gemerkt rgb(225, 29, 72) mit weißem
-Zeichen, gelernt rgb(21, 112, 60) mit weißem Zeichen, in beiden Stilen gleich.
-
-### Beim Vorlesen wandert eine Marke über die Wörter
-
-Dietmar: „Beim Vorlesen bei der Erklärung würde ich mir noch wünschen, das das Wort, was gerade
-vorgelesen wird, farblich hervorgehoben wird."
-
-Es ist ein Leuchtstift, kein zweiter Kasten: Nur der Grund des einen Wortes färbt sich, die Zeile
-bleibt, wo sie ist. Am Tag ist es das Gelb des Lehrgangs, nachts das 50-Ohm-Blau mit dunkler
-Schrift — dieselbe Markierung, die auch die gerade gelesene Antwort trägt. Es gilt in der kleinen
-Tafel und im großen Fenster; wandert die Marke aus dem Sichtbaren, rollt der Text nach. Beim Knopf
-„nur vorlesen" bleibt alles still: Dort ist kein Text zu sehen, also gibt es auch nichts
-hervorzuheben.
-
-**Warum geschätzt und nicht gemessen.** Der Browser kennt bei seiner eigenen Stimme die
-Wortgrenzen; die ist hier aber seit dem 25.08.2026 nicht mehr in Gebrauch, weil sie „MHz"
-buchstabiert. Piper liefert eine fertige Tondatei und sonst nichts — kein Zeitraster, keine
-Marken. Was der Trainer hat, ist ihre **Länge** und der Text, der darin steckt. Daraus lässt sich
-die Stelle gut genug schätzen; es geht ums Mitlesen, nicht um Millisekunden.
-
-**Wie geschätzt wird.** Jedes Wort bekommt ein Gewicht, und die Dauer wird im Verhältnis dieser
-Gewichte verteilt. Ein Zeichen zählt eins — allerdings erst, nachdem `sprechbar()` darüber
-gelaufen ist: Aus „MHz" werden so neun Zeichen statt drei, aus dem Ω vier. Eine **Ziffer zählt
-fünf**, denn „330" spricht sich als „dreihundertdreißig": drei Zeichen, achtzehn Laute. Und ein
-Satzzeichen ist eine Pause — Punkt sechs, Komma drei.
-
-Zwei Fallen lagen dabei im Weg. Ein Abschnitt wird in mehrere Tondateien zerlegt, damit kein
-Stück zu lang wird; ohne Gegenmaßnahme fing die Marke bei jedem Stück wieder vorn an. Jedes Stück
-weiß deshalb jetzt, welchen **Anteil** am Abschnitt es trägt — gerechnet mit demselben Gewicht,
-nicht mit der reinen Zeichenzahl, sonst sprang die Marke an jeder Zahl zurück. Und weil auch das
-noch um ein Wort danebenliegen kann, merkt sich der Lauf, wie weit er gekommen ist: **Zurück geht
-die Marke nie.** Ein neues Vorlesen fängt wieder vorn an.
-
-Die Wörter werden dafür einmal in eigene `<span>` gefasst. Am Aussehen ändert das nichts, und sie
-bleiben danach stehen, statt den Abschnitt nach jedem Vorlesen neu aufzubauen.
-
-Nachgemessen an AI612 im hellen und im dunklen Stil, in der Tafel und im großen Fenster: 95 Wörter
-im Abschnitt „Im Bild", 82 im „Kniff", beide von vorn bis hinten durchlaufen, **null Rücksprünge**,
-null Seitenfehler. Nach „Stop" ist die Marke weg, ein zweiter Durchgang beginnt wieder beim ersten
-Wort.
-
-### Ein Klick auf ein Antwortbild wählt die Antwort
-
-Dietmar, und genauso ein Mitleser mit demselben Erlebnis: „Bei den Bildern, die größer werden
-beim Drüberfahren, sollte man mal die Fläche zum Anklicken markieren! Ich habe mich gewundert,
-verdammt noch mal, wo klicke ich die Lösung an!" Und sein Vorschlag: „Maus Overlay Bild
-vergrößern, draufklicken Frage beantwortet."
-
-**Es war nicht nur unklar — es ging gar nicht.** Am Bild stand
-
-```
-onclick="event.stopPropagation(); openLightbox(...)"
-title="Klick zum Vergrößern"
-```
-
-und im Stilblatt dazu `cursor: zoom-in`. Drei Dinge, die alle dasselbe Falsche sagten: *der Klick
-vergrößert.* Das `stopPropagation` hat ihn sogar aktiv daran gehindert, bei der Kachel anzukommen
-— eine Bildantwort war mit der Maus nur zu treffen, indem man den schmalen Rand **neben** dem Bild
-erwischte. Nachgemessen bei AD408: Klick mitten auf Antwort C, `userAnswerIndex` blieb `null`.
-
-Jetzt trägt das Bild keinen eigenen Klick mehr. Er läuft dorthin, wo er hingehört — zur Kachel mit
-`selectOption()`. Groß wird das Bild weiter vom Draufstehenbleiben (die Lupe, ohne Klick), und weil
-das ohne Klick geschieht, stehen sich die beiden nicht mehr im Weg: **Bleib stehen, sieh es groß an,
-klick — Antwort gewählt.** Der Hinweistext sagt es jetzt auch („Antwort C wählen"), und der
-Mauszeiger ist eine Hand statt einer Lupe.
-
-Das Fragebild behält seine Lightbox. Es ist keine Antwort; ein Klick darauf wählt nichts aus.
-
-**Und beim Vorlesen wird das Bild markiert.** Dietmar: „Das Bild soll beim Vorlesen natürlich
-markiert werden." Bisher färbte sich nur der **Grund der Kachel**. Bei einer Textantwort sieht man
-das sofort; bei einer Bildantwort liegt das Bild mit seinem eigenen weißen Grund darüber und deckt
-fast die ganze Kachel ab — vom Bernstein blieb ein Saum von wenigen Punkten. Und gerade dort zählt
-es: Bei einer Bildantwort spricht der Trainer nur „Antwort C" und lässt eine Pause zum Hinsehen —
-in dieser Pause muss zu sehen sein, *welches* Bild gemeint ist.
-
-Das Bild bekommt deshalb jetzt selbst einen Ring, drei Punkte breit. Er liegt als `box-shadow`
-außen an und nimmt keinen Platz weg; ein dickerer Rahmen hätte die Bildfläche verschoben. Im
-hellen Stil ist er bernsteinfarben, im Dark Mode erscheint er im 50-Ohm-Blau — derselben Farbe, in
-der auch die Lupe und das gerade gesprochene Wort leuchten. Dort steht er im Stilblatt als
-`#ff5210`, weil die Zeichnungen im Dark Mode ins Negativ gedreht sind und der Filter den Rahmen
-mit umkehrt.
-
-Nachgemessen an AD408 mit allen vier Kacheln, bei größter Vergrößerung und mit abgeschalteter Lupe:
-Jeder Klick trifft genau seine eigene Antwort, auch mitten im großen Bild. Ein zweiter Klick auf
-eine andere Kachel ändert nichts mehr, die Tastatur (Enter auf der Kachel) tut wie bisher dasselbe,
-und das Fragebild öffnet weiter die Lightbox. Die Marke beim Vorlesen sitzt in beiden Stilen am
-Bild. Null Seitenfehler.
-
-### Das Zeichen im Dock hüpft nicht mehr anderthalb Minuten
-
-Eine Rückmeldung vom Mac, macOS 15.7.9 mit Safari 26.6: „Unter macOS hört das App-Symbol ewig
-(ca. 1,5 Minuten) nicht auf, munter im Dock auf und ab zu springen."
-
-Die anderthalb Minuten sind der Hinweis auf die Ursache: Es ist genau die Frist, die der Launch
-Service von macOS einem startenden Programm gibt. `CFBundlePackageType APPL` in der `Info.plist`
-sagt dem System: *Das ist ein Programm mit Fenstern.* Es legt daraufhin ein Zeichen ins Dock und
-lässt es hüpfen, **bis sich das Programm beim Fensterdienst meldet**. Unser Starter im `.app` ist
-aber ein Shell-Skript, das `node Server.js` startet — es macht nie ein Fenster auf und meldet sich
-deshalb nie. Also hüpfte das Zeichen, bis macOS von selbst aufgab: rund neunzig Sekunden.
-
-Der Eintrag dagegen heißt `LSUIElement` und bedeutet „Programm ohne eigene Oberfläche". Dann gibt
-es kein Dock-Zeichen, das hüpfen könnte — und weil die Oberfläche des Trainers im Browser steht,
-fehlt auch nichts. Der Hinweis auf fehlendes Node.js kommt weiter: `LSUIElement` verbietet nur die
-eigene Oberfläche, nicht die Dialoge.
-
-`installieren.sh` macht es von Anfang an so; nur die `.app` aus `pakete_bauen.sh` hatte die Zeile
-nicht. Es traf also genau die, die das Mac-ZIP geladen haben. Nachgerechnet: Die erzeugte
-`Info.plist` ist gültig und trägt `LSUIElement` als `true`.
-
-Die beiliegende Anleitung und `INSTALLATION.md` sagen es jetzt auch: Die Mac-App legt **absichtlich**
-kein Zeichen ins Dock. Und der Satz „für macOS nicht auf echter Hardware ausprobiert" steht nicht
-mehr in der Installationsanleitung — seit dem 17.09.2026 ist der Trainer dort gelaufen.
-
-### `erklaerungen.json` war wieder aus den Linux- und Mac-Paketen verschwunden
-
-Beim Bau der Pakete für 1.297.0 nachgezählt, weil die Gelegenheit da war: Die Positivliste in
-`pakete_bauen.sh` führte **40 Dateien**, das ausgelieferte Mac-ZIP von 1.296.0 enthält **41**.
-Die eine, die fehlte, war `erklaerungen.json` — 2,8 MB, der ganze Erklärteil.
-
-Dieselbe Datei, dieselbe Liste, derselbe Grund wie am 15.09. in 1.296.0. Sie kam dort herein,
-weil sie in keiner der beiden Paketlisten stand; irgendwann zwischen jenem Bau und heute ist die
-Zeile wieder aus `pakete_bauen.sh` gefallen. Aufgefallen wäre es nicht: Fehlt die Datei, schreibt
-`Index.html` beim 404 eine Zeile in die Konsole („der Erklärkasten bleibt aus") und macht weiter.
-Wer neu installiert und nicht sofort aktualisiert — oder ohne Netz lernt —, hätte in 1.297.0 auf
-Linux und am Mac wieder **keine einzige Erklärung** gesehen.
-
-Die Zeile steht wieder drin, diesmal mit einem Merkzettel darüber, dass sie schon einmal
-verlorengegangen ist. Und weil Zählen besser ist als Hoffen: Die Dateiliste des neuen Mac-ZIP ist
-gegen die von 1.296.0 gestellt — **keine Datei verloren, keine dazu**, und `erklaerungen.json`
-liegt mit 2.819.194 Bytes im `.zip`, im `.deb` und im `.rpm`.
-
-Gebaut sind die drei Pakete für 1.297.0 damit auch: `mac.zip`, `.deb` und `.rpm`, je 1804
-Programmdateien, 37 MB entpackt. Größen und Prüfsummen stehen nicht hier — sie können es nicht:
-Dieses Protokoll liegt in den Paketen, seine eigene Prüfsumme kann es also nicht enthalten. Sie
-gehören auf die Release-Seite. Das Windows-ZIP entsteht weiter mit `Build-DIREKT.bat`.
-
-### Mitautor am Commit
-
-Dietmar: „Kann ich dich als Entwickler in GitHub eintragen?" Ein Konto hat der Assistent
-nicht, ein Mitarbeiter im Repository geht also nicht. `hochladen.js` hängt jedem Commit
-jetzt die Zeile `Co-Authored-By: Claude <noreply@anthropic.com>` an — GitHub zeigt sie am
-Commit als zweiten Autor —, und die README nennt es unter „Urheberrecht".
-
-### Der Fragenkatalog ist vollständig erklärt
-
-Die letzten 464 Fragen des Aufstiegs **E → A** haben eine Erklärung bekommen. Damit sind
-alle vier Prüfungsziele durch — Klasse N, Klasse E, N → E und E → A —, zusammen
-**1750 Erklärungen**. Vorher waren es 1286; offen war allein dieser Aufstieg.
-
-Jede der 464 folgt derselben Form wie die übrigen:
-
-- **Das Prinzip zuerst.** Warum es so ist, allgemein genug, dass es bei der nächsten Frage
-  wieder trägt. Erst danach der Kniff — die Stelle, an der man hereinfällt.
-- **Zu jeder falschen Antwort ein eigener Satz**, der den konkreten Rechen- oder Denkfehler
-  benennt: „Der Faktor 2 fehlt", „mit der Leerlaufspannung gerechnet", „das ist die Lösung
-  der Nachbarfrage AD105". Wo keine Verwechslung auf die Zahl führt, steht das
-  ausdrücklich da statt einer erfundenen Begründung.
-- **146 Rechenwege** mit jedem Zwischenschritt und jeder Einheit — vom Blindwiderstand
-  über die Carson-Formel und Shannon-Hartley bis zum Personenschutz-Sicherheitsabstand.
-
-Abgedeckt sind damit auch die Gebiete, die es nur in der Klasse A gibt: Betriebsarten der
-Verstärker, Doppelsuper und Roofing-Filter, digitale Signalverarbeitung mit I/Q und
-Abtasttheorem, Leitungstransformation, Ausbreitung über Aurora und Sporadic E,
-Messtechnik mit dem vektoriellen Netzwerkanalysator und die Feldstärkerechnungen des
-Personenschutzes.
-
-**Maschinell geprüft**, wie bei allen Erklärungen zuvor: Jeder Fragentext, jede richtige
-Antwort und jeder Schlüssel unter `warum_falsch` steht wörtlich so im amtlichen Katalog —
-0 Abweichungen bei allen 1750 Einträgen. Jede der 146 Rechnungen wurde nachgerechnet und
-gegen die amtliche Antwort gehalten. Die Datei wurde über HTTP aus dem laufenden Trainer
-geladen, um zu sehen, dass sie dort ankommt, wie sie gemeint ist.
-
----
-
-### Die Erklärung für Augen, die nicht mehr die besten sind
-
-Ein Benutzer nach den ersten Klasse-A-Erklärungen: *„ich finde es gut mit den Erklärungen,
-nur etwas klein geschrieben. Aber vlt sollte ich mir doch mal wieder eine passende Brille
-besorgen."* Dietmar dazu: *„Funkamateure, die von E auf A gehen, sind sehr oft schon älter
-und die tun sich schwer bei dem Lesen."*
-
-Drei Knöpfe kommen dazu. Der Erklärkasten selbst bleibt, wie er war — wer ihn so mag,
-merkt von der Änderung nichts.
-
-- **Ganz rechts im Kopf des Kastens das Symbol zum Aufziehen.** Ein Klick, und die
-  Erklärung steht groß über der Seite: **1,35 rem statt 0,86 rem**, also gut das
-  Anderthalbfache, dazu mehr Zeilenabstand. Kein Wort auf dem Knopf, nur das Zeichen —
-  Dietmar: *„Gross klingt nicht gut. Es würde auch das hier langen."*
-  Zu geht es mit dem Zeichen zum Zusammenschieben, mit dem ✕, mit *Esc* oder mit einem
-  Klick neben das Fenster.
-- **Ein Knopf „Lösung" neben „Vorlesen".** Bei offenem Erklärkasten sind die
-  Antwortkacheln ausgeblendet — F9 würde also etwas aufdecken, das man gar nicht sieht.
-  Der Knopf schreibt die richtige Antwort stattdessen in den Kasten, grün abgesetzt.
-  **Gewertet wird über dieselbe Funktion wie F9**: im Gruppenraum und im
-  Prüfungssimulator als Fehler, beim Lernen zu Hause nicht. So kann es nicht
-  auseinanderlaufen.
-- **Ein Lautsprecher-Knopf neben der Glühbirne.** Er liest die Erklärung vor, **ohne dass
-  sich etwas aufklappt** — die Antworten bleiben stehen. Dietmar: *„Ein Button, der die
-  Erklärung vorliest ohne das diese sich öffnet."* Zweiter Klick hält an. Vor der Antwort
-  liest er nur Prinzip und Kniff, genau wie der Kasten sie zeigt; sonst wäre er ein Weg,
-  sich die Lösung vorsagen zu lassen.
-
-Der Inhalt des großen Fensters kommt aus derselben `erklaerInhalt()` wie der Kasten. Ein
-zweiter, eigener Text wäre eine Stelle mehr, die bei jeder Korrektur vergessen werden kann.
-
-> **Gemessen und nicht geschätzt:** Auf einem 400 Punkte breiten Fenster war das große
-> Fenster zunächst nur 231 Punkte breit — gut die Hälfte des Schirms blieb leer.
-> Ursache: Der Trainer setzt auf `<html>` ein `zoom` (dort 0,6), und eine Angabe in `vw`
-> wird dann zweimal klein gerechnet. Mit Prozenten statt `vw` sind es jetzt 375 von 400
-> Punkten. Nachgemessen bei 1400, 1024 und 400 Punkten Breite: nichts steht über dem Rand,
-> nirgends muss quer gescrollt werden.
-
-**F8 hört, F9 sieht.** Dietmar: *„Verwende F8."* Die Taste tut dasselbe wie der
-Lautsprecher-Knopf — Erklärung vorlesen, ohne dass sich etwas öffnet; zweites Drücken hält
-an. Steht der Kasten oder das große Fenster schon offen, liest F8 dort, damit nicht zwei
-Vorgänge gleichzeitig sprechen. In einem Eingabefeld — Suche, Notiz, Rufzeichen — tut sie
-nichts, dort gehört das F8 in den Text. Im Prüfungssimulator ist sie aus, wie der Knopf.
-Sie steht jetzt bei den anderen Tasten unter *Einstellungen → Nachteilsausgleich →
-Bedienung per Tastatur*.
-
-**Die Lösung nennt den Buchstaben.** Dietmar: *„Bei Lösung wünsche ich mir, das es die
-Antwort und den Buchstaben dazu sagt."* In der Zeile steht er grün abgesetzt vor dem Text
-— `Die Lösung. [C] 7,1 m` —, und beim Vorlesen wird er mitgesprochen: *„Die Lösung.
-Antwort C. 7,1 m."*
-
-> Der Buchstabe kommt aus der **aktuellen** Reihenfolge, nicht aus dem Katalog: Der Trainer
-> mischt die Antworten, und ein fester Buchstabe wäre danach falsch. Genommen wird derselbe
-> Index, den auch die Kacheln als `data-optindex` tragen und den das Vorlesen der Frage
-> benutzt. Bei sechs Stichproben aus verschiedenen Sachgebieten stimmte der angezeigte
-> Buchstabe jedes Mal mit dem auf der Kachel überein.
-
----
+### Hinzugefügt
+- Erklärungen: gesamter Katalog erklärt (1750 Fragen), zuletzt 464 Fragen E → A mit 146 Rechenwegen
+- Erklärung: Großansicht in Kartengröße, Knopf Lösung mit Antwortbuchstabe, Vorlesen ohne Aufklappen (Knopf, F8), Wortmarke
+- Update-Fenster beim Start: Versionen, Änderungsliste aus `CHANGELOG.md`, Fortschritt; ersetzt stilles Nachholen, Blinkknopf und Ton
+- Dark Mode wieder verfügbar: Zeichnungen im Negativ (`invert(1)`), alle Fenster angepasst, Signalfarben wie im hellen Stil
+- Lernmodus: offene Fragen als Liste statt Nicht bestanden, Knopf Ausgelassene jetzt üben
+
+### Geändert
+- Oberfläche: Antwortfelder so hoch wie ihr Text, Knopfleiste fest am Fensterrand, Prüfungsteil in der Kopfzeile
+- Bilder: Lupe erst nach 350 ms Stillstand, bleibt innerhalb der Karte, Höchststufe füllt die Karte
+- Build: Sprachprobe `sprachprobe.js` in `Build-DIREKT.bat`, kein Setup-Bau mehr, ZIP-Inhalt namentlich geprüft
+
+### Behoben
+- Fragenkatalog: 784 Stellen in 363 Fragen ans amtliche PDF angeglichen; Indizes, Brüche und Wurzeln wie gedruckt
+- Sprachausgabe: Formeln, Einheiten und Zahlengruppen vollständig vorgelesen; bei Auslastung Warteschlange statt Fehlerfenster
+- Bedienung: Klick aufs Antwortbild wählt die Antwort, kein Überlauf bei fünf Bildern, Zurücknehmen bei nachträglichem Haken
+- Start/Pakete: `START.sh` findet `node\node.exe` und fremden Server, Mac-App hüpft nicht im Dock, `erklaerungen.json` wieder drin
 
 ## [1.296.0] - 2026-09-14
 
-### Behoben — zwei Stimmen auf einmal
+### Hinzugefügt
+- Windows-ZIP als einziger Download: Node, Piper mit Stimmen, Katalog und Erklärungen enthalten, Start per `START.bat`
+- `node_holen.ps1` wieder da: lädt Node bei Bedarf als ZIP mit Prüfsummenvergleich
+- GitHub-Pages-Seite unter `docs/` ohne externe Server, Schriften und Zählpixel
+- Anleitungsvideo in README, `docs/` und Release-Seite verlinkt
+- Pakete: `erklaerungen.json` in `installer.iss` und `pakete_bauen.sh` aufgenommen
 
-Ein Benutzer am 14.09.2026, nachdem er das `.deb` auf seinem Rechner installiert hatte:
-„er liest vor aber irgendwas passt da nicht als ob es doppelt und dreifach kommt die stimme" —
-und kurz darauf: „erst auf schluss passt es".
+### Geändert
+- Setup (EXE) entfällt wegen Smart App Control (Fehler 4551); `installer.iss` bleibt als Vorlage im Repository
+- Tunnelprogramm nicht mehr im Setup, wird beim ersten Tunnelstart nachgeladen
+- `release_hochladen.js`: lädt das Windows-ZIP hoch, ignoriert EXE-Dateien
 
-**Beides stimmte, und beides war ein Fehler in `Index.html`, nicht im Linux-Paket.**
-
-Startete ein zweiter Vorlesevorgang, während der erste noch sprach, wurde der alte nur
-*losgelassen*, nicht angehalten. `ttsQueueToken` sorgte dafür, dass die alte Schleife kein
-**neues** Stück mehr anfängt — das gerade laufende Audio hielt niemand an, weil
-`currentTtsAudio` zu diesem Zeitpunkt längst auf das neue zeigte. Aus demselben Grund
-erreichte auch `stopTTS()` nur das jüngste Audio: Es hält genau eine Variable an, und das
-war die falsche.
-
-Nachgestellt und gemessen, zwei Vorlesevorgänge im Abstand von 1,2 Sekunden:
-
-| | vorher | jetzt |
-|---|---|---|
-| gleichzeitig sprechende Stimmen | **2** | **1** |
-| nach Klick auf „Stop" noch sprechend | **1** | **0** |
-
-Das alte Stück lief im Versuch bis 3,24 s weiter, obwohl längst gestoppt war; jetzt schweigt
-es bei 1,13 s. „Erst auf Schluss passt es" heißt genau das: wenn die verwaisten Stücke von
-selbst zu Ende waren.
-
-Ausgelöst wurde es bei jedem zweiten Vorlesen kurz hintereinander — beim Weiterblättern mit
-automatischem Vorlesen, beim zweiten Klick auf *Vorlesen*, oder wenn Frage und Erklärung
-schnell nacheinander drankamen.
-
-**Was geändert wurde.** Jedes abgespielte Stück steht jetzt in `ttsLaufendeAudios` und wird
-beim Anhalten wieder ausgetragen — ein Satz statt einer einzelnen Variablen, denn es können
-mehrere unterwegs sein. `stopTTS()` und jeder neue Vorlesevorgang bringen **alle** zum
-Schweigen, und der Zweig „inzwischen läuft ein neuerer Vorgang" hält das Audio an, statt es
-loszulassen. Der Normalfall bleibt unberührt: Ein langer Abschnitt zerfällt weiter in vier
-Stücke, die sauber nacheinander kommen, nie mehr als eines gleichzeitig (nachgemessen).
-
-### Behoben — vier Meldungen, die es nur unter Windows gab
-
-Derselbe Benutzer, einen Schritt vorher: Nach der Installation des `.deb` fehlte Piper, und
-der Trainer schickte ihn zum **Setup** — das es auf Linux gar nicht gibt. Nachgesehen: Vier
-Meldungen im Vorlesezweig sprachen von `piper.exe` und vom Setup, zwei davon als
-blockierendes `alert()`, obwohl gleich darüber steht, dass es die nicht mehr geben soll
-(FIX W21).
-
-Schlimmer als der falsche Dateiname war, was fehlte: **Der Weg, der auf jedem System hilft,
-stand in keiner der vier.** Es gibt ihn längst — *Einstellungen → Wartung → Hilfsprogramme →
-Holen*, wo `programme_holen.js` das System erkennt und die passende Fassung selbst holt. Er
-stand nur in einem Hinweis, den man erst zu sehen bekommt, wenn die **Stimmen** schon da sind
-und bloß das Programm fehlt — also nie bei einer frischen Installation.
-
-Alle vier nennen jetzt diesen Weg, erwähnen `piper.exe` und das Setup nur noch unter Windows,
-und keine davon blockiert mehr. Dazu der Satz, der dem Benutzer am meisten gefehlt hat: dass
-Piper **nicht** zur Installation gehört und nichts schiefgegangen ist.
-
-**Nachtrag, eine Stunde später: es waren fünf.** Der Benutzer meldete, die Meldung komme
-weiter — und er hatte recht. Im Reiter *Nachteilsausgleich*, genau dort, wo er geklickt hat,
-stand eine fünfte: „Kein Sprachmodell im Ordner `piper/` gefunden." Sie unterscheidet zwar
-seit dem 07.09.2026 zwischen Windows und Linux, gibt aber auf beiden Wegen einen Rat, den es
-nicht mehr braucht — unter Windows „am einfachsten das Setup noch einmal ausführen", auf Linux
-„die Dateien `.onnx` und `.onnx.json` gehören von Hand dorthin". Zwei Zeilen darunter sitzt
-der Knopf **„Stimmen hinzufügen"**, der seit demselben 07.09.2026 genau das auf jedem System
-selbst erledigt.
-
-Der Text war schlicht älter als der Knopf und hat Leute zu Handarbeit geschickt, die niemand
-mehr machen muss. Jetzt nennt er zuerst den Knopf, dann den Weg über *Wartung →
-Hilfsprogramme*, falls auch das Programm fehlt — und die Handarbeit nur noch als Fußnote für
-die, die es so wollen.
-
-### Hinzugefügt — `erklaerungen.json` liegt jetzt in den Paketen
-
-Beim Bau der Pakete für 1.295.0 aufgefallen: `erklaerungen.json` stand **in keiner der beiden
-Paketlisten** — weder in `installer.iss` noch in `pakete_bauen.sh`. Nachgeprüft am fertigen
-`.deb` von 1.275.0: nicht enthalten. Und es fällt nicht auf, weil nichts knallt — `Index.html`
-schreibt beim 404 nur eine Zeile in die Konsole („der Erklärkasten bleibt aus") und macht
-weiter.
-
-In die installierten Ordner kam die Datei bisher ausschließlich über den GitHub-Updater. Wer
-neu installierte und nicht sofort aktualisierte — oder ohne Netz lernte — hat nie eine
-Erklärung gesehen. Bei einer Fassung, deren Ankündigung „1286 Erklärungen" lautet, ist das
-der Unterschied zwischen Release und Blamage. Beide Listen haben die Zeile jetzt.
-
-### Behoben — zwei Windows-Warnungen, die der Trainer selbst ausgelöst hat
-
-Aus einer Facebook-Runde am 14.09.2026: „Mein PC Sagt.! Achtung Virus und nicht Sicher" —
-darauf ein zweiter: „Da bist du nicht alleine. Habe auch Abstand davon genommen, bzw wurde das
-automatisch geblockt." — „Besser ist!"
-
-Zwei Leute reden dort andere davon ab. Nachgesehen, was Windows tatsächlich meldet, und es
-waren drei verschiedene Dinge, von denen **zwei auf unsere Kappe gehen**:
-
-**1. `cloudflared.exe` liegt nicht mehr im Setup.** Ein unsigniertes Installationsprogramm von
-330 MB, in dem ein 54-MB-Tunnelprogramm steckt, ist genau das Muster, auf das Virenscanner
-anspringen: cloudflared baut eine Verbindung von außen in den Rechner — für den Gruppenraum
-richtig, für einen Scanner nicht von Fernwartung zu unterscheiden. Nötig war es ohnehin nicht
-mehr, `programme_holen.js` holt es seit dem 07.09.2026 auf jedem System selbst. Der Preis:
-Beim ersten Klick auf „Tunnel starten" wird es nachgeladen, ein bis zwei Minuten. Wer den
-Gruppenraum nie benutzt — die meisten — hat 54 MB weniger und eine Warnung weniger.
-
-**2. `ie4uinit.exe -ClearIconCache` ist heraus**, aus `installer.iss` und aus
-`verknuepfung_auffrischen.js`. Dietmar schickte den Eintrag aus dem Schutzverlauf:
-
-> Zugriff auf geschützten Ordner blockiert · Blockierte APP oder Prozess: `ie4uinit.exe` ·
-> Geschützter Ordner: `%userprofile%\Favorites` · Blockiert durch: Überwachter Ordnerzugriff
-
-Also eine Sicherheitswarnung **unmittelbar nach der Installation**. Stufe „Niedrig",
-technisch belanglos — aber wer sie liest, versteht „der Trainer wollte an meine Dateien".
-`-ClearIconCache` stand hier nur als Gürtel zum Hosenträger (es ist der alte Name von `-show`
-bis Windows 8) und räumt quer durch die Shell-Ordner des Benutzers auf, darunter `Favorites`
-— genau das, was der überwachte Ordnerzugriff schützt. `-show` tut das nicht und erledigt die
-Aufgabe; der Explorer zeichnet über `SHChangeNotify` weiter sofort neu.
-
-**3. Was nicht zu beheben ist, steht jetzt wenigstens da.** Der rote SmartScreen-Kasten
-(„Der Computer wurde durch Windows geschützt") bleibt, solange das Setup nicht mit einem
-gekauften Zertifikat unterschrieben ist — und selbst dann: Microsoft schreibt, dass
-EV-Zertifikate SmartScreen nicht mehr umgehen; der Ruf baut sich erst über Wochen auf.
-Deshalb steht in der README und auf der Webseite jetzt ein eigener Abschnitt mit Dietmars
-Bildschirmfoto der Warnung, und darin die drei Dinge, die wirklich helfen:
-
-- **Es ist keine Virenmeldung.** SmartScreen prüft den Ruf, nicht den Inhalt. Ein leeres
-  Programm, heute geschrieben, bekommt denselben Kasten.
-- **Der Knopf zum Weitermachen ist versteckt** — und das ist der Grund, warum Leute
-  aufgeben. Sichtbar ist nur *Nicht ausführen*; *Trotzdem ausführen* erscheint erst nach
-  einem Klick auf den kleinen Link *Weitere Informationen*.
-- **Man muss niemandem glauben:** Quelltext offen, jede Datei vorher bei VirusTotal prüfbar,
-  offizielle Setups nur unter Releases. Und ausdrücklich **nicht** „schalte deinen
-  Virenscanner aus" — wer das bei einem Download rät, gleich bei welchem, will nichts Gutes.
-
-Am Ende des Abschnitts steht ein Satz, den man selten liest: Wenn es dir zu unsicher ist,
-lass es. Es ist ein kostenloses Lernprogramm, kein Muss.
-
-### Hinzugefügt — ein Windows-Archiv für die Rechner, die das Setup abweisen
-
-Noch am 15.09.2026, mit einem Bildschirmfoto:
-
-> Die Datei konnte nicht im temporären Ordner ausgeführt werden. Das Setup wurde abgebrochen.
-> **Fehler 4551: Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert.**
-
-Das ist **Smart App Control** auf Windows 11 — und es bricht die Installation ab, bevor sie
-anfängt. Der Grund liegt im Aufbau jedes Inno-Setups: Die EXE ist eine Hülle, die sich beim
-Doppelklick in den Temp-Ordner auspackt und sich von dort startet. Ein unsigniertes Programm
-aus dem Temp-Ordner lässt die Richtlinie nicht laufen.
-
-**Das ist nicht umzubauen.** Es liegt nicht am Inhalt des Setups, sondern an seiner Hülle.
-Dietmars Frage „Wäre eine MSI besser?" war naheliegend, aber nein: Smart App Control blockiert
-unsignierte MSI genauso — das Format ist nicht das Problem, die fehlende Unterschrift ist es.
-Bleiben zwei Wege: unterschreiben, oder nichts ausführen.
-
-**Ein ZIP wird ausgepackt, nicht ausgeführt.** `Build-DIREKT.bat` baut deshalb ab jetzt ein
-`Amateurfunk-Trainer-<Fassung>-windows.zip`. Auspacken, `START.bat` doppelklicken — fertig.
-Kein 4551, keine Rechteabfrage, kein roter SmartScreen-Kasten.
-
-**Und die EXE entfällt.** Erst sollten beide Wege nebeneinander stehen. Zwei Wege bedeuten
-aber, dass jeder Benutzer zuerst eine Entscheidung treffen muss, die er nicht treffen kann —
-er weiß ja nicht, ob auf seinem Rechner Smart App Control läuft. Und der eine Weg, der überall
-funktioniert, ist das Archiv. Also nur noch das Archiv. Das Setup mit seinem roten Kasten, dem
-*Weitere Informationen → Trotzdem ausführen* und der Rechteabfrage ist damit aus README,
-Release-Seite und der Seite unter `docs/` verschwunden — zusammen mit dem Bild vom
-SmartScreen-Fenster, das keine Anleitung mehr braucht, wenn es das Fenster nicht mehr gibt.
-
-Der erste Versuch war ein schlankes Archiv, bei dem Node beim ersten Start nachgeholt wurde,
-mit einem Fenster, das vorher erklärt, was geschieht. Dietmar hat es abgelehnt, und zu Recht:
-„Damit kommen viele doch gar nicht klar. Da muss alles rein, was es braucht." **Jetzt ist
-alles drin** — Node, die Sprachausgabe mit Stimmen, der Fragenkatalog samt Erklärungen und
-Zeichnungen. Draußen bleibt nur das Persönliche: `data\`, `backup\`, `tts_cache\`, `Hoerbuch\`.
-
-**Getestet auf dem Rechner, auf dem die EXE scheitert** — Smart App Control an. Dietmar:
-„Läuft, ohne Probleme!"
-
-Drei Dinge hängen daran:
-
-- **`node_holen.ps1` ist zurück** (am 01.09.2026 gelöscht). Es holt Node bei Bedarf von
-  nodejs.org als ZIP — kein MSI, also keine Administratorrechte — und **vergleicht die
-  Prüfsumme** gegen `SHASUMS256.txt`. Das kann `programme_holen.js` noch nicht; hier geht es,
-  weil die Quelle die Summen veröffentlicht. Im vollen Archiv wird es nie gebraucht: Es ist
-  das Netz für den Fall, dass `node\` einmal fehlt, statt der Sackgasse „bitte neu
-  installieren". Nebenbei behoben: `Fehler-Zeigen.bat` rief die Datei schon die ganze Zeit
-  auf, nur fehlte sie.
-- **`release_hochladen.js` kennt jetzt das ZIP — und die EXE nicht mehr.** Zuerst fehlte das
-  ZIP im Namensmuster; es wäre in `release\` liegen geblieben und stillschweigend übergangen
-  worden. Genau die Sorte Fehler, die man erst merkt, wenn jemand fragt, warum das nicht im
-  Release steht. Umgekehrt ist das EXE-Muster gestrichen: Eine alte EXE, die noch im Ordner
-  liegt, wird nicht gelöscht, aber auch nicht mehr gesehen — sie kann nicht aus Versehen
-  wieder mitgehen.
-- **`Build-DIREKT.bat` kann das alte Archiv nicht mehr zerstören.** Zuerst stand dort
-  „altes ZIP löschen, dann packen" — und als das Packen einmal nicht durchlief, lag in
-  `release\` gar kein Archiv mehr. Jetzt wird unter einem Zwischennamen gepackt und erst nach
-  einer Größenprobe umbenannt; ein halbes Archiv kommt nicht unter dem richtigen Namen an.
-  Und gemeldet wird nur, was gerade entstanden ist — sonst hätte ein Fehlschlag „Fertig"
-  gemeldet und dabei auf das Archiv vom Vortag gezeigt.
-- **`installer.iss` bleibt im Repository, wird aber nicht mehr veröffentlicht.** Die Datei ist
-  gepflegt (`PrivilegesRequiredOverridesAllowed=dialog`: „für alle Benutzer" oder „nur für
-  mich" ohne Rechteabfrage; `cloudflared.exe` und der Aufruf von `ie4uinit.exe` sind
-  herausgenommen), falls es später einmal eine Unterschrift gibt. Gelöscht wird nichts — die
-  Arbeit war richtig, sie hilft nur gegen 4551 nicht: Die Hülle packt sich immer nach Temp
-  aus.
-
-### Die Seite für GitHub Pages
-
-Unter `docs/` liegt eine Seite, die GitHub unter
-`amateurfunk-gruppe.github.io/Amateurfunk-Trainer/` veröffentlicht: dreizehn Abschnitte mit
-fünfzehn Bildern, inhaltlich aus der README. Kein fremder Server, keine Schrift von außen,
-kein Zählpixel — also auch keine Cookie-Frage. Eingeschaltet wird sie unter
-*Settings → Pages → Deploy from a branch → main, Ordner `/docs`*.
-
-> Der Ordner ist dabei das Entscheidende: Im Hauptordner heißt die Datei `Index.html` mit
-> großem I, GitHub sucht `index.html` mit kleinem — und meldet sonst „Site not found".
-
-### Ein Video statt eines Absatzes
-
-Vier Handgriffe — herunterladen, entpacken, Verknüpfung anlegen, starten — lassen sich
-beschreiben oder zeigen. Gezeigt ist es kürzer:
-**[In zwei Minuten einsatzbereit](https://www.youtube.com/watch?v=k80u5clY1VI)**. Der Link
-steht jetzt in der README, auf der Seite unter `docs/` und auf der Release-Seite, jeweils
-über den Download-Knöpfen — nicht statt der Anleitung, sondern daneben: Wer lieber liest,
-liest weiter.
-
----
+### Behoben
+- Vorlesen: keine doppelten Stimmen mehr, Stop hält alle laufenden Stücke an
+- Piper-Hinweise: keine Windows-Texte unter Linux, nicht mehr blockierend, Verweis auf Stimmen hinzufügen und Hilfsprogramme
+- Installation: `ie4uinit.exe -ClearIconCache` entfernt, keine Warnung durch überwachten Ordnerzugriff mehr
+- `Build-DIREKT.bat`: packt unter Zwischennamen mit Größenprobe, altes Archiv bleibt bei Fehlschlag erhalten
 
 ## [1.295.0] - 2026-09-13
 
-### Hinzugefügt — der Aufstieg N auf E ist vollständig erklärt
-
-Dietmar am 13.09.2026: „N → E: 338 offen (von 463) Mache das bitte Fertig"
-
-**Alle 463 Fragen des Aufstiegs N → E haben jetzt eine Erklärung.** Damit sind **drei der vier**
-Prüfungsziele abgeschlossen. Vorher waren es 125 (nur die Fragen mit Zeichnung), es fehlten
-338 — alle reiner Text, alle aus dem Technikteil.
-
-| | vorher | jetzt |
-|---|---|---|
-| Erklärungen gesamt | 948 | **1286** |
-| Klasse N | 571 von 571 | 571 von 571 |
-| **Klasse E** | 696 von 1034 | **1034 von 1034** |
-| **N → E** | 125 von 463 | **463 von 463** |
-| E → A | 252 von 716 | 252 von 716 |
-| Begriffsblätter | 41 | **76** |
-| Fragen an einem Blatt | 493 | **834** |
-| Fragen mit Rechenweg | 149 | **244** |
-| `erklaerungen.json` | 1.681.598 Bytes | **2.297.226 Bytes** |
-
-Vorschriften und Betrieb waren mit Klasse N schon fertig — die V- und B-Fragen sind für alle
-Klassen dieselben. Übrig war nur Technik.
-
-**Berichtigung, noch am selben Tag.** Hier stand zuerst „zwei der drei Prüfungsziele". Das war
-falsch, und Dietmar hat es gesehen: „Einstieg in N und von N nach E und von E nach A fehlt
-doch?" Der Trainer kennt **vier** Ziele, nicht drei — Klasse N, Klasse E, N → E und E → A.
-Klasse E war in meiner Auswertung nie aufgetaucht, weil mein Prüfskript nur drei Fragendateien
-kannte und `Fragen-E.json` nicht mitlas.
-
-Der Fehler war reine Buchhaltung, keine fehlende Arbeit: Die 1034 Fragen der Klasse E sind
-genau die 571 der Klasse N plus die 463 des Aufstiegs (nachgerechnet, die Differenz beider
-Mengen ist in beide Richtungen leer). Mit dem Aufstieg ist also auch Klasse E vollständig —
-richtig ist **drei von vier**.
-
-### Die 35 neuen Begriffsblätter
-
-**Rechnen und Grundlagen (8):** `dezibel` (die vier Werte 3/6/10/20 dB und der Versatz 2,15
-zwischen dBd und dBi) · `zahlensysteme` · `wechselgroessen` (Spitze, Spitze-Spitze,
-Effektivwert) · `leistung-rechnen` (P = I²·R und P = U²/R, und Bauteile mit zwei Grenzen) ·
-`reihe-parallel` · `elektrisches-feld` · `magnetisches-feld` · `uebertrager`
-
-**Bauteile (4):** `widerstaende` (Bauart, Toleranz, SMD-Kennzeichnung) · `blindwiderstand`
-(der Kondensator lässt Hohes durch, die Spule Tiefes) · `diode` · `transistor`
-
-**Geräte (7):** `sender-e` (Linearität) · `oszillatoren` · `mischer` (Summe und Differenz) ·
-`empfaenger` (der Überlagerungsempfänger und seine Baugruppen) · `modulation` (wo die
-Information sitzt) · `datenuebertragung` · `multiplex-netze` · `vna`
-
-**Antennen und Leitungen (7):** `antennen-kennwerte` · `speisepunkt` (Strom- und
-Spannungsverteilung, und daraus die Fußpunktwiderstände) · `kabeldaempfung` ·
-`swr-rechnen` · `mantelwellen` · `eirp-rechnen` (die Kette vom Sender zur Luft)
-
-**Ausbreitung (2):** `ausbreitung-kw` (die Ionisation bricht oben und dämpft unten) ·
-`troposphaere`
-
-**Störungen und Schutz (7):** `einstroemung` · `entstoeren` · `oberwellen` ·
-`bandbreite-begrenzen` · `feldgrenzwerte` · `sicherheitsabstand` · `hf-sicherheit`
-
-Dazu sind **neun bestehende Blätter erweitert** worden — `einheiten`, `welle`, `leistung`,
-`stromversorgung`, `antennenformen`, `kabel-swr`, `ausbreitung`, `messen`, `stoerungen`. Sie
-tragen jetzt Fragen zweier Klassen; der angehängte Absatz beginnt jeweils mit „In der Klasse E
-kommt dazu …", damit sichtbar bleibt, was neu ist. Und drei Fragen, die längst erklärt waren
-aber an keinem Blatt hingen, wurden angehängt: EC115, EF216 und EJ117.
-
-### Wo die Erklärungen ansetzen
-
-Drei Beispiele, was in den Blättern steht statt einer Merkregel:
-
-- **Warum ist die Dipolmitte niederohmig?** Weil an den Enden kein Strom weiterfließen kann —
-  dort ist Stromknoten und Spannungsbauch, in der Mitte umgekehrt. Und weil Widerstand
-  Spannung durch Strom ist, folgt daraus jede Zahl des Abschnitts: Dipol 40 bis 90 Ohm,
-  Groundplane als halbe Antenne 30 bis 50, Faltdipol mit zwei parallelen Hälften 240 bis 300.
-- **Warum gibt es das Dezibel überhaupt?** Weil sich auf dem Weg vom Sender zur Antenne die
-  Faktoren MULTIPLIZIEREN. Im Logarithmus wird daraus Addieren, und damit ist die ganze
-  EIRP-Rechnung ein Strich unter drei Zahlen.
-- **Warum sind 160 m und 80 m tagsüber stumm?** Weil dieselbe Sonne oben bricht und unten
-  dämpft: die F2-Region trägt die Weite, die D-Region frisst die tiefen Bänder — und aus
-  diesem einen Gegensatz folgen MUF, LUF und die tote Zone.
-
-### Behoben — 30 Stellen nach der Gegenprüfung
-
-Drei Prüfer haben die 44 betroffenen Blätter und die 338 Erklärungen gegen den Katalog
-gelesen, 136 Rechenaufgaben unabhängig nachgerechnet und den Sicherheitsteil eigens geprüft.
-**Sie haben 24 Befunde gemeldet.** Die schwerwiegenden waren meine:
-
-1. **„Die Grenzwerte der AFuV sind PEP-Werte" — falsch, und ein Widerspruch zu Fragen auf
-   demselben Blatt.** Für Klasse N und für Relais steht die Grenze als GESTRAHLTE Leistung da:
-   VD724 nennt 10 W EIRP, VD743 10 W ERP, VD503 50 W ERP. Mein Satz hätte einen Lernenden bei
-   genau diesen Fragen in die Irre geführt. Jetzt sagt das Blatt, dass die Einheit des
-   Grenzwerts verrät, welche Frage gestellt ist.
-2. **Der Drehkondensator beruht auf der FLÄCHE, nicht auf dem Abstand.** Ich hatte
-   geschrieben „größerer Abstand heißt weniger Kapazität — genau darauf beruht der
-   Drehkondensator, bei dem die Überdeckung der Platten verändert wird". Der Satz widerlegt
-   sich im eigenen Nebensatz, und die Listenzeile desselben Blattes hatte es richtig.
-3. **„Mitte des Hausdachs" steht nirgends im Katalog.** NG111 sagt nur „auf dem Hausdach". Die
-   Dachmitte kommt aus NK310 — und die meint das FAHRZEUGdach.
-4. **Der Faktor 4 beim Faltdipol trug die eigenen Zahlen nicht.** Vier mal 40 bis 90 Ohm sind
-   160 bis 360, nicht 240 bis 300. Gerechnet wird von den 60 bis 75 Ohm des hoch aufgehängten
-   Dipols; das steht jetzt da.
-5. **Drei falsche „Blindantwort"-Behauptungen.** Bei ED113 („kein Rechenweg führt auf 200 Ohm")
-   führt sehr wohl einer hin: der Parallelblock ergibt 400 Ohm, R₄ hat 600, und 600 minus 400
-   sind genau 200 — derselbe Subtraktionsfehler, den die Datei bei ED104 und ED105 selbst als
-   üblich nennt. Bei EB102 und EB104 nannte mein Satz den Rechenweg und behauptete im nächsten
-   Halbsatz, es gebe keinen. Fünf weitere Behauptungen waren zu stark formuliert und sind
-   entschärft.
-6. **Die Mantelwellendrossel hat einen Ort.** „An beliebiger Stelle im Kabel" hebelte das
-   Nachbarblatt aus, wo EJ119 ausdrücklich „vor dem Rundfunkempfänger" verlangt.
-
-**Zwei sicherheitsrelevante Präzisierungen**, beide vom Sicherheitsprüfer gefunden:
-
-- Die **separate HF-Erdleitung** (EJ111) konnte als vom Haus getrennte zweite Erde gelesen
-  werden — genau der Fall, gegen den EK208 und VDE 0855-300 gerichtet sind. Das Blatt sagt
-  jetzt, dass sie zusätzlich an die Haupterdungsschiene gehört und der Schutzleiter dadurch
-  nie entfällt.
-- Bei **EJ119** stand zum Vorschlag, dem Sender die Erde abzuklemmen, nur „schafft neue
-  Probleme". Jetzt steht da, dass die Erdverbindung eine Schutzmaßnahme ist und zur
-  Entstörung niemals entfernt wird.
-
-**Acht Quellenangaben** ergänzt, wo Zusatzwissen nicht gekennzeichnet war oder die erweiterten
-Blätter noch nach Klasse N aussahen — darunter, dass die 12,7 V eines vollen Bleiakkus nicht
-geprüft werden und dass der Grundsatz der kleinsten ausreichenden Sendeleistung eben DOCH
-geprüft wird (EJ104, EJ105), also kein Zusatzwissen ist.
-
-### Behoben — drei Fehler beim Vorlesen, die den ganzen Bestand betrafen
-
-Die Gegenprüfung hat in `sprechbar()` drei Zeichen gefunden, die Piper verschluckt:
-
-| Zeichen | vorher gehört | jetzt |
-|---|---|---|
-| `Ω` | „ein Widerstand mit 10 k" | „10 kOhm" |
-| `λ` | „eine 5/8-Antenne statt /4" | „fünf Achtel Lambda statt Lambda durch 4" |
-| `mm²` | „16 Millimeter zum Quadrat" | „16 Quadratmillimeter" |
-
-Das erste traf jede Stelle im ganzen Bestand, an der eine Einheit als Ω geschrieben ist — die
-Einheit fiel beim Hören einfach weg. Flächen- und Raummaße werden jetzt vor den Hochzahlen
-ersetzt, sonst würde aus `mm²` weiter „Millimeter zum Quadrat".
-
-Außerdem 54 Stellen auf deutsche Anführungszeichen gebracht. Mein erster Versuch dafür war
-selbst fehlerhaft: er zählte paarweise ab und verrutschte dort, wo im Text schon richtige
-Zeichen standen — 43 Stellen bekamen zwei öffnende Zeichen („Amateurfunkdienst„). Der zweite
-Versuch entscheidet aus dem Kontext (nach Leerraum und vor einem Buchstaben ist öffnend) und
-geht überall auf.
-
-### Behoben — Katalog-Eigenheit beim Eintragen
-
-`eintragen.py` löst die Schlüssel unter `warum_falsch` gegen den Katalog auf. Bei EE404 schlug
-das fehl: der Antworttext enthält **geschützte Leerzeichen** (U+00A0), die beim Abschreiben zu
-normalen werden. Verglichen wird jetzt über eine geglättete Fassung (U+00A0, U+202F und
-U+2009 werden zu normalen Leerzeichen); GESPEICHERT wird weiter der Originaltext, sonst würde
-die Prüfung fehlschlagen.
-
-### Nachgemessen
-
-- `python3 eintragen.py`: 1286 Erklärungen, 76 Begriffsblätter, **0 Fehler**.
-- Im Browser mit dem Ziel N → E: **463 von 463** Fragen der Bank haben eine Erklärung. 45
-  Blätter gelten für dieses Ziel, 342 Fragen hängen daran. Keine Skriptfehler.
-- **Alle 136 Rechenaufgaben unabhängig nachgerechnet** — in keiner einzigen wich das Ergebnis
-  von der amtlich richtigen Antwort ab. Bei den elf EIRP-Aufgaben war der 2,15-dB-Versatz
-  überall richtig angewandt und der Kabelverlust überall abgezogen.
-- Die fünf Aufgaben zum Kabeldämpfungsdiagramm wurden rückwärts erschlossen (das Diagramm ist
-  Blatt 22 der Formelsammlung und liegt nur in der Prüfung vor). Die dabei unterstellten Werte
-  je 100 m sind untereinander widerspruchsfrei: dünneres Kabel dämpft mehr, höhere Frequenz
-  dämpft mehr.
-- Vorlesen geprüft mit mitgeschriebenen Anfragen: bei EB510, EG507 und EG207 je 8 Stücke,
-  längstes 700 Zeichen, keines über der Serverngrenze von 1000, das Prinzip zuerst, und kein
-  Ω oder λ mehr im gesprochenen Text.
-- Druckheft für N → E: **45 Blätter auf 51 Seiten** — Deckblatt plus ein Blatt je Seite, fünf
-  der längeren Blätter brauchen eine zweite Seite. Kein Inhalt geht dabei verloren: für alle
-  45 Blätter wurden Merksatz-Ende und letzte Listenzeile im PDF-Text wiedergefunden.
-- Alle 17 Skriptblöcke in `Index.html` fehlerfrei nach `node --check`.
+### Hinzugefügt
+- Erklärungen: Aufstieg N → E vollständig (463 von 463), damit auch Klasse E komplett; 1286 Erklärungen gesamt
+- Begriffsblätter: 35 neue (u. a. Dezibel, Blindwiderstand, Mischer, SWR, EIRP, Ausbreitung), 9 erweitert, jetzt 76
+- Rechenwege: 244 Fragen mit Rechenweg (vorher 149)
 
 ### Geändert
+- `erklaerungen.json`: Kopffeld `umfang` aktualisiert, drei bereits erklärte Fragen an Begriffsblätter angehängt
 
-- `erklaerungen.json`: 338 neue Erklärungen, 35 neue Blätter, 9 erweiterte, Kopffeld `umfang`.
-- `Index.html`: `sprechbar()` kennt jetzt Ω, λ und die Flächen- und Raummaße.
-- Keine Änderung an `Server.js`.
-
----
+### Behoben
+- Erklärungen: 30 Stellen nach Gegenprüfung korrigiert (Grenzwerte EIRP/ERP, Drehkondensator, Faltdipol, Blindantworten)
+- Sicherheit: HF-Erdleitung zusätzlich an Haupterdungsschiene, Erdverbindung nie entfernen; 8 Quellenangaben ergänzt
+- Vorlesen: Ω, λ sowie Flächen- und Raummaße werden gesprochen (`sprechbar()`)
+- Texte: 54 Stellen auf deutsche Anführungszeichen umgestellt
+- `eintragen.py`: Abgleich toleriert geschützte Leerzeichen (U+00A0, U+202F, U+2009)
 
 ## [1.294.0] - 2026-09-13
 
-### Behoben — beim Vorlesen fiel das Prinzip still aus
-
-Dietmar am 13.09.2026, mit Bildschirmfoto zu NE401: „Nur beim vorlesen von der Erklärung.
-Seltsammer weiss überspringt es den ersten Text und beginnt bei „der Kniff" da geht das
-vorlesen"
-
-**Mein Fehler, und ein doppelter.** Der Server nimmt höchstens **1000 Zeichen** je
-Vorlese-Anfrage (`TTS_MAX_TEXT_LEN` in `Server.js`, eingebaut als FIX K5 zum Schutz gegen
-Überlast). Das hat lange gereicht — eine Frage mit vier Antworten bleibt darunter. Seit die
-Begriffsblätter am 13.09.2026 ein `prinzip` von 200 bis 400 Wörtern tragen, ist der **erste**
-Abschnitt aber regelmäßig 1500 bis 2800 Zeichen lang.
-
-Nachgemessen mit einer direkten Anfrage an den laufenden Server:
-
-| Text | Antwort |
-|---|---|
-| Prinzip von NE401 ungeteilt, 1627 Zeichen | **413** `Text zu lang (1627 Zeichen, max. 1000)` |
-| erstes Stück nach der Zerlegung, 549 Zeichen | kommt durch zur Sprachausgabe |
-
-Der Client warf die 413 weg und sprang zum nächsten Abschnitt — genau das, was Dietmar
-gesehen hat. **Betroffen waren 421 der 948 Erklärungen:** 318 Prinzipien, 277 Listen und
-46 mal „Warum die anderen falsch sind". Je länger und je besser ein Blatt, desto sicherer
-fiel es aus.
-
-Der zweite Fehler war die **Meldung**. Sie sagte „Für das Vorlesen fehlt die Stimme im Ordner
-piper/" und schickte ihn damit in die falsche Richtung — die Stimme war völlig in Ordnung.
-
-### Wie es jetzt läuft
-
-Neu in `playTTSQueue`: `ttsInStuecke()` zerlegt jeden Abschnitt vor dem Sprechen in Stücke von
-höchstens **700 Zeichen** (Sicherheitsabstand zu den 1000 des Servers). Geteilt wird an
-**Satzenden** — eine Stimme, die mitten im Satz abbricht, klingt kaputt. Nur wenn ein
-einzelner Satz allein zu lang ist, wird am Komma und notfalls hart getrennt; lieber eine
-Atempause zu viel als ein Abschnitt, der gar nicht gesprochen wird.
-
-Zwei Feinheiten, die dazugehören:
-
-- Die **Hervorhebung** bleibt über alle Stücke eines Abschnitts auf demselben Element stehen.
-  Der Leser sieht weiter den ganzen Abschnitt, er hört ihn nur in Etappen.
-- Eine **Pause** (die nach einer Bildantwort) gehört an das Ende eines Abschnitts, nicht
-  zwischen seine Stücke. Sonst stockte das Vorlesen mitten im Prinzip.
-
-Nebeneffekt: jedes Stück ist eine eigene Anfrage und liegt danach einzeln im Cache. Beim
-zweiten Hören ist das Vorlesen deshalb sogar schneller als vorher.
-
-Und eine 413 sagt jetzt, was wirklich los ist: „Ein Abschnitt war zu lang für die
-Sprachausgabe und wurde übersprungen. Die Stimme ist in Ordnung — es ist ein Fehler im
-Trainer. Bitte melden." Der Hinweis auf die fehlende Stimme kommt nur noch, wenn wirklich
-keine da ist.
-
-### Nachgemessen
-
-Mit einem Browser, der die Vorlese-Anfragen mitschreibt, je eine Runde über das Themenfenster
-gestartet und die Erklärung vorlesen lassen:
-
-| Frage | Anfragen | längste | über 1000 Zeichen | erster Abschnitt |
-|---|---:|---:|---:|---|
-| NK301 (`sicherheit`, längstes Prinzip) | 9 | 672 | **0** | „Das Prinzip. Gefährlich am Strom …" |
-| BA101 (`buchstabieren`, 28 Listenzeilen) | 7 | 700 | **0** | „Das Prinzip. Buchstabieren ist kein Brauch …" |
-| NE401 (Dietmars Bildschirmfoto) | 8 | 685 | **0** | „Das Prinzip. Ein digitales Verfahren ist eine Verabredung …" |
-
-Das Prinzip steht in allen drei Fällen wieder an erster Stelle, und jedes Stück beginnt an
-einem Satzanfang. Alle 17 Skriptblöcke fehlerfrei nach `node --check`.
-
 ### Geändert
+- Vorlesen: `ttsInStuecke()` teilt Abschnitte an Satzenden in Stücke bis 700 Zeichen, Stücke einzeln im Cache
+- Vorlesen: Hervorhebung bleibt über alle Stücke eines Abschnitts, Pause nur am Abschnittsende
 
-- `Index.html`: `ttsInStuecke()` und die Zerlegung in `playTTSQueue`; eigener Zweig für 413.
-- Keine Änderung an `Server.js`. Die Grenze von 1000 Zeichen bleibt, wo sie ist — sie schützt
-  vor Überlast, und ein einzelner Riesenauftrag an Piper wäre auch langsamer als mehrere
-  kleine. Der Fehler lag nicht in der Grenze, sondern darin, dass der Client sie nicht kannte.
-
----
+### Behoben
+- Vorlesen: Prinzip langer Erklärungen nicht mehr übersprungen (HTTP 413 über 1000 Zeichen, 421 Erklärungen betroffen)
+- Fehlermeldung bei 413 nennt zu langen Abschnitt statt fehlender Stimme
 
 ## [1.293.0] - 2026-09-13
 
-### Hinzugefügt — Klasse N ist vollständig erklärt
-
-Dietmar am 13.09.2026: „die Klasse N fertig?" — nach seinem eigenen Plan: „2. Danach machen
-wir die Klasse N fertig. 3. Ausliefern 4. Danach mache die Klasse E nach A fertig."
-
-**Alle 571 Fragen der Klasse N haben jetzt eine Erklärung.** Vorher waren es 424, es fehlten
-147: 43 im Fach Betrieb und 104 im Fach Technik. Damit ist das erste der vier Prüfungsziele
-abgeschlossen.
-
-| | vorher | jetzt |
-|---|---|---|
-| Erklärungen gesamt | 801 | **948** |
-| davon Klasse N | 424 von 571 | **571 von 571** |
-| davon N → E | 125 von 463 | 125 von 463 |
-| davon E → A | 252 von 716 | 252 von 716 |
-| Begriffsblätter | 21 | **41** |
-| Fragen an einem Blatt | 345 | **493** |
-| Fragen mit Rechenweg | 131 | **149** |
-| `erklaerungen.json` | 1.419.331 Bytes | **1.681.385 Bytes** |
-
-### Die 20 neuen Begriffsblätter
-
-Ein Blatt steht einmal in der Datei, viele Fragen verweisen darauf. Jedes beginnt mit dem
-`prinzip` — dem Grund, warum etwas so ist — und endet mit `merken` und `quelle`.
-
-**Betrieb (5):** `buchstabieren` (das internationale Buchstabieralphabet, 28 Zeilen) ·
-`contest` (Wettbewerb, DX-Betrieb, Standortkenner) · `relais-satellit` (Relais, Baken und
-Satelliten: Stationen, die von allein arbeiten) · `notfunk` (helfen, ohne im Weg zu stehen) ·
-`logbuch` (freiwillig, manchmal angeordnet)
-
-**Technik (15):** `rechnen` · `einheiten` · `werkstoffe` · `welle` · `grundformeln` ·
-`stromversorgung` · `sender-stufen` · `geraet` (die Knöpfe und ihre Aufgabe) ·
-`digital-netze` · `antennenformen` · `kabel-swr` · `ausbreitung` (Kurzwelle und UKW) ·
-`messen` · `schirmung` · `sicherheit` (Strom, Akkus, Fahrzeug, Antennenbau)
-
-Vier Fragen sind an **bestehende** Blätter gehängt statt an neue: BE305 und BE308 an
-`betriebsabwicklung` (Split und Pile-Up stehen dort schon in der Liste), NJ102 an
-`stoerungen`, NK201 an `personenschutz`. Dabei hat jedes der drei Blätter eine Zeile
-dazubekommen, damit die neue Frage wirklich getragen wird.
-
-### Wo die Erklärungen ansetzen
-
-Nicht am Auswendiglernen, sondern am Grund. Drei Beispiele:
-
-- **Warum liegt die Relaiseingabe unten?** Weil ein Umsetzer gleichzeitig hören und senden
-  muss und sich sonst selbst zudecken würde. Aus dieser einen Einsicht folgen beide Zahlen —
-  600 kHz auf 2 m, 7,6 MHz auf 70 cm — und die gesamte Benimmordnung am Relais: Pause vor
-  dem Durchgang, ordentliche Übergabe, kurze Durchgänge, Schmalband-FM.
-- **Warum darf ein Funkamateur kein MAYDAY senden, obwohl er helfen soll?** Weil auf einer
-  Amateurfunkfrequenz keine Rettungsleitstelle mithört. Das Zeichen erreicht dort niemanden,
-  der helfen kann. Deshalb wird der Funkamateur zum Boten: er ruft einen anderen Amateur oder
-  greift zum Telefon. Das ist mehr Hilfe, nicht weniger.
-- **Warum sieht ein längeres Kabel das SWR besser?** Weil die rücklaufende Welle das neue
-  Stück ein zweites Mal durchläuft und dabei gedämpft wird. Das Messgerät lügt nicht, es
-  sieht weniger. Die Antenne ist unverändert — wer so ein Anpassgerät bauen wollte, hätte ein
-  Heizgerät gebaut.
-
-### Behoben — 46 Stellen nach der Gegenprüfung
-
-Drei Prüfer haben die 20 Blätter und die 147 Erklärungen gegen den Fragenkatalog gelesen,
-jede Zahl nachgerechnet und jede Behauptung auf ihre Quelle geprüft. **Sie haben 24 Befunde
-gemeldet, und die meisten davon waren meine Fehler.** Sie stehen hier, weil sie zeigen, wo
-solche Texte reißen:
-
-**Sachfehler:**
-
-1. **13,8 V ist nicht die Spannung eines vollen Bleiakkus.** Ich hatte geschrieben, die Zahl
-   sei „kein Zufall: sie ist die Spannung eines vollgeladenen 12-V-Bleiakkus im Auto". Falsch:
-   ein voller Bleiakku hat in Ruhe etwa 12,7 V. 13,8 V ist die Bordnetz- und
-   Ladeerhaltungsspannung bei laufendem Motor. Zwei Prüfer haben es unabhängig gefunden.
-2. **„Bei 12 V ist der Mensch nicht gefährdet"** — so stand es dreimal im Sicherheitsblatt,
-   und das verharmlost. Bei 12 V droht keine **Körperdurchströmung**; Lichtbogen, Knallgas
-   und Elektrolyt treffen den Menschen sehr wohl. Das eigene Blatt sagte zwei Zeilen weiter
-   oben „Verbrennungen, Verätzungen, Vergiftungen" — ich hatte mir selbst widersprochen.
-3. **Bei 50 Hz wechselt der Strom hundertmal je Sekunde die Richtung, nicht fünfzigmal.**
-   Fünfzig ist die Zahl der vollen Perioden.
-4. **Der ISM-Bereich liegt IM 70-cm-Band.** In der Erklärung zu NJ202 stand, eine
-   ISM-Frequenz sei „kein Amateurfunkband; dort zu senden wäre kein zulässiger
-   Amateurfunkbetrieb". Das widerspricht VD708 desselben Katalogs: 433,05 bis 434,79 MHz
-   liegen mitten im 70-cm-Band und werden nur **mitbenutzt**. Der Satz behauptete ein Verbot,
-   das es nicht gibt.
-5. **Eine Probe, die nichts beweist.** Zu NA101 („20 m bei 2/3 zertrennt") hatte ich als
-   Kontrolle empfohlen, die beiden Stücke zusammenzuzählen — „diese Probe entlarvt jede
-   falsche Antwort sofort". Nachgerechnet: **alle vier** angebotenen Antworten ergeben
-   zusammen 20 m. Die Summe unterscheidet also gar nichts; nur das Verhältnis 2 zu 1 tut es.
-   Mein eigener Satz sagte im nächsten Halbsatz das Gegenteil.
-6. **„Zwei Fragen verlangen nur Kopfrechnen"** — es sind drei. NA103 (Dreisatz über das
-   Drahtgewicht) hing an keinem Blatt. Sie hängt jetzt an `rechnen`, und das Blatt hat eine
-   Zeile zum Dreisatz dazubekommen.
-7. **DMR hat zwei Zeitschlitze, TETRA vier.** „Zwei Gespräche auf einer Frequenz" war für
-   TETRA falsch; der Katalog sagt „mehrere".
-8. **„In der Prüfung sind die falschen Antworten immer mit Ländernamen gefüllt"** — nachgezählt
-   sind es auch Kilowatt, Radio, Queen, Baker, Caesar, William, Xavier, Zebra, Ypsilon,
-   Nordpol. Dieselben Wörter standen in den Zeilen meines eigenen Blattes.
-9. **Eine Lötstelle trägt selbstverständlich Strom.** Ich hatte geschrieben, sie solle „halten
-   und Kontakt schaffen, nicht Strom tragen". Sie funktioniert, weil sie kurz ist.
-10. **Kork ist ein Nichtleiter.** Die Antwortgruppe „Polystyrol, Messing, Kork" scheitert
-    allein an **Messing**. Mein Satz hätte einen Lernenden auf die falsche Fährte gesetzt.
-11. **NB302:** der behauptete Rechenfehler zur falschen Antwort „149 MHz" ergibt 150, nicht
-    149. Jetzt steht dort, was zutrifft: eine Blindantwort in der Nähe des richtigen Werts.
-12. **NB503:** „Zwei Antworten haben R links" — es sind drei von vier.
-13. **notfunk, erster Satz:** „Menschenleben zuerst, Vorschriften danach" legt nahe, die
-    Vorschriften stünden im Notfall zur Disposition. Genau das verneint aber BF102. Jetzt:
-    „Die Vorschriften sind genau dafür gemacht: sie erlauben die Hilfe und verbieten nur die
-    fremden Notzeichen."
-14. Drei weitere zu absolute Sätze zurechtgerückt: der Gleichspannungsausgang mancher
-    Netzteile liegt durchaus auf PE-Potential (ND108); Tiefentladung schädigt Zellen sehr
-    wohl (ND110); „Verkochung" ist in der Elektropathologie ein beschriebener Befund und
-    einfach nicht der geprüfte Begriff (NK303).
-
-**Zusatzwissen, das nicht als solches gekennzeichnet war** — acht `quelle`-Felder ergänzt.
-Das ist derselbe Fehler wie bei den Bändern am 12.09.2026, nur milder: die Höhe der
-Ionosphäre (60 bis 400 km) steht in keiner Frage; **300 und 600 Ohm stammen aus einer
-FALSCHEN Antwort** von NG201; die „Hertz-Antenne" kommt im Katalog überhaupt nicht vor; die
-Kurzform „300 geteilt durch f" steht nicht wörtlich auf dem Formelblatt; die vollständige
-Leitfähigkeitsreihe der sieben Metalle wird nicht geprüft, nur der beste oder schlechteste
-Leiter der jeweils **angebotenen** Gruppe.
-
-**Übertreibungen zurückgenommen**, weil der Katalog anders formuliert und eine Ablenkantwort
-genau daran hängen kann: „immer darunter" → „üblicherweise" (BE402, BE403 sagen
-„üblicherweise"); „nur auf Kurzwelle" → „in der Regel nur" (NG109); „diese Reihenfolge ist
-zwingend" → „bei einem einfachen Sender" (NF402 fragt nach einem einfachen Sender); dazu
-„der wirksamste EMV-Griff überhaupt", „tragen den ganzen technischen Teil" und „ausdrücklich
-kein Glücksspiel".
-
-### Nachgemessen
-
-- `python3 eintragen.py`: 948 Erklärungen, 41 Begriffsblätter, **0 Fehler**. Jeder
-  `gruppe`-Verweis zeigt auf ein vorhandenes Blatt, jede Blattzeile hat `k` und `l`, jeder
-  `warum_falsch`-Schlüssel ist wirklich eine falsche Antwort des Katalogs.
-- Im Browser: 948 Erklärungen geladen, 41 Blätter, **571 von 571** Fragen der aktuellen Bank
-  haben eine Erklärung. Kein Blatt ohne `prinzip`, ohne `merken` oder ohne `quelle`. Keine
-  kaputte Zeile. Keine Skriptfehler.
-- Themenfenster: 41 Zeilen, 491 Fragen dieses Prüfungsziels. „Üben" startet eine Runde mit
-  genau den Fragen eines Blattes — geprüft mit `sicherheit`: 11 Fragen, NK301 zuerst.
-- Erklärfenster mit echtem Klick auf eine falsche Antwort: Prinzip, Kniff, Liste, Merksatz
-  und „Warum falsch" stehen da; bei langen Blättern scrollt der Kasten (278 px sichtbar,
-  1645 px Inhalt) — so von Dietmar am 13.09.2026 ausdrücklich erlaubt.
-- Druckheft: **41 Blätter auf 42 Seiten** (Deckblatt plus ein Blatt je Seite), keine leere
-  Seite, keine zerrissene Tabelle. Auf den Blättern steht **keine einzige Prüfungsfrage und
-  keine Antwort** — nur die Begriffe und im Quellenfeld die Nummern, wo sie im Katalog
-  nachzulesen sind.
-- Alle 18 neuen Rechenwege enden im letzten Schritt genau auf der amtlich richtigen Antwort,
-  und die Umwandlung der Vorsätze (mA nach A) ist überall ein eigener Schritt.
-- Der Mittelpunkt „·" steht in den neuen Blättern ausschließlich in echten Formeln
-  (`U = R · I`, `13,8 V · 1,5 A = 20,7 W`). Die Vorlesefunktion liest ihn als „mal", dort
-  also richtig.
+### Hinzugefügt
+- Erklärungen: Klasse N vollständig (571 von 571), 147 neue in Betrieb und Technik; 948 Erklärungen gesamt
+- Begriffsblätter: 20 neue (5 Betrieb, 15 Technik), jetzt 41; 18 neue Rechenwege
 
 ### Geändert
+- Begriffsblätter: fünf Fragen an bestehende Blätter gehängt, betroffene Blätter um je eine Zeile ergänzt
+- `erklaerungen.json`: Kopffeld `umfang` mit Stand je Prüfungsziel, `blaetter` beschreibt Feld `quelle`
 
-- `erklaerungen.json`: Kopffeld `umfang` nennt jetzt den Stand je Prüfungsziel und dass
-  Klasse N vollständig ist; `blaetter` erklärt zusätzlich das Feld `quelle`.
-- Keine Änderung an `Index.html` und `Server.js`. Die Blätter, das Themenfenster und das
-  Druckheft aus 1.290.0 bis 1.292.0 tragen die neuen Inhalte unverändert.
-
----
+### Behoben
+- Erklärungen: Sachfehler nach Gegenprüfung korrigiert (13,8 V, 12-V-Gefahren, 50 Hz, ISM im 70-cm-Band, DMR/TETRA)
+- Erklärungen: zu absolute Aussagen entschärft, 8 Quellenangaben für Zusatzwissen ergänzt
 
 ## [1.292.0] - 2026-09-13
 
-### Behoben — die Übungszeit wurde nie gesichert
+### Hinzugefügt
+- Übungszeit-Fenster: Anzeige je Benutzerplatz, sobald mehr als ein Platz Übungszeit hat
 
-Dietmar am 13.09.2026: „Mit der Übungszeit stimmt was nicht. Wir haben das am Freitag
-eingebaut, Samstag habe ich gelernt und die Zeit heute fehlt auch."
+### Geändert
+- Übungszeit und Diagnose: Server führt je Tag bzw. Frage zusammen, leerer Stand überschreibt die Sicherung nicht
+- Übungszeit: Uhr löst höchstens alle fünf Minuten selbst ein Sichern in die Datei aus
 
-**Der Fehler lag im Server, und er war eindeutig.** Die stille Messung kam am 10.09.2026
-dazu — Diagnose (welche falsche Antwort, wie lange) und Übungszeit (Sekunden je Tag). Dabei
-wurden **drei von vier** Stellen angefasst:
-
-| Stelle | Kennt die zwei Felder? |
-|---|---|
-| `getDefaultUserdata()` | ja |
-| `normalisiereUserdata()` | ja |
-| `FELD_TYP` (Prüfung im POST) | **nein** |
-| das `merged`-Objekt in `POST /api/userdata` | **nein** |
-
-Die Folge: Der Browser schickte die Daten bei jedem Speichern brav mit. Der Server baute
-sein `merged`-Objekt ohne sie, schrieb es in die Datei, und `normalisiereUserdata()` setzte
-danach die leeren Standardwerte ein. **Bei jedem einzelnen Speichern.** In
-`data/userdata/amateurfunk_data.json` stand deshalb `mastery` mit 577 Einträgen — aber
-`uebungszeit` und `diagnose` bei allen drei Plätzen leer.
-
-Besonders ärgerlich: der Kommentar in `getDefaultUserdata()` sagt ausdrücklich, warum diese
-Felder überhaupt in die Datei gehören — „Eine Woche Übungszeit kann man nicht nacherfassen".
-Und drei Zeilen darüber steht die Warnung, die für `cb` geschrieben wurde: „Ohne dieses Feld
-würde `normalisiereUserdata()` es beim ersten Speichern stillschweigend wegwerfen." Genau
-dieser Fehler ist ein Feld weiter noch einmal gemacht worden.
-
-**Die fehlende zweite Hälfte:** `loadPersistentFromServer()` holte die beiden Felder auch
-nie zurück. Jeder andere Speicher hat dort einen Zweig — diese zwei nicht. Die Datei war für
-sie also in **beiden** Richtungen wirkungslos.
-
-### Was jetzt anders ist
-- **`Server.js`:** `FELD_TYP` und `TYP_ALIAS` kennen `diagnose` und `uebungszeit`, und das
-  `merged`-Objekt nimmt sie mit.
-- **Zusammengeführt statt ersetzt.** Bei den anderen Feldern gilt „der Browser hat recht".
-  Bei diesen zwei wäre das gefährlich: Wer den Trainer auf einem zweiten Rechner öffnet oder
-  die Browserdaten löscht, schickt einen LEEREN Stand — und würde damit die Sicherung
-  überschreiben. Deshalb wird je Tag der **größere** Wert genommen (ein Übungstag kann nur
-  wachsen, nie schrumpfen) und bei der Diagnose je Frage der Stand des Browsers, während
-  unbekannte Fragen aus der Sicherung stehen bleiben. Nachgeprüft: ein absichtlich leerer
-  POST räumt die Datei nicht mehr leer.
-- **`Index.html`:** `loadPersistentFromServer()` holt beides zurück, nach derselben Regel.
-  Damit übersteht die Übungszeit jetzt eine Neuinstallation und einen Rechnerwechsel.
-- **Die Uhr sichert mit.** Bisher ging die Zeit nur in den localStorage und wartete auf ein
-  Speichern, das aus anderem Anlass kam. Jetzt löst sie beim Zubuchen höchstens alle fünf
-  Minuten selbst ein Sichern in die Datei aus.
-
-### Nachgeprüft, in dieser Reihenfolge
-1. Zeit erzeugt: 90 s stehen im Arbeitsspeicher und im localStorage.
-2. Gespeichert: in der Datei steht `uebungszeit.user1 = {"2026-09-13": 90}`. **Vor der
-   Korrektur stand dort `{}`.**
-3. Die Zeit im localStorage gelöscht und neu geladen: sie **kommt aus der Datei zurück**
-   (91 s — die 90 wiederhergestellt, eine Sekunde neu getickt).
-4. Eine Frage falsch beantwortet, gespeichert: `diagnose.user1` enthält `VD710`.
-5. Absichtlich einen leeren Stand gesendet: Zeit und Diagnose in der Datei bleiben stehen.
-
-### Dazu: wo die Zeit steckt, ist jetzt ablesbar
-Eine zweite Möglichkeit blieb und war von außen nicht zu sehen: **die Zeit wird je
-Benutzerplatz gezählt.** Wer an einem Tag auf Platz 3 lernt und danach Platz 1 ansieht,
-findet dort nichts — und das Fenster sagte kein Wort darüber. In der Datei hat Platz 3
-tatsächlich 30 Fragen im Lernbedarf, ist also benutzt worden.
-
-Das Übungszeit-Fenster zeigt deshalb unten eine Zeile, **sobald mehr als ein Platz
-Übungszeit hat**: welcher Platz wie viel an wie vielen Tagen hat, und welcher davon der
-gerade gewählte ist. Bei nur einem Platz erscheint sie nicht — sie wäre die Erklärung für
-ein Problem, das niemand hat.
-
-### Was ich nicht retten kann
-**Der Samstag ist weg.** Die Sicherung war wegen dieses Fehlers leer, und was im
-Browserspeicher nicht mehr steht, kann ich nicht wiederherstellen. Ob er dort einmal stand
-und verloren ging, oder auf einem anderen Benutzerplatz gezählt wurde, lässt sich von außen
-nicht mehr feststellen — die neue Zeile im Fenster wird es ab jetzt beantworten. Ab dieser
-Version ist die Zeit in der Datei, und damit sicher.
-
-### Wichtig beim Einbauen
-**`Server.js` ist mitgeändert.** Ein Neuladen der Seite reicht dafür nicht — der Trainer muss
-einmal beendet und neu gestartet werden (`STOP.bat`, dann `START.bat`), sonst läuft der alte
-Server weiter und wirft die Zeit weiter weg.
-
----
+### Behoben
+- `Server.js`: `diagnose` und `uebungszeit` wurden beim Speichern verworfen (`FELD_TYP`, `merged`); Neustart nötig
+- `loadPersistentFromServer()`: lädt Übungszeit und Diagnose aus der Datei zurück
 
 ## [1.291.0] - 2026-09-13
 
 ### Hinzugefügt
-Dietmar am 13.09.2026: „können wir noch was ergänzen" — und dann drei Sachen ausgewählt:
-Begriffsblätter zum Ausdrucken, Fortschritt je Thema, Lernen nach Themen. Alle drei hängen
-an derselben Grundlage, deshalb sind sie zusammen gebaut: seit 1.290.0 zeigt jede erklärte
-Frage mit `gruppe` auf eines von 21 Begriffsblättern, und jedes Blatt trägt ein `prinzip`.
-
-- **Das Themen-Fenster.** Eine Zeile je Begriffsblatt, das schwächste oben: Titel,
-  Fortschrittsbalken, „sitzen von gesamt", dazu wie viele wacklig und wie viele nie dran
-  waren. Zu jeder Zeile zwei Knöpfe — **Blatt lesen** und **Üben**. Oben ein Knopf „Die
-  schwächsten Themen üben", der aus den drei schwächsten Themen nur die Fragen nimmt, die
-  noch nicht sitzen.
-
-  Damit ist beides erledigt, was gewünscht war: der **Fortschritt je Thema** und das
-  **Lernen nach Themen**. Ich habe es absichtlich in EIN Fenster gelegt statt in zwei —
-  wer sieht, wo es klemmt, will von dort aus sofort dorthin, und ein zweiter Weg über ein
-  anderes Fenster wäre nur ein Umweg.
-
-- **Ein Blatt lesen — die Lektion ohne Frage drumherum.** Ein eigenes Fenster mit Prinzip,
-  Tabelle und Merksatz, in derselben Form wie die Erklärungstafel, damit man sich nicht
-  umstellen muss. Mit **Vorlesen** (dieselbe Reihenfolge wie in der Tafel) und einem Knopf
-  „Fragen üben". Unten steht, wie viele Fragen an diesem Blatt hängen und wie viele davon
-  sitzen, und darunter das Feld `quelle` — woher die Angaben kommen.
-
-- **„Wo es beim Verstehen klemmt" in der Auswertung.** Ein Kasten neben den Stolpersteinen:
-  die drei schwächsten Themen mit Balken, dazu ein Knopf zu allen 21. Der Unterschied zu
-  den Stolpersteinen ist die Sprache — die Stolpersteine zählen Fragennummern, dieser
-  Kasten sagt, welches THEMA nicht sitzt.
-
-- **Die Begriffsblätter auf Papier.** Ein neuer Kasten unter *Vor der Prüfung*: **ein
-  Thema pro Seite**, 21 Seiten — oben das Prinzip, darunter die Tabelle und der Merksatz.
-  Die Seitenzahl steht als „3 / 21" im Kopf jedes Blattes, damit man eine einzelne Seite
-  wiederfindet oder herausziehen kann. Ein zweiter Knopf druckt nur die Themen, die noch
-  nicht sitzen.
-
-  **Auf diesen Blättern stehen keine Prüfungsfragen und keine Antworten.** Damit gilt hier
-  dieselbe Regel, die beim Merkblatt aufgeschrieben ist: nichts Falsches auf Papier, an dem
-  sich etwas einprägen könnte. Gedruckt wird in der Reihenfolge des Stoffes, nicht nach
-  Quote — ein Heft soll immer gleich aussehen.
-
-### Gezählt wird nur im gewählten Prüfungsziel
-`blattFragen()` fragt `durchsichtBank()`, also den Bestand des gerade gewählten Ziels. Wer
-auf Klasse N steht, sieht nicht die Quote einer Aufstockung, die er nie geübt hat. Blätter
-ohne eine einzige Frage im aktuellen Ziel fallen aus der Liste. Als Maßstab gilt derselbe
-wie im Merkblatt: „sitzt" heißt gemeistert oder angerechnet, „wacklig" heißt schon einmal
-falsch und noch nicht sicher, „nie dran" heißt ohne jeden Eintrag.
+- Themen-Fenster: Fortschritt je Begriffsblatt, schwächstes oben, Knöpfe Blatt lesen und Üben, schwächste Themen üben
+- Blatt-Fenster: Prinzip, Tabelle und Merksatz mit Vorlesen, Fragen üben und Quellenangabe
+- Auswertung: Kasten mit den drei schwächsten Themen neben den Stolpersteinen
+- Druck: Begriffsblätter ein Thema pro Seite mit Seitenzahl, wahlweise nur offene Themen, ohne Prüfungsfragen
 
 ### Geändert
-- **`Index.html`:** neu sind `blattFragen`, `blattStand`, `blaetterStand`, `themenFarbe`,
-  `blattUeben`, `blattLesen`, `blattVorlesen`, `themenOeffnen`,
-  `themenSchwaechsteUeben` und `blaetterDrucken`; dazu der Themen-Kasten in
-  `statistikOeffnen`, der Druck-Kasten in `einstMerkblattFuellen` und ein Stylesheet-Block
-  für die zwei neuen Fenster.
-- `erklaerungen.json` ist unverändert gegenüber 1.290.0.
+- Themenstand zählt nur Fragen des gewählten Prüfungsziels
 
-### Zwei Fehler von mir, beim Testen gefunden
-- **Die halbe Seite blieb leer.** Mit `page-break-inside: avoid` allein schob jedes Blatt,
-  das nicht mehr ganz auf die Seite passte, sich auf die nächste — und ließ unten die
-  Hälfte frei. 21 Blätter ergaben 19 unruhige Seiten. Jetzt beginnt jedes Blatt eine eigene
-  Seite: 21 Blätter, 21 Seiten, und die Nummer im Kopf stimmt mit der Seite überein.
-- **Eine leere Seite am Ende.** `.blatt:last-of-type` traf nicht das letzte Blatt, sondern
-  die Fußzeile — beide sind `div`, und `:last-of-type` zählt nach Elementtyp, nicht nach
-  Klasse. Deshalb hatte auch das letzte Blatt einen Seitenumbruch hinter sich und der Druck
-  hatte 22 statt 21 Seiten. Jetzt bekommt das letzte Blatt die Klasse `letzt`.
-
-### Nachgeprüft
-- Im Browser durchgespielt: 21 Blätter geladen, 343 Fragen der Klasse N hängen daran (die
-  beiden übrigen von 345 gehören zu anderen Zielen und werden dort gezählt). Themen-Fenster
-  mit 21 Zeilen, Blatt-Fenster mit Prinzip, 20 Tabellenzeilen und Merksatz. Der Kasten in
-  der Auswertung nennt die drei schwächsten Themen. Keine Meldung in der Konsole.
-- Den Druck als PDF gerendert und angesehen: **21 Seiten, ein Thema je Seite**, Kopf und
-  Hinweis auf Seite 1, keine leere Seite am Ende.
-- Syntaxprüfung: 17 Script-Blöcke mit `node --check` sauber, alle Style-Blöcke ausgeglichen.
-
----
+### Behoben
+- Druck: jedes Blatt auf eigener Seite statt halbleerer Seiten, keine leere Seite am Ende
 
 ## [1.290.0] - 2026-09-13
 
-### Das Fach Vorschriften der Klasse N ist vollständig
-
-Dietmar am 13.09.2026: „N möchte zuerst fertig machen. Hier kommen Benutzer die am meisten
-Unterstützung benötigen." Richtig — also habe ich nicht das nächste Paket gebaut, sondern
-das ganze Prüfungsfach.
-
-| Fach (Klasse N) | erklärt | von | offen |
-|---|---:|---:|---:|
-| **Vorschriften** | **204** | **204** | **0** |
-| Betrieb | 129 | 172 | 43 |
-| Technik | 91 | 195 | 104 |
-
-**89 neue Erklärungen, zehn neue Begriffsblätter:**
-
-| Blatt | Zeilen | Fragen |
-|---|---:|---:|
-| Wer darf funken, und wozu (AFuG) | 14 | 16 |
-| Funken im Ausland (CEPT, HAREC) | 15 | 13 |
-| Personenschutz: EMVU und BEMFV | 11 | 11 |
-| Remote-Betrieb | 10 | 9 |
-| Störungen: beim Nachbarn und bei mir | 7 | 9 |
-| Klubstation, Relais und Bake: die Zulassung | 8 | 8 |
-| Gerät und Anlage: gekauft, gebaut, geerdet | 7 | 7 |
-| Ausbildungsfunkbetrieb | 6 | 6 |
-| Abhören und Fernmeldegeheimnis | 6 | 4 |
-| Beiträge, Gebühren und Haftung | 3 | 3 |
-
-Dazu kamen drei Zeilen in „Wer regelt was" (FuAG, TTDSG, Frequenzzuteilung), und VE102,
-VE103 und VD703 hängen jetzt dort.
-
-**Die Prinzipien dieses Pakets** — was jeweils der tragende Gedanke ist:
-
-- **AFuG:** Das Gesetz beschreibt den Dienst über seinen ZWECK, und fast alles andere folgt
-  daraus. Nur Amateure mit Amateuren, keine Nachrichten für Dritte, keine gewerbliche
-  Nutzung — alles drei sind Folgen desselben Satzes. Und weil Selbstbau zum Zweck gehört,
-  darf man dort von den Störfestigkeitsanforderungen des EMVG abweichen: die schützen den
-  Markt, nicht den Experimentator.
-- **CEPT:** Es gibt keine Weltlizenz. Deshalb sind bei jeder dieser Fragen drei Dinge zu
-  prüfen — welche Empfehlung passt zu meiner Klasse, hat das Gastland sie umgesetzt, und was
-  gilt dort. Die Empfehlung erspart die Gastzulassung; sie exportiert nicht das deutsche
-  Recht.
-- **BEMFV:** schützt Menschen, nicht Geräte, und ist ganz auf Eigenverantwortung gebaut. Die
-  Anzeige ist eine verbindliche Erklärung, kein Antrag — sie wird nicht genehmigt. Und weil
-  es um das Feld geht, dem ein Mensch ausgesetzt ist, zählt alles zusammen, was gleichzeitig
-  strahlt.
-- **Remote:** Hier fällt die Selbstverständlichkeit weg, dass der Verantwortliche neben
-  seinem Sender sitzt. Jede einzelne Regel zielt darauf, dass die Verantwortung trotzdem
-  zuzuordnen bleibt — erreichbar, abschaltbar, Zugang gesichert, und durchweg Klasse A.
-- **Störungen:** Eine Störung ist nicht automatisch jemandes Schuld. Halten Sender und
-  Empfänger ihre Grenzwerte ein und es funktioniert trotzdem nicht, hat niemand einen Fehler
-  gemacht — und genau dann vermittelt die Behörde, statt zu bestrafen.
-- **Klubstation:** Ein Rufzeichen verleiht kein Recht, die Zulassung tut es. Daraus folgt,
-  dass die niedrigere der beiden Klassen gilt, und dass Relais und Baken eine eigene
-  Zuteilung brauchen — dort sitzt niemand, also muss die Erlaubnis an der Station hängen.
-- **Gerätesicherheit:** Drei Rechtsmassen, die gern verwechselt werden. Darf es verkauft
-  werden? FuAG und CE. Ist meine Anlage sicher? VDE. Darf die Antenne da stehen? Baurecht
-  des Bundeslandes.
-- **Ausbildung:** Der eine Fall, in dem jemand ohne Zulassung sendet — und alles ist so
-  gebaut, dass die Verantwortung beim Ausbilder bleibt. Deshalb darf die Klasse N nicht
-  ausbilden: weitergeben kann man nur, was man selbst hat.
-- **Fernmeldegeheimnis:** Die Trennlinie ist der ADRESSAT, nicht der Inhalt. Und der Schutz
-  reicht weiter als der Inhalt — man darf nicht einmal erwähnen, dass man es empfangen hat.
-- **Gebühren:** Der Beitrag wird für die Freihaltung der Frequenz gezahlt, nicht für ihre
-  Benutzung. Deshalb ist er fällig, solange man eine Zulassung hat.
-
-### Nachgezogen: die sechs ersten Blätter hatten noch kein Prinzip
-Ein Helfer meldete, dass das Feld PRINZIP bei „Wer regelt was" leer sei. Das stimmte — und
-es traf fünf weitere: die Blätter aus den Paketen 1 bis 3 entstanden, bevor das Feld
-existierte (1.285.0). Bei **171 Fragen** zeigte die Tafel also nur Kniff und Liste, das WIE
-ohne das WARUM — genau der Einwand, der das Feld überhaupt veranlasst hatte. Alle sechs
-haben jetzt eines:
-
-- **Leistung:** drei verschiedene Fragen mit drei Messpunkten, und daraus folgt, warum der
-  Gesetzgeber auf Kurzwelle die Senderleistung und bei der Klasse N die gestrahlte begrenzt.
-- **Q-Gruppen:** älter als der Amateurfunk, aus der Zeit, in der jedes Zeichen Zeit kostete
-  und die Gegenstation eine andere Sprache sprach. Daher drei Buchstaben, weltweit
-  vereinbart — und daher die Doppelfunktion mit und ohne Fragezeichen.
-- **Rechtsquellen:** das Recht ist in Ebenen gebaut, und jede regelt nur, was auf ihrer
-  Ebene entschieden werden muss. Erst nach Reichweite sortieren, dann nach Gegenstand.
-- **Bandplan:** keine Willkür, sondern eine Verträglichkeitsfrage — schmale Betriebsarten
-  unten, breite darüber, und eigene Streifen für alles, was nicht ausweichen kann.
-- **Betriebsabwicklung:** eine Funkverbindung ist schwach, kurz und oft ohne gemeinsame
-  Sprache. Die Abkürzungen und die Benimmordnung sind beide Folgen dieser Knappheit.
-- **Betriebsarten:** es gibt nur drei Größen, die man an einem Träger verändern kann —
-  Amplitude, Frequenz, Phase. Die Reihenfolge nach Bandbreite ist das Ergebnis dieser
-  Bauart, keine Liste zum Lernen.
-
-**Damit trägt jedes der 21 Blätter ein Prinzip.**
+### Hinzugefügt
+- Erklärungen: Fach Vorschriften der Klasse N vollständig erklärt (204 von 204 Fragen), 89 neue Erklärungen
+- Begriffsblätter: AFuG, Funken im Ausland (CEPT, HAREC), Personenschutz (EMVU, BEMFV), Remote-Betrieb, Störungen
+- Begriffsblätter: Klubstation/Relais/Bake, Gerät und Anlage, Ausbildungsfunkbetrieb, Fernmeldegeheimnis, Beiträge und Gebühren
+- Begriffsblatt Wer regelt was: FuAG, TTDSG und Frequenzzuteilung ergänzt, VE102, VE103 und VD703 zugeordnet
+- Erklärungen: VD408 und VD703 mit eigenem Prinzip vor dem Blatt-Prinzip
 
 ### Geändert
-- **`erklaerungen.json`:** 1.248.827 → 1.419.331 Bytes, 712 → 801 Erklärungen, 11 → 21
-  Begriffsblätter, 256 → 345 Fragen an einem Blatt. Klasse N: 335 → **424 von 571**.
-- `Index.html` ist unverändert gegenüber 1.289.0.
+- `erklaerungen.json`: 712 → 801 Erklärungen, 11 → 21 Begriffsblätter, Klasse N 424 von 571 Fragen erklärt
 
-### Nachgeprüft
-- `eintragen.py` über alle 801 Erklärungen: **0 Fehler.** Jeder Fragentext, jede richtige
-  Antwort und jeder Schlüssel steht wörtlich im Katalog; zu jeder falschen Antwort der 89
-  neuen Fragen steht ein eigener Satz.
-- Im Browser gemessen: 21 Blätter geladen, 801 Erklärungen, 424 davon im Ziel Klasse N. Bei
-  den nachgezogenen Blättern steht das Prinzip jetzt an erster Stelle (BB201 880 Zeichen,
-  VD724 1082). Keine Meldung in der Konsole.
-- Zwei Fragen haben ein eigenes Prinzip, das dem Blatt vorgeht: VD408 (kurzzeitige
-  Standortänderung) und VD703 (CB-Funk).
-
-### Was die Helfer im Katalog gefunden haben
-Nicht von mir, aber der Vollständigkeit halber: VC108 bricht in der vierten Antwort mitten
-im Satz ab („… beträgt"), und bei VD404, VD407, VD609, VE103, VE204, VE309, VE707 sowie
-VB101 und VB102 fehlen Trennzeichen oder es hängen Textfragmente am Antwortende. Alle Texte
-sind wörtlich übernommen, damit die maschinelle Prüfung gegen den Katalog weiter aufgeht.
-
-### Offen in der Klasse N
-- **Betrieb, 43 Fragen:** Buchstabieralphabet (10), Notfunk (8), Contest und DX (6), Logbuch
-  und Locator (4), Relais- und Satellitenbetrieb (aus BE4xx), Reste.
-- **Technik, 104 Fragen:** Einheiten und Vorsätze (15), Relais und Satelliten (15), Kabel
-  und Anpassung (13), Stromversorgung (11), elektrische Sicherheit und Mobileinbau (11),
-  Leitfähigkeit, Wellenlänge und Ohm (11), Wellenausbreitung (8), EMV am eigenen Gerät (7),
-  P = U · I (6), Messgeräte (5), Sender- und Empfängerstufen (5), Reste.
-
----
+### Behoben
+- Begriffsblätter: fehlendes Prinzip bei den sechs älteren Blättern nachgetragen (171 Fragen), alle 21 Blätter mit Prinzip
 
 ## [1.289.0] - 2026-09-13
 
 ### Hinzugefügt
-- **„Warum war meine Antwort falsch?" steht jetzt in den Stolpersteinen.** Dietmar am
-  13.09.2026 auf die Frage, was man noch einbauen könne: „Warum-falsch in den
-  Stolpersteinen."
-
-  In der Liste „Alle Stolpersteine" stand bisher die Frage und darunter die richtige
-  Antwort. Jetzt kommt eine dritte Zeile dazu — aber nicht irgendeine: der Satz zu genau
-  der Antwort, die du angeklickt hattest.
-
-  ```
-  1×  VD724  Vorschriften
-      Wie hoch ist die maximal zulässige isotrope Strahlungsleistung (EIRP)
-      für Funkamateure mit der Zulassungsklasse N im 2 m- und 70 cm Band?
-      ✓ 10 W
-      ✗ Du hattest: „100 W"
-        Das ist die Kurzwellengrenze der Klasse E, nicht die der Klasse N.
-  ```
-
-  Die 712 Erklärungen enthalten zu jeder falschen Antwort einen eigenen Satz — bisher war
-  der nur in der Erklärungstafel neben der Frage zu sehen, und zwar in dem Moment, in dem
-  man gerade nicht sortiert, was man noch üben muss. In der Stolpersteinliste sitzt er
-  richtig: dort geht man seine Fehler durch.
-
-### Dazu musste erst etwas mitgeschrieben werden
-- **Die falsche Antwort wird jetzt als TEXT gemerkt, nicht als Nummer.** `diagnoseNotieren`
-  hielt in `e.f` schon fest, welche Antwort angeklickt wurde — aber als Index innerhalb der
-  gerade angezeigten Reihenfolge. Und der Trainer mischt die Antworten in jeder Runde neu
-  (`prepareQuestion`). Eine gemerkte 2 bedeutet in der nächsten Runde also etwas anderes.
-  Deshalb kommt neben `e.f` jetzt `e.fa` dazu: derselbe Vorgang, aber der Antworttext. Der
-  bleibt gleich, und mit ihm sind die Sätze in `erklaerungen.json` verschlüsselt —
-  `warum_falsch` hat aus genau diesem Grund den Antworttext als Schlüssel.
-
-  Das Feld ist rein zusätzlich. Alte Fortschrittsdateien laden unverändert, `e.fa` fehlt
-  dort einfach; die Liste zeigt für solche Fragen keine zusätzliche Zeile, und der Kopf sagt
-  es: „Sobald du eine Frage falsch beantwortest, steht hier künftig auch der Satz, warum
-  gerade diese Antwort falsch war." Steht der Satz schon bei welchen, zählt der Kopf sie.
-
-- **Nebenbefund, den ich nicht angefasst habe:** dieselbe Mischung macht auch die
-  „Geraten oder gewusst"-Probe unscharf. Sie liest `e.f` und schließt aus „immer dieselbe
-  Nummer" auf einen festen Irrtum und aus „drei verschiedene Nummern" auf Raten — beides
-  wird durch das Mischen verwischt. Mit `e.fa` liegt die richtige Grundlage jetzt vor; die
-  Probe darauf umzustellen wäre eine eigene Änderung, und die mache ich nicht ungefragt.
-
-### Eine Abwägung, weil deine eigene Regel dagegen sprach
-Im Merkblatt steht ausdrücklich, dass dort NUR die richtige Antwort erscheint, mit deiner
-Begründung: „Wer kurz vor der Prüfung noch einmal quer liest, soll sich nichts Falsches
-einprägen; drei Ablenker auf dem Blatt wären genau dafür die beste Gelegenheit." Diese neue
-Zeile druckt nun einen falschen Antworttext. Ich halte das hier für richtig, aber der
-Unterschied gehört benannt: das Merkblatt ist zum Querlesen kurz vor der Prüfung, die
-Stolpersteinliste zum Durcharbeiten. Dort ist es der Sinn der Sache, den eigenen Irrtum
-beim Namen zu nennen. Die Zeile ist deshalb unübersehbar als Fehler markiert — rotes ✗,
-rote Schrift, die Worte „Du hattest", und der erklärende Satz in Grau darunter. **Merkblatt
-und Hörbuch bleiben unberührt**, dort steht weiterhin nur die richtige Antwort.
+- Stolpersteine: zusätzliche Zeile mit der eigenen falschen Antwort und dem passenden Warum-falsch-Satz
+- Stolpersteine: falsche Antwort mit rotem ✗ markiert, Erklärung grau darunter, Kopf zählt Fragen mit Satz
 
 ### Geändert
-- **`Index.html`:** `diagnoseNotieren` schreibt `e.fa` mit; neu sind `letzteFalscheAntwort`,
-  `warumFalschSatz` und `warumFalschVorhanden`; `stolpersteineOeffnen` zeigt die Zeile und
-  zählt im Kopf. Sonst keine Änderung am Aussehen.
-- **`erklaerungen.json`** ist unverändert gegenüber 1.288.0.
-
-### Nachgeprüft
-- Im Browser durchgespielt: zwei Fragen über die echten Antwortknöpfe absichtlich falsch
-  beantwortet (VD724 mit „100 W", VD710 mit „3,8–3,9 MHz"), dann die Liste geöffnet. Beide
-  Zeilen stehen da, mit dem jeweils passenden Satz; der Kopf zählt „Bei 2 Fragen". Die drei
-  älteren Stolpersteine aus derselben Liste zeigen erwartungsgemäß nichts Zusätzliches.
-  Keine Meldung in der Konsole.
-- Syntaxprüfung: 17 Script-Blöcke mit `node --check` sauber, 10 Style-Blöcke ausgeglichen.
-
----
+- Lernstand: falsche Antwort zusätzlich als Text gespeichert (`e.fa`), unabhängig von der Antwortmischung
+- Fortschrittsdateien: Feld `e.fa` rein zusätzlich, ältere Dateien laden unverändert
+- `Index.html`: neue Funktionen `letzteFalscheAntwort`, `warumFalschSatz`, `warumFalschVorhanden`
+- Merkblatt und Hörbuch: weiterhin nur die richtige Antwort
 
 ## [1.288.0] - 2026-09-13
 
 ### Hinzugefügt
-- **Paket 4: Was die AFuV im Betrieb verlangt. 17 Fragen an einem Blatt.**
-
-  Das elfte Begriffsblatt hat 17 Zeilen und deckt VD102 bis VD119 ab: Empfang ohne
-  Zulassung, offene Sprache und die einzige Ausnahme davon, das Verbot der Notzeichen
-  anderer Funkdienste, die technische Anforderung, unerwünschte Aussendungen, der
-  unmodulierte Träger, der Abgleich ohne freies Abstrahlen, das Logbuch auf Verlangen, die
-  Anzeige von Namens- und Anschriftsänderungen, der Inhalt der Rufzeichenliste, Betrieb in
-  Schiff und Flugzeug, die Ausnahmezuteilung — und die drei Wortlaut-Definitionen
-  Klubstation, Relaisfunkstelle und Funkbake.
-
-  **Das Prinzip: die AFuV nennt Maßstäbe, keine Zahlen.** Sie ist nach einem Grundgedanken
-  gebaut — der Funkamateur entscheidet selbst, WIE er eine Anforderung erfüllt, und steht
-  dafür hinterher ein. Deshalb steht dort „nach den allgemein anerkannten Regeln der
-  Technik", „auf das geringstmögliche Maß", „unverzüglich", „kurzzeitig". Wo eine Antwort
-  eine Dezibelzahl, eine Wochenfrist oder eine Leistungsgrenze anbietet, ist sie mit hoher
-  Wahrscheinlichkeit falsch — und genau so sind die Distraktoren dieses Blocks gebaut:
-  40 dB, 60 dB, 4 Wochen, 14 Tage, 12 Monate, unter 1 W, halbe Sendeleistung. Wo doch eine
-  Zahl in der Verordnung steht, sagt sie etwas über Personen und nicht über Technik: drei
-  Mitglieder für eine Klubstation.
-
-  Dazu die zwei Zwecke, aus denen der Rest folgt. Das Spektrum muss für alle brauchbar
-  bleiben — daher Nebenwellen klein halten, beim Abgleich nicht abstrahlen, den Träger nur
-  kurz senden, und daher darf die Bundesnetzagentur Aufzeichnungen verlangen, wenn eine
-  Störung aufzuklären ist. Und der Amateurfunkdienst muss offen und nicht kommerziell
-  bleiben — daher offene Sprache, keine fremden Notzeichen, eine öffentliche
-  Rufzeichenliste. Begrenzt wird immer nur das Senden; Zuhören braucht keine Erlaubnis.
-
-- **Klasse N steht jetzt bei 335 von 571 Fragen** (vorher 318). Insgesamt 712 Erklärungen,
-  11 Begriffsblätter, 256 Fragen an einem Blatt.
+- Erklärungen: Paket 4, Pflichten der AFuV im Betrieb (VD102 bis VD119), 17 Fragen an einem neuen Begriffsblatt
+- Begriffsblatt AFuV: offene Sprache, Notzeichen, unerwünschte Aussendungen, Logbuch, Rufzeichenliste, Klubstation/Relais/Bake
+- Begriffsblatt AFuV: Prinzip Maßstäbe statt Zahlen
+- Klasse N: 335 von 571 Fragen erklärt, insgesamt 712 Erklärungen und 11 Begriffsblätter
 
 ### Geändert
-- **`erklaerungen.json`:** 1.220.630 → 1.248.827 Bytes, 695 → 712 Erklärungen, 10 → 11
-  Begriffsblätter.
-- `Index.html` ist unverändert gegenüber 1.285.0.
-
-### Nachgeprüft
-- **Drei Querverweise gegen den Katalog geprüft**, weil ich in den Kniffen darauf verweise:
-  bei VD111 (Abgleich) sage ich, der andere Grund für einen Abschlusswiderstand sei der
-  Schutz der Endstufe — NF107 nennt genau das („Durch die reflektierte Welle könnte die
-  Senderendstufe beschädigt werden"). Bei VD105 verweise ich darauf, dass SOS und MAYDAY
-  auch im Notfall nicht erlaubt sind — BF102 antwortet dort mit einem klaren Nein. Und bei
-  VD115 nenne ich /am als Zusatz für den Betrieb im Luftfahrzeug — so steht es in BD201.
-- `eintragen.py` über alle 712 Erklärungen: **0 Fehler.** Zu jeder der 51 falschen Antworten
-  dieses Pakets steht ein eigener Satz.
-- Im Browser gemessen: 11 Blätter geladen, 712 Erklärungen, Zeilenfolge `prinzip, kniff,
-  liste, merken`, keine Meldung in der Konsole.
-
-### Offen
-- Klasse N: 236 Fragen ohne Erklärung. Nächste Pakete: AFuG-Begriffe und Rechte (16),
-  Relaisfunkstellen und Satelliten (15), Einheiten und Vorsätze (15), Stromversorgung und
-  Netzteil (11), Personenschutz und EMVU (11), elektrische Sicherheit und Mobileinbau (11),
-  CEPT und HAREC (11), Buchstabieralphabet (10), Störungen beim Nachbarn (9),
-  Remote-Betrieb (9), Notfunk (8).
-
----
+- `erklaerungen.json`: 695 → 712 Erklärungen, 10 → 11 Begriffsblätter
 
 ## [1.287.0] - 2026-09-13
 
 ### Hinzugefügt
-- **Paket 3: Rufzeichen — Arten und Zusätze. 26 Fragen an einem Blatt.** Dietmar am
-  13.09.2026: „Bitte Paket 3 und die Dateien in den Ordner."
-
-  Das neunte Begriffsblatt heißt **„Deutsche Rufzeichen lesen"** und hat 20 Zeilen: der
-  Aufbau aus Präfix, Ziffer und Suffix; DL für Klasse A, DO für E, DN für N; die Null nach
-  dem Buchstabenpaar für die Klubstation; DA5 für experimentelle Studien und DP0 für
-  exterritorial; das lange Suffix zu besonderen Anlässen; die drei Zuteilungsarten; Nennung
-  am Anfang, am Ende und alle zehn Minuten; das internationale Buchstabieralphabet; und die
-  sechs Zusätze /m, /mm, /p, /R, /T und der Gastkenner nach CEPT. Dazu die
-  Peilsender-Kennungen.
-
-  **Das Prinzip: ein Rufzeichen ist kein Name, sondern eine Zulassung zum Vorlesen.** Jeder
-  Teil trägt eine Auskunft, und die STELLE sagt, welche — was vor dem eigenen Rufzeichen
-  steht, nennt den Ort (der Kenner des Gastlandes), was dahinter steht, einen Umstand dieser
-  Aussendung (unterwegs, tragbar, fernbedient, in Ausbildung). Damit fallen sechs Fragen auf
-  einen Schlag: „Trainee/DL1PZ" und „DO7PR/HB3" sind falsch, weil die Hälften vertauscht
-  sind. Dazu die zweite Einsicht: das Rufzeichen ist das EINZIGE Merkmal, an dem man eine
-  Amateurfunkstelle erkennt — nicht die Frequenz, nicht die Sendeart. Nur weil jede
-  Aussendung zuzuordnen ist, bekommt der Amateurfunkdienst seine Frequenzen überhaupt.
-  Daraus folgen Nennungspflicht, Buchstabieralphabet und der fehlende Anspruch auf ein
-  bestimmtes Rufzeichen von selbst.
-
-  Ein eigenes Prinzip hat BD109 (die Peilsender): eine Kennung muss kurz sein, damit sie
-  sich schnell wiederholt, und sie darf nicht wie ein Rufzeichen aussehen. Und die Endungen
-  zählen die Sender im Morsealphabet durch — E ist ein Punkt, I zwei, S drei, H vier, 5
-  fünf. Damit sind MO, MOE, MOI, MOS, MOH, MO5 keine Liste zum Auswendiglernen mehr.
-
-- **Zusätzlich: der Farbcode am Widerstand. 9 Fragen.** Dietmar mitten in der Arbeit:
-  „Farbcode von den Widerständen möchte ich auch eine Erklärung. Wie man das errechnet."
-
-  Das zehnte Blatt, **„Der Farbcode am Widerstand"**, 16 Zeilen. Und weil er nach dem
-  Rechnen gefragt hat, steht im Prinzip das Verfahren und nicht die Tabelle: erste zwei
-  Ringe sind Ziffern, der dritte sagt die Anzahl der Nullen, der vierte die Toleranz. Der
-  Wert ist immer eine zweistellige Zahl mal einer Zehnerpotenz. Der Schlüssel, der die halbe
-  Arbeit spart: **der dritte Ring trägt dieselbe Zahl wie die Farbe als Ziffer** — rot ist
-  die 2, also mal 100; orange die 3, also mal 1000; grün die 5, also mal 100 000. Für den
-  Multiplikator muss man also nichts Zweites lernen. Und Gold und Silber kommen in der
-  Ziffernreihe nicht vor, können folglich nur Toleranz bedeuten: Gold ±5 %, Silber ±10 %.
-
-  Dazu eine Beobachtung, die die vier Rechenfragen zusammenbindet: NC104 bis NC107 sind
-  genau die vier Kombinationen aus zwei ersten Ziffern (rot 2 oder gelb 4) und zwei
-  Multiplikatoren (rot mal 100 oder orange mal 1000) — 2,7 k, 4,7 k, 27 k, 47 k. Wer eine
-  rechnen kann, kann alle vier; man muss nur sauber hinsehen, welche Farbe an welcher Stelle
-  steht. In allen neun Fragen kommen überhaupt nur sechs Ziffernfarben vor.
-
-  **Wichtig zur Prüfung:** die Farbcode-Tabelle steht auf Blatt 11 der amtlichen
-  Formelsammlung und liegt in der Prüfung vor (nachgesehen in `_Formelblatt-Analyse.md`).
-  Das Prinzip sagt das ausdrücklich — zu können ist nicht die Tabelle, sondern das
-  Verfahren.
-
-- **Klasse N steht jetzt bei 318 von 571 Fragen** (vorher 283). Insgesamt 695 Erklärungen,
-  10 Begriffsblätter, 239 Fragen an einem Blatt.
+- Erklärungen: Paket 3, Rufzeichen-Arten und Zusätze, 26 Fragen am Begriffsblatt Deutsche Rufzeichen lesen
+- Begriffsblatt Rufzeichen: Präfix/Ziffer/Suffix, DL/DO/DN, Klubstation, Sonderrufzeichen, Zusätze /m /mm /p /R /T, Gastkenner
+- Erklärungen: Peilsender-Kennungen (BD109) mit eigenem Prinzip
+- Erklärungen: Farbcode am Widerstand, 9 Fragen mit neuem Begriffsblatt und Rechenverfahren
+- Klasse N: 318 von 571 Fragen erklärt, insgesamt 695 Erklärungen und 10 Begriffsblätter
 
 ### Geändert
-- **`erklaerungen.json`:** 1.177.220 → 1.220.630 Bytes, 660 → 695 Erklärungen, 8 → 10
-  Begriffsblätter.
-- `Index.html` ist unverändert gegenüber 1.285.0.
-
-### Nachgeprüft
-- **Der Farbcode maschinell nachgerechnet.** Für NC102 bis NC107 habe ich den Wert aus den
-  genannten Farben mit meinem eigenen Verfahren berechnet — Ziffer, Ziffer, Zehnerpotenz —
-  und mit der richtigen Antwort des Katalogs verglichen: rot-violett-rot 2,7 kΩ,
-  gelb-violett-rot 4,7 kΩ, rot-violett-orange 27 kΩ, gelb-violett-orange 47 kΩ, grün
-  100 000, und rückwärts 1,2 kΩ zu braun-rot-rot. **Alle sechs stimmen.** Ebenso die drei
-  Toleranzwerte.
-- `eintragen.py` über alle 695 Erklärungen: **0 Fehler.** Zu jeder falschen Antwort der
-  beiden Blöcke steht ein eigener Satz; keine blieb offen.
-- Im Browser gemessen: 10 Blätter geladen, 695 Erklärungen, Zeilenfolge `prinzip, kniff,
-  liste, merken`, keine Meldung in der Konsole.
-
-### Offen
-- Klasse N: 253 Fragen ohne Erklärung. Nächste Pakete: AFuV-Pflichten im Betrieb (17),
-  AFuG-Begriffe und Rechte (16), Relaisfunkstellen und Satelliten (15), Einheiten und
-  Vorsätze (15), Stromversorgung und Netzteil (11), Personenschutz und EMVU (11),
-  elektrische Sicherheit und Mobileinbau (11), CEPT und HAREC (11).
-
----
+- `erklaerungen.json`: 660 → 695 Erklärungen, 8 → 10 Begriffsblätter
 
 ## [1.286.0] - 2026-09-13
 
 ### Hinzugefügt
-- **Paket 2: Bänder und Frequenzbereiche — 29 Fragen an einem Blatt.** Dietmar am
-  13.09.2026: „Bitte jetzt Paket 2."
-
-  Das achte Begriffsblatt heißt **„Die Bänder in Deutschland"** und hat 20 Zeilen: alle
-  vierzehn Bänder von 160 m bis 13 cm mit Anfangs- und Endfrequenz, die vier
-  Bereichsnamen MF, HF, VHF und UHF mit ihren Grenzen, die drei Bänder der Klasse N, und
-  eine Zeile zu primär gegen sekundär. Damit sind gelöst: VD709 bis VD722 (die vierzehn
-  Fragen nach den Bandkanten), VD723 (was die Klasse N darf), VD738 bis VD742 (die
-  Bandbreiten), VD706 bis VD708 (Status und ISM) und BC101 bis BC106 (die Bereichsnamen).
-
-  **Das Prinzip statt vierzehn Zahlen.** Der Bandname ist keine Nummer, sondern die
-  Wellenlänge, und Wellenlänge mal Frequenz ergibt über die Lichtgeschwindigkeit etwa 300:
-  300 geteilt durch 80 sind 3,75 MHz, und das 80-m-Band liegt bei 3,5 bis 3,8. Dazu die
-  Struktur der Kanten — die alten breiten Bänder liegen harmonisch zueinander (7, 14, 21
-  und 28 MHz sind das Doppelte, Vierfache, Sechsfache und Achtfache von 3,5 MHz), die drei
-  schmalen Bänder 10,1, 18,068 und 24,89 MHz kamen später hinzu und haben deshalb krumme
-  Kanten. Und die Bandbreitenregel ist keine Willkür, sondern eine Platzfrage: nach oben
-  werden die Bänder breiter, also darf dort eine Aussendung mehr belegen. Merksatz für die
-  Bereichsnamen: MF bis 3 MHz, HF bis 30, VHF bis 300, UHF bis 3000 — jedes Mal Faktor zehn.
-
-  Zwei Fragen haben ein **eigenes** Prinzip, das dem Blatt vorgeht: VD706 (primärer und
-  sekundärer Status — wer weichen muss und warum das keine Höflichkeit, sondern der Inhalt
-  der Zuweisung ist) und VD738 (warum die erlaubte Bandbreite mit der Bandbreite wächst).
-
-- **Klasse N steht jetzt bei 283 von 571 Fragen** (vorher 254). Insgesamt 660 Erklärungen,
-  8 Begriffsblätter.
+- Erklärungen: Paket 2, Bänder und Frequenzbereiche, 29 Fragen am Begriffsblatt Die Bänder in Deutschland
+- Begriffsblatt Bänder: 14 Bänder von 160 m bis 13 cm, Bereichsnamen MF/HF/VHF/UHF, Bänder der Klasse N, primär/sekundär
+- Erklärungen: VD706 (primär/sekundär) und VD738 (Bandbreite) mit eigenem Prinzip
+- Klasse N: 283 von 571 Fragen erklärt, insgesamt 660 Erklärungen und 8 Begriffsblätter
 
 ### Geändert
-- **`erklaerungen.json`:** 1.143.964 → 1.177.220 Bytes, 631 → 660 Erklärungen, 7 → 8
-  Begriffsblätter.
-- `Index.html` ist unverändert gegenüber 1.285.0 — Paket 2 brauchte keine neue Technik.
+- `erklaerungen.json`: 631 → 660 Erklärungen, 7 → 8 Begriffsblätter
+- Begriffsblatt Bänder: Angaben außerhalb des Katalogs (40 m, 6 m, 2 m in anderen ITU-Regionen) im Feld `quelle` belegt
 
-### Behoben — meine eigenen Behauptungen, die über den Katalog hinausgingen
-Beim Gegenlesen habe ich neun Stellen gefunden, an denen ich etwas geschrieben hatte, das
-ich nicht belegen kann. Alle berichtigt:
-- Ich hatte behauptet, bei **7,1 MHz** gelte eine engere Bandbreitengrenze. Das steht
-  nirgends im Katalog — die Zahl kommt dort nur in einer FALSCHEN Antwort vor. Jetzt heißt
-  es nur noch, dass 7,1 MHz mitten im Band liegt und keine Kante ist.
-- Bei **21,35 MHz** hatte ich von einer „Marke im Band" geschrieben. Auch unbelegt; die
-  Ziffern stammen erkennbar aus der Oberkante des 20-m-Bandes (14,35 MHz), und genau das
-  steht jetzt da.
-- Bei **432 bis 438 MHz** hatte ich behauptet, um 438 MHz herum begännen die Relaisausgaben.
-  Der Bandplan im Katalog nennt 439,200 MHz, nicht 438. Die Aussage ist weg.
-- Bei **VD738** hatte ich geschrieben, alle drei Bereiche mit 800 Hz Bandbreite seien „nur
-  wenige Kilohertz breit" und „zwei davon liegen unter der Mittelwelle". Beides falsch:
-  135,7–137,8 kHz sind 2 kHz, 472–479 kHz sind 7 kHz, aber 10,1–10,15 MHz sind 50 kHz; und
-  von den drei liegt einer unter der Mittelwelle, einer mitten darin und einer auf der
-  Kurzwelle.
-- Bei **VD741, VD742 und VD706** hatte ich bei den falschen Antworten Bandbreiten und
-  Rangfolgen für Bereiche behauptet, über die der Katalog nichts sagt (13 cm, 3,4 GHz,
-  10 GHz, 23 cm). Die Sätze sagen jetzt nur noch, welches Band gemeint ist und wohin der
-  gefragte Wert gehört.
-- Bei **1850–1890 kHz** hatte ich einen Grund erfunden („gerade deshalb wechselt dort die
-  Leistungsgrenze"). Jetzt steht nur noch die Tatsache: die Zahl 1850 kommt im Katalog vor,
-  weil bis dorthin für die Klasse E 100 W PEP gelten.
-
-Was von außerhalb des Katalogs stammt und bleibt, weil es die falschen Antworten erklärt,
-steht jetzt im Feld `quelle` des Blattes: dass 40 m außerhalb Europas bis 7,3 MHz, 6 m in
-anderen ITU-Regionen bis 54 MHz und 2 m in der ITU-Region 2 bis 148 MHz reicht — genau die
-drei Zahlen, die als Distraktoren auftauchen.
-
-### Nachgeprüft
-- **Maschinell gegen den Katalog:** für alle vierzehn Bänder habe ich die Zahlen im Blatt
-  mit der richtigen Antwort aus VD709 bis VD722 verglichen, Ziffer für Ziffer. **0
-  Abweichungen.** Ebenso die fünf Bandbreitenwerte aus VD738 bis VD742.
-- `eintragen.py` über alle 660 Erklärungen: **0 Fehler**, und zu jeder der 87 falschen
-  Antworten dieses Pakets steht ein eigener Satz — keine einzige blieb offen.
-- Im Browser gemessen: 8 Blätter geladen, 660 Erklärungen, Zeilenfolge `prinzip, kniff,
-  liste, merken`. Bei VD738 und VD706 greift das eigene Prinzip (512 bzw. 517 Zeichen)
-  statt des Blatt-Prinzips (1095 Zeichen) — die Vorrangregel arbeitet also. Keine Meldung
-  in der Konsole.
-
-### Offen
-- Klasse N: 288 Fragen ohne Erklärung. Nächste Pakete in der abgesprochenen Reihenfolge:
-  Rufzeichen — Arten und Zusätze (26), AFuV-Pflichten im Betrieb (17), AFuG-Begriffe und
-  Rechte (16), Relaisfunkstellen und Satelliten (15), Einheiten und Vorsätze (15).
-
----
+### Behoben
+- Erklärungen Bänder: unbelegte Aussagen zu 7,1 MHz, 21,35 MHz, 438 MHz und 1850 kHz berichtigt
+- Erklärungen VD706, VD738, VD741, VD742: falsche bzw. unbelegte Bandbreiten und Rangfolgen entfernt
 
 ## [1.285.0] - 2026-09-13
 
 ### Hinzugefügt
-- **„Das Prinzip" — eine neue Zeile in der Erklärungstafel.** Dietmar am 13.09.2026:
-  „Das ist ein Amateurfunk-Trainer und der soll Wert auf Ausbildung legen. Nur auswendig
-  lernen, bringt nichts. Die Benutzer müssen das auch verstehen."
-
-  Bis jetzt hatte die Tafel „Im Bild", „Der Kniff", die Liste, den Merksatz, „Der Weg" und
-  „Warum die anderen falsch sind". Der Kniff sagt, WIE man die Antwort findet. Was fehlte,
-  war das WARUM — der Grund, der auch bei der nächsten Frage noch trägt. Bei NI103 lautet
-  die Antwort nicht „B", sondern: ein Spannungsmesser ist hochohmig und kommt parallel zum
-  Messobjekt, ein Strommesser ist niederohmig und kommt in Reihe; wer das vertauscht, hält
-  einmal den Strom an und schließt einmal die Quelle kurz.
-
-  Deshalb gibt es das Feld `prinzip`. Es steht als **erste Zeile** in der Tafel, noch vor
-  „Im Bild", und es wird als erstes vorgelesen. Wie die Liste kann es im Eintrag stehen
-  oder aus einem Begriffsblatt kommen — dann gilt es für alle Fragen der Gruppe, und ein
-  eigenes im Eintrag hat Vorrang. Vor dem Bau habe ich gefragt, weil das die Tafel
-  verändert; Dietmar hat die eigene Zeile gewählt.
-
-- **Paket 1: die 59 Fragen, deren Antworten Bilder sind.** Hier muss ich mich korrigieren:
-  ich hatte gemeldet, alle Fragen mit Zeichnung seien erklärt. Das stimmte für die 379
-  Fragen, bei denen die FRAGE ein Bild hat. Es gibt aber **77 Fragen, bei denen die vier
-  ANTWORTEN Bilder sind**, und davon hatten nur 18 eine Erklärung. Die fehlenden 59 sind
-  jetzt fertig: 6 in Klasse N, 27 in N → E, 26 in E → A. Genau dort ist Auswendiglernen
-  sinnlos — vier Bilder kann man sich nicht merken.
-
-  Jede dieser 59 Fragen hat `prinzip`, `bild` und `kniff`. `warum_falsch` gibt es hier
-  nicht: die Antworten haben keinen Text, über den man sie ansprechen könnte. Und weil der
-  Trainer die Antworten mischt, steht in keinem dieser Texte ein „Antwort C" oder „das
-  dritte Bild" — beschrieben wird, WAS zu sehen ist.
-
-- **Ein siebtes Begriffsblatt: „Einen Stromkreis lesen".** Neun Zeilen, mit geteiltem
-  Prinzip, für die sieben Schaltbildfragen NB702, NB703, NC404, NI103, NI104, AB601 und
-  EI102: Batteriesymbol (langer dünner Strich ist Plus), technische und physikalische
-  Stromrichtung, Diode leitet vom Dreieck zum Strich, Schalter offen oder zu,
-  Spannungsmesser hochohmig und parallel, Strommesser niederohmig und in Reihe, Reihe
-  gegen Parallel. Merksatz: „Lang und schlank ist Plus. A wie Amperemeter kommt in die
-  Reihe, V wie Voltmeter kommt quer davor."
+- Erklärtafel: neue erste Zeile Das Prinzip (Feld `prinzip`), wird zuerst vorgelesen
+- Prinzip: im Eintrag oder aus dem Begriffsblatt, eigenes Prinzip im Eintrag hat Vorrang
+- Erklärungen: Paket 1, 59 Fragen mit Bildantworten (6 Klasse N, 27 N → E, 26 E → A)
+- Begriffsblatt Einen Stromkreis lesen: 9 Zeilen für sieben Schaltbildfragen
 
 ### Geändert
-- **`Index.html`:** `erklaerInhalt()` und `erklaerVorlesen()` lösen `prinzip` auf und
-  stellen es an den Anfang — an beiden Stellen dieselbe Auflösung, damit Gezeigtes und
-  Vorgelesenes nicht auseinanderlaufen. Sonst keine Änderung am Aussehen.
-- **`erklaerungen.json`:** 1.024.140 → 1.143.964 Bytes, 572 → 631 Erklärungen, 6 → 7
-  Begriffsblätter, neues Kopffeld `prinzip_feld`.
-- **Mein Werkzeug:** `bildantworten.py` erzeugt jetzt auch einen Kontaktbogen für Fragen
-  OHNE eigenes Fragenbild — bisher brach es dort ab, und das sind gerade diese 59. Neu ist
-  `lupe.py`: es rendert eine Antwort bei 2400 px und zeigt nur die entscheidenden Ecken
-  groß nebeneinander. Ohne das hätte ich bei NB703 und NC404 nicht sagen können, welcher
-  Strich der Batterie der lange dünne ist — und genau daran hängt die ganze Frage.
+- `Index.html`: `erklaerInhalt()` und `erklaerVorlesen()` lösen `prinzip` auf
+- `erklaerungen.json`: 572 → 631 Erklärungen, 6 → 7 Begriffsblätter, neues Kopffeld `prinzip_feld`
+- Werkzeuge: `bildantworten.py` auch für Fragen ohne Fragenbild, neu `lupe.py` zur Detailvergrößerung
+- Erklärungen AD204 und AJ208: Hinweis auf mehrdeutige bzw. unübliche Katalogantwort
 
 ### Behoben
-- **Der Blatt-Titel lief beim Vorlesen in die erste Zeile.** „Die Kenner." hatte einen
-  Punkt, die neuen Blatt-Titel haben keinen — Piper las „Einen Stromkreis lesen
-  Batteriesymbol". `erklaerVorlesen()` setzt jetzt einen Punkt, wenn der Titel keinen hat.
-  Am Angezeigten ändert das nichts.
-
-### Nachgeprüft
-- Alle 59 Kontaktbögen wurden angesehen, keiner geraten. Bei den Stromkreisen habe ich mit
-  `lupe.py` zusätzlich Batterie-, Schalter- und Diodenecken vergrößert.
-- `eintragen.py` über alle 631 Erklärungen: **0 Fehler.** Jeder Fragentext und jede richtige
-  Antwort steht wörtlich im Katalog, jedes `"gruppe"` zeigt auf ein Blatt, das es gibt.
-- Im Browser gemessen: 7 Blätter geladen, 631 Erklärungen, die Zeilenfolge in der Tafel ist
-  `prinzip, bild, kniff, liste, merken`, und die Vorleseliste beginnt mit „Das Prinzip."
-  Keine Meldung in der Konsole.
-
-### Zwei Stellen, an denen ich den Katalog für fehlerhaft halte
-- **AD204** („Welcher Schwingkreis passt zu dem dargestellten Verlauf der Impedanz?"): Nach
-  der Regel „Reihe gehört zum Minimum, Parallel zum Maximum" passen ZWEI der vier Bilder in
-  sich zusammen — der Reihenkreis mit dem Minimum und der dreifache Parallelkreis mit dem
-  Maximum. Gewertet wird nur der Reihenkreis. Ich habe die Regel trotzdem so hingeschrieben,
-  wie sie stimmt, und im Kniff ausdrücklich gesagt, dass hier zwei Paare stimmig sind und
-  welches die Prüfung meint. Einen Lernenden, der richtig denkt, darf eine Erklärung nicht
-  im Stich lassen.
-- **AJ208** („Die Oberschwingungen eines Einbandsenders sollen mit einem Ausgangsfilter
-  unterdrückt werden. Welcher Filterkurventyp wird benötigt?"): Unter den vier Kurven ist
-  kein Tiefpass. Richtig ist eine Bandpasskurve mit dem Gipfel auf der Nutzfrequenz — das
-  trifft die Sache auch, ist aber nicht die Antwort, die man nach der üblichen Regel
-  „Oberwellen liegen oben, also Tiefpass" sucht. Die Erklärung begründet deshalb über die
-  Richtung des Frequenzgangs und nicht über das Wort Tiefpass.
-
-### Offen
-- Nach Paket 1 bleiben in der Klasse N 317 Fragen ohne Erklärung. Die nächsten Pakete nach
-  der abgesprochenen Reihenfolge: Bänder und Frequenzbereiche (29), Rufzeichen: Arten und
-  Zusätze (26), AFuV-Pflichten (17), AFuG-Begriffe (16), Relais und Satelliten (15),
-  Einheiten und Vorsätze (15).
-
----
+- Vorlesen: Blatt-Titel ohne Schlusspunkt lief in die erste Zeile über
 
 ## [1.284.0] - 2026-09-13
 
 ### Hinzugefügt
-- **Begriffsblätter: 175 neue Erklärungen für die Klasse N.** Dietmar am 13.09.2026:
-  „Bei der Klasse N gibt es viele Fachbegriffe und Abkürzungen. Geh die fragen.json durch
-  und ermittle was wir in der Erklärung noch auf nehmen." Ich habe die Durchsicht als
-  `_begriffe-klasse-n.md` geliefert, mit einer Reihenfolge nach Nutzen je Aufwand. Seine
-  Antwort: „ich überlasse dir die entscheidung." Also habe ich die Reihenfolge aus dem
-  Dokument gebaut.
-
-  **Das Problem, das die Blätter lösen.** Von den 571 Fragen der Klasse N hatten 73 eine
-  Erklärung, 498 keine. Die 498 sind aber nicht 498 verschiedene Probleme: die Liste der
-  Q-Gruppen wäre in 9 Fragen dieselbe, die der Rechtsquellen in 56, die des IARU-Bandplans
-  in 22. Diese Liste 56-mal in die Datei zu schreiben, wäre Verschwendung — und bei einer
-  Korrektur müsste man 56 Stellen anfassen und würde eine vergessen.
-
-  **Die Bauart.** `erklaerungen.json` hat einen neuen Abschnitt `gruppen`. Darin steht
-  jedes Blatt genau einmal, mit `titel`, `liste` und `merken` — denselben Feldern, die die
-  Landeskenner-Erklärung schon benutzt. Ein Fragen-Eintrag verweist mit `"gruppe":
-  "q-gruppen"` darauf. Der Trainer zeigt dann die Liste des Blattes und darunter das, was
-  nur zu dieser Frage gehört: `kniff` und die Sätze zu den falschen Antworten. Steht im
-  Eintrag eine eigene `liste`, gewinnt sie — so kann eine einzelne Frage abweichen, ohne
-  das Blatt zu ändern.
-
-  **Die sechs Blätter.**
-
-  | Blatt | Zeilen | Fragen |
-  |---|---|---|
-  | Leistung: die Begriffe und die Grenzen (PEP, ERP, EIRP) | 7 | 18 |
-  | Die Q-Gruppen | 14 | 9 |
-  | Wer regelt was (RR, CEPT, IARU, ETSI, AFuG, AFuV, TKG, BEMFV, EMVG, BNetzA) | 11 | 56 |
-  | IARU-Bandplan: 2 m und 70 cm | 18 | 22 |
-  | Abkürzungen im Funkbetrieb (CQ, DX, RST, QSL, UTC, Split, Pile-Up) | 15 | 37 |
-  | Die Betriebsarten (CW, SSB, AM, FM, LSB/USB, digital) | 9 | 26 |
-
-  Die Spalte „Fragen" zählt, wie viele Fragen auf das Blatt verweisen — 168 zusammen.
-  Mit den sieben Fragen ohne Blatt sind es **175 neue Fragen**; die Klasse N steht damit
-  bei **248 von 571** erklärten
-  Fragen statt bei 73. Diese sieben haben Kniff und Fehlersätze bekommen, aber
-  **kein** Blatt: NA103, NE305, NF108, NF111, NF114 handeln von etwas anderem, und bei
-  BD201/BD202 würde das Betriebsarten-Blatt in die Irre führen — dort ist „/am" der
-  Rufzeichenzusatz für „an Bord eines Luftfahrzeugs", nicht die Amplitudenmodulation.
-  Genau diese Verwechslung ist die Falle der Frage.
+- Begriffsblätter: gemeinsame Listen für Fragengruppen, Abschnitt `gruppen` in `erklaerungen.json`
+- Begriffsblätter: Leistung (PEP, ERP, EIRP), Q-Gruppen, Wer regelt was, IARU-Bandplan 2 m/70 cm, Abkürzungen, Betriebsarten
+- Erklärungen: 175 neue Fragen der Klasse N, jetzt 248 von 571 erklärt
+- Fragen-Eintrag: Verweis per `gruppe`, eigene `liste` hat Vorrang vor dem Blatt
 
 ### Geändert
-- **`erklaerungen.json`:** neuer Abschnitt `gruppen` vor `fragen`, neues Kopffeld
-  `blaetter`, und `umfang` nennt jetzt auch die Blätter. 795.845 → 1.024.140 Bytes,
-  397 → 572 Erklärungen.
-- **`Index.html`:** `erklaerInhalt()` und `erklaerVorlesen()` lösen `liste`, `merken` und
-  den Titel erst aus dem Eintrag und dann aus `erklaerGruppen[er.gruppe]` auf — dieselbe
-  Auflösung an beiden Stellen, damit Gezeigtes und Vorgelesenes nicht auseinanderlaufen
-  können. Nichts an der Darstellung geändert: kein neues Feld, keine neue Farbe, keine
-  neue Größe.
+- `erklaerungen.json`: Abschnitt `gruppen`, Kopffeld `blaetter`, 397 → 572 Erklärungen
+- `Index.html`: `erklaerInhalt()` und `erklaerVorlesen()` lösen Liste, Merksatz und Titel aus dem Blatt auf
+- Erklärtafel: langer Inhalt scrollt innerhalb (`.et-buehne`)
+- `eintragen.py`: prüft auch die Begriffsblätter
 
 ### Behoben
-- **Mein falscher Merksatz zum 70-cm-Band.** Ich hatte ins Bandplan-Blatt geschrieben, die
-  Reihenfolge sei „immer dieselbe: erst CW, dann SSB, dann die Baken, dann FM und die
-  Relais, und ganz oben der Weltraum". Auf 2 m stimmt das. Auf 70 cm nicht: die
-  Relaisfunkstellen liegen bei 439,200 MHz, der Satellitenfunk bei 435,500 MHz — die
-  Relais liegen also **über** dem Weltraum. Aufgefallen ist es bei der Gegenprobe an
-  BC221 und BC222. Der Merksatz sagt den Unterschied jetzt ausdrücklich.
-- **Der Malpunkt im Vorgelesenen.** In den Blättern hatte ich „TX · RX · TRX" und
-  „144,075 · 144,125" geschrieben. `sprechbar()` macht aus „·" richtigerweise „mal", weil
-  es in den Formeln der Rechenfragen die Multiplikation ist — vorgelesen wäre daraus
-  „TX mal RX mal TRX" geworden. In den Blättern steht jetzt „und" beziehungsweise ein
-  Komma. Die Formeln bleiben unberührt.
-
-### Nachgeprüft
-- `eintragen.py` prüft jetzt auch die Blätter: jede Zeile braucht `k` und `l`, und ein
-  `"gruppe"` muss auf ein Blatt zeigen, das es gibt. Ergebnis über alle 572 Erklärungen:
-  **0 Fehler.** Jeder Fragentext, jede richtige Antwort und jeder Schlüssel unter
-  `warum_falsch` steht wörtlich im Katalog; jede falsche Antwort der 175 neuen Fragen hat
-  einen eigenen Satz.
-- Im Browser gemessen: 6 Blätter geladen, 572 Erklärungen, 248 davon im Ziel Klasse N,
-  keine Fehlermeldung in der Konsole. Die Tafel bleibt deckungsgleich mit den Antworten
-  (bei BC221 oben 416, links 400, 908 × 327 — wie der Antwortkasten).
-- **Die Blätter sind länger als eine Zeichnungserklärung.** Beim Bandplan-Blatt sind es
-  774 px Inhalt in einer 262 px hohen Tafel. Dietmar am 13.09.2026: „Wenn der Platz nicht
-  langt, gerne auch in dem kleinen Fenster zum scrollen." Also bleibt die Tafel, wie sie
-  ist; `.et-buehne` rollt. Vor der Rückfrage hatte ich die Blätter schon einmal gekürzt:
-  die mittlere Spalte ist `white-space: nowrap`, ein langer Text dort quetscht die dritte
-  Spalte auf drei Zeilen. Beim Leistungs-Blatt sank der Inhalt dadurch von 796 auf 433 px.
-
-### Offen
-- Die 140 Fragen der Klasse N, die zu keiner Gruppe gehören, sind weiter ohne Erklärung.
-  Dort lohnt sie nur, wo die Frage wirklich schwer ist — das entscheidet sich je Frage.
-- Die Helfer haben Textfehler im Katalog gemeldet, die nicht von mir kommen: BF109 endet
-  mit „QSL-Karten", VC125 mit „(AFuV)", BG111 mit „Grundkenntnisse und Größen
-  Grundkenntnisse", und BE113 schreibt das Rufzeichen im Fragetext „N4EAX", in den
-  Antworten „N4 EAX". Ich habe die Texte wörtlich gelassen, damit die Prüfung gegen den
-  Katalog weiter aufgeht.
-
----
+- Bandplan-Blatt: falscher Merksatz zum 70-cm-Band, Relais liegen dort über dem Satellitenbereich
+- Vorlesen: Malpunkt in Blättern wurde als mal gesprochen, durch und bzw. Komma ersetzt
 
 ## [1.283.0] - 2026-09-13
 
 ### Geändert
-- **Landeskenner und Rufzeichen werden buchstabiert.** Dietmar am 13.09.2026, mit Bild
-  der Antworten A bis D: „Die Buchstaben bei den Landeskenner in der Antwort sollen als
-  Buchstaben vorgelesen werden."
-
-  Und das ist zwingend: „PY, CE und VE" liest eine Sprachausgabe als drei Silben — etwa
-  „pü, tse, we". Wer zuhört, versteht nichts, obwohl genau diese Buchstabenpaare die
-  Frage sind. Jetzt heißt es **„P-Y, C-E und V-E"**, so wie Funker sie ohnehin sprechen.
-
-  Nachgemessen, was an die Sprachausgabe geht:
-
-  | Frage | vorher | jetzt |
-  |---|---|---|
-  | BD317 | PY, CE und VE | P-Y, C-E und V-E |
-  | BD302 | Deutschland (DA-DR) | Deutschland (D-A bis D-R) |
-  | BD315 | K3LR, W3DZZ und K4EAX | K-3-L-R, W-3-D-Z-Z und K-4-E-A-X |
-
-  Ein Bereich wie `DA-DR` wird also nicht zu „D-A-D-R", sondern zu „D-A **bis** D-R" —
-  sonst klingt es wie ein einziger langer Kenner.
-
-  **ZWEI SPERREN, DAMIT ES NUR DORT GREIFT, WO ES HINGEHÖRT.** Zwei Großbuchstaben
-  kommen im Katalog auch ganz anders vor. Erstens gibt es eine feste Liste der
-  Landeskenner — geraten wird nichts. Zweitens wird nur in Fragen buchstabiert, die auch
-  von Landeskennern, Präfixen oder Rufzeichen handeln.
-
-  **Warum die zweite Sperre nötig ist, zeigt „PA":** In BD304 ist das der Landeskenner
-  der Niederlande, in AF414, AF416, AF420 und AF423 aber die **Endstufe** (Power
-  Amplifier). Gegengeprüft über alle 1750 Fragen: betroffen sind **25**, und in **44**
-  weiteren hätte die Regel etwas verändert, das dort nichts zu buchstabieren ist — genau
-  diese 44 bleiben unangetastet.
-
-  Buchstabiert wird an beiden Stellen: beim Vorlesen der Frage samt Antworten und in der
-  Erklärtafel, wo die Sätze unter „warum die anderen falsch sind" die Antworttexte im
-  Original tragen.
-
----
+- Vorlesen: Landeskenner und Rufzeichen werden buchstabiert (z. B. P-Y, C-E und V-E)
+- Vorlesen: Bereiche wie DA-DR als D-A bis D-R gesprochen
+- Vorlesen: Buchstabieren nur mit fester Landeskennerliste und nur in Fragen zu Kennern, Präfixen und Rufzeichen (25 Fragen)
+- Erklärtafel: Buchstabieren auch in den Sätzen zu falschen Antworten
 
 ## [1.282.0] - 2026-09-13
 
 ### Hinzugefügt
-- **Erklärungen zu den Landeskennern der Klasse N — 18 Fragen, mit Eselsbrücken.**
-  Dietmar: „Bei der Klasse N benötige ich auch eine Erklärung für die Landeskenner und
-  Eselbrücken." Die Fragen BD301 bis BD318 haben jetzt jede einen Eintrag.
+- Erklärungen: Landeskenner der Klasse N (BD301 bis BD318) mit Eselsbrücken
+- Erklärtafel: Tabelle Die Kenner (Kenner, Land, Eselsbrücke) und Zeile Zum Merken, beide vorlesbar
 
-  Das sind die ersten Erklärungen zu Fragen **ohne Zeichnung**, und dafür hat die Tafel
-  zwei neue Teile bekommen:
-
-  - **Die Kenner** — eine kleine Tabelle: Landeskenner, Land, Eselsbrücke. Darin stehen
-    genau die Kenner, die in der Frage und in ihren vier Antworten vorkommen, also auch
-    die falschen. Bei BD317 sind das sechs Zeilen: PY, LU, CE für Südamerika und VE, BY,
-    JA als die drei, mit denen die falschen Antworten arbeiten.
-  - **Zum Merken** — der Satz, an dem man es behält.
-
-  Die Überschrift heißt bei diesen Fragen nur noch „Erklärung" statt „Erklärung zur
-  Zeichnung", und der Zusatz „mit Rechenweg" erscheint nur, wenn wirklich einer dabei
-  ist. Beide neuen Teile werden auch **vorgelesen**: die Tabelle als Satzfolge („PY.
-  Brasilien. Pelé, Yes."), der Merksatz danach.
-
-  **Die Eselsbrücken sind zum Teil Dietmars eigene** — SM als „Schwedisches Mädchen"
-  war sein Einfall und ist der Ausgangspunkt für alle anderen gewesen. Dazu kommen die
-  Brücken, bei denen die Antwort im Landesnamen selbst steckt (EA = España, LX =
-  Luxemburg, XE = meXiko, CE = Chile, ZL = New ZeaLand, PA = Pays-Bas) und zwei
-  übernommene, die besser waren als meine ersten: **„Keiner Will Nach Amerika"** für die
-  vier US-Kenner K, W, N und A — die löst BD312, BD315 und BD316 auf einen Schlag — und
-  **„Hohe Berge"** für HB9.
-
-  **Geprüft gegen zwei unabhängige Quellen.** Dietmar hat auf 12db.de und auf 50ohm.de
-  verwiesen; jede der 34 Zuordnungen stimmt mit beiden überein, und alle 18 richtigen
-  Antworten ebenfalls. Wichtig war das bei den Fällen, die man leicht falsch erinnert:
-  **VE ist Kanada**, nicht Venezuela (das wäre YV). **US ist nicht USA**, sondern die
-  Ukraine. **DA bis DZ ist nicht ganz deutsch** — Deutschland endet bei DR, dann kommen
-  Südkorea (DS–DT) und die Philippinen (DU–DZ).
-
-  Die Kachel „Mit Erklärung" zählt in Klasse N damit **73** statt 55 Fragen, und ihr
-  Untertitel heißt jetzt „Fragen mit Erklärung" statt „Fragen mit erklärter Zeichnung" —
-  Zeichnungen sind nicht mehr die einzigen.
-
----
+### Geändert
+- Erklärtafel: Überschrift Erklärung bei Fragen ohne Zeichnung, Zusatz mit Rechenweg nur bei vorhandenem Rechenweg
+- Kachel Mit Erklärung: Klasse N 73 statt 55 Fragen, Untertitel Fragen mit Erklärung
+- Landeskenner: Zuordnungen gegen 12db.de und 50ohm.de geprüft
 
 ## [1.281.0] - 2026-09-12
 
 ### Hinzugefügt
-- **Die Erklärung lässt sich vorlesen.** Dietmar: „Es fehlt noch das was wir jetzt
-  erarbeitet haben, einen Button mit vorlesen." Der Knopf sitzt in der Kopfzeile der
-  Erklärtafel, links vom Kreuz, und sieht aus wie der „Vorlesen"-Knopf an der Frage.
-
-  Gelesen wird in der Reihenfolge, in der es dasteht: **Im Bild**, **Der Kniff**, und —
-  wenn geantwortet ist — **Der Weg** und **Warum die anderen falsch sind**. Vor der
-  Antwort sagt der Trainer am Ende den Satz, dass der Rechenweg noch kommt. Was nicht in
-  der Tafel steht, wird auch nicht gesprochen.
-
-  **Jeder Abschnitt ist ein eigenes Stück der Vorlese-Warteschlange.** Das hat zwei
-  Wirkungen, die zusammen das Platzproblem der Tafel lösen: Der gerade gesprochene
-  Abschnitt wird gelb hervorgehoben, und er rollt von selbst in den Blick. Die Tafel ist
-  nur so hoch wie der Antwortkasten — beim Zuhören blättert sie jetzt mit.
-
-  Der Knopf heißt während des Vorlesens **Stop**. Schließen der Tafel beendet das
-  Vorlesen, ein Klick auf „Weiter" ebenfalls: Was nicht mehr zu sehen ist, soll nicht
-  weitersprechen.
-
-  **Die Formeln mussten erst sprechbar werden**, und das war die eigentliche Arbeit. Auf
-  dem Schirm steht `P = U² / R = (10 V)² / 100 Ohm = 1 W`. Die Einheiten schreibt der
-  Server mit `expandTTS` schon aus („Ohm", „Watt"), aber `=`, `²`, `·`, `√`, `∥`, die
-  Tiefzahlen in `R₂` und der Unterstrich in `U_BE` kommen dort nicht vor — die wären als
-  Zeichen durchgerutscht oder verschluckt worden. Die neue Funktion `sprechbar()` setzt
-  sie vorher in Worte:
-
-  | geschrieben | gesprochen |
-  |---|---|
-  | `P = U² / R` | P ist U zum Quadrat durch R |
-  | `R₂ ∥ R_L` | R 2 parallel zu R L |
-  | `1,2 · 10⁻⁶ H` | 1,2 mal 10 hoch minus 6 H |
-  | `f = 1 / (2π · √(L · C))` | f ist 1 durch (2 pi mal Wurzel aus (L mal C)) |
-  | `ü = 1:4` | ü ist 1 zu 4 |
-
-  **Ein Fehler, den der Probelauf gefunden hat:** Die Regel für Zehnerpotenzen stand
-  zuerst NACH der Regel für `²`. Aus `10⁻¹²` wurde damit „10 hoch minus eins zum
-  Quadrat". Jetzt werden Zehnerpotenzen als Ganzes erkannt, bevor die einzelnen
-  Hochzahlen dran sind. Nachgemessen mit zehn echten Zeilen aus den Erklärungen.
+- Erklärtafel: Vorlese-Knopf in der Kopfzeile, liest die Abschnitte in Anzeigereihenfolge
+- Vorlesen: aktueller Abschnitt gelb hervorgehoben und automatisch in den Blick gerollt
+- Vorlesen: Formeln sprechbar über `sprechbar()` (=, ², ·, √, ∥, Tiefzahlen, Zehnerpotenzen)
+- Vorlesen: stoppt beim Schließen der Tafel und bei Weiter
 
 ### Geändert
-- **`playTTSQueue()` nimmt jetzt eine dritte Angabe**: wie der Knopf danach aussehen
-  soll. Bis heute stand dort fest „Vorlesen" und `vorleseFrage()` — es gab ja nur einen
-  Vorleseknopf. Ohne diese Angabe bleibt alles wie vorher, der Knopf an der Frage merkt
-  nichts davon. Und `stopTTS()` setzt beide Knöpfe zurück, nicht nur den einen; sonst
-  stünde in der Tafel „Stop", während längst Stille ist.
+- `playTTSQueue()`: optionaler dritter Parameter für den Knopfzustand
+- `stopTTS()`: setzt beide Vorleseknöpfe zurück
 
----
+### Behoben
+- `sprechbar()`: Zehnerpotenzen vor einzelnen Hochzahlen erkannt
 
 ## [1.280.0] - 2026-09-12
 
 ### Hinzugefügt
-- **Erklärungen zu ALLEN Fragen mit Zeichnung — 379 Stück.** Dietmar: „Mache bitte
-  alle für die Klasse E nach A fertig. Danach von N nach E und auch N."
+- Erklärungen: alle 379 Fragen mit Zeichnung (226 E → A, 98 N → E, 55 Klasse N)
+- Erklärungen: Im Bild, Der Kniff, 131 Rechenwege und 1083 Sätze zu falschen Antworten
+- Erklärungen: 18 Fragen mit Bildantworten beschreiben die Antwortbilder nach Inhalt
+- Erklärungen: Blindantworten ohne Rechenweg ausdrücklich gekennzeichnet
+- Erklärungen Klasse N: Fachbegriffe und Abkürzungen jeweils mit erklärt
 
-  | Prüfungsziel | Fragen mit Zeichnung | erklärt |
-  |---|---|---|
-  | Aufstockung E → A | 226 | 226 |
-  | Aufstockung N → E | 98 | 98 |
-  | Klasse N | 55 | 55 |
-  | **zusammen** | **379** | **379** |
-
-  Damit ist keine Frage mit Zeichnung mehr ohne Erklärung. Vorher waren es zwölf.
-
-  Jeder Eintrag hat **Im Bild** (was die Zeichnung zeigt — was liegt parallel, was in
-  Reihe, wohin zeigt welcher Pfeil), **Der Kniff** (die Stelle, an der man hereinfällt),
-  bei Rechenfragen **Der Weg** (131 Stück, Schritt für Schritt mit Zwischenergebnis) und
-  **Warum die anderen falsch sind** — **1083 einzelne Sätze**, je falsche Antwort einer.
-
-  **Jede Zeichnung wurde angesehen, nicht aus dem Fragentext erraten.** Das war der
-  eigentliche Aufwand: Bei „Wie groß ist die Gesamtkapazität dieser Schaltung" steht die
-  Antwort nicht im Text, sondern im Bild — parallel wird addiert, in Reihe nicht. Die 746
-  Zeichnungen wurden dafür einzeln gerastert und in Kontaktbögen durchgesehen; an
-  strittigen Stellen (Verbindungspunkt oder bloße Kreuzung, Diodenpolung, Mittelanzapfung)
-  wurde die SVG-Quelle ausgelesen und ausgemessen.
-
-  **Maschinell geprüft** ist bei allen 379: der Fragentext steht wörtlich so im Katalog,
-  die als richtig genannte Antwort ist die amtlich richtige, und jeder Schlüssel unter
-  `warum_falsch` ist wörtlich eine der falschen Antworten. Das ist wichtig, weil der
-  Trainer die Antworten mischt — eine Erklärung, die an „Antwort C" hängt, zeigt am
-  nächsten Tag auf die falsche. Der Prüflauf meldet 0 Fehler.
-
-  **Wo kein Rechenweg zu einer falschen Antwort führt, steht das ausdrücklich dabei:**
-  „Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort." Eine
-  erfundene Begründung wäre schlimmer als keine. Rund 40 der 1083 Sätze sind solche
-  ehrlichen Fehlanzeigen, und in einigen Fällen ließ sich zeigen, dass die Zahl aus der
-  NACHBARfrage stammt (etwa AC517/AC518, die sich nur durch den Emitterwiderstand
-  unterscheiden — wer den übersieht, landet genau auf der Antwort der anderen Frage).
-
-  **Die 18 Fragen mit Bild-Antworten** sind der Sonderfall: dort haben die Antworten
-  keinen Text, an dem ein Satz hängen könnte. Für sie beschreibt „Im Bild" alle vier
-  Antwortbilder nach ihrem INHALT (nicht nach ihrem Buchstaben, der wandert beim
-  Mischen), und „Der Kniff" sagt, woran man das richtige erkennt.
-
-  **Für die Klasse N ist der Ton ein anderer**: dort fangen Leute ohne Elektrotechnik an,
-  deshalb wird jeder Fachbegriff im Halbsatz mit erklärt und keine Abkürzung ohne
-  Auflösung benutzt.
-
-### Korrigiert
-- **Elf Zeichnungen tragen die Endung `.svg`, sind aber PNG-Dateien** (`BE207_q.svg`,
-  `BE208_q.svg`, `BE209_q.svg`, `NE209_q.svg`, `NF101_q.svg` bis `NF106_q.svg`,
-  `NG302_q.svg`). Beim Durchsehen fiel außerdem auf, dass mehrere echte SVGs ihren Inhalt
-  nur über einen `feImage`-Filter zeigen; wer sie ohne diesen Filter rastert, sieht ein
-  leeres Bild. Am Trainer ändert das nichts — der Browser zeigt beides richtig an —, aber
-  wer die Dateien weiterverarbeitet, sollte es wissen. Deshalb steht es hier.
-
----
+### Behoben
+- Zeichnungen: elf als `.svg` benannte PNG-Dateien dokumentiert, Anzeige im Browser nicht betroffen
 
 ## [1.279.0] - 2026-09-12
 
 ### Geändert
-- **Erklärung und Notiz treten an die Stelle der Antworten.** Dietmar zum
-  Erklärfenster: „Die Position gefällt mir nicht. Schöner wäre es exakt auf der
-  Größe wie die Antworten. Das Fenster soll nicht schwebend sein. Sondern so
-  aussehen, als würde es die Antworten ersetzen. Der Hintergrund soll nicht
-  abgedunkelt werden." Und gleich danach: „Bei Notizen möchte ich das auch so haben.
-  Es öffnet sich ein Fenster, wo man das selbst beschreiben kann. Exakt auf der Länge
-  und Breite von den Antworten und auch ohne abgedunkelten Hintergrund."
+- Erklärung und Notiz: Tafel an Stelle des Antwortkastens statt schwebendem Fenster, ohne Abdunklung
+- Tafel: übernimmt die Höhe des Antwortkastens (`offsetHeight`), längerer Text scrollt innerhalb
+- Tafel: Schließen per Kreuz, Escape oder erneutem Knopfdruck, Erklärung und Notiz schließen sich gegenseitig
+- Notizfeld: beim Anzeigen der Frage immer geschlossen, vorhandene Notiz über Zettel in der Kopfzeile angezeigt
+- Formelblatt und Glühbirne: pulsen abwechselnd, je Schlag 620 ms
+- Nach falscher Antwort pulst nur die Glühbirne, nach richtiger nichts
 
-  Beides ist jetzt eine **Tafel im Fluss** statt eines Fensters über der Seite: Sie
-  steht an der Stelle des Antwortkastens, der solange verschwindet. Breite und Rand
-  ergeben sich damit von selbst, ohne eine einzige gerechnete Zahl. Kein Schatten,
-  kein abgedunkelter Hintergrund, nichts schwebt.
-
-  Nachgemessen bei 1920×955: Antwortkasten und Tafel sind **deckungsgleich** — oben
-  505, links 562, 1119 × 285 Punkte, beide. Die Seite wird um keinen Punkt länger
-  (`ueber 0`), und die Schriftstufe der Frage bleibt, wo sie war.
-
-  **Die Höhe wird übernommen, nicht neu bestimmt** — genau so hoch wie der Kasten,
-  den sie ersetzt, und längerer Text rollt innerhalb. Sonst wäre die Seite beim
-  Aufschlagen um rund 200 Punkte gewachsen, die Schriftautomatik hätte die Frage
-  verkleinert, und ein Klick auf „Erklärung" hätte die Frage kleiner gemacht.
-  Gerechnet wird mit `offsetHeight` und nicht mit `getBoundingClientRect`:
-  offsetHeight zählt in Satzpunkten, der Rahmen in Bildschirmpunkten — bei 115 % wäre
-  die Tafel sonst 15 % zu hoch.
-
-  Beide Tafeln haben ein Kreuz zum Zumachen, Escape schließt sie, und der Knopf
-  schaltet um: ein zweiter Klick bringt die Antworten zurück. Zwei Tafeln an
-  derselben Stelle gibt es nicht — wer die Erklärung aufschlägt, schließt damit die
-  Notiz und umgekehrt.
-
-  **Eine Folge beim Zettel, die man kennen muss:** Das Notizfeld ist beim Zeichnen
-  der Frage jetzt **immer zu**, auch wenn eine Notiz vorliegt. Vorher stand es offen,
-  „sonst wäre die Notiz nach dem Zuklappen unsichtbar, obwohl es sie gibt" — das geht
-  nicht mehr, es würde die Antworten verdecken. Dass eine Notiz da ist, sagt der
-  orange leuchtende Zettel in der Kopfzeile.
-
-- **Formelblatt und Glühbirne pulsen abwechselnd.** Dietmar: „Erklärung soll
-  Alternierend mit Formelsammlung pulsen."
-
-  Vorher pulste das Formelblatt dreimal hintereinander und die Glühbirne 900
-  Millisekunden später noch dreimal — zusammen fast vier Sekunden, und der zweite
-  Teil kam so spät, dass man ihn verpasste. Jetzt wechseln sie sich ab: Formelblatt,
-  Glühbirne, Formelblatt, Glühbirne, Formelblatt, Glühbirne — je Schlag 620
-  Millisekunden. Ist nur einer der beiden Knöpfe da, pulst er dreimal allein, dann
-  sieht es aus wie vorher.
-
-  **Ein Fehler beim Einbauen, der beim Nachmessen aufflog:** Der Takt stand zuerst in
-  `formelKnopfSetzen()` — und zu diesem Zeitpunkt ist die Glühbirne noch verborgen,
-  weil `erklaerKnopfSetzen()` erst danach läuft. Gemessen pulste deshalb nur das
-  Formelblatt. Der Takt wird jetzt am Ende von `renderQuestion()` angeschlagen, wenn
-  beide Knöpfe stehen. Nachgemessen: F bei 0 ms, G bei 621, F bei 1240, G bei 1860,
-  F bei 2480, G bei 3101.
-
-  Nach einer **falschen** Antwort pulst nur die Glühbirne — im Formelblatt steht
-  nichts Neues, in der Erklärung schon. Nach einer richtigen Antwort pulst nichts.
-
----
+### Behoben
+- Pulsen: Takt am Ende von `renderQuestion()`, vorher pulste nur das Formelblatt
 
 ## [1.278.0] - 2026-09-12
 
-### Korrigiert
-- **Die Fragenansicht passt jetzt ins Fenster.** Dietmar, mit Bild von AD806:
-  „Schau mal, das Fenster ist bei den Fragen grösser!" Auf dem Bild war die Fußzeile
-  abgeschnitten und rechts stand der Scrollbalken.
-
-  **Die Knopfleiste war das falsche Maß.** Seit es die drei Schriftstufen für die
-  Frage gibt, entschied `fragenGroesseAnpassen()` nach der Unterkante der
-  Knopfleiste: „Solange die im Fenster bleibt, ist die Frage vollständig zu sehen."
-  Das ist nicht wahr — **unter** der Knopfleiste steht die Fußzeile mit der
-  Katalogquelle, 63 Punkte hoch. Bei AD806 hatte die Knopfleiste 94 Punkte Luft, und
-  die Seite ragte trotzdem 26 Punkte heraus.
-
-  Es ist derselbe Fehler, den ich am Morgen desselben Tages in der Zoom-Automatik
-  beseitigt habe: ein Stellvertreter statt der Sache selbst. Gemessen wird jetzt, ob
-  die **Seite** ins Fenster passt — `scrollHeight` sagt das direkt.
-
-  Nachgemessen bei 1920×955 und 115 %, ohne Zeichnung:
-
-  | Frage | vorher | jetzt |
-  |---|---|---|
-  | AD806 | „groß", 26 Punkte zu viel | „mittel", passt mit 56 Punkten Luft |
-  | AI611 | „groß", 64 zu viel | „klein", passt |
-  | AD212 | „groß", passt | unverändert „groß" |
-  | AK103 | passt auf keiner Stufe | siehe unten |
-
-  Zusätzlich wird nach dem Laden der Zeichnungen noch einmal geprüft: Ein Bild, das
-  erst danach seine endgültige Höhe bekommt, kann die Seite über die Kante schieben.
-  Diese Nachprüfung geht **nur nach unten** — wer dort auch wieder vergrößern würde,
-  baute eine Schaukel aus „kleinere Schrift → mehr Platz → größeres Bild".
-
 ### Hinzugefügt
-- **Die Fußzeile ist während der Fragen weg, ein Knopf holt sie.** Dietmar auf die
-  Frage, ob sie ausgeblendet werden soll: „Antwort 1 ausblenden, aber über einen
-  Button Sichtbar machen." Der Knopf ⓘ sitzt am rechten Ende der Knopfleiste, neben
-  „Hauptmenü".
-
-  Eingeblendet liegt die Zeile **am Fensterrand, nicht in der Seite**
-  (`position: fixed`). Sonst wäre die Seite beim Knopfdruck um 63 Punkte gewachsen,
-  die Schriftautomatik hätte die Frage verkleinert — und ein Klick auf „Quelle" hätte
-  die Frage kleiner gemacht. So ändert sich am Satz der Seite nichts. Escape blendet
-  sie wieder aus, und beim Zurückgehen in die Hauptansicht steht sie ohnehin wieder
-  ganz unten.
-
-  Gemessen bringt das 63 Punkte: AG422 und AI306 bekommen dadurch die **größte**
-  Schriftstufe statt „mittel" und „klein" — die Frage ist also besser zu lesen als
-  vorher.
+- Fragenansicht: Fußzeile ausgeblendet, Knopf ⓘ blendet sie am Fensterrand ein (`position: fixed`), Escape blendet aus
 
 ### Geändert
-- **„Automatisch" gibt für eine lange Frage nach.** Bis heute galt: gemessen wird die
-  Hauptansicht, denn sie ist die längste. Das stimmt nicht mehr. Bei 1920×955 passt
-  die Hauptansicht bis 120 %, die Fragenansicht aber nur bis 110 — und mit Zeichnung,
-  wie bei AD806 und AI611, nur bis 105 beziehungsweise 100.
+- Zoom-Automatik: geht bei zu langen Fragen stufenweise herunter, Wert gilt dann für die ganze Seite
+- Zoom-Automatik: zuerst Schriftstufe der Frage, dann Seitenzoom, höchstens drei Stufen
+- Zoom-Automatik: Wert je Fenstergröße gemerkt, Zurücksetzen durch festen Wert und zurück auf Automatisch
 
-  Dietmar auf die Wahl zwischen „Scrollen ist in Ordnung" und „immer so klein, dass
-  alles passt": **„Immer so klein, dass alles passt."**
-
-  Also: Trifft die Automatik auf eine Frage, die auch in der kleinsten Schriftstufe
-  nicht hineinpasst, geht sie Stufe um Stufe herunter — und der gefundene Wert gilt
-  ab dann für die ganze Seite, auch für die Hauptansicht. Alles andere hieße, bei
-  jedem Wechsel zwischen Frage und Hauptansicht eine andere Größe zu haben.
-
-  Zwei Dinge sind daran wichtig:
-
-  **Erstens die Reihenfolge.** Zuerst die Schriftstufe der Frage — der kleine
-  Eingriff, er betrifft nur Frage und Antworten. Erst wenn selbst die kleinste Stufe
-  nicht reicht, geht die Anzeige der ganzen Seite herunter. Und nach jeder Zoomstufe
-  wird die Schriftstufe neu entschieden: Bei AD806 steht am Ende 100 % Anzeige mit
-  der **größten** Schrift — besser lesbar als die 115 % mit der kleinsten.
-
-  **Zweitens die Grenze: höchstens drei Stufen.** Nicht „nie unter 100 %", denn auf
-  einem 1366×768-Laptop steht die Hauptansicht schon bei 95 %, und eine feste Grenze
-  von 100 hätte dort gar nichts zugelassen (dort gibt es jetzt bis 80 % nach, und
-  AD806 passt). Gerechnet wird die Grenze aus dem Wert **ohne** Deckel — sonst würde
-  sie bei jeder langen Frage drei Stufen tiefer rutschen, und nach dreimal AG424 wäre
-  man bei 70 %.
-
-  Gemerkt wird der Wert je Fenstergröße. **Zurückgesetzt wird er, indem man die
-  Anzeige einmal auf einen festen Wert und wieder auf „Automatisch" stellt** — dann
-  misst die Automatik von vorn. Das ist der Weg, den man ohne Anleitung findet;
-  besser als ein weiterer Knopf in den Einstellungen.
-
-  **Was das in Dietmars Fenster bedeutet, offen gesagt:** Die Hauptansicht stand auf
-  115 %. Nach der ersten Frage mit Zeichnung sind es 100 %, und wer AG424 oder AK103
-  aufruft — die zwei längsten Fragen des Katalogs E → A — landet bei 95 %. Unten
-  bleiben dann rund 190 Punkte leer. Das ist der Preis für „nichts scrollt je", und
-  er ist genau so gewählt worden. Wer es anders will, setzt die Anzeige auf einen
-  festen Wert; dort rührt die Automatik nichts an.
-
----
+### Behoben
+- Fragenansicht: passt wieder ins Fenster, Schriftstufe misst die Seitenhöhe (`scrollHeight`) statt der Knopfleiste
+- Schriftstufe: Nachprüfung nach dem Laden der Zeichnungen, nur verkleinernd
 
 ## [1.277.0] - 2026-09-12
 
+### Hinzugefügt
+- Erklärung: eigener Knopf mit Glühbirne neben dem Formelblatt, nur bei vorhandener Erklärung, pulst
+- Erklärung: eigenes verschiebbares Fenster unten, schließt per Escape, Kreuz oder Klick daneben
+- Erklärung: vor der Antwort Im Bild und Der Kniff, danach Rechenweg und Warum die anderen falsch sind
+- Erklärung: in allen Modi (Lernmodus, Blättern, Merkliste, Suche, Gruppenraum), nicht im Prüfungssimulator
+
 ### Geändert
-- **Die Erklärung hat jetzt einen eigenen Knopf und ein eigenes Fenster.** Dietmar,
-  nachdem er sie in 1.276.0 zweimal nicht gefunden hatte: „Unterhalb von den Fragen,
-  verlängert nur das Fenster. Besser wäre ein eigenes Fenster, das sich öffnet. Ich
-  möchte die Formel nicht nachdem antworten. Hier wäre neben dem Formelblatt Button
-  ein eigener Button mit der Glühbirne. Das erst vorhanden ist, wenn es was zum
-  rechnen gibt und es soll auch Pulsieren wie auch das Formelblatt." Und dazu: „Es
-  soll nicht nur bei Blättern vorhanden sein, sondern auch bei Start im Lernmodus."
+- Fenster-Mechanik: gemeinsame Funktion für Formelblatt und Erklärung
+- Pulsen: Erklärungsknopf 900 ms nach dem Formelblatt und erneut nach falscher Antwort, ohne Ton
+- Fragenansicht: kein Scrollen mehr durch den Erklärungskasten
 
-  **Zwei Fehler von mir in 1.276.0, und für beide gibt es den Beweis.**
-
-  *Erstens war sie unsichtbar.* Nach einer richtigen Antwort blieb der Kasten
-  zugeklappt, und übrig war eine dünne Zeile in Kapitälchen, die aussah wie eine
-  Überschrift. Dietmar hat sie zweimal nicht gefunden, obwohl sie auf dem Schirm
-  stand — beim zweiten Mal mit Bildschirmfoto, auf dem sie zu sehen ist. Ein
-  Bedienelement, das der Entwickler dem Benutzer zeigen muss, ist keines.
-
-  *Zweitens kam sie zu spät.* Die Erklärung gab es erst nach dem Antworten, aus
-  Sorge, sie wäre sonst die Lösung. Aber eine Lernhilfe, die man erst nach der
-  Antwort bekommt, hilft beim Rechnen nicht — das Formelblatt liegt in der Prüfung
-  ja auch vorher auf dem Tisch.
-
-  **Gebaut ist es jetzt Stück für Stück wie das Formelblatt daneben:** ein Knopf in
-  der Kopfzeile der Frage, violett wie die Kachel „Mit Erklärung", der nur erscheint,
-  wenn es zu genau dieser Frage etwas gibt, dreimal pulst und ein eigenes Fenster
-  aufmacht. Das Fenster lässt sich am Kopf beiseiteschieben, mit Escape, dem Kreuz
-  oder einem Klick daneben schließen und liegt beim nächsten Öffnen wieder mittig —
-  dieselbe Mechanik wie beim Formelblatt, jetzt aus einer Funktion für beide.
-
-  **Der Inhalt hängt daran, ob schon geantwortet ist.** Vorher stehen darin **Im
-  Bild** und **Der Kniff** — was die Zeichnung zeigt und worauf es ankommt. Nach der
-  Antwort kommen **Der Weg** und **Warum die anderen falsch sind** dazu, mit der
-  eigenen falschen Antwort hervorgehoben. Damit ein kurzes Fenster nicht wie ein
-  Fehler aussieht, steht vor der Antwort ein Satz darunter, dass der Rechenweg noch
-  kommt.
-
-  **Das Fenster steht unten, nicht in der Mitte.** Die Zeichnung sitzt oben in der
-  Frage, und „Im Bild. Ein Parallelschwingkreis …" ist ohne den Blick darauf die
-  Hälfte wert. Nachgemessen bei 1920×955: das Fenster beginnt vor der Antwort bei
-  636 Punkten, die Zeichnung endet bei 508 — sie bleibt frei. Bei 1366×768 und
-  1280×800 ebenso.
-
-  **In allen Modi**, nicht nur beim Blättern: Der Knopf wird in `renderQuestion()`
-  entschieden, und die läuft bei jeder Frage — Lernmodus, Blättern, Merkliste,
-  Suche, Gruppenraum.
-
-  **Im Prüfungssimulator bleibt er aus.** Die Formelsammlung ist amtliches
-  Hilfsmittel und liegt in der Prüfung auf dem Tisch; eine Erklärung mit Rechenweg
-  ist keines. Ein offenes Fenster geht beim Start des Durchgangs zu. Der
-  Formelblatt-Knopf bleibt selbstverständlich stehen.
-
-  **Der Puls kommt zweimal je Frage und 900 Millisekunden nach dem des
-  Formelblatts:** einmal, wenn die Frage erscheint, und noch einmal nach einer
-  *falschen* Antwort — dann steht mehr im Fenster als vorher. Wer richtig geantwortet
-  hat, bekommt den zweiten Schlag nicht. Gleichzeitig mit dem Formelblatt sah es in
-  der Kopfzeile nach Zappeln aus; hintereinander liest es sich als zwei Hinweise.
-
-  **Kein Ton.** Fast jede Frage mit Erklärung hat auch eine Stelle im Formelblatt,
-  und zwei Zweiklänge hintereinander bei derselben Frage wären Lärm. Abschaltbar ist
-  das Pulsen über denselben Haken wie beim Formelblatt (Einstellungen → Formelblatt →
-  „Auf das Formelblatt hinweisen"); ein eigener Haken kann dazukommen, wenn er
-  gewünscht ist.
-
-  Der Kasten selbst sieht aus wie vorher — gleiche Maße, gleiche Farben. Er steht
-  jetzt nur woanders. Die Seite wird dadurch nicht mehr länger: in der Fragenansicht
-  waren nach einer falschen Antwort 423 Punkte zu scrollen, jetzt sind es 0.
-
-### Korrigiert
-- Das Datum von 1.276.0 stand auf dem 13.09.2026. Der Tag war der 12.
-
----
+### Behoben
+- Erklärung: nach richtiger Antwort kaum auffindbar und erst nach dem Antworten verfügbar
+- CHANGELOG: Datum von 1.276.0 auf 12.09.2026 korrigiert
 
 ## [1.276.0] - 2026-09-12
 
 ### Hinzugefügt
-- **Erklärungen zu den Fragen mit Zeichnung.** Dietmar: „ich kann mir technische
-  Fragen mit Bild erklären lassen?" — und nach der Probe: „Baue mir das mal ein."
-
-  Nach dem Antworten steht unter der Frage ein Kasten mit vier Teilen: **Im Bild**
-  (was in der Zeichnung zu sehen ist und woran man es erkennt), **Der Kniff** (der
-  eine Satz, um den es geht), **Der Weg** (die Rechenschritte) und **Warum die
-  anderen falsch sind** — je falscher Antwort ein Satz. Die gerade gewählte falsche
-  Antwort wird hervorgehoben, damit man nicht sucht, welcher der drei Sätze der
-  eigene ist.
-
-  Den Anfang machen **zwölf Fragen aus der Aufstockung E → A**, die schwersten mit
-  Zeichnung: AD212, AD321, AD803, AD806, AF107, AG115, AG217, AG422, AI306, AI601,
-  AI610, AI611. Jede Lösung wurde nachgerechnet und mit der amtlichen Antwort
-  verglichen — alle zwölf stimmen überein.
-
-  Von 36 falschen Antworten ließen sich **30** auf einen bestimmten Rechenfehler
-  zurückführen, und zwar genau auf die angebotene Zahl. Bei AI610, AD321, AG217 und
-  AF107 trifft jede falsche Antwort einen Fehler. Die sechs übrigen sind Blindwerte
-  ohne Rechenweg — das steht auch so darin, eine erfundene Begründung wäre
-  schlimmer als keine.
-
-  **Die Zuordnung hängt am Antworttext, nicht an a/b/c/d.** Der Trainer mischt die
-  Antworten; eine Erklärung an Position C hätte am nächsten Tag auf die falsche
-  gezeigt. Alle 36 Schlüssel sind gegen den Fragenkatalog geprüft.
-
-  Der Kasten steckt in einem `<details>`: zugeklappt nach einer richtigen Antwort,
-  aufgeklappt nach einer falschen. Wer richtig geraten hat, soll ihn finden können;
-  wer falsch lag, soll ihn nicht suchen müssen.
-
-  `erklaerungen.json` ist freiwillig wie `50ohm_map.json` — fehlt sie, bleibt der
-  Kasten aus und nichts anderes ändert sich.
-
-- **Kachel „Mit Erklärung" beim Blättern.** Dietmar: „sage mir wie ich diese Fragen
-  finde." Sie zählt, zu wie vielen Fragen **des gerade gewählten Prüfungsziels** eine
-  Erklärung vorliegt, und blättert nur durch diese. Sie erscheint nur, wenn es welche
-  gibt — wer auf Klasse N steht, sieht keine Kachel und wundert sich nicht über eine
-  leere Liste.
+- Erklärungen zu Fragen mit Zeichnung: Im Bild, Der Kniff, Der Weg, Warum die anderen falsch sind
+- Erklärungen: zwölf schwere Fragen E → A (AD212, AD321, AD803, AD806, AF107, AG115, AG217, AG422, AI306, AI601, AI610, AI611)
+- Erklärungen: Zuordnung über Antworttext statt Position, gewählte falsche Antwort hervorgehoben
+- Erklärkasten als `<details>`, nach falscher Antwort aufgeklappt, `erklaerungen.json` optional
+- Blättern: Kachel Mit Erklärung für das gewählte Prüfungsziel
 
 ### Geändert
-- **„Automatisch" sucht die Stufe jetzt selbst — und lief beim Laden vorher gar nicht.**
-  Dietmar, mit Bild: „Automatisch ist zu gross! An der Seite siehst du den Scrollbalken.
-  Das Bild hat exakt die grösse von meinem sichtbaren Fenster." Und davor: „Ich muss
-  jetzt auf 125% hoch damit ich annähernd ein Vollbild habe."
-
-  **Zwei Fehlversuche von mir, bevor es saß.** Erst habe ich „zu groß" als „vergrößert
-  zu stark" gelesen und die Obergrenze auf 100 % gesetzt — das Gegenteil war gemeint.
-  Dann habe ich die 870-Punkt-Untergrenze in der Höhenrechnung entfernt, was richtig
-  war, aber nichts bewirkte. Warum, stand eine Ebene tiefer:
-
-  **`anzeigeAnwenden()` lief beim Laden der Seite nie.** Es hing nur an Größenänderung
-  des Fensters, Vollbild-Wechsel, Beamer-Modus und den Einstellungen. Beim gewöhnlichen
-  Öffnen blieb der grobe Wert aus dem Block vor dem ersten Zeichnen stehen — und der
-  rechnet mit angenommenen 870 Punkten, weil es vor dem Zeichnen nichts zu messen gibt.
-  Die ganze Messtechnik darunter war beim Start wirkungslos. Wer einmal am Fenster zog,
-  sah plötzlich eine andere Größe als beim Öffnen; genau das war das „da muss sich was
-  verändert haben".
-
-  Jetzt läuft es beim Laden — zweimal, einmal wenn die Seite steht und einmal wenn die
-  Schriften geladen sind, weil die Symbolschrift Zeilenhöhen und damit die Kartenhöhe
-  ändert.
-
-  **Und die Stufe wird gesucht, nicht gerechnet.** Eine Formel über die Kartenhöhe ist
-  ein Näherungswert: Auf der Seite steht noch die Fußzeile, es kommen Ränder dazu, und je
-  Rechner ein paar Punkte mehr — bei mir 833, bei ihm über 910. Mit derselben Formel kam
-  bei mir kein Balken heraus und bei ihm einer. Gefragt ist nicht „wie hoch ist die
-  Karte", sondern **„passt die Seite ins Fenster"**, und das sagt `scrollHeight` direkt.
-
-  Die Automatik geht daher vom geschätzten Wert aus stufenweise hinauf, solange die
-  nächste Stufe noch passt, und hinunter, solange sie nicht passt. Geprüft werden
-  **zwei** Bedingungen: kein Scrollbalken **und** unten mindestens 14 Punkte frei
-  („Es soll Minimal unten etwas Abstand haben"). Die Fußzeile allein genügte nicht — bei
-  120 % hatte sie noch 24 Punkte Luft, und trotzdem stand ein Balken da, weil die
-  Verlaufsspalte rechts höher ist.
-
-  Nachgemessen, alles ohne Balken und mit Luft unten:
-
-  | Fenster | vorher | jetzt | Luft unten |
-  |---|---|---|---|
-  | 1920 × 955 (Fenster) | 105 %, mit Balken | **115 %** | 69 px |
-  | 1920 × 1080 (F11) | 115 % | **130 %** | 73 px |
-  | 1366 × 768 | 75 % | **80 %** | 38 px |
-  | 1280 × 800 | 75 % | **80 %** | 68 px |
-  | 1600 × 900 | 90 % | **90 %** | 85 px |
-  | 1920 × 700 | 80 % | **85 %** | 41 px |
-  | 2560 × 1300 | 100 % | **150 %** (Grenze) | 140 px |
-
-  Kleiner ziehen und zurück ergibt wieder denselben Wert — es schaukelt nicht. Feste
-  Werte bleiben unangetastet: 100 % gibt 1,00, 125 % gibt 1,25 samt Balken, wenn man ihn
-  ausdrücklich wählt.
-
-  **Was bleibt:** Die Fragenansicht ist höher als die Hauptansicht (876 statt 790 Punkte).
-  Die Vergrößerung gilt für die ganze Seite und richtet sich nach der Hauptansicht — bei
-  115 % sind in den Fragen also rund 80 Punkte zu scrollen. Das war vorher auch so
-  (bei 105 %: 30 Punkte), fällt jetzt aber stärker auf. Wer das nicht will, wählt einen
-  festen Wert; die Suche ließe sich auch auf die Fragenansicht ausdehnen, dann füllt die
-  Hauptansicht das Fenster nicht mehr.
+- Anzeige Automatisch: Zoomstufe wird schrittweise gesucht (`scrollHeight`), ohne Scrollbalken, unten mind. 14 px frei
+- Anzeige Automatisch: Untergrenze 870 px in der Höhenrechnung entfernt
 
 ### Behoben
-- **`erklaerungen.json` wurde vom Server nicht ausgeliefert** (404), der Erklärkasten
-  wäre nie erschienen. Ursache ist die Whitelist aus Fix K1: „eine neue Datei im
-  Projektordner ist damit automatisch NICHT öffentlich." Genau der vorhergesagte Fall
-  — der Schutz hat gearbeitet, der Eintrag fehlte. Die Datei steht jetzt in
-  `PUBLIC_FILES`, in `PAKET_DATEIEN` (damit Gäste aus dem Gruppenraum sie mitbekommen)
-  und in `ABGLEICH_DATEN` (sonst verlangte ein Update für eine Textdatei Bestätigung
-  und Neustart).
+- Anzeige Automatisch: `anzeigeAnwenden()` lief beim Laden nicht, jetzt nach Seitenaufbau und nach Laden der Schriften
+- Server: `erklaerungen.json` lieferte 404, jetzt in `PUBLIC_FILES`, `PAKET_DATEIEN` und `ABGLEICH_DATEN`
 
 ## [1.275.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Pakete für Linux und macOS.** Aus einer Frage in einer Facebook-Gruppe:
-  „Wäre jetzt schön, wenn es auch ein deb und rpm Paket gäbe. So muss man das
-  Programm erst compilieren, was für Linux-Einsteiger suboptimal ist."
-
-  Compiliert wird nichts — der Trainer ist Node.js und HTML. Aber der Wunsch
-  dahinter ist berechtigt: `bash installieren.sh` ist für Einsteiger etwas
-  anderes als ein Doppelklick. Neu gibt es daher drei Pakete:
-
-  | Datei | Für |
-  |---|---|
-  | `amateurfunk-trainer_<Fassung>_all.deb` | Debian, Ubuntu, Mint, Raspberry Pi OS |
-  | `amateurfunk-trainer-<Fassung>-1.noarch.rpm` | Fedora, openSUSE, RHEL |
-  | `Amateurfunk-Trainer-<Fassung>-mac.zip` | macOS 11 und neuer |
-
-  Jedes enthält 1798 Dateien: den amtlichen Fragenkatalog, alle 746
-  Zeichnungen, die Formelsammlung, die Töne und express/cors/socket.io. Kein
-  `npm install` beim Benutzer, kein Netz beim Lernen. Node.js 18 zieht die
-  Paketverwaltung selbst mit (`Depends: nodejs (>= 18)`).
-
-  **Wo der Lernstand landet.** Der Server legt `data/` neben `Server.js` — in
-  `/opt` darf ein normaler Benutzer aber nicht schreiben. Der Starter spiegelt
-  das Programm deshalb beim ersten Aufruf und nach jedem Update in den
-  Heimatordner und läuft von dort: `~/.local/share/amateurfunk-trainer` unter
-  Linux, `~/Library/Application Support/Amateurfunk-Trainer` unter macOS.
-  Kopiert werden nur Programmdateien; `data/`, `backup/`, `Hoerbuch/`, `piper/`
-  und `tts_cache/` bleiben liegen. Nachgemessen: Merkdatei in `data/` angelegt,
-  Fassungsmerker auf 1.274.0 zurückgestellt, `Index.html` zerstört, neu
-  gestartet — `Index.html` war wieder echt, die Merkdatei unberührt.
-
-  Die Mac-App ist **nicht signiert**; beim ersten Start braucht es Rechtsklick
-  → „Öffnen". Eine Signatur kostet ein Entwicklerkonto für 99 US-Dollar im
-  Jahr. Der Hinweis liegt als `ZUERST-LESEN.txt` im ZIP.
-
-  Gebaut wird mit `pakete_bauen.sh` (Positivliste wie in `installer.iss`, was
-  nicht eingetragen ist kommt nicht mit). Die Datei steht in der `.gitignore`,
-  aus demselben Grund wie `installer.iss`.
+- Pakete: `.deb` (Debian, Ubuntu, Mint, Raspberry Pi OS), `.rpm` (Fedora, openSUSE, RHEL), ZIP für macOS ab 11
+- Pakete: vollständiger Inhalt ohne `npm install`, Abhängigkeit Node.js ab 18
+- Pakete: Starter spiegelt das Programm in den Heimatordner, `data/`, `backup/` und Caches bleiben erhalten
+- Mac-App unsigniert, Hinweis in `ZUERST-LESEN.txt`
+- Build-Skript `pakete_bauen.sh` mit Positivliste
 
 ### Geändert
-- **`Release-Hochladen.bat` veröffentlicht jetzt alle Pakete einer Fassung**,
-  nicht mehr nur die EXE. Es sammelt aus `release\` alles, was zu den vier
-  Namensmustern passt, und hängt es in einem Zug an dasselbe Release.
-
-  Drei Dinge, die dabei nötig waren:
-
-  - **Fremde Fassungen bleiben liegen.** Ein `.deb` von 1.270.0 unter der
-    Überschrift „Amateurfunk-Trainer 1.275.0" wäre schlimmer als gar keines:
-    Es sieht richtig aus und ist es nicht. Was nicht dieselbe Nummer trägt,
-    wird genannt und übergangen.
-  - **Die Beschreibung kennt auch, was schon oben hängt.** Wer die
-    Linux-Pakete nachschiebt, hat keine EXE in `release\` — ohne Abfrage der
-    vorhandenen Anhänge wäre der Windows-Abschnitt aus der Anleitung
-    gefallen, während die EXE weiter darunter hing.
-  - **Eine Grenze für die Beschreibung.** GitHub nimmt 125.000 Zeichen, und
-    zwar hart: Mehr wird nicht gekürzt, sondern abgewiesen. Zuletzt
-    veröffentlicht ist v1.111.0; die 186 Abschnitte seitdem sind zusammen
-    355.550 Zeichen, das Dreifache. Ohne diese Grenze wäre der erste Versuch
-    nach der langen Pause fehlgeschlagen — und zwar erst, nachdem alle
-    Dateien übertragen waren. Jetzt kommen die zwölf neuesten Fassungen
-    vollständig mit (19.298 Zeichen), die 174 davor werden mit Bereich und
-    Verweis aufs Protokoll genannt. Still weggelassen wird nichts.
+- `Release-Hochladen.bat`: veröffentlicht alle Pakete einer Fassung in einem Release, fremde Fassungen übersprungen
+- `Release-Hochladen.bat`: Beschreibung berücksichtigt bereits vorhandene Anhänge
+- `Release-Hochladen.bat`: Beschreibung unter der GitHub-Grenze von 125.000 Zeichen, ältere Fassungen als Verweis
 
 ### Behoben
-- **`Hochladen.bat` ließ Änderungen unbemerkt liegen.** Dietmar: „ich habe ein
-  neues Bild in den Ordner Bilder hochgeladen, es nimmt aber GitHub nicht an."
-
-  Nachgesehen, was tatsächlich im Repository liegt: Der `CHANGELOG.md` dort war
-  von heute, die `README.md` dagegen **steinalt** — sie listete noch
-  „Aufstockung N → A" und „Direkteinstieg Klasse A", beide seit dem 2. September
-  aus dem Trainer heraus, und verwies auf ein Bild, das es nicht mehr gibt. Es
-  ging also nie um die Bilder; es ging bei jedem Hochladen nur ein Teil mit.
-
-  Die Ursache steckt in einer Zeile:
-
-  ```js
-  const ja = (a) => /^j/i.test(a);
-  ```
-
-  Bei „Jetzt mit aufnehmen? [j/n]" sieht diese Prüfung eine **leere Eingabe**
-  — also Enter — und findet kein „j". Das zählt als **Nein**. Der Push nimmt
-  dann nur den zuletzt committeten Stand mit, und das Skript meldet trotzdem
-  „Fertig".
-
-  Vier Änderungen:
-
-  - **Enter zählt jetzt als Ja** (`[J/n] (Enter = ja)`). Bei der Frage, ob
-    überhaupt hochgeladen wird, bleibt es beim ausdrücklichen „j" — ein Push
-    lässt sich nicht zurückholen.
-  - **Wer ablehnt, liest, was das heißt:** „Bei GitHub steht dann weiter der
-    Stand von vorher — auch bei Bildern, README und allem anderen aus der
-    Liste."
-  - **Vor dem Push steht, was hochgeht:** Zahl der Commits und die Liste der
-    Dateien aus `origin/main..HEAD`. Gibt es keinen Unterschied, sagt das
-    Skript das, statt kommentarlos zu pushen.
-  - **Nach dem Push die Gegenprobe:** Liegt im Ordner noch etwas herum, steht
-    es da — auch wenn der Push gerade erfolgreich war.
-
-  `hochladen.js` steht in der `.gitignore` und geht selbst nie mit hoch.
-
----
+- `Hochladen.bat`: Enter bei Rückfrage zählte als Nein, Änderungen blieben liegen, jetzt Enter = Ja
+- `Hochladen.bat`: zeigt vor dem Push Commits und Dateien, danach verbliebene lokale Änderungen
 
 ## [1.274.0] - 2026-09-11
 
 ### Behoben
-- **Die Lupe vergrößerte den Kasten mit — jetzt wächst nur noch die
-  Zeichnung.** Dietmar: „Es vergrössert noch immer das Feld mit. Es soll nur
-  das Bild vergrössern!"
-
-  Das war ein **zweiter** Grund, ganz unabhängig von der fehlenden `viewBox`
-  aus 1.273.0. Die Antwortbilder stehen im CSS auf:
-
-  ```css
-  .option-grid .option-image { width: 100%; height: 90px; object-fit: contain; }
-  ```
-
-  Das Element ist also so breit wie seine Kachel und 90 Punkte hoch — die
-  Zeichnung sitzt mit `contain` mittendrin, mit weißem Grund links und rechts.
-  Ein 227 × 83 großes Schaltbild in einem 427 × 129 großen Feld lässt über 40
-  Punkte Weiß an jeder Seite stehen.
-
-  Die Lupe hat bisher genau diesen **Kasten** skaliert — also auch das Weiß.
-  Jetzt rechnet sie mit der Fläche, die die Zeichnung darin wirklich einnimmt
-  (aus `naturalWidth`/`naturalHeight`), und baut das große Bild in deren
-  Seitenverhältnis.
-
-  Nachgemessen an AB406:
-
-  | | Seitenverhältnis |
-  |---|---|
-  | kleines Feld | 3,32 |
-  | Zeichnung | 2,73 |
-  | große Ansicht **vorher** | 3,32 — der weiße Rand wuchs mit |
-  | große Ansicht **jetzt** | 2,78 |
-
-  Dasselbe gilt für das Fragebild: 2,30 zu 2,33 statt 2,11.
-
----
+- Lupe: vergrößert nur die Zeichnung statt des Bildkastens samt weißem Rand (`naturalWidth`/`naturalHeight`)
+- Lupe: korrektes Seitenverhältnis bei Antwortbildern und Fragebild
 
 ## [1.273.0] - 2026-09-11
 
 ### Behoben
-- **Die Lupe blies den weißen Kasten auf, nicht die Zeichnung.** Dietmar, mit
-  Video: „Bilder vergrössern mit MouseOverlay zieht den weissen Hintergrund mit
-  hoch und nicht nur das svg."
-
-  Das Video zeigte es genau: Der Kasten wuchs auf halbe Fensterbreite, die
-  Zeichnung blieb winzig in der Mitte stehen.
-
-  **Die Ursache steckt in den SVG-Dateien selbst.** Sie tragen eine feste
-  Größe, aber keine `viewBox`:
-
-  ```
-  <svg xmlns="…" width="226.814" height="83.134">
-  ```
-
-  Ohne `viewBox` weiß der Browser nicht, welcher Ausschnitt der Zeichnung auf
-  die Fläche soll — er kann sie also gar nicht skalieren. Bekommt das `<img>`
-  eine größere Breite, wächst nur die Box; die Zeichnung bleibt bei ihren
-  226 × 83 Punkten und wird brav in der Mitte platziert. Der Rest ist der weiße
-  Grund des Bildes.
-
-  **Die Lösung berührt keine einzige Datei.** 746 SVGs liegen im Ordner des
-  Trainers; sie alle umzuschreiben wäre ein Update von etlichen Megabyte und
-  ein Eingriff in Material, das aus dem Katalog stammt. Stattdessen wird die
-  Datei beim ersten Vergrößern **einmal gelesen**, bekommt im Arbeitsspeicher
-  ihre `viewBox` verpasst und geht als `data:`-URL an die große Ansicht. Die
-  Zeichnung skaliert dann vektoriell mit — scharf in jeder Größe. `width` und
-  `height` bleiben stehen, denn die geben dem Bild überall sonst seine
-  natürliche Größe.
-
-  Das Ergebnis wird je Datei gemerkt, und die Bilder der laufenden Frage werden
-  schon beim Zeichnen vorgewärmt — beim ersten Hinsehen ist also nichts mehr zu
-  laden. Fehlt eine Datei oder lässt sie sich nicht lesen, bleibt alles beim
-  Alten: nachgemessen mit einem unvollständigen Bildordner, kein Fehler, nur
-  der bisherige Weg.
-
-  Nachgemessen an AB406 (vier Antwortbilder, 227 × 83 Punkte natürliche Größe):
-  Die Lupe zeigt jetzt 687 × 218 Punkte **Zeichnung**, nicht 687 × 218 Punkte
-  weißen Kasten mit einem Bildchen darin.
-
----
+- Lupe: SVG ohne `viewBox` skalierte nicht, `viewBox` wird im Speicher ergänzt und als `data:`-URL angezeigt
+- Lupe: Ergebnis je Datei gemerkt, Bilder der aktuellen Frage vorgeladen, bei Lesefehler bisheriger Weg
 
 ## [1.272.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Der Lernbedarf steht jetzt als zweiter Knopf im Abschlussfenster.** Dietmar:
-  „Weiter mit Lernbedarf ist das gleiche? Wenn nicht, auch das als Button mit
-  einbauen."
-
-  Es ist **nicht** dasselbe, und der Unterschied ist der Rede wert:
-
-  | | was drin ist | wann eine Frage rausfällt |
-  |---|---|---|
-  | **Stolpersteine** | jede Frage, bei der jemals etwas danebenging und die noch nicht sitzt | wenn sie gemeistert ist |
-  | **Lernbedarf** | die kleinere, frischere Liste — hinein bei jedem Fehler | nach dreimal richtig in Folge |
-
-  Bei Dietmars Lernstand an diesem Tag: 49 offene Stolpersteine, 36 im
-  Lernbedarf. Beides anzubieten ist also keine Dopplung — und damit niemand
-  zweimal dasselbe sucht und sich über verschiedene Zahlen wundert, steht der
-  Unterschied jetzt als feine Zeile unter den Knöpfen.
-
-  Das Fenster nach „Noch nie geübt" zeigt beide, je mit der aktuellen Zahl, und
-  lässt jeden weg, dessen Liste gerade leer ist. Sind beide leer, sagt es
-  weiterhin nur: „Sauber."
-
----
+- Abschlussfenster Noch nie geübt: zweiter Knopf Lernbedarf neben Stolpersteinen, jeweils mit aktueller Anzahl
+- Abschlussfenster: Hinweiszeile zum Unterschied Stolpersteine/Lernbedarf, leere Listen ausgeblendet
 
 ## [1.271.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Ein Klang, wenn etwas geschafft ist — `sounds/level-up.wav`.** Dietmar hat
-  die Datei selbst in den Ordner gelegt und beschrieben, wo sie hingehört:
-  „Noch nie geübt sind bei mir 6 Fragen. Hier möchte ich einen Sound und im
-  Abschluss ein Fenster … Interessant wäre dieser Sound auch wenn eine Frage 3
-  Mal hintereinander richtig beantwortet wurde. Hier dann ohne Fenster."
-
-  Zwei Anlässe, ein Ton:
-
-  1. **Eine Frage sitzt** — dreimal hintereinander richtig. Genau in diesem
-     Moment wechselt sie vom Lernstapel in den Bestand; das ist die Stelle, an
-     der ein Trainer nickt. Ohne Fenster, ohne Unterbrechung. Nachgemessen: der
-     Ton kommt beim dritten Mal, nicht beim vierten.
-  2. **Die Runde „Noch nie geübt" ist durch** — dazu ein Fenster: „Alle Fragen
-     durch! Es gibt keine Frage mehr, die du noch nie gesehen hast. Jetzt geht
-     es weiter mit den Fragen, bei denen du noch Schwierigkeiten hast." Der
-     Knopf daneben startet die Stolpersteine gleich mit der richtigen Zahl
-     („Weiter mit 12 Stolpersteinen"). Gibt es keine, sagt das Fenster auch das.
-
-  Das Fenster kommt **nur** nach dieser einen Rundenart — nach jeder beliebigen
-  Runde wäre es eine Unterbrechung; hier ist es der Abschluss von etwas, das man
-  sich vorgenommen hat.
-
-  Beides ist unter **Einstellungen → Nachteilsausgleich → Belohnung**
-  abschaltbar: „Ton, wenn eine Frage sitzt" und „Fenster, wenn ‚Noch nie geübt'
-  durch ist". Beim Einschalten erklingt der Ton einmal zur Probe. Nachgemessen
-  mit abgefangenem `play()`: mit Haken ein Aufruf von `level-up.wav`, ohne Haken
-  keiner.
-
----
+- Belohnungsklang `sounds/level-up.wav`, wenn eine Frage dreimal in Folge richtig beantwortet wurde
+- Abschlussfenster nach der Runde Noch nie geübt mit Klang und Knopf Weiter mit Stolpersteinen
+- Einstellungen → Nachteilsausgleich → Belohnung: Ton und Fenster einzeln abschaltbar, Probeton beim Einschalten
 
 ## [1.270.0] - 2026-09-11
 
 ### Geändert
-- **Der Formelblatt-Ton kommt jetzt bei jeder Frage — und lässt sich einzeln
-  abschalten.** Dietmar: „Der Sound bei Formelblatt muss jedes Mal kommen,
-  sobald ich eine Frage mit Formelblatt habe. Dieser soll unter Einstellungen
-  abschaltbar sein."
-
-  Bisher erklang der Zweiklang nur **einmal je Sitzung** — aus Sorge, er könnte
-  bei 282 Fragen mit Blattbezug (Katalog E → A) auf die Nerven gehen. Dietmars
-  Weg ist der bessere: Wer übt, schaut auf die Frage und nicht auf die
-  Knopfleiste; ein Ton erreicht ihn auch dann. Und wem es zu viel wird, der
-  schaltet **genau diesen Ton** ab, ohne den optischen Hinweis zu verlieren.
-
-  Dafür stehen unter Einstellungen → Nachteilsausgleich → Formelblatt jetzt
-  zwei Haken statt einem: „Auf das Formelblatt hinweisen" (der Knopf pulst) und
-  „Dazu ein kurzer Ton". Ist der erste aus, steht der zweite grau — ohne
-  Hinweis gibt es auch keinen Ton. Beim Einschalten erklingt der Zweiklang
-  einmal zur Probe.
-
-  Nachgemessen über eine Runde von 25 Fragen: 8 Fragen mit Blattbezug, 8 Töne —
-  genau einer je Frage, auch wenn dieselbe Frage mehrfach gezeichnet wird.
-  Ausgeschaltet: kein einziger.
-
----
+- Formelblatt-Ton: bei jeder Frage mit Formelblattbezug statt einmal je Sitzung
+- Einstellungen → Formelblatt: eigener Haken für den Ton, abhängig vom Hinweis, Probeton beim Einschalten
 
 ## [1.269.0] - 2026-09-11
 
 ### Behoben
-- **Beim Blättern fehlten Kacheln, solange ein Ziel frisch war.** Dietmar: „Bei
-  Blättern fehlt eine Kachel bei N nach E."
-
-  Ursache war eine Regel aus 1.267.0: „Rest abarbeiten" und „Noch nie geübt"
-  erschienen nur, wenn ihre Zahl kleiner war als der ganze Katalog — der
-  Gedanke war, dieselbe Zahl nicht dreimal untereinander zu schreiben. Bei
-  E → A hatte Dietmar eine Frage beantwortet, dort stand die Kachel (715 von
-  716); bei N → E keine einzige, dort fehlte sie.
-
-  Eine Kachel, die mal da ist und mal nicht, sieht nach Fehler aus — und „alle
-  463 sind noch unberührt" ist eine Aussage über den Lernstand, keine
-  Dopplung. Beide Kacheln stehen jetzt immer; dass die Menge gerade dem ganzen
-  Katalog entspricht, sagt ein Zusatz in der Erklärzeile: **„Derzeit ist das
-  der ganze Katalog."**
-
----
+- Blättern: Kacheln Rest abarbeiten und Noch nie geübt fehlten bei frischem Prüfungsziel, stehen jetzt immer
+- Blättern: Zusatz Derzeit ist das der ganze Katalog, wenn die Menge dem Katalog entspricht
 
 ## [1.268.0] - 2026-09-11
 
 ### Behoben
-- **Die beiden Ankreuzfelder im Prüfungssimulator sind wieder gleich groß.**
-  Dietmar: „2 unterschiedliche Rahmen zum anklicken bei Prüfungssimulator. Die
-  obere Größe gefällt mir gut."
-
-  Beide standen auf `width:17px` — trotzdem war das untere schmaler,
-  nachgemessen 15,3 statt 17 Punkte. Der Grund: Beide sind Flex-Kinder, und ein
-  Flex-Kind **schrumpft**, wenn der Text daneben mehr Platz braucht. Neben dem
-  oberen steht eine Zeile, neben dem unteren drei — also wurde nur dieses
-  zusammengedrückt.
-
-  `width` allein hilft dagegen nicht, `flex:0 0 17px` schon: Damit ist die
-  Breite keine Empfehlung mehr, sondern eine Ansage. Beide Felder messen jetzt
-  17 × 17 Punkte.
-
----
+- Prüfungssimulator: beide Ankreuzfelder wieder gleich groß (17 × 17 px, `flex:0 0 17px`)
 
 ## [1.267.0] - 2026-09-11
 
 ### Geändert
-- **Blättern öffnet jetzt immer das Fenster — auch bei N → E und E → A.**
-  Dietmar: „Wenn ich von N nach E und von E nach A ‚Blättere', möchte ich beim
-  Öffnen auch dieses Fenster haben."
-
-  Im Code stand eine Abkürzung: ohne Lesezeichen und ohne abgehakte Fragen ging
-  es sofort los, ohne Fenster. Sie stammte aus der Zeit, als dort nur zwei
-  Kacheln standen, die dann beide dasselbe gesagt hätten. Bei einem frisch
-  gewechselten Prüfungsziel griff genau diese Abkürzung — man landete ohne ein
-  Wort der Erklärung mitten im Katalog.
-
-  Inzwischen stehen im Fenster die Fragenzahl des Ziels, der Satz, wie Blättern
-  überhaupt funktioniert, und die Knöpfe zum Zurücksetzen. Das gehört gerade
-  beim ersten Mal gesehen.
-
-  Damit dort nicht dreimal dieselbe Zahl untereinander steht, erscheinen „Rest
-  abarbeiten" und „Noch nie geübt" erst, wenn sie etwas anderes sagen als der
-  ganze Katalog. Frisch gewechselt zeigt das Fenster also eine Kachel, mit
-  Lernstand alle vier.
-
----
+- Blättern: Fenster öffnet immer, auch bei N → E und E → A ohne Lesezeichen
+- Blättern: Kacheln Rest abarbeiten und Noch nie geübt nur, wenn sie vom ganzen Katalog abweichen
 
 ## [1.266.0] - 2026-09-11
 
 ### Geändert
-- **Alle Schließen-Knöpfe verhalten sich beim Überfahren gleich — und keiner
-  wird mehr rot.** Dietmar: „Bei Prüfungssimulator ist bei MouseOverlay der
-  Button X rot. Eine farbliche Abhebung finde ich gut, aber nicht rot. Die
-  Farbe von dem Mode? Das muss bei allen X für Fenster schließen gleich sein."
-
-  Rot war dort die Farbe für „etwas geht kaputt" (`--bad`) — und ein Fenster zu
-  schließen ist nichts Schlimmes. Dazu hatte fast jedes Fenster sein eigenes
-  Verhalten: mal gar keins, mal ein blasses Blau, beim Simulator eben Rot.
-
-  Jetzt gilt eine Regel für alle: Der Grund nimmt die **Linienfarbe des Modes**
-  (`--line`), Rahmen und Zeichen die **Textfarbe des Modes** (`--ink`). Beide
-  wechseln mit — im Green Mode wird es grünlich, im Orange Mode warm, im Grey
-  Mode grau. Nachgemessen in allen fünf Modes: Simulator und Auswertung liefern
-  exakt dieselben Farbwerte, von `rgb(227,233,243)` im Light Mode bis
-  `rgb(180,187,195)` im Grey Mode.
-
-  Erfasst sind die Schließen-Knöpfe in Auswertung, Stolpersteinen, „Woran es
-  liegt", Übungszeit, Kursleiter-Auswertung, gespeicherten Kursauswertungen,
-  Formelsammlung, Lektionen, GitHub, Abgleich, QSL-Album, Notizen,
-  Vorlese-Einstellungen, Gruppenraum, Blättern, Einstellungen, Anleitung,
-  Rechner und Simulator. Die **Form** der Knöpfe bleibt, wie sie ist — rund,
-  wo sie rund war, eckig, wo sie eckig war; gleich ist, was beim Überfahren
-  passiert.
-
----
+- Schließen-Knöpfe: einheitlicher Hover-Effekt in allen Fenstern, Farben aus dem Mode (`--line`, `--ink`) statt Rot
+- Schließen-Knöpfe: Form bleibt, gilt u. a. für Auswertung, Stolpersteine, Formelsammlung, Einstellungen und Simulator
 
 ## [1.265.0] - 2026-09-11
 
 ### Geändert
-- **Die Auswertung hat in jedem Prüfungsziel dieselbe Größe.** Dietmar, mit
-  zwei Bildern nebeneinander: „Bei der Klasse E nach A möchte ich die gleiche
-  Größe."
-
-  Das Fenster stand auf einer **Höchst**höhe und richtete sich damit nach dem
-  Inhalt — und der ist beim Aufstieg E → A nun einmal kürzer: ein Prüfungsteil
-  statt dreier. Also schrumpfte das Fenster mit, und beim Wechsel des Ziels
-  sprang es.
-
-  Jetzt steht es still: eine **feste** Höhe, genau wie bei den Einstellungen
-  und der Anleitung, die Dietmar am 11.09. schon angeglichen haben wollte.
-  Gerollt würde innen — und innen wird ohnehin nicht mehr gerollt, dafür sorgt
-  seit 1.264.0 das Einpassen. Damit die beiden Spalten die feste Höhe auch
-  ausfüllen und der graue Kasten rechts nicht auf halber Höhe aufhört, nimmt
-  das Spaltenraster mindestens die ganze Höhe des Inhaltsbereichs ein.
-
-  Nachgemessen in allen vier Zielen, jeweils mit und ohne Lernstand: acht Mal
-  774 × 780 Punkte, acht Mal ohne Rollbalken — außen wie innen.
-
----
+- Auswertung: feste Fensterhöhe in allen Prüfungszielen, kein Springen beim Zielwechsel
+- Auswertung: Spaltenraster füllt die ganze Höhe des Inhaltsbereichs
 
 ## [1.264.0] - 2026-09-11
 
-### Geändert
-- **Der Rollbalken in der Auswertung ist weg — das Fenster passt sich jetzt an,
-  nicht der Leser.** Dietmar: „Der Scrollbalken muss weg. Baue das Fenster so
-  auf, dass er verschwindet. Achte darauf, dass es in allen Klassen vorhanden
-  ist."
-
-  An den Abständen zu feilen war Flickwerk: Die Auswertung ist bei jedem
-  Lernstand anders lang, und jedes Fenster ist anders hoch. Was bei dem einen
-  passt, läuft beim nächsten wieder über.
-
-  Jetzt andersherum — **nach** dem Aufbau wird gemessen, ob der Inhalt in die
-  sichtbare Höhe passt. Tut er es nicht, verschwindet die unterste entbehrliche
-  Zeile, und das so lange, bis er passt. In dieser Reihenfolge: Stolpersteine
-  bis zwei übrig, Befundzeilen bis eine, dann die Erklärtexte, dann die
-  Tempo-Kacheln, zuletzt „Wo es klemmt". **Verloren geht nichts** — über beiden
-  Listen steht jetzt immer der Knopf „Alle … ansehen", der zur vollständigen
-  Fassung führt. Gekürzt wird die Vorschau, nicht der Inhalt.
-
-  Nachgemessen über acht Fenstergrößen von 1920×1080 bis 1152×648: kein
-  Rollbalken mehr, in allen vier Prüfungszielen. Am Handy bleibt alles wie
-  bisher — dort steht die Auswertung einspaltig, und Rollen ist der normale Weg.
-
-- **Die Balken stehen jetzt auch da, wenn es noch nichts vorherzusagen gibt.**
-  Dietmar: „Ich möchte da auch diese Balken wie bei der Klasse N, auch wenn da
-  kein Fortschritt angezeigt wird." Beim Aufstieg N → E und E → A fehlte in der
-  Zeile der Balken, solange keine 25 Antworten vorlagen — die Zeile sah aus, als
-  fehle etwas. Jetzt steht dort ein leerer Balken mit der Bestehensgrenze an
-  ihrem Platz und rechts „– von 25 · offen".
-
-- **Die rechte Seite sieht in jedem Prüfungsziel gleich aus.** Dietmar: „Ich
-  möchte rechts auch diese Buttons, auch wenn nichts angezeigt wird weil man
-  damit noch nie gelernt hat." Die beiden Kästen „Deine häufigsten
-  Stolpersteine" und „Woran es liegt" verschwanden bisher ganz, wenn noch keine
-  Antworten vorlagen. Jetzt stehen sie immer da — mit Kopfzeile, mit Knopf und
-  mit einem Satz, der sagt, was dort später steht.
-
 ### Hinzugefügt
-- **„Hier wird es voll, sobald du übst".** Dietmar zum Aufstieg E → A: „Von
-  Klasse E auf A ist so gut wie nichts zu sehen." Wer das Prüfungsziel gerade
-  gewechselt hat, hat dort noch keine Antworten — und die Auswertung sagte das
-  zweimal auf verschiedene Weise, was aussah wie ein Fehler.
+- Auswertung: Startkasten für neue Prüfungsziele mit Fortschritt und Knöpfen Blättern und Noch nie geübt, ab zehn Antworten aus
 
-  Darunter steht jetzt ein Kasten, der etwas anbietet statt etwas abzusagen:
-  wie viele Fragen das Ziel hat, wie viele davon beantwortet sind, was bis zur
-  ersten Einschätzung fehlt — und zwei Knöpfe, mit denen man an Ort und Stelle
-  loslegt: „Blättern" und „Die … noch nie geübten". Ab zehn beantworteten
-  Fragen verschwindet er von selbst.
-
----
+### Geändert
+- Auswertung: kein Rollbalken, entbehrliche Zeilen werden nach dem Aufbau stufenweise ausgeblendet
+- Auswertung: Knopf Alle ansehen immer über beiden Listen
+- Auswertung: Balken mit Bestehensgrenze auch ohne 25 Antworten (N → E, E → A)
+- Auswertung: Kästen Stolpersteine und Woran es liegt immer sichtbar, mit Platzhaltertext
 
 ## [1.263.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Prüfungssimulator: „Erschwerte Bedingungen".** Dietmar: „Hier wünsche ich
-  mir eine Prüfung mit erschwerten Bedingungen. Es gibt eine Auswertung mit
-  den Defiziten und hier möchte ich, dass diese Fragen auftauchen, bei denen
-  man Stolpersteine hat. Das Ganze muss realistisch sein."
-
-  Der letzte Satz ist der schwierige. Ein Bogen aus lauter Stolpersteinen wäre
-  keine Prüfung, sondern eine Fehlerrunde — die gibt es schon. Und er wäre
-  irreführend: Wenn alle Schwächen im selben Thema liegen, käme ein Bogen
-  heraus, der zur Hälfte aus einem einzigen Lernziel besteht. So sieht kein
-  Prüfungsbogen aus.
-
-  **Deshalb zwei Schritte, und nur der zweite ist gewichtet:**
-
-  1. Eine ganz normale Ziehung von 25 Fragen liefert die **Schablone** — wie
-     viele Fragen je Lernziel auf den Bogen gehören, mitsamt der Schwankung
-     einer echten Ziehung.
-  2. Innerhalb jedes Lernziels wird dann **gewichtet** gezogen: eine wacklige
-     Frage hat rund die achtfache Chance einer sitzenden.
-
-  Die Gewichte kommen aus `reifeChance()` — also aus genau dem Lernstand, aus
-  dem auch Prüfungsreife und Stolpersteine gerechnet werden. Eine abgehakte
-  Frage steht bei 0,95 und bekommt das kleinste Gewicht; eine mehrfach
-  danebengegangene bei 0,35 oder darunter. Wer bei einer Frage immer wieder
-  dieselbe falsche Antwort wählt, bekommt einen Aufschlag von 35 Prozent.
-
-  **Nachgemessen** mit 200 Bögen aus einem Topf von 204 Fragen, von denen 40
-  als wacklig galten:
-
-  | | wacklige Fragen je Bogen | Abweichung der Themenverteilung |
-  |---|---|---|
-  | normal | 5,0 von 25 | 1,4 % |
-  | erschwert | 16,3 von 25 | 2,4 % |
-
-  Dreimal so viele Stolpersteine, und die Themenverteilung bleibt die eines
-  echten Bogens. Der Haken merkt sich seinen Zustand, die Kopfzeile der
-  laufenden Prüfung trägt den Zusatz „· erschwert", und neben dem Haken steht,
-  wie viele Fragen je Teil derzeit überhaupt als wacklig gelten — ohne
-  Lernstand bringt der Modus nichts, und das soll man vorher wissen.
-
-  **Zur Frage, wie die Bundesnetzagentur ihre Bögen zusammenstellt:** Die
-  Prüfungsordnung (Vfg 29/2024) legt 25 Fragen je Teil und 19 Punkte zum
-  Bestehen fest — über die Zusammenstellung der Bögen steht dort kein Wort,
-  und einen veröffentlichten Schwierigkeitswert je Frage gibt es nicht.
-  Deshalb ist die Schablone oben eine gleichmäßige Zufallsziehung und keine
-  erfundene Gewichtung.
-
----
+- Prüfungssimulator: Option Erschwerte Bedingungen, bevorzugt wacklige Fragen
+- Erschwerte Bedingungen: Themenverteilung aus normaler Ziehung, innerhalb der Lernziele gewichtet nach `reifeChance()`
+- Erschwerte Bedingungen: Aufschlag bei wiederholt gleicher falscher Antwort, etwa dreimal so viele Stolpersteine je Bogen
+- Prüfungssimulator: Kopfzeile mit Zusatz erschwert, Anzahl wackliger Fragen je Teil, Einstellung wird gemerkt
 
 ## [1.262.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Vierte Kachel im Blättern: „Noch nie geübt".** Dietmar: „Ich gehe alle 571
-  Fragen durch und klicke weiter wenn ich eine Antwort nicht kenne. Da steht,
-  noch nie geübt? Genau diese paar Fragen, suche ich! Meiner Meinung nach,
-  muss da noch eine Kachel mit rein."
+- Blättern: vierte Kachel Noch nie geübt, gezählt wie in der Prüfungsreife (ohne CB-Anrechnung)
 
-  Er hat recht, und „Rest abarbeiten" ist etwas anderes: Dort steht alles, was
-  noch nicht abgehakt ist — auch die Frage, die man fünfmal beantwortet hat
-  und immer noch nicht sicher kann. Die hier gesuchten sind eine kleine
-  Teilmenge davon: die, bei denen noch **überhaupt nichts** passiert ist. Beim
-  Blättern mit „Weiter" durchgeklickt, oder nie erreicht.
-
-  Gezählt wird nach **derselben Regel wie in der Prüfungsreife** — kein
-  Eintrag im Lernstand und nicht über den CB-Schein angerechnet. Nur so ergibt
-  die Zahl auf der Kachel dieselbe Summe wie die „noch nie geübt" der drei
-  Prüfungsteile; sonst sucht man sechs Fragen und bekommt sieben. Die Kachel
-  erscheint nur, wenn es solche Fragen gibt, und das Lesezeichen des normalen
-  Blätterns bleibt liegen.
-
-### Geändert
-- **Links ist der Abstand zwischen den Kästen kleiner.** Dietmar: „Oberhalb
-  von Auffrischung ist viel Platz. Wenn man das etwas aufschließt, ist rechts
-  der Scrollbalken komplett entfernt."
-
-  Der Platz war ein Versehen aus 1.261.0: Seit links mehr als ein Kasten
-  steht, zählte der Abstand doppelt — einmal als `gap` der Spalte (1 rem) und
-  noch einmal als `margin-top` jedes Blocks (0,8 rem). Rechts fiel das nie
-  auf, dort sitzen die Blöcke ohne `gap` aneinander. Jetzt gilt links nur noch
-  der `gap`, und der steht auf 0,7 rem: zusammen rund 22 Punkte weniger Höhe.
-
----
+### Behoben
+- Auswertung: doppelter Abstand zwischen den Kästen links entfernt (`gap` 0,7 rem ohne `margin-top`)
 
 ## [1.261.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Merken und Üben jetzt auch bei „Woran es liegt".** Dietmar: „Bei
-  Stolpersteine kann ich die Fragen Markieren und Üben. Bei Woran das liegt,
-  würde sich das auch gut ergänzen?"
-
-  Es ergänzt sich sogar besonders gut: Die Stolpersteine sagen, *welche*
-  Fragen danebengehen — hier steht, *warum*. Wer den Grund gerade gelesen hat,
-  ist genau derjenige, der die Frage jetzt vornehmen will; der Weg dorthin war
-  bisher Fenster zu, Liste aufmachen, Frage suchen.
-
-  Jede Zeile im Fenster hat rechts dasselbe Herz und denselben Knopf „Üben"
-  wie die Stolpersteine — dieselbe Merkliste, derselbe Übungsweg, kein zweites
-  Herz mit eigener Meinung. Steht dieselbe Frage in beiden Fenstern, ziehen
-  beide Herzen gemeinsam nach. Die grüne Hilfsmittel-Zeile bekommt keine
-  Knöpfe; sie gehört zu keiner einzelnen Frage.
-
-  In der Vorschau auf der rechten Seite bleiben die Knöpfe weg — dort ist der
-  Platz knapp, und der Kasten sollte gerade flacher werden.
+- Woran es liegt: Herz zum Merken und Knopf Üben je Zeile, gemeinsame Merkliste mit den Stolpersteinen
 
 ### Geändert
-- **Die Auffrischung steht jetzt links.** Dietmar: „Auffrischung: 408 gelernte
-  Fragen warteten auf Wiederholung. … Das nach links verschieben." Sie war der
-  vierte Kasten der rechten Spalte; jetzt steht sie unter der Tempo-Probe.
-  Links geht es um „wie weit bin ich" — und was als Nächstes dran wäre, gehört
-  dazu. Rechts bleiben die zwei Fragenlisten.
-
----
+- Auswertung: Auffrischung von rechts nach links unter die Tempo-Probe verschoben
 
 ## [1.260.0] - 2026-09-11
 
 ### Hinzugefügt
-- **„Geraten oder gewusst?" — eine Auswertung, die Raten von Wissen trennt.**
-  Dietmar: „Wenn ich mit meiner Freundin im Gruppenraum lerne, ist sie extrem
-  schnell. Ich würde gerne wissen, ob das alles nur geraten ist. Im
-  allgemeinen, kann man eine Auswertung einbauen, die prüft ob man nur die
-  Frage errät?"
-
-  Man kann — aber nicht so, wie man zuerst denkt. **Schnell allein beweist
-  gar nichts.** Der Fragenkatalog ist öffentlich, und wer ihn oft genug
-  durchgegangen ist, *erkennt* eine Frage in zwei Sekunden wieder. Das ist
-  kein Schummeln, das ist genau das, was in der Prüfung trägt.
-
-  Was Raten von Wissen trennt, ist die **Trefferquote unter genau den
-  Antworten, die zu schnell für ein Lesen kamen**:
-
-  | | schnell + richtig | schnell + falsch |
-  |---|---|---|
-  | **Quote nahe 100 %** | sitzt auswendig | — |
-  | **Quote nahe 25 %** | — | geraten (bei vier Antworten ist ein Viertel der Zufall) |
-
-  Nachgerechnet wird mit der Binomialverteilung: Wie wahrscheinlich ist es,
-  dass reines Raten mindestens so viele Treffer bringt? Ist das gut möglich,
-  taugt die Quote nicht als Nachweis von Wissen. Ist es praktisch
-  ausgeschlossen, dann weiß da jemand etwas. Nachgestellt mit drei
-  Teilnehmern, die alle gleich schnell klicken: Der Rater (28 % Treffer) und
-  der Auswendiglerner (96 %) werden sauber auseinandergehalten.
-
-  Die Schwelle „zu schnell zum Lesen" hängt an der Länge der Frage — gerechnet
-  mit 28 Zeichen je Sekunde, also sehr flüssigem Lesen. Eine kurze Frage
-  bekommt vier Sekunden, eine mit vier langen Antworten neunzehn.
-
-  **Draußen bleibt, was kein Raten sein kann:** Fragen mit Formelblatt,
-  Taschenrechner oder Vorlesen. Wer nachschlägt, rät nicht — und die
-  Vorlesezeit wird ohnehin abgezogen, was die Messung sonst verfälschen würde.
-
-  Dafür schreibt der Trainer ab jetzt Zeit **und** Ergebnis als Paar mit
-  (`amateurfunk_tempo_<Platz>`, die letzten 600 Antworten). Bisher standen
-  beide getrennt — daraus ließ sich nicht mehr ablesen, ob die schnelle
-  Antwort auch die richtige war, und genau darauf kommt es an. Die Probe
-  braucht deshalb ein paar Runden, bevor sie etwas sagen kann.
-
-  Ein zweiter Befund fällt nebenbei ab: Wenn in mehr als der Hälfte der
-  schnellen Fälle dieselbe **Stelle** angeklickt wurde, steht das da. Die
-  Reihenfolge der Antworten wechselt bei jedem Durchgang — das ist dann die
-  Hand, nicht der Kopf.
-
-- **Im Gruppenraum sieht der Gastgeber dasselbe je Teilnehmer.** In der
-  Kursleiter-Auswertung steht jetzt unter „Wo es hakt" eine Tabelle „Wie
-  geantwortet wurde": wie viele Antworten schnell kamen, wie hoch die
-  Trefferquote dabei war, wie hoch sie in Ruhe ist, und der Befund in
-  Klartext.
-
-  Die Bearbeitungszeit muss dafür nicht übertragen werden — sie steckt schon
-  in den Daten: `answeredAt` steht zu jeder Antwort, und der Abstand zur
-  vorigen *ist* die Zeit für diese Frage. Neu ist nur, dass der Server die
-  Startzeiten mitschickt, sonst fiele je Teilnehmer die erste Frage aus der
-  Rechnung.
-
-  **Namen folgen dem vorhandenen Schalter.** Ohne ihn steht dort „Teilnehmer
-  1, 2, 3" — wer schnell und richtig ist, hat nichts zu verbergen; wer
-  schnell und falsch ist, gehört nicht vor der Gruppe vorgeführt.
+- Auswertung: Geraten oder gewusst, Trefferquote schneller Antworten mit Binomialtest bewertet
+- Tempo-Probe: Leseschwelle nach Fragenlänge, Fragen mit Formelblatt, Rechner oder Vorlesen ausgenommen
+- Lernstand: Zeit und Ergebnis als Paar gespeichert (`amateurfunk_tempo_<Platz>`, letzte 600 Antworten)
+- Geraten oder gewusst: Hinweis bei gehäuft gleicher Antwortposition
+- Gruppenraum: Kursleiter-Auswertung mit Tabelle Wie geantwortet wurde je Teilnehmer, Namen nur per Schalter
+- Server: überträgt Startzeiten für die Zeitmessung im Gruppenraum
 
 ### Geändert
-- **„Woran es liegt" hat jetzt immer den Knopf „Alle ansehen".** Dietmar: „Bei
-  woran es liegt, fehlt noch immer der Button. Ohne dem, ist das Fenster
-  unnötig in die Tiefe gezogen."
+- Woran es liegt: Vorschau eine Zeile je Art, Begründung nur im Fenster
+- Fenster Alle Stolpersteine und Woran es liegt: gleiche Größe wie die Auswertung
 
-  Zwei Fehler auf einmal: Der Knopf erschien nur, wenn etwas *weggelassen*
-  wurde — bei ihm wurde nichts weggelassen, also gab es auch keinen Weg zur
-  ausführlichen Ansicht. Und die Vorschau zeigte zwei Zeilen je Art, also bis
-  zu acht Zeilen mit vollem Fragetext: der längste Kasten der rechten Spalte.
-
-  Jetzt ist es **eine Zeile je Art** — vier sagen genauso gut, *welche* Arten
-  vorkommen, die Menge steht im Knopf. Die drei Zeilen lange Begründung zum
-  Nachschlagen steht nur noch im Fenster, wo Platz dafür ist. Der Kasten ist
-  damit von 287 auf gut die Hälfte geschrumpft.
-
-- **Die Fenster „Alle Stolpersteine" und „Woran es liegt" haben die Größe der
-  Auswertung.** Dietmar: „Mit ist aufgefallen, das bei dem Button ‚alle
-  ansehen' das Fenster kleiner ist. Hier wünsche ich mir die gleiche Größe wie
-  das Fenster darunter." Beide standen auf 900 Punkten Breite und 83 vh Höhe,
-  die Auswertung dahinter auf 1040 und 90 vh. Jetzt sind es dieselben Maße —
-  nachgemessen bei 1440×930: 936×837 gegen 936×837.
-
----
+### Behoben
+- Woran es liegt: Knopf Alle ansehen fehlte, wenn nichts ausgelassen wurde
 
 ## [1.259.0] - 2026-09-11
 
 ### Hinzugefügt
-- **Die Übungszeit zeigt jetzt die einzelnen Tage.** Dietmar hatte gefragt:
-  „Ich habe gestern damit geübt. Müsste es nicht einen Balken geben zum
-  10.09.?" — und damit einen wunden Punkt getroffen.
-
-  Der Balken war da; die Säulen waren nur **Wochen**, und der 10. und der 11.
-  September liegen beide in derselben. Nur sagt eine Wochenansicht nach zwei
-  Übungstagen eben fast nichts: acht Balken, davon sieben leer, und die beiden
-  Tage zusammengefasst im achten. Dietmar: „möchte das auf Tage. Nur dann kann
-  ich mein wöchentliches Lernpensum gut erkennen. Hier könnte man auch
-  Wöchentlich noch Hinzufügen."
-
-  **Beides steht jetzt untereinander**: oben die letzten 14 Tage, darunter wie
-  bisher die letzten acht Wochen. Vierzehn Tage sind der Kompromiss — zwei
-  volle Wochen zum Vergleichen, und die Balken bleiben breit genug, um sie
-  auseinanderzuhalten.
-
-  Drei Kleinigkeiten, die den Rhythmus sichtbar machen:
-
-  - Unter jedem Balken steht der Anfangsbuchstabe des Wochentags. Bei vierzehn
-    Spalten ist „Mo" schon zu breit, „M" liest man trotzdem.
-  - **Vor jedem Montag ist eine Fuge.** Wer sein wöchentliches Pensum erkennen
-    will, muss sehen, wo eine Woche aufhört — der Spalt tut das, ohne Linie und
-    ohne Beschriftung.
-  - Samstag und Sonntag sind etwas zurückgenommen. So sieht man auf einen
-    Blick, ob am Wochenende geübt wurde.
-
-  Beim Zeigen auf einen Balken steht die Zahl dazu: „Do 10.9.: 1 h 5 min",
-  „Heute, Fr 11.9.: 1 min" oder „Mi 9.9.: nicht geübt".
-
----
+- Übungszeit: Tagesansicht der letzten 14 Tage über der Wochenansicht
+- Übungszeit: Wochentagsbuchstaben, Fuge vor jedem Montag, Wochenende abgesetzt
+- Übungszeit: Tooltip mit Datum und Übungsdauer je Balken
 
 ## [1.258.0] - 2026-09-11
 
 ### Geändert
-- **Die Anleitung ist so groß wie die Einstellungen.** Dietmar: „unter Info
-  Anleitung wünsche ich mir auch gleich grosse Fenster so wie es bei
-  Einstellungen vorhanden ist."
-
-  Der Unterschied lag in zwei Zahlen: 900 statt 1040 Punkte breit, und eine
-  **Höchsthöhe** statt einer festen. Das zweite fiel mehr auf als das erste —
-  mit einer Höchsthöhe richtet sich das Fenster nach dem längsten Abschnitt,
-  und beim Blättern durch die Anleitung wuchs und schrumpfte es unter der Maus.
-  Eine feste Höhe steht still; gerollt wird innen, genau wie bei den
-  Einstellungen.
-
-  Nachgemessen auf zwei Fenstergrößen — beide Dialoge jetzt Punkt für Punkt
-  gleich, und die Höhe bleibt beim Wechsel des Abschnitts stehen:
-
-  | Fenster | Einstellungen | Anleitung |
-  |---|---|---|
-  | 1456×930 | 988 × 772 | **988 × 772** |
-  | 1280×720 | 832 × 598 | **832 × 598** |
-
----
+- Anleitung: gleiche Fenstergröße wie Einstellungen mit fester Höhe, Inhalt scrollt innen
 
 ## [1.257.0] - 2026-09-11
 
 ### Hinzugefügt
-- **„Woran es liegt" hat jetzt auch einen Knopf „Alle ansehen".** Dietmar:
-  „Bei Woran es liegt … Möchte ich auch so einen Button: Alle ansehen."
-
-  Dahinter steht die vollständige Liste — jeder festsitzende Irrtum, jedes
-  Raten, jede lange Zeit, jedes Nachschlagen. Gebaut wird sie von derselben
-  Funktion wie die Vorschau, nur ohne Grenzen: So gibt es weiterhin nur eine
-  Stelle, an der die Zeilen entstehen.
+- Woran es liegt: Knopf Alle ansehen mit vollständiger Liste
 
 ### Geändert
-- **Die rechte Seite der Auswertung ist aufgeräumt.** Dietmar: „Ich wünsche mir
-  die rechte Seite aufgeräumter."
-
-  Sie war es nicht, weil dort drei verschiedene Sachen ohne Grenze ineinander
-  liefen: die Stolpersteine mit ihren langen Fragetexten, darunter ohne Absatz
-  die Befunde, die genauso aussehen, und ganz unten der Auffrischungskasten —
-  der einzige mit eigenem Rahmen. Man sah nicht, wo das eine aufhörte und das
-  andere anfing.
-
-  Jetzt steht jeder der drei in einem eigenen weißen Kasten auf dem grauen
-  Grund, mit derselben Kopfzeile: Überschrift links, „Alle ansehen" rechts.
-  Gleiche Dinge sehen gleich aus, verschiedene trennt eine Kante.
-
-  **Und der Befund-Block ist kürzer geworden.** Er zeigte bis zu sechzehn
-  Zeilen am Stück — fünf feste Irrtümer, drei geratene, drei nachgeschlagene,
-  fünf langsame — und jede Zeile trägt den vollen Fragetext über zwei Zeilen.
-  Das war die längste Sache auf der rechten Seite und hat sie unruhig gemacht.
-  Jetzt sind es zwei je Art, also höchstens acht Zeilen; der Knopf führt zum
-  Rest. Zwei genügen, um die Art zu zeigen.
-
----
+- Auswertung rechts: Stolpersteine, Befunde und Auffrischung in eigenen Kästen mit einheitlicher Kopfzeile
+- Befund-Block: zwei Zeilen je Art statt bis zu sechzehn
 
 ## [1.256.0] - 2026-09-11
 
 ### Geändert
-- **Alle Fenster dunkeln den Hintergrund ab, keines macht ihn mehr unscharf.**
-  Dietmar: „Wir verwenden unterschiedliches Hintergrundverhalten. Bei
-  Einstellungen ist es Blure und bei der Uhrzeit ist es ein abdunkeln. Das
-  abdunkeln gefällt mir besser. Das möchte ich bei jeder Funktion, ausser bei
-  Formelsammlung und Taschenrechner."
-
-  Der Unterschied war nicht gewollt, er ist über die Monate entstanden — jedes
-  neue Fenster hat sich am zuletzt gebauten orientiert, und irgendwann gab es
-  zwei Linien. **25 Fenster** tragen jetzt dieselbe Abdunklung wie das
-  Übungszeit-Fenster, das Dietmar als Vorbild genannt hat:
-
-  | | vorher | jetzt |
-  |---|---|---|
-  | Die meisten Fenster | 62 % dunkel + 8 px unscharf | **62 % dunkel** |
-  | Vorlesen, Gruppenraum | 85 % dunkel + 4 px unscharf | **62 % dunkel** |
-  | Prüfungssimulator | 62 % dunkel + 10 px unscharf | **62 % dunkel** |
-  | Rückfragen (Löschen, Zurücksetzen) | 62 % dunkel + 10 px unscharf | **62 % dunkel** |
-  | QSL-Jubel | 66 % dunkel + 8 px unscharf | **62 % dunkel** |
-
-  Die 85 Prozent waren dabei der größte Ausreißer: Vorlesen-Einstellungen und
-  Gruppenraum verdeckten den Trainer fast ganz.
-
-  **Die beiden Ausnahmen bleiben, wie sie sind.** Die Formelsammlung hat seit
-  1.251.0 nur einen Hauch Abdunklung (14 %) und lässt sich beiseiteschieben —
-  man schlägt schließlich nach, *während* man die Frage liest. Der
-  Taschenrechner hat gar keinen Hintergrund: Er ist ein freies Fenster, das man
-  in die Ecke stellt.
-
-  Unscharf bleiben genau zwei Stellen, und die liegen nicht auf der Seite,
-  sondern auf einem Bild: die Bildunterschrift und der Zoom-Hinweis in der
-  Großansicht. Dort trägt die Unschärfe die Lesbarkeit der weißen Schrift.
-
----
+- Fenster: einheitlich 62 % Abdunklung ohne Unschärfe, 25 Fenster angepasst
+- Vorlesen-Einstellungen und Gruppenraum: Abdunklung von 85 % auf 62 % reduziert
+- Formelsammlung und Taschenrechner: Hintergrundverhalten unverändert
 
 ## [1.255.0] - 2026-09-11
 
 ### Geändert
-- **Prüfungsreife und Trefferquoten sind eine Anzeige geworden.** Dietmar, mit
-  beiden untereinander: „Irgendwie ähnelt sich das. Schaue selbst: … Kann man
-  die zwei Funktionen in einer umbauen? Wo es klemmt gehört auf jeden Fall
-  darunter."
-
-  Er hat recht, es war zweimal dasselbe. Oben die Prüfungsreife mit Teil,
-  Fragenzahl und Vorhersage:
-
-  > Vorschriften · 204 Fragen · 23 von 25 · sitzt
-
-  Und darunter eine Tabelle mit Teil, Fragenzahl, Gelernt und Trefferquote:
-
-  > Vorschriften · 187/204 (92 %) · 91 % · 2
-
-  Zweimal „Vorschriften", zweimal „204". Wer die Zahlen zusammenbringen wollte,
-  musste zwischen zwei Kästen hin und her sehen.
-
-  Jetzt steht alles in einer Zeile je Prüfungsteil — Balken und Vorhersage wie
-  bisher, darunter fein der Lernstand:
-
-  > **Vorschriften** · 204 Fragen ▸ ▬▬▬▬▬▬▬▌▬ ▸ **23 von 25**, sitzt
-  > 187 von 204 gelernt (92 %) · Trefferquote 91 % · 2 noch nie geübt
-
-  „Wo es klemmt" steht damit von selbst darunter, wie gewünscht.
-
-  **Gezählt wird aus einem Topf**, und das ist wichtiger, als es aussieht: Die
-  alte Tabelle zählte die ganze Technik unter einem Schlüssel, die
-  Prüfungsreife kennt `technik_n`, `technik_e` und `technik_a` getrennt. In
-  Klasse N kam dasselbe heraus, beim Aufstieg nicht mehr. Aus einem Topf können
-  die beiden Zahlen gar nicht erst auseinanderlaufen.
-
-- **Der Kasten verschwindet nicht mehr, wenn die Vorhersage fehlt.** Bisher
-  blendete sich die ganze Prüfungsreife aus, solange kein Teil 25 beantwortete
-  Fragen hatte — ein leerer Rahmen mit „noch keine Einschätzung" wäre ja nur
-  ein Platzhalter gewesen. Das war auch der Grund für die leere linke Spalte,
-  die Dietmar am 10.09. gemeldet hatte.
-
-  Seit die Zeilen den Lernstand tragen, stimmt die Begründung nicht mehr: Wie
-  viele Fragen gelernt sind und wie viele noch nie drankamen, weiß der Trainer
-  vom ersten Tag an. Statt der Ansage steht jetzt ein Satz, der sagt, was noch
-  fehlt — die Zahlen darunter stehen trotzdem da.
-
-  Damit konnte auch der Handgriff entfallen, der die linke Spalte ausblendete.
-
----
+- Auswertung: Prüfungsreife und Trefferquoten in einer Zeile je Prüfungsteil zusammengeführt
+- Auswertung: Lernstand je Teil mit gelernt, Trefferquote und noch nie geübt unter dem Balken
+- Auswertung: gemeinsame Zählung mit getrennter Technik (`technik_n`, `technik_e`, `technik_a`)
+- Prüfungsreife: Kasten auch ohne Vorhersage sichtbar, mit Hinweis auf fehlende Antworten
+- Auswertung: Sonderregel zum Ausblenden der linken Spalte entfernt
 
 ## [1.254.0] - 2026-09-11
 
+### Hinzugefügt
+- Übungszeit: eigener Knopf mit Uhr in der Kopfzeile neben den Einstellungen, eigenes Fenster
+
 ### Geändert
-- **Die Trefferquoten stehen jetzt links.** Dietmar mit einem Bild der Tabelle:
-  „Bei Auswertung, möchte ich das auf die Linke Seite."
-
-  Sie gehört dorthin. Links steht die Frage „Reicht es?" — die Prüfungsreife —,
-  und die Tabelle beantwortet dieselbe Frage nur genauer: Wie viel ist gelernt,
-  wie gut sitzt es, was ist noch nie drangekommen. Beides zusammen ist der
-  Überblick. Rechts bleibt, was man sich im Einzelnen ansieht: Stolpersteine,
-  Befunde, Auffrischung.
-
-  Die Tabelle hat links eine eigene Kachel bekommen, im selben Grau wie die
-  rechte Spalte, und dehnt sich nach unten — so liegen die Unterkanten beider
-  Spalten weiter aufeinander, worum Dietmar am 06.09. gebeten hatte.
-
-  **Eine Regel konnte dabei ganz entfallen.** Seit dem 10.09. gab es einen
-  Handgriff, der die linke Spalte ausblendete, solange die Prüfungsreife noch
-  schweigt — sonst stand dort ein weißes Feld. Jetzt kann die Spalte gar nicht
-  mehr leer sein: Die Tabelle ist vom ersten Augenblick an da, auch wenn in
-  jeder Zeile noch ein Strich steht.
-
-- **Die Übungszeit hat einen eigenen Knopf.** Dietmar: „Übungszeit, kommt aus
-  Auswertung raus und erhält einen Extra Button oben neben Einstellungen."
-
-  Sie hat in der Auswertung auch nie ganz hingehört: Dort steht, **was** man
-  kann — die Übungszeit sagt, **wie lange** man dafür gebraucht hat. Das ist
-  eine eigene Frage, und man stellt sie sich nicht jedes Mal, wenn man die
-  Trefferquoten sehen will.
-
-  Der Knopf mit der Uhr sitzt in der Kopfzeile direkt links neben dem Zahnrad.
-  Dahinter steht unverändert alles, was vorher in der Auswertung stand: die
-  acht Wochenbalken, die Gesamtzeit, die Zahl der Übungstage, der Schnitt je
-  Tag und der längste Tag.
-
-  Gebaut wird der Inhalt weiter von derselben Funktion wie zuvor — es gibt also
-  nach wie vor nur eine Stelle, an der die Säulen und die Kacheln entstehen.
-  Neu ist nur, dass sie die Überschrift weglässt, wenn sie im eigenen Fenster
-  steht: „Deine Übungszeit" zweimal untereinander sah nach Versehen aus. Wer
-  noch nie geübt hat, bekommt kein leeres Fenster, sondern einen Satz, der
-  erklärt, was dort einmal stehen wird.
-
----
+- Auswertung: Trefferquoten-Tabelle in eigener Kachel links unter der Prüfungsreife
+- Auswertung: linke Spalte nie mehr leer, Ausblenden entfällt
+- Übungszeit: aus der Auswertung entfernt, ohne doppelte Überschrift, Hinweistext bei fehlenden Daten
 
 ## [1.253.0] - 2026-09-10
 
 ### Behoben
-- **43 weitere Fragen bekommen ihren Formelblatt-Knopf.** Dietmar mit dem Bild
-  zu VD721 („Anfangs- und Endfrequenz für das 23 cm Amateurfunkband"): „Hier
-  VD721 fehlt die Formelsammlung. Gibt es davon noch mehr die fehlen?"
-
-  Ja — und mein Suchmuster von 1.252.0 war schuld. Es suchte nach „maximal
-  zulässige … Frequenzbereich" und fand deshalb genau die zwölf Fragen, die so
-  formuliert sind. Die Serie **VD709 bis VD723** fragt aber „Welche Antwort
-  enthält die richtige Anfangs- und Endfrequenz für das … Band?" — fünfzehn
-  Fragen, eine je Band von 160 m bis 13 cm, und alle fielen durch. VD721 stand
-  mittendrin.
-
-  Diesmal ist das Blatt Seite für Seite durchgegangen worden, statt nach
-  Wortmustern zu raten:
-
-  | Fundstelle | + | Fragen |
-  |---|---|---|
-  | Seite 3 — Anlage 1, Absatz (3) | 2 | VD704, VD705 (Definition primärer/sekundärer Funkdienst, im Wortlaut) |
-  | Seite 4 — Tabellarische Übersicht | 18 | **VD709–VD723** (Bandgrenzen), VD727, VD736, VD737 |
-  | Seite 6 — Aufbau der Rufzeichen | 3 | VD201, VD202, VD203 |
-  | Seite 7 — Rufzeichenreihen und Klasse | 3 | BD104, BD105, BD106 (DL1–DL9 = A, DN9 = N, DO1–DO9 = E) |
-  | Seite 8 — Nr. 3, besondere Anlässe | 1 | VD204 (warum „DL250 BTHVN" zulässig ist) |
-  | Seite 9 — Nr. 6, Peilsender | 1 | BD109 (MO, MOE, MOI, MOS, MOH, MO5) |
-  | Seite 10 — Nr. 9–11, Rufzeichenzusätze | 12 | BD201–BD211, VD306 (/m /mm /am /p, /T, /R) |
-  | Seite 17 — EIRP | 2 | VD725, VD726 |
-  | Seite 19 — Wellenlänge und Frequenz | 1 | EG109 |
-
-  **Fünf Seitentitel** wurden dabei präzisiert, weil die Seiten mehr tragen,
-  als bisher dranstand — Seite 9 etwa nicht nur die Notfunk-Klubstationen,
-  sondern auch die Kurzzeitzulassungen und die Peilsender-Kennungen.
-
-  Aus 480 Zuordnungen sind über zwei Durchgänge **535** geworden. Damit hat in
-  der Klasse N jede fünfte Frage einen Knopf, im Aufstieg E auf A jede zweite
-  bis dritte:
-
-  | Katalog | Fragen | mit Knopf |
-  |---|---|---|
-  | Klasse N | 571 | 114 (20 %) |
-  | N auf E | 463 | 139 (30 %) |
-  | E auf A | 716 | 282 (39 %) |
-  | Klasse A | 1750 | 535 (31 %) |
-
-  Nachgeprüft im Trainer: Bei VD721 erscheint der Knopf und öffnet auf „Blatt 2
-  · Seite 4 im PDF".
-
----
+- Formelblatt: 43 weitere Fragen mit Formelblatt-Knopf, u. a. Bandgrenzen VD709 bis VD723
+- Formelblatt: Blatt Seite für Seite zugeordnet (Rufzeichen, Zusätze, Peilsender, EIRP, Wellenlänge)
+- Formelblatt: fünf Seitentitel präzisiert
+- `formelhilfe.json`: 492 → 535 Zuordnungen, Knopf bei Klasse N 114, N → E 139, E → A 282 Fragen
 
 ## [1.252.0] - 2026-09-10
 
 ### Behoben
-- **Zwölf Fragen hatten keinen Formelblatt-Knopf, obwohl die Antwort im Blatt
-  steht.** Aufgefallen ist es an Dietmars Frage: „Wo finde ich das im
-  Formelblatt?" zu VD742 — der Frage nach dem Frequenzbereich mit 2 MHz
-  Bandbreite bzw. 7 MHz für amplitudenmodulierte Fernsehaussendungen. Die
-  Antwort steht im Blatt, der Knopf erschien trotzdem nicht.
-
-  Die Antwort braucht zwei Seiten: Auf **Seite 5** (B Zusätzliche
-  Nutzungsbestimmungen) sagt **Nummer 7** genau diese beiden Werte; auf
-  **Seite 4** trägt dann Zeile 18 — 430–440 MHz — diese 7 in der letzten
-  Spalte. Die Falle ist Nummer 8 direkt darunter: fast derselbe Wortlaut, aber
-  „amplitudenmoduliert *oder digital* 7 MHz und frequenzmoduliert 18 MHz", und
-  die gehört zu 1240–1300 MHz.
-
-  Zugeordnet wurden:
-
-  | Fundstelle | Fragen |
-  |---|---|
-  | Seite 4 — Tabellarische Übersicht | VD706, VD724, VD728, VD730, VD731, VD732, VD743 |
-  | Seite 5 — Zusätzliche Nutzungsbestimmungen | VD738, VD739, VD740, VD741, VD742 |
-
-- **Sieben 70-cm-Fragen zeigten auf den 2-m-Bandplan.** Beim Nachsehen fiel
-  auf, dass die beiden Bandplan-Stellen falsch benannt waren: Die Stelle hieß
-  „IARU-Bandplan (Kurzwelle)" und zeigte auf Seite 11 — dort steht aber der
-  **2-m-Plan**, und auf Seite 12 der **70-cm-Plan**. Einen Kurzwellen-Bandplan
-  gibt es im Blatt gar nicht.
-
-  Alle 19 Bandplan-Fragen hingen an dieser einen Stelle. Wer bei BC206 („Welche
-  Frequenz empfiehlt der IARU Bandplan für einen allgemeinen Anruf mit analoger
-  FM-Telefonie im 70 cm-Band?") nachschlug, landete im 2-m-Plan und fand die
-  433,500 MHz dort nicht. Betroffen: BC206, BC208, BC212, BC219, BC220, BC221,
-  BC222 — sie zeigen jetzt auf Seite 12.
-
-- **Acht Seitentitel stimmten nicht mit dem PDF überein.** Sie sind Seite für
-  Seite am Original abgelesen und richtiggestellt:
-
-  | Stelle | bisher | jetzt |
-  |---|---|---|
-  | Seite 4 | Frequenzbereiche und Sendeleistung 1 | A Tabellarische Übersicht — Frequenzbereiche und Leistung |
-  | Seite 5 | Frequenzbereiche und Sendeleistung 2 | B Zusätzliche Nutzungsbestimmungen (Nr. 1–17) |
-  | Seite 6 | Frequenzbereiche und Sendeleistung 3 | Rufzeichenplan (Amtsblatt-Verfügung 61/2024) |
-  | Seite 7 | Zusätzliche Nutzungsbestimmungen 1 | Rufzeichen mit 2- oder 3-buchstabigen Suffixen |
-  | Seite 8 | Zusätzliche Nutzungsbestimmungen 2 | Rufzeichen mit 1-buchstabigen Suffixen (Klubstationen) |
-  | Seite 9 | Zusätzliche Nutzungsbestimmungen 3 | Klubstationsrufzeichen für Not- und Katastrophenschutz |
-  | Seite 10 | Zusätzliche Nutzungsbestimmungen 4 | International gebräuchliche Rufzeichenzusätze |
-  | Seite 3 | Nutzungsbestimmungen (Anlage 1) | Anlage 1: Nutzungsbedingungen (P/S, PEP, ERP) |
-
-  Aufgefallen war es bisher nicht, weil auf die Seiten 6 bis 10 keine einzige
-  Frage zeigte — der falsche Titel stand nur in der Datei, nie auf dem Schirm.
-
-  Geändert wurde ausschließlich `formelhilfe.json`: 480 Zuordnungen sind 492
-  geworden, keine ging verloren, und kein Verweis zeigt ins Leere. Nachgeprüft
-  im Trainer: Bei VD742 erscheint der Knopf, das Fenster öffnet auf „Blatt 3 ·
-  Seite 5 im PDF".
-
----
+- Formelblatt: zwölf Fragen ohne Knopf zugeordnet (Seite 4 und 5, u. a. VD724, VD738 bis VD742)
+- Formelblatt: sieben 70-cm-Fragen (BC206 bis BC222) zeigen auf den 70-cm-Bandplan (Seite 12) statt auf den 2-m-Plan
+- Formelblatt: Bandplan-Stellen korrekt benannt (2 m Seite 11, 70 cm Seite 12)
+- Formelblatt: acht Seitentitel an das PDF angeglichen
+- `formelhilfe.json`: 480 → 492 Zuordnungen
 
 ## [1.251.0] - 2026-09-10
 
 ### Geändert
-- **Die Formelsammlung verdeckt die Frage nicht mehr.** Dietmar: „Bei der
-  Formelsammlung den Hintergrund in Blure zu halten ist nicht gut. Hier wäre es
-  auch schön, wenn man das Formelblatt verschieben kann. Beim nächsten mal
-  öffen, ist es wieder Zentriert."
-
-  Drei Sätze, ein Gedanke: Man schlägt im Blatt nach, **weil** man die Frage
-  beantworten will — und muss sie dabei lesen können. Bisher lagen 72 Prozent
-  Abdunklung und sechs Punkte Unschärfe darüber; von der Frage blieben graue
-  Schemen.
-
-  Jetzt liegt nur noch ein Hauch darüber (14 Prozent), gerade genug, damit das
-  Fenster als eigene Ebene zu erkennen ist. Die Abgrenzung übernimmt der
-  Schatten.
-
-  **Und das Blatt lässt sich am Kopf beiseite ziehen** — genau wie der Rechner.
-  Wo es steht, wird bewusst **nicht** gemerkt: Beim nächsten Aufschlagen liegt
-  es wieder in der Mitte, so wie Dietmar es beschrieben hat. Das ist der
-  Unterschied zum Rechner, den man einmal an seine Ecke stellt und dort stehen
-  lässt; das Blatt schiebt man nur kurz zur Seite, um etwas nachzusehen.
-
-  Verschoben wird über `transform` und nicht über `left`/`top`: Der Kasten
-  sitzt in einem Flex-Kasten, der ihn mittig hält — wer `left` setzt, kämpft
-  gegen diese Zentrierung an. Ein leeres `transform` bringt ihn genau in die
-  Mitte zurück, und das ist auch der ganze Trick beim Zurücksetzen. Gerechnet
-  wird durch den Anzeigefaktor, sonst liefe das Fenster bei 90 Prozent Anzeige
-  langsamer als der Zeiger.
-
-  Die Grenzen sorgen dafür, dass der Kopf immer greifbar bleibt: Man kann das
-  Blatt fast ganz aus dem Bild schieben, aber nie so weit, dass man es nicht
-  mehr zurückholen kann. Ein Klick daneben schließt es weiterhin, ein Klick auf
-  den Kopf nicht.
-
----
+- Formelsammlung: Hintergrund nur noch leicht abgedunkelt (14 % statt 72 % mit Unschärfe), Frage bleibt lesbar
+- Formelsammlung: Fenster am Kopf verschiebbar, öffnet beim nächsten Mal wieder zentriert
+- Formelsammlung: Verschieben per `transform` unter Berücksichtigung des Anzeigefaktors, Kopf bleibt immer greifbar
+- Formelsammlung: Klick daneben schließt weiterhin, Klick auf den Kopf nicht
 
 ## [1.250.0] - 2026-09-10
 
 ### Geändert
-- **Vorlesen zählt bei der Zeitauswertung mit.** Dietmar: „Vorlesen lassen,
-  gehört auch dazu zum Auswerten der Zeit bei den Fragen."
-
-  Derselbe Gedanke wie beim Formelblatt am selben Tag, und wieder trifft er
-  einen Denkfehler. Wer sich eine Frage samt vier Antworten vorlesen lässt,
-  sitzt zwanzig bis vierzig Sekunden davor, bevor er überhaupt anfangen kann zu
-  entscheiden. Der Trainer hat diese Sekunden bisher wie Nachdenken gezählt —
-  und die Frage danach unter „richtig, aber langsam" gemeldet. Das ist doppelt
-  falsch: Es stimmt nicht, und es hält ausgerechnet denen etwas vor, die das
-  Vorlesen brauchen. Für sie ist es Nachteilsausgleich und in der Prüfung
-  ausdrücklich vorgesehen.
-
-  **Die Vorlesezeit wird jetzt gestoppt und abgezogen.** Gemessen wird die
-  tatsächliche Dauer, nicht die Länge des Textes: Wer mittendrin auf Stop
-  drückt, bekommt auch nur die gehörten Sekunden abgezogen. Nachgerechnet an
-  einem Beispiel: 30 Sekunden an der Frage, davon 22 Sekunden Vorlesen → **8
-  Sekunden** gehen in die Auswertung. Ohne Vorlesen bleiben 12 Sekunden 12
-  Sekunden.
-
-  **Und das Vorlesen wird als Hilfsmittel vermerkt** — wie Formelblatt und
-  Rechner seit 1.241.0. Bleibt eine Frage trotz Abzug auffällig, steht sie
-  nicht mehr unter „langsam", sondern unter den Zeilen, die eine gute
-  Gewohnheit benennen. Die Marke sagt dabei, was zutraf: „vorgelesen",
-  „nachgeschlagen" oder „mit Hilfsmittel", und der Text nennt nur die Mittel,
-  die auch benutzt wurden.
-
-  Ein fehlgeschlagener Vorlesevorgang zählt nicht mit. Ist keine Stimme
-  eingerichtet, ist der ganze Vorgang nach einem Sekundenbruchteil vorbei —
-  gemessen 111 Millisekunden. Erst ab anderthalb Sekunden gilt es als
-  vorgelesen; die Zeit selbst wird trotzdem abgezogen, sie fällt bei so kurzen
-  Vorgängen ohnehin nicht ins Gewicht.
-
-  **Die Übungszeit bleibt unberührt.** In der Auswertung (diese Woche,
-  insgesamt) zählt weiter jede Minute am Trainer — Zuhören ist Üben. Abgezogen
-  wird nur dort, wo eine Zeit *bewertet* wird.
-
----
+- Zeitauswertung: tatsächliche Vorlesedauer wird gemessen und von der Bearbeitungszeit einer Frage abgezogen
+- Zeitauswertung: Vorlesen als Hilfsmittel vermerkt wie Formelblatt und Rechner, Marken vorgelesen/nachgeschlagen/mit Hilfsmittel
+- Zeitauswertung: auffällige Fragen mit Vorlesen nicht mehr als langsam, sondern als gute Gewohnheit eingestuft
+- Vorlesen: Vorgänge unter 1,5 s (z. B. ohne eingerichtete Stimme) gelten nicht als vorgelesen
+- Übungszeit: unverändert, Vorlesezeit zählt dort weiter als Übung
 
 ## [1.249.0] - 2026-09-10
 
 ### Geändert
-- **Das Bild zur Frage steht jetzt im Kasten der Frage.** Dietmar mit einem
-  Video: „Das das Fragebild oben so im leeren steht, sieht nicht schön aus.
-  Schöner wäre erst die Frage und darunter das Bild in dem grauen Rahmen mit
-  drin gefasst."
-
-  Er hat recht, und so war es nie gedacht: Das Bild stand seit jeher **vor**
-  dem Kasten mit Fragenummer und Text — ein Kästchen allein im Weißen, weit weg
-  von dem Satz, zu dem es gehört. Bei Fragen ohne Antwortbilder fiel das kaum
-  auf, weil gleich darunter die Antworten kamen. Seit 1.248.0 die 18 Fragen mit
-  **beiden** Bildern ihr Fragebild zurückbekommen haben, stand es dort oben
-  ganz allein.
-
-  Jetzt steht es im selben grauen Rahmen wie die Frage und unter ihrem Text —
-  in der Reihenfolge, in der man es liest: erst die Frage, dann das Bild dazu.
-  Genau so steht es auch auf dem Blatt der Bundesnetzagentur. Das gilt für alle
-  Fragen mit Bild, nicht nur die 18: Bei BE204 („…zeigt den dargestellten
-  Zeigerausschlag") steht das Instrument jetzt unter dem Satz statt darüber.
-
-- **Die Lupe vergrößert moderater.** Dietmar: „Ich habe den Nachteilsausgleich
-  komplett aus und die Vergrößerung ist extrem."
-
-  Das ist die andere Seite des Fehlers von 1.247.0. Dort war das Ziel zu klein
-  geworden, weil die Bilder gewachsen waren; der Zielfaktor von 2,2 hat es
-  überkorrigiert. Auf seinem Bild deckte das vergrößerte Antwortbild fast das
-  ganze Fenster zu — Frage und die Antworten A und B verschwanden darunter, und
-  man verliert den Zusammenhang, in dem das Bild steht.
-
-  Der Faktor ist jetzt 1,6, der Anteil am Fenster von 76 auf 62 Prozent
-  gesenkt. Ein Antwortbild wächst damit von 419 auf 670 Punkte statt auf 922 —
-  deutlich besser zu sehen, aber Frage und Nachbarbilder bleiben stehen. Für
-  die kleinen Bilder zur Frage ändert sich nichts: Bei ihnen greift die feste
-  Zielzahl, sie werden weiter gut dreifach vergrößert. Wer mehr braucht, hat
-  den Nachteilsausgleich.
-
-### Anmerkung
-- Auf einem sehr hohen Schirm (1920×1080, Anzeige 120 %) bleiben die
-  Antwortbilder bei diesen Fragen klein. Nachgemessen: Die Seite ist dort schon
-  bei kleinsten Bildern randvoll (genau 1080 Punkte), jede Vergrößerung bringt
-  sofort einen Rollbalken. Die Ursache ist die Mindesthöhe der Karte bei
-  vergrößerter Anzeige — sie nimmt das ganze Fenster ein, obwohl darunter noch
-  Knopfleiste und Fußzeile kommen. Das ist eine eigene Baustelle und steht auf
-  der Liste; hier wurde bewusst der ruhige Zustand ohne Rollbalken gewählt.
-
----
+- Fragebild: steht im grauen Fragenkasten unter dem Fragetext statt darüber, gilt für alle Fragen mit Bild
+- Lupe: Vergrößerungsfaktor von 2,2 auf 1,6, Fensteranteil von 76 auf 62 % gesenkt, Frage und Nachbarbilder bleiben sichtbar
+- Lupe: kleine Fragebilder weiter über feste Zielgröße etwa dreifach vergrößert
+- Große Anzeige (1920×1080, 120 %): Antwortbilder bewusst klein gehalten, um Rollbalken zu vermeiden
 
 ## [1.248.0] - 2026-09-10
 
 ### Behoben
-- **Das Bild zur Frage fehlte bei 18 Fragen.** Dietmar mit der Katalogseite zu
-  AB406 und AB407: „Bei der Frage AB406 kommt in der Frage ein Bild vor. Das
-  fehlt und auch bei vielen anderen Fragen bei E nach A." Seine Fundliste:
-  AB405, AB406, AB407, AC405, AC406.
-
-  Im Code stand `if (!hasImages)` — das Bild zur Frage wurde also unterdrückt,
-  sobald die Antworten Bilder hatten. Gemeint war damit, dieselbe Zeichnung
-  nicht zweimal zu zeigen; getroffen hat es aber auch alle Fälle, in denen
-  Frage und Antworten **verschiedene** Bilder haben.
-
-  Und dann fehlt nicht Beiwerk, sondern die Frage selbst: Bei AB406 steht dort
-  das Frequenzspektrum, zu dem das passende Signal gesucht wird. Ohne dieses
-  Bild sieht man vier Kurven und hat keinen Anhaltspunkt — die Frage ist nicht
-  zu beantworten.
-
-  Alle sechs Kataloge durchgezählt:
-
-  | Katalog | betroffene Fragen |
-  |---|---|
-  | Klasse N | 3 — NE206, NE207, NE208 |
-  | N auf E | 1 — ED304 |
-  | **E auf A** | **14** — AB404–AB407, AC405, AC406, AD308, AD406, AD408, AD502, AF626–AF629 |
-  | Klasse E | 4 |
-  | Klasse A | 18 |
-  | N auf A | 15 |
-
-  **18 verschiedene Fragen insgesamt**, Dietmars fünf sind darunter.
-
-  Sechs weitere Fragen sehen ähnlich aus, sind aber etwas anderes: Bei NB401,
-  NB702, NB703, NC404, NI103 und NI104 gibt es kein eigenes `<ID>_q.svg`, und
-  die Datei `<ID>.svg` ist zugleich eines der Antwortbilder. Dort gibt es also
-  gar kein Bild zur Frage — was so aussah, war in Wahrheit die Antwort A. Bei
-  ihnen muss es beim einen Bild bleiben, und das tut es auch: Die Suche nach
-  dem Fragebild bekommt jetzt die Namen der Antwortbilder mit und streicht sie
-  aus ihrer Reihenfolge. Eine Prüfung nur des ersten Namens hätte diese Fälle
-  nicht erwischt — dort existiert `_q.svg` nicht, und der Rückfall wäre genau
-  auf das Antwortbild gelandet.
-
-- **Der Platz reicht jetzt für beide Bilder.** Als das Bild zur Frage wieder
-  erschien, war die Knopfleiste bei AB407 weg: Die Bildrechnung war schon
-  gelaufen, bevor das neue Bild seinen Platz einnahm. Sie wartet jetzt auch auf
-  dieses Bild.
-
-  Dabei kam ein zweiter, älterer Fehler ans Licht. Die Bremse maß nur, ob die
-  Knopfleiste noch im Fenster steht — bei AB407 endete sie auf **exakt** der
-  Fensterkante, was formal genügte, während die Seite 1023 statt 930 Punkte
-  hoch war. Unter der Leiste steht nämlich noch die Fußzeile, und die zählte
-  niemand mit.
-
-  Jetzt zählt beides, aber nicht blind. Nachgemessen, Bildhöhe Schritt für
-  Schritt durchprobiert:
-
-  | Fenster | bei 90 px | bei 150 px |
-  |---|---|---|
-  | 1440×930 | Seite 930 (passt) | Seite 930 (passt) |
-  | 1920×1080 | Seite 1099 (**+19**) | Seite 1243 |
-
-  Zwei verschiedene Lagen. Auf 1440×930 gibt es eine Bildhöhe, bei der die
-  Seite genau passt — dort ist der Überlauf das richtige Maß. Auf 1920×1080
-  läuft die Seite schon bei kleinsten Bildern über; das kommt von der
-  Mindesthöhe der Karte bei vergrößerter Anzeige und hat mit den Bildern nichts
-  zu tun. Wer dort trotzdem auf null Überlauf hinregelt, drückt die Bilder auf
-  das Minimum und behebt nichts — gemessen fielen sie von 224 auf 108 Punkte.
-  Dort zählt allein, was Dietmar ursprünglich beanstandet hatte: dass die
-  Knopfleiste ohne Scrollen erreichbar bleibt.
-
-  Ergebnis bei AB406 mit Bild zur Frage, Knopfleiste überall sichtbar:
-
-  | Fenster | Bildhöhe | Knopfleiste |
-  |---|---|---|
-  | 1440×930 | 135 px | 837 von 930 |
-  | 1920×1080 | 139 px | 1035 von 1080 |
-  | 1280×720 | 102 px | 709 von 720 |
-  | 1440×660 | 88 px | 651 von 660 |
-
-  Stehen beide Bilder da, bekommt das Bild zur Frage eine engere Höhengrenze
-  als allein: Man sieht es einmal an, verglichen werden müssen die vier
-  Antworten. Wer es größer braucht, fährt mit der Maus darüber — die Lupe von
-  1.247.0 zeigt es groß.
-
----
+- Fragebild: fehlte bei 18 Fragen mit zusätzlichen Antwortbildern (u. a. AB404–AB407, AC405, AC406, NE206–NE208, ED304)
+- Fragebild: Suche schließt Antwortbilder aus, kein doppeltes Bild bei NB401, NB702, NB703, NC404, NI103, NI104
+- Bildgröße: Berechnung wartet auch auf das Fragebild, Knopfleiste bleibt sichtbar
+- Bildgröße: Fußzeile zählt bei der Überlaufprüfung mit; ist das Ziel unerreichbar, zählt nur die sichtbare Knopfleiste
+- Fragebild: bei zusätzlichen Antwortbildern engere Höhengrenze, große Ansicht über die Lupe
 
 ## [1.247.0] - 2026-09-10
 
 ### Behoben
-- **Die Lupe vergrößert wieder von selbst.** Dietmar: „Mit dem Vergrössern der
-  Bilder stimmt was nicht bei e auf A AB406. Ich muss den Nachteilsausgleich
-  auf Maximum setzen, das sie schön vergrössern."
-
-  Das ist eine Folge der eigenen Verbesserung von 1.243.0 — eine Änderung, die
-  eine andere Stelle veralten ließ. Als die Zielgröße der Lupe festgelegt
-  wurde, waren die Antwortbilder 156 Punkte breit; 400 Punkte Ziel bedeuteten
-  damals Faktor 2,5. Seit die Bilder ihren Kasten ausfüllen, sind sie 419 bis
-  559 Punkte breit — das Ziel lag also **unter** der Ausgangsgröße.
-
-  Nachgemessen bei AB406, ohne Nachteilsausgleich:
-
-  | Fenster | Bild im Raster | Faktor | Ergebnis |
-  |---|---|---|---|
-  | 1440×930 | 419×138 | 0,96 | Lupe bleibt aus |
-  | 1920×1080 | 559×224 | 0,72 | Lupe bleibt aus |
-  | 1280×720 | 372×109 | 1,08 | Lupe bleibt aus |
-
-  Unter 1,15 unterbleibt die Vergrößerung — das ist richtig so, ein Bild um
-  vier Prozent aufzublasen wäre nur Unruhe. Falsch war das Ziel. Wer den
-  Nachteilsausgleich hochdreht, multipliziert es und kommt darüber: genau der
-  Umweg, den Dietmar beschreibt.
-
-  Zwei Änderungen:
-
-  **Das Ziel wächst mit dem Bild mit.** Es ist jetzt der größere Wert aus der
-  festen Zahl und dem 2,2-fachen der heutigen Bildgröße. Damit kann diese
-  Stelle nicht wieder veralten, wenn sich die Bilder im Raster ändern.
-
-  **Breite und Höhe bekommen eigene Anteile am Fenster.** Bisher galt eine Zahl
-  für beides. Ein Fenster ist aber breiter als hoch, und die Schaltbilder des
-  Katalogs sind sehr flach (Seitenverhältnis 0,37) — bei ihnen war die Breite
-  die Fessel, obwohl daneben reichlich Platz stand.
-
-  Ergebnis, wieder ohne Nachteilsausgleich: auf allen drei Fenstern **Faktor
-  2,2**. Auf 1440×930 wird aus dem Bild 419×138 eines von 938×320, mit 88
-  Punkten Rand rechts und 298 unten. Für die Fragebilder ändert sich nichts:
-  Sie sind weiter höchstens 260 Punkte hoch, dort greift die feste Zielzahl wie
-  bisher, nachgerechnet vorher wie nachher Faktor 2,55. Nur bei einem
-  ungewöhnlich großen Fragebild springt die Lupe künftig an, wo sie bisher
-  ausblieb.
-
----
+- Lupe: vergrößert Antwortbilder wieder ohne Nachteilsausgleich (Zielgröße lag unter der Ausgangsgröße)
+- Lupe: Zielgröße wächst mit der Bildgröße mit (mindestens 2,2-fach)
+- Lupe: getrennte Fensteranteile für Breite und Höhe, flache Schaltbilder nutzen die verfügbare Breite
+- Lupe: Fragebilder unverändert (Faktor 2,55), ungewöhnlich große Fragebilder werden jetzt ebenfalls vergrößert
 
 ## [1.246.0] - 2026-09-10
 
 ### Behoben
-- **Das Strecken beim Laden einer Frage ist weg — diesmal wirklich.** Dietmar
-  hatte 1.245.0 geprüft und gemeldet: „Das strecken beim laden ist noch immer
-  vorhanden." Und mit dem Video, das er dazu geschickt hat, war es in ein paar
-  Minuten gefunden.
-
-  Er hat die Ursache dann selbst benannt, bevor ich die Messung fertig hatte:
-  „Hier fällt mir auf, das der Fortschritt das nach unten zieht und es über den
-  Code erst nach dem laden wieder angepasst wird." Genau so ist es.
-
-  Die Fortschrittsspalte zeigt jede Frage der Runde als Kästchen. Bei einer
-  Runde über alle 716 Fragen des Katalogs E auf A sind das 103 Zeilen, rund
-  1750 Pixel. Begrenzt hat sie bisher **nur** das Skript — und ein Skript läuft
-  erst *nach* dem ersten Bildaufbau.
-
-  Nachgemessen, Fenster 590 Pixel hoch:
-
-  | Zeitpunkt | Seitenhöhe |
-  |---|---|
-  | 3189 ms | **2207 px** |
-  | 3200 ms | 2176 px |
-  | 3210 ms | 2134 px |
-  | … 75 Bildaufbauten lang, je 32 px … | |
-  | 4423 ms | 590 px |
-
-  Über **1,2 Sekunden** kroch die Seite nach oben — man sieht sie
-  zusammenschnurren. Und der Grund für das langsame Kriechen war ein zweiter
-  Fehler, der schon einmal an anderer Stelle steckte: Spalte und Frage stehen
-  nebeneinander in einem Flex-Kasten, in dem die kürzere auf die Höhe der
-  längeren gezogen wird. Das Skript maß also an der Frage nicht deren Inhalt,
-  sondern die zu große Höhe, die die Spalte selbst erzeugte. Der falsche Wert
-  bestätigte sich bei jeder Messung neu; jeder Durchgang nahm der Spalte genau
-  eine Kästchenzeile ab, der Beobachter löste den nächsten aus. Bei der rechten
-  Verlaufsspalte steht die Warnung davor seit dem 05.09.2026 im Kommentar — an
-  dieser Stelle stand sie nicht.
-
-  Zwei Änderungen, beide nötig:
-
-  **Die Obergrenze steht jetzt im Stilblatt.** Sie gilt schon beim allerersten
-  Bildaufbau, ohne dass eine Zeile JavaScript gelaufen sein muss. Wie viel von
-  der Fensterhöhe abzuziehen ist, wurde gemessen statt geschätzt — der Rest für
-  Kopfzeile, Knopfleiste und Fußzeile war auf allen vier geprüften Fenstern
-  derselbe (260 bis 261 Punkte), weil sich die Anzeigegröße herausrechnet.
-  Abgezogen werden 320 Punkte, also knapp sechzig mehr: Ist die Grenze etwas zu
-  klein, ist die Spalte für einen Sechzigstelmoment kürzer als möglich und das
-  Skript zieht sie sofort nach — das sieht niemand, weil eine kürzere Spalte
-  die Seite nicht länger macht. Wäre sie zu groß, wäre die Seite genau um diese
-  Punkte zu lang, und das sieht man sofort.
-
-  **Das Skript misst richtig.** Für den Moment der Messung werden die gesetzten
-  Höhen weggenommen; dann streckt die Spalte nichts mehr und die Frage fällt
-  auf ihre eigene Höhe zurück. Gezeichnet wird dazwischen nichts — aus 75
-  Schritten wird einer.
-
-  Nachgemessen auf vier Fenstergrößen mit einer Runde über alle 716 Fragen:
-
-  | Fenster | vorher | jetzt |
-  |---|---|---|
-  | 1280×590 | 75 Bildaufbauten, bis +1617 px | **kein einziger** |
-  | 1280×686 | dasselbe Bild | **kein einziger** |
-  | 1440×930 | dasselbe Bild | **kein einziger** |
-  | 1920×1080 | dasselbe Bild | **kein einziger** |
-
-  Die Spalte hat am Ende exakt die Höhe der Frage daneben, rollt ihre Kästchen
-  wie bisher intern, und die Knopfleiste steht in jedem Fall im Fenster.
-
----
+- Fragenansicht: kein Strecken der Seite mehr beim Laden einer Frage in langen Runden (z. B. 716 Fragen)
+- Fortschrittsspalte: Höhengrenze im Stilblatt, greift schon beim ersten Bildaufbau ohne JavaScript
+- Fortschrittsspalte: Höhenmessung ohne Flex-Streckung, ein Schritt statt bis zu 75 Bildaufbauten
+- Fortschrittsspalte: exakt so hoch wie die Frage, Knopfleiste in allen geprüften Fenstergrößen sichtbar
 
 ## [1.245.0] - 2026-09-10
 
-### Behoben
-- **Die Seite streckt sich beim Aufbauen nicht mehr nach unten.** Dietmar:
-  „Beim aufbauen einer Seite (das hatten wir auch schon davor) streckt sich
-  die Seite erst mal tief nach unten. Dieses Strecken, gefällt mir gar nicht.
-  Der Trainer soll eine Seite so laden, das man das strecken nicht mehr sieht."
-
-  Nachgemessen, Bild für Bild, bei AB406 auf 1440×930:
-
-  | Zeit | Karte | Rollbalken | Bildhöhe |
-  |------|-------|-----------|----------|
-  | 3112 ms | 710 px | nein | (die Frage steht noch nicht) |
-  | 3153 ms | **944 px** | **ja** | **230 px** |
-  | 3159 ms | 901 px | nein | 120 px |
-
-  Ein einziger Bildaufbau mit falscher Größe — das ist das Strecken. Die
-  Ursache stand in derselben Zeile: Zu diesem Zeitpunkt waren die SVG-Dateien
-  noch nicht geladen. Der Trainer hat mit einem **geschätzten**
-  Seitenverhältnis von 0,55 gerechnet; die vier Signalbilder haben aber 0,366.
-  Aus 419 Pixeln Kastenbreite wurden so 230 statt 153 Pixel Höhe, die Karte
-  wuchs über den Schirm hinaus, der Rollbalken erschien — und eine
-  Sechzigstelsekunde später nahm die Bremse alles wieder zurück.
-
-  Ein geschätztes Seitenverhältnis ist also keine Näherung, sondern eine
-  Fehlerquelle mit sichtbarer Folge. Jetzt wird gar nicht gerechnet, solange
-  ein Bild fehlt: Die Kästen bleiben bei ihrer Grundhöhe — klein, aber
-  richtig —, und sobald die Bilder da sind, steht die Größe. Die Seite wird
-  damit einmal größer und nie wieder kleiner.
-
-  Nachgemessen über 25 Fragen je Fenstergröße auf 1280×720, 1440×930 und
-  1920×1080: **keine einzige Ansicht wird zwischendurch höher als am Ende.**
-
-- **Bildantworten nutzen den Platz jetzt wirklich.** Dietmar: „Jetzt haben wir
-  wieder den Anfangszustand mit den Bilder."
-
-  Er hatte recht, und die Rechnung von 1.243.1 war schuld. Sie addierte den
-  Abstand zwischen Knopfleiste und Fensterkante (93 Pixel) und übersah dabei
-  einen Posten, den sie gar nicht kannte: Die Karte ist während einer Runde
-  auf Schirmhöhe gedehnt, und ihr Inhalt war **218 Pixel niedriger als das**.
-  Genau diese 218 Pixel sind Platz, den die Bilder haben dürfen, ohne dass
-  sich irgendetwas bewegt. Nachweisbar an einer einzigen Zahl: Die Knopfleiste
-  stand vor *und* nach dem Vergrößern bei 837 — sie hatte sich nicht um einen
-  Pixel bewegt.
-
-  Ein Posten mehr in der Formel hätte diesen einen Fall behoben und wäre beim
-  nächsten Umbau wieder falsch gewesen. Deshalb rechnet der Trainer jetzt
-  umgekehrt und ohne Formel: Erst wird die Höhe gesetzt, bei der das Bild
-  seine Kastenbreite gerade ausfüllt (größer wäre sinnlos — dann bliebe
-  seitlich Luft). Dann wird nachgesehen, ob die Knopfleiste noch im Fenster
-  steht. Steht sie, ist es fertig; steht sie nicht, geht es so weit zurück,
-  bis sie es tut. Gemessen wird damit nur noch, was man auch sieht.
-
-  | Fenster | vorher | jetzt |
-  |---------|--------|-------|
-  | 1440×930 | 120 px | **153 px** (Bild füllt die Breite) |
-  | 1920×1080 | 163 px | **188 px** |
-  | 1440×660 | 90 px | **127 px** |
-  | 1280×720 | 90 px | **136 px** |
-  | 1024×640 | 90 px | 90 px (dort passt die Knopfleiste schon ohne Bilder nicht) |
-
 ### Hinzugefügt
-- **Der Trainer merkt sich die Seitenverhältnisse der Bilder.** Auch nachdem
-  das Überschießen behoben war, blieb ein Rest: Beim *ersten* Anzeigen einer
-  Bildfrage stehen die Kästen kurz auf ihrer Grundhöhe und wachsen dann.
-  Verhindern lässt sich das nur, wenn die Höhe schon feststeht, bevor die
-  Datei da ist — und dafür braucht es das Seitenverhältnis im Voraus.
+- Bildfragen: Seitenverhältnisse geladener Bilder werden gespeichert (auch über Neustart), Höhe steht beim erneuten Anzeigen sofort
+- Bildfragen: Bilder der nächsten Frage werden im Hintergrund vorgeladen
 
-  Geraten wird es nicht mehr; genau das Raten war ja die Ursache des Fehlers
-  oben. Stattdessen hinterlässt jede Datei, die einmal geladen war, ihr
-  Verhältnis unter ihrem Namen. Beim zweiten Mal — und der Trainer zeigt
-  dieselben Fragen oft wieder — steht die Höhe sofort. Der Vorrat überlebt
-  auch den nächsten Start.
-
-  Nachgemessen, dieselbe Frage zweimal geöffnet: Beim zweiten Mal erscheint
-  sie **ohne jeden Zwischenschritt** in ihrer endgültigen Größe.
-
-- **Die Bilder der nächsten Frage werden im Hintergrund geholt.** Während eine
-  Frage auf dem Schirm steht, tut sich nichts — genug Zeit, die Dateien der
-  nächsten schon zu laden. Beim Weiterklicken steht die Höhe dann im selben
-  Augenblick fest, in dem die Frage erscheint. Es kostet nichts: Die Dateien
-  liegen im eigenen Ordner und wären ohnehin geladen worden, nur eben eine
-  Sekunde später und dann sichtbar.
-
----
+### Behoben
+- Seitenaufbau: kein kurzes Strecken mehr durch geschätztes Seitenverhältnis, Größe erst nach dem Laden der Bilder
+- Bildantworten: nutzen den freien Platz bis zur Kastenbreite, Rücknahme nur bis die Knopfleiste im Fenster steht
+- Bildantworten: größer als zuvor, z. B. 1440×930 von 120 auf 153 px, 1920×1080 von 163 auf 188 px
 
 ## [1.244.0] - 2026-09-10
 
 ### Geändert
-- **Beim Vorlesen fällt das Wort „Bild" weg.** Dietmar: „Beim vorlesen sagt es:
-  Antwort A Bild. Bild gehört da raus."
-
-  Er hat recht — das Wort beschreibt nichts, es füllt nur die Stelle, an der
-  bei einer Textantwort etwas Sinnvolles stünde. Wer nicht sieht, dem hilft es
-  nicht; wer sieht, weiß es ohnehin. Jetzt heißt es schlicht „Antwort A."
-  Dasselbe gilt für die Beschriftung, die Vorleseprogramme auslesen.
-
-- **Bildantworten bekommen eine Pause.** „…und es soll etwas langsamer
-  Vorlesen. Das geht derzeit noch sehr schnell bei Bildern."
-
-  Der eigentliche Punkt daran: Bei Textantworten bestimmt die Länge des Satzes
-  die Zeit zum Mitdenken. Bei vier Bildern sagt der Trainer viermal zwei Silben
-  und ist nach fünf Sekunden fertig — genau dann, wenn man am meisten Zeit
-  braucht, weil man vier Kurven vergleichen muss.
-
-  Deshalb **2,6 Sekunden Pause nach jeder Bildantwort**, in denen die Antwort
-  hervorgehoben stehen bleibt. Nicht langsamer sprechen — dabei klänge die
-  Stimme betrunken —, sondern schweigen und zeigen.
+- Vorlesen: Bildantworten ohne das Wort Bild, nur noch Antwort A usw. (auch Beschriftung für Vorleseprogramme)
+- Vorlesen: 2,6 s Pause nach jeder Bildantwort, Antwort bleibt dabei hervorgehoben
 
 ### Behoben
-- **Die Bilder waren zu groß, die Knopfleiste nur noch durch Rollen
-  erreichbar.** Dietmar: „Tut mir Leid, es passt noch immer nicht."
-
-  Die Ursache lag nicht in der Rechnung, sondern im Zeitpunkt: Beim ersten
-  Durchgang sind die SVG-Dateien oft noch nicht geladen. `naturalWidth` ist
-  dann 0, das Seitenverhältnis wird geschätzt — und die Rechnung entsprechend
-  daneben. Jetzt wird nach dem Laden jedes Bildes nachgerechnet.
-
-  Gemessen an AB406 (E → A), Knopfleiste in **allen vier** geprüften Größen
-  sichtbar: 1440 × 930 → Leiste bei 837, 1440 × 660 → 581, 1920 × 1080 → 1011,
-  1280 × 720 → 637. Die Bilder bleiben dabei deutlich größer als vorher
-  (83 → 108 bis 194 Pixel).
-
-  Zwei Sonderfälle wurden dabei verworfen und stehen als Warnung im Code:
-  „wenn die Leiste ohnehin nicht passt, regle nach der Container-Lücke" ergab
-  riesige Bilder **und** Rollbalken; „dann gar nicht vergrößern" scheiterte an
-  drei Pixeln Messunterschied. Es bleibt bei einer Regel ohne Ausnahme: Es
-  wird nach der Knopfleiste geregelt, Untergrenze ist die Ausgangsgröße.
-
-- **In der Auswertung fehlte die linke Seite.** Dietmar mit einem Bild aus dem
-  Katalog E → A: „Unter Statistik, fehlt die linke Seite komplett."
-
-  Sie fehlte nicht, sie war leer — und das ist richtig so: Die Prüfungsreife
-  hält sich zurück, solange kein Prüfungsteil genug Antworten hat. Im frisch
-  geöffneten A-Katalog stehen 0 von 716, also schweigt sie. Falsch war nur,
-  dass die Spalte trotzdem ihren halben Platz behielt: ein weißes Feld neben
-  zusammengedrängtem Text. Steht links nichts, nimmt die rechte Seite jetzt
-  die volle Breite.
+- Bildantworten: Größe wird nach dem Laden jedes Bildes neu berechnet, Knopfleiste ohne Rollen erreichbar
+- Bildantworten: Regelung einheitlich nach der Knopfleiste, Untergrenze ist die Ausgangsgröße
+- Auswertung: rechte Seite nutzt die volle Breite, wenn die Prüfungsreife links leer bleibt
 
 ## [1.243.1] - 2026-09-10
 
 ### Behoben
-- **Die Bilder wurden zu groß — die Knopfleiste war nur noch durch Rollen
-  erreichbar.** Dietmar zu 1.243.0: „Jetzt ist es zu gross. Die Leiste mit den
-  Buttons sind nur über scrollen erreichbar."
-
-  Er hat den Finger auf das gelegt, was wirklich zählt. Die Bremse verglich
-  vorher mit dem Zustand *vor* der Vergrößerung — „nicht schlimmer als
-  vorher". Das ist kein Kriterium, das jemand merkt. Gemerkt wird, ob man den
-  Weiter-Knopf sieht. Genau danach entscheidet auch `fragenGroesseAnpassen()`
-  über die Schriftstufe; dieselbe Regel gilt jetzt für die Bilder.
-
-  Dazu mehr Reserve: 28 statt 14 Pixel Abstand zur Leiste und 90 statt 94
-  Prozent der errechneten Höhe.
-
-  Gemessen an AB406 (E → A) auf 1440 × 930: Bild **181 Pixel**, Knopfleiste
-  endet bei 837 von 930 — sichtbar, **kein Rollen**. Ebenso auf 1440 × 660
-  und 1280 × 720.
-
-- **Die Bremse erkennt jetzt unerreichbare Ziele.** Gemessen auf 1920 × 1080
-  bei einer Anzeigevergrößerung von 1,2: Die Knopfleiste endet 41 Pixel unter
-  der Fensterkante — auch bei kleinsten Bildern, auch bei gar keinen. Ohne
-  diese Prüfung drückte die Bremse die Bilder auf das Minimum, ohne irgendetwas
-  zu erreichen: klein *und* rollen. Jetzt wird bei Minimalgröße nachgesehen,
-  ob das Ziel überhaupt erreichbar ist; wenn nicht, regelt sie nach der Lücke
-  im Container. Gerollt werden muss ohnehin — dann sollen wenigstens die
-  Bilder etwas taugen.
-
-### Anmerkung zur Ursache
-Die Zeile `body.runde-laeuft .card { min-height: calc(100vh / var(--afu-zoom) - 2rem) }`
-liefert bei einer Anzeigevergrößerung von 1,2 eine Karte, die höher ist als
-das Fenster. Das trifft die Bildfragen am stärksten, gilt aber unabhängig von
-ihnen. Nicht angefasst — das gehört getrennt angesehen.
+- Bildantworten: Größenbremse richtet sich nach Sichtbarkeit der Knopfleiste statt nach dem Zustand vorher
+- Bildantworten: mehr Reserve (28 statt 14 px Abstand zur Leiste, 90 statt 94 % der errechneten Höhe)
+- Bildantworten: bei unerreichbarem Ziel (z. B. Anzeige 120 %) Regelung nach Container-Lücke statt Minimalgröße
 
 ## [1.243.0] - 2026-09-10
 
 ### Geändert
-- **Bildantworten nutzen jetzt den Platz.** Dietmar mit einem Bild von AB406,
-  auf dem unter den vier Signalbildern die halbe Fläche leer stand: „Kann man
-  das so anpassen, das bei Bildern der Raum besser genutzt wird?"
-
-  Gemessen an NB703 auf 1400 × 900 ohne Videokachel: Das Schaltbild wächst von
-  **81 auf 159 Pixel** Höhe, die Kastenbreite wird von 156 auf **419 Pixel**
-  ausgenutzt. Die Bilder skalieren mit dem freien Platz und schrumpfen wieder,
-  wenn das Fenster kleiner wird.
-
-  **Die Ursache war eine andere als vermutet.** Im Stilblatt stand
-  `max-height: 100px` neben `width: auto` — das sieht nach einer Begrenzung
-  aus, war aber keine. Die SVG-Dateien des Katalogs sind winzig deklariert
-  (`NB703.svg` trägt `width="226.771"`) und haben **keine viewBox**. Ein
-  `<img>` ohne vorgegebene Breite wird nie größer als seine natürliche Größe.
-  Die 100 Pixel haben also nie etwas gedeckelt; das Bild war schlicht so
-  klein, wie die Datei es sagt.
-
-  Größere SVG-Dateien braucht es deshalb **nicht** — SVG ist Vektorgrafik,
-  dasselbe Bild auf 419 Pixel gezogen ist gestochen scharf.
-
-### Technik
-Die Rechnung hat vier Anläufe gebraucht, und jeder Irrweg steht als Kommentar
-im Code, damit ihn niemand wiederholt:
-
-1. `window.innerHeight − scrollHeight` als Maß für den freien Platz taugt
-   nicht: Die Karte trägt seit 1.224.0 eine `min-height` über den ganzen
-   Schirm, damit die Knopfleiste nicht springt. Der „Überschuss" war in jeder
-   Messung exakt null.
-2. `object-fit: contain` allein bringt nichts — mit zu kleiner Höhe passt es
-   den Inhalt ein und lässt seitlich Luft. Das Bild war 419 Pixel breit, die
-   Zeichnung darin weiter 164.
-3. Alle Nachfahren durchgehen und die tiefste Unterkante nehmen erwischt
-   `main-layout` und die anderen gedehnten Kästen. Wieder null.
-4. Den Ausgangszustand messen, während die Vergrößerung vom vorigen Aufruf
-   noch im Stilblatt steht: Dann vergleicht die Bremse mit ihrem eigenen
-   Ergebnis und findet alles in Ordnung.
-
-Was jetzt gerechnet wird: die Lücke zwischen dem letzten Element, das wirklich
-etwas anzeigt (über die Geschwisterkette gefunden), und dem Ende des
-Fragencontainers — begrenzt durch die ideale Höhe, bei der das Bild die
-Kastenbreite gerade ausfüllt. Grenzen 90 bis 300 Pixel, dazu 6 % Marge und
-eine Bremse, die zurückregelt, falls die Seite weiter überstehen würde als
-vorher.
-
-### Aufgefallen, nicht behoben
-- **Die `min-height` der Karte kann größer sein als das Fenster.** Gemessen
-  bei NB703 auf 1400 × 900: **968 Pixel bei 900 Pixel Fensterhöhe** — die
-  Seite rollt dort um 40 Pixel, ganz ohne Zutun der Bilder. Das ist ein
-  eigener Fehler in der Rechnung von `updateVisibility()` und sollte getrennt
-  angesehen werden.
+- Bildantworten: skalieren mit dem freien Platz, z. B. NB703 von 81 auf 159 px Höhe, Kastenbreite 419 statt 156 px genutzt
+- Bildantworten: Höhe aus Lücke bis Ende Fragencontainer berechnet, Grenzen 90 bis 300 px, Bremse gegen Überstand
+- Bildantworten: klein deklarierte SVG-Dateien ohne viewBox werden auf die errechnete Größe gezogen, bleiben scharf
 
 ## [1.242.0] - 2026-09-10
 
-### Neu
-- **Der Formelblatt-Knopf macht auf sich aufmerksam.** Dietmar: „hier könnten
-  wir den Button Formelblatt bei den Fragen akustisch und Optisch zb durch
-  3 mal pulsen darauf aufmerksam machen. 45 oder 60 Minuten ist eine Menge
-  Zeit. wenn man diese Lernhilfe hat, sollten wir die Benutzer darauf
-  aufmerksam machen."
+### Hinzugefügt
+- Formelblatt-Knopf: pulst dreimal bei Fragen mit Stelle im Formelblatt, einmal je Sitzung zusätzlich kurzer Zweiklang
+- Formelblatt-Knopf: bei `prefers-reduced-motion` stehender Schein, kein erneutes Pulsen beim Neuzeichnen derselben Frage
+- Einstellungen: Hinweis abschaltbar unter Vorlesen → Formelblatt (Standard an), Ton wird erzeugt statt als Datei geliefert
+- `_Formelblatt-Analyse.md`: Auswertung über alle drei Kataloge, 470 von 1750 Fragen im Formelblatt lösbar
 
-  Sobald es zu einer Frage eine Stelle im Blatt gibt, pulst der Knopf
-  **dreimal** — je 0,62 Sekunden, mit einem orangen Schein am Rand. Dazu
-  **einmal je Sitzung** ein kurzer Zweiklang (880 Hz und 1318 Hz, zusammen
-  200 ms, halbe Lautstärke).
-
-  **Warum optisch immer, akustisch nur einmal.** Im Katalog E → A haben 224
-  Fragen eine Stelle im Blatt. Ein Ton bei jeder davon wäre nach zehn Minuten
-  unerträglich und würde als Erstes abgeschaltet — mitsamt dem optischen
-  Hinweis. Einmal hören, danach sehen: Das bleibt.
-
-  **Warum dreimal und nicht dauernd.** Eine Animation, die nicht aufhört,
-  liest sich nach der zehnten Frage als Fehler. Drei Schläge sagen „hier ist
-  etwas" und geben dann Ruhe. Beim Neuzeichnen derselben Frage pulst nichts
-  erneut; wer `prefers-reduced-motion` gesetzt hat, bekommt statt der
-  Bewegung einen stehenden Schein.
-
-  Der Ton wird selbst erzeugt statt als Datei mitgeliefert — eine MP3 dafür
-  wäre eine Datei mehr im Paket, im Update und im Setup.
-
-  Abschaltbar unter **Einstellungen → Vorlesen → Formelblatt**. Standard ist an.
-
-### Analyse
-- **`_Formelblatt-Analyse.md` neu geschrieben**, jetzt über alle drei Kataloge.
-  Das Ergebnis:
-
-  | Katalog | Fragen | im Blatt | nicht im Blatt |
-  |---|---:|---:|---:|
-  | Klasse N | 571 | 112 | 459 |
-  | Aufstieg N → E | 463 | 134 | 329 |
-  | Aufstieg E → A | 716 | 224 | 492 |
-  | **Summe** | **1750** | **470** | **1280** |
-
-  Je höher die Klasse, desto mehr trägt das Blatt: von 20 % über 29 % auf 31 %.
-  Mit der Klasse wächst der Anteil der Rechenaufgaben, und genau dafür ist die
-  Sammlung gemacht.
-
-- **Zwei Durchgänge waren nötig.** Der erste lief gegen ein zu grobes
-  Inhaltsverzeichnis, in dem Effektivwert, `T = 1/f`, die
-  Transformator-Übersetzung, `E = U/d`, der Widerstands-Farbcode und die
-  Zweierpotenz-Tabelle fehlten — alles Dinge, die im Blatt stehen. Für den
-  zweiten Durchgang wurden alle 22 Blätter als Bild gelesen und Formel für
-  Formel übertragen (der PDF-Text ist zeichenverschlüsselt).
-
-- **Eine Regel hatte ich falsch gefasst:** Fragen mit Schaltbild galten
-  zunächst pauschal als nicht lösbar. In der Prüfung liegt das Bild aber auf
-  dem Aufgabenblatt — eine Schaltung zu *berechnen* zählt daher als lösbar,
-  wenn die Formel im Blatt steht; ein Schaltzeichen zu *erkennen* nicht.
-  Diese Korrektur allein hob den Katalog N → E von 63 auf 97 lösbare Fragen
-  im ersten geprüften Block.
-
-### Geprüft
-- Frage mit Formelstelle: Knopf sichtbar, Animation `formel-puls`, 0,62 s,
-  drei Wiederholungen, Ton einmal.
-- Nach 2,6 s ist die Klasse wieder entfernt; Neuzeichnen derselben Frage löst
-  nichts aus; die nächste Frage pulst wieder, der Ton bleibt einmalig.
-- Frage ohne Formelstelle: Knopf unsichtbar, kein Pulsen.
-- Schalter aus: kein Pulsen.
+### Geändert
+- Formelblatt-Analyse: Berechnung von Schaltungen gilt als lösbar, wenn die Formel im Blatt steht
 
 ## [1.241.0] - 2026-09-10
 
-### Neu
-- **Nachschlagen wird positiv vermerkt.** Dietmar: „es gibt viele Antworten
-  die im Formelblatt stehen. das soll positiv registriert werden wenn man
-  diese nutzt. mehr Zeit zu benötigen und nachschauen ist definitiv kein
-  Fehler."
-
-  Er hat recht, und der Denkfehler in 1.240.0 war handfest: Dort wurden
-  längere Zeiten als Risiko gewertet, ohne zu fragen, **womit** sie zustande
-  kommen. In der Prüfung liegt die Formelsammlung auf dem Tisch — Anlage 1
-  AFuV und die Bandplan-Auszüge stehen ausdrücklich in der Liste der
-  erlaubten Hilfsmittel, ebenso der nicht programmierbare Taschenrechner.
-  Wer sie benutzt, übt genau das, was er im Prüfungsraum tun wird.
-
-  Nachgezählt: **114 der 571 Fragen** haben in `formelhilfe.json` eine Stelle
-  im Formelblatt hinterlegt.
-
-  > **Berichtigung vom selben Tag:** Hier stand zuerst „534 der 571". Das war
-  > falsch. Die Datei `formelhilfe.json` enthält 534 Einträge, davon aber
-  > **420 mit IDs der Klassen A und E** (Präfixe AA…AK, EB…EG) — für den
-  > N-Katalog bleiben 114. Die Zahl war aus der Dateigröße abgelesen statt
-  > gegen den Fragenkatalog geprüft. Eine unabhängige Nachanalyse gegen den
-  > Inhalt der Formelsammlung kommt auf **112 beantwortbare Fragen**, siehe
-  > `_Formelblatt-Analyse.md`.
-
-  Ab jetzt schreibt der Trainer mit, wann jemand das Formelblatt oder den
-  Rechner öffnet — nicht um es vorzuhalten, sondern um eine lange
-  Bearbeitungszeit richtig einzuordnen und die gute Gewohnheit zu benennen.
+### Hinzugefügt
+- Zeitauswertung: Öffnen von Formelblatt und Rechner wird je Frage vermerkt (`fb`, `tr`)
 
 ### Geändert
-- **„Richtig, aber langsam" ist in zwei Befunde zerfallen.** Wer bei einer
-  Frage nachgeschlagen hat, steht jetzt in Grün: *„Hat länger gedauert — aber
-  du hast nachgeschlagen. Das ist die Zeit wert."* Nur wer ohne Hilfsmittel
-  ins Grübeln kommt, steht noch in der neutralen blauen Zeile — und auch
-  dort steht kein Tadel, sondern der Hinweis, dass sich dort ein Blick ins
-  Formelblatt vielleicht mehr lohnt als weiteres Nachdenken.
-- **Eine Zusammenfassung oben im Kasten** zählt alle Fragen, bei denen ein
-  Hilfsmittel geöffnet wurde: *„Genau richtig: Beides liegt in der Prüfung
-  auf dem Tisch. Nachschlagen ist geübte Prüfungstechnik, kein Umweg."*
-- **Die Schlusszeile wurde umgeschrieben.** Aus „in der Prüfung ist das ein
-  Risiko" wurde „Länger brauchen ist kein Fehler, und nachschlagen erst recht
-  nicht — die Formelsammlung liegt in der Prüfung vor dir."
-- Stehen nur gute Befunde im Kasten, passt „woran es liegt" nicht mehr; die
-  Einleitung lautet dann „Nichts, was dagegen spricht — und eine Gewohnheit,
-  die für dich spricht."
-
-### Geprüft
-- Ein echter Klick auf das Formelblatt bei NC104 landet als `fb:1` im
-  Speicher, der Taschenrechner als `tr:1`.
-- Bewertung mit erfundenen Verläufen: 3 langsame ohne Hilfsmittel bleiben in
-  der blauen Zeile, 3 langsame mit Nachschlagen wandern in die grüne, und die
-  Zusammenfassung zählt 5 (drei langsame plus zwei zügige mit Nachschlagen).
-- Randfall: nur nachgeschlagen und sonst nichts Auffälliges — der Kasten
-  zeigt allein das Positive, mit angepasster Einleitung.
+- Auswertung: richtig, aber langsam aufgeteilt, mit Nachschlagen grün als gute Gewohnheit, ohne Hilfsmittel neutral blau
+- Auswertung: Zusammenfassung zählt alle Fragen mit genutztem Hilfsmittel
+- Auswertung: Schlusszeile und Einleitung neu, längere Bearbeitungszeit nicht mehr als Risiko gewertet
+- Formelhilfe: 114 der 571 Fragen der Klasse N mit Stelle im Formelblatt (zuvor fälschlich 534 angegeben)
 
 ## [1.240.0] - 2026-09-10
 
-### Neu
-- **„Woran es liegt" in der Auswertung.** Die Stolpersteine darüber sagen,
-  *welche* Fragen danebengehen. Der neue Abschnitt sagt, *was* dabei
-  passiert — und das sind drei verschiedene Dinge, die man verschieden
-  angehen muss:
+### Hinzugefügt
+- Auswertung: Abschnitt Woran es liegt mit drei Befunden: festsitzender Irrtum, geraten, richtig aber langsam
+- Auswertung: festsitzender Irrtum nennt Buchstaben und vollen Text der wiederholt gewählten Antwort
+- Auswertung: langsam ab gut doppeltem eigenem Median; ohne Befund Meldung erst ab 15 gemessenen Fragen
+- Fragenansicht: Vorsatz-Hinweis bei falscher Antwort mit gleicher Zahl und anderem Vorsatz (z. B. kV statt mV)
 
-  **Immer dieselbe falsche Antwort** — ein Irrtum, der festsitzt. Hier hilft
-  kein Wiederholen; hier muss man einmal nachlesen, warum die andere Antwort
-  richtig ist. Der Trainer nennt den Buchstaben und den vollen Text der
-  Antwort, die immer wieder gewählt wird.
-
-  **Jedes Mal eine andere** — geraten. Die Frage ist noch gar nicht
-  angekommen und gehört an den Anfang, nicht in die Wiederholung.
-
-  **Richtig, aber langsam** — sitzt, aber nicht sicher. Fragen, die zuletzt
-  richtig waren, aber gut doppelt so lange dauern wie der eigene Schnitt
-  (Median, nicht Mittelwert: eine einzige Frage, bei der jemand nebenbei
-  telefoniert hat, würde den Mittelwert verschieben). In der Prüfung ist das
-  ein Risiko, auch wenn die Statistik grün aussieht.
-
-  Ist nichts auffällig und wurden mindestens 15 Fragen gemessen, sagt der
-  Kasten genau das. Vor den ersten Antworten steht er gar nicht da.
-
-- **Der Vorsatz-Hinweis an der Frage.** Wenn die gewählte Antwort *dieselbe
-  Zahl* trägt wie die richtige und sich nur im Vorsatz unterscheidet, sagt
-  der Trainer das im Augenblick des Fehlers: *„Die Zahl stimmt, der Vorsatz
-  nicht. Du hast 4200 kV gewählt, richtig ist 4200 mV — Kilo statt Milli
-  macht die Antwort eine Million mal zu groß."*
-
-### Vorher gerechnet
-Die ursprüngliche Idee war weiter gefasst: „Wer 0,2 Ω statt 200 Ω wählt, hat
-den Vorsatz verrechnet." Das Auszählen über alle 571 Fragen sagt dazu etwas
-Unbequemes:
-
-- **44 Fragen** haben überhaupt Zahlenantworten (8 %)
-- **42 Fälle**, wo eine falsche Antwort eine Zehnerpotenz der richtigen ist —
-  aber die meisten davon sind **Vorschriften** (750 statt 75 W PEP), und da
-  ist nichts verrechnet, da ist schlicht die falsche Zahl gelernt
-- **10 echte Vorsatzfallen in 7 Fragen**: gleiche Zahl, anderer Vorsatz
-
-Daraus folgten zwei Entscheidungen. Erstens: Die Vorsatz-Erkennung ist
-präzise, aber schmal — als Statistik über sieben Fragen taugt sie nichts, als
-Hinweis im Augenblick des Fehlers sehr viel. Deshalb steht sie an der Frage
-und nicht in der Auswertung. Zweitens: Der tragende Befund ist ein anderer
-und wirkt bei **allen 571 Fragen** — welche falsche Antwort immer wieder
-gewählt wird.
-
-### Behoben (in der eigenen Arbeit gefunden)
-- **Die erste Fassung der Vorsatzerkennung verglich nur die Ziffernfolge.**
-  Bei NA208 galten damit „4,200 µV" und „4200 mV" als dieselbe Zahl — sie
-  sind aber 4,2 und 4200. Der Trainer meldete „tausendmal zu klein", richtig
-  war eine Million. Schlimmer noch wären BE402/BE403 durchgegangen, wo
-  600 kHz und 7,6 MHz schlicht zwei verschiedene Frequenzen sind. Jetzt wird
-  der **Zahlenwert** verglichen, nicht die Ziffernfolge. Es bleiben weniger
-  Fälle — aber lieber siebenmal etwas Richtiges sagen als zwanzigmal etwas
-  Ungefähres.
-- **Der Antworttext war bei 60 Zeichen abgeschnitten** — derselbe Fehler, der
-  am 09.09. bei den Stolpersteinen behoben wurde („Nach Klasse, ist der Text
-  nur noch Klas"). Ein Satz, der mitten im Wort endet, ist nicht kurz,
-  sondern unlesbar — und die Antwort ist genau das, was man hier lesen will.
-
-### Geprüft
-- Vorsatzerkennung gegen den echten Katalog: 8 Fälle in 5 Fragen der Klasse N
-  erkannt, Gegenprobe VD728 (75 gegen 750 W) schlägt korrekt **nicht** an.
-- Die drei Befunde mit erfundenen Antwortverläufen: 3 festsitzend, 2 geraten,
-  3 langsam bei einem Median von 12 s — alle richtig zugeordnet.
-- Randfälle: ohne Daten kein Kasten, nach drei Fragen kein Kasten, nach
-  zwanzig glatten Fragen die Nachricht „nichts Auffälliges".
+### Behoben
+- Vorsatzerkennung: vergleicht den Zahlenwert statt der Ziffernfolge
+- Auswertung: Antworttext nicht mehr nach 60 Zeichen abgeschnitten
 
 ## [1.239.1] - 2026-09-10
 
 ### Behoben
-- **Die Zeitkachel ging die Farbstile nicht mit.** Dietmar: „der DARK Mode
-  ist raus. wir haben nur den Grey Blue Orange Green und den Light."
-
-  Nachgesehen — und er hat auf etwas gezeigt, das ich übersehen hatte. Die
-  Stile färben Seitenleiste und Kennzahl-Kästchen mit (Orange `#f5dcc0`,
-  Green `#d6ecdf`, Blue `#d3e4f5`, Grey `#dde1e4`), meine neue Zeitkachel
-  blieb aber in **jedem** Stil türkis-hell. In der orangenen Leiste saß
-  damit ein kalter blauer Fleck.
-
-  Sie nimmt jetzt über zwei Variablen (`--zeit-grund`, `--zeit-rand`)
-  denselben Ton wie die Kennzahl-Kästchen daneben — sie *ist* eine Kennzahl
-  wie die anderen.
-
-- **Die Farbe der großen Wochenzahl trug nur im Light Mode.** `#0a7a8b`
-  kommt auf den vier anderen Untergründen nur auf 3,8 bis 4,1:1. Neu ist
-  `#0a6b7a`, durchgerechnet auf allen fünf:
-
-  | Stil | Grund | Kontrast |
-  |---|---|---|
-  | Light | `#eef7f9` | 5,68:1 |
-  | Green | `#d6ecdf` | 4,98:1 |
-  | Blue | `#d3e4f5` | 4,76:1 |
-  | Grey | `#dde1e4` | 4,70:1 |
-  | Orange | `#f5dcc0` | 4,67:1 |
-
-  Eine Farbe für alle fünf ist zudem leichter zu pflegen als fünf einzelne.
-
-- **Eine Woche ohne Übung war im Verlauf unsichtbar.** Der Aufbau setzte
-  `height:0%` direkt am Element, und das schlägt jede Regel im Stilblatt —
-  auch die, die dort einen 2-Pixel-Strich zeichnen sollte. Die Höhe wird
-  jetzt an derselben Stelle bestimmt. Der Strich trägt außerdem ein
-  neutrales Grau statt `var(--line)`, das auf weißem Grund zu blass war:
-  Es ist kein kleiner Wert, es ist gar keiner.
-
-### Anmerkung
-- Die `body.dark`-Regeln in den neuen Blöcken sind kein Versehen. Der Dark
-  Mode ist am 03.09.2026 aus der Liste `STILE` geflogen, die Regeln bleiben
-  aber im Blatt stehen — wer ihn zurückholt, schreibt `'dark'` wieder in die
-  Liste, und alles greift von allein. Die neuen Bauteile (Zeitkachel, Notiz,
-  Fragennummer) halten sich an dieselbe Verabredung.
+- Zeitkachel: übernimmt den Farbton der Kennzahl-Kästchen im jeweiligen Farbstil (`--zeit-grund`, `--zeit-rand`)
+- Zeitkachel: Wochenzahl in `#0a6b7a`, Kontrast mindestens 4,67:1 in allen fünf Farbstilen
+- Übungsverlauf: Woche ohne Übung wieder als grauer 2-px-Strich sichtbar
 
 ## [1.239.0] - 2026-09-10
 
-### Neu
-- **Die Gesamtzeit steht jetzt neben der Wochenzeit.** Dietmar: „nicht nur
-  die Wochenzeit, sondern auch die Gesamtzeit."
-
-  In der Auswertung, unter einer Trennlinie: *Insgesamt 15 h 53 min · an
-  28 Tagen*. Die Zahl steht **nie ohne ihren Zeitraum** da — „15 Stunden"
-  kann über zwei Wochen oder über ein halbes Jahr entstanden sein, und das
-  ist ein gewaltiger Unterschied. Sie steht auch bewusst kleiner als die
-  Wochenzeit: Beim Lernen zählt, was man diese Woche tut; die Gesamtsumme
-  ist der Blick zurück, nicht der Antrieb.
-
-- **Ein Kasten „Deine Übungszeit" in der Auswertung** — mit dem Verlauf der
-  letzten acht Wochen als Säulen und vier Zahlen darunter: insgesamt (seit
-  wann), Tage geübt, Schnitt je Übungstag, längster Tag.
-
-  Der Verlauf ist der eigentliche Grund für den Kasten. Eine Gesamtzahl
-  sagt nicht, ob man gerade nachlässt — acht Säulen nebeneinander sagen es
-  auf einen Blick, und das ist die Frage, die vor einer Prüfung zählt.
-
-  **Die laufende Woche ist gekennzeichnet.** Am Montagabend steht die letzte
-  Säule fast auf dem Boden — nicht weil jemand nachlässt, sondern weil die
-  Woche zwei Tage alt ist. Sie neben sieben abgeschlossene Wochen zu stellen
-  und nichts dazu zu sagen, wäre die häufigste stille Lüge in solchen
-  Verläufen. Deshalb trägt sie an der Achse „jetzt" und im Hinweisfeld den
-  Zusatz „läuft noch".
+### Hinzugefügt
+- Auswertung: Gesamtübungszeit mit Zeitraum (Anzahl Tage) unter der Wochenzeit
+- Auswertung: Kasten Deine Übungszeit mit Verlauf der letzten acht Wochen, Gesamtzeit, Übungstagen, Tagesschnitt, längstem Tag
+- Übungsverlauf: laufende Woche als jetzt und läuft noch gekennzeichnet
 
 ### Geändert
-- **Die Zeitkachel in der Seitenleiste steht jetzt untereinander statt in
-  zwei Spalten.** Gemessen: Die Leiste ist 203 Pixel breit, und „Diese
-  Woche" brach zwischen „Diese" und „Woche" um. Zwei Spalten gehen dort
-  nicht auf, sobald die Zahlen länger werden — und sie werden länger, sobald
-  jemand ernsthaft übt.
-- **Der Vergleich zur Vorwoche ist jetzt eine absolute Zahl.** Aus
-  „−1 h 57 min zur Vorwoche" wurde „Vorwoche 3 h 15 min" — kürzer und
-  aussagekräftiger: eine Zahl, die man einordnen kann, statt einer Differenz,
-  die man erst zurückrechnen muss.
-- **Ist diese Woche noch nichts geübt, steht „noch nichts" statt „0 s".**
-  Eine fette Null wäre genau der Vorwurf, den diese Kachel nicht machen soll.
+- Zeitkachel: in der Seitenleiste untereinander statt zweispaltig
+- Zeitkachel: Vorwoche als absolute Zeit statt Differenz
+- Zeitkachel: noch nichts statt 0 s, solange in der Woche nicht geübt wurde
 
 ### Behoben
-- **Kontrast der großen Wochenzahl.** Nachgemessen: das kräftige Türkis
-  (`#0a9cb0`) kommt auf dem hellen Kachelgrund auf **3,02:1** — das reicht
-  erst ab 19 Pixel fetter Schrift, die Zahl ist 16. Sie trägt jetzt den
-  dunkleren Ton `#0a7a8b` mit **4,63:1**. Dieselbe Abwägung steckt schon im
-  1024er-Block, dort für schmale Schirme. Die ruhenden Säulen des Verlaufs
-  wurden aus demselben Grund von `#bcd9de` auf `#a3c8d0` angehoben.
-
-### Geprüft
-- **Zeitumstellung:** Wochenanfang und Tagesschlüssel rund um den 29.03. und
-  den 25.10.2026 in `Europe/Berlin` — Wochenanfang immer Montag, sieben
-  eindeutige Tage, Summe der Umstellungswoche korrekt. Ebenso der
-  Jahreswechsel (29.12.2025 bis 04.01.2026).
-- **Randfälle:** keine Daten (keine Kachel), erster Tag mit 1 Sekunde, 40
-  Sekunden und 12 Minuten, nur Vorwoche, 312 Stunden über 39 Tage — kein
-  Überlauf, Ein- und Mehrzahl stimmen.
-- **Alle fünf Stile** (hell, grün, blau, orange, grau) — die Kachel sieht in
-  allen gleich aus, wie beabsichtigt.
+- Zeitkachel: Kontrast der Wochenzahl erhöht (`#0a7a8b`, 4,63:1), Verlaufssäulen dunkler (`#a3c8d0`)
 
 ## [1.238.0] - 2026-09-10
 
-### Neu
-- **Die Übungszeit wird gezählt — je Tag, aufaddiert, und wochenweise
-  angezeigt.** Dietmar: „wenn wir schon mit Zeit arbeiten, eine
-  Registrierung wie lange man in der Woche geübt hat. übt man mehrmals am
-  Tag, wird die Zeit adiert."
-
-  In der Auswertung steht jetzt eine Zeile: *Diese Woche 1 h 38 min*,
-  daneben *heute 38 min* und der Vergleich zur Vorwoche. Bewusst **kein
-  Balken und keine Ampel** — wer sieht, dass er diese Woche 40 Minuten
-  geübt hat und letzte Woche zwei Stunden, weiß selbst, was das heißt.
-  Vor der ersten Übung steht die Zeile gar nicht da; eine Kachel mit „0 s"
-  wäre kein Ansporn, sondern ein Vorwurf.
-
-  **Was als Üben zählt, ist die eigentliche Frage.** Die Uhr läuft nur,
-  wenn eine Runde läuft, das Fenster im Vordergrund ist und die letzte
-  Regung weniger als **90 Sekunden** her ist. Als Regung zählen Klick und
-  Tastendruck, **nicht** die Mausbewegung — sonst hielte schon ein
-  Windstoß am Tisch die Uhr am Laufen.
-
-  Die 90 Sekunden waren zuerst drei Minuten. Nachgerechnet: Die Uhr läuft
-  bis zur Schwelle weiter, wer also aufsteht und geht, bekommt die volle
-  Schwelle geschenkt. Fünfmal am Tag kurz reingeschaut, und in der
-  Statistik stünden fünfzehn erfundene Minuten. Neunzig Sekunden reichen
-  für eine Rechenaufgabe mit Papier daneben und halbieren den
-  größtmöglichen Irrtum. Lieber etwas zu wenig zählen als eine Zahl, der
-  man nicht trauen kann.
-
-- **Die gewählte falsche Antwort wird mitgeschrieben — und wie lange die
-  Frage gedauert hat.** Bisher stand im Verlauf nur, *dass* eine Frage
-  falsch war (`errorList.push(qId)`). *Welche* Antwort angeklickt wurde,
-  war weg — und genau darin steckt das System des Fehlers: Wer bei einer
-  Widerstandsfrage 0,2 Ω statt 200 Ω wählt, hat den Vorsatz verrechnet,
-  nicht die Formel. Das schlägt bei zwanzig anderen Fragen wieder zu.
-
-  Der Grund, das **jetzt** einzubauen, obwohl die Auswertung erst folgt:
-  **Daten, die man heute nicht mitschreibt, kann man später nicht
-  rückwirkend gewinnen.**
-
-  Je Frage stehen ab sofort die letzten zehn Versuche im Speicher: Anzahl,
-  die gewählten falschen Antworten, die Sekunden. Eine Frage, bei der die
-  Uhr zwischendurch angehalten hat, wird **ohne** Zeit gespeichert — eine
-  Zahl, die stillschweigend eine Kaffeepause enthält, ist für „richtig,
-  aber langsam" schlimmer als gar keine.
-
-### Technik
-- Zwei neue Speicher je Benutzerplatz: `amateurfunk_diagnose_<platz>` und
-  `amateurfunk_uebungszeit_<platz>`. Beide hängen an `benutzerSchluessel()`
-  (Reset und Benutzerwechsel) und gehen über `/api/userdata` mit auf den
-  Server — `normalisiereUserdata()` in `Server.js` kennt sie jetzt, sonst
-  hätte sie das erste Speichern stillschweigend weggeworfen.
-- Der Tag wird über die lokale Uhr bestimmt, **nicht** über
-  `toISOString()`: das rechnet in Weltzeit, und wer um halb zwölf abends
-  übt, säße in der Statistik schon im nächsten Tag. Wochen beginnen am
-  Montag.
-- Gemessen: 45 s aktives Üben werden erfasst, eine Pause bringt 0 s
-  Zuwachs, die Zeit einer Frage mit Pause darin wird verworfen, eine
-  zügige Frage mit 4 s erfasst, Platz 2 fängt nach dem Benutzerwechsel bei
-  null an.
+### Hinzugefügt
+- Übungszeit: Erfassung je Tag, Anzeige der Wochenzeit mit heute und Vorwoche in der Auswertung
+- Übungszeit: zählt nur bei laufender Runde, Fenster im Vordergrund und Klick oder Tastendruck innerhalb von 90 s
+- Übungszeit: Tag nach lokaler Uhrzeit statt Weltzeit, Woche beginnt Montag
+- Diagnose: je Frage die letzten zehn Versuche mit gewählter falscher Antwort und Bearbeitungszeit gespeichert
+- Diagnose: Zeit einer Frage mit Unterbrechung wird verworfen
+- Speicher: `amateurfunk_diagnose_<platz>`, `amateurfunk_uebungszeit_<platz>`, mit Reset, Benutzerwechsel und `/api/userdata`
 
 ## [1.237.0] - 2026-09-09
 
 ### Geändert
-- **Nummer und Knöpfe stehen jetzt in einer eigenen Zeile, der Fragetext
-  darunter über die volle Breite.** Dietmar: „Wir können die erste Reihe
-  komplett ungenutzt lassen. Hier würde Technik und die Fragen Nr. stehen
-  und ganz rechts die Buttons. Darunter kommt der Text, die komplett
-  ausgenutzt wird."
-
-  **Der Weg dahin in drei Schritten — und warum die ersten zwei nicht
-  gereicht haben.**
-
-  *Erst* standen Text und Knopfreihe als zwei **Flex-Spalten**
-  nebeneinander. Eine Spalte ist über ihre ganze Höhe schmal — auch dort,
-  wo die Knöpfe längst zu Ende sind. Bei sechs Zeilen Frage blieben fünf
-  davon unnötig kurz, rechts stand ein leeres Feld.
-
-  *Dann* (1.236.0) floss der Text um die Knöpfe herum. Besser, aber nicht
-  gut, und Dietmar hat sofort gesehen warum: „danach kommt ein ewig
-  grosser Leerraum und geht erst in der nächsten Zeile weiter." Nachgemessen
-  — die Knöpfe sind **32 Pixel** hoch, eine Textzeile knapp **28**. Der
-  8-Pixel-Abstand unter den Knöpfen ragte also immer noch in die *zweite*
-  Zeile hinein und kürzte sie mit, obwohl daneben schon nichts mehr stand.
-  Genau diese halbe Zeile war der markierte Leerraum.
-
-  *Jetzt:* Die Nummer steht links, die Knöpfe stehen rechts, beide in einer
-  eigenen Kopfzeile. Der Text fängt darunter bei null an und läuft über die
-  volle Breite — **jede Zeile gleich lang, kein Rest, keine Pixelrechnerei
-  mit Zeilenhöhen.** Gemessen an NG208 auf 1441 × 913: vier Textzeilen statt
-  sieben, alle bis an den rechten Rand.
-
-  **Die Fragennummer hat den Fragetext verlassen.** Sie stand bisher als
-  erstes Wort *in* der Frage. Damit sie in der Kopfzeile nicht verloren
-  wirkt, trägt sie ihre bekannte Optik jetzt auch außerhalb des DARC-Bildes:
-  weißes Feld, Monoschrift, im Dunkelmodus dunkelblau.
-
-  Geprüft in hell, dunkel, eckig (DARC), Beamer, 1024 und 760 Pixel.
-  Kein Querüberlauf.
+- Fragenansicht: Nummer links und Knöpfe rechts in eigener Kopfzeile, Fragetext darunter über die volle Breite
+- Fragennummer: außerhalb des Fragetexts, weißes Feld mit Monoschrift auch außerhalb des DARC-Stils (dunkel: dunkelblau)
 
 ## [1.236.0] - 2026-09-09
 
 ### Geändert
-- **Der Fragetext läuft jetzt um die Knopfreihe herum.** Dietmar mit einem rot
-  umrandeten Rechteck im leeren Feld unter den sechs Knöpfen: „Der Freiraum
-  unterhalb von den Buttons wäre gut für den Text von der Frage."
-
-  **Was da im Weg stand, war Flexbox.** Text und Knopfreihe standen als zwei
-  Spalten nebeneinander. Eine Spalte ist über ihre *ganze* Höhe schmal — auch
-  dort, wo die Knöpfe längst zu Ende sind. Die Knopfreihe ist 32 Pixel hoch,
-  eine Frage oft sechs Zeilen. Also blieben fünf Zeilen unnötig kurz, und
-  rechts stand ein leeres Feld, das man ansehen musste.
-
-  **`float` löst genau das.** Die Knopfreihe wird aus dem Textfluss
-  herausgenommen und rechts oben angeheftet; der Text läuft daneben und
-  darunter weiter. Dieselbe Mechanik, mit der in jeder Zeitung ein Bild
-  mitten im Artikel steht. Gemessen an NG208 auf 1441 × 913: der Text ist
-  von 540 auf **888 Pixel** breit gewachsen, das sind zwei Zeilen weniger
-  bei gleicher Schriftgröße. Im Beamer-Modus 1698 statt 1230.
-
-  **Eine Regel muss man dabei kennen:** Die schwebende Kiste muss im Quelltext
-  *vor* dem Text stehen, um den sie fließen soll. Deshalb steht die
-  Knopfreihe in `renderQuestion()` jetzt zuerst — im Bild ändert sich dadurch
-  nichts, sie sitzt weiterhin rechts oben.
-
-  **Unter 900 Pixel Fensterbreite fließt nichts.** Sechs Knöpfe sind dort
-  breiter als der halbe Schirm, die ersten Zeilen hätten je vier Wörter.
-  Dann lieber wie bisher: Knöpfe oben, Text darunter über die volle Breite.
-
-  Geprüft in allen sechs Ansichten — hell, dunkel, eckig (DARC), Beamer,
-  1024 und 760 Pixel. Kein Querüberlauf, keine Rollleiste.
+- Fragenansicht: Fragetext umfließt die Knopfreihe (`float` statt Flex-Spalten), Textbreite z. B. 540 → 888 px
+- Fragenansicht: unter 900 px Fensterbreite Knöpfe oben, Text darunter
 
 ## [1.235.0] - 2026-09-09
 
-### Neu
-- **Notizen an der Frage.** Dietmar: „Notizen anlegen. Wie stellst du dir das
-  vor?“ — und auf den Vorschlag hin: nur an der Frage, kein zweiter
-  Notizblock daneben.
+### Hinzugefügt
+- Notizen: eigene Notiz je Frage über Notizzettel-Knopf neben Haken und Herz, farbig nur bei vorhandener Notiz
+- Notizen: Eingabefeld unter den Antworten, Speichern 2 s nach der letzten Eingabe und beim Verlassen, leere Notizen gelöscht
+- Notizen: Liste Alle Notizen mit Fragennummer, Fragetext und Sprung zur Frage
+- Notizen: auf dem Blatt Vor der Prüfung unter der richtigen Antwort
+- Notizen: je Benutzer in `amateurfunk_notizen_<Platz>`, bleibt beim Cache-Leeren erhalten, im Gruppenraum privat
 
-  **Warum das etwas anderes ist als das Herz.** Die Merkliste sagt, *dass*
-  eine Frage wichtig ist. Die Notiz sagt, *warum* — und beim zweiten
-  Durchgang ist das der Teil, der zählt: „Verwechslungsgefahr mit NC404“,
-  „Formel steht auf Seite 12“, „Michael erklärt das im Video ab 5:30“.
-
-  Ein dritter Knopf neben Haken und Herz, ein Notizzettel. Er trägt seine
-  Farbe nur, wenn wirklich etwas darin steht — dieselbe Regel wie bei den
-  anderen beiden, aus demselben Grund (1.231.1).
-
-  **Geschrieben wird unter den Antworten, nicht in einem Fenster.** Gelber
-  Grund wie ein Merkzettel, gespeichert wird **zwei Sekunden nach dem
-  letzten Anschlag** und beim Verlassen des Feldes — kein Speichern-Knopf,
-  den man vergessen kann. Bei einer Frage mit Notiz klappt das Feld von
-  selbst auf; leere Notizen werden gelöscht statt als leerer Text abgelegt.
-
-  **Ein Fehler, den der eigene Test gefunden hat.** Die erste Fassung fragte
-  beim Speichern `currentQuestions[currentIndex]` — das ist beim Blättern
-  aber **schon die nächste Frage**, während im Textfeld noch der Text der
-  vorigen steht. Ergebnis im Test: Die Notiz an NB505 stand nach einem Klick
-  auf *Weiter* auch an NC108. Die Fragennummer hängt jetzt am Feld selbst
-  (`data-qid`) und wird mit ihm zusammen ersetzt; was im Feld steht und
-  wohin es gehört, kann so nicht mehr auseinanderlaufen.
-
-  **Wiederfinden** über *Alle Notizen* im Notizfeld: alle untereinander, mit
-  Fragennummer, Fragetext und Sprung zur Frage. Bewusst **kein** weiterer
-  Knopf in der Kopfzeile — der Merkliste-Knopf dort war schon einer zu viel
-  (1.231.2).
-
-  **Auf dem Blatt „Vor der Prüfung“** steht die Notiz unter der richtigen
-  Antwort. Sie ist der einzige Teil des Blattes, den nicht der Katalog
-  geschrieben hat — und am Vorabend der wertvollste.
-
-  **Aufgehoben** wird pro Benutzer wie die Merkliste, in
-  `amateurfunk_notizen_<Platz>`. Der Schlüssel steht in `benutzerSchluessel()`
-  (Zurücksetzen räumt ihn mit weg) und in `preserveKeys` (Cache-Leeren lässt
-  ihn stehen). Im Gruppenraum bleibt die Notiz privat.
-
-**Geprüft**: schreiben, blättern, zurückblättern, sofort weiterblättern ohne
-Pause, Liste öffnen, springen — jede Notiz bleibt bei ihrer Frage.
-
----
+### Behoben
+- Notizen: Zuordnung über `data-qid` am Feld, keine Übertragung auf die nächste Frage beim Blättern
 
 ## [1.234.3] - 2026-09-09
 
 ### Geändert
-- **Die ganze Tafel steht jetzt ab 48 Punkten im Zeichen, nicht erst ab 128.**
-  Dietmar, als das neue Zeichen endlich auf dem Schreibtisch stand: „Auf dem
-  ICO fehlt Amateurfunk ----Trainer----“
-
-  Er hat es an der Stelle gesehen, an der Windows mittelgroße Symbole
-  zeichnet — 48 Punkte. Dort stand die mittlere Fassung: Wellen und Zahl,
-  ohne Schrift. Mein Gedanke war, dass „Amateurfunk“ in 48 Punkten nur noch
-  ein grauer Streifen ist.
-
-  **Das stimmt für die Lesbarkeit — nur geht es hier nicht darum.** Ein
-  Symbol wird nicht gelesen, es wird *wiedererkannt*. Und wiedererkannt wird
-  die ganze Tafel: Wellen oben, Zahl, Schriftblock unten — auch wenn die
-  Buchstaben zu Streifen werden. Wer sein Zeichen entworfen hat, will es auf
-  dem Schreibtisch sehen und nicht dessen Kurzfassung.
-
-| Größe | vorher | jetzt |
-|---|---|---|
-| 256, 128 | ganze Tafel | ganze Tafel |
-| **96, 64, 48** | Wellen und Zahl | **ganze Tafel** |
-| 32, 24, 16 | nur die Zahl | nur die Zahl |
-
-  Unter 48 Punkten (Taskleiste, Listen) bleibt die Zahl allein: Dort wäre
-  auch die Welle nur noch Gekrissel, und die 55 ist das, was das Zeichen an
-  dieser Stelle ausmacht.
-
----
+- Programmsymbol: vollständige Tafel mit Schriftzug ab 48 statt ab 128 px, unter 48 px nur die Zahl 55
 
 ## [1.234.2] - 2026-09-09
 
 ### Behoben
-- **`icon.ico` stand in der `.gitignore` — deshalb kam auf dem Schreibtisch
-  nie ein neues Zeichen an.** Dietmar, zum dritten Mal: „Das Icon hat sich
-  bei mir auf meinem Desktop nicht verändert.“
-
-  Ich habe zweimal am Zwischenspeicher gearbeitet und dabei die falsche
-  Ursache angenommen. Der Blick in seinen Ordner hat es entschieden — in
-  `C:\Program Files\Amateurfunk-Trainer`:
-
-| Datei | Stand |
-|---|---|
-| `icon-512.png` | **heute** |
-| `icon.png` | **heute** |
-| `favicon.ico` | **heute** |
-| `Index.html`, `Server.js` | **heute** |
-| **`icon.ico`** | **vor Tagen, 410 KB aus einem alten Bau** |
-
-  Und genau aus `icon.ico` nimmt Windows das Zeichen der Verknüpfung.
-  **Kein Leeren eines Zwischenspeichers hilft gegen eine Datei, die nie
-  ankommt.**
-
-  Der Grund stand in `.gitignore`: `icon.ico` galt als Teil des *Baus* — wie
-  `installer.iss`, `version.js` und `wizard.bmp`. Das stimmte einmal. Seit
-  das Zeichen aus `zeichen_bauen.py` kommt, ist es dieselbe Datei wie
-  `icon-512.png`, nur in einem anderen Format; `favicon.ico` lag ohnehin die
-  ganze Zeit im Repository. Die Zeile war ein Rest, der drei Fassungen lang
-  eine falsche Fehlersuche getragen hat.
-
-  `icon.ico` fährt jetzt mit — aus der `.gitignore` heraus und in
-  `PAKET_DATEIEN` hinein, zusammen mit `favicon.ico` und `icon.png`.
-
-- **Zwei Installationen, und die Verknüpfung zeigt auf die andere.** Auf
-  Dietmars Rechner liegen sechs Trainer-Ordner; der Schreibtisch-Verweis
-  zeigt auf `C:\Program Files\Amateurfunk-Trainer`, während hier seit Tagen
-  der Ordner auf dem Schreibtisch gepflegt wurde. Das neue `icon.ico` ist
-  deshalb in **beide** gelegt worden, dazu `Zeichen-Auffrischen.bat` und
-  `verknuepfung_auffrischen.js` in die installierte Fassung.
-
----
+- Programmsymbol: `icon.ico` aus `.gitignore` entfernt, Updates liefern das neue Symbol jetzt aus
+- Paket: `icon.ico`, `favicon.ico` und `icon.png` in `PAKET_DATEIEN` aufgenommen
 
 ## [1.234.1] - 2026-09-09
 
+### Hinzugefügt
+- `Zeichen-Auffrischen.bat`: frischt Verknüpfungen per Doppelklick sofort auf, mit Ausgabe der Änderungen
+
 ### Behoben
-- **„Ansehen“ im Update-Balken öffnete die Anleitung.** Dietmar: „bei Ansehen,
-  öffnet sich das Fenster. Das ist falsch. Hier muss sich der Updater sich
-  melden.“
-
-  Dort stand ein Aufruf von `githubUpdateOeffnen()` — **eine Funktion, die es
-  nie gegeben hat.** Der Aufruf löste einen ReferenceError aus, und der
-  Rückfall im `catch` öffnete `infoOeffnen()`, die Anleitung. So wurde aus
-  einem Tippfehler ein Fenster, das aussah, als sei es so gemeint: Es ging ja
-  etwas auf, nur eben das Falsche.
-
-  Jetzt führt der Knopf nach **Einstellungen → Update**. Und der Rückfall ist
-  weg: Ein `catch`, das etwas völlig anderes tut, verdeckt den Fehler, statt
-  ihn zu zeigen. Geht es schief, steht es in der Konsole und der Balken bleibt
-  stehen — dann sieht man, dass etwas nicht stimmt.
-
-  **Danach alle 192 Funktionsaufrufe aus `onclick`/`onchange` gegen die
-  vorhandenen Definitionen geprüft** — sonst hätte ich einen zweiten dieser
-  Art wieder erst durch Zufall gefunden. Kein weiterer Treffer.
-
-- **Das Zeichen unter Windows: jetzt wird es gesetzt, nicht nur angefasst.**
-  Dietmar: „Das alte Icon ist noch immer zu sehen, unter Windows“ — und auf
-  seinem Bild stand ein Zeichen, das der Trainer seit Wochen nicht mehr
-  benutzt.
-
-  1.234.0 hat die Verknüpfung nur **unverändert gespeichert**, damit sie
-  einen neuen Zeitstempel bekommt. Das reicht, solange sie ohnehin auf das
-  richtige Bild zeigt. **Zeigt sie auf eine alte Bilddatei, bleibt sie so
-  alt, wie sie war** — und genau das war hier der Fall.
-
-  Jetzt wird bei jeder Verknüpfung, die in einen Trainer-Ordner zeigt (dort
-  liegen `Index.html` und `icon.ico`), das Zeichen ausdrücklich auf dieses
-  `icon.ico` **gesetzt** — und zwar auf das im Ordner der Verknüpfung selbst,
-  nicht auf unseres: Wer zwei Installationen hat, soll nicht die eine auf die
-  andere zeigen sehen. Dazu `SHChangeNotify`, damit der Explorer den
-  Schreibtisch sofort neu zeichnet, statt erst beim nächsten Anmelden.
-
-  Der Vorgang **berichtet jetzt**, was er gefunden und geändert hat — mit
-  dem alten und dem neuen Pfad je Verknüpfung. Ohne diesen Bericht rät man
-  wieder.
-
-### Neu
-- **`Zeichen-Auffrischen.bat`** für alle, die nicht warten wollen: Doppelklick,
-  und die Verknüpfungen werden sofort nachgezogen — mit Ausgabe, welche
-  angefasst wurde und was vorher darin stand. Ziel, Name und Arbeitsordner
-  bleiben unangetastet.
-
----
+- Update-Balken: Ansehen öffnet Einstellungen → Update statt der Anleitung (Aufruf einer nicht vorhandenen Funktion)
+- Update-Balken: irreführender Rückfall im `catch` entfernt, Fehler erscheint in der Konsole
+- Code: alle 192 Funktionsaufrufe aus `onclick`/`onchange` gegen vorhandene Definitionen geprüft
+- Windows-Verknüpfungen: Symbol ausdrücklich auf `icon.ico` im Ordner der Verknüpfung gesetzt, `SHChangeNotify` zum Neuzeichnen
+- Verknüpfungen: Auffrischen meldet alten und neuen Symbolpfad je Verknüpfung
 
 ## [1.234.0] - 2026-09-09
 
-### Neu
-- **Das Zeichen auf dem Schreibtisch frischt sich von selbst auf — unter
-  Windows, Linux und macOS.** Dietmar: „Das neue Icon auf dem Desktop muss
-  sich bei Windows Linux und Mac automatisch erneuern.“
+### Hinzugefügt
+- Programmsymbol: automatisches Auffrischen der Verknüpfungen unter Windows, Linux und macOS (`verknuepfung_auffrischen.js`)
+- Windows: `.lnk` neu gespeichert und `ie4uinit.exe -show`, Suche auf Desktop (auch OneDrive) und im Startmenü
+- Linux: `.desktop` neu geschrieben, `update-desktop-database`, `gtk-update-icon-cache` und `gio set … trusted`
+- `zeichen_bauen.py`: erzeugt `icon.icns` selbst, sieben Größen von 64 bis 1024
+- Auffrischen nach Update, beim Start bei neuerem Symbol (`data/zeichen_stand.json`) und bei der Installation
+- Auffrischen ändert nur vorhandene Verknüpfungen, legt nichts an und löscht nichts
 
-  **Warum das überhaupt nötig ist:** Alle drei Systeme merken sich Zeichen
-  nach dem **Pfad** der Bilddatei, nicht nach ihrem Inhalt. Der Pfad bleibt
-  bei einem Update derselbe (`icon.ico` liegt immer im Trainer-Ordner) — also
-  sieht das System keinen Grund, noch einmal hinzusehen. Man tauscht die
-  Datei, und auf dem Schreibtisch klebt weiter das alte Bild, oft wochenlang.
-
-  Jedes System braucht seinen eigenen Anstoß, und die stehen jetzt in
-  `verknuepfung_auffrischen.js`:
-
-  - **Windows** — die Verknüpfung (`.lnk`) wird geöffnet und **unverändert**
-    wieder gespeichert. Erst das Speichern gibt ihr einen neuen Zeitstempel,
-    an dem der Explorer merkt, dass er nachsehen muss. Dazu
-    `ie4uinit.exe -show`, der amtliche Weg, den Zwischenspeicher der Shell zu
-    leeren. Gesucht wird auf beiden Schreibtischen (auch dem in OneDrive) und
-    im Startmenü.
-  - **Linux** — die `.desktop`-Datei wird mit demselben Inhalt neu
-    geschrieben (manche Arbeitsumgebungen sehen auf den Inhalt, andere auf
-    den Zeitstempel), dazu `update-desktop-database`, `gtk-update-icon-cache`
-    und `gio set … trusted`.
-  - **macOS** — das neue `icon.icns` kommt in die `.app`, dann wird das
-    Bündel angefasst.
-
-  **Auf dem Mac gab es gar kein Zeichen.** Die `.app`, die `installieren.sh`
-  anlegt, hatte keinen `CFBundleIconFile`-Eintrag und keine Icon-Datei — der
-  Finder zeigte das leere Standardblatt. Beides ist jetzt dabei; ältere
-  Bündel bekommen den fehlenden Eintrag beim Auffrischen nachgetragen.
-
-- **`icon.icns` wird mitgebaut.** Auf dem Mac nimmt man dafür `iconutil` —
-  das gibt es hier nicht, und ein Zeichen, das nur auf einem Mac entstehen
-  kann, könnte niemand nachbauen. `zeichen_bauen.py` schreibt das Format
-  deshalb selbst: Kopf, dann je Bild Typkürzel, Länge und ein PNG. Sieben
-  Größen von 64 bis 1024.
-
-**Drei Wege, auf denen es ausgelöst wird** — der Anstoß muss überall
-hängen, wo ein neues Zeichen ankommen kann:
-
-  1. **Nach einem Update** (`github_update.js`): War eine der Zeichen-Dateien
-     dabei, wird aufgefrischt. Scheitert das, gilt das Update trotzdem als
-     gelungen — die neuen Dateien liegen ja da.
-  2. **Beim Start** (`Server.js`): Der Zeitstempel des Zeichens steht in
-     `data/zeichen_stand.json`. Ist die Bilddatei neuer, wird **einmal**
-     aufgefrischt, zwölf Sekunden nach dem Start. Das fängt die übrigen Fälle
-     ab: von Hand getauscht, aus einer Sicherung geholt, den Ordner kopiert.
-     Der Stempel wird **vor** dem Versuch geschrieben — sonst scheiterte es
-     auf einem widerspenstigen System bei jedem Start neu.
-  3. **Bei der Installation**: `installieren.sh` ruft es am Ende auf, und das
-     Windows-Setup startet `ie4uinit` mit `runasoriginaluser` — der
-     Zwischenspeicher hängt am Benutzer, nicht am Setup.
-
-  Das Skript **legt nichts an und löscht nichts**. Es fasst nur an, was schon
-  da ist; findet es nichts, geht es still wieder hinaus.
-
----
+### Behoben
+- macOS: von `installieren.sh` angelegte `.app` erhält `icon.icns` und `CFBundleIconFile`, ältere Bündel werden nachgetragen
 
 ## [1.233.0] - 2026-09-09
 
-### Neu
-- **Ein Zurücksetzen-Knopf hinter jedem Platz.** Dietmar: „Hier benötigt es
-  hinter jeden Benutzer einen Reset Button.“
-
-  Bisher führte der einzige Weg über *Allgemein → Zurücksetzen* — weit weg
-  von dem Platz, den man gerade meint, und mit der Frage, welcher es denn
-  sein soll. Jetzt steht er dort, wo die Entscheidung fällt: in der Zeile des
-  Platzes.
-
-  **Zwei verschiedene Dinge, zwei Knöpfe:**
-
-  - **↺ Zurücksetzen** räumt den *Lernstand* weg: Verlauf, Fehlerliste,
-    Lernbedarf, Lernfortschritt, Merkliste, Prüfungstermin, Blätter-Stand,
-    Lesezeichen, Diplome und CB-Teil. **Der Name bleibt**, ebenso das
-    Prüfungsziel und die Einstellungen des Platzes — das ist die Person,
-    nicht ihr Fortschritt. Gedacht für den Abend, an dem der Platz an den
-    Nächsten geht.
-  - **✕** entfernt weiterhin *nur den Namen* und lässt alles liegen.
-
-  Der Knopf erscheint nur bei Plätzen, auf denen etwas liegt. Gefragt wird im
-  Fenster des Trainers, mit einer Liste dessen, was geht und was bleibt —
-  nicht mit dem nackten `confirm()` des Browsers.
-
-  **Zwei Stellen, an die man leicht nicht denkt**, und die hier mit
-  drankommen: Der gemeinsame Verlauf (`examHistory`) hält ein Fach je Platz —
-  ohne dessen Leerung wäre der Verlauf beim nächsten Start wieder da. Und ist
-  der zurückgesetzte Platz gerade der aktive, werden Zähler, Verlaufsspalte
-  und Lernfortschritt sofort nachgezogen, statt die alten Zahlen stehen zu
-  lassen.
-
-  Die Liste der Schlüssel steht in `benutzerSchluessel()` an einer Stelle.
-  Wer später ein neues Fach je Benutzer anlegt, muss es dort und in
-  `preserveKeys` eintragen — sonst bliebe beim Zurücksetzen still etwas
-  liegen.
-
-**Geprüft**: Platz 2 mit Lernfortschritt, Fehlern, Merkliste und Verlauf
-zurückgesetzt — alle vier Schlüssel weg, `examHistory` für diesen Platz
-geleert, der Name „Gast“ steht noch, und die Merkliste von Platz 1 ist
-unberührt.
-
----
+### Hinzugefügt
+- Benutzerplätze: Zurücksetzen-Knopf je Platz, löscht den Lernstand (Verlauf, Fehler, Lernbedarf, Merkliste, Diplome u. a.)
+- Benutzerplätze: Name, Prüfungsziel und Einstellungen bleiben beim Zurücksetzen erhalten, ✕ entfernt weiterhin nur den Namen
+- Benutzerplätze: Rückfrage im Trainer-Dialog mit Liste der betroffenen Daten, Knopf nur bei Plätzen mit Daten
+- Benutzerplätze: `examHistory` des Platzes wird geleert, Anzeigen des aktiven Platzes sofort aktualisiert
 
 ## [1.232.0] - 2026-09-09
 
 ### Geändert
-- **Die Schrift richtet sich jetzt nach dem Platz — bis 24 px.** Dietmar:
-  „Die Frage und die Antworten, kann man doch größer schreiben. Es gibt
-  meiner Meinung nach genug Platz.“
-
-  Er hat recht — **für die Frage, die er vor sich hat.** Nur gilt das nicht
-  für jede: Der Katalog reicht von „1 W entspricht …“ bis zu VD707 mit vier
-  langen Antworten. Eine feste Größe muss sich nach der längsten richten,
-  und die längste ist selten. Gemessen: Bei fest 24 px lief auf seinem
-  Fenster (1441 × 913) **jede sechste der vierzig längsten Fragen** über den
-  Rand — und bei den übrigen 531 blieb der Platz ungenutzt. Beides zugleich
-  geht nur, wenn die Größe nicht fest ist.
-
-  Drei Stufen, und nach jeder Frage wird die größte genommen, die noch ganz
-  hineinpasst:
-
-| Stufe | Frage | Antworten |
-|---|---|---|
-| groß | **24,0 px** | **23,7 px** |
-| mittel | 21,4 px | 21,1 px |
-| klein | 19,8 px | 19,5 px |
-
-  Gemessen wird an der **Unterkante der Knopfleiste**: Solange die im
-  Fenster bleibt, ist die Frage vollständig zu sehen.
-
-  **Ergebnis auf seinem Fenster** (1441 × 913): eine gewöhnliche 25er-Runde
-  steht **25 von 25 Mal auf der großen Stufe**; von den vierzig längsten
-  Fragen des Katalogs bekommen **34 die große** und 6 die mittlere. Keine
-  läuft über.
-
-  **Drei Stufen und nicht stufenlos**, damit die Schrift nicht bei jeder
-  Frage eine andere Größe hat — und **groß zuerst**, damit der häufige Fall
-  ohne Umweg richtig steht.
-
-  **Alles in einem Durchgang.** Zwischen den Versuchen wird nicht gezeichnet:
-  Der Browser rechnet die Seite neu, sobald man eine Größe liest, malt aber
-  erst am Ende. Mit einem `setTimeout` dazwischen sähe man die Schrift
-  dreimal springen. Gemessen wird außerdem in derselben Einheit, in der
-  `innerHeight` zählt — `clientHeight` wäre die andere und ergäbe bei
-  vergrößerter Anzeige die falsche Entscheidung.
-
-  Beim Ändern der Fenstergröße wird neu entschieden.
-
----
+- Fragenansicht: Schriftgröße in drei Stufen bis 24 px, je Frage die größte passende Stufe
+- Fragenansicht: Maßstab ist die Unterkante der Knopfleiste im Fenster, neue Entscheidung bei Änderung der Fenstergröße
+- Fragenansicht: Stufenwahl in einem Durchgang ohne sichtbares Springen der Schrift
 
 ## [1.231.5] - 2026-09-09
 
 ### Behoben
-- **Die Erklärung beim Überfahren ist zurück — ich hatte sie weggenommen.**
-  Dietmar: „Bei Mouse Overlay möchte ich, das hier eine kurze Erklärung
-  kommt.“
-
-  In 1.230.1 hatte ich bei Haken und Herz `title` durch `data-tooltip`
-  ersetzt, in dem Glauben, `data-tooltip` sei die Sprechblase des Trainers.
-  **Ist es nicht:** `data-tooltip` steuert allein das *Vorlesen* der Knöpfe.
-  Sichtbar wird ein Text beim Überfahren nur über `title` — der Kasten, den
-  der Browser selbst zeigt, und auf den der ganze Trainer baut. Damit hatte
-  ich den beiden Knöpfen genau die Erklärung genommen, die die Verwechslung
-  von vornherein verhindert hätte.
-
-  Jetzt steht beides da: **`title` für das Auge, `data-tooltip` für das Ohr.**
-  Der sichtbare Text wandert beim Umschalten mit — es steht nicht weiter
-  „merken“, wenn die Frage längst gemerkt ist.
-
-- **Taschenrechner und Formelblatt bekommen ihren Text zum ersten Mal.**
-  Beiden fehlte `title` von Anfang an; sie hatten nur die Vorlese-Fassung.
-  Damit haben jetzt alle sechs Knöpfe in der Zeile über der Frage eine
-  Erklärung beim Überfahren: Haken, Herz, Rechner, Formelblatt, Vorlesen und
-  das Zahnrad.
-
----
+- Haken und Herz: Erklärung beim Überfahren wieder da (`title` für die Anzeige, `data-tooltip` fürs Vorlesen)
+- Haken und Herz: Text beim Überfahren wechselt mit dem Zustand
+- Taschenrechner und Formelblatt: erstmals Erklärung beim Überfahren, damit alle sechs Knöpfe über der Frage beschriftet
 
 ## [1.231.4] - 2026-09-09
 
 ### Behoben
-- **Haken und Herz sind zurück — die Wörter waren nicht meine Entscheidung.**
-  Dietmar: „Für Gelernt = gibt es einen Hacken und für Gemerkt = gibt es ein
-  Herz. Wer hat dir das erlaubt, das zu ändern?“
-
-  **Niemand.** Ich hatte in 1.231.0 *Gelernt* und *Merken* in die Knöpfe
-  geschrieben, um eine Verwechslung abzustellen. Die Verwechslung zu melden
-  war richtig; das Aussehen eigenmächtig zu ändern nicht. Die beiden Zeichen
-  sind seine Gestaltung, und sie stehen seit Monaten so.
-
-  Die Knöpfe sind wieder 36 Punkte groß und tragen nur ihr Zeichen: Haken und
-  Herz.
-
-  **Was von der Änderung bleibt**, weil es nichts am Aussehen ändert:
-
-  1. **Farbe heißt „an“** (1.231.1). Aus ist grau, gesetzt ist farbig. Der
-     rote Ruhezustand aus 1.230.1, der wie „gesetzt“ aussah, war der eigentliche
-     Auslöser der ganzen Sache.
-  2. **Der Hinweiskasten** beim Zeigen sagt jetzt, welcher Knopf welcher ist:
-     „Herz = MERKLISTE …“, „Haken = GELERNT …“.
-  3. **Die Einblendung nach dem Klick** („❤ NB505 gemerkt — Merkliste: 1“)
-     samt der Gegenprobe aus 1.231.3.
-
-  Ist auch davon etwas zu viel, fliegt es raus — es ist sein Programm.
-
----
+- Haken und Herz: Knöpfe wieder 36 px groß, nur Symbol ohne Wortbeschriftung
+- Haken und Herz: Hinweiskasten benennt die Funktion (Herz = Merkliste, Haken = Gelernt), grau im Aus-Zustand bleibt
 
 ## [1.231.3] - 2026-09-09
 
 ### Behoben
-- **„Merken“ sagt jetzt, wenn es nicht geht.** Dietmar auf die Nachfrage:
-  „Ich habe ♥ Merken gedrückt — nichts passiert.“
-
-  Nachstellen ließ sich das hier nicht: in vier Rundenarten und über die
-  Suche trägt der Knopf die Frage ein. Es liegt also an etwas, das nur auf
-  seinem Rechner so ist — **und genau davon erfuhr ich nichts, weil jeder
-  Schritt in einem stillen `catch` endete:**
-
-  - `saveFavorites()` verschluckte einen Schreibfehler (voller Speicher,
-    abgeschaltete Ablage, privates Fenster) — `catch(e){}`, ohne ein Wort.
-  - `toggleFavoriteCurrent()` kehrte wortlos um, wenn gerade keine Frage
-    erkannt wurde.
-
-  Von außen sieht beides gleich aus: nichts passiert. **Ein stilles catch ist
-  keine Fehlerbehandlung, es ist eine Fehlerverschleierung** — und hier hat
-  es zwei Tage gekostet.
-
-  Jetzt meldet der Knopf in jedem Fall, was passiert ist, auch im Fehlerfall
-  mit Grund. Nach dem Schreiben macht er die **Gegenprobe**: Er liest die
-  Ablage zurück und vergleicht sie mit der Liste im Speicher. Stimmen sie
-  nicht überein, steht das da — mit beiden Inhalten:
-
-      ❤ NB505 NICHT gespeichert — Ablage: ["…"] / erwartet: […]
-
-  Verglichen wird die **ganze Liste**, nicht nur „kommt die Nummer vor“.
-  Sonst ginge ein fehlgeschlagenes Schreiben durch, solange die Nummer noch
-  vom letzten Mal in der Ablage steht — genau das ist beim ersten Versuch
-  passiert.
-
-  Dazu Einträge in der Konsole des Browsers (F12) mit Schlüssel, Ablage-
-  Inhalt und Liste.
-
----
+- Merkliste: Merken meldet immer das Ergebnis, im Fehlerfall mit Grund
+- Merkliste: Gegenprobe nach dem Speichern vergleicht die ganze Liste mit der Ablage
+- Merkliste: stille `catch`-Blöcke in `saveFavorites()` und `toggleFavoriteCurrent()` ersetzt, Ausgabe in der Konsole (F12)
 
 ## [1.231.2] - 2026-09-09
 
 ### Geändert
-- **Der Knopf „Merkliste“ in der Hauptansicht ist wieder weg.** Dietmar:
-  „Diesen Button Merkliste wird nicht benötigt. Ich habe das oben in der
-  Merkliste.“
-
-  Er hat recht, und ich hätte ihn gar nicht erst bauen sollen. Ich hatte ihn
-  in 1.230.0 hinzugefügt, weil ich die Ursache falsch geraten hatte — ich
-  hielt es für ein Auffind-Problem. Der eigentliche Grund war die
-  Verwechslung der beiden Marken an der Frage; die ist mit 1.231.0 (Wörter
-  statt bloßer Zeichen) und 1.231.1 (Farbe heißt nur noch „an“) behoben.
-
-  Damit war der Knopf das, was er von Anfang an war: ein zweiter Weg zu einer
-  Liste, die schon einen hat. Das Herz mit der Zahl in der Kopfzeile bleibt
-  und tut dasselbe.
-
-  Der Hinweis über Gemerktes außerhalb des Prüfungsziels („2 Fragen · 1
-  weitere gehört nicht zum gewählten Prüfungsziel“) bleibt — der gehört zur
-  Liste, nicht zum Knopf.
-
----
+- Hauptansicht: Knopf Merkliste wieder entfernt, Zugriff über das Herz in der Kopfzeile
+- Merkliste: Hinweis auf gemerkte Fragen außerhalb des Prüfungsziels bleibt
 
 ## [1.231.1] - 2026-09-09
 
 ### Behoben
-- **Farbe heißt jetzt wieder nur eines: eingeschaltet.** In 1.230.1 hatte ich
-  beiden Marken an der Frage ihre Farbe **auch im Aus-Zustand** gegeben — der
-  Haken grün, das Herz rot — damit man sie auseinanderhalten kann.
-
-  **Das war schlechter als das Problem, das es lösen sollte.** Ein rotes Herz
-  auf weißem Grund liest sich als „gesetzt“. Wer es sieht, hat allen Grund
-  anzunehmen, die Frage stehe auf der Merkliste — und wenn der Zähler oben
-  dann 0 zeigt, ist der einzige mögliche Schluss, dass die Merkliste kaputt
-  ist. Genau dieser Schluss wurde zweimal gemeldet, an einem Programm, das
-  tat, was es sollte.
-
-  Jetzt: **aus ist grau, an trägt Farbe.** Was die beiden Knöpfe
-  unterscheidet, ist das Wort daneben — *Gelernt* und *Merken* / *Gemerkt* —
-  und nicht der Farbton. Das Wort ist der verlässliche Kanal; Farbe kann nur
-  eines sagen, und das soll sie auch.
-
-  Zusammen mit der Einblendung aus 1.231.0 („❤ NB505 gemerkt — Merkliste: 1“)
-  gibt es damit drei unabhängige Bestätigungen: das Wort im Knopf, die
-  gefüllte Fläche und die Zeile unten.
-
-**Nachgestellt** wurde dabei auch der Weg, den Dietmar zuletzt beschrieben
-hat — „NB505“ ins Suchfeld, Eingabetaste, Herz drücken: Die Frage landet in
-der Liste, Zähler oben und Knopf *Merkliste* zeigen 1, gespeichert unter
-`amateurfunk_favorites_user1`.
-
----
+- Haken und Herz: im Aus-Zustand grau, Farbe nur im gesetzten Zustand
+- Haken und Herz: Unterscheidung über die Beschriftung Gelernt und Merken/Gemerkt statt über den Farbton
 
 ## [1.231.0] - 2026-09-09
 
 ### Geändert
-- **Die beiden Marken an der Frage tragen jetzt ihren Namen, und jeder Klick
-  sagt, was er bewirkt hat.** Dietmar, zweimal: „Mit der Merkliste stimmt was
-  nicht“ und danach „Nein, die Merkliste ist zerschossen!“
-
-  **Nachgemessen im laufenden Trainer, in vier Rundenarten** (Start über den
-  Knopf, Fehler, Lernbedarf, gezielte Runde): Ein Klick auf das Herz trägt
-  die Frage ein, der Zähler oben springt auf 1, der Knopf *Merkliste* zeigt
-  1, und die Liste steht danach unter `amateurfunk_favorites_user1` in der
-  Ablage des Browsers. Sie übersteht Klassenwechsel, Neuladen, Serverneustart
-  und das Zurücksetzen des Zwischenspeichers. Die Merkliste selbst ist in
-  Ordnung.
-
-  **Der Fehler ist die Beschriftung — genauer: ihr Fehlen.** Zwei runde
-  Knöpfe nebeneinander, beide 36 Punkte groß, beide nur ein Zeichen ohne
-  Wort: links *gelernt – nicht mehr abfragen*, rechts die Merkliste. Wer den
-  linken drückt und oben in der Merkliste nachsieht, findet nichts — und die
-  einzige mögliche Erklärung ist dann, dass die Merkliste kaputt ist. Ein
-  Zeichen ohne Wort ist ein Rätsel, und dieses hier hatte zwei plausible
-  Lösungen.
-
-  Jetzt heißen sie, was sie sind: **Gelernt** (grün) und **Merken** /
-  **Gemerkt** (rot). Nach jedem Klick blendet sich unten für zwei Sekunden
-  eine Zeile ein — „❤ NB505 gemerkt — Merkliste: 3“ bzw. „✓ NB505 gilt als
-  gelernt — wird nicht mehr abgefragt“. Damit ist die Frage „wirkt das
-  überhaupt?“ beim nächsten Mal in einer Sekunde beantwortet, ohne
-  irgendwo nachzusehen.
-
-  Unter 1200 Punkten Fensterbreite bleiben es Zeichen allein — dort wäre die
-  Zeile über der Frage sonst zu voll. Hinweiskasten und Einblendung bleiben
-  auch dann.
-
-  Der Zustand kommt jetzt aus einer CSS-Klasse statt aus einzelnen
-  `style`-Zuweisungen. Sonst hätte sich beim Umschalten die Farbe geändert,
-  das Wort aber nicht.
-
----
+- Haken und Herz: Beschriftung Gelernt (grün) und Merken/Gemerkt (rot), unter 1200 px Fensterbreite nur Symbol
+- Haken und Herz: Einblendung für zwei Sekunden nach jedem Klick mit Fragennummer und Stand der Merkliste
+- Haken und Herz: Zustand über CSS-Klasse statt einzelner `style`-Zuweisungen
 
 ## [1.230.1] - 2026-09-09
 
 ### Behoben
-- **Zwei Knöpfe, die man verwechseln musste.** Dietmar mit einem Ausschnitt:
-  der grüne Haken an der Frage ist gesetzt, oben steht die Merkliste auf 0 —
-  „Der Fehler liegt bei dir!“
-
-  **Er hat recht, und der Fehler lag bei mir — nur nicht in der Merkliste.**
-  Der grüne Haken ist *gelernt – nicht mehr abfragen*; die Merkliste ist das
-  Herz daneben. Zwei verschiedene Funktionen, aber:
-
-  - gleich groß, gleich rund, gleich weiß,
-  - **beide grau**, solange sie aus sind,
-  - und beide färben sich beim Klick kräftig ein.
-
-  Zwei Knöpfe, die im Aus-Zustand gleich aussehen und im Ein-Zustand beide
-  „markiert“ sagen, sind keine zwei Knöpfe — das ist einer mit zwei
-  Bedeutungen. Wer den linken drückt und rechts nachsieht, hat alles richtig
-  gemacht und bekommt trotzdem das falsche Ergebnis. Genau das ist passiert.
-
-  Jetzt tragen sie **ihre Farbe immer**: der Haken grün, das Herz rot, auch
-  im Aus-Zustand (weißer Grund, farbiger Rand und Zeichen). Der Unterschied
-  zwischen an und aus ist die **Fläche**, nicht die Farbe — gefüllt heißt
-  gesetzt.
-
-  Dazu sagen beide im Vorbeigehen, was sie tun: aus `title` (das der Browser
-  erst nach Sekunden und in Systemschrift zeigt) wurde `data-tooltip`, der
-  Hinweiskasten des Trainers. Beim Haken steht ausdrücklich dabei: **„Das ist
-  NICHT die Merkliste; die ist das Herz daneben.“**
-
----
+- Haken und Herz: Farbe auch im Aus-Zustand (Haken grün, Herz rot), gesetzt = gefüllte Fläche
+- Haken und Herz: Hinweiskasten des Trainers (`data-tooltip`) statt `title`, Haken verweist auf das Herz als Merkliste
 
 ## [1.230.0] - 2026-09-09
 
+### Hinzugefügt
+- Hauptansicht: Knopf Merkliste mit Anzahl zwischen Lernbedarf und Auffrischen
+
 ### Geändert
-- **Die Merkliste hat jetzt einen Knopf in der Hauptansicht.** Dietmar: „Mit
-  der Merkliste stimmt was nicht. Ich habe welche gespeichert und in der
-  Hauptansicht, sind diese nicht zu sehen.“
-
-  **Die gemerkten Fragen waren nie weg.** Nachgeprüft im laufenden Trainer:
-  Sie stehen unter `amateurfunk_favorites_<Benutzer>` und überstehen den
-  Wechsel des Prüfungsziels (N → E → N), das Neuladen der Seite, den
-  Neustart des Servers und das Zurücksetzen des Zwischenspeichers — der
-  Schlüssel steht in der Schutzliste. Auch der Zähler stimmte in jedem Test.
-
-  Was fehlte, war der **Weg dorthin**. *Fehler* und *Lernbedarf* haben in
-  der Hauptansicht je einen Knopf mit ihrer Zahl daneben; die Merkliste
-  hatte nur ein kleines Herz oben in der Kopfzeile, rechts neben dem
-  Suchfeld. Wer dort nicht hinsieht, findet sie nicht — und muss annehmen,
-  das Gemerkte sei verloren. Das ist kein Bedienfehler, sondern ein Fehler
-  der Anordnung: Drei gleichartige Listen, und eine davon steht woanders.
-
-  Der neue Knopf steht zwischen *Lernbedarf* und *Auffrischen*, mit
-  derselben Zahl und demselben Verhalten (blass, solange nichts gemerkt
-  ist). Das Herz oben bleibt, wo es war.
-
-- **Gemerktes außerhalb des Prüfungsziels wird jetzt erklärt.** Die Zahl
-  zählt alle gemerkten Fragen, die Liste kann nur die aus dem geladenen
-  Fragenpool zeigen. Wer auf Klasse N lernt und eine A-Frage gemerkt hat,
-  sah bisher **3** am Knopf und zwei Zeilen in der Liste, ohne ein Wort
-  dazu. Jetzt steht in der Kopfzeile der Liste: „2 Fragen · 1 weitere gehört
-  nicht zum gewählten Prüfungsziel“.
-
----
+- Merkliste: Kopfzeile nennt die Anzahl gemerkter Fragen außerhalb des gewählten Prüfungsziels
 
 ## [1.229.3] - 2026-09-09
 
 ### Behoben
-- **Die Hauptansicht im Vollbild: leere Fläche links, endloser Verlauf
-  rechts.** Dietmar mit einem Foto: „bei vollbild stimmt jetzt was nicht.“
-
-  Beides kam aus **einer** Zeile. Seit 1.224.0 ist die Karte mindestens
-  fensterhoch, damit die Knopfleiste bei jeder Frage auf derselben Höhe
-  sitzt. Diese Mindesthöhe galt aber **immer** — auch in der Hauptansicht,
-  wo es gar keine Knopfleiste gibt, die etwas festhalten müsste.
-
-  Die Folge war eine Kette: Die linke Spalte wurde auf Fensterhöhe gezogen,
-  obwohl ihr Inhalt nach einem Drittel endet. `verlaufHoeheAngleichen()`
-  misst genau diese Spalte und gibt dem Verlauf dieselbe Höhe — also stand
-  rechts eine Liste über die ganze Seite, links nichts.
-
-  **Im Vollbild fällt es auf, weil dort die Browserleisten wegfallen:**
-  100vh sind gut zweihundert Punkte mehr als sonst. Im Fenster war der
-  Fehler kleiner und deshalb nie aufgefallen.
-
-  Die Kette hängt jetzt an einer Marke `runde-laeuft`, die
-  `updateVisibility()` setzt — der einzige Ort, an dem zwischen Runde und
-  Hauptansicht zuverlässig umgeschaltet wird. In der Hauptansicht ist die
-  Karte so hoch wie ihr Inhalt.
-
-**Gemessen** bei 1920 × 1080 (Vollbild):
-
-| | vorher | jetzt |
-|---|---|---|
-| Karte im Hauptmenü | 1042 px | **951 px** |
-| Verlauf-Höhe | 684 px | **496 px** (= linke Spalte) |
-
-  In der Runde bleibt alles wie gehabt: Karte fensterhoch, Knopfleiste bei
-  jeder Frage auf derselben Höhe. Geprüft bei 1920 × 1080, 1400 × 900 und
-  1366 × 660, jeweils Hauptansicht → Runde → zurück.
-
----
+- Hauptansicht: im Vollbild keine leere Fläche links und kein überlanger Verlauf rechts mehr
+- Karte: Mindesthöhe in Fensterhöhe nur noch während einer Runde (Klasse `runde-laeuft` über `updateVisibility()`)
 
 ## [1.229.2] - 2026-09-09
 
 ### Behoben
-- **Das Zucken beim Weiterblättern.** Dietmar: „Bei weiter klicken, zieht es
-  den Trainer kurz nach unten und danach wieder nach oben.“
-
-  Zwei Ursachen, beide erst durch die letzten Fassungen scharf geworden.
-
-  **1. Die Rollleiste des Browsers schaukelt sich auf.** Seit die Karte
-  mindestens fensterhoch ist (1.224.0) und die Antwortfelder den Rest füllen
-  (1.228.0), liegt die Seitenhöhe **genau auf der Fensterhöhe** — auf der
-  Kippe. Wird eine Frage einen Punkt zu hoch, blendet der Browser die
-  Rollleiste ein; die Seite wird dadurch **15 Punkte schmaler**, der Text
-  bricht anders um und die Seite wird wieder niedriger — worauf die
-  Rollleiste verschwindet, die Seite breiter wird und alles von vorn
-  beginnt. Das ist das Rucken: eine Rückkopplung zwischen Höhe und Breite.
-
-      html { scrollbar-gutter: stable; }
-
-  hält den Platz für die Leiste immer frei. Ihr Kommen und Gehen kostet dann
-  keine Breite mehr, und die Rückkopplung ist unterbrochen. Der Preis sind
-  15 Punkte Rand, die man nicht bemerkt.
-
-  **2. `scrollIntoView` rollte das ganze Fenster mit.** Nach jeder Frage
-  wurde der aktuelle Punkt in der Verlaufsspalte sichtbar gemacht — mit
-  `currentDot.scrollIntoView({ block: 'nearest' })`. Der Name klingt
-  harmlos, aber die Funktion rollt **jeden rollbaren Vorfahren** mit, bis
-  hinauf zum Fenster. Lag der Punkt weiter unten in der Spalte, zog sie die
-  ganze Seite nach unten — weich, also gut sichtbar. `block: 'nearest'`
-  hilft dagegen nicht: Es bestimmt, **wohin** gerollt wird, nicht **was**.
-
-  Jetzt wird der Rollstand der Spalte selbst gesetzt, und nur, wenn der
-  Punkt wirklich außerhalb liegt. Das Fenster bleibt, wo es ist.
-
-  Am Programm ändert sich nichts weiter; die Knopfleiste steht wie bisher
-  bei jeder Frage auf derselben Höhe.
-
----
+- Fragenansicht: kein Zucken der Seite beim Weiterblättern
+- Layout: `scrollbar-gutter: stable` verhindert Rückkopplung durch ein- und ausblendende Rollleiste
+- Verlaufsspalte: setzt eigenen Rollstand statt `scrollIntoView`, das Fenster rollt nicht mehr mit
 
 ## [1.229.1] - 2026-09-09
 
+### Geändert
+- Fragetext: 19,8 statt 20,8 px, Knopfleiste auch bei der längsten Frage (VD707) ohne Rollen erreichbar
+
 ### Behoben
-- **Der Antworttext war nie mitgewachsen — eine feste Angabe hat ihn
-  festgehalten.** Dietmar mit einem Ausschnitt der vier Antwortfelder:
-  „0,200 Ω usw.… die Antworten können gerne grösser sein.“
-
-  Das war kein Wunsch nach noch mehr, sondern ein **Fehler von mir**. In der
-  CSS stand seit jeher
-
-      .option-text { font-size: 0.9rem; }
-
-  also 14,4 px, fest. 1.227.0 und 1.229.0 haben `.option` vergrößert — aber
-  `.option-text` ist die speziellere Regel und blieb, wo sie war.
-  **Gewachsen ist dadurch nur der Buchstabe davor**, der die Größe des
-  Feldes erbt. Genau das zeigt sein Ausschnitt: „A:“ groß, „0,200 Ω“ klein
-  daneben. Zwei Fassungen lang habe ich an einer Schraube gedreht, die
-  nichts bewegte.
-
-      .option-text { font-size: inherit; }
-
-  Dasselbe bei den Bildantworten (`.option-grid .option-text`, 0,8 rem).
-
-| | angezeigt bis jetzt | **jetzt** |
-|---|---|---|
-| Antworttext | 14,4 px | **19,5 px** (+36 %) |
-| Fragetext | 20,8 px | 19,8 px |
-
-  **Der Fragetext geht dabei um einen Punkt zurück, und das mit Absicht.**
-  Bei der längsten Frage des Katalogs (VD707) stand die Knopfleiste mit den
-  ehrlichen 20,5 px auf einem 1915 × 950-Fenster bei y = 967 — **17 Punkte
-  unter dem Rand**, man hätte für *Weiter* scrollen müssen. Mit 19,8 / 19,5
-  sitzt sie bei y = 918. Gemessen wurde für jeden Wert einzeln; das ist das
-  größte Paar, bei dem auch die längste Frage überall vollständig steht.
-
-  **Geprüft**: 1915 × 950 → Leiste bei 918, 1400 × 900 → 784, 1366 × 660 →
-  657 (Fenster 660). Kein Quer-Überlauf.
-
----
+- Antworttext: wächst mit (`.option-text` erbt die Schriftgröße statt fester 0,9 rem), 19,5 statt 14,4 px
+- Bildantworten: `.option-grid .option-text` erbt ebenfalls die Schriftgröße
 
 ## [1.229.0] - 2026-09-09
 
 ### Geändert
-- **Größere Felder, größerer Text.** Dietmar in vier Worten: „Grössere Felder
-  = grösserer Text.“
-
-  Stimmt — in einem 90 Punkte hohen Feld sah eine Antwort in 17,9 px verloren
-  aus. Die Felder waren gewachsen, die Schrift darin nicht; das Verhältnis
-  stimmte nicht mehr.
-
-| | 1.227.0 | 1.228.0 | **jetzt** |
-|---|---|---|---|
-| Fragetext | 19,5 px | 19,5 px | **20,8 px** |
-| Antworttext | 17,9 px | 17,9 px | **20,5 px** |
-
-  Die Antworten stehen jetzt **fast so groß wie die Frage** — und das ist
-  Absicht: Die Frage hebt sich ohnehin ab, sie steht fett und auf grauem
-  Grund. Ein Größenunterschied obendrauf war Gewohnheit, keine Notwendigkeit.
-  Auf einer Prüfung liest man die vier Antworten öfter als die Frage.
-
-  **Gemessen** bei 1915 × 950, 1400 × 900, 1366 × 660 und 900 × 700. Nur bei
-  der längsten Frage des Katalogs (VD707, vier lange Antworten) reicht die
-  Seite etwa 70 Punkte über den Rand — die Knopfleiste bleibt dabei sichtbar,
-  unter dem Rand liegt nur die Fußzeile.
-
----
+- Fragenansicht: Fragetext 20,8 px, Antworttext 20,5 px (vorher 19,5 und 17,9 px)
+- Längste Frage (VD707): Knopfleiste bleibt sichtbar, nur die Fußzeile liegt unter dem Rand
 
 ## [1.228.0] - 2026-09-09
 
 ### Geändert
-- **Der leere Bereich unter der Frage gehört jetzt den Antwortfeldern.**
-  Dietmar nach der größeren Schrift: „Viel hat sich da nichts getan.“
-
-  Er hat recht — und ich hatte die falsche Stelle angefasst. Der Eindruck
-  kam nicht von der Schriftgröße, sondern von der **weißen Fläche zwischen
-  der letzten Antwort und der Knopfleiste**: auf seinem Fenster gut
-  zweihundert Punkte, die nichts tun. Größere Schrift füllt davon fast
-  nichts.
-
-  Diese Fläche gibt es seit 1.224.0 mit Absicht — sie hält die Knopfleiste
-  bei jeder Frage auf derselben Höhe. **Sie musste also nicht verschwinden,
-  sie musste nur woandershin:** an die Antwortfelder statt unter sie. Beides
-  geht zugleich, und die Knöpfe stehen weiter an derselben Stelle.
-
-| 1400 × 900 | Feldhöhe vorher | jetzt |
-|---|---|---|
-| kurze Antworten (NA210) | 44 px | **94 px** |
-| mittlere (NI401) | 44 px | **88 px** |
-| lange, zweizeilig (VD707) | 66 px | **70 px** |
-
-  Wo der Platz knapp ist, ändert sich nichts: Auf 1366 × 660 bleiben es
-  45 px, auf 900 × 700 die natürliche Höhe. Verteilt wird nur, was übrig
-  ist.
-
-  **Vier Glieder mussten dafür zusammenspielen**, nicht eines:
-  `#questionContainer` → `.main-layout` → `.question-area` → `.options`.
-  Fehlt eines, landet der Platz wieder am falschen Ende — genau das war in
-  1.224.0 schon einmal passiert. `.main-layout` stand außerdem auf
-  `align-items: flex-start`; damit blieb die Zeile so hoch wie ihr Inhalt.
-
-  Die Felder wachsen einzeln (`flex: 1 1 auto`), behalten aber ihre
-  natürliche Grundhöhe: Eine Antwort mit zwei Zeilen wird nicht auf die Höhe
-  einer einzeiligen gedrückt. Abgeschnitten wird nichts.
-
----
+- Antwortfelder: nutzen den freien Raum unter der Frage, Knopfleiste bleibt an derselben Stelle (z. B. 44 → 94 px)
+- Layout: Flex-Kette `#questionContainer` → `.main-layout` → `.question-area` → `.options`, ohne `align-items: flex-start`
+- Antwortfelder: wachsen einzeln, behalten ihre natürliche Grundhöhe, nichts wird abgeschnitten
 
 ## [1.227.0] - 2026-09-09
 
 ### Geändert
-- **Frage und Antworten stehen rund 20 Prozent größer.** Dietmar: „Könnte
-  man die Fragen und Antworten nicht etwas größer darstellen? Ziel: Dass der
-  Platz besser ausgenutzt wird.“
-
-  Er hat recht, und der Grund liegt in der Herkunft dieser Werte. Sie sind
-  im September aus einem Bildschirmfoto des DARC-Fragenkatalogs **abgemessen**
-  — 34 px Feldhöhe, 16 px Fragetext — und das war die richtige Entscheidung,
-  solange es ums Aussehen ging. Nur: Dort stehen **zwanzig Fragen
-  untereinander** auf einer Seite. Hier steht **immer nur eine**, auf einem
-  Fenster von 900 Punkten Höhe. Was dort dichte Übersicht war, ist hier
-  verschenkter Platz.
-
-| | vorher | jetzt |
-|---|---|---|
-| Fragetext | 16,0 px | **19,5 px** |
-| Antworttext | 15,2 px | **17,9 px** |
-| Feldhöhe | 34 px | **44 px** |
-| Abstand der Felder | 8 px | **10 px** |
-| Fragennummer | 13,1 px | **14,7 px** |
-
-  Warum nicht mehr? Bei der längsten Frage des Katalogs (VD707, vier lange
-  Antworten) reicht die Seite auf einem 15-Zoll-Fenster (1366 × 660) schon
-  jetzt 41 Punkte über den Rand. Ein weiterer Schritt hieße: rollen bei jeder
-  zweiten Frage.
-
-- **Auf schmalen Fenstern bleibt es kleiner** — bis 1024 Punkte Breite gelten
-  17,3 px / 16,0 px und 40 px Feldhöhe. Dort ist der Platz eben nicht da.
-
-  **Diese Zeilen mussten hinter die Regeln des DARC-Stils wandern.** Erst
-  standen sie im 1024er-Block weiter oben und bewirkten **gar nichts**:
-  `body.eckig .question-area .option` hat dieselbe Spezifität, und bei
-  Gleichstand gewinnt die spätere Regel. Gemessen: Der Fragetext blieb auch
-  auf 420 Punkten Breite bei 19,5 px. Jetzt sind es dort 17,3 px.
-
-**Gemessen** bei 1915 × 950, 1440 × 900, 1366 × 660, 900 × 700 und 420 × 760.
-Die Knopfleiste sitzt weiter bei jeder Frage auf derselben Höhe (das ist
-1.224.0), kein Quer-Überlauf.
-
----
+- Fragenansicht: Frage und Antworten rund 20 % größer (Fragetext 19,5 px, Antworten 17,9 px, Feldhöhe 44 px)
+- Fragenansicht: Feldabstand 10 px, Fragennummer 14,7 px
+- Schmale Fenster bis 1024 px: 17,3 und 16,0 px Schrift, 40 px Feldhöhe
+- Stilblatt: Größenregeln hinter die Regeln des DARC-Stils verschoben, damit sie greifen
 
 ## [1.226.3] - 2026-09-09
 
 ### Geändert
-- **Das Türkis in der Wortmarke wird kräftiger.** Dietmar: „In der
-  Hauptansicht, fehlt das kräftige Türkis, was wir auch im Icon verwenden.“
-
-  Er hat recht — der Ton von 1.226.0 war zu brav. Ich hatte mit `#0a7a8b`
-  auf Nummer sicher gespielt (5,0:1 auf Weiß), und dabei ging genau das
-  verloren, was die Farbe ausmacht.
-
-  Jetzt **`#0a9cb0`**: derselbe Ton, so hell wie es geht, ohne die
-  Lesbarkeit aufzugeben. Die Wortmarke ist 1,5 rem fett, gilt also als
-  **große Schrift** — dafür verlangt man 3:1, und der Ton hat 3,3:1.
-
-  Das Türkis des Zeichens selbst (`#22e0f2`) geht hier nicht: Es liegt dort
-  auf Dunkelblau, hier steht es auf Weiß und käme auf **1,6:1**. Das liest
-  fast niemand mehr.
-
-  **Eine Stelle brauchte einen Rückfall:** Im engen Fenster schrumpft die
-  Wortmarke auf 1,15 rem und 1,1 rem — dann gilt nicht mehr „große Schrift“,
-  sondern die Regel für Fließtext mit 4,5:1. Dort schaltet je eine Zeile auf
-  den dunkleren Ton zurück, sonst wäre die Farbe ausgerechnet auf dem
-  schmalen Schirm die schlechter lesbare. In der dunklen Fassung bleibt es
-  bei `#35dff0`, dem hellen vom Zeichen (9,6:1).
-
-  **Gemessen** in der laufenden Anwendung: 1400 Punkte breit → 24 px,
-  `rgb(10,156,176)`; 900 → 18,4 px, dunklerer Ton; 420 → 17,6 px, dunklerer
-  Ton; dunkle Fassung → `rgb(53,223,240)`.
-
----
+- Wortmarke: kräftigeres Türkis `#0a9cb0` (3,3:1 bei großer Schrift)
+- Wortmarke: in schmalen Fenstern dunklerer Ton für ausreichenden Kontrast, dunkle Fassung weiter `#35dff0`
 
 ## [1.226.2] - 2026-09-09
 
 ### Geändert
-- **Das Zeichen in seiner endgültigen Form: Skala, und die 55 in Weiß.**
-  Dietmar nach fünf Vorschlägen: „Entferne den Edelstahl Look und mache die
-  55 einfach weiss. Das mit der Skala gefällt mir gut.“
-
-  Beides ist die bessere Wahl, und zwar aus demselben Grund. Der
-  Edelstahl-Verlauf war der Anlass des Strichs, den er gesehen hatte — eine
-  dunkle Stufe, die zufällig auf der Höhe der Wellenlinie lag. **Wo kein
-  Verlauf ist, kann auch keine Stufe irgendwo hinfallen.** Und eine weiße
-  Zahl bleibt auf 16 Punkten lesbar, wo ein Verlauf zu Grau verrührt. Der
-  türkise Schein bleibt: Er bindet die Zahl an die Farbe der Tafel und hebt
-  sie zugleich vom dunklen Grund ab.
-
-  Die **Skala** unter der Zahl ist die eines S-Meters — lange Striche für
-  die vollen Werte, kurze dazwischen. Sie erdet die Zahl, statt sie schweben
-  zu lassen, und ist das Einzige auf der Tafel, das ohne Worte „Messgerät“
-  sagt.
-
-  **Zwei Maße mussten dafür nachgezogen werden**, sonst hätte es nicht
-  zusammengepasst: Die Ausschläge der Welle sind von 2,1 auf 1,6 gedeckelt —
-  eine Spitze reichte bis in die Teilstriche hinunter und sah aus, als hänge
-  die Welle darin. Und die obere Gruppe ist um drei Prozent der Höhe
-  gerutscht, damit über der Zahl so viel Luft steht wie zwischen Skala und
-  Wortmarke; vorher kippte die Tafel optisch nach oben.
-
-  Wieder nur Bilddateien und der Bauplan `zeichen_bauen.py`. Am Programm
-  nichts.
-
----
+- Programmsymbol: 55 in Weiß statt Edelstahl-Verlauf, türkiser Schein bleibt
+- Programmsymbol: S-Meter-Skala unter der Zahl
+- Programmsymbol: Wellenausschläge begrenzt, obere Gruppe nach unten gerückt; nur Bilddateien und `zeichen_bauen.py`
 
 ## [1.226.1] - 2026-09-09
 
 ### Behoben
-- **Der Strich, der durch die 55 zu laufen schien.** Dietmar: „Der Stich, auf
-  dem die Funkwellen laufen, geht auch durch die 55 und wirft da einen
-  Schatten.“
-
-  Er sieht richtig, die Ursache lag aber woanders, als es aussieht: Die
-  Grundlinie der Wellen hört links und rechts **vor** der Zahl auf, es lief
-  also nichts hindurch. Was er sah, war die dunkle Stufe **im
-  Edelstahl-Verlauf** — sie saß bei 47 Prozent der Zahlenhöhe, also genau auf
-  der Höhe der Wellenlinie. Zwei völlig verschiedene Dinge auf einer Linie
-  liest das Auge als eines, und dann ist es ein Strich mit Schatten.
-
-  Die Stufe sitzt jetzt bei 62 Prozent, deutlich unter der Welle. Das Metall
-  behält seine harte Kante — sie ist es, die poliertes Metall von grauer
-  Farbe unterscheidet —, sie steht nur nicht mehr in einer Flucht mit etwas
-  anderem.
-
-  Nur die Bilddateien ändern sich (`icon-512.png`, `icon-192.png`,
-  `icon.png`, `icon.ico`, `favicon.ico`, `icon-512-maskierbar.png`) und der
-  Bauplan `zeichen_bauen.py`. Am Programm selbst nichts.
-
----
+- Programmsymbol: dunkle Stufe im Edelstahl-Verlauf von 47 auf 62 % verschoben, kein scheinbarer Strich durch die 55
+- Programmsymbol: nur Bilddateien (`icon-512.png`, `icon.ico`, `favicon.ico` u. a.) und `zeichen_bauen.py` geändert
 
 ## [1.226.0] - 2026-09-09
 
+### Hinzugefügt
+- `icon-512-maskierbar.png`: Symbol für den Android-Startbildschirm, randlos mit Zahl
+- `zeichen_bauen.py`: Skript zum Erzeugen des Programmsymbols wird mitgeliefert
+
 ### Geändert
-- **Ein neues Zeichen.** Dietmar hatte das Symbol einer fremden Funk-App
-  danebengelegt: „Das mit den Funkwellen rechts und Links gefällt mir gut.
-  Ebenso auch die Farbe. Dazwischen ist ein VFO Knopf. Der muss raus und 55
-  muss da rein. Da wo RigOne steht, möchte ich Amateurfunk und darunter
-  ---Trainer---“
-
-  **Übernommen ist nur, was ihm gefiel und was niemandem gehört:** eine
-  Wellenlinie und ein Türkis auf dunklem Grund. Der Drehknopf, die Wortmarke
-  und die Beschriftung der Vorlage bleiben draußen — das ist die Arbeit
-  anderer Leute, und ein Zeichen, das an ein fremdes erinnert, wäre für ein
-  Programm, das unter eigenem Namen läuft, das schlechteste Aushängeschild.
-  Gezeichnet ist alles neu, mit einem Skript (`zeichen_bauen.py`), das
-  mitgeliefert wird: Wer es später ändern will, soll nicht raten müssen.
-
-  Die **55** steht in der Mitte, wo vorher der Knopf war. Sie bleibt aus dem
-  alten Zeichen — unter Funkern heißt sie „viel Erfolg“, und sie ist das
-  Einzige, was auf der Taskleiste in 16 Punkten noch zu erkennen ist.
-
-- **Die 55 in poliertem Edelstahl.** Dietmar: „Die 55 auch in so einem
-  pollierten Edelstahl look?“
-
-  Poliertes Metall erkennt das Auge nicht an der Farbe, sondern an den
-  **harten Kanten zwischen hell und dunkel**: Es spiegelt den hellen Himmel
-  und den dunklen Boden, und dazwischen springt es um. Ein weicher
-  Grauverlauf sieht nach Plastik aus. Der Verlauf hat deshalb zehn
-  Stützpunkte, die dicht beieinander stark springen, dazu einen Lichtsaum an
-  der Oberkante und eine dunkle Kante außen herum — ohne die verschwimmt
-  helles Metall mit dem türkisen Schein dahinter.
-
-- **Drei Fassungen statt einer.** Je kleiner die Fläche, desto weniger darf
-  darauf stehen. Ab 128 Punkten das ganze Zeichen; von 48 bis 96 nur Wellen
-  und Zahl; bis 32 Punkte nur die Zahl, dafür größer. In 16 Punkten wäre von
-  „Amateurfunk“ ein grauer Streifen und von den Wellen ein Gekrissel, das
-  die Zahl unleserlich macht.
-
-  Dazu neu: **`icon-512-maskierbar.png`** für den Startbildschirm am Handy.
-  Android schneidet dieses Bild in die Form, die das Gerät benutzt — Kreis,
-  Squircle, Tropfen. Bisher zeigte das Verzeichnis dafür auf das normale
-  Zeichen, dessen Schrift dabei angeschnitten worden wäre. Die neue Fassung
-  hat Farbe bis in jede Ecke und nur die Zahl, klein genug für jede Form.
-
-- **Die Wortmarke trägt die Farbe des Zeichens.** Dietmar: „In der
-  Hauptansicht muss sich das auch ändern. Amateurfunk-Trainer und Trainer in
-  dieser Farbe von dem Icon.“ Der Teil *-Trainer* stand bisher in einem
-  matten Grau (`#7a8ba1`).
-
-  Auf dem Zeichen liegt das Türkis auf Dunkelblau und darf dort hell sein
-  (`#22e0f2`). Im Kopf der Hauptansicht steht es auf Weiß — dasselbe Hell
-  hätte dort **1,7:1** und wäre für viele nicht mehr zu lesen. Es ist
-  deshalb derselbe Ton, so weit abgedunkelt, dass er **5,0:1** erreicht
-  (`#0a7a8b`). In der dunklen Fassung wird wieder das helle daraus
-  (`#35dff0`, 9,6:1). Die Farbe steht als `--tuerkis` an einer Stelle.
-
-- **Der Zwischenspeicher heißt jetzt `afu-trainer-v2`.** Das ist die einzige
-  Stelle, an der man einem Browser sagen kann, dass er die alten Zeichen
-  wegwerfen soll — beim Aktivieren löscht der Service Worker jeden Speicher,
-  der nicht so heißt.
-
-**Achtung:** In dieser Fassung ändert sich auch `Server.js` (die neue
-Bilddatei muss ausgeliefert werden). Dafür ist ein **Neustart** nötig, F5
-allein genügt nicht.
-
----
+- Programmsymbol: neu gestaltet mit Wellenlinien, Türkis auf dunklem Grund und der 55 in der Mitte
+- Programmsymbol: 55 in poliertem Edelstahl-Look
+- Programmsymbol: drei Fassungen (ab 128 px vollständig, 48 bis 96 px Wellen und Zahl, bis 32 px nur Zahl)
+- Wortmarke: Farbe des Programmsymbols (`--tuerkis`, `#0a7a8b`, dunkle Fassung `#35dff0`)
+- Service Worker: Cache heißt `afu-trainer-v2`, alte Symbole werden verworfen
+- `Server.js`: liefert neue Bilddatei aus, Neustart erforderlich
 
 ## [1.225.0] - 2026-09-09
 
 ### Geändert
-- **Die drei Lernkacheln stehen jetzt nebeneinander, nicht zwei oben und
-  eine darunter.** Dietmar: „Das neue Feld wirkt jetzt asynchron. Ich würde
-  es besser finden wenn da das Omega Zeichen mit dabei ist und alles in
-  einer Reihe ist.“
-
-  Er hat recht, und der Grund ist nicht Geschmack: Eine angebrochene zweite
-  Zeile zieht den Blick auf sich, als fehle dort etwas. Ich hatte den Umbruch
-  vorsorglich eingebaut, weil drei Kacheln schmaler werden — die Sorge war
-  unbegründet. Gemessen bei 1915 × 950 sind es **350 Punkte je Kachel**, bei
-  1366 noch 250; beide Beschriftungen bleiben lesbar. Unter 1150 Punkten
-  stehen sie untereinander, jede in voller Breite, statt zu dritt auf
-  Buchstabenreste gedrückt.
-
-- **Das Omega auch beim Lösungsweg — und die Beschriftung kürzer.** Dietmar:
-  „Den Bereich kürzen und 50Ω (Zeichen) den Punkt und Lösungsweg.“
-
-  Vorher stand auf der Lösungsweg-Kachel ein Wurzelzeichen. Es meinte
-  „gerechnet“, sagte aber nichts darüber, woher die Seite kommt. Jetzt tragen
-  beide DARC-Kacheln dasselbe Ω: Wer es einmal zugeordnet hat, erkennt die
-  Herkunft, ohne zu lesen.
-
-  Aus *50 Ohm ·* wurde **50Ω ·**, aus *Lösungsweg · NB505* wurde
-  **50Ω · Lösungsweg** — die Fragenummer steht zwei Zeilen darüber schon, und
-  die gesparte Breite ist genau die, die die dritte Kachel braucht.
-
-- **Die Herkunftszeile wird zusammengezogen.** Zwei der drei Kacheln kommen
-  von 50ohm.de. „50ohm.de (DARC)“ steht deshalb **einmal, mittig unter
-  beiden**, statt zweimal direkt nebeneinander. Der Trainer rechnet die
-  Spaltenbreiten dafür selbst aus (1fr 2fr) — und zwar aus den Kacheln, die
-  wirklich da sind, nicht aus einer Annahme.
-
-- **Ohne Lösungsweg bleibt alles wie gewohnt.** Dietmar: „Wenn kein
-  Lösungsweg vorhanden ist, soll das wie gewohnt angezeigt werden.“ Geprüft:
-  Bei zwei Kacheln teilen sie sich die Zeile weiterhin je zur Hälfte, jede
-  mit ihrer eigenen Herkunftszeile darunter; bei einer nimmt sie die ganze
-  Breite. Die dreispaltige Aufteilung greift nur, wenn wirklich drei Kacheln
-  da sind.
-
-**Geprüft** bei 1915 × 950, 1440 × 900, 1366 × 660, 1100 × 800 und 390 × 780 —
-kein Quer-Überlauf, keine Fehler in der Konsole, alle drei Kacheln auf
-derselben Höhe.
-
----
+- Lernkacheln: drei Kacheln in einer Reihe, unter 1150 px untereinander in voller Breite
+- Lösungsweg-Kachel: Ω-Symbol statt Wurzelzeichen, Beschriftung 50Ω · Lösungsweg
+- 50-Ohm-Kachel: Beschriftung 50Ω statt 50 Ohm
+- Herkunftszeile: 50ohm.de (DARC) einmal mittig unter beiden DARC-Kacheln (Spalten 1fr 2fr)
+- Lernkacheln: ohne Lösungsweg unverändert (zwei halbe oder eine volle Breite)
 
 ## [1.224.0] - 2026-09-09
 
 ### Geändert
-- **Die Knopfleiste steht jetzt immer an derselben Stelle.** Dietmar: „Bei
-  den Einstellungen haben wir die Fenstergröße schon angepasst. Ich möchte
-  das auch bei den Fragen. Wenn eine Frage kürzer ist, soll dazwischen in
-  der Fensterfarbe ein Leerraum hinzugefügt werden. Ziel ist es: Der Bereich
-  soll immer auf gleicher Höhe sitzen.“
-
-  Bisher hingen *Zurück*, *Weiter*, *Hauptmenü* und die Fußzeile am unteren
-  Ende des Inhalts. Bei einer kurzen Frage rutschten sie hoch, bei einer
-  langen runter — **um fast hundert Punkte**. Wer zwanzig Fragen durchgeht,
-  trifft *Weiter* deshalb jedes Mal woanders und klickt daneben.
-
-  Die Karte ist jetzt eine Spalte, die mindestens so hoch ist wie das
-  Fenster; der Fragenbereich darin nimmt sich den übrigen Platz. Weil er die
-  Farbe der Karte hat, sieht man davon nichts als ruhigen Grund. Ist der
-  Inhalt länger als das Fenster, wächst die Karte wie zuvor — es ist eine
-  Mindesthöhe, keine feste.
-
-  **Drei Stellen mussten dafür zusammenspielen**, nicht eine: Der
-  Fragenbereich liegt zwei Ebenen tiefer als die Karte
-  (`.card` → `.app-layout` → `.main-col` → `#questionContainer`). Nach der
-  ersten Änderung war die Karte zwar bildschirmhoch, die Leiste wanderte
-  aber weiter — der zusätzliche Platz landete unter der Spalte statt in ihr.
-
-**Gemessen** (1915 × 950, dieselbe Fläche wie am Arbeitsplatz):
-
-| Frage | Knopfleiste vorher | jetzt |
-|---|---|---|
-| kürzeste (NA210) | y = 585 | **y = 794** |
-| mittlere (ND104) | y = 608 | **y = 794** |
-| längste (VE305) | y = 676 | **y = 794** |
-
-Geprüft außerdem: Hauptmenü, 15-Zoll-Fenster (1366 × 660), Handy
-(390 × 780), sehr flaches Fenster (1200 × 420). Überall bleibt der Inhalt
-vollständig erreichbar; wo er länger ist als das Fenster, wird gescrollt wie
-zuvor.
-
----
+- Fragenansicht: Knopfleiste bei jeder Frage auf gleicher Höhe, Karte mindestens fensterhoch
+- Layout: Restplatz über `.card` → `.app-layout` → `.main-col` → `#questionContainer`, längerer Inhalt scrollt wie bisher
 
 ## [1.223.0] - 2026-09-09
 
-### Behoben
-- **Die Route stand im falschen Block — der eigentliche Grund für drei
-  vergebliche Neustarts.** `app.post('/api/50ohm-index-holen', …)` war
-  versehentlich **innerhalb von `io.on('connection', …)`** gelandet, also im
-  Socket-Handler des Gruppenraums. Damit wurde sie erst angemeldet, wenn
-  sich jemand über einen Raum verband — und danach bei jeder weiteren
-  Verbindung noch einmal. Wer den Gruppenraum nie öffnete, bekam auf den
-  Knopf nur „Not found“.
-
-  Dietmar hat dreimal neu gestartet, `STOP.bat` benutzt und den Task-Manager
-  bemüht, bevor `/api/version` die Sache entschied: `serverStart` zeigte
-  09:22 Uhr, Version 1.222.3 — sein Server war längst der neue. Der Fehler
-  lag bei mir, nicht bei seinem Neustart.
-
-  Routen gehören auf die oberste Ebene, wo sie einmal beim Start angemeldet
-  werden. Dort steht sie jetzt, mit einem Kommentar, der erklärt warum.
-
 ### Geändert
-- **Der Server holt die Zuordnung von selbst.** Dietmar: „Der Server, soll
-  das eigentlich im Hintergrund machen, ohne Einstellungen.“
+- Lösungswege: Server lädt die 50ohm.de-Zuordnung im Hintergrund, wenn sie fehlt oder älter als 30 Tage ist
+- Lösungswege: Abruf acht Sekunden nach dem Start, Fehler nur im Log, ohne Netz voll funktionsfähig
+- Lösungswege: Browser prüft zwölf Sekunden nach dem Laden erneut, Knopf unter Wartung bleibt
+- README: Angaben zum Internetzugriff um den automatischen Abruf ergänzt
 
-  Er hat recht: Wer den Trainer benutzt, soll die Lösungswege vorfinden und
-  nicht erst in den Einstellungen danach suchen. Ein Knopf, den man erst
-  kennen muss, ist für die meisten kein Angebot.
-
-  Drei Regeln, damit daraus keine Zumutung wird:
-
-  1. **Nur wenn nötig** — fehlt die Datei oder ist sie älter als 30 Tage.
-     Bei jedem Start nachzufragen hieße, einem Verein, der uns nichts
-     schuldet, jede Sitzung eine Anfrage zu schicken.
-  2. **Nicht beim Hochfahren** — erst acht Sekunden nach dem Start, damit
-     der Trainer sofort da ist.
-  3. **Still** — Fehler stehen im Log, nicht auf dem Bildschirm. Ohne Netz
-     läuft der Trainer vollständig.
-
-  Der Browser fasst zwölf Sekunden nach dem Laden einmal nach, falls die
-  Datei beim ersten Blick noch nicht da war — sonst müsste man bis zum
-  nächsten Start warten, um die Lösungswege zu sehen.
-
-  Der Knopf unter *Wartung* bleibt zum sofortigen Auffrischen. Die Zusage
-  in der README — „ins Internet geht er nur, wenn Sie …“ — ist um diesen
-  einen Fall erweitert und dort auch so aufgeschrieben. Eine Zusage, die
-  nicht mehr stimmt, wäre schlimmer als die Sache selbst.
-
----
+### Behoben
+- Server: Route `/api/50ohm-index-holen` aus dem Socket-Handler auf die oberste Ebene verschoben, kein Not found mehr
 
 ## [1.222.3] - 2026-09-09
 
 ### Behoben
-- **Eine Fehlermeldung, die in die falsche Richtung zeigte.** Dietmar beim
-  ersten Klick auf „Zuordnung holen“:
-
-  > Nicht geholt: Unexpected token 'N', "Not found" is not valid JSON
-  > Kein Netz, oder 50ohm.de ist gerade nicht erreichbar.
-
-  Beide Zeilen waren irreführend. Die erste ist der Wortlaut des Browsers,
-  der eine Antwort als JSON lesen wollte, die keines war. Die zweite war
-  mein Ratschlag — und schickte zur Fehlersuche ins Internet, während das
-  Problem einen Meter näher lag: **Sein eigener Server lief noch mit der
-  alten `Server.js`** und kannte den Weg `/api/50ohm-index-holen` schlicht
-  noch nicht. Darauf antwortet Express mit „Not found“.
-
-  Der Trainer liest die Antwort jetzt erst als Text und macht dann JSON
-  daraus. Kommt ein 404 oder ein „Not found“ vom eigenen Server, steht dort
-  der Satz, der wirklich hilft: **Der Trainer muss einmal komplett neu
-  gestartet werden** — schließen und wieder öffnen, nicht nur die Seite neu
-  laden. `Server.js` wird nur beim Start gelesen.
-
-  Das war schon oft der wahre Grund, wenn nach einem Update „nichts
-  passiert“. Diesmal sagt es der Trainer selbst.
-
----
+- Lösungswege: Serverantwort erst als Text gelesen, keine irreführende JSON-Fehlermeldung mehr
+- Lösungswege: bei 404 vom eigenen Server Hinweis auf kompletten Neustart des Trainers
 
 ## [1.222.2] - 2026-09-09
 
 ### Behoben
-- **Eine falsche Behauptung im Trainer zurückgenommen.** In 1.222.1 stand
-  im Wartungs-Kasten und in der README, der DARC veröffentliche die
-  Lösungswege „bisher nur für die Fragen der Klasse A“.
-
-  **Das stimmt nicht.** Die Datei `question_index.json` war über ein
-  Werkzeug abgerufen worden, das lange Dateien abschneidet — die Antwort
-  endete bei `AF116` und enthielt deshalb nur A-Nummern. Erst der Hinweis
-  „the file appears incomplete“ in derselben Antwort machte stutzig.
-
-  Die Gegenprobe an einer echten Klasse-N-Rechenaufgabe:
-  **`50ohm.de/NB505.html` existiert** — „Zur Berechnung des Widerstands
-  verwenden wir das Ohmsche Gesetz aus der Formelsammlung“, R = U/I, mit
-  eingesetzten Werten. Es gibt also sehr wohl Lösungswege für Klasse N.
-
-  Der Trainer sagt jetzt nur noch, was er wirklich weiß: dass es nicht zu
-  jeder Frage einen gerechneten Lösungsweg gibt — wo nichts zu rechnen ist,
-  wäre er auch sinnlos. Die genaue Zahl für das eigene Prüfungsziel steht
-  nach dem Holen im Wartungs-Kasten; sie kommt aus der vollständigen Datei,
-  die der Server selbst holt und für die kein solches Limit gilt.
-
-  Dass `NA101` und `VA101` keine Seite haben, bleibt richtig — es war nur
-  keine Aussage über die ganze Klasse.
-
----
+- Wartung und README: falsche Angabe entfernt, Lösungswege gebe es nur für Klasse A (z. B. NB505 vorhanden)
+- Wartung: Hinweis, dass nicht jede Frage einen Lösungsweg hat, genaue Zahl nach dem Abruf
 
 ## [1.222.1] - 2026-09-09
 
 ### Geändert
-- **Der Wartungs-Kasten sagt jetzt, wie viele Lösungswege das eigene
-  Prüfungsziel betreffen.** Dietmar nach dem Einbau: „Bei wie vielen Fragen
-  ist das mit drin? Ich bin eben viele Fragen durch und habe nichts
-  gefunden.“
-
-  Zwei Gründe, und beide waren aus dem Trainer heraus nicht zu erkennen:
-
-  **Erstens** war die Zuordnung noch gar nicht geholt — ohne den einen
-  Klick unter *Wartung* gibt es nichts anzuzeigen.
-
-  **Zweitens, und das ist der eigentliche Punkt:** Die Datei des DARC
-  enthält 516 Einträge, davon 358 mit Lösungsweg — **und alle beginnen mit
-  A**. Für die Fragen der Klassen N und E gibt es dort bisher nichts. Wer
-  auf Klasse N lernt, hätte auch nach dem Holen keinen einzigen Lösungsweg
-  gesehen und den Trainer für kaputt gehalten.
-
-  Der Kasten nennt deshalb nicht mehr nur die Gesamtzahl, sondern **wie
-  viele davon zum eingestellten Ziel gehören** — und sagt es ausdrücklich,
-  wenn es keine sind. Eine Funktion, die stillschweigend nichts tut, ist
-  schlimmer als eine, die erklärt, warum.
-
-  (Das erklärt auch die Stichproben von vorhin rückwirkend vollständig:
-  AB101 und AB102 sind Fragen der Klasse A, NA101, EB101 und VA101 nicht.)
-
----
+- Wartung: zeigt die Anzahl der Lösungswege für das eingestellte Prüfungsziel, mit Hinweis wenn keine vorhanden
 
 ## [1.222.0] - 2026-09-09
 
 ### Hinzugefügt
-- **Der gerechnete Lösungsweg beim DARC — an jeder Frage, die einen hat.**
-  Dietmar nach einem Gespräch mit einem Entwickler von 50ohm.de: „Diesen
-  Lösungsweg gibt es für alle Fragen. Hier ändert sich nur die Nr. hinten
-  dran. Könnte man das mit Intigieren? **Ziel ist es, das man nicht nur
-  auswendig lernt, sondern auch was lernt.**“
-
-  Die Adresse ist denkbar einfach: `https://50ohm.de/<Nummer>.html`. Dort
-  steht kein Ergebnis, sondern die Herleitung — Formel, gegebene Werte,
-  Rechenschritte.
-
-  **Es gibt sie aber nicht für jede Frage.** Nachgesehen: AB101 und AB102
-  ja, NA101, EB101 und VA101 nein — obwohl NA101 ebenfalls eine
-  Rechenaufgabe ist. Dietmar sah die Falle sofort: „Man müsste dafür
-  vermutlich einen Generator entwickeln, der alle Fragen abfragt … Nicht
-  das es am Ende auf 404 läuft.“
-
-  Ich hatte diesen Generator schon geschrieben — 1750 Anfragen an einen
-  Server, der uns nichts schuldet, gut zehn Minuten Laufzeit. Dann kam
-  Dietmars nächste Nachricht mit der Adresse, die alles überflüssig machte:
-
-  ```
-  https://50ohm.de/assets/question_index.json
-  ```
-
-  Darin steht je Fragennummer, in welchem **Kapitel und Abschnitt** sie
-  behandelt wird und ob es einen Lösungsweg gibt (`has_solution`). Der
-  Generator wurde wieder gelöscht, bevor er je gelaufen ist.
-
-- **Der Lehrgangs-Verweis führt endlich auf den genauen Abschnitt.** In
-  `50ohm_map.json` steht seit Monaten der Satz: *„Der Link führt auf die
-  KAPITELÜBERSICHT, nicht auf die genaue Unterseite — dafür braucht es die
-  Liste des DARC. Sobald die da ist, ersetzt sie diese Datei
-  vollständig.“* Sie ist jetzt da.
-
-  Aus `section` und der Ausgabe lässt sich die Seite bilden:
-  `https://50ohm.de/N_sinusschwingung.html` — nachgesehen, existiert.
-  **Welche Ausgabe genommen wird, richtet sich nach dem Prüfungsziel:** Wer
-  auf N lernt, bekommt die N-Fassung des Kapitels und nicht die für
-  Klasse A — dieselbe Erklärung, aber in der Tiefe, die zu seiner Prüfung
-  gehört.
-
-  Fehlt die Datei, bleibt alles beim Alten: Der Verweis führt wie bisher
-  aufs Kapitel, und Lösungswege werden nicht angeboten.
-
-- **Geholt wird sie unter Einstellungen → Wartung → Lehrgang des DARC.**
-  Einmal, rund 200 Kilobyte, danach nie wieder. **Nur auf Klick** — die
-  Zusage „ins Internet geht der Trainer nur, wenn Sie es wollen“ steht in
-  der README und gilt auch hier.
-
-  Übernommen wird dabei nur, was gebraucht wird, und nur, was wie eine
-  Fragennummer aussieht. Fremde Daten wandern nicht ungeprüft in eine
-  Datei, die der Trainer später selbst ausliefert.
-
-  Wer den Trainer aus dem Gruppenraum mitnimmt, bekommt die Datei mit —
-  sonst müsste jeder Teilnehmer sie einzeln holen.
-
-**Nachgesehen am 09.09.2026:**
-
-| Adresse | Ergebnis |
-|---|---|
-| `50ohm.de/AB101.html` | Lösungsweg mit Formel und Rechenschritten ✔ |
-| `50ohm.de/AB102.html` | ebenso ✔ |
-| `50ohm.de/NA101.html` | 404 — obwohl Rechenaufgabe |
-| `50ohm.de/EB101.html`, `VA101.html` | 404 |
-| `50ohm.de/N_sinusschwingung.html` | Lehrgangsseite ✔ |
-| `AB101` im Katalog Klasse A | identischer Wortlaut, identische Antwort ✔ |
-
----
+- Lösungswege: Verweis auf den gerechneten Lösungsweg bei 50ohm.de (`50ohm.de/<Nummer>.html`) für Fragen, die einen haben
+- Lösungswege: Zuordnung über `question_index.json` von 50ohm.de (Kapitel, Abschnitt, `has_solution`)
+- Lehrgang: Verweis führt auf den genauen Abschnitt in der Ausgabe passend zum Prüfungsziel
+- Wartung: Abruf der Zuordnung unter Einstellungen → Wartung → Lehrgang des DARC, nur auf Klick (ca. 200 KB)
+- Lösungswege: nur gültige Fragennummern übernommen, Datei wird aus dem Gruppenraum mitgegeben
+- Lösungswege: ohne Zuordnungsdatei Kapitelverweis wie bisher, keine Lösungswege
 
 ## [1.221.1] - 2026-09-09
 
 ### Behoben
-- **Die Stolpersteine in der Auswertung endeten mitten im Wort.** Dietmar:
-  „Hier werden die Fragen abgeschnitten. … Nach Klasse, ist der Text nur
-  noch Klas“.
-
-  Genau darin lag der Fehler: Gekürzt wurde nach 88 **Zeichen**, nicht nach
-  Wörtern. So endet der Satz nicht nur früh, er wird unlesbar — „…für
-  Rufzeicheninhaber der Klas“ sagt niemandem etwas.
-
-  Die Kürzung stammte aus der Zeit, als es von dort keinen Weg zur ganzen
-  Frage gab. Seit es **Alle ansehen** gibt, ist sie überflüssig: Bei fünf
-  Zeilen ist auch der volle Text kein Platzproblem, und umbrechen darf er.
-
----
+- Stolpersteine: Fragetext in der Auswertung vollständig statt nach 88 Zeichen abgeschnitten
 
 ## [1.221.0] - 2026-09-09
 
 ### Hinzugefügt
-- **Stolpersteine markieren.** Dietmar: „Alle Stolpersteine möchte ich auch
-  Markieren können.“
-
-  Jede Zeile hat jetzt ein Herz. Genommen wird dafür die **vorhandene
-  Merkliste** und keine zweite Auswahl daneben — nicht nur der
-  Einheitlichkeit wegen: Die Merkliste lässt sich als eigene Lernrunde
-  durchgehen. Wer sich hier sieben Fragen heraussucht, kann sie damit sofort
-  am Stück üben, ohne dass dafür etwas Neues gebaut werden musste.
-
-  Oben steht, wie viele der Stolpersteine markiert sind, und ein Knopf nimmt
-  genau diese vor. Bewusst nicht die ganze Merkliste: Dort können auch
-  Fragen aus der Suche liegen, die hier nichts zu suchen haben.
-
-  Markierte Zeilen sind zart rosa hinterlegt — in einer Liste mit
-  achtundfünfzig Einträgen findet man ein einzelnes Herz sonst nicht wieder.
-
-  **Beim Umschalten wird nur die eine Zeile nachgezogen**, nicht die ganze
-  Liste neu gebaut. Sonst zuckte die Liste bei jedem Klick, und die
-  Bildlaufleiste spränge nach oben — ausgerechnet beim Markieren, wo man
-  mehrere hintereinander anklickt.
+- Stolpersteine: Markieren per Herz über die Merkliste, markierte Zeilen rosa hinterlegt
+- Stolpersteine: Anzahl markierter Einträge und Knopf zum Üben genau dieser Fragen
+- Stolpersteine: beim Umschalten wird nur die betroffene Zeile aktualisiert, kein Springen der Liste
 
 ### Behoben
-- **Das Herz wäre bei manchen ein leeres Kästchen geworden.** Der erste Bau
-  zeigte ungemerkte Fragen mit dem umrandeten Herz (`far fa-heart`). Diese
-  Variante gibt es in Font Awesome zwar, sie steckt aber nicht in jeder
-  Auslieferung — im Trainer kommt `far` an genau zwei Stellen vor, `fas` an
-  267. Jetzt ist es immer das gefüllte Herz, und ob markiert oder nicht,
-  sagt die Farbe: grau oder rot. Das sieht man aus zwei Metern noch, den
-  Unterschied zwischen gefüllt und umrandet nicht.
-
-**Gemessen:**
-
-| Prüfung | Ergebnis |
-|---|---|
-| Drei markieren, Zahl im Kopf | 3 von 14 markiert ✔ |
-| Im Speicher des Benutzers abgelegt | 3 ✔ |
-| Merkliste-Anzeige in der Kopfzeile | zeigt 3 ✔ |
-| Eines abwählen | 2 von 14 ✔ |
-| „markierte üben“ startet die Runde | 2 Fragen ✔ |
-
----
+- Stolpersteine: Herz immer gefüllt (`fas`), Zustand über Farbe grau oder rot statt umrandeter Variante
 
 ## [1.220.1] - 2026-09-09
 
 ### Geändert
-- **Das Fenster heißt jetzt nur noch „Auswertung“.** Dietmar: „Auswertung &
-  Sicherung muss in Auswertung geändert werden.“ Richtig — die Sicherung ist
-  seit 1.220.0 nicht mehr darin.
-
-  Zwei weitere Stellen versprachen sie ebenfalls noch: der Tooltip am Knopf
-  *Statistik* und der gesprochene Text dazu. Beide schickten damit zu einer
-  Funktion, die dort nicht mehr zu finden ist. Sie nennen jetzt, was
-  wirklich im Fenster steht — und wo der Lernstand stattdessen gesichert
-  wird.
-
----
+- Auswertung: Fenster heißt nur noch Auswertung statt Auswertung & Sicherung
+- Statistik-Knopf: Tooltip und Vorlesetext nennen den tatsächlichen Inhalt und den Ort der Sicherung
 
 ## [1.220.0] - 2026-09-09
 
 ### Hinzugefügt
-- **„9 von 10 Prüfungen bestanden“ — mit Farbverlauf.** Dietmar: „Links
-  würde ich mir wünschen: 10 von 10 Prüfungen. Wie viele man davon schaffen
-  würde. … Bei Kritisch möchte ich Rot und im Mittelfeld möchte ich gelb.
-  Ideal wäre es mit einem Farbverlauf.“
+- Statistik: Bestehensprognose als x von 10 Prüfungen, per Simulation (2000 Durchläufe, 25 Fragen je Teil ohne Zurücklegen)
+- Prognose: bestanden nur, wenn jeder Prüfungsteil mindestens 19 Punkte erreicht
+- Prognose-Balken: Farbe nach Wert von Rot über Gelb nach Grün (HSL), Beschriftung dunkler für bessere Lesbarkeit
+- Prognose: bei fehlenden Antworten Hinweis auf den fehlenden Prüfungsteil statt Gesamtaussage
+- Stolpersteine: Gesamtansicht mit vollem Fragetext, richtiger Antwort, Prüfungsteil und Zahl der Fehlversuche
+- Stolpersteine: Üben je Frage und die 30 hartnäckigsten am Stück; wieder sichere Fragen grün markiert am Listenende
 
-  Der Kasten sagte bisher, wie viele **Punkte** zu erwarten sind. Das ist
-  ein Mittelwert — und Mittelwerte verschweigen das Zittern. Wer im Schnitt
-  19,4 Punkte hat, besteht eben nicht immer: mal sind es 21, mal 17. Genau
-  diese Streuung ist das, was vor der Prüfung interessiert.
-
-  Gerechnet wird nicht mit einer Formel, sondern durch **Nachspielen**:
-  zweitausend Mal wird eine komplette Prüfung gewürfelt. Je Teil werden 25
-  Fragen aus dem Topf gezogen — ohne Zurücklegen, wie im echten Bogen — und
-  für jede einzeln gewürfelt, mit *ihrer* Trefferwahrscheinlichkeit.
-  Bestanden zählt nur, wenn **jeder** Teil auf 19 Punkte kommt; ein guter
-  Teil rettet keinen schlechten.
-
-  Warum nachspielen statt rechnen: Jede Frage hat eine eigene
-  Wahrscheinlichkeit, und gezogen wird ohne Zurücklegen aus rund 200
-  Fragen. Dafür gibt es keine handliche Formel — das Nachspielen dauert ein
-  paar Millisekunden und trifft genau das, was passiert.
-
-  **Der Balken trägt die Farbe seines Wertes**, nicht die einer Skala. Ein
-  erster Versuch spannte den Verlauf Rot → Grün über die ganze Balkenbreite
-  und ließ die Füllung einen Teil davon aufdecken. Das sah bei *neun von
-  zehn* überwiegend rot aus, obwohl neun von zehn gut sind. Jetzt ist der
-  Balken bei zwei von zehn rot, bei fünf gelb und bei neun grün — gleitend,
-  gerechnet in HSL, weil ein direkter Weg von Rot nach Grün im RGB-Raum
-  durch ein schmutziges Braun läuft.
-
-  Die Schrift daneben ist dunkler als der Balken: Ein Gelb, das als Fläche
-  kräftig wirkt, ist als Schrift auf Weiß nicht mehr zu lesen — und
-  ausgerechnet im Mittelfeld, wo die Zahl am wichtigsten ist.
-
-  Fehlen in einem Prüfungsteil noch Antworten, wird nicht geraten. Dann
-  steht dort, **welcher** Teil fehlt und warum es ohne ihn keine
-  Gesamtaussage gibt.
-
-- **Alle Stolpersteine ansehen.** Dietmar: „Deine häufigsten Stolpersteine
-  ist gut! Hier wünsche ich mir die Funktion das ich mir alle Stolpersteine
-  ansehen kann.“
-
-  Die fünf im Statistikfenster sind die Spitze des Eisbergs, und der Text
-  ist dort auf 88 Zeichen gekürzt — genug, um die Frage zu erkennen, zu
-  wenig, um sie zu beantworten. Der Knopf **Alle … ansehen** zeigt sie
-  vollständig: ganzer Fragetext, die richtige Antwort darunter, Prüfungsteil
-  und Zahl der Fehlversuche. Jede Zeile hat ein **Üben**, und oben lassen
-  sich die **30 hartnäckigsten am Stück** vornehmen.
-
-  Fragen, die inzwischen wieder sitzen, bleiben in der Liste — aber grün
-  markiert und ans Ende sortiert. Sie sind ja der Beweis, dass es vorangeht.
-
-### Entfernt
-- **„Lernstand sichern“ aus dem Statistikfenster.** Dietmar: „Das ist in der
-  Hauptansicht und auch im den Einstellungen schon vorhanden.“ Beides
-  stimmt. Dreimal dasselbe an drei Orten heißt nur, dass man an keinem
-  sicher ist, den richtigen zu haben.
-
-  **Dabei wäre fast eine Rückmeldung verlorengegangen:** Das Hinweisfeld
-  „Datei erstellt“ lebte in genau diesem Block. Von der Hauptansicht und aus
-  den Einstellungen heraus hätte man ab jetzt geklickt und nicht gewusst, ob
-  etwas passiert ist. Fehlt das Feld, kommt die Meldung nun als Fenster.
-
-**Gemessen** (Lernstand künstlich gesetzt, drei Prüfungsteile):
-
-| Trefferquote je Frage | Vorhersage |
-|---|---|
-| 97 % | 10 von 10 |
-| 88 % | 9 von 10 |
-| 78 % | 5 von 10 |
-| 65 % | 1 von 10 |
-
-Bei 78 % erwartet man 19,5 Punkte — knapp über der Grenze von 19. Dass
-daraus nur etwa jede zweite Prüfung wird, ist genau der Punkt.
-
----
+### Geändert
+- Statistikfenster: Lernstand sichern entfernt, weiterhin in Hauptansicht und Einstellungen verfügbar
+- Lernstand sichern: Bestätigung als Fenster, wenn kein Hinweisfeld vorhanden ist
 
 ## [1.219.0] - 2026-09-09
 
 ### Geändert
-- **Das Einstellungen-Fenster hat jetzt überall dieselbe Größe.** Dietmar:
-  „Ich möchte unter Einstellungen eine Einheitliche Grösse von den Fenster.
-  Die grösse von Benutzer passt.“
-
-  Bisher wuchs das Fenster mit seinem Inhalt bis zu einer Obergrenze:
-  *Benutzer* mit zehn Zeilen stieß an die 83 % der Fensterhöhe, *Update* mit
-  zwei Kästen war nur halb so hoch. Jeder Reiterwechsel ließ das Fenster
-  darum springen — und weil es mittig sitzt, wanderte dabei **auch die
-  Reiterspalte** nach oben und unten. Der nächste Knopf war dann nicht mehr
-  dort, wo eben noch geklickt wurde.
-
-  Aus `max-height` wurde `height`. Der Wert bleibt bei 83 %: genau dort
-  stand *Benutzer* bisher, und diese Größe hat er als passend bezeichnet.
-  Gescrollt wird im Blatt rechts, die Reiterspalte steht still. Die
-  Mindesthöhe von 380 Punkten im Blatt ist entfallen — sie war der Notbehelf
-  gegen genau dieses Springen.
-
-  Überschüssiger Platz bleibt bei kurzen Reitern unten leer. Das ist der
-  Preis für ein Fenster, das stillsteht, und er ist es wert.
-
-**Gemessen** (alle acht Reiter, drei Bildschirmgrößen):
-
-| Prüfung | Ergebnis |
-|---|---|
-| Fensterhöhe über alle acht Reiter | 788 px, ein einziger Wert ✔ |
-| Lage des Fensters beim Wechseln | unverändert ✔ |
-| 15 Zoll (1366 × 660) | 548 px, alle Reiter sichtbar, Blatt scrollt ✔ |
-| 17 Zoll (1600 × 790) | 656 px ✔ |
-| Arbeitsfläche 1915 × 950 | 788 px ✔ |
-
----
+- Einstellungen: Fenster in allen Reitern gleich hoch (83 % der Fensterhöhe), kein Springen beim Reiterwechsel
+- Einstellungen: Scrollen nur im rechten Blatt, Reiterspalte bleibt fest; Mindesthöhe von 380 px entfallen
 
 ## [1.218.0] - 2026-09-09
 
 ### Geändert
-- **Aus „Merkblatt“ wird „Vor der Prüfung“.** Dietmar: „Der Name Merkblatt
-  gefällt mir nicht. Ich denke, Lernhilfe ist besser.“ — *Lernhilfe* stünde
-  im Reiter direkt neben *Lernen*, zwei ähnliche Wörter untereinander; seine
-  Wahl fiel deshalb auf **Vor der Prüfung**. Das sagt nicht, was das Blatt
-  ist, sondern wann man es braucht.
+- Merkblatt umbenannt in Vor der Prüfung
 
 ### Behoben
-- **Bei Bildfragen stand kein Bild auf dem Blatt.** Dietmar: „Bildantwort –
-  im Trainer ansehen (NI103) Ich möchte das Bild mit auf dem Merkblatt.“
-
-  Er hat recht, und mein ursprünglicher Grund war falsch. Ich hatte
-  argumentiert, ein einzelnes Antwortbild sage ohne die drei anderen daneben
-  nichts. Bei diesen Fragen **ist das Bild aber die Antwort** — der
-  Antworttext ist leer. Der Hinweis machte das Blatt an genau den Stellen
-  wertlos, an denen es am meisten hilft: bei den Schaltbildern.
-
-  Jetzt steht das Bild der richtigen Antwort auf dem Papier, groß genug zum
-  Erkennen (bis 88 × 56 mm, weiß hinterlegt, weil die SVG durchsichtig sind).
-
-  **Ein Bild wird dabei nicht doppelt gedruckt.** Bei Bildfragen heißt die
-  richtige Antwort oft `<Nummer>.svg` — genau der zweite Name, unter dem auch
-  ein Fragebild gesucht wird. Ohne die Prüfung stünde dasselbe Bild zweimal
-  auf dem Blatt, einmal als Frage und einmal als Antwort.
-
-**Gemessen** (NB401, NB702, NB703 — die drei Bildfragen der Klasse N):
-
-| Prüfung | Ergebnis |
-|---|---|
-| Antwortbilder geladen und sichtbar | 3 von 3 ✔ |
-| Fragebild nicht zusätzlich gedruckt | ✔ |
-| Kein „im Trainer ansehen“ mehr auf dem Blatt | ✔ |
-
----
+- Vor der Prüfung: Bildfragen zeigen das Bild der richtigen Antwort (bis 88 × 56 mm, weiß hinterlegt)
+- Vor der Prüfung: Fragebild und Antwortbild werden nicht doppelt gedruckt
 
 ## [1.217.0] - 2026-09-09
 
 ### Hinzugefügt
-- **Zehn Lernende statt drei — mit eigenem Prüfungsziel.** Dietmar:
-  „Derzeit haben wir 3 Benutzer. Ich möchte die Anzahl auf 10 erweitern."
-  Und: „Ein Beginner lernt auf Klasse N und ein E Lizensierter, übt auf die
-  Klasse A. Die Klasse muss beim auswählen sich mit umstellen."
+- Benutzer: bis zu zehn Lernende statt drei, Verwaltung unter Einstellungen → Benutzer
+- Benutzerauswahl: Hauptansicht listet nur angelegte Plätze
+- Benutzer: eigenes Prüfungsziel je Platz, Fragenkatalog wechselt beim Benutzerwechsel mit
+- Benutzer: Löschen des Namens behält den Lernstand, erneuter Eintrag desselben Namens stellt ihn wieder her
+- Merkblatt: Kopf Wo du stehst mit Trefferquote je Prüfungsteil, wackligen und nie geübten Fragen sowie schwächstem Teil
+- Gruppenraum: Kursauswertung für später sichern (im Browser des Gastgebers), Übersicht unter Einstellungen → Kursauswertung
+- Kursauswertung: Beamer-Ansicht mit schrittweisem Aufdecken von Mehrheitsantwort und Lösung, ohne Namen
+- Beamer-Ansicht: Steuerung per Leertaste, Pfeiltasten und Esc, Schriftgröße passt sich der Fragelänge an
 
-  Neuer Reiter **Einstellungen → Benutzer**: dort bekommt ein Platz einen
-  Namen und ist damit angelegt. **In der Auswahlliste der Hauptansicht
-  stehen nur die angelegten Plätze** — wer allein lernt, sieht weiterhin
-  einen Eintrag und nicht zehn.
-
-  **Das Prüfungsziel gehört jetzt zum Platz, nicht zum Rechner.** Bis
-  hierher nahm ein Benutzerwechsel die Klasse des Vorgängers mit: Der
-  Lernstand war getrennt, das Ziel nicht. In einem Ortsverband, wo
-  Anfänger und Aufsteiger sich einen Rechner teilen, ist das genau
-  verkehrt herum. Beim Wechsel wird der Fragenkatalog nachgezogen —
-  *gemessen: Anna 571 Fragen (Klasse N), Clara 716 (E → A), und zurück.*
-
-  **Ein Name löschen heißt nicht Lernstand löschen.** Fehler, Lernbedarf,
-  Verlauf und Merkliste bleiben unter dem Schlüssel des Platzes liegen;
-  wer denselben Namen wieder einträgt, findet alles vor. Das steht auch so
-  im Fenster.
-
-  Die riskanteste Stelle war eine andere: `['user1','user2','user3']` stand
-  an **siebzehn Stellen** im Code, darunter in `preserveKeys` und
-  `getAllLocalUserData`. Wäre auch nur eine übersehen worden, hätte der
-  vierte Benutzer beim Sichern oder Zurücksetzen still seinen Lernstand
-  verloren. Die Liste ist jetzt die **einzige** Stelle, an der die Zahl
-  steht, und sie steht vor ihrer ersten Verwendung.
-
-- **Dein persönliches Merkblatt — mit einem Kopf, der sagt, wo es hakt.**
-  Dietmar: „Merkblatt für Wackelkanditaten klingt blöd. Dein persönliches
-  Merkblatt klingt besser. … Wichtig ist dabei der Trainer selbst erkennt
-  wo man noch schwächen hat. Und genau das muss auf dieses Blatt mit drauf."
-
-  Oben auf dem Blatt steht jetzt **Wo du stehst**: Trefferquote je
-  Prüfungsteil mit Balken, wie viele Fragen dort wackeln, wie viele noch
-  nie dran waren — und ein Satz, der es benennt: *„Am meisten hakt es bei
-  Vorschriften – 64 % richtig, 12 wacklige Fragen."*
-
-  Wer im Hotel sitzt, hat den Trainer nicht dabei. Ohne diesen Kopf wäre
-  das Blatt eine Fragenliste ohne Einordnung.
-
-  Umgezogen ist es außerdem: aus der Statistik in den eigenen Reiter
-  **Einstellungen → Merkblatt**.
-
-- **Kursauswertungen aufheben und am Beamer durchgehen.** Dietmar:
-  „Szenario: Wir üben Online über dem Internet und am nächsten OV VHS
-  Abend, möchte ich als Trainer die Fragen über dem Beamer mit der Gruppe
-  durchgehen."
-
-  In der Auswertung gibt es **Für später sichern**; unter
-  **Einstellungen → Kursauswertung** stehen die gesicherten Abende.
-  Gespeichert wird im Browser des Gastgebers, nicht auf dem Server: Der
-  Raum lebt nur, solange er läuft, und wird spätestens nach zwölf Stunden
-  weggeräumt — zwischen Online-Abend und Kursabend liegen aber Tage.
-
-  Die **Beamer-Ansicht** füllt den Bildschirm mit einer Frage. Darunter,
-  einzeln aufzudecken: was die Gruppe mehrheitlich gewählt hat, und was
-  richtig ist. So überlegt der Kurs erst selbst. Weiter mit Leertaste
-  oder →, zurück mit ←, aufdecken mit ↓, Schluss mit Esc. Die Schriftgröße
-  richtet sich nach der Länge des Fragetextes, damit auch eine lange Frage
-  ins Bild passt.
-
-  **Namen bleiben an der Wand aus.** Wer am Beamer steht, hat die Gruppe
-  vor sich sitzen.
-
-**Gemessen:**
-
-| Prüfung | Ergebnis |
-|---|---|
-| Liste zeigt nur angelegte Plätze (user1, user4, user10) | ✔ |
-| Lernstände der Plätze 4 und 10 getrennt | ✔ |
-| Sichern erfasst alle zehn Plätze | ✔ |
-| Name gelöscht → Platz weg, 6 Fragen Lernstand liegen noch | ✔ |
-| Benutzerwechsel zieht den Fragenkatalog nach (571 ↔ 716) | ✔ |
-| Merkblatt-Kopf: Quote, Wackler, nie geübt, schwächster Teil | ✔ |
-| Kursabend sichern, ansehen, löschen | ✔ |
-| Beamer: aufdecken, weiter, zurück, Esc | ✔ |
-
----
+### Geändert
+- Merkblatt: Titel Dein persönliches Merkblatt, verschoben nach Einstellungen → Merkblatt
+- Benutzerliste zentral an einer Stelle im Code statt an 17 Stellen; Sichern und Zurücksetzen erfassen alle Plätze
 
 ## [1.216.0] - 2026-09-09
 
 ### Hinzugefügt
-- **Auswertung für den Kursleiter.** Dietmar am 09.09.2026, aus einer
-  Ideenliste ausgewählt: „Kursleiter-Auswertung im Gruppenraum — welche
-  Fragen hat die Gruppe falsch? Damit weiß ein OV- oder VHS-Leiter, was am
-  nächsten Abend dran ist."
-
-  Die Rangliste am Ende einer Runde beantwortet „wer war gut". Der neue
-  Knopf **Auswertung** im Gruppenraum beantwortet die andere Frage: **was
-  hat die Gruppe nicht verstanden** — und die beantwortet man nicht mit
-  Punkten, sondern mit den Fragen selbst.
-
-  Das Wertvollste daran ist nicht die Fehlerquote, sondern der **gemeinsame
-  Irrtum**: Wenn sechs von acht dieselbe falsche Antwort wählen, ist das
-  kein Streuverlust, sondern ein Denkfehler, den alle teilen — und genau
-  der lässt sich am nächsten Abend geraderücken. Die Auswertung nennt ihn
-  im Klartext („Meist gewählt: Contest Query, 3×") und stellt die richtige
-  Antwort daneben.
-
-  Dazu eine Zeile je Prüfungsteil, ein Vorschlag „Für den nächsten Abend"
-  mit den Fragen, die mindestens zwei falsch hatten, und ein Ausdruck fürs
-  Kursmappe.
-
-  **Namen sind standardmäßig aus.** In einer VHS oder im Ortsverband sitzt
-  niemand gern vor der Gruppe am Pranger, und für die Planung des nächsten
-  Abends braucht man sie nicht. Ein Schalter blendet sie ein — wer einzeln
-  helfen will, muss wissen, wem.
-
-  **Nur der Gastgeber kommt daran**, serverseitig geprüft. Sonst könnte
-  jeder Teilnehmer mitten in der Runde nachsehen, welche Antwort die
-  richtige ist.
-
-- **Merkblatt zum Ausdrucken.** Die eigenen **Wackelkandidaten** auf einem
-  Blatt: Fragennummer, Frage, und darunter **nur die richtige Antwort**.
-
-  Die drei falschen fehlen mit Absicht — dieselbe Regel wie beim Hörbuch.
-  Wer auf der Fahrt zur Prüfung noch einmal quer liest, soll sich nichts
-  Falsches einprägen; drei Ablenker auf dem Papier wären genau dafür die
-  beste Gelegenheit. Zum Ankreuzen gibt es weiterhin den Prüfungsbogen.
-
-  „Wackelkandidat" heißt: **schon einmal falsch gehabt und noch nicht
-  sicher gemeistert.** Eine Frage, die man einmal daneben hatte und
-  seitdem dreimal sicher konnte, gehört nicht mehr aufs Blatt — sie würde
-  nur den Platz derer wegnehmen, die wirklich wackeln.
-
-  Zu finden unter **Statistik**, mit Auswahl der Anzahl (10 bis alle) und
-  des Prüfungsteils. Steht ein Prüfungstermin, rechnet der Kopf die
-  verbleibenden Tage mit auf das Blatt.
+- Gruppenraum: Kursleiter-Auswertung mit falsch beantworteten Fragen und Fehlerquote je Prüfungsteil
+- Kursleiter-Auswertung: gemeinsamer Irrtum (meistgewählte falsche Antwort) neben der richtigen Antwort
+- Kursleiter-Auswertung: Vorschlag für den nächsten Abend (Fragen mit mindestens zwei Fehlern) und Ausdruck
+- Kursleiter-Auswertung: Namen standardmäßig ausgeblendet und zuschaltbar; nur für Gastgeber, serverseitig geprüft
+- Statistik: Merkblatt zum Ausdrucken mit Wackelkandidaten und nur der richtigen Antwort, Auswahl von Anzahl und Prüfungsteil
+- Merkblatt: sicher gemeisterte Fragen ausgeschlossen, verbleibende Tage bis zum Prüfungstermin im Kopf
 
 ### Behoben
-- **Zwei Sorten Antworten im Gruppenraum, die keine Antworten sind.**
-  Beim Betreten meldet der Trainer für alle als gelernt markierten Fragen
-  automatisch die richtige Antwort, damit der Raum nicht auf jemanden
-  wartet, der sie längst kann. Und **F9/F10** („Lösung zeigen") meldet eine
-  bewusst falsche.
-
-  Beides ist richtig so — aber serverseitig waren diese Meldungen von
-  echten Antworten **nicht zu unterscheiden**. Für die Rangliste fiel das
-  nie auf; eine Fehlerquote der Gruppe hätte damit nicht die Gruppe
-  beschrieben, sondern die Technik.
-
-  Solche Meldungen tragen jetzt eine Kennzeichnung (`art`), die der Server
-  über eine Weißliste annimmt statt sie durchzureichen. Die
-  Kursleiter-Auswertung lässt sie weg und sagt darunter, wie viele es
-  waren. Ältere Trainer, die noch nichts davon wissen, senden nichts —
-  fehlende Kennzeichnung gilt als echte Antwort, die vorsichtigere
-  Annahme.
-
-**Gemessen** (drei Browserfenster in einem echten Raum):
-
-| Prüfung | Ergebnis |
-|---|---|
-| Alle drei wählen denselben Ablenker | als gemeinsamer Irrtum erkannt, 3× ✔ |
-| Zwei falsch, einer richtig | 2 von 3 · 67 % ✔ |
-| Alle richtig | 0 von 3 · 0 % ✔ |
-| Vorbelegung und F9-Meldung | nicht mitgezählt, Hinweis erscheint ✔ |
-| Knopf beim Gastgeber / bei Teilnehmern | sichtbar / verborgen ✔ |
-| Teilnehmer fordert Auswertung an | serverseitig abgewiesen ✔ |
-| Merkblatt: gemeisterte Frage | bleibt draußen ✔ |
-| Merkblatt: nur die richtige Antwort auf dem Blatt | ✔ |
-
----
+- Gruppenraum: automatische Vorbelegungen und F9/F10-Meldungen gekennzeichnet (`art`, Weißliste), nicht in Auswertung gezählt
 
 ## [1.215.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Windows, Linux und macOS aus einem Guss.** Dietmar: „Baue es mir so auf,
-  dass es auf Windows, Linux und Mac läuft."
-
-  Der Trainer selbst lief dort längst — er ist Node.js. Es fehlten die beiden
-  **Hilfsprogramme**, und die kamen bisher ausschließlich über Windows-Wege:
-  `piper.exe` mit dem Setup, `cloudflared.exe` über `start-tunnel.bat` mit
-  PowerShell. Beides gibt es für Linux und macOS genauso, nur unter anderem
-  Namen.
-
-  Neu ist **`programme_holen.js`**: Es erkennt System und Prozessor und holt die
-  passende Fassung — in Node, also auf allen drei Systemen über denselben Knopf.
-  Zu finden unter **Einstellungen → Wartung → Hilfsprogramme**; dort steht auch,
-  was schon da ist und was fehlt.
-
-  | System | Piper | cloudflared |
-  |---|---|---|
-  | Windows x64 | `piper_windows_amd64.zip` | `cloudflared-windows-amd64.exe` |
-  | Linux x86-64 | `piper_linux_x86_64.tar.gz` | `cloudflared-linux-amd64` |
-  | Linux ARM64 | `piper_linux_aarch64.tar.gz` | `cloudflared-linux-arm64` |
-  | Linux ARMv7 | `piper_linux_armv7l.tar.gz` | `cloudflared-linux-arm` |
-  | macOS Intel | `piper_macos_x64.tar.gz` | `cloudflared-darwin-amd64.tgz` |
-  | macOS Apple Silicon | `piper_macos_aarch64.tar.gz` | `cloudflared-darwin-arm64.tgz` |
-
-  Die Namen sind auf den Release-Seiten der beiden Projekte **nachgesehen und
-  nicht geraten**. Ein System ohne fertige Fassung (etwa FreeBSD) bekommt keinen
-  Knopf, sondern den Satz, dass es dafür nichts Fertiges gibt.
-
-  **Die Vorsichtsmaßnahmen sind dieselben wie beim Stimmen-Nachladen:** nur zwei
-  erlaubte Rechnernamen (`github.com` und der Auslieferungsdienst, an den GitHub
-  weiterreicht), **jede** Umleitung wird erneut geprüft — nicht nur die erste —,
-  eine Obergrenze für die Dateigröße, und geschrieben wird erst unter einem
-  Zwischennamen. Ein Abbruch mitten im Laden hinterlässt damit keine halbe Datei,
-  die beim nächsten Start als „ist ja da" gilt. Entpackt wird mit dem `tar` des
-  Systems statt mit eigenem Code — weniger Fläche für Fehler.
-
-**Gemessen** (ohne Netz, alle Zweige nachgestellt):
-
-| Prüfung | Ergebnis |
-|---|---|
-| Dateiwahl für 7 System/Prozessor-Kombinationen | alle richtig ✔ |
-| Entpacken, Datei finden, `chmod +x`, ausführen | ✔ |
-| `github.com.boese.example` | abgelehnt ✔ |
-| `example.com` | abgelehnt ✔ |
-| `169.254.169.254` (Metadaten-Adresse) | abgelehnt ✔ |
-| Anzeige: beides fehlt / beides da / kein Angebot | alle drei richtig ✔ |
-
-- **Ein Befehl, und Linux und macOS sind eingerichtet.** Dietmar: „Ich gebe
-  den Befehl ins Terminal ein und ziehe mir darüber die Version von GitHub
-  und baue alle Abhängigkeiten ein. Wenn möglich, mit einer Verknüpfung auf
-  dem Desktop."
-
-  ```
-  curl -fsSL https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/HEAD/installieren.sh | bash
-  ```
-
-  Neu ist **`installieren.sh`**. Es prüft Node.js und git und installiert
-  sie bei Bedarf mit dem Paketverwalter des Systems nach (apt, dnf, pacman,
-  zypper, apk, Homebrew), holt den Trainer nach `~/Amateurfunk-Trainer`,
-  richtet die drei Abhängigkeiten ein, lädt Piper und cloudflared passend zu
-  System und Prozessor und legt die Verknüpfung an — unter Linux eine
-  `.desktop`-Datei, die zusätzlich ins Anwendungsmenü kommt, am Mac ein
-  `Amateurfunk-Trainer.app`.
-
-  **`HEAD` statt `main` in der Adresse** — damit hängt der Befehl nicht am
-  Namen des Hauptzweigs und bleibt gültig, falls der sich je ändert.
-
-  **Ein zweiter Aufruf frischt auf** statt neu einzurichten (`git pull`).
-  **`data/` wird dabei nie angefasst** — der Lernstand liegt außerhalb von
-  allem, was das Skript berührt.
-
-  Wer `| bash` nicht mag, lädt das Skript herunter, sieht hinein und ruft es
-  dann auf; der Weg steht in `INSTALLATION.md`. Zwei Schalter gibt es:
-  `AFU_ZIEL=<Pfad>` für einen anderen Ordner, `AFU_OHNE_HILFSPROGRAMME=1`
-  zum Auslassen der beiden Downloads.
-
-  **Unter Windows ändert sich nichts** — dort bleibt das Setup der Weg, und
-  die Anleitung sagt das jetzt auch deutlich.
-
-  **`programme_holen.js` kann jetzt auch von der Konsole**
-  (`node programme_holen.js alles`), damit das Installationsskript dieselbe
-  Mechanik benutzt wie der Knopf im Trainer — eine Stelle, an der geladen
-  wird, nicht zwei.
-
-  Neu dazu: **`INSTALLATION.md`** mit beiden Wegen, den Schaltern und einem
-  Abschnitt „Wenn etwas klemmt", sowie das Bild
-  `bilder/13-installation.png`.
-
-**Gemessen** (Linux, mit einem nachgestellten Repository):
-
-| Prüfung | Ergebnis |
-|---|---|
-| Ersteinrichtung von null | ✔ |
-| zweiter Aufruf frischt auf, `data/` unverändert | ✔ |
-| Zielordner belegt (kein git) | bricht ab, ohne etwas anzufassen ✔ |
-| Node.js fehlt, kein Paketverwalter | nennt den Weg von Hand ✔ |
-| `.desktop` angelegt, ausführbar, im Anwendungsmenü | ✔ |
-| macOS-Zweig: `.app`-Struktur, Info.plist, Starter | ✔ |
+- Plattformen: Unterstützung für Windows, Linux und macOS
+- `programme_holen.js`: lädt Piper und Tunnelprogramm passend zu System und Prozessor (Einstellungen → Wartung → Hilfsprogramme)
+- Hilfsprogramme: Download nur von GitHub, Prüfung jeder Umleitung, Größenlimit, Zwischendatei, Entpacken mit System-`tar`
+- `installieren.sh`: Ein-Befehl-Installation für Linux und macOS inkl. Node.js, git, Abhängigkeiten und Hilfsprogrammen
+- Installation: Verknüpfung auf dem Desktop (Linux `.desktop` inkl. Anwendungsmenü, macOS `.app`)
+- `installieren.sh`: erneuter Aufruf aktualisiert per `git pull`, `data/` bleibt unberührt
+- `installieren.sh`: Schalter `AFU_ZIEL` für Zielordner und `AFU_OHNE_HILFSPROGRAMME` zum Auslassen der Downloads
+- `programme_holen.js`: Aufruf per Konsole (`node programme_holen.js alles`)
+- Dokumentation: `INSTALLATION.md` mit beiden Installationswegen und Fehlerhilfe
 
 ### Behoben
-- **Verwaiste `cloudflared`-Prozesse wurden auf Linux und macOS nie
-  aufgeräumt.** Dort stand ein `return` — ein cloudflared, der einen Absturz
-  überlebt hatte, blockierte den nächsten Start still.
-
-  Aufgeräumt wird jetzt auch dort, **aber nicht mit der Brechstange**: Die
-  Windows-Fassung erschlägt *jedes* cloudflared auf dem Rechner. Das ist dort
-  vertretbar; auf Linux betreibt mancher einen eigenen benannten Tunnel für sein
-  Heimnetz, und den abzuschießen, weil hier ein Trainer startet, wäre ein
-  Übergriff. Beendet wird deshalb nur, was ein `tunnel --url` ohne Konfiguration
-  ist — also ein Quick Tunnel wie unserer.
-
----
+- Linux/macOS: verwaiste Tunnelprozesse (Quick Tunnel) werden beim Start beendet, eigene benannte Tunnel bleiben unberührt
 
 ## [1.214.0] - 2026-09-07
 
-### Behoben
-- **Auf Linux und am Mac gab es nie eine Stimme — der Server hat nur nach
-  `piper.exe` gesucht.** Rückmeldung eines Linux-Benutzers: „Bis auf die Stimme
-  läuft es ja."
-
-  In `findPiper()` stand genau ein Kandidat: `piper/piper.exe`. Auf Linux und am
-  Mac heißt die Datei **`piper`**, ohne Endung — also wurde sie nie gefunden.
-  Zurück kam der Notnagel `{type:'python', path:'python'}`, und der ging auf den
-  meisten heutigen Linux-Systemen ebenfalls ins Leere: Dort gibt es nur
-  **`python3`**, ein blankes `python` existiert nicht mehr. Ergebnis: `ENOENT`,
-  Fehler 500, keine Stimme.
-
-  Gesucht wird jetzt der Reihe nach: im Ordner `piper/` unter dem Namen, den das
-  jeweilige System benutzt · eine Ebene tiefer (`piper/piper/piper` — so entpackt
-  sich das offizielle Archiv) · auf dem **Systempfad** (wer piper über die
-  Paketverwaltung installiert hat, ist damit fertig) · zuletzt das Python-Modul,
-  mit `python3` statt `python`.
-
-  Nachgestellt und gemessen — alle sechs Fälle richtig:
-
-  | Lage | gefunden als |
-  |---|---|
-  | Linux, `piper/piper` | Ordner piper/ ✔ |
-  | Linux, `piper/piper/piper` | Ordner piper/ ✔ |
-  | Linux, nur auf dem Systempfad | Systempfad ✔ |
-  | Linux, gar nichts | Python-Modul `python3` ✔ |
-  | Windows, `piper/piper.exe` | Ordner piper/ ✔ |
-  | Windows, gar nichts | Python-Modul `python` ✔ |
-
-- **Die Fehlermeldung sprach auf Linux von DLLs und Visual C++.** Sie war für
-  Windows geschrieben und half dort, wo sie am dringendsten gebraucht wurde,
-  überhaupt nicht. Außerhalb von Windows steht jetzt, wonach gesucht wurde und
-  was dort zu tun ist — Archiv entpacken und `chmod +x`, oder
-  `pip install piper-tts`.
-
-- **Die Anzeige verwechselte „keine Stimme" mit „kein Programm".** Es müssen
-  **zwei** Dinge stimmen, damit vorgelesen wird: die Sprachmodelle *und* das
-  Programm. Bisher nannte der Hinweis nur die Modelle — im gemeldeten Fall lagen
-  die aber da. `/api/tts-voices` liefert jetzt die Lage des Programms mit, und
-  der Hinweis benennt den Unterschied.
-
-  (Beim ersten Versuch stand der neue Hinweis **vor** dem Standardtext und wurde
-  eine Zeile später wieder überschrieben — im Test sichtbar geworden, jetzt steht
-  er dahinter.)
-
 ### Hinzugefügt
-- **`START.sh` und `STOP.sh` für Linux und den Mac.** Dietmar: „start.bat wird
-  vermutlich auf Linux nicht funktionieren?" — richtig, `.bat` und `.vbs` sind
-  Windows. Wer das Paket auf einem anderen System auspackte, hatte gar keinen
-  Startknopf.
+- `START.sh` und `STOP.sh` für Linux und macOS, im ZIP-Paket enthalten
+- `STOP.sh`: beendet nur den Trainer aus dem eigenen Ordner
 
-  `START.sh` tut, was `START.vbs` unter Windows tut: nachsehen, ob `node` da ist
-  (mit dem passenden Installationsbefehl je Distribution, falls nicht), nachsehen
-  ob auf Port 3000 schon ein Trainer läuft, dann starten und den Browser öffnen.
-
-  `STOP.sh` beendet **nur, was aus diesem Ordner heraus läuft** — anders als die
-  Windows-Fassung, die pauschal jedes `node.exe` abschießt. Auf einem
-  Linux-Rechner läuft nebenher oft anderes mit node; das darf nicht mitgehen.
-
-  Beide sind ins ZIP-Paket aufgenommen (`PAKET_DATEIEN`), das sich Teilnehmer
-  über den Gruppenraum-Link herunterladen.
-
-  Getestet: frischer Start → Server auf Port 3000 ✔ · zweiter Aufruf erkennt den
-  laufenden Trainer und öffnet nur den Browser ✔ · `STOP.sh` beendet ihn
-  (`Server beendet (PID …)`), danach antwortet der Port nicht mehr ✔
-
----
+### Behoben
+- Linux/macOS: Piper wird gefunden (Name ohne `.exe`, Unterordner, Systempfad, Python-Modul über `python3`)
+- Piper: Fehlermeldung außerhalb von Windows mit passenden Hinweisen statt DLL/Visual C++
+- Vorlesen: Hinweis unterscheidet fehlende Stimmen und fehlendes Programm (`/api/tts-voices`)
 
 ## [1.213.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Antwort zurücknehmen.** Dietmar: „Bei Zittern oder Tremor ist ein Fehlklick
-  keine falsche Antwort, sondern eine verrutschte Hand. Das ist für mich der
-  wichtigste Punkt."
-
-  Nach dem Antworten steht **Zurücknehmen** in der Knopfreihe unter der Frage —
-  oder **Strg+Z**. Es gilt beim Lernen, im Prüfungssimulator und im Gruppenraum.
-
-  **Warum eine Sicherung und keine Rückrechnung:** Eine Antwort zieht mehr nach
-  sich, als man beim Lesen von `selectOption` denkt — Fehlerliste, Lernbedarf mit
-  seinen Zählern, Lernfortschritt mit Streak, der Fortschritt der Runde und die
-  beiden Zähler für Anzahl und Treffer. Jeden dieser Schritte rückwärts
-  nachzubauen hieße, `handleDifficultOnWrong`, `handleDifficultOnCorrect` und
-  `handleMasteryOnAnswer` ein zweites Mal zu schreiben — und beim nächsten Mal,
-  wenn sich eine davon ändert, hier den Fehler zu haben. Stattdessen wird **vor**
-  der Wertung eine Kopie der betroffenen Stellen gemacht und beim Zurücknehmen
-  genau diese Kopie zurückgeschrieben.
-
-  Es gilt nur für die **gerade offene Frage** — wer weiterblättert, lässt die
-  Antwort stehen. Im **Gruppenraum** ist die Antwort schon beim Server; der
-  speichert sie je Frage und überschreibt sie mit der nächsten, eine korrigierte
-  Antwort kommt also richtig an.
-
-  **Nachgemessen** (jeweils vorher / nach der Antwort / nach dem Zurücknehmen):
-
-  | | vorher | nach | zurück |
-  |---|---|---|---|
-  | Antwort | – | 0 | – ✔ |
-  | gezählt / richtig | 0 / 0 | 1 / 0 | 0 / 0 ✔ |
-  | Fortschritt | `answered:false` | `answered:true` | `answered:false` ✔ |
-  | Fehlerliste | 18 | 19 | 18 ✔ |
-  | Lernbedarf | – | `wrongCount:1` | – ✔ |
-  | Lernfortschritt | – | `totalWrong:1` | – ✔ |
-
-- **Gesprochener Text für jede Funktion im Nachteilsausgleich.** Dietmar: „Unter
-  Nachteilsausgleich möchte ich bei jeder Funktion einen gesprochenen Text. Bei
-  Ausführlich soll er das sagen: *Ausführlich — in ganzen Sätzen, so wie man es
-  jemandem erklärt, der daneben sitzt.*"
-
-  Alle **17** Bedienelemente des Reiters tragen jetzt `data-vorlesen` und
-  `data-vorlesen-kurz` — Stimme, Probe hören, Stimmen hinzufügen, beide
-  Vorlese-Schalter, Knöpfe vorlesen, Kurz, Ausführlich, Schrift vergrößern,
-  Tastatur, Zurücknehmen, Automatisch weiter samt Auswahlfeld, Bilder vergrößern
-  samt Auswahlfeld, Prüfungszeit samt Auswahlfeld. „Ausführlich" sagt genau den
-  Satz, den Dietmar vorgegeben hat.
-
-  Die Sätze hängen am umgebenden `<label>` beziehungsweise am Kasten, nicht am
-  Kästchen selbst — der Zuhörer am Dokument sucht das nächste Element mit einem
-  solchen Text, und beim Anfahren landet der Zeiger auf dem Label.
+- Antwort zurücknehmen per Knopf oder Strg+Z (Lernen, Prüfungssimulator, Gruppenraum)
+- Zurücknehmen: stellt Fehlerliste, Lernbedarf, Lernfortschritt und Zähler aus Sicherung wieder her, nur für die offene Frage
+- Nachteilsausgleich: gesprochene Erklärung (kurz und ausführlich) für alle 17 Bedienelemente
 
 ### Behoben
-- **Der Knopf „Zurücknehmen" ließ sich nicht ausblenden.** `style="display:none"`
-  am Element half nicht: `.nav-btn` setzt weiter oben `display:inline-flex`
-  **mit `!important`**, und das schlägt jeden Inline-Wert ohne `!important`.
-  Nachgemessen kam trotz Inline-Wert `none` als berechneter Wert `flex` heraus.
-  Gelöst wie schon bei `.pruefung-aus`: eine eigene Klasse mit `!important`, ganz
-  am Ende des Stylesheets — bei gleicher Spezifität gewinnt die spätere Regel.
-
----
+- Zurücknehmen: Knopf lässt sich ausblenden (eigene CSS-Klasse mit `!important`)
 
 ## [1.212.0] - 2026-09-07
 
 ### Geändert
-- **Der Reiter „Nachteilsausgleich" trägt jetzt das durchgestrichene Auge.**
-  Dietmar hat das internationale Sehbehinderten-Zeichen geschickt — das
-  stilisierte Auge mit Schrägstrich auf blauem Grund — und gesagt: „Das Zeichen
-  gefällt mir gut."
-
-  Sein Bild ist ein genormtes Piktogramm und nicht unseres; nachgebaut wird es
-  deshalb nicht. Font Awesome bringt aber mit **`eye-low-vision`** dieselbe
-  Aussage in derselben Formsprache mit — ein Auge mit Schrägstrich —, und die
-  Schriftart liegt ohnehin im Ordner. Damit kommt keine Datei dazu und nichts
-  Fremdes ins Projekt.
-
-  Nachgesehen: In `fontawesome/css/all.min.css` steht
-  `.fa-eye-low-vision:before,.fa-low-vision:before{content:"\f2a8"}` — das
-  Zeichen ist in der **Free**-Ausgabe enthalten und im Stil `fas` erreichbar,
-  also genau so, wie die Reiterleiste ihre Zeichen einbindet.
-
----
+- Reiter Nachteilsausgleich: Symbol durchgestrichenes Auge (Font Awesome `eye-low-vision`)
 
 ## [1.211.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Automatisch weiterblättern.** Dietmar: „Beim Lernen, Prüfungsraum,
-  Gruppenraum soll es automatisch ‚weiter' klicken nach 3 Sekunden. Das gehört
-  auch unter Nachteilsausgleich. Ein und abschaltbar."
-
-  Es hängt an `selectOption` — also an dem Augenblick, in dem eine Antwort steht.
-  Damit gilt es in allen drei Lagen von selbst: beim Lernen, im
-  Prüfungssimulator und im Gruppenraum, denn alle drei beantworten Fragen über
-  dieselbe Funktion. Wählbar sind 2, 3, 5, 8 oder 12 Sekunden.
-
-  **Vier Dinge sind eingebaut, damit es nicht überrumpelt:**
-
-  1. **Es wartet auf die Stimme.** Wer das Vorlesen braucht, braucht es ganz.
-     Eine Uhr, die während des Vorlesens weiterläuft, schnitte genau die Hilfe
-     ab, um die es hier geht. Solange gesprochen wird, steht der Zähler still.
-  2. **Die letzte Frage bleibt stehen.** Dort führt „Weiter" nicht zur nächsten
-     Frage, sondern ins Ergebnis — mit Konfetti und Auswertung. Da
-     hineinzuspringen wäre ein Schreck und kein Nachteilsausgleich.
-  3. **Man sieht ihn laufen:** im Knopf steht *Weiter (3)*, *(2)*, *(1)*.
-  4. **Jede Bedienung bricht ab.** Wer eine Taste drückt oder irgendwo
-     hinklickt, will länger schauen.
-
-- **Bilder stärker vergrößern.** Dietmar: „Für Bilder einen größeren Zoom. Ein
-  und abschaltbar." Vier Stufen von *ein Drittel größer* bis *so groß wie
-  möglich*. Multipliziert wird **beides** — die feste Obergrenze in Punkten und
-  der Anteil am Fenster. Nur die Obergrenze anzuheben brächte auf einem kleinen
-  Laptop nichts, weil dort ohnehin der Anteil greift; nur den Anteil anzuheben
-  brächte auf einem großen Monitor nichts. Der Anteil wird bei 92 % gekappt — ein
-  Bild, das den Rand berührt, sieht aus wie ein Fehler.
-
-  Gemessen an einem 120 × 80 großen Schaltzeichen: aus → **392 px**,
-  ein Drittel → 504, halb → 580, doppelt → 767, so groß wie möglich → **917 px**.
+- Nachteilsausgleich: automatisch weiterblättern nach 2 bis 12 Sekunden (Lernen, Prüfungssimulator, Gruppenraum)
+- Automatisch weiter: wartet auf das Vorlesen, Countdown im Knopf, hält bei letzter Frage und bei jeder Bedienung an
+- Nachteilsausgleich: stärkere Bildvergrößerung in vier Stufen, bis 92 % des Fensters
 
 ### Behoben
-- **Im Reiter stand das Zeichen über dem Wort.** Dietmar: „Das Zeichen sitzt
-  oberhalb von dem Text." Der Knopf war ein Block mit einem Zeichen davor —
-  solange die Beschriftungen kurz waren, fiel das nicht auf.
-  „Nachteilsausgleich" passte dann nicht mehr in eine Zeile. Jetzt ist der Knopf
-  eine Flex-Zeile mit `white-space: nowrap`, und die Spalte links ist von 180 auf
-  **210 Punkte** verbreitert.
-
-  (Das Zeichen ist übrigens kein Rollstuhl, sondern das allgemeine
-  Barrierefreiheits-Zeichen — eine Figur mit ausgebreiteten Armen im Kreis.)
-
-- **Das Fenster „Einstellungen" ist breiter und flacher.** Dietmar: „Das Fenster
-  Einstellungen etwas mehr in die Breite ziehen und es kann um 10 % kürzer sein."
-  860 → **1040 Punkte** breit, 92 % → **83 %** der Fensterhöhe. Die Kästen im
-  Nachteilsausgleich haben lange Erklärungen; auf 860 brachen sie auf fünf und
-  sechs Zeilen um, und das Fenster wurde dadurch hoch statt breit.
-
-**Gemessen:** Zähler läuft 3 → 2 → 1, dann weiter ✔ · Tastendruck hält ihn an ✔ ·
-letzte Frage bleibt stehen ✔ · Bildvergrößerung in allen fünf Stufen ✔ · Zeichen
-steht neben dem Wort ✔ · Fenster 988 × 830 statt 860 × 920 ✔ · keine
-Fehlermeldung ✔
-
----
+- Einstellungen: Reitersymbol steht neben dem Text statt darüber, Reiterspalte 210 px breit
+- Einstellungen: Fenster breiter (1040 px) und flacher (83 % der Fensterhöhe)
 
 ## [1.210.0] - 2026-09-07
 
-### Geändert
-- **Aus dem Reiter „Vorlesen" wird „Nachteilsausgleich", und die
-  Tastaturbedienung zieht dort ein.** Dietmar: „Vorlesen wird
-  Nachteilsausgleich. Bedienung für Tastatur muss da mit rein."
-
-  Er hat recht: Vorlesen, Tastaturbedienung und mehr Zeit in der Prüfung sind
-  dasselbe Thema — Wege, die Prüfung für jemanden gangbar zu machen, dem der
-  übliche Weg verstellt ist. Über zwei Reiter verstreut findet man sie nur, wenn
-  man schon weiß, dass es sie gibt.
-
-  Die interne Kennung bleibt `vorlesen`. Sie steht an einem Dutzend Stellen; sie
-  mitzuändern brächte nichts außer der Gelegenheit, eine davon zu übersehen.
-
 ### Hinzugefügt
-- **Verlängerte Prüfungszeit — ein- und ausschaltbar.** Dietmar: „Für den
-  Nachteilsausgleich gibt es mehr Zeit für die Prüfung. Bin mir nicht ganz sicher
-  welche Zeit? Ich vermute 60 Minuten für jeden Prüfungsteil."
+- Nachteilsausgleich: verlängerte Prüfungszeit zuschaltbar, Faktor +25 %, ein Drittel (45 → 60 min), +50 % oder doppelt
+- Prüfungszeit: zentrale Berechnung (`pruefZeit()`) für Übersicht, Kacheln, Simulatoren und Ausdruck, Kennzeichnung mit +
+- Verlängerte Prüfungszeit: Hinweis auf Amtsblatt-Verfügung 29/2024 der BNetzA, Einstellung gilt je Rechner
 
-  **Nachgesehen — und die Vermutung stimmt so nicht.** In der
-  Amtsblatt-Verfügung **29/2024** der Bundesnetzagentur stehen die amtlichen
-  Zeiten (45 Minuten je Teil, 60 Minuten für Technik Klasse A) und zum
-  Nachteilsausgleich nur der Satz, dass „Menschen mit Behinderung ihrer
-  Behinderung entsprechende Erleichterungen bei der Prüfungsdurchführung zu
-  gewähren" sind. **Wie viel** mehr Zeit, steht dort nicht: Das entscheidet die
-  zuständige Stelle im Einzelfall, und es kann statt Zeit auch eine Einzelprüfung
-  oder eine mündliche Abnahme sein. Der Nachweis (ärztliches Attest) gehört zur
-  Anmeldung.
-
-  Deshalb keine feste Zahl im Code, sondern ein **Faktor zum Auswählen**:
-  +25 % · **ein Drittel mehr (45 → 60)** · +50 % · doppelte Zeit. Die Stufe mit
-  den 60 Minuten steht mit in der Liste, weil sie Dietmars Zahl trifft — aber als
-  Wahl und nicht als Gesetz. Der Kasten sagt das auch dem Benutzer, samt Quelle.
-
-  **Es gibt nur eine Stelle, die Zeiten ausrechnet.** Alles, was eine
-  Prüfungszeit anzeigt oder herunterzählt, geht durch `pruefZeit()` —
-  Übersichtstabelle, Auswahlkacheln, beide Simulatoren, Ausdruck. Sonst stünde in
-  der Tabelle 45 und im Simulator liefen 60. In der Übersichtstabelle steht bei
-  verlängerter Zeit ein kleines **+** hinter den Minuten.
-
-  Die Einstellung gehört zum Rechner, nicht zum Lernstand: Wer den
-  Nachteilsausgleich braucht, braucht ihn in jedem Benutzer-Slot.
-
-**Gemessen** (Simulator über die Oberfläche gestartet):
-
-| Stufe | Übersicht | Kachel | Uhr im Simulator |
-|---|---|---|---|
-| aus | 45 min | 45 Min | **45:00** ✔ |
-| ein Drittel mehr | 60 min + | 60 Min | **60:00** ✔ |
-| +50 % | 68 min + | 68 Min | **68:00** ✔ |
-
-Ausschalten stellt überall 45 wieder her ✔ · beim Wiedereinschalten kommt die
-zuletzt gewählte Stufe zurück ✔ · „Bedienung per Tastatur" steht im neuen Reiter
-und nicht mehr unter „Allgemein" ✔ · keine Fehlermeldung ✔
-
----
+### Geändert
+- Reiter Vorlesen umbenannt in Nachteilsausgleich, Tastaturbedienung aus Allgemein dorthin verschoben
 
 ## [1.209.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Nachschlagen: Claude, DeepSeek und Meta KI stehen jetzt mit zur Wahl.**
-  Dietmar: „Hier könnten wir noch Meta KI, DeepSeek und Claude einbauen."
-
-  Damit sind es sieben Ziele, in zwei Gruppen — und die Gruppen stehen so im
-  Auswahlfeld, weil sie sich technisch wirklich unterscheiden:
-
-  **Bekommt die Frage direkt** — Google KI · Google · ChatGPT · **Claude** ·
-  Perplexity. Die Frage steht im Link, die Seite antwortet beim Öffnen von
-  selbst. Claude nimmt sie über `claude.ai/new?q=` entgegen, genau wie ChatGPT
-  über `chatgpt.com/?q=`.
-
-  **Frage wird kopiert** — **DeepSeek** · **Meta KI**. Beide Seiten kennen
-  keinen Parameter, mit dem sich eine fertige Frage mitgeben lässt — derselbe
-  Grund, aus dem Gemini bis heute nicht in der Liste steht. Statt sie deshalb
-  wegzulassen, geht es hier über die Zwischenablage: Die Frage wird kopiert, die
-  Seite geht auf, und ein Hinweis unten sagt, dass jetzt **Strg+V** dran ist. Ein
-  Handgriff mehr, aber abtippen muss niemand.
-
-  Ein Detail, das leicht schiefgeht: **Kopiert wird vor `window.open`.** Danach
-  liegt der Zugriff auf die Zwischenablage in einem Fenster, das nicht mehr im
-  Vordergrund ist — manche Browser verweigern ihn dann. Klappt es doch einmal
-  nicht, sagt der Hinweis das ehrlich, statt eine leere Zwischenablage
-  vorzugeben.
-
-  Sollte eine der beiden Seiten später doch einen Parameter bekommen, ist es im
-  Quelltext eine Zeile: `kopieren` raus, `adresse` mit `?q=` wie bei den anderen.
-
-**Gemessen:** alle sieben Adressen richtig aufgebaut ✔ · Knopf neben der Frage
-trägt Namen und Zeichen des Ziels (Meta KI mit eigenem Logo) ✔ · bei DeepSeek
-landet die Frage in der Zwischenablage und die Seite öffnet ✔ · der Hinweis
-erscheint und verschwindet nach vier Sekunden ✔ · keine Fehlermeldung ✔
-
----
+- Nachschlagen: Claude, DeepSeek und Meta KI als Ziele, sieben Ziele in zwei Gruppen im Auswahlfeld
+- Nachschlagen: Claude mit direkter Frageübergabe (`claude.ai/new?q=`)
+- Nachschlagen: DeepSeek und Meta KI über Zwischenablage mit Hinweis auf Strg+V, Kopieren vor dem Öffnen des Fensters
+- Nachschlagen: Knopf zeigt Namen und Logo des gewählten Ziels
 
 ## [1.208.0] - 2026-09-07
 
-### Entfernt
-- **Das Prüfungsziel „CB → N" ist aus der Klassenwahl herausgenommen.**
-  Dietmar: „Die Klasse von CB auf N kannst du entfernen, da Blättern richtig gut
-  funktioniert und jeder selbst das durchgehen kann."
-
-  Das Ziel hat 138 Fragen als „kann ein CB-Funker schon" vom Lernstapel
-  abgezogen. Seit es das Blättern mit Lesezeichen und die Kacheln „Wo soll ich
-  anfangen" gibt, entscheidet das jeder besser selbst — und ohne die
-  Unsicherheit, ob die Vorauswahl auf ihn passt. Geprüft wurde ohnehin immer
-  alles: Der Simulator hat schon vorher aus dem vollen Katalog gezogen.
-
-  In der Klassenwahl stehen jetzt vier Ziele: **Klasse N · Klasse E · N → E ·
-  E → A**.
-
-  **Es ist genau eine Zeile.** Der ganze CB-Teil (`CB_GRUPPEN`, `cbAktiv`,
-  `cbPanelAktualisieren`, das Fenster „Als CB bekannt") hing an `k.cb` — und das
-  gibt es ohne den Eintrag nirgends mehr. Alles davon liegt still, ohne dass eine
-  Zeile gelöscht werden musste. Im Quelltext steht bei `KLASSEN`, welche zwei
-  Zeilen es zurückholen.
-
-  **Wer das Ziel eingestellt hatte**, landet beim nächsten Start auf Klasse N;
-  der gespeicherte Wert wird dabei einmal richtiggestellt. Bliebe er stehen,
-  zeigte die Klassenwahl weiter auf ein Ziel, das nirgends mehr auftaucht.
-
-  **Am Lernstand ändert sich nichts.** Die CB-Anrechnung war nur eine Blende über
-  „gelernt" — sie hat nie in den Lernfortschritt geschrieben. Wer sie benutzt
-  hat, findet die 138 Fragen jetzt wieder im Stapel; abgehakt war keine davon.
-
-**Geprüft:** Klassenwahl ohne CB ✔ · gespeichertes `cbn` fällt auf `n` zurück und
-wird im Speicher richtiggestellt ✔ · CB-Kasten bleibt unsichtbar, `cbAktiv()`
-liefert `false` ✔ · keine Fehlermeldung im Fenster ✔
-
----
+### Geändert
+- Klassenwahl: Prüfungsziel CB → N entfernt, verbleibend Klasse N, Klasse E, N → E und E → A
+- Klassenwahl: gespeichertes CB-Ziel wird auf Klasse N umgestellt; Lernstand unverändert, 138 Fragen wieder im Stapel
 
 ## [1.207.0] - 2026-09-07
 
 ### Geändert
-- **Die Knopfleiste rückt zusammen, statt umzubrechen.** Der Umbruch aus 1.204.0
-  ist wieder draußen — er war das Falsche.
-
-  Drei Rückmeldungen von Dietmar am selben Tag haben den Weg gezeigt:
-
-  1. „Manchmal, nicht immer, ist der Button Gruppenraum nur halb zu sehen."
-     → Die Leiste war um ein paar Punkte zu breit.
-  2. Daraufhin durfte sie umbrechen. → „Der Button Gruppenraum verschiebt sich in
-     2. Reihe." Auch nicht recht — und zu Recht: Eine zweite Reihe für **einen**
-     Knopf sieht nach Panne aus, nicht nach Absicht.
-  3. „Das war nur bei 90 %." und „Bei 115 % verschiebt sich der Button
-     Gruppenraum auch in 2. Reihe." → Es hängt an der Anzeigegröße, also an einer
-     Zahl, die sich ändert.
-
-  Er will **eine** Zeile, in der alles steht. Also wird weder umgebrochen noch
-  abgeschnitten, sondern gemessen und zusammengerückt — in drei Stufen, jede erst
-  dann, wenn die vorige nicht reicht:
-
-  | Stufe | was enger wird | bringt |
-  |---|---|---|
-  | **eng** | Innenabstände und Lücken der Knöpfe | rund 90 Punkte |
-  | **sehr eng** | zusätzlich Schrift und Höhe eine Spur kleiner | rund 100 Punkte |
-  | **ohne Zeichen** | die Symbole in den Knöpfen fallen weg | rund 200 Punkte |
-
-  Die letzte Stufe kostet etwas und steht deshalb zuletzt: Das Zeichen findet man
-  aus dem Augenwinkel, die Beschriftung muss man lesen. Aber ein Knopf ohne
-  Zeichen ist immer noch besser als ein Knopf, den man nicht sieht.
-
-  Warum Stufen und nicht stufenlos gerechnet: Ein stufenlos berechneter
-  Innenabstand ändert sich bei jedem Zähler, der auftaucht — die Leiste zappelte.
-  Drei feste Stufen sind ruhig und reichen.
-
-  **Drei Dinge, die dabei leicht schiefgehen — und wie sie gelöst sind:**
-
-  - **Vor jeder Messung müssen alle Stufen weg.** Sonst misst man die schon
-    zusammengerückte Leiste und käme nie wieder in die weite Darstellung zurück,
-    wenn Platz frei wird.
-  - **Der ResizeObserver allein genügt nicht.** Er meldet sich nur, wenn sich der
-    *Kasten* ändert. Die Knöpfe darin ändern sich aber ständig, ohne dass er
-    größer wird: „Blättern" wird zu „Weiterblättern", ein Zähler taucht auf,
-    „Auffrischen" kommt dazu. **Genau daran hing das „manchmal, nicht immer".**
-    Ein MutationObserver auf den Inhalt fängt das jetzt — bewusst ohne
-    `attributes`, sonst löste die Prüfung mit ihrer eigenen Klasse den nächsten
-    Durchlauf aus.
-  - **Während einer Runde ist die Leiste ausgeblendet.** Dann sind alle Breiten
-    null, und die Messung würde „passt" sagen, ohne etwas gesehen zu haben.
-
-  Bleibt es trotzdem zu breit — sehr schmales Fenster bei großer Anzeige —,
-  greift wie bisher das seitliche Schieben samt Schattenhinweis. Das ist der
-  Notnagel, nicht der Normalfall.
-
-**Gemessen** (voll besetzte Leiste: Weiterblättern + Auffrischen + alle Zähler):
-
-| Fenster | 90 % | 95 % | 115 % |
-|---|---|---|---|
-| 1915 × 950 | eng, alles drin | eng, alles drin | eng, alles drin |
-| 1500 × 900 | eng, alles drin | eng, alles drin | sehr eng, alles drin |
-| 1360 × 860 | eng, alles drin | eng, alles drin | sehr eng, alles drin |
-| 1200 × 800 | sehr eng, alles drin | sehr eng, alles drin | schiebbar |
-
-In allen Fällen **eine** Zeile. Die Stufen greifen auch dann, wenn sich nur die
-Beschriftung ändert und der Kasten gleich groß bleibt — der Fall, der vorher
-durchgerutscht ist.
-
----
+- Knopfleiste: bleibt einzeilig und rückt in drei Stufen zusammen (eng, sehr eng, ohne Symbole) statt umzubrechen
+- Knopfleiste: Neuberechnung auch bei geänderter Beschriftung (MutationObserver), keine Messung bei ausgeblendeter Leiste
+- Knopfleiste: seitliches Schieben nur noch als Rückfall bei sehr schmalem Fenster
 
 ## [1.206.0] - 2026-09-07
 
 ### Geändert
-- **Die beiden Anzeigegrößen stehen jetzt nebeneinander, die Felder sind
-  schmaler.** Dietmar: „Richte die Felder bitte nebeneinander an. Die Felder
-  können in der Breite etwas reduziert werden."
-
-  Gebaut als **ein** Raster mit zwei Spalten und vier Zeilen — Überschrift,
-  Erklärung, Feld, Hinweis — und nicht als zwei Kästen nebeneinander. Der
-  Unterschied fällt erst auf, wenn ein Text unterschiedlich lang umbricht: Bei
-  zwei Kästen stünden die Auswahlfelder dann auf verschiedener Höhe, im
-  gemeinsamen Raster bleiben sie auf einer Linie. Eine senkrechte Linie trennt
-  die Spalten, ohne Platz zu kosten.
-
-  Die Felder sind von 260 auf **160 Punkte** zurückgenommen — „Automatisch" ist
-  das längste Wort darin und braucht nicht mehr.
-
-  Am Handy fällt das Raster auf **eine** Spalte zurück. Dabei war eine Falle zu
-  umgehen: Im Quelltext stehen die acht Teile zeilenweise (Überschrift links,
-  Überschrift rechts, Erklärung links, Erklärung rechts …). In einer einzigen
-  Spalte stünden sie damit im Reißverschluss und wären unlesbar. `order` sortiert
-  sie deshalb wieder zu zwei vollständigen Blöcken untereinander, mit Trennlinie
-  dazwischen.
-
-**Gemessen:**
-
-| Fenster | Spalten | Felder auf einer Linie | Feldbreite | Reihenfolge |
-|---|---|---|---|---|
-| 1400 px | 2 | ja | 152 px | nebeneinander |
-| 412 px | 1 | — | volle Breite | Normal komplett, dann Vollbild komplett |
-
----
+- Einstellungen: Anzeigegröße für normale Ansicht und Vollbild nebeneinander in gemeinsamem Raster
+- Anzeigegröße: Auswahlfelder schmaler (160 px), am Handy einspaltig in richtiger Reihenfolge
 
 ## [1.205.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Die Anzeigegröße gibt es jetzt zweimal: für die normale Ansicht und fürs
-  Vollbild.** Dietmar: „Das benötige ich 2 ×! Einmal für Bildschirm für normale
-  Ansicht mit Adressleiste und Taskleiste. Und 1 × für vergrößert!"
-
-  Seine eigenen Zahlen vom selben Tag geben es her: „Bei der normalen Ansicht
-  passt 100 bis 105 Prozent, beim Vergrößern passt 110 bis 115." Der Grund ist
-  einfach — im Vollbild sind Adressleiste, Reiterleiste und Taskleiste weg. Auf
-  einem 1080er Schirm sind das gut **130 Punkte Höhe**, also rund 14 Prozent:
-  genau der Unterschied zwischen seinen beiden Angaben. **Eine** Zahl kann das
-  nicht abdecken. Wer sie fürs Vollbild einstellt, bekommt in der normalen
-  Ansicht unten Abgeschnittenes; wer sie für die normale Ansicht einstellt,
-  verschenkt im Vollbild eine Handbreit Platz.
-
-  In den Einstellungen stehen beide Felder untereinander im selben Kasten — erst
-  nebeneinander sieht man, dass die zweite Zahl größer sein darf. Unter jedem
-  Feld steht, ob es gerade gilt oder ab wann.
-
-  **Umgeschaltet wird ohne Zutun**, und zwar auf beiden Wegen ins Vollbild:
-
-  - Der **Knopf im Trainer** benutzt die Fullscreen-Schnittstelle — das meldet
-    sich sauber, hier hängt die Umschaltung direkt am Ereignis.
-  - **F11 ist Sache des Browsers.** Die Seite erfährt davon gar nichts:
-    `document.fullscreenElement` bleibt leer, und ein Ereignis gibt es auch
-    nicht. Erkannt wird es am Vergleich mit dem Bildschirm — bleibt über und
-    unter der Seite nichts mehr übrig, nimmt auch nichts mehr Platz weg. Diese
-    Faustregel gilt **nur am Rechner**: Am Handy fährt die Adressleiste beim
-    Scrollen ständig ein und aus, dort wäre sie eine Münze statt eines
-    Anhaltspunkts. F11 gibt es dort ohnehin nicht.
-
-  Dazu ist im Fenster-Beobachter die Abkürzung „nur nachrechnen, wenn auf
-  automatisch" herausgeflogen. Sie stimmte, solange es **eine** Größe gab; jetzt
-  zeigt sich der Wechsel zwischen beiden als Größenänderung des Fensters — bei
-  F11 sogar ausschließlich so.
-
-  **Einmalige Übernahme:** Wer bisher einen festen Wert eingestellt hatte,
-  bekommt ihn auch fürs Vollbild eingetragen — sonst spränge der Trainer beim
-  ersten F11 nach dem Update auf etwas ganz anderes um, ohne dass jemand etwas
-  geändert hätte. Ab dann sind die beiden Werte unabhängig.
-
-**Gemessen** (1915 × 950 Fenster auf einem 1080er Schirm, normal 100 %,
-Vollbild 115 %):
-
-| Lage | erkannt als Vollbild | angewandt |
-|---|---|---|
-| normale Ansicht | nein | 100 % |
-| Vollbild über den Knopf | ja | 115 % |
-| zurück | nein | 100 % |
-| F11 (Fenster = Bildschirmhöhe) | ja | 115 % |
-| F11 aus | nein | 100 % |
-| Handy, `screen.height == innerHeight` | **nein** (richtig) | — |
-
-Mit „Automatisch" in beiden Feldern: normale Ansicht **105 %**, Vollbild
-**120 %** — die Automatik findet den Unterschied von selbst.
-
----
+- Anzeigegröße: getrennte Werte für normale Ansicht und Vollbild
+- Anzeigegröße: automatische Umschaltung bei Vollbild per Knopf und per F11 (F11-Erkennung nur am Rechner)
+- Anzeigegröße: bisheriger fester Wert wird einmalig auch für das Vollbild übernommen
 
 ## [1.204.0] - 2026-09-07
 
 ### Behoben
-- **Der Knopf „Gruppenraum" war manchmal nur halb zu sehen.**
-  Dietmar, mit Bild: „Manchmal, nicht immer, ist der Button Gruppenraum nur halb
-  zu sehen. F5 hilft, es kommt aber wieder."
-
-  **Nachgemessen bei seiner Fenstergröße** (1915 × 950, Anzeige automatisch
-  105 %): Die Knopfleiste braucht **1319 Punkte**, sie hat **1372** — also
-  53 Punkte Luft. Genau die ist weg, sobald sich der Blätter-Knopf von
-  „Blättern" in **„Weiterblättern"** umbenennt (rund 57 Punkte). Dann ragt der
-  letzte Knopf — der Gruppenraum — um ein paar Punkte hinaus und steht halb da.
-
-  Damit ist auch das „manchmal" erklärt: **sobald ein Lesezeichen im Blättern
-  liegt.** Kommt „Auffrischen" dazu, fehlt noch mehr. Und F5 half nur so lange,
-  bis der Knopf sich wieder umbenannte.
-
-  Scrollen konnte man zwar — die Leiste ist seitlich verschiebbar, mit Schatten
-  als Hinweis —, aber auf einem 1915 Punkte breiten Bildschirm will niemand nach
-  einem Knopf wischen.
-
-  **Jetzt bricht die Leiste am Rechner um.** Fehlt Platz, rutscht der letzte
-  Knopf in eine zweite Zeile und ist ganz da, statt angeschnitten. Passt alles,
-  sieht man wie bisher eine einzige Zeile — die Regel kostet nichts, solange sie
-  nicht gebraucht wird.
-
-  Zwei Kleinigkeiten, die dabei zählen:
-
-  - `overflow` muss auf **beiden** Achsen `visible` werden. Steht eine Achse auf
-    `auto` oder `hidden`, macht der Browser aus der anderen ebenfalls einen
-    Scrollbereich — die zweite Zeile wäre dann oben und unten abgeschnitten.
-  - **Am Handy bleibt es beim Wischen.** Dort wären aus elf Knöpfen vier Zeilen,
-    und die halbe Anzeige wäre voll mit Leiste, bevor die erste Frage kommt. Eine
-    Leiste, die man seitlich schiebt, ist dort das kleinere Übel — und aus Apps
-    vertraut.
-
-**Gemessen:**
-
-| Fenster | Leiste normal | Leiste voll besetzt | angeschnitten |
-|---|---|---|---|
-| 1915 × 950 | 1 Zeile, 68 px | 2 Zeilen, 116 px | keiner |
-| 1366 × 768 | 1 Zeile, 55 px | 2 Zeilen, 94 px | keiner |
-| 412 px (Handy) | 1 Zeile, wischbar | 1 Zeile, wischbar | unverändert |
-
-„Voll besetzt" heißt: Weiterblättern + Auffrischen + alle vier Zähler.
-
----
+- Knopfleiste: Gruppenraum-Knopf nicht mehr angeschnitten, Leiste bricht am Rechner bei Platzmangel um
+- Knopfleiste: am Handy weiterhin seitlich wischbar
 
 ## [1.203.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Am Handy geht der Trainer beim ersten Antippen von selbst ins Vollbild.**
-  Dietmar zur Chrome-Meldung „… zum Beenden des Vollbildmodus: von oben nach
-  unten wischen": „Beim Öffnen sofort auf Vollbild."
-
-  **Vorweg, damit es nicht untergeht:** Diese Meldung gehört Chrome und lässt
-  sich von keiner Seite unterdrücken — es gibt dafür keine Schnittstelle. Was
-  sich ändern lässt, ist der **Zeitpunkt**: Sie kommt jetzt gleich am Anfang und
-  nicht mitten in der Runde, wenn man den Knopf drückt. Danach ist Ruhe.
-
-  **Warum beim ersten Antippen und nicht beim Laden:** Kein Browser lässt das
-  Vollbild aus dem Nichts zu — es geht nur als Antwort auf eine Bedienung. Ein
-  Aufruf beim Laden oder aus einem Zeitgeber wird abgewiesen
-  („Permissions check failed"), und zwar wortlos. Das erste Antippen ist der
-  früheste Zeitpunkt, an dem es überhaupt erlaubt ist — und aus Sicht des
-  Benutzers immer noch „beim Öffnen".
-
-  Genau **einmal pro Seitenaufruf**. Sonst käme man nie wieder heraus: Wer das
-  Vollbild mit dem Knopf verlässt, tippt danach ja weiter und wäre sofort wieder
-  drin. Nicht am Rechner, nicht wenn der Trainer ohnehin schon als App vom
-  Startbildschirm läuft, und nicht, wenn der erste Griff dem Vollbild-Knopf
-  selbst gilt — sonst schaltete er ein und der Klick gleich wieder aus.
-
-  Abschaltbar unter **Einstellungen → Vollbild am Handy**. Die Wahl gehört zum
-  Gerät, nicht zum Lernstand.
-
-**Gemessen:**
-
-| Fenster | Automatik | nach 1. Antippen | nach Verlassen + Antippen |
-|---|---|---|---|
-| 412 px | an | Vollbild ✔ (Knopfzeichen wechselt) | bleibt aus ✔ |
-| 412 px | aus | bleibt aus ✔ | bleibt aus ✔ |
-| 768 px (Tablet) | an | Vollbild ✔ | bleibt aus ✔ |
-| 1600 px (Rechner) | an | bleibt aus ✔ | bleibt aus ✔ |
-
-Der Schalter überlebt das Neuladen.
-
----
+- Handy: Vollbild beim ersten Antippen, einmal pro Seitenaufruf, nicht in installierter App
+- Einstellungen: Vollbild am Handy abschaltbar, Einstellung je Gerät
 
 ## [1.202.0] - 2026-09-07
 
-### Entfernt
-- **Der dunkle Balken „Der Trainer läuft auch als App auf deinem Startbildschirm"
-  kommt nicht mehr.** Dietmar, mit Bild vom Handy: „Unten kommt ein Hinweis mit
-  einer Verknüpfung … Diese gehört entfernt."
-
-  Er lag fest unten über der Seite, verdeckte die Fußzeile und stand auch bei
-  jedem im Weg, der den Trainer über den Einladungslink öffnet — also bei den
-  Teilnehmern einer Runde, die gar nichts einrichten wollen, sondern mitmachen.
-
-  Die Sache selbst bleibt: Der Trainer lässt sich weiterhin auf den
-  Startbildschirm legen, `manifest.webmanifest` und der Service Worker sind
-  unverändert. Wie es geht, steht im **Info-Fenster** unter „Als App auf den
-  Startbildschirm" — dort sucht man es, wenn man es will, statt es aufgedrängt
-  zu bekommen.
+### Geändert
+- Handy: Hinweisbalken zur App-Installation entfernt, Anleitung weiterhin im Info-Fenster
 
 ### Behoben
-- **Der dunkelgraue Streifen oben und unten am Handy.** Dietmar: „Das soll
-  automatisch mit der gleichen Farbe wie der Inhalt vom Trainer gefüllt werden
-  und soll sich automatisch an das Fenster anpassen."
-
-  Woher er kam: `body` hat rundum 1 rem Innenabstand. Für schmale Geräte war der
-  Abstand **links und rechts** längst auf die Handy-Ecken (`safe-area`) gesetzt,
-  also praktisch null — **oben und unten** blieb er stehen. Dort schaute genau
-  die Farbe durch, die den Rahmen macht: im Grey Mode `#aab0b6`, also der dunkle
-  Balken auf seinem Bild.
-
-  Der Abstand bleibt absichtlich, wo er ist — unten hängt an ihm der Platz für
-  die Gruppenchat-Leiste (56 px); wer ihn wegnimmt, schiebt die letzte Zeile
-  unter die Leiste. Geändert wird nur die **Farbe**, und zwar nicht als feste
-  Zahl, sondern als die des Karteninhalts (`var(--card-bg)`). Damit stimmt sie in
-  jedem Farbstil von selbst, auch in einem, den es heute noch nicht gibt. Ist die
-  Seite kürzer als das Fenster, wird der Rest in derselben Farbe weitergemalt.
-  Und weil `browserfarbeNachziehen()` genau diese Farbe in
-  `<meta name="theme-color">` schreibt, zieht die Adressleiste des Handys
-  automatisch mit.
-
-  Runde Ecken, Schatten und Rahmen der Karte fallen am Handy weg: Sie waren dafür
-  da, die Karte vom Untergrund abzuheben — und den gibt es dort nicht mehr.
-
-**Gemessen** (Farbe von Untergrund und Karteninhalt):
-
-| Fenster | Stil | Untergrund | Karte | gleich | theme-color |
-|---|---|---|---|---|---|
-| 412 px | Grey | `#f7f8f9` | `#f7f8f9` | ✔ | `#f7f8f9` |
-| 412 px | Light / Green / Blue / Orange | `#ffffff` | `#ffffff` | ✔ | `#ffffff` |
-| 768 px (Tablet) | Grey | `#f7f8f9` | `#f7f8f9` | ✔ | `#f7f8f9` |
-| 1600 px (Rechner) | Grey | `#aab0b6` | `#f7f8f9` | — unverändert | `#aab0b6` |
-
-Nachgemessen am Bildpunkt: obere und untere Bildkante am Handy jetzt
-`rgb(247,248,249)` — dieselbe Farbe wie in der Mitte der Seite.
-
----
+- Handy: Rand oben und unten in der Farbe des Karteninhalts (`var(--card-bg)`), Adressleiste zieht mit
+- Handy: Karte ohne runde Ecken, Schatten und Rahmen
 
 ## [1.201.0] - 2026-09-07
 
 ### Geändert
-- **Am Handy fallen drei Dinge weg, die dort nur Platz kosten.**
-  Dietmar: „In der mobilen Version steht oben Klasse N 571 Fragen. Das kann in
-  der mobilen Version raus. Ebenso auch die Videolektion und 50 Ohm —
-  **nur** in der mobilen Version."
-
-  Weg sind auf schmalen Geräten:
-
-  - die Plakette **„Klasse N · 571 Fragen"** in der Kopfzeile. Welche Klasse
-    eingestellt ist, steht ohnehin im Knopf daneben und in der
-    Prüfungsübersicht;
-  - die beiden Kacheln unter der Frage — **Videolehrgang** (rot, YouTube) und
-    **50 Ohm · Kapitel** — samt der Quellenzeile darunter. Beide öffnen ein
-    neues Fenster, am Handy also einen Wechsel aus dem Trainer heraus mitten in
-    der Runde.
-
-  Die Grenze ist **640 Punkte Breite** (`body.handy`), nicht 1024. Am Tablet
-  hochkant ist genug Platz — dort bleibt alles stehen, am Rechner ändert sich
-  gar nichts.
-
-  Gemessen: 412 px → beides weg · 640 px → beides weg · 768 px (Tablet) →
-  beides da · 1600 px → beides da. Es bleibt kein leerer Kasten zurück.
-
----
+- Handy (bis 640 px): Plakette mit Klasse und Fragenanzahl in der Kopfzeile ausgeblendet
+- Handy: Kacheln Videolehrgang und 50 Ohm samt Quellenzeile ausgeblendet; Tablet und Rechner unverändert
 
 ## [1.200.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Eine Tunnel-Wache: der Trainer sagt Cloudflare alle vier Minuten „ich bin da".**
-  Dietmar: „Ich möchte, dass wenn ich im Gruppenraum einen Raum starte, der Server
-  läuft. Der Trainer muss auch über Stunden laufen, ohne dass ich am Rechner aktiv
-  bin. Der Trainer muss mit Cloudflare Handshake machen und immer wieder sagen
-  ‚ich bin da', damit der zufällig generierte Raum nicht geschlossen wird."
-
-  Zwei neue Dinge im Server:
-
-  **Der Puls.** Alle vier Minuten ruft der Trainer seine *eigene* öffentliche
-  Adresse auf (`/api/tunnel-status`). Das ist nicht nur Höflichkeit: Diese Anfrage
-  läuft über genau die Leitung, die `cloudflared` zu Cloudflare hält, und hält
-  damit die NAT-Einträge im Router offen. Genau die laufen bei UDP/QUIC nach ein
-  paar Minuten Ruhe ab — das ist die Ursache des bekannten Abbruchs
-  „timeout: no recent network activity". Kommt eine Antwort zurück, steht die
-  ganze Kette: dieser PC → cloudflared → Cloudflare → zurück.
-
-  **Die Wache.** Jede Minute wird nachgesehen, ob `cloudflared` überhaupt noch
-  läuft. Bisher passierte, wenn er wegbrach, **gar nichts**: Prozess weg,
-  `tunnel_url.txt` gelöscht, Einladungslink tot — und niemand merkte es, bis der
-  erste Teilnehmer anrief. Jetzt wird die Leitung automatisch neu aufgebaut,
-  ebenso nach drei Pulsen ohne Antwort.
-
-  **Mit Bremse.** Bringt der Neuaufbau nichts — kein Internet, oder Cloudflare
-  bremst die kostenlosen Quick Tunnels dieser Leitung aus —, würde die Wache heiß
-  laufen und im Minutentakt neue Links erzeugen. Deshalb: Liegt der letzte
-  Neuaufbau keine zehn Minuten zurück, wird gewartet — 1, 2, 4, 8 Minuten,
-  höchstens eine Viertelstunde.
-
-  **Der neue Link wird sofort gemeldet.** Ein Quick Tunnel bekommt bei jedem
-  Start einen neuen Zufallsnamen — der alte Link ist danach tot. Die neue Adresse
-  geht deshalb über die Gruppenraum-Verbindung an alle, der Link im Fenster wird
-  ausgetauscht, und der Gastgeber bekommt einen deutlichen Hinweis, dass er den
-  neuen Link verschicken muss.
-
-  Im Gruppenraum steht dazu eine neue Zeile unter dem Einladungslink: wann der
-  letzte Puls durchgekommen ist, wie viele im Raum sind, und ob die Leitung
-  zwischendurch neu aufgebaut werden musste.
-
-- **Wake Lock: der Bildschirm bleibt an, solange ein Raum offen ist.**
-  Das Lebenszeichen an den Server kommt aus dem Browser-Tab. Legt Chrome ihn
-  schlafen, hört es auf. Solange ein Gruppenraum offen ist, hält der Trainer
-  jetzt einen Wake Lock. Gegen den Ruhezustand von Windows selbst hilft das
-  nicht — wer den Deckel zuklappt, schickt den Rechner trotzdem schlafen.
+- Online-Zugang: Tunnel-Puls alle vier Minuten über die eigene öffentliche Adresse (`/api/tunnel-status`), hält NAT offen
+- Online-Zugang: Tunnel-Wache prüft minütlich das Tunnelprogramm, Neuaufbau bei Absturz oder drei Pulsen ohne Antwort
+- Tunnel-Wache: Wartezeit bei wiederholtem Neuaufbau (1, 2, 4, 8 bis höchstens 15 Minuten)
+- Gruppenraum: neuer Einladungslink nach Neuaufbau an alle gemeldet, Hinweis an den Gastgeber
+- Gruppenraum: Statuszeile mit letztem Puls, Teilnehmerzahl und Neuaufbauten
+- Gruppenraum: Wake Lock hält den Bildschirm an, solange ein Raum offen ist
 
 ### Behoben
-- **Der Server machte Feierabend, während die Gruppe noch übte.**
-  Er beendet sich fünf Minuten nach dem letzten Lebenszeichen aus dem Browser.
-  Schläft der Tab ein oder geht der Rechner kurz weg, war der Raum weg — mitten
-  in der Runde.
-
-  Jetzt zählt nicht mehr nur der Browser:
-
-  - Sitzt **jemand im Gruppenraum**, wird überhaupt nicht abgeschaltet.
-  - **Läuft ein Tunnel**, gilt statt der fünf Minuten eine Frist von **vier
-    Stunden** völliger Leere. So bleibt der Link stehen, wenn kurz niemand da
-    ist — und ein vergessener öffentlicher Tunnel läuft trotzdem nicht ewig.
-
-**Gemessen** (mit einem nachgestellten `cloudflared`, der abstürzt bzw. nicht
-antwortet):
-
-| Fall | Erwartet | Ergebnis |
-|---|---|---|
-| cloudflared stirbt | Neuaufbau binnen einer Minute, neue Adresse gemeldet | ✔ |
-| Puls antwortet nicht | Neuaufbau nach 3 Fehlversuchen | ✔ |
-| Neuaufbau bringt nichts | 2. Mal → 1 Min Pause, dann 2, 4, 8 | ✔ |
-| Leitung steht | kein Neuaufbau, `letzterPuls` bleibt frisch | ✔ |
-| Raum offen, kein Fenster | `imRaum` > 0 → kein Feierabend | ✔ |
-
-### Hinweis zur Lebensdauer des Links
-Ein **Quick Tunnel** (`*.trycloudflare.com`) ist kostenlos und ohne Konto,
-Cloudflare sagt dazu ausdrücklich: keine zugesicherte Verfügbarkeit, gedacht zum
-Testen, höchstens 200 gleichzeitige Anfragen. Es gibt **keine feste Ablaufzeit** —
-die Adresse lebt genau so lange, wie der `cloudflared`-Prozess sie hält. Fällt er,
-ist sie für immer weg und die nächste heißt anders. Wer eine Adresse braucht, die
-über Wochen dieselbe bleibt, braucht einen **benannten Tunnel** mit eigener
-Domain; das bleibt offen, bis eine Domain da ist.
-
----
+- Server: kein automatisches Beenden bei Teilnehmern im Gruppenraum; bei laufendem Tunnel erst nach vier Stunden Leerlauf
 
 ## [1.199.0] - 2026-09-07
 
 ### Geändert
-- **Die Anzeigegröße hat jetzt kleinere Stufen — und welche zum Verkleinern.**
-  Dietmar: „Bei der normalen Ansicht passt 100–105 %. Beim Vergrößern passt
-  110–115. Ich wünsche mir in den Einstellungen kleinere Werte, auch in Richtung
-  verkleinern. Der Trainer muss auf 15- und 17-Zoll-Laptops komplett dargestellt
-  werden. Fehlen kleinere Werte, kann das der Benutzer schlecht selbst
-  einstellen."
-
-  Vorher gab es nach unten nur 80 und 90 Prozent. Jetzt geht es in
-  **Fünferschritten von 60 bis 115 Prozent**, darüber noch 125 und 150:
-
-  `Automatisch · 60 · 65 · 70 · 75 · 80 · 85 · 90 · 95 · 100 · 105 · 110 · 115 · 125 · 150`
-
-  Die feinen Schritte liegen bewusst unten. Beim Vergrößern kommt es auf ein
-  Zwanzigstel nicht an; beim Verkleinern entscheidet eine einzige Stufe
-  darüber, ob die letzte Knopfreihe noch ins Fenster passt.
-
-  Auch die Automatik darf jetzt bis 60 Prozent hinunter (vorher war bei 80
-  Schluss). Auf einem 15-Zoll-Laptop mit 768 Punkten Höhe reichten 80 Prozent
-  nicht immer.
+- Anzeigegröße: Stufen in Fünferschritten von 60 bis 115 %, dazu 125 und 150 %
+- Anzeigegröße: Automatik bis minimal 60 %
 
 ### Behoben
-- **Die Automatik richtete sich nach der gerade sichtbaren Ansicht statt nach
-  der längsten.** Dietmar: „Nicht besser geworden."
-
-  Der Fehler des Vorgängers: Gemessen wurde, was gerade auf dem Schirm stand.
-  In der Fragenansicht ist das wenig — also wurde vergrößert. Beim Zurückgehen
-  in die Hauptansicht passte es dann nicht mehr, und unten fehlte wieder etwas.
-
-  Die Vergrößerung gilt aber für die ganze Seite, also muss sich die **längste**
-  Ansicht durchsetzen — und das ist die Hauptansicht. Ihre Höhe wird jetzt
-  gemerkt, solange sie sichtbar ist, und auch dann benutzt, wenn gerade eine
-  Runde läuft.
-
-- **Zwei Aufrufe hintereinander lieferten zwei verschiedene Werte** (80 % und
-  85 %). Die gemessene Höhe hängt selbst von der Vergrößerung ab: Bei 115
-  Prozent ist das Fenster in gewöhnlichen Punkten schmaler, also bricht mehr
-  um, also ist die Karte höher. Wer daraus einen neuen Faktor rechnet, misst
-  beim nächsten Mal etwas anderes.
-
-  Jetzt wird der Wert zum jeweiligen Fenster gemerkt, und nachgemessen wird
-  **nur nach unten**: Passt es nach dem Setzen doch nicht, geht es eine Stufe
-  zurück — nie nach oben. So kann sich nichts aufschaukeln, und nach höchstens
-  drei Runden steht der Wert.
-
-- **Der Vorab-Block rechnete anders als der Rest.** Der kleine Block ganz oben
-  in der Datei setzt die Größe schon *vor* dem ersten Zeichnen, damit die Seite
-  nicht einmal falsch aufblitzt. Er rundete noch und ging nur bis 80 Prozent
-  hinunter. Jetzt rechnet er genau wie die Hauptfunktion.
-
-**Gemessen** (Hauptansicht mit vollem Verlauf, danach Wechsel in die
-Fragenansicht und zurück):
-
-| Fenster | Faktor | Karte braucht | Fenster hat |
-|---|---|---|---|
-| 1911 × 945 | 105 % | 867 | 945 |
-| 1600 × 900 | 100 % | 829 | 900 |
-| 1440 × 810 | 90 % | 741 | 810 |
-| 1366 × 768 (15 Zoll) | 85 % | 702 | 768 |
-| 1280 × 720 | 80 % | 663 | 720 |
-| 2560 × 1400 | 150 % | 1238 | 1400 |
-
-In allen Fällen: Der Faktor steigt beim Wechsel in die Fragenansicht **nicht**
-mehr, und nach der Rückkehr passt die Hauptansicht vollständig ins Fenster.
-
----
+- Anzeigegröße: Automatik richtet sich nach der Hauptansicht als längster Ansicht
+- Anzeigegröße: stabile Werte je Fenstergröße, Nachmessen nur nach unten
+- Anzeigegröße: Vorab-Block rechnet wie die Hauptfunktion
 
 ## [1.198.0] - 2026-09-07
 
 ### Behoben
-- **Die automatische Anzeigegröße war eine Stufe zu groß — unten fehlte etwas.**
-  Dietmar: „Habe es auf automatisch. Das ist etwas zu groß. Bei Vergrößern sieht
-  es ähnlich aus. Unten fehlt etwas."
-
-  Zwei Ursachen, beide behoben:
-
-  **Es wurde gerundet statt abgerundet.** Der Faktor geht in
-  Zwanzigstelschritten. Passte rechnerisch 1,086, machte `Math.round()` daraus
-  **1,10** — also eine Stufe *mehr*, als hineinpasst, und unten fehlte genau
-  dieser Rest. Jetzt wird abgerundet: Ein bisschen Luft unten stört niemanden,
-  ein abgeschnittener Knopf schon.
-
-  **Die Höhe wurde angenommen statt gemessen.** Die 870 Punkte im Code stammen
-  aus der Zeit, als die Hauptansicht kürzer war — seitdem sind Prüfungstermin,
-  Rufzeichen prüfen und die Diplome dazugekommen. Wer mit einer festen Zahl
-  rechnet, rechnet irgendwann falsch. Jetzt wird die Karte selbst gemessen; ihre
-  Höhe steht in gewöhnlichen Punkten und ändert sich durch die Vergrößerung
-  nicht.
-
-  Nachgemessen bei sechs Fenstergrößen — 1911×945 (Dietmars), 1920×1080,
-  1600×900, 1366×768, 2560×1440 und 1280×720: überall passt die Karte
-  vollständig ins Fenster. Bei 1911×945 sind es jetzt 1,05 statt 1,10.
+- Anzeigegröße: Automatik rundet ab statt auf, kein abgeschnittener Inhalt am unteren Rand
+- Anzeigegröße: Kartenhöhe wird gemessen statt fest angenommen (870 px)
 
 ## [1.197.0] - 2026-09-07
 
 ### Geändert
-- **Grey Mode: die Karte eine Spur heller.** Dietmar mit einer Farbprobe der
-  Karte: „Die Farbe kann etwas heller sein. Damit sich der Inhalt mehr vom
-  Fenster abhebt."
-
-  Von `#f1f2f4` auf `#f7f8f9`. Genau richtig: Seit der Hintergrund das kräftige
-  Grau seiner Werkzeugleiste hat, muss die Karte nicht mehr selbst grau sein, um
-  grau zu wirken — das macht der Rahmen ringsum. Die Abhebung von der Seite
-  steigt auf 2,06:1 (vorher 1,95:1, in 1.193.0 waren es 1,23:1), der Text darauf
-  auf 15,41:1.
-
-  Die Innenflächen bleiben, wie sie sind (Fragenfeld, Verlauf, Auswertung
-  `#e7eaec`): Sie sollen sich von der Karte abheben, nicht mit ihr zusammen
-  heller werden.
+- Grey Mode: Karte heller (`#f7f8f9`), Kontrast zur Seite 2,06:1
 
 ## [1.196.0] - 2026-09-07
 
 ### Hinzugefügt
-- **Die Leiste des Browsers färbt sich mit — dort, wo das möglich ist.** Dietmar:
-  „Kann man das so aufbauen, dass die Leiste vom Browser mit die Farbe wechselt?"
-
-  Beim Umschalten der Ansicht schreibt der Trainer die aktuelle
-  Hintergrundfarbe in `<meta name="theme-color">`. Wo das wirkt:
-
-  | | färbt sich mit |
-  |---|---|
-  | Chrome auf Android (Adressleiste) | ja |
-  | Als App auf dem Startbildschirm / über „Verknüpfung erstellen" | ja, der Fensterrahmen |
-  | Safari ab 15 | ja |
-  | Gewöhnliches Chrome- oder Edge-Fenster am Rechner | **nein** |
-
-  Die Werkzeugleiste im Desktop-Browser gehört dem Browser und richtet sich nach
-  dessen eigenem Design. Keine Seite kann das ändern — und das ist Absicht, sonst
-  könnte sich jede Seite als Browser verkleiden.
-
-  Die Farbe wird nicht je Ansicht gepflegt, sondern schlicht abgelesen: Was der
-  Seitenhintergrund gerade ist, steht auch in der Leiste. Damit stimmt es auch
-  dann noch, wenn eine Ansicht später umgefärbt wird. Nachgemessen für alle fünf:
-  Hell `#eef2f9`, Grün `#eef8f2`, Blau `#eaf3fb`, Orange `#fdf3e7`, Grau
-  `#aab0b6` — und nach einem Neuladen steht die gespeicherte Farbe wieder da.
+- Browserleiste: Farbe folgt dem Farbstil über `theme-color` (Chrome auf Android, installierte App, Safari ab 15)
 
 ## [1.195.0] - 2026-09-07
 
 ### Geändert
-- **Grey Mode: der Seitenhintergrund noch eine Stufe dunkler — und nachgemessen.**
-  Dietmar: „Messen das mal durch. Den Hintergrund noch leicht etwas dunkler."
-
-  Erst auf `#c9ced3`, dann — mit einer Farbprobe nachgereicht — auf die Farbe
-  seiner Browser-Werkzeugleiste: „In der Farbe ist meine Taskleiste von meinem
-  Browser. Das würde gut passen." Aus dem Bild gemessen: **`#aab0b6`**.
-
-  | Seitenhintergrund | Text | Nebentext | Karte hebt sich ab |
-  |---|---|---|---|
-  | `#d8dcdf` (1.194.0) | 11,88:1 | 5,26:1 | 1,23:1 |
-  | `#c9ced3` (Zwischenschritt) | 10,34:1 | 4,58:1 | 1,41:1 |
-  | **`#aab0b6` (neu)** | **7,49:1** | 3,31:1 | **1,95:1** |
-
-  Die 3,31:1 beim Nebentext wären zu blass — **wenn dort Text stünde.** Es steht
-  aber keiner: Die Karte deckt die Seite ab, und die Fußzeile sitzt auf ihr
-  drauf. Nachgesehen wurde das eigens, mit einer Prüfung, die jedes sichtbare
-  Textstück durchgeht und fragt, welche Fläche darunter liegt — bei 1400 und bei
-  412 Punkten Breite: null Treffer auf dem Seitenhintergrund.
-
-  Die Flächen darauf bleiben, wie sie sind: Karte 14,63:1, Fragenfeld 13,56:1,
-  Filterleiste 12,46:1, Antwortkacheln 16,39:1 — alle weit über der Schwelle.
-  Die Karte hebt sich vom Hintergrund jetzt fast doppelt so deutlich ab wie
-  vorher (1,95 statt 1,23).
+- Grey Mode: Seitenhintergrund dunkler (`#aab0b6`), Karte hebt sich deutlicher ab (1,95:1)
 
 ## [1.194.0] - 2026-09-07
 
 ### Geändert
-- **Der Grey Mode ist jetzt wirklich grau.** Dietmar: „Den Grey Mode wünsche ich
-  mir etwas grauer." Er hatte recht — die Karten waren reinweiß, nur der
-  Hintergrund war leicht angegraut. Das sah aus wie die helle Ansicht mit einem
-  Schatten darunter.
-
-  Alle Flächen sind eine gute Stufe dunkler: die Seite von `#e8eaec` auf
-  `#d8dcdf`, die Karte von Weiß auf `#f1f2f4`, Fragenfeld, Verlauf und
-  Auswertung von `#f2f4f5` auf `#e7eaec`, Filterleiste und Fortschrittspunkte
-  entsprechend. Die Linien sind kräftiger (`#c3c9cf` → `#b4bbc3`), damit die
-  Kanten nicht im Grau verschwinden.
-
-  **Nicht angetastet: Eingabefelder und Antwortkacheln.** Die bleiben weiß —
-  dort wird gelesen und geschrieben, und Papier ist weiß. Genau dieser
-  Unterschied macht das Grau ringsum überhaupt erst sichtbar.
+- Grey Mode: alle Flächen eine Stufe dunkler, Karte `#f1f2f4`, kräftigere Linien
+- Grey Mode: Eingabefelder und Antwortkacheln bleiben weiß
 
 ## [1.193.0] - 2026-09-07
 
 ### Geändert
-- **In der Hauptansicht steht nur noch der Name.** Dietmar: „In der Hauptansicht
-  langt Amateurfunk-Trainer, 55 kann da raus." Stimmt — der Name trägt sich
-  allein. Das Zeichen bleibt dort, wo kein Text danebenpasst: auf der Taskleiste,
-  im Browsertab und auf dem Startbildschirm von Handy und Tablet.
+- Kopfzeile: Hauptansicht zeigt nur den Namen ohne Zeichen 55
 
 ## [1.192.0] - 2026-09-07
 
 ### Geändert
-- **Aus der 73 wird die 55.** Dietmar: „Das 73 kommt raus, und hier wünsche ich
-  mir 55. 55 bedeutet ‚viel Erfolg'."
-
-  Das trifft es besser: 73 ist der Gruß zum Abschied, 55 der Wunsch für das, was
-  noch kommt — und genau dafür ist der Trainer da. Neu gezeichnet sind alle fünf
-  Dateien: `icon.ico` (sieben Größen von 16 bis 256), `icon.png`, `favicon.ico`,
-  `icon-192.png` und `icon-512.png`. In der Kopfzeile steckt das Zeichen als SVG
-  in der Seite; auch dort steht jetzt 55.
+- Programmsymbol: 55 statt 73 in allen Symboldateien und in der Kopfzeile
 
 ## [1.191.0] - 2026-09-07
 
 ### Geändert
-- **Die Rückfrage „Neue Runde?" kommt jetzt im Fenster des Trainers.** Dietmar zum
-  grauen Kasten von Chrome: „Das Fenster ist noch Old School. Das wünsche ich mir
-  angepasst."
-
-  Der Trainer hat sein eigenes Rückfragefenster — dasselbe, das beim Abbrechen
-  einer Runde und beim Löschen des Verlaufs erscheint. Es kennt die hellen und
-  dunklen Ansichten, wird vorgelesen und lässt sich mit Escape schließen.
-  `confirm()` aus dem Browser kann nichts davon, sieht auf jedem System anders
-  aus und schreibt obendrein „localhost:3000 enthält" darüber.
-
-  Dafür gibt es jetzt eine Hilfe `afuRueckfrage()`: Titel, Frage, Aufzählung,
-  Beschriftung des Knopfes, und was beim Bestätigen geschehen soll. Die zweite
-  Stelle, die schon darauf umgestellt ist: die Frage aus dem Diplome-Fenster, ob
-  auf Klasse N umgeschaltet werden soll. Fehlt das Fenster einmal, fällt die
-  Hilfe auf `confirm()` zurück — lieber die Notlösung des Browsers als gar keine
-  Rückfrage.
-
-- **Im Gruppenraum ist der Knopf „Google KI" weg.** Dietmar: „Im Gruppenraum muss
-  der Google-KI-Button raus." Alle bearbeiten dieselben Fragen, und wer sich die
-  Antwort nebenbei erklären lässt, übt nicht mehr, sondern sucht. Außerhalb des
-  Raums bleibt der Knopf, wo er ist. Gilt für Gastgeber und Gäste gleichermaßen,
-  erkannt am laufenden Raum, nicht an der Rolle.
+- Rückfrage Neue Runde im eigenen Dialogfenster statt Browser-`confirm()`
+- Neue Hilfsfunktion `afuRueckfrage()`, auch für die Klassenwechsel-Rückfrage im Diplome-Fenster
+- Gruppenraum: Knopf Google KI während eines laufenden Raums ausgeblendet
 
 ## [1.190.0] - 2026-09-06
 
 ### Geändert
-- **Nach der Runde geht es weiter, ohne neuen Raum.** Dietmar: „Im Gruppenraum,
-  wenn die Runde zu Ende ist, muss ich jedes Mal einen neuen Raum einstellen und
-  einen Link versenden. Kann man das anders aufbauen?"
-
-  Konnte man schon — der Knopf „Neue Runde" stand nur im Gruppenraum-Fenster,
-  und das ist während der Runde zu. In der Gesamt-Auswertung am Ende steht er
-  jetzt an erster Stelle: **„Neue Runde für alle"**. Der Raum bleibt bestehen,
-  der Code bleibt derselbe, der verschickte Link gilt weiter — es muss nichts
-  noch einmal verschickt werden. Darunter steht dieser Satz auch so da.
-
-  **Und der Weg hinaus heißt jetzt, was er tut.** Vorher stand dort „Hauptmenü",
-  und dass damit der Raum zugeht, stand nirgends. Jetzt: beim Gastgeber
-  **„Raum beenden"**, beim Gast **„Raum verlassen"** — dazwischen
-  **„Fenster schließen"**, das nur die Auswertung wegräumt und alles laufen
-  lässt. Beim Gast steht daneben: „Lass das Fenster ruhig zu — startet der
-  Trainer eine neue Runde, bist du automatisch dabei."
+- Gruppenraum: Neue Runde für alle direkt in der Gesamtauswertung, Raum, Code und Link bleiben gültig
+- Gruppenraum: Ausgänge benannt als Raum beenden, Raum verlassen und Fenster schließen
 
 ### Behoben
-- **Die alte Auswertung lag über der neuen Runde.** Startete der Gastgeber eine
-  neue Runde, blieb bei den Teilnehmern das Auswertungsfenster der vorigen offen,
-  und die Merkposten dafür standen noch auf „schon gezeigt" — die nächste
-  Auswertung wäre gar nicht mehr erschienen. Beides wird jetzt beim Start einer
-  Runde zurückgesetzt.
-
-  Nachgestellt mit zwei Browsern: Gastgeber und Gast im selben Raum, Runde
-  durchgespielt, „Neue Runde für alle" — beide stehen danach bei Frage 1 von 25,
-  derselbe Raumcode, kein Auswertungsfenster im Weg.
+- Gruppenraum: Auswertung der vorigen Runde wird beim Start einer neuen Runde geschlossen und zurückgesetzt
 
 ## [1.189.0] - 2026-09-06
 
 ### Geändert
-- **Neuer Name in der Kopfzeile und ein neues Zeichen.** Dietmar nach den
-  Entwürfen: Wortmarke „das zweite", Symbol „F — 73".
-
-  Oben links stand bisher **„Prüfung"** mit einer Satellitenschüssel. Das sagte,
-  was man tut, aber nicht, worum es geht — und als Programmname wäre es beliebig
-  gewesen. Jetzt steht dort der volle Name: **Amateurfunk-Trainer**, das
-  „-Trainer" in Grau abgesetzt. Auch der Titel des Browserfensters heißt so.
-
-  Das Zeichen ist die **73** — der Gruß unter Funkern, weiß auf dem Dunkelblau
-  der Kopfzeile. Dasselbe Bild steht jetzt überall:
-
-  | Datei | wofür |
-  |---|---|
-  | `icon.ico` | die EXE, das Startmenü, die Verknüpfung auf dem Schreibtisch — sieben Größen von 16 bis 256 in einer Datei |
-  | `icon.png` | das Zeichen im Browsertab |
-  | `favicon.ico` | dasselbe für Browser, die noch danach fragen |
-  | `icon-192.png`, `icon-512.png` | die App auf dem Startbildschirm von Handy und Tablet |
-
-  In der Kopfzeile selbst steckt es als SVG in der Seite — keine Bilddatei, die
-  beim Weitergeben fehlen könnte.
-
-  Die sieben Größen sind einzeln gezeichnet und nicht aus einem großen Bild
-  heruntergerechnet: Bei 16 Punkten entscheidet sich, ob ein Symbol in der
-  Taskleiste noch lesbar ist, und dort ist Verkleinern der schnellste Weg zu
-  Matsch.
+- Kopfzeile: Name Amateurfunk-Trainer statt Prüfung, auch als Fenstertitel
+- Neues Programmsymbol 73 in `icon.ico` (16 bis 256 px), `icon.png`, `favicon.ico`, `icon-192.png` und `icon-512.png`
+- Kopfzeile: Symbol als eingebettete SVG
 
 ## [1.188.0] - 2026-09-06
 
-### Behoben
-- **„Not found" statt Suchseite — die Adresse war zu neu.** Dietmar: „Es öffnet
-  sich die Webseite Not found."
-
-  Der Trainer öffnete `https://ans.bundesnetzagentur.de/…`. Die Bundesnetzagentur
-  verlinkt ihre eigene Rufzeichensuche auf der Amateurfunk-Seite aber mit
-  **`http://`** — unter der verschlüsselten Adresse antwortet dort offenbar ein
-  anderer Server, und der kennt die Seite nicht. Link und Rückfall nehmen jetzt
-  dieselbe Adresse wie die Behörde selbst.
-
-  Beim Abfragen probiert der Server weiterhin zuerst https und fällt erst dann
-  auf http zurück; welche Adresse geantwortet hat, schickt er mit, und genau die
-  öffnet der Trainer im Notfall.
-
 ### Geändert
-- **Die Diagnose sagt jetzt, woran es lag.** Schlägt die Abfrage fehl, nennt
-  `grund` beide Versuche mit ihrem Ergebnis, zum Beispiel
-  `Suchseite nicht erreichbar [https → 404 (kein Formular) | http → 200 (Formular)]`.
-  Zu sehen unter `http://localhost:3000/api/rufzeichen?ruf=DL1ABC`.
+- Rufzeichenabfrage: Feld `grund` nennt beide Versuche (https, http) mit Ergebnis
+
+### Behoben
+- Rufzeichensuche: Link zur BNetzA mit `http://` statt `https://`, kein Not found mehr
+- Rufzeichenabfrage: Server meldet die antwortende Adresse, Rückfall öffnet genau diese
 
 ## [1.187.0] - 2026-09-06
 
 ### Behoben
-- **Die Rufzeichenabfrage kam nicht durch — drei Ursachen abgestellt.** Dietmar:
-  „Es öffnet sich direkt der Link." Das ist der Rückfall; er greift immer dann,
-  wenn die Abfrage keine eindeutige Antwort liefert.
-
-  **Die Kennung.** Der erste Versuch meldete sich als „Amateurfunk-Trainer".
-  Viele Behördenseiten hängen hinter einem Schutzdienst, der ungewohnte
-  Kennungen aussortiert, bevor die Seite überhaupt gefragt wird. Jetzt meldet
-  sich der Server wie ein gewöhnlicher Browser.
-
-  **Das Sitzungs-Cookie.** `getSetCookie()` gibt es erst ab Node 20 — ältere
-  Fassungen liefern alle Cookies in einer Zeile, die von Hand zerlegt werden
-  muss. Ohne Cookie weist ASP.NET die Eingabe zurück, und zwar ohne zu sagen,
-  warum. Beide Wege werden jetzt bedient.
-
-  **Formularziel und Suchknopf.** Wohin ein Formular schickt, steht im Formular
-  selbst — es muss nicht dieselbe Seite sein. Und statt eines Knopfes kann dort
-  ein Link stehen, der `__doPostBack` aufruft; dann trägt man den Namen in
-  `__EVENTTARGET` ein. Beides liest der Server jetzt aus der Seite, statt es
-  vorauszusetzen.
-
-  Geprüft gegen eine zweite, absichtlich anders gebaute Nachbildung: Link statt
-  Knopf, abweichendes Formularziel, zwei Cookies in einer Zeile — Treffer,
-  Nicht-Treffer und Platzhaltersuche werden richtig gedeutet.
-
-  **Falls es immer noch nicht geht:** `http://localhost:3000/api/rufzeichen?ruf=DL1ABC`
-  im Browser öffnen. Die Antwort nennt unter `grund` genau, woran es hakt.
+- Rufzeichenabfrage: Server meldet sich mit Browser-Kennung
+- Rufzeichenabfrage: Sitzungs-Cookie auch unter Node.js vor Version 20 ausgewertet
+- Rufzeichenabfrage: Formularziel und Suchknopf (inkl. `__doPostBack`) werden aus der Seite gelesen
 
 ## [1.186.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Der Trainer fragt jetzt selbst nach: „vergeben" oder „noch frei".** Dietmar:
-  „Kann man das nicht indirekt abfragen?" — und auf die Rückfrage: „Nur vergeben
-  und noch frei."
-
-  Neue Schnittstelle `/api/rufzeichen`. Der Server macht das, was ein Mensch auf
-  der Seite auch täte: Seite holen, die versteckten Felder (`__VIEWSTATE`,
-  `__EVENTVALIDATION` …) und das Sitzungs-Cookie mitnehmen, das Rufzeichen ins
-  Suchfeld schreiben, abschicken, im Ergebnis nachsehen. Antwort im Trainer:
-  **„DL1ABC ist vergeben"** in Rot oder **„DL1ABC ist noch frei"** in Grün, mit
-  dem ehrlichen Zusatz, dass eine Sperrfrist trotzdem laufen kann.
-
-  **Was dabei nicht passiert:** keine Namen, keine Adressen — die stehen im
-  Verzeichnis, gehen den Trainer aber nichts an. Kein Sammeln, kein Vorratsabruf:
-  eine Anfrage je Klick, die Antwort liegt höchstens zehn Minuten im Speicher,
-  damit ein zweiter Klick die Behörde nicht noch einmal behelligt. Und nur vom
-  Trainer-Rechner aus (`localOnly`) — sonst könnte jeder mit dem Einladungslink
-  über diesen Server Anfragen schicken.
-
-  **Der Code rät nichts.** Feldnamen und Aufbau gehören der Seite, nicht uns.
-  Deshalb liest er die Namen des Suchfelds und des Knopfes aus der Seite selbst
-  und wertet nur aus, was in Ergebnis-*Tabellen* steht — das Suchfeld enthält das
-  eingetippte Rufzeichen ja auch dann, wenn nichts gefunden wurde. Ist die
-  Antwort nicht eindeutig, sagt er „unklar", und der Trainer fällt auf den alten
-  Weg zurück: Seite öffnen, Rufzeichen in der Zwischenablage. **Eine falsche
-  Auskunft wäre schlimmer als keine.**
-
-  Geprüft gegen ein nachgebautes ASP.NET-Formular: versteckte Felder erkannt,
-  Feld- und Knopfnamen gefunden, Treffer, Nicht-Treffer und Platzhaltersuche
-  (`DB2*K`) richtig gedeutet; in der Anzeige beide Fälle sowie der Rückfall bei
-  fehlender Antwort. **Gegen die echte Seite habe ich nicht testen können** — aus
-  meiner Arbeitsumgebung ist sie nicht erreichbar. Der erste Versuch am
-  Trainer-PC zeigt, ob die Feldnamen passen.
+- Rufzeichen prüfen: automatische Abfrage bei der BNetzA (`/api/rufzeichen`), Ergebnis vergeben oder noch frei
+- Rufzeichenabfrage: keine Namen oder Adressen, eine Anfrage je Klick, Zwischenspeicher 10 Minuten, nur lokal (`localOnly`)
+- Rufzeichenabfrage: Feldnamen aus der Seite gelesen; bei unklarer Antwort Rückfall auf Seite öffnen mit Zwischenablage
 
 ## [1.185.0] - 2026-09-06
 
 ### Hinzugefügt
-- **„Rufzeichen prüfen" — eine Zeile unter dem Prüfungstermin.** Dietmar: „Die
-  Bundesnetzagentur hat die Möglichkeit, nach Rufzeichen in Deutschland zu
-  suchen. Hier wäre ein Feld bei Prüfungstermin, wo man schauen kann, ob das
-  Rufzeichen schon vergeben ist."
-
-  Man trägt das Wunschrufzeichen ein und klickt „Nachsehen": Der Trainer legt es
-  in die Zwischenablage und öffnet die
-  [Rufzeichensuche der Bundesnetzagentur](https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx).
-  Dort genügt Strg+V. Der Stern als Platzhalter für ein einzelnes Zeichen
-  (`DB2*K`) ist erlaubt, weil die Suche ihn kennt; alles andere wird aus der
-  Eingabe entfernt.
-
-  **Warum kein Direktlink:** Die Seite der Bundesnetzagentur ist ein
-  ASP.NET-Formular. Solche Seiten schicken ihre Eingaben per POST zusammen mit
-  einem Sitzungsschlüssel — eine Adresse mit angehängtem Rufzeichen gibt es dort
-  nicht. Man könnte eine raten; sie liefe beim nächsten Umbau der Seite still ins
-  Leere, und man sähe nur eine leere Suchmaske ohne zu wissen, warum. Zwei Tasten
-  sind ehrlicher als ein Link, der irgendwann lügt.
-
-  Steht auf den Diplomen schon ein Rufzeichen, ist das Feld beim Start damit
-  vorbelegt. Schlägt die Zwischenablage fehl — der Browser gibt sie nur in
-  sicherem Zusammenhang frei —, gibt es einen zweiten Weg über ein unsichtbares
-  Textfeld, und wenn auch der nicht greift, sagt der Hinweis eben „dort
-  eintragen".
+- Rufzeichen prüfen: Eingabefeld unter dem Prüfungstermin, öffnet die Rufzeichensuche der BNetzA, Rufzeichen in Zwischenablage
+- Rufzeichen prüfen: Platzhalter * erlaubt, Vorbelegung mit dem Rufzeichen der Diplome, Ersatzweg beim Kopieren
 
 ## [1.184.0] - 2026-09-06
 
-### Behoben
-- **Aus dem Diplome-Fenster kamen alle Fragen der Lektion statt nur der
-  fehlenden.** Dietmar: „Bei Diplome steht noch 1 Frage. Ich habe die eine Frage
-  beantwortet und kein Diplom erhalten. Beim nächsten Klick war da eine neue
-  Frage." — und mit Bild nachgereicht: „Da war 1 weiße und 51 hellgrüne", später
-  „Hier fehlen 2 Fragen" bei einer Runde mit dreizehn.
-
-  Der Klick startete die Runde über `lektionRundeStarten()`, und die richtet sich
-  nach den beiden Schaltern der Hauptansicht: „Gelernte ausblenden" und
-  „Gelerntes erneut prüfen". Stand der erste aus, gab `ohneGelernte()` den
-  **ganzen** Stapel zurück — aus „noch 1 Frage" wurden 52. Und weil bei jedem
-  Start neu gemischt wird, stand beim nächsten Klick eine andere Frage da.
-
-  Aus dem Album ist die Absicht eindeutig: Ich will das, was mir zur Karte noch
-  fehlt. Deshalb gelten beide Schalter dort für die Dauer des Starts so, wie es
-  diese Absicht verlangt — danach stehen sie wieder, wie der Benutzer sie gesetzt
-  hat.
-
-- **Ein Klick auf ein Fach, dessen Lektion inzwischen voll ist, gibt die Karte
-  statt einer Runde.** Das Album zeichnet sich nicht von selbst neu, während man
-  daneben lernt. Wer die letzte offene Frage beantwortete und danach dasselbe
-  Fach noch einmal anklickte, klickte auf einen Stand von vorhin — und weil dort
-  nichts mehr offen war, fiel die Runde auf „alles gelernt, dann eben alles
-  wiederholen" zurück. Jetzt wird vorher nachgesehen; ist die Lektion voll,
-  kommt die Karte, bei Bedarf mit Konfetti.
-
-### Werkzeug
-- **Entwürfe und Notizen gehen nicht mehr mit auf GitHub.** Dietmar, mit einem
-  Bild der Rückfrage von `GitHub-Verbinden.bat`: „Ändere das bitte, damit ich
-  keinen Blödsinn auf GitHub poste." Angeboten wurden dort die Musterseiten
-  `_auswertung-vorschlag.html`, `_blaettern-vorschlag.html` und
-  `_drei-ideen-vorschlag.html`. Der Unterstrich am Anfang ist für solche Dateien
-  seit Wochen das Zeichen — ab jetzt reicht er auch aus: `.gitignore` nimmt
-  `_*.html`, `_*.md`, `_*.json` und `_*.txt` heraus. Sie bleiben im Ordner und
-  lassen sich weiter öffnen, tauchen aber in der Rückfrage nicht mehr auf. Soll
-  doch einmal etwas mit Unterstrich hinein, geht das mit einem Ausrufezeichen
-  davor (`!_wichtig.md`).
-
 ### Geändert
-- **Die Fächer sagen jetzt, wie viel wirklich noch fehlt.** Eine Frage gilt erst
-  als gelernt, wenn sie **dreimal hintereinander** richtig beantwortet wurde —
-  davon stand im Fach nichts. Auf der Zielgeraden (drei Fragen oder weniger)
-  steht deshalb jetzt „noch 1 Frage · noch 2× richtig". Der Hinweistext beim
-  Überfahren nennt die Regel ebenfalls.
+- Diplome: Fächer zeigen auf der Zielgeraden die noch nötigen richtigen Antworten (noch 2× richtig)
+- `.gitignore`: Entwurfsdateien mit Unterstrich (`_*.html`, `_*.md`, `_*.json`, `_*.txt`) ausgeschlossen
+
+### Behoben
+- Diplome: Klick auf ein Fach startet nur die fehlenden Fragen der Lektion, unabhängig von den Filterschaltern
+- Diplome: Klick auf eine inzwischen vollständige Lektion zeigt die Karte statt einer Wiederholungsrunde
 
 ## [1.183.0] - 2026-09-06
 
 ### Geändert
-- **Zurück zur Hauptansicht beendet jetzt auch den Gruppenraum.** Dietmar:
-  „Gruppenraum — Raum erstellen — Starten. Wenn ich zurück zum Hauptmenü gehe,
-  muss der Gruppenraum und der Chat beendet werden."
-
-  Bisher galt das nur für „Schließen" im Gruppenraum-Fenster. Wer stattdessen die
-  Runde abbrach, stand wieder in der Hauptansicht — der Raum lief aber weiter,
-  der Chat blieb am Bildschirm, und die Teilnehmer warteten auf einen Gastgeber,
-  der längst woanders war.
-
-  Die Rückfrage sagt vorher, was passiert: beim Gastgeber „Der Gruppenraum wird
-  beendet und der Chat geschlossen — die Teilnehmer werden abgemeldet", beim Gast
-  „Du verlässt den Gruppenraum". Der Lernstand bleibt in beiden Fällen unberührt,
-  er hängt am Benutzer und nicht am Raum.
-
-  Nachgestellt mit zwei Browsern: Gastgeber erstellt den Raum, Gast tritt bei,
-  Runde läuft, Gastgeber bricht ab — Raum zu, Chat weg, Fenster geschlossen, und
-  auch beim Gast ist der Raum beendet.
+- Gruppenraum: Rückkehr zur Hauptansicht beendet Raum und Chat (Gastgeber) bzw. verlässt den Raum (Gast), mit Rückfrage
 
 ## [1.182.0] - 2026-09-06
 
 ### Behoben
-- **Es sind wieder alle vierzehn Lektionen da — bei jedem Prüfungsziel.** Dietmar,
-  im Bild die Aufstockung E → A: „Es müssten 14 sein! Es fehlen auch die, wo ich
-  noch nicht fertig habe. Anklickbar direkt zu den Fragen. Das Ziel ist, die
-  Benutzer dazu zu bringen, alle Diplome zu erhalten."
-
-  Die Fragen einer Lektion kamen aus `lektionFragen()`, und das durchsucht den
-  **gerade geladenen** Fragenkatalog. Bei einer Aufstockung liegen dort die
-  Fragen der Klasse A — keine einzige Lektion fand ihre Fragen, und übrig blieben
-  nur die schon verdienten Karten. Deshalb lief es vormittags richtig und
-  nachmittags nicht: Dazwischen lag der Wechsel des Prüfungsziels.
-
-  Gezählt wird jetzt aus der Video-Map. Sie enthält genau die 571 Fragen der
-  Klasse N in ihren 14 Lektionen — immer, unabhängig vom geladenen Katalog. Der
-  Lernstand steht ohnehin je Fragennummer, also für alle Kataloge in einem Topf.
-
-- **Ein Klick auf ein leeres Fach führt jetzt auch dann zu den Fragen, wenn ein
-  anderes Ziel eingestellt ist.** Der Trainer fragt einmal nach und schaltet auf
-  Klasse N um, bevor er die fehlenden Fragen der Lektion lädt. Der Kopftext im
-  Fenster sagt vorher, dass das passieren wird.
-
-  Nachgestellt: 14 Fächer bei Klasse N und bei fremdem Katalog, Rückfrage beim
-  Klick, und nach dem Umschalten eine Runde mit genau den offenen Fragen.
+- Diplome: alle 14 Lektionen bei jedem Prüfungsziel, Zählung aus der Video-Map (Klasse N)
+- Diplome: Klick auf leeres Fach schaltet nach Rückfrage auf Klasse N und lädt die offenen Fragen
 
 ## [1.181.0] - 2026-09-06
 
 ### Behoben
-- **Der Verlauf war wieder zu lang — und diesmal war die Ursache eine andere.**
-  Dietmar mit einem Bild der Aufstockung E → A: „Der Verlauf von dem Benutzer ist
-  wieder zu lang."
-
-  Zwei Fehler auf einmal:
-
-  **Erstens: Die Messung bestätigte sich selbst.** Beide Spalten stehen
-  nebeneinander in einem Flex-Kasten, und darin wird die kürzere auf die Höhe der
-  längeren gezogen. War der Verlauf einmal zu lang, maß `verlaufHoeheAngleichen()`
-  an der linken Spalte nicht mehr deren Inhalt, sondern genau die zu große Höhe,
-  die sie selbst gesetzt hatte. Der falsche Wert bestätigte sich bei jeder
-  weiteren Messung — kein späterer Aufruf konnte das je geradebiegen. Jetzt wird
-  die Höhenbegrenzung für den Moment der Messung auf null gesetzt: Dann streckt
-  der Verlauf nichts mehr, die linke Spalte fällt auf ihre eigene Höhe zurück,
-  und die wird gelesen. Gezeichnet wird dazwischen nichts.
-
-  **Zweitens: Die drei gestaffelten Messungen decken den Fall nicht ab.** Sie
-  fangen ab, was nach dem Zeichnen noch *dazukommt*. Beim Wechsel des
-  Prüfungsziels passiert das Gegenteil — die linke Spalte wird *kürzer*: Die
-  Prüfungsübersicht der Klasse N hat drei Zeilen, die der Aufstockung E → A nur
-  eine. Statt an jede einzelne Stelle einen Aufruf zu hängen (Zielwechsel,
-  Prüfungstermin, CB-Kasten, Hörbuch-Vorschau, Diplome-Knopf …) schaut jetzt ein
-  Beobachter der linken Spalte beim Wachsen und Schrumpfen zu. Eine Stelle, alle
-  Fälle — auch die, die erst noch dazukommen.
-
-  Nachgestellt: künstlich auf 900 Punkte gesetzt, eine Korrektur später steht
-  wieder der richtige Wert. Beim Wechsel von Klasse N auf E → A liegen beide
-  Unterkanten auf derselben Linie.
+- Verlauf: Höhenmessung ohne Rückkopplung durch Flex-Streckung, Verlauf nicht mehr zu lang
+- Verlauf: Beobachter der linken Spalte passt die Höhe beim Wachsen und Schrumpfen an (z. B. Zielwechsel)
 
 ## [1.180.0] - 2026-09-06
 
 ### Behoben
-- **„0 von 0 Lektionen bestätigt" — die Diplome waren nicht weg, sie standen nur
-  nicht da.** Dietmar: „Meine Diplome sind weg."
-
-  Das Album zeigte ausschließlich Lektionen, die im **gerade eingestellten
-  Prüfungsziel** vorkommen. Die Lektionseinteilung stammt aus dem Videolehrgang,
-  und den gibt es nur für den Katalog der Klasse N — wer auf Klasse E oder eine
-  Aufstockung umschaltet, hat keine einzige Lektion, und damit war die Liste
-  leer, obwohl die Karten unverändert im Lernstand lagen. Dasselbe passierte,
-  wenn das Fenster geöffnet wurde, bevor der Katalog geladen war.
-
-  Jetzt kommen zuerst die verdienten Karten aus dem gespeicherten Stand — immer,
-  egal was eingestellt ist —, und danach die noch offenen Lektionen des
-  aktuellen Ziels. Gibt es für dieses Ziel keine Lektionen, sagt der Kopftext
-  das, statt „0 von 0" zu melden.
+- Diplome: verdiente Karten werden unabhängig vom Prüfungsziel angezeigt, keine Anzeige 0 von 0 mehr
+- Diplome: Hinweis, wenn das Prüfungsziel keine Lektionen hat
 
 ## [1.179.0] - 2026-09-06
 
 ### Geändert
-- **Die Trennlinie im Beamer-Modus ist jetzt grau statt fast schwarz.** Dietmar:
-  „Grau ist gut. Jetzt ist eine schwarze Linie dabei, die weg muss." Die Farbe
-  der Nebentexte war auf der Leinwand ein schwarzer Balken; die Rahmenfarbe aus
-  dem ersten Versuch war das andere Extrem und verschwand im hellen Grau der
-  Karte. Der neue Wert liegt dazwischen: sichtbar als Trennung, ohne sich
-  vorzudrängen.
+- Beamer-Modus: Trennlinie grau statt fast schwarz
 
 ## [1.178.0] - 2026-09-06
 
 ### Geändert
-- **Aus „Dein Sammelalbum" wird „Deine Diplome 🏆".** Dietmar hat sie von Anfang
-  an Diplome genannt — dann sollen sie auch so heißen. Der Knopf im
-  Lernfortschritt heißt jetzt „Diplome" und trägt einen Pokal statt der
-  Bilderrahmen; Fenstertitel, Hinweis und Vorlesetext sind mitgezogen.
+- Sammelalbum umbenannt in Deine Diplome, Knopf Diplome mit Pokal-Symbol
 
 ## [1.177.0] - 2026-09-06
 
 ### Behoben
-- **Im Beamer-Modus fehlte die Trennlinie zwischen Frage und Antworten.**
-  Dietmar hat sie im Bild rot eingezeichnet: „Im Beamer-Modus fehlt oben eine
-  graue Linie." In der gewöhnlichen Ansicht trennt der Rahmen der Fragenkarte
-  beides — im Beamer-Modus sind Rahmen und Schatten abgeschaltet, damit die
-  Schrift die Leinwand füllt, und damit war auch die Grenze weg.
-
-  Die Linie sitzt jetzt am Antwortenblock, nicht an der Frage: So läuft sie über
-  die volle Breite und nicht nur unter dem grauen Kasten. Sie ist in der
-  Schriftfarbe der Nebentexte gehalten, nicht in der Rahmenfarbe — die Antworten
-  stehen auf demselben hellen Grau wie die Fragenkarte, dort verschwindet eine
-  helle Linie. Nachgesehen in beiden Ansichten, hell und dunkel.
+- Beamer-Modus: Trennlinie zwischen Frage und Antworten ergänzt
 
 ## [1.176.0] - 2026-09-06
 
 ### Behoben
-- **„Gelernte ausblenden" wurde nicht vorgelesen.** Dietmar: „In der Hauptansicht
-  fehlt bei ‚Gelernte ausblenden' der Text zum Vorlesen." Der Grund lag eine
-  Ebene tiefer als gedacht: Der Vorleser greift nur bei Elementen mit
-  `data-tooltip`, und dieses Feld hatte keinen — der Nachbar „Gelerntes erneut
-  prüfen" schon, deshalb fiel es auf. Jetzt hat es beides, den kurzen Hinweis
-  für die Maus und den ausführlichen Satz für die Sprachausgabe.
-- **„LAN" klang wie „elan".** Dietmar: „Im gemeinsamen Modus bei der Kachel
-  Offline über LAN sagt es elan oder WLAN." Die Stimme las die drei Buchstaben
-  als Wort. Jetzt wird buchstabiert: L-A-N. „WLAN" bleibt unangetastet — das
-  spricht jeder als ein Wort, und die Stimme trifft es auch. Die Regel steht wie
-  bei DARC und DL2YMR an beiden Stellen: in `Index.html` für die Notstimme des
-  Browsers und in `tts-expand.js` für Piper.
+- Vorlesen: Schalter Gelernte ausblenden mit Vorlesetext (`data-tooltip`)
+- Vorlesen: LAN wird buchstabiert (Browserstimme und Piper, `tts-expand.js`)
 
 ## [1.175.0] - 2026-09-06
 
-### Behoben
-- **„noch 0 Fragen" und trotzdem kein Diplom.** Dietmar: „Es soll den Lernstand
-  übernehmen. Wo 0 Fragen vorhanden sind, sollte auch das Diplom vorhanden
-  sein." Eine Karte fiel bisher nur beim Beantworten einer Frage — wer den
-  Trainer aktualisierte und danach nur das Album öffnete, sah fertige Lektionen
-  als leeres Fach. Jetzt übernimmt das Album beim Öffnen den Lernstand, und beim
-  Start des Trainers geschieht dasselbe einmal still. Ohne Konfetti: Was schon
-  vorher fertig war, wurde nicht gerade eben verdient.
-
 ### Hinzugefügt
-- **Leere Fächer sind anklickbar und laden die fehlenden Fragen.** Dietmar: „Die
-  Diplome sollten anklickbar sein und die fehlenden Fragen laden." Ein Klick auf
-  ein noch nicht verdientes Fach schließt das Album und startet eine Runde mit
-  genau den Fragen dieser Lektion, die noch offen sind — das Gelernte bleibt
-  weg. Beim Überfahren hebt sich die Karte und sagt, um wie viele Fragen es
-  geht.
+- Diplome: leere Fächer anklickbar, starten eine Runde mit den offenen Fragen der Lektion
+
+### Behoben
+- Diplome: Album übernimmt beim Öffnen und beim Start den Lernstand, fertige Lektionen erhalten ihre Karte
 
 ## [1.174.0] - 2026-09-06
 
 ### Hinzugefügt
-- **QSL-Karten fürs Sammelalbum.** Dietmar: „Für jede abgeschlossene Lektion
-  bekommst du eine virtuelle QSL-Karte. Sammelalbum im Profil."
-
-  Eine Karte fällt, sobald **jede Frage einer Lektion** abgehakt ist — gezählt
-  wird nur, was im aktuellen Prüfungsziel überhaupt vorkommt. Dann geht ein
-  Fenster mit der Karte auf, mit dem Konfetti, das der Trainer schon hatte.
-
-  **Kein DARC-Design.** Die Vorstandschaft hat entschieden, den Trainer nicht zu
-  übernehmen; das Logo bleibt draußen. Die Karten sind eigene Entwürfe — was
-  ohnehin schöner ist, weil es dann Dietmars Karten sind.
-
-  **Sechs gezeichnete Motive** im Wechsel: Leuchtturm, Burg, Windrad,
-  Gittermast mit Yagi, Küste mit Segelboot, Bake auf dem Berg. Alle als SVG in
-  `Index.html`, keine einzige zusätzliche Bilddatei — was nicht daneben liegt,
-  kann beim Weitergeben auch nicht verlorengehen.
-
-  Die Karte behält die Form einer echten QSL: Rufzeichen groß oben,
-  Bestätigungszeile unten mit Lektionsname, Fragenzahl, Datum, Trefferquote und
-  Klasse. Nur bestätigt sie kein QSO, sondern eine Lektion. Das Rufzeichen ist
-  im Album änderbar; bis dahin steht ein Platzhalter da — die meisten hier haben
-  ja noch keins.
-
-  **Das Album** sitzt neben „Alle Lektionen" im Lernfortschritt. Verdiente
-  Karten zuerst, danach die offenen — und die offenen nach dem, was am wenigsten
-  fehlt, damit oben steht, was als Nächstes zu holen ist. Nicht verdiente Fächer
-  zeigen das Motiv als Schattenriss mit „noch 4 Fragen" und einem Balken: Man
-  ahnt, was einen erwartet, liest aber nicht schon die Bestätigung.
-
-  **Jede Karte lässt sich als PNG speichern** (1000 × 600, also auch gedruckt
-  scharf) — zum Ausdrucken oder in die Gruppe stellen.
-
-  **Beim ersten Mal wird still nachgetragen.** Wer den Trainer seit Wochen
-  benutzt, wird nicht mit vierzehn Karten auf einmal beworfen; die schon
-  fertigen Lektionen liegen einfach im Album.
+- Sammelalbum: virtuelle QSL-Karte je abgeschlossener Lektion, mit Konfetti-Fenster
+- QSL-Karten: sechs eigene SVG-Motive, eingebettet in `Index.html`, ohne DARC-Logo
+- QSL-Karten: Rufzeichen (änderbar, mit Platzhalter), Lektion, Fragenzahl, Datum, Trefferquote und Klasse
+- Sammelalbum im Lernfortschritt: verdiente Karten zuerst, offene nach Restfragen mit Schattenriss und Balken
+- QSL-Karten: Export als PNG (1000 × 600)
+- Sammelalbum: bereits fertige Lektionen beim ersten Start still nachgetragen
 
 ### Geändert
-- **Die Sicherung nimmt das Sammelalbum mit.** `getAllLocalUserData()` und
-  `data\userdata\amateurfunk_data.json` führen jetzt ein Feld `qsl` — je
-  Benutzer die verdienten Karten, dazu das Rufzeichen. Ohne das wäre die
-  Sammlung beim Wechsel auf einen anderen Rechner weg, und sie ist gerade das,
-  was man nicht noch einmal erarbeiten möchte. Zurückgeholte Karten werden nicht
-  als „gerade eben verdient" gefeiert.
+- Sicherung: Feld `qsl` mit Karten und Rufzeichen je Benutzer in `amateurfunk_data.json`
 
 ## [1.173.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Taschenrechner.** Dietmar: „1. Taschenrechner" — und nach dem Entwurf: „Baue
-  das so ein." Gebaut ist genau der, den die Prüfungsordnung erlaubt. In der
-  Amtsblatt-Verfügung 29/2024 steht als Hilfsmittel „ein einfacher
-  wissenschaftlicher oder nicht programmierbarer Taschenrechner (ohne
-  Textspeicher)": keine Variablen, kein Formelspeicher, keine
-  Wiederholrechnungen. Nicht weil es schwer wäre — sondern weil man sonst etwas
-  übt, das einem im Prüfungsraum weggenommen wird.
-
-  **Die Vorsätze sind der eigentliche Grund** für einen eigenen Rechner. In den
-  Aufgaben steht „4,7 kΩ" und „22 pF", nicht „4700" und „0,000000000022". Hier
-  sind p n µ m k M G eigene Tasten, sie hängen sich direkt an die Zahl, und die
-  Antwort kommt in derselben Sprache zurück.
-
-  **Zwei Schreibweisen gleichzeitig:** groß die, die man an dieser Stelle lesen
-  will, klein darunter die andere. Zwischen 0,1 und 10000 ist das die gewöhnliche
-  Zahl („1024", „0,5"), darüber und darunter der Vorsatz („2,2 µ", „3,5 M").
-
-  **Kein `eval()`.** Der Ausdruck wird selbst zerlegt und nach dem
-  Shunting-Yard-Verfahren gerechnet — in einer Datei, die weitergegeben wird,
-  wäre `eval()` eine offene Tür, und bequemer wäre es hier nicht einmal.
-
-  Der Knopf sitzt in der Fragen-Kopfzeile neben dem Formelblatt und ist auch im
-  Prüfungssimulator erreichbar, denn erlaubt ist der Rechner dort ja auch. Das
-  Fenster schwebt rechts unten statt über der Seite — man muss die Frage lesen
-  können, während man rechnet —, lässt sich am Kopf verschieben und merkt sich
-  seinen Platz. Die Tastatur bedient es mit: Ziffern, Komma, Klammern,
-  Rechenzeichen, Enter, Rücktaste, Esc, und die Vorsatzbuchstaben.
-
-  Durchgerechnet mit dreizehn Proben, darunter `1/(2*π*7,159M*22p)` = 1010,52
-  und `sin(30)` = 0,5, dazu zwei fehlerhafte Eingaben, die sauber „Fehler"
-  ergeben statt etwas Falsches.
+- Taschenrechner nach Prüfungsvorgaben (Amtsblatt-Verfügung 29/2024), ohne Variablen und Formelspeicher
+- Taschenrechner: Tasten für Vorsätze p, n, µ, m, k, M, G; Ergebnis in Vorsatz- und Normalschreibweise
+- Taschenrechner: eigener Parser (Shunting-Yard) statt `eval()`
+- Taschenrechner: Knopf in der Fragen-Kopfzeile, auch im Prüfungssimulator; verschiebbares Fenster mit gemerkter Position
+- Taschenrechner: Tastaturbedienung für Ziffern, Rechenzeichen, Klammern und Vorsätze
 
 ## [1.172.0] - 2026-09-06
 
 ### Hinzugefügt
-- **„Rest abarbeiten" — ein drittes Feld über die ganze Breite.** Dietmar: „Ich
-  habe 485 Fragen und würde gerne die 86, die noch fehlen, abarbeiten. Darunter
-  ein drittes Feld, was über die ganze Breite von dem Feld geht, wo steht: 86
-  Fragen sind noch zu lernen." Genau das steht jetzt unter den beiden Kacheln,
-  im selben Zuschnitt, aber über die volle Breite und in einem warmen Ton — es
-  ist weder der ganze Katalog noch das Abgehakte, sondern die Arbeit, die noch
-  vor einem liegt. Ein Klick geht nur durch die Fragen, die noch nicht abgehakt
-  sind, in der Reihenfolge des Katalogs; das Lesezeichen des normalen Blätterns
-  bleibt liegen.
+- Blättern: Feld Rest abarbeiten über volle Breite, nur nicht abgehakte Fragen in Katalogreihenfolge
 
 ### Behoben
-- **Die Zeile „Bei der ersten offenen Frage" aus 1.171.0 zeigte sich bei
-  Dietmar nie.** Sie erschien nur, wenn die erste offene Frage nicht ohnehin die
-  nächste war — und da sein Lesezeichen am Kataloganfang liegt, war genau das
-  immer der Fall. Das neue Feld hat diese Bedingung nicht: Es steht da, solange
-  überhaupt etwas offen ist, und verschwindet erst, wenn alles abgehakt ist.
+- Blättern: Einstieg bei offenen Fragen immer sichtbar, solange Fragen offen sind
 
 ## [1.171.0] - 2026-09-06
 
-### Geändert
-- **Das Blätter-Fenster ist neu aufgebaut — zwei Kacheln statt vier Knöpfe.**
-  Dietmar: „Blättern gefällt mir so nicht. Mache mir Vorschläge." Nach drei
-  Entwürfen: „B — Zwei Kacheln, aber nicht mit Text, sondern Buttons darunter."
-
-  Vorher standen vier Wege gleichzeitig da, und der breite grüne Kasten „Nur die
-  gelernten ansehen" sah aus wie der Hauptknopf, war es aber nicht. Dazu ein
-  Zahlenkasten „Dein Stand" mit zwei Zahlen ohne Bezug — 8 wovon, 458 von wie
-  vielen?
-
-  Jetzt steht die eigentliche Frage da: ganzer Katalog oder nur das Abgehakte?
-  Beides als gleich große Kachel, jede mit ihrer Zahl und ihrem Balken, und ein
-  Klick auf die Kachel startet. Die Balken laufen beim Öffnen auf. „Neu
-  beginnen" und „Stand löschen" stehen als Knöpfe in der Fußzeile.
-
-  Die linke Kachel sagt drei verschiedene Dinge: „571 Fragen" beim ersten Mal,
-  „8 von 571" mit Lesezeichen, „Am Ende" nach der letzten Frage. Ohne abgehakte
-  Fragen fällt die rechte Kachel weg und die linke füllt die Breite.
-
 ### Hinzugefügt
-- **„Bei der ersten offenen Frage" — der dritte Weg aus Vorschlag C, unter den
-  Kacheln.** Dietmar: „C — Wo soll ich anfangen? Das darunter in B mit
-  integrieren." Wer 458 von 571 Fragen abgehakt hat, klickt sich beim Blättern
-  sonst durch hunderte Fragen, die er längst kann. Diese Zeile setzt direkt an
-  der ersten Frage an, die noch nicht abgehakt ist; das Lesezeichen wandert von
-  dort aus weiter wie sonst. Sie steht nur da, wenn sie auch etwas spart.
+- Blättern: Einstieg bei der ersten offenen Frage unter den Kacheln
+
+### Geändert
+- Blättern: Fenster neu mit zwei Kacheln (ganzer Katalog, nur Abgehaktes) mit Zahl und Balken
+- Blättern: Neu beginnen und Stand löschen als Knöpfe in der Fußzeile
 
 ### Behoben
-- **Ein Satz stand doppelt.** Beim ersten Öffnen — also ohne Lesezeichen —
-  stand „Blättern geht alle Fragen der Reihe nach durch." als Ansage und direkt
-  darunter noch einmal als Erklärung. Jetzt steht er einmal.
+- Blättern: doppelter Hinweissatz beim ersten Öffnen entfernt
 
 ## [1.170.0] - 2026-09-06
 
 ### Geändert
-- **Die Balken der Prüfungsreife reichen weiter nach links.** Dietmar: „Sieht
-  gut aus. Nach links kann man den noch etwas verlängern?" Die Namensspalte geht
-  von 132 auf 108 Punkte, der Balken wächst damit bei 1500 Punkten Fensterbreite
-  von 206 auf 230. Weiter geht es nicht: „Vorschriften" misst in dieser Schrift
-  rund 90 Punkte, und sobald der Name umbricht, wird die Zeile höher und die
-  drei Balken stehen nicht mehr in gleichem Abstand. Nachgemessen bei 1920,
-  1500, 1280 und 1100 Punkten: alle drei Zeilen gleich hoch, kein Umbruch.
+- Statistik: Balken der Prüfungsreife länger, Namensspalte 108 px
 
 ## [1.169.0] - 2026-09-06
 
-### Geändert
-- **Die Balken der Prüfungsreife sind rund ein Drittel länger.** Dietmar: „Bei
-  Vorschriften habe ich den grünen Balken etwas verlängert. Hier ist mehr Platz
-  vorhanden. Bitte nutze ihn." Die Namensspalte ist von 150 auf 132 Punkte
-  zusammengerückt („Vorschriften" ist das längste Wort) und die Zahlenspalte von
-  118 auf 86 — die Zahlen stehen in der Schreibmaschinenschrift, ihre Breite ist
-  bekannt. Der gewonnene Platz geht an den Balken: bei 1500 Punkten
-  Fensterbreite von 156 auf 206 Punkte.
-
-  Die Werte bleiben fest und werden nicht automatisch berechnet: Jede Zeile ist
-  ein eigenes Raster, und bei „auto" wäre die Spalte in der Zeile mit „zu wenig"
-  breiter als in der mit „sitzt" — die Balken stünden dann treppenförmig.
-
 ### Hinzugefügt
-- **Die Balken laufen beim Öffnen auf.** Dietmar: „Beim Aufrufen der Statistik
-  soll der Balken so aussehen, als wird er frisch eingelesen." Sie starten bei
-  null und wachsen in 0,9 Sekunden auf ihren Wert, um 0,14 Sekunden versetzt
-  von oben nach unten — so liest es sich als Einlesen und nicht als Ruck.
+- Statistik: Balken der Prüfungsreife wachsen beim Öffnen animiert, zeilenweise versetzt
+
+### Geändert
+- Statistik: Balken der Prüfungsreife rund ein Drittel länger, Namens- und Zahlenspalte schmaler
 
 ## [1.168.0] - 2026-09-06
 
 ### Geändert
-- **Auswertung & Sicherung: rechts steht jetzt ein eigener Kasten in hellem
-  Grau.** Dietmar: „Hebe die rechte Seite mit einem hellen Hellgrau etwas ab,
-  damit es auch farblich wie zwei Teile aussieht." — und: „Zwischen links und
-  rechts zu den Buttons ist eine Höhendifferenz." Beides erledigt derselbe
-  Handgriff: Der rechte Kasten hat denselben Zuschnitt wie die Prüfungsreife
-  links — gleicher Radius, gleiche Linie, gleicher Innenabstand, nur in Grau
-  statt im hellen Blau. Weil beide Spalten gleich hoch sind, liegen ihre
-  Unterkanten damit genau aufeinander. Vorher verglich das Auge die Kastenkante
-  links mit dem Knopf „Als Datei sichern" rechts — zwei verschiedene Dinge, und
-  darum sah es schief aus.
+- Auswertung & Sicherung: rechte Spalte als hellgrauer Kasten, Unterkanten beider Spalten bündig
 
 ## [1.167.0] - 2026-09-06
 
 ### Geändert
-- **Auswertung & Sicherung: der Kasten „Prüfungsreife" reicht bis nach unten.**
-  Dietmar: „Hier ist auch etwas nicht synchron. Die Auswertung links ist kürzer
-  als die Sicherung. Verlängere die Prüfungsreife etwas in die Tiefe, damit es
-  rechts synchron ist." Die rechte Spalte — Trefferquote, Stolpersteine,
-  Auffrischung, Lernstand sichern — ist fast immer länger; der Rahmen links
-  hörte mitten im Fenster auf, während rechts noch Text kam. Jetzt sind beide
-  Spalten gleich hoch und der Rahmen füllt seine Spalte aus. Einspaltig (Handy,
-  schmales Fenster) behält er seine natürliche Höhe — dort steht ohnehin alles
-  untereinander. Nachgemessen bei 1920, 1280, 900 und 412 Punkten.
+- Auswertung & Sicherung: Kasten Prüfungsreife füllt die Spaltenhöhe, einspaltig mit natürlicher Höhe
 
 ## [1.166.0] - 2026-09-06
 
 ### Geändert
-- **Die drei Sinnbilder bleiben oben stehen.** Dietmar: „Die drei Bilder
-  switchen mit runter. Die sollen bei bereits gelerntes unterhalb bleiben." —
-  „auf der Höhe von Dein Name." In 1.165.0 waren sie mit an den Fuß der Spalte
-  gerutscht, um dort mit der Knopfreihe einen Block zu bilden. Jetzt stehen sie
-  wieder fest im Textfluss, direkt unter „Bereits gelernte Fragen" und damit auf
-  einer Höhe mit dem Kasten „Dein Name" links. An den Fuß geht nur noch die
-  Knopfreihe; der freie Platz sammelt sich darüber. Die Unterkanten beider
-  Spalten liegen weiterhin auf einer Linie.
+- Gruppenraum: drei Sinnbilder fest unter Bereits gelernte Fragen, nur die Knopfreihe am Spaltenfuß
 
 ## [1.165.0] - 2026-09-06
 
 ### Behoben
-- **„Neue Runde": die Schrift lief über den Rand.** Im HTML haben alle drei
-  Knöpfe die Grundbreite `1 1 140px`, `neueRundeKnopfNachziehen()` setzte beim
-  Einblenden aber `1 1 0`. Bei ungleicher Grundbreite bekommt der Knopf mit der
-  kleineren am wenigsten Platz — „Neue Runde" wurde schmaler als seine eigene
-  Beschriftung. Jetzt setzt die Funktion dieselbe Grundbreite wie die anderen.
-- **Die Knöpfe können nicht mehr schmaler werden als ihre Beschriftung.** Das
-  `min-width:0` ist raus; damit greift wieder die eingebaute Untergrenze
-  (Mindestbreite = Textbreite). Zusätzlich rücken die Seitenabstände in diesen
-  beiden Reihen von 1,1 rem auf 0,6 rem zusammen — drei Knöpfe in einer halben
-  Fensterbreite brauchen jeden Punkt. Reicht es trotzdem nicht, rutscht der
-  letzte Knopf in eine zweite Zeile, statt hinauszulaufen. Nachgemessen bei
-  1920, 1600, 1440, 1366, 1280, 1150, 1100, 1024, 900, 768 und 412 Punkten
-  Fensterbreite, jeweils mit erstelltem Raum: nirgends ein Überlauf.
-- **Die rechte Spalte hängt nicht mehr durch.** Dietmar: „Wenn ich das Feld
-  Dein Name öffne, Gruppenraum Konfiguration — ist es auf der rechten Seite
-  nicht mehr synchron." Beim Aufklappen wächst die linke Spalte, die rechte
-  nicht; die Knopfreihe blieb am Fuß stehen und ließ mitten in der rechten
-  Spalte ein Loch. Jetzt bilden die drei Sinnbilder und die Knopfreihe
-  zusammen den Fuß der rechten Spalte — der freie Platz sammelt sich an einer
-  Stelle oberhalb, statt sich dazwischenzuschieben. Die Unterkanten beider
-  Spalten liegen weiterhin auf einer Linie.
-- **Läuft ein Raum, fällt die leere Zeile links weg.** „Raum erstellen" und
-  „Raum beitreten" werden dann ausgeblendet; ihr Kasten blieb mit seinem
-  Innenabstand stehen und machte die linke Spalte länger als nötig.
+- Gruppenraum: Knopf Neue Runde mit gleicher Grundbreite, Beschriftung läuft nicht mehr über
+- Gruppenraum: Knöpfe nicht schmaler als ihre Beschriftung, Umbruch statt Überlauf, engere Innenabstände
+- Gruppenraum: rechte Spalte ohne Lücke beim Aufklappen von Dein Name
+- Gruppenraum: leerer Kasten bei laufendem Raum ausgeblendet
 
 ## [1.164.0] - 2026-09-06
 
 ### Geändert
-- **Die Knopfreihen stehen jetzt in ihren Spalten, auf einer Höhe.** Dietmar mit
-  einem Bild dazu: „Baue die Buttons so ein wie auf dem Bild. Schließen nach
-  rechts und Starten nach links. Baue es so ein, dass alle Buttons zu sehen sind
-  und nicht überlaufen."
-
-  „Raum erstellen | Raum beitreten" schließt die linke Spalte ab und liegt bündig
-  an ihrer linken Kante; „Jetzt starten | Neue Runde | Schließen" schließt die
-  rechte Spalte ab und liegt bündig an der rechten. Weil beide Spalten
-  verschieden lang sind, werden sie gleich hoch gezogen und die letzte Reihe
-  jeweils an den Fuß geschoben — so liegen beide Reihen auf einer Linie.
-
-  Die feste Höchstbreite von 560 Punkten ist weg, die Spalte gibt die Breite
-  jetzt vor. Damit nichts seitlich hinausläuft, dürfen die Knöpfe umbrechen:
-  Sind sie zu dritt und ist die Spalte zu schmal — am Handy —, rutscht
-  „Schließen" in eine zweite Zeile, statt aus dem Fenster zu ragen.
-
-  Nachgemessen bei 1600×1000, 1280×800 und 412×915, jeweils mit und ohne „Neue
-  Runde": beide Reihen auf derselben Höhe, bündig an ihren Außenkanten, kein
-  seitlicher Überlauf.
+- Gruppenraum: Knopfreihen am Fuß ihrer Spalte auf gleicher Höhe, links- bzw. rechtsbündig
+- Gruppenraum: feste Höchstbreite von 560 px entfallen, Knöpfe brechen bei schmaler Spalte um
 
 ## [1.163.0] - 2026-09-06
 
-### Geändert
-- **Die drei Knöpfe im Gruppenraum sind bündig.** Dietmar: „Jetzt starten, Neue
-  Runde und Schließen muss bündig sein." Vorher nahm sich „Jetzt starten" den
-  ganzen übrigen Platz, die anderen beiden standen in ihrer natürlichen Breite
-  daneben. Jetzt teilen sich alle drei die Zeile zu gleichen Teilen und sind
-  gleich hoch. Fehlt „Neue Runde" — den sieht nur der Gastgeber —, teilen die
-  übrigen zwei die Breite unter sich auf, statt eine Lücke stehen zu lassen.
-
 ### Hinzugefügt
-- **Drei Sinnbilder in der rechten Spalte des Gruppenraums.** Dietmar hat sie
-  gezeichnet und weiß geliefert; hier stehen sie im Dunkelblau der Kopfzeile und
-  füllen die Fläche, die durch die neue Zweispaltigkeit frei geworden war.
+- Gruppenraum: drei Sinnbilder mit Erklärung (Online, Offline über LAN, alle Geräte), als Data-URI in `Index.html`
+- Sinnbilder: Beschriftung als Tooltip und für die Vorlesefunktion
 
-  | Bild | Beschriftung | beim Überfahren |
-  |---|---|---|
-  | Mensch am Rechner mit Funkwellen | Online übers Internet | „Der Einladungslink führt über den Tunnel zu diesem Rechner. Teilnehmer kommen von überall herein — aus dem Nachbarort genauso wie aus dem Mobilfunk." |
-  | Funkwellen | Offline über LAN | „Im selben WLAN geht es auch ganz ohne Internet: Die Adresse mit 192.168 genügt. Für den Kursabend im Vereinsheim heißt das — kein Netz nötig, und keine Frage verlässt euer Netzwerk." |
-  | Handy mit Funkwellen | Computer, Handy und Tablet | „Jedes Gerät mit einem Browser macht mit: Windows, Mac, Linux, Android, iPhone. Kein Konto, keine Anmeldung, keine App aus dem Store — der Link genügt." |
-
-  Die Bilder wurden auf ihren Inhalt zugeschnitten, quadratisch ausgerichtet, auf
-  192 Punkte gebracht und eingefärbt — die Deckkraft blieb dabei erhalten, nur
-  die Farbe wurde gesetzt. Sie stecken als **Data-URI in Index.html**, nicht als
-  eigene Dateien: So können sie beim Weitergeben nicht verlorengehen und
-  brauchen keinen Eintrag im Installationsprogramm. Index.html wächst dadurch um
-  rund 36 KB.
-
-  Die Beschriftung ist auch die Sprechblase — wer das Vorlesen eingeschaltet
-  hat, bekommt sie mit.
-
-### Geprüft
-Bei 1600 × 1000: drei gleich breite Karten zu je 159 Punkten in der rechten
-Spalte, die Knöpfe je 290 Punkte breit und 42 hoch. Keine Skriptfehler.
-
----
+### Geändert
+- Gruppenraum: Knöpfe Jetzt starten, Neue Runde und Schließen gleich breit und gleich hoch
 
 ## [1.162.0] - 2026-09-06
 
 ### Geändert
-- **Die beiden großen Fenster sind jetzt breit und zweispaltig.** Dietmar:
-  „Auswertung & Sicherung und Gemeinsamer Modus etwas breiter gestalten.
-  Rechteckig horizontal. Wir haben so viel Platz und ziehen uns da so ein
-  knappes längliches Fenster rein? Das kann man schöner aufbauen."
-
-  Beide waren auf **480** beziehungsweise **560 Punkte** Breite gedeckelt und
-  stapelten alles untereinander — auf einem Bildschirm mit 1900 Punkten eine
-  Röhre, durch die man scrollt. Jetzt **1020** und **1040 Punkte**, und der
-  Inhalt steht nebeneinander:
-
-  | Fenster | links | rechts |
-  |---|---|---|
-  | **Gemeinsamer Modus** | Adresse, Einladungslink, Name, Passwort, Konfiguration, Raum anlegen | Raum-Code, Teilnehmer, Status, gelernte Fragen |
-  | **Auswertung & Sicherung** | Prüfungsreife | Trefferquoten, Stolpersteine, Auffrischung, Lernstand sichern |
-
-  Die Knopfreihe unten im Gruppenraum bleibt bewusst schmal: Ein 900 Punkte
-  breiter Startknopf sieht nicht nach Sorgfalt aus, sondern nach einem
-  Versehen.
-
-  **Am Handy und Tablet fällt alles wieder untereinander** — dort ist eine
-  Spalte richtig. Dasselbe gilt für ein schmal gezogenes Fenster am Rechner
-  (unter 760 Punkten).
-
-### Geprüft
-412 × 915 und 820 × 1180: je eine Spalte, nichts läuft seitlich über.
-1280 × 800 und 1600 × 1000: zwei Spalten zu je rund 480 Punkten, Fenster 867
-bis 1092 Punkte breit. Keine Skriptfehler.
-
----
+- Gemeinsamer Modus: Fenster 1040 px breit und zweispaltig
+- Auswertung & Sicherung: Fenster 1020 px breit und zweispaltig
+- Handy, Tablet und schmale Fenster (unter 760 px): einspaltige Darstellung
 
 ## [1.161.0] - 2026-09-06
 
 ### Behoben
-- **Die eigene Adresse nimmt jetzt auch http.** Die Prüfung von gestern war zu
-  streng: Sie ließ nur `https` zu, mit dem Hinweis, dass die App auf dem
-  Startbildschirm sonst nicht läuft. Das stimmt — aber sie machte damit genau
-  den Test unmöglich, um den es gerade geht: **Kommt von außen überhaupt etwas
-  an meinem Anschluss an?** Dafür braucht es `http://adresse:3000`, und der
-  Trainer selbst läuft darüber tadellos.
-
-  Statt einer Ablehnung steht jetzt eine Warnung da: „Gesetzt — aber ohne
-  https. Der Trainer läuft darüber, die App auf dem Startbildschirm und das
-  Mikrofon jedoch nicht." Fehlt der Vorsatz ganz, wird weiterhin `https://`
-  ergänzt; wer bewusst `http://` schreibt, bekommt es auch.
-
-### Geprüft
-`http://amateurfunk-trainer.duckdns.org:3000` wird angenommen, der
-Einladungslink lautet danach
-`http://amateurfunk-trainer.duckdns.org:3000/?duo=EYEXWT` und die Warnung steht
-darunter. Eingabe ohne Vorsatz wird weiterhin zu `https://…`, dort mit grüner
-Bestätigung. Keine Skriptfehler.
-
----
+- Gruppenraum: eigene Adresse auch mit `http://` möglich, Warnung statt Ablehnung
 
 ## [1.160.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Eigene feste Adresse im Gruppenraum.** Dietmar: „Ich habe einen DNS bei
-  DuckDNS erstellt. Ich kann das im Gruppenraum nicht bei dem Link eingeben."
-
-  Stimmt — das Feld „Server-URL" war auf `readonly` gestellt. Es zeigte nur,
-  was cloudflared beim Start ausgewürfelt hatte. Für den Regelfall war das
-  richtig: Eine von Hand eingetippte Adresse, die auf nichts zeigt, erzeugt
-  Einladungslinks, die bei niemandem aufgehen.
-
-  Jetzt steht ein Knopf **Eigene Adresse** daneben: einmal drücken, Feld ist
-  offen, Adresse eintragen, noch einmal drücken, gespeichert. Sie hat ab dann
-  **Vorrang** vor der automatischen Erkennung — kein Tunnelstart und kein
-  Wächter überschreibt sie mehr. Leer speichern nimmt sie wieder zurück.
-
-  Drei Kleinigkeiten, die dabei nötig waren:
-  - **`https://` wird ergänzt**, wenn es fehlt, und ein Schrägstrich am Ende
-    entfernt — sonst entstünde `…org//?duo=ABC`. Vor dem Fragezeichen kommt
-    einer hinzu, damit Messenger den Link als Link erkennen.
-  - **Nur https wird angenommen.** Über http lässt kein Browser einen Service
-    Worker zu — die App auf dem Startbildschirm liefe also nicht, und das
-    Mikrofon bekäme auch keine Freigabe.
-  - **Die Tunnelprüfung wird übersprungen.** Der Server kann eine fremde
-    Adresse nicht prüfen, er kennt nur seinen eigenen Tunnel. Ohne diese
-    Ausnahme hinge der Link für immer auf „wird geprüft", und der Gastgeber
-    bekäme nie einen zum Verschicken.
-
-- Die Anleitung unter **Info ▸ Prüfung & Kurs** beschreibt das Feld.
-
-### Geprüft
-Eingabe `amateurfunk-trainer.duckdns.org/` wird zu
-`https://amateurfunk-trainer.duckdns.org`, der Einladungslink lautet danach
-`https://amateurfunk-trainer.duckdns.org/?duo=SW2ZKB`. Nach dem Leeren gilt
-wieder der automatisch erkannte Tunnel. Keine Skriptfehler.
-
----
+- Gruppenraum: Knopf Eigene Adresse für eine feste Server-URL, Vorrang vor der automatischen Erkennung
+- Eigene Adresse: `https://` wird ergänzt, abschließender Schrägstrich entfernt, Tunnelprüfung übersprungen
+- Eigene Adresse: nur https angenommen (App auf dem Startbildschirm, Mikrofon); leer speichern setzt zurück
+- Info ▸ Prüfung & Kurs: Anleitung zum Feld Server-URL
 
 ## [1.159.0] - 2026-09-06
 
 ### Geändert
-- **Die Prüfungsreife ist von der Hauptansicht in die Statistik gewandert.**
-  Dietmar: „Zu groß für die Hauptansicht. Besser wäre, wenn wir Prüfungsreife
-  unter Statistik verschieben." Er hat recht — der Kasten ist eine Auswertung,
-  und Auswertungen holt man sich, wenn man sie sehen will, statt sie dauernd vor
-  sich zu haben. Die Hauptansicht ist damit wieder so kurz wie vorher.
-
-  Er steht jetzt **ganz oben** im Fenster „Auswertung & Sicherung" — vor der
-  Tabelle mit den Trefferquoten. Das ist auch inhaltlich die richtige
-  Reihenfolge: erst die Antwort auf „Reicht es?", dann die Einzelheiten.
-
-  Die Knöpfe **Video** und **Üben** schließen das Statistik-Fenster, bevor sie
-  loslegen. Sonst landete man hinter einem offenen Fenster.
-
-- Die Anleitung unter **Info ▸ Lernen** nennt den neuen Ort.
-
----
+- Prüfungsreife: aus der Hauptansicht ganz nach oben in Statistik (Auswertung & Sicherung) verschoben
+- Prüfungsreife: Knöpfe Video und Üben schließen das Statistik-Fenster
+- Info ▸ Lernen: neuer Ort der Prüfungsreife beschrieben
 
 ## [1.158.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Prüfungsreife statt Prozentzahl.** Der neue Kasten steht in der Hauptansicht
-  zwischen der Prüfungsübersicht (was verlangt wird) und dem Lernfortschritt
-  (was schon sitzt) — genau dazwischen liegt die Frage, die er beantwortet:
-  **Reicht es?**
-
-  Bisher stand dort „Technik 61 %". Das ist eine Zahl über die *Vergangenheit*:
-  über alle Antworten, die je gegeben wurden, auch die vom ersten Lernabend.
-  Jetzt steht dort ein erwarteter Punktestand — **„16 von 25"**, daneben die
-  Bestehensgrenze als senkrechter Strich im Balken, und darüber ein Satz in
-  Klartext: *„Heute würdest du an Technik N scheitern. Dir fehlen dort im
-  Schnitt 3,5 Punkte zur Bestehensgrenze."*
-
-  Ist ein **Prüfungstermin** eingetragen, kommt das Tagespensum dazu. Es zählt
-  bewusst genauso wie die Anzeige am Terminfeld darunter — zwei Zahlen
-  nebeneinander, die verschieden zählen, wiegen schwerer als eine, die fehlt.
-
-  Darunter **„Wo es klemmt"**: die drei Lektionen des Videolehrgangs, in denen
-  die meisten offenen Fehler stecken, jede mit einem Knopf ins Video und einem
-  in die Übung. Die Zuordnung Frage → Lektion lag ohnehin schon vor; sie trifft
-  die Themen besser als der grobe Prüfungsteil.
-
-### Wie die Zahl zustande kommt
-Nicht als Trefferquote über alles Bisherige, sondern als **Vorhersage für einen
-echten Bogen**. Für jede Frage des Prüfungsteils wird geschätzt, wie
-wahrscheinlich sie richtig beantwortet würde; der Mittelwert mal 25 ist der
-erwartete Punktestand — denn genau 25 Fragen werden aus diesem Topf gezogen.
-
-| Zustand der Frage | Schätzung |
-|---|---|
-| gilt als gelernt | 0,95 |
-| im Lernbedarf | 0,35 + 0,15 je richtiger Antwort in Folge, höchstens 0,80 |
-| schon beantwortet | aus richtig/falsch, geglättet mit dem Schnitt des Teils; zuletzt richtig hebt auf mindestens 0,75 |
-| noch nie gesehen | der Schnitt des Teils |
-
-Die Glättung ist der wichtige Teil: Eine Frage, die einmal richtig war, ist nicht
-zu hundert Prozent sicher. Ohne sie wäre die Vorhersage nach dem ersten Abend
-viel zu optimistisch.
-
-**Was bewusst nicht dasteht:** keine Prozentzahl mit Nachkommastelle. „73,4 %
-Bestehenswahrscheinlichkeit" wäre eine Genauigkeit, die es nicht gibt. Deshalb
-steht dort eine Punktzahl und ein Wort — sitzt, knapp, zu wenig. Und der Kasten
-erscheint erst, wenn in einem Prüfungsteil **25 Fragen** beantwortet sind; eine
-Vorhersage aus drei Antworten wäre geraten, und geraten hilft niemandem. Teile,
-die noch zu wenig haben, sagen das in ihrer Zeile.
-
-Die Ansage richtet sich immer nach dem **schwächsten** Teil: In der Prüfung muss
-jeder Teil einzeln bestanden werden, ein guter gleicht keinen schlechten aus.
-
-- Die Anleitung unter **Info ▸ Lernen** beschreibt den Kasten.
-
-### Geprüft
-Mit erfundenem Lernstand (Vorschriften stark, Betrieb mittel, Technik schwach):
-24 / 20 / 16 von 25, Ansage und Farben stimmen, das Tagespensum nennt dieselbe
-Zahl wie das Terminfeld darunter (501 offen, 11 am Tag). Der Knopf **Üben**
-startet eine Runde mit genau den 18 Fragen der Lektion. Während einer Runde ist
-der Kasten ausgeblendet, am Handy steht er untereinander und nichts läuft
-seitlich über. Ohne Daten erscheint er gar nicht. Keine Skriptfehler.
-
----
+- Hauptansicht: Kasten Prüfungsreife mit erwartetem Punktestand je Prüfungsteil (z. B. 16 von 25) und Bestehensgrenze im Balken
+- Prüfungsreife: Klartext-Ansage nach dem schwächsten Prüfungsteil, Einstufung sitzt, knapp oder zu wenig
+- Prüfungsreife: Tagespensum bei eingetragenem Prüfungstermin, gleiche Zählung wie am Terminfeld
+- Prüfungsreife: Bereich Wo es klemmt mit den drei fehlerstärksten Lektionen, je ein Knopf zu Video und Übung
+- Prüfungsreife: Vorhersage aus geglätteter Trefferwahrscheinlichkeit je Frage (gelernt, Lernbedarf, beantwortet, ungesehen)
+- Prüfungsreife: erst ab 25 beantworteten Fragen je Teil, während einer Runde ausgeblendet, mobil untereinander
+- Anleitung: Info ▸ Lernen beschreibt den Kasten
 
 ## [1.157.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Die Anleitung hat einen eigenen Reiter „Handy & Tablet".** Bisher stand von
-  der ganzen mobilen Seite kein Wort darin — weder das Mitmachen über den Link,
-  noch die neue Runde, noch der Weg auf den Startbildschirm. Zwei Blöcke sind es
-  geworden: **Der Trainer am Handy** (Mitmachen, kein Hauptmenü, neue Runde,
-  Bedienung) und **Als App auf den Startbildschirm** (wie es geht, warum es
-  https braucht, warum die Adressleiste nur so verschwindet, was ohne Netz
-  passiert).
-
-- **Die README beschreibt die mobile Ansicht**, mit Dietmars Bildschirmfoto der
-  beiden Ansichten nebeneinander (`bilder/10-mobile.png`): links das Fenster zum
-  Mitmachen, rechts eine Frage im Gruppenraum. Der Abschnitt steht direkt unter
-  dem Gruppenraum — dort, wo Ausbilder ohnehin nachlesen.
-
----
+- Anleitung: neuer Reiter Handy & Tablet (Trainer am Handy, Installation auf dem Startbildschirm)
+- README: Abschnitt zur mobilen Ansicht mit Bildschirmfoto `bilder/10-mobile.png`
 
 ## [1.156.0] - 2026-09-06
 
 ### Geändert
-- **Auch „Zurück" ist im Gruppenraum am Handy weg.** Dietmar: „Der Button
-  Zurück kann auch raus." Im Raum geht es der Reihe nach vorwärts; wer
-  zurückblättert, sucht meist nur seine schon gegebene Antwort. Beim Gast am
-  Handy bleiben damit genau drei Knöpfe: **Weiter**, **Hauptmenü** und der
-  **Farbstil**. Für den Gastgeber und am Rechner ändert sich nichts.
-
----
+- Gruppenraum am Handy: Knopf Zurück für Gäste ausgeblendet, es bleiben Weiter, Hauptmenü und Farbstil
 
 ## [1.155.0] - 2026-09-06
 
 ### Hinzugefügt
-- **Der Trainer ist jetzt eine Progressive Web App.** Dietmar: „Der Trainer muss
-  sich in der mobilen Version wie eine App anfühlen." Und: „Der Link, ich nenne
-  das mal Adresszeile, sollte ausgeblendet werden."
-
-  Drei Stücke gehören dazu, alle drei sind jetzt da:
-
-  | Datei | wofür |
-  |---|---|
-  | `manifest.webmanifest` | Name, Symbol, Start **ohne Adressleiste** (`display: standalone`) |
-  | `sw.js` | macht die Seite installierbar und lässt sie ohne Netz starten |
-  | `icon-192.png`, `icon-512.png` | was auf dem Startbildschirm liegt |
-
-  **Zur Adressleiste, ehrlich gesagt:** Keine Seite kann sie von sich aus
-  ausblenden — sie gehört dem Browser, und sie zu verstecken wäre die älteste
-  Betrugsmasche des Netzes. Es gibt genau einen erlaubten Weg, und der ist
-  jetzt vorbereitet: Wird der Trainer **auf den Startbildschirm gelegt**,
-  startet er als eigene App, mit eigenem Symbol und ohne Adressleiste.
-
-  Damit das niemand suchen muss, erscheint am Handy nach ein paar Sekunden eine
-  kleine Leiste unten. Sie zeigt drei verschiedene Texte: in Chrome einen Knopf
-  **Einrichten** (das System fragt den Rest), auf dem iPhone den Weg über das
-  Teilen-Zeichen, und im eingebauten Browser von Messenger, Facebook oder
-  Instagram den Hinweis, den Link erst im richtigen Browser zu öffnen — dort
-  geht es prinzipbedingt nicht. Einmal weggetippt, kommt sie nicht wieder.
-
-  Der Service Worker holt **zuerst aus dem Netz** und erst dann aus dem
-  Speicher. Umgekehrt wäre es schneller, aber falsch: Der Trainer bekommt fast
-  täglich eine neue Index.html, und ein Speicher, der gewinnt, würde die alte
-  Fassung festhalten. `/api/`, Gruppenraum und Sprachausgabe werden gar nicht
-  angefasst.
-
-  **Eine Einschränkung, die man kennen muss:** Ein Service Worker läuft nur über
-  **https** oder auf localhost. Über die nackte LAN-Adresse
-  (`http://192.168.…`) meldet ihn kein Browser an. Am Handy heißt das: über den
-  **Tunnel-Link** ja, im heimischen WLAN per IP-Adresse nein. Der Trainer läuft
-  dort trotzdem — nur eben ohne Symbol auf dem Startbildschirm.
-
-- **App-Anmutung im Detail.** Kein graublauer Blitz beim Antippen, keine
-  versehentliche Textmarkierung samt Lupe (Eingabefelder und Fragetext bleiben
-  ausgenommen), kein Gummiband am Rand und kein Neuladen durch Ziehen von oben,
-  und Platz für Kamera-Aussparung und Wischbalken.
-
-- **Neue Runde für alle.** Dietmar: „Wenn man durch ist, bekommt man eine
-  Auswertung. Der Trainer kann, wenn alle fertig sind, eine neue Runde
-  starten." Das ging bisher nicht: `startDuoQuiz` antwortet mit `socket.emit`
-  an **genau einen** Teilnehmer — richtig so, denn im Raum startet jeder für
-  sich. Nur konnte deshalb niemand eine Runde für alle auslösen, und die Fragen
-  blieben dieselben.
-
-  Neu ist `neueRunde`: Es würfelt einen **frischen** Fragensatz und schickt ihn
-  mit `io.to(code)` an alle im Raum. Antworten, Zeiten und die Sperre für die
-  Endauswertung werden zurückgesetzt. Nur der Gastgeber darf das — sonst könnte
-  ein Teilnehmer mitten in der Runde allen anderen den Stand wegreißen. Der
-  Knopf **Neue Runde** steht im Gruppenraum-Fenster und fragt vorher nach, mit
-  der Zahl der Betroffenen.
+- PWA: Trainer als Progressive Web App mit `manifest.webmanifest`, Service Worker `sw.js` und Symbolen 192/512 px
+- PWA: Start vom Startbildschirm als eigene App ohne Adressleiste (`display: standalone`)
+- PWA: Installationshinweis am Handy je nach Browser (Chrome, iPhone, In-App-Browser von Messengern)
+- Service Worker: Netz zuerst, Speicher als Rückfall; `/api/`, Gruppenraum und Sprachausgabe ausgenommen; nur über https/localhost
+- Mobile: App-Anmutung ohne Tipp-Blitz, versehentliche Textmarkierung, Gummiband und Neuladen durch Ziehen
+- Gruppenraum: Knopf Neue Runde für den Gastgeber, frischer Fragensatz für alle (`neueRunde`), Zähler zurückgesetzt
 
 ### Geändert
-- **Kein Hauptmenü mehr für Gäste am Handy.** Dietmar: „In der mobilen Version
-  wird das Hauptmenü nicht benötigt. Nur der Gruppenraum mit den gemeinsamen
-  Fragen." Filterleiste, Startknopf, Prüfungsübersicht, Lernfortschritt,
-  Prüfungstermin, Videolehrgang und Verlauf gehören zum eigenen Lernen am
-  eigenen Rechner — im Raum entscheidet der Gastgeber, was gefragt wird.
-
-- **„Mitmachen" macht jetzt mit.** Dietmar: „Ich lande im Hauptmenü, nicht im
-  Gruppenraum." Vorher wurde nur das Fenster geschlossen, und der Gast stand vor
-  der Hauptansicht. Jetzt wird die Runde gleich mitgestartet: Name eintragen,
-  tippen, erste Frage. Bis der Server antwortet, steht ein grüner Kasten „Du
-  bist im Gruppenraum" da, damit der Knopfdruck nicht ins Leere zu gehen
-  scheint.
-
-- **Der Gruppenchat ist am Handy ausgeblendet.** Dietmar: „Der Gruppenchat kann
-  raus." Er nahm dort die halbe Anzeige ein und legte sich über die Frage. Am
-  Rechner bleibt er.
+- Gruppenraum am Handy: kein Hauptmenü für Gäste, nur die gemeinsamen Fragen
+- Gruppenraum: Mitmachen startet die Runde sofort, Hinweis bis zur Serverantwort
+- Gruppenraum am Handy: Gruppenchat ausgeblendet
 
 ### Behoben
-- **Die Seite ließ sich am Handy seitlich verschieben.** Ursache war eine
-  einzige Reihe: der Balken des Lernfortschritts zusammen mit zwei Kästchen,
-  dem Zurücksetzen-Pfeil und den Knöpfen „Sichern" und „Einlesen" — alles
-  nebeneinander, ohne Umbruch, 549 Punkte breit bei 412 Punkten Bildschirm.
-  Dazu ein Sicherheitsnetz: Am Handy ist seitliches Scrollen der Seite ganz
-  unterbunden. Was innen scrollen soll — die Filterleiste — hat seinen eigenen
-  Rahmen und bleibt unberührt.
-
-### Geprüft
-Zwei Browser gleichzeitig: Gastgeber am Rechner, Gast am Handy über den
-Einladungslink. Beim Gast steht nur der Namenskasten, kein Hauptmenü, kein Chat,
-nichts läuft seitlich über (`scrollWidth` = `clientWidth` = 412). Nach
-„Mitmachen" beginnt sofort die erste Frage. Nach dem Durchgang steht die
-Auswertung; der Gastgeber drückt **Neue Runde**, und beide bekommen dieselbe
-frische Frage, Zähler wieder bei null. Manifest, Service Worker und beide
-Symbole werden ausgeliefert (HTTP 200), der Service Worker meldet sich an,
-`display` ist `standalone`. Die Hinweisleiste erscheint am Handy, im
-Messenger-Browser mit dem passenden anderen Text, am Rechner gar nicht. Die
-Rechner-Ansicht ist unverändert. Keine Skriptfehler.
-
----
+- Mobile: Seite nicht mehr seitlich verschiebbar (zu breite Zeile im Lernfortschritt), seitliches Scrollen unterbunden
 
 ## [1.154.0] - 2026-09-06
 
 ### Geändert
-- **Im Gruppenraum bleibt am Handy und Tablet nur noch, was ein Teilnehmer
-  braucht.** Dietmar: „In der Handy- und Tablet-Edition benötige ich nur die
-  Buttons für den Mode und Hauptmenü im Gruppenraum. Erst wenn ich den
-  Gruppenraum verlasse, benötige ich die Buttons." Auf Nachfrage kamen
-  **Zurück** und **Weiter** dazu — ohne sie käme man in der Runde nicht weiter.
-
-  Es bleiben: **Zurück, Weiter, Hauptmenü, Farbstil**, alles zum Raum (Raum,
-  Teilnehmer, Chat) und die Knöpfe an der Frage selbst (gelernt, Merkliste,
-  Vorlesen, Stimme, Formelblatt).
-
-  Es geht: die Auswertungsspalte samt Umschaltknopf, **Abbrechen**,
-  **Google KI**, **Prüfungsziel**, **Suchfeld**, **Info**, **Einstellungen**
-  und **Beenden**. Mehrere davon waren nicht nur überflüssig, sondern
-  schädlich: Das Prüfungsziel legt der Gastgeber fest, die Suche würde aus der
-  gemeinsamen Runde herausspringen, und Nachschlagen zählt im Raum als Fehler.
-
-  **Für den Gastgeber ändert sich nichts** — er muss den Raum steuern können.
-  Erkannt wird das über `window.duo.isActive()` und `isHost()`; die Seite trägt
-  dann die Klasse `gast-im-raum`. Verlässt man den Raum, fällt sie weg und
-  alles steht wieder da, ohne Neuladen.
-
-- **Das große Fenster des Gruppenraums ist für Gäste am Handy auf einen
-  Namenskasten geschrumpft.** Dietmar: „Das große Fenster nervt. Hier sollte
-  nur ein Fenster für den Namen und Starten vorhanden sein. Ohne Namen kann man
-  nicht starten."
-
-  Wer über den Einladungslink hereinkam, sah auf dem Handy zuerst die
-  Server-Adresse, den Einladungslink zum Weiterreichen, die Raumkonfiguration
-  und „Raum erstellen" — lauter Dinge, die dem Gastgeber gehören. Was er
-  wirklich tun musste, stand ganz unten. Ohne das erschien er bei allen anderen
-  als **„Benutzer 1"**.
-
-  Jetzt steht dort ein Feld, ein Knopf **Mitmachen** und der Weg hinaus. Der
-  Knopf ist gesperrt, solange das Feld leer ist. Ein schon gespeicherter Name
-  wird vorgetragen — „Benutzer 1" allerdings nicht, das ist der Platzhalter des
-  Servers und kein Name.
-
-  Der Name wird über einen **erneuten Beitritt** in den Raum getragen. Das ist
-  kein Umweg, sondern der einzige Weg: Der Name geht nur beim Beitritt mit. Ein
-  zweiter Eintrag entsteht dabei nicht, denn der Server legt seine Teilnehmer
-  unter der Verbindungskennung ab (`room.users[socket.id]`).
+- Gruppenraum am Handy/Tablet: Gäste sehen nur Zurück, Weiter, Hauptmenü, Farbstil sowie Raum- und Fragenknöpfe
+- Gruppenraum: Auswertungsspalte, Abbrechen, Google KI, Prüfungsziel, Suche, Info, Einstellungen, Beenden für Gäste ausgeblendet
+- Gruppenraum: Gastgeber-Ansicht unverändert; Klasse `gast-im-raum`, Knöpfe nach Verlassen ohne Neuladen zurück
+- Gruppenraum am Handy: Einladungsfenster für Gäste auf Namensfeld mit Knopf Mitmachen reduziert, ohne Namen gesperrt
+- Gruppenraum: Name per erneutem Beitritt übertragen, Server-Platzhalter Benutzer 1 wird nicht vorgetragen
 
 ### Behoben
-- **Das Fenster des Gruppenraums stand am Handy halb außerhalb des
-  Bildschirms.** Sein Kasten ist auf 480 Punkte ausgelegt, und „100 %" bezog
-  sich auf einen Bezugsrahmen, den der überbreite Inhalt selbst aufgeblasen
-  hatte — gemessen 599 Punkte bei 412 Punkten Bildschirmbreite. Mit `vw` hängt
-  die Breite jetzt fest am sichtbaren Bereich.
-
-### Geprüft
-Mit zwei Browsern gleichzeitig: Gastgeber am Rechner (1500 × 900) legt einen
-Raum an, Gast am Handy (412 × 915) kommt über den Einladungslink herein. Beim
-Gast steht nur der Namenskasten, der Knopf ist gesperrt; nach Eingabe von
-„Klaus" wird er frei, das Fenster schließt sich, und beim Gastgeber steht in
-der Teilnehmerliste **Klaus** statt „Benutzer 1". Die Knopfleiste zeigt beim
-Gast genau Zurück, Weiter, Hauptmenü und Farbstil; beim Gastgeber ist alles
-unverändert. Nach dem Verlassen des Raums sind beim Gast wieder alle Knöpfe da.
-Keine Skriptfehler.
-
----
+- Gruppenraum am Handy: Fenster ragte über den Bildschirmrand, Breite jetzt per `vw`
 
 ## [1.153.0] - 2026-09-06
 
-### Behoben
-- **Das große blaue Feld über der Frage am Handy.** Dietmar hat es auf einem
-  Bildschirmfoto geschickt: ein 554 Punkte hoher dunkelblauer Block, in dessen
-  Mitte klein „Verlauf ausblenden" stand — die Frage begann erst darunter, bei
-  Bildpunkt 715, also außerhalb des Sichtfelds.
-
-  Das Feld war der **Umschaltknopf für den Verlauf**. Am Rechner steht er als
-  schmaler Reiter *neben* der Frage, und ein Skript bringt ihn auf genau deren
-  Höhe, damit die Kante unten stimmt. Am Handy stehen dieselben Elemente
-  *übereinander* — und aus dem Reiter wurde ein Feld von der Höhe der ganzen
-  Frage. Eine style-Angabe aus dem Skript schlägt jede Regel aus dem
-  Stylesheet, deshalb half der vorhandene Media-Query nichts.
-
-  Jetzt hört das Skript auf schmalen Bildschirmen auf zu rechnen und räumt
-  gesetzte Höhen wieder weg. Der Knopf ist 46 Punkte hoch.
-
-- **Alles war am Handy auf 80 Prozent verkleinert.** Die automatische
-  Anzeigegröße rechnet Fensterbreite geteilt durch 1520. Auf einem Handy mit
-  412 Punkten ergibt das 0,27 — gekappt auf die Untergrenze 0,8. Ausgerechnet
-  dort, wo am wenigsten Platz ist, wurde also alles kleiner gemacht. Bis 1024
-  Punkte Breite bleibt es jetzt bei 100 Prozent; ein schmaler Bildschirm
-  braucht ein anderes Layout, keine Lupe rückwärts.
-
-- **Zugeklappt hieß am Handy nicht weg.** Die eingeklappte Auswertungsspalte
-  schrumpft am Rechner auf null Breite. Gestapelt blieb sie null Punkte breit,
-  aber tausend Punkte hoch — ein leeres Feld unter der Frage.
-
-- **Pinch-Zoom war gesperrt.** In der Viewport-Angabe stand `maximum-scale=1.0`;
-  damit lässt sich die Seite auf keinem Handy vergrößern. Für ein Programm, das
-  Wert auf Barrierefreiheit legt, war das die falsche Zeile. Sie ist raus.
-
 ### Geändert
-- **Der Trainer erkennt jetzt, wie breit er steht**, und setzt zwei Klassen an
-  die Seite: `schmal` bis 1024 Punkte (Tablet hochkant und Handy) und `handy`
-  bis 640 Punkte. Stylesheet **und** Skript richten sich nach derselben Marke.
-  Gemessen wird die Breite, nicht das Gerät — ein schmales Fenster am Rechner
-  ist dasselbe Problem, und eine Erkennung über die Browserkennung liegt
-  regelmäßig daneben. Umgestellt wird auch beim Drehen des Geräts.
+- Layout: Breitenerkennung mit Klassen `schmal` (bis 1024 px) und `handy` (bis 640 px), auch beim Drehen
+- Handy: Frage oben, Auswertung darunter und eingeklappt
+- Touch: Antwortkacheln und Navigationsknöpfe mind. 44 bis 48 px, untere Knopfreihe zweispaltig mit Zurück/Weiter oben
+- Touch: kein hängender Hover-Zustand bei `hover: none`
+- Handy: Knopf Beenden ausgeblendet (nur lokal nutzbar), Platz unten für die Gruppenchat-Leiste
 
-- **Am Handy steht die Frage oben.** Nebeneinander sind Auswertung und Frage
-  gleich gut sichtbar; untereinander gilt das nicht mehr — was oben steht,
-  sieht man, der Rest ist Scrollarbeit. Die Auswertung rutscht deshalb unter
-  die Frage und startet zugeklappt. Die Frage beginnt jetzt bei Bildpunkt 199
-  statt 715.
-
-- **Fingermaße statt Mausmaße:** Antwortkacheln und Navigationsknöpfe sind
-  mindestens 44 bis 48 Punkte hoch. Die Knopfreihe neben dem Fragetext rutscht
-  unter ihn, statt ihm die halbe Breite zu nehmen. Die untere Knopfreihe steht
-  in zwei Spalten, und in anderer Reihenfolge als am Rechner: **Zurück** und
-  **Weiter** oben, wo der Daumen ohnehin ist, **Abbrechen** und **Hauptmenü**
-  unten, wo man sie nicht versehentlich trifft.
-
-- **Kein hängender Schwebezustand mehr.** Wo es keinen Zeiger gibt
-  (`hover: none`), bleibt eine angetippte Antwort nicht mehr eingefärbt stehen,
-  als wäre sie noch ausgewählt.
-
-- **„Beenden" ist am Handy ausgeblendet.** Der Knopf fährt den Trainer auf dem
-  Rechner herunter und ist absichtlich nur von dort erreichbar (`localOnly`).
-  Auf einem Handy, das über den Gruppenraum-Link hereinkommt, hätte er nur eine
-  Fehlermeldung erzeugt.
-
-- Unten bleibt Platz für die Gruppenchat-Leiste, die dort festsitzt.
-
-### Geprüft
-Mit dem Testbrowser bei 1920 × 1080, 820 × 1180 (Tablet), 915 × 412 (Handy
-quer), 412 × 915 und 360 × 640: keine Seite scrollt seitlich, keine
-Skriptfehler. Die Rechner-Ansicht ist unverändert — der Reiter steht dort
-weiterhin als 43 × 495 Punkte großer Streifen neben der Frage. Auch das Ziehen
-des Fensters von breit auf schmal und zurück wurde geprüft: Die gesetzten Höhen
-werden weggeräumt und beim Zurückziehen wieder gesetzt.
-
----
+### Behoben
+- Handy: Umschaltknopf des Verlaufs nicht mehr als großer blauer Block über der Frage
+- Handy: automatische Anzeigegröße bis 1024 px Breite fest auf 100 % statt 80 %
+- Handy: eingeklappte Auswertungsspalte hinterließ kein leeres Feld mehr
+- Viewport: Pinch-Zoom wieder möglich (`maximum-scale=1.0` entfernt)
 
 ## [1.152.0] - 2026-09-05
 
 ### Geändert
-- **Der Videolehrgang läuft jetzt in einem eigenen Fenster statt im Trainer.**
-  Dietmar: „Video im Fenster abspielen möchte ich ändern. Videolehrgang von
-  DL2YMR in einem neuen Fenster öffnen."
-
-  Bisher gab es zwei Wege: Wer auf der Liste im `video_embed.json` stand, bekam
-  einen eingebetteten Player *innerhalb* des Trainers, alle anderen einen neuen
-  Tab auf YouTube. Jetzt gilt der zweite Weg für alle. Das Video lässt sich
-  neben den Trainer legen, es hat die volle Bedienung von YouTube
-  (Geschwindigkeit, Untertitel, Kapitel, Vollbild) — und der Aufruf zählt
-  regulär für Michael, DL2YMR, samt Werbung.
-
-  Der Schalter bleibt stehen: `VIDEO_IM_FENSTER` in Index.html auf `true`, und
-  der eingebettete Player ist zurück. Geöffnet wird bewusst über den simulierten
-  Klick auf einen Link (`openExternalTab`) und **nicht** über `window.open` mit
-  Feature-Angaben — sobald dort ein dritter Parameter steht, macht Chrome ein
-  echtes Popup daraus, und das fängt der Popup-Blocker ab.
-
-- **Sprechblase und Vorlesetext der Videokachel** sagen jetzt, was passiert:
-  „Videolehrgang von DL2YMR in einem neuen Fenster öffnen."
+- Videolehrgang: öffnet in eigenem Fenster auf YouTube statt im eingebetteten Player; Schalter `VIDEO_IM_FENSTER` für alte Variante
+- Videolehrgang: Öffnen per simuliertem Linkklick (`openExternalTab`), kein Popup-Blocker
+- Videokachel: Tooltip und Vorlesetext angepasst, Anleitung unter Info aktualisiert
 
 ### Behoben
-- **„DL2YMR" wird buchstabiert statt gelesen.** Dietmar: „DL2YMR müssen als
-  Buchstaben vorgelesen werden." Als Wort gelesen klang das Rufzeichen wie ein
-  Nieser. Die Regel arbeitet wie die für DARC: Bindestriche trennen die
-  Buchstaben, ohne ein Wort dazuzusetzen — `D-L-2-Y-M-R`. Sie steht an beiden
-  Stellen, in `tts-expand.js` (Piper über den Server) und in Index.html
-  (Notstimme des Browsers), und greift auch in Klein- und Mischschreibung.
-
-- Die Anleitung unter **Info** beschreibt das neue Verhalten.
-
----
+- Sprachausgabe: Rufzeichen des Videolehrgangs wird buchstabiert, in `tts-expand.js` und `Index.html`
 
 ## [1.151.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Der Knopf neben der Frage führt jetzt wahlweise in die KI.** Dietmar: „Bei
-  dem Google Button, kann man das auch in die KI leiten?"
+- Nachschlagen: Ziel wählbar unter Einstellungen ▸ Allgemein (Google KI, Google, ChatGPT, Perplexity)
+- Nachschlagen: Knopf zeigt Namen und Zeichen des gewählten Ziels
+- Nachschlagen: KI-Ziele erhalten ausformulierte Erklärbitte statt Stichworten, bei Bildfragen mit Hinweis auf fehlende Bilder
 
-  Ja — und weil die Meinungen auseinandergehen, was beim Lernen mehr hilft, ist
-  das Ziel unter **Einstellungen ▸ Allgemein ▸ Nachschlagen** wählbar:
-
-  | Ziel | was passiert |
-  |---|---|
-  | **Google KI** (Voreinstellung) | KI-Modus der Google-Suche (`udm=50`) |
-  | Google | die gewohnte Websuche mit Trefferliste |
-  | ChatGPT | chatgpt.com mit fertig eingetragener Frage |
-  | Perplexity | perplexity.ai, antwortet mit Quellenangaben |
-
-  Der Knopf trägt Namen und Zeichen des gewählten Ziels — vor dem Klick ist
-  also zu sehen, wo man landet.
-
-- **Zwei verschiedene Texte gehen hinaus.** An die Suche wie bisher Stichworte.
-  An eine KI dagegen eine ausformulierte Bitte: „Erkläre mir bitte diese Frage
-  aus der deutschen Amateurfunkprüfung … Sag mir, welche Antwort richtig ist,
-  und begründe kurz und verständlich, warum." Eine Aneinanderreihung von
-  Stichworten beantwortet eine KI sonst mit Vermutungen. Bei **Bildfragen**
-  steht ausdrücklich dabei, dass die Antworten als Bilder vorliegen und nicht
-  mitgeschickt werden konnten — sonst rät die KI über Antworten, die sie nie
-  gesehen hat.
-
-### Anmerkung
-- **Gemini steht nicht zur Wahl.** Diese Seite nimmt keine fertige Frage aus
-  der Adresse entgegen; man käme dort auf einer leeren Seite an und müsste die
-  Frage abtippen. Der KI-Modus der Google-Suche kann es und läuft auf demselben
-  Google-Sprachmodell.
-
-- Im **Gruppenraum** und im **Prüfungssimulator** zählt Nachschlagen weiterhin
-  als Fehler — egal welches Ziel eingestellt ist. Der Knopf warnt dort wie
-  bisher mit rotem Rand und Hinweistext.
-
-- Die Anleitung unter **Info** beschreibt den Knopf neu.
-
----
+### Geändert
+- Nachschlagen: zählt im Gruppenraum und Prüfungssimulator unabhängig vom Ziel weiter als Fehler
+- Anleitung: Info beschreibt den Knopf neu
 
 ## [1.150.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Hinweis am Link 50ohm.de in der Fußzeile.** Wer mit der Maus darüberfährt,
-  liest jetzt: „Auf der Seite von 50 Ohm findest du Kurse, Trainings-App,
-  Ausbildungspaten und das Buch Klasse N zur Ausbildung." Bisher stand dort nur
-  der nackte Link — was einen dort erwartet, war nicht zu sehen. Der Text ist
-  zugleich Sprechblase (`data-tooltip`) und wird beim Überfahren vorgelesen.
-
----
+- Fußzeile: Tooltip mit Vorlesetext am Link 50ohm.de (Kurse, Trainings-App, Ausbildungspaten, Buch Klasse N)
 
 ## [1.149.0] - 2026-09-05
 
 ### Geändert
-- **Bilder wachsen jetzt an ihrer Stelle statt in der Fenstermitte.** Dietmar:
-  „Das Vergrößern mittig finde ich nicht besonders schön. Hier wäre mir ein
-  Vergrößern an der Stelle wo das Bild sitzt angenehmer. Bei den Fragen mit
-  4 Bildern: Hier wäre links oben das Vergrößern auch an Ort und Stelle lieber.
-  Das gleiche bei rechts oben und links unten und rechts unten."
-
-  Bisher wurde das überfahrene Bild in einer Ebene über der Seite **mittig**
-  gezeigt. Der Blick musste jedes Mal von der Kachel zur Fenstermitte springen
-  und wieder zurück — bei vier Bildern nebeneinander vier Mal, immer an
-  dieselbe Stelle, egal welches Bild gemeint war.
-
-  Jetzt bleibt das Bild dort, wo der Zeiger steht. Bei den vier Antwortbildern
-  hängt es an der Ecke, die dem Fensterrand am nächsten liegt, und wächst von
-  dort nach innen: **links oben** nach rechts unten, **rechts oben** nach links
-  unten, **links unten** nach rechts oben, **rechts unten** nach links oben. So
-  läuft die Vergrößerung immer ins Fenster hinein und nie darüber hinaus; zur
-  Sicherheit wird sie am Schluss noch in den sichtbaren Bereich geschoben.
-
-  Das **einzelne Fragebild** hat keinen Nachbarn, dem es ausweichen müsste. Es
-  wächst deshalb um seine eigene Mitte herum — das wirkt ruhiger als ein Bild,
-  das zur Seite wegkippt.
-
-- **Im Vollbild wird größer vergrößert, im Fenster weniger.** Dietmar: „Im
-  Vollbild kann das Vergrößern etwas größer sein. Im normalen Modus etwas
-  weniger." Es gibt jetzt zwei Sätze von Grenzen statt einem: im Fenster
-  38 Prozent der Fensterfläche und höchstens 520 × 300 (Fragebild) bzw.
-  400 × 250 Bildpunkte (Antwortbild), im Vollbild 52 Prozent und höchstens
-  780 × 440 bzw. 620 × 380. Im normalen Fenster stehen daneben noch Verlauf
-  und Seitenleiste — dort war die alte Größe zu üppig.
-
-- **Die Anzeigegröße rechnet jetzt sauber mit.** Die Vergrößerung wird in
-  Bildschirmpunkten berechnet und erst beim Setzen in Seitenpunkte
-  zurückgerechnet. Ohne diese Trennung saß das große Bild bei einer
-  Anzeigegröße von 125 Prozent daneben und wählte die falsche Ecke.
-
-- Die Anleitung unter **Info** beschreibt das neue Verhalten.
-
----
+- Bildvergrößerung: Bild wächst an seiner Stelle statt in der Fenstermitte
+- Bildvergrößerung: Antwortbilder wachsen von der randnächsten Ecke nach innen, Fragebild um die eigene Mitte
+- Bildvergrößerung: getrennte Grenzen für Fenster (38 %) und Vollbild (52 %)
+- Bildvergrößerung: korrekte Position bei Anzeigegröße ungleich 100 %
+- Anleitung: Info beschreibt das neue Verhalten
 
 ## [1.148.0] - 2026-09-05
 
-### Behoben
-- **Im Chat ließ sich erst schreiben, nachdem jemand geschrieben hatte.** Dietmar:
-  „Ich kann erst im Chat schreiben, wenn mir davor jemand geschrieben hat."
-
-  Genau so war es gebaut: Das Chatfenster kam **zugeklappt** auf die Welt — nur
-  die Kopfleiste war zu sehen, das Eingabefeld steckte darunter. Aufgeklappt hat
-  es sich erst, wenn eine **fremde** Nachricht eintraf. Wer als Erster schreiben
-  wollte, fand kein Feld und hätte die Kopfleiste anklicken müssen — die aber wie
-  eine Überschrift aussieht, nicht wie ein Knopf
-- Jetzt klappt der Chat beim Betreten des Raums einmal von selbst auf, beim
-  Gastgeber wie beim Gast. Wer ihn zumacht, dem bleibt er zu; ein neu
-  eintreffender Raum-Zustand reißt ihn nicht wieder auf
-- Beim automatischen Aufklappen springt der Schreibcursor **nicht** ins Chatfeld
-  — in dem Moment ist man beim Einladungslink, nicht beim Schreiben
-
 ### Geändert
-- **„Schließen" beendet den Gruppenraum wirklich.** Dietmar: „Wenn ich im
-  Gruppenraum den Button schließen betätige, muss auch der Gruppenchat beendet
-  werden" — und auf Nachfrage: den Raum wirklich beenden.
+- Gruppenraum: Schließen beendet den Raum samt Gruppenchat
+- Gruppenraum: nur der Gastgeber beendet für alle, Gäste melden sich nur selbst ab
+- Gruppenraum: Gäste erhalten eine Meldung, wenn der Gastgeber den Raum beendet
 
-  Bis dahin gab es **überhaupt keinen Weg**, einen Raum absichtlich zu verlassen.
-  Der Knopf machte nur das Fenster zu: Der Raum lief weiter, das Chatfenster
-  blieb am Bildschirm stehen und der Knopf „Raum" in der Kopfzeile ebenso
-- **Nur der Gastgeber beendet den Raum für alle.** Wer zu Gast ist, meldet sich
-  mit demselben Knopf nur selbst ab und lässt den Raum stehen — sonst könnte ein
-  beliebiger Teilnehmer allen anderen den Kursabend beenden
-- Die Gäste bekommen dabei eine Zeile: „Der Gastgeber hat den Gruppenraum
-  beendet." Wer selbst geschlossen hat, sieht nichts — er weiß es
-
-### Geprüft
-Mit zwei Browsern, Gastgeber und Gast:
-
-- Direkt nach dem Erstellen ist das Chatfeld da — beim Gastgeber und, nach dem
-  Beitreten, auch beim Gast
-- „Schließen" beim Gastgeber: Chat weg, Fenster zu, Raum aus — **und beim Gast
-  ebenso**, mit der Meldung auf dem Bildschirm
-- Keine Fehler in beiden Browsern
-
----
+### Behoben
+- Gruppenchat: klappt beim Betreten des Raums auf, Schreiben ohne vorherige fremde Nachricht möglich
+- Gruppenchat: bleibt nach manuellem Schließen zu, kein Fokussprung beim automatischen Aufklappen
 
 ## [1.147.0] - 2026-09-05
 
-### Behoben
-- **Der Verlauf rechts war zu kurz.** Dietmar: „Die Ansicht bei Benutzer ist zu
-  kurz. Im Vollbild passt die Länge. Vermutlich hat sich beim Hinzufügen vom
-  Vollbild was verändert." — Die Spur war richtig, die Ursache lag aber nicht am
-  Vollbild, sondern an der **Anzeigegröße**, die kurz davor dazukam. Seitdem sind
-  zwei Zahlen verschieden, die vorher gleich waren:
-
-  | | bei 125 % |
-  |---|---|
-  | `getBoundingClientRect().height` | 552 — was man **sieht** |
-  | `offsetHeight` | 441 — womit die Seite **rechnet** |
-
-  Geschrieben wird in `style.maxHeight`, und das zählt in der zweiten Einheit.
-  Die erste dort hineinzuschreiben setzt eine Höhe, die noch einmal mit 1,25
-  multipliziert wird. Jetzt wird `offsetHeight` gemessen — beides dieselbe Einheit
-- Aus demselben Grund fragt die Umschaltung auf schmale Bildschirme jetzt
-  `clientWidth` statt `innerWidth`: `innerWidth` nennt den echten Schirm (1920),
-  `clientWidth` den Raum, in dem die Seite rechnet (bei 125 % also 1536) — und
-  mit dem arbeitet auch der Media-Query. Sonst trifft das Programm irgendwann
-  eine andere Entscheidung als das Stylesheet
-- **Ein Knopf wurde beim zweiten Überfahren nicht mehr vorgelesen.** Dietmar:
-  „Erst wenn ich einen anderen Button auswähle und zurück zu dem wechsle, wo er
-  nicht vorgelesen hat, liest es den Button vor." Genau so war es gebaut: Ein
-  Merker hielt den zuletzt gesprochenen Satz fest, wurde beim Verlassen des
-  Knopfes aber nie geleert. Beim nächsten Überfahren sagte der Vergleich „läuft
-  schon" — und es kam nichts. Der Vergleich ist entfallen; den Fall, für den er
-  gedacht war, fängt die Zeile darüber schon ab
-
 ### Geändert
-- **Alle Knöpfe heben sich beim Überfahren, nach einer Sekunde.** Dietmar:
-  „Teilweise ist beim Mouse Overlay ein Heben von dem Button aufgefallen und bei
-  anderen ist das nicht. […] Durch dem Heben wird das Vorlesen der Buttons
-  aktiviert." Bisher hob sich nur `.btn` — und sofort. Die Knöpfe im Verlauf, im
-  Lernfortschritt und in den Fenstern lagen still
-- **Die Sekunde ist die Verabredung mit der Sprachausgabe:** Der Knopf hebt sich
-  in dem Moment, in dem der Satz beginnt. Die Vorlese-Verzögerung ist deshalb von
-  450 ms auf 1000 ms gegangen; beide Zahlen verweisen im Quelltext aufeinander
-- Der Weg zurück hat **keine** Verzögerung — wer den Zeiger wegnimmt, will den
-  Knopf sofort wieder flach sehen
-- Ausgenommen bleiben die Punkte im Verlauf (die haben ihr eigenes Vergrößern),
-  die Antwortfelder (dort wäre ein Heben ein falsches Signal) und alles
-  Abgeschaltete
+- Knöpfe: alle heben sich beim Überfahren nach 1 s, zeitgleich mit dem Vorlesen
+- Vorlesen: Verzögerung beim Überfahren von 450 auf 1000 ms
+- Knöpfe: Absenken ohne Verzögerung; Verlaufspunkte, Antwortfelder und deaktivierte Knöpfe ausgenommen
 
-### Geprüft
-- Spaltenhöhen bei 1920×1080 (125 %) und 1366×768 (90 %) mit 60 zusätzlichen
-  Verlaufszeilen: **Unterschied 0 Punkte** in beiden Fällen
-- Heben nachgemessen: nach 0,4 s noch flach, nach 1,4 s um 2 Punkte gehoben —
-  auch am Zahnrad, das sich vorher gar nicht bewegt hat
-- Denselben Knopf zweimal überfahren: **zweimal gesprochen**
-- Antwortfelder heben sich nicht, die Verlaufspunkte vergrößern sich weiter wie
-  bisher
-
----
+### Behoben
+- Verlauf: Spalte bei Anzeigegröße ungleich 100 % zu kurz, jetzt über `offsetHeight` gemessen
+- Layout: Schmal-Umschaltung nutzt `clientWidth` statt `innerWidth`, passend zum Media-Query
+- Vorlesen: Knopf wird beim erneuten Überfahren wieder vorgelesen
 
 ## [1.146.0] - 2026-09-05
 
 ### Behoben
-- **„DARC" wird buchstabiert, nicht gelesen.** Dietmar: „DARC liest es als Dark.
-  Es muss DARC aussprechen. D A R C mit einer sehr kleinen Pause dazwischen bei
-  allen Sprachen." An die Sprachausgabe geht jetzt **`D-A-R-C`**
-- Die Bindestriche trennen, ohne dass ein Wort dazukommt. Ein Komma machte eine
-  deutlich längere Pause, ein Schrägstrich würde als „Strich" mitgesprochen — es
-  ist dieselbe Technik, mit der hier schon „Antennen-anlage" getrennt wird, damit
-  Piper nicht „Andenanlage" daraus macht
-- **An zwei Stellen eingetragen**, weil es zwei Wege zur Sprachausgabe gibt:
-  `tts-expand.js` auf der Serverseite gilt für alles, was Piper spricht — also
-  für jede Stimme; die Tabelle in `Index.html` deckt zusätzlich die Notstimme des
-  Browsers ab, die nie am Server vorbeikommt. Doppelt angewandt schadet nichts:
-  Nach dem ersten Mal steht dort `D-A-R-C`, und darauf passt die Regel nicht mehr
-- Die Regel steht ganz oben im Ausdruck, gleich nach Lambda — später greifen
-  Regeln, die auf Großbuchstabenfolgen schauen, und die sollen dieses Wort nicht
-  mehr vorfinden
-
-### Geprüft
-- Mitgeschnitten, was wirklich an die Sprachausgabe geht: „… der Lehrgang des
-  **D-A-R-C**. Dort steht das Kapitel …"
-- Sechs Schreibweisen durchgespielt, darunter „DARC-Ortsverband" und „der DARC
-  e.V." — überall richtig getrennt, und kein anderes Wort wird berührt
-
----
+- Sprachausgabe: DARC wird buchstabiert (`D-A-R-C`) statt als Wort gelesen
+- Sprachausgabe: Regel in `tts-expand.js` (Piper) und `Index.html` (Browser-Notstimme), vor den Großbuchstaben-Regeln
 
 ## [1.145.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Eine Aussprache-Tabelle für die Sprachausgabe.** Dietmar: „Jetzt sagt
-  Kerstin Mekliste." — das *r* im „rk" fehlte. Zusammengesetzte Wörter getrennt
-  zu schreiben hilft dort: „Merkliste" geht als **„Merk Liste"** an die Stimme,
-  beide Teile werden ausgesprochen statt verschliffen
-- **Die Regel für Einträge in dieser Tabelle:** nur echte Wörter, nur Trennungen
-  von Zusammensetzungen, **keine erfundenen Schreibweisen**. Der Versuch,
-  „Blättern" als „Blettern" zu schreiben, ist genau daran gescheitert — ein Wort,
-  das in keinem Wörterbuch steht, muss die Stimme raten
-- **Ein Wort am Satzanfang, gefolgt von einem Punkt, bekommt jetzt ein Komma.**
-  Das betraf die ausführlichen Erklärungen, die alle mit dem Knopfnamen und
-  einem Punkt beginnen: „Merkliste. Hier stehen …" war dieselbe Form, an der die
-  Stimme schon bei „Blättern." gescheitert ist. Jetzt: „Merkliste, hier stehen …"
+- Sprachausgabe: Aussprache-Tabelle, zusammengesetzte Wörter getrennt übergeben (Merkliste als Merk Liste)
+- Sprachausgabe: Einzelwort mit Punkt am Satzanfang erhält Komma
 
 ### Geändert
-- **Das Suchfeld sagt „Suchen nach Fragen oder Schlagwörtern."** Dietmar: „Beim
-  Suchfeld kommt: ‚Suche Start'. Hier wäre ein ‚Suchen nach Fragen oder
-  Schlagwörter' besser."
-
-### Technisch
-- Die Aussprache läuft als **letzter Schritt**, unmittelbar vor der
-  Sprachausgabe. Beim ersten Versuch stand sie am Anfang — dann sah der Rest des
-  Programms „Merk Liste", zwei Wörter, und die Regel, die einem Einzelwort einen
-  Nachsatz gibt, sprang nicht mehr an
-- Innerhalb der Aussprache kommt **erst der Punkt, dann die Tabelle**. Andersherum
-  wäre aus „Merkliste. Hier stehen …" schon „Merk Liste. Hier …" geworden — zwei
-  Wörter, und die Kommaregel hätte nicht mehr gegriffen. Der Punkt bliebe stehen,
-  und genau der ist das Problem
-- Beide Reihenfolgen sind der Grund, warum es zwei Anläufe brauchte; sie stehen
-  als Merksatz im Quelltext
-
----
+- Suchfeld: Vorlesetext Suchen nach Fragen oder Schlagwörtern
+- Sprachausgabe: Aussprache als letzter Schritt vor der Ausgabe, Kommaregel vor der Tabelle
 
 ## [1.144.0] - 2026-09-05
 
 ### Behoben
-- **Kein Knopf schickt der Sprachausgabe mehr ein nacktes Einzelwort.** Dietmar
-  zu „Merkliste": „bei Merkliste kommt ein Verplisse." Damit ist die Regel von
-  1.142.0 widerlegt — es lag nicht am Punkt. Auch ein Wort **ohne** Punkt gerät
-  daneben; bei „Starten" und „Lernbedarf" hatte es nur zufällig geklappt
-
-  Der Grund ist derselbe wie bei „Blättern": Eine Äußerung aus einem einzigen
-  Wort ist für diese Modelle die unsicherste Form überhaupt — Anfang, Betonung
-  und Ende müssen aus dem Nichts entstehen. Sobald ein zweiter Halbsatz folgt,
-  hat das Modell einen Zusammenhang
-- **Der Nachsatz wird nicht erfunden, er stand schon da:** Es ist der Teil der
-  Sprechblase hinter dem Trennstrich, den die Kurzfassung bisher weggeworfen hat.
-
-  | Knopf | gesprochen |
-  |---|---|
-  | Merkliste | „Merkliste, gemerkte Fragen ansehen und der Reihe nach lernen." |
-  | Lernbedarf | „Lernbedarf, oft falsch." |
-  | Starten | „Starten, 561 von 571 Fragen noch nicht gelernt." |
-  | Prüfungssimulator | „Prüfungssimulator, echte Prüfungsbedingungen." |
-
-- **Geschnitten wird an einem Satzzeichen, nie zwischen zwei Wörtern, die
-  zusammengehören.** Der erste Versuch schnitt nach sechs Wörtern ab und ergab
-  „und der Reihe." und „je 25 Fragen und." — Sätze, die mitten im Satzteil
-  aufhören. Genau das war hier schon einmal ein Fehler („Bei Weiterblättern
-  verschluckt es Silben")
-- Zwei Knöpfe, deren Sprechblase als Aufzählung weitergeht, haben einen eigenen
-  Text bekommen, weil der erste Halbsatz allein ein schiefes Bild ergäbe:
-  **Einstellungen** („Einstellungen für Anzeige, Vorlesen und Update.") und das
-  **Suchfeld** („Suchfeld für Fragennummer oder Stichwort.")
-
-### Geprüft
-- Alle 24 sichtbaren Knopftexte im Kurzmodus durchgezählt: **kein einzelnes Wort
-  mehr**, und keiner endet auf einem Füllwort wie „und", „der" oder „je"
-
----
+- Sprachausgabe: Knöpfe senden kein nacktes Einzelwort mehr, sondern Wort plus Nachsatz aus dem Tooltip
+- Sprachausgabe: Kürzung nur an Satzzeichen, nicht mitten im Satzteil
+- Vorlesen: eigene Texte für Einstellungen und Suchfeld
 
 ## [1.143.0] - 2026-09-05
 
 ### Geändert
-- **Der Satz im Band oben und „später" sind jetzt weiß** — so wie bei 50 Ohm
-  selbst. Dietmar: „Am Trainer hat sich etwas geändert, seit diese Seite geladen
-  wurde und später bitte in der Farbe weiss."
-- Ich hatte sie in 1.141.0 dunkel gesetzt, weil Weiß auf diesem Blau nur 2,6:1
-  trägt und damit unter den 4,5:1 liegt, die als lesbar gelten. Das bleibt so —
-  aber es ist Dietmars Programm, und es sieht damit aus wie das Vorbild
-- Was bleibt, um die Zeile trotzdem lesbar zu halten: fette Schrift, eine Zeile
-  allein, und der Knopf **„Jetzt neu laden"** weiterhin weiß mit dunkler Schrift.
-  Der trägt 15:1 — und er ist das, worauf es ankommt, wenn jemand das Band nur
-  streift
-
----
+- Aktualisierungsband: Hinweistext und Knopf später in Weiß wie bei 50ohm.de, Knopf Jetzt neu laden weiß mit dunkler Schrift
 
 ## [1.142.0] - 2026-09-05
 
 ### Geändert
-- **Der Vollbild-Knopf sagt jetzt „Vollbild zum Vergrößern."** Dietmar:
-  „Vollbild spricht Kerstin sehr schnell aus." — und gleich mit dem Wortlaut
-  hinterher
+- Vollbild-Knopf: Vorlesetext Vollbild zum Vergrößern
 
 ### Behoben
-- **Ein einzelnes Wort bekommt keinen Punkt mehr mitgeschickt.** Aus zwei
-  Rückmeldungen ergibt sich ein klares Muster:
-
-  | ging daneben | kam sauber heraus |
-  |---|---|
-  | „Blättern**.**" · „Vollbild**.**" | „Starten" · „Merkliste" · „Lernbedarf" · „Prüfungssimulator" |
-  | ein Wort **mit** Punkt | ein Wort **ohne** Punkt |
-
-  Der Punkt macht aus dem Wort eine abgeschlossene Äußerung, und eine Äußerung
-  aus einem einzigen Wort ist für diese Modelle die unsicherste Form überhaupt:
-  Sie müssen Anfang, Betonung und Ende aus dem Nichts erzeugen. Ohne Punkt läuft
-  es als Fragment durch und klingt ruhig
-- Die Regel gilt jetzt für alle Knöpfe, nicht nur für die beiden gemeldeten —
-  mit gefangen wird dadurch „Suchfeld.", das denselben Fehler gehabt hätte.
-  Sätze mit mehreren Wörtern behalten ihren Punkt; dort hilft er der Betonung
-
-### Geprüft
-- Alle 24 sichtbaren Knopftexte im Kurzmodus durchgezählt: Kein einziger ist
-  noch ein einzelnes Wort mit Punkt
-
----
+- Sprachausgabe: Einzelwörter werden für alle Knöpfe ohne Punkt übergeben
 
 ## [1.141.0] - 2026-09-05
 
 ### Geändert
-- **„Blättern" ohne das „Zum".** Dietmar: „Jetzt klingt es gut. Zum gehört raus.
-  Nur ‚Blättern, alle Fragen'." — Damit ist auch klar, woran es wirklich lag:
-  **nicht an der Stellung, sondern am Punkt.** „Blättern." war für das Modell
-  eine vollständige, sehr kurze Äußerung, und die geriet ihm daneben. Ein Komma
-  hält den Satz zusammen; das Wort bekommt seinen Klang aus dem, was folgt:
-
-  | | jetzt |
-  |---|---|
-  | kurz | „Blättern, alle Fragen der Reihe nach." |
-  | kurz, mit Lesezeichen | „Weiterblättern, weiter bei Frage 41 von 571." |
-  | ausführlich | „Blättern, diese Funktion hilft dir …" |
-
-- **Das Band oben trägt jetzt die 50-Ohm-Farbe** statt des Brauns. Dietmar: „Bei
-  Update möchte ich oben kein Braun, sondern die 50 Ohm Farbe." Der Wert
-  `#00adef` ist aus dem Knopf „Jetzt starten" auf 50ohm.de gemessen — derselbe,
-  der im Nachtstil des Trainers schon steht
-- **Die Schrift darauf ist dunkel, nicht weiß.** 50 Ohm setzt auf dieses Blau
-  weiße Schrift; die trägt aber nur 2,6:1 und liegt damit weit unter den 4,5:1,
-  die als lesbar gelten. Dunkles Marineblau darauf kommt auf **5,9:1**, der
-  Knopf „Jetzt neu laden" auf 15:1. Die Farbe ist ihre, die Lesbarkeit bleibt
-  unsere — auf einem Band, das jemanden zum Neuladen bewegen soll, wäre schlecht
-  lesbare Schrift ein Widerspruch in sich
-- Zur Sicherheit festgehalten: Das ist die **Farbe**, nicht das Logo. Das blaue
-  50-Ohm-Zeichen ist markenrechtlich geschützt und bleibt draußen, bis die
-  Vorstandschaft es freigibt
-
----
+- Sprachausgabe: Blättern ohne vorangestelltes Zum, mit Komma statt Punkt
+- Aktualisierungsband: 50-Ohm-Farbe `#00adef` statt Braun, dunkle Schrift (Kontrast 5,9:1)
+- Aktualisierungsband: nur die Farbe übernommen, kein 50-Ohm-Logo
 
 ## [1.140.0] - 2026-09-05
 
 ### Geändert
-- **„Blättern" steht der Sprachausgabe nicht mehr am Satzanfang.** Dietmars
-  dritte Rückmeldung war die entscheidende: „Es ist viel mehr so ein Bitttööö
-  alle Fragen der Reihe nach." — Der **Rest des Satzes kommt sauber heraus**,
-  kaputt ist nur das erste Wort.
-
-  Das ist ein bekanntes Verhalten dieser Sprachmodelle: Der Anfang einer
-  Äußerung ist die unsicherste Stelle, weil das Modell noch keinen Klang hat, an
-  dem es sich orientiert. Ein harter Anlaut — hier das „Bl" — trifft genau
-  dorthin, und bei 16 kHz fällt das Ergebnis auseinander. Kerstin ist die
-  einzige verbliebene Stimme mit dieser Rate
-- Das Wort bekommt deshalb einen **Anlauf**: der Satz beginnt mit einem leichten
-  „Zum", das Stichwort steht an zweiter Stelle.
-
-  | | vorher | jetzt |
-  |---|---|---|
-  | kurz | „Blättern. Alle Fragen der Reihe nach." | „**Zum** Blättern durch alle Fragen der Reihe nach." |
-  | kurz, mit Lesezeichen | „Weiterblättern. Weiter bei Frage 41 von 571." | „**Zum** Weiterblättern bei Frage 41 von 571." |
-  | ausführlich | „Blättern. Diese Funktion hilft dir …" | „**Zum** Blättern. Diese Funktion hilft dir …" |
-
-  Für die Augen ändert sich nichts — auf dem Knopf steht weiter „Blättern", und
-  der Hinweistext ist unverändert
-
-### Anmerkung zu den drei Anläufen
-Der Weg dorthin gehört ins Protokoll, weil zwei der drei Versuche danebenlagen:
-„Blettern" zu schreiben war ein Fehlgriff (ein erfundenes Wort steht in keinem
-Wörterbuch), und ein Satz drumherum allein reichte nicht, solange das Wort vorne
-stand. Erst Dietmars Beobachtung, dass der Rest des Satzes stimmt, hat die
-Ursache eingekreist. Nachgehört werden kann hier nicht — die Sprechprobe in den
-Einstellungen enthält das Wort deshalb seit 1.139 mitten im Satz und ist der
-schnellste Weg, eine Stimme darauf zu prüfen.
-
----
+- Sprachausgabe: Blättern nicht mehr am Satzanfang, mit vorangestelltem Zum; Knopfbeschriftung unverändert
 
 ## [1.139.0] - 2026-09-05
 
-### Entfernt
-- **Der untere Kasten „Weitere Stimmen" ist weg.** Dietmar: „Das untere Feld
-  ‚weitere Stimmen' kann raus. Wir haben oben ausgewählt was an Stimmen
-  hinzugefügt wird." Richtig — seit es „Stimmen hinzufügen" neben „Probe hören"
-  gibt, war der Haken darunter ein zweiter Weg zum selben Ziel. Der Code für die
-  Einzelauswahl ist mit herausgenommen, nicht nur der Kasten: toter Code, den
-  niemand mehr aufruft, ist die nächste Falle
-
 ### Geändert
-- **„Blättern" wird wieder als „Blättern" gesprochen.** Der Versuch mit
-  „Blettern" war ein Fehlgriff — Dietmars Protokoll zeigt ihn schwarz auf weiß:
-  `[TTS] Model:de_DE-kerstin-low.onnx Text:Blettern.`, und geklungen hat es
-  danach „ungefähr so: Bisssöööö". Ein erfundenes Wort steht in keinem
-  Aussprachewörterbuch; die Stimme muss raten, und das war die schlechtere Wette
-- **Stattdessen bekommt das Wort einen Satz um sich herum:** „Blättern. Alle
-  Fragen der Reihe nach." Sprachmodelle rechnen den Klang aus dem Zusammenhang.
-  Dasselbe Protokoll zeigt auch, dass es nicht an einzelnen Wörtern generell
-  liegt — „Starten" kommt sauber heraus —, sondern an diesem einen mit dieser
-  einen Stimme. Ein kurzer Satz kostet nichts und gibt dem Modell den Halt, den
-  es braucht
-- **Die Sprechprobe enthält das Wort jetzt:** „So klingt die Stimme, die dich
-  durch das Menü führt — zum Beispiel beim Blättern durch den Fragenkatalog."
-  Damit lässt sich mit einem Klick prüfen, ob es bei einer Stimme klappt, statt
-  erst den Knopf zu suchen
+- Einstellungen: Kasten Weitere Stimmen samt Code für die Einzelauswahl entfernt
+- Sprachausgabe: Blättern wieder in Originalschreibung, mit kurzem Folgesatz
+- Sprechprobe: enthält das Wort Blättern
 
 ### Behoben
-- **„Fehler beim Laden der Stimmen"** war kein Fehler, sondern ein Ende. In
-  Dietmars `server.log` steht eine Minute vor seiner Meldung: *„[ENDE] Kein
-  Fenster mehr offen. Der Trainer macht Feierabend."* Die Seite blieb offen, der
-  Server war weg — und die Auskunft „Server nicht erreichbar oder Fehler beim
-  Abrufen der Stimmen" klang nach Defekt. Jetzt steht dort, was wirklich los
-  ist: *„Der Trainer antwortet nicht mehr. Meist heißt das: Er hat sich beendet,
-  weil kein Fenster mehr offen war. Zum Weiterlernen START noch einmal ausführen
-  und diese Seite neu laden."*
-
----
+- Stimmen: klare Meldung, wenn der Trainer nicht mehr läuft, statt Fehler beim Laden der Stimmen
 
 ## [1.138.0] - 2026-09-05
 
 ### Geändert
-- **Die kurze Meldung unten rechts hat jetzt die Farbe ihrer Nachricht.**
-  Dietmar: „Als gelernt abgehakt Popup unten rechts möchte ich das gleiche Grün
-  wie bei der Frage richtig beantwortet, und bei entfernt gelernt in dem Rot wie
-  bei einer falschen Antwort."
-
-  Sie hatte bis jetzt nur eine Farbe: das Rot der Fehlerwertung. Das passte für
-  „Nachgeschlagen — hier als Fehler gewertet", aber nicht für „Als gelernt
-  abgehakt" — da stand eine gute Nachricht in Warnrot
-- Genommen werden **dieselben zwei Farben wie an den Antworten**
-  (`--darc-richtig` und `--darc-falsch`), beide mit schwarzer Schrift, wie dort
-  auch. Wer eine Frage abhakt und aus dem Augenwinkel etwas aufblitzen sieht,
-  weiß damit ohne Lesen, was passiert ist
-- Mit umgestellt: „Wieder als CB-Wissen angerechnet" (grün) und „Zurück in den
-  Lernstapel" (rot) — dieselben zwei Vorgänge, nur bei CB-angerechneten Fragen
-- **Die dritte Farbe bleibt**, wofür sie gedacht war: die Fehlerwertung beim
-  Nachschlagen und beim Anzeigen der Lösung. Das ist kein Ergebnis an einer
-  Antwort, sondern eine Warnung — und soll auch nicht aussehen wie eine
-
-### Geprüft
-- Die Farben Pixel für Pixel gegen die Antworten verglichen: Meldung und
-  richtige Antwort sind beide `rgb(59, 181, 131)`, Meldung und falsche Antwort
-  beide `rgb(254, 117, 108)`, jeweils mit schwarzer Schrift
-- Schwarz auf beiden Farben trägt gut 8:1 — dieselbe Rechnung wie bei den
-  Antworten
-
----
+- Meldung unten rechts: Grün bei gelernt, Rot bei entfernt, wie an den Antworten (`--darc-richtig`, `--darc-falsch`)
+- Meldung unten rechts: gleiche Farben für CB-Wissen angerechnet und Zurück in den Lernstapel
+- Meldung unten rechts: Warnfarbe bleibt für Fehlerwertung beim Nachschlagen und Lösung anzeigen
 
 ## [1.137.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Anzeigegröße** in den Einstellungen unter *Allgemein*. Dietmar: „Bei
-  Vergrößern wird die Fläche größer auf dem Bildschirm. Hier möchte ich eine
-  dynamische Vergrößerung von dem Trainer. Bei mir wäre zB 125 % gut. Auf meinem
-  Laptop 15 und 17 Zoll vermutlich wieder schlecht. Hier muss es sich
-  verkleinern."
-
-  Er hat den wunden Punkt getroffen: Das Vollbild schafft Platz, macht aber
-  nichts größer — die Schrift bleibt, wie sie war, und der Gewinn ist mehr Weiß
-  am Rand
-- **„Automatisch" rechnet aus dem Fenster.** Der Trainer ist für rund
-  1520 × 870 Punkte entworfen; darüber darf alles im selben Verhältnis wachsen,
-  darunter muss es schrumpfen. Genommen wird die kleinere der beiden Richtungen
-  — ein breiter, flacher Schirm hat trotzdem nur die Höhe, die er hat.
-  Nachgemessen:
-
-  | Bildschirm | Ergebnis |
-  |---|---|
-  | 1280 × 800 | 85 % |
-  | 1366 × 768 (15-Zoll-Laptop) | 90 % |
-  | 1920 × 1080 (Dietmars Schirm) | **125 %** |
-  | 2560 × 1440 | 150 % (Grenze) |
-
-  Gerundet wird auf 5 %, damit ein Fenster, das man um zehn Punkte zieht, nicht
-  dauernd die Schrift verändert
-- Fest wählbar sind 90, 100, 110, 125 und 150 %
-- **Im Beamer-Modus bleibt es bei 100 %.** Der rechnet seine Größen ohnehin aus
-  der Bildschirmgröße; beides zusammen hieße zweimal vergrößern, und die Frage
-  stünde unten aus dem Bild heraus
-
-### Technisch
-- Skaliert wird mit `zoom` auf dem Wurzelelement, nicht mit `transform: scale`.
-  `transform` verschiebt nur das Bild — der Platz darunter bleibt, wie er war,
-  und alles läuft aus dem Fenster. `zoom` rechnet die Größen wirklich um, der
-  Umbruch stimmt danach
-- **Der Haken an `zoom`:** `vh` und `vw` beziehen sich weiter auf den echten
-  Bildschirm und werden anschließend mitskaliert. `max-height:90vh` wäre bei
-  125 % also 112 % der Bildhöhe — jedes Fenster stünde über. Alle 27 Stellen mit
-  `vh` oder `vw` stehen deshalb jetzt als `calc(90vh / var(--afu-zoom))`; die
-  Variable hebt die Skalierung dort wieder auf. Wer eine neue Stelle mit `vh`
-  oder `vw` baut, muss das mitnehmen — es steht als Merksatz im Quelltext
-- Gesetzt wird die Größe **vor dem ersten Zeichnen**, im selben frühen Block wie
-  der Farbstil. Sonst blitzt die Seite einmal in der falschen Größe auf und
-  springt dann
-- `window.innerWidth`/`innerHeight` bleiben von `zoom` unberührt und nennen den
-  echten Ausschnitt — die Rechnung kann sich also nicht selbst aufschaukeln
+- Einstellungen ▸ Allgemein: Anzeigegröße automatisch oder fest (90, 100, 110, 125, 150 %)
+- Anzeigegröße: Automatik nach Fenstergröße (Basis 1520 × 870), gerundet auf 5 %
+- Anzeigegröße: im Beamer-Modus fest 100 %
+- Anzeigegröße: Skalierung per `zoom`, `vh`/`vw` über `--afu-zoom` korrigiert, gesetzt vor dem ersten Zeichnen
 
 ### Geändert
-- **„Blättern" wird der Sprachausgabe jetzt als „Blettern" übergeben.** Dietmar:
-  „Blättern klingt schrecklich bei Kerstin." Die Stimmen sprechen nicht aus einer
-  Lautschrift, sondern aus dem geschriebenen Wort; wo eine danebengreift, hilft
-  eine andere Schreibung desselben Klangs. Im Deutschen sind beide lautgleich
-  ([blɛtɐn]), aber mit dem *e* kommen die Modelle besser zurecht als mit dem *ä*.
-  Betrifft nur das Gesprochene — auf dem Knopf steht weiterhin „Blättern", und
-  „Weiterblättern" und „Blätter-Stand" gehen denselben Weg
-
-### Geprüft
-- Vier Bildschirmgrößen durchgemessen: Die Werte stimmen, nichts läuft seitlich
-  über, und die Fenster (Einstellungen, Anleitung, **Formelblatt**) passen
-  überall auf den Schirm — das Formelblatt rechnet seine Breite selbst aus der
-  Höhe und war die heikelste Stelle
-- Beamer-Modus an und wieder aus: Die Skalierung fällt auf 100 % und kommt
-  danach zurück
-- Die vollständige Liste aller Funktionen und Konstanten gegen die vorherige
-  Fassung verglichen — es fehlt nichts
-
----
+- Sprachausgabe: Blättern als Blettern übergeben, Knopfbeschriftung unverändert
 
 ## [1.136.0] - 2026-09-05
 
-### Entfernt
-- **karlsson, pavoque, ramona, eva_k und thorsten_emotional** werden nicht mehr
-  angeboten. Dietmar, nachdem er sie gehört hatte: „Karlsson und pavoque ramona
-  eva gehört auch raus" — und kurz darauf: „Thorsten emotional auch entfernen."
-  Die ersten vier gibt es nur in `low` oder `x_low`, also 16 kHz; der Trainer
-  warnt bei diesen ohnehin vor dem dumpfen S. `thorsten_emotional` ist derselbe
-  Sprecher wie die mitgelieferte Stimme, nur mit gespielten Gefühlslagen — für
-  Prüfungsfragen ist das nicht Ausdruck, sondern Ablenkung. Übrig bleiben
-  **Thorsten in drei Gütestufen und Kerstin**
-- Ausgewählt wird nach **Sprecher**, nicht nach einzelnem Eintrag: Käme morgen
-  „karlsson" in mittlerer Güte dazu, wäre sie sonst wieder in der Liste — und
-  die Entscheidung galt der Stimme, nicht der Güte
-
 ### Hinzugefügt
-- **Wegräumen für Stimmen, die schon im Ordner liegen.** Aus der Liste nehmen
-  genügt nicht: Wer sie geholt hat, hat sie weiter im Ordner und in der Auswahl.
-  Der Reiter *Vorlesen* zeigt jetzt einen Hinweis, sobald so etwas herumliegt —
-  mit den Namen, dem belegten Platz und einem Knopf
-- **Gelöscht wird trotzdem nichts.** Die Dateien wandern nach
-  `_Aufgeraeumt_<Datum>\piper\`, so wie es `Aufraeumen.bat` mit allem anderen
-  auch hält. Zwei Gründe: Ein Modell ist 20 bis 110 MB, und wer es zurückhaben
-  will, müsste es sonst neu über die Leitung ziehen. Und wichtiger — ein
-  Programm, das ungefragt Dateien im Ordner des Benutzers löscht, ist eines, dem
-  man beim nächsten Mal nicht mehr traut. Der Ordner liegt sichtbar daneben; wer
-  Platz braucht, wirft ihn selbst weg. Das steht auch am Knopf, damit niemand
-  einen Klick tut, den er für endgültig hält
-- Liegt im Aufräumordner schon eine gleichnamige Datei aus einem früheren Lauf,
-  bekommt die neue eine Zahl angehängt — überschrieben wird auch dort nichts
+- Einstellungen ▸ Vorlesen: Wegräumen nicht mehr angebotener Stimmen aus dem Ordner
+- Stimmen: Verschieben nach `_Aufgeraeumt_<Datum>\piper\` statt Löschen, keine Überschreibung
 
-### Geprüft
-Mit genau dem Bestand aus Dietmars Ordner nachgestellt (acht Stimmen plus
-`piper.exe`, DLLs und `espeak-ng-data`):
-
-- Erkannt werden die sechs richtigen; **Thorsten und Kerstin bleiben**
-- `thorsten_emotional` wird gefasst, `thorsten-medium` und `thorsten-high`
-  nicht — die Namen werden genau verglichen, nicht als Wortanfang
-- **`piper.exe`, `onnxruntime.dll` und `espeak-ng-data\` werden nie angefasst**
-- Nach dem Wegräumen stehen in der Stimmenauswahl noch drei Stimmen, ohne
-  Neustart
-
----
+### Geändert
+- Stimmen: `karlsson`, `pavoque`, `ramona`, `eva_k` und `thorsten_emotional` nicht mehr angeboten
+- Stimmen: Auswahl nach Sprecher, übrig bleiben `thorsten` (drei Gütestufen) und `kerstin`
 
 ## [1.135.0] - 2026-09-05
 
 ### Behoben
-- **„Unexpected token 'N', ‚Not found' is not valid JSON"** beim Klick auf
-  *Stimmen hinzufügen*. Das war keine kaputte Datei, sondern die richtige
-  Antwort auf eine Frage, die der laufende Server noch nicht kannte: Die neue
-  `Index.html` lag schon im Ordner, im Speicher lief aber noch die Fassung von
-  vorhin — und die hatte `/api/stimmen/alle` nicht. Express antwortet darauf mit
-  dem schlichten Wort `Not found`, und `res.json()` zerbricht daran mit einer
-  Meldung, die niemandem sagt, was zu tun ist
-- Jetzt wird die Antwort erst als **Text** gelesen und dann gedeutet. Ein 404
-  heißt an dieser Stelle immer dasselbe, und genau das steht nun da: *„Diese
-  Funktion ist neuer als der laufende Trainer. Bitte den Trainer einmal beenden
-  und neu starten."*
-- Die Vorsicht gilt an **allen drei Stellen** — Verzeichnis holen, eine Stimme
-  holen, alle holen. Dieselbe Falle war seit dem 28.08.2026 bei `githubPruefen`
-  schon entschärft; sie gehört an jede Stelle, die eine neue Serverfunktion
-  anspricht
-
-### Geprüft
-- Den Fall nachgestellt: neue Anzeige, alter Server ohne das Stimmen-Modul. Beide
-  Wege — der große Knopf und die Liste — melden jetzt den Klartext statt der
-  Javascript-Meldung, und keine Ausnahme landet mehr in der Konsole
-
----
+- Stimmen hinzufügen: verständliche Meldung statt JSON-Fehler, wenn der laufende Server die Funktion noch nicht kennt
+- Stimmen: Antworten zuerst als Text gelesen, 404 mit Hinweis auf Neustart, an allen drei Abrufstellen
 
 ## [1.134.0] - 2026-09-05
 
 ### Hinzugefügt
-- **„Stimmen hinzufügen"** steht jetzt neben „Probe hören". Ein Klick holt alle
-  weiteren deutschen Stimmen nacheinander — ohne dass etwas auszuwählen wäre.
-  Dietmar: „Ohne auswählen, alle mit einem Rutsch installieren." Und kurz
-  darauf: „Bei Stimmen hinzufügen benötigt es nur einen kleinen kurzen Text und
-  kein weiteres Fenster." Beides so umgesetzt: ein Klick, ein Satz mit Anzahl
-  und Größe, dann der Balken. Keine Rückfrage
-- Geholt wird **nacheinander, nicht gleichzeitig**: Vier Downloads parallel
-  machen die Leitung nicht schneller, aber den Fortschritt unlesbar. Geht einer
-  schief, laufen die übrigen weiter — eine Stimme, die es gerade nicht gibt,
-  soll nicht die anderen verhindern. Was nicht geklappt hat, steht am Ende dabei
-- Bei mehreren steht am Balken, die wievielte gerade läuft. Ein Balken, der
-  zwischendurch stehenbleibt, sähe sonst nach einem Hänger aus
-- Der Haken darunter heißt jetzt **„Einzeln auswählen"** — er ist der Weg für
-  den Fall, dass nicht alle gebraucht werden
-
-### Entfernt
-- **`de_DE-mls-medium` wird nicht mehr angeboten** (auf Dietmars Wunsch). Sie
-  stammt nicht aus einer Studioaufnahme, sondern aus einem Hörbuch-Datensatz
-  (Multilingual LibriSpeech) — viele Sprecher, viele Aufnahmesituationen. Für
-  einen Fragenkatalog, den man stundenlang hört, ist das die falsche Stimme, und
-  eine Auswahl, in der etwas steht, das man ohnehin nicht nehmen soll, ist keine
-  Hilfe
+- Einstellungen ▸ Vorlesen: Knopf Stimmen hinzufügen lädt alle weiteren deutschen Stimmen ohne Rückfrage
+- Stimmen hinzufügen: nacheinander, Fehler einzelner Stimmen blockieren nicht, Zusammenfassung am Ende
+- Stimmen hinzufügen: Fortschrittsbalken mit Zähler der laufenden Stimme
 
 ### Geändert
-- Die Probe sagt jetzt **„So klingt die Stimme, die dich durch das Menü
-  führt."** Dietmar über die alte Fassung: „So klingt die Stimme, die dir die
-  Knöpfe vorliest — klingt schrecklich!" Er hat recht: „die dir die Knöpfe
-  vorliest" beschreibt die Technik, nicht den Zweck
+- Stimmen: Haken heißt Einzeln auswählen
+- Stimmen: `de_DE-mls-medium` nicht mehr angeboten
+- Sprechprobe: neuer Text
 
 ### Behoben
-- Der Fortschritt konnte über 100 % hinauslaufen, wenn eine Stimme misslang: Sie
-  zählte doppelt — einmal die Bytes, die schon durch die Leitung gingen, und
-  einmal ihre Größe, die nachgetragen wird, damit der Balken nicht hängenbleibt.
-  Jetzt wird nach jeder Stimme auf die Summe der erledigten gesetzt
-
-### Geprüft
-Am Verzeichnis auf dem eigenen Rechner:
-
-- Drei Stimmen mit einem Klick geholt, geprüft und geschrieben; sie stehen
-  sofort in der Auswahl, ohne Neustart
-- `mls-medium` liegt im Verzeichnis und taucht in der Liste **nicht** auf
-- Eine absichtlich beschädigte Stimme wird verworfen, die beiden anderen kommen
-  trotzdem an, und der Fehler steht am Ende dabei
-- Der Balken endet bei genau 100 %, auch wenn eine misslungen ist
-- **Kein Fenster** geht auf; **keine doppelt vergebene Kennung** im Dokument
-
----
+- Stimmen: Fortschritt lief bei Fehlschlag über 100 %
 
 ## [1.133.0] - 2026-09-05
 
-### Geändert
-- **Der Vollbild-Knopf steht jetzt direkt neben dem Zahnrad.** Dietmar:
-  „Bildschirm vergrößern soll direkt neben Einstellungen verschoben werden."
-- **Die Anleitung ist neu gebaut.** Dietmar: „Unter Button Info möchte ich mehr
-  Struktur und eine bessere und nüchterne Anleitung. Bitte ergänze die neuen
-  Funktionen. Ich finde den jetzigen Aufbau schrecklich."
-
-  Er hatte recht, und zwar zweifach. Der Aufbau: dreizehn Kästen mit
-  Emoji-Überschriften, alle untereinander, in einem Fenster, das man vier
-  Bildschirmhöhen weit rollen musste — wer etwas Bestimmtes suchte, hat
-  gescrollt und gelesen, gescrollt und gelesen. Und der Ton: „Los geht's",
-  „fürs Auto", Ausrufezeichen, wo eine Anleitung nüchtern sein soll.
-
-  Jetzt sind es **acht Abschnitte, links anwählbar**, in derselben Form wie die
-  Einstellungen — wer das eine kennt, findet sich im anderen zurecht. Jeder
-  Abschnitt passt auf einen Bildschirm. Keine Emoji in den Überschriften. Zwei
-  Spalten je Zeile: links, wie die Sache heißt; rechts, was sie tut. Wer sucht,
-  überfliegt die linke Spalte
-- Die Abschnitte: **Überblick · Lernen · An der Frage · Prüfung & Kurs · Video &
-  Hörbuch · Einstellungen · Tastatur · Daten & Stand**
-
 ### Hinzugefügt
-- Beschrieben sind jetzt auch die Sachen, die seit August dazugekommen sind:
-  **Blättern** samt Blätter-Buch und „Nur die gelernten ansehen", das
-  **Formelblatt** als PDF an der richtigen Stelle, **Dazu lernen** mit
-  Videolehrgang und 50ohm.de, der **Vollbild-Knopf**, die **Einstellungen** mit
-  ihren fünf Reitern, das **Nachholen weiterer Stimmen**, die grünen Punkte im
-  Verlauf und wo der Lernstand liegt
-- Unter *Daten & Stand* steht die **Versionsnummer** statt des Fingerabdrucks —
-  dieselbe Änderung wie im Reiter *Update*. Der Fingerabdruck bleibt klein
-  dahinter
+- Anleitung: neue Funktionen seit August beschrieben (Blättern, Formelblatt, Dazu lernen, Vollbild, Einstellungen, Stimmen)
+- Anleitung: Versionsnummer statt Fingerabdruck unter Daten & Stand
+
+### Geändert
+- Kopfzeile: Vollbild-Knopf neben dem Zahnrad
+- Anleitung: neu aufgebaut mit acht links anwählbaren Abschnitten, nüchterner Ton, ohne Emoji
 
 ### Behoben
-- Beim Umbau des Anleitungsfensters hatte ich einen Bereich mitgelöscht, der
-  nichts mit ihm zu tun hatte: `dateiStandAnzeigen`, `fehlerMelden`,
-  `fehlerStand`, `verlaufHoeheAngleichen`, `paketZaehlerAnzeigen` und
-  `paketGeladen` lagen zwischen den beiden Funktionen, die ersetzt werden
-  sollten. Aufgefallen ist es daran, dass die Zeile „Welcher Stand läuft hier"
-  auf „wird ermittelt …" stehen blieb. Alle sechs sind wieder da; geprüft wurde
-  danach nicht nur die Anleitung, sondern die **vollständige Liste aller
-  Funktionen und Konstanten** gegen die ausgelieferte Fassung — es fehlt nichts
-  außer dem alten Hilfskästchen, das die neue Form ersetzt
-
----
+- Standanzeige: beim Umbau entfernte Funktionen (`dateiStandAnzeigen`, `fehlerMelden` u. a.) wiederhergestellt
 
 ## [1.132.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Weitere Vorlesestimmen lassen sich nachholen** — in den Einstellungen unter
-  *Vorlesen*. Dietmar: „Ich möchte noch weitere Piper Stimmen mit in das Tool
-  mit aufnehmen. […] Haken setzen und es installiert weitere Natural Stimmen
-  dazu. Ausgeliefert wird nur Standard Thorsten, um die Installations-exe nicht
-  aufzublähen."
-- **Ausgeliefert wird weiter nur Thorsten.** Eine Stimme in mittlerer Güte wiegt
-  63 MB, die hohe 110 MB; alle zehn deutschen zusammen rund 500 MB — in einem
-  Setup von knapp 90 MB. Wer nur lernen will, soll nicht erst eine halbe Stunde
-  Stimmen laden, die er nie benutzt
-- **Der Haken zeigt die Liste, geholt wird einzeln.** Das weicht bewusst von
-  „Haken setzen und es installiert" ab: Ein Haken, der ungefragt eine halbe
-  Stunde Leitung belegt, wäre eine unangenehme Überraschung — und die meisten
-  wollen eine zweite Stimme, nicht neun
-- **Die Güte steht vor dem Laden dabei.** `x_low` und `low` sind 16 kHz und
-  klingen beim S dumpf. Die Stimmenauswahl warnt heute schon davor — aber erst
-  *nach* dem Herunterladen, und das ist zu spät
-- Während des Ladens läuft ein Balken; danach steht die neue Stimme sofort in
-  der Auswahl, ohne Neustart
-
-### Technisch
-- Neue Datei `piper_stimmen.js`, eingehängt wie `github_update.js`. Fehlt sie,
-  entfällt nur die Auswahl — der Trainer läuft weiter
-- **Eine einzige Quelle:** die `voices.json` des Piper-Projekts bei Hugging
-  Face, dieselbe Herkunft wie die mitgelieferte Stimme. Dort steht zu jeder
-  Datei Größe *und* MD5-Prüfsumme. Nichts ist fest verdrahtet; kommt dort eine
-  Stimme dazu, steht sie von selbst zur Wahl
-- **Geholt werden nur `.onnx` und `.onnx.json`** — Sprachmodelle und deren
-  Beschreibung, also Daten. Nie ein Programm, nie eine `.exe`, nie eine `.dll`
-- **Jede Datei wird nachgerechnet.** Stimmt die Prüfsumme nicht, wird sie
-  verworfen und nicht geschrieben; ein abgebrochener Download kommt so nie im
-  Ordner an. Geschrieben wird erst nach `piper\`, wenn alles stimmt — vorher
-  liegt die Datei unter `.teil`
-- Geschrieben wird ausschließlich direkt nach `piper\`, nur unter einem Namen,
-  der zum Muster einer Stimmdatei passt. Kein Unterordner, kein `..`, kein Pfad
-  aus der Antwort des Servers. Als Gegenstelle sind nur `huggingface.co` und
-  `hf.co` zugelassen, auch nach einer Umleitung ans Auslieferungsnetz
-- Der Fortschritt wird abgefragt, nicht gemeldet: Eine Anfrage, die zwei Minuten
-  offen steht, läuft in jeden Zeitablauf — beim Browser, beim Server und beim
-  Virenscanner dazwischen
-
-### Geprüft
-An einem Verzeichnis auf dem eigenen Rechner durchgespielt, statt 63 MB durch
-die Leitung zu ziehen:
-
-- Eine englische Stimme im Verzeichnis taucht in der deutschen Liste **nicht**
-  auf
-- Ein Eintrag mit dem Pfad `../../../piper.exe` wird verworfen, nicht geholt
-- `MODEL_CARD` und Ähnliches fällt weg — nur Modell und Beschreibung kommen mit
-- Eine **absichtlich veränderte** Datei wird an der Prüfsumme erkannt; im Ordner
-  landet nichts, auch keine `.teil`-Datei
-- Der saubere Fall: geladen, geprüft, geschrieben — die Stimme steht sofort in
-  der Auswahl
-
----
+- Einstellungen ▸ Vorlesen: weitere Piper-Stimmen nachladbar, Auslieferung weiterhin nur mit `thorsten`
+- Stimmen: Liste mit Güteangabe vor dem Laden, Einzeldownload mit Fortschrittsbalken, sofort ohne Neustart nutzbar
+- Stimmen: neues Modul `piper_stimmen.js`, Quelle `voices.json` des Piper-Projekts bei Hugging Face
+- Stimmen: nur `.onnx`/`.onnx.json`, MD5-Prüfung, Zwischendatei `.teil`, nur huggingface.co und hf.co zugelassen
+- Stimmen: Fortschritt per Abfrage statt lang offener Anfrage
 
 ## [1.131.0] - 2026-09-05
 
 ### Hinzugefügt
-- **Ein Knopf für das Vollbild** in der Kopfzeile, mit dem Zeichen der vier
-  Pfeile nach außen. Dietmar: „Benötige einen Button oben in der Leiste mit
-  Browser Fenster ‚Maximieren' bzw. das Zeichen mit den 4 Pfeilen. Beim Button
-  vorlesen mit aufnehmen. Danach verschwindet der obere Teil vom Browser."
-- Es ist dasselbe wie **F11** — aber F11 muss man wissen, und im Kursraum sitzt
-  niemand mit der Tastatur vor dem Beamer. Was dabei wegfällt, ist kein Zierrat:
-  Adressleiste, Lesezeichen und Reiter sind auf einem Laptopschirm rund 120
-  Punkte, also zwei bis drei Antwortzeilen mehr für die Frage
-- **Der Knopf ist beim Vorlesen dabei**, kurz wie ausführlich — mit dem Hinweis
-  auf F11 und darauf, dass Escape wieder herausführt
-- **Das Zeichen sagt, was als Nächstes passiert**, nicht wo man ist: vier Pfeile
-  nach außen heißt „groß machen", die vier nach innen „wieder klein"
-
-### Technisch
-- Nachgezogen wird über das Ereignis `fullscreenchange`, nicht nach dem eigenen
-  Klick. Das Vollbild lässt sich auch mit F11 und mit Escape umschalten, ohne
-  dass der Knopf je angefasst wird — wer nur auf den eigenen Klick hört, hat
-  früher oder später ein Zeichen, das das Gegenteil dessen zeigt, was gerade ist
-- Alle vier Schreibweisen der Browser sind berücksichtigt (`webkit`, `moz`,
-  `ms`). Verbietet ein Browser das Umschalten — das kommt in Kioskmodi vor —,
-  sagt der Trainer das und verweist auf F11, statt stumm nichts zu tun
-
-### Geprüft
-- Ein und aus über den Knopf, dazu ein Weg an ihm vorbei (Vollbild von außen
-  beendet): Das Zeichen, der Tooltip, die Vorlesetexte und `aria-label` ziehen
-  jedes Mal mit
-
----
+- Kopfzeile: Vollbild-Knopf (wie F11) mit Pfeilsymbol, auch vorgelesen
+- Vollbild: Symbol folgt `fullscreenchange`, auch bei F11/Escape; Browser-Präfixe berücksichtigt
+- Vollbild: Hinweis auf F11, wenn der Browser das Umschalten verbietet
 
 ## [1.130.0] - 2026-09-05
 
 ### Geändert
-- **Die gelernten Fragen sind jetzt im Verlauf grün** — in der Punktetafel unter
-  „Fortschritt". Dietmar, nachdem ich es zuerst am Nummernfeld der Frage gemacht
-  hatte: „Mit grün markiert, war eigentlich etwas anderes gemeint. Die gelernten
-  sollen im Verlauf grün markiert sein." Er hat die bessere Stelle gemeint: Am
-  Nummernfeld sieht man den Zustand **einer** Frage — der, die man ohnehin
-  gerade liest. In der Tafel sieht man alle auf einmal, und damit die Frage, die
-  einen beim Blättern wirklich umtreibt: Wie weit bin ich, und was liegt noch
-  vor mir?
-- **Drei Grüntöne, die man auseinanderhalten muss.** Der neue Punkt ist
-  *hellgrün mit grünem Rand*, nicht gefüllt — gefülltes Dunkelgrün heißt
-  weiterhin „in dieser Runde richtig beantwortet". Zwei gleich aussehende Grüns
-  nebeneinander hätten die Auskunft wieder weggenommen, die sie geben sollen
-  (Ziffern #0f5132 auf #d7f0e0 tragen 7,6:1)
-- **Das Ergebnis der laufenden Runde geht vor.** Wer eine gelernte Frage falsch
-  beantwortet, sieht Rot — alles andere wäre gelogen
-- Beim Abhaken oder Zurücknehmen färbt sich der Punkt sofort mit
-- Nicht im Prüfungssimulator: Dort liegt nichts auf dem Tisch, was in der echten
-  Prüfung nicht auch daläge
-
-### Entfernt
-- **Das grüne Nummernfeld an der Frage aus 1.129.0 ist wieder raus.** Es war
-  meine Auslegung von „grün markiert", nicht Dietmars Bitte — und es sagte
-  ohnehin nichts, was der Knopf „Gelernt" daneben nicht schon zeigt. Der
-  knappere Abstand zwischen Nummer und Fragentext bleibt
-
-### Technisch
-- Die Punktetafel wird an zwei Stellen gebaut (`renderQuestion` und
-  `updateSidebarOnly`); beide fragen jetzt dieselbe Funktion `gelerntPunkt()`
-- Die neue Regel trägt `!important`, weil die Farbstile spezifischer sind:
-  `body.grey .dot-sidebar` ist (0,2,1), `.dot-sidebar.gelernt-dot` nur (0,2,0).
-  Ohne das hätte der Punkt in Grau, Grün, Blau und Orange seine Farbe verloren —
-  derselbe Weg wie bei `.beantwortet-dot`, aus demselben Grund
-
-### Geprüft
-- Neun vorab abgehakte Fragen in einer Runde von 28: alle hellgrün. Eine richtig
-  beantwortet → dunkelgrün gefüllt. Eine nicht gelernte falsch beantwortet →
-  rot. Haken zurückgenommen → Punkt sofort wieder blass
-
----
+- Verlauf: gelernte Fragen als hellgrüne Punkte mit grünem Rand markiert
+- Verlauf: Ergebnis der laufenden Runde hat Vorrang, Aktualisierung beim Abhaken sofort, nicht im Prüfungssimulator
+- Fragennummer: grünes Nummernfeld aus 1.129.0 entfernt, knapper Abstand bleibt
+- Punktetafel: gemeinsame Funktion `gelerntPunkt()`, `!important` gegen spezifischere Farbstile
 
 ## [1.129.0] - 2026-09-05
 
 ### Geändert
-- **Die Lücke zwischen Fragennummer und Fragentext ist knapper.** Dietmar:
-  „Neben der Nummer aus dem Fragenkatalog ist etwas viel Platz zu dem Text.
-  Hätte das gerne etwas leicht aufgeschlossener." Der Grund war, dass zweimal
-  Abstand entstand: 7 Punkte Rand am Feld **und** ein echtes Leerzeichen der
-  Fragenschrift dahinter, zusammen gut 13 Punkte. Das Leerzeichen ist raus, der
-  Rand steht auf 6 — nachgemessen sind es jetzt genau 6 Punkte
-- **Gilt eine Frage als gelernt, wird das Nummernfeld grün.** Dietmar:
-  „Blätter-Stand / Gelernte ansehen: Hier möchte ich die gelernten Fragen grün
-  markiert." Es ist dasselbe Grün wie am Knopf „Gelernt" daneben, damit man die
-  beiden zusammen liest und nicht als zwei verschiedene Dinge (weiße Schrift
-  darauf trägt 6,3:1)
-- Die Markierung steht **überall**, nicht nur in der Runde „Gelernte ansehen" —
-  dort ist ohnehin alles grün. Nützlich ist sie beim Blättern: Man sieht auf
-  einen Blick, was schon abgehakt ist, ohne den Knopf anzusehen. Eine
-  Markierung, die mal da ist und mal nicht, müsste man sich außerdem erklären
-- **Ausgenommen ist der Prüfungssimulator.** Dort liegt nichts auf dem Tisch,
-  was in der echten Prüfung nicht auch daläge
-- Beim Abhaken färbt sich das Feld sofort mit. Ohne das bliebe es bis zur
-  nächsten Frage stehen, wie es war — und der Klick sähe aus, als hätte er nur
-  den Knopf betroffen
-
-### Geprüft
-- Abstand nachgemessen: vorher gut 13 Punkte, jetzt 6
-- Abhaken, zurücknehmen und die Runde „Gelernte ansehen" durchgespielt; das Feld
-  folgt jedes Mal sofort
-
----
+- Fragennummer: Abstand zum Fragentext von ca. 13 auf 6 px verkleinert
+- Fragennummer: Nummernfeld grün bei gelernter Frage (außer Prüfungssimulator), sofort beim Abhaken
 
 ## [1.128.0] - 2026-09-05
 
-### Geändert
-- **Unter Update steht jetzt die Versionsnummer statt eines Fingerabdrucks.**
-  Dietmar: „Dieser Trainer läuft mit dem Stand 2fe36d2d5e. Kann man da nicht die
-  Version anzeigen lassen? Ich habe nur noch keine Idee dazu, woher man die Nr
-  bekommt." — Sie kommt aus der **obersten Überschrift des `CHANGELOG.md`**,
-  derselben Zeile, aus der auch `version.js` und `Build-DIREKT.bat` rechnen. Das
-  CHANGELOG wandert mit den Dateien; wer einzelne Dateien bei GitHub einstellt,
-  stellt es mit ein. Die Nummer stimmt also auch dann, wenn kein Setup gebaut
-  wurde
-- **Nicht aus der `package.json`.** Die wird nur beim Bauen gesetzt
-  (`version.js --setzen`). In Dietmars Ordner stand dort `1.98.0`, während das
-  CHANGELOG längst bei `1.127.0` war. Eine Nummer, die man glauben soll, darf
-  nicht von einem Arbeitsschritt abhängen, den man vergessen kann
-- Der Fingerabdruck bleibt, klein und darunter. Er beantwortet eine andere
-  Frage: ob zwei Ordner buchstabengenau dasselbe enthalten — bei einer
-  Fehlersuche zu zweit genau die richtige Frage
-
 ### Hinzugefügt
-- **Drei Zahlen statt einer**, weil es drei gibt und sie Verschiedenes meinen —
-  das war der Punkt, an dem Dietmar hängen blieb („Derzeit habe ich eine exe mit
-  der Versions Nr. 1.111.0 bei GitHub. Die Version ändert sich aber, wenn ich
-  einzelne Dateien in GitHub einstelle."):
+- Einstellungen ▸ Update: drei Versionszeilen Hier, Bei GitHub und Setup dort
+- Update: GitHub-Prüfung ohne großes Fenster, lokal neuere Dateien getrennt genannt
+- Update-Fenster: Versionsvergleich (z. B. `1.127.0 → 1.129.0`) über den Knöpfen
+- API: `GET /api/github/pruefen` liefert `versionHier`, `versionDort`, `versionSetup`; führendes `v` am Release-Tag ignoriert
 
-  | Zeile | Was sie sagt |
-  |---|---|
-  | **Hier** | die Dateien in diesem Ordner |
-  | **Bei GitHub** | die Dateien dort — dasselbe CHANGELOG, nur im Repository |
-  | **Setup dort** | das fertige Installationsprogramm, aus dem Release-Tag |
-
-  Dass die dritte hinterherhinkt, ist kein Fehler: Ein Setup wird seltener
-  gebaut als eine Datei geändert. Man sieht jetzt nur, wie weit
-- **„Bei GitHub nachsehen" ohne das große Fenster.** Wer nur wissen will, ob es
-  etwas Neues gibt, bekommt zwei Zahlen und einen Satz — und erst wenn wirklich
-  etwas zu holen ist, den Knopf dorthin. Dateien, die **hier** neuer sind,
-  werden getrennt genannt: Sie bleiben unangetastet und warten aufs Hochladen
-- Im Update-Fenster steht die Gegenüberstellung `1.127.0 → 1.129.0` über den
-  Knöpfen, direkt neben der Entscheidung
-
-### Technisch
-- `GET /api/version` liefert `version` jetzt aus dem CHANGELOG (mit Rückfall auf
-  die `package.json`, falls kein CHANGELOG dabei ist), gelesen nur bei
-  geändertem Zeitstempel — die Standwache fragt jede Minute
-- `GET /api/github/pruefen` liefert zusätzlich `versionHier`, `versionDort` und
-  `versionSetup`. Das ferne CHANGELOG (60 KB) wird **nur** geholt, wenn sein
-  Fingerabdruck von dem hiesigen abweicht; ist er gleich, ist auch die Nummer
-  gleich. Schlägt eines davon fehl, fehlt nur die Zeile — der Dateivergleich
-  hängt nicht daran
-- Ein führendes `v` am Release-Tag wird abgeschnitten, damit sowohl `1.111.0`
-  als auch `v1.111.0` erkannt werden
-
----
+### Geändert
+- Update: Versionsnummer aus der obersten Überschrift von `CHANGELOG.md` statt Fingerabdruck, Fingerabdruck klein darunter
+- API: `GET /api/version` liest die Version aus dem CHANGELOG, Rückfall auf `package.json`
 
 ## [1.127.0] - 2026-09-05
 
-### Geändert
-- **Das Formelblatt-Fenster hat jetzt die Form des Blattes.** Dietmar schickte
-  ein Bild, auf dem links und rechts ein breiter grauer Streifen rot
-  angestrichen war: „Das rot markierte an der Seite nimmt viel Platz weg.
-  Besser wäre, wenn es sich automatisch am Monitor anpasst und seitlich
-  schmäler und dafür etwas länglicher wird." Der Grund für das Grau: Die
-  Formelsammlung ist A4 hochkant (Verhältnis 0,707), und ein hochkantes Blatt
-  in einem breiten Fenster lässt links und rechts Platz übrig. Jetzt richtet
-  sich die Höhe nach dem Bildschirm und die Breite rechnet sich daraus. Auf
-  einem 1080er Schirm standen vorher je 270 Punkte grau daneben, jetzt sind es
-  gut 100 — und statt 17 Zeilen der Tabelle sind 36 zu sehen
-- **Der Miniaturstreifen an der Seite ist weg** (`navpanes=0`). Dietmar: „Eine
-  seitliche Übersicht über alle Blätter wird nicht benötigt." Er hat recht —
-  man kommt mit einem Klick auf das richtige Blatt, man sucht es sich nicht aus
-- **Die Werkzeugleiste bleibt vollständig**, samt Stift, Textmarker und
-  Radierer: „Das mit dem Zeichnen und Markieren von einem Text auf dem PDF
-  finde ich richtig gut." Deshalb wird das Fenster nie schmäler als 800 Punkte
-  — darunter klappen Edge und Chrome die Zeichenwerkzeuge in ein Untermenü
-
 ### Hinzugefügt
-- **Beim Blättern führt der Trainer jetzt Buch.** Dietmar: „Ich möchte, dass
-  bei Blättern / Weiterblättern eine JSON angelegt wird, die den Stand
-  speichert, den man wieder löschen kann. Gespeichert werden: als gelernt
-  markierte Fragen über den Knopf ‚Gelernt' und Fragen, die man weiterklickt."
-  Bisher merkte sich das Blättern genau eine Frage — die letzte. Jetzt steht in
-  `data\userdata\blaettern.json` je Benutzer und Prüfungsziel, welche Fragen
-  durchgesehen und welche abgehakt wurden
-- **Eine eigene Datei, nicht ein Feld im Lernstand.** Der Lernstand wird
-  gesichert, zurückgeholt und beim Umzug mitgenommen; an ihm hängt viel. Der
-  Blätter-Stand ist ein Arbeitsbuch, das man wegwerfen können soll, ohne um den
-  Verlauf zu bangen. Zwei Dateien heißt: Löschen kann hier nichts anderes
-  mitreißen — und die Rückfrage vor dem Löschen sagt genau das
-- **„Nur die gelernten ansehen"** im Blätter-Fenster und in den Einstellungen.
-  Dietmar am 05.09.2026: „Ich bin alle 571 Fragen durch und habe neu angefangen.
-  Hier möchte ich mir alle grün gelernten Fragen sehen." Diese Runde verschiebt
-  das Lesezeichen des normalen Blätterns **nicht**. Gefragt wird der Lernstand
-  selbst und nicht das neue Buch — wer den Katalog schon durch hat, sähe sonst
-  eine leere Liste
+- Blättern: Stand je Benutzer und Prüfungsziel in `data\userdata\blaettern.json` (durchgesehen, abgehakt), löschbar
+- Blättern: Runde Nur die gelernten ansehen im Blätter-Fenster und in den Einstellungen, Lesezeichen bleibt
 
 ### Geändert
-- **Die Einstellungen sind ein Fenster mit Reitern geworden.** Dietmar:
-  „Ähnlich wie in einem Programm, zB WSJT-X (FT8). […] Das Fenster darf gerne in
-  die Breite gehen. Derzeit ist es doch mehr ein längliches Fenster. […] Hier
-  werden vermutlich noch weitere Einstellungen dazu kommen." Der letzte Satz hat
-  die Form bestimmt: Eine lange Liste wächst nach unten, bis niemand mehr etwas
-  findet; Reiter wachsen in die Breite. Fünf Reiter — **Allgemein, Vorlesen,
-  Lernen, Update, Wartung** — links stehend, nach Dietmars Wahl aus zwei
-  Entwürfen
-- **Vorlesen ist mit hereingezogen.** Es lag hinter dem Zahnrad an der Frage in
-  einem eigenen Fenster. Das Zahnrad gibt es weiter, es öffnet jetzt diesen
-  Reiter — der kurze Weg bleibt. Die Bedienelemente wurden **verschoben, nicht
-  nachgebaut**: Zwei Kästchen mit derselben Kennung wären ein Fehler, den man
-  erst merkt, wenn ein Haken nicht mehr hält
-- **Der Farbstil steht jetzt in den Einstellungen** — fünf Farbfelder statt
-  eines Knopfes, der durchschaltet
-- Jede Einstellung wirkt sofort. Der Knopf „Speichern" aus dem alten
-  Vorlese-Fenster ist damit überflüssig
-
-### Entfernt
-- **„Beim Entwickler nach Neuerungen sehen"** ist aus dem Info-Fenster
-  verschwunden. Dietmar: „Die Option Abgleich mit dem Entwickler wird nicht mehr
-  benötigt, wir arbeiten jetzt über GitHub." Zwei Wege zum selben Ziel waren
-  einer zu viel
-
-### Geprüft
-- Formelblatt an drei Bildschirmgrößen nachgemessen (1920×1080, 1600×900,
-  1366×768); die Werkzeugleiste behält den Stift bei 800 Punkten Breite
-- Blätter-Buch durchgespielt: durchklicken, abhaken, Datei auf der Platte
-  nachgesehen, Fenster wieder geöffnet, Stand gelöscht. Ein Eintrag mit einem
-  Pfad statt einer Fragennummer wird vom Server verworfen
-- Einstellungen: alle fünf Reiter, Esc schließt, Zahnrad an der Frage landet auf
-  Vorlesen, Farbstil schaltet um. **Keine doppelt vergebene Kennung** im ganzen
-  Dokument — das war beim Verschieben der Vorlese-Elemente die Stelle, an der es
-  leicht schiefgeht
-
----
+- Formelblatt: Fenster im Seitenverhältnis des A4-Blatts, Höhe nach Bildschirm, mindestens 800 px breit
+- Formelblatt: Miniaturleiste ausgeblendet (`navpanes=0`), Werkzeugleiste mit Zeichenwerkzeugen bleibt
+- Einstellungen: Fenster mit fünf Reitern (Allgemein, Vorlesen, Lernen, Update, Wartung)
+- Einstellungen: Vorlesen integriert, Zahnrad an der Frage öffnet diesen Reiter
+- Einstellungen: Farbstil als fünf Farbfelder, Änderungen wirken sofort ohne Speichern-Knopf
+- Info: Abgleich beim Entwickler entfernt, Aktualisierung nur über GitHub
 
 ## [1.126.0] - 2026-09-05
 
 ### Geändert
-- **Das Formelblatt ist jetzt das echte PDF, aufgeschlagen auf der richtigen
-  Seite.** Bisher lagen 20 abfotografierte Seiten im Ordner `formelsammlung\`,
-  und der Trainer zeigte davon einen Ausschnitt mit Markierung. Dietmar:
-  „Wir hatten in der letzten Version das PDF als Bilder erstellt. Das kann
-  raus! Besser und realistischer ist, das Formelblatt genau an der Stelle /
-  Seite anzuzeigen. Ziel ist es für die Benutzer, nicht nur die Antwort zu
-  sehen, sondern auch den Umgang damit zu lernen." — Genau so ist es jetzt:
-  ein Klick auf **Formelblatt** schlägt `Formelsammlung.pdf` auf dem Blatt
-  auf, auf dem die Antwort steht. Gesucht wird auf dem Blatt selbst, denn in
-  der Prüfung liegt das Heft auf dem Tisch und niemand zeigt mit dem Finger
-  auf die richtige Zeile
-- Über dem Blatt steht, **welches** es ist: „Blatt 2 · Seite 4 im PDF". Die
-  beiden Zahlen gehen auseinander, weil Deckblatt und Hinweisseite im Heft
-  keine Nummer tragen — wer selbst blättert, braucht beide
-- **Größer** legt dasselbe Blatt in ein eigenes Browserfenster, mit allem,
-  was der Browser für PDFs anbietet: Suche, Zoom, Drucken
-- Eigene Blätter-Knöpfe und die Abdunklung gibt es nicht mehr. Der Betrachter
-  des Browsers kann das alles schon, und eine Markierung wollte Dietmar
-  ausdrücklich nicht
+- Formelblatt: öffnet `Formelsammlung.pdf` direkt auf dem passenden Blatt statt Seitenbild mit Markierung
+- Formelblatt: Anzeige von Blatt- und PDF-Seitennummer
+- Formelblatt: Knopf Größer öffnet das Blatt im eigenen Browserfenster, eigene Blätterknöpfe und Abdunklung entfallen
+- Installer: Ordner `formelsammlung\` mit 20 Seitenbildern (ca. 3,6 MB) entfernt
 
-### Entfernt
-- Der Ordner `formelsammlung\` mit den 20 Seitenbildern (rund 3,6 MB) fällt
-  aus dem Installer und aus dem Aktualisierungspaket. `Formelsammlung.pdf`
-  selbst war ohnehin schon dabei. Bei bestehenden Installationen wird nichts
-  gelöscht — der Ordner liegt dort nur nutzlos herum und kann von Hand weg
-
-### Geprüft
-- Neun Fragen durchgespielt: VD730, VD709, VD731, VD732, VD736 → Blatt 2;
-  BC219 → Blatt 10 (IARU 70 cm); NB605 → Blatt 12 (Leistung); bei VA202 und
-  BE103 bleibt der Knopf richtigerweise aus
-- Der Wechsel zwischen zwei Blättern war die Stelle, an der es leicht schief
-  geht: Blatt 2 und Blatt 10 unterscheiden sich in der Adresse nur hinter dem
-  Doppelkreuz, und das allein ist für den Browser keine neue Seite — der
-  Betrachter wäre stehen geblieben, wo er stand. Der Rahmen wird deshalb bei
-  jedem Blattwechsel neu aufgebaut
-- `Formelsammlung.pdf` wird vom Server ausgeliefert (HTTP 200, 919 KB), auch
-  über den Einladungslink
-
----
+### Behoben
+- Formelblatt: Rahmen wird bei jedem Blattwechsel neu aufgebaut, Wechsel per Sprungmarke sonst ohne Wirkung
 
 ## [1.125.0] - 2026-09-05
 
 ### Behoben
-- **Der Formelblatt-Knopf blieb aus, obwohl die Zuordnung da war** — Dietmar
-  am Beispiel VD730. Ursache war nicht die Zuordnung, sondern der Abruf:
-  `formelhilfe.json` wurde mit `cache: 'force-cache'` geholt. Das heißt „nimm
-  die gespeicherte Fassung, egal wie alt sie ist, und frag den Server gar
-  nicht erst". Nach einer neuen Datei sah der Browser also weiter die alte —
-  und in der alten stand VD730 nicht. Die Datei wird jetzt mit Zeitstempel
-  und ohne Zwischenspeicher geholt; sie ist klein und wird einmal je Sitzung
-  gelesen
-- Geprüft an sechs Fragen: VD730, VD709 → Blatt 2, BC219 → IARU 70 cm,
-  NB605 → Leistung; bei VA202 und BE103 erscheint der Knopf richtigerweise
-  nicht
-
----
+- Formelblatt: Knopf fehlte trotz Zuordnung, `formelhilfe.json` wird mit Zeitstempel ohne Browser-Cache geladen
 
 ## [1.124.0] - 2026-09-05
 
-### Behoben
-- **Bei vielen Fragen fehlte das Formelblatt.** Dietmar nannte VD730, VD731,
-  VD732, VD736 und VD709 — alle fünf fragen nach Werten, die in der amtlichen
-  Formelsammlung auf Blatt 2 stehen. Von 571 Fragen der Klasse N hatten nur
-  **60** eine Zuordnung; jetzt sind es **114**
-- **Der Seitenaufbau in `formelhilfe.json` war falsch beschriftet.** Die
-  Einträge für PDF-Seite 5 bis 10 hießen „Frequenzbereiche" und „Zusätzliche
-  Nutzungsbestimmungen", zeigen aber den **Rufzeichenplan**. Wer dort
-  nachschlug, fand etwas anderes. Am PDF nachgesehen und richtiggestellt:
-  S.3 = Anlage 1, S.4 = Frequenzbereiche und maximale Leistung,
-  S.5 = Bandbreiten, S.6–10 = Rufzeichenplan, S.11 = IARU 2 m,
-  S.12 = IARU 70 cm, S.13–24 = Formelsammlung Technik
-- Die beiden Bandpläne hießen „Kurzwelle" und „UKW" — es sind 2 m und 70 cm
-
 ### Geändert
-- **Das Formelblatt zeigt nur noch die Seite, ohne Markierung.** Dietmar:
-  „Eine Markierung wird nicht benötigt." Das Abdunkeln drumherum und der
-  Rahmen sind weg, die Seite beginnt oben, der Schalter „Nur die Stelle"
-  entfällt. In der Prüfung liegt die Formelsammlung als Blatt auf dem Tisch,
-  ohne dass jemand die Zeile anstreicht. Die Koordinaten bleiben in der Datei
-  stehen, falls die Markierung je zurückkommen soll
+- Formelblatt: Seite ohne Markierung und Abdunklung, Schalter Nur die Stelle entfällt
 
-### Zur Zuordnung
-- Die Regeln sind **eng** gefasst. Der erste Entwurf traf auf jedes Wort
-  „Frequenzbereich", „Rufzeichen", „IARU" und hätte 242 Fragen zugeordnet —
-  darunter reine Rechtsfragen wie „Wie ist die Amateurfunkstelle definiert?",
-  bei denen die Antwort in keiner Tabelle steht. Ein Knopf, der die falsche
-  Seite aufschlägt, ist schlimmer als gar keiner: Man sucht dann in der
-  Prüfung an der falschen Stelle weiter. Zugeordnet wird nur, wenn die
-  Antwort wirklich auf dem Blatt steht — erkennbar an Zahlenwerten, Bändern
-  oder einer ausdrücklichen Frage nach dem Plan
-- Dass es „nur" 114 von 571 sind, liegt an der Klasse N selbst: Sie rechnet
-  wenig, und die meisten Technikfragen sind Verständnisfragen
-
----
+### Behoben
+- Formelblatt: Zuordnung von 60 auf 114 Fragen der Klasse N erweitert, mit eng gefassten Regeln
+- `formelhilfe.json`: Seitenbeschriftungen korrigiert (Rufzeichenplan, Bandbreiten, IARU-Bandpläne 2 m und 70 cm)
 
 ## [1.123.0] - 2026-09-05
 
 ### Behoben
-- **„Blättern" hat den Filter „Lernen aktiv für" ignoriert.** Dietmar: „Nehme
-  ich bei Lernen aktiv für Technik raus, müsste sich doch Blättern
-  reduzieren?" — Ja, müsste es. Die Zahl am Knopf stimmte zwar (Frage 344 von
-  571 macht 228 Rest), beantwortete aber eine andere Frage als der Zähler
-  daneben: „Start" filtert über `getFilteredQuestions()` nach den aktiven
-  Teilen, das Blättern lief stur durch den ganzen Katalog
-- Beides rechnet jetzt gleich. An Dietmars Stand nachgerechnet: 228 Rest mit
-  allen drei Teilen, **33** ohne Technik. Die schon gelernten Fragen bleiben
-  ausdrücklich drin — das ist der Zweck der Sache und steht auch so im Fenster
-- **Sonderfall mitbehandelt:** Fällt das Lesezeichen durch den Filter, weil
-  die gemerkte Frage zu einem abgewählten Teil gehört — BE404 ist eine
-  Betriebsfrage —, springt der Trainer nicht an den Anfang zurück, sondern zur
-  nächsten Frage danach, die noch im Pool ist. 343 durchgesehene Fragen noch
-  einmal von vorn wären die schlechteste aller Antworten
-- Die Zahl am Knopf zieht beim Umschalten der Teile sofort nach
-
----
+- Blättern: berücksichtigt den Filter Lernen aktiv für wie Start (`getFilteredQuestions()`)
+- Blättern: Lesezeichen in abgewähltem Teil springt zur nächsten Frage im Pool statt an den Anfang
+- Blättern: Zahl am Knopf aktualisiert sich beim Umschalten der Teile sofort
 
 ## [1.122.0] - 2026-09-04
 
 ### Geändert
-- **Die Fragennummer steht jetzt in einem eigenen weißen Feld.** Dietmar:
-  „Dieses Feld möchte ich ähnlich wie am Anfang in einem weißen Feld umrahmt,
-  damit sich das von der Frage etwas abhebt." Dieselben Werte wie die
-  Antwortfelder darunter — weißer Grund auf dem grauen Block, dünner Rand,
-  Monoschrift. Die Nummer ist eine Fundstelle im Katalog, kein Teil der
-  Frage; bisher steckte der einzige Hinweis darauf im Doppelpunkt dahinter
-- **Die Herkunft steht unter der Kachel, zu der sie gehört.** Vorher standen
-  beide Quellen in einer Zeile unter beiden Kacheln, und man musste raten,
-  was wozu gehört. Jetzt dasselbe Raster wie die Kacheln darüber, jede
-  Angabe mittig unter ihrer eigenen — nachgemessen, die Mittelpunkte liegen
-  auf denselben Pixeln
+- Fragennummer: eigenes weißes Feld mit Rahmen und Monoschrift
+- Dazu lernen: Herkunftsangabe jeweils mittig unter der zugehörigen Kachel
 
 ### Behoben
-- **Nach dem Klick war die Antwort erst gelb, dann grün oder rot.** Dietmar:
-  „Hier wünsche ich mir, dass es gleich rot oder grün ausgibt." Ursache: Der
-  Trainer liest nach dem Klick „Richtig" bzw. „Falsch" vor und markiert dabei
-  die betroffene Antwort gelb — und diese Markierung gewann ausdrücklich
-  gegen Grün und Rot. Zwei Sekunden lang stand Gelb, wo die Antwort längst
-  feststand
-- Das Gelb greift jetzt nur noch dort, wo **noch keine Wertung** steht. Beim
-  Vorlesen der Frage und der offenen Antworten bleibt alles wie gehabt;
-  sobald geklickt ist, gilt Grün und Rot
-
----
+- Antworten: nach dem Klick sofort grün oder rot statt kurz gelb durch die Vorlese-Markierung
 
 ## [1.121.0] - 2026-09-04
 
-### Behoben
-- **Der Trainer war plötzlich nicht mehr erreichbar — und es war nie ein
-  Absturz.** Der Server hat sich selbst beendet, zu Unrecht. Dietmar: „Der
-  Trainer schmiert nach kurzer Interaktivität immer noch ab. Das nervt
-  unwahrscheinlich!"
-
-  Die Seite meldet sich alle zehn Sekunden beim Server; bleibt sie länger als
-  45 Sekunden stumm, machte er Feierabend. Chrome und Edge **bremsen
-  Zeitgeber in Hintergrund-Tabs aber aus** — nach einigen Minuten nur noch
-  einmal pro Minute — und legen unbenutzte Tabs von sich aus schlafen
-  („Energiesparmodus", „Sleeping Tabs"), dann läuft gar kein Zeitgeber mehr.
-  45 Sekunden waren dagegen chancenlos: Der Server sah eine Lücke, hielt den
-  letzten Zuschauer für gegangen und schaltete ab, während das Fenster offen
-  daneben stand
-- Verschärft hat es der neue Kasten unter der Frage: **„Video ansehen" und
-  „Bei 50 Ohm nachlesen" öffnen einen neuen Tab** — damit ist der Trainer
-  genau in dem Moment im Hintergrund, in dem man etwas nachliest
-- Die Frist steht jetzt auf **fünf Minuten** statt 45 Sekunden. Der Zweck
-  bleibt derselbe — Browser zu, Server aus —, nur ohne die Annahme, dass ein
-  Browser Zeitgeber pünktlich ausführt. Der Preis: Ein herrenloser Server
-  läuft fünf Minuten statt 45 Sekunden weiter
-- **Die Seite meldet sich jetzt auch, sobald sie wieder sichtbar wird** —
-  über `visibilitychange`, `focus` und `pageshow`, statt nur im Takt
-- **Zweiter Fehler an derselben Stelle:** `pagehide` kommt auch dann, wenn
-  der Browser die Seite nur zur Seite legt und gleich wiederholt (bfcache,
-  Energiesparmodus). Die Seite hat sich dabei jedes Mal **abgemeldet** — der
-  Server hielt sie für geschlossen und schaltete ab, obwohl sie wiederkam.
-  Jetzt gilt der Abschied nur, wenn die Seite wirklich geht (`event.persisted`)
-
 ### Hinzugefügt
-- **Ein Protokoll.** Bis heute gab es keins: `START.vbs` startet den Server
-  ohne Fenster und ohne Umleitung — alles, was er sagte, fiel ins Nichts.
-  Verschwand er, gab es nichts nachzusehen. Genau deshalb ließ sich das so
-  lange nicht klären. Ab jetzt steht alles zusätzlich in
-  **`data\userdata\server.log`**, mit Uhrzeit; bei einem Megabyte fängt die
-  Datei von vorn an, die alte bleibt als `server.log.alt` liegen
-- Beim Ausscheiden eines Zuschauers steht jetzt dabei, **wie lange** er stumm
-  war — und beim Beenden, mit welchem Code und nach welcher Laufzeit. Bleibt
-  diese letzte Zeile aus, wurde der Server von außen abgeschossen; auch das
-  ist eine Auskunft
-- Das Protokoll liegt bei den Lerndaten, nicht im Programmordner: Eine
-  Installation unter „Program Files" ist für normale Benutzer nicht
-  beschreibbar, dort wäre es still gescheitert
+- Server-Protokoll `data\userdata\server.log` mit Uhrzeit, Wechsel bei 1 MB nach `server.log.alt`
+- Protokoll: Dauer der Stille beim Ausscheiden eines Zuschauers sowie Beendigungscode und Laufzeit
 
----
+### Behoben
+- Server: beendete sich zu Unrecht, da Browser Zeitgeber in Hintergrund-Tabs drosseln; Frist von 45 s auf 5 min
+- Lebenszeichen: Seite meldet sich zusätzlich bei `visibilitychange`, `focus` und `pageshow`
+- Lebenszeichen: `pagehide` meldet nur bei endgültigem Verlassen ab (`event.persisted`), nicht bei bfcache
 
 ## [1.120.0] - 2026-09-04
 
 ### Hinzugefügt
-- **Die 50-Ohm-Zuordnung liegt jetzt für alle 571 Fragen der Klasse N vor.**
-  Jede Frage führt auf das Kapitel im Lehrgang des DARC, in dem ihr Stoff
-  erklärt wird — keine Lücke, kein Rest
-- Hergeleitet ist sie aus dem **Videolehrgang**: Michaels 14 Lektionen folgen
-  den 14 Kapiteln von 50 Ohm, Lektion für Kapitel. Das ist nicht geraten,
-  sondern nachgesehen — die Unterkapitel decken sich wörtlich. Lektion 11
-  „Pileups, Split, Contest, Fuchsjagd, SSTV, Notfunk" gegen Kapitel 11
-  „Betriebsabwicklung" mit Pile-up, Split-Verkehr, Contest, Fuchsjagd, SSTV,
-  Notfunk. Bei Lektion 3 und 13 dasselbe Bild
-- Alle 14 Kapiteladressen sind einzeln aufgerufen und ihre Überschriften
-  verglichen worden — kein Link führt ins Leere
-- `50ohm_map.json` wandert jetzt mit: in den Installer, in das
-  Aktualisierungspaket und in den Abgleich, wie die Video-Map daneben
-- **Die Fußzeile nennt jetzt die Herkunft der Erklärungen** — in derselben
-  Zeile, nicht darunter:
+- 50ohm.de: Zuordnung aller 571 Fragen der Klasse N zu Kapiteln des DARC-Lehrgangs, abgeleitet aus dem Videolehrgang
+- `50ohm_map.json`: in Installer, Aktualisierungspaket und Abgleich aufgenommen
+- Fußzeile: Herkunftshinweis mit Links zu 50ohm.de und DARC, Angaben zu Basis und Fragenzahl entfernt
+- Fußzeile: Umbruch unter 900 px erlaubt, kein seitlicher Überlauf
 
-  > Offizieller Katalog der Bundesnetzagentur Stand: März 2024 ·
-  > Direkteinstieg Klasse N · **Ω** In Zusammenarbeit mit **50ohm.de** — dem
-  > Amateurfunk-Lehrgang des DARC
-
-  Dafür sind „Basis (Vorschriften, Betrieb, Technik N)" und „571 Fragen im
-  Pool" herausgeflogen. Beides stand ohnehin doppelt: die Prüfungsübersicht
-  führt die Teile auf, und die Zahl steht am Knopf „Start". Farbe trägt nur
-  das Omega, wie in den Kacheln unter der Frage
-- Unterhalb von 900 Pixeln darf der Satz umbrechen — lieber zwei Zeilen als
-  ein Fenster, das sich seitlich wegschiebt. Geprüft bei 1440, 1280, 1024 und
-  820 Pixeln: kein seitlicher Überlauf
-- Beide Namen in der Zeile sind anklickbar: **50ohm.de** führt auf den
-  Lehrgang, **DARC** auf den Verein. Beide öffnen im Browser
-- Zwei vorsichtigere Fassungen des Satzes stehen als Kommentar daneben, falls
-  der DARC eine davon lieber sieht
-
-- **Das Omega trägt keine Farbe mehr.** Es stand in `#00adef`, dem Blau des
-  DARC — und geschützt ist die Marke als Ganzes, das Blau gehört dazu. Jetzt
-  hat es die Farbe der Zeile, in der es steht: in der Fußzeile die
-  Schriftfarbe, in den Kacheln die des Titels daneben. Damit ist es ein
-  Buchstabe im Satz und nichts weiter
-
-### Nicht gemacht
-- **Das Zeichen „50 Ω" des DARC kommt im Trainer nicht vor.** Matthias am
-  04.09.2026: „Das Logo ist markenrechtlich geschützt. Ich würde erstmal
-  vorschlagen, dass du das draußen lässt." Darüber entscheidet der Vorstand.
-  Sobald er zustimmt, wird das Zeichen unten in der Fußzeile und oben in der
-  Kopfzeile eingebaut — bis dahin steht dort das schwarze Omega
-
-### Bekannte Einschränkung
-- Die Verlinkung geht auf die **Kapitelübersicht**, nicht auf die genaue
-  Unterseite. Für die feinere Zuordnung braucht es die Liste vom DARC; sobald
-  sie da ist, ersetzt sie die Datei vollständig. Der Kasten sagt das auch:
-  unter dem Kapitelnamen steht „Kapitelübersicht"
-
----
+### Geändert
+- Omega-Zeichen: ohne DARC-Blau, in der Schriftfarbe der jeweiligen Zeile
+- 50ohm.de: Links führen vorerst auf die Kapitelübersicht, nicht auf Unterseiten
 
 ## [1.119.0] - 2026-09-04
 
 ### Hinzugefügt
-- **„Dazu lernen" unter der Frage — jetzt zwei Wege.** Neben dem Videolehrgang
-  steht künftig der Lehrgang des DARC: dieselbe Frage, einmal erklärt im Video
-  und einmal zum Nachlesen auf **50ohm.de**. Anlass ist Dietmars Vorgabe: „Ziel
-  ist es, nicht nur auswendig zu lernen, sondern auch richtig zu lernen"
-- Die Zuordnung kommt aus der neuen Datei **`50ohm_map.json`** — eine Zeile je
-  Frage mit Kapitel, Seitenname und Adresse. Sie ist **freiwillig**: Fehlt sie,
-  bleibt einfach der zweite Hinweis weg, sonst ändert sich nichts. Der Trainer
-  läuft ohne sie genauso
-- Der Weg zu 50 Ohm geht in den **Browser**, nicht in ein Fenster des Trainers:
-  Die Seite gehört dem DARC und soll auch als seine erscheinen, mit ihrer
-  Adresse in der Zeile
-- **Ohne Verbindung** führt der Knopf nicht ins Leere, sondern sagt, wohin er
-  führen *würde* — Kapitel und Seitenname stehen ja in der Zuordnung. Der
-  Trainer lernt bewusst offline
-- Beide Knöpfe erklären sich beim Vorlesen, kurz wie ausführlich
+- Dazu lernen: zweiter Hinweis auf den DARC-Lehrgang 50ohm.de neben dem Videolehrgang
+- `50ohm_map.json`: optionale Zuordnung Frage zu Kapitel, Seitenname und Adresse
+- 50ohm.de: öffnet im Browser, ohne Verbindung Anzeige des Ziels statt Fehler
+- Dazu lernen: beide Knöpfe mit Vorlesetext
 
 ### Geändert
-- **Die Gestaltung des Hinweises folgt jetzt der Knopfleiste.** Bisher war es ein
-  Kasten mit farbiger Symbolkachel und einem schwarzen Pillen-Knopf — also die
-  Bauweise, die im September aus der Leiste geflogen ist („wirkt wie ein
-  Kinderspielzeug"). Jetzt zwei gleich breite Felder, weiß, Rand `#d7e0ec`,
-  8 Pixel Ecke; das Feld selbst ist der Knopf. Farbe tragen nur die beiden
-  Zeichen der Quelle
-- Gibt es nur eine Quelle, nimmt sie die volle Breite; unter 700 Pixeln stehen
-  beide untereinander
-- Das **Ω** steht für 50 Ohm — der Buchstabe, nicht das Logo des DARC. Das
-  gehört ihnen und wird nicht nachgebaut
-- **Am Fragenblock ändert sich nichts.** Dietmar: „An den Farben und dem Style
-  möchte ich nichts verändern. Das ist von 50Ohm." Rahmen `#dddddd`, richtig
-  `#3bb583`, falsch `#fe756c` bleiben, wie sie sind
-- Im Prüfungssimulator und im Beamer-Modus bleiben beide Hinweise ausgeblendet,
-  wie bisher der Videokasten
-
----
+- Dazu lernen: zwei gleich breite weiße Felder im Stil der Knopfleiste, unter 700 px untereinander
+- Dazu lernen: Ω als Zeichen für 50 Ohm, kein DARC-Logo
+- Dazu lernen: im Prüfungssimulator und Beamer-Modus ausgeblendet
 
 ## [1.118.0] - 2026-09-03
 
-### Entfernt
-- **Der Dark Mode ist abgeschaltet.** Grund sind nicht die Farben, sondern die
-  Bilder: Die Schaltbilder im Fragenkatalog der Bundesnetzagentur bringen ihren
-  weißen Grund mit. Auf dunklem Grund stehen sie als leuchtende Kacheln in der
-  Frage — bei fast jeder Technikfrage. Dagegen hilft kein anderes Blau
-- Der Umschalter wandert jetzt durch **Light → Green → Blue → Orange → Grey**.
-  Wer „Dunkel" gespeichert hatte, landet still auf Hell; der gespeicherte Wert
-  wird dabei mit umgeschrieben, damit er nicht im Browser liegen bleibt
-- Die Regeln des Dark Mode **bleiben im Stilblock stehen**, wirkungslos, weil
-  die Klasse nirgends mehr gesetzt wird. Nichts davon ist verloren: Wer ihn
-  zurückholen will, schreibt `dark` wieder in die Liste `STILE`, alles Weitere
-  greift dann von allein
-
----
+### Geändert
+- Dark Mode abgeschaltet (Schaltbilder mit weißem Grund), Umschalter Light → Green → Blue → Orange → Grey
+- Farbstil: gespeichertes Dunkel wird auf Hell umgeschrieben
+- Dark-Mode-Regeln bleiben inaktiv im Stylesheet, reaktivierbar über die Liste `STILE`
 
 ## [1.117.0] - 2026-09-03
 
 ### Geändert
-- **Dark Mode auf DARC-Blau umgestellt.** Der bisherige „Geräteschwarz"-Modus
-  war nach Dietmars Icom RS-BA1 gebaut: fast schwarze Flächen, leuchtendes
-  Türkis. Schön, aber am falschen Ort — der Trainer geht Richtung DARC. Neue
-  Quelle sind die Farben der **50-Ohm-App des DARC**, aus einem Bildschirmfoto
-  gemessen statt geschätzt: `#00adef` das Blau im Logo, `#2fbcf4` Kopfband und
-  Fortschritt, `#98def8` der blasse Rahmen
-- Übernommen ist nicht das Helle — eine Nachtansicht in Hellblau wäre keine —
-  sondern die **Farbfamilie**: derselbe Blauton einmal weit heruntergezogen als
-  Grund (`#071520` … `#10293b`) und einmal ganz oben als Signal (`#00adef`).
-  Aus dem Geräteschwarz wird ein tiefes Marineblau, aus dem Türkis das
-  DARC-Blau. Die Bauweise bleibt: durchgehend dunkle Flächen, dünne Kanten
-  statt Schatten, ein Signalton und nur dort, wo etwas an ist
-- Die vorgelesene Antwort leuchtet jetzt im DARC-Blau statt im Türkis — der
-  Gedanke ist derselbe geblieben
-- Die CSS-Variablen heißen ehrlich nach dem, was sie sind: aus `--geraet-*`
-  wird `--nacht-*`, aus `--tuerkis` wird `--darc-blau`
-- Hell bleibt unverändert. Auch Green, Blue, Orange und Grey sind unberührt
+- Dark Mode: Farbfamilie DARC-Blau (`#00adef`) auf dunklem Marineblau statt Geräteschwarz und Türkis
+- Dark Mode: vorgelesene Antwort leuchtet in DARC-Blau
+- CSS: Variablen `--geraet-*` umbenannt in `--nacht-*`, `--tuerkis` in `--darc-blau`
 
 ### Behoben
-- **Die Auswertungsspalte war im Dark Mode kaum zu lesen.** „Richtig",
-  „Falsch", „Offen" und „Quote" trugen noch die Signalfarben von damals, als
-  die Spalte ein weißer Kasten war: dunkles Grün, dunkles Rot, dunkles Ocker,
-  graue Beschriftung. Gemessen 2,3:1 für die Beschriftung und 2,6:1 für die
-  Zahlen — lesbar beginnt bei 4,5:1. Jetzt stehen dort die hellen
-  Gegenstücke; die Bedeutung bleibt, nur die Helligkeit dreht sich um
-- Alle Schriftfarben der Nachtansicht sind gegen ihre Flächen gerechnet:
-  helle Schrift über 12:1, leise Schrift über 5,9:1, das Signalblau über 5,8:1
-
----
+- Dark Mode: Auswertungsspalte mit hellen Signalfarben lesbar (Kontrast mind. 4,5:1)
+- Dark Mode: alle Schriftfarben gegen ihre Flächen auf Kontrast geprüft
 
 ## [1.116.0] - 2026-09-03
 
 ### Geändert
-- **Die Kopfzeile ist auf vier Knöpfe geschrumpft.** Sie war durch „Beenden" auf
-  acht angewachsen und in eine zweite Zeile gerutscht. Oben bleiben Zahnrad,
-  Info, Beenden und der Farbumschalter — das, was man während einer Runde in
-  Reichweite haben will. Die Reihe ist jetzt 298 statt 640 Pixel breit und
-  bricht erst unterhalb von 1000 Pixeln um
-- **„Cache leeren", „Fehler melden" und „Alles zurücksetzen" stehen jetzt im
-  Zahnrad-Fenster** unter der neuen Überschrift *Wartung*. Selten gebraucht,
-  zwei davon heikel, keiner gehört zum Lernen. Die Funktionen sind
-  unverändert — auch die Rückfrage vor dem Zurücksetzen. Das Vorlesen kennt
-  sie an ihrem neuen Platz genauso
-- **„Raum" erscheint nur noch, wenn ein Raum läuft.** Der Knopf zeigt die
-  Statistik der Teilnehmer und hatte ohne Raum nichts anzuzeigen; der große
-  Knopf „Gruppenraum" in der zweiten Leiste öffnet denselben Dialog. Läuft ein
-  Raum, steht er wieder oben — auch mitten in einer Runde, wo die zweite
-  Leiste ausgeblendet ist
-
----
+- Kopfzeile: auf Zahnrad, Info, Beenden und Farbumschalter reduziert, Umbruch erst unter 1000 px
+- Zahnrad-Fenster: Cache leeren, Fehler melden und Alles zurücksetzen im neuen Abschnitt Wartung
+- Kopfzeile: Knopf Raum nur bei laufendem Gruppenraum
 
 ## [1.115.0] - 2026-09-03
 
 ### Behoben
-- **Beamer-Modus ließ die Hauptansicht leer zurück.** Wer ihn einschaltete,
-  während keine Runde lief, sah ein weißes Blatt — die Hauptansicht besteht
-  fast nur aus den Teilen, die der Modus ausblendet: Knopfleiste, Verlauf,
-  Prüfungsübersicht, Lernfortschritt. Erst F5 half. Der Modus greift jetzt
-  **nur, solange eine Frage auf dem Schirm steht**. Vorher bleibt alles, wie es
-  ist, und ein Balken am unteren Rand sagt: „Beamer-Modus ist an — er schaltet
-  um, sobald du eine Runde startest." Beim Verlassen wird die Ansicht wieder
-  aufgebaut, ohne Neuladen
-- **Der Ausstieg war praktisch unsichtbar.** „Beamer-Modus verlassen (Esc)"
-  stand mit 25 % Deckkraft in der Ecke und ging auf hellem Grund unter. Jetzt
-  ein deutlicher dunkler Knopf. Außerdem stand er nach dem ersten Gebrauch als
-  weißer Kasten in der **normalen** Ansicht herum — ihm fehlte die Grundregel,
-  die ihn außerhalb des Beamer-Modus wegnimmt
-- **Esc gehört zuerst dem offenen Fenster.** Wer den Modus im Zahnrad-Fenster
-  einschaltete, schloss mit Esc bisher beides auf einmal. Jetzt schließt das
-  erste Esc das Fenster, das zweite verlässt den Beamer-Modus
-- **Die Knopfreihe der Kopfzeile rutschte nach links,** sobald sie durch den
-  neuen Knopf „Beenden" in eine zweite Zeile umbrach. Grund war das
-  `space-between` der Kopfzeile, das den umgebrochenen Block an den linken Rand
-  setzt. Sie bleibt jetzt in jeder Zeile rechtsbündig
-
----
+- Beamer-Modus: Hauptansicht nicht mehr leer, Umschaltung erst bei laufender Runde, vorher Hinweisbalken
+- Beamer-Modus: Ausstiegsknopf deutlich sichtbar und nicht mehr in der normalen Ansicht
+- Esc: schließt zuerst das offene Fenster, erst danach den Beamer-Modus
+- Kopfzeile: Knopfreihe bleibt beim Umbruch rechtsbündig
 
 ## [1.114.0] - 2026-09-03
 
 ### Hinzugefügt
-- **Beamer-Modus** für den Kursraum. Nur Frage und Antworten, dreimal so groß,
-  alles andere weg — Leisten, Verlauf, Auswertung, Fußzeile. Weiterblättern mit
-  Leertaste, Pfeiltasten oder Presenter (Bild-auf/Bild-ab), **Strg+B** schaltet
-  um, **Esc** beendet ihn. Unten links steht, bei welcher Frage von wie vielen
-  man ist. Schaltbar im Zahnrad-Fenster
-- Die Schriftgröße rechnet in `vw`: auf jeder Leinwand gleich groß im
-  Verhältnis zum Bild, egal ob 1280 oder 4K angeschlossen ist
-- Der Modus wird **nicht** gespeichert. Wer morgen allein am Schreibtisch
-  öffnet, will nicht in Kinoschrift begrüßt werden
-- **Knopf „Beenden"** in der Kopfzeile. Beendet den Server sauber, statt nur
-  das Fenster zuzumachen: der Port wird frei, beim nächsten Start gibt es keine
-  Rückfrage. Mit Rückfrage vorher — sie nennt auch, ob gerade eine Runde läuft
-  oder der Gruppenraum offen ist. Die neue Route `/api/beenden` ist `localOnly`:
-  ein Gast im Gruppenraum kann den Trainer des Gastgebers nicht ausschalten
-- **Der Trainer merkt jetzt, wenn der Server weg ist.** Bisher lief die Wache
-  jede Minute gegen `/api/version` und tat bei ausbleibender Antwort nichts —
-  die Seite sah normal aus, während nichts mehr gespeichert wurde. Nach zwei
-  Fehlversuchen erscheint ein Balken
+- Beamer-Modus: nur Frage und Antworten in großer Schrift, Leertaste, Pfeiltasten, Presenter; Strg+B schaltet, Esc beendet
+- Beamer-Modus: Schriftgröße in `vw`, Fragenzähler unten links, Zustand wird nicht gespeichert
+- Kopfzeile: Knopf Beenden fährt den Server mit Rückfrage sauber herunter, Route `/api/beenden` nur lokal
+- Verbindung: Hinweisbalken nach zwei fehlgeschlagenen Abfragen, wenn der Server nicht erreichbar ist
 
 ### Behoben
-- Im Dark Mode war in den Fenstern fast schwarze Schrift auf fast schwarzem
-  Grund. Ursache: Die Fenster setzten sich ihre alten **hellen** Variablen
-  (`--ink: #16232f`), weil sie einmal helle Kästen waren. Jetzt werden die
-  Variablen umgestellt — eine Regel statt fünfzig
-
----
+- Dark Mode: dunkle Schrift auf dunklem Grund in den Fenstern, Variablen jetzt zentral umgestellt
 
 ## [1.113.0] - 2026-09-03
 
 ### Geändert
-- **Dark Mode im Gerätestil.** Dietmar mit einem Screenshot seines Icom RS-BA1:
-  „Die Farbe und der Style ist wahnsinnig schön. Dagegen wirkt unser Dark Mode
-  ziemlich mickrig." Er hatte recht — der bisherige Dark Mode machte nur den
-  Rand dunkel und ließ die Inhalte weiß. Das war ein heller Trainer in einem
-  dunklen Rahmen
-- Jetzt durchgehend dunkle Flächen, dünne Kanten statt Schatten, ein Glanzlicht
-  an der Oberkante wie bei einem gefrästen Frontpanel
-- **Türkis `#17c3d6` als einziges Signal** — und nur dort, wo etwas an ist:
-  Start, „Weiter", die richtige Antwort, die Antwortbuchstaben
-- Zähler in Monoschrift auf dunklen Feldern, wie eine Anzeige am Gerät
-- **Die vorgelesene Antwort leuchtet türkis** statt gelb. Im hellen Stil bleibt
-  es beim Leuchtstift-Gelb — die Signalfarben für richtig, falsch und
-  angekreuzt sind in allen Modi unverändert
-- Der Fragenblock hat ein eigenes Farbsystem (`--darc-*`); im Dark Mode werden
-  jetzt dessen Variablen umgestellt statt zwanzig Einzelregeln geschrieben
-
-- **Die Fenster ziehen mit.** Dietmar: „Manche Fenster die sich öffnen sind
-  weiß und andere grau." Stimmt — die zwölf Fenster sind über Jahre gewachsen
-  und tragen ihre Farben als `style`-Attribut im HTML; inline schlägt jede
-  Klasse, deshalb blieben sie hell. Welche Farbwerte darin vorkommen, habe ich
-  nicht geraten, sondern alle Fenster im Browser geöffnet und ausmessen lassen
-- Hauptknöpfe in den Fenstern leuchten türkis, Warnkästen behalten ihren Ton
-  nur gedunkelt, Ankreuzfelder bekommen die Gerätefarbe
+- Dark Mode: Gerätestil mit durchgehend dunklen Flächen, dünnen Kanten und Glanzlicht
+- Dark Mode: Türkis `#17c3d6` als einziges Signal, Zähler in Monoschrift
+- Dark Mode: vorgelesene Antwort türkis statt gelb, Signalfarben für richtig und falsch unverändert
+- Dark Mode: Fragenblock über Variablen `--darc-*`, alle Fenster dunkel
 
 ### Behoben
-- Die Antwortbuchstaben A bis D standen im Dark Mode schwarz auf schwarz
-- Der Fragenblock behielt sein helles Grau `#dddddd`
-- Die Überschriften der aufklappbaren Gruppen im Gruppenraum waren dunkelblau
-  auf Schwarz und damit unsichtbar
-
----
+- Dark Mode: Antwortbuchstaben A bis D, Fragenblock-Grau und Gruppenraum-Überschriften wieder lesbar
 
 ## [1.112.0] - 2026-09-03
 
 ### Geändert
-- **Ruhige Knopfleiste.** Farbe war bisher ein Kennzeichen: jeder Knopf hatte
-  eine eigene, damit man ihn unterscheiden kann. Wenn alles hervorgehoben ist,
-  ist nichts hervorgehoben — das Auge fand „Start" nicht schneller als
-  „Drucken". Jetzt gilt eine Rangfolge:
-  gefüllt = die Handlung (nur **Start**), weiß = Werkzeug, blauer Rand = eigener
-  Modus (Prüfungssimulator, Gruppenraum), roter Rand = tut weh (Reset)
-- Die Farbe ist nicht verschwunden, sie sitzt jetzt in der **Zahl** — dort steht
-  die Information. Rot für Fehler, Violett für Lernbedarf
-- **Start** in Tiefblau `#123a6b`. Die Farbe steht als `--start-farbe` einmal
-  oben in der Datei; ein Wechsel ist eine Zeile
-- Ecken von 30 px auf 8 px — weniger Bonbon, mehr Werkzeug
-- Betroffen sind nur die beiden Leisten. Knöpfe in Fenstern und in der
-  Frageansicht bleiben unverändert
-- Im dunklen Stil bleibt die Filterleiste ein heller Kasten, wie bisher; dort
-  gilt weiter die helle Fassung. Umgestellt wurde nur die Kopfleiste
-
----
+- Knopfleiste: Rangfolge statt Farbkennzeichnung (gefüllt Start, weiß Werkzeug, blauer Rand Modus, roter Rand Reset)
+- Knopfleiste: Farbe in den Zählern (Rot für Fehler, Violett für Lernbedarf)
+- Start-Knopf: Tiefblau `#123a6b` über Variable `--start-farbe`
+- Knopfleiste: Eckenradius von 30 auf 8 px, nur Kopf- und Filterleiste betroffen
 
 ## [1.111.0] - 2026-09-02
 
 ### Hinzugefügt
-- **Zahnrad links neben „Info"** — ein eigenes Fenster für zwei Einstellungen,
-  beide pro Benutzer gespeichert
-- **Knöpfe vorlesen**: Fährt die Maus über einen Knopf, wird sein Hinweistext
-  gesprochen. Der Tabulator löst dasselbe aus, damit es auch ohne Maus geht
-- Dazu die Wahl **kurz oder ausführlich**: kurz nennt nur den Namen
-  („Lernbedarf"), ausführlich die ganze Erklärung („Lernbedarf, oft falsch,
-  braucht 3x richtig")
-- **Schrift beim Vorlesen vergrößern**: Die Antwort, die gerade gelesen wird,
-  tritt hervor und wird deutlich größer
-- Zu den wichtigsten Knöpfen gibt es für „ausführlich" eigene Erklärungen in
-  ganzen Sätzen — nicht nur die Sprechblase, sondern so, wie man es jemandem
-  erklärt, der daneben sitzt
-- **„Ziel wählen" spricht mit**: beim Öffnen „Wähle eine Klasse aus", auf jeder
-  der fünf Karten deren Name — mehr nicht. Prüfungsteile, Fragenzahl und die
-  CB-Rechnung stehen ohnehin sichtbar auf der Karte
-- Stumm bleiben das Kreuz zum Schließen und die Knöpfe zurück zur Hauptansicht.
-  Beides erklärt sich von selbst und würde beim Weiterklicken dazwischenreden.
-  Einzelne Elemente lassen sich mit `data-nicht-vorlesen` stumm stellen
-- „Prüfung starten" nennt jetzt die **Taste F9**, die beim Üben die richtige
-  Antwort zeigt. Dass sie anderswo gesperrt ist, sagen die Knöpfe, die es
-  betrifft: „Prüfungssimulator" und „Gruppenraum"
-- Die **Benutzer-Auswahl im Verlauf** erklärt sich: drei getrennte Lernstände
-  an einem Rechner, gedacht für den Ortsverband, wo sich mehrere einen Computer
-  teilen. Beschriftung und Auswahlfeld lösen dieselbe Ansage aus
-- Der **Pfeil neben dem Suchfeld** erklärt beim Überfahren, was die Suche kann:
-  Fragennummer zum Hinspringen, Stichwort im Fragetext, mehrere Wörter grenzen
-  ein, Groß- und Kleinschreibung und Umlaute egal
-- „Probe hören" im Einstellungsfenster spielt einen Beispielsatz
-
-### Entfernt
-- Das **Hinweis-Kästchen beim Überfahren** ist weg — das Vorlesen erklärt die
-  Knöpfe besser, und im Video wäre die Blase nur im Bild gewesen. Die
-  `data-tooltip`-Texte bleiben: sie sind jetzt die Quelle für die gesprochene
-  Erklärung
-
-### Geändert (Blättern)
-- Die Erklärung sagt jetzt, wozu der Knopf da ist, nicht nur was er tut:
-  Fragen finden, die man schon kennt, unter „Gelernt" abhaken und so den
-  Stapel kleiner machen. Bei gesetztem Lesezeichen nennt sie die Stelle
-
-### Geändert (Gruppenraum)
-- Sprechblase und Erklärung sagen jetzt ausdrücklich, dass Teilnehmer über den
-  Link **im Browser** hereinkommen — ohne Installation, ohne Download, ohne
-  Anmeldung, auf jedem Gerät
+- Kopfzeile: Zahnrad-Fenster links neben Info für Einstellungen je Benutzer, mit Probe hören
+- Vorlesen: Hinweistext eines Knopfs beim Überfahren oder per Tabulator, wahlweise kurz oder ausführlich
+- Vorlesen: optionale Schriftvergrößerung der gerade gelesenen Antwort
+- Vorlesen: Erklärungen für wichtige Knöpfe, Ziel wählen, Benutzerauswahl und Suchfeld; `data-nicht-vorlesen` stellt stumm
 
 ### Geändert
-- Beim Vorlesen der Knopftexte werden Symbole entfernt, „·" und „|" werden zu
-  einer kurzen Pause, „N→E" zu „N nach E", „3x" zu „3 Mal", „&" zu „und" —
-  sonst klingt es abgehackt oder schlicht falsch
-- Die vorgelesene Frage hat immer Vorrang: solange sie läuft, schweigen die
-  Knopftexte
-
-### Geändert (Fehler-Knopf)
-- Der Knopf **„Fehler"** steht jetzt immer in der Leiste und ist nur blass,
-  solange nichts offen ist — genau wie „Lernbedarf" es schon immer gemacht hat.
-  Vorher verschwand er ganz: die Leiste sprang bei jedem ersten Fehler um, und
-  erklären oder vorlesen ließ er sich gar nicht. Seine Erklärung nennt jetzt
-  auch die Anzahl
-- Ein Klick ohne offene Fehler meldet sich nicht mehr mit einem blockierenden
-  Fenster, sondern mit dem beiläufigen Hinweis des Trainers
-
-### Geändert (F9)
-- Die Lösungstaste F9 ist jetzt auch **im Gruppenraum abgeschaltet**, nicht nur
-  im Prüfungssimulator. Sie wurde dort bisher als Fehler gewertet — die Lösung
-  stand danach aber trotzdem da, und am Ergebnis hängt ein gemeinsamer
-  Punktestand. Beim Üben allein bleibt F9 unverändert eine Lernhilfe
+- Tooltip-Kästchen entfernt, `data-tooltip` dient als Vorlesequelle; Symbole werden für die Sprachausgabe umgeschrieben
+- Vorlesen: vorgelesene Frage hat Vorrang vor Knopftexten
+- Knopf Fehler: immer sichtbar, blass ohne offene Fehler, Hinweis statt blockierendem Fenster
+- F9: Lösungstaste auch im Gruppenraum gesperrt, Prüfung starten nennt die Taste
+- Blättern und Gruppenraum: Erklärungstexte präzisiert
 
 ### Behoben
-- **Verschluckte Silben beim Vorlesen**: Zwei Ursachen. Erstens schnitt eine
-  Grenze von 220 Zeichen die ausführlichen Erklärungen mitten im Wort ab —
-  sie reicht jetzt für jede von ihnen und endet notfalls an einem Punkt.
-  Zweitens schreibt sich der Blättern-Knopf im Betrieb selbst um; dabei fiel
-  unter dem stehenden Mauszeiger ein Aus/Ein-Ereignis an und die Stimme fing
-  von vorne an. Verglichen wird jetzt der Satz statt des Elements: was läuft,
-  läuft weiter
-- **Klicken las den Text noch einmal vor.** Auffällig beim Knopf „Light Mode",
-  der beim Klicken seine eigene Beschriftung umschreibt. Zwei Gründe: der Klick
-  setzt den Fokus, und die Fokus-Ansage kannte den Unterschied zur Tastatur
-  nicht; außerdem griff der Satzvergleich nicht mehr, sobald der Knopf einen
-  neuen Text trug. Jetzt spricht nur noch der Tabulator beim Fokus
-  (`:focus-visible`), und solange der Zeiger auf demselben Knopf steht, wird
-  nichts neu gestartet. Durchschalten während des Sprechens geht damit
-- Blieb die Sprachausgabe einmal aus (Stimme fehlt, Server antwortet nicht,
-  leere Datei), galt der Satz weiter als „läuft gerade" — dieser eine Knopf
-  blieb dann für den Rest der Sitzung stumm. Jetzt wird die Merkung auf jedem
-  Weg zurückgesetzt, auf dem es nicht bis zum Abspielen kommt
-- Die Stimmen überschnitten sich beim Wischen über die Knopfleiste: der alte
-  Knopf verstummte erst, wenn der neue an der Reihe war. Jetzt ist er in dem
-  Moment still, in dem der Zeiger den nächsten Knopf erreicht. Nimmst du die
-  Maus nur zur Seite, läuft der Satz zu Ende
-- Karten mit fehlender Fragendatei waren `disabled` und bekamen deshalb keine
-  Maus-Ereignisse — ausgerechnet dort, wo die Erklärung am nötigsten ist. Jetzt
-  `aria-disabled`: nicht anwählbar wie vorher, aber sie sagen „Datei fehlt"
-- Die vergrößerte Antwort schob sich rechts über den Rand der Fragenkarte
-  hinaus. Ursache war `transform: scale()` — ein skaliertes Feld behält seine
-  gemessene Breite. Jetzt wächst nur die Schrift, das Feld bleibt in seiner
-  Spalte
-
----
+- Vorlesen: keine verschluckten Silben, kein erneutes Vorlesen beim Klick (`:focus-visible`)
+- Vorlesen: kein Verstummen nach fehlgeschlagener Ausgabe, keine überlappenden Stimmen beim Wischen
+- Zielkarten mit fehlender Datei per `aria-disabled` erklärbar, vergrößerte Antwort bleibt in der Fragenkarte
 
 ## [1.110.0] - 2026-09-02
 
 ### Geändert
-- Knopf „Durchsehen" heißt jetzt **Blättern** — und **Weiterblättern**, sobald ein
-  Lesezeichen liegt. Der Tooltip nennt dann die Stelle: „Weiter bei Frage 13 von 571"
-- Das Fenster bei „Weiterblättern" heißt jetzt **Neu beginnen** und
-  **Weiterblättern**; die Fragennummer steht nur noch im Satz darüber, nicht
-  zweimal
-- Ältere Verlaufseinträge behalten das Wort „Durchsicht" — umschreiben hieße
-  gespeicherte Lernstände anfassen, und dafür ist der Anlass zu klein
-
-### Entfernt
-- Knopf und Logik „Verwechslungsgefahr" — im Gebrauch ohne Nutzen. Damit passt auch
-  die Knopfleiste wieder: „Gruppenraum" war zuvor halb abgeschnitten
+- Knopf Durchsehen heißt Blättern bzw. Weiterblättern, Tooltip nennt die Stelle
+- Weiterblättern-Fenster: Knöpfe Neu beginnen und Weiterblättern
+- Knopf Verwechslungsgefahr samt Logik entfernt
 
 ### Behoben
-- Der Verlauf war beim Start und beim Zurückkehren zum Hauptmenü oft zu lang; erst
-  F5 richtete ihn. Die Messung war richtig, ihr Zeitpunkt nicht: Die linke Spalte
-  wächst nach dem Zeichnen noch mehrmals (Prüfungsübersicht, Tagespensum,
-  Hörbuch-Vorschau, CB-Kasten). Jetzt gestaffelt — sofort, nach 250 ms und nach 900 ms
-- Beim Umschalten zwischen Runde und Hauptansicht war die linke Spalte im Moment der
-  Messung ausgeblendet; zurück blieb der Wert von vorhin. Wird jetzt erkannt und
-  übersprungen statt einen falschen Wert zu behalten
+- Verlauf: Höhe beim Start und nach Rückkehr zum Hauptmenü gestaffelt nachgemessen (sofort, 250 ms, 900 ms)
+- Verlauf: Messung bei ausgeblendeter linker Spalte wird übersprungen
 
 ## [1.109.0] - 2026-09-02
 
-### Behoben
-- **Das Update konnte nie funktionieren.** `{app}` fehlte in den `[Dirs]` des
-  Installers — `data\` und `backup\` waren beschreibbar, der Programmordner nicht.
-  Der Trainer legte seine Sicherung an und scheiterte dann am Ersetzen von
-  `Index.html`. Daher „Es wurde nichts verändert"
-- Die Startprüfung zählte `unbekannt` nicht mit — genau der Zustand jeder frischen
-  Installation, weil `github_stand.json` nicht mitgeliefert wird. Ausgerechnet dort
-  meldete der Start nichts
-- Das Update-Fenster warf den Grund weg und riet „Später noch einmal versuchen".
-  Der Grund steht jetzt da, mit dem echten Ordnerpfad statt einer Vermutung
-
 ### Hinzugefügt
-- Automatisches Übernehmen von Fragen, Bildern und Seite — mit Meldung unten rechts
-  und Neuladen, wenn die Seite dabei war. Abschaltbar mit `AFU_AUTO_UPDATE=0`
-- Balken oben, wenn Programmdateien anstehen: die werden nie von allein getauscht
-- Schreibprobe vor dem ersten Zugriff statt Scheitern bei jeder einzelnen Datei
-- Version am Info-Knopf, aus `package.json` und damit aus dem CHANGELOG
+- Update: automatisches Übernehmen von Fragen, Bildern und Seite mit Meldung, abschaltbar per `AFU_AUTO_UPDATE=0`
+- Update: Hinweisbalken bei anstehenden Programmdateien, die nie automatisch getauscht werden
+- Update: Schreibprobe vor dem ersten Zugriff
+- Info-Knopf: Versionsanzeige aus `package.json`
 
 ### Geändert
-- Alles oder nichts je Stand: Sind Programmdateien dabei, wird auch der Rest nicht
-  automatisch geholt — sonst läuft eine neue `Index.html` auf einem alten `Server.js`
+- Update: alles oder nichts je Stand, bei Programmdateien kein automatisches Teil-Update
+
+### Behoben
+- Installer: `{app}` in `[Dirs]` ergänzt, Programmordner für das Update beschreibbar
+- Update: Startprüfung berücksichtigt Zustand `unbekannt` bei frischer Installation
+- Update-Fenster: zeigt den tatsächlichen Fehlergrund mit Ordnerpfad
 
 ## [1.108.0] - 2026-09-02
 
-### Geändert
-- Der Abgleich mit GitHub geht jetzt den dortigen Dateibaum durch statt einer festen
-  Liste von 16 Namen — eine neu hinzugefügte Datei fällt damit überhaupt erst auf
-- Unterordner werden mit abgeglichen (`svgs\`, `formelsammlung\`, `fontawesome\`);
-  fehlende Ordner werden beim Übernehmen angelegt
-- Einteilung daten/browser/programm jetzt nach Endung statt nach Namensliste; im
-  Zweifel gilt eine `.js` als Programmdatei und verlangt die ausdrückliche Bestätigung
-
 ### Hinzugefügt
-- `LIZENZ-Optionen.md` — was die PolyForm Noncommercial erlaubt, was PolyForm Strict
-  ändern würde, und was GitHubs Nutzungsbedingungen unabhängig davon offenlassen
+- `LIZENZ-Optionen.md`: Erläuterung zu PolyForm Noncommercial, PolyForm Strict und GitHub-Nutzungsbedingungen
 
-### Sicherheit
-- Erlaubt sind nur ungefährliche Endungen (Umkehr der Beweislast): `.bat`, `.vbs`,
-  `.ps1`, `.exe`, `.cmd`, `.py`, `.sh` und `.iss` kommen nie über den Abgleich
-- `data\`, `backup\`, `Hoerbuch\`, `release\`, `tts_cache\` und `bilder\` sind tabu
-- Pfade mit `..`, führendem `/` oder Laufwerksbuchstaben werden abgewiesen — der
-  Dateibaum kommt aus einer fremden Quelle und bestimmt sonst, wohin geschrieben wird
-- Die Prüfung läuft zweimal: beim Auflisten und noch einmal kurz vor dem Schreiben
+### Geändert
+- GitHub-Abgleich: kompletter Dateibaum statt fester Liste, inkl. Unterordner (`svgs\`, `formelsammlung\`, `fontawesome\`)
+- GitHub-Abgleich: Einteilung nach Dateiendung, `.js` im Zweifel Programmdatei mit Bestätigung
+- GitHub-Abgleich: nur ungefährliche Endungen, nie `.bat`, `.vbs`, `.ps1`, `.exe`, `.cmd`, `.py`, `.sh`, `.iss`
+- GitHub-Abgleich: `data\`, `backup\`, `Hoerbuch\`, `release\`, `tts_cache\` und `bilder\` gesperrt
+- GitHub-Abgleich: Pfade mit `..`, führendem `/` oder Laufwerksbuchstaben abgewiesen, Prüfung erneut vor dem Schreiben
 
 ## [1.107.0] - 2026-09-02
 
-### Geändert
-- Die Bauanleitung bleibt aus dem öffentlichen Repository: `installer.iss`,
-  `Build-DIREKT.bat`, `version.js`, `icon.ico`, `wizard.bmp`, `small.bmp`
-- `icon.png` bleibt drin — es ist das Symbol der Seite, nicht Teil der Bauanleitung
-- README: Hinweis, dass offizielle Setups ausschließlich unter Releases liegen
-
 ### Hinzugefügt
-- `Hochladen.bat` trägt Dateien, die in der `.gitignore` stehen aber noch im
-  Repository liegen, auf Nachfrage aus (`git rm --cached`) — im eigenen Ordner
-  bleiben sie liegen
+- `Hochladen.bat`: entfernt ignorierte, aber noch versionierte Dateien auf Nachfrage aus dem Repository (`git rm --cached`)
+
+### Geändert
+- Repository: Build-Dateien (`installer.iss`, `Build-DIREKT.bat`, `version.js`, Symbole) nicht mehr öffentlich, `icon.png` bleibt
+- README: offizielle Setups nur unter Releases
 
 ### Behoben
-- Eine `.gitignore` wirkt nur auf neue Dateien; `git add -A` nahm bereits
-  nachverfolgte weiter mit. Ein neuer Eintrag hätte die Datei bei GitHub
-  stehen lassen, ohne dass es auffällt
+- Hochladen: per `.gitignore` ausgeschlossene, bereits versionierte Dateien blieben bei GitHub
 
 ## [1.106.0] - 2026-09-02
 
 ### Hinzugefügt
-- Knopf „Verwechslungsgefahr": Fragen, die sich zum Verwechseln ähneln, kommen
-  direkt hintereinander statt über Wochen verteilt — Klasse N: 81 Fragen in 25 Gruppen
-- Die Gruppen werden beim Laden aus dem Katalog gerechnet, nicht gepflegt; jedes
-  Prüfungsziel bekommt seine eigenen (N → E: 72 Fragen in 27 Gruppen)
-- README: Abschnitt „Einstieg CB → N" mit den 138 angerechneten Fragen und dem
-  Verweis auf CB-Einstieg.md
+- Knopf Verwechslungsgefahr: ähnliche Fragen direkt hintereinander (Klasse N: 81 Fragen in 25 Gruppen)
+- Verwechslungsgruppen: beim Laden je Prüfungsziel aus dem Katalog berechnet
+- README: Abschnitt Einstieg CB → N mit den 138 angerechneten Fragen
 
 ### Geändert
-- README: Zielauswahl auf die fünf aktuellen Ziele umgestellt, neuer Screenshot
-  `02-pruefungsziel.png`, Simulator-Tabelle ohne Klasse A und N → A
-- README: „Durchsehen" in der Funktionsliste ergänzt
+- README: fünf aktuelle Prüfungsziele, Screenshot `02-pruefungsziel.png`, Simulator-Tabelle ohne Klasse A und N → A
+- README: Durchsehen in der Funktionsliste ergänzt
 
 ### Behoben
-- Bild `09-simulator-klassen.png` zeigte den Simulator mit fünf Teilen für Klasse A —
-  das Ziel gibt es nicht mehr, der Verweis ist aus der README genommen
+- README: veralteter Verweis auf `09-simulator-klassen.png` entfernt
 
 ## [1.105.0] - 2026-09-02
 
 ### Hinzugefügt
-- Knopf „Durchsehen": geht alle Fragen in Katalogreihenfolge durch — auch die schon
-  gelernten — und merkt sich per Lesezeichen, wo man aufgehört hat
-- Lesezeichen hängt an Benutzer und Prüfungsziel und speichert die Frage-Kennung,
-  nicht die Position; Zahl am Knopf zeigt, wie viele noch kommen
-- Beim zweiten Start Fenster mit zwei Wegen: „Weiter bei 213" oder „Von vorn"
+- Knopf Durchsehen: alle Fragen in Katalogreihenfolge, auch gelernte, mit Lesezeichen
+- Lesezeichen: je Benutzer und Prüfungsziel über die Frage-Kennung, Restzahl am Knopf
+- Durchsehen: Auswahl Weiter bei oder Von vorn beim erneuten Start
 
 ### Geändert
-- Vorlesen: Strich zwischen zwei Zahlen wird „bis", wenn eine Einheit folgt
-  („3-30 MHz" → „3 bis 30 Megahertz"). 104 Stellen im Katalog betroffen
-- Die Regel greift nur mit Einheit, damit „CEPT-Empfehlung T/R 61-01" unangetastet bleibt
+- Vorlesen: Strich zwischen Zahlen mit Einheit als bis (3-30 MHz wird 3 bis 30 Megahertz), 104 Stellen
 
 ### Behoben
-- Der Rückkehr-Dialog für angefangene Runden legte sich über das Durchsicht-Fenster
-  und fing dessen Klicks ab; die Durchsicht ist von diesem Mechanismus ausgenommen,
-  sie hat ihr eigenes Lesezeichen
+- Durchsehen: Rückkehr-Dialog für angefangene Runden überlagert das Fenster nicht mehr
 
 ## [1.104.0] - 2026-09-02
 
 ### Hinzugefügt
-- Prüfungsziel „Einstieg CB → N" mit Badge CB-BONUS — derselbe Katalog wie Klasse N,
-  aber 138 Fragen als CB-Wissen angerechnet (571 → 433)
-- Haken „CB-Erfahrung anrechnen" im Lernfortschritt, je Benutzer gespeichert und
-  über `/api/userdata` auch in `data\userdata\`
-- Eigenes Fenster „Als CB bekannt" mit allen 138 Fragen. Kästchen links holt die
-  Frage zurück in den Lernstapel, Klick auf den Text öffnet sie — wie in der
-  Trefferliste der Suche. Scrollposition bleibt beim Abhaken stehen, Escape schließt
-- `CB-Einstieg.md` — jede der 138 Fragen mit Begründung, plus die Liste dessen,
-  was bewusst drinbleibt
+- Prüfungsziel Einstieg CB → N mit Badge CB-BONUS, 138 Fragen als CB-Wissen angerechnet (571 → 433)
+- Lernfortschritt: Haken CB-Erfahrung anrechnen, je Benutzer auch in `data\userdata\` gespeichert
+- Fenster Als CB bekannt mit allen 138 Fragen, einzeln in den Lernstapel zurückholbar
+- `CB-Einstieg.md`: Begründung je angerechneter Frage
 
 ### Geändert
-- Zielauswahl auf fünf Karten gekürzt: N Basis, E direkt, N → E, E → A, CB → N
-- Direkteinstieg Klasse A und Aufstockung N → A entfernt; Weg zu A führt über E → A
-- `isMastered()` ist die einzige Stelle, an der CB-Wissen einhakt — Lernstapel,
-  Zähler, Lektionsübersicht und der Simulator-Haken ziehen von selbst nach
-- Prüfungssimulator zieht unverändert aus allen 571 Fragen — die BNetzA tut es auch
-- Zeilen im Fenster „Prüfungsziel wählen" färben beim Überfahren orange (#f9a05a) —
-  dasselbe Orange wie die angekreuzte Antwort im Simulator
+- Zielauswahl: fünf Karten (N Basis, E direkt, N → E, E → A, CB → N), Klasse A direkt und N → A entfernt
+- CB-Wissen: zentral über `isMastered()`, Prüfungssimulator weiter mit allen 571 Fragen
+- Zielauswahl: Zeilen beim Überfahren orange (`#f9a05a`)
 
 ### Behoben
-- Die CB-Liste stand im Lernfortschritt-Kasten und hat die Hauptansicht um mehrere
-  hundert Pixel verlängert — der Kasten ist jetzt 79 Pixel hoch
-- Zähler lasen `masteryData` direkt statt über `isMastered()` und hätten die
-  angerechneten Fragen unterschlagen
-- Ein gespeichertes Ziel, das es nicht mehr gibt (`a`, `na`), fällt sauber auf
-  Klasse N zurück
+- Lernfortschritt: CB-Liste verlängerte die Hauptansicht, Kasten jetzt 79 px hoch
+- Zähler: angerechnete Fragen über `isMastered()` statt `masteryData` berücksichtigt
+- Prüfungsziel: entfallene Ziele (`a`, `na`) fallen auf Klasse N zurück
 
 ## [1.103.0] - 2026-09-02
 
 ### Geändert
-- Drucken folgt dem unter „Ziel wählen" eingestellten Prüfungsziel: 1 bis 5 Bögen statt fest 3
-- Druck und Prüfungssimulator ziehen aus derselben Quelle (`realisticTeile` / `realisticPool`)
-- Deckblatt nennt die Zielklasse statt des Aufstiegswegs; Technik A mit 60 statt 45 Minuten
-- Fünf Papierfarben; für Technik E und A als „nur zum Auseinanderhalten" gekennzeichnet
-- Info-Text nennt die Klassen N, E und A sowie das aktuell eingestellte Ziel
+- Drucken: folgt dem gewählten Prüfungsziel mit 1 bis 5 Bögen statt fest 3
+- Drucken: gleiche Quelle wie der Prüfungssimulator (`realisticTeile`, `realisticPool`)
+- Deckblatt: nennt die Zielklasse, Technik A mit 60 statt 45 Minuten
+- Drucken: fünf Papierfarben, Info-Text mit Klassen N, E, A und aktuellem Ziel
 
 ### Behoben
-- Technikbogen enthielt alle Technikfragen aller Klassen (bei Klasse A 1374 in einem Bogen)
-- Bögen Technik E und Technik A wurden nie gedruckt; Aufstockungen bekamen Vorschriften und Betrieb
-- Kennung hinter der Fragennummer zeigte für jede Technikfrage „N" statt TN/TE/TA
+- Technikbogen: nur noch Fragen der Zielklasse statt aller Klassen
+- Drucken: Bögen Technik E und A werden gedruckt, Aufstockungen ohne Vorschriften und Betrieb
+- Fragenkennung: Technikfragen zeigen TN, TE oder TA statt N
 
 ## [1.102.0] - 2026-09-02
 
 ### Geändert
-- „Alles zurücksetzen" löscht jetzt auch den Prüfungsverlauf des aktuellen Benutzers
-- Fenstertext listet Verlauf unter „wird gelöscht" statt unter „bleibt erhalten"
+- Alles zurücksetzen: löscht auch den Prüfungsverlauf des aktuellen Benutzers, Fenstertext angepasst
 
 ### Behoben
-- Verlauf überlebte den Reset in `examHistory`, in `examHistory_<Benutzer>`,
-  `amateurfunk_history_<Benutzer>` und in `data\userdata\` — alle vier werden geleert
+- Reset: Verlauf in `examHistory`, `examHistory_<Benutzer>`, `amateurfunk_history_<Benutzer>` und `data\userdata\` geleert
 
 ## [1.101.0] - 2026-09-01
 
 ### Hinzugefügt
-- Neuinstallation startet leer: Server meldet über `/api/neuanfang` einen frischen Ordner,
-  die Seite leert daraufhin localStorage und sessionStorage
-- Deinstallation fragt, ob `data\` mitentfernt werden soll (Vorgabe: Nein)
+- Neuinstallation: Server meldet frischen Ordner über `/api/neuanfang`, Seite leert localStorage und sessionStorage
+- Deinstallation: Rückfrage, ob `data\` mitentfernt wird (Vorgabe: Nein)
 
 ### Geändert
-- Release-Beschreibung nüchtern: Installation in vier Zeilen plus Liste der Änderungen
-  (vorher 7451 Zeichen Fließtext, jetzt rund 900)
-- `Release-Hochladen.bat` nimmt alle Änderungen seit dem letzten veröffentlichten Release,
-  frischt ein vorhandenes Release per `gh release edit` auf
+- Release-Beschreibung: Installation in vier Zeilen plus Änderungsliste (rund 900 statt 7451 Zeichen)
+- `Release-Hochladen.bat`: alle Änderungen seit dem letzten Release, vorhandenes Release per `gh release edit` aufgefrischt
 
 ### Behoben
-- Argumente an `gh` waren bei `shell:true` nicht in Anführungszeichen — Titel und Pfade
-  mit Leerzeichen wären zerfallen
-- Gast im Gruppenraum bekommt auf `/api/neuanfang` keine Antwort (hätte sonst seinen
-  Browser geleert)
+- `gh`-Aufruf: Argumente bei `shell:true` in Anführungszeichen, Titel und Pfade mit Leerzeichen bleiben intakt
+- Gruppenraum: Gast erhält auf `/api/neuanfang` keine Antwort, sein Browser wird nicht geleert
 
 ## [1.99.0] - 2026-09-01
 
@@ -11601,13 +2070,12 @@ die Leitung zu ziehen:
 - `Start.js` als Ziel der Verknüpfungen
 
 ### Geändert
-- Verknüpfungen zeigen auf `node\node.exe` statt `wscript.exe`, Flag `runminimized`
-- Setup-Schlussseite erklärt das Anheften an die Taskleiste von Hand
+- Verknüpfungen: Ziel `node\node.exe` statt `wscript.exe`, Flag `runminimized`
+- Setup-Schlussseite: Anleitung zum manuellen Anheften an die Taskleiste
 
 ### Behoben
-- Verknüpfungen ließen sich nicht an die Taskleiste anheften; bei `wscript.exe` als Ziel
-  fehlt der Menüpunkt ganz
-- Nicht funktionierender Haken „An Taskleiste anheften" aus dem Installer entfernt
+- Verknüpfungen: Anheften an die Taskleiste möglich (Menüpunkt fehlte bei `wscript.exe` als Ziel)
+- Installer: nicht funktionierende Option An Taskleiste anheften entfernt
 
 ## [1.98.0] - 2026-09-01
 
@@ -11615,324 +2083,307 @@ die Leitung zu ziehen:
 - Lebenszeichen der Seite alle 10 s (`/api/lebenszeichen`), Abmeldung per `sendBeacon`
 
 ### Geändert
-- Server beendet sich 45 s nachdem das letzte Fenster zu ist — nur bei `AFU_BROWSER=1`,
-  mit 2 min Schonzeit und nie während einer Hörbuch-Berechnung
-- Portprüfung wartet bis zu 10 s statt starrer 2 s
+- Server: beendet sich 45 s nach Schließen des letzten Fensters (nur `AFU_BROWSER=1`, 2 min Schonzeit, nie während Hörbuch-Berechnung)
+- Portprüfung: wartet bis zu 10 s statt starrer 2 s
 
 ### Behoben
-- Server lief nach dem Schließen des Browsers weiter; nach mehreren Starts war Port 3000 belegt
-- Meldung „Port 3000 ist immer noch belegt" empfahl STOP.bat, obwohl das dasselbe tut;
-  `taskkill`-Exitcode wird jetzt ausgewertet (Rechteproblem statt Geduldproblem)
+- Server lief nach Schließen des Browsers weiter, Port 3000 nach mehreren Starts belegt
+- Meldung Port 3000 belegt: kein Verweis mehr auf STOP.bat, `taskkill`-Exitcode wird ausgewertet (Rechteproblem erkannt)
 
 ## [1.97.0] - 2026-09-01
 
 ### Hinzugefügt
-- `version.js` — Versionsnummer aus dem CHANGELOG statt von Hand
+- `version.js`: Versionsnummer aus dem CHANGELOG statt von Hand
 - Ordner `release\` für fertige Setups, `Release-Hochladen.bat` zum Veröffentlichen
 
 ### Geändert
-- Versionsnummer erscheint in EXE-Name, Dateieigenschaften, „Apps & Features" und package.json
+- Versionsnummer in EXE-Name, Dateieigenschaften, Apps & Features und package.json
 
 ### Behoben
-- `Build-DIREKT.bat` brach mit „Die Syntax für den Dateinamen … ist falsch" ab
-  (`for /f "usebackq"` mit führendem Anführungszeichen) — jetzt über temporäre Datei
+- `Build-DIREKT.bat`: Abbruch mit Syntaxfehler im Dateinamen behoben (`for /f` jetzt über temporäre Datei)
 
 ## [1.94.0] - 2026-09-01
 
 ### Hinzugefügt
-- Font Awesome 6.5.2 liegt lokal im Ordner `fontawesome\` (vorher CDN, also Internetzwang)
-- Acht neue Screenshots im Grey Mode für die README
+- Font Awesome 6.5.2 lokal im Ordner `fontawesome\` statt über CDN, kein Internetzwang
+- README: acht neue Screenshots im Grey Mode
 
 ### Geändert
-- 104 espeak-Stimmvarianten aus dem Setup entfernt
-- Schlussmeldung nach dem Hochladen zeigt nicht mehr auf entfernte Werkzeuge
+- Setup: 104 espeak-Stimmvarianten entfernt
+- Hochladen: Schlussmeldung verweist nicht mehr auf entfernte Werkzeuge
 
 ### Behoben
-- `Hochladen.bat` scheiterte mit „Der Befehl node … konnte nicht gefunden werden"
-  (`process.execPath` statt bloßem `node`)
-- Löschungen werden beim Hochladen vollständig und zuerst gelistet statt „… und N weitere"
-- `Hochladen.bat` und `GitHub-Verbinden.bat` verwiesen im Fehlerfall aufeinander
+- `Hochladen.bat`: node nicht gefunden, jetzt `process.execPath` statt bloßem `node`
+- Hochladen: Löschungen vollständig und zuerst gelistet statt gekürzt
+- `Hochladen.bat` und `GitHub-Verbinden.bat`: kein gegenseitiger Verweis mehr im Fehlerfall
 
 ## [1.88.0] - 2026-09-01
 
 ### Geändert
-- Setup fragt wieder nach dem Zielordner
-- USB-Stick-Erstellung und Piper-Stimmen-Download ersatzlos entfernt, samt aller Hinweise darauf
-- Setup entschlackt: arabische Vokalisierung und 111 fremdsprachige Wörterbücher (16,4 MB) raus
+- Setup: fragt wieder nach dem Zielordner
+- USB-Stick-Erstellung und Piper-Stimmen-Download samt aller Hinweise entfernt
+- Setup verkleinert: arabische Vokalisierung und 111 fremdsprachige Wörterbücher (16,4 MB) entfernt
 
 ### Behoben
-- 30 beim Ordnerwechsel liegengebliebene Dateien zurückgeholt, jede über die Dateigröße abgeglichen
-- Beinahe wären neun MIT-Lizenzdateien aus `node_modules` mit ausgeschlossen worden
+- 30 beim Ordnerwechsel liegengebliebene Dateien wiederhergestellt, per Dateigröße abgeglichen
+- Neun MIT-Lizenzdateien aus `node_modules` vor versehentlichem Ausschluss bewahrt
 
 ## [1.85.0] - 2026-09-01
 
 ### Geändert
-- Form „Rund" komplett entfernt, nur noch „Eckig"
-- Antwortfelder in Schrift, Farbe und Geometrie nach DARC-Vorbild, mit Haken und Kreuz
-- Prüfungssimulator: keine Grün/Rot-Färbung, keine Ansage „Richtig"/„Falsch"
-- Angekreuzte Antwort im Simulator orange, vorgelesene Antwort gelb
+- Darstellung: Form Rund entfernt, nur noch Eckig
+- Antwortfelder: Schrift, Farbe und Geometrie nach DARC-Vorbild, mit Haken und Kreuz
+- Prüfungssimulator: keine Grün/Rot-Färbung, keine Ansage Richtig/Falsch
+- Prüfungssimulator: angekreuzte Antwort orange, vorgelesene Antwort gelb
 
 ### Behoben
-- Nach einem Durchgang im Simulator blieben Benutzerauswahl und Verlauf verschwunden
-  (drei Ausstiegswege, zwei davon unvollständig)
-- Gelbe Vorlese-Markierung war vorhanden, aber durch CSS-Spezifität unsichtbar
-- Icon fehlte auf der kompilierten EXE
+- Prüfungssimulator: Benutzerauswahl und Verlauf nach einem Durchgang wieder sichtbar (alle drei Ausstiegswege vollständig)
+- Vorlese-Markierung: gelbe Hervorhebung wieder sichtbar (CSS-Spezifität)
+- EXE: fehlendes Icon ergänzt
 
 ## [1.81.0] - 2026-09-01
 
 ### Hinzugefügt
-- Grey Mode; Farbe und Form als zwei getrennte Achsen umschaltbar
+- Grey Mode; Farbe und Form getrennt umschaltbar
 
 ### Geändert
-- Setup mit Zielordner-Abfrage, Symbol und Herausgeber-Angabe
+- Setup: Zielordner-Abfrage, Symbol und Herausgeber-Angabe
 
 ### Behoben
-- `data\*` (Lernstand) und `video_embed.json` (echte Vornamen) wurden mit ausgeliefert
-- `github_update.js` fehlte im Setup, obwohl `Server.js` es beim Start lädt
-- Doppelklick auf START.bat tat nichts, wenn ein verwaister Server auf Port 3000 saß;
-  beide Startdateien prüfen den Port jetzt vorher
+- Setup: `data\*` (Lernstand) und `video_embed.json` nicht mehr mit ausgeliefert
+- Setup: fehlendes `github_update.js` ergänzt (wird von `Server.js` beim Start geladen)
+- START.bat: Doppelklick wirkungslos bei verwaistem Server auf Port 3000; beide Startdateien prüfen den Port vorher
 
 ## [1.77.0] - 2026-08-29
 
 ### Hinzugefügt
-- Formelsammlung direkt an der Frage: die passende PDF-Seite wird angezeigt und die Stelle markiert
+- Formelsammlung an der Frage: passende PDF-Seite angezeigt, Stelle markiert
 
 ## [1.76.0] - 2026-08-28
 
 ### Hinzugefügt
-- `Update-Test.bat` — Probelauf für die Update-Meldung, ohne zu holen oder zu schreiben
-- Video „Installation auf USB-Stick" in der README
+- `Update-Test.bat`: Probelauf der Update-Meldung ohne Download und Schreibzugriff
+- README: Video zur Installation auf USB-Stick
 
 ### Geändert
-- Updater fragt nicht mehr, was angehakt werden soll; Programmdateien ohne Rückfrage
-- README nennt den festen Platz auf dem Rechner und dass der Lernstand mitzieht
+- Updater: keine Auswahlabfrage mehr, Programmdateien ohne Rückfrage
+- README: fester Platz auf dem Rechner, Lernstand zieht mit
 - Desktop-Verknüpfung startet minimiert
 
 ### Behoben
-- Beim Start gingen zwei Fenster auf, eines zu viel
-- Meldung „[SEC] Externer Zugriff blockiert" samt voller IP las sich wie ein Angriff —
-  entfernt, IP-Adressen werden gekürzt, „Entfernen" bekommt die Option „sperren"
+- Start: nur noch ein Fenster statt zwei
+- Sicherheitsmeldung zu blockiertem externem Zugriff entfernt, IP-Adressen gekürzt, Entfernen mit Option sperren
 
 ## [1.70.0] - 2026-08-28
 
 ### Hinzugefügt
-- `GitHub-Verbinden.bat` — holt den Stand von GitHub in einen Ordner ohne `.git`
-- `Zurueckholen.bat` — versehentlich gelöschte Dateien wiederholen
+- `GitHub-Verbinden.bat`: holt den Stand von GitHub in einen Ordner ohne `.git`
+- `Zurueckholen.bat`: versehentlich gelöschte Dateien wiederherstellen
 
 ### Geändert
-- Abschnitt „Loslegen" der README beschreibt nicht mehr den Weg über git clone und npm install
-- Der Umweg über ein Stimmen-Release ist aufgegeben; Piper wird an der Quelle geholt
+- README, Abschnitt Loslegen: kein Weg mehr über git clone und npm install
+- Piper: Download direkt von der Quelle statt über ein Stimmen-Release
 
 ### Behoben
-- `Hochladen.bat` stand nach dem Deinstallieren von Node.js still
-- 19 Dateien standen versehentlich zum Löschen bereit; Ursache war eine überbügelte `.gitignore`
+- `Hochladen.bat` hing nach Deinstallation von Node.js
+- 19 Dateien fälschlich zum Löschen vorgemerkt (überschriebene `.gitignore`)
 
 ## [1.65.0] - 2026-08-27
 
 ### Hinzugefügt
-- Betrieb ohne Installation: `Node-Holen.bat` holt Node portabel, Prüfsumme gegen SHASUMS256.txt
-- `USB-Stick-Erstellen.bat` — kompletter Trainer auf einen Stick
+- Betrieb ohne Installation: `Node-Holen.bat` lädt Node portabel, Prüfsumme gegen SHASUMS256.txt
+- `USB-Stick-Erstellen.bat`: kompletter Trainer auf USB-Stick
 
 ### Geändert
-- Repository ausgemistet: von 800 Dateien und 22,6 MB auf das Nötige
-- `sounds/fanfare.wav` (2,3 MB für zwölf Sekunden) und `bilder/youtube-vorlage.html` entfernt
+- Repository bereinigt: von 800 Dateien und 22,6 MB auf das Nötige
+- `sounds/fanfare.wav` (2,3 MB) und `bilder/youtube-vorlage.html` entfernt
 
 ## [1.63.0] - 2026-08-26
 
 ### Hinzugefügt
-- Prüfungssimulator kennt alle sechs Prüfungsziele; Prüfungsumfang steht als Regel an einer Stelle
-- Vorschaubild und Anleitung für das Repository
+- Prüfungssimulator: alle sechs Prüfungsziele, Prüfungsumfang als zentrale Regel
+- Repository: Vorschaubild und Anleitung
 
 ### Geändert
-- Trainer fragt beim Start von selbst nach Neuerungen — nur lokal, nur ohne laufende Runde,
-  nur einmal je Stand, abschaltbar
-- Direkteinstieg und Aufstockung werden konsequent auseinandergehalten
-- Prüfungsübersicht auf der Hauptseite baut ihre Zeilen aus derselben Regel wie der Simulator
+- Update-Prüfung beim Start: nur lokal, nur ohne laufende Runde, einmal je Stand, abschaltbar
+- Direkteinstieg und Aufstockung konsequent getrennt
+- Hauptseite: Prüfungsübersicht nutzt dieselbe Regel wie der Simulator
 
 ## [1.58.0] - 2026-08-26
 
 ### Hinzugefügt
-- Screenshots von Hauptansicht, Zielwahl, Gruppenraum und Updater in der README
+- README: Screenshots von Hauptansicht, Zielwahl, Gruppenraum und Updater
 
 ### Geändert
-- Lizenz von MIT auf PolyForm Noncommercial 1.0.0 (bereits Herausgegebenes bleibt MIT)
-- `Piper-Stimmen.zip` (419 MiB), alte Git-Historie und ausgediente Helfer entfernt
+- Lizenz: PolyForm Noncommercial 1.0.0 statt MIT (bereits Veröffentlichtes bleibt MIT)
+- Repository: `Piper-Stimmen.zip` (419 MiB), alte Git-Historie und ausgediente Helfer entfernt
 
 ### Behoben
-- Fehler in `github_ausmisten.js` selbst gefunden und behoben
+- `github_ausmisten.js`: Fehler behoben
 - `BUG_REPORT.md` aus dem Repository entfernt
 
 ## [1.53.0] - 2026-08-26
 
 ### Hinzugefügt
-- `DNS-Auffrischen.bat` — hilft beim negativen DNS-Cache nach einem Tunnelstart
-- Prüfung der heruntergeladenen Datei: HTML statt JSON und zu kleine Dateien werden erkannt
+- `DNS-Auffrischen.bat`: hilft bei negativem DNS-Cache nach Tunnelstart
+- Download-Prüfung: HTML statt JSON und zu kleine Dateien werden erkannt
 
 ### Geändert
-- START.bat sieht erst nach, fragt dann und startet zuletzt; fremde Prozesse auf Port 3000
-  werden nie beendet
-- Aus „Gastgeber" wird „Entwickler" (nicht überall — eine Stelle blieb bewusst stehen)
+- START.bat: erst prüfen, dann fragen, dann starten; fremde Prozesse auf Port 3000 werden nie beendet
+- Bezeichnung Gastgeber in Entwickler umbenannt (eine Stelle bewusst beibehalten)
 
 ### Behoben
-- „Das Fenster geht auf und sofort wieder zu" — Ursache nachgestellt und beseitigt
+- Startfenster schloss sich sofort wieder
 - Meldung nannte nur den umständlichen Weg über den Tunnel des Entwicklers
-- Portprüfung war auf deutschen Rechnern wirkungslos; im Zweifel wird jetzt gestartet
+- Portprüfung auf deutschen Systemen wirkungslos; im Zweifel wird jetzt gestartet
 
 ## [1.45.0] - 2026-08-26
 
 ### Hinzugefügt
-- Angefangene Runde überlebt eine Pause und wird wiederhergestellt
-  (nicht im Simulator, nicht im Gruppenraum)
-- `Update-Pruefen.bat` — sagt, warum ein Gast kein Update bekommt
-- `GitHub-Ausmisten.bat` — Entwicklerwerkzeuge aus dem Repository nehmen
+- Angefangene Runde übersteht eine Pause und wird wiederhergestellt (nicht in Simulator und Gruppenraum)
+- `Update-Pruefen.bat`: zeigt, warum ein Gast kein Update erhält
+- `GitHub-Ausmisten.bat`: Entwicklerwerkzeuge aus dem Repository entfernen
 
 ### Geändert
-- Update von GitHub überschreibt lokal neuere Dateien nicht mehr (dritter Zustand „neuer hier")
-- Geprüft wird über Kennungen, nicht durch Herunterladen von 10 MB
+- GitHub-Update: überschreibt keine lokal neueren Dateien mehr (dritter Zustand neuer hier)
+- Update-Prüfung über Kennungen statt Download von 10 MB
 
 ### Behoben
-- Im Fenster „Prüfungsziel wählen" reagierte keine Zeile auf die Maus (Inline-Stile)
-- „Verlauf einblenden" war kürzer als die Frage daneben
+- Prüfungsziel wählen: Zeilen reagierten nicht auf die Maus (Inline-Stile)
+- Verlauf einblenden war kürzer als die Frage daneben
 - Echte Vornamen aus `Index.html`, CHANGELOG und Raum-Dialog entfernt
-- Eigene `.gitignore` beim Update überbügelt
+- Update: eigene `.gitignore` wurde überschrieben
 
 ## [1.37.0] - 2026-08-25
 
 ### Hinzugefügt
 - Formelsammlung und Fragenkatalog als PDF im Paket, auch über den Browser abrufbar
-- Bedienung per Tastatur: Tasten 1–4 antworten, Enter weiter, Rücktaste zurück;
-  Rückmeldungen werden für Vorleseprogramme angesagt
-- `Hochladen.bat` und `Stimmen_packen.bat` statt einer Anleitung
+- Tastaturbedienung: 1–4 antworten, Enter weiter, Rücktaste zurück; Ansagen für Vorleseprogramme
+- `Hochladen.bat` und `Stimmen_packen.bat` statt Anleitung
 
 ### Geändert
 - Download heißt `Amateurfunk-Trainer.zip` statt `Klasse-N-Trainer.zip`
-- Download-Knopf aus dem Gruppenraum-Fenster entfernt
+- Gruppenraum-Fenster: Download-Knopf entfernt
 
 ### Behoben
-- Bildsuche kennt jetzt drei Varianten (`_q.svg`, `.svg`, `_q.png`) statt verschachtelter `onerror`
-- Zwei Fehler in `github_pruefen.js`
+- Bildsuche: drei Varianten (`_q.svg`, `.svg`, `_q.png`) statt verschachtelter `onerror`
+- `github_pruefen.js`: zwei Fehler behoben
 
 ## [1.32.0] - 2026-08-25
 
 ### Hinzugefügt
 - Klassen E und A: alle fünf Prüfungswege, je eine eigene Fragendatei
-- Knopf „Fehler melden" mit vorbereiteter Mail zur angezeigten Frage
+- Knopf Fehler melden: vorbereitete Mail zur angezeigten Frage
 
 ### Geändert
-- Microsoft-Stimmen entfernt, nur noch Piper; stiller Rückfall auf Microsoft beseitigt
+- Sprachausgabe: nur noch Piper, Microsoft-Stimmen und stiller Rückfall darauf entfernt
 - LaTeX in 219 Fragen nach Unicode umgesetzt statt KaTeX nachzurüsten
-- Verlauf begrenzt, damit die Seite nicht mit jeder Runde länger wird
+- Verlauf begrenzt, Seite wächst nicht mehr mit jeder Runde
 
 ### Behoben
-- Sechs Formel-Fragen in `fragen.json` repariert (NB302, NB303, NG104, NB501, NB502, NB503)
+- `fragen.json`: sechs Formel-Fragen repariert (NB302, NB303, NG104, NB501, NB502, NB503)
 - 55 Zeilen toter Code entfernt
 
 ## [1.26.0] - 2026-08-23
 
 ### Hinzugefügt
-- Hörbuch fürs Autoradio: Frage, drei Sekunden Stille, Antwort — als MP3 je Lektion oder je Frage
-- Erzeugt der Server, happenweise kodiert, 44100 Hz
+- Hörbuch fürs Autoradio: Frage, drei Sekunden Stille, Antwort; MP3 je Lektion oder je Frage
+- Hörbuch: Erzeugung im Server, happenweise kodiert, 44100 Hz
 
 ## [1.25.0] - 2026-08-22
 
 ### Hinzugefügt
-- Fanfare und Konfetti beim Bestehen im Gruppenraum
+- Gruppenraum: Fanfare und Konfetti beim Bestehen
 
 ### Geändert
-- Laufende Nummer aus dem Verlauf entfernt (Datum, Teil, R, F, %, Ergebnis bleiben)
-- Löschmodus im Verlauf: zwei Knöpfe statt drei
+- Verlauf: laufende Nummer entfernt (Datum, Teil, R, F, %, Ergebnis bleiben)
+- Verlauf: Löschmodus mit zwei statt drei Knöpfen
 
 ### Behoben
-- Geister-Eintrag nach einer Gruppenraum-Runde; jede Runde merkt sich ihren Verlaufseintrag
-- Automatisch gewertete Fragen zählten in der Teilrunde nicht mit
-- Konfetti lag vor dem Fenster, Fanfare fehlte ohne Internet, Endlosschleife bei fehlender Bibliothek
+- Gruppenraum: kein Geister-Eintrag mehr im Verlauf, jede Runde merkt sich ihren Eintrag
+- Teilrunde: automatisch gewertete Fragen zählen mit
+- Konfetti vor dem Fenster, fehlende Fanfare ohne Internet, Endlosschleife bei fehlender Bibliothek
 
 ## [1.20.0] - 2026-08-22
 
 ### Hinzugefügt
-- Dateistand im Info-Fenster („Dieser Trainer läuft mit dem Stand …")
+- Info-Fenster: Anzeige des Dateistands
 - Abgleich mit dem Entwickler, getrennt nach Daten und Programmdateien
-- Standwache: veraltete Seiten melden sich mit einem Banner
+- Standwache: Banner bei veralteten Seiten
 - Automatischer Abgleich beim Start, Sicherung nach `backup\`, abschaltbar mit `AFU_AUTO_ABGLEICH=0`
 
 ### Geändert
-- `Server.js` wird beim Abgleich nie automatisch ersetzt
+- Abgleich: `Server.js` wird nie automatisch ersetzt
 
 ### Behoben
-- Im Gruppenraum stand nur „27/50 richtig" — jetzt richtig, falsch und beantwortet
+- Gruppenraum: Ergebnis zeigt richtig, falsch und beantwortet statt nur Anzahl richtig
 
 ## [1.15.0] - 2026-08-21
 
 ### Hinzugefügt
-- Prüfungstermin mit Tagespensum, je Benutzer gespeichert, plus Link zur BNetzA-Terminliste
+- Prüfungstermin mit Tagespensum, je Benutzer gespeichert, Link zur BNetzA-Terminliste
 - Lernen nach den 14 Lektionen des Videolehrgangs, mit Lektionsübersicht und Inhaltsverzeichnis
 - Info-Knopf mit Kurzanleitung
-- Einzelne Verlaufseinträge löschbar
+- Verlauf: einzelne Einträge löschbar
 
 ### Geändert
-- Hauptansicht aufgeräumt, Videolehrgang bekommt ein eigenes Feld mit eigener Zählung
-- Lektionsanzeige nennt offene und Gesamtzahl („25 von 52")
+- Hauptansicht aufgeräumt, Videolehrgang mit eigenem Feld und eigener Zählung
+- Lektionsanzeige: offene und Gesamtzahl (z. B. 25 von 52)
 
 ### Behoben
-- Zwei Kontrastfehler am Info-Knopf und in der Lektionszeile
+- Kontrast: zwei Fehler an Info-Knopf und Lektionszeile
 
 ## [1.8.0] - 2026-08-20
 
 ### Hinzugefügt
-- Haken „Gelerntes erneut prüfen" — nur die abgehakten Fragen, immer als Übung
-- Haken „Bereits gelernte Fragen" in Gruppenraum und Prüfungssimulator
+- Option Gelerntes erneut prüfen: nur abgehakte Fragen, immer als Übung
+- Gruppenraum und Prüfungssimulator: Option Bereits gelernte Fragen
 
 ### Behoben
-- Gruppenraum-Runden landeten nicht im Verlauf
-- „Gelernte ausblenden" wirkte nur in zwei von fünf Fällen und wurde nie wieder eingelesen
-- Abgebrochene Runden landeten nicht im Verlauf
-- Antworten aus früheren Runden wurden mitgezählt
+- Verlauf: Gruppenraum-Runden und abgebrochene Runden werden erfasst
+- Gelernte ausblenden: wirkt in allen fünf Fällen und wird wieder eingelesen
+- Antworten aus früheren Runden nicht mehr mitgezählt
 
 ## [1.5.0] - 2026-08-19
 
 ### Hinzugefügt
-- Stichwortsuche im Fragenkatalog
+- Fragenkatalog: Stichwortsuche
 
 ### Geändert
-- Videos laufen über YouTube; Benutzername gehört zum Benutzer-Slot
+- Videos über YouTube; Benutzername gehört zum Benutzer-Slot
 
 ### Behoben
-- YouTube-Fenster blieb leer („Fehler 153"), Ursache war ein Sicherheitsheader
+- YouTube-Fenster blieb leer (Fehler 153), Ursache Sicherheitsheader
 
 ## [1.4.0] - 2026-08-18
 
 ### Geändert
-- „Pastell Mode" heißt „Green Mode"; der Umschalt-Knopf zeigt den aktiven Modus
-- Host kann Fragenzahl und Bereich nachträglich ändern, solange niemand geantwortet hat
-- Textsmileys im Chat werden als Emoji dargestellt
+- Pastell Mode heißt Green Mode; Umschalt-Knopf zeigt den aktiven Modus
+- Host: Fragenzahl und Bereich nachträglich änderbar, solange niemand geantwortet hat
+- Chat: Textsmileys als Emoji dargestellt
 
 ### Behoben
-- Chat im Dark Mode war fast unlesbar (Kontrast 1,1:1), jetzt über 4,5:1
-- Kontrastfehler der Punkte-Leiste in allen drei Themes
-- Gruppenraum-Runden landeten nur unter engen Bedingungen im persönlichen Verlauf
-- Auswertungs-Popup erschien auch, wenn ein anderer Teilnehmer fertig war
+- Chat im Dark Mode: Kontrast von 1,1:1 auf über 4,5:1
+- Punkte-Leiste: Kontrastfehler in allen drei Themes
+- Gruppenraum-Runden landen zuverlässig im persönlichen Verlauf
+- Auswertungs-Popup erscheint nicht mehr, wenn ein anderer Teilnehmer fertig ist
 
 ## [1.3.0] - 2026-08-17
 
 ### Behoben
-- K1: Der komplette Projektordner war über den Server abrufbar, inklusive Quellcode
-- K2: Der Cloudflare-Tunnel startete ohne Zustimmung
-- K3: `/api/userdata` war ungeschützt lesbar, überschreibbar und löschbar
-- K4: `/api/start-tunnel` erlaubte Fremden, Prozesse auf dem PC zu starten und zu beenden
-- K5: `/api/tts` ließ sich für unbegrenzte Subprozesse missbrauchen (DoS)
-- K6: Im Gruppenraum ließen sich Punkte und Identität fälschen
-- K7: Ein fehlgeschlagener Piper-Start brachte den Server zum Absturz
-- Verzerrte Zufallsauswahl, Raumcodes von 4 auf 6 Zeichen, Passwort im Klartext in der URL,
-  Speicherwachstum und Dateikorruption beim gleichzeitigen Schreiben, TTS-Cache-Race
-- Einladungslink hing bei „Tunnel startet noch…"; verwaiste `cloudflared.exe` werden aufgeräumt
-
----
+- Sicherheit K1: Projektordner inklusive Quellcode war über den Server abrufbar
+- Sicherheit K2: Tunnel startete ohne Zustimmung
+- Sicherheit K3: `/api/userdata` ungeschützt lesbar, überschreibbar und löschbar
+- Sicherheit K4: `/api/start-tunnel` erlaubte Fremden, Prozesse auf dem PC zu starten und zu beenden
+- Sicherheit K5: `/api/tts` für unbegrenzte Subprozesse missbrauchbar (DoS)
+- Sicherheit K6: Punkte und Identität im Gruppenraum fälschbar
+- K7: Server-Absturz bei fehlgeschlagenem Piper-Start
+- Zufallsauswahl nicht mehr verzerrt, Raumcodes 6 statt 4 Zeichen, kein Passwort im Klartext in der URL
+- Speicherwachstum, Dateikorruption bei gleichzeitigem Schreiben und TTS-Cache-Race behoben
+- Einladungslink hing bei Tunnel startet noch; verwaiste Tunnel-Prozesse werden aufgeräumt
 
 ## Bekannte Einschränkungen
 
-- Die Zuordnung Frage → Lektion ist eine thematische Sammelzuordnung: 279 von 571 Fragen
-  hängen an der ersten Zeitmarke ihrer Lektion. Zum Lernen brauchbar, als Aussage
-  „das erklärt Michael hier" nur bedingt.
-- F9/F10 (Lösungen ein-/ausblenden) kollidieren mit den Aufnahme-Hotkeys von Camtasia Studio.
-  `Strg+Umschalt+L` funktioniert als Alternative.
-- Piper `de_DE-thorsten-medium.onnx` (63 MB) und `node_modules` (26 MB) bleiben im Setup.
+- Zuordnung Frage → Lektion ist thematisch: 279 von 571 Fragen hängen an der ersten Zeitmarke ihrer Lektion
+- F9/F10 (Lösungen ein-/ausblenden) kollidieren mit den Aufnahme-Tastenkürzeln von Camtasia Studio, Alternative `Strg+Umschalt+L`
+- Windows-ZIP ist groß, da Node, Piper und die Stimmen enthalten sind

@@ -1,0 +1,589 @@
+<!doctype html>
+<!--
+  ============================================================================
+  DER WEG ZUR AMATEURFUNKLIZENZ - RATGEBER                         25.09.2026
+  ----------------------------------------------------------------------------
+  Dietmar: "Wenn ich Google frage, welche Moeglichkeiten gibt es, um
+  Amateurfunklizenz zu erwerben, ist mein Trainer noch nicht dabei." Und:
+  "da koennen wir noch etwas mehr SEO betreiben, damit auch Google das
+  richtig zuordnen kann."
+
+  Die Startseite beschreibt das Programm. Wer "Amateurfunklizenz erwerben"
+  sucht, will aber wissen, wie der Weg dorthin aussieht - dafuer gab es
+  keine Seite. Diese hier beantwortet genau das, mit den Angaben der
+  Bundesnetzagentur, und nennt den Trainer als einen der Lernwege.
+  (Dietmar hat "Eigene Seite" gewaehlt, im Aussehen der Startseite.)
+
+  BEIM AENDERN BEACHTEN
+  1. Jede Zahl steht in einer Quelle unten auf der Seite. Aendert die
+     Bundesnetzagentur Gebuehren, Pruefungsorte oder die Pruefungsordnung,
+     hier nachziehen und das Datum "Stand" oben und unten anpassen.
+  2. Die Fragen unter "Haeufige Fragen" stehen ein zweites Mal ganz unten
+     in den strukturierten Daten (FAQPage) - beide gleich halten.
+  3. Wie die Startseite: nichts von fremden Servern laden.
+  ============================================================================
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amateurfunklizenz: der Weg zur Prüfung (Klasse N, E, A)</title>
+<meta name="description" content="Wie du die Amateurfunklizenz bekommst: die Klassen N, E und A, die Prüfung bei der Bundesnetzagentur, Anmeldung, Gebühren, Rufzeichen und Lernwege.">
+<link rel="canonical" href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/amateurfunklizenz.html">
+<meta name="theme-color" content="#0f2745">
+<link rel="icon" href="bilder/zeichen.png" sizes="256x256">
+<link rel="apple-touch-icon" href="bilder/zeichen.png">
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Amateurfunk-Trainer">
+<meta property="og:title" content="Der Weg zur Amateurfunklizenz – Klasse N, E und A">
+<meta property="og:description" content="Klassen, Prüfung, Anmeldung, Gebühren und Rufzeichen – kompakt erklärt, mit den Angaben der Bundesnetzagentur.">
+<meta property="og:url" content="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/amateurfunklizenz.html">
+<meta property="og:image" content="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/bilder/vorschau.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="663">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+:root{
+  --navy:#0f2745; --navy-tief:#0b1d34; --navy-hell:#16365e;
+  --tuerkis:#22e0f2; --tuerkis-dunkel:#0a9cb0; --amber:#f0a93c;
+  --gruen:#1f9d55; --rot:#c0392b;
+  --grund:#eef2f9; --karte:#fff; --linie:#d7e0ec;
+  --text:#17243a; --matt:#5b6b80;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--grund); color:var(--text); line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.bahn{max-width:1060px;margin:0 auto;padding:0 22px}
+h1,h2,h3{line-height:1.16;letter-spacing:-.018em}
+h2{font-size:clamp(1.6rem,3.6vw,2.3rem);font-weight:800;margin-bottom:.5em}
+h3{font-size:1.16rem;font-weight:800;margin-bottom:.35em}
+h4{font-size:1.02rem;font-weight:800;margin:1.6em 0 .3em}
+p{margin-bottom:1em}
+a{color:#0d4f8b}
+img{max-width:100%;height:auto;display:block}
+
+/* ------------------------------------------------------------ Kopf */
+.kopf{
+  background:
+    radial-gradient(900px 560px at 12% 0%, #1d4272 0%, rgba(29,66,114,0) 62%),
+    radial-gradient(760px 520px at 96% 100%, #0a9cb0 0%, rgba(10,156,176,0) 60%),
+    linear-gradient(155deg,#0f2745 0%,#0b1d34 100%);
+  color:#fff; padding:54px 0 0;
+}
+.kopf-reihe{display:flex;align-items:center;gap:20px;margin-bottom:30px}
+.kopf-reihe img{width:74px;height:74px;border-radius:16px;flex:none}
+.wortmarke{font-size:1.42rem;font-weight:800;letter-spacing:-.01em}
+.wortmarke span{color:var(--tuerkis)}
+.kopf h1{font-size:clamp(2rem,5.4vw,3.35rem);font-weight:800;max-width:17ch}
+.kopf h1 span{color:var(--tuerkis)}
+.kopf .vor{font-size:clamp(1.02rem,2.2vw,1.22rem);color:#c2d7ec;max-width:60ch;margin-top:18px}
+.knoepfe{display:flex;gap:13px;flex-wrap:wrap;margin-top:30px}
+.knopf{
+  display:inline-block;padding:14px 26px;border-radius:10px;font-weight:700;
+  text-decoration:none;font-size:1.02rem;border:2px solid transparent;
+}
+.knopf-haupt{background:var(--tuerkis);color:#08202f}
+.knopf-haupt:hover{background:#4ae9f8}
+.knopf-rand{border-color:rgba(255,255,255,.42);color:#fff}
+.knopf-rand:hover{border-color:#fff;background:rgba(255,255,255,.09)}
+.kopf-fuss{margin-top:26px;font-size:.93rem;color:#8fb4dd}
+.kopf-bild{margin-top:44px}
+.kopf-bild img{
+  border-radius:12px 12px 0 0;border:1px solid rgba(255,255,255,.18);border-bottom:0;
+  box-shadow:0 -6px 60px rgba(0,0,0,.35);
+}
+
+/* ------------------------------------------------------------ Sprungleiste */
+.sprung{
+  position:sticky;top:0;z-index:20;background:rgba(15,39,69,.96);
+  backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid rgba(255,255,255,.12);
+}
+.sprung .bahn{display:flex;gap:6px;overflow-x:auto;padding-top:0;padding-bottom:0;
+  scrollbar-width:none;-ms-overflow-style:none}
+.sprung .bahn::-webkit-scrollbar{display:none}
+.sprung a{
+  color:#c2d7ec;text-decoration:none;font-size:.9rem;font-weight:600;
+  padding:13px 10px;white-space:nowrap;border-bottom:2px solid transparent;
+}
+.sprung a:hover{color:#fff;border-bottom-color:var(--tuerkis)}
+
+/* ------------------------------------------------------------ Zahlen */
+.zahlen{background:var(--navy-tief);color:#fff;padding:30px 0}
+.zahlen-gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:22px;text-align:center}
+.zahl{font-size:2.5rem;font-weight:800;color:var(--tuerkis);line-height:1.05;font-variant-numeric:tabular-nums}
+.zahl-name{font-size:.9rem;color:#9fc0e0;letter-spacing:.05em;margin-top:3px}
+
+/* ------------------------------------------------------------ Abschnitte */
+section{padding:62px 0}
+section.hell{background:var(--karte)}
+.blei{font-size:1.1rem;color:var(--matt);max-width:66ch}
+.marke{
+  display:inline-block;font-size:.8rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--tuerkis-dunkel);margin-bottom:9px;
+}
+
+.tabelle-rolle{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+table{border-collapse:collapse;width:100%;margin:26px 0;font-size:1rem}
+th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--linie)}
+th{font-size:.83rem;letter-spacing:.05em;text-transform:uppercase;color:var(--matt);font-weight:700}
+td.zahlen-zelle{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.fertig{color:var(--gruen);font-weight:700}
+.offen{color:var(--amber);font-weight:700}
+
+figure{margin:30px 0}
+figure img{border-radius:12px;border:1px solid var(--linie);box-shadow:0 18px 44px rgba(15,39,69,.16)}
+figcaption{font-size:.92rem;color:var(--matt);margin-top:11px}
+
+.gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:22px;margin-top:30px}
+.feld{background:var(--karte);border:1px solid var(--linie);border-radius:12px;padding:22px 22px 20px}
+section.hell .feld{background:var(--grund)}
+.feld p{font-size:.97rem;color:var(--matt);margin:0}
+
+/* Aufzählung mit Fettführung */
+.punkte{list-style:none;max-width:70ch;margin:22px 0}
+.punkte li{position:relative;padding-left:24px;margin-bottom:.85em;color:var(--matt);font-size:1.02rem}
+.punkte li::before{
+  content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;
+  border-radius:50%;background:var(--tuerkis-dunkel);
+}
+.punkte b{color:var(--text)}
+.dunkel .punkte li{color:#bcd3ea}
+.dunkel .punkte b{color:#fff}
+.dunkel .punkte li::before{background:var(--tuerkis)}
+
+/* Beispielkasten */
+.beispiel{
+  background:var(--karte);border:1px solid var(--linie);border-left:5px solid var(--tuerkis-dunkel);
+  border-radius:10px;padding:18px 22px;margin:26px 0;max-width:62ch;
+}
+section.hell .beispiel{background:var(--grund)}
+.dunkel .beispiel{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);border-left-color:var(--tuerkis)}
+.beispiel .zeile{font-size:1.02rem;margin:0}
+.beispiel .zeile + .zeile{margin-top:.35em}
+.beispiel .etikett{font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--matt)}
+.dunkel .beispiel .etikett{color:#9fc0e0}
+.beispiel .falsch{color:var(--rot);font-weight:700}
+.beispiel .richtig{color:var(--gruen);font-weight:700}
+.dunkel .beispiel .falsch{color:#ff8f80}
+.dunkel .beispiel .richtig{color:#5fd99a}
+
+/* Nebenbemerkung */
+.neben{
+  border-left:3px solid var(--linie);padding:2px 0 2px 18px;margin:22px 0;
+  color:var(--matt);font-size:.99rem;max-width:66ch;
+}
+.neben p:last-child{margin-bottom:0}
+.dunkel .neben{border-left-color:rgba(255,255,255,.25);color:#bcd3ea}
+
+/* -------------------------------------------------- dunkle Abschnitte */
+.dunkel{background:var(--navy);color:#fff}
+.dunkel h2,.dunkel h3,.dunkel h4{color:#fff}
+.dunkel .blei{color:#bcd3ea}
+.dunkel .marke{color:var(--tuerkis)}
+.dunkel .feld{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16)}
+.dunkel .feld h3{color:#fff}
+.dunkel .feld p{color:#bcd3ea}
+.dunkel figure img{border-color:rgba(255,255,255,.14)}
+.dunkel figcaption{color:#9fc0e0}
+.dunkel a{color:#8ce8f5}
+
+/* ------------------------------------------------------------ Laden */
+.laden{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:26px}
+.laden a{
+  display:block;text-decoration:none;background:var(--karte);border:1px solid var(--linie);
+  border-radius:12px;padding:20px;color:var(--text);
+}
+.laden a:hover{border-color:var(--tuerkis-dunkel);box-shadow:0 8px 22px rgba(15,39,69,.10)}
+.laden b{display:block;font-size:1.06rem;margin-bottom:3px}
+.laden span{font-size:.9rem;color:var(--matt)}
+
+.hinweis{
+  background:#fdf6e8;border:1px solid #eccf9a;border-left:5px solid var(--amber);
+  border-radius:10px;padding:20px 22px;margin-top:30px;
+}
+.hinweis h3{margin-bottom:.3em}
+.hinweis p:last-child{margin-bottom:0}
+
+/* ------------------------------------------------------------ Fuss */
+footer{background:var(--navy-tief);color:#9fc0e0;padding:44px 0 50px;font-size:.94rem}
+footer a{color:#bcd3ea}
+footer .fuss-gitter{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:26px}
+footer h3{color:#fff;font-size:.86rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7em}
+footer ul{list-style:none}
+footer li{margin-bottom:.45em}
+.fuss-strich{border-top:1px solid rgba(255,255,255,.13);margin-top:32px;padding-top:22px;font-size:.88rem;color:#7f9cbb}
+
+@media (max-width:640px){
+  section{padding:44px 0}
+  .kopf{padding:38px 0 0}
+  .kopf-reihe img{width:58px;height:58px}
+  .kopf-bild{margin-top:34px}
+  table{font-size:.93rem}
+  th,td{padding:10px 6px}
+  th{font-size:.76rem;letter-spacing:.02em}
+  th:last-child,td:last-child{padding-right:0}
+  th:first-child,td:first-child{padding-left:0}
+  td.zahlen-zelle{white-space:normal}
+  .sprung .bahn{padding-left:14px;padding-right:14px}
+  .sprung a{padding:11px 9px;font-size:.86rem}
+}
+</style>
+<style>
+/* Ergaenzungen nur fuer diese Seite */
+.kopf{padding-bottom:46px}
+.kopf-reihe a{color:inherit;text-decoration:none;display:flex;align-items:center;gap:20px}
+.stand{font-size:.9rem;color:#8fb4dd;margin-top:14px}
+.schritte{list-style:none;counter-reset:schritt;display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:18px;margin-top:28px}
+.schritte li{counter-increment:schritt;background:var(--karte);border:1px solid var(--linie);border-radius:12px;padding:20px 20px 18px;position:relative}
+.schritte li::before{content:counter(schritt);display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--tuerkis);font-weight:800;margin-bottom:10px}
+.schritte b{display:block;font-size:1.05rem;margin-bottom:4px}
+.schritte span{color:var(--matt);font-size:.96rem}
+.fussnote{font-size:.9rem;color:var(--matt);max-width:70ch}
+.frage{border-bottom:1px solid var(--linie);padding:18px 0}
+.frage h3{margin-bottom:.35em}
+.frage p{color:var(--matt);margin:0;max-width:70ch}
+.quellen{font-size:.93rem;max-width:80ch}
+.quellen li{margin-bottom:.5em}
+</style>
+</head>
+<body>
+
+<header class="kopf">
+  <div class="bahn">
+    <div class="kopf-reihe">
+      <a href="./"><img src="bilder/zeichen.png" alt="">
+      <span class="wortmarke">Amateurfunk-<span>Trainer</span></span></a>
+    </div>
+    <h1>Der Weg zur <span>Amateurfunklizenz</span></h1>
+    <p class="vor">
+      Wer in Deutschland selbst funken will, braucht in der Regel ein Amateurfunkzeugnis
+      und eine Zulassung mit eigenem Rufzeichen. Beides gibt es bei der Bundesnetzagentur – nach
+      einer Prüfung mit Fragen aus einem öffentlichen Katalog. Hier steht, wie das abläuft,
+      was es kostet und wie du dich vorbereitest.
+    </p>
+    <p class="stand">Stand: 25. September 2026 · Angaben der Bundesnetzagentur, Quellen unten</p>
+  </div>
+</header>
+
+<nav class="sprung">
+  <div class="bahn">
+    <a href="#klassen">Klassen</a>
+    <a href="#pruefung">Prüfung</a>
+    <a href="#anmelden">Anmelden</a>
+    <a href="#kosten">Kosten</a>
+    <a href="#danach">Rufzeichen</a>
+    <a href="#lernen">Lernen</a>
+    <a href="#fragen">Häufige Fragen</a>
+  </div>
+</nav>
+
+<section>
+  <div class="bahn">
+    <span class="marke">Kurz gesagt</span>
+    <h2>In vier Schritten zum eigenen Rufzeichen</h2>
+    <ol class="schritte">
+      <li><b>Klasse wählen</b><span>N zum Einstieg, E oder A mit mehr Bändern und mehr Leistung.</span></li>
+      <li><b>Lernen</b><span>Alle Prüfungsfragen stehen vorab im öffentlichen Fragenkatalog der Bundesnetzagentur.</span></li>
+      <li><b>Prüfung ablegen</b><span>Bei der Bundesnetzagentur anmelden und schriftlich prüfen lassen.</span></li>
+      <li><b>Zulassung beantragen</b><span>Mit der Prüfungsbescheinigung gibt es die Zulassung und das eigene Rufzeichen.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="hell" id="klassen">
+  <div class="bahn">
+    <span class="marke">Die Klassen</span>
+    <h2>N, E oder A – was du damit darfst</h2>
+    <p class="blei">
+      Seit dem 24. Juni 2024 gibt es drei Klassen. Die Klasse N ist der Einstieg, E und A
+      bauen darauf auf. Du kannst aber auch gleich mit E oder A anfangen – die Prüfung
+      enthält dann die Teile der kleineren Klassen mit.
+    </p>
+    <div class="tabelle-rolle">
+      <table>
+        <thead><tr><th>Klasse</th><th>Was du darfst</th><th>Im Ausland</th><th>Rufzeichen</th></tr></thead>
+        <tbody>
+          <tr><td><b>N</b><br>Einstieg</td>
+              <td>10-m-, 2-m- und 70-cm-Band, mit geringer Sendeleistung</td>
+              <td>bisher nur in Deutschland¹</td>
+              <td>DN9…</td></tr>
+          <tr><td><b>E</b><br>CEPT-Novice</td>
+              <td>zusätzlich weitere Bänder, auf Kurzwelle unter anderem 160&nbsp;m, 80&nbsp;m und 15&nbsp;m, meist bis 100&nbsp;Watt</td>
+              <td>in Ländern mit der CEPT-Empfehlung ECC/REC (05)06, bis zu drei Monate²</td>
+              <td>DO1… bis DO9… (auch DA6…)</td></tr>
+          <tr><td><b>A</b><br>HAREC</td>
+              <td>alle Amateurfunkbänder, auf vielen bis 750&nbsp;Watt – etwa auf 80, 40, 20 und 15&nbsp;m sowie 2&nbsp;m und 70&nbsp;cm</td>
+              <td>in Ländern mit der CEPT-Empfehlung T/R 61-01, bei kurzen Aufenthalten</td>
+              <td>zum Beispiel DL…, DK…, DJ…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fussnote">
+      ¹ Laut DARC (50ohm.de) hat Deutschland die Klasse N der CEPT noch nicht gemeldet.<br>
+      ² Laut DARC (50ohm.de).<br>
+      Die genauen Frequenzbereiche und Leistungen stehen in Anlage 1 der Amateurfunkverordnung.
+    </p>
+  </div>
+</section>
+
+<section id="pruefung">
+  <div class="bahn">
+    <span class="marke">Die Prüfung</span>
+    <h2>25 Fragen je Teil, 19 zum Bestehen</h2>
+    <p class="blei">
+      Geprüft wird schriftlich, auf Papier und im Multiple-Choice-Verfahren. Die Prüfung
+      besteht aus Teilen; für jede Klasse brauchst du bestimmte davon.
+    </p>
+    <div class="tabelle-rolle">
+      <table>
+        <thead><tr><th>Prüfungsteil</th><th>Fragen</th><th>Zeit höchstens</th></tr></thead>
+        <tbody>
+          <tr><td>V – Kenntnisse von Vorschriften</td><td class="zahlen-zelle">25</td><td class="zahlen-zelle">45 Minuten</td></tr>
+          <tr><td>B – Betriebliche Kenntnisse</td><td class="zahlen-zelle">25</td><td class="zahlen-zelle">45 Minuten</td></tr>
+          <tr><td>N – Technik Klasse N</td><td class="zahlen-zelle">25</td><td class="zahlen-zelle">45 Minuten</td></tr>
+          <tr><td>E – Technik Klasse E</td><td class="zahlen-zelle">25</td><td class="zahlen-zelle">45 Minuten</td></tr>
+          <tr><td>A – Technik Klasse A</td><td class="zahlen-zelle">25</td><td class="zahlen-zelle">60 Minuten</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="punkte">
+      <li><b>Klasse N:</b> die Teile V, B und N.</li>
+      <li><b>Klasse E:</b> die Teile V, B, N und E.</li>
+      <li><b>Klasse A:</b> die Teile V, B, N, E und A.</li>
+      <li><b>Bestanden</b> ist ein Teil mit mindestens 19 von 25 Punkten – jede richtige Antwort zählt einen Punkt.
+          Fehlen in nur einem Teil ein oder zwei Punkte (17 oder 18), ist eine mündliche Nachprüfung möglich.</li>
+      <li><b>Hilfsmittel:</b> Mitbringen musst du einen Stift und einen einfachen wissenschaftlichen oder
+          nicht programmierbaren Taschenrechner ohne Textspeicher. Gestellt werden Anlage 1 der
+          Amateurfunkverordnung, der Rufzeichenplan, Auszüge aus dem IARU-Bandplan für 2&nbsp;m und 70&nbsp;cm
+          und für die Technik-Teile die Formelsammlung aus dem Fragenkatalog und Papier zum Rechnen.</li>
+      <li><b>Aufsteigen:</b> Wer schon Klasse N hat, legt für E nur noch den Teil E ab und für A die Teile E und A.
+          Wer Klasse E hat, braucht für A nur noch den Teil A.</li>
+      <li><b>Morsen</b> ist keine Pflicht. Es gibt dafür eine freiwillige Zusatzprüfung; abgenommen wird sie
+          derzeit nur in Dortmund, Hamburg und Reutlingen.</li>
+    </ul>
+    <div class="neben">
+      <p>Alle Fragen stehen vorab im Fragenkatalog der Bundesnetzagentur (3. Auflage, März 2024).
+      Er ist kostenlos und enthält auch die Formelsammlung, die in der Prüfung ausliegt.</p>
+    </div>
+  </div>
+</section>
+
+<section class="hell" id="anmelden">
+  <div class="bahn">
+    <span class="marke">Anmelden</span>
+    <h2>Antrag, Termin und Prüfungsort</h2>
+    <ul class="punkte">
+      <li><b>Antrag:</b> Die Anmeldung zur Prüfung geht an die Bundesnetzagentur – vorrangig elektronisch,
+          aber auch schriftlich. Das Formular ist auf ihrer Amateurfunk-Seite verlinkt. Darin gibst du
+          Wunschort und Wunschtermin an.</li>
+      <li><b>Danach</b> kommt ein Zwischenbescheid mit den Angaben für die Überweisung der Gebühr und
+          anschließend die Einladung zur Prüfung.</li>
+      <li><b>Prüfungsorte</b> sind die Standorte der Bundesnetzagentur in Berlin, Dortmund, Cottbus, Erfurt,
+          Eschborn, Göttingen, Hamburg, Hannover, München, Nürnberg und Reutlingen.</li>
+      <li><b>Termine</b> veröffentlicht die Bundesnetzagentur in einer Liste. Viele sind lange vorher
+          ausgebucht – früh anmelden lohnt sich. Den Termin kannst du bis 14 Tage vorher ändern, das
+          erste Mal ohne Gebühr.</li>
+      <li><b>Voraussetzungen:</b> ein Wohnsitz in Deutschland. Ein Mindestalter gibt es nicht; bei
+          Minderjährigen muss der gesetzliche Vertreter einverstanden sein.</li>
+      <li><b>Am Prüfungstag</b> brauchst du deinen Personalausweis oder einen anderen amtlichen
+          Lichtbildausweis zusammen mit einer Meldebescheinigung.</li>
+      <li><b>Nachteilsausgleich:</b> Menschen mit Behinderung oder chronischer Erkrankung bekommen
+          Erleichterungen bei der Prüfung. Den Nachweis, zum Beispiel ein ärztliches Attest, reichst du
+          mit dem Antrag ein.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="kosten">
+  <div class="bahn">
+    <span class="marke">Kosten</span>
+    <h2>Was die Lizenz kostet</h2>
+    <p class="blei">Die Gebühren legt eine Verordnung fest (BMDVTKBGebV). Für die Erstprüfung hängen sie von der Klasse ab, nicht von der Zahl der Teile.</p>
+    <div class="tabelle-rolle">
+      <table>
+        <thead><tr><th>Wofür</th><th>Gebühr</th></tr></thead>
+        <tbody>
+          <tr><td>Erstprüfung Klasse N</td><td class="zahlen-zelle">68,00&nbsp;€</td></tr>
+          <tr><td>Erstprüfung Klasse E</td><td class="zahlen-zelle">73,50&nbsp;€</td></tr>
+          <tr><td>Erstprüfung Klasse A</td><td class="zahlen-zelle">81,00&nbsp;€</td></tr>
+          <tr><td>Zusatzprüfung von N nach E</td><td class="zahlen-zelle">48,00&nbsp;€</td></tr>
+          <tr><td>Zusatzprüfung von N nach A</td><td class="zahlen-zelle">57,00&nbsp;€</td></tr>
+          <tr><td>Zusatzprüfung von E nach A</td><td class="zahlen-zelle">50,50&nbsp;€</td></tr>
+          <tr><td>Wiederholungsprüfung</td><td class="zahlen-zelle">42,50&nbsp;€ + 5,50&nbsp;€ je Teil</td></tr>
+          <tr><td>Zusatzprüfung Morsen (freiwillig)</td><td class="zahlen-zelle">84,00&nbsp;€</td></tr>
+          <tr><td>Zulassung mit persönlichem Rufzeichen</td><td class="zahlen-zelle">20,00&nbsp;€</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="beispiel">
+      <p class="zeile"><span class="etikett">Beispiel Klasse N</span></p>
+      <p class="zeile">68,00&nbsp;€ Prüfung + 20,00&nbsp;€ Zulassung = <b>88,00&nbsp;€</b> einmalig.</p>
+    </div>
+    <p class="blei">
+      Dazu kommen <b>jährliche Beiträge</b> nach der Frequenzschutzbeitragsverordnung. Sie schwanken,
+      werden rückwirkend per Bescheid erhoben und lagen nach den Angaben des DARC zuletzt bei zusammen
+      29,22&nbsp;€ (2022) und 23,52&nbsp;€ (2023).
+    </p>
+  </div>
+</section>
+
+<section class="hell" id="danach">
+  <div class="bahn">
+    <span class="marke">Nach der Prüfung</span>
+    <h2>Zulassung und eigenes Rufzeichen</h2>
+    <ul class="punkte">
+      <li><b>Prüfungsbescheinigung:</b> Sind alle nötigen Teile bestanden, bekommst du die
+          Amateurfunkprüfungsbescheinigung als Urkunde.</li>
+      <li><b>Zulassung:</b> Mit ihr beantragst du die Zulassung zum Amateurfunkdienst. Dabei kannst du bis zu
+          drei Wunschrufzeichen angeben; einen Anspruch darauf gibt es nicht. Die Zulassung kommt als Bescheid
+          und kostet 20&nbsp;€.</li>
+      <li><b>Rufzeichen je Klasse:</b> Klasse N beginnt mit DN9, Klasse E mit DO (oder DA6), Klasse A zum
+          Beispiel mit DL, DK oder DJ.</li>
+      <li><b>Feste Station anzeigen:</b> Wer eine ortsfeste Amateurfunkanlage mit 10&nbsp;Watt EIRP oder mehr
+          betreibt, muss sie vorher bei der Bundesnetzagentur anzeigen.</li>
+      <li><b>Ausbildungsfunk:</b> Mit Klasse E oder A darfst du selbst ausbilden. Eigene Ausbildungsrufzeichen
+          werden seit dem 24. Juni 2025 nicht mehr zugeteilt. Wer ausgebildet wird, funkt unter dem Rufzeichen
+          des Ausbilders oder der Klubstation mit dem Zusatz „/Trainee“, bei Telegrafie und digitalen
+          Betriebsarten „/T“.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="dunkel" id="lernen">
+  <div class="bahn">
+    <span class="marke">Lernen</span>
+    <h2>So bereitest du dich vor</h2>
+    <p class="blei">Es gibt nicht den einen Weg. Viele kombinieren einen Kurs mit Üben am Rechner.</p>
+    <div class="gitter">
+      <div class="feld"><h3>Lehrgang 50 Ohm</h3>
+        <p>Der kostenlose Online-Lehrgang des DARC für die Klassen N, E und A, mit Erklärungen und
+        Lösungswegen. <a href="https://50ohm.de/" target="_blank" rel="noopener">50ohm.de</a></p></div>
+      <div class="feld"><h3>Kurs im Ortsverband</h3>
+        <p>Viele Ortsverbände des DARC bieten Kurse an, vor Ort oder online, oft einen Abend in der Woche.
+        <a href="https://50ohm.de/kurse_vor_ort_karte.html" target="_blank" rel="noopener">Kurse in der Nähe</a></p></div>
+      <div class="feld"><h3>Der Fragenkatalog</h3>
+        <p>Das Original der Bundesnetzagentur mit allen Prüfungsfragen und der Formelsammlung – kostenlos als PDF.
+        <a href="https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/SpezielleAnwendungen/Amateurfunk/start.html" target="_blank" rel="noopener">Bundesnetzagentur</a></p></div>
+      <div class="feld"><h3>Der Amateurfunk-Trainer</h3>
+        <p>Alle 1750 Prüfungsfragen, jede mit eigenem Lösungsweg, dazu die Lösungswege des DARC an der Frage,
+        Prüfungssimulator, Vorlesen, Nachteilsausgleich und ein Gruppenraum für den Kursabend.
+        Kostenlos, ohne Konto, auf dem eigenen Rechner.
+        <a href="./">Mehr zum Trainer</a></p></div>
+    </div>
+    <div class="knoepfe">
+      <a class="knopf knopf-haupt" href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">Trainer kostenlos herunterladen</a>
+      <a class="knopf knopf-rand" href="https://amateurfunk-trainer.com/">Online ausprobieren</a>
+    </div>
+  </div>
+</section>
+
+<section id="fragen">
+  <div class="bahn">
+    <span class="marke">Häufige Fragen</span>
+    <h2>Was oft gefragt wird</h2>
+    <div class="frage"><h3>Gibt es ein Mindestalter?</h3>
+      <p>Nein. Bei Minderjährigen muss der gesetzliche Vertreter einverstanden sein.</p></div>
+    <div class="frage"><h3>Muss ich morsen können?</h3>
+      <p>Nein. Morsen ist eine freiwillige Zusatzprüfung.</p></div>
+    <div class="frage"><h3>Kann ich gleich mit Klasse E oder A anfangen?</h3>
+      <p>Ja. Du legst dann alle zugehörigen Teile auf einmal ab: für E vier, für A fünf.</p></div>
+    <div class="frage"><h3>Was passiert, wenn ich einen Teil nicht bestehe?</h3>
+      <p>Hast du in nur einem Teil 17 oder 18 Punkte, ist eine mündliche Nachprüfung möglich. Sonst wiederholst
+      du die nicht bestandenen Teile innerhalb von 24 Monaten; danach muss die ganze Prüfung neu abgelegt werden.</p></div>
+    <div class="frage"><h3>Was kostet das insgesamt?</h3>
+      <p>Für Klasse N einmalig 88 €: 68 € Prüfung und 20 € Zulassung. Dazu kommen jährliche Beiträge, zuletzt
+      zwischen etwa 20 und 30 €.</p></div>
+    <div class="frage"><h3>Darf ich mit Klasse N im Ausland funken?</h3>
+      <p>Derzeit nicht. Laut DARC hat Deutschland die Klasse N der CEPT noch nicht gemeldet.</p></div>
+  </div>
+</section>
+
+<section class="hell" id="quellen">
+  <div class="bahn">
+    <span class="marke">Quellen</span>
+    <h2>Wo das steht</h2>
+    <ul class="quellen punkte">
+      <li><a href="https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/SpezielleAnwendungen/Amateurfunk/start.html" target="_blank" rel="noopener">Bundesnetzagentur: Amateurfunk</a> – Klassen, Prüfungsorte, Fragenkatalog, Formulare</li>
+      <li><a href="https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/SpezielleAnwendungen/Amateurfunk/DL_Vfg_AFu/Vfg29_2024_Auszug.pdf?__blob=publicationFile&amp;v=11" target="_blank" rel="noopener">Bundesnetzagentur: Verfügung 29/2024</a> – Antrag, Prüfungsteile, Bestehen, Hilfsmittel</li>
+      <li><a href="https://www.bundesnetzagentur.de/amateurfunk-termine.html" target="_blank" rel="noopener">Bundesnetzagentur: Prüfungstermine</a></li>
+      <li><a href="https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Amateurfunk/Gebuehren/BMDVTKBGebV.pdf?__blob=publicationFile&amp;v=5" target="_blank" rel="noopener">Bundesnetzagentur: Gebühren (BMDVTKBGebV)</a></li>
+      <li><a href="https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/SpezielleAnwendungen/Amateurfunk/DL_Vfg_AFu/Rufzeichenplan_10_24_Auszug_aus_Vfg_15_2025.pdf?__blob=publicationFile&amp;v=4" target="_blank" rel="noopener">Bundesnetzagentur: Rufzeichenplan</a></li>
+      <li><a href="https://www.gesetze-im-internet.de/afuv_2005/" target="_blank" rel="noopener">Amateurfunkverordnung (AFuV)</a> und <a href="https://www.gesetze-im-internet.de/afug_1997/" target="_blank" rel="noopener">Amateurfunkgesetz (AFuG)</a></li>
+      <li><a href="https://50ohm.de/N_funken_im_ausland.html" target="_blank" rel="noopener">DARC / 50ohm.de: Funken im Ausland</a> und <a href="https://www.darc.de/nachrichten/meldungen/aktuelles-details/news/tkg-und-emv-beitraege-fuer-die-jahre-2022-und-2023-festgelegt" target="_blank" rel="noopener">DARC: Beiträge 2022 und 2023</a></li>
+    </ul>
+    <p class="fussnote">Stand: 25. September 2026. Kein amtliches Angebot – verbindlich sind die Angaben der Bundesnetzagentur.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="bahn">
+    <div class="fuss-gitter">
+      <div>
+        <h3>Das Programm</h3>
+        <ul>
+          <li><a href="./">Der Amateurfunk-Trainer</a></li>
+          <li><a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">Herunterladen</a></li>
+          <li><a href="https://amateurfunk-trainer.com/">Online ausprobieren</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Zur Prüfung</h3>
+        <ul>
+          <li>Der Weg zur Amateurfunklizenz</li>
+          <li>Fragenkatalog der Bundesnetzagentur, Stand März 2024</li>
+          <li>Klasse N, E und A</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fuss-strich">
+      Amateurfunk-Trainer · Entwickler und Urheber: Dietmar Reh ·
+      Kontakt: <a href="mailto:kontakt@amateurfunk-trainer.com">kontakt@amateurfunk-trainer.com</a> ·
+      Kein amtliches Angebot der Bundesnetzagentur.
+    </div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"Article",
+      "headline":"Der Weg zur Amateurfunklizenz",
+      "description":"Wie du die Amateurfunklizenz bekommst: die Klassen N, E und A, die Prüfung bei der Bundesnetzagentur, Anmeldung, Gebühren, Rufzeichen und Lernwege.",
+      "inLanguage":"de",
+      "datePublished":"2026-09-25",
+      "dateModified":"2026-09-25",
+      "author":{"@type":"Person","name":"Dietmar Reh"},
+      "image":"https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/bilder/vorschau.jpg",
+      "mainEntityOfPage":"https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/amateurfunklizenz.html",
+      "about":[
+        {"@type":"Thing","name":"Amateurfunkprüfung"},
+        {"@type":"Thing","name":"Amateurfunkzeugnis"},
+        {"@type":"Thing","name":"Amateurfunklizenz"}
+      ]
+    },
+    {
+      "@type":"FAQPage",
+      "mainEntity":[
+        {"@type":"Question","name":"Gibt es ein Mindestalter?","acceptedAnswer":{"@type":"Answer","text":"Nein. Bei Minderjährigen muss der gesetzliche Vertreter einverstanden sein."}},
+        {"@type":"Question","name":"Muss ich morsen können?","acceptedAnswer":{"@type":"Answer","text":"Nein. Morsen ist eine freiwillige Zusatzprüfung."}},
+        {"@type":"Question","name":"Kann ich gleich mit Klasse E oder A anfangen?","acceptedAnswer":{"@type":"Answer","text":"Ja. Du legst dann alle zugehörigen Teile auf einmal ab: für E vier, für A fünf."}},
+        {"@type":"Question","name":"Was passiert, wenn ich einen Teil nicht bestehe?","acceptedAnswer":{"@type":"Answer","text":"Hast du in nur einem Teil 17 oder 18 Punkte, ist eine mündliche Nachprüfung möglich. Sonst wiederholst du die nicht bestandenen Teile innerhalb von 24 Monaten; danach muss die ganze Prüfung neu abgelegt werden."}},
+        {"@type":"Question","name":"Was kostet das insgesamt?","acceptedAnswer":{"@type":"Answer","text":"Für Klasse N einmalig 88 €: 68 € Prüfung und 20 € Zulassung. Dazu kommen jährliche Beiträge, zuletzt zwischen etwa 20 und 30 €."}},
+        {"@type":"Question","name":"Darf ich mit Klasse N im Ausland funken?","acceptedAnswer":{"@type":"Answer","text":"Derzeit nicht. Laut DARC hat Deutschland die Klasse N der CEPT noch nicht gemeldet."}}
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>

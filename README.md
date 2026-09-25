@@ -49,7 +49,7 @@ vorher, welche Prüfungsbögen dazugehören und wie viele Fragen zu lernen sind.
 **Weiter:**
 
 - **Eine Erklärung zu jeder Frage** — alle 1750, in allen vier Prüfungszielen.
-  Zuerst das Prinzip, dann der Kniff für diese eine Frage, bei 390 Rechenaufgaben
+  Zuerst das Prinzip, dann der Kniff für diese eine Frage, bei 391 Rechenaufgaben
   der Weg mit jedem Zwischenschritt, und zu jeder falschen Antwort ein Satz, welcher
   Denk- oder Rechenfehler genau dorthin führt. Hinter den Erklärungen stehen
   76 Begriffsblätter. Für Augen, die nicht mehr die besten sind: ein großes Fenster
@@ -208,9 +208,10 @@ Ansicht — keine verkleinerte Rechnerseite.
   <img src="bilder/10-mobile.png" alt="Der Trainer am Handy: links das Fenster zum Mitmachen mit Namensfeld, rechts eine Frage im Gruppenraum" width="760">
 </p>
 
-- **Name eintragen, mitmachen, los.** Ein Feld, ein Knopf. Ohne Namen geht es
-  nicht weiter — sonst steht man bei allen anderen als „Benutzer 1" in der
-  Liste. Nach dem Tippen beginnt sofort die erste Frage.
+- **Name eintragen, mitmachen, los.** Ein Feld, zwei Knöpfe: **Start** oder
+  **Ohne Namen**. Der Name ist freiwillig und steht nur im Chat und in der
+  Teilnehmerliste; ohne Eintrag heißt man „Besucher". Danach geht es direkt in
+  den Raum.
 - **Nur der Raum, kein Hauptmenü.** Filterleiste, Prüfungsübersicht,
   Lernfortschritt und Verlauf gehören zum eigenen Lernen am eigenen Rechner —
   im Raum entscheidet der Ausbilder, was gefragt wird. Übrig bleiben

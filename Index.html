@@ -31,7 +31,13 @@
          sich diese Seite hier, und die hatte bisher keine Beschreibung.
          Dann sucht sich Google irgendeinen Satz aus dem Text. Derselbe
          Wortlaut wie in der Kachel. -->
-    <meta name="description" content="Alle Prüfungsfragen der Bundesnetzagentur für die Amateurfunkprüfung Klasse N, E und A – mit Erklärung zu jeder Frage. Kostenlos, ohne Konto.">
+    <!-- Neu gefasst am 25.09.2026. Dietmar am 25.09.2026, nach Googles KI-Vergleich der Trainer: "Wir haben wahnsinnig viele
+         Tools, vor allem der Nachteilausgleich fuer behinderte Menschen, fuer Menschen, die sich
+         schwer tun mit dem Lernen." Gewaehlt: "Staerken nach vorn" - Tatsachen statt Rang. -->
+    <!-- Ergaenzt am 25.09.2026. Dietmar: "dass nicht nur der Loesungsweg vom DARC dabei ist, sondern
+         auch noch eigene, dass 1750 Antworten auch eine Loesung haben, einen Loesungsweg." Deshalb
+         steht jetzt "jede mit eigenem Loesungsweg" vorn; die DARC-Loesungswege (277) kommen dazu. -->
+    <meta name="description" content="Kostenlos und modern: alle 1750 Prüfungsfragen für Klasse N, E und A, jede mit eigenem Lösungsweg – dazu Vorlesen, Nachteilsausgleich und die Lösungswege des DARC.">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Das Zeichen im Browsertab. icon.png fuer alles Moderne, favicon.ico
          fuer das, was noch danach fragt. -->
@@ -87,7 +93,7 @@
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Amateurfunk-Trainer">
     <meta property="og:title" content="Amateurfunk-Trainer: Prüfungsfragen Klasse N, E, A üben">
-    <meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung – mit Erklärung zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.">
+    <meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung – mit eigenem Lösungsweg zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.">
     <meta property="og:url" content="https://amateurfunk-trainer.com/">
     <meta property="og:image" content="https://amateurfunk-trainer.com/vorschau.jpg">
     <meta property="og:image:width" content="1200">
@@ -100,7 +106,7 @@
       "name": "Amateurfunk-Trainer",
       "alternateName": "AFu-Trainer",
       "url": "https://amateurfunk-trainer.com/",
-      "description": "Lernprogramm für die deutsche Amateurfunkprüfung: der amtliche Fragenkatalog der Bundesnetzagentur für Klasse N, E und A mit einer Erklärung zu jeder Frage, Prüfungssimulation, Karteikasten, Vorlesen und Gruppenraum für den OV-Abend.",
+      "description": "Kostenloses Lernprogramm für die deutsche Amateurfunkprüfung: alle 1750 Fragen der Bundesnetzagentur für Klasse N, E und A, jede mit eigenem Lösungsweg und dem Grund, warum die falschen Antworten falsch sind. Gebaut auch für alle, denen Lernen schwerfällt: Vorlesen, Hörbuch, Tastaturbedienung, größere Bilder und verlängerte Prüfungszeit. Dazu die Lösungswege des DARC direkt an der Frage, Prüfungssimulator und Gruppenraum. Ohne Konto, ohne Werbung.",
       "inLanguage": "de",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Web, Windows, Linux, macOS",
@@ -112,7 +118,7 @@
       "downloadUrl": "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",
       "installUrl": "https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
       "softwareHelp": { "@type": "CreativeWork", "url": "https://amateurfunk-trainer.com/support.html" },
-      "keywords": "Amateurfunk, Amateurfunkprüfung, Prüfungsfragen, Fragenkatalog, Bundesnetzagentur, Klasse N, Klasse E, Klasse A, Amateurfunkzeugnis, Lernprogramm, Prüfungssimulator",
+      "keywords": "Amateurfunk, Amateurfunkprüfung, Amateurfunklizenz, Prüfungsfragen, Fragenkatalog, Bundesnetzagentur, Klasse N, Klasse E, Klasse A, Amateurfunkzeugnis, Lernprogramm, Prüfungssimulator, Nachteilsausgleich, Vorlesen, Hörbuch, Lösungswege",
       "about": [
         { "@type": "Thing", "name": "Amateurfunkprüfung" },
         { "@type": "Thing", "name": "Amateurfunkzeugnis Klasse N" },
@@ -120,6 +126,15 @@
         { "@type": "Thing", "name": "Amateurfunkzeugnis Klasse A" }
       ]
     }
+    </script>
+    <!-- Der Name der Website fuer das Suchergebnis (25.09.2026). Google
+         zeigte ueber dem Treffer bisher "amateurfunk-trainer.com" - mit
+         diesen Angaben auf der Startseite darf es "Amateurfunk-Trainer"
+         schreiben. Dietmar: "da koennen wir noch etwas mehr SEO betreiben,
+         damit auch Google das richtig zuordnen kann." Dasselbe steht in
+         der Seite, die der Worker bei ausgeschaltetem Rechner zeigt. -->
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "WebSite", "name": "Amateurfunk-Trainer", "alternateName": "AFu-Trainer", "url": "https://amateurfunk-trainer.com/" }
     </script>
     <!-- Die Symbolschrift liegt seit dem 01.09.2026 im Ordner, nicht mehr
          bei einem CDN. Vorher stand hier cdnjs.cloudflare.com - damit
@@ -7138,7 +7153,10 @@ window.klasseFragenNachladen = klasseFragenNachladen;
             </div>
 
             <!-- FRAGEN -->
-            <input type="file" id="lernstandDateiHaupt" accept="application/json,.json" style="display:none" onchange="lernstandDateiGewaehlt(this)">
+            <!-- .txt seit dem 24.09.2026: die Fehler, die ein Gast aus dem
+                 Gruppenraum mitnimmt, kommen als lesbare Textdatei (siehe
+                 FEHLER MITNEHMEN). -->
+            <input type="file" id="lernstandDateiHaupt" accept="application/json,.json,text/plain,.txt" style="display:none" onchange="lernstandDateiGewaehlt(this)">
             <!-- Kein Abstand nach unten: In der Hauptansicht ist dieser Kasten das
                  letzte sichtbare Element, und der Abstand liess ihn 13 Pixel hoeher
                  enden als den Verlauf daneben. Waehrend einer Runde ist der Kasten
@@ -13488,6 +13506,303 @@ function duoVerlaufSchreiben(quelle) {
     } catch (e) { console.warn('[DUO] Verlaufseintrag fehlgeschlagen', e); return false; }
 }
 window.duoVerlaufSchreiben = duoVerlaufSchreiben;
+
+// ================================================================
+//  FEHLER MITNEHMEN                                      24.09.2026
+//  ----------------------------------------------------------------
+//  Dietmar: "meine Freundin hat auch den Trainer installiert, dass
+//  wenn sie mit mir im Gruppenraum lernt und Fehler hat, dass diese
+//  Fehler dann in ihren Trainer mit aufgenommen wird. Ist sowas
+//  moeglich?" Und gleich dazu: "Das braucht aber dann nur derjenige,
+//  der dann bei mir ... auf dem Server arbeitet. Also ich brauche das
+//  nicht, weil bei mir wird das ja gespeichert."
+//
+//  Ein Gast lernt im Raum im Browser auf Dietmars Trainer. Sein
+//  eigener Trainer zu Hause hat einen anderen Speicher und erfaehrt
+//  davon nichts. Deshalb nimmt der Gast seine Fehler als kleine Datei
+//  mit - Knopf "Meine Fehler mitnehmen" in der Auswertung - und liest
+//  sie zu Hause ueber den vorhandenen Knopf "Einlesen" ein. Dort zaehlt
+//  jede Frage wie eine falsche Antwort am eigenen Rechner: Fehlerliste,
+//  Lernbedarf, und eine schon gelernte Frage kommt wieder zum Ueben.
+//  Ueberschrieben wird nichts. (So von Dietmar ausgewaehlt: Knopf in
+//  der Auswertung, Einlesen ueber "Einlesen", Wirkung "wie falsch
+//  beantwortet".)
+//
+//  Gesammelt wird ueber alle Runden eines Raums. Startet der Gastgeber
+//  eine neue Runde, wandern die Fehler der alten nach "frueher".
+//  Innerhalb einer Runde zaehlt die letzte Meldung - im Pruefungsraum
+//  laesst sich eine Antwort noch aendern. Der Stand liegt im Browser,
+//  damit ein Neuladen der Seite nichts verliert. Ein anderer Raum oder
+//  ein Stand von gestern faengt von vorn an.
+//
+//  Die Meldungen kommen aus duo.js (answer), also von genau der Stelle,
+//  die auch dem Server jede Antwort meldet: Klick, F9 als Fehler und
+//  abgelaufene Zeit. Vorbelegte gelernte Fragen ("gelernt") zaehlen
+//  nicht - die hat niemand beantwortet.
+//
+//  Der Gastgeber sieht den Knopf nicht: Bei ihm landen die Fehler
+//  ohnehin im eigenen Lernstand.
+//
+//  DIE DATEI IST ZUM LESEN UND ZUM EINLESEN. Dietmar, noch waehrend
+//  des Baus: "Interessant waere es wahrscheinlich auch, wenn man sich
+//  die Textdatei runterlaedt im Klartext, so dass ich das auch oeffnen
+//  und lesen kann, was ich falsch gehabt habe. Beziehungsweise
+//  zusaetzlich dann auch nochmal fuer den Trainer, dass er das
+//  einlesen kann."
+//  Deshalb EINE Textdatei (.txt, oeffnet sich mit einem Doppelklick):
+//  oben jede falsche Frage mit der eigenen und der richtigen Antwort,
+//  ganz unten eine Zeile fuer den Trainer. Zwei Dateien auf einen Klick
+//  haetten die Browser mit einer Rueckfrage quittiert, und am Ende
+//  laege nur eine davon im Download-Ordner.
+// ================================================================
+const RAUMFEHLER_SCHLUESSEL = 'amateurfunk_raumfehler';
+const RAUMFEHLER_TYP = 'amateurfunk-trainer-raumfehler';
+const RAUMFEHLER_ID = /^[A-Z]{2}\d{3}$/;
+const RAUMFEHLER_HOECHSTENS_ALT = 24 * 60 * 60 * 1000;
+
+function raumFehlerStand(){
+    try{
+        const s = JSON.parse(localStorage.getItem(RAUMFEHLER_SCHLUESSEL) || 'null');
+        if(s && typeof s === 'object'){
+            if(!Array.isArray(s.frueher)) s.frueher = [];
+            if(!s.runde || typeof s.runde !== 'object') s.runde = {};
+            if(!s.texte || typeof s.texte !== 'object') s.texte = {};
+            return s;
+        }
+    }catch(e){}
+    return { raum:'', seit:0, frueher:[], runde:{}, texte:{} };
+}
+function raumFehlerSchreiben(s){
+    try{ localStorage.setItem(RAUMFEHLER_SCHLUESSEL, JSON.stringify(s)); }catch(e){}
+}
+function raumFehlerRaumCode(){
+    try{ return (window.duo && window.duo.raumCode) ? String(window.duo.raumCode() || '') : ''; }catch(e){ return ''; }
+}
+// Gilt der gespeicherte Stand fuer den Raum, in dem ich gerade bin?
+function raumFehlerPasst(s){
+    const code = raumFehlerRaumCode();
+    if(!s.raum) return false;
+    if(code && s.raum !== code) return false;
+    return (Date.now() - (s.seit || 0)) < RAUMFEHLER_HOECHSTENS_ALT;
+}
+// Frage, eigene Antwort und richtige Antwort als schlichter Text - fuer
+// die lesbare Datei. Die Antworten stehen im Raum gemischt; deshalb wird
+// der Text gleich hier festgehalten und nicht spaeter aus einer Nummer
+// zurueckgerechnet.
+function raumFehlerTexte(id, optIndex, art){
+    try{
+        const q = (typeof currentQuestions !== 'undefined' && Array.isArray(currentQuestions))
+            ? currentQuestions.find(x => x && x.id === id) : null;
+        if(!q) return null;
+        const rein = t => String(t || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const opt = o => !o ? '' : (rein(o.text) || (o.image ? '(Bild)' : ''));
+        const richtig = (q.options || []).find(o => o && o.correct === true);
+        let gewaehlt = '';
+        if(art === 'loesung')      gewaehlt = 'Lösung angesehen (F9)';
+        else if(art === 'zeit')    gewaehlt = 'keine Antwort – die Zeit war abgelaufen';
+        else if(typeof optIndex === 'number' && q.options && q.options[optIndex]) gewaehlt = opt(q.options[optIndex]);
+        return { f: rein(q.text).slice(0, 600), g: gewaehlt.slice(0, 300), r: opt(richtig).slice(0, 300) };
+    }catch(e){ return null; }
+}
+// Aufgerufen aus duo.js bei jeder Antwort, die an den Server geht.
+function raumFehlerMerken(qId, isCorrect, art, optIndex){
+    try{
+        const id = String(qId || '');
+        if(!RAUMFEHLER_ID.test(id)) return;
+        if(art === 'gelernt') return;
+        const code = raumFehlerRaumCode();
+        if(!code) return;
+        let s = raumFehlerStand();
+        if(!raumFehlerPasst(s)) s = { raum:code, seit:Date.now(), frueher:[], runde:{}, texte:{} };
+        if(!s.texte || typeof s.texte !== 'object') s.texte = {};
+        s.runde[id] = isCorrect ? 1 : 0;
+        if(!isCorrect){
+            const t = raumFehlerTexte(id, optIndex, art);
+            if(t) s.texte[id] = t;
+        }
+        raumFehlerSchreiben(s);
+    }catch(e){}
+}
+window.raumFehlerMerken = raumFehlerMerken;
+// Eine neue Runde beginnt: Die Fehler der alten bleiben, die Antworten
+// fangen neu an.
+function raumFehlerRundeAbschliessen(){
+    try{
+        const s = raumFehlerStand();
+        if(!raumFehlerPasst(s)) return;
+        Object.keys(s.runde).forEach(id => {
+            if(s.runde[id] === 0 && s.frueher.indexOf(id) === -1) s.frueher.push(id);
+        });
+        s.runde = {};
+        raumFehlerSchreiben(s);
+    }catch(e){}
+}
+function raumFehlerListe(){
+    const s = raumFehlerStand();
+    if(!raumFehlerPasst(s)) return [];
+    const ids = new Set(s.frueher.filter(id => RAUMFEHLER_ID.test(id)));
+    Object.keys(s.runde).forEach(id => { if(s.runde[id] === 0) ids.add(id); });
+    return Array.from(ids).sort();
+}
+function raumFehlerIstGast(){
+    try{
+        return !!(window.duo && window.duo.isActive && window.duo.isActive()
+                  && !(window.duo.isHost && window.duo.isHost()));
+    }catch(e){ return false; }
+}
+// Der Knopf - leer beim Gastgeber und wenn es nichts mitzunehmen gibt.
+// In der Gesamt-Auswertung steht er in einer eigenen Zeile und ist der
+// Hauptknopf (Gaeste haben dort sonst keinen). Im Kasten "Du bist mit
+// allen Fragen fertig!" reiht er sich ein; dort ist "Gesamt-Auswertung
+// anzeigen" schon der Hauptknopf.
+function raumFehlerKnopfHtml(imKasten){
+    if(!raumFehlerIstGast()) return '';
+    const n = raumFehlerListe().length;
+    if(!n) return '';
+    const knopf = '<button class="btn ' + (imKasten ? 'btn-outline' : 'btn-primary') + '" onclick="raumFehlerSpeichern(this)" '
+        + 'data-tooltip="Deine falschen Antworten aus diesem Raum als Textdatei – zum Nachlesen und für deinen eigenen Trainer zu Hause">'
+        + '<i class="fas fa-download"></i> Meine Fehler mitnehmen (' + n + ')</button>';
+    if(imKasten) return knopf;
+    return '<div style="display:flex; justify-content:center; margin-top:1.2rem;">' + knopf + '</div>';
+}
+function raumFehlerHinweisHtml(){
+    if(!raumFehlerIstGast() || !raumFehlerListe().length) return '';
+    return '<div style="margin-top:0.35rem; text-align:center; font-size:0.76rem; color:var(--muted);">'
+        + 'Die Datei kannst du öffnen und lesen. Für deinen eigenen Trainer: dort auf „Einlesen“ klicken und die Datei wählen.</div>';
+}
+window.raumFehlerKnopfHtml = raumFehlerKnopfHtml;
+window.raumFehlerHinweisHtml = raumFehlerHinweisHtml;
+
+function raumFehlerSpeichern(knopf){
+    try{
+        const ids = raumFehlerListe();
+        if(!ids.length) return;
+        const s = raumFehlerStand();
+        let name = '';
+        try{ name = String(localStorage.getItem('duo_userName') || '').slice(0, 40); }catch(e){}
+        const paket = {
+            typ: RAUMFEHLER_TYP,
+            version: 1,
+            erstellt: new Date().toISOString(),
+            raum: s.raum || '',
+            name: name,
+            fehler: ids
+        };
+        const d = new Date();
+        const zwei = n => String(n).padStart(2, '0');
+        const stempel = d.getFullYear() + '-' + zwei(d.getMonth() + 1) + '-' + zwei(d.getDate());
+        const datum = zwei(d.getDate()) + '.' + zwei(d.getMonth() + 1) + '.' + d.getFullYear();
+        const raum = String(s.raum || '').replace(/[^A-Za-z0-9-]/g, '');
+        // Der lesbare Teil. Windows-Zeilenenden, damit auch ein altes
+        // Notepad die Zeilen trennt.
+        const z = [];
+        z.push('Amateurfunk-Trainer – meine Fehler aus dem Gruppenraum');
+        z.push([raum ? 'Raum ' + raum : '', datum, name].filter(Boolean).join(' · '));
+        z.push(ids.length + (ids.length === 1 ? ' Frage' : ' Fragen'));
+        z.push('');
+        ids.forEach((id, i) => {
+            const t = (s.texte && s.texte[id]) || null;
+            z.push((i + 1) + '. ' + id + (t && t.f ? ' – ' + t.f : ''));
+            if(t && t.g) z.push('   Deine Antwort: ' + t.g);
+            if(t && t.r) z.push('   Richtig:       ' + t.r);
+            z.push('');
+        });
+        z.push('So kommen die Fehler in deinen eigenen Trainer:');
+        z.push('Hauptansicht → „Einlesen“ → diese Datei wählen. Dein Lernstand wird dabei nicht überschrieben.');
+        z.push('');
+        z.push('--- Für den Trainer, bitte nicht ändern ---');
+        z.push(JSON.stringify(paket));
+        // Das BOM am Anfang sagt auch aelteren Editoren, dass hier UTF-8
+        // steht - sonst werden aus Umlauten Zeichensalat.
+        const blob = new Blob(['﻿' + z.join('\r\n') + '\r\n'], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Fehler-Gruppenraum_' + stempel + (raum ? '_' + raum : '') + '.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        // Rueckmeldung direkt am Knopf: Ein zweites Fenster ueber der
+        // Auswertung wuerde sie verdecken.
+        if(knopf){
+            knopf.innerHTML = '<i class="fas fa-check"></i> Gespeichert (' + ids.length + ') – liegt im Download-Ordner';
+        }
+    }catch(e){
+        try{ if(window.showAppAlert) window.showAppAlert('❌ Speichern fehlgeschlagen: ' + e.message); }catch(e2){}
+    }
+}
+window.raumFehlerSpeichern = raumFehlerSpeichern;
+
+// Die Zeile fuer den Trainer aus der Textdatei holen. Gesucht wird nach
+// dem Anfang des Pakets, nicht nach der Trennzeile darueber - wer beim
+// Lesen versehentlich etwas darueber veraendert hat, verliert so nichts.
+function raumFehlerAusText(text){
+    try{
+        const t = String(text || '');
+        const beginn = t.indexOf('{"typ":"' + RAUMFEHLER_TYP + '"');
+        if(beginn < 0) return null;
+        // JSON.stringify schreibt alles in eine Zeile - sie geht bis zum
+        // Zeilenende.
+        const zeile = t.slice(beginn).split(/\r?\n/)[0].trim();
+        const paket = JSON.parse(zeile);
+        return (paket && paket.typ === RAUMFEHLER_TYP) ? paket : null;
+    }catch(e){ return null; }
+}
+
+// Im eigenen Trainer: die Datei kommt ueber "Einlesen" herein
+// (lernstandDateiGewaehlt erkennt sie am Typ).
+function raumFehlerEinlesen(paket){
+    const ids = Array.from(new Set((Array.isArray(paket.fehler) ? paket.fehler : [])
+        .map(x => String(x || '')).filter(x => RAUMFEHLER_ID.test(x))));
+    if(!ids.length){ lernstandMeldung('In dieser Datei stehen keine Fehler.', true); return; }
+    const schon = ids.filter(id => errorList.includes(id)).length;
+    const neu = ids.length - schon;
+    const esc = t => String(t || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    let datum = '';
+    try{
+        const t = String(paket.erstellt || '').slice(0, 10).split('-');
+        if(t.length === 3) datum = t[2] + '.' + t[1] + '.' + t[0];
+    }catch(e){}
+    let wer = currentUser;
+    try{ wer = getUserDisplayName(currentUser); }catch(e){}
+    const details = ids.length + (ids.length === 1 ? ' Frage' : ' Fragen')
+        + (paket.raum ? ' aus Raum ' + esc(paket.raum) : '')
+        + (datum ? ' vom ' + datum : '') + '<br>'
+        + neu + ' neu' + (schon ? ', ' + schon + ' ' + (schon === 1 ? 'stand' : 'standen') + ' schon in der Fehlerliste' : '') + '.<br><br>'
+        + 'Jede Frage zählt wie eine falsche Antwort hier am Rechner: Sie kommt in die Fehlerliste und in den Lernbedarf. '
+        + 'War sie schon gelernt, kommt sie wieder zum Üben dran.<br>'
+        + '<b>Dein Lernstand wird nicht überschrieben.</b>';
+    const frage = 'Fehler aus dem Gruppenraum für „' + wer + '“ hinzufügen?';
+    const los = () => raumFehlerUebernehmen(ids);
+    if(typeof window.showAppConfirm === 'function'){
+        window.showAppConfirm(frage, los, {
+            title: 'Fehler aus dem Gruppenraum',
+            icon: 'fa-users',
+            details: details,
+            confirmLabel: '<i class="fas fa-plus"></i> Hinzufügen'
+        });
+    } else if(confirm(frage + '\n' + details.replace(/<[^>]*>/g, ' '))){
+        los();
+    }
+}
+function raumFehlerUebernehmen(ids){
+    try{
+        ids.forEach(id => {
+            if(!errorList.includes(id)) errorList.push(id);
+            handleDifficultOnWrong(id);
+            handleMasteryOnAnswer(id, false);
+        });
+        saveErrors();
+        saveDifficult();
+        saveMastery();
+        try{ updateErrorBadge(); }catch(e){}
+        lernstandMeldung(ids.length + (ids.length === 1 ? ' Frage' : ' Fragen')
+            + ' aus dem Gruppenraum übernommen – sie stehen jetzt in deiner Fehlerliste.', false);
+    }catch(e){
+        lernstandMeldung('Übernehmen fehlgeschlagen: ' + e.message, true);
+    }
+}
 
 function clearHistory() {
     openHistoryClearModal();
@@ -23555,10 +23870,29 @@ function stopTTS(){
 function ttsIstWindows(){
     try{ return /Windows/i.test(navigator.userAgent || ''); }catch(e){ return false; }
 }
+// ----------------------------------------------------------------
+//  WER DIE MELDUNG LIEST                                  (25.09.2026)
+//  Dietmar am 25.09.2026: "ob irgendwo noch Fehler vorhanden sind, ob
+//  alles sauber funktioniert."
+//
+//  Beim Durchpruefen am Handy eines Gastes aufgefallen: Fehlen beim
+//  Gastgeber die Stimmen, bekam der GAST den Weg "Einstellungen ->
+//  Wartung -> Hilfsprogramme" gezeigt. Den kann er nicht gehen - die
+//  Sprachausgabe laeuft auf dem Rechner des Gastgebers. Gaeste bekommen
+//  deshalb einen eigenen Satz.
+//
+//  Und "Wahlweise tut es auch das Setup noch einmal" stammte aus der
+//  Zeit vor dem 14.09.2026. Ein Setup gibt es nicht mehr; im Windows-ZIP
+//  sind Piper und die Stimmen dabei.
+// ----------------------------------------------------------------
 function ttsPiperWeg(){
+    if(!laeuftLokal()){
+        return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Gastgebers \u2013 dort fehlt sie gerade. '
+             + 'An deinem Ger\u00e4t musst du nichts einstellen.';
+    }
     return 'So kommt sie dazu: Einstellungen \u2192 Wartung \u2192 Hilfsprogramme \u2192 bei Piper auf \u201eHolen\u201c. '
          + 'Danach Einstellungen \u2192 Nachteilsausgleich \u2192 Stimme \u2192 \u201eStimmen hinzuf\u00fcgen\u201c.'
-         + (ttsIstWindows() ? ' Wahlweise tut es auch das Setup noch einmal.' : '');
+         + (ttsIstWindows() ? ' Wahlweise das Windows-ZIP noch einmal herunterladen \u2013 darin sind Piper und die Stimmen enthalten.' : '');
 }
 function ttsMeldung(text){
     console.warn('[TTS] ' + text);
@@ -23751,10 +24085,11 @@ async function playTTSSegment(seg, token){
     if(!isPiperVoice && !window._ttsHinweisGezeigt){
         window._ttsHinweisGezeigt = true;
         console.warn('[TTS] Keine Piper-Stimme verfügbar - keine Sprachausgabe.');
-        ttsMeldung('Für das Vorlesen fehlt noch die Sprachausgabe.\n'
-            + 'Das ist kein Fehler — Piper und die Stimmen sind nicht Teil der '
-            + 'Installation, weil sie für jedes System anders aussehen.\n'
-            + ttsPiperWeg());
+        ttsMeldung(laeuftLokal()
+            ? 'Für das Vorlesen fehlt noch die Sprachausgabe.\n'
+              + 'In diesem Ordner sind Piper oder die Stimmen nicht zu finden.\n'
+              + ttsPiperWeg()
+            : 'Vorlesen geht gerade nicht.\n' + ttsPiperWeg());
     }
 }
 
@@ -24421,7 +24756,7 @@ const KNOPF_ERKLAERUNG_TIP = {
     'Lernstand sichern':
         'Lernstand sichern. Schreibt Verlauf, Lernfortschritt, Lernbedarf und Fehler aller Benutzer in eine einzige Datei. Die kannst du wegkopieren und später auf demselben oder einem anderen Rechner wieder einlesen.',
     'Gesicherten Lernstand aus einer Datei zurückholen':
-        'Gesicherten Lernstand zurückholen. Du wählst eine vorher gesicherte Datei aus, und der Trainer stellt Verlauf, Lernfortschritt, Lernbedarf und Fehler daraus wieder her.',
+        'Gesicherten Lernstand zurückholen. Du wählst eine vorher gesicherte Datei aus, und der Trainer stellt Verlauf, Lernfortschritt, Lernbedarf und Fehler daraus wieder her. Hier liest du auch die Fehler ein, die du aus einem Gruppenraum mitgenommen hast. Die kommen zu deinem Lernstand dazu, statt ihn zu ersetzen.',
     'Alle 14 Lektionen mit Kapitelmarken und Lernfortschritt':
         'Lektionen. Der Lehrgang ist in vierzehn Lektionen geteilt. Du siehst zu jeder die Kapitelmarken und wie weit du darin schon gekommen bist.',
     'Prüfungsziel wählen':
@@ -28443,8 +28778,10 @@ function renderDuoWaitingScreen(){
                 <div class="sub" id="duoGroupProgressText">Du kannst dir jederzeit die Auswertung ansehen (auch bevor alle fertig sind) - niemand muss auf dich oder andere warten.</div>
                 <div class="btn-group" style="margin-top:1rem;">
                     <button class="btn btn-primary" onclick="window.duo.requestFinalResults()"><i class="fas fa-chart-bar"></i> Gesamt-Auswertung anzeigen</button>
+                    ${raumFehlerKnopfHtml(true)}
                     <button class="btn btn-outline" onclick="backToMain()"><i class="fas fa-home"></i> Hauptmenü</button>
                 </div>
+                ${raumFehlerHinweisHtml()}
             </div>`;
     }
 }
@@ -28542,6 +28879,9 @@ window.showDuoFinalResults = function(data){
                 //  "Raum beenden", beim Gast "Raum verlassen". Vorher stand dort
                 //  "Hauptmenue" - und dass damit der Raum zugeht, stand nirgends.
                 // ================================================================
+                // Nur fuer Gaeste mit Fehlern: die eigenen Fehler mitnehmen
+                // (siehe FEHLER MITNEHMEN).
+                + raumFehlerKnopfHtml(false)
                 + '<div class="btn-group" style="margin-top:1.2rem;justify-content:center; flex-wrap:wrap;">'
                 // Pruefungsraum: zurueck zur eigenen Auswertung mit den
                 // falschen Antworten - die Rangliste hat sie ueberdeckt.
@@ -28563,6 +28903,7 @@ window.showDuoFinalResults = function(data){
                       + 'Du musst nichts noch einmal verschicken.</div>'
                     : '<div style="margin-top:0.6rem; text-align:center; font-size:0.76rem; color:var(--muted);">'
                       + 'Lass das Fenster ruhig zu — startet der Trainer eine neue Runde, bist du automatisch dabei.</div>')
+                + raumFehlerHinweisHtml()
                 + '</div>';
         }
         if (overlay) overlay.classList.add('open');
@@ -31189,6 +31530,9 @@ window.duoInit = function() {
 
 // Wird vom Duo-Plugin aufgerufen wenn Quiz starten soll mit Server-Fragen
 window.startDuoQuizWithQuestions = function(questionsFromServer, meta) {
+    // Neue Runde: die Fehler der alten bleiben zum Mitnehmen erhalten
+    // (siehe FEHLER MITNEHMEN).
+    try{ raumFehlerRundeAbschliessen(); }catch(e){}
     try{
       if(window.realisticExam){
         window.realisticExam.active=false;
@@ -35012,6 +35356,9 @@ function startRealisticPart(){
 const DUO_TEIL_SCHLUESSEL = { vorschriften:'vorschriften', betrieb:'betrieb', technik:'technik_n' };
 
 window.startDuoPruefung = function(fragen, meta){
+  // Neue Pruefung im Raum: die Fehler der alten bleiben zum Mitnehmen
+  // erhalten (siehe FEHLER MITNEHMEN).
+  try{ raumFehlerRundeAbschliessen(); }catch(e){}
   try{ stopRealisticTimer(); }catch(e){}
   const teile = (meta && Array.isArray(meta.teile)) ? meta.teile : [];
   if(!Array.isArray(fragen) || !fragen.length || !teile.length){
@@ -38183,7 +38530,16 @@ function lernstandDateiGewaehlt(input) {
     leser.onload = () => {
         let paket;
         try { paket = JSON.parse(leser.result); }
-        catch (e) { lernstandMeldung('Das ist keine gültige Lernstand-Datei (kein JSON).', true); return; }
+        catch (e) {
+            // Keine reine JSON-Datei - vielleicht die Textdatei mit den
+            // Fehlern aus dem Gruppenraum (siehe FEHLER MITNEHMEN).
+            paket = raumFehlerAusText(leser.result);
+            if (!paket) { lernstandMeldung('Das ist keine gültige Lernstand-Datei (kein JSON).', true); return; }
+        }
+        // Fehler, die ein Gast aus einem Gruppenraum mitgenommen hat
+        // (siehe FEHLER MITNEHMEN): Sie kommen dazu, statt den Lernstand
+        // zu ersetzen.
+        if (paket && paket.typ === RAUMFEHLER_TYP) { raumFehlerEinlesen(paket); return; }
         if (!paket || paket.typ !== 'klasse-n-trainer-lernstand' || !paket.daten) {
             lernstandMeldung('Diese Datei stammt nicht aus dem Klasse-N-Trainer.', true);
             return;

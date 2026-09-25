@@ -1456,17 +1456,181 @@
         if(z) z.classList.toggle('nimmt-auf', !!an);
     }
 
-    async function aufnahmeStarten(){
-        if(aufnahme || !darfSprechen()) return;
-        let stream;
+    // ----------------------------------------------------------------
+    //  DAS MIKROFON SELBST FINDEN                          (24.09.2026)
+    //  Dietmar: "Meine Freundin Maya hat es vorhin mal probiert, mir
+    //  eine Sprachnachricht zu senden. Sie arbeitet am Laptop. Und hat
+    //  auch eine Webcam. Eigentlich muesste da auch ein internes
+    //  Mikrofon verbaut sein. Ich musste erst in den Einstellungen was
+    //  aendern. Damit die Soundkarte gefunden wird. Kann man das
+    //  vielleicht nicht so machen, dass das automatisch erkannt wird?"
+    //
+    //  Der Browser nimmt von sich aus immer das Standard-Mikrofon von
+    //  Windows. Ist das ein Geraet, das gar nicht angeschlossen ist, ein
+    //  stummgeschaltetes Webcam-Mikrofon oder "Stereomix", kommt entweder
+    //  ein Fehler oder eine Aufnahme ohne Ton - obwohl ein brauchbares
+    //  Mikrofon im Laptop steckt.
+    //
+    //  Deshalb jetzt der Reihe nach:
+    //    1. das Mikrofon, das zuletzt funktioniert hat (im Browser gemerkt),
+    //    2. das Standard-Mikrofon,
+    //    3. jedes andere Mikrofon, das der Browser kennt.
+    //  Genommen wird das erste, das sich oeffnen laesst UND etwas hoert.
+    //  "Hoert etwas" heisst: nicht exakt null. Ein echtes Mikrofon rauscht
+    //  immer ein wenig, auch im stillen Zimmer; ein totes Geraet liefert
+    //  lauter Nullen. Geprueft wird dafuer kurz ohne Rauschunterdrueckung
+    //  - die koennte leises Rauschen sonst selbst zu Null machen.
+    //  Weicht das gefundene vom Standard ab, steht im Chat, welches es ist.
+    //
+    //  Was der Browser nicht kann: Einstellungen von Windows aendern.
+    //  Sperrt Windows das Mikrofon ganz, sagt die Meldung jetzt genau, wo
+    //  man es freigibt.
+    // ----------------------------------------------------------------
+    const MIKRO_MERKEN = 'afu_mikrofon';
+    let mikroSucht = false;
+    // Einmal geprueft, gilt es fuer diese Sitzung: Die naechste Aufnahme
+    // startet ohne Pruefung und damit ohne Verzoegerung.
+    let mikroBewaehrt = null;           // deviceId oder 'default'
+
+    // Rauscht das Mikrofon? Im Zweifel ja - lieber eine stille Aufnahme
+    // als gar keine.
+    async function mikroHoertEtwas(stream, ms){
+        let ctx = null;
         try{
-            stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-        }catch(e){
-            chatSystemmeldung(e && e.name === 'NotAllowedError'
-                ? 'Kein Zugriff aufs Mikrofon. Bitte im Browser erlauben (Schloss-Symbol links neben der Adresse).'
-                : 'Kein Mikrofon gefunden.');
-            return;
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if(!AC) return true;
+            ctx = new AC();
+            if(ctx.state === 'suspended'){ try{ await ctx.resume(); }catch(e){} }
+            if(ctx.state !== 'running') return true;
+            const an = ctx.createAnalyser();
+            an.fftSize = 2048;
+            ctx.createMediaStreamSource(stream).connect(an);
+            const puffer = new Float32Array(an.fftSize);
+            const ende = Date.now() + ms;
+            let hoechst = 0;
+            while(Date.now() < ende){
+                await new Promise(r => setTimeout(r, 60));
+                an.getFloatTimeDomainData(puffer);
+                for(let i = 0; i < puffer.length; i++){ const v = Math.abs(puffer[i]); if(v > hoechst) hoechst = v; }
+                if(hoechst > 0) return true;
+            }
+            return hoechst > 0;
+        }catch(e){ return true; }
+        finally{ try{ if(ctx) ctx.close(); }catch(e){} }
+    }
+
+    // Ein bestimmtes Mikrofon (id) oder das Standard-Mikrofon (null)
+    // oeffnen und pruefen. Liefert { stream } oder { fehler, stumm }.
+    async function mikroVersuchen(id){
+        const genau = id ? { deviceId: { exact: id } } : {};
+        let probe = null;
+        try{
+            probe = await navigator.mediaDevices.getUserMedia({ audio: Object.assign({ echoCancellation: false, noiseSuppression: false, autoGainControl: false }, genau) });
+        }catch(e){ return { fehler: e }; }
+        const spur = probe.getAudioTracks()[0];
+        const echteId = (spur && spur.getSettings && spur.getSettings().deviceId) || id || '';
+        const hoert = await mikroHoertEtwas(probe, 700);
+        probe.getTracks().forEach(t => t.stop());
+        if(!hoert) return { stumm: true, id: echteId, name: spur ? spur.label : '' };
+        // Fuer die Aufnahme selbst wieder mit Echo- und Rauschunterdrueckung.
+        try{
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: Object.assign({ echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+                                                                      echteId && echteId !== 'default' ? { deviceId: { exact: echteId } } : genau) });
+            return { stream: stream, id: echteId, name: spur ? spur.label : '' };
+        }catch(e){ return { fehler: e }; }
+    }
+
+    async function mikroOeffnen(){
+        if(mikroBewaehrt){
+            try{
+                return await navigator.mediaDevices.getUserMedia({ audio: Object.assign({ echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+                                                                  mikroBewaehrt !== 'default' ? { deviceId: { exact: mikroBewaehrt } } : {}) });
+            }catch(e){
+                mikroBewaehrt = null;          // abgezogen? Dann neu suchen.
+                if(e && e.name === 'NotAllowedError') throw e;
+            }
         }
+        let gemerkt = '';
+        try{ gemerkt = localStorage.getItem(MIKRO_MERKEN) || ''; }catch(e){}
+        const versucht = new Set();
+        let ersterFehler = null, stummGefunden = null;
+        const probieren = async (id) => {
+            versucht.add(id || 'default');
+            const r = await mikroVersuchen(id);
+            if(r.stream) return r;
+            if(r.stumm && !stummGefunden) stummGefunden = r;
+            if(r.fehler && !ersterFehler) ersterFehler = r.fehler;
+            // Keine Erlaubnis: Weiterprobieren bringt nichts und fragt nur
+            // noch einmal nach.
+            if(r.fehler && r.fehler.name === 'NotAllowedError') throw r.fehler;
+            return null;
+        };
+        let r = null;
+        if(gemerkt) r = await probieren(gemerkt);
+        if(!r) r = await probieren(null);
+        if(!r){
+            let geraete = [];
+            try{ geraete = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput'); }catch(e){}
+            for(const d of geraete){
+                if(!d.deviceId || d.deviceId === 'default' || d.deviceId === 'communications' || versucht.has(d.deviceId)) continue;
+                r = await probieren(d.deviceId);
+                if(r){ r.gewechselt = true; if(!r.name) r.name = d.label; break; }
+            }
+        }
+        if(r){
+            try{ if(r.id && r.id !== 'default') localStorage.setItem(MIKRO_MERKEN, r.id); }catch(e){}
+            mikroBewaehrt = r.id || 'default';
+            if(r.gewechselt){
+                chatSystemmeldung('Mit dem Standard-Mikrofon ging es nicht – ich nehme jetzt '
+                    + (r.name ? '„' + r.name + '“' : 'ein anderes Mikrofon') + '.');
+            }
+            return r.stream;
+        }
+        // Alle stumm: dann eben das stumme - vielleicht ist es nur sehr
+        // leise. Aber sagen, wo man nachsieht.
+        if(stummGefunden){
+            try{
+                const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+                chatSystemmeldung('Das Mikrofon scheint nichts zu hören. Ist es stummgeschaltet? '
+                    + 'In Windows: Einstellungen → System → Sound → Eingabe.');
+                return s;
+            }catch(e){}
+        }
+        throw ersterFehler || Object.assign(new Error('kein Mikrofon'), { name: 'NotFoundError' });
+    }
+
+    function mikroFehlerText(e){
+        const name = e && e.name, text = String((e && e.message) || '');
+        if(name === 'NotAllowedError'){
+            // Chrome und Edge sagen es dazu, wenn Windows selbst sperrt.
+            if(/system/i.test(text)){
+                return 'Windows lässt den Browser nicht ans Mikrofon. Freigeben unter: Einstellungen → '
+                     + 'Datenschutz (und Sicherheit) → Mikrofon – dort den Zugriff einschalten, '
+                     + 'auch für Desktop-Apps.';
+            }
+            return 'Kein Zugriff aufs Mikrofon. Bitte im Browser erlauben (Schloss-Symbol links neben der Adresse).';
+        }
+        if(name === 'NotReadableError' || name === 'AbortError'){
+            return 'Das Mikrofon lässt sich nicht öffnen – vielleicht benutzt es gerade ein anderes Programm '
+                 + '(Teams, Zoom, Skype). Das Programm schließen und noch einmal versuchen.';
+        }
+        return 'Kein Mikrofon gefunden. In Windows nachsehen: Einstellungen → System → Sound → Eingabe.';
+    }
+
+    async function aufnahmeStarten(){
+        if(aufnahme || mikroSucht || !darfSprechen()) return;
+        let stream;
+        mikroSucht = true;
+        try{
+            stream = await mikroOeffnen();
+        }catch(e){
+            chatSystemmeldung(mikroFehlerText(e));
+            return;
+        }finally{
+            mikroSucht = false;
+        }
+        // Waehrend der Suche kann der Raum zugegangen sein.
+        if(aufnahme || !darfSprechen()){ try{ stream.getTracks().forEach(t => t.stop()); }catch(e){} return; }
         const arten = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
         let art = '';
         try{ art = arten.find(a => MediaRecorder.isTypeSupported(a)) || ''; }catch(e){}
@@ -3484,6 +3648,10 @@
                 socket.emit('duoAnswer',{code:roomCode, questionId:qId, optionIndex:optIndex, isCorrect:isCorrect, userId:myUserId, art:art||''});
                 window._duoHasAnswered=true;
             }catch(e){ console.error('[DUO] answer emit Fehler', e); }
+            // Fehler mitnehmen (24.09.2026, siehe FEHLER MITNEHMEN in
+            // Index.html): Dieselbe Meldung merkt sich der Browser, damit
+            // ein Gast seine Fehler fuer den eigenen Trainer speichern kann.
+            try{ if(typeof window.raumFehlerMerken === 'function') window.raumFehlerMerken(qId, isCorrect, art||'', optIndex); }catch(e){}
         },
         // Kein serverseitiges Warten mehr - jeder geht in eigenem Tempo weiter (rein lokale Navigation in Index.html)
         next: function(){ /* no-op: Fragenwechsel läuft rein lokal, siehe nextQuestion() in Index.html */ },
