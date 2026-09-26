@@ -234,7 +234,23 @@ function einrichten(umgebung) {
     for (const e of (baum.tree || [])) {
       if (e.type === 'blob' && abgleichbar(e.path)) karte[e.path] = { sha: e.sha, groesse: e.size };
     }
-    return { commit, karte };
+    // WANN dieser Stand entstanden ist (26.09.2026) - siehe pruefen(),
+    // Fall 'unbekannt'. Faellt die Anfrage aus, bleibt die Zeit leer
+    // und der Vergleich laeuft wie bisher.
+    let zeit = null;
+    try {
+      const c = await holen(`${API}/repos/${KONTO}/${REPO}/commits/${commit}`);
+      const d = c && c.commit && ((c.commit.committer && c.commit.committer.date) || (c.commit.author && c.commit.author.date));
+      if (d && !isNaN(Date.parse(d))) zeit = Date.parse(d);
+    } catch (e) { zeit = null; }
+    return { commit, karte, zeit };
+  }
+
+  // Nur den Zeiger auf den letzten Commit - eine kleine Anfrage, fuer
+  // die Frage "hat sich seit der Pruefung etwas getan?" in anwenden().
+  async function fernCommit() {
+    const ref = await holen(`${API}/repos/${KONTO}/${REPO}/git/ref/heads/${ZWEIG}`);
+    return (ref && ref.object && ref.object.sha) || null;
   }
 
   // ================================================================
@@ -400,7 +416,7 @@ function einrichten(umgebung) {
 
   // ---- Der Drei-Wege-Vergleich -------------------------------------
   async function pruefen() {
-    const { commit, karte } = await fernStand();
+    const { commit, karte, zeit } = await fernStand();
     const merk = standLesen();
     const eintraege = [];
     // Durchgegangen wird jetzt, was BEI GITHUB liegt - nicht mehr eine
@@ -418,6 +434,30 @@ function einrichten(umgebung) {
       else if (!gemerkt)          lage = 'unbekannt';    // nie abgeglichen
       else if (hier === gemerkt)  lage = 'neuer_dort';   // dort hat sich etwas getan
       else                        lage = 'neuer_hier';   // HIER wurde geaendert - Finger weg
+
+      // ================================================================
+      //  'unbekannt', ABER HIER JUENGER ALS DER STAND BEI GITHUB
+      //  (26.09.2026). Was am 26.09. passiert ist: Die Projektseite und
+      //  der Ratgeber in docs\ lagen hier in neuer Fassung, GitHub hatte
+      //  noch die alte. Fuer docs\ gab es keinen Merkposten (Hochladen.bat
+      //  merkte sich nur den Hauptordner), also 'unbekannt' - und
+      //  'unbekannt' wird angeboten. Ein Klick, und die aeltere Fassung
+      //  von GitHub hat die neuere hier ueberschrieben. Genau das, was
+      //  der Merkposten verhindern soll, nur eben da, wo er fehlte.
+      //
+      //  Ohne Merkposten bleibt noch ein Anhaltspunkt: die Uhr. Ist die
+      //  Datei hier juenger als der Commit bei GitHub, kann sie nicht
+      //  von dort stammen - dann ist sie hier neuer, Finger weg. Eine
+      //  frische Installation ist davon nicht betroffen: Dort sind die
+      //  Dateien aelter als der neueste Commit, und es wird weiter
+      //  angeboten, was fehlt oder abweicht.
+      // ================================================================
+      if (lage === 'unbekannt' && zeit) {
+        try {
+          const m = fs.statSync(path.join(WURZEL, name)).mtimeMs;
+          if (m > zeit + 60000) lage = 'neuer_hier';
+        } catch (e) {}
+      }
 
       eintraege.push({
         name, lage,
@@ -471,6 +511,31 @@ function einrichten(umgebung) {
     }
     if (erlaubt.some(n => kategorie(n) === 'programm') && programmBestaetigt !== true)
       throw new Error('Fuer Programmdateien fehlt die ausdrueckliche Bestaetigung');
+
+    // ================================================================
+    //  NIE EINEN AELTEREN STAND HOLEN ALS DEN, DER BEI GITHUB LIEGT
+    //  (26.09.2026). Geholt wird von einem festen Commit - dem aus der
+    //  Pruefung. Das schuetzt vor einer Mischung aus zwei Staenden. Es
+    //  hat aber eine Kehrseite, und die hat am 26.09. zugeschlagen:
+    //  Der Trainer prueft beim START. Dietmar hat DANACH mit
+    //  Hochladen.bat neue Dateien zu GitHub geschoben - und dann im
+    //  Fenster auf "Jetzt aktualisieren" geklickt. Geholt wurde vom
+    //  Commit der Startpruefung, also der Stand VOR seinem Hochladen:
+    //  Seine neuen Dateien wurden durch die alten ersetzt.
+    //
+    //  Deshalb: Ist der Zeiger bei GitHub inzwischen ein anderer, wird
+    //  nichts geholt. Stattdessen wird neu geprueft, das Fenster bekommt
+    //  die frische Lage - und der Klick geht dann auf den richtigen Stand.
+    // ================================================================
+    let jetzt = null;
+    try { jetzt = await fernCommit(); } catch (e) { jetzt = null; }
+    if (jetzt && jetzt !== commit) {
+      console.warn(`[GITHUB] Stand bei GitHub hat sich seit der Pruefung geaendert (${commit.slice(0, 7)} -> ${jetzt.slice(0, 7)}) - nichts geholt, neu geprueft.`);
+      try { await beimStartNachsehen(); } catch (e) {}
+      throw new Error('Bei GitHub hat sich seit der letzten Pr\u00fcfung etwas getan. Es wurde nichts geholt. '
+        + 'Die Liste ist jetzt neu geholt \u2013 bitte das Fenster schlie\u00dfen und noch einmal \u00f6ffnen '
+        + '(Einstellungen \u2192 Update).');
+    }
 
     // Noch einmal nachsehen, was bei GitHub steht. Zwischen dem Pruefen
     // und dem Klick koennen Minuten liegen.
@@ -577,6 +642,13 @@ function einrichten(umgebung) {
       }
     } catch (e) { console.warn('[GITHUB] Zeichen nicht aufgefrischt:', e.message); }
 
+    // Die Lage fuer das Fenster neu bestimmen (26.09.2026). Bis eben blieb
+    // hier die Lage vom Start stehen - und das Fenster kam bei jedem
+    // Laden der Seite wieder, obwohl laengst alles geholt war. Dietmar:
+    // "Es kommt immer wieder :(". Faellt GitHub gerade aus, bleibt die
+    // alte Lage - das ist der seltenere Fall.
+    try { await beimStartNachsehen(); } catch (e) {}
+
     return {
       ok: !fehler.length,
       geschrieben, fehler, uebersprungen,
@@ -654,7 +726,20 @@ function einrichten(umgebung) {
   // ---- Endpunkte ---------------------------------------------------
   // Alle localOnly: das hier schreibt Dateien in DIESEN Ordner. Ein Gast
   // aus dem Gruppenraum hat damit nichts zu schaffen.
-  app.get('/api/github/stand', localOnly, (req, res) => {
+  // Ist die Lage aelter als zehn Minuten, wird vor der Antwort neu
+  // geprueft (26.09.2026) - hoechstens sechs Sekunden lang, sonst kommt
+  // die alte Lage. So zeigt das Fenster nicht stundenlang, was beim Start
+  // einmal galt. Zehn Minuten, weil GitHub ohne Anmeldung nur sechzig
+  // Anfragen je Stunde erlaubt und eine Pruefung drei davon braucht.
+  let nachschauLaeuft = null;
+  app.get('/api/github/stand', localOnly, async (req, res) => {
+    try {
+      const alt = !letzteLage || !letzteLage.zeit || (Date.now() - Date.parse(letzteLage.zeit)) > 10 * 60000;
+      if (alt) {
+        if (!nachschauLaeuft) nachschauLaeuft = beimStartNachsehen().finally(() => { nachschauLaeuft = null; });
+        await Promise.race([nachschauLaeuft, new Promise(r => setTimeout(r, 6000))]);
+      }
+    } catch (e) {}
     res.json({ letzteLage, quelle: `https://github.com/${KONTO}/${REPO}`, zweig: ZWEIG });
   });
 
@@ -682,6 +767,9 @@ function einrichten(umgebung) {
       const k = {};
       for (const n of Object.keys(karte)) k[n] = karte[n].sha;
       standSchreiben(commit, k);
+      // Nach dem Hochladen ist hier und dort dasselbe - das soll das
+      // Fenster auch wissen, statt weiter die Lage vom Start zu zeigen.
+      try { await beimStartNachsehen(); } catch (e2) {}
       res.json({ ok: true, commit, dateien: Object.keys(k).length });
     } catch (e) { res.status(502).json({ error: e.message }); }
   });

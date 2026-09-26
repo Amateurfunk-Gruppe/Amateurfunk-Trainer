@@ -58,6 +58,8 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Updater: holt nie mehr einen älteren Stand als den aktuellen bei GitHub (nach einem Hochladen zwischen Prüfung und Klick wurden hier neuere Dateien mit älteren überschrieben); prüft nach dem Aktualisieren und nach Hochladen.bat sofort neu, statt die Lage vom Start weiter zu zeigen; Dateien ohne Merkposten, die hier jünger sind als der GitHub-Stand, bleiben unangetastet
+- Hochladen.bat merkt sich auch die Dateien in Unterordnern (docs, fontawesome …), damit der Updater sie nicht zurückdreht
 - Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
 - Gruppenraum: nach Neuverbindung wieder Schreiben möglich, Raumchat nicht mehr überschrieben
 - Besucher: Meldung beendet erscheint nicht mehr fälschlich
