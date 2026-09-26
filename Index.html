@@ -117,6 +117,7 @@
       "image": "https://amateurfunk-trainer.com/vorschau.jpg",
       "downloadUrl": "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",
       "installUrl": "https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
+      "sameAs": ["https://www.facebook.com/amateurfunktrainer/", "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer"],
       "softwareHelp": { "@type": "CreativeWork", "url": "https://amateurfunk-trainer.com/support.html" },
       "keywords": "Amateurfunk, Amateurfunkprüfung, Amateurfunklizenz, Prüfungsfragen, Fragenkatalog, Bundesnetzagentur, Klasse N, Klasse E, Klasse A, Amateurfunkzeugnis, Lernprogramm, Prüfungssimulator, Nachteilsausgleich, Vorlesen, Hörbuch, Lösungswege",
       "about": [
@@ -134,7 +135,7 @@
          damit auch Google das richtig zuordnen kann." Dasselbe steht in
          der Seite, die der Worker bei ausgeschaltetem Rechner zeigt. -->
     <script type="application/ld+json">
-    { "@context": "https://schema.org", "@type": "WebSite", "name": "Amateurfunk-Trainer", "alternateName": "AFu-Trainer", "url": "https://amateurfunk-trainer.com/" }
+    { "@context": "https://schema.org", "@type": "WebSite", "name": "Amateurfunk-Trainer", "alternateName": "AFu-Trainer", "url": "https://amateurfunk-trainer.com/", "sameAs": ["https://www.facebook.com/amateurfunktrainer/"] }
     </script>
     <!-- Die Symbolschrift liegt seit dem 01.09.2026 im Ordner, nicht mehr
          bei einem CDN. Vorher stand hier cdnjs.cloudflare.com - damit
@@ -342,7 +343,7 @@
             margin-bottom: 0.6rem;
             gap: 10px;
         }
-        .header-left { display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
+        .header-left { display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
         .header h1 {
             font-family: var(--font-display);
             font-size: 1.5rem;
@@ -5533,7 +5534,8 @@
            ueberlappen.
            position:relative und z-index: Sonst legt sich die wachsende
            Zeile UNTER die naechste statt darueber. */
-        body.tts-gross .tts-highlight {
+        body.tts-gross .tts-highlight,
+        body.tts-gross .maus-liest {
             position: relative;
             z-index: 5;
             transform: translateY(-2px);
@@ -5541,7 +5543,9 @@
             transition: transform 0.28s ease, box-shadow 0.28s ease;
         }
         body.tts-gross .tts-highlight .option-text,
-        body.tts-gross .tts-highlight .option-label {
+        body.tts-gross .tts-highlight .option-label,
+        body.tts-gross .maus-liest .option-text,
+        body.tts-gross .maus-liest .option-label {
             font-size: 1.3em;
             font-weight: 600;
             line-height: 1.35;
@@ -5549,9 +5553,11 @@
         }
         /* Ohne Bewegung, wenn das Betriebssystem darum bittet. */
         @media (prefers-reduced-motion: reduce) {
-            body.tts-gross .tts-highlight { transition: none; }
+            body.tts-gross .tts-highlight, body.tts-gross .maus-liest { transition: none; }
             body.tts-gross .tts-highlight .option-text,
-            body.tts-gross .tts-highlight .option-label { transition: none; }
+            body.tts-gross .tts-highlight .option-label,
+            body.tts-gross .maus-liest .option-text,
+            body.tts-gross .maus-liest .option-label { transition: none; }
         }
 
         .klasse-opt {
@@ -6933,7 +6939,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <input type="text" id="searchInput" placeholder="Suche: NC404 oder DX"
                     data-vorlesen-kurz="Suchen nach Fragen oder Schlagwörtern."
                     data-vorlesen="Suchfeld. Hier kommt eine Fragennummer hinein oder ein Wort, nach dem im Fragetext gesucht werden soll." 
-                    style="padding:0.35rem 0.8rem 0.35rem 2rem;border-radius:20px;border:1px solid #b0c4d8;font-size:0.75rem;width:160px;font-family:var(--font-mono);outline:none;"
+                    style="padding:0.35rem 0.8rem 0.35rem 2rem;border-radius:20px;border:1px solid #b0c4d8;font-size:0.75rem;width:145px;font-family:var(--font-mono);outline:none;"
                     onkeydown="if(event.key==='Enter') searchQuestion()">
                 <i class="fas fa-search" style="position:absolute;left:8px;color:var(--muted);font-size:0.7rem;"></i>
                 <button onclick="searchQuestion()" aria-label="Suche starten"
@@ -6943,7 +6949,13 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <button id="favListBtn" onclick="openFavorites()" data-tooltip="❤️ Merkliste – gemerkte Fragen ansehen und der Reihe nach lernen" style="border:1px solid #f0b8c4;background:#fff1f4;color:#b01238;border-radius:20px;padding:0.2rem 0.6rem;height:24px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:0.72rem;font-weight:700;opacity:0.55;"><i class="fas fa-heart" style="font-size:0.7rem;"></i> <span id="favCount">0</span></button>
             </div>
         </div>
-        <div class="header-right" style="display:flex;align-items:center;gap:8px;">
+        <!-- 26.09.2026: Abstaende 8 -> 6 Punkte, links 10 -> 8, Suchfeld 160 -> 145.
+             Dietmar, mit dem Facebook-Zeichen oben: "wieder so ein geteiltes Menue
+             auf 2 Ebenen. Bekommen wir das wieder auf einer hin?" Bei ihm (Green
+             Mode, Anzeigegroesse 75 %) fehlten mit der Besucherzahl am Server-Knopf
+             gut 15 Punkte - ohne Zahl passte es gerade noch. Jetzt bleibt Luft fuer
+             eine zweistellige Zahl. -->
+        <div class="header-right" style="display:flex;align-items:center;gap:6px;">
             <div id="examTimerDisplay" class="exam-timer" style="display:none;"><i class="fas fa-stopwatch"></i> <span id="examTimerText">45:00</span></div>
             <div id="trainerControls" style="display:none; align-items:center; gap:6px; background:#fdf1e0; border:1px solid #ffe0a0; padding:4px 8px; border-radius:20px;">
                 <button id="trainerBtn" class="btn" style="background:#e2932f; color:white; padding:0.35rem 0.8rem; min-height:32px; font-size:0.78rem; font-weight:700;" onclick="toggleTrainerMode()" data-tooltip="Trainer-Ansicht ein/aus"><i class="fas fa-chalkboard-teacher"></i> Trainer</button>
@@ -6978,6 +6990,18 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     data-vorlesen-kurz="Vollbild zum Vergrößern."
                     data-vorlesen="Vollbild. Der Trainer nimmt den ganzen Bildschirm ein, Adressleiste und Reiter des Browsers verschwinden. Dasselbe macht die Taste F11. Noch einmal anklicken holt sie zurück, die Taste Escape auch."
                     aria-label="Vollbild einschalten"><i class="fas fa-expand"></i></button>
+            <!-- Die Facebook-Seite des Trainers (26.09.2026). Dietmar: "Den Link
+                 zu der Seite auch im Trainer in der Hauptansicht mit einbauen"
+                 und auf die Vorschlaege hin: "Oben mit dem Facebook Logo und
+                 unten bitte auch." Unten steht er schon in der Fusszeile.
+                 Nur das Zeichen, ohne Wort: Mit Beschriftung passte die
+                 Kopfzeile bei 1400 Punkten Breite nicht mehr in eine Reihe.
+                 Ein schlichter Link, nichts von Facebook eingebettet. -->
+            <a class="btn" id="facebookBtn" href="https://www.facebook.com/amateurfunktrainer/" target="_blank" rel="noopener"
+                    style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.95rem; font-weight:700; text-decoration:none;"
+                    data-tooltip="Der Trainer auf Facebook – Neuigkeiten rund ums Thema Amateurfunk"
+                    data-vorlesen-kurz="Der Trainer auf Facebook."
+                    aria-label="Der Trainer auf Facebook"><i class="fab fa-facebook" style="color:#1877f2;"></i></a>
             <button class="btn" id="infoBtn" onclick="infoOeffnen()" style="padding:0.35rem 0.7rem; min-height:32px; font-size:0.78rem; font-weight:700;" data-tooltip="Kurze Anleitung: was das Tool kann und wie es bedient wird"><i class="fas fa-circle-info"></i> Info</button>
             <!-- Dietmar am 03.09.2026: "Die erste Leiste hat sich durch Beenden
                  verlaengert und nach unten verschoben. Ueberlege dir, ob man aus
@@ -8045,7 +8069,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
     <div class="footer-note">
         <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
                title="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung."
-               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support" target="_blank" rel="noopener">Support</a> · <a href="support.html#datenschutz" class="footer-support" target="_blank" rel="noopener">Datenschutz</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
+               data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support" target="_blank" rel="noopener">Support</a> · <a href="support.html#datenschutz" class="footer-support" target="_blank" rel="noopener">Datenschutz</a> · <a href="https://www.facebook.com/amateurfunktrainer/" class="footer-support" target="_blank" rel="noopener" data-tooltip="Die Seite des Trainers auf Facebook – Neuigkeiten rund ums Thema Amateurfunk">Facebook</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
     </div>
 </div>
 <script>
@@ -24410,7 +24434,9 @@ function ttsWorteVergessen(){
 window.ttsWorteVergessen = ttsWorteVergessen;
 
 function clearTTSHighlightsOnly(){
-    document.querySelectorAll('.tts-highlight').forEach(el=>el.classList.remove('tts-highlight'));
+    // .maus-liest ist die Markierung fuer die Antwort, die unter der Maus
+    // vorgelesen wird - in der gewaehlten Farbe statt in Gelb (26.09.2026).
+    document.querySelectorAll('.tts-highlight, .maus-liest').forEach(el=>el.classList.remove('tts-highlight', 'maus-liest'));
     ttsWorteEnde();
 }
 function clearTTSHighlights(){
@@ -24519,7 +24545,7 @@ async function playTTSSegment(seg, token){
     clearTTSHighlightsOnly();
     if(seg.selector){
         const el=document.querySelector(seg.selector);
-        if(el){ el.classList.add('tts-highlight'); el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+        if(el){ el.classList.add(seg.klasse || 'tts-highlight'); el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
     }
     let selectedVoice = localStorage.getItem('ttsVoice') || '';
 
@@ -24546,7 +24572,7 @@ async function playTTSSegment(seg, token){
         // und noch einmal, statt dem Lernenden ein Fenster hinzustellen.
         let res;
         for(let versuch = 0; ; versuch++){
-            res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice})});
+            res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice, klang: ttsKlangWert()})});
             if(res.status !== 429 || versuch >= 4) break;
             console.warn('[TTS] ausgelastet - warte kurz und versuche es noch einmal (' + (versuch+1) + ')');
             await new Promise(r => setTimeout(r, 800 * (versuch + 1)));
@@ -24577,6 +24603,7 @@ async function playTTSSegment(seg, token){
                 if(blob.size>500){
                     const url=URL.createObjectURL(blob); currentTtsUrl=url;
                     const audio=new Audio(url); currentTtsAudio=audio;
+                    ttsTempoAnwenden(audio);
                     ttsAudioMerken(audio, url);
                     // Die Marke laeuft ueber die Woerter mit - nur dort, wo
                     // der Text auch zu sehen ist (seg.worte, gesetzt in
@@ -24818,6 +24845,7 @@ async function playTTSQueue(segments, btn, zurueck){
             stuecke.push({
                 text: t,
                 selector: seg.selector,
+                klasse: seg.klasse,
                 worte: seg.worte,
                 wortVon: von,
                 wortBis: vorher / gesamt,
@@ -24885,17 +24913,142 @@ function vorleseFrage(){
     const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
     const segments=[{text:sprich(q.text)+'.', selector:null}];
+    // NUR DIE FRAGE, wenn die Antworten unter der Maus kommen sollen -
+    // siehe "DIE ANTWORT UNTER DER MAUS VORLESEN" (26.09.2026).
+    if(einstellungen.mausVorlesen){ playTTSQueue(segments, btn); return; }
     q.options.forEach((opt,i)=>{
-        const label=String.fromCharCode(65+i);
-        const hatText = !!(opt.text && opt.text.trim());
-        const istBild = !!(opt.image && String(opt.image).trim());
-        // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
-        const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
-        segments.push({ text, selector:`[data-optindex="${i}"]`,
-                        pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 });
+        segments.push(antwortSegment(q, i, sprich));
     });
     playTTSQueue(segments, btn);
 }
+// Ein Antwort-Abschnitt fuer die Sprachausgabe - fuer die ganze Frage
+// (vorleseFrage) und fuer die Antwort unter der Maus derselbe Satz.
+function antwortSegment(q, i, sprich){
+    const opt = q.options[i];
+    const label=String.fromCharCode(65+i);
+    const hatText = !!(opt.text && opt.text.trim());
+    const istBild = !!(opt.image && String(opt.image).trim());
+    // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
+    const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
+    return { text, selector:`[data-optindex="${i}"]`,
+             pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 };
+}
+
+// ================================================================
+//  DIE ANTWORT UNTER DER MAUS VORLESEN               (26.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Beim vorlesen, waere die Option gut, das es nur die Frage
+//  vorliest und die Antwort, wo ich gerade Mouseoverlay habe. Das waere
+//  auch gut fuer Menschen mit Nachteil. Die wissen dann, wo die Maus
+//  gerade ist. Wichtig ist, das das vorlesen endet, wenn ich auf einer
+//  anderen Antwort wechsle."
+//
+//  Mit dem Haken (Nachteilsausgleich, "Fragen und Antworten") spricht
+//  der Vorlese-Knopf - und das automatische Vorlesen - nur noch die
+//  Frage. Jede Antwort kommt, sobald die Maus auf ihr steht; per
+//  Tastatur genauso, wenn der Tabulator sie erreicht.
+//
+//  GESPROCHEN WIRD UEBER DIESELBE WARTESCHLANGE wie die ganze Frage
+//  (playTTSQueue), nicht ueber die Knopfstimme: So wird die Antwort beim
+//  Sprechen gelb (das wollte Dietmar am 04.09. so), die gehoerten
+//  Sekunden werden von der Bearbeitungszeit abgezogen, lange Antworten
+//  werden in Stuecke zerlegt - und vor allem: Ein neuer Aufruf haelt den
+//  alten SOFORT an (Token). Das ist der Satz "das Vorlesen endet, wenn
+//  ich auf eine andere Antwort wechsle".
+//
+//  DIE FRAGE WIRD ZU ENDE GEHOERT. Steht die Maus schon auf einer
+//  Antwort, waehrend die Frage noch laeuft, wartet die Antwort, bis die
+//  Frage fertig ist - und kommt dann nur, wenn die Maus noch dort steht.
+//  Wer die Frage abbrechen will, nimmt den Stop-Knopf. Dasselbe gilt
+//  fuer "Das war die richtige Antwort" nach dem Klick.
+//
+//  Das blosse Verlassen der Antwort schneidet nicht ab - wer die Maus
+//  zur Seite nimmt und zuhoert, hoert den Satz zu Ende. Genau wie bei
+//  den Knoepfen.
+//
+//  Drei Zehntel Verzoegerung: Beim Wischen ueber die vier Felder soll
+//  nicht jedes kurz anfangen. Bei den Knoepfen ist es eine Sekunde, hier
+//  weniger - die Antwort ist der Zweck der Sache, nicht ein Nebenbei.
+// ================================================================
+const MAUS_VORLESEN_VERZOEGERUNG = 300;
+let mausVorleseZielEl = null;
+let mausVorleseTimer = null;
+let mausVorleseLauf = 0;          // Zaehler: nur der juengste Aufruf darf sprechen
+let mausVorleseQueueToken = -1;   // das Token der Warteschlange, die gerade eine Antwort spricht
+
+function mausVorleseAnsagen(el){
+    if(!einstellungen.mausVorlesen) return;
+    if(!el || el === mausVorleseZielEl) return;
+    mausVorleseZielEl = el;
+    if(mausVorleseTimer){ clearTimeout(mausVorleseTimer); mausVorleseTimer = null; }
+    mausVorleseTimer = setTimeout(() => {
+        mausVorleseTimer = null;
+        mausVorleseSprechen(el);
+    }, MAUS_VORLESEN_VERZOEGERUNG);
+}
+function mausVorleseVerlassen(){
+    if(mausVorleseTimer){ clearTimeout(mausVorleseTimer); mausVorleseTimer = null; }
+    mausVorleseZielEl = null;
+}
+async function mausVorleseSprechen(el){
+    const lauf = ++mausVorleseLauf;
+    const q = currentQuestions[currentIndex]; if(!q) return;
+    const i = parseInt(el.getAttribute('data-optindex'), 10);
+    if(!(i >= 0 && i < q.options.length)) return;
+    // Erst die Frage (oder die Bestaetigung) zu Ende hoeren.
+    let gewartet = 0;
+    while(ttsQueueActive && ttsQueueToken !== mausVorleseQueueToken && gewartet < 120000){
+        await new Promise(r => setTimeout(r, 150));
+        gewartet += 150;
+        if(lauf !== mausVorleseLauf) return;
+    }
+    if(lauf !== mausVorleseLauf) return;
+    // Inzwischen weg, oder die Frage ist eine andere: dann nichts.
+    if(mausVorleseZielEl !== el || !document.contains(el)) return;
+    if(currentQuestions[currentIndex] !== q) return;
+    const kenner = (typeof kennerThema === 'function') && kennerThema(q);
+    const sprich = (t) => kenner ? kennerSprechen(t) : t;
+    // In der gewaehlten Farbe markieren, nicht im Gelb. Dietmar: "Wenn ich
+    // die Farbe umstelle, soll sich die Farbe von der Antwort auch aendern.
+    // Derzeit ist es in Orange. Waehle ich blau, ist die Antwort Blau
+    // vorgehoben usw." - das Gelb hier war die Vorlese-Markierung.
+    const seg = antwortSegment(q, i, sprich);
+    seg.klasse = 'maus-liest';
+    const p = playTTSQueue([seg], null);
+    mausVorleseQueueToken = ttsQueueToken;   // playTTSQueue hat es eben hochgezaehlt
+    try{ await p; }catch(e){}
+}
+
+document.addEventListener('mouseover', function(e){
+    if(!einstellungen.mausVorlesen) return;
+    // Nur mit Maus. Am Handy feuert vor jedem Tippen ein mouseover - die
+    // Antwort wuerde dann nach dem Klick noch einmal gesprochen.
+    try{ if(!window.matchMedia('(hover: hover)').matches) return; }catch(e2){}
+    const el = (e.target && e.target.closest) ? e.target.closest('#optionsContainer [data-optindex]') : null;
+    if(el) mausVorleseAnsagen(el);
+}, true);
+document.addEventListener('mouseout', function(e){
+    const el = (e.target && e.target.closest) ? e.target.closest('#optionsContainer [data-optindex]') : null;
+    if(!el) return;
+    if(e.relatedTarget && el.contains(e.relatedTarget)) return;
+    mausVorleseVerlassen();
+}, true);
+// Tastatur: Der Tabulator sagt die Antwort an, ein Mausklick nicht
+// (der hat sie eben schon gehoert) - dieselbe Unterscheidung wie bei
+// den Knoepfen, ueber :focus-visible.
+document.addEventListener('focusin', function(e){
+    if(!einstellungen.mausVorlesen) return;
+    const el = (e.target && e.target.closest) ? e.target.closest('#optionsContainer [data-optindex]') : null;
+    if(!el) return;
+    let perTastatur = true;
+    try{ perTastatur = el.matches(':focus-visible'); }catch(e2){ perTastatur = true; }
+    if(!perTastatur) return;
+    mausVorleseAnsagen(el);
+}, true);
+document.addEventListener('focusout', function(e){
+    const el = (e.target && e.target.closest) ? e.target.closest('#optionsContainer [data-optindex]') : null;
+    if(el) mausVorleseVerlassen();
+}, true);
 function vorleseAntwort(isCorrect, correctText, correctLabel){
     const q=currentQuestions[currentIndex]; if(!q) return;
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
@@ -24923,7 +25076,47 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
 //  (ttsQueueActive), sagt der Knopf-Text gar nichts.
 // ============================================================================
 
-let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false };
+// Die Farbe der Antwort unter der Maus (26.09.2026). Dietmar: "nimm 5
+// Farben und setzt das unter Einstellungen rein. Meine Frau gefaellt
+// gruen." Pro Benutzer gespeichert wie die anderen Einstellungen - so
+// kann jeder am selben Rechner seine eigene haben.
+//   rand  - der Rand, der einmal herumlaeuft
+//   grund - das Feld darunter, hell genug fuer schwarze Schrift
+// Bewusst NICHT dabei: Rot, denn Rot heisst "falsch". Das Gruen ist
+// dunkler als das "richtig" (#3bb583), und das Feld bleibt blass - eine
+// volle gruene Flaeche mit Haken gibt es erst nach dem Klick.
+// Das Gelb ist genau das Gelb der Antwort, die gerade vorgelesen wird
+// (--darc-vorgelesen). Dietmar mit einem Bild davon: "Dieses Gelb-Orange
+// gefaellt mir auch gut." Beim Vorlesen bleibt es trotzdem eindeutig:
+// Dort steht das Gelb auch ohne Maus, und der Rand laeuft nur unter der
+// Maus. Fuer das Gelb ist das Violett aus dem ersten Entwurf gegangen,
+// damit es bei den gewuenschten fuenf Farben bleibt.
+// Das CSS dazu: "DIE ANTWORT UNTER DER MAUS".
+const MAUS_FARBEN = {
+    blau:    { name: 'Blau',    rand: '#00adef', grund: '#e3f5fd' },
+    gruen:   { name: 'Grün',    rand: '#1f9a55', grund: '#e2f4e9' },
+    gelb:    { name: 'Gelb',    rand: '#c98a00', grund: '#ffe066' },
+    orange:  { name: 'Orange',  rand: '#e2932f', grund: '#fdf1e0' },
+    grau:    { name: 'Grau',    rand: '#555555', grund: '#e6e6e6' }
+};
+
+// mausRand: 'lauf' - der Rand laeuft einmal herum (Standard),
+//           'fest' - er steht sofort ganz da (Dietmar: "Animation auch zum
+//                    abschalten."),
+//           'kein' - gar kein Rand (Dietmar: "Moechte auch die Option ohne
+//                    Rand. Das Feld soll dann einfach nur die Farbe haben").
+// Gespeicherte Staende von heute frueh hatten noch mausLauf:false - das
+// wird beim Laden zu 'fest'.
+// mausLeuchten: ob das Feld weich vom Weiss in die Farbe uebergeht.
+// Dietmar: "Es waere ebenfalls ein aufleuchten was von dem Hintergrund in
+// die Farbe sanft uebergeht." Auch AN; beide Haken sind unabhaengig,
+// ohne beide springt alles sofort um.
+// mausVorlesen: Der Vorlese-Knopf spricht nur die Frage; die Antwort
+// kommt erst, wenn die Maus (oder der Tabulator) auf ihr steht. Siehe
+// "DIE ANTWORT UNTER DER MAUS VORLESEN" weiter unten. Standard AUS.
+const MAUS_RAND_ARTEN = ['lauf', 'fest', 'kein'];
+let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false };
 
 function einstellungenSchluessel(){
     return 'amateurfunk_einstellungen_' + (typeof currentUser !== 'undefined' ? currentUser : 'user1');
@@ -24932,7 +25125,8 @@ function einstellungenSchluessel(){
 function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
-                      levelUpTon: true, rundeFertig: true };
+                      levelUpTon: true, rundeFertig: true,
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
@@ -24949,6 +25143,11 @@ function einstellungenLaden(){
             if(d && d.levelUpTon === false) einstellungen.levelUpTon = false;
             if(d && d.rundeFertig === false) einstellungen.rundeFertig = false;
             if(d && d.knopfUmfang === 'lang') einstellungen.knopfUmfang = 'lang';
+            if(d && MAUS_FARBEN.hasOwnProperty(d.mausFarbe)) einstellungen.mausFarbe = d.mausFarbe;
+            if(d && MAUS_RAND_ARTEN.indexOf(d.mausRand) >= 0) einstellungen.mausRand = d.mausRand;
+            else if(d && d.mausLauf === false) einstellungen.mausRand = 'fest';   // alter Stand
+            if(d && d.mausLeuchten === false) einstellungen.mausLeuchten = false;
+            einstellungen.mausVorlesen = !!(d && d.mausVorlesen);
         }
     }catch(e){}
     einstellungenAnwenden();
@@ -25044,6 +25243,17 @@ window.einstProgrammHolen = einstProgrammHolen;
 
 function einstellungenAnwenden(){
     try{ document.body.classList.toggle('tts-gross', !!einstellungen.vorlesenGross); }catch(e){}
+    // Die Farbe der Antwort unter der Maus - als Variablen an <html>,
+    // damit sie ueberall gilt, auch im Probefeld der Einstellungen.
+    try{
+        const mf = MAUS_FARBEN[einstellungen.mausFarbe] || MAUS_FARBEN.blau;
+        document.documentElement.style.setProperty('--maus-rand', mf.rand);
+        document.documentElement.style.setProperty('--maus-grund', mf.grund);
+        document.body.classList.toggle('maus-ohne-lauf', einstellungen.mausRand === 'fest');
+        document.body.classList.toggle('maus-ohne-rand', einstellungen.mausRand === 'kein');
+        document.body.classList.toggle('maus-leuchten', einstellungen.mausLeuchten !== false);
+        einstMausKnoepfeNachziehen();
+    }catch(e){}
     if(!einstellungen.knoepfeVorlesen){ try{ knopfSprechenStoppen(); }catch(e){} }
     const a = document.getElementById('einstKnoepfeVorlesen');
     if(a) a.checked = !!einstellungen.knoepfeVorlesen;
@@ -25115,6 +25325,17 @@ function einstellungenUmschalten(feld, an){
     }
     if(feld === 'levelUpTon' && an){
         try{ levelUpSpielen(); }catch(e){}
+    }
+    // Rand mit oder ohne Lauf, Feld mit oder ohne Aufleuchten: in der
+    // Vorschau gleich einmal vorfuehren.
+    if(feld === 'mausLeuchten'){
+        try{ einstMausProbeZeigen(); }catch(e){}
+    }
+    // Beim Einschalten einmal sagen, was jetzt gilt - ohne Haken bleibt
+    // eine angefangene Antwort trotzdem zu Ende gesprochen.
+    if(feld === 'mausVorlesen'){
+        try{ mausVorleseVerlassen(); }catch(e){}
+        if(an) knopfSprechen('Die Antwort unter der Maus wird jetzt vorgelesen.');
     }
     // Der Ton haengt am Hinweis: Ist der aus, gibt es auch keinen Ton.
     // Der zweite Haken wird dann grau - siehe einstellungenAnwenden().
@@ -25308,7 +25529,8 @@ const KNOPF_ERKLAERUNG = {
     duoBtn: 'Gruppenraum. Mehrere Leute lernen gleichzeitig dieselben Fragen, und als Trainer siehst du, wer wo steht. Die Teilnehmer kommen über einen Link herein, im Browser, auf jedem Gerät. Sie brauchen den Trainer nicht zu installieren und laden nichts herunter. Die Lösungstaste F9 ist im Raum abgeschaltet — sonst wäre der gemeinsame Punktestand nichts wert.',
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
-    einstellungenBtn: 'Einstellungen. Das Fenster hat fünf Reiter: Allgemein für Anzeigegröße, Farbstil, Beamer-Modus und Tastatur, Vorlesen für Stimme und was gesprochen wird, Lernen für den Blätter-Stand, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
+    // 26.09.2026: "fuenf Reiter" stimmte laengst nicht mehr - jetzt sind es neun.
+    einstellungenBtn: 'Einstellungen. Das Fenster hat neun Reiter: Allgemein für Anzeigegröße, Farbstil und Beamer-Modus, Anpassen für die Antwort unter der Maus, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Vor der Prüfung, Kursauswertung, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
     lernVideoBtn: 'Videolehrgang. Michael, DL2YMR, erklärt genau diese Frage in seinem Lehrgang. Der Knopf öffnet ein neues Fenster und springt dort an die Stelle im Video, an der es losgeht.',
     lernOhmBtn: 'Bei 50 Ohm nachlesen. 50 Ohm ist der Lehrgang des DARC. Dort steht das Kapitel, in dem diese Frage erklärt wird — zum Lesen statt zum Ansehen. Der Knopf öffnet die Seite im Browser.',
     einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
@@ -25617,6 +25839,61 @@ function knopfSatz(el){
     return ersatz || knopfTextSaeubern(roh);
 }
 
+// ================================================================
+//  GESCHWINDIGKEIT UND KLANG DER STIMME              (26.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Koennen wir die Piperstimme anpassen? Zb. etwas schneller
+//  vorlesen und anders klingen lassen?" - und zur Stufung: "Bei
+//  Geschwindigkeit beim vorlesen moechte ich 1 und 1,25 und 1,30 und
+//  1,50", dann noch: "unter 1,25 noch etwas langsameres hinzufuegen."
+//  Daher die 1,1.
+//
+//  GESCHWINDIGKEIT macht der Browser: playbackRate am Audio, mit
+//  preservesPitch, damit die Tonlage bleibt - dasselbe wie bei den
+//  Sprachnachrichten im Chat. So sind 1,25 wirklich 1,25; Pipers
+//  eigener Regler (length_scale) brachte gemessen nur elf Prozent bei
+//  0,8, weil Pausen nicht mitschrumpfen. Und der Cache bleibt einer:
+//  Dieselbe Datei laeuft nur schneller ab.
+//
+//  KLANG kommt vom Server: noise_scale und noise_w bei Piper, siehe
+//  /api/tts. Deshalb geht "klang" mit jeder Anfrage mit.
+//
+//  Beides ist eine Einstellung dieses Rechners, wie die Stimme selbst
+//  (ttsVoice) - nicht pro Benutzer: Es ist dieselbe Stimme aus
+//  demselben Lautsprecher.
+// ================================================================
+const TTS_TEMPI = [1, 1.1, 1.25, 1.3, 1.5];
+function ttsTempoWert(){
+    let v = 1;
+    try{ v = parseFloat(localStorage.getItem('ttsTempo') || '1'); }catch(e){}
+    return TTS_TEMPI.indexOf(v) >= 0 ? v : 1;
+}
+function ttsKlangWert(){
+    let k = 'normal';
+    try{ k = localStorage.getItem('ttsKlang') || 'normal'; }catch(e){}
+    return (k === 'ruhig' || k === 'lebhaft') ? k : 'normal';
+}
+function ttsTempoAnwenden(audio){
+    try{
+        const v = ttsTempoWert();
+        audio.preservesPitch = true;
+        audio.defaultPlaybackRate = v;
+        audio.playbackRate = v;
+    }catch(e){}
+}
+const TTS_PROBE_SATZ = 'So klingt die Stimme jetzt: Die Frequenz von 145 Megahertz liegt im 2-Meter-Band.';
+function ttsTempoSetzen(v){
+    const z = parseFloat(v);
+    try{ localStorage.setItem('ttsTempo', String(TTS_TEMPI.indexOf(z) >= 0 ? z : 1)); }catch(e){}
+    knopfSprechen(TTS_PROBE_SATZ);
+}
+window.ttsTempoSetzen = ttsTempoSetzen;
+function ttsKlangSetzen(k){
+    try{ localStorage.setItem('ttsKlang', (k === 'ruhig' || k === 'lebhaft') ? k : 'normal'); }catch(e){}
+    knopfSprechen(TTS_PROBE_SATZ);
+}
+window.ttsKlangSetzen = ttsKlangSetzen;
+
 async function knopfSprechen(text, vomZeiger){
     const satz = aussprache(knopfTextSaeubern(text));
     if(!satz) return;
@@ -25639,7 +25916,7 @@ async function knopfSprechen(text, vomZeiger){
         const res = await fetch('/api/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: satz, voice: stimme })
+            body: JSON.stringify({ text: satz, voice: stimme, klang: ttsKlangWert() })
         });
         if(token !== knopfToken) return;
         if(!res.ok) return nichtAngekommen();
@@ -25652,6 +25929,7 @@ async function knopfSprechen(text, vomZeiger){
         const url = URL.createObjectURL(blob);
         knopfUrl = url;
         const audio = new Audio(url);
+        ttsTempoAnwenden(audio);
         knopfAudio = audio;
         const aufraeumen = () => {
             if(knopfUrl === url){ try{ URL.revokeObjectURL(url); }catch(e){} knopfUrl = null; }
@@ -25916,6 +26194,10 @@ document.addEventListener('DOMContentLoaded', raumKnopfNachziehen);
 // uebersehen.
 const EINST_REITER = [
     { id:'allgemein', name:'Allgemein', symbol:'fa-sliders' },
+    // 26.09.2026, Dietmar: "Lege einen Reiter Anpassen unter Einstellungen
+    // an." Dort steht, wie die Antwort unter der Maus aussieht - mit
+    // Vorschau. Die Palette als Zeichen, weil es um Farbe geht.
+    { id:'anpassen',  name:'Anpassen',  symbol:'fa-palette' },
     // Das Zeichen ist am 07.09.2026 gewechselt. Dietmar hat das
     // internationale Sehbehinderten-Zeichen geschickt - das durchgestrichene
     // Auge auf blauem Grund - und gesagt: "Das Zeichen gefaellt mir gut."
@@ -26072,6 +26354,7 @@ function einstellungenOeffnen(reiter){
           // diesem Kasten.
           + '<div style="flex:1; min-width:0; overflow-y:auto; padding:0.9rem 1rem;">'
           + '<div id="einstBlatt_allgemein"></div>'
+          + '<div id="einstBlatt_anpassen" style="display:none;"></div>'
           + '<div id="einstBlatt_vorlesen" style="display:none;"></div>'
           + '<div id="einstBlatt_lernen"   style="display:none;"></div>'
           + '<div id="einstBlatt_benutzer" style="display:none;"></div>'
@@ -26116,6 +26399,17 @@ function einstBlaetterFuellen(){
       + 'title="' + ((STIL_ANZEIGE[st] && STIL_ANZEIGE[st].label) || st) + '" '
       + 'style="width:40px; height:34px; border-radius:8px; border:2px solid #e3e9f3; cursor:pointer; '
       + '--kachel:' + (farben[st] || '#eee') + '; background:' + (farben[st] || '#eee') + ';"></button>').join(' ');
+    const mausKnoepfe = Object.keys(MAUS_FARBEN).map(k =>
+        '<button type="button" id="einstMaus_' + k + '" onclick="einstMausWaehlen(\'' + k + '\')" '
+      + 'title="' + MAUS_FARBEN[k].name + '" aria-label="Farbe ' + MAUS_FARBEN[k].name + '" '
+      + 'data-vorlesen-kurz="' + MAUS_FARBEN[k].name + '." '
+      // Jede Kachel ist ein kleines Antwortfeld: der helle Grund mit dem
+      // Rand darum - so sieht man vorher, wie es aussieht. Beim Gelb waere
+      // eine Kachel nur in der Randfarbe ein dunkles Ocker gewesen und
+      // nicht das Gelb, das gemeint war.
+      + 'style="width:40px; height:34px; border-radius:8px; border:2px solid #e3e9f3; cursor:pointer; '
+      + '--kachel:' + MAUS_FARBEN[k].grund + '; background:' + MAUS_FARBEN[k].grund + '; '
+      + 'box-shadow:inset 0 0 0 4px ' + MAUS_FARBEN[k].rand + ';"></button>').join(' ');
 
     document.getElementById('einstBlatt_allgemein').innerHTML =
         einstKasten('Anzeigegröße',
@@ -26246,10 +26540,89 @@ function einstBlaetterFuellen(){
           + '<b>Gemini</b> gar nicht zur Wahl: Dort müsste man die Frage abtippen.</div>')
       ;   // "Tastatur" ist am 07.09.2026 in den Nachteilsausgleich gewandert.
 
+    // ---- Anpassen ----
+    // Eigener Reiter (26.09.2026). Dietmar: "Lege einen Reiter Anpassen
+    // unter Einstellungen an. Hier auch eine Vorschau, was bei Mouseoverlay
+    // kommt." Die Vorschau sind vier Antwortfelder wie im Trainer; wer mit
+    // der Maus darueberfaehrt, sieht die Farbe und die Bewegung so, wie
+    // sie beim Ueben kommen. Nach dem Klick auf eine Farbe oder einen
+    // Haken laeuft es bei B einmal von selbst.
+    // Die Kacheln sind so gebaut wie beim Farbstil - dieselbe Groesse,
+    // dieselbe Markierung der Wahl. Siehe MAUS_FARBEN.
+    const mausHaken = (id, feld, titel, text, vorlesen) =>
+        '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.55rem;" '
+      + 'data-vorlesen-kurz="' + titel + '." data-vorlesen="' + vorlesen + '">'
+      + '<input type="checkbox" id="' + id + '" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+      + 'onchange="einstellungenUmschalten(\'' + feld + '\', this.checked)">'
+      + '<span><b style="color:#0f2745; font-size:0.85rem;">' + titel + '</b>'
+      + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">' + text + '</span></span></label>';
+    const mausRadio = (art, titel, text) =>
+        '<label style="display:flex; gap:0.55rem; align-items:flex-start; cursor:pointer; margin-top:0.35rem;" '
+      + 'data-vorlesen-kurz="' + titel + '." data-vorlesen="' + titel + '. ' + text + '">'
+      + '<input type="radio" name="einstMausRand" id="einstMausRand_' + art + '" style="margin-top:0.2rem; cursor:pointer;" '
+      + 'onchange="einstMausRandSetzen(\'' + art + '\')">'
+      + '<span style="font-size:0.78rem; color:#4b5563; line-height:1.45;"><b style="color:#0f2745;">' + titel + '</b> — '
+      + text + '</span></label>';
+    document.getElementById('einstBlatt_anpassen').innerHTML =
+        einstKasten('Antwort unter der Maus',
+            'Fährst du beim Üben mit der Maus über eine Antwort, tritt sie hervor. Wie, stellst du hier ein. '
+          + 'Die Wahl gilt für den angemeldeten Benutzer — jeder kann seine eigene haben.',
+            '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-bottom:0.35rem;">Farbe</div>'
+          + '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + mausKnoepfe + '</div>'
+          + '<div id="einstMausName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>'
+          + '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-top:0.8rem;">Rand</div>'
+          // Drei Moeglichkeiten. "Animation auch zum abschalten." und
+          // "Moechte auch die Option ohne Rand. Das Feld soll dann einfach
+          // nur die Farbe haben."
+          + mausRadio('lauf', 'Läuft einmal herum',
+                'Ein Rand in der Farbe läuft in gut einer Sekunde um die Antwort und bleibt dann stehen.')
+          + mausRadio('fest', 'Steht sofort da', 'Der Rand erscheint ohne Bewegung.')
+          + mausRadio('kein', 'Kein Rand', 'Das Feld bekommt nur die Farbe.')
+          + '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-top:0.8rem;">Bewegung</div>'
+          // "Es waere ebenfalls ein aufleuchten was von dem Hintergrund in
+          // die Farbe sanft uebergeht."
+          + mausHaken('einstMausLeuchten', 'mausLeuchten', 'Feld leuchtet sanft auf',
+                'Das Feld geht weich vom Weiß in die Farbe über — und beim Verlassen wieder zurück. '
+              + 'Ohne Haken springt die Farbe sofort um.',
+                'Feld leuchtet sanft auf. Das Feld geht weich vom Weiß in die Farbe über. Ohne Haken springt die Farbe sofort um.')
+          + '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-top:0.8rem;">Vorschau — mit der Maus darüberfahren</div>'
+          + '<div class="maus-probe-rahmen">'
+          + '<div class="maus-probe"><b>A:</b><span>Fahre mit der Maus über eine dieser Antworten …</span></div>'
+          + '<div class="maus-probe" id="einstMausProbe"><b>B:</b><span>… so sieht es dann beim Üben aus.</span></div>'
+          + '<div class="maus-probe"><b>C:</b><span>Nach jeder Änderung hier zeigt B es einmal von selbst.</span></div>'
+          + '<div class="maus-probe"><b>D:</b><span>Richtig und falsch bleiben davon unberührt: grün und rot.</span></div>'
+          + '</div>');
+
     // ---- Vorlesen ----
     document.getElementById('einstBlatt_vorlesen').innerHTML =
         einstKasten('Stimme', 'Wer vorliest — und eine Probe, damit man es hört, bevor man sich entscheidet.',
             '<div id="einstZielStimme"></div>'
+          // Geschwindigkeit und Klang (26.09.2026). Dietmar: "Koennen wir
+          // die Piperstimme anpassen? Zb. etwas schneller vorlesen und
+          // anders klingen lassen?" und "Bei Geschwindigkeit beim vorlesen
+          // moechte ich 1 und 1,25 und 1,30 und 1,50". Siehe ttsTempoWert().
+          + '<div class="tts-regler">'
+          + '<label data-vorlesen-kurz="Geschwindigkeit." data-vorlesen="Geschwindigkeit. Wie schnell vorgelesen wird. Die Tonlage bleibt dabei gleich.">'
+          + '<span>Geschwindigkeit</span>'
+          + '<select id="einstTtsTempo" onchange="ttsTempoSetzen(this.value)">'
+          + '<option value="1">1× — normal</option>'
+          // Dietmar: "unter 1,25 noch etwas langsameres hinzufuegen."
+          + '<option value="1.1">1,1×</option>'
+          + '<option value="1.25">1,25×</option>'
+          + '<option value="1.3">1,3×</option>'
+          + '<option value="1.5">1,5×</option>'
+          + '</select></label>'
+          + '<label data-vorlesen-kurz="Klang." data-vorlesen="Klang. Ruhig spricht gleichmäßig, lebhaft mit mehr Betonung.">'
+          + '<span>Klang</span>'
+          + '<select id="einstTtsKlang" onchange="ttsKlangSetzen(this.value)">'
+          + '<option value="ruhig">Ruhig — gleichmäßig</option>'
+          + '<option value="normal">Normal</option>'
+          + '<option value="lebhaft">Lebhaft — mehr Betonung</option>'
+          + '</select></label>'
+          + '</div>'
+          + '<div style="font-size:0.75rem; color:var(--muted); margin-top:0.35rem; line-height:1.5;">'
+          + 'Beides gilt für alles, was der Trainer vorliest, und wird nach jeder Änderung gleich einmal vorgesprochen. '
+          + 'Den größten Unterschied macht die Stimme selbst — oben zur Auswahl.</div>'
           + '<div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.5rem;">'
           + '<button type="button" style="' + EINST_KNOPF + '" '
           + 'onclick="knopfSprechen(\'So klingt die Stimme, die dich durch das Menü führt — zum Beispiel beim Blättern durch den Fragenkatalog.\')" '
@@ -26264,7 +26637,23 @@ function einstBlaetterFuellen(){
           + '<div id="einstStimmenLage" style="font-size:0.8rem; line-height:1.6; margin-top:0.5rem;"></div>'
           + '<div id="einstStimmenAlt" style="margin-top:0.5rem;"></div>')
       + einstKasten('Fragen und Antworten', 'Was von selbst gesprochen wird.',
-            '<div id="einstZielAuto"></div><div id="einstZielAntwort"></div>')
+            '<div id="einstZielAuto"></div><div id="einstZielAntwort"></div>'
+          // Die Antwort unter der Maus (26.09.2026). Dietmar: "Beim vorlesen,
+          // waere die Option gut, das es nur die Frage vorliest und die
+          // Antwort, wo ich gerade Mouseoverlay habe. Das waere auch gut fuer
+          // Menschen mit Nachteil. Die wissen dann, wo die Maus gerade ist."
+          // Pro Benutzer, wie die Knoepfe - siehe mausVorleseAnsagen().
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.2rem;" '
+          + 'data-vorlesen-kurz="Antwort unter der Maus vorlesen." '
+          + 'data-vorlesen="Antwort unter der Maus vorlesen. Der Vorlese-Knopf spricht dann nur die Frage. Jede Antwort wird gesprochen, sobald die Maus auf ihr steht. Wechselst du zu einer anderen Antwort, bricht die alte sofort ab.">'
+          + '<input type="checkbox" id="einstMausVorlesen" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'mausVorlesen\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Antwort unter der Maus vorlesen</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Der Vorlese-Knopf und das automatische Vorlesen sprechen dann <b>nur die Frage</b>. '
+          + 'Jede Antwort wird gesprochen, sobald die Maus auf ihr steht — mit der Tabulatortaste genauso. '
+          + 'Wechselst du zu einer anderen Antwort, bricht die alte sofort ab. So weiß man auch ohne '
+          + 'hinzusehen, wo die Maus gerade ist.</span></span></label>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
             + 'Gleiches gilt, wenn du mit der Tabulatortaste dorthin springst.',
             '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin-bottom:0.4rem;" '
@@ -26775,6 +27164,59 @@ function einstStilKnoepfeNachziehen(){
     if(n) n.textContent = (STIL_ANZEIGE[jetzt] && STIL_ANZEIGE[jetzt].label) || jetzt;
 }
 
+// Die Farbe der Antwort unter der Maus (26.09.2026). Nach der Wahl laeuft
+// der Rand im Probefeld einmal von selbst - so sieht man die neue Farbe
+// gleich in Bewegung, ohne erst mit der Maus hinzufahren.
+function einstMausWaehlen(farbe){
+    if(!MAUS_FARBEN.hasOwnProperty(farbe)) return;
+    einstellungen.mausFarbe = farbe;
+    einstellungenSpeichern();
+    einstMausProbeZeigen();
+}
+window.einstMausWaehlen = einstMausWaehlen;
+
+function einstMausRandSetzen(art){
+    if(MAUS_RAND_ARTEN.indexOf(art) < 0) return;
+    einstellungen.mausRand = art;
+    einstellungenSpeichern();
+    einstMausProbeZeigen();
+}
+window.einstMausRandSetzen = einstMausRandSetzen;
+
+function einstMausProbeZeigen(){
+    const p = document.getElementById('einstMausProbe');
+    if(!p) return;
+    p.classList.remove('zeigen');
+    void p.offsetWidth;                // neu anstossen, auch bei derselben Farbe
+    p.classList.add('zeigen');
+    clearTimeout(einstMausProbeZeigen.uhr);
+    einstMausProbeZeigen.uhr = setTimeout(() => p.classList.remove('zeigen'), 2200);
+}
+
+function einstMausKnoepfeNachziehen(){
+    const jetzt = MAUS_FARBEN.hasOwnProperty(einstellungen.mausFarbe) ? einstellungen.mausFarbe : 'blau';
+    for(const k of Object.keys(MAUS_FARBEN)){
+        const b = document.getElementById('einstMaus_' + k);
+        if(!b) continue;
+        // Gewaehlt wie beim Farbstil: dunkler Rand und ein weisser Streifen
+        // innen - der farbige Rand der Kachel liegt dann dahinter.
+        const r = MAUS_FARBEN[k].rand;
+        b.style.borderColor = (k === jetzt) ? 'var(--panel-navy)' : '#e3e9f3';
+        b.style.boxShadow   = (k === jetzt) ? 'inset 0 0 0 2px #fff, inset 0 0 0 6px ' + r : 'inset 0 0 0 4px ' + r;
+        b.setAttribute('aria-pressed', k === jetzt ? 'true' : 'false');
+    }
+    const n = document.getElementById('einstMausName');
+    if(n) n.textContent = MAUS_FARBEN[jetzt].name;
+    for(const art of MAUS_RAND_ARTEN){
+        const r = document.getElementById('einstMausRand_' + art);
+        if(r) r.checked = (einstellungen.mausRand === art);
+    }
+    const le = document.getElementById('einstMausLeuchten');
+    if(le) le.checked = (einstellungen.mausLeuchten !== false);
+    const mv = document.getElementById('einstMausVorlesen');
+    if(mv) mv.checked = !!einstellungen.mausVorlesen;
+}
+
 // Der Reiter "Lernen" zeigt den Blaetter-Stand - dieselben Zahlen wie im
 // Blaetter-Fenster, an der Stelle, an der man sie sucht, wenn man gerade
 // nicht blaettert.
@@ -27008,6 +27450,10 @@ window.hinweisKeinPiper = hinweisKeinPiper;
 
 async function ttsFelderNachziehen() {
     if(!document.getElementById('ttsAutoReadCheckbox')) return;
+    try{
+        const t = document.getElementById('einstTtsTempo'); if(t) t.value = String(ttsTempoWert());
+        const k = document.getElementById('einstTtsKlang'); if(k) k.value = ttsKlangWert();
+    }catch(e){}
     document.getElementById('ttsAutoReadCheckbox').checked = localStorage.getItem('ttsAutoRead') === '1';
     document.getElementById('ttsAutoReadAnswerCheckbox').checked = localStorage.getItem('ttsAutoReadAnswer') === '1';
     const tk = document.getElementById('tastaturCheckbox');
@@ -33247,7 +33693,236 @@ if (originalSelectOption) {
             body.eckig .question-area .options { gap: 8px; padding: 0 7px 8px 7px; }
         }
         body.eckig .question-area .option .option-content { flex: 1; min-width: 0; }
-        body.eckig .question-area .option:hover:not(.disabled) { background: #f2f2f2 !important; }
+        /* ================================================================
+           DIE ANTWORT UNTER DER MAUS                        (26.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Beim Mouseoverlay bei den Antworten wird die Frage nur
+           leicht grau. Koennen wir das Farblich anheben?" - und dazu: "ich
+           dachte mir, das der Rand auch eine Farbe bekommt. Gerne auch
+           animiert was einmal aussenrum laeuft." Die Farbe: "nimm 5 Farben
+           und setzt das unter Einstellungen rein. Meine Frau gefaellt
+           gruen." Tempo: "Langsamer".
+
+           Bisher wurde das Feld nur von Weiss auf #f2f2f2 getoent - auf dem
+           grauen Rahmen #dddddd kaum zu sehen. Jetzt:
+             - das Feld wird hell in der gewaehlten Farbe eingefaerbt,
+             - ein 3 Punkte breiter Rand laeuft in 1,2 Sekunden einmal im
+               Uhrzeigersinn herum (oben, rechts, unten, links) und bleibt
+               dann stehen, solange die Maus auf der Antwort ist.
+
+           Gezeichnet wird der Rand von ::before - vier Farbstreifen als
+           Hintergrund, deren Laenge die Animation von 0 auf 100 % zieht.
+           Ein echter Rahmen (border) ginge nicht: Er wuerde das Feld um
+           6 Punkte vergroessern und die Antworten darunter verschieben.
+           ::after bleibt frei, dort sitzen Haken und Kreuz.
+
+           Die Zeiten sind nach der Form verteilt: Ein Antwortfeld ist rund
+           zwanzigmal so breit wie hoch - bekaeme jede Seite ein Viertel
+           der Zeit, raste die Linie oben entlang und kroeche an den kurzen
+           Seiten. Deshalb 45/5/45/5. Die Bildkacheln sind eher quadratisch
+           und bekommen 30/20/30/20.
+
+           Die Farbe steht in den Einstellungen (Reiter Anpassen, mit
+           Vorschau) und gilt pro Benutzer - siehe MAUS_FARBEN: Blau,
+           Gruen, Gelb, Orange, Grau. Dort laesst sich auch der Lauf
+           abschalten ("Animation auch zum abschalten"), dann steht der
+           Rand sofort ganz da - body.maus-ohne-lauf am Ende -, oder der
+           Rand ganz weglassen ("Das Feld soll dann einfach nur die Farbe
+           haben") - body.maus-ohne-rand. Und
+           das Feld kann weich in die Farbe uebergehen statt zu springen -
+           body.maus-leuchten, siehe "DAS SANFTE AUFLEUCHTEN". Die Werte kommen als
+           --maus-rand und --maus-grund an <html>; die Vorgaben hier sind
+           das Blau, falls noch nichts gewaehlt ist.
+
+           Nur mit Maus (hover: hover): Am Handy bliebe die zuletzt
+           angetippte Antwort sonst eingefaerbt stehen - das war bisher mit
+           dem Grau auch schon so. Angekreuzte (Pruefung), bewertete und
+           gerade vorgelesene Antworten behalten ihre Farbe; der Rand
+           laeuft trotzdem, damit man sieht, wo die Maus steht. Im Dark
+           Mode gilt dieselbe Farbe, mit schwarzer Schrift (siehe unten).
+           ================================================================ */
+        :root { --maus-rand: #00adef; --maus-grund: #e3f5fd; }
+        body.eckig .question-area .option { position: relative; }
+        body.eckig .question-area .option::before,
+        body.eckig .question-area .option-grid::before,
+        .maus-probe::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background:
+                linear-gradient(var(--maus-rand), var(--maus-rand)) left  top    / 0 3px no-repeat,
+                linear-gradient(var(--maus-rand), var(--maus-rand)) right top    / 3px 0 no-repeat,
+                linear-gradient(var(--maus-rand), var(--maus-rand)) right bottom / 0 3px no-repeat,
+                linear-gradient(var(--maus-rand), var(--maus-rand)) left  bottom / 3px 0 no-repeat;
+        }
+        @keyframes mausRandLang {
+            0%   { background-size: 0 3px,    3px 0,    0 3px,    3px 0; }
+            45%  { background-size: 100% 3px, 3px 0,    0 3px,    3px 0; }
+            50%  { background-size: 100% 3px, 3px 100%, 0 3px,    3px 0; }
+            95%  { background-size: 100% 3px, 3px 100%, 100% 3px, 3px 0; }
+            100% { background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%; }
+        }
+        @keyframes mausRandKachel {
+            0%   { background-size: 0 3px,    3px 0,    0 3px,    3px 0; }
+            30%  { background-size: 100% 3px, 3px 0,    0 3px,    3px 0; }
+            50%  { background-size: 100% 3px, 3px 100%, 0 3px,    3px 0; }
+            80%  { background-size: 100% 3px, 3px 100%, 100% 3px, 3px 0; }
+            100% { background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%; }
+        }
+        @media (hover: hover) {
+            body.eckig .question-area .option:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+            body.eckig .question-area .option-grid:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+            .maus-probe:hover { background: var(--maus-grund) !important; }
+            /* AUCH IM DARK MODE DIESELBE FARBE (26.09.2026). Dietmar: "Im
+               Dark Mode wird keine Farbe angezeigt :(" - bis eben blieb dort
+               der dunkle Grund aus der Nachtregel weiter unten, nur der
+               Rand lief. Jetzt gilt dieselbe helle Farbe wie am Tag, mit
+               schwarzer Schrift - genau wie bei richtig und falsch, die im
+               Dark Mode auch ihre Tagesfarben tragen ("Sie muessen in JEDEM
+               Farbmodus dieselben sein"). Die helle Schrift der Nacht
+               (#b3cbdb) waere auf dem hellen Feld nicht zu lesen. */
+            body.eckig.dark .question-area .option:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text,
+            body.eckig.dark .question-area .option:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-label,
+            body.eckig.dark .question-area .option-grid:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text,
+            body.eckig.dark .question-area .option-grid:hover:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-label { color: #000 !important; }
+            body.eckig .question-area .option:hover:not(.disabled)::before,
+            .maus-probe:hover::before { animation: mausRandLang 1.2s linear forwards; }
+            body.eckig .question-area .option-grid:hover:not(.disabled)::before { animation: mausRandKachel 1.2s linear forwards; }
+        }
+        /* DAS SANFTE AUFLEUCHTEN. Dietmar: "Es waere ebenfalls ein
+           aufleuchten was von dem Hintergrund in die Farbe sanft
+           uebergeht." Ein Uebergang auf der Hintergrundfarbe, hin und
+           zurueck. Er haengt an body.maus-leuchten (Haken "Feld leuchtet
+           sanft auf") und gilt NUR fuer noch offene Antworten: Sobald
+           eine Wertung steht (correct, wrong, gewaehlt, vorgelesen),
+           greift diese Regel nicht mehr, und die Grundregel mit
+           "transition: none" gilt - Rot und Gruen kommen weiter sofort.
+           Dietmar am 04.09.2026: "Hier wuensche ich mir, dass es gleich
+           rot oder gruen ausgibt." */
+        body.maus-leuchten.eckig .question-area .option:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+        body.maus-leuchten.eckig .question-area .option-grid:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+        body.maus-leuchten .maus-probe { transition: background-color 0.55s ease, color 0.55s ease; }
+
+        /* Geschwindigkeit und Klang der Stimme (Nachteilsausgleich, Kasten
+           Stimme, 26.09.2026): zwei Auswahlfelder nebeneinander, am Handy
+           untereinander. Dark Mode uebernimmt die Modal-Regel fuer select. */
+        .tts-regler { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.55rem; }
+        .tts-regler label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.72rem; font-weight: 700; color: #4b5b73; min-width: 180px; flex: 1 1 180px; max-width: 260px; }
+        .tts-regler select { padding: 0.4rem 0.6rem; border-radius: 8px; border: 1px solid #b0c4d8; font-family: inherit; font-size: 0.83rem; font-weight: 400; background: #fff; color: #0f2745; cursor: pointer; }
+
+        /* Die Vorschau in den Einstellungen (Reiter Anpassen) sieht aus
+           wie die Antworten im Trainer: weisse Felder auf grauem Rahmen,
+           dieselbe Schrift, derselbe Abstand. */
+        .maus-probe-rahmen {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #dddddd;
+            padding: 8px;
+            margin-top: 0.5rem;
+            max-width: 560px;
+        }
+        .maus-probe {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 10px 14px 10px 18px;
+            background: #ffffff;
+            font-family: var(--darc-schrift);
+            font-size: 1rem;
+            color: #000000;
+            cursor: default;
+        }
+        /* Im Dark Mode macht eine allgemeine Regel jedes <b> in einem
+           Fenster hell ("body.dark [id$=Modal] b") - im weissen Probefeld
+           war das "B:" dadurch kaum zu sehen. */
+        .maus-probe b,
+        body.dark [id$="Modal"] .maus-probe b { color: #000000 !important; }
+        /* IM DARK MODE IST AUCH DIE VORSCHAU DUNKEL (26.09.2026). Dietmar:
+           "im Darkmode, muessen die Test Antworten, auch dark sein :)"
+           Dieselben Farben wie die Antworten im Trainer bei Nacht:
+           Rahmen --darc-rahmen (#0a1b28), Feld --darc-feld (#10293b),
+           Schrift #b3cbdb, der Buchstabe im Signalblau. Unter der Maus
+           wird das Feld hell in der gewaehlten Farbe, mit schwarzer
+           Schrift - genau wie beim Ueben. */
+        body.dark .maus-probe-rahmen { background: var(--darc-rahmen); border: 1px solid var(--nacht-kante); }
+        body.dark .maus-probe { background: var(--darc-feld); color: #b3cbdb; }
+        body.dark [id$="Modal"] .maus-probe b { color: var(--darc-blau) !important; }
+        body.dark .maus-probe:hover,
+        body.dark .maus-probe.zeigen { color: #000000; }
+        body.dark [id$="Modal"] .maus-probe:hover b,
+        body.dark [id$="Modal"] .maus-probe.zeigen b { color: #000000 !important; }
+        /* In den Einstellungen: Nach dem Klick auf eine Farbe laeuft der
+           Rand im Probefeld einmal von selbst, auch ohne Maus darauf. */
+        .maus-probe.zeigen { background: var(--maus-grund) !important; }
+        .maus-probe.zeigen::before { animation: mausRandLang 1.2s linear forwards; }
+        /* Wer im System "Bewegung reduzieren" eingestellt hat, bekommt den
+           Rand sofort vollstaendig - ohne Lauf. */
+        @media (prefers-reduced-motion: reduce) {
+            body.eckig .question-area .option:hover:not(.disabled)::before,
+            body.eckig .question-area .option-grid:hover:not(.disabled)::before,
+            .maus-probe:hover::before,
+            .maus-probe.zeigen::before {
+                animation: none;
+                background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%;
+            }
+            /* Dieselben Vorspaenne wie beim Aufleuchten - kuerzere
+               wuerden verlieren, die :not()-Ketten dort zaehlen mit. */
+            body.maus-leuchten.eckig .question-area .option:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+            body.maus-leuchten.eckig .question-area .option-grid:not(.disabled):not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+            body.maus-leuchten .maus-probe { transition: none; }
+        }
+        /* Dasselbe auf Wunsch. Dietmar: "Animation auch zum abschalten."
+           Der Haken "Rand laeuft einmal herum" in den Einstellungen setzt
+           body.maus-ohne-lauf. Diese Regeln muessen HINTER den
+           animierten stehen - sie sind gleich spezifisch. */
+        @media (hover: hover) {
+            body.maus-ohne-lauf .question-area .option:hover:not(.disabled)::before,
+            body.maus-ohne-lauf .question-area .option-grid:hover:not(.disabled)::before,
+            body.maus-ohne-lauf .maus-probe:hover::before {
+                animation: none;
+                background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%;
+            }
+        }
+        body.maus-ohne-lauf .maus-probe.zeigen::before {
+            animation: none;
+            background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%;
+        }
+        /* GAR KEIN RAND. Dietmar: "Moechte auch die Option ohne Rand. Das
+           Feld soll dann einfach nur die Farbe haben." body.maus-ohne-rand
+           nimmt das ::before ganz weg - auch bei der Antwort, die gerade
+           unter der Maus vorgelesen wird (.maus-liest). */
+        body.maus-ohne-rand .question-area .option::before,
+        body.maus-ohne-rand .question-area .option-grid::before,
+        body.maus-ohne-rand .maus-probe::before { display: none; }
+        /* DIE ANTWORT, DIE UNTER DER MAUS VORGELESEN WIRD   (26.09.2026)
+           Dietmar: "Wenn ich die Farbe umstelle, soll sich die Farbe von
+           der Antwort auch aendern. Derzeit ist es in Orange. Waehle ich
+           blau, ist die Antwort Blau vorgehoben usw."
+           Was er sah, war das Gelb der Vorlese-Markierung (tts-highlight):
+           Beim Sprechen der Antwort unter der Maus lag es ueber der
+           gewaehlten Farbe. Die Antwort unter der Maus bekommt deshalb
+           eine eigene Markierung, .maus-liest (siehe mausVorleseSprechen),
+           in der gewaehlten Farbe mit vollem Rand - und die bleibt, bis
+           der Satz zu Ende ist, auch wenn die Maus schon weiter ist. Das
+           Gelb gehoert weiter dem Vorlesen der ganzen Frage. */
+        body.eckig .question-area .option.maus-liest:not(.correct):not(.wrong):not(.gewaehlt),
+        body.eckig .question-area .option-grid.maus-liest:not(.correct):not(.wrong):not(.gewaehlt) {
+            background: var(--maus-grund) !important;
+        }
+        /* Dark Mode: schwarze Schrift auf dem hellen Feld, siehe oben. */
+        body.eckig.dark .question-area .option.maus-liest:not(.correct):not(.wrong):not(.gewaehlt) .option-text,
+        body.eckig.dark .question-area .option.maus-liest:not(.correct):not(.wrong):not(.gewaehlt) .option-label,
+        body.eckig.dark .question-area .option-grid.maus-liest:not(.correct):not(.wrong):not(.gewaehlt) .option-text,
+        body.eckig.dark .question-area .option-grid.maus-liest:not(.correct):not(.wrong):not(.gewaehlt) .option-label { color: #000 !important; }
+        body.eckig .question-area .option.maus-liest::before,
+        body.eckig .question-area .option-grid.maus-liest::before {
+            background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%;
+        }
         /* opacity 0.9 lag frueher auf beantworteten Feldern. Damit waeren
            die gemessenen Farben nicht mehr die gemessenen Farben. */
         body.eckig .question-area .option.disabled { opacity: 1; }
@@ -34621,7 +35296,8 @@ if (originalSelectOption) {
         /* Die Farbkacheln: jede zeigt ihre eigene Farbe - die steht als
            Variable --kachel am Knopf, weil der Knopfverlauf oben jede
            inline gesetzte Farbe ueberschreibt. */
-        body.dark #einstellungenModal button[id^="einstStil_"] {
+        body.dark #einstellungenModal button[id^="einstStil_"],
+        body.dark #einstellungenModal button[id^="einstMaus_"] {
             background: var(--kachel, #333) !important;
             border-color: var(--nacht-kante2) !important;
         }

@@ -4741,7 +4741,28 @@ app.post('/api/tts',async (req,res)=>{
   const original=text; text=expandTTS(text);
   const voices=listVoices(); if(!voices.length) return res.status(500).json({error:'Keine Stimmen in piper/'});
   const voice=voices.find(v=>v.file===req.body.voice)||voices[0];
-  const hash=crypto.createHash('md5').update(voice.file+'::'+text).digest('hex');
+  // ================================================================
+  //  DER KLANG DER STIMME                              (26.09.2026)
+  //  Dietmar: "Koennen wir die Piperstimme anpassen? Zb. etwas
+  //  schneller vorlesen und anders klingen lassen?"
+  //
+  //  Schneller macht der BROWSER (playbackRate, Tonlage bleibt) - so
+  //  sind 1,25 oder 1,5 auch wirklich 1,25 oder 1,5. Pipers eigener
+  //  Regler (length_scale) trifft das nicht: 0,8 brachte gemessen nur
+  //  elf Prozent, weil Pausen und Satzenden nicht mitschrumpfen.
+  //
+  //  Der Klang dagegen kommt von Piper selbst: noise_scale und noise_w
+  //  bestimmen, wie viel Schwankung die Stimme in Tonhoehe und
+  //  Lautdauer hat. Weniger klingt gleichmaessig und ruhig, mehr
+  //  lebhafter, fast wie beim Erzaehlen. Pipers Vorgaben sind 0,667
+  //  und 0,8 - das ist "normal" und bleibt ohne Zusatz, damit der
+  //  bisherige Cache weiter gilt. Die beiden anderen bekommen einen
+  //  eigenen Cache-Schluessel.
+  // ================================================================
+  const TTS_KLANG = { ruhig: ['0.45', '0.6'], lebhaft: ['0.9', '1.0'] };
+  const klang = TTS_KLANG[String(req.body.klang || '')] ? String(req.body.klang) : 'normal';
+  const klangArgs = klang === 'normal' ? [] : ['--noise_scale', TTS_KLANG[klang][0], '--noise_w', TTS_KLANG[klang][1]];
+  const hash=crypto.createHash('md5').update(voice.file+'::'+(klang === 'normal' ? '' : 'klang=' + klang + '::')+text).digest('hex');
   const out=path.join(TTS_CACHE_DIR,hash+'.wav');
   // Diagnose: Welche Stimme hat wirklich gesprochen? Der Client zeigt das an.
   // Ohne diese Auskunft ist von aussen nicht erkennbar, ob der Wunsch des
@@ -4775,7 +4796,7 @@ app.post('/api/tts',async (req,res)=>{
   // Antwort, die schon einmal gefragt wurde, spricht Piper nicht zweimal.
   if(fs.existsSync(out)){ ttsPlatzFrei(); console.log(`[TTS] Cache Hit ${hash} (nach Warten)`); res.setHeader('Content-Type','audio/wav'); return res.sendFile(out); }
   const piper=findPiper();
-  console.log(`[TTS] ${piper.type} Model:${voice.file} Text:${original.slice(0,60)} -> ${text.slice(0,80)}`);
+  console.log(`[TTS] ${piper.type} Model:${voice.file}${klang === 'normal' ? '' : ' Klang:' + klang} Text:${original.slice(0,60)} -> ${text.slice(0,80)}`);
   let proc,done=false,err='';
   // Platz ist belegt (ttsPlatzHolen) und wird garantiert genau einmal wieder frei
   let slotReleased = false;
@@ -4783,9 +4804,9 @@ app.post('/api/tts',async (req,res)=>{
   const opts={cwd:PIPER_DIR, env:{...process.env, PYTHONIOENCODING:'utf-8', PYTHONUTF8:'1'}};
   // FIX K7: spawn selbst kann synchron werfen - dann wuerde der Slot fuer immer belegt bleiben
   try{
-    if(piper.type==='binary') proc=spawn(piper.path,['--model',voice.fullPath,'--output_file',outTmp],opts);
+    if(piper.type==='binary') proc=spawn(piper.path,['--model',voice.fullPath,'--output_file',outTmp, ...klangArgs],opts);
     // piper.path ist hier "python3" bzw. "python" - siehe findPiper.
-    else proc=spawn(piper.path,['-m','piper','--model',voice.fullPath,'--output_file',outTmp],opts);
+    else proc=spawn(piper.path,['-m','piper','--model',voice.fullPath,'--output_file',outTmp, ...klangArgs],opts);
   }catch(spawnErr){
     releaseTtsSlot();
     console.error('[TTS] spawn fehlgeschlagen:', spawnErr.message);

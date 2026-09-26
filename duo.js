@@ -1124,19 +1124,33 @@
         '#duoChatAufnahmePause{color:#e5484d;}',
         '#duoChatAufnahme.pausiert .punkt{animation:none;opacity:0.35;}',
         '#duoChatAufnahmeSenden{background:#1c7a46;color:#fff;}',
-        '.duo-sprache{display:inline-flex;align-items:center;gap:8px;min-width:170px;vertical-align:middle;}',
+        '.duo-sprache{display:inline-flex;align-items:center;gap:6px;min-width:170px;vertical-align:middle;}',
         '.duo-sprache-knopf{border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:0.8rem;flex-shrink:0;',
         '  background:var(--panel-navy);color:#fff;}',
         '.duo-chat-eigen .duo-sprache-knopf{background:#fff;color:var(--panel-navy);}',
         '.duo-sprache-balken{flex:1;height:4px;border-radius:2px;background:currentColor;opacity:0.25;position:relative;overflow:hidden;}',
         '.duo-sprache-balken span{position:absolute;left:0;top:0;bottom:0;width:0;background:currentColor;}',
-        '.duo-sprache-dauer{font-size:0.72rem;opacity:0.8;font-variant-numeric:tabular-nums;}',
+        '.duo-sprache-dauer{font-size:0.72rem;opacity:0.8;font-variant-numeric:tabular-nums;flex-shrink:0;white-space:nowrap;}',
         /* Die Welle in der Sprechblase (25.09.2026), wie bei WhatsApp: der
-           gespielte Teil wird gruen. Ein Klick springt an die Stelle. */
-        '.duo-sprache-welle{flex:1;display:flex;align-items:center;gap:2px;height:26px;min-width:100px;cursor:pointer;}',
-        '.duo-sprache-welle i{flex:1 1 0;min-width:2px;max-width:3px;background:currentColor;opacity:0.35;border-radius:2px;display:block;}',
+           gespielte Teil wird gruen. Ein Klick springt an die Stelle.
+           Seit 26.09.2026 sind die Striche fest 2 px breit, nur die Luecken
+           dazwischen passen sich an: Die Pille fuer die Geschwindigkeit
+           nimmt beim Abspielen Platz weg, und vorher schob sich die Welle
+           dann ueber die Zeitangabe. */
+        '.duo-sprache-welle{flex:1 1 auto;width:130px;display:flex;align-items:center;justify-content:space-between;gap:1px;height:26px;min-width:95px;cursor:pointer;}',
+        '.duo-sprache-welle i{flex:0 0 2px;width:2px;background:currentColor;opacity:0.35;border-radius:2px;display:block;}',
         '.duo-sprache-welle i.gespielt{opacity:1;background:#16a34a;}',
         '.duo-chat-eigen .duo-sprache-welle i.gespielt{background:#86efac;}',
+        /* Abspielgeschwindigkeit (26.09.2026), wie bei WhatsApp: Die Pille
+           erscheint, sobald die Nachricht laeuft, und schaltet bei jedem
+           Klick 1x -> 1,25x -> 1,5x -> 1x weiter. */
+        '.duo-sprache-tempo{display:none;border:none;border-radius:999px;padding:2px 7px;min-width:34px;height:20px;',
+        '  align-items:center;justify-content:center;font-weight:700;font-size:0.7rem;line-height:1;font-family:inherit;cursor:pointer;flex-shrink:0;',
+        '  background:rgba(127,127,127,0.22);color:inherit;font-variant-numeric:tabular-nums;}',
+        '.duo-sprache-tempo:hover{background:rgba(127,127,127,0.36);}',
+        '.duo-chat-eigen .duo-sprache-tempo{background:rgba(0,0,0,0.28);color:#fff;}',
+        '.duo-chat-eigen .duo-sprache-tempo:hover{background:rgba(0,0,0,0.4);}',
+        '.duo-sprache.laeuft .duo-sprache-tempo{display:inline-flex;}',
         /* Loeschen und Reaktionen (25.09.2026). Das Smiley neben der Blase
            (beim Zeigen mit der Maus, am Handy immer blass zu sehen) oder
            ein Klick auf die Blase klappt die Leiste auf: vier Reaktionen,
@@ -1190,6 +1204,7 @@
         'body.eckig #duoChatBlase,body.eckig #duoChatEingabe,body.eckig #duoChatSenden,body.eckig #duoChatMikro,',
         '  body.eckig #duoChatAufnahme button,body.eckig #duoChatBox .duo-reakt{border-radius:999px !important;}',
         'body.eckig #duoChatBox .duo-chat-zeile{border-radius:12px !important;}',
+        'body.eckig #duoChatBox .duo-sprache-tempo{border-radius:999px !important;}',
         'body.eckig #duoChatAufnahme .punkt,body.eckig #duoChatBox .duo-sprache-knopf,body.eckig #duoChatBox .duo-chat-mehr{border-radius:50% !important;}',
         'body.eckig #duoChatBox .duo-chat-leiste button{border-radius:8px !important;}',
         'body.eckig #duoChatBox .duo-sprache-balken,body.eckig #duoChatBox .duo-sprache-welle i{border-radius:2px !important;}',
@@ -1258,6 +1273,8 @@
                 if(b && b.dataset.spracheId) spracheAbspielen(b.dataset.spracheId);
                 return;
             }
+            // Die Pille 1x / 1,25x / 1,5x (26.09.2026).
+            if(t.closest('.duo-sprache-tempo')){ spracheTempoWeiter(); return; }
             // Ein Klick in die Welle einer Sprachnachricht springt an die
             // Stelle (25.09.2026, wie bei WhatsApp).
             const wl = t.closest('.duo-sprache-welle');
@@ -2050,6 +2067,50 @@
     function spracheAlleAnhalten(ausser){
         spracheAudio.forEach((au, k) => { if(k !== ausser && !au.paused) au.pause(); });
     }
+
+    // ================================================================
+    //  ABSPIELGESCHWINDIGKEIT                              26.09.2026
+    //  Dietmar waehlte aus der Roadmap: "Abspielgeschwindigkeit bei
+    //  Sprachnachrichten" - der Vorschlag war ein Knopf 1x / 1,5x / 2x
+    //  an der Sprechblase, wie bei WhatsApp.
+    //
+    //  Wie dort gilt die Wahl fuer ALLE Sprachnachrichten und bleibt
+    //  gespeichert, bis man sie wieder aendert - wer schnell hoert, will
+    //  das nicht bei jeder Nachricht neu einstellen. Gemerkt wird sie im
+    //  Browser (je Geraet), nicht auf dem Server.
+    //
+    //  Die Stimme bleibt dabei in ihrer Tonlage (preservesPitch) - sonst
+    //  klaenge es schneller wie Micky Maus.
+    //
+    //  DIE STUFEN: Zuerst waren es 1x / 1,5x / 2x wie bei WhatsApp.
+    //  Dietmar am 26.09.2026: "Abspielgeschwindigkeit 1 und 1,25 und
+    //  1,5. Die 2 braucht es nicht." Wer vorher 2x gewaehlt hatte,
+    //  beginnt deshalb wieder bei 1x.
+    // ================================================================
+    const SPRACHE_TEMPI = [1, 1.25, 1.5];
+    const SPRACHE_TEMPO_SCHLUESSEL = 'duo_spracheTempo';
+    let spracheTempo = 1;
+    try{
+        const gemerkt = parseFloat(localStorage.getItem(SPRACHE_TEMPO_SCHLUESSEL));
+        if(SPRACHE_TEMPI.indexOf(gemerkt) >= 0) spracheTempo = gemerkt;
+    }catch(e){}
+    function spracheTempoText(t){ return String(t).replace('.', ',') + '×'; }
+    function spracheTempoSetzen(au){
+        if(!au) return;
+        try{ au.preservesPitch = true; au.mozPreservesPitch = true; au.webkitPreservesPitch = true; }catch(e){}
+        try{ au.defaultPlaybackRate = spracheTempo; au.playbackRate = spracheTempo; }catch(e){}
+    }
+    function spracheTempoWeiter(){
+        const i = SPRACHE_TEMPI.indexOf(spracheTempo);
+        spracheTempo = SPRACHE_TEMPI[(i + 1) % SPRACHE_TEMPI.length];
+        try{ localStorage.setItem(SPRACHE_TEMPO_SCHLUESSEL, String(spracheTempo)); }catch(e){}
+        spracheAudio.forEach(au => spracheTempoSetzen(au));
+        const text = spracheTempoText(spracheTempo);
+        document.querySelectorAll('#duoChatVerlauf .duo-sprache-tempo').forEach(p => {
+            p.textContent = text;
+            p.setAttribute('aria-label', 'Abspielgeschwindigkeit ' + text + ' - anklicken zum Umschalten');
+        });
+    }
     function spracheDatenAngekommen(d){
         if(!d || !d.id) return;
         const id = String(d.id);
@@ -2062,6 +2123,7 @@
             return;
         }
         au.src = URL.createObjectURL(new Blob([d.daten], { type: typ }));
+        spracheTempoSetzen(au);
         spracheAudio.set(id, au);
         spracheKnopf(id, '▶', 'Abspielen');
         // Die Blase wird bei jedem Schritt neu gesucht: Nach einem
@@ -2077,6 +2139,9 @@
             // wie bei WhatsApp (25.09.2026).
             const f = b.querySelector('.duo-sprache-dauer');
             if(f) f.textContent = (au.paused && !au.currentTime) ? gesamtText() : dauerMinSek(Math.floor(au.currentTime));
+            // Die Pille fuer die Geschwindigkeit zeigt sich, solange die
+            // Nachricht laeuft oder mittendrin angehalten ist (26.09.2026).
+            b.classList.toggle('laeuft', !au.paused || au.currentTime > 0);
         };
         let lauf = 0;
         const schleife = () => { anzeigen(); if(!au.paused && !au.ended) lauf = requestAnimationFrame(schleife); };
@@ -2088,6 +2153,7 @@
             try{ au.currentTime = 0; }catch(e){}
             const b = spracheBlase(id);
             spracheFortschritt(b, 0);
+            if(b) b.classList.remove('laeuft');
             const f = b && b.querySelector('.duo-sprache-dauer');
             if(f) f.textContent = gesamtText();
             spracheKnopf(id, '▶', 'Abspielen');
@@ -2175,7 +2241,9 @@
                     + welleWerte.map(v => '<i style="height:' + Math.max(12, Math.min(100, Math.round(Number(v) || 0))) + '%"></i>').join('')
                     + '</span>'
                   : '<span class="duo-sprache-balken"><span></span></span>')
-              + '<span class="duo-sprache-dauer">' + dauerMinSek(n.sprache.dauer) + '</span></span>'
+              + '<span class="duo-sprache-dauer">' + dauerMinSek(n.sprache.dauer) + '</span>'
+              + '<button type="button" class="duo-sprache-tempo" title="Abspielgeschwindigkeit" aria-label="Abspielgeschwindigkeit '
+              + spracheTempoText(spracheTempo) + ' - anklicken zum Umschalten">' + spracheTempoText(spracheTempo) + '</button></span>'
             : chatLinks(smileysErsetzen(escapeHtml(n.text)));
         zeile.innerHTML = absender + koerper +
             '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>' +

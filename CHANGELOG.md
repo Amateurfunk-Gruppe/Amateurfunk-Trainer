@@ -26,8 +26,12 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Chat: Reaktionen mit Emojis wie bei WhatsApp (Daumen hoch/runter, lustig, traurig, grünes Herz, Kleeblatt, erstaunt, Lächeln) und Löschen eigener Nachrichten, der Gastgeber kann jede löschen
 - Chat: dritter Haken, wenn bei mehreren Empfängern alle die Nachricht gelesen haben
 - Sprachnachrichten wie bei WhatsApp: laufende Balken bei der Aufnahme, Pause, Welle in der Sprechblase mit Springen per Klick
+- Sprachnachrichten: Abspielgeschwindigkeit 1×, 1,25× oder 1,5× per Klick auf die Pille in der Sprechblase; die Wahl gilt für alle Nachrichten und bleibt gespeichert
 - Besucherfenster: Zeitschaltuhr – zu einer Uhrzeit Server aus, wahlweise danach PC herunterfahren (eine Minute Vorlauf, abbrechbar), Besucher 5 Minuten vorher gewarnt
 - Verlauf anklickbar: Ein Klick auf einen Eintrag zeigt die Fehler der Runde mit eigener und richtiger Antwort, „Fehler erneut üben“, „Ausgelassene üben“ und „In Fehler und Lernbedarf übernehmen“ für inzwischen herausgefallene Fragen
+- Einstellungen, neuer Reiter „Anpassen“: Antwort unter der Maus in Blau, Grün, Gelb, Orange oder Grau; Rand läuft einmal herum, steht sofort oder bleibt weg; das Feld leuchtet sanft auf (abschaltbar); mit Vorschau (im Dark Mode dunkel), Wahl pro Benutzer, auch im Dark Mode
+- Nachteilsausgleich, Kasten Stimme: Geschwindigkeit 1×, 1,1×, 1,25×, 1,3× oder 1,5× (Tonlage bleibt) und Klang ruhig, normal oder lebhaft; nach jeder Änderung spricht der Trainer eine Probe
+- Nachteilsausgleich: „Antwort unter der Maus vorlesen“ – der Vorlese-Knopf spricht nur die Frage, jede Antwort wird gesprochen, sobald Maus oder Tabulator auf ihr steht, beim Wechsel bricht die alte sofort ab; die gesprochene Antwort ist dabei in der gewählten Farbe markiert
 
 ### Geändert
 - Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
@@ -50,6 +54,8 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Chat ohne Gruppenraum: Sprachnachrichten jetzt auch für Besucher am geteilten Link
 - Prüfungen: Fragen, die bei abgelaufener Zeit offen blieben, kommen wie falsche Antworten unter Fehler und Lernbedarf
 - Lernstand: Die Sicherung am Trainer-PC darf größer werden (8 MB statt 256 KB), damit auch drei Benutzer samt Verlauf Platz haben
+- Facebook-Seite des Trainers verlinkt: Symbol in der Kopfzeile, Fußzeile im Trainer, Projektseite und Ratgeber
+- Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
 - Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
@@ -69,6 +75,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Windows-Start: Hinweise bei Quelltext-Download, falsch abgelegtem Node und abgestürztem Server statt stillem Abbruch
 - Prüfungssimulator: zwei Teile in der Grauzone gelten als nicht bestanden, Ansage nannte bei Technik N „undefined“
 - Wer während des Countdowns zum Schließen dazukommt, sieht jetzt den Hinweisbalken
+- Kopfzeile bleibt einzeilig, auch mit dem Facebook-Zeichen und der Besucherzahl am Server-Knopf
 - Dark Mode: Die Detaillierte Auswertung nach der Prüfung zeigt die eigene und die richtige Antwort wieder rot und grün
 
 ## [1.297.0] - 2026-09-15
