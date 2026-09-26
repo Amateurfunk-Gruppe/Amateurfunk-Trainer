@@ -37,11 +37,12 @@
     <!-- Ergaenzt am 25.09.2026. Dietmar: "dass nicht nur der Loesungsweg vom DARC dabei ist, sondern
          auch noch eigene, dass 1750 Antworten auch eine Loesung haben, einen Loesungsweg." Deshalb
          steht jetzt "jede mit eigenem Loesungsweg" vorn; die DARC-Loesungswege (277) kommen dazu. -->
-    <meta name="description" content="Kostenlos und modern: alle 1750 Prüfungsfragen für Klasse N, E und A, jede mit eigenem Lösungsweg – dazu Vorlesen, Nachteilsausgleich und die Lösungswege des DARC.">
+    <meta name="description" content="Amateurfunkprüfung mit intelligentem Lernsystem: Fehler kommen wieder, bis sie sitzen. 1750 Prüfungsfragen mit Lösungsweg – kostenlos, ohne Anmeldung.">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Das Zeichen im Browsertab. icon.png fuer alles Moderne, favicon.ico
          fuer das, was noch danach fragt. -->
-    <link rel="icon" type="image/png" href="icon.png">
+    <!-- Das runde Zeichen fuer Google (26.09.2026). Dietmar: "wir benoetigen da ein rundes Icon, kein viereckig, sondern rund ... es an der Seite abgeschnitten und das sieht nicht schoen aus ... vielleicht auch sogar noch ohne Text." Google zeigt das Zeichen im Kreis; das eckige mit Schrift wurde an den Seiten abgeschnitten. Nur fuer die Webseite - das Programmsymbol auf dem Schreibtisch bleibt, wie es ist. -->
+    <link rel="icon" type="image/png" href="icon-rund.png" sizes="192x192">
     <link rel="alternate icon" href="favicon.ico">
     <script>
     // Der dritte Teil der PWA: der Service Worker. Er macht den Trainer
@@ -87,13 +88,14 @@
          Jetzt 55 und 141 Zeichen. "Prüfungsfragen" und "Klasse N" stehen
          auch im sichtbaren Text der Seite; das prueft der Test ebenfalls.
          ================================================================ -->
-    <title>Amateurfunk-Trainer: Prüfungsfragen Klasse N, E, A üben</title>
+    <!-- Titel und Beschreibung fuer Google (26.09.2026). Dietmar: "Also ich persoenlich stelle mir vor, dass das bei Google auftaucht." und "Vorschlag B. Mit intelligent." Dann: "Ohne Konto und dann noch kostenlos. Passt das noch mit rein? Vielleicht auch noch ohne Anmeldung." und "nimm das, was du denkst, was die groesste Reichweite aufbaut." Die Suchwoerter vorn ("Amateurfunkpruefung", "Pruefungsfragen"), N, E und A stehen schon im Titel, "intelligent" gleich mit dem belegt, was es tut. Gleich auf Startseite, Projektseite und im Trainer. -->
+<title>Amateurfunkprüfung lernen – Klasse N, E und A, kostenlos</title>
     <link rel="canonical" href="https://amateurfunk-trainer.com/">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Amateurfunk-Trainer">
-    <meta property="og:title" content="Amateurfunk-Trainer: Prüfungsfragen Klasse N, E, A üben">
-    <meta property="og:description" content="Der amtliche Fragenkatalog der Bundesnetzagentur für die Amateurfunkprüfung – mit eigenem Lösungsweg zu jeder Frage, Prüfungssimulation, Vorlesen und Gruppenraum für den OV-Abend. Kostenlos, ohne Konto.">
+    <meta property="og:title" content="Amateurfunkprüfung lernen – Klasse N, E und A, kostenlos">
+    <meta property="og:description" content="Amateurfunkprüfung mit intelligentem Lernsystem: Fehler kommen wieder, bis sie sitzen. 1750 Prüfungsfragen mit Lösungsweg – kostenlos, ohne Anmeldung.">
     <meta property="og:url" content="https://amateurfunk-trainer.com/">
     <meta property="og:image" content="https://amateurfunk-trainer.com/vorschau.jpg">
     <meta property="og:image:width" content="1200">
@@ -333,6 +335,37 @@
             body.runde-laeuft.quelle-zeigen:not(.beamer-live) #navArea { bottom: calc(1.4rem + 50px); }
             body.dark.runde-laeuft:not(.beamer-live) #navArea { background: var(--nacht-flaeche, #0f2b40); border-color: var(--nacht-kante, #2b5471); }
         }
+        /* ================================================================
+           KOPFZEILE BLEIBT EINZEILIG, AUCH IM GRUPPENRAUM   (26.09.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit Bild der zweizeiligen Kopfzeile: "mit einer Person".
+           Mit offenem Raum kommen "Raum" und "Teilnehmer" dazu - rund 200
+           Punkte, und die Leiste brach wieder um. Feste Kuerzungen haetten
+           das Aussehen auch dann veraendert, wenn Platz genug ist.
+
+           Deshalb schrittweise und nur bei Bedarf: kopfEinpassen() sieht
+           nach, ob die rechte Leiste unter die linke gerutscht ist, und
+           nimmt dann einem Knopf nach dem anderen die Beschriftung - das
+           Zeichen bleibt, die Sprechblase sagt weiter, was er tut, und
+           Vorleseprogramme lesen den Text trotzdem (er ist nur 0 Punkte
+           gross, nicht entfernt). Reihenfolge: das Unwichtigste zuerst.
+             1 Farbstil   2 Beenden   3 Info   4 Raum
+             5 Teilnehmer (die Zahl bleibt)   6 Server (die Zahl bleibt)
+           ================================================================ */
+        .header.knapp-1 #themeToggleBtn #themeToggleLabel,
+        .header.knapp-6 #tuerBtn #tuerBtnText { display: none; }
+        .header.knapp-1 #themeToggleBtn,
+        .header.knapp-2 #beendenBtn,
+        .header.knapp-3 #infoBtn,
+        .header.knapp-4 #duoRoomBtn,
+        .header.knapp-5 #duoTeilnehmerBtn { font-size: 0 !important; gap: 0 !important; padding-left: 0.6rem !important; padding-right: 0.6rem !important; }
+        .header.knapp-1 #themeToggleBtn i,
+        .header.knapp-2 #beendenBtn i,
+        .header.knapp-3 #infoBtn i,
+        .header.knapp-4 #duoRoomBtn i,
+        .header.knapp-5 #duoTeilnehmerBtn i,
+        .header.knapp-6 #tuerBtn i { font-size: 0.85rem; }
+        .header.knapp-5 #duoTeilnehmerBtn #duoTeilnehmerBadge { font-size: 0.65rem !important; }
         .header {
             display: flex;
             justify-content: space-between;
@@ -19475,6 +19508,53 @@ window.lebenszeichenStarten = lebenszeichenStarten;
 let tuerStand = { offen:false, schliesstUm:0, draussen:0, imRaum:0, sperre:null, uhr:null };
 let tuerUhr = null;
 
+
+// Siehe KOPFZEILE BLEIBT EINZEILIG, AUCH IM GRUPPENRAUM (Stylesheet).
+(function(){
+    const STUFEN = 6;
+    let laeuft = false, geplant = 0;
+    function umgebrochen(kopf){
+        const l = kopf.querySelector('.header-left'), r = kopf.querySelector('.header-right');
+        if(!l || !r || !r.offsetParent) return false;
+        return r.getBoundingClientRect().top > l.getBoundingClientRect().bottom - 2;
+    }
+    function kopfEinpassen(){
+        geplant = 0;
+        const kopf = document.querySelector('.header');
+        if(!kopf || laeuft) return;
+        laeuft = true;
+        try{
+            for(let i = 1; i <= STUFEN; i++) kopf.classList.remove('knapp-' + i);
+            // Nur auf breiten Schirmen: Am Handy und im schmalen Fenster
+            // stapelt sich die Kopfzeile ohnehin mit Absicht.
+            if(window.innerWidth >= 900 && !document.body.classList.contains('handy')){
+                for(let i = 1; i <= STUFEN && umgebrochen(kopf); i++) kopf.classList.add('knapp-' + i);
+            }
+        }catch(e){}
+        laeuft = false;
+    }
+    function planen(){ if(!geplant) geplant = requestAnimationFrame(kopfEinpassen); }
+    window.kopfEinpassen = planen;
+    function start(){
+        const kopf = document.querySelector('.header');
+        if(!kopf) return;
+        planen();
+        window.addEventListener('resize', planen);
+        const r = kopf.querySelector('.header-right');
+        // Knoepfe erscheinen und verschwinden (Raum, Teilnehmer, Server),
+        // Beschriftungen und Zahlen aendern sich - jedes Mal neu einpassen.
+        if(r && window.MutationObserver){
+            new MutationObserver(planen).observe(r, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['style','class'] });
+        }
+        const l = kopf.querySelector('.header-left');
+        if(l && window.MutationObserver){
+            new MutationObserver(planen).observe(l, { childList:true, subtree:true, characterData:true });
+        }
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
+})();
+
 function tuerKnopfZeichnen(){
     const b = document.getElementById('tuerBtn');
     const t = document.getElementById('tuerBtnText');
@@ -26384,6 +26464,7 @@ function einstellungenOeffnen(reiter){
     einstellungenAnwenden();
     try{ einstStilKnoepfeNachziehen(); }catch(e){}
     try{ anzeigeFeldNachziehen(); }catch(e){}
+    try{ const sa = document.getElementById('einstSpracheAuto'); if(sa) sa.checked = localStorage.getItem('duo_spracheAuto') !== '0'; }catch(e){}
     try{ nachschlagenFeldNachziehen(); }catch(e){}
 }
 window.einstellungenOeffnen = einstellungenOeffnen;
@@ -26506,6 +26587,21 @@ function einstBlaetterFuellen(){
       + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
           + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>')
+      // Sprachnachrichten automatisch abspielen (26.09.2026). Dietmar:
+      // "Sprachnachrichten automatisch abspielen waere noch gut. Das muss
+      // man aber unter Einstellungen aendern koennen." Gemerkt im Browser
+      // (duo_spracheAuto), Standard AN - siehe duo.js.
+      + einstKasten('Chat',
+            'Gilt für diesen Rechner. In einer laufenden Prüfung bleibt es still.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
+          + 'data-vorlesen-kurz="Sprachnachrichten automatisch abspielen." '
+          + 'data-vorlesen="Sprachnachrichten automatisch abspielen. Neue Sprachnachrichten von anderen werden sofort abgespielt, mehrere nacheinander.">'
+          + '<input type="checkbox" id="einstSpracheAuto" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="try{localStorage.setItem(\'duo_spracheAuto\', this.checked ? \'1\' : \'0\');}catch(e){}">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Sprachnachrichten automatisch abspielen</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Neue Sprachnachrichten von anderen laufen sofort los, mehrere nacheinander. Spricht gerade schon etwas '
+          + '– eine andere Nachricht oder das Vorlesen –, wartet sie, bis es fertig ist.</span></span></label>')
       + einstKasten('Beamer-Modus', 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
             + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. <b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.',
             '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'

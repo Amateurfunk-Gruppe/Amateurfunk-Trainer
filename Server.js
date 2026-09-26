@@ -3581,7 +3581,7 @@ const PAKET_DATEIEN = [
   // icon.ico und favicon.ico gehoeren mit in die Liste: Aus icon.ico
   // nimmt Windows das Zeichen der Verknuepfung. Fehlt sie hier, kommt
   // auf dem Schreibtisch nie ein neues Bild an - siehe .gitignore.
-  'icon.ico', 'favicon.ico', 'icon.png',
+  'icon.ico', 'favicon.ico', 'icon.png', 'icon-rund.png',
   // README.txt ist am 27.08.2026 herausgeflogen: Sie erklaerte eine
   // Handinstallation von Piper, die piper.bat laengst allein macht,
   // und nannte Dateien bei alten Namen. Im Paket liegt die richtige
@@ -4943,6 +4943,8 @@ const PUBLIC_FILES = new Set([
   '/icon-512-maskierbar.png',
   '/icon.icns',
   '/icon.png',
+  // Das runde Zeichen fuer Google und den Browser-Tab (26.09.2026).
+  '/icon-rund.png',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
   // Update-Test.bat. Die Seite sieht regelmaessig nach, ob es ihn gibt;
@@ -6325,6 +6327,23 @@ try{
         // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
+        // ================================================================
+        //  DER RAUM GEHOERT DEM, DER IHN ERSTELLT HAT         (26.09.2026)
+        //  Dietmar: "Bin geflogen. Danach war meine Frau, ploetzlich Host."
+        //  Edge hatte den Trainer im Vollbild als "Scareware" blockiert und
+        //  geschlossen; beim Abriss ging der Raum - wie gedacht - an den
+        //  naechsten Teilnehmer. Nur kam er beim Wiederkommen nie zurueck:
+        //  Ein neuer Browser-Tab hat eine neue Socket-id, und an der hing
+        //  alles.
+        //
+        //  Jetzt bekommt der Ersteller einen geheimen Schluessel. Sein
+        //  Browser merkt ihn sich (localStorage, uebersteht also auch einen
+        //  geschlossenen Tab) und schickt ihn bei jedem Beitritt mit. Passt
+        //  er, ist er wieder Host - wer vertreten hat, wird wieder
+        //  Teilnehmer. Der Schluessel geht nur an den Ersteller, nie in ein
+        //  roomUpdate; raten laesst er sich nicht.
+        // ================================================================
+        duoRooms[code].hostSchluessel = crypto.randomBytes(16).toString('hex');
         socket.join(code); socket.data.roomCode=code;
         raumBeitrittMerken(socket, duoRooms[code]);
         hausVolkMelden();   // dieser hier ist ab jetzt im Raum, nicht mehr im Haus
@@ -6334,7 +6353,7 @@ try{
         // selbst starten und bekommt garantiert exakt dieselben Fragen wie alle anderen im Raum.
         generateRoomQuestions(duoRooms[code]);
 
-        socket.emit('roomCreated',{code, userId:socket.id, hostId: socket.id, users:duoRooms[code].users, password: pwd||null, totalQuestions:duoRooms[code].questions.length});
+        socket.emit('roomCreated',{code, userId:socket.id, hostId: socket.id, users:duoRooms[code].users, password: pwd||null, totalQuestions:duoRooms[code].questions.length, hostSchluessel: duoRooms[code].hostSchluessel});
         willkommenSenden(socket, duoRooms[code]);
         sendeTeilnehmerUebersicht(duoRooms[code]);
       }catch(e){ console.error(e); }
@@ -6370,6 +6389,16 @@ try{
       // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
       const userName = data.name || data.userName || `Benutzer ${idx}`;
       room.users[socket.id]={name:userName, role:`Teilnehmer`};
+      // Der Ersteller kommt zurueck (siehe DER RAUM GEHOERT DEM, DER IHN
+      // ERSTELLT HAT): Host wieder an ihn, der Vertreter wird Teilnehmer.
+      let hostZurueck = false;
+      if(room.hostSchluessel && typeof data.hostSchluessel === 'string' && data.hostSchluessel === room.hostSchluessel){
+        if(room.hostId && room.users[room.hostId] && room.hostId !== socket.id) room.users[room.hostId].role = 'Teilnehmer';
+        room.hostId = socket.id;
+        room.users[socket.id].role = 'Host';
+        hostZurueck = true;
+        console.log(`[GRUPPENRAUM] ${userName} ist als Ersteller zurueck in ${data.code} - wieder Host`);
+      }
       if(!room.ipsVonTeilnehmern) room.ipsVonTeilnehmern = {};
       room.ipsVonTeilnehmern[socket.id] = wo;
       socket.join(data.code); socket.data.roomCode=data.code;
@@ -6389,6 +6418,7 @@ try{
       // Automatische Begruessung - geht NUR an den Beitretenden und wird bewusst
       // nicht im Raumverlauf gespeichert, sonst saehe jeder sie mehrfach.
       willkommenSenden(socket, room);
+      if(hostZurueck) io.to(data.code).emit('hostChanged', { hostId: room.hostId });
       io.to(data.code).emit('roomUpdate',{users:room.users, hostId: room.hostId});
       const trainerData = getTrainerData(room);
       if(trainerData && room.hostId){ io.to(room.hostId).emit('duoTrainerLive', trainerData); }
@@ -7481,7 +7511,7 @@ try{
         }catch(e){} }, 30);
         if(duoRooms[code].hostId===socket.id){
           const remaining = Object.keys(duoRooms[code].users);
-          if(remaining.length>0){ duoRooms[code].hostId = remaining[0]; io.to(code).emit('hostChanged',{hostId: duoRooms[code].hostId}); }
+          if(remaining.length>0){ duoRooms[code].hostId = remaining[0]; if(duoRooms[code].users[remaining[0]]) duoRooms[code].users[remaining[0]].role = 'Host'; io.to(code).emit('hostChanged',{hostId: duoRooms[code].hostId}); }
         }
         io.to(code).emit('roomUpdate',{users:duoRooms[code].users, hostId: duoRooms[code].hostId});
         const trainerDataLeave = getTrainerData(duoRooms[code]);
@@ -7506,6 +7536,7 @@ try{
           const remaining = Object.keys(duoRooms[code].users);
           if(remaining.length > 0){
             duoRooms[code].hostId = remaining[0];
+            if(duoRooms[code].users[remaining[0]]) duoRooms[code].users[remaining[0]].role = 'Host';
             io.to(code).emit('hostChanged', { hostId: duoRooms[code].hostId });
           }
         }

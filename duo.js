@@ -1106,6 +1106,20 @@
            Stil ein helleres Gruen, damit es sich vom Grund abhebt. */
         '#duoChatMikro i{color:#16a34a;font-size:1.05rem;}',
         'body.dark #duoChatMikro i{color:#4ade80;}',
+        /* DARK MODE: DUNKLERES BLAU, DEUTLICHE HAKEN (26.09.2026). Dietmar,
+           mit Bild: "Im Dark Mode sieht man die Hacken schlecht und das
+           Blau ist viel zu hell." Im dunklen Stil ist --panel-navy das
+           helle Signalblau #00adef - fuer Knoepfe gedacht, als Flaeche der
+           eigenen Blasen und des Chatkopfs viel zu grell. Und das Blau der
+           gelesenen Haken (#53bdeb) stand darauf praktisch unsichtbar.
+           Jetzt: Kopf und eigene Blasen in einem tiefen Blau (weisse
+           Schrift 7,6:1), Haken heller und etwas groesser, gelesen in
+           hellem Tuerkis. */
+        'body.dark #duoChatKopf{background:#0c4a6e;}',
+        'body.dark .duo-chat-eigen{background:#075985;color:#fff;}',
+        'body.dark .duo-chat-eigen .duo-chat-haken{color:#e0f2fe;opacity:0.95;font-size:0.8rem;}',
+        'body.dark .duo-chat-eigen .duo-chat-haken.gelesen{color:#67e8f9;opacity:1;}',
+        'body.dark .duo-chat-eigen .duo-sprache-knopf{color:#075985;}',
         '#duoChatEingabeZeile.nimmt-auf #duoChatEingabe,#duoChatEingabeZeile.nimmt-auf #duoChatMikro,#duoChatEingabeZeile.nimmt-auf #duoChatSenden{display:none !important;}',
         '#duoChatAufnahme{display:none;flex:1;align-items:center;gap:6px;min-width:0;}',
         '#duoChatEingabeZeile.nimmt-auf #duoChatAufnahme{display:flex;}',
@@ -2111,6 +2125,83 @@
             p.setAttribute('aria-label', 'Abspielgeschwindigkeit ' + text + ' - anklicken zum Umschalten');
         });
     }
+    // ================================================================
+    //  SPRACHNACHRICHTEN AUTOMATISCH ABSPIELEN             26.09.2026
+    //  Dietmar: "Sprachnachrichten automatisch abspielen waere noch gut.
+    //  Das muss man aber unter Einstellungen aendern koennen."
+    //
+    //  Der Schalter steht in den Einstellungen (Allgemein, Kasten Chat)
+    //  und wird im Browser gemerkt (duo_spracheAuto), wie die
+    //  Geschwindigkeit. Standard ist AN - so war der Wunsch; wer es
+    //  nicht mag, nimmt den Haken heraus.
+    //
+    //  Was abgespielt wird: nur neu ankommende Sprachnachrichten von
+    //  anderen - nicht die eigenen, nicht der Verlauf beim Oeffnen.
+    //  Kommen mehrere kurz hintereinander, laufen sie der Reihe nach.
+    //  Gewartet wird, solange schon etwas spricht: eine andere
+    //  Sprachnachricht, die man selbst angeklickt hat, oder das
+    //  Vorlesen des Trainers. In einer laufenden Pruefung wird nichts
+    //  abgespielt - dort bleibt es still, wie beim Benachrichtigungston.
+    //  Laesst der Browser das Abspielen nicht zu (noch kein Klick auf
+    //  der Seite), bleibt die Nachricht einfach zum Anklicken stehen.
+    // ================================================================
+    // ================================================================
+    //  DER SCHLUESSEL DES ERSTELLERS                       26.09.2026
+    //  Siehe DER RAUM GEHOERT DEM, DER IHN ERSTELLT HAT in Server.js.
+    //  Je Raum-Code gemerkt, im localStorage - so uebersteht er auch einen
+    //  geschlossenen Tab. Aeltere als zwei Tage werden weggeraeumt.
+    // ================================================================
+    function hostSchluesselMerken(code, schluessel){
+        if(!code || !schluessel) return;
+        try{
+            const alle = JSON.parse(localStorage.getItem('duo_hostSchluessel') || '{}') || {};
+            const jetzt = Date.now();
+            Object.keys(alle).forEach(k => { if(!alle[k] || jetzt - (alle[k].zeit || 0) > 2 * 86400000) delete alle[k]; });
+            alle[String(code).toUpperCase()] = { s: String(schluessel), zeit: jetzt };
+            localStorage.setItem('duo_hostSchluessel', JSON.stringify(alle));
+        }catch(e){}
+    }
+    function hostSchluesselFuer(code){
+        try{
+            const alle = JSON.parse(localStorage.getItem('duo_hostSchluessel') || '{}') || {};
+            const e = alle[String(code || '').toUpperCase()];
+            return e && e.s ? e.s : undefined;
+        }catch(e){ return undefined; }
+    }
+
+    const SPRACHE_AUTO_SCHLUESSEL = 'duo_spracheAuto';
+    function spracheAutoAn(){
+        try{ return localStorage.getItem(SPRACHE_AUTO_SCHLUESSEL) !== '0'; }catch(e){ return true; }
+    }
+    const spracheAutoReihe = [];
+    let spracheAutoUhr = null;
+    function spracheAutoVormerken(id){
+        if(!id || !spracheAutoAn()) return;
+        spracheAutoReihe.push(String(id));
+        spracheAutoWeiter();
+    }
+    function spracheSprichtGerade(){
+        let laeuft = false;
+        spracheAudio.forEach(au => { if(!au.paused && !au.ended) laeuft = true; });
+        if(spracheWartet.size) laeuft = true;
+        try{ if(window.ttsQueueActive) laeuft = true; }catch(e){}
+        return laeuft;
+    }
+    function spracheAutoWeiter(){
+        clearTimeout(spracheAutoUhr); spracheAutoUhr = null;
+        if(!spracheAutoReihe.length) return;
+        if(!spracheAutoAn()){ spracheAutoReihe.length = 0; return; }
+        if(pruefungLaeuft()){ spracheAutoReihe.length = 0; return; }
+        if(spracheSprichtGerade()){ spracheAutoUhr = setTimeout(spracheAutoWeiter, 500); return; }
+        const id = spracheAutoReihe.shift();
+        if(!spracheBlase(id)){ spracheAutoWeiter(); return; }     // inzwischen geloescht
+        const au = spracheAudio.get(id);
+        if(au){ try{ au.currentTime = 0; }catch(e){} spracheAlleAnhalten(id); au.play().catch(()=>{}); }
+        else spracheAbspielen(id);
+        if(spracheAutoReihe.length) spracheAutoUhr = setTimeout(spracheAutoWeiter, 800);
+    }
+    window.duoSpracheAutoAn = spracheAutoAn;
+
     function spracheDatenAngekommen(d){
         if(!d || !d.id) return;
         const id = String(d.id);
@@ -2264,6 +2355,11 @@
         chatNachUntenRollen();
 
         if(stumm || eigen) return;
+
+        // Automatisch abspielen (siehe SPRACHNACHRICHTEN AUTOMATISCH ABSPIELEN).
+        if(n.sprache && n.id && !n.system && !n.automatisch && !pruefungLaeuft()){
+            try{ spracheAutoVormerken(n.id); }catch(e){}
+        }
 
         // Ton und Aufklappen nur bei echten Nachrichten - nicht bei den
         // Zeilen, die der Server selbst schreibt ("betritt den Server").
@@ -3637,7 +3733,7 @@
             if(!ersteVerbindung && roomCode){
                 try{
                     console.log('[DUO] Verbindung war weg - melde mich zurueck in Raum ' + roomCode);
-                    socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() });
+                    socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword(), hostSchluessel: hostSchluesselFuer(roomCode) });
                 }catch(e){}
             }
 
@@ -3691,7 +3787,7 @@
             if(window.showAppAlert) window.showAppAlert(t);
             demoKnopfNachziehen();
         });
-        socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', data); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen();
+        socket.on('roomCreated', data=>{ console.log('[DUO] roomCreated', { code: data.code }); hostSchluesselMerken(data.code, data.hostSchluessel); roomCode=data.code; isHost=true; duoActive=true; window._duoHostId=data.hostId||myUserId; showRoomUI(data); chatVerlaufSetzen([]); chatSichtbarkeitPruefen();
             // Ein Raum ohne offene Tuer ist ein Link ins Leere - siehe
             // tuerFuerRaumOeffnen() in Index.html. Der Aufruf prueft selbst,
             // ob er am richtigen Rechner sitzt und ob ueberhaupt etwas zu
@@ -3763,7 +3859,7 @@
                 const jetzt = Date.now();
                 if(jetzt - letzteRueckkehr > 15000){
                     letzteRueckkehr = jetzt;
-                    try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() }); }catch(e){}
+                    try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword(), hostSchluessel: hostSchluesselFuer(roomCode) }); }catch(e){}
                     if(window.showAppAlert) window.showAppAlert(
                         'Die Verbindung war kurz weg — deine Nachricht ist nicht angekommen.\n\n'
                         + 'Der Trainer meldet dich gerade wieder im Raum an. Schick sie in ein paar '
@@ -3795,7 +3891,7 @@
                             if(!roomCode || !socket || !socket.connected || ++beitrittVersuche > 120){
                                 clearInterval(beitrittWiederholung); beitrittWiederholung = null; return;
                             }
-                            try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword() }); }catch(e){}
+                            try{ socket.emit('joinRoom', { code: roomCode, name: getDuoUserName(), password: getPassword(), hostSchluessel: hostSchluesselFuer(roomCode) }); }catch(e){}
                         }, 5000);
                     }
                     try{ const w = document.getElementById('willkommenWarte'); if(w) w.style.display = ''; }catch(e){}
@@ -4070,7 +4166,7 @@
                     if(codeInp) codeInp.value=urlCode;
                     roomCode=urlCode;
                     console.log('[DUO] WhatsApp Link erkannt, trete bei:', urlCode);
-                    setTimeout(()=>{ try{ const name=getDuoUserName(), pwd=getPassword(); if(socket) socket.emit('joinRoom',{code:urlCode,name:name,password:pwd}); }catch(e){} }, 500);
+                    setTimeout(()=>{ try{ const name=getDuoUserName(), pwd=getPassword(); if(socket) socket.emit('joinRoom',{code:urlCode,name:name,password:pwd,hostSchluessel:hostSchluesselFuer(urlCode)}); }catch(e){} }, 500);
                     // Automatisch Modal öffnen bei WhatsApp Link - aber nur
                     // fuer den, der zu Hause sitzt. Wer ueber den geteilten
                     // Link kommt, bekommt das kleine Willkommensfenster: Name,
@@ -4132,7 +4228,7 @@
                 const target=code||(codeInp?codeInp.value.trim():'');
                 if(!target){ alert('Bitte Raumcode eingeben'); return; }
                 roomCode=target;
-                socket.emit('joinRoom',{code:target,name:name,password:pwd});
+                socket.emit('joinRoom',{code:target,name:name,password:pwd,hostSchluessel:hostSchluesselFuer(target)});
             }catch(e){ alert('Server nicht erreichbar'); }
         },
         // Jeder Teilnehmer (Host oder nicht) startet für sich selbst, unabhängig von allen anderen.

@@ -32,8 +32,11 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Einstellungen, neuer Reiter „Anpassen“: Antwort unter der Maus in Blau, Grün, Gelb, Orange oder Grau; Rand läuft einmal herum, steht sofort oder bleibt weg; das Feld leuchtet sanft auf (abschaltbar); mit Vorschau (im Dark Mode dunkel), Wahl pro Benutzer, auch im Dark Mode
 - Nachteilsausgleich, Kasten Stimme: Geschwindigkeit 1×, 1,1×, 1,25×, 1,3× oder 1,5× (Tonlage bleibt) und Klang ruhig, normal oder lebhaft; nach jeder Änderung spricht der Trainer eine Probe
 - Nachteilsausgleich: „Antwort unter der Maus vorlesen“ – der Vorlese-Knopf spricht nur die Frage, jede Antwort wird gesprochen, sobald Maus oder Tabulator auf ihr steht, beim Wechsel bricht die alte sofort ab; die gesprochene Antwort ist dabei in der gewählten Farbe markiert
+- Chat: Sprachnachrichten von anderen laufen automatisch los, mehrere nacheinander, nie während Vorlesen oder Prüfung; abschaltbar unter Einstellungen → Allgemein → Chat
 
 ### Geändert
+- Zeichen der Webseite (Google, Browser-Tab): rund und ohne Schrift, damit es in der Trefferliste nicht mehr abgeschnitten wird; das Programmsymbol bleibt
+- Titel und Beschreibung für Suchmaschinen (Startseite, Projektseite, Trainer): „Amateurfunkprüfung lernen – Klasse N, E und A, kostenlos“ und „Amateurfunkprüfung mit intelligentem Lernsystem: Fehler kommen wieder, bis sie sitzen. 1750 Prüfungsfragen mit Lösungsweg – kostenlos, ohne Anmeldung.“
 - Chat: nur laufende Sitzung sichtbar, neue Besucher ohne alten Verlauf, Systemmeldungen mit Absender Server, Server-Log ohne Chat-Inhalte
 - Fußleiste: Besucherzähler und Info-Knopf, 50ohm.de als Empfehlung statt Zusammenarbeit
 - Erklärungen: Abgleich mit allen 277 DARC-Lösungswegen, 67 Erklärungen überarbeitet (31 Fehler, 36 Unschärfen)
@@ -58,6 +61,9 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Chat im Dark Mode: eigene Blasen und Chatkopf in tiefem Blau statt grellem Signalblau, Haken deutlich sichtbar (gelesen in hellem Türkis)
+- Kopfzeile bleibt auch mit offenem Gruppenraum einzeilig: reicht der Platz nicht, verlieren Knöpfe schrittweise ihre Beschriftung (Zeichen, Sprechblase und Zahlen bleiben)
+- Gruppenraum: Wer den Raum erstellt hat, wird beim Wiederkommen wieder Host – auch nach geschlossenem Tab; bisher blieb die Vertretung Host
 - Updater: holt nie mehr einen älteren Stand als den aktuellen bei GitHub (nach einem Hochladen zwischen Prüfung und Klick wurden hier neuere Dateien mit älteren überschrieben); prüft nach dem Aktualisieren und nach Hochladen.bat sofort neu, statt die Lage vom Start weiter zu zeigen; Dateien ohne Merkposten, die hier jünger sind als der GitHub-Stand, bleiben unangetastet
 - Hochladen.bat merkt sich auch die Dateien in Unterordnern (docs, fontawesome …), damit der Updater sie nicht zurückdreht
 - Ruckeln beim Laden/F5, auf Support- und Datenschutzseite sowie in der Fortschrittsspalte beim Antworten
