@@ -9808,14 +9808,33 @@ function bildLupeVormerken(img, x, y){
         // In den 350 ms kann die Frage weitergeblaettert worden sein -
         // dann haengt das Bild nicht mehr im Dokument, und die Lupe
         // haette nichts mehr zu vergroessern.
+        // Ist inzwischen die grosse Ansicht offen (Klick aufs Bild), bleibt
+        // die Lupe zu - sonst stuenden zwei Bilder uebereinander (29.09.2026).
+        const lb = document.getElementById('lightboxOverlay');
+        if(lb && lb.classList.contains('active')){ bildLupeZiel = null; return; }
         if(bildLupeZiel && document.body.contains(bildLupeZiel)) bildZoomAn(bildLupeZiel);
     }, BILD_LUPE_WARTEN);
 }
 function bildLupeZu(){ bildLupeAbbrechen(); bildZoomAus(); }
 
+// DIE LUPE IST FUER DIE MAUS, NICHT FUERS ANTIPPEN (29.09.2026).
+// Dietmar, mit Bild vom Handy: "beim anklicken auf ein Bild, sehe ich 2
+// Bilder". Ein Fingertipp schickt hinterher auch ein "mouseover" - die
+// Lupe ging also nach 350 ms auf, obendrein kam die grosse Ansicht vom
+// Tipp. Und weil ein Finger kein "mouseout" kennt, blieb die Lupe stehen,
+// ueber der grossen Ansicht. Kommt ein mouseover kurz nach einer
+// Beruehrung, stammt es vom Finger und wird uebergangen.
+let bildLetzteBeruehrung = 0;
+document.addEventListener('touchstart', function(){ bildLetzteBeruehrung = Date.now(); bildLupeZu(); }, { capture: true, passive: true });
+function bildVomFinger(e){
+    if(e && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return true;
+    return (Date.now() - bildLetzteBeruehrung) < 1500;
+}
+
 // Ein Zuhoerer am Dokument statt an jedem Bild - die Fragen werden staendig
 // neu gezeichnet, einzeln angehaengte Zuhoerer waeren jedes Mal weg.
 document.addEventListener('mouseover', function(e){
+    if(bildVomFinger(e)) return;
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
     if(img){ if(!bildZoomOriginal) bildLupeVormerken(img, e.clientX, e.clientY); }
     else bildLupeZu();
@@ -34905,6 +34924,8 @@ function toggleTheme() {
 }
 
 function openLightbox(src, caption) {
+    // Eine offene Lupe gehoert weg, sonst stehen zwei Bilder da (29.09.2026).
+    try{ bildLupeZu(); }catch(e){}
     const overlay = document.getElementById('lightboxOverlay');
     const img = document.getElementById('lightboxImage');
     const cap = document.getElementById('lightboxCaption');
