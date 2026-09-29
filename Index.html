@@ -452,8 +452,12 @@
         .filter-bar.eng select { padding: 0.4rem 0.5rem; }
 
         .filter-bar.sehr-eng { gap: 3px; padding: 0.55rem 0.55rem; }
+        /* min-height wie die beiden Auswahlfelder (40px). Bis 27.09.2026 stand
+           hier 34px - die Knoepfe wurden in dieser Stufe niedriger als die
+           Felder links. Dietmar, mit Bild: "Die Felder und Buttons sind links
+           groesser und rechts kleiner." Gespart wird nur in der Breite. */
         .filter-bar.sehr-eng .btn {
-            padding: 0.35rem 0.4rem; gap: 3px; font-size: 0.74rem; min-height: 34px;
+            padding: 0.35rem 0.4rem; gap: 3px; font-size: 0.74rem; min-height: 40px;
         }
         .filter-bar.sehr-eng .btn i { font-size: 0.72rem; }
         .filter-bar.sehr-eng select { padding: 0.35rem 0.4rem; font-size: 0.76rem; }
@@ -7166,6 +7170,9 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         <button class="btn" id="printExamBtn" onclick="printExam()" data-tooltip="🖨️ Prüfungsfragen drucken mit Lösungsschablone"><i class="fas fa-print"></i> Drucken</button>
         <button class="btn btn-exam btn-modus" id="examSimulatorBtn" onclick="startExamSimulator()" data-tooltip="🎓 Prüfungssimulator - echte Prüfungsbedingungen, je 25 Fragen und 45 Minuten pro Teil, F9 abgeschaltet"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</button>
         <button class="btn btn-modus" id="duoBtn" onclick="window.duoInit()" data-tooltip="Gruppenraum für gemeinsames Lernen – Teilnehmer kommen über einen Link, im Browser, ohne Installation"><i class="fas fa-users"></i> Gruppenraum</button>
+        <!-- Unterricht (27.09.2026). Dietmar: "Bauen wir dazu einen Button ein wo
+             der Kursleiter den Beamermodus und die Lektionen waehlen kann?" -->
+        <button class="btn btn-modus" id="unterrichtBtn" onclick="unterrichtOeffnen()" data-tooltip="Unterricht: die Lektionen deines Prüfungsziels in der Reihenfolge der 50ohm-Folien – auf Wunsch gleich am Beamer" data-vorlesen-kurz="Unterricht mit den Lektionen des Lehrgangs."><i class="fas fa-chalkboard-user"></i> Unterricht</button>
     </div>
     <script>
     // ================================================================
@@ -7944,6 +7951,9 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                         const hk = document.getElementById('duoPruefungHinweisKonfig');
                         if(hk) hk.style.display = (pr && pr.checked) ? '' : 'none';
                         if(pr && pr.checked){ sum.textContent = 'Prüfung • 3 × 25'; return; }
+                        const uh = document.getElementById('duoUnterrichtCheck');
+                        const ul = document.getElementById('duoUnterrichtLektion');
+                        if(uh && uh.checked && ul && ul.value){ sum.textContent = 'Lektion ' + ul.value; return; }
                         const partMap = {all:'Alle', vorschriften:'Vorschr.', betrieb:'Betrieb', technik:'Technik'};
                         const cnt = c.value==='all' ? 'Alle' : c.value;
                         sum.textContent = cnt + ' • ' + (partMap[p.value]||p.value);
@@ -7981,6 +7991,28 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <span><b style="color:var(--panel-navy);"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</b> — drei Runden <b>Vorschriften · Betrieb · Technik</b>, je 25 Fragen und 45 Minuten.
                     <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Auflösung erst in der Auswertung · jeder startet die nächste Runde selbst · falsche Antworten kommen bei jedem unter Fehler und Lernbedarf</span></span>
             </label>
+            <!-- ================================================================
+                 UNTERRICHT IM RAUM-FENSTER                        (27.09.2026)
+                 Dietmar nach dem Neustart, mit Bild dieses Fensters: "Im
+                 Gruppenraum gibt es keine Lektionen." Der Knopf "Unterricht"
+                 stand nur in der Leiste der Hauptansicht. Hier dieselbe Wahl,
+                 gebaut wie der Pruefungssimulator darueber: Haken setzen,
+                 Lektion waehlen, "Jetzt starten" startet sie fuer alle im Raum.
+                 ================================================================ -->
+            <div id="duoUnterrichtZeile" style="margin:0 0 10px; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:14px; background:#f4f7fd; font-size:0.8rem; line-height:1.45;">
+                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;"
+                       data-tooltip="Die 14 Lektionen der Klasse N in der Reihenfolge der 50ohm-Folien. Du schaltest am Beamer weiter, alle sehen dieselbe Frage und antworten am eigenen Gerät. Aufgelöst wird gemeinsam.">
+                    <input type="checkbox" id="duoUnterrichtCheck" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;" onchange="duoUnterrichtHaken(this.checked)">
+                    <span><b style="color:var(--panel-navy);"><i class="fas fa-chalkboard-user"></i> Unterricht</b> — eine der <b id="duoUnterrichtAnzahl">14 Lektionen</b> im Gleichschritt: Du schaltest weiter, alle antworten am eigenen Gerät.
+                        <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Reihenfolge der Folien von 50ohm.de · aufgelöst wird gemeinsam · „Jetzt starten“ startet die Lektion für alle im Raum</span></span>
+                </label>
+                <div id="duoUnterrichtWahl" style="display:none; margin:8px 0 0 28px; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <select id="duoUnterrichtLektion" onchange="duoUnterrichtGewaehlt()" style="flex:1 1 220px; padding:0.45rem 0.7rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.8rem; font-weight:600; background:white;"></select>
+                    <label style="display:flex; align-items:center; gap:6px; font-weight:600; color:var(--panel-navy); cursor:pointer; white-space:nowrap;">
+                        <input type="checkbox" id="duoUnterrichtBeamer" style="width:16px; height:16px; cursor:pointer;" onchange="unterrichtBeamerMerken(this.checked)"> <i class="fas fa-display"></i> Am Beamer</label>
+                    <span id="duoUnterrichtInfo" style="flex:1 0 100%; font-size:0.72rem; color:var(--muted);"></span>
+                </div>
+            </div>
             <div class="nur-gastgeber duo-knopfreihe-links" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <button id="duoCreateRoomBtn" class="btn btn-primary" onclick="window.duo.createRoom()" style="justify-content:center;"><i class="fas fa-plus"></i> Raum erstellen</button>
                 <button id="duoJoinRoomBtn" class="btn btn-outline" onclick="window.duo.joinRoom()" style="justify-content:center;"><i class="fas fa-sign-in-alt"></i> Raum beitreten</button>
@@ -8048,7 +8080,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  statt aus dem Fenster zu laufen.
                  ================================================================ -->
             <div class="duo-knopfreihe" style="display:flex; flex-wrap:wrap; gap:8px; align-items:stretch;">
-                <button id="duoStartBtn" class="btn btn-primary" onclick="window.duo.startDuoQuiz()" style="flex:1 1 140px; justify-content:center;" disabled><i class="fas fa-play"></i> Jetzt starten</button>
+                <button id="duoStartBtn" class="btn btn-primary" onclick="duoJetztStarten()" style="flex:1 1 140px; justify-content:center;" disabled><i class="fas fa-play"></i> Jetzt starten</button>
                 <!-- Neue Runde fuer alle. Steht nur beim Gastgeber und nur,
                      wenn ein Raum laeuft - eingeblendet von
                      neueRundeKnopfNachziehen(). Dietmar: "Der Trainer kann,
@@ -9648,6 +9680,92 @@ function syncDuoNameToSlot(){
         if(v) localStorage.setItem('duo_userName', v);
         else  localStorage.removeItem('duo_userName');
     }catch(e){}
+    // Das Profilbild gehoert zum Benutzer - im Raum gleich mitwechseln
+    try{ if(window.duoProfilbildGeaendert) window.duoProfilbildGeaendert(); }catch(e){}
+}
+
+// ============================================================================
+//  PROFILBILD                                                  (27.09.2026)
+//  Dietmar: "Kannst du mir die Option Profilbild mit einbauen? Das muss auch
+//  beim anrufen gezeigt werden."
+//  Gewaehlt unter Einstellungen -> Allgemein -> Profilbild, gespeichert pro
+//  Benutzer (wie die Farbe unter der Maus), damit an einem Rechner jeder
+//  sein eigenes hat. Das Bild wird hier im Browser auf 128 x 128 Punkte
+//  mittig quadratisch zugeschnitten und als JPEG klein gerechnet (etwa 5 bis
+//  10 KB) - so bleibt es im localStorage handlich und geht schnell durch
+//  die Leitung. Gezeigt wird es rund im Gruppenraum-Chat (duo.js): in der
+//  Kontaktliste, im Gespraechsstreifen und beim Anrufen.
+// ============================================================================
+const PROFILBILD_PREFIX = 'amateurfunk_profilbild_';
+const PROFILBILD_MUSTER = /^data:image\/jpeg;base64,[A-Za-z0-9+\/]+={0,2}$/;
+function profilbildHolen(slot){
+    try{
+        const v = localStorage.getItem(PROFILBILD_PREFIX + (slot || currentUser)) || '';
+        return PROFILBILD_MUSTER.test(v) ? v : '';
+    }catch(e){ return ''; }
+}
+window.profilbildHolen = profilbildHolen;
+function profilbildSpeichern(daten){
+    try{
+        if(daten) localStorage.setItem(PROFILBILD_PREFIX + currentUser, daten);
+        else localStorage.removeItem(PROFILBILD_PREFIX + currentUser);
+    }catch(e){
+        profilbildMeldung('Das Bild ließ sich nicht speichern – der Speicher des Browsers ist voll.');
+        return false;
+    }
+    einstProfilbildZeichnen();
+    try{ if(window.duoProfilbildGeaendert) window.duoProfilbildGeaendert(); }catch(e){}
+    return true;
+}
+function profilbildMeldung(text){
+    const el = document.getElementById('einstProfilbildText');
+    if(el){ el.textContent = text; el.style.color = text ? '#a33227' : ''; }
+}
+function profilbildWaehlen(input){
+    const datei = input && input.files && input.files[0];
+    if(input) input.value = '';          // dieselbe Datei darf gleich noch einmal gewaehlt werden
+    if(!datei) return;
+    profilbildMeldung('');
+    if(!/^image\//.test(datei.type || '')){ profilbildMeldung('Das ist kein Bild. Bitte ein Foto (JPG, PNG …) auswählen.'); return; }
+    if(datei.size > 25 * 1024 * 1024){ profilbildMeldung('Das Bild ist zu groß (über 25 MB).'); return; }
+    const url = URL.createObjectURL(datei);
+    const img = new Image();
+    img.onload = function(){
+        try{
+            const seite = Math.min(img.naturalWidth, img.naturalHeight);
+            if(!seite){ throw new Error('leer'); }
+            const c = document.createElement('canvas');
+            c.width = 128; c.height = 128;
+            const g = c.getContext('2d');
+            g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128);    // Transparentes wird weiss statt schwarz
+            g.imageSmoothingQuality = 'high';
+            g.drawImage(img, (img.naturalWidth - seite) / 2, (img.naturalHeight - seite) / 2, seite, seite, 0, 0, 128, 128);
+            let daten = c.toDataURL('image/jpeg', 0.82);
+            if(daten.length > 22000) daten = c.toDataURL('image/jpeg', 0.6);
+            if(!PROFILBILD_MUSTER.test(daten) || daten.length > 24000){ profilbildMeldung('Das Bild ließ sich nicht umrechnen.'); return; }
+            profilbildSpeichern(daten);
+        }catch(e){ profilbildMeldung('Das Bild ließ sich nicht lesen.'); }
+        finally{ URL.revokeObjectURL(url); }
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); profilbildMeldung('Das Bild ließ sich nicht lesen.'); };
+    img.src = url;
+}
+function profilbildEntfernen(){
+    profilbildMeldung('');
+    profilbildSpeichern('');
+}
+function einstProfilbildZeichnen(){
+    const el = document.getElementById('einstProfilbildVorschau');
+    if(!el) return;
+    const bild = profilbildHolen();
+    const name = getUserDisplayName(currentUser);
+    const buchstabe = ((name.match(/[A-Za-zÄÖÜäöü0-9]/) || ['?'])[0]).toUpperCase();
+    el.innerHTML = bild
+        ? '<img src="' + bild + '" alt="Dein Profilbild" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50% !important;">'
+        : '<span aria-label="Noch kein Profilbild">' + buchstabe.replace(/[<>&"]/g, '') + '</span>';
+    el.style.background = bild ? 'transparent' : '#0f2745';
+    const weg = document.getElementById('einstProfilbildWeg');
+    if(weg) weg.disabled = !bild;
 }
 // Aktualisiert alle sichtbaren Stellen, an denen der Name auftaucht
 function refreshUserLabels(){
@@ -11868,7 +11986,13 @@ function einstKursFuellen(){
     }
 
     ziel.innerHTML =
-        einstKasten('Gesicherte Kursabende',
+        // Hausaufgaben (28.09.2026): die Uebersicht steht im Fenster
+        // "Unterricht" unter "Auswertung" - hier der Weg dorthin.
+        einstKasten('Hausaufgaben',
+            'Wer welche Hausaufgabe mit welchem Ergebnis erledigt hat, und wo es in der Gruppe hakt.',
+            '<button type="button" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.8rem;" '
+            + 'onclick="einstellungenSchliessen(); unterrichtOeffnen(\'auswertung\')"><i class="fas fa-clipboard-check"></i> Hausaufgaben-Übersicht öffnen</button>')
+        + einstKasten('Gesicherte Kursabende',
             'Auswertungen aus dem Gruppenraum, aufgehoben für den nächsten Abend im Ortsverband oder '
             + 'an der Volkshochschule. Sie liegen <b>nur in diesem Browser</b> – nicht auf einem Server '
             + 'und nicht bei den Teilnehmern.',
@@ -23070,11 +23194,17 @@ function beamerBedienungAufbauen(){
 }
 
 function beamerStandAktualisieren(){
+    // Unterricht (27.09.2026): Stand merken, und am Beamer steht dann
+    // "Lektion 3 · Rufzeichen · 12 / 86" statt nur der Zahl. Steht VOR
+    // der Abfrage unten: Das Merken und der Gleichschritt im Gruppenraum
+    // laufen auch ohne Beamer (beim Teilnehmer gibt es beamerStand nie).
+    let unterrichtZeile = '';
+    try{ if(typeof unterrichtNachziehen === 'function') unterrichtZeile = unterrichtNachziehen(); }catch(e){}
     const d = document.getElementById('beamerStand');
     if(!d) return;
     try{
         if(beamerAn && beamerRundeLaeuft()){
-            d.textContent = (currentIndex + 1) + ' / ' + currentQuestions.length;
+            d.textContent = unterrichtZeile || ((currentIndex + 1) + ' / ' + currentQuestions.length);
         } else {
             d.textContent = '';
         }
@@ -23111,6 +23241,11 @@ document.addEventListener('keydown', function(e){
         const knopf = document.getElementById(weiter ? 'nextBtn' : 'prevBtn');
         if(knopf && !knopf.disabled && knopf.offsetParent !== null){
             e.preventDefault();
+            // 27.09.2026: Ohne diese Zeile sprang die Pfeiltaste am Beamer
+            // ZWEI Fragen weiter - der allgemeine Pfeiltasten-Griff weiter
+            // unten blaetterte ein zweites Mal. Beim Test fuer den Unterricht
+            // aufgefallen (Dietmar: "Kursleiter arbeiten diese ab").
+            e.stopPropagation();
             knopf.click();
             setTimeout(beamerStandAktualisieren, 60);
         }
@@ -24269,6 +24404,1833 @@ function lektionVideoOeffnen() {
     else window.open(url, '_blank');
 }
 window.lektionVideoOeffnen = lektionVideoOeffnen;
+
+// ================================================================
+//  UNTERRICHT: DIE 14 LEKTIONEN KLASSE N AM BEAMER     (27.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Es gibt Lektionen ... 14 in der Klasse N. Kursleiter
+//  arbeiten diese ab. Dazu gehoeren die Fragen." und danach:
+//  "Bauen wir dazu einen Button ein wo der Kursleiter den Beamermodus
+//  und die Lektionen waehlen kann?"
+//
+//  WOHER DIE REIHENFOLGE KOMMT. 50ohm.de hat zu jeder Lektion einen
+//  Foliensatz. Im Quelltext der Folien (github.com/DARC-e-V/
+//  50ohm-contents-dl) steht, an welcher Stelle welche Pruefungsfrage
+//  drankommt. Genau diese Reihenfolge steht unten in KURSE - die
+//  Folien selbst NICHT: nur Lektions- und Abschnittstitel, die
+//  Fragennummern und die Zeitmarke im Video. Die Folien oeffnet der
+//  Trainer auf 50ohm.de, als das, was sie sind.
+//
+//  LIZENZ. Die Inhalte stehen unter CC BY 4.0. Die Namensnennung steht
+//  im Fenster unten, mit dem Hinweis, dass hier gekuerzt wurde.
+//
+//  Alle 571 Fragen der Klasse N kommen in den Folien vor. Drei stehen
+//  in zwei Lektionen (VD306, BD209 in 1 und 3) - die bleiben in beiden,
+//  jede Lektion soll fuer sich vollstaendig sein. BD210 steht in
+//  Lektion 3 zweimal und wird dort nur einmal gefragt.
+//
+//  Aufbau je Abschnitt: [Titel, Video-ID, Sekunde (-1 = kein Video),
+//  "Fragennummern in Folienreihenfolge"]
+// ================================================================
+//
+//  ALLE PRUEFUNGSZIELE (28.09.2026). Dietmar: "Von N auf E und von E
+//  nach A muss sich der Trainer anpassen." 50ohm.de hat zu jedem Ziel
+//  einen eigenen Lehrgang mit Folien:
+//    n  -> Gesamtkurs N   (N_slide_...)   14 Lektionen
+//    e  -> Gesamtkurs E   (NE_slide_...)  23 Lektionen
+//    ne -> Aufbaukurs N->E (E_slide_...)  16 Lektionen
+//    ea -> Aufbaukurs E->A (A_slide_...)  14 Lektionen, Folien bei 50ohm
+//          zum groessten Teil noch Entwurf (Stand 08.09.2026)
+//  Welcher gilt, entscheidet das Pruefungsziel oben (klasseAktuell).
+//  Fragen des Katalogs, die in keiner Folie vorkommen (8 bei E, 4 bei
+//  E->A), haengen als "Weitere Pruefungsfragen" am Kapitel, dem 50ohm
+//  sie zuordnet - so fehlt im Lehrgang keine Frage.
+//  Fuenftes Feld je Abschnitt: '' fertig, 'e' Entwurf bei 50ohm,
+//  'z' vom Trainer angehaengt (nicht in den Folien).
+// ================================================================
+const KURSE = {"n":{"key":"N","name":"Gesamtkurs Klasse N","lek":[{"t":"Erste Schritte","s":"n_erste_schritte","a":[["Vorwort","",-1,"",""],["Der erste Schritt","WnOBk1UogjM",0,"VD102 NF108 NA101 NA103 NA102",""],["Rufzeichen","WnOBk1UogjM",198,"VD207 VD205",""],["Internationale Buchstabiertafel","WnOBk1UogjM",258,"VD206 BA103 BA104 BA110 BA109 BA101 BA105 BA106 BA102 BA107 BA108",""],["Betriebsabwicklung","WnOBk1UogjM",544,"BB102 BE105 BE101 BE102 BE103 BE108",""],["Das RST-System","WnOBk1UogjM",806,"BE201 BE202 BE203 NF103 NF301 BE204 BE205 BE206 BE207 BE208 BE209",""],["Ausbildungsfunkbetrieb","WnOBk1UogjM",1120,"VD303 VD306 BD209",""],["Offene Sprache","WnOBk1UogjM",1178,"VD103",""],["Funkverkehr nur mit Funkamateuren","WnOBk1UogjM",1212,"VC111 VD703 VC112",""],["Gewerbliche Nutzung","WnOBk1UogjM",1259,"VC114 VC115",""]]},{"t":"Frequenz und Wellenausbreitung","s":"n_frequenz_und_wellenausbreitung","a":[["Gleich- und  Wechselspannung","MPSwrnhAbyY",20,"",""],["Frequenz","MPSwrnhAbyY",188,"NA206 NA207 NA212 VD723 ND201 NI301",""],["Sinusschwingung","MPSwrnhAbyY",368,"NB401",""],["Amplitude und Periode","MPSwrnhAbyY",455,"NB404 NB405 NA213",""],["Funkwellen","MPSwrnhAbyY",514,"NB301 NB402",""],["Wellenlänge","MPSwrnhAbyY",588,"NB403 NA205 NB302 NB303",""],["Wasserfalldiagramm","MPSwrnhAbyY",855,"NF104 NF105 NF106 NI401",""],["Frequenzspektrum","MPSwrnhAbyY",1119,"BC104 BC105 BC106 BC101 BC102 BC103",""],["Frequenzzuteilung","MPSwrnhAbyY",1236,"VE102 VD701 VC110 VD101 VD702",""],["Amateurfunkbänder","MPSwrnhAbyY",1362,"VD709 VD710 VD711 VD712 VD713 VD714 VD715 VD716 VD717 VD718 VD719 VD720 VD721 VD722",""],["Primärer und sekundärer Funkdienst","MPSwrnhAbyY",1394,"VD704 VD705 VD706 VD707 VD708",""],["IARU-Bandpläne","MPSwrnhAbyY",1539,"BC201 BC204",""],["IARU-Bandplan für 2 m","MPSwrnhAbyY",1603,"BC205 BC207 BC209 BC211 BC210 BC214 BC215 BC218 BC217 BC213",""],["IARU-Bandplan für 70 cm","MPSwrnhAbyY",1755,"BC206 BC208 BC212 BC221 BC222 BC219 BC220",""],["Wellenausbreitung","MPSwrnhAbyY",1788,"",""],["Funkhorizont","MPSwrnhAbyY",1848,"NH301 NH303 NH302",""],["Troposphärische Inversionsbildung","MPSwrnhAbyY",1904,"NH304",""],["Sporadic-E","MPSwrnhAbyY",1976,"NH306 NH305",""],["Ionosphäre","MPSwrnhAbyY",2043,"NH101 NH102 NH201 BE106",""]]},{"t":"Amateurfunkstationen","s":"n_amateurfunkstationen","a":[["Aufbau von Rufzeichen","E5RuFuUv7ag",0,"VC116 VA406 VD203 VD202 VD201",""],["Persönliche Rufzeichen","E5RuFuUv7ag",178,"BD105 BD106 BD104 VC107 VD208 VC117",""],["Klubstationen","E5RuFuUv7ag",363,"VD117 BD101 BD103 VD401 VD402 VD403 VD404 VD405 VD406 VD407 VD408",""],["Ausbildungsrufzeichen","E5RuFuUv7ag",621,"VD302 BD211 VD304 BD210 VD301 VD305",""],["Remote-Stationen","E5RuFuUv7ag",738,"VD601 VD603 VD607 VD602 VD608 VD605 VD606 VD604 VD609",""],["Rufzeichenzusätze","E5RuFuUv7ag",890,"BD201 BD202 VE705 BD205 VE706 VD115 BD203 BD204 BD206 BD207 BD208 BD209 VD306",""],["Besondere Anlässe","E5RuFuUv7ag",1221,"VD204",""],["Fernbediente und automatische Stationen","E5RuFuUv7ag",1405,"VD501 VD502",""],["Relaisfunkstellen","E5RuFuUv7ag",1419,"VD118 BE401 BE402 BE403 NF118 NE309 NE308 BE407 VD504 BE406 BE404 NE310 BE405 VD503 BE408",""],["Baken","E5RuFuUv7ag",1937,"VD119 BE409 BE410",""],["Linkstrecken","E5RuFuUv7ag",2229,"NE405",""],["Satelliten","E5RuFuUv7ag",2262,"BE415 BE416 BE411 BE412 NF113 BE413 BE414 VA303 VD104",""],["Exterritoriale Stationen","E5RuFuUv7ag",2522,"BD107 BD108",""],["Experimentelle Studien","E5RuFuUv7ag",2797,"BD102 VD116",""]]},{"t":"Internationaler Funkbetrieb","s":"n_internationaler_funkbetrieb","a":[["Internationale Landeskenner","KMxUv8N_F70",0,"BD301 BD314 BD311 BD304 BD307 BD303 BD305 BD306 BD308 BD310 BD302 BD312 BD313 BD316 BD318 BD317 BD309 BD315",""],["ITU-Regionen","KMxUv8N_F70",484,"VA402 VA401 VA403 VA404 VA405",""],["DX","KMxUv8N_F70",532,"BB103 BE114 BB105 BB104 BE109 BE110 BE113 BE104 BE312",""],["Funken im Ausland","KMxUv8N_F70",798,"VB104 VB106 VB107 VB109 VB108 BD213 BD214 VB105 VB110 BD212 VB114 VB113 VB111 VB112 VB102 VB103 VB101",""]]},{"t":"Modulation","s":"n_modulation","a":[["Rauch- und Morsezeichen","AeeffN4SOaE",0,"NE201 NE101",""],["Modulationsarten","AeeffN4SOaE",277,"",""],["Sprachsignale","AeeffN4SOaE",344,"",""],["Amplitudenmodulation (AM)","AeeffN4SOaE",607,"NE202 NE206",""],["Einseitenbandmodulation (SSB)","AeeffN4SOaE",744,"NE203 NE204 NE208 NE207 NE205",""],["Frequenzmodulation (FM)","AeeffN4SOaE",873,"NE301 NE302 NE303 BC216 NE306 NE304",""],["Bandbreite","AeeffN4SOaE",1072,"VD738 VD739 VD740 VD741 VD742 NE305",""],["Modulationseinstellungen am Funkgerät","AeeffN4SOaE",1468,"NE102 NE209 BC202 BC203 NE211 NE210 NE212",""]]},{"t":"Digitale Übertragungsverfahren","s":"n_digitale_uebertragungsverfahren","a":[["Analog vs. Digital","QRq0uPzdPZY",0,"",""],["Morsetelegrafie","QRq0uPzdPZY",50,"VA304 BE117 BE118",""],["Computersteuerung","QRq0uPzdPZY",156,"NF114 NF116 NF117 NF115",""],["Funkfernschreiben","QRq0uPzdPZY",356,"NE401 BB101 BB110 BB109 BB108 BE112",""],["Digital Voice (DV)","QRq0uPzdPZY",715,"NE404 NE307 NE403 NE402",""]]},{"t":"Abkürzungen","s":"n_abkuerzungen","a":[["Betriebliche Abkürzungen","iVov9T0EO74",19,"BB106 BB107",""],["Q-Schlüssel","iVov9T0EO74",275,"VA407 BB204 BB203 BE115 BB202 BB205 BB201 BB206 BE107",""],["Maidenhead Locator","iVov9T0EO74",783,"BE111",""]]},{"t":"Antennen und Leitungen","s":"n_antennen_und_leitungen","a":[["Antennen","Oe2XpzhSVEQ",19,"NG101",""],["Dipol-Antenne","Oe2XpzhSVEQ",89,"NG103 NG304 NG305",""],["Yagi-Uda-Antenne","Oe2XpzhSVEQ",308,"NG108",""],["Rundstrahlantennen","Oe2XpzhSVEQ",369,"NG105 NG106 NG104 NG102 NG110 NG111",""],["Endgespeiste Antennen (End-Fed)","Oe2XpzhSVEQ",527,"NG107 NG109",""],["Polarisation","Oe2XpzhSVEQ",554,"NB304",""],["Einbau Kfz","Oe2XpzhSVEQ",652,"NK308 NK310 NK309 NK307",""],["Übertragungsleitungen","Oe2XpzhSVEQ",752,"NG207 NG201",""],["Koaxialsteckverbinder","Oe2XpzhSVEQ",888,"",""],["PL-Steckverbinder","Oe2XpzhSVEQ",954,"NG202",""],["N-Steckverbinder","Oe2XpzhSVEQ",968,"NG204",""],["BNC-Steckverbinder","Oe2XpzhSVEQ",997,"NG203",""],["SMA-Steckverbinder","Oe2XpzhSVEQ",1029,"NG205 NG206",""],["Stehwellenverhältnis (SWR)","Oe2XpzhSVEQ",1089,"NI201 NF101 NI202 NG301 NI203 NG302 NG303 NG208",""],["Personenschutz","Oe2XpzhSVEQ",1965,"NK201 VE501 VE502 VE505 VE503 VE504 VE511",""],["Effektive Strahlungsleistung (ERP)","Oe2XpzhSVEQ",2053,"NG401",""],["Äquivalente isotrope Strahlungsleistung (EIRP)","Oe2XpzhSVEQ",2119,"NG402",""],["Sendeleistung Klasse N","Oe2XpzhSVEQ",2188,"VD724 VD743 VD726 VD725",""],["Anzeige ortsfester Amateurfunkanlagen","Oe2XpzhSVEQ",2209,"VE508 VE507 VE509 VE512 VE513 VD107 VE514 VE510 VE506 VE515 VE516 VE517",""],["Standortbescheinigung","Oe2XpzhSVEQ",2264,"VC121 VE519 VE518",""],["Baurecht und Haftung","Oe2XpzhSVEQ",2884,"VE602 VE707",""],["Energieleitungen","Oe2XpzhSVEQ",2839,"NK311",""],["Blitzschutz","",-1,"VE603",""],["Potentialausgleich","Oe2XpzhSVEQ",2780,"VE604",""]]},{"t":"Transceiver","s":"n_transceiver","a":[["Aufbau eines Empfängers","0bn_wZe4a2I",0,"NF201 NF303",""],["RIT","0bn_wZe4a2I",245,"NF111 NF112",""],["VOX","0bn_wZe4a2I",449,"NF109 NF110",""],["Squelch","0bn_wZe4a2I",551,"NF302",""],["Aufbau eines Senders","0bn_wZe4a2I",649,"NF401 NF403 NF402 VD106",""],["Ausgangsleistung","0bn_wZe4a2I",807,"NF102 VD727 VD729 VD728 VD730 VD731 VD732 VD733 VD734 VD736 VD737 VD735",""],["Dummy-Load","0bn_wZe4a2I",1001,"VD111 NJ202 NF107 VD112",""],["Unerwünschte Aussendungen","0bn_wZe4a2I",1088,"NJ201 NF404 VD110",""],["Elektromagnetische Verträglichkeit","0bn_wZe4a2I",1204,"VC118 VC120 VC119 NK101 NJ101 NK102",""],["Störungen vermeiden","0bn_wZe4a2I",1311,"NJ102 VE302 VE301 VE305 VE306 VE303 VE304",""],["Störungen beim Empfang","0bn_wZe4a2I",1492,"VE307 VE308 VE309",""]]},{"t":"Logbuch und QSL-Karten","s":"n_logbuch_und_qsl_karten","a":[["Logbuch","JdrDCAynRkU",0,"BG101 VD109 VD108 BG102 BG103",""],["QSL-Karten","JdrDCAynRkU",355,"BG104 BG105 BG110 BG109 BG111 BG106 BG107 BG108",""]]},{"t":"Betriebsabwicklung","s":"n_betriebsabwicklung","a":[["Pile-up","iVZDwRE4cwg",0,"BE305 BE306 BE307",""],["Split-Verkehr","iVZDwRE4cwg",205,"BE308 BE310 BE309 BE311",""],["Contest","iVZDwRE4cwg",412,"BE301 BE116 BE303 BE302 BE304",""],["Fuchsjagd (ARDF)","iVZDwRE4cwg",545,"BE313 BD109",""],["SSTV","iVZDwRE4cwg",630,"BE210",""],["Notfunk","iVZDwRE4cwg",771,"BF104 BF105 BF106 BF107 BF108 BF101 BF102 VD105 BF103 BF109",""]]},{"t":"Spannungsversorgung","s":"n_spannungsversorgung","a":[["Elektrische Spannung","H9wytHFZ2Z0",20,"NA201 NA208",""],["Elektrischer Strom","H9wytHFZ2Z0",327,"NA202 NA209",""],["Gefahren durch elektrischen Strom","H9wytHFZ2Z0",485,"VE601 NK301 NK303 NK302 NK304",""],["Netzgerät","H9wytHFZ2Z0",679,"ND101 ND102 ND109 ND104 ND103 ND105 ND106 ND107 ND108 NK305",""],["Batterien und Akkus","H9wytHFZ2Z0",959,"NB201 NB203 NB204 ND110 NK306",""]]},{"t":"Bauteile und Schaltkreise","s":"n_bauteile_und_schaltkreise","a":[["Recht zum Selbstbau","M6c2mlsrIvo",19,"VC109 VE401 VE402 VE403 VE404 VE405",""],["Leiter und Nichtleiter","M6c2mlsrIvo",398,"NB101 NB102 NB103 NB104",""],["Stromkreis","M6c2mlsrIvo",793,"NB701 NC101 NB702 NB207",""],["Spannungsmessung","M6c2mlsrIvo",1161,"NI101 NI103 NB205 NB206",""],["Strom messen","M6c2mlsrIvo",1547,"NI102 NI104",""],["Ohmsches Gesetz","M6c2mlsrIvo",1780,"NA203 NB505 NB504 NB502 NB503 NB501",""],["Widerstandsfarbcode","M6c2mlsrIvo",1926,"NC107 NC105 NC106 NC104 NC103 NC102 NC108 NC109 NC110",""],["Halbleiter","M6c2mlsrIvo",2058,"NC401 NC403 NC404 NC402 NB703",""],["Leistung","M6c2mlsrIvo",2243,"NA204 NA211 NA210 NB601 NB602 NB603 NB606 NB604 NB605",""],["Schaltzeichen und Bauelemente","M6c2mlsrIvo",2433,"NC201 NC301 NC501 NB202",""]]},{"t":"Gesetze und Vorschriften","s":"n_gesetze_und_vorschriften","a":[["Internationale Vereinbarungen, Gesetze und Vorschriften","VdCP90XGQUU",0,"VA301 VC101 VC104 VE101",""],["Amateurfunkdienst","VdCP90XGQUU",299,"VA101 VA102 VA103 VC102",""],["Amateurfunkstelle","VdCP90XGQUU",433,"VA201 VA202 VC103 VA302",""],["Funkamateur","VdCP90XGQUU",576,"VA104 VC113 VC105",""],["Zulassung","VdCP90XGQUU",651,"VC106 VC108",""],["Anschrift und Änderung","VdCP90XGQUU",707,"VD113 VD114",""],["Gebühren und Beiträge","VdCP90XGQUU",739,"VE701 VE702 VE703 VE704",""],["Fernmeldegeheimnis und Abhörverbot","VdCP90XGQUU",797,"VE202 VE203 VE204 VE201",""],["Verstöße und Folgen","VdCP90XGQUU",965,"VC122 VC123 VC124 VC125 VE103",""],["Kursabschluss","",-1,"",""]]}]},"e":{"key":"NE","name":"Gesamtkurs Klasse E","lek":[{"t":"Erste Schritte","s":"ne_erste_schritte","a":[["Vorwort","",-1,"",""],["Der erste Schritt","WnOBk1UogjM",0,"VD102 NF108 NA101 NA103 NA102",""],["Rufzeichen","WnOBk1UogjM",198,"VD207 VD205",""],["Internationale Buchstabiertafel","WnOBk1UogjM",258,"VD206 BA103 BA104 BA110 BA109 BA101 BA105 BA106 BA102 BA107 BA108",""],["Betriebsabwicklung","WnOBk1UogjM",544,"BB102 BE105 BE101 BE102 BE103 BE108",""],["Das RST-System","WnOBk1UogjM",806,"BE201 BE202 BE203 NF103 NF301 BE204 BE205 BE206 BE207 BE208 BE209",""],["Ausbildungsfunkbetrieb","WnOBk1UogjM",1120,"VD303 VD306 BD209",""],["Offene Sprache","WnOBk1UogjM",1178,"VD103",""],["Funkverkehr nur mit Funkamateuren","WnOBk1UogjM",1212,"VC111 VD703 VC112",""],["Gewerbliche Nutzung","WnOBk1UogjM",1259,"VC114 VC115",""]]},{"t":"Elektrische Schwingungen und Funkwellen","s":"ne_elektrische_schwingungen_funkwellen","a":[["Gleich- und  Wechselspannung","MPSwrnhAbyY",20,"",""],["Frequenz","MPSwrnhAbyY",188,"NA206 NA207 NA212 VD723 ND201 NI301",""],["Sinusschwingung","MPSwrnhAbyY",368,"NB401",""],["Amplitude und Periode","MPSwrnhAbyY",455,"NB404 NB405 NA213",""],["Zehnerpotenzen","",-1,"EA110 EA109 EA108 EA116 EA114 EA111 EA112 EA115 EA113",""],["Funkwellen","MPSwrnhAbyY",514,"NB301 NB402",""],["Wellenlänge","MPSwrnhAbyY",588,"NB403 NA205 NB302 NB303",""],["Formeln umstellen I","",-1,"",""],["Wellenlänge II","",-1,"EB314 EB315 EB316 EB311 EB312 EB313",""],["Wasserfalldiagramm","MPSwrnhAbyY",855,"NF104 NF105 NF106 NI401",""],["Frequenzspektrum","MPSwrnhAbyY",1119,"BC104 BC105 BC106 BC101 BC102 BC103",""],["Frequenzzuteilung","MPSwrnhAbyY",1236,"VE102 VD701 VC110 VD101 VD702",""],["Amateurfunkbänder","MPSwrnhAbyY",1362,"VD709 VD710 VD711 VD712 VD713 VD714 VD715 VD716 VD717 VD718 VD719 VD720 VD721 VD722",""],["Primärer und sekundärer Funkdienst","MPSwrnhAbyY",1394,"VD704 VD705 VD706 VD707 VD708",""],["IARU-Bandpläne","MPSwrnhAbyY",1539,"BC201 BC204",""],["IARU-Bandplan für 2 m","MPSwrnhAbyY",1603,"BC205 BC207 BC209 BC211 BC210 BC214 BC215 BC218 BC217 BC213",""],["IARU-Bandplan für 70 cm","MPSwrnhAbyY",1755,"BC206 BC208 BC212 BC221 BC222 BC219 BC220",""]]},{"t":"Wellenausbreitung","s":"ne_wellenausbreitung","a":[["Wellenausbreitung","MPSwrnhAbyY",1788,"",""],["Funkhorizont","MPSwrnhAbyY",1848,"NH301 NH303 NH302",""],["Troposphärische Inversionsbildung","MPSwrnhAbyY",1904,"NH304",""],["Troposphäre II","",-1,"EH301 EH302 EH303",""],["Aurora I","",-1,"EH305",""],["Sporadic-E","MPSwrnhAbyY",1976,"NH306 NH305",""],["Sporadic-E II","",-1,"EH304 EH218",""],["Ionosphäre","MPSwrnhAbyY",2043,"NH101 NH102 NH201 BE106",""],["Ionosphäre II","",-1,"EH101 EH219 EH102 EH210 EH105 EH106 EH103 EH104 EH107 EH205",""],["Tote Zone I","",-1,"EH201",""],["Fading","",-1,"EH203 EH202",""],["Sprungdistanz I","",-1,"EH208",""],["MUF und LUF","",-1,"EH204 EH207 EH206 EH209",""],["Bodenwelle","",-1,"EH211 EH212",""],["Greyline","",-1,"EH213",""],["Mögel-Dellinger-Effekt","",-1,"EH214 EH215",""],["Langer und kurzer Weg I","",-1,"EH217 EH216",""]]},{"t":"Amateurfunkstationen","s":"ne_amateurfunkstationen","a":[["Aufbau von Rufzeichen","E5RuFuUv7ag",0,"VC116 VA406 VD203 VD202 VD201",""],["Persönliche Rufzeichen","E5RuFuUv7ag",178,"BD105 BD106 BD104 VC107 VD208 VC117",""],["Klubstationen","E5RuFuUv7ag",363,"VD117 BD101 BD103 VD401 VD402 VD403 VD404 VD405 VD406 VD407 VD408",""],["Ausbildungsrufzeichen","E5RuFuUv7ag",621,"VD302 BD211 VD304 BD210 VD301 VD305",""],["Remote-Stationen","E5RuFuUv7ag",738,"VD601 VD603 VD607 VD602 VD608 VD605 VD606 VD604 VD609",""],["Rufzeichenzusätze","E5RuFuUv7ag",890,"BD201 BD202 VE705 BD205 VE706 VD115 BD203 BD204 BD206 BD207 BD208 BD209 VD306",""],["Besondere Anlässe","E5RuFuUv7ag",1221,"VD204",""],["Fernbediente und automatische Stationen","E5RuFuUv7ag",1405,"VD501 VD502",""],["Relaisfunkstellen","E5RuFuUv7ag",1419,"VD118 BE401 BE402 BE403 NF118 NE309 NE308 BE407 VD504 BE406 BE404 NE310 BE405 VD503 BE408",""],["Baken","E5RuFuUv7ag",1937,"VD119 BE409 BE410",""],["Linkstrecken","E5RuFuUv7ag",2229,"NE405",""],["Satelliten","E5RuFuUv7ag",2262,"BE415 BE416 BE411 BE412 NF113 BE413 BE414 VA303 VD104",""],["Exterritoriale Stationen","E5RuFuUv7ag",2522,"BD107 BD108",""],["Experimentelle Studien","E5RuFuUv7ag",2797,"BD102 VD116",""]]},{"t":"Internationaler Funkbetrieb","s":"ne_internationaler_funkbetrieb","a":[["Internationale Landeskenner","KMxUv8N_F70",0,"BD301 BD314 BD311 BD304 BD307 BD303 BD305 BD306 BD308 BD310 BD302 BD312 BD313 BD316 BD318 BD317 BD309 BD315",""],["ITU-Regionen","KMxUv8N_F70",484,"VA402 VA401 VA403 VA404 VA405",""],["DX","KMxUv8N_F70",532,"BB103 BE114 BB105 BB104 BE109 BE110 BE113 BE104 BE312",""],["Funken im Ausland","KMxUv8N_F70",798,"VB104 VB106 VB107 VB109 VB108 BD213 BD214 VB105 VB110 BD212 VB114 VB113 VB111 VB112 VB102 VB103 VB101",""]]},{"t":"Strom, Spannung, Widerstand, Leistung, Energie","s":"ne_strom_spannung_widerstand_leistung_energie","a":[["Recht zum Selbstbau","M6c2mlsrIvo",19,"VC109 VE401 VE402 VE403 VE404 VE405",""],["Elektrische Spannung","H9wytHFZ2Z0",20,"NA201 NA208",""],["Elektrischer Strom","H9wytHFZ2Z0",327,"NA202 NA209",""],["Gefahren durch elektrischen Strom","H9wytHFZ2Z0",485,"VE601 NK301 NK303 NK302 NK304",""],["Leiter und Nichtleiter","M6c2mlsrIvo",398,"NB101 NB102 NB103 NB104",""],["Stromkreis","M6c2mlsrIvo",793,"NB701 NC101 NB702 NB207",""],["Spannungsmessung","M6c2mlsrIvo",1161,"NI101 NI103 NB205 NB206",""],["Strom messen","M6c2mlsrIvo",1547,"NI102 NI104",""],["Strom- und Spannungsmessung II","",-1,"EI101 EI102",""],["Zeigerinstrumente ablesen","",-1,"EI103 EI104",""],["Spitzen- und Effektivwert","",-1,"EB407 EB406 EB405 EB404 EB403 EB401 EB402",""],["Oszilloskop I","",-1,"EB408 EI301 EB410 EI302 EB409 EB411 EI304",""],["Ohmsches Gesetz","M6c2mlsrIvo",1780,"NA203 NB505 NB504 NB502 NB503 NB501",""],["Widerstandsfarbcode","M6c2mlsrIvo",1926,"NC107 NC105 NC106 NC104 NC103 NC102 NC108 NC109 NC110",""],["SMD-Widerstände","",-1,"EC114 EC115 EC116 EC117",""],["Widerstandsmaterialien","",-1,"EC101 EC102 EC103 EC104",""],["Widerstandstoleranzen","",-1,"EC112 EC113",""],["Heißleiter und Kaltleiter","",-1,"EC109 EC110 EC111",""],["Halbleiter","M6c2mlsrIvo",2058,"NC401 NC403 NC404 NC402 NB703",""],["Leistung","M6c2mlsrIvo",2243,"NA204 NA211 NA210 NB601 NB602 NB603 NB606 NB604 NB605",""],["Leistung II","",-1,"EB505 EB506 EB504 EB507 EB508 EB509 EB510 EB511 EB512 EB503 EB513",""],["Dezibel I","",-1,"EA107",""],["Schaltzeichen und Bauelemente","M6c2mlsrIvo",2433,"NC201 NC301 NC501 NB202",""],["Weitere Prüfungsfragen","",-1,"EB514 EC108 EC107 EC106 EC105 EI303","z"]]},{"t":"Elektromagnetisches Feld","s":"ne_em_feld","a":[["Elektrisches Feld","",-1,"EB101 EA103 EB102 EB103 EB104 EB105",""],["Magnetisches Feld","",-1,"EB201 EB202 EA104 EB203 EB206",""],["Elektromagnetisches Feld","",-1,"EB301 EB302 EB303 EB304",""]]},{"t":"Bauelemente","s":"ne_bauelemente","a":[["Kondensator I","",-1,"EA101 EC205 EC203 EC204 EC206 EC207 EC201 EC202",""],["Spule I","",-1,"EC304 EA102 EC307 EC306 EC305 EB205 EB204 EC302 EC301 EC303",""],["Übertrager I","",-1,"EC401 EC402 EC403 EC404",""],["Diode I","",-1,"EC501 EC502 EC503 EC504 EC506 EC507 EC508 EC505 EC513 EC510 EC509 EC511 EC512 EC514 EC515 EC516 EC517 EC518 EC519 EC520 EC521 EC522",""],["Transistor I","",-1,"EC602 EC608 EC607 EC606 EC605 EC609 EC601 EC603 EC610 EC611 EC612 EC613 EC614 EC615 EC604",""]]},{"t":"Reihen- und Parallelschaltung von Bauelementen","s":"ne_reihen_parallelschaltung","a":[["Widerstand in Reihen- und Parallelschaltung","",-1,"ED104 ED105 ED106 ED110 ED111 ED108 ED109 ED112 ED113 ED107",""],["Widerstandsnetzwerke I","",-1,"ED115 ED116",""],["Spannungsteiler I","",-1,"ED101 ED102 ED103",""],["Kondensator in Reihen- und Parallelschaltung","",-1,"ED119 ED120 ED117 ED118 ED123 ED124 ED122 ED121",""],["Weitere Prüfungsfragen","",-1,"ED114","z"]]},{"t":"Strom- und Spannungsversorgung","s":"ne_strom_spannungsversorgung","a":[["Spannungsquellen","",-1,"ED301 EK205",""],["Netzgerät","H9wytHFZ2Z0",679,"ND101 ND102 ND109 ND104 ND103 ND105 ND106 ND107 ND108 NK305",""],["Batterien und Akkus","H9wytHFZ2Z0",959,"NB201 NB203 NB204 ND110 NK306",""],["Gleichrichter I","",-1,"ED304",""],["Schaltnetzteil I","",-1,"ED302 ED303",""],["Sicherungen","",-1,"EK204",""]]},{"t":"Grundlegende Schaltungen","s":"ne_grundlegende_schaltungen","a":[["Filter und Schwingkreise I","",-1,"ED202 ED211 ED212 ED213 ED201 ED208 ED209 ED210 ED203 ED205 ED215 ED204 ED206 ED207 ED214 ED216",""],["Oszillatoren","",-1,"ED501 ED502 ED503 ED504 ED505 EF304 ED506 ED507 EF207",""],["Frequenzvervielfacher I","",-1,"EF301 EF302 EF303",""],["Mischer","",-1,"EF201 EF202 EF203 EF204 EF205 EF206",""],["Konverter und Transverter","",-1,"EF504 EF505 EF501 EF502 EF503",""],["Verstärker","",-1,"ED401 ED403 EF403 ED402 EF307 EF308 EF405",""]]},{"t":"Modulation","s":"ne_modulation","a":[["Rauch- und Morsezeichen","AeeffN4SOaE",0,"NE201 NE101",""],["Unmodulierter Träger","",-1,"",""],["Modulationsarten","AeeffN4SOaE",277,"",""],["Sprachsignale","AeeffN4SOaE",344,"",""],["Amplitudenmodulation (AM)","AeeffN4SOaE",607,"NE202 NE206",""],["Einseitenbandmodulation (SSB)","AeeffN4SOaE",744,"NE203 NE204 NE208 NE207 NE205",""],["Einseitenbandmodulation (SSB) II","",-1,"EE201 EE202 EJ210 EE203 EE204 EJ211 EF310 EE207 EE206 EE205 EJ215",""],["Frequenzmodulation (FM)","AeeffN4SOaE",873,"NE301 NE302 NE303 BC216 NE306 NE304",""],["Frequenzmodulation (FM) II","",-1,"EE301 EE302 EE303 EE306 EE304 EE305",""],["Bandbreite","AeeffN4SOaE",1072,"VD738 VD739 VD740 VD741 VD742 NE305",""],["Bandbreite II","",-1,"EA105",""],["Modulationseinstellungen am Funkgerät","AeeffN4SOaE",1468,"NE102 NE209 BC202 BC203 NE211 NE210 NE212",""],["Dynamikkompressor I","",-1,"EF306",""]]},{"t":"Empfänger","s":"ne_empfaenger","a":[["Aufbau eines Empfängers","0bn_wZe4a2I",0,"NF201 NF303",""],["Detektorempfänger","",-1,"EF101",""],["Überlagerungsempfänger (Einfachsuper) I","",-1,"EF102 EF208","e"],["Trennschärfe I","",-1,"EF210",""],["BFO I","",-1,"EF209",""],["Vorverstärker und Dämpfungsglied","",-1,"EF217 EF218",""],["Automatische Verstärkungsregelung (AGC) I","",-1,"EF211 EF212",""],["RIT","0bn_wZe4a2I",245,"NF111 NF112",""],["VOX","0bn_wZe4a2I",449,"NF109 NF110",""],["Squelch","0bn_wZe4a2I",551,"NF302",""],["Notch-Filter","",-1,"EF216",""],["Rauschunterdrückung","",-1,"EF213 EF214",""],["Frequenzmessung I","",-1,"EI501 EI502 EI503 EI504",""],["Weitere Prüfungsfragen","",-1,"EF215","z"]]},{"t":"Sender","s":"ne_sender","a":[["Aufbau eines Senders","0bn_wZe4a2I",649,"NF401 NF403 NF402 VD106",""],["ALC","",-1,"EF305",""],["Ausgangsleistung","0bn_wZe4a2I",807,"NF102 VD727 VD729 VD728 VD730 VD731 VD732 VD733 VD734 VD736 VD737 VD735",""],["Senderausgangsleistung","",-1,"EJ209 EF401 EF402 EB501 EB502",""],["Dummy-Load","0bn_wZe4a2I",1001,"VD111 NJ202 NF107 VD112",""],["Unerwünschte Aussendungen","0bn_wZe4a2I",1088,"NJ201 NF404 VD110",""],["Unerwünschte Aussendungen II","",-1,"EJ201 EJ202 EJ204 EJ205 EJ206 EJ207 EJ208 EJ203 EF404 EJ213 EJ214 EJ216 EJ212",""],["Elektromagnetische Verträglichkeit","0bn_wZe4a2I",1204,"VC118 VC120 VC119 NK101 NJ101 NK102",""],["Störungen vermeiden","0bn_wZe4a2I",1311,"NJ102 VE302 VE301 VE305 VE306 VE303 VE304",""],["Störende Beeinflussung elektronischer Geräte I","",-1,"EJ101 EJ102 EJ103 EJ112 EJ113 EJ120 EJ121 EJ104 EJ105 EJ106 EJ107 EJ108 EJ109 EJ111 EJ124 EJ116 EJ117 EJ118 EJ119 EJ115 EJ114 EJ122 EJ123",""],["Störungen beim Empfang","0bn_wZe4a2I",1492,"VE307 VE308 VE309",""]]},{"t":"Logbuch und QSL-Karten","s":"ne_logbuch_und_qsl_karten","a":[["Logbuch","JdrDCAynRkU",0,"BG101 VD109 VD108 BG102 BG103",""],["QSL-Karten","JdrDCAynRkU",355,"BG104 BG105 BG110 BG109 BG111 BG106 BG107 BG108",""]]},{"t":"Digitale Übertragungsverfahren","s":"ne_digitale_uebertragungsverfahren","a":[["Analog vs. Digital","QRq0uPzdPZY",0,"",""],["Binäres Zahlensystem","",-1,"EA201 EA202 EA203 EA204 EA205 EA206 EA207 EA208",""],["Morsetelegrafie","QRq0uPzdPZY",50,"VA304 BE117 BE118",""],["Computersteuerung","QRq0uPzdPZY",156,"NF114 NF116 NF117 NF115",""],["Funkfernschreiben","QRq0uPzdPZY",356,"NE401 BB101 BB110 BB109 BB108 BE112",""],["Digimode per SSB","",-1,"EE403 EE402 EE404 EE415",""],["9600-Port","",-1,"EF309 EF219",""],["Übersteuerung","",-1,"EJ218 EJ217 EJ219",""],["Automatische Empfangsberichte","",-1,"EE405",""],["Digital Voice (DV)","QRq0uPzdPZY",715,"NE404 NE307 NE403 NE402",""],["Paketvermittelte Netzwerke","",-1,"EE412 EE414 EE413",""],["Datenübertragungsrate","",-1,"EA106 EE401",""],["Amplituden- und Frequenzumtastung (ASK, FSK)","",-1,"EE406 EE407 EE101",""],["AFSK","",-1,"EE408",""],["Vielfachzugriff","",-1,"EE409 EE411 EE410",""]]},{"t":"Digitale Signalverarbeitung","s":"ne_digitale_signalverarbeitung","a":[["Digitale Signalverarbeitung","",-1,"EF603 EF602 EF601",""]]},{"t":"Betriebsabwicklung","s":"ne_betriebsabwicklung","a":[["Pile-up","iVZDwRE4cwg",0,"BE305 BE306 BE307",""],["Split-Verkehr","iVZDwRE4cwg",205,"BE308 BE310 BE309 BE311",""],["Contest","iVZDwRE4cwg",412,"BE301 BE116 BE303 BE302 BE304",""],["Fuchsjagd (ARDF)","iVZDwRE4cwg",545,"BE313 BD109",""],["SSTV","iVZDwRE4cwg",630,"BE210",""],["Notfunk","iVZDwRE4cwg",771,"BF104 BF105 BF106 BF107 BF108 BF101 BF102 VD105 BF103 BF109",""]]},{"t":"Antennen und Übertragungsleitungen","s":"ne_antennen_uebertragungsleitungen","a":[["Antennen","Oe2XpzhSVEQ",19,"NG101",""],["Dipol-Antenne","Oe2XpzhSVEQ",89,"NG103 NG304 NG305",""],["Yagi-Uda-Antenne","Oe2XpzhSVEQ",308,"NG108",""],["Rundstrahlantennen","Oe2XpzhSVEQ",369,"NG105 NG106 NG104 NG102 NG110 NG111",""],["Endgespeiste Antennen (End-Fed)","Oe2XpzhSVEQ",527,"NG107 NG109",""],["Polarisation","Oe2XpzhSVEQ",554,"NB304",""],["Polarisation II","",-1,"EG222 EB305 EB306 EB309 EB307 EB310 EB308",""],["Antennenformen II","",-1,"EG213 EG101 EG105 EG104 EG103 EG215 EG214 EG219 EG108 EG216 EG217 EG106 EG107",""],["Antennenlänge und -resonanz","",-1,"EG102 EG109 EG110",""],["Verkürzungsfaktor I","",-1,"EG201 EG202",""],["Fußpunktimpedanz I","",-1,"EG207 EG208 EG209 EG210 EG211",""],["Yagi-Uda Antenne II","",-1,"EG111 EG212 EG218",""],["Parabolspiegel I","",-1,"EG113 EG114",""],["Strom- und Spannungsspeisung I","",-1,"EG203 EG204 EG206 EG205",""],["Antennengewinn in dBi und dBd","",-1,"EG220 EG221",""],["Standortwahl","",-1,"EG223 EJ110 EG112",""],["Einbau Kfz","Oe2XpzhSVEQ",652,"NK308 NK310 NK309 NK307",""],["Übertragungsleitungen","Oe2XpzhSVEQ",752,"NG207 NG201",""],["Übertragungsleitungen II","",-1,"EG301 EG302 EG306 EG304 EG305 EG303","e"],["Koaxialsteckverbinder","Oe2XpzhSVEQ",888,"",""],["PL-Steckverbinder","Oe2XpzhSVEQ",954,"NG202",""],["N-Steckverbinder","Oe2XpzhSVEQ",968,"NG204",""],["BNC-Steckverbinder","Oe2XpzhSVEQ",997,"NG203",""],["SMA-Steckverbinder","Oe2XpzhSVEQ",1029,"NG205 NG206",""],["Kabeldämpfung I","",-1,"EG309 EG310 EG308 EG307 EG312 EG311 EG313 EG314 EG315 EG316",""],["Stehwellenverhältnis (SWR)","Oe2XpzhSVEQ",1089,"NI201 NF101 NI202 NG301 NI203 NG302 NG303 NG208",""],["Stehwellenverhältnis (SWR) II","",-1,"EG401 EG402 EG403",""],["Stehwellenmessgerät (SWR-Meter) I","",-1,"EI401 EI402 EI403 EI404 EI405",""],["Vektorieller Netzwerkanalysator (VNA) I","",-1,"EI201 EI202 EI203 EI204 EI205 EI206",""],["Mantelwellen I","",-1,"EG405 EG406 EG404 EG407 EG408",""]]},{"t":"Personenschutzabstand","s":"ne_personenschutzabstand","a":[["Personenschutz","Oe2XpzhSVEQ",1965,"NK201 VE501 VE502 VE505 VE503 VE504 VE511",""],["Effektive Strahlungsleistung (ERP)","Oe2XpzhSVEQ",2053,"NG401",""],["Äquivalente isotrope Strahlungsleistung (EIRP)","Oe2XpzhSVEQ",2119,"NG402",""],["Äquivalente isotrope Strahlungsleistung (EIRP) II","",-1,"EG501 EG502 EG503 EG504 EG511 EG505 EG507 EG506 EG508 EG509 EG510",""],["Sendeleistung Klasse N","Oe2XpzhSVEQ",2188,"VD724 VD743 VD726 VD725",""],["Anzeige ortsfester Amateurfunkanlagen","Oe2XpzhSVEQ",2209,"VE508 VE507 VE509 VE512 VE513 VD107 VE514 VE510 VE506 VE515 VE516 VE517",""],["Standortbescheinigung","Oe2XpzhSVEQ",2264,"VC121 VE519 VE518",""],["Personenschutzabstand II","",-1,"EK104 EK107",""],["Grenzwerte","",-1,"EK101 EK102 EK103",""],["Näherungsformel I","",-1,"EK108 EK106 EK105",""]]},{"t":"Sicherheit","s":"ne_sicherheit","a":[["Baurecht und Haftung","Oe2XpzhSVEQ",2884,"VE602 VE707",""],["Energieleitungen","Oe2XpzhSVEQ",2839,"NK311",""],["Öffnen elektrischer Geräte I","",-1,"EK203",""],["Blitzschutz","",-1,"VE603",""],["Blitzerdung","",-1,"EK209 EK210 EK211",""],["Potentialausgleich","Oe2XpzhSVEQ",2780,"VE604",""],["Schutzerdung und Potentialausgleich I","",-1,"EK208","e"],["Statische Aufladung von Antennen","",-1,"EK206 EK207",""],["Berühren von Antennen I","",-1,"EK202",""],["Aufenthalt im Strahlengang","",-1,"EK201",""]]},{"t":"Gesetze und Vorschriften","s":"ne_gesetze_und_vorschriften","a":[["Internationale Vereinbarungen, Gesetze und Vorschriften","VdCP90XGQUU",0,"VA301 VC101 VC104 VE101",""],["Amateurfunkdienst","VdCP90XGQUU",299,"VA101 VA102 VA103 VC102",""],["Amateurfunkstelle","VdCP90XGQUU",433,"VA201 VA202 VC103 VA302",""],["Funkamateur","VdCP90XGQUU",576,"VA104 VC113 VC105",""],["Zulassung","VdCP90XGQUU",651,"VC106 VC108",""],["Anschrift und Änderung","VdCP90XGQUU",707,"VD113 VD114",""],["Gebühren und Beiträge","VdCP90XGQUU",739,"VE701 VE702 VE703 VE704",""],["Fernmeldegeheimnis und Abhörverbot","VdCP90XGQUU",797,"VE202 VE203 VE204 VE201",""],["Verstöße und Folgen","VdCP90XGQUU",965,"VC122 VC123 VC124 VC125 VE103",""]]},{"t":"Abkürzungen","s":"ne_abkuerzungen","a":[["Betriebliche Abkürzungen","iVov9T0EO74",19,"BB106 BB107",""],["Q-Schlüssel","iVov9T0EO74",275,"VA407 BB204 BB203 BE115 BB202 BB205 BB201 BB206 BE107",""],["Maidenhead Locator","iVov9T0EO74",783,"BE111",""],["Kursabschluss","",-1,"",""]]}]},"ne":{"key":"E","name":"Aufbaukurs N → E","lek":[{"t":"Elektrische Schwingungen und Funkwellen","s":"e_elektrische_schwingungen_funkwellen","a":[["Zehnerpotenzen","",-1,"EA110 EA109 EA108 EA116 EA114 EA111 EA112 EA115 EA113",""],["Formeln umstellen I","",-1,"",""],["Wellenlänge II","",-1,"EB314 EB315 EB316 EB311 EB312 EB313",""]]},{"t":"Wellenausbreitung","s":"e_wellenausbreitung","a":[["Troposphäre II","",-1,"EH301 EH302 EH303",""],["Aurora I","",-1,"EH305",""],["Sporadic-E II","",-1,"EH304 EH218",""],["Ionosphäre II","",-1,"EH101 EH219 EH102 EH210 EH105 EH106 EH103 EH104 EH107 EH205",""],["Tote Zone I","",-1,"EH201",""],["Fading","",-1,"EH203 EH202",""],["Sprungdistanz I","",-1,"EH208",""],["MUF und LUF","",-1,"EH204 EH207 EH206 EH209",""],["Bodenwelle","",-1,"EH211 EH212",""],["Greyline","",-1,"EH213",""],["Mögel-Dellinger-Effekt","",-1,"EH214 EH215",""],["Langer und kurzer Weg I","",-1,"EH217 EH216",""]]},{"t":"Strom, Spannung, Widerstand, Leistung, Energie","s":"e_strom_spannung_widerstand_leistung_energie","a":[["Strom- und Spannungsmessung II","",-1,"EI101 EI102",""],["Zeigerinstrumente ablesen","",-1,"EI103 EI104",""],["Spitzen- und Effektivwert","",-1,"EB407 EB406 EB405 EB404 EB403 EB401 EB402",""],["Oszilloskop I","",-1,"EB408 EI301 EB410 EI302 EB409 EB411 EI304",""],["SMD-Widerstände","",-1,"EC114 EC115 EC116 EC117",""],["Widerstandsmaterialien","",-1,"EC101 EC102 EC103 EC104",""],["Widerstandstoleranzen","",-1,"EC112 EC113",""],["Heißleiter und Kaltleiter","",-1,"EC109 EC110 EC111",""],["Leistung II","",-1,"EB505 EB506 EB504 EB507 EB508 EB509 EB510 EB511 EB512 EB503 EB513",""],["Dezibel I","",-1,"EA107",""],["Weitere Prüfungsfragen","",-1,"EB514 EC108 EC107 EC106 EC105 EI303","z"]]},{"t":"Elektromagnetisches Feld","s":"e_em_feld","a":[["Elektrisches Feld","",-1,"EB101 EA103 EB102 EB103 EB104 EB105",""],["Magnetisches Feld","",-1,"EB201 EB202 EA104 EB203 EB206",""],["Elektromagnetisches Feld","",-1,"EB301 EB302 EB303 EB304",""]]},{"t":"Bauelemente","s":"e_bauelemente","a":[["Kondensator I","",-1,"EA101 EC205 EC203 EC204 EC206 EC207 EC201 EC202",""],["Spule I","",-1,"EC304 EA102 EC307 EC306 EC305 EB205 EB204 EC302 EC301 EC303",""],["Übertrager I","",-1,"EC401 EC402 EC403 EC404",""],["Diode I","",-1,"EC501 EC502 EC503 EC504 EC506 EC507 EC508 EC505 EC513 EC510 EC509 EC511 EC512 EC514 EC515 EC516 EC517 EC518 EC519 EC520 EC521 EC522",""],["Transistor I","",-1,"EC602 EC608 EC607 EC606 EC605 EC609 EC601 EC603 EC610 EC611 EC612 EC613 EC614 EC615 EC604",""]]},{"t":"Reihen- und Parallelschaltung von Bauelementen","s":"e_reihen_parallelschaltung","a":[["Widerstand in Reihen- und Parallelschaltung","",-1,"ED104 ED105 ED106 ED110 ED111 ED108 ED109 ED112 ED113 ED107",""],["Widerstandsnetzwerke I","",-1,"ED115 ED116",""],["Spannungsteiler I","",-1,"ED101 ED102 ED103",""],["Kondensator in Reihen- und Parallelschaltung","",-1,"ED119 ED120 ED117 ED118 ED123 ED124 ED122 ED121",""],["Weitere Prüfungsfragen","",-1,"ED114","z"]]},{"t":"Strom- und Spannungsversorgung","s":"e_strom_spannungsversorgung","a":[["Spannungsquellen","",-1,"ED301 EK205",""],["Gleichrichter I","",-1,"ED304",""],["Schaltnetzteil I","",-1,"ED302 ED303",""],["Sicherungen","",-1,"EK204",""]]},{"t":"Grundlegende Schaltungen","s":"e_grundlegende_schaltungen","a":[["Filter und Schwingkreise I","",-1,"ED202 ED211 ED212 ED213 ED201 ED208 ED209 ED210 ED203 ED205 ED215 ED204 ED206 ED207 ED214 ED216",""],["Oszillatoren","",-1,"ED501 ED502 ED503 ED504 ED505 EF304 ED506 ED507 EF207",""],["Frequenzvervielfacher I","",-1,"EF301 EF302 EF303",""],["Mischer","",-1,"EF201 EF202 EF203 EF204 EF205 EF206",""],["Konverter und Transverter","",-1,"EF504 EF505 EF501 EF502 EF503",""],["Verstärker","",-1,"ED401 ED403 EF403 ED402 EF307 EF308 EF405",""]]},{"t":"Modulation","s":"e_modulation","a":[["Unmodulierter Träger","",-1,"",""],["Einseitenbandmodulation (SSB) II","",-1,"EE201 EE202 EJ210 EE203 EE204 EJ211 EF310 EE207 EE206 EE205 EJ215",""],["Frequenzmodulation (FM) II","",-1,"EE301 EE302 EE303 EE306 EE304 EE305",""],["Bandbreite II","",-1,"EA105",""],["Dynamikkompressor I","",-1,"EF306",""]]},{"t":"Empfänger","s":"e_empfaenger","a":[["Detektorempfänger","",-1,"EF101",""],["Überlagerungsempfänger (Einfachsuper) I","",-1,"EF102 EF208","e"],["Trennschärfe I","",-1,"EF210",""],["BFO I","",-1,"EF209",""],["Vorverstärker und Dämpfungsglied","",-1,"EF217 EF218",""],["Automatische Verstärkungsregelung (AGC) I","",-1,"EF211 EF212",""],["Notch-Filter","",-1,"EF216",""],["Rauschunterdrückung","",-1,"EF213 EF214",""],["Frequenzmessung I","",-1,"EI501 EI502 EI503 EI504",""],["Weitere Prüfungsfragen","",-1,"EF215","z"]]},{"t":"Sender","s":"e_sender","a":[["ALC","",-1,"EF305",""],["Senderausgangsleistung","",-1,"EJ209 EF401 EF402 EB501 EB502",""],["Unerwünschte Aussendungen II","",-1,"EJ201 EJ202 EJ204 EJ205 EJ206 EJ207 EJ208 EJ203 EF404 EJ213 EJ214 EJ216 EJ212",""],["Störende Beeinflussung elektronischer Geräte I","",-1,"EJ101 EJ102 EJ103 EJ112 EJ113 EJ120 EJ121 EJ104 EJ105 EJ106 EJ107 EJ108 EJ109 EJ111 EJ124 EJ116 EJ117 EJ118 EJ119 EJ115 EJ114 EJ122 EJ123",""]]},{"t":"Digitale Übertragungsverfahren","s":"e_digitale_uebertragungsverfahren","a":[["Binäres Zahlensystem","",-1,"EA201 EA202 EA203 EA204 EA205 EA206 EA207 EA208",""],["Digimode per SSB","",-1,"EE403 EE402 EE404 EE415",""],["9600-Port","",-1,"EF309 EF219",""],["Übersteuerung","",-1,"EJ218 EJ217 EJ219",""],["Automatische Empfangsberichte","",-1,"EE405",""],["Paketvermittelte Netzwerke","",-1,"EE412 EE414 EE413",""],["Datenübertragungsrate","",-1,"EA106 EE401",""],["Amplituden- und Frequenzumtastung (ASK, FSK)","",-1,"EE406 EE407 EE101",""],["AFSK","",-1,"EE408",""],["Vielfachzugriff","",-1,"EE409 EE411 EE410",""]]},{"t":"Digitale Signalverarbeitung","s":"e_digitale_signalverarbeitung","a":[["Digitale Signalverarbeitung","",-1,"EF603 EF602 EF601",""]]},{"t":"Antennen und Übertragungsleitungen","s":"e_antennen_uebertragungsleitungen","a":[["Polarisation II","",-1,"EG222 EB305 EB306 EB309 EB307 EB310 EB308",""],["Antennenformen II","",-1,"EG213 EG101 EG105 EG104 EG103 EG215 EG214 EG219 EG108 EG216 EG217 EG106 EG107",""],["Antennenlänge und -resonanz","",-1,"EG102 EG109 EG110",""],["Verkürzungsfaktor I","",-1,"EG201 EG202",""],["Fußpunktimpedanz I","",-1,"EG207 EG208 EG209 EG210 EG211",""],["Yagi-Uda Antenne II","",-1,"EG111 EG212 EG218",""],["Parabolspiegel I","",-1,"EG113 EG114",""],["Strom- und Spannungsspeisung I","",-1,"EG203 EG204 EG206 EG205",""],["Antennengewinn in dBi und dBd","",-1,"EG220 EG221",""],["Standortwahl","",-1,"EG223 EJ110 EG112",""],["Übertragungsleitungen II","",-1,"EG301 EG302 EG306 EG304 EG305 EG303","e"],["Kabeldämpfung I","",-1,"EG309 EG310 EG308 EG307 EG312 EG311 EG313 EG314 EG315 EG316",""],["Stehwellenverhältnis (SWR) II","",-1,"EG401 EG402 EG403",""],["Stehwellenmessgerät (SWR-Meter) I","",-1,"EI401 EI402 EI403 EI404 EI405",""],["Vektorieller Netzwerkanalysator (VNA) I","",-1,"EI201 EI202 EI203 EI204 EI205 EI206",""],["Mantelwellen I","",-1,"EG405 EG406 EG404 EG407 EG408",""]]},{"t":"Personenschutzabstand","s":"e_personenschutzabstand","a":[["Äquivalente isotrope Strahlungsleistung (EIRP) II","",-1,"EG501 EG502 EG503 EG504 EG511 EG505 EG507 EG506 EG508 EG509 EG510",""],["Personenschutzabstand II","",-1,"EK104 EK107",""],["Grenzwerte","",-1,"EK101 EK102 EK103",""],["Näherungsformel I","",-1,"EK108 EK106 EK105",""]]},{"t":"Sicherheit","s":"e_sicherheit","a":[["Öffnen elektrischer Geräte I","",-1,"EK203",""],["Blitzerdung","",-1,"EK209 EK210 EK211",""],["Schutzerdung und Potentialausgleich I","",-1,"EK208","e"],["Statische Aufladung von Antennen","",-1,"EK206 EK207",""],["Berühren von Antennen I","",-1,"EK202",""],["Aufenthalt im Strahlengang","",-1,"EK201",""],["Kursabschluss","",-1,"",""]]}]},"ea":{"key":"A","name":"Aufbaukurs E → A","lek":[{"t":"Wellenausbreitung","s":"a_wellenausbreitung","a":[["Troposphäre III","",-1,"AH309",""],["Mehrwegeausbreitung","",-1,"AH222",""],["Aurora II","",-1,"AH302 AH303 AH306 AH304 AH305 AH307 AH308",""],["Sporadic-E III","",-1,"AH301 AH214 AH220",""],["Ionosphäre III","",-1,"AH101 AH103 AH104 AH105 AH106 AH108 AH202 AH201 AH203 AH221 AH107 AH102 AH219",""],["Tote Zone II","",-1,"AH215",""],["Sprungdistanz II","",-1,"AH212 AH213",""],["MUF und LUF II","",-1,"AH206 AH207 AH208 AH209 AH210 AH211 AH204 AH205",""],["Langer und kurzer Weg II","",-1,"AH216 AH217 AH218",""],["Scatter","",-1,"AH311 AH223 AH310","e"]]},{"t":"Strom, Spannung, Widerstand, Leistung, Energie","s":"a_strom_spannung_widerstand_leistung_energie","a":[["Physikalische Stromrichtung","",-1,"AB601",""],["Strom- und Spannungsmessung III","",-1,"AI101 AI102 AI103 AI104",""],["Oszilloskop II","",-1,"AI301 AI304 AI303 AI302 AI305 AI306",""],["Leiterwiderstand","",-1,"AB101 AB102 AB103","e"],["Leistung beim Wechselstrom","",-1,"AB301 AI105","e"],["Dezibel II","",-1,"AD428 AA110 AA105 AD427 AA111 AA108 AA107 AA109 AA106 AD426 AA112","e"],["Ladung und Energie","",-1,"AA102 AA103 AB502 AB503","e"]]},{"t":"Bauelemente","s":"a_bauelemente","a":[["Phase","",-1,"AB302 AB303","e"],["Kondensator II","",-1,"AC101 AC111 AC103 AC102 AC104 AC105 AC106 AC107 AC108 AC109 AC110","e"],["Spule II","",-1,"AC201 AC202 AC203 AC204 AC211 AC205 AC206 AC207 AC208 AC209 AA101 AC210","e"],["Übertrager II","",-1,"AC301 AC302 AC306 AC303 AC304 AC305 AC307","e"],["Halbleiter II","",-1,"AB104 AB105 AB106 AB107 AB108 AC402 AB109","e"],["Diode II","",-1,"AC401 AC403 AC404 AC405 AC406 AC407 AC408","e"],["Transistor II","",-1,"AC503 AC504 AC501 AC505 AC515 AC518 AC516 AC517 AC519 AC520 AC502 AC506 AC513 AC512 AC514 AC507 AC508 AC509 AC510 AC511 AC521 AC522 AC523 AC524","e"],["Integrierte Schaltkreise","",-1,"AC601 AC602 AC603 AC604 AF425 AF426 AF427","e"]]},{"t":"Reihen- und Parallelschaltung von Bauelementen","s":"a_reihen_parallelschaltung","a":[["Widerstandsnetzwerke II","",-1,"AD106 AD107 AD108 AD109 AD110 AD114","e"],["Spannungsteiler II","",-1,"AD115","e"],["Brückenschaltung","",-1,"AD111 AD112 AD113","e"],["Spule in Reihenschaltung","",-1,"AD102","e"],["Reihen- und Parallelschaltung gemischter Bauelemente","",-1,"AD101 AD103 AD105 AD104","e"]]},{"t":"Strom- und Spannungsversorgung","s":"a_strom_spannungsversorgung","a":[["Innenwiderstand von Strom- und Spannungsquellen","",-1,"AB201 AG401 AB202 AB203 AB204 AB207 AB208 AB206 AB205","e"],["Akkus","",-1,"AB210 AB209 AB211 AB501","e"],["Photovoltaik","",-1,"AB212 AD301","e"],["Spannungswandler","",-1,"AB213 AB214","e"],["Gleichrichter II","",-1,"AD302 AD303 AD304","e"],["Brückengleichrichter","",-1,"AD305 AD306","e"],["Vollweggleichrichter","",-1,"AD307 AD308 AD310","e"],["Restwelligkeit","",-1,"AD309","e"],["Schaltnetzteil II","",-1,"AD311 AD312 AD313 AD314","e"],["Spannungsstabilisierung","",-1,"AD321 AD315 AD319 AD320 AD317 AD316 AD318","e"],["Fernspeiseweiche","",-1,"AD322 AD323 AD324 AD325","e"]]},{"t":"Grundlegende Schaltungen","s":"a_grundlegende_schaltungen","a":[["Schwingkreis II","",-1,"AD201 AD202 AD203 AD206 AD207 AD204 AD208 AD209 AD210 AD211 AD212 AD213 AD214 AD215 AD216 AD217 AD218 AD205 AD219 AD220 AD221 AD222 AD225 AD226 AD224 AD223 AD227 AD228 AD229","e"],["Spannungsgesteuerter Oszillator (VCO)","",-1,"AD601 AD611","e"],["Temperaturkompensation von Oszillatoren","",-1,"AF215 AD602 AD603 AD605 AD604","e"],["GPS-synchronisierter Oszillator","",-1,"AD606","e"],["Spannungsstabilität von Oszillatoren","",-1,"AD612 AD608 AD607 AD609","e"],["Oszillatorschaltungen","",-1,"AD613 AD614 AD616 AD617 AD610 AD615 AD619 AD618","e"],["Direkte digitale Synthese","",-1,"AD620","e"],["Phasenregelschleife (PLL)","",-1,"AD701 AD702 AD705 AD703 AD704","e"],["Frequenzvervielfacher II","",-1,"AF312 AF311 AF313 AF314","e"],["Konverter und Transverter II","",-1,"AF501 AF502 AF301","e"],["Kollektorschaltung","",-1,"AD401 AD405 AD402 AD403 AD404","e"],["Emitterschaltung","",-1,"AD409 AD411 AD413 AD412 AD407 AD408 AD406 AD414 AD415 AD410","e"],["Wirkungsgrad","",-1,"AD430 AD429","e"],["Verstärkerklassen","",-1,"AD416 AD419 AD420 AD421 AD424 AD425 AD418 AD417 AD422 AJ218 AD423 AF402 AF403","e"],["Linearverstärker","",-1,"AD431","e"],["Eigenschwingung","",-1,"AD432 AJ216 AJ215","e"],["Begrenzung der Verstärkerbandbreite","",-1,"AD433","e"]]},{"t":"Modulation","s":"a_modulation","a":[["Amplitudenmodulation (AM) II","",-1,"AE201 AE202 AE203 AE204","e"],["Einseitenbandmodulation (SSB) III","",-1,"AE209 AE208 AE205 AE213 AE207","e"],["Frequenzmodulation (FM) III","",-1,"AE303 AE301 AE302 AE305 AE306 AE307 AE304 AE309 AE308 AE311 AE312 AE310","e"],["Phasenmodulation (PM)","",-1,"AE313","e"],["Bandbreite III","",-1,"AE101","e"],["Dynamikkompressor II","",-1,"AE211 AE212 AE210","e"]]},{"t":"Empfänger","s":"a_empfaenger","a":[["Überlagerungsempfänger (Einfachsuper) II","",-1,"AF115","e"],["Mischer II","",-1,"AF212 AF213 AF214","e"],["Spiegelfrequenzen","",-1,"AF201 AF202 AF203 AF204 AF106 AF107 AF108 AF109 AF110 AF111","e"],["Doppelüberlagerungsempfänger (Doppelsuper)","",-1,"AF112 AF113 AF114 AF116 AF209 AF117 AF210 AF120 AF118 AF119","e"],["Trennschärfe II","",-1,"AF208 AF206 AF205 AF207","e"],["BFO II","",-1,"AF211 AF216","e"],["Inter- und Kreuzmodulation","",-1,"AF217 AF219 AF222 AF218 AF223 AF221 AF220","e"],["Begrenzerverstärker","",-1,"AF226","e"],["Low Noise Block (LNB)","",-1,"AF230 AF231","e"],["S-Meter","",-1,"AA113 AF104 AF101 AF102 AF103 AA114 AF105","e"],["Dämpfungsglieder","",-1,"AD806 AD803 AD804 AD805 AD801 AD802","e"],["Automatische Verstärkungsregelung (AGC) II","",-1,"AF224","e"],["SNR und Rauschzahl","",-1,"AF227 AF228 AF229","e"],["Rauschen","",-1,"AB408 AB409","e"],["Squelch II","",-1,"AF225","e"],["Demodulator","",-1,"AD501 AD502 AD504 AD505 AD506","e"],["Frequenzmessung II","",-1,"AI511 AI504 AI502 AI501 AI503 AI505","e"],["Frequenzgenauigkeit","",-1,"AA115 AA116 AI506 AI507 AI508 AI509 AI510","e"]]},{"t":"Sender","s":"a_sender","a":[["Modulatoren","",-1,"AD507 AE206 AF302 AF308 AD510 AF309 AF304 AF303 AF305 AF306 AF307 AD508 AF310 AD509 AD503","e"],["Nicht-sinusförmige Signale","",-1,"AB403 AB401 AB402 AI615 AI614 AJ201 AJ205 AJ202 AJ206","e"],["Leistungsverstärker","",-1,"AF412 AF408 AF413 AF414 AF417 AF409 AF410 AF407 AF406 AF405 AF404 AF401 AF420 AF423 AF424 AF421 AF411 AF422 AF419 AF418 AF415 AF428","e"],["Parasitäre Schwingungen","",-1,"AJ212 AJ213 AJ217 AF416","e"],["Messungen am Sender","",-1,"AI608 AI605 AI604 AI609 AI612 AI610 AI611 AI607 AI606 AI613","e"],["Dummy-Load II","",-1,"AI601 AI602 AI603","e"],["Unerwünschte Aussendungen III","",-1,"AJ208 AJ211 AJ209 AJ204 AJ203 AJ207 AJ210 AJ219 AJ222 AJ223 AJ224 AJ225",""],["Störende Beeinflussung elektronischer Geräte II","",-1,"AJ116 AJ117 AJ118 AJ105 AJ103 AJ107 AJ106 AJ113 AJ114 AJ108 AJ112 AJ104 AJ110 AJ111 AJ109 AJ101 AJ119 AJ102 AJ214","e"],["Remote-Station","",-1,"AF701 AF702 AF704 AF703 AF705 AF709 AF710 AF708 AF707 AF706","e"]]},{"t":"Digitale Übertragungsverfahren","s":"a_digitale_uebertragungsverfahren","a":[["Symbole und Symbolrate","",-1,"AA104 AE405 AE406","e"],["I/Q-Darstellung und Konstellationsdiagramm","",-1,"AF633","e"],["Mapping","",-1,"","e"],["Phasenumtastung: PSK und QPSK","",-1,"AE401 AE402","e"],["Quadraturamplitudenmodulation (QAM)","",-1,"AE403 AF632 AE404","e"],["Symbolumschaltung und Bandbreite","",-1,"AE415 AE214 AJ221 AJ220","e"],["Shannon-Hartley-Gesetz","",-1,"AE416 AE417 AE418 AE420 AE419","e"],["Quellencodierung","",-1,"AE408","e"],["Kanalcodierung","",-1,"AE409","e"],["Fehlererkennung","",-1,"AE411 AE412 AE410","e"],["Fehlerkorrektur","",-1,"AE413 AE414","e"],["Sende- und Empfangsketten","",-1,"AF626 AF628 AF629 AF627","e"],["Orthogonales Frequenzmultiplexverfahren (OFDM)","",-1,"AE421 AE422","e"],["Synchronisation","",-1,"AE407","e"],["Polarmodulation","",-1,"","e"]]},{"t":"Digitale Signalverarbeitung","s":"a_digitale_signalverarbeitung","a":[["Sampling und Quantisierung","",-1,"AF601 AF603 AF606 AF615 AF602 AF604 AF605","e"],["Abtasttheorem","",-1,"AF617 AF616 AF618 AF619","e"],["A/D- und D/A-Umsetzung","",-1,"AF607 AF608 AF621 AF609 AF611 AF610 AF613 AF612 AF614","e"],["Anti-Alias- und Rekonstruktionsfilter","",-1,"AF622 AF623 AF620 AF624 AF625","e"],["Fourier-Transformation","",-1,"AF630 AB404 AB405 AB406 AB407","e"],["Digitale Filter","",-1,"AF631","e"],["Digitale I/Q-Signalverarbeitung","",-1,"AF634 AF635 AF636","e"],["Latenz","",-1,"AF637","e"]]},{"t":"Antennen und Übertragungsleitungen","s":"a_antennen_uebertragungsleitungen","a":[["Polarisation III","",-1,"AG201","e"],["Antennenformen III","",-1,"AG419 AG123 AG124 AG120 AG117 AG119 AG121 AG122 AG223","e"],["Verkürzungsfaktor II","",-1,"AG101 AG102 AG103 AG104 AG105 AG202 AG118 AG313 AG315 AG316","e"],["Fußpunktimpedanz II","",-1,"AG211 AG209 AG210","e"],["Elektrische Verlängerung und Verkürzung","",-1,"AG106 AG107 AG108","e"],["Near Vertical Incidence Skywave (NVIS)","",-1,"AG125 AG224","e"],["Yagi-Uda-Antenne III","",-1,"AG212 AG222 AG126","e"],["Parabolspiegel II","",-1,"AG225 AG226 AG227 AG228 AG229","e"],["Offset-Spiegel","",-1,"AG127","e"],["Vor-/Rückverhältnis","",-1,"AG214 AG213 AG217 AG215 AG216 AG218","e"],["Halbwertsbreite","",-1,"AG219 AG220 AG221","e"],["Strom- und Spannungsspeisung II","",-1,"AG207 AG208",""],["Traps","",-1,"AG109 AG110 AG113 AG112 AG116 AG111 AG115 AG114","e"],["Übertragungsleitungen III","",-1,"AG312 AG301 AG303 AG314 AG302 AG317","e"],["Wellenwiderstand","",-1,"AG305 AG306 AG307 AG304","e"],["Kabeldämpfung II","",-1,"AG309 AG310 AG308 AG311","e"],["Skineffekt","",-1,"AG318 AG319","e"],["Stehwellenverhältnis (SWR) III","",-1,"AG405 AG402 AG403 AG404","e"],["Stehwellenmessgerät (SWR-Meter) II","",-1,"AI401 AI402 AI403","e"],["Vektorieller Netzwerkanalysator (VNA) II","",-1,"AI201 AI202 AI203 AI204 AI205 AI206 AI207 AI208","e"],["Phasenverschiebung in Übertragungsleitungen","",-1,"AG407 AG408","e"],["Lecherleitung","",-1,"AG320 AG411 AG410 AG409","e"],["Impedanztransformation","",-1,"AG412 AG416 AG413 AG414 AG415 AG417 AG418 AG406","e"],["Mantelwellen II","",-1,"AG425 AG426 AJ115 AG427 AG421 AG422 AG428 AG429","e"],["Umwegleitung","",-1,"AG420 AG423 AG424","e"],["Weitere Prüfungsfragen","",-1,"AG206 AG205 AG204 AG203","z"]]},{"t":"Personenschutzabstand","s":"a_personenschutzabstand","a":[["Effektive Strahlungsleistung (ERP) II","",-1,"AG501 AG502 AG503","e"],["Nah- und Fernfeld","",-1,"AK101 AK103","e"],["Näherungsformel II","",-1,"AK106 AK108 AK109 AK110 AK111 AK112","e"],["Personenschutzabstand III","",-1,"AK102 AK104 AK107 AK113 AK114 AK115","e"],["Personenschutz bei Richtantennen","",-1,"AK105","e"]]},{"t":"Sicherheit","s":"a_sicherheit","a":[["Öffnen elektrischer Geräte II","",-1,"AK201","e"],["Schutzerdung und Potentialausgleich II","",-1,"AK202 AK203","e"],["Berühren von Antennen II","",-1,"AK204","e"],["Kursabschluss","",-1,"",""]]}]}};
+function kursId(){
+    let id = 'n';
+    try{ id = klasseAktuell().id; }catch(e){}
+    return KURSE[id] ? id : 'n';
+}
+function kursAktuell(){ return KURSE[kursId()]; }
+window.kursAktuell = kursAktuell;
+function kursLektionen(){ return kursAktuell().lek; }
+function kursFolienLink(l){ return 'https://50ohm.de/' + kursAktuell().key + '_slide_' + l.s + '.html'; }
+// Stand je Lehrgang getrennt; fuer Klasse N bleibt der alte Schluessel.
+function unterrichtStandSchluessel(){ return 'unterricht_' + kursId() + '_stand'; }
+
+let unterrichtWahl = 0;          // im Fenster gewaehlte Lektion (Index)
+let unterrichtWahlKurs = null;   // zu welchem Lehrgang unterrichtWahl gehoert
+let unterrichtLauf = null;       // laufende Unterrichtsrunde
+
+function unterrichtStandHolen(){
+    try{ return JSON.parse(localStorage.getItem(unterrichtStandSchluessel()) || '{}') || {}; }catch(e){ return {}; }
+}
+function unterrichtStandSetzen(nr, id){
+    try{
+        const s = unterrichtStandHolen();
+        if(id) s[nr] = { id: id, t: Date.now() }; else delete s[nr];
+        localStorage.setItem(unterrichtStandSchluessel(), JSON.stringify(s));
+    }catch(e){}
+}
+
+// Die Fragen einer Lektion der Reihe nach, mit dem Abschnitt, zu dem sie
+// gehoeren. Was im geladenen Katalog fehlt (anderes Pruefungsziel), faellt raus.
+function unterrichtFragen(i){
+    const l = kursLektionen()[i]; if(!l) return [];
+    const nachId = {};
+    try{ questionBank.forEach(q => { nachId[q.id] = q; }); }catch(e){}
+    const liste = [], doppelt = {};
+    l.a.forEach((a, ai) => {
+        (a[3] ? a[3].split(' ') : []).forEach(id => {
+            if(doppelt[id] || !nachId[id]) return;
+            doppelt[id] = 1;
+            liste.push({ q: nachId[id], abschnitt: ai });
+        });
+    });
+    return liste;
+}
+
+function unterrichtZeit(s){
+    s = Math.max(0, s | 0);
+    const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0');
+}
+
+// ----------------------------------------------------------------
+// Videos (28.09.2026). Dietmar zum Knopf "Video an dieser Stelle":
+// "Hier waere mir Videolehrgang von DL2YMR lieber." Es SIND dieselben
+// 14 Videos - 50ohm.de verweist auf Michaels Lehrgang. Jetzt steht das
+// auch dran: Knopf "Videolehrgang DL2YMR", und das Videofenster traegt
+// den Lektionsnamen aus dem Videolehrgang des Trainers.
+// ----------------------------------------------------------------
+function unterrichtVideoLektion(videoId){
+    try{
+        const map = (typeof videoMap === 'object' && videoMap && Object.keys(videoMap).length)
+            ? videoMap : (window.EMBEDDED_VIDEO_MAP || {});
+        for(const v of Object.values(map)){ if(v && v.videoId === videoId && v.lesson) return v.lesson; }
+    }catch(e){}
+    return '';
+}
+function unterrichtVideoTitel(videoId, sek){
+    return (unterrichtVideoLektion(videoId) ? 'Videolehrgang von Michael, DL2YMR' : 'Video') + ' – ab ' + unterrichtZeit(sek);
+}
+function unterrichtVideoAb(li, ai){
+    const l = kursLektionen()[li]; const a = l && l.a[ai];
+    if(!a || !a[1]) return;
+    const name = unterrichtVideoLektion(a[1]);
+    openVideoModal(a[1], a[2], name ? 'Videolehrgang DL2YMR · ' + name : 'Video', a[0]);
+}
+window.unterrichtVideoAb = unterrichtVideoAb;
+
+function unterrichtEsc(t){
+    return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function unterrichtStilEinbauen(){
+    if(document.getElementById('unterrichtStil')) return;
+    const st = document.createElement('style');
+    st.id = 'unterrichtStil';
+    st.textContent = [
+        '#unterrichtModal{display:none;position:fixed;inset:0;background:rgba(15,39,69,0.62);z-index:99996;align-items:center;justify-content:center;padding:1rem;}',
+        /* Feste Hoehe (27.09.2026). Dietmar: "Beim durchklicken der Lektionen,
+           gibt es unterschiedliche groessen vom Fenster." Die Lektionen haben
+           2 bis 24 Abschnitte - das Fenster wuchs und schrumpfte mit. Jetzt
+           steht es fest, die Abschnittsliste rollt innen. */
+        '#unterrichtModal > div{background:#fff;border-radius:18px;padding:1.2rem 1.3rem 1rem;width:min(980px,96%);height:min(calc(92vh / var(--afu-zoom, 1)), 820px);box-sizing:border-box;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.4);}',
+        '#unterrichtModal .u-kopf{display:flex;align-items:center;gap:8px;margin-bottom:0.2rem;}',
+        '#unterrichtModal .u-kopf h3{flex:1;margin:0;font-size:1.05rem;color:var(--panel-navy);}',
+        '#unterrichtModal .u-unter{font-size:0.8rem;color:var(--muted);margin:0 0 0.8rem;}',
+        '#unterrichtModal .u-rumpf{display:grid;grid-template-columns:290px 1fr;grid-template-rows:minmax(0,1fr);gap:14px;min-height:0;flex:1 1 0;}',
+        '#unterrichtModal .u-liste{overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:4px;background:#f4f7fd;}',
+        '#unterrichtModal .u-lek{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:9px;padding:6px 8px;cursor:pointer;font:inherit;color:var(--ink);}',
+        '#unterrichtModal .u-lek:hover{background:rgba(0,120,200,0.07);}',
+        '#unterrichtModal .u-lek.an{background:#fff;border-color:var(--panel-navy);box-shadow:0 1px 4px rgba(15,39,69,0.12);}',
+        '#unterrichtModal .u-nr{flex:0 0 26px;height:26px;border-radius:7px;background:var(--panel-navy);color:#fff;font-weight:800;font-size:0.8rem;display:flex;align-items:center;justify-content:center;}',
+        '#unterrichtModal .u-lt{flex:1;font-size:0.84rem;font-weight:600;line-height:1.2;}',
+        '#unterrichtModal .u-lz{font-size:0.7rem;color:var(--muted);white-space:nowrap;text-align:right;line-height:1.25;}',
+        '#unterrichtModal .u-lz b{color:#b86e00;font-weight:700;}',
+        '#unterrichtModal .u-detail{display:flex;flex-direction:column;min-height:0;min-width:0;}',
+        '#unterrichtModal .u-dt{font-size:1rem;font-weight:800;color:var(--panel-navy);margin:2px 0 2px;}',
+        '#unterrichtModal .u-dm{font-size:0.78rem;color:var(--muted);margin-bottom:8px;}',
+        '#unterrichtModal .u-abs{overflow-y:auto;border:1px solid var(--line);border-radius:12px;flex:1 1 0;min-height:120px;}',
+        '#unterrichtModal .u-dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+        '#unterrichtModal .u-ab{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font-size:0.82rem;}',
+        '#unterrichtModal .u-ab:last-child{border-bottom:none;}',
+        '#unterrichtModal .u-ab.hier{background:#fff6e5;}',
+        '#unterrichtModal .u-an{flex:0 0 22px;color:var(--muted);font-family:var(--font-mono);font-size:0.72rem;}',
+        '#unterrichtModal .u-at{flex:1;}',
+        '#unterrichtModal .u-tag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;font-size:0.66rem;font-weight:700;color:#8a5a00;background:#fdf1d8;border:1px solid #f0d49a;vertical-align:1px;}',
+        'body.dark #unterrichtModal .u-tag{color:#f5c56b;background:#2a2410;border-color:#5a4a1c;}',
+        '#unterrichtModal .u-af{flex:0 0 auto;font-size:0.72rem;color:var(--muted);min-width:64px;text-align:right;}',
+        '#unterrichtModal .u-mini{border:1px solid var(--line);background:#fff;color:var(--panel-navy);border-radius:14px;padding:2px 8px;font-size:0.72rem;cursor:pointer;white-space:nowrap;font-family:inherit;}',
+        '#unterrichtModal .u-mini:hover{border-color:var(--panel-navy);}',
+        '#unterrichtModal .u-mini[disabled]{opacity:0.35;cursor:default;}',
+        /* Alle Zeitknoepfe gleich breit (28.09.2026). Dietmar, mit Bild der
+           Spalte 0:00 ... 20:59: "Bitte achte darauf, das alle Felder gleich
+           gross sind." Feste Breite, Ziffern gleich breit, Inhalt mittig; ein
+           Abschnitt ohne Video haelt den Platz frei, damit die Spalten stehen. */
+        '#unterrichtModal .u-zeit{flex:0 0 74px;width:74px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;}',
+        '#unterrichtModal .u-platz{visibility:hidden;}',
+        '#unterrichtModal .u-ab > .u-mini:last-child{flex:0 0 76px;width:76px;box-sizing:border-box;text-align:center;}',
+        '#unterrichtModal .u-fuss{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}',
+        '#unterrichtModal .u-haken{display:flex;align-items:center;gap:7px;font-size:0.85rem;font-weight:600;color:var(--panel-navy);cursor:pointer;background:#f4f7fd;border:1px solid var(--line);border-radius:20px;padding:0.35rem 0.8rem;}',
+        '#unterrichtModal .u-haken input{width:17px;height:17px;cursor:pointer;}',
+        '#unterrichtModal .u-quelle{font-size:0.68rem;color:var(--muted);margin-top:10px;line-height:1.35;}',
+        '#unterrichtModal .u-quelle a{color:inherit;}',
+        '#unterrichtModal .u-leer{padding:1rem;color:var(--muted);font-size:0.85rem;}',
+        '@media (max-width:760px){#unterrichtModal .u-rumpf{grid-template-columns:1fr;grid-template-rows:30vh minmax(0,1fr);}}',
+        'body.dark #unterrichtModal{--ink:#f0f7fc;--muted:#8ba6bb;--line:#1d3b52;--panel-navy:#00adef;color:var(--nacht-schrift,#f0f7fc);}',
+        'body.dark #unterrichtModal .u-mini{background:var(--nacht-flaeche,#0f2b40);}',
+        'body.dark #unterrichtModal .u-lek.an{background:#12405e !important;border-color:#00adef !important;}',
+        'body.dark #unterrichtModal .u-nr{color:#062033;}',
+        'body.dark #unterrichtModal .u-ab.hier{background:#2a2410;}',
+        'body.dark #unterrichtModal .u-haken, body.dark #unterrichtModal .u-liste{background:var(--nacht-tief,#0a1f2e);}',
+        'body.dark #unterrichtModal .btn-primary, body.dark #unterrichtModal .btn-primary i{color:#fff !important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+}
+
+function unterrichtOeffnen(reiter){
+    unterrichtStilEinbauen();
+    if(typeof reiter === 'string') unterrichtReiter = reiter;
+    let m = document.getElementById('unterrichtModal');
+    if(!m){
+        m = document.createElement('div');
+        m.id = 'unterrichtModal';
+        m.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="unterrichtTitel">'
+            + '<div class="u-kopf"><h3 id="unterrichtTitel"></h3>'
+            + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" onclick="unterrichtSchliessen()" aria-label="Schließen">&#10005;</button></div>'
+            + '<div class="u-reiter" id="unterrichtReiter" style="display:none"></div>'
+            + '<div class="u-teil" id="unterrichtTeilLektionen">'
+            + '<p class="u-unter" id="unterrichtUnter"></p>'
+            + '<div class="u-rumpf"><div class="u-liste" id="unterrichtListe"></div><div class="u-detail" id="unterrichtDetail"></div></div>'
+            + '</div>'
+            + '<div class="u-teil u-anders" id="unterrichtTeilAndere" style="display:none"></div>'
+            + '<div class="u-quelle">Lektionen, Abschnitte und Reihenfolge der Fragen nach den Folien von '
+            + '<a href="#" onclick="openExternalTab(\'https://50ohm.de/\' + kursAktuell().key + \'_slide_index.html\');return false;">50ohm.de</a> – '
+            + '50ohm.de–Autorenteam, koordiniert durch das AJW-Referat des DARC e. V., Lizenz '
+            + '<a href="#" onclick="openExternalTab(\'https://creativecommons.org/licenses/by/4.0/deed.de\');return false;">CC BY 4.0</a>. '
+            + 'Für den Trainer auf Titel und Fragenreihenfolge gekürzt; die Folien selbst stehen auf 50ohm.de.</div>'
+            + '</div>';
+        document.body.appendChild(m);
+        m.addEventListener('click', e => { if(e.target === m) unterrichtSchliessen(); });
+    }
+    // Erstes Oeffnen oder anderes Pruefungsziel: die zuletzt bearbeitete
+    // Lektion dieses Lehrgangs vorwaehlen.
+    if(unterrichtWahlKurs !== kursId()){
+        unterrichtWahlKurs = kursId();
+        unterrichtWahl = 0;
+        const st = unterrichtStandHolen();
+        let best = -1, zeit = 0;
+        Object.keys(st).forEach(k => { if(st[k] && st[k].t > zeit){ zeit = st[k].t; best = (+k) - 1; } });
+        if(best >= 0 && best < kursLektionen().length) unterrichtWahl = best;
+    }
+    unterrichtZeichnen();
+    m.style.display = 'flex';
+    // Reiter fuer Kurs und Hausaufgaben (je nach Rolle), danach frisch
+    // vom Server nachziehen.
+    try{ unterrichtReiterZeichnen(); }catch(e){}
+    try{ kursAuffrischen().then(() => { try{ unterrichtReiterZeichnen(); }catch(e){} }); }catch(e){}
+}
+window.unterrichtOeffnen = unterrichtOeffnen;
+
+function unterrichtSchliessen(){
+    const m = document.getElementById('unterrichtModal');
+    if(m) m.style.display = 'none';
+}
+window.unterrichtSchliessen = unterrichtSchliessen;
+
+function unterrichtWaehlen(i){
+    unterrichtWahl = i;
+    unterrichtZeichnen();
+}
+window.unterrichtWaehlen = unterrichtWaehlen;
+
+function unterrichtZeichnen(){
+    const liste = document.getElementById('unterrichtListe');
+    const detail = document.getElementById('unterrichtDetail');
+    if(!liste || !detail) return;
+    const stand = unterrichtStandHolen();
+    const kurs = kursAktuell();
+    if(unterrichtWahl >= kurs.lek.length) unterrichtWahl = 0;
+    const titel = document.getElementById('unterrichtTitel');
+    if(titel) titel.innerHTML = '<i class="fas fa-chalkboard-user"></i> Unterricht · ' + unterrichtEsc(kurs.name);
+    const unter = document.getElementById('unterrichtUnter');
+    if(unter){
+        const entwurf = kurs.lek.reduce((n, l) => n + l.a.filter(a => a[4] === 'e').length, 0);
+        const abschnitte = kurs.lek.reduce((n, l) => n + l.a.length, 0);
+        unter.innerHTML = 'Die ' + kurs.lek.length + ' Lektionen in der Reihenfolge der Folien von 50ohm.de. '
+            + 'Der Trainer stellt die Fragen genau dort, wo sie im Foliensatz drankommen, und merkt sich, wo du aufgehört hast.'
+            + (entwurf > abschnitte / 4
+                ? ' <b style="color:#b86e00;">Bei 50ohm.de sind ' + entwurf + ' von ' + abschnitte + ' Abschnitten noch Entwurf – die Reihenfolge kann sich noch ändern.</b>'
+                : '');
+    }
+
+    liste.innerHTML = kursLektionen().map((l, i) => {
+        const fr = unterrichtFragen(i);
+        const s = stand[i + 1];
+        let zusatz = fr.length + ' Fragen';
+        if(s && s.id){
+            const pos = fr.findIndex(x => x.q.id === s.id);
+            if(pos >= 0) zusatz += '<br><b>bei ' + (pos + 1) + '</b>';
+        }
+        return '<button type="button" class="u-lek' + (i === unterrichtWahl ? ' an' : '') + '" onclick="unterrichtWaehlen(' + i + ')">'
+            + '<span class="u-nr">' + (i + 1) + '</span><span class="u-lt">' + unterrichtEsc(l.t) + '</span>'
+            + '<span class="u-lz">' + zusatz + '</span></button>';
+    }).join('');
+
+    const l = kursLektionen()[unterrichtWahl];
+    const fr = unterrichtFragen(unterrichtWahl);
+    if(!fr.length){
+        detail.innerHTML = '<div class="u-leer">Diese Lektion hat im geladenen Katalog keine Prüfungsfragen – sie stehen nur in den Folien auf 50ohm.de.</div>';
+        return;
+    }
+    const s = stand[unterrichtWahl + 1];
+    const merkPos = s && s.id ? fr.findIndex(x => x.q.id === s.id) : -1;
+    const merkAbschnitt = merkPos >= 0 ? fr[merkPos].abschnitt : -1;
+    const video = l.a.find(a => a[1] && a[2] >= 0);
+
+    let html = '<div class="u-dt">Lektion ' + (unterrichtWahl + 1) + ' · ' + unterrichtEsc(l.t) + '</div>'
+        + '<div class="u-dm">' + l.a.length + ' Abschnitte · ' + fr.length + ' Prüfungsfragen'
+        + (merkPos >= 0 ? ' · zuletzt bei Frage ' + (merkPos + 1) : '') + '</div>'
+        + '<div class="u-abs">';
+    let lauf = 0;
+    l.a.forEach((a, ai) => {
+        const n = fr.filter(x => x.abschnitt === ai).length;
+        const von = lauf; lauf += n;
+        html += '<div class="u-ab' + (ai === merkAbschnitt ? ' hier' : '') + '">'
+            + '<span class="u-an">' + (ai + 1) + '</span>'
+            + '<span class="u-at">' + unterrichtEsc(a[0])
+            + (a[4] === 'e' ? ' <span class="u-tag" title="Bei 50ohm.de noch nicht fertig – die Folien können sich ändern">Entwurf</span>' : '')
+            + (a[4] === 'z' ? ' <span class="u-tag" title="Diese Fragen stehen im Katalog, kommen in den Folien aber nicht vor. Der Trainer hängt sie hier an, damit keine fehlt.">nicht in den Folien</span>' : '')
+            + '</span>'
+            + (a[1] && a[2] >= 0
+                ? '<button type="button" class="u-mini u-zeit" onclick="unterrichtVideoAb(' + unterrichtWahl + ',' + ai + ')" title="' + unterrichtVideoTitel(a[1], a[2]) + '"><i class="fab fa-youtube" style="color:#c4302b;"></i> ' + unterrichtZeit(a[2]) + '</button>'
+                : (l.a.some(x => x[1] && x[2] >= 0) ? '<span class="u-zeit u-platz"></span>' : ''))
+            + '<span class="u-af">' + (n ? (von + 1) + (n > 1 ? '–' + (von + n) : '') : 'nur Folien') + '</span>'
+            + '<button type="button" class="u-mini" ' + (n ? '' : 'disabled ') + 'onclick="unterrichtStarten(' + unterrichtWahl + ',' + von + ')" title="Ab diesem Abschnitt starten"><i class="fas fa-play"></i> ab hier</button>'
+            + '</div>';
+    });
+    html += '</div>'
+        + '<div class="u-fuss">'
+        + '<label class="u-haken"><input type="checkbox" id="unterrichtBeamer" ' + (unterrichtBeamerGewuenscht() ? 'checked ' : '') + 'onchange="unterrichtBeamerMerken(this.checked)"> <i class="fas fa-display"></i> Am Beamer zeigen</label>'
+        + '<button type="button" class="btn btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="openExternalTab(\'' + kursFolienLink(l) + '\')"><i class="fas fa-person-chalkboard"></i> Folien auf 50ohm.de</button>'
+        + (video ? '<button type="button" class="btn btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="unterrichtVideoAb(' + unterrichtWahl + ',' + l.a.indexOf(video) + ')" title="' + unterrichtVideoTitel(video[1], video[2]) + '"><i class="fab fa-youtube" style="color:#c4302b;"></i> ' + (unterrichtVideoLektion(video[1]) ? 'Videolehrgang DL2YMR' : 'Video') + '</button>' : '')
+        + '<span style="margin-left:auto;display:inline-flex;gap:8px;">'
+        + (merkPos > 0 ? '<button type="button" class="btn btn-outline" style="padding:0.45rem 0.9rem;font-size:0.82rem;" onclick="unterrichtStarten(' + unterrichtWahl + ',0)"><i class="fas fa-rotate-left"></i> Von vorn</button>' : '')
+        + '<button type="button" class="btn btn-primary" style="padding:0.45rem 1rem;font-size:0.85rem;" onclick="unterrichtStarten(' + unterrichtWahl + ',' + Math.max(0, merkPos) + ')">'
+        + '<i class="fas fa-play"></i> ' + (merkPos > 0 ? 'Weiter bei Frage ' + (merkPos + 1) : 'Lektion ' + (unterrichtWahl + 1) + ' starten')
+        + (unterrichtIchBinKursleiterImRaum() ? ' – für alle im Raum' : '') + '</button>'
+        + '</span></div>';
+    detail.innerHTML = html;
+}
+
+// Der Haken gilt als Vorliebe des Kursleiters und wird gemerkt. Der
+// Beamer-Modus selbst bleibt, wie er ist: fuer diesen Abend.
+function unterrichtBeamerGewuenscht(){
+    try{ return localStorage.getItem('unterricht_beamer') !== '0'; }catch(e){ return true; }
+}
+function unterrichtBeamerMerken(an){
+    try{ localStorage.setItem('unterricht_beamer', an ? '1' : '0'); }catch(e){}
+}
+window.unterrichtBeamerMerken = unterrichtBeamerMerken;
+
+function unterrichtStarten(i, ab, beamerWunsch){
+    try{
+        const alle = unterrichtFragen(i);
+        if(!alle.length) return;
+        ab = Math.min(Math.max(0, ab | 0), alle.length - 1);
+        const teil = alle.slice(ab);
+        const beamerWahl = document.getElementById('unterrichtBeamer');
+        // Im Gruppenraum: nur der Kursleiter startet, und zwar fuer alle.
+        if(unterrichtIchBinTeilnehmerImRaum()){
+            if(window.showAppAlert) showAppAlert('Im Gruppenraum startet der Kursleiter die Lektion für alle.');
+            return;
+        }
+        if(unterrichtIchBinKursleiterImRaum()){
+            window._unterrichtBeamerBeimStart = (typeof beamerWunsch === 'boolean') ? beamerWunsch
+                : (beamerWahl ? beamerWahl.checked : unterrichtBeamerGewuenscht());
+            window.duo.lektionStarten({
+                nr: i + 1, titel: kursLektionen()[i].t,
+                ids: teil.map(x => x.q.id),
+                abschnitte: teil.map(x => kursLektionen()[i].a[x.abschnitt][0]),
+                versatz: ab, gesamt: alle.length
+            });
+            unterrichtSchliessen();
+            return;
+        }
+        if(typeof examSimulatorMode !== 'undefined' && examSimulatorMode){
+            try{ stopExamTimer(); }catch(e){}
+            examSimulatorMode = false;
+            const t = document.getElementById('examTimerDisplay');
+            if(t) t.style.display = 'none';
+        }
+        laufendeLektion = null;
+        isQuizActive = true;
+        examFinished = false;
+        examMode = false;
+        showSidebar = true;
+        currentPart = 'Unterricht Lektion ' + (i + 1) + ' – ' + kursLektionen()[i].t;
+        // Reihenfolge der Folien, NICHT mischen. Die Antworten werden wie
+        // ueberall gemischt - im Katalog steht die richtige immer vorn.
+        currentQuestions = teil.map(x => { try{ return prepareQuestion(x.q); }catch(e){ return x.q; } });
+        unterrichtLauf = { kurs: kursId(), nr: i + 1, fragen: currentQuestions, abschnitte: teil.map(x => x.abschnitt), versatz: ab, gesamt: alle.length };
+        neueRundeVorbereiten();
+        unterrichtSchliessen();
+        const beamerHaken = document.getElementById('unterrichtBeamer');
+        const beamer = beamerHaken ? beamerHaken.checked : unterrichtBeamerGewuenscht();
+        renderQuestion();
+        try{ navArea.style.display = 'flex'; }catch(e){}
+        if(typeof updateVisibility === 'function') updateVisibility();
+        if(beamer && typeof beamerSetzen === 'function') beamerSetzen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }catch(e){ console.warn('Unterricht konnte nicht gestartet werden', e); }
+}
+window.unterrichtStarten = unterrichtStarten;
+
+// Laeuft gerade eine Unterrichtsrunde? Nur solange die Fragenliste noch
+// dieselbe ist - jede andere Runde ersetzt currentQuestions.
+function unterrichtAktiv(){
+    return !!(unterrichtLauf && typeof currentQuestions !== 'undefined'
+              && currentQuestions === unterrichtLauf.fragen && isQuizActive);
+}
+
+// Wird bei jeder Frage aufgerufen (ueber beamerStandAktualisieren):
+// Stand merken und die Zeile fuer den Beamer liefern.
+function unterrichtNachziehen(){
+    // Hausaufgabe (28.09.2026): nur die Zeile unten links nachziehen.
+    try{
+        if(typeof hausaufgabeAktiv === 'function' && hausaufgabeAktiv()){
+            setTimeout(unterrichtLeisteZeichnen, 0);
+            return (hausLauf.versatz + Math.min(currentIndex, currentQuestions.length - 1) + 1) + ' / ' + hausLauf.gesamt;
+        }
+    }catch(e){}
+    // Im Gruppenraum fuehrt der Server - siehe UNTERRICHT IM GRUPPENRAUM.
+    const raumZeile = unterrichtRaumNachziehen();
+    if(raumZeile) return raumZeile;
+    if(!unterrichtAktiv()) return '';
+    const q = currentQuestions[currentIndex];
+    if(!q) return '';
+    unterrichtStandSetzen(unterrichtLauf.nr, q.id);
+    setTimeout(unterrichtLeisteZeichnen, 0);
+    // Unten links nur die Zahl; Lektion und Abschnitt stehen oben in der
+    // Leiste. Lang unten links lief die Zeile unter die Knoepfe.
+    return (unterrichtLauf.versatz + currentIndex + 1) + ' / ' + unterrichtLauf.gesamt;
+}
+
+// "Lektion 3 · Persoenliche Rufzeichen" fuer die Leiste - allein oder im Raum.
+function unterrichtLektionZeile(){
+    try{
+        if(typeof hausaufgabeAktiv === 'function' && hausaufgabeAktiv()){
+            const ab = hausLauf.abschnitte[currentIndex];
+            return 'Hausaufgabe · Lektion ' + hausLauf.nr + (ab ? ' · ' + ab : '') + ' · '
+                + (hausLauf.versatz + Math.min(currentIndex, currentQuestions.length - 1) + 1) + ' / ' + hausLauf.gesamt;
+        }
+    }catch(e){}
+    const L = unterrichtRaum();
+    if(L){
+        const ab = L.abschnitte[currentIndex];
+        return 'Lektion ' + L.nr + (ab ? ' · ' + ab : '');
+    }
+    if(!unterrichtAktiv()) return '';
+    const ab = KURSE[unterrichtLauf.kurs || 'n'].lek[unterrichtLauf.nr - 1].a[unterrichtLauf.abschnitte[currentIndex]];
+    return 'Lektion ' + unterrichtLauf.nr + (ab ? ' · ' + ab[0] : '');
+}
+window.unterrichtNachziehen = unterrichtNachziehen;
+
+// ================================================================
+//  UNTERRICHT IM GRUPPENRAUM                          (27.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Die Lektionen, muss es auch im Gruppenraum geben." Auf
+//  die Rueckfrage: "Im Gleichschritt" und am Beamer "Zaehler und
+//  Verteilung".
+//
+//  So laeuft es:
+//   - Der Kursleiter startet im Fenster "Unterricht". Der Server schickt
+//     die Fragen der Lektion an alle im Raum (siehe lektionStarten).
+//   - Der Kursleiter steht am Beamer und antwortet nicht. Er schaltet:
+//     erster Druck auf Weiter (Leertaste, Presenter) loest auf, der
+//     zweite geht zur naechsten Frage. Ein Klick auf eine Antwort loest
+//     ebenfalls auf.
+//   - Die Teilnehmer sehen immer die Frage, die der Kursleiter zeigt.
+//     Sie antworten am Geraet; ob es stimmt, sehen sie erst, wenn
+//     aufgeloest wird - wie bei den hochgehaltenen Karten.
+//   - Am Beamer steht, wie viele schon geantwortet haben, und nach dem
+//     Aufloesen an jeder Antwort, wie viele sie gewaehlt haben. Namen
+//     erscheinen nirgends (Regel "Namen bleiben aus" am Beamer).
+// ================================================================
+window._duoLektion = null;
+
+function unterrichtRaum(){
+    const L = window._duoLektion;
+    if(!L || typeof currentQuestions === 'undefined' || currentQuestions !== L.fragen) return null;
+    try{ if(!(window.duo && window.duo.isActive && window.duo.isActive())) return null; }catch(e){ return null; }
+    return L;
+}
+window.unterrichtRaum = unterrichtRaum;
+
+// Teilnehmer, noch nicht aufgeloest: Antwort nur als "gewaehlt" zeigen.
+function unterrichtVerdeckt(){
+    const L = unterrichtRaum();
+    return !!(L && !L.host && !L.aufgedeckt);
+}
+window.unterrichtVerdeckt = unterrichtVerdeckt;
+
+// Aufgeloest: die richtige Antwort bei allen gruen.
+function unterrichtLoesungZeigen(){
+    const L = unterrichtRaum();
+    return !!(L && L.aufgedeckt && L.index === currentIndex);
+}
+window.unterrichtLoesungZeigen = unterrichtLoesungZeigen;
+
+function unterrichtIchBinKursleiterImRaum(){
+    try{ return !!(window.duo && window.duo.isActive && window.duo.isActive() && window.duo.isHost && window.duo.isHost()); }
+    catch(e){ return false; }
+}
+function unterrichtIchBinTeilnehmerImRaum(){
+    try{ return !!(window.duo && window.duo.isActive && window.duo.isActive() && !(window.duo.isHost && window.duo.isHost())); }
+    catch(e){ return false; }
+}
+
+// Aus startDuoQuizWithQuestions, bevor die erste Frage gezeichnet wird.
+function unterrichtRaumBeginnen(meta){
+    const m = meta && meta.lektion;
+    if(!m){ window._duoLektion = null; unterrichtRaumKlassen(); return; }
+    const n = currentQuestions.length;
+    const idx = Math.min(Math.max(0, parseInt(m.index, 10) || 0), Math.max(0, n - 1));
+    window._duoLektion = {
+        nr: parseInt(m.nr, 10) || 0,
+        titel: String(m.titel || ''),
+        abschnitte: Array.isArray(m.abschnitte) ? m.abschnitte : [],
+        versatz: parseInt(m.versatz, 10) || 0,
+        gesamt: parseInt(m.gesamt, 10) || n,
+        index: idx,
+        aufgedeckt: !!m.aufgedeckt,
+        host: unterrichtIchBinKursleiterImRaum(),
+        fragen: currentQuestions,
+        gesendet: idx,
+        stand: null
+    };
+    unterrichtLauf = null;
+    currentIndex = idx;
+    const q = currentQuestions[idx];
+    answered = !!(q && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined);
+    currentPart = 'Unterricht Lektion ' + window._duoLektion.nr + ' – ' + window._duoLektion.titel;
+}
+window.unterrichtRaumBeginnen = unterrichtRaumBeginnen;
+
+// Aus startDuoQuizWithQuestions, nachdem die erste Frage steht.
+function unterrichtRaumNachStart(){
+    const L = unterrichtRaum();
+    unterrichtRaumKlassen();
+    if(!L) return;
+    if(L.host && window._unterrichtBeamerBeimStart){
+        window._unterrichtBeamerBeimStart = false;
+        try{ beamerSetzen(true); }catch(e){}
+    }
+    unterrichtLeisteZeichnen();
+}
+window.unterrichtRaumNachStart = unterrichtRaumNachStart;
+
+function unterrichtRaumKlassen(){
+    const L = unterrichtRaum();
+    const b = document.body;
+    if(!b) return;
+    b.classList.toggle('lektion-raum', !!L);
+    b.classList.toggle('lektion-kursleiter', !!(L && L.host));
+    b.classList.toggle('lektion-teilnehmer', !!(L && !L.host));
+    b.classList.toggle('lektion-aufgedeckt', !!(L && L.aufgedeckt && L.index === currentIndex));
+    if(!L){ const el = document.getElementById('unterrichtLeiste'); if(el) el.style.display = 'none'; }
+}
+
+// Wird aus unterrichtNachziehen() bei jeder Frage aufgerufen.
+function unterrichtRaumNachziehen(){
+    const L = unterrichtRaum();
+    unterrichtRaumKlassen();
+    if(!L) return '';
+    const q = currentQuestions[currentIndex];
+    if(L.host && q){
+        if(currentIndex !== L.gesendet){
+            L.gesendet = currentIndex;
+            L.index = currentIndex;
+            L.aufgedeckt = false;
+            L.stand = null;
+            try{ window.duo.lektionSchritt(currentIndex, false); }catch(e){}
+        }
+        unterrichtStandSetzen(L.nr, q.id);
+    }
+    setTimeout(unterrichtLeisteZeichnen, 0);
+    return (L.versatz + Math.min(currentIndex, currentQuestions.length - 1) + 1) + ' / ' + L.gesamt;
+}
+
+function unterrichtAufloesen(){
+    const L = unterrichtRaum();
+    if(!L || !L.host || L.aufgedeckt) return false;
+    L.aufgedeckt = true;
+    L.index = currentIndex;
+    try{ window.duo.lektionSchritt(currentIndex, true); }catch(e){}
+    renderQuestion();
+    return true;
+}
+window.unterrichtAufloesen = unterrichtAufloesen;
+
+// Vorne in nextQuestion(): true = erledigt, nicht normal weiterblaettern.
+function unterrichtRaumWeiterAbfangen(){
+    const L = unterrichtRaum();
+    if(!L) return false;
+    if(!L.host) return true;                        // Teilnehmer: der Kursleiter schaltet
+    if(!L.aufgedeckt){ unterrichtAufloesen(); return true; }
+    if(currentIndex >= currentQuestions.length - 1){
+        unterrichtBeendenFragen();
+        return true;
+    }
+    return false;
+}
+window.unterrichtRaumWeiterAbfangen = unterrichtRaumWeiterAbfangen;
+
+function unterrichtBeendenFragen(){
+    const los = () => { try{ window.duo.lektionEnde(); }catch(e){} };
+    if(typeof window.showAppConfirm === 'function'){
+        window.showAppConfirm('Das war die letzte Frage. Lektion beenden und allen die Auswertung zeigen?', los,
+            { title: 'Lektion beenden?', icon: 'fa-flag-checkered', iconColor: '#15703c',
+              confirmLabel: '<i class="fas fa-flag-checkered"></i> Beenden und auswerten' });
+    } else { los(); }
+}
+
+// Vorne in prevQuestion(): Teilnehmer blaettern nicht selbst.
+function unterrichtRaumZurueckAbfangen(){
+    const L = unterrichtRaum();
+    return !!(L && !L.host);
+}
+window.unterrichtRaumZurueckAbfangen = unterrichtRaumZurueckAbfangen;
+
+// Vorne in selectOption(): Der Kursleiter antwortet nicht - sein Klick
+// loest auf. Teilnehmer koennen nach dem Aufloesen nicht mehr antworten.
+function unterrichtRaumAntwortAbfangen(){
+    const L = unterrichtRaum();
+    if(!L) return false;
+    if(L.host){ unterrichtAufloesen(); return true; }
+    return !!L.aufgedeckt;
+}
+window.unterrichtRaumAntwortAbfangen = unterrichtRaumAntwortAbfangen;
+
+// Beim Teilnehmer: Der Kursleiter hat geblaettert oder aufgeloest.
+window.unterrichtRaumSchritt = function(d){
+    const L = unterrichtRaum();
+    if(!L || L.host || !d) return;
+    const idx = parseInt(d.index, 10);
+    if(!(idx >= 0 && idx < currentQuestions.length)) return;
+    const neu = idx !== currentIndex;
+    L.index = idx;
+    L.aufgedeckt = !!d.aufgedeckt;
+    if(neu){
+        try{ autoWeiterAbbrechen(); }catch(e){}
+        try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+        currentIndex = idx;
+        const q = currentQuestions[idx];
+        answered = !!(q && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined);
+    }
+    renderQuestion();
+    // Wer nicht auf den Bildschirm sieht, erfaehrt die Aufloesung von der Stimme.
+    if(!neu && L.aufgedeckt){
+        try{
+            const q = currentQuestions[currentIndex];
+            const ri = q.options.findIndex(o => o.correct);
+            if(typeof ansagen === 'function' && ri >= 0){
+                ansagen('Aufgelöst. Richtig ist ' + 'ABCD'[ri] + (q.userAnswerIndex === null || q.userAnswerIndex === undefined ? '.' : (q.userAnswerIndex === ri ? ' – deine Antwort stimmt.' : ' – deine Antwort war ' + 'ABCD'[q.userAnswerIndex] + '.')));
+            }
+        }catch(e){}
+    }
+};
+
+// Beim Kursleiter: Zaehler und Verteilung vom Server.
+window.unterrichtRaumStand = function(d){
+    const L = unterrichtRaum();
+    if(!L || !L.host || !d || d.index !== currentIndex) return;
+    L.stand = d;
+    unterrichtLeisteZeichnen();
+};
+
+function unterrichtLeisteZeichnen(){
+    const L = unterrichtRaum();
+    let el = document.getElementById('unterrichtLeiste');
+    const allein = !L && (unterrichtAktiv() || (typeof hausaufgabeAktiv === 'function' && hausaufgabeAktiv())) && currentIndex < currentQuestions.length;
+    if(!L && !allein){ if(el) el.style.display = 'none'; unterrichtVerteilungZeigen(); return; }
+    if(!el){
+        el = document.createElement('div');
+        el.id = 'unterrichtLeiste';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        document.body.appendChild(el);
+    }
+    const q = currentQuestions[currentIndex];
+    const lek = '<span class="u-lek">' + unterrichtEsc(unterrichtLektionZeile()) + '</span>';
+    let html = '';
+    if(allein){
+        html = lek;
+    } else if(L.host){
+        const s = L.stand;
+        const zahl = s ? '<b>' + s.geantwortet + '</b> von <b>' + s.teilnehmer + '</b> ' + (s.teilnehmer === 1 ? 'hat' : 'haben') + ' geantwortet'
+                       : 'Warte auf Antworten …';
+        const letzte = currentIndex >= currentQuestions.length - 1;
+        const knopf = !L.aufgedeckt
+            ? '<button type="button" onclick="unterrichtAufloesen()"><i class="fas fa-eye"></i> Auflösen</button>'
+            : (letzte ? '<button type="button" onclick="unterrichtBeendenFragen()"><i class="fas fa-flag-checkered"></i> Lektion beenden</button>'
+                      : '<button type="button" onclick="nextQuestion()">Nächste Frage <i class="fas fa-chevron-right"></i></button>');
+        html = lek + '<span class="u-zahl"><i class="fas fa-users"></i> ' + zahl + '</span>' + knopf;
+    } else {
+        const hat = q && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined;
+        html = lek + '<span class="u-zahl"><i class="fas fa-chalkboard-user"></i> '
+            + (L.aufgedeckt ? 'Aufgelöst – gleich geht es weiter'
+               : (hat ? 'Antwort gespeichert – aufgelöst wird gemeinsam' : 'Der Kursleiter schaltet weiter'))
+            + '</span>';
+    }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    unterrichtVerteilungZeigen();
+}
+window.unterrichtLeisteZeichnen = unterrichtLeisteZeichnen;
+
+// ================================================================
+//  UNTERRICHT IM RAUM-FENSTER                          (27.09.2026)
+//  Dietmar: "Im Gruppenraum gibt es keine Lektionen." Die Zeile unter
+//  dem Pruefungssimulator: Haken, Lektion, Am Beamer. "Jetzt starten"
+//  startet dann die Lektion fuer alle (siehe duoJetztStarten).
+// ================================================================
+function duoUnterrichtFuellen(){
+    const sel = document.getElementById('duoUnterrichtLektion');
+    if(!sel) return;
+    let wert = sel.value;
+    if(!wert){ try{ wert = localStorage.getItem('unterricht_raum_lektion_' + kursId()) || ''; }catch(e){} }
+    if(!wert){
+        const st = unterrichtStandHolen();
+        let zeit = 0;
+        Object.keys(st).forEach(k => { if(st[k] && st[k].t > zeit){ zeit = st[k].t; wert = k; } });
+    }
+    const stand = unterrichtStandHolen();
+    sel.innerHTML = kursLektionen().map((l, i) => {
+        const fr = unterrichtFragen(i);
+        const s = stand[i + 1];
+        const pos = s && s.id ? fr.findIndex(x => x.q.id === s.id) : -1;
+        return '<option value="' + (i + 1) + '">' + (i + 1) + ' · ' + unterrichtEsc(l.t) + ' (' + fr.length + ' Fragen'
+            + (pos > 0 ? ', bei ' + (pos + 1) : '') + ')</option>';
+    }).join('');
+    sel.value = wert && +wert >= 1 && +wert <= kursLektionen().length ? String(+wert) : '1';
+    sel.dataset.kurs = kursId();
+}
+window.duoUnterrichtFuellen = duoUnterrichtFuellen;
+
+function duoUnterrichtHaken(an){
+    try{ localStorage.setItem('unterricht_raum', an ? '1' : '0'); }catch(e){}
+    if(an){
+        // Unterricht und Pruefungssimulator schliessen sich aus.
+        const pr = document.getElementById('duoPruefungCheck');
+        if(pr && pr.checked){ pr.checked = false; pr.dispatchEvent(new Event('change')); }
+    }
+    duoUnterrichtNachziehen();
+}
+window.duoUnterrichtHaken = duoUnterrichtHaken;
+
+function duoUnterrichtGewaehlt(){
+    const sel = document.getElementById('duoUnterrichtLektion');
+    try{ if(sel) localStorage.setItem('unterricht_raum_lektion_' + kursId(), sel.value); }catch(e){}
+    duoUnterrichtNachziehen();
+}
+window.duoUnterrichtGewaehlt = duoUnterrichtGewaehlt;
+
+function duoUnterrichtMerkPos(nr){
+    const fr = unterrichtFragen(nr - 1);
+    const s = unterrichtStandHolen()[nr];
+    return s && s.id ? fr.findIndex(x => x.q.id === s.id) : -1;
+}
+
+function duoUnterrichtNachziehen(){
+    const zeile = document.getElementById('duoUnterrichtZeile');
+    const h = document.getElementById('duoUnterrichtCheck');
+    const wahl = document.getElementById('duoUnterrichtWahl');
+    const sel = document.getElementById('duoUnterrichtLektion');
+    const info = document.getElementById('duoUnterrichtInfo');
+    const bm = document.getElementById('duoUnterrichtBeamer');
+    if(!zeile || !h || !sel) return;
+    let imRaum = false, host = false;
+    try{ imRaum = !!(window.duo && window.duo.isActive && window.duo.isActive()); host = !!(window.duo && window.duo.isHost && window.duo.isHost()); }catch(e){}
+    // Teilnehmer waehlen keine Lektion - das macht der Kursleiter.
+    zeile.style.display = (imRaum && !host) ? 'none' : '';
+    // Anderes Pruefungsziel -> andere Lektionen.
+    if(!sel.options.length || sel.dataset.kurs !== kursId()){ sel.value = ''; duoUnterrichtFuellen(); }
+    const anz = document.getElementById('duoUnterrichtAnzahl');
+    if(anz) anz.textContent = kursLektionen().length + ' Lektionen';
+    if(wahl) wahl.style.display = h.checked ? 'flex' : 'none';
+    if(bm && document.activeElement !== bm) bm.checked = unterrichtBeamerGewuenscht();
+    if(info){
+        let t = '';
+        if(h.checked){
+            const nr = parseInt(sel.value, 10) || 1;
+            const L = unterrichtRaum();
+            const pos = duoUnterrichtMerkPos(nr);
+            if(!imRaum) t = 'Zuerst „Raum erstellen“ und den Link teilen, dann „Jetzt starten“ – die Lektion beginnt für alle gleichzeitig.';
+            else if(L && L.nr === nr) t = 'Lektion ' + nr + ' läuft gerade – „Jetzt starten“ bringt dich zurück zur Frage.';
+            else t = '„Jetzt starten“ beginnt für alle bei Frage ' + (pos > 0 ? (pos + 1) + ' – dort hast du zuletzt aufgehört.' : '1.')
+                   + (L ? ' Die laufende Lektion ' + L.nr + ' endet damit.' : '');
+        }
+        info.textContent = t;
+    }
+    try{ if(typeof updateDuoConfigSummary === 'function') updateDuoConfigSummary(); }catch(e){}
+}
+window.duoUnterrichtNachziehen = duoUnterrichtNachziehen;
+
+// "Jetzt starten" im Raum-Fenster.
+function duoJetztStarten(){
+    const h = document.getElementById('duoUnterrichtCheck');
+    const sel = document.getElementById('duoUnterrichtLektion');
+    if(h && h.checked && sel && unterrichtIchBinKursleiterImRaum()){
+        const nr = parseInt(sel.value, 10) || 1;
+        const L = unterrichtRaum();
+        if(L && L.nr === nr){
+            const m = document.getElementById('duoModal');
+            if(m) m.style.display = 'none';
+            return;
+        }
+        const bm = document.getElementById('duoUnterrichtBeamer');
+        unterrichtStarten(nr - 1, Math.max(0, duoUnterrichtMerkPos(nr)), bm ? bm.checked : undefined);
+        return;
+    }
+    try{ window.duo.startDuoQuiz(); }catch(e){ console.warn('[DUO] Start', e); }
+}
+window.duoJetztStarten = duoJetztStarten;
+
+// ================================================================
+//  KURS UND HAUSAUFGABEN                               (28.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Der DARC hat Hausaufgaben. Interessant wird es, wenn sich
+//  die Teilnehmer mit ihrem Namen einloggen und Lektion fuer Lektion
+//  abarbeiten koennen. [...] Mit einer Uebersicht in der Auswertung und
+//  wer seine Hausaufgaben erledigt hat." Anmeldung ueber den Gruppenchat,
+//  Hausaufgabe = Lektion oder Abschnitte mit Termin (seine Wahl).
+//
+//  Drei Rollen, ermittelt beim Laden (kursAuffrischen):
+//    leiter      - am Trainer-PC: GET /api/kurs antwortet (localOnly)
+//    teilnehmer  - hat einen Schluessel in localStorage (kurs_token)
+//    null        - Besucher; gibt es einen Kurs, kann er anfragen
+//  Im Fenster "Unterricht" kommen je nach Rolle Reiter dazu.
+//  Server: siehe "KURS UND HAUSAUFGABEN" in Server.js.
+// ================================================================
+const KURS_TOKEN = 'kurs_token';
+const KURS_ANFRAGE = 'kurs_anfrage';
+let kursRolle = null;
+let kursLeiterDaten = null;
+let kursIchDaten = null;
+let kursInfo = null;
+let unterrichtReiter = 'lektionen';
+let hausLauf = null;
+let kursAuswertungWahl = null;
+let kursNeuOffen = false;
+
+function kursLS(k, v){
+    try{
+        if(v === undefined) return localStorage.getItem(k);
+        if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
+    }catch(e){}
+    return null;
+}
+async function kursApi(pfad, daten){
+    const opt = daten === undefined ? { cache: 'no-store' }
+        : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(daten) };
+    const r = await fetch(pfad, opt);
+    let j = null;
+    try{ j = await r.json(); }catch(e){}
+    return { ok: r.ok, status: r.status, j: j || {} };
+}
+function kursEsc(t){ return unterrichtEsc(t); }
+function kursTag(iso){
+    if(!iso) return '';
+    const d = new Date(iso + 'T12:00:00');
+    return isNaN(d) ? iso : d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+}
+function kursWann(ms){
+    if(!ms) return 'noch nie';
+    const d = new Date(ms), heute = new Date();
+    const uhr = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const tage = Math.round((new Date(heute.toDateString()) - new Date(d.toDateString())) / 864e5);
+    if(tage === 0) return 'heute, ' + uhr;
+    if(tage === 1) return 'gestern, ' + uhr;
+    if(tage < 7) return d.toLocaleDateString('de-DE', { weekday: 'short' }) + ', ' + uhr;
+    return d.toLocaleDateString('de-DE');
+}
+function kursUeberfaellig(bis){
+    if(!bis) return false;
+    const heute = new Date(); const h = heute.getFullYear() + '-' + String(heute.getMonth() + 1).padStart(2, '0') + '-' + String(heute.getDate()).padStart(2, '0');
+    return bis < h;
+}
+function kursGeraetArt(){
+    const u = navigator.userAgent || '';
+    if(/iPad|Tablet/i.test(u)) return 'Tablet';
+    if(/Mobi|Android|iPhone/i.test(u)) return 'Handy';
+    return 'Computer';
+}
+function kursFarbe(name){
+    const f = ['#c0392b', '#2e7d32', '#6a1b9a', '#0277bd', '#ad6800', '#00838f', '#5d4037', '#283593'];
+    let s = 0; String(name || '').split('').forEach(c => { s = (s * 31 + c.charCodeAt(0)) >>> 0; });
+    return f[s % f.length];
+}
+function kursAvatar(name){
+    return '<span class="k-av" style="background:' + kursFarbe(name) + '">' + kursEsc(String(name || '?').charAt(0).toUpperCase()) + '</span>';
+}
+// "ganze Lektion" / "Abschn. 1–4" / "Abschn. 1, 3, 5"
+function kursTeilText(a){
+    const teil = (a.teil || []).slice().sort((x, y) => x - y);
+    const alle = (a.abschnitte || []).length;
+    if(!teil.length || teil.length >= alle) return 'ganze Lektion';
+    const n = teil.map(x => x + 1);
+    const zusammen = n.every((x, i) => i === 0 || x === n[i - 1] + 1);
+    return 'Abschn. ' + (zusammen && n.length > 2 ? n[0] + '–' + n[n.length - 1] : n.join(', '));
+}
+
+// --- Rolle ermitteln ------------------------------------------------
+async function kursAuffrischen(){
+    const vorher = kursRolle;
+    await kursAuffrischenInnen();
+    // Rolle gewechselt (z. B. gerade aufgenommen): Reiter im offenen Fenster neu.
+    if(vorher !== kursRolle){
+        const m = document.getElementById('unterrichtModal');
+        if(m && m.style.display === 'flex'){
+            if(kursRolle === 'teilnehmer' && unterrichtReiter === 'kurs') unterrichtReiter = 'meine';
+            try{ unterrichtReiterZeichnen(); }catch(e){}
+        }
+    }
+}
+async function kursAuffrischenInnen(){
+    try{
+        const vonAussen = typeof window.ueberGeteiltenLink === 'function' && window.ueberGeteiltenLink();
+        if(!vonAussen && location.protocol !== 'file:'){
+            const r = await kursApi('/api/kurs');
+            if(r.ok){ kursRolle = 'leiter'; kursLeiterDaten = r.j; kursAnfragenInDenChat(); kursKnopfZahl(); kursChatMeldungen(); return; }
+        }
+        const tok = kursLS(KURS_TOKEN);
+        if(tok){
+            const r = await kursApi('/api/kurs/ich', { token: tok });
+            if(r.ok){ kursRolle = 'teilnehmer'; kursIchDaten = r.j; kursKnopfZahl(); kursChatMeldungen(); return; }
+            if(r.status === 401){ kursLS(KURS_TOKEN, null); }
+        }
+        kursRolle = null; kursIchDaten = null;
+        const i = await kursApi('/api/kurs/info');
+        kursInfo = i.ok && i.j && i.j.kurs ? i.j : null;
+        kursWillkommenZeigen();
+        kursKnopfZahl();
+    }catch(e){ /* ohne Server (Datei, offline): kein Kurs */ }
+}
+window.kursAuffrischen = kursAuffrischen;
+
+// Zahl am Knopf "Unterricht": offene Anfragen (Kursleiter) oder
+// offene Hausaufgaben (Teilnehmer).
+function kursKnopfZahl(){
+    const b = document.getElementById('unterrichtBtn');
+    if(!b) return;
+    let n = 0, titel = '';
+    if(kursRolle === 'leiter' && kursLeiterDaten && kursLeiterDaten.kurs){
+        n = kursLeiterDaten.kurs.anfragen.length; titel = n + ' offene Anfrage(n) für den Kurs';
+    } else if(kursRolle === 'teilnehmer' && kursIchDaten){
+        n = kursIchDaten.aufgaben.filter(a => !a.fertig).length; titel = n + ' offene Hausaufgabe(n)';
+    }
+    let z = document.getElementById('unterrichtBtnZahl');
+    if(!z){ z = document.createElement('span'); z.id = 'unterrichtBtnZahl'; z.className = 'start-badge'; z.style.cssText = 'background:#fdecea;color:#b03024;'; b.appendChild(z); }
+    z.textContent = String(n);
+    z.style.display = n > 0 ? 'inline' : 'none';
+    z.title = titel;
+    kursHinweisZeichnen();
+}
+// Hinweiszeile ueber der Knopfleiste - fuer Teilnehmer. Am Handy steht der
+// Knopf "Unterricht" weit rechts ausserhalb des Bildes; die Zeile sieht man.
+function kursHinweisZeichnen(){
+    let el = document.getElementById('kursHinweis');
+    const leiste = document.querySelector('.filter-bar');
+    if(!leiste) return;
+    let wartet = null; try{ wartet = JSON.parse(kursLS(KURS_ANFRAGE) || 'null'); }catch(e){}
+    let html = '';
+    if(kursRolle === 'teilnehmer' && kursIchDaten){
+        const n = kursIchDaten.aufgaben.filter(a => !a.fertig).length;
+        html = '<i class="fas fa-house-laptop"></i> <span><b>Hallo ' + kursEsc(kursIchDaten.name) + '</b> – '
+            + (n ? n + (n === 1 ? ' offene Hausaufgabe' : ' offene Hausaufgaben') : (kursIchDaten.aufgaben.length ? 'alle Hausaufgaben erledigt' : 'du bist im Kurs, noch keine Hausaufgaben')) + '</span>'
+            + '<button type="button" class="k-btn k-klein" onclick="unterrichtOeffnen(\'meine\')">' + (n ? 'Öffnen' : 'Ansehen') + '</button>';
+    } else if(kursRolle === null && wartet){
+        html = '<i class="fas fa-hourglass-half"></i> <span>Deine Anfrage für den Kurs „' + kursEsc(wartet.kurs) + '“ ist beim Kursleiter.</span>';
+    }
+    if(!html){ if(el) el.style.display = 'none'; return; }
+    if(!el){ el = document.createElement('div'); el.id = 'kursHinweis'; leiste.parentNode.insertBefore(el, leiste); }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+}
+
+// --- Kursleiter: Anfragen als Karte in den Chat ----------------------
+function kursAnfragenInDenChat(){
+    if(kursRolle !== 'leiter' || !kursLeiterDaten || !kursLeiterDaten.kurs || typeof window.duoChatKarte !== 'function') return;
+    const k = kursLeiterDaten.kurs;
+    const offen = new Set(k.anfragen.map(a => a.id));
+    document.querySelectorAll('#duoChatVerlauf [data-kurs-anfrage]').forEach(el => {
+        // Erledigt (hier, im Reiter oder auf einem anderen Weg): Karte weg,
+        // sonst stapeln sich im Chat die Reste.
+        if(!offen.has(el.getAttribute('data-kurs-anfrage'))) el.remove();
+    });
+    k.anfragen.forEach(a => {
+        if(document.querySelector('#duoChatVerlauf [data-kurs-anfrage="' + a.id + '"]')) return;
+        const el = document.createElement('div');
+        el.className = 'k-karte';
+        el.setAttribute('data-kurs-anfrage', a.id);
+        el.innerHTML = '<div class="k-kt"><i class="fas fa-user-plus" style="color:#d08a12"></i> ' + kursEsc(a.name) + ' möchte in den Kurs</div>'
+            + '<div class="k-km">„' + kursEsc(k.name) + '“ · ' + kursEsc(a.art) + ' · ' + new Date(a.zeit).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+            + '<br>Nur du siehst diese Anfrage.</div>'
+            + kursAufnehmenKnoepfe(a, true);
+        window.duoChatKarte(el);
+    });
+}
+function kursAufnehmenKnoepfe(a, klein){
+    const k = kursLeiterDaten.kurs;
+    const opts = k.teilnehmer.map(t => '<option value="' + t.id + '">zu ' + kursEsc(t.name) + '</option>').join('');
+    return '<div class="k-zeile" style="flex-wrap:wrap;gap:6px;">'
+        + '<button type="button" class="k-btn k-gruen' + (klein ? ' k-klein' : '') + '" onclick="kursAufnehmen(\'' + a.id + '\')"><i class="fas fa-check"></i> Aufnehmen</button>'
+        + '<button type="button" class="k-btn' + (klein ? ' k-klein' : '') + '" onclick="kursAblehnen(\'' + a.id + '\')">Ablehnen</button>'
+        + (opts ? '<select class="k-btn' + (klein ? ' k-klein' : '') + '" onchange="if(this.value) kursAufnehmen(\'' + a.id + '\', this.value)" title="Zweites Gerät einer Person, die schon im Kurs ist"><option value="">zu … zuordnen</option>' + opts + '</select>' : '')
+        + '</div>';
+}
+async function kursLeiterAktion(pfad, daten){
+    try{
+        const r = await kursApi(pfad, daten);
+        if(!r.ok){ if(window.showAppAlert) showAppAlert(r.j.error || 'Das hat nicht geklappt.'); return false; }
+        kursLeiterDaten = r.j;
+        kursAnfragenInDenChat(); kursKnopfZahl(); kursTeilZeichnen();
+        return true;
+    }catch(e){ if(window.showAppAlert) showAppAlert('Der Trainer-Server antwortet nicht.'); return false; }
+}
+window.kursAufnehmen = (id, zu) => kursLeiterAktion('/api/kurs/aufnehmen', { id, zu: zu || '' });
+window.kursAblehnen = id => kursLeiterAktion('/api/kurs/ablehnen', { id });
+
+// --- Teilnehmer: Anfrage stellen und auf Antwort warten -------------
+async function kursAnfrageSenden(name){
+    try{
+        const r = await kursApi('/api/kurs/anfrage', { name, art: kursGeraetArt() });
+        if(!r.ok){ if(window.showAppAlert) showAppAlert(r.j.error || 'Die Anfrage ging nicht durch.'); return false; }
+        kursLS(KURS_ANFRAGE, JSON.stringify({ id: r.j.id, geheim: r.j.geheim, kurs: r.j.kurs, leiter: r.j.leiter }));
+        if(typeof window.duoChatKarte === 'function'){
+            const el = document.createElement('div');
+            el.className = 'k-karte'; el.setAttribute('data-kurs-warte', r.j.id);
+            el.innerHTML = '<div class="k-kt"><i class="fas fa-hourglass-half" style="color:#d08a12"></i> Deine Anfrage ist beim Kursleiter</div>'
+                + '<div class="k-km">„' + kursEsc(r.j.kurs) + '“ – sobald ' + (r.j.leiter ? kursEsc(r.j.leiter) : 'der Kursleiter') + ' dich aufnimmt, geht es hier weiter.</div>';
+            window.duoChatKarte(el);
+        }
+        kursTeilZeichnen();
+        kursHinweisZeichnen();
+        kursAnfrageBeobachten();
+        return true;
+    }catch(e){ return false; }
+}
+window.kursAnfrageSenden = kursAnfrageSenden;
+
+let kursAnfrageUhr = null;
+function kursAnfrageBeobachten(){
+    if(kursAnfrageUhr) return;
+    kursAnfrageUhr = setInterval(async () => {
+        let a = null;
+        try{ a = JSON.parse(kursLS(KURS_ANFRAGE) || 'null'); }catch(e){}
+        if(!a){ clearInterval(kursAnfrageUhr); kursAnfrageUhr = null; return; }
+        try{
+            const r = await kursApi('/api/kurs/anfrage/' + encodeURIComponent(a.id) + '?g=' + encodeURIComponent(a.geheim));
+            if(r.status === 404){ kursLS(KURS_ANFRAGE, null); return; }
+            if(!r.ok) return;
+            if(r.j.status === 'ja' && r.j.token){
+                kursLS(KURS_TOKEN, r.j.token); kursLS(KURS_ANFRAGE, null);
+                if(typeof window.duoChatKarte === 'function'){
+                    const el = document.createElement('div');
+                    el.className = 'k-karte k-karte-gut';
+                    el.innerHTML = '<div class="k-kt"><i class="fas fa-circle-check" style="color:#15703c"></i> '
+                        + (a.leiter ? kursEsc(a.leiter) + ' hat' : 'Der Kursleiter hat') + ' dich in den Kurs aufgenommen</div>'
+                        + '<div class="k-km">„' + kursEsc(a.kurs) + '“ · Nur du siehst diese Nachricht.</div>'
+                        + '<button type="button" class="k-btn k-dunkel k-klein" onclick="unterrichtOeffnen(\'meine\')"><i class="fas fa-house-laptop"></i> Zu meinen Hausaufgaben</button>';
+                    window.duoChatKarte(el);
+                }
+                // Erst die Begruessung, dann (in kursAuffrischen) die Hausaufgaben.
+                await kursAuffrischen();
+                kursTeilZeichnen();
+            } else if(r.j.status === 'nein'){
+                kursLS(KURS_ANFRAGE, null);
+                kursHinweisZeichnen();
+                if(typeof window.duoChatKarte === 'function'){
+                    const el = document.createElement('div');
+                    el.className = 'k-karte';
+                    el.innerHTML = '<div class="k-kt">Die Anfrage für den Kurs wurde nicht angenommen.</div><div class="k-km">Sprich den Kursleiter an, wenn das ein Versehen war.</div>';
+                    window.duoChatKarte(el);
+                }
+                kursTeilZeichnen();
+            }
+        }catch(e){}
+    }, 5000);
+}
+
+// Kam die Seite ueber die Einladung (?kurs=1)?
+function kursPerLink(){ try{ return new URLSearchParams(location.search).get('kurs') === '1'; }catch(e){ return false; } }
+// Ueber die Einladung, das Willkommen ist aber schon erledigt: gleich das
+// passende Fenster zeigen - Anmeldung oder die eigenen Hausaufgaben.
+function kursPerLinkOeffnen(){
+    if(!kursPerLink() || kursPerLinkOeffnen.erledigt) return;
+    let gesehen = false; try{ gesehen = !!localStorage.getItem('demo_hinweis_gesehen'); }catch(e){}
+    const w = document.getElementById('willkommenModal');
+    if(!gesehen || (w && w.style.display === 'flex')) return;
+    kursPerLinkOeffnen.erledigt = true;
+    if(kursRolle === 'teilnehmer') unterrichtOeffnen('meine');
+    else if(kursRolle === null && kursInfo) unterrichtOeffnen('kurs');
+}
+// Haken im Willkommensfenster
+function kursWillkommenZeigen(){
+    const z = document.getElementById('willkommenKurs');
+    if(!z) return;
+    const zeigen = !!(kursInfo && kursInfo.kurs && kursRolle === null && !kursLS(KURS_ANFRAGE));
+    z.style.display = zeigen ? 'flex' : 'none';
+    if(zeigen && kursPerLink()){ const h = document.getElementById('willkommenKursHaken'); if(h && !h.dataset.gesetzt){ h.checked = true; h.dataset.gesetzt = '1'; } }
+    if(zeigen){
+        const t = document.getElementById('willkommenKursText');
+        if(t) t.textContent = '„' + kursInfo.kurs + '“' + (kursInfo.leiter ? ' bei ' + kursInfo.leiter : '')
+            + ' – dann bekommst du hier deine Hausaufgaben. Der Kursleiter bestätigt dich einmal.';
+    }
+}
+// Aus willkommenFertig: true = Fenster bleibt offen (Name fehlt)
+window.kursWillkommenPruefen = function(mitNamen){
+    const h = document.getElementById('willkommenKursHaken');
+    const z = document.getElementById('willkommenKurs');
+    if(!h || !h.checked || !z || z.style.display === 'none') return false;
+    const feld = document.getElementById('willkommenName');
+    const v = feld ? String(feld.value || '').trim() : '';
+    if(!mitNamen || !v){
+        const hin = document.getElementById('willkommenKursHinweis');
+        if(hin) hin.style.display = '';
+        try{ feld.focus(); }catch(e){}
+        return true;
+    }
+    setTimeout(() => kursAnfrageSenden(v.replace(/[\u0000-\u001F\u007F<>]/g, '').slice(0, 30)), 300);
+    return false;
+};
+
+// --- Reiter im Fenster "Unterricht" ----------------------------------
+function kursReiterListe(){
+    if(kursRolle === 'leiter') return [['lektionen', 'fa-list-ol', 'Lektionen'], ['hausaufgaben', 'fa-house-laptop', 'Hausaufgaben'], ['teilnehmer', 'fa-users', 'Teilnehmer'], ['auswertung', 'fa-clipboard-check', 'Auswertung']];
+    if(kursRolle === 'teilnehmer') return [['meine', 'fa-house-laptop', 'Meine Hausaufgaben'], ['lektionen', 'fa-list-ol', 'Lektionen']];
+    if(kursInfo && kursInfo.kurs) return [['lektionen', 'fa-list-ol', 'Lektionen'], ['kurs', 'fa-user-plus', 'Kurs']];
+    return [];
+}
+function unterrichtReiterZeichnen(){
+    const leiste = document.getElementById('unterrichtReiter');
+    if(!leiste) return;
+    const liste = kursReiterListe();
+    if(!liste.some(r => r[0] === unterrichtReiter)) unterrichtReiter = liste.length ? liste[0][0] : 'lektionen';
+    leiste.style.display = liste.length ? '' : 'none';
+    leiste.innerHTML = liste.map(r => {
+        let zahl = '';
+        if(r[0] === 'teilnehmer' && kursLeiterDaten && kursLeiterDaten.kurs && kursLeiterDaten.kurs.anfragen.length) zahl = '<span class="k-zahl">' + kursLeiterDaten.kurs.anfragen.length + '</span>';
+        if(r[0] === 'meine' && kursIchDaten){ const n = kursIchDaten.aufgaben.filter(a => !a.fertig).length; if(n) zahl = '<span class="k-zahl">' + n + '</span>'; }
+        return '<button type="button" class="' + (r[0] === unterrichtReiter ? 'an' : '') + '" onclick="unterrichtReiterWaehlen(\'' + r[0] + '\')"><i class="fas ' + r[1] + '"></i> ' + r[2] + zahl + '</button>';
+    }).join('');
+    const lek = document.getElementById('unterrichtTeilLektionen');
+    const and = document.getElementById('unterrichtTeilAndere');
+    if(lek) lek.style.display = unterrichtReiter === 'lektionen' ? '' : 'none';
+    if(and) and.style.display = unterrichtReiter === 'lektionen' ? 'none' : '';
+    // Die Namensnennung fuer 50ohm gehoert zu den Lektionen.
+    const quelle = document.querySelector('#unterrichtModal .u-quelle');
+    if(quelle) quelle.style.display = unterrichtReiter === 'lektionen' || unterrichtReiter === 'hausaufgaben' ? '' : 'none';
+    kursTeilZeichnen();
+}
+window.unterrichtReiterZeichnen = unterrichtReiterZeichnen;
+window.unterrichtReiterWaehlen = function(r){ unterrichtReiter = r; unterrichtReiterZeichnen(); };
+
+function kursTeilZeichnen(){
+    const ziel = document.getElementById('unterrichtTeilAndere');
+    const m = document.getElementById('unterrichtModal');
+    if(!ziel || !m || m.style.display === 'none' || unterrichtReiter === 'lektionen') { kursReiterZahlenNachziehen(); return; }
+    // Eingaben nicht wegwischen, waehrend jemand tippt.
+    const fokus = document.activeElement;
+    if(fokus && ziel.contains(fokus) && (fokus.tagName === 'INPUT' || fokus.tagName === 'SELECT') && fokus.type !== 'checkbox') return;
+    let html = '';
+    if(unterrichtReiter === 'hausaufgaben') html = kursHtmlHausaufgaben();
+    else if(unterrichtReiter === 'teilnehmer') html = kursHtmlTeilnehmer();
+    else if(unterrichtReiter === 'auswertung') html = kursHtmlAuswertung();
+    else if(unterrichtReiter === 'meine') html = kursHtmlMeine();
+    else if(unterrichtReiter === 'kurs') html = kursHtmlBeitreten();
+    ziel.innerHTML = html;
+    if(unterrichtReiter === 'hausaufgaben') kursFormNachziehen();
+    kursReiterZahlenNachziehen();
+}
+function kursReiterZahlenNachziehen(){
+    const leiste = document.getElementById('unterrichtReiter');
+    if(!leiste) return;
+    // Nur die Zahlen neu - die Leiste selbst bleibt stehen.
+    const n = kursLeiterDaten && kursLeiterDaten.kurs ? kursLeiterDaten.kurs.anfragen.length : 0;
+    const b = [...leiste.querySelectorAll('button')].find(x => /Teilnehmer/.test(x.textContent));
+    if(b){ let z = b.querySelector('.k-zahl'); if(n && !z){ z = document.createElement('span'); z.className = 'k-zahl'; b.appendChild(z); } if(z){ z.textContent = n; z.style.display = n ? '' : 'none'; } }
+}
+
+// Noch kein Kurs: anlegen
+function kursHtmlNeu(pflicht){
+    let leiter = '';
+    try{ leiter = localStorage.getItem('duo_userName') || ''; }catch(e){}
+    const kurs = kursAktuell();
+    return '<div class="k-kasten" style="max-width:560px;">'
+        + '<p class="k-titel"><i class="fas fa-plus"></i> ' + (pflicht ? 'Noch kein Kurs – leg ihn an' : 'Neuer Kurs') + '</p>'
+        + '<p class="muted" style="margin:0 0 8px;">Der Kurs gehört zum eingestellten Prüfungsziel: <b>' + kursEsc(kurs.name) + '</b>. Teilnehmer melden sich danach über den Link und den Gruppenchat an.</p>'
+        + '<div class="k-zeile"><input id="kursNeuName" class="k-feld" style="flex:1" maxlength="50" placeholder="z. B. ' + kursEsc(kurs.name.replace(/^Gesamtkurs /, '')) + ' · Herbst 2026"></div>'
+        + '<div class="k-zeile" style="margin-top:8px"><span class="muted">Kursleiter:</span><input id="kursNeuLeiter" class="k-feld" style="flex:1" maxlength="30" value="' + kursEsc(leiter) + '" placeholder="dein Name">'
+        + '<button type="button" class="k-btn k-dunkel" onclick="kursNeuAnlegen()"><i class="fas fa-check"></i> Kurs anlegen</button>'
+        + (pflicht ? '' : '<button type="button" class="k-btn" onclick="kursNeuOffen=false;kursTeilZeichnen()">Abbrechen</button>')
+        + '</div></div>';
+}
+window.kursNeuAnlegen = function(){
+    const n = (document.getElementById('kursNeuName') || {}).value || '';
+    const l = (document.getElementById('kursNeuLeiter') || {}).value || '';
+    if(!n.trim()){ if(window.showAppAlert) showAppAlert('Bitte einen Namen für den Kurs eingeben.'); return; }
+    kursNeuOffen = false;
+    try{ document.activeElement.blur(); }catch(e){}
+    kursLeiterAktion('/api/kurs/neu', { name: n, leiter: l, klasse: kursId() });
+};
+
+function kursKopfZeile(){
+    const d = kursLeiterDaten;
+    const opts = d.kurse.map(k => '<option value="' + k.id + '"' + (k.id === d.kurs.id ? ' selected' : '') + '>' + kursEsc(k.name) + ' (' + kursEsc((KURSE[k.klasse] || KURSE.n).name) + ')</option>').join('');
+    return '<div class="k-zeile" style="margin-bottom:12px"><span class="muted">Kurs:</span>'
+        + '<select class="k-feld" style="flex:1" onchange="kursLeiterAktion(\'/api/kurs/waehlen\', { id: this.value })">' + opts + '</select>'
+        + '<button type="button" class="k-btn" onclick="kursNeuOffen=true;kursTeilZeichnen()"><i class="fas fa-plus"></i> Neuer Kurs</button></div>';
+}
+window.kursLeiterAktion = kursLeiterAktion;
+
+
+// --- Einladung verschicken (28.09.2026) --------------------------------
+// Dietmar: "WhatsApp ist nicht schlecht, einzeln oder einen Gruppen Chat
+// oder via Mail oder fuer die ganze Gruppe." Verschickt wird der ALLGEMEINE
+// Link mit ?kurs=1 - kein persoenlicher Schluessel. Wer ihn oeffnet, sieht
+// den Haken "Ich nehme am Kurs teil" schon gesetzt; aufnehmen tut der
+// Kursleiter. So darf der Link auch in eine ganze Gruppe.
+async function kursEinladungsLink(){
+    let basis = '';
+    try{ basis = (localStorage.getItem('duo_eigene_adresse') || '').trim(); }catch(e){}
+    if(!/^https?:\/\//i.test(basis)) basis = window.__TUNNEL_URL__ || '';
+    if(!basis){ try{ const r = await fetch('/api/tunnel-url', { cache: 'no-store' }); const j = await r.json(); basis = (j && j.url) || ''; }catch(e){} }
+    if(!basis) basis = location.origin;
+    return basis.replace(/\/+$/, '') + '/?kurs=1';
+}
+function kursEinladungsText(link){
+    const k = kursLeiterDaten.kurs;
+    return 'Hallo! Hier geht es zu den Hausaufgaben für unseren Kurs „' + k.name + '“:\n' + link
+        + '\n\nLink öffnen, Vornamen eingeben, Haken „Ich nehme am Kurs teil“ setzen – ich bestätige dich dann.'
+        + (k.leiter ? '\n' + k.leiter : '');
+}
+window.kursEinladen = async function(weg){
+    if(!kursLeiterDaten || !kursLeiterDaten.kurs) return;
+    const link = await kursEinladungsLink();
+    const text = kursEinladungsText(link);
+    if(weg === 'whatsapp'){ openExternalTab('https://wa.me/?text=' + encodeURIComponent(text)); return; }
+    if(weg === 'mail'){ location.href = 'mailto:?subject=' + encodeURIComponent('Hausaufgaben – ' + kursLeiterDaten.kurs.name) + '&body=' + encodeURIComponent(text); return; }
+    try{ await navigator.clipboard.writeText(text); if(window.showAppAlert) showAppAlert('Die Einladung liegt in der Zwischenablage – mit Strg + V einfügen, wo du magst.'); }
+    catch(e){ if(window.showAppAlert) showAppAlert(text); }
+};
+function kursHtmlEinladen(){
+    return '<div class="k-kasten" style="margin-bottom:12px"><div class="k-zeile" style="flex-wrap:wrap;gap:8px">'
+        + '<p class="k-titel" style="margin:0"><i class="fas fa-paper-plane"></i> Einladen</p>'
+        + '<button type="button" class="k-btn" onclick="kursEinladen(\'whatsapp\')"><i class="fab fa-whatsapp" style="color:#25a244"></i> WhatsApp</button>'
+        + '<button type="button" class="k-btn" onclick="kursEinladen(\'mail\')"><i class="fas fa-envelope"></i> E-Mail</button>'
+        + '<button type="button" class="k-btn" onclick="kursEinladen(\'kopieren\')"><i class="fas fa-copy"></i> Einladung kopieren</button></div>'
+        + '<div class="muted" style="margin-top:6px">Ein Link für alle: bei WhatsApp wählst du einzelne Chats oder eure Gruppe, bei E-Mail mehrere Empfänger. Jeder meldet sich mit seinem Vornamen an, du nimmst auf – ohne deine Bestätigung kommt niemand in den Kurs.</div></div>';
+}
+
+// --- Reiter Teilnehmer ------------------------------------------------
+function kursHtmlTeilnehmer(){
+    const d = kursLeiterDaten;
+    if(!d || !d.kurs) return kursHtmlNeu(true);
+    if(kursNeuOffen) return kursHtmlNeu(false);
+    const k = d.kurs;
+    let html = kursKopfZeile() + kursHtmlEinladen();
+    if(k.anfragen.length){
+        html += '<div class="k-anfrage"><p class="k-titel"><i class="fas fa-bell" style="color:#d08a12"></i> Möchte in den Kurs</p>'
+            + k.anfragen.map(a => '<div class="k-zeile" style="margin-top:6px">' + kursAvatar(a.name) + '<b>' + kursEsc(a.name) + '</b><span class="muted">' + kursEsc(a.art) + ' · ' + kursWann(a.zeit) + '</span><span style="flex:1"></span>' + kursAufnehmenKnoepfe(a, false) + '</div>').join('')
+            + '</div>';
+    }
+    if(!k.teilnehmer.length){
+        html += '<div class="k-leer">Noch niemand im Kurs. Schick oben die Einladung – wer den Link öffnet, gibt seinen Vornamen ein und setzt den Haken „Ich nehme am Kurs teil“. Die Anfrage erscheint hier und in deinem Chat.</div>';
+    } else {
+        html += '<table class="k-tab"><tr><th>Teilnehmer</th><th>Geräte</th><th>Zuletzt da</th><th></th></tr>'
+            + k.teilnehmer.map(t => '<tr><td>' + kursAvatar(t.name) + ' <b>' + kursEsc(t.name) + '</b></td>'
+                + '<td class="muted">' + (t.geraete.length ? t.geraete.length + (t.geraete.length === 1 ? ' Gerät' : ' Geräte') + ' <span title="' + kursEsc(t.geraete.map(g => g.art).join(', ')) + '">(' + kursEsc(t.geraete.map(g => g.art).join(', ')) + ')</span>' : 'abgemeldet') + '</td>'
+                + '<td class="muted">' + kursWann(t.zuletzt) + '</td>'
+                + '<td style="text-align:right;white-space:nowrap"><button type="button" class="k-btn k-klein" onclick="kursGeraeteAbmelden(\'' + t.id + '\')" title="Alle Geräte dieser Person abmelden – z. B. wenn ein Handy verloren ging. Sie meldet sich danach neu an und du ordnest sie wieder zu.">Geräte abmelden</button> '
+                + '<button type="button" class="k-btn k-klein" onclick="kursEntfernen(\'' + t.id + '\')">Entfernen</button></td></tr>').join('')
+            + '</table>';
+    }
+    html += '<p class="muted" style="margin:10px 0 0">Anmelden geht über den normalen Link: Name eingeben, Haken „Ich nehme am Kurs teil“ – du bestätigst hier oder im Chat. Danach erkennt der Trainer die Person auf diesem Gerät, ohne Passwort. Meldet sich jemand von einem zweiten Gerät, ordnest du es mit „zu … zuordnen“ dem vorhandenen Namen zu.</p>';
+    return html;
+}
+window.kursGeraeteAbmelden = function(id){
+    const t = kursLeiterDaten.kurs.teilnehmer.find(x => x.id === id);
+    const los = () => kursLeiterAktion('/api/kurs/geraete-abmelden', { id });
+    if(window.showAppConfirm) showAppConfirm('Alle Geräte von ' + (t ? t.name : 'diesem Teilnehmer') + ' abmelden? Die Ergebnisse bleiben erhalten.', los, { title: 'Geräte abmelden?' });
+    else los();
+};
+window.kursEntfernen = function(id){
+    const t = kursLeiterDaten.kurs.teilnehmer.find(x => x.id === id);
+    const los = () => kursLeiterAktion('/api/kurs/entfernen', { id });
+    if(window.showAppConfirm) showAppConfirm((t ? t.name : 'Dieser Teilnehmer') + ' wird aus dem Kurs genommen – mit allen Ergebnissen seiner Hausaufgaben.', los,
+        { title: 'Aus dem Kurs entfernen?', icon: 'fa-user-minus', iconColor: '#a8322c', confirmColor: '#a8322c', confirmLabel: '<i class="fas fa-user-minus"></i> Entfernen' });
+    else los();
+};
+
+// --- Reiter Hausaufgaben ----------------------------------------------
+function kursLektionenDesKurses(){ const k = kursLeiterDaten.kurs; return (KURSE[k.klasse] || KURSE.n).lek; }
+function kursHtmlHausaufgaben(){
+    const d = kursLeiterDaten;
+    if(!d || !d.kurs) return kursHtmlNeu(true);
+    if(kursNeuOffen) return kursHtmlNeu(false);
+    const k = d.kurs;
+    const lek = kursLektionenDesKurses();
+    const morgen = new Date(Date.now() + 7 * 864e5);
+    const bis = morgen.getFullYear() + '-' + String(morgen.getMonth() + 1).padStart(2, '0') + '-' + String(morgen.getDate()).padStart(2, '0');
+    let html = kursKopfZeile();
+    html += '<div class="k-zwei"><div class="k-kasten">'
+        + '<p class="k-titel">Neue Hausaufgabe</p>'
+        + '<select id="kursHaLektion" class="k-feld" style="width:100%;margin-bottom:8px" onchange="kursFormNachziehen(true)">'
+        + lek.map((l, i) => '<option value="' + i + '">' + (i + 1) + ' · ' + kursEsc(l.t) + '</option>').join('') + '</select>'
+        + '<div id="kursHaAbschnitte" class="k-abs"></div>'
+        + '<div class="k-zeile" style="margin-top:8px"><span class="muted">Bis:</span><input id="kursHaBis" type="date" class="k-feld" value="' + bis + '"><span style="flex:1"></span>'
+        + '<button type="button" id="kursHaLos" class="k-btn k-dunkel" onclick="kursHausaufgabeAufgeben()"><i class="fas fa-paper-plane"></i> aufgeben</button></div>'
+        + '</div><div>'
+        + '<p class="k-titel">Aufgegeben</p>';
+    const auf = k.aufgaben.slice().sort((a, b) => b.erstellt - a.erstellt);
+    if(!auf.length) html += '<div class="k-leer">Noch keine Hausaufgabe. Links Lektion und Abschnitte wählen, Termin setzen, aufgeben – die Teilnehmer sehen sie sofort unter „Meine Hausaufgaben“.</div>';
+    else {
+        const n = k.teilnehmer.length;
+        html += '<table class="k-tab"><tr><th>Hausaufgabe</th><th>Bis</th><th>Erledigt</th><th></th></tr>'
+            + auf.map(a => {
+                const fertig = k.teilnehmer.filter(t => a.stand[t.id] && a.stand[t.id].fertig).length;
+                const spaet = kursUeberfaellig(a.bis);
+                return '<tr><td><b>L' + a.nr + '</b> ' + kursTeilText(a) + '<div class="muted">' + kursEsc(a.titel) + ' · ' + a.fragen.length + ' Fragen</div></td>'
+                    + '<td' + (spaet ? ' style="color:#a8322c"' : '') + '>' + kursTag(a.bis) + '</td>'
+                    + '<td><div class="k-balken"><i style="width:' + (n ? Math.round(fertig / n * 100) : 0) + '%"></i></div><span class="muted">' + fertig + ' von ' + n + '</span></td>'
+                    + '<td style="text-align:right"><button type="button" class="k-btn k-klein" title="Hausaufgabe zurückziehen" onclick="kursHausaufgabeLoeschen(\'' + a.id + '\')"><i class="fas fa-trash-can"></i></button></td></tr>';
+            }).join('') + '</table>';
+    }
+    html += '</div></div>';
+    return html;
+}
+// Abschnitte der gewaehlten Lektion als Haken
+function kursFormNachziehen(neu){
+    const sel = document.getElementById('kursHaLektion');
+    const box = document.getElementById('kursHaAbschnitte');
+    if(!sel || !box) return;
+    const l = kursLektionenDesKurses()[+sel.value];
+    if(!l) return;
+    if(neu || box.dataset.lektion !== sel.value){
+        box.dataset.lektion = sel.value;
+        box.innerHTML = l.a.map((a, i) => {
+            const n = a[3] ? a[3].split(' ').length : 0;
+            return '<label' + (n ? '' : ' class="aus"') + '><input type="checkbox" ' + (n ? 'checked' : 'disabled') + ' value="' + i + '" onchange="kursFormZahl()"> '
+                + kursEsc(a[0]) + '<span class="n">' + (n || 'nur Folien') + '</span></label>';
+        }).join('');
+    }
+    kursFormZahl();
+}
+window.kursFormNachziehen = kursFormNachziehen;
+function kursFormAuswahl(){
+    const sel = document.getElementById('kursHaLektion');
+    const l = kursLektionenDesKurses()[+sel.value];
+    const teil = [...document.querySelectorAll('#kursHaAbschnitte input:checked')].map(x => +x.value);
+    const fragen = [], abschnittJeFrage = [], doppelt = {};
+    teil.forEach(i => (l.a[i][3] ? l.a[i][3].split(' ') : []).forEach(id => { if(!doppelt[id]){ doppelt[id] = 1; fragen.push(id); abschnittJeFrage.push(i); } }));
+    return { nr: +sel.value + 1, titel: l.t, abschnitte: l.a.map(a => a[0]), teil, fragen, abschnittJeFrage };
+}
+window.kursFormZahl = function(){
+    const b = document.getElementById('kursHaLos');
+    if(!b) return;
+    const a = kursFormAuswahl();
+    b.innerHTML = '<i class="fas fa-paper-plane"></i> ' + a.fragen.length + ' Fragen aufgeben';
+    b.disabled = !a.fragen.length;
+};
+window.kursHausaufgabeAufgeben = function(){
+    const a = kursFormAuswahl();
+    a.bis = (document.getElementById('kursHaBis') || {}).value || '';
+    if(!a.fragen.length) return;
+    kursLeiterAktion('/api/kurs/aufgabe', a);
+};
+window.kursHausaufgabeLoeschen = function(id){
+    const a = kursLeiterDaten.kurs.aufgaben.find(x => x.id === id);
+    const los = () => kursLeiterAktion('/api/kurs/aufgabe-loeschen', { id });
+    if(window.showAppConfirm) showAppConfirm('Hausaufgabe Lektion ' + (a ? a.nr : '') + ' zurückziehen? Die Ergebnisse dazu gehen mit.', los,
+        { title: 'Hausaufgabe zurückziehen?', icon: 'fa-trash-can', iconColor: '#a8322c', confirmColor: '#a8322c', confirmLabel: '<i class="fas fa-trash-can"></i> Zurückziehen' });
+    else los();
+};
+
+// --- Reiter Auswertung ------------------------------------------------
+function kursZelle(a, s){
+    if(!s) return '<span class="k-pill k-offen">–</span>';
+    const spaet = kursUeberfaellig(a.bis);
+    if(s.fertig) return '<span class="k-pill k-ok" title="' + s.richtig + ' von ' + s.anzahl + ' richtig, abgegeben ' + kursWann(s.fertig) + '"><i class="fas fa-check"></i> ' + s.richtig + ' / ' + s.anzahl + '</span>';
+    if(s.beantwortet) return '<span class="k-pill ' + (spaet ? 'k-spaet' : 'k-halb') + '" title="' + s.beantwortet + ' von ' + s.anzahl + ' beantwortet, davon ' + s.richtig + ' richtig"><i class="fas fa-hourglass-half"></i> ' + s.beantwortet + ' / ' + s.anzahl + '</span>';
+    return spaet ? '<span class="k-pill k-spaet"><i class="fas fa-triangle-exclamation"></i> nicht erledigt</span>' : '<span class="k-pill k-offen">offen</span>';
+}
+function kursHtmlAuswertung(){
+    const d = kursLeiterDaten;
+    if(!d || !d.kurs) return kursHtmlNeu(true);
+    const k = d.kurs;
+    const auf = k.aufgaben.slice().sort((a, b) => a.erstellt - b.erstellt);
+    let html = kursKopfZeile().replace('<button type="button" class="k-btn" onclick="kursNeuOffen=true;kursTeilZeichnen()"><i class="fas fa-plus"></i> Neuer Kurs</button>',
+        '<span class="muted">' + k.teilnehmer.length + ' Teilnehmer · ' + auf.length + ' Hausaufgaben</span>'
+        + (auf.length && k.teilnehmer.length ? '<button type="button" class="k-btn" onclick="kursTabelleSpeichern()" title="Alle Ergebnisse als Tabelle (CSV) für Excel oder LibreOffice – landet im Download-Ordner"><i class="fas fa-file-csv"></i> Als Tabelle speichern</button>' : ''));
+    if(!auf.length || !k.teilnehmer.length) return html + '<div class="k-leer">Hier steht, wer welche Hausaufgabe mit welchem Ergebnis erledigt hat – sobald es Teilnehmer und Hausaufgaben gibt.</div>';
+    html += '<div class="k-rollen"><table class="k-tab k-matrix"><tr><th>Teilnehmer</th>'
+        + auf.map(a => '<th title="' + kursEsc(a.titel) + ' – ' + kursTeilText(a) + '">L' + a.nr + (a.bis ? ' · bis ' + kursTag(a.bis).replace(/^\w+\.,? /, '') : '') + '</th>').join('')
+        + '<th>Schnitt</th></tr>'
+        + k.teilnehmer.map(t => {
+            let r = 0, b = 0;
+            const zellen = auf.map(a => { const s = a.stand[t.id]; if(s){ r += s.richtig; b += s.beantwortet; } return '<td>' + kursZelle(a, s) + '</td>'; }).join('');
+            return '<tr><td>' + kursAvatar(t.name) + ' <b>' + kursEsc(t.name) + '</b></td>' + zellen + '<td><b>' + (b ? Math.round(r / b * 100) + ' %' : '–') + '</b></td></tr>';
+        }).join('') + '</table></div>';
+    // Wo hakt es? Standard: die juengste Hausaufgabe mit Antworten
+    const mitAntw = auf.filter(a => Object.keys(a.beantwortet || {}).length);
+    if(mitAntw.length){
+        if(!mitAntw.some(a => a.id === kursAuswertungWahl)) kursAuswertungWahl = mitAntw[mitAntw.length - 1].id;
+        const a = mitAntw.find(x => x.id === kursAuswertungWahl);
+        const liste = Object.keys(a.falsch || {}).map(id => ({ id, f: a.falsch[id], b: a.beantwortet[id] || 0, ab: a.abschnitte[a.abschnittJeFrage[a.fragen.indexOf(id)]] || '' }))
+            .filter(x => x.f > 0).sort((x, y) => (y.f / y.b) - (x.f / x.b) || y.f - x.f).slice(0, 6);
+        html += '<div class="k-kasten" style="margin-top:14px"><div class="k-zeile" style="margin-bottom:6px"><p class="k-titel" style="margin:0"><i class="fas fa-fire" style="color:#c0392b"></i> Hier hakt es in der Gruppe</p>'
+            + (mitAntw.length > 1 ? '<select class="k-feld k-klein" onchange="kursAuswertungWahl=this.value;kursTeilZeichnen()">' + mitAntw.map(x => '<option value="' + x.id + '"' + (x.id === a.id ? ' selected' : '') + '>Lektion ' + x.nr + ' · ' + kursTeilText(x) + '</option>').join('') + '</select>' : '<span class="muted">Lektion ' + a.nr + '</span>')
+            + '</div>';
+        if(!liste.length) html += '<div class="muted">Bisher alles richtig – nichts, woran die Gruppe hängt.</div>';
+        else html += '<div class="k-zeile" style="flex-wrap:wrap;gap:6px 18px;font-size:13px">'
+            + liste.map(x => '<span class="muted"><b style="color:var(--ink)">' + x.id + '</b> ' + x.f + ' von ' + x.b + ' falsch' + (x.ab ? ' – ' + kursEsc(x.ab) : '') + '</span>').join('')
+            + '<button type="button" class="k-btn k-klein" style="margin-left:auto" onclick="kursFragenAmBeamer(' + kursEsc(JSON.stringify(liste.map(x => x.id))).replace(/"/g, '&quot;') + ')"><i class="fas fa-display"></i> Diese Fragen am Beamer</button></div>';
+        html += '</div>';
+    }
+    return html;
+}
+window.kursFragenAmBeamer = async function(ids){
+    try{
+        const r = await kursApi('/api/kurs/fragen-leiter', { ids });
+        if(!r.ok || !r.j.fragen.length) return;
+        unterrichtFreieRunde(r.j.fragen, 'Unterricht · Wo es hakt', true);
+    }catch(e){}
+};
+// Eine Runde mit beliebigen Fragen, in dieser Reihenfolge
+function unterrichtFreieRunde(fragen, titel, beamer){
+    if(typeof examSimulatorMode !== 'undefined' && examSimulatorMode){ try{ stopExamTimer(); }catch(e){} examSimulatorMode = false; }
+    laufendeLektion = null; unterrichtLauf = null; hausLauf = null;
+    isQuizActive = true; examFinished = false; examMode = false; showSidebar = true;
+    currentPart = titel;
+    currentQuestions = fragen.map(q => { try{ return prepareQuestion(q); }catch(e){ return q; } });
+    neueRundeVorbereiten();
+    unterrichtSchliessen();
+    renderQuestion();
+    try{ navArea.style.display = 'flex'; }catch(e){}
+    if(typeof updateVisibility === 'function') updateVisibility();
+    if(beamer && typeof beamerSetzen === 'function') beamerSetzen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- Teilnehmer: Meine Hausaufgaben ----------------------------------
+function kursHtmlMeine(){
+    const d = kursIchDaten;
+    if(!d) return '<div class="k-leer">Der Kurs ist gerade nicht erreichbar.</div>';
+    let html = '<div class="k-gruss"><b>Hallo ' + kursEsc(d.name) + '</b><div>' + kursEsc(d.kurs) + (d.leiter ? ' · Kursleiter ' + kursEsc(d.leiter) : '') + '</div></div>';
+    const offen = d.aufgaben.filter(a => !a.fertig).sort((a, b) => (a.bis || '9') < (b.bis || '9') ? -1 : 1);
+    const fertig = d.aufgaben.filter(a => a.fertig).sort((a, b) => b.fertig - a.fertig);
+    if(!d.aufgaben.length) html += '<div class="k-leer">Noch keine Hausaufgaben. Sobald ' + (d.leiter ? kursEsc(d.leiter) : 'dein Kursleiter') + ' eine aufgibt, steht sie hier.</div>';
+    offen.forEach(a => {
+        const spaet = kursUeberfaellig(a.bis);
+        html += '<div class="k-ha k-ha-offen' + (spaet ? ' k-ha-spaet' : '') + '"><div class="k-zeile"><div style="flex:1"><div class="k-hat">Lektion ' + a.nr + ' · ' + kursEsc(a.titel) + '</div>'
+            + '<div class="muted">' + kursTeilText(a) + ' · ' + a.anzahl + ' Fragen' + (a.bis ? ' · ' + (spaet ? '<b style="color:#a8322c">war bis ' + kursTag(a.bis) + '</b>' : 'bis ' + kursTag(a.bis)) : '') + '</div></div>'
+            + '<button type="button" class="k-btn k-dunkel" onclick="hausaufgabeStarten(\'' + a.id + '\')"><i class="fas fa-play"></i> ' + (a.beantwortet ? 'Weiter bei Frage ' + (a.beantwortet + 1) : 'Starten') + '</button></div>'
+            + '<div class="k-zeile" style="margin-top:8px"><div class="k-balken" style="flex:1;width:auto"><i style="width:' + Math.round(a.beantwortet / a.anzahl * 100) + '%;background:#e2932f"></i></div><span class="muted">' + a.beantwortet + ' von ' + a.anzahl + '</span></div></div>';
+    });
+    fertig.forEach(a => {
+        html += '<div class="k-ha"><div class="k-zeile"><div style="flex:1"><div class="k-hat">Lektion ' + a.nr + ' · ' + kursEsc(a.titel) + '</div>'
+            + '<div class="muted">' + kursTeilText(a) + ' · ' + a.anzahl + ' Fragen · abgegeben ' + kursWann(a.fertig) + '</div></div>'
+            + '<span class="k-pill k-ok"><i class="fas fa-check"></i> ' + a.richtig + ' / ' + a.anzahl + '</span></div></div>';
+    });
+    html += '<p class="muted" style="text-align:center;margin-top:12px">Es zählt die erste Antwort. Falsche Antworten kommen wie immer unter Fehler und Lernbedarf – alles andere im Trainer geht wie gewohnt.</p>';
+    return html;
+}
+// --- Besucher: beim Kurs anmelden --------------------------------------
+function kursHtmlBeitreten(){
+    let wartet = null;
+    try{ wartet = JSON.parse(kursLS(KURS_ANFRAGE) || 'null'); }catch(e){}
+    if(wartet) return '<div class="k-kasten" style="max-width:560px"><p class="k-titel"><i class="fas fa-hourglass-half" style="color:#d08a12"></i> Deine Anfrage ist beim Kursleiter</p>'
+        + '<p class="muted" style="margin:0">„' + kursEsc(wartet.kurs) + '“ – sobald ' + (wartet.leiter ? kursEsc(wartet.leiter) : 'der Kursleiter') + ' dich aufnimmt, erscheinen hier deine Hausaufgaben. Das Fenster kann solange zu bleiben; im Chat kommt eine Nachricht.</p></div>';
+    if(!kursInfo) return '<div class="k-leer">Gerade gibt es keinen Kurs.</div>';
+    let name = '';
+    try{ name = localStorage.getItem('duo_userName') || ''; }catch(e){}
+    if(/^Besucher$/i.test(name)) name = '';
+    return '<div class="k-kasten" style="max-width:560px"><p class="k-titel"><i class="fas fa-chalkboard-user"></i> Kurs „' + kursEsc(kursInfo.kurs) + '“' + (kursInfo.leiter ? ' bei ' + kursEsc(kursInfo.leiter) : '') + '</p>'
+        + '<p class="muted" style="margin:0 0 8px">Melde dich an, dann bekommst du hier deine Hausaufgaben. Der Kursleiter bestätigt dich einmal; ein Passwort gibt es nicht.</p>'
+        + '<div class="k-zeile"><input id="kursBeitrittName" class="k-feld" style="flex:1" maxlength="30" value="' + kursEsc(name) + '" placeholder="Dein Name oder Rufzeichen">'
+        + '<button type="button" class="k-btn k-dunkel" onclick="kursBeitreten()"><i class="fas fa-user-plus"></i> Beim Kurs anmelden</button></div></div>';
+}
+window.kursBeitreten = function(){
+    const v = String((document.getElementById('kursBeitrittName') || {}).value || '').replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 30);
+    if(!v){ if(window.showAppAlert) showAppAlert('Bitte einen Namen eingeben.'); return; }
+    try{ document.activeElement.blur(); }catch(e){}
+    kursAnfrageSenden(v);
+};
+
+// --- Hausaufgabe bearbeiten --------------------------------------------
+window.hausaufgabeStarten = async function(id){
+    try{
+        const tok = kursLS(KURS_TOKEN);
+        const r = await kursApi('/api/kurs/fragen', { token: tok, aufgabe: id });
+        if(r.status === 401){ kursLS(KURS_TOKEN, null); kursAuffrischen(); if(window.showAppAlert) showAppAlert('Dieses Gerät ist nicht mehr im Kurs angemeldet.'); return; }
+        if(!r.ok){ if(window.showAppAlert) showAppAlert(r.j.error || 'Die Hausaufgabe ließ sich nicht laden.'); return; }
+        const a = (kursIchDaten.aufgaben || []).find(x => x.id === id) || { nr: 0, titel: '', abschnitte: [] };
+        const schon = new Set(r.j.beantwortet || []);
+        const liste = r.j.fragen.map((q, i) => ({ q, ab: (r.j.abschnittJeFrage || [])[i] })).filter(x => !schon.has(x.q.id));
+        if(!liste.length){ if(window.showAppAlert) showAppAlert('Diese Hausaufgabe ist schon erledigt.'); return; }
+        if(typeof examSimulatorMode !== 'undefined' && examSimulatorMode){ try{ stopExamTimer(); }catch(e){} examSimulatorMode = false; }
+        laufendeLektion = null; unterrichtLauf = null;
+        isQuizActive = true; examFinished = false; examMode = false; showSidebar = true;
+        currentPart = 'Hausaufgabe Lektion ' + a.nr + ' – ' + a.titel;
+        currentQuestions = liste.map(x => { try{ return prepareQuestion(x.q); }catch(e){ return x.q; } });
+        hausLauf = { id, nr: a.nr, titel: a.titel, fragen: currentQuestions, abschnitte: liste.map(x => (a.abschnitte || [])[x.ab] || ''), versatz: schon.size, gesamt: r.j.fragen.length };
+        neueRundeVorbereiten();
+        unterrichtSchliessen();
+        renderQuestion();
+        try{ navArea.style.display = 'flex'; }catch(e){}
+        if(typeof updateVisibility === 'function') updateVisibility();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }catch(e){ console.warn('[KURS] Hausaufgabe', e); }
+};
+function hausaufgabeAktiv(){
+    return !!(hausLauf && typeof currentQuestions !== 'undefined' && currentQuestions === hausLauf.fragen && isQuizActive);
+}
+window.hausaufgabeAktiv = hausaufgabeAktiv;
+
+// Aus selectOption: jede Antwort geht an den Server. Klappt es nicht
+// (Leitung weg), wird es alle 5 s wieder versucht.
+const hausWarteschlange = [];
+let hausSendeUhr = null;
+window.hausaufgabeAntwort = function(q, opt){
+    if(!hausaufgabeAktiv() || !q || !opt) return;
+    hausWarteschlange.push({ token: kursLS(KURS_TOKEN), aufgabe: hausLauf.id, frage: q.id, text: String(opt.text || ''), bild: String(opt.image || '') });
+    hausSenden();
+};
+async function hausSenden(){
+    if(hausSendeUhr) return;
+    while(hausWarteschlange.length){
+        try{
+            const r = await kursApi('/api/kurs/antwort', hausWarteschlange[0]);
+            if(r.ok || r.status === 400 || r.status === 404 || r.status === 401){ hausWarteschlange.shift(); if(r.ok && r.j.fertig) kursAuffrischen(); continue; }
+        }catch(e){}
+        hausSendeUhr = setTimeout(() => { hausSendeUhr = null; hausSenden(); }, 5000);
+        return;
+    }
+    kursAuffrischenSpaeter();
+}
+let kursAuffrischUhr = null;
+function kursAuffrischenSpaeter(){
+    if(kursAuffrischUhr) clearTimeout(kursAuffrischUhr);
+    kursAuffrischUhr = setTimeout(() => { kursAuffrischUhr = null; kursAuffrischen().then(() => kursTeilZeichnen()); }, 1500);
+}
+
+// --- Nachrichten im Chat und Tabelle (28.09.2026) ----------------------
+// Dietmar zu den beiden Vorschlaegen aus der Roadmap: "baue es bitte ein."
+//  - Teilnehmer: "Neue Hausaufgabe" mit Knopf, Erinnerung am Tag vor dem
+//    Termin und am Termin selbst (je einmal am Tag).
+//  - Kursleiter: "Maja hat Lektion 3 erledigt: 10 / 11".
+// Alles als Karte im eigenen Chat - nur der Betroffene sieht sie, nichts
+// davon geht ueber den Server an andere. Was schon gemeldet ist, merkt
+// sich der Browser (localStorage), damit nichts doppelt kommt.
+//
+// Der Chatverlauf wird beim (Wieder-)Verbinden neu gesetzt und leert
+// dabei alles. Die Karten dieser Sitzung werden deshalb gemerkt und alle
+// paar Sekunden wieder angehaengt, falls sie weg sind.
+const kursKartenSitzung = [];
+function kursKarte(html, klasse){
+    if(typeof window.duoChatKarte !== 'function') return false;
+    const el = document.createElement('div');
+    el.className = 'k-karte' + (klasse ? ' ' + klasse : '');
+    el.innerHTML = html;
+    if(!window.duoChatKarte(el)) return false;
+    kursKartenSitzung.push(el);
+    return true;
+}
+setInterval(() => {
+    const v = document.getElementById('duoChatVerlauf');
+    if(!v || typeof window.duoChatKarte !== 'function') return;
+    kursKartenSitzung.forEach(el => { if(!el.isConnected) window.duoChatKarte(el); });
+}, 3000);
+
+function kursListe(k){ try{ return JSON.parse(kursLS(k) || 'null'); }catch(e){ return null; } }
+function kursHeute(plus){
+    const d = new Date(Date.now() + (plus || 0) * 864e5);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function kursChatMeldungen(){
+    try{
+        if(kursRolle === 'teilnehmer' && kursIchDaten) kursMeldungenTeilnehmer();
+        if(kursRolle === 'leiter' && kursLeiterDaten && kursLeiterDaten.kurs) kursMeldungenLeiter();
+    }catch(e){ console.warn('[KURS] Meldungen', e); }
+}
+window.kursChatMeldungen = kursChatMeldungen;
+
+function kursMeldungenTeilnehmer(){
+    const d = kursIchDaten;
+    const gesehen = kursListe('kurs_ha_gemeldet') || [];
+    const erinnert = kursListe('kurs_ha_erinnert') || {};
+    const heute = kursHeute(0), morgen = kursHeute(1);
+    const knopf = a => '<button type="button" class="k-btn k-dunkel k-klein" onclick="hausaufgabeStarten(\'' + a.id + '\')"><i class="fas fa-play"></i> '
+        + (a.beantwortet ? 'Weiter bei Frage ' + (a.beantwortet + 1) : 'Starten') + '</button>';
+    d.aufgaben.filter(a => !a.fertig).forEach(a => {
+        if(!gesehen.includes(a.id)){
+            const ok = kursKarte('<div class="k-kt"><i class="fas fa-house-laptop" style="color:#0a7a8b"></i> Neue Hausaufgabe: Lektion ' + a.nr + ' · ' + kursEsc(a.titel) + '</div>'
+                + '<div class="k-km">' + kursTeilText(a) + ' · ' + a.anzahl + ' Fragen' + (a.bis ? ' · bis ' + kursTag(a.bis) : '') + (d.leiter ? ' · von ' + kursEsc(d.leiter) : '') + '</div>' + knopf(a));
+            if(ok){ gesehen.push(a.id); erinnert[a.id] = heute; }
+            return;
+        }
+        if(a.bis && (a.bis === heute || a.bis === morgen) && erinnert[a.id] !== heute){
+            const rest = a.anzahl - a.beantwortet;
+            const ok = kursKarte('<div class="k-kt"><i class="fas fa-bell" style="color:#d08a12"></i> Erinnerung: Lektion ' + a.nr + ' ist ' + (a.bis === heute ? 'heute' : 'morgen') + ' fällig</div>'
+                + '<div class="k-km">Noch ' + rest + (rest === 1 ? ' Frage' : ' Fragen') + ' von ' + a.anzahl + '.</div>' + knopf(a));
+            if(ok) erinnert[a.id] = heute;
+        }
+    });
+    kursLS('kurs_ha_gemeldet', JSON.stringify(gesehen.slice(-200)));
+    kursLS('kurs_ha_erinnert', JSON.stringify(erinnert));
+}
+
+function kursMeldungenLeiter(){
+    const k = kursLeiterDaten.kurs;
+    let gemeldet = kursListe('kurs_fertig_gemeldet');
+    const erstes = gemeldet === null;
+    if(erstes) gemeldet = [];
+    k.aufgaben.forEach(a => k.teilnehmer.forEach(t => {
+        const s = a.stand[t.id];
+        const key = a.id + ':' + t.id;
+        if(!s || !s.fertig || gemeldet.includes(key)) return;
+        // Beim allerersten Mal nur merken - sonst kaeme alles Alte auf einmal.
+        if(erstes || kursKarte('<div class="k-kt"><i class="fas fa-circle-check" style="color:#15703c"></i> ' + kursEsc(t.name) + ' hat Lektion ' + a.nr + ' erledigt</div>'
+            + '<div class="k-km">' + s.richtig + ' von ' + s.anzahl + ' richtig · ' + kursTeilText(a) + ' · ' + kursWann(s.fertig) + ' · Nur du siehst diese Nachricht.</div>', 'k-karte-gut')){
+            gemeldet.push(key);
+        }
+    }));
+    kursLS('kurs_fertig_gemeldet', JSON.stringify(gemeldet.slice(-500)));
+}
+
+// Tabelle fuer die Unterlagen: CSV mit Semikolon und BOM - so oeffnet
+// Excel sie mit Umlauten und Spalten richtig.
+window.kursTabelleSpeichern = function(){
+    const d = kursLeiterDaten;
+    if(!d || !d.kurs) return;
+    const k = d.kurs;
+    const auf = k.aufgaben.slice().sort((a, b) => a.erstellt - b.erstellt);
+    const zelle = v => { v = String(v == null ? '' : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const zeilen = [];
+    zeilen.push(['Kurs', k.name].map(zelle).join(';'));
+    zeilen.push(['Kursleiter', k.leiter || ''].map(zelle).join(';'));
+    zeilen.push(['Stand', new Date().toLocaleString('de-DE')].map(zelle).join(';'));
+    zeilen.push('');
+    const kopf = ['Teilnehmer'];
+    auf.forEach(a => { const n = 'L' + a.nr + ' ' + kursTeilText(a) + (a.bis ? ' (bis ' + a.bis.split('-').reverse().join('.') + ')' : ''); kopf.push(n + ' richtig', n + ' beantwortet', n + ' Fragen', n + ' abgegeben'); });
+    kopf.push('Richtig gesamt', 'Beantwortet gesamt', 'Schnitt %');
+    zeilen.push(kopf.map(zelle).join(';'));
+    k.teilnehmer.forEach(t => {
+        const z = [t.name]; let r = 0, b = 0;
+        auf.forEach(a => {
+            const s = a.stand[t.id] || { richtig: 0, beantwortet: 0, anzahl: a.fragen.length, fertig: 0 };
+            r += s.richtig; b += s.beantwortet;
+            z.push(s.richtig, s.beantwortet, s.anzahl, s.fertig ? new Date(s.fertig).toLocaleString('de-DE') : (kursUeberfaellig(a.bis) ? 'nicht erledigt' : 'offen'));
+        });
+        z.push(r, b, b ? Math.round(r / b * 100) : '');
+        zeilen.push(z.map(zelle).join(';'));
+    });
+    zeilen.push('');
+    zeilen.push(['Frage', 'Hausaufgabe', 'Abschnitt', 'falsch', 'beantwortet'].map(zelle).join(';'));
+    auf.forEach(a => Object.keys(a.falsch || {}).sort((x, y) => a.falsch[y] - a.falsch[x]).forEach(id => {
+        zeilen.push([id, 'L' + a.nr, a.abschnitte[a.abschnittJeFrage[a.fragen.indexOf(id)]] || '', a.falsch[id], (a.beantwortet || {})[id] || 0].map(zelle).join(';'));
+    }));
+    const blob = new Blob(['﻿' + zeilen.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Hausaufgaben_' + k.name.replace(/[^\wäöüÄÖÜß.-]+/g, '_').replace(/_+/g, '_') + '_' + kursHeute(0) + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+};
+
+// --- Aussehen ----------------------------------------------------------
+(function(){
+    const st = document.createElement('style');
+    st.textContent = [
+        '#unterrichtModal .u-reiter{display:flex;gap:6px;border-bottom:2px solid var(--line);margin:0 0 12px;flex-wrap:wrap;}',
+        '#unterrichtModal .u-reiter button{border:2px solid transparent;border-bottom:none;background:none;padding:6px 13px;font:600 0.85rem var(--font-body);color:var(--muted);border-radius:10px 10px 0 0;margin-bottom:-2px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}',
+        '#unterrichtModal .u-reiter button.an{color:var(--panel-navy);border-color:var(--line);background:#fff;border-bottom:2px solid #fff;}',
+        '#unterrichtModal .u-teil{display:flex;flex-direction:column;flex:1 1 0;min-height:0;}',
+        '#unterrichtModal .u-anders{overflow-y:auto;padding-right:4px;font-size:0.85rem;}',
+        '#unterrichtModal .k-zahl{background:#fdecea;color:#b03024;border-radius:9px;padding:0 6px;font-size:0.7rem;font-weight:800;}',
+        '.k-zeile{display:flex;align-items:center;gap:10px;}',
+        '.k-btn{border:1px solid #c3d0de;background:#fff;color:var(--panel-navy);border-radius:20px;padding:0.35rem 0.8rem;font:600 0.8rem var(--font-body);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}',
+        '.k-btn:disabled{opacity:0.45;cursor:default;}',
+        '.k-btn.k-klein{padding:0.2rem 0.6rem;font-size:0.74rem;}',
+        '.k-btn.k-gruen{background:#15703c;border-color:#15703c;color:#fff;}',
+        '.k-btn.k-dunkel{background:var(--panel-navy);border-color:var(--panel-navy);color:#fff;}',
+        '#unterrichtModal .k-feld{border:1px solid #a8c0de;border-radius:20px;padding:0.4rem 0.75rem;font:600 0.82rem var(--font-body);background:#fff;color:var(--ink);min-width:0;}',
+        '#unterrichtModal .k-feld.k-klein{padding:0.2rem 0.6rem;font-size:0.76rem;}',
+        '#unterrichtModal .k-kasten{border:1px solid var(--line);border-radius:12px;background:#f4f7fd;padding:12px 14px;}',
+        '#unterrichtModal .k-titel{font-weight:800;color:var(--panel-navy);font-size:0.85rem;margin:0 0 6px;}',
+        '#unterrichtModal .k-leer{padding:14px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;}',
+        '#unterrichtModal .k-anfrage{border:2px solid #f0d49a;background:#fffaf0;border-radius:12px;padding:10px 12px;margin-bottom:14px;}',
+        '#unterrichtModal .k-tab{width:100%;border-collapse:separate;border-spacing:0;}',
+        '#unterrichtModal .k-tab th{font-size:0.7rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:700;white-space:nowrap;}',
+        '#unterrichtModal .k-tab td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}',
+        '#unterrichtModal .k-rollen{overflow-x:auto;}',
+        '#unterrichtModal .k-zwei{display:grid;grid-template-columns:1fr 1fr;gap:16px;}',
+        '@media (max-width:760px){#unterrichtModal .k-zwei{grid-template-columns:1fr;}}',
+        '#unterrichtModal .k-abs{background:#fff;border:1px solid var(--line);border-radius:10px;max-height:260px;overflow-y:auto;}',
+        '#unterrichtModal .k-abs label{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--line);font-size:0.8rem;cursor:pointer;}',
+        '#unterrichtModal .k-abs label.aus{color:var(--muted);cursor:default;}',
+        '#unterrichtModal .k-abs label:last-child{border-bottom:none;}',
+        '#unterrichtModal .k-abs .n{margin-left:auto;color:var(--muted);font-size:0.72rem;}',
+        '#unterrichtModal .k-balken{height:8px;border-radius:4px;background:var(--line);overflow:hidden;width:110px;}',
+        '#unterrichtModal .k-balken i{display:block;height:100%;background:#15703c;}',
+        '.k-pill{display:inline-flex;align-items:center;gap:5px;border-radius:12px;padding:3px 9px;font-weight:700;font-size:0.74rem;min-width:88px;justify-content:center;white-space:nowrap;}',
+        '.k-ok{background:#dcf3e5;color:#15703c;} .k-halb{background:#fdf1d8;color:#8a5a00;} .k-offen{background:#eef2f8;color:#5b6b80;} .k-spaet{background:#fbe1df;color:#a8322c;}',
+        '.k-av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.72rem;vertical-align:middle;flex:0 0 26px;}',
+        '#unterrichtModal .k-gruss{background:var(--panel-navy);color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:12px;}',
+        '#unterrichtModal .k-gruss b{font-size:1.05rem;} #unterrichtModal .k-gruss div{opacity:0.8;font-size:0.8rem;}',
+        '#unterrichtModal .k-ha{border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:10px;}',
+        '#unterrichtModal .k-ha-offen{border-color:#f0d49a;background:#fffaf0;}',
+        '#unterrichtModal .k-ha-spaet{border-color:#efb3ad;background:#fff6f5;}',
+        '#unterrichtModal .k-hat{font-weight:800;color:var(--panel-navy);}',
+        /* Karten im Chat */
+        '#kursHinweis{display:none;align-items:center;gap:10px;margin:0.6rem 0 -0.6rem;padding:0.5rem 0.9rem;border:2px solid #f0d49a;background:#fffaf0;border-radius:14px;font-size:0.85rem;color:#162436;}',
+        '#kursHinweis > span{flex:1;}',
+        '#kursHinweis > i{color:#d08a12;}',
+        'body.runde-laeuft #kursHinweis{display:none !important;}',
+        'body.dark #kursHinweis{background:#2a2410;border-color:#5a4a1c;color:#f0f7fc;}',
+        '#duoChatVerlauf .k-karte{align-self:stretch;background:#fff;border:2px solid #f0d49a;border-radius:14px;padding:9px 11px;font-size:0.8rem;color:#162436;}',
+        '#duoChatVerlauf .k-karte-gut{border-color:#9fd3b1;}',
+        '#duoChatVerlauf .k-karte-klein{border-width:1px;padding:5px 10px;align-self:center;}',
+        '#duoChatVerlauf .k-kt{font-weight:800;color:#0f2745;margin-bottom:3px;}',
+        '#duoChatVerlauf .k-km{color:#5b6b80;font-size:0.74rem;margin-bottom:7px;}',
+        '#duoChatVerlauf .muted{color:#5b6b80;}',
+        /* Dunkel */
+        'body.dark #unterrichtModal .u-reiter button.an{background:var(--nacht-flaeche,#0f2b40);border-bottom-color:var(--nacht-flaeche,#0f2b40);}',
+        'body.dark #unterrichtModal .k-btn{background:var(--nacht-flaeche,#0f2b40);color:#e6f1f8;border-color:#2b5471;}',
+        'body.dark #unterrichtModal .k-btn.k-gruen{background:#15703c;border-color:#15703c;color:#fff;}',
+        'body.dark #unterrichtModal .k-btn.k-dunkel{background:#00adef;border-color:#00adef;color:#04283a;}',
+        'body.dark #unterrichtModal .k-feld{background:var(--nacht-tief,#0a1f2e);color:#f0f7fc;border-color:#2b5471;}',
+        'body.dark #unterrichtModal .k-kasten, body.dark #unterrichtModal .k-abs{background:var(--nacht-tief,#0a1f2e);}',
+        'body.dark #unterrichtModal .k-anfrage, body.dark #unterrichtModal .k-ha-offen{background:#2a2410;border-color:#5a4a1c;}',
+        'body.dark #unterrichtModal .k-ha-spaet{background:#2e1512;border-color:#6b2a24;}',
+        'body.dark #unterrichtModal .k-gruss{background:#12405e;}',
+        'body.dark .k-ok{background:#123d25;color:#8fe0ae;} body.dark .k-halb{background:#3a2e0e;color:#f5c56b;} body.dark .k-offen{background:#1d3b52;color:#8ba6bb;} body.dark .k-spaet{background:#3d1714;color:#f2a39b;}'
+    ].join('\n');
+    document.head.appendChild(st);
+})();
+
+// Beim Laden und danach: Kursleiter alle 6 s, damit Anfragen zeitnah im
+// Chat stehen; Teilnehmer beim Wiederkommen auf die Seite.
+(function(){
+    function start(){
+        setTimeout(() => {
+            kursAuffrischen().then(() => {
+                if(kursLS(KURS_ANFRAGE)) kursAnfrageBeobachten();
+                kursPerLinkOeffnen();
+            });
+        }, 2500);
+        setInterval(() => {
+            if(kursRolle !== 'leiter' || document.hidden) return;
+            kursApi('/api/kurs').then(r => {
+                if(!r.ok) return;
+                const alt = JSON.stringify(kursLeiterDaten || {});
+                kursLeiterDaten = r.j;
+                kursAnfragenInDenChat(); kursKnopfZahl(); kursChatMeldungen();
+                if(JSON.stringify(r.j) !== alt) kursTeilZeichnen();
+            }).catch(() => {});
+        }, 6000);
+        // Teilnehmer: jede Minute nachsehen, ob eine neue Hausaufgabe da ist.
+        setInterval(() => { if(kursRolle === 'teilnehmer' && !document.hidden) kursAuffrischen().then(() => kursTeilZeichnen()); }, 60000);
+        document.addEventListener('visibilitychange', () => { if(!document.hidden && kursRolle === 'teilnehmer') kursAuffrischenSpaeter(); });
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+(function(){
+    // Zustand des Hakens vom letzten Mal; Pruefungssimulator nimmt ihn weg.
+    function einrichten(){
+        const h = document.getElementById('duoUnterrichtCheck');
+        if(!h) return;
+        try{ h.checked = localStorage.getItem('unterricht_raum') === '1'; }catch(e){}
+        const pr = document.getElementById('duoPruefungCheck');
+        if(pr && h.checked && pr.checked) h.checked = false;
+        if(pr) pr.addEventListener('change', () => {
+            if(pr.checked && h.checked){ h.checked = false; try{ localStorage.setItem('unterricht_raum', '0'); }catch(e){} duoUnterrichtNachziehen(); }
+        });
+        // Beim Oeffnen des Fensters Liste und Hinweis frisch; solange es
+        // offen ist, folgt der Hinweis dem Raum (erstellt, beigetreten).
+        let warOffen = false;
+        setInterval(() => {
+            const m = document.getElementById('duoModal');
+            const offen = !!(m && m.style.display && m.style.display !== 'none');
+            if(offen && !warOffen){ try{ duoUnterrichtFuellen(); }catch(e){} }
+            if(offen){ try{ duoUnterrichtNachziehen(); }catch(e){} }
+            warOffen = offen;
+        }, 700);
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', einrichten);
+    else einrichten();
+})();
+
+// Nach dem Aufloesen: an jeder Antwort, wie viele sie gewaehlt haben.
+function unterrichtVerteilungZeigen(){
+    document.querySelectorAll('#optionsContainer .u-vert').forEach(x => x.remove());
+    const L = unterrichtRaum();
+    if(!L || !L.host || !L.aufgedeckt || !L.stand || !Array.isArray(L.stand.verteilung)) return;
+    const v = L.stand.verteilung;
+    const max = Math.max(1, ...v);
+    document.querySelectorAll('#optionsContainer [data-optindex]').forEach(kachel => {
+        const i = parseInt(kachel.getAttribute('data-optindex'), 10);
+        if(!(i >= 0 && i < v.length)) return;
+        const s = document.createElement('span');
+        s.className = 'u-vert';
+        s.innerHTML = '<i style="width:' + Math.round(v[i] / max * 100) + '%"></i><b>' + v[i] + '</b>';
+        s.title = v[i] + (v[i] === 1 ? ' Teilnehmer hat' : ' Teilnehmer haben') + ' diese Antwort gewählt';
+        kachel.appendChild(s);
+    });
+}
+
+(function(){
+    const st = document.createElement('style');
+    st.textContent = [
+        'body.lektion-teilnehmer #nextBtn, body.lektion-teilnehmer #prevBtn{display:none !important;}',
+        '#unterrichtLeiste{display:none;position:fixed;z-index:100003;left:16px;bottom:16px;align-items:center;gap:12px;',
+        '  background:#0f2745;color:#fff;border-radius:22px;padding:6px 8px 6px 16px;font-size:0.9rem;box-shadow:0 6px 20px rgba(0,0,0,0.25);max-width:calc(100vw - 32px);}',
+        '#unterrichtLeiste .u-zahl{white-space:nowrap;}',
+        '#unterrichtLeiste .u-lek{white-space:nowrap;font-weight:700;overflow:hidden;text-overflow:ellipsis;max-width:46vw;}',
+        '#unterrichtLeiste .u-lek + .u-zahl{border-left:1px solid rgba(255,255,255,0.3);padding-left:12px;}',
+        '#unterrichtLeiste > .u-lek:only-child{padding-right:8px;}',
+        '@media (max-width:640px){body.lektion-teilnehmer #unterrichtLeiste .u-lek{display:none;}#unterrichtLeiste .u-lek + .u-zahl{border-left:none;padding-left:0;}}',
+        '#unterrichtLeiste .u-zahl i{margin-right:6px;opacity:0.8;}',
+        '#unterrichtLeiste button{border:none;border-radius:16px;background:#ffffff;color:#0f2745;font-weight:700;padding:6px 14px;cursor:pointer;font-family:inherit;font-size:0.85rem;white-space:nowrap;}',
+        'body.lektion-teilnehmer #unterrichtLeiste{padding:8px 16px;font-size:0.85rem;white-space:normal;}',
+        'body.lektion-teilnehmer #unterrichtLeiste .u-zahl{white-space:normal;}',
+        /* Am Beamer oben links, unten links steht schon der Stand. */
+        /* Am Beamer oben in der Mitte: links steht die Fragennummer, rechts
+           die Knoepfe, unten links der Stand. */
+        'body.beamer.beamer-live #unterrichtLeiste{top:8px;bottom:auto;left:50%;transform:translateX(-50%);font-size:1.05rem;padding:7px 8px 7px 18px;}',
+        'body.beamer.beamer-live #unterrichtLeiste button{font-size:1rem;padding:7px 16px;}',
+        /* Verteilung an den Kacheln */
+        'body.lektion-kursleiter #optionsContainer [data-optindex]{position:relative;}',
+        /* Nach dem Aufloesen Platz rechts freihalten, damit der Balken keinen
+           Text verdeckt; das Haekchen der richtigen Antwort bleibt ganz aussen. */
+        'body.lektion-kursleiter.lektion-aufgedeckt #optionsContainer [data-optindex]{padding-right:calc(min(22%,220px) + 64px) !important;}',
+        '#optionsContainer .u-vert{position:absolute;right:52px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:10px;width:min(22%,220px);justify-content:flex-end;pointer-events:none;}',
+        '#optionsContainer .u-vert i{display:block;height:0.75em;min-width:3px;background:#5d7189;border-radius:4px;opacity:0.55;}',
+        '#optionsContainer .correct .u-vert i{background:#15703c;opacity:0.9;}',
+        '#optionsContainer .u-vert b{font:800 1.1em/1 var(--font-mono), Consolas, monospace;min-width:1.6em;text-align:right;color:inherit;}',
+        '@media (max-width:640px){#unterrichtLeiste{left:8px;right:8px;bottom:8px;justify-content:center;text-align:center;}}'
+    ].join('\n');
+    document.head.appendChild(st);
+})();
 
 function getFilteredQuestions(part) {
     // Basis-Filter nach Teil
@@ -26465,6 +28427,8 @@ function einstellungenOeffnen(reiter){
     try{ einstStilKnoepfeNachziehen(); }catch(e){}
     try{ anzeigeFeldNachziehen(); }catch(e){}
     try{ const sa = document.getElementById('einstSpracheAuto'); if(sa) sa.checked = localStorage.getItem('duo_spracheAuto') !== '0'; }catch(e){}
+    try{ const ca = document.getElementById('einstChatAndocken'); if(ca) ca.checked = localStorage.getItem('duo_chatAngedockt') === '1'; }catch(e){}
+    try{ einstProfilbildZeichnen(); profilbildMeldung(''); }catch(e){}
     try{ nachschlagenFeldNachziehen(); }catch(e){}
 }
 window.einstellungenOeffnen = einstellungenOeffnen;
@@ -26591,6 +28555,20 @@ function einstBlaetterFuellen(){
       // "Sprachnachrichten automatisch abspielen waere noch gut. Das muss
       // man aber unter Einstellungen aendern koennen." Gemerkt im Browser
       // (duo_spracheAuto), Standard AN - siehe duo.js.
+      // Profilbild (27.09.2026) - siehe PROFILBILD weiter oben
+      + einstKasten('Profilbild',
+            'Gilt für den gewählten Benutzer. Wird im Gruppenraum neben deinem Namen und beim Anrufen gezeigt.',
+            '<div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">'
+          + '<div id="einstProfilbildVorschau" style="width:72px; height:72px; flex:0 0 72px; border-radius:50% !important; overflow:hidden; '
+          + 'display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1.6rem; background:#0f2745;"></div>'
+          + '<div><input type="file" id="einstProfilbildDatei" accept="image/*" style="display:none;" onchange="profilbildWaehlen(this)">'
+          + '<button type="button" class="btn btn-primary" style="padding:0.45rem 0.9rem; font-size:0.8rem; margin:0 6px 4px 0;" '
+          + 'onclick="document.getElementById(\'einstProfilbildDatei\').click()"><i class="fa-solid fa-image"></i> Bild auswählen …</button>'
+          + '<button type="button" id="einstProfilbildWeg" class="btn btn-outline" style="padding:0.45rem 0.9rem; font-size:0.8rem; margin:0 0 4px 0;" '
+          + 'onclick="profilbildEntfernen()"><i class="fa-solid fa-trash-can"></i> Entfernen</button>'
+          + '<div style="font-size:0.72rem; color:#4b5563; margin-top:0.35rem; line-height:1.45;">Wird rund zugeschnitten und klein gerechnet (etwa 5 KB). '
+          + 'Ohne Bild erscheint dein Anfangsbuchstabe in Farbe.</div>'
+          + '<div id="einstProfilbildText" style="font-size:0.75rem; margin-top:0.3rem; font-weight:600;"></div></div></div>')
       + einstKasten('Chat',
             'Gilt für diesen Rechner. In einer laufenden Prüfung bleibt es still.',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
@@ -26601,7 +28579,19 @@ function einstBlaetterFuellen(){
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Sprachnachrichten automatisch abspielen</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
           + 'Neue Sprachnachrichten von anderen laufen sofort los, mehrere nacheinander. Spricht gerade schon etwas '
-          + '– eine andere Nachricht oder das Vorlesen –, wartet sie, bis es fertig ist.</span></span></label>')
+          + '– eine andere Nachricht oder das Vorlesen –, wartet sie, bis es fertig ist.</span></span></label>'
+          // Rechts andocken (26.09.2026). Dietmar: "Die Moeglichkeit den
+          // Chat rechts andocken. Ein und ausschaltbar." Derselbe Schalter
+          // wie der Knopf im Chatkopf - siehe chatAndocken() in duo.js.
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.55rem;" '
+          + 'data-vorlesen-kurz="Chat rechts andocken." '
+          + 'data-vorlesen="Chat rechts andocken. Der Chat steht dann als Spalte am rechten Rand, immer aufgeklappt, und die Seite rückt nach links.">'
+          + '<input type="checkbox" id="einstChatAndocken" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="if(window.duoChatAndocken) window.duoChatAndocken(this.checked); else try{localStorage.setItem(\'duo_chatAngedockt\', this.checked ? \'1\' : \'0\');}catch(e){}">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Chat rechts andocken</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Der Chat steht als Spalte am rechten Rand, von oben bis unten und immer aufgeklappt; die Seite rückt '
+          + 'nach links, damit er nichts verdeckt. Dasselbe schaltet der Knopf im Chatkopf. Nur auf breiten Bildschirmen.</span></span></label>')
       + einstKasten('Beamer-Modus', 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
             + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. <b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.',
             '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
@@ -28756,7 +30746,7 @@ function updateSidebarOnly(){
             const p = progress[qItem.id];
             if(p && p.answered){ isAnswered = true; isCorrect = !!p.correct; }
         }
-        if (isAnswered) cls = pruefungStreng() ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
+        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
         // Noch nicht beantwortet, aber laengst abgehakt: hellgruen.
         // Siehe den langen Kommentar bei der zweiten Stelle unten.
         else if(gelerntPunkt(qItem.id)) cls += ' gelernt-dot';
@@ -28982,7 +30972,7 @@ function renderQuestion() {
                 isCorrect = !!p.correct;
             }
         }
-        if (isAnswered) cls = pruefungStreng() ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
+        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
         else if(gelerntPunkt(qItem.id)) cls += ' gelernt-dot';
         if (idx === currentIndex) cls += ' current-dot';
         if(isTrainerViewActive) cls += ' trainer-dot';
@@ -29160,7 +31150,7 @@ function renderQuestion() {
         let cls = optionBaseClass;
         let isThisCorrect = !!opt.correct;
         // IMMER eigene Antwort für Klickbarkeit nutzen, nicht Teilnehmer-Antwort
-        if (showAllAnswers) {
+        if (showAllAnswers || (typeof unterrichtLoesungZeigen === 'function' && unterrichtLoesungZeigen())) {
             if (opt.correct) cls += ' correct';
             if (answered) {
                 cls += ' disabled';
@@ -29168,7 +31158,7 @@ function renderQuestion() {
             }
         } else if (answered) {
             cls += ' disabled';
-            if (pruefungStreng()) {
+            if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) {
                 // Nur markieren, WAS angekreuzt wurde - nicht, ob es stimmt.
                 if (i === q.userAnswerIndex) cls += ' gewaehlt';
             } else {
@@ -29582,6 +31572,8 @@ window.rundeSichernSpaeter = rundeSichernSpaeter;
 function selectOption(optIndex) {
     const q = currentQuestions[currentIndex];
     if (!q || answered) return;
+    // Unterricht im Gruppenraum: Der Kursleiter loest mit dem Klick auf.
+    if (typeof unterrichtRaumAntwortAbfangen === 'function' && unterrichtRaumAntwortAbfangen()) return;
     // (Gruppenraum-Turn-Check entfernt - jeder geht in eigenem Tempo, siehe oben)
     // Starte Timer bei erstem Klick im Simulator
     if (examSimulatorMode && !examTimerRunning) {
@@ -29589,6 +31581,8 @@ function selectOption(optIndex) {
     }
     const opt = q.options[optIndex];
     const isCorrect = !!opt.correct;
+    // Hausaufgabe (28.09.2026): die Antwort geht an den Kurs auf dem Server.
+    try{ if(typeof hausaufgabeAntwort === 'function') hausaufgabeAntwort(q, opt); }catch(e){}
 
     // VOR jeder Aenderung: die Kopie fuer "Zuruecknehmen".
     try{ antwortSicherungNehmen(q); }catch(e){}
@@ -29613,7 +31607,7 @@ function selectOption(optIndex) {
     // man sich durch vier Kacheln tasten, um sie zu finden.
     try {
         if (typeof ansagen === 'function') {
-            if (pruefungStreng()) {
+            if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) {
                 // Auch hier darf die Wertung nicht durchsickern - aber wer
                 // die Kacheln nicht sieht, braucht trotzdem eine Bestaetigung,
                 // DASS gespeichert wurde. Sonst klickt man zweimal.
@@ -29682,7 +31676,7 @@ function selectOption(optIndex) {
         // Die Kacheln verraten es dort schon nicht mehr - die Stimme tat
         // es aber weiter. Am Ende des Teils spricht der Trainer sehr
         // wohl: dann kommt die Auswertung, und die gehoert dazu.
-        if (pruefungStreng()) return;
+        if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) return;
         const q = currentQuestions[currentIndex]; if (!q) return;
         let correctText = ''; let correctLabel = '';
         for (let i=0;i<q.options.length;i++){ if(q.options[i].correct){ correctText = q.options[i].text || ('Option ' + ['A','B','C','D'][i]); correctLabel = String.fromCharCode(65+i); break; } }
@@ -30664,6 +32658,7 @@ function ausgelasseneUeben(){
 window.ausgelasseneUeben = ausgelasseneUeben;
 
 function prevQuestion() {
+    if (typeof unterrichtRaumZurueckAbfangen === 'function' && unterrichtRaumZurueckAbfangen()) return;
     try{ rundeSichernSpaeter(); }catch(e){}
     // Automatisch als richtig gewertete (bereits gelernte) Fragen werden
     // uebersprungen - siehe gelernteVorbelegen().
@@ -30995,6 +32990,8 @@ document.addEventListener('pointerdown', (e) => {
 }, true);
 
 function nextQuestion() {
+    // Unterricht im Gruppenraum: Kursleiter loest erst auf, Teilnehmer warten.
+    if (typeof unterrichtRaumWeiterAbfangen === 'function' && unterrichtRaumWeiterAbfangen()) return;
     try{ autoWeiterAbbrechen(); }catch(e){}
     // Wer weiterblaettert, laesst die Antwort stehen.
     antwortSicherung = null;
@@ -32573,6 +34570,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // geantwortet zu haben, soll wieder gefragt werden.
     window.willkommenFertig = function(mitNamen){
         try{
+            // Kurs-Haken gesetzt, aber kein Name: Fenster bleibt offen.
+            try{ if(typeof window.kursWillkommenPruefen === 'function' && window.kursWillkommenPruefen(mitNamen)) return; }catch(e){}
             const m = document.getElementById('willkommenModal');
             if(m){ m.style.display = 'none'; m.classList.remove('open'); }
             localStorage.setItem('demo_hinweis_gesehen', '1');
@@ -32799,7 +34798,8 @@ window.startDuoQuizWithQuestions = function(questionsFromServer, meta) {
         // true = die automatischen Antworten gehen auch an den Server, damit der
         // Raum meinen Fortschritt richtig sieht.
         var autoGewertetDuo = 0;
-        try{ autoGewertetDuo = gelernteVorbelegen(true); }catch(e){}
+        // Unterricht: nichts ueberspringen - alle sind bei derselben Frage.
+        if(!(meta && meta.lektion)){ try{ autoGewertetDuo = gelernteVorbelegen(true); }catch(e){} }
         examMode = false;
         showSidebar = true;
         currentPart = 'Duo ' + (meta && meta.parts ? meta.parts.join('+') : '');
@@ -32808,8 +34808,10 @@ window.startDuoQuizWithQuestions = function(questionsFromServer, meta) {
         var navAreaEl = document.getElementById('navArea') || document.querySelector('.nav-area');
         if(navAreaEl) navAreaEl.style.display = 'flex';
         if(typeof navArea !== 'undefined' && navArea) navArea.style.display = 'flex';
+        try{ if(typeof unterrichtRaumBeginnen === 'function') unterrichtRaumBeginnen(meta); }catch(e){ console.warn('[UNTERRICHT]', e); }
         if(typeof renderQuestion === 'function'){ renderQuestion(); } else { alert('Fehler: renderQuestion nicht gefunden'); return; }
         if(typeof updateVisibility === 'function') updateVisibility();
+        try{ if(typeof unterrichtRaumNachStart === 'function') unterrichtRaumNachStart(); }catch(e){ console.warn('[UNTERRICHT]', e); }
         var modal = document.getElementById('duoModal');
         if(modal) modal.style.display='none';
         if(autoGewertetDuo > 0 && typeof zeigeGelerntHinweis === 'function'){
@@ -37753,6 +39755,12 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
                     font-size:0.92rem; font-family:var(--font-mono);">
       <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;">
         Steht nur im Chat und in der Teilnehmerliste dieses Trainers. Ohne Eintrag heißt du „Besucher".</div>
+      <!-- Kurs und Hausaufgaben (28.09.2026): nur sichtbar, wenn der
+           Kursleiter einen Kurs angelegt hat (kursWillkommenZeigen). -->
+      <label id="willkommenKurs" style="display:none; align-items:flex-start; gap:10px; margin-top:0.8rem; padding:0.65rem 0.8rem; border:2px solid #c2d6f0; border-radius:14px; background:#f4f7fd; font-size:0.82rem; line-height:1.45; cursor:pointer;">
+        <input type="checkbox" id="willkommenKursHaken" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;">
+        <span><b style="color:var(--panel-navy);"><i class="fas fa-chalkboard-user"></i> Ich nehme am Kurs teil</b><br><span id="willkommenKursText"></span>
+          <span id="willkommenKursHinweis" style="display:none; color:#a8322c; font-weight:600;"><br>Bitte oben deinen Vornamen eintragen.</span></span></label>
       <!-- Erscheint nur, wenn der Raum aus dem Link noch nicht eroeffnet
            ist. duo.js blendet ihn ein und wieder aus. -->
       <div id="willkommenWarte" style="display:none; margin-top:0.8rem; padding:0.55rem 0.8rem; border-radius:10px; background:#eef4fb; border:1px solid #c2d6f0; font-size:0.8rem; color:#1f3f66;">

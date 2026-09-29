@@ -29,6 +29,23 @@
     // stehen, auch wenn der Besucher wieder gegangen ist.
     let hausChatHatNachrichten = false;
     let duoUsersCache = {};
+    // Anrufen im Gruppenraum (27.09.2026) - Zustand steht hier oben, weil
+    // spracheSprichtGerade() und die Chatliste ihn schon frueh abfragen.
+    // STUN bei Cloudflare, nicht bei Google: Die Datenschutzerklaerung
+    // (support.html) nennt Cloudflare ohnehin als Weg zum Trainer und
+    // verspricht "kein Google". stun.cloudflare.com ist frei und braucht
+    // kein Konto.
+    const ANRUF_ICE = [{ urls: ['stun:stun.cloudflare.com:3478'] }];
+    const ANRUF_LISTE_MERKEN = 'duo_anrufListe';
+    const anruf = { zustand: null, partner: null, name: '', pc: null, stream: null, audio: null,
+                    start: 0, frist: null, zeitUhr: null, abrissUhr: null, kette: null, warteKandidaten: [],
+                    stumm: false, ton: null };
+    // Profilbilder der anderen im Raum (27.09.2026): Socket-Id -> data:-Adresse
+    const profilbilder = {};
+    let chatAmEnde = true;           // Chatliste steht unten (27.09.2026)
+    const PB_MUSTER = /^data:image\/jpeg;base64,[A-Za-z0-9+\/]+={0,2}$/;
+    const PB_FARBEN = ['#2563eb', '#9333ea', '#0e7490', '#c2410c', '#15803d', '#be185d', '#4d7c0f', '#1e40af'];
+
     let tunnelUrlCache = null;
     window._duoHasAnswered=false;
 
@@ -608,6 +625,7 @@
         if(!users) users=duoUsersCache;
         if(!users) return;
         duoUsersCache=users;
+        try{ anrufListeZeichnen(); }catch(e){}
         const el=document.getElementById('duoUsers');
         if(!el) return;
         let html='';
@@ -1053,9 +1071,38 @@
         // weisser Blase: gemessene 1,12:1 statt der noetigen 4,5:1.
         // Ueber die Variablen passt sich der Chat allen drei Stilen von selbst an.
         style.textContent = [
+        /* 27.09.2026. Dietmar, mit fuenf Bildern (Grey/Orange/Blue/Green/
+           Dark Mode): "Der Chat, soll die Farbe vom Mode uebernehmen. Eine
+           weisse Flaeche tut in den Augen weh." und "Hier siehst du genau
+           wo die Farbe fehlt." Die Karte selbst bleibt in jedem Stil
+           absichtlich weiss (die "Buehne", siehe Farbstile weiter oben) -
+           nur die Seite ringsum bekommt die Modusfarbe. Der Chat sitzt
+           aber in genau diesem Rahmen, nicht auf der Buehne, darum jetzt
+           eine eigene Variable --chat-flaeche: in Hell und Dunkel deckt sie
+           sich mit --bg (passt schon), in Grau/Gruen/Blau/Orange bekommt sie
+           denselben Ton wie der Seitenhintergrund dieses Stils. Eingabefeld
+           und Sprechblasen bleiben weiss - "Papier ist weiss", genau wie bei
+           den Antwortkacheln. */
+        ':root{--chat-flaeche:var(--bg);--chat-muted:var(--muted);}',
+        /* Grau ist krauftiger als die anderen drei Pastelltoene (siehe
+           Farbstile oben, "deutlich dunkler als alles bisherige... deshalb
+           steht auf dieser Flaeche kein Text"). Das gewoehnliche --muted
+           (fuer "Noch keine Nachrichten" & Co.) faellt darauf auf 3,3:1 -
+           zu wenig. --chat-muted ist nur fuer Grau dunkler nachgezogen,
+           gemessen 5,4:1. */
+        'body.grey{--chat-flaeche:#aab0b6;--chat-muted:#33393e;}',
+        'body.green{--chat-flaeche:#eef8f2;}',
+        'body.blue{--chat-flaeche:#eaf3fb;}',
+        'body.orange{--chat-flaeche:#fdf3e7;}',
+        /* --chat-flaeche:var(--bg) an :root wird an der Stelle ausgewertet,
+           wo es steht (an <html>, mit dem HELLEN --bg) - nicht dort, wo es
+           spaeter geerbt wird. body.dark aendert --bg erst an <body>, darum
+           braucht der Dark Mode hier seinen eigenen Eintrag, sonst bliebe
+           der Chat angedockt beim hellen Grundton haengen. */
+        'body.dark{--chat-flaeche:#0d2639;--chat-muted:#dce9f2;}',
         '#duoChatBox{position:fixed;right:18px;bottom:18px;z-index:99998;width:320px;max-width:calc(100vw - 36px);',
         '  font-family:inherit;border-radius:14px;overflow:hidden;box-shadow:0 10px 34px rgba(0,0,0,0.28);',
-        '  background:var(--card-bg);display:none;flex-direction:column;border:1px solid var(--line);',
+        '  background:var(--chat-flaeche);display:none;flex-direction:column;border:1px solid var(--line);',
         '  color:var(--ink);}',
         '#duoChatBox.sichtbar{display:flex;}',
         '#duoChatKopf{background:var(--panel-navy);color:#fff;padding:10px 12px;display:flex;align-items:center;gap:8px;',
@@ -1067,7 +1114,21 @@
         '#duoChatKnopf{background:transparent;border:none;color:#fff;font-size:1.05rem;cursor:pointer;line-height:1;padding:2px 4px;}',
         '#duoChatKoerper{display:none;flex-direction:column;height:300px;}',
         '#duoChatBox.offen #duoChatKoerper{display:flex;}',
-        '#duoChatVerlauf{flex:1;overflow-y:auto;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:7px;}',
+        /* 27.09.2026. Dietmar: "Der Chat, soll die Farbe vom Mode
+           uebernehmen. Eine weisse Flaeche tut in den Augen weh." Bei
+           vielen Nachrichten wird die Liste scrollbar - und die
+           Scrollleiste hatte keine eigene Farbe, also die helle
+           Windows-Standardleiste, hell/weiss und im dunklen Chat ein
+           Fremdkoerper (wie vorher schon bei .progress-dots-sidebar und
+           .filter-bar geloest). Jetzt duenn und in der Linienfarbe des
+           jeweiligen Stils, im Dark Mode kraeftiger, damit sie noch zu
+           erkennen ist. */
+        '#duoChatVerlauf{flex:1;overflow-y:auto;padding:10px;background:var(--chat-flaeche);display:flex;flex-direction:column;gap:7px;',
+        '  scrollbar-width:thin;scrollbar-color:var(--line) transparent;}',
+        '#duoChatVerlauf::-webkit-scrollbar{width:7px;}',
+        '#duoChatVerlauf::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}',
+        'body.dark #duoChatVerlauf::-webkit-scrollbar-thumb{background:#3a7ba3;}',
+        'body.dark #duoChatVerlauf{scrollbar-color:#3a7ba3 transparent;}',
         '.duo-chat-zeile{max-width:85%;padding:6px 10px;border-radius:12px;font-size:0.82rem;line-height:1.35;word-break:break-word;position:relative;}',
         /* Jede Blase bringt ihre eigene Textfarbe mit - nichts wird mehr geerbt */
         '.duo-chat-fremd{align-self:flex-start;background:var(--card-bg);border:1px solid var(--line);color:var(--ink);}',
@@ -1076,8 +1137,19 @@
         '.duo-chat-absender{display:block;font-size:0.67rem;font-weight:700;opacity:0.75;margin-bottom:2px;}',
         '.duo-chat-zeit{font-size:0.62rem;opacity:0.6;margin-left:6px;}',
         '.duo-chat-system{align-self:center;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);font-size:0.72rem;}',
-        '#duoChatLeer{color:var(--muted);font-size:0.78rem;text-align:center;margin:auto;padding:0 14px;line-height:1.4;}',
-        '#duoChatEingabeZeile{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);background:var(--card-bg);}',
+        '#duoChatLeer{color:var(--chat-muted);font-size:0.78rem;text-align:center;margin:auto;padding:0 14px;line-height:1.4;}',
+        /* NEUE NACHRICHTEN UNTEN (27.09.2026). Dietmar: "Das geschriebene soll
+           unten anfangen und aeltere Nachrichten sollen oben stehen. Wenn ich
+           eine Nachricht schreibe, sehe ich auf das Feld ... und muss danach
+           ganz nach oben schauen." Wie bei WhatsApp: Ein unsichtbarer
+           Platzhalter vor der ersten Nachricht nimmt den freien Raum ein,
+           die Nachrichten sitzen also unten am Eingabefeld und wandern nach
+           oben weiter. Ist die Liste voll, schrumpft er auf null und es wird
+           ganz normal gescrollt. Solange noch "Noch keine Nachrichten" dasteht,
+           bleibt der Hinweis in der Mitte. */
+        '#duoChatVerlauf::before{content:"";flex:1 0 0;margin-bottom:-7px;}',
+        '#duoChatVerlauf:has(> #duoChatLeer)::before{display:none;}',
+        '#duoChatEingabeZeile{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);background:var(--chat-flaeche);}',
         '#duoChatEingabe{flex:1;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:0.85rem;',
         '  font-family:inherit;outline:none;min-width:0;background:var(--card-bg);color:var(--ink);}',
         '#duoChatEingabe:focus{border-color:var(--panel-navy);}',
@@ -1130,10 +1202,10 @@
         /* Die Aufnahmeleiste wie bei WhatsApp (25.09.2026): Papierkorb,
            roter Punkt, Zeit, Balken-Welle, Pause, gruener Senden-Knopf.
            Die Welle nimmt die gedaempfte Schriftfarbe des Stils an. */
-        '#duoChatWelle{flex:1 1 auto;min-width:40px;height:28px;display:block;color:var(--muted);}',
+        '#duoChatWelle{flex:1 1 auto;min-width:40px;height:28px;display:block;color:var(--chat-muted);}',
         '#duoChatAufnahme button{border:none;border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:0.95rem;flex-shrink:0;}',
         '#duoChatAufnahmeWeg,#duoChatAufnahmePause{background:transparent;width:30px !important;font-size:1.02rem !important;padding:0;}',
-        '#duoChatAufnahmeWeg{color:var(--muted);}',
+        '#duoChatAufnahmeWeg{color:var(--chat-muted);}',
         '#duoChatAufnahmeWeg:hover{color:#dc2626;}',
         '#duoChatAufnahmePause{color:#e5484d;}',
         '#duoChatAufnahme.pausiert .punkt{animation:none;opacity:0.35;}',
@@ -1222,6 +1294,163 @@
         'body.eckig #duoChatAufnahme .punkt,body.eckig #duoChatBox .duo-sprache-knopf,body.eckig #duoChatBox .duo-chat-mehr{border-radius:50% !important;}',
         'body.eckig #duoChatBox .duo-chat-leiste button{border-radius:8px !important;}',
         'body.eckig #duoChatBox .duo-sprache-balken,body.eckig #duoChatBox .duo-sprache-welle i{border-radius:2px !important;}',
+        /* RECHTS ANGEDOCKT (26.09.2026). Dietmar, mit Bild: "Die
+           Moeglichkeit den Chat rechts andocken. Ein und ausschaltbar."
+           Dann steht der Chat als Spalte am rechten Rand, von oben bis
+           unten, immer aufgeklappt - und die Seite rueckt nach links,
+           damit er nichts verdeckt. Umgeschaltet wird mit dem Knopf im
+           Chatkopf oder unter Einstellungen -> Allgemein -> Chat. */
+        /* Nachtrag, am selben Abend. Dietmar: "Bei mir ist da leider viel
+           Platz dazwischen." und "Der Chat muss die gleiche Hoehe wie das
+           Fenster rechts davon haben." Also: Der Chat steht jetzt wie eine
+           zweite Karte neben der Trainer-Karte - dieselbe Hoehe (oben und
+           unten das Polster des body, 1rem), dieselbe Rundung, ein
+           schmaler Spalt dazwischen. Und die Trainer-Karte darf angedockt
+           breiter werden als ihre sonstigen 1440 Punkte, damit auf breiten
+           Bildschirmen keine Luecke zwischen beiden bleibt. */
+        /* Nachtrag, 27.09.2026. Dietmar: "Der Chat soll beim andocken, so
+           aussehen als gehoert er zu dem Hauptfenster dazu." Der dunkelblaue
+           Kopf mit weisser Schrift liess den Chat wie ein eigenes kleines
+           Programm daneben wirken. Angedockt bekommt der Kopf jetzt dieselbe
+           Flaeche wie die Karte (--card-bg/--ink) mit einem duennen Strich
+           darunter statt der auffaelligen Farbe - schwebend bleibt der Kopf
+           wie gewohnt dunkelblau. */
+        /* Nachtrag, noch am 27.09.2026. Dietmar: "Der Chat kann noch naeher
+           dran sein. Er soll beim andocken ein Bestandteil vom Hauptfenster
+           sein." Die Karte selbst ("eckig", fest fuer den Trainer) hat keinen
+           eigenen Schatten, nur einen duennen Rand - der Chat hatte trotzdem
+           noch einen kraeftigen Schatten und 1rem Luecke, das wirkte wie ein
+           zweites, schwebendes Fenster daneben. Jetzt: kein Schatten mehr
+           angedockt, der Spalt entfaellt (die Karte und der Chat stossen
+           direkt aneinander), und die Naht dazwischen ist nur noch EIN
+           Strich statt zwei uebereinander - der linke Rand des Chats entfaellt,
+           es bleibt allein der rechte Rand der Karte als Trennlinie. Von
+           aussen sieht es dadurch wie eine einzige Flaeche mit zwei Spalten
+           aus, nicht wie zwei Karten nebeneinander. */
+        /* Nachtrag, 27.09.2026 abends. Dietmar, mit Bild im Grey Mode: "Den
+           Chat kann man noch etwas mehr nach links ruecken und ein klein
+           wenig schmaeler machen. Was definitiv fehlt ist der Rahmen aussen
+           rum. Der Chat muss optisch mit der Hauptansicht verschmelzen."
+           Gemessen: Der Chat hatte genau die Farbe des Seitenrands (#aab0b6)
+           und stand ausserhalb der Karte - sein Rahmen verschwand darin.
+           Jetzt steht er INNERHALB der Karte, als dritte Spalte wie der
+           Verlauf: Die Karte reicht bis an den rechten Rand, ihr Rahmen
+           laeuft um alles herum, der Chat sitzt mit demselben Abstand
+           darin (chatAnKarteAusrichten) und uebernimmt Farbe und Rand der
+           Verlauf-Spalte des jeweiligen Stils - also getoent, nicht weiss.
+           310 statt 340 Punkte breit. */
+        /* Dietmar, 27.09.2026 abends: "Der Chat wird nicht abgedunkelt, wenn
+           ich ein Fenster oeffne." Schwebend liegt der Chat mit 99998 ueber
+           fast allem. Angedockt gehoert er zur Seite, also auch auf ihre
+           Ebene: knapp ueber der festen Knopfleiste (80) und der
+           Quellenzeile (90), unter jedem Fenster (ab 9998) und dessen
+           Abdunklung. Das Klingelfenster eines Anrufs liegt bei 100000. */
+        '#duoChatBox.angedockt{top:1rem;right:1rem;bottom:1rem;width:310px;max-width:none;border-radius:24px !important;',
+        '  box-shadow:none;z-index:95;}',
+        'body.eckig #duoChatBox.angedockt{border-radius:var(--karte-rund, 24px) !important;}',
+        'body.chat-angedockt #app{max-width:none !important;}',
+        '#duoChatBox.angedockt #duoChatKoerper{display:flex;flex:1 1 auto;height:auto;min-height:0;}',
+        '#duoChatBox.angedockt #duoChatKnopf{display:none;}',
+        '#duoChatBox.angedockt #duoChatKopf{cursor:default;background:var(--chat-flaeche);color:var(--ink);',
+        '  border-bottom:1px solid var(--line);}',
+        '#duoChatBox.angedockt #duoChatKopf .titel{color:var(--ink);}',
+        '#duoChatBox.angedockt #duoChatAndocken,#duoChatBox.angedockt #duoChatAbgleich{color:var(--ink) !important;}',
+        /* Nachtrag, noch am 27.09.2026: "unten befindet sich eine 2 Linie.
+           Der Uebergang passt optisch so gar nicht. Nachricht an alle, das
+           Feld kann im angedockten Zustand gerne etwas hoeher sein. Und die
+           untere 2 Linie kann raus." Angedockt ist die Eingabezeile jetzt
+           grosszuegiger (mehr Luft ueber/unter dem Feld) und ohne den
+           eigenen Strich darueber, der zusammen mit dem Kartenrand wie eine
+           doppelte Linie wirkte - sie geht jetzt ohne Bruch in die
+           Nachrichtenliste darueber ueber. */
+        '#duoChatBox.angedockt #duoChatEingabeZeile{border-top:none;padding:14px 12px;}',
+        '#duoChatBox.angedockt #duoChatEingabe{padding:12px 14px;}',
+        '#duoChatBox.angedockt #duoChatMikro,#duoChatBox.angedockt #duoChatSenden{width:42px;height:42px;}',
+        /* Waehrend einer Runde steht die Knopfleiste fest am Fenster und ist
+           fensterbreit - angedockt nur so breit wie die Hauptspalte, sonst
+           laege sie halb unter dem Chat. Die Masse setzt chatAnKarteAusrichten. */
+        'body.chat-angedockt.runde-laeuft:not(.beamer-live) #navArea{left:var(--andock-nav-links) !important;width:var(--andock-nav-breite) !important;',
+        '  max-width:none !important;transform:none !important;bottom:var(--andock-nav-unten, 1.4rem) !important;}',
+        /* Dietmar, 27.09.2026 abends, mit Bild: "Bei den Fragen, ist die
+           Buttonleiste etwas zu tief ... Diese gehoert etwas hoeher, dann
+           stimmt das auch mit dem angedockten Chat ueberein." Angedockt
+           endet die Leiste unten genau dort, wo der Chat endet. Mit der
+           Quellenzeile am Fensterrand bleibt sie mindestens darueber. */
+        'body.chat-angedockt.runde-laeuft.quelle-zeigen:not(.beamer-live) #navArea{bottom:max(var(--andock-nav-unten, 1.4rem), calc(1.4rem + 50px)) !important;}',
+        '#duoChatAndocken{background:transparent;border:none;color:#fff;font-size:0.9rem;cursor:pointer;line-height:1;padding:2px 5px;opacity:0.9;}',
+        '#duoChatAndocken:hover{opacity:1;}',
+        /* ANRUFEN (27.09.2026) - Kontaktliste im Chat, Gespraechsstreifen
+           und das Klingel-Fenster. Aussehen wie im Vorschaubild, das Dietmar
+           mit "Baue das bitte ein." freigegeben hat. Farben aus den
+           Stil-Variablen, damit es in allen fuenf Stilen passt. */
+        '#duoAnrufLeiste{flex-shrink:0;max-height:45%;overflow-y:auto;border-bottom:1px solid var(--line);background:var(--chat-flaeche);',
+        '  font-size:0.8rem;color:var(--ink);scrollbar-width:thin;scrollbar-color:var(--line) transparent;}',
+        '#duoAnrufLeiste .kopf{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;user-select:none;}',
+        '#duoAnrufLeiste .kopf i.leute{color:var(--chat-muted);}',
+        '#duoAnrufLeiste .kopf b{font-weight:700;}',
+        '#duoAnrufLeiste .pfeil{margin-left:auto;color:var(--chat-muted);font-size:0.75rem;}',
+        '#duoAnrufLeiste ul{list-style:none;margin:0;padding:2px 8px 8px;}',
+        '#duoAnrufLeiste li{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:32px;}',
+        '#duoAnrufLeiste li:hover{background:var(--card-bg);}',
+        '#duoAnrufLeiste .punkt{width:9px;height:9px;background:#22a55a;flex-shrink:0;}',
+        '#duoAnrufLeiste .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+        '#duoAnrufLeiste .rolle{font-size:0.68rem;color:var(--chat-muted);}',
+        '#duoAnrufLeiste .rolle.aktiv{color:#1c7a46;font-weight:700;}',
+        'body.dark #duoAnrufLeiste .rolle.aktiv{color:#4ade80;}',
+        '#duoAnrufLeiste .hoerer{width:32px;height:32px;border:1px solid var(--line);background:var(--card-bg);flex-shrink:0;',
+        '  color:#16a34a;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;padding:0;}',
+        '#duoAnrufLeiste .hoerer:hover{border-color:#16a34a;}',
+        '#duoAnrufLeiste .hoerer.auflegen{background:#d9403a;border-color:#d9403a;color:#fff;}',
+        '#duoAnrufLeiste .hoerer:disabled{color:#b7c0c9;cursor:default;border-color:var(--line);}',
+        'body.dark #duoAnrufLeiste .hoerer{color:#4ade80;}',
+        'body.dark #duoAnrufLeiste .hoerer.auflegen{color:#fff;}',
+        'body.dark #duoAnrufLeiste .hoerer:disabled{color:#5b6b80;}',
+        '#duoAnrufStreifen{align-items:center;gap:10px;padding:10px 12px;background:#1c7a46;color:#fff;font-size:0.82rem;flex-shrink:0;}',
+        '#duoAnrufStreifen .welle{display:flex;gap:2px;align-items:center;height:16px;flex-shrink:0;}',
+        '#duoAnrufStreifen .welle i{display:block;width:3px;height:14px;background:#bbf7d0;animation:duoAnrufWelle 1.1s ease-in-out infinite;}',
+        '#duoAnrufStreifen .welle i:nth-child(2){animation-delay:.15s}#duoAnrufStreifen .welle i:nth-child(3){animation-delay:.3s}',
+        '#duoAnrufStreifen .welle i:nth-child(4){animation-delay:.45s}#duoAnrufStreifen .welle i:nth-child(5){animation-delay:.6s}',
+        '#duoAnrufStreifen .welle i:nth-child(6){animation-delay:.75s}#duoAnrufStreifen .welle i:nth-child(7){animation-delay:.9s}',
+        '#duoAnrufStreifen.wartet .welle i{animation-duration:2.2s;opacity:0.7;}',
+        '@keyframes duoAnrufWelle{0%,100%{transform:scaleY(0.35)}50%{transform:scaleY(1)}}',
+        '#duoAnrufStreifen .text{flex:1;min-width:0;line-height:1.25;}',
+        '#duoAnrufStreifen .text b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+        '#duoAnrufStreifen .text small{display:block;opacity:0.85;font-size:0.7rem;}',
+        '#duoAnrufStreifen button{width:34px;height:34px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;font-size:0.9rem;}',
+        '#duoAnrufStreifen .stumm{background:rgba(255,255,255,0.18);color:#fff;}',
+        '#duoAnrufStreifen .stumm.an{background:#fff;color:#a33227;}',
+        '#duoAnrufStreifen .auflegen{background:#d9403a;color:#fff;}',
+        'body.eckig #duoAnrufLeiste .punkt,body.eckig #duoAnrufLeiste .hoerer,body.eckig #duoAnrufStreifen button{border-radius:50% !important;}',
+        /* Profilbild (27.09.2026): rund, weil es zum Chat gehoert */
+        '.duo-pb{width:30px;height:30px;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;',
+        '  font-weight:700;font-size:0.8rem;color:#fff;line-height:1;border-radius:50%;}',
+        '.duo-pb img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;}',
+        '.duo-pb .an{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;box-sizing:border-box;background:#22a55a;',
+        '  border:2px solid var(--chat-flaeche);border-radius:50%;}',
+        '.duo-pb.mittel{box-shadow:0 0 0 2px #bbf7d0;}',
+        '#duoAnrufStreifen.wartet .duo-pb{animation:duoPbWarten 1.4s ease-in-out infinite;}',
+        '@keyframes duoPbWarten{0%,100%{opacity:1}50%{opacity:0.55}}',
+        '.duo-pb.gross{width:76px;height:76px;font-size:1.8rem;margin:0 auto 12px;box-shadow:0 0 0 4px #dcfce7,0 0 0 8px rgba(34,165,90,0.25);',
+        '  animation:duoPbPuls 1.6s ease-in-out infinite;}',
+        '@keyframes duoPbPuls{0%,100%{box-shadow:0 0 0 4px #dcfce7,0 0 0 8px rgba(34,165,90,0.25)}50%{box-shadow:0 0 0 4px #dcfce7,0 0 0 14px rgba(34,165,90,0.06)}}',
+        'body.dark .duo-pb.gross{box-shadow:0 0 0 4px #14532d,0 0 0 8px rgba(74,222,128,0.25);animation:none;}',
+        'body.eckig .duo-pb,body.eckig .duo-pb img,body.eckig .duo-pb .an{border-radius:50% !important;}',
+        'body.eckig #duoAnrufLeiste li{border-radius:8px !important;}',
+        'body.eckig #duoAnrufStreifen .welle i{border-radius:2px !important;}',
+        '#duoAnrufKlingeln{position:fixed;inset:0;background:rgba(15,39,69,0.55);z-index:100000;display:flex;align-items:center;justify-content:center;padding:1rem;}',
+        '#duoAnrufKlingeln .kasten{background:var(--card-bg);color:var(--ink);width:340px;max-width:100%;padding:22px 20px;text-align:center;',
+        '  border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,0.35);box-sizing:border-box;}',
+        '#duoAnrufKlingeln .ring{width:64px;height:64px;margin:0 auto 12px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;',
+        '  justify-content:center;font-size:1.6rem;animation:duoAnrufRing 1.2s ease-in-out infinite;}',
+        'body.dark #duoAnrufKlingeln .ring{background:#14532d;color:#4ade80;}',
+        '@keyframes duoAnrufRing{0%,100%{transform:rotate(0)}10%{transform:rotate(-12deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}',
+        'body.eckig #duoAnrufKlingeln .ring{border-radius:50% !important;}',
+        '#duoAnrufKlingeln h3{margin:0 0 4px;font-size:1.05rem;}',
+        '#duoAnrufKlingeln p{margin:0 0 16px;font-size:0.82rem;color:var(--muted);line-height:1.4;}',
+        '#duoAnrufKlingeln .knoepfe{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}',
+        '#duoAnrufKlingeln button{padding:10px 18px;border:none;color:#fff;font-weight:700;cursor:pointer;font-size:0.85rem;}',
+        '#duoAnrufKlingeln .ja{background:#1c7a46;} #duoAnrufKlingeln .nein{background:#a33227;}',
+        '@media (max-width:900px){#duoChatAndocken{display:none;}}',
         '@media (max-width:520px){#duoChatBox{right:10px;bottom:10px;width:calc(100vw - 20px);}',
         '  #duoChatKoerper{height:45vh;}}'
         ].join('\n');
@@ -1236,9 +1465,12 @@
         '  <span id="duoChatBlase">0</span>',
         '  <button id="duoChatAbgleich" type="button" title="Alle Teilnehmer neu laden lassen (nur am Server)" ',
         '     style="display:none;background:transparent;border:none;color:#fff;font-size:0.95rem;cursor:pointer;padding:2px 4px;">⟳</button>',
+        '  <button id="duoChatAndocken" type="button" title="Rechts andocken" aria-label="Rechts andocken"><i class="fa-solid fa-table-columns"></i></button>',
         '  <button id="duoChatKnopf" type="button" title="Minimieren/Aufklappen">▾</button>',
         '</div>',
+        '<div id="duoAnrufStreifen" style="display:none"></div>',
         '<div id="duoChatKoerper">',
+        '  <div id="duoAnrufLeiste" style="display:none"></div>',
         '  <div id="duoChatVerlauf"><div id="duoChatLeer">Noch keine Nachrichten.<br>Schreib etwas an alle im Raum.</div></div>',
         '  <div id="duoChatEingabeZeile">',
         '    <input id="duoChatEingabe" type="text" maxlength="500" placeholder="Nachricht an alle..." autocomplete="off">',
@@ -1256,7 +1488,15 @@
         ].join('');
         document.body.appendChild(box);
 
-        document.getElementById('duoChatKopf').addEventListener('click', ()=>chatUmschalten());
+        document.getElementById('duoChatKopf').addEventListener('click', ()=>{ if(!chatAngedockt()) chatUmschalten(); });
+        document.getElementById('duoChatAndocken').addEventListener('click', e=>{ e.stopPropagation(); chatAndocken(!chatAngedockt()); });
+        document.getElementById('duoAnrufLeiste').addEventListener('click', anrufListeKlick);
+        document.getElementById('duoAnrufLeiste').addEventListener('keydown', e=>{ if((e.key === 'Enter' || e.key === ' ') && e.target.closest('.kopf')){ e.preventDefault(); anrufListeKlick(e); } });
+        document.getElementById('duoAnrufStreifen').addEventListener('click', anrufStreifenKlick);
+        chatEndeBeobachten();
+        // Die Seite rueckt nur zur Seite, solange der Chat auch zu sehen ist.
+        try{ new MutationObserver(chatAndockenAnwenden).observe(box, { attributes:true, attributeFilter:['class'] }); }catch(e){}
+        chatAndockenAnwenden();
         const abg = document.getElementById('duoChatAbgleich');
         if(abg) abg.addEventListener('click', e=>{ e.stopPropagation(); alleNeuLadenLassen(); });
         document.getElementById('duoChatKnopf').addEventListener('click', e=>{ e.stopPropagation(); chatUmschalten(); });
@@ -1353,6 +1593,7 @@
 
     function chatSichtbarkeitPruefen(){
         chatAufbauen();
+        try{ anrufRaumPruefen(); }catch(e){}
         const box = document.getElementById('duoChatBox');
         if(!box) return;
         try{ downloadKnopfZeichnen(); }catch(e){}
@@ -1443,6 +1684,127 @@
     // ohneFokus: beim automatischen Aufklappen soll der Mauszeiger nicht
     // ins Chatfeld gezogen werden - der Gastgeber ist in dem Moment beim
     // Einladungslink, nicht beim Schreiben.
+    // ================================================================
+    //  DEN CHAT RECHTS ANDOCKEN                            26.09.2026
+    //  Gemerkt im Browser (duo_chatAngedockt). Am schmalen Schirm (unter
+    //  900 Punkten) nie - dort bliebe fuer die Frage kein Platz.
+    // ================================================================
+    const CHAT_DOCK_SCHLUESSEL = 'duo_chatAngedockt';
+    function chatAngedockt(){
+        try{ if(window.innerWidth < 900) return false; return localStorage.getItem(CHAT_DOCK_SCHLUESSEL) === '1'; }catch(e){ return false; }
+    }
+    let chatDockSetzt = false;
+    function chatAndockenAnwenden(){
+        if(chatDockSetzt) return;
+        chatDockSetzt = true;
+        try{
+            const box = document.getElementById('duoChatBox');
+            if(!box) return;
+            const an = chatAngedockt();
+            box.classList.toggle('angedockt', an);
+            document.body.classList.toggle('chat-angedockt', an && box.classList.contains('sichtbar'));
+            if(an && !chatOffen) chatUmschalten(true, true);
+            const k = document.getElementById('duoChatAndocken');
+            if(k){
+                const t = an ? 'Vom Rand lösen' : 'Rechts andocken';
+                k.title = t; k.setAttribute('aria-label', t);
+                k.innerHTML = an ? '<i class="fa-solid fa-up-right-from-square"></i>' : '<i class="fa-solid fa-table-columns"></i>';
+            }
+            const h = document.getElementById('einstChatAndocken');
+            if(h) h.checked = (localStorage.getItem(CHAT_DOCK_SCHLUESSEL) === '1');
+        }catch(e){}
+        finally{ chatDockSetzt = false; try{ if(window.kopfEinpassen) window.kopfEinpassen(); }catch(e){} chatAusrichtenPlanen(); }
+    }
+    // Genau so hoch wie die Trainer-Karte und genauso gerundet (siehe
+    // Nachtrag im Stylesheet). Die Karte fuellt das Fenster nicht immer
+    // bis unten, und im eckigen Stil hat sie gar keine Rundung - deshalb
+    // wird gemessen statt geraten. Die Masse kommen aus dem sichtbaren
+    // Bild, die Seite steht aber in einer Vergroesserung (--afu-zoom):
+    // darum durch den Faktor teilen.
+    // Farbe und Rand der Verlauf-Spalte im aktuellen Stil - der angedockte
+    // Chat sieht aus wie ihr Nachbar (27.09.2026).
+    function chatVerlaufFarben(){
+        const h = document.getElementById('historyCol');
+        if(!h) return null;
+        const c = getComputedStyle(h);
+        const grund = c.backgroundColor;
+        if(!grund || grund === 'transparent' || /rgba\(0, 0, 0, 0\)/.test(grund)) return null;
+        return { grund: grund, rand: c.borderTopColor, text: c.color };
+    }
+    const ANDOCK_LUECKE = 22;     // Abstand Hauptspalte - Chat, wie zwischen Inhalt und Verlauf
+    function chatAnKarteAusrichten(){
+        const box = document.getElementById('duoChatBox');
+        const karte = document.getElementById('app');
+        if(!box || !karte) return;
+        try{ if(!karte._chatBeob && window.ResizeObserver){ karte._chatBeob = new ResizeObserver(chatAusrichtenPlanen); karte._chatBeob.observe(karte); } }catch(e){}
+        const aktiv = box.classList.contains('angedockt') && document.body.classList.contains('chat-angedockt');
+        if(!aktiv){
+            box.style.top = ''; box.style.bottom = ''; box.style.right = ''; box.style.borderRadius = '';
+            ['--chat-flaeche', '--chat-muted', 'border-color', 'color'].forEach(k => box.style.removeProperty(k));
+            if(karte.dataset.andockPad){ karte.style.removeProperty('padding-right'); delete karte.dataset.andockPad; try{ if(window.kopfEinpassen) window.kopfEinpassen(); }catch(e){} }
+            document.body.style.removeProperty('--andock-nav-links'); document.body.style.removeProperty('--andock-nav-breite'); document.body.style.removeProperty('--andock-nav-unten');
+            return;
+        }
+        const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        const ck = getComputedStyle(karte);
+        const padL = parseFloat(ck.paddingLeft) || 32;
+        const padT = parseFloat(ck.paddingTop) || 32;
+        const randR = parseFloat(ck.borderRightWidth) || 0, randT = parseFloat(ck.borderTopWidth) || 0, randB = parseFloat(ck.borderBottomWidth) || 0;
+        const breite = box.offsetWidth || 310;
+        // 1. Die Karte macht rechts Platz: eigener Innenabstand + Chat + Luecke
+        const pad = Math.round(padL + breite + ANDOCK_LUECKE);
+        if(karte.dataset.andockPad !== String(pad)){
+            karte.style.setProperty('padding-right', pad + 'px', 'important');
+            karte.dataset.andockPad = String(pad);
+            try{ if(window.kopfEinpassen) window.kopfEinpassen(); }catch(e){}
+        }
+        // 2. Der Chat sitzt in diesem Platz, mit dem Innenabstand der Karte
+        //    zu ihrem Rahmen - oben, rechts und unten wie links.
+        const r = karte.getBoundingClientRect();                  // sichtbare Punkte (mit Zoom)
+        const rand = 16;
+        const oben = Math.max(rand, r.top / z + randT + padT);
+        const unten = Math.max(rand, (window.innerHeight - r.bottom) / z + randB + padT);
+        box.style.top = Math.round(oben) + 'px';
+        box.style.bottom = Math.round(unten) + 'px';
+        // Waagerecht: Zielkante = Innenkante der Karte. Erst schaetzen, dann
+        // nachmessen und berichtigen - Zoom (afu-zoom) und die fest
+        // reservierte Scrollleisten-Rinne (scrollbar-gutter) rechnen sonst
+        // nicht sauber zusammen.
+        const zielR = r.right - (randR + padL) * z;                // sichtbar
+        let rechts = parseFloat(box.style.right);
+        if(!isFinite(rechts)) rechts = (window.innerWidth - zielR) / z;
+        box.style.right = rechts.toFixed(1) + 'px';
+        const abw = zielR - box.getBoundingClientRect().right;    // sichtbar
+        if(Math.abs(abw) > 0.5){ rechts -= abw / z; box.style.right = rechts.toFixed(1) + 'px'; }
+        box.style.setProperty('border-radius', getComputedStyle(karte).borderRadius, 'important');
+        // 3. Farbe und Rand wie die Verlauf-Spalte
+        const f = chatVerlaufFarben();
+        if(f){
+            box.style.setProperty('--chat-flaeche', f.grund);
+            box.style.setProperty('border-color', f.rand);
+            box.style.setProperty('--chat-muted', getComputedStyle(document.body).getPropertyValue('--muted').trim() || f.text);
+        }
+        // 4. Knopfleiste der Runde nur ueber der Hauptspalte
+        const navLinks = r.left / z + (parseFloat(ck.borderLeftWidth) || 0) + padL;
+        const chatLinks = box.getBoundingClientRect().left / z;
+        document.body.style.setProperty('--andock-nav-links', Math.round(navLinks) + 'px');
+        document.body.style.setProperty('--andock-nav-breite', Math.max(200, Math.round(chatLinks - ANDOCK_LUECKE - navLinks)) + 'px');
+        document.body.style.setProperty('--andock-nav-unten', Math.round(unten) + 'px');
+    }
+    // Stilwechsel (Grau, Gruen, Dunkel ...) -> Farben neu uebernehmen
+    try{ new MutationObserver(() => chatAusrichtenPlanen()).observe(document.body, { attributes: true, attributeFilter: ['class'] }); }catch(e){}
+    let chatAusrichtenGeplant = 0;
+    function chatAusrichtenPlanen(){ if(!chatAusrichtenGeplant) chatAusrichtenGeplant = requestAnimationFrame(()=>{ chatAusrichtenGeplant = 0; try{ chatAnKarteAusrichten(); }catch(e){} }); }
+    window.addEventListener('scroll', chatAusrichtenPlanen, { passive:true });
+
+    function chatAndocken(an){
+        try{ localStorage.setItem(CHAT_DOCK_SCHLUESSEL, an ? '1' : '0'); }catch(e){}
+        chatAndockenAnwenden();
+        if(an) chatNachUntenRollen();
+    }
+    window.duoChatAndocken = chatAndocken;
+    window.addEventListener('resize', () => { try{ chatAndockenAnwenden(); chatAusrichtenPlanen(); }catch(e){} });
+
     function chatUmschalten(erzwingeOffen, ohneFokus){
         chatAufbauen();
         const box = document.getElementById('duoChatBox');
@@ -1473,6 +1835,17 @@
     function chatNachUntenRollen(){
         const v = document.getElementById('duoChatVerlauf');
         if(v) v.scrollTop = v.scrollHeight;
+        chatAmEnde = true;
+    }
+    // Wer unten war, bleibt unten - auch wenn die Liste hoeher oder
+    // niedriger wird (Andocken, Fenstergroesse, Kontaktliste auf/zu).
+    // (chatAmEnde steht oben bei den Zustaenden.)
+    function chatEndeBeobachten(){
+        const v = document.getElementById('duoChatVerlauf');
+        if(!v || v._endeBeob) return;
+        v._endeBeob = true;
+        v.addEventListener('scroll', () => { chatAmEnde = v.scrollHeight - v.scrollTop - v.clientHeight < 30; }, { passive: true });
+        try{ new ResizeObserver(() => { if(chatAmEnde) v.scrollTop = v.scrollHeight; }).observe(v); }catch(e){}
     }
 
     function chatZeit(ms){
@@ -1794,6 +2167,7 @@
 
     async function aufnahmeStarten(){
         if(aufnahme || mikroSucht || !darfSprechen()) return;
+        if(anruf.zustand){ chatSystemmeldung('Während eines Gesprächs geht keine Sprachnachricht – erst auflegen.'); return; }
         let stream;
         mikroSucht = true;
         try{
@@ -2185,6 +2559,7 @@
         spracheAudio.forEach(au => { if(!au.paused && !au.ended) laeuft = true; });
         if(spracheWartet.size) laeuft = true;
         try{ if(window.ttsQueueActive) laeuft = true; }catch(e){}
+        if(anruf.zustand) laeuft = true;     // waehrend eines Anrufs warten (27.09.2026)
         return laeuft;
     }
     function spracheAutoWeiter(){
@@ -2637,6 +3012,509 @@
             halloGesagt = true;
         }catch(e){}
     }
+
+    // ================================================================
+    //  ANRUFEN IM GRUPPENRAUM                             (27.09.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Nehmen wir an, ich bin mit fuenf Leuten im Raum und ich
+    //  muss einem was erklaeren. Dann langt es doch, wenn ich das nur
+    //  dieser einen Person erklaere." - "nur der Kursleiter kann
+    //  anrufen" - "Dann muss in dem Chat quasi eine Kontaktliste mit
+    //  drin sein ... Dann muss ich keine Sprachnachrichten staendig
+    //  versenden, sondern ich habe den anderen im Dialog."
+    //
+    //  So laeuft es:
+    //    1. Unter dem Chatkopf steht "5 im Raum" mit allen Namen. Beim
+    //       Kursleiter hat jeder andere einen gruenen Hoerer.
+    //    2. Klick darauf: Mikrofon auf, Server meldet es der Person
+    //       ('anrufStart' -> 'anrufKlingelt'). Bei ihr klingelt es, ein
+    //       Fenster fragt "Annehmen / Ablehnen".
+    //    3. Angenommen: Beide Browser verbinden sich DIREKT (WebRTC).
+    //       Die Stimmen gehen nicht ueber den Trainer-Server; der reicht
+    //       nur die Verbindungsdaten weiter ('anrufSignal').
+    //    4. Oben im Chat steht dann gruen "Im Gespraech mit ...", mit
+    //       Stummschalten und rotem Auflegen.
+    //  Die anderen im Raum hoeren nichts und merken nichts.
+    //
+    //  Zum Finden der Gegenstelle ueber das Internet fragen beide Browser
+    //  den STUN-Dienst von Cloudflare, welche Adresse sie von aussen
+    //  haben. Dabei geht nur die Internetadresse dorthin, kein Ton.
+    //  Laesst ein Netz (Firma, manche Mobilfunknetze) die direkte
+    //  Verbindung nicht zu, kommt nach 20 Sekunden eine klare Meldung.
+    // ================================================================
+    function anrufAktiv(){ return !!anruf.zustand; }
+    window.duoAnrufAktiv = anrufAktiv;
+    function darfTelefonieren(){
+        try{ return !!(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection); }
+        catch(e){ return false; }
+    }
+    function anrufListeOffen(){ try{ return localStorage.getItem(ANRUF_LISTE_MERKEN) !== '0'; }catch(e){ return true; } }
+    function anrufDauer(){ return anruf.start ? dauerMinSek((Date.now() - anruf.start) / 1000) : '0:00'; }
+
+    // ---- Profilbild (27.09.2026) -----------------------------------------
+    //  Dietmar: "Kannst du mir die Option Profilbild mit einbauen? Das muss
+    //  auch beim anrufen gezeigt werden." Gewaehlt wird es in den
+    //  Einstellungen (Index.html, profilbildWaehlen), gespeichert pro
+    //  Benutzer im Browser. Hier: an den Raum schicken, die der anderen
+    //  empfangen und rund anzeigen - in der Kontaktliste, im
+    //  Gespraechsstreifen und im Klingel-Fenster. Ohne Bild steht der
+    //  Anfangsbuchstabe in einem farbigen Kreis; die Farbe haengt am Namen,
+    //  bleibt also fuer jeden gleich.
+    function duoAvatarHtml(bild, name, klasse, punkt){
+        const ok = typeof bild === 'string' && PB_MUSTER.test(bild);
+        const n = String(name || '?').trim();
+        const buchstabe = escapeHtml(((n.match(/[A-Za-zÄÖÜäöü0-9]/) || ['?'])[0]).toUpperCase());
+        let h = 0; for(const c of n) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+        const farbe = PB_FARBEN[h % PB_FARBEN.length];
+        return '<span class="duo-pb ' + (klasse || '') + '"' + (ok ? '' : ' style="background:' + farbe + '"') + ' aria-hidden="true">'
+             + (ok ? '<img src="' + bild + '" alt="">' : buchstabe) + (punkt ? '<span class="an"></span>' : '') + '</span>';
+    }
+    window.duoAvatarHtml = duoAvatarHtml;
+    function profilbildEigenes(){
+        try{ const b = window.profilbildHolen ? window.profilbildHolen() : ''; return PB_MUSTER.test(b || '') ? b : ''; }catch(e){ return ''; }
+    }
+    function profilbildVon(id){
+        if(id && id === myUserId) return profilbildEigenes();
+        return profilbilder[id] || '';
+    }
+    function profilbildSenden(){
+        if(!socket || !roomCode) return;
+        try{ socket.emit('profilbild', { bild: profilbildEigenes() || null }); }catch(e){}
+    }
+    // Aufgerufen aus den Einstellungen (neues Bild, entfernt, anderer Benutzer)
+    window.duoProfilbildGeaendert = function(){
+        profilbildSenden();
+        try{ anrufZeichnen(); }catch(e){}
+    };
+
+    // ---- Kontaktliste ------------------------------------------------
+    function anrufListeZeichnen(){
+        const el = document.getElementById('duoAnrufLeiste');
+        if(!el) return;
+        const users = duoUsersCache || {};
+        const ids = Object.keys(users);
+        if(!roomCode || !ids.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+        const hostId = window._duoHostId;
+        // Kursleiter zuerst, dann man selbst, dann die anderen
+        ids.sort((a, b) => (a === hostId ? -2 : a === myUserId ? -1 : 0) - (b === hostId ? -2 : b === myUserId ? -1 : 0));
+        const offen = anrufListeOffen();
+        let html = '<div class="kopf" role="button" tabindex="0" data-aktion="klappen" aria-expanded="' + offen + '">'
+                 + '<i class="fa-solid fa-users leute"></i><b>' + ids.length + ' im Raum</b>'
+                 + '<span class="pfeil">' + (offen ? 'zuklappen <i class="fa-solid fa-chevron-up"></i>' : 'aufklappen <i class="fa-solid fa-chevron-down"></i>') + '</span></div>';
+        if(offen){
+            const telefon = darfTelefonieren();
+            html += '<ul>' + ids.map(id => {
+                const u = users[id] || {};
+                const ich = id === myUserId;
+                const name = escapeHtml(u.name || u.userName || 'Teilnehmer');
+                let rolle = '';
+                if(id === hostId) rolle = 'Kursleiter' + (ich ? ' (du)' : '');
+                else if(ich) rolle = 'du';
+                let aktiv = '';
+                if(anruf.zustand && anruf.partner === id){
+                    aktiv = anruf.zustand === 'spricht' ? 'im Gespräch' : anruf.zustand === 'klingelt' ? 'ruft an' : 'wird angerufen';
+                }
+                let knopf = '';
+                if(isHost && !ich){
+                    if(anruf.zustand && anruf.partner === id){
+                        knopf = '<button type="button" class="hoerer auflegen" data-aktion="auflegen" title="Auflegen" aria-label="Auflegen"><i class="fa-solid fa-phone-slash"></i></button>';
+                    } else if(anruf.zustand){
+                        knopf = '<button type="button" class="hoerer" disabled title="Du bist gerade in einem Gespräch" aria-label="' + name + ' anrufen (besetzt)"><i class="fa-solid fa-phone"></i></button>';
+                    } else if(!telefon){
+                        knopf = '<button type="button" class="hoerer" disabled title="Anrufen geht nur über eine sichere Verbindung (https) oder am eigenen Rechner" aria-label="Anrufen nicht möglich"><i class="fa-solid fa-phone-slash"></i></button>';
+                    } else {
+                        knopf = '<button type="button" class="hoerer" data-aktion="anrufen" data-an="' + escapeHtml(id) + '" title="' + name + ' anrufen" aria-label="' + name + ' anrufen"><i class="fa-solid fa-phone"></i></button>';
+                    }
+                }
+                return '<li>' + duoAvatarHtml(profilbildVon(id), u.name || u.userName || 'Teilnehmer', '', true) + '<span class="name">' + name
+                     + (rolle ? ' <span class="rolle">· ' + rolle + '</span>' : '')
+                     + (aktiv ? ' <span class="rolle aktiv">· ' + aktiv + '</span>' : '')
+                     + '</span>' + knopf + '</li>';
+            }).join('') + '</ul>';
+        }
+        el.innerHTML = html;
+        el.style.display = '';
+    }
+    function anrufListeKlick(e){
+        const ziel = e.target.closest('[data-aktion]');
+        if(!ziel) return;
+        const aktion = ziel.getAttribute('data-aktion');
+        if(aktion === 'klappen'){
+            try{ localStorage.setItem(ANRUF_LISTE_MERKEN, anrufListeOffen() ? '0' : '1'); }catch(err){}
+            anrufListeZeichnen();
+        } else if(aktion === 'anrufen'){
+            anrufStarten(ziel.getAttribute('data-an'));
+        } else if(aktion === 'auflegen'){
+            anrufAuflegen('aufgelegt');
+        }
+    }
+
+    // ---- Streifen oben im Chat -----------------------------------------
+    function anrufStreifenZeichnen(){
+        const el = document.getElementById('duoAnrufStreifen');
+        if(!el) return;
+        if(!anruf.zustand || anruf.zustand === 'klingelt'){ el.style.display = 'none'; el.innerHTML = ''; return; }
+        const name = escapeHtml(anruf.name);
+        let titel, klein;
+        if(anruf.zustand === 'ruft'){ titel = 'Rufe ' + name + ' an …'; klein = 'es klingelt bei ' + name; }
+        else if(anruf.zustand === 'verbindet'){ titel = 'Verbinde mit ' + name + ' …'; klein = 'einen Moment'; }
+        else { titel = 'Im Gespräch mit ' + name; klein = '<span class="dauer">' + anrufDauer() + '</span> · nur ihr zwei hört mit'; }
+        const welle = duoAvatarHtml(profilbildVon(anruf.partner), anruf.name, 'mittel');
+        const stumm = anruf.zustand === 'spricht'
+            ? '<button type="button" class="stumm' + (anruf.stumm ? ' an' : '') + '" data-aktion="stumm" title="' + (anruf.stumm ? 'Mikrofon wieder an' : 'Mikrofon aus') + '" aria-label="' + (anruf.stumm ? 'Mikrofon wieder an' : 'Mikrofon aus') + '"><i class="fa-solid ' + (anruf.stumm ? 'fa-microphone-slash' : 'fa-microphone') + '"></i></button>'
+            : '';
+        el.className = anruf.zustand === 'spricht' ? '' : 'wartet';
+        el.innerHTML = welle + '<span class="text"><b>' + titel + '</b><small>' + klein + '</small></span>' + stumm
+                     + '<button type="button" class="auflegen" data-aktion="auflegen" title="Auflegen" aria-label="Auflegen"><i class="fa-solid fa-phone-slash"></i></button>';
+        el.style.display = 'flex';
+    }
+    function anrufStreifenKlick(e){
+        e.stopPropagation();
+        const ziel = e.target.closest('[data-aktion]');
+        if(!ziel) return;
+        const aktion = ziel.getAttribute('data-aktion');
+        if(aktion === 'auflegen') anrufAuflegen('aufgelegt');
+        else if(aktion === 'stumm') anrufStummUmschalten();
+    }
+    function anrufZeichnen(){
+        try{ anrufListeZeichnen(); }catch(e){}
+        try{ anrufStreifenZeichnen(); }catch(e){}
+    }
+    function anrufStummUmschalten(){
+        anruf.stumm = !anruf.stumm;
+        try{ (anruf.stream ? anruf.stream.getAudioTracks() : []).forEach(t => { t.enabled = !anruf.stumm; }); }catch(e){}
+        anrufStreifenZeichnen();
+    }
+
+    // ---- Ton: klingelton.mp3 beim Anrufer und beim Angerufenen ------------
+    //  Dietmar, 27.09.2026: "klingelton.mp3 muss abgespielt werden wenn ich
+    //  jemanden anrufe." Die Datei liegt im Ordner sounds/ (dort hat Dietmar
+    //  sie hingelegt); zur Sicherheit wird auch direkt neben der Index.html
+    //  gesucht. Sie laeuft in Schleife, bis angenommen, abgelehnt oder
+    //  aufgelegt wird - beim Anrufer etwas leiser, beim Angerufenen voll.
+    //  Nachtrag am Abend: "es sieht so aus, als haettest du noch einen
+    //  anderen Sound mit eingebaut. Ich hoere zu meinem auch noch was
+    //  anderes." Das war der Ersatzton (Freizeichen/zwei Pieptoene), weil
+    //  die Datei neben der Index.html gesucht wurde. Der Ersatzton ist
+    //  raus: Es klingelt nur mit Dietmars Datei, sonst gar nicht.
+    const KLINGELTON_QUELLEN = ['sounds/klingelton.mp3', 'klingelton.mp3'];
+    function anrufTonStarten(art){
+        anrufTonStoppen();
+        const eintrag = { art: art, mp3: null, quelle: -1, aus: false };
+        anruf.ton = eintrag;
+        const naechste = () => {
+            if(anruf.ton !== eintrag) return;
+            eintrag.quelle++;
+            if(eintrag.quelle >= KLINGELTON_QUELLEN.length){ eintrag.aus = true; eintrag.mp3 = null; return; }
+            try{
+                const a = new Audio(KLINGELTON_QUELLEN[eintrag.quelle]);
+                a.loop = true;
+                a.volume = art === 'ruf' ? 0.6 : 1.0;
+                a.addEventListener('error', () => { if(eintrag.mp3 === a) naechste(); });
+                eintrag.mp3 = a;
+                const v = a.play();
+                if(v && v.catch) v.catch(e => {
+                    // Datei fehlt -> naechste Stelle; vom Browser gesperrt -> still
+                    if(e && e.name === 'NotAllowedError'){ eintrag.aus = true; return; }
+                });
+            }catch(e){ naechste(); }
+        };
+        naechste();
+    }
+    function anrufTonStoppen(){
+        const t = anruf.ton;
+        if(!t) return;
+        anruf.ton = null;
+        try{ if(t.mp3){ const a = t.mp3; t.mp3 = null; a.pause(); a.removeAttribute('src'); a.load(); } }catch(e){}
+    }
+    window.duoAnrufTonArt = () => anruf.ton ? (anruf.ton.mp3 && !anruf.ton.aus ? 'mp3:' + KLINGELTON_QUELLEN[anruf.ton.quelle] : 'still') : null;   // fuer den Test
+
+    // ---- Klingel-Fenster beim Angerufenen --------------------------------
+    function anrufKlingelnZeigen(){
+        anrufKlingelnWeg();
+        const o = document.createElement('div');
+        o.id = 'duoAnrufKlingeln';
+        o.setAttribute('role', 'alertdialog');
+        o.setAttribute('aria-labelledby', 'duoAnrufKlingelnTitel');
+        const name = escapeHtml(anruf.name);
+        const pruefung = pruefungLaeuft() ? '<br><b>Deine Prüfungszeit läuft dabei weiter.</b>' : '';
+        o.innerHTML = '<div class="kasten">' + duoAvatarHtml(profilbildVon(anruf.partner), anruf.name, 'gross')
+            + '<h3 id="duoAnrufKlingelnTitel">' + name + ' ruft an</h3>'
+            + '<p>Der Kursleiter möchte mit dir sprechen.<br>Nur ihr beide hört euch, der Raum läuft weiter.' + pruefung + '</p>'
+            + '<div class="knoepfe"><button type="button" class="ja"><i class="fa-solid fa-phone"></i> Annehmen</button>'
+            + '<button type="button" class="nein"><i class="fa-solid fa-phone-slash"></i> Ablehnen</button></div></div>';
+        o.querySelector('.ja').addEventListener('click', anrufAnnehmen);
+        o.querySelector('.nein').addEventListener('click', () => anrufAblehnen());
+        document.body.appendChild(o);
+        try{ o.querySelector('.ja').focus(); }catch(e){}
+    }
+    function anrufKlingelnWeg(){
+        const o = document.getElementById('duoAnrufKlingeln');
+        if(o) o.remove();
+    }
+
+    // ---- Ablauf ----------------------------------------------------------
+    async function anrufStarten(id){
+        if(!socket || !roomCode || !isHost || anruf.zustand || !id || id === myUserId) return;
+        if(!darfTelefonieren()){ chatSystemmeldung('Anrufen geht nur über eine sichere Verbindung (https) oder am eigenen Rechner.'); return; }
+        if(aufnahme){ chatSystemmeldung('Erst die Sprachnachricht fertig aufnehmen oder verwerfen, dann anrufen.'); return; }
+        const u = duoUsersCache && duoUsersCache[id];
+        if(!u) return;
+        anruf.zustand = 'ruft'; anruf.partner = id; anruf.name = u.name || u.userName || 'Teilnehmer';
+        anrufZeichnen();
+        let stream;
+        try{ stream = await mikroOeffnen(); }
+        catch(e){ chatSystemmeldung(mikroFehlerText(e)); anrufAufraeumen(); return; }
+        // Waehrend der Mikrofonsuche aufgelegt?
+        if(anruf.zustand !== 'ruft' || anruf.partner !== id){ try{ stream.getTracks().forEach(t => t.stop()); }catch(e){} return; }
+        anruf.stream = stream;
+        socket.emit('anrufStart', { an: id });
+        anrufTonStarten('ruf');
+        clearTimeout(anruf.frist);
+        anruf.frist = setTimeout(() => {
+            if(anruf.zustand === 'ruft'){ chatSystemmeldung(anruf.name + ' hat nicht abgenommen.'); anrufAuflegen('keineAntwort'); }
+        }, 30000);
+    }
+
+    async function anrufAnnehmen(){
+        if(anruf.zustand !== 'klingelt') return;
+        anrufKlingelnWeg(); anrufTonStoppen();
+        clearTimeout(anruf.frist);
+        const von = anruf.partner;
+        if(!darfTelefonieren()){
+            chatSystemmeldung('Telefonieren geht in diesem Browser oder über diese Verbindung nicht.');
+            anrufAblehnen(true); return;
+        }
+        anruf.zustand = 'verbindet';
+        anrufZeichnen();
+        let stream;
+        try{ stream = await mikroOeffnen(); }
+        catch(e){ chatSystemmeldung(mikroFehlerText(e)); anrufAblehnen(true); return; }
+        if(anruf.zustand !== 'verbindet' || anruf.partner !== von){ try{ stream.getTracks().forEach(t => t.stop()); }catch(e){} return; }
+        anruf.stream = stream;
+        anrufVerbindungAnlegen();
+        socket.emit('anrufAntwort', { an: von, ja: true });
+        anrufVerbindungsFrist();
+    }
+    function anrufAblehnen(stillschweigend){
+        const von = anruf.partner;
+        if(socket && von) socket.emit('anrufAntwort', { an: von, ja: false });
+        if(!stillschweigend && anruf.zustand === 'klingelt') chatSystemmeldung('Anruf von ' + anruf.name + ' abgelehnt.');
+        anrufAufraeumen();
+    }
+
+    function anrufVerbindungAnlegen(){
+        const pc = new RTCPeerConnection({ iceServers: ANRUF_ICE });
+        anruf.pc = pc;
+        anruf.warteKandidaten = [];
+        anruf.stream.getTracks().forEach(t => pc.addTrack(t, anruf.stream));
+        pc.onicecandidate = e => {
+            if(!e.candidate || !socket || anruf.pc !== pc) return;
+            const k = e.candidate.toJSON ? e.candidate.toJSON() : e.candidate;
+            socket.emit('anrufSignal', { an: anruf.partner, kandidat: { candidate: k.candidate, sdpMid: k.sdpMid, sdpMLineIndex: k.sdpMLineIndex } });
+        };
+        pc.ontrack = e => {
+            if(anruf.pc !== pc) return;
+            if(!anruf.audio){
+                const a = document.createElement('audio');
+                a.id = 'duoAnrufTon'; a.autoplay = true; a.style.display = 'none';
+                document.body.appendChild(a);
+                anruf.audio = a;
+            }
+            anruf.audio.srcObject = (e.streams && e.streams[0]) || new MediaStream([e.track]);
+            anruf.audio.play().catch(() => {});
+        };
+        const lage = () => {
+            if(anruf.pc !== pc) return;
+            const s = pc.connectionState || pc.iceConnectionState;
+            if(s === 'connected' || s === 'completed'){ clearTimeout(anruf.abrissUhr); anrufLaeuft(); }
+            else if(s === 'failed'){
+                chatSystemmeldung(anruf.zustand === 'spricht'
+                    ? 'Die Verbindung zu ' + anruf.name + ' ist abgerissen.'
+                    : 'Keine direkte Verbindung zu ' + anruf.name + ' möglich – vermutlich lässt eines der Netze (Firma, Mobilfunk) das nicht zu. Schreibt euch solange im Chat.');
+                anrufAuflegen('fehler');
+            } else if(s === 'disconnected'){
+                clearTimeout(anruf.abrissUhr);
+                anruf.abrissUhr = setTimeout(() => {
+                    if(anruf.pc === pc && (pc.connectionState || pc.iceConnectionState) === 'disconnected'){
+                        chatSystemmeldung('Die Verbindung zu ' + anruf.name + ' ist abgerissen.');
+                        anrufAuflegen('fehler');
+                    }
+                }, 8000);
+            }
+        };
+        pc.onconnectionstatechange = lage;
+        pc.oniceconnectionstatechange = lage;
+        return pc;
+    }
+    function anrufVerbindungsFrist(){
+        clearTimeout(anruf.frist);
+        anruf.frist = setTimeout(() => {
+            if(anruf.zustand === 'verbindet'){
+                chatSystemmeldung('Keine direkte Verbindung zu ' + anruf.name + ' möglich – vermutlich lässt eines der Netze (Firma, Mobilfunk) das nicht zu. Schreibt euch solange im Chat.');
+                anrufAuflegen('fehler');
+            }
+        }, 20000);
+    }
+    function anrufLaeuft(){
+        if(anruf.zustand === 'spricht') return;
+        clearTimeout(anruf.frist); anrufTonStoppen();
+        anruf.zustand = 'spricht';
+        anruf.start = Date.now();
+        clearInterval(anruf.zeitUhr);
+        anruf.zeitUhr = setInterval(() => {
+            const d = document.querySelector('#duoAnrufStreifen .dauer');
+            if(d) d.textContent = anrufDauer();
+        }, 1000);
+        anrufZeichnen();
+    }
+
+    // Die Signale kommen der Reihe nach und werden der Reihe nach
+    // verarbeitet - setRemoteDescription ist asynchron, ein Kandidat darf
+    // es nicht ueberholen.
+    function anrufSignalVerarbeiten(d){
+        anruf.kette = (anruf.kette || Promise.resolve()).then(async () => {
+            const pc = anruf.pc;
+            if(!pc || !d || d.von !== anruf.partner) return;
+            if(d.sdp){
+                await pc.setRemoteDescription(d.sdp);
+                const warte = anruf.warteKandidaten.splice(0);
+                for(const k of warte){ try{ await pc.addIceCandidate(k); }catch(e){} }
+                if(d.sdp.type === 'offer'){
+                    const antwort = await pc.createAnswer();
+                    await pc.setLocalDescription(antwort);
+                    if(anruf.pc === pc && socket) socket.emit('anrufSignal', { an: anruf.partner, sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+                }
+            }
+            if(d.kandidat){
+                if(!pc.remoteDescription) anruf.warteKandidaten.push(d.kandidat);
+                else { try{ await pc.addIceCandidate(d.kandidat); }catch(e){} }
+            }
+        }).catch(e => { console.warn('[ANRUF] Signal', e); });
+    }
+
+    function anrufAuflegen(grund){
+        if(!anruf.zustand) return;
+        if(socket && anruf.partner) socket.emit('anrufEnde', { grund: grund || 'aufgelegt' });
+        if(anruf.zustand === 'spricht' && grund !== 'fehler') chatSystemmeldung('Gespräch mit ' + anruf.name + ' beendet (' + anrufDauer() + ').');
+        anrufAufraeumen();
+    }
+    function anrufAufraeumen(){
+        clearTimeout(anruf.frist); clearTimeout(anruf.abrissUhr); clearInterval(anruf.zeitUhr);
+        anrufTonStoppen(); anrufKlingelnWeg();
+        try{ if(anruf.pc) anruf.pc.close(); }catch(e){}
+        try{ if(anruf.stream) anruf.stream.getTracks().forEach(t => t.stop()); }catch(e){}
+        try{ if(anruf.audio){ anruf.audio.srcObject = null; anruf.audio.remove(); } }catch(e){}
+        Object.assign(anruf, { zustand: null, partner: null, name: '', pc: null, stream: null, audio: null, start: 0,
+                               frist: null, zeitUhr: null, abrissUhr: null, kette: null, warteKandidaten: [], stumm: false });
+        anrufZeichnen();
+        // Waehrend des Gespraechs aufgelaufene Sprachnachrichten jetzt abspielen
+        try{ spracheAutoWeiter(); }catch(e){}
+    }
+    // Raum verlassen, entfernt, Raum beendet: Gespraech mit beenden.
+    function anrufRaumPruefen(){
+        if(!roomCode && anruf.zustand) anrufAuflegen('weg');
+        if(!roomCode) Object.keys(profilbilder).forEach(k => { delete profilbilder[k]; });
+        anrufZeichnen();
+    }
+
+    function anrufEreignisseAnmelden(s){
+        s.on('anrufKlingelt', d => {
+            if(!d || !d.von) return;
+            if(anruf.zustand){ s.emit('anrufAntwort', { an: d.von, ja: false }); return; }
+            anruf.zustand = 'klingelt'; anruf.partner = d.von; anruf.name = String(d.name || 'Kursleiter');
+            // Das Bild des Anrufers kommt mit dem Anruf (27.09.2026 abends)
+            if(d.bild && PB_MUSTER.test(d.bild)) profilbilder[d.von] = d.bild;
+            anrufZeichnen();
+            anrufKlingelnZeigen();
+            anrufTonStarten('klingel');
+            clearTimeout(anruf.frist);
+            anruf.frist = setTimeout(() => {
+                if(anruf.zustand === 'klingelt'){
+                    chatSystemmeldung('Anruf von ' + anruf.name + ' verpasst.');
+                    anrufAblehnen(true);
+                }
+            }, 32000);
+        });
+        s.on('anrufAbgelehnt', d => {
+            if(anruf.zustand !== 'ruft') return;
+            const g = d && d.grund;
+            chatSystemmeldung(g === 'besetzt' ? anruf.name + ' ist gerade in einem anderen Gespräch.'
+                            : g === 'nurKursleiter' ? 'Anrufen kann nur der Kursleiter.'
+                            : anruf.name + ' ist nicht mehr im Raum.');
+            anrufAufraeumen();
+        });
+        s.on('anrufAntwort', async d => {
+            if(!d || d.von !== anruf.partner || anruf.zustand !== 'ruft') return;
+            clearTimeout(anruf.frist);
+            anrufTonStoppen();
+            if(!d.ja){ chatSystemmeldung(anruf.name + ' hat abgelehnt.'); anrufAufraeumen(); return; }
+            anruf.zustand = 'verbindet';
+            anrufZeichnen();
+            try{
+                const pc = anrufVerbindungAnlegen();
+                const angebot = await pc.createOffer();
+                await pc.setLocalDescription(angebot);
+                if(anruf.pc === pc) s.emit('anrufSignal', { an: anruf.partner, sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+                anrufVerbindungsFrist();
+            }catch(e){
+                console.warn('[ANRUF] Angebot', e);
+                chatSystemmeldung('Das Gespräch ließ sich nicht aufbauen.');
+                anrufAuflegen('fehler');
+            }
+        });
+        s.on('anrufSignal', d => anrufSignalVerarbeiten(d));
+        // Profilbilder (27.09.2026)
+        s.on('profilbilder', d => {
+            Object.keys(profilbilder).forEach(k => { delete profilbilder[k]; });
+            const b = (d && d.bilder) || {};
+            Object.keys(b).forEach(id => { if(PB_MUSTER.test(b[id] || '')) profilbilder[id] = b[id]; });
+            anrufZeichnen();
+        });
+        s.on('profilbild', d => {
+            if(!d || !d.id) return;
+            if(d.bild && PB_MUSTER.test(d.bild)) profilbilder[d.id] = d.bild; else delete profilbilder[d.id];
+            anrufZeichnen();
+            const k = document.querySelector('#duoAnrufKlingeln .duo-pb');
+            if(k && d.id === anruf.partner && anruf.zustand === 'klingelt') k.outerHTML = duoAvatarHtml(profilbildVon(anruf.partner), anruf.name, 'gross');
+        });
+        // Nach dem Betreten oder Eroeffnen eines Raums das eigene Bild schicken
+        s.on('roomCreated', () => setTimeout(profilbildSenden, 50));
+        s.on('roomJoined', () => setTimeout(profilbildSenden, 50));
+        s.on('anrufEnde', d => {
+            if(!d || d.von !== anruf.partner || !anruf.zustand) return;
+            const g = d.grund;
+            let text;
+            if(anruf.zustand === 'klingelt') text = 'Anruf von ' + anruf.name + ' verpasst.';
+            else if(anruf.zustand === 'spricht') text = (g === 'weg' ? anruf.name + ' ist nicht mehr da' : anruf.name + ' hat aufgelegt') + ' (' + anrufDauer() + ').';
+            else if(g === 'weg') text = anruf.name + ' ist nicht mehr im Raum.';
+            else if(g === 'fehler') text = 'Keine Verbindung zu ' + anruf.name + ' möglich.';
+            else text = anruf.name + ' hat aufgelegt.';
+            chatSystemmeldung(text);
+            anrufAufraeumen();
+        });
+        s.on('disconnect', () => {
+            if(anruf.zustand){ chatSystemmeldung('Verbindung zum Trainer unterbrochen – das Gespräch ist beendet.'); anrufAufraeumen(); }
+        });
+    }
+
+    // Eine Karte in den Chat haengen (28.09.2026, Kurs und Hausaufgaben).
+    // Die Anfrage "Maja moechte in den Kurs" sieht nur der Kursleiter, die
+    // Antwort nur Maja - beides entsteht im eigenen Browser, nicht als
+    // Chatnachricht auf dem Server. Deshalb geht es hier am Verteiler vorbei.
+    window.duoChatKarte = function(knoten){
+        try{
+            chatAufbauen();
+            const verlauf = document.getElementById('duoChatVerlauf');
+            if(!verlauf || !knoten) return false;
+            const leer = document.getElementById('duoChatLeer');
+            if(leer) leer.remove();
+            verlauf.appendChild(knoten);
+            chatNachUntenRollen();
+            if(!chatOffen){ chatUngelesen++; try{ chatBlaseAktualisieren(); }catch(e){} }
+            return true;
+        }catch(e){ console.warn('[CHAT] Karte', e); return false; }
+    };
 
     function chatSystemmeldung(text){
         chatAufbauen();
@@ -3762,6 +4640,7 @@
                 if(!fensterOffen) hausHalloSenden();
             }catch(e){ hausHalloSenden(); }
         });
+        anrufEreignisseAnmelden(socket);   // Anrufen (27.09.2026)
         socket.on('hostChanged', data=>{ window._duoHostId=data.hostId; isHost=data.hostId===myUserId; updateDuoConfigVisibility(); updateDuoCreateButtonVisibility(); updateDuoStartButton(); updateDuoConfigAccess(); updateRoomUsers(duoUsersCache); updateLinkWithTunnel(); });
         socket.on('neustartAnsage', a=>{ try{ neustartAnsageSetzen(a); }catch(e){} });
         socket.on('tuerAnsage', a=>{ try{ tuerAnsageSetzen(a); }catch(e){} });
@@ -3959,6 +4838,10 @@
             }catch(err){ console.error('[DUO] kickErgebnis', err); }
         });
         socket.on('duoQuizStarted', data=>{ if(typeof window.startDuoQuizFromServer==='function') window.startDuoQuizFromServer(data); });
+        // Unterricht: der Kursleiter blaettert / loest auf (an die Teilnehmer),
+        // und der Zaehler fuer seinen Beamer (nur an ihn).
+        socket.on('lektionSchritt', d=>{ try{ if(typeof window.unterrichtRaumSchritt==='function') window.unterrichtRaumSchritt(d); }catch(e){ console.error('[UNTERRICHT]', e); } });
+        socket.on('lektionStand', d=>{ try{ if(typeof window.unterrichtRaumStand==='function') window.unterrichtRaumStand(d); }catch(e){ console.error('[UNTERRICHT]', e); } });
 
         // Auswertung fuer den Kursleiter - kommt nur, wenn der Gastgeber
         // sie angefordert hat, und nur bei ihm an.
@@ -4240,6 +5123,23 @@
         // Neue Runde fuer ALLE im Raum - frische Fragen, alle fangen von
         // vorn an. Nur der Gastgeber darf das; der Server prueft es noch
         // einmal, hier wird nur der Knopf nicht angeboten.
+        // Unterricht im Gruppenraum (27.09.2026). Dietmar: "Die Lektionen,
+        // muss es auch im Gruppenraum geben." Im Gleichschritt: Der
+        // Kursleiter startet und blaettert, alle folgen. Der Server prueft
+        // jedes Mal, ob es wirklich der Kursleiter ist.
+        lektionStarten: function(d){
+            if(!socket||!roomCode||!isHost||!d) return false;
+            socket.emit('lektionStarten',{code:roomCode, nr:d.nr, titel:d.titel, ids:d.ids, abschnitte:d.abschnitte, versatz:d.versatz, gesamt:d.gesamt});
+            return true;
+        },
+        lektionSchritt: function(index, aufgedeckt){
+            if(!socket||!roomCode||!isHost) return;
+            socket.emit('lektionSchritt',{code:roomCode, index:index, aufgedeckt:aufgedeckt===true});
+        },
+        lektionEnde: function(){
+            if(!socket||!roomCode||!isHost) return;
+            socket.emit('lektionEnde',{code:roomCode});
+        },
         neueRunde: function(){
             if(!socket||!roomCode) return;
             if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Kursleiter kann eine neue Runde starten.'); return; }

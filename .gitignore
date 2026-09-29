@@ -183,6 +183,13 @@ Mitnehmen/
 README.txt
 bilder/youtube-vorlage.html
 sounds/fanfare.wav
+# Der Klingelton fuer Anrufe (27.09.2026) ist Dietmars eigene Datei.
+# Ob er oeffentlich zu GitHub darf, ist noch offen (siehe Roadmap) -
+# bis dahin bleibt er auf diesem Rechner.
+sounds/klingelton.mp3
+# Kurs und Hausaufgaben (28.09.2026): Namen der Teilnehmer, ihre Geraete
+# und Antworten. Personenbezogen - geht NIE zu GitHub.
+kurse/
 
 # ================================================================
 #  DIE BAUANLEITUNG BLEIBT DRAUSSEN (ab 02.09.2026)

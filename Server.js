@@ -2480,6 +2480,9 @@ function isLocalRequest(req){
 // doch nur der Schutz, der lautlos seine Arbeit tat.
 const ERWARTET_ABGEWIESEN = [
   /^\/api\/userdata/,
+  // Kurs (28.09.2026): Jede Seite im eigenen Netz fragt einmal, ob sie der
+  // Kursleiter ist. Ein Nein ist fuer alle anderen der Normalfall.
+  /^\/api\/kurs$/,
   // Dasselbe fuer den Blaetter-Stand: Jede Seite fragt beim Laden danach,
   // auch die eines Gastes. Ein Nein ist hier der Normalfall.
   /^\/api\/blaettern/,
@@ -4945,6 +4948,11 @@ const PUBLIC_FILES = new Set([
   '/icon.png',
   // Das runde Zeichen fuer Google und den Browser-Tab (26.09.2026).
   '/icon-rund.png',
+  // Der Klingelton fuer Anrufe im Gruppenraum (27.09.2026). Dietmar:
+  // "klingelton.mp3 muss abgespielt werden wenn ich jemanden anrufe."
+  // Oeffentlich, weil ihn auch der Browser des Angerufenen (am Link, von
+  // aussen) hier abholt. Fehlt die Datei, klingelt es mit einem Ersatzton.
+  '/klingelton.mp3',
   '/favicon.ico',
   // Merkzettel fuer den Probelauf des Updaters, angelegt von
   // Update-Test.bat. Die Seite sieht regelmaessig nach, ob es ihn gibt;
@@ -5271,6 +5279,373 @@ app.post('/api/besucher/verlauf-loeschen', localOnly, (req, res) => {
   besucherSchreiben(true);
   console.log('[BESUCHER] Verlauf geloescht (' + n + ' Eintraege).');
   res.json({ ok: true, geloescht: n });
+});
+
+// ================================================================
+//  KURS UND HAUSAUFGABEN                               (28.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Der DARC hat Hausaufgaben. Interessant wird es, wenn sich
+//  die Teilnehmer mit ihrem Namen einloggen und Lektion fuer Lektion
+//  abarbeiten koennen. [...] Mit einer Uebersicht in der Auswertung und
+//  wer seine Hausaufgaben erledigt hat." - Anmeldung auf seinen Wunsch
+//  ueber den Gruppenchat: Name eingeben, Haken "Ich nehme am Kurs teil",
+//  der Kursleiter nimmt auf.
+//
+//  WIE DIE ANMELDUNG FUNKTIONIERT. Ohne Passwort: Wird eine Anfrage
+//  angenommen, bekommt genau dieser Browser einen zufaelligen Schluessel
+//  (48 Hexzeichen). Hier liegt davon nur der SHA-256-Wert - wer die
+//  Datei liest, kann sich damit nicht anmelden. Der Browser holt den
+//  Schluessel mit dem Geheimnis seiner Anfrage ab, genau einmal.
+//
+//  WO DIE DATEN LIEGEN. kurse/kurse.json neben dem Server - Namen,
+//  Geraete (nur Art und Zeiten), Hausaufgaben und Antworten. Nicht in
+//  data/ und nicht in backup/; die Datei steht in der .gitignore und
+//  geht nie zu GitHub oder in ein Paket.
+//
+//  WER WAS DARF. Alles, was einen Kurs anlegt, aufnimmt, Hausaufgaben
+//  aufgibt oder Ergebnisse zeigt, ist localOnly - nur am Trainer-PC.
+//  Von aussen erreichbar sind nur: nachsehen ob es einen Kurs gibt,
+//  anfragen, den Stand der eigenen Anfrage, und mit Schluessel die
+//  eigenen Hausaufgaben samt Antworten.
+// ================================================================
+const KURS_DIR = path.join(__dirname, 'kurse');
+const KURS_FP = path.join(KURS_DIR, 'kurse.json');
+let kursDaten = null;
+let kursSchreibUhr = null;
+
+function kursLaden(){
+  if(kursDaten) return kursDaten;
+  try{
+    const d = JSON.parse(fs.readFileSync(KURS_FP, 'utf8'));
+    if(d && typeof d === 'object' && d.kurse) kursDaten = d;
+  }catch(e){}
+  if(!kursDaten) kursDaten = { aktiv: null, kurse: {} };
+  return kursDaten;
+}
+function kursSpeichern(sofort){
+  const schreiben = () => {
+    kursSchreibUhr = null;
+    try{
+      fs.mkdirSync(KURS_DIR, { recursive: true });
+      const tmp = KURS_FP + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify(kursDaten, null, 1), 'utf8');
+      fs.renameSync(tmp, KURS_FP);
+    }catch(e){ console.error('[KURS] Speichern fehlgeschlagen:', e.message); }
+  };
+  if(sofort){ if(kursSchreibUhr) clearTimeout(kursSchreibUhr); return schreiben(); }
+  if(!kursSchreibUhr) kursSchreibUhr = setTimeout(schreiben, 1500);
+}
+function kursAktiv(){
+  const d = kursLaden();
+  return d.aktiv && d.kurse[d.aktiv] ? d.kurse[d.aktiv] : null;
+}
+function kursId(vorsilbe){ return vorsilbe + '_' + crypto.randomBytes(6).toString('hex'); }
+function kursHash(t){ return crypto.createHash('sha256').update(String(t)).digest('hex'); }
+function kursText(t, max){
+  return String(t == null ? '' : t).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 40);
+}
+function kursDatum(t){ return /^\d{4}-\d{2}-\d{2}$/.test(String(t || '')) ? String(t) : ''; }
+
+// Der Katalog des Pruefungsziels, fuer das der Kurs angelegt ist.
+const KURS_KATALOGE = { n: 'fragen.json', e: 'Fragen-E.json', ne: 'Fragen-N-Auf-E.json', ea: 'Fragen-E-Auf-A.json' };
+const kursKatalogCache = {};
+function kursKatalog(klasse){
+  const datei = KURS_KATALOGE[klasse] || KURS_KATALOGE.n;
+  try{
+    const fp = path.join(__dirname, datei);
+    const st = fs.statSync(fp);
+    const c = kursKatalogCache[datei];
+    if(c && c.mtime === st.mtimeMs) return c.nachId;
+    const nachId = {};
+    (JSON.parse(fs.readFileSync(fp, 'utf8')) || []).forEach(q => { if(q && q.id) nachId[q.id] = q; });
+    kursKatalogCache[datei] = { mtime: st.mtimeMs, nachId };
+    return nachId;
+  }catch(e){ console.error('[KURS] Katalog', datei, e.message); return {}; }
+}
+
+// Wer steckt hinter einem Schluessel? -> { kurs, t, geraet } oder null
+function kursMitglied(token){
+  if(!token || typeof token !== 'string' || token.length < 20 || token.length > 100) return null;
+  const h = kursHash(token);
+  const d = kursLaden();
+  for(const kid of Object.keys(d.kurse)){
+    const k = d.kurse[kid];
+    for(const tid of Object.keys(k.teilnehmer || {})){
+      const t = k.teilnehmer[tid];
+      const g = (t.geraete || []).find(x => x.h === h);
+      if(g) return { kurs: k, t, geraet: g };
+    }
+  }
+  return null;
+}
+
+// Stand eines Teilnehmers bei einer Hausaufgabe
+function kursStand(k, a, tid){
+  const e = ((k.antworten || {})[a.id] || {})[tid];
+  const q = (e && e.q) || {};
+  let beantwortet = 0, richtig = 0;
+  a.fragen.forEach(id => { if(q[id]){ beantwortet++; if(q[id][1]) richtig++; } });
+  return { beantwortet, richtig, anzahl: a.fragen.length, fertig: e && e.fertig ? e.fertig : 0 };
+}
+
+// Die Uebersicht fuer den Kursleiter
+function kursUebersicht(){
+  const d = kursLaden();
+  const k = kursAktiv();
+  const liste = Object.values(d.kurse).map(x => ({ id: x.id, name: x.name, klasse: x.klasse, erstellt: x.erstellt }))
+    .sort((a, b) => b.erstellt - a.erstellt);
+  if(!k) return { kurse: liste, kurs: null };
+  const teilnehmer = Object.values(k.teilnehmer || {}).map(t => ({
+    id: t.id, name: t.name, geraete: (t.geraete || []).map(g => ({ art: g.art, seit: g.seit, zuletzt: g.zuletzt })),
+    zuletzt: t.zuletzt || 0, seit: t.seit || 0
+  })).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  const anfragen = Object.values(k.anfragen || {}).filter(a => a.status === 'offen')
+    .map(a => ({ id: a.id, name: a.name, art: a.art, zeit: a.zeit }))
+    .sort((a, b) => a.zeit - b.zeit);
+  const aufgaben = (k.aufgaben || []).map(a => {
+    const stand = {};
+    const falsch = {}, beantwortet = {};
+    teilnehmer.forEach(t => {
+      stand[t.id] = kursStand(k, a, t.id);
+      const q = ((((k.antworten || {})[a.id] || {})[t.id]) || {}).q || {};
+      Object.keys(q).forEach(id => { beantwortet[id] = (beantwortet[id] || 0) + 1; if(!q[id][1]) falsch[id] = (falsch[id] || 0) + 1; });
+    });
+    return { id: a.id, nr: a.nr, titel: a.titel, abschnitte: a.abschnitte, teil: a.teil || [], abschnittJeFrage: a.abschnittJeFrage || [],
+             fragen: a.fragen, bis: a.bis, erstellt: a.erstellt, stand, falsch, beantwortet };
+  });
+  return { kurse: liste, kurs: { id: k.id, name: k.name, klasse: k.klasse, leiter: k.leiter, teilnehmer, anfragen, aufgaben } };
+}
+
+// --- Oeffentlich ------------------------------------------------
+// Gibt es einen Kurs, dem man beitreten kann?
+app.get('/api/kurs/info', (req, res) => {
+  const k = kursAktiv();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(k ? { kurs: k.name, leiter: k.leiter || '', klasse: k.klasse } : { kurs: null });
+});
+
+const kursAnfrageZeit = new Map();   // IP -> Zeiten der letzten Anfragen
+app.post('/api/kurs/anfrage', (req, res) => {
+  const k = kursAktiv();
+  if(!k) return res.status(404).json({ error: 'Es gibt gerade keinen Kurs.' });
+  const b = req.body || {};
+  const name = kursText(b.name, 30);
+  if(!name) return res.status(400).json({ error: 'Bitte einen Namen eingeben.' });
+  // Hoechstens 6 Anfragen je Minute und Adresse. Nicht strenger: Im
+  // Kursraum sitzen alle hinter DEMSELBEN WLAN und melden sich zugleich an.
+  const ip = String(req.headers['cf-connecting-ip'] || req.ip || '');
+  const jetzt = Date.now();
+  const zeiten = (kursAnfrageZeit.get(ip) || []).filter(z => jetzt - z < 60000);
+  if(zeiten.length >= 6) return res.status(429).json({ error: 'Bitte einen Moment warten.' });
+  zeiten.push(jetzt); kursAnfrageZeit.set(ip, zeiten);
+  if(!k.anfragen) k.anfragen = {};
+  // Alte Anfragen aufraeumen (erledigt und aelter als 14 Tage)
+  Object.keys(k.anfragen).forEach(id => { const a = k.anfragen[id]; if(a.status !== 'offen' && jetzt - a.zeit > 14 * 864e5) delete k.anfragen[id]; });
+  if(Object.values(k.anfragen).filter(a => a.status === 'offen').length >= 30){
+    return res.status(429).json({ error: 'Zu viele offene Anfragen - bitte den Kursleiter ansprechen.' });
+  }
+  const art = ['Handy', 'Tablet', 'Computer'].includes(b.art) ? b.art : 'Gerät';
+  const geheim = crypto.randomBytes(24).toString('hex');
+  const id = kursId('a');
+  k.anfragen[id] = { id, name, art, zeit: jetzt, g: kursHash(geheim), status: 'offen' };
+  kursSpeichern();
+  console.log('[KURS] Anfrage von "' + name + '" (' + art + ') fuer ' + k.name);
+  res.json({ ok: true, id, geheim, kurs: k.name, leiter: k.leiter || '' });
+});
+
+app.get('/api/kurs/anfrage/:id', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const d = kursLaden();
+  const id = String(req.params.id || '');
+  const g = kursHash(String(req.query.g || ''));
+  for(const k of Object.values(d.kurse)){
+    const a = (k.anfragen || {})[id];
+    if(!a || a.g !== g) continue;
+    const antwort = { status: a.status, kurs: k.name, leiter: k.leiter || '' };
+    // Den Schluessel gibt es genau einmal.
+    if(a.status === 'ja' && a.token){ antwort.token = a.token; delete a.token; a.abgeholt = Date.now(); kursSpeichern(); }
+    return res.json(antwort);
+  }
+  res.status(404).json({ status: 'unbekannt' });
+});
+
+// Mit Schluessel: meine Hausaufgaben
+app.post('/api/kurs/ich', (req, res) => {
+  const m = kursMitglied((req.body || {}).token);
+  if(!m) return res.status(401).json({ abgemeldet: true });
+  const jetzt = Date.now();
+  m.t.zuletzt = jetzt; m.geraet.zuletzt = jetzt; kursSpeichern();
+  const aufgaben = (m.kurs.aufgaben || []).map(a => Object.assign({ id: a.id, nr: a.nr, titel: a.titel, abschnitte: a.abschnitte, teil: a.teil || [], bis: a.bis, erstellt: a.erstellt }, kursStand(m.kurs, a, m.t.id)));
+  res.json({ name: m.t.name, kurs: m.kurs.name, klasse: m.kurs.klasse, leiter: m.kurs.leiter || '', aktiv: kursAktiv() === m.kurs, aufgaben });
+});
+
+app.post('/api/kurs/fragen', (req, res) => {
+  const b = req.body || {};
+  const m = kursMitglied(b.token);
+  if(!m) return res.status(401).json({ abgemeldet: true });
+  const a = (m.kurs.aufgaben || []).find(x => x.id === b.aufgabe);
+  if(!a) return res.status(404).json({ error: 'Diese Hausaufgabe gibt es nicht mehr.' });
+  const kat = lektionKatalogAlle();
+  const q = ((((m.kurs.antworten || {})[a.id] || {})[m.t.id]) || {}).q || {};
+  res.json({ fragen: a.fragen.map(id => kat[id]).filter(Boolean), abschnittJeFrage: a.abschnittJeFrage || [], beantwortet: Object.keys(q) });
+});
+
+app.post('/api/kurs/antwort', (req, res) => {
+  const b = req.body || {};
+  const m = kursMitglied(b.token);
+  if(!m) return res.status(401).json({ abgemeldet: true });
+  const k = m.kurs;
+  const a = (k.aufgaben || []).find(x => x.id === b.aufgabe);
+  if(!a || !a.fragen.includes(b.frage)) return res.status(404).json({ error: 'unbekannt' });
+  const f = lektionKatalogAlle()[b.frage];
+  if(!f) return res.status(404).json({ error: 'unbekannt' });
+  // Richtig oder falsch entscheidet der Server - anhand des Antworttexts,
+  // denn die Reihenfolge der Antworten ist beim Teilnehmer gemischt.
+  const text = String(b.text || ''), bild = String(b.bild || '');
+  const i = (f.options || []).findIndex(o => String(o.text || '') === text && String(o.image || '') === bild);
+  if(i < 0) return res.status(400).json({ error: 'Antwort passt nicht zur Frage' });
+  if(!k.antworten) k.antworten = {};
+  if(!k.antworten[a.id]) k.antworten[a.id] = {};
+  const e = k.antworten[a.id][m.t.id] || (k.antworten[a.id][m.t.id] = { q: {} });
+  const richtig = !!f.options[i].correct;
+  // Es zaehlt die erste Antwort.
+  if(!e.q[b.frage]) e.q[b.frage] = [i, richtig ? 1 : 0, Date.now()];
+  if(!e.fertig && a.fragen.every(id => e.q[id])){
+    e.fertig = Date.now();
+    const s = kursStand(k, a, m.t.id);
+    console.log('[KURS] ' + m.t.name + ' hat die Hausaufgabe Lektion ' + a.nr + ' erledigt: ' + s.richtig + '/' + s.anzahl);
+  }
+  m.t.zuletzt = Date.now();
+  kursSpeichern();
+  res.json({ ok: true, richtig: !!e.q[b.frage][1], fertig: !!e.fertig });
+});
+
+// Fuer Fragen aus allen Katalogen (Fragen-A.json enthaelt alle 1750).
+function lektionKatalogAlle(){
+  const nachId = Object.assign({}, kursKatalog('n'));
+  try{
+    const fp = path.join(__dirname, 'Fragen-A.json');
+    const st = fs.statSync(fp);
+    if(!kursKatalogCache.__A || kursKatalogCache.__A.mtime !== st.mtimeMs){
+      const alle = {};
+      (JSON.parse(fs.readFileSync(fp, 'utf8')) || []).forEach(q => { if(q && q.id) alle[q.id] = q; });
+      kursKatalogCache.__A = { mtime: st.mtimeMs, nachId: alle };
+    }
+    Object.assign(nachId, kursKatalogCache.__A.nachId);
+  }catch(e){}
+  return nachId;
+}
+
+// --- Nur am Trainer-PC ----------------------------------------------
+app.get('/api/kurs', localOnly, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/neu', localOnly, (req, res) => {
+  const b = req.body || {};
+  const name = kursText(b.name, 50);
+  if(!name) return res.status(400).json({ error: 'Bitte einen Namen für den Kurs eingeben.' });
+  const klasse = KURS_KATALOGE[b.klasse] ? b.klasse : 'n';
+  const d = kursLaden();
+  const id = kursId('k');
+  d.kurse[id] = { id, name, klasse, leiter: kursText(b.leiter, 30), erstellt: Date.now(), teilnehmer: {}, anfragen: {}, aufgaben: [], antworten: {} };
+  d.aktiv = id;
+  kursSpeichern(true);
+  console.log('[KURS] Neuer Kurs "' + name + '" (' + klasse + ')');
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/waehlen', localOnly, (req, res) => {
+  const d = kursLaden();
+  const id = String((req.body || {}).id || '');
+  if(!d.kurse[id]) return res.status(404).json({ error: 'Kurs nicht gefunden' });
+  d.aktiv = id; kursSpeichern(true);
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/aufnehmen', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const b = req.body || {};
+  const a = (k.anfragen || {})[String(b.id || '')];
+  if(!a || a.status !== 'offen') return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+  let t = b.zu && k.teilnehmer[b.zu];
+  if(!t){
+    const tid = kursId('t');
+    t = k.teilnehmer[tid] = { id: tid, name: a.name, geraete: [], seit: Date.now(), zuletzt: 0 };
+  }
+  const token = crypto.randomBytes(24).toString('hex');
+  t.geraete.push({ h: kursHash(token), art: a.art, seit: Date.now(), zuletzt: 0 });
+  a.status = 'ja'; a.token = token; a.tid = t.id;
+  kursSpeichern(true);
+  console.log('[KURS] "' + a.name + '" aufgenommen' + (b.zu ? ' (Geraet zu ' + t.name + ')' : ''));
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/ablehnen', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const a = (k.anfragen || {})[String((req.body || {}).id || '')];
+  if(a && a.status === 'offen'){ a.status = 'nein'; kursSpeichern(true); }
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/geraete-abmelden', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const t = k.teilnehmer[String((req.body || {}).id || '')];
+  if(t){ t.geraete = []; kursSpeichern(true); }
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/entfernen', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const id = String((req.body || {}).id || '');
+  if(k.teilnehmer[id]){
+    delete k.teilnehmer[id];
+    Object.values(k.antworten || {}).forEach(x => { delete x[id]; });
+    kursSpeichern(true);
+  }
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/aufgabe', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const b = req.body || {};
+  const kat = kursKatalog(k.klasse);
+  const fragen = [], abschnittJeFrage = [], doppelt = {};
+  (Array.isArray(b.fragen) ? b.fragen.slice(0, 300) : []).forEach((id, i) => {
+    id = String(id || '');
+    if(!/^[A-Z]{2}\d{3}$/.test(id) || !kat[id] || doppelt[id]) return;
+    doppelt[id] = 1; fragen.push(id);
+    abschnittJeFrage.push(Math.max(0, parseInt((b.abschnittJeFrage || [])[i], 10) || 0));
+  });
+  if(!fragen.length) return res.status(400).json({ error: 'Keine Prüfungsfragen ausgewählt.' });
+  const a = {
+    id: kursId('h'), nr: Math.max(1, Math.min(99, parseInt(b.nr, 10) || 1)), titel: kursText(b.titel, 80),
+    abschnitte: (Array.isArray(b.abschnitte) ? b.abschnitte : []).slice(0, 60).map(x => kursText(x, 80)),
+    teil: (Array.isArray(b.teil) ? b.teil : []).slice(0, 60).map(x => Math.max(0, parseInt(x, 10) || 0)),
+    fragen, abschnittJeFrage, bis: kursDatum(b.bis), erstellt: Date.now()
+  };
+  if(!k.aufgaben) k.aufgaben = [];
+  k.aufgaben.push(a);
+  kursSpeichern(true);
+  console.log('[KURS] Hausaufgabe Lektion ' + a.nr + ' (' + fragen.length + ' Fragen) bis ' + (a.bis || '-'));
+  res.json(kursUebersicht());
+});
+
+app.post('/api/kurs/aufgabe-loeschen', localOnly, (req, res) => {
+  const k = kursAktiv(); if(!k) return res.status(404).json({ error: 'Kein Kurs' });
+  const id = String((req.body || {}).id || '');
+  k.aufgaben = (k.aufgaben || []).filter(a => a.id !== id);
+  if(k.antworten) delete k.antworten[id];
+  kursSpeichern(true);
+  res.json(kursUebersicht());
+});
+
+// Fragen fuer den Beamer ("Hier hakt es")
+app.post('/api/kurs/fragen-leiter', localOnly, (req, res) => {
+  const kat = lektionKatalogAlle();
+  const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.slice(0, 100) : [];
+  res.json({ fragen: ids.map(id => kat[String(id)]).filter(Boolean) });
 });
 
 app.use((req,res,next)=>{
@@ -6210,6 +6585,8 @@ try{
     // unabhängig davon, wann er beitritt oder für sich selbst startet.
     function generateRoomQuestions(room){
       try{
+        // Ein gewuerfelter Satz beendet den Unterricht (27.09.2026).
+        room.lektion = null;
         // FIX W10: aus dem Cache statt 395 KB bei jeder Raumerstellung neu zu parsen
         const qb = ladeFragen() || [];
         let pool=qb;
@@ -6411,6 +6788,7 @@ try{
       // PRUEFUNGSRAUM kommt und nicht in eine Fragerunde - der Haken im
       // Fenster steht dann von selbst richtig (20.09.2026).
       socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length, config: room.config || null});
+      socket.emit('profilbilder', { bilder: profilbilderFuer(room) });
       // Chatverlauf mitschicken - seit 23.09.2026 nur, was seit dem
       // eigenen Beitritt geschrieben wurde. Wer neu kommt, bekommt also
       // einen leeren Chat; wer nach einem Abriss zurueckkehrt, seinen.
@@ -6525,6 +6903,8 @@ try{
       try{
         if(!room) return;
         io.to(room.code).emit('duoTeilnehmerUebersicht', { code: room.code, teilnehmer: buildTeilnehmerUebersicht(room) });
+        // Kommt jemand dazu oder geht, stimmt "7 von 9" nicht mehr.
+        if(room.lektion) lektionStandSenden(room);
       }catch(e){ console.error('[DUO] Teilnehmer-Uebersicht Fehler', e); }
     }
 
@@ -6548,6 +6928,8 @@ try{
       const room = duoRooms[code]; if(!room) return;
       const usersStats = computeUserStats(room);
       const ranking = Object.entries(usersStats)
+        // Unterricht: Der Kursleiter stand am Beamer und hat nicht geantwortet.
+        .filter(([uid])=> !(room.lektion && uid === room.hostId))
         .map(([uid,s])=>({userId:uid, ...s}))
         .sort((a,b)=> b.correct - a.correct || b.accuracy - a.accuracy);
       // FIX W12: Das Flag wird hier NICHT mehr gesetzt.
@@ -6601,7 +6983,10 @@ try{
         questions:room.questions,
         questionsFull:room.questionsFull,
         meta:{code:data.code, parts:room.config?room.config.parts:undefined, count:room.config?room.config.count:undefined, part:room.config?room.config.part:undefined, actualCount:room.questions.length,
-              pruefung: !!(room.config && room.config.pruefung), teile: room.pruefungTeile || null},
+              pruefung: !!(room.config && room.config.pruefung), teile: room.pruefungTeile || null,
+              // Unterricht: wer spaeter dazukommt, springt auf die Frage,
+              // die der Kursleiter gerade zeigt.
+              lektion: lektionMeta(room)},
         users:room.users
       });
       // Startzeit fuer die Zeitmessung in der Teilnehmer-Uebersicht - nur beim
@@ -6660,6 +7045,162 @@ try{
       console.log(`[GRUPPENRAUM] Neue Runde in ${code}: ${room.questions.length} frische Fragen fuer ${Object.keys(room.users).length} Teilnehmer.`);
       sendeTeilnehmerUebersicht(room);
      }catch(e){ console.error('[DUO] neueRunde Fehler', e); }
+    });
+
+    // ================================================================
+    //  UNTERRICHT IM GRUPPENRAUM                          (27.09.2026)
+    // ----------------------------------------------------------------
+    //  Dietmar: "Die Lektionen, muss es auch im Gruppenraum geben." Auf
+    //  die Rueckfrage: im Gleichschritt, und am Beamer ein Zaehler und
+    //  nach dem Aufloesen die Verteilung A/B/C/D.
+    //
+    //  Ablauf:
+    //    lektionStarten  - der Kursleiter schickt die Fragennummern der
+    //                      Lektion in Folienreihenfolge. Wie 'neueRunde'
+    //                      geht der Satz an ALLE, nur nicht gewuerfelt.
+    //    lektionSchritt  - der Kursleiter blaettert oder loest auf; alle
+    //                      Teilnehmer springen auf dieselbe Frage.
+    //    lektionStand    - geht NUR an den Kursleiter: wie viele haben die
+    //                      aktuelle Frage beantwortet, und (nach dem
+    //                      Aufloesen) wie verteilen sich A-D. Ohne Namen.
+    //    lektionEnde     - letzte Frage durch: Auswertung fuer alle.
+    //
+    //  Der Kursleiter selbst antwortet nicht - er steht am Beamer. Er
+    //  zaehlt deshalb weder beim "alle fertig" noch in der Rangliste mit.
+    // ================================================================
+    const LEKTION_ID = /^[A-Z]{2}\d{3}$/;
+    function lektionTextSauber(t, max){
+      return String(t == null ? '' : t).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, max || 80);
+    }
+    function lektionStandSenden(room){
+      try{
+        if(!room || !room.lektion || !room.hostId) return;
+        const L = room.lektion;
+        const qid = room.questions && room.questions[L.index];
+        const teilnehmer = Object.keys(room.users || {}).filter(u => u !== room.hostId);
+        const verteilung = [0, 0, 0, 0];
+        let geantwortet = 0;
+        teilnehmer.forEach(u => {
+          const a = room.allAnswers && room.allAnswers[u] && room.allAnswers[u][qid];
+          if(!a) return;
+          geantwortet++;
+          const i = Number(a.optionIndex);
+          if(i >= 0 && i < 4) verteilung[i]++;
+        });
+        io.to(room.hostId).emit('lektionStand', {
+          index: L.index, aufgedeckt: !!L.aufgedeckt, geantwortet, teilnehmer: teilnehmer.length,
+          // Die Verteilung erst nach dem Aufloesen - vorher wuerde der
+          // Beamer verraten, wohin die Gruppe tendiert.
+          verteilung: L.aufgedeckt ? verteilung : null
+        });
+      }catch(e){ console.error('[UNTERRICHT] Stand', e); }
+    }
+    // Alle Pruefungsfragen nach Nummer (28.09.2026): Der Gruppenraum kennt
+    // sonst nur fragen.json (Klasse N). Fuer die Lehrgaenge N->E, E->A und
+    // Klasse E braucht lektionStarten auch deren Fragen. Fragen-A.json
+    // enthaelt alle 1750 (N, E und A); gelesen wird sie nur, wenn eine
+    // Lektion startet, und dann gemerkt, solange sich die Datei nicht aendert.
+    function lektionKatalog(){
+      const nachId = {};
+      (ladeFragen() || []).forEach(q => { if(q && q.id) nachId[q.id] = q; });
+      try{
+        const fp = path.join(__dirname, 'Fragen-A.json');
+        const st = fs.statSync(fp);
+        if(!global.__lektionKatalogA || global.__lektionKatalogA.mtime !== st.mtimeMs){
+          const d = JSON.parse(fs.readFileSync(fp, 'utf8'));
+          global.__lektionKatalogA = { mtime: st.mtimeMs, fragen: Array.isArray(d) ? d : [] };
+        }
+        global.__lektionKatalogA.fragen.forEach(q => { if(q && q.id && !nachId[q.id]) nachId[q.id] = q; });
+      }catch(e){ console.error('[UNTERRICHT] Fragen-A.json nicht lesbar:', e.message); }
+      return nachId;
+    }
+    function lektionMeta(room){
+      if(!room || !room.lektion) return null;
+      const L = room.lektion;
+      return { nr: L.nr, titel: L.titel, abschnitte: L.abschnitte, index: L.index, aufgedeckt: !!L.aufgedeckt,
+               versatz: L.versatz || 0, gesamt: L.gesamt || (room.questions ? room.questions.length : 0) };
+    }
+
+    socket.on('lektionStarten', data=>{
+     try{
+      if(!data || typeof data !== 'object') return;
+      const code = data.code;
+      const room = duoRooms[code]; if(!room) return;
+      if(room.hostId !== socket.id){
+        socket.emit('errorMsg','Nur der Kursleiter kann eine Lektion starten.');
+        return;
+      }
+      const nr = parseInt(data.nr, 10);
+      if(!(nr >= 1 && nr <= 99)) return;
+      const ids = Array.isArray(data.ids) ? data.ids.slice(0, 300) : [];
+      const abschnitte = Array.isArray(data.abschnitte) ? data.abschnitte : [];
+      const nachId = lektionKatalog();
+      const gewaehlt = [], abs = [], doppelt = {};
+      ids.forEach((id, i) => {
+        id = String(id || '');
+        if(!LEKTION_ID.test(id) || !nachId[id] || doppelt[id]) return;
+        doppelt[id] = 1;
+        gewaehlt.push(nachId[id]);
+        abs.push(lektionTextSauber(abschnitte[i], 80));
+      });
+      if(!gewaehlt.length){
+        socket.emit('errorMsg','Die Fragen dieser Lektion gibt es im geladenen Katalog nicht.');
+        return;
+      }
+      room.config = Object.assign({}, room.config || {}, { pruefung: false });
+      room.pruefungTeile = null;
+      room.questions = gewaehlt.map(q => q.id);
+      room.questionsFull = gewaehlt.map(shuffleOptions);
+      // versatz/gesamt: Startet der Kursleiter mitten in der Lektion ("ab
+      // hier"), zeigt der Beamer trotzdem "Frage 12 von 85" wie im Foliensatz.
+      const versatz = Math.max(0, Math.min(999, parseInt(data.versatz, 10) || 0));
+      const gesamt = Math.max(gewaehlt.length + versatz, Math.min(999, parseInt(data.gesamt, 10) || 0));
+      room.lektion = { nr, titel: lektionTextSauber(data.titel, 80), abschnitte: abs, index: 0, aufgedeckt: false, versatz, gesamt };
+      room.allAnswers = {};
+      room.startTimes = {};
+      room.finishTimes = {};
+      room._fertigGemeldet = {};
+      room.finalResultsSent = false;
+      const jetzt = Date.now();
+      Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
+      io.to(code).emit('duoQuizStarted', {
+        questions: room.questions,
+        questionsFull: room.questionsFull,
+        meta: { code, actualCount: room.questions.length, neueRunde: true, part: 'lektion',
+                lektion: lektionMeta(room) },
+        users: room.users
+      });
+      console.log(`[UNTERRICHT] Raum ${code}: Lektion ${nr} mit ${room.questions.length} Fragen fuer ${Object.keys(room.users).length} im Raum.`);
+      sendeTeilnehmerUebersicht(room);
+      lektionStandSenden(room);
+     }catch(e){ console.error('[UNTERRICHT] lektionStarten', e); }
+    });
+
+    socket.on('lektionSchritt', data=>{
+     try{
+      if(!data || typeof data !== 'object') return;
+      const room = duoRooms[data.code]; if(!room || !room.lektion) return;
+      if(room.hostId !== socket.id) return;
+      const n = room.questions ? room.questions.length : 0;
+      const index = parseInt(data.index, 10);
+      if(!(index >= 0 && index < n)) return;
+      const L = room.lektion;
+      if(index !== L.index){ L.index = index; L.aufgedeckt = false; }
+      if(data.aufgedeckt === true) L.aufgedeckt = true;
+      socket.to(data.code).emit('lektionSchritt', { index: L.index, aufgedeckt: L.aufgedeckt });
+      lektionStandSenden(room);
+     }catch(e){ console.error('[UNTERRICHT] lektionSchritt', e); }
+    });
+
+    socket.on('lektionEnde', data=>{
+     try{
+      if(!data || typeof data !== 'object') return;
+      const room = duoRooms[data.code]; if(!room || !room.lektion) return;
+      if(room.hostId !== socket.id) return;
+      room.finalResultsSent = true;
+      sendFinalResults(data.code);
+      console.log(`[UNTERRICHT] Raum ${data.code}: Lektion ${room.lektion.nr} beendet.`);
+     }catch(e){ console.error('[UNTERRICHT] lektionEnde', e); }
     });
 
     // ===== KEIN WARTEN: Jeder beantwortet in eigenem Tempo, kein erzwungener Fragenwechsel =====
@@ -6724,6 +7265,8 @@ try{
 
       // Nur Fortschritts-Info, löst KEINEN Fragenwechsel für andere User aus
       io.to(data.code).emit('duoProgressUpdate',{userId:uid, answeredCount, totalQuestions, totalUsers});
+      // Unterricht: der Zaehler am Beamer des Kursleiters.
+      if(room.lektion) lektionStandSenden(room);
 
       const trainerDataAns = getTrainerData(room);
       if(trainerDataAns && room.hostId){ io.to(room.hostId).emit('duoTrainerLive', trainerDataAns); }
@@ -6736,6 +7279,10 @@ try{
           return cnt >= totalQuestions;
         });
       }
+      // Unterricht: Das Ende bestimmt der Kursleiter (lektionEnde), nicht
+      // die letzte Antwort - sonst ginge die Auswertung auf, bevor er die
+      // letzte Frage aufgeloest hat.
+      if(room.lektion) allDone = false;
 
       // Endzeit fuer die Zeitmessung in der Teilnehmer-Uebersicht - einmalig
       // beim eigenen Abschluss (unabhaengig davon, ob andere im Raum schon
@@ -6750,7 +7297,7 @@ try{
       // stattdessen landet sein Ergebnis als Nachricht im Gruppenchat. So sieht
       // man, wenn ein Teilnehmer schneller war, wird davon aber beim eigenen
       // Lernen nicht unterbrochen.
-      if(totalQuestions>0 && answeredCount>=totalQuestions && !allDone){
+      if(totalQuestions>0 && answeredCount>=totalQuestions && !allDone && !room.lektion){
         if(!room._fertigGemeldet) room._fertigGemeldet = {};
         if(!room._fertigGemeldet[uid]){
           room._fertigGemeldet[uid] = true;
@@ -7258,6 +7805,141 @@ try{
     });
 
     // ================================================================
+    //  ANRUFEN IM GRUPPENRAUM                             (27.09.2026)
+    //  Dietmar: "wenn einer sagt, ich habe ein Problem, kannst du mir
+    //  das mal erklaeren? Dann muss ich keine Sprachnachrichten staendig
+    //  versenden, sondern ich habe den anderen im Dialog." Und: "dass nur
+    //  der Kursleiter anrufen kann, weil sonst wird das ja ziemlich
+    //  bloed."
+    //
+    //  Die Stimmen laufen NICHT ueber diesen Server, sondern direkt von
+    //  Browser zu Browser (WebRTC). Hier wird nur vermittelt: wer wen
+    //  anruft, ob angenommen wird, und die paar Zeilen, mit denen sich
+    //  die beiden Rechner gegenseitig finden. Deshalb kostet ein Gespraech
+    //  den Rechner des Kursleiters als Server praktisch nichts.
+    //
+    //  Regeln, die hier und nicht nur im Browser stehen:
+    //  - Anrufen darf nur der Host des Raums, und nur jemanden aus
+    //    demselben Raum.
+    //  - Jeder fuehrt hoechstens ein Gespraech; wer klingelt oder spricht,
+    //    ist besetzt.
+    //  - Weitergereicht wird nur zwischen den beiden, die gerade
+    //    miteinander verbunden sind (socket.data.anrufMit auf beiden
+    //    Seiten). Ein Dritter kann sich nicht einklinken.
+    //  - Geht einer (Tab zu, Raum verlassen, entfernt), bekommt der
+    //    andere sofort "aufgelegt".
+    //  Protokolliert wird nur, wer wen anruft - nie, was gesprochen wird.
+    // ================================================================
+    function profilbilderFuer(room){
+      const raus = {};
+      Object.keys((room && room.bilder) || {}).forEach(function(id){ if(room.users[id]) raus[id] = room.bilder[id]; });
+      return raus;
+    }
+    function anrufPartner(s){
+      const id = s && s.data && s.data.anrufMit;
+      return id ? io.sockets.sockets.get(id) : null;
+    }
+    function anrufAufloesen(s, grund){
+      try{
+        const p = anrufPartner(s);
+        if(p && p.data && p.data.anrufMit === s.id){
+          p.data.anrufMit = null;
+          p.emit('anrufEnde', { von: s.id, grund: grund || 'aufgelegt' });
+        }
+        if(s && s.data) s.data.anrufMit = null;
+      }catch(e){}
+    }
+    function anrufGepaart(s, an){
+      const p = typeof an === 'string' ? io.sockets.sockets.get(an) : null;
+      return (p && s.data && s.data.anrufMit === an && p.data && p.data.anrufMit === s.id) ? p : null;
+    }
+    // ================================================================
+    //  PROFILBILD                                          (27.09.2026)
+    //  Dietmar: "Kannst du mir die Option Profilbild mit einbauen? Das
+    //  muss auch beim anrufen gezeigt werden." Gewaehlt wird es unter
+    //  Einstellungen -> Allgemein; der Browser rechnet es auf 128 x 128
+    //  Punkte als JPEG klein (etwa 5 bis 10 KB) und schickt es beim
+    //  Betreten des Raums. Hier liegt es nur im Arbeitsspeicher, beim
+    //  Raum (room.bilder) und NICHT in room.users - das geht bei jedem
+    //  roomUpdate an alle und wuerde sonst jedes Mal die Bilder
+    //  mitschleppen. Weitergegeben wird es nur an die im selben Raum; mit
+    //  dem Verlassen ist es weg. Protokolliert wird nichts.
+    //
+    //  Angenommen wird nur ein JPEG als data:-Adresse mit reinem Base64
+    //  und hoechstens 24 000 Zeichen - also nichts, was sich als Skript
+    //  oder fremde Adresse in eine Seite schmuggeln liesse.
+    // ================================================================
+    socket.on('profilbild', data=>{
+      try{
+        const code = socket.data && socket.data.roomCode;
+        const room = code && duoRooms[code];
+        if(!room || !room.users[socket.id]) return;
+        const jetzt = Date.now();
+        if(jetzt - (socket.data.profilbildZeit || 0) < 1500) return;
+        socket.data.profilbildZeit = jetzt;
+        let bild = data && typeof data.bild === 'string' ? data.bild : '';
+        if(bild && (bild.length > 24000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(bild))) return;
+        if(!room.bilder) room.bilder = {};
+        if(bild) room.bilder[socket.id] = bild; else delete room.bilder[socket.id];
+        io.to(code).emit('profilbild', { id: socket.id, bild: bild || null });
+      }catch(e){ console.error('[PROFILBILD] Fehler', e); }
+    });
+    socket.on('anrufStart', data=>{
+      try{
+        const an = data && typeof data.an === 'string' ? data.an : '';
+        const code = socket.data && socket.data.roomCode;
+        const room = code && duoRooms[code];
+        if(!room || !room.users[socket.id]) return;
+        if(room.hostId !== socket.id){ socket.emit('anrufAbgelehnt', { an, grund: 'nurKursleiter' }); return; }
+        if(!an || an === socket.id || !room.users[an]){ socket.emit('anrufAbgelehnt', { an, grund: 'weg' }); return; }
+        const ziel = io.sockets.sockets.get(an);
+        if(!ziel || !ziel.data || ziel.data.roomCode !== code){ socket.emit('anrufAbgelehnt', { an, grund: 'weg' }); return; }
+        if(socket.data.anrufMit || ziel.data.anrufMit){ socket.emit('anrufAbgelehnt', { an, grund: 'besetzt' }); return; }
+        socket.data.anrufMit = an;
+        ziel.data.anrufMit = socket.id;
+        // Das Profilbild des Anrufers faehrt mit (27.09.2026) - dann steht es im
+        // Klingelfenster, auch wenn es vorher nicht ankam.
+        ziel.emit('anrufKlingelt', { von: socket.id, name: (room.users[socket.id] && room.users[socket.id].name) || 'Kursleiter',
+                                     bild: (room.bilder && room.bilder[socket.id]) || null });
+        console.log('[ANRUF] ' + ((room.users[socket.id] || {}).name || '?') + ' ruft ' + ((room.users[an] || {}).name || '?') + ' an (Raum ' + code + ')');
+      }catch(e){ console.error('[ANRUF] Start-Fehler', e); }
+    });
+    socket.on('anrufAntwort', data=>{
+      try{
+        const an = data && data.an;
+        const p = anrufGepaart(socket, an);
+        if(!p) return;
+        const ja = !!(data && data.ja);
+        p.emit('anrufAntwort', { von: socket.id, ja: ja });
+        if(!ja){ socket.data.anrufMit = null; p.data.anrufMit = null; }
+        console.log('[ANRUF] ' + (ja ? 'angenommen' : 'abgelehnt'));
+      }catch(e){ console.error('[ANRUF] Antwort-Fehler', e); }
+    });
+    socket.on('anrufSignal', data=>{
+      try{
+        const p = anrufGepaart(socket, data && data.an);
+        if(!p) return;
+        const raus = { von: socket.id };
+        if(data.sdp && typeof data.sdp === 'object' && typeof data.sdp.sdp === 'string' && data.sdp.sdp.length < 20000
+           && (data.sdp.type === 'offer' || data.sdp.type === 'answer')){
+          raus.sdp = { type: data.sdp.type, sdp: data.sdp.sdp };
+        }
+        if(data.kandidat && typeof data.kandidat === 'object' && typeof data.kandidat.candidate === 'string' && data.kandidat.candidate.length < 1000){
+          raus.kandidat = { candidate: data.kandidat.candidate, sdpMid: data.kandidat.sdpMid == null ? null : String(data.kandidat.sdpMid).slice(0, 20),
+                            sdpMLineIndex: typeof data.kandidat.sdpMLineIndex === 'number' ? data.kandidat.sdpMLineIndex : null };
+        }
+        if(!raus.sdp && !raus.kandidat) return;
+        p.emit('anrufSignal', raus);
+      }catch(e){ console.error('[ANRUF] Signal-Fehler', e); }
+    });
+    socket.on('anrufEnde', data=>{
+      try{
+        const grund = data && typeof data.grund === 'string' ? data.grund.slice(0, 20) : 'aufgelegt';
+        anrufAufloesen(socket, grund);
+      }catch(e){}
+    });
+
+    // ================================================================
     // ABGLEICH: Der Host kann alle Teilnehmer zum Neuladen auffordern.
     // Nur der Host - sonst koennte jeder Teilnehmer den ganzen Raum stoeren.
     // ================================================================
@@ -7410,7 +8092,9 @@ try{
             s.leave(data.code);
             if (s.data) s.data.roomCode = null;
           }
+          if (s) anrufAufloesen(s, 'weg');
           delete room.users[id];
+          if (room.bilder) delete room.bilder[id];
           if (room.allAnswers && room.allAnswers[id]) delete room.allAnswers[id];
           if (room.ipsVonTeilnehmern) delete room.ipsVonTeilnehmern[id];
         });
@@ -7486,6 +8170,11 @@ try{
           socket.emit('errorMsg', 'Nur der Kursleiter kann den Raum beenden.');
           return;
         }
+        // Laufende Anrufe im Raum mit beenden (27.09.2026)
+        Object.keys(room.users || {}).forEach(function(id){
+          const s = io.sockets.sockets.get(id);
+          if(s) anrufAufloesen(s, 'raumZu');
+        });
         io.to(code).emit('roomDeleted', { code: code });
         delete duoRooms[code];
         console.log(`[DUO] Raum ${code} vom Kursleiter beendet.`);
@@ -7495,8 +8184,10 @@ try{
     socket.on('leaveRoom',data=>{
      try{
       const code=(data && typeof data==='object' ? data.code : null)||socket.data.roomCode;
+      anrufAufloesen(socket, 'weg');
       if(code&&duoRooms[code]){
         delete duoRooms[code].users[socket.id];
+        if(duoRooms[code].bilder) delete duoRooms[code].bilder[socket.id];
         // FIX W11: Antworten mitloeschen. kickUser machte das korrekt,
         // leaveRoom und disconnect liessen sie liegen.
         if(duoRooms[code].allAnswers) delete duoRooms[code].allAnswers[socket.id];
@@ -7525,10 +8216,12 @@ try{
     socket.on('disconnect', (reason)=>{
       clearInterval(activityTimeout);
       console.log(`[SOCKET] ${socket.id} getrennt (Grund: ${reason})`);
+      anrufAufloesen(socket, 'weg');
       const code = socket.data.roomCode;
       if(code && duoRooms[code]){
         const wasHost = duoRooms[code].hostId === socket.id;
         delete duoRooms[code].users[socket.id];
+        if(duoRooms[code].bilder) delete duoRooms[code].bilder[socket.id];
         // FIX W11: siehe leaveRoom
         if(duoRooms[code].allAnswers) delete duoRooms[code].allAnswers[socket.id];
         
