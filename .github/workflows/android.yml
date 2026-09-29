@@ -1,0 +1,129 @@
+# ================================================================
+#  ANDROID-APP BAUEN                                    (29.09.2026)
+# ----------------------------------------------------------------
+#  Dietmar: "kannst du eine apk erstellen?" - Auf die Rueckfrage: GitHub
+#  soll sie bauen, und die App soll zum allein Lernen UND als Server fuer
+#  andere im WLAN taugen.
+#
+#  Laeuft bei jedem Hochladen (und von Hand unter "Actions"). Ergebnis:
+#  "Amateurfunk-Trainer.apk" unter Releases -> "Android-App (Test)".
+#  Diese Test-Version ist als Vorabversion markiert - der Updater des
+#  Trainers sieht sie nicht (er fragt nur nach releases/latest).
+#
+#  Schluessel: Liegt bei GitHub unter Settings -> Secrets ein eigener
+#  (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS,
+#  ANDROID_KEY_PASS), wird er benutzt. Sonst der Test-Schluessel aus
+#  android/app/trainer-test.jks.
+# ================================================================
+name: Android-App bauen
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-app
+  cancel-in-progress: true
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Node.js fuer Android holen (nodejs-mobile 18.20.4)
+        run: |
+          set -e
+          mkdir -p /tmp/nm && cd /tmp/nm
+          npm pack nodejs-mobile-react-native@18.20.4 --silent
+          tar xzf nodejs-mobile-react-native-18.20.4.tgz package/android/libnode package/LICENSE
+          mkdir -p "$GITHUB_WORKSPACE/android/app/libnode"
+          cp -r package/android/libnode/* "$GITHUB_WORKSPACE/android/app/libnode/"
+          rm -rf "$GITHUB_WORKSPACE/android/app/libnode/bin/x86_64"
+          ls -la "$GITHUB_WORKSPACE/android/app/libnode/bin/"*
+
+      - name: Trainer einpacken
+        run: |
+          set -e
+          ZIEL=/tmp/trainer
+          rm -rf "$ZIEL" && mkdir -p "$ZIEL"
+          rsync -a ./ "$ZIEL/" \
+            --exclude '.git' --exclude '.github' --exclude 'android' --exclude 'docs' \
+            --exclude 'node' --exclude 'node_modules' --exclude 'piper' --exclude 'kokoro' \
+            --exclude 'release' --exclude 'data' --exclude 'backup' --exclude 'Hoerbuch' \
+            --exclude 'tts_cache' --exclude 'lerncoach' --exclude 'kurse' --exclude '_*' \
+            --exclude '*.bat' --exclude '*.vbs' --exclude '*.exe' --exclude '*.iss' \
+            --exclude '*.sh' --exclude '*.ps1' --exclude '*.py'
+          cp /tmp/nm/package/LICENSE "$ZIEL/LIZENZ-nodejs-mobile.txt"
+          cd "$ZIEL"
+          npm ci --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund
+          mkdir -p "$GITHUB_WORKSPACE/android/app/src/main/assets"
+          zip -qr -9 "$GITHUB_WORKSPACE/android/app/src/main/assets/trainer.zip" .
+          ls -la "$GITHUB_WORKSPACE/android/app/src/main/assets"
+
+      - name: Versionsnummer
+        run: |
+          echo "TRAINER_VERSION_NAME=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+          echo "TRAINER_VERSION_CODE=$((1000 + ${{ github.run_number }}))" >> "$GITHUB_ENV"
+
+      - name: Eigenen Schluessel benutzen (falls hinterlegt)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          K_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          K_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > /tmp/eigen.jks
+            echo "TRAINER_KEYSTORE=/tmp/eigen.jks" >> "$GITHUB_ENV"
+            echo "TRAINER_KEYSTORE_PASS=$KS_PASS" >> "$GITHUB_ENV"
+            echo "TRAINER_KEY_ALIAS=$K_ALIAS" >> "$GITHUB_ENV"
+            echo "TRAINER_KEY_PASS=$K_PASS" >> "$GITHUB_ENV"
+            echo "Eigener Schluessel wird benutzt."
+          else
+            echo "Test-Schluessel (android/app/trainer-test.jks) wird benutzt."
+          fi
+
+      - name: APK bauen
+        working-directory: android
+        run: gradle --no-daemon --stacktrace assembleRelease
+
+      - name: APK bereitlegen
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Amateurfunk-Trainer.apk
+          ls -la Amateurfunk-Trainer.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Amateurfunk-Trainer-APK
+          path: Amateurfunk-Trainer.apk
+
+      - name: Als Test-Version unter Releases ablegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view android-test >/dev/null 2>&1; then
+            gh release create android-test --prerelease --title "Android-App (Test)" \
+              --notes "Test-Version des Amateurfunk-Trainers für Android-Handys (ab Android 8). Die Datei Amateurfunk-Trainer.apk auf dem Handy öffnen und installieren – Android fragt dabei, ob Apps aus dieser Quelle erlaubt sind."
+          fi
+          gh release upload android-test Amateurfunk-Trainer.apk --clobber

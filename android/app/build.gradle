@@ -1,0 +1,90 @@
+// Amateurfunk-Trainer als Android-App (29.09.2026).
+// Dietmar: "kannst du eine apk erstellen?" - Weg: GitHub baut sie,
+// gedacht zum allein Lernen UND als Server fuer andere im WLAN.
+//
+// Drinnen steckt Node.js fuer Android (nodejs-mobile, MIT-Lizenz). Die
+// App packt beim ersten Start den Trainer aus (assets/trainer.zip) und
+// startet Server.js darin - genau wie am PC. Die Oberflaeche ist die
+// gewohnte Index.html in einem Browserfenster der App.
+//
+// libnode/ und assets/trainer.zip legt der Bauauftrag bei GitHub an
+// (.github/workflows/android.yml); sie liegen nicht im Repository.
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.amateurfunktrainer.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.amateurfunktrainer.app'
+        minSdk 26
+        targetSdk 34
+        versionCode Integer.parseInt(System.getenv('TRAINER_VERSION_CODE') ?: '1')
+        versionName System.getenv('TRAINER_VERSION_NAME') ?: '1.0'
+        ndk {
+            // Handys: 64 Bit (fast alle seit etwa 2017) und 32 Bit (aeltere).
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_shared'
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'CMakeLists.txt'
+        }
+    }
+
+    signingConfigs {
+        trainer {
+            // Test-Schluessel (siehe .github/workflows/android.yml). Solange
+            // derselbe Schluessel benutzt wird, laesst sich eine neue APK
+            // ueber die alte installieren - ohne dass Lernstaende verloren gehen.
+            storeFile file(System.getenv('TRAINER_KEYSTORE') ?: 'trainer-test.jks')
+            storePassword System.getenv('TRAINER_KEYSTORE_PASS') ?: 'amateurfunk'
+            keyAlias System.getenv('TRAINER_KEY_ALIAS') ?: 'trainer'
+            keyPassword System.getenv('TRAINER_KEY_PASS') ?: 'amateurfunk'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            signingConfig signingConfigs.trainer
+        }
+    }
+
+    sourceSets {
+        main.jniLibs.srcDirs = ['libnode/bin']
+    }
+
+    packaging {
+        jniLibs {
+            // libnode.so kommt sowohl ueber CMake als auch ueber jniLibs.
+            pickFirsts += ['**/libnode.so', '**/libc++_shared.so']
+            // Gepackt statt entpackt: die APK wird deutlich kleiner.
+            useLegacyPackaging = true
+        }
+    }
+
+    androidResources {
+        // Nicht auslassen, was mit Punkt oder Unterstrich beginnt.
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+        noCompress 'zip'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+}

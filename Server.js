@@ -5236,6 +5236,25 @@ function besucherAufschlag(){
   }catch(e){ return 0; }
 }
 
+// ================================================================
+//  RUNDGANG FUER NEUE TEILNEHMER                       (29.09.2026)
+//  Dietmar: "Zur Begruessung ... Koennen wir da auch noch was anbieten?
+//  Ein Tutorial, das man in dem Trainer hinterlegt der Funktionen
+//  erklaert. Persoenlich und nur fuer den Teilnehmer sichtbar."
+//  Der Rundgang selbst laeuft im Browser (Index.html, "RUNDGANG"). Hier
+//  steht nur, was der Kursleiter in rundgang.md hinterlegt hat - fuer
+//  jeden lesbar, es ist ja der Text, den jeder Besucher sehen soll. Fehlt
+//  die Datei, nimmt der Browser seinen eingebauten Rundgang.
+// ================================================================
+app.get('/api/rundgang', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try{
+    const datei = path.join(__dirname, 'rundgang.md');
+    if(!fs.existsSync(datei) || fs.statSync(datei).size > 40000) return res.json({ text: null });
+    res.json({ text: fs.readFileSync(datei, 'utf8') });
+  }catch(e){ res.json({ text: null }); }
+});
+
 app.get('/api/besucherzahl', (req, res) => {
   try{
     const b = zaehlerFrisch(besucherLesen(), Date.now());
@@ -5279,6 +5298,607 @@ app.post('/api/besucher/verlauf-loeschen', localOnly, (req, res) => {
   besucherSchreiben(true);
   console.log('[BESUCHER] Verlauf geloescht (' + n + ' Eintraege).');
   res.json({ ok: true, geloescht: n });
+});
+
+// ================================================================
+//  LERNCOACH - DIE KI IM CHAT                          (29.09.2026)
+// ----------------------------------------------------------------
+//  Dietmar: "Nehmen wir mal an, du als KI bist im Chat mit drin und
+//  kannst Fragen erklaeren. Unter Einstellungen die API hinzufuegen und
+//  das laeuft danach ueber meinem Account. Ggf. sogar mit
+//  Sprachausgabe." Dazu: "Es muesste aber so laufen, das alles in einem
+//  Ordner [...] laeuft. Alles aus dem Chat landet da." - gewaehlt: nur
+//  die Gespraeche mit dem Lerncoach, ueber einen API-Schluessel, Antwort
+//  als Text und als Sprachnachricht. Und ausdruecklich: "Den Key,
+//  duerfen wir unter keinen Umstaenden raus geben. Das muss jeder
+//  Kursleiter selbst entscheiden."
+//
+//  DER SCHLUESSEL liegt deshalb NICHT im Trainer-Ordner, sondern im
+//  Benutzerprofil dieses PCs (%APPDATA%\Amateurfunk-Trainer). So kann
+//  er weder mit Hochladen.bat zu GitHub noch in ein ZIP, einen Stick
+//  oder das Paket zum Mitnehmen geraten - die Listen dort sind ohnehin
+//  Whitelists, aber auf eine Liste allein soll sich hier niemand
+//  verlassen muessen. Er wird nur am Trainer-PC selbst eingetragen
+//  (localOnly), nie an einen Browser zurueckgegeben (nur die letzten
+//  vier Zeichen zur Kontrolle) und nie ins Protokoll geschrieben.
+//  Jeder, der den Trainer bekommt, hat am Anfang KEINEN Schluessel -
+//  ob er einen eintraegt, entscheidet er selbst.
+//
+//  DER ORDNER lerncoach\ im Trainer-Ordner (in der .gitignore):
+//    anweisungen.md   - wie der Lerncoach erklaert; Dietmar kann das
+//                       selbst aendern wie die Anweisungen eines Projekts
+//    einstellungen.json, verbrauch.json
+//    verlauf\JJJJ-MM-TT.md - jede Frage an den Lerncoach und jede Antwort
+//  Der uebrige Gruppenchat wird wie bisher NICHT gespeichert.
+//
+//  Die Antwort stuetzt sich auf das, was der Trainer ohnehin weiss: die
+//  richtige Antwort, den Kniff und "warum falsch" aus erklaerungen.json.
+//  So rechnet die KI nicht ins Blaue, sondern erklaert den Weg zu einer
+//  Loesung, die feststeht.
+// ================================================================
+const LC_ORDNER = path.join(__dirname, 'lerncoach');
+const LC_GEHEIM_ORDNER = path.join(process.env.APPDATA || path.join(os.homedir(), '.config'), 'Amateurfunk-Trainer');
+const LC_SCHLUESSEL_DATEI = path.join(LC_GEHEIM_ORDNER, 'lerncoach-schluessel.txt');
+const LC_SCHLUESSEL_RE = /^sk-ant-[A-Za-z0-9_-]{20,300}$/;
+// OPENROUTER als zweiter Weg (29.09.2026). Dietmar hat Max und fuer
+// Claude Code einen OpenRouter-Schluessel ("kann ich die API aus Claude
+// Code verwenden?"). Max selbst darf nicht in den Trainer (Anthropic
+// erlaubt keine claude.ai-Anmeldung in Anwendungen fuer andere), die
+// API bei Anthropic braucht Guthaben. OpenRouter hat kostenlose Modelle
+// - schwaecher und wechselnd (openrouter/free waehlt jedes Mal eines
+// aus), hoechstens 50 Anfragen am Tag ohne gekauftes Guthaben, und fuer
+// kostenlose Modelle gelten eigene Regeln, ob mit den Anfragen trainiert
+// werden darf. Deshalb geht an OpenRouter KEIN Vorname mit, nur "jemand
+// aus dem Kurs". Eigener Schluessel, eigene Datei, gleicher Ort.
+const LC_OR_SCHLUESSEL_DATEI = path.join(LC_GEHEIM_ORDNER, 'lerncoach-openrouter.txt');
+const LC_OR_SCHLUESSEL_RE = /^sk-or-[A-Za-z0-9_-]{20,300}$/;
+const LC_OR_MODELL_RE = /^[a-z0-9][a-z0-9._\/:-]{2,99}$/i;
+const LC_OR_VORSCHLAEGE = ['openrouter/free', 'anthropic/claude-haiku-4.5', 'anthropic/claude-sonnet-4.5'];
+// Preise je Million Token in Dollar (Eingabe, Ausgabe), Stand 29.09.2026,
+// platform.claude.com/docs/en/about-claude/pricing
+const LC_MODELLE = {
+  'claude-haiku-4-5-20251001': { name: 'Claude Haiku 4.5', preis: [1, 5] },
+  'claude-sonnet-5-5':         { name: 'Claude Sonnet 5.5', preis: [2, 10] },
+  'claude-opus-5-5':           { name: 'Claude Opus 5.5', preis: [4, 20] }
+};
+const LC_STANDARD = { an: false, anbieter: 'anthropic', modell: 'claude-sonnet-5-5', orModell: 'openrouter/free', grenzeDollar: 1, stimme: true };
+const LC_ANWEISUNGEN_VORGABE = [
+  '# Anweisungen fuer den Lerncoach',
+  '',
+  'Diese Datei liest der Trainer vor jeder Antwort. Du kannst sie frei aendern -',
+  'wie die Anweisungen eines Projekts. Sie bleibt auf diesem PC.',
+  '',
+  '- Du bist der Lerncoach im Chat des Amateurfunk-Trainers. Die Leute bereiten',
+  '  sich auf die Amateurfunkpruefung der Bundesnetzagentur vor (Klasse N, E, A).',
+  '- Sprich die Leute mit du an, freundlich und geduldig, wie ein erfahrener',
+  '  Funkamateur im Ortsverband. Nie herablassend.',
+  '- Erklaere in kurzen Schritten. Beim Rechnen jeden Schritt in eine eigene Zeile,',
+  '  mit Einheiten. Beim Umrechnen immer sagen, um wie viele Stellen das Komma',
+  '  wandert und warum (k = 1000, M = 1 000 000, m = 1/1000, µ = 1/1 000 000 ...).',
+  '- Wenn es passt: ein Merksatz oder eine Eselsbruecke.',
+  '- Zum Schluss eine kleine Uebungsaufgabe anbieten, wenn es ums Rechnen geht.',
+  '- Keine Links nach draussen ausser 50ohm.de.',
+  ''
+].join('\n');
+let lcIo = null;                 // wird beim Aufbau des Gruppenraums gesetzt
+let lcLaufend = 0;               // gleichzeitig laufende Anfragen
+
+function lcOrdnerAnlegen(){
+  try{
+    fs.mkdirSync(path.join(LC_ORDNER, 'verlauf'), { recursive: true });
+    const a = path.join(LC_ORDNER, 'anweisungen.md');
+    if(!fs.existsSync(a)) fs.writeFileSync(a, LC_ANWEISUNGEN_VORGABE, 'utf8');
+  }catch(e){ console.warn('[LERNCOACH] Ordner:', e.message); }
+}
+function lcJsonLesen(datei, vorgabe){
+  try{ return Object.assign({}, vorgabe, JSON.parse(fs.readFileSync(path.join(LC_ORDNER, datei), 'utf8'))); }
+  catch(e){ return Object.assign({}, vorgabe); }
+}
+function lcJsonSchreiben(datei, daten){
+  lcOrdnerAnlegen();
+  const ziel = path.join(LC_ORDNER, datei);
+  fs.writeFileSync(ziel + '.tmp', JSON.stringify(daten, null, 2), 'utf8');
+  fs.renameSync(ziel + '.tmp', ziel);
+}
+function lcEinstellungen(){
+  const e = lcJsonLesen('einstellungen.json', LC_STANDARD);
+  if(!LC_MODELLE[e.modell]) e.modell = LC_STANDARD.modell;
+  if(e.anbieter !== 'openrouter') e.anbieter = 'anthropic';
+  if(!LC_OR_MODELL_RE.test(String(e.orModell || ''))) e.orModell = LC_STANDARD.orModell;
+  e.grenzeDollar = Math.max(0.1, Math.min(50, Number(e.grenzeDollar) || LC_STANDARD.grenzeDollar));
+  e.an = !!e.an; e.stimme = e.stimme !== false;
+  return e;
+}
+function lcHeute(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function lcVerbrauch(){
+  const v = lcJsonLesen('verbrauch.json', { tag: '', dollar: 0, anfragen: 0 });
+  if(v.tag !== lcHeute()) return { tag: lcHeute(), dollar: 0, anfragen: 0 };
+  return v;
+}
+function lcSchluessel(anbieter){
+  if(!anbieter) anbieter = lcEinstellungen().anbieter;
+  const or = anbieter === 'openrouter';
+  try{
+    const s = fs.readFileSync(or ? LC_OR_SCHLUESSEL_DATEI : LC_SCHLUESSEL_DATEI, 'utf8').trim();
+    return (or ? LC_OR_SCHLUESSEL_RE : LC_SCHLUESSEL_RE).test(s) ? s : '';
+  }catch(e){ return ''; }
+}
+function lcAktiv(){ return lcEinstellungen().an && !!lcSchluessel(); }
+function lcStandSenden(){
+  try{ if(lcIo) lcIo.emit('lerncoachStand', { an: lcAktiv(), anbieter: lcEinstellungen().anbieter }); }catch(e){}
+}
+
+// Die Anfrage an die KI. Ohne zusaetzliches Paket, mit dem https von
+// Node - "npm install" muss dafuer nicht neu laufen.
+function lcApi(schluessel, body){
+  return new Promise((ok, fehler) => {
+    // Nur zum Pruefen ohne echten Schluessel: eine Attrappe auf diesem
+    // Rechner (LERNCOACH_API=http://127.0.0.1:...). Im Alltag leer.
+    const ziel = new URL((process.env.LERNCOACH_API || 'https://api.anthropic.com') + '/v1/messages');
+    const modul = ziel.protocol === 'http:' ? http : https;
+    const daten = Buffer.from(JSON.stringify(body), 'utf8');
+    const req = modul.request({
+      hostname: ziel.hostname, port: ziel.port || undefined, path: ziel.pathname, method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': schluessel,
+                 'anthropic-version': '2023-06-01', 'content-length': daten.length },
+      timeout: 90000
+    }, res => {
+      const teile = [];
+      res.on('data', d => teile.push(d));
+      res.on('end', () => {
+        let j = null;
+        try{ j = JSON.parse(Buffer.concat(teile).toString('utf8')); }catch(e){}
+        if(res.statusCode >= 400 || !j){
+          const f = new Error((j && j.error && j.error.message) || ('HTTP ' + res.statusCode));
+          f.status = res.statusCode; return fehler(f);
+        }
+        ok(j);
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('Keine Antwort nach 90 Sekunden')));
+    req.on('error', fehler);
+    req.end(daten);
+  });
+}
+// Dieselbe Frage an OpenRouter (Schnittstelle wie bei OpenAI). Zurueck
+// kommt dasselbe Format wie von lcApi, damit der Rest nichts merkt.
+function lcOpenRouter(schluessel, body){
+  const wartezeit = body.wartezeit || 90000;
+  return new Promise((ok, fehler) => {
+    const ziel = new URL((process.env.LERNCOACH_OPENROUTER || 'https://openrouter.ai') + '/api/v1/chat/completions');
+    const modul = ziel.protocol === 'http:' ? http : https;
+    const nachrichten = (body.system ? [{ role: 'system', content: body.system }] : []).concat(body.messages);
+    const daten = Buffer.from(JSON.stringify({ model: body.model, max_tokens: body.max_tokens, messages: nachrichten,
+                                               usage: { include: true },
+                                               // Wenig nachdenken (29.09.2026, "es dauert fast eine Minute"):
+                                               // die Denkmodelle schrieben 1200 bis 2700 Token, bevor die
+                                               // eigentliche Antwort kam - bei kostenlosen Modellen eine Minute.
+                                               reasoning: { effort: 'low', exclude: true } }), 'utf8');
+    const req = modul.request({
+      hostname: ziel.hostname, port: ziel.port || undefined, path: ziel.pathname, method: 'POST',
+      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + schluessel,
+                 'x-title': 'Amateurfunk-Trainer', 'content-length': daten.length },
+      timeout: body.wartezeit || 90000
+    }, res => {
+      const teile = [];
+      res.on('data', d => teile.push(d));
+      res.on('end', () => {
+        let j = null;
+        try{ j = JSON.parse(Buffer.concat(teile).toString('utf8')); }catch(e){}
+        if(res.statusCode >= 400 || !j || j.error){
+          const f = new Error((j && j.error && (j.error.message || j.error)) || ('HTTP ' + res.statusCode));
+          f.status = (j && j.error && j.error.code) || res.statusCode; f.openrouter = true; return fehler(f);
+        }
+        const c = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
+        const u = j.usage || {};
+        ok({ content: [{ type: 'text', text: typeof c === 'string' ? c : '' }],
+             usage: { input_tokens: u.prompt_tokens || 0, output_tokens: u.completion_tokens || 0 },
+             kostenDollar: Number(u.cost) || 0, modellEcht: j.model || body.model });
+      });
+    });
+    req.on('timeout', () => req.destroy(Object.assign(new Error('Keine Antwort nach ' + Math.round(wartezeit / 1000) + ' Sekunden'), { zeit: true })));
+    req.on('error', fehler);
+    req.end(daten);
+  });
+}
+function lcFehlerText(e){
+  if(e && e.unbrauchbar){
+    return e.openrouter
+      ? 'Die kostenlose KI hat keine brauchbare deutsche Antwort geliefert. Bitte noch einmal fragen – besser: unter Einstellungen → Lerncoach ein festes Modell wählen.'
+      : 'Die KI hat keine brauchbare Antwort geliefert. Bitte noch einmal fragen.';
+  }
+  if(e && e.openrouter){
+    const s = Number(e.status);
+    if(s === 401) return 'OpenRouter nimmt den Schlüssel nicht an. Bitte unter Einstellungen → Lerncoach prüfen.';
+    if(s === 402) return 'Bei OpenRouter fehlt Guthaben für dieses Modell. Mit „openrouter/free“ geht es kostenlos.';
+    if(s === 429) return 'Die kostenlosen Anfragen bei OpenRouter sind für heute aufgebraucht (ohne Guthaben 50 am Tag) – oder es ging zu schnell. Bitte später noch einmal.';
+    return 'Der Lerncoach ist gerade nicht erreichbar (OpenRouter: ' + String((e && e.message) || 'unbekannt').slice(0, 120) + ').';
+  }
+  const s = e && e.status;
+  if(s === 401) return 'Der API-Schlüssel wird nicht angenommen. Bitte unter Einstellungen → Lerncoach prüfen.';
+  if(s === 402 || /credit|balance|billing/i.test(String(e && e.message))) return 'Beim API-Konto ist kein Guthaben mehr. Das lässt sich auf platform.claude.com aufladen.';
+  if(s === 429) return 'Die KI ist gerade ausgelastet. Bitte in einer Minute noch einmal.';
+  if(s === 529 || s === 503) return 'Die KI ist gerade überlastet. Bitte gleich noch einmal.';
+  return 'Der Lerncoach ist gerade nicht erreichbar (' + String((e && e.message) || 'unbekannt').slice(0, 120) + ').';
+}
+
+let lcErklaerungenCache = null;
+function lcErklaerung(id){
+  try{
+    if(!lcErklaerungenCache){
+      const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'erklaerungen.json'), 'utf8'));
+      lcErklaerungenCache = (j && j.fragen) || {};
+    }
+    return lcErklaerungenCache[id] || null;
+  }catch(e){ return null; }
+}
+// Alles, was der Trainer zu einer Pruefungsfrage weiss - als Text fuer die KI.
+function lcFrageKontext(id){
+  const q = lektionKatalogAlle()[id];
+  if(!q) return '';
+  const zeilen = ['Prüfungsfrage ' + id + ':', q.text];
+  (q.options || []).forEach((o, i) => {
+    zeilen.push('  ' + 'ABCD'.charAt(i) + ') ' + (o.text || (o.image ? '[Bild ' + o.image + ']' : '')) + (o.correct ? '   <- richtig' : ''));
+  });
+  const e = lcErklaerung(id);
+  if(e){
+    if(e.bild) zeilen.push('Zeichnung zur Frage: ' + e.bild);
+    if(e.kniff) zeilen.push('Erklärung aus dem Trainer: ' + e.kniff);
+    if(e.warum_falsch && typeof e.warum_falsch === 'object'){
+      zeilen.push('Warum die anderen falsch sind:');
+      Object.keys(e.warum_falsch).forEach(k => zeilen.push('  ' + k + ': ' + e.warum_falsch[k]));
+    }
+  }
+  return zeilen.join('\n');
+}
+
+// Gespraechsfaden je Person: die letzten zwei Wechsel, hoechstens eine
+// halbe Stunde alt - dann versteht der Lerncoach "und bei MΩ?".
+const lcFaeden = new Map();
+function lcFaden(sitzung){
+  const f = (lcFaeden.get(sitzung) || []).filter(x => Date.now() - x.zeit < 30 * 60 * 1000);
+  return f.slice(-4);
+}
+function lcFadenMerken(sitzung, frage, antwort){
+  const f = lcFaden(sitzung);
+  f.push({ rolle: 'user', text: frage, zeit: Date.now() }, { rolle: 'assistant', text: antwort, zeit: Date.now() });
+  lcFaeden.set(sitzung, f.slice(-4));
+  while(lcFaeden.size > 300) lcFaeden.delete(lcFaeden.keys().next().value);
+}
+
+// Nimmt die Antwort auseinander. null = nicht zu gebrauchen.
+function lcNachEnglisch(t){
+  const w = String(t || '').toLowerCase().match(/[a-zäöüß']+/g) || [];
+  if(w.length < 8) return false;
+  const en = new Set(['the','and','we','should','let\'s','lets','maybe','need','answer','output','first','then','which','is','are','that','this','with','for','probably','they','it','of','to','be','can','not','but']);
+  const n = w.filter(x => en.has(x)).length;
+  return n / w.length > 0.12;
+}
+// streng = OpenRouter: dort MUSS die Antwort in den Markierungen stehen.
+// Dietmar, mit Bild vom 29.09.2026, 15:07: Die Antwort lautete nur "User
+// Safety: safe" - openrouter/free hatte ein Pruefmodell erwischt, das gar
+// nicht antwortet, sondern nur einstuft, ob eine Nachricht harmlos ist.
+function lcAntwortZerlegen(roh, streng){
+  let t = String(roh || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^[\s\S]*<\/think>/i, '');
+  let chat = '', sprech = '';
+  const a = t.lastIndexOf('<<<CHAT>>>');
+  if(a !== -1){
+    let rest = t.slice(a + 10);
+    const e = rest.indexOf('<<<ENDE>>>'); if(e !== -1) rest = rest.slice(0, e);
+    const v = rest.indexOf('<<<VORLESEN>>>');
+    chat = (v === -1 ? rest : rest.slice(0, v));
+    sprech = v === -1 ? '' : rest.slice(v + 14);
+  } else {
+    if(streng) return null;
+    // Ohne Markierungen: die alte Form mit ### - aber nur, wenn es danach
+    // nicht nach Vorueberlegungen aussieht.
+    const teile = t.split(/^\s*###\s*$/m);
+    chat = teile[0] || ''; sprech = teile[1] || '';
+  }
+  chat = chat.replace(/<<<[A-Z]+>>>/g, '').replace(/\*\*|__|^#+\s*/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+  sprech = sprech.replace(/<<<[A-Z]+>>>/g, '').replace(/[*#_]/g, '').trim();
+  if(chat.length < 30 || lcNachEnglisch(chat)) return null;
+  if(/^\s*(user|agent|response)?\s*safety\s*:|^\s*(safe|unsafe)\b/i.test(chat)) return null;
+  if(!sprech || lcNachEnglisch(sprech)) sprech = chat;
+  if(chat.length > 1600) chat = chat.slice(0, 1600) + ' …';
+  if(sprech.length > 900) sprech = sprech.slice(0, 900);
+  return { chat: chat, sprech: sprech };
+}
+
+function lcSystemText(anweisungen){
+  return [
+    'Du bist der Lerncoach im Gruppenchat des Amateurfunk-Trainers. Antworte immer auf Deutsch.',
+    'Du hilfst nur beim Lernen für die Amateurfunkprüfung (Technik, Betriebstechnik, Vorschriften, Rechnen dazu).',
+    'Zu anderen Themen antwortest du freundlich in einem Satz, dass du hier nur beim Amateurfunk hilfst.',
+    'Frag niemals nach persönlichen Daten. Gib keine Links außer 50ohm.de.',
+    'Wenn die richtige Antwort unten mitgeliefert wird, gilt sie. Erkläre den Weg dorthin; widersprich ihr nicht.',
+    'Gib NUR die fertige Antwort aus – keine Vorüberlegungen, keine Planung, kein Englisch.',
+    'FORM DER ANTWORT, genau so mit den drei Markierungen:',
+    '<<<CHAT>>>',
+    'Text für den Chat: höchstens 900 Zeichen, einfache Sprache, Rechenschritte in eigenen Zeilen, kein Markdown',
+    '(keine Sternchen, keine Rauten, keine Tabellen).',
+    '<<<VORLESEN>>>',
+    'Dieselbe Erklärung zum Vorlesen, höchstens 600 Zeichen: ganze deutsche Sätze, Zahlen und Einheiten',
+    'ausgeschrieben (zum Beispiel "siebenundvierzig Kiloohm"), keine Formeln, keine Sonderzeichen.',
+    '<<<ENDE>>>',
+    '',
+    anweisungen
+  ].join('\n');
+}
+
+async function lcFragen({ name, text, frageId, sitzung, versuchMelden }){
+  const e = lcEinstellungen();
+  const or = e.anbieter === 'openrouter';
+  const schluessel = lcSchluessel(e.anbieter);
+  if(!schluessel) throw Object.assign(new Error('kein Schluessel'), { status: 401, openrouter: or });
+  let anweisungen = '';
+  try{ anweisungen = fs.readFileSync(path.join(LC_ORDNER, 'anweisungen.md'), 'utf8').slice(0, 8000); }catch(err){ anweisungen = LC_ANWEISUNGEN_VORGABE; }
+  const system = lcSystemText(anweisungen);
+  // An OpenRouter kein Vorname - siehe oben bei LC_OR_SCHLUESSEL_DATEI.
+  let inhalt = 'Frage von ' + (or ? 'jemandem aus dem Kurs' : (name || 'jemandem im Chat')) + ':\n' + (text || 'Bitte erkläre mir diese Frage.');
+  if(frageId){
+    const k = lcFrageKontext(frageId);
+    if(k) inhalt += '\n\n' + k;
+  }
+  const messages = lcFaden(sitzung).map(x => ({ role: x.rolle, content: x.text }));
+  messages.push({ role: 'user', content: inhalt });
+  // ZWEI VERSUCHE (29.09.2026). Dietmar, mit Bild: "Erst deutsch und
+  // danach Englisch und die Sprachnachricht ist ein Mix aus allem." Ein
+  // kostenloses Modell hatte seine Vorueberlegungen ("Let's craft ...")
+  // mit in die Antwort geschrieben. Deshalb: Antwort zwischen festen
+  // Markierungen, alles davor fliegt weg, und was dann noch nach Englisch
+  // aussieht, wird nicht gezeigt - dann ein zweiter Versuch (bei
+  // openrouter/free meist mit einem anderen Modell).
+  let j = null, gut = null, dollar = 0, ein = 0, aus = 0;
+  // Bei openrouter/free drei Versuche - jedes Mal kann ein anderes Modell kommen.
+  const versuche = (or && e.orModell === 'openrouter/free') ? 3 : 2;
+  const beginn = Date.now();
+  let versuchNr = 0;
+  for(let versuch = 0; versuch < versuche && !gut; versuch++){
+    versuchNr = versuch + 1;
+    if(versuch && typeof versuchMelden === 'function') versuchMelden(versuchNr);
+    // Ein Versuch bei OpenRouter bekommt hoechstens 35 Sekunden - haengt ein
+    // kostenloses Modell in der Warteschlange, ist der naechste oft schneller.
+    try{
+      j = or ? await lcOpenRouter(schluessel, { model: e.orModell, max_tokens: 1500, system: system, messages: messages, wartezeit: 35000 })
+             : await lcApi(schluessel, { model: e.modell, max_tokens: 1200, system: system, messages: messages });
+    }catch(err){
+      if(or && err.zeit && versuch + 1 < versuche){ console.warn('[LERNCOACH] ' + err.message + ' - noch ein Versuch'); continue; }
+      throw err;
+    }
+    const u = j.usage || {};
+    ein += u.input_tokens || 0; aus += u.output_tokens || 0;
+    dollar += or ? (j.kostenDollar || 0) : ((u.input_tokens || 0) * LC_MODELLE[e.modell].preis[0] + (u.output_tokens || 0) * LC_MODELLE[e.modell].preis[1]) / 1e6;
+    gut = lcAntwortZerlegen(((j.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n') || ''), or);
+    if(!gut) console.warn('[LERNCOACH] Unbrauchbare Antwort (' + (j.modellEcht || e.orModell || e.modell) + ')' + (versuch + 1 < versuche ? ' - noch ein Versuch' : ''));
+  }
+  if(!gut) throw Object.assign(new Error('unbrauchbare Antwort'), { unbrauchbar: true, openrouter: or });
+  let chat = gut.chat, sprech = gut.sprech;
+  const u = { input_tokens: ein, output_tokens: aus };
+  const v = lcVerbrauch();
+  v.dollar = Math.round((v.dollar + dollar) * 100000) / 100000;
+  v.anfragen++;
+  try{ lcJsonSchreiben('verbrauch.json', v); }catch(err){}
+  lcFadenMerken(sitzung, inhalt, chat);
+  return { chat: chat, sprech: sprech, dollar: dollar, ein: ein, aus: aus,
+           sekunden: Math.round((Date.now() - beginn) / 1000), versuche: versuchNr,
+           modell: or ? e.orModell : e.modell, modellName: or ? 'OpenRouter ' + (j.modellEcht || e.orModell) : LC_MODELLE[e.modell].name };
+}
+
+// Die Antwort als Sprachnachricht: dieselbe Stimme wie beim Vorlesen,
+// als MP3 mit dem Kodierer aus hoerbuch.js (64 kbit/s, Mono).
+function lcSprechen(text){
+  return new Promise((ok, fehler) => {
+    let hb;
+    try{ hb = require('./hoerbuch')._intern; }catch(e){ return fehler(e); }
+    const stimmen = listVoices();
+    if(!stimmen.length) return fehler(new Error('keine Stimme'));
+    const piper = findPiper();
+    const tmp = path.join(os.tmpdir(), 'lerncoach_' + process.pid + '_' + Date.now() + '.wav');
+    const opts = { cwd: PIPER_DIR, env: { ...process.env, PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' } };
+    let proc;
+    try{
+      proc = piper.type === 'binary'
+        ? spawn(piper.path, ['--model', stimmen[0].fullPath, '--output_file', tmp], opts)
+        : spawn(piper.path, ['-m', 'piper', '--model', stimmen[0].fullPath, '--output_file', tmp], opts);
+    }catch(e){ return fehler(e); }
+    proc.on('error', fehler);
+    proc.stdin.on('error', fehler);
+    proc.on('exit', code => {
+      try{
+        if(code !== 0 || !fs.existsSync(tmp)) throw new Error('Piper Exitcode ' + code);
+        const wav = hb.wavLesen(fs.readFileSync(tmp));
+        try{ fs.unlinkSync(tmp); }catch(e){}
+        const proben = hb.umrechnen(wav.proben, wav.rate, hb.MP3_RATE);
+        const buf = hb.mp3Kodieren(proben);
+        // Die Welle fuer die Sprechblase: 36 Balken, lauteste = 100. (48 waren
+        // in der schmalen Blase zu breit und stiessen an die Zeitangabe.)
+        const n = 36, stueck = Math.max(1, Math.floor(proben.length / n)), werte = [];
+        for(let i = 0; i < n; i++){
+          let s = 0;
+          for(let k = i * stueck; k < Math.min(proben.length, (i + 1) * stueck); k += 16) s += proben[k] * proben[k];
+          werte.push(Math.sqrt(s / Math.max(1, stueck / 16)));
+        }
+        const max = Math.max(1, ...werte);
+        ok({ buf: buf, dauer: Math.max(1, Math.round(proben.length / hb.MP3_RATE)), welle: werte.map(w => Math.round(w / max * 100)) });
+      }catch(e){ try{ fs.unlinkSync(tmp); }catch(x){} fehler(e); }
+    });
+    try{ proc.stdin.setDefaultEncoding('utf-8'); proc.stdin.write(expandTTS(text), 'utf-8'); proc.stdin.end(); }catch(e){ fehler(e); }
+  });
+}
+
+function lcVerlaufSchreiben({ name, frageId, text, chat, ergebnis }){
+  try{
+    lcOrdnerAnlegen();
+    const d = new Date();
+    const zeit = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const kosten = ergebnis ? ' · ' + ergebnis.modellName + ' · ' + ergebnis.ein + '/' + ergebnis.aus
+      + ' Token · ' + (ergebnis.dollar * 100).toFixed(2).replace('.', ',') + ' Cent'
+      + ' · ' + ergebnis.sekunden + ' s' + (ergebnis.versuche > 1 ? ' · ' + ergebnis.versuche + ' Versuche' : '') : '';
+    const eintrag = '## ' + zeit + ' · ' + (name || '?') + (frageId ? ' · ' + frageId : '') + '\n\n'
+      + '**Frage:** ' + (text || '(Erklär mir die Frage)') + '\n\n'
+      + '**Lerncoach:**\n' + chat + '\n\n_' + kosten.replace(/^ · /, '') + '_\n\n';
+    const datei = path.join(LC_ORDNER, 'verlauf', lcHeute() + '.md');
+    if(!fs.existsSync(datei)) fs.writeFileSync(datei, '# Lerncoach ' + lcHeute() + '\n\n', 'utf8');
+    fs.appendFileSync(datei, eintrag, 'utf8');
+  }catch(e){ console.warn('[LERNCOACH] Verlauf:', e.message); }
+}
+
+// ---- Einstellungen (nur am Trainer-PC) ----
+app.get('/api/lerncoach', localOnly, (req, res) => {
+  const e = lcEinstellungen();
+  const s = lcSchluessel('anthropic'), so = lcSchluessel('openrouter');
+  res.json({
+    an: e.an, anbieter: e.anbieter, modell: e.modell, orModell: e.orModell, orVorschlaege: LC_OR_VORSCHLAEGE,
+    grenzeDollar: e.grenzeDollar, stimme: e.stimme,
+    modelle: Object.keys(LC_MODELLE).map(k => ({ id: k, name: LC_MODELLE[k].name, preis: LC_MODELLE[k].preis })),
+    hatSchluessel: !!(e.anbieter === 'openrouter' ? so : s),
+    anthropic: { hat: !!s, ende: s ? s.slice(-4) : '' }, openrouter: { hat: !!so, ende: so ? so.slice(-4) : '' },
+    heute: lcVerbrauch(), ordner: LC_ORDNER, schluesselOrt: LC_GEHEIM_ORDNER,
+    stimmeDa: listVoices().length > 0
+  });
+});
+app.post('/api/lerncoach/einstellungen', localOnly, (req, res) => {
+  try{
+    const e = lcEinstellungen();
+    const b = req.body || {};
+    if('an' in b) e.an = !!b.an;
+    if(b.modell && LC_MODELLE[b.modell]) e.modell = b.modell;
+    if(b.anbieter === 'anthropic' || b.anbieter === 'openrouter') e.anbieter = b.anbieter;
+    if(typeof b.orModell === 'string' && LC_OR_MODELL_RE.test(b.orModell.trim())) e.orModell = b.orModell.trim();
+    if('grenzeDollar' in b) e.grenzeDollar = Math.max(0.1, Math.min(50, Number(b.grenzeDollar) || 1));
+    if('stimme' in b) e.stimme = !!b.stimme;
+    lcJsonSchreiben('einstellungen.json', e);
+    lcStandSenden();
+    console.log('[LERNCOACH] Einstellungen: ' + (e.an ? 'an' : 'aus') + ', ' + e.anbieter + ', ' + (e.anbieter === 'openrouter' ? e.orModell : e.modell) + ', Grenze ' + e.grenzeDollar + ' $');
+    res.json({ ok: true });
+  }catch(err){ res.status(500).json({ error: err.message }); }
+});
+app.post('/api/lerncoach/schluessel', localOnly, (req, res) => {
+  try{
+    const s = String((req.body && req.body.schluessel) || '').trim();
+    // Welcher Anbieter, erkennt der Trainer am Anfang: sk-ant- oder sk-or-.
+    const or = LC_OR_SCHLUESSEL_RE.test(s);
+    if(!or && !LC_SCHLUESSEL_RE.test(s)) return res.status(400).json({ error: 'Das sieht nicht wie ein API-Schlüssel aus. Anthropic-Schlüssel beginnen mit sk-ant-, OpenRouter-Schlüssel mit sk-or-.' });
+    fs.mkdirSync(LC_GEHEIM_ORDNER, { recursive: true });
+    fs.writeFileSync(or ? LC_OR_SCHLUESSEL_DATEI : LC_SCHLUESSEL_DATEI, s, { encoding: 'utf8', mode: 0o600 });
+    // Der eben eingetragene Schluessel bestimmt den Anbieter.
+    try{ const e = lcEinstellungen(); e.anbieter = or ? 'openrouter' : 'anthropic'; lcJsonSchreiben('einstellungen.json', e); }catch(err){}
+    lcOrdnerAnlegen();
+    lcStandSenden();
+    console.log('[LERNCOACH] ' + (or ? 'OpenRouter' : 'Anthropic') + '-Schluessel gespeichert (endet auf ...' + s.slice(-4) + ').');
+    res.json({ ok: true, schluesselEnde: s.slice(-4) });
+  }catch(err){ res.status(500).json({ error: err.message }); }
+});
+app.post('/api/lerncoach/schluessel-loeschen', localOnly, (req, res) => {
+  const datei = lcEinstellungen().anbieter === 'openrouter' ? LC_OR_SCHLUESSEL_DATEI : LC_SCHLUESSEL_DATEI;
+  try{ if(fs.existsSync(datei)) fs.unlinkSync(datei); }catch(err){ return res.status(500).json({ error: err.message }); }
+  lcStandSenden();
+  console.log('[LERNCOACH] API-Schluessel entfernt.');
+  res.json({ ok: true });
+});
+app.post('/api/lerncoach/pruefen', localOnly, async (req, res) => {
+  const e = lcEinstellungen();
+  const s = lcSchluessel(e.anbieter);
+  if(!s) return res.json({ ok: false, text: 'Noch kein Schlüssel eingetragen.' });
+  try{
+    const probe = { max_tokens: 5, messages: [{ role: 'user', content: 'Antworte nur mit OK.' }] };
+    if(e.anbieter === 'openrouter') await lcOpenRouter(s, Object.assign({ model: e.orModell }, probe));
+    else await lcApi(s, Object.assign({ model: e.modell }, probe));
+    res.json({ ok: true, text: 'Verbindung steht – der Schlüssel wird angenommen' + (e.anbieter === 'openrouter' ? ' (OpenRouter).' : '.') });
+  }catch(e){ res.json({ ok: false, text: lcFehlerText(e) }); }
+});
+// Die kostenlosen Modelle bei OpenRouter - fuer die Auswahl in den
+// Einstellungen. Die Liste ist oeffentlich (ohne Schluessel) und aendert
+// sich oft; deshalb eine Stunde gemerkt und sonst frisch geholt.
+let lcOrListe = { zeit: 0, liste: null };
+app.get('/api/lerncoach/openrouter-modelle', localOnly, (req, res) => {
+  if(lcOrListe.liste && Date.now() - lcOrListe.zeit < 60 * 60 * 1000) return res.json({ liste: lcOrListe.liste });
+  const ziel = new URL((process.env.LERNCOACH_OPENROUTER || 'https://openrouter.ai') + '/api/v1/models');
+  const modul = ziel.protocol === 'http:' ? http : https;
+  const r = modul.get({ hostname: ziel.hostname, port: ziel.port || undefined, path: ziel.pathname, timeout: 15000 }, antw => {
+    const teile = [];
+    antw.on('data', d => teile.push(d));
+    antw.on('end', () => {
+      try{
+        const j = JSON.parse(Buffer.concat(teile).toString('utf8'));
+        // Pruefmodelle (Guard, Moderation) antworten nicht, sie stufen nur ein - raus damit.
+        const liste = (j.data || []).filter(m => m && typeof m.id === 'string' && /:free$/.test(m.id) && !/guard|safety|moderat|shield/i.test(m.id + ' ' + (m.name || '')))
+          .map(m => ({ id: m.id, name: String(m.name || m.id).slice(0, 80),
+                       denkt: Array.isArray(m.supported_parameters) && m.supported_parameters.indexOf('reasoning') !== -1 }))
+          // Modelle, die nicht erst lange nachdenken, zuerst - die antworten schneller.
+          .sort((x, y) => (x.denkt - y.denkt) || x.name.localeCompare(y.name));
+        lcOrListe = { zeit: Date.now(), liste: liste };
+        res.json({ liste: liste });
+      }catch(e){ res.json({ liste: [], fehler: 'Liste nicht lesbar' }); }
+    });
+  });
+  r.on('timeout', () => r.destroy(new Error('Zeitueberschreitung')));
+  r.on('error', e => { if(!res.headersSent) res.json({ liste: [], fehler: e.message }); });
+});
+// MODELLE TESTEN (29.09.2026). Dietmar: "Erst mal welches am besten ist
+// und auch schnell reagiert." Welche kostenlosen Modelle es bei OpenRouter
+// gibt, aendert sich fast taeglich - eine feste Empfehlung von mir waere
+// morgen schon falsch. Also fragt der Trainer selbst: dieselbe Pruefungsfrage
+// (NC107, Farbcode) an bis zu sechs Modelle gleichzeitig, jedes hoechstens
+// 30 Sekunden, und prueft die Antwort wie im Chat (Markierungen, Deutsch,
+// richtige Loesung 47 kOhm). Kostet bis zu sechs der 50 Tagesfragen.
+app.post('/api/lerncoach/modelle-testen', localOnly, async (req, res) => {
+  const schluessel = lcSchluessel('openrouter');
+  if(!schluessel) return res.json({ ok: false, text: 'Erst einen OpenRouter-Schlüssel eintragen.' });
+  let liste = (lcOrListe.liste || []);
+  if(!liste.length){
+    try{
+      liste = await new Promise((ok) => {
+        const ziel = new URL((process.env.LERNCOACH_OPENROUTER || 'https://openrouter.ai') + '/api/v1/models');
+        const modul = ziel.protocol === 'http:' ? http : https;
+        modul.get({ hostname: ziel.hostname, port: ziel.port || undefined, path: ziel.pathname, timeout: 15000 }, antw => {
+          const t = []; antw.on('data', d => t.push(d));
+          antw.on('end', () => { try{ ok((JSON.parse(Buffer.concat(t).toString('utf8')).data || [])
+            .filter(m => m && /:free$/.test(m.id) && !/guard|safety|moderat|shield/i.test(m.id + ' ' + (m.name || '')))
+            .map(m => ({ id: m.id, name: m.name || m.id, denkt: Array.isArray(m.supported_parameters) && m.supported_parameters.indexOf('reasoning') !== -1 }))); }catch(e){ ok([]); } });
+        }).on('error', () => ok([]));
+      });
+    }catch(e){ liste = []; }
+  }
+  const kandidaten = (Array.isArray(req.body && req.body.modelle) && req.body.modelle.length
+      ? liste.filter(m => req.body.modelle.indexOf(m.id) !== -1)
+      : liste.filter(m => !m.denkt).concat(liste.filter(m => m.denkt))).slice(0, 6);
+  if(!kandidaten.length) return res.json({ ok: false, text: 'Die Liste der kostenlosen Modelle ließ sich nicht holen.' });
+  let anweisungen = '';
+  try{ anweisungen = fs.readFileSync(path.join(LC_ORDNER, 'anweisungen.md'), 'utf8').slice(0, 8000); }catch(err){ anweisungen = LC_ANWEISUNGEN_VORGABE; }
+  const system = lcSystemText(anweisungen);
+  const inhalt = 'Frage von jemandem aus dem Kurs:\nBitte erkläre mir diese Frage.\n\n' + lcFrageKontext('NC107');
+  const ergebnisse = await Promise.all(kandidaten.map(async m => {
+    const t0 = Date.now();
+    try{
+      const j = await lcOpenRouter(schluessel, { model: m.id, max_tokens: 1500, system: system,
+                                                 messages: [{ role: 'user', content: inhalt }], wartezeit: 30000 });
+      const sek = Math.round((Date.now() - t0) / 100) / 10;
+      const gut = lcAntwortZerlegen(((j.content || []).map(c => c.text).join('\n') || ''), true);
+      const richtig = !!gut && /47\s*(k|000)/i.test(gut.chat);
+      return { id: m.id, name: m.name, sekunden: sek, brauchbar: !!gut, richtig: richtig,
+               probe: gut ? gut.chat.slice(0, 160) : '' };
+    }catch(e){
+      return { id: m.id, name: m.name, sekunden: Math.round((Date.now() - t0) / 100) / 10, brauchbar: false, richtig: false,
+               fehler: e.zeit ? 'keine Antwort in 30 s' : (Number(e.status) === 429 ? 'Tageslimit/zu schnell' : String(e.message || 'Fehler').slice(0, 80)) };
+    }
+  }));
+  ergebnisse.sort((a, b) => (b.richtig - a.richtig) || (b.brauchbar - a.brauchbar) || (a.sekunden - b.sekunden));
+  console.log('[LERNCOACH] Modelltest: ' + ergebnisse.map(e => e.id + ' ' + e.sekunden + 's ' + (e.richtig ? 'gut' : (e.brauchbar ? 'ungenau' : 'unbrauchbar'))).join(', '));
+  res.json({ ok: true, ergebnisse: ergebnisse });
+});
+app.post('/api/lerncoach/ordner', localOnly, (req, res) => {
+  lcOrdnerAnlegen();
+  try{
+    if(process.platform === 'win32') spawn('explorer', [LC_ORDNER], { detached: true, stdio: 'ignore' }).unref();
+    else if(process.platform === 'darwin') spawn('open', [LC_ORDNER], { detached: true, stdio: 'ignore' }).unref();
+    else spawn('xdg-open', [LC_ORDNER], { detached: true, stdio: 'ignore' }).unref();
+  }catch(e){}
+  res.json({ ok: true, ordner: LC_ORDNER });
 });
 
 // ================================================================
@@ -6092,6 +6712,7 @@ try{
     allowUpgrades: true,
     transports: ['websocket', 'polling']
   });
+  lcIo = io;          // Lerncoach: Stand an alle melden (29.09.2026)
   const duoRooms={};
 
   // Der Handschlag geht nicht durch die Express-Kette, die Tuer weiter
@@ -6203,6 +6824,239 @@ try{
     }
   }
   // ----------------------------------------------------------------
+  //  BILDER IM CHAT                                     (29.09.2026)
+  //  Dietmar: "Bilder über dem Messenger, geht das auch?" - schicken
+  //  duerfen alle, dazu eine Pruefungsfrage aus dem Trainer mit Bild
+  //  ("Bild zur Frage und auch eigene Bilder").
+  //
+  //  Wie bei den Sprachnachrichten: Die Nachricht selbst traegt nur ein
+  //  kleines Vorschaubild (hoechstens 40 000 Zeichen, reines JPEG als
+  //  data:-Adresse). Das grosse Bild bleibt hier liegen und wird erst
+  //  geholt, wenn jemand darauf tippt (bildHolen). Der Browser rechnet
+  //  jedes Bild vorher selbst klein und macht ein JPEG daraus - hier
+  //  kommt also nie ein Handyfoto mit 5 MB und Standortdaten an; die
+  //  stecken in den Zusatzdaten der Datei, und die gehen beim
+  //  Neuzeichnen verloren.
+  //
+  //  Nur im Arbeitsspeicher: hoechstens 40 Bilder und 20 MB, die
+  //  aeltesten fallen heraus. Beim Neustart ist alles weg. Ins
+  //  Protokoll kommt nur Name und Groesse, nie das Bild.
+  // ----------------------------------------------------------------
+  const bildSpeicher = new Map();      // Nachrichten-id -> Buffer (JPEG)
+  const BILD_MAX_ANZAHL = 40;
+  const BILD_MAX_GESAMT = 20 * 1024 * 1024;
+  const BILD_MAX_GROESSE = 700 * 1024;
+  const BILD_VORSCHAU_MAX = 40000;
+  const BILD_VORSCHAU_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/;
+  let bildGesamt = 0;
+  function bildMerken(id, buf){
+    bildSpeicher.set(id, buf);
+    bildGesamt += buf.length;
+    while(bildSpeicher.size > BILD_MAX_ANZAHL || bildGesamt > BILD_MAX_GESAMT){
+      const alt = bildSpeicher.keys().next().value;
+      const b = bildSpeicher.get(alt);
+      bildGesamt -= (b ? b.length : 0);
+      bildSpeicher.delete(alt);
+    }
+  }
+  function bildVergessen(id){
+    const b = bildSpeicher.get(id);
+    if(b){ bildGesamt -= b.length; bildSpeicher.delete(id); }
+  }
+  // Eine Pruefungsfrage, die jemand in den Chat teilt: Nummer, Fragetext
+  // und die vier Antworten so, wie der Absender sie vor sich hat - aber
+  // OHNE die richtige. Bilder nur als Dateiname aus svgs/, keine Adresse.
+  function chatFrageSaeubern(f){
+    if(!f || typeof f !== 'object') return null;
+    const id = String(f.id || '').toUpperCase();
+    if(!/^[A-Z]{2}\d{3}$/.test(id)) return null;
+    const rein = function(x){ return String(x || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim(); };
+    const antworten = Array.isArray(f.antworten) ? f.antworten.slice(0, 4).map(function(a){
+      const b = (a && typeof a.b === 'string' && /^[A-Za-z0-9_-]{1,40}\.(svg|png)$/.test(a.b)) ? a.b : '';
+      return { t: rein(a && a.t).slice(0, 300), b: b };
+    }) : [];
+    return { id: id, text: rein(f.text).slice(0, 600), antworten: antworten };
+  }
+  // ----------------------------------------------------------------
+  //  LERNCOACH IM CHAT (29.09.2026) - der Teil, der den Chat kennt.
+  //  Oben (LERNCOACH - DIE KI IM CHAT) steht, was gefragt und bezahlt
+  //  wird; hier, wer fragen darf und wohin die Antwort geht: in denselben
+  //  Kanal, aus dem die Frage kam (Raum oder Chat ohne Raum).
+  // ----------------------------------------------------------------
+  // Auch "Hey KI" (29.09.2026). Dietmar: "Koennen wir ein Keyword in den
+  // Chat einbauen? Hey KI, ich habe eine Frage." Erkannt werden am Anfang
+  // der Nachricht @KI / @Lerncoach und eine Anrede (hey, hallo, hi, hei,
+  // he, moin, servus) vor KI, Lerncoach oder Coach. "Hi Kim" loest nichts
+  // aus (\b hinter "ki"). Dieselbe Regel steht in duo.js (LC_KI_RE).
+  const LC_RE = /^\s*(?:@(?:ki|lerncoach)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach)\b)[\s,:!.\-\u2013]*/i;
+  // "Hey KI, ich habe eine Frage." ohne die Frage selbst: Der Lerncoach
+  // antwortet sofort (ohne KI, kostet nichts) "Was moechtest du wissen?"
+  // und hoert danach drei Minuten lang auf die NAECHSTE Nachricht dieser
+  // Person im selben Chat - die geht dann ohne "Hey KI" an ihn. Nur eine
+  // Nachricht, damit er sich nicht in das Gespraech der Gruppe mischt.
+  const LC_NUR_ANREDE_RE = /^(?:(?:ich\s+)?(?:habe|hab|h[a\u00e4]tte)\s+(?:da\s+|mal\s+|noch\s+)*(?:eine|ne|'ne)\s+(?:kurze\s+)?frage|(?:eine\s+)?(?:kurze\s+)?frage|bist\s+du\s+da)?[\s.!?,:]*$/i;
+  function lcHoertZu(socket, code){
+    const d = socket.data || {};
+    if(d.lcHoertBis && Date.now() < d.lcHoertBis && d.lcHoertOrt === code){ d.lcHoertBis = 0; return true; }
+    return false;
+  }
+  // ----------------------------------------------------------------
+  //  LERNCOACH UNTER VIER AUGEN                        (29.09.2026)
+  //  Dietmar: "Die Antwort, soll nur der Teilnehmer bekommen der die KI
+  //  fragt. Bei allen anderen soll nur erscheinen, das ein Teilnehmer mit
+  //  Namen die KI gefragt hat."
+  //  Frage, "denkt nach", Antwort und Sprachnachricht gehen nur an den
+  //  Fragenden. Die anderen bekommen eine Zeile "Maja hat den Lerncoach
+  //  gefragt." lcPrivat merkt sich je Nachricht die Chat-Sitzung des
+  //  Fragenden - so bleibt die Antwort fuer ihn auch nach einem
+  //  Neuverbinden im Verlauf, und chatFuer/chatNachrichtOrt lassen sie
+  //  fuer alle anderen weg.
+  // ----------------------------------------------------------------
+  const lcPrivat = new Map();
+  function lcPrivatMerken(socket, id){
+    lcPrivat.set(id, chatSitzungFuer(socket));
+    while(lcPrivat.size > 2000) lcPrivat.delete(lcPrivat.keys().next().value);
+  }
+  // Und umgekehrt: die Zeile "... hat gefragt" sieht der Fragende selbst nicht.
+  const lcNichtFuer = new Map();
+  function lcFuerMich(sock, n){
+    if(!n || !n.id) return true;
+    if(lcNichtFuer.has(n.id)) return lcNichtFuer.get(n.id) !== chatSitzungFuer(sock);
+    if(!lcPrivat.has(n.id)) return true;
+    return lcPrivat.get(n.id) === chatSitzungFuer(sock);
+  }
+  function lcNotiz(name, socket){
+    const id = crypto.randomBytes(8).toString('hex');
+    if(socket){
+      lcNichtFuer.set(id, chatSitzungFuer(socket));
+      while(lcNichtFuer.size > 2000) lcNichtFuer.delete(lcNichtFuer.keys().next().value);
+    }
+    return { id: id, userId: '__system__', name: 'Lerncoach', system: true,
+             text: '🎓 ' + name + ' hat den Lerncoach gefragt.', zeit: Date.now() };
+  }
+  // Geht diese Nachricht an den Lerncoach - und bleibt sie deshalb unter
+  // vier Augen? Nur wenn er an ist und keine Pruefung laeuft; sonst bleibt
+  // sie eine ganz normale Nachricht (die Pruefungs-Absage kommt trotzdem).
+  function lcPruefen(socket, text, code, room){
+    const an = LC_RE.test(text) || lcHoertZu(socket, code);
+    const privat = an && lcAktiv() && !(room && room.config && room.config.pruefung);
+    return { an: an, privat: privat };
+  }
+  function lcOrtFuer(socket, code){
+    if(code === '__haus') return (socket.data && socket.data.roomCode) ? null : { haus: true };
+    const room = duoRooms[code];
+    if(!room || !room.users[socket.id]) return null;
+    return { room: room, code: code };
+  }
+  function lcSenden(ort, ereignis, daten){
+    if(ort.room) io.to(ort.code).emit(ereignis, daten);
+    else hausSenden(ereignis, daten);
+  }
+  function lcPosten(ort, n, sock){
+    if(sock) lcPrivatMerken(sock, n.id);
+    if(ort.room){
+      if(!Array.isArray(ort.room.chat)) ort.room.chat = [];
+      ort.room.chat.push(n);
+      // 50 wie CHAT_VERLAUF_MAX - das steht im Verbindungs-Handler und ist hier nicht sichtbar.
+      while(ort.room.chat.length > 50) ort.room.chat.shift();
+    } else {
+      n.haus = true;
+      hausChat.push(n);
+      while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+    }
+    if(sock) sock.emit('duoChatNachricht', n);
+    else lcSenden(ort, 'duoChatNachricht', n);
+  }
+  async function lcAnstossen(socket, ort, anfrage){
+    try{
+      if(!lcAktiv()) return;
+      // In einer Pruefung im Gruppenraum schweigt der Lerncoach.
+      if(ort.room && ort.room.config && ort.room.config.pruefung){
+        socket.emit('duoChatHinweis', 'Während einer Prüfung hilft der Lerncoach nicht – danach gern.'); return;
+      }
+      if(!anfrage.frageId && LC_NUR_ANREDE_RE.test(String(anfrage.text || ''))){
+        socket.data.lcHoertBis = Date.now() + 3 * 60 * 1000;
+        socket.data.lcHoertOrt = ort.room ? ort.code : '__haus';
+        lcPosten(ort, { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
+                        lerncoach: true, fuer: anfrage.name, fuerId: socket.id, zeit: Date.now(),
+                        ohneHinweis: true,
+                        text: 'Gern! Was möchtest du wissen? Schreib deine Frage einfach als nächste Nachricht – ohne „Hey KI“.' }, socket);
+        return;
+      }
+      const jetzt = Date.now();
+      socket.data.lcZeiten = (socket.data.lcZeiten || []).filter(t => jetzt - t < 60 * 60 * 1000);
+      if(socket.data.lcZeiten.length && jetzt - socket.data.lcZeiten[socket.data.lcZeiten.length - 1] < 10000){
+        socket.emit('duoChatHinweis', 'Einen Moment – der Lerncoach antwortet gerade noch.'); return;
+      }
+      if(socket.data.lcZeiten.length >= 15){
+        socket.emit('duoChatHinweis', 'Das waren viele Fragen an den Lerncoach in einer Stunde – bitte etwas später wieder.'); return;
+      }
+      const e = lcEinstellungen();
+      // Kostenlose Modelle bei OpenRouter zaehlen nicht gegen die Tagesgrenze -
+      // sonst sperrte ein aufgebrauchtes Claude-Budget auch das Kostenlose.
+      const kostenlos = e.anbieter === 'openrouter' && /(^openrouter\/free$|:free$)/.test(e.orModell);
+      if(!kostenlos && lcVerbrauch().dollar >= e.grenzeDollar){
+        socket.emit('duoChatHinweis', 'Für heute ist das Budget des Lerncoachs aufgebraucht – morgen geht es weiter.'); return;
+      }
+      if(lcLaufend >= 3){ socket.emit('duoChatHinweis', 'Der Lerncoach beantwortet gerade andere Fragen – bitte gleich noch einmal.'); return; }
+      socket.data.lcZeiten.push(jetzt);
+      lcLaufend++;
+      socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name });
+      let ergebnis;
+      try{
+        ergebnis = await lcFragen({ name: anfrage.name, text: anfrage.text, frageId: anfrage.frageId,
+                                    versuchMelden: nr => socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name, versuch: nr }),
+                                    sitzung: chatSitzungFuer(socket) });
+      }catch(err){
+        console.warn('[LERNCOACH] Fehler: ' + (err.status || '') + ' ' + String(err.message || err).slice(0, 160));
+        socket.emit('duoChatHinweis', lcFehlerText(err));
+        return;
+      }finally{
+        lcLaufend--;
+        socket.emit('lerncoachDenkt', { an: false });
+      }
+      const n = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
+                  lerncoach: true, fuer: anfrage.name, fuerId: socket.id, text: ergebnis.chat, zeit: Date.now() };
+      if(anfrage.frageId) n.zuFrage = anfrage.frageId;
+      // Sprachnachricht erst auf Wunsch (29.09.2026). Dietmar: "Nach dem
+      // Text, soll er fragen ob auch eine Sprachnachricht gewuenscht ist."
+      // Den Vorlese-Text hat die KI schon mitgeliefert (<<<VORLESEN>>>);
+      // er wartet hier, bis der Fragende "Ja, bitte" tippt. Piper macht
+      // daraus am Trainer-PC die Aufnahme - das kostet keine Token.
+      if(e.stimme && ergebnis.sprech){
+        n.vorlesenAngebot = true;
+        lcVorleseWunsch.set(n.id, { n: n, sprech: ergebnis.sprech, ort: ort, sitzung: chatSitzungFuer(socket), name: anfrage.name });
+        while(lcVorleseWunsch.size > 300) lcVorleseWunsch.delete(lcVorleseWunsch.keys().next().value);
+      }
+      lcPosten(ort, n, socket);
+      lcVerlaufSchreiben({ name: anfrage.name, frageId: anfrage.frageId, text: anfrage.text, chat: ergebnis.chat, ergebnis: ergebnis });
+      console.log('[LERNCOACH] Antwort fuer ' + anfrage.name + (anfrage.frageId ? ' zu ' + anfrage.frageId : '') + ' nach ' + ergebnis.sekunden + ' s - '
+                  + ergebnis.ein + '/' + ergebnis.aus + ' Token, ' + (ergebnis.dollar * 100).toFixed(2) + ' Cent');
+    }catch(err){ console.error('[LERNCOACH] Fehler', err); }
+  }
+  const lcVorleseWunsch = new Map();   // Antwort-id -> { n, sprech, ort, sitzung, name }
+  async function lcVorlesen(socket, id){
+    const w = lcVorleseWunsch.get(id);
+    if(!w || w.sitzung !== chatSitzungFuer(socket)) return;
+    lcVorleseWunsch.delete(id);
+    w.n.vorlesenAngebot = false;           // auch im Verlauf: nicht noch einmal anbieten
+    const ort = w.ort;
+    if(ort.room && duoRooms[ort.code] !== ort.room) return;   // Raum gibt es nicht mehr
+    try{
+      const t = await lcSprechen(w.sprech);
+      const text = '🎤 Sprachnachricht (' + Math.floor(t.dauer / 60) + ':' + String(t.dauer % 60).padStart(2, '0') + ')';
+      const s = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
+                  lerncoach: true, fuer: w.name, fuerId: socket.id, zuAntwort: id, text: text, zeit: Date.now(),
+                  sprache: { mime: 'audio/mpeg', dauer: t.dauer, welle: t.welle } };
+      spracheMerken(s.id, t.buf, 'audio/mpeg');
+      lcPosten(ort, s, socket);
+    }catch(err){
+      console.warn('[LERNCOACH] Sprachnachricht nicht moeglich: ' + err.message);
+      socket.emit('duoChatHinweis', 'Die Sprachnachricht ließ sich gerade nicht erstellen.');
+      socket.emit('lerncoachVorlesenFertig', { id: id });
+    }
+  }
+  // ----------------------------------------------------------------
   //  WER NEU KOMMT, SIEHT NICHTS VON VORHER             (23.09.2026)
   //  Dietmar: "Der Chat und Sprachnachrichten muessen nach einem
   //  Neustart geloescht werden. Neue Benutzer sollten nicht sehen, was
@@ -6274,7 +7128,7 @@ try{
   function chatFuer(sock, room, liste){
     const ab = chatSichtbarAb(sock, room);
     const ich = chatSitzungFuer(sock);
-    return (Array.isArray(liste) ? liste : []).filter(function(n){ return n && (n.zeit || 0) >= ab; })
+    return (Array.isArray(liste) ? liste : []).filter(function(n){ return n && (n.zeit || 0) >= ab && lcFuerMich(sock, n); })
       .map(function(n){
         const zusatz = {};
         if(n.id && chatBesitzer.get(n.id) === ich) zusatz.meine = true;
@@ -6294,13 +7148,13 @@ try{
     const code = sock.data && sock.data.roomCode;
     if(code && duoRooms[code] && Array.isArray(duoRooms[code].chat)){
       const n = duoRooms[code].chat.find(function(x){ return x.id === id; });
-      if(n) return ((n.zeit || 0) >= chatSichtbarAb(sock, duoRooms[code])) ? { n: n, room: duoRooms[code] } : null;
+      if(n) return ((n.zeit || 0) >= chatSichtbarAb(sock, duoRooms[code]) && lcFuerMich(sock, n)) ? { n: n, room: duoRooms[code] } : null;
     }
     // Aus dem Chat ohne Raum darf lesen, wer dort mitliest: ohne Raum,
     // oder der Gastgeber am eigenen Rechner (siehe hausLeute).
     if(hausLeute().indexOf(sock) !== -1){
       const n = hausChat.find(function(x){ return x.id === id; });
-      return (n && (n.zeit || 0) >= chatSichtbarAb(sock, null)) ? { n: n, room: null } : null;
+      return (n && (n.zeit || 0) >= chatSichtbarAb(sock, null) && lcFuerMich(sock, n)) ? { n: n, room: null } : null;
     }
     return null;
   }
@@ -6416,6 +7270,32 @@ try{
   // aussen? Danach entscheidet der Gastgeber-Client, ob er das
   // Chatfenster aufmacht: Wenn niemand da ist, soll es nicht im Weg
   // stehen.
+  // WER IST AUF DEM SERVER? (29.09.2026) Dietmar: "Rechts im angedockten
+  // Chat haette ich gerne die Option zu sehen, wer da drauf ist wie auch
+  // im Gruppenraum." Dieselben Leute, die den Chat ohne Raum lesen
+  // (hausLeute), mit Namen - sonst nichts: keine Adresse, kein Ort. Mehrere
+  // Fenster derselben Person (gleicher Name, gleiche Rolle) zaehlen einmal.
+  function socketAmTrainer(s){
+    try{
+      const h = (s.handshake && s.handshake.headers) || {};
+      if(PROXY_HEADERS.some(function(k){ return h[k]; })) return false;
+      const a = String((s.handshake && s.handshake.address) || '').replace(/^::ffff:/i, '');
+      return a === '127.0.0.1' || a === '::1';
+    }catch(e){ return false; }
+  }
+  function hausNamensliste(){
+    const liste = [], gesehen = {};
+    hausLeute().forEach(function(s){
+      const rolle = socketAmTrainer(s) ? 'kursleiter' : ((s.data && s.data.vonAussen) ? '' : 'wlan');
+      const name = (s.data && s.data.hausName) || (rolle === 'kursleiter' ? 'Kursleiter' : 'Besucher');
+      const schluessel = rolle + '|' + name.toLowerCase();
+      if(name !== 'Besucher' && gesehen[schluessel]){ gesehen[schluessel].ids.push(s.id); return; }
+      const e = { id: s.id, ids: [s.id], name: name, rolle: rolle };
+      gesehen[schluessel] = e;
+      liste.push(e);
+    });
+    return liste.slice(0, 60);
+  }
   function hausVolkMelden(){
     try{
       const ohneRaum = hausOhneRaum();
@@ -6424,7 +7304,7 @@ try{
       // Chat ein und Server aus = Chat aus." Der Client koennte ihn auch
       // einzeln erfragen - aber er hoert hier ohnehin schon zu, und so
       // kommt beides in einem Stueck an, ohne zusaetzlichen Abruf.
-      const daten = { anzahl: ohneRaum.length, vonAussen: vonAussen, tuer: !!tuerOffen };
+      const daten = { anzahl: ohneRaum.length, vonAussen: vonAussen, tuer: !!tuerOffen, leute: hausNamensliste() };
       hausLeute().forEach(function(s){ try{ s.emit('hausVolk', daten); }catch(e){} });
     }catch(e){}
   }
@@ -6500,6 +7380,7 @@ try{
     //  soll ein zweiter Raum weiterhin moeglich sein.
     const vonAussen = sperrbar(socketIp(socket));
     socket.data.vonAussen = vonAussen;
+    try{ socket.emit('lerncoachStand', { an: lcAktiv(), anbieter: lcEinstellungen().anbieter }); }catch(e){}
     // Ab wann dieser Besucher den Chat sieht - gleich jetzt festhalten,
     // vor jeder Nachricht (siehe "WER NEU KOMMT").
     chatSitzungFuer(socket);
@@ -6513,6 +7394,9 @@ try{
     // wenn es diesmal gar nicht gezeigt wurde.
     socket.on('hausHallo', function(data){
       try{
+        // Den Namen fuer die Liste "wer ist da" merken - bei allen (29.09.2026).
+        const nm = String((data && data.name) || '').replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 20);
+        if(nm && socket.data.hausName !== nm){ socket.data.hausName = nm; hausVolkMelden(); }
         // Nur Besucher von aussen. Der Gastgeber und sein WLAN begruessen
         // sich nicht selbst.
         if(!socket.data || !socket.data.vonAussen) return;
@@ -6929,7 +7813,8 @@ try{
       const usersStats = computeUserStats(room);
       const ranking = Object.entries(usersStats)
         // Unterricht: Der Kursleiter stand am Beamer und hat nicht geantwortet.
-        .filter(([uid])=> !(room.lektion && uid === room.hostId))
+        // Im eigenen Tempo zaehlt er mit, wenn er mitgemacht hat (29.09.2026).
+        .filter(([uid])=> !(room.lektion && uid === room.hostId && !(room.lektion.frei && room.allAnswers && room.allAnswers[uid] && Object.keys(room.allAnswers[uid]).length)))
         .map(([uid,s])=>({userId:uid, ...s}))
         .sort((a,b)=> b.correct - a.correct || b.accuracy - a.accuracy);
       // FIX W12: Das Flag wird hier NICHT mehr gesetzt.
@@ -7026,11 +7911,29 @@ try{
         socket.emit('errorMsg','Nur der Kursleiter kann eine neue Runde starten.');
         return;
       }
+      // WAS KOMMT DRAN? (29.09.2026) Dietmar: "nach neue Runde fuer alle
+      // moechte ich auswaehlen koennen, was dran kommt." Der Kursleiter
+      // schickt optional eine neue Auswahl mit: Anzahl und Bereich - oder
+      // den Pruefungssimulator. (Eine Lektion startet sein Browser ueber
+      // lektionStarten, dafuer braucht es hier nichts.)
+      if(data.config && typeof data.config === 'object'){
+        const c = data.config;
+        const ANZAHL = ['10','20','25','50','75','all'];
+        const TEILE = ['vorschriften','betrieb','technik'];
+        const count = ANZAHL.includes(String(c.count)) ? String(c.count) : '25';
+        const part = TEILE.includes(String(c.part)) ? String(c.part) : 'all';
+        room.config = { count: count === 'all' ? 'all' : parseInt(count, 10), part: part,
+                        parts: part === 'all' ? TEILE.slice() : [part], pruefung: c.pruefung === true };
+      }
       generateRoomQuestions(room);
+      if(data.config) io.to(code).emit('duoConfigGeaendert', { config: room.config, totalQuestions: room.questions.length, gesperrt: false, leise: true });
       // Der alte Durchgang ist vorbei: Antworten, Zeiten und die Sperre
-      // fuer die Endauswertung gehen mit ihm.
+      // fuer die Endauswertung gehen mit ihm - und die Merker, wer schon
+      // "ist fertig" im Chat hatte (sonst blieb der Chat ab Runde 2 stumm).
       room.allAnswers = {};
       room.startTimes = {};
+      room.finishTimes = {};
+      room._fertigGemeldet = {};
       room.finalResultsSent = false;
       const jetzt = Date.now();
       Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
@@ -7076,6 +7979,23 @@ try{
       try{
         if(!room || !room.lektion || !room.hostId) return;
         const L = room.lektion;
+        // JEDER IM EIGENEN TEMPO (29.09.2026): statt "wer hat diese Frage
+        // beantwortet" - wie viele sind durch, und wie gut laeuft es.
+        if(L.frei){
+          const alle = room.questions ? room.questions.length : 0;
+          const tn = Object.keys(room.users || {}).filter(u => u !== room.hostId);
+          let fertig = 0, beantwortet = 0, richtig = 0;
+          tn.forEach(u => {
+            const a = (room.allAnswers && room.allAnswers[u]) || {};
+            const n = Object.keys(a).length;
+            beantwortet += n;
+            Object.keys(a).forEach(k => { if(a[k] && a[k].isCorrect) richtig++; });
+            if(alle && n >= alle) fertig++;
+          });
+          io.to(room.hostId).emit('lektionStand', { frei: true, fertig, teilnehmer: tn.length, beantwortet, richtig,
+                                                     gesamt: alle * tn.length });
+          return;
+        }
         const qid = room.questions && room.questions[L.index];
         const teilnehmer = Object.keys(room.users || {}).filter(u => u !== room.hostId);
         const verteilung = [0, 0, 0, 0];
@@ -7117,8 +8037,8 @@ try{
     function lektionMeta(room){
       if(!room || !room.lektion) return null;
       const L = room.lektion;
-      return { nr: L.nr, titel: L.titel, abschnitte: L.abschnitte, index: L.index, aufgedeckt: !!L.aufgedeckt,
-               versatz: L.versatz || 0, gesamt: L.gesamt || (room.questions ? room.questions.length : 0) };
+      return { nr: L.nr, titel: L.titel, abschnitte: L.abschnitte, index: L.frei ? 0 : L.index, aufgedeckt: !!L.aufgedeckt,
+               versatz: L.versatz || 0, gesamt: L.gesamt || (room.questions ? room.questions.length : 0), frei: !!L.frei };
     }
 
     socket.on('lektionStarten', data=>{
@@ -7155,7 +8075,12 @@ try{
       // hier"), zeigt der Beamer trotzdem "Frage 12 von 85" wie im Foliensatz.
       const versatz = Math.max(0, Math.min(999, parseInt(data.versatz, 10) || 0));
       const gesamt = Math.max(gewaehlt.length + versatz, Math.min(999, parseInt(data.gesamt, 10) || 0));
-      room.lektion = { nr, titel: lektionTextSauber(data.titel, 80), abschnitte: abs, index: 0, aufgedeckt: false, versatz, gesamt };
+      // frei (29.09.2026): Dietmar: "Das alle warten muessen ist bloed.
+      // Besser waere es wenn jeder in seinem Tempo arbeiten kann, ohne auf
+      // einen anderen zu warten." Dann blaettert jeder selbst, sieht sofort,
+      // ob seine Antwort stimmt, und der Kursleiter sieht, wer wie weit ist.
+      room.lektion = { nr, titel: lektionTextSauber(data.titel, 80), abschnitte: abs, index: 0, aufgedeckt: false, versatz, gesamt,
+                       frei: !!data.frei };
       room.allAnswers = {};
       room.startTimes = {};
       room.finishTimes = {};
@@ -7179,7 +8104,7 @@ try{
     socket.on('lektionSchritt', data=>{
      try{
       if(!data || typeof data !== 'object') return;
-      const room = duoRooms[data.code]; if(!room || !room.lektion) return;
+      const room = duoRooms[data.code]; if(!room || !room.lektion || room.lektion.frei) return;
       if(room.hostId !== socket.id) return;
       const n = room.questions ? room.questions.length : 0;
       const index = parseInt(data.index, 10);
@@ -7282,7 +8207,13 @@ try{
       // Unterricht: Das Ende bestimmt der Kursleiter (lektionEnde), nicht
       // die letzte Antwort - sonst ginge die Auswertung auf, bevor er die
       // letzte Frage aufgeloest hat.
-      if(room.lektion) allDone = false;
+      if(room.lektion && !room.lektion.frei) allDone = false;
+      // Im eigenen Tempo: fertig, wenn alle Teilnehmer durch sind. Der
+      // Kursleiter zaehlt nur mit, wenn er selbst mitgemacht hat.
+      if(room.lektion && room.lektion.frei && totalQuestions > 0){
+        const wer = Object.keys(room.users).filter(u => u !== room.hostId || (room.allAnswers[u] && Object.keys(room.allAnswers[u]).length));
+        allDone = wer.length > 0 && wer.every(u => (room.allAnswers[u] ? Object.keys(room.allAnswers[u]).length : 0) >= totalQuestions);
+      }
 
       // Endzeit fuer die Zeitmessung in der Teilnehmer-Uebersicht - einmalig
       // beim eigenen Abschluss (unabhaengig davon, ob andere im Raum schon
@@ -7297,7 +8228,11 @@ try{
       // stattdessen landet sein Ergebnis als Nachricht im Gruppenchat. So sieht
       // man, wenn ein Teilnehmer schneller war, wird davon aber beim eigenen
       // Lernen nicht unterbrochen.
-      if(totalQuestions>0 && answeredCount>=totalQuestions && !allDone && !room.lektion){
+      // Seit 29.09.2026 auch fuer den, der als Letzter fertig wird - vorher
+      // ging dann nur die Gesamt-Auswertung auf, und im Chat stand nichts.
+      // Dietmar: "Wenn meine Frau Maja fertig ist, kommt eine Meldung im
+      // Chat und bei mir kommt nichts".
+      if(totalQuestions>0 && answeredCount>=totalQuestions && (!room.lektion || room.lektion.frei)){
         if(!room._fertigGemeldet) room._fertigGemeldet = {};
         if(!room._fertigGemeldet[uid]){
           room._fertigGemeldet[uid] = true;
@@ -7311,7 +8246,9 @@ try{
               name: (room.users[uid] && room.users[uid].name) || 'Ein Teilnehmer',
               istHost: uid === room.hostId,
               automatisch: true,
-              text: (meineStats.teile && meineStats.teile.length)
+              text: room.lektion
+                ? '🏁 ist mit Lektion ' + room.lektion.nr + ' fertig: ' + meineStats.correct + '/' + meineStats.total + ' richtig.'
+                : (meineStats.teile && meineStats.teile.length)
                 ? '🏁 hat die Prüfung abgegeben: ' + meineStats.teile.map(t =>
                     ({vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik'}[t.teil] || t.teil) + ' ' + t.correct + '/' + t.total).join(', ')
                   + ' (' + statusText + ').'
@@ -7473,7 +8410,8 @@ try{
         if(data.code === '__haus'){
           if(socket.data && socket.data.roomCode) return;   // der sitzt in einem Raum
           let t = String(data.text || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g,' ').trim();
-          if(!t) return;
+          const frageH = chatFrageSaeubern(data.frage);    // 29.09.2026
+          if(!t && !frageH) return;
           if(t.length > CHAT_MAX_LAENGE) t = t.slice(0, CHAT_MAX_LAENGE);
           if(chatRateLimit(socket)){
             socket.emit('duoChatHinweis','Bitte etwas langsamer schreiben.');
@@ -7485,6 +8423,7 @@ try{
           // Raum. Der eigene Rechner heisst "Gastgeber", damit ein
           // Besucher sieht, mit wem er spricht.
           let name = String((data.name || '')).replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20);
+          if(name && socket.data.hausName !== name){ socket.data.hausName = name; hausVolkMelden(); }
           const drinnen = !(socket.data && socket.data.vonAussen);
           if(!name) name = drinnen ? 'Kursleiter' : 'Besucher';
           const n = {
@@ -7492,15 +8431,29 @@ try{
             userId: socket.id,
             name: name,
             istHost: drinnen,
-            text: t,
+            text: t || ('Frage ' + frageH.id),
             zeit: Date.now()
           };
+          if(frageH){ n.frage = frageH; if(!t) n.ohneText = true; }
           n.haus = true;      // der Client schreibt "am Link" dazu
-          n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
+          const lcH = lcPruefen(socket, t, '__haus', null);
+          n.empfaenger = lcH.privat ? 0 : hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
           chatBesitzerMerken(socket, n.id);
+          if(lcH.privat) lcPrivatMerken(socket, n.id);
           hausChat.push(n);
           while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
-          hausSenden('duoChatNachricht', n);
+          if(lcH.privat){
+            // Frage an den Lerncoach: nur an den Fragenden, die anderen
+            // sehen, dass gefragt wurde (29.09.2026).
+            socket.emit('duoChatNachricht', n);
+            const notiz = Object.assign(lcNotiz(name, socket), { haus: true });
+            hausChat.push(notiz);
+            while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+            hausLeute().forEach(function(s){ if(s.id !== socket.id){ try{ s.emit('duoChatNachricht', notiz); }catch(e){} } });
+          } else {
+            hausSenden('duoChatNachricht', n);
+          }
+          if(lcH.an) lcAnstossen(socket, { haus: true }, { name: name, text: t.replace(LC_RE, ''), frageId: frageH ? frageH.id : null });
           // Nur wer und wie lang, nicht was: server.log ueberlebt jeden
           // Neustart, der Chat soll es nicht (23.09.2026).
           console.log('[CHAT] ohne Raum - ' + n.name + ' schreibt (' + t.length + ' Zeichen)');
@@ -7514,7 +8467,8 @@ try{
 
         // Steuerzeichen raus, Zeilenumbrueche zu Leerzeichen, Laenge begrenzen
         let text = String(data.text || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g,' ').trim();
-        if(!text) return;
+        const frageR = chatFrageSaeubern(data.frage);      // 29.09.2026
+        if(!text && !frageR) return;
         if(text.length > CHAT_MAX_LAENGE) text = text.slice(0, CHAT_MAX_LAENGE);
 
         if(chatRateLimit(socket)){
@@ -7527,13 +8481,29 @@ try{
           userId: socket.id,
           name: user.name || 'Teilnehmer',
           istHost: socket.id === room.hostId,
-          text: text,
+          text: text || ('Frage ' + frageR.id),
           zeit: Date.now()
         };
+        if(frageR){ nachricht.frage = frageR; if(!text) nachricht.ohneText = true; }
         if(!Array.isArray(room.chat)) room.chat = [];
         chatBesitzerMerken(socket, nachricht.id);
+        const lcR = lcPruefen(socket, text, data.code, room);
+        if(lcR.privat) lcPrivatMerken(socket, nachricht.id);
         room.chat.push(nachricht);
         while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
+        // Frage an den Lerncoach: nur an den Fragenden; die anderen im Raum
+        // sehen nur "... hat den Lerncoach gefragt." (29.09.2026)
+        if(lcR.privat){
+          nachricht.empfaenger = 0;
+          socket.emit('duoChatNachricht', nachricht);
+          const notiz = lcNotiz(nachricht.name, socket);
+          room.chat.push(notiz);
+          while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
+          socket.to(data.code).emit('duoChatNachricht', notiz);
+          lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null });
+          console.log(`[CHAT] ${room.code} ${nachricht.name} fragt den Lerncoach (${text.length} Zeichen)`);
+          return;
+        }
 
         // An wie viele geht sie? Die anderen im Raum - und, wenn der
         // Gastgeber schreibt, dazu die am Link (siehe unten).
@@ -7568,6 +8538,7 @@ try{
             console.log('[CHAT] Antwort des Kursleiters auch an ' + draussen.length + ' am Link.');
           }
         }
+        if(lcR.an) lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null });
         console.log(`[CHAT] ${room.code} ${nachricht.name} schreibt (${text.length} Zeichen)`);
       }catch(e){ console.error('[CHAT] Fehler', e); }
     });
@@ -7703,6 +8674,130 @@ try{
       }catch(e){ console.error('[CHAT] Sprache-Fehler', e); }
     });
 
+    // Ein Bild kommt an (29.09.2026, siehe BILDER IM CHAT).
+    socket.on('duoBild', data=>{
+      try{
+        if(!data || typeof data !== 'object') return;
+        let buf = data.daten;
+        if(buf instanceof ArrayBuffer) buf = Buffer.from(buf);
+        if(!Buffer.isBuffer(buf) || buf.length < 500) return;
+        if(buf.length > BILD_MAX_GROESSE){ socket.emit('duoChatHinweis', 'Das Bild ist zu groß.'); return; }
+        // Nur JPEG - der Browser macht aus jedem Bild eines. Die ersten
+        // drei Bytes sind bei jedem JPEG dieselben.
+        if(buf[0] !== 0xFF || buf[1] !== 0xD8 || buf[2] !== 0xFF) return;
+        const vorschau = typeof data.vorschau === 'string' ? data.vorschau : '';
+        if(!vorschau || vorschau.length > BILD_VORSCHAU_MAX || !BILD_VORSCHAU_RE.test(vorschau)) return;
+        const w = Math.max(1, Math.min(4000, Math.round(Number(data.w) || 0)));
+        const h = Math.max(1, Math.min(4000, Math.round(Number(data.h) || 0)));
+        const jetzt = Date.now();
+        if(socket.data.bildZuletzt && jetzt - socket.data.bildZuletzt < 3000){
+          socket.emit('duoChatHinweis', 'Bitte etwas langsamer.'); return;
+        }
+        socket.data.bildZeiten = (socket.data.bildZeiten || []).filter(function(t){ return jetzt - t < 5 * 60 * 1000; });
+        if(socket.data.bildZeiten.length >= 10){
+          socket.emit('duoChatHinweis', 'Das waren viele Bilder – bitte ein paar Minuten warten.'); return;
+        }
+        socket.data.bildZuletzt = jetzt;
+        socket.data.bildZeiten.push(jetzt);
+        let text = String(data.text || '').replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LAENGE);
+        const bild = { w: w, h: h, vorschau: vorschau, kb: Math.round(buf.length / 1024) };
+
+        if(data.code === '__haus'){
+          if(socket.data && socket.data.roomCode) return;
+          const drinnen = !(socket.data && socket.data.vonAussen);
+          const name = String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20) || (drinnen ? 'Kursleiter' : 'Besucher');
+          const n = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id, name: name, istHost: drinnen,
+                      text: text || '\uD83D\uDCF7 Bild', zeit: jetzt, haus: true, bild: bild };
+          if(!text) n.ohneText = true;
+          n.empfaenger = hausLeute().filter(function(x){ return x.id !== socket.id; }).length;
+          chatBesitzerMerken(socket, n.id);
+          bildMerken(n.id, buf);
+          hausChat.push(n);
+          while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+          hausSenden('duoChatNachricht', n);
+          console.log('[CHAT] Bild ohne Raum - ' + name + ', ' + bild.kb + ' KB');
+          return;
+        }
+
+        const room = duoRooms[data.code];
+        if(!room) return;
+        const user = room.users[socket.id];
+        if(!user){ socket.emit('errorMsg','Du bist nicht in diesem Raum'); return; }
+        const nachricht = { id: crypto.randomBytes(8).toString('hex'), userId: socket.id,
+                            name: user.name || 'Teilnehmer', istHost: socket.id === room.hostId,
+                            text: text || '\uD83D\uDCF7 Bild', zeit: jetzt, bild: bild };
+        if(!text) nachricht.ohneText = true;
+        try{
+          let anz = Object.keys(room.users || {}).filter(function(k){ return k !== socket.id; }).length;
+          if(socket.id === room.hostId) anz += hausOhneRaum().filter(function(x){ return x.id !== socket.id; }).length;
+          nachricht.empfaenger = anz;
+        }catch(e){}
+        chatBesitzerMerken(socket, nachricht.id);
+        bildMerken(nachricht.id, buf);
+        if(!Array.isArray(room.chat)) room.chat = [];
+        room.chat.push(nachricht);
+        while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
+        io.to(data.code).emit('duoChatNachricht', nachricht);
+        if(socket.id === room.hostId){
+          const draussen = hausOhneRaum();
+          if(draussen.length){
+            const kopie = Object.assign({}, nachricht, { haus: true });
+            if(!hausChat.some(function(x){ return x.id === kopie.id; })){
+              hausChat.push(kopie);
+              while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+            }
+            draussen.forEach(function(x){ try{ x.emit('duoChatNachricht', kopie); }catch(e){} });
+          }
+        }
+        console.log('[CHAT] ' + room.code + ' Bild - ' + nachricht.name + ', ' + bild.kb + ' KB');
+      }catch(e){ console.error('[CHAT] Bild-Fehler', e); }
+    });
+
+    // "Lerncoach fragen" an einer geteilten Frage (29.09.2026)
+    socket.on('lerncoachVorlesen', data=>{
+      try{ lcVorlesen(socket, String((data && data.id) || '').slice(0, 32)); }catch(e){ console.error('[LERNCOACH] Vorlesen', e); }
+    });
+    socket.on('lerncoachFragen', data=>{
+      try{
+        if(!data || typeof data !== 'object') return;
+        const ort = lcOrtFuer(socket, String(data.code || ''));
+        if(!ort) return;
+        const n = chatNachrichtFinden(socket, String(data.id || '').slice(0, 32));
+        if(!n || !n.frage) return;
+        let name = ort.room ? (ort.room.users[socket.id].name || 'Teilnehmer')
+                            : (String(data.name || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 20)
+                               || ((socket.data && socket.data.vonAussen) ? 'Besucher' : 'Kursleiter'));
+        // Die anderen sehen nur, dass gefragt wurde (29.09.2026).
+        if(lcAktiv() && !(ort.room && ort.room.config && ort.room.config.pruefung)){
+          const notiz = lcNotiz(name, socket);
+          if(ort.room){
+            if(!Array.isArray(ort.room.chat)) ort.room.chat = [];
+            ort.room.chat.push(notiz);
+            while(ort.room.chat.length > CHAT_VERLAUF_MAX) ort.room.chat.shift();
+            socket.to(ort.code).emit('duoChatNachricht', notiz);
+          } else {
+            notiz.haus = true;
+            hausChat.push(notiz);
+            while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
+            hausLeute().forEach(function(s){ if(s.id !== socket.id){ try{ s.emit('duoChatNachricht', notiz); }catch(e){} } });
+          }
+        }
+        lcAnstossen(socket, ort, { name: name, text: 'Bitte erkläre mir diese Frage.', frageId: n.frage.id });
+      }catch(e){ console.error('[LERNCOACH] Knopf', e); }
+    });
+
+    // Das grosse Bild holen - nur, wer die Nachricht auch sehen darf.
+    socket.on('bildHolen', data=>{
+      try{
+        const id = String((data && data.id) || '').slice(0, 32);
+        if(!id) return;
+        const n = chatNachrichtFinden(socket, id);
+        const b = bildSpeicher.get(id);
+        if(!n || !b){ socket.emit('bildDaten', { id: id, fehlt: true }); return; }
+        socket.emit('bildDaten', { id: id, daten: b });
+      }catch(e){ console.error('[CHAT] Bild-holen-Fehler', e); }
+    });
+
     // Abspielen: Die Aufnahme holen - nur, wer die Nachricht auch sehen darf.
     socket.on('spracheHolen', data=>{
       try{
@@ -7735,7 +8830,7 @@ try{
         // geschrieben - als Kopie im Chat ohne Raum. Dieselbe id.
         const raeume = [];
         let imHaus = false;
-        function platzhalter(n){ n.geloescht = von; n.text = ''; delete n.sprache; }
+        function platzhalter(n){ n.geloescht = von; n.text = ''; delete n.sprache; delete n.bild; delete n.frage; delete n.ohneText; }
         Object.keys(duoRooms).forEach(function(code){
           const r = duoRooms[code];
           if(r && Array.isArray(r.chat)) r.chat.forEach(function(n){ if(n.id === id){ platzhalter(n); raeume.push(code); } });
@@ -7743,6 +8838,7 @@ try{
         hausChat.forEach(function(n){ if(n.id === id){ platzhalter(n); imHaus = true; } });
         const e = sprachSpeicher.get(id);
         if(e){ sprachGesamt -= (e.buf ? e.buf.length : 0); sprachSpeicher.delete(id); }
+        bildVergessen(id);
         chatLeser.delete(id);
         chatReaktionen.delete(id);
         const meldung = { id: id, von: von };

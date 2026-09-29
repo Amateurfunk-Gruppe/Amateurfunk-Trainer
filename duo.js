@@ -311,14 +311,59 @@
         const c=document.getElementById('duoCreateRoomBtn'), j=document.getElementById('duoJoinRoomBtn');
         if(!c||!j) return;
         const inRoom=!!roomCode;
-        c.style.display=inRoom?'none':''; j.style.display=inRoom?'none':'';
+        // "Raum beitreten" gibt es nicht mehr, und "Jetzt starten" erst, wenn
+        // ein Raum da ist (29.09.2026). Dietmar: "Jetzt starten, wenn kein
+        // Raum erstellt wurde ist Bloedsinn. Raum beitreten, braucht es
+        // nicht. Ich verteile die Links dazu." - "Aus Raum erstellen, wird
+        // Jetzt Starten."
+        c.style.display=inRoom?'none':''; j.style.display='none';
+        // Ohne Raum auch keine Namensliste mehr (29.09.2026): Nach dem
+        // Schliessen stand auf Dietmars Bild noch "Dietmar Host (Du)" und
+        // "Alle Teilnehmer haben denselben Dateistand" unter "Im Raum",
+        // obwohl der Link schon "Noch kein Raum" sagte.
+        // Der Hinweis "Das ist nicht dein Trainer" gilt nur vor dem Beitreten.
+        // Im Raum stand er zwischen "Jetzt starten" und machte "Schliessen"
+        // riesig - Dietmar: "Bei einem Teilnehmer, ist der Button Schliessen
+        // soooo gross".
+        try{ const dh=document.getElementById('duoDemoHinweis'); if(dh) dh.style.display=inRoom?'none':''; }catch(e){}
+        if(!inRoom){
+            try{ const ul=document.getElementById('duoUsers'); if(ul && ul.children.length) updateRoomUsers({}); }catch(e){}
+            try{ const ah=document.getElementById('duoAbgleichHinweis'); if(ah) ah.innerHTML=''; }catch(e){}
+        }
+        const st=document.getElementById('duoStartBtn'); if(st) st.style.display=inRoom?'':'none';
         // Der Kasten um die beiden Knoepfe steht als Fusszeile der linken
         // Spalte. Sind beide Knoepfe weg, soll auch der Kasten weg - sonst
         // bleibt eine leere Zeile mit Innenabstand stehen und macht die
         // Spalte laenger, als ihr Inhalt es verlangt.
+        // Seit 29.09.2026 bleibt der Kasten stehen: Laeuft ein Raum, ziehen
+        // "Jetzt starten", "Neue Runde" und "Auswertung" hinein, rechts
+        // bleibt nur "Schliessen". Dietmar, mit rotem Rahmen um die leere
+        // Stelle links: "Raum erstellen und links kommt jetzt starten, neue
+        // Runde und Auswertung. Das muss nach links. Und schliessen rechts
+        // davon". Am Handy (eine Spalte) bleibt alles wie bisher unten.
         try{
             const kasten = c.closest('.duo-knopfreihe-links');
-            if(kasten) kasten.classList.toggle('leer', inRoom);
+            const rechts = document.querySelector('#duoModal .duo-knopfreihe');
+            const schliessen = document.getElementById('duoSchliessenBtn');
+            const knoepfe = ['duoStartBtn','duoNeueRundeBtn','duoAuswertungBtn'].map(id => document.getElementById(id)).filter(Boolean);
+            const zweiSpalten = !document.body.classList.contains('schmal') && window.innerWidth > 760;
+            if(kasten && rechts && schliessen){
+                // Im Raum stehen alle vier in EINER Reihe ueber beide Spalten -
+                // Dietmar, zum Bild mit der Luecke zwischen "Auswertung" und
+                // "Schliessen": "Auf Bild 2 ist da so eine grosse Luecke."
+                if(inRoom && zweiSpalten){
+                    knoepfe.concat([schliessen]).forEach(k => { if(k.parentNode !== kasten) kasten.appendChild(k); });
+                    kasten.classList.add('mit-start'); rechts.classList.remove('nur-schliessen'); rechts.classList.add('leer');
+                } else {
+                    if(schliessen.parentNode !== rechts) rechts.appendChild(schliessen);
+                    rechts.classList.remove('leer');
+                    knoepfe.forEach(k => { if(k.parentNode !== rechts) rechts.insertBefore(k, schliessen); });
+                    kasten.classList.remove('mit-start');
+                    // Ohne Raum steht rechts ohnehin nur "Schliessen".
+                    rechts.classList.toggle('nur-schliessen', !inRoom && zweiSpalten);
+                }
+            }
+            if(kasten) kasten.classList.toggle('leer', inRoom && !kasten.classList.contains('mit-start'));
         }catch(e){}
     };
     // Jeder Teilnehmer startet für sich selbst - kein Warten auf den Host, kein Warten auf andere
@@ -1178,6 +1223,77 @@
            Stil ein helleres Gruen, damit es sich vom Grund abhebt. */
         '#duoChatMikro i{color:#16a34a;font-size:1.05rem;}',
         'body.dark #duoChatMikro i{color:#4ade80;}',
+        /* BILDER IM CHAT (29.09.2026). Dietmar: "Bilder über dem Messenger,
+           geht das auch?" Der Knopf sieht aus wie das Mikrofon daneben. */
+        '#duoChatBildKnopf{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;',
+        '  cursor:pointer;font-size:0.95rem;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}',
+        '#duoChatBildKnopf:hover{border-color:var(--panel-navy);}',
+        '#duoChatBildKnopf i{color:var(--panel-navy);font-size:1.02rem;}',
+        'body.dark #duoChatBildKnopf i{color:#7dd3fc;}',
+        '#duoChatBox.angedockt #duoChatBildKnopf{width:42px;height:42px;}',
+        '#duoChatEingabeZeile.nimmt-auf #duoChatBildKnopf{display:none !important;}',
+        /* Was gleich mitgeht: ein Streifen ueber dem Eingabefeld */
+        '#duoChatAnhang{display:none;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--line);background:var(--chat-flaeche);font-size:0.76rem;color:var(--ink);}',
+        '#duoChatAnhang.da{display:flex;}',
+        '#duoChatAnhang img{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#fff;flex-shrink:0;}',
+        '#duoChatAnhang .frage-nr{flex-shrink:0;font-family:var(--font-mono,monospace);font-weight:700;border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--card-bg);}',
+        '#duoChatAnhang .was{flex:1;min-width:0;line-height:1.3;}',
+        '#duoChatAnhang .was b{display:block;}',
+        '#duoChatAnhang .was span{display:block;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+        '#duoChatAnhang button{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:999px;width:28px;height:28px;cursor:pointer;flex-shrink:0;}',
+        /* Das Bild in der Blase */
+        '.duo-bild{display:block;padding:0;margin:2px 0 3px;border:none;background:transparent;cursor:zoom-in;border-radius:8px;overflow:hidden;max-width:100%;}',
+        '.duo-bild img{display:block;border-radius:8px;object-fit:cover;background:#fff;}',
+        /* Eine Frage aus dem Trainer */
+        '.duo-frage{margin:2px 0 3px;padding:7px 8px;border-radius:8px;background:rgba(127,127,127,0.12);border-left:3px solid currentColor;}',
+        '.duo-frage-kopf{display:flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:700;opacity:0.85;margin-bottom:4px;}',
+        '.duo-frage-nr{font-family:var(--font-mono,monospace);font-size:0.72rem;border:1px solid currentColor;border-radius:5px;padding:1px 5px;}',
+        '.duo-frage-text{font-weight:600;margin-bottom:5px;}',
+        '.duo-frage-bild img{display:block;max-width:100% !important;max-height:150px !important;margin:0 0 6px;border-radius:6px !important;border:none !important;background:#fff !important;padding:4px !important;cursor:zoom-in !important;}',
+        '.duo-frage-antw{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;}',
+        '.duo-frage-antw li{display:flex;gap:6px;align-items:flex-start;}',
+        '.duo-frage-antw li b{flex-shrink:0;width:14px;}',
+        '.duo-frage-antw.bilder{display:grid;grid-template-columns:1fr 1fr;gap:5px;}',
+        '.duo-frage-antw.bilder li{min-width:0;}',
+        '.duo-frage-antw.bilder img{display:block;flex:1 1 0;min-width:0;width:0;max-height:80px;object-fit:contain;background:#fff;border-radius:5px;padding:3px;cursor:zoom-in;}',
+        '.duo-chat-zeile.mit-anhang{min-width:0;}',
+        '.duo-frage-oeffnen{margin-top:7px;background:transparent;border:1px solid currentColor;color:inherit;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;}',
+        /* Gross anzeigen - ueber allem, auch ueber dem Chat */
+        '#duoBildGross{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px;cursor:zoom-out;}',
+        '#duoBildGross.offen{display:flex;}',
+        '#duoBildGross img{max-width:94vw;max-height:84vh;object-fit:contain;border-radius:8px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,0.6);}',
+        '#duoBildGross .unter{color:#fff;font-size:0.85rem;opacity:0.9;text-align:center;}',
+        '#duoBildGross .zu{position:absolute;top:14px;right:18px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:999px;width:40px;height:40px;font-size:1.3rem;cursor:pointer;}',
+        '#duoChatBox.ziehen{outline:3px dashed var(--panel-navy);outline-offset:-3px;}',
+        /* LERNCOACH (29.09.2026): gruen abgesetzt, damit niemand die KI
+           mit einem Menschen verwechselt. Zeilenumbrueche bleiben stehen -
+           Rechenschritte stehen je in einer eigenen Zeile. */
+        '.duo-chat-coach{align-self:flex-start;background:#ecf8f1;border:1px solid #8fd0a8;color:var(--ink);white-space:pre-line;}',
+        '.duo-chat-zeile.duo-chat-coach{background:#ecf8f1;border-color:#8fd0a8;}',
+        'body.dark .duo-chat-zeile.duo-chat-coach{background:#123828;border-color:#2f7a52;color:#e6f4ec;}',
+        '.duo-chat-coach .duo-chat-absender{color:#15703c;opacity:1;white-space:normal;}',
+        'body.dark .duo-chat-coach .duo-chat-absender{color:#6ee7a0;}',
+        '.duo-coach-hinweis{display:block;font-size:0.62rem;opacity:0.65;margin-top:4px;white-space:normal;}',
+        '.duo-chat-rundgang{align-self:stretch;background:#eaf4ff;border:1px solid #9cc3ea;color:var(--ink);font-size:0.78rem;line-height:1.45;}',
+        '.duo-chat-rundgang .knoepfe{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}',
+        '.duo-chat-rundgang button{border:1px solid #0f2745;background:#0f2745;color:#fff;font-weight:700;font-size:0.74rem;padding:4px 12px;cursor:pointer;font-family:inherit;border-radius:999px;}',
+        '.duo-chat-rundgang button.nein{background:transparent;color:#0f2745;}',
+        'body.dark .duo-chat-rundgang{background:#16304f;border-color:#2c5a8a;color:#e6eef8;}',
+        'body.dark .duo-chat-rundgang button.nein{color:#e6eef8;border-color:#9cc3ea;}',
+        'body.eckig #duoChatBox .duo-chat-rundgang button{border-radius:999px !important;}',
+        '.duo-coach-vorlesen{display:block;margin-top:8px;padding-top:6px;border-top:1px dashed #8fd0a8;font-size:0.78rem;white-space:normal;color:#15703c;}',
+        '.duo-coach-vorlesen button{margin-left:4px;border:1px solid #16a34a;background:#16a34a;color:#fff;border-radius:999px;padding:2px 10px;font-size:0.74rem;font-weight:700;cursor:pointer;font-family:inherit;}',
+        '.duo-coach-vorlesen button:hover{background:#15803d;}',
+        '.duo-coach-vorlesen.wartet{font-style:italic;opacity:.8;}',
+        'body.dark .duo-coach-vorlesen{color:#6ee7a0;border-top-color:#2f7a52;}',
+        'body.eckig #duoChatBox .duo-coach-vorlesen button{border-radius:999px !important;}',
+        '.duo-chat-coach.denkt{font-style:italic;white-space:normal;}',
+        '.duo-chat-coach.denkt .p{display:inline-block;animation:duoLcPunkt 1.2s infinite;}',
+        '.duo-chat-coach.denkt .p:nth-child(2){animation-delay:.2s}.duo-chat-coach.denkt .p:nth-child(3){animation-delay:.4s}',
+        '@keyframes duoLcPunkt{0%,60%,100%{opacity:.2}30%{opacity:1}}',
+        '.duo-frage-coach{display:none;margin:7px 0 0 6px;background:#15703c;border:1px solid #15703c;color:#fff;border-radius:999px;padding:3px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;}',
+        'body.lerncoach-an .duo-frage-coach{display:inline-block;}',
+        'body.eckig #duoChatBox .duo-frage-coach{border-radius:999px !important;}',
         /* DARK MODE: DUNKLERES BLAU, DEUTLICHE HAKEN (26.09.2026). Dietmar,
            mit Bild: "Im Dark Mode sieht man die Hacken schlecht und das
            Blau ist viel zu hell." Im dunklen Stil ist --panel-navy das
@@ -1210,7 +1326,9 @@
         '#duoChatAufnahmePause{color:#e5484d;}',
         '#duoChatAufnahme.pausiert .punkt{animation:none;opacity:0.35;}',
         '#duoChatAufnahmeSenden{background:#1c7a46;color:#fff;}',
-        '.duo-sprache{display:inline-flex;align-items:center;gap:6px;min-width:170px;vertical-align:middle;}',
+        // max-width (29.09.2026): ohne die Grenze nahm die Zeile ihre volle
+        // Wunschbreite und die Pille "1x" ragte ueber den Blasenrand.
+        '.duo-sprache{display:inline-flex;align-items:center;gap:6px;min-width:170px;max-width:100%;vertical-align:middle;}',
         '.duo-sprache-knopf{border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:0.8rem;flex-shrink:0;',
         '  background:var(--panel-navy);color:#fff;}',
         '.duo-chat-eigen .duo-sprache-knopf{background:#fff;color:var(--panel-navy);}',
@@ -1223,7 +1341,12 @@
            dazwischen passen sich an: Die Pille fuer die Geschwindigkeit
            nimmt beim Abspielen Platz weg, und vorher schob sich die Welle
            dann ueber die Zeitangabe. */
-        '.duo-sprache-welle{flex:1 1 auto;width:130px;display:flex;align-items:center;justify-content:space-between;gap:1px;height:26px;min-width:95px;cursor:pointer;}',
+        /* 29.09.2026: Dietmar: "Die Geschwindigkeit 1x ueberlaeuft dem
+           Rahmen im Chat." 36 Striche mit je 1 px Luecke brauchten 107 px,
+           mehr als die Welle neben Pille und Zeit im schmalen Chat hat.
+           Jetzt ohne feste Luecke (space-between verteilt den Rest), die
+           Welle darf bis 72 px schrumpfen - dann passt die Pille hinein. */
+        '.duo-sprache-welle{flex:1 1 auto;width:130px;display:flex;align-items:center;justify-content:space-between;gap:0;height:26px;min-width:72px;cursor:pointer;}',
         '.duo-sprache-welle i{flex:0 0 2px;width:2px;background:currentColor;opacity:0.35;border-radius:2px;display:block;}',
         '.duo-sprache-welle i.gespielt{opacity:1;background:#16a34a;}',
         '.duo-chat-eigen .duo-sprache-welle i.gespielt{background:#86efac;}',
@@ -1287,6 +1410,8 @@
            Rundungen - mit hoeherer Spezifitaet, damit sie gewinnen. Der
            uebrige Blue Mode bleibt, wie er ist. */
         'body.eckig #duoChatBox{border-radius:14px !important;}',
+        'body.eckig #duoChatBildKnopf,body.eckig #duoChatAnhang button,body.eckig #duoChatBox .duo-frage-oeffnen,body.eckig #duoBildGross .zu{border-radius:999px !important;}',
+        'body.eckig #duoChatBox .duo-bild,body.eckig #duoChatBox .duo-bild img,body.eckig #duoChatAnhang img,body.eckig #duoChatBox .duo-frage{border-radius:8px !important;}',
         'body.eckig #duoChatBlase,body.eckig #duoChatEingabe,body.eckig #duoChatSenden,body.eckig #duoChatMikro,',
         '  body.eckig #duoChatAufnahme button,body.eckig #duoChatBox .duo-reakt{border-radius:999px !important;}',
         'body.eckig #duoChatBox .duo-chat-zeile{border-radius:12px !important;}',
@@ -1472,8 +1597,11 @@
         '<div id="duoChatKoerper">',
         '  <div id="duoAnrufLeiste" style="display:none"></div>',
         '  <div id="duoChatVerlauf"><div id="duoChatLeer">Noch keine Nachrichten.<br>Schreib etwas an alle im Raum.</div></div>',
+        '  <div id="duoChatAnhang"></div>',
         '  <div id="duoChatEingabeZeile">',
         '    <input id="duoChatEingabe" type="text" maxlength="500" placeholder="Nachricht an alle..." autocomplete="off">',
+        '    <button id="duoChatBildKnopf" type="button" title="Bild senden" aria-label="Bild senden"><i class="fa-solid fa-image"></i></button>',
+        '    <input id="duoChatBildDatei" type="file" accept="image/*" style="display:none">',
         '    <button id="duoChatMikro" type="button" title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht aufnehmen"><i class="fa-solid fa-microphone"></i></button>',
         '    <div id="duoChatAufnahme">',
         '      <button id="duoChatAufnahmeWeg" type="button" title="Verwerfen" aria-label="Verwerfen"><i class="fa-solid fa-trash-can"></i></button>',
@@ -1496,6 +1624,7 @@
         chatEndeBeobachten();
         // Die Seite rueckt nur zur Seite, solange der Chat auch zu sehen ist.
         try{ new MutationObserver(chatAndockenAnwenden).observe(box, { attributes:true, attributeFilter:['class'] }); }catch(e){}
+        try{ new MutationObserver(() => { try{ if(window.frageChatKnopfSetzen) window.frageChatKnopfSetzen(); }catch(e){} }).observe(box, { attributes:true, attributeFilter:['class'] }); }catch(e){}
         chatAndockenAnwenden();
         const abg = document.getElementById('duoChatAbgleich');
         if(abg) abg.addEventListener('click', e=>{ e.stopPropagation(); alleNeuLadenLassen(); });
@@ -1512,6 +1641,7 @@
         feld.addEventListener('input', downloadKnopfZeichnen);
         downloadKnopfZeichnen();
         document.getElementById('duoChatMikro').addEventListener('click', aufnahmeStarten);
+        bildKnopfVerdrahten(feld);
         document.getElementById('duoChatAufnahmeWeg').addEventListener('click', ()=>aufnahmeBeenden(false));
         document.getElementById('duoChatAufnahmeSenden').addEventListener('click', ()=>aufnahmeBeenden(true));
         document.getElementById('duoChatAufnahmePause').addEventListener('click', aufnahmePause);
@@ -1521,6 +1651,33 @@
         document.getElementById('duoChatVerlauf').addEventListener('click', e=>{
             const t = e.target;
             if(!t || !t.closest) return;
+            // Bilder und geteilte Fragen (29.09.2026)
+            const bk = t.closest('.duo-bild');
+            if(bk){ bildGrossZeigen(bk.dataset.bildId, bk); return; }
+            const fb = t.closest('.duo-frage img');
+            if(fb){ bildGrossZeigen(null, null, fb.currentSrc || fb.src, fb.alt || ''); return; }
+            const rg = t.closest('[data-rundgang]');
+            if(rg){
+                const zeile = document.getElementById('duoRundgangAngebot');
+                if(rg.getAttribute('data-rundgang') === 'los'){
+                    if(zeile) zeile.remove();
+                    try{ window.rundgangStarten(); }catch(err){}
+                } else {
+                    if(zeile) zeile.remove();
+                    chatSystemmeldung('Kein Problem. Den Rundgang findest du jederzeit unter „Info“ – oder schreib hier einfach „Rundgang“.');
+                }
+                e.stopPropagation(); return;
+            }
+            const vl = t.closest('.duo-coach-vorlesen button');
+            if(vl){
+                const sp = vl.closest('.duo-coach-vorlesen');
+                if(sp && socket){ socket.emit('lerncoachVorlesen', { id: sp.dataset.lcVorlesen }); sp.classList.add('wartet'); sp.textContent = '🎤 Die Sprachnachricht kommt gleich …'; }
+                e.stopPropagation(); return;
+            }
+            const fc = t.closest('.duo-frage-coach');
+            if(fc){ const z = fc.closest('.duo-chat-zeile[data-id]'); if(z) lerncoachFrageKnopf(z.dataset.id); return; }
+            const fo = t.closest('.duo-frage-oeffnen');
+            if(fo){ frageImTrainerOeffnen(fo.dataset.frage); return; }
             const k = t.closest('.duo-sprache-knopf');
             if(k){
                 const b = k.closest('.duo-sprache');
@@ -2680,7 +2837,11 @@
         // " · Host" hinter dem Namen des Gastgebers: Dietmar am 23.09.2026:
         // "Das Wort Host im Chat klingt doof." Auf die Rueckfrage, was
         // stattdessen dastehen soll, seine Antwort: "Server".
-        const absender = (n.system || (eigen && !n.automatisch)) ? '' :
+        if(n.lerncoach) zeile.className = 'duo-chat-zeile duo-chat-fremd duo-chat-coach';   // fremd: Leiste und Knopf sitzen wie bei allen anderen
+        const absender = n.lerncoach
+            ? '<span class="duo-chat-absender"><i class="fa-solid fa-graduation-cap"></i> Lerncoach (KI)'
+              + (n.fuer ? ' · für ' + (n.fuerId && n.fuerId === myUserId ? 'dich' : escapeHtml(n.fuer)) : '') + '</span>'
+            : (n.system || (eigen && !n.automatisch)) ? '' :
             '<span class="duo-chat-absender">' + escapeHtml(n.name || 'Teilnehmer') +
             (n.istHost ? ' · Server' : '') + woher + '</span>';
         const mitHaken = eigen && !n.system && !n.automatisch && n.id && !n.geloescht;
@@ -2710,12 +2871,29 @@
               + '<span class="duo-sprache-dauer">' + dauerMinSek(n.sprache.dauer) + '</span>'
               + '<button type="button" class="duo-sprache-tempo" title="Abspielgeschwindigkeit" aria-label="Abspielgeschwindigkeit '
               + spracheTempoText(spracheTempo) + ' - anklicken zum Umschalten">' + spracheTempoText(spracheTempo) + '</button></span>'
-            : chatLinks(smileysErsetzen(escapeHtml(n.text)));
+            : (n.bild || n.frage)
+                ? anhangHtml(n) + (n.ohneText ? '' : '<div>' + chatLinks(smileysErsetzen(escapeHtml(n.text))) + '</div>')
+                : chatLinks(smileysErsetzen(escapeHtml(n.text)));
+        if(n.bild || n.frage) zeile.classList.add('mit-anhang');
+        if(n.lerncoach){ const d = document.getElementById('duoLcDenkt'); if(d) d.remove(); }
+        if(n.zuAntwort) lcVorleseAngebotWeg(n.zuAntwort);
         zeile.innerHTML = absender + koerper +
+            // Sprachnachricht auf Wunsch (29.09.2026), siehe lcVorlesen in Server.js.
+            (n.lerncoach && !n.sprache && n.vorlesenAngebot && n.id
+                ? '<span class="duo-coach-vorlesen" data-lc-vorlesen="' + escapeHtml(n.id) + '">🎤 Soll ich dir das auch als Sprachnachricht schicken? '
+                  + '<button type="button">Ja, bitte</button></span>' : '') +
+            (n.lerncoach && !n.sprache && !n.ohneHinweis ? '<span class="duo-coach-hinweis">Erklärung einer KI – sie kann sich irren. Im Zweifel: Formelsammlung und 50ohm.de.</span>' : '') +
             '<span class="duo-chat-zeit">' + chatZeit(n.zeit) + '</span>' +
             (mitHaken ? '<span class="duo-chat-haken" data-haken="' + escapeHtml(n.id) + '"></span>' : '') +
             (mitLeiste ? leisteHtml(darfLoeschen(eigen)) : '');
         verlauf.appendChild(zeile);
+        // Die Zeichnungen einer geteilten Frage laden nach - dann soll die
+        // Liste trotzdem unten bleiben, wenn sie unten war.
+        if(n.frage){
+            zeile.querySelectorAll('img').forEach(im => im.addEventListener('load', () => {
+                const v = document.getElementById('duoChatVerlauf'); if(v && chatAmEnde) v.scrollTop = v.scrollHeight;
+            }, { once:true }));
+        }
         if(mitLeiste && (n.reaktionen || reaktStand.has(String(n.id)))){
             reaktionenZeichnen(String(n.id), n.reaktionen || reaktStand.get(String(n.id)));
         }
@@ -2732,7 +2910,8 @@
         if(stumm || eigen) return;
 
         // Automatisch abspielen (siehe SPRACHNACHRICHTEN AUTOMATISCH ABSPIELEN).
-        if(n.sprache && n.id && !n.system && !n.automatisch && !pruefungLaeuft()){
+        if(n.sprache && n.id && !n.system && !n.automatisch && !pruefungLaeuft()
+           && (!n.lerncoach || n.fuerId === myUserId)){
             try{ spracheAutoVormerken(n.id); }catch(e){}
         }
 
@@ -2944,6 +3123,361 @@
     //  steht der Knopf zum Herunterladen fuer Windows, Linux und Mac,
     //  dazu, was man mit der Datei macht.
     // ----------------------------------------------------------------
+    // ================================================================
+    //  LERNCOACH                                          (29.09.2026)
+    //  Dietmar: "Nehmen wir mal an, du als KI bist im Chat mit drin und
+    //  kannst Fragen erklaeren." Der Server sagt, ob er an ist
+    //  (lerncoachStand) - dann gibt es an jeder geteilten Frage den Knopf
+    //  "Lerncoach fragen", und wer eine Nachricht mit @KI beginnt, fragt
+    //  ihn direkt. Die Antwort kommt fuer alle sichtbar in den Chat, als
+    //  Text und als Sprachnachricht; abgespielt wird die von selbst nur
+    //  bei dem, der gefragt hat. Beim ersten Mal steht im Chat, wohin die
+    //  Frage geht - einmal je Browser.
+    // ================================================================
+    var lerncoachAn = false;
+    var lerncoachAnbieter = 'anthropic';
+    // Wie LC_RE in Server.js: @KI oder "Hey KI" (29.09.2026).
+    var LC_KI_RE = /^\s*(?:@(?:ki|lerncoach)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach)\b)/i;
+    function lerncoachStand(d){
+        lerncoachAn = !!(d && d.an);
+        lerncoachAnbieter = (d && d.anbieter === 'openrouter') ? 'openrouter' : 'anthropic';
+        document.body.classList.toggle('lerncoach-an', lerncoachAn);
+        if(lerncoachAn){
+            let schon = false;
+            try{ schon = localStorage.getItem('lerncoach_tipp') === '1'; }catch(e){}
+            const box = document.getElementById('duoChatBox');
+            if(!schon && box && box.classList.contains('sichtbar')){
+                chatSystemmeldung('Neu: der Lerncoach (KI). Beginne eine Nachricht mit „Hey KI“ oder @KI, oder tippe an einer geteilten Frage auf „Lerncoach fragen“.');
+                try{ localStorage.setItem('lerncoach_tipp', '1'); }catch(e){}
+            }
+        }
+    }
+    // true = darf los
+    function lerncoachVorSenden(){
+        if(!lerncoachAn){ chatSystemmeldung('Der Lerncoach ist auf diesem Trainer nicht eingeschaltet.'); return true; }
+        if(pruefungLaeuft()){ chatSystemmeldung('Während einer Prüfung hilft der Lerncoach nicht – danach gern.'); return false; }
+        let schon = false;
+        // _2 seit 29.09.2026: Der Hinweis sagt jetzt "siehst nur du" - wer den alten kennt, soll den neuen einmal sehen.
+        try{ schon = localStorage.getItem('lerncoach_datenschutz_2') === '1'; }catch(e){}
+        if(!schon){
+            chatSystemmeldung(lerncoachAnbieter === 'openrouter'
+                ? 'Hinweis: Fragen an den Lerncoach gehen ohne deinen Namen über OpenRouter an ein KI-Modell. Der Trainer-PC des Kursleiters speichert Frage und Antwort mit Vornamen. Frage und Antwort siehst nur du – die anderen sehen nur, dass du gefragt hast.'
+                : 'Hinweis: Fragen an den Lerncoach gehen mit deinem Vornamen an die KI Claude (Anthropic) und werden auf dem Trainer-PC des Kursleiters gespeichert. Frage und Antwort siehst nur du – die anderen sehen nur, dass du gefragt hast.');
+            try{ localStorage.setItem('lerncoach_datenschutz_2', '1'); }catch(e){}
+        }
+        return true;
+    }
+    function lcVorleseAngebotWeg(id){
+        try{ document.querySelectorAll('.duo-coach-vorlesen').forEach(el => { if(el.dataset.lcVorlesen === id) el.remove(); }); }catch(e){}
+    }
+    function lerncoachFrageKnopf(nachrichtId){
+        if(!socket || !nachrichtId) return;
+        if(!lerncoachVorSenden()) return;
+        socket.emit('lerncoachFragen', { code: roomCode || '__haus', id: nachrichtId, name: roomCode ? undefined : getDuoUserName() });
+    }
+    // Mit Sekundenzaehler und "zweiter Versuch" (29.09.2026). Dietmar: "es
+    // dauert fast eine Minute, bis eine Antwort kommt" - wer wartet, soll
+    // wenigstens sehen, dass etwas passiert.
+    var lcDenktSeit = 0, lcDenktUhr = 0;
+    function lerncoachDenkt(d){
+        const verlauf = document.getElementById('duoChatVerlauf');
+        let el = document.getElementById('duoLcDenkt');
+        if(!d || !d.an){ if(el) el.remove(); clearInterval(lcDenktUhr); lcDenktUhr = 0; return; }
+        if(!verlauf) return;
+        if(!el){
+            el = document.createElement('div');
+            el.id = 'duoLcDenkt';
+            el.className = 'duo-chat-zeile duo-chat-coach denkt';
+            verlauf.appendChild(el);
+            lcDenktSeit = Date.now();
+        }
+        // Ohne Namen (29.09.2026). Dietmar: "Lerncoach denkt nach (fuer
+        // Dietmar) ... (fuer Dietmar) moechte ich raus haben".
+        el.innerHTML = '<i class="fa-solid fa-graduation-cap"></i> Lerncoach denkt nach'
+            + ' <span class="p">●</span><span class="p">●</span><span class="p">●</span>'
+            + ' <span class="sek" style="opacity:.7"></span>'
+            + (d.versuch > 1 ? '<br><span style="font-size:.7rem;opacity:.75">Die erste Antwort war unbrauchbar – ' + (d.versuch === 2 ? 'zweiter' : 'dritter') + ' Versuch …</span>' : '');
+        const zeigen = () => { const e = document.querySelector('#duoLcDenkt .sek'); if(!e){ clearInterval(lcDenktUhr); lcDenktUhr = 0; return; }
+            const sek = Math.round((Date.now() - lcDenktSeit) / 1000); e.textContent = sek >= 3 ? sek + ' s' : ''; };
+        zeigen();
+        if(!lcDenktUhr) lcDenktUhr = setInterval(zeigen, 1000);
+        chatNachUntenRollen();
+    }
+
+    // ================================================================
+    //  BILDER IM CHAT                                     (29.09.2026)
+    //  Dietmar: "Bilder über dem Messenger, geht das auch?" Auf die
+    //  Rueckfrage: schicken duerfen alle, und dazu soll man eine Frage
+    //  aus dem Trainer teilen koennen - "Bild zur Frage und auch eigene
+    //  Bilder".
+    //
+    //  Eigene Bilder: Knopf neben dem Mikrofon, Einfuegen (Strg+V) ins
+    //  Eingabefeld oder ein Bild auf den Chat ziehen. Der Browser
+    //  rechnet es selbst klein (lange Seite hoechstens 1600 Punkte, JPEG)
+    //  und macht dazu ein kleines Vorschaubild. Nur das Vorschaubild geht
+    //  mit der Nachricht an alle; das grosse holt sich, wer darauf tippt.
+    //  Beim Neuzeichnen fallen die Zusatzdaten des Fotos weg - auch der
+    //  Aufnahmeort, den ein Handy sonst mitschreibt.
+    //
+    //  Frage teilen: der Knopf an der Frage (Index.html, frageInDenChat)
+    //  haengt Nummer, Text, Zeichnung und die vier Antworten an - so, wie
+    //  der Absender sie sieht, aber OHNE die richtige. Dann kann man
+    //  darueber reden, ohne dass jemand die Loesung vorgesagt bekommt.
+    //
+    //  Beides geht nicht sofort weg, sondern steht erst ueber dem
+    //  Eingabefeld: Man kann noch etwas dazuschreiben ("Wie rechnet man
+    //  das?") und schickt dann mit dem Pfeil - oder nimmt es mit x weg.
+    // ================================================================
+    var chatAnhang = null;              // { art:'bild', ... } oder { art:'frage', frage }
+    var bildUrls = new Map();           // Nachrichten-id -> blob:-Adresse des grossen Bildes
+    var bildGrossId = null;             // welches gerade gross offen ist und noch laedt
+
+    function bildLaden(datei){
+        return new Promise((ok, fehler) => {
+            const url = URL.createObjectURL(datei);
+            const im = new Image();
+            im.onload = () => { ok({ im: im, url: url }); };
+            im.onerror = () => { URL.revokeObjectURL(url); fehler(new Error('kein Bild')); };
+            im.src = url;
+        });
+    }
+    function bildZeichnen(im, lang, qualitaet){
+        const w0 = im.naturalWidth || im.width, h0 = im.naturalHeight || im.height;
+        const f = Math.min(1, lang / Math.max(w0, h0));
+        const w = Math.max(1, Math.round(w0 * f)), h = Math.max(1, Math.round(h0 * f));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const g = c.getContext('2d');
+        g.fillStyle = '#ffffff';            // durchsichtige PNGs nicht schwarz
+        g.fillRect(0, 0, w, h);
+        g.drawImage(im, 0, 0, w, h);
+        return { c: c, w: w, h: h };
+    }
+    function alsBlob(c, q){ return new Promise(ok => c.toBlob(b => ok(b), 'image/jpeg', q)); }
+
+    async function bildVorbereiten(datei){
+        const { im, url } = await bildLaden(datei);
+        try{
+            let gross = null, blob = null;
+            for(const [lang, q] of [[1600, 0.82], [1600, 0.7], [1280, 0.7], [1024, 0.65]]){
+                gross = bildZeichnen(im, lang, q);
+                blob = await alsBlob(gross.c, q);
+                if(blob && blob.size <= 650 * 1024) break;
+            }
+            if(!blob || blob.size > 690 * 1024) throw new Error('zu gross');
+            let vorschau = '';
+            for(const [lang, q] of [[360, 0.72], [300, 0.6], [240, 0.55]]){
+                vorschau = bildZeichnen(im, lang, q).c.toDataURL('image/jpeg', q);
+                if(vorschau.length <= 38000) break;
+            }
+            return { art:'bild', blob: blob, vorschau: vorschau, w: gross.w, h: gross.h, kb: Math.round(blob.size / 1024) };
+        } finally { URL.revokeObjectURL(url); }
+    }
+
+    async function bildAnhaengen(datei){
+        if(!datei || !/^image\//i.test(datei.type || '')){
+            chatSystemmeldung('Das ist kein Bild.');
+            return;
+        }
+        try{
+            const a = await bildVorbereiten(datei);
+            chatAnhang = a;
+            anhangZeichnen();
+        }catch(e){
+            console.warn('[CHAT] Bild', e);
+            chatSystemmeldung('Dieses Bild kann der Browser nicht öffnen. Bitte als JPG oder PNG versuchen.');
+        }
+    }
+
+    function anhangZeichnen(){
+        const el = document.getElementById('duoChatAnhang');
+        const feld = document.getElementById('duoChatEingabe');
+        if(!el) return;
+        const a = chatAnhang;
+        if(!a){
+            el.classList.remove('da'); el.innerHTML = '';
+            if(feld) feld.placeholder = 'Nachricht an alle...';
+            downloadKnopfZeichnen();
+            return;
+        }
+        if(a.art === 'bild'){
+            el.innerHTML = '<img src="' + escapeHtml(a.vorschau) + '" alt="">'
+                + '<div class="was"><b>Bild</b><span>' + a.w + ' × ' + a.h + ' · ' + a.kb + ' KB</span></div>';
+        } else {
+            el.innerHTML = '<span class="frage-nr">' + escapeHtml(a.frage.id) + '</span>'
+                + '<div class="was"><b>Frage aus dem Trainer</b><span>' + escapeHtml(a.frage.text) + '</span></div>';
+        }
+        el.insertAdjacentHTML('beforeend', '<button type="button" title="Nicht senden" aria-label="Nicht senden"><i class="fa-solid fa-xmark"></i></button>');
+        el.lastElementChild.addEventListener('click', () => { chatAnhang = null; anhangZeichnen(); });
+        el.classList.add('da');
+        if(feld){ feld.placeholder = 'Text dazu (freiwillig) …'; }
+        downloadKnopfZeichnen();
+        chatUmschalten(true);
+        chatNachUntenRollen();
+        try{ if(feld) feld.focus(); }catch(e){}
+    }
+
+    async function anhangSenden(text){
+        const a = chatAnhang;
+        const feld = document.getElementById('duoChatEingabe');
+        if(!a) return;
+        if(!socket){ chatSystemmeldung('Keine Verbindung - nicht gesendet.'); return; }
+        const code = roomCode || '__haus';
+        const name = roomCode ? undefined : getDuoUserName();
+        if(a.art === 'bild'){
+            let daten;
+            try{ daten = await a.blob.arrayBuffer(); }catch(e){ chatSystemmeldung('Das Bild ließ sich nicht lesen.'); return; }
+            socket.emit('duoBild', { code: code, name: name, text: text, daten: daten, vorschau: a.vorschau, w: a.w, h: a.h });
+        } else {
+            socket.emit('duoChat', { code: code, name: name, text: text, frage: a.frage });
+        }
+        chatAnhang = null;
+        if(feld){ feld.value = ''; feld.focus(); }
+        anhangZeichnen();
+    }
+
+    function bildKnopfVerdrahten(feld){
+        const knopf = document.getElementById('duoChatBildKnopf');
+        const datei = document.getElementById('duoChatBildDatei');
+        if(knopf && datei){
+            knopf.addEventListener('click', () => { datei.value = ''; datei.click(); });
+            datei.addEventListener('change', () => { if(datei.files && datei.files[0]) bildAnhaengen(datei.files[0]); });
+        }
+        // Strg+V mit einem Bild in der Zwischenablage (Bildschirmfoto)
+        feld.addEventListener('paste', e => {
+            try{
+                const items = Array.from((e.clipboardData && e.clipboardData.items) || []);
+                const it = items.find(x => x.kind === 'file' && /^image\//.test(x.type));
+                if(it){ e.preventDefault(); bildAnhaengen(it.getAsFile()); }
+            }catch(err){}
+        });
+        // Ein Bild auf den Chat ziehen
+        const box = document.getElementById('duoChatBox');
+        if(box){
+            const hatDatei = e => { try{ return Array.from(e.dataTransfer.types || []).indexOf('Files') !== -1; }catch(err){ return false; } };
+            box.addEventListener('dragover', e => { if(hatDatei(e)){ e.preventDefault(); box.classList.add('ziehen'); } });
+            box.addEventListener('dragleave', e => { if(!box.contains(e.relatedTarget)) box.classList.remove('ziehen'); });
+            box.addEventListener('drop', e => {
+                box.classList.remove('ziehen');
+                if(!hatDatei(e)) return;
+                e.preventDefault();
+                const f = Array.from(e.dataTransfer.files || []).find(x => /^image\//.test(x.type));
+                if(f) bildAnhaengen(f); else chatSystemmeldung('Das ist kein Bild.');
+            });
+        }
+    }
+
+    // Was in der Blase steht
+    function anhangHtml(n){
+        if(n.bild){
+            const b = n.bild;
+            let w = 230, h = Math.round(230 * (b.h || 1) / (b.w || 1));
+            if(h > 260){ h = 260; w = Math.max(60, Math.round(260 * (b.w || 1) / (b.h || 1))); }
+            return '<button type="button" class="duo-bild" data-bild-id="' + escapeHtml(n.id) + '" title="Groß anzeigen">'
+                 + '<img src="' + escapeHtml(b.vorschau) + '" alt="Bild von ' + escapeHtml(n.name || '') + '" style="width:' + w + 'px;height:' + h + 'px"></button>';
+        }
+        const f = n.frage;
+        const antwBilder = f.antworten.map(x => x.b).filter(Boolean);
+        let zeichnung = '';
+        try{
+            if(typeof window.getSvgHtml === 'function') zeichnung = String(window.getSvgHtml(f.id, antwBilder) || '').replace(/\sonclick="[^"]*"/, '');
+        }catch(e){}
+        const liste = antwBilder.length
+            ? '<ol class="duo-frage-antw bilder">' + f.antworten.map((x, i) => '<li><b>' + 'ABCD'.charAt(i) + '</b>'
+                + (x.b ? '<img src="svgs/' + escapeHtml(x.b) + '" alt="Antwort ' + 'ABCD'.charAt(i) + '" loading="lazy">' : escapeHtml(x.t)) + '</li>').join('') + '</ol>'
+            : '<ol class="duo-frage-antw">' + f.antworten.map((x, i) => '<li><b>' + 'ABCD'.charAt(i) + '</b><span>' + escapeHtml(x.t) + '</span></li>').join('') + '</ol>';
+        const coach = '<button type="button" class="duo-frage-coach" title="Der Lerncoach (KI) erklärt die Frage im Chat">'
+            + '<i class="fa-solid fa-graduation-cap"></i> Lerncoach fragen</button>';
+        const oeffnen = frageOeffnenMoeglich(f.id)
+            ? '<button type="button" class="duo-frage-oeffnen" data-frage="' + escapeHtml(f.id) + '"><i class="fa-solid fa-arrow-up-right-from-square"></i> Im Trainer öffnen</button>' : '';
+        return '<div class="duo-frage"><div class="duo-frage-kopf"><span class="duo-frage-nr">' + escapeHtml(f.id) + '</span> Frage aus dem Trainer</div>'
+             + '<div class="duo-frage-text">' + escapeHtml(f.text) + '</div>'
+             + (zeichnung ? '<div class="duo-frage-bild">' + zeichnung + '</div>' : '')
+             + liste + oeffnen + coach + '</div>';
+    }
+
+    // Im eigenen Trainer hinspringen - nicht mitten in einer Pruefung und
+    // nicht im Gruppenraum, dort gibt der Host die Fragen vor.
+    function frageOeffnenMoeglich(id){
+        try{
+            if(roomCode || pruefungLaeuft()) return false;
+            return !!(window.questionBank && window.questionBank.some(q => q.id === id)) && typeof window.jumpToQuestionId === 'function';
+        }catch(e){ return false; }
+    }
+    function frageImTrainerOeffnen(id){
+        if(!frageOeffnenMoeglich(id)){ chatSystemmeldung('Die Frage ' + id + ' gibt es in dieser Klasse nicht - oder gerade läuft eine Prüfung.'); return; }
+        try{ window.jumpToQuestionId(id); }catch(e){ console.warn('[CHAT] Frage öffnen', e); }
+    }
+
+    // Gross anzeigen
+    function bildGrossFenster(){
+        let el = document.getElementById('duoBildGross');
+        if(el) return el;
+        el = document.createElement('div');
+        el.id = 'duoBildGross';
+        el.innerHTML = '<button type="button" class="zu" title="Schließen" aria-label="Schließen">×</button><img alt=""><div class="unter"></div>';
+        el.addEventListener('click', e => { if(e.target.tagName !== 'IMG') bildGrossZu(); });
+        document.addEventListener('keydown', e => { if(e.key === 'Escape' && el.classList.contains('offen')){ e.stopPropagation(); bildGrossZu(); } }, true);
+        document.body.appendChild(el);
+        return el;
+    }
+    function bildGrossZu(){
+        const el = document.getElementById('duoBildGross');
+        if(el) el.classList.remove('offen');
+        bildGrossId = null;
+    }
+    function bildGrossZeigen(id, knopf, src, unter){
+        const el = bildGrossFenster();
+        const im = el.querySelector('img');
+        const u = el.querySelector('.unter');
+        if(!id){ im.src = src; u.textContent = unter || ''; el.classList.add('offen'); return; }
+        const klein = knopf ? knopf.querySelector('img') : null;
+        const text = klein ? klein.alt : '';
+        if(bildUrls.has(id)){
+            im.src = bildUrls.get(id); u.textContent = text;
+        } else {
+            // Erst das Vorschaubild, scharf wird es, sobald das grosse da ist.
+            if(klein) im.src = klein.src;
+            u.textContent = 'Wird geladen …';
+            bildGrossId = id;
+            if(socket) socket.emit('bildHolen', { id: id });
+            else u.textContent = 'Keine Verbindung.';
+        }
+        el.classList.add('offen');
+    }
+    function bildDatenAngekommen(d){
+        if(!d || !d.id) return;
+        const el = document.getElementById('duoBildGross');
+        if(d.fehlt){
+            if(el && bildGrossId === d.id) el.querySelector('.unter').textContent = 'Das große Bild ist nicht mehr da (der Trainer wurde neu gestartet oder es war das älteste von vielen). Hier nur die Vorschau.';
+            return;
+        }
+        const url = URL.createObjectURL(new Blob([d.daten], { type:'image/jpeg' }));
+        bildUrls.set(d.id, url);
+        if(el && bildGrossId === d.id){
+            el.querySelector('img').src = url;
+            const k = document.querySelector('.duo-bild[data-bild-id="' + d.id.replace(/[^a-f0-9]/g, '') + '"] img');
+            el.querySelector('.unter').textContent = k ? k.alt : '';
+            bildGrossId = null;
+        }
+    }
+
+    // Fuer Index.html: Kann man gerade etwas in den Chat stellen?
+    window.duoChatBereit = function(){
+        try{
+            const box = document.getElementById('duoChatBox');
+            // Am Handy ist der Chat ganz ausgeblendet (body.schmal, Index.html)
+            // - dann auch kein Knopf an der Frage.
+            return !!(box && box.classList.contains('sichtbar')) && getComputedStyle(box).display !== 'none' && !pruefungLaeuft();
+        }catch(e){ return false; }
+    };
+    window.duoChatFrageAnhaengen = function(frage){
+        if(!frage || !frage.id) return;
+        if(!window.duoChatBereit()){ return; }
+        chatAnhang = { art:'frage', frage: frage };
+        anhangZeichnen();
+    };
+
     const DOWNLOAD_SEITE = 'https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/';
     const DOWNLOAD_TEXT  = 'Den Amateurfunk-Trainer zum Herunterladen gibt es hier: ' + DOWNLOAD_SEITE
                          + ' \u2013 kostenlos, ohne Anmeldung, f\u00fcr Windows, Linux und Mac.';
@@ -2960,7 +3494,7 @@
         const k = document.getElementById('duoChatSenden');
         const feld = document.getElementById('duoChatEingabe');
         if(!k || !feld) return;
-        const gruen = darfDownloadSenden() && !feld.value.trim();
+        const gruen = darfDownloadSenden() && !feld.value.trim() && !chatAnhang;
         k.classList.toggle('download', gruen);
         k.title = gruen ? 'Link zum Herunterladen an alle senden' : 'Senden';
     }
@@ -2969,6 +3503,15 @@
         const feld = document.getElementById('duoChatEingabe');
         if(!feld) return;
         let text = feld.value.trim();
+        // "Rundgang" (auch "Hey KI, Rundgang") startet den Rundgang hier im
+        // Browser und geht nicht an die anderen (29.09.2026).
+        if(/^((hey|hallo|hi)[\s,!]+)?((ki|lerncoach)[\s,:!]+)?rundgang[\s.!?]*$/i.test(text) && typeof window.rundgangStarten === 'function'){
+            feld.value = ''; try{ downloadKnopfZeichnen(); }catch(e){}
+            window.rundgangStarten();
+            return;
+        }
+        if(LC_KI_RE.test(text) && !lerncoachVorSenden()) return;
+        if(chatAnhang){ anhangSenden(text); return; }
         if(!text && ausKnopf === true && darfDownloadSenden()){
             // Doppelklick soll den Link nicht zweimal schicken.
             if(Date.now() - downloadZuletzt < 3000) return;
@@ -3093,7 +3636,8 @@
         if(!el) return;
         const users = duoUsersCache || {};
         const ids = Object.keys(users);
-        if(!roomCode || !ids.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+        if(!roomCode){ hausListeZeichnen(el); return; }
+        if(!ids.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
         const hostId = window._duoHostId;
         // Kursleiter zuerst, dann man selbst, dann die anderen
         ids.sort((a, b) => (a === hostId ? -2 : a === myUserId ? -1 : 0) - (b === hostId ? -2 : b === myUserId ? -1 : 0));
@@ -3130,6 +3674,33 @@
                      + (rolle ? ' <span class="rolle">· ' + rolle + '</span>' : '')
                      + (aktiv ? ' <span class="rolle aktiv">· ' + aktiv + '</span>' : '')
                      + '</span>' + knopf + '</li>';
+            }).join('') + '</ul>';
+        }
+        el.innerHTML = html;
+        el.style.display = '';
+    }
+    // Ohne Raum: wer ist auf dem Server? (29.09.2026) Dietmar: "Rechts im
+    // angedockten Chat haette ich gerne die Option zu sehen, wer da drauf
+    // ist wie auch im Gruppenraum." Dieselbe Leiste wie im Raum, nur ohne
+    // Anrufknopf. Die Liste kommt vom Server mit 'hausVolk'.
+    function hausListeZeichnen(el){
+        const leute = (hausVolk && Array.isArray(hausVolk.leute)) ? hausVolk.leute.slice() : [];
+        if(!leute.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+        const meine = socket && socket.id;
+        const ich = p => Array.isArray(p.ids) ? p.ids.indexOf(meine) !== -1 : p.id === meine;
+        const rang = p => p.rolle === 'kursleiter' ? -2 : (ich(p) ? -1 : 0);
+        leute.sort((a, b) => rang(a) - rang(b));
+        const offen = anrufListeOffen();
+        let html = '<div class="kopf" role="button" tabindex="0" data-aktion="klappen" aria-expanded="' + offen + '">'
+                 + '<i class="fa-solid fa-users leute"></i><b>' + leute.length + ' auf dem Server</b>'
+                 + '<span class="pfeil">' + (offen ? 'zuklappen <i class="fa-solid fa-chevron-up"></i>' : 'aufklappen <i class="fa-solid fa-chevron-down"></i>') + '</span></div>';
+        if(offen){
+            html += '<ul>' + leute.map(p => {
+                const name = escapeHtml(p.name || 'Besucher');
+                const du = ich(p);
+                let rolle = p.rolle === 'kursleiter' ? 'Kursleiter' + (du ? ' (du)' : '') : (du ? 'du' : (p.rolle === 'wlan' ? 'im WLAN' : ''));
+                return '<li>' + duoAvatarHtml(null, p.name || 'Besucher', '', true) + '<span class="name">' + name
+                     + (rolle ? ' <span class="rolle">· ' + rolle + '</span>' : '') + '</span></li>';
             }).join('') + '</ul>';
         }
         el.innerHTML = html;
@@ -3515,6 +4086,42 @@
             return true;
         }catch(e){ console.warn('[CHAT] Karte', e); return false; }
     };
+
+    // ================================================================
+    //  RUNDGANG ANBIETEN                                  (29.09.2026)
+    //  Unter der eigenen Begruessung ("Herzlich willkommen, Baumpaul
+    //  betritt den Server." bzw. die Begruessung im Raum) steht einmal je
+    //  Geraet: "Neu hier? ... [Rundgang starten] [Nein danke]". Die Zeile
+    //  entsteht nur hier im Browser - niemand sonst sieht sie.
+    //  Der Rundgang selbst: Index.html, <script id="rundgang">.
+    // ================================================================
+    const RUNDGANG_ANGEBOTEN = 'rundgang_angeboten';
+    function rundgangAngebotPruefen(n){
+        try{
+            if(!n || typeof window.rundgangStarten !== 'function') return;
+            const eigeneBegruessung = (n.system && n.haus && n.userId && n.userId === (socket && socket.id) && /betritt den Server/.test(n.text || ''))
+                || (n.automatisch && n.userId === '__system__' && /^Herzlich willkommen bei/.test(n.text || ''));
+            if(!eigeneBegruessung) return;
+            try{ if(localStorage.getItem(RUNDGANG_ANGEBOTEN) === '1' || (window.rundgangGesehen && window.rundgangGesehen())) return; }catch(e){ return; }
+            try{ localStorage.setItem(RUNDGANG_ANGEBOTEN, '1'); }catch(e){}
+            setTimeout(rundgangAngebotZeigen, 700);
+        }catch(e){}
+    }
+    function rundgangAngebotZeigen(){
+        chatAufbauen();
+        const verlauf = document.getElementById('duoChatVerlauf');
+        if(!verlauf || document.getElementById('duoRundgangAngebot')) return;
+        const zeile = document.createElement('div');
+        zeile.id = 'duoRundgangAngebot';
+        zeile.className = 'duo-chat-zeile duo-chat-rundgang';
+        zeile.innerHTML = '<b><i class="fa-solid fa-route"></i> Neu hier?</b> Ich zeige dir in gut einer Minute die wichtigsten Knöpfe des Trainers.'
+            + '<span class="knoepfe"><button type="button" data-rundgang="los">Rundgang starten</button>'
+            + '<button type="button" class="nein" data-rundgang="nein">Nein danke</button></span>';
+        verlauf.appendChild(zeile);
+        chatNachUntenRollen();
+    }
+    window.duoRundgangAnbieten = rundgangAngebotZeigen;   // zum Testen und fuer spaeter
+    window.duoLerncoachAn = () => !!lerncoachAn;
 
     function chatSystemmeldung(text){
         chatAufbauen();
@@ -4315,8 +4922,8 @@
     // ----------------------------------------------------------------
     const DEMO_TEXT = 'Dieser Trainer läuft auf einem fremden Rechner. '
         + 'Ein eigener Gruppenraum lässt sich hier nicht eröffnen — er würde die Verbindung '
-        + 'des Kursleiters stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink oder '
-        + 'den Raum-Code benutzen. Und wer den Trainer behalten will, bekommt ihn kostenlos '
+        + 'des Kursleiters stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink des '
+        + 'Kursleiters anklicken. Und wer den Trainer behalten will, bekommt ihn kostenlos '
         + 'auf amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
 
     function demoKnopfNachziehen(){
@@ -4341,8 +4948,8 @@
             hinweis.id = 'duoDemoHinweis';
             hinweis.className = 'duo-demo-hinweis';
             hinweis.innerHTML = '🔒 <b>Das ist nicht dein Trainer.</b> Ein eigener Raum lässt sich hier nicht eröffnen — '
-                + 'er würde die Verbindung des Kursleiters stören. <b>Beitreten geht:</b> Einladungslink '
-                + 'anklicken oder Raum-Code eintragen.';
+                + 'er würde die Verbindung des Kursleiters stören. <b>Beitreten geht:</b> den Einladungslink '
+                + 'des Kursleiters anklicken.';
             knopf.parentNode.insertBefore(hinweis, knopf.nextSibling);
         }
     }
@@ -4487,7 +5094,15 @@
         const aktivJetzt = (j.aktivExtern || 0);
         if(aktivJetzt) t += ' <b>' + aktivJetzt + '</b> ' + (aktivJetzt === 1 ? 'ist' : 'sind')
                           + ' gerade auf der Seite.';
-        if(offenSeit) t += ' Der Trainer l\u00e4uft seit <b>' + dauerText(offenSeit, jetzt) + '</b>.';
+        // EINKLAPPBAR (29.09.2026). Dietmar, mit Bild dieses Kastens: "Das
+        // auch eingeklappt." Zugeklappt bleibt die erste Zeile mit den
+        // Zahlen stehen; der Rest (seit wann, was gezaehlt wird, der Knopf)
+        // kommt mit dem Pfeil. Eine wartende Zutrittsanfrage bleibt immer
+        // sichtbar - die soll niemand uebersehen.
+        t = '<div class="bz-kopf" style="display:flex; align-items:flex-start; gap:6px;"><span style="flex:1;">' + t + '</span>'
+          + '<button type="button" class="drz-klapp" onclick="duoBesucherKlappen()" aria-label="Auf- oder zuklappen" title="Auf- oder zuklappen" style="width:24px; height:24px; margin-top:-3px;"><i class="fas fa-chevron-down"></i></button></div>'
+          + '<div class="bz-mehr">';
+        if(offenSeit) t += 'Der Trainer l\u00e4uft seit <b>' + dauerText(offenSeit, jetzt) + '</b>.';
         t += '<br><span style="opacity:.75;">Gez\u00e4hlt werden Aufrufe von au\u00dfen \u2014 der eigene Rechner und die '
            + 'Vorschau-Abrufe von Facebook und WhatsApp z\u00e4hlen nicht mit.</span>';
 
@@ -4505,6 +5120,11 @@
                + (offeneAnfragen === 1 ? 'Anfrage' : 'Anfragen') + ' auf Zutritt von außerhalb des '
                + 'deutschsprachigen Raums — im Besucherfenster zu entscheiden.</span>';
         }
+        let anfrageZeile = '';
+        if(offeneAnfragen){
+            anfrageZeile = '<div style="color:#8a6a10; font-weight:600; margin-top:3px;">\u270B ' + offeneAnfragen + ' '
+               + (offeneAnfragen === 1 ? 'Anfrage' : 'Anfragen') + ' auf Zutritt – im Besucherfenster zu entscheiden.</div>';
+        }
 
         if(istEntwickler()){
             t += '<div style="margin-top:7px;">'
@@ -4514,8 +5134,17 @@
                + '<i class="fas fa-list"></i> Besucher ansehen'
                + (j.gesamt ? ' (' + j.gesamt + ')' : '') + '</button></div>';
         }
-        zeile.innerHTML = t;
+        t += '</div>';
+        zeile.innerHTML = t + '<div class="bz-anfrage">' + anfrageZeile + '</div>';
+        zeile.classList.toggle('zu', besucherZu);
     }
+    // Zugeklappt beim Oeffnen des Fensters (Index.html, duoFensterEinklappen).
+    var besucherZu = true;
+    window.duoBesucherKlappen = function(zu){
+        besucherZu = (typeof zu === 'boolean') ? zu : !besucherZu;
+        const z = document.getElementById('duoBesucherZeile');
+        if(z) z.classList.toggle('zu', besucherZu);
+    };
 
     // ----------------------------------------------------------------
     //  DER BILDSCHIRM DARF NICHT EINSCHLAFEN
@@ -4645,7 +5274,9 @@
         socket.on('neustartAnsage', a=>{ try{ neustartAnsageSetzen(a); }catch(e){} });
         socket.on('tuerAnsage', a=>{ try{ tuerAnsageSetzen(a); }catch(e){} });
         socket.on('hausVolk', data=>{
-            hausVolk = { anzahl: (data && data.anzahl) || 0, vonAussen: (data && data.vonAussen) || 0 };
+            hausVolk = { anzahl: (data && data.anzahl) || 0, vonAussen: (data && data.vonAussen) || 0,
+                         leute: (data && Array.isArray(data.leute)) ? data.leute : [] };
+            try{ anrufListeZeichnen(); }catch(e){}
             // Der Anfangszustand der Tuer kommt hier mit - die 'tuerAnsage'
             // wird nur beim Umschalten verschickt, und wer sich erst
             // danach verbindet, haette sie sonst nie gehoert.
@@ -4801,7 +5432,15 @@
                 if(feld && !eigeneAdresse()) feld.value = d.url;
                 updateLinkWithTunnel();
                 wacheNachsehen();
-                if(isHost){
+                // Mit eigener Adresse (29.09.2026): Der Einladungslink laeuft
+                // ueber den benannten Tunnel und aendert sich NICHT - der Hinweis
+                // "der bisher verschickte Link funktioniert nicht mehr" war dann
+                // schlicht falsch. Dietmar bekam ihn trotzdem, mit
+                // amateurfunk-trainer.com. Neu aufgebaut wurde nur der Quick
+                // Tunnel im Hintergrund, den niemand benutzt.
+                if(isHost && eigeneAdresse()){
+                    console.log('[DUO] Quick Tunnel neu aufgebaut - die eigene Adresse ' + eigeneAdresse() + ' gilt unverändert, kein Hinweis.');
+                } else if(isHost){
                     const txt = 'Die Verbindung zu Cloudflare ist abgerissen und wurde automatisch neu '
                               + 'aufgebaut.\n\nDabei gibt es immer eine NEUE Adresse — der bisher '
                               + 'verschickte Einladungslink funktioniert nicht mehr.\n\nBitte den neuen '
@@ -4851,7 +5490,11 @@
         });
 
         // ===== Gruppenchat =====
-        socket.on('duoChatNachricht', n=>{ try{ chatNachrichtAnzeigen(n); }catch(e){ console.error('[CHAT]', e); } });
+        socket.on('duoChatNachricht', n=>{ try{ chatNachrichtAnzeigen(n); rundgangAngebotPruefen(n); }catch(e){ console.error('[CHAT]', e); } });
+        socket.on('lerncoachStand', d=>{ try{ lerncoachStand(d); }catch(e){} });
+        socket.on('lerncoachDenkt', d=>{ try{ lerncoachDenkt(d); }catch(e){} });
+        socket.on('lerncoachVorlesenFertig', d=>{ try{ lcVorleseAngebotWeg(d && d.id); }catch(e){} });
+        socket.on('bildDaten', d=>{ try{ bildDatenAngekommen(d); }catch(e){ console.error('[CHAT] Bild', e); } });
         socket.on('spracheDaten', d=>{ try{ spracheDatenAngekommen(d); }catch(e){ console.error('[CHAT] Sprache', e); } });
         socket.on('chatGelesenStand', d=>{
             try{
@@ -4885,7 +5528,7 @@
                         (d.config.part==='all' ? 'Alle' : (d.config.part||'Alle'));
                 }
                 updateDuoConfigAccess();
-                if(d && !d.gesperrt) chatSystemmeldung(d.config && d.config.pruefung === true
+                if(d && !d.gesperrt && !d.leise) chatSystemmeldung(d.config && d.config.pruefung === true
                     ? 'Konfiguration geändert: Prüfungssimulator – 3 Runden zu 25 Fragen.'
                     : 'Konfiguration geändert: ' + (d.totalQuestions||0) + ' Fragen.');
             }catch(e){ console.error('[DUO] duoConfigGeaendert', e); }
@@ -5129,7 +5772,7 @@
         // jedes Mal, ob es wirklich der Kursleiter ist.
         lektionStarten: function(d){
             if(!socket||!roomCode||!isHost||!d) return false;
-            socket.emit('lektionStarten',{code:roomCode, nr:d.nr, titel:d.titel, ids:d.ids, abschnitte:d.abschnitte, versatz:d.versatz, gesamt:d.gesamt});
+            socket.emit('lektionStarten',{code:roomCode, nr:d.nr, titel:d.titel, ids:d.ids, abschnitte:d.abschnitte, versatz:d.versatz, gesamt:d.gesamt, frei:!!d.frei});
             return true;
         },
         lektionSchritt: function(index, aufgedeckt){
@@ -5140,10 +5783,10 @@
             if(!socket||!roomCode||!isHost) return;
             socket.emit('lektionEnde',{code:roomCode});
         },
-        neueRunde: function(){
+        neueRunde: function(config){
             if(!socket||!roomCode) return;
             if(!isHost){ if(window.showAppAlert) showAppAlert('Nur der Kursleiter kann eine neue Runde starten.'); return; }
-            socket.emit('neueRunde',{code:roomCode});
+            socket.emit('neueRunde', config ? {code:roomCode, config:config} : {code:roomCode});
         },
         // Eigene feste Adresse setzen oder wieder loeschen.
         eigeneAdresseSetzen: function(roh){

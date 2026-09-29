@@ -1,0 +1,11 @@
+// Amateurfunk-Trainer fuer Android (29.09.2026). Gebaut wird bei GitHub,
+// siehe .github/workflows/android.yml - auf dem PC muss dafuer nichts
+// installiert sein.
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+dependencyResolutionManagement {
+    repositories { google(); mavenCentral() }
+}
+rootProject.name = "Amateurfunk-Trainer"
+include ':app'

@@ -3159,6 +3159,82 @@
            es schieben koennte. Am Handy (eine Spalte) faellt das von selbst
            wieder weg, dort stehen die Reihen ohnehin untereinander. */
         .duo-spalten { align-items: stretch; }
+        /* Pruefungssimulator und Unterricht zum Einklappen (29.09.2026).
+           Dietmar: "die 2 Fenster evtl auch zum einklappen?" Zugeklappt
+           bleibt die Zeile mit Haken und Namen stehen, dazu eine kurze
+           Zusammenfassung ("Lektion 1 · eigenes Tempo"). */
+        .drz-klapp { flex:0 0 auto; margin-left:auto; border:none; background:transparent; color:var(--muted);
+                     width:22px; height:22px; margin-top:-2px; margin-bottom:-2px; padding:0; border-radius:50%; cursor:pointer; font-size:0.8rem; }
+        /* GLEICHE GROESSE WIE "DEIN NAME" (29.09.2026). Dietmar, mit rot
+           markierten Kaesten: "Bekommen wir die Felder auf die gleiche
+           Groesse?" Rand, Rundung, Innenabstand und Schrift wie die
+           Klappkaesten links (.duo-collapsible); zugeklappt steht alles auf
+           einer Mittellinie. */
+        #duoPruefungZeile, #duoUnterrichtZeile {
+            border:1px solid #c2d6f0 !important; background:#f0f7ff !important;
+            padding:0.75rem 0.9rem !important; font-size:0.85rem !important; line-height:1.3 !important; }
+        #duoPruefungZeile .drz-mehr, #duoUnterrichtZeile .drz-mehr { font-size:0.8rem; line-height:1.45; }
+        #duoPruefungZeile.zu, #duoUnterrichtZeile.zu > label { align-items:center !important; }
+        /* Zugeklappt alle vier genau 40 Punkte hoch. */
+        #duoModal .duo-collapsible-header { min-height:38px; box-sizing:border-box; padding-top:0.45rem; padding-bottom:0.45rem; }
+        #duoPruefungZeile.zu, #duoUnterrichtZeile.zu { box-sizing:border-box; height:40px; padding-top:0 !important; padding-bottom:0 !important; display:flex; align-items:center !important; }
+        #duoUnterrichtZeile.zu > label { flex:1; }
+        #duoPruefungZeile.zu input[type=checkbox], #duoUnterrichtZeile.zu > label > input[type=checkbox] { margin-top:0 !important; }
+        #duoPruefungZeile b, #duoUnterrichtZeile > label b { font-size:0.85rem; }
+        .drz-klapp:hover { background:rgba(15,39,69,0.08); }
+        .drz-klapp i { transition: transform .2s; transform: rotate(180deg); }
+        .zu > .drz-klapp i, .zu > label > .drz-klapp i { transform: rotate(0deg); }
+        .drz-kurz { display:none; color:var(--muted); font-weight:600; }
+        .zu .drz-mehr { display:none; }
+        .zu .drz-kurz { display:inline; }
+        #duoUnterrichtZeile.zu #duoUnterrichtWahl { display:none !important; }
+        /* Besucher-Kasten unter dem Link, ebenfalls einklappbar. Die
+           ausfuehrliche Anfrage-Zeile steht in .bz-mehr; zugeklappt zeigt
+           .bz-anfrage die kurze. */
+        #duoBesucherZeile.zu .bz-mehr { display:none; }
+        #duoBesucherZeile:not(.zu) .bz-anfrage { display:none; }
+        #duoBesucherZeile .drz-klapp i { transform: rotate(180deg); }
+        #duoBesucherZeile.zu .drz-klapp i { transform: rotate(0deg); }
+        /* Aufgeklappt fuellt "Unterricht" die rechte Spalte bis zur
+           Knopfreihe - Dietmar: "Unterricht bleibt rechts und passt sich an
+           der Groesse ausgeklappt an." Zugeklappt bleibt er so hoch wie
+           seine Zeile. */
+                /* FELDER AUF EINER HOEHE (29.09.2026). Dietmar: "ich haette die
+           Felder gerne auf einer Hoehe. Das es rechts zwischen den Feldern
+           sitzt stoert mich gerade ungemein".
+           Jede Spalte hat drei Stockwerke: oben (Link-Kasten bzw. "Im Raum"
+           mit den drei Bildern), mitte (die Klappfelder) und die Knopfreihe.
+           Im Zweispalten-Fenster loesen sich die Spalten auf
+           (display:contents), die Stockwerke stehen im gemeinsamen Raster
+           .duo-spalten - so beginnt "Unterricht" genau neben "Dein Name",
+           und die Knopfreihen stehen auf einer Linie. Am Handy bleibt alles
+           untereinander wie bisher. */
+        .duo-mitte { display: flex; flex-direction: column; }
+        .duo-oben > .raum-sinnbilder { margin-bottom: 1rem; }
+        /* Der Link-Kasten links reicht bis zur Unterkante der drei Bilder. */
+        .duo-links > .duo-oben { display: flex; flex-direction: column; }
+        .duo-links > .duo-oben > .nur-gastgeber { flex: 1 1 auto; }
+        @media (min-width: 761px) {
+            body:not(.schmal) .duo-spalten { grid-template-rows: auto 1fr auto; }
+            body:not(.schmal) .duo-links, body:not(.schmal) .duo-rechts { display: contents; }
+            body:not(.schmal) .duo-links > .duo-oben { grid-column: 1; grid-row: 1; }
+            body:not(.schmal) .duo-links > .duo-mitte { grid-column: 1; grid-row: 2; }
+            body:not(.schmal) .duo-links > .duo-knopfreihe-links { grid-column: 1; grid-row: 3; margin-top: 0; }
+            body:not(.schmal) .duo-rechts > .duo-oben { grid-column: 2; grid-row: 1; }
+            body:not(.schmal) .duo-rechts > .duo-mitte { grid-column: 2; grid-row: 2; }
+            body:not(.schmal) .duo-rechts > .duo-knopfreihe { grid-column: 2; grid-row: 3; margin-top: 0; }
+        }
+        /* Unterricht zugeklappt: kein Loch mehr darunter - "Bereits gelernte
+           Fragen" folgt direkt. Aufgeklappt waechst er bis zur Knopfreihe. */
+        .duo-mitte > .duo-raumart { flex: 0 0 auto; display: flex; flex-direction: column; }
+        /* "Bereits gelernte Fragen" ganz unten, direkt ueber der Knopfreihe
+           (29.09.2026). Dietmar, mit rotem Rahmen im Bild: "Das muss weiter
+           runter, dahin wo der Rote Rahmen ist". */
+        .duo-mitte > .duo-gelernt-zeile { margin-top: auto !important; }
+        .duo-mitte > .duo-raumart:has(> #duoUnterrichtZeile:not(.zu)) { flex: 1 1 auto; }
+        .duo-mitte > .duo-raumart > #duoUnterrichtZeile { margin-bottom: 0 !important; }
+        .duo-mitte > .duo-raumart > #duoUnterrichtZeile:not(.zu) { flex: 1 1 auto; }
+        body.schmal .duo-mitte > .duo-raumart > #duoUnterrichtZeile:not(.zu) { flex: 0 0 auto; }
         .duo-links, .duo-rechts { display: flex; flex-direction: column; }
         /* Linke Spalte: die Knopfreihe an den Fuss. */
         .duo-links > .duo-knopfreihe-links { margin-top: auto; padding-top: 0.9rem; }
@@ -3169,13 +3245,23 @@
            bleiben." Sie stehen also fest im Textfluss; der freie Platz, den
            die laengere linke Spalte erzeugt, sammelt sich darunter - vor der
            Knopfreihe. */
-        .duo-rechts > .raum-sinnbilder { margin-top: 0.2rem; }
+        .duo-oben > .raum-sinnbilder { margin-top: 0.2rem; }
         .duo-rechts > .duo-knopfreihe { margin-top: auto; padding-top: 0.9rem; }
         /* Sobald ein Raum laeuft, blendet updateDuoCreateButtonVisibility()
            "Raum erstellen" und "Raum beitreten" aus. Uebrig bliebe eine leere
            Zeile mit Innenabstand, die die linke Spalte unnoetig verlaengert -
            deshalb faellt der Kasten dann ganz weg. */
         .duo-knopfreihe-links.leer { display: none !important; }
+        /* Laeuft ein Raum, stehen "Jetzt starten", "Neue Runde" und
+           "Auswertung" links, "Schliessen" rechts - so breit und an der
+           Stelle wie vor dem Raum (29.09.2026, siehe duo.js
+           updateDuoCreateButtonVisibility). */
+        .duo-knopfreihe-links.mit-start { display: flex !important; flex-wrap: wrap; gap: 8px !important; }
+        .duo-knopfreihe-links.mit-start > .btn { flex: 1 1 0 !important; min-width: 120px; }
+        body:not(.schmal) .duo-links > .duo-knopfreihe-links.mit-start { grid-column: 1 / -1; }
+        .duo-knopfreihe.leer { display: none !important; }
+        .duo-knopfreihe.nur-schliessen > #duoSchliessenBtn { flex: 0 1 calc(50% - 4px) !important; margin-left: auto; align-self: flex-start; }
+        .duo-knopfreihe-links.mit-start > .duo-demo-hinweis { display: none !important; }
 
         /* Die Knoepfe in diesen beiden Reihen duerfen nicht schmaler werden
            als ihre eigene Beschriftung. Ohne diese Bremse schrumpft der Text
@@ -7748,6 +7834,10 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  ================================================================ -->
             <div class="duo-spalten">
             <div class="duo-links">
+            <!-- 29.09.2026: je Spalte drei Stockwerke (oben / mitte / Knopfreihe),
+                 damit links und rechts auf einer Hoehe beginnen. Siehe
+                 "FELDER AUF EINER HOEHE" im Stilblock. -->
+            <div class="duo-oben">
             <div class="nur-gastgeber" style="background:#f4f7fd; border-radius:12px; padding:0.8rem; margin-bottom:1rem; font-size:0.85rem;">
                 <div style="margin-bottom:0.8rem;">
                     <label style="font-weight:600; font-size:0.8rem; display:block; margin-bottom:4px;"><span id="tunnelStatusDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#bbb; margin-right:5px;"></span><i class="fas fa-link"></i> Server-URL (für Weitergabe):</label>
@@ -7779,6 +7869,8 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     <div style="margin-top:8px;"><a id="duoLocalLink" href="#" target="_blank" style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); word-break:break-all; display:none;"></a></div>
                 </div>
             </div>
+            </div><!-- /duo-oben -->
+            <div class="duo-mitte">
             <style>
                 /* ================================================================
                    DIE TUNNEL-WACHE                              (20.09.2026)
@@ -7972,6 +8064,8 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     }catch(e){}
                 })();
             </script>
+            <!-- 29.09.2026: Dietmar: "Pruefungssimulator nach Links und Unterricht
+                 bleibt rechts" - der Simulator steht unter der Konfiguration. -->
             <!-- ================================================================
                  DER SCHALTER STEHT OFFEN, NICHT IM ZUGEKLAPPTEN KASTEN
                  ----------------------------------------------------------------
@@ -7985,52 +8079,50 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  beim Beitreten, dass er in eine Pruefung kommt und nicht in
                  eine Fragerunde.
                  ================================================================ -->
-            <label id="duoPruefungZeile" style="display:flex; align-items:flex-start; gap:10px; margin:0 0 10px; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:14px; background:#f4f7fd; font-size:0.8rem; line-height:1.45; cursor:pointer;"
+            <label id="duoPruefungZeile" style="display:flex; align-items:flex-start; gap:10px; margin:0; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:12px; background:#f4f7fd; font-size:0.8rem; line-height:1.45; cursor:pointer;"
                    data-tooltip="Wie die echte Prüfung: drei Runden Vorschriften, Betrieb, Technik – je 25 Fragen und 45 Minuten. Rückmeldung erst in der Auswertung, zurückblättern erlaubt, F9 und Nachschlagen aus. Falsche Antworten landen bei jedem Teilnehmer unter Fehler und Lernbedarf.">
                 <input type="checkbox" id="duoPruefungCheck" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;">
-                <span><b style="color:var(--panel-navy);"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</b> — drei Runden <b>Vorschriften · Betrieb · Technik</b>, je 25 Fragen und 45 Minuten.
-                    <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Auflösung erst in der Auswertung · jeder startet die nächste Runde selbst · falsche Antworten kommen bei jedem unter Fehler und Lernbedarf</span></span>
+                <span style="flex:1;"><b style="color:var(--panel-navy);"><i class="fas fa-graduation-cap"></i> Prüfungssimulator</b><span class="drz-mehr"> — drei Runden <b>Vorschriften · Betrieb · Technik</b>, je 25 Fragen und 45 Minuten.
+                    <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Auflösung erst in der Auswertung · jeder startet die nächste Runde selbst · falsche Antworten kommen bei jedem unter Fehler und Lernbedarf</span></span><span class="drz-kurz"> · 3 × 25 Fragen, je 45 min</span></span>
+                <button type="button" class="drz-klapp" onclick="duoRaumKlappen(event,'duoPruefungZeile')" aria-label="Auf- oder zuklappen" title="Auf- oder zuklappen"><i class="fas fa-chevron-down"></i></button>
             </label>
-            <!-- ================================================================
-                 UNTERRICHT IM RAUM-FENSTER                        (27.09.2026)
-                 Dietmar nach dem Neustart, mit Bild dieses Fensters: "Im
-                 Gruppenraum gibt es keine Lektionen." Der Knopf "Unterricht"
-                 stand nur in der Leiste der Hauptansicht. Hier dieselbe Wahl,
-                 gebaut wie der Pruefungssimulator darueber: Haken setzen,
-                 Lektion waehlen, "Jetzt starten" startet sie fuer alle im Raum.
-                 ================================================================ -->
-            <div id="duoUnterrichtZeile" style="margin:0 0 10px; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:14px; background:#f4f7fd; font-size:0.8rem; line-height:1.45;">
-                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;"
-                       data-tooltip="Die 14 Lektionen der Klasse N in der Reihenfolge der 50ohm-Folien. Du schaltest am Beamer weiter, alle sehen dieselbe Frage und antworten am eigenen Gerät. Aufgelöst wird gemeinsam.">
-                    <input type="checkbox" id="duoUnterrichtCheck" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;" onchange="duoUnterrichtHaken(this.checked)">
-                    <span><b style="color:var(--panel-navy);"><i class="fas fa-chalkboard-user"></i> Unterricht</b> — eine der <b id="duoUnterrichtAnzahl">14 Lektionen</b> im Gleichschritt: Du schaltest weiter, alle antworten am eigenen Gerät.
-                        <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Reihenfolge der Folien von 50ohm.de · aufgelöst wird gemeinsam · „Jetzt starten“ startet die Lektion für alle im Raum</span></span>
-                </label>
-                <div id="duoUnterrichtWahl" style="display:none; margin:8px 0 0 28px; gap:8px; flex-wrap:wrap; align-items:center;">
-                    <select id="duoUnterrichtLektion" onchange="duoUnterrichtGewaehlt()" style="flex:1 1 220px; padding:0.45rem 0.7rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.8rem; font-weight:600; background:white;"></select>
-                    <label style="display:flex; align-items:center; gap:6px; font-weight:600; color:var(--panel-navy); cursor:pointer; white-space:nowrap;">
-                        <input type="checkbox" id="duoUnterrichtBeamer" style="width:16px; height:16px; cursor:pointer;" onchange="unterrichtBeamerMerken(this.checked)"> <i class="fas fa-display"></i> Am Beamer</label>
-                    <span id="duoUnterrichtInfo" style="flex:1 0 100%; font-size:0.72rem; color:var(--muted);"></span>
-                </div>
-            </div>
+            </div><!-- /duo-mitte -->
             <div class="nur-gastgeber duo-knopfreihe-links" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <button id="duoCreateRoomBtn" class="btn btn-primary" onclick="window.duo.createRoom()" style="justify-content:center;"><i class="fas fa-plus"></i> Raum erstellen</button>
-                <button id="duoJoinRoomBtn" class="btn btn-outline" onclick="window.duo.joinRoom()" style="justify-content:center;"><i class="fas fa-sign-in-alt"></i> Raum beitreten</button>
+                <button id="duoJoinRoomBtn" class="btn btn-outline" onclick="window.duo.joinRoom()" style="display:none; justify-content:center;"><i class="fas fa-sign-in-alt"></i> Raum beitreten</button>
             </div>
             </div><div class="duo-rechts">
+            <div class="duo-oben">
             <div class="nur-gastgeber raum-kasten" style="background:#fff; border:1px solid var(--line); border-radius:12px; padding:0.8rem; margin-bottom:1rem;">
-                <div style="font-weight:700; font-size:0.9rem; margin-bottom:6px;">Raum-Code: <span id="duoRoomCode" style="font-family:var(--font-mono); background:var(--panel-navy); color:white; padding:2px 10px; border-radius:8px;">---</span> <span style="font-size:0.75rem; color:var(--muted);">(Teile: <span id="duoRoomCode2">---</span>)</span></div>
+                <!-- 29.09.2026: Dietmar: "Raum-Code: --- (Teile: ---) kann raus. Hier
+                     muss nur stehen, welcher Benutzer in dem Raum kommt. Den Raumcode
+                     habe ich zur Not auch ueber dem Link." Die beiden Felder bleiben
+                     unsichtbar im Fenster, weil duo.js sie weiter beschreibt. -->
+                <div style="display:none;"><span id="duoRoomCode">---</span><span id="duoRoomCode2">---</span></div>
+                <div style="font-weight:700; font-size:0.9rem; margin-bottom:2px; color:var(--panel-navy);"><i class="fas fa-users"></i> Im Raum</div>
                 <div id="duoUsers" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
-                <div id="duoWait" style="font-size:0.8rem; color:var(--muted); margin-top:8px; text-align:center;">Warten auf Benutzer... Noch kein Raum erstellt</div>
-                <div id="duoStatus" style="font-size:0.75rem; color:var(--panel-navy); margin-top:6px; text-align:center; font-family:var(--font-mono);"></div>
+                <div id="duoWait" style="font-size:0.8rem; color:var(--muted); margin-top:8px; text-align:center;">Noch kein Raum – „Raum erstellen“ und den Link teilen.</div>
+                <!-- "Verbunden: ..." - Dietmar: "kann auch weg. Wenn es benoetigt
+                     wird, dann unsichtbar." duo.js schreibt weiter hinein. -->
+                <div id="duoStatus" style="display:none;"></div>
+                <script>
+                // Der Hinweis unter der Liste stand bisher immer da ("Warten auf
+                // Benutzer... Noch kein Raum erstellt"), auch mit vollem Raum.
+                // Jetzt richtet er sich nach der Liste (29.09.2026).
+                (function(){
+                    const liste = document.getElementById('duoUsers'), hin = document.getElementById('duoWait');
+                    if(!liste || !hin) return;
+                    const zeigen = () => {
+                        const n = liste.querySelectorAll(':scope > *').length;
+                        hin.style.display = n > 1 ? 'none' : '';
+                        hin.textContent = n === 0 ? 'Noch kein Raum – „Raum erstellen“ und den Link teilen.'
+                                                  : 'Noch niemand da – teile den Einladungs-Link.';
+                    };
+                    try{ new MutationObserver(zeigen).observe(liste, { childList: true }); }catch(e){}
+                    zeigen();
+                })();
+                </script>
             </div>
-            <!-- Bereits gelernte Fragen: dieselbe Einstellung wie im Pruefungssimulator.
-                 Sie gilt nur fuer mich selbst - die Fragen des Raums bleiben fuer alle
-                 dieselben, ich bekomme meine gelernten nur nicht mehr vorgelegt. -->
-            <label class="nur-gastgeber" style="display:flex; align-items:center; gap:8px; margin-bottom:0.8rem; font-size:0.82rem; cursor:pointer;">
-                <input type="checkbox" id="duoGelerntCheck" onchange="window.setGelernteAutoRichtig(this.checked)" style="width:17px; height:17px; cursor:pointer;">
-                <span>Bereits gelernte Fragen nicht mehr fragen – sie zählen automatisch als richtig <span id="duoGelerntInfo" style="color:var(--muted); font-size:0.78rem;"></span></span>
-            </label>
 
             <!-- ================================================================
                  DIE DREI SINNBILDER
@@ -8056,6 +8148,53 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     <span>Computer, Handy und Tablet</span>
                 </div>
             </div>
+            </div><!-- /duo-oben -->
+            <div class="duo-mitte">
+            <!-- ================================================================
+                 UNTERRICHT RECHTS                                  (29.09.2026)
+                 Dietmar, mit Bild: "Rechts ist so viel Platz und aufgeklappt
+                 wird das Fenster noch unuebersichtlicher. Nutze den ganzen
+                 Raum." Links bleiben Adresse, Name und Konfiguration; die
+                 beiden Wahlen fuer die Art des Raums stehen rechts unter den
+                 drei Bildern (die bleiben direkt unter "Bereits gelernte
+                 Fragen", wie am 06.09.2026 gewuenscht).
+                 ================================================================ -->
+            <div class="duo-raumart">
+            <!-- ================================================================
+                 UNTERRICHT IM RAUM-FENSTER                        (27.09.2026)
+                 Dietmar nach dem Neustart, mit Bild dieses Fensters: "Im
+                 Gruppenraum gibt es keine Lektionen." Der Knopf "Unterricht"
+                 stand nur in der Leiste der Hauptansicht. Hier dieselbe Wahl,
+                 gebaut wie der Pruefungssimulator darueber: Haken setzen,
+                 Lektion waehlen, "Jetzt starten" startet sie fuer alle im Raum.
+                 ================================================================ -->
+            <div id="duoUnterrichtZeile" style="margin:0 0 10px; padding:0.7rem 0.85rem; border:2px solid #c2d6f0; border-radius:12px; background:#f4f7fd; font-size:0.8rem; line-height:1.45;">
+                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;"
+                       data-tooltip="Die 14 Lektionen der Klasse N in der Reihenfolge der 50ohm-Folien. Du schaltest am Beamer weiter, alle sehen dieselbe Frage und antworten am eigenen Gerät. Aufgelöst wird gemeinsam.">
+                    <input type="checkbox" id="duoUnterrichtCheck" style="width:18px; height:18px; flex:0 0 18px; margin-top:1px; cursor:pointer;" onchange="duoUnterrichtHaken(this.checked)">
+                    <span style="flex:1;"><b style="color:var(--panel-navy);"><i class="fas fa-chalkboard-user"></i> Unterricht</b><span class="drz-mehr"> — eine der <b id="duoUnterrichtAnzahl">14 Lektionen</b> für alle im Raum: jeder in seinem Tempo oder im Gleichschritt am Beamer.
+                        <span style="display:block; color:var(--muted); font-size:0.74rem; margin-top:2px;">Reihenfolge der Folien von 50ohm.de · „Jetzt starten“ startet die Lektion für alle im Raum</span></span><span class="drz-kurz" id="duoUnterrichtKurz"></span></span>
+                    <button type="button" class="drz-klapp" onclick="duoRaumKlappen(event,'duoUnterrichtZeile')" aria-label="Auf- oder zuklappen" title="Auf- oder zuklappen"><i class="fas fa-chevron-down"></i></button>
+                </label>
+                <div id="duoUnterrichtWahl" style="display:none; margin:8px 0 0 28px; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <select id="duoUnterrichtLektion" onchange="duoUnterrichtGewaehlt()" style="flex:1 1 220px; padding:0.45rem 0.7rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.8rem; font-weight:600; background:white;"></select>
+                    <select id="duoUnterrichtTempo" onchange="duoUnterrichtTempoGewaehlt()" style="flex:1 1 220px; padding:0.45rem 0.7rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.8rem; font-weight:600; background:white;">
+                        <option value="frei">Jeder im eigenen Tempo</option>
+                        <option value="gleich">Im Gleichschritt – du schaltest weiter</option></select>
+                    <label id="duoUnterrichtBeamerWahl" style="display:flex; align-items:center; gap:6px; font-weight:600; color:var(--panel-navy); cursor:pointer; white-space:nowrap;">
+                        <input type="checkbox" id="duoUnterrichtBeamer" style="width:16px; height:16px; cursor:pointer;" onchange="unterrichtBeamerMerken(this.checked)"> <i class="fas fa-display"></i> Am Beamer</label>
+                    <span id="duoUnterrichtInfo" style="flex:1 0 100%; font-size:0.72rem; color:var(--muted);"></span>
+                </div>
+            </div>
+            </div>
+            <!-- Bereits gelernte Fragen: dieselbe Einstellung wie im Pruefungssimulator.
+                 Sie gilt nur fuer mich selbst - die Fragen des Raums bleiben fuer alle
+                 dieselben, ich bekomme meine gelernten nur nicht mehr vorgelegt.
+                 29.09.2026: Dietmar: "bitte unterhalb von Unterricht verschieben." -->
+            <label class="nur-gastgeber duo-gelernt-zeile" style="display:flex; align-items:center; gap:8px; margin:0; padding-top:0.7rem; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="duoGelerntCheck" onchange="window.setGelernteAutoRichtig(this.checked)" style="width:17px; height:17px; cursor:pointer;">
+                <span>Bereits gelernte Fragen nicht mehr fragen – sie zählen automatisch als richtig <span id="duoGelerntInfo" style="color:var(--muted); font-size:0.78rem;"></span></span>
+            </label>
             <!-- ================================================================
                  DIE KNOPFREIHE STEHT IN DER RECHTEN SPALTE
                  ----------------------------------------------------------------
@@ -8079,8 +8218,9 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  Spalte zu schmal, rutscht der letzte Knopf in eine zweite Zeile,
                  statt aus dem Fenster zu laufen.
                  ================================================================ -->
+            </div><!-- /duo-mitte -->
             <div class="duo-knopfreihe" style="display:flex; flex-wrap:wrap; gap:8px; align-items:stretch;">
-                <button id="duoStartBtn" class="btn btn-primary" onclick="duoJetztStarten()" style="flex:1 1 140px; justify-content:center;" disabled><i class="fas fa-play"></i> Jetzt starten</button>
+                <button id="duoStartBtn" class="btn btn-primary" onclick="duoJetztStarten()" style="display:none; flex:1 1 140px; justify-content:center;" disabled><i class="fas fa-play"></i> Jetzt starten</button>
                 <!-- Neue Runde fuer alle. Steht nur beim Gastgeber und nur,
                      wenn ein Raum laeuft - eingeblendet von
                      neueRundeKnopfNachziehen(). Dietmar: "Der Trainer kann,
@@ -8107,7 +8247,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
 
                      leave() meldet sich beim Server ab, raeumt Chat, Fenster
                      und den Raum-Knopf weg und setzt die Anzeige zurueck. -->
-                <button class="btn btn-reset" onclick="window.duo.leave()" style="flex:1 1 140px; justify-content:center;"
+                <button id="duoSchliessenBtn" class="btn btn-reset" onclick="window.duo.leave()" style="flex:1 1 140px; justify-content:center;"
                         data-tooltip="Raum beenden – Chat und Fenster schließen sich, Teilnehmer werden abgemeldet">Schließen</button>
             </div>
             </div></div>
@@ -11383,29 +11523,112 @@ function afuRueckfrage(o){
 }
 window.afuRueckfrage = afuRueckfrage;
 
+// ================================================================
+//  NEUE RUNDE: WAS KOMMT DRAN?                          (29.09.2026)
+//  Dietmar, mit Bild der Gesamt-Auswertung: "nach neue Runde fuer alle
+//  moechte ich auswaehlen koennen, was dran kommt."
+//  Die Rueckfrage bekommt drei Wahlmoeglichkeiten: eine Fragenrunde
+//  (Anzahl und Bereich), den Pruefungssimulator oder eine Lektion aus
+//  dem Unterricht (mit Tempo). Vorausgewaehlt ist, was naheliegt: nach
+//  einer Lektion die naechste, nach einer Pruefung wieder die Pruefung,
+//  sonst die Fragenrunde wie bisher. Fragenrunde und Pruefung gehen als
+//  'neueRunde' mit neuer Auswahl an den Server; eine Lektion startet
+//  wie aus dem Raum-Fenster (unterrichtStarten).
+// ================================================================
 function neueRundeFragen(){
     try{
         let wie = 0;
         try{ wie = Object.keys(window.duoUsersCache || {}).length; }catch(e){}
         const wen = wie > 1 ? ('<b>alle ' + wie + ' Teilnehmer</b>') : '<b>alle im Raum</b>';
-        // Im Pruefungsraum heisst dasselbe anders: Es kommen drei frische
-        // Boegen, nicht eine Fragerunde.
-        const pruefung = !!window._duoPruefung;
+        const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        const optionenVon = (id, wert) => {
+            const el = document.getElementById(id);
+            if(!el) return '';
+            return Array.from(el.options).map(o => '<option value="' + esc(o.value) + '"' + (String(o.value) === String(wert) ? ' selected' : '') + '>' + esc(o.textContent) + '</option>').join('');
+        };
+        // Lektionen: dieselbe Liste wie im Raum-Fenster.
+        const lsel = document.getElementById('duoUnterrichtLektion');
+        try{ if(lsel && !lsel.options.length && typeof duoUnterrichtNachziehen === 'function') duoUnterrichtNachziehen(); }catch(e){}
+        const lektionMoeglich = !!(lsel && lsel.options.length && typeof unterrichtStarten === 'function');
+        const letzte = window._duoLektion || null;
+        let wahl = 'fragen';
+        if(letzte && lektionMoeglich) wahl = 'lektion';
+        else if(window._duoPruefung) wahl = 'pruefung';
+        let lektionNr = lsel ? (parseInt(lsel.value, 10) || 1) : 1;
+        if(letzte && letzte.nr && lsel){
+            const max = Math.max.apply(null, Array.from(lsel.options).map(o => parseInt(o.value, 10) || 0));
+            lektionNr = Math.min(letzte.nr + 1, max || letzte.nr + 1);
+        }
+        const tempo = (typeof unterrichtRaumFrei === 'function' && !unterrichtRaumFrei()) ? 'gleich' : 'frei';
+        const anzahl = (document.getElementById('duoFilterCount') || {}).value || '25';
+        const teil = (document.getElementById('duoFilterPart') || {}).value || 'all';
+        if(!document.getElementById('nrWahlStil')){
+            const st = document.createElement('style');
+            st.id = 'nrWahlStil';
+            st.textContent = '.nr-opt{display:block;border:1px solid #c2d6f0;background:#fff;padding:0.6rem 0.75rem;margin:0 0 0.5rem;cursor:pointer;font-weight:400;}'
+                + '.nr-opt:has(input:checked){border-color:var(--panel-navy);box-shadow:inset 3px 0 0 var(--panel-navy);background:#f7fbff;}'
+                + '.nr-opt .kopf{display:flex;align-items:center;gap:8px;}'
+                + '.nr-opt .kopf input{width:16px;height:16px;margin:0;flex:0 0 16px;}'
+                + '.nr-opt .klein{color:var(--muted);font-size:0.78rem;}'
+                + '.nr-opt .felder{display:flex;gap:6px;flex-wrap:wrap;margin:0.45rem 0 0 24px;}'
+                + '.nr-opt select{flex:1 1 140px;padding:0.35rem 0.5rem;border:1px solid #a8c0de;font-size:0.8rem;font-weight:600;background:#fff;}'
+                + 'body.dark .nr-opt{background:transparent;}';
+            document.head.appendChild(st);
+        }
+        const opt = (wert, titel, klein, felder) =>
+            '<label class="nr-opt"><span class="kopf"><input type="radio" name="nrWahl" value="' + wert + '"' + (wahl === wert ? ' checked' : '') + '>'
+            + '<b>' + titel + '</b>' + (klein ? ' <span class="klein">' + klein + '</span>' : '') + '</span>'
+            + (felder ? '<span class="felder">' + felder + '</span>' : '') + '</label>';
+        const liste = '<div style="font-weight:700;margin:2px 0 8px;">Was kommt dran?</div>'
+            + opt('fragen', 'Fragenrunde', 'frisch gemischt',
+                  '<select id="nrAnzahl" onfocus="this.closest(\'label\').querySelector(\'input\').checked=true">' + optionenVon('duoFilterCount', anzahl) + '</select>'
+                + '<select id="nrTeil" onfocus="this.closest(\'label\').querySelector(\'input\').checked=true">' + optionenVon('duoFilterPart', teil) + '</select>')
+            + opt('pruefung', 'Prüfungssimulator', '3 × 25 Fragen, je 45 Minuten', '')
+            + (lektionMoeglich ? opt('lektion', 'Unterricht', 'eine Lektion für alle',
+                  '<select id="nrLektion" onfocus="this.closest(\'label\').querySelector(\'input\').checked=true">' + optionenVon('duoUnterrichtLektion', lektionNr) + '</select>'
+                + '<select id="nrTempo" onfocus="this.closest(\'label\').querySelector(\'input\').checked=true">' + optionenVon('duoUnterrichtTempo', tempo) + '</select>') : '')
+            + '<div style="font-size:0.76rem;color:var(--muted);margin-top:4px;">Ein laufender Durchgang geht verloren. Der Raum bleibt bestehen: derselbe Code, derselbe Link.</div>';
         afuRueckfrage({
-            titel: pruefung ? 'Neue Prüfung?' : 'Neue Runde?',
-            zeichen: pruefung ? 'fa-graduation-cap' : 'fa-rotate',
-            frage: (pruefung ? 'Neue Prüfung für ' : 'Neue Runde für ') + wen + ' starten?',
-            liste: pruefung
-                 ? '• Drei frische Bögen — Vorschriften, Betrieb, Technik, je 25 Fragen<br>'
-                   + '• Jeder fängt wieder bei Runde 1 an; ein laufender Bogen geht verloren<br>'
-                   + '• Die bisherigen Ergebnisse bleiben im Verlauf stehen<br>'
-                   + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link'
-                 : '• Es werden frische Fragen gezogen — jeder fängt wieder von vorn an<br>'
-                   + '• Ein laufender Durchgang geht dabei verloren<br>'
-                   + '• Der Raum bleibt bestehen: derselbe Code, derselbe Link',
-            knopf: pruefung ? 'Neue Prüfung starten' : 'Neue Runde starten',
-            knopfZeichen: pruefung ? 'fa-graduation-cap' : 'fa-rotate',
-            dann: function(){ window.duo.neueRunde(); }
+            titel: 'Neue Runde?',
+            zeichen: 'fa-rotate',
+            frage: 'Neue Runde für ' + wen + ' starten?',
+            liste: liste,
+            knopf: 'Neue Runde starten',
+            knopfZeichen: 'fa-rotate',
+            dann: function(){
+                const w = (document.querySelector('input[name="nrWahl"]:checked') || {}).value || 'fragen';
+                const pr = document.getElementById('duoPruefungCheck');
+                const uh = document.getElementById('duoUnterrichtCheck');
+                if(w === 'lektion'){
+                    const nr = parseInt((document.getElementById('nrLektion') || {}).value, 10) || 1;
+                    const te = (document.getElementById('nrTempo') || {}).value === 'gleich' ? 'gleich' : 'frei';
+                    // Im Raum-Fenster nachziehen, ohne dass der Pruefungs-Haken
+                    // eine Konfigurationsaenderung an den Server meldet.
+                    if(pr) pr.checked = false;
+                    try{ if(window.pruefungFelderNachziehen) window.pruefungFelderNachziehen(); }catch(e){}
+                    if(lsel){ lsel.value = String(nr); try{ duoUnterrichtGewaehlt(); }catch(e){} }
+                    const ts = document.getElementById('duoUnterrichtTempo');
+                    if(ts){ ts.value = te; try{ duoUnterrichtTempoGewaehlt(); }catch(e){} }
+                    if(uh){ uh.checked = true; try{ duoUnterrichtHaken(true); }catch(e){} }
+                    unterrichtStarten(nr - 1, 0);
+                    return;
+                }
+                if(uh && uh.checked){ uh.checked = false; try{ duoUnterrichtHaken(false); }catch(e){} }
+                if(w === 'pruefung'){
+                    if(pr) pr.checked = true;
+                    try{ if(window.pruefungFelderNachziehen) window.pruefungFelderNachziehen(); }catch(e){}
+                    window.duo.neueRunde({ count: '25', part: 'all', pruefung: true });
+                    return;
+                }
+                const c = (document.getElementById('nrAnzahl') || {}).value || '25';
+                const t = (document.getElementById('nrTeil') || {}).value || 'all';
+                if(pr) pr.checked = false;
+                const fc = document.getElementById('duoFilterCount'), fp = document.getElementById('duoFilterPart');
+                if(fc) fc.value = c;
+                if(fp) fp.value = t;
+                try{ if(window.pruefungFelderNachziehen) window.pruefungFelderNachziehen(); }catch(e){}
+                window.duo.neueRunde({ count: c, part: t, pruefung: false });
+            }
         });
     }catch(e){ console.error('[Neue Runde]', e); }
 }
@@ -11943,6 +12166,184 @@ window.kursAuswertungLoeschen = kursAuswertungLoeschen;
 // ----------------------------------------------------------------
 //  Der Reiter
 // ----------------------------------------------------------------
+// ================================================================
+//  EINSTELLUNGEN -> LERNCOACH (KI)                     (29.09.2026)
+//  Dietmar: "In meinem Trainer soll das über meiner API laufen. Den
+//  Key, dürfen wir unter keinen Umständen raus geben. Das muss jeder
+//  Kursleiter selbst entscheiden."
+//
+//  Der Schluessel wird hier EINMAL eingetippt und geht an den eigenen
+//  Server (nur am Trainer-PC erreichbar). Zurueck kommen nur die letzten
+//  vier Zeichen. Im Browser bleibt nichts davon liegen: kein
+//  localStorage, das Feld wird nach dem Speichern geleert.
+// ================================================================
+async function einstLerncoachFuellen(){
+    const ziel = document.getElementById('einstBlatt_lerncoach');
+    if(!ziel) return;
+    if(!laeuftLokal()){
+        ziel.innerHTML = einstKasten('Lerncoach (KI)', 'Der Lerncoach wird nur direkt am Trainer-PC eingerichtet.', '');
+        return;
+    }
+    let d;
+    try{ d = await (await fetch('/api/lerncoach', { cache:'no-store' })).json(); }
+    catch(e){ ziel.innerHTML = einstKasten('Lerncoach (KI)', 'Der Trainer antwortet gerade nicht.', ''); return; }
+    const or = d.anbieter === 'openrouter';
+    const k = or ? d.openrouter : d.anthropic;
+    const geld = x => (Number(x) || 0).toFixed(2).replace('.', ',') + ' $';
+    const zeile = 'display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:0.8rem;';
+    const feldStil = 'min-height:32px; padding:0.3rem 0.6rem; border:1px solid #b0c4d8; border-radius:8px; font-family:inherit; font-size:0.8rem;';
+    const modelle = d.modelle.map(m => {
+        const cent = ((1500 * m.preis[0] + 450 * m.preis[1]) / 1e6 * 100).toFixed(1).replace('.', ',');
+        return '<option value="' + m.id + '"' + (m.id === d.modell ? ' selected' : '') + '>' + m.name + ' – etwa ' + cent + ' Cent je Erklärung</option>';
+    }).join('');
+    const wahl = (wert, titel, text) => '<label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; padding:7px 9px; border:1px solid '
+        + (d.anbieter === wert ? 'var(--panel-navy)' : '#e3e9f3') + '; border-radius:8px; flex:1; min-width:240px; font-size:0.78rem; line-height:1.45;">'
+        + '<input type="radio" name="lcAnbieter" value="' + wert + '"' + (d.anbieter === wert ? ' checked' : '') + ' onchange="lcEinstSetzen({anbieter:this.value})" style="margin-top:3px;">'
+        + '<span><b>' + titel + '</b>' + ((wert === 'openrouter' ? d.openrouter : d.anthropic).hat ? ' <span style="color:#15703c;">· Schlüssel da</span>' : '') + '<br>' + text + '</span></label>';
+
+    ziel.innerHTML =
+        einstKasten('Lerncoach im Chat',
+            'Die KI erklärt Prüfungsfragen im Gruppenchat – wer eine Nachricht mit <b>Hey KI</b> (oder @KI) beginnt oder an einer geteilten '
+            + 'Frage auf <b>Lerncoach fragen</b> tippt, bekommt eine Erklärung als Text und auf Wunsch auch als Sprachnachricht. '
+            + 'Sie stützt sich auf die richtige Antwort und die Erklärung aus dem Trainer. In Prüfungen schweigt sie.',
+            '<label style="' + zeile + ' cursor:pointer;"><input type="checkbox" id="lcAn"' + (d.an ? ' checked' : '')
+            + (d.hatSchluessel ? '' : ' disabled') + ' onchange="lcEinstSetzen({an:this.checked})"> '
+            + '<b>Lerncoach einschalten</b>'
+            + (d.hatSchluessel ? '' : ' <span style="color:var(--muted);">– erst mit einem Schlüssel möglich</span>') + '</label>',
+            d.an && d.hatSchluessel ? '#8fd0a8' : null)
+      + einstKasten('Welche KI?', '',
+            '<div style="display:flex; gap:8px; flex-wrap:wrap;">'
+            + wahl('anthropic', 'Claude direkt bei Anthropic', 'Gleichbleibend gut, auch beim Rechnen. Braucht Guthaben auf platform.claude.com (ab 5 $); eine Erklärung kostet unter einem Cent.')
+            + wahl('openrouter', 'Über OpenRouter', 'Mit „openrouter/free“ kostenlos, aber wechselnde, meist schwächere Modelle und höchstens 50 Fragen am Tag. Der Vorname der Fragenden geht dort nicht mit.')
+            + '</div>')
+      + einstKasten(or ? 'Dein OpenRouter-Schlüssel' : 'Dein API-Schlüssel',
+            (or ? 'Den Schlüssel legst du selbst an: <b>openrouter.ai</b> → Keys. Am besten einen eigenen nur für den Trainer, nicht den von Claude Code. '
+                : 'Den Schlüssel legst du selbst an: <b>platform.claude.com</b> → API Keys. Bezahlt wird über dieses Konto, nach Verbrauch. ')
+            + 'Der Schlüssel liegt nur auf diesem PC, im Benutzerprofil (' + escapeHtmlDuo(d.schluesselOrt) + ') und <b>nicht</b> im Trainer-Ordner. '
+            + 'Er geht nie an Teilnehmer, nie zu GitHub, nie in ein ZIP oder auf einen Stick. Wer den Trainer weitergibt, gibt keinen Schlüssel mit – '
+            + 'jeder Kursleiter entscheidet selbst, ob er einen einträgt.',
+            (k.hat
+                ? '<div style="' + zeile + '"><span>Eingetragen: <code>' + (or ? 'sk-or-' : 'sk-ant-') + '…' + escapeHtmlDuo(k.ende) + '</code></span>'
+                  + '<button type="button" style="' + EINST_KNOPF + '" onclick="lcPruefen()"><i class="fas fa-plug-circle-check"></i> Verbindung prüfen</button>'
+                  + '<button type="button" style="' + EINST_KNOPF + '" onclick="document.getElementById(\'lcNeu\').style.display=\'flex\'">Anderen Schlüssel</button>'
+                  + '<button type="button" style="' + EINST_KNOPF + ' color:#a33; border-color:#e3c0c0;" onclick="lcSchluesselWeg()">Entfernen</button></div>'
+                : '')
+            + '<div id="lcNeu" style="' + zeile + (k.hat ? ' display:none; margin-top:8px;' : '') + '">'
+            + '<input type="password" id="lcSchluessel" autocomplete="off" spellcheck="false" placeholder="' + (or ? 'sk-or-…' : 'sk-ant-…') + '" style="' + feldStil + ' flex:1; min-width:220px; font-family:var(--font-mono,monospace);">'
+            + '<button type="button" style="' + EINST_KNOPF + ' background:var(--panel-navy); color:#fff; border-color:var(--panel-navy);" onclick="lcSchluesselSpeichern()">Speichern</button></div>'
+            + '<div id="lcMeldung" style="font-size:0.76rem; margin-top:7px;"></div>')
+      + einstKasten('Modell und Kosten',
+            'Heute: <b>' + geld(d.heute.dollar) + '</b> von ' + geld(d.grenzeDollar) + ' · ' + d.heute.anfragen + ' Erklärung' + (d.heute.anfragen === 1 ? '' : 'en')
+            + '. Ist die Tagesgrenze erreicht, pausiert der Lerncoach bis morgen.'
+            + (or ? ' Kostenlose Modelle zählen hier mit 0 $; ohne gekauftes Guthaben lässt OpenRouter 50 Fragen am Tag zu. '
+                  + '<b>Tipp:</b> Ein festes Modell, das „direkt antwortet“, ist meist in wenigen Sekunden fertig. „openrouter/free“ erwischt oft '
+                  + 'Modelle, die erst lange nachdenken – dann dauert es bis zu einer Minute. Wie lange jede Antwort gebraucht hat, steht im Verlauf.' : ''),
+            '<div style="' + zeile + '">'
+            + (or
+                ? '<select id="lcOrModell" style="' + feldStil + ' width:100%; max-width:560px;" onchange="lcEinstSetzen({orModell:this.value})">'
+                  + '<option value="openrouter/free"' + (d.orModell === 'openrouter/free' ? ' selected' : '') + '>openrouter/free – jedes Mal ein anderes kostenloses Modell</option>'
+                  + (d.orModell !== 'openrouter/free' ? '<option value="' + escapeHtmlDuo(d.orModell) + '" selected>' + escapeHtmlDuo(d.orModell) + '</option>' : '')
+                  + '</select>'
+                : '<select id="lcModell" style="' + feldStil + '" onchange="lcEinstSetzen({modell:this.value})">' + modelle + '</select>')
+            + (or ? '<span style="flex-basis:100%; height:0;"></span>' : '')
+            + '<span style="margin-left:' + (or ? '0' : '8px') + ';">Tagesgrenze</span><input type="number" id="lcGrenze" min="0.1" max="50" step="0.5" value="' + d.grenzeDollar + '" style="' + feldStil + ' width:80px;" '
+            + 'onchange="lcEinstSetzen({grenzeDollar:this.value})"> <span>$</span></div>'
+            + (or ? '<div style="margin-top:10px; ' + zeile + '"><button type="button" id="lcTestKnopf" style="' + EINST_KNOPF + '" onclick="lcModelleTesten()">'
+                  + '<i class="fas fa-stopwatch"></i> Kostenlose Modelle testen</button>'
+                  + '<span style="color:var(--muted); font-size:0.74rem;">Stellt bis zu sechs Modellen dieselbe Prüfungsfrage und misst, wer schnell und richtig antwortet. Verbraucht bis zu sechs der 50 Tagesfragen.</span></div>'
+                  + '<div id="lcTestErgebnis" style="margin-top:8px;"></div>' : ''))
+      + einstKasten('Sprachnachricht',
+            d.stimmeDa ? 'Unter der Erklärung fragt der Lerncoach, ob sie auch als Sprachnachricht kommen soll – mit der Vorlese-Stimme dieses PCs. Das kostet nichts extra. Abgespielt wird sie nur bei dem, der gefragt hat.'
+                       : 'Auf diesem PC ist noch keine Vorlese-Stimme eingerichtet – dann gibt es nur den Text.',
+            '<label style="' + zeile + ' cursor:pointer;"><input type="checkbox" id="lcStimme"' + (d.stimme ? ' checked' : '') + (d.stimmeDa ? '' : ' disabled')
+            + ' onchange="lcEinstSetzen({stimme:this.checked})"> Sprachnachricht anbieten</label>')
+      + einstKasten('Der Lerncoach-Ordner',
+            'Alles vom Lerncoach liegt in einem Ordner: <b>anweisungen.md</b> – so erklärt er, das kannst du selbst ändern; '
+            + '<b>verlauf\\</b> – jede Frage an ihn und jede Antwort, mit Datum und Vorname. Der übrige Chat wird weiter nicht gespeichert. '
+            + 'Der Ordner geht nicht zu GitHub.',
+            '<div style="' + zeile + '"><code style="font-size:0.74rem;">' + escapeHtmlDuo(d.ordner) + '</code>'
+            + '<button type="button" style="' + EINST_KNOPF + '" onclick="fetch(\'/api/lerncoach/ordner\',{method:\'POST\'})"><i class="fas fa-folder-open"></i> Ordner öffnen</button></div>');
+    // Die kostenlosen Modelle bei OpenRouter nachladen (29.09.2026).
+    if(or){
+        try{
+            const l = await (await fetch('/api/lerncoach/openrouter-modelle', { cache:'no-store' })).json();
+            const sel = document.getElementById('lcOrModell');
+            if(sel && l.liste && l.liste.length){
+                l.liste.forEach(m => {
+                    if(m.id === d.orModell) return;
+                    const o = document.createElement('option');
+                    o.value = m.id; o.textContent = m.name + (m.denkt ? ' – denkt erst nach, langsamer' : ' – antwortet direkt');
+                    sel.appendChild(o);
+                });
+            }
+        }catch(e){}
+    }
+}
+// Modelle testen (29.09.2026) - siehe /api/lerncoach/modelle-testen.
+async function lcModelleTesten(){
+    const ziel = document.getElementById('lcTestErgebnis');
+    const knopf = document.getElementById('lcTestKnopf');
+    if(!ziel) return;
+    if(knopf) knopf.disabled = true;
+    let sek = 0;
+    ziel.innerHTML = '<div style="font-size:0.78rem;">Teste … <span id="lcTestSek">0</span> s (höchstens etwa 30 s)</div>';
+    const uhr = setInterval(() => { const e = document.getElementById('lcTestSek'); if(e) e.textContent = String(++sek); }, 1000);
+    let j;
+    try{ j = await lcPost('/api/lerncoach/modelle-testen', {}); }
+    catch(e){ j = { ok:false, text: e.message }; }
+    clearInterval(uhr);
+    if(knopf) knopf.disabled = false;
+    if(!j.ok){ ziel.innerHTML = '<div style="font-size:0.78rem; color:#a33;">' + escapeHtmlDuo(j.text || 'Test fehlgeschlagen.') + '</div>'; return; }
+    const zeilen = j.ergebnisse.map((e, i) => {
+        const note = e.richtig ? '<b style="color:#15703c;">✓ richtig</b>'
+                   : e.brauchbar ? '<span style="color:#8a5a00;">~ ungenau</span>'
+                   : '<span style="color:#a33;">✗ ' + escapeHtmlDuo(e.fehler || 'unbrauchbar') + '</span>';
+        return '<tr style="border-top:1px solid #e3e9f3;">'
+            + '<td style="padding:5px 6px;">' + (i === 0 && e.richtig ? '<b>Empfehlung:</b> ' : '') + escapeHtmlDuo(e.name) + '</td>'
+            + '<td style="padding:5px 6px; text-align:right; white-space:nowrap;">' + String(e.sekunden).replace('.', ',') + ' s</td>'
+            + '<td style="padding:5px 6px; white-space:nowrap;">' + note + '</td>'
+            + '<td style="padding:5px 6px;">' + (e.brauchbar ? '<button type="button" style="' + EINST_KNOPF + ' min-height:26px; padding:0.15rem 0.6rem;" '
+                + 'onclick="lcEinstSetzen({orModell:\'' + escapeHtmlDuo(e.id) + '\'})">Nehmen</button>' : '') + '</td></tr>'
+            + (e.probe ? '<tr><td colspan="4" style="padding:0 6px 6px; font-size:0.72rem; color:var(--muted);">„' + escapeHtmlDuo(e.probe) + ' …“</td></tr>' : '');
+    }).join('');
+    ziel.innerHTML = '<table style="width:100%; border-collapse:collapse; font-size:0.78rem;">' + zeilen + '</table>'
+        + '<div style="font-size:0.72rem; color:var(--muted); margin-top:4px;">Gefragt wurde NC107 (Farbcode, richtig: 47 kΩ). Die Zeiten schwanken – bei kostenlosen Modellen hängt viel davon ab, wie voll es gerade bei OpenRouter ist.</div>';
+}
+async function lcPost(url, body){
+    const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body || {}) });
+    let j = {}; try{ j = await r.json(); }catch(e){}
+    if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    return j;
+}
+async function lcEinstSetzen(teil){
+    try{ await lcPost('/api/lerncoach/einstellungen', teil); }catch(e){ alert(e.message); }
+    einstLerncoachFuellen();
+}
+async function lcSchluesselSpeichern(){
+    const f = document.getElementById('lcSchluessel');
+    const m = document.getElementById('lcMeldung');
+    const wert = f ? f.value.trim() : '';
+    if(f) f.value = '';               // nichts im Feld stehen lassen
+    try{
+        await lcPost('/api/lerncoach/schluessel', { schluessel: wert });
+        await einstLerncoachFuellen();
+        lcPruefen();
+    }catch(e){ if(m){ m.style.color = '#a33'; m.textContent = e.message; } }
+}
+async function lcSchluesselWeg(){
+    if(!confirm('Den API-Schlüssel von diesem PC entfernen? Der Lerncoach ist dann aus.')) return;
+    try{ await lcPost('/api/lerncoach/schluessel-loeschen'); }catch(e){}
+    einstLerncoachFuellen();
+}
+async function lcPruefen(){
+    const m = document.getElementById('lcMeldung');
+    if(m){ m.style.color = 'var(--muted)'; m.textContent = 'Prüfe die Verbindung …'; }
+    try{
+        const j = await lcPost('/api/lerncoach/pruefen');
+        if(m){ m.style.color = j.ok ? '#15703c' : '#a33'; m.textContent = j.text; }
+    }catch(e){ if(m){ m.style.color = '#a33'; m.textContent = e.message; } }
+}
+
 function einstKursFuellen(){
     const ziel = document.getElementById('einstBlatt_kurs');
     if(!ziel) return;
@@ -23967,7 +24368,12 @@ function infoFuellen() {
 
     // ---------------------------------------------------------------
     setz('ueberblick',
-        infoBlock('Was das ist',
+        // Rundgang (29.09.2026) - derselbe, der neuen Teilnehmern im Chat
+        // angeboten wird.
+        '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#eaf4ff; border:1px solid #9cc3ea; padding:0.7rem 0.9rem; margin-bottom:1rem;">'
+      + '<span style="flex:1; min-width:220px; font-size:0.85rem;"><b><i class="fas fa-route"></i> Rundgang</b> – in gut einer Minute die wichtigsten Knöpfe, Schritt für Schritt.</span>'
+      + '<button type="button" class="btn btn-primary" onclick="document.getElementById(\'infoModal\').style.display=\'none\'; if(window.rundgangStarten) rundgangStarten();"><i class="fas fa-route"></i> Rundgang starten</button></div>'
+      + infoBlock('Was das ist',
             'Ein Übungsprogramm für die Amateurfunkprüfung der Klassen N, E und A. '
           + 'Es läuft auf diesem Rechner. Es gibt keine Anmeldung, und die Lerndaten verlassen den Rechner nicht.',
             [
@@ -24751,9 +25157,11 @@ function unterrichtStarten(i, ab, beamerWunsch){
             return;
         }
         if(unterrichtIchBinKursleiterImRaum()){
-            window._unterrichtBeamerBeimStart = (typeof beamerWunsch === 'boolean') ? beamerWunsch
-                : (beamerWahl ? beamerWahl.checked : unterrichtBeamerGewuenscht());
+            const frei = unterrichtRaumFrei();
+            window._unterrichtBeamerBeimStart = !frei && ((typeof beamerWunsch === 'boolean') ? beamerWunsch
+                : (beamerWahl ? beamerWahl.checked : unterrichtBeamerGewuenscht()));
             window.duo.lektionStarten({
+                frei: frei,
                 nr: i + 1, titel: kursLektionen()[i].t,
                 ids: teil.map(x => x.q.id),
                 abschnitte: teil.map(x => kursLektionen()[i].a[x.abschnitt][0]),
@@ -24875,14 +25283,14 @@ window.unterrichtRaum = unterrichtRaum;
 // Teilnehmer, noch nicht aufgeloest: Antwort nur als "gewaehlt" zeigen.
 function unterrichtVerdeckt(){
     const L = unterrichtRaum();
-    return !!(L && !L.host && !L.aufgedeckt);
+    return !!(L && !L.frei && !L.host && !L.aufgedeckt);
 }
 window.unterrichtVerdeckt = unterrichtVerdeckt;
 
 // Aufgeloest: die richtige Antwort bei allen gruen.
 function unterrichtLoesungZeigen(){
     const L = unterrichtRaum();
-    return !!(L && L.aufgedeckt && L.index === currentIndex);
+    return !!(L && !L.frei && L.aufgedeckt && L.index === currentIndex);
 }
 window.unterrichtLoesungZeigen = unterrichtLoesungZeigen;
 
@@ -24912,7 +25320,8 @@ function unterrichtRaumBeginnen(meta){
         host: unterrichtIchBinKursleiterImRaum(),
         fragen: currentQuestions,
         gesendet: idx,
-        stand: null
+        stand: null,
+        frei: !!m.frei
     };
     unterrichtLauf = null;
     currentIndex = idx;
@@ -24927,7 +25336,7 @@ function unterrichtRaumNachStart(){
     const L = unterrichtRaum();
     unterrichtRaumKlassen();
     if(!L) return;
-    if(L.host && window._unterrichtBeamerBeimStart){
+    if(L.host && !L.frei && window._unterrichtBeamerBeimStart){
         window._unterrichtBeamerBeimStart = false;
         try{ beamerSetzen(true); }catch(e){}
     }
@@ -24940,9 +25349,12 @@ function unterrichtRaumKlassen(){
     const b = document.body;
     if(!b) return;
     b.classList.toggle('lektion-raum', !!L);
-    b.classList.toggle('lektion-kursleiter', !!(L && L.host));
-    b.classList.toggle('lektion-teilnehmer', !!(L && !L.host));
-    b.classList.toggle('lektion-aufgedeckt', !!(L && L.aufgedeckt && L.index === currentIndex));
+    // Im eigenen Tempo blaettert jeder selbst - die Sperren des Gleichschritts
+    // (keine Weiter-Knoepfe, Kursleiter antwortet nicht) gelten dann nicht.
+    b.classList.toggle('lektion-frei', !!(L && L.frei));
+    b.classList.toggle('lektion-kursleiter', !!(L && L.host && !L.frei));
+    b.classList.toggle('lektion-teilnehmer', !!(L && !L.host && !L.frei));
+    b.classList.toggle('lektion-aufgedeckt', !!(L && !L.frei && L.aufgedeckt && L.index === currentIndex));
     if(!L){ const el = document.getElementById('unterrichtLeiste'); if(el) el.style.display = 'none'; }
 }
 
@@ -24952,6 +25364,11 @@ function unterrichtRaumNachziehen(){
     unterrichtRaumKlassen();
     if(!L) return '';
     const q = currentQuestions[currentIndex];
+    if(L.frei){
+        if(q) unterrichtStandSetzen(L.nr, q.id);
+        setTimeout(unterrichtLeisteZeichnen, 0);
+        return (L.versatz + Math.min(currentIndex, currentQuestions.length - 1) + 1) + ' / ' + L.gesamt;
+    }
     if(L.host && q){
         if(currentIndex !== L.gesendet){
             L.gesendet = currentIndex;
@@ -24968,7 +25385,7 @@ function unterrichtRaumNachziehen(){
 
 function unterrichtAufloesen(){
     const L = unterrichtRaum();
-    if(!L || !L.host || L.aufgedeckt) return false;
+    if(!L || L.frei || !L.host || L.aufgedeckt) return false;
     L.aufgedeckt = true;
     L.index = currentIndex;
     try{ window.duo.lektionSchritt(currentIndex, true); }catch(e){}
@@ -24980,7 +25397,7 @@ window.unterrichtAufloesen = unterrichtAufloesen;
 // Vorne in nextQuestion(): true = erledigt, nicht normal weiterblaettern.
 function unterrichtRaumWeiterAbfangen(){
     const L = unterrichtRaum();
-    if(!L) return false;
+    if(!L || L.frei) return false;
     if(!L.host) return true;                        // Teilnehmer: der Kursleiter schaltet
     if(!L.aufgedeckt){ unterrichtAufloesen(); return true; }
     if(currentIndex >= currentQuestions.length - 1){
@@ -24993,8 +25410,15 @@ window.unterrichtRaumWeiterAbfangen = unterrichtRaumWeiterAbfangen;
 
 function unterrichtBeendenFragen(){
     const los = () => { try{ window.duo.lektionEnde(); }catch(e){} };
+    const L = unterrichtRaum();
+    const s = L && L.stand;
+    const text = (L && L.frei)
+        ? ((s && s.teilnehmer && s.fertig < s.teilnehmer)
+            ? 'Erst ' + s.fertig + ' von ' + s.teilnehmer + ' sind fertig. Lektion trotzdem beenden und allen die Auswertung zeigen?'
+            : 'Lektion beenden und allen die Auswertung zeigen?')
+        : 'Das war die letzte Frage. Lektion beenden und allen die Auswertung zeigen?';
     if(typeof window.showAppConfirm === 'function'){
-        window.showAppConfirm('Das war die letzte Frage. Lektion beenden und allen die Auswertung zeigen?', los,
+        window.showAppConfirm(text, los,
             { title: 'Lektion beenden?', icon: 'fa-flag-checkered', iconColor: '#15703c',
               confirmLabel: '<i class="fas fa-flag-checkered"></i> Beenden und auswerten' });
     } else { los(); }
@@ -25003,7 +25427,7 @@ function unterrichtBeendenFragen(){
 // Vorne in prevQuestion(): Teilnehmer blaettern nicht selbst.
 function unterrichtRaumZurueckAbfangen(){
     const L = unterrichtRaum();
-    return !!(L && !L.host);
+    return !!(L && !L.frei && !L.host);
 }
 window.unterrichtRaumZurueckAbfangen = unterrichtRaumZurueckAbfangen;
 
@@ -25011,7 +25435,7 @@ window.unterrichtRaumZurueckAbfangen = unterrichtRaumZurueckAbfangen;
 // loest auf. Teilnehmer koennen nach dem Aufloesen nicht mehr antworten.
 function unterrichtRaumAntwortAbfangen(){
     const L = unterrichtRaum();
-    if(!L) return false;
+    if(!L || L.frei) return false;
     if(L.host){ unterrichtAufloesen(); return true; }
     return !!L.aufgedeckt;
 }
@@ -25020,7 +25444,7 @@ window.unterrichtRaumAntwortAbfangen = unterrichtRaumAntwortAbfangen;
 // Beim Teilnehmer: Der Kursleiter hat geblaettert oder aufgeloest.
 window.unterrichtRaumSchritt = function(d){
     const L = unterrichtRaum();
-    if(!L || L.host || !d) return;
+    if(!L || L.frei || L.host || !d) return;
     const idx = parseInt(d.index, 10);
     if(!(idx >= 0 && idx < currentQuestions.length)) return;
     const neu = idx !== currentIndex;
@@ -25049,7 +25473,9 @@ window.unterrichtRaumSchritt = function(d){
 // Beim Kursleiter: Zaehler und Verteilung vom Server.
 window.unterrichtRaumStand = function(d){
     const L = unterrichtRaum();
-    if(!L || !L.host || !d || d.index !== currentIndex) return;
+    if(!L || !L.host || !d) return;
+    if(L.frei){ if(d.frei){ L.stand = d; unterrichtLeisteZeichnen(); } return; }
+    if(d.index !== currentIndex) return;
     L.stand = d;
     unterrichtLeisteZeichnen();
 };
@@ -25071,6 +25497,19 @@ function unterrichtLeisteZeichnen(){
     let html = '';
     if(allein){
         html = lek;
+    } else if(L.frei){
+        // Jeder im eigenen Tempo (29.09.2026).
+        const s = L.stand;
+        if(L.host){
+            const quote = s && s.beantwortet ? Math.round(s.richtig / s.beantwortet * 100) : null;
+            // Kurz - die Leiste steht neben Zurueck/Weiter und soll sie nicht verdecken.
+            html = lek + '<span class="u-zahl" title="Jeder arbeitet im eigenen Tempo"><i class="fas fa-person-running"></i> '
+                + (s ? '<b>' + s.fertig + '</b> von <b>' + s.teilnehmer + '</b> fertig' + (quote !== null ? ' · ' + quote + ' % richtig' : '') : 'Eigenes Tempo')
+                + '</span><button type="button" onclick="unterrichtBeendenFragen()"><i class="fas fa-flag-checkered"></i> Lektion beenden</button>';
+        } else {
+            html = lek + '<span class="u-zahl"><i class="fas fa-person-running"></i> In deinem Tempo · Frage '
+                + (L.versatz + Math.min(currentIndex, currentQuestions.length - 1) + 1) + ' von ' + L.gesamt + '</span>';
+        }
     } else if(L.host){
         const s = L.stand;
         const zahl = s ? '<b>' + s.geantwortet + '</b> von <b>' + s.teilnehmer + '</b> ' + (s.teilnehmer === 1 ? 'hat' : 'haben') + ' geantwortet'
@@ -25125,6 +25564,7 @@ window.duoUnterrichtFuellen = duoUnterrichtFuellen;
 
 function duoUnterrichtHaken(an){
     try{ localStorage.setItem('unterricht_raum', an ? '1' : '0'); }catch(e){}
+    if(an) duoRaumKlappen(null, 'duoUnterrichtZeile', true);
     if(an){
         // Unterricht und Pruefungssimulator schliessen sich aus.
         const pr = document.getElementById('duoPruefungCheck');
@@ -25141,6 +25581,49 @@ function duoUnterrichtGewaehlt(){
 }
 window.duoUnterrichtGewaehlt = duoUnterrichtGewaehlt;
 
+// Einklappen der beiden Kaesten (29.09.2026). Beim Oeffnen des Fensters
+// ist alles zu (duoFensterEinklappen). Wer den Haken bei Unterricht setzt,
+// bekommt den Kasten aufgeklappt, sonst saehe er die Lektionsauswahl nicht.
+function duoRaumKlappenStart(){
+    ['duoPruefungZeile', 'duoUnterrichtZeile'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!el || el.dataset.klappBereit) return;
+        el.dataset.klappBereit = '1';
+        el.classList.add('zu');
+    });
+}
+// Dietmar: "Beim oeffnen alles eingeklappt." - bei jedem Oeffnen des
+// Fensters: Name, Konfiguration, Pruefungssimulator und Unterricht zu.
+function duoFensterEinklappen(){
+    ['duoAccName', 'duoAccPwd', 'duoAccConfig'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('open'); });
+    ['duoPruefungZeile', 'duoUnterrichtZeile'].forEach(id => { const el = document.getElementById(id); if(el){ el.dataset.klappBereit = '1'; el.classList.add('zu'); } });
+    try{ duoUnterrichtNachziehen(); }catch(e){}
+    try{ if(window.duoBesucherKlappen) window.duoBesucherKlappen(true); }catch(e){}
+}
+window.duoFensterEinklappen = duoFensterEinklappen;
+function duoRaumKlappen(e, id, auf){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    const el = document.getElementById(id);
+    if(!el) return;
+    const zu = (auf === true) ? false : !el.classList.contains('zu');
+    el.classList.toggle('zu', zu);
+}
+window.duoRaumKlappen = duoRaumKlappen;
+
+// Jeder im eigenen Tempo oder im Gleichschritt (29.09.2026). Dietmar:
+// "Das alle warten muessen ist bloed. Besser waere es wenn jeder in seinem
+// Tempo arbeiten kann, ohne auf einen anderen zu warten." Deshalb ist
+// "eigenes Tempo" die Vorgabe; der Gleichschritt bleibt fuer den Beamer.
+function unterrichtRaumFrei(){
+    try{ return localStorage.getItem('unterricht_raum_tempo') !== 'gleich'; }catch(e){ return true; }
+}
+function duoUnterrichtTempoGewaehlt(){
+    const t = document.getElementById('duoUnterrichtTempo');
+    try{ localStorage.setItem('unterricht_raum_tempo', t && t.value === 'gleich' ? 'gleich' : 'frei'); }catch(e){}
+    duoUnterrichtNachziehen();
+}
+window.duoUnterrichtTempoGewaehlt = duoUnterrichtTempoGewaehlt;
+
 function duoUnterrichtMerkPos(nr){
     const fr = unterrichtFragen(nr - 1);
     const s = unterrichtStandHolen()[nr];
@@ -25155,6 +25638,7 @@ function duoUnterrichtNachziehen(){
     const info = document.getElementById('duoUnterrichtInfo');
     const bm = document.getElementById('duoUnterrichtBeamer');
     if(!zeile || !h || !sel) return;
+    duoRaumKlappenStart();
     let imRaum = false, host = false;
     try{ imRaum = !!(window.duo && window.duo.isActive && window.duo.isActive()); host = !!(window.duo && window.duo.isHost && window.duo.isHost()); }catch(e){}
     // Teilnehmer waehlen keine Lektion - das macht der Kursleiter.
@@ -25164,7 +25648,13 @@ function duoUnterrichtNachziehen(){
     const anz = document.getElementById('duoUnterrichtAnzahl');
     if(anz) anz.textContent = kursLektionen().length + ' Lektionen';
     if(wahl) wahl.style.display = h.checked ? 'flex' : 'none';
+    const kurz = document.getElementById('duoUnterrichtKurz');
+    if(kurz) kurz.textContent = h.checked ? ' · Lektion ' + (parseInt(sel.value, 10) || 1) + ' · ' + (unterrichtRaumFrei() ? 'eigenes Tempo' : 'Gleichschritt') : ' · ' + kursLektionen().length + ' Lektionen von 50ohm.de';
     if(bm && document.activeElement !== bm) bm.checked = unterrichtBeamerGewuenscht();
+    const tempo = document.getElementById('duoUnterrichtTempo');
+    if(tempo && document.activeElement !== tempo) tempo.value = unterrichtRaumFrei() ? 'frei' : 'gleich';
+    const bmWahl = document.getElementById('duoUnterrichtBeamerWahl');
+    if(bmWahl) bmWahl.style.display = unterrichtRaumFrei() ? 'none' : 'flex';
     if(info){
         let t = '';
         if(h.checked){
@@ -25173,7 +25663,9 @@ function duoUnterrichtNachziehen(){
             const pos = duoUnterrichtMerkPos(nr);
             if(!imRaum) t = 'Zuerst „Raum erstellen“ und den Link teilen, dann „Jetzt starten“ – die Lektion beginnt für alle gleichzeitig.';
             else if(L && L.nr === nr) t = 'Lektion ' + nr + ' läuft gerade – „Jetzt starten“ bringt dich zurück zur Frage.';
-            else t = '„Jetzt starten“ beginnt für alle bei Frage ' + (pos > 0 ? (pos + 1) + ' – dort hast du zuletzt aufgehört.' : '1.')
+            else t = (unterrichtRaumFrei()
+                       ? '„Jetzt starten“ gibt allen die Lektion ab Frage ' + (pos > 0 ? (pos + 1) : '1') + '. Jeder blättert selbst und sieht sofort, ob es stimmt; du siehst, wer wie weit ist.'
+                       : '„Jetzt starten“ beginnt für alle bei Frage ' + (pos > 0 ? (pos + 1) + ' – dort hast du zuletzt aufgehört.' : '1.'))
                    + (L ? ' Die laufende Lektion ' + L.nr + ' endet damit.' : '');
         }
         info.textContent = t;
@@ -25556,6 +26048,10 @@ function kursTeilZeichnen(){
     else if(unterrichtReiter === 'meine') html = kursHtmlMeine();
     else if(unterrichtReiter === 'kurs') html = kursHtmlBeitreten();
     ziel.innerHTML = html;
+    // Hausaufgaben (29.09.2026): Die Abschnittsliste fuellt die Hoehe des
+    // Fensters. Dietmar: "Hier kann man den Bereich besser ausnutzen.
+    // Scrollen ist nicht noetig." Vorher war sie auf 260 Punkte begrenzt.
+    ziel.classList.toggle('k-voll', unterrichtReiter === 'hausaufgaben' && !!ziel.querySelector('.k-zwei'));
     if(unterrichtReiter === 'hausaufgaben') kursFormNachziehen();
     kursReiterZahlenNachziehen();
 }
@@ -26084,6 +26580,13 @@ window.kursTabelleSpeichern = function(){
         '#unterrichtModal .k-rollen{overflow-x:auto;}',
         '#unterrichtModal .k-zwei{display:grid;grid-template-columns:1fr 1fr;gap:16px;}',
         '@media (max-width:760px){#unterrichtModal .k-zwei{grid-template-columns:1fr;}}',
+        '@media (min-width:761px){',
+        '  #unterrichtTeilAndere.k-voll{display:flex;flex-direction:column;}',
+        '  #unterrichtTeilAndere.k-voll > .k-zwei{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr);}',
+        '  #unterrichtTeilAndere.k-voll .k-zwei > .k-kasten{display:flex;flex-direction:column;min-height:0;}',
+        '  #unterrichtTeilAndere.k-voll .k-abs{flex:1 1 auto;max-height:none;min-height:140px;}',
+        '  #unterrichtTeilAndere.k-voll .k-zwei > div:last-child{overflow-y:auto;min-height:0;}',
+        '}',
         '#unterrichtModal .k-abs{background:#fff;border:1px solid var(--line);border-radius:10px;max-height:260px;overflow-y:auto;}',
         '#unterrichtModal .k-abs label{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--line);font-size:0.8rem;cursor:pointer;}',
         '#unterrichtModal .k-abs label.aus{color:var(--muted);cursor:default;}',
@@ -27572,7 +28075,7 @@ const KNOPF_ERKLAERUNG = {
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
     // 26.09.2026: "fuenf Reiter" stimmte laengst nicht mehr - jetzt sind es neun.
-    einstellungenBtn: 'Einstellungen. Das Fenster hat neun Reiter: Allgemein für Anzeigegröße, Farbstil und Beamer-Modus, Anpassen für die Antwort unter der Maus, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Vor der Prüfung, Kursauswertung, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
+    einstellungenBtn: 'Einstellungen. Das Fenster hat zehn Reiter: Allgemein für Anzeigegröße, Farbstil und Beamer-Modus, Anpassen für die Antwort unter der Maus, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Vor der Prüfung, Kursauswertung, Lerncoach für die KI im Chat, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
     lernVideoBtn: 'Videolehrgang. Michael, DL2YMR, erklärt genau diese Frage in seinem Lehrgang. Der Knopf öffnet ein neues Fenster und springt dort an die Stelle im Video, an der es losgeht.',
     lernOhmBtn: 'Bei 50 Ohm nachlesen. 50 Ohm ist der Lehrgang des DARC. Dort steht das Kapitel, in dem diese Frage erklärt wird — zum Lesen statt zum Ansehen. Der Knopf öffnet die Seite im Browser.',
     einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
@@ -28264,6 +28767,9 @@ const EINST_REITER = [
     // 09.09.2026, "Der Name Merkblatt gefaellt mir nicht."
     { id:'merkblatt', name:'Vor der Prüfung', symbol:'fa-file-lines' },
     { id:'kurs',      name:'Kursauswertung', symbol:'fa-chalkboard-user' },
+    // Lerncoach (29.09.2026): die KI im Chat. Nur am Trainer-PC zu sehen -
+    // dort, wo auch der Schluessel liegt (siehe einstLerncoachFuellen).
+    { id:'lerncoach', name:'Lerncoach (KI)', symbol:'fa-user-graduate' },
     { id:'update',    name:'Update',    symbol:'fa-cloud-arrow-down' },
     { id:'wartung',   name:'Wartung',   symbol:'fa-screwdriver-wrench' }
 ];
@@ -28271,6 +28777,8 @@ let einstReiterJetzt = 'allgemein';
 
 function einstReiterZeigen(id){
     if(!EINST_REITER.some(r => r.id === id)) id = 'allgemein';
+    // Der Lerncoach wird nur am Trainer-PC eingerichtet (29.09.2026).
+    try{ const lt = document.getElementById('einstTab_lerncoach'); if(lt && !laeuftLokal()){ lt.style.display = 'none'; if(id === 'lerncoach') id = 'allgemein'; } }catch(e){}
     einstReiterJetzt = id;
     for(const r of EINST_REITER){
         const knopf = document.getElementById('einstTab_' + r.id);
@@ -28290,6 +28798,7 @@ function einstReiterZeigen(id){
     if(id === 'benutzer') { try{ einstBenutzerFuellen(); }catch(e){} }
     if(id === 'merkblatt'){ try{ einstMerkblattFuellen(); }catch(e){} }
     if(id === 'kurs')     { try{ einstKursFuellen(); }catch(e){} }
+    if(id === 'lerncoach'){ try{ einstLerncoachFuellen(); }catch(e){} }
     if(id === 'update')   { try{ einstUpdateFuellen(); }catch(e){} }
     if(id === 'wartung')  { try{ einstProgrammeFuellen(); }catch(e){} try{ einstOhmLageFuellen(); }catch(e){} }
     if(id === 'vorlesen') {
@@ -28402,6 +28911,7 @@ function einstellungenOeffnen(reiter){
           + '<div id="einstBlatt_benutzer" style="display:none;"></div>'
           + '<div id="einstBlatt_merkblatt" style="display:none;"></div>'
           + '<div id="einstBlatt_kurs"     style="display:none;"></div>'
+          + '<div id="einstBlatt_lerncoach" style="display:none;"></div>'
           + '<div id="einstBlatt_update"   style="display:none;"></div>'
           + '<div id="einstBlatt_wartung"  style="display:none;"></div>'
           + '</div></div>'
@@ -30845,6 +31355,31 @@ function uebungszeitAnzeigeNachziehen(){
     }catch(e){}
 }
 
+// ================================================================
+//  FRAGE IN DEN CHAT                                   (29.09.2026)
+//  Dietmar: "Bilder über dem Messenger, geht das auch?" - und auf die
+//  Rueckfrage: "Bild zur Frage und auch eigene Bilder". Die Sprechblase
+//  an der Frage haengt sie im Chat an (duo.js, BILDER IM CHAT): Nummer,
+//  Text, Zeichnung und die Antworten in der Reihenfolge, in der man sie
+//  gerade sieht - die richtige ist NICHT markiert. Zu sehen ist der
+//  Knopf nur, wenn der Chat da ist, und nie in einer Pruefung.
+// ================================================================
+function frageInDenChat() {
+    const q = currentQuestions[currentIndex];
+    if (!q || typeof window.duoChatFrageAnhaengen !== 'function') return;
+    window.duoChatFrageAnhaengen({
+        id: q.id,
+        text: q.text,
+        antworten: (q.options || []).map(o => ({ t: o.text || '', b: o.image ? String(o.image).trim() : '' }))
+    });
+}
+function frageChatKnopfSetzen() {
+    const b = document.getElementById('questionChatBtn');
+    if (!b) return;
+    b.style.display = (window.duoChatBereit && window.duoChatBereit()) ? '' : 'none';
+}
+window.frageChatKnopfSetzen = frageChatKnopfSetzen;
+
 function renderQuestion() {
     // Erst sichern, was im Notizfeld steht - gleich wird es ersetzt.
     try{ notizJetztSichern(); }catch(e){}
@@ -31108,6 +31643,12 @@ function renderQuestion() {
                     title="Zettel = NOTIZ — eigene Anmerkung zu dieser Frage.&#10;Sie steht auf dem Blatt „Vor der Prüfung“ mit dabei."
                     data-tooltip="Zettel = NOTIZ: eine eigene Anmerkung zu dieser Frage."
                     ><i class="fas fa-note-sticky"></i></button>
+            <button id="questionChatBtn" class="q-marke q-marke-chat" onclick="frageInDenChat()"
+                    aria-label="Frage in den Chat stellen"
+                    title="Sprechblase = IN DEN CHAT — diese Frage mit Bild und Antworten an alle im Chat.&#10;Die richtige Antwort geht nicht mit."
+                    data-tooltip="Sprechblase = IN DEN CHAT: diese Frage mit Bild und Antworten an alle im Chat. Die richtige Antwort geht nicht mit."
+                    style="${(window.duoChatBereit && window.duoChatBereit()) ? '' : 'display:none'}"
+                    ><i class="fas fa-comment-dots"></i></button>
             <button id="rechnerBtn" onclick="rechnerUmschalten()" title="Taschenrechner — nicht programmierbar, wie in der Prüfung erlaubt.&#10;Mit Vorsätzen p n µ m k M G." data-tooltip="Taschenrechner – nicht programmierbar, wie in der Prüfung erlaubt. Mit Vorsätzen p n µ m k M G." style="background:#eef2f9; color:var(--panel-navy); border:1px solid var(--line); border-radius:20px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;"><i class="fas fa-calculator"></i></button>
             <button id="formelBtn" onclick="formelBtnKlick()" title="Formelsammlung — die Stelle zu dieser Frage" data-tooltip="Formelsammlung" style="display:none; background:#fdf1e0; color:#8a5a12; border:1px solid #e0b25a; border-radius:20px; padding:0.45rem 0.85rem; font-size:0.8rem; cursor:pointer; white-space:nowrap;"><i class="fas fa-file-lines"></i> Formelblatt</button>
             <!-- Die Gluehbirne steht bewusst RECHTS vom Formelblatt: Wer
@@ -34696,6 +35237,7 @@ window.duoInit = function() {
             window.syncDuoModalFromMain();
             try{ window.updateDuoGelerntInfo(); }catch(e){}
             try{ adresseFeldNachziehen(); }catch(e){}
+            try{ duoFensterEinklappen(); }catch(e){}
         };
         document.head.appendChild(s);
     } else {
@@ -34704,6 +35246,7 @@ window.duoInit = function() {
         window.syncDuoModalFromMain();
         try{ window.updateDuoGelerntInfo(); }catch(e){}
         try{ adresseFeldNachziehen(); }catch(e){}
+        try{ duoFensterEinklappen(); }catch(e){}
     }
 };
 
@@ -43647,5 +44190,212 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 })();
 </script>
 
+<script id="rundgang">
+// ================================================================
+//  RUNDGANG FUER NEUE TEILNEHMER                       (29.09.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Zur Begruessung kommt das. Koennen wir da auch noch was
+//  anbieten? Ein Tutorial, das man in dem Trainer hinterlegt der
+//  Funktionen erklaert. Persoenlich und nur fuer den Teilnehmer
+//  sichtbar." Auf die Rueckfrage: gefuehrter Rundgang, Text von mir,
+//  aenderbar in rundgang.md, angeboten beim ersten Besuch.
+//
+//  Angebot: duo.js haengt unter die eigene Begruessung eine Zeile mit
+//  "Rundgang starten" - nur im eigenen Browser, der Server weiss davon
+//  nichts. Danach jederzeit ueber Info oder "Rundgang" im Chat.
+//  Ablauf: ein dunkler Schleier mit einem Lichtkreis um den Knopf, daneben
+//  eine Karte mit Titel, Text, Zurueck/Weiter. Fehlt ein Knopf gerade
+//  (Handy, Gast, ausgeblendet), wird der Schritt uebersprungen.
+// ================================================================
+(function(){
+    const RUNDGANG_STANDARD = "# Rundgang für neue Teilnehmer\n\n## Willkommen im Amateurfunk-Trainer\nSchön, dass du da bist! In gut einer Minute zeige ich dir die wichtigsten Knöpfe. Mit **Weiter** geht es zum nächsten Schritt, mit dem Kreuz hörst du jederzeit auf.\n\n## Hier geht es los [start]\n**Start** beginnt eine Runde mit Prüfungsfragen. Die Zahl am Knopf zeigt, wie viele Fragen du noch lernen musst.\n\n## Was und wie viel [auswahl]\nHier wählst du den Prüfungsteil – Vorschriften, Betrieb oder Technik – und wie viele Fragen eine Runde hat.\n\n## Fehler wiederholen [fehler]\nWas du falsch beantwortet hast, sammelt sich hier. Ein Klick, und du übst genau diese Fragen noch einmal.\n\n## Lernbedarf [lernbedarf]\nFragen, die öfter danebengehen. Sie verschwinden erst, wenn du sie dreimal richtig hattest.\n\n## Auffrischen [auffrischen]\nGelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt.\n\n## Blättern [blaettern]\nAlle Fragen der Reihe nach ansehen – mit Lösung und Erklärung, ganz ohne Druck.\n\n## Prüfungssimulator [pruefung]\nWie die echte Prüfung: drei Teile mit je 25 Fragen und 45 Minuten. Die Auflösung gibt es erst am Ende.\n\n## Unterricht [unterricht]\nDie Lektionen in der Reihenfolge der 50ohm-Folien – der Stoff und die passenden Fragen, Schritt für Schritt.\n\n## Suchen [suche]\nEine Fragennummer wie **NC404** oder ein Stichwort eingeben – der Trainer springt direkt dorthin.\n\n## Dein Lernfortschritt [fortschritt]\nHier siehst du, wie viel schon sitzt. Trag deinen Prüfungstermin ein, dann rechnet dir der Trainer aus, wie viel du pro Tag schaffen solltest.\n\n## Der Chat [chat]\nHier schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, mit dem Bild-Knopf ein Foto.\n\n## Frag die KI [ki]\nSchreib **Hey KI** vor deine Frage – der Lerncoach erklärt dir jede Prüfungsfrage. Die Antwort siehst nur du.\n\n## Wo bekomme ich den Trainer?\nDen Amateurfunk-Trainer zum Herunterladen gibt es hier: https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/ – kostenlos, ohne Anmeldung, für Windows, Linux und Mac.\n\n## Das war's! [info]\nDen Rundgang findest du jederzeit wieder unter **Info**. Viel Erfolg bei der Prüfung – 73!\n";
+    const ZIELE = {
+        start: ['#startBtn'], auswahl: ['#filterPart', '#filterPart + select'], fehler: ['#repeatErrorsBtn'],
+        lernbedarf: ['#difficultBtn'], auffrischen: ['#auffrischenBtn'], blaettern: ['#durchsichtBtn'],
+        statistik: ['#statistikBtn'], pruefung: ['#examSimulatorBtn'], gruppenraum: ['#duoBtn'],
+        unterricht: ['#unterrichtBtn'], suche: ['#searchInput'], fortschritt: ['#masteryDisplay'],
+        verlauf: ['#historyCol'], info: ['#infoBtn'], chat: ['#duoChatBox'], ki: ['#duoChatEingabe'],
+        mikro: ['#duoChatMikro'], bild: ['#duoChatBildKnopf']
+    };
+    function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function textHtml(t){
+        let h = esc(t.trim());
+        h = h.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+        h = h.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+        return h.replace(/\n{2,}/g, '<br><br>').replace(/\n/g, ' ');
+    }
+    function zerlegen(md){
+        const ohne = String(md || '').replace(/<!--[\s\S]*?-->/g, '');
+        const schritte = [];
+        ohne.split(/^##\s+/m).slice(1).forEach(block => {
+            const zeilen = block.split('\n');
+            let kopf = zeilen.shift().trim(), ziel = '';
+            const m = kopf.match(/\[([a-zäöü]+)\]\s*$/i);
+            if(m){ ziel = m[1].toLowerCase(); kopf = kopf.slice(0, m.index).trim(); }
+            const text = zeilen.join('\n').trim();
+            if(kopf || text) schritte.push({ titel: kopf, ziel: ziel, text: text });
+        });
+        return schritte.slice(0, 40);
+    }
+    function sichtbar(el){
+        if(!el) return false;
+        const r = el.getBoundingClientRect();
+        if(r.width < 2 || r.height < 2) return false;
+        const st = getComputedStyle(el);
+        return st.display !== 'none' && st.visibility !== 'hidden' && el.offsetParent !== null || st.position === 'fixed';
+    }
+    function zielElemente(ziel){
+        if(!ziel) return [];
+        if(!ZIELE[ziel]) return null;           // unbekanntes Wort: Schritt in die Mitte
+        if(ziel === 'ki'){ try{ if(!(window.duoLerncoachAn && window.duoLerncoachAn())) return false; }catch(e){ return false; } }
+        const els = ZIELE[ziel].map(s => { try{ return document.querySelector(s); }catch(e){ return null; } }).filter(sichtbar);
+        return els.length ? els : false;       // false = gerade nicht zu sehen -> ueberspringen
+    }
+    let lauf = null;
+    function stil(){
+        if(document.getElementById('rgStil')) return;
+        const st = document.createElement('style');
+        st.id = 'rgStil';
+        st.textContent =
+            '#rgHuelle{position:fixed;inset:0;z-index:100050;}'
+          + '#rgSchleier{position:fixed;inset:0;background:rgba(8,20,40,0.55);}'
+          + '#rgLicht{position:fixed;border:3px solid #2fd3ee;box-shadow:0 0 0 9999px rgba(8,20,40,0.55),0 0 18px rgba(47,211,238,0.6);transition:all .25s ease;pointer-events:none;}'
+          + '#rgKarte{position:fixed;width:min(380px,calc(100vw - 24px));background:#fff;color:#1d2a38;box-shadow:0 18px 48px rgba(0,0,0,0.35);border:1px solid #c2d6f0;transition:top .25s ease,left .25s ease;font-size:0.9rem;line-height:1.5;}'
+          + '#rgKarte .rg-kopf{display:flex;align-items:center;gap:8px;background:#0f2745;color:#fff;padding:0.6rem 0.8rem;}'
+          + '#rgKarte .rg-kopf b{flex:1;font-size:0.95rem;}'
+          + '#rgKarte .rg-zu{border:none;background:transparent;color:#fff;font-size:1.05rem;cursor:pointer;width:28px;height:28px;}'
+          + '#rgKarte .rg-text{padding:0.8rem 0.9rem 0.6rem;}'
+          + '#rgKarte .rg-text a{color:#0f5fb3;word-break:break-all;}'
+          + '#rgKarte .rg-fuss{display:flex;align-items:center;gap:8px;padding:0.55rem 0.9rem 0.75rem;}'
+          + '#rgKarte .rg-zahl{flex:1;font-size:0.76rem;color:#6b7c90;}'
+          + '#rgKarte .rg-fuss button{border:1px solid #0f2745;background:#fff;color:#0f2745;font-weight:700;font-size:0.8rem;padding:0.4rem 0.9rem;cursor:pointer;font-family:inherit;}'
+          + '#rgKarte .rg-fuss button.rg-weiter{background:#0f2745;color:#fff;}'
+          + '#rgKarte .rg-fuss button:disabled{opacity:.35;cursor:default;}'
+          + 'body.dark #rgKarte{background:#15233a;color:#e6eef8;border-color:#2c4263;}';
+        document.head.appendChild(st);
+    }
+    function zeichnen(richtung){
+        if(!lauf) return;
+        // Schritte, deren Knopf gerade fehlt, ueberspringen
+        while(lauf.i >= 0 && lauf.i < lauf.schritte.length && zielElemente(lauf.schritte[lauf.i].ziel) === false) lauf.i += (richtung || 1);
+        if(lauf.i >= lauf.schritte.length){ beenden(true); return; }
+        if(lauf.i < 0){ lauf.i = 0; zeichnen(1); return; }
+        const s = lauf.schritte[lauf.i];
+        const els = zielElemente(s.ziel) || [];
+        const licht = document.getElementById('rgLicht'), schleier = document.getElementById('rgSchleier'), karte = document.getElementById('rgKarte');
+        // Zaehler nur ueber die Schritte, die wirklich gezeigt werden
+        const gezeigt = lauf.schritte.map((x, k) => k).filter(k => zielElemente(lauf.schritte[k].ziel) !== false);
+        const nr = gezeigt.indexOf(lauf.i) + 1, von = gezeigt.length;
+        const letzter = nr === von;
+        karte.innerHTML = '<div class="rg-kopf"><i class="fas fa-route"></i><b>' + esc(s.titel) + '</b>'
+            + '<button type="button" class="rg-zu" data-rg="ende" title="Rundgang beenden" aria-label="Rundgang beenden">&#10005;</button></div>'
+            + '<div class="rg-text">' + textHtml(s.text) + '</div>'
+            + '<div class="rg-fuss"><span class="rg-zahl">Schritt ' + nr + ' von ' + von + '</span>'
+            + '<button type="button" data-rg="zurueck"' + (nr <= 1 ? ' disabled' : '') + '>Zurück</button>'
+            + '<button type="button" class="rg-weiter" data-rg="weiter">' + (letzter ? 'Fertig' : 'Weiter') + '</button></div>';
+        if(els.length){
+            try{ els[0].scrollIntoView({ block: 'center', inline: 'nearest' }); }catch(e){}
+        }
+        const setzen = () => {
+            if(!lauf) return;
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const kb = karte.offsetWidth, kh = karte.offsetHeight;
+            if(!els.length){
+                licht.style.display = 'none'; schleier.style.display = '';
+                karte.style.left = Math.max(12, (vw - kb) / 2) + 'px';
+                karte.style.top = Math.max(12, (vh - kh) / 2) + 'px';
+                return;
+            }
+            let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+            els.forEach(e => { const q = e.getBoundingClientRect(); l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom); });
+            const rand = 6;
+            l -= rand; t -= rand; r += rand; b += rand;
+            schleier.style.display = 'none';
+            licht.style.display = '';
+            licht.style.left = l + 'px'; licht.style.top = t + 'px';
+            licht.style.width = (r - l) + 'px'; licht.style.height = (b - t) + 'px';
+            // Karte unter den Knopf, sonst darueber, sonst daneben
+            let kt = b + 12;
+            if(kt + kh > vh - 8) kt = t - kh - 12;
+            if(kt < 8) kt = Math.min(vh - kh - 8, Math.max(8, t));
+            let kl = Math.min(Math.max(12, l), vw - kb - 12);
+            if(kt < b && kt + kh > t){       // ueberdeckt den Knopf: daneben stellen
+                kl = (r + 12 + kb < vw) ? r + 12 : Math.max(12, l - kb - 12);
+            }
+            // Ganz rechts am Rand (der angedockte Chat): links daneben, sonst
+            // laege die Karte ueber dem Chat, den sie gerade erklaert.
+            const chatBox = document.getElementById('duoChatBox');
+            const imChat = chatBox && els.some(e => chatBox.contains(e));
+            const kante = imChat ? chatBox.getBoundingClientRect().left : l;
+            if((imChat || r > vw - 60) && kante - kb - 12 > 0){
+                kl = kante - kb - 12;
+                kt = Math.min(vh - kh - 8, Math.max(8, b - kh));
+            }
+            karte.style.left = kl + 'px'; karte.style.top = kt + 'px';
+        };
+        setzen();
+        setTimeout(setzen, 350);
+        lauf.setzen = setzen;
+        try{ karte.querySelector('.rg-weiter').focus(); }catch(e){}
+    }
+    function tasten(e){
+        if(!lauf) return;
+        if(e.key === 'Escape'){ e.preventDefault(); beenden(false); }
+        else if(e.key === 'ArrowRight' || e.key === 'Enter'){ e.preventDefault(); weiter(1); }
+        else if(e.key === 'ArrowLeft'){ e.preventDefault(); weiter(-1); }
+        e.stopPropagation();                  // keine Kuerzel des Trainers ausloesen
+    }
+    function weiter(d){
+        if(!lauf) return;
+        const gezeigt = lauf.schritte.map((x, k) => k).filter(k => zielElemente(lauf.schritte[k].ziel) !== false);
+        const pos = gezeigt.indexOf(lauf.i);
+        if(d > 0 && pos === gezeigt.length - 1){ beenden(true); return; }
+        lauf.i = gezeigt[Math.max(0, Math.min(gezeigt.length - 1, pos + d))];
+        zeichnen(d);
+    }
+    function beenden(fertig){
+        if(!lauf) return;
+        try{ localStorage.setItem('rundgang_gesehen', '1'); }catch(e){}
+        const h = document.getElementById('rgHuelle');
+        if(h) h.remove();
+        window.removeEventListener('keydown', tasten, true);
+        window.removeEventListener('resize', lauf.neu, true);
+        window.removeEventListener('scroll', lauf.neu, true);
+        lauf = null;
+    }
+    async function rundgangStarten(){
+        if(lauf) return;
+        let md = null;
+        try{
+            const r = await fetch('/api/rundgang', { cache: 'no-store' });
+            if(r.ok){ const j = await r.json(); md = j && j.text; }
+        }catch(e){}
+        let schritte = zerlegen(md);
+        if(!schritte.length) schritte = zerlegen(RUNDGANG_STANDARD);
+        if(!schritte.length) return;
+        stil();
+        const h = document.createElement('div');
+        h.id = 'rgHuelle';
+        h.innerHTML = '<div id="rgSchleier"></div><div id="rgLicht"></div><div id="rgKarte" role="dialog" aria-live="polite"></div>';
+        document.body.appendChild(h);
+        h.addEventListener('click', e => {
+            const k = e.target.closest('[data-rg]');
+            if(!k) return;
+            const a = k.getAttribute('data-rg');
+            if(a === 'ende') beenden(false);
+            else if(a === 'weiter') weiter(1);
+            else if(a === 'zurueck') weiter(-1);
+        });
+        lauf = { schritte: schritte, i: 0, setzen: null, neu: () => { if(lauf && lauf.setzen) lauf.setzen(); } };
+        window.addEventListener('keydown', tasten, true);
+        window.addEventListener('resize', lauf.neu, true);
+        window.addEventListener('scroll', lauf.neu, true);
+        zeichnen(1);
+    }
+    window.rundgangStarten = rundgangStarten;
+    window.rundgangLaeuft = () => !!lauf;
+    window.rundgangGesehen = () => { try{ return localStorage.getItem('rundgang_gesehen') === '1'; }catch(e){ return false; } };
+})();
+</script>
 </body>
 </html>

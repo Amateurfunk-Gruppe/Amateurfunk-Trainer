@@ -17,6 +17,11 @@ yarn-error.log*
 
 # Persoenliche Lerndaten - nichts fuer ein Repository
 data/
+# Lerncoach (29.09.2026): Anweisungen, Einstellungen, Verbrauch und die
+# Gespraeche mit Vornamen. Gehoert dem Kursleiter, nicht nach GitHub.
+# Der API-Schluessel liegt ohnehin NICHT hier, sondern im Benutzerprofil
+# (%APPDATA%\Amateurfunk-Trainer) - siehe Server.js, LERNCOACH.
+lerncoach/
 *.bak
 *.tmp
 *.defekt-*

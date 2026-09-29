@@ -57,7 +57,14 @@ vorher, welche Prüfungsbögen dazugehören und wie viele Fragen zu lernen sind.
   Buchstabe (**F9**) — F8 hört, F9 sieht
 - **Lernmodus** mit Lernfortschritt, Fehlerliste, Merkliste und Auffrischung
 - **Prüfungssimulator** — 25 Fragen, 45 Minuten, 19 zum Bestehen, wie in der echten Prüfung
-- **Gruppenraum** — gemeinsam lernen, jeder in seinem Tempo, am Ende die Auswertung aller
+- **Gruppenraum** — gemeinsam lernen, jeder in seinem Tempo, am Ende die Auswertung aller.
+  Mit Chat, Sprachnachrichten und Anrufen, auch als Prüfungssimulator für die ganze Gruppe
+- **Unterricht** — die Lektionen des Lehrgangs von 50ohm.de für jedes Prüfungsziel, mit den
+  Prüfungsfragen genau dort, wo sie in den Folien drankommen. Am Beamer, im Gruppenraum
+  im Gleichschritt ([mehr dazu](#unterricht--die-lektionen-von-50ohmde))
+- **Kurs und Hausaufgaben** — Teilnehmer melden sich mit dem Vornamen an, der Kursleiter
+  gibt Lektionen oder Abschnitte als Hausaufgabe auf und sieht, wer was erledigt hat
+  ([mehr dazu](#kurs-und-hausaufgaben))
 - **Sprachausgabe** über [Piper](https://github.com/rhasspy/piper), lokal und offline.
   Abkürzungen werden vor dem Sprechen ausgeschrieben: „145 MHz" wird zu „145 Megahertz"
 - **Hörbuch** — Frage, drei Sekunden Stille zum Selbstantworten, richtige Antwort.
@@ -143,7 +150,15 @@ Link. Mehr braucht es nicht:
 - **Alle bekommen dieselben Fragen**, jeder in seinem Tempo.
 - Der Ausbilder sieht in der **Teilnehmer-Übersicht**, wie weit jeder ist und wo
   es hakt — ohne dass bei irgendjemandem ein Fenster aufspringt.
-- Ein **Gruppenchat** für Zwischenfragen gehört dazu.
+- Ein **Gruppenchat** für Zwischenfragen gehört dazu — mit **Sprachnachrichten**,
+  Reaktionen wie bei WhatsApp und Löschen eigener Nachrichten. Rechts angedockt
+  wird er zur eigenen Spalte neben der Frage.
+- **Anrufen:** Der Kursleiter ruft einen Teilnehmer direkt aus der Kontaktliste
+  im Chat an — nur die beiden hören sich, die Stimme geht von Browser zu Browser.
+  Mit **Profilbild**, wer mag.
+- **Prüfungssimulator im Raum:** drei Bögen Vorschriften, Betrieb, Technik, je
+  25 Fragen und 45 Minuten, Auswertung je Bogen — wie in der echten Prüfung, nur
+  mit der ganzen Gruppe.
 - Am Ende steht die **Auswertung für alle** — und wer will, nimmt sich den
   kompletten Trainer über „Trainer herunterladen" mit nach Hause.
 
@@ -198,6 +213,92 @@ aufzudecken: was die Gruppe mehrheitlich gewählt hat, und was richtig ist – s
 aufdecken mit `↓`, Schluss mit `Esc`.
 
 ![Die Beamer-Ansicht für den Kursabend](bilder/17-beamer.png)
+
+### Unterricht — die Lektionen von 50ohm.de
+
+Der Knopf **Unterricht** in der Leiste öffnet den Lehrgang, der zum eingestellten
+Prüfungsziel gehört — so, wie Kursleiter ihn Abend für Abend abarbeiten:
+
+| Prüfungsziel | Lehrgang bei 50ohm.de | Lektionen |
+|---|---|---|
+| Klasse N | Gesamtkurs N | 14 |
+| Direkteinstieg E | Gesamtkurs E | 23 |
+| Aufstockung N → E | Aufbaukurs N → E | 16 |
+| Aufstockung E → A | Aufbaukurs E → A | 14 |
+
+Links die Lektionen, rechts die Abschnitte der gewählten. Die Prüfungsfragen
+kommen **genau dort, wo sie in den Folien stehen** — erst der Stoff, dann die
+Fragen dazu. Jeder Abschnitt hat einen Knopf **ab hier** und, wo es eins gibt,
+den **Videolehrgang von DL2YMR** an genau dieser Stelle. Die Folien selbst
+öffnet der Trainer auf 50ohm.de. Er merkt sich, wo du aufgehört hast: Beim
+nächsten Mal steht dort **Weiter bei Frage 9**.
+
+Alle Fragen des jeweiligen Katalogs kommen im Lehrgang vor. Die wenigen, die
+in keiner Folie stehen, hängen als *Weitere Prüfungsfragen* am passenden
+Kapitel. Wo 50ohm.de die Folien noch als Entwurf führt — beim Aufbaukurs
+E → A der größte Teil —, steht das dabei.
+
+![Das Fenster „Unterricht" mit den 14 Lektionen der Klasse N](bilder/22-unterricht.png)
+
+**Am Beamer:** Mit dem Haken *Am Beamer zeigen* läuft die Lektion groß, ohne
+Menüs. Oben steht Lektion und Abschnitt, unten der Stand. Presenter, `Leertaste`
+und Pfeiltasten schalten weiter.
+
+#### Im Gruppenraum im Gleichschritt
+
+Läuft ein Gruppenraum, startet **Jetzt starten** (Haken *Unterricht* im
+Gruppenraum-Fenster) oder der Knopf im Unterricht-Fenster die Lektion **für
+alle**. Der Kursleiter steht am Beamer, die Teilnehmer antworten am eigenen
+Handy — wie mit hochgehaltenen Karten, nur dass niemand abzählen muss:
+
+- Alle sehen **dieselbe Frage**. Weiter schaltet nur der Kursleiter.
+- Am Beamer steht, **wie viele schon geantwortet** haben.
+- Erster Druck auf `Leertaste` oder Presenter **löst auf**: Die richtige Antwort
+  wird grün, und an jeder Antwort steht, **wie viele sie gewählt** haben — ohne
+  Namen. Der zweite Druck geht zur nächsten Frage.
+- Die Teilnehmer sehen erst beim Auflösen, ob sie richtig lagen. Wer später
+  dazukommt, landet auf der laufenden Frage.
+- Am Ende die Auswertung für alle.
+
+![Am Beamer nach dem Auflösen: Zähler oben, Verteilung an den Antworten](bilder/23-unterricht-beamer.png)
+
+### Kurs und Hausaufgaben
+
+Für die Zeit zwischen den Kursabenden. Im Fenster **Unterricht** kommen am
+Trainer-PC drei Reiter dazu:
+
+- **Teilnehmer** — Kurs anlegen und einladen: per **WhatsApp** (einzeln oder in
+  die Gruppe), per **E-Mail** oder als kopierter Text. Es ist ein Link für alle.
+  Wer ihn öffnet, gibt seinen **Vornamen** ein und setzt den Haken *Ich nehme am
+  Kurs teil*. Die Anfrage erscheint beim Kursleiter im Chat — erst mit seinem
+  **Aufnehmen** ist man im Kurs. Danach erkennt der Trainer die Person auf diesem
+  Gerät, **ohne Passwort**: Der Browser bekommt einen zufälligen Schlüssel, auf
+  dem Server liegt davon nur eine Prüfsumme. Wer sich unter fremdem Namen
+  anmeldet, braucht trotzdem die Bestätigung des Kursleiters.
+- **Hausaufgaben** — Lektion wählen, die behandelten Abschnitte anhaken, Termin
+  setzen, aufgeben. Rechts steht, wie viele schon fertig sind.
+- **Auswertung** — wer welche Hausaufgabe mit welchem Ergebnis erledigt hat,
+  Halbfertiges gelb, Überfälliges rot, dazu der Schnitt. Darunter **Hier hakt
+  es**: die Fragen, an denen die Gruppe hängt — mit einem Knopf, der genau
+  diese Fragen am Beamer zeigt. Alles auch **als Tabelle** für Excel oder
+  LibreOffice.
+
+![Eine Hausaufgabe aufgeben](bilder/24-hausaufgaben.png)
+
+![Die Auswertung der Hausaufgaben](bilder/25-hausaufgaben-auswertung.png)
+
+Die Teilnehmer sehen über der Knopfleiste **„Hallo Maja – 1 offene Hausaufgabe"**,
+im Fenster *Unterricht* steht alles unter **Meine Hausaufgaben**. Sie können unterbrechen und
+später bei derselben Frage weitermachen; es zählt die erste Antwort, falsche
+kommen wie immer unter Fehler und Lernbedarf. Im Chat meldet sich eine **neue
+Hausaufgabe** mit Start-Knopf, am Tag vor dem Termin eine **Erinnerung** — und
+beim Kursleiter **„Maja hat Lektion 3 erledigt"**. Diese Nachrichten sieht
+jeweils nur der, den sie angehen.
+
+> Die Hausaufgaben liegen auf dem Rechner des Kursleiters, im Ordner `kurse`.
+> Erreichbar sind sie, solange sein Trainer online ist — für Kurse mit Übung
+> zu Hause am besten ein Rechner, der durchläuft. Der Ordner geht nie zu
+> GitHub und in kein Paket.
 
 ### Am Handy und am Tablet
 
@@ -697,7 +798,12 @@ Lektion für Lektion verweist.
 
 **[50ohm.de](https://www.50ohm.de)** für den Online-Lehrgang, zu dem der Trainer
 bei jeder Frage die passende Stelle anbietet — Kapitel und Abschnitt direkt,
-ohne Suchmaschine dazwischen.
+ohne Suchmaschine dazwischen. Die Lektionen, Abschnitte und die Reihenfolge der
+Fragen im **Unterricht** folgen den Folien von 50ohm.de —
+50ohm.de–Autorenteam, koordiniert durch das AJW-Referat des DARC e. V., Lizenz
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.de). Für den
+Trainer auf Titel und Fragenreihenfolge gekürzt; die Folien selbst stehen auf
+50ohm.de ([Quelltext](https://github.com/DARC-e-V/50ohm-contents-dl)).
 
 **Dem [DARC e. V.](https://www.darc.de)**, der diesen Lehrgang herausgibt und
 die Ausbildung im Amateurfunk seit Jahrzehnten trägt.
@@ -743,4 +849,5 @@ hier ein Issue. Das gilt auch für alles, was über die Lizenz hinausgeht.
 
 Für mitgelieferte Fremdbestandteile gilt weiter die Lizenz ihrer Urheber:
 `lame.js` unter LGPL 2.1, der Fragenkatalog unter der Datenlizenz Deutschland,
+die Lektionsgliederung von 50ohm.de unter CC BY 4.0,
 die Zeichnungen sind gemeinfrei. Einzelheiten in [LICENSE](LICENSE).

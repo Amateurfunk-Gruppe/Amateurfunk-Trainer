@@ -165,8 +165,12 @@ function einrichten(umgebung) {
   // Ordner, die nie von aussen beschrieben werden. data\ und backup\ sind
   // die Lernstaende, Hoerbuch\ die gerechneten MP3s, release\ die fertigen
   // Setups - alles Eigentum des Rechners, auf dem der Trainer laeuft.
+  // android/ und .github/ (29.09.2026): Das Android-Projekt und der
+  // Bauauftrag dafuer liegen bei GitHub, gehoeren aber nicht in einen
+  // Trainer am PC.
   const ABGLEICH_TABU = ['data/', 'backup/', 'hoerbuch/', 'node_modules/',
-                         'release/', 'tts_cache/', '.git', 'bilder/'];
+                         'release/', 'tts_cache/', '.git', 'bilder/',
+                         'android/', '.github/'];
 
   function abgleichbar(pfad) {
     const p = String(pfad || '').replace(/\\/g, '/');
