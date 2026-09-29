@@ -189,6 +189,9 @@ function getCloudflaredPath(){
   if(cloudflaredPfadCache) return cloudflaredPfadCache;
 
   const candidates = [
+    // Android-App (29.09.2026): cloudflared liegt dort bei den Programmteilen
+    // der App (libcloudflared.so), den Pfad gibt die App mit.
+    ...(process.env.TRAINER_CLOUDFLARED ? [process.env.TRAINER_CLOUDFLARED] : []),
     path.join(__dirname, 'cloudflared.exe'),
     path.join(__dirname, 'cloudflared'),
     path.join(__dirname, 'bin', 'cloudflared.exe'),
@@ -4166,7 +4169,13 @@ app.get('/api/video-embed', (req,res)=>{
 // Programm. Zwei Wege, eine Liste dessen, was ueberhaupt wandern darf.
 // ================================================================
 let githubUpdate = null;
-try{
+// In der Android-App (29.09.2026) keine Datei-Updates von GitHub: Dort
+// kommt ein neuer Stand als neue App. Dietmar bekam in der App gleich
+// beim ersten Start "21 berichtigte Dateien - Jetzt aktualisieren"; ein
+// Update wuerde den Server neu starten wollen, und das kann die App nicht.
+if(process.env.TRAINER_ANDROID){
+  console.log('[GITHUB] Android-App: Updates kommen als neue App, nicht als einzelne Dateien.');
+} else try{
   githubUpdate = require('./github_update').einrichten({
     app, localOnly, projektOrdner: __dirname,
     dateien: ABGLEICH_ALLE, kategorie: abgleichKategorie
@@ -4730,6 +4739,19 @@ function ttsRateLimited(req){
   entry.count++;
   return entry.count > TTS_MAX_PER_MINUTE;
 }
+
+// Android-App (29.09.2026): Die Sprachausgabe des Handys legt ihre Aufnahme
+// als WAV in TRAINER_TTS_DIR ab (siehe MainActivity.synthese); hier holt der
+// Browser sie ab - einmal, danach ist sie weg. Nur in der App vorhanden.
+app.get('/api/android-tts/:id', localOnly, (req, res) => {
+  const ordner = process.env.TRAINER_TTS_DIR;
+  const id = String(req.params.id || '');
+  if(!process.env.TRAINER_ANDROID || !ordner || !/^t[a-z0-9]{6,30}$/.test(id)) return res.status(404).end();
+  const datei = path.join(ordner, id + '.wav');
+  if(!fs.existsSync(datei)) return res.status(404).end();
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(datei, { headers: { 'Content-Type': 'audio/wav' } }, () => { fs.unlink(datei, () => {}); });
+});
 
 app.post('/api/tts-preview',(req,res)=>{
   const txt=String(req.body.text||'').slice(0, TTS_MAX_TEXT_LEN);
@@ -7023,7 +7045,8 @@ try{
       // Den Vorlese-Text hat die KI schon mitgeliefert (<<<VORLESEN>>>);
       // er wartet hier, bis der Fragende "Ja, bitte" tippt. Piper macht
       // daraus am Trainer-PC die Aufnahme - das kostet keine Token.
-      if(e.stimme && ergebnis.sprech){
+      // In der Android-App gibt es kein Piper - dort keine Sprachnachricht anbieten.
+      if(e.stimme && ergebnis.sprech && !process.env.TRAINER_ANDROID){
         n.vorlesenAngebot = true;
         lcVorleseWunsch.set(n.id, { n: n, sprech: ergebnis.sprech, ort: ort, sitzung: chatSitzungFuer(socket), name: anfrage.name });
         while(lcVorleseWunsch.size > 300) lcVorleseWunsch.delete(lcVorleseWunsch.keys().next().value);

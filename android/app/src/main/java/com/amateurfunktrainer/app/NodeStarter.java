@@ -112,12 +112,31 @@ public final class NodeStarter {
             + "process.env.APPDATA = " + jsText(appdata.getAbsolutePath()) + ";\n"
             + "process.env.TMPDIR = " + jsText(ctx.getCacheDir().getAbsolutePath()) + ";\n"
             + "process.env.TRAINER_ANDROID = '1';\n"
+            + "process.env.TRAINER_TTS_DIR = " + jsText(sprachOrdner(ctx).getAbsolutePath()) + ";\n"
+            // cloudflared (Go) soll Namen ueber Android aufloesen, nicht ueber
+            // eine resolv.conf, die es am Handy nicht gibt.
+            + (tunnelProgramm(ctx) != null ? "process.env.TRAINER_CLOUDFLARED = " + jsText(tunnelProgramm(ctx).getAbsolutePath()) + ";\n"
+                + "process.env.GODEBUG = 'netdns=cgo';\n" : "")
             + "process.chdir(__dirname);\n"
             + "require('./Server.js');\n";
         File f = new File(ordner, "android-start.js");
         try (OutputStream out = new FileOutputStream(f)) {
             out.write(js.getBytes(StandardCharsets.UTF_8));
         }
+        return f;
+    }
+
+    /** cloudflared fuer den Internet-Link - liegt als libcloudflared.so bei den
+     *  Programmteilen der App, nur dort darf Android es ausfuehren. */
+    public static File tunnelProgramm(Context ctx) {
+        File f = new File(ctx.getApplicationInfo().nativeLibraryDir, "libcloudflared.so");
+        return (f.exists() && f.canExecute()) ? f : null;
+    }
+
+    /** Hier legt die Sprachausgabe des Handys ihre Aufnahmen ab (MainActivity). */
+    public static File sprachOrdner(Context ctx) {
+        File f = new File(ctx.getCacheDir(), "sprache");
+        f.mkdirs();
         return f;
     }
 

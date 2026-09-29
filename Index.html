@@ -4,6 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- ================================================================
+         ANDROID-APP UND SCHMALE BILDSCHIRME                 (29.09.2026)
+         Dietmar, mit Bildern vom Handy: "So richtig angepasst fuer Android
+         ist es nicht." Drei Dinge:
+           1. In der App (Kennung "AmateurfunkTrainerApp" im User-Agent)
+              bekommt <html> die Klasse android-app. Was es dort nicht
+              gibt - Piper, Tunnel, Hoerbuch, Update, Beenden -, wird
+              ausgeblendet.
+           2. Vorlesen: Die App bringt die Sprachausgabe des Handys mit
+              (AndroidSprache). Alle Anfragen an /api/tts werden hier
+              umgeleitet - der Server schreibt die Abkuerzungen aus
+              (/api/tts-preview), das Handy spricht, und die Aufnahme kommt
+              als WAV zurueck wie von Piper. Alles andere (Markierung,
+              Tempo, Stopp) bleibt, wie es ist.
+           3. Einstellungen und Info: am Handy die Reiter als Leiste oben
+              statt als Spalte links - vorher blieb fuer den Inhalt nur ein
+              Streifen.
+         ================================================================ -->
+    <script>
+    (function(){
+        try{
+            if(!/AmateurfunkTrainerApp/.test(navigator.userAgent)) return;
+            document.documentElement.classList.add('android-app');
+            // Hat die App cloudflared dabei, gibt es auch den Internet-Link.
+            if(/AmateurfunkTrainerApp Tunnel/.test(navigator.userAgent)) document.documentElement.classList.add('android-tunnel');
+            if(!window.AndroidSprache) return;
+            var original = window.fetch.bind(window);
+            var warten = {};
+            window.__androidTtsFertig = function(id, ok){
+                var w = warten[id];
+                if(w){ delete warten[id]; w(!!ok); }
+            };
+            window.fetch = async function(input, init){
+                var url = typeof input === 'string' ? input : ((input && input.url) || '');
+                var pfad = url.split('?')[0].replace(/^https?:\/\/[^\/]+/, '');
+                if(pfad === '/api/tts' && init && String(init.method || '').toUpperCase() === 'POST'){
+                    var daten = {};
+                    try{ daten = JSON.parse(init.body || '{}'); }catch(e){}
+                    var text = String(daten.text || '').trim();
+                    if(!text) return new Response('Kein Text', { status: 400 });
+                    try{
+                        var r = await original('/api/tts-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                                     body: JSON.stringify({ text: text }) });
+                        var j = await r.json();
+                        if(j && j.expanded) text = j.expanded;
+                    }catch(e){}
+                    var id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                    var ok = await new Promise(function(fertig){
+                        warten[id] = fertig;
+                        try{ window.AndroidSprache.synthese(id, text); }
+                        catch(e){ delete warten[id]; fertig(false); }
+                        setTimeout(function(){ if(warten[id]){ delete warten[id]; fertig(false); } }, 30000);
+                    });
+                    if(!ok) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+                    var a = await original('/api/android-tts/' + id);
+                    if(!a.ok) return new Response('Aufnahme fehlt', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+                    var b = await a.blob();
+                    return new Response(b, { status: 200, headers: { 'Content-Type': 'audio/wav', 'X-TTS-Voice': 'Stimme des Handys', 'X-TTS-Rate': '24000' } });
+                }
+                return original(input, init);
+            };
+        }catch(e){}
+    })();
+    </script>
+    <style>
+        /* In der App gibt es das nicht (siehe oben). */
+        html.android-app:not(.android-tunnel) #tuerBtn,
+        html.android-app #beendenBtn,
+        html.android-app #hoerbuchFeld,
+        /* Gruppenraum in der App: kein Tunnel - die anderen kommen ueber das WLAN. */
+        html.android-app:not(.android-tunnel) div:has(> label > #tunnelStatusDot),
+        html.android-app:not(.android-tunnel) #duoLink,
+        html.android-app:not(.android-tunnel) #duoWacheZeile,
+        html.android-app:not(.android-tunnel) #duoBesucherZeile,
+        html.android-app #adresseKnopf,
+        html.android-app #einstZielStimme,
+        html.android-app #einstAlleStimmenBtn,
+        html.android-app #einstStimmenLage,
+        html.android-app #einstStimmenAlt,
+        html.android-app label:has(> #einstTtsKlang) { display: none !important; }
+        .nur-app { display: none; }
+        html.android-app .nur-app { display: block; }
+        html.android-app #einstellungenModal #einstTab_update,
+        html.android-app #einstellungenModal #einstTab_wartung { display: none !important; }
+        /* Einstellungen und Info am Handy: Reiter oben als Leiste. */
+        @media (max-width: 640px){
+            #einstellungenModal, #infoModal { padding: 0.4rem !important; }
+            #einstellungenModal .einst-rahmen, #infoModal > div { height: calc(92vh / var(--afu-zoom, 1)) !important; width: 100% !important; }
+            #einstellungenModal .einst-mitte, #infoModal .einst-mitte { flex-direction: column !important; }
+            #einstellungenModal .einst-leiste, #infoModal .einst-leiste {
+                width: auto !important; display: flex !important; flex-wrap: nowrap; overflow-x: auto !important; overflow-y: hidden !important;
+                border-right: none !important; border-bottom: 1px solid #e3e9f3; padding: 0.4rem !important; gap: 4px; flex-shrink: 0; }
+            #einstellungenModal .einst-leiste button, #infoModal .einst-leiste button {
+                width: auto !important; flex: 0 0 auto; margin: 0 !important; white-space: nowrap; display: flex !important; }
+        }
+    </style>
+    <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
          ----------------------------------------------------------------
          Dietmar am 06.09.2026: "Der Trainer muss sich in der mobilen
@@ -24014,8 +24110,8 @@ function infoOeffnen() {
           + '<button type="button" onclick="document.getElementById(\'infoModal\').style.display=\'none\'" '
           + 'aria-label="Schließen" style="width:30px; height:30px; border-radius:50%; border:1px solid #e3e9f3; '
           + 'background:#fff; cursor:pointer; font-size:1rem; line-height:1; color:#4b5563;">&#10005;</button></div>'
-          + '<div style="display:flex; flex:1; min-height:0;">'
-          + '<div style="width:172px; flex-shrink:0; background:#f7fafd; border-right:1px solid #e3e9f3; '
+          + '<div class="einst-mitte" style="display:flex; flex:1; min-height:0;">'
+          + '<div class="einst-leiste" style="width:172px; flex-shrink:0; background:#f7fafd; border-right:1px solid #e3e9f3; '
           + 'padding:0.6rem; overflow-y:auto;">' + leiste + '</div>'
           + '<div id="infoBlattRahmen" style="flex:1; min-width:0; overflow-y:auto; padding:1rem 1.2rem;">'
           + INFO_ABSCHNITTE.map(a => '<div id="infoBlatt_' + a.id + '" style="display:none;"></div>').join('')
@@ -28880,7 +28976,7 @@ function einstellungenOeffnen(reiter){
             // diese Groesse hat er als passend bezeichnet. Ueberschuessiger
             // Platz bleibt bei kurzen Reitern unten leer - das ist der Preis
             // fuer ein Fenster, das stillsteht, und er ist es wert.
-            '<div style="background:#fff; border-radius:16px; width:min(1040px,calc(97vw / var(--afu-zoom, 1))); '
+            '<div class="einst-rahmen" style="background:#fff; border-radius:16px; width:min(1040px,calc(97vw / var(--afu-zoom, 1))); '
           + 'height:calc(83vh / var(--afu-zoom, 1)); '
           + 'display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
 
@@ -28894,10 +28990,10 @@ function einstellungenOeffnen(reiter){
           + 'line-height:1; color:#4b5563;">&#10005;</button></div>'
 
           // Reiter links, Blatt rechts
-          + '<div style="display:flex; flex:1; min-height:0;">'
+          + '<div class="einst-mitte" style="display:flex; flex:1; min-height:0;">'
           // 210 statt 180: "Nachteilsausgleich" ist das laengste Wort in der
           // Spalte und braucht mit Zeichen davor rund 176 Punkte.
-          + '<div role="tablist" style="width:210px; flex-shrink:0; background:#f7fafd; '
+          + '<div role="tablist" class="einst-leiste" style="width:210px; flex-shrink:0; background:#f7fafd; '
           + 'border-right:1px solid #e3e9f3; padding:0.6rem; overflow-y:auto;">' + reiterLeiste + '</div>'
           // Die frueher hier stehende Mindesthoehe von 380 Punkten ist
           // entfallen: Sie war der Notbehelf gegen das springende Fenster.
@@ -29193,6 +29289,11 @@ function einstBlaetterFuellen(){
     document.getElementById('einstBlatt_vorlesen').innerHTML =
         einstKasten('Stimme', 'Wer vorliest — und eine Probe, damit man es hört, bevor man sich entscheidet.',
             '<div id="einstZielStimme"></div>'
+          // In der Android-App spricht die Stimme des Handys (29.09.2026).
+          + '<div class="nur-app" style="font-size:0.82rem; line-height:1.55; background:#eaf4ff; border:1px solid #9cc3ea; padding:0.55rem 0.7rem; margin-bottom:0.6rem;">'
+          + '<b>Es spricht die Stimme deines Handys.</b> Welche Stimme das ist, stellst du in Android ein: '
+          + 'Einstellungen → Bedienungshilfen → Sprachausgabe (je nach Handy auch unter „Zusätzliche Einstellungen“). '
+          + 'Fehlt dort Deutsch, einmal die deutsche Sprachdatei laden.</div>'
           // Geschwindigkeit und Klang (26.09.2026). Dietmar: "Koennen wir
           // die Piperstimme anpassen? Zb. etwas schneller vorlesen und
           // anders klingen lassen?" und "Bei Geschwindigkeit beim vorlesen

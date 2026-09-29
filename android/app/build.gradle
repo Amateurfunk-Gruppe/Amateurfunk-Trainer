@@ -13,6 +13,17 @@ plugins {
     id 'com.android.application'
 }
 
+// Versionsnummer wie am PC: die oberste im CHANGELOG.md (29.09.2026 -
+// vorher stand 1.297.0 aus package.json in der App, gemeint war 1.298.0).
+def trainerVersion = { ->
+    def f = rootProject.file('../CHANGELOG.md')
+    if (f.exists()) {
+        def m = (f.getText('UTF-8') =~ /(?m)^## \[(\d+\.\d+\.\d+)\]/)
+        if (m.find()) return m.group(1)
+    }
+    return System.getenv('TRAINER_VERSION_NAME') ?: '1.0'
+}
+
 android {
     namespace 'com.amateurfunktrainer.app'
     compileSdk 34
@@ -22,7 +33,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode Integer.parseInt(System.getenv('TRAINER_VERSION_CODE') ?: '1')
-        versionName System.getenv('TRAINER_VERSION_NAME') ?: '1.0'
+        versionName trainerVersion()
         ndk {
             // Handys: 64 Bit (fast alle seit etwa 2017) und 32 Bit (aeltere).
             abiFilters 'arm64-v8a', 'armeabi-v7a'
@@ -68,7 +79,11 @@ android {
             // libnode.so kommt sowohl ueber CMake als auch ueber jniLibs.
             pickFirsts += ['**/libnode.so', '**/libc++_shared.so']
             // Gepackt statt entpackt: die APK wird deutlich kleiner.
+            // Ausserdem legt Android die Programmteile dann als echte Dateien
+            // ab - noetig, damit cloudflared ausgefuehrt werden darf.
             useLegacyPackaging = true
+            // cloudflared ist ein fertiges Go-Programm - nicht anfassen.
+            keepDebugSymbols += ['**/libcloudflared.so']
         }
     }
 
@@ -88,3 +103,68 @@ android {
         checkReleaseBuilds = false
     }
 }
+
+// ----------------------------------------------------------------
+// Internet-Link auch am Handy (29.09.2026, Versuch).
+// Dietmar: "Gruppenraum Link erzeugen geht leider nicht." - "versuche das mal"
+//
+// Am PC baut cloudflared den Link ins Internet. Das normale Linux-Programm
+// von Cloudflare findet unter Android keinen Namensdienst (DNS). Termux
+// baut cloudflared eigens fuer Android - das holen wir hier beim Bauen
+// (nur bei GitHub, Variable CI) und legen es als libcloudflared.so zu den
+// Programmteilen der App. Nur von dort darf Android es starten.
+// Klappt das Holen nicht, wird die App trotzdem gebaut - dann eben ohne
+// Internet-Link (der Knopf dafuer bleibt in der App verborgen).
+// cloudflared: Apache-2.0-Lizenz, Cloudflare Inc.
+// ----------------------------------------------------------------
+def tunnelHolen = tasks.register('tunnelHolen') {
+    onlyIf { System.getenv('CI') != null }
+    doLast {
+        def quellen = ['https://packages-cf.termux.dev/apt/termux-main',
+                       'https://packages.termux.dev/apt/termux-main',
+                       'https://grimler.se/termux/termux-main']
+        def abis = ['arm64-v8a': 'aarch64', 'armeabi-v7a': 'arm']
+        abis.each { abi, arch ->
+            def ziel = file("libnode/bin/${abi}/libcloudflared.so")
+            if (ziel.exists()) return
+            def geschafft = false
+            for (basis in quellen) {
+                if (geschafft) break
+                try {
+                    def index = null
+                    try {
+                        index = new URL("${basis}/dists/stable/main/binary-${arch}/Packages").getText('UTF-8')
+                    } catch (Exception e1) {
+                        def gz = new java.util.zip.GZIPInputStream(new URL("${basis}/dists/stable/main/binary-${arch}/Packages.gz").openStream())
+                        index = gz.getText('UTF-8')
+                    }
+                    def block = index.replace('\r', '').split('\n\n').find { it.startsWith('Package: cloudflared\n') }
+                    if (block == null) throw new Exception('cloudflared nicht im Paketverzeichnis')
+                    def pfad = (block =~ /(?m)^Filename: (.+)$/)[0][1].trim()
+                    def abh = (block =~ /(?m)^Depends: (.+)$/)
+                    println "cloudflared fuer ${abi}: ${pfad}" + (abh.find() ? " (Depends: ${abh.group(1)})" : '')
+                    def tmp = file("${buildDir}/tunnel/${arch}")
+                    tmp.deleteDir()
+                    tmp.mkdirs()
+                    def deb = new File(tmp, 'cf.deb')
+                    deb.bytes = new URL("${basis}/${pfad}").bytes
+                    def pb = new ProcessBuilder('bash', '-c', 'ar x cf.deb && mkdir -p inhalt && tar -xf data.tar.* -C inhalt')
+                    pb.directory(tmp)
+                    pb.redirectErrorStream(true)
+                    def proc = pb.start()
+                    def ausgabe = proc.inputStream.getText('UTF-8')
+                    if (proc.waitFor() != 0) throw new Exception('Auspacken fehlgeschlagen: ' + ausgabe)
+                    def bin = new File(tmp, 'inhalt/data/data/com.termux/files/usr/bin/cloudflared')
+                    if (!bin.exists()) throw new Exception('cloudflared nicht im Paket gefunden')
+                    ziel.parentFile.mkdirs()
+                    ziel.bytes = bin.bytes
+                    println "cloudflared fuer ${abi} eingebaut (${(long) (ziel.length() / 1024)} KB)"
+                    geschafft = true
+                } catch (Exception e) {
+                    println "WARNUNG: cloudflared fuer ${abi} von ${basis} nicht geholt: ${e.message}"
+                }
+            }
+        }
+    }
+}
+tasks.named('preBuild') { dependsOn tunnelHolen }

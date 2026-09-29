@@ -14,6 +14,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.content.ContentValues;
+import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.util.Base64;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
@@ -24,8 +30,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * Die Oberflaeche der App (29.09.2026): ein Browserfenster, das die
@@ -40,6 +50,8 @@ public class MainActivity extends Activity {
     private PermissionRequest wartendeFreigabe;
     private final Handler haupt = new Handler(Looper.getMainLooper());
     private boolean geladen = false;
+    private TextToSpeech sprache;
+    private boolean spracheBereit = false;
 
     @Override protected void onCreate(Bundle zustand) {
         super.onCreate(zustand);
@@ -53,6 +65,9 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         setContentView(web);
+        spracheStarten();
+        web.addJavascriptInterface(new Sprache(), "AndroidSprache");
+        web.addJavascriptInterface(new Datei(), "AndroidDatei");
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -63,7 +78,7 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setAllowFileAccess(false);
-        s.setUserAgentString(s.getUserAgentString() + " AmateurfunkTrainerApp");
+        s.setUserAgentString(s.getUserAgentString() + " AmateurfunkTrainerApp" + (NodeStarter.tunnelProgramm(this) != null ? " Tunnel" : ""));
 
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
@@ -106,8 +121,16 @@ public class MainActivity extends Activity {
 
         // Herunterladen (MP3, PDF, ...) ueber den Download-Manager des Handys.
         web.setDownloadListener((url, agent, inhalt, mime, laenge) -> {
-            if (url == null || url.startsWith("blob:") || url.startsWith("data:")) {
-                Toast.makeText(this, "Dieser Download geht in der App noch nicht – bitte im Browser des Handys öffnen.", Toast.LENGTH_LONG).show();
+            if (url == null) return;
+            if (url.startsWith("blob:") || url.startsWith("data:")) {
+                // Vom Trainer selbst erzeugt (Lernstand sichern, Auswertung als
+                // CSV ...): im Browserfenster auslesen und ueber AndroidDatei
+                // in "Downloads" ablegen.
+                String name = URLUtil.guessFileName(url, inhalt, mime);
+                if (name == null || name.startsWith("downloadfile")) name = "Amateurfunk-Trainer" + endungFuer(mime);
+                String js = "(function(){fetch(" + jsText(url) + ").then(function(r){return r.blob();}).then(function(b){"
+                    + "var f=new FileReader();f.onload=function(){AndroidDatei.speichern(" + jsText(name) + ",f.result);};f.readAsDataURL(b);});})()";
+                web.evaluateJavascript(js, null);
                 return;
             }
             try {
@@ -125,12 +148,92 @@ public class MainActivity extends Activity {
         });
 
         web.loadDataWithBaseURL(null,
-            "<html><body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;"
+            "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;"
           + "background:#0F2745;color:#fff;font-family:sans-serif;text-align:center'>"
           + "<div><div style='font-size:22px;font-weight:700'>Amateurfunk-Trainer</div>"
           + "<div style='margin-top:12px;opacity:.8'>wird gestartet …</div></div></body></html>",
             "text/html", "utf-8", null);
         aufServerWarten(0);
+    }
+
+    // ================================================================
+    //  SPRACHAUSGABE DES HANDYS                          (29.09.2026)
+    //  Dietmar: "So richtig angepasst fuer Android ist es nicht." Unter
+    //  anderem: "Fuer das Vorlesen fehlt noch die Sprachausgabe" - Piper
+    //  gibt es auf dem Handy nicht. Dafuer hat jedes Android eine eigene
+    //  Stimme. Sie nimmt den Text (vom Server schon ausgeschrieben, siehe
+    //  Index.html "ANDROID-APP") und schreibt eine WAV-Datei; der Browser
+    //  holt sie ueber /api/android-tts ab und spielt sie wie bisher.
+    // ================================================================
+    private void spracheStarten() {
+        sprache = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.SUCCESS) return;
+            int r = sprache.setLanguage(Locale.GERMANY);
+            spracheBereit = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
+            sprache.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override public void onStart(String id) { }
+                @Override public void onDone(String id) { melden(id, true); }
+                @Override public void onError(String id) { melden(id, false); }
+            });
+        });
+    }
+
+    private void melden(final String id, final boolean ok) {
+        haupt.post(() -> { if (web != null) web.evaluateJavascript("window.__androidTtsFertig&&window.__androidTtsFertig(" + jsText(id) + "," + ok + ")", null); });
+    }
+
+    class Sprache {
+        @JavascriptInterface public boolean bereit() { return spracheBereit; }
+        @JavascriptInterface public void synthese(String id, String text) {
+            if (!spracheBereit || id == null || !id.matches("t[a-z0-9]{6,30}")) { melden(id, false); return; }
+            File f = new File(NodeStarter.sprachOrdner(MainActivity.this), id + ".wav");
+            String t = text.length() > 3900 ? text.substring(0, 3900) : text;
+            int r = sprache.synthesizeToFile(t, new Bundle(), f, id);
+            if (r != TextToSpeech.SUCCESS) melden(id, false);
+        }
+    }
+
+    class Datei {
+        @JavascriptInterface public void speichern(String name, String datenUrl) {
+            try {
+                int komma = datenUrl.indexOf(',');
+                byte[] daten = Base64.decode(datenUrl.substring(komma + 1), Base64.DEFAULT);
+                String sauber = name.replaceAll("[\\\\/:*?\"<>|]", "_");
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues v = new ContentValues();
+                    v.put(MediaStore.Downloads.DISPLAY_NAME, sauber);
+                    Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                    try (OutputStream out = getContentResolver().openOutputStream(u)) { out.write(daten); }
+                } else {
+                    File ziel = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), sauber);
+                    try (OutputStream out = new FileOutputStream(ziel)) { out.write(daten); }
+                }
+                haupt.post(() -> Toast.makeText(MainActivity.this, "Gespeichert unter Downloads: " + sauber, Toast.LENGTH_LONG).show());
+            } catch (Exception e) {
+                haupt.post(() -> Toast.makeText(MainActivity.this, "Speichern nicht möglich.", Toast.LENGTH_LONG).show());
+            }
+        }
+    }
+
+    private static String endungFuer(String mime) {
+        if (mime == null) return "";
+        if (mime.contains("json")) return ".json";
+        if (mime.contains("csv")) return ".csv";
+        if (mime.contains("pdf")) return ".pdf";
+        if (mime.contains("html")) return ".html";
+        if (mime.contains("mpeg")) return ".mp3";
+        if (mime.contains("text")) return ".txt";
+        return "";
+    }
+
+    private static String jsText(String s) {
+        if (s == null) return "''";
+        return "'" + s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "") + "'";
+    }
+
+    @Override protected void onDestroy() {
+        try { if (sprache != null) sprache.shutdown(); } catch (Exception e) { }
+        super.onDestroy();
     }
 
     /** Fragt alle 300 ms, ob der Server schon antwortet - beim ersten Start
@@ -149,7 +252,7 @@ public class MainActivity extends Activity {
             haupt.postDelayed(() -> {
                 if (ok) { geladen = true; web.loadUrl(ADRESSE); }
                 else if (versuch < 400) aufServerWarten(versuch + 1);
-                else web.loadDataWithBaseURL(null, "<p style='font-family:sans-serif;padding:20px'>Der Trainer startet nicht. Bitte die App ganz schließen (Benachrichtigung „Beenden“) und neu öffnen.</p>", "text/html", "utf-8", null);
+                else web.loadDataWithBaseURL(null, "<meta name='viewport' content='width=device-width,initial-scale=1'><p style='font-family:sans-serif;padding:20px'>Der Trainer startet nicht. Bitte die App ganz schließen (Benachrichtigung „Beenden“) und neu öffnen.</p>", "text/html", "utf-8", null);
             }, ok ? 0 : 300);
         }).start();
     }
