@@ -28,6 +28,16 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -52,6 +62,8 @@ public class MainActivity extends Activity {
     private boolean geladen = false;
     private TextToSpeech sprache;
     private boolean spracheBereit = false;
+    private View vorhang;
+    private TextView vorhangText;
 
     @Override protected void onCreate(Bundle zustand) {
         super.onCreate(zustand);
@@ -64,7 +76,12 @@ public class MainActivity extends Activity {
         }
 
         web = new WebView(this);
-        setContentView(web);
+        web.setBackgroundColor(Color.parseColor("#0F2745"));
+        FrameLayout wurzel = new FrameLayout(this);
+        wurzel.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        vorhang = startbild();
+        wurzel.addView(vorhang, new FrameLayout.LayoutParams(-1, -1));
+        setContentView(wurzel);
         spracheStarten();
         web.addJavascriptInterface(new Sprache(), "AndroidSprache");
         web.addJavascriptInterface(new Datei(), "AndroidDatei");
@@ -81,6 +98,9 @@ public class MainActivity extends Activity {
         s.setUserAgentString(s.getUserAgentString() + " AmateurfunkTrainerApp" + (NodeStarter.tunnelProgramm(this) != null ? " Tunnel" : ""));
 
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView v, String url) {
+                if (url != null && url.startsWith("http://127.0.0.1")) vorhangWeg();
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
                 String h = u.getHost();
@@ -147,13 +167,66 @@ public class MainActivity extends Activity {
             }
         });
 
-        web.loadDataWithBaseURL(null,
-            "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;"
-          + "background:#0F2745;color:#fff;font-family:sans-serif;text-align:center'>"
-          + "<div><div style='font-size:22px;font-weight:700'>Amateurfunk-Trainer</div>"
-          + "<div style='margin-top:12px;opacity:.8'>wird gestartet …</div></div></body></html>",
-            "text/html", "utf-8", null);
         aufServerWarten(0);
+    }
+
+    // ================================================================
+    //  STARTBILD                                         (29.09.2026)
+    //  Dietmar, mit Bild vom Start: "Beim Start ist Amateurfunk-Trainer
+    //  viel zu klein." Vorher war das eine kleine Seite im Browserfenster,
+    //  und das zeigte sie trotz Angabe winzig. Jetzt ist es ein Bild der
+    //  App selbst (Zeichen, Name, Kreisel) - Groessen in sp, also so gross
+    //  wie andere Schrift auf dem Handy. Es verschwindet, sobald der
+    //  Trainer geladen ist.
+    // ================================================================
+    private View startbild() {
+        LinearLayout f = new LinearLayout(this);
+        f.setOrientation(LinearLayout.VERTICAL);
+        f.setGravity(Gravity.CENTER);
+        f.setBackgroundColor(Color.parseColor("#0F2745"));
+        int pad = dp(32);
+        f.setPadding(pad, pad, pad, pad);
+        f.setClickable(true);
+
+        ImageView zeichen = new ImageView(this);
+        zeichen.setImageResource(R.mipmap.ic_launcher);
+        f.addView(zeichen, new LinearLayout.LayoutParams(dp(112), dp(112)));
+
+        TextView name = new TextView(this);
+        name.setText("Amateurfunk-Trainer");
+        name.setTextColor(Color.WHITE);
+        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
+        name.setTypeface(Typeface.DEFAULT_BOLD);
+        name.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
+        lp.topMargin = dp(24);
+        f.addView(name, lp);
+
+        ProgressBar kreisel = new ProgressBar(this);
+        kreisel.setIndeterminate(true);
+        kreisel.setIndeterminateTintList(ColorStateList.valueOf(Color.parseColor("#5FD3C4")));
+        LinearLayout.LayoutParams kp = new LinearLayout.LayoutParams(dp(44), dp(44));
+        kp.topMargin = dp(32);
+        f.addView(kreisel, kp);
+
+        vorhangText = new TextView(this);
+        vorhangText.setText("wird gestartet …");
+        vorhangText.setTextColor(Color.parseColor("#D0DAE6"));
+        vorhangText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        vorhangText.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2, -2);
+        tp.topMargin = dp(16);
+        f.addView(vorhangText, tp);
+        return f;
+    }
+
+    private int dp(int wert) {
+        return Math.round(wert * getResources().getDisplayMetrics().density);
+    }
+
+    private void vorhangWeg() {
+        if (vorhang == null || vorhang.getVisibility() != View.VISIBLE) return;
+        vorhang.animate().alpha(0f).setDuration(250).withEndAction(() -> vorhang.setVisibility(View.GONE)).start();
     }
 
     // ================================================================
@@ -251,8 +324,12 @@ public class MainActivity extends Activity {
             final boolean ok = da;
             haupt.postDelayed(() -> {
                 if (ok) { geladen = true; web.loadUrl(ADRESSE); }
-                else if (versuch < 400) aufServerWarten(versuch + 1);
-                else web.loadDataWithBaseURL(null, "<meta name='viewport' content='width=device-width,initial-scale=1'><p style='font-family:sans-serif;padding:20px'>Der Trainer startet nicht. Bitte die App ganz schließen (Benachrichtigung „Beenden“) und neu öffnen.</p>", "text/html", "utf-8", null);
+                else if (versuch < 400) {
+                    // Beim allerersten Start packt die App erst aus.
+                    if (versuch == 20 && vorhangText != null) vorhangText.setText("wird gestartet …\nBeim ersten Start dauert es etwas länger.");
+                    aufServerWarten(versuch + 1);
+                }
+                else if (vorhangText != null) vorhangText.setText("Der Trainer startet nicht.\nBitte die App ganz schließen (Benachrichtigung „Beenden“) und neu öffnen.");
             }, ok ? 0 : 300);
         }).start();
     }

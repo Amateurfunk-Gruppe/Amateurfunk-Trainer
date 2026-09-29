@@ -462,6 +462,15 @@
         .header.knapp-5 #duoTeilnehmerBtn i,
         .header.knapp-6 #tuerBtn i { font-size: 0.85rem; }
         .header.knapp-5 #duoTeilnehmerBtn #duoTeilnehmerBadge { font-size: 0.65rem !important; }
+        /* Am Handy nur das Zeichen (29.09.2026). Dietmar, mit Bild der
+           Kopfzeile in der App: "Der Button Light Mode ist zu gross und muss
+           angepasst werden" - die Beschriftung brach zweizeilig um und machte
+           den Knopf hoeher als die anderen. Die Sprechblase sagt weiter,
+           welcher Stil gerade gilt. */
+        @media (max-width: 640px) {
+            #themeToggleBtn #themeToggleLabel { display: none; }
+            .header #themeToggleBtn { min-height: 32px; }
+        }
         .header {
             display: flex;
             justify-content: space-between;
@@ -4431,6 +4440,39 @@
         body.handy .header-left .suchfeld-huelle { order: 10; width: 100%; flex: 1 1 100%; display: flex; }
         body.handy .header-left .suchfeld-huelle #searchInput { flex: 1 1 auto; min-width: 0; width: auto; }
         body.handy .header-left #favListBtn { margin-left: auto; }
+        /* Suche, Pfeil und Herz gleich hoch (29.09.2026). Dietmar, mit Bild
+           der Suchzeile am Handy: "Gross Klein und Mittel. Das muss eine
+           grösse sein." - und dann am PC: "In der Desktop Version müsste es
+           auch angepasst werden. Der Fehler kommt vermutlich von genau da".
+           Stimmt: Pfeil und Herz hatten im Knopf-Markup feste Hoehen (22 und
+           24 Punkte), das Suchfeld richtet sich nach seiner Schrift. Jetzt
+           nehmen beide ueberall die Hoehe des Feldes, der Pfeil ist
+           quadratisch. */
+        .header-left .suchfeld-huelle > #searchInput,
+        .header-left .suchfeld-huelle > button { height: 1.8rem !important; box-sizing: border-box; padding-top: 0 !important; padding-bottom: 0 !important; }
+        .header-left .suchfeld-huelle > button { justify-content: center; flex: 0 0 auto; }
+        .header-left .suchfeld-huelle > button:not(#favListBtn) { width: 1.8rem !important; }
+        /* Am Handy ist das Feld hoeher (16-Punkt-Schrift) - dort nehmen
+           Pfeil und Herz einfach seine Hoehe. */
+        body.handy .header-left .suchfeld-huelle { gap: 6px; }
+        body.handy .header-left .suchfeld-huelle > #searchInput { height: auto !important; padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
+        body.handy .header-left .suchfeld-huelle > button { align-self: stretch; height: auto !important; min-width: 40px; }
+        body.handy .header-left .suchfeld-huelle > button:not(#favListBtn) { width: 40px !important; }
+        body.handy .suchfeld-huelle > button i { font-size: 0.85rem !important; }
+        /* Beschriftete Knoepfe nicht schmaler als ihr Inhalt (29.09.2026).
+           Dietmar: "Zeichen und Schrift laufen über" - beim Server-Knopf
+           ragten Zeichen und "Server" ueber den Rand, weil sich alle Knoepfe
+           die Zeile zu gleichen Teilen teilen. Die Zeichen-Knoepfe geben den
+           Platz ab. */
+        body.handy .header-right > #infoBtn,
+        body.handy .header-right > #tuerBtn,
+        body.handy .header-right > #duoRoomBtn,
+        body.handy .header-right > #beendenBtn { flex: 0 0 auto; padding-left: 0.5rem !important; padding-right: 0.5rem !important; gap: 4px; }
+        /* Die Zeichen-Knoepfe untereinander gleich breit - ohne Innenabstand
+           steht das Zeichen mittig, auch wenn der Platz knapp wird. */
+        body.handy .header-right { gap: 6px; }
+        body.handy .header-right > .btn:not(#infoBtn):not(#tuerBtn):not(#duoRoomBtn):not(#beendenBtn),
+        body.handy .header-right > #themeToggleBtn { flex: 1 1 0 !important; min-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
 
         /* ----------------------------------------------------------------
            WARUM DAS WILLKOMMENSFENSTER "IRRE GROSS" WAR      (22.09.2026)
@@ -34605,6 +34647,8 @@ function applyThemeButtonLabel() {
     const label = document.getElementById('themeToggleLabel');
     if (icon) icon.className = STIL_ANZEIGE[jetzt].icon;
     if (label) label.textContent = STIL_ANZEIGE[jetzt].label;
+    // Am Handy ist die Beschriftung ausgeblendet - Vorleseprogramme lesen das.
+    btn.setAttribute('aria-label', STIL_ANZEIGE[jetzt].label);
     btn.setAttribute('data-tooltip', 'Aktuell: ' + STIL_ANZEIGE[jetzt].label +
         ' – klicken für ' + STIL_ANZEIGE[naechster].label);
 }

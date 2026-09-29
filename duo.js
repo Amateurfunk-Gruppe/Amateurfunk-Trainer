@@ -1157,6 +1157,7 @@
         '  font-size:0.7rem;font-weight:700;display:none;align-items:center;justify-content:center;}',
         '#duoChatBlase.sichtbar{display:flex;}',
         '#duoChatKnopf{background:transparent;border:none;color:#fff;font-size:1.05rem;cursor:pointer;line-height:1;padding:2px 4px;}',
+        '#duoChatKnopf.zu{font-size:0.9rem;padding:2px 5px;}',
         '#duoChatKoerper{display:none;flex-direction:column;height:300px;}',
         '#duoChatBox.offen #duoChatKoerper{display:flex;}',
         /* 27.09.2026. Dietmar: "Der Chat, soll die Farbe vom Mode
@@ -1591,7 +1592,7 @@
         '  <button id="duoChatAbgleich" type="button" title="Alle Teilnehmer neu laden lassen (nur am Server)" ',
         '     style="display:none;background:transparent;border:none;color:#fff;font-size:0.95rem;cursor:pointer;padding:2px 4px;">⟳</button>',
         '  <button id="duoChatAndocken" type="button" title="Rechts andocken" aria-label="Rechts andocken"><i class="fa-solid fa-table-columns"></i></button>',
-        '  <button id="duoChatKnopf" type="button" title="Minimieren/Aufklappen">▾</button>',
+        '  <button id="duoChatKnopf" type="button" title="Chat öffnen" aria-label="Chat öffnen"><i class="fa-solid fa-up-right-from-square"></i></button>',
         '</div>',
         '<div id="duoAnrufStreifen" style="display:none"></div>',
         '<div id="duoChatKoerper">',
@@ -1803,6 +1804,7 @@
         } else {
             box.classList.remove('sichtbar','offen');
             chatOffen = false;
+            chatKnopfZeigen();
             chatSchonAufgeklappt = null;
             chatUngelesen = 0;
             chatBlaseAktualisieren();
@@ -1969,7 +1971,7 @@
         chatOffen = (erzwingeOffen === true) ? true : !chatOffen;
         box.classList.toggle('offen', chatOffen);
         const knopf = document.getElementById('duoChatKnopf');
-        if(knopf) knopf.textContent = chatOffen ? '▾' : '▴';
+        chatKnopfZeigen(knopf);
         if(chatOffen){
             chatUngelesen = 0;
             chatBlaseAktualisieren();
@@ -1980,6 +1982,22 @@
                 if(feld) setTimeout(()=>feld.focus(), 60);
             }
         }
+    }
+
+    // Zeichen am Kopf des Chats (29.09.2026). Dietmar: "Beim Chat minimiert,
+    // möchte ich das Zeichen. Das ist verständlicher" (mit Bild des Zeichens
+    // "nach draussen oeffnen") - "Pfeil nach oben gross und Pfeil nach unten
+    // wird minimiert". Vorher stand im zugeklappten Chat ein kleines Dreieck
+    // nach oben, das nicht nach "oeffnen" aussah. Jetzt: zugeklappt das
+    // Oeffnen-Zeichen, offen der Pfeil nach unten zum Minimieren.
+    function chatKnopfZeigen(knopf){
+        knopf = knopf || document.getElementById('duoChatKnopf');
+        if(!knopf) return;
+        const t = chatOffen ? 'Minimieren' : 'Chat öffnen';
+        knopf.innerHTML = chatOffen ? '▾' : '<i class="fa-solid fa-up-right-from-square"></i>';
+        knopf.title = t;
+        knopf.setAttribute('aria-label', t);
+        knopf.classList.toggle('zu', !chatOffen);
     }
 
     function chatBlaseAktualisieren(){
