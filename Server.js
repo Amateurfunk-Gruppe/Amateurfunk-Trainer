@@ -4169,13 +4169,13 @@ app.get('/api/video-embed', (req,res)=>{
 // Programm. Zwei Wege, eine Liste dessen, was ueberhaupt wandern darf.
 // ================================================================
 let githubUpdate = null;
-// In der Android-App (29.09.2026) keine Datei-Updates von GitHub: Dort
-// kommt ein neuer Stand als neue App. Dietmar bekam in der App gleich
-// beim ersten Start "21 berichtigte Dateien - Jetzt aktualisieren"; ein
-// Update wuerde den Server neu starten wollen, und das kann die App nicht.
-if(process.env.TRAINER_ANDROID){
-  console.log('[GITHUB] Android-App: Updates kommen als neue App, nicht als einzelne Dateien.');
-} else try{
+// Android-App (29.09.2026): Erst abgeschaltet, weil die App gleich beim
+// ersten Start "21 berichtigte Dateien" meldete. Das waren die Dateien der
+// Webseite (docs/), die in der App gar nicht liegen - github_update.js laesst
+// sie dort jetzt aus. Dietmar: "in der Ersten Version, konnte ich über
+// GitHub Update machen" - also wieder an. Den Neustart nach Programmdateien
+// uebernimmt die App (Knopf "Jetzt neu starten", NeustartActivity).
+try{
   githubUpdate = require('./github_update').einrichten({
     app, localOnly, projektOrdner: __dirname,
     dateien: ABGLEICH_ALLE, kategorie: abgleichKategorie

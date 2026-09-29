@@ -85,6 +85,7 @@ public class MainActivity extends Activity {
         spracheStarten();
         web.addJavascriptInterface(new Sprache(), "AndroidSprache");
         web.addJavascriptInterface(new Datei(), "AndroidDatei");
+        web.addJavascriptInterface(new AppSteuerung(), "AndroidApp");
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -253,6 +254,14 @@ public class MainActivity extends Activity {
 
     private void melden(final String id, final boolean ok) {
         haupt.post(() -> { if (web != null) web.evaluateJavascript("window.__androidTtsFertig&&window.__androidTtsFertig(" + jsText(id) + "," + ok + ")", null); });
+    }
+
+    /** Fuer die Seite: nach einem Update mit Programmdateien neu starten
+     *  (29.09.2026, Knopf "Jetzt neu starten" im Update-Fenster). */
+    class AppSteuerung {
+        @JavascriptInterface public void neuStarten() {
+            haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));
+        }
     }
 
     class Sprache {

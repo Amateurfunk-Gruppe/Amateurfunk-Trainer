@@ -97,6 +97,16 @@ public final class NodeStarter {
         try (OutputStream out = new FileOutputStream(merker)) {
             out.write(stand.getBytes(StandardCharsets.UTF_8));
         }
+        // Der Merkposten des Datei-Updaters (29.09.2026) gehoert zum alten
+        // Stand: Die neue App hat die Dateien eben ersetzt. Bliebe er
+        // liegen, hielte der Updater die neuen Dateien fuer "hier von Hand
+        // geaendert" und wuerde sie nie mehr auffrischen. Er wird nur zur
+        // Seite gelegt, nicht geloescht.
+        File gh = new File(ziel, "github_stand.json");
+        if (gh.exists()) {
+            // rename ersetzt unter Android (Linux) eine aeltere Ablage gleich mit.
+            gh.renameTo(new File(ziel, "github_stand.vor-app-update.json"));
+        }
         return ziel;
     }
 

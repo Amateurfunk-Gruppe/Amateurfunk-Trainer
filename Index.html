@@ -4459,6 +4459,17 @@
         body.handy .header-left .suchfeld-huelle > button { align-self: stretch; height: auto !important; min-width: 40px; }
         body.handy .header-left .suchfeld-huelle > button:not(#favListBtn) { width: 40px !important; }
         body.handy .suchfeld-huelle > button i { font-size: 0.85rem !important; }
+        /* Benutzer-Plaetze am Handy (29.09.2026). Dietmar, mit Bild aus den
+           Einstellungen: "Das Feld für den Benutzernamen ist zu klein" -
+           neben Nummer, festen 150 Punkten fuer "2 Fragen, 2 Fehler" und den
+           Knoepfen blieb fuer den Namen kaum ein Daumen breit. Am schmalen
+           Schirm bekommt der Name jetzt die ganze erste Zeile, Stand und
+           Knoepfe rutschen darunter. */
+        @media (max-width: 640px) {
+            .platz-zeile { flex-wrap: wrap; row-gap: 6px !important; }
+            .platz-zeile > .platz-name { flex: 1 1 calc(100% - 40px) !important; font-size: 16px !important; padding: 7px 10px !important; }
+            .platz-zeile > .platz-stand { width: auto !important; flex: 1 1 auto !important; text-align: left !important; margin-left: 31px; }
+        }
         /* Beschriftete Knoepfe nicht schmaler als ihr Inhalt (29.09.2026).
            Dietmar: "Zeichen und Schrift laufen über" - beim Server-Knopf
            ragten Zeichen und "Server" ueber den Rand, weil sich alle Knoepfe
@@ -13100,18 +13111,18 @@ function einstBenutzerFuellen(){
             if(zk && da) ziel = zk.name;
         }catch(e){}
 
-        zeilen += '<div style="display:flex; align-items:center; gap:9px; padding:7px 0; '
+        zeilen += '<div class="platz-zeile" style="display:flex; align-items:center; gap:9px; padding:7px 0; '
             + 'border-top:' + (i === 0 ? 'none' : '1px solid #e8eef6') + ';">'
             + '<span style="width:22px; height:22px; flex:0 0 auto; border-radius:50%; '
             +   'display:inline-flex; align-items:center; justify-content:center; font-size:0.68rem; '
             +   'font-weight:700; background:' + (da ? 'var(--panel-navy)' : '#e8eef6') + '; '
             +   'color:' + (da ? '#fff' : '#8b9bb0') + ';">' + (i + 1) + '</span>'
-            + '<input type="text" id="benutzerName_' + slot + '" value="' + name.replace(/"/g,'&quot;') + '" '
+            + '<input type="text" class="platz-name" id="benutzerName_' + slot + '" value="' + name.replace(/"/g,'&quot;') + '" '
             +   'maxlength="20" placeholder="' + (da ? '' : 'Name eingeben zum Anlegen') + '" '
             +   'onchange="benutzerNameSetzen(\'' + slot + '\', this.value)" '
             +   'style="flex:1; min-width:0; padding:5px 9px; border:1px solid #cfdae8; border-radius:8px; '
             +   'font-family:inherit; font-size:0.8rem;">'
-            + '<span style="width:150px; flex:0 0 auto; font-size:0.7rem; color:var(--muted); '
+            + '<span class="platz-stand" style="width:150px; flex:0 0 auto; font-size:0.7rem; color:var(--muted); '
             +   'text-align:right; line-height:1.3;">'
             +   (hatDaten ? b.fragen + ' Fragen' + (b.fehler ? ', ' + b.fehler + ' Fehler' : '')
                           : (da ? 'noch nichts gelernt' : 'frei'))
@@ -21384,6 +21395,11 @@ function updateFertigZeigen(j){
                           + updateEsc((j.fehler[0] && j.fehler[0].grund) || '') + '</span>';
         if(j.probelauf){
             t += '<br><span style="color:#8a5a12;">Probelauf — es wurde nichts geholt und nichts geschrieben.</span>';
+        } else if(j.neustartNoetig && window.AndroidApp && typeof AndroidApp.neuStarten === 'function'){
+            // In der Android-App startet die App sich selbst neu (29.09.2026).
+            t += '<br>Damit das Programm die neuen Dateien lädt, startet die App einmal neu.'
+               + '<br><button type="button" class="btn-lernstand" style="margin-top:0.6rem;" onclick="try{AndroidApp.neuStarten();}catch(e){}">'
+               + '<i class="fas fa-rotate"></i> Jetzt neu starten</button>';
         } else if(j.neustartNoetig){
             t += '<br>Bitte den Trainer einmal <b>beenden und neu starten</b>, damit das Programm die neuen Dateien lädt.';
         } else {

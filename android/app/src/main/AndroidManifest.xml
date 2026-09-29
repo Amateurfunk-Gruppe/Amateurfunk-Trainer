@@ -43,6 +43,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Neustart nach einem Update von GitHub (29.09.2026): laeuft im
+             eigenen Prozess, beendet den alten und oeffnet die App frisch. -->
+        <activity
+            android:name=".NeustartActivity"
+            android:process=":neustart"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- Haelt den Server am Leben, auch wenn die App im Hintergrund ist -
              sonst wuerde Android ihn abschalten, und die Teilnehmer im WLAN
              staenden vor einer toten Seite. -->

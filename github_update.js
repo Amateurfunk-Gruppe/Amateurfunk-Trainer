@@ -171,6 +171,14 @@ function einrichten(umgebung) {
   const ABGLEICH_TABU = ['data/', 'backup/', 'hoerbuch/', 'node_modules/',
                          'release/', 'tts_cache/', '.git', 'bilder/',
                          'android/', '.github/'];
+  // In der Android-App (29.09.2026) liegt nur, was die App mitbringt. Die
+  // Webseite (docs/) und die PC-Programme gehoeren nicht dazu - ohne diese
+  // Liste meldete die erste App gleich "21 berichtigte Dateien", und das
+  // waren genau die fehlenden docs-Dateien. Dietmar: "in der Ersten
+  // Version, konnte ich über GitHub Update machen" - so geht es wieder.
+  if (process.env.TRAINER_ANDROID) {
+    ABGLEICH_TABU.push('docs/', 'node/', 'piper/', 'kokoro/', 'kurse/', 'lerncoach/');
+  }
 
   function abgleichbar(pfad) {
     const p = String(pfad || '').replace(/\\/g, '/');
