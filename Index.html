@@ -26,6 +26,34 @@
         try{
             if(!/AmateurfunkTrainerApp/.test(navigator.userAgent)) return;
             document.documentElement.classList.add('android-app');
+            // DIE APP ZOOMT NIE                              (30.09.2026)
+            // Dietmar, mit Bild aus einer Runde: Zurueck/Weiter unten halb
+            // abgeschnitten, oben die Leiste ein Stueck zu hoch. Das Muster
+            // dahinter: Ist irgendetwas auf der Seite auch nur ein paar
+            // Punkte breiter als der Schirm, erlaubt das Browserfenster der
+            // App ein Herauszoomen - und legt die festen Leisten (oben,
+            // unten) an den Rand dieser groesseren, herausgezoomten Flaeche.
+            // Bei normaler Groesse sitzen sie dann jenseits des Bildschirms.
+            // Mit minimum-scale=1 gibt es kein Herauszoomen, die Leisten
+            // stehen immer am echten Rand. maximum-scale=1: auch kein
+            // Hineinzoomen in ein Eingabefeld. Die Groesse der Schrift regelt
+            // in der App die Einstellung "Groesse".
+            try{
+                var vp = document.querySelector('meta[name="viewport"]');
+                if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover');
+            }catch(e){}
+            // Der Stil der App (30.09.2026, siehe "ZWEI STILE FUER DIE APP"):
+            // sachlich oder verspielt - als Klasse am <html>, damit schon das
+            // erste Bild stimmt. "Wie Handy" stellt hell/dunkel hier vorab.
+            try{
+                var stil = localStorage.getItem('app_stil') === 'verspielt' ? 'verspielt' : 'sachlich';
+                document.documentElement.classList.add('stil-' + stil);
+                var ds = localStorage.getItem('app_design');
+                if(ds === 'system' && window.matchMedia)
+                    localStorage.setItem('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                else if(ds === 'dunkel') localStorage.setItem('theme', 'dark');
+                else if(ds === 'hell') localStorage.setItem('theme', 'light');
+            }catch(e){ document.documentElement.classList.add('stil-sachlich'); }
             // Hat die App cloudflared dabei, gibt es auch den Internet-Link.
             if(/AmateurfunkTrainerApp Tunnel/.test(navigator.userAgent)) document.documentElement.classList.add('android-tunnel');
             if(!window.AndroidSprache) return;
@@ -130,13 +158,33 @@
 
         /* ---- Seite: volle Breite, Platz fuer die beiden Leisten ---- */
         html.android-app .header { display: none !important; }
-        /* Nichts darf breiter werden als der Schirm - sonst zoomt das
-           Browserfenster der App die ganze Seite heraus. */
-        html.android-app, html.android-app body { overflow-x: hidden; }
+        /* ================================================================
+           SCROLLEN MIT DEM FINGER                         (30.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Auf der Hauptseite kann ich nicht scrollen. Es ist fast
+           so, als haette ich Handschuhe an, da bewegt sich nichts nach
+           unten." - und selbst der lange Bildschirmfoto-Modus des Handys
+           kam nicht weiter.
+
+           Hier stand bis heute "overflow-x: hidden" fuer <html> UND <body>.
+           Beides zusammen macht den Koerper zu einem eigenen Scrollbereich
+           innerhalb der Seite (der Browser reicht die Angabe am body dann
+           nicht mehr an das Fenster weiter). Zusammen mit dem abgeschalteten
+           Gummiband am Rand (overscroll-behavior, siehe APP-ANMUTUNG) blieb
+           die Wischgeste am Koerper haengen, der selbst nichts zu scrollen
+           hat - und das Fenster darunter bewegte sich nicht.
+
+           Die Regel ist deshalb weg. Seitliches Verschieben verhindert
+           weiter body.schmal { overflow-x: hidden } (das geht wie vor dem
+           neuen Stil an das Fenster), und gegen das Herauszoomen bei zu
+           breitem Inhalt steht minimum-scale=1 im Kopf der Seite.
+           ================================================================ */
         html.android-app body {
             padding: calc(var(--app-leiste-h) + 8px) 0 calc(var(--app-navi-h) + 14px) 0 !important;
         }
-        html.android-app body.runde-laeuft { padding-bottom: 92px !important; padding-top: calc(var(--app-leiste-h) + 4px) !important; }
+        /* Unten so viel Platz, wie die Leiste mit Zurueck/Weiter hoch ist
+           (das Skript misst sie, --app-runde-h) - und ein Fingerbreit Luft. */
+        html.android-app body.runde-laeuft { padding-bottom: calc(var(--app-runde-h, 64px) + 16px) !important; padding-top: calc(var(--app-leiste-h) + 4px) !important; }
         html.android-app #app.card {
             width: 100% !important; max-width: none !important; margin: 0 !important;
             border-left: 0 !important; border-right: 0 !important; box-shadow: none !important;
@@ -232,6 +280,12 @@
         }
         html.android-app body.runde-laeuft #appNavi,
         html.android-app body.app-tastatur #appNavi { display: none; }
+        /* Beim Scrollen nach unten macht die Leiste Platz, beim Scrollen
+           nach oben ist sie sofort wieder da (30.09.2026). Dietmar: "Wenn
+           ich nach unten scrolle muss diese Leiste auch wieder verschwinden
+           mit dem Menue". */
+        html.android-app #appNavi { transition: transform 0.22s ease; will-change: transform; }
+        html.android-app body.app-navi-weg #appNavi { transform: translateY(calc(100% + 2px)); }
         #appNavi button {
             border: none; background: transparent; color: var(--muted); font-family: inherit; font-size: 0.72rem; font-weight: 600;
             display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 0; position: relative;
@@ -307,6 +361,37 @@
         html.android-app body.app-chat-offen #duoChatBox #duoChatKopf { min-height: 54px; box-sizing: border-box; }
         html.android-app body:not(.app-chat-offen) #duoChatBox { display: none !important; }
         html.android-app body.eckig.app-rund #alChat .al-zahl { border-radius: 8px !important; }
+        /* ================================================================
+           FENSTER SO GROSS WIE DER BILDSCHIRM              (30.09.2026)
+           ----------------------------------------------------------------
+           Dietmar: "Bei den Fenstern die ich oeffne die sind minimal etwas
+           kleiner ... es ist ja ueberall der Button schliessen vorhanden
+           und die sollen eigentlich genauso gross wie der Bildschirm sein."
+
+           In der App fuellt jedes Fenster den ganzen Schirm: kein Rand,
+           kein Schatten, keine runden Ecken. Zu geht es ueber das X oben
+           oder die Zurueck-Taste des Handys. Kleine Rueckfragen bleiben
+           kleine Dialoge (Ja/Nein, Hinweise, der Jubel ueber eine neue
+           QSL-Karte, "Runde fortsetzen?", das Ende einer Runde, die
+           Begruessung, "Neues Update verfuegbar") - das sind keine Fenster,
+           die man oeffnet, sondern Fragen an einen. Der Taschenrechner bleibt klein und verschiebbar:
+           Er soll neben der Frage stehen, nicht ueber ihr.
+           Die :not(#...) geben der Regel zugleich das Gewicht, um die
+           Festwerte der einzelnen Fenster (Breite, 90vh, Ecken) zu schlagen.
+           Zwei Fenster (Gruppenraum, Vorlese-Einstellungen) stehen nicht
+           direkt im body, sondern in #app - daher :is(body, #app).
+           ================================================================ */
+        html.android-app :is(body, #app) > div:is([id$="Modal"], [id$="Fenster"], .realistic-modal-overlay):not(#genericConfirmModal):not(#genericAlertModal):not(#masteryClearModal):not(#cacheClearModal):not(#fullResetModal):not(#qslJubelModal):not(#rundeModal):not(#rundeFertigModal):not(#willkommenModal):not(#updateModal):not(#rechnerFenster) {
+            padding: 0 !important; align-items: stretch !important; justify-content: stretch !important; overflow: hidden !important;
+        }
+        html.android-app :is(body, #app) > div:is([id$="Modal"], [id$="Fenster"], .realistic-modal-overlay):not(#genericConfirmModal):not(#genericAlertModal):not(#masteryClearModal):not(#cacheClearModal):not(#fullResetModal):not(#qslJubelModal):not(#rundeModal):not(#rundeFertigModal):not(#willkommenModal):not(#updateModal):not(#rechnerFenster) > div:first-of-type {
+            width: 100% !important; max-width: none !important; min-width: 0 !important;
+            height: 100% !important; max-height: none !important; min-height: 0 !important;
+            flex: 1 1 auto !important; margin: 0 !important; box-sizing: border-box !important;
+            border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+            /* Verschieben am Kopf (Formelsammlung) gibt es im ganzen Schirm nicht. */
+            transform: none !important;
+        }
         html.android-app #fehlerwertungHinweis { bottom: calc(var(--app-navi-h) + 12px) !important; }
         html.android-app body.runde-laeuft #fehlerwertungHinweis { bottom: 84px !important; }
 
@@ -371,6 +456,539 @@
         body.eckig .app-form-mini.rund i { border-radius: 7px !important; }
         body.eckig .app-form-mini.rund b { border-radius: 9px !important; }
         body.eckig.app-rund .app-form-kachel { border-radius: 16px !important; }
+    </style>
+    <!-- ================================================================
+         ZWEI STILE FUER DIE APP: SACHLICH UND VERSPIELT      (30.09.2026)
+         ----------------------------------------------------------------
+         Dietmar zu den Entwuerfen: "mit Sicherheit ist dein jetziges
+         Thema ziemlich interessant im Alter von 9 bis 21 Jahren. Aber ab
+         35 bis ... 65 ist es vielleicht ein bisschen besser, wenn es etwas
+         nuechterner ist, aber trotzdem modern. Und vielleicht kann man das
+         Ganze auch so einbauen, dass man die Themen auch dann umschalten
+         kann." Dann: "Ja, baue mir das ein".
+
+         Nur in der App (html.android-app). Der Stil steht als Klasse am
+         <html> (stil-sachlich / stil-verspielt, gesetzt im Kopf der Seite,
+         bevor gezeichnet wird), hell oder dunkel kommt wie bisher ueber
+         body.dark. Alle Farben laufen ueber die Variablen --s-*; die
+         Bausteine unten benutzen nur sie. Eckig/rund bleibt die eigene
+         Wahl (body.eckig / body.app-rund): Eckig nimmt wie am PC alle
+         Rundungen weg, rund setzt sie hier gezielt wieder ein.
+
+         Etappe 1: Grundfarben, Leisten, Startbildschirm, Blatt "Neue
+         Runde", Stilwahl beim ersten Oeffnen, Einstellung.
+         ================================================================ -->
+    <style id="appStilNeu">
+        /* ---------- Farben: Sachlich ---------- */
+        html.android-app.stil-sachlich {
+            --s-bg: #F4F5F7; --s-fl: #FFFFFF; --s-fl2: #F0F2F5; --s-rand: #E3E6EB; --s-rand2: #D3D8DF;
+            --s-text: #0F1728; --s-text2: #4A5465; --s-text3: #8A93A3;
+            --s-haupt: #0F2745; --s-auf-haupt: #FFFFFF; --s-akzent: #0B8796; --s-akzent-w: rgba(11,135,150,0.10);
+            --s-gruen: #178A4C; --s-gruen-w: rgba(23,138,76,0.10); --s-rot: #C8323F; --s-rot-w: rgba(200,50,63,0.08); --s-amber: #B7791F;
+            --s-v: #6E56CF; --s-b: #D9692A; --s-t: #0B8796;
+            --s-schatten: 0 1px 2px rgba(16,24,40,0.05); --s-navi: #FFFFFF; --s-blatt: #FFFFFF; --s-schleier: rgba(15,23,40,0.38);
+            --s-r-karte: 16px; --s-r-knopf: 12px; --s-r-klein: 10px;
+        }
+        html.android-app.stil-sachlich body.dark {
+            --s-bg: #0C121C; --s-fl: #141C2A; --s-fl2: #1B2536; --s-rand: #263246; --s-rand2: #33415A;
+            --s-text: #F2F4F7; --s-text2: #B3BCC9; --s-text3: #7F8A9C;
+            --s-haupt: #45C2CE; --s-auf-haupt: #06262C; --s-akzent: #45C2CE; --s-akzent-w: rgba(69,194,206,0.14);
+            --s-gruen: #3CC97A; --s-gruen-w: rgba(60,201,122,0.14); --s-rot: #F06470; --s-rot-w: rgba(240,100,112,0.14); --s-amber: #E8B04B;
+            --s-v: #A08CF0; --s-b: #F09A5C; --s-t: #45C2CE;
+            --s-schatten: none; --s-navi: #111826; --s-blatt: #162033; --s-schleier: rgba(0,0,0,0.55);
+        }
+        /* ---------- Farben: Verspielt ---------- */
+        html.android-app.stil-verspielt {
+            --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
+            --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
+            --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
+            --s-rot: #F2375A; --s-rot-w: rgba(242,55,90,0.10); --s-amber: #FFA41B; --s-amber-tief: #D97F00;
+            --s-v: #7B5CFF; --s-b: #FF7A33; --s-t: #0FB7B2;
+            --s-schatten: 0 6px 18px rgba(22,44,92,0.08); --s-navi: rgba(255,255,255,0.94); --s-blatt: #FFFFFF; --s-schleier: rgba(12,23,49,0.42);
+            --s-r-karte: 26px; --s-r-knopf: 20px; --s-r-klein: 14px;
+            --s-glow1: rgba(20,184,196,0.16); --s-glow2: rgba(124,92,255,0.12);
+        }
+        html.android-app.stil-verspielt body.dark {
+            --s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
+            --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
+            --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
+            --s-rot: #FF4D6D; --s-rot-w: rgba(255,77,109,0.14); --s-amber: #FFB547; --s-amber-tief: #E08A00;
+            --s-v: #A084FF; --s-b: #FF8B4D; --s-t: #2EE6D6;
+            --s-schatten: 0 8px 22px rgba(0,0,0,0.35); --s-navi: rgba(15,22,45,0.9); --s-blatt: #0F1730; --s-schleier: rgba(3,6,15,0.62);
+            --s-glow1: rgba(34,211,238,0.20); --s-glow2: rgba(139,92,246,0.22);
+        }
+
+        /* ---------- Seite ---------- */
+        html.android-app.stil-sachlich body, html.android-app.stil-verspielt body { background: var(--s-bg) !important; color: var(--s-text); }
+        html.android-app.stil-verspielt body::before {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(380px 380px at -12% -6%, var(--s-glow1), transparent 70%),
+                        radial-gradient(400px 400px at 118% 42%, var(--s-glow2), transparent 70%);
+        }
+        html.android-app.stil-sachlich #app.card, html.android-app.stil-verspielt #app.card { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+        /* Die alte Startleiste bleibt im Dokument - ihre Knoepfe tun weiter
+           die Arbeit, der neue Startbildschirm ruft sie auf. Zu sehen ist
+           sie nicht mehr. */
+        html.android-app.stil-sachlich .filter-bar, html.android-app.stil-verspielt .filter-bar { display: none !important; }
+
+        /* ---------- Obere Leiste ---------- */
+        html.android-app.stil-sachlich #appLeiste, html.android-app.stil-verspielt #appLeiste { background: var(--s-navi); color: var(--s-text); border-bottom: 1px solid var(--s-rand); }
+        html.android-app.stil-verspielt #appLeiste { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app.stil-sachlich #appLeiste .al-knopf, html.android-app.stil-verspielt #appLeiste .al-knopf { color: var(--s-text); }
+        html.android-app.stil-sachlich #appLeiste .al-titel b, html.android-app.stil-verspielt #appLeiste .al-titel b { color: var(--s-akzent); }
+        html.android-app.stil-sachlich #appLeiste .al-avatar { background: var(--s-haupt); color: var(--s-auf-haupt); }
+        html.android-app.stil-verspielt #appLeiste .al-avatar { background: linear-gradient(145deg, #FFB547, #FF5F8F); color: #fff; }
+        #alBenutzer { position: relative; }
+        #alBenutzer .al-stufe { display: none; }
+        html.android-app.stil-verspielt #alBenutzer .al-stufe {
+            display: block; position: absolute; right: -1px; bottom: 3px; height: 15px; padding: 0 4px; line-height: 15px;
+            font: 800 9.5px/15px var(--font-display); color: var(--s-auf-haupt); background: var(--s-haupt); border: 1.5px solid var(--s-navi);
+        }
+
+        /* ---------- Untere Leiste ---------- */
+        html.android-app.stil-sachlich #appNavi, html.android-app.stil-verspielt #appNavi { background: var(--s-navi); border-top: 1px solid var(--s-rand); }
+        html.android-app.stil-sachlich #appNavi button, html.android-app.stil-verspielt #appNavi button { color: var(--s-text3); }
+        html.android-app.stil-sachlich #appNavi button.an, html.android-app.stil-verspielt #appNavi button.an { color: var(--s-text); }
+        html.android-app.stil-sachlich #appNavi button.an .an-pille, html.android-app.stil-verspielt #appNavi button.an .an-pille { background: var(--s-akzent-w); color: var(--s-akzent); }
+        /* Verspielt: die Leiste schwebt */
+        html.android-app.stil-verspielt { --app-navi-h: 82px; }
+        html.android-app.stil-verspielt #appNavi {
+            left: 12px; right: 12px; bottom: 12px; height: 68px; padding: 6px 2px; border: 1px solid var(--s-rand2);
+            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+        }
+        html.android-app.stil-verspielt body.app-navi-weg #appNavi { transform: translateY(calc(100% + 18px)); }
+        html.android-app.stil-verspielt body.eckig.app-rund #appNavi { border-radius: 30px !important; }
+
+        /* ---------- Blatt "Mehr" ---------- */
+        html.android-app.stil-sachlich #appMehr .am-blatt, html.android-app.stil-verspielt #appMehr .am-blatt { background: var(--s-blatt); color: var(--s-text); }
+        html.android-app.stil-sachlich #appMehr .am-schleier, html.android-app.stil-verspielt #appMehr .am-schleier { background: var(--s-schleier); }
+        html.android-app.stil-sachlich #appMehr .am-zeile, html.android-app.stil-verspielt #appMehr .am-zeile { color: var(--s-text); }
+        html.android-app.stil-sachlich #appMehr .am-zeile > i, html.android-app.stil-verspielt #appMehr .am-zeile > i { color: var(--s-akzent); }
+        html.android-app.stil-sachlich #appMehr .am-zeile small, html.android-app.stil-verspielt #appMehr .am-zeile small { color: var(--s-text2); }
+        html.android-app.stil-sachlich #appSuchPlatz.offen, html.android-app.stil-verspielt #appSuchPlatz.offen { background: var(--s-navi); border-bottom-color: var(--s-rand); }
+
+        /* ---------- Die alten Kaesten der Startseite als Karten ---------- */
+        html.android-app.stil-sachlich .exam-info, html.android-app.stil-verspielt .exam-info,
+        html.android-app.stil-sachlich #masteryDisplay, html.android-app.stil-verspielt #masteryDisplay {
+            background: var(--s-fl) !important; border: 1px solid var(--s-rand) !important; box-shadow: var(--s-schatten) !important; color: var(--s-text);
+        }
+        html.android-app.stil-verspielt body:not(.dark) .exam-info, html.android-app.stil-verspielt body:not(.dark) #masteryDisplay { backdrop-filter: none; }
+        html.android-app.stil-verspielt body.dark .exam-info, html.android-app.stil-verspielt body.dark #masteryDisplay { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app body.eckig.app-rund .exam-info, html.android-app body.eckig.app-rund #masteryDisplay { border-radius: var(--s-r-karte, 16px) !important; }
+
+        /* ================================================================
+           DER NEUE STARTBILDSCHIRM (#appHeute)
+           ================================================================ */
+        #appHeute { display: none; }
+        html.android-app.stil-sachlich body:not(.runde-laeuft) #appHeute,
+        html.android-app.stil-verspielt body:not(.runde-laeuft) #appHeute { display: block; margin-bottom: 14px; }
+        #appHeute .ah-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 12px; }
+        #appHeute .ah-gruss { font: 600 23px/1.2 var(--font-body); letter-spacing: -0.4px; color: var(--s-text); }
+        #appHeute .ah-gruss small { display: none; }
+        #appHeute .ah-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
+        #appHeute .ah-chips #appZielZeile { margin: 0 !important; }
+        #appHeute .ah-termin { font-size: 13.5px; color: var(--s-text2); background: none; border: 0; padding: 0; font-family: inherit; }
+        #appHeute .ah-termin b { color: var(--s-text); font-weight: 600; }
+        html.android-app.stil-sachlich .app-chip, html.android-app.stil-verspielt .app-chip { background: var(--s-fl); color: var(--s-text); border-color: var(--s-rand2); height: 36px; font-size: 14px; }
+        html.android-app.stil-sachlich .app-chip i, html.android-app.stil-verspielt .app-chip i { color: var(--s-akzent); }
+        #appHeute .ah-xp { display: none; }
+
+        #appHeute .ah-karte { background: var(--s-fl); border: 1px solid var(--s-rand); padding: 16px; box-shadow: var(--s-schatten); margin-bottom: 12px; position: relative; color: var(--s-text); }
+        html.android-app body.eckig.app-rund #appHeute .ah-karte { border-radius: var(--s-r-karte) !important; }
+        #appHeute .ah-l { font-size: 13px; font-weight: 600; color: var(--s-text3); }
+        #appHeute .ah-runde h2 { font: 600 20px/1.25 var(--font-body); margin: 4px 0 12px; color: var(--s-text); letter-spacing: -0.2px; }
+        #appHeute .ah-wahl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+        #appHeute .ah-wahl .w { height: 32px; padding: 0 11px; background: var(--s-fl2); color: var(--s-text2); font-size: 13.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        #appHeute .ah-wahl .aendern { height: 32px; padding: 0 4px 0 6px; border: 0; background: none; color: var(--s-akzent); font: 600 14px var(--font-body); display: inline-flex; align-items: center; gap: 5px; }
+        html.android-app body.eckig.app-rund #appHeute .ah-wahl .w { border-radius: 9px !important; }
+        #appHeute .ah-knopf { height: 52px; width: 100%; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 600 16.5px var(--font-body);
+                              display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+        html.android-app body.eckig.app-rund #appHeute .ah-knopf { border-radius: var(--s-r-knopf) !important; }
+
+        #appHeute .ah-tag { display: flex; align-items: center; gap: 16px; }
+        #appHeute .ah-ring { position: relative; flex: none; width: 66px; height: 66px; }
+        #appHeute .ah-ring svg { position: absolute; inset: 0; }
+        #appHeute .ah-ring .z { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; }
+        #appHeute .ah-ring .z b { font-size: 17px; font-weight: 700; color: var(--s-text); }
+        #appHeute .ah-ring .z small { font-size: 10.5px; color: var(--s-text3); }
+        #appHeute .ah-tag b.t { display: block; font-size: 16px; font-weight: 600; color: var(--s-text); }
+        #appHeute .ah-serie { margin-top: 5px; font-size: 13.5px; color: var(--s-text2); display: flex; align-items: center; gap: 7px; }
+        #appHeute .ah-serie i { color: var(--s-amber); }
+        #appHeute .ah-belohnung { display: none; }
+
+        #appHeute .ah-ueber { font-size: 13px; font-weight: 600; color: var(--s-text3); margin: 16px 0 8px 4px; }
+        #appHeute .ah-liste { background: var(--s-fl); border: 1px solid var(--s-rand); box-shadow: var(--s-schatten); overflow: hidden; }
+        html.android-app body.eckig.app-rund #appHeute .ah-liste { border-radius: var(--s-r-karte) !important; }
+        #appHeute .ah-zeile { display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 56px; position: relative; width: 100%;
+                              border: 0; background: none; color: var(--s-text); font: 500 16px var(--font-body); text-align: left; cursor: pointer; }
+        #appHeute .ah-zeile + .ah-zeile::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; height: 1px; background: var(--s-rand); }
+        #appHeute .ah-zeile .sym { width: 26px; text-align: center; color: var(--s-akzent); font-size: 17px; flex: none; }
+        #appHeute .ah-zeile .t { flex: 1; }
+        #appHeute .ah-zeile .w { color: var(--s-text2); font-size: 15px; display: flex; align-items: center; gap: 10px; }
+        #appHeute .ah-zeile .w .fa-chevron-right { font-size: 12px; color: var(--s-text3); }
+        #appHeute .ah-zeile.aus { display: none; }
+        #appHeute .ah-kacheln { display: none; }
+        #appHeute .ah-onair { display: none; }
+        #appHeute .ah-mk { display: none; }
+        #appHeute .ah-weiter-ueber { font-size: 13px; font-weight: 600; color: var(--s-text3); margin: 20px 0 0 4px; }
+
+        /* ---------- Verspielt: der Startbildschirm mit Leben ---------- */
+        html.android-app.stil-verspielt #appHeute .ah-gruss { font: 500 13px/1.2 var(--font-body); color: var(--s-text2); }
+        html.android-app.stil-verspielt #appHeute .ah-gruss small { display: block; font: 700 22px/1.15 var(--font-display); color: var(--s-text); letter-spacing: -0.3px; margin-top: 2px; }
+        html.android-app.stil-verspielt #appHeute .ah-gruss .gt { display: block; }
+        html.android-app.stil-verspielt #appHeute .ah-gruss .name { display: none; }
+        html.android-app.stil-verspielt #appHeute .ah-onair {
+            display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px 0 10px; border-radius: 12px;
+            background: linear-gradient(180deg, #3A0B14, #25060C); border: 1px solid rgba(255,77,109,0.55);
+            font: 600 12.5px/1 var(--font-mono); letter-spacing: 1.4px; color: #FF6B86;
+            box-shadow: 0 0 18px rgba(255,60,95,0.45), inset 0 0 12px rgba(255,60,95,0.25); text-shadow: 0 0 10px rgba(255,80,110,0.9);
+        }
+        html.android-app.stil-verspielt #appHeute .ah-onair.aus { filter: grayscale(1) brightness(0.9); opacity: 0.7; box-shadow: none; text-shadow: none; }
+        html.android-app.stil-verspielt #appHeute .ah-onair .lampe { width: 8px; height: 8px; border-radius: 50% !important; background: #FF4D6D; box-shadow: 0 0 10px #FF4D6D, 0 0 20px #FF4D6D; }
+        html.android-app.stil-verspielt #appHeute .ah-onair b { font: 700 15px var(--font-display); letter-spacing: 0; color: #fff; text-shadow: none; }
+        html.android-app.stil-verspielt #appHeute .ah-xp { display: inline-flex; }
+        html.android-app.stil-verspielt #appHeute .ah-xp i { color: var(--s-amber) !important; }
+        html.android-app.stil-verspielt #appHeute .ah-termin { display: none; }
+
+        html.android-app.stil-verspielt #appHeute .ah-runde {
+            color: #fff; border: 0; overflow: hidden; padding: 18px;
+            background: radial-gradient(120% 90% at 100% 0%, rgba(160,132,255,0.95) 0%, transparent 55%), linear-gradient(140deg, #0E7FA6 0%, #1564C9 55%, #5B3FE0 100%);
+            box-shadow: 0 18px 40px rgba(38,80,220,0.38), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        html.android-app.stil-verspielt #appHeute .ah-runde::before { content: ""; position: absolute; inset: 0; background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) 0 1.5px, transparent 1.5px 18px); pointer-events: none; }
+        html.android-app.stil-verspielt #appHeute .ah-runde .ah-l { position: relative; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+        html.android-app.stil-verspielt #appHeute .ah-runde h2 { position: relative; color: #fff; font: 700 24px/1.15 var(--font-display); max-width: 205px; letter-spacing: -0.4px; }
+        html.android-app.stil-verspielt #appHeute .ah-runde .ah-wahl { position: relative; max-width: 230px; }
+        html.android-app.stil-verspielt #appHeute .ah-runde .ah-wahl .w { background: rgba(255,255,255,0.16); color: #fff; }
+        html.android-app.stil-verspielt #appHeute .ah-runde .ah-wahl .aendern { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+        html.android-app.stil-verspielt #appHeute .ah-mk { display: block; position: absolute; right: 12px; top: 12px; width: 92px; }
+        html.android-app.stil-verspielt #appHeute .ah-runde .ah-knopf {
+            position: relative; color: #0B2A63; background: linear-gradient(180deg, #FFFFFF, #E4EEFF); font-weight: 700; font-size: 17px;
+            box-shadow: 0 5px 0 rgba(10,30,80,0.35), 0 12px 24px rgba(0,0,0,0.25);
+        }
+        html.android-app.stil-verspielt #appHeute .ah-ring { width: 86px; height: 86px; }
+        html.android-app.stil-verspielt #appHeute .ah-ring .z b { font: 700 22px var(--font-display); }
+        html.android-app.stil-verspielt #appHeute .ah-tag b.t { font: 700 16.5px/1.25 var(--font-display); }
+        html.android-app.stil-verspielt #appHeute .ah-belohnung { display: inline-flex; margin-top: 8px; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--s-amber); background: rgba(255,164,27,0.14); padding: 5px 9px; }
+        html.android-app body.eckig.app-rund #appHeute .ah-belohnung { border-radius: 10px !important; }
+        html.android-app.stil-verspielt #appHeute .ah-serie { display: none; }
+        html.android-app.stil-verspielt #appHeute .ah-liste { display: none; }
+        html.android-app.stil-verspielt #appHeute .ah-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        #appHeute .ah-kachel { padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--s-rand); background: var(--s-fl); box-shadow: var(--s-schatten); color: var(--s-text); text-align: left; font-family: inherit; cursor: pointer; }
+        html.android-app.stil-verspielt body.dark #appHeute .ah-kachel, html.android-app.stil-verspielt body.dark #appHeute .ah-karte:not(.ah-runde) { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app body.eckig.app-rund #appHeute .ah-kachel { border-radius: 24px !important; }
+        #appHeute .ah-kachel.aus { display: none; }
+        #appHeute .ah-kachel .kz { display: flex; justify-content: space-between; align-items: flex-start; }
+        #appHeute .ah-kachel .anz { font: 700 24px/1 var(--font-display); }
+        #appHeute .ah-kachel .anz.klein { font-size: 15px; padding-top: 4px; color: var(--s-text2); }
+        #appHeute .ah-kachel b { font-size: 14.5px; font-weight: 700; display: block; }
+        #appHeute .ah-kachel small { font-size: 12px; color: var(--s-text2); }
+        .ah-ico { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex: none; position: relative; overflow: hidden;
+                  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 14px rgba(0,0,0,0.18); }
+        html.android-app body.eckig.app-rund .ah-ico { border-radius: 14px !important; }
+        .ah-ico::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,0.28), transparent 55%); }
+        .ah-ico.rot { background: linear-gradient(145deg, #FF8FA3, #F0284F); }
+        .ah-ico.amber { background: linear-gradient(145deg, #FFD06B, #FF8A00); }
+        .ah-ico.violett { background: linear-gradient(145deg, #B9A2FF, #6A45F5); }
+        .ah-ico.blau { background: linear-gradient(145deg, #7CB8FF, #2E63F0); }
+        .ah-ico.gruen { background: linear-gradient(145deg, #6BF0A8, #0FA95A); }
+        .ah-ico.tuerkis { background: linear-gradient(145deg, #3FF0DF, #0A9FC0); }
+
+        /* ---------- Das Maskottchen: ein kleines Funkgeraet ---------- */
+        .mk svg { width: 100%; height: auto; display: block; overflow: visible; }
+        .mk .mk-huepf { animation: mkWippen 2.6s ease-in-out infinite; }
+        .mk .mk-antenne { transform-origin: 80px 36px; animation: mkAntenne 1.9s ease-in-out infinite; }
+        .mk .mk-auge { transform-origin: 0 58.5px; transform-box: view-box; animation: mkBlinzeln 4.2s infinite; }
+        .mk .mk-arm-r { transform-origin: 100px 86px; transform: rotate(-28deg); }
+        .mk .mk-arm-l { transform-origin: 12px 86px; transform: rotate(28deg); }
+        .mk.winkt .mk-arm-r { animation: mkWinken 0.62s ease-in-out 5; }
+        .mk .mk-w1 { animation: mkWelle 1.6s ease-in-out infinite; }
+        .mk .mk-w2 { animation: mkWelle 1.6s ease-in-out 0.8s infinite; }
+        @keyframes mkWippen { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        @keyframes mkAntenne { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(7deg); } }
+        @keyframes mkBlinzeln { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.12); } }
+        @keyframes mkWinken { 0%, 100% { transform: rotate(-126deg); } 50% { transform: rotate(-154deg); } }
+        @keyframes mkWelle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .mk *, .mk { animation: none !important; } }
+        /* Eckig darf den Roboter nicht kantig machen - er ist gezeichnet, kein Kasten. */
+
+        /* ================================================================
+           BLATT "NEUE RUNDE" - statt der Auswahlliste von Android
+           ================================================================ */
+        #appRundeBlatt { display: none; position: fixed; inset: 0; z-index: 99991; }
+        #appRundeBlatt.offen { display: block; }
+        #appRundeBlatt .ar-schleier { position: absolute; inset: 0; background: var(--s-schleier, rgba(0,0,0,0.4)); }
+        #appRundeBlatt .ar-blatt { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; overflow-y: auto; background: var(--s-blatt, #fff); color: var(--s-text, #111);
+                                   padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); animation: amHoch 0.18s ease-out; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-blatt { border-radius: 24px 24px 0 0 !important; }
+        #appRundeBlatt .ar-griff { width: 36px; height: 5px; background: var(--s-rand2); margin: 0 auto 14px; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-griff { border-radius: 3px !important; }
+        #appRundeBlatt .ar-kz { display: flex; align-items: center; justify-content: space-between; }
+        #appRundeBlatt h2 { font: 600 22px var(--font-body); letter-spacing: -0.3px; margin: 0; }
+        html.android-app.stil-verspielt #appRundeBlatt h2 { font: 700 24px var(--font-display); }
+        #appRundeBlatt .ar-zu { width: 36px; height: 36px; border: 0; background: var(--s-fl2); color: var(--s-text2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-zu { border-radius: 50% !important; }
+        #appRundeBlatt .ar-ab { margin-top: 18px; }
+        #appRundeBlatt .ar-ue { font-size: 13px; font-weight: 600; color: var(--s-text3); margin: 0 0 8px 2px; }
+        #appRundeBlatt .ar-seg { display: flex; background: var(--s-fl2); padding: 3px; gap: 2px; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-seg { border-radius: 12px !important; }
+        #appRundeBlatt .ar-seg button { flex: 1; height: 40px; border: 0; background: none; font: 600 14.5px var(--font-body); color: var(--s-text2); padding: 0 2px; white-space: nowrap; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-seg button { border-radius: 9px !important; }
+        #appRundeBlatt .ar-seg button.an { background: var(--s-fl); color: var(--s-text); box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0 0 1px var(--s-rand); }
+        html.android-app.stil-verspielt #appRundeBlatt .ar-seg button.an { background: var(--s-haupt); color: var(--s-auf-haupt); box-shadow: 0 4px 12px rgba(16,183,208,0.35); }
+        html.android-app.stil-sachlich body.dark #appRundeBlatt .ar-seg button.an { background: #2C3648; }
+        #appRundeBlatt .ar-schalt { margin-top: 18px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--s-fl2); cursor: pointer; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-schalt { border-radius: 14px !important; }
+        #appRundeBlatt .ar-schalt b { display: block; font-size: 15px; font-weight: 600; }
+        #appRundeBlatt .ar-schalt small { font-size: 12.5px; color: var(--s-text2); }
+        .ar-schalter { width: 50px; height: 30px; background: var(--s-rand2); position: relative; flex: none; transition: background 0.15s; }
+        html.android-app .ar-schalter { border-radius: 15px !important; }
+        html.android-app .ar-schalter::after { border-radius: 50% !important; }
+        .ar-schalter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.25); transition: left 0.15s; }
+        /* Schalter bleiben auch in "eckig" rund - ein eckiger Schiebeschalter sieht kaputt aus. */
+        .ar-schalter.an { background: var(--s-akzent); }
+        .ar-schalter.an::after { left: 23px; }
+        #appRundeBlatt .ar-dauer { text-align: center; margin: 16px 0 12px; font-size: 14px; color: var(--s-text2); }
+        #appRundeBlatt .ar-los { height: 54px; width: 100%; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 600 16.5px var(--font-body); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        html.android-app body.eckig.app-rund #appRundeBlatt .ar-los { border-radius: var(--s-r-knopf) !important; }
+        html.android-app.stil-verspielt #appRundeBlatt .ar-los { font-weight: 700; font-size: 17px; background: linear-gradient(180deg, color-mix(in srgb, var(--s-haupt) 88%, white) 0%, var(--s-haupt) 45%, var(--s-haupt2) 100%); box-shadow: 0 5px 0 var(--s-haupt-tief), 0 12px 26px rgba(16,183,208,0.35); }
+
+        /* ================================================================
+           STILWAHL BEIM ERSTEN OEFFNEN
+           ================================================================ */
+        #appStilWahl { position: fixed; inset: 0; z-index: 100200; background: #F4F5F7; color: #0F1728; display: flex; flex-direction: column; padding: 28px 18px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; }
+        body.dark #appStilWahl { background: #0C121C; color: #F2F4F7; }
+        #appStilWahl h1 { font: 600 26px/1.2 var(--font-body); letter-spacing: -0.5px; margin: 8px 0 6px; }
+        #appStilWahl .sw-unter { font-size: 15px; line-height: 1.45; color: #4A5465; }
+        body.dark #appStilWahl .sw-unter { color: #B3BCC9; }
+        #appStilWahl .sw-wahl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin: 22px 0 16px; }
+        #appStilWahl .sw-karte { border: 2px solid #D3D8DF; background: #fff; padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 10px; text-align: left; font-family: inherit; color: inherit; cursor: pointer; }
+        body.dark #appStilWahl .sw-karte { background: #141C2A; border-color: #33415A; }
+        #appStilWahl .sw-karte.an { border-color: #0B8796; box-shadow: 0 0 0 4px rgba(11,135,150,0.18); }
+        body.eckig #appStilWahl .sw-karte { border-radius: 16px !important; }
+        #appStilWahl .sw-karte > b { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        #appStilWahl .sw-karte > small { font-size: 13px; line-height: 1.4; color: #4A5465; }
+        body.dark #appStilWahl .sw-karte > small { color: #B3BCC9; }
+        #appStilWahl .sw-kreis { width: 20px; height: 20px; border: 2px solid #B8C0CC; flex: none; }
+        #appStilWahl .sw-karte.an .sw-kreis { border: 6px solid #0B8796; }
+        body.eckig #appStilWahl .sw-kreis { border-radius: 50% !important; }
+        #appStilWahl .sw-fuss { margin-top: auto; }
+        #appStilWahl .sw-hinweis { text-align: center; font-size: 13px; color: #8A93A3; margin-bottom: 12px; }
+        #appStilWahl .sw-los { height: 54px; width: 100%; border: 0; background: #0F2745; color: #fff; font: 600 17px var(--font-body); }
+        body.dark #appStilWahl .sw-los { background: #45C2CE; color: #06262C; }
+        body.eckig #appStilWahl .sw-los { border-radius: 12px !important; }
+        /* Grosse Anzeige (Einstellungen -> Anzeigegroesse): zu schmal fuer
+           zwei Karten nebeneinander - dann untereinander, Bild links. */
+        #appStilWahl { container-type: inline-size; }
+        @container (max-width: 280px) {
+            #appStilWahl .sw-wahl { grid-template-columns: minmax(0, 1fr); }
+            #appStilWahl .sw-karte { display: grid; grid-template-columns: 42% minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 12px; row-gap: 6px; align-items: start; }
+            #appStilWahl .sw-karte .swp-rahmen { grid-row: 1 / span 2; }
+        }
+        /* ================================================================
+           VORSCHAU-HANDYS (Stilwahl und Einstellungen)          (30.09.2026)
+           Dietmar: "Beim Start muessen Bilder erscheinen ... Natuerlich mit
+           dem Namen von dem Benutzer, nicht mit meinem."
+           Gezeichnet in 360 x 640 Punkten, verkleinert per transform
+           (vorschauSkalieren). Sachlich eckig wie in der App, Verspielt rund.
+           ================================================================ */
+        .swp-rahmen { position: relative; width: 100%; aspect-ratio: 360 / 640; overflow: hidden; border: 1.5px solid #D5DAE2; background: #F4F5F7; }
+        .swp-rahmen.kurz { aspect-ratio: 360 / 540; }
+        html.android-app body .swp-rahmen { border-radius: 12% / 6.75% !important; }      /* waechst mit dem Bild */
+        html.android-app body .swp-rahmen.kurz { border-radius: 12% / 8% !important; }
+        body.dark .swp-rahmen { border-color: #33415A; background: #0C121C; }
+        .swp { position: absolute; left: 0; top: 0; width: 360px; height: 640px; transform-origin: 0 0; overflow: hidden; font-family: var(--font-body); color: #0F1728; text-align: left; pointer-events: none;
+               background: #F4F5F7; --s-fl2: #E9ECF1; --s-akzent: #0B8796; --s-amber: #FFA41B; }
+        .swp i { font-style: normal; }
+        .swp-status { height: 34px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; font: 600 14px var(--font-body); }
+        .swp-status .r { display: flex; gap: 7px; font-size: 12px; }
+        .swp-in { padding: 8px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+        .swp-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; }
+        .swp-kopf > b { font: 600 22px/1.2 var(--font-body); letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .swp-av { width: 38px; height: 38px; flex: none; display: inline-flex; align-items: center; justify-content: center; font: 700 16px var(--font-body); color: #fff; background: #10233F; position: relative; }
+        .swp-chips { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+        .swp-chip { height: 34px; padding: 0 12px; flex: none; display: inline-flex; align-items: center; gap: 7px; font: 600 14px var(--font-body); background: #fff; border: 1px solid #DDE2E9; }
+        .swp-chip .fa-graduation-cap { color: #0B8796; }
+        .swp-chip .fa-chevron-down { font-size: 10px; color: #7A8494; }
+        .swp-leise { font-size: 13px; color: #5B6474; overflow: hidden; text-overflow: ellipsis; }
+        .swp-karte { background: #fff; border: 1px solid #E3E6EB; padding: 14px 16px; }
+        .swp-l { font-size: 13px; color: #7A8494; font-weight: 500; }
+        .swp-h { font: 600 21px/1.2 var(--font-body); letter-spacing: -0.3px; margin: 3px 0 10px; }
+        .swp-w { display: flex; gap: 6px; margin-bottom: 12px; }
+        .swp-w span { font-size: 13px; padding: 6px 10px; background: #EEF0F3; color: #3D4656; }
+        .swp-knopf { height: 44px; display: flex; align-items: center; justify-content: center; gap: 9px; font: 600 16px var(--font-body); background: #10233F; color: #fff; }
+        .swp-tag { display: flex; align-items: center; gap: 14px; position: relative; }
+        .swp-tag svg { flex: none; }
+        .swp-rz { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 66px; text-align: center; line-height: 1.05; }
+        .swp-rz b { display: block; font: 700 18px var(--font-body); }
+        .swp-rz small { font-size: 10px; color: #7A8494; }
+        .swp-tag > div:last-child b { display: block; font: 600 15px/1.3 var(--font-body); }
+        .swp-tag > div:last-child small { display: block; font-size: 13px; color: #5B6474; margin-top: 3px; }
+        .swp-tag .fa-calendar-check { color: #D08A00; }
+        .swp-ue { font-size: 13px; font-weight: 600; color: #7A8494; margin: 2px 0 -4px 2px; }
+        .swp-liste { background: #fff; border: 1px solid #E3E6EB; }
+        .swp-z { height: 50px; display: flex; align-items: center; gap: 14px; padding: 0 16px; font-size: 15px; }
+        .swp-z + .swp-z { border-top: 1px solid #EDEFF2; }
+        .swp-z > i { width: 18px; text-align: center; color: #0B8796; }
+        .swp-z span { flex: 1; }
+        .swp-z em { font-style: normal; color: #5B6474; display: flex; align-items: center; gap: 8px; }
+        .swp-z em i { font-size: 10px; color: #9AA3B2; }
+        .swp-navi { position: absolute; left: 0; right: 0; bottom: 0; height: 58px; display: flex; justify-content: space-around; align-items: center; background: #fff; border-top: 1px solid #E3E6EB; font-size: 10.5px; color: #7A8494; }
+        .swp-navi span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .swp-navi i { font-size: 16px; }
+        .swp-navi .an { color: #0F1728; font-weight: 600; }
+        .swp-navi .an i { color: #0B8796; }
+        /* Verspielt */
+        .swp.v { background: linear-gradient(168deg, #D9F3FA 0%, #E9EEFF 50%, #F3ECFF 100%); --s-fl2: rgba(15,23,40,0.08); }
+        .swp.v .swp-kopf { justify-content: flex-start; }
+        .swp.v .swp-av { width: 44px; height: 44px; background: linear-gradient(145deg, #FFB36B, #FF6B4A); box-shadow: 0 0 0 3px #fff, 0 4px 10px rgba(255,107,74,0.35); font-size: 18px; }
+        .swp.v .swp-av em { position: absolute; right: -7px; bottom: -5px; font: 700 9px var(--font-mono); font-style: normal; padding: 2px 4px; background: #16C2B5; color: #062A2C; border: 1.5px solid #fff; }
+        .swp-gruss { flex: 1; min-width: 0; line-height: 1.15; }
+        .swp-gruss small { display: block; font-size: 12.5px; color: #4E5A70; }
+        .swp-gruss b { display: block; font: 700 19px var(--font-display); letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .swp-onair { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; flex: none; background: linear-gradient(180deg, #3A0B14, #25060C); border: 1px solid rgba(255,77,109,0.6);
+                     color: #FF6B86; font: 600 11px var(--font-mono); letter-spacing: 1.2px; box-shadow: 0 0 14px rgba(255,60,95,0.45); }
+        .swp-onair i { width: 7px; height: 7px; background: #FF4D6D; box-shadow: 0 0 8px #FF4D6D; }
+        .swp-onair b { font: 700 14px var(--font-display); color: #fff; letter-spacing: 0; }
+        .swp.v .swp-chip { background: rgba(255,255,255,0.85); border-color: rgba(15,23,40,0.08); }
+        .swp.v .swp-chip .fa-bolt { color: #FFA41B; }
+        .swp-held { position: relative; overflow: hidden; padding: 16px; color: #fff;
+                    background: radial-gradient(120% 90% at 100% 0%, rgba(160,132,255,0.95) 0%, transparent 55%), linear-gradient(140deg, #0E7FA6 0%, #1564C9 55%, #5B3FE0 100%); box-shadow: 0 14px 30px rgba(38,80,220,0.35); }
+        .swp-held::before { content: ""; position: absolute; inset: 0; background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) 0 1.5px, transparent 1.5px 18px); }
+        .swp-held .swp-l { position: relative; color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+        .swp-held .swp-h { position: relative; color: #fff; font: 700 22px/1.15 var(--font-display); max-width: 190px; margin: 4px 0 10px; }
+        .swp-held .swp-w { position: relative; }
+        .swp-held .swp-w span { background: rgba(255,255,255,0.16); color: #fff; }
+        .swp-mk { position: absolute; right: 10px; top: 10px; width: 92px; }
+        .swp-held .swp-knopf { position: relative; background: linear-gradient(180deg, #FFFFFF, #E4EEFF); color: #0B2A63; font-weight: 700; box-shadow: 0 4px 0 rgba(10,30,80,0.35); }
+        .swp.v .swp-karte { background: rgba(255,255,255,0.9); border-color: rgba(15,23,40,0.06); box-shadow: 0 8px 20px rgba(40,60,120,0.08); }
+        .swp.v .swp-rz { width: 86px; }
+        .swp.v .swp-rz b { font: 700 21px var(--font-display); }
+        .swp-bel { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 11.5px; font-weight: 700; color: #E08A00; background: rgba(255,164,27,0.16); padding: 4px 8px; }
+        .swp-kach { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .swp-kach > div { position: relative; background: rgba(255,255,255,0.9); border: 1px solid rgba(15,23,40,0.06); padding: 12px; box-shadow: 0 8px 20px rgba(40,60,120,0.08); display: flex; flex-direction: column; gap: 2px; }
+        .swp-kach .ah-ico { width: 38px; height: 38px; font-size: 16px; margin-bottom: 7px; }
+        .swp-kach em { position: absolute; right: 12px; top: 10px; font: 700 22px var(--font-display); font-style: normal; }
+        .swp-kach em.kl { font-size: 14px; color: #5B6474; top: 14px; }
+        .swp-kach b { font-size: 13.5px; }
+        .swp-kach small { font-size: 11px; color: #5B6474; }
+        .swp.v .swp-navi { left: 12px; right: 12px; bottom: 10px; height: 56px; background: rgba(255,255,255,0.92); border: 1px solid rgba(15,23,40,0.08); box-shadow: 0 10px 24px rgba(40,60,120,0.15); }
+        /* Der Roboter in der Vorschau winkt immer wieder */
+        .swp .mk.winkt .mk-arm-r { animation: swpWinken 3.4s ease-in-out infinite; }
+        @keyframes swpWinken { 0%, 52%, 100% { transform: rotate(-28deg); } 8% { transform: rotate(-128deg); } 14% { transform: rotate(-154deg); } 20% { transform: rotate(-126deg); }
+                               26% { transform: rotate(-154deg); } 32% { transform: rotate(-126deg); } 38% { transform: rotate(-150deg); } 46% { transform: rotate(-118deg); } }
+        /* Rund in Verspielt, auch wenn der Rest eckig ist */
+        html.android-app body .swp.v .swp-av { border-radius: 50% !important; }
+        html.android-app body .swp.v .swp-av em { border-radius: 6px !important; }
+        html.android-app body .swp.v .swp-onair { border-radius: 10px !important; }
+        html.android-app body .swp.v .swp-onair i { border-radius: 50% !important; }
+        html.android-app body .swp.v .swp-chip { border-radius: 17px !important; }
+        html.android-app body .swp.v .swp-held { border-radius: 24px !important; }
+        html.android-app body .swp.v .swp-w span { border-radius: 10px !important; }
+        html.android-app body .swp.v .swp-knopf { border-radius: 16px !important; }
+        html.android-app body .swp.v .swp-karte, html.android-app body .swp.v .swp-kach > div { border-radius: 22px !important; }
+        html.android-app body .swp.v .ah-ico { border-radius: 13px !important; }
+        html.android-app body .swp.v .swp-bel { border-radius: 9px !important; }
+        html.android-app body .swp.v .swp-navi { border-radius: 22px !important; }
+        /* Dunkel */
+        body.dark .swp.s { background: #0C121C; color: #F2F4F7; --s-fl2: #1E2838; --s-akzent: #45C2CE; }
+        body.dark .swp.s .swp-chip, body.dark .swp.s .swp-karte, body.dark .swp.s .swp-liste, body.dark .swp.s .swp-navi { background: #141C2A; border-color: #253247; }
+        body.dark .swp.s .swp-w span { background: #1E2838; color: #C9D1DD; }
+        body.dark .swp.s .swp-knopf, body.dark .swp.s .swp-av { background: #45C2CE; color: #06262C; }
+        body.dark .swp.s .swp-z + .swp-z { border-color: #1F2A3B; }
+        body.dark .swp .swp-leise, body.dark .swp .swp-z em, body.dark .swp .swp-tag > div:last-child small, body.dark .swp .swp-kach small, body.dark .swp .swp-kach em.kl, body.dark .swp .swp-gruss small { color: #9AA6B8; }
+        body.dark .swp .swp-navi .an { color: #F2F4F7; }
+        body.dark .swp.v { background: radial-gradient(90% 60% at 10% 0%, rgba(34,211,238,0.22), transparent 60%), radial-gradient(90% 60% at 100% 100%, rgba(139,92,246,0.25), transparent 60%), #070B17; color: #F3F6FF; --s-fl2: rgba(255,255,255,0.1); }
+        body.dark .swp.v .swp-chip, body.dark .swp.v .swp-karte, body.dark .swp.v .swp-kach > div, body.dark .swp.v .swp-navi { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); box-shadow: none; }
+        body.dark .swp.v .swp-av { box-shadow: 0 0 0 3px #070B17; }
+
+        /* ---------- Einstellungen: Stil, Design, Tagesziel ---------- */
+        html.android-app .nur-pc { display: none !important; }
+        .app-stil-wahl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+        .app-stil-wahl .sw-karte { border: 2px solid var(--line); background: var(--card-bg); padding: 8px 8px 10px; display: flex; flex-direction: column; gap: 8px; font-family: inherit; color: var(--ink); cursor: pointer; }
+        .app-stil-wahl .sw-karte.an { border-color: var(--tuerkis); box-shadow: 0 0 0 3px rgba(10,156,176,0.18); }
+        .app-stil-wahl .sw-karte > b { font-size: 0.92rem; }
+        body.eckig.app-rund .app-stil-wahl .sw-karte { border-radius: 14px !important; }
+        .app-seg { display: flex; gap: 4px; background: rgba(15,39,69,0.06); padding: 3px; }
+        body.dark .app-seg { background: rgba(255,255,255,0.07); }
+        .app-seg button { flex: 1; height: 38px; border: 0; background: none; font: 600 0.88rem var(--font-body); color: var(--muted); cursor: pointer; }
+        .app-seg button.an { background: var(--card-bg); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.14); }
+        body.eckig.app-rund .app-seg { border-radius: 12px !important; }
+        body.eckig.app-rund .app-seg button { border-radius: 9px !important; }
+
+        /* ================================================================
+           FUNKI, DER KLEINE HELFER (nur Stil Verspielt)       (30.09.2026)
+           Dietmar: "Ich moechte, dass er ueber den Bildschirm tanzt und
+           vielleicht auch ein paar Tipps gibt und sagt, schau mal hier und
+           schau mal da. Ich bin dein Roboter, ich helfe dir. ... Bei
+           Jugendlichen so ab neun Jahren."
+           ================================================================ */
+        #roboHelfer { position: fixed; left: 0; top: 0; z-index: 99986; width: 92px; display: none; cursor: pointer;
+                      transition: transform 0.75s cubic-bezier(0.34, 0.9, 0.3, 1.15); will-change: transform; -webkit-tap-highlight-color: transparent; }
+        html.android-app.stil-verspielt #roboHelfer.da { display: block; }
+        #roboHelfer .mk { width: 92px; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.3)); }
+        #roboHelfer .robo-hopp { transform-origin: 50% 100%; }
+        #roboHelfer.huepft .robo-hopp { animation: roboHuepf 0.75s ease-in-out; }
+        #roboHelfer.tanzt .robo-hopp { animation: roboTanz 1.1s ease-in-out 2; }
+        @keyframes roboHuepf { 0% { transform: translateY(0) scale(1, 1); } 12% { transform: translateY(0) scale(1.08, 0.9); }
+                               45% { transform: translateY(-42px) rotate(-8deg) scale(0.96, 1.05); } 75% { transform: translateY(-8px) rotate(5deg); }
+                               90% { transform: translateY(0) scale(1.06, 0.93); } 100% { transform: translateY(0) scale(1, 1); } }
+        @keyframes roboTanz { 0%, 100% { transform: rotate(0) translateY(0); } 15% { transform: rotate(-14deg) translateY(-10px); }
+                              30% { transform: rotate(0) translateY(0) scale(1.06, 0.94); } 45% { transform: rotate(13deg) translateY(-12px); }
+                              60% { transform: rotate(0) translateY(0) scale(1.06, 0.94); } 78% { transform: rotate(-8deg) translateY(-22px) scale(0.96, 1.05); } }
+        #roboHelfer.tanzt .mk-arm-l { animation: mkJubelL 0.55s ease-in-out 4; }
+        #roboHelfer.tanzt .mk-arm-r { animation: mkJubelR 0.55s ease-in-out 4; }
+        @keyframes mkJubelL { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(150deg); } }
+        @keyframes mkJubelR { 0%, 100% { transform: rotate(-28deg); } 50% { transform: rotate(-150deg); } }
+        #roboBlase { position: fixed; left: 0; top: 0; z-index: 99987; width: 250px; display: none; padding: 12px 14px 12px;
+                     background: var(--s-blatt); color: var(--s-text); border: 1px solid var(--s-rand2); box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+                     font: 500 15px/1.42 var(--font-body); }
+        html.android-app.stil-verspielt #roboBlase.da { display: block; animation: blaseAuf 0.22s ease-out; }
+        html.android-app body #roboBlase { border-radius: 18px !important; }
+        @keyframes blaseAuf { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+        #roboBlase .rb-kopf { font: 700 11.5px var(--font-display); color: var(--s-akzent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 3px; }
+        #roboBlase .rb-knoepfe { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+        #roboBlase .rb-knoepfe button { height: 38px; padding: 0 14px; border: 0; font: 700 14px var(--font-body); cursor: pointer; }
+        html.android-app body #roboBlase .rb-knoepfe button { border-radius: 12px !important; }
+        #roboBlase .rb-haupt { background: var(--s-haupt); color: var(--s-auf-haupt); box-shadow: 0 3px 0 var(--s-haupt-tief); }
+        #roboBlase .rb-leise { background: var(--s-fl2); color: var(--s-text); }
+        #roboBlase .rb-zahl { margin-left: auto; align-self: center; font-size: 12px; color: var(--s-text3); }
+        #roboRing { position: fixed; left: 0; top: 0; z-index: 99985; pointer-events: none; display: none;
+                    border: 3px solid var(--s-amber); box-shadow: 0 0 0 4000px rgba(3, 8, 20, 0.45), 0 0 22px rgba(255, 181, 71, 0.8);
+                    transition: all 0.45s ease; animation: ringPuls 1.3s ease-in-out infinite; }
+        html.android-app body #roboRing { border-radius: 20px !important; }
+        html.android-app.stil-verspielt #roboRing.da { display: block; }
+        @keyframes ringPuls { 0%, 100% { outline: 0 solid rgba(255,181,71,0.5); outline-offset: 0; } 50% { outline: 6px solid rgba(255,181,71,0.25); outline-offset: 3px; } }
+        #appHeute .ah-mk.weg { visibility: hidden; }
+        html.android-app.stil-verspielt #appHeute .ah-mk { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        /* Zeigen: der Arm zur Seite des Ziels geht hoch. Winken wie in der Karte. */
+        #roboHelfer .mk-arm-l, #roboHelfer .mk-arm-r { transition: transform 0.35s ease; }
+        #roboHelfer.zeigt-l .mk-arm-l { transform: rotate(152deg); }
+        #roboHelfer.zeigt-r .mk-arm-r { transform: rotate(-152deg); }
+        #roboHelfer.winkt .mk-arm-r { animation: mkWinken 0.62s ease-in-out 4; }
+        /* Die Sperre dahinter: dunkelt ab und faengt Tipper ab (im Rundgang
+           dunkelt der Ring selbst ab, dann ist sie durchsichtig). */
+        #roboSperre { position: fixed; inset: 0; z-index: 99984; display: none; background: rgba(3, 8, 20, 0.45); touch-action: none; -webkit-tap-highlight-color: transparent; }
+        html.android-app.stil-verspielt #roboSperre.da { display: block; animation: sperreAuf 0.3s ease-out; }
+        #roboSperre.klar { background: transparent; }
+        @keyframes sperreAuf { from { opacity: 0; } to { opacity: 1; } }
+        #roboBlase .rb-zu { position: absolute; right: 4px; top: 4px; width: 34px; height: 34px; border: 0; background: none; color: var(--s-text3); font-size: 15px; cursor: pointer; }
+        #roboBlase .rb-kopf { padding-right: 30px; }
+        #roboBlase .rb-tipp { display: block; margin-top: 9px; padding: 9px 11px; background: var(--s-fl2); font-size: 14px; line-height: 1.42; }
+        html.android-app body #roboBlase .rb-tipp { border-radius: 12px !important; }
+        /* Der Zipfel der Sprechblase zeigt auf Funki */
+        #roboBlase::before { content: ""; position: absolute; width: 14px; height: 14px; background: var(--s-blatt); border: 1px solid var(--s-rand2); transform: rotate(45deg); display: none; }
+        #roboBlase.zl::before { display: block; left: -8px; top: var(--zy, 30px); border-top: 0; border-right: 0; }
+        #roboBlase.zr::before { display: block; right: -8px; top: var(--zy, 30px); border-left: 0; border-bottom: 0; }
+        #roboBlase.zo::before { display: block; left: var(--zx, calc(50% - 8px)); top: -8px; border-right: 0; border-bottom: 0; }
+        #roboBlase.zu::before { display: block; left: var(--zx, calc(50% - 8px)); bottom: -8px; border-top: 0; border-left: 0; }
+        html.android-app .nur-verspielt { display: none; }
+        html.android-app.stil-verspielt .nur-verspielt { display: block; }
+        @media (prefers-reduced-motion: reduce) { #roboHelfer, #roboHelfer * , #roboRing, #roboSperre { animation: none !important; transition: none !important; } }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -21441,7 +22059,7 @@ function updateFensterBauen(){
       + '<div id="updateSatz" style="padding:0 1.3rem; font-size:0.9rem; line-height:1.6;"></div>'
 
       // Was sich geaendert hat
-      + '<div style="padding:0.85rem 1.3rem 0; font-size:0.74rem; font-weight:700; letter-spacing:0.05em; '
+      + '<div id="updateListeKopf" style="padding:0.85rem 1.3rem 0; font-size:0.74rem; font-weight:700; letter-spacing:0.05em; '
       + 'text-transform:uppercase; color:var(--muted);">Was sich geändert hat</div>'
       + '<div id="updateListe" tabindex="0" style="margin:0.35rem 1.3rem 0; flex:1 1 auto; min-height:110px; '
       + 'max-height:calc(38vh / var(--afu-zoom, 1)); overflow-y:auto; border:1px solid var(--line); border-radius:10px; '
@@ -21482,6 +22100,9 @@ function updateDatumDeutsch(iso){
 
 function updateListeHtml(l){
     const a = l.aenderungen || [];
+    if(!a.length && updateInApp()){
+        return '<div style="color:var(--muted);">Kleine Verbesserungen und Berichtigungen – etwa an Fragen, Erklärungen oder Bildern.</div>';
+    }
     if(!a.length){
         const dateien = l.anzahl + (l.anzahl === 1 ? ' Datei' : ' Dateien');
         return '<div style="color:var(--muted);">'
@@ -21514,9 +22135,10 @@ function updateFensterZeigen(l){
     const neu = l.versionDort, hier = l.versionHier;
     const neueNummer = !!(neu && hier && neu !== hier) || !!(neu && !hier);
 
-    document.getElementById('updateTitel').textContent = neueNummer
-        ? 'Neue Version des Amateurfunk-Trainers'
-        : 'Aktualisierte Dateien für den Amateurfunk-Trainer';
+    const inApp = updateInApp();
+    document.getElementById('updateTitel').textContent = inApp
+        ? 'Neues Update verfügbar'
+        : (neueNummer ? 'Neue Version des Amateurfunk-Trainers' : 'Aktualisierte Dateien für den Amateurfunk-Trainer');
 
     let satz;
     if(neu && hier && neu !== hier){
@@ -21528,11 +22150,17 @@ function updateFensterZeigen(l){
         satz = 'Bei GitHub liegen <b>' + l.anzahl + (l.anzahl === 1 ? ' berichtigte Datei' : ' berichtigte Dateien') + '</b>'
              + (hier ? ' für Version ' + updateEsc(hier) + ' — die Version, die du gerade benutzt.' : '.');
     }
-    if((l.programm || []).length){
+    if(inApp){
+        // Wie bei jeder App: was da ist, nicht woher es kommt.
+        satz = (neu && hier && neu !== hier)
+            ? 'Version <b>' + updateEsc(neu) + '</b> ist da. Du hast gerade <b>' + updateEsc(hier) + '</b>.'
+            : (neu && !hier ? 'Version <b>' + updateEsc(neu) + '</b> ist da.' : 'Es gibt Verbesserungen für deinen Trainer.');
+    }
+    if(!inApp && (l.programm || []).length){
         satz += '<div style="margin-top:0.4rem; font-size:0.82rem; color:var(--muted);">'
               + 'Programmdateien sind dabei — danach muss der Trainer einmal neu gestartet werden.</div>';
     }
-    if(l.eigene){
+    if(l.eigene && !inApp){
         satz += '<div style="margin-top:0.4rem; font-size:0.82rem; color:var(--muted);">'
               + l.eigene + (l.eigene === 1 ? ' Datei ist' : ' Dateien sind') + ' hier neuer als bei GitHub — die bleiben unangetastet.</div>';
     }
@@ -21562,10 +22190,33 @@ function updateFensterZeigen(l){
     });
     document.getElementById('updateZu').style.display = 'none';
 
+    // ================================================================
+    //  IN DER APP: "INSTALLIEREN ODER VERWERFEN"         (30.09.2026)
+    //  Dietmar: "ich wuerde mir wuenschen, dass wenn wir ein Update
+    //  machen, dann nicht GitHub Updater dasteht, sondern einfach nur, es
+    //  gibt ein neues Update, installieren oder verwerfen. So wie man das
+    //  bei jeder anderen App auch kennt." Also: kein GitHub, kein
+    //  Haekchen, zwei Knoepfe. "Verwerfen" schliesst - beim naechsten
+    //  Start fragt die App wieder, wie "Spaeter" am PC. Am PC bleibt das
+    //  Fenster, wie es ist. (Kommt die App in den Play Store, faellt das
+    //  Fenster dort ganz weg - dann aktualisiert der Store.)
+    // ================================================================
+    const kopf = document.getElementById('updateListeKopf');
+    if(kopf) kopf.textContent = inApp ? 'Was ist neu' : 'Was sich geändert hat';
+    document.getElementById('updateSpaeter').textContent = inApp ? 'Verwerfen' : 'Später';
+    document.getElementById('updateJetzt').innerHTML = inApp
+        ? '<i class="fas fa-download"></i> Installieren'
+        : '<i class="fas fa-cloud-arrow-down"></i> Jetzt aktualisieren';
+    if(inApp){
+        document.getElementById('updateSeite').style.display = 'none';
+        document.getElementById('updateStummZeile').style.display = 'none';
+    }
+
     m.style.display = 'flex';
     try{ document.getElementById('updateJetzt').focus(); }catch(e){}
 }
 window.updateFensterZeigen = updateFensterZeigen;
+function updateInApp(){ return document.documentElement.classList.contains('android-app'); }
 
 function updateFensterSchliessen(){
     if(updateLaeuft) return;      // waehrend des Holens bleibt es auf
@@ -21631,7 +22282,9 @@ async function updateJetzt(){
         const k = document.getElementById(id); k.disabled = true; k.style.opacity = '0.45'; k.style.cursor = 'default';
     });
     if(kasten) kasten.disabled = true;
-    const zeile = (n, g) => '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Wird geholt … '
+    const zeile = (n, g) => updateInApp()
+        ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Wird installiert … ' + (g ? Math.min(100, Math.round(n / g * 100)) + ' %' : '')
+        : '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Wird geholt … '
         + (g ? n + ' von ' + g + (g === 1 ? ' Datei' : ' Dateien') : '');
     status.innerHTML = zeile(0, 0);
 
@@ -21708,16 +22361,22 @@ function updateFertigZeigen(j){
         t = '<b style="color:var(--bad);">Das hat nicht geklappt.</b> Es wurde nichts verändert.'
           + (grund ? '<br>' + updateEsc(grund) : '');
     } else {
-        t = '<b style="color:#15703c;">Fertig — der Trainer ist auf dem neuesten Stand.</b>';
+        t = updateInApp()
+            ? '<b style="color:#15703c;">Update installiert.</b>'
+            : '<b style="color:#15703c;">Fertig — der Trainer ist auf dem neuesten Stand.</b>';
         if(misslungen) t += '<br><span style="color:#8a6d00;">' + misslungen + ' Datei(en) blieben zurück: '
                           + updateEsc((j.fehler[0] && j.fehler[0].grund) || '') + '</span>';
         if(j.probelauf){
             t += '<br><span style="color:#8a5a12;">Probelauf — es wurde nichts geholt und nichts geschrieben.</span>';
         } else if(j.neustartNoetig && window.AndroidApp && typeof AndroidApp.neuStarten === 'function'){
             // In der Android-App startet die App sich selbst neu (29.09.2026).
-            t += '<br>Damit das Programm die neuen Dateien lädt, startet die App einmal neu.'
+            // Seit 30.09.2026 von allein nach zwei Sekunden - wer
+            // "Installieren" tippt, hat zugestimmt. Der Knopf bleibt als
+            // Rueckfall, falls es nicht klappt.
+            t += '<br>Die App startet jetzt einmal neu.'
                + '<br><button type="button" class="btn-lernstand" style="margin-top:0.6rem;" onclick="try{AndroidApp.neuStarten();}catch(e){}">'
                + '<i class="fas fa-rotate"></i> Jetzt neu starten</button>';
+            setTimeout(() => { try{ AndroidApp.neuStarten(); }catch(e){} }, 2000);
         } else if(j.neustartNoetig){
             t += '<br>Bitte den Trainer einmal <b>beenden und neu starten</b>, damit das Programm die neuen Dateien lädt.';
         } else {
@@ -29549,9 +30208,13 @@ function einstBlaetterFuellen(){
           + 'onchange="vollbildAutoSetzen(this.checked)">'
           + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beim Öffnen gleich ins Vollbild</span></label>'
           + '<div id="einstVollbildText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>')
-      + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand.',
+      // In der App heisst es seit dem 30.09.2026 "Stil der App" und "Hell oder
+      // dunkel" (siehe ZWEI STILE FUER DIE APP) - die sechs Farbstile gibt es
+      // nur noch am PC.
+      + '<div class="nur-pc">' + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
-          + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>')
+          + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>') + '</div>'
+      + (typeof window.appStilEinstHtml === 'function' ? window.appStilEinstHtml() : '')
       // Form - nur in der App (30.09.2026), siehe appFormSetzen()
       + '<div class="nur-app">' + einstKasten('Form',
             'Eckig wie am PC oder rund wie bei vielen Android-Apps. Gilt für Knöpfe, Felder und Karten – '
@@ -34752,6 +35415,16 @@ window.anzeigeAnwenden = anzeigeAnwenden;
 // ============================================================================
 function anzeigeFuerFrageNachgeben(){
     try{
+        // IN DER APP GIBT DIE ANZEIGE NICHT NACH            (30.09.2026)
+        // Dietmar: "Die Button bei den Fragen sollen fest fixiert sein. Wenn
+        // der Platz dafuer nicht langt, ist die Frage und die Antwort zum
+        // scrollen." Genau so ist die App gebaut: Zurueck/Weiter stehen fest
+        // unten, eine lange Frage rollt darunter durch. Ein Verkleinern der
+        // ganzen Seite braucht es dort nicht - und es schadete: Auf seinem
+        // Handy stand die Anzeige in einer Runde bei rund 85 Prozent, und
+        // die feste Leiste mit Zurueck/Weiter sass halb unter dem
+        // Bildschirmrand. Im Browser (PC und Handy) bleibt alles wie es war.
+        if(document.documentElement.classList.contains('android-app')) return;
         if(anzeigeWahl() !== 'auto') return;
         if(!document.body.classList.contains('runde-laeuft')) return;
         if(typeof fragenPasstInsFenster !== 'function') return;
@@ -35267,7 +35940,10 @@ function openLightbox(src, caption) {
 function closeLightbox() {
     const overlay = document.getElementById('lightboxOverlay');
     overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
+    // Leer statt 'auto' (30.09.2026): 'auto' blieb danach fest am body
+    // stehen und ueberschrieb, was das Stylesheet fuer den body vorsieht.
+    // Leer gibt die Seite so zurueck, wie sie vor dem Bild war.
+    document.body.style.overflow = '';
 }
 
 document.addEventListener('keydown', function(e) {
@@ -36417,7 +37093,7 @@ function closeVideoModal() {
     const iframe = document.getElementById('videoModalIframe');
     if (iframe) iframe.src = '';
     if (modal) modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = '';   // leer statt 'auto', siehe closeLightbox()
 }
 
 window.printExam = printExam;
@@ -44724,8 +45400,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Fortschritt in der unteren Leiste, Suche und Chat oben, Info und
     // Unterricht unter "Mehr". Am PC sind sie unsichtbar und fallen weg.
     const ZIELE = {
-        start: ['#startBtn'], auswahl: ['#filterPart', '#filterPart + select'], fehler: ['#repeatErrorsBtn'],
-        lernbedarf: ['#difficultBtn'], auffrischen: ['#auffrischenBtn'], blaettern: ['#durchsichtBtn'],
+        start: ['#ahStart', '#startBtn'], auswahl: ['#ahWahl', '#filterPart', '#filterPart + select'], fehler: ['#ahFehler', '#ahKacheln [data-ziel="ahFehler"]', '#repeatErrorsBtn'],
+        lernbedarf: ['#ahLernbedarf', '#ahKacheln [data-ziel="ahLernbedarf"]', '#difficultBtn'], auffrischen: ['#ahAuffrischen', '#auffrischenBtn'], blaettern: ['#ahBlaettern', '#ahKacheln [data-ziel="ahBlaettern"]', '#durchsichtBtn'],
         statistik: ['#appNavi [data-bereich="fortschritt"]', '#statistikBtn'],
         pruefung: ['#appNavi [data-bereich="pruefung"]', '#examSimulatorBtn'],
         gruppenraum: ['#appNavi [data-bereich="gruppe"]', '#duoBtn'],
@@ -45050,8 +45726,23 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const b = e.target.closest('button[data-bereich]');
         if(b) bereich(b.dataset.bereich);
     });
+    // Beim Scrollen nach unten macht die Leiste Platz, beim Scrollen nach
+    // oben kommt sie sofort wieder (30.09.2026). Dietmar: "Wenn ich nach
+    // unten scrolle muss diese Leiste auch wieder verschwinden mit dem
+    // Menue." Ganz oben (die ersten 60 Punkte) ist sie immer zu sehen.
+    tu(() => {
+        let letzte = window.scrollY || 0;
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY || 0, d = y - letzte;
+            if(Math.abs(d) < 6 && y > 60) return;
+            letzte = y;
+            const weg = d > 0 && y > 60;
+            if(D.body.classList.contains('app-navi-weg') !== weg) D.body.classList.toggle('app-navi-weg', weg);
+        }, { passive: true });
+    });
     function bereich(was){
         sucheZu();
+        D.body.classList.remove('app-navi-weg');
         if(was === 'mehr'){ mehrUmschalten(); return; }
         mehrZu();
         if(was === 'lernen'){ try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, 0); } return; }
@@ -45068,10 +45759,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Übungszeit & Verlauf', 'far fa-clock', 'Wie lange du geübt hast', () => uebungszeitOeffnen()],
         ['Unterricht', 'fas fa-chalkboard-user', 'Die Lektionen der Reihe nach, auch am Beamer', () => unterrichtOeffnen()],
         ['Server', 'fas fa-server', 'Andere über den Internet-Link einladen', () => serverFensterOeffnen(), () => H.classList.contains('android-tunnel')],
-        ['Farbstil & Form', 'fas fa-palette', 'Hell, Dunkel, Grün … – eckig oder rund', () => einstellungenOeffnen('allgemein')],
+        ['Darstellung', 'fas fa-palette', 'Sachlich oder verspielt, hell oder dunkel, eckig oder rund', () => einstellungenOeffnen('allgemein')],
         ['Rundgang', 'fas fa-route', 'Die wichtigsten Knöpfe erklärt', () => window.rundgangStarten && window.rundgangStarten()],
         ['Info & Hilfe', 'fas fa-circle-info', 'Anleitung, Version, Updates', () => infoOeffnen()],
-        ['Facebook-Gruppe', 'fab fa-facebook', 'Austausch mit anderen Lernenden', () => klick('facebookBtn')]
+        // Dietmar: "Facebook Gruppe stimmt auch nicht ich habe keine Gruppe
+        // noch nicht es ist nur die Seite oder einfach auch nur Facebook."
+        ['Facebook', 'fab fa-facebook', 'Neuigkeiten rund ums Thema Amateurfunk', () => klick('facebookBtn')]
     ];
     const mehr = D.createElement('div');
     mehr.id = 'appMehr';
@@ -45165,11 +45858,39 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         z.textContent = n;
         z.classList.toggle('da', !!n && n !== '0');
     }
-    function nachziehen(){ tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); }
+    function rundeHoehe(){
+        // Wie hoch die Leiste mit Zurueck/Weiter wirklich ist - danach
+        // richtet sich der Platz unter der Frage (--app-runde-h). Mit
+        // groesserer Schrift wird sie hoeher, und dann darf sie nichts
+        // verdecken.
+        if(!D.body.classList.contains('runde-laeuft')) return;
+        const n = $('navArea');
+        if(!n) return;
+        const z = parseFloat(getComputedStyle(H).getPropertyValue('--afu-zoom')) || 1;
+        const h = Math.round(n.getBoundingClientRect().height / z);
+        if(h > 20 && H.style.getPropertyValue('--app-runde-h') !== h + 'px') H.style.setProperty('--app-runde-h', h + 'px');
+    }
+    function sperreLoesen(){
+        // SICHERHEITSNETZ FUERS SCROLLEN (30.09.2026). Die Fenster setzen
+        // beim Oeffnen body.style.overflow = 'hidden' - der Hintergrund soll
+        // nicht mitlaufen - und beim Schliessen wieder zurueck. Geht eines
+        // auf anderem Weg zu, bliebe die Seite gesperrt: kein Finger bewegt
+        // sie mehr. Ist kein Fenster mehr offen, wird die Sperre hier
+        // aufgehoben.
+        if(D.body.style.overflow !== 'hidden') return;
+        if(offeneFenster().length) return;
+        const lb = $('lightboxOverlay');
+        if(lb && lb.classList.contains('active')) return;
+        D.body.style.overflow = '';
+    }
+    // Ganz oben ist die untere Leiste immer da - auch wenn die Seite ohne
+    // Scroll-Ereignis nach oben gesprungen ist (neue Ansicht, Runde vorbei).
+    function leisteOben(){ if((window.scrollY || 0) <= 60) D.body.classList.remove('app-navi-weg'); }
+    function nachziehen(){ tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); tu(rundeHoehe); tu(sperreLoesen); tu(leisteOben); }
     nachziehen();
     setInterval(nachziehen, 1000);
     // Die Fragennummer oben sofort mitziehen, nicht erst nach einer Sekunde.
-    tu(() => { const q = $('qCounter'); if(q) new MutationObserver(() => tu(rundenText)).observe(q, { childList: true, characterData: true, subtree: true }); });
+    tu(() => { const q = $('qCounter'); if(q) new MutationObserver(() => { tu(rundenText); tu(rundeHoehe); }).observe(q, { childList: true, characterData: true, subtree: true }); });
 
     // Tastatur offen: die untere Leiste geht aus dem Weg (sie sass sonst
     // direkt ueber der Tastatur und nahm dem Eingabefeld den Platz).
@@ -45181,27 +45902,1122 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // ---------------- Android-Taste "Zurueck" ----------------
     // Die App fragt hier nach (MainActivity.onBackPressed). true heisst:
     // erledigt - sonst geht die App wie bisher in den Hintergrund.
+    // Alle offenen Fenster, das oberste zuerst. Zwei davon (Gruppenraum,
+    // Vorlese-Einstellungen) stehen in #app statt direkt im body.
+    function offeneFenster(){
+        return Array.from(D.querySelectorAll('body > div[id], body > section[id], #app > div[id]')).filter(el => {
+            if(el === mehr || el === such || el === navi) return false;
+            const st = getComputedStyle(el);
+            return st.position === 'fixed' && st.display !== 'none' && st.visibility !== 'hidden'
+                && el.offsetWidth > 100 && el.offsetHeight > 100 && /modal|fenster|overlay/i.test(el.id + ' ' + el.className);
+        }).sort((a, b) => (parseInt(getComputedStyle(b).zIndex, 10) || 0) - (parseInt(getComputedStyle(a).zIndex, 10) || 0));
+    }
+    // Der Schliessen-Knopf eines Fensters. Die meisten sind beschriftet
+    // (aria-label, .x-zu ...); manche sind nur ein Kreuz - etwa bei der
+    // Wahl der Klasse. Auch die werden gefunden.
+    function schliessKnopf(f){
+        const b = f.querySelector('.x-zu, [aria-label="Schließen"], [aria-label="Schliessen"], .modal-close, .close-btn, .lightbox-close, button[title="Schließen"]');
+        if(b) return b;
+        return Array.from(f.querySelectorAll('button')).find(k => /^[✕×✖xX]$/.test((k.textContent || '').trim())
+            || k.querySelector('i.fa-xmark, i.fa-times, i.fa-close')) || null;
+    }
     window.appZurueck = function(){
         try{
+            const pb = $('appPruefblatt');
+            if(pb){ pb.remove(); return true; }
             if(mehr.classList.contains('offen')){ mehrZu(); return true; }
             if(such.classList.contains('offen')){ sucheZu(); return true; }
             const lb = $('lightboxOverlay');
             if(lb && lb.classList.contains('active')){ closeLightbox(); return true; }
             if(D.body.classList.contains('app-chat-offen')){ chatZu(); return true; }
             // Das oberste offene Fenster ueber seinen eigenen Schliessen-Knopf zu.
-            const offen = Array.from(D.querySelectorAll('body > div[id], body > section[id]')).filter(el => {
-                if(el === mehr || el === such || el === navi) return false;
-                const st = getComputedStyle(el);
-                return st.position === 'fixed' && st.display !== 'none' && st.visibility !== 'hidden'
-                    && el.offsetWidth > 100 && el.offsetHeight > 100 && /modal|fenster|overlay/i.test(el.id + ' ' + el.className);
-            }).sort((a, b) => (parseInt(getComputedStyle(b).zIndex, 10) || 0) - (parseInt(getComputedStyle(a).zIndex, 10) || 0));
-            for(const f of offen){
-                const zu = f.querySelector('.x-zu, [aria-label="Schließen"], [aria-label="Schliessen"], .modal-close, .close-btn, .lightbox-close, button[title="Schließen"]');
+            for(const f of offeneFenster()){
+                const zu = schliessKnopf(f);
                 if(zu){ zu.click(); return true; }
+                // Kein Knopf, aber manches Fenster schliesst beim Tippen neben
+                // den Kasten: genau das nachmachen.
+                f.click();
+                if(getComputedStyle(f).display === 'none') return true;
             }
         }catch(e){}
         return false;
     };
+
+    // ---------------- Pruefblatt (nur auf Wunsch) ----------------
+    // Lange (knapp eine Sekunde) auf den Namen oben druecken zeigt die Masse
+    // der Anzeige. Gedacht fuer ein Bildschirmfoto, falls auf einem Handy
+    // etwas nicht sitzt - nachmessen laesst sich das nur auf dem Geraet
+    // selbst. Wer nicht lange drueckt, sieht davon nie etwas. (30.09.2026)
+    tu(() => {
+        const t = leiste.querySelector('.al-titel');
+        let uhr = null;
+        const ab = () => { if(uhr){ clearTimeout(uhr); uhr = null; } };
+        t.addEventListener('touchstart', () => { ab(); uhr = setTimeout(() => { uhr = null; tu(pruefblatt); }, 900); }, { passive: true });
+        ['touchend', 'touchmove', 'touchcancel'].forEach(n => t.addEventListener(n, ab, { passive: true }));
+    });
+    function pruefblatt(){
+        const alt = $('appPruefblatt');
+        if(alt) alt.remove();
+        const vv = window.visualViewport || {};
+        const ov = e => { const s = getComputedStyle(e); return s.overflowX + '/' + s.overflowY; };
+        const W = H.clientWidth, breit = [];
+        D.querySelectorAll('body *').forEach(e => {
+            if(breit.length >= 5) return;
+            const s = getComputedStyle(e);
+            if(s.display === 'none' || s.position === 'fixed') return;
+            const b = e.getBoundingClientRect();
+            if(b.width > 0 && (b.right > W + 1 || b.left < -1)) breit.push((e.id ? '#' + e.id : e.tagName.toLowerCase()
+                + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : '')) + ' ' + Math.round(b.left) + '..' + Math.round(b.right));
+        });
+        const vp = D.querySelector('meta[name="viewport"]');
+        const zeilen = [
+            ['Fenster', innerWidth + ' x ' + innerHeight + ' (Dichte ' + window.devicePixelRatio + ')'],
+            ['Sichtbar', Math.round(vv.width || 0) + ' x ' + Math.round(vv.height || 0) + ', Zoom ' + (vv.scale || 1).toFixed(3) + ', versetzt ' + Math.round(vv.offsetLeft || 0) + '/' + Math.round(vv.offsetTop || 0)],
+            ['Seite', H.scrollWidth + ' x ' + H.scrollHeight + ', gescrollt ' + Math.round(window.scrollY)],
+            ['overflow', 'html ' + ov(H) + ', body ' + ov(D.body) + (D.body.style.overflow ? ' (Sperre: ' + D.body.style.overflow + ')' : '')],
+            ['Groesse', (H.style.zoom || '1') + ', Viewport: ' + (vp ? vp.content : '-')],
+            ['Leisten', ['appLeiste', 'appNavi', 'navArea'].map(id => { const e = $(id); if(!e) return id + ' -'; const b = e.getBoundingClientRect(); return id + ' ' + Math.round(b.top) + '-' + Math.round(b.bottom); }).join(', ')],
+            ['Zu breit', breit.join(', ') || 'nichts'],
+            ['Klassen', D.body.className],
+            ['WebView', (navigator.userAgent.match(/Chrome\/[\d.]+/) || ['?'])[0]]
+        ];
+        const d = D.createElement('div');
+        d.id = 'appPruefblatt';
+        d.style.cssText = 'position:fixed; left:8px; right:8px; top:64px; z-index:100100; background:#0f2745; color:#fff; '
+            + 'padding:12px 14px; font:12px/1.5 monospace; box-shadow:0 8px 30px rgba(0,0,0,0.4); word-break:break-word;';
+        d.innerHTML = zeilen.map(z => '<div><b style="color:#5fd3c4">' + z[0] + ':</b> '
+            + String(z[1]).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]) + '</div>').join('')
+            + '<div style="margin-top:8px; opacity:0.75;">Antippen schließt.</div>';
+        d.addEventListener('click', () => d.remove());
+        D.body.appendChild(d);
+    }
+})();
+</script>
+<script id="appStilSkript">
+// ================================================================
+//  ZWEI STILE FUER DIE APP - ETAPPE 1                   (30.09.2026)
+//  ----------------------------------------------------------------
+//  Siehe "ZWEI STILE FUER DIE APP" im Kopf der Seite. Hier:
+//    - Stil (sachlich/verspielt) und Design (hell/dunkel/wie Handy)
+//    - Tageszaehler, Serie und Punkte (neu, je Benutzer)
+//    - der neue Startbildschirm (#appHeute) und das Blatt "Neue Runde"
+//    - die Stilwahl beim ersten Oeffnen und der Kasten in den
+//      Einstellungen
+//  Alles nur in der App - am PC kehrt das Skript sofort um.
+// ================================================================
+(function(){
+    const D = document, H = D.documentElement;
+    if(!H.classList.contains('android-app')) return;
+    const $ = id => D.getElementById(id);
+    const tu = fn => { try{ return fn(); }catch(e){ console.warn('[STIL]', e && e.message); } };
+    const klick = id => { const e = $(id); if(e){ e.click(); return true; } return false; };
+    const lies = (k, v) => { try{ const x = localStorage.getItem(k); return x === null ? v : x; }catch(e){ return v; } };
+    const schreib = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+    // ---------------- Stil und Design ----------------
+    function stilIst(){ return lies('app_stil', 'sachlich') === 'verspielt' ? 'verspielt' : 'sachlich'; }
+    function stilSetzenApp(s){
+        s = s === 'verspielt' ? 'verspielt' : 'sachlich';
+        schreib('app_stil', s);
+        H.classList.toggle('stil-verspielt', s === 'verspielt');
+        H.classList.toggle('stil-sachlich', s === 'sachlich');
+        if(s !== 'verspielt') tu(() => roboHeim(true));
+        tu(einstNachziehen); tu(nachziehen);
+        tu(() => window.browserfarbeNachziehen && window.browserfarbeNachziehen());
+    }
+    window.appStilSetzen = stilSetzenApp;
+    // Hell / Dunkel / wie das Handy. Dahinter steht der bisherige Schalter
+    // (stilSetzen: 'light' oder 'dark'), damit alles, was den Dark Mode
+    // schon kennt - die Zeichnungen "kraeftig weiss" zum Beispiel -, so
+    // bleibt, wie es ist.
+    function designIst(){
+        const d = lies('app_design', '');
+        if(d === 'hell' || d === 'dunkel' || d === 'system') return d;
+        return lies('theme', 'light') === 'dark' ? 'dunkel' : 'hell';
+    }
+    const dunkelAbfrage = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function designAnwenden(){
+        const d = designIst();
+        const dunkel = d === 'dunkel' || (d === 'system' && !!(dunkelAbfrage && dunkelAbfrage.matches));
+        if(typeof window.stilSetzen === 'function') window.stilSetzen(dunkel ? 'dark' : 'light');
+        else D.body.classList.toggle('dark', dunkel);
+    }
+    function designSetzenApp(d){
+        if(d !== 'hell' && d !== 'dunkel' && d !== 'system') d = 'hell';
+        schreib('app_design', d);
+        designAnwenden(); tu(einstNachziehen); tu(nachziehen);
+    }
+    window.appDesignSetzen = designSetzenApp;
+    tu(() => { if(dunkelAbfrage) dunkelAbfrage.addEventListener('change', () => { if(designIst() === 'system') designAnwenden(); }); });
+    // Die frueheren Farbstile (Gruen, Blau, Orange, Grau) gibt es in der App
+    // nicht mehr - dort heisst es jetzt hell oder dunkel.
+    tu(() => {
+        const soll = designIst();
+        const dunkelSoll = soll === 'dunkel' || (soll === 'system' && !!(dunkelAbfrage && dunkelAbfrage.matches));
+        if(dunkelSoll !== D.body.classList.contains('dark') || !/^(light|dark)$/.test(lies('theme', 'light'))) designAnwenden();
+    });
+
+    // ---------------- Tageszaehler, Serie, Punkte ----------------
+    //  Neu am 30.09.2026. Je Benutzer im Browser der App:
+    //    amateurfunk_tagesfragen_<benutzer> = { "2026-09-30": 14, ... }
+    //    amateurfunk_xp_<benutzer>          = Punkte (richtig 10, falsch 2)
+    //  Fuer die Tage VOR heute zaehlt fuer die Serie auch die schon
+    //  gemessene Uebungszeit mit (amateurfunk_uebungszeit_) - so beginnt
+    //  niemand, der seit Wochen uebt, heute bei null.
+    const TAG_PREFIX = 'amateurfunk_tagesfragen_', XP_PREFIX = 'amateurfunk_xp_';
+    const benutzer = () => { try{ return String(currentUser); }catch(e){ return '1'; } };
+    const tagK = d => { try{ return tagSchluessel(d); }catch(e){ const x = d ? new Date(d) : new Date(); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); } };
+    function tagDaten(){ try{ return JSON.parse(localStorage.getItem(TAG_PREFIX + benutzer()) || '{}') || {}; }catch(e){ return {}; } }
+    function tagesziel(){ const z = parseInt(lies('app_tagesziel', '10'), 10); return [5, 10, 20, 25, 50].includes(z) ? z : 10; }
+    window.appTageszielSetzen = z => { schreib('app_tagesziel', String(z)); tu(einstNachziehen); tu(nachziehen); };
+    function heuteAnzahl(){ return tagDaten()[tagK()] || 0; }
+    function xpStand(){
+        let x = parseInt(lies(XP_PREFIX + benutzer(), ''), 10);
+        if(isNaN(x)){
+            // Einmaliger Anfang aus dem, was schon gemessen wurde
+            // (diagnoseDaten: je Frage die Zahl der Antworten, die letzten
+            // Fehlgriffe). Grob, aber fair: nicht bei null anfangen.
+            x = 0;
+            tu(() => {
+                for(const k in (diagnoseDaten || {})){
+                    const e = diagnoseDaten[k] || {};
+                    const n = e.n || 0, f = Math.min(n, (e.f || []).length);
+                    x += (n - f) * 10 + f * 2;
+                }
+            });
+            schreib(XP_PREFIX + benutzer(), String(x));
+        }
+        return x;
+    }
+    function antwortZaehlen(richtig){
+        const d = tagDaten(), t = tagK();
+        d[t] = (d[t] || 0) + 1;
+        // Nur die letzten 400 Tage behalten
+        const tage = Object.keys(d).sort();
+        while(tage.length > 400) delete d[tage.shift()];
+        schreib(TAG_PREFIX + benutzer(), JSON.stringify(d));
+        schreib(XP_PREFIX + benutzer(), String(xpStand() + (richtig ? 10 : 2)));
+    }
+    function tagZaehlt(t, d){
+        if((d[t] || 0) > 0) return true;
+        try{ return ((uebungsTage || {})[t] || 0) >= 60; }catch(e){ return false; }
+    }
+    function serie(){
+        const d = tagDaten(), tag = new Date();
+        let n = 0;
+        if(!tagZaehlt(tagK(tag), d)) tag.setDate(tag.getDate() - 1);   // heute noch offen: die Serie lebt noch
+        for(let i = 0; i < 1000 && tagZaehlt(tagK(tag), d); i++){ n++; tag.setDate(tag.getDate() - 1); }
+        return n;
+    }
+    // Stufe als Signalstaerke: S1 ... S9, danach S9+10 ... S9+60 dB
+    const STUFEN = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000, 6200, 7600, 9200];
+    function stufe(xp){
+        let i = 0;
+        while(i + 1 < STUFEN.length && xp >= STUFEN[i + 1]) i++;
+        const name = i < 9 ? 'S' + (i + 1) : 'S9+' + ((i - 8) * 10);
+        const naechste = STUFEN[i + 1];
+        return { name, bis: naechste ? naechste - xp : 0, naechsteName: i + 1 < 9 ? 'S' + (i + 2) : 'S9+' + ((i - 7) * 10) };
+    }
+    window.appSpielstand = () => ({ heute: heuteAnzahl(), ziel: tagesziel(), serie: serie(), xp: xpStand(), stufe: stufe(xpStand()).name });
+
+    // Jede Antwort zaehlt - eingehaengt in selectOption()
+    tu(() => {
+        const alt = window.selectOption;
+        if(typeof alt !== 'function') return;
+        window.selectOption = function(i){
+            let vorher = true, q = null;
+            try{ vorher = answered; q = currentQuestions[currentIndex]; }catch(e){}
+            const r = alt.apply(this, arguments);
+            try{ if(!vorher && answered && q && q.options && q.options[i]) { antwortZaehlen(!!q.options[i].correct); nachziehen(); } }catch(e){}
+            return r;
+        };
+    });
+
+    // ---------------- Das Maskottchen ----------------
+    let mkNr = 0;
+    function maskottchen(art){
+        const n = ++mkNr, k = 'mkK' + n, l = 'mkL' + n;
+        return '<div class="mk ' + (art || '') + '" aria-hidden="true"><svg viewBox="0 0 112 140">'
+          + '<defs><linearGradient id="' + k + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#46F0E0"/><stop offset="1" stop-color="#0B8FC4"/></linearGradient>'
+          + '<radialGradient id="' + l + '" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE29A"/><stop offset="1" stop-color="#FF9A1F"/></radialGradient></defs>'
+          + '<g class="mk-huepf">'
+          + '<g class="mk-antenne"><path class="mk-w1" d="M92 8 a14 14 0 0 1 0 20" stroke="#FFB547" stroke-width="3" fill="none" stroke-linecap="round"/>'
+          + '<path class="mk-w2" d="M99 2 a23 23 0 0 1 0 32" stroke="#FFB547" stroke-width="3" fill="none" stroke-linecap="round"/>'
+          + '<line x1="80" y1="36" x2="84" y2="15" stroke="#9FB3C8" stroke-width="4" stroke-linecap="round"/>'
+          + '<circle cx="84.5" cy="14" r="6.5" fill="url(#' + l + ')"/></g>'
+          + '<g class="mk-arm-l"><rect x="7.5" y="86" width="9" height="24" rx="4.5" fill="url(#' + k + ')"/></g>'
+          + '<g class="mk-arm-r"><rect x="95.5" y="86" width="9" height="24" rx="4.5" fill="url(#' + k + ')"/></g>'
+          + '<rect x="14" y="32" width="84" height="94" rx="24" fill="url(#' + k + ')"/>'
+          + '<rect x="14" y="32" width="84" height="94" rx="24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>'
+          + '<path d="M26 40 q30 -8 60 0" stroke="rgba(255,255,255,.45)" stroke-width="3" fill="none" stroke-linecap="round"/>'
+          + '<rect x="26" y="44" width="60" height="38" rx="13" fill="#0A1628"/>'
+          + '<ellipse cx="33" cy="72" rx="5" ry="3" fill="#FF6B86" opacity=".55"/><ellipse cx="79" cy="72" rx="5" ry="3" fill="#FF6B86" opacity=".55"/>'
+          + '<g class="mk-auge"><rect x="38" y="51" width="11" height="15" rx="5.5" fill="#fff"/><circle cx="46" cy="55" r="2.4" fill="#0A1628"/>'
+          + '<rect x="63" y="51" width="11" height="15" rx="5.5" fill="#fff"/><circle cx="71" cy="55" r="2.4" fill="#0A1628"/></g>'
+          + '<path d="M49 71 q7 6 14 0" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+          + '<g fill="rgba(3,40,50,.35)"><circle cx="36" cy="97" r="3"/><circle cx="46" cy="97" r="3"/><circle cx="56" cy="97" r="3"/><circle cx="36" cy="107" r="3"/><circle cx="46" cy="107" r="3"/><circle cx="56" cy="107" r="3"/></g>'
+          + '<circle cx="77" cy="102" r="9" fill="#0A6F92"/><circle cx="77" cy="102" r="9" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>'
+          + '<line x1="77" y1="102" x2="81" y2="96" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>'
+          + '<rect x="30" y="122" width="18" height="10" rx="5" fill="#0A7FA8"/><rect x="64" y="122" width="18" height="10" rx="5" fill="#0A7FA8"/>'
+          + '</g></svg></div>';
+    }
+    window.appMaskottchen = maskottchen;
+
+    // ---------------- Ring fuers Tagesziel ----------------
+    function ringSvg(anteil, gross){
+        const S = gross ? 86 : 66, dicke = gross ? 9 : 6, c = S / 2;
+        const welle = gross, a = welle ? 1.5 : 0, R = c - dicke / 2 - a - 1;
+        const farbe = gross ? 'var(--s-amber)' : 'var(--s-akzent)';
+        const p = Math.max(0, Math.min(1, anteil));
+        let d = '';
+        const bis = -Math.PI / 2 + Math.PI * 2 * p;
+        for(let t = -Math.PI / 2, i = 0; t <= bis + 0.0001; t += 0.03, i++){
+            const r = R + a * Math.sin(12 * (t + Math.PI / 2));
+            d += (i ? ' L' : 'M') + (c + r * Math.cos(t)).toFixed(2) + ',' + (c + r * Math.sin(t)).toFixed(2);
+        }
+        return '<svg width="' + S + '" height="' + S + '" viewBox="0 0 ' + S + ' ' + S + '">'
+          + '<circle cx="' + c + '" cy="' + c + '" r="' + R + '" fill="none" stroke="var(--s-fl2)" stroke-width="' + dicke + '"/>'
+          + (p > 0 ? '<path d="' + d + '" fill="none" stroke="' + farbe + '" stroke-width="' + dicke + '" stroke-linecap="round"'
+          + (gross ? ' style="filter:drop-shadow(0 0 6px rgba(255,170,40,.55))"' : '') + '/>' : '')
+          + '</svg>';
+    }
+
+    // ---------------- Der neue Startbildschirm ----------------
+    const heute = D.createElement('section');
+    heute.id = 'appHeute';
+    heute.setAttribute('aria-label', 'Start');
+    heute.innerHTML =
+        '<div class="ah-kopf"><div class="ah-gruss" id="ahGruss"><span class="gt" id="ahGrussZeit">Guten Tag</span><span class="name" id="ahGrussName"></span><small id="ahGrussName2"></small></div>'
+      + '<div class="ah-onair" id="ahOnAir"><span class="lampe"></span>ON AIR <b id="ahSerieZahl">0</b></div></div>'
+      + '<div class="ah-chips" id="ahChips"><span class="app-chip ah-xp" id="ahXp"><i class="fas fa-bolt"></i> <span id="ahXpText">0 XP</span></span>'
+      + '<button type="button" class="ah-termin" id="ahTermin"></button></div>'
+      + '<div class="ah-karte ah-runde" id="ahRunde">'
+      +   '<div class="ah-l" id="ahRundeL">Neue Runde</div>'
+      +   '<h2 id="ahOffen">Fragen üben</h2>'
+      +   '<div class="ah-wahl" id="ahWahl"><span class="w" id="ahWahlAnzahl"></span><span class="w" id="ahWahlTeil"></span><span class="w" id="ahWahlGelernt"></span>'
+      +   '<button type="button" class="aendern" id="ahAendern"><i class="fas fa-sliders"></i> Ändern</button></div>'
+      +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '</div>'
+      +   '<button type="button" class="ah-knopf" id="ahStart"><i class="fas fa-play"></i> <span id="ahStartText">Runde starten</span></button>'
+      + '</div>'
+      + '<div class="ah-karte ah-tag" id="ahTag"><div class="ah-ring" id="ahRing"></div>'
+      +   '<div><b class="t" id="ahTagText">Tagesziel</b><div class="ah-serie" id="ahSerie"><i class="fas fa-calendar-check"></i> <span id="ahSerieText"></span></div>'
+      +   '<div class="klein" id="ahTagUnter" style="font-size:13px;color:var(--s-text2);margin-top:3px"></div>'
+      +   '<span class="ah-belohnung" id="ahBelohnung"><i class="fas fa-tower-broadcast"></i> <span id="ahBelohnungText"></span></span></div></div>'
+      + '<div class="ah-ueber" id="ahUebenUeber">Üben</div>'
+      + '<div class="ah-liste" id="ahListe">'
+      +   '<button type="button" class="ah-zeile" id="ahFehler"><span class="sym"><i class="fas fa-rotate-left"></i></span><span class="t">Fehler üben</span><span class="w"><span id="ahFehlerZahl">0</span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahLernbedarf"><span class="sym"><i class="fas fa-list-check"></i></span><span class="t">Lernbedarf</span><span class="w"><span id="ahLernbedarfZahl">0</span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile aus" id="ahAuffrischen"><span class="sym"><i class="fas fa-rotate"></i></span><span class="t">Gelerntes auffrischen</span><span class="w"><span id="ahAuffrischenZahl">0</span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahPruefung"><span class="sym"><i class="fas fa-stopwatch"></i></span><span class="t">Prüfungssimulation</span><span class="w"><span id="ahPruefungText">3 × 45 min</span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahBlaettern"><span class="sym"><i class="fas fa-book"></i></span><span class="t" id="ahBlaetternText">Fragenkatalog blättern</span><span class="w"><span id="ahBlaetternZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
+      + '</div>'
+      + '<div class="ah-kacheln" id="ahKacheln">'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahLernbedarf"><div class="kz"><span class="ah-ico amber"><i class="fas fa-fire-flame-curved"></i></span><span class="anz" id="ahKLernbedarf">0</span></div><div><b>Lernbedarf</b><small>wackelige Fragen</small></div></button>'
+      +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Generalprobe</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
+      + '</div>'
+      + '<div class="ah-weiter-ueber">Übersicht und Werkzeuge</div>';
+    tu(() => {
+        const fb = D.querySelector('.filter-bar');
+        const app = $('app');
+        if(fb && fb.parentNode) fb.parentNode.insertBefore(heute, fb);
+        else if(app) app.insertBefore(heute, app.firstChild);
+        // Die Zeile mit dem Pruefungsziel (und der Kursleiter-Steuerung)
+        // wandert in den neuen Kopf.
+        const ziel = $('appZielZeile');
+        if(ziel) $('ahChips').insertBefore(ziel, $('ahChips').firstChild);
+    });
+
+    // Knoepfe des Startbildschirms -> die bewaehrten Knoepfe dahinter
+    $('ahStart').addEventListener('click', () => rundeStarten());
+    $('ahAendern').addEventListener('click', e => { e.stopPropagation(); blattAuf(); });
+    $('ahWahl').addEventListener('click', () => blattAuf());
+    $('ahFehler').addEventListener('click', () => klick('repeatErrorsBtn'));
+    $('ahLernbedarf').addEventListener('click', () => klick('difficultBtn'));
+    $('ahAuffrischen').addEventListener('click', () => klick('auffrischenBtn'));
+    $('ahPruefung').addEventListener('click', () => klick('examSimulatorBtn'));
+    $('ahBlaettern').addEventListener('click', () => klick('durchsichtBtn'));
+    heute.querySelectorAll('.ah-kachel').forEach(k => k.addEventListener('click', () => klick(k.dataset.ziel)));
+    $('ahTermin').addEventListener('click', () => tu(() => {
+        const t = $('terminInput');
+        if(!t) return;
+        t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => { try{ t.showPicker ? t.showPicker() : t.focus(); }catch(e){ t.focus(); } }, 350);
+    }));
+
+    // ---------------- Blatt "Neue Runde" ----------------
+    const TEILE = [['all', 'Alle'], ['vorschriften', 'Vorschriften'], ['betrieb', 'Betrieb'], ['technik', 'Technik']];
+    const ANZAHL = [['10', '10'], ['20', '20'], ['25', '25'], ['50', '50'], ['75', '75'], ['all', 'Alle']];
+    const blatt = D.createElement('div');
+    blatt.id = 'appRundeBlatt';
+    blatt.innerHTML = '<div class="ar-schleier"></div><div class="ar-blatt" role="dialog" aria-label="Neue Runde">'
+      + '<div class="ar-griff"></div><div class="ar-kz"><h2>Neue Runde</h2><button type="button" class="ar-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'
+      + '<div class="ar-ab"><div class="ar-ue">Prüfungsteile</div><div class="ar-seg" id="arTeile">'
+      + TEILE.map(t => '<button type="button" data-w="' + t[0] + '" style="flex:1 1 auto;font-size:13.5px;padding:0 8px">' + t[1] + '</button>').join('') + '</div></div>'
+      + '<div class="ar-ab"><div class="ar-ue">Anzahl der Fragen</div><div class="ar-seg" id="arAnzahl">'
+      + ANZAHL.map(t => '<button type="button" data-w="' + t[0] + '">' + t[1] + '</button>').join('') + '</div></div>'
+      + '<div class="ar-schalt" id="arGelernt"><div style="flex:1"><b>Gelernte Fragen auslassen</b><small>Was sitzt, kommt nicht mehr dran</small></div><span class="ar-schalter" id="arGelerntSchalter"></span></div>'
+      + '<div class="ar-dauer" id="arDauer"></div>'
+      + '<button type="button" class="ar-los" id="arLos"><i class="fas fa-play"></i> <span id="arLosText">Runde starten</span></button>'
+      + '</div>';
+    D.body.appendChild(blatt);
+    const wahl = { teil: 'all', anzahl: '25', gelernt: true };
+    function wahlLesen(){
+        tu(() => { wahl.teil = $('filterPart').value; });
+        tu(() => { wahl.anzahl = $('filterCount').value; });
+        tu(() => { wahl.gelernt = !!$('hideMasteredCheck').checked; });
+    }
+    function offeneZahl(){
+        let t = '';
+        tu(() => { const b = $('startToLearnCount'); if(b && b.style.display !== 'none') t = b.textContent.trim(); });
+        if(!t) tu(() => { t = ($('toLearnCount') || {}).textContent || ''; });
+        const n = parseInt(String(t).replace(/\D/g, ''), 10);
+        return isNaN(n) ? null : n;
+    }
+    function blattZeichnen(){
+        blatt.querySelectorAll('#arTeile button').forEach(b => b.classList.toggle('an', b.dataset.w === wahl.teil));
+        blatt.querySelectorAll('#arAnzahl button').forEach(b => b.classList.toggle('an', b.dataset.w === wahl.anzahl));
+        $('arGelerntSchalter').classList.toggle('an', wahl.gelernt);
+        const offen = offeneZahl();
+        const n = wahl.anzahl === 'all' ? (offen || 0) : parseInt(wahl.anzahl, 10);
+        const min = Math.max(1, Math.round(n * 0.5));
+        $('arDauer').textContent = n ? 'Dauer etwa ' + min + (min === 1 ? ' Minute' : ' Minuten') : '';
+        $('arLosText').textContent = 'Runde starten' + (wahl.anzahl === 'all' ? '' : ' · ' + n + ' Fragen');
+    }
+    function blattAuf(){ wahlLesen(); blattZeichnen(); blatt.classList.add('offen'); }
+    function blattZu(){ blatt.classList.remove('offen'); }
+    blatt.querySelector('.ar-schleier').addEventListener('click', blattZu);
+    blatt.querySelector('.ar-zu').addEventListener('click', blattZu);
+    $('arTeile').addEventListener('click', e => { const b = e.target.closest('button'); if(b){ wahl.teil = b.dataset.w; blattZeichnen(); } });
+    $('arAnzahl').addEventListener('click', e => { const b = e.target.closest('button'); if(b){ wahl.anzahl = b.dataset.w; blattZeichnen(); } });
+    $('arGelernt').addEventListener('click', () => { wahl.gelernt = !wahl.gelernt; blattZeichnen(); });
+    $('arLos').addEventListener('click', () => { blattZu(); rundeStarten(true); });
+    // Nach unten wischen schliesst das Blatt
+    tu(() => {
+        const b = blatt.querySelector('.ar-blatt'); let y0 = null;
+        b.addEventListener('touchstart', e => { y0 = (b.scrollTop <= 0) ? e.touches[0].clientY : null; }, { passive: true });
+        b.addEventListener('touchmove', e => { if(y0 !== null && e.touches[0].clientY - y0 > 70){ y0 = null; blattZu(); } }, { passive: true });
+    });
+    function wahlUebernehmen(){
+        tu(() => { const s = $('filterPart'); if(s && s.value !== wahl.teil){ s.value = wahl.teil; s.dispatchEvent(new Event('change', { bubbles: true })); } });
+        tu(() => { const s = $('filterCount'); if(s && s.value !== wahl.anzahl){ s.value = wahl.anzahl; s.dispatchEvent(new Event('change', { bubbles: true })); } });
+        tu(() => {
+            const c = $('hideMasteredCheck');
+            if(c && c.checked !== wahl.gelernt){
+                c.checked = wahl.gelernt;
+                if(typeof window.toggleHideMastered === 'function') window.toggleHideMastered(wahl.gelernt);
+                else c.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+    function rundeStarten(ausBlatt){
+        if(!ausBlatt) wahlLesen();
+        wahlUebernehmen();
+        setTimeout(() => klick('startBtn'), 30);
+    }
+    window.appRundeBlattAuf = blattAuf;
+
+    // ---------------- Laufend nachziehen ----------------
+    const zahlAus = id => { const e = $(id); if(!e) return 0; if(e.style && e.style.display === 'none') return 0; const n = parseInt(String(e.textContent).replace(/\D/g, ''), 10); return isNaN(n) ? 0 : n; };
+    function grussZeit(){ const h = new Date().getHours(); return h < 5 ? 'Hallo' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend'; }
+    function nameIst(){
+        let n = '';
+        tu(() => { n = getUserName(currentUser) || ''; });
+        if(!n) n = lies('duo_userName', '') || '';
+        return String(n).trim();
+    }
+    function terminText(){
+        const e = $('terminInput');
+        const v = e && e.value;
+        if(!v) return 'Prüfungstermin eintragen';
+        const d = new Date(v + 'T00:00:00'), h = new Date(); h.setHours(0, 0, 0, 0);
+        const tage = Math.round((d - h) / 86400000);
+        const kurz = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+        if(tage < 0) return 'Prüfung war am ' + kurz;
+        return 'Prüfung am <b>' + kurz + '</b> · ' + (tage === 0 ? 'heute' : tage === 1 ? 'morgen' : 'noch ' + tage + ' Tage');
+    }
+    function nachziehen(){
+        if(!D.body) return;
+        const vs = stilIst() === 'verspielt';
+        // Gruss
+        const name = nameIst();
+        $('ahGrussZeit').textContent = vs ? grussZeit() + ',' : grussZeit() + (name ? ',' : '');
+        $('ahGrussName').textContent = name ? ' ' + name : '';
+        $('ahGrussName2').textContent = name || 'schön, dass du da bist';
+        // Termin
+        $('ahTermin').innerHTML = terminText();
+        // Offene Fragen und Wahl
+        wahlLesen();
+        const offen = offeneZahl();
+        $('ahOffen').textContent = vs ? 'Bereit für eine Runde?' : (offen !== null ? offen + ' Fragen offen' : 'Fragen üben');
+        $('ahRundeL').textContent = vs ? (offen !== null ? offen + ' Fragen warten auf dich' : 'Neue Runde') : 'Neue Runde';
+        const tn = (TEILE.find(t => t[0] === wahl.teil) || TEILE[0])[1];
+        $('ahWahlAnzahl').textContent = wahl.anzahl === 'all' ? 'Alle Fragen' : wahl.anzahl + ' Fragen';
+        $('ahWahlTeil').textContent = wahl.teil === 'all' ? 'alle Teile' : tn;
+        $('ahWahlGelernt').textContent = wahl.gelernt ? 'ohne Gelerntes' : 'mit Gelerntem';
+        // Zahlen an den Knoepfen
+        const fehler = zahlAus('repeatErrorsCount'), bedarf = zahlAus('difficultCount');
+        const frisch = ($('auffrischenBtn') && $('auffrischenBtn').style.display !== 'none') ? zahlAus('auffrischenCount') : 0;
+        $('ahFehlerZahl').textContent = fehler; $('ahKFehler').textContent = fehler;
+        $('ahLernbedarfZahl').textContent = bedarf; $('ahKLernbedarf').textContent = bedarf;
+        $('ahAuffrischenZahl').textContent = frisch; $('ahKAuffrischen').textContent = frisch;
+        $('ahAuffrischen').classList.toggle('aus', !frisch);
+        $('ahKAuffrischenK').classList.toggle('aus', !frisch);
+        const bt = (($('durchsichtText') || {}).textContent || 'Blättern').trim();
+        $('ahBlaetternText').textContent = /weiter/i.test(bt) ? 'Weiter blättern' : 'Fragenkatalog blättern';
+        const dz = zahlAus('durchsichtCount');
+        let alle = '';
+        tu(() => { alle = String((questionBank || []).length || ''); });
+        $('ahBlaetternZahl').textContent = dz || alle;
+        $('ahKBlaettern').textContent = dz || alle;
+        // Tagesziel, Serie, Punkte
+        const n = heuteAnzahl(), z = tagesziel(), s = serie(), xp = xpStand(), st = stufe(xp);
+        $('ahRing').innerHTML = ringSvg(n / z, vs) + '<div class="z"><b>' + n + '</b><small>von ' + z + '</small></div>';
+        const rest = Math.max(0, z - n);
+        $('ahTagText').textContent = rest ? (vs ? 'Noch ' + rest + (rest === 1 ? ' Frage' : ' Fragen') + ' bis zum Tagesziel' : 'Tagesziel: noch ' + rest + (rest === 1 ? ' Frage' : ' Fragen')) : 'Tagesziel erreicht';
+        $('ahSerieText').textContent = s ? s + (s === 1 ? ' Tag' : ' Tage') + ' in Folge geübt' : 'Heute ist ein guter Tag zum Anfangen';
+        $('ahTagUnter').textContent = vs ? (rest ? 'Dann bleibt deine Serie auf Sendung.' : 'Stark – deine Serie bleibt auf Sendung.') : '';
+        $('ahTagUnter').style.display = vs ? '' : 'none';
+        const heuteDabei = n > 0;
+        $('ahBelohnungText').textContent = heuteDabei ? 'Tag ' + s + ' auf Sendung' : 'Tag ' + (s + 1) + ' wartet';
+        $('ahSerieZahl').textContent = s;
+        $('ahOnAir').classList.toggle('aus', !heuteDabei);
+        $('ahXpText').textContent = xp.toLocaleString('de-DE') + ' XP';
+        tu(() => {
+            const b = $('alBenutzer');
+            if(!b) return;
+            let m = b.querySelector('.al-stufe');
+            if(!m){ m = D.createElement('span'); m.className = 'al-stufe'; b.appendChild(m); }
+            if(m.textContent !== st.name) m.textContent = st.name;
+        });
+    }
+    window.appStartNachziehen = nachziehen;
+    tu(nachziehen);
+    setInterval(() => tu(nachziehen), 1500);
+    // Beim Zurueckkommen auf die Startseite gleich frisch
+    tu(() => {
+        let rundeVorher = D.body.classList.contains('runde-laeuft');
+        new MutationObserver(() => {
+            const r = D.body.classList.contains('runde-laeuft');
+            if(r !== rundeVorher){ rundeVorher = r; if(!r) tu(nachziehen); }
+        }).observe(D.body, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // ---------------- Stilwahl beim ersten Oeffnen ----------------
+    // ---------------- Vorschau wie auf dem Plakat ----------------
+    //  Dietmar (30.09.2026): "Beim Start muessen Bilder erscheinen ... und
+    //  es soll dann fragen: bist du lieber sachlich oder doch lieber
+    //  verspielt?" - und: "Natuerlich mit dem Namen von dem Benutzer,
+    //  nicht mit meinem."
+    //  Deshalb keine festen Bilder, sondern zwei kleine, echte Bildschirme:
+    //  mit dem Namen und der Klasse dessen, der gerade davorsitzt; die
+    //  Zahlen sind ein Beispiel. Gezeichnet in 360 x 640 Punkten und auf
+    //  die Kartenbreite verkleinert (vorschauSkalieren).
+    function vorschauDaten(){
+        const name = nameIst();
+        let klasse = 'N', fragen = 0;
+        tu(() => {
+            const t = (($('bankBadge') || $('appZielText') || {}).textContent || '').replace(/\s+/g, ' ');
+            const k = /Klasse\s+([NEA])/.exec(t), f = /(\d+)\s*Fragen/.exec(t);
+            if(k) klasse = k[1];
+            if(f) fragen = parseInt(f[1], 10);
+        });
+        if(!fragen) tu(() => { fragen = (questionBank || []).length; });
+        const z = tagesziel(), n = Math.max(1, Math.round(z * 0.7));
+        const jetzt = new Date();
+        return { name, klasse, fragen: fragen || 571, z, n, rest: z - n,
+                 uhr: jetzt.getHours() + ':' + String(jetzt.getMinutes()).padStart(2, '0'), gruss: grussZeit() };
+    }
+    function handyVorschau(stil, kurz){
+        const d = vorschauDaten(), nm = esc(d.name), init = d.name ? esc(d.name.charAt(0).toUpperCase()) : '<i class="fas fa-user"></i>';
+        const status = '<div class="swp-status"><span>' + d.uhr + '</span><span class="r"><i class="fas fa-signal"></i><i class="fas fa-wifi"></i><i class="fas fa-battery-three-quarters"></i></span></div>';
+        const navi = (v) => '<div class="swp-navi">' + [['fa-book-open', 'Lernen'], ['fa-stopwatch', 'Prüfung'], ['fa-users', 'Gruppe'], ['fa-chart-simple', 'Fortschritt'], ['fa-bars', 'Mehr']]
+            .map((b, i) => '<span' + (i ? '' : ' class="an"') + '><i class="fas ' + b[0] + '"></i>' + b[1] + '</span>').join('') + '</div>';
+        let inhalt;
+        if(stil === 'sachlich'){
+            inhalt = '<div class="swp-kopf"><b>' + d.gruss + (nm ? ', ' + nm : '') + '</b><span class="swp-av">' + init + '</span></div>'
+              + '<div class="swp-chips"><span class="swp-chip"><i class="fas fa-graduation-cap"></i> Klasse ' + d.klasse + ' <i class="fas fa-chevron-down"></i></span><span class="swp-leise">Prüfungstermin eintragen</span></div>'
+              + '<div class="swp-karte swp-runde"><div class="swp-l">Neue Runde</div><div class="swp-h">' + d.fragen + ' Fragen offen</div>'
+              +   '<div class="swp-w"><span>25 Fragen</span><span>alle Teile</span></div><div class="swp-knopf"><i class="fas fa-play"></i> Runde starten</div></div>'
+              + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, false) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
+              +   '<div><b>Tagesziel: noch ' + fragenText(d.rest) + '</b><small><i class="fas fa-calendar-check"></i> 12 Tage in Folge geübt</small></div></div>'
+              + '<div class="swp-ue">Üben</div>'
+              + '<div class="swp-liste">' + [['fa-rotate-left', 'Fehler üben', '12'], ['fa-list-check', 'Lernbedarf', '34'], ['fa-stopwatch', 'Prüfungssimulation', '3 × 45 min'], ['fa-book', 'Fragenkatalog', String(d.fragen)]]
+                  .map(z => '<div class="swp-z"><i class="fas ' + z[0] + '"></i><span>' + z[1] + '</span><em>' + z[2] + ' <i class="fas fa-chevron-right"></i></em></div>').join('') + '</div>';
+        } else {
+            inhalt = '<div class="swp-kopf"><span class="swp-av">' + init + '<em>' + stufe(1240).name + '</em></span><div class="swp-gruss"><small>' + d.gruss + ',</small><b>' + (nm || 'schön, dass du da bist') + '</b></div>'
+              +   '<span class="swp-onair"><i></i>ON AIR <b>12</b></span></div>'
+              + '<div class="swp-chips"><span class="swp-chip"><i class="fas fa-graduation-cap"></i> Klasse ' + d.klasse + ' <i class="fas fa-chevron-down"></i></span><span class="swp-chip"><i class="fas fa-bolt"></i> 1.240 XP</span></div>'
+              + '<div class="swp-held"><div class="swp-l">' + d.fragen + ' Fragen warten auf dich</div><div class="swp-h">Bereit für eine Runde?</div>'
+              +   '<div class="swp-w"><span>25 Fragen</span><span>alle Teile</span></div><div class="swp-mk">' + maskottchen('winkt') + '</div>'
+              +   '<div class="swp-knopf"><i class="fas fa-play"></i> Runde starten</div></div>'
+              + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, true) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
+              +   '<div><b>Noch ' + fragenText(d.rest) + ' bis zum Tagesziel</b><small>Dann bleibt deine Serie auf Sendung.</small><span class="swp-bel"><i class="fas fa-tower-broadcast"></i> Tag 13 wartet</span></div></div>'
+              + '<div class="swp-kach">' + [['rot', 'fa-rotate-left', '12', 'Fehler üben', 'bis sie sitzen'], ['amber', 'fa-fire-flame-curved', '34', 'Lernbedarf', 'wackelige Fragen'],
+                   ['violett', 'fa-stopwatch', '3×45′', 'Prüfungstag', 'Generalprobe'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
+                  .map(k => '<div><span class="ah-ico ' + k[0] + '"><i class="fas ' + k[1] + '"></i></span><em' + (k[2].length > 3 ? ' class="kl"' : '') + '>' + k[2] + '</em><b>' + k[3] + '</b><small>' + k[4] + '</small></div>').join('') + '</div>';
+        }
+        return '<div class="swp-rahmen' + (kurz ? ' kurz' : '') + '"><div class="swp ' + (stil === 'sachlich' ? 's' : 'v') + '" aria-hidden="true">'
+          + status + '<div class="swp-in">' + inhalt + '</div>' + navi() + '</div></div>';
+    }
+    // Verkleinern auf die Breite der Karte - auch wenn die Karte erst
+    // spaeter sichtbar wird (Reiter in den Einstellungen).
+    const vorschauRO = window.ResizeObserver ? new ResizeObserver(e => e.forEach(x => vorschauSkalieren(x.target))) : null;
+    function vorschauSkalieren(r){
+        const w = r.clientWidth, i = r.firstElementChild;
+        if(w && i) i.style.transform = 'scale(' + (w / 360).toFixed(4) + ')';
+    }
+    function vorschauBeobachten(){
+        D.querySelectorAll('.swp-rahmen:not([data-ro])').forEach(r => {
+            r.dataset.ro = '1';
+            if(vorschauRO) vorschauRO.observe(r);
+            vorschauSkalieren(r);
+        });
+    }
+    tu(() => window.addEventListener('resize', () => D.querySelectorAll('.swp-rahmen').forEach(vorschauSkalieren)));
+    function stilWahlZeigen(){
+        if($('appStilWahl')) return;
+        const w = D.createElement('div');
+        w.id = 'appStilWahl';
+        w.setAttribute('role', 'dialog');
+        w.setAttribute('aria-label', 'Stil wählen');
+        let gewaehlt = stilIst();
+        const name = nameIst();
+        w.innerHTML = '<h1>Bist du lieber sachlich – oder doch lieber verspielt?</h1>'
+          + '<div class="sw-unter">' + (name ? 'Hallo ' + esc(name) + '! ' : '') + 'Such dir aus, wie dein Trainer aussehen soll. Die Fragen sind in beiden dieselben.</div>'
+          + '<div class="sw-wahl">'
+          + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (s === gewaehlt ? ' an' : '') + '" data-stil="' + s + '">'
+              + handyVorschau(s) + '<b><span class="sw-kreis"></span>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b>'
+              + '<small>' + (s === 'sachlich' ? 'Klar und ruhig. Große Schrift, keine Ablenkung.' : 'Punkte, Serien und Funki – ein kleiner Roboter, der dir alles zeigt.') + '</small></button>').join('')
+          + '</div>'
+          + '<div class="sw-fuss"><div class="sw-hinweis">Jederzeit änderbar unter Einstellungen → Allgemein</div>'
+          + '<button type="button" class="sw-los" id="swLos">Los geht\'s</button></div>';
+        D.body.appendChild(w);
+        vorschauBeobachten();
+        w.querySelectorAll('.sw-karte').forEach(k => k.addEventListener('click', () => {
+            gewaehlt = k.dataset.stil;
+            w.querySelectorAll('.sw-karte').forEach(x => x.classList.toggle('an', x === k));
+            stilSetzenApp(gewaehlt);
+        }));
+        $('swLos').addEventListener('click', () => stilWahlFertig(gewaehlt));
+    }
+    function stilWahlFertig(s){
+        stilSetzenApp(s || stilIst());
+        // Die Form passt sich beim ersten Mal an: verspielt ist rund,
+        // sachlich eckig wie am PC. Umstellbar in den Einstellungen.
+        tu(() => { if(lies('app_form', '') === '' && typeof window.appFormSetzen === 'function') window.appFormSetzen(stilIst() === 'verspielt' ? 'rund' : 'eckig'); });
+        schreib('app_stil_gewaehlt', '1');
+        const w = $('appStilWahl');
+        if(w) w.remove();
+        tu(nachziehen);
+    }
+    window.appStilWahlZeigen = stilWahlZeigen;
+    // Erst wenn nichts anderes offen ist (Begruessung, Update ...)
+    tu(() => {
+        if(lies('app_stil_gewaehlt', '') === '1') return;
+        let versuche = 0;
+        const uhr = setInterval(() => {
+            versuche++;
+            let frei = true;
+            tu(() => {
+                for(const m of D.querySelectorAll('[id$="Modal"], #rgHuelle')){
+                    if(getComputedStyle(m).display !== 'none' && m.getClientRects().length) { frei = false; break; }
+                }
+            });
+            if(frei || versuche > 40){ clearInterval(uhr); if(lies('app_stil_gewaehlt', '') !== '1') stilWahlZeigen(); }
+        }, 700);
+    });
+
+    // ---------------- Einstellungen -> Allgemein ----------------
+    //  Wird von einstBlaetterFuellen() eingebaut (nur-app-Bereich).
+    window.appStilEinstHtml = function(){
+        setTimeout(() => tu(vorschauBeobachten), 0);      // die Vorschau erst nach dem Einsetzen verkleinern
+        return '<div class="nur-app">'
+          + einstKasten('Stil der App', 'Sachlich: klar und ruhig, große Schrift. Verspielt: mit Punkten, Serie und Funki, dem kleinen Roboter. Der Inhalt ist derselbe.',
+                '<div class="app-stil-wahl">'
+              + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (stilIst() === s ? ' an' : '') + '" id="appStilKachel_' + s + '" onclick="appStilSetzen(\'' + s + '\')">'
+                  + handyVorschau(s, true) + '<b>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b></button>').join('')
+              + '</div>')
+          + einstKasten('Hell oder dunkel', 'Wie Handy: folgt der Einstellung deines Handys.',
+                '<div class="app-seg" id="appDesignSeg">'
+              + [['hell', 'Hell'], ['dunkel', 'Dunkel'], ['system', 'Wie Handy']].map(d => '<button type="button" data-d="' + d[0] + '"' + (designIst() === d[0] ? ' class="an"' : '')
+                  + ' onclick="appDesignSetzen(\'' + d[0] + '\')">' + d[1] + '</button>').join('')
+              + '</div>')
+          + einstKasten('Tagesziel', 'So viele Fragen am Tag. Die Serie zählt jeden Tag, an dem du geübt hast.',
+                '<div class="app-seg" id="appZielSeg">'
+              + [5, 10, 20, 25, 50].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
+              + '</div>')
+          + '<div class="nur-verspielt">'
+          + einstKasten('Funki, dein Helfer', 'Sagt einmal am Tag Hallo, gibt Tipps und feiert mit dir. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
+                '<div class="app-seg" id="appFunkiSeg">'
+              + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + ((tippsAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
+                  + ' onclick="appFunkiSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+              + '</div>')
+          + '</div>'
+          + '</div>';
+    };
+    function einstNachziehen(){
+        ['sachlich', 'verspielt'].forEach(s => { const k = $('appStilKachel_' + s); if(k) k.classList.toggle('an', stilIst() === s); });
+        D.querySelectorAll('#appDesignSeg button').forEach(b => b.classList.toggle('an', b.dataset.d === designIst()));
+        D.querySelectorAll('#appZielSeg button').forEach(b => b.classList.toggle('an', parseInt(b.dataset.z, 10) === tagesziel()));
+        D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === (tippsAn() ? 'an' : 'aus')));
+    }
+
+    // ================================================================
+    //  FUNKI, DER KLEINE HELFER                              (30.09.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Ich moechte, dass er ueber den Bildschirm tanzt und
+    //  vielleicht auch ein paar Tipps gibt und sagt, schau mal hier und
+    //  schau mal da. Ich bin dein Roboter, ich helfe dir. So stelle ich
+    //  mir das vor. Bei Jugendlichen so ab neun Jahren."
+    //
+    //  Nur im Stil Verspielt. Das Funkgeraet aus der grossen Karte
+    //  springt heraus, huepft ueber den Schirm und
+    //    - bietet beim ersten Mal einen kurzen Rundgang an: ein
+    //      leuchtender Ring zeigt auf einen Knopf, Funki steht daneben,
+    //      zeigt mit dem Arm darauf und erklaert ihn ("Schau mal hier")
+    //    - sagt einmal am Tag Hallo, mit einem Tipp
+    //    - feiert mit, wenn das Tagesziel geschafft ist
+    //    - kommt jederzeit, wenn man ihn in der Karte antippt
+    //  Nie waehrend einer Runde, nie ueber einem offenen Fenster.
+    //  Abschaltbar: Einstellungen -> Allgemein -> "Funki, dein Helfer"
+    //  (dann kommt er nur noch auf Antippen).
+    //  Gemerkt wird (je Handy): robo_tour_gesehen, robo_gruss_tag,
+    //  robo_ziel_tag, robo_tipp_nr und robo_tipps (an/aus).
+    // ================================================================
+    const RW = 92, RH = 115;              // so gross wie in der Karte
+    const robo = { da: false, modus: '', schritt: 0, uhren: [], bw: 0, bh: 0, frei: 0, breite: 0, stapel: false };
+    // Die Anzeigegroesse (Einstellungen -> Allgemein) setzt html.style.zoom.
+    // getBoundingClientRect und innerWidth zaehlen dann in Bildschirm-
+    // punkten, left/top/width in ungezoomten - wie bei bildZoomAn(). Hier
+    // wird durchweg in Bildschirmpunkten gerechnet und erst beim Setzen
+    // geteilt. Wichtig fuer alle, die den Trainer groesser stellen.
+    const zf = () => { const z = parseFloat(H.style.zoom); return z > 0 ? z : 1; };
+    const px = v => Math.round(v / zf()) + 'px';
+    // Im Rundgang bleibt Funki auf dem Schirm so gross wie ohne Zoom - er
+    // ist Schmuck; wachsen soll die Schrift in der Blase.
+    const tourMass = () => Math.min(1, 1 / zf());
+    const roboEl = D.createElement('div');
+    roboEl.id = 'roboHelfer';
+    roboEl.setAttribute('aria-hidden', 'true');
+    roboEl.innerHTML = '<div class="robo-hopp">' + maskottchen('') + '</div>';
+    const roboBlase = D.createElement('div');
+    roboBlase.id = 'roboBlase';
+    roboBlase.setAttribute('role', 'dialog');
+    roboBlase.setAttribute('aria-label', 'Funki');
+    roboBlase.setAttribute('aria-live', 'polite');
+    const roboRing = D.createElement('div');
+    roboRing.id = 'roboRing';
+    const roboSperre = D.createElement('div');
+    roboSperre.id = 'roboSperre';
+    [roboSperre, roboRing, roboEl, roboBlase].forEach(e => D.body.appendChild(e));
+
+    // Tipps fuer alle ab neun: kurz, freundlich, und jeder muss stimmen.
+    const TIPPS = [
+        'Lies jede Frage bis zum Ende. Kleine Wörter wie <b>„nicht“</b> oder <b>„kein“</b> drehen die ganze Frage um.',
+        'Lieber <b>jeden Tag ein bisschen</b> als einmal ganz viel. So merkt sich dein Kopf die Antworten am besten.',
+        'Falsch getippt? Macht nichts! Die Frage kommt wieder, <b>bis sie sitzt</b>. Und fürs Versuchen gibt es trotzdem 2 XP.',
+        'Weißt du, was <b>73</b> heißt? So sagen Funkamateure <b>„Viele Grüße“</b>.',
+        '<b>CQ</b> ist der Anruf an alle: „Wer möchte mit mir funken?“',
+        'In der Prüfung darfst du die <b>Formelsammlung</b> und einen einfachen Taschenrechner benutzen. Das ist kein Schummeln – das ist erlaubt!',
+        'Eine <b>QSL-Karte</b> ist eine Postkarte, die Funkamateure nach einer Verbindung tauschen – als Beweis, dass es geklappt hat.',
+        'Mach ab und zu die <b>Generalprobe</b>. Dann kennst du den Ablauf und bist am Prüfungstag viel ruhiger.',
+        '<b>QTH</b> heißt Standort. „Mein QTH ist Hamburg“ bedeutet: Ich funke aus Hamburg.',
+        'Lesen ist anstrengend? In der Runde kann dir das Handy jede Frage <b>vorlesen</b>.',
+        'Beim Buchstabieren sagen Funker <b>Alfa, Bravo, Charlie</b> … So versteht man jeden Buchstaben, auch wenn es rauscht.',
+        'Wusstest du? Über Amateurfunk haben Schulklassen schon mit <b>Astronauten auf der ISS</b> gesprochen.',
+        'Kleine Runden sind super: <b>zehn Fragen</b> passen in jede Pause.',
+        '<b>QRZ?</b> heißt: „Wer ruft mich?“ So fragt man, wenn man das Rufzeichen nicht verstanden hat.',
+        'Die <b>Serie</b> zählt jeden Tag, an dem du übst. Wie lange bleibst du auf Sendung?'
+    ];
+    function naechsterTipp(){
+        let i = parseInt(lies('robo_tipp_nr', '-1'), 10);
+        i = (isNaN(i) ? 0 : i + 1) % TIPPS.length;
+        schreib('robo_tipp_nr', String(i));
+        return TIPPS[i];
+    }
+    function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus'; }
+    window.appFunkiSetzen = v => { schreib('robo_tipps', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
+
+    // Uhren, die beim Heimgehen alle zusammen enden
+    function spaeter(fn, ms){
+        const t = setTimeout(() => { robo.uhren = robo.uhren.filter(x => x !== t); tu(fn); }, ms);
+        robo.uhren.push(t);
+    }
+    function uhrenAus(){ robo.uhren.forEach(clearTimeout); robo.uhren = []; }
+    const zuSehen = e => !!(e && e.getClientRects().length);
+    function heldRect(){
+        const m = $('ahMk'), k = m && m.querySelector('.mk');
+        if(!k) return null;
+        const r = k.getBoundingClientRect();
+        return r.width ? r : null;
+    }
+    function randOben(){
+        const l = $('appLeiste'), r = l && l.getBoundingClientRect();
+        return (r && r.height && r.bottom > 0 ? r.bottom : 0) + 10;
+    }
+    function randUnten(){
+        const n = $('appNavi'), hoch = window.innerHeight;
+        if(n && !D.body.classList.contains('app-navi-weg')){
+            const r = n.getBoundingClientRect();
+            if(r.height && r.top < hoch) return r.top - 10;
+        }
+        return hoch - 12;
+    }
+    // Offene Fenster wie in appZurueck: fest stehend, gross, "modal",
+    // "fenster" oder "overlay" im Namen - dazu Stilwahl und Rundgang.
+    function fensterOffen(){
+        let offen = false;
+        tu(() => {
+            offen = Array.from(D.querySelectorAll('body > div[id], body > section[id], #app > div[id]')).some(el => {
+                if(!/modal|fenster|overlay/i.test(el.id + ' ' + (typeof el.className === 'string' ? el.className : ''))) return false;
+                const st = getComputedStyle(el);
+                return st.position === 'fixed' && st.display !== 'none' && st.visibility !== 'hidden' && el.offsetWidth > 100 && el.offsetHeight > 100;
+            });
+        });
+        if(offen) return true;
+        return ['appStilWahl', 'rgHuelle', 'appPruefblatt'].some(id => zuSehen($(id)));
+    }
+    function roboDarf(){
+        if(!H.classList.contains('stil-verspielt') || D.hidden) return false;
+        if(D.body.classList.contains('runde-laeuft') || D.body.classList.contains('app-chat-offen')) return false;
+        if(!zuSehen(heute) || !zuSehen($('ahMk')) || blatt.classList.contains('offen')) return false;
+        const m = $('appMehr'), s = $('appSuchPlatz');
+        if((m && m.classList.contains('offen')) || (s && s.classList.contains('offen'))) return false;
+        return !fensterOffen();
+    }
+
+    // ----- Bewegen: Mitte (cx, cy), Groesse s; ohne "sofort" mit Hopser
+    function roboStellen(cx, cy, s, sofort){
+        s = s || 1;
+        const z = zf();
+        const t = 'translate(' + Math.round(cx / z - RW / 2) + 'px,' + Math.round(cy / z - RH / 2) + 'px)' + (s !== 1 ? ' scale(' + s.toFixed(3) + ')' : '');
+        if(sofort){
+            roboEl.style.transition = 'none';
+            roboEl.style.transform = t;
+            void roboEl.offsetWidth;
+            roboEl.style.transition = '';
+            return;
+        }
+        roboEl.classList.remove('huepft');
+        void roboEl.offsetWidth;
+        roboEl.classList.add('huepft');
+        roboEl.style.transform = t;
+    }
+    function tanzen(){
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt');
+        void roboEl.offsetWidth;
+        roboEl.classList.add('tanzt');
+        spaeter(() => roboEl.classList.remove('tanzt'), 2400);
+    }
+    function rausAusKarte(){
+        if(robo.da) return;
+        const r = heldRect(), hoch = window.innerHeight, W = window.innerWidth, z = zf();
+        if(r && r.bottom > 0 && r.top < hoch) roboStellen(r.left + r.width / 2, r.top + r.height / 2, r.width / (RW * z), true);
+        else roboStellen(W - RW * z / 2 - 16, hoch + RH * z, 1, true);    // Karte nicht zu sehen: von unten herein
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt', 'huepft');
+        roboEl.classList.add('da');
+        const m = $('ahMk');
+        if(m) m.classList.add('weg');
+        robo.da = true;
+        robo.breite = W;
+    }
+    function roboHeim(sofort){
+        uhrenAus();
+        blaseZu();
+        roboRing.classList.remove('da');
+        roboSperre.classList.remove('da', 'klar');
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt');
+        robo.modus = '';
+        if(!robo.da) return;
+        const fertig = () => {
+            roboEl.classList.remove('da', 'huepft');
+            const m = $('ahMk');
+            if(m) m.classList.remove('weg');
+            robo.da = false;
+        };
+        const r = sofort ? null : heldRect();
+        if(!r){ fertig(); return; }
+        const zurueck = () => {
+            const q = heldRect();
+            if(!q){ fertig(); return; }
+            roboStellen(q.left + q.width / 2, q.top + q.height / 2, q.width / (RW * zf()));   // zurueck in die Karte
+            spaeter(fertig, 800);
+        };
+        // Nach dem Rundgang steht die Karte oft ausserhalb: erst hinauf,
+        // damit man sieht, wie er wieder hineinhuepft.
+        if(r.bottom < randOben() || r.top > window.innerHeight){
+            tu(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            nachDemScrollen(zurueck);
+        } else zurueck();
+    }
+
+    // ----- Sprechblase
+    function blaseFuellen(html, knoepfe, zahl, breite){
+        roboBlase.innerHTML = '<button type="button" class="rb-zu" data-tat="heim" aria-label="Schließen"><i class="fas fa-xmark"></i></button>'
+          + '<div class="rb-kopf">Funki</div><div class="rb-text">' + html + '</div>'
+          + ((knoepfe && knoepfe.length) || zahl
+              ? '<div class="rb-knoepfe">' + (knoepfe || []).map((k, i) => '<button type="button" class="' + (i ? 'rb-leise' : 'rb-haupt') + '" data-tat="' + k[1] + '">' + k[0] + '</button>').join('')
+                + (zahl ? '<span class="rb-zahl">' + zahl + '</span>' : '') + '</div>'
+              : '');
+        roboBlase.classList.remove('da', 'zl', 'zr', 'zo', 'zu');
+        robo.bw = breite;                                   // Bildschirmpunkte
+        roboBlase.style.width = px(breite);
+        roboBlase.style.visibility = 'hidden';
+        roboBlase.style.display = 'block';
+        robo.bh = roboBlase.getBoundingClientRect().height;  // Bildschirmpunkte
+        roboBlase.style.display = '';
+        roboBlase.style.visibility = '';
+    }
+    // x, y und die Lage des Zipfels (zy von oben, zx von links) in
+    // Bildschirmpunkten
+    function blaseZeigen(x, y, zipfel, zy, zx){
+        const W = window.innerWidth, b = robo.bw || 250;
+        const links = Math.max(8, Math.min(x, W - 8 - b));
+        roboBlase.style.left = px(links);
+        roboBlase.style.top = px(y);
+        roboBlase.style.setProperty('--zy', px(zy || 30));
+        roboBlase.style.setProperty('--zx', px(zx === undefined ? b / 2 - 8 : Math.max(16, Math.min(b - 30, zx - (links - x) - 8))));
+        roboBlase.classList.remove('zl', 'zr', 'zo', 'zu');
+        if(zipfel) roboBlase.classList.add(zipfel);
+        roboBlase.classList.add('da');
+    }
+    function blaseZu(){ roboBlase.classList.remove('da', 'zl', 'zr', 'zo', 'zu'); }
+
+    // ----- Buehne: Funki gross in der Mitte, die Blase darunter
+    function buehne(s){
+        const W = window.innerWidth, o = randOben(), u = randUnten();
+        const rh = RH * zf() * s, gesamt = rh + 16 + robo.bh;
+        let oben = o + (u - o - gesamt) * 0.42;
+        oben = Math.max(o, Math.min(oben, u - gesamt));
+        const bw = robo.bw || 280;
+        return { cx: W / 2, cy: oben + rh / 2, bx: (W - bw) / 2, by: oben + rh + 16 };
+    }
+    // Auftritt auf der Buehne. art 'tanzweg': erst quer ueber den Schirm
+    // huepfen - Dietmar: "dass er ueber den Bildschirm tanzt".
+    function auftritt(html, knoepfe, art, modus){
+        uhrenAus();
+        robo.modus = modus || 'tipp';
+        const neu = !robo.da;
+        rausAusKarte();
+        blaseZu();
+        roboRing.classList.remove('da');
+        roboEl.classList.remove('zeigt-l', 'zeigt-r', 'winkt');
+        roboSperre.classList.remove('klar');
+        roboSperre.classList.add('da');
+        const W = window.innerWidth, z = zf();
+        blaseFuellen(html, knoepfe, '', Math.min(310 * z, W - 32));
+        const s = 1.2 * tourMass(), p = buehne(s);
+        let t = neu ? 80 : 0;
+        if(art === 'tanzweg' && neu){
+            const o = randOben(), u = randUnten(), m = (o + u) / 2;
+            spaeter(() => roboStellen(W * 0.27, m + 40, tourMass()), t);
+            spaeter(() => roboStellen(W * 0.73, m - 50, tourMass()), t + 700);
+            t += 1400;
+        }
+        spaeter(() => roboStellen(p.cx, p.cy, s), t);
+        spaeter(() => { tanzen(); blaseZeigen(p.bx, p.by, 'zo'); }, t + 780);
+    }
+
+    // ----- Der Rundgang: "Schau mal hier ... schau mal da"
+    const TOUR = [
+        { text: () => 'Hallo' + (nameIst() ? ' ' + esc(nameIst()) : '') + '! Ich bin <b>Funki</b>, dein Funk-Roboter. Ich helfe dir beim Lernen. Soll ich dir zeigen, wo alles ist?',
+          knoepfe: [['Zeig’s mir!', 'weiter'], ['Später', 'heim']], anfang: true },
+        { ziel: '#ahStart', text: '<b>Schau mal hier!</b> Damit startest du eine Runde. Für jede richtige Antwort bekommst du <b>10 XP</b>.' },
+        { ziel: '#ahWahl', text: 'Tippst du hier drauf, suchst du aus, <b>wie viele Fragen</b> drankommen – und aus welchem Prüfungsteil.' },
+        { ziel: '#ahTag', text: 'Das ist dein <b>Tagesziel</b>. Übst du jeden Tag, bleibt deine Serie auf Sendung: <b>ON AIR</b>!' },
+        { ziel: '#ahKacheln [data-ziel="ahFehler"]', text: '<b>Schau mal da!</b> Hier übst du deine Fehler – so lange, bis sie sitzen.' },
+        { ziel: '#ahKacheln [data-ziel="ahPruefung"]', text: 'Das ist die <b>Generalprobe</b>: eine Prüfung wie am echten Prüfungstag, mit Uhr.' },
+        { ziel: '#alSuche', text: 'Mit der <b>Lupe</b> findest du jede Frage – mit der Nummer oder einem Stichwort.' },
+        { ziel: '#appNavi [data-bereich="fortschritt"]', text: 'Und hier unten siehst du, <b>wie weit</b> du schon bist.' },
+        { text: () => 'Das war’s schon! Wenn du mich brauchst, <b>tipp mich in der großen Karte an</b>. Viel Spaß – und <b>73</b>!'
+            + '<span class="rb-tipp">73 sagen Funker, wenn sie „Viele Grüße“ meinen.</span>', knoepfe: [['Los geht’s!', 'heim']], ende: true }
+    ];
+    const tourZiele = () => TOUR.filter(s => s.ziel && zuSehen(D.querySelector(s.ziel)));
+    function tourFertig(){ schreib('robo_tour_gesehen', '1'); }
+    function tourStarten(){ schreib('robo_gruss_tag', tagK()); tourSchritt(0); }
+    function nachDemScrollen(fn){
+        let y = window.scrollY, gleich = 0, n = 0;
+        const pruef = () => {
+            n++;
+            const y2 = window.scrollY;
+            gleich = Math.abs(y2 - y) < 1 ? gleich + 1 : 0;
+            y = y2;
+            if(gleich >= 2 || n > 30) fn(); else spaeter(pruef, 70);
+        };
+        spaeter(pruef, 90);
+    }
+    // Wo stehen Funki und die Blase neben dem Ziel T?
+    function seite(T){
+        const z = zf() * tourMass(), W = window.innerWidth, o = randOben(), u = randUnten();
+        const rw = RW * z, rh = RH * z, bw = robo.bw || 250, bh = robo.bh;
+        const links = (T.left + T.right) / 2 <= W / 2 + 1;
+        const rx = links ? 10 : W - rw - 10;
+        // Zu schmal fuer nebeneinander (grosse Anzeige, kleines Handy):
+        // Funki neben dem Ziel, die Blase in voller Breite darunter.
+        const blockH = robo.stapel ? rh + 10 + bh : Math.max(rh, bh);
+        let y0, lage;
+        if(T.bottom + 14 + blockH <= u){ y0 = T.bottom + 14; lage = 'unter'; }
+        else if(T.top - 14 - blockH >= o){ y0 = T.top - 14 - blockH; lage = 'ueber'; }
+        else { y0 = Math.max(o, u - blockH); lage = 'auf'; }
+        const zeigt = lage === 'unter' ? (links ? 'zeigt-r' : 'zeigt-l') : 'winkt';
+        if(robo.stapel){
+            const bx = (W - bw) / 2;
+            // darueber: oben die Blase, darunter Funki - nah am Ziel
+            const ry = lage === 'ueber' ? y0 + bh + 10 : y0, by = lage === 'ueber' ? y0 : y0 + rh + 10;
+            return { cx: rx + rw / 2, cy: ry + rh / 2, bx, by, zipfel: lage === 'ueber' ? 'zu' : 'zo', zy: 30, zx: rx + rw / 2 - bx, zeigt, platzDa: lage !== 'auf' };
+        }
+        const ry = lage === 'ueber' ? y0 + blockH - rh : y0;
+        const bx = links ? rx + rw + 12 : rx - 12 - bw;
+        const by = lage === 'ueber' ? y0 + blockH - bh : y0;
+        return { cx: rx + rw / 2, cy: ry + rh / 2, bx, by, zipfel: links ? 'zl' : 'zr',
+                 zy: Math.max(14, Math.min(bh - 30, ry + 38 * z - by)), zeigt, platzDa: lage !== 'auf' };
+    }
+    function tourSchritt(i){
+        while(i < TOUR.length && TOUR[i].ziel && !zuSehen(D.querySelector(TOUR[i].ziel))) i++;
+        if(i >= TOUR.length){ tourFertig(); roboHeim(); return; }
+        robo.schritt = i;
+        const st = TOUR[i], text = typeof st.text === 'function' ? st.text() : st.text;
+        if(!st.ziel){
+            auftritt(text, st.knoepfe, st.anfang ? 'tanzweg' : '', 'tour');
+            if(st.ende) tourFertig();
+            return;
+        }
+        uhrenAus();
+        robo.modus = 'tour';
+        rausAusKarte();
+        blaseZu();
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt');
+        const el = D.querySelector(st.ziel);
+        const W = window.innerWidth, z = zf(), alle = tourZiele(), nr = alle.indexOf(st) + 1;
+        const nebenBreite = Math.min(250 * z, W - RW * z * tourMass() - 34);
+        robo.stapel = nebenBreite / z < 200;
+        blaseFuellen(text, [['Weiter', 'weiter']], nr + ' von ' + alle.length, robo.stapel ? Math.min(310 * z, W - 32) : nebenBreite);
+        const fest = !!el.closest('#appLeiste, #appNavi');
+        const inNavi = !!el.closest('#appNavi');
+        if(inNavi) D.body.classList.remove('app-navi-weg');
+        // Nur scrollen, wenn das Ziel nicht ganz zu sehen ist oder
+        // Funki daneben keinen Platz haette.
+        const T0 = el.getBoundingClientRect();
+        const mussScrollen = !fest && (T0.top < randOben() || T0.bottom > randUnten() || !seite(T0).platzDa);
+        if(mussScrollen){
+            roboRing.classList.remove('da');
+            roboSperre.classList.remove('klar');
+            // Uebereinander braucht Funki viel Platz darunter: das Ziel
+            // nach oben (unter die Leiste) statt in die Mitte.
+            tu(() => {
+                if(robo.stapel){
+                    el.style.scrollMarginTop = px(randOben() + 8);
+                    el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                } else el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            });
+        }
+        roboSperre.classList.add('da');
+        nachDemScrollen(() => {
+            el.style.scrollMarginTop = '';
+            if(inNavi) D.body.classList.remove('app-navi-weg');
+            spaeter(() => {
+                const T = el.getBoundingClientRect(), p = 6;
+                Object.assign(roboRing.style, { left: px(T.left - p), top: px(T.top - p), width: px(T.width + 2 * p), height: px(T.height + 2 * p) });
+                roboRing.classList.add('da');
+                roboSperre.classList.add('klar');
+                const q = seite(T);
+                roboStellen(q.cx, q.cy, tourMass());
+                spaeter(() => { roboEl.classList.add(q.zeigt); blaseZeigen(q.bx, q.by, q.zipfel, q.zy, q.zx); }, 720);
+            }, (inNavi || mussScrollen) ? 260 : 0);     // die untere Leiste braucht 0,22 s
+        });
+    }
+
+    // ----- Tipps, Tagesgruss, Feiern, Antippen
+    function tippZeigen(){
+        auftritt('<b>Tipp:</b> ' + naechsterTipp(), [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
+    }
+    function fragenText(n){ return n + (n === 1 ? ' Frage' : ' Fragen'); }
+    function tagesGruss(){
+        const name = nameIst(), rest = Math.max(0, tagesziel() - heuteAnzahl()), s = serie();
+        let t = grussZeit() + (name ? ', ' + esc(name) : '') + '! ';
+        if(!rest) t += 'Dein Tagesziel hast du heute schon geschafft. Stark!';
+        else if(s > 1) t += 'Du bist seit <b>' + s + ' Tagen</b> auf Sendung. Heute fehlen noch <b>' + fragenText(rest) + '</b>.';
+        else t += 'Heute fehlen dir noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel.';
+        t += '<span class="rb-tipp"><b>Tipp:</b> ' + naechsterTipp() + '</span>';
+        auftritt(t, rest ? [['Runde starten', 'runde'], ['Später', 'heim']] : [['Noch ein Tipp', 'tipp'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
+    }
+    function zielFeiern(){
+        const s = serie();
+        auftritt('<b>Juhu, Tagesziel geschafft!</b> ' + (s > 1 ? 'Du bist jetzt seit <b>' + s + ' Tagen</b> auf Sendung. Weiter so!' : 'Deine Serie hat begonnen – morgen geht es weiter!'),
+            [['Weiter üben', 'runde'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
+    }
+    const HALLO = ['Du hast mich gerufen?', 'Da bin ich!', 'Funki meldet sich!', 'Hallo! Schön, dass du da bist.'];
+    function rufen(){
+        if(robo.da || !roboDarf()) return;
+        auftritt(HALLO[Math.floor(Math.random() * HALLO.length)] + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + naechsterTipp() + '</span>',
+            [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
+    }
+    tu(() => $('ahMk').addEventListener('click', e => { e.stopPropagation(); rufen(); }));
+
+    function roboTat(t){
+        if(t === 'weiter') tourSchritt(robo.schritt + 1);
+        else if(t === 'tipp') tippZeigen();
+        else if(t === 'tour') tourSchritt(1);
+        else if(t === 'runde'){ roboHeim(true); rundeStarten(); }
+        else { if(robo.modus === 'tour') tourFertig(); roboHeim(); }
+    }
+    roboBlase.addEventListener('click', e => {
+        const b = e.target.closest('[data-tat]');
+        if(b){ e.stopPropagation(); roboTat(b.dataset.tat); }
+    });
+    // Tippen daneben: im Rundgang weiter, sonst Tschuess. Die Frage am
+    // Anfang ("Soll ich dir zeigen ...?") will eine Antwort.
+    roboSperre.addEventListener('click', () => {
+        if(!robo.modus) return;
+        const st = TOUR[robo.schritt] || {};
+        if(robo.modus === 'tour' && st.anfang) return;
+        if(robo.modus === 'tour' && st.ziel) roboTat('weiter');
+        else roboTat('heim');
+    });
+    // Funki selbst antippen: im Rundgang weiter, sonst ein Tanz
+    roboEl.addEventListener('click', () => {
+        if(!robo.modus) return;
+        const st = TOUR[robo.schritt] || {};
+        if(robo.modus === 'tour' && st.ziel) roboTat('weiter');
+        else tanzen();
+    });
+
+    // ----- Wann kommt er von selbst?
+    //  Erst wenn der Startbildschirm ein paar Sekunden frei ist (keine
+    //  Begruessung, keine Stilwahl, kein Update-Fenster) und oben steht.
+    function roboPruefen(){
+        if(robo.da){
+            if(robo.modus && !roboDarf()) roboHeim(true);    // Runde, Fenster oder Stilwechsel
+            return;
+        }
+        if(!roboDarf() || lies('app_stil_gewaehlt', '') !== '1' || window.scrollY > 150){ robo.frei = 0; return; }
+        robo.frei++;
+        if(robo.frei < 2 || !tippsAn()) return;
+        const t = tagK();
+        if(lies('robo_tour_gesehen', '') !== '1'){ tourStarten(); return; }
+        if(heuteAnzahl() >= tagesziel() && lies('robo_ziel_tag', '') !== t){ schreib('robo_ziel_tag', t); schreib('robo_gruss_tag', t); zielFeiern(); return; }
+        if(lies('robo_gruss_tag', '') !== t){ schreib('robo_gruss_tag', t); tagesGruss(); }
+    }
+    setInterval(() => tu(roboPruefen), 1200);
+    // Drehen des Handys: Funki geht heim, statt schief zu stehen
+    window.addEventListener('resize', () => { if(robo.da && window.innerWidth !== robo.breite) roboHeim(true); });
+    window.appFunki = { rufen: () => { robo.frei = 0; rufen(); }, rundgang: () => tourSchritt(0), tipp: tippZeigen, gruss: tagesGruss, feiern: zielFeiern, heim: roboHeim,
+                        schritt: i => tourSchritt(i), zustand: () => ({ da: robo.da, modus: robo.modus, schritt: robo.schritt }) };
+
+    // ---------------- Zurueck-Taste ----------------
+    tu(() => {
+        const alt = window.appZurueck;
+        window.appZurueck = function(){
+            if(robo.da && robo.modus){ roboTat('heim'); return true; }
+            if(blatt.classList.contains('offen')){ blattZu(); return true; }
+            if($('appStilWahl')){ stilWahlFertig(); return true; }
+            return typeof alt === 'function' ? alt() : false;
+        };
+    });
 })();
 </script>
 </body>
