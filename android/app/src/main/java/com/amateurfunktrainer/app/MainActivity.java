@@ -16,8 +16,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.content.ContentValues;
 import android.provider.MediaStore;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -45,7 +43,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Locale;
 
 /**
  * Die Oberflaeche der App (29.09.2026): ein Browserfenster, das die
@@ -60,8 +57,9 @@ public class MainActivity extends Activity {
     private PermissionRequest wartendeFreigabe;
     private final Handler haupt = new Handler(Looper.getMainLooper());
     private boolean geladen = false;
-    private TextToSpeech sprache;
-    private boolean spracheBereit = false;
+    // Die Stimme haengt seit dem 30.09.2026 am Prozess, nicht an der
+    // Oberflaeche - siehe Stimme.java.
+    private final Stimme.Melder stimmMelder = this::melden;
     private View vorhang;
     private TextView vorhangText;
 
@@ -82,7 +80,7 @@ public class MainActivity extends Activity {
         vorhang = startbild();
         wurzel.addView(vorhang, new FrameLayout.LayoutParams(-1, -1));
         setContentView(wurzel);
-        spracheStarten();
+        Stimme.anmelden(this, stimmMelder);
         web.addJavascriptInterface(new Sprache(), "AndroidSprache");
         web.addJavascriptInterface(new Datei(), "AndroidDatei");
         web.addJavascriptInterface(new AppSteuerung(), "AndroidApp");
@@ -238,20 +236,10 @@ public class MainActivity extends Activity {
     //  Stimme. Sie nimmt den Text (vom Server schon ausgeschrieben, siehe
     //  Index.html "ANDROID-APP") und schreibt eine WAV-Datei; der Browser
     //  holt sie ueber /api/android-tts ab und spielt sie wie bisher.
+    //  Seit dem 30.09.2026 liegt die Verbindung zum Sprachmodul in
+    //  Stimme.java (eine je Prozess) - Dietmar: "Oeffne ich ein zweites
+    //  Mal die App, ist die Stimme nicht da."
     // ================================================================
-    private void spracheStarten() {
-        sprache = new TextToSpeech(getApplicationContext(), status -> {
-            if (status != TextToSpeech.SUCCESS) return;
-            int r = sprache.setLanguage(Locale.GERMANY);
-            spracheBereit = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
-            sprache.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                @Override public void onStart(String id) { }
-                @Override public void onDone(String id) { melden(id, true); }
-                @Override public void onError(String id) { melden(id, false); }
-            });
-        });
-    }
-
     private void melden(final String id, final boolean ok) {
         haupt.post(() -> { if (web != null) web.evaluateJavascript("window.__androidTtsFertig&&window.__androidTtsFertig(" + jsText(id) + "," + ok + ")", null); });
     }
@@ -265,14 +253,15 @@ public class MainActivity extends Activity {
     }
 
     class Sprache {
-        @JavascriptInterface public boolean bereit() { return spracheBereit; }
+        @JavascriptInterface public boolean bereit() { return Stimme.istBereit(); }
         @JavascriptInterface public void synthese(String id, String text) {
-            if (!spracheBereit || id == null || !id.matches("t[a-z0-9]{6,30}")) { melden(id, false); return; }
+            if (id == null || text == null || !id.matches("t[a-z0-9]{6,30}")) { melden(id, false); return; }
             File f = new File(NodeStarter.sprachOrdner(MainActivity.this), id + ".wav");
             String t = text.length() > 3900 ? text.substring(0, 3900) : text;
-            int r = sprache.synthesizeToFile(t, new Bundle(), f, id);
-            if (r != TextToSpeech.SUCCESS) melden(id, false);
+            if (!Stimme.aufnehmen(MainActivity.this, id, t, f)) melden(id, false);
         }
+        /** Woran es liegt, wenn nichts kommt - fuer den Hinweis in der Seite. */
+        @JavascriptInterface public String zustand() { return Stimme.zustand(); }
     }
 
     class Datei {
@@ -314,7 +303,9 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        try { if (sprache != null) sprache.shutdown(); } catch (Exception e) { }
+        // Die Verbindung zum Sprachmodul bleibt bestehen (Stimme.java) -
+        // nur die Rueckmeldungen gehen nicht mehr an diese Oberflaeche.
+        Stimme.abmelden(stimmMelder);
         super.onDestroy();
     }
 

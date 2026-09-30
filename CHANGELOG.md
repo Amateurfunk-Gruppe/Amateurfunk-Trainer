@@ -81,6 +81,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Android-App: Nach dem zweiten Öffnen las das Handy nicht mehr vor (erst ein Neustart des Handys half, zum Beispiel mit Acapela) – die App hält jetzt eine Verbindung zur Stimme, solange sie läuft, verbindet bei Bedarf neu und versucht es dann ein zweites Mal; unter dem Hinweis steht eine kleine Technik-Zeile (braucht die neue App-Version)
 - Android-App: Las das Handy nicht vor, riet der Hinweis zu Piper – das gibt es nur am PC. Jetzt steht dort, was am Handy zu prüfen ist (Sprachausgabe-Modul, deutsche Stimme, Trainer neu öffnen)
 - Android-App: Die Seite ließ sich mit dem Finger nicht scrollen (auch nicht im langen Bildschirmfoto), und in einer Runde saßen Zurück/Weiter halb unter dem Bildschirmrand
 - Chat im Dark Mode: eigene Blasen und Chatkopf in tiefem Blau statt grellem Signalblau, Haken deutlich sichtbar (gelesen in hellem Türkis)

@@ -77,14 +77,22 @@
                         var j = await r.json();
                         if(j && j.expanded) text = j.expanded;
                     }catch(e){}
-                    var id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-                    var ok = await new Promise(function(fertig){
-                        warten[id] = fertig;
-                        try{ window.AndroidSprache.synthese(id, text); }
-                        catch(e){ delete warten[id]; fertig(false); }
-                        setTimeout(function(){ if(warten[id]){ delete warten[id]; fertig(false); } }, 30000);
-                    });
-                    if(!ok) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+                    var sprich = function(){
+                        var id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                        return new Promise(function(fertig){
+                            warten[id] = fertig;
+                            try{ window.AndroidSprache.synthese(id, text); }
+                            catch(e){ delete warten[id]; fertig(false); }
+                            setTimeout(function(){ if(warten[id]){ delete warten[id]; fertig(false); } }, 30000);
+                        }).then(function(ok){ return ok ? id : null; });
+                    };
+                    // Zweiter Versuch (30.09.2026). Dietmar: "Oeffne ich ein
+                    // zweites Mal die App, ist die Stimme nicht da." War die
+                    // Stimme nicht bereit, verbindet die App neu (Stimme.java)
+                    // - nach einer kurzen Pause klappt es dann meist.
+                    var id = await sprich();
+                    if(!id){ await new Promise(function(r){ setTimeout(r, 1800); }); id = await sprich(); }
+                    if(!id) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
                     var a = await original('/api/android-tts/' + id);
                     if(!a.ok) return new Response('Aufnahme fehlt', { status: 503, headers: { 'Content-Type': 'text/plain' } });
                     var b = await a.blob();
@@ -28214,6 +28222,17 @@ function ttsIstWindows(){
 //  im Modul noch nicht installiert.
 // ================================================================
 function ttsImApp(){ return document.documentElement.classList.contains('android-app'); }
+// Was die App ueber die Stimme weiss (ab der App vom 30.09.2026) - eine
+// kleine Zeile unter dem Hinweis, damit ein Bildschirmfoto verraet, woran
+// es liegt.
+function ttsAppZustand(){
+    try{
+        if(!window.AndroidSprache || typeof window.AndroidSprache.zustand !== 'function') return '';
+        const z = JSON.parse(window.AndroidSprache.zustand());
+        return '\n(Technik: Modul ' + (z.modul || 'unbekannt') + ', bereit ' + (z.bereit ? 'ja' : 'nein')
+             + ', Start ' + z.status + ', Sprache ' + z.sprache + ', Fehler ' + z.fehler + ')';
+    }catch(e){ return ''; }
+}
 function ttsPiperWeg(){
     if(ttsImApp()){
         return 'So klappt es wieder: In den Android-Einstellungen unter \u201eSprachausgabe\u201c (auch \u201eText-in-Sprache\u201c) '
@@ -28221,7 +28240,7 @@ function ttsPiperWeg(){
              + 'Danach den Trainer ganz schlie\u00dfen (aus der Liste der offenen Apps wischen) und neu \u00f6ffnen \u2013 '
              + 'er verbindet sich beim Start mit der Stimme. '
              + 'Bei zus\u00e4tzlichen Stimmen-Apps wie Acapela muss die deutsche Stimme auf dem Handy installiert sein; '
-             + 'sonst als Modul Google w\u00e4hlen.';
+             + 'sonst als Modul Google w\u00e4hlen.' + ttsAppZustand();
     }
     if(!laeuftLokal()){
         return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Kursleiters \u2013 dort fehlt sie gerade. '
