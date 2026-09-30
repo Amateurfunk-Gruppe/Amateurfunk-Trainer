@@ -5630,9 +5630,16 @@ function lcAntwortZerlegen(roh, streng){
   return { chat: chat, sprech: sprech };
 }
 
-function lcSystemText(anweisungen){
+function lcSystemText(anweisungen, funki){
   return [
-    'Du bist der Lerncoach im Gruppenchat des Amateurfunk-Trainers. Antworte immer auf Deutsch.',
+    funki
+      // Funki im Chat (30.09.2026). Dietmar: "Funki ist ein Roboter, der
+      // dich unterstuetzt, dich animiert und dir Glauben gibt, dass du die
+      // Pruefung schaffst."
+      ? 'Du bist Funki, das kleine Funkgerät-Maskottchen des Amateurfunk-Trainers, und hilfst im Gruppenchat. Antworte immer auf Deutsch. '
+        + 'Deine Art: fröhlich, ein bisschen frech, ermutigend (zum Beispiel "Du schaffst das!"), per du, kurz. '
+        + 'Fachlich bleibst du genau – ein Witz nie auf Kosten der Richtigkeit.'
+      : 'Du bist der Lerncoach im Gruppenchat des Amateurfunk-Trainers. Antworte immer auf Deutsch.',
     'Du hilfst nur beim Lernen für die Amateurfunkprüfung (Technik, Betriebstechnik, Vorschriften, Rechnen dazu).',
     'Zu anderen Themen antwortest du freundlich in einem Satz, dass du hier nur beim Amateurfunk hilfst.',
     'Frag niemals nach persönlichen Daten. Gib keine Links außer 50ohm.de.',
@@ -5651,14 +5658,14 @@ function lcSystemText(anweisungen){
   ].join('\n');
 }
 
-async function lcFragen({ name, text, frageId, sitzung, versuchMelden }){
+async function lcFragen({ name, text, frageId, sitzung, versuchMelden, funki }){
   const e = lcEinstellungen();
   const or = e.anbieter === 'openrouter';
   const schluessel = lcSchluessel(e.anbieter);
   if(!schluessel) throw Object.assign(new Error('kein Schluessel'), { status: 401, openrouter: or });
   let anweisungen = '';
   try{ anweisungen = fs.readFileSync(path.join(LC_ORDNER, 'anweisungen.md'), 'utf8').slice(0, 8000); }catch(err){ anweisungen = LC_ANWEISUNGEN_VORGABE; }
-  const system = lcSystemText(anweisungen);
+  const system = lcSystemText(anweisungen, funki);
   // An OpenRouter kein Vorname - siehe oben bei LC_OR_SCHLUESSEL_DATEI.
   let inhalt = 'Frage von ' + (or ? 'jemandem aus dem Kurs' : (name || 'jemandem im Chat')) + ':\n' + (text || 'Bitte erkläre mir diese Frage.');
   if(frageId){
@@ -6910,7 +6917,16 @@ try{
   // der Nachricht @KI / @Lerncoach und eine Anrede (hey, hallo, hi, hei,
   // he, moin, servus) vor KI, Lerncoach oder Coach. "Hi Kim" loest nichts
   // aus (\b hinter "ki"). Dieselbe Regel steht in duo.js (LC_KI_RE).
-  const LC_RE = /^\s*(?:@(?:ki|lerncoach)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach)\b)[\s,:!.\-\u2013]*/i;
+  //
+  // FUNKI IM CHAT (30.09.2026). Dietmar: "Funki soll auch im Chat aktiv
+  // sein. Funki, ich habe eine Frage." Funki ist hier der Lerncoach in
+  // Funkis Gestalt: "Funki, ...", "Hey Funki" oder @Funki am Anfang. Ein
+  // blosses "Funki" mitten im Satz ("Funki ist cool") loest nichts aus -
+  // dahinter muss ein Komma, Doppelpunkt, Ausrufe- oder Fragezeichen
+  // stehen oder die Nachricht zu Ende sein. Antwort und Hinweise kommen
+  // dann unter dem Namen Funki, froehlich und ermutigend.
+  const LC_RE = /^\s*(?:@(?:ki|lerncoach|funki)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach|funki)\b|funki(?=\s*[,:!?]|\s*$))[\s,:!.\-\u2013]*/i;
+  const LC_FUNKI_RE = /^\s*(?:@funki\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+funki\b|funki(?=\s*[,:!?]|\s*$))/i;
   // "Hey KI, ich habe eine Frage." ohne die Frage selbst: Der Lerncoach
   // antwortet sofort (ohne KI, kostet nichts) "Was moechtest du wissen?"
   // und hoert danach drei Minuten lang auf die NAECHSTE Nachricht dieser
@@ -6947,22 +6963,24 @@ try{
     if(!lcPrivat.has(n.id)) return true;
     return lcPrivat.get(n.id) === chatSitzungFuer(sock);
   }
-  function lcNotiz(name, socket){
+  function lcNotiz(name, socket, funki){
     const id = crypto.randomBytes(8).toString('hex');
     if(socket){
       lcNichtFuer.set(id, chatSitzungFuer(socket));
       while(lcNichtFuer.size > 2000) lcNichtFuer.delete(lcNichtFuer.keys().next().value);
     }
-    return { id: id, userId: '__system__', name: 'Lerncoach', system: true,
-             text: '🎓 ' + name + ' hat den Lerncoach gefragt.', zeit: Date.now() };
+    return { id: id, userId: '__system__', name: funki ? 'Funki' : 'Lerncoach', system: true,
+             text: funki ? '📻 ' + name + ' hat Funki gefragt.' : '🎓 ' + name + ' hat den Lerncoach gefragt.', zeit: Date.now() };
   }
   // Geht diese Nachricht an den Lerncoach - und bleibt sie deshalb unter
   // vier Augen? Nur wenn er an ist und keine Pruefung laeuft; sonst bleibt
   // sie eine ganz normale Nachricht (die Pruefungs-Absage kommt trotzdem).
   function lcPruefen(socket, text, code, room){
-    const an = LC_RE.test(text) || lcHoertZu(socket, code);
+    const direkt = LC_RE.test(text);
+    const funkiVorher = !!(socket.data && socket.data.lcFunki);
+    const an = direkt || lcHoertZu(socket, code);
     const privat = an && lcAktiv() && !(room && room.config && room.config.pruefung);
-    return { an: an, privat: privat };
+    return { an: an, privat: privat, funki: direkt ? LC_FUNKI_RE.test(text) : (an && funkiVorher) };
   }
   function lcOrtFuer(socket, code){
     if(code === '__haus') return (socket.data && socket.data.roomCode) ? null : { haus: true };
@@ -6992,23 +7010,26 @@ try{
   async function lcAnstossen(socket, ort, anfrage){
     try{
       if(!lcAktiv()) return;
+      const funki = !!anfrage.funki, wer = funki ? 'Funki' : 'der Lerncoach';
       // In einer Pruefung im Gruppenraum schweigt der Lerncoach.
       if(ort.room && ort.room.config && ort.room.config.pruefung){
-        socket.emit('duoChatHinweis', 'Während einer Prüfung hilft der Lerncoach nicht – danach gern.'); return;
+        socket.emit('duoChatHinweis', 'Während einer Prüfung hilft ' + wer + ' nicht – danach gern.'); return;
       }
       if(!anfrage.frageId && LC_NUR_ANREDE_RE.test(String(anfrage.text || ''))){
         socket.data.lcHoertBis = Date.now() + 3 * 60 * 1000;
         socket.data.lcHoertOrt = ort.room ? ort.code : '__haus';
-        lcPosten(ort, { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
-                        lerncoach: true, fuer: anfrage.name, fuerId: socket.id, zeit: Date.now(),
+        socket.data.lcFunki = funki;
+        lcPosten(ort, { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: funki ? 'Funki' : 'Lerncoach', istHost: false,
+                        lerncoach: true, funki: funki, fuer: anfrage.name, fuerId: socket.id, zeit: Date.now(),
                         ohneHinweis: true,
-                        text: 'Gern! Was möchtest du wissen? Schreib deine Frage einfach als nächste Nachricht – ohne „Hey KI“.' }, socket);
+                        text: funki ? 'Klar, ich bin ganz Antenne! Was möchtest du wissen? Schreib deine Frage einfach als nächste Nachricht.'
+                                    : 'Gern! Was möchtest du wissen? Schreib deine Frage einfach als nächste Nachricht – ohne „Hey KI“.' }, socket);
         return;
       }
       const jetzt = Date.now();
       socket.data.lcZeiten = (socket.data.lcZeiten || []).filter(t => jetzt - t < 60 * 60 * 1000);
       if(socket.data.lcZeiten.length && jetzt - socket.data.lcZeiten[socket.data.lcZeiten.length - 1] < 10000){
-        socket.emit('duoChatHinweis', 'Einen Moment – der Lerncoach antwortet gerade noch.'); return;
+        socket.emit('duoChatHinweis', 'Einen Moment – ' + wer + ' antwortet gerade noch.'); return;
       }
       if(socket.data.lcZeiten.length >= 15){
         socket.emit('duoChatHinweis', 'Das waren viele Fragen an den Lerncoach in einer Stunde – bitte etwas später wieder.'); return;
@@ -7023,11 +7044,11 @@ try{
       if(lcLaufend >= 3){ socket.emit('duoChatHinweis', 'Der Lerncoach beantwortet gerade andere Fragen – bitte gleich noch einmal.'); return; }
       socket.data.lcZeiten.push(jetzt);
       lcLaufend++;
-      socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name });
+      socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name, funki: funki });
       let ergebnis;
       try{
-        ergebnis = await lcFragen({ name: anfrage.name, text: anfrage.text, frageId: anfrage.frageId,
-                                    versuchMelden: nr => socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name, versuch: nr }),
+        ergebnis = await lcFragen({ name: anfrage.name, text: anfrage.text, frageId: anfrage.frageId, funki: funki,
+                                    versuchMelden: nr => socket.emit('lerncoachDenkt', { an: true, fuer: anfrage.name, versuch: nr, funki: funki }),
                                     sitzung: chatSitzungFuer(socket) });
       }catch(err){
         console.warn('[LERNCOACH] Fehler: ' + (err.status || '') + ' ' + String(err.message || err).slice(0, 160));
@@ -7037,8 +7058,8 @@ try{
         lcLaufend--;
         socket.emit('lerncoachDenkt', { an: false });
       }
-      const n = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
-                  lerncoach: true, fuer: anfrage.name, fuerId: socket.id, text: ergebnis.chat, zeit: Date.now() };
+      const n = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: funki ? 'Funki' : 'Lerncoach', istHost: false,
+                  lerncoach: true, funki: funki, fuer: anfrage.name, fuerId: socket.id, text: ergebnis.chat, zeit: Date.now() };
       if(anfrage.frageId) n.zuFrage = anfrage.frageId;
       // Sprachnachricht erst auf Wunsch (29.09.2026). Dietmar: "Nach dem
       // Text, soll er fragen ob auch eine Sprachnachricht gewuenscht ist."
@@ -7048,7 +7069,7 @@ try{
       // In der Android-App gibt es kein Piper - dort keine Sprachnachricht anbieten.
       if(e.stimme && ergebnis.sprech && !process.env.TRAINER_ANDROID){
         n.vorlesenAngebot = true;
-        lcVorleseWunsch.set(n.id, { n: n, sprech: ergebnis.sprech, ort: ort, sitzung: chatSitzungFuer(socket), name: anfrage.name });
+        lcVorleseWunsch.set(n.id, { n: n, sprech: ergebnis.sprech, ort: ort, sitzung: chatSitzungFuer(socket), name: anfrage.name, funki: funki });
         while(lcVorleseWunsch.size > 300) lcVorleseWunsch.delete(lcVorleseWunsch.keys().next().value);
       }
       lcPosten(ort, n, socket);
@@ -7068,8 +7089,8 @@ try{
     try{
       const t = await lcSprechen(w.sprech);
       const text = '🎤 Sprachnachricht (' + Math.floor(t.dauer / 60) + ':' + String(t.dauer % 60).padStart(2, '0') + ')';
-      const s = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: 'Lerncoach', istHost: false,
-                  lerncoach: true, fuer: w.name, fuerId: socket.id, zuAntwort: id, text: text, zeit: Date.now(),
+      const s = { id: crypto.randomBytes(8).toString('hex'), userId: '__lerncoach__', name: w.funki ? 'Funki' : 'Lerncoach', istHost: false,
+                  lerncoach: true, funki: !!w.funki, fuer: w.name, fuerId: socket.id, zuAntwort: id, text: text, zeit: Date.now(),
                   sprache: { mime: 'audio/mpeg', dauer: t.dauer, welle: t.welle } };
       spracheMerken(s.id, t.buf, 'audio/mpeg');
       lcPosten(ort, s, socket);
@@ -8469,14 +8490,14 @@ try{
             // Frage an den Lerncoach: nur an den Fragenden, die anderen
             // sehen, dass gefragt wurde (29.09.2026).
             socket.emit('duoChatNachricht', n);
-            const notiz = Object.assign(lcNotiz(name, socket), { haus: true });
+            const notiz = Object.assign(lcNotiz(name, socket, lcH.funki), { haus: true });
             hausChat.push(notiz);
             while(hausChat.length > HAUS_CHAT_MAX) hausChat.shift();
             hausLeute().forEach(function(s){ if(s.id !== socket.id){ try{ s.emit('duoChatNachricht', notiz); }catch(e){} } });
           } else {
             hausSenden('duoChatNachricht', n);
           }
-          if(lcH.an) lcAnstossen(socket, { haus: true }, { name: name, text: t.replace(LC_RE, ''), frageId: frageH ? frageH.id : null });
+          if(lcH.an) lcAnstossen(socket, { haus: true }, { name: name, text: t.replace(LC_RE, ''), frageId: frageH ? frageH.id : null, funki: lcH.funki });
           // Nur wer und wie lang, nicht was: server.log ueberlebt jeden
           // Neustart, der Chat soll es nicht (23.09.2026).
           console.log('[CHAT] ohne Raum - ' + n.name + ' schreibt (' + t.length + ' Zeichen)');
@@ -8519,11 +8540,11 @@ try{
         if(lcR.privat){
           nachricht.empfaenger = 0;
           socket.emit('duoChatNachricht', nachricht);
-          const notiz = lcNotiz(nachricht.name, socket);
+          const notiz = lcNotiz(nachricht.name, socket, lcR.funki);
           room.chat.push(notiz);
           while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
           socket.to(data.code).emit('duoChatNachricht', notiz);
-          lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null });
+          lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null, funki: lcR.funki });
           console.log(`[CHAT] ${room.code} ${nachricht.name} fragt den Lerncoach (${text.length} Zeichen)`);
           return;
         }
@@ -8561,7 +8582,7 @@ try{
             console.log('[CHAT] Antwort des Kursleiters auch an ' + draussen.length + ' am Link.');
           }
         }
-        if(lcR.an) lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null });
+        if(lcR.an) lcAnstossen(socket, { room: room, code: data.code }, { name: nachricht.name, text: text.replace(LC_RE, ''), frageId: frageR ? frageR.id : null, funki: lcR.funki });
         console.log(`[CHAT] ${room.code} ${nachricht.name} schreibt (${text.length} Zeichen)`);
       }catch(e){ console.error('[CHAT] Fehler', e); }
     });

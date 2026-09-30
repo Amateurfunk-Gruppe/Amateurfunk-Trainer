@@ -2857,7 +2857,7 @@
         // stattdessen dastehen soll, seine Antwort: "Server".
         if(n.lerncoach) zeile.className = 'duo-chat-zeile duo-chat-fremd duo-chat-coach';   // fremd: Leiste und Knopf sitzen wie bei allen anderen
         const absender = n.lerncoach
-            ? '<span class="duo-chat-absender"><i class="fa-solid fa-graduation-cap"></i> Lerncoach (KI)'
+            ? '<span class="duo-chat-absender">' + (n.funki ? '<i class="fa-solid fa-robot"></i> Funki (KI)' : '<i class="fa-solid fa-graduation-cap"></i> Lerncoach (KI)')
               + (n.fuer ? ' · für ' + (n.fuerId && n.fuerId === myUserId ? 'dich' : escapeHtml(n.fuer)) : '') + '</span>'
             : (n.system || (eigen && !n.automatisch)) ? '' :
             '<span class="duo-chat-absender">' + escapeHtml(n.name || 'Teilnehmer') +
@@ -3154,8 +3154,10 @@
     // ================================================================
     var lerncoachAn = false;
     var lerncoachAnbieter = 'anthropic';
-    // Wie LC_RE in Server.js: @KI oder "Hey KI" (29.09.2026).
-    var LC_KI_RE = /^\s*(?:@(?:ki|lerncoach)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach)\b)/i;
+    // Wie LC_RE in Server.js: @KI oder "Hey KI" (29.09.2026), dazu Funki
+    // (30.09.2026, Dietmar: "Funki soll auch im Chat aktiv sein. Funki,
+    // ich habe eine Frage."): "Funki, ...", "Hey Funki", @Funki.
+    var LC_KI_RE = /^\s*(?:@(?:ki|lerncoach|funki)\b|(?:hey|hallo|hi|hei|he|moin|servus)[\s,!]+(?:ki|lerncoach|coach|funki)\b|funki(?=\s*[,:!?]|\s*$))/i;
     function lerncoachStand(d){
         lerncoachAn = !!(d && d.an);
         lerncoachAnbieter = (d && d.anbieter === 'openrouter') ? 'openrouter' : 'anthropic';
@@ -3165,14 +3167,18 @@
             try{ schon = localStorage.getItem('lerncoach_tipp') === '1'; }catch(e){}
             const box = document.getElementById('duoChatBox');
             if(!schon && box && box.classList.contains('sichtbar')){
-                chatSystemmeldung('Neu: der Lerncoach (KI). Beginne eine Nachricht mit „Hey KI“ oder @KI, oder tippe an einer geteilten Frage auf „Lerncoach fragen“.');
+                chatSystemmeldung('Neu: der Lerncoach (KI). Beginne eine Nachricht mit „Hey KI“, @KI oder „Funki,“ – oder tippe an einer geteilten Frage auf „Lerncoach fragen“.');
                 try{ localStorage.setItem('lerncoach_tipp', '1'); }catch(e){}
             }
         }
     }
     // true = darf los
-    function lerncoachVorSenden(){
-        if(!lerncoachAn){ chatSystemmeldung('Der Lerncoach ist auf diesem Trainer nicht eingeschaltet.'); return true; }
+    function lerncoachVorSenden(text){
+        if(!lerncoachAn){
+            chatSystemmeldung(/funki/i.test(String(text || '')) ? 'Funki kann im Chat antworten, sobald der Kursleiter den Lerncoach (KI) einschaltet.'
+                                                                : 'Der Lerncoach ist auf diesem Trainer nicht eingeschaltet.');
+            return true;
+        }
         if(pruefungLaeuft()){ chatSystemmeldung('Während einer Prüfung hilft der Lerncoach nicht – danach gern.'); return false; }
         let schon = false;
         // _2 seit 29.09.2026: Der Hinweis sagt jetzt "siehst nur du" - wer den alten kennt, soll den neuen einmal sehen.
@@ -3211,7 +3217,7 @@
         }
         // Ohne Namen (29.09.2026). Dietmar: "Lerncoach denkt nach (fuer
         // Dietmar) ... (fuer Dietmar) moechte ich raus haben".
-        el.innerHTML = '<i class="fa-solid fa-graduation-cap"></i> Lerncoach denkt nach'
+        el.innerHTML = (d.funki ? '<i class="fa-solid fa-robot"></i> Funki überlegt' : '<i class="fa-solid fa-graduation-cap"></i> Lerncoach denkt nach')
             + ' <span class="p">●</span><span class="p">●</span><span class="p">●</span>'
             + ' <span class="sek" style="opacity:.7"></span>'
             + (d.versuch > 1 ? '<br><span style="font-size:.7rem;opacity:.75">Die erste Antwort war unbrauchbar – ' + (d.versuch === 2 ? 'zweiter' : 'dritter') + ' Versuch …</span>' : '');
@@ -3523,12 +3529,12 @@
         let text = feld.value.trim();
         // "Rundgang" (auch "Hey KI, Rundgang") startet den Rundgang hier im
         // Browser und geht nicht an die anderen (29.09.2026).
-        if(/^((hey|hallo|hi)[\s,!]+)?((ki|lerncoach)[\s,:!]+)?rundgang[\s.!?]*$/i.test(text) && typeof window.rundgangStarten === 'function'){
+        if(/^((hey|hallo|hi)[\s,!]+)?((ki|lerncoach|funki)[\s,:!]+)?rundgang[\s.!?]*$/i.test(text) && typeof window.rundgangStarten === 'function'){
             feld.value = ''; try{ downloadKnopfZeichnen(); }catch(e){}
             window.rundgangStarten();
             return;
         }
-        if(LC_KI_RE.test(text) && !lerncoachVorSenden()) return;
+        if(LC_KI_RE.test(text) && !lerncoachVorSenden(text)) return;
         if(chatAnhang){ anhangSenden(text); return; }
         if(!text && ausKnopf === true && darfDownloadSenden()){
             // Doppelklick soll den Link nicht zweimal schicken.

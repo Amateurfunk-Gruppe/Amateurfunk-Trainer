@@ -988,7 +988,33 @@
         #roboBlase.zu::before { display: block; left: var(--zx, calc(50% - 8px)); bottom: -8px; border-top: 0; border-left: 0; }
         html.android-app .nur-verspielt { display: none; }
         html.android-app.stil-verspielt .nur-verspielt { display: block; }
-        @media (prefers-reduced-motion: reduce) { #roboHelfer, #roboHelfer * , #roboRing, #roboSperre { animation: none !important; transition: none !important; } }
+        /* Sein Name huepft Buchstabe fuer Buchstabe (Dietmar: "wenn er sich
+           Funki nennt mit Animation") */
+        .funki-name { display: inline-flex; font-weight: 800; color: var(--s-akzent); }
+        .funki-name i { font-style: normal; display: inline-block; animation: funkiBuchstabe 2.6s ease-in-out infinite; animation-delay: calc(var(--n) * 90ms); }
+        @keyframes funkiBuchstabe { 0%, 34%, 100% { transform: translateY(0) rotate(0); color: var(--s-akzent); } 9% { transform: translateY(-6px) rotate(-10deg); color: #FFA41B; }
+                                    18% { transform: translateY(1px) rotate(5deg); } 26% { transform: translateY(0) rotate(0); } }
+        #roboBlase .rb-wellen { width: 13px; height: 13px; vertical-align: -1px; margin-left: 1px; fill: none; stroke: #FFA41B; stroke-width: 1.8; stroke-linecap: round; }
+        #roboBlase .rb-wellen .w1 { animation: mkWelle 1.6s ease-in-out infinite; }
+        #roboBlase .rb-wellen .w2 { animation: mkWelle 1.6s ease-in-out 0.8s infinite; }
+        /* Kurz hereinlugen: kleine Blase ohne Knoepfe, Funki schraeg am Rand */
+        #roboBlase.klein { padding: 9px 12px 10px; font-size: 14px; line-height: 1.38; cursor: pointer; }
+        #roboBlase.klein .rb-kopf { font-size: 10.5px; padding-right: 0; margin-bottom: 1px; }
+        #roboHelfer .mk { transition: transform 0.4s ease; }
+        #roboHelfer.lugt-l .mk { transform: rotate(14deg); }
+        #roboHelfer.lugt-r .mk { transform: rotate(-14deg); }
+        /* Ta-da: Sprung mit Salto, so stellt er sich vor */
+        #roboHelfer.tada .robo-hopp { animation: roboTada 1.1s cubic-bezier(0.3, 0.7, 0.4, 1); }
+        @keyframes roboTada { 0% { transform: translateY(0) scale(1, 1); } 14% { transform: translateY(0) scale(1.1, 0.86); }
+                              50% { transform: translateY(-58px) rotate(180deg) scale(0.95, 1.05); } 82% { transform: translateY(0) rotate(360deg) scale(1.08, 0.9); }
+                              100% { transform: translateY(0) rotate(360deg) scale(1, 1); } }
+        /* Zuruf ueber dem Kopf ("Hihi!") */
+        #roboRuf { position: fixed; left: 0; top: 0; z-index: 99988; pointer-events: none; display: none; white-space: nowrap;
+                   font: 800 16px var(--font-display); color: #FFA41B; text-shadow: 0 2px 0 rgba(0,0,0,0.25), 0 0 12px rgba(255,164,27,0.6); }
+        html.android-app.stil-verspielt #roboRuf.da { display: block; animation: rufAuf 1.2s ease-out forwards; }
+        @keyframes rufAuf { 0% { opacity: 0; transform: translate(-50%, -80%) scale(0.6); } 20% { opacity: 1; transform: translate(-50%, -110%) scale(1.1); }
+                            70% { opacity: 1; transform: translate(-50%, -130%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -160%) scale(0.95); } }
+        @media (prefers-reduced-motion: reduce) { #roboHelfer, #roboHelfer * , #roboRing, #roboSperre, .funki-name i, #roboRuf { animation: none !important; transition: none !important; } }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -46129,7 +46155,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             let vorher = true, q = null;
             try{ vorher = answered; q = currentQuestions[currentIndex]; }catch(e){}
             const r = alt.apply(this, arguments);
-            try{ if(!vorher && answered && q && q.options && q.options[i]) { antwortZaehlen(!!q.options[i].correct); nachziehen(); } }catch(e){}
+            try{ if(!vorher && answered && q && q.options && q.options[i]) { antwortZaehlen(!!q.options[i].correct); nachziehen(); tu(() => funkiAntwort(!!q.options[i].correct)); } }catch(e){}
             return r;
         };
     });
@@ -46491,7 +46517,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<div class="sw-wahl">'
           + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (s === gewaehlt ? ' an' : '') + '" data-stil="' + s + '">'
               + handyVorschau(s) + '<b><span class="sw-kreis"></span>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b>'
-              + '<small>' + (s === 'sachlich' ? 'Klar und ruhig. Große Schrift, keine Ablenkung.' : 'Punkte, Serien und Funki – ein kleiner Roboter, der dir alles zeigt.') + '</small></button>').join('')
+              + '<small>' + (s === 'sachlich' ? 'Klar und ruhig. Große Schrift, keine Ablenkung.' : 'Punkte, Serien und Funki, der immer wieder vorbeischaut.') + '</small></button>').join('')
           + '</div>'
           + '<div class="sw-fuss"><div class="sw-hinweis">Jederzeit änderbar unter Einstellungen → Allgemein</div>'
           + '<button type="button" class="sw-los" id="swLos">Los geht\'s</button></div>';
@@ -46536,7 +46562,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.appStilEinstHtml = function(){
         setTimeout(() => tu(vorschauBeobachten), 0);      // die Vorschau erst nach dem Einsetzen verkleinern
         return '<div class="nur-app">'
-          + einstKasten('Stil der App', 'Sachlich: klar und ruhig, große Schrift. Verspielt: mit Punkten, Serie und Funki, dem kleinen Roboter. Der Inhalt ist derselbe.',
+          + einstKasten('Stil der App', 'Sachlich: klar und ruhig, große Schrift. Verspielt: mit Punkten, Serie und Funki. Der Inhalt ist derselbe.',
                 '<div class="app-stil-wahl">'
               + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (stilIst() === s ? ' an' : '') + '" id="appStilKachel_' + s + '" onclick="appStilSetzen(\'' + s + '\')">'
                   + handyVorschau(s, true) + '<b>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b></button>').join('')
@@ -46551,7 +46577,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [5, 10, 20, 25, 50].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
               + '</div>')
           + '<div class="nur-verspielt">'
-          + einstKasten('Funki, dein Helfer', 'Sagt einmal am Tag Hallo, gibt Tipps und feiert mit dir. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
+          + einstKasten('Funki, dein Helfer', 'Taucht immer wieder mal auf, sagt Hallo, gibt Tipps und feiert mit dir. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
                 '<div class="app-seg" id="appFunkiSeg">'
               + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + ((tippsAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
@@ -46661,6 +46687,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function randUnten(){
         const n = $('appNavi'), hoch = window.innerHeight;
+        if(D.body.classList.contains('runde-laeuft')){
+            const na = $('navArea'), r = na && na.getBoundingClientRect();
+            if(r && r.height && r.top < hoch) return r.top - 10;
+        }
         if(n && !D.body.classList.contains('app-navi-weg')){
             const r = n.getBoundingClientRect();
             if(r.height && r.top < hoch) return r.top - 10;
@@ -46695,6 +46725,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         s = s || 1;
         const z = zf();
         const t = 'translate(' + Math.round(cx / z - RW / 2) + 'px,' + Math.round(cy / z - RH / 2) + 'px)' + (s !== 1 ? ' scale(' + s.toFixed(3) + ')' : '');
+        robo.cx = cx; robo.cy = cy; robo.s = s;
         if(sofort){
             roboEl.style.transition = 'none';
             roboEl.style.transform = t;
@@ -46734,7 +46765,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         robo.modus = '';
         if(!robo.da) return;
         const fertig = () => {
-            roboEl.classList.remove('da', 'huepft');
+            ebeneSetzen(0);
+            roboEl.classList.remove('da', 'huepft', 'lugt-l', 'lugt-r');
             const m = $('ahMk');
             if(m) m.classList.remove('weg');
             robo.da = false;
@@ -46756,9 +46788,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
 
     // ----- Sprechblase
-    function blaseFuellen(html, knoepfe, zahl, breite){
-        roboBlase.innerHTML = '<button type="button" class="rb-zu" data-tat="heim" aria-label="Schließen"><i class="fas fa-xmark"></i></button>'
-          + '<div class="rb-kopf">Funki</div><div class="rb-text">' + html + '</div>'
+    const WELLEN = '<svg class="rb-wellen" viewBox="0 0 14 14" aria-hidden="true"><path class="w1" d="M4 4 a4 4 0 0 1 0 6"/><path class="w2" d="M8 1.5 a7.5 7.5 0 0 1 0 11"/></svg>';
+    function blaseFuellen(html, knoepfe, zahl, breite, klein){
+        roboBlase.classList.toggle('klein', !!klein);
+        roboBlase.innerHTML = (klein ? '' : '<button type="button" class="rb-zu" data-tat="heim" aria-label="Schließen"><i class="fas fa-xmark"></i></button>')
+          + '<div class="rb-kopf">Funki ' + WELLEN + '</div><div class="rb-text">' + html + '</div>'
           + ((knoepfe && knoepfe.length) || zahl
               ? '<div class="rb-knoepfe">' + (knoepfe || []).map((k, i) => '<button type="button" class="' + (i ? 'rb-leise' : 'rb-haupt') + '" data-tat="' + k[1] + '">' + k[0] + '</button>').join('')
                 + (zahl ? '<span class="rb-zahl">' + zahl + '</span>' : '') + '</div>'
@@ -46798,9 +46832,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Auftritt auf der Buehne. art 'tanzweg': erst quer ueber den Schirm
     // huepfen - Dietmar: "dass er ueber den Bildschirm tanzt".
-    function auftritt(html, knoepfe, art, modus){
+    function auftritt(html, knoepfe, art, modus, kuer){
         uhrenAus();
         robo.modus = modus || 'tipp';
+        robo.letzter = Date.now(); robo.ruhig = 0;
+        roboEl.classList.remove('lugt-l', 'lugt-r');
+        ebeneSetzen(0); robo.ort = 'start';
         const neu = !robo.da;
         rausAusKarte();
         blaseZu();
@@ -46819,21 +46856,30 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             t += 1400;
         }
         spaeter(() => roboStellen(p.cx, p.cy, s), t);
-        spaeter(() => { tanzen(); blaseZeigen(p.bx, p.by, 'zo'); }, t + 780);
+        spaeter(() => { kuer === 'tada' ? tada() : tanzen(); blaseZeigen(p.bx, p.by, 'zo'); }, t + 780);
     }
+    // Ta-da: Sprung mit Salto, danach winken - so stellt er sich vor
+    function tada(){
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt', 'tada');
+        void roboEl.offsetWidth;
+        roboEl.classList.add('tada');
+        spaeter(() => { roboEl.classList.remove('tada'); roboEl.classList.add('winkt'); }, 1150);
+    }
+    // Sein Name huepft Buchstabe fuer Buchstabe
+    const FUNKI = '<span class="funki-name">' + 'Funki'.split('').map((b, i) => '<i style="--n:' + i + '">' + b + '</i>').join('') + '</span>';
 
     // ----- Der Rundgang: "Schau mal hier ... schau mal da"
     const TOUR = [
-        { text: () => 'Hallo' + (nameIst() ? ' ' + esc(nameIst()) : '') + '! Ich bin <b>Funki</b>, dein Funk-Roboter. Ich helfe dir beim Lernen. Soll ich dir zeigen, wo alles ist?',
-          knoepfe: [['Zeig’s mir!', 'weiter'], ['Später', 'heim']], anfang: true },
-        { ziel: '#ahStart', text: '<b>Schau mal hier!</b> Damit startest du eine Runde. Für jede richtige Antwort bekommst du <b>10 XP</b>.' },
-        { ziel: '#ahWahl', text: 'Tippst du hier drauf, suchst du aus, <b>wie viele Fragen</b> drankommen – und aus welchem Prüfungsteil.' },
-        { ziel: '#ahTag', text: 'Das ist dein <b>Tagesziel</b>. Übst du jeden Tag, bleibt deine Serie auf Sendung: <b>ON AIR</b>!' },
-        { ziel: '#ahKacheln [data-ziel="ahFehler"]', text: '<b>Schau mal da!</b> Hier übst du deine Fehler – so lange, bis sie sitzen.' },
-        { ziel: '#ahKacheln [data-ziel="ahPruefung"]', text: 'Das ist die <b>Generalprobe</b>: eine Prüfung wie am echten Prüfungstag, mit Uhr.' },
-        { ziel: '#alSuche', text: 'Mit der <b>Lupe</b> findest du jede Frage – mit der Nummer oder einem Stichwort.' },
-        { ziel: '#appNavi [data-bereich="fortschritt"]', text: 'Und hier unten siehst du, <b>wie weit</b> du schon bist.' },
-        { text: () => 'Das war’s schon! Wenn du mich brauchst, <b>tipp mich in der großen Karte an</b>. Viel Spaß – und <b>73</b>!'
+        { text: () => 'Hey' + (nameIst() ? ' ' + esc(nameIst()) : '') + '! Ich bin ' + FUNKI + '! Ich wohne hier in der Karte und kenne jeden Knopf. Kleine Führung gefällig?',
+          knoepfe: [['Klar, zeig her!', 'weiter'], ['Später', 'heim']], anfang: true, kuer: 'tada' },
+        { ziel: '#ahStart', text: '<b>Psst – hier!</b> Damit geht’s los. Jede richtige Antwort bringt dir <b>10 XP</b>. Ka-tsching!' },
+        { ziel: '#ahWahl', text: 'Tipp hier drauf und bestimm selbst: <b>wie viele Fragen</b> und welcher Prüfungsteil. Du bist der Boss!' },
+        { ziel: '#ahTag', text: 'Dein <b>Tagesziel</b>. Schaffst du es jeden Tag, bleibst du <b>ON AIR</b>. Ich zähl mit – ich seh alles!' },
+        { ziel: '#ahKacheln [data-ziel="ahFehler"]', text: '<b>Schau mal da!</b> Deine Fehler. Die kommen so lange wieder, bis sie sitzen. Da bin ich gnadenlos.' },
+        { ziel: '#ahKacheln [data-ziel="ahPruefung"]', text: 'Die <b>Generalprobe</b>: Prüfung wie echt, mit Uhr. Ich drück dir die Daumen. Also … wenn ich welche hätte.' },
+        { ziel: '#alSuche', text: 'Mit der <b>Lupe</b> findest du jede Frage – mit Nummer oder Stichwort. Schneller, als ich blinzeln kann.' },
+        { ziel: '#appNavi [data-bereich="fortschritt"]', text: 'Und hier unten siehst du, <b>wie weit</b> du schon bist. Kleiner Spoiler: immer weiter!' },
+        { text: () => 'Das war’s schon! Brauchst du mich, <b>tipp mich einfach an</b>. Und keine Sorge – ich tauch sowieso immer wieder mal auf. <b>73!</b>'
             + '<span class="rb-tipp">73 sagen Funker, wenn sie „Viele Grüße“ meinen.</span>', knoepfe: [['Los geht’s!', 'heim']], ende: true }
     ];
     const tourZiele = () => TOUR.filter(s => s.ziel && zuSehen(D.querySelector(s.ziel)));
@@ -46882,7 +46928,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         robo.schritt = i;
         const st = TOUR[i], text = typeof st.text === 'function' ? st.text() : st.text;
         if(!st.ziel){
-            auftritt(text, st.knoepfe, st.anfang ? 'tanzweg' : '', 'tour');
+            auftritt(text, st.knoepfe, st.anfang ? 'tanzweg' : '', 'tour', st.kuer);
             if(st.ende) tourFertig();
             return;
         }
@@ -46890,7 +46936,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         robo.modus = 'tour';
         rausAusKarte();
         blaseZu();
-        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt');
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt', 'lugt-l', 'lugt-r');
+        ebeneSetzen(0); robo.ort = 'start';
         const el = D.querySelector(st.ziel);
         const W = window.innerWidth, z = zf(), alle = tourZiele(), nr = alle.indexOf(st) + 1;
         const nebenBreite = Math.min(250 * z, W - RW * z * tourMass() - 34);
@@ -46936,38 +46983,246 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         auftritt('<b>Tipp:</b> ' + naechsterTipp(), [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
     }
     function fragenText(n){ return n + (n === 1 ? ' Frage' : ' Fragen'); }
+    const zufall = a => a[Math.floor(Math.random() * a.length)];
     function tagesGruss(){
         const name = nameIst(), rest = Math.max(0, tagesziel() - heuteAnzahl()), s = serie();
-        let t = grussZeit() + (name ? ', ' + esc(name) : '') + '! ';
+        const std = new Date().getHours(), nn = name ? ', ' + esc(name) : '', hn = name ? ' ' + esc(name) : '';
+        let t = (std >= 2 && std < 5)
+            ? 'Hey' + hn + ', es ist mitten in der Nacht! Ein paar Fragen noch – aber dann ab ins Bett, morgen ist auch wieder ein Tag. '
+            : (std >= 22 || std < 2)
+            ? 'So spät noch wach' + nn + '?! Du bist aber fleißig. '
+            : zufall([grussZeit() + nn + '! Da bist du ja!', grussZeit() + nn + '! Schön, dich zu sehen!',
+                      'Hey' + hn + ', schön, dass du auch hier bist! Ich hab schon auf dich gewartet.']) + ' ';
         if(!rest) t += 'Dein Tagesziel hast du heute schon geschafft. Stark!';
-        else if(s > 1) t += 'Du bist seit <b>' + s + ' Tagen</b> auf Sendung. Heute fehlen noch <b>' + fragenText(rest) + '</b>.';
-        else t += 'Heute fehlen dir noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel.';
+        else if(s > 1) t += 'Du bist seit <b>' + s + ' Tagen</b> ON AIR. Heute fehlen noch <b>' + fragenText(rest) + '</b> – packen wir’s?';
+        else t += 'Heute fehlen dir noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel. Packen wir’s?';
         t += '<span class="rb-tipp"><b>Tipp:</b> ' + naechsterTipp() + '</span>';
-        auftritt(t, rest ? [['Runde starten', 'runde'], ['Später', 'heim']] : [['Noch ein Tipp', 'tipp'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
+        auftritt(t, rest ? [['Los, eine Runde!', 'runde'], ['Später', 'heim']] : [['Noch ein Tipp', 'tipp'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
     }
     function zielFeiern(){
         const s = serie();
-        auftritt('<b>Juhu, Tagesziel geschafft!</b> ' + (s > 1 ? 'Du bist jetzt seit <b>' + s + ' Tagen</b> auf Sendung. Weiter so!' : 'Deine Serie hat begonnen – morgen geht es weiter!'),
-            [['Weiter üben', 'runde'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
+        robo.nachRunde = false;
+        auftritt('<b>Juhu, Tagesziel geschafft!</b> Ich tanz dann mal. ' + (s > 1 ? 'Seit <b>' + s + ' Tagen</b> ON AIR – weiter so!' : 'Morgen wieder? Dann läuft deine Serie!'),
+            [['Noch eine Runde', 'runde'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
     }
-    const HALLO = ['Du hast mich gerufen?', 'Da bin ich!', 'Funki meldet sich!', 'Hallo! Schön, dass du da bist.'];
-    function rufen(){
-        if(robo.da || !roboDarf()) return;
-        auftritt(HALLO[Math.floor(Math.random() * HALLO.length)] + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + naechsterTipp() + '</span>',
+    const HALLO = ['Du hast gerufen?', 'Funki meldet sich zum Dienst!', 'Kuckuck!', 'Hab ich da meinen Namen gehört?', 'Na, du?'];
+    function rufenJetzt(){
+        auftritt(zufall(HALLO) + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + naechsterTipp() + '</span>',
             [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
     }
+    function rufen(){
+        if(robo.da || !roboDarf()) return;
+        rufenJetzt();
+    }
     tu(() => $('ahMk').addEventListener('click', e => { e.stopPropagation(); rufen(); }));
+
+    // ----- Immer wieder mal: Funki lugt vom Rand herein
+    //  Dietmar (30.09.2026): "Verspielt. Froehlich frech immer wieder mal
+    //  auftaucht." Kurz und ohne zu stoeren: kein Abdunkeln, die Seite
+    //  bleibt bedienbar, nach gut fuenf Sekunden ist er wieder weg.
+    //  Antippen holt ihn ganz heraus. Hoechstens dreimal je Start, nie
+    //  gleich nach einer Beruehrung, nie waehrend einer Runde.
+    const SPRUECHE_FEST = ['Kuckuck! Nur mal gucken, ob du noch da bist.', 'CQ, CQ – hört mich jemand? Ah, du!', 'Wusstest du? <b>73</b> heißt „Viele Grüße“.',
+        'Ich hab heute schon tausendmal geblinzelt. Und du so?', 'Antippen erlaubt. Ich beiße nicht – ich funke nur.', 'Psst! Hier drüben! … Nur so.',
+        // Dietmar: "Funki darf gerne auch ein eigenes Leben haben."
+        'Ich hab heute meine Antenne poliert. Sieht man, oder?', 'Ich hab versucht, mit dem Toaster zu funken. Keine Antwort.',
+        'Ich hab drei Satelliten zugewinkt. Keiner hat zurückgewinkt.', 'Mein Akku ist voll. Deiner auch?', 'Heute früh hab ich auf 2 Meter gelauscht. War ganz schön was los!',
+        'Ich hab gerade mit einem Kühlschrank gefunkt. Der war ganz schön cool.', 'Weißt du, wie ich rückwärts heiße? Iknuf. Klingt komisch, oder?',
+        'Ich hab Schluckauf. Hicks – piep – hicks.', 'Ich übe Morsen: ·−·· ·− −·−· ···· · −· – das heißt „lachen“!', 'Wenn ich groß bin, werde ich Relaisstation.',
+        'Mein Traum: einmal um die Welt funken. Mit Kurzwelle geht das wirklich!', 'Heute ist ein guter Tag für gute Antworten.', 'Zieh mal an meiner Antenne! … War nur Spaß.'];
+    // Plaudern je nach Tageszeit (Dietmar: "Ueber den Tag fragt er dich:
+    // Wie war dein Tag? Was gab es bei dir Gutes heute zum Mittagessen?
+    // ... Du bist aber schon spaet online. Fleissig am Ueben, sehr gut.")
+    // Hoechstens einmal je Tageszeit und Tag (robo_plausch).
+    const PLAUSCH = {
+        morgen: { frage: 'Guten Morgen! Gut geschlafen?', antworten: [['Super!', 'Perfekt! Ausgeschlafen lernt es sich am besten.'],
+            ['Geht so', 'Dann starten wir gemütlich – ein paar leichte Fragen wecken auf.'], ['Zu kurz', 'Oh je. Dann heute kleine Runden – und abends früh ins Bett!']] },
+        mittag: { frage: 'Mahlzeit! Was gab’s bei dir heute Gutes zum Mittagessen?', antworten: [['Was Leckeres!', 'Lecker! Ich hatte Strom. Wie immer.'],
+            ['Nur was Kleines', 'Hauptsache, der Akku ist voll. Meiner ist es.'], ['Noch gar nichts', 'Dann aber schnell was essen! Mit Hunger lernt es sich schlecht.']] },
+        tag: { frage: 'Na, wie läuft dein Tag bisher?', antworten: [['Super', 'Juhu! Dann ist jetzt der perfekte Moment für ein paar Fragen.'],
+            ['Geht so', 'Dann machen wir es gemütlich – fünf Fragen reichen auch.'], ['Anstrengend', 'Dann hast du dir eine Pause verdient. Oder eine ganz kleine Runde – nur wenn du magst.']] },
+        wochenende: { frage: 'Wochenende! Was hast du heute noch vor?', antworten: [['Faulenzen', 'Gute Wahl! Ein paar Fragen auf dem Sofa zählen auch.'],
+            ['Ganz viel', 'Dann zwischendurch fünf Fragen – die passen in jede Pause.'], ['Funken!', 'Stark! Dann grüß schön – mit 73!']] },
+        abend: { frage: 'Wie war dein Tag?', antworten: [['Richtig gut', 'Das freut mich! Dann krönen wir ihn mit ein paar Fragen.'],
+            ['Ganz okay', 'Okay ist auch gut. Eine kleine Runde macht ihn noch besser.'], ['Anstrengend', 'Dann mach es dir gemütlich. Heute reichen ein paar Fragen.']] },
+        nacht: { satz: 'So spät noch wach?! Du bist aber fleißig. Aber vergiss das Schlafen nicht.' },
+        fruehnacht: { satz: 'Jetzt wird’s aber langsam Zeit, dass du ins Bett gehst. Morgen ist auch wieder ein Tag! Gute Nacht.' }
+    };
+    function tagesZeit(){
+        const d = new Date(), h = d.getHours() + d.getMinutes() / 60, we = d.getDay() === 0 || d.getDay() === 6;
+        if(h >= 2 && h < 5) return 'fruehnacht';
+        if(h >= 22 || h < 2) return 'nacht';
+        if(h < 10.5) return 'morgen';
+        if(h >= 11.5 && h < 14) return 'mittag';
+        if(h >= 18) return 'abend';
+        return we ? 'wochenende' : 'tag';
+    }
+    const plauschFaellig = () => lies('robo_plausch', '') !== tagK() + ':' + tagesZeit();
+    function plaudern(){
+        const zeit = tagesZeit(), pl = PLAUSCH[zeit];
+        schreib('robo_plausch', tagK() + ':' + zeit);
+        if(pl.satz){ kurzauftritt(pl.satz); return; }
+        robo.plausch = pl;
+        kurzauftritt(pl.frage, { knoepfe: pl.antworten.map((a, i) => [a[0], 'antwort:' + i]), dauer: 14000 });
+    }
+    const HILFE_FRAGEN = ['Alles in Ordnung? Brauchst du Hilfe? Tipp mich an!', 'Kann ich dir irgendwie helfen? Ich kenne hier jeden Knopf.'];
+    // Mut machen - Dietmar: "Du bist gut, mach weiter so, du schaffst das.
+    // Funki ist ein Roboter, der dich unterstuetzt, dich animiert und dir
+    // Glauben gibt, dass du die Pruefung schaffst."
+    const MUT = ['Du bist gut! Mach weiter so – du schaffst das!', 'Ich glaub an dich. Die Prüfung packst du!',
+        'Jede Frage bringt dich näher an dein eigenes Rufzeichen.', 'Du wirst ein richtig guter Funker. Ich spür das in meiner Antenne!',
+        'Schritt für Schritt – und eines Tages hörst du dein Rufzeichen im Funk.'];
+    function gelerntZahl(){
+        const offen = offeneZahl();
+        let alle = 0;
+        tu(() => { alle = (questionBank || []).length; });
+        return offen === null || !alle ? 0 : Math.max(0, alle - offen);
+    }
+    const HILFE_MENUE = () => ({ html: 'Wie kann ich dir helfen?', knoepfe: [['Zeig mir alles', 'tour'], ['Einen Tipp, bitte', 'tipp'], ['Alles gut!', 'heim']] });
+    function kecherSpruch(){
+        const n = heuteAnzahl(), rest = Math.max(0, tagesziel() - n), s = serie(), f = zahlAus('repeatErrorsCount');
+        const pool = SPRUECHE_FEST.slice();
+        if(rest && n) pool.push('Psst! Nur noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel.', 'Noch <b>' + fragenText(rest) + '</b> – dann tanz ich für dich!');
+        if(rest && !n) pool.push('Heute noch keine einzige Frage? Zehn schnelle gehen immer!', 'Mir ist langweilig … eine kleine Runde?');
+        if(!rest) pool.push('Tagesziel geschafft – ich bin immer noch ganz aus dem Häuschen!');
+        if(s >= 2) pool.push('<b>' + s + ' Tage</b> am Stück ON AIR. Respekt!');
+        if(f > 0) pool.push('Da warten <b>' + (f === 1 ? '1 Fehler' : f + ' Fehler') + '</b> auf eine zweite Chance. Nur so als Tipp …');
+        pool.push(...HILFE_FRAGEN, ...MUT, ...MUT);                 // Mut machen kommt oefter
+        const g = gelerntZahl();
+        if(g >= 10) pool.push('Schon <b>' + g + ' Fragen</b> sitzen richtig fest. Du schaffst das!');
+        let t;
+        do { t = zufall(pool); } while(pool.length > 1 && t === robo.letzterSpruch);
+        robo.letzterSpruch = t;
+        return t;
+    }
+    // Die letzten Runden (Anteil richtig) je Benutzer, fuer "du verbesserst dich"
+    const RUNDEN_K = () => 'amateurfunk_funki_runden_' + benutzer();
+    function rundeMerken(){
+        robo.bilanz = null;
+        if((robo.rundeN || 0) < 5) return;                  // abgebrochene Mini-Runden zaehlen nicht
+        const anteil = Math.round(100 * robo.rundeR / robo.rundeN);
+        let alt = [];
+        try{ alt = JSON.parse(localStorage.getItem(RUNDEN_K()) || '[]') || []; }catch(e){}
+        const vorher = alt.length ? alt[alt.length - 1] : null;
+        alt.push(anteil);
+        schreib(RUNDEN_K(), JSON.stringify(alt.slice(-10)));
+        robo.bilanz = { anteil, vorher };
+    }
+    function rundenSpruch(){
+        const n = heuteAnzahl(), rest = Math.max(0, tagesziel() - n), b = robo.bilanz;
+        robo.bilanz = null;
+        if(b){
+            // Dietmar: "Letzte Runde war richtig gut von dir, du verbesserst
+            // dich." - "Die letzte Runde war nicht besonders gut."
+            if(b.vorher !== null && b.anteil >= b.vorher + 10) return 'Die letzte Runde war richtig gut von dir – <b>' + b.anteil + ' %</b>! Du verbesserst dich!';
+            if(b.anteil >= 80) return 'Die letzte Runde war richtig gut von dir: <b>' + b.anteil + ' %</b> richtig. Du schaffst das!';
+            if(b.anteil < 50) return 'Die letzte Runde war nicht besonders gut. Macht nichts – die Fehler kommen wieder, und dann sitzen sie. Ich glaub an dich!';
+            return 'Solide Runde: <b>' + b.anteil + ' %</b> richtig. Noch ein bisschen, dann sitzt alles!';
+        }
+        return zufall(['Zack, Runde durch!', 'Runde geschafft!', 'Und wieder eine!']) + ' Heute schon <b>' + fragenText(n) + '</b>.'
+            + (rest ? ' Noch ' + rest + ' bis zum Ziel.' : '') + ' ' + zufall(['Du bist gut – mach weiter so!', 'Du schaffst das!', 'Stark!']);
+    }
+    // Ueber einem Fenster muss Funki hoeher liegen als das Fenster
+    function ebeneSetzen(z){
+        roboEl.style.zIndex = z ? String(z + 3) : '';
+        roboBlase.style.zIndex = z ? String(z + 4) : '';
+        roboRuf.style.zIndex = z ? String(z + 5) : '';
+    }
+    function kurzauftritt(text, opt){
+        if(robo.da) return;
+        opt = opt || {};
+        uhrenAus();
+        robo.modus = 'kurz';
+        robo.ort = opt.ort || 'start';
+        robo.kurzHilfe = opt.hilfe || null;
+        ebeneSetzen(opt.z || 0);
+        robo.letzter = Date.now(); robo.ruhig = 0;
+        const z = zf(), W = window.innerWidth, ts = tourMass(), rw = RW * z * ts, rh = RH * z * ts;
+        const o = randOben(), u = randUnten(), links = Math.random() < 0.5;
+        const cy = o + rh / 2 + (u - o - rh) * (0.45 + Math.random() * 0.25);
+        robo.kurzY = cy; robo.kurzLinks = links;
+        roboStellen(links ? -rw : W + rw, cy, ts, true);                   // hinter dem Rand
+        roboEl.classList.remove('tanzt', 'zeigt-l', 'zeigt-r', 'winkt', 'huepft', 'tada', 'lugt-l', 'lugt-r');
+        roboEl.classList.add('da', links ? 'lugt-l' : 'lugt-r');
+        const m = $('ahMk');
+        if(m) m.classList.add('weg');
+        robo.da = true; robo.breite = W;
+        const cx = links ? rw * 0.34 : W - rw * 0.34;                      // ein Drittel bleibt draussen
+        spaeter(() => roboStellen(cx, cy, ts), 60);
+        spaeter(() => { roboEl.classList.add('winkt'); blaseAmRand(text, opt.knoepfe, !opt.knoepfe); }, 820);
+        spaeter(kurzWeg, 820 + (opt.dauer || 5600));
+    }
+    // Die Blase neben dem hereinlugenden Funki
+    function blaseAmRand(html, knoepfe, klein){
+        const z = zf(), W = window.innerWidth, ts = tourMass(), rw = RW * z * ts, rh = RH * z * ts;
+        const links = robo.kurzLinks, cx = links ? rw * 0.34 : W - rw * 0.34, cy = robo.kurzY;
+        blaseFuellen(html, knoepfe, '', klein ? Math.min(230 * z, W - rw - 40) : Math.min(270 * z, W - rw * 0.84 - 24), klein);
+        const o = randOben(), u = randUnten(), kopf = cy - rh * 0.12;
+        const by = Math.max(o, Math.min(u - robo.bh, kopf - robo.bh / 2));
+        blaseZeigen(links ? cx + rw * 0.5 + 8 : cx - rw * 0.5 - 8 - robo.bw, by, links ? 'zl' : 'zr', kopf - by - 7);
+    }
+    function kurzWeg(){
+        if(robo.modus !== 'kurz' && robo.modus !== 'hilfe') return;
+        uhrenAus();
+        blaseZu();
+        roboEl.classList.remove('winkt');
+        const W = window.innerWidth, rw = RW * zf() * tourMass();
+        roboStellen(robo.kurzLinks ? -rw : W + rw, robo.kurzY, tourMass());
+        spaeter(() => roboHeim(true), 760);
+    }
+    // Angetippt beim Hereinlugen: Er bleibt am Rand und hilft dort -
+    // ueber einem Fenster oder in einer Runde ohne alles abzudunkeln.
+    function hilfeZeigen(){
+        const h = robo.kurzHilfe && robo.kurzHilfe();
+        if(!h){ kurzWeg(); return; }
+        uhrenAus();
+        robo.modus = 'hilfe';
+        const W = window.innerWidth, ts = tourMass(), rw = RW * zf() * ts;
+        roboStellen(robo.kurzLinks ? rw * 0.34 : W - rw * 0.34, robo.kurzY, ts);
+        zurufen(zufall(['Klar!', 'Bin da!', 'Gern!']));
+        blaseAmRand(h.html, h.knoepfe, false);
+    }
+    // Antwort beim Plaudern: Funki freut sich, sagt etwas dazu, geht
+    function plauschAntwort(i){
+        const a = robo.plausch && robo.plausch.antworten[i];
+        if(!a){ kurzWeg(); return; }
+        uhrenAus();
+        robo.modus = 'kurz'; robo.kurzHilfe = null;
+        blaseAmRand(a[1], null, true);
+        if(i === 0){ tanzen(); zurufen(zufall(['Juhu!', 'Yeah!', 'Hihi!'])); }
+        spaeter(kurzWeg, 5200);
+    }
+    // Ein kurzer Zuruf ueber dem Kopf, wenn man ihn antippt
+    const roboRuf = D.createElement('div');
+    roboRuf.id = 'roboRuf';
+    D.body.appendChild(roboRuf);
+    function zurufen(t){
+        const z = zf();
+        roboRuf.textContent = t;
+        roboRuf.style.left = px(robo.cx || 0);
+        roboRuf.style.top = px((robo.cy || 0) - RH * z * (robo.s || 1) / 2 - 6);
+        roboRuf.classList.remove('da');
+        void roboRuf.offsetWidth;
+        roboRuf.classList.add('da');
+    }
+    const KITZEL = ['Hihi!', 'Das kitzelt!', 'Hey!', 'Nochmal!', 'Juhu!', 'Huch!'];
 
     function roboTat(t){
         if(t === 'weiter') tourSchritt(robo.schritt + 1);
         else if(t === 'tipp') tippZeigen();
         else if(t === 'tour') tourSchritt(1);
         else if(t === 'runde'){ roboHeim(true); rundeStarten(); }
-        else { if(robo.modus === 'tour') tourFertig(); roboHeim(); }
+        else if(t === 'vorlesen'){ kurzWeg(); tu(() => { const b = $('ttsBtn'); if(b) b.click(); }); }
+        else if(t.indexOf('antwort:') === 0) plauschAntwort(parseInt(t.slice(8), 10));
+        else {
+            if(robo.modus === 'tour') tourFertig();
+            if(robo.modus === 'kurz' || robo.modus === 'hilfe') kurzWeg(); else roboHeim();
+        }
     }
     roboBlase.addEventListener('click', e => {
         const b = e.target.closest('[data-tat]');
-        if(b){ e.stopPropagation(); roboTat(b.dataset.tat); }
+        if(b){ e.stopPropagation(); roboTat(b.dataset.tat); return; }
+        if(robo.modus === 'kurz'){ e.stopPropagation(); kurzWeg(); }
     });
     // Tippen daneben: im Rundgang weiter, sonst Tschuess. Die Frage am
     // Anfang ("Soll ich dir zeigen ...?") will eine Antwort.
@@ -46981,32 +47236,182 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Funki selbst antippen: im Rundgang weiter, sonst ein Tanz
     roboEl.addEventListener('click', () => {
         if(!robo.modus) return;
+        if(robo.modus === 'kurz'){ robo.kurzHilfe ? hilfeZeigen() : rufenJetzt(); return; }
+        if(robo.modus === 'hilfe'){ zurufen(zufall(KITZEL)); return; }
         const st = TOUR[robo.schritt] || {};
         if(robo.modus === 'tour' && st.ziel) roboTat('weiter');
-        else tanzen();
+        else { tanzen(); zurufen(zufall(KITZEL)); }
     });
 
     // ----- Wann kommt er von selbst?
     //  Erst wenn der Startbildschirm ein paar Sekunden frei ist (keine
     //  Begruessung, keine Stilwahl, kein Update-Fenster) und oben steht.
-    function roboPruefen(){
-        if(robo.da){
-            if(robo.modus && !roboDarf()) roboHeim(true);    // Runde, Fenster oder Stilwechsel
+    //  Die grossen Auftritte nur oben auf der Startseite; das Hereinlugen
+    //  ueberall auf der Startseite, sobald sie eine Weile ruhig ist.
+    Object.assign(robo, { ruhig: 0, naechsterKurz: 35000 + Math.random() * 15000, kurzZahl: 0, letzter: 0, beruehrt: 0, nachRunde: false });
+    const TAKT = 1200;
+    tu(() => {
+        const merk = () => { robo.beruehrt = Date.now(); };
+        D.addEventListener('touchstart', merk, { passive: true, capture: true });
+        window.addEventListener('scroll', merk, { passive: true });
+        // Zurueck in der App nach einer Weile: "Ich hab schon auf dich gewartet"
+        let weg = 0;
+        D.addEventListener('visibilitychange', () => {
+            if(D.hidden) weg = Date.now();
+            else if(weg && Date.now() - weg > 10 * 60000){ robo.wiederDa = true; robo.letzter = 0; }
+        });
+        let rundeVorher = D.body.classList.contains('runde-laeuft');
+        new MutationObserver(() => {
+            const r = D.body.classList.contains('runde-laeuft');
+            if(r !== rundeVorher){
+                rundeVorher = r;
+                if(!r){ robo.nachRunde = true; tu(rundeMerken); }
+                else { robo.frageIdx = -1; robo.falschFolge = 0; robo.richtigFolge = 0; robo.rundeR = 0; robo.rundeN = 0; }
+            }
+        }).observe(D.body, { attributes: true, attributeFilter: ['class'] });
+    });
+    // ----- Begleiter durch die ganze App
+    //  Dietmar (30.09.2026): "Funki soll mich immer wieder durch die App
+    //  begleiten. Mal auftauchen und fragen: alles in Ordnung? Brauchst du
+    //  Hilfe? Kann ich dir irgendwas helfen?"
+    //  In den grossen Fenstern (einmal je Oeffnen, wenn man eine Weile
+    //  darin ist) und in einer Runde, wenn jemand an einer Frage haengt
+    //  oder dreimal danebenlag. Nie in der Pruefung, nie im Gruppenraum.
+    const HILFE_FENSTER = {
+        einstellungenModal: 'Hier stellst du alles ein – oben sind die Reiter. Unter <b>Allgemein</b> findest du Stil, Hell oder Dunkel und die Anzeigegröße, unter <b>Nachteilsausgleich</b> das Vorlesen.',
+        statistikModal: 'Das ist deine <b>Auswertung</b>: Für jeden Prüfungsteil siehst du, wie weit du bist. Hast du in einem Teil 25 Fragen beantwortet, steht da, wie du stehst.',
+        uebungszeitModal: 'Hier steht, wie lange du geübt hast. Jede Minute zählt – auch die fünf in der Bahn!',
+        unterrichtModal: 'Die Lektionen der Reihe nach, wie im Kurs. Tipp eine an – los geht’s!',
+        lektionenModal: 'Die Lektionen der Reihe nach. Tipp eine an – los geht’s!',
+        klasseModal: 'Hier wählst du deine Prüfungsklasse. Ganz neu dabei? Dann ist <b>Klasse N</b> der Einstieg.',
+        infoModal: 'Hier steht alles über den Trainer: Anleitung, Version und Updates.',
+        duoModal: 'Das ist der <b>Gruppenraum</b>: Hier übt ihr gemeinsam – die anderen kommen über den Einladungslink dazu.',
+        searchResultsModal: 'Tipp eine Frage an, dann springst du direkt hin.',
+        qslAlbumModal: 'Dein <b>QSL-Album</b>! Hier sammelst du deine QSL-Karten.',
+        stolperModal: 'Deine <b>Stolpersteine</b>: die Fragen, bei denen du öfter danebenliegst. Genau die lohnen sich!',
+        formelModal: 'Die <b>Formelsammlung</b> – die bekommst du in der Prüfung auch. Wer sie kennt, findet alles schneller.'
+    };
+    const FRAGEN_FENSTER = ['Alles in Ordnung hier?', 'Kommst du klar? Tipp mich an, wenn ich helfen soll.', 'Alles klar? Ich erklär dir gern, was das hier ist.'];
+    const FRAGEN_RUNDE = ['Alles in Ordnung? Hängst du fest?', 'Knifflige Frage, was? Brauchst du Hilfe?', 'Kann ich dir helfen? Tipp mich an!'];
+    function pruefungLaeuft(){
+        let p = false;
+        tu(() => { p = !!(examMode || examSimulatorMode || examTimerRunning); });
+        return p;
+    }
+    // Darf er ausserhalb der Startseite auftauchen?
+    function begleitDarf(){
+        if(!H.classList.contains('stil-verspielt') || D.hidden || !tippsAn()) return false;
+        if(lies('app_stil_gewaehlt', '') !== '1' || lies('robo_tour_gesehen', '') !== '1') return false;
+        if(D.body.classList.contains('im-gruppenraum') || D.body.classList.contains('gast-im-raum') || D.body.classList.contains('app-chat-offen')) return false;
+        if(pruefungLaeuft() || blatt.classList.contains('offen')) return false;
+        const m = $('appMehr'), s = $('appSuchPlatz');
+        if((m && m.classList.contains('offen')) || (s && s.classList.contains('offen'))) return false;
+        return !['appStilWahl', 'rgHuelle', 'appPruefblatt'].some(id => zuSehen($(id)));
+    }
+    function obersteFenster(){
+        let best = null, bz = -1;
+        tu(() => D.querySelectorAll('body > div[id], body > section[id], #app > div[id]').forEach(el => {
+            if(!/modal|fenster|overlay/i.test(el.id + ' ' + (typeof el.className === 'string' ? el.className : ''))) return;
+            const st = getComputedStyle(el);
+            if(st.position !== 'fixed' || st.display === 'none' || st.visibility === 'hidden' || el.offsetWidth < 100 || el.offsetHeight < 100) return;
+            const z = parseInt(st.zIndex, 10) || 0;
+            if(z >= bz){ bz = z; best = el; }
+        }));
+        return best ? { el: best, z: bz } : null;
+    }
+    function funkiAntwort(richtig){
+        robo.rundeR = (robo.rundeR || 0) + (richtig ? 1 : 0);
+        robo.rundeN = (robo.rundeN || 0) + 1;
+        robo.richtigFolge = richtig ? (robo.richtigFolge || 0) + 1 : 0;
+        if((robo.richtigFolge === 5 || robo.richtigFolge === 10) && !robo.da && begleitDarf() && Date.now() - (robo.letzter || 0) > 90000){
+            const n = robo.richtigFolge;
+            setTimeout(() => tu(() => {
+                if(robo.da || !begleitDarf() || !D.body.classList.contains('runde-laeuft')) return;
+                kurzauftritt((n === 5 ? 'Fünf richtige am Stück!' : 'Zehn am Stück – Wahnsinn!') + ' Du bist gut – mach weiter so!', { ort: 'runde' });
+                tanzen();
+            }), 900);
+        }
+        robo.falschFolge = richtig ? 0 : (robo.falschFolge || 0) + 1;
+        if(robo.falschFolge !== 3 || robo.da || !begleitDarf()) return;
+        setTimeout(() => tu(() => {
+            if(robo.da || !begleitDarf() || !D.body.classList.contains('runde-laeuft')) return;
+            kurzauftritt('Kopf hoch! Fehler gehören dazu – die kommen wieder, bis sie sitzen.', { ort: 'runde',
+                hilfe: () => ({ html: 'Die falschen Fragen findest du später unter <b>Fehler üben</b>. Dort übst du sie, bis sie sitzen – ich pass auf!', knoepfe: [['Alles klar!', 'heim']] }) });
+        }), 1300);
+    }
+    function begleiten(jetzt){
+        const ruhe = jetzt - robo.beruehrt;
+        const f = obersteFenster();
+        if(f){
+            if(robo.fensterEl !== f.el){ robo.fensterEl = f.el; robo.fensterSeit = jetzt; robo.fensterGezeigt = false; }
+            const text = HILFE_FENSTER[f.el.id];
+            if(text && !robo.fensterGezeigt && begleitDarf() && jetzt - robo.fensterSeit > 25000 && ruhe > 6000 && jetzt - robo.letzter > 60000){
+                robo.fensterGezeigt = true;
+                kurzauftritt(zufall(FRAGEN_FENSTER), { ort: 'fenster', z: f.z, hilfe: () => ({ html: text, knoepfe: [['Danke!', 'heim']] }) });
+            }
             return;
         }
-        if(!roboDarf() || lies('app_stil_gewaehlt', '') !== '1' || window.scrollY > 150){ robo.frei = 0; return; }
-        robo.frei++;
-        if(robo.frei < 2 || !tippsAn()) return;
-        const t = tagK();
-        if(lies('robo_tour_gesehen', '') !== '1'){ tourStarten(); return; }
-        if(heuteAnzahl() >= tagesziel() && lies('robo_ziel_tag', '') !== t){ schreib('robo_ziel_tag', t); schreib('robo_gruss_tag', t); zielFeiern(); return; }
-        if(lies('robo_gruss_tag', '') !== t){ schreib('robo_gruss_tag', t); tagesGruss(); }
+        robo.fensterEl = null;
+        if(!D.body.classList.contains('runde-laeuft')) return;
+        let idx = -1, beantwortet = true;
+        tu(() => { idx = currentIndex; beantwortet = !!answered; });
+        if(idx !== robo.frageIdx){ robo.frageIdx = idx; robo.frageSeit = jetzt; }
+        if(!beantwortet && begleitDarf() && jetzt - robo.frageSeit > 45000 && ruhe > 8000 && jetzt - robo.letzter > 180000){
+            kurzauftritt(zufall(FRAGEN_RUNDE), { ort: 'runde', hilfe: () => ({ html: 'Lies die Frage in Ruhe nochmal und achte auf kleine Wörter wie <b>„nicht“</b>. Soll ich sie dir vorlesen lassen?',
+                knoepfe: [['Ja, vorlesen', 'vorlesen'], ['Alles gut!', 'heim']] }) });
+        }
     }
-    setInterval(() => tu(roboPruefen), 1200);
+    // Ist sein Platz noch der richtige?
+    function ortPasst(){
+        if(!H.classList.contains('stil-verspielt') || D.hidden) return false;
+        if(robo.ort === 'fenster'){ const f = obersteFenster(); return !!(f && f.el === robo.fensterEl); }
+        if(robo.ort === 'runde') return D.body.classList.contains('runde-laeuft') && !obersteFenster() && !pruefungLaeuft();
+        return roboDarf();
+    }
+    function roboPruefen(){
+        if(robo.da){
+            if(robo.modus && !ortPasst()) roboHeim(true);    // Runde, Fenster oder Stilwechsel
+            return;
+        }
+        const jetzt0 = Date.now();
+        if(!roboDarf()){ robo.frei = 0; tu(() => begleiten(jetzt0)); return; }
+        robo.fensterEl = null;
+        if(lies('app_stil_gewaehlt', '') !== '1'){ robo.frei = 0; return; }
+        if(!tippsAn()){ robo.nachRunde = false; return; }
+        const t = tagK(), jetzt = Date.now();
+        if(window.scrollY <= 150){
+            robo.frei++;
+            if(robo.frei >= 2){
+                if(lies('robo_tour_gesehen', '') !== '1'){ tourStarten(); return; }
+                if(heuteAnzahl() >= tagesziel() && lies('robo_ziel_tag', '') !== t){ schreib('robo_ziel_tag', t); schreib('robo_gruss_tag', t); zielFeiern(); return; }
+                if(lies('robo_gruss_tag', '') !== t){ schreib('robo_gruss_tag', t); tagesGruss(); return; }
+            }
+        } else robo.frei = 0;
+        if(lies('robo_tour_gesehen', '') !== '1' || jetzt - robo.beruehrt < 4000) return;
+        if(robo.nachRunde){ robo.nachRunde = false; if(jetzt - robo.letzter > 20000){ kurzauftritt(rundenSpruch(), { dauer: 7000 }); return; } }
+        if(robo.wiederDa){
+            robo.wiederDa = false;
+            const nn = nameIst() ? ', ' + esc(nameIst()) : '', hn = nameIst() ? ' ' + esc(nameIst()) : '';
+            kurzauftritt(zufall(['Hey' + hn + ', schön, dass du wieder da bist! Ich hab schon auf dich gewartet.', 'Da bist du ja wieder' + nn + '! Ich hab mich schon gelangweilt.']));
+            return;
+        }
+        robo.ruhig += TAKT;
+        if(robo.kurzZahl < 3 && robo.ruhig >= robo.naechsterKurz && jetzt - robo.letzter > 60000){
+            robo.kurzZahl++;
+            robo.naechsterKurz = 150000 + Math.random() * 90000;
+            if(plauschFaellig()) plaudern();
+            else {
+                const t = kecherSpruch();
+                kurzauftritt(t, HILFE_FRAGEN.includes(t) ? { hilfe: HILFE_MENUE } : {});
+            }
+        }
+    }
+    setInterval(() => tu(roboPruefen), TAKT);
     // Drehen des Handys: Funki geht heim, statt schief zu stehen
     window.addEventListener('resize', () => { if(robo.da && window.innerWidth !== robo.breite) roboHeim(true); });
     window.appFunki = { rufen: () => { robo.frei = 0; rufen(); }, rundgang: () => tourSchritt(0), tipp: tippZeigen, gruss: tagesGruss, feiern: zielFeiern, heim: roboHeim,
-                        schritt: i => tourSchritt(i), zustand: () => ({ da: robo.da, modus: robo.modus, schritt: robo.schritt }) };
+                        kurz: (t, o) => kurzauftritt(t || kecherSpruch(), o), plaudern, schritt: i => tourSchritt(i), intern: robo,
+                        zustand: () => ({ da: robo.da, modus: robo.modus, ort: robo.ort, schritt: robo.schritt }) };
 
     // ---------------- Zurueck-Taste ----------------
     tu(() => {
