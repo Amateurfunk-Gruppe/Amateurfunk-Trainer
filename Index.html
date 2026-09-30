@@ -28202,7 +28202,27 @@ function ttsIstWindows(){
 //  Zeit vor dem 14.09.2026. Ein Setup gibt es nicht mehr; im Windows-ZIP
 //  sind Piper und die Stimmen dabei.
 // ----------------------------------------------------------------
+// ================================================================
+//  IN DER APP SPRICHT DAS HANDY, NICHT PIPER            (30.09.2026)
+//  Dietmar, mit Bild aus der App: "Ich weiss nicht, warum es nach
+//  Piper fragt, Piper waere doch gar nicht benoetigt." Er hat recht:
+//  In der App liest die Sprachausgabe des Handys vor (AndroidSprache).
+//  Antwortet sie nicht, kam bisher der Rat fuer den PC (Piper holen).
+//  Jetzt steht dort, was am Handy zu pruefen ist. Typischer Fall: ein
+//  anderes Sprachmodul (Acapela) wurde bevorzugt, die App hat sich beim
+//  Start aber mit der Stimme verbunden - oder die deutsche Stimme ist
+//  im Modul noch nicht installiert.
+// ================================================================
+function ttsImApp(){ return document.documentElement.classList.contains('android-app'); }
 function ttsPiperWeg(){
+    if(ttsImApp()){
+        return 'So klappt es wieder: In den Android-Einstellungen unter \u201eSprachausgabe\u201c (auch \u201eText-in-Sprache\u201c) '
+             + 'das bevorzugte Modul pr\u00fcfen, Sprache Deutsch, und mit \u201eWiedergeben\u201c testen. '
+             + 'Danach den Trainer ganz schlie\u00dfen (aus der Liste der offenen Apps wischen) und neu \u00f6ffnen \u2013 '
+             + 'er verbindet sich beim Start mit der Stimme. '
+             + 'Bei zus\u00e4tzlichen Stimmen-Apps wie Acapela muss die deutsche Stimme auf dem Handy installiert sein; '
+             + 'sonst als Modul Google w\u00e4hlen.';
+    }
     if(!laeuftLokal()){
         return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Kursleiters \u2013 dort fehlt sie gerade. '
              + 'An deinem Ger\u00e4t musst du nichts einstellen.';
@@ -28403,7 +28423,10 @@ async function playTTSSegment(seg, token){
     if(!isPiperVoice && !window._ttsHinweisGezeigt){
         window._ttsHinweisGezeigt = true;
         console.warn('[TTS] Keine Piper-Stimme verfügbar - keine Sprachausgabe.');
-        ttsMeldung(laeuftLokal()
+        ttsMeldung(ttsImApp()
+            ? 'Das Handy liest gerade nicht vor. In der App spricht die Sprachausgabe des Handys \u2013 Piper braucht es hier nicht.\n'
+              + ttsPiperWeg()
+            : laeuftLokal()
             ? 'Für das Vorlesen fehlt noch die Sprachausgabe.\n'
               + 'In diesem Ordner sind Piper oder die Stimmen nicht zu finden.\n'
               + ttsPiperWeg()
