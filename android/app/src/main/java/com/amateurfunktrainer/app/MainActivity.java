@@ -361,9 +361,22 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(code, rechte, antworten);
     }
 
+    /** Zurueck-Taste (30.09.2026): Erst fragt die App die Seite, ob sie etwas
+     *  zu schliessen hat - das Blatt "Mehr", die Suche, ein Fenster, den Chat
+     *  (window.appZurueck im Skript "appRahmen"). Nur wenn nicht, geht die App
+     *  wie bisher in den Hintergrund. Beendet wird nie - der Server soll
+     *  weiterlaufen. */
     @Override public void onBackPressed() {
-        if (web != null && geladen && web.canGoBack()) { web.goBack(); return; }
-        // Nicht beenden - der Server soll weiterlaufen. Zurueck zum Startbildschirm.
+        if (web != null && geladen) {
+            web.evaluateJavascript(
+                "(function(){try{return !!(window.appZurueck && window.appZurueck());}catch(e){return false;}})()",
+                antwort -> {
+                    if ("true".equals(antwort)) return;
+                    if (web.canGoBack()) { web.goBack(); return; }
+                    moveTaskToBack(true);
+                });
+            return;
+        }
         moveTaskToBack(true);
     }
 }

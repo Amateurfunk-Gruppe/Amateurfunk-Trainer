@@ -5984,6 +5984,9 @@
         },
         alleNeuLaden: ()=>alleNeuLadenLassen(),
         chatOeffnen: ()=>chatUmschalten(true),
+        // Fuer die Android-App (30.09.2026): Chat als ganze Seite oeffnen,
+        // ohne gleich die Tastatur hochzuholen.
+        chatOeffnenOhneFokus: ()=>chatUmschalten(true, true),
         chatUmschalten: ()=>chatUmschalten(),
         raumCode: ()=>roomCode || '',
         isActive: ()=>!!duoActive,

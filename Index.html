@@ -100,6 +100,279 @@
         }
     </style>
     <!-- ================================================================
+         DIE APP SIEHT AUS WIE EINE ANDROID-APP             (30.09.2026)
+         ----------------------------------------------------------------
+         Dietmar: "Was mir persoenlich an dem Trainer in der App nicht so
+         gut gefaellt ist es sieht immer noch aus wie Windows und nicht
+         wirklich wie eine Android Applikation." Nach den Entwuerfen:
+         "Mach mir das bitte fertig". Und: "Du hast zwei Style, einmal
+         eckig und einmal rund. Koennen wir das in den Einstellungen nicht
+         mit uebernehmen?"
+
+         Nur in der App (html.android-app), am PC aendert sich nichts:
+           - oben eine schmale Leiste: Name, Suche, Benutzer, drei Punkte
+             (waehrend einer Runde "Frage 3 von 25" und die Pruefungsuhr)
+           - unten fuenf Bereiche: Lernen, Pruefung, Gruppe, Fortschritt,
+             Mehr - statt der sieben Kaestchen in der Kopfzeile
+           - "Mehr" klappt von unten auf und fuehrt zu allem, was vorher
+             in der Kopfzeile stand
+           - Zurueck/Weiter unten im Daumenbereich, der Chat als ganze Seite
+           - Form eckig (wie am PC) oder rund, Einstellungen -> Allgemein
+
+         Die alte Kopfzeile bleibt im Dokument (unsichtbar): Ihre Knoepfe
+         werden von hier aus weiter benutzt, und das Skript, das die
+         Pruefungsuhr stellt, findet seine Elemente wie bisher. Gebaut wird
+         der Rahmen im Skript "appRahmen" am Ende der Seite.
+         ================================================================ -->
+    <style id="appRahmenStil">
+        #appLeiste, #appNavi, #appMehr, #appSuchPlatz, #appZielZeile { display: none; }
+        html.android-app { --app-leiste-h: 56px; --app-navi-h: 66px; }
+
+        /* ---- Seite: volle Breite, Platz fuer die beiden Leisten ---- */
+        html.android-app .header { display: none !important; }
+        /* Nichts darf breiter werden als der Schirm - sonst zoomt das
+           Browserfenster der App die ganze Seite heraus. */
+        html.android-app, html.android-app body { overflow-x: hidden; }
+        html.android-app body {
+            padding: calc(var(--app-leiste-h) + 8px) 0 calc(var(--app-navi-h) + 14px) 0 !important;
+        }
+        html.android-app body.runde-laeuft { padding-bottom: 92px !important; padding-top: calc(var(--app-leiste-h) + 4px) !important; }
+        html.android-app #app.card {
+            width: 100% !important; max-width: none !important; margin: 0 !important;
+            border-left: 0 !important; border-right: 0 !important; box-shadow: none !important;
+            padding: 0.75rem 0.7rem !important;
+        }
+        html.android-app body.runde-laeuft #app.card { padding: 6px !important; }
+        /* Vollbild gibt es im Browserfenster der App nicht - die App ist es schon. */
+        html.android-app body #vollbildBtnFrage { display: none !important; }
+
+        /* ---- Obere Leiste ---- */
+        html.android-app #appLeiste {
+            display: flex; position: fixed; left: 0; right: 0; top: 0; z-index: 9000;
+            height: var(--app-leiste-h); box-sizing: border-box; align-items: center; gap: 2px;
+            padding: 0 4px 0 14px; background: var(--card-bg); color: var(--ink);
+            border-bottom: 1px solid var(--line);
+        }
+        #appLeiste .al-titel {
+            flex: 1; min-width: 0; font-family: var(--font-display); font-size: 1.16rem; font-weight: 700;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px;
+        }
+        #appLeiste .al-titel b { color: var(--tuerkis); font-weight: 700; }
+        #appLeiste .al-runde { display: none; font-family: var(--font-body); font-size: 1.02rem; font-weight: 600; }
+        body.runde-laeuft #appLeiste .al-name { display: none; }
+        body.runde-laeuft #appLeiste .al-runde { display: inline; }
+        #appLeiste .al-knopf {
+            width: 44px; height: 44px; flex: 0 0 44px; border: none; background: transparent; color: var(--ink);
+            font-size: 1.12rem; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+        }
+        #appLeiste .al-avatar {
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            background: var(--tuerkis); color: #fff; font-weight: 700; font-size: 0.9rem;
+        }
+        #appLeiste .al-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        body.dark #appLeiste .al-avatar { color: #04283a; }
+        body.runde-laeuft #appLeiste #alSuche,
+        body.runde-laeuft #appLeiste #alBenutzer { display: none; }
+        /* Die Pruefungsuhr wandert aus der alten Kopfzeile hierher. */
+        #alUhrPlatz #examTimerDisplay {
+            margin: 0 4px 0 0; padding: 0.3rem 0.7rem; font-size: 0.9rem; font-weight: 700; white-space: nowrap;
+        }
+
+        /* ---- Suche: klappt unter der Leiste auf ---- */
+        html.android-app #appSuchPlatz.offen {
+            display: block; position: fixed; left: 0; right: 0; top: var(--app-leiste-h); z-index: 8995;
+            background: var(--card-bg); border-bottom: 1px solid var(--line); padding: 10px 12px;
+            box-shadow: 0 10px 18px -12px rgba(15,39,69,0.35);
+        }
+        #appSuchPlatz .suchfeld-huelle { display: flex !important; width: 100% !important; gap: 6px !important; align-items: stretch !important; }
+        #appSuchPlatz #searchInput {
+            flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; height: 44px !important;
+            font-size: 16px !important; padding: 0 0.8rem 0 2rem !important; box-sizing: border-box;
+        }
+        #appSuchPlatz .suchfeld-huelle > button { height: 44px !important; min-width: 44px; width: auto !important; align-self: stretch; padding: 0 10px !important; }
+        #appSuchPlatz .suchfeld-huelle > i.fa-search { top: 50%; transform: translateY(-50%); left: 11px !important; }
+
+        /* ---- Ziel und Trainer-Steuerung oben auf der Startseite ---- */
+        html.android-app #appZielZeile { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+        html.android-app body.runde-laeuft #appZielZeile { display: none; }
+        .app-chip {
+            height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+            border: 1px solid var(--line); background: var(--card-bg); color: var(--ink);
+            font-family: inherit; font-size: 0.9rem; font-weight: 600;
+        }
+        .app-chip i { color: var(--tuerkis); }
+        .app-chip .fa-caret-down { color: var(--muted); }
+
+        /* ---- Startseite: die Leiste wird zu grossen Feldern ---- */
+        /* Das Skript setzt die Leiste per style.display auf "flex" oder
+           (waehrend einer Runde) auf "none". "none" muss weiter greifen,
+           aus "flex" wird hier ein Raster. */
+        html.android-app .filter-bar:not([style*="none"]) { display: grid !important; }
+        html.android-app .filter-bar {
+            grid-template-columns: 1fr 1fr; gap: 8px !important;
+            overflow: visible !important; padding: 10px !important; margin: 0 0 12px !important;
+            box-shadow: none !important;
+        }
+        html.android-app .filter-bar > * { min-width: 0; }
+        html.android-app .filter-bar select { max-width: none !important; width: 100% !important; height: 46px; font-size: 16px !important; padding: 0 0.7rem !important; }
+        html.android-app .filter-bar .btn { justify-content: center; height: 46px; padding: 0 0.6rem !important; font-size: 0.92rem !important; gap: 6px !important; }
+        html.android-app .filter-bar .btn i { display: inline-block !important; }
+        html.android-app .filter-bar #startBtn { grid-column: 1 / -1; height: 54px; font-size: 1.08rem !important; }
+        html.android-app .filter-bar #statistikBtn,
+        html.android-app .filter-bar #printExamBtn,
+        html.android-app .filter-bar #examSimulatorBtn,
+        html.android-app .filter-bar #duoBtn,
+        html.android-app .filter-bar #unterrichtBtn { display: none !important; }
+
+        /* ---- Untere Leiste ---- */
+        html.android-app #appNavi {
+            display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;
+            height: var(--app-navi-h); box-sizing: border-box; padding: 7px 2px 6px;
+            background: var(--card-bg); border-top: 1px solid var(--line);
+        }
+        html.android-app body.runde-laeuft #appNavi,
+        html.android-app body.app-tastatur #appNavi { display: none; }
+        #appNavi button {
+            border: none; background: transparent; color: var(--muted); font-family: inherit; font-size: 0.72rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 0; position: relative;
+        }
+        #appNavi .an-pille { width: 56px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+        #appNavi button.an { color: var(--ink); }
+        #appNavi button.an .an-pille { background: rgba(10,156,176,0.18); background: color-mix(in srgb, var(--tuerkis) 22%, transparent); color: var(--ink); }
+        #appNavi .an-zahl {
+            position: absolute; top: -2px; left: calc(50% + 8px); min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box;
+            background: var(--bad); color: #fff; font-size: 0.64rem; font-weight: 800; display: none; align-items: center; justify-content: center;
+        }
+        #appNavi .an-zahl.da { display: flex; }
+
+        /* ---- "Mehr": ein Blatt von unten ---- */
+        html.android-app #appMehr.offen { display: block; position: fixed; inset: 0; z-index: 99990; }
+        #appMehr .am-schleier { position: absolute; inset: 0; background: rgba(0,0,0,0.38); }
+        #appMehr .am-blatt {
+            position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow-y: auto;
+            background: var(--card-bg); color: var(--ink); padding: 8px 0 14px;
+            box-shadow: 0 -8px 30px rgba(0,0,0,0.25); animation: amHoch 0.18s ease-out;
+        }
+        @keyframes amHoch { from { transform: translateY(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+        #appMehr .am-griff { width: 34px; height: 4px; background: var(--line); margin: 6px auto 12px; }
+        #appMehr h3 { font-size: 1rem; font-weight: 700; margin: 0 22px 6px; }
+        #appMehr .am-zeile {
+            display: flex; align-items: center; gap: 16px; width: 100%; padding: 12px 22px; border: none; background: transparent;
+            color: var(--ink); font-family: inherit; text-align: left; cursor: pointer;
+        }
+        #appMehr .am-zeile > i { width: 24px; text-align: center; color: var(--tuerkis); font-size: 1.12rem; flex: 0 0 24px; }
+        #appMehr .am-zeile b { display: block; font-size: 0.98rem; font-weight: 600; }
+        #appMehr .am-zeile small { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
+
+        /* ---- Waehrend einer Runde: Zurueck/Weiter unten im Daumenbereich ---- */
+        html.android-app body.runde-laeuft #navArea {
+            position: fixed !important; left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
+            transform: none !important; width: auto !important; max-width: none !important; z-index: 8990;
+            margin: 0 !important; padding: 8px 10px 10px !important; box-sizing: border-box;
+            background: var(--card-bg) !important; border: 0 !important; border-top: 1px solid var(--line) !important;
+            box-shadow: 0 -6px 16px -10px rgba(15,39,69,0.35) !important;
+        }
+        html.android-app body.runde-laeuft #navArea .progress-stats { display: none !important; }
+        html.android-app body.runde-laeuft #navArea .nav-buttons { display: flex !important; gap: 8px; flex-wrap: nowrap; margin: 0 !important; }
+        html.android-app body.runde-laeuft #navArea .nav-buttons > * { margin: 0 !important; min-height: 50px; font-size: 1rem !important; }
+        html.android-app body.runde-laeuft #navArea #prevBtn { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; padding: 0 16px !important; }
+        html.android-app body.runde-laeuft #navArea #nextBtn { flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; }
+        html.android-app body.runde-laeuft #navArea #homeBtn,
+        html.android-app body.runde-laeuft #navArea #zurueckNehmenBtn {
+            flex: 0 0 50px !important; width: 50px !important; min-width: 0 !important; padding: 0 !important; font-size: 0 !important; gap: 0 !important; justify-content: center;
+        }
+        html.android-app body.runde-laeuft #navArea #homeBtn i,
+        html.android-app body.runde-laeuft #navArea #zurueckNehmenBtn i { font-size: 1.1rem !important; margin: 0 !important; }
+
+        /* ---- Chat: in der App eine eigene, ganze Seite ----
+           Am Handy war der Gruppenchat bisher ganz aus (body.schmal, weiter
+           unten): Er nahm die halbe Anzeige ein und lag ueber der Frage.
+           Dietmar: "Der Gruppenchat kann raus." In der App kommt er als
+           ganze Seite zurueck - geoeffnet ueber die Sprechblase oben in der
+           Leiste, zu mit dem Pfeil im Chat oder der Zurueck-Taste. Er legt
+           sich nie von selbst ueber eine Frage. */
+        #alChat { display: none; position: relative; }
+        html.android-app body.app-chat-da #alChat { display: flex; }
+        #alChat .al-zahl {
+            position: absolute; top: 5px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+            background: var(--bad); color: #fff; font-size: 0.62rem; font-weight: 800; display: none; align-items: center; justify-content: center;
+        }
+        #alChat .al-zahl.da { display: flex; }
+        html.android-app body.schmal.app-chat-offen #duoChatBox.sichtbar,
+        html.android-app body.app-chat-offen #duoChatBox.sichtbar {
+            display: flex !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: auto !important; max-width: none !important; height: auto !important; border: 0 !important;
+        }
+        html.android-app body.app-chat-offen #duoChatBox #duoChatKoerper { display: flex !important; flex: 1 1 auto !important; height: auto !important; min-height: 0 !important; }
+        html.android-app body.app-chat-offen #duoChatBox #duoChatKopf { min-height: 54px; box-sizing: border-box; }
+        html.android-app body:not(.app-chat-offen) #duoChatBox { display: none !important; }
+        html.android-app body.eckig.app-rund #alChat .al-zahl { border-radius: 8px !important; }
+        html.android-app #fehlerwertungHinweis { bottom: calc(var(--app-navi-h) + 12px) !important; }
+        html.android-app body.runde-laeuft #fehlerwertungHinweis { bottom: 84px !important; }
+
+        /* ---- Form "rund" (Einstellungen -> Allgemein -> Form) ----
+           Die eckige Form ist am PC fest: body.eckig macht mit einer
+           einzigen Regel alles kantig. "Rund" in der App nimmt dort, wo man
+           es sieht, die Kanten wieder zurueck - der Rest der eckigen
+           Gestaltung (Farben, Rahmen, Antwortfelder) bleibt. */
+        html.android-app body.eckig.app-rund #appLeiste .al-knopf,
+        html.android-app body.eckig.app-rund #appLeiste .al-avatar { border-radius: 50% !important; }
+        html.android-app body.eckig.app-rund #appNavi .an-pille { border-radius: 15px !important; }
+        html.android-app body.eckig.app-rund #appNavi .an-zahl { border-radius: 9px !important; }
+        html.android-app body.eckig.app-rund #appMehr .am-blatt { border-radius: 26px 26px 0 0 !important; }
+        html.android-app body.eckig.app-rund #appMehr .am-griff { border-radius: 2px !important; }
+        html.android-app body.eckig.app-rund .app-chip { border-radius: 19px !important; }
+        html.android-app body.eckig.app-rund #appSuchPlatz #searchInput { border-radius: 22px !important; }
+        html.android-app body.eckig.app-rund #appSuchPlatz .suchfeld-huelle > button { border-radius: 22px !important; }
+        html.android-app body.eckig.app-rund .filter-bar,
+        html.android-app body.eckig.app-rund .exam-info,
+        html.android-app body.eckig.app-rund #masteryDisplay,
+        html.android-app body.eckig.app-rund .question-area,
+        html.android-app body.eckig.app-rund .explanation-box,
+        html.android-app body.eckig.app-rund .left-sidebar,
+        html.android-app body.eckig.app-rund .history-col,
+        html.android-app body.eckig.app-rund .main-col > div[id] > div[style*="border"],
+        html.android-app body.eckig.app-rund #cbPanel { border-radius: 16px !important; }
+        html.android-app body.eckig.app-rund .filter-bar select,
+        html.android-app body.eckig.app-rund select,
+        html.android-app body.eckig.app-rund input[type="text"],
+        html.android-app body.eckig.app-rund input[type="date"],
+        html.android-app body.eckig.app-rund input[type="number"],
+        html.android-app body.eckig.app-rund textarea { border-radius: 12px !important; }
+        html.android-app body.eckig.app-rund .btn,
+        html.android-app body.eckig.app-rund .nav-btn,
+        html.android-app body.eckig.app-rund .btn-google,
+        html.android-app body.eckig.app-rund .btn-lernstand,
+        html.android-app body.eckig.app-rund .btn-lernstand-hell,
+        html.android-app body.eckig.app-rund .btn-theme,
+        html.android-app body.eckig.app-rund .sidebar-tab { border-radius: 22px !important; }
+        html.android-app body.eckig.app-rund .question-area .option,
+        html.android-app body.eckig.app-rund .question-area .option-grid,
+        html.android-app body.eckig.app-rund .q-image img { border-radius: 14px !important; }
+        html.android-app body.eckig.app-rund .start-badge,
+        html.android-app body.eckig.app-rund .error-badge,
+        html.android-app body.eckig.app-rund .difficult-badge,
+        html.android-app body.eckig.app-rund .mastery-badge,
+        html.android-app body.eckig.app-rund .badge { border-radius: 10px !important; }
+        html.android-app body.eckig.app-rund #einstellungenModal .einst-rahmen,
+        html.android-app body.eckig.app-rund #infoModal > div,
+        html.android-app body.eckig.app-rund [id$="Modal"] > div:first-child { border-radius: 20px !important; }
+        /* Die Kacheln fuer die Wahl der Form in den Einstellungen */
+        .app-form-wahl { display: flex; gap: 10px; }
+        .app-form-kachel {
+            flex: 1; border: 2px solid var(--line); background: var(--card-bg); padding: 12px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 10px; font-family: inherit; color: var(--ink);
+        }
+        .app-form-kachel.an { border-color: var(--tuerkis); background: rgba(10,156,176,0.10); }
+        .app-form-kachel span { font-weight: 700; font-size: 0.9rem; }
+        .app-form-mini { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+        .app-form-mini i { display: block; height: 14px; border: 1px solid #b0c4d8; background: #fff; }
+        .app-form-mini b { display: block; height: 18px; background: #0f2745; }
+        body.eckig .app-form-mini.rund i { border-radius: 7px !important; }
+        body.eckig .app-form-mini.rund b { border-radius: 9px !important; }
+        body.eckig.app-rund .app-form-kachel { border-radius: 16px !important; }
+    </style>
+    <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
          ----------------------------------------------------------------
          Dietmar am 06.09.2026: "Der Trainer muss sich in der mobilen
@@ -5300,6 +5573,26 @@
             body.dark .q-image img,
             body.dark .option-grid .option-image { filter: none; background: #fff !important; border-color: #dfe8f2 !important; }
         }
+        /* IN DER ANDROID-APP KRAEFTIG WEISS                 (30.09.2026)
+           Dietmar, nach dem Vergleich "Original / umgekehrt / umgekehrt
+           und weisser": "Drei kraeftig weiss gefaellt mir richtig gut".
+           Am Handy wirken die duennen Linien nach der Umkehr grau. Ein
+           Kontrast von 1,8 nach der Umkehr zieht sie nach Weiss. Die
+           Dateien bleiben unberuehrt - es aendert sich nur die Anzeige.
+           Die Grundfarben sind so gewaehlt, dass nach invert + contrast
+           wieder genau die Flaeche (#0a1b28) und die Kante (#2b5471) des
+           Dark Mode herauskommen: c = 255 - ((Ziel - 128) / 1,8 + 128).
+           Am PC bleibt es bei invert(1). */
+        html.android-app body.dark .q-image img,
+        html.android-app body.dark .option-grid .option-image,
+        html.android-app body.dark .lightbox-overlay img,
+        html.android-app body.dark #bildZoomEbene img {
+            filter: invert(1) contrast(1.8);
+            background: #c1b7b0 !important;
+            border-color: #ae978b !important;
+        }
+        html.android-app body.dark .option-grid .option-image:hover,
+        html.android-app body.dark .q-image img:hover { border-color: #c66641 !important; }
 
         /* ============================================================
            DARK MODE - NAV BUTTONS FIX - ALLE GLEICH HOCH
@@ -7175,6 +7468,12 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         // vergeben, BEVOR das erste Mal gezeichnet wird - sonst blitzte
         // beim Laden kurz die runde Fassung auf.
         document.body.classList.add('eckig');
+        // In der App darf es auch rund sein (30.09.2026) - siehe
+        // "DIE APP SIEHT AUS WIE EINE ANDROID-APP" im Kopf der Seite.
+        try{
+            if(document.documentElement.classList.contains('android-app') && localStorage.getItem('app_form') === 'rund')
+                document.body.classList.add('app-rund');
+        }catch(e){}
         // Die Leiste des Browsers gleich mitfaerben - siehe
         // browserfarbeNachziehen(). Die Funktion steht weiter unten, beim
         // ersten Zeichnen gibt es sie noch nicht; deshalb hier nur der
@@ -29119,6 +29418,25 @@ window.einstellungenOeffnen = einstellungenOeffnen;
 // ---------------------------------------------------------------
 //  Die fuenf Blaetter
 // ---------------------------------------------------------------
+// ---------------------------------------------------------------
+//  FORM IN DER APP: ECKIG ODER RUND                    (30.09.2026)
+//  Dietmar: "Du hast zwei Style, einmal eckig und einmal rund. Koennen
+//  wir das in den Einstellungen nicht mit uebernehmen?" - Nur in der
+//  Android-App; am PC bleibt es eckig (Entscheidung vom 01.09.2026).
+//  Gemerkt pro Geraet, Voreinstellung eckig.
+// ---------------------------------------------------------------
+function appFormIst(){ try{ return localStorage.getItem('app_form') === 'rund' ? 'rund' : 'eckig'; }catch(e){ return 'eckig'; } }
+function appFormSetzen(form){
+    const rund = form === 'rund';
+    try{ localStorage.setItem('app_form', rund ? 'rund' : 'eckig'); }catch(e){}
+    if(document.documentElement.classList.contains('android-app')) document.body.classList.toggle('app-rund', rund);
+    ['eckig', 'rund'].forEach(f => {
+        const k = document.getElementById('appFormKachel_' + f);
+        if(k){ k.classList.toggle('an', f === (rund ? 'rund' : 'eckig')); k.setAttribute('aria-pressed', f === (rund ? 'rund' : 'eckig') ? 'true' : 'false'); }
+    });
+}
+window.appFormSetzen = appFormSetzen;
+
 function einstBlaetterFuellen(){
     // ---- Allgemein ----
     const farben = { light:'#eef2f9', dark:'#0f2b40', green:'#dff0e4', blue:'#dde9f7', orange:'#fbe8d4', grey:'#e6e6e6' };
@@ -29234,6 +29552,16 @@ function einstBlaetterFuellen(){
       + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
           + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>')
+      // Form - nur in der App (30.09.2026), siehe appFormSetzen()
+      + '<div class="nur-app">' + einstKasten('Form',
+            'Eckig wie am PC oder rund wie bei vielen Android-Apps. Gilt für Knöpfe, Felder und Karten – '
+          + 'die Zeichnungen der Fragen bleiben, wie sie sind.',
+            '<div class="app-form-wahl">'
+          + ['eckig', 'rund'].map(f => '<button type="button" class="app-form-kachel' + (appFormIst() === f ? ' an' : '') + '" '
+              + 'id="appFormKachel_' + f + '" aria-pressed="' + (appFormIst() === f) + '" onclick="appFormSetzen(\'' + f + '\')">'
+              + '<div class="app-form-mini' + (f === 'rund' ? ' rund' : '') + '"><i></i><i></i><b></b></div>'
+              + '<span>' + (f === 'rund' ? 'Rund' : 'Eckig') + '</span></button>').join('')
+          + '</div>') + '</div>'
       // Sprachnachrichten automatisch abspielen (26.09.2026). Dietmar:
       // "Sprachnachrichten automatisch abspielen waere noch gut. Das muss
       // man aber unter Einstellungen aendern koennen." Gemerkt im Browser
@@ -44391,13 +44719,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 // ================================================================
 (function(){
     const RUNDGANG_STANDARD = "# Rundgang für neue Teilnehmer\n\n## Willkommen im Amateurfunk-Trainer\nSchön, dass du da bist! In gut einer Minute zeige ich dir die wichtigsten Knöpfe. Mit **Weiter** geht es zum nächsten Schritt, mit dem Kreuz hörst du jederzeit auf.\n\n## Hier geht es los [start]\n**Start** beginnt eine Runde mit Prüfungsfragen. Die Zahl am Knopf zeigt, wie viele Fragen du noch lernen musst.\n\n## Was und wie viel [auswahl]\nHier wählst du den Prüfungsteil – Vorschriften, Betrieb oder Technik – und wie viele Fragen eine Runde hat.\n\n## Fehler wiederholen [fehler]\nWas du falsch beantwortet hast, sammelt sich hier. Ein Klick, und du übst genau diese Fragen noch einmal.\n\n## Lernbedarf [lernbedarf]\nFragen, die öfter danebengehen. Sie verschwinden erst, wenn du sie dreimal richtig hattest.\n\n## Auffrischen [auffrischen]\nGelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt.\n\n## Blättern [blaettern]\nAlle Fragen der Reihe nach ansehen – mit Lösung und Erklärung, ganz ohne Druck.\n\n## Prüfungssimulator [pruefung]\nWie die echte Prüfung: drei Teile mit je 25 Fragen und 45 Minuten. Die Auflösung gibt es erst am Ende.\n\n## Unterricht [unterricht]\nDie Lektionen in der Reihenfolge der 50ohm-Folien – der Stoff und die passenden Fragen, Schritt für Schritt.\n\n## Suchen [suche]\nEine Fragennummer wie **NC404** oder ein Stichwort eingeben – der Trainer springt direkt dorthin.\n\n## Dein Lernfortschritt [fortschritt]\nHier siehst du, wie viel schon sitzt. Trag deinen Prüfungstermin ein, dann rechnet dir der Trainer aus, wie viel du pro Tag schaffen solltest.\n\n## Der Chat [chat]\nHier schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, mit dem Bild-Knopf ein Foto.\n\n## Frag die KI [ki]\nSchreib **Hey KI** vor deine Frage – der Lerncoach erklärt dir jede Prüfungsfrage. Die Antwort siehst nur du.\n\n## Wo bekomme ich den Trainer?\nDen Amateurfunk-Trainer zum Herunterladen gibt es hier: https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/ – kostenlos, ohne Anmeldung, für Windows, Linux und Mac.\n\n## Das war's! [info]\nDen Rundgang findest du jederzeit wieder unter **Info**. Viel Erfolg bei der Prüfung – 73!\n";
+    // Die Ziele mit "#app..." / "#al..." gibt es nur in der Android-App
+    // (30.09.2026, Skript "appRahmen"): Dort stehen Pruefung, Gruppe und
+    // Fortschritt in der unteren Leiste, Suche und Chat oben, Info und
+    // Unterricht unter "Mehr". Am PC sind sie unsichtbar und fallen weg.
     const ZIELE = {
         start: ['#startBtn'], auswahl: ['#filterPart', '#filterPart + select'], fehler: ['#repeatErrorsBtn'],
         lernbedarf: ['#difficultBtn'], auffrischen: ['#auffrischenBtn'], blaettern: ['#durchsichtBtn'],
-        statistik: ['#statistikBtn'], pruefung: ['#examSimulatorBtn'], gruppenraum: ['#duoBtn'],
-        unterricht: ['#unterrichtBtn'], suche: ['#searchInput'], fortschritt: ['#masteryDisplay'],
-        verlauf: ['#historyCol'], info: ['#infoBtn'], chat: ['#duoChatBox'], ki: ['#duoChatEingabe'],
-        mikro: ['#duoChatMikro'], bild: ['#duoChatBildKnopf']
+        statistik: ['#appNavi [data-bereich="fortschritt"]', '#statistikBtn'],
+        pruefung: ['#appNavi [data-bereich="pruefung"]', '#examSimulatorBtn'],
+        gruppenraum: ['#appNavi [data-bereich="gruppe"]', '#duoBtn'],
+        unterricht: ['#appNavi [data-bereich="mehr"]', '#unterrichtBtn'], suche: ['#alSuche', '#searchInput'],
+        fortschritt: ['#masteryDisplay'],
+        verlauf: ['#historyCol'], info: ['#appNavi [data-bereich="mehr"]', '#infoBtn'], chat: ['#alChat', '#duoChatBox'],
+        ki: ['#duoChatEingabe'], mikro: ['#duoChatMikro'], bild: ['#duoChatBildKnopf']
     };
     function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
     function textHtml(t){
@@ -44577,6 +44912,296 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.rundgangStarten = rundgangStarten;
     window.rundgangLaeuft = () => !!lauf;
     window.rundgangGesehen = () => { try{ return localStorage.getItem('rundgang_gesehen') === '1'; }catch(e){ return false; } };
+})();
+</script>
+<script id="appRahmen">
+// ================================================================
+//  DER RAHMEN DER ANDROID-APP                           (30.09.2026)
+//  ----------------------------------------------------------------
+//  Siehe "DIE APP SIEHT AUS WIE EINE ANDROID-APP" im Kopf der Seite.
+//  Hier werden die obere Leiste, die untere Leiste, das Blatt "Mehr"
+//  und die Suche gebaut. Alles nur in der App - am PC kehrt das Skript
+//  in der ersten Zeile um.
+//
+//  Die Knoepfe fuehren ueber die vorhandenen Knoepfe der alten
+//  Kopfzeile und der Startleiste (click()), nicht ueber eigene Wege -
+//  so tut "Pruefung" genau dasselbe wie der Knopf Pruefungssimulator,
+//  auch wenn der sich einmal aendert.
+// ================================================================
+(function(){
+    const D = document, H = D.documentElement;
+    if(!H.classList.contains('android-app')) return;
+    const $ = id => D.getElementById(id);
+    const tu = fn => { try{ return fn(); }catch(e){ console.warn('[APP]', e && e.message); } };
+    const klick = id => { const e = $(id); if(e){ e.click(); return true; } return false; };
+
+    // ---------------- obere Leiste ----------------
+    const leiste = D.createElement('header');
+    leiste.id = 'appLeiste';
+    leiste.innerHTML =
+        '<div class="al-titel"><span class="al-name">Amateurfunk-<b>Trainer</b></span><span class="al-runde" id="alRunde"></span></div>'
+      + '<span id="alUhrPlatz"></span>'
+      + '<button type="button" class="al-knopf" id="alChat" aria-label="Gruppenchat" title="Gruppenchat"><i class="fas fa-comments"></i><span class="al-zahl" id="alChatZahl"></span></button>'
+      + '<button type="button" class="al-knopf" id="alSuche" aria-label="Suchen" title="Suchen"><i class="fas fa-magnifying-glass"></i></button>'
+      + '<button type="button" class="al-knopf" id="alBenutzer" aria-label="Benutzer" title="Benutzer"><span class="al-avatar" id="alInitiale"></span></button>'
+      + '<button type="button" class="al-knopf" id="alMehr" aria-label="Mehr" title="Mehr"><i class="fas fa-ellipsis-vertical"></i></button>';
+    D.body.insertBefore(leiste, D.body.firstChild);
+    // Die Pruefungsuhr zieht aus der (unsichtbaren) Kopfzeile hierher um.
+    tu(() => { const u = $('examTimerDisplay'); if(u) $('alUhrPlatz').appendChild(u); });
+
+    // ---------------- Suche ----------------
+    const such = D.createElement('div');
+    such.id = 'appSuchPlatz';
+    leiste.insertAdjacentElement('afterend', such);
+    tu(() => { const h = D.querySelector('.suchfeld-huelle'); if(h) such.appendChild(h); });
+    function sucheZu(){
+        such.classList.remove('offen');
+        // Den Fokus aus dem Feld nehmen - sonst bliebe die Tastatur "offen"
+        // gemeldet und die untere Leiste versteckt.
+        try{ if(such.contains(D.activeElement)) D.activeElement.blur(); }catch(e){}
+        D.body.classList.remove('app-tastatur');
+    }
+    function sucheAuf(){
+        mehrZu();
+        such.classList.add('offen');
+        const i = $('searchInput');
+        if(i) setTimeout(() => { try{ i.focus(); }catch(e){} }, 60);
+    }
+    $('alSuche').addEventListener('click', () => such.classList.contains('offen') ? sucheZu() : sucheAuf());
+    // Nach dem Suchen geht das Feld wieder zu - das Ergebnis soll frei stehen.
+    tu(() => {
+        const alt = window.searchQuestion;
+        if(typeof alt === 'function') window.searchQuestion = function(){ sucheZu(); return alt.apply(this, arguments); };
+    });
+    $('alBenutzer').addEventListener('click', () => { sucheZu(); mehrZu(); tu(() => einstellungenOeffnen('benutzer')); });
+
+    // ---------------- Chat als ganze Seite ----------------
+    function chatBox(){ return $('duoChatBox'); }
+    function chatAuf(){
+        const b = chatBox();
+        if(!b || !b.classList.contains('sichtbar')) return;
+        sucheZu(); mehrZu();
+        D.body.classList.add('app-chat-offen');
+        if(!b.classList.contains('offen')){
+            if(window.duo && typeof window.duo.chatOeffnenOhneFokus === 'function') tu(() => window.duo.chatOeffnenOhneFokus());
+            else klick('duoChatKnopf');
+        }
+    }
+    function chatZu(){
+        D.body.classList.remove('app-chat-offen');
+        const b = chatBox();
+        if(b && b.classList.contains('offen')) klick('duoChatKnopf');
+    }
+    $('alChat').addEventListener('click', () => D.body.classList.contains('app-chat-offen') ? chatZu() : chatAuf());
+    // Der Chat oeffnet sich manchmal von selbst (jemand kommt dazu). In der
+    // App bleibt er dann zu - gezaehlt wird am Knopf oben, geoeffnet wird
+    // nur auf Wunsch. Klappt ihn jemand im Chat selbst zu, ist die Seite weg.
+    function chatBeobachten(){
+        const b = chatBox();
+        if(!b || b.dataset.appBeobachtet) return;
+        b.dataset.appBeobachtet = '1';
+        const pruefen = () => {
+            const offen = b.classList.contains('offen'), da = b.classList.contains('sichtbar');
+            D.body.classList.toggle('app-chat-da', da);
+            if(!da || !offen){ D.body.classList.remove('app-chat-offen'); }
+            if(da && offen && !D.body.classList.contains('app-chat-offen')) setTimeout(() => {
+                if(b.classList.contains('offen') && !D.body.classList.contains('app-chat-offen')) klick('duoChatKnopf');
+            }, 0);
+        };
+        new MutationObserver(pruefen).observe(b, { attributes: true, attributeFilter: ['class'] });
+        pruefen();
+    }
+    $('alMehr').addEventListener('click', () => mehrUmschalten());
+
+    // ---------------- Ziel und Trainer-Steuerung auf der Startseite ----------------
+    const ziel = D.createElement('div');
+    ziel.id = 'appZielZeile';
+    ziel.innerHTML = '<button type="button" class="app-chip" id="appZielChip"><i class="fas fa-graduation-cap"></i>'
+                   + '<span id="appZielText">Ziel wählen</span><i class="fas fa-caret-down"></i></button>';
+    tu(() => {
+        const fb = D.querySelector('.filter-bar');
+        if(fb && fb.parentNode) fb.parentNode.insertBefore(ziel, fb);
+        else { const app = $('app'); if(app) app.insertBefore(ziel, app.firstChild); }
+    });
+    $('appZielChip').addEventListener('click', () => klick('klasseBtn'));
+    // Kursleiter im Gruppenraum: die Steuerung "Trainer-Modus" stand in der Kopfzeile.
+    tu(() => { const t = $('trainerControls'); if(t) ziel.appendChild(t); });
+
+    // ---------------- untere Leiste ----------------
+    const BEREICHE = [
+        ['lernen', 'fa-book-open', 'Lernen'],
+        ['pruefung', 'fa-stopwatch', 'Prüfung'],
+        ['gruppe', 'fa-users', 'Gruppe'],
+        ['fortschritt', 'fa-chart-simple', 'Fortschritt'],
+        ['mehr', 'fa-bars', 'Mehr']
+    ];
+    const navi = D.createElement('nav');
+    navi.id = 'appNavi';
+    navi.setAttribute('aria-label', 'Bereiche');
+    navi.innerHTML = BEREICHE.map(b =>
+        '<button type="button" data-bereich="' + b[0] + '"' + (b[0] === 'lernen' ? ' class="an"' : '') + '>'
+      + '<span class="an-pille"><i class="fas ' + b[1] + '"></i></span>' + b[2]
+      + '<span class="an-zahl" id="appZahl_' + b[0] + '"></span></button>').join('');
+    D.body.appendChild(navi);
+    function naviAn(was){
+        navi.querySelectorAll('button').forEach(b => b.classList.toggle('an', b.dataset.bereich === was));
+    }
+    navi.addEventListener('click', e => {
+        const b = e.target.closest('button[data-bereich]');
+        if(b) bereich(b.dataset.bereich);
+    });
+    function bereich(was){
+        sucheZu();
+        if(was === 'mehr'){ mehrUmschalten(); return; }
+        mehrZu();
+        if(was === 'lernen'){ try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, 0); } return; }
+        if(was === 'pruefung'){ klick('examSimulatorBtn'); return; }
+        if(was === 'gruppe'){ if(!klick('duoBtn')) tu(() => window.duoInit()); return; }
+        if(was === 'fortschritt'){ klick('statistikBtn'); return; }
+    }
+
+    // ---------------- Blatt "Mehr" ----------------
+    // [Titel, Zeichen, Unterzeile, Aktion, wann sichtbar]
+    const EINTRAEGE = [
+        ['Einstellungen', 'fas fa-gear', 'Vorlesen, Anzeige, Benutzer, Form', () => einstellungenOeffnen()],
+        ['Merkliste', 'fas fa-heart', '', () => openFavorites()],
+        ['Übungszeit & Verlauf', 'far fa-clock', 'Wie lange du geübt hast', () => uebungszeitOeffnen()],
+        ['Unterricht', 'fas fa-chalkboard-user', 'Die Lektionen der Reihe nach, auch am Beamer', () => unterrichtOeffnen()],
+        ['Server', 'fas fa-server', 'Andere über den Internet-Link einladen', () => serverFensterOeffnen(), () => H.classList.contains('android-tunnel')],
+        ['Farbstil & Form', 'fas fa-palette', 'Hell, Dunkel, Grün … – eckig oder rund', () => einstellungenOeffnen('allgemein')],
+        ['Rundgang', 'fas fa-route', 'Die wichtigsten Knöpfe erklärt', () => window.rundgangStarten && window.rundgangStarten()],
+        ['Info & Hilfe', 'fas fa-circle-info', 'Anleitung, Version, Updates', () => infoOeffnen()],
+        ['Facebook-Gruppe', 'fab fa-facebook', 'Austausch mit anderen Lernenden', () => klick('facebookBtn')]
+    ];
+    const mehr = D.createElement('div');
+    mehr.id = 'appMehr';
+    mehr.innerHTML = '<div class="am-schleier"></div><div class="am-blatt" role="dialog" aria-label="Mehr">'
+        + '<div class="am-griff"></div><h3>Mehr</h3>'
+        + EINTRAEGE.map((e, i) => '<button type="button" class="am-zeile" data-nr="' + i + '"><i class="' + e[1] + '"></i>'
+            + '<span><b>' + e[0] + '</b><small id="appMehrUnter_' + i + '">' + e[2] + '</small></span></button>').join('')
+        + '</div>';
+    D.body.appendChild(mehr);
+    mehr.querySelector('.am-schleier').addEventListener('click', () => mehrZu());
+    mehr.addEventListener('click', e => {
+        const z = e.target.closest('.am-zeile');
+        if(!z) return;
+        const eintrag = EINTRAEGE[+z.dataset.nr];
+        mehrZu();
+        if(eintrag) tu(eintrag[3]);
+    });
+    // Nach unten wischen schliesst das Blatt - wie bei Android gewohnt.
+    tu(() => {
+        const blatt = mehr.querySelector('.am-blatt');
+        let y0 = null;
+        blatt.addEventListener('touchstart', e => { y0 = (blatt.scrollTop <= 0) ? e.touches[0].clientY : null; }, { passive: true });
+        blatt.addEventListener('touchmove', e => { if(y0 !== null && e.touches[0].clientY - y0 > 70){ y0 = null; mehrZu(); } }, { passive: true });
+    });
+    function mehrAuf(){
+        EINTRAEGE.forEach((e, i) => {
+            const z = mehr.querySelector('.am-zeile[data-nr="' + i + '"]');
+            if(z) z.style.display = (e[4] && !tu(e[4])) ? 'none' : '';
+        });
+        tu(() => {
+            const n = parseInt(($('favCount') || {}).textContent || '0', 10) || 0;
+            $('appMehrUnter_1').textContent = n ? (n === 1 ? '1 gemerkte Frage' : n + ' gemerkte Fragen') : 'Noch keine Frage gemerkt';
+        });
+        mehr.classList.add('offen');
+        naviAn('mehr');
+    }
+    function mehrZu(){ mehr.classList.remove('offen'); naviAn('lernen'); }
+    function mehrUmschalten(){ mehr.classList.contains('offen') ? mehrZu() : mehrAuf(); }
+
+    // ---------------- was sich laufend aendert ----------------
+    function avatar(){
+        const a = $('alInitiale');
+        if(!a) return;
+        let bild = '', name = '';
+        try{ bild = profilbildHolen(); }catch(e){}
+        try{ name = getUserName(currentUser); }catch(e){}
+        if(!name){ try{ name = localStorage.getItem('duo_userName') || ''; }catch(e){} }
+        const merk = bild ? 'b' + bild.length + bild.slice(-12) : 'n' + name;
+        if(a.dataset.merk === merk) return;
+        a.dataset.merk = merk;
+        if(bild){ a.innerHTML = ''; const img = D.createElement('img'); img.alt = ''; img.src = bild; a.appendChild(img); }
+        else a.innerHTML = name ? name.charAt(0).toUpperCase() : '<i class="fas fa-user"></i>';
+        $('alBenutzer').setAttribute('aria-label', name ? 'Benutzer: ' + name : 'Benutzer');
+    }
+    function zielText(){
+        const b = $('bankBadge'), t = $('appZielText');
+        if(!t) return;
+        const text = b ? b.textContent.replace(/\s+/g, ' ').trim() : '';
+        if(text && t.textContent !== text) t.textContent = text;
+    }
+    function rundenText(){
+        const r = $('alRunde');
+        if(!r) return;
+        const q = $('qCounter');
+        const t = q ? q.textContent.trim() : '';
+        const m = t.match(/^(\d+)\s*\/\s*(\d+)$/);
+        const neu = m ? ('Frage ' + m[1] + ' von ' + m[2]) : (t || 'Frage');
+        if(r.textContent !== neu) r.textContent = neu;
+    }
+    function gruppenZahl(){
+        // Wie viele Teilnehmer schon fertig sind - stand am Knopf "Teilnehmer" oben.
+        const z = $('appZahl_gruppe');
+        if(!z) return;
+        const b = $('duoTeilnehmerBadge'), k = $('duoTeilnehmerBtn');
+        const zeigen = !!(b && k && k.style.display !== 'none' && b.style.display !== 'none' && b.textContent.trim() && b.textContent.trim() !== '0');
+        z.textContent = zeigen ? b.textContent.trim() : '';
+        z.classList.toggle('da', zeigen);
+    }
+    function tastaturPruefen(){
+        // Sicherheitsnetz: Steht "Tastatur offen", aber kein sichtbares
+        // Eingabefeld hat den Fokus, war es ein Rest - Leiste wieder her.
+        if(!D.body.classList.contains('app-tastatur')) return;
+        const a = D.activeElement;
+        if(!tippfeld(a) || !a.offsetParent) D.body.classList.remove('app-tastatur');
+    }
+    function chatZahl(){
+        chatBeobachten();
+        const z = $('alChatZahl'), blase = $('duoChatBlase');
+        if(!z) return;
+        const n = (blase && blase.classList.contains('sichtbar')) ? blase.textContent.trim() : '';
+        z.textContent = n;
+        z.classList.toggle('da', !!n && n !== '0');
+    }
+    function nachziehen(){ tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); }
+    nachziehen();
+    setInterval(nachziehen, 1000);
+    // Die Fragennummer oben sofort mitziehen, nicht erst nach einer Sekunde.
+    tu(() => { const q = $('qCounter'); if(q) new MutationObserver(() => tu(rundenText)).observe(q, { childList: true, characterData: true, subtree: true }); });
+
+    // Tastatur offen: die untere Leiste geht aus dem Weg (sie sass sonst
+    // direkt ueber der Tastatur und nahm dem Eingabefeld den Platz).
+    const tippfeld = el => el && (el.tagName === 'TEXTAREA' || el.isContentEditable
+        || (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|range|file|color|date|time)$/i.test(el.type || '')));
+    D.addEventListener('focusin', e => { if(tippfeld(e.target)) D.body.classList.add('app-tastatur'); });
+    D.addEventListener('focusout', () => setTimeout(() => { if(!tippfeld(D.activeElement)) D.body.classList.remove('app-tastatur'); }, 120));
+
+    // ---------------- Android-Taste "Zurueck" ----------------
+    // Die App fragt hier nach (MainActivity.onBackPressed). true heisst:
+    // erledigt - sonst geht die App wie bisher in den Hintergrund.
+    window.appZurueck = function(){
+        try{
+            if(mehr.classList.contains('offen')){ mehrZu(); return true; }
+            if(such.classList.contains('offen')){ sucheZu(); return true; }
+            const lb = $('lightboxOverlay');
+            if(lb && lb.classList.contains('active')){ closeLightbox(); return true; }
+            if(D.body.classList.contains('app-chat-offen')){ chatZu(); return true; }
+            // Das oberste offene Fenster ueber seinen eigenen Schliessen-Knopf zu.
+            const offen = Array.from(D.querySelectorAll('body > div[id], body > section[id]')).filter(el => {
+                if(el === mehr || el === such || el === navi) return false;
+                const st = getComputedStyle(el);
+                return st.position === 'fixed' && st.display !== 'none' && st.visibility !== 'hidden'
+                    && el.offsetWidth > 100 && el.offsetHeight > 100 && /modal|fenster|overlay/i.test(el.id + ' ' + el.className);
+            }).sort((a, b) => (parseInt(getComputedStyle(b).zIndex, 10) || 0) - (parseInt(getComputedStyle(a).zIndex, 10) || 0));
+            for(const f of offen){
+                const zu = f.querySelector('.x-zu, [aria-label="Schließen"], [aria-label="Schliessen"], .modal-close, .close-btn, .lightbox-close, button[title="Schließen"]');
+                if(zu){ zu.click(); return true; }
+            }
+        }catch(e){}
+        return false;
+    };
 })();
 </script>
 </body>
