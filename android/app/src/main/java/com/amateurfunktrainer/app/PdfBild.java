@@ -29,6 +29,8 @@ final class PdfBild {
     private PdfBild() { }
 
     private static File datei(Context c, String name) {
+        // Folien des DARC (01.10.2026): "folien/slide-N.pdf" liegt im App-Ordner "folien", siehe Folien.java
+        if (name != null && name.startsWith("folien/")) return Folien.datei(c, name.substring(7));
         if (name == null || !name.matches("[A-Za-z0-9_.-]+\\.pdf")) return null;
         File f = new File(NodeStarter.trainerOrdner(c), name);
         return (f.isFile() && f.canRead()) ? f : null;

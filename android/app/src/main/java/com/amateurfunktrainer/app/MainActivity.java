@@ -285,6 +285,22 @@ public class MainActivity extends Activity {
         @JavascriptInterface public int pdfSeiten(String datei) {
             return PdfBild.seiten(MainActivity.this, datei);
         }
+        /** Folien des DARC laden und zeigen (01.10.2026), siehe Folien.java */
+        @JavascriptInterface public long folienGroesse(String name) { return Folien.groesse(MainActivity.this, name); }
+        @JavascriptInterface public String folienLaeuft() { return Folien.laeuft(); }
+        @JavascriptInterface public void folienAbbrechen() { Folien.abbrechen(); }
+        @JavascriptInterface public boolean folienEntfernen(String name) { return Folien.entfernen(MainActivity.this, name); }
+        @JavascriptInterface public void folienLaden(String name) {
+            Folien.laden(MainActivity.this, name, new Folien.Stand() {
+                @Override public void melden(final String n, final long bytes, final long gesamt, final String status, final String text) {
+                    haupt.post(new Runnable() {
+                        @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.__folienStand&&window.__folienStand(" + jsText(n) + "," + bytes + "," + gesamt + "," + jsText(status) + "," + jsText(text) + ")", null);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     class Sprache {

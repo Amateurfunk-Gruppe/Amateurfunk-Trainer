@@ -1604,8 +1604,8 @@
         html.android-app.stil-sachlich #appHeute .ah-ueber { font-size: 15px; font-weight: 500; color: var(--s-text2); margin: 22px 0 8px 2px; }
         html.android-app.stil-verspielt #appWerk #awUeberPruef { display: none; }
         /* Zeichen: eine Farbe statt bunter Verlaeufe */
-        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt) .ah-ico { background: var(--s-fl2); color: var(--s-haupt); box-shadow: none; }
-        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt) .ah-ico::after { display: none; }
+        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt, #appFolien) .ah-ico { background: var(--s-fl2); color: var(--s-haupt); box-shadow: none; }
+        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt, #appFolien) .ah-ico::after { display: none; }
         /* Fortschritt: Balken in der Hauptfarbe, die Teile als Zeilen mit Kaestchen */
         html.android-app.stil-sachlich #appWerk .aw-fz b { font: 700 30px/1 var(--font-display); }
         html.android-app.stil-sachlich #appWerk .aw-fz span { font-weight: 500; }
@@ -1702,6 +1702,53 @@
         html.android-app .app-bild-lupe:active { background: #eef2f9; }
         html.android-app body.dark .app-bild-lupe { background: rgba(16,32,52,0.92); color: #dbe6f3; border-color: rgba(255,255,255,0.22); }
         html.android-app body.eckig.app-rund .app-bild-lupe { border-radius: 50% !important; }
+
+        /* ================================================================
+           FOLIEN IN DER APP                                    (01.10.2026)
+           Ganzer Bildschirm: Liste der drei Foliensaetze (laden, ansehen,
+           entfernen) und die Ansicht mit Blaettern und Vergroessern.
+           Dazu die Quellenangabe (CC BY 4.0: 50ohm.de / DARC e. V.).
+           ================================================================ */
+        #appFolien { display: none; position: fixed; inset: 0; z-index: 99993; flex-direction: column; background: var(--s-blatt, #fff); color: var(--s-text, #111); }
+        #appFolien.offen { display: flex; }
+        #appFolien .afo-kopf { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px; border-bottom: 1px solid var(--s-rand); }
+        #appFolien h2 { flex: 1; min-width: 0; margin: 0; font: 700 20px/1.2 var(--font-display); letter-spacing: -0.3px; }
+        #appFolien .afo-zurueck { width: 40px; height: 40px; flex: none; border: 0; background: var(--s-fl2); color: var(--s-text); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        #appFolien .afo-rumpf { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px 24px; display: flex; flex-direction: column; }
+        #appFolien .afo-text { margin: 0 0 14px; font-size: 14px; line-height: 1.45; color: var(--s-text2); }
+        #appFolien .afo-karte { background: var(--s-fl2); padding: 12px 14px; margin-bottom: 10px; }
+        #appFolien .afo-zeile { display: flex; align-items: center; gap: 13px; }
+        #appFolien .afo-zeile .ah-ico { width: 42px; height: 42px; font-size: 18px; flex: none; }
+        #appFolien .afo-zt { flex: 1; min-width: 0; }
+        #appFolien .afo-zt b { display: block; font-size: 16px; font-weight: 700; }
+        #appFolien .afo-zt small { display: block; font-size: 13px; color: var(--s-text2); margin-top: 1px; }
+        #appFolien .afo-knoepfe { display: flex; gap: 8px; margin-top: 11px; }
+        #appFolien .afo-knopf { flex: 1; height: 46px; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 700 15px var(--font-body); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+        #appFolien .afo-knopf.leise { flex: 0 0 auto; padding: 0 16px; background: var(--s-fl); color: var(--s-text); box-shadow: inset 0 0 0 1px var(--s-rand2); }
+        #appFolien .afo-knopf.rot { background: var(--s-rot); color: #fff; }
+        #appFolien .afo-knopf:active { opacity: 0.85; }
+        #appFolien .afo-hinweis { display: flex; gap: 10px; align-items: flex-start; margin-top: 11px; padding: 10px 12px; background: var(--s-fl); font-size: 13.5px; line-height: 1.42; }
+        #appFolien .afo-hinweis > i { color: var(--s-akzent); margin-top: 2px; }
+        #appFolien .afo-bar { height: 8px; margin-top: 12px; background: var(--s-fl); overflow: hidden; }
+        #appFolien .afo-bar i { display: block; height: 100%; background: var(--s-haupt); transition: width 0.4s linear; }
+        #appFolien .afo-zahl { margin-top: 6px; font-size: 13px; color: var(--s-text2); font-variant-numeric: tabular-nums; }
+        #appFolien .afo-fehler { margin-top: 9px; font-size: 13px; color: var(--s-rot); }
+        #appFolien .afo-quelle { margin-top: auto; padding-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--s-text2); }
+        #appFolien .afo-quelle a, #appFolien .afo-fuss a { color: var(--s-akzent); text-decoration: underline; }
+        #appFolien .afo-leiste { flex: none; display: flex; align-items: center; gap: 8px; margin: -14px -16px 0; padding: 8px 16px; border-bottom: 1px solid var(--s-rand); }
+        #appFolien .afo-leiste #afoStand { flex: 1; text-align: center; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        #appFolien .afo-nav { width: 44px; height: 40px; border: 0; background: var(--s-fl2); color: var(--s-text); font-size: 15px; }
+        #appFolien .afo-nav:disabled { opacity: 0.35; }
+        #appFolien .afo-zoom { height: 40px; padding: 0 12px; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 700 13.5px var(--font-body); }
+        #appFolien .afo-rolle { flex: 1; min-height: 0; overflow: auto; margin: 0 -16px; background: var(--s-fl2); -webkit-overflow-scrolling: touch; }
+        #appFolien .afo-rolle img { display: block; background: #fff; max-width: none; margin: 0 auto; }
+        #appFolien #afoHinweis { padding: 20px; text-align: center; font-size: 14px; color: var(--s-text2); }
+        #appFolien #afoHinweis:empty { display: none; }
+        #appFolien .afo-fuss { flex: none; margin: 0 -16px -24px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: var(--s-text2); text-align: center; border-top: 1px solid var(--s-rand); }
+        html.android-app body.eckig.app-rund #appFolien :is(.afo-karte, .afo-hinweis) { border-radius: 16px !important; }
+        html.android-app body.eckig.app-rund #appFolien :is(.afo-knopf, .afo-nav, .afo-zoom, .afo-zurueck) { border-radius: 14px !important; }
+        html.android-app body.eckig.app-rund #appFolien .afo-zeile .ah-ico { border-radius: 14px !important; }
+        html.android-app body.eckig.app-rund #appFolien :is(.afo-bar, .afo-bar i) { border-radius: 99px !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -47652,6 +47699,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         });
         if(offen) return true;
         if(werk && werk.offen) return true;               // ein Blatt der Werkzeuge
+        if(folien && folien.offen) return true;           // die Folien
         return ['appStilWahl', 'rgHuelle', 'appPruefblatt'].some(id => zuSehen($(id)));
     }
     function roboDarf(){
@@ -49106,7 +49154,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!vorlesenEgal && wirdVorgelesen()) return false;
         if(lies('app_stil_gewaehlt', '') !== '1' || lies('robo_tour_gesehen', '') !== '1') return false;
         if(D.body.classList.contains('im-gruppenraum') || D.body.classList.contains('gast-im-raum') || D.body.classList.contains('app-chat-offen')) return false;
-        if(pruefungLaeuft() || blatt.classList.contains('offen') || (werk && werk.offen)) return false;
+        if(pruefungLaeuft() || blatt.classList.contains('offen') || (werk && werk.offen) || folien.offen) return false;
         const m = $('appMehr'), s = $('appSuchPlatz');
         if((m && m.classList.contains('offen')) || (s && s.classList.contains('offen'))) return false;
         return !['appStilWahl', 'rgHuelle', 'appPruefblatt'].some(id => zuSehen($(id)));
@@ -49741,7 +49789,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         HILFE_ZEILEN.forEach((z, i) => {
             const b = D.querySelector(z.such);
             if(!b || (z.nurSichtbar && b.style.display === 'none')) return;
-            html += zeile('hilfe:' + i, z.farbe, z.icon, z.titel, z.unter, '<i class="fas fa-arrow-up-right-from-square aw-pf" aria-hidden="true"></i>');
+            const imApp = /pdf-slides/.test(z.such) && folienAppDa();
+            html += zeile('hilfe:' + i, z.farbe, z.icon, z.titel, imApp ? 'Laden und in der App ansehen' : z.unter, '<i class="fas ' + (imApp ? 'fa-download' : 'fa-arrow-up-right-from-square') + ' aw-pf" aria-hidden="true"></i>');
         });
         return html;
     }
@@ -49903,7 +49952,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(was === 'diplome'){ werkBlattZu(); tu(() => qslAlbumOeffnen()); }
         else if(was === 'video' && l[nr]) tu(() => lektionVideoStarten(l[nr].name));
         else if(was === 'lernen' && l[nr]){ werkBlattZu(); tu(() => lektionFragenLernen(l[nr].name)); }
-        else if(was === 'hilfe' && HILFE_ZEILEN[nr]) klickAuf(HILFE_ZEILEN[nr].such);
+        else if(was === 'hilfe' && HILFE_ZEILEN[nr]){
+            // Folien: in der neuen App laden und selbst zeigen (siehe FOLIEN IN DER APP), sonst der Link wie bisher
+            if(/pdf-slides/.test(HILFE_ZEILEN[nr].such) && typeof window.appFolienAuf === 'function' && window.appFolienAuf()) return;
+            klickAuf(HILFE_ZEILEN[nr].such);
+        }
         else if(was === 'sichern'){ werkBlattZu(); klickAuf('button[onclick="lernstandExportieren()"]') || tu(() => lernstandExportieren()); }
         else if(was === 'einlesen'){ werkBlattZu(); klickAuf('button[onclick="lernstandDateiWaehlen()"]') || tu(() => lernstandDateiWaehlen()); }
         else if(was === 'nurgelernt'){
@@ -50179,6 +50232,167 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     };
 
     // ================================================================
+    //  FOLIEN IN DER APP                                     (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit Bild der GitHub-Seite im Handy-Browser: "Wenn ich in
+    //  der App auf Folien klicke, oeffnet sich der Link zu GitHub." - "Ich
+    //  stelle mir das so vor, dass sich bei Folien ein Button oeffnet mit
+    //  dem Hinweis, dass man sich hier 150 MB an Daten runterzieht und
+    //  danach die PDF dann in der App liegen." - "Hier soll es auch einen
+    //  Hinweis auf den DARC geben. 50 Ohm auf die Entwickler, das muss
+    //  glaube ich auch so genannt werden." (CC BY 4.0 verlangt die
+    //  Namensnennung - sie steht in der Liste und unter jeder Folie.)
+    //  Die App laedt die PDF in ihren Ordner (Folien.java) und zeigt sie
+    //  wie das Formelblatt (PdfBild). Ohne die neue APK: alter Weg, Link.
+    // ================================================================
+    const FOLIEN = [['slide-N.pdf', 'Folien N', 125], ['slide-E.pdf', 'Folien E', 31], ['slide-NE.pdf', 'Folien NE', 150]];
+    var folien = { offen: false, ansicht: 'liste', datei: '', seite: 1, seiten: 0, zoom: 1, stand: {}, bilder: new Map(), frage: '', weg: '' };
+    function folienAppDa(){ const a = window.AndroidApp; return !!(a && typeof a.folienLaden === 'function' && typeof a.folienGroesse === 'function' && typeof a.pdfSeite === 'function'); }
+    const folienMB = b => (b / 1048576).toFixed(b >= 10485760 ? 0 : 1).replace('.', ',');
+    function folienGroesse(n){ let g = 0; tu(() => { g = Number(window.AndroidApp.folienGroesse(n)) || 0; }); return g; }
+    function folienLaeuft(){ let n = ''; tu(() => { n = typeof window.AndroidApp.folienLaeuft === 'function' ? String(window.AndroidApp.folienLaeuft() || '') : ''; }); return n; }
+    const folienQuelle = '<div class="afo-quelle"><b>Quelle:</b> Die Folien stammen vom <a href="#" data-afo-link="https://50ohm.de/">50ohm.de</a>-Autorenteam, koordiniert durch das AJW-Referat des '
+        + '<b>DARC e. V.</b> – 50 Ohm ist der Amateurfunklehrgang des DARC. Lizenz <a href="#" data-afo-link="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>. '
+        + 'Hier unverändert geladen und angezeigt; der Trainer ist ein eigenes Projekt und keine Veröffentlichung des DARC. '
+        + '<a href="#" data-afo-link="https://github.com/DARC-e-V/50ohm-pdf-slides/releases/latest">Zur Quelle auf GitHub</a></div>';
+    var folienEl = D.createElement('div');
+    folienEl.id = 'appFolien';
+    folienEl.setAttribute('role', 'dialog');
+    folienEl.setAttribute('aria-label', 'Folien zum Lehrgang');
+    folienEl.innerHTML = '<div class="afo-kopf"><button type="button" class="afo-zurueck" data-afo="zurueck" aria-label="Zurück"><i class="fas fa-chevron-left"></i></button>'
+        + '<h2 id="afoTitel">Folien zum Lehrgang</h2></div><div class="afo-rumpf" id="afoRumpf"></div>';
+    D.body.appendChild(folienEl);
+    function folienListe(){
+        const lauf = folienLaeuft();
+        let h = '<p class="afo-text">Die Foliensätze zum Lehrgang. Einmal laden – dann liegen sie in der App und gehen auch ohne Internet.</p>';
+        FOLIEN.forEach(f => {
+            const n = f[0], g = folienGroesse(n), da = g > 0, st = folien.stand[n] || null, laeuft = lauf === n;
+            h += '<div class="afo-karte" data-datei="' + n + '"><div class="afo-zeile"><span class="ah-ico tuerkis"><i class="fas fa-file-pdf"></i></span>'
+               + '<span class="afo-zt"><b>' + f[1] + '</b><small>' + (da ? 'liegt in der App · ' + folienMB(g) + ' MB' : 'PDF · ca. ' + f[2] + ' MB') + '</small></span></div>';
+            if(laeuft){
+                const b = st && st.b || 0, gs = st && st.g || 0;
+                h += '<div class="afo-bar"><i style="width:' + (gs ? Math.round(100 * b / gs) : 0) + '%"></i></div>'
+                   + '<div class="afo-zahl">' + (gs ? folienMB(b) + ' von ' + folienMB(gs) + ' MB' : 'wird verbunden …') + '</div>'
+                   + '<div class="afo-knoepfe"><button type="button" class="afo-knopf leise" data-afo="stopp">Abbrechen</button></div>';
+            }
+            else if(folien.frage === n){
+                h += '<div class="afo-hinweis"><i class="fas fa-circle-info"></i><span>Diese Datei ist <b>ca. ' + f[2] + ' MB</b> groß und wird einmal auf dein Handy geladen – am besten im <b>WLAN</b>, sonst geht Datenvolumen drauf. Danach liegt sie in der App.</span></div>'
+                   + '<div class="afo-knoepfe"><button type="button" class="afo-knopf" data-afo="laden"><i class="fas fa-download"></i> Jetzt laden</button><button type="button" class="afo-knopf leise" data-afo="nein">Abbrechen</button></div>';
+            }
+            else if(da){
+                h += folien.weg === n
+                    ? '<div class="afo-hinweis"><i class="fas fa-trash-can"></i><span>Von diesem Handy entfernen? Du kannst sie jederzeit neu laden.</span></div><div class="afo-knoepfe"><button type="button" class="afo-knopf rot" data-afo="weg-ja">Entfernen</button><button type="button" class="afo-knopf leise" data-afo="nein">Behalten</button></div>'
+                    : '<div class="afo-knoepfe"><button type="button" class="afo-knopf" data-afo="ansehen"><i class="fas fa-eye"></i> Ansehen</button><button type="button" class="afo-knopf leise" data-afo="weg">Entfernen</button></div>';
+            }
+            else h += '<div class="afo-knoepfe"><button type="button" class="afo-knopf" data-afo="frage"><i class="fas fa-download"></i> Laden · ca. ' + f[2] + ' MB</button></div>';
+            if(st && st.st === 'fehler' && !laeuft) h += '<div class="afo-fehler">' + esc(st.tx || 'Das Laden hat nicht geklappt.') + '</div>';
+            h += '</div>';
+        });
+        $('afoRumpf').innerHTML = h + folienQuelle;
+        $('afoTitel').textContent = 'Folien zum Lehrgang';
+    }
+    function folienAnsicht(){
+        const f = FOLIEN.find(x => x[0] === folien.datei) || FOLIEN[0];
+        $('afoTitel').textContent = f[1];
+        $('afoRumpf').innerHTML = '<div class="afo-leiste"><button type="button" class="afo-nav" data-afo="zurueckSeite" aria-label="Vorherige Folie"><i class="fas fa-chevron-left"></i></button>'
+            + '<span id="afoStand"></span><button type="button" class="afo-nav" data-afo="weiterSeite" aria-label="Nächste Folie"><i class="fas fa-chevron-right"></i></button>'
+            + '<button type="button" class="afo-zoom" id="afoZoom" data-afo="zoom">Größer</button></div>'
+            + '<div class="afo-rolle" id="afoRolle"><img id="afoBild" alt="Folie"><div id="afoHinweis"></div></div>'
+            + '<div class="afo-fuss">Folien: 50ohm.de / DARC e. V. · <a href="#" data-afo-link="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a></div>';
+        let x0 = null;
+        const r = $('afoRolle');
+        r.addEventListener('touchstart', e => { x0 = (folien.zoom === 1 && e.touches.length === 1) ? e.touches[0].clientX : null; }, { passive: true });
+        r.addEventListener('touchend', e => {
+            if(x0 === null || !e.changedTouches.length) return;
+            const dx = e.changedTouches[0].clientX - x0; x0 = null;
+            if(Math.abs(dx) > 70) folienSeite(folien.seite + (dx < 0 ? 1 : -1));
+        }, { passive: true });
+        folienSeite(folien.seite);
+    }
+    function folienBild(seite, px){
+        const k = folien.datei + '|' + seite + '@' + px;
+        if(folien.bilder.has(k)) return folien.bilder.get(k);
+        let d = '';
+        tu(() => { d = String(window.AndroidApp.pdfSeite('folien/' + folien.datei, seite, px) || ''); });
+        if(d){ folien.bilder.set(k, d); if(folien.bilder.size > 5) folien.bilder.delete(folien.bilder.keys().next().value); }
+        return d;
+    }
+    function folienSeite(seite){
+        const rolle = $('afoRolle'), bild = $('afoBild'), stand = $('afoStand'), hinweis = $('afoHinweis');
+        if(!rolle || !bild) return;
+        seite = Math.max(1, Math.min(seite, folien.seiten));
+        folien.seite = seite;
+        schreib('app_folien_' + folien.datei, String(seite));
+        if(stand) stand.textContent = 'Folie ' + seite + ' von ' + folien.seiten;
+        rolle.querySelectorAll('.afo-nav').forEach(b => { b.disabled = b.dataset.afo === 'weiterSeite' ? seite >= folien.seiten : seite <= 1; });
+        const z = $('afoZoom'); if(z) z.textContent = folien.zoom === 1 ? 'Größer' : folien.zoom === 2 ? 'Noch größer' : 'Normal';
+        const breite = Math.max(200, rolle.clientWidth - 2);
+        const px = Math.min(2400, Math.round(breite * (window.devicePixelRatio || 1) * folien.zoom));
+        bild.style.width = Math.round(breite * folien.zoom) + 'px';
+        if(hinweis) hinweis.textContent = 'wird gezeichnet …';
+        setTimeout(() => {
+            if(folien.seite !== seite) return;
+            const d = folienBild(seite, px);
+            if(d){ bild.src = d; bild.style.display = ''; if(hinweis) hinweis.textContent = ''; }
+            else{ bild.removeAttribute('src'); bild.style.display = 'none'; if(hinweis) hinweis.textContent = 'Die Folie lässt sich gerade nicht zeichnen. Bitte noch einmal versuchen.'; }
+        }, 0);
+    }
+    function folienZeichnen(){ if(folien.ansicht === 'ansicht') folienAnsicht(); else folienListe(); }
+    function folienAuf(){
+        if(!folienAppDa()) return false;
+        folien.offen = true; folien.ansicht = 'liste'; folien.frage = ''; folien.weg = '';
+        folienEl.classList.add('offen');
+        folienListe();
+        $('afoRumpf').scrollTop = 0;
+        return true;
+    }
+    function folienZu(){ folien.offen = false; folienEl.classList.remove('offen'); folien.bilder.clear(); }
+    function folienZurueck(){
+        if(folien.ansicht === 'ansicht'){ folien.ansicht = 'liste'; folien.zoom = 1; folienListe(); }
+        else folienZu();
+    }
+    // Rueckmeldung aus der App (Folien.java): laeuft / fertig / fehler / abgebrochen
+    window.__folienStand = function(n, b, g, st, tx){
+        folien.stand[n] = { b: b, g: g, st: st, tx: tx };
+        if(!folien.offen || folien.ansicht !== 'liste') return;
+        if(st === 'laeuft'){
+            const k = folienEl.querySelector('.afo-karte[data-datei="' + n + '"]');
+            const bar = k && k.querySelector('.afo-bar i'), zahl = k && k.querySelector('.afo-zahl');
+            if(!bar || !zahl){ folienListe(); return; }
+            bar.style.width = (g ? Math.round(100 * b / g) : 0) + '%';
+            zahl.textContent = g ? folienMB(b) + ' von ' + folienMB(g) + ' MB' : 'wird verbunden …';
+        }
+        else folienListe();
+    };
+    folienEl.addEventListener('click', e => {
+        const l = e.target.closest('[data-afo-link]');
+        if(l){ e.preventDefault(); const u = l.dataset.afoLink; tu(() => { if(typeof window.openExternalTab === 'function') window.openExternalTab(u); else window.open(u, '_blank'); }); return; }
+        const b = e.target.closest('[data-afo]');
+        if(!b) return;
+        const k = b.closest('.afo-karte'), n = k ? k.dataset.datei : '';
+        switch(b.dataset.afo){
+            case 'zurueck': folienZurueck(); break;
+            case 'frage': folien.frage = n; folien.weg = ''; folienListe(); break;
+            case 'nein': folien.frage = ''; folien.weg = ''; folienListe(); break;
+            case 'laden': folien.frage = ''; delete folien.stand[n]; tu(() => window.AndroidApp.folienLaden(n)); folien.stand[n] = { b: 0, g: 0, st: 'laeuft', tx: '' }; folienListe(); break;
+            case 'stopp': tu(() => window.AndroidApp.folienAbbrechen()); break;
+            case 'weg': folien.weg = n; folien.frage = ''; folienListe(); break;
+            case 'weg-ja': tu(() => window.AndroidApp.folienEntfernen(n)); folien.weg = ''; folien.bilder.clear(); delete folien.stand[n]; folienListe(); break;
+            case 'ansehen': {
+                let s = 0; tu(() => { s = Number(window.AndroidApp.pdfSeiten('folien/' + n)) || 0; });
+                if(!s){ folien.stand[n] = { st: 'fehler', tx: 'Die Datei lässt sich nicht öffnen. Bitte entfernen und neu laden.' }; folienListe(); break; }
+                folien.datei = n; folien.seiten = s; folien.zoom = 1; folien.ansicht = 'ansicht';
+                folien.seite = Math.max(1, Math.min(parseInt(lies('app_folien_' + n, '1'), 10) || 1, s));
+                folienAnsicht(); break;
+            }
+            case 'zurueckSeite': folienSeite(folien.seite - 1); break;
+            case 'weiterSeite': folienSeite(folien.seite + 1); break;
+            case 'zoom': folien.zoom = folien.zoom >= 3 ? 1 : folien.zoom + 1; folienSeite(folien.seite); break;
+        }
+    });
+    window.appFolienAuf = folienAuf;
+
+    // ================================================================
     //  BILDER GROSS, MIT ZWEI FINGERN                       (01.10.2026)
     //  ----------------------------------------------------------------
     //  Dietmar, mit Bild aus der App: "Bilder in den Fragen lassen sich
@@ -50297,6 +50511,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Ein Kunststueck haelt die Zurueck-Taste nicht auf - er ist einfach weg
             if(robo.da && (robo.modus === 'kunst' || robo.modus === 'frei')) roboHeim(true);
             else if(robo.da && robo.modus){ roboTat('heim'); return true; }
+            if(folien.offen){ folienZurueck(); return true; }
             if(werk.offen){ werkBlattZu(); return true; }
             if(blatt.classList.contains('offen')){ blattZu(); return true; }
             if($('appStilWahl')){ stilWahlFertig(); return true; }
