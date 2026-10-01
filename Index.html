@@ -1736,19 +1736,27 @@
         #appFolien .afo-quelle { margin-top: auto; padding-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--s-text2); }
         #appFolien .afo-quelle a, #appFolien .afo-fuss a { color: var(--s-akzent); text-decoration: underline; }
         #appFolien .afo-leiste { flex: none; display: flex; align-items: center; gap: 8px; margin: -14px -16px 0; padding: 8px 16px; border-bottom: 1px solid var(--s-rand); }
-        #appFolien .afo-leiste #afoStand { flex: 1; text-align: center; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
         #appFolien .afo-nav { width: 44px; height: 40px; border: 0; background: var(--s-fl2); color: var(--s-text); font-size: 15px; }
         #appFolien .afo-nav:disabled { opacity: 0.35; }
         #appFolien .afo-zoom { height: 40px; padding: 0 12px; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 700 13.5px var(--font-body); }
-        #appFolien .afo-rolle { flex: 1; min-height: 0; overflow: auto; margin: 0 -16px; background: var(--s-fl2); -webkit-overflow-scrolling: touch; }
-        #appFolien .afo-rolle img { display: block; background: #fff; max-width: none; margin: 0 auto; }
-        #appFolien #afoHinweis { padding: 20px; text-align: center; font-size: 14px; color: var(--s-text2); }
-        #appFolien #afoHinweis:empty { display: none; }
+        #appFolien .afo-rolle { flex: 1; min-height: 0; overflow: auto; margin: 0 -16px; background: #cfd6dc; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x pan-y; }
+        #appFolien .afo-liste { position: relative; margin: 0 auto; }
+        #appFolien .afo-sl { position: absolute; left: 0; right: 0; background: #fff; overflow: hidden; }
+        #appFolien .afo-sl img { display: block; width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; user-select: none; }
+        #appFolien .afo-sl > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 16px; font-size: 13px; color: #8a949c; }
+        #appFolien .afo-sl.fertig > span { display: none; }
+        #appFolien .afo-sl.fehler > span { color: #b3261e; }
+        #appFolien .afo-mitte { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
+        #appFolien #afoStand { border: 0; background: transparent; color: var(--s-text); font: 600 14px var(--font-body); font-variant-numeric: tabular-nums; padding: 8px 10px; text-decoration: underline dotted; text-underline-offset: 4px; }
+        #appFolien #afoNr { width: 84px; height: 40px; border: 1px solid var(--s-rand); background: var(--s-fl2); color: var(--s-text); font: 600 16px var(--font-body); text-align: center; }
+        #appFolien .afo-los { height: 40px; padding: 0 14px; border: 0; background: var(--s-haupt); color: var(--s-auf-haupt); font: 700 13.5px var(--font-body); }
         #appFolien .afo-fuss { flex: none; margin: 0 -16px -24px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: var(--s-text2); text-align: center; border-top: 1px solid var(--s-rand); }
         html.android-app body.eckig.app-rund #appFolien :is(.afo-karte, .afo-hinweis) { border-radius: 16px !important; }
-        html.android-app body.eckig.app-rund #appFolien :is(.afo-knopf, .afo-nav, .afo-zoom, .afo-zurueck) { border-radius: 14px !important; }
+        html.android-app body.eckig.app-rund #appFolien :is(.afo-knopf, .afo-nav, .afo-zoom, .afo-zurueck, .afo-los, #afoNr) { border-radius: 14px !important; }
         html.android-app body.eckig.app-rund #appFolien .afo-zeile .ah-ico { border-radius: 14px !important; }
         html.android-app body.eckig.app-rund #appFolien :is(.afo-bar, .afo-bar i) { border-radius: 99px !important; }
+        #appFolien .afo-passt { display: inline-block; margin-left: 6px; padding: 2px 7px; font: 700 11px var(--font-body); font-style: normal; vertical-align: 2px; color: var(--s-auf-haupt); background: var(--s-haupt); }
+        html.android-app body.eckig.app-rund #appFolien .afo-passt { border-radius: 99px !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -49860,7 +49868,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         tu(() => { html = bauer ? bauer() : ''; });
         $('awInhalt').innerHTML = html;
         let unter = '';
-        if(art === 'hilfe'){ const q = (($('hilfeQuelleText') || {}).textContent || '').trim(); unter = q ? q.charAt(0).toUpperCase() + q.slice(1) : 'Öffnet im Browser'; }
+        if(art === 'hilfe'){
+            // Dietmar (01.10.2026): "Was haeltst du davon, wenn wir da reinschreiben: Hier hilft dir der DARC oder 50 Ohm?"
+            // Bewusst "Hilfe BEIM DARC und BEI 50 Ohm" (sagt, wo die Hilfe liegt) statt "Hier hilft dir der DARC":
+            // Letzteres klaenge nach Partnerschaft - CC BY 4.0 verbietet den Anschein einer Billigung durch den DARC.
+            // Bei Klasse N fuehrt ein Knopf zu Amazon (siehe buchKnopfNachziehen) - das bleibt ehrlich genannt.
+            const q = (($('hilfeQuelleText') || {}).textContent || '').trim();
+            unter = /amazon/i.test(q) ? 'Hilfe beim DARC und bei 50 Ohm · Bücher bei Amazon · Links öffnen im Browser' : 'Hilfe beim DARC und bei 50 Ohm · Links öffnen im Browser';
+        }
         if(art === 'pruefung') unter = (($('examInfoTitel') || {}).textContent || '').replace(/[^\p{L}\p{N}\s.,·–-]/gu, '').trim();
         if(art === 'stufen') unter = 'Stufe ' + (stufeNr(xpStand()) + 1) + ' von ' + STUFEN.length;
         $('awUnter').textContent = unter;
@@ -50245,7 +50260,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  Die App laedt die PDF in ihren Ordner (Folien.java) und zeigt sie
     //  wie das Formelblatt (PdfBild). Ohne die neue APK: alter Weg, Link.
     // ================================================================
-    const FOLIEN = [['slide-N.pdf', 'Folien N', 125], ['slide-E.pdf', 'Folien E', 31], ['slide-NE.pdf', 'Folien NE', 150]];
+    // Die Namen der Dateien folgen den Kurskennungen von 50ohm.de (KURSE im Trainer: N, NE = Gesamtkurs
+    // Klasse E, E = Aufbaukurs N -> E, A = Aufbaukurs E -> A). Zu A gibt es beim DARC noch keine Datei.
+    // Bestaetigt am 01.10.2026 anhand der Titelfolien in der App (Dietmar): slide-N "Klasse N", slide-NE
+    // "Klasse NE" ab "Erste Schritte", slide-E "Klasse E" ab "Elektrische Schwingungen und Funkwellen".
+    const FOLIEN = [['slide-N.pdf', 'Klasse N', 125, 'Gesamtkurs Klasse N', 'n'], ['slide-NE.pdf', 'Klasse E', 150, 'Gesamtkurs Klasse E, von Anfang an (beim DARC „Klasse NE“)', 'e'],
+                    ['slide-E.pdf', 'N → E', 31, 'Aufbaukurs für alle mit Klasse N (beim DARC „Klasse E“)', 'ne']];
+    function folienZiel(){ let z = ''; tu(() => { z = String(window.klasseAktuell().id || ''); }); return z; }
     var folien = { offen: false, ansicht: 'liste', datei: '', seite: 1, seiten: 0, zoom: 1, stand: {}, bilder: new Map(), frage: '', weg: '' };
     function folienAppDa(){ const a = window.AndroidApp; return !!(a && typeof a.folienLaden === 'function' && typeof a.folienGroesse === 'function' && typeof a.pdfSeite === 'function'); }
     const folienMB = b => (b / 1048576).toFixed(b >= 10485760 ? 0 : 1).replace('.', ',');
@@ -50264,11 +50285,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     D.body.appendChild(folienEl);
     function folienListe(){
         const lauf = folienLaeuft();
+        const ziel = folienZiel();
         let h = '<p class="afo-text">Die Foliensätze zum Lehrgang. Einmal laden – dann liegen sie in der App und gehen auch ohne Internet.</p>';
+        if(ziel === 'ea') h += '<p class="afo-text">Für E → A hat der DARC noch keine fertigen Folien veröffentlicht.</p>';
         FOLIEN.forEach(f => {
             const n = f[0], g = folienGroesse(n), da = g > 0, st = folien.stand[n] || null, laeuft = lauf === n;
             h += '<div class="afo-karte" data-datei="' + n + '"><div class="afo-zeile"><span class="ah-ico tuerkis"><i class="fas fa-file-pdf"></i></span>'
-               + '<span class="afo-zt"><b>' + f[1] + '</b><small>' + (da ? 'liegt in der App · ' + folienMB(g) + ' MB' : 'PDF · ca. ' + f[2] + ' MB') + '</small></span></div>';
+               + '<span class="afo-zt"><b>' + f[1] + (f[4] === ziel ? ' <em class="afo-passt">passt zu deinem Ziel</em>' : '') + '</b><small>' + f[3] + ' · ' + (da ? 'liegt in der App · ' + folienMB(g) + ' MB' : 'PDF, ca. ' + f[2] + ' MB') + '</small></span></div>';
             if(laeuft){
                 const b = st && st.b || 0, gs = st && st.g || 0;
                 h += '<div class="afo-bar"><i style="width:' + (gs ? Math.round(100 * b / gs) : 0) + '%"></i></div>'
@@ -50291,51 +50314,179 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('afoRumpf').innerHTML = h + folienQuelle;
         $('afoTitel').textContent = 'Folien zum Lehrgang';
     }
+    // ----------------------------------------------------------------
+    //  DURCHGEHEND NACH UNTEN BLAETTERN                      (01.10.2026)
+    //  Dietmar, mit Bildschirmvideo einer anderen PDF-Anzeige: "Ich moechte
+    //  das genauso fluessig in der App haben, und in der App muss ich noch
+    //  links scrollen. Ich moechte das nach unten scrollen." Die Folien
+    //  stehen jetzt als ein langer Streifen untereinander ("Folie 12 von
+    //  2983"); gezeichnet werden nur die Seiten im und um das Sichtfeld,
+    //  der Rest ist nur ein leerer Platzhalter. Neue APK: Seiten kommen im
+    //  Hintergrund (AndroidApp.pdfSeiteHolen -> window.__pdfBild); aeltere
+    //  Apps zeichnen Seite fuer Seite wie bisher.
+    // ----------------------------------------------------------------
+    const FO_LUECKE = 6, FO_VOR = 2, FO_NACH = 3, FO_MERK = 16;
+    var foL = null;
+    function foAsync(){ const a = window.AndroidApp; return !!(a && typeof a.pdfSeiteHolen === 'function' && typeof a.pdfFenster === 'function'); }
     function folienAnsicht(){
         const f = FOLIEN.find(x => x[0] === folien.datei) || FOLIEN[0];
-        $('afoTitel').textContent = f[1];
-        $('afoRumpf').innerHTML = '<div class="afo-leiste"><button type="button" class="afo-nav" data-afo="zurueckSeite" aria-label="Vorherige Folie"><i class="fas fa-chevron-left"></i></button>'
-            + '<span id="afoStand"></span><button type="button" class="afo-nav" data-afo="weiterSeite" aria-label="Nächste Folie"><i class="fas fa-chevron-right"></i></button>'
+        $('afoTitel').textContent = 'Folien ' + f[1];
+        $('afoRumpf').innerHTML = '<div class="afo-leiste"><button type="button" class="afo-nav" data-afo="zurueckSeite" aria-label="Vorherige Folie"><i class="fas fa-chevron-up"></i></button>'
+            + '<span class="afo-mitte" id="afoMitte"><button type="button" id="afoStand" data-afo="springen">Folie 1 von ' + folien.seiten + '</button></span>'
+            + '<button type="button" class="afo-nav" data-afo="weiterSeite" aria-label="Nächste Folie"><i class="fas fa-chevron-down"></i></button>'
             + '<button type="button" class="afo-zoom" id="afoZoom" data-afo="zoom">Größer</button></div>'
-            + '<div class="afo-rolle" id="afoRolle"><img id="afoBild" alt="Folie"><div id="afoHinweis"></div></div>'
+            + '<div class="afo-rolle" id="afoRolle"><div class="afo-liste" id="afoListe"></div></div>'
             + '<div class="afo-fuss">Folien: 50ohm.de / DARC e. V. · <a href="#" data-afo-link="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a></div>';
-        let x0 = null;
         const r = $('afoRolle');
-        r.addEventListener('touchstart', e => { x0 = (folien.zoom === 1 && e.touches.length === 1) ? e.touches[0].clientX : null; }, { passive: true });
-        r.addEventListener('touchend', e => {
-            if(x0 === null || !e.changedTouches.length) return;
-            const dx = e.changedTouches[0].clientX - x0; x0 = null;
-            if(Math.abs(dx) > 70) folienSeite(folien.seite + (dx < 0 ? 1 : -1));
-        }, { passive: true });
-        folienSeite(folien.seite);
+        foL = { r: r, l: $('afoListe'), vh: 9 / 16, bildbreite: 0, px: 0, platz: new Map(), da: new Map(), warte: new Map(), fehler: new Set(), nr: 0, rahmen: 0, merk: 0, sync: 0 };
+        r.addEventListener('scroll', foPlan, { passive: true });
+        foMasse(true);
+        r.scrollTop = (folien.seite - 1) * foL.pitch;
+        foAktuell();
     }
-    function folienBild(seite, px){
-        const k = folien.datei + '|' + seite + '@' + px;
-        if(folien.bilder.has(k)) return folien.bilder.get(k);
+    function foMasse(neuBauen){
+        const L = foL; if(!L) return;
+        const breite = Math.max(200, L.r.clientWidth);
+        L.breite = Math.round(breite * folien.zoom);
+        L.hoehe = Math.round(L.breite * L.vh);
+        L.pitch = L.hoehe + FO_LUECKE;
+        L.px = Math.min(2400, Math.round(breite * (window.devicePixelRatio || 1) * folien.zoom));
+        L.l.style.width = L.breite + 'px';
+        L.l.style.height = (folien.seiten * L.pitch) + 'px';
+        if(neuBauen) foAbraeumen(true);
+        else L.platz.forEach((el, n) => { el.style.top = ((n - 1) * L.pitch) + 'px'; el.style.height = L.hoehe + 'px'; });
+    }
+    function foAbraeumen(alle){
+        const L = foL; if(!L) return;
+        L.platz.forEach((el, n) => { el.remove(); });
+        L.platz.clear();
+        if(alle){ L.warte.clear(); L.fehler.clear(); }
+    }
+    function foPlan(){
+        const L = foL; if(!L || L.rahmen) return;
+        L.rahmen = requestAnimationFrame(() => { L.rahmen = 0; foAktuell(); });
+    }
+    function foSeiteJetzt(){
+        const L = foL;
+        return Math.max(1, Math.min(folien.seiten, Math.floor((L.r.scrollTop + L.pitch * 0.5) / L.pitch) + 1));
+    }
+    function foKey(n){ return folien.datei + '|' + n + '@' + foL.px; }
+    function foBildSetzen(n, d){
+        const el = foL.platz.get(n); if(!el) return;
+        let im = el.querySelector('img');
+        if(!im){ im = D.createElement('img'); im.alt = 'Folie ' + n; im.draggable = false; el.appendChild(im); }
+        im.src = d; el.classList.add('fertig'); el.classList.remove('fehler');
+    }
+    function foAktuell(){
+        const L = foL; if(!L || !folien.offen || folien.ansicht !== 'ansicht') return;
+        const n = foSeiteJetzt();
+        if(n !== folien.seite || !L.merk){
+            folien.seite = n;
+            const st = $('afoStand'); if(st && !st.dataset.offen) st.textContent = 'Folie ' + n + ' von ' + folien.seiten;
+            clearTimeout(L.merk); L.merk = setTimeout(() => { schreib('app_folien_' + folien.datei, String(folien.seite)); }, 500);
+        }
+        $('afoZoom') && ($('afoZoom').textContent = folien.zoom === 1 ? 'Größer' : folien.zoom === 2 ? 'Noch größer' : 'Normal');
+        L.r.parentNode.querySelectorAll('.afo-nav').forEach(b => { b.disabled = b.dataset.afo === 'weiterSeite' ? n >= folien.seiten : n <= 1; });
+        const ers = Math.max(1, Math.floor(L.r.scrollTop / L.pitch) + 1 - FO_VOR);
+        const let_ = Math.min(folien.seiten, Math.floor((L.r.scrollTop + L.r.clientHeight) / L.pitch) + 1 + FO_NACH);
+        // Platzhalter anlegen / abraeumen
+        L.platz.forEach((el, k) => { if(k < ers - 2 || k > let_ + 2){ el.remove(); L.platz.delete(k); } });
+        const gebraucht = [];
+        for(let k = ers; k <= let_; k++){
+            let el = L.platz.get(k);
+            if(!el){
+                el = D.createElement('div'); el.className = 'afo-sl'; el.dataset.nr = k;
+                el.style.top = ((k - 1) * L.pitch) + 'px'; el.style.height = L.hoehe + 'px';
+                el.innerHTML = '<span>' + k + '</span>';
+                L.l.appendChild(el); L.platz.set(k, el);
+            }
+            const key = foKey(k);
+            if(folien.bilder.has(key)){ if(!el.classList.contains('fertig')){ foBildSetzen(k, folien.bilder.get(key)); } }
+            else if(!L.warte.has(k) && !L.fehler.has(k)) gebraucht.push(k);
+        }
+        gebraucht.sort((a, b) => Math.abs(a - n) - Math.abs(b - n));
+        if(foAsync()){
+            tu(() => window.AndroidApp.pdfFenster(ers, let_));
+            gebraucht.slice(0, 8).forEach(k => {
+                const id = ++L.nr; L.warte.set(k, id);
+                tu(() => window.AndroidApp.pdfSeiteHolen('folien/' + folien.datei, k, L.px, id));
+            });
+        }
+        else if(gebraucht.length && !L.sync){
+            const k = gebraucht[0];
+            L.sync = setTimeout(() => {
+                L.sync = 0; if(foL !== L) return;
+                const d = foBildHolenSync(k);
+                if(d) foBildSetzen(k, d); else foFehler(k);
+                foAktuell();
+            }, 0);
+        }
+    }
+    function foBildHolenSync(k){
         let d = '';
-        tu(() => { d = String(window.AndroidApp.pdfSeite('folien/' + folien.datei, seite, px) || ''); });
-        if(d){ folien.bilder.set(k, d); if(folien.bilder.size > 5) folien.bilder.delete(folien.bilder.keys().next().value); }
+        tu(() => { d = String(window.AndroidApp.pdfSeite('folien/' + folien.datei, k, foL.px) || ''); });
+        if(d) foMerken(foKey(k), d);
         return d;
     }
-    function folienSeite(seite){
-        const rolle = $('afoRolle'), bild = $('afoBild'), stand = $('afoStand'), hinweis = $('afoHinweis');
-        if(!rolle || !bild) return;
+    function foMerken(key, d){
+        folien.bilder.set(key, d);
+        while(folien.bilder.size > FO_MERK) folien.bilder.delete(folien.bilder.keys().next().value);
+    }
+    function foFehler(k){
+        const L = foL; if(!L) return;
+        L.fehler.add(k);
+        const el = L.platz.get(k);
+        if(el){ el.classList.add('fehler'); el.innerHTML = '<span>Folie ' + k + ' lässt sich nicht zeichnen – antippen, um es noch einmal zu versuchen</span>'; }
+    }
+    // Antwort der App (neue APK): id, Seitenverhaeltnis Hoehe/Breite, Bild (leer = uebersprungen oder misslungen)
+    window.__pdfBild = function(id, vh, d){
+        const L = foL; if(!L || !folien.offen) return;
+        let k = 0; L.warte.forEach((v, key) => { if(v === id) k = key; });
+        if(!k) return;
+        L.warte.delete(k);
+        if(!d){
+            // Uebersprungen, weil schon weitergescrollt: spaeter von selbst wieder. Sonst: wirklich misslungen.
+            const ers = Math.floor(L.r.scrollTop / L.pitch) + 1 - FO_VOR, let_ = Math.floor((L.r.scrollTop + L.r.clientHeight) / L.pitch) + 1 + FO_NACH;
+            if(k >= ers && k <= let_) foFehler(k);
+            return;
+        }
+        if(vh > 0.2 && vh < 5 && Math.abs(vh - L.vh) > 0.004 && !L.vhGesetzt){
+            // Echtes Seitenverhaeltnis der Folien einmal uebernehmen (16:9 ist nur die Annahme vorher)
+            L.vhGesetzt = true;
+            const oben = (L.r.scrollTop / L.pitch);
+            L.vh = vh; foMasse(false);
+            L.r.scrollTop = Math.round(oben * L.pitch);
+        }
+        foMerken(foKey(k), d);
+        foBildSetzen(k, d);
+        foPlan();
+    };
+    function foNach(seite, weich){
+        const L = foL; if(!L) return;
         seite = Math.max(1, Math.min(seite, folien.seiten));
-        folien.seite = seite;
-        schreib('app_folien_' + folien.datei, String(seite));
-        if(stand) stand.textContent = 'Folie ' + seite + ' von ' + folien.seiten;
-        rolle.querySelectorAll('.afo-nav').forEach(b => { b.disabled = b.dataset.afo === 'weiterSeite' ? seite >= folien.seiten : seite <= 1; });
-        const z = $('afoZoom'); if(z) z.textContent = folien.zoom === 1 ? 'Größer' : folien.zoom === 2 ? 'Noch größer' : 'Normal';
-        const breite = Math.max(200, rolle.clientWidth - 2);
-        const px = Math.min(2400, Math.round(breite * (window.devicePixelRatio || 1) * folien.zoom));
-        bild.style.width = Math.round(breite * folien.zoom) + 'px';
-        if(hinweis) hinweis.textContent = 'wird gezeichnet …';
-        setTimeout(() => {
-            if(folien.seite !== seite) return;
-            const d = folienBild(seite, px);
-            if(d){ bild.src = d; bild.style.display = ''; if(hinweis) hinweis.textContent = ''; }
-            else{ bild.removeAttribute('src'); bild.style.display = 'none'; if(hinweis) hinweis.textContent = 'Die Folie lässt sich gerade nicht zeichnen. Bitte noch einmal versuchen.'; }
-        }, 0);
+        const y = (seite - 1) * L.pitch;
+        if(weich && L.r.scrollTo) L.r.scrollTo({ top: y, behavior: 'smooth' }); else L.r.scrollTop = y;
+        foPlan();
+    }
+    function foSpringen(){
+        const m = $('afoMitte'), st = $('afoStand'); if(!m || !st) return;
+        if(st.dataset.offen) return;
+        st.dataset.offen = '1';
+        m.innerHTML = '<input type="number" inputmode="numeric" min="1" max="' + folien.seiten + '" id="afoNr" aria-label="Folie Nummer" value="' + folien.seite + '"><button type="button" class="afo-los" data-afo="los">Los</button>';
+        const i = $('afoNr'); i.focus(); i.select();
+        i.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); foLos(); } });
+    }
+    function foLos(){
+        const i = $('afoNr'); const m = $('afoMitte'); if(!i || !m) return;
+        const n = parseInt(i.value, 10);
+        m.innerHTML = '<button type="button" id="afoStand" data-afo="springen">Folie ' + folien.seite + ' von ' + folien.seiten + '</button>';
+        if(n >= 1) foNach(n, false);
+    }
+    function foSchliessen(){
+        if(foL){ clearTimeout(foL.merk); if(foL.rahmen) cancelAnimationFrame(foL.rahmen); clearTimeout(foL.sync); }
+        schreib('app_folien_' + folien.datei, String(folien.seite));
+        tu(() => { if(foAsync()) window.AndroidApp.pdfFenster(0, -1); });
+        foL = null;
     }
     function folienZeichnen(){ if(folien.ansicht === 'ansicht') folienAnsicht(); else folienListe(); }
     function folienAuf(){
@@ -50346,9 +50497,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('afoRumpf').scrollTop = 0;
         return true;
     }
-    function folienZu(){ folien.offen = false; folienEl.classList.remove('offen'); folien.bilder.clear(); }
+    function folienZu(){ foSchliessen(); folien.offen = false; folienEl.classList.remove('offen'); folien.bilder.clear(); }
     function folienZurueck(){
-        if(folien.ansicht === 'ansicht'){ folien.ansicht = 'liste'; folien.zoom = 1; folienListe(); }
+        if(folien.ansicht === 'ansicht'){ foSchliessen(); folien.ansicht = 'liste'; folien.zoom = 1; folienListe(); }
         else folienZu();
     }
     // Rueckmeldung aus der App (Folien.java): laeuft / fertig / fehler / abgebrochen
@@ -50365,6 +50516,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else folienListe();
     };
     folienEl.addEventListener('click', e => {
+        const sl = e.target.closest('.afo-sl.fehler');
+        if(sl && foL){ const k = parseInt(sl.dataset.nr, 10); foL.fehler.delete(k); sl.classList.remove('fehler'); sl.innerHTML = '<span>' + k + '</span>'; foPlan(); return; }
         const l = e.target.closest('[data-afo-link]');
         if(l){ e.preventDefault(); const u = l.dataset.afoLink; tu(() => { if(typeof window.openExternalTab === 'function') window.openExternalTab(u); else window.open(u, '_blank'); }); return; }
         const b = e.target.closest('[data-afo]');
@@ -50385,9 +50538,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 folien.seite = Math.max(1, Math.min(parseInt(lies('app_folien_' + n, '1'), 10) || 1, s));
                 folienAnsicht(); break;
             }
-            case 'zurueckSeite': folienSeite(folien.seite - 1); break;
-            case 'weiterSeite': folienSeite(folien.seite + 1); break;
-            case 'zoom': folien.zoom = folien.zoom >= 3 ? 1 : folien.zoom + 1; folienSeite(folien.seite); break;
+            case 'zurueckSeite': foNach(folien.seite - 1, true); break;
+            case 'weiterSeite': foNach(folien.seite + 1, true); break;
+            case 'springen': foSpringen(); break;
+            case 'los': foLos(); break;
+            case 'zoom': {
+                const n = folien.seite;
+                folien.zoom = folien.zoom >= 3 ? 1 : folien.zoom + 1;
+                folien.bilder.clear(); foMasse(true); foL.r.scrollLeft = 0; foNach(n, false); break;
+            }
         }
     });
     window.appFolienAuf = folienAuf;

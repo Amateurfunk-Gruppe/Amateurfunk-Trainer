@@ -285,6 +285,19 @@ public class MainActivity extends Activity {
         @JavascriptInterface public int pdfSeiten(String datei) {
             return PdfBild.seiten(MainActivity.this, datei);
         }
+        /** Durchgehendes Blaettern (01.10.2026): Seiten im Hintergrund zeichnen, Bild kommt per __pdfBild(id, verhaeltnis, bild). */
+        @JavascriptInterface public void pdfFenster(int von, int bis) { PdfBild.fenster(von, bis); }
+        @JavascriptInterface public void pdfSeiteHolen(String datei, int seite, int breite, int id) {
+            PdfBild.anfordern(MainActivity.this, datei, seite, breite, id, new PdfBild.Rueckruf() {
+                @Override public void fertig(final int i, final double v, final String bild) {
+                    haupt.post(new Runnable() {
+                        @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.__pdfBild&&window.__pdfBild(" + i + "," + v + "," + jsText(bild) + ")", null);
+                        }
+                    });
+                }
+            });
+        }
         /** Folien des DARC laden und zeigen (01.10.2026), siehe Folien.java */
         @JavascriptInterface public long folienGroesse(String name) { return Folien.groesse(MainActivity.this, name); }
         @JavascriptInterface public String folienLaeuft() { return Folien.laeuft(); }

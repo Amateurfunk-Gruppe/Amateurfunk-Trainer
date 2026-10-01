@@ -66,6 +66,7 @@ final class Folien {
 
     static boolean entfernen(Context c, String name) {
         if (!erlaubt(name) || name.equals(laeuftName)) return false;
+        PdfBild.schliessen();
         File f = new File(ordner(c), name);
         File t = new File(ordner(c), name + ".part");
         boolean ok = !f.exists() || f.delete();
