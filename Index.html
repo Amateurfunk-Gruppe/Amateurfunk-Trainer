@@ -1840,6 +1840,27 @@
         html.android-app #unterrichtModal .u-fuss > span > button { width: 100%; justify-content: center; min-height: 48px; font-size: 0.95rem !important; }
         html.android-app #unterrichtModal .u-fuss > :is(.u-haken, button) { flex: 1 1 auto; justify-content: center; min-height: 40px; }
         html.android-app #unterrichtModal .u-quelle { font-size: 0.66rem; }
+
+        /* ANGETIPPTE ANTWORT IM DUNKEL-MODUS IN DER GEWAEHLTEN FARBE (01.10.2026)
+           Dietmar: "Im dark Mode uebernimmt er nicht die eingestellte Farbe."
+           Die markierte Antwort (Simulator: angekreuzt, noch nicht bewertet)
+           war im Dunkel-Modus immer tuerkis. Jetzt traegt sie die Farbe aus
+           Einstellungen -> Anpassen, mit schwarzer Schrift wie am PC unter
+           der Maus. "Kein Rand" nimmt auch hier den Rand weg. Nur App. */
+        html.android-app body.dark .question-area .option.gewaehlt:not(.correct):not(.wrong),
+        html.android-app body.dark .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) {
+            background: var(--maus-grund, #e3f5fd) !important;
+            border-color: var(--maus-rand, #00adef) !important;
+            box-shadow: inset 0 0 0 2px var(--maus-rand, #00adef) !important;
+        }
+        html.android-app body.dark.maus-ohne-rand .question-area .option.gewaehlt:not(.correct):not(.wrong),
+        html.android-app body.dark.maus-ohne-rand .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) {
+            border-color: transparent !important; box-shadow: none !important;
+        }
+        html.android-app body.dark .question-area .option.gewaehlt:not(.correct):not(.wrong) .option-text,
+        html.android-app body.dark .question-area .option.gewaehlt:not(.correct):not(.wrong) .option-label,
+        html.android-app body.dark .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) .option-text,
+        html.android-app body.dark .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) .option-label { color: #000 !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -50924,6 +50945,44 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const r = waehlen.apply(this, arguments);
             setz('detail');
             const a = modal() && modal().querySelector('.u-abs'); if(a) a.scrollTop = 0;
+            return r;
+        };
+    });
+
+    // ================================================================
+    //  ANPASSEN AM HANDY   (01.10.2026)
+    //  Am Handy gibt es kein "Darueberfahren mit der Maus". Der Reiter
+    //  Anpassen sagt deshalb hier: Die Wahl gilt fuer die Maus am PC,
+    //  die Vorschau reagiert auf Antippen. Nur in der App; am PC und im
+    //  Browser des Handys bleibt der Reiter, wie er ist.
+    // ================================================================
+    tu(() => {
+        const oeffnen = window.einstellungenOeffnen;
+        if(typeof oeffnen !== 'function') return;
+        const umbauen = () => tu(() => {
+            const b = $('einstBlatt_anpassen'); if(!b || b.dataset.handy) return;
+            b.dataset.handy = '1';
+            const ersetze = (sel, fn) => b.querySelectorAll(sel).forEach(fn);
+            ersetze('*', e => {
+                if(e.children.length) return;
+                const t = e.textContent;
+                if(t === 'Antwort unter der Maus') e.textContent = 'Antwort hervorheben';
+                else if(t.indexOf('Vorschau — mit der Maus') === 0) e.textContent = 'Vorschau — Antwort antippen';
+                else if(t.indexOf('Fahre mit der Maus') === 0) e.textContent = 'Tippe auf eine dieser Antworten …';
+                else if(t.indexOf('Nach jeder Änderung') === 0) e.textContent = 'Nach jeder Änderung hier zeigt B es einmal von selbst.';
+            });
+            ersetze('div', e => {
+                if(e.textContent.indexOf('Fährst du beim Üben mit der Maus') === 0 && e.children.length === 0)
+                    e.textContent = 'So tritt eine Antwort hervor, wenn man am PC mit der Maus darüberfährt. Am Handy gibt es kein Darüberfahren – hier siehst du die Wirkung in der Vorschau unten. Die Wahl gilt für den angemeldeten Benutzer.';
+            });
+            b.querySelectorAll('.maus-probe').forEach(p => p.addEventListener('click', () => {
+                p.classList.remove('zeigen'); void p.offsetWidth; p.classList.add('zeigen');
+                setTimeout(() => p.classList.remove('zeigen'), 2200);
+            }));
+        });
+        window.einstellungenOeffnen = function(){
+            const r = oeffnen.apply(this, arguments);
+            umbauen();
             return r;
         };
     });

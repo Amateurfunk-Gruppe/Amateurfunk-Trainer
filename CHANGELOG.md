@@ -11,6 +11,8 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App: Im Dunkel-Modus trägt die angetippte Antwort (Simulator) die Farbe aus Einstellungen → Anpassen (z. B. Gelb, schwarze Schrift) statt des festen Türkis; „Kein Rand" gilt auch dort
+- Android-App: Reiter „Anpassen" ohne „Maus"-Wortlaut („Antwort hervorheben", „Vorschau — Antwort antippen"); Antippen eines Vorschaufeldes zeigt die Farbe
 - Server-Knopf in der Kopfzeile: Online-Zugang ein/aus (rot/grün), nach Start aus, beim Schließen eine Minute Vorwarnung für Besucher
 - Ländersperre: Zugriff nur aus Deutschland, Österreich und der Schweiz, Zutritt anfragen mit Freigabe durch den Gastgeber
 - Gruppenraum: Prüfungssimulator mit drei Bögen à 25 Fragen/45 Minuten, Auswertung je Bogen, Fehler in Fehlerliste und Lernbedarf
