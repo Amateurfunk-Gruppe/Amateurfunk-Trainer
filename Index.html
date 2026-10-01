@@ -1649,6 +1649,29 @@
         /* Das Blatt: ohne Funki, ohne Sprechblase */
         html.android-app.stil-sachlich #appWerkBlatt .aw-funki, html.android-app.stil-sachlich #appWerkBlatt .aw-sprech { display: none !important; }
         html.android-app.stil-sachlich #appWerkBlatt .aw-zeile:active { transform: none; }
+        /* Knoepfe im Blatt: eine Farbe, kein Verlauf, kein Sockel (01.10.2026).
+           Dietmar, mit Bild vom Blatt "Rufzeichen": "Ist irgendwie ein bunter
+           Button mit reingerutscht, der gehoert eigentlich gar nicht hin.
+           Weil die anderen, die haben ja wieder diese blaue Farbe. Und hier
+           ist ein kompletter Ausreisser." Der Knopf "Nachsehen" ist der
+           ausgeliehene PC-Knopf, der im Blatt sein violettes Kleid aus dem
+           Stil Verspielt trug. Hier bekommen alle Knoepfe im Blatt dieselbe
+           Farbe - und die bunten Verlaeufe bei Verlauf und Videos auch. */
+        html.android-app.stil-sachlich #appWerkBlatt :is(.aw-knopf, #rufzeichenBtn, .aw-rund, .aw-pille) { background: var(--s-haupt) !important; color: var(--s-auf-haupt) !important; box-shadow: none !important; }
+        html.android-app.stil-sachlich #appWerkBlatt #rufzeichenBtn i { color: var(--s-auf-haupt) !important; }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-knopf.rot { background: var(--s-rot) !important; color: #fff !important; }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-knopf.leise { background: var(--s-fl2) !important; color: var(--s-text) !important; }
+        html.android-app.stil-sachlich #appWerkBlatt :is(.aw-knopf, .aw-zeile, .aw-runde, .aw-pille, .aw-rund):active { transform: none; opacity: 0.85; }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-nr { background: var(--s-fl); color: var(--s-haupt); box-shadow: inset 0 0 0 1px var(--s-rand2); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-lektion .aw-mini i { background: var(--s-haupt); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-kurve i { background: var(--s-gruen); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-kurve i.fail { background: var(--s-rot); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-kurve i.grauzone { background: var(--s-amber); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-status { background: var(--s-gruen); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-status.fail { background: var(--s-rot); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-status.grauzone { background: var(--s-amber); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-hinweis { background: var(--s-fl2); }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-hinweis > i { color: var(--s-haupt); }
         /* Der Pruefungstermin als Pille rechts neben dem Gruss - das "Loch" ist zu */
         html.android-app.stil-sachlich #appHeute .ah-kopf { align-items: center; margin-bottom: 10px; }
         html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin { display: inline-flex; align-items: center; gap: 9px; flex: none; max-width: 46%; padding: 7px 12px 7px 11px;
@@ -47045,10 +47068,50 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       + '</div>';
     D.body.appendChild(blatt);
     const wahl = { teil: 'all', anzahl: '25', gelernt: true };
+    // ================================================================
+    //  WELCHE PRUEFUNGSTEILE LIEGEN IM KATALOG?                (01.10.2026)
+    //  Dietmar, mit Bild vom Blatt "Neue Runde" bei E -> A: "Normal ist N
+    //  auf E und E auf A nur Technik. Ich kann aber Betrieb und
+    //  Vorschriften anklicken und da kommt auch was aber ich weiss nicht
+    //  was das ist und woher." Was kam, war der Fehlerkasten "Keine
+    //  Fragen fuer diesen Filter gefunden" - vom PC geerbt, wo die
+    //  Auswahl immer alle vier Eintraege zeigt. Bei den Aufstockungen
+    //  gibt es nur Technik. Was es nicht gibt, steht in der App auch
+    //  nicht zur Wahl: nicht im Blatt, nicht auf der Fortschritt-Karte.
+    //  Gibt es nur einen Teil, entfaellt auch "Alle" - es ist derselbe.
+    // ================================================================
+    const TEILE_ALLE = ['vorschriften', 'betrieb', 'technik'];
+    var teileMerk = { bank: null, n: 0, teile: TEILE_ALLE };
+    function teileImKatalog(){
+        let bank = null;
+        tu(() => { bank = questionBank; });
+        if(!Array.isArray(bank) || !bank.length) return TEILE_ALLE;
+        if(teileMerk.bank !== bank || teileMerk.n !== bank.length){
+            const da = new Set(bank.map(q => q && q.part));
+            teileMerk = { bank, n: bank.length, teile: TEILE_ALLE.filter(t => da.has(t)) };
+        }
+        return teileMerk.teile.length ? teileMerk.teile : TEILE_ALLE;
+    }
+    // Ein Teil, der im Katalog fehlt, heisst "Alle" - sonst stuende die
+    // Auswahl vom alten Ziel (etwa "Betrieb" aus Klasse N) stumm im Weg.
+    // Gibt es nur einen Teil, heisst es ebenfalls "Alle": Am PC macht
+    // "25 Fragen" plus ein einzelner Teil aus der Runde einen
+    // Pruefungsbogen; in der App ist dafuer die Generalprobe da.
+    function teilPruefen(){
+        const da = teileImKatalog();
+        if(da.length === 1 || (wahl.teil !== 'all' && !da.includes(wahl.teil))) wahl.teil = 'all';
+    }
+    function teilName(){
+        const da = teileImKatalog();
+        if(wahl.teil === 'all' && da.length !== 1) return 'alle Teile';
+        const t = wahl.teil === 'all' ? da[0] : wahl.teil;
+        return (TEILE.find(x => x[0] === t) || TEILE[0])[1];
+    }
     function wahlLesen(){
         tu(() => { wahl.teil = $('filterPart').value; });
         tu(() => { wahl.anzahl = $('filterCount').value; });
         tu(() => { wahl.gelernt = !!$('hideMasteredCheck').checked; });
+        teilPruefen();
     }
     function offeneZahl(){
         let t = '';
@@ -47058,7 +47121,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return isNaN(n) ? null : n;
     }
     function blattZeichnen(){
-        blatt.querySelectorAll('#arTeile button').forEach(b => b.classList.toggle('an', b.dataset.w === wahl.teil));
+        const da = teileImKatalog(), einer = da.length === 1;
+        teilPruefen();
+        blatt.querySelectorAll('#arTeile button').forEach(b => {
+            const w = b.dataset.w, zeigen = w === 'all' ? !einer : da.includes(w);
+            b.style.display = zeigen ? '' : 'none';
+            // Nur ein Teil: der eine Knopf steht gewaehlt da, egal ob die
+            // Wahl "Alle" oder der Teil selbst ist - es sind dieselben Fragen
+            b.classList.toggle('an', einer ? zeigen : w === wahl.teil);
+        });
         blatt.querySelectorAll('#arAnzahl button').forEach(b => b.classList.toggle('an', b.dataset.w === wahl.anzahl));
         $('arGelerntSchalter').classList.toggle('an', wahl.gelernt);
         const offen = offeneZahl();
@@ -47148,14 +47219,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(tb.parentElement !== tz){ if(vs) tz.appendChild(tb); else tz.insertBefore(tb, $('ahOnAir')); }
         const th = vs ? terminText() : terminPille();
         if(tb.innerHTML !== th) tb.innerHTML = th;
-        // Offene Fragen und Wahl
-        wahlLesen();
+        // Offene Fragen und Wahl. Solange das Blatt "Neue Runde" offen ist,
+        // gilt, was darin angetippt wurde - sonst holte sich dieser Takt
+        // alle anderthalb Sekunden die alte Wahl von der Seite zurueck, und
+        // wer "10 Fragen" waehlte und nicht sofort startete, bekam 25.
+        // (01.10.2026, beim Nachstellen der Pruefungsteile aufgefallen)
+        if(!blatt.classList.contains('offen')) wahlLesen();
         const offen = offeneZahl();
         $('ahOffen').textContent = vs ? 'Bereit für eine Runde?' : (offen !== null ? offen + ' Fragen offen' : 'Fragen üben');
         $('ahRundeL').textContent = vs ? (offen !== null ? offen + ' Fragen warten auf dich' : 'Neue Runde') : 'Neue Runde';
-        const tn = (TEILE.find(t => t[0] === wahl.teil) || TEILE[0])[1];
         $('ahWahlAnzahl').textContent = wahl.anzahl === 'all' ? 'Alle Fragen' : wahl.anzahl + ' Fragen';
-        $('ahWahlTeil').textContent = wahl.teil === 'all' ? 'alle Teile' : tn;
+        $('ahWahlTeil').textContent = teilName();
         $('ahWahlGelernt').textContent = wahl.gelernt ? 'ohne Gelerntes' : 'mit Gelerntem';
         // Zahlen an den Knoepfen
         const fehler = zahlAus('repeatErrorsCount'), bedarf = zahlAus('difficultCount');
@@ -49419,17 +49493,24 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         setText($('awGelernt'), gel.toLocaleString('de-DE'));
         setText($('awGelerntText'), vs ? 'von ' + alle.toLocaleString('de-DE') + ' Fragen sitzen schon' : 'von ' + alle.toLocaleString('de-DE') + ' Fragen gelernt');
         balkenSetzen($('awBalken'), alle ? gel / alle : 0);
-        const aktiv = [];
+        // Nur die Teile, die es in diesem Ziel gibt (siehe teileImKatalog) -
+        // bei N -> E und E -> A ist das allein Technik, und ein einzelner
+        // Teil braucht keine Zeile: Die grosse Zahl darueber sagt dasselbe.
+        const da = teileImKatalog(), aktiv = [];
         WERK_TEILE.forEach(t => {
             const cb = $(t[3]), an = !!(cb && cb.checked), z = (($(t[4]) || {}).textContent || '').match(/(\d+)\s*\/\s*(\d+)/);
-            const k = werkEl.querySelector('.aw-teil[data-teil="' + t[0] + '"]');
+            const k = werkEl.querySelector('.aw-teil[data-teil="' + t[0] + '"]'), gibt = da.includes(t[0]);
+            k.style.display = gibt ? '' : 'none';
+            if(!gibt) return;
             if(an) aktiv.push(t[1]);
             k.classList.toggle('aus', !an);
             if(k.getAttribute('aria-pressed') !== String(an)) k.setAttribute('aria-pressed', String(an));
             setText($('awTZ_' + t[0]), z ? z[1] + '/' + z[2] : '–');
             balkenSetzen($('awTB_' + t[0]), z && +z[2] ? +z[1] / +z[2] : 0);
         });
-        if(Date.now() > werk.hinweisBis) setText($('awTeileInfo'), aktiv.length >= 3 || !aktiv.length ? 'Antippen: diesen Teil üben oder auslassen' : 'Nur ' + aktiv.join(' + ') + ' · antippen zum Ändern');
+        const mehrere = da.length > 1 ? '' : 'none';
+        if($('awTeile').style.display !== mehrere){ $('awTeile').style.display = mehrere; $('awTeileInfo').style.display = mehrere; }
+        if(Date.now() > werk.hinweisBis) setText($('awTeileInfo'), aktiv.length >= da.length || !aktiv.length ? 'Antippen: diesen Teil üben oder auslassen' : 'Nur ' + aktiv.join(' + ') + ' · antippen zum Ändern');
         const hc = $('hideMasteredCheck'), nc = $('nurGelernteCheck');
         const aus = !!(hc && hc.checked), gesperrt = !!(hc && hc.disabled) || !!(nc && nc.checked);
         $('awAusblendenSchalter').classList.toggle('an', aus);
@@ -49460,7 +49541,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function teilUmschalten(k){
         const t = WERK_TEILE.find(x => x[0] === k.dataset.teil), cb = t && $(t[3]);
         if(!cb) return;
-        const aktiv = WERK_TEILE.filter(x => $(x[3]) && $(x[3]).checked).length;
+        const da = teileImKatalog(), aktiv = WERK_TEILE.filter(x => da.includes(x[0]) && $(x[3]) && $(x[3]).checked).length;
         if(cb.checked && aktiv <= 1){
             // Der letzte Teil bleibt an - sonst kaeme "Bitte mindestens ein
             // Teil aktivieren!" als graues Android-Fenster.
