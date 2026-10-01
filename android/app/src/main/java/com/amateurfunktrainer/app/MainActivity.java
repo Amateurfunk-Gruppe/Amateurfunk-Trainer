@@ -142,6 +142,16 @@ public class MainActivity extends Activity {
         // Herunterladen (MP3, PDF, ...) ueber den Download-Manager des Handys.
         web.setDownloadListener((url, agent, inhalt, mime, laenge) -> {
             if (url == null) return;
+            // Ein PDF vom eigenen Server (01.10.2026) - Dietmar: "Das
+            // Formelblatt kann ich nicht downloaden. Das ist nicht da." Das
+            // Browserfenster zeigt keine PDFs; statt eines stillen Downloads
+            // geht die Datei an den Browser des Handys, der sie anzeigt oder
+            // mit einem Klick oeffnet. Das Formelblatt selbst malt die App
+            // inzwischen als Bild (PdfBild), hier geht es um alle anderen.
+            if (url.startsWith("http://127.0.0.1") && url.replaceAll("[#?].*$", "").toLowerCase().endsWith(".pdf")) {
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url.replaceAll("#.*$", "")))); return; }
+                catch (ActivityNotFoundException e) { }
+            }
             if (url.startsWith("blob:") || url.startsWith("data:")) {
                 // Vom Trainer selbst erzeugt (Lernstand sichern, Auswertung als
                 // CSV ...): im Browserfenster auslesen und ueber AndroidDatei
@@ -267,6 +277,13 @@ public class MainActivity extends Activity {
         /** Der Stil der Seite, fuer das Startbild beim naechsten Start (StartFunki). */
         @JavascriptInterface public void stilMerken(String stil) {
             StartFunki.stilMerken(MainActivity.this, stil);
+        }
+        /** Formelblatt in der App (01.10.2026): eine PDF-Seite als Bild, siehe PdfBild. */
+        @JavascriptInterface public String pdfSeite(String datei, int seite, int breite) {
+            return PdfBild.seite(MainActivity.this, datei, seite, breite);
+        }
+        @JavascriptInterface public int pdfSeiten(String datei) {
+            return PdfBild.seiten(MainActivity.this, datei);
         }
     }
 

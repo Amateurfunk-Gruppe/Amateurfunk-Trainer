@@ -90,7 +90,21 @@
                     // zweites Mal die App, ist die Stimme nicht da." War die
                     // Stimme nicht bereit, verbindet die App neu (Stimme.java)
                     // - nach einer kurzen Pause klappt es dann meist.
+                    // GEDULD (01.10.2026): Gleich nach dem Start ist die Stimme
+                    // oft noch im Aufbau (Dietmar, mit Bild: "Aergerlich").
+                    // Statt sofort den Hinweis zu zeigen, bis zu 12 Sekunden
+                    // nachfragen, ob sie bereit ist - die App verbindet
+                    // derweil, notfalls neu.
+                    var bereitWarten = async function(ms){
+                        var bis = Date.now() + ms;
+                        while(Date.now() < bis){
+                            try{ if(window.AndroidSprache.bereit()) return true; }catch(e){}
+                            await new Promise(function(r){ setTimeout(r, 400); });
+                        }
+                        return false;
+                    };
                     var id = await sprich();
+                    if(!id){ await bereitWarten(12000); id = await sprich(); }
                     if(!id){ await new Promise(function(r){ setTimeout(r, 1800); }); id = await sprich(); }
                     if(!id) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
                     var a = await original('/api/android-tts/' + id);
@@ -839,6 +853,18 @@
         #appStilWahl .sw-karte.an .sw-kreis { border: 6px solid #0B8796; }
         body.eckig #appStilWahl .sw-kreis { border-radius: 50% !important; }
         #appStilWahl .sw-fuss { margin-top: auto; }
+        /* "Nicht mehr anzeigen" (01.10.2026): ein grosses Kaestchen, gut zu treffen */
+        #appStilWahl .sw-nichtmehr { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; margin-bottom: 6px; font-size: 15px; color: #3B475A; cursor: pointer; user-select: none; }
+        #appStilWahl .sw-nichtmehr input { position: absolute; opacity: 0; width: 0; height: 0; }
+        #appStilWahl .sw-kasten { width: 24px; height: 24px; border: 2px solid #9AA6B8; border-radius: 6px; background: #fff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        #appStilWahl .sw-nichtmehr input:checked + .sw-kasten { background: #0F2745; border-color: #0F2745; }
+        #appStilWahl .sw-nichtmehr input:checked + .sw-kasten::after { content: ''; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+        #appStilWahl .sw-nichtmehr input:focus-visible + .sw-kasten { outline: 3px solid #45C2CE; outline-offset: 2px; }
+        body.dark #appStilWahl .sw-nichtmehr { color: #C9D6E6; }
+        body.dark #appStilWahl .sw-kasten { background: #0F2238; border-color: #6B7A90; }
+        body.dark #appStilWahl .sw-nichtmehr input:checked + .sw-kasten { background: #45C2CE; border-color: #45C2CE; }
+        body.dark #appStilWahl .sw-nichtmehr input:checked + .sw-kasten::after { border-color: #06262C; }
+        body.eckig #appStilWahl .sw-kasten { border-radius: 4px !important; }
         #appStilWahl .sw-hinweis { text-align: center; font-size: 13px; color: #8A93A3; margin-bottom: 12px; }
         #appStilWahl .sw-los { height: 54px; width: 100%; border: 0; background: #0F2745; color: #fff; font: 600 17px var(--font-body); }
         body.dark #appStilWahl .sw-los { background: #45C2CE; color: #06262C; }
@@ -1535,6 +1561,26 @@
         html.android-app body.dark .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text,
         html.android-app body.dark .question-area .option-grid:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text { color: var(--nacht-hell, #f0f7fc) !important; }
         html.android-app body.dark .question-area .q-text { color: var(--nacht-hell, #f0f7fc) !important; }
+
+        /* ================================================================
+           FORMELBLATT ALS BILD                                 (01.10.2026)
+           Dietmar: "Das Formelblatt kann ich nicht downloaden. Das ist
+           nicht da." Die App malt die Seite selbst (appStilSkript,
+           PdfBild.java): Leiste mit Pfeilen, darunter das Blatt zum Rollen.
+           ================================================================ */
+        html.android-app #formelBuehne { flex-direction: column; }
+        html.android-app #formelAppLeiste { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; background: #fff; border-bottom: 1px solid var(--line, #d5dde8); }
+        html.android-app #formelAppLeiste .fa-blatt { width: 44px; height: 40px; border: 1px solid var(--line, #d5dde8); background: #f4f7fb; color: var(--panel-navy, #0f2745); font-size: 1rem; cursor: pointer; }
+        html.android-app #formelAppLeiste .fa-blatt:disabled { opacity: 0.35; }
+        html.android-app #formelAppStand { font-size: 0.9rem; font-weight: 600; color: var(--panel-navy, #0f2745); text-align: center; }
+        html.android-app #formelAppRolle { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #eef2f7; position: relative; }
+        html.android-app #formelAppBild { display: block; max-width: none; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+        html.android-app #formelAppHinweis { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: var(--muted, #5b6b7f); font-size: 0.95rem; padding: 0 16px; pointer-events: none; }
+        html.android-app body.eckig.app-rund #formelAppLeiste .fa-blatt { border-radius: 12px !important; }
+        html.android-app body.dark #formelAppLeiste { background: #0f2238; border-color: rgba(255,255,255,0.14); }
+        html.android-app body.dark #formelAppLeiste .fa-blatt { background: rgba(255,255,255,0.08); color: #dbe6f3; border-color: rgba(255,255,255,0.18); }
+        html.android-app body.dark #formelAppStand { color: #dbe6f3; }
+        html.android-app body.dark #formelAppRolle { background: #0a1628; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -24836,7 +24882,9 @@ function formelZeichnen(){
     const rahmen = document.getElementById('formelPdf');
     const titel  = document.getElementById('formelTitel');
     const unter  = document.getElementById('formelUnterzeile');
-    if(!rahmen) return;
+    // In der App steht statt des Rahmens das Bild (appFormelZeichnen) -
+    // dann geht es ohne Rahmen weiter.
+    if(!rahmen && typeof window.appFormelZeichnen !== 'function') return;
 
     const st    = formelStelleJetzt;
     const seite = st ? st.seite : 1;
@@ -24862,6 +24910,11 @@ function formelZeichnen(){
     //                mittig zwischen zwei grauen Raendern.
     // Die Werkzeugleiste bleibt: Zoom, Suche, Drucken - und der Stift,
     // mit dem man auf dem Blatt zeichnen und Stellen markieren kann.
+    // In der App malt die App die Seite selbst (01.10.2026, appStilSkript
+    // "FORMELBLATT ALS BILD") - das Browserfenster dort kann kein PDF.
+    if(typeof window.appFormelZeichnen === 'function' && window.appFormelZeichnen(seite)) return;
+    if(!rahmen) return;
+
     const ziel = 'Formelsammlung.pdf#page=' + seite + '&view=FitH&navpanes=0';
     if(rahmen.dataset.ziel === ziel) return;   // schon die richtige Seite
 
@@ -24888,6 +24941,7 @@ function formelZeichnen(){
 // mit allem, was der Browser sonst fuer PDFs anbietet.
 function formelExtern(){
     if(!formelStelleJetzt) return;
+    if(typeof window.appFormelGroesser === 'function' && window.appFormelGroesser()) return;   // App: Bild vergroessern
     try{ window.open('Formelsammlung.pdf#page=' + formelStelleJetzt.seite + '&view=FitH&navpanes=0', '_blank', 'noopener'); }catch(e){}
 }
 window.formelExtern = formelExtern;
@@ -28741,18 +28795,25 @@ function ttsAppZustand(){
     try{
         if(!window.AndroidSprache || typeof window.AndroidSprache.zustand !== 'function') return '';
         const z = JSON.parse(window.AndroidSprache.zustand());
+        // "Start null" hiess bisher 0 und sah aus wie Erfolg - seit der App
+        // vom 01.10.2026 meldet die App null, solange das Modul schweigt.
+        const start = (z.status === null || z.status === undefined) ? 'keine Antwort' : z.status;
+        const aufbau = z.verbindet ? ', verbindet seit ' + Math.round((z.seit || 0) / 1000) + ' s' : '';
+        const versuche = z.versuche ? ', Versuche ' + z.versuche : '';
+        const ausweg = z.ausweg ? ', Ausweg Google' : '';
         return '\n(Technik: Modul ' + (z.modul || 'unbekannt') + ', bereit ' + (z.bereit ? 'ja' : 'nein')
-             + ', Start ' + z.status + ', Sprache ' + z.sprache + ', Fehler ' + z.fehler + ')';
+             + ', Start ' + start + ', Sprache ' + z.sprache + ', Fehler ' + z.fehler + aufbau + versuche + ausweg + ')';
     }catch(e){ return ''; }
 }
 function ttsPiperWeg(){
     if(ttsImApp()){
-        return 'So klappt es wieder: In den Android-Einstellungen unter \u201eSprachausgabe\u201c (auch \u201eText-in-Sprache\u201c) '
+        return 'Gleich nach dem Start braucht die Stimme manchmal ein paar Sekunden \u2013 kurz warten und noch einmal auf \u201eVorlesen\u201c tippen. '
+             + 'Bleibt sie stumm: In den Android-Einstellungen unter \u201eSprachausgabe\u201c (auch \u201eText-in-Sprache\u201c) '
              + 'das bevorzugte Modul pr\u00fcfen, Sprache Deutsch, und mit \u201eWiedergeben\u201c testen. '
              + 'Danach den Trainer ganz schlie\u00dfen (aus der Liste der offenen Apps wischen) und neu \u00f6ffnen \u2013 '
              + 'er verbindet sich beim Start mit der Stimme. '
              + 'Bei zus\u00e4tzlichen Stimmen-Apps wie Acapela muss die deutsche Stimme auf dem Handy installiert sein; '
-             + 'sonst als Modul Google w\u00e4hlen.' + ttsAppZustand();
+             + 'sonst als Modul Google w\u00e4hlen \u2013 die App weicht nach zwei vergeblichen Anl\u00e4ufen von selbst darauf aus.' + ttsAppZustand();
     }
     if(!laeuftLokal()){
         return 'Die Sprachausgabe l\u00e4uft auf dem Rechner des Kursleiters \u2013 dort fehlt sie gerade. '
@@ -47171,7 +47232,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + handyVorschau(s) + '<b><span class="sw-kreis"></span>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b>'
               + '<small>' + (s === 'sachlich' ? 'Klar und ruhig. Große Schrift, keine Ablenkung.' : 'Punkte, Serien und Funki, der immer wieder vorbeischaut.') + '</small></button>').join('')
           + '</div>'
-          + '<div class="sw-fuss"><div class="sw-hinweis">Jederzeit änderbar unter Einstellungen → Allgemein</div>'
+          + '<div class="sw-fuss">'
+          // Bei jedem Start, bis man es abwaehlt (01.10.2026) - Dietmar:
+          // "Hier wuensche ich mir unten drunter ein Kaestchen, wo man
+          // anklicken kann, nicht mehr anzeigen. Ansonsten soll das bei
+          // jedem Start kommen."
+          + '<label class="sw-nichtmehr"><input type="checkbox" id="swNichtMehr"><span class="sw-kasten" aria-hidden="true"></span><span>Nicht mehr anzeigen</span></label>'
+          + '<div class="sw-hinweis">Jederzeit änderbar unter Einstellungen → Allgemein</div>'
           + '<button type="button" class="sw-los" id="swLos">Los geht\'s</button></div>';
         D.body.appendChild(w);
         vorschauBeobachten();
@@ -47189,13 +47256,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         tu(() => { if(lies('app_form', '') === '' && typeof window.appFormSetzen === 'function') window.appFormSetzen(stilIst() === 'verspielt' ? 'rund' : 'eckig'); });
         schreib('app_stil_gewaehlt', '1');
         const w = $('appStilWahl');
+        tu(() => { const k = $('swNichtMehr'); if(k && k.checked) schreib('app_stilwahl_aus', '1'); });
         if(w) w.remove();
         tu(nachziehen);
     }
     window.appStilWahlZeigen = stilWahlZeigen;
-    // Erst wenn nichts anderes offen ist (Begruessung, Update ...)
+    // Erst wenn nichts anderes offen ist (Begruessung, Update ...). Bei
+    // jedem Start, bis "Nicht mehr anzeigen" angehakt ist (app_stilwahl_aus).
     tu(() => {
-        if(lies('app_stil_gewaehlt', '') === '1') return;
+        if(lies('app_stilwahl_aus', '') === '1') return;
         let versuche = 0;
         const uhr = setInterval(() => {
             versuche++;
@@ -47205,7 +47274,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                     if(getComputedStyle(m).display !== 'none' && m.getClientRects().length) { frei = false; break; }
                 }
             });
-            if(frei || versuche > 40){ clearInterval(uhr); if(lies('app_stil_gewaehlt', '') !== '1') stilWahlZeigen(); }
+            if(frei || versuche > 40){ clearInterval(uhr); if(lies('app_stilwahl_aus', '') !== '1') stilWahlZeigen(); }
         }, 700);
     });
 
@@ -49794,6 +49863,86 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             finally{ r.style.display = ''; }
         };
     });
+
+    // ================================================================
+    //  FORMELBLATT ALS BILD                                  (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit Bild aus der App: "Das Formelblatt kann ich nicht
+    //  downloaden. Das ist nicht da." Das Browserfenster der App zeigt
+    //  kein PDF - es reichte die Datei an den Download weiter. Jetzt malt
+    //  die App die Seite selbst (AndroidApp.pdfSeite, PdfBild.java) und
+    //  das Fenster "Formelblatt" zeigt sie als Bild: blaettern mit den
+    //  Pfeilen, "Groesser" vergroessert (dann rollt man im Blatt).
+    //  Aeltere Apps ohne pdfSeite bekommen weiter den alten Weg.
+    // ================================================================
+    const FORMEL_DATEI = 'Formelsammlung.pdf';
+    const formel = { seite: 0, seiten: 0, zoom: 1, bilder: new Map() };
+    function formelAppDa(){ const a = window.AndroidApp; return !!(a && typeof a.pdfSeite === 'function' && typeof a.pdfSeiten === 'function'); }
+    function formelBild(seite, px){
+        const k = seite + '@' + px;
+        if(formel.bilder.has(k)) return formel.bilder.get(k);
+        let d = '';
+        tu(() => { d = String(window.AndroidApp.pdfSeite(FORMEL_DATEI, seite, px) || ''); });
+        if(d){
+            formel.bilder.set(k, d);
+            if(formel.bilder.size > 6) formel.bilder.delete(formel.bilder.keys().next().value);   // hoechstens sechs im Speicher
+        }
+        return d;
+    }
+    function formelAppBauen(buehne){
+        buehne.innerHTML = '<div id="formelAppLeiste">'
+            + '<button type="button" class="fa-blatt" data-tat="zurueck" aria-label="Vorheriges Blatt"><i class="fas fa-chevron-left"></i></button>'
+            + '<span id="formelAppStand"></span>'
+            + '<button type="button" class="fa-blatt" data-tat="weiter" aria-label="Nächstes Blatt"><i class="fas fa-chevron-right"></i></button>'
+            + '</div>'
+            + '<div id="formelAppRolle"><img id="formelAppBild" alt="Formelsammlung, Seite"><div id="formelAppHinweis"></div></div>';
+        buehne.addEventListener('click', e => {
+            const b = e.target && e.target.closest ? e.target.closest('[data-tat]') : null;
+            if(!b) return;
+            const z = b.dataset.tat === 'weiter' ? formel.seite + 1 : formel.seite - 1;
+            if(z >= 1 && z <= formel.seiten) formelAppSeite(z);
+        });
+    }
+    function formelAppSeite(seite){
+        const rolle = $('formelAppRolle'), bild = $('formelAppBild'), stand = $('formelAppStand'), hinweis = $('formelAppHinweis');
+        if(!rolle || !bild) return;
+        formel.seite = seite;
+        if(stand) stand.textContent = 'Blatt ' + (seite - 2) + ' \u00b7 Seite ' + seite + ' von ' + formel.seiten;
+        rolle.querySelectorAll('.fa-blatt').forEach(b => { b.disabled = b.dataset.tat === 'weiter' ? seite >= formel.seiten : seite <= 1; });
+        const breite = Math.max(200, rolle.clientWidth - 2);
+        const px = Math.min(2400, Math.round(breite * (window.devicePixelRatio || 1) * formel.zoom));
+        bild.style.width = Math.round(breite * formel.zoom) + 'px';
+        if(hinweis) hinweis.textContent = 'wird gezeichnet …';
+        setTimeout(() => {
+            if(formel.seite !== seite) return;
+            const d = formelBild(seite, px);
+            if(d){ bild.src = d; bild.style.display = ''; if(hinweis) hinweis.textContent = ''; }
+            else{ bild.removeAttribute('src'); bild.style.display = 'none'; if(hinweis) hinweis.textContent = 'Die Seite lässt sich gerade nicht zeichnen. Bitte noch einmal versuchen.'; }
+        }, 0);
+    }
+    // Von formelZeichnen() in der Seite: true = erledigt, false = alter Weg
+    window.appFormelZeichnen = function(seite){
+        if(!formelAppDa()) return false;
+        const buehne = $('formelBuehne');
+        if(!buehne) return false;
+        if(!formel.seiten) tu(() => { formel.seiten = Number(window.AndroidApp.pdfSeiten(FORMEL_DATEI)) || 0; });
+        if(!formel.seiten) return false;
+        if(!$('formelAppRolle')) formelAppBauen(buehne);
+        const g = $('formelExternBtn');
+        if(g){ g.textContent = formel.zoom > 1 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – zum Lesen im Blatt rollen'; }
+        tu(() => { const f = buehne.parentElement && buehne.parentElement.querySelector(':scope > div:last-child'); if(f && f !== buehne) f.textContent = 'Amtliches Hilfsmittel der Bundesnetzagentur – in der Prüfung wird es genau so ausgehändigt. Blättern mit den Pfeilen, „Größer“ zum Vergrößern.'; });
+        formelAppSeite(Math.max(1, Math.min(seite || 1, formel.seiten)));
+        return true;
+    };
+    // "Groesser" in der App: zwischen Blattbreite und doppelt umschalten
+    window.appFormelGroesser = function(){
+        if(!formelAppDa() || !$('formelAppRolle')) return false;
+        formel.zoom = formel.zoom > 1 ? 1 : 2;
+        const g = $('formelExternBtn');
+        if(g) g.textContent = formel.zoom > 1 ? 'Kleiner' : 'Größer';
+        formelAppSeite(formel.seite || 1);
+        return true;
+    };
 
     // ---------------- Zurueck-Taste ----------------
     tu(() => {
