@@ -1861,6 +1861,25 @@
         html.android-app body.dark .question-area .option.gewaehlt:not(.correct):not(.wrong) .option-label,
         html.android-app body.dark .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) .option-text,
         html.android-app body.dark .question-area .option-grid.gewaehlt:not(.correct):not(.wrong) .option-label { color: #000 !important; }
+
+        /* VORGELESENE ANTWORT IM DUNKEL-MODUS IN DER GEWAEHLTEN FARBE (01.10.2026)
+           Dietmar (Handybild: Antwort A tuerkis, oben "Stop"): "Geht nicht." -
+           Beim Vorlesen leuchtete die Antwort im festen Blau der Nacht, nicht
+           in der Farbe aus Einstellungen -> Anpassen. Jetzt gilt dort die
+           gewaehlte Farbe (Feld, Rand, schwarze Schrift); "Kein Rand" nimmt
+           auch hier den Rand weg. Die doppelten Klassen heben die
+           Spezifitaet ueber die Nacht-Regeln. Nur App, nur Dunkel. */
+        html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight {
+            background: var(--maus-grund, #e3f5fd) !important;
+            border-color: var(--maus-rand, #00adef) !important;
+            box-shadow: inset 0 0 0 2px var(--maus-rand, #00adef) !important;
+        }
+        html.android-app.android-app body.dark.dark.maus-ohne-rand .question-area :is(.option, .option-grid).tts-highlight {
+            border-color: transparent !important; box-shadow: none !important;
+        }
+        html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight,
+        html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight .option-text,
+        html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight .option-label { color: #000 !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
