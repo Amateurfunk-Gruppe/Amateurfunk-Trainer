@@ -1581,6 +1581,104 @@
         html.android-app body.dark #formelAppLeiste .fa-blatt { background: rgba(255,255,255,0.08); color: #dbe6f3; border-color: rgba(255,255,255,0.18); }
         html.android-app body.dark #formelAppStand { color: #dbe6f3; }
         html.android-app body.dark #formelAppRolle { background: #0a1628; }
+
+        /* ================================================================
+           SACHLICH, ABER MODERN: UEBERSICHT UND WERKZEUGE      (01.10.2026)
+           Dietmar: "Es ist immer noch ein Windows in Android. Kann man das
+           nicht noch sachlich lassen, aber vom Style her verbessern." -
+           "Ab Lernfortschritt ... da ist es wie Windows ... Auch wenn
+           sachlich, soll es trotzdem noch modern wirken." Aus zwei
+           Entwuerfen: "Entwurf B gefaellt mir gut. Bis auf das Loch oben
+           neben dem Namen."
+           Dieselben Karten und Blaetter wie bei Verspielt (#appWerk,
+           #appWerkBlatt), nur ruhig: eine Farbe, keine Verlaeufe, kein
+           Level, kein Funki. Die alten PC-Kaesten verschwinden auch hier.
+           ================================================================ */
+        html.android-app.stil-sachlich #appWerk { display: block; padding-bottom: 4px; }
+        html.android-app.stil-sachlich .main-col > #examInfo,
+        html.android-app.stil-sachlich .main-col > #masteryDisplay,
+        html.android-app.stil-sachlich .app-layout > #historyCol,
+        html.android-app.stil-sachlich #appHeute .ah-weiter-ueber,
+        html.android-app.stil-sachlich #appWerk #awUeberLevel,
+        html.android-app.stil-sachlich #appWerk #awLevel { display: none !important; }
+        html.android-app.stil-sachlich #appHeute .ah-ueber { font-size: 15px; font-weight: 500; color: var(--s-text2); margin: 22px 0 8px 2px; }
+        html.android-app.stil-verspielt #appWerk #awUeberPruef { display: none; }
+        /* Zeichen: eine Farbe statt bunter Verlaeufe */
+        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt) .ah-ico { background: var(--s-fl2); color: var(--s-haupt); box-shadow: none; }
+        html.android-app.stil-sachlich :is(#appWerk, #appWerkBlatt) .ah-ico::after { display: none; }
+        /* Fortschritt: Balken in der Hauptfarbe, die Teile als Zeilen mit Kaestchen */
+        html.android-app.stil-sachlich #appWerk .aw-fz b { font: 700 30px/1 var(--font-display); }
+        html.android-app.stil-sachlich #appWerk .aw-fz span { font-weight: 500; }
+        html.android-app.stil-sachlich #appWerk .aw-balken { height: 10px; margin: 12px 0 6px; }
+        html.android-app.stil-sachlich #appWerk .aw-balken i { background: var(--s-haupt); box-shadow: none; }
+        html.android-app.stil-sachlich #appWerk .aw-teile { display: block; }
+        html.android-app.stil-sachlich #appWerk .aw-teil { display: grid; grid-template-columns: 26px 1fr auto; column-gap: 12px; row-gap: 7px; align-items: center;
+            width: 100%; padding: 12px 2px 11px; text-align: left; border: 0; border-top: 1px solid var(--s-rand); background: none; color: var(--s-text); font: 600 16px var(--font-body); }
+        html.android-app.stil-sachlich #appWerk .aw-teil:active { transform: none; background: var(--s-fl2); }
+        html.android-app.stil-sachlich #appWerk .aw-teil .aw-ha { position: static; width: 24px; height: 24px; margin: 0; border: 2px solid var(--s-haupt); background: var(--s-haupt); color: #fff; font-size: 13px; transform: none; opacity: 1; }
+        html.android-app.stil-sachlich #appWerk .aw-teil.aus { background: none; border-color: var(--s-rand); color: var(--s-text3); }
+        html.android-app.stil-sachlich #appWerk .aw-teil.aus .aw-ha { background: transparent; border-color: var(--s-rand2); color: transparent; opacity: 1; transform: none; }
+        html.android-app.stil-sachlich #appWerk .aw-teil .aw-z { display: inline; margin: 0; font: 500 15px var(--font-body); color: var(--s-text2); }
+        html.android-app.stil-sachlich #appWerk .aw-teil .aw-mini { grid-column: 2 / 4; height: 7px; background: var(--s-fl2); margin: 0; }
+        html.android-app.stil-sachlich #appWerk .aw-teil .aw-mini i { background: var(--s-haupt); opacity: 1; }
+        html.android-app.stil-sachlich #appWerk .aw-teil.aus .aw-mini i { background: var(--s-text3); opacity: 0.45; }
+        html.android-app.stil-sachlich #appWerk .aw-klein { display: none; }
+        html.android-app.stil-sachlich #appWerk .aw-schalt { margin-top: 2px; padding-top: 13px; }
+        html.android-app.stil-sachlich #appWerk .aw-schalt > i { color: var(--s-haupt); }
+        html.android-app.stil-sachlich #appWerk .aw-schalt .ar-schalter.an { background: var(--s-haupt); }
+        html.android-app.stil-sachlich body.eckig:not(.app-rund) #appWerk :is(.aw-balken, .aw-balken i, .aw-mini, .aw-mini i, .aw-ha) { border-radius: 0 !important; }
+        /* Pruefung: die Tage als grosse Zahl, keine Rakete, keine Farbe */
+        html.android-app.stil-sachlich #appWerk .aw-count, html.android-app.stil-sachlich #appWerk .aw-count.leer {
+            min-height: 0; background: var(--s-fl); color: var(--s-text); border: 1px solid var(--s-rand); box-shadow: var(--s-schatten); }
+        html.android-app.stil-sachlich #appWerk .aw-gross { width: 72px; height: 72px; background: var(--s-fl2); color: var(--s-haupt); }
+        html.android-app.stil-sachlich #appWerk .aw-gross b { color: var(--s-haupt); }
+        html.android-app.stil-sachlich #appWerk .aw-gross small { color: var(--s-text2); }
+        html.android-app.stil-sachlich #appWerk .aw-count h4 { color: var(--s-text); font-weight: 600; }
+        html.android-app.stil-sachlich #appWerk .aw-count p { color: var(--s-text2); opacity: 1; }
+        html.android-app.stil-sachlich #appWerk .aw-chip { background: var(--s-akzent-w); color: var(--s-akzent); }
+        html.android-app.stil-sachlich #appWerk .aw-rakete { display: none; }
+        html.android-app.stil-sachlich #appWerk .aw-count:active { transform: none; background: var(--s-fl2); }
+        /* Werkzeuge: Kacheln in Grau und Navy (Entwurf B) */
+        html.android-app.stil-sachlich #appWerk .aw-grid { gap: 10px; }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel { min-height: 96px; gap: 8px; box-shadow: none; }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel:active { background: var(--s-fl2); }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel .ah-ico { width: 38px; height: 38px; font-size: 17px; background: transparent; color: var(--s-haupt); }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel .anz.klein { font: 700 17px/1 var(--font-display); color: var(--s-text); padding-top: 9px; }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel b { font-size: 16px; font-weight: 600; }
+        html.android-app.stil-sachlich #appWerk .aw-grid .ah-kachel small { font-size: 13px; }
+        /* Das Blatt: ohne Funki, ohne Sprechblase */
+        html.android-app.stil-sachlich #appWerkBlatt .aw-funki, html.android-app.stil-sachlich #appWerkBlatt .aw-sprech { display: none !important; }
+        html.android-app.stil-sachlich #appWerkBlatt .aw-zeile:active { transform: none; }
+        /* Der Pruefungstermin als Pille rechts neben dem Gruss - das "Loch" ist zu */
+        html.android-app.stil-sachlich #appHeute .ah-kopf { align-items: center; margin-bottom: 10px; }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin { display: inline-flex; align-items: center; gap: 9px; flex: none; max-width: 46%; padding: 7px 12px 7px 11px;
+            background: var(--s-fl); border: 1px solid var(--s-rand); box-shadow: var(--s-schatten); color: var(--s-text); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin:active { background: var(--s-fl2); }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin > i { color: var(--s-haupt); font-size: 18px; flex: none; }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin > span { min-width: 0; }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin b { display: block; font: 700 15px/1.15 var(--font-display); color: var(--s-text); white-space: nowrap; }
+        html.android-app.stil-sachlich #appHeute .ah-kopf .ah-termin small { display: block; font-size: 12px; color: var(--s-text2); margin-top: 2px; white-space: nowrap; }
+        html.android-app.stil-sachlich #appHeute .ah-gruss { min-width: 0; flex: 1; }
+        html.android-app body.eckig.app-rund #appHeute .ah-kopf .ah-termin { border-radius: 14px !important; }
+
+        /* ================================================================
+           BILDER GROSS, MIT ZWEI FINGERN                       (01.10.2026)
+           Dietmar: "Bilder in den Fragen lassen sich nicht vergroessern.
+           Bei Bildern in der Antwort muss ich auch die Bilder groesser
+           sehen koennen." Die grosse Ansicht fuellt die Breite und laesst
+           sich mit zwei Fingern ziehen (appStilSkript); an jeder
+           Bildantwort sitzt eine kleine Lupe.
+           ================================================================ */
+        html.android-app .lightbox-overlay img { width: calc(100% - 16px); max-width: none; max-height: calc(100% - 150px); padding: 6px; border-width: 2px;
+            touch-action: none; transform-origin: center center; will-change: transform; animation: none; }
+        html.android-app .lightbox-zoom-hint { max-width: 70%; font-size: 12px; line-height: 1.35; text-align: left; }
+        html.android-app .lightbox-close { z-index: 2; }
+        html.android-app #questionContainer .option-grid { position: relative; }
+        html.android-app .app-bild-lupe { position: absolute; top: 6px; right: 6px; width: 38px; height: 38px; border: 1px solid rgba(15,39,69,0.18); background: rgba(255,255,255,0.92);
+            color: var(--panel-navy, #0f2745); font-size: 15px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.14); z-index: 3; -webkit-tap-highlight-color: transparent; }
+        html.android-app .app-bild-lupe:active { background: #eef2f9; }
+        html.android-app body.dark .app-bild-lupe { background: rgba(16,32,52,0.92); color: #dbe6f3; border-color: rgba(255,255,255,0.22); }
+        html.android-app body.eckig.app-rund .app-bild-lupe { border-radius: 50% !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -46921,6 +47019,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     $('ahBlaettern').addEventListener('click', () => klick('durchsichtBtn'));
     heute.querySelectorAll('.ah-kachel').forEach(k => k.addEventListener('click', () => klick(k.dataset.ziel)));
     $('ahTermin').addEventListener('click', () => tu(() => {
+        // Sachlich (01.10.2026): das Blatt "Termin" wie bei Verspielt - der
+        // alte Kasten mit dem Datumsfeld ist in der App nicht mehr zu sehen
+        if(window.appWerkBlatt){ window.appWerkBlatt.auf('termin'); return; }
         const t = $('terminInput');
         if(!t) return;
         t.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -47008,6 +47109,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!n) n = lies('duo_userName', '') || '';
         return String(n).trim();
     }
+    // Die Pille rechts neben dem Gruss (01.10.2026) - Dietmar: "Oben neben
+    // Dietmar rechts davon ist so ein riesengrosses Loch ... Da koennte man
+    // irgendwas noch einbauen, ein Logo oder vielleicht ein Button." Jetzt
+    // steht dort der Pruefungstermin: Tage und Datum, antippen zum Aendern.
+    function terminPille(){
+        const e = $('terminInput');
+        const v = e && e.value;
+        if(!v) return '<i class="fas fa-calendar-plus"></i><span><b>Termin</b><small>eintragen</small></span>';
+        const d = new Date(v + 'T00:00:00'), h = new Date(); h.setHours(0, 0, 0, 0);
+        const tage = Math.round((d - h) / 86400000);
+        const kurz = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+        if(isNaN(tage)) return '<i class="fas fa-calendar-day"></i><span><b>Termin</b><small>ändern</small></span>';
+        if(tage < 0) return '<i class="fas fa-calendar-check"></i><span><b>Prüfung war</b><small>am ' + kurz + '</small></span>';
+        if(tage === 0) return '<i class="fas fa-calendar-day"></i><span><b>Heute</b><small>Prüfung</small></span>';
+        return '<i class="fas fa-calendar-days"></i><span><b>' + (tage === 1 ? 'morgen' : tage + ' Tage') + '</b><small>bis ' + kurz + '</small></span>';
+    }
     function terminText(){
         const e = $('terminInput');
         const v = e && e.value;
@@ -47026,8 +47143,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('ahGrussZeit').textContent = vs ? grussZeit() + ',' : grussZeit() + (name ? ',' : '');
         $('ahGrussName').textContent = name ? ' ' + name : '';
         $('ahGrussName2').textContent = name || 'schön, dass du da bist';
-        // Termin
-        $('ahTermin').innerHTML = terminText();
+        // Termin - Sachlich: als Pille rechts neben dem Gruss, Verspielt: unter den Chips (dort verborgen)
+        const tb = $('ahTermin'), tz = vs ? $('ahChips') : $('ahGruss').parentElement;
+        if(tb.parentElement !== tz){ if(vs) tz.appendChild(tb); else tz.insertBefore(tb, $('ahOnAir')); }
+        const th = vs ? terminText() : terminPille();
+        if(tb.innerHTML !== th) tb.innerHTML = th;
         // Offene Fragen und Wahl
         wahlLesen();
         const offen = offeneZahl();
@@ -49176,14 +49296,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     werkEl.id = 'appWerk';
     werkEl.setAttribute('aria-label', 'Übersicht und Werkzeuge');
     werkEl.innerHTML =
-        '<div class="ah-ueber">Dein Level</div>'
+        '<div class="ah-ueber" id="awUeberLevel">Dein Level</div>'
       + '<button type="button" class="ah-karte aw-level" id="awLevel">'
       +   '<span class="aw-stern" id="awStern" aria-hidden="true"><i class="fas fa-star"></i><b id="awStufeNr">1</b><span class="aw-funke f1"></span><span class="aw-funke f2"></span></span>'
       +   '<span class="aw-info"><b id="awStufeName"></b><span class="aw-zeile" id="awStufeZeile"></span>'
       +   '<span class="aw-bar"><i id="awStufeBar"></i></span><small id="awStufeNoch"></small></span>'
       +   '<i class="fas fa-chevron-right aw-pfeil" aria-hidden="true"></i>'
       + '</button>'
-      + '<div class="ah-ueber">Dein Fortschritt</div>'
+      + '<div class="ah-ueber" id="awUeberFort">Dein Fortschritt</div>'
       + '<div class="ah-karte aw-fort" id="awFort">'
       +   '<div class="aw-fz"><b id="awGelernt">0</b><span id="awGelerntText"></span></div>'
       +   '<div class="aw-balken"><i id="awBalken"></i></div>'
@@ -49196,8 +49316,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="aw-schalt" id="awCb" role="switch" aria-checked="false" style="display:none"><i class="fas fa-walkie-talkie"></i>'
       +     '<span class="aw-sx"><b>CB-Erfahrung anrechnen</b><small>Was du vom CB-Funk kennst, zählt als gelernt</small></span><span class="ar-schalter" id="awCbSchalter"></span></button>'
       + '</div>'
+      + '<div class="ah-ueber" id="awUeberPruef">Prüfung</div>'
       + '<button type="button" class="ah-karte aw-count" id="awCount"></button>'
-      + '<div class="ah-ueber">Werkzeuge</div>'
+      + '<div class="ah-ueber" id="awUeberWerk">Werkzeuge</div>'
       + '<div class="aw-grid" id="awGrid">' + WERK_KACHELN.map(k => '<button type="button" class="ah-kachel aw-kachel" id="awK_' + k.art + '" data-blatt="' + k.art + '">'
       +     '<div class="kz"><span class="ah-ico ' + k.farbe + '"><i class="fas ' + k.icon + '"></i></span><span class="anz klein" id="awKZ_' + k.art + '"></span></div>'
       +     '<div><b>' + k.titel + '</b><small id="awKU_' + k.art + '">' + k.unter + '</small></div></button>').join('')
@@ -49222,6 +49343,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function terminTage(t){ let n = null; tu(() => { n = tageBisTermin(t); }); return n; }
     function countInhalt(){
         const t = terminIst();
+        if(!H.classList.contains('stil-verspielt')) return countInhaltSachlich(t);
         if(!t) return '<span class="aw-gross"><i class="fas fa-calendar-plus"></i><small>Termin</small></span>'
             + '<span class="aw-ct"><h4>Wann ist deine Prüfung?</h4><p>Trag den Tag ein – dann rechne ich dir aus, wie viele Fragen am Tag reichen.</p>'
             + '<span class="aw-chip"><i class="fas fa-plus"></i> Termin eintragen</span></span>';
@@ -49239,9 +49361,32 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<span class="aw-ct"><h4>bis zu deiner Prüfung</h4><p>' + d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) + '</p>'
             + (chip ? '<span class="aw-chip">' + chip + '</span>' : '') + '</span><i class="fas fa-rocket aw-rakete" aria-hidden="true"></i>';
     }
+    // Sachlich (01.10.2026): dieselbe Karte, ohne Rakete und ohne Zuspruch
+    function countInhaltSachlich(t){
+        if(!t) return '<span class="aw-gross"><i class="fas fa-calendar-plus"></i></span>'
+            + '<span class="aw-ct"><h4>Prüfungstermin eintragen</h4><p>Dann steht hier, wie viele Tage bleiben und wie viele Fragen am Tag reichen.</p></span>';
+        const tage = terminTage(t), d = new Date(t + 'T00:00:00');
+        const lang = isNaN(d) ? '' : d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+        if(tage === null || isNaN(d)) return '<span class="aw-gross"><i class="fas fa-calendar-day"></i></span><span class="aw-ct"><h4>Prüfungstermin</h4><p>Antippen zum Ändern</p></span>';
+        if(tage < 0) return '<span class="aw-gross"><i class="fas fa-calendar-check"></i></span><span class="aw-ct"><h4>Prüfung war am ' + lang + '</h4><p>Antippen für einen neuen Termin</p></span>';
+        if(tage === 0) return '<span class="aw-gross"><b>0</b><small>Tage</small></span><span class="aw-ct"><h4>Heute ist Prüfung</h4><p>' + lang + '</p></span>';
+        const info = (($('terminInfo') || {}).textContent || ''), m = info.match(/(\d+)\s+Fragen?\s+pro\s+Tag/);
+        const chip = /alles gelernt/i.test(info) ? '<i class="fas fa-circle-check"></i> Alles gelernt' : m ? m[1] + (m[1] === '1' ? ' Frage' : ' Fragen') + ' am Tag' : '';
+        return '<span class="aw-gross' + (tage > 99 ? ' lang' : '') + '"><b>' + tage + '</b><small>' + (tage === 1 ? 'Tag' : 'Tage') + '</small></span>'
+            + '<span class="aw-ct"><h4>bis zur Prüfung</h4><p>' + lang + '</p>' + (chip ? '<span class="aw-chip">' + chip + '</span>' : '') + '</span>';
+    }
+    // Sachlich: Ueberschriften und Kacheltexte wie am PC, ohne Spielerei
+    const WERK_SACHLICH = { verlauf: ['Verlauf', 'Runden und Ergebnisse'], videos: ['Videolehrgang', 'Lektionen von DL2YMR'], hilfe: ['Hilfe & Unterlagen', 'Paten, Kurse, Folien, Buch'],
+                            ruf: ['Rufzeichen', 'bei der Bundesnetzagentur'], lernstand: ['Lernstand', 'sichern und einlesen'], pruefung: ['So läuft die Prüfung', 'Teile, Fragen, Zeit'] };
     function werkNachziehen(){
         if(!werkEl) return;
         const vs = H.classList.contains('stil-verspielt');
+        setText($('awUeberFort'), vs ? 'Dein Fortschritt' : 'Fortschritt');
+        WERK_KACHELN.forEach(k => {
+            const b = werkEl.querySelector('#awK_' + k.art + ' b');
+            setText(b, vs ? k.titel : WERK_SACHLICH[k.art][0]);
+            if(!vs && k.art !== 'verlauf') setText($('awKU_' + k.art), WERK_SACHLICH[k.art][1]);
+        });
         // Die Stufe merken - auch im Stil Sachlich, dort ohne Feier
         const xp = xpStand(), nr = stufeNr(xp), sk = 'app_stufe_' + benutzer(), alt = parseInt(lies(sk, ''), 10);
         if(isNaN(alt) || nr < alt || !vs) schreib(sk, String(nr));
@@ -49250,7 +49395,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Ohne Funki (abgeschaltet): kein Auftritt, nur der Stern springt
             if(!tippsAn()){ schreib(sk, String(nr)); werk.aufstieg = null; werk.sternNeu = true; }
         }
-        if(!vs) return;
+        if(vs) levelNachziehen(xp, nr);
+        fortschrittNachziehen(vs);
+    }
+    function levelNachziehen(xp, nr){
         // Dein Level
         const ab = STUFEN[nr], naechste = STUFEN[nr + 1];
         setText($('awStufeNr'), String(nr + 1));
@@ -49262,12 +49410,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         setText($('awStufeNoch'), naechste ? 'Noch ' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + (nr + 2) : 'Höchste Stufe – du bist eine Legende!');
         const al = 'Dein Level: Stufe ' + (nr + 1) + ', ' + STUFEN_NAMEN[nr] + '. Alle Stufen ansehen';
         if($('awLevel').getAttribute('aria-label') !== al) $('awLevel').setAttribute('aria-label', al);
+    }
+    function fortschrittNachziehen(vs){
         // Dein Fortschritt - die Zahlen stehen im alten Kasten
         const ms = (($('masteryStats') || {}).textContent || '');
         const m = ms.match(/Gesamt:\s*(\d+)\s*\/\s*(\d+)/) || ms.match(/(\d+)\s*\/\s*(\d+)/);
         const gel = m ? +m[1] : 0, alle = m ? +m[2] : 0;
         setText($('awGelernt'), gel.toLocaleString('de-DE'));
-        setText($('awGelerntText'), 'von ' + alle.toLocaleString('de-DE') + ' Fragen sitzen schon');
+        setText($('awGelerntText'), vs ? 'von ' + alle.toLocaleString('de-DE') + ' Fragen sitzen schon' : 'von ' + alle.toLocaleString('de-DE') + ' Fragen gelernt');
         balkenSetzen($('awBalken'), alle ? gel / alle : 0);
         const aktiv = [];
         WERK_TEILE.forEach(t => {
@@ -49285,7 +49435,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('awAusblendenSchalter').classList.toggle('an', aus);
         $('awAusblenden').classList.toggle('gesperrt', gesperrt);
         if($('awAusblenden').getAttribute('aria-checked') !== String(aus)) $('awAusblenden').setAttribute('aria-checked', String(aus));
-        setText($('awAusblendenText'), gesperrt ? 'Aus, solange „Gelerntes erneut prüfen“ an ist' : aus ? 'Was sitzt, kommt nicht mehr dran' : 'Auch Gelerntes kommt noch dran');
+        setText($('awAusblendenText'), gesperrt ? 'Aus, solange „Gelerntes erneut prüfen“ an ist' : vs ? (aus ? 'Was sitzt, kommt nicht mehr dran' : 'Auch Gelerntes kommt noch dran') : (aus ? 'Gelernte Fragen nicht mehr abfragen' : 'Auch gelernte Fragen kommen dran'));
         const cbp = $('cbPanel'), cbc = $('cbModusCheck'), cbDa = !!(cbp && cbp.style.display !== 'none');
         $('awCb').style.display = cbDa ? '' : 'none';
         if(cbDa){
@@ -49301,7 +49451,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let r = 0, g = 0;
         h.forEach(e => { r += +e.correct || 0; g += +e.total || 0; });
         setText($('awKZ_verlauf'), h.length && g ? 'Ø ' + Math.round(100 * r / g) + ' %' : '');
-        setText($('awKU_verlauf'), h.length ? (h.length === 1 ? '1 Runde' : h.length + ' Runden') + ' – wie lief’s?' : 'noch keine Runde');
+        setText($('awKU_verlauf'), h.length ? (h.length === 1 ? '1 Runde' : h.length + ' Runden') + (vs ? ' – wie lief’s?' : '') : 'noch keine Runde');
         const lk = lektionen().length;
         setText($('awKZ_videos'), lk ? String(lk) : '');
     }
@@ -49615,19 +49765,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         clearTimeout(werk.zuUhr);
         if(werk.offen) werkBlattZu(true);
         werk.art = art; werk.offen = true; werk.bearbeiten = false; werk.auswahl = new Set();
-        $('awTitel').innerHTML = '<span class="ah-ico ' + b.farbe + '"><i class="fas ' + b.icon + '"></i></span><span>' + esc(b.titel) + '</span>';
+        const titel = (!H.classList.contains('stil-verspielt') && WERK_SACHLICH[art]) ? WERK_SACHLICH[art][0] : b.titel;   // Sachlich: wie am PC
+        $('awTitel').innerHTML = '<span class="ah-ico ' + b.farbe + '"><i class="fas ' + b.icon + '"></i></span><span>' + esc(titel) + '</span>';
         inhaltZeichnen();
-        $('awFunki').innerHTML = maskottchen('winkt');               // neu: Winken und Hereinklettern von vorn
+        const vs = H.classList.contains('stil-verspielt');            // Sachlich (01.10.2026): das Blatt ohne Funki
+        $('awFunki').innerHTML = vs ? maskottchen('winkt') : '';      // neu: Winken und Hereinklettern von vorn
         // Beim ersten Mal erklaert Funki, wofuer das Blatt da ist - Dietmar:
         // "Was mir persoenlich auch sehr gut gefaellt, ist, dass Funki einem
         // auch die App erklaert ... koennen wir auch das erweitern."
-        const erstes = lies('robo_blatt_' + art, '') !== '1';
-        schreib('robo_blatt_' + art, '1');
-        sprechblase(erstes ? b.erklaer : zufall(b.satz()), true);
+        const erstes = vs && lies('robo_blatt_' + art, '') !== '1';
+        if(vs) schreib('robo_blatt_' + art, '1');
+        if(vs) sprechblase(erstes ? b.erklaer : zufall(b.satz()), true); else $('awSprech').textContent = '';
         werkBlatt.classList.remove('offen', 'zu'); void werkBlatt.offsetWidth;
         werkBlatt.classList.add('offen');
         $('awRolle').scrollTop = 0;
         if(robo.da && robo.modus !== 'tour') tu(() => roboHeim(true));   // nie zwei Funkis
+        if(!vs) return;
         if(erstes) setTimeout(() => { if(werk.offen && werk.art === art) funkiSagt(b.sprich, true); }, 650);
         else setTimeout(() => { if(werk.offen) tu(() => funkiGeraeusch('bliep')); }, 500);
     }
@@ -49943,6 +50096,118 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         formelAppSeite(formel.seite || 1);
         return true;
     };
+
+    // ================================================================
+    //  BILDER GROSS, MIT ZWEI FINGERN                       (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit Bild aus der App: "Bilder in den Fragen lassen sich
+    //  nicht vergroessern. Bei Bildern in der Antwort muss ich auch die
+    //  Bilder groesser sehen koennen. Mouseoverlay gibt es leider bei
+    //  Android nicht." Zwei Gruende, zwei Antworten:
+    //   1. Die grosse Ansicht (Lightbox) bekam das SVG ohne viewBox - und
+    //      so ein Bild waechst nicht, es bleibt bei seinen Punkten. Jetzt
+    //      bekommt sie die skalierbare Fassung (svgMitViewBox, dieselbe
+    //      wie die Lupe am PC) und fuellt die Breite. Dazu Zwei-Finger-
+    //      Zoom, Ziehen und Doppeltippen - die Seite selbst laesst sich in
+    //      der App ja nicht zoomen (maximum-scale=1).
+    //   2. Bei Bildantworten waehlt das Antippen die Antwort (so soll es
+    //      sein). Fuer die grosse Ansicht steht deshalb eine kleine Lupe
+    //      in der Ecke jeder Bildantwort.
+    //  Nur in der App; am PC bleibt die Maus-Lupe.
+    // ================================================================
+    tu(() => {
+        const alt = window.openLightbox;
+        if(typeof alt !== 'function') return;
+        window.openLightbox = function(src, cap){
+            lupe.reset();
+            if(typeof window.svgMitViewBox === 'function') window.svgMitViewBox(src).then(u => alt(u, cap), () => alt(src, cap));
+            else alt(src, cap);
+        };
+        const hinweis = D.querySelector('#lightboxOverlay .lightbox-zoom-hint');
+        if(hinweis) hinweis.innerHTML = '<i class="fas fa-hand-pointer"></i> Zwei Finger oder doppelt tippen: größer · daneben tippen: schließen';
+    });
+    const lupe = { s: 1, tx: 0, ty: 0, zeiger: new Map(), start: null, tipp: 0, bewegt: false,
+        setz(){ const img = $('lightboxImage'); if(img) img.style.transform = 'translate(' + Math.round(this.tx) + 'px,' + Math.round(this.ty) + 'px) scale(' + this.s.toFixed(3) + ')'; },
+        reset(){ this.s = 1; this.tx = 0; this.ty = 0; this.zeiger.clear(); this.start = null; this.bewegt = false; this.setz(); } };
+    tu(() => {
+        const ov = $('lightboxOverlay'), img = $('lightboxImage');
+        if(!ov || !img) return;
+        img.addEventListener('pointerdown', e => {
+            lupe.zeiger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            tu(() => img.setPointerCapture(e.pointerId));
+            const z = Array.from(lupe.zeiger.values());
+            if(z.length === 1){ lupe.start = { x: e.clientX, y: e.clientY, tx: lupe.tx, ty: lupe.ty }; lupe.bewegt = false; }
+            else if(z.length === 2) lupe.start = { d: Math.hypot(z[0].x - z[1].x, z[0].y - z[1].y) || 1, s: lupe.s, mx: (z[0].x + z[1].x) / 2, my: (z[0].y + z[1].y) / 2, tx: lupe.tx, ty: lupe.ty };
+            e.preventDefault();
+        });
+        img.addEventListener('pointermove', e => {
+            if(!lupe.zeiger.has(e.pointerId) || !lupe.start) return;
+            lupe.zeiger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            const z = Array.from(lupe.zeiger.values());
+            if(z.length >= 2 && lupe.start.d){
+                const d = Math.hypot(z[0].x - z[1].x, z[0].y - z[1].y);
+                lupe.s = Math.max(1, Math.min(6, lupe.start.s * d / lupe.start.d));
+                const mx = (z[0].x + z[1].x) / 2, my = (z[0].y + z[1].y) / 2;
+                lupe.tx = lupe.start.tx + (mx - lupe.start.mx); lupe.ty = lupe.start.ty + (my - lupe.start.my);
+                lupe.bewegt = true; lupe.setz();
+            }else if(z.length === 1 && lupe.start.x !== undefined && lupe.s > 1){
+                lupe.tx = lupe.start.tx + (e.clientX - lupe.start.x); lupe.ty = lupe.start.ty + (e.clientY - lupe.start.y);
+                if(Math.abs(e.clientX - lupe.start.x) + Math.abs(e.clientY - lupe.start.y) > 6) lupe.bewegt = true;
+                lupe.setz();
+            }
+        });
+        const hoch = e => {
+            lupe.zeiger.delete(e.pointerId);
+            const z = Array.from(lupe.zeiger.values());
+            if(!z.length){ if(lupe.s < 1.05){ lupe.s = 1; lupe.tx = 0; lupe.ty = 0; lupe.setz(); } lupe.start = null; }
+            else if(z.length === 1) lupe.start = { x: z[0].x, y: z[0].y, tx: lupe.tx, ty: lupe.ty };
+        };
+        img.addEventListener('pointerup', hoch); img.addEventListener('pointercancel', hoch);
+        // Tippen auf das Bild: doppelt = zoomen, einfach bei Zoom = nichts,
+        // einfach ohne Zoom = schliessen (wie bisher, nur eine Spur spaeter,
+        // damit ein zweiter Tipp noch als Doppeltipp zaehlt)
+        ov.addEventListener('click', e => {
+            if(e.target !== img) return;
+            e.stopPropagation();
+            if(lupe.bewegt){ lupe.bewegt = false; return; }
+            const jetzt = Date.now();
+            if(jetzt - lupe.tipp < 320){
+                lupe.tipp = 0;
+                if(lupe.s > 1){ lupe.s = 1; lupe.tx = 0; lupe.ty = 0; }
+                else{
+                    const r = img.getBoundingClientRect(), cx = e.clientX - (r.left + r.width / 2), cy = e.clientY - (r.top + r.height / 2);
+                    lupe.s = 2.5; lupe.tx = -cx * 1.5; lupe.ty = -cy * 1.5;
+                }
+                lupe.setz(); return;
+            }
+            lupe.tipp = jetzt;
+            if(lupe.s > 1) return;
+            setTimeout(() => { if(lupe.tipp === jetzt){ lupe.tipp = 0; tu(() => window.closeLightbox()); } }, 330);
+        }, true);
+    });
+    // Die kleine Lupe an jeder Bildantwort
+    function bildLupenNachziehen(){
+        D.querySelectorAll('#questionContainer .option-grid .option-image:not([data-lupe])').forEach(img => {
+            img.dataset.lupe = '1';
+            const kachel = img.closest('.option-grid');
+            if(!kachel || kachel.querySelector('.app-bild-lupe')) return;
+            const b = D.createElement('button');
+            b.type = 'button'; b.className = 'app-bild-lupe'; b.setAttribute('aria-label', 'Bild vergrößern'); b.setAttribute('data-kein-klickton', '');
+            b.innerHTML = '<i class="fas fa-magnifying-glass-plus"></i>';
+            b.addEventListener('click', e => {
+                e.stopPropagation(); e.preventDefault();
+                const l = kachel.querySelector('.option-label'), name = l ? l.textContent.replace(/[:\s]+$/, '') : '';
+                tu(() => window.openLightbox(img.currentSrc || img.src, name ? 'Antwort ' + name : ''));
+            });
+            kachel.appendChild(b);
+        });
+    }
+    tu(() => {
+        const q = $('questionContainer');
+        if(!q || !window.MutationObserver) return;
+        new MutationObserver(() => tu(bildLupenNachziehen)).observe(q, { childList: true, subtree: true });
+        bildLupenNachziehen();
+    });
 
     // ---------------- Zurueck-Taste ----------------
     tu(() => {
