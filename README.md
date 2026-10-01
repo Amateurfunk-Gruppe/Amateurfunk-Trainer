@@ -636,6 +636,12 @@ cd ~/Amateurfunk-Trainer
 
 Der Trainer läuft dann unter <http://localhost:3000>.
 
+**Android** — am Handy unter [Releases](../../releases)
+`Amateurfunk-Trainer-<Version>-android.apk` laden und öffnen, ab Android 8.
+Android fragt beim ersten Mal, ob Apps aus dieser Quelle erlaubt sind. Ein
+Update wird einfach darüber installiert, der Lernstand bleibt. Die App lernt
+allein am Handy und kann im WLAN auch Server für andere sein.
+
 > **Die ausführliche Anleitung steht in
 > [INSTALLATION.md](INSTALLATION.md)** — beide Wege Schritt für Schritt,
 > die Schalter für einen anderen Zielordner, und ein Abschnitt

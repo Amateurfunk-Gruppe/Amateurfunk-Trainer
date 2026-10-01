@@ -208,6 +208,7 @@ section.hell .beispiel{background:var(--grund)}
 
 /* ------------------------------------------------------------ Laden */
 .laden{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:26px}
+.laden.handy{margin-top:16px}
 .laden a{
   display:block;text-decoration:none;background:var(--karte);border:1px solid var(--linie);
   border-radius:12px;padding:20px;color:var(--text);
@@ -319,8 +320,8 @@ footer li{margin-bottom:.45em}
     <p class="blei">
       Der Amateurfunk-Trainer nimmt genau diesen Katalog (Stand März 2024) und macht ein
       Lernprogramm daraus. Er läuft auf dem eigenen Rechner unter Windows, Linux und
-      macOS, braucht kein Konto und keine Verbindung ins Internet. Der Lernfortschritt
-      bleibt dort, wo er entsteht.
+      macOS und als App auf Android-Handys, braucht kein Konto und keine Verbindung ins
+      Internet. Der Lernfortschritt bleibt dort, wo er entsteht.
     </p>
     <!-- 25.09.2026: die Staerken nach vorn (siehe Kommentar an der
          Beschreibung im Kopf von Index.html). Am selben Tag ergaenzt, Dietmar:
@@ -775,13 +776,14 @@ footer li{margin-bottom:.45em}
 <section class="hell" id="laden">
   <div class="bahn">
     <span class="marke">Herunterladen</span>
-    <h2>Kostenlos, für Windows, Linux und macOS</h2>
+    <h2>Kostenlos, für Windows, Linux, macOS und Android</h2>
     <p class="blei">
       Alle Fassungen liegen auf der Release-Seite. Such dir die für dein System aus —
       mehr ist nicht nötig. Unter Windows ist es ein Archiv: auspacken, Ordner hinlegen,
       wo du willst, <code>START.bat</code> doppelklicken. Kein Terminal, keine
       Administratorrechte, nichts wird in Windows eingetragen. Linux und macOS brauchen
-      Node.js 18 oder neuer.
+      Node.js 18 oder neuer. Fürs Handy gibt es die App: die APK-Datei am Handy laden
+      und öffnen, ab Android 8.
     </p>
     <p class="blei" style="font-size:1.04rem;background:#fff;border:1px solid var(--linie);
               border-left:5px solid var(--rot);border-radius:10px;padding:16px 20px;max-width:none">
@@ -799,9 +801,19 @@ footer li{margin-bottom:.45em}
       <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
         <b>macOS</b><span>Archiv (.zip)</span></a>
     </div>
+    <!-- Android seit dem 01.10.2026 - Dietmar: "Ich moechte aus der Testphase
+         raus und moechte die App dann auch zu meinen anderen Apps fuer Windows,
+         Mac und Linux hinzufuegen." Eine eigene Reihe unter den Rechnern, ueber
+         die ganze Breite. Die APK haengt GitHub beim Release selbst an
+         (.github/workflows/android.yml). -->
+    <div class="laden handy">
+      <a href="https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest">
+        <b>Android-Handy</b><span>App (.apk) — ab Android 8: am Handy laden, öffnen und installieren. Zum Lernen unterwegs, ohne Konto.</span></a>
+    </div>
     <p class="blei" style="margin-top:22px">
       Der Lernstand bleibt beim Update erhalten — unter Windows im Ordner
-      <code>data\</code> neben dem Trainer, unter Linux und macOS im eigenen Heimatordner.
+      <code>data\</code> neben dem Trainer, unter Linux und macOS im eigenen Heimatordner,
+      am Handy in der App.
     </p>
 
     <div class="hinweis" style="background:#eef4fb;border-color:#b9cfe6;border-left-color:#0a9cb0">
@@ -924,7 +936,7 @@ footer li{margin-bottom:.45em}
   "name":"Amateurfunk-Trainer",
   "inLanguage":"de",
   "applicationCategory":"EducationalApplication",
-  "operatingSystem":"Windows, Linux, macOS",
+  "operatingSystem":"Windows, Linux, macOS, Android",
   "description":"Kostenloses Lernprogramm für die deutsche Amateurfunkprüfung: alle 1750 Fragen der Bundesnetzagentur für Klasse N, E und A, jede mit eigenem Lösungsweg und dem Grund, warum die falschen Antworten falsch sind. Gebaut auch für alle, denen Lernen schwerfällt: Vorlesen, Hörbuch, Tastaturbedienung, größere Bilder und verlängerte Prüfungszeit. Dazu die Lösungswege des DARC direkt an der Frage, Prüfungssimulator und Gruppenraum. Ohne Konto, ohne Werbung.",
   "url":"https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
   "downloadUrl":"https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",

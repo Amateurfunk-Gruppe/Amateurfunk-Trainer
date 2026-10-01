@@ -62,6 +62,7 @@ public class MainActivity extends Activity {
     private final Stimme.Melder stimmMelder = this::melden;
     private View vorhang;
     private TextView vorhangText;
+    private View startFunki;          // Funki im Startbild (01.10.2026), siehe StartFunki.java
 
     @Override protected void onCreate(Bundle zustand) {
         super.onCreate(zustand);
@@ -187,9 +188,18 @@ public class MainActivity extends Activity {
         f.setPadding(pad, pad, pad, pad);
         f.setClickable(true);
 
-        ImageView zeichen = new ImageView(this);
-        zeichen.setImageResource(R.mipmap.ic_launcher);
-        f.addView(zeichen, new LinearLayout.LayoutParams(dp(112), dp(112)));
+        // Funki statt Antenne (01.10.2026) - Dietmar: "Die Antenne raus und
+        // ein animierter Funki rein." Im Stil Sachlich und wenn etwas nicht
+        // klappt, bleibt das Zeichen (siehe StartFunki.java).
+        View funki = StartFunki.bild(this);
+        startFunki = funki;
+        if (funki != null) {
+            f.addView(funki, new LinearLayout.LayoutParams(dp(170), dp(190)));
+        } else {
+            ImageView zeichen = new ImageView(this);
+            zeichen.setImageResource(R.mipmap.ic_launcher);
+            f.addView(zeichen, new LinearLayout.LayoutParams(dp(112), dp(112)));
+        }
 
         TextView name = new TextView(this);
         name.setText("Amateurfunk-Trainer");
@@ -225,7 +235,11 @@ public class MainActivity extends Activity {
 
     private void vorhangWeg() {
         if (vorhang == null || vorhang.getVisibility() != View.VISIBLE) return;
-        vorhang.animate().alpha(0f).setDuration(250).withEndAction(() -> vorhang.setVisibility(View.GONE)).start();
+        vorhang.animate().alpha(0f).setDuration(250).withEndAction(() -> {
+            vorhang.setVisibility(View.GONE);
+            StartFunki.freigeben(startFunki);     // das kleine Browserfenster wird nicht mehr gebraucht
+            startFunki = null;
+        }).start();
     }
 
     // ================================================================
@@ -249,6 +263,10 @@ public class MainActivity extends Activity {
     class AppSteuerung {
         @JavascriptInterface public void neuStarten() {
             haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));
+        }
+        /** Der Stil der Seite, fuer das Startbild beim naechsten Start (StartFunki). */
+        @JavascriptInterface public void stilMerken(String stil) {
+            StartFunki.stilMerken(MainActivity.this, stil);
         }
     }
 

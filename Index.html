@@ -1448,6 +1448,93 @@
         .robo-funken i:nth-child(3n) { background: #FF8FA3; }
         @keyframes roboFunke { 0% { transform: translate(0, 0) scale(0.3); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(140deg); opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .robo-funken { display: none; } }
+
+        /* ================================================================
+           RUNDE: WENIGER LUFT UEBER DER FRAGE                  (01.10.2026)
+           Dietmar (Bild mit gelbem Pfeil zwischen Kopfleiste und Frage):
+           "Der Abstand oben, da kann etwas verringert werden, dann habe ich
+           auch etwas mehr Platz." Vorher 53 Punkte von der Kopfleiste bis
+           zur Fragenummer (6 + 12 + 5 + 14 + 11 + Rand), jetzt rund 25 -
+           beide Stile, nur in der App.
+           ================================================================ */
+        html.android-app body.runde-laeuft #app.card { padding-top: 4px !important; }
+        html.android-app body.runde-laeuft #questionContainer .main-layout { margin-top: 0 !important; padding-top: 0 !important; }
+        html.android-app body.runde-laeuft #questionContainer .question-area { padding-top: 8px !important; }
+        html.android-app body.runde-laeuft #questionContainer .q-text-row { padding-top: 8px !important; }
+
+        /* ================================================================
+           HILFEN AN DER FRAGE                                  (01.10.2026)
+           Dietmar: "Mir ist aufgefallen, dass bei den Fragen kein
+           Formelblatt, Taschenrechner und Loesungshilfe bzw. auch unsere
+           eigenen Erklaerungen fehlen." - "Es fehlen ebenso auch die
+           Buttons zu DARC-Erklaerungen zu den Fragen."
+           Eine Reihe unter den Antworten (appStilSkript: hilfenNachziehen),
+           nur in der App, in beiden Stilen. Farben wie die Tasten am PC:
+           Formelblatt bernstein, Erklaerung lila, DARC im Blau von 50 Ohm,
+           Video mit dem roten Zeichen.
+           ================================================================ */
+        /* Enger gesetzt - Dietmar: "Den Platz zwischen den 2 Reihen klein wenig
+           verkleinern. Wir muessen Platz sparen." */
+        html.android-app #appHilfen { display: flex; flex-direction: column; gap: 5px; margin: 10px 0 0; }
+        /* Jede Zeile ueber die ganze Breite, die Tasten teilen sie sich -
+           Dietmar: "Die obere Reihe in der Laenge etwas korrigieren, damit
+           es mit der unteren Reihe buendig ist." */
+        html.android-app #appHilfen .ahf-zeile { display: flex; flex-wrap: wrap; gap: 5px; }
+        html.android-app #appHilfen .ahf {
+            flex: 1 1 auto; min-width: 0; justify-content: center;
+            display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px;
+            font-size: 0.92rem; font-weight: 600; line-height: 1.1; white-space: nowrap; cursor: pointer;
+            background: #ffffff; color: var(--panel-navy, #0f2745); border: 1px solid var(--line, #d5dde8); border-radius: 0;
+            -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        html.android-app #appHilfen .ahf i { font-size: 1.02rem; }
+        html.android-app #appHilfen .ahf.nur-zeichen { flex: 0 0 44px; width: 44px; padding: 0; justify-content: center; }
+        /* Erklaerung und Vorlesen als ein Paar, ohne Luecke dazwischen */
+        html.android-app #appHilfen .ahf-paar { flex: 1 1 auto; min-width: 0; display: inline-flex; }
+        html.android-app #appHilfen .ahf-paar .ahf:first-child { border-right-width: 0; }
+        html.android-app body.eckig.app-rund #appHilfen .ahf-paar .ahf:first-child { border-radius: 21px 0 0 21px !important; }
+        html.android-app body.eckig.app-rund #appHilfen .ahf-paar .ahf + .ahf { border-radius: 0 21px 21px 0 !important; }
+        /* Zu eng fuer die erste Zeile: beim Rechner nur das Zeichen */
+        html.android-app #appHilfen.knapp .ahf-rechner span { display: none; }
+        html.android-app #appHilfen.knapp .ahf-rechner { flex: 0 0 44px; width: 44px; padding: 0; justify-content: center; }
+        html.android-app #appHilfen .ahf:active { transform: scale(0.96); }
+        html.android-app #appHilfen .ahf-formel { background: #fdf1e0; color: #8a5a12; border-color: #e0b25a; }
+        html.android-app #appHilfen .ahf-rechner i { color: #47607d; }
+        html.android-app #appHilfen .ahf-erklaer { background: #f2eefb; color: #5b3f95; border-color: #bba9dd; }
+        html.android-app #appHilfen .ahf-erklaer.an { background: #5b3f95; color: #ffffff; border-color: #5b3f95; }
+        html.android-app #appHilfen .ahf-darc { color: #00628a; }
+        html.android-app #appHilfen .ahf-darc i { color: #00adef; }
+        html.android-app #appHilfen .ahf-video i { color: #e11d48; }
+        html.android-app body.eckig.app-rund #appHilfen .ahf { border-radius: 21px !important; }
+        /* Der Puls wie am PC: dreimal im Takt mit der Erklaerung (hinweisePulsen) */
+        html.android-app #appHilfen .ahf-formel.puls { animation: formel-puls 0.62s ease-in-out 1; }
+        html.android-app #appHilfen .ahf-erklaer.puls { animation: erklaer-puls 0.62s ease-in-out 1; }
+        @media (prefers-reduced-motion: reduce) {
+            html.android-app #appHilfen .ahf.puls { animation: none; }
+            html.android-app #appHilfen .ahf-formel.puls { box-shadow: 0 0 0 3px rgba(226,147,47,0.35); }
+            html.android-app #appHilfen .ahf-erklaer.puls { box-shadow: 0 0 0 3px rgba(91,63,149,0.35); }
+        }
+        html.android-app body.dark #appHilfen .ahf { background: rgba(255,255,255,0.06); color: #dbe6f3; border-color: rgba(255,255,255,0.18); }
+        html.android-app body.dark #appHilfen .ahf-rechner i { color: #9fb6cf; }
+        html.android-app body.dark #appHilfen .ahf-formel { background: rgba(224,178,90,0.14); color: #f1c77a; border-color: rgba(224,178,90,0.5); }
+        html.android-app body.dark #appHilfen .ahf-erklaer { background: rgba(187,169,221,0.14); color: #d6c8f4; border-color: rgba(187,169,221,0.5); }
+        html.android-app body.dark #appHilfen .ahf-erklaer.an { background: #7a5cc0; color: #ffffff; border-color: #7a5cc0; }
+        html.android-app body.dark #appHilfen .ahf-darc { color: #8fd3f5; }
+        html.android-app body.dark #appHilfen .ahf-video i { color: #ff5a72; }
+
+        /* ================================================================
+           DUNKEL: FRAGE UND ANTWORTEN BLEIBEN HELL              (01.10.2026)
+           Dietmar (Bild der dunklen App): "Bitte die Schrift in den Fragen
+           und in den Antworten nicht abdunkeln. Lass die hell." Am PC
+           steht die Antwort im Dunkeln in gedaempftem Blaugrau (#b3cbdb) -
+           in der App dieselbe helle Schrift wie die Frage. Richtig, falsch,
+           gewaehlt und die vorgelesene Antwort behalten ihre Farben.
+           ================================================================ */
+        html.android-app body.dark .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+        html.android-app body.dark .question-area .option-grid:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight),
+        html.android-app body.dark .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text,
+        html.android-app body.dark .question-area .option-grid:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-text { color: var(--nacht-hell, #f0f7fc) !important; }
+        html.android-app body.dark .question-area .q-text { color: var(--nacht-hell, #f0f7fc) !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -46516,10 +46603,23 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         H.classList.toggle('stil-verspielt', s === 'verspielt');
         H.classList.toggle('stil-sachlich', s === 'sachlich');
         if(s !== 'verspielt') tu(() => roboHeim(true));
+        tu(klickTonSteuern);                              // Verspielt: nur die eigenen Toene, kein Maus-Klick
+        tu(stilAnAppMelden);                              // fuer das Startbild beim naechsten Start
         tu(einstNachziehen); tu(nachziehen);
         tu(() => window.browserfarbeNachziehen && window.browserfarbeNachziehen());
     }
     window.appStilSetzen = stilSetzenApp;
+    // Das Startbild der App (01.10.2026) - Dietmar: "Die Antenne raus und
+    // ein animierter Funki rein." Die App merkt sich den Stil fuer den
+    // naechsten Start (StartFunki.java): Verspielt winkt Funki, Sachlich
+    // bleibt das Zeichen. Solange noch nichts gewaehlt ist, meldet die
+    // Seite nichts - dann kommt Funki. Aeltere Apps kennen das nicht.
+    function stilAnAppMelden(){
+        if(lies('app_stil_gewaehlt', '') !== '1' && !$('appStilWahl')) return;
+        const a = window.AndroidApp;
+        if(a && typeof a.stilMerken === 'function') a.stilMerken(stilIst());
+    }
+    tu(stilAnAppMelden);
     // Hell / Dunkel / wie das Handy. Dahinter steht der bisherige Schalter
     // (stilSetzen: 'light' oder 'dark'), damit alles, was den Dark Mode
     // schon kennt - die Zeichnungen "kraeftig weiss" zum Beispiel -, so
@@ -47142,7 +47242,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '</div>'
               + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>')
           // Toene beim Tippen (01.10.2026)
-          + einstKasten('Töne beim Tippen', 'Ein leises Plopp bei Knöpfen und Kacheln. Nie in der Prüfung und nie, während vorgelesen wird.',
+          + einstKasten('Töne beim Tippen', 'Ein leises Plopp bei Knöpfen und Kacheln, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
                 '<div class="app-seg" id="appTippSeg">'
               + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-t="' + f[0] + '"' + ((lies('app_tipptoene', 'an') === 'aus' ? 'aus' : 'an') === f[0] ? ' class="an"' : '')
                   + ' onclick="appTippToeneSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
@@ -48651,14 +48751,35 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             setTimeout(() => kn.forEach(k => tu(() => k.disconnect())), 400);
         });
     }
+    // ----- Ein Ton je Tipper                                     (01.10.2026)
+    //  Dietmar: "Wenn ich einen Button klicke, kommt trotzdem noch der Klick-
+    //  Sound, diese MP3 oder WAV-Datei, plus dem Piepsen von dir. Also es
+    //  sind zwei Toene." Im Stil Verspielt schweigt der Maus-Klick aus
+    //  klick-sound.js deshalb ganz (data-kein-klickton am body), und jeder
+    //  Knopf, den er sonst vertont haette, bekommt genau einen Ton von hier.
+    //  "Toene beim Tippen: Aus" heisst dort wirklich still. Wo das Plopp
+    //  schweigt - in der Pruefung und waehrend vorgelesen wird -, klickt es
+    //  wie gewohnt; so bleibt es immer genau ein Ton. Entschieden wird bei
+    //  jedem Antippen neu (pointerdown kommt vor dem click). Im Stil
+    //  Sachlich und am PC klickt es wie bisher.
+    function klickTonSteuern(){
+        if(!D.body) return;
+        let still = false;
+        if(H.classList.contains('stil-verspielt')) still = !tippToeneAn() || (!pruefungLaeuft() && !wirdVorgelesen());
+        D.body.toggleAttribute('data-kein-klickton', still);
+    }
+    tu(klickTonSteuern);
+    // Dieselben Bedienelemente wie in klick-sound.js, dazu Kacheln und Zeilen
+    const TIPP_ZIELE = 'button, .btn, .nav-btn, [role="button"], input[type="button"], input[type="submit"], .option, .ah-kachel, .ah-zeile, [data-tat]';
     tu(() => D.addEventListener('pointerdown', e => {
-        const b = e.target && e.target.closest ? e.target.closest('button, .ah-kachel, .ah-zeile, [data-tat]') : null;
-        if(!b || b.disabled) return;
+        tu(klickTonSteuern);                                                       // Klick ja oder nein - fuer genau diesen Tipper
+        const b = e.target && e.target.closest ? e.target.closest(TIPP_ZIELE) : null;
+        if(!b || b.disabled || b.getAttribute('aria-disabled') === 'true') return;
         if(b.id === 'ahStart' || b.id === 'arLos') tippTon('los');
         else if(b.closest('#roboBlase, #roboHelfer, #appStilHinweis')) tippTon('digi');      // Funkis Knoepfe: Computer-Piep statt Klick
         else if(b.closest('#appNavi')) tippTon('reiter');
         else if(b.closest('.app-seg, .app-stil-wahl, .app-form-wahl, .ar-seg, .aw-teil, .aw-schalt, #appWerkBlatt [role="switch"]')) tippTon('schalter');
-        else if(b.closest('#appHeute, #roboBlase, #appRundeBlatt, #appMehr, #appLeiste, #appStilWahl, #appWerkBlatt')) tippTon('plopp');
+        else tippTon('plopp');                                                    // alles andere: ein leises Plopp
     }, { passive: true, capture: true }));
 
     // Karten und Kacheln der Startseite huepfen kurz herein
@@ -49537,6 +49658,142 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     tu(werkNachziehen);
     tu(werkFrisch);
+
+    // ================================================================
+    //  HILFEN AN DER FRAGE                                   (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Mir ist aufgefallen, dass bei den Fragen kein
+    //  Formelblatt, Taschenrechner und Loesungshilfe bzw. auch unsere
+    //  eigenen Erklaerungen fehlen." - "Es fehlen ebenso auch die Buttons
+    //  zu DARC-Erklaerungen zu den Fragen."
+    //  Im Handy-Browser hat er sie am 07.09. und 22.09.2026 selbst
+    //  herausgenommen (schlanke Ansicht beim Ueben) - dort bleibt es so,
+    //  ebenso am PC. In der App kommen sie als eigene Reihe unter die
+    //  Antworten, in den Daumenbereich:
+    //    Formelblatt (nur, wo es eine Stelle gibt), Rechner, Erklaerung
+    //    und "Erklaerung vorlesen" - dann die Kacheln des DARC: 50 Ohm,
+    //    Loesungsweg (nur, wo es einen gibt) und der Videolehrgang.
+    //  Jede Taste drueckt die gewohnte Taste der Frage (die in der App
+    //  verborgen bleibt) - was dahinter passiert, ist dasselbe wie am PC.
+    //  Was dort gerade nicht gilt (Pruefung, Gruppenraum), fehlt hier
+    //  ebenso. Das Formelblatt pulst mit, wie am PC.
+    // ================================================================
+    //  Zwei Zeilen, jede ueber die ganze Breite (Dietmar: "Die obere Reihe
+    //  in der Laenge etwas korrigieren, damit es mit der unteren Reihe
+    //  buendig ist"), eng gesetzt ("Wir muessen Platz sparen"). Eine
+    //  einzeilige Bauart mit kleinen Zeichen war im Vergleich nicht
+    //  besser: kaum mehr Platz fuer Funki, dafuer winzige Schrift.
+    const HILFEN = [
+        { id: 'formelBtn',          art: 'formel',  icon: 'fas fa-file-lines',           text: 'Formelblatt' },
+        { id: 'rechnerBtn',         art: 'rechner', icon: 'fas fa-calculator',           text: 'Rechner' },
+        { id: 'erklaerBtn',         art: 'erklaer', icon: 'fas fa-lightbulb',            text: 'Erklärung' },
+        { id: 'erklaerLesenNurBtn', art: 'erklaer nur-zeichen', icon: 'fas fa-volume-up', text: '', titel: 'Erklärung vorlesen' },
+        { id: 'lernOhmBtn',         art: 'darc',    icon: 'fas fa-graduation-cap',       text: '50 Ohm', gruppe: 2 },
+        { id: 'lernLoesungBtn',     art: 'darc',    icon: 'fas fa-square-root-variable', text: 'Lösungsweg', gruppe: 2 },
+        { id: 'lernVideoBtn',       art: 'video',   icon: 'fab fa-youtube',              text: 'Video', gruppe: 2 }
+    ];
+    // Da ist eine Hilfe, wenn ihre Taste in der Frage steht und das Skript
+    // sie nicht abgeschaltet hat (keine Stelle im Formelblatt, Pruefung ...).
+    // Die Handy-Regel im Stilblatt versteckt sie alle - deshalb zaehlt hier
+    // nur, was das Skript selbst gesetzt hat.
+    function hilfeDa(h){
+        const b = $(h.id);
+        if(!b || b.disabled) return false;
+        if(b.style.display === 'none') return false;
+        const kachel = b.closest('.lernpaar');
+        if(kachel && kachel.style.display === 'none') return false;
+        return true;
+    }
+    function hilfenNachziehen(){
+        const opts = $('optionsContainer');
+        let reihe = $('appHilfen');
+        if(!opts || !D.body.classList.contains('runde-laeuft')){ if(reihe) reihe.remove(); return; }
+        const da = HILFEN.filter(hilfeDa);
+        if(!da.length){ if(reihe) reihe.remove(); return; }
+        if(!reihe){
+            reihe = D.createElement('div');
+            reihe.id = 'appHilfen';
+            reihe.setAttribute('role', 'group');
+            reihe.setAttribute('aria-label', 'Hilfen zur Frage');
+            reihe.addEventListener('click', e => {
+                const k = e.target && e.target.closest ? e.target.closest('[data-ziel]') : null;
+                const z = k ? $(k.dataset.ziel) : null;
+                if(z) z.click();
+            });
+        }
+        const schluessel = da.map(h => h.id).join(',');
+        if(reihe.dataset.schluessel !== schluessel){
+            const taste = h => '<button type="button" class="ahf ahf-' + h.art + '" data-ziel="' + h.id + '"'
+                      + (h.titel ? ' aria-label="' + h.titel + '" title="' + h.titel + '"' : '') + '>'
+                      + '<i class="' + h.icon + '" aria-hidden="true"></i>' + (h.text ? '<span>' + h.text + '</span>' : '') + '</button>';
+            // Zwei Zeilen (Hilfsmittel, dann der DARC), jede ueber die ganze Breite
+            const zeilen = [];
+            da.forEach((h, i) => {
+                if(h.id === 'erklaerLesenNurBtn' && da[i - 1] && da[i - 1].id === 'erklaerBtn') return;      // steckt schon im Paar
+                const g = h.gruppe || 1;
+                if(!zeilen[g]) zeilen[g] = '';
+                // Erklaerung und "vorlesen" als ein Paar - der Lautsprecher gehoert zur Gluehbirne
+                if(h.id === 'erklaerBtn' && da[i + 1] && da[i + 1].id === 'erklaerLesenNurBtn') zeilen[g] += '<span class="ahf-paar">' + taste(h) + taste(da[i + 1]) + '</span>';
+                else zeilen[g] += taste(h);
+            });
+            let html = '';
+            zeilen.forEach(z => { if(z) html += '<div class="ahf-zeile">' + z + '</div>'; });
+            reihe.innerHTML = html;
+            reihe.dataset.schluessel = schluessel;
+        }
+        if(opts.nextElementSibling !== reihe) opts.insertAdjacentElement('afterend', reihe);
+        // Passt die erste Gruppe nicht in eine Zeile, steht beim Rechner nur
+        // das Zeichen (bei grosser Anzeige darf sie trotzdem umbrechen).
+        reihe.classList.remove('knapp');
+        const erste = reihe.querySelector('.ahf-zeile') ? Array.from(reihe.querySelector('.ahf-zeile').children) : [];
+        if(erste.length > 1 && erste[erste.length - 1].offsetTop > erste[0].offsetTop + 4) reihe.classList.add('knapp');
+        // Die verborgenen Tasten schweigen: Der Ton kommt schon von dieser
+        // Reihe (Maus-Klick oder Plopp) - sonst klaenge es doppelt.
+        da.forEach(h => { const b = $(h.id); if(b && !b.hasAttribute('data-kein-klickton')) b.setAttribute('data-kein-klickton', ''); });
+        // Zustand mitnehmen: aufgeklappte Erklaerung, Puls beim Formelblatt
+        reihe.querySelectorAll('[data-ziel]').forEach(k => {
+            const b = $(k.dataset.ziel);
+            if(!b) return;
+            k.classList.toggle('an', b.classList.contains('an'));
+            const pulst = b.classList.contains('puls-einmal');
+            if(pulst && !k.classList.contains('puls')){
+                void k.offsetWidth; k.classList.add('puls');
+                setTimeout(() => k.classList.remove('puls'), 700);
+            }
+        });
+    }
+    let hilfenPlan = 0;
+    function hilfenPlanen(){
+        if(hilfenPlan) return;
+        hilfenPlan = requestAnimationFrame(() => { hilfenPlan = 0; tu(hilfenNachziehen); });
+    }
+    tu(() => {
+        const q = $('questionContainer');
+        if(!q || !window.MutationObserver) return;
+        new MutationObserver(liste => {
+            for(const m of liste){
+                const t = m.target;
+                if(t && t.closest && t.closest('#appHilfen')) continue;    // die eigenen Aenderungen zaehlen nicht
+                hilfenPlanen(); return;
+            }
+        }).observe(q, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+        new MutationObserver(hilfenPlanen).observe(D.body, { attributes: true, attributeFilter: ['class'] });
+        hilfenPlanen();
+    });
+    // Die Schriftgroesse der Frage (q-gross, q-mittel) wird ohne diese
+    // Reihe entschieden: Sie steht unter den Antworten, und wer sie
+    // braucht, rollt ein Stueck. Die Frage soll dafuer nicht kleiner werden.
+    tu(() => {
+        const alt = window.fragenPasstInsFenster;
+        if(typeof alt !== 'function') return;
+        window.fragenPasstInsFenster = function(){
+            const r = $('appHilfen');
+            if(!r || r.style.display === 'none') return alt.apply(this, arguments);
+            r.style.display = 'none';
+            try{ return alt.apply(this, arguments); }
+            finally{ r.style.display = ''; }
+        };
+    });
 
     // ---------------- Zurueck-Taste ----------------
     tu(() => {

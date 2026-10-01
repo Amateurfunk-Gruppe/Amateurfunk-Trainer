@@ -252,6 +252,11 @@ function beschreibung(namen, version, neue) {
   const rpm = finde(/\.rpm$/i);
   const zip = finde(/-mac\.zip$/i);
   const win = finde(/-windows\.zip$/i);
+  // Die Android-App (01.10.2026) liegt nie in release\ - sie baut GitHub
+  // selbst und haengt sie an (.github/workflows/android.yml). Hier steht
+  // sie nur, wenn sie schon am Release haengt; beim ersten Mal schreibt
+  // der Bauauftrag den Absatz selbst dazu.
+  const apk = finde(/-android\.apk$/i);
 
   let s = '## Installation\n\n';
 
@@ -292,12 +297,21 @@ function beschreibung(namen, version, neue) {
       + 'Rechtsklick \u2192 *\u00d6ffnen* (nicht bei Apple signiert). Braucht Node.js 18 oder neuer.\n\n';
   }
 
+  // Wortgleich mit dem Absatz, den android.yml einsetzt - daran erkennt
+  // der Bauauftrag, dass er schon dasteht (Zeile beginnt mit **Android**).
+  if (apk) {
+    s += '**Android** \u2014 `' + apk + '` am Handy laden und \u00f6ffnen, ab Android 8. '
+      + 'Android fragt beim ersten Mal, ob Apps aus dieser Quelle erlaubt sind. '
+      + 'Ein Update wird einfach dar\u00fcber installiert, der Lernstand bleibt.\n\n';
+  }
+
   s += 'Der Lernstand bleibt beim Update erhalten';
   if (deb || rpm || zip || win) {
     s += ':\n\n```\n'
       + 'Windows : data\\ im Trainer-Ordner\n'
       + 'Linux   : ~/.local/share/amateurfunk-trainer\n'
       + 'macOS   : ~/Library/Application Support/Amateurfunk-Trainer\n'
+      + (apk ? 'Android : in der App\n' : '')
       + '```\n\n';
   } else {
     s += ' \u2013 der Ordner `data\\` wird nicht angefasst.\n\n';
@@ -609,6 +623,37 @@ function beschreibung(namen, version, neue) {
   // ein Fenster ohne Lebenszeichen sieht aus wie ein Haenger.
   const r = spawnSync('gh', argumente, { cwd: WURZEL, stdio: 'inherit', shell: true });
   if (r.status !== 0) fertig = false;
+
+  // ---- Android: die App baut GitHub selbst ---------- (01.10.2026)
+  //
+  // Dietmar: "Ich moechte aus der Testphase raus und moechte die App
+  // dann auch zu meinen anderen Apps fuer Windows, Mac und Linux
+  // hinzufuegen." Ein NEUES Release stoesst den Bau von allein an
+  // (android.yml, "release: published"). Bei einem schon vorhandenen
+  // kommt dieses Ereignis nicht - fehlt dort die APK, wird der Bau hier
+  // angestossen, mit gh und Dietmars eigener Anmeldung.
+  if (fertig) {
+    const hatApk = namen.some(n => /-android\.apk$/i.test(n));
+    console.log('');
+    if (!vorhanden) {
+      console.log('  Android: GitHub baut die App jetzt selbst und haengt sie in');
+      console.log('  etwa einer Viertelstunde an dieses Release.');
+    } else if (!hatApk) {
+      const a = spawnSync('gh', ['workflow', 'run', 'android.yml',
+        '--repo', KONTO + '/' + REPO, '-f', zitat('tag=' + tag)],
+        { cwd: WURZEL, stdio: 'inherit', shell: true });
+      if (a.status === 0) {
+        console.log('  Android: Der Bau der App ist angestossen. In etwa einer');
+        console.log('  Viertelstunde haengt sie an diesem Release.');
+      } else {
+        console.log('  Android: Der Bau liess sich nicht anstossen. Von Hand:');
+        console.log('  ' + SEITE + '/actions -> "Android-App bauen" ->');
+        console.log('  "Run workflow", bei Tag ' + tag + ' eintragen.');
+      }
+    } else {
+      console.log('  Android: Die App haengt schon an diesem Release.');
+    }
+  }
 
   console.log('');
   if (fertig) {
