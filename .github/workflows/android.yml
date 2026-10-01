@@ -14,6 +14,28 @@
 #  (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASS, ANDROID_KEY_ALIAS,
 #  ANDROID_KEY_PASS), wird er benutzt. Sonst der Test-Schluessel aus
 #  android/app/trainer-test.jks.
+#
+#  RAUS AUS DER TESTPHASE                               (01.10.2026)
+#  Dietmar: "Ich moechte aus der Testphase raus und moechte die App
+#  dann auch zu meinen anderen Apps fuer Windows, Mac und Linux
+#  hinzufuegen." Auf die Rueckfragen: eigener Schluessel, erst GitHub
+#  und die Projektseite (noch kein Store).
+#    - Wird ein Release veroeffentlicht (Release-Hochladen.bat), baut
+#      dieser Auftrag die App aus genau diesem Stand und haengt sie als
+#      "Amateurfunk-Trainer-<Fassung>-android.apk" daneben - neben das
+#      Windows-ZIP, .deb, .rpm und das Mac-ZIP. Dazu ein Absatz
+#      "Android" in der Beschreibung, falls er noch fehlt.
+#    - Von Hand unter "Actions" mit einem Tag (z. B. v1.298.0) haengt er
+#      sie an ein schon vorhandenes Release. Das macht auch
+#      Release-Hochladen.bat, wenn dort die APK fehlt.
+#    - Jedes Hochladen baut weiter die Vorabversion zum Ausprobieren
+#      (Releases -> "Android-App (Vorabversion)", Tag android-test).
+#    - Der eigene Schluessel kommt von _Android-Schluessel.bat (bleibt auf
+#      Dietmars Rechner). Noetig sind nur ANDROID_KEYSTORE_BASE64 und
+#      ANDROID_KEYSTORE_PASS; den Namen im Schluessel (Alias) liest der
+#      Auftrag selbst aus, das Schluesselpasswort ist dasselbe. Ein
+#      Release ohne eigenen Schluessel gibt es nicht - dann bricht der
+#      Bau mit einem Hinweis ab, statt still den Test-Schluessel zu nehmen.
 # ================================================================
 name: Android-App bauen
 
@@ -22,13 +44,23 @@ on:
     branches: [ main ]
     paths-ignore:
       - 'docs/**'
+  release:
+    types: [ published ]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'An welches Release soll die App? (z. B. v1.298.0) - leer: nur die Vorabversion'
+        required: false
+        default: ''
 
 permissions:
   contents: write
 
+# Vorabversionen loesen einander ab (ein neueres Hochladen bricht den
+# laufenden Bau ab). Ein Bau fuer ein Release wird nie abgebrochen -
+# sonst stuende das Release ohne App da.
 concurrency:
-  group: android-app
+  group: android-app-${{ github.event_name == 'push' && 'vorschau' || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -36,7 +68,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      - name: Ziel bestimmen (Release oder Vorabversion)
+        id: ziel
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          EINGABE_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          TAG="${RELEASE_TAG:-$EINGABE_TAG}"
+          TAG="$(printf '%s' "$TAG" | tr -d '[:space:]')"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ -n "$TAG" ]; then echo "Ziel: Release $TAG"; else echo "Ziel: Vorabversion (android-test)"; fi
+
       - uses: actions/checkout@v4
+        with:
+          # Fuer ein Release genau dessen Stand, sonst wie bisher
+          ref: ${{ steps.ziel.outputs.tag || github.ref }}
 
       - uses: actions/setup-java@v4
         with:
@@ -92,14 +138,28 @@ jobs:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           K_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           K_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+          TAG: ${{ steps.ziel.outputs.tag }}
         run: |
           if [ -n "$KS" ]; then
-            echo "$KS" | base64 -d > /tmp/eigen.jks
-            echo "TRAINER_KEYSTORE=/tmp/eigen.jks" >> "$GITHUB_ENV"
+            # Zeilenumbrueche oder Leerzeichen aus dem Kopieren stoeren nicht
+            printf '%s' "$KS" | tr -d '\r\n ' | base64 -d > /tmp/eigen.keystore
+            # Der Name im Schluessel: aus dem Secret, sonst aus der Datei
+            # (Windows vergibt ihn beim Ablegen selbst).
+            if [ -z "$K_ALIAS" ]; then
+              K_ALIAS="$(keytool -list -v -keystore /tmp/eigen.keystore -storepass "$KS_PASS" 2>/dev/null | sed -n 's/^Alias name: //p' | head -1)"
+            fi
+            if [ -z "$K_ALIAS" ]; then
+              echo "::error::Der eigene Schluessel laesst sich nicht oeffnen. Stimmen ANDROID_KEYSTORE_BASE64 und ANDROID_KEYSTORE_PASS? (_Android-Schluessel.bat legt beide noch einmal in die Zwischenablage.)"
+              exit 1
+            fi
+            echo "TRAINER_KEYSTORE=/tmp/eigen.keystore" >> "$GITHUB_ENV"
             echo "TRAINER_KEYSTORE_PASS=$KS_PASS" >> "$GITHUB_ENV"
             echo "TRAINER_KEY_ALIAS=$K_ALIAS" >> "$GITHUB_ENV"
-            echo "TRAINER_KEY_PASS=$K_PASS" >> "$GITHUB_ENV"
+            echo "TRAINER_KEY_PASS=${K_PASS:-$KS_PASS}" >> "$GITHUB_ENV"
             echo "Eigener Schluessel wird benutzt."
+          elif [ -n "$TAG" ]; then
+            echo "::error::Fuer ein Release braucht die App den eigenen Schluessel: _Android-Schluessel.bat starten und ANDROID_KEYSTORE_BASE64 und ANDROID_KEYSTORE_PASS bei GitHub eintragen. Danach unter Actions mit dem Tag $TAG noch einmal starten."
+            exit 1
           else
             echo "Test-Schluessel (android/app/trainer-test.jks) wird benutzt."
           fi
@@ -109,21 +169,62 @@ jobs:
         run: gradle --no-daemon --stacktrace assembleRelease
 
       - name: APK bereitlegen
+        id: apk
+        env:
+          TAG: ${{ steps.ziel.outputs.tag }}
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk Amateurfunk-Trainer.apk
-          ls -la Amateurfunk-Trainer.apk
+          # Am Release heisst sie wie die anderen Dateien dort:
+          # Amateurfunk-Trainer-1.298.0-android.apk
+          if [ -n "$TAG" ]; then NAME="Amateurfunk-Trainer-${TAG#v}-android.apk"; else NAME="Amateurfunk-Trainer.apk"; fi
+          cp android/app/build/outputs/apk/release/app-release.apk "$NAME"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          ls -la "$NAME"
 
       - uses: actions/upload-artifact@v4
         with:
           name: Amateurfunk-Trainer-APK
-          path: Amateurfunk-Trainer.apk
+          path: ${{ steps.apk.outputs.name }}
 
-      - name: Als Test-Version unter Releases ablegen
+      - name: An das Release haengen
+        if: steps.ziel.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.ziel.outputs.tag }}
+          NAME: ${{ steps.apk.outputs.name }}
+        run: |
+          gh release upload "$TAG" "$NAME" --clobber
+          # Ein Absatz "Android" in der Beschreibung - nur, wenn er fehlt
+          # (Release-Hochladen.bat schreibt ihn selbst, sobald die APK dranhaengt).
+          gh release view "$TAG" --json body -q .body > /tmp/text.md
+          if ! grep -q '^\*\*Android\*\*' /tmp/text.md; then
+            python3 - "$NAME" <<'PY'
+          import sys
+          name = sys.argv[1]
+          text = open('/tmp/text.md', encoding='utf-8').read()
+          absatz = ('**Android** \u2014 `' + name + '` am Handy laden und \u00f6ffnen, ab Android 8. '
+                    'Android fragt beim ersten Mal, ob Apps aus dieser Quelle erlaubt sind. '
+                    'Ein Update wird einfach dar\u00fcber installiert, der Lernstand bleibt.\n\n')
+          marke = 'Der Lernstand bleibt beim Update erhalten'
+          if marke in text:
+              text = text.replace(marke, absatz + marke, 1)
+          elif text.startswith('## Installation'):
+              text = text.replace('## Installation\n\n', '## Installation\n\n' + absatz, 1)
+          else:
+              text = absatz + text
+          open('/tmp/neu.md', 'w', encoding='utf-8').write(text)
+          PY
+            gh release edit "$TAG" --notes-file /tmp/neu.md
+          fi
+
+      - name: Als Vorabversion unter Releases ablegen
+        if: steps.ziel.outputs.tag == ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          NOTIZ="Vorabversion der Android-App des Amateurfunk-Trainers (ab Android 8), bei jedem Hochladen neu gebaut – zum Ausprobieren. Die fertige App liegt beim aktuellen Release neben Windows, Linux und macOS. Die Datei Amateurfunk-Trainer.apk auf dem Handy öffnen und installieren – Android fragt dabei, ob Apps aus dieser Quelle erlaubt sind."
           if ! gh release view android-test >/dev/null 2>&1; then
-            gh release create android-test --prerelease --title "Android-App (Test)" \
-              --notes "Test-Version des Amateurfunk-Trainers für Android-Handys (ab Android 8). Die Datei Amateurfunk-Trainer.apk auf dem Handy öffnen und installieren – Android fragt dabei, ob Apps aus dieser Quelle erlaubt sind."
+            gh release create android-test --prerelease --title "Android-App (Vorabversion)" --notes "$NOTIZ"
+          else
+            gh release edit android-test --prerelease --title "Android-App (Vorabversion)" --notes "$NOTIZ"
           fi
           gh release upload android-test Amateurfunk-Trainer.apk --clobber
