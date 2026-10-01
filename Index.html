@@ -1757,6 +1757,89 @@
         html.android-app body.eckig.app-rund #appFolien :is(.afo-bar, .afo-bar i) { border-radius: 99px !important; }
         #appFolien .afo-passt { display: inline-block; margin-left: 6px; padding: 2px 7px; font: 700 11px var(--font-body); font-style: normal; vertical-align: 2px; color: var(--s-auf-haupt); background: var(--s-haupt); }
         html.android-app body.eckig.app-rund #appFolien .afo-passt { border-radius: 99px !important; }
+
+        /* ================================================================
+           GRUPPENRAUM UND BESUCHER-FENSTER AM HANDY            (01.10.2026)
+           ----------------------------------------------------------------
+           Dietmar, mit zwei Bildern aus der App: "Die Buttons sind total
+           verschoben und im Gruppenraum ist das Fenster zu gross, das
+           ueberlaeuft." - und: "Da ist immer noch das Windows drin, also da
+           muessen wir auch mal dran arbeiten." Beide Fenster stammen vom PC.
+           1. Gruppenraum: Die Handy-Spalte hiess "1fr" - das darf nie
+              schmaler werden als ihr breitester Inhalt (die lange Adresse,
+              die Namenszeile). Mit minmax(0, 1fr) und min-width 0 passt
+              sich alles der Fensterbreite an; die Adresse bekommt eine eigene
+              Zeile und kuerzt mit "...".
+           2. Besucher: Ganzer Bildschirm. Oben Titel und Kreuz, darunter die
+              drei Knoepfe gleich breit in einer Reihe; unten Server, Uhr und
+              Sperre in einer Reihe, Aktualisieren und Schliessen darunter.
+           Nur in der App; am PC und im Browser bleibt alles, wie es ist.
+           ================================================================ */
+        html.android-app #duoModal .duo-spalten { grid-template-columns: minmax(0, 1fr) !important; }
+        html.android-app #duoModal :is(.duo-spalten, .duo-links, .duo-rechts, .duo-oben, .duo-mitte, .duo-collapsible, .duo-collapsible-content, .nur-gastgeber, .raum-kasten) { min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+        html.android-app #duoModal :is(input, select, textarea) { min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+        html.android-app #duoModal #duckDnsInput { flex: 1 1 100% !important; text-overflow: ellipsis; }
+        html.android-app #duoModal :is(#duoLink, #duoLocalLink) { overflow-wrap: anywhere; word-break: break-all; }
+        html.android-app #duoModal :is(#duoNameHint, #adresseHinweis, .duo-wache, .duo-besucher) { overflow-wrap: break-word; word-break: normal; }
+        html.android-app #duoModal #duckDnsInput { font-size: 0.72rem !important; }
+        html.android-app #duoModal #duoCreateRoomBtn { width: 100%; grid-column: 1 / -1; box-sizing: border-box; }
+        html.android-app #duoModal > div { overflow-x: hidden; }
+
+        html.android-app #besucherModal { padding: 0 !important; }
+        html.android-app #besucherModal > div { width: 100% !important; max-width: none !important; height: 100% !important; max-height: none !important; border-radius: 0 !important; border: 0 !important; }
+        html.android-app #besucherModal > div > div:first-child { flex-wrap: wrap; gap: 8px 10px; padding: 0.7rem 1rem; align-items: center; }
+        html.android-app #besucherModal > div > div:first-child > h3 { flex: 1 1 0 !important; min-width: 0; white-space: normal !important; font-size: 1.05rem; }
+        html.android-app #besucherModal > div > div:first-child > button { order: 2; flex: none; }
+        html.android-app #besucherKopfKnoepfe { order: 3; flex: 1 1 100% !important; justify-content: stretch !important; flex-wrap: nowrap !important; gap: 8px !important; }
+        html.android-app #besucherKopfKnoepfe > button { flex: 1 1 0; min-width: 0; min-height: 44px !important; padding: 0.3rem 0.4rem !important; font-size: 0.76rem !important; line-height: 1.2; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+        html.android-app #besucherModal > div > div:last-child { gap: 8px !important; padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom, 0px)) !important; }
+        html.android-app #besucherModal > div > div:last-child > :is(#serverSchalter, #uhrSchalter, #sperreSchalter) { flex: 1 1 0; min-width: 0; padding: 0.5rem 0.3rem !important; font-size: 0.8rem; white-space: nowrap; justify-content: center; text-align: center; }
+        html.android-app #besucherModal > div > div:last-child > div:last-child { margin-left: 0 !important; flex: 1 1 100%; display: flex; gap: 8px; }
+        html.android-app #besucherModal > div > div:last-child > div:last-child > button { flex: 1 1 0; justify-content: center; text-align: center; min-height: 44px; }
+        html.android-app #duoModal .ad-zeile { display: flex !important; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+        html.android-app #duoModal .ad-zeile > br { display: none; }
+        html.android-app #duoModal .ad-kopie { margin-left: auto; min-height: 32px; padding: 0 12px; border: 1px solid var(--s-rand, #b0c4d8); background: var(--s-haupt, #0F2745); color: var(--s-auf-haupt, #fff); font: 700 12px var(--font-body); white-space: nowrap; }
+        html.android-app body.eckig.app-rund #duoModal .ad-kopie { border-radius: 99px !important; }
+        html.android-app #duoModal .ad-zeile > a { flex: 1 1 100%; }
+        html.android-app #masteryClearModal .ad-tipp { display: block; margin-top: 6px; color: var(--muted, #5a6b7d); }
+
+        /* ================================================================
+           UNTERRICHT AM HANDY                                  (01.10.2026)
+           Dietmar: "Sieht schrecklich aus." - siehe appStilSkript. Erst die
+           Lektionen (voller Bildschirm, ein Rollfeld), nach dem Antippen die
+           Abschnitte mit dem Startknopf fest unten. Nur in der App.
+           ================================================================ */
+        html.android-app #unterrichtModal { padding: 0 !important; }
+        html.android-app #unterrichtModal > div { width: 100% !important; max-width: none !important; height: 100% !important; max-height: none !important; border-radius: 0 !important; border: 0 !important; padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px)) !important; box-sizing: border-box; }
+        html.android-app #unterrichtModal .u-kopf { gap: 8px; margin-bottom: 0.5rem; }
+        html.android-app #unterrichtModal .u-kopf h3 { font-size: 1rem; line-height: 1.25; min-width: 0; }
+        html.android-app #unterrichtModal .u-zurueck { display: none; flex: none; width: 40px; height: 40px; border: 0; background: var(--s-fl2, #eef2f8); color: var(--s-text, #0F2745); font-size: 15px; }
+        html.android-app #unterrichtModal[data-ansicht="detail"] .u-zurueck { display: inline-flex; align-items: center; justify-content: center; }
+        html.android-app body.eckig.app-rund #unterrichtModal .u-zurueck { border-radius: 14px !important; }
+        html.android-app #unterrichtModal .u-reiter { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 8px; scrollbar-width: none; }
+        html.android-app #unterrichtModal .u-reiter button { white-space: nowrap; flex: none; }
+        html.android-app #unterrichtModal .u-unter { font-size: 0.78rem; line-height: 1.45; margin-bottom: 0.6rem; }
+        html.android-app #unterrichtModal .u-rumpf { display: flex !important; flex-direction: column; gap: 0; }
+        html.android-app #unterrichtModal[data-ansicht="liste"] .u-detail, html.android-app #unterrichtModal:not([data-ansicht]) .u-detail { display: none; }
+        html.android-app #unterrichtModal[data-ansicht="detail"] :is(.u-liste, .u-unter, .u-quelle) { display: none; }
+        html.android-app #unterrichtModal .u-liste { flex: 1 1 0; min-height: 0; overflow-y: auto; padding: 4px; }
+        html.android-app #unterrichtModal .u-lek { padding: 11px 10px; min-height: 52px; }
+        html.android-app #unterrichtModal .u-lt { font-size: 0.92rem; }
+        html.android-app #unterrichtModal .u-lz { font-size: 0.74rem; }
+        html.android-app #unterrichtModal .u-detail { flex: 1 1 0; min-height: 0; }
+        html.android-app #unterrichtModal .u-dt { white-space: normal; font-size: 1.02rem; }
+        html.android-app #unterrichtModal .u-abs { flex: 1 1 0; min-height: 0; }
+        html.android-app #unterrichtModal .u-ab { flex-wrap: wrap; gap: 4px 8px; padding: 9px 10px; }
+        html.android-app #unterrichtModal .u-at { flex: 1 1 calc(100% - 34px); min-width: 0; font-size: 0.88rem; }
+        html.android-app #unterrichtModal .u-ab > :is(.u-zeit, .u-af, .u-mini) { margin-top: 2px; }
+        html.android-app #unterrichtModal .u-ab > .u-zeit { margin-left: 30px; }
+        html.android-app #unterrichtModal .u-af { flex: 1 1 auto; text-align: right; }
+        html.android-app #unterrichtModal .u-mini { min-height: 34px; padding: 4px 10px; }
+        html.android-app #unterrichtModal .u-fuss { gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--s-rand, #dbe3ee); }
+        html.android-app #unterrichtModal .u-fuss > span { order: -1; flex: 1 1 100%; margin-left: 0 !important; display: flex !important; flex-direction: column-reverse; gap: 8px !important; }
+        html.android-app #unterrichtModal .u-fuss > span > button { width: 100%; justify-content: center; min-height: 48px; font-size: 0.95rem !important; }
+        html.android-app #unterrichtModal .u-fuss > :is(.u-haken, button) { flex: 1 1 auto; justify-content: center; min-height: 40px; }
+        html.android-app #unterrichtModal .u-quelle { font-size: 0.66rem; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -49812,7 +49895,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + zeile('einlesen', 'blau', 'fa-upload', 'Lernstand einlesen', 'Eine gesicherte Datei zurückholen')
           + '<button type="button" class="aw-zeile" data-tat="nurgelernt" role="switch" aria-checked="' + nur + '"><span class="ah-ico violett"><i class="fas fa-rotate"></i></span>'
           + '<span class="aw-zt"><b>Gelerntes erneut prüfen</b><small>Nur die gelernten Fragen – sitzt es wirklich?</small></span><span class="ar-schalter' + (nur ? ' an' : '') + '"></span></button>'
-          + zeile('zuruecksetzen', 'rot', 'fa-rotate-left', 'Lernfortschritt zurücksetzen', 'Alle gelernten Fragen wieder auf offen').replace('class="aw-zeile"', 'class="aw-zeile aw-gefahr"');
+          + zeile('zuruecksetzen', 'rot', 'fa-rotate-left', 'Lernstand zurücksetzen', 'Alles auf null: Fragen, Fehler, Verlauf, Level').replace('class="aw-zeile"', 'class="aw-zeile aw-gefahr"');
     }
     function terminKurz(){
         const t = terminIst();
@@ -49979,7 +50062,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             inhaltZeichnen(); tu(nachziehen);
             sprechblase($('nurGelernteCheck') && $('nurGelernteCheck').checked ? 'Mal sehen, ob alles sitzt!' : 'Alles klar – wieder alle Fragen!');
         }
-        else if(was === 'zuruecksetzen'){ werkBlattZu(); tu(() => clearMastery()); }
+        else if(was === 'zuruecksetzen'){ werkBlattZu(); tu(() => window.appLernstandNullen()); }
         else if(was === 'generalprobe'){ werkBlattZu(); klick('examSimulatorBtn'); }
         else if(was === 'termin') werkBlattAuf('termin');
         else if(was === 'terminweg'){ tu(() => setPruefungstermin('')); inhaltZeichnen(); tu(nachziehen); sprechblase('Okay, kein Termin. Sag Bescheid, wenn’s ernst wird!'); }
@@ -50671,10 +50754,177 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(robo.da && (robo.modus === 'kunst' || robo.modus === 'frei')) roboHeim(true);
             else if(robo.da && robo.modus){ roboTat('heim'); return true; }
             if(folien.offen){ folienZurueck(); return true; }
+            { const um = $('unterrichtModal'); if(um && um.style.display === 'flex' && um.dataset.ansicht === 'detail'){ um.dataset.ansicht = 'liste'; return true; } }
             if(werk.offen){ werkBlattZu(); return true; }
             if(blatt.classList.contains('offen')){ blattZu(); return true; }
             if($('appStilWahl')){ stilWahlFertig(); return true; }
             return typeof alt === 'function' ? alt() : false;
+        };
+    });
+
+    // ================================================================
+    //  ADRESSEN KOPIEREN IM GRUPPENRAUM                      (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, zur langen Server-Adresse im Gruppenraum: "Notfalls mit der
+    //  Link einfach gekuerzt, ich muss dann eh nicht ganz sehen, wichtig ist
+    //  nur, dass wenn ich ihn kopiere, dass ich ihn komplett habe." Die
+    //  Anzeige darf also mit "..." enden; der Knopf "Kopieren" legt immer die
+    //  GANZE Adresse in die Zwischenablage (Server-URL und Einladungs-Link).
+    //  Nur in der App; am PC markiert man den Text einfach.
+    // ================================================================
+    tu(() => {
+        const urlFeld = $('duckDnsInput'), link = $('duoLink');
+        const kopieren = text => {
+            if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+            return new Promise((ok, nein) => {
+                const t = D.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+                D.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+                let g = false; try{ g = D.execCommand('copy'); }catch(e){}
+                t.remove(); g ? ok() : nein(new Error('kopieren'));
+            });
+        };
+        const knopf = (wo, wert) => {
+            if(!wo || wo.querySelector('.ad-kopie')) return;
+            const b = D.createElement('button');
+            b.type = 'button'; b.className = 'ad-kopie'; b.innerHTML = '<i class="fas fa-copy"></i> Kopieren';
+            b.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                const t = String(wert() || '').trim();
+                const alt = b.innerHTML;
+                const zeigen = h => { b.innerHTML = h; setTimeout(() => { b.innerHTML = alt; }, 1800); };
+                if(!/^https?:\/\//i.test(t)){ zeigen('Noch keine Adresse'); return; }
+                kopieren(t).then(() => zeigen('<i class="fas fa-check"></i> Kopiert'), () => zeigen('Nicht möglich'));
+            });
+            wo.appendChild(b);
+        };
+        if(urlFeld){ const lab = urlFeld.closest('div[style*="margin-bottom"]'); const l = lab && lab.querySelector('label'); if(l){ l.classList.add('ad-zeile'); knopf(l, () => urlFeld.value); } }
+        if(link){ const z = link.parentElement && link.parentElement.querySelector('strong'); if(z){ z.parentElement.classList.add('ad-zeile'); knopf(z.parentElement, () => (link.getAttribute('href') && link.getAttribute('href') !== '#') ? link.href : link.textContent); } }
+    });
+
+    // ================================================================
+    //  LERNSTAND AUF NULL, IN DER APP                        (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit zwei Bildern nach dem Zuruecksetzen: "Wird nicht
+    //  zurueckgesetzt." Auf dem Bild standen noch Tagesziel 10 von 25,
+    //  Level mit 68 Punkten, zwei Fehler, Lernbedarf 2 und der Verlauf mit
+    //  zwei Runden - zurueckgesetzt waren nur die "gelernten" Fragen.
+    //  Gefragt, was alles auf null soll: Fehler und Lernbedarf, Tagesziel
+    //  und Serie, Level und Punkte, Verlauf. Und gleich danach: "Meinen
+    //  Lernstand auf dem PC moechte ich aber behalten, das ist ganz
+    //  wichtig." Deshalb gilt das NUR in der App (dort liegt der Lernstand
+    //  des Handys fuer sich); das kleine Zuruecksetzen am PC bleibt, wie es
+    //  war, und das Fenster sagt vor dem Klick, was geloescht wird und was
+    //  bleibt. Gelernte Fragen, Fehlerliste, Lernbedarf, Verlauf (nur des
+    //  gewaehlten Benutzers), die Messung der Antworten und Uebungszeit
+    //  (daraus rechnet die App Serie und Punkte), Tageszaehler und Punkte.
+    //  Bleiben: Notizen, Merkliste, Pruefungstermin, Name, Einstellungen.
+    // ================================================================
+    var nullenModus = false, nullenAlt = null;
+    tu(() => {
+        const alt = window.confirmMasteryClear, zu = window.closeMasteryClearModal;
+        if(typeof alt !== 'function') return;
+        const kasten = () => { const c = $('masteryClearCount'); return c ? c.parentElement : null; };
+        const titel = () => D.querySelector('#masteryClearModal h3');
+        const knopf = () => D.querySelector('#masteryClearModal button[onclick*="confirmMasteryClear"]');
+        const wiederherstellen = () => {
+            if(!nullenAlt) return;
+            const k = nullenAlt.el, t = titel(), b = knopf();
+            if(k) k.innerHTML = nullenAlt.k;
+            if(t) t.innerHTML = nullenAlt.t;
+            if(b) b.innerHTML = nullenAlt.b;
+            const hint = D.querySelector('#masteryClearModal .ad-tipp'); if(hint) hint.remove();
+            nullenAlt = null;
+        };
+        window.closeMasteryClearModal = function(){ nullenModus = false; wiederherstellen(); return zu.apply(this, arguments); };
+        window.appLernstandNullen = function(){
+            const k = kasten(), t = titel(), b = knopf();
+            if(!k || !t || !b){ return window.clearMastery && window.clearMastery(); }
+            wiederherstellen();
+            nullenAlt = { el: k, k: k.innerHTML, t: t.innerHTML, b: b.innerHTML };
+            const n = (() => { try{ return questionBank.filter(q => isMastered(q.id)).length; }catch(e){ return 0; } })();
+            k.innerHTML = '<b>Das wird gelöscht (nur auf diesem Handy):</b><br>'
+                + '• ' + (n > 0 ? n + ' als gelernt markierte Fragen' : 'alle gelernten Fragen') + '<br>• Fehlerliste und Lernbedarf<br>• Verlauf der Runden und die Auswertung der Antworten<br>• Tagesziel, Serie, Level und Punkte<br>'
+                + '<b>Bleibt:</b> Notizen, Merkliste, Prüfungstermin, Name und alle Einstellungen.<br>'
+                + '<span class="ad-tipp">Tipp: Wenn du den Stand behalten willst, lege vorher unter „Lernstand sichern“ eine Sicherung an.</span>';
+            t.innerHTML = '<i class="fas fa-rotate-left" style="color:#c0392b;"></i> Lernstand komplett zurücksetzen?';
+            b.innerHTML = '<i class="fas fa-trash-alt"></i> Alles auf null';
+            nullenModus = true;
+            window.openMasteryClearModal();
+        };
+        window.confirmMasteryClear = async function(){
+            if(!nullenModus) return alt.apply(this, arguments);
+            nullenModus = false;
+            window.closeMasteryClearModal();
+            let u = '1'; tu(() => { u = String(currentUser); });
+            const sch = (k, w) => { try{ localStorage.setItem(k, typeof w === 'string' ? w : JSON.stringify(w)); }catch(e){} };
+            tu(() => { masteryData = {}; errorList = []; difficultQuestions = {}; diagnoseDaten = {}; uebungsTage = {}; });
+            sch('amateurfunk_mastery_' + u, {}); sch('amateurfunk_errors_' + u, []); sch('amateurfunk_difficult_' + u, {});
+            sch('amateurfunk_mastery', {}); sch('amateurfunk_errors', []); sch('amateurfunk_difficult', {});
+            sch('amateurfunk_diagnose_' + u, {}); sch('amateurfunk_uebungszeit_' + u, {});
+            sch('amateurfunk_tagesfragen_' + u, {}); sch('amateurfunk_xp_' + u, '0');
+            tu(() => {
+                if(typeof history === 'object' && history) history[u] = [];
+                const roh = localStorage.getItem('examHistory');
+                const h = slotFaecherErgaenzen(roh ? JSON.parse(roh) : null, []);
+                h[u] = [];
+                sch('examHistory', h);
+            });
+            tu(() => { localStorage.removeItem('examHistory_' + u); localStorage.removeItem('amateurfunk_history_' + u); });
+            // Auf dem Server der App (persistente Dateien dieses Handys) leeren, sonst holt der Start den alten Stand zurueck
+            try{
+                if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && PERSISTENT_FILE_ENABLED){
+                    const send = (type, data) => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, user: u, data: data }) });
+                    await Promise.all([send('errors', []), send('difficult', {}), send('mastery', {}), send('history', []), send('diagnose', {}), send('uebungszeit', {})]);
+                }
+            }catch(e){}
+            tu(() => { if(typeof saveMastery === 'function') saveMastery(); });
+            const toast = D.createElement('div');
+            toast.textContent = '✅ Lernstand auf null gesetzt';
+            toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel-navy);color:white;padding:0.6rem 1.1rem;border-radius:20px;font-size:0.85rem;font-weight:600;z-index:99999;';
+            D.body.appendChild(toast);
+            setTimeout(() => { location.reload(); }, 1200);
+        };
+    });
+
+    // ================================================================
+    //  UNTERRICHT AM HANDY: ERST DIE LEKTIONEN, DANN DIE EINZELHEITEN
+    //                                                       (01.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar, mit einem Bild des Fensters "Unterricht": "Sieht
+    //  schrecklich aus." Das PC-Fenster stellt Lektionsliste und Abschnitte
+    //  nebeneinander bzw. gestapelt in zwei kleinen Rollfeldern - auf dem
+    //  Handy blieben je drei, vier Zeilen sichtbar, und der Knopf "Lektion 1
+    //  starten" schwebte ueber dem Kleingedruckten. In der App jetzt wie
+    //  bei jeder Handy-Liste: erst alle Lektionen untereinander (voller
+    //  Bildschirm, ein Rollfeld), Antippen oeffnet die Lektion mit ihren
+    //  Abschnitten und unten fest dem Knopf zum Starten; der Pfeil oben
+    //  links (und die Zurueck-Taste) fuehrt zur Liste zurueck.
+    //  Nur in der App; Kursleiter-Reiter und Beamer-Modus bleiben, wie sie sind.
+    // ================================================================
+    tu(() => {
+        const oeffnen = window.unterrichtOeffnen, waehlen = window.unterrichtWaehlen;
+        if(typeof oeffnen !== 'function' || typeof waehlen !== 'function') return;
+        const modal = () => $('unterrichtModal');
+        const setz = a => { const m = modal(); if(m) m.dataset.ansicht = a; };
+        const zurueckKnopf = () => {
+            const m = modal(); if(!m || m.querySelector('.u-zurueck')) return;
+            const kopf = m.querySelector('.u-kopf'); if(!kopf) return;
+            const b = D.createElement('button');
+            b.type = 'button'; b.className = 'u-zurueck'; b.setAttribute('aria-label', 'Zurück zu den Lektionen');
+            b.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setz('liste'); const r = m.querySelector('.u-liste'); if(r) r.scrollTop = r.scrollTop; });
+            kopf.insertBefore(b, kopf.firstChild);
+        };
+        window.unterrichtOeffnen = function(){
+            const r = oeffnen.apply(this, arguments);
+            zurueckKnopf(); setz('liste');
+            return r;
+        };
+        window.unterrichtWaehlen = function(i){
+            const r = waehlen.apply(this, arguments);
+            setz('detail');
+            const a = modal() && modal().querySelector('.u-abs'); if(a) a.scrollTop = 0;
+            return r;
         };
     });
 })();
