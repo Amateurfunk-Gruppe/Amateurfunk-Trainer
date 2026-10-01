@@ -11,6 +11,9 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App: Die Hilfen zur Frage (Formelblatt, Rechner, Erklärung, 50 Ohm, Lösungsweg, Video) stecken hinter einer Leiste „Hilfen anzeigen“; aufgeklappt stehen sie in zwei gleich breiten Spalten mit einheitlichem Rahmen. Beide Leisten („Hilfen anzeigen“, „Verlauf einblenden“) sitzen schmal in einem festen Dock direkt über Zurück/Weiter, verschwinden beim Herunterrollen und kommen beim Hochrollen oder ganz oben wieder
+- Android-App: „Von selbst weiterblättern“ läuft auch, wenn vorgelesen wird – nach der Antwort zählt der Knopf sofort herunter; als Netz blättert die App nach Ablauf plus drei Sekunden selbst weiter. Jede Berührung danach hält es weiterhin an
+- Android-App: Im Stil Sachlich kein Maus-Klick-Ton mehr (am PC bleibt er)
 - Android-App: Auch die gerade vorgelesene Antwort trägt im Dunkel-Modus die Farbe aus Einstellungen → Anpassen (statt des festen Blaus); „Kein Rand" gilt auch dort
 - Android-App: Im Dunkel-Modus trägt die angetippte Antwort (Simulator) die Farbe aus Einstellungen → Anpassen (z. B. Gelb, schwarze Schrift) statt des festen Türkis; „Kein Rand" gilt auch dort
 - Android-App: Reiter „Anpassen" ohne „Maus"-Wortlaut („Antwort hervorheben", „Vorschau — Antwort antippen"); Antippen eines Vorschaufeldes zeigt die Farbe

@@ -1880,6 +1880,90 @@
         html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight,
         html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight .option-text,
         html.android-app.android-app body.dark.dark .question-area :is(.option, .option-grid).tts-highlight .option-label { color: #000 !important; }
+
+        /* ================================================================
+           HILFEN HINTER EINER LEISTE                            (01.10.2026)
+           Dietmar: "Unter den Fragen kommen 3 Felder ... Dann sind die 2
+           Reihen nur noch eine." und "Achte bitte darauf, dass die Buttons
+           alle die gleiche Laenge haben ... Die einen haben einen Rahmen,
+           die anderen haben keinen Rahmen."
+           Die Leiste "Hilfen anzeigen" traegt die Klasse sidebar-tab und
+           sieht damit aus wie "Verlauf einblenden" darunter - gleiche
+           Breite, Hoehe, Kante. Aufgeklappt: zwei gleich breite Spalten,
+           jede Taste mit demselben Rahmen und Grund. Beide Leisten stehen
+           unten, direkt ueber Zurueck/Weiter.
+           ================================================================ */
+        html.android-app #appHilfen { display: flex; flex-direction: column; gap: 0; margin: 0 0 6px; width: 100%; }
+        html.android-app #appHilfen .ahf-kopf { width: 100%; }
+        html.android-app #appHilfen .ahf-gitter { display: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; margin-top: 6px; }
+        html.android-app #appHilfen.offen .ahf-gitter { display: grid; }
+        html.android-app #appHilfen .ahf-gitter > .ahf,
+        html.android-app #appHilfen .ahf-gitter > .ahf-paar { width: 100%; min-width: 0; min-height: 46px; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar { display: flex; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar .ahf:first-child { flex: 1 1 auto; min-width: 0; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar .ahf.nur-zeichen { flex: 0 0 46px; width: 46px; }
+        html.android-app #appHilfen .ahf-gitter .ahf { min-height: 46px; border-radius: 12px; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar .ahf:first-child { border-radius: 12px 0 0 12px; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar .ahf + .ahf { border-radius: 0 12px 12px 0; }
+        html.android-app body.eckig:not(.app-rund) #appHilfen .ahf-gitter .ahf { border-radius: 0 !important; }
+        /* Ein Rahmen, ein Grund fuer alle - die Farbe steckt nur noch im Zeichen */
+        html.android-app #appHilfen .ahf-gitter .ahf,
+        html.android-app #appHilfen .ahf-gitter .ahf-formel,
+        html.android-app #appHilfen .ahf-gitter .ahf-erklaer:not(.an) { background: #ffffff; border: 1px solid var(--line, #c9d4e2); }
+        html.android-app #appHilfen .ahf-gitter .ahf-formel i { color: #c98a00; }
+        html.android-app #appHilfen .ahf-gitter .ahf-erklaer:not(.an) i { color: #7a5cc0; }
+        html.android-app body.dark #appHilfen .ahf-gitter .ahf,
+        html.android-app body.dark #appHilfen .ahf-gitter .ahf-formel,
+        html.android-app body.dark #appHilfen .ahf-gitter .ahf-erklaer:not(.an) { background: #10293b; color: #dbe6f3; border: 1px solid #2f6a8f; }
+        html.android-app body.dark #appHilfen .ahf-gitter .ahf-formel i { color: #f1c77a; }
+        html.android-app body.dark #appHilfen .ahf-gitter .ahf-erklaer:not(.an) i { color: #c3b2ee; }
+        html.android-app #appHilfen .ahf-gitter .ahf-paar .ahf:first-child { border-right-width: 0; }
+
+        /* ================================================================
+           DIE BEIDEN LEISTEN UNTEN AM DOCK                      (01.10.2026)
+           Dietmar: "Diese Leisten ... koennen wir auch unten am Dock
+           fixieren und wenn ich scrolle, verschwinden die und wenn ich
+           nach oben scrolle, kommen die wieder zurueck. Diese zwei Leisten
+           koennen wir auch etwas schmaeler machen."
+           #appDock steht fest ueber Zurueck/Weiter (--nav-h), darin
+           "Hilfen anzeigen" (die Hilfen klappen nach oben auf) und ein
+           Abbild von "Verlauf einblenden" - die echte Leiste bleibt
+           unsichtbar an ihrem Platz und wird angeklickt. Beim Runter-
+           rollen gleitet das Dock hinter die Knopfleiste (.weg).
+           ================================================================ */
+        html.android-app #appDock { display: none; }
+        html.android-app body.runde-laeuft.mit-dock #appDock {
+            display: flex; flex-direction: column; gap: 6px;
+            position: fixed; left: 0; right: 0; bottom: var(--nav-h, 70px); z-index: 8980;
+            padding: 6px 10px; box-sizing: border-box;
+            background: var(--card-bg, #ffffff); border-top: 1px solid var(--line, #d5dde8);
+            box-shadow: 0 -6px 16px -10px rgba(15,39,69,0.35);
+            transition: transform 0.22s ease, opacity 0.22s ease;
+        }
+        html.android-app body.runde-laeuft.mit-dock #appDock.weg { transform: translateY(calc(100% + 8px)); opacity: 0; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { html.android-app body.runde-laeuft.mit-dock #appDock { transition: none; } }
+        html.android-app body.runde-laeuft.mit-dock #sidebarToggleBtn { display: none !important; }
+        html.android-app body.runde-laeuft.mit-dock {
+            padding-bottom: calc(var(--nav-h, 70px) + var(--dock-h, 90px) + 8px) !important;
+        }
+        /* Beim Messen der Schriftstufe (fragenPasstInsFenster) zaehlt das Dock nicht mit */
+        html.android-app.ohne-dock body.runde-laeuft.mit-dock { padding-bottom: calc(var(--nav-h, 70px) + 8px) !important; }
+        html.android-app.ohne-dock #appDock { display: none !important; }
+        /* schmaler: 36 statt 46 Punkte hoch */
+        html.android-app #appDock .sidebar-tab {
+            min-height: 36px !important; height: 36px !important; max-height: 36px !important; width: 100%;
+            flex-direction: row; gap: 8px; align-self: auto; border-radius: 10px;
+        }
+        html.android-app body.eckig:not(.app-rund) #appDock .sidebar-tab { border-radius: 0 !important; }
+        html.android-app body.app-rund #appDock .sidebar-tab { border-radius: 18px !important; }
+        html.android-app #appDock .sidebar-tab .tab-label { writing-mode: horizontal-tb; transform: none; }
+        html.android-app #appDock .dock-verlauf[hidden], html.android-app #appDock .dock-hilfen:empty { display: none !important; }
+        html.android-app #appDock #appHilfen { margin: 0; }
+        html.android-app #appDock #appHilfen .ahf-gitter { order: -1; margin: 0 0 6px; }
+        html.android-app #appDock #appHilfen .ahf-gitter > .ahf,
+        html.android-app #appDock #appHilfen .ahf-gitter > .ahf-paar,
+        html.android-app #appDock #appHilfen .ahf-gitter .ahf { min-height: 42px; }
+        html.android-app #appDock #appHilfen .ahf-gitter .ahf-paar .ahf.nur-zeichen { flex: 0 0 42px; width: 42px; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -47808,6 +47892,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function randUnten(){
         const n = $('appNavi'), hoch = window.innerHeight;
         if(D.body.classList.contains('runde-laeuft')){
+            const dk = $('appDock');
+            if(dk && D.body.classList.contains('mit-dock') && !dk.classList.contains('weg')){
+                const r = dk.getBoundingClientRect();
+                if(r.height && r.top < hoch) return r.top - 10;
+            }
             const na = $('navArea'), r = na && na.getBoundingClientRect();
             if(r && r.height && r.top < hoch) return r.top - 10;
         }
@@ -49208,6 +49297,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!D.body) return;
         let still = false;
         if(H.classList.contains('stil-verspielt')) still = !tippToeneAn() || (!pruefungLaeuft() && !wirdVorgelesen());
+        // SACHLICH: AM HANDY KEIN MAUS-KLICK (01.10.2026). Dietmar: "Im Dark
+        // Mode gibt es noch immer den Mausklick-Sound." Am Handy gibt es
+        // keine Maus; der Klick aus klick-sound.js bleibt dem PC.
+        else still = true;
         D.body.toggleAttribute('data-kein-klickton', still);
     }
     tu(klickTonSteuern);
@@ -50198,49 +50291,136 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(kachel && kachel.style.display === 'none') return false;
         return true;
     }
+    // ----- DAS DOCK (01.10.2026), siehe "DIE BEIDEN LEISTEN UNTEN AM DOCK" im Stilblatt
+    function dockHolen(){
+        let d = $('appDock');
+        if(d) return d;
+        d = D.createElement('div');
+        d.id = 'appDock';
+        d.innerHTML = '<div class="dock-hilfen"></div>'
+                    + '<button type="button" class="sidebar-tab dock-verlauf"><i class="fas fa-chevron-right" aria-hidden="true"></i><span class="tab-label">Verlauf einblenden</span></button>';
+        D.body.appendChild(d);
+        d.querySelector('.dock-verlauf').addEventListener('click', () => tu(() => {
+            const t = $('sidebarToggleBtn');
+            if(!t) return;
+            t.click();
+            setTimeout(() => tu(() => {
+                dockNachziehen();
+                const w = $('leftSidebarWrapper');
+                if(w && w.offsetHeight > 0) w.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }), 320);
+        }));
+        if(window.ResizeObserver) new ResizeObserver(() => tu(dockMasse)).observe(d);
+        return d;
+    }
+    function dockMasse(){
+        const d = $('appDock'), na = $('navArea');
+        if(na && na.offsetHeight) H.style.setProperty('--nav-h', na.offsetHeight + 'px');
+        if(d && d.offsetHeight) H.style.setProperty('--dock-h', d.offsetHeight + 'px');
+    }
+    function dockNachziehen(){
+        const d = $('appDock');
+        const runde = D.body.classList.contains('runde-laeuft');
+        const t = $('sidebarToggleBtn'), spalte = t && t.parentElement;
+        const verlaufDa = !!(runde && t && t.style.display !== 'none' && spalte && getComputedStyle(spalte).display !== 'none');
+        const hilfenDa = !!(runde && $('appHilfen'));
+        if(d){
+            const v = d.querySelector('.dock-verlauf');
+            v.hidden = !verlaufDa;
+            if(verlaufDa){
+                const lt = t.querySelector('.tab-label'), vt = v.querySelector('.tab-label'), vi = v.querySelector('i'), ti = t.querySelector('i');
+                if(lt && vt && vt.textContent !== lt.textContent) vt.textContent = lt.textContent;
+                if(ti && vi && vi.className !== ti.className) vi.className = ti.className;
+                v.classList.toggle('trainer-mode', t.classList.contains('trainer-mode'));
+            }
+        }
+        const an = runde && (verlaufDa || hilfenDa);
+        if(an && !d) dockHolen();
+        D.body.classList.toggle('mit-dock', an);
+        if(an) dockMasse(); else if($('appDock')) $('appDock').classList.remove('weg');
+    }
+    // Runterrollen: weg. Hochrollen oder ganz oben: wieder da.
+    tu(() => {
+        let zuletzt = 0;
+        const lage = e => {
+            const z = e && e.target;
+            if(z && z !== D && z !== D.body && z !== D.documentElement && z !== D.scrollingElement) return null;
+            return Math.max(window.scrollY || 0, D.scrollingElement ? D.scrollingElement.scrollTop : 0, D.body.scrollTop || 0);
+        };
+        D.addEventListener('scroll', e => tu(() => {
+            const d = $('appDock');
+            if(!d || !D.body.classList.contains('mit-dock')) return;
+            const y = lage(e);
+            if(y === null) return;
+            if(y < 12) d.classList.remove('weg');
+            else if(y > zuletzt + 6) d.classList.add('weg');
+            else if(y < zuletzt - 6) d.classList.remove('weg');
+            zuletzt = y;
+        }), { capture: true, passive: true });
+        window.addEventListener('resize', () => tu(dockMasse));
+    });
+    function hilfenOffenZeigen(reihe){
+        const offen = lies('app_hilfen_offen', '0') === '1';
+        reihe.classList.toggle('offen', offen);
+        const k = reihe.querySelector('.ahf-kopf');
+        if(!k) return;
+        k.setAttribute('aria-expanded', offen ? 'true' : 'false');
+        const i = k.querySelector('i'), t = k.querySelector('.tab-label');
+        if(i) i.className = 'fas ' + (offen ? 'fa-chevron-down' : 'fa-chevron-right');
+        if(t) t.textContent = offen ? 'Hilfen ausblenden' : 'Hilfen anzeigen';
+    }
     function hilfenNachziehen(){
         const opts = $('optionsContainer');
         let reihe = $('appHilfen');
-        if(!opts || !D.body.classList.contains('runde-laeuft')){ if(reihe) reihe.remove(); return; }
+        if(!opts || !D.body.classList.contains('runde-laeuft')){ if(reihe) reihe.remove(); dockNachziehen(); return; }
         const da = HILFEN.filter(hilfeDa);
-        if(!da.length){ if(reihe) reihe.remove(); return; }
+        if(!da.length){ if(reihe) reihe.remove(); dockNachziehen(); return; }
         if(!reihe){
             reihe = D.createElement('div');
             reihe.id = 'appHilfen';
             reihe.setAttribute('role', 'group');
             reihe.setAttribute('aria-label', 'Hilfen zur Frage');
             reihe.addEventListener('click', e => {
+                if(e.target && e.target.closest && e.target.closest('.ahf-kopf')){
+                    schreib('app_hilfen_offen', reihe.classList.contains('offen') ? '0' : '1');
+                    hilfenOffenZeigen(reihe);
+                    return;
+                }
                 const k = e.target && e.target.closest ? e.target.closest('[data-ziel]') : null;
                 const z = k ? $(k.dataset.ziel) : null;
                 if(z) z.click();
             });
         }
         const schluessel = da.map(h => h.id).join(',');
+        // HINTER EINER LEISTE (01.10.2026). Dietmar: "Unter den Fragen
+        // kommen 3 Felder ... Dann sind die 2 Reihen nur noch eine." Die
+        // Hilfen stecken jetzt hinter der Leiste "Hilfen anzeigen" - sie
+        // sieht aus wie "Verlauf einblenden" (gleiche Klasse sidebar-tab)
+        // und steht direkt darueber. Aufgeklappt: ein Raster aus zwei
+        // gleich breiten Spalten, jede Taste gleich lang, gleicher Rahmen
+        // ("Achte bitte darauf, dass die Buttons alle die gleiche Laenge
+        // haben ... Die einen haben einen Rahmen, die anderen keinen").
         if(reihe.dataset.schluessel !== schluessel){
             const taste = h => '<button type="button" class="ahf ahf-' + h.art + '" data-ziel="' + h.id + '"'
                       + (h.titel ? ' aria-label="' + h.titel + '" title="' + h.titel + '"' : '') + '>'
                       + '<i class="' + h.icon + '" aria-hidden="true"></i>' + (h.text ? '<span>' + h.text + '</span>' : '') + '</button>';
-            // Zwei Zeilen (Hilfsmittel, dann der DARC), jede ueber die ganze Breite
-            const zeilen = [];
+            let gitter = '';
             da.forEach((h, i) => {
                 if(h.id === 'erklaerLesenNurBtn' && da[i - 1] && da[i - 1].id === 'erklaerBtn') return;      // steckt schon im Paar
-                const g = h.gruppe || 1;
-                if(!zeilen[g]) zeilen[g] = '';
                 // Erklaerung und "vorlesen" als ein Paar - der Lautsprecher gehoert zur Gluehbirne
-                if(h.id === 'erklaerBtn' && da[i + 1] && da[i + 1].id === 'erklaerLesenNurBtn') zeilen[g] += '<span class="ahf-paar">' + taste(h) + taste(da[i + 1]) + '</span>';
-                else zeilen[g] += taste(h);
+                if(h.id === 'erklaerBtn' && da[i + 1] && da[i + 1].id === 'erklaerLesenNurBtn') gitter += '<span class="ahf-paar">' + taste(h) + taste(da[i + 1]) + '</span>';
+                else gitter += taste(h);
             });
-            let html = '';
-            zeilen.forEach(z => { if(z) html += '<div class="ahf-zeile">' + z + '</div>'; });
-            reihe.innerHTML = html;
+            reihe.innerHTML = '<button type="button" class="sidebar-tab ahf-kopf" aria-expanded="false">'
+                            + '<i class="fas fa-chevron-right" aria-hidden="true"></i><span class="tab-label">Hilfen anzeigen</span></button>'
+                            + '<div class="ahf-gitter">' + gitter + '</div>';
             reihe.dataset.schluessel = schluessel;
         }
-        if(opts.nextElementSibling !== reihe) opts.insertAdjacentElement('afterend', reihe);
-        // Passt die erste Gruppe nicht in eine Zeile, steht beim Rechner nur
-        // das Zeichen (bei grosser Anzeige darf sie trotzdem umbrechen).
-        reihe.classList.remove('knapp');
-        const erste = reihe.querySelector('.ahf-zeile') ? Array.from(reihe.querySelector('.ahf-zeile').children) : [];
-        if(erste.length > 1 && erste[erste.length - 1].offsetTop > erste[0].offsetTop + 4) reihe.classList.add('knapp');
+        hilfenOffenZeigen(reihe);
+        // Platz: im Dock unten, ueber Zurueck/Weiter (siehe DOCK weiter unten)
+        const fach = dockHolen().querySelector('.dock-hilfen');
+        if(reihe.parentElement !== fach) fach.appendChild(reihe);
+        dockNachziehen();
         // Die verborgenen Tasten schweigen: Der Ton kommt schon von dieser
         // Reihe (Maus-Klick oder Plopp) - sonst klaenge es doppelt.
         da.forEach(h => { const b = $(h.id); if(b && !b.hasAttribute('data-kein-klickton')) b.setAttribute('data-kein-klickton', ''); });
@@ -50280,12 +50460,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     tu(() => {
         const alt = window.fragenPasstInsFenster;
         if(typeof alt !== 'function') return;
+        // Seit dem Dock (01.10.2026) zaehlt der Platz ohne das Dock: Es
+        // weicht beim Rollen von selbst, die Frage soll seinetwegen nicht
+        // kleiner werden.
         window.fragenPasstInsFenster = function(){
-            const r = $('appHilfen');
-            if(!r || r.style.display === 'none') return alt.apply(this, arguments);
-            r.style.display = 'none';
+            if(H.classList.contains('ohne-dock')) return alt.apply(this, arguments);
+            H.classList.add('ohne-dock');
             try{ return alt.apply(this, arguments); }
-            finally{ r.style.display = ''; }
+            finally{ H.classList.remove('ohne-dock'); }
         };
     });
 
@@ -51002,6 +51184,61 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         window.einstellungenOeffnen = function(){
             const r = oeffnen.apply(this, arguments);
             umbauen();
+            return r;
+        };
+    });
+
+    // ================================================================
+    //  AUTOMATISCH WEITER, AUCH MIT VORLESEN                (01.10.2026)
+    //  Dietmar, mit Bildern: Der Haken "Von selbst weiterblaettern" ist
+    //  an, aber nach einer Antwort geht es nicht weiter, sobald er
+    //  vorlesen laesst. "Sobald ich die Frage angeklickt habe, muss der
+    //  Counter laufen und weiterklicken." Ohne Vorlesen ging es.
+    //  Drei Dinge, nur in der App:
+    //   1. Die Uhr wartet nicht mehr aufs Vorlesen. Die Abfrage in
+    //      autoWeiterSpricht() sah ohnehin nur die Browser-Stimme - und
+    //      die kann im WebView haengen bleiben, dann steht die Uhr ewig.
+    //   2. Steht 1,2 Sekunden nach der Antwort keine Uhr, startet sie hier.
+    //   3. Als Netz: Ist die Zeit plus drei Sekunden um und die Frage
+    //      steht noch, blaettert die App selbst weiter.
+    //  Jede Beruehrung und jede Taste nach der Antwort haelt das Ganze an,
+    //  genau wie beim Original (siehe pointerdown/keydown dort).
+    // ================================================================
+    tu(() => {
+        window.autoWeiterSpricht = function(){ return false; };
+        const alt = window.selectOption;
+        if(typeof alt !== 'function') return;
+        let beruehrt = false;
+        const anhalten = () => { beruehrt = true; };
+        D.addEventListener('pointerdown', anhalten, true);
+        D.addEventListener('keydown', anhalten, true);
+        const naechsteGibtEs = () => {
+            let ziel = currentIndex + 1;
+            while(ziel < currentQuestions.length && currentQuestions[ziel] && currentQuestions[ziel]._autoGelernt) ziel++;
+            return ziel < currentQuestions.length;
+        };
+        window.selectOption = function(){
+            let schonBeantwortet = true;
+            try{ schonBeantwortet = !!answered; }catch(e){}
+            const r = alt.apply(this, arguments);
+            if(schonBeantwortet) return r;            // ein weiteres Antippen zaehlt nicht
+            tu(() => {
+                if(!window.autoWeiterAn || !window.autoWeiterAn()) return;
+                const merk = currentIndex, sek = window.autoWeiterSekunden();
+                beruehrt = false;
+                setTimeout(() => tu(() => {
+                    if(beruehrt || currentIndex !== merk || !answered) return;
+                    if(!window.autoWeiterAn() || !naechsteGibtEs()) return;
+                    const knopf = $('nextBtn');
+                    if(knopf && !/\(\d+\)/.test(knopf.textContent)) window.autoWeiterStarten();
+                }), 1200);
+                setTimeout(() => tu(() => {
+                    if(beruehrt || currentIndex !== merk || !answered) return;
+                    if(!window.autoWeiterAn() || !naechsteGibtEs()) return;
+                    window.autoWeiterAbbrechen();
+                    window.nextQuestion();
+                }), (sek + 3) * 1000);
+            });
             return r;
         };
     });
