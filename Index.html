@@ -1964,6 +1964,18 @@
         html.android-app #appDock #appHilfen .ahf-gitter > .ahf-paar,
         html.android-app #appDock #appHilfen .ahf-gitter .ahf { min-height: 42px; }
         html.android-app #appDock #appHilfen .ahf-gitter .ahf-paar .ahf.nur-zeichen { flex: 0 0 42px; width: 42px; }
+
+        /* DER KNOPF FUER DIE LEISTEN (02.10.2026): rechts neben dem Zahnrad.
+           Leuchtet, solange die Leisten unten da sind. Aus: kein Dock,
+           keine Verlauf-Leiste, kein Platz dafuer. */
+        html.android-app #dockKnopf { display: inline-flex !important; align-items: center; justify-content: center; }
+        html.android-app #dockKnopf.an { background: #dbe7f5 !important; border-color: #9fb6cf !important; color: var(--panel-navy, #0f2745) !important; }
+        html.android-app body.dark #dockKnopf.an { background: #1b4d6c !important; border-color: #2f6a8f !important; color: #dbe6f3 !important; }
+        /* Aus: wie das Zahnrad daneben (Nacht: derselbe Verlauf) */
+        html.android-app body.dark #dockKnopf:not(.an) { background: linear-gradient(#133048, #0a1e2c) !important; border: 1px solid #2b5471 !important; color: #cfe2ee !important; }
+        html.android-app body.dock-aus #appDock,
+        html.android-app body.runde-laeuft.dock-aus #sidebarToggleBtn { display: none !important; }
+        html.android-app body.runde-laeuft.mit-dock.dock-aus { padding-bottom: calc(var(--nav-h, 70px) + 8px) !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -47773,6 +47785,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                   + ' onclick="appTippToeneSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>')
           + '</div>'
+          // Leisten unter der Frage (02.10.2026). Dietmar: "Es waere gut,
+          // wenn man das im Menue aktivieren kann ... Vielleicht mag
+          // jemand die Leiste doch haben." und "Bei einer Neuinstallation
+          // ohne Einstellungen muss diese aktiviert sein." - Vorgabe An.
+          + einstKasten('Leisten unter der Frage', 'Die beiden Leisten „Hilfen anzeigen“ und „Verlauf einblenden“ über Zurück/Weiter. Aus: Sie sind weg; der Knopf ☰ neben dem Zahnrad holt sie bei Bedarf zurück.',
+                '<div class="app-seg" id="appDockSeg">'
+              + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-k="' + f[0] + '"' + ((lies('app_dock_an', '1') === '0' ? 'aus' : 'an') === f[0] ? ' class="an"' : '')
+                  + ' onclick="appDockSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+              + '</div>')
           + '</div>';
     };
     function einstNachziehen(){
@@ -47782,6 +47803,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === (tippsAn() ? 'an' : 'aus')));
         D.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === (lies('robo_stimme', 'an') === 'aus' ? 'aus' : 'an')));
         D.querySelectorAll('#appTippSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (lies('app_tipptoene', 'an') === 'aus' ? 'aus' : 'an')));
+        D.querySelectorAll('#appDockSeg button').forEach(b => b.classList.toggle('an', b.dataset.k === (lies('app_dock_an', '1') === '0' ? 'aus' : 'an')));
         // Fuer Vorleseprogramme: welcher Knopf gewaehlt ist (30.09.2026)
         D.querySelectorAll('.app-seg button, .app-stil-wahl .sw-karte').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('an') ? 'true' : 'false'));
     }
@@ -47866,6 +47888,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.appFunkiSetzen = v => { schreib('robo_tipps', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
     // Funki spricht: An/Aus und eine Probe (30.09.2026)
     window.appTippToeneSetzen = v => { schreib('app_tipptoene', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
+    window.appDockSetzen = v => { schreib('app_dock_an', v === 'aus' ? '0' : '1'); tu(einstNachziehen); tu(() => window.appDockNachziehen && window.appDockNachziehen()); };
     window.appFunkiStimmeSetzen = v => { schreib('robo_stimme', v === 'aus' ? 'aus' : 'an'); if(v === 'aus') tu(funkiVerstummen); tu(einstNachziehen); };
     window.appFunkiProbe = () => {
         if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
@@ -47893,7 +47916,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const n = $('appNavi'), hoch = window.innerHeight;
         if(D.body.classList.contains('runde-laeuft')){
             const dk = $('appDock');
-            if(dk && D.body.classList.contains('mit-dock') && !dk.classList.contains('weg')){
+            if(dk && D.body.classList.contains('mit-dock') && !D.body.classList.contains('dock-aus') && !dk.classList.contains('weg')){
                 const r = dk.getBoundingClientRect();
                 if(r.height && r.top < hoch) return r.top - 10;
             }
@@ -50318,7 +50341,41 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(na && na.offsetHeight) H.style.setProperty('--nav-h', na.offsetHeight + 'px');
         if(d && d.offsetHeight) H.style.setProperty('--dock-h', d.offsetHeight + 'px');
     }
+    // ----- Der Knopf in der Kopfzeile der Frage (02.10.2026)
+    //  Dietmar (Bild der Knopfreihe): "Baue mir bitte hier einen Button
+    //  ein, der die Leiste ein- und ausblendet. Ich finde die Leiste
+    //  unten sehr stoerend. Wenn ich sie benoetige, hole ich sie mir."
+    //  Rechts neben dem Zahnrad; die Wahl bleibt (app_dock_an).
+    const dockAn = () => lies('app_dock_an', '1') !== '0';
+    function dockKnopfNachziehen(){
+        const zahnrad = D.querySelector('.question-area button[onclick="openTtsSettings()"]');
+        if(!zahnrad) return;
+        let k = $('dockKnopf');
+        if(!k){
+            k = D.createElement('button');
+            k.type = 'button'; k.id = 'dockKnopf'; k.className = 'dock-knopf';
+            k.setAttribute('style', zahnrad.getAttribute('style') || '');
+            k.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
+            k.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                schreib('app_dock_an', dockAn() ? '0' : '1');
+                const d = $('appDock'); if(d) d.classList.remove('weg');
+                dockNachziehen();
+                tu(einstNachziehen);
+            });
+        }
+        if(k.previousElementSibling !== zahnrad) zahnrad.insertAdjacentElement('afterend', k);
+        const an = dockAn();
+        k.classList.toggle('an', an);
+        k.title = an ? 'Leisten unten ausblenden' : 'Leisten unten einblenden (Hilfen, Verlauf)';
+        k.setAttribute('aria-label', k.title);
+        k.setAttribute('aria-pressed', an ? 'true' : 'false');
+        k.setAttribute('data-tooltip', k.title);
+    }
+    window.appDockNachziehen = () => { const d = $('appDock'); if(d) d.classList.remove('weg'); dockNachziehen(); };
     function dockNachziehen(){
+        tu(dockKnopfNachziehen);
+        D.body.classList.toggle('dock-aus', !dockAn());
         const d = $('appDock');
         const runde = D.body.classList.contains('runde-laeuft');
         const t = $('sidebarToggleBtn'), spalte = t && t.parentElement;
