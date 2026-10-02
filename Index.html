@@ -15556,15 +15556,6 @@ function geraeteKlasseSetzen(){
         const schmal = b > 0 && b <= SCHMAL_GRENZE;
         document.body.classList.toggle('schmal', schmal);
         document.body.classList.toggle('handy', b > 0 && b <= HANDY_GRENZE);
-        // Breites Layout (02.10.2026): Ab 1700 Punkten Seitenbreite - gerechnet
-        // in den Punkten der Seite, also durch die Anzeigegroesse geteilt, nicht
-        // in Fensterpunkten wie die Medienabfragen - wird der Inhalt der
-        // Startseite um 10 % groesser gezeichnet (Stilblock pcStile). Bei einer
-        // schmaleren Seite brechen die Zeilen sonst um.
-        try{
-            const zf = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--afu-zoom')) || 1;
-            document.body.classList.toggle('inhalt-gross', b > 0 && (b / zf) >= 1700);
-        }catch(e){}
         const gast = gastImGruppenraum();
         document.body.classList.toggle('gast-im-raum', gast);
         // Laeuft ein Gruppenraum - egal ob als Gastgeber oder als Gast?
@@ -36410,7 +36401,6 @@ function anzeigeAnwenden(){
             // erzeugt aber einen eigenen Zeichenbereich - und damit in
             // manchen Browsern unscharfe Schrift, wo vorher keine war.
             e.style.zoom = (Math.abs(f - 1) < 0.001) ? '' : String(f);
-            try{ geraeteKlasseSetzen(); }catch(err2){}   // inhalt-gross haengt an der Anzeigegroesse
         }catch(err){}
     };
     let f = anzeigeFaktor();
@@ -45562,10 +45552,12 @@ html:not(.android-app) body.klar .btn, html:not(.android-app) body.klar select, 
 html:not(.android-app) body.klar .btn-primary, html:not(.android-app) body.klar #nextBtn { background: #00adef !important; border-color: #00adef !important; color: #04283a !important; }
 html:not(.android-app) body.klar .btn-danger { border-color: #b42318 !important; color: #b42318 !important; }
 html:not(.android-app) body.klar .btn-difficult { border-color: #c2410c !important; color: #c2410c !important; }
-html:not(.android-app) body.klar .app-layout { padding: 0 26px !important; }
+/* Inhalt so breit wie die Kopfleiste (Dietmar, Bild: "Pruefungsuebersicht und Lernfortschritt
+   muss genauso breit wie das darueber sein"): kein Innenrand mehr links und rechts. */
+html:not(.android-app) body.klar .app-layout { padding: 0 !important; }
 html:not(.android-app) body.klar .exam-info, html:not(.android-app) body.klar #masteryDisplay, html:not(.android-app) body.klar .history-col, html:not(.android-app) body.klar .question-area { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; }
 html:not(.android-app) body.klar .exam-info { border-left: 8px solid #00adef !important; }
-html:not(.android-app) body.klar .footer-note { border-top: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; margin: 18px 26px 0 !important; }
+html:not(.android-app) body.klar .footer-note { border-top: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; margin: 18px 0 0 !important; }
 html:not(.android-app) body.klar .q-text { font-size: 1.24rem !important; font-weight: 800 !important; line-height: 1.4 !important; color: #0f2745 !important; }
 html:not(.android-app) body.klar .question-area .option, html:not(.android-app) body.klar .question-area .option-grid { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; border-left: 10px solid #0f2745 !important; padding: 10px 14px 10px 18px !important; margin-bottom: 0 !important; box-shadow: none !important; }
 html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fff !important; }
@@ -45580,8 +45572,8 @@ html:not(.android-app) body.klar.runde-laeuft #navArea { border: 1.5px solid #0f
    ueber unten in der Leiste"): Der Kasten hat in Klar und Luftig 26 Punkte
    Rand innen, die Leiste war so breit wie der ganze Kasten. Jetzt zieht sie
    die 26 Punkte je Seite ab und endet mit Verlauf-Spalte und Fragenkasten. */
-html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #navArea,
-html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #navArea { width: calc(min(100% - 2rem, 1720px) - 52px) !important; }
+html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #navArea { width: min(100% - 2rem, 1440px) !important; }   /* Klar: Inhalt so breit wie die Kopfleiste, die Knopfleiste auch */
+html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #navArea { width: calc(min(100% - 2rem, 1440px) - 52px) !important; }
 html:not(.android-app) body.klar [id$="Modal"] > div:first-child, html:not(.android-app) body.klar #einstellungenModal > div { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; }
 
 /* ---------- 3  PAPIER & WARM ---------- */
@@ -45797,34 +45789,19 @@ html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #app.card { padd
 html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: calc(6.5rem - 6px) !important; }
 }
 /* ================================================================
-   DER INHALT GROESSER, DIE KOPFLEISTE KLEINER                (02.10.2026)
+   KOPFLEISTE EIN STUECK KLEINER                           (02.10.2026)
    ----------------------------------------------------------------
-   Dietmar (Bild, Klar): "Den Inhalt moechte ich etwas groesser haben. Die
-   obere Leiste ist groesser als der Inhalt." Gemessen: Titel 24 px, Knoepfe
-   der Leiste 12,8 px fett auf 40 Punkten Hoehe - der Inhalt darunter 11,5
-   bis 12,8 px (Tabellenkopf 11,5, Zeilen-Knoepfe 11,5, Verlauf 10,4).
-   Jetzt: Kasten Pruefungsuebersicht, Lernfortschritt samt Zeilen und Verlauf
-   werden gemeinsam um 10 % groesser gezeichnet (zoom, damit auch Abstaende,
-   Felder und Knoepfe mitgehen und nichts einzeln vergessen wird), die
-   Kopfleiste ein Stueck niedriger. Die Seitenhoehe bleibt dieselbe wie bei
-   "Alle Stile gleich hoch" - die Abstaende im Inhalt werden dafuer enger.
-   Nur im breiten Fenster und nicht im Beamer.
+   Dietmar (Bild, Klar): "Die obere Leiste ist groesser als der Inhalt."
+   Gemessen: Titel 24 px, Knoepfe der Leiste 12,8 px fett auf 40 Punkten
+   Hoehe - der Inhalt darunter 11,5 bis 12,8 px. Der erste Versuch, den
+   Inhalt mit zoom zu vergroessern und die Karte auf 1720 Punkte zu
+   verbreitern, machte das Fenster zu gross und liess den Verlauf aus dem
+   Rahmen laufen - zurueckgenommen. Jetzt nur noch die Leiste: Titel
+   24 -> 21 px, Knoepfe und Felder der Filterleiste 12,2 px bei 34 statt
+   40 Punkten Hoehe. Die Karte bleibt 1440 Punkte breit, die Seite wird
+   dadurch hoechstens niedriger, nie groesser. Alle Stile gleich.
    ================================================================ */
 @media (min-width: 761px) {
-/* Der Inhalt wird nur gross gezeichnet, wenn die Seite breit genug ist
-   (body.inhalt-gross, gesetzt in geraeteKlasseSetzen: Seitenbreite = Fenster
-   durch Anzeigegroesse, ab 1700 Punkten). Eine Medienabfrage ginge nach
-   Fensterpunkten und wuerde bei 80 % Anzeigegroesse zu spaet greifen. */
-html:not(.android-app) body.inhalt-gross:not(.beamer) .exam-info, html:not(.android-app) body.inhalt-gross:not(.beamer) #masteryDisplay, html:not(.android-app) body.inhalt-gross:not(.beamer) .history-col { zoom: 1.1; }
-/* Die Karte darf breiter werden (1440 -> 1720 Punkte), sonst brechen die
-   Zeilen mit dem groesseren Inhalt um und die Seite wird hoeher. */
-html:not(.android-app) body:not(.beamer) #app.card { max-width: 1720px !important; }
-html:not(.android-app) body.runde-laeuft:not(.beamer-live) #navArea { max-width: 1720px !important; }
-/* Lernfortschritt: Zeilenabstand und Innenrand enger, damit der groessere Inhalt
-   nicht hoeher baut als vorher. */
-html:not(.android-app) body:not(.beamer) #masteryDisplay { gap: 8px !important; padding-top: 10px !important; padding-bottom: 10px !important; }
-/* Die Kopfleiste ist kleiner als der Inhalt, nicht groesser: Titel 24 -> 21 px,
-   Knoepfe und Felder der Leiste 12,8 -> 12,2 px bei 34 statt 40 Punkten Hoehe. */
 html:not(.android-app) body:not(.beamer) .header h1 { font-size: 1.32rem !important; }
 html:not(.android-app) body:not(.beamer) .filter-bar .btn, html:not(.android-app) body:not(.beamer) .filter-bar select { font-size: 0.76rem !important; min-height: 34px !important; }
 }
