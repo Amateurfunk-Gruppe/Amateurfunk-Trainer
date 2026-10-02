@@ -2028,6 +2028,20 @@
         html.android-app body.dark .bk-balken.violett > i { background: #a98ff0; }
         /* Die zuletzt angetippte Kachel: deutlicher Ring statt des blassen Fokusrands */
         html.android-app body.dark .blaetter-kachel:focus-visible { outline: 3px solid #4fc9f7; outline-offset: 2px; }
+
+        /* BLAETTERN-FENSTER: ROLLBAR (02.10.2026). Dietmar (Bild): "Die
+           untere Reihe laesst sich ueberhaupt nicht lesen." Das Fenster
+           fuellt in der App den Schirm, der Kasten darin hat aber
+           overflow:hidden aus der PC-Fassung - was unter den Rand faellt,
+           war weg. Jetzt: Kopf und Fuss stehen fest, die Mitte rollt. */
+        html.android-app #durchsichtModal > div:first-of-type { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+        html.android-app #durchsichtModal > div:first-of-type > div:first-child { flex: 0 0 auto; }
+        html.android-app #durchsichtModal > div:first-of-type > div:nth-child(2) { flex: 1 1 auto; min-height: 0; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 1.4rem !important; }
+        html.android-app #durchsichtModal > div:first-of-type > div:last-child { flex: 0 0 auto; padding-bottom: calc(0.8rem + env(safe-area-inset-bottom)) !important; }
+        html.android-app #durchsichtModal .btn.bl-neu { color: #16243a; }
+        html.android-app #durchsichtModal .btn.bl-loeschen { color: #a5281b; }
+        html.android-app body.dark #durchsichtModal .btn.bl-neu { color: #e6f0f8 !important; background: #10293b !important; border-color: #2f6a8f !important; }
+        html.android-app body.dark #durchsichtModal .btn.bl-loeschen { color: #ff8a80 !important; background: #2a1414 !important; border-color: #7a2e2e !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -51515,6 +51529,30 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  (Herz) bleibt die blaue, dort gibt es keine zweite.
     // ================================================================
     tu(() => { if(typeof window.toggleGelerntCurrentHinweis === 'function') window.toggleGelerntCurrentHinweis = function(){}; });
+
+    // ================================================================
+    //  BLAETTERN-FENSTER: DIE KNOEPFE IM FUSS                (02.10.2026)
+    //  Ihre Schriftfarbe steht im HTML mit !important (fuer den weissen
+    //  Grund des PC) - im Dunkeln der App stand "Neu beginnen" damit
+    //  dunkel auf dunkel. Hier kommt die Inline-Farbe weg; das Stilblatt
+    //  (html.android-app #durchsichtModal .btn) faerbt je nach Hell/Dunkel.
+    //  Nur in der App; am PC bleibt das HTML, wie es ist.
+    // ================================================================
+    tu(() => {
+        const alt = window.durchsichtFrageFenster;
+        if(typeof alt !== 'function') return;
+        window.durchsichtFrageFenster = function(){
+            const r = alt.apply(this, arguments);
+            tu(() => {
+                const box = D.querySelector('#durchsichtModal > div'); if(!box) return;
+                box.lastElementChild.querySelectorAll('button').forEach(b => {
+                    b.style.removeProperty('color');
+                    b.classList.add((b.getAttribute('onclick') || '').indexOf('StandLoeschen') >= 0 ? 'bl-loeschen' : 'bl-neu');
+                });
+            });
+            return r;
+        };
+    });
 })();
 </script>
 </body>

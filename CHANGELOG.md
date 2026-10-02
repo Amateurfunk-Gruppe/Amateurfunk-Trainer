@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App: Blättern-Fenster ist rollbar – Kopf und Fuß stehen fest, die Kacheln in der Mitte rollen; die letzte Zeile war unter dem Rand verschwunden. Die Knöpfe im Fuß sind im Dunkel-Modus lesbar
 - Android-App: Blättern-Fenster im Dunkel-Modus mit kräftigeren Farben – Titel, Zahl, Balken und Rand jeder Kachel in hellen Tönen statt der Tagesfarben
 - Android-App: Mitlesen beim Vorlesen – das gerade gesprochene Wort bekommt in Frage und Antworten eine andere Schriftfarbe (nur die Farbe, kein Rahmen); Einstellungen → Vorlesen → „Mitlesen“ mit An/Aus und sechs Farben (Vorgabe: An, Gelb), gilt auch für die Erklärung
 - Android-App: Knopf ☰ rechts neben dem Zahnrad der Frage blendet die beiden Leisten unten („Hilfen anzeigen“, „Verlauf einblenden“) ein und aus; dazu Einstellungen → Allgemein → „Leisten unter der Frage“ (An/Aus). Vorgabe: An. Die Wahl bleibt gespeichert
