@@ -2042,6 +2042,28 @@
         html.android-app #durchsichtModal .btn.bl-loeschen { color: #a5281b; }
         html.android-app body.dark #durchsichtModal .btn.bl-neu { color: #e6f0f8 !important; background: #10293b !important; border-color: #2f6a8f !important; }
         html.android-app body.dark #durchsichtModal .btn.bl-loeschen { color: #ff8a80 !important; background: #2a1414 !important; border-color: #7a2e2e !important; }
+
+        /* BILDANTWORTEN IM DUNKELN: BUCHSTABEN IN BLAU (02.10.2026)
+           Dietmar (Bild NI103): "Die Buchstaben bei den Antworten sind
+           schwarz auf dunkelgrauem Hintergrund. Das passt nicht." Die
+           DARC-Regel faerbt den Buchstaben der Bildkachel schwarz - fuer
+           den weissen Grund. Nachts hier dasselbe Blau wie bei den
+           Textantworten; richtig und falsch (heller Grund) bleiben schwarz. */
+        html.android-app body.dark .question-area .option-grid:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) .option-label { color: var(--darc-blau, #00adef) !important; }
+
+        /* ZEICHNUNGEN IM DUNKELN NOCH WEISSER (02.10.2026). Dietmar: "Schau
+           mal bitte, ob du die Bilder auch noch ein bisschen weisser
+           bekommst." Kontrast 2,6 statt 1,8 nach der Umkehr; Grund und
+           Kante wieder so gewaehlt, dass nach invert + contrast genau
+           #0a1b28 und #2b5471 herauskommen (c = 255 - ((Ziel-128)/2,6 + 128)). */
+        html.android-app.android-app body.dark .q-image img,
+        html.android-app.android-app body.dark .option-grid .option-image,
+        html.android-app.android-app body.dark .lightbox-overlay img,
+        html.android-app.android-app body.dark #bildZoomEbene img {
+            filter: invert(1) contrast(2.6) !important;
+            background: #aca6a1 !important;
+            border-color: #a09085 !important;
+        }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE

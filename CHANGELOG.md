@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App, Dunkel-Modus: Bei Bildantworten stehen die Buchstaben A–D in Blau statt Schwarz; die Zeichnungen sind weißer (Kontrast 2,6 statt 1,8 nach der Umkehr), Grund und Kante der Bilder bleiben wie gehabt
 - Android-App: Blättern-Fenster ist rollbar – Kopf und Fuß stehen fest, die Kacheln in der Mitte rollen; die letzte Zeile war unter dem Rand verschwunden. Die Knöpfe im Fuß sind im Dunkel-Modus lesbar
 - Android-App: Blättern-Fenster im Dunkel-Modus mit kräftigeren Farben – Titel, Zahl, Balken und Rand jeder Kachel in hellen Tönen statt der Tagesfarben
 - Android-App: Mitlesen beim Vorlesen – das gerade gesprochene Wort bekommt in Frage und Antworten eine andere Schriftfarbe (nur die Farbe, kein Rahmen); Einstellungen → Vorlesen → „Mitlesen“ mit An/Aus und sechs Farben (Vorgabe: An, Gelb), gilt auch für die Erklärung
