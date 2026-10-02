@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App: Mitlesen beim Vorlesen – das gerade gesprochene Wort bekommt in Frage und Antworten eine andere Schriftfarbe (nur die Farbe, kein Rahmen); Einstellungen → Vorlesen → „Mitlesen“ mit An/Aus und sechs Farben (Vorgabe: An, Gelb), gilt auch für die Erklärung
 - Android-App: Knopf ☰ rechts neben dem Zahnrad der Frage blendet die beiden Leisten unten („Hilfen anzeigen“, „Verlauf einblenden“) ein und aus; dazu Einstellungen → Allgemein → „Leisten unter der Frage“ (An/Aus). Vorgabe: An. Die Wahl bleibt gespeichert
 - Android-App: „Von selbst weiterblättern“ hält nur noch an, wenn ein Knopf oder eine Leiste angetippt wird – Rollen, Tippen auf Text und das Vorlesen stören den Zähler nicht mehr
 - Android-App: Haken „Nur die Frage vorlesen“ (Einstellungen → Vorlesen → Fragen und Antworten) – Vorlese-Knopf und automatisches Vorlesen sprechen die Antworten nicht mit; ersetzt dort den Maus-Haken

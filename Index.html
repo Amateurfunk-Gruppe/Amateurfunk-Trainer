@@ -1976,6 +1976,25 @@
         html.android-app body.dock-aus #appDock,
         html.android-app body.runde-laeuft.dock-aus #sidebarToggleBtn { display: none !important; }
         html.android-app body.runde-laeuft.mit-dock.dock-aus { padding-bottom: calc(var(--nav-h, 70px) + 8px) !important; }
+
+        /* DAS GESPROCHENE WORT: NUR DIE SCHRIFTFARBE (02.10.2026)
+           Dietmar: "nicht irgendwie umrandet oder so, sondern nur der Text
+           hat dann eine andere Farbe." Kein Grund, kein Schatten, keine
+           Linie - am Tag ein dunkles Bernstein, nachts ein warmes Gelb;
+           in einer eingefaerbten Antwort (heller Grund, schwarze Schrift)
+           ein kraeftiges Blau, damit es sich vom Schwarz abhebt. */
+        html.android-app body .tts-wort-an { background: none !important; box-shadow: none !important; border-radius: 0; text-decoration: none; color: var(--wort-tag, #b45309) !important; }
+        html.android-app body.dark .tts-wort-an { color: var(--wort-nacht, #ffd34d) !important; }
+        /* In einer eingefaerbten Antwort ist der Grund hell - der Tageston passt dort auch nachts */
+        html.android-app body :is(.tts-highlight, .maus-liest, .correct, .wrong) .tts-wort-an { color: var(--wort-tag, #b45309) !important; }
+        html.android-app body.wort-aus .tts-wort-an { color: inherit !important; }
+        /* Der Kasten "Mitlesen" in den Einstellungen */
+        html.android-app #einstWortFarben button { background: var(--wt) !important; }
+        html.android-app body.dark #einstWortFarben button { background: var(--wn) !important; border-color: var(--nacht-kante2, #2b5471); }
+        html.android-app .app-wort-probe { margin-top: 0.7rem; padding: 0.5rem 0.65rem; border: 1px dashed #c9d4e2; border-radius: 8px; font-size: 0.9rem; line-height: 1.5; color: var(--panel-navy, #0f2745); }
+        html.android-app body.dark .app-wort-probe { border-color: var(--nacht-kante2, #2b5471); color: var(--nacht-hell, #f0f7fc); }
+        html.android-app .app-wort-probe b { font-weight: inherit; color: var(--wort-tag, #b45309) !important; }
+        html.android-app body.dark .app-wort-probe b { color: var(--wort-nacht, #ffd34d) !important; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
@@ -51345,17 +51364,81 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  Vorlese-Knopf und das automatische Vorlesen sprechen die Frage,
     //  die Antworten nicht. Nur in der App, pro Handy (app_nur_frage).
     // ================================================================
+    // ----- Mitlesen: An/Aus und Farbe (02.10.2026). Dietmar: "Gegebenenfalls
+    //  muessen wir unter Einstellungen die Farbe noch auswaehlen koennen."
+    //  und "Bitte ein- und ausschaltbar in den Einstellungen." Jede Farbe
+    //  hat einen Ton fuer den Tag (dunkel, auf hellem Grund) und einen fuer
+    //  die Nacht (hell, auf dunklem Grund). Vorgabe: An, Gelb.
+    const WORT_FARBEN = {
+        gelb:   { name: 'Gelb',    tag: '#b45309', nacht: '#ffd34d' },
+        blau:   { name: 'Blau',    tag: '#0b63c4', nacht: '#4fc9f7' },
+        gruen:  { name: 'Grün',    tag: '#1f8a4c', nacht: '#7be495' },
+        orange: { name: 'Orange',  tag: '#d9480f', nacht: '#ffab4d' },
+        rot:    { name: 'Rot',     tag: '#c62828', nacht: '#ff7b7b' },
+        lila:   { name: 'Violett', tag: '#7a3ea8', nacht: '#d9a6ff' }
+    };
+    const wortAn = () => lies('app_wort_an', '1') !== '0';
+    const wortFarbe = () => { const k = lies('app_wort_farbe', 'gelb'); return WORT_FARBEN[k] ? k : 'gelb'; };
+    function wortAnwenden(){
+        const f = WORT_FARBEN[wortFarbe()];
+        H.style.setProperty('--wort-tag', f.tag);
+        H.style.setProperty('--wort-nacht', f.nacht);
+        if(D.body) D.body.classList.toggle('wort-aus', !wortAn());
+        D.querySelectorAll('#einstWortFarben button').forEach(b => {
+            const an = b.dataset.f === wortFarbe();
+            b.style.borderColor = an ? 'var(--panel-navy)' : '#e3e9f3';
+            b.style.boxShadow = an ? 'inset 0 0 0 2px #fff' : 'none';
+            b.setAttribute('aria-pressed', an ? 'true' : 'false');
+        });
+        const n = $('einstWortName'); if(n) n.textContent = f.name;
+        D.querySelectorAll('#appWortSeg button').forEach(b => { const an = b.dataset.w === (wortAn() ? 'an' : 'aus'); b.classList.toggle('an', an); b.setAttribute('aria-pressed', an ? 'true' : 'false'); });
+    }
+    window.appWortSetzen = v => { schreib('app_wort_an', v === 'aus' ? '0' : '1'); tu(wortAnwenden); };
+    window.appWortFarbeSetzen = k => { if(WORT_FARBEN[k]) schreib('app_wort_farbe', k); tu(wortAnwenden); };
+    tu(wortAnwenden);
+    // Aus heisst aus - auch in der Erklaerung (dort setzt das Original die Marke selbst).
+    tu(() => { const alt = window.ttsWorteStarten; if(typeof alt !== 'function') return; window.ttsWorteStarten = function(){ if(!wortAn()) return; return alt.apply(this, arguments); }; });
+    function wortKasten(){
+        const f = wortFarbe();
+        const knoepfe = Object.keys(WORT_FARBEN).map(k =>
+            '<button type="button" data-f="' + k + '" onclick="appWortFarbeSetzen(\'' + k + '\')" title="' + WORT_FARBEN[k].name + '" aria-label="Farbe ' + WORT_FARBEN[k].name + '" '
+          + 'data-vorlesen-kurz="' + WORT_FARBEN[k].name + '." '
+          + 'style="--wt:' + WORT_FARBEN[k].tag + '; --wn:' + WORT_FARBEN[k].nacht + '; width:40px; height:34px; border-radius:8px; border:2px solid ' + (k === f ? 'var(--panel-navy)' : '#e3e9f3') + '; cursor:pointer;"></button>').join(' ');
+        return einstKasten('Mitlesen',
+            'Das Wort, das gerade gesprochen wird, bekommt beim Vorlesen eine andere Schriftfarbe – in der Frage, in den Antworten und in der Erklärung. Nur die Farbe, kein Rahmen.',
+            '<div class="app-seg" id="appWortSeg">'
+          + [['an', 'An'], ['aus', 'Aus']].map(x => '<button type="button" data-w="' + x[0] + '"' + ((wortAn() ? 'an' : 'aus') === x[0] ? ' class="an"' : '') + ' onclick="appWortSetzen(\'' + x[0] + '\')">' + x[1] + '</button>').join('')
+          + '</div>'
+          + '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-top:0.8rem;">Farbe</div>'
+          + '<div id="einstWortFarben" style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + knoepfe + '</div>'
+          + '<div id="einstWortName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;">' + WORT_FARBEN[f].name + '</div>'
+          + '<div class="app-wort-probe">So sieht es aus: Der Trainer liest, und <b>dieses</b> Wort wird gerade gesprochen.</div>');
+    }
     tu(() => {
         const alt = window.vorleseFrage;
         if(typeof alt !== 'function') return;
         const nurFrage = () => lies('app_nur_frage', '0') === '1';
+        // DAS WORT, DAS GERADE GESPROCHEN WIRD - AUCH BEI FRAGE UND
+        // ANTWORTEN (02.10.2026). Dietmar (Bild der Frage): "Beim Vorlesen:
+        // kann man das so einbauen, dass wenn vorgelesen wird, das Wort
+        // farblich markiert wird?" und "dass der Text in Farbe ist, nicht
+        // irgendwie umrandet ... nur der Text dann eine andere Farbe hat."
+        // Dieselbe Marke wie in der Erklaerung (ttsWorteStarten, seg.worte);
+        // die Frage bekommt dafuer die harmlose Klasse tts-frage statt
+        // tts-highlight, damit sie nicht wie eine Antwort eingefaerbt wird.
+        // Das Aussehen (nur Schriftfarbe) steht im Stilblatt, .tts-wort-an.
         window.vorleseFrage = function(){
-            if(!nurFrage()) return alt.apply(this, arguments);
             const q = currentQuestions[currentIndex]; if(!q) return;
             const btn = $('ttsBtn');
             const kenner = (typeof kennerThema === 'function') && kennerThema(q);
-            const text = (kenner ? kennerSprechen(q.text) : q.text) + '.';
-            return playTTSQueue([{ text, selector: null }], btn);
+            const sprich = t => kenner ? kennerSprechen(t) : t;
+            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn() }];
+            let mitAntworten = !nurFrage();
+            try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
+            if(mitAntworten && typeof antwortSegment === 'function'){
+                q.options.forEach((opt, i) => { const s = antwortSegment(q, i, sprich); s.worte = wortAn(); segments.push(s); });
+            }
+            return playTTSQueue(segments, btn);
         };
         window.appNurFrageSetzen = function(an){ schreib('app_nur_frage', an ? '1' : '0'); };
         const oeffnen = window.einstellungenOeffnen;
@@ -51377,6 +51460,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             z.querySelector('input').checked = nurFrage();
             z.querySelector('input').addEventListener('change', e => window.appNurFrageSetzen(e.target.checked));
             alteZeile.insertAdjacentElement('afterend', z);
+            // Darunter der Kasten "Mitlesen" (An/Aus, Farbe)
+            const kasten = alteZeile.parentElement;
+            if(kasten && !kasten.nextElementSibling?.querySelector?.('#appWortSeg')) kasten.insertAdjacentHTML('afterend', wortKasten());
+            tu(wortAnwenden);
         });
         window.einstellungenOeffnen = function(){
             const r = oeffnen.apply(this, arguments);
