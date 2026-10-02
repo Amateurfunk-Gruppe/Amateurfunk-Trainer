@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- PC: Der Inhalt der Startseite (Prüfungsübersicht, Lernfortschritt mit allen Zeilen, Verlauf) wird auf breiten Seiten um 10 % größer gezeichnet, die Kopfleiste ist etwas kleiner (Titel 21 statt 24 Punkte, Knöpfe und Felder 34 statt 40 Punkte hoch) – vorher war die Leiste größer als der Inhalt. „Breit“ heißt: Seitenbreite ab 1700 Punkten, gerechnet nach der Anzeigegröße (bei 80 % Anzeige also ab einem Fenster von 1360 Punkten). Die Karte darf dafür bis 1720 statt 1440 Punkte breit werden, die Knopfleiste in der Runde geht mit; die Seitenhöhe bleibt dabei unter der von vorher
 - PC: Alle Farbstile sind jetzt gleich hoch – die Startseite samt Fußzeile und die Fragenansicht brauchen in Hell, Grün, Blau, Orange, Grau, Luftig, Klar, Papier und Graphit denselben Platz. Bisher passte die Fußzeile bei „Klar“ schon bei 85 % Anzeigegröße ins Fenster, bei den anderen erst bei 80 %. Dafür sind Innenrand, Abstände zwischen Titelzeile, Knopfleiste, Inhalt und Fußzeile sowie die Seitenränder angeglichen; in den neuen Stilen haben Frage und Antworten dieselbe Schriftgröße und denselben Abstand wie in Hell
 - PC, Stile „Luftig“, „Klar“, „Papier“, „Graphit“: Prüfungssimulator, Gruppenraum und Unterricht haben dieselbe Farbe wie Auffrischen, Blättern, Statistik und Drucken (vorher eigene Tönung); Start, Fehler und Lernbedarf bleiben
 - PC: Der Stil „Graphit (dunkel)“ heißt jetzt nur „Graphit“
