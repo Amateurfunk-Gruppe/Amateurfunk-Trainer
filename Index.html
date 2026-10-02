@@ -50361,9 +50361,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const r = y > zuletzt ? 1 : (y < zuletzt ? -1 : 0);
             if(r && r !== richtung){ richtung = r; anker = zuletzt; }
             zuletzt = y;
+            // Empfindlicher (02.10.2026, Dietmar: "Kann man das noch
+            // empfindlicher einstellen mit dem Hochschieben?"): 5 Punkte
+            // abwaerts reichen; zurueck kommt es nach 14 Punkten aufwaerts.
             if(y < 12){ d.classList.remove('weg'); return; }
-            if(richtung > 0 && y - anker >= 20) d.classList.add('weg');
-            else if(richtung < 0 && anker - y >= 20) d.classList.remove('weg');
+            if(richtung > 0 && y - anker >= 5) d.classList.add('weg');
+            else if(richtung < 0 && anker - y >= 14) d.classList.remove('weg');
         }), { capture: true, passive: true });
         window.addEventListener('resize', () => tu(dockMasse));
     });

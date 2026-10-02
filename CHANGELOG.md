@@ -13,7 +13,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ### Hinzugefügt
 - Android-App: „Von selbst weiterblättern“ hält nur noch an, wenn ein Knopf oder eine Leiste angetippt wird – Rollen, Tippen auf Text und das Vorlesen stören den Zähler nicht mehr
 - Android-App: Haken „Nur die Frage vorlesen“ (Einstellungen → Vorlesen → Fragen und Antworten) – Vorlese-Knopf und automatisches Vorlesen sprechen die Antworten nicht mit; ersetzt dort den Maus-Haken
-- Android-App: Das Dock unten weicht auch beim langsamen Rollen (Weg seit dem letzten Richtungswechsel statt Sprung je Ereignis)
+- Android-App: Das Dock unten weicht auch beim langsamen Rollen (Weg seit dem letzten Richtungswechsel statt Sprung je Ereignis); empfindlich: 5 Punkte abwärts, zurück nach 14 Punkten aufwärts oder ganz oben
 - Android-App: Beim Abhaken als gelernt nur noch die grüne Meldung, die blaue entfällt
 - Android-App: Die Hilfen zur Frage (Formelblatt, Rechner, Erklärung, 50 Ohm, Lösungsweg, Video) stecken hinter einer Leiste „Hilfen anzeigen“; aufgeklappt stehen sie in zwei gleich breiten Spalten mit einheitlichem Rahmen. Beide Leisten („Hilfen anzeigen“, „Verlauf einblenden“) sitzen schmal in einem festen Dock direkt über Zurück/Weiter, verschwinden beim Herunterrollen und kommen beim Hochrollen oder ganz oben wieder
 - Android-App: „Von selbst weiterblättern“ läuft auch, wenn vorgelesen wird – nach der Antwort zählt der Knopf sofort herunter; als Netz blättert die App nach Ablauf plus drei Sekunden selbst weiter. Jede Berührung danach hält es weiterhin an
