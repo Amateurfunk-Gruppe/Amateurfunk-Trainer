@@ -11,6 +11,13 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- PC: Alle Farbstile sind jetzt gleich hoch – die Startseite samt Fußzeile und die Fragenansicht brauchen in Hell, Grün, Blau, Orange, Grau, Luftig, Klar, Papier und Graphit denselben Platz. Bisher passte die Fußzeile bei „Klar“ schon bei 85 % Anzeigegröße ins Fenster, bei den anderen erst bei 80 %. Dafür sind Innenrand, Abstände zwischen Titelzeile, Knopfleiste, Inhalt und Fußzeile sowie die Seitenränder angeglichen; in den neuen Stilen haben Frage und Antworten dieselbe Schriftgröße und denselben Abstand wie in Hell
+- PC, Stile „Luftig“, „Klar“, „Papier“, „Graphit“: Prüfungssimulator, Gruppenraum und Unterricht haben dieselbe Farbe wie Auffrischen, Blättern, Statistik und Drucken (vorher eigene Tönung); Start, Fehler und Lernbedarf bleiben
+- PC: Der Stil „Graphit (dunkel)“ heißt jetzt nur „Graphit“
+- PC, Stile „Luftig“, „Klar“, „Papier“: Die Zeilen unten auf der Startseite (Prüfungstermin, Rufzeichen prüfen, Lernen aktiv für, Videolehrgang, Hilfe & Unterlagen, Hörbuch) tragen jetzt die Farben des gewählten Stils statt des alten Hellblaus; in „Papier“ auch Beschriftungen, Knöpfe, Felder, Besucherzähler, die graue Fläche um Frage und Antworten, die Seitenleiste mit Zahlenpunkten und der Kopf des Prüfungssimulators
+- PC, Stile „Luftig“ und „Klar“: Die Knopfleiste unten (Abbrechen, Zurück, Weiter …) endet jetzt mit Verlauf-Spalte und Fragenkasten und ragt rechts und links nicht mehr über
+- PC: Der alte Dunkel-Modus entfällt, „Graphit (dunkel)“ ersetzt ihn; ein gespeicherter Dunkel-Modus wird beim Start zu Graphit. Die Android-App behält Hell und Dunkel
+- PC, Graphit: Der Rundgang-Kasten in der Info ist lesbar (die Schrift war hell auf hellem Grund), das Rufzeichenfeld bei den Diplomen ist dunkel, und der Schleier hinter den Fenstern ist neutral statt bläulich
 - PC, Stil „Klar“: Die Knopfleiste unten trägt denselben dunkelblauen Rand wie der Kasten und steht nicht mehr über dessen Rand hinaus
 - PC: Vier neue Farbstile unter Einstellungen → Allgemein → Farbstil – „Luftig & hell“ (runde Karten, viel Luft, kräftiges Blau), „Klar & kontrastreich“ (dunkelblaue Kopfleiste, eckig, kräftige Linien), „Papier & warm“ (cremefarben, Serifen, Bernstein) und „Graphit (dunkel)“ (der Dunkel-Modus in neutralem Grau). Der bisherige Stil bleibt Vorgabe; der Umschalter in der Kopfzeile kennt die neuen Stile ebenfalls. In der Android-App gelten weiter Sachlich und Verspielt
 - Android-App: Bei jeder neuen Frage steht die Seite ganz oben (Weiter, Zurück, Sprung im Verlauf) – vorher blieb der Rollstand der alten Frage liegen; beim Antworten auf derselben Frage bleibt die Stelle

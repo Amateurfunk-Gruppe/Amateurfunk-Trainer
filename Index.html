@@ -9164,7 +9164,11 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         // Schaltbilder im Dark Mode ins Negative gekehrt (siehe den
         // Dark-Mode-Block im Stilblatt), und ein gespeichertes 'dark'
         // gilt wieder.
-        if (gespeichert === 'dark') document.body.classList.add('dark');
+        if (gespeichert === 'dark') {
+            document.body.classList.add('dark');
+            // Am PC ist der alte Dark Mode zu Graphit geworden (02.10.2026)
+            if (!document.documentElement.classList.contains('android-app')) document.body.classList.add('graphit');
+        }
         // 'pastell' war der fruehere Name des Green Mode - weiter akzeptieren,
         // damit eine gespeicherte Einstellung nicht verlorengeht.
         else if (gespeichert === 'green' || gespeichert === 'pastell') document.body.classList.add('green');
@@ -31352,7 +31356,7 @@ function einstBlaetterFuellen(){
       // In der App heisst es seit dem 30.09.2026 "Stil der App" und "Hell oder
       // dunkel" (siehe ZWEI STILE FUER DIE APP) - die sechs Farbstile gibt es
       // nur noch am PC.
-      + '<div class="nur-pc">' + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand. Die vier zweifarbigen Kacheln sind die neuen Stile: Luftig, Klar, Papier und Graphit.',
+      + '<div class="nur-pc">' + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand. Die vier zweifarbigen Kacheln sind die neuen Stile: Luftig, Klar, Papier und Graphit – Graphit ist der dunkle Stil.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
           + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>') + '</div>'
       + (typeof window.appStilEinstHtml === 'function' ? window.appStilEinstHtml() : '')
@@ -36755,7 +36759,13 @@ for(const ereignis of ['fullscreenchange','webkitfullscreenchange','mozfullscree
 // auf; Graphit ist ein Dunkel-Modus (traegt die Klasse dark mit, damit
 // alle Nachtregeln gelten) in neutralem Grau. Das Stilblatt dazu:
 // "VIER NEUE FARBSTILE FUER DEN PC" am Ende der Seite.
-const STILE = ['light', 'dark', 'green', 'blue', 'orange', 'grey', 'luftig', 'klar', 'papier', 'graphit'];
+// DER ALTE DARK MODE IST GRAPHIT GEWICHEN (02.10.2026). Dietmar: "Den
+// Dark-Mode kannst du ausbauen. Graphit ist viel schoener!" Am PC steht
+// 'dark' nicht mehr zur Wahl; ein gespeichertes 'dark' wird zu Graphit.
+// Die Klasse dark am body bleibt - Graphit baut darauf auf, und die
+// Android-App (Hell/Dunkel) nutzt sie weiter wie bisher.
+const STILE = ['light', 'green', 'blue', 'orange', 'grey', 'luftig', 'klar', 'papier', 'graphit'];
+const istAndroidApp = () => { try { return document.documentElement.classList.contains('android-app'); } catch (e) { return false; } };
 const STILE_NEU = ['luftig', 'klar', 'papier', 'graphit'];
 const STIL_ANZEIGE = {
     light:  { label: 'Light Mode',  icon: 'fas fa-sun' },
@@ -36767,7 +36777,7 @@ const STIL_ANZEIGE = {
     luftig: { label: 'Luftig & hell',          icon: 'fas fa-cloud' },
     klar:   { label: 'Klar & kontrastreich',   icon: 'fas fa-square' },
     papier: { label: 'Papier & warm',          icon: 'fas fa-book' },
-    graphit:{ label: 'Graphit (dunkel)',       icon: 'fas fa-circle-half-stroke' }
+    graphit:{ label: 'Graphit',                icon: 'fas fa-circle-half-stroke' }
 };
 
 function aktuellerStil() {
@@ -36782,7 +36792,8 @@ function aktuellerStil() {
 
 function stilSetzen(stil) {
     if (stil === 'pastell') stil = 'green';          // alter Name, gespeicherte Werte
-    if (STILE.indexOf(stil) === -1) stil = 'light';
+    if (stil === 'dark' && !istAndroidApp()) stil = 'graphit';   // am PC heisst die Nacht jetzt Graphit
+    if (STILE.indexOf(stil) === -1 && !(stil === 'dark' && istAndroidApp())) stil = 'light';
     document.body.classList.remove('dark', 'green', 'blue', 'orange', 'grey', 'pastell', 'luftig', 'klar', 'papier', 'graphit');
     if (stil === 'graphit') document.body.classList.add('dark');     // Graphit ist eine Nacht - alle Dunkelregeln gelten
     if (stil !== 'light') document.body.classList.add(stil);
@@ -45517,14 +45528,13 @@ html:not(.android-app) body.luftig .btn, html:not(.android-app) body.luftig .btn
 html:not(.android-app) body.luftig .btn-primary, html:not(.android-app) body.luftig #nextBtn { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
 html:not(.android-app) body.luftig .btn-danger { background: #fff1f1 !important; border-color: #f3c2c2 !important; color: #b42318 !important; }
 html:not(.android-app) body.luftig .btn-difficult { background: #fff5e8 !important; border-color: #f6d7ae !important; color: #9a5b00 !important; }
-html:not(.android-app) body.luftig .btn-exam, html:not(.android-app) body.luftig .btn-modus { background: #eef4ff !important; border-color: #cfdcf7 !important; color: #1d4ed8 !important; }
 html:not(.android-app) body.luftig .badge { border-radius: 999px !important; }
 html:not(.android-app) body.luftig .exam-info, html:not(.android-app) body.luftig #masteryDisplay, html:not(.android-app) body.luftig .history-col, html:not(.android-app) body.luftig .question-area { background: #fff !important; border: 1px solid #e4e9f2 !important; border-radius: 18px !important; box-shadow: 0 8px 24px -18px rgba(15,39,69,.35) !important; }
-html:not(.android-app) body.luftig .question-area { padding: 22px !important; }
+html:not(.android-app) body.luftig .question-area { padding: 24px !important; }
 html:not(.android-app) body.luftig .question-area .q-text-row { border-radius: 14px !important; }
-html:not(.android-app) body.luftig .q-text { font-family: 'Space Grotesk', 'Segoe UI', sans-serif !important; font-size: 1.35rem !important; line-height: 1.4 !important; color: #13203a !important; }
+html:not(.android-app) body.luftig .q-text { font-family: 'Space Grotesk', 'Segoe UI', sans-serif !important; font-size: 1.24rem !important; line-height: 1.4 !important; color: #13203a !important; }
 html:not(.android-app) body.luftig .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #f8fafd !important; }
-html:not(.android-app) body.luftig .question-area .option, html:not(.android-app) body.luftig .question-area .option-grid { border-radius: 14px !important; border: 1px solid #e4e9f2 !important; box-shadow: none !important; padding: 14px 18px !important; margin-bottom: 10px !important; }
+html:not(.android-app) body.luftig .question-area .option, html:not(.android-app) body.luftig .question-area .option-grid { border-radius: 14px !important; border: 1px solid #e4e9f2 !important; box-shadow: none !important; padding: 9px 14px 9px 18px !important; margin-bottom: 0 !important; }
 html:not(.android-app) body.luftig .question-area .option:not(.correct):not(.wrong) .option-label { color: #2563eb !important; }
 html:not(.android-app) body.luftig .sidebar-tab { border-radius: 14px !important; background: #e8eefc !important; color: #1d4ed8 !important; }
 html:not(.android-app) body.luftig .footer-note { background: transparent !important; border: 0 !important; color: #6b7a90 !important; }
@@ -45542,13 +45552,12 @@ html:not(.android-app) body.klar .btn, html:not(.android-app) body.klar select, 
 html:not(.android-app) body.klar .btn-primary, html:not(.android-app) body.klar #nextBtn { background: #00adef !important; border-color: #00adef !important; color: #04283a !important; }
 html:not(.android-app) body.klar .btn-danger { border-color: #b42318 !important; color: #b42318 !important; }
 html:not(.android-app) body.klar .btn-difficult { border-color: #c2410c !important; color: #c2410c !important; }
-html:not(.android-app) body.klar .btn-exam, html:not(.android-app) body.klar .btn-modus { background: #eaf6fd !important; }
 html:not(.android-app) body.klar .app-layout { padding: 0 26px !important; }
 html:not(.android-app) body.klar .exam-info, html:not(.android-app) body.klar #masteryDisplay, html:not(.android-app) body.klar .history-col, html:not(.android-app) body.klar .question-area { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; }
 html:not(.android-app) body.klar .exam-info { border-left: 8px solid #00adef !important; }
 html:not(.android-app) body.klar .footer-note { border-top: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; margin: 18px 26px 0 !important; }
-html:not(.android-app) body.klar .q-text { font-size: 1.45rem !important; font-weight: 800 !important; line-height: 1.35 !important; color: #0f2745 !important; }
-html:not(.android-app) body.klar .question-area .option, html:not(.android-app) body.klar .question-area .option-grid { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; border-left: 10px solid #0f2745 !important; padding: 14px 18px !important; margin-bottom: 8px !important; box-shadow: none !important; }
+html:not(.android-app) body.klar .q-text { font-size: 1.24rem !important; font-weight: 800 !important; line-height: 1.4 !important; color: #0f2745 !important; }
+html:not(.android-app) body.klar .question-area .option, html:not(.android-app) body.klar .question-area .option-grid { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; border-left: 10px solid #0f2745 !important; padding: 10px 14px 10px 18px !important; margin-bottom: 0 !important; box-shadow: none !important; }
 html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fff !important; }
 html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong) .option-label { color: #0f2745 !important; font-weight: 800 !important; }
 html:not(.android-app) body.klar .sidebar-tab { border-radius: 0 !important; background: #0f2745 !important; color: #fff !important; }
@@ -45557,6 +45566,12 @@ html:not(.android-app) body.klar .sidebar-tab { border-radius: 0 !important; bac
    Rand ab. Hier bekommt sie denselben Rand und keine Rundung - sie ist der
    Fuss des Kastens, nicht ein schwebendes Brett. */
 html:not(.android-app) body.klar.runde-laeuft #navArea { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; box-sizing: border-box !important; }
+/* ... und so breit wie der Inhalt (Dietmar, zweites Bild, rot markiert: "laeuft
+   ueber unten in der Leiste"): Der Kasten hat in Klar und Luftig 26 Punkte
+   Rand innen, die Leiste war so breit wie der ganze Kasten. Jetzt zieht sie
+   die 26 Punkte je Seite ab und endet mit Verlauf-Spalte und Fragenkasten. */
+html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #navArea,
+html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #navArea { width: calc(min(100% - 2rem, 1440px) - 52px) !important; }
 html:not(.android-app) body.klar [id$="Modal"] > div:first-child, html:not(.android-app) body.klar #einstellungenModal > div { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; }
 
 /* ---------- 3  PAPIER & WARM ---------- */
@@ -45571,12 +45586,11 @@ html:not(.android-app) body.papier .btn, html:not(.android-app) body.papier .btn
 html:not(.android-app) body.papier .btn-primary, html:not(.android-app) body.papier #nextBtn { background: #b45309 !important; border-color: #b45309 !important; color: #fff !important; }
 html:not(.android-app) body.papier .btn-danger { color: #9a2d1f !important; border-color: #e2b3a8 !important; background: #fff4f1 !important; }
 html:not(.android-app) body.papier .btn-difficult { color: #8a5a00 !important; border-color: #e3c98f !important; background: #fff8e6 !important; }
-html:not(.android-app) body.papier .btn-exam, html:not(.android-app) body.papier .btn-modus { background: #efe6d6 !important; border-color: #d9ccb3 !important; color: #4a3a1f !important; }
 html:not(.android-app) body.papier .exam-info, html:not(.android-app) body.papier #masteryDisplay, html:not(.android-app) body.papier .history-col, html:not(.android-app) body.papier .question-area { background: #fffdf8 !important; border: 1px solid #e1d6c2 !important; border-radius: 12px !important; box-shadow: none !important; }
 html:not(.android-app) body.papier th { background: #f4ecdd !important; color: #4a3a1f !important; }
 html:not(.android-app) body.papier .footer-note { background: transparent !important; border: 0 !important; border-top: 1px solid #e1d6c2 !important; color: #6f6252 !important; }
-html:not(.android-app) body.papier .q-text { font-family: Georgia, 'Times New Roman', serif !important; font-size: 1.45rem !important; line-height: 1.45 !important; color: #2b2418 !important; font-weight: 600 !important; }
-html:not(.android-app) body.papier .question-area .option, html:not(.android-app) body.papier .question-area .option-grid { border-radius: 12px !important; border: 1px solid #e1d6c2 !important; padding: 14px 18px !important; margin-bottom: 10px !important; box-shadow: 0 1px 0 #ebe2d0 !important; font-size: 1.05rem !important; }
+html:not(.android-app) body.papier .q-text { font-family: Georgia, 'Times New Roman', serif !important; font-size: 1.24rem !important; line-height: 1.4 !important; color: #2b2418 !important; font-weight: 600 !important; }
+html:not(.android-app) body.papier .question-area .option, html:not(.android-app) body.papier .question-area .option-grid { border-radius: 12px !important; border: 1px solid #e1d6c2 !important; padding: 9px 14px 9px 18px !important; margin-bottom: 0 !important; box-shadow: 0 1px 0 #ebe2d0 !important; }
 html:not(.android-app) body.papier .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fffdf8 !important; }
 html:not(.android-app) body.papier .question-area .option:not(.correct):not(.wrong) .option-label { color: #b45309 !important; font-family: Georgia, serif !important; }
 html:not(.android-app) body.papier .sidebar-tab { border-radius: 10px !important; background: #efe6d6 !important; color: #4a3a1f !important; }
@@ -45591,9 +45605,187 @@ html:not(.android-app) body.dark.graphit .btn, html:not(.android-app) body.dark.
 html:not(.android-app) body.dark.graphit .btn-primary, html:not(.android-app) body.dark.graphit #nextBtn { background: #38bdf8 !important; border-color: #38bdf8 !important; color: #06202c !important; }
 html:not(.android-app) body.dark.graphit .exam-info, html:not(.android-app) body.dark.graphit #masteryDisplay, html:not(.android-app) body.dark.graphit .history-col { background: #1b2027 !important; border: 1px solid #262c35 !important; border-radius: 14px !important; box-shadow: none !important; }
 html:not(.android-app) body.dark.graphit .question-area { background: #1b2027 !important; border-color: #262c35 !important; border-radius: 14px !important; }
-html:not(.android-app) body.dark.graphit .question-area .option, html:not(.android-app) body.dark.graphit .question-area .option-grid { border-radius: 12px !important; margin-bottom: 10px !important; box-shadow: none !important; }
+html:not(.android-app) body.dark.graphit .question-area .option, html:not(.android-app) body.dark.graphit .question-area .option-grid { border-radius: 12px !important; margin-bottom: 0 !important; box-shadow: none !important; }
 html:not(.android-app) body.dark.graphit .sidebar-tab { border-radius: 10px !important; background: #182230 !important; color: #7dd3fc !important; }
 html:not(.android-app) body.dark.graphit [id$="Modal"] > div:first-child, html:not(.android-app) body.dark.graphit #einstellungenModal > div { border-radius: 16px !important; }
+/* ================================================================
+   DIE UNTEREN ZEILEN DER STARTSEITE UND ALLES MIT FEST EINGEBAUTEM BLAU
+   ----------------------------------------------------------------
+   Dietmar (Bild, Papier, rot markiert): "fehlt noch die Farbe. Oben hast es
+   gut uebernommen und unten ist es das alte geblieben." Pruefungstermin,
+   Rufzeichen, Lernen aktiv, Videolehrgang, Hilfe und Hoerbuch tragen ihre
+   Hellblau-Toene direkt im style-Attribut (background:#f4f7fd ...), und
+   die Beschriftungen ihr Dunkelblau ueber --panel-navy. Das schlaegt keine
+   Klassenregel von oben, darum fassen wir es hier ueber das Attribut und
+   ueber die Variablen an. Graphit braucht das nicht: die Nachtregeln
+   (.dark) kennen die Zeilen schon.
+   ================================================================ */
+
+/* ----- Papier: Variablen, damit alles, was var(--ink) / var(--line) /
+   var(--panel-navy) benutzt, warm wird (Beschriftungen, Knoepfe) ----- */
+html:not(.android-app) body.papier { --panel-navy: #4a3a1f; --panel-navy-light: #6b5530; --ink: #2b2418; --muted: #6f6252; --line: #e1d6c2; --bg: #f1ebe0; --card-bg: #fffdf8; --accent-amber-soft: #f7ead2; }
+/* die Zeilen selbst */
+html:not(.android-app) body.papier [style*="background:#f4f7fd" i],
+html:not(.android-app) body.papier [style*="background: #f4f7fd" i],
+html:not(.android-app) body.papier [style*="background:#fafbff" i],
+html:not(.android-app) body.papier [style*="background: #fafbff" i],
+html:not(.android-app) body.papier [style*="background:#f9fbff" i],
+html:not(.android-app) body.papier [style*="background: #f9fbff" i],
+html:not(.android-app) body.papier [style*="background:#f7fafd" i],
+html:not(.android-app) body.papier [style*="background: #f7fafd" i],
+html:not(.android-app) body.papier [style*="background:#f0f7ff" i],
+html:not(.android-app) body.papier [style*="background: #f0f7ff" i],
+html:not(.android-app) body.papier [style*="background:#eef2f9" i],
+html:not(.android-app) body.papier [style*="background: #eef2f9" i],
+html:not(.android-app) body.papier [style*="background:#eef4fc" i],
+html:not(.android-app) body.papier [style*="background: #eef4fc" i],
+html:not(.android-app) body.papier [style*="background:#eef2f8" i],
+html:not(.android-app) body.papier [style*="background: #eef2f8" i],
+html:not(.android-app) body.papier [style*="background:#e8edf3" i],
+html:not(.android-app) body.papier [style*="background: #e8edf3" i],
+html:not(.android-app) body.papier [style*="background:#eef7f8" i],
+html:not(.android-app) body.papier [style*="background: #eef7f8" i] { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
+html:not(.android-app) body.papier [style*="solid #b0c4d8" i],
+html:not(.android-app) body.papier [style*="solid #a8c0de" i],
+html:not(.android-app) body.papier [style*="solid #c2d6f0" i],
+html:not(.android-app) body.papier [style*="solid #e3e9f3" i],
+html:not(.android-app) body.papier [style*="solid #cfdae8" i],
+html:not(.android-app) body.papier [style*="solid #dbe6f5" i] { border-color: #d9ccb3 !important; }
+/* feste Dunkelblau-Schrift -> warmes Braun (nur als Schrift, nicht als Flaeche) */
+html:not(.android-app) body.papier [style*=" color:#0f2745" i], html:not(.android-app) body.papier [style*=";color:#0f2745" i], html:not(.android-app) body.papier [style^="color:#0f2745" i], html:not(.android-app) body.papier [style*=" color: #0f2745" i], html:not(.android-app) body.papier [style*=" color:#16243a" i], html:not(.android-app) body.papier [style*=" color:#4b5b73" i] { color: #3a2d17 !important; }
+/* Knoepfe und Felder in den Zeilen: weisse Flaeche -> Papierweiss */
+html:not(.android-app) body.papier #masteryDisplay [style*="background:#fff;" i], html:not(.android-app) body.papier #masteryDisplay [style*="background: #fff;" i], html:not(.android-app) body.papier #masteryDisplay [style*="background:#ffffff" i], html:not(.android-app) body.papier #masteryDisplay input, html:not(.android-app) body.papier #masteryDisplay select { background-color: #fffdf8 !important; }
+html:not(.android-app) body.papier #masteryDisplay input, html:not(.android-app) body.papier #masteryDisplay select, html:not(.android-app) body.papier #masteryDisplay .btn { border-color: #d9ccb3 !important; color: #2b2418 !important; }
+html:not(.android-app) body.papier #masteryDisplay [style*="background:var(--panel-navy)" i], html:not(.android-app) body.papier #masteryDisplay [style*="background: var(--panel-navy)" i] { background: #4a3a1f !important; border-color: #4a3a1f !important; color: #fffdf8 !important; }
+html:not(.android-app) body.papier .footer-note a, html:not(.android-app) body.papier .footer-note .ohm { color: #4a3a1f !important; }
+html:not(.android-app) body.papier .fz-kopf, html:not(.android-app) body.papier .fz-zahl { background: #efe6d6 !important; color: #4a3a1f !important; }
+html:not(.android-app) body.papier .fz-zahl { background: #fffdf8 !important; color: #2b2418 !important; }
+html:not(.android-app) body.papier #difficultCount, html:not(.android-app) body.papier .difficult-badge { background: #f3e2bd !important; color: #7a4a00 !important; }
+html:not(.android-app) body.papier #masteryStats, html:not(.android-app) body.papier #terminInfo { color: #6f6252 !important; }
+/* Klassen mit festem Hellblau */
+html:not(.android-app) body.papier .vf-hinweis, html:not(.android-app) body.papier .realistic-rules .r-rule, html:not(.android-app) body.papier .rpc-icon, html:not(.android-app) body.papier #unterrichtModal .u-liste, html:not(.android-app) body.papier #unterrichtModal .u-haken, html:not(.android-app) body.papier #unterrichtModal .k-kasten { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
+
+/* ----- Luftig: runde Zeilen im Ton der Karten ----- */
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f4f7fd" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f4f7fd" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#fafbff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #fafbff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f9fbff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f9fbff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f7fafd" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f7fafd" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f0f7ff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f0f7ff" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef2f9" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef2f9" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef4fc" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef4fc" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef2f8" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef2f8" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#e8edf3" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #e8edf3" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef7f8" i],
+html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef7f8" i] { background: #f6f8fc !important; border-color: #e4e9f2 !important; border-radius: 14px !important; }
+html:not(.android-app) body.luftig .fz-kopf { background: #eef3fb !important; }
+
+/* ----- Klar: eckige Zeilen mit klarer Linie ----- */
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#f4f7fd" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #f4f7fd" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#fafbff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #fafbff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#f9fbff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #f9fbff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#f7fafd" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #f7fafd" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#f0f7ff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #f0f7ff" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef2f9" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef2f9" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef4fc" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef4fc" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef2f8" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef2f8" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#e8edf3" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #e8edf3" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef7f8" i],
+html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef7f8" i] { background: #f2f5f9 !important; border: 1px solid #9fb2c8 !important; border-radius: 0 !important; }
+html:not(.android-app) body.klar .fz-kopf { background: #e6edf5 !important; border-radius: 0 !important; }
+/* ----- Papier: Fragenansicht, Seitenleiste, Fenster ----- */
+/* Der graue Block um Frage und Antworten (DARC-Vorbild, #dddddd) und die
+   Luecken dazwischen werden Sand; die Felder bleiben Papierweiss. */
+html:not(.android-app) body.papier { --darc-rahmen: #efe6d6; --darc-feld: #fffdf8; }
+html:not(.android-app) body.papier .left-sidebar { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
+html:not(.android-app) body.papier .left-sidebar .stat-chip { background: #efe6d6 !important; border-color: #e1d6c2 !important; }
+html:not(.android-app) body.papier .left-sidebar .result-box.waiting { background: #efe6d6 !important; color: #6f6252 !important; }
+html:not(.android-app) body.papier .dot-sidebar:not(.correct-dot):not(.wrong-dot):not(.beantwortet-dot):not(.gelernt-dot) { background: #fffdf8; border-color: #a8946a; color: #4a3a1f; }
+html:not(.android-app) body.papier .dot-sidebar.beantwortet-dot { background: #e6d9bd !important; border-color: #a8946a !important; color: #3a2d17 !important; }
+html:not(.android-app) body.papier .option.gewaehlt, html:not(.android-app) body.papier .option-grid.gewaehlt { background: #f3e6cd !important; border-color: #4a3a1f !important; box-shadow: inset 0 0 0 2px #4a3a1f !important; }
+html:not(.android-app) body.papier .uebungszeit { background: #f2ead9 !important; border-color: #e1d6c2 !important; color: #4a3a1f !important; }
+html:not(.android-app) body.papier .uebungszeit .zeit-wert { color: #7a4a00 !important; }
+html:not(.android-app) body.papier .realistic-modal-header { background: #f7f0e2 !important; border-bottom-color: #e1d6c2 !important; }
+html:not(.android-app) body.papier #duoModal .name-box, html:not(.android-app) body.papier #duoModal .config-box, html:not(.android-app) body.papier #duoModal .zu { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
+html:not(.android-app) body.papier [id$="Modal"] a:not(.btn):not([class*="btn"]) { color: #9a4a06; }
+html:not(.android-app) body.papier .q-meta span, html:not(.android-app) body.papier .progress-stats span { background: #efe6d6 !important; color: #4a3a1f !important; }
+/* ----- Graphit: Reste, die in Dunkel hell geblieben sind ----- */
+/* Der Rundgang-Kasten in der Info (#eaf4ff, helle Schrift darauf -> unlesbar)
+   und das Rufzeichenfeld bei den Diplomen (weiss). Ausserdem der Schleier hinter
+   den Fenstern: er war Dunkelblau und faerbte das graphitgraue Fenster dahinter
+   blau - jetzt neutral schwarz. */
+body.dark [style*="background:#eaf4ff" i], body.dark [style*="background: #eaf4ff" i] { background: #14212e !important; border-color: #24506f !important; color: #d9dee5 !important; }
+html:not(.android-app) body.dark.graphit #qslRufInput { background: #1e242b !important; color: #f3f5f8 !important; border-color: #323a44 !important; }
+html:not(.android-app) body.dark.graphit [id$="Modal"][style*="rgba(15,39,69" i], html:not(.android-app) body.dark.graphit [id$="Modal"][style*="rgba(15, 39, 69" i] { background: rgba(4,6,9,.72) !important; }
+/* ================================================================
+   ALLE STILE GLEICH HOCH                                 (02.10.2026)
+   ----------------------------------------------------------------
+   Dietmar (Video): "Bei Klar und Kontrastreich kann ich auf 85 % gehen und
+   bei allen anderen muss ich auf 80 % Groesse gehen, um unten die Fusszeile
+   zu sehen. Ich moechte, dass alle Fenster eine Groesse haben."
+
+   Gemessen (Fenster 1400 x 1000, Anzeigegroesse 100 %, Startseite): Klar
+   war 97 Punkte niedriger als Hell, Gruen, Blau, Orange und Grau - die
+   anderen tragen innen 32 Punkte Rand oben und unten und 33 Punkte
+   Abstand zwischen Titelzeile und Knopfleiste, Klar hat die Titelzeile
+   randlos. Hier bekommen ALLE Stile dieselbe Hoehe; Klar bleibt, wie es
+   ist, die anderen rucken oben, unten und zwischen den Bloecken zusammen.
+   Die Zahlen stehen als Variablen (--sk-...) in jedem Stil, damit man sie
+   an einer Stelle findet.
+   ================================================================ */
+/* Nur im breiten Fenster: im schmalen (Handy, Tablet hochkant) gelten die
+   eigenen Raender der Grundregeln. */
+@media (min-width: 761px) {
+html:not(.android-app) body:not(.klar):not(.beamer) #app.card { padding-top: var(--sk-pad, 10px) !important; padding-bottom: var(--sk-pad, 10px) !important; }
+html:not(.android-app) body:not(.klar):not(.beamer) .header { margin-bottom: 0 !important; }
+html:not(.android-app) body:not(.klar):not(.beamer):not(.luftig) .header { padding-bottom: var(--sk-hk, 12px) !important; }
+html:not(.android-app) body:not(.klar):not(.beamer) .filter-bar { margin-top: var(--sk-g1, 12px) !important; margin-bottom: var(--sk-g2, 12px) !important; }
+html:not(.android-app) body:not(.klar):not(.beamer) .footer-note { margin-top: var(--sk-g3, 10px) !important; }
+html:not(.android-app) body.luftig { --sk-pad: 6px; --sk-g1: 10px; }
+html:not(.android-app) body.graphit { --sk-g1: 10px; --sk-g2: 10px; }
+/* Seitenrand gleich (26 Punkte im Inneren wie bei Klar und Luftig): sonst
+   bricht die Knopfleiste in den alten Stilen frueher in zwei Zeilen um und
+   die Seite wird dort hoeher. Die Stile mit 1 Punkt Rand bekommen 25. */
+html:not(.android-app) body:not(.klar):not(.luftig):not(.beamer) #app.card { padding-left: 25px !important; padding-right: 25px !important; }
+}
+/* Pruefungssimulator, Gruppenraum und Unterricht sehen aus wie Auffrischen,
+   Blaettern, Statistik und Drucken (Dietmar: "Die Farbe links gefaellt mir
+   gut. Die gleiche Farbe soll auch rechts sein. Start, Fehler und Lernbedarf
+   koennen so bleiben."). Sie trugen eine eigene Toenung - in den neuen Stilen
+   weg, die Kanten und Schrift der uebrigen Knoepfe gelten. */
+html:not(.android-app) body.luftig .btn-exam, html:not(.android-app) body.luftig .btn-modus { background: #fff !important; border-color: #dfe6f0 !important; color: #1f2a3a !important; }
+html:not(.android-app) body.klar .btn-exam, html:not(.android-app) body.klar .btn-modus { background: #fff !important; border: 1.5px solid #0f2745 !important; color: #0f2745 !important; }
+html:not(.android-app) body.papier .btn-exam, html:not(.android-app) body.papier .btn-modus { background: #fffdf8 !important; border-color: #d9ccb3 !important; color: #2b2418 !important; }
+html:not(.android-app) body.luftig .btn-exam i, html:not(.android-app) body.luftig .btn-modus i, html:not(.android-app) body.klar .btn-exam i, html:not(.android-app) body.klar .btn-modus i, html:not(.android-app) body.papier .btn-exam i, html:not(.android-app) body.papier .btn-modus i { color: #7e8ea6 !important; }
+html:not(.android-app) body.dark.graphit .filter-bar .btn.btn-modus i, html:not(.android-app) body.dark.graphit .filter-bar .btn.btn-exam i, html:not(.android-app) body.dark.graphit .filter-bar #duoBtn i { color: #7d9bb1 !important; }
+html:not(.android-app) body.dark.graphit .filter-bar #duoBtn { color: #cfe2ee !important; }
+/* Waehrend einer Runde haelt die Karte unten Platz fuer die schwebende
+   Knopfleiste frei (6,5 rem, siehe die Grundregel). Die Regeln oben und die
+   Stilregeln mit padding: 0 / 18px duerfen das nicht aufheben - sonst liegt
+   die letzte Antwort unter der Leiste. Nur im breiten Fenster, wie dort. */
+@media (min-width: 1025px) {
+html:not(.android-app) body.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: 6.5rem !important; }
+/* Klar und Luftig tragen oben weniger Rand und sind in der Runde sonst hoeher */
+html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: calc(6.5rem - 10px) !important; }
+html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: calc(6.5rem - 6px) !important; }
+}
 </style>
 
 <script id="muendlicheNachpruefung">
