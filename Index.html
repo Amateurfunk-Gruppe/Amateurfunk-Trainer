@@ -50340,8 +50340,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(an) dockMasse(); else if($('appDock')) $('appDock').classList.remove('weg');
     }
     // Runterrollen: weg. Hochrollen oder ganz oben: wieder da.
+    //  NACHTRAG 02.10.2026. Dietmar: "Ich muss ziemlich viel scrollen,
+    //  damit die Leiste unten aus dem Bildschirm verschwindet." Vorher
+    //  zaehlte jedes Rollereignis fuer sich: Wer langsam rollte, kam je
+    //  Ereignis nie ueber die Schwelle. Jetzt zaehlt der Weg seit dem
+    //  letzten Richtungswechsel - 20 Punkte abwaerts: weg, 20 Punkte
+    //  aufwaerts oder ganz oben: wieder da.
     tu(() => {
-        let zuletzt = 0;
+        let zuletzt = 0, anker = 0, richtung = 0;
         const lage = e => {
             const z = e && e.target;
             if(z && z !== D && z !== D.body && z !== D.documentElement && z !== D.scrollingElement) return null;
@@ -50352,10 +50358,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(!d || !D.body.classList.contains('mit-dock')) return;
             const y = lage(e);
             if(y === null) return;
-            if(y < 12) d.classList.remove('weg');
-            else if(y > zuletzt + 6) d.classList.add('weg');
-            else if(y < zuletzt - 6) d.classList.remove('weg');
+            const r = y > zuletzt ? 1 : (y < zuletzt ? -1 : 0);
+            if(r && r !== richtung){ richtung = r; anker = zuletzt; }
             zuletzt = y;
+            if(y < 12){ d.classList.remove('weg'); return; }
+            if(richtung > 0 && y - anker >= 20) d.classList.add('weg');
+            else if(richtung < 0 && anker - y >= 20) d.classList.remove('weg');
         }), { capture: true, passive: true });
         window.addEventListener('resize', () => tu(dockMasse));
     });
@@ -51204,14 +51212,38 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  Jede Beruehrung und jede Taste nach der Antwort haelt das Ganze an,
     //  genau wie beim Original (siehe pointerdown/keydown dort).
     // ================================================================
+    //  NACHTRAG 02.10.2026. Dietmar: "Wenn ich schon beim Vorlesen
+    //  antworte, geht es nicht weiter." Im Simulator laeuft es, am Handy
+    //  nicht - also darf nichts mehr dazwischenfunken, was keine
+    //  Bedienung ist: Am PC haelt JEDE Beruehrung die Uhr an (pointerdown
+    //  im Original); am Handy ist Beruehren auch Rollen und Lesen.
+    //  Jetzt haelt nur noch ein Antippen eines Knopfes an (click auf
+    //  Taste, Leiste, Hilfe - nicht auf eine Antwort, nicht auf Text),
+    //  und nichts in der ersten Sekunde nach der Antwort (die Ereignisse
+    //  des eigenen Tippers). Das Original-Anhalten per pointerdown wird
+    //  in der App uebersprungen (siehe autoWeiterAbbrechen unten).
     tu(() => {
         window.autoWeiterSpricht = function(){ return false; };
         const alt = window.selectOption;
         if(typeof alt !== 'function') return;
-        let beruehrt = false;
-        const anhalten = () => { beruehrt = true; };
-        D.addEventListener('pointerdown', anhalten, true);
-        D.addEventListener('keydown', anhalten, true);
+        let beruehrt = false, antwortZeit = 0, ignorieren = false;
+        const BEDIENUNG = 'button, a[href], input, select, textarea, label, .sidebar-tab, .ahf, [data-ziel], [role="button"]:not(.option):not(.option-grid)';
+        const istBedienung = z => !!(z && z.closest && z.closest(BEDIENUNG) && !z.closest('.option, .option-grid'));
+        // Das Original haelt bei jedem pointerdown an - in der App nicht.
+        const abbrechenAlt = window.autoWeiterAbbrechen;
+        if(typeof abbrechenAlt === 'function') window.autoWeiterAbbrechen = function(){ if(ignorieren) return; return abbrechenAlt.apply(this, arguments); };
+        window.addEventListener('pointerdown', e => {
+            if(!e.isTrusted) return;
+            ignorieren = true; setTimeout(() => { ignorieren = false; }, 0);
+        }, true);
+        window.addEventListener('click', e => {
+            if(!e.isTrusted || Date.now() - antwortZeit < 900) return;
+            if(istBedienung(e.target)){ beruehrt = true; tu(() => abbrechenAlt && abbrechenAlt()); }
+        }, true);
+        D.addEventListener('keydown', e => {
+            if(!e.isTrusted || Date.now() - antwortZeit < 900) return;
+            if(e.key && (e.key.length === 1 || /^(Enter|Tab|Escape|Arrow|Page|Home|End|Backspace)/.test(e.key))) beruehrt = true;
+        }, true);
         const naechsteGibtEs = () => {
             let ziel = currentIndex + 1;
             while(ziel < currentQuestions.length && currentQuestions[ziel] && currentQuestions[ziel]._autoGelernt) ziel++;
@@ -51225,7 +51257,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             tu(() => {
                 if(!window.autoWeiterAn || !window.autoWeiterAn()) return;
                 const merk = currentIndex, sek = window.autoWeiterSekunden();
-                beruehrt = false;
+                beruehrt = false; antwortZeit = Date.now();
                 setTimeout(() => tu(() => {
                     if(beruehrt || currentIndex !== merk || !answered) return;
                     if(!window.autoWeiterAn() || !naechsteGibtEs()) return;
@@ -51242,6 +51274,67 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             return r;
         };
     });
+
+    // ================================================================
+    //  NUR DIE FRAGE VORLESEN                               (02.10.2026)
+    //  Dietmar (Bild vom Kasten "Fragen und Antworten"): "Hier wuensche
+    //  ich mir, dass nur die Frage ohne Antworten vorgelesen wird."
+    //  Am PC gibt es das ueber "Antwort unter der Maus vorlesen" - die
+    //  Antworten kommen dann unter der Maus. Am Handy gibt es keine Maus,
+    //  darum hier ein eigener Haken "Nur die Frage vorlesen": Der
+    //  Vorlese-Knopf und das automatische Vorlesen sprechen die Frage,
+    //  die Antworten nicht. Nur in der App, pro Handy (app_nur_frage).
+    // ================================================================
+    tu(() => {
+        const alt = window.vorleseFrage;
+        if(typeof alt !== 'function') return;
+        const nurFrage = () => lies('app_nur_frage', '0') === '1';
+        window.vorleseFrage = function(){
+            if(!nurFrage()) return alt.apply(this, arguments);
+            const q = currentQuestions[currentIndex]; if(!q) return;
+            const btn = $('ttsBtn');
+            const kenner = (typeof kennerThema === 'function') && kennerThema(q);
+            const text = (kenner ? kennerSprechen(q.text) : q.text) + '.';
+            return playTTSQueue([{ text, selector: null }], btn);
+        };
+        window.appNurFrageSetzen = function(an){ schreib('app_nur_frage', an ? '1' : '0'); };
+        const oeffnen = window.einstellungenOeffnen;
+        if(typeof oeffnen !== 'function') return;
+        const umbauen = () => tu(() => {
+            const haken = $('einstMausVorlesen'); if(!haken) return;
+            const alteZeile = haken.closest('label'); if(!alteZeile || alteZeile.dataset.handy) return;
+            alteZeile.dataset.handy = '1';
+            alteZeile.style.display = 'none';                 // die Maus gibt es am Handy nicht
+            const z = D.createElement('label');
+            z.style.cssText = 'display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.2rem;';
+            z.setAttribute('data-vorlesen-kurz', 'Nur die Frage vorlesen.');
+            z.setAttribute('data-vorlesen', 'Nur die Frage vorlesen. Der Vorlese-Knopf und das automatische Vorlesen sprechen die Frage, die Antworten nicht.');
+            z.innerHTML = '<input type="checkbox" id="einstNurFrage" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;">'
+                        + '<span><b style="color:#0f2745; font-size:0.85rem;">Nur die Frage vorlesen</b>'
+                        + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+                        + 'Der Vorlese-Knopf und das automatische Vorlesen sprechen die Frage – die Antworten nicht. '
+                        + 'Die Bestätigung nach deiner Antwort bleibt, wie sie oben eingestellt ist.</span></span>';
+            z.querySelector('input').checked = nurFrage();
+            z.querySelector('input').addEventListener('change', e => window.appNurFrageSetzen(e.target.checked));
+            alteZeile.insertAdjacentElement('afterend', z);
+        });
+        window.einstellungenOeffnen = function(){
+            const r = oeffnen.apply(this, arguments);
+            umbauen();
+            return r;
+        };
+    });
+
+    // ================================================================
+    //  EINE MELDUNG BEIM ABHAKEN                            (02.10.2026)
+    //  Dietmar (Bild): "Es gibt 2 Benachrichtigungen, wenn ich eine
+    //  Frage als gelernt markiere. Die blaue entfernen, die gruene
+    //  bleibt genau an der Stelle." Die blaue (markeHinweis, "BB103 gilt
+    //  als gelernt - wird nicht mehr abgefragt") entfaellt in der App;
+    //  die gruene aus zeigeFehlerwertungHinweis bleibt. Beim Merken
+    //  (Herz) bleibt die blaue, dort gibt es keine zweite.
+    // ================================================================
+    tu(() => { if(typeof window.toggleGelerntCurrentHinweis === 'function') window.toggleGelerntCurrentHinweis = function(){}; });
 })();
 </script>
 </body>
