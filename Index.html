@@ -2064,6 +2064,20 @@
             background: #aca6a1 !important;
             border-color: #a09085 !important;
         }
+
+        /* RUNDENENDE PASST AUF DEN SCHIRM (02.10.2026). Dietmar (Bild
+           "Runde beendet", rechts abgeschnitten): "Am Ende der Runde". Die
+           drei Knoepfe standen in einer Reihe und zogen den ganzen Kasten
+           breiter als das Fenster - samt Ueberschrift und Liste. In der
+           App stehen die Knoepfe untereinander, Text bricht um, die Liste
+           bleibt in der Breite. */
+        html.android-app .finish-box { max-width: 100% !important; min-width: 0 !important; width: auto !important; box-sizing: border-box; padding-left: 0.4rem !important; padding-right: 0.4rem !important; overflow-wrap: anywhere; }
+        html.android-app .finish-box > div { max-width: 100% !important; min-width: 0; box-sizing: border-box; }
+        html.android-app .finish-box .sub, html.android-app .finish-box p { white-space: normal !important; }
+        html.android-app .finish-box .btn-group { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; width: 100%; }
+        html.android-app .finish-box .btn-group .btn { width: 100% !important; min-width: 0 !important; max-width: none !important; margin: 0 !important; white-space: normal !important; justify-content: center; min-height: 48px; }
+        html.android-app .ausgelassen-zeile { min-width: 0; max-width: 100%; box-sizing: border-box; }
+        html.android-app .ausgelassen-zeile > span:nth-child(3) { display: none; }   /* der Teil (Technik...) - am Handy kein Platz */
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
