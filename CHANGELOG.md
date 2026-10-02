@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- PC, Stil „Klar“: Die Knopfleiste unten trägt denselben dunkelblauen Rand wie der Kasten und steht nicht mehr über dessen Rand hinaus
 - PC: Vier neue Farbstile unter Einstellungen → Allgemein → Farbstil – „Luftig & hell“ (runde Karten, viel Luft, kräftiges Blau), „Klar & kontrastreich“ (dunkelblaue Kopfleiste, eckig, kräftige Linien), „Papier & warm“ (cremefarben, Serifen, Bernstein) und „Graphit (dunkel)“ (der Dunkel-Modus in neutralem Grau). Der bisherige Stil bleibt Vorgabe; der Umschalter in der Kopfzeile kennt die neuen Stile ebenfalls. In der Android-App gelten weiter Sachlich und Verspielt
 - Android-App: Bei jeder neuen Frage steht die Seite ganz oben (Weiter, Zurück, Sprung im Verlauf) – vorher blieb der Rollstand der alten Frage liegen; beim Antworten auf derselben Frage bleibt die Stelle
 - Android-App: Der Abschluss einer Runde („Runde beendet“, auch mit ausgelassenen Fragen) passt auf den Schirm – Knöpfe untereinander, Text bricht um, die Liste der Ausgelassenen bleibt in der Breite

@@ -45552,6 +45552,11 @@ html:not(.android-app) body.klar .question-area .option, html:not(.android-app) 
 html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fff !important; }
 html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong) .option-label { color: #0f2745 !important; font-weight: 800 !important; }
 html:not(.android-app) body.klar .sidebar-tab { border-radius: 0 !important; background: #0f2745 !important; color: #fff !important; }
+/* Die Knopfleiste unten: Dietmar (Bild): "Die Button Reihe laeuft rechts und
+   links ueber." Sie ist so breit wie der Kasten samt Rand und deckte dessen
+   Rand ab. Hier bekommt sie denselben Rand und keine Rundung - sie ist der
+   Fuss des Kastens, nicht ein schwebendes Brett. */
+html:not(.android-app) body.klar.runde-laeuft #navArea { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; box-sizing: border-box !important; }
 html:not(.android-app) body.klar [id$="Modal"] > div:first-child, html:not(.android-app) body.klar #einstellungenModal > div { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; }
 
 /* ---------- 3  PAPIER & WARM ---------- */
