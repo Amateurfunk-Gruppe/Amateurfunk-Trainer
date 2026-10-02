@@ -1995,6 +1995,39 @@
         html.android-app body.dark .app-wort-probe { border-color: var(--nacht-kante2, #2b5471); color: var(--nacht-hell, #f0f7fc); }
         html.android-app .app-wort-probe b { font-weight: inherit; color: var(--wort-tag, #b45309) !important; }
         html.android-app body.dark .app-wort-probe b { color: var(--wort-nacht, #ffd34d) !important; }
+
+        /* BLAETTERN IM DUNKELN: KRAEFTIGERE FARBEN (02.10.2026)
+           Dietmar (Bild vom Blaettern-Fenster, dunkel): "Die Farbe hier
+           ist ziemlich schwer zu erkennen. Kann man die etwas kraeftiger
+           machen?" Die Tagestoene (dunkles Gruen, Ocker, Dunkelblau,
+           Violett) sind fuer weissen Grund gemacht; auf dem dunklen Grund
+           versinken sie. Hier die hellen Gegenstuecke - Titel, Zahl, Balken
+           und Rand jeder Kachel. Nur in der App. */
+        html.android-app body.dark .blaetter-kachel { border-width: 2px; border-color: #3b7fa8 !important; }
+        html.android-app body.dark .blaetter-kachel .bk-zahl > span:first-child { color: #ffffff !important; }
+        html.android-app body.dark .blaetter-kachel .bk-zahl > span + span,
+        html.android-app body.dark .blaetter-kachel .bk-klein { color: #c9d8e6 !important; }
+        html.android-app body.dark .bk-balken { background: rgba(255,255,255,0.14); }
+        html.android-app body.dark .bk-balken > i { background: #22c3f2; }
+        html.android-app body.dark .blaetter-kachel .bk-titel { color: #4fc9f7 !important; }
+        html.android-app body.dark .blaetter-kachel.gruen { border-color: #35c46a !important; }
+        html.android-app body.dark .blaetter-kachel.gruen .bk-titel,
+        html.android-app body.dark .blaetter-kachel.gruen .bk-zahl > span:first-child { color: #5ee08f !important; }
+        html.android-app body.dark .bk-balken.gruen > i { background: #35c46a; }
+        html.android-app body.dark .blaetter-kachel.offen { border-color: #f2a81d !important; }
+        html.android-app body.dark .blaetter-kachel.offen .bk-titel,
+        html.android-app body.dark .blaetter-kachel.offen .bk-zahl > span:first-child { color: #ffbe3d !important; }
+        html.android-app body.dark .bk-balken.orange > i { background: #f2a81d; }
+        html.android-app body.dark .blaetter-kachel.unberuehrt { border-color: #4f9cf0 !important; }
+        html.android-app body.dark .blaetter-kachel.unberuehrt .bk-titel,
+        html.android-app body.dark .blaetter-kachel.unberuehrt .bk-zahl > span:first-child { color: #7dbcff !important; }
+        html.android-app body.dark .bk-balken.blau > i { background: #4f9cf0; }
+        html.android-app body.dark .blaetter-kachel.erklaert { border-color: #a98ff0 !important; }
+        html.android-app body.dark .blaetter-kachel.erklaert .bk-titel,
+        html.android-app body.dark .blaetter-kachel.erklaert .bk-zahl > span:first-child { color: #c9b6ff !important; }
+        html.android-app body.dark .bk-balken.violett > i { background: #a98ff0; }
+        /* Die zuletzt angetippte Kachel: deutlicher Ring statt des blassen Fokusrands */
+        html.android-app body.dark .blaetter-kachel:focus-visible { outline: 3px solid #4fc9f7; outline-offset: 2px; }
     </style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
