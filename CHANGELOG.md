@@ -11,6 +11,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 ## [1.298.0] - 2026-09-25
 
 ### Hinzugefügt
+- Android-App: Bei jeder neuen Frage steht die Seite ganz oben (Weiter, Zurück, Sprung im Verlauf) – vorher blieb der Rollstand der alten Frage liegen; beim Antworten auf derselben Frage bleibt die Stelle
 - Android-App: Der Abschluss einer Runde („Runde beendet“, auch mit ausgelassenen Fragen) passt auf den Schirm – Knöpfe untereinander, Text bricht um, die Liste der Ausgelassenen bleibt in der Breite
 - Android-App, Dunkel-Modus: Bei Bildantworten stehen die Buchstaben A–D in Blau statt Schwarz; die Zeichnungen sind weißer (Kontrast 2,6 statt 1,8 nach der Umkehr), Grund und Kante der Bilder bleiben wie gehabt
 - Android-App: Blättern-Fenster ist rollbar – Kopf und Fuß stehen fest, die Kacheln in der Mitte rollen; die letzte Zeile war unter dem Rand verschwunden. Die Knöpfe im Fuß sind im Dunkel-Modus lesbar

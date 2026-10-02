@@ -51589,6 +51589,45 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             return r;
         };
     });
+
+    // ================================================================
+    //  NEUE FRAGE: GANZ NACH OBEN                            (02.10.2026)
+    //  Ein Nutzer (ueber Dietmar): "ist es normal bei den Fragen, wenn
+    //  man auf die naechste geht, dass man selbst erst ganz nach oben
+    //  scrollen muss." Dietmar: "dass, wenn die neue Frage laedt, auch
+    //  wirklich der Text ganz, ganz oben ist." War die alte Frage
+    //  gerollt, blieb der Rollstand liegen - bei einer kuerzeren Frage
+    //  nur zum Teil, daher die "ein bis zwei Zentimeter". Jetzt: Sobald
+    //  eine ANDERE Frage gezeichnet wird, geht es nach oben - nicht beim
+    //  Neuzeichnen derselben Frage (Antwort, Zuruecknehmen). Dreimal,
+    //  weil Bilder und die Schriftstufe die Hoehe noch nachziehen.
+    // ================================================================
+    tu(() => {
+        const alt = window.renderQuestion;
+        if(typeof alt !== 'function') return;
+        let letzte = null;
+        const nachOben = () => tu(() => {
+            try{ window.scrollTo(0, 0); }catch(e){}
+            if(D.scrollingElement) D.scrollingElement.scrollTop = 0;
+            if(D.body) D.body.scrollTop = 0;
+            const qa = D.querySelector('#questionContainer'); if(qa && qa.scrollTop) qa.scrollTop = 0;
+            const d = $('appDock'); if(d) d.classList.remove('weg');
+        });
+        window.renderQuestion = function(){
+            const r = alt.apply(this, arguments);
+            tu(() => {
+                if(!D.body.classList.contains('runde-laeuft')) return;
+                const q = currentQuestions[currentIndex];
+                const marke = (q && q.id ? q.id : '?') + '#' + currentIndex;
+                if(marke === letzte) return;
+                letzte = marke;
+                nachOben();
+                requestAnimationFrame(nachOben);
+                setTimeout(nachOben, 220);
+            });
+            return r;
+        };
+    });
 })();
 </script>
 </body>
