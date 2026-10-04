@@ -1162,6 +1162,92 @@
         @keyframes rufAuf { 0% { opacity: 0; transform: translate(-50%, -80%) scale(0.6); } 20% { opacity: 1; transform: translate(-50%, -110%) scale(1.1); }
                             70% { opacity: 1; transform: translate(-50%, -130%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -160%) scale(0.95); } }
         @media (prefers-reduced-motion: reduce) { #roboHelfer, #roboHelfer * , #roboRing, #roboSperre, .funki-name i, #roboRuf { animation: none !important; transition: none !important; } }
+        /* ================================================================
+           FUNKI ERKLAERT, MORSEN, QUIZ UND DIE ISS               (04.10.2026)
+           Alles nur in Funkis Blase (#roboBlase) und im Ueberflug (#appIss),
+           die es nur im Stil Verspielt der App gibt.
+           ================================================================ */
+        #roboBlase .rb-bild { margin-top: 10px; overflow: hidden; background: var(--s-fl2); }
+        html.android-app body #roboBlase .rb-bild { border-radius: 12px !important; }
+        #roboBlase .rb-bild svg { display: block; width: 100%; height: auto; }
+        #roboBlase .rb-bild .eb-l { fill: none; stroke: var(--s-haupt); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        #roboBlase .rb-bild .eb-a { fill: none; stroke: var(--s-amber); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        #roboBlase .rb-bild .eb-t { fill: none; stroke: var(--s-text3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        #roboBlase .rb-bild .eb-fa { fill: var(--s-amber); }
+        #roboBlase .rb-bild .eb-fh { fill: var(--s-haupt); }
+        #roboBlase .rb-bild .eb-ft { fill: var(--s-text3); }
+        #roboBlase .rb-bild .eb-txt { font: 700 9.5px var(--font-body); fill: var(--s-text2); text-anchor: middle; }
+        #roboBlase .rb-bild .eb-txt-g { font: 800 13px var(--font-display); fill: var(--s-akzent); text-anchor: middle; }
+        @keyframes ebRing { 0% { transform: scale(0.08); opacity: 0.9; } 100% { transform: scale(1); opacity: 0; } }
+        #roboBlase .eb-ring { fill: none; stroke: var(--s-amber); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: ebRing 2.8s ease-out infinite; }
+        @keyframes ebFluss { to { stroke-dashoffset: -28; } }
+        #roboBlase .eb-fluss { stroke-dasharray: 6 8; animation: ebFluss 1s linear infinite; }
+        @keyframes ebBlitz { 0%, 60%, 100% { opacity: 1; } 65%, 75% { opacity: 0.15; } 70% { opacity: 1; } }
+        #roboBlase .eb-blitz { animation: ebBlitz 2s infinite; }
+        @keyframes ebHupf { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        #roboBlase .eb-hupf { animation: ebHupf 1.1s ease-in-out infinite; }
+        @keyframes ebKeule { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.42; } }
+        #roboBlase .eb-keule { animation: ebKeule 1.8s ease-in-out infinite; }
+        @keyframes ebDreh { 0%, 18% { transform: rotate(-24deg); } 50%, 68% { transform: rotate(24deg); } 100% { transform: rotate(-24deg); } }
+        #roboBlase .eb-dreh { transform-box: view-box; transform-origin: 172px 46px; animation: ebDreh 5s ease-in-out infinite; }
+        @keyframes ebScan { from { transform: translateY(0); } to { transform: translateY(37px); } }
+        #roboBlase .eb-scan { animation: ebScan 1.6s linear infinite; }
+        @keyframes ebAuf { 0% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
+        #roboBlase .eb-deckel { transform-box: view-box; transform-origin: 72px 80px; animation: ebAuf 5s steps(14) infinite; }
+        @keyframes ebZeile { from { transform: translateY(0); } to { transform: translateY(61px); } }
+        #roboBlase .eb-zeile { animation: ebZeile 5s steps(14) infinite; }
+        @keyframes ebWackel { 0%, 100% { transform: translate(0, 0) rotate(-1.5deg); } 50% { transform: translate(0, -3px) rotate(1.5deg); } }
+        #roboBlase .eb-wackel { transform-box: fill-box; transform-origin: center; animation: ebWackel 3.4s ease-in-out infinite; }
+        @keyframes ebBogen { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+        #roboBlase .eb-bogen { animation: ebBogen 1.4s ease-in-out infinite; }
+        @keyframes issLicht { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+        #roboBlase .iss-licht, #appIss .iss-licht { animation: issLicht 1s ease-in-out infinite; }
+        /* Auswahl im Funk-ABC und im Quiz */
+        #roboBlase .rb-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        #roboBlase .rb-chip { min-height: 34px; padding: 4px 11px; border: 1px solid var(--s-rand2); background: var(--s-fl2); color: var(--s-text);
+                              font: 700 13.5px var(--font-body); cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent; }
+        html.android-app body #roboBlase .rb-chip { border-radius: 17px !important; }
+        #roboBlase .rb-chip.gelesen { border-color: var(--s-gruen); }
+        #roboBlase .rb-chip.gelesen::after { content: " ✓"; color: var(--s-gruen); }
+        #roboBlase .rb-antw .rb-chip { width: 100%; min-height: 40px; font-weight: 600; }
+        html.android-app body #roboBlase .rb-antw .rb-chip { border-radius: 12px !important; }
+        #roboBlase small { color: var(--s-text3); font-size: 12px; }
+        /* Morsen: Punkte und Striche leuchten der Reihe nach auf */
+        #roboBlase .rb-morse { margin-top: 8px; min-height: 28px; font: 800 20px/1.25 var(--font-display); letter-spacing: 3px; color: var(--s-text3); }
+        #roboBlase .rb-morse:empty::before { content: "−·−·  −−·−"; opacity: 0.3; }
+        #roboBlase .rb-morse .mz { display: inline-block; margin-right: 12px; }
+        #roboBlase .rb-morse i { font-style: normal; opacity: 0.35; transition: opacity 0.08s, color 0.08s; }
+        #roboBlase .rb-morse i.an { opacity: 1; color: var(--s-amber); }
+        /* Die ISS fliegt durch den Schirm: fest, ueber allem, fasst nichts an */
+        #appIss { position: fixed; left: 0; top: 0; z-index: 99999; pointer-events: none; display: none; transform-origin: center; will-change: transform, opacity; }
+        html.android-app.stil-verspielt #appIss.fliegt { display: block; }
+        #appIss svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+        /* Der Astronaut winkt vom Rand herein */
+        #appAstro { position: fixed; left: 0; top: 0; z-index: 99998; pointer-events: none; display: none; transition: transform 0.7s cubic-bezier(0.3, 1.25, 0.5, 1); }
+        html.android-app.stil-verspielt #appAstro.da { display: block; }
+        #appAstro.l { transform: translateX(-115%); }
+        #appAstro.r { transform: translateX(115%); }
+        #appAstro.l.rein { transform: translateX(-26%); }
+        #appAstro.r.rein { transform: translateX(26%); }
+        #appAstro svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3)); }
+        #appAstro.r svg { transform: scaleX(-1); }
+        @keyframes asWinken { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(24deg); } }
+        #appAstro .as-winkarm { transform-box: view-box; transform-origin: 68px 62px; animation: asWinken 0.7s ease-in-out infinite; }
+        @keyframes asSchwebe { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+        #appAstro .as-schwebe { transform-box: view-box; transform-origin: 50px 70px; animation: asSchwebe 3.2s ease-in-out infinite; }
+        #appAstroBlase { position: fixed; left: 0; top: 0; z-index: 99998; width: 220px; display: none; padding: 9px 12px 10px; pointer-events: none;
+                         background: var(--s-blatt); color: var(--s-text); border: 1px solid var(--s-rand2); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3); font: 600 14px/1.38 var(--font-body); }
+        html.android-app.stil-verspielt #appAstroBlase.da { display: block; animation: blaseAuf 0.22s ease-out; }
+        html.android-app body #appAstroBlase { border-radius: 18px !important; }
+        #appAstroBlase .ab-kopf { font: 700 10.5px var(--font-display); color: var(--s-akzent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 2px; }
+        #appAstroBlase::before { content: ""; position: absolute; width: 14px; height: 14px; background: var(--s-blatt); border: 1px solid var(--s-rand2); transform: rotate(45deg); top: var(--zy, 30px); display: none; }
+        #appAstroBlase.zl::before { display: block; left: -8px; border-top: 0; border-right: 0; }
+        #appAstroBlase.zr::before { display: block; right: -8px; border-left: 0; border-bottom: 0; }
+        @media (prefers-reduced-motion: reduce) {
+            #roboBlase .rb-bild *, #appIss *, #appAstro * { animation: none !important; }
+            #appAstro { transition: none; }
+            #roboBlase .eb-deckel, #roboBlase .eb-zeile { display: none; }
+        }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -48206,18 +48292,31 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [5, 10, 20, 25, 50].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
               + '</div>')
           + '<div class="nur-verspielt">'
-          + einstKasten('Funki, dein Helfer', 'Taucht immer wieder mal auf, sagt Hallo, gibt Tipps und feiert mit dir. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
+          + einstKasten('Funki, dein Helfer', 'Wie oft er auftaucht, Hallo sagt, Tipps gibt, Witze macht und mit dir feiert. Wenig ist wie bisher. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
                 '<div class="app-seg" id="appFunkiSeg">'
-              + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + ((tippsAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
+              + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + (helferRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
-              // FUNKI SPRICHT (30.09.2026) - ein eigener Schalter fuer die Stimme
-              + '<div class="app-unterzeile"><b>Funki spricht</b><small>Ab und zu ein kurzer Satz und kleine Roboter-Töne – Hallo, Hilfe, Jubel, mal ein Kichern oder Schluckauf. Es spricht die Stimme deines Handys.</small></div>'
+              // FUNKI SPRICHT (30.09.2026) - ein eigener Regler fuer die Stimme; vier Stufen seit 04.10.2026
+              + '<div class="app-unterzeile"><b>Funki spricht</b><small>Wie viel er sagt: Bei Viel spricht er fast zu allem, was er zeigt – auch Tipps und Rundgang. Normal ist öfter als bisher, Wenig nur ab und zu (wie bisher). Aus ist ganz still. Es spricht die Stimme deines Handys.</small></div>'
               + '<div class="app-seg" id="appFunkiStimmeSeg">'
-              + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-s="' + f[0] + '"' + (lies('robo_stimme', 'an') === f[0] || (f[0] === 'an' && lies('robo_stimme', 'an') !== 'aus') ? ' class="an"' : '')
+              + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-s="' + f[0] + '"' + (stimmeRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiStimmeSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
               + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>')
+          // ISS-Ueberflug (04.10.2026)
+          + einstKasten('ISS & Astronaut', 'Ab und zu fliegt die Raumstation mit Ton quer über die Startseite – und manchmal winkt ein Astronaut seitlich herein und macht dir Mut. Nie in einer Runde, nie beim Vorlesen und nur im Stil Verspielt.',
+                '<div class="app-seg" id="appIssSeg">'
+              + [['viel', 'Oft'], ['an', 'Normal'], ['wenig', 'Selten'], ['aus', 'Aus']].map(f => '<button type="button" data-i="' + f[0] + '"' + (issRegler() === f[0] ? ' class="an"' : '')
+                  + ' onclick="appIssSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+              + '</div>'
+              + '<div class="app-unterzeile"><b>Ton</b><small>Rauschen, Brummen und Funk-Piepen – und die Funkgeräte-Stimme des Astronauten (sie folgt auch „Funki spricht“). Der Klang wandert von einem Ohr zum anderen, so wie die Station fliegt.</small></div>'
+              + '<div class="app-seg" id="appIssTonSeg">'
+              + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-t="' + f[0] + '"' + ((issTonAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
+                  + ' onclick="appIssTonSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+              + '</div>'
+              + '<button type="button" class="app-probe" onclick="appIssProbe()"><i class="fas fa-satellite"></i> ISS vorbeifliegen lassen</button>'
+              + '<button type="button" class="app-probe" onclick="appAstroProbe()"><i class="fas fa-user-astronaut"></i> Astronaut winken lassen</button>')
           // Toene beim Tippen (01.10.2026)
           + einstKasten('Töne beim Tippen', 'Ein leises Plopp bei Knöpfen und Kacheln, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
                 '<div class="app-seg" id="appTippSeg">'
@@ -48240,8 +48339,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['sachlich', 'verspielt'].forEach(s => { const k = $('appStilKachel_' + s); if(k) k.classList.toggle('an', stilIst() === s); });
         D.querySelectorAll('#appDesignSeg button').forEach(b => b.classList.toggle('an', b.dataset.d === designIst()));
         D.querySelectorAll('#appZielSeg button').forEach(b => b.classList.toggle('an', parseInt(b.dataset.z, 10) === tagesziel()));
-        D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === (tippsAn() ? 'an' : 'aus')));
-        D.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === (lies('robo_stimme', 'an') === 'aus' ? 'aus' : 'an')));
+        D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === helferRegler()));
+        D.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === stimmeRegler()));
+        D.querySelectorAll('#appIssSeg button').forEach(b => b.classList.toggle('an', b.dataset.i === issRegler()));
+        D.querySelectorAll('#appIssTonSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (issTonAn() ? 'an' : 'aus')));
         D.querySelectorAll('#appTippSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (lies('app_tipptoene', 'an') === 'aus' ? 'aus' : 'an')));
         D.querySelectorAll('#appDockSeg button').forEach(b => b.classList.toggle('an', b.dataset.k === (lies('app_dock_an', '1') === '0' ? 'aus' : 'an')));
         // Fuer Vorleseprogramme: welcher Knopf gewaehlt ist (30.09.2026)
@@ -48316,8 +48417,74 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         'Wusstest du? Über Amateurfunk haben Schulklassen schon mit <b>Astronauten auf der ISS</b> gesprochen.',
         'Kleine Runden sind super: <b>zehn Fragen</b> passen in jede Pause.',
         '<b>QRZ?</b> heißt: „Wer ruft mich?“ So fragt man, wenn man das Rufzeichen nicht verstanden hat.',
-        'Die <b>Serie</b> zählt jeden Tag, an dem du übst. Wie lange bleibst du auf Sendung?'
+        'Die <b>Serie</b> zählt jeden Tag, an dem du übst. Wie lange bleibst du auf Sendung?',
+        'Sag einfach <b>„Erklär mir was“</b> – dann zeige ich dir CQ, DX, QRM, QRN, QTH und mehr, mit kleinen Bildern!',
+        '<b>QRM</b> kommt vom Menschen, <b>QRN</b> aus der Natur. M wie Mensch, N wie Natur – so merkst du dir’s!',
+        'Eine <b>Richtantenne</b> wie die Yagi bündelt das Signal wie eine Taschenlampe. Das gibt Antennengewinn – aber keine zusätzliche Sendeleistung.',
+        'Funkamateure können sogar <b>Fernsehen</b> senden: Amateurfunk-TV, kurz <b>ATV</b>. Das braucht die hohen Bänder.',
+        '<b>CQ DX</b> heißt: „Ich rufe in die Ferne!“ Wer antwortet, kommt vielleicht von einem anderen Erdteil.',
+        'Auch Astronauten funken: <b>Dr. Ulf Merbold</b> trägt das Rufzeichen <b>DB1KM</b>. Frag mich nach den Funkern im All!'
     ];
+    // ================================================================
+    //  MEHR ODER WENIGER FUNKI                               (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Der kleine Funki soll mehr sprechen!" und "In den
+    //  Einstellungen soll man das reduzieren und abstellen koennen."
+    //  Darum gibt es zwei Regler mit je vier Stufen - Viel, Normal, Wenig,
+    //  Aus - und einen dritten fuer die ISS (Oft, Normal, Selten, Aus):
+    //    "Funki, dein Helfer"  (robo_tipps)  wie oft er auftaucht
+    //    "Funki spricht"       (robo_stimme) wie viel er sagt
+    //    "ISS-Ueberflug"       (robo_iss)    und der Ton dazu (robo_iss_ton)
+    //  Normal ist neu und deutlich gespraechiger als vorher; Wenig
+    //  entspricht genau dem alten Verhalten. Alte Werte "an" und "aus"
+    //  gelten weiter (an = Normal).
+    // ================================================================
+    function reglerListe(){ return ['viel', 'an', 'wenig', 'aus']; }
+    function reglerLies(k){ const v = lies(k, 'an'); return reglerListe().includes(v) ? v : 'an'; }
+    function helferRegler(){ return reglerLies('robo_tipps'); }
+    function stimmeRegler(){ return reglerLies('robo_stimme'); }
+    function issRegler(){ return reglerLies('robo_iss'); }
+    function issTonAn(){ return lies('robo_iss_ton', 'an') !== 'aus'; }
+    // Spricht er zu allem, was er sagt (Hereinlugen, Tipps, Rundgang, Antworten)?
+    function mehrSprechen(){ const s = stimmeRegler(); return s === 'viel' || s === 'an'; }
+    const zwischen = a => a[0] + Math.random() * a[1];
+    // erst: Wartezeit bis zum ersten Hereinlugen; pause: danach; kurz/kunst: wie oft je Start;
+    // abstand: so lange nach dem letzten Auftritt Ruhe; pflege: Chance auf "Hilf mir" (je Tag hoechstens pflegeMax)
+    const PLAN = {
+        viel:  { erst: [18000, 14000], pause: [60000, 40000],  kurz: 8, kunst: 5, kunstPause: [55000, 35000], kunstErst: [12000, 10000], abstand: 30000, pflege: 0.45, pflegeMax: 3 },
+        an:    { erst: [28000, 12000], pause: [100000, 50000], kurz: 5, kunst: 4, kunstPause: [75000, 45000], kunstErst: [18000, 14000], abstand: 45000, pflege: 0.35, pflegeMax: 2 },
+        wenig: { erst: [35000, 15000], pause: [150000, 90000], kurz: 3, kunst: 3, kunstPause: [90000, 60000], kunstErst: [25000, 20000], abstand: 60000, pflege: 0.3,  pflegeMax: 2 }
+    };
+    const plan = () => PLAN[helferRegler()] || PLAN.an;
+    // ISS: erst = Wartezeit bis zum ersten Mal, pause = danach, max = hoechstens so viele je Start
+    const ISS_PLAN = {
+        viel:  { erst: [45000, 30000],   pause: [180000, 90000],   max: 6 },
+        an:    { erst: [75000, 60000],   pause: [420000, 180000],  max: 3 },
+        wenig: { erst: [420000, 240000], pause: [1500000, 600000], max: 1 }
+    };
+    const issPlan = () => ISS_PLAN[issRegler()] || ISS_PLAN.an;
+    // Wie lange er nach einem Satz schweigt, wenn er von selbst redet
+    const SPRECH_ABSTAND = { viel: 35000, an: 90000, wenig: 240000 };
+    const sprechAbstand = () => SPRECH_ABSTAND[stimmeRegler()] || SPRECH_ABSTAND.wenig;
+    // Q-Gruppen und Abkuerzungen Buchstabe fuer Buchstabe, sonst liest der Server "QRM" als "Stoerungen"
+    function buchstabiert(t){ return String(t).replace(/\b(Q[A-Z]{2}|CQ|DX|ATV|SSTV|ISS|DARC)\b/g, m => m.split('').join(' ')); }
+    // Aus der Blase einen gesprochenen Satz machen: nur Text, kurz, Abkuerzungen buchstabiert
+    function redeText(html, max){
+        const roh = nurText(html);
+        if(/[·−]{2,}/.test(roh)) return 'Ich übe Morsen. ^ Das heißt: lachen!';        // der Morse-Witz mit Punkten und Strichen
+        return buchstabiert(kurzGesagt(roh, max || 110));
+    }
+    // Lob fuer richtige am Stueck: je nach Stufe mehr Anlaesse
+    function lobStufen(){ const h = helferRegler(); return h === 'viel' ? [3, 5, 7, 10, 15, 20] : h === 'wenig' ? [5, 10] : [5, 10, 15]; }
+    const LOB = {
+        3:  ['Dreimal richtig hintereinander – das läuft!', 'Dreimal richtig hintereinander. Das läuft!'],
+        5:  ['Fünf richtige am Stück! Du bist gut – mach weiter so!', 'Du bist gut. Du hast schon fünf richtig.'],
+        7:  ['Sieben am Stück! Dein Signal ist <b>S9 plus</b>!', 'Sieben richtig am Stück. Dein Signal ist S9 plus!'],
+        10: ['Zehn am Stück – Wahnsinn! Du bist gut – mach weiter so!', 'Du hast schon zehn richtig am Stück. {melodie} Wahnsinn!'],
+        15: ['Fünfzehn am Stück! Du funkst gerade auf Rekordkurs.', 'Fünfzehn am Stück. Du funkst gerade auf Rekordkurs!'],
+        20: ['Zwanzig am Stück! Ich bin sprachlos – und das als Funkgerät.', '{melodie} Zwanzig am Stück! Ich bin sprachlos. Und das als Funkgerät.']
+    };
+
     function naechsterTipp(){
         let i = parseInt(lies('robo_tipp_nr', '-1'), 10);
         i = (isNaN(i) ? 0 : i + 1) % TIPPS.length;
@@ -48325,11 +48492,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return TIPPS[i];
     }
     function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus'; }
-    window.appFunkiSetzen = v => { schreib('robo_tipps', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
+    window.appFunkiSetzen = v => { schreib('robo_tipps', reglerListe().includes(v) ? v : 'an'); tu(einstNachziehen); };
     // Funki spricht: An/Aus und eine Probe (30.09.2026)
     window.appTippToeneSetzen = v => { schreib('app_tipptoene', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
     window.appDockSetzen = v => { schreib('app_dock_an', v === 'aus' ? '0' : '1'); tu(einstNachziehen); tu(() => window.appDockNachziehen && window.appDockNachziehen()); };
-    window.appFunkiStimmeSetzen = v => { schreib('robo_stimme', v === 'aus' ? 'aus' : 'an'); if(v === 'aus') tu(funkiVerstummen); tu(einstNachziehen); };
+    window.appFunkiStimmeSetzen = v => { v = reglerListe().includes(v) ? v : 'an'; schreib('robo_stimme', v); if(v === 'aus') tu(funkiVerstummen); tu(einstNachziehen); };
+    // ISS-Ueberflug: Haeufigkeit, Ton und eine Probe (04.10.2026)
+    window.appIssSetzen = v => { schreib('robo_iss', reglerListe().includes(v) ? v : 'an'); tu(einstNachziehen); };
+    window.appIssTonSetzen = v => { schreib('robo_iss_ton', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
+    window.appIssProbe = () => { issUeberflug({ probe: true, stumm: true }); };
+    window.appAstroProbe = () => { astroWinken({ probe: true }); };
     window.appFunkiProbe = () => {
         if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
         funkiSagt('Ich bin Funki. | ' + nameTon() + 'Schön, dass du da bist.', true);
@@ -48512,6 +48684,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Auftritt auf der Buehne. art 'tanzweg': erst quer ueber den Schirm
     // huepfen - Dietmar: "dass er ueber den Bildschirm tanzt".
     function auftritt(html, knoepfe, art, modus, kuer){
+        tu(astroWeg);                                     // ein winkender Astronaut raeumt das Feld
         uhrenAus();
         robo.modus = modus || 'tipp';
         robo.letzter = Date.now(); robo.ruhig = 0;
@@ -48674,14 +48847,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 roboSperre.classList.add('klar');
                 const q = seite(T);
                 roboStellen(q.cx, q.cy, tourMass());
-                spaeter(() => { roboEl.classList.add(q.zeigt); blaseZeigen(q.bx, q.by, q.zipfel, q.zy, q.zx); }, 720);
+                spaeter(() => { roboEl.classList.add(q.zeigt); blaseZeigen(q.bx, q.by, q.zipfel, q.zy, q.zx); if(mehrSprechen()) funkiSagt(redeText(text, 150), true); }, 720);
             }, (inNavi || mussScrollen) ? 260 : 0);     // die untere Leiste braucht 0,22 s
         });
     }
 
     // ----- Tipps, Tagesgruss, Feiern, Antippen
     function tippZeigen(){
-        auftritt('<b>Tipp:</b> ' + naechsterTipp(), [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
+        const tipp = naechsterTipp();
+        auftritt('<b>Tipp:</b> ' + tipp, [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
+        if(mehrSprechen()) funkiSagt(redeText(tipp, 160), true);
     }
     function fragenText(n){ return n + (n === 1 ? ' Frage' : ' Fragen'); }
     const zufall = a => a[Math.floor(Math.random() * a.length)];
@@ -48691,7 +48866,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let t = (std >= 2 && std < 5)
             ? 'Hey' + hn + ', es ist mitten in der Nacht! Ein paar Fragen noch – aber dann ab ins Bett, morgen ist auch wieder ein Tag. '
             : (std >= 22 || std < 2)
-            ? 'So spät noch wach' + nn + '?! Du bist aber fleißig. '
+            ? 'So spät noch wach' + nn + '?! Du bist aber fleißig. Bald <b>QRT</b>? So sagen Funker, wenn sie Schluss machen. '
             : zufall([grussZeit() + nn + '! Da bist du ja!', grussZeit() + nn + '! Schön, dich zu sehen!',
                       'Hey' + hn + ', schön, dass du auch hier bist! Ich hab schon auf dich gewartet.']) + ' ';
         if(!rest) t += 'Dein Tagesziel hast du heute schon geschafft. Stark!';
@@ -48701,11 +48876,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // schoen, dass du da bist. Rauschen, Piep." Zwischen den Teilen ein
         // Bliep-Blup (|), beim Gaehnen um 4 Uhr ein muedes Rechnen (^).
         const gesagt = (std >= 2 && std < 5) ? nameTon() + 'Es ist mitten in der Nacht. ^ Ab ins Bett – morgen ist auch wieder ein Tag.'
-            : (std >= 22 || std < 2) ? nameTon() + 'So spät noch wach? Du bist aber fleißig.'
+            : (std >= 22 || std < 2) ? nameTon() + 'So spät noch wach? Du bist aber fleißig.' + (mehrSprechen() ? ' Bald Q R T? So sagen Funker, wenn sie Schluss machen.' : '')
             : 'Ich bin Funki. | ' + nameTon() + 'Schön, dass du da bist.';
-        t += '<span class="rb-tipp"><b>Tipp:</b> ' + naechsterTipp() + '</span>';
-        auftritt(t, rest ? [['Los, eine Runde!', 'runde'], ['Später', 'heim']] : [['Noch ein Tipp', 'tipp'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
-        funkiSagt(gesagt, false);
+        // Jeden zweiten Tag ein Wort aus dem Funk-ABC statt eines Tipps (04.10.2026)
+        const wort = abcWort(), tipp = wort ? '' : naechsterTipp();
+        t += wort ? '<span class="rb-tipp"><b>Funk-ABC:</b> ' + wort.kurz + '</span>' : '<span class="rb-tipp"><b>Tipp:</b> ' + tipp + '</span>';
+        const knoepfe = [rest ? ['Los, eine Runde!', 'runde'] : ['Noch ein Tipp', 'tipp']];
+        if(wort) knoepfe.push(['Erklär’s mir', 'erkl:' + wort.id]);
+        knoepfe.push([rest ? 'Später' : 'Tschüss', 'heim']);
+        auftritt(t, knoepfe, 'tanzweg', 'tipp');
+        // Bei Viel und Normal sagt er auch das Tagesziel und den Tipp
+        const mehr = !mehrSprechen() ? '' : ' | ' + (rest ? 'Heute fehlen noch ' + fragenText(rest) + ' bis zum Tagesziel.' : 'Das Tagesziel ist schon geschafft. Stark!')
+            + ' | ' + (wort ? 'Das Wort des Tages: ' + redeText(wort.kurz, 100) : redeText(tipp, 140));
+        funkiSagt(gesagt + mehr, false);
     }
     function zielFeiern(){
         const s = serie();
@@ -48717,9 +48900,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const HALLO = ['Du hast gerufen?', 'Funki meldet sich zum Dienst!', 'Kuckuck!', 'Hab ich da meinen Namen gehört?', 'Na, du?'];
     function rufenJetzt(){
         const hallo = zufall(HALLO);
-        auftritt(hallo + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + naechsterTipp() + '</span>',
-            [['Noch ein Tipp', 'tipp'], ['Rundgang', 'tour']], '', 'tipp');
-        funkiSagt('| ' + nurText(hallo), true);
+        const tipp = naechsterTipp();
+        auftritt(hallo + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + tipp + '</span>',
+            [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
+        funkiSagt('| ' + nurText(hallo) + (mehrSprechen() ? ' | Hier ist ein Tipp für dich. ' + redeText(tipp, 150) : ''), true);
     }
     function rufen(){
         if(robo.da || !roboDarf()) return;
@@ -48740,7 +48924,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         'Ich hab drei Satelliten zugewinkt. Keiner hat zurückgewinkt.', 'Mein Akku ist voll. Deiner auch?', 'Heute früh hab ich auf 2 Meter gelauscht. War ganz schön was los!',
         'Ich hab gerade mit einem Kühlschrank gefunkt. Der war ganz schön cool.', 'Weißt du, wie ich rückwärts heiße? Iknuf. Klingt komisch, oder?',
         'Ich übe Morsen: ·−·· ·− −·−· ···· · −· – das heißt „lachen“!', 'Wenn ich groß bin, werde ich Relaisstation.',
-        'Mein Traum: einmal um die Welt funken. Mit Kurzwelle geht das wirklich!', 'Heute ist ein guter Tag für gute Antworten.', 'Zieh mal an meiner Antenne! … War nur Spaß.'];
+        'Mein Traum: einmal um die Welt funken. Mit Kurzwelle geht das wirklich!', 'Heute ist ein guter Tag für gute Antworten.', 'Zieh mal an meiner Antenne! … War nur Spaß.',
+        // Mehr Persoenlichkeit (04.10.2026): wer mehr spricht, braucht mehr zu sagen
+        'Heute früh hatte ich <b>QRM</b>: Mein Kopf war voller Störungen. Jetzt ist Strom drin. Viel besser!',
+        'Wusstest du? „Ham“ heißt auf Englisch Schinken – und Funkamateur. Ich bin aber Funki, kein Brötchenbelag.',
+        'Ich hab meiner Antenne einen Namen gegeben: Yagi. Sie zeigt immer in eine Richtung – ganz schön stur.',
+        'Meine Lieblingsfarbe ist <b>S9</b>. So laut ist ein richtig gutes Signal!',
+        'Gestern war ich auf <b>DX</b>: bis zum Kühlschrank. Das ist weit, wenn man so kurze Beine hat.',
+        'Heute Nacht hab ich von der <b>ISS</b> geträumt. Sie hat CQ gerufen. Ich hab geantwortet – dann bin ich aufgewacht.',
+        'Mein Akku hat <b>73</b> Prozent. Das ist auch ein Gruß, ich weiß: Viele Grüße!',
+        'Ich bin <b>QRV</b>! Das heißt: bereit zum Funken. Und du?',
+        'Eine Yagi-Antenne sieht aus wie eine Fischgräte. Gefangen hab ich damit trotzdem noch nichts.',
+        'Ich hab die Sonne gefragt, wie viele Flecken sie hat. Das beeinflusst nämlich den Funk!',
+        'Gewitter in der Ferne? Das knistert im Lautsprecher! Das nennt man <b>QRN</b>.',
+        'Ich hab heute nur mit ganz wenig Leistung gefunkt. Das heißt <b>QRP</b> – und es ist eine Sportart!'];
     // Plaudern je nach Tageszeit (Dietmar: "Ueber den Tag fragt er dich:
     // Wie war dein Tag? Was gab es bei dir Gutes heute zum Mittagessen?
     // ... Du bist aber schon spaet online. Fleissig am Ueben, sehr gut.")
@@ -48789,7 +48986,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         tu(() => { alle = (questionBank || []).length; });
         return offen === null || !alle ? 0 : Math.max(0, alle - offen);
     }
-    const HILFE_MENUE = () => ({ html: 'Wie kann ich dir helfen?', knoepfe: [['Zeig mir alles', 'tour'], ['Einen Tipp, bitte', 'tipp'], ['Alles gut!', 'heim']] });
+    const HILFE_MENUE = () => ({ html: 'Wie kann ich dir helfen?', knoepfe: [['Zeig mir alles', 'tour'], ['Einen Tipp, bitte', 'tipp'], ['Erklär mir was', 'abc'], ['Alles gut!', 'heim']] });
     function kecherSpruch(){
         const n = heuteAnzahl(), rest = Math.max(0, tagesziel() - n), s = serie(), f = zahlAus('repeatErrorsCount');
         const pool = SPRUECHE_FEST.slice();
@@ -48799,6 +48996,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(s >= 2) pool.push('<b>' + s + ' Tage</b> am Stück ON AIR. Respekt!');
         if(f > 0) pool.push('Da warten <b>' + (f === 1 ? '1 Fehler' : f + ' Fehler') + '</b> auf eine zweite Chance. Nur so als Tipp …');
         pool.push(...HILFE_FRAGEN, ...MUT, ...MUT);                 // Mut machen kommt oefter
+        pool.push(...ERKL_FRAGEN);                                  // Funk-ABC: "Weisst du, was QRM ist?" (bei Viel doppelt)
+        if(helferRegler() === 'viel') pool.push(...ERKL_FRAGEN);
         const g = gelerntZahl();
         if(g >= 10) pool.push('Schon <b>' + g + ' Fragen</b> sitzen richtig fest. Du schaffst das!');
         let t;
@@ -48842,6 +49041,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function kurzauftritt(text, opt){
         if(robo.da || wirdVorgelesen()) return;            // beim Vorlesen nie (siehe dort)
         opt = opt || {};
+        tu(astroWeg);
         uhrenAus();
         robo.modus = 'kurz';
         robo.ort = opt.ort || 'start';
@@ -48864,7 +49064,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         spaeter(kurzWeg, 820 + (opt.dauer || 5600));
         // FUNKI SPRICHT: eigener Satz (Text) oder der Anfang der Blase, mit
         // Name und Bliep-Blup - ohne Worte surrt er beim Hereinlugen
-        if(opt.sprich) funkiSagt(typeof opt.sprich === 'string' ? opt.sprich : nameTon() + kurzGesagt(text, 90), !!opt.sprichSofort);
+        if(opt.sprich) funkiSagt(typeof opt.sprich === 'string' ? opt.sprich : nameTon() + redeText(text, 110), !!opt.sprichSofort);
+        // Viel und Normal: er sagt, was in der Blase steht (04.10.2026); der Name nur ab und zu
+        else if(!opt.stumm && mehrSprechen() && darfSprechen(false)) spaeter(() => funkiSagt((Math.random() < 0.25 ? nameTon() : '') + redeText(text, 110), false), 300);
         else spaeter(() => funkiGeraeusch(opt.ton || 'surren'), 120);
     }
     // Die Blase neben dem hereinlugenden Funki
@@ -48912,6 +49114,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         uhrenAus();
         robo.modus = 'kurz'; robo.kurzHilfe = null;
         blaseAmRand(a[1], null, true);
+        if(mehrSprechen()) funkiSagt(redeText(a[1], 120), true);
         if(i === 0){ tanzen(); zurufen(zufall(['Juhu!', 'Yeah!', 'Hihi!'])); }
         spaeter(kurzWeg, 5200);
     }
@@ -49092,7 +49295,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         kitzeln: { blase: 'Mir ist so langweilig … <b>kitzelst</b> du mich mal?',
                    bitte: 'Mir ist so langweilig. Kitzelst du mich mal?',
                    knopf: '<i class="fas fa-hand"></i> Kitzeln',
-                   danke: 'Hihihi! Hör auf, hör auf! … Nochmal!', dankeSprich: '{lachen} Hör auf, hör auf! {lachen}' }
+                   danke: 'Hihihi! Hör auf, hör auf! … Nochmal!', dankeSprich: '{lachen} Hör auf, hör auf! {lachen}' },
+        // Dietmar (04.10.2026): "Funki soll auch mal auftauchen mit einem rostigen Sound, dass sein Knie geoelt
+        // werden muss. Darunter ein kleiner Button: Knie oelen. Danach soll er sich bedanken und sagen:
+        // Das ist echter Ham Spirit." (Ham = englisch Haemm; sonst liest die Stimme "Ham" wie "Schinken".)
+        knie:    { blase: 'Kannst du mir bitte helfen? <i>Quieeek … knarrrr …</i> Mein <b>Knie</b> ist ganz rostig – es muss geölt werden.',
+                   bitte: '{rost} Kannst du mir bitte helfen? Mein Knie ist ganz rostig. Es muss geölt werden.',
+                   knopf: '<i class="fas fa-oil-can"></i> Knie ölen',
+                   danke: 'Ahhh, das tut gut! Mein Knie läuft wie geschmiert. Danke dir – das ist echter <b>Ham Spirit</b>!',
+                   dankeSprich: '{gluck} Ahhh, das tut gut! | Mein Knie läuft wie geschmiert. Danke dir! Das ist echter Hämm Spirit! {boing}' }
     };
     // ----- Zu bunt? Einmal zeigt Funki den ruhigen Stil          (01.10.2026)
     //  Dietmar: "Damit es fuer Funkamateure vielleicht nicht ganz so kitschig
@@ -49175,6 +49386,598 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         spaeter(kurzWeg, 6000);
     }
 
+    // ================================================================
+    //  FUNKI ERKLAERT: DAS FUNK-ABC                          (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Nimm CQ, DX, QRM, QRN, QTH mit auf." und "Funki soll auch
+    //  Amateurfunk-TV, eine Richtantenne erklaeren." und "Funki kann auch
+    //  gerne sagen, wer alles Funkamateur auf der ISS gewesen ist. Zum
+    //  Beispiel Dr. Ulf Merbold ... DB1KM." - "Er muss nicht alle erklaeren.
+    //  Zumindest 2-3 Deutsche." (Merbold flog 1983 und 1992 mit dem Spacelab
+    //  und 1994 zur Mir - nicht zur ISS; darum steht er unter "Funker im All".
+    //  Auf der ISS waren Thomas Reiter, DF4TR, und Matthias Maurer, KI5KFH.)
+    //  Je Begriff: eine Blase mit kleinem, bewegtem Bild, dazu gesprochen
+    //  (sprich: Buchstaben und Rufzeichen mit Leerzeichen und Bindestrichen,
+    //  sonst liest der Server "QRM" als "Stoerungen").
+    //  Zu erreichen: Antippen -> "Erklaer mir was", das Hilfe-Menue, als Wort
+    //  des Tages im Gruss und beim Hereinlugen ("Weisst du, was QRM ist?").
+    //  Dazu zwei Spielereien: Morsen zum Anhoeren ("Hoer mal: CQ") und ein
+    //  Quiz mit frechen Ausreden fuer falsche Antworten. Wer alle Begriffe
+    //  gelesen hat, wird "Ehren-Funker".
+    //  Die Rufzeichen sind nachgeprueft - siehe CHANGELOG.
+    // ================================================================
+    // ----- Die Bilder: 240 x 96, Farben aus dem Stil, bewegt (CSS .eb-*)
+    const eb = inner => '<svg viewBox="0 0 240 96" role="img" aria-hidden="true">' + inner + '</svg>';
+    // Das Haus mit Antenne (Empfaenger) bei QRM und QRN
+    const ebHaus = (x, y) => '<g transform="translate(' + x + ' ' + y + ')"><path class="eb-l" d="M0 34V14l14-12 14 12v20z"/><path class="eb-l" d="M14 2V-16M8 -10l6-6 6 6"/></g>';
+    // Weltraum-Hintergrund: dunkel, Sterne, ein Stueck Erde unten
+    const ebRaum = '<rect width="240" height="96" fill="#0b1a33"/>'
+        + '<circle cx="18" cy="14" r="1.2" fill="#fff"/><circle cx="52" cy="30" r="1" fill="#fff" opacity=".7"/><circle cx="214" cy="12" r="1.3" fill="#fff"/>'
+        + '<circle cx="190" cy="40" r="1" fill="#fff" opacity=".6"/><circle cx="30" cy="62" r="1" fill="#fff" opacity=".6"/><circle cx="226" cy="64" r="1.2" fill="#fff" opacity=".8"/>'
+        + '<circle cx="82" cy="10" r="1" fill="#fff" opacity=".8"/><circle cx="150" cy="8" r="1.1" fill="#fff" opacity=".7"/>'
+        + '<path d="M0 96V84C60 70 180 70 240 84V96z" fill="#1e6fb8"/><path d="M0 96V90C70 80 170 80 240 90V96z" fill="#2f8fd6" opacity=".7"/>';
+    // Die ISS in 200 x 90 (auch fuer den Ueberflug)
+    function issKoerper(){
+        const feld = (x, y) => '<rect x="' + x + '" y="' + y + '" width="26" height="33" fill="#2b5aa6" stroke="#9cbdf0" stroke-width="1"/>'
+            + '<path d="M' + (x + 13) + ' ' + y + 'v33M' + x + ' ' + (y + 16.5) + 'h26" stroke="#6f9be0" stroke-width=".8" fill="none"/>';
+        return '<path d="M8 45h184" stroke="#c9d2dc" stroke-width="3.5" stroke-linecap="round"/>'
+            + [10, 42, 132, 164].map(x => feld(x, 8) + feld(x, 49)).join('')
+            + '<rect x="92" y="12" width="7" height="25" fill="#f4f6f9"/><rect x="101" y="53" width="7" height="25" fill="#f4f6f9"/>'
+            + '<rect x="72" y="40" width="14" height="10" rx="4" fill="#cfd6df"/><rect x="114" y="40" width="16" height="10" rx="4" fill="#cfd6df"/>'
+            + '<rect x="84" y="37" width="32" height="16" rx="5" fill="#e6ebf1"/><circle cx="100" cy="45" r="5" fill="#f5c26b"/>'
+            + '<circle class="iss-licht" cx="100" cy="45" r="2.2" fill="#ff6a4d"/>';
+    }
+    // Der Astronaut in 240 x 96 Mitte, mit Funkgeraet in der Hand
+    const ebAstro = '<g class="eb-wackel">'
+        + '<rect x="98" y="52" width="9" height="22" rx="3" fill="#cfd6df"/>'                                   // Rucksack
+        + '<path d="M112 76L106 90M128 76L136 88" stroke="#eef2f6" stroke-width="10" stroke-linecap="round"/>'   // Beine
+        + '<circle cx="106" cy="91" r="5" fill="#8a96a5"/><circle cx="136" cy="89" r="5" fill="#8a96a5"/>'     // Stiefel
+        + '<rect x="104" y="50" width="32" height="28" rx="10" fill="#eef2f6"/>'                                 // Koerper
+        + '<rect x="112" y="57" width="16" height="9" rx="2" fill="#2b5aa6"/><circle cx="116" cy="61.5" r="1.6" fill="#ff6a4d"/><circle cx="121" cy="61.5" r="1.6" fill="#5fe08a"/>'
+        + '<path d="M106 58L92 68" stroke="#eef2f6" stroke-width="9" stroke-linecap="round"/><circle cx="91" cy="69" r="4.5" fill="#8a96a5"/>'   // linker Arm
+        + '<path d="M134 58L148 50" stroke="#eef2f6" stroke-width="9" stroke-linecap="round"/>'                  // rechter Arm
+        + '<rect x="146" y="36" width="11" height="20" rx="2.5" fill="#2d3b4a"/><rect x="148.5" y="39" width="6" height="5" rx="1" fill="#5fe08a"/>'    // Funkgeraet
+        + '<path d="M151.5 36V26" stroke="#9fb3c8" stroke-width="2" stroke-linecap="round"/><circle cx="151.5" cy="25" r="2.4" fill="#FFB547"/>'
+        + '<circle cx="120" cy="34" r="19" fill="#eef2f6" stroke="#c9d2dc" stroke-width="2"/>'                   // Helm
+        + '<ellipse cx="122" cy="34" rx="12" ry="10" fill="#1d3557"/><path d="M114 30q6-7 14-3" stroke="#fff" stroke-width="2" fill="none" opacity=".55" stroke-linecap="round"/>'
+        + '</g>'
+        + '<path class="eb-a eb-bogen" d="M162 28q8 6 0 12M168 24q12 10 0 20" stroke="#FFB547" fill="none"/>';
+    const ERKL_BILD = {
+        cq: () => eb('<circle class="eb-ring" cx="120" cy="52" r="96"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:.95s"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:1.9s"/>'
+            + '<path class="eb-l" d="M120 82V48M112 56l8-8 8 8"/><circle class="eb-fa" cx="120" cy="44" r="4.5"/><path class="eb-t" d="M110 82h20"/>'
+            + '<path class="eb-t" d="M18 84V68l12-10 12 10v16zM198 84V68l12-10 12 10v16z"/><text class="eb-txt-g" x="120" y="16">CQ · CQ · CQ</text>'),
+        dx: () => eb('<circle class="eb-t" cx="120" cy="56" r="32"/><ellipse class="eb-t" cx="120" cy="56" rx="13" ry="32"/><ellipse class="eb-t" cx="120" cy="56" rx="32" ry="11"/>'
+            + '<path class="eb-a eb-bogen" d="M97 40Q126 -22 150 66"/><circle class="eb-fh" cx="97" cy="40" r="4.5"/><circle class="eb-fa" cx="150" cy="66" r="4.5"/>'
+            + '<text class="eb-txt" x="172" y="18" style="text-anchor:start">Ionosphäre</text><text class="eb-txt" x="26" y="86" style="text-anchor:start">DX = weit weg</text>'),
+        qrm: () => eb('<circle class="eb-a" cx="30" cy="22" r="8"/><path class="eb-a" d="M26 33h8M27 37h6"/><rect class="eb-a" x="22" y="48" width="16" height="13" rx="3" fill="none"/><path class="eb-a" d="M27 48v-6M33 48v-6"/>'
+            + '<path class="eb-a" d="M30 90V76M24 80l6-6 6 6"/>'
+            + '<path class="eb-a eb-fluss" d="M46 24L172 52"/><path class="eb-a eb-fluss" d="M46 56L172 58"/><path class="eb-a eb-fluss" d="M46 82L172 64"/>'
+            + ebHaus(176, 52) + '<text class="eb-txt-g" x="204" y="20">QRM</text><text class="eb-txt" x="204" y="32">vom Menschen</text>'),
+        qrn: () => eb('<g class="eb-ft" opacity=".4"><circle cx="38" cy="26" r="11"/><circle cx="54" cy="20" r="14"/><circle cx="70" cy="28" r="10"/><rect x="32" y="26" width="46" height="12" rx="6"/></g>'
+            + '<path class="eb-fa eb-blitz" d="M56 40l-9 17h8l-6 17 17-23h-9l8-11z"/>'
+            + '<path class="eb-a eb-fluss" d="M80 56L170 54"/><path class="eb-a eb-fluss" d="M82 66L170 60" style="animation-delay:.3s"/>'
+            + ebHaus(176, 52) + '<text class="eb-txt-g" x="204" y="20">QRN</text><text class="eb-txt" x="204" y="32">aus der Natur</text>'),
+        qth: () => eb('<rect class="eb-t" x="20" y="8" width="200" height="70" rx="10"/><path class="eb-t" opacity=".4" d="M20 32h200M20 54h200M80 8v70M140 8v70M200 8v70"/>'
+            + '<ellipse class="eb-ft" cx="120" cy="68" rx="12" ry="3" opacity=".3"/><g class="eb-hupf"><path class="eb-fa" d="M120 64c-14-14-18-22-18-30a18 18 0 0 1 36 0c0 8-4 16-18 30z"/><circle cx="120" cy="34" r="6" fill="var(--s-blatt)"/></g>'
+            + '<text class="eb-txt" x="120" y="91">Mein QTH ist hier!</text>'),
+        qsl: () => eb('<g class="eb-hupf"><rect class="eb-l" x="52" y="12" width="136" height="72" rx="7"/><rect class="eb-fa" x="152" y="20" width="26" height="30" rx="3" opacity=".85"/>'
+            + '<path class="eb-t" d="M64 58h74M64 68h60M64 76h44"/><text class="eb-txt-g" x="100" y="40">QSL</text><path class="eb-l" d="M160 66l6 6 12-14"/></g>'
+            + '<text class="eb-txt" x="120" y="94">Empfang bestätigt</text>'),
+        qrp: () => eb('<rect class="eb-l" x="26" y="26" width="64" height="34" rx="7"/><rect class="eb-l" x="90" y="37" width="7" height="12" rx="2"/><rect class="eb-fa" x="33" y="33" width="14" height="20" rx="2"/>'
+            + '<path class="eb-a eb-bogen" d="M122 36q12 12 0 24M138 26q20 22 0 44M154 16q28 32 0 64"/><circle class="eb-fh" cx="184" cy="48" r="5"/>'
+            + '<text class="eb-txt" x="58" y="78">wenig Leistung</text><text class="eb-txt-g" x="208" y="30">QRP</text><text class="eb-txt" x="208" y="82">trotzdem weit!</text>'),
+        richt: () => eb('<circle cx="56" cy="46" r="30" fill="var(--s-haupt)" opacity=".16"/><circle class="eb-fh" cx="56" cy="46" r="4"/><text class="eb-txt" x="56" y="90">Rundstrahler</text>'
+            + '<g class="eb-dreh"><path class="eb-keule" fill="var(--s-haupt)" opacity=".3" d="M172 46C190 12 232 22 232 46C232 70 190 80 172 46z"/>'
+            + '<path fill="var(--s-haupt)" opacity=".16" d="M172 46C166 40 156 40 156 46C156 52 166 52 172 46z"/>'
+            + '<path class="eb-l" d="M158 46h28M162 38v16M170 36v20M178 40v12M186 42v8"/></g><text class="eb-txt" x="190" y="90">Richtantenne</text>'),
+        atv: () => eb('<path class="eb-l" d="M16 62h28M20 54v16M27 52v20M34 55v14M41 57v10"/><path class="eb-a eb-bogen" d="M50 50q10 12 0 24M58 44q16 18 0 36"/>'
+            + '<rect class="eb-l" x="100" y="22" width="84" height="56" rx="8"/><rect x="108" y="30" width="68" height="40" rx="4" fill="var(--s-blatt)"/>'
+            + '<path class="eb-t" d="M142 62V44M136 50l6-6 6 6M124 66h36M130 22l-10-12M154 22l10-12"/><rect class="eb-fa eb-scan" x="108" y="30" width="68" height="3" opacity=".7"/>'
+            + '<text class="eb-txt-g" x="212" y="54">ATV</text>'),
+        sstv: () => eb('<rect class="eb-l" x="64" y="8" width="112" height="80" rx="8"/><rect x="72" y="16" width="96" height="64" rx="4" fill="#7fc8f0"/><circle cx="148" cy="34" r="9" fill="#FFB547"/>'
+            + '<path d="M72 80V62Q100 46 130 64Q150 72 168 58V80z" fill="#52b46b"/><path d="M96 62V40M90 46l6-6 6 6" stroke="#3a4a5a" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
+            + '<rect class="eb-deckel" x="72" y="16" width="96" height="64" rx="4" fill="var(--s-fl2)"/><rect class="eb-zeile" x="72" y="16" width="96" height="2.6" fill="var(--s-amber)"/>'
+            + '<text class="eb-txt-g" x="30" y="52">SSTV</text><path class="eb-a eb-bogen" d="M186 48q6-8 12 0t12 0t12 0"/>'),
+        morse: () => eb('<g class="eb-hupf"><rect class="eb-l" x="84" y="60" width="72" height="14" rx="4"/><path class="eb-l" d="M96 60l10-12h30"/><circle class="eb-fa" cx="138" cy="46" r="4.5"/></g>'
+            + '<text class="eb-txt-g" x="120" y="24">−·−· −−·−</text><text class="eb-txt" x="120" y="90">CQ in Morsezeichen</text>'),
+        iss: () => eb(ebRaum + '<g transform="translate(20 2)"><g class="eb-wackel">' + issKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">ISS · Rufzeichen NA1SS</text>'),
+        astro: () => eb(ebRaum + ebAstro + '<text class="eb-txt" x="44" y="26" style="fill:#fff">DB1KM</text><text class="eb-txt" x="202" y="26" style="fill:#fff">DF4TR</text><text class="eb-txt" x="202" y="84" style="fill:#fff">KI5KFH</text>'),
+        jung: () => eb('<text class="eb-txt-g" x="62" y="14">Kirian · 9</text><text class="eb-txt-g" x="178" y="14">Maja · 14</text>'
+            // links der Junge, rechts das Maedchen: jeder mit Handfunkgeraet, beide hupfen abwechselnd
+            + '<g class="eb-hupf"><circle class="eb-l" cx="62" cy="38" r="11"/><path class="eb-t" d="M52 34q10-10 20 0"/>'
+            + '<path class="eb-l" d="M62 49v22M62 71l-9 11M62 71l9 11M62 56l-12 10M62 56l13-9"/>'
+            + '<rect class="eb-fa" x="73" y="33" width="7" height="14" rx="2"/><path class="eb-l" d="M76.5 33V25"/><circle class="eb-fa" cx="76.5" cy="24" r="2"/>'
+            + '<path class="eb-a eb-bogen" d="M84 30q6 6 0 12M90 26q10 10 0 20"/></g>'
+            + '<g class="eb-hupf" style="animation-delay:.55s"><circle class="eb-l" cx="178" cy="38" r="11"/><circle class="eb-fa" cx="165" cy="42" r="3.6"/><circle class="eb-fa" cx="191" cy="42" r="3.6"/>'
+            + '<path class="eb-l" d="M178 49L166 74H190zM172 74v8M184 74v8M172 56l-11-9"/><path class="eb-l" d="M184 56l8 8"/>'
+            + '<rect class="eb-fa" x="153" y="33" width="7" height="14" rx="2"/><path class="eb-l" d="M156.5 33V25"/><circle class="eb-fa" cx="156.5" cy="24" r="2"/>'
+            + '<path class="eb-a eb-bogen" d="M150 30q-6 6 0 12M144 26q-10 10 0 20" style="animation-delay:.55s"/></g>'
+            + '<text class="eb-txt-g" x="120" y="62">73!</text><text class="eb-txt" x="120" y="94">Bist du der / die Nächste?</text>'),
+        zahl: () => eb(Array.from({ length: 66 }, (_, i) => '<circle class="eb-fh" cx="' + (22 + (i % 22) * 9.6) + '" cy="' + (30 + Math.floor(i / 22) * 11) + '" r="2.6" opacity=".38"/>').join('')
+            + '<g class="eb-hupf"><circle class="eb-fa" cx="' + (22 + 12 * 9.6) + '" cy="52" r="3.6"/></g>'
+            + '<text class="eb-txt-g" x="120" y="16">rund 61 000 Funkamateure</text><text class="eb-txt" x="120" y="80">Klasse A · Klasse E · Klasse N</text><text class="eb-txt" x="120" y="92">… und bald vielleicht du!</text>'),
+        ham: () => eb('<path class="eb-t" d="M18 84V66l14-12 14 12v18zM194 84V66l14-12 14 12v18z"/><path class="eb-l" d="M32 54V34M26 42l6-6 6 6M208 54V34M202 42l6-6 6 6"/>'
+            + '<path class="eb-a eb-bogen" d="M52 62Q120 30 188 62"/><g class="eb-hupf"><path class="eb-fa" d="M120 60c-10-8-14-14-8-19 4-3 8-1 8 3 0-4 4-6 8-3 6 5 2 11-8 19z"/></g>'
+            + '<text class="eb-txt-g" x="120" y="22">73!</text>')
+    };
+    // ----- Die Begriffe. html = Blase, sprich = gesprochen, kurz = eine Zeile (Gruss), frage = beim Hereinlugen
+    const ERKLAERT = [
+        { id: 'cq', name: 'CQ', frage: 'Weißt du, was <b>CQ</b> heißt? Tipp mich an – ich erklär’s dir!',
+          kurz: '<b>CQ</b> ist der Ruf an alle: „Wer hört mich?“',
+          html: '<b>CQ</b> ist der <b>allgemeine Anruf</b>: „Ich rufe alle – wer hört mich?“ So fängt man an, wenn man noch nicht weiß, wer gerade zuhört. <b>CQ DX</b> heißt: „Ich rufe in die Ferne!“<div class="rb-morse" aria-hidden="true"></div>',
+          sprich: 'C Q ist der allgemeine Anruf. | Ich rufe alle. Wer hört mich? So fängt man an, wenn man noch nicht weiß, wer gerade zuhört.',
+          extra: [['Hör mal: CQ', 'morse:CQ']] },
+        { id: 'dx', name: 'DX', frage: 'Was ist eigentlich ein <b>DX</b>? Tipp mich an!',
+          kurz: '<b>DX</b> heißt große Entfernung – Funken in ferne Länder.',
+          html: '<b>DX</b> heißt <b>große Entfernung</b>. Eine DX-Verbindung geht weit weg, oft in ein anderes Land oder auf einen anderen Kontinent. Auf Kurzwelle klappt das, weil die Funkwellen von der <b>Ionosphäre</b> zurückgeworfen werden.',
+          sprich: 'D X heißt große Entfernung. | Eine D X Verbindung geht weit weg, oft in ein anderes Land. Auf Kurzwelle klappt das, weil die Funkwellen von der Ionosphäre zurückgeworfen werden.' },
+        { id: 'qrm', name: 'QRM', frage: 'Kennst du <b>QRM</b>? Das nervt jeden Funker! Tipp mich an.',
+          kurz: '<b>QRM</b> heißt „Ich werde gestört“ – von Menschen gemacht. M wie Mensch.',
+          html: '<b>QRM</b> heißt: „Ich werde <b>gestört</b>.“ Die Störung kommt vom <b>Menschen</b>: andere Funker auf derselben Frequenz, aber auch Netzteile, LED-Lampen oder Ladegeräte. Merkhilfe: <b>M</b> wie Mensch.',
+          sprich: 'Q R M heißt: Ich werde gestört. | Die Störung kommt vom Menschen. Von anderen Funkern auf derselben Frequenz, aber auch von Netzteilen, L E D Lampen oder Ladegeräten. Merkhilfe: M wie Mensch.' },
+        { id: 'qrn', name: 'QRN', frage: 'Und <b>QRN</b>? Das kommt vom Wetter! Tipp mich an.',
+          kurz: '<b>QRN</b> ist Störung aus der Natur, zum Beispiel Gewitter. N wie Natur.',
+          html: '<b>QRN</b> heißt: „Ich werde durch <b>atmosphärische Störungen</b> gestört.“ Zum Beispiel durch Gewitter und Blitze – das knistert und kracht im Lautsprecher! Merkhilfe: <b>N</b> wie Natur.',
+          sprich: 'Q R N heißt: Ich werde durch atmosphärische Störungen gestört. | Zum Beispiel durch Gewitter. Das knistert und kracht im Lautsprecher! Merkhilfe: N wie Natur.' },
+        { id: 'qth', name: 'QTH', frage: 'Weißt du, was mein <b>QTH</b> ist? Tipp mich an!',
+          kurz: '<b>QTH</b> ist dein Standort.',
+          html: '<b>QTH</b> ist dein <b>Standort</b>. „Mein QTH ist Hamburg“ heißt: Ich funke aus Hamburg. Mit „QTH?“ fragt man: „Wo ist dein Standort?“',
+          sprich: 'Q T H ist dein Standort. | Mein Q T H ist Hamburg, das heißt: Ich funke aus Hamburg. Mit Q T H, Fragezeichen, fragt man: Wo ist dein Standort?' },
+        { id: 'qsl', name: 'QSL', frage: 'Was ist eine <b>QSL</b>-Karte? Tipp mich an!',
+          kurz: '<b>QSL</b> heißt: „Empfang bestätigt.“ Dazu gibt es Karten – wie Postkarten.',
+          html: '<b>QSL</b> heißt: „Ich <b>bestätige</b> den Empfang.“ Funkamateure schicken sich nach einer Verbindung eine <b>QSL-Karte</b> – wie eine Postkarte, auf der steht: „Das war ein Funkkontakt mit mir!“ Dein <b>QSL-Album</b> in der App sammelt deine Karten.',
+          sprich: 'Q S L heißt: Ich bestätige den Empfang. | Funkamateure schicken sich nach einer Verbindung eine Q S L Karte, wie eine Postkarte. Dein Q S L Album in der App sammelt deine Karten.' },
+        { id: 'qrp', name: 'QRP', frage: 'Weißt du, was <b>QRP</b> heißt? Tipp mich an!',
+          kurz: '<b>QRP</b> heißt: mit ganz wenig Sendeleistung funken – und trotzdem weit kommen.',
+          html: '<b>QRP</b> heißt: mit <b>geringer Sendeleistung</b> funken. Das ist eine Sportart unter Funkern: Wer es mit ein paar Watt in ein fernes Land schafft, ist richtig stolz. Das Gegenteil heißt <b>QRO</b> – hohe Leistung.',
+          sprich: 'Q R P heißt: mit geringer Sendeleistung funken. | Das ist eine Sportart unter Funkern. Wer es mit ein paar Watt in ein fernes Land schafft, ist richtig stolz.' },
+        { id: 'richt', name: 'Richtantenne', frage: 'Wie funktioniert eine <b>Richtantenne</b>? Tipp mich an – ich zeig’s dir!',
+          kurz: 'Eine <b>Richtantenne</b> bündelt das Signal wie eine Taschenlampe.',
+          html: 'Eine <b>Richtantenne</b> (zum Beispiel die <b>Yagi</b>, sie sieht aus wie eine Fischgräte) bündelt das Signal in <b>eine Richtung</b> – wie eine Taschenlampe, die einen Lichtkegel macht. Das bringt <b>Antennengewinn</b>: Du hörst den Partner besser, er hört dich besser, und Störungen von der Seite werden schwächer. Mehr Sendeleistung ist das nicht – nur besser gebündelt. Ein <b>Rundstrahler</b> funkt dagegen in alle Richtungen.',
+          sprich: 'Eine Richtantenne bündelt das Signal in eine Richtung, wie eine Taschenlampe. | Das bringt Antennengewinn. Du hörst den Partner besser, und er hört dich besser. Störungen von der Seite werden schwächer. Mehr Sendeleistung ist das nicht, nur besser gebündelt.' },
+        { id: 'atv', name: 'Amateurfunk-TV', frage: 'Wusstest du, dass Funker auch <b>Fernsehen</b> senden? Tipp mich an!',
+          kurz: '<b>Amateurfunk-TV (ATV)</b>: Funkamateure senden bewegte Bilder.',
+          html: '<b>Amateurfunk-TV</b> (<b>ATV</b>) heißt: Funkamateure senden <b>bewegte Bilder</b>, sogar live von der Kamera. Ein Fernsehbild braucht <b>sehr viel Bandbreite</b> – über tausendmal so viel wie ein Sprechfunk-Signal. Darum funkt man ATV auf den <b>hohen Bändern</b> (70 cm und höher) – und gern mit einer <b>Richtantenne</b>.',
+          sprich: 'Amateurfunk T V heißt: Funkamateure senden bewegte Bilder, sogar live von der Kamera. | Ein Fernsehbild braucht sehr viel Bandbreite, über tausendmal so viel wie Sprechfunk. Darum funkt man das auf den hohen Bändern, gern mit einer Richtantenne.' },
+        { id: 'sstv', name: 'SSTV', frage: 'Bilder per Funk? Das geht! Tipp mich an – <b>SSTV</b>!',
+          kurz: '<b>SSTV</b> schickt Standbilder per Funk.',
+          html: '<b>SSTV</b> schickt <b>Standbilder</b> per Funk. Ein Bild dauert ein bis zwei Minuten und klingt wie Gezwitscher. Das passt in einen <b>normalen Sprechfunkkanal</b> – ganz ohne Fernseh-Bandbreite. Zu besonderen Anlässen sendet sogar die <b>ISS</b> solche Bilder zur Erde!',
+          sprich: 'S S T V schickt Standbilder per Funk. | Ein Bild dauert ein bis zwei Minuten und klingt wie Gezwitscher. Zu besonderen Anlässen sendet sogar die I S S solche Bilder zur Erde.' },
+        { id: 'morse', name: 'Morsen', frage: 'Soll ich dir <b>Morsen</b> vorführen? Tipp mich an – piep!',
+          kurz: '<b>Morsen</b>: kurze und lange Töne – die älteste Funk-Sprache.',
+          html: '<b>Morsen</b> ist die älteste Funk-Sprache: aus <b>kurzen</b> und <b>langen</b> Tönen wird jeder Buchstabe. Es kommt auch durch, wenn Sprache im Rauschen untergeht. Tipp auf einen Knopf, dann <b>hörst du es</b>:<div class="rb-morse" aria-hidden="true"></div>',
+          sprich: 'Morsen ist die älteste Funk Sprache. | Aus kurzen und langen Tönen wird jeder Buchstabe. Es kommt auch durch, wenn Sprache im Rauschen untergeht. Tipp auf einen Knopf, dann hörst du es.',
+          extra: [['Hör mal: CQ', 'morse:CQ'], ['Und 73', 'morse:73']] },
+        { id: 'iss', name: 'ISS', frage: 'Weißt du, dass auf der <b>ISS</b> auch gefunkt wird? Tipp mich an!',
+          kurz: 'Auf der <b>ISS</b> gibt es eine Amateurfunkstation – Rufzeichen NA1SS.',
+          html: 'Die <b>ISS</b> umrundet die Erde in rund <b>90 Minuten</b> – etwa <b>400 km</b> hoch, mit rund <b>28 000 km/h</b>. An Bord ist eine <b>Amateurfunkstation</b> mit dem Rufzeichen <b>NA1SS</b>. Bei Schulkontakten (<b>ARISS</b>) hört man die Astronauten auf <b>145,800 MHz</b>, im 2-m-Band. Ein echter Überflug dauert ein paar Minuten – nicht ein paar Sekunden wie bei mir!',
+          extra: [['Astronaut winkt', 'astro']],
+          sprich: 'Die I S S umrundet die Erde in neunzig Minuten, vierhundert Kilometer hoch. | An Bord ist eine Amateurfunkstation mit dem Rufzeichen N-A-1-S-S. Bei Schulkontakten hört man die Astronauten auf hundertfünfundvierzig Komma acht Megahertz.' },
+        { id: 'astro', name: 'Funker im All', frage: 'Weißt du, welche <b>deutschen Astronauten</b> Funkamateure sind? Tipp mich an!',
+          kurz: 'Deutsche Funker im All: Ulf Merbold (<b>DB1KM</b>), Thomas Reiter (<b>DF4TR</b>), Matthias Maurer (<b>KI5KFH</b>).',
+          html: 'Auch im All gibt es <b>Funkamateure</b>! <b>Dr. Ulf Merbold</b>, deutscher Physiker und ESA-Astronaut, trägt das Rufzeichen <b>DB1KM</b> – er flog 1983 mit dem Spacelab und später zur Raumstation Mir. <b>Thomas Reiter</b> (<b>DF4TR</b>) war auf der Mir und 2006 auf der <b>ISS</b>, <b>Matthias Maurer</b> (<b>KI5KFH</b>) 2021 und 2022. Manchmal sind Funkamateure von der ISS sogar live zu hören!',
+          extra: [['Astronaut winkt', 'astro']],
+          sprich: 'Auch im All gibt es Funkamateure! | Doktor Ulf Merbold, deutscher Physiker und E S A Astronaut, hat das Rufzeichen D-B-1-K-M. Er flog neunzehnhundertdreiundachtzig mit dem Spacelab und später zur Mir. | Thomas Reiter, D-F-4-T-R, war auf der Mir und auf der I S S. Und Matthias Maurer, K-I-5-K-F-H, funkte von der I S S.' },
+        { id: 'jung', name: 'Die Jüngsten', frage: 'Kirian ist erst 9 – Deutschlands jüngster Funkamateur! Bist du der Nächste? Tipp mich an.',
+          frage2: 'Maja ist erst 14 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.',
+          kurz: 'Kirian ist 9, Maja ist 14 – Deutschlands jüngste Funker. <b>Bist du der Nächste?</b>',
+          html: '<b>Kirian</b> ist erst <b>neun</b> Jahre alt und gilt als Deutschlands <b>jüngster Funkamateur</b>. <b>Maja</b> aus Bamberg ist <b>14</b> und Deutschlands <b>jüngste Funkamateurin</b> – ihre Lizenz hat sie schon mit zehn bekommen. Wer gut lernt, schafft die Prüfung auch als Kind. <b>Bist du der Nächste? Oder die Nächste?</b>',
+          extra: [['Ich bin der Nächste!', 'naechste:er'], ['Ich bin die Nächste!', 'naechste:sie']],
+          sprich: 'Kirian ist erst neun Jahre alt und gilt als Deutschlands jüngster Funkamateur. | Maja aus Bamberg ist vierzehn und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen. | Wer gut lernt, schafft die Prüfung auch als Kind. Bist du der Nächste? Oder die Nächste?' },
+        { id: 'zahl', name: 'Funker in Deutschland', frage: 'Wie viele <b>Funkamateure</b> gibt es in Deutschland? Rate mal – tipp mich an!',
+          kurz: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure.',
+          html: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure mit gültiger Lizenz. Über <b>50 000</b> haben die <b>Klasse A</b>, gut <b>9 000</b> die <b>Klasse E</b> und gut <b>1 000</b> die Einsteigerklasse <b>N</b> – die wächst gerade kräftig. Über <b>33 000</b> sind im <b>DARC</b>. Du kannst bald einer von ihnen sein!',
+          sprich: 'In Deutschland gibt es rund einundsechzigtausend Funkamateure. | Über fünfzigtausend haben die Klasse A, gut neuntausend die Klasse E und gut tausend die Einsteigerklasse N. Die wächst gerade kräftig. Über dreiunddreißigtausend sind im D A R C. Du kannst bald einer von ihnen sein!' },
+        { id: 'ham', name: 'Ham Spirit', frage: 'Weißt du, was <b>Ham Spirit</b> ist? Tipp mich an!',
+          kurz: '<b>Ham Spirit</b>: Funkamateure heißen auf Englisch „Hams“ – und helfen einander.',
+          html: 'Funkamateure heißen auf Englisch <b>„Hams“</b> (nicht „Schinken“!). <b>Ham Spirit</b> ist ihr Geist: Man <b>hilft einander</b>, teilt sein Wissen, baut zusammen und freut sich über jede Verbindung – egal, wie weit sie reicht. <b>73!</b> heißt „Viele Grüße“.',
+          sprich: 'Funkamateure heißen auf Englisch Hämms. Nicht Schinken! | Hämm Spirit ist ihr Geist: Man hilft einander, teilt sein Wissen und baut zusammen. Dreiundsiebzig heißt: Viele Grüße!' }
+    ];
+    const ERKL_PEEK = {};
+    // beim Hereinlugen: jede Frage (frage, bei den Juengsten auch frage2) fuehrt zum selben Begriff
+    const ERKL_FRAGEN = [];
+    ERKLAERT.forEach(e => [e.frage, e.frage2].forEach(f => { if(f){ ERKL_PEEK[f] = e.id; ERKL_FRAGEN.push(f); } }));
+    function erklFinden(id){ return ERKLAERT.find(e => e.id === id) || ERKLAERT[0]; }
+    const erklBild = id => ERKL_BILD[id] ? '<div class="rb-bild" aria-hidden="true">' + ERKL_BILD[id]() + '</div>' : '';
+    const erklHtml = e => e.html + erklBild(e.id);
+    const ERKL_KNOEPFE = e => (e && e.extra ? e.extra.concat([['Noch was erklären', 'abc']]) : [['Noch was erklären', 'abc'], ['Danke!', 'heim']]);
+    // Welche Begriffe hat man schon gelesen? (je Handy, robo_abc_gelesen)
+    function abcGelesen(){ return String(lies('robo_abc_gelesen', '')).split(',').filter(Boolean); }
+    function abcMerken(id){
+        const g = abcGelesen();
+        if(!g.includes(id)){ g.push(id); schreib('robo_abc_gelesen', g.join(',')); }
+    }
+    // Gross auf der Buehne (Tipp, Antippen, Hilfe-Menue, Gruss)
+    function erklaeren(id){
+        const e = erklFinden(id);
+        abcMerken(e.id);
+        auftritt(erklHtml(e), ERKL_KNOEPFE(e), '', 'tipp');
+        funkiSagt(e.sprich, true);
+    }
+    // Klein am Rand (beim Hereinlugen angetippt)
+    function erklHilfe(id){
+        const e = erklFinden(id);
+        abcMerken(e.id);
+        funkiSagt(e.sprich, true);
+        return { html: erklHtml(e), knoepfe: ERKL_KNOEPFE(e) };
+    }
+    function abcMenue(){
+        const g = abcGelesen(), n = ERKLAERT.filter(e => g.includes(e.id)).length, alle = n === ERKLAERT.length;
+        const chips = ERKLAERT.map(e => '<button type="button" class="rb-chip' + (g.includes(e.id) ? ' gelesen' : '') + '" data-tat="erkl:' + e.id + '">' + e.name + '</button>').join('');
+        let kopf = '<b>Funk-ABC.</b> Was soll ich dir erklären?', sprich = 'Was soll ich dir erklären?';
+        if(alle && lies('robo_abc_meister', '') !== '1'){
+            schreib('robo_abc_meister', '1');
+            kopf = '<b>Alle ' + ERKLAERT.length + ' Begriffe gelesen – du bist jetzt Ehren-Funker!</b> Urkunde folgt per Funk. Oder auch nicht.';
+            sprich = '{melodie} Alle Begriffe gelesen! Du bist jetzt Ehren-Funker. | Die Urkunde kommt per Funk. Oder auch nicht.';
+        } else if(n) kopf += ' <small>' + n + ' von ' + ERKLAERT.length + ' gelesen.</small>';
+        auftritt(kopf + '<div class="rb-chips">' + chips + '</div>', [['Quiz mit mir!', 'quiz'], ['Später', 'heim']], '', 'tipp');
+        funkiSagt(sprich, true);
+    }
+    // Jeden zweiten Tagesgruss: ein Wort aus dem Funk-ABC statt eines Tipps
+    function abcWort(){
+        let n = parseInt(lies('robo_abc_nr', '0'), 10);
+        if(isNaN(n)) n = 0;
+        schreib('robo_abc_nr', String(n + 1));
+        return n % 2 === 0 ? ERKLAERT[Math.floor(n / 2) % ERKLAERT.length] : null;
+    }
+
+    // "Bist du der Naechste?" - die Antwort auf den Knopf bei den Juengsten (04.10.2026)
+    function naechsteAntwort(wer){
+        const sie = wer === 'sie';
+        auftritt('Das will ich hören! <b>' + (sie ? 'Die Nächste' : 'Der Nächste') + '</b> bist du also. Lern fleißig – bald hörst du dein eigenes Rufzeichen im Äther. <b>Weiter so, wir hören uns!</b> 73!',
+            [['Noch was erklären', 'abc'], ['Danke!', 'heim']], '', 'tipp');
+        funkiSagt('{melodie} Das will ich hören! | Lern fleißig. Bald hörst du dein eigenes Rufzeichen im Äther. Weiter so, wir hören uns! Dreiundsiebzig!', true);
+    }
+
+    // ----- Morsen zum Anhoeren: "Hoer mal: CQ" (04.10.2026)
+    const MORSE = { A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--', N: '-.', O: '---', P: '.--.', Q: '--.-',
+        R: '.-.', S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..', '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+        '6': '-....', '7': '--...', '8': '---..', '9': '----.' };
+    // Liefert die Ereignisse: { t: Sekunden ab Start, dauer, i: Nummer des Zeichens }
+    function morsePlan(wort, einheit){
+        const ev = []; let t = 0, nr = 0;
+        String(wort).toUpperCase().split('').forEach((b, bi) => {
+            const code = MORSE[b]; if(!code) return;
+            if(bi) t += 2 * einheit;                       // zwischen Buchstaben 3 Einheiten (eine ist schon dabei)
+            code.split('').forEach((z, k) => {
+                if(k) t += einheit;                          // zwischen Zeichen eine Einheit
+                const d = (z === '-' ? 3 : 1) * einheit;
+                ev.push({ t: t, dauer: d, i: nr++ }); t += d;
+            });
+        });
+        return { ev: ev, gesamt: t };
+    }
+    function morseSpielen(wort){
+        const bl = roboBlase.querySelector('.rb-morse');
+        const einheit = 0.09, p = morsePlan(wort, einheit);
+        tu(funkiVerstummen);
+        if(bl){
+            // Die Zeichen als Punkte und Striche anzeigen; beim Abspielen leuchten sie der Reihe nach auf
+            let nr = 0;
+            bl.innerHTML = String(wort).toUpperCase().split('').filter(b => MORSE[b]).map(b =>
+                '<span class="mz">' + MORSE[b].split('').map(z => '<i data-n="' + (nr++) + '">' + (z === '-' ? '−' : '·') + '</i>').join('') + '</span>').join('');
+        }
+        p.ev.forEach(e => spaeter(() => {
+            const el = roboBlase.querySelector('.rb-morse i[data-n="' + e.i + '"]');
+            if(el) el.classList.add('an');
+        }, Math.round(e.t * 1000) + 80));
+        if(!darfSprechen(true)) return;
+        const ctx = tonKontext();
+        if(!ctx) return;
+        tu(() => {
+            if(ctx.state === 'suspended') ctx.resume();
+            const kn = [], aus = ctx.createGain(); aus.gain.value = 0.9; aus.connect(ctx.destination); kn.push(aus);
+            const t0 = ctx.currentTime + 0.1;
+            p.ev.forEach(e => tonBlip(ctx, aus, kn, t0 + e.t, 700, e.dauer, 'sine', 0, 0.16));
+            setTimeout(() => kn.forEach(k => tu(() => k.disconnect())), Math.ceil((p.gesamt + 0.6) * 1000));
+        });
+    }
+
+    // ----- Das Funk-ABC-Quiz mit frechen Ausreden (04.10.2026)
+    //  Drei Antworten, eine stimmt. Richtig: Lob mit Funk-Wortwitz. Falsch:
+    //  eine freche Ausrede ("QRM im Kopf") und die richtige Antwort mit
+    //  Erklaerung. Gespeichert: robo_abc_quiz_nr (naechste Frage) und
+    //  robo_abc_quiz_ok (richtige insgesamt). Wer 10 richtig hat, ist
+    //  "Funk-ABC-Meister".
+    const QUIZ = [
+        { f: 'Was bedeutet <b>QRM</b>?', r: 'Ich werde von Menschen gestört', x: ['Ich werde vom Gewitter gestört', 'Mein Toaster hat gefunkt'],
+          w: '<b>QRM</b> ist Störung durch Menschen: andere Funker, Netzteile, LED-Lampen. <b>M</b> wie Mensch.' },
+        { f: 'Was bedeutet <b>QRN</b>?', r: 'Ich werde durch Gewitter & Co. gestört', x: ['Ich werde von anderen Funkern gestört', 'Mein Hund bellt'],
+          w: '<b>QRN</b> ist Störung aus der Natur, zum Beispiel Gewitter. <b>N</b> wie Natur.' },
+        { f: 'Was ist dein <b>QTH</b>?', r: 'Dein Standort', x: ['Deine Sendeleistung', 'Deine Lieblingsfarbe'],
+          w: '<b>QTH</b> ist der Standort. „Mein QTH ist Hamburg“ heißt: Ich funke aus Hamburg.' },
+        { f: 'Was heißt <b>CQ</b>?', r: 'Allgemeiner Anruf: Wer hört mich?', x: ['Ich beende die Verbindung', 'Bitte langsamer sprechen'],
+          w: '<b>CQ</b> ruft alle: „Wer hört mich?“ Mit <b>CQ DX</b> ruft man in die Ferne.' },
+        { f: 'Was bedeutet <b>DX</b>?', r: 'Große Entfernung', x: ['Doppelte Sendeleistung', 'Digitale Zeichen'],
+          w: '<b>DX</b> heißt weit weg – eine Verbindung in ein fernes Land.' },
+        { f: 'Was macht eine <b>Richtantenne</b>?', r: 'Sie bündelt das Signal in eine Richtung', x: ['Sie macht den Sender stärker', 'Sie strahlt überall gleich stark'],
+          w: 'Eine Richtantenne bündelt wie eine Taschenlampe. Mehr Sendeleistung ist das nicht – nur besser gebündelt.' },
+        { f: 'Wofür steht <b>ATV</b>?', r: 'Fernsehen per Funk – bewegte Bilder', x: ['Automatische Telefonverbindung', 'Antennen-Testverfahren'],
+          w: '<b>Amateurfunk-TV</b> sendet bewegte Bilder. Dafür braucht es viel Bandbreite – also hohe Bänder.' },
+        { f: 'Was schickt <b>SSTV</b>?', r: 'Standbilder per Funk', x: ['Live-Fernsehen in HD', 'Nur Morsezeichen'],
+          w: '<b>SSTV</b> schickt Standbilder – ein Bild dauert ein bis zwei Minuten und klingt wie Gezwitscher.' },
+        { f: 'Was heißt <b>QSL</b>?', r: 'Ich bestätige den Empfang', x: ['Ich ändere die Frequenz', 'Ich beende den Funkbetrieb'],
+          w: '<b>QSL</b> bestätigt den Empfang – darum heißen die Postkarten der Funker <b>QSL-Karten</b>.' },
+        { f: 'Was heißt <b>73</b> unter Funkern?', r: 'Viele Grüße', x: ['73 Watt Sendeleistung', 'Ende der Verbindung'],
+          w: '<b>73</b> heißt „Viele Grüße“. Funker verabschieden sich damit.' },
+        { f: 'Was heißt <b>QRP</b>?', r: 'Mit geringer Sendeleistung funken', x: ['Mit hoher Sendeleistung funken', 'Die Frequenz wechseln'],
+          w: '<b>QRP</b> heißt wenig Leistung – und trotzdem weit kommen. Das Gegenteil ist <b>QRO</b>.' },
+        { f: 'Wie heißen Funkamateure auf Englisch?', r: 'Hams', x: ['Hamster', 'Spaghetti'],
+          w: '<b>Hams</b>! Und <b>Ham Spirit</b> heißt: Man hilft einander.' },
+        { f: 'Wer trägt das Rufzeichen <b>DB1KM</b>?', r: 'Dr. Ulf Merbold, Astronaut', x: ['Matthias Maurer', 'Der Weihnachtsmann'],
+          w: '<b>Dr. Ulf Merbold</b>, deutscher ESA-Astronaut und Physiker, ist Funkamateur mit dem Rufzeichen <b>DB1KM</b>.' },
+        { f: 'Welche Station funkt unter <b>NA1SS</b>?', r: 'Die ISS', x: ['Der Mond', 'Funkis Kühlschrank'],
+          w: '<b>NA1SS</b> ist das Rufzeichen der Amateurfunkstation an Bord der <b>ISS</b>.' },
+        { f: 'Wie alt ist <b>Kirian</b>, Deutschlands jüngster Funkamateur?', r: 'Neun Jahre', x: ['Neunzehn Jahre', 'Neunzig Jahre'],
+          w: '<b>Kirian</b> ist erst neun – und schon Funkamateur. Bist du der Nächste?' },
+        { f: 'Wer ist <b>Maja</b> aus Bamberg?', r: 'Deutschlands jüngste Funkamateurin', x: ['Eine Astronautin auf der ISS', 'Funkis Schwester'],
+          w: '<b>Maja</b> ist 14 und Deutschlands jüngste Funkamateurin – ihre Lizenz hat sie schon mit zehn bekommen. Bist du die Nächste?' },
+        { f: 'Wie viele Funkamateure gibt es ungefähr in Deutschland?', r: 'Rund 61 000', x: ['Rund 600', 'Rund 6 Millionen'],
+          w: 'Rund <b>61 000</b> Funkamateure haben in Deutschland eine gültige Lizenz – und du kannst bald dazugehören.' }
+    ];
+    const QUIZ_LOB = ['Volltreffer!', 'QSL – verstanden und bestätigt!', 'Glasklar, Lautstärke S9!', 'Richtig! Du hörst gut zu.', 'Wie ein DX: weit gedacht und getroffen!', 'Läuft bei dir!'];
+    const QUIZ_AUSREDE = ['Autsch – das war wohl QRM in deinem Kopf!', 'Knister, knister – QRN im Gehirn!', 'Starkes QSB: Die Antwort kam und ging.', 'Das war nur Rauschen – kein Problem!',
+        'Fast! Aber nur fast – wie ein Funkspruch im Gewitter.', 'Hoppla – Frequenz verfehlt!'];
+    function quizFrage(){
+        let n = parseInt(lies('robo_abc_quiz_nr', '0'), 10);
+        if(isNaN(n) || n < 0) n = 0;
+        schreib('robo_abc_quiz_nr', String((n + 1) % QUIZ.length));
+        const q = QUIZ[n % QUIZ.length], opts = [q.r].concat(q.x);
+        for(let i = opts.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+        robo.quiz = { q: q, opts: opts };
+        return robo.quiz;
+    }
+    function quizStarten(){
+        const z = quizFrage();
+        auftritt('<b>Funk-ABC-Quiz.</b> ' + z.q.f + '<div class="rb-chips rb-antw">'
+            + z.opts.map((o, i) => '<button type="button" class="rb-chip" data-tat="qz:' + i + '">' + o + '</button>').join('') + '</div>', [['Aufhören', 'heim']], '', 'tipp');
+        funkiSagt(redeText(z.q.f, 120), true);
+    }
+    function quizAntwort(i){
+        const a = robo.quiz;
+        if(!a || !a.opts[i]) return;
+        robo.quiz = null;
+        const ok = a.opts[i] === a.q.r;
+        let gesamt = parseInt(lies('robo_abc_quiz_ok', '0'), 10) || 0;
+        if(ok){ gesamt++; schreib('robo_abc_quiz_ok', String(gesamt)); }
+        const kopf = ok ? zufall(QUIZ_LOB) : zufall(QUIZ_AUSREDE);
+        let extra = '';
+        if(ok && gesamt === 10 && lies('robo_abc_quiz_meister', '') !== '1'){
+            schreib('robo_abc_quiz_meister', '1');
+            extra = '<span class="rb-tipp"><b>Zehn richtige insgesamt – du bist jetzt Funk-ABC-Meister!</b></span>';
+        }
+        auftritt('<b>' + kopf + '</b>' + (ok ? '' : ' Richtig wäre: <b>' + a.q.r + '</b>.') + '<span class="rb-tipp">' + a.q.w + '</span>' + extra,
+            [['Nächste Frage', 'quiz'], ['Fertig', 'heim']], '', 'tipp');
+        funkiSagt((ok ? '{melodie} ' : '~ ') + redeText(kopf, 90) + (ok ? '' : ' Richtig wäre: ' + redeText(a.q.r, 60) + '.') + ' | ' + redeText(a.q.w, 120)
+            + (extra ? ' | Zehn richtige insgesamt. Du bist jetzt Funk-ABC-Meister!' : ''), true);
+    }
+
+    // ================================================================
+    //  DIE ISS FLIEGT DURCH DEN SCHIRM                       (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Die ISS, die durch den Bildschirm mit Sound fliegt."
+    //  Die Raumstation quert den Schirm in gut sieben Sekunden, schraeg,
+    //  gross in der Mitte und klein am Rand (Vorbeiflug). Dazu: Rauschen,
+    //  das beim Vorbeiflug nach unten rutscht (Doppler), ein tiefes
+    //  Brummen, in der Mitte ein Funk-Piepen (zwei Toene, 1200 und 2200 Hz,
+    //  wie ein Datenpaket auf 145,825 MHz) und ein Bliep. Der Klang wandert
+    //  von Ohr zu Ohr, so wie sie fliegt. Danach lugt Funki herein und sagt
+    //  etwas dazu (bei Wenig nicht).
+    //  Nur im Stil Verspielt, nur auf der Startseite ohne offenes Fenster,
+    //  nie waehrend einer Runde, nie beim Vorlesen, nie bei "Animationen
+    //  entfernen". Einstellungen -> Allgemein -> ISS-Ueberflug: Oft, Normal,
+    //  Selten, Aus - und der Ton einzeln.
+    // ================================================================
+    const issEl = D.createElement('div');
+    issEl.id = 'appIss';
+    issEl.setAttribute('aria-hidden', 'true');
+    D.body.appendChild(issEl);
+    let issLaeuft = false;
+    const ISS_DAUER = 7200;
+    // Der Klang. ctx und ziel von aussen, damit ein Test ihn auch ohne Lautsprecher rechnen kann.
+    function issKlang(ctx, links, d, kn, ziel){
+        const t0 = ctx.currentTime + 0.05;
+        let pan = null;
+        if(ctx.createStereoPanner){
+            pan = ctx.createStereoPanner(); kn.push(pan);
+            pan.pan.setValueAtTime(links ? -0.85 : 0.85, t0); pan.pan.linearRampToValueAtTime(links ? 0.85 : -0.85, t0 + d);
+            pan.connect(ziel);
+        }
+        const aus = pan || ziel;
+        // Gemeinsame Huellkurve: leise herein, in der Mitte am lautesten, dann leise hinaus
+        const huell = ctx.createGain(); kn.push(huell);
+        huell.gain.setValueAtTime(0, t0); huell.gain.linearRampToValueAtTime(0.2, t0 + d * 0.48); huell.gain.linearRampToValueAtTime(0.12, t0 + d * 0.56); huell.gain.linearRampToValueAtTime(0, t0 + d);
+        huell.connect(aus);
+        // 1. Rauschen, dessen Klang beim Vorbeiflug nach unten rutscht (Doppler)
+        const n = Math.floor(ctx.sampleRate * 2), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
+        for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
+        const rs = ctx.createBufferSource(); rs.buffer = nb; rs.loop = true; kn.push(rs);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1; kn.push(bp);
+        bp.frequency.setValueAtTime(1500, t0); bp.frequency.linearRampToValueAtTime(1100, t0 + d * 0.46);
+        bp.frequency.exponentialRampToValueAtTime(420, t0 + d * 0.62); bp.frequency.linearRampToValueAtTime(330, t0 + d);
+        const rg = ctx.createGain(); rg.gain.value = 1.6; kn.push(rg);
+        rs.connect(bp); bp.connect(rg); rg.connect(huell); rs.start(t0); rs.stop(t0 + d + 0.05);
+        // 2. Tiefes Brummen der Station - faellt nach dem Vorbeiflug ein Stueck ab
+        [98, 147].forEach((hz, i) => {
+            const o = ctx.createOscillator(); o.type = i ? 'triangle' : 'sawtooth'; kn.push(o);
+            o.frequency.setValueAtTime(hz * 1.05, t0); o.frequency.setValueAtTime(hz * 1.05, t0 + d * 0.46);
+            o.frequency.exponentialRampToValueAtTime(hz * 0.9, t0 + d * 0.6); o.frequency.linearRampToValueAtTime(hz * 0.88, t0 + d);
+            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420; kn.push(lp);
+            const g = ctx.createGain(); g.gain.value = i ? 0.3 : 0.2; kn.push(g);
+            o.connect(lp); lp.connect(g); g.connect(huell); o.start(t0); o.stop(t0 + d + 0.05);
+        });
+        // 3. Funk-Piepen mitten im Vorbeiflug (ohne Huellkurve): 1200 und 2200 Hz im Wechsel, dann ein Bliep
+        const pk = ctx.createGain(); pk.gain.value = 1; pk.connect(aus); kn.push(pk);
+        let t = t0 + d * 0.36;
+        for(let i = 0; i < 22; i++){ tonBlip(ctx, pk, kn, t, i % 2 ? 2200 : 1200, 0.03, 'square', 0, 0.03); t += 0.034; }
+        roboGeraeusch(ctx, pk, kn, t0 + d * 0.62, 'bliep');
+    }
+    function issTonSpielen(links, d){
+        if(!issTonAn() || D.hidden || pruefungLaeuft() || wirdVorgelesen()) return;
+        const ctx = tonKontext();
+        if(!ctx) return;
+        tu(() => {
+            if(ctx.state === 'suspended') ctx.resume();
+            const kn = [], aus = ctx.createGain(); aus.gain.value = 0.9; aus.connect(ctx.destination); kn.push(aus);
+            issKlang(ctx, links, d, kn, aus);
+            setTimeout(() => kn.forEach(k => tu(() => k.disconnect())), Math.ceil(d * 1000) + 700);
+        });
+    }
+    const ISS_SPRUECHE = [
+        { t: 'Da! Die <b>ISS</b>! Ob die Astronauten gerade funken?', s: 'Da! Die I S S! Ob die Astronauten gerade funken?', id: 'iss' },
+        { t: 'Hast du sie gesehen? Die <b>ISS</b> ist schneller als jedes Flugzeug – rund 28 000 km/h!', s: 'Hast du sie gesehen? Die I S S ist schneller als jedes Flugzeug. Achtundzwanzigtausend Kilometer pro Stunde!', id: 'iss' },
+        { t: 'Winke mal! Auf der <b>ISS</b> war schon <b>Matthias Maurer</b> auf Sendung – Rufzeichen KI5KFH.', s: 'Winke mal! Auf der I S S war schon Matthias Maurer auf Sendung. K-I-5-K-F-H.', id: 'astro' },
+        { t: 'Auch <b>Thomas Reiter</b> hat von dort oben gefunkt – <b>DF4TR</b>. Ein echter Funkamateur im All!', s: 'Auch Thomas Reiter hat von dort oben gefunkt. D-F-4-T-R. Ein echter Funkamateur im All!', id: 'astro' },
+        { t: 'Schau an – die <b>ISS</b> macht ihre Runde. Alle 90 Minuten einmal um die Erde!', s: 'Schau an. Die I S S macht ihre Runde. Alle neunzig Minuten einmal um die Erde!', id: 'iss' },
+        { t: 'Tipp mich an: Ich erzähl dir, wer von dort oben schon gefunkt hat!', s: 'Tipp mich an. Ich erzähl dir, wer von dort oben schon gefunkt hat!', id: 'astro' }
+    ];
+    function issUeberflug(opt){
+        opt = opt || {};
+        if(issLaeuft || !issEl.animate || !H.classList.contains('stil-verspielt') || !H.classList.contains('android-app') || D.hidden) return false;
+        if(ruhigGewuenscht() && !opt.probe) return false;
+        issLaeuft = true;
+        const W = window.innerWidth, Hh = window.innerHeight, z = zf();
+        const breite = Math.round(Math.min(W * 0.46, 200)), hoehe = breite * 0.45;       // Bildschirmpunkte
+        issEl.style.width = px(breite);
+        issEl.innerHTML = '<svg viewBox="0 0 200 90" aria-hidden="true">' + issKoerper() + '</svg>';
+        issEl.classList.add('fliegt');
+        const links = Math.random() < 0.5;
+        const y0 = Hh * (0.14 + Math.random() * 0.2), y1 = Hh * (0.4 + Math.random() * 0.3), ym = (y0 + y1) / 2 - Hh * 0.06;
+        const X = t => (links ? -breite * 0.7 : W + breite * 0.7) + (links ? 1 : -1) * (W + breite * 1.4) * t;
+        const Y = t => (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * ym + t * t * y1;
+        const Sk = t => 0.45 + 0.75 * Math.sin(Math.PI * t);
+        const R = t => (links ? 1 : -1) * (-7 + 14 * t);
+        const T = t => 'translate(' + ((X(t) - breite / 2) / z).toFixed(1) + 'px,' + ((Y(t) - hoehe / 2) / z).toFixed(1) + 'px) scale(' + Sk(t).toFixed(3) + ') rotate(' + R(t).toFixed(1) + 'deg)';
+        const kf = [0, 0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1].map(t => ({ offset: t, opacity: (t === 0 || t === 1) ? 0 : (t < 0.15 || t > 0.85 ? 0.7 : 1), transform: T(t) }));
+        let fertig = false;
+        const ende = () => { if(fertig) return; fertig = true; issEl.classList.remove('fliegt'); issEl.innerHTML = ''; issLaeuft = false; };
+        let anim = null;
+        tu(() => { anim = issEl.animate(kf, { duration: ISS_DAUER, easing: 'linear', fill: 'both' }); anim.onfinish = ende; });
+        setTimeout(ende, ISS_DAUER + 1500);
+        tu(() => issTonSpielen(links, ISS_DAUER / 1000));
+        // Danach winkt seitlich ein Astronaut herein (oft) oder Funki lugt herein und sagt etwas dazu
+        if(!opt.stumm) setTimeout(() => tu(() => {
+            if(astroDa || robo.da || !roboDarf() || wirdVorgelesen()) return;
+            if(Math.random() < 0.5 && astroWinken()) return;
+            if(!mehrSprechen()) return;
+            const e = zufall(ISS_SPRUECHE);
+            kurzauftritt(e.t, { sprich: e.s, sprichSofort: true, hilfe: () => erklHilfe(e.id || 'iss') });
+        }), ISS_DAUER * 0.62);
+        return true;
+    }
+    // Wann kommt sie? Eigener Takt, unabhaengig von "Funki, dein Helfer"
+    function issPruefen(jetzt){
+        if(issLaeuft || astroDa || issRegler() === 'aus' || robo.da || ruhigGewuenscht()) return;
+        if(lies('robo_tour_gesehen', '') !== '1' || lies('app_stil_gewaehlt', '') !== '1') return;
+        if(jetzt - robo.beruehrt < 4000 || jetzt - (robo.letzter || 0) < 15000) return;
+        const p = issPlan();
+        if(robo.issWarte === undefined) robo.issWarte = zwischen(p.erst);
+        robo.issRuhig = (robo.issRuhig || 0) + TAKT;
+        if((robo.issZahl || 0) >= p.max || robo.issRuhig < robo.issWarte) return;
+        robo.issZahl = (robo.issZahl || 0) + 1; robo.issRuhig = 0; robo.issWarte = zwischen(p.pause);
+        issUeberflug();
+    }
+
+
+    // ================================================================
+    //  DER ASTRONAUT WINKT                                   (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Baust du mir auch noch einen Astronauten mit ein, der
+    //  seitlich am Bildschirm winkt und was sagt, was Mut macht, die
+    //  Pruefung zu bestehen. Nach dem Motto: Weiter so, wir hoeren uns."
+    //  Ein Astronaut schwebt vom linken oder rechten Rand herein, winkt,
+    //  und in einer kleinen Blase steht ein Mutmacher; dazu spricht er mit
+    //  Funkgeraete-Stimme (Telefon-Klang mit Rauschen und Piep, ohne die
+    //  hohe Roboterstimme von Funki). Nach ein paar Sekunden schwebt er
+    //  wieder hinaus. Er kommt nach manchen ISS-Ueberfluegen, auf Wunsch
+    //  ("Astronaut winkt" beim Funk-ABC "ISS" und "Funker im All") und zur
+    //  Probe in den Einstellungen. Gleiche Regeln wie die ISS: nur Stil
+    //  Verspielt, nur Startseite, nie in einer Runde, nie beim Vorlesen,
+    //  nie bei "Animationen entfernen" (ausser zur Probe). Die Stimme folgt
+    //  "ISS-Ueberflug: Ton" und "Funki spricht". Er nennt keinen Namen und
+    //  gibt sich nicht als eine bestimmte Person aus.
+    // ================================================================
+    const astroEl = D.createElement('div');
+    astroEl.id = 'appAstro';
+    astroEl.setAttribute('aria-hidden', 'true');
+    const astroBlase = D.createElement('div');
+    astroBlase.id = 'appAstroBlase';
+    astroBlase.setAttribute('role', 'status');
+    astroBlase.setAttribute('aria-live', 'polite');
+    D.body.appendChild(astroEl); D.body.appendChild(astroBlase);
+    let astroDa = false, astroProbe = false, astroUhren = [];
+    function astroSVG(){
+        return '<svg viewBox="0 -6 100 130" aria-hidden="true"><g class="as-schwebe">'
+          + '<rect x="24" y="54" width="10" height="26" rx="4" fill="#cfd6df"/>'
+          + '<path d="M40 86L38 110M60 86L62 110" stroke="#eef2f6" stroke-width="13" stroke-linecap="round"/>'
+          + '<ellipse cx="37" cy="115" rx="9" ry="6" fill="#8a96a5"/><ellipse cx="63" cy="115" rx="9" ry="6" fill="#8a96a5"/>'
+          + '<rect x="30" y="52" width="40" height="42" rx="15" fill="#eef2f6" stroke="#c9d2dc" stroke-width="2"/>'
+          + '<rect x="39" y="62" width="22" height="13" rx="3" fill="#2b5aa6"/><circle cx="45" cy="68.5" r="2.2" fill="#ff6a4d"/><circle cx="52" cy="68.5" r="2.2" fill="#5fe08a"/><circle cx="58" cy="68.5" r="1.4" fill="#f5c26b"/>'
+          + '<path d="M32 62L18 84" stroke="#eef2f6" stroke-width="11" stroke-linecap="round"/><circle cx="17" cy="86" r="6" fill="#8a96a5"/>'
+          + '<g class="as-winkarm"><path d="M68 62L86 38" stroke="#eef2f6" stroke-width="11" stroke-linecap="round"/><circle cx="88" cy="34" r="6.5" fill="#8a96a5"/></g>'
+          + '<circle cx="50" cy="34" r="25" fill="#eef2f6" stroke="#c9d2dc" stroke-width="2.5"/>'
+          + '<ellipse cx="52" cy="35" rx="16" ry="13.5" fill="#1d3557"/><path d="M42 29q7-8 17-3" stroke="#fff" stroke-width="2.4" fill="none" opacity=".5" stroke-linecap="round"/>'
+          + '<circle cx="46" cy="33" r="2" fill="#fff"/><circle cx="58" cy="33" r="2" fill="#fff"/><path d="M46 40q6 5 12 0" stroke="#f5c26b" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+          + '<path d="M50 9V0" stroke="#9fb3c8" stroke-width="2.4" stroke-linecap="round"/><circle cx="50" cy="0" r="3" fill="#FFB547"/>'
+          + '</g></svg>';
+    }
+    // Funkgeraete-Stimme: keine Erhoehung, Telefonband, kaum Effekte
+    const ASTRO_STIMME = { halb: 0, tempo: 1.0, hp: 420, praes: 4, tp: 3600, chorus: 0, vib: 0, echo: 0.03 };
+    const ASTRO_SPRUECHE = [
+        { t: 'Hier <b>ISS</b>! <b>Weiter so</b> – du schaffst die Prüfung! Wir hören uns im Funk!', s: 'Hier I S S! Weiter so! Du schaffst die Prüfung. Wir hören uns im Funk!' },
+        { t: 'Ich winke von ganz oben: <b>Bleib dran</b>, die Prüfung packst du! Wir hören uns!', s: 'Ich winke von ganz oben. Bleib dran! Die Prüfung packst du. Wir hören uns!' },
+        { t: 'Jede Frage bringt dich näher an dein eigenes Rufzeichen. <b>Weiter so</b> – wir hören uns!', s: 'Jede Frage bringt dich näher an dein eigenes Rufzeichen. Weiter so! Wir hören uns!' },
+        { t: 'Von hier oben seh ich dein ganzes QTH. Du schaffst das – <b>weiter so</b>!', s: 'Von hier oben seh ich dein ganzes Q T H. Du schaffst das. Weiter so!' },
+        { t: 'Kleine Schritte, große Wirkung! Schaffst du die Prüfung, <b>hören wir uns bald im Funk</b>.', s: 'Kleine Schritte, große Wirkung! Schaffst du die Prüfung, hören wir uns bald im Funk.' },
+        { t: 'Hier oben ist es still – nur Rauschen. Ich freu mich auf <b>dein Rufzeichen</b>. Weiter so!', s: 'Hier oben ist es still. Nur Rauschen. Ich freu mich auf dein Rufzeichen. Weiter so!' }
+    ];
+    function astroWeg(still){
+        if(!astroDa) return;
+        astroDa = false; astroProbe = false;
+        astroUhren.forEach(clearTimeout); astroUhren = [];
+        astroBlase.classList.remove('da', 'zl', 'zr');
+        astroEl.classList.remove('rein');
+        if(still) tu(funkiVerstummen);
+        astroUhren.push(setTimeout(() => { if(astroDa) return; astroEl.className = ''; astroEl.innerHTML = ''; }, 900));
+    }
+    function astroWinken(opt){
+        opt = opt || {};
+        if(astroDa || D.hidden || !H.classList.contains('stil-verspielt') || !H.classList.contains('android-app')) return false;
+        if(!opt.probe && (ruhigGewuenscht() || robo.da || !roboDarf() || wirdVorgelesen())) return false;
+        astroUhren.forEach(clearTimeout); astroUhren = [];
+        const e = zufall(ASTRO_SPRUECHE), W = window.innerWidth, z = zf(), links = Math.random() < 0.5;
+        const aw = Math.round(Math.min(W * 0.26, 104)), ah = Math.round(aw * 1.3);
+        const o = randOben(), u = randUnten();
+        const cy = o + ah / 2 + Math.max(0, u - o - ah) * (0.2 + Math.random() * 0.55);
+        astroDa = true; astroProbe = !!opt.probe;
+        robo.letzter = Date.now();
+        astroEl.className = 'da ' + (links ? 'l' : 'r');
+        astroEl.style.width = px(aw);
+        astroEl.style.left = links ? '0px' : px(W - aw);
+        astroEl.style.top = px(cy - ah / 2);
+        astroEl.innerHTML = astroSVG();
+        // Die Blase: neben dem Kopf, der Zipfel zeigt auf ihn
+        astroBlase.innerHTML = '<div class="ab-kopf">Astronaut</div>' + e.t;
+        const bw = Math.min(230 * z, W - aw * 0.74 - 22);
+        astroBlase.style.width = px(bw);
+        astroBlase.style.visibility = 'hidden'; astroBlase.style.display = 'block';
+        const bh = astroBlase.getBoundingClientRect().height;
+        astroBlase.style.display = ''; astroBlase.style.visibility = '';
+        const kopf = cy - ah * 0.2, by = Math.max(o, Math.min(u - bh, kopf - bh / 2));
+        astroBlase.style.left = px(links ? aw * 0.74 + 8 : W - aw * 0.74 - 8 - bw);
+        astroBlase.style.top = px(by);
+        astroBlase.style.setProperty('--zy', px(Math.max(14, Math.min(bh - 30, kopf - by - 7))));
+        astroBlase.classList.remove('zl', 'zr'); astroBlase.classList.add(links ? 'zl' : 'zr');
+        void astroEl.offsetWidth;
+        astroEl.classList.add('rein');
+        const dauer = Math.min(10000, 4200 + nurText(e.t).length * 55);
+        astroUhren.push(setTimeout(() => {
+            astroBlase.classList.add('da');
+            if(issTonAn() && !opt.stumm) funkiSagt((nameIst() && Math.random() < 0.4 ? nameIst() + '. ' : '') + e.s, true, ASTRO_STIMME);
+        }, 700));
+        astroUhren.push(setTimeout(() => astroWeg(false), 700 + dauer));
+        return true;
+    }
     function roboTat(t){
         if(t === 'weiter') tourSchritt(robo.schritt + 1);
         else if(t === 'tipp') tippZeigen();
@@ -49183,6 +49986,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(t === 'vorlesen'){ kurzWeg(); tu(() => { const b = $('ttsBtn'); if(b) b.click(); }); }
         else if(t.indexOf('antwort:') === 0) plauschAntwort(parseInt(t.slice(8), 10));
         else if(t.indexOf('pflege:') === 0) pflegeDanke(t.slice(7));
+        // Funk-ABC, Morsen, Quiz (04.10.2026)
+        else if(t === 'abc') abcMenue();
+        else if(t.indexOf('erkl:') === 0) erklaeren(t.slice(5));
+        else if(t.indexOf('morse:') === 0) morseSpielen(t.slice(6));
+        else if(t === 'quiz') quizStarten();
+        else if(t === 'astro'){ roboHeim(true); setTimeout(() => tu(() => astroWinken({ probe: true })), 700); }
+        else if(t.indexOf('naechste:') === 0) naechsteAntwort(t.slice(9));
+        else if(t.indexOf('qz:') === 0) quizAntwort(parseInt(t.slice(3), 10));
         // Rundgang, Teil 2: die Werkzeuge - oder gleich zum Schluss
         else if(t === 'werkzeuge'){ schreib('robo_werkzeugtour', '1'); tourSchritt(TOUR.findIndex(s => s.teil === 2)); }
         else if(t === 'tourende') tourSchritt(tourStelle('ende'));
@@ -49223,8 +50034,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  Begruessung, keine Stilwahl, kein Update-Fenster) und oben steht.
     //  Die grossen Auftritte nur oben auf der Startseite; das Hereinlugen
     //  ueberall auf der Startseite, sobald sie eine Weile ruhig ist.
-    Object.assign(robo, { ruhig: 0, naechsterKurz: 35000 + Math.random() * 15000, kurzZahl: 0, letzter: 0, beruehrt: 0, nachRunde: false,
-                          kunstZahl: 0, kunstBei: Date.now() + 25000 + Math.random() * 20000, freiZuletzt: 0 });
+    Object.assign(robo, { ruhig: 0, naechsterKurz: zwischen(plan().erst), kurzZahl: 0, letzter: 0, beruehrt: 0, nachRunde: false,
+                          kunstZahl: 0, kunstBei: Date.now() + zwischen(plan().kunstErst), freiZuletzt: 0 });
     const TAKT = 1200;
     tu(() => {
         const merk = () => { robo.beruehrt = Date.now(); };
@@ -49372,7 +50183,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!stimmeAn() || !H.classList.contains('stil-verspielt') || D.hidden) return false;
         if(pruefungLaeuft() || wirdVorgelesen()) return false;
         if(D.body.classList.contains('im-gruppenraum') || D.body.classList.contains('gast-im-raum')) return false;
-        if(!selbst && Date.now() - ton.zuletzt < 4 * 60000) return false;
+        if(!selbst && Date.now() - ton.zuletzt < sprechAbstand()) return false;
         return true;
     }
 
@@ -49468,6 +50279,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             [o, w1, w2].forEach(x => { x.start(ab); x.stop(ab + 0.44); });
             kn.push(o, w1, w1g, w2, w2g, bp, g);
             return 0.44;
+        }
+        if(art === 'rost'){                               // rostiges Knie: knarrendes Quieken, kurze Pause, noch eins (04.10.2026)
+            [[0, 0.52, 540, 980], [0.64, 0.38, 680, 1240]].forEach(([v, lang, von, bis]) => {
+                const t = ab + v, o = ctx.createOscillator(); o.type = 'sawtooth';
+                o.frequency.setValueAtTime(von, t); o.frequency.linearRampToValueAtTime(bis, t + lang * 0.6); o.frequency.linearRampToValueAtTime(bis * 0.8, t + lang);
+                const ruck = ctx.createOscillator(); ruck.type = 'square'; ruck.frequency.value = 31;           // ruckelnde Reibung
+                const rg = ctx.createGain(); rg.gain.value = 110; ruck.connect(rg); rg.connect(o.frequency);
+                const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 5;
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.1, t + 0.05); g.gain.setValueAtTime(0.1, t + lang * 0.75); g.gain.linearRampToValueAtTime(0, t + lang);
+                const am = ctx.createOscillator(); am.frequency.value = 17; const ag = ctx.createGain(); ag.gain.value = 0.04; am.connect(ag); ag.connect(g.gain);
+                o.connect(bp); bp.connect(g); g.connect(ziel);
+                [o, ruck, am].forEach(x => { x.start(t); x.stop(t + lang + 0.02); });
+                kn.push(o, ruck, rg, bp, g, am, ag);
+            });
+            return 1.04;
         }
         if(art === 'gluck'){                              // Oel: gluck, gluck, gluck
             for(let i = 0; i < 3; i++) tonBlip(ctx, ziel, kn, ab + i * 0.13, 420 - i * 30, 0.1, 'sine', 150, 0.16);
@@ -49566,7 +50393,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // "Ich bin Funki. | Maja. | Schoen, dass du da bist." -> Teile und Toene.
     // Kurzzeichen: | Bliep-Blup, ^ Rechnen, ~ Rutsch; dazu {lachen}, {hicks},
     // {boing}, {surren}, {melodie} und die drei auch ausgeschrieben.
-    const TOENE = ['bliep', 'piep', 'rechnen', 'rutsch', 'lachen', 'hicks', 'boing', 'surren', 'melodie', 'quietsch', 'gluck', 'laden', 'puste'];
+    const TOENE = ['bliep', 'piep', 'rechnen', 'rutsch', 'lachen', 'hicks', 'boing', 'surren', 'melodie', 'quietsch', 'gluck', 'laden', 'puste', 'rost'];
     function zerlegen(text){
         const folge = [], kurz = { '|': 'bliep', '^': 'rechnen', '~': 'rutsch' };
         String(text).split(/(\{[a-z]+\}|[|^~])/).forEach(s => {
@@ -49577,7 +50404,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return folge;
     }
     // selbst = true: angetippt, Rundgang, Lob oder Probe - ohne Pause davor
-    async function funkiSagt(text, selbst){
+    async function funkiSagt(text, selbst, stimme){
         text = String(text || '').trim();
         if(!text || !darfSprechen(selbst)) return false;
         const ctx = tonKontext();
@@ -49596,7 +50423,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }catch(e){ return false; }
         if(folge.some(f => f.text && !f.puffer)) return false;
         if(nr !== ton.nr || !darfSprechen(true)) return false;
-        return !!tu(() => { roboterton(ctx, folge, nr); return true; });
+        return !!tu(() => { roboterton(ctx, folge, nr, stimme); return true; });
     }
     // folge: [{ puffer } | { ton: 'bliep' | 'rechnen' | 'rutsch' }, ...]
     // st: andere Stimme (nur fuer Hoerproben), sonst STIMME
@@ -49607,7 +50434,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // 1. Die Teile zu einem Stueck - mit Luecken, in die die Toene kommen
         const sr = folge.find(f => f.puffer).puffer.sampleRate;
         const LUECKE = { bliep: 0.34, piep: 0.32, rechnen: 0.36, rutsch: 0.40, lachen: 0.52, hicks: 0.2, boing: 0.42, surren: 0.38, melodie: 0.8,
-                         quietsch: 0.5, gluck: 0.46, laden: 0.76, puste: 0.48 };
+                         quietsch: 0.5, gluck: 0.46, laden: 0.76, puste: 0.48, rost: 1.1 };
         const stuecke = folge.map(f => f.puffer ? f.puffer.getChannelData(0) : new Float32Array(Math.round(sr * (LUECKE[f.ton] || 0.3))));
         const ganz = ctx.createBuffer(1, Math.max(1, stuecke.reduce((a, s) => a + s.length, 0)), sr), d = ganz.getChannelData(0), toene = [];
         let pos = 0;
@@ -49821,6 +50648,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function vorlesenWeg(){
         robo.stillBis = Date.now() + 1500;
+        tu(() => astroWeg(true));
         tu(funkiVerstummen);
         if(!robo.da || robo.modus === 'tour') return;     // der Rundgang deckt ohnehin alles ab
         // Leise im freien Platz (gucken, winken) darf er bleiben - er verdeckt nichts
@@ -49864,13 +50692,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // begleitDarf(true): ob gerade vorgelesen wird, klaert wennStill
         // Ein stummes Kunststueck im freien Platz macht dem Lob Platz
         const freiDa = () => robo.da && robo.modus === 'frei';
-        if((robo.richtigFolge === 5 || robo.richtigFolge === 10) && (!robo.da || freiDa()) && begleitDarf(true) && Date.now() - (robo.letzter || 0) > 90000){
-            const n = robo.richtigFolge;
+        if(lobStufen().includes(robo.richtigFolge) && (!robo.da || freiDa()) && begleitDarf(true) && Date.now() - (robo.letzter || 0) > (helferRegler() === 'viel' ? 45000 : 90000)){
+            const lob = LOB[robo.richtigFolge];
             setTimeout(() => wennStill(() => {
                 if(freiDa()) roboHeim(true);
                 if(robo.da || !begleitDarf() || !D.body.classList.contains('runde-laeuft')) return;
-                kurzauftritt((n === 5 ? 'Fünf richtige am Stück!' : 'Zehn am Stück – Wahnsinn!') + ' Du bist gut – mach weiter so!', { ort: 'runde', sprichSofort: true,
-                    sprich: nameTon() + (n === 5 ? 'Du bist gut. Du hast schon fünf richtig.' : 'Du hast schon zehn richtig am Stück. {melodie} Wahnsinn!') });
+                kurzauftritt(lob[0], { ort: 'runde', sprichSofort: true, sprich: nameTon() + lob[1] });
                 tanzen();
             }), 900);
         }
@@ -49879,7 +50706,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         setTimeout(() => wennStill(() => {
             if(freiDa()) roboHeim(true);
             if(robo.da || !begleitDarf() || !D.body.classList.contains('runde-laeuft')) return;
-            kurzauftritt('Uppps! Kopf hoch – Fehler gehören dazu. Die kommen wieder, bis sie sitzen.', { ort: 'runde', sprich: 'Uppps! ~ ' + nameTon() + 'Kopf hoch! Fehler gehören dazu.',
+            // Bei Viel und Normal mit einer frechen Ausrede (04.10.2026)
+            const witz = mehrSprechen() ? zufall(QUIZ_AUSREDE) : '';
+            kurzauftritt('Uppps! Kopf hoch – Fehler gehören dazu. Die kommen wieder, bis sie sitzen.' + (witz ? ' <i>' + witz + '</i>' : ''),
+                { ort: 'runde', dauer: witz ? 8500 : undefined, sprich: 'Uppps! ~ ' + nameTon() + 'Kopf hoch! Fehler gehören dazu.' + (witz ? ' | ' + redeText(witz, 80) : ''),
                 hilfe: () => ({ html: 'Die falschen Fragen findest du später unter <b>Fehler üben</b>. Dort übst du sie, bis sie sitzen – ich pass auf!', knoepfe: [['Alles klar!', 'heim']] }) });
         }), 1300);
     }
@@ -49979,6 +50809,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return roboDarf();
     }
     function roboPruefen(){
+        if(astroDa && !astroProbe && (!roboDarf() || wirdVorgelesen() || pruefungLaeuft() || ruhigGewuenscht())) astroWeg(true);
         if(robo.da){
             if(robo.modus && robo.modus !== 'tour' && wirdVorgelesen()){ vorlesenWeg(); return; }
             if(robo.modus && !ortPasst()) roboHeim(true);    // Runde, Fenster oder Stilwechsel
@@ -49987,6 +50818,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const jetzt0 = Date.now();
         if(!roboDarf()){ robo.frei = 0; tu(() => begleiten(jetzt0)); return; }
         robo.fensterEl = null;
+        tu(() => issPruefen(jetzt0));                      // die ISS hat ihren eigenen Takt (04.10.2026)
+        if(issLaeuft || astroDa) return;
         if(lies('app_stil_gewaehlt', '') !== '1'){ robo.frei = 0; return; }
         if(!tippsAn()){ robo.nachRunde = false; return; }
         const t = tagK(), jetzt = Date.now();
@@ -50014,17 +50847,18 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         robo.ruhig += TAKT;
         // Ein Kunststueck zwischendurch: kurz, ohne Blase - hoechstens dreimal
         // je Start, mit gut eineinhalb bis zweieinhalb Minuten Abstand
-        if(robo.kunstZahl < 3 && jetzt >= robo.kunstBei && robo.ruhig >= 15000 && jetzt - robo.letzter > 30000){
+        if(robo.kunstZahl < plan().kunst && jetzt >= robo.kunstBei && robo.ruhig >= 15000 && jetzt - robo.letzter > 30000){
             robo.kunstZahl++;
-            robo.kunstBei = jetzt + 90000 + Math.random() * 60000;
+            robo.kunstBei = jetzt + zwischen(plan().kunstPause);
             if(kunstStartseite()) return;
         }
-        if(robo.kurzZahl < 3 && robo.ruhig >= robo.naechsterKurz && jetzt - robo.letzter > 60000){
+        if(robo.kurzZahl < plan().kurz && robo.ruhig >= robo.naechsterKurz && jetzt - robo.letzter > plan().abstand){
             robo.kurzZahl++;
-            robo.naechsterKurz = 150000 + Math.random() * 90000;
+            robo.naechsterKurz = zwischen(plan().pause);
             if(plauschFaellig()) plaudern();
-            else if(pflegeZahl() < 2 && Math.random() < 0.3){    // Funki bittet um Hilfe (siehe PFLEGE)
-                const arten = Object.keys(PFLEGE).filter(a => a !== robo.letztePflege);
+            else if(pflegeZahl() < plan().pflegeMax && Math.random() < plan().pflege){    // Funki bittet um Hilfe (siehe PFLEGE)
+                let arten = Object.keys(PFLEGE).filter(a => a !== robo.letztePflege);
+                if(arten.includes('knie')) arten = arten.concat(['knie', 'knie']);        // das rostige Knie kommt oefter
                 pflegeBitte(zufall(arten));
             }
             else if(Math.random() < 0.35){                      // ein menschlicher Moment (siehe MENSCHLICH)
@@ -50034,7 +50868,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 kurzauftritt(m.blase, { sprich: m.sprich, sprichSofort: true });
             } else {
                 const t = kecherSpruch();
-                kurzauftritt(t, HILFE_FRAGEN.includes(t) ? { hilfe: HILFE_MENUE, sprich: true } : {});
+                kurzauftritt(t, HILFE_FRAGEN.includes(t) ? { hilfe: HILFE_MENUE, sprich: true } : ERKL_PEEK[t] ? { hilfe: () => erklHilfe(ERKL_PEEK[t]), sprich: true } : {});
             }
         }
     }
@@ -50052,6 +50886,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                         stufeFeiern: () => { werk.aufstieg = { von: 0, nach: stufeNr(xpStand()) }; stufeFeiern(); }, werkzeuge: () => werkzeugAngebot(),
                         _klang: (ctx, folge, st) => roboterton(ctx, folge, ton.nr, st),  // nur fuer Tests und Hoerproben: derselbe Klang offline
                         _zerlegen: t => zerlegen(t),
+                        // Funk-ABC, Morsen, Quiz, ISS, Regler (04.10.2026)
+                        erklaere: id => erklaeren(id), abc: () => abcMenue(), quiz: () => quizStarten(), quizAntwort: i => quizAntwort(i), morse: w => morseSpielen(w),
+                        erklaert: () => ERKLAERT.map(e => e.id), redeText: (h, m) => redeText(h, m),
+                        erklFragen: () => ERKL_FRAGEN.slice(), peek: t => kurzauftritt(t, ERKL_PEEK[t] ? { hilfe: () => erklHilfe(ERKL_PEEK[t]), sprich: true } : {}),
+                        astro: o => astroWinken(o), astroDa: () => astroDa, astroWeg: () => astroWeg(true), iss: o => issUeberflug(o), issLaeuft: () => issLaeuft, _issKlang: (ctx, links, d, kn, ziel) => issKlang(ctx, links, d, kn, ziel),
+                        regler: () => ({ helfer: helferRegler(), stimme: stimmeRegler(), iss: issRegler(), issTon: issTonAn(), mehr: mehrSprechen(), plan: plan(), issPlan: issPlan() }),
                         zustand: () => ({ da: robo.da, modus: robo.modus, ort: robo.ort, schritt: robo.schritt }) };
 
     // ================================================================
