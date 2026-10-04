@@ -2113,10 +2113,6 @@
         html.android-app body.dark .blaetter-kachel.unberuehrt .bk-titel,
         html.android-app body.dark .blaetter-kachel.unberuehrt .bk-zahl > span:first-child { color: #7dbcff !important; }
         html.android-app body.dark .bk-balken.blau > i { background: #4f9cf0; }
-        html.android-app body.dark .blaetter-kachel.erklaert { border-color: #a98ff0 !important; }
-        html.android-app body.dark .blaetter-kachel.erklaert .bk-titel,
-        html.android-app body.dark .blaetter-kachel.erklaert .bk-zahl > span:first-child { color: #c9b6ff !important; }
-        html.android-app body.dark .bk-balken.violett > i { background: #a98ff0; }
         /* Die zuletzt angetippte Kachel: deutlicher Ring statt des blassen Fokusrands */
         html.android-app body.dark .blaetter-kachel:focus-visible { outline: 3px solid #4fc9f7; outline-offset: 2px; }
 
@@ -5594,16 +5590,6 @@
             .blaetter-kachel.unberuehrt:hover { border-color: #1b5a97; }
         }
         .bk-balken.blau > i { background: #2c6fb5; }
-
-        /* Die Kachel "Mit Erklärung". Violett, weil die vier anderen
-           Gruen, Orange, Blau und Weiss schon belegt haben - und weil es
-           kein Lernstand ist, sondern eine Eigenschaft der Frage. */
-        .blaetter-kachel.erklaert { border-color: #d3c6ea; background: #f8f5ff; }
-        .blaetter-kachel.erklaert .bk-titel { color: #5b3f95; }
-        @media (hover: hover) {
-            .blaetter-kachel.erklaert:hover { border-color: #5b3f95; }
-        }
-        .bk-balken.violett > i { background: #6b4bb0; }
 
         /* ================================================================
            TASCHENRECHNER
@@ -18472,38 +18458,6 @@ function durchsichtUnberuehrtLos(){
 }
 window.durchsichtUnberuehrtLos = durchsichtUnberuehrtLos;
 
-// ================================================================
-//  DIE FRAGEN, ZU DENEN EINE ERKLAERUNG VORLIEGT
-//  ----------------------------------------------------------------
-//  Dietmar am 13.09.2026: "sage mir wie ich diese Fragen finde."
-//
-//  Genau dafuer diese Kachel. Sie zaehlt, zu wie vielen Fragen DES
-//  GERADE GEWAEHLTEN Prueungsziels eine Erklaerung in
-//  erklaerungen.json steht, und blaettert nur durch diese.
-//
-//  Sie erscheint nur, wenn es welche gibt. Wer auf Klasse N steht und
-//  Erklaerungen nur fuer E -> A hat, sieht keine Kachel und wundert
-//  sich nicht ueber eine leere Liste.
-// ================================================================
-const ERKLAERT_NAME = 'Mit Erklärung';
-
-function durchsichtErklaertIds(){
-    try{
-        if(typeof erklaerMap === 'undefined' || !erklaerMap) return [];
-        return durchsichtBank().filter(q => !!erklaerMap[q.id]).map(q => q.id);
-    }catch(e){ return []; }
-}
-
-function durchsichtErklaertLos(){
-    const ids = durchsichtErklaertIds();
-    if(!ids.length){
-        if(window.showAppAlert) showAppAlert('Zu diesem Prüfungsziel liegt noch keine Erklärung vor.');
-        return;
-    }
-    startQuestionSession(ids, ERKLAERT_NAME);
-}
-window.durchsichtErklaertLos = durchsichtErklaertLos;
-
 function durchsichtStarten(){
     const p = durchsichtPosition();
     if(!p.ids.length){
@@ -18523,9 +18477,84 @@ function durchsichtStarten(){
     // Katalog. Im Fenster stehen inzwischen die Fragenzahl, der Satz, wie
     // Blaettern ueberhaupt funktioniert, und die Knoepfe zum Zuruecksetzen.
     // Das gehoert gerade beim ersten Mal gesehen.
+    // Steht ein Lesezeichen mitten im Katalog, wird erst gefragt, ob es dort weitergeht (04.10.2026).
+    if(p.gemerkt && p.index > 0 && p.ids.length - p.index > 1){ durchsichtWeiterFrage(p); return; }
     durchsichtFrageFenster(p);
 }
 window.durchsichtStarten = durchsichtStarten;
+
+// ----------------------------------------------------------------
+//  "BEIM LETZTEN STAND WEITERMACHEN?"                      (04.10.2026)
+//  Dietmar: "Er soll mich fragen, ob wir beim letzten Stand weiter
+//  machen." - "Genau beim letzten Stand weiter machen."
+//  Liegt ein Lesezeichen mitten im Katalog, kommt beim Oeffnen von
+//  Blaettern zuerst diese Frage - mit drei Wegen: weitermachen, von vorn,
+//  oder die ganze Auswahl (ganzer Katalog, nur Gelernte, Rest ...).
+//  Ohne Lesezeichen (erster Start, nach "Neu beginnen") oder am Ende des
+//  Katalogs geht gleich das Fenster mit der Auswahl auf.
+// ----------------------------------------------------------------
+function durchsichtWeiterFrage(p){
+    let modal = document.getElementById('durchsichtModal');
+    if(!modal){
+        modal = document.createElement('div');
+        modal.id = 'durchsichtModal';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
+            + ' z-index:99997; align-items:center; justify-content:center; padding:1rem;';
+        modal.onclick = e => { if(e.target === modal) durchsichtFensterZu(); };
+        document.body.appendChild(modal);
+    }
+    const gesamt = p.ids.length;
+    const nr     = p.index + 1;
+    const offen  = gesamt - p.index;
+    const anteil = gesamt ? Math.max(1.2, Math.min(100, (p.index / gesamt) * 100)) : 0;
+    const gel    = durchsichtGelernte().length;
+    const knopf = 'min-height:40px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; cursor:pointer; '
+                + 'font-family:inherit; font-size:0.84rem; border:1px solid #b0c4d8; background:#fff; color:#16243a !important;';
+    modal.innerHTML =
+        '<div style="background:#fff; border-radius:22px; width:100%; max-width:560px; overflow:hidden; '
+      + 'box-shadow:0 24px 64px rgba(0,0,0,0.35);">'
+      + '<div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; '
+      + 'border-bottom:1px solid #e3e9f3; background:#f9fbff;">'
+      + '<h3 style="margin:0; font-size:1.05rem; color:#0f2745;">'
+      + '<i class="fas fa-book-open" style="color:#5b6b8c;"></i> Blättern</h3>'
+      + '<button onclick="durchsichtFensterZu()" aria-label="Schließen" style="width:34px; height:34px; '
+      + 'border-radius:50%; border:1px solid #e3e9f3; background:#fff; cursor:pointer; font-size:1.2rem; '
+      + 'line-height:1; color:#4b5563;">&#10005;</button></div>'
+      + '<div style="padding:1.1rem 1.2rem; font-size:0.9rem; line-height:1.55; color:#16243a;">'
+      + '<div style="font-size:1.02rem; font-weight:700; margin-bottom:0.25rem; color:#0f2745;">Beim letzten Stand weitermachen?</div>'
+      + '<div style="font-size:0.84rem; color:#4b5563; margin-bottom:0.8rem;">'
+      + 'Du warst zuletzt bei Frage ' + nr + ' von ' + gesamt + '. Blättern zeigt immer den ganzen Katalog, '
+      + 'auch die ' + gel + ' Fragen, die du schon abgehakt hast.</div>'
+      + '<div class="blaetter-kacheln einzeln">'
+      + '<button type="button" id="durchsichtWeiterJa" class="blaetter-kachel" onclick="durchsichtFensterZu(); durchsichtLos(' + p.index + ');">'
+      + '<span class="bk-titel"><i class="fas fa-play"></i> Ja, weitermachen</span>'
+      + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#0f2745;">' + nr + '</span>'
+      + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> von ' + gesamt + '</span></span>'
+      + '<span class="bk-balken"><i data-ziel="' + anteil.toFixed(1) + '%"></i></span>'
+      + '<span class="bk-klein">Weiter beim Lesezeichen. Noch ' + offen + ' Fragen.</span>'
+      + '</button></div>'
+      + '</div>'
+      + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
+      + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
+      + '<button onclick="durchsichtFensterZu(); durchsichtFrageFenster(durchsichtPosition());" class="btn bl-neu" '
+      + 'style="margin-right:auto; ' + knopf + '" data-tooltip="Ganzer Katalog, nur Gelernte, Rest abarbeiten, noch nie geübt">'
+      + '<i class="fas fa-table-cells-large"></i> Andere Auswahl</button>'
+      + '<button onclick="durchsichtFensterZu(); durchsichtVergessen(); durchsichtLos(0);" class="btn bl-neu" '
+      + 'style="' + knopf + '" data-tooltip="Lesezeichen zurück auf die erste Frage – der Lernstand bleibt">'
+      + '<i class="fas fa-rotate-left"></i> Nein, von vorn</button>'
+      + '</div></div>';
+    modal.style.display = 'flex';
+    try{
+        const balken = modal.querySelectorAll('.bk-balken > i');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            balken.forEach(b => { b.style.width = b.getAttribute('data-ziel') || '0%'; });
+        }));
+    }catch(e){}
+    // In der App faerbt das Stilblatt die Knoepfe je nach Hell/Dunkel - die Inline-Farbe (fuer den weissen Grund am PC) muss dort weg,
+    // genau wie beim Fenster mit den Kacheln (siehe appStilSkript, "BLAETTERN-FENSTER: DIE KNOEPFE IM FUSS").
+    try{ if(document.documentElement.classList.contains('android-app')) modal.querySelectorAll('button.bl-neu').forEach(b => b.style.removeProperty('color')); }catch(e){}
+}
+window.durchsichtWeiterFrage = durchsichtWeiterFrage;
 
 // Zwei Wege, also zwei Knoepfe - eine Ja/Nein-Rueckfrage waere hier die
 // falsche Form. Am Ende des Katalogs steht nur noch "von vorn".
@@ -18674,25 +18703,6 @@ function durchsichtFrageFenster(p){
         + '</button>'
       : '';
 
-    // Die fuenfte Kachel: die Fragen mit Erklaerung. Siehe
-    // durchsichtErklaertIds(). Steht unten, weil sie keine Aussage
-    // ueber den Lernstand ist, sondern ueber das Material.
-    const erklaertIds = durchsichtErklaertIds();
-    const erklaertN = erklaertIds.length;
-    const anteilE = gesamt ? Math.max(1.2, Math.min(100, (erklaertN / gesamt) * 100)) : 0;
-    const mitBild = erklaertN
-      ? '<button type="button" class="blaetter-kachel erklaert" '
-        + 'onclick="durchsichtFensterZu(); durchsichtErklaertLos();">'
-        + '<span class="bk-titel"><i class="fas fa-lightbulb"></i> Mit Erklärung</span>'
-        + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#5b3f95;">' + erklaertN + '</span>'
-        + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen mit Erklärung</span></span>'
-        + '<span class="bk-balken violett"><i data-ziel="' + anteilE.toFixed(1) + '%"></i></span>'
-        + '<span class="bk-klein">Der Knopf mit der Glühbirne in der Kopfzeile der Frage öffnet sie: '
-        + 'was in der Zeichnung zu sehen ist, der Rechenweg oder die Eselsbrücke, und nach dem '
-        + 'Antworten, warum jede falsche Antwort falsch ist. Das Lesezeichen bleibt liegen.</span>'
-        + '</button>'
-      : '';
-
     modal.innerHTML =
         '<div style="background:#fff; border-radius:22px; width:100%; max-width:560px; overflow:hidden; '
       + 'box-shadow:0 24px 64px rgba(0,0,0,0.35);">'
@@ -18713,7 +18723,6 @@ function durchsichtFrageFenster(p){
       + '<div class="blaetter-kacheln' + (gel ? '' : ' einzeln') + '">' + kachel1 + kachel2 + '</div>'
       + (einstieg ? '<div class="blaetter-rest">' + einstieg + '</div>' : '')
       + (weiss ? '<div class="blaetter-rest">' + weiss + '</div>' : '')
-      + (mitBild ? '<div class="blaetter-rest">' + mitBild + '</div>' : '')
       + '</div>'
       + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
       + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
@@ -47354,6 +47363,256 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     let lageStand = 16;
     setInterval(() => tu(nachziehen), 800);
     tu(nachziehen);
+})();
+</script>
+<style id="lekLeisteStil">
+        /* ================================================================
+           DIE LEKTIONS-LEISTE VERDECKT NICHTS MEHR              (04.10.2026)
+           Dietmar (Bild aus der App): "Lektion unten verdeckt alles."
+           #unterrichtLeiste ("Lektion 3 - 0 von 1 fertig - Lektion beenden")
+           schwebt am Handy fest ueber dem unteren Rand und lag damit auf
+           Zurueck/Weiter und auf den Hilfen darueber.
+           In der App steht sie jetzt als schmale Leiste unter der Kopfzeile
+           ("Frage 1 von 44") - unten bleibt der Daumenbereich frei, und die
+           Frage rueckt um ihre Hoehe nach unten (--lek-h, gemessen).
+           Im Handy-Browser bleibt sie unten, die Seite bekommt dafuer unten
+           so viel Platz, dass man Weiter und Hauptmenue darueber erreicht.
+           Am PC und am Tablet aendert sich nichts.
+           ================================================================ */
+        html.android-app body.runde-laeuft.mit-lekleiste #unterrichtLeiste {
+            top: var(--app-leiste-h, 56px); bottom: auto; left: 0; right: 0; max-width: none;
+            border-radius: 0; justify-content: center; box-sizing: border-box; z-index: 8995; transform: none;
+            box-shadow: 0 8px 16px -10px rgba(0,0,0,0.45);
+        }
+        html.android-app body.runde-laeuft.mit-lekleiste #unterrichtLeiste .u-lek { max-width: 44vw; }
+        html.android-app body.runde-laeuft.mit-lekleiste #unterrichtLeiste > .u-lek:only-child { max-width: calc(100vw - 32px); }
+        /* Schmale Handys: der Lektionsname muss weichen, sonst bliebe von ihm ein einzelner Buchstabe
+           ("L") neben Zaehler und Knopf stehen. Allein stehend (Uebung ohne Raum) bleibt er. */
+        @media (max-width: 439px) {
+            html.android-app body.runde-laeuft.mit-lekleiste #unterrichtLeiste .u-lek:not(:only-child) { display: none; }
+            html.android-app body.runde-laeuft.mit-lekleiste #unterrichtLeiste .u-lek + .u-zahl { border-left: none; padding-left: 0; }
+        }
+        html.android-app body.runde-laeuft.mit-lekleiste { padding-top: calc(var(--app-leiste-h, 56px) + var(--lek-h, 0px) + 4px) !important; }
+        @media (max-width: 640px) {
+            html:not(.android-app) body.mit-lekleiste { padding-bottom: calc(var(--lek-h, 0px) + 24px); }
+        }
+</style>
+<script id="lekLeiste">
+(function(){
+    const D = document, H = D.documentElement;
+    let beo = null, el = null;
+    function messen(){
+        try{
+            const e = D.getElementById('unterrichtLeiste');
+            const an = !!e && e.style.display !== 'none' && getComputedStyle(e).display !== 'none';
+            D.body.classList.toggle('mit-lekleiste', an);
+            H.style.setProperty('--lek-h', an ? e.offsetHeight + 'px' : '0px');
+            if(e && e !== el){
+                el = e;
+                if(window.ResizeObserver){ if(beo) beo.disconnect(); beo = new ResizeObserver(messen); beo.observe(e); }
+                if(window.MutationObserver) new MutationObserver(messen).observe(e, { attributes: true, attributeFilter: ['style'] });
+            }
+        }catch(x){}
+    }
+    if(window.MutationObserver) new MutationObserver(messen).observe(D.body, { childList: true });
+    window.addEventListener('resize', messen);
+    messen();
+})();
+</script>
+<style id="brHilfenStil">
+        /* ================================================================
+           HILFEN IM GRUPPENRAUM AM HANDY-BROWSER                (04.10.2026)
+           Dietmar (Bild einer Runde im Handy-Browser): "Da fehlt
+           einiges. Kein Hamburger Menue. Taschenrechner, Formelblatt,
+           50 Ohm ..." - In der App hat jeder Spieler unter den Antworten die
+           Leiste "Hilfen anzeigen" und neben dem Zahnrad den Dreistrich-Knopf,
+           der sie ein- und ausschaltet. Im Handy-Browser sind Rechner,
+           Formelblatt und Erklaerung beim Ueben herausgenommen (schlanke
+           Ansicht, 07.09. und 22.09.2026) - das bleibt ausserhalb eines
+           Gruppenraums so. Im Raum bekommt der Handy-Browser dieselbe
+           Leiste wie die App: genau die Hilfen, die die App dort auch zeigt
+           (50 Ohm, Loesungsweg und Video sind im Raum gesperrt - wer dort
+           nachschlaegt, uebt nicht mehr). Jede Taste druckt die gewohnte,
+           verborgene Taste der Frage. Am PC, am Tablet, in der App und
+           ausserhalb eines Raums aendert sich nichts.
+           ================================================================ */
+        html:not(.android-app) #brHilfen { display: flex; flex-direction: column; gap: 0; margin: 10px 0 6px; width: 100%; }
+        html:not(.android-app) #brHilfen .sidebar-tab.brhf-kopf {
+            width: 100%; min-height: 36px; height: 36px; max-height: 36px; flex-direction: row; gap: 8px; align-self: auto;
+        }
+        html:not(.android-app) #brHilfen .sidebar-tab.brhf-kopf .tab-label { writing-mode: horizontal-tb; transform: none; }
+        html:not(.android-app) #brHilfen .brhf-gitter { display: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; margin-top: 6px; }
+        html:not(.android-app) #brHilfen.offen .brhf-gitter { display: grid; }
+        html:not(.android-app) #brHilfen .brhf-paar { display: flex; min-width: 0; }
+        html:not(.android-app) #brHilfen .brhf {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; width: 100%; min-height: 46px; padding: 0 12px;
+            font-family: inherit; font-size: 0.92rem; font-weight: 600; line-height: 1.1; white-space: nowrap; cursor: pointer;
+            background: #ffffff; color: var(--panel-navy, #0f2745); border: 1px solid var(--line, #c9d4e2); border-radius: 0;
+            -webkit-tap-highlight-color: transparent; transition: transform 0.12s ease;
+        }
+        html:not(.android-app) #brHilfen .brhf:active { transform: scale(0.97); }
+        html:not(.android-app) #brHilfen .brhf i { font-size: 1.02rem; }
+        html:not(.android-app) #brHilfen .brhf-paar .brhf:first-child { flex: 1 1 auto; border-right-width: 0; }
+        html:not(.android-app) #brHilfen .brhf-paar .brhf.nur-zeichen { flex: 0 0 46px; width: 46px; padding: 0; }
+        html:not(.android-app) #brHilfen .brhf-formel i { color: #c98a00; }
+        html:not(.android-app) #brHilfen .brhf-rechner i { color: #47607d; }
+        html:not(.android-app) #brHilfen .brhf-erklaer:not(.an) i { color: #7a5cc0; }
+        html:not(.android-app) #brHilfen .brhf-erklaer.an { background: #5b3f95; color: #ffffff; border-color: #5b3f95; }
+        html:not(.android-app) #brHilfen .brhf-darc i { color: #00adef; }
+        html:not(.android-app) #brHilfen .brhf-video i { color: #e11d48; }
+        html:not(.android-app) body.dark #brHilfen .brhf { background: #10293b; color: #dbe6f3; border: 1px solid #2f6a8f; }
+        html:not(.android-app) body.dark #brHilfen .brhf-formel i { color: #f1c77a; }
+        html:not(.android-app) body.dark #brHilfen .brhf-erklaer:not(.an) i { color: #c3b2ee; }
+        html:not(.android-app) body.dark #brHilfen .brhf-erklaer.an { background: #5b3f95; color: #ffffff; border-color: #8c74c9; }
+        html:not(.android-app) #brHilfen .brhf.puls { animation: brhfPuls 0.7s ease-out 1; }
+        @keyframes brhfPuls { 0% { box-shadow: 0 0 0 0 rgba(201,138,0,0.55); } 100% { box-shadow: 0 0 0 12px rgba(201,138,0,0); } }
+        @media (prefers-reduced-motion: reduce) { html:not(.android-app) #brHilfen .brhf.puls { animation: none; } }
+        /* Der Dreistrich-Knopf neben dem Zahnrad - leuchtet, solange die Leiste da ist */
+        html:not(.android-app) #brHilfenKnopf { display: inline-flex !important; align-items: center; justify-content: center; }
+        html:not(.android-app) #brHilfenKnopf.an { background: #dbe7f5 !important; border-color: #9fb6cf !important; color: var(--panel-navy, #0f2745) !important; }
+        html:not(.android-app) body.dark #brHilfenKnopf.an { background: #1b4d6c !important; border-color: #2f6a8f !important; color: #dbe6f3 !important; }
+        html:not(.android-app) body.dark #brHilfenKnopf:not(.an) { background: linear-gradient(#133048, #0a1e2c) !important; border: 1px solid #2b5471 !important; color: #cfe2ee !important; }
+        /* Auf ganz schmalen Handys (unter 340 Punkten) ist in der Knopfreihe der Frage kein Platz fuer den sechsten Knopf:
+           Der Vollbild-Knopf weicht dem Dreistrich-Knopf, solange ein Gruppenraum laeuft. */
+        @media (max-width: 339px) {
+            html:not(.android-app) body.handy.runde-laeuft.im-gruppenraum #vollbildBtnFrage { display: none !important; }
+        }
+</style>
+<script id="browserHilfen">
+(function(){
+    const D = document, H = D.documentElement;
+    if(H.classList.contains('android-app')) return;           // in der App macht das der Rahmen dort
+    const $ = id => D.getElementById(id);
+    const tu = fn => { try{ return fn(); }catch(e){ console.warn('[HILFEN]', e && e.message); } };
+    const lies = (k, d) => { try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } };
+    const schreib = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+    // Dieselbe Liste und dieselbe Regel wie in der App (appStilSkript, "HILFEN AN DER FRAGE")
+    const HILFEN = [
+        { id: 'formelBtn',          art: 'formel',  icon: 'fas fa-file-lines',           text: 'Formelblatt' },
+        { id: 'rechnerBtn',         art: 'rechner', icon: 'fas fa-calculator',           text: 'Rechner' },
+        { id: 'erklaerBtn',         art: 'erklaer', icon: 'fas fa-lightbulb',            text: 'Erklärung' },
+        { id: 'erklaerLesenNurBtn', art: 'erklaer nur-zeichen', icon: 'fas fa-volume-up', text: '', titel: 'Erklärung vorlesen' },
+        { id: 'lernOhmBtn',         art: 'darc',    icon: 'fas fa-graduation-cap',       text: '50 Ohm' },
+        { id: 'lernLoesungBtn',     art: 'darc',    icon: 'fas fa-square-root-variable', text: 'Lösungsweg' },
+        { id: 'lernVideoBtn',       art: 'video',   icon: 'fab fa-youtube',              text: 'Video' }
+    ];
+    // Nur Handy (bis 640 Punkte), nur waehrend einer Runde, nur im Gruppenraum
+    const aktiv = () => { const b = D.body; return b.classList.contains('handy') && b.classList.contains('runde-laeuft') && b.classList.contains('im-gruppenraum'); };
+    const leisteAn = () => lies('br_hilfen_an', '1') !== '0';
+    function hilfeDa(h){
+        const b = $(h.id);
+        if(!b || b.disabled) return false;
+        if(b.style.display === 'none') return false;
+        const kachel = b.closest && b.closest('.lernpaar');
+        if(kachel && kachel.style.display === 'none') return false;
+        return true;
+    }
+    function offenZeigen(reihe){
+        const offen = lies('br_hilfen_offen', '0') === '1';
+        reihe.classList.toggle('offen', offen);
+        const k = reihe.querySelector('.brhf-kopf');
+        if(!k) return;
+        k.setAttribute('aria-expanded', offen ? 'true' : 'false');
+        const i = k.querySelector('i'), t = k.querySelector('.tab-label');
+        if(i) i.className = 'fas ' + (offen ? 'fa-chevron-down' : 'fa-chevron-right');
+        if(t) t.textContent = offen ? 'Hilfen ausblenden' : 'Hilfen anzeigen';
+    }
+    // ----- der Dreistrich-Knopf rechts neben dem Zahnrad
+    function knopfNachziehen(){
+        let k = $('brHilfenKnopf');
+        const zahnrad = aktiv() ? D.querySelector('.question-area button[onclick="openTtsSettings()"]') : null;
+        if(!zahnrad){ if(k) k.remove(); return; }
+        if(!k){
+            k = D.createElement('button');
+            k.type = 'button'; k.id = 'brHilfenKnopf';
+            k.setAttribute('style', zahnrad.getAttribute('style') || '');
+            k.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
+            k.addEventListener('click', e => {
+                e.preventDefault(); e.stopPropagation();
+                schreib('br_hilfen_an', leisteAn() ? '0' : '1');
+                nachziehen();
+            });
+        }
+        if(k.previousElementSibling !== zahnrad) zahnrad.insertAdjacentElement('afterend', k);
+        const an = leisteAn();
+        k.classList.toggle('an', an);
+        const t = an ? 'Hilfen ausblenden (Rechner, Formelblatt, Erklärung)' : 'Hilfen einblenden (Rechner, Formelblatt, Erklärung)';
+        k.title = t; k.setAttribute('aria-label', t); k.setAttribute('aria-pressed', an ? 'true' : 'false');
+    }
+    // ----- die Leiste unter den Antworten
+    function nachziehen(){
+        tu(knopfNachziehen);
+        let reihe = $('brHilfen');
+        if(!aktiv() || !leisteAn()){ if(reihe) reihe.remove(); return; }
+        const na = $('navArea');
+        const da = HILFEN.filter(hilfeDa);
+        if(!na || !na.parentNode || !da.length){ if(reihe) reihe.remove(); return; }
+        if(!reihe){
+            reihe = D.createElement('div');
+            reihe.id = 'brHilfen';
+            reihe.setAttribute('role', 'group');
+            reihe.setAttribute('aria-label', 'Hilfen zur Frage');
+            reihe.addEventListener('click', e => {
+                const t = e.target && e.target.closest ? e.target : null;
+                if(!t) return;
+                if(t.closest('.brhf-kopf')){
+                    schreib('br_hilfen_offen', reihe.classList.contains('offen') ? '0' : '1');
+                    offenZeigen(reihe);
+                    return;
+                }
+                const k = t.closest('[data-ziel]');
+                const z = k ? $(k.dataset.ziel) : null;
+                if(z) z.click();
+            });
+        }
+        const schluessel = da.map(h => h.id).join(',');
+        if(reihe.dataset.schluessel !== schluessel){
+            const taste = h => '<button type="button" class="brhf brhf-' + h.art + '" data-ziel="' + h.id + '"'
+                      + (h.titel ? ' aria-label="' + h.titel + '" title="' + h.titel + '"' : '') + '>'
+                      + '<i class="' + h.icon + '" aria-hidden="true"></i>' + (h.text ? '<span>' + h.text + '</span>' : '') + '</button>';
+            let gitter = '';
+            da.forEach((h, i) => {
+                if(h.id === 'erklaerLesenNurBtn' && da[i - 1] && da[i - 1].id === 'erklaerBtn') return;      // steckt schon im Paar
+                if(h.id === 'erklaerBtn' && da[i + 1] && da[i + 1].id === 'erklaerLesenNurBtn') gitter += '<span class="brhf-paar">' + taste(h) + taste(da[i + 1]) + '</span>';
+                else gitter += taste(h);
+            });
+            reihe.innerHTML = '<button type="button" class="sidebar-tab brhf-kopf" aria-expanded="false">'
+                            + '<i class="fas fa-chevron-right" aria-hidden="true"></i><span class="tab-label">Hilfen anzeigen</span></button>'
+                            + '<div class="brhf-gitter">' + gitter + '</div>';
+            reihe.dataset.schluessel = schluessel;
+        }
+        offenZeigen(reihe);
+        if(reihe.nextElementSibling !== na) na.parentNode.insertBefore(reihe, na);
+        // Zustand der echten Tasten mitnehmen: aufgeklappte Erklaerung, Puls beim Formelblatt
+        reihe.querySelectorAll('[data-ziel]').forEach(k => {
+            const b = $(k.dataset.ziel);
+            if(!b) return;
+            k.classList.toggle('an', b.classList.contains('an'));
+            const pulst = b.classList.contains('puls-einmal');
+            if(pulst && !k.classList.contains('puls')){
+                void k.offsetWidth; k.classList.add('puls');
+                setTimeout(() => k.classList.remove('puls'), 700);
+            }
+        });
+    }
+    let plan = 0;
+    function planen(){
+        if(plan) return;
+        plan = requestAnimationFrame(() => { plan = 0; tu(nachziehen); });
+    }
+    tu(() => {
+        const q = $('questionContainer');
+        if(!q || !window.MutationObserver) return;
+        new MutationObserver(liste => {
+            for(const m of liste){
+                const t = m.target;
+                if(t && t.closest && (t.closest('#brHilfen') || t.id === 'brHilfenKnopf')) continue;    // die eigenen Aenderungen zaehlen nicht
+                planen(); return;
+            }
+        }).observe(q, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+        new MutationObserver(planen).observe(D.body, { attributes: true, attributeFilter: ['class'] });
+        planen();
+    });
 })();
 </script>
 <script id="appRahmen">
