@@ -7732,6 +7732,31 @@ try{
      }catch(e){ console.error('[DUO] joinRoom Fehler', e); try{ socket.emit('errorMsg','Fehler beim Beitreten'); }catch{} }
     });
 
+    // ================================================================
+    //  NAME NACHTRAGEN                                  (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Wer ueber den Einladungslink kommt, wird schon eine halbe Sekunde
+    //  nach dem Laden in den Raum gesetzt - da hat er seinen Namen im
+    //  Willkommensfenster noch nicht getippt, und der Server nannte ihn
+    //  "Benutzer 1". Der Name stand nur im Handy, nirgends im Raum
+    //  (Eine Testerin im Gruppenraum: "Benutzer 1 - laeuft noch"). Hier kann ein
+    //  Teilnehmer seinen Namen nachtragen, ohne neu beizutreten.
+    // ================================================================
+    socket.on('nameAendern',data=>{
+     try{
+      if(!data || typeof data !== 'object') return;
+      const room=duoRooms[data.code]; if(!room || !room.users || !room.users[socket.id]) return;
+      let v=String(data.name==null?'':data.name).replace(/[\u0000-\u001F\u007F<>]/g,'').trim().slice(0,20);
+      if(!v || room.users[socket.id].name===v) return;
+      room.users[socket.id].name=v;
+      io.to(data.code).emit('roomUpdate',{users:room.users, hostId: room.hostId});
+      const trainerData = getTrainerData(room);
+      if(trainerData && room.hostId){ io.to(room.hostId).emit('duoTrainerLive', trainerData); }
+      sendeTeilnehmerUebersicht(room);
+      console.log(`[GRUPPENRAUM] Name nachgetragen in ${data.code}: ${v}`);
+     }catch(e){ console.error('[DUO] nameAendern Fehler', e); }
+    });
+
     // ===== GRUPPENRAUM: gemeinsame Statistik-Berechnung (jeder User in eigenem Tempo) =====
     // WICHTIG (Fix): Die offizielle Bestehensgrenze (19/25 bestanden, 17-18/25 Grauzone/Nachprüfung)
     // ist eine FESTE Regel für genau 25 Fragen pro Prüfungsteil - keine allgemeine Prozentregel!

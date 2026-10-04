@@ -5906,6 +5906,42 @@
            bleibt er, dort steht er in der Ecke und stoert niemanden. */
         body.schmal #duoChatBox { display: none !important; }
 
+        /* ================================================================
+           DER GRUPPENCHAT AM HANDY IM BROWSER - WIEDER DA      (04.10.2026)
+           ----------------------------------------------------------------
+           Eine Testerin kam ueber den Einladungs-Link mit dem Handy-Browser in den
+           Raum und hatte keinen Chat - der Ton lief, die Seite fehlte.
+           Der Chat war hier ganz abgeschaltet (Dietmar: "Der Gruppenchat
+           kann raus", weil er die halbe Anzeige belegte und sich ueber die
+           Frage legte). Dietmar am 04.10.2026: "Baue es wieder ein."
+
+           Jetzt wie in der App: Er legt sich nie von selbst ueber eine
+           Frage. Ein runder Knopf unten rechts (mit Zahl fuer Neues) oeffnet
+           ihn als ganze Seite, zu geht er mit dem Pfeil im Chat. Den Knopf
+           gibt es nur im Raum bzw. beim Besucher-Chat und nur am Handy im
+           Browser - die App hat ihre eigene Leiste, der Rechner seinen Chat
+           in der Ecke. */
+        #brChatKnopf { display: none; --bz: calc(1 / var(--afu-zoom, 1)); }
+        html:not(.android-app) body.schmal.br-chat-da:not(.br-chat-offen) #brChatKnopf {
+            display: flex; position: fixed; z-index: 99990; right: calc(12px * var(--bz)); bottom: calc(16px * var(--bz));
+            width: calc(52px * var(--bz)); height: calc(52px * var(--bz)); padding: 0; border: 0; border-radius: 50%;
+            background: var(--panel-navy); color: #fff; font-size: calc(1.3rem * var(--bz)); align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35); cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        #brChatKnopf .br-zahl {
+            position: absolute; top: calc(-4px * var(--bz)); right: calc(-4px * var(--bz)); min-width: calc(19px * var(--bz)); height: calc(19px * var(--bz));
+            padding: 0 calc(5px * var(--bz)); box-sizing: border-box; border-radius: 999px; background: var(--bad, #c0392b); color: #fff;
+            font-size: calc(0.7rem * var(--bz)); font-weight: 700; display: none; align-items: center; justify-content: center;
+        }
+        #brChatKnopf .br-zahl.da { display: flex; }
+        html:not(.android-app) body.schmal.br-chat-offen #duoChatBox.sichtbar {
+            display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: auto !important; max-width: none !important; height: auto !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+        }
+        html:not(.android-app) body.schmal.br-chat-offen #duoChatBox #duoChatKoerper { display: flex !important; flex: 1 1 auto !important; height: auto !important; min-height: 0 !important; }
+        html:not(.android-app) body.schmal.br-chat-offen #duoChatBox #duoChatKopf { min-height: 54px; box-sizing: border-box; padding-top: max(10px, env(safe-area-inset-top)); }
+        html:not(.android-app) body.schmal.br-chat-offen #duoChatAndocken { display: none !important; }
+
         /* Das Fenster des Gruppenraums war am Handy breiter als der
            Bildschirm - es stand halb ausserhalb. Sein Kasten ist auf
            480 Punkte ausgelegt, und "100 %" bezieht sich auf einen
@@ -11998,7 +12034,7 @@ function zeigeFehlerwertungHinweis(iconKlasse, text, art){
         if(!el){
             el = document.createElement('div');
             el.id = 'fehlerwertungHinweis';
-            el.style.cssText = 'position:fixed; bottom:20px; right:20px; padding:0.6rem 1rem; border-radius:12px; font-size:0.85rem; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.3); transition:opacity 0.3s;';
+            el.style.cssText = 'position:fixed; bottom:20px; right:20px; padding:0.6rem 1rem; border-radius:12px; font-size:0.85rem; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.3); transition:opacity 0.3s; pointer-events:none;';
             document.body.appendChild(el);
         }
         const f = HINWEIS_FARBEN[art] || HINWEIS_FARBEN.warnung;
@@ -13842,7 +13878,10 @@ function neueRundeFragen(){
                 + '.nr-opt .kopf input{width:16px;height:16px;margin:0;flex:0 0 16px;}'
                 + '.nr-opt .klein{color:var(--muted);font-size:0.78rem;}'
                 + '.nr-opt .felder{display:flex;gap:6px;flex-wrap:wrap;margin:0.45rem 0 0 24px;}'
-                + '.nr-opt select{flex:1 1 140px;padding:0.35rem 0.5rem;border:1px solid #a8c0de;font-size:0.8rem;font-weight:600;background:#fff;}'
+                + '.nr-opt{box-sizing:border-box;max-width:100%;min-width:0;overflow:hidden;}'
+                + '.nr-opt .felder{min-width:0;max-width:calc(100% - 24px);box-sizing:border-box;}'
+                + '.nr-opt select{flex:1 1 140px;min-width:0;max-width:100%;box-sizing:border-box;text-overflow:ellipsis;padding:0.35rem 0.5rem;border:1px solid #a8c0de;font-size:0.8rem;font-weight:600;background:#fff;}'
+                + '@media(max-width:480px){.nr-opt .felder{margin-left:0;max-width:100%;}.nr-opt select{flex-basis:100%;font-size:0.76rem;padding:0.35rem 0.4rem;}}'
                 + 'body.dark .nr-opt{background:transparent;}';
             document.head.appendChild(st);
         }
@@ -29448,6 +29487,64 @@ function istBrowserStimme(wert){
 // gespeicherte Einstellung ("browser:Microsoft Katja") und setzt sie auf
 // eine Piper-Stimme zurueck.
 
+// ================================================================
+//  VORLESEN FUER GAESTE, WENN DER SERVER KEINE STIMME HAT   (04.10.2026)
+//  ----------------------------------------------------------------
+//  Eine Testerin kam ueber den Einladungs-Link mit dem Handy-Browser in einen
+//  Raum, dessen Gastgeber Dietmars Handy ist - und dort gibt es kein Piper:
+//  "Vorlesen geht im Gruppenraum nicht." In diesem Fall (fremder Server
+//  antwortet "Keine Stimmen", wir sind nicht in der App und nicht am
+//  eigenen Rechner) liest das eigene Geraet mit seiner Stimme vor.
+//
+//  Der Rueckfall auf die Browserstimme war am 25.08.2026 abgeschafft
+//  worden, weil sie Abkuerzungen Buchstabe fuer Buchstabe las. Der Grund
+//  ist hier erledigt: Der Text geht vorher durch /api/tts-preview, der
+//  Server schreibt Q R M, D-A-R-C und Co. aus - genau wie in der App.
+//  Wo Piper laeuft (Rechner als Gastgeber), kommt dieser Weg nie dran.
+// ================================================================
+async function ttsGeraetestimme(seg, token){
+    try{
+        if(ttsImApp() || laeuftLokal() || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return false;
+        let text = String(seg.text || '');
+        try{
+            const r = await fetch('/api/tts-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }) });
+            if(r.ok){ const j = await r.json(); if(j && j.expanded) text = j.expanded; }
+        }catch(e){}
+        if(token !== ttsQueueToken) return true;
+        const synth = window.speechSynthesis;
+        let stimmen = synth.getVoices();
+        if(!stimmen.length){
+            await new Promise(r => { const t = setTimeout(r, 1200); try{ synth.addEventListener('voiceschanged', () => { clearTimeout(t); r(); }, { once: true }); }catch(e){} });
+            stimmen = synth.getVoices();
+        }
+        const de = stimmen.filter(v => /^de([-_]|$)/i.test(v.lang || ''));
+        if(stimmen.length && !de.length) return false;          // keine deutsche Stimme: lieber nichts als Deutsch mit englischer Stimme
+        if(token !== ttsQueueToken) return true;
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'de-DE';
+        if(de.length) u.voice = de.find(v => /^de[-_]DE$/i.test(v.lang || '')) || de[0];
+        try{ u.rate = ttsTempoWert(); }catch(e){}
+        await new Promise(resolve => {
+            let aus = false, wach = null;
+            const ende = () => { if(aus) return; aus = true; clearInterval(wach); resolve(); };
+            const start = Date.now();
+            u.onend = ende; u.onerror = ende;
+            // Sicherheitsnetz: Manche Handy-Browser melden das Ende nicht.
+            wach = setInterval(() => {
+                if(token !== ttsQueueToken){ try{ synth.cancel(); }catch(e){} ende(); }
+                else if(Date.now() - start > 1500 && !synth.speaking && !synth.pending) ende();
+                else if(Date.now() - start > 90000){ try{ synth.cancel(); }catch(e){} ende(); }
+            }, 250);
+            try{ synth.cancel(); }catch(e){}
+            synth.speak(u);
+        });
+        return true;
+    }catch(e){
+        console.warn('[TTS] Geraetestimme:', e && e.message);
+        return false;
+    }
+}
+
 async function playTTSSegment(seg, token){
     if(token!==ttsQueueToken) return;
     clearTTSHighlightsOnly();
@@ -29455,6 +29552,8 @@ async function playTTSSegment(seg, token){
         const el=document.querySelector(seg.selector);
         if(el){ el.classList.add(seg.klasse || 'tts-highlight'); el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
     }
+    // Gast an einem Server ohne Stimme: das eigene Geraet liest vor (ab dem zweiten Stueck ohne Umweg ueber den Server)
+    if(window._ttsGeraet && await ttsGeraetestimme(seg, token)) return;
     let selectedVoice = localStorage.getItem('ttsVoice') || '';
 
     // Alte Einstellung aus der Zeit, als es Browser-Stimmen gab: nicht mehr
@@ -29574,6 +29673,10 @@ async function playTTSSegment(seg, token){
             if(res.status === 429){
                 console.warn('[TTS] Stueck uebersprungen - Sprachausgabe dauerhaft ausgelastet');
                 return;
+            }
+            if(res.status === 500 && /Keine Stimmen/i.test(err) && !ttsImApp() && !laeuftLokal()){
+                window._ttsGeraet = true;
+                if(await ttsGeraetestimme(seg, token)) return;
             }
             if(isPiperVoice){
                 // Wenn Piper gewählt, NICHT auf Microsoft fallen, sondern Fehler zeigen
@@ -29962,6 +30065,8 @@ document.addEventListener('focusout', function(e){
 }, true);
 function vorleseAntwort(isCorrect, correctText, correctLabel){
     const q=currentQuestions[currentIndex]; if(!q) return;
+    // Der Haken "Antwort mit Sprachausgabe bestaetigen" (Einstellungen -> Vorlesen): ausdrueckliches Nein = still. Ohne Eintrag bleibt es wie bisher (an).
+    try{ if(localStorage.getItem('ttsAutoReadAnswer') === '0') return; }catch(e){}
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
     const text = isCorrect ? 'Das war die richtige Antwort.' : 'Das war leider die falsche Antwort.';
     const segments=[{text, selector:`[data-optindex="${idx}"]`}];
@@ -32456,7 +32561,7 @@ async function ttsFelderNachziehen() {
         const k = document.getElementById('einstTtsKlang'); if(k) k.value = ttsKlangWert();
     }catch(e){}
     document.getElementById('ttsAutoReadCheckbox').checked = localStorage.getItem('ttsAutoRead') === '1';
-    document.getElementById('ttsAutoReadAnswerCheckbox').checked = localStorage.getItem('ttsAutoReadAnswer') === '1';
+    document.getElementById('ttsAutoReadAnswerCheckbox').checked = localStorage.getItem('ttsAutoReadAnswer') !== '0';
     const tk = document.getElementById('tastaturCheckbox');
     if (tk) tk.checked = tastaturBedienung();
     const select = document.getElementById('ttsVoiceSelect');
@@ -47157,6 +47262,100 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.rundgangGesehen = () => { try{ return localStorage.getItem('rundgang_gesehen') === '1'; }catch(e){ return false; } };
 })();
 </script>
+<script id="browserChat">
+// ================================================================
+//  GRUPPENCHAT AM HANDY IM BROWSER                       (04.10.2026)
+//  ----------------------------------------------------------------
+//  Siehe "DER GRUPPENCHAT AM HANDY IM BROWSER" im Stilblatt. Der Chat
+//  selbst ist der aus duo.js; hier steht nur der runde Knopf, die Zahl
+//  fuer Neues und das Auf und Zu als ganze Seite. In der App kehrt das
+//  Skript in der ersten Zeile um (dort macht die obere Leiste das).
+// ================================================================
+(function(){
+    const D = document, H = D.documentElement;
+    if(H.classList.contains('android-app')) return;
+    const $ = id => D.getElementById(id);
+    const tu = fn => { try{ return fn(); }catch(e){ console.warn('[BrChat]', e && e.message); } };
+    const schmal = () => D.body.classList.contains('schmal');
+    const klick = id => { const e = $(id); if(e){ e.click(); return true; } return false; };
+    const verlauf = () => window.history;          // "history" ist auf dieser Seite der Verlauf der Runden - deshalb window.history
+    let ungelesen = 0;                               // Neues, waehrend der Chat zu war
+    const k = D.createElement('button');
+    k.type = 'button'; k.id = 'brChatKnopf'; k.title = 'Gruppenchat'; k.setAttribute('aria-label', 'Gruppenchat');
+    k.innerHTML = '<i class="fas fa-comments" aria-hidden="true"></i><span class="br-zahl" id="brChatZahl"></span>';
+    D.body.appendChild(k);
+    function box(){ return $('duoChatBox'); }
+    function auf(){
+        const b = box();
+        if(!b || !b.classList.contains('sichtbar') || !schmal()) return;
+        D.body.classList.add('br-chat-offen');
+        ungelesen = 0;
+        if(!b.classList.contains('offen')){
+            if(window.duo && typeof window.duo.chatOeffnenOhneFokus === 'function') tu(() => window.duo.chatOeffnenOhneFokus());
+            else klick('duoChatKnopf');
+        }
+        // Die Zurueck-Taste des Handys macht den Chat zu, nicht die Seite.
+        tu(() => { const h = verlauf(); if(!(h.state && h.state.brChat)) h.pushState({ brChat: 1 }, ''); });
+    }
+    function zu(){
+        D.body.classList.remove('br-chat-offen');
+        const b = box();
+        if(b && b.classList.contains('offen')) klick('duoChatKnopf');
+    }
+    k.addEventListener('click', auf);
+    window.addEventListener('popstate', () => { if(D.body.classList.contains('br-chat-offen')) zu(); });
+    // Der Chat geht manchmal von selbst auf (jemand kommt dazu). Am Handy
+    // bleibt er dann zu - gezaehlt wird am Knopf, geoeffnet wird auf Wunsch.
+    function beobachten(){
+        const b = box();
+        if(!b || b.dataset.brBeobachtet) return;
+        b.dataset.brBeobachtet = '1';
+        const pruefen = () => {
+            const offen = b.classList.contains('offen'), da = b.classList.contains('sichtbar');
+            D.body.classList.toggle('br-chat-da', da);
+            if(!da || !offen) D.body.classList.remove('br-chat-offen');
+            // Der Chat klappt bei einer neuen Nachricht von selbst auf und setzt dabei seine
+            // eigene Zahl auf null - hier wird gezaehlt und wieder zugeklappt.
+            if(schmal() && da && offen && !D.body.classList.contains('br-chat-offen') && !b.dataset.brZu){
+                b.dataset.brZu = '1'; ungelesen++;
+                setTimeout(() => {
+                    delete b.dataset.brZu;
+                    if(schmal() && b.classList.contains('offen') && !D.body.classList.contains('br-chat-offen')) klick('duoChatKnopf');
+                    tu(nachziehen);
+                }, 0);
+            }
+        };
+        new MutationObserver(pruefen).observe(b, { attributes: true, attributeFilter: ['class'] });
+        pruefen();
+    }
+    // Zahl am Knopf, Lage ueber der Weiter-Leiste
+    function nachziehen(){
+        beobachten();
+        const z = $('brChatZahl'), blase = $('duoChatBlase');
+        if(z){
+            const eigene = (blase && blase.classList.contains('sichtbar')) ? (parseInt(blase.textContent, 10) || 0) : 0;
+            const zahl = Math.max(ungelesen, eigene), n = zahl > 99 ? '99+' : (zahl > 0 ? String(zahl) : '');
+            if(z.textContent !== n) z.textContent = n;
+            z.classList.toggle('da', !!n && n !== '0');
+        }
+        // Ueber der Weiter-Leiste, falls eine unten klebt (Bildschirmpunkte)
+        let unten = 16;
+        const na = $('navArea');
+        if(na && na.offsetParent !== null){
+            const r = na.getBoundingClientRect();
+            if(r.height > 0 && r.top > window.innerHeight * 0.4 && window.innerHeight - r.bottom < 40) unten = Math.round(window.innerHeight - r.top) + 12;
+        }
+        if(unten !== lageStand){
+            lageStand = unten;
+            if(unten > 16) k.style.setProperty('bottom', 'calc(' + unten + 'px / var(--afu-zoom, 1))', 'important');
+            else k.style.removeProperty('bottom');
+        }
+    }
+    let lageStand = 16;
+    setInterval(() => tu(nachziehen), 800);
+    tu(nachziehen);
+})();
+</script>
 <script id="appRahmen">
 // ================================================================
 //  DER RAHMEN DER ANDROID-APP                           (30.09.2026)
@@ -50792,7 +50991,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function klickTonSteuern(){
         if(!D.body) return;
         let still = false;
-        if(H.classList.contains('stil-verspielt')) still = !tippToeneAn() || (!pruefungLaeuft() && !wirdVorgelesen());
+        // 04.10.2026, Dietmar: "Der Mausklick-Sound ist bei Verspielt noch da." Er kam noch in der Pruefung und
+        // waehrend des Vorlesens. In der App klickt es jetzt nirgends mehr (der Mausklick bleibt dem PC).
+        if(H.classList.contains('stil-verspielt')) still = true;
         // SACHLICH: AM HANDY KEIN MAUS-KLICK (01.10.2026). Dietmar: "Im Dark
         // Mode gibt es noch immer den Mausklick-Sound." Am Handy gibt es
         // keine Maus; der Klick aus klick-sound.js bleibt dem PC.

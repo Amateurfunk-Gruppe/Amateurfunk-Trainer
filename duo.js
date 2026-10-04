@@ -16,6 +16,31 @@
     // gefunden" wirklich "der Gastgeber hat zugemacht". Vorher heisst es
     // nur: noch nicht eroeffnet - dann wird gewartet, nicht gemeldet.
     let imRaumGewesen = false;
+    // ---- Gesamt-Auswertung bleibt aktuell (04.10.2026) ----
+    function auswertungOffen(){
+        try{
+            const m = document.getElementById('realisticExamModal');
+            if(!m || !m.classList.contains('open')) return false;
+            const b = document.getElementById('realisticModalBody');
+            return !!(b && /Gesamt-Auswertung Gruppenraum|Rangliste – Prüfung im Gruppenraum/.test(b.textContent || ''));
+        }catch(e){ return false; }
+    }
+    let auswertungUhr = null;
+    function auswertungNachladen(){
+        try{
+            if(auswertungUhr || !socket || !roomCode || !auswertungOffen()) return;
+            auswertungUhr = setTimeout(()=>{
+                auswertungUhr = null;
+                try{
+                    if(!socket || !roomCode || !auswertungOffen()) return;
+                    // Im Pruefungsraum steht die Rangliste nur auf Wunsch im Fenster - hier ist sie schon offen
+                    if(window._duoPruefung) window._duoRanglisteGewuenscht = true;
+                    socket.emit('requestFinalResults', { code: roomCode });
+                }catch(e){}
+            }, 700);
+        }catch(e){}
+    }
+    let nameOffen = '';   // Name aus dem Willkommensfenster, der noch nicht im Raum angekommen ist
     let beitrittWiederholung = null;
     let beitrittVersuche = 0;
     // Wer ueber den Link kommt und "Los geht's" drueckt, bevor der Raum da
@@ -5330,6 +5355,7 @@
         });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
             imRaumGewesen = true;
+            if(nameOffen){ const nn = nameOffen; nameOffen = ''; try{ socket.emit('nameAendern', { code: data.code, name: nn }); }catch(e){} }
             if(beitrittWiederholung){ clearInterval(beitrittWiederholung); beitrittWiederholung = null; }
             try{ const w = document.getElementById('willkommenWarte'); if(w) w.style.display = 'none'; }catch(e){}
             if(startSobaldDrin){
@@ -5598,6 +5624,18 @@
                 const meineZeile = ranking.find(r=>r.userId===window.myUserId);
                 const ichBinFertig = !!(meineZeile && meineZeile.finished);
                 if(!ichBinFertig) return;
+                // Erneuerung bei offenem Fenster (04.10.2026): Dietmar: "Bei
+                // mir aktualisiert sich das nicht." Das Fenster war eine
+                // Momentaufnahme. Jetzt fragt es bei jeder Aenderung im Raum
+                // neu nach - und zeichnet nur, wenn sich wirklich etwas
+                // geaendert hat; der Scrollstand bleibt stehen.
+                const sig = JSON.stringify(ranking);
+                const body0 = document.getElementById('realisticModalBody');
+                const offen = auswertungOffen();
+                if(offen && window._duoFinalSig === sig) return;
+                const rolle = offen && body0 ? (body0.closest('.realistic-modal') || body0) : null;
+                const scrollWar = [body0 ? body0.scrollTop : 0, rolle ? rolle.scrollTop : 0];
+                window._duoFinalSig = sig;
                 // Pruefungsraum (20.09.2026): Nach der dritten Runde steht
                 // die EIGENE Auswertung mit den falschen Antworten im
                 // Fenster. Die Rangliste darf sie nicht ueberdecken - sie
@@ -5607,6 +5645,7 @@
                 window._duoRanglisteGewuenscht = false;
                 if(typeof window.showDuoFinalResults==='function'){
                     window.showDuoFinalResults(data);
+                    if(offen){ try{ if(body0) body0.scrollTop = scrollWar[0]; if(rolle) rolle.scrollTop = scrollWar[1]; }catch(e){} }
                 } else if(typeof window.showDuoFinalModal==='function' && window.duoTrainerData){
                     window.showDuoFinalModal(window.duoTrainerData);
                 }
@@ -5620,6 +5659,7 @@
             try{
                 window.duoTeilnehmerUebersichtData = (data && data.teilnehmer) || [];
                 teilnehmerBadgeAktualisieren();
+                auswertungNachladen();
                 const modal = document.getElementById('duoTeilnehmerModal');
                 if(modal && modal.style.display!=='none') teilnehmerListeRendern();
             }catch(e){ console.error('[DUO] duoTeilnehmerUebersicht handler error', e); }
@@ -5671,6 +5711,19 @@
         //  Gastgebers. Fehler werden geschluckt - laeuft kein Server,
         //  bleibt es beim Lernen ohne Gruppe, genau wie bisher.
         // ----------------------------------------------------------------
+        // Name nachtragen (04.10.2026): Der Beitritt ueber den Link kommt vor
+        // dem Namen im Willkommensfenster - der Raum kannte sie nur als
+        // "Benutzer 1". Wer schon im Raum ist, meldet den Namen nach.
+        nameNachziehen: function(name){
+            try{
+                const v = String(name || '').trim();
+                if(!v) return false;
+                try{ localStorage.setItem('duo_userName', v); }catch(e){}
+                if(socket && roomCode && imRaumGewesen){ socket.emit('nameAendern', { code: roomCode, name: v }); return true; }
+                nameOffen = v;      // Beitritt noch unterwegs: wird mit der Antwort des Servers nachgemeldet
+                return false;
+            }catch(e){ return false; }
+        },
         hausHallo: () => hausHalloSenden(),
         // "Los geht's" im Willkommensfenster, wenn ein Raumcode im Link
         // steht: drin -> sofort starten; noch nicht drin -> starten, sobald
