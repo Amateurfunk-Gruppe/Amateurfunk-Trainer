@@ -296,20 +296,33 @@ function einrichten(umgebung) {
     catch (e) { return null; }
   }
 
+  // Die Stand-Nummer (04.10.2026): die Zeile "Stand N · TT.MM.JJJJ" unter der obersten
+  // Version. Sie zaehlt jede Lieferung, auch wenn die Versionsnummer gleich bleibt -
+  // damit das Fenster sagen kann "Stand 37 ist da, du hast 36". Fehlt die Zeile
+  // (aelteres CHANGELOG), gibt es keinen Stand, und alles laeuft wie bisher.
+  function standAusText(text) {
+    const m = String(text || '').match(/^Stand\s+(\d+)\s*[\u00b7\u2022\-\u2013]\s*(\d{2}\.\d{2}\.\d{4})\s*$/m);
+    return m ? { nr: Number(m[1]), datum: m[2] } : null;
+  }
+  function standHier() {
+    try { return standAusText(fs.readFileSync(path.join(WURZEL, CHANGELOG), 'utf8')); }
+    catch (e) { return null; }
+  }
+
   // Seit dem 17.09.2026 kommt der Text mit zurueck: Aus ihm liest das
   // Update-Fenster, was sich geaendert hat (aenderungenAus unten). Ist
   // das CHANGELOG hier und dort gleich, gibt es nichts Neues zu erzaehlen
   // - dann bleibt text leer.
   async function versionDort(commit, karte) {
     const fern = karte[CHANGELOG];
-    if (!fern) return { version: null, text: null };          // liegt dort nicht
+    if (!fern) return { version: null, text: null, stand: null };          // liegt dort nicht
     const hier = hierFingerabdruck(CHANGELOG);
-    if (hier && hier === fern.sha) return { version: versionHier(), text: null };   // gleich
+    if (hier && hier === fern.sha) return { version: versionHier(), text: null, stand: standHier() };   // gleich
     try {
       const roh = await holen(`${RAW}/${KONTO}/${REPO}/${commit}/${CHANGELOG}`, { roh: true, zeit: 12000 });
       const text = roh.toString('utf8');
-      return { version: versionAusText(text), text };
-    } catch (e) { return { version: null, text: null }; }
+      return { version: versionAusText(text), text, stand: standAusText(text) };
+    } catch (e) { return { version: null, text: null, stand: null }; }
   }
 
   // ================================================================
@@ -487,6 +500,8 @@ function einrichten(umgebung) {
       zuletzt: merk.zeit || null,
       versionHier: vHier,
       versionDort: dort.version,
+      standHier: standHier(),
+      standDort: dort.stand || null,
       versionSetup: await versionSetup(),
       // Was sich geaendert hat - fuer das Fenster beim Start.
       aenderungen: dort.text ? aenderungenAus(dort.text, vHier) : [],
@@ -710,6 +725,7 @@ function einrichten(umgebung) {
         programm: echte.filter(e => kategorie(e.name) === 'programm').map(e => e.name),
         namen: echte.map(e => e.name),
         versionHier: j.versionHier, versionDort: j.versionDort, versionSetup: j.versionSetup,
+        standHier: j.standHier || null, standDort: j.standDort || null,
         aenderungen: j.aenderungen || [],
       };
       if (echte.length) {

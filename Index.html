@@ -23122,6 +23122,12 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 
 // Rohdateien und Seite des Repositorys. Nur hier, damit ein umbenanntes
 // Repository nicht an mehreren Stellen nachgezogen werden muss.
+// Die Stand-Nummer dieser Lieferung (04.10.2026). Sie zaehlt bei jeder Lieferung hoch, auch wenn die Versionsnummer
+// (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
+// Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
+// github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
+const TRAINER_STAND = { nr: 36, datum: '04.10.2026' };
+window.TRAINER_STAND = TRAINER_STAND;
 const GITHUB_ROH   = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
 const GITHUB_SEITE = 'https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer';
 
@@ -23201,6 +23207,7 @@ async function githubStartNachschau(versuch){
         commit: l.commit, namen: l.namen || [], programm: l.programm || [],
         anzahl: l.anzahl, eigene: l.eigene || 0,
         versionHier: l.versionHier || null, versionDort: l.versionDort || null,
+        standDort: l.standDort || null,
         aenderungen: l.aenderungen || []
     };
     // Das Haekchen von neulich: fuer genau diese Fassung schweigen.
@@ -23247,7 +23254,7 @@ async function versionAnKnopf(){
     if(!v) return;
     versionHierBekannt = v;
     b.setAttribute('data-tooltip',
-        'Amateurfunk-Trainer ' + v + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
+        'Amateurfunk-Trainer ' + v + ' · Stand ' + TRAINER_STAND.nr + ' vom ' + TRAINER_STAND.datum + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
 }
 window.versionAnKnopf = versionAnKnopf;
 
@@ -23392,6 +23399,17 @@ function updateFensterZeigen(l){
             ? 'Version <b>' + updateEsc(neu) + '</b> ist da. Du hast gerade <b>' + updateEsc(hier) + '</b>.'
             : (neu && !hier ? 'Version <b>' + updateEsc(neu) + '</b> ist da.' : 'Es gibt Verbesserungen für deinen Trainer.');
     }
+    // Die Stand-Nummer (04.10.2026): Sie sagt, was die Versionsnummer nicht sagt - ob die Lieferung bei GitHub neuer ist als die hier.
+    try{
+        const sd = l.standDort && l.standDort.nr ? l.standDort : null, sh = window.TRAINER_STAND || null;
+        if(sd && (!sh || sd.nr !== sh.nr)){
+            const standSatz = 'Stand <b>' + updateEsc(sd.nr) + '</b> vom ' + updateEsc(sd.datum) + ' ist da'
+                + (sh ? ' — du hast gerade Stand <b>' + updateEsc(sh.nr) + '</b> vom ' + updateEsc(sh.datum) + '.' : '.');
+            satz = inApp
+                ? standSatz + ((neu && hier && neu !== hier) ? ' Dazu Version <b>' + updateEsc(neu) + '</b> statt ' + updateEsc(hier) + '.' : '')
+                : standSatz + ' ' + satz;
+        }
+    }catch(e){}
     if(!inApp && (l.programm || []).length){
         satz += '<div style="margin-top:0.4rem; font-size:0.82rem; color:var(--muted);">'
               + 'Programmdateien sind dabei — danach muss der Trainer einmal neu gestartet werden.</div>';
@@ -26431,13 +26449,14 @@ async function dateiStandAnzeigen() {
         // Fingerabdrucks - dieselbe Aenderung wie im Reiter "Update".
         // Der Fingerabdruck bleibt klein dahinter: Er beantwortet die
         // andere Frage, ob zwei Ordner buchstabengenau dasselbe enthalten.
-        el.innerHTML = `Dieser Trainer läuft mit Version <b>${j.version || '?'}</b>`
+        el.innerHTML = `Dieser Trainer läuft mit Version <b>${j.version || '?'}</b> · <b>Stand ${TRAINER_STAND.nr}</b> vom ${TRAINER_STAND.datum}`
             + ` – Index.html vom <b>${datum}</b>.`
             + `<br><span style="font-size:0.75rem;">Fingerabdruck des Ordners: `
             + `<span style="font-family:var(--font-mono);">${j.kennung || '?'}</span></span>`;
         el.style.color = 'var(--ink)';
     } catch (e) {
-        el.textContent = 'Der Stand lässt sich gerade nicht ermitteln – das ist normal, wenn die Datei ohne den Server geöffnet wurde.';
+        el.innerHTML = 'Dieser Trainer läuft mit <b>Stand ' + TRAINER_STAND.nr + '</b> vom ' + TRAINER_STAND.datum
+            + ' – die Versionsnummer lässt sich ohne den Server nicht ermitteln.';
     }
 }
 window.dateiStandAnzeigen = dateiStandAnzeigen;
@@ -32422,7 +32441,7 @@ async function einstGithubNachsehen(){
                 + '</span>';
             return;
         }
-        einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null };
+        einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null, stand: j.standDort || null };
         await einstUpdateFuellen();
 
         // Dieselbe Zaehlung wie im Fenster: 'unbekannt' (nie abgeglichen,
@@ -32471,7 +32490,7 @@ async function einstUpdateFuellen(){
           + '</div>';
 
         let html = zeile('Hier', j.version || 'unbekannt',
-            datum ? 'Index.html vom ' + datum : '');
+            'Stand ' + TRAINER_STAND.nr + ' vom ' + TRAINER_STAND.datum + (datum ? ' · Index.html vom ' + datum : ''));
         // Aus welchem Ordner dieser Trainer laeuft. Dietmar am 17.09.2026:
         // "Ueber START.sh ... ist das Update, was in dem Arbeitsordner
         // drin ist, nicht verwendet. Bei START.bat ist es vorhanden.
@@ -32489,9 +32508,13 @@ async function einstUpdateFuellen(){
         const f = einstVersionFern;
         if(f && f.dort){
             const gleich = (f.dort === j.version);
+            // Mit Stand-Nummer (04.10.2026): dieselbe Version kann einen neueren Stand haben.
+            const st = f.stand && f.stand.nr ? f.stand : null;
+            const standGleich = !st || st.nr === TRAINER_STAND.nr;
             html += zeile('Bei GitHub', f.dort,
-                gleich ? '<span style="color:#15703c;">gleich</span>'
-                       : '<span style="color:#8a5a12;">weicht ab</span>');
+                (st ? 'Stand ' + st.nr + ' vom ' + st.datum + ' · ' : '')
+                + (gleich && standGleich ? '<span style="color:#15703c;">gleich</span>'
+                       : '<span style="color:#8a5a12;">' + (gleich ? 'neuerer Stand' : 'weicht ab') + '</span>'));
         }
         if(f && f.setup){
             html += zeile('Setup dort', f.setup,
@@ -33777,7 +33800,9 @@ function updateSidebarOnly(){
             const p = progress[qItem.id];
             if(p && p.answered){ isAnswered = true; isCorrect = !!p.correct; }
         }
-        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
+        // Beim Blaettern (04.10.2026) ist gruen nur, was als gelernt abgehakt ist - eine richtige Antwort zaehlt 1 von 3, bleibt im Verlauf aber neutral.
+        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot'
+            : (isCorrect ? ((typeof DURCHSICHT_NAME !== 'undefined' && currentPart === DURCHSICHT_NAME && !gelerntPunkt(qItem.id)) ? 'dot-sidebar' : 'dot-sidebar correct-dot') : 'dot-sidebar wrong-dot');
         // Noch nicht beantwortet, aber laengst abgehakt: hellgruen.
         // Siehe den langen Kommentar bei der zweiten Stelle unten.
         else if(gelerntPunkt(qItem.id)) cls += ' gelernt-dot';
@@ -34028,7 +34053,9 @@ function renderQuestion() {
                 isCorrect = !!p.correct;
             }
         }
-        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot' : (isCorrect ? 'dot-sidebar correct-dot' : 'dot-sidebar wrong-dot');
+        // Beim Blaettern (04.10.2026) ist gruen nur, was als gelernt abgehakt ist - eine richtige Antwort zaehlt 1 von 3, bleibt im Verlauf aber neutral.
+        if (isAnswered) cls = (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) ? 'dot-sidebar beantwortet-dot'
+            : (isCorrect ? ((typeof DURCHSICHT_NAME !== 'undefined' && currentPart === DURCHSICHT_NAME && !gelerntPunkt(qItem.id)) ? 'dot-sidebar' : 'dot-sidebar correct-dot') : 'dot-sidebar wrong-dot');
         else if(gelerntPunkt(qItem.id)) cls += ' gelernt-dot';
         if (idx === currentIndex) cls += ' current-dot';
         if(isTrainerViewActive) cls += ' trainer-dot';
@@ -47788,7 +47815,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Server', 'fas fa-server', 'Andere über den Internet-Link einladen', () => serverFensterOeffnen(), () => H.classList.contains('android-tunnel')],
         ['Darstellung', 'fas fa-palette', 'Sachlich oder verspielt, hell oder dunkel, eckig oder rund', () => einstellungenOeffnen('allgemein')],
         ['Rundgang', 'fas fa-route', 'Die wichtigsten Knöpfe erklärt', () => window.rundgangStarten && window.rundgangStarten()],
-        ['Info & Hilfe', 'fas fa-circle-info', 'Anleitung, Version, Updates', () => infoOeffnen()],
+        ['Info & Hilfe', 'fas fa-circle-info', (window.TRAINER_STAND ? 'Stand ' + window.TRAINER_STAND.nr + ' vom ' + window.TRAINER_STAND.datum + ' · Anleitung, Updates' : 'Anleitung, Version, Updates'), () => infoOeffnen()],
         // Dietmar: "Facebook Gruppe stimmt auch nicht ich habe keine Gruppe
         // noch nicht es ist nur die Seite oder einfach auch nur Facebook."
         ['Facebook', 'fab fa-facebook', 'Neuigkeiten rund ums Thema Amateurfunk', () => klick('facebookBtn')]

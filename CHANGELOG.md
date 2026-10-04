@@ -5,12 +5,16 @@ Entwickler und Urheber: Dietmar Reh. Lizenz: [PolyForm Noncommercial 1.0.0](LICE
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), SemVer. Je Version: Hinzugefügt, Geändert, Behoben.
 Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie von hier
 und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Namen des Windows-ZIP.
+Die Zeile „Stand N · Datum“ unter der obersten Version zählt jede Lieferung, auch ohne neue Versionsnummer;
+Index.html trägt dieselbe Nummer (`TRAINER_STAND`), die App zeigt sie unter Info & Hilfe, das Update-Fenster vergleicht sie.
 
 ---
 
 ## [1.298.0] - 2026-09-25
+Stand 36 · 04.10.2026
 
 ### Hinzugefügt
+- Stand-Nummer: Jede Lieferung zählt eine Nummer hoch, auch wenn die Versionsnummer gleich bleibt. Sie steht in der App unter Mehr → Info & Hilfe („Stand 36 vom 04.10.2026“), am PC im Info-Fenster, am Info-Knopf und in Einstellungen → Update; das Update-Fenster sagt „Stand 37 vom … ist da — du hast gerade Stand 36“. Im CHANGELOG steht sie als Zeile „Stand N · Datum“ unter der obersten Version; von dort liest der Updater den Stand bei GitHub.
 - Gruppenraum am Handy im Browser: Wer über den Einladungslink mitmacht, hat jetzt dieselben Hilfen wie in der App – unter den Antworten die Leiste „Hilfen anzeigen“ (Rechner, Erklärung mit Vorlesen, Formelblatt, wo es eine Stelle gibt) und neben dem Zahnrad den Dreistrich-Knopf, der die Leiste ein- und ausschaltet; 50 Ohm, Lösungsweg und Video bleiben im Raum gesperrt (wie in der App). Ausserhalb eines Raums und am PC, Tablet und in der App ändert sich nichts
 - Blättern: Liegt ein Lesezeichen mitten im Katalog, fragt der Trainer beim Öffnen zuerst „Beim letzten Stand weitermachen?“ – Ja, weitermachen (bei der gemerkten Frage), Nein, von vorn oder Andere Auswahl (ganzer Katalog, nur Gelernte, Rest abarbeiten, noch nie geübt); ohne Lesezeichen geht gleich die Auswahl auf
 - Gruppenraum am Handy im Browser (Teilnehmer, die über den Einladungslink kommen): Der Chat hat jetzt einen runden Knopf unten rechts, der den Chat als ganze Seite öffnet – mit Zahl ungelesener Nachrichten am Knopf und der Zurück-Taste des Handys zum Schließen; der Chat liegt nie von selbst über der Frage. Vorher war er auf dem schmalen Bildschirm ganz ausgeblendet. Am Rechner und in der Android-App bleibt alles wie bisher
@@ -114,6 +118,7 @@ und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Name
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Blättern: Im Verlauf ist jetzt nur grün, was als gelernt abgehakt ist. Eine richtig beantwortete, noch nicht abgehakte Frage zählt weiter 1 von 3 für „gelernt“, ihr Punkt bleibt aber neutral; falsch bleibt rot. In allen anderen Runden bleibt richtig dunkelgrün.
 - Blättern: Die Kachel „Mit Erklärung“ ist entfallen – inzwischen hat jede Frage eine Erklärung, die Kachel stammte aus der Zeit, als sie nur zu einem Teil vorlagen
 - Android-App: statt der Farbstile Grau, Grün, Blau und Orange heißt es in der App jetzt Hell, Dunkel oder Wie Handy; am PC bleibt alles, wie es ist
 - Android-App: Bei Funki klickt es nicht mehr wie eine Maus – seine Knöpfe antworten mit einem kleinen Computer-Piep; beim Weggehen macht er sich manchmal mit ein paar Funken unsichtbar
