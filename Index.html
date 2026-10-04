@@ -48315,7 +48315,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [['viel', 'Oft'], ['an', 'Normal'], ['wenig', 'Selten'], ['aus', 'Aus']].map(f => '<button type="button" data-i="' + f[0] + '"' + (issRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appIssSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
-              + '<div class="app-unterzeile"><b>Ton</b><small>Rauschen, Brummen und Funk-Piepen, die Funkgeräte-Stimme des Astronauten (sie folgt auch „Funki spricht“) und der CQ-Ruf des Satelliten in Morsezeichen. Der Klang wandert von einem Ohr zum anderen, so wie es fliegt.</small></div>'
+              + '<div class="app-unterzeile"><b>Ton</b><small>Rauschen, Brummen und Funk-Piepen, die süße Funk-Stimme des Astronauten mit Quindar-Ton, Roger-Beep und Rauschen (sie folgt auch „Funki spricht“) und der CQ-Ruf des Satelliten in Morsezeichen. Der Klang wandert von einem Ohr zum anderen, so wie es fliegt.</small></div>'
               + '<div class="app-seg" id="appIssTonSeg">'
               + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-t="' + f[0] + '"' + ((issTonAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
                   + ' onclick="appIssTonSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
@@ -49964,8 +49964,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<path d="M50 9V0" stroke="#9fb3c8" stroke-width="2.4" stroke-linecap="round"/><circle cx="50" cy="0" r="3" fill="#FFB547"/>'
           + '</g></svg>';
     }
-    // Funkgeraete-Stimme: keine Erhoehung, Telefonband, kaum Effekte
-    const ASTRO_STIMME = { halb: 0, tempo: 1.0, hp: 420, praes: 4, tp: 3600, chorus: 0, vib: 0, echo: 0.03 };
+    // Suesse Funk-Stimme (hoch wie Funki, aber etwas tiefer und im Funkband) mit Quindar-Ton davor und danach (Roger-Beep) und Rauschen darunter
+    const ASTRO_STIMME = { halb: 6, tempo: 1.03, hp: 380, praes: 5, tp: 4800, chorus: 0.15, vib: 0.04, echo: 0.05, quindar: true };
     const ASTRO_SPRUECHE = [
         { t: 'Hier <b>ISS</b>! <b>Weiter so</b> – du schaffst die Prüfung! Wir hören uns im Funk!', s: 'Hier I S S! Weiter so! Du schaffst die Prüfung. Wir hören uns im Funk!' },
         { t: 'Ich winke von ganz oben: <b>Bleib dran</b>, die Prüfung packst du! Wir hören uns!', s: 'Ich winke von ganz oben. Bleib dran! Die Prüfung packst du. Wir hören uns!' },
@@ -50611,7 +50611,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const vorVerst = Math.max(0.5, Math.min(4, 0.12 / (n2 ? Math.sqrt(s2 / n2) : 0.12)));
         // 2. Hoeher machen
         const b = gestreckt(ctx, ganz, faktor), dauer = b.duration / rate;
-        const t0 = ctx.currentTime + 0.04, tv = t0 + 0.14, te = tv + dauer + 0.05;
+        const qd = !!st.quindar, t0 = ctx.currentTime + 0.04, tv = t0 + (qd ? 0.36 : 0.14), te = tv + dauer + 0.05;
         // Ausgang: sanft begrenzt, damit nichts knallt
         const grenze = neu(ctx.createDynamicsCompressor());
         grenze.threshold.value = -20; grenze.ratio.value = 4;
@@ -50666,10 +50666,50 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             o.connect(g); g.connect(tonAus);
             o.start(ab); o.stop(ab + lang + 0.01);
         };
-        rauschen(t0, 0.13, 0.11);
+        if(!qd) rauschen(t0, 0.13, 0.11);
         q.start(tv); vo.start(tv); lfo.start(tv); vo.stop(te); lfo.stop(te);
-        piep(te, 1180, 0.07); piep(te + 0.085, 1560, 0.08);
-        rauschen(te + 0.18, 0.08, 0.08);
+        if(qd){
+            // Astronaut (Dietmar, 04.10.2026: "suesse Stimme mit dem Quindar-Roger-Beep mit Rauschen dahinter"):
+            // Quindar-Ton davor (2525 Hz), die Stimme, Quindar-Ton danach (2475 Hz = der Roger-Beep) - und die ganze Zeit Funkrauschen darunter
+            const qton = (ab, hz) => {
+                const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = hz;
+                const g = neu(ctx.createGain());
+                g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(0.13, ab + 0.012);
+                g.gain.setValueAtTime(0.13, ab + 0.238); g.gain.linearRampToValueAtTime(0, ab + 0.25);
+                o.connect(g); g.connect(tonAus); o.start(ab); o.stop(ab + 0.26);
+            };
+            const bett = (ab, bis) => {
+                const n = Math.floor(ctx.sampleRate * 1.5), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
+                for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
+                const s = neu(ctx.createBufferSource()); s.buffer = nb; s.loop = true;
+                const h2 = neu(ctx.createBiquadFilter()); h2.type = 'highpass'; h2.frequency.value = 600; h2.Q.value = 0.7;
+                const l2 = neu(ctx.createBiquadFilter()); l2.type = 'lowpass'; l2.frequency.value = 4200; l2.Q.value = 0.7;
+                const g = neu(ctx.createGain()), st0 = 0.05;
+                g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(st0, ab + 0.03);
+                g.gain.setValueAtTime(st0, bis - 0.05); g.gain.linearRampToValueAtTime(0, bis);
+                // das Rauschen atmet leicht, wie bei schwachem Empfang
+                const wo = neu(ctx.createOscillator()); wo.frequency.value = 3.3;
+                const wg = neu(ctx.createGain()); wg.gain.value = 0.014; wo.connect(wg); wg.connect(g.gain);
+                s.connect(h2); h2.connect(l2); l2.connect(g); g.connect(tonAus);
+                s.start(ab); s.stop(bis + 0.02); wo.start(ab); wo.stop(bis + 0.02);
+                // dazu ein leises Knistern
+                for(let t = ab + 0.1 + Math.random() * 0.2; t < bis - 0.15; t += 0.12 + Math.random() * 0.35){
+                    const kn2 = Math.floor(ctx.sampleRate * (0.005 + Math.random() * 0.009)), kb = ctx.createBuffer(1, kn2, ctx.sampleRate), kd = kb.getChannelData(0);
+                    for(let i = 0; i < kn2; i++) kd[i] = (Math.random() * 2 - 1) * (1 - i / kn2);
+                    const ks = neu(ctx.createBufferSource()); ks.buffer = kb;
+                    const kf = neu(ctx.createBiquadFilter()); kf.type = 'bandpass'; kf.frequency.value = 2400 + Math.random() * 1600; kf.Q.value = 0.9;
+                    const kg = neu(ctx.createGain()); kg.gain.value = 0.07 + Math.random() * 0.07;
+                    ks.connect(kf); kf.connect(kg); kg.connect(tonAus); ks.start(t);
+                }
+            };
+            bett(t0, te + 0.52);
+            qton(t0 + 0.04, 2525);
+            qton(te + 0.02, 2475);
+            rauschen(te + 0.29, 0.16, 0.07);
+        } else {
+            piep(te, 1180, 0.07); piep(te + 0.085, 1560, 0.08);
+            rauschen(te + 0.18, 0.08, 0.08);
+        }
         ton.knoten = kn; ton.quelle = q;
         // Mund und Antenne
         const sprecher = sprecherEl();
@@ -50689,7 +50729,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         requestAnimationFrame(mundLauf);
         // Aufraeumen, wenn alles verklungen ist
         setTimeout(() => { if(nr === ton.nr){ ton.knoten.forEach(k => tu(() => k.disconnect())); ton.knoten = []; ton.quelle = null; ton.nr++; mundZu(); } },
-                   Math.ceil((te + 0.3 - ctx.currentTime) * 1000) + 60);
+                   Math.ceil((te + (qd ? 0.75 : 0.3) - ctx.currentTime) * 1000) + 60);
     }
 
     // ================================================================
@@ -51057,7 +51097,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                         erklaert: () => ERKLAERT.map(e => e.id), redeText: (h, m) => redeText(h, m),
                         erklFragen: () => ERKL_FRAGEN.slice(), peek: t => kurzauftritt(t, ERKL_PEEK[t] ? { hilfe: () => erklHilfe(ERKL_PEEK[t]), sprich: true } : {}),
                         astro: o => astroWinken(o), astroDa: () => astroDa, astroWeg: () => astroWeg(true), iss: o => issUeberflug(o), issLaeuft: () => issLaeuft || satLaeuft, sat: o => satUeberflug(o), satLaeuft: () => satLaeuft, satPlan: (e, w) => satPlan(e, w),
-                        _satKlang: (ctx, links, d, kn, ziel) => satKlang(ctx, links, d, kn, ziel), _issKlang: (ctx, links, d, kn, ziel) => issKlang(ctx, links, d, kn, ziel),
+                        _satKlang: (ctx, links, d, kn, ziel) => satKlang(ctx, links, d, kn, ziel), astroStimme: ASTRO_STIMME, _issKlang: (ctx, links, d, kn, ziel) => issKlang(ctx, links, d, kn, ziel),
                         regler: () => ({ helfer: helferRegler(), stimme: stimmeRegler(), iss: issRegler(), issTon: issTonAn(), mehr: mehrSprechen(), plan: plan(), issPlan: issPlan() }),
                         zustand: () => ({ da: robo.da, modus: robo.modus, ort: robo.ort, schritt: robo.schritt }) };
 
