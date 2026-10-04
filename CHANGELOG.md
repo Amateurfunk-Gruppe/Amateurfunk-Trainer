@@ -6,15 +6,17 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), SemVer. Je
 Die oberste Versionsnummer ist die des nächsten Baus: `version.js` liest sie von hier
 und legt sie in `package.json` ab, `Build-DIREKT.bat` übernimmt sie in den Namen des Windows-ZIP.
 Die Zeile „Stand N · Datum“ unter der obersten Version zählt jede Lieferung, auch ohne neue Versionsnummer;
-Index.html trägt dieselbe Nummer (`TRAINER_STAND`), die App zeigt sie unter Info & Hilfe, das Update-Fenster vergleicht sie.
+Index.html trägt dieselbe Nummer (`TRAINER_STAND`), angezeigt als 2.0NN (Stand 37 = 2.037): in der App als „Version 2.037“
+unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der Versionsnummer; das Update-Fenster vergleicht sie.
 
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 36 · 04.10.2026
+Stand 37 · 04.10.2026
 
 ### Hinzugefügt
-- Stand-Nummer: Jede Lieferung zählt eine Nummer hoch, auch wenn die Versionsnummer gleich bleibt. Sie steht in der App unter Mehr → Info & Hilfe („Stand 36 vom 04.10.2026“), am PC im Info-Fenster, am Info-Knopf und in Einstellungen → Update; das Update-Fenster sagt „Stand 37 vom … ist da — du hast gerade Stand 36“. Im CHANGELOG steht sie als Zeile „Stand N · Datum“ unter der obersten Version; von dort liest der Updater den Stand bei GitHub.
+- Stand-Nummer: Jede Lieferung zählt eine Nummer hoch, auch wenn die Versionsnummer gleich bleibt – angezeigt als 2.0NN. Die App hat damit eine eigene Versionsnummer: „Version 2.037 · 04.10.2026“ ganz unten auf der Startseite (antippen öffnet Info & Hilfe → Daten & Stand) und unter Mehr → Info & Hilfe. Am PC steht sie als „Stand 2.037“ im Info-Fenster, am Info-Knopf und in Einstellungen → Update (dort auch der Stand bei GitHub: gleich / neuerer Stand). Das Update-Fenster sagt „Version 2.038 vom … ist da — du hast gerade Version 2.037“. Im CHANGELOG steht die Nummer als Zeile „Stand N · Datum“ unter der obersten Version; von dort liest der Updater den Stand bei GitHub.
+- Android-App: Unter Mehr gibt es „Nach Update suchen“ – sieht bei GitHub nach und sagt, ob eine neuere Fassung bereitliegt (dann das bekannte Update-Fenster), ob alles aktuell ist, oder woran es hängt (kein Netz, GitHub bremst). Bisher kam das Fenster nur beim Start und nur einmal je Sitzung; der Reiter Update ist in der App ausgeblendet.
 - Gruppenraum am Handy im Browser: Wer über den Einladungslink mitmacht, hat jetzt dieselben Hilfen wie in der App – unter den Antworten die Leiste „Hilfen anzeigen“ (Rechner, Erklärung mit Vorlesen, Formelblatt, wo es eine Stelle gibt) und neben dem Zahnrad den Dreistrich-Knopf, der die Leiste ein- und ausschaltet; 50 Ohm, Lösungsweg und Video bleiben im Raum gesperrt (wie in der App). Ausserhalb eines Raums und am PC, Tablet und in der App ändert sich nichts
 - Blättern: Liegt ein Lesezeichen mitten im Katalog, fragt der Trainer beim Öffnen zuerst „Beim letzten Stand weitermachen?“ – Ja, weitermachen (bei der gemerkten Frage), Nein, von vorn oder Andere Auswahl (ganzer Katalog, nur Gelernte, Rest abarbeiten, noch nie geübt); ohne Lesezeichen geht gleich die Auswahl auf
 - Gruppenraum am Handy im Browser (Teilnehmer, die über den Einladungslink kommen): Der Chat hat jetzt einen runden Knopf unten rechts, der den Chat als ganze Seite öffnet – mit Zahl ungelesener Nachrichten am Knopf und der Zurück-Taste des Handys zum Schließen; der Chat liegt nie von selbst über der Frage. Vorher war er auf dem schmalen Bildschirm ganz ausgeblendet. Am Rechner und in der Android-App bleibt alles wie bisher
@@ -118,6 +120,7 @@ Stand 36 · 04.10.2026
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Android-App, Startseite: Ganz unten kommt die untere Leiste (Lernen, Prüfung, Gruppe, Fortschritt, Mehr) wieder, auch wenn sie beim Rollen nach unten verschwunden war – der Platz unter der Fußzeile, der für sie freigehalten ist, war sonst ein Fingerbreit Leere.
 - Blättern: Im Verlauf ist jetzt nur grün, was als gelernt abgehakt ist. Eine richtig beantwortete, noch nicht abgehakte Frage zählt weiter 1 von 3 für „gelernt“, ihr Punkt bleibt aber neutral; falsch bleibt rot. In allen anderen Runden bleibt richtig dunkelgrün.
 - Blättern: Die Kachel „Mit Erklärung“ ist entfallen – inzwischen hat jede Frage eine Erklärung, die Kachel stammte aus der Zeit, als sie nur zu einem Teil vorlagen
 - Android-App: statt der Farbstile Grau, Grün, Blau und Orange heißt es in der App jetzt Hell, Dunkel oder Wie Handy; am PC bleibt alles, wie es ist

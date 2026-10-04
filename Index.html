@@ -1253,6 +1253,8 @@
             #appAstro { transition: none; }
             #roboBlase .eb-deckel, #roboBlase .eb-zeile { display: none; }
         }
+        /* Die Versionszeile ganz unten auf der Startseite der App (04.10.2026) */
+        html.android-app .footer-note .app-stand { display: block; margin-top: 8px; font-size: 0.76rem; letter-spacing: 0.02em; opacity: 0.85; cursor: pointer; font-variant-numeric: tabular-nums; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23126,8 +23128,12 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 36, datum: '04.10.2026' };
-window.TRAINER_STAND = TRAINER_STAND;
+const TRAINER_STAND = { nr: 37, datum: '04.10.2026' };
+// Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
+// "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
+function standText(n){ return '2.' + String(n).padStart(3, '0'); }
+TRAINER_STAND.text = standText(TRAINER_STAND.nr);
+window.TRAINER_STAND = TRAINER_STAND; window.standText = standText;
 const GITHUB_ROH   = 'https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/';
 const GITHUB_SEITE = 'https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer';
 
@@ -23254,7 +23260,7 @@ async function versionAnKnopf(){
     if(!v) return;
     versionHierBekannt = v;
     b.setAttribute('data-tooltip',
-        'Amateurfunk-Trainer ' + v + ' · Stand ' + TRAINER_STAND.nr + ' vom ' + TRAINER_STAND.datum + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
+        'Amateurfunk-Trainer ' + v + ' · Stand ' + TRAINER_STAND.text + ' vom ' + TRAINER_STAND.datum + ' · Kurze Anleitung: was das Tool kann und wie es bedient wird');
 }
 window.versionAnKnopf = versionAnKnopf;
 
@@ -23403,8 +23409,9 @@ function updateFensterZeigen(l){
     try{
         const sd = l.standDort && l.standDort.nr ? l.standDort : null, sh = window.TRAINER_STAND || null;
         if(sd && (!sh || sd.nr !== sh.nr)){
-            const standSatz = 'Stand <b>' + updateEsc(sd.nr) + '</b> vom ' + updateEsc(sd.datum) + ' ist da'
-                + (sh ? ' — du hast gerade Stand <b>' + updateEsc(sh.nr) + '</b> vom ' + updateEsc(sh.datum) + '.' : '.');
+            const wort = inApp ? 'Version' : 'Stand';
+            const standSatz = wort + ' <b>' + standText(sd.nr) + '</b> vom ' + updateEsc(sd.datum) + ' ist da'
+                + (sh ? ' — du hast gerade ' + wort + ' <b>' + standText(sh.nr) + '</b> vom ' + updateEsc(sh.datum) + '.' : '.');
             satz = inApp
                 ? standSatz + ((neu && hier && neu !== hier) ? ' Dazu Version <b>' + updateEsc(neu) + '</b> statt ' + updateEsc(hier) + '.' : '')
                 : standSatz + ' ' + satz;
@@ -23673,12 +23680,14 @@ async function githubOeffnen(){
                        + 'GitHub lässt pro Stunde nur eine begrenzte Zahl Anfragen zu; dann hilft abwarten.');
         return;
     }
-    try{ einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null }; }catch(e2){}
+    try{ einstVersionFern = { dort: j.versionDort || null, setup: j.versionSetup || null, stand: j.standDort || null }; }catch(e2){}
     const holbar = (j.eintraege || []).filter(e => e.lage === 'neuer_dort' || e.lage === 'fehlt' || e.lage === 'unbekannt');
     if(!holbar.length){
         if(typeof showAppAlert === 'function')
-            showAppAlert('Alles auf demselben Stand — es gibt nichts zu holen.'
-                       + (j.versionHier ? ' (Version ' + j.versionHier + ')' : ''));
+            showAppAlert(updateInApp()
+                ? 'Alles auf dem neuesten Stand — Version ' + TRAINER_STAND.text + ' vom ' + TRAINER_STAND.datum + '. Es gibt nichts zu holen.'
+                : 'Alles auf demselben Stand — es gibt nichts zu holen.'
+                       + (j.versionHier ? ' (Version ' + j.versionHier + ' · Stand ' + TRAINER_STAND.text + ')' : ''));
         return;
     }
     updateTest = false;
@@ -23689,6 +23698,7 @@ async function githubOeffnen(){
         anzahl: holbar.length,
         eigene: (j.eintraege || []).filter(e => e.lage === 'neuer_hier').length,
         versionHier: j.versionHier || null, versionDort: j.versionDort || null,
+        standDort: j.standDort || null,
         aenderungen: j.aenderungen || []
     });
 }
@@ -26449,14 +26459,16 @@ async function dateiStandAnzeigen() {
         // Fingerabdrucks - dieselbe Aenderung wie im Reiter "Update".
         // Der Fingerabdruck bleibt klein dahinter: Er beantwortet die
         // andere Frage, ob zwei Ordner buchstabengenau dasselbe enthalten.
-        el.innerHTML = `Dieser Trainer läuft mit Version <b>${j.version || '?'}</b> · <b>Stand ${TRAINER_STAND.nr}</b> vom ${TRAINER_STAND.datum}`
+        el.innerHTML = (updateInApp()
+                ? `Dieser Trainer läuft mit <b>Version ${TRAINER_STAND.text}</b> vom ${TRAINER_STAND.datum} (Grundversion ${j.version || '?'})`
+                : `Dieser Trainer läuft mit Version <b>${j.version || '?'}</b> · <b>Stand ${TRAINER_STAND.text}</b> vom ${TRAINER_STAND.datum}`)
             + ` – Index.html vom <b>${datum}</b>.`
             + `<br><span style="font-size:0.75rem;">Fingerabdruck des Ordners: `
             + `<span style="font-family:var(--font-mono);">${j.kennung || '?'}</span></span>`;
         el.style.color = 'var(--ink)';
     } catch (e) {
-        el.innerHTML = 'Dieser Trainer läuft mit <b>Stand ' + TRAINER_STAND.nr + '</b> vom ' + TRAINER_STAND.datum
-            + ' – die Versionsnummer lässt sich ohne den Server nicht ermitteln.';
+        el.innerHTML = 'Dieser Trainer läuft mit <b>' + (updateInApp() ? 'Version ' : 'Stand ') + TRAINER_STAND.text + '</b> vom ' + TRAINER_STAND.datum
+            + ' – mehr lässt sich ohne den Server nicht ermitteln.';
     }
 }
 window.dateiStandAnzeigen = dateiStandAnzeigen;
@@ -32490,7 +32502,7 @@ async function einstUpdateFuellen(){
           + '</div>';
 
         let html = zeile('Hier', j.version || 'unbekannt',
-            'Stand ' + TRAINER_STAND.nr + ' vom ' + TRAINER_STAND.datum + (datum ? ' · Index.html vom ' + datum : ''));
+            'Stand ' + TRAINER_STAND.text + ' vom ' + TRAINER_STAND.datum + (datum ? ' · Index.html vom ' + datum : ''));
         // Aus welchem Ordner dieser Trainer laeuft. Dietmar am 17.09.2026:
         // "Ueber START.sh ... ist das Update, was in dem Arbeitsordner
         // drin ist, nicht verwendet. Bei START.bat ist es vorhanden.
@@ -32512,7 +32524,7 @@ async function einstUpdateFuellen(){
             const st = f.stand && f.stand.nr ? f.stand : null;
             const standGleich = !st || st.nr === TRAINER_STAND.nr;
             html += zeile('Bei GitHub', f.dort,
-                (st ? 'Stand ' + st.nr + ' vom ' + st.datum + ' · ' : '')
+                (st ? 'Stand ' + standText(st.nr) + ' vom ' + st.datum + ' · ' : '')
                 + (gleich && standGleich ? '<span style="color:#15703c;">gleich</span>'
                        : '<span style="color:#8a5a12;">' + (gleich ? 'neuerer Stand' : 'weicht ab') + '</span>'));
         }
@@ -47790,7 +47802,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const y = window.scrollY || 0, d = y - letzte;
             if(Math.abs(d) < 6 && y > 60) return;
             letzte = y;
-            const weg = d > 0 && y > 60;
+            // Ganz unten kommt die Leiste wieder (04.10.2026): Der Platz unter der Fusszeile ist fuer sie freigehalten -
+            // ohne sie waere er ein Fingerbreit Leere. Dietmar: "Es koennte aber so bleiben, dass wenn man ganz unten ist die Leiste kommt."
+            const amEnde = y + window.innerHeight >= D.documentElement.scrollHeight - 24;
+            const weg = d > 0 && y > 60 && !amEnde;
             if(D.body.classList.contains('app-navi-weg') !== weg) D.body.classList.toggle('app-navi-weg', weg);
         }, { passive: true });
     });
@@ -47815,7 +47830,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Server', 'fas fa-server', 'Andere über den Internet-Link einladen', () => serverFensterOeffnen(), () => H.classList.contains('android-tunnel')],
         ['Darstellung', 'fas fa-palette', 'Sachlich oder verspielt, hell oder dunkel, eckig oder rund', () => einstellungenOeffnen('allgemein')],
         ['Rundgang', 'fas fa-route', 'Die wichtigsten Knöpfe erklärt', () => window.rundgangStarten && window.rundgangStarten()],
-        ['Info & Hilfe', 'fas fa-circle-info', (window.TRAINER_STAND ? 'Stand ' + window.TRAINER_STAND.nr + ' vom ' + window.TRAINER_STAND.datum + ' · Anleitung, Updates' : 'Anleitung, Version, Updates'), () => infoOeffnen()],
+        ['Info & Hilfe', 'fas fa-circle-info', (window.TRAINER_STAND ? 'Version ' + window.TRAINER_STAND.text + ' vom ' + window.TRAINER_STAND.datum + ' · Anleitung' : 'Anleitung, Version, Updates'), () => infoOeffnen()],
+        // Von Hand nach einem Update sehen (04.10.2026) - in der App ist der Reiter Update ausgeblendet, und das Fenster beim Start
+        // kommt nur einmal je Sitzung. githubOeffnen sagt auch, woran es haengt (kein Netz, GitHub bremst), oder dass alles aktuell ist.
+        ['Nach Update suchen', 'fas fa-cloud-arrow-down', 'Bei GitHub nachsehen, ob es eine neuere Fassung gibt', () => githubOeffnen()],
         // Dietmar: "Facebook Gruppe stimmt auch nicht ich habe keine Gruppe
         // noch nicht es ist nur die Seite oder einfach auch nur Facebook."
         ['Facebook', 'fab fa-facebook', 'Neuigkeiten rund ums Thema Amateurfunk', () => klick('facebookBtn')]
@@ -47828,6 +47846,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<span><b>' + e[0] + '</b><small id="appMehrUnter_' + i + '">' + e[2] + '</small></span></button>').join('')
         + '</div>';
     D.body.appendChild(mehr);
+    // Die Versionszeile ganz unten (04.10.2026): "Version 2.037 · 04.10.2026" unter dem Besucherzaehler, nur in der App.
+    tu(() => {
+        const f = D.querySelector('.footer-note');
+        if(!f || $('appStandZeile') || !window.TRAINER_STAND) return;
+        const z = D.createElement('div'); z.id = 'appStandZeile'; z.className = 'app-stand';
+        z.textContent = 'Version ' + window.TRAINER_STAND.text + ' · ' + window.TRAINER_STAND.datum;
+        z.setAttribute('role', 'button'); z.title = 'Info & Hilfe öffnen';
+        z.addEventListener('click', () => { try{ infoOeffnen(); infoAbschnittZeigen('daten'); }catch(e){} });
+        f.appendChild(z);
+    });
     mehr.querySelector('.am-schleier').addEventListener('click', () => mehrZu());
     mehr.addEventListener('click', e => {
         const z = e.target.closest('.am-zeile');
@@ -47939,7 +47967,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Ganz oben ist die untere Leiste immer da - auch wenn die Seite ohne
     // Scroll-Ereignis nach oben gesprungen ist (neue Ansicht, Runde vorbei).
-    function leisteOben(){ if((window.scrollY || 0) <= 60) D.body.classList.remove('app-navi-weg'); }
+    function leisteOben(){ const y = window.scrollY || 0; if(y <= 60 || y + window.innerHeight >= D.documentElement.scrollHeight - 24) D.body.classList.remove('app-navi-weg'); }
     function nachziehen(){ tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); tu(rundeHoehe); tu(sperreLoesen); tu(leisteOben); }
     nachziehen();
     setInterval(nachziehen, 1000);
