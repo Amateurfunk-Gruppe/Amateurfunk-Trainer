@@ -2125,8 +2125,8 @@
         html.android-app #durchsichtModal > div:first-of-type > div:first-child { flex: 0 0 auto; }
         html.android-app #durchsichtModal > div:first-of-type > div:nth-child(2) { flex: 1 1 auto; min-height: 0; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 1.4rem !important; }
         html.android-app #durchsichtModal > div:first-of-type > div:last-child { flex: 0 0 auto; padding-bottom: calc(0.8rem + env(safe-area-inset-bottom)) !important; }
-        html.android-app #durchsichtModal .btn.bl-neu { color: #16243a; }
-        html.android-app #durchsichtModal .btn.bl-loeschen { color: #a5281b; }
+        html.android-app #durchsichtModal .btn.bl-neu { color: #16243a !important; }
+        html.android-app #durchsichtModal .btn.bl-loeschen { color: #a5281b !important; }
         html.android-app body.dark #durchsichtModal .btn.bl-neu { color: #e6f0f8 !important; background: #10293b !important; border-color: #2f6a8f !important; }
         html.android-app body.dark #durchsichtModal .btn.bl-loeschen { color: #ff8a80 !important; background: #2a1414 !important; border-color: #7a2e2e !important; }
 
@@ -16034,7 +16034,7 @@ function favoriteAllResults(){
 }
 // Startet eine Lernrunde mit genau diesen Fragen. Aufgebaut wie "Lernbedarf",
 // deshalb zaehlen falsche Antworten ganz normal in Fehlerliste und Lernbedarf.
-function startQuestionSession(ids, label){
+function startQuestionSession(ids, label, startIndex){
     const list = (ids||[]).map(id => questionBank.find(q => q.id === id)).filter(Boolean);
     if(list.length === 0){ alert('Keine Fragen ausgewählt.'); return; }
     if (typeof examSimulatorMode !== 'undefined' && examSimulatorMode) {
@@ -16046,7 +16046,8 @@ function startQuestionSession(ids, label){
     isQuizActive = true; examFinished = false; examMode = false; showSidebar = true;
     currentPart = label || 'Merkliste';
     currentQuestions = list.map(q => prepareQuestion(q));
-    currentIndex = 0; answered = false; totalAnswered = 0; correctCount = 0;
+    // Optional: mitten in der Liste anfangen (Blaettern: ganzer Katalog, Start beim Lesezeichen).
+    currentIndex = (startIndex > 0) ? Math.min(startIndex, list.length - 1) : 0; answered = false; totalAnswered = 0; correctCount = 0;
     rundeGewertet = false;
     progress = {};
     currentQuestions.forEach(q => { progress[q.id] = { answered:false, correct:false }; });
@@ -18328,7 +18329,8 @@ function durchsichtLos(ab){
         return;
     }
     const start = Math.max(0, Math.min(ab, p.ids.length - 1));
-    startQuestionSession(p.ids.slice(start), DURCHSICHT_NAME);
+    // Der GANZE Katalog, nur der Start liegt beim Lesezeichen: Verlauf und Zaehler zeigen 191 von 571 und alles, was davor schon abgehakt ist.
+    startQuestionSession(p.ids, DURCHSICHT_NAME, start);
     durchsichtMerken(p.ids[start]);
 }
 
