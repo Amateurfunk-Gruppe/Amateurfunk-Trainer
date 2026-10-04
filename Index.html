@@ -1222,6 +1222,11 @@
         #appIss { position: fixed; left: 0; top: 0; z-index: 99999; pointer-events: none; display: none; transform-origin: center; will-change: transform, opacity; }
         html.android-app.stil-verspielt #appIss.fliegt { display: block; }
         #appIss svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+        /* Der OSCAR-Satellit fliegt mit CQ-Ruf durch den Schirm: fest, ueber allem, fasst nichts an */
+        #appSat { position: fixed; left: 0; top: 0; z-index: 99999; pointer-events: none; display: none; transform-origin: center; will-change: transform, opacity; }
+        html.android-app.stil-verspielt #appSat.fliegt { display: block; }
+        #appSat svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+        #appSat .sat-wellen { opacity: 0; }
         /* Der Astronaut winkt vom Rand herein */
         #appAstro { position: fixed; left: 0; top: 0; z-index: 99998; pointer-events: none; display: none; transition: transform 0.7s cubic-bezier(0.3, 1.25, 0.5, 1); }
         html.android-app.stil-verspielt #appAstro.da { display: block; }
@@ -1244,7 +1249,7 @@
         #appAstroBlase.zl::before { display: block; left: -8px; border-top: 0; border-right: 0; }
         #appAstroBlase.zr::before { display: block; right: -8px; border-left: 0; border-bottom: 0; }
         @media (prefers-reduced-motion: reduce) {
-            #roboBlase .rb-bild *, #appIss *, #appAstro * { animation: none !important; }
+            #roboBlase .rb-bild *, #appIss *, #appSat *, #appAstro * { animation: none !important; }
             #appAstro { transition: none; }
             #roboBlase .eb-deckel, #roboBlase .eb-zeile { display: none; }
         }
@@ -48305,18 +48310,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '</div>'
               + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>')
           // ISS-Ueberflug (04.10.2026)
-          + einstKasten('ISS & Astronaut', 'Ab und zu fliegt die Raumstation mit Ton quer über die Startseite – und manchmal winkt ein Astronaut seitlich herein und macht dir Mut. Nie in einer Runde, nie beim Vorlesen und nur im Stil Verspielt.',
+          + einstKasten('ISS, Astronaut & Satellit', 'Ab und zu fliegt die Raumstation mit Ton quer über die Startseite – manchmal winkt ein Astronaut seitlich herein und macht dir Mut, und manchmal ruft der OSCAR-Satellit „CQ“ im Vorbeiflug. Nie in einer Runde, nie beim Vorlesen und nur im Stil Verspielt.',
                 '<div class="app-seg" id="appIssSeg">'
               + [['viel', 'Oft'], ['an', 'Normal'], ['wenig', 'Selten'], ['aus', 'Aus']].map(f => '<button type="button" data-i="' + f[0] + '"' + (issRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appIssSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
-              + '<div class="app-unterzeile"><b>Ton</b><small>Rauschen, Brummen und Funk-Piepen – und die Funkgeräte-Stimme des Astronauten (sie folgt auch „Funki spricht“). Der Klang wandert von einem Ohr zum anderen, so wie die Station fliegt.</small></div>'
+              + '<div class="app-unterzeile"><b>Ton</b><small>Rauschen, Brummen und Funk-Piepen, die Funkgeräte-Stimme des Astronauten (sie folgt auch „Funki spricht“) und der CQ-Ruf des Satelliten in Morsezeichen. Der Klang wandert von einem Ohr zum anderen, so wie es fliegt.</small></div>'
               + '<div class="app-seg" id="appIssTonSeg">'
               + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-t="' + f[0] + '"' + ((issTonAn() ? 'an' : 'aus') === f[0] ? ' class="an"' : '')
                   + ' onclick="appIssTonSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
               + '<button type="button" class="app-probe" onclick="appIssProbe()"><i class="fas fa-satellite"></i> ISS vorbeifliegen lassen</button>'
-              + '<button type="button" class="app-probe" onclick="appAstroProbe()"><i class="fas fa-user-astronaut"></i> Astronaut winken lassen</button>')
+              + '<button type="button" class="app-probe" onclick="appAstroProbe()"><i class="fas fa-user-astronaut"></i> Astronaut winken lassen</button>'
+              + '<button type="button" class="app-probe" onclick="appSatProbe()"><i class="fas fa-satellite-dish"></i> OSCAR-Satellit fliegen lassen</button>')
           // Toene beim Tippen (01.10.2026)
           + einstKasten('Töne beim Tippen', 'Ein leises Plopp bei Knöpfen und Kacheln, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
                 '<div class="app-seg" id="appTippSeg">'
@@ -48502,6 +48508,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.appIssTonSetzen = v => { schreib('robo_iss_ton', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
     window.appIssProbe = () => { issUeberflug({ probe: true, stumm: true }); };
     window.appAstroProbe = () => { astroWinken({ probe: true }); };
+    window.appSatProbe = () => { satUeberflug({ probe: true, stumm: true }); };
     window.appFunkiProbe = () => {
         if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
         funkiSagt('Ich bin Funki. | ' + nameTon() + 'Schön, dass du da bist.', true);
@@ -49442,6 +49449,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         + '<ellipse cx="122" cy="34" rx="12" ry="10" fill="#1d3557"/><path d="M114 30q6-7 14-3" stroke="#fff" stroke-width="2" fill="none" opacity=".55" stroke-linecap="round"/>'
         + '</g>'
         + '<path class="eb-a eb-bogen" d="M162 28q8 6 0 12M168 24q12 10 0 20" stroke="#FFB547" fill="none"/>';
+    // Der OSCAR-Satellit in 160 x 100: goldener Koerper, zwei Sonnensegel, Stabantennen; die Lampe blinkt im Takt des Morsens
+    function satKoerper(){
+        const feld = x => '<rect x="' + x + '" y="32" width="44" height="34" fill="#2b5aa6" stroke="#9cbdf0" stroke-width="1"/>'
+            + '<path d="M' + (x + 14.7) + ' 32v34M' + (x + 29.3) + ' 32v34M' + x + ' 43.3h44M' + x + ' 54.7h44" stroke="#6f9be0" stroke-width=".8" fill="none"/>';
+        return '<path d="M48 49h14M98 49h14" stroke="#c9d2dc" stroke-width="3" stroke-linecap="round"/>'
+            + feld(4) + feld(112)
+            + '<path d="M80 28V9M71 30L57 15M89 30L103 15" stroke="#9fb3c8" stroke-width="1.8" stroke-linecap="round"/>'
+            + '<circle cx="80" cy="7.5" r="2.6" fill="#FFB547"/><circle cx="56" cy="14" r="2" fill="#9fb3c8"/><circle cx="104" cy="14" r="2" fill="#9fb3c8"/>'
+            + '<rect x="62" y="28" width="36" height="44" rx="5" fill="#d9b24a" stroke="#f2d78a" stroke-width="1.4"/>'
+            + '<rect x="68" y="34" width="24" height="16" rx="3" fill="#2d3b4a"/>'
+            + '<circle class="sat-lampe" cx="80" cy="42" r="4.2" fill="#FFB547"/>'
+            + '<rect x="66" y="56" width="28" height="11" rx="2.5" fill="#1d3557"/><text x="80" y="64.4" text-anchor="middle" font-size="7.4" font-weight="800" fill="#fff" font-family="sans-serif">OSCAR</text>'
+            + '<g class="sat-wellen" fill="none" stroke="#FFB547" stroke-width="2.4" stroke-linecap="round"><path d="M108 24q8-8 16 0"/><path d="M113 16q14-13 28 0"/></g>';
+    }
+    // Im Funk-ABC-Bild: Lampe und Wellen blinken von selbst
+    const satBildKoerper = () => satKoerper().replace('class="sat-lampe"', 'class="iss-licht"').replace('class="sat-wellen"', 'class="sat-wellen eb-bogen"');
     const ERKL_BILD = {
         cq: () => eb('<circle class="eb-ring" cx="120" cy="52" r="96"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:.95s"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:1.9s"/>'
             + '<path class="eb-l" d="M120 82V48M112 56l8-8 8 8"/><circle class="eb-fa" cx="120" cy="44" r="4.5"/><path class="eb-t" d="M110 82h20"/>'
@@ -49482,6 +49505,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<text class="eb-txt-g" x="120" y="24">−·−· −−·−</text><text class="eb-txt" x="120" y="90">CQ in Morsezeichen</text>'),
         iss: () => eb(ebRaum + '<g transform="translate(20 2)"><g class="eb-wackel">' + issKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">ISS · Rufzeichen NA1SS</text>'),
         astro: () => eb(ebRaum + ebAstro + '<text class="eb-txt" x="44" y="26" style="fill:#fff">DB1KM</text><text class="eb-txt" x="202" y="26" style="fill:#fff">DF4TR</text><text class="eb-txt" x="202" y="84" style="fill:#fff">KI5KFH</text>'),
+        oscar: () => eb(ebRaum + '<g transform="translate(40 4) scale(0.82)"><g class="eb-wackel">' + satBildKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">OSCAR · seit 1961 · „HI HI“ im 2-m-Band</text>'),
+        oscar7: () => eb(ebRaum + '<g transform="translate(40 4) scale(0.82)"><g class="eb-wackel">' + satBildKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">OSCAR 7 · 1974 · seit 2002 wieder da</text>'),
         jung: () => eb('<text class="eb-txt-g" x="62" y="14">Kirian · 9</text><text class="eb-txt-g" x="178" y="14">Maja · 14</text>'
             // links der Junge, rechts das Maedchen: jeder mit Handfunkgeraet, beide hupfen abwechselnd
             + '<g class="eb-hupf"><circle class="eb-l" cx="62" cy="38" r="11"/><path class="eb-t" d="M52 34q10-10 20 0"/>'
@@ -49558,12 +49583,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           html: 'Auch im All gibt es <b>Funkamateure</b>! <b>Dr. Ulf Merbold</b>, deutscher Physiker und ESA-Astronaut, trägt das Rufzeichen <b>DB1KM</b> – er flog 1983 mit dem Spacelab und später zur Raumstation Mir. <b>Thomas Reiter</b> (<b>DF4TR</b>) war auf der Mir und 2006 auf der <b>ISS</b>, <b>Matthias Maurer</b> (<b>KI5KFH</b>) 2021 und 2022. Manchmal sind Funkamateure von der ISS sogar live zu hören!',
           extra: [['Astronaut winkt', 'astro']],
           sprich: 'Auch im All gibt es Funkamateure! | Doktor Ulf Merbold, deutscher Physiker und E S A Astronaut, hat das Rufzeichen D-B-1-K-M. Er flog neunzehnhundertdreiundachtzig mit dem Spacelab und später zur Mir. | Thomas Reiter, D-F-4-T-R, war auf der Mir und auf der I S S. Und Matthias Maurer, K-I-5-K-F-H, funkte von der I S S.' },
+        { id: 'oscar', name: 'OSCAR', frage: 'Weißt du, dass Funkamateure eigene <b>Satelliten</b> haben? Tipp mich an – CQ aus dem All!',
+          kurz: 'Seit 1961 fliegen Satelliten von Funkamateuren – die <b>OSCAR</b>-Reihe.',
+          html: '<b>OSCAR</b> heißt „Orbiting Satellite Carrying Amateur Radio“. <b>OSCAR 1</b> startete am <b>12. Dezember 1961</b>, wog nur 4,5 kg und funkte „HI HI“ in Morse im 2-m-Band – nach etwa sieben Wochen verglühte er. Beim Vorbeiflug rutscht der Ton nach unten: der <b>Doppler-Effekt</b>.',
+          extra: [['Satellit fliegen lassen', 'sat']],
+          sprich: 'Oscar heißt: Orbiting Satellite Carrying Amateur Radio. | Oscar eins startete am zwölften Dezember neunzehnhunderteinundsechzig. Er wog nur viereinhalb Kilo und funkte Morsezeichen: Hi Hi, im Zwei Meter Band. Nach etwa sieben Wochen verglühte er. | Beim Vorbeiflug rutscht der Ton nach unten. Das ist der Doppler Effekt.' },
+        { id: 'oscar7', name: 'OSCAR 7', frage: 'Ein Satellit, der 21 Jahre nach seinem Ausfall wieder funkte? Tipp mich an – <b>OSCAR 7</b>!',
+          kurz: '<b>OSCAR 7</b> fiel 1981 aus und meldete sich 2002 zurück.',
+          html: '<b>OSCAR 7</b> (1974, mit Bauteilen von <b>AMSAT-DL</b>) fiel 1981 mit defekter Batterie aus – und meldete sich 2002 wie von Zauberhand zurück. Er funkt bis heute! Später kamen <b>OSCAR 10</b> und <b>13</b>; 13 baute AMSAT-Deutschland.',
+          extra: [['Satellit fliegen lassen', 'sat']],
+          sprich: 'Oscar sieben, von neunzehnhundertvierundsiebzig, fiel mit kaputter Batterie aus. | Im Jahr zweitausendzwei meldete er sich zurück, wie von Zauberhand. Er funkt bis heute! | Später kamen Oscar zehn und Oscar dreizehn. Dreizehn hat AMSAT Deutschland gebaut.' },
         { id: 'jung', name: 'Die Jüngsten', frage: 'Kirian ist erst 9 – Deutschlands jüngster Funkamateur! Bist du der Nächste? Tipp mich an.',
           frage2: 'Maja ist erst 14 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.',
           kurz: 'Kirian ist 9, Maja ist 14 – Deutschlands jüngste Funker. <b>Bist du der Nächste?</b>',
-          html: '<b>Kirian</b> ist erst <b>neun</b> Jahre alt und gilt als Deutschlands <b>jüngster Funkamateur</b>. <b>Maja</b> aus Bamberg ist <b>14</b> und Deutschlands <b>jüngste Funkamateurin</b> – ihre Lizenz hat sie schon mit zehn bekommen. Wer gut lernt, schafft die Prüfung auch als Kind. <b>Bist du der Nächste? Oder die Nächste?</b>',
+          html: '<b>Kirian</b> ist erst <b>neun</b> Jahre alt und gilt als Deutschlands <b>jüngster Funkamateur</b>. <b>Maja</b> aus Bamberg ist <b>14</b> und Deutschlands <b>jüngste Funkamateurin</b> – ihre Lizenz hat sie schon mit zehn bekommen. <b>Bist du der Nächste? Oder die Nächste?</b>',
           extra: [['Ich bin der Nächste!', 'naechste:er'], ['Ich bin die Nächste!', 'naechste:sie']],
-          sprich: 'Kirian ist erst neun Jahre alt und gilt als Deutschlands jüngster Funkamateur. | Maja aus Bamberg ist vierzehn und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen. | Wer gut lernt, schafft die Prüfung auch als Kind. Bist du der Nächste? Oder die Nächste?' },
+          sprich: 'Kirian ist erst neun Jahre alt und gilt als Deutschlands jüngster Funkamateur. | Maja aus Bamberg ist vierzehn und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen. | Bist du der Nächste? Oder die Nächste?' },
         { id: 'zahl', name: 'Funker in Deutschland', frage: 'Wie viele <b>Funkamateure</b> gibt es in Deutschland? Rate mal – tipp mich an!',
           kurz: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure.',
           html: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure mit gültiger Lizenz. Über <b>50 000</b> haben die <b>Klasse A</b>, gut <b>9 000</b> die <b>Klasse E</b> und gut <b>1 000</b> die Einsteigerklasse <b>N</b> – die wächst gerade kräftig. Über <b>33 000</b> sind im <b>DARC</b>. Du kannst bald einer von ihnen sein!',
@@ -49713,7 +49748,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { f: 'Wer ist <b>Maja</b> aus Bamberg?', r: 'Deutschlands jüngste Funkamateurin', x: ['Eine Astronautin auf der ISS', 'Funkis Schwester'],
           w: '<b>Maja</b> ist 14 und Deutschlands jüngste Funkamateurin – ihre Lizenz hat sie schon mit zehn bekommen. Bist du die Nächste?' },
         { f: 'Wie viele Funkamateure gibt es ungefähr in Deutschland?', r: 'Rund 61 000', x: ['Rund 600', 'Rund 6 Millionen'],
-          w: 'Rund <b>61 000</b> Funkamateure haben in Deutschland eine gültige Lizenz – und du kannst bald dazugehören.' }
+          w: 'Rund <b>61 000</b> Funkamateure haben in Deutschland eine gültige Lizenz – und du kannst bald dazugehören.' },
+        { f: 'Wofür steht <b>OSCAR</b>?', r: 'Orbiting Satellite Carrying Amateur Radio', x: ['Ein Filmpreis – aber für Funker', 'Oben Senden Chaos, Alles Rauscht'],
+          w: '<b>OSCAR</b> heißt „Orbiting Satellite Carrying Amateur Radio“ – ein Satellit mit Amateurfunk an Bord.' },
+        { f: 'Was funkte <b>OSCAR 1</b> im Dezember 1961?', r: 'Morsezeichen: „HI HI“', x: ['Ein Weihnachtslied', 'Den Wetterbericht'],
+          w: '<b>OSCAR 1</b> funkte „HI HI“ in Morse im 2-m-Band – rund drei Wochen, dann war die Batterie leer.' },
+        { f: 'Was war das Besondere an <b>OSCAR 7</b>?', r: 'Er meldete sich nach 21 Jahren zurück', x: ['Er flog zum Mond', 'Funki hat ihn gebaut'],
+          w: '<b>OSCAR 7</b> fiel 1981 aus, funkte 2002 plötzlich wieder und ist bis heute in Betrieb.' },
+        { f: 'Wie klingt ein Satellit beim Vorbeiflug?', r: 'Erst höher, dann tiefer (Doppler-Effekt)', x: ['Immer gleich hoch', 'Erst tiefer, dann höher – aber nur sonntags'],
+          w: 'Beim Näherkommen klingt der Ton höher, beim Entfernen tiefer: der <b>Doppler-Effekt</b>.' }
     ];
     const QUIZ_LOB = ['Volltreffer!', 'QSL – verstanden und bestätigt!', 'Glasklar, Lautstärke S9!', 'Richtig! Du hörst gut zu.', 'Wie ein DX: weit gedacht und getroffen!', 'Läuft bei dir!'];
     const QUIZ_AUSREDE = ['Autsch – das war wohl QRM in deinem Kopf!', 'Knister, knister – QRN im Gehirn!', 'Starkes QSB: Die Antwort kam und ging.', 'Das war nur Rauschen – kein Problem!',
@@ -49833,7 +49876,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     ];
     function issUeberflug(opt){
         opt = opt || {};
-        if(issLaeuft || !issEl.animate || !H.classList.contains('stil-verspielt') || !H.classList.contains('android-app') || D.hidden) return false;
+        if(issLaeuft || satLaeuft || !issEl.animate || !H.classList.contains('stil-verspielt') || !H.classList.contains('android-app') || D.hidden) return false;
         if(ruhigGewuenscht() && !opt.probe) return false;
         issLaeuft = true;
         const W = window.innerWidth, Hh = window.innerHeight, z = zf();
@@ -49867,7 +49910,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Wann kommt sie? Eigener Takt, unabhaengig von "Funki, dein Helfer"
     function issPruefen(jetzt){
-        if(issLaeuft || astroDa || issRegler() === 'aus' || robo.da || ruhigGewuenscht()) return;
+        if(issLaeuft || satLaeuft || astroDa || issRegler() === 'aus' || robo.da || ruhigGewuenscht()) return;
         if(lies('robo_tour_gesehen', '') !== '1' || lies('app_stil_gewaehlt', '') !== '1') return;
         if(jetzt - robo.beruehrt < 4000 || jetzt - (robo.letzter || 0) < 15000) return;
         const p = issPlan();
@@ -49875,7 +49918,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         robo.issRuhig = (robo.issRuhig || 0) + TAKT;
         if((robo.issZahl || 0) >= p.max || robo.issRuhig < robo.issWarte) return;
         robo.issZahl = (robo.issZahl || 0) + 1; robo.issRuhig = 0; robo.issWarte = zwischen(p.pause);
-        issUeberflug();
+        if(!(Math.random() < 0.4 && satUeberflug())) issUeberflug();       // etwa jeder dritte Ueberflug ist der OSCAR-Satellit
     }
 
 
@@ -49978,6 +50021,128 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         astroUhren.push(setTimeout(() => astroWeg(false), 700 + dauer));
         return true;
     }
+
+    // ================================================================
+    //  DER OSCAR-SATELLIT MIT CQ-RUF                         (04.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Baue mir den OSCAR Satellit mit Sound mit ein. Als Sound
+    //  stelle ich mir CQ Ruf vor." OSCAR 1 funkte 1961 "HI HI"; dieser hier
+    //  ruft dreimal "CQ" in Morsezeichen. Er fliegt in einem flachen Bogen
+    //  durch den Schirm, die Lampe blinkt im Takt der Zeichen, der Ton
+    //  wandert von Ohr zu Ohr und rutscht beim Vorbeiflug nach unten
+    //  (Doppler-Effekt). Gleiche Regeln und gleicher Takt wie die ISS:
+    //  Einstellungen -> Allgemein -> "ISS, Astronaut & Satellit" (Oft,
+    //  Normal, Selten, Aus; Ton). Etwa jeder dritte Ueberflug ist der
+    //  Satellit. Nur Stil Verspielt, nur Startseite, nie in einer Runde,
+    //  nie beim Vorlesen, nie bei "Animationen entfernen" (ausser zur Probe).
+    // ================================================================
+    const satEl = D.createElement('div');
+    satEl.id = 'appSat';
+    satEl.setAttribute('aria-hidden', 'true');
+    D.body.appendChild(satEl);
+    let satLaeuft = false;
+    const SAT_DAUER = 8800, SAT_EINHEIT = 0.07, SAT_START = 0.6;
+    // Drei Rufe "CQ" mit Wortabstand (7 Einheiten); t in Sekunden ab dem ersten Zeichen
+    function satPlan(einheit, wdh){
+        const cq = morsePlan('CQ', einheit), ev = []; let off = 0;
+        for(let k = 0; k < wdh; k++){ cq.ev.forEach(e => ev.push({ t: off + e.t, dauer: e.dauer })); off += cq.gesamt + 7 * einheit; }
+        return { ev: ev, gesamt: off - 7 * einheit };
+    }
+    // Der Klang. ctx und ziel von aussen, damit ein Test ihn auch ohne Lautsprecher rechnen kann.
+    function satKlang(ctx, links, d, kn, ziel){
+        const t0 = ctx.currentTime + 0.05, f0 = 1180;
+        let pan = null;
+        if(ctx.createStereoPanner){
+            pan = ctx.createStereoPanner(); kn.push(pan);
+            pan.pan.setValueAtTime(links ? -0.85 : 0.85, t0); pan.pan.linearRampToValueAtTime(links ? 0.85 : -0.85, t0 + d);
+            pan.connect(ziel);
+        }
+        const aus = pan || ziel;
+        // leise herein, in der Mitte am lautesten, dann leise hinaus
+        const huell = ctx.createGain(); kn.push(huell);
+        huell.gain.setValueAtTime(0, t0); huell.gain.linearRampToValueAtTime(0.2, t0 + d * 0.5); huell.gain.linearRampToValueAtTime(0, t0 + d);
+        huell.connect(aus);
+        // der Ton: beim Annaehern hoeher, danach tiefer (Doppler)
+        const o = ctx.createOscillator(); o.type = 'sine'; kn.push(o);
+        o.frequency.setValueAtTime(f0 * 1.05, t0); o.frequency.linearRampToValueAtTime(f0 * 1.04, t0 + d * 0.42);
+        o.frequency.exponentialRampToValueAtTime(f0 * 0.96, t0 + d * 0.6); o.frequency.linearRampToValueAtTime(f0 * 0.95, t0 + d);
+        // die Morsetaste: weich ein und aus, sonst knackt es
+        const taste = ctx.createGain(); taste.gain.value = 0; kn.push(taste);
+        satPlan(SAT_EINHEIT, 3).ev.forEach(e => {
+            const a = t0 + SAT_START + e.t, b = a + e.dauer;
+            taste.gain.setValueAtTime(0, a); taste.gain.linearRampToValueAtTime(1, a + 0.008);
+            taste.gain.setValueAtTime(1, b - 0.008); taste.gain.linearRampToValueAtTime(0, b);
+        });
+        o.connect(taste); taste.connect(huell); o.start(t0); o.stop(t0 + d + 0.05);
+        // dazu leises Rauschen wie aus einem Empfaenger
+        const n = Math.floor(ctx.sampleRate * 1.5), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
+        for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
+        const rs = ctx.createBufferSource(); rs.buffer = nb; rs.loop = true; kn.push(rs);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.8; kn.push(bp);
+        const rg = ctx.createGain(); rg.gain.value = 0.22; kn.push(rg);
+        rs.connect(bp); bp.connect(rg); rg.connect(huell); rs.start(t0); rs.stop(t0 + d + 0.05);
+    }
+    function satTonSpielen(links, d){
+        if(!issTonAn() || D.hidden || pruefungLaeuft() || wirdVorgelesen()) return;
+        const ctx = tonKontext();
+        if(!ctx) return;
+        tu(() => {
+            if(ctx.state === 'suspended') ctx.resume();
+            const kn = [], aus = ctx.createGain(); aus.gain.value = 0.9; aus.connect(ctx.destination); kn.push(aus);
+            satKlang(ctx, links, d, kn, aus);
+            setTimeout(() => kn.forEach(k => tu(() => k.disconnect())), Math.ceil(d * 1000) + 700);
+        });
+    }
+    const SAT_SPRUECHE = [
+        { t: 'Da! <b>OSCAR</b>! Der Funk-Satellit ruft: <b>CQ, CQ, CQ</b>!', s: 'Da! Oscar! Der Funk Satellit ruft: C Q, C Q, C Q!' },
+        { t: 'Hast du es gehört? Ein <b>CQ-Ruf</b> aus dem All – „Wer hört mich?“ Ich hab geantwortet!', s: 'Hast du es gehört? Ein C Q Ruf aus dem All. Wer hört mich? Ich habe geantwortet!' },
+        { t: 'Der allererste, <b>OSCAR 1</b>, funkte 1961 nur „HI“. Der hier ist gesprächiger!', s: 'Der allererste, Oscar eins, funkte neunzehnhunderteinundsechzig nur: Hi. Der hier ist gesprächiger!' },
+        { t: 'Hör auf die Tonhöhe: Sie rutscht beim Vorbeiflug nach unten – das ist der <b>Doppler-Effekt</b>!', s: 'Hör auf die Tonhöhe. Sie rutscht beim Vorbeiflug nach unten. Das ist der Doppler Effekt!' },
+        { t: 'Tipp mich an: Ich erzähl dir von den <b>OSCAR</b>-Satelliten!', s: 'Tipp mich an. Ich erzähl dir von den Oscar Satelliten!' }
+    ];
+    function satUeberflug(opt){
+        opt = opt || {};
+        if(satLaeuft || issLaeuft || !satEl.animate || !H.classList.contains('stil-verspielt') || !H.classList.contains('android-app') || D.hidden) return false;
+        if(ruhigGewuenscht() && !opt.probe) return false;
+        satLaeuft = true;
+        const W = window.innerWidth, Hh = window.innerHeight, z = zf();
+        const breite = Math.round(Math.min(W * 0.4, 168)), hoehe = breite * 0.62;           // Bildschirmpunkte
+        const dsek = SAT_DAUER / 1000;
+        satEl.style.width = px(breite);
+        satEl.innerHTML = '<svg viewBox="0 0 160 100" aria-hidden="true">' + satKoerper() + '</svg>';
+        satEl.classList.add('fliegt');
+        const links = Math.random() < 0.5;
+        // flacher Bogen ueber den oberen Teil des Schirms, mit sanftem Taumeln
+        const y0 = Hh * (0.28 + Math.random() * 0.16), y1 = Hh * (0.14 + Math.random() * 0.14), ym = Math.min(y0, y1) - Hh * 0.12;
+        const X = t => (links ? -breite * 0.7 : W + breite * 0.7) + (links ? 1 : -1) * (W + breite * 1.4) * t;
+        const Y = t => (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * ym + t * t * y1;
+        const Sk = t => 0.6 + 0.5 * Math.sin(Math.PI * t);
+        const R = t => (links ? 1 : -1) * (-16 + 32 * t) + 8 * Math.sin(2 * Math.PI * t);
+        const T = t => 'translate(' + ((X(t) - breite / 2) / z).toFixed(1) + 'px,' + ((Y(t) - hoehe / 2) / z).toFixed(1) + 'px) scale(' + Sk(t).toFixed(3) + ') rotate(' + R(t).toFixed(1) + 'deg)';
+        const kf = [0, 0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1].map(t => ({ offset: t, opacity: (t === 0 || t === 1) ? 0 : (t < 0.15 || t > 0.85 ? 0.7 : 1), transform: T(t) }));
+        let fertig = false;
+        const ende = () => { if(fertig) return; fertig = true; satEl.classList.remove('fliegt'); satEl.innerHTML = ''; satLaeuft = false; };
+        tu(() => { const anim = satEl.animate(kf, { duration: SAT_DAUER, easing: 'linear', fill: 'both' }); anim.onfinish = ende; });
+        setTimeout(ende, SAT_DAUER + 1500);
+        // Die Lampe und die Funkwellen am Satelliten blinken im Takt der Morsezeichen
+        tu(() => {
+            const ev = satPlan(SAT_EINHEIT, 3).ev, an = [{ offset: 0 }];
+            ev.forEach(e => { const a = (SAT_START + e.t) / dsek, b = (SAT_START + e.t + e.dauer) / dsek;
+                an.push({ offset: a, v: 0 }, { offset: a + 0.0004, v: 1 }, { offset: b, v: 1 }, { offset: b + 0.0004, v: 0 }); });
+            an.shift(); an.push({ offset: 1, v: 0 });
+            const lampe = satEl.querySelector('.sat-lampe'), wellen = satEl.querySelector('.sat-wellen');
+            if(lampe) lampe.animate([{ offset: 0, opacity: 0.18 }].concat(an.map(k => ({ offset: k.offset, opacity: k.v ? 1 : 0.18 }))), { duration: SAT_DAUER, easing: 'linear', fill: 'both' });
+            if(wellen) wellen.animate([{ offset: 0, opacity: 0 }].concat(an.map(k => ({ offset: k.offset, opacity: k.v ? 0.95 : 0 }))), { duration: SAT_DAUER, easing: 'linear', fill: 'both' });
+        });
+        tu(() => satTonSpielen(links, dsek));
+        // Danach lugt Funki herein und sagt etwas dazu (bei Wenig nicht)
+        if(!opt.stumm) setTimeout(() => tu(() => {
+            if(astroDa || robo.da || !roboDarf() || wirdVorgelesen() || !mehrSprechen()) return;
+            const e = zufall(SAT_SPRUECHE);
+            kurzauftritt(e.t, { sprich: e.s, sprichSofort: true, hilfe: () => erklHilfe('oscar') });
+        }), SAT_DAUER * 0.8);
+        return true;
+    }
     function roboTat(t){
         if(t === 'weiter') tourSchritt(robo.schritt + 1);
         else if(t === 'tipp') tippZeigen();
@@ -49992,6 +50157,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(t.indexOf('morse:') === 0) morseSpielen(t.slice(6));
         else if(t === 'quiz') quizStarten();
         else if(t === 'astro'){ roboHeim(true); setTimeout(() => tu(() => astroWinken({ probe: true })), 700); }
+        else if(t === 'sat'){ roboHeim(true); setTimeout(() => tu(() => satUeberflug({ probe: true })), 700); }
         else if(t.indexOf('naechste:') === 0) naechsteAntwort(t.slice(9));
         else if(t.indexOf('qz:') === 0) quizAntwort(parseInt(t.slice(3), 10));
         // Rundgang, Teil 2: die Werkzeuge - oder gleich zum Schluss
@@ -50819,7 +50985,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!roboDarf()){ robo.frei = 0; tu(() => begleiten(jetzt0)); return; }
         robo.fensterEl = null;
         tu(() => issPruefen(jetzt0));                      // die ISS hat ihren eigenen Takt (04.10.2026)
-        if(issLaeuft || astroDa) return;
+        if(issLaeuft || satLaeuft || astroDa) return;
         if(lies('app_stil_gewaehlt', '') !== '1'){ robo.frei = 0; return; }
         if(!tippsAn()){ robo.nachRunde = false; return; }
         const t = tagK(), jetzt = Date.now();
@@ -50890,7 +51056,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                         erklaere: id => erklaeren(id), abc: () => abcMenue(), quiz: () => quizStarten(), quizAntwort: i => quizAntwort(i), morse: w => morseSpielen(w),
                         erklaert: () => ERKLAERT.map(e => e.id), redeText: (h, m) => redeText(h, m),
                         erklFragen: () => ERKL_FRAGEN.slice(), peek: t => kurzauftritt(t, ERKL_PEEK[t] ? { hilfe: () => erklHilfe(ERKL_PEEK[t]), sprich: true } : {}),
-                        astro: o => astroWinken(o), astroDa: () => astroDa, astroWeg: () => astroWeg(true), iss: o => issUeberflug(o), issLaeuft: () => issLaeuft, _issKlang: (ctx, links, d, kn, ziel) => issKlang(ctx, links, d, kn, ziel),
+                        astro: o => astroWinken(o), astroDa: () => astroDa, astroWeg: () => astroWeg(true), iss: o => issUeberflug(o), issLaeuft: () => issLaeuft || satLaeuft, sat: o => satUeberflug(o), satLaeuft: () => satLaeuft, satPlan: (e, w) => satPlan(e, w),
+                        _satKlang: (ctx, links, d, kn, ziel) => satKlang(ctx, links, d, kn, ziel), _issKlang: (ctx, links, d, kn, ziel) => issKlang(ctx, links, d, kn, ziel),
                         regler: () => ({ helfer: helferRegler(), stimme: stimmeRegler(), iss: issRegler(), issTon: issTonAn(), mehr: mehrSprechen(), plan: plan(), issPlan: issPlan() }),
                         zustand: () => ({ da: robo.da, modus: robo.modus, ort: robo.ort, schritt: robo.schritt }) };
 
