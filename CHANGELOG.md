@@ -12,7 +12,7 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 39 · 05.10.2026
+Stand 40 · 05.10.2026
 
 ### Hinzugefügt
 - Android-App, neue Kachel „Match“ unter „Üben“ (jetzt sechs statt fünf – kein Loch mehr im Raster; ist eine Kachel ausgeblendet, nimmt die letzte die ganze Breite): Wischen wie bei Tinder. Jede Karte zeigt oben die Frage (mit Bild, wenn es eins gibt) und unten EINE Antwort – nach rechts wischen heißt „die Antwort ist richtig“, nach links „falsch“ (oder die Knöpfe darunter). Statt vier Antworten gibt es nur zwei Möglichkeiten. Am Anfang erklärt ein Bild das Wischen, dann wählt man ein Thema: Alles gemischt, Prüfungsfragen (bei Klasse N alle 571), Q-Gruppen & Abkürzungen, Morsezeichen, Landeskenner (51, abgeglichen mit BD302 bis BD318), Stecker (mit den Katalogbildern) und Einheiten & Formeln. Bei N → E, E → A und N → A gibt es nur Technik: die Prüfungsfragen des Katalogs (dort nur Technik) und Einheiten & Formeln. Wer danebenliegt, sieht die richtige Antwort; 20 Karten je Runde, am Ende Ergebnis, Bestleistung je Thema und die verpassten Karten. Danebengegangene Prüfungsfragen kommen unter „Fehler üben“ und lassen sich gleich als normale Runde nachüben; der Lernfortschritt (gelernt) bleibt unberührt.
@@ -165,6 +165,7 @@ Stand 39 · 05.10.2026
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Android-App, Match, Morsezeichen: Das CW-Signal wird jetzt bei jeder Karte sicher abgespielt – am Handy blieb es teils stumm, weil der Ton erst nach einem Tipp freigegeben wird (jetzt schon beim Tipp auf das Thema). Liegt das Swipe-Tutorial darüber, kommt der Ton, sobald es geschlossen ist. Der Knopf darunter heißt „Erneut abspielen“
 - Android-App, Stil Verspielt: Während Match oder das Funk-Logbuch offen ist, kommt Funki nicht mehr auf die Startseite darunter – man hörte ihn sprechen, sah ihn aber nicht. Die ISS fliegt weiter durch
 - Android-App: Die Zurück-Taste des Handys beendet jetzt den Rundgang („Willkommen im Amateurfunk-Trainer – Schritt 1 von 12“). Bisher ging sie an ihm vorbei.
 - Android-App: Auf schmalen Handys (360 Punkte und weniger) stand oben „Amateurfunk-Tr…“ – die Schrift des Titels wird dort etwas kleiner, der Name steht wieder ganz da.

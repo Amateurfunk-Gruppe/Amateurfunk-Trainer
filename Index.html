@@ -23131,7 +23131,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 39, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 40, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -48250,6 +48250,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
 
     function los(thema){
+        klangEntsperren();
         const k = THEMEN[thema].karten(RUNDE).filter(Boolean);
         if(!k.length){ start(); return; }
         spiel = { thema, karten: k, i: 0, richtig: 0, fehl: [], warten: false };
@@ -48308,12 +48309,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(code){
             const ziel = el.querySelector(k.grossMorse ? '.ks-oben' : '.ks-unten');
             const z = D.createElement('div'); z.className = 'ks-hoer-zeile';
-            z.innerHTML = '<button type="button" class="ks-hoer" aria-label="Morsezeichen anhören"><i class="fas fa-volume-high"></i> Anhören</button>';
+            z.innerHTML = '<button type="button" class="ks-hoer" aria-label="Morsezeichen erneut abspielen"><i class="fas fa-volume-high"></i> Erneut abspielen</button>';
             ziel.appendChild(z);
             const b = z.querySelector('.ks-hoer');
             b.addEventListener('click', ev => { ev.stopPropagation(); morseKlang(code, b); });
             const nr = spiel.i;
-            setTimeout(() => { if(spiel && spiel.i === nr && !spiel.warten) morseKlang(code, b); }, 350);
+            // Immer abspielen - liegt noch das Swipe-Tutorial darueber, erst wenn es weg ist
+            const spielen = () => { if(spiel && spiel.i === nr && !spiel.warten) morseKlang(code, b); };
+            if(el.querySelector('.ks-tut')) tutDanach = spielen;
+            else setTimeout(spielen, 350);
         }
     }
 
@@ -48384,9 +48388,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         });
     }
     const tutEntfernen = () => tu(() => el.querySelectorAll('.ks-tut').forEach(x => x.remove()));
+    let tutDanach = null;
     function tutWeg(){
         const d = el && el.querySelector('.ks-tut');
         if(!d) return;
+        klangEntsperren();
+        const f = tutDanach; tutDanach = null;
+        if(f) setTimeout(f, 400);
         d.classList.add('weg');
         setTimeout(() => tu(() => d.remove()), 320);
     }
@@ -48399,6 +48407,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         klang.teile = [];
         if(klang.zeit){ clearTimeout(klang.zeit); klang.zeit = null; }
         tu(() => el.querySelectorAll('.ks-hoer.spielt').forEach(b => b.classList.remove('spielt')));
+    }
+    // Der Ton darf am Handy nur nach einem Tipp anlaufen: den Klang-Kontext darum direkt im Tipp anlegen bzw. wecken
+    function klangEntsperren(){
+        tu(() => {
+            const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+            const ctx = klang.ctx || (klang.ctx = new C());
+            if(ctx.state === 'suspended') ctx.resume();
+            // ein stummer Mini-Ton schaltet die Ausgabe sicher frei
+            const o = ctx.createOscillator(), g = ctx.createGain(); g.gain.value = 0; o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.01);
+        });
     }
     function morseKlang(code, knopf){
         klangStopp();
@@ -48427,6 +48445,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function antwort(sagtRichtig){
         if(!spiel || spiel.warten) return;
+        klangEntsperren();
         tutWeg();
         const k = spiel.karten[spiel.i];
         const karte = el.querySelector('.ks-karte');
