@@ -53,6 +53,7 @@
                     localStorage.setItem('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 else if(ds === 'dunkel') localStorage.setItem('theme', 'dark');
                 else if(ds === 'hell') localStorage.setItem('theme', 'light');
+                else if({ gruen: 1, blau: 1, orange: 1, grau: 1 }[ds]) localStorage.setItem('theme', { gruen: 'green', blau: 'blue', orange: 'orange', grau: 'grey' }[ds]);
             }catch(e){ document.documentElement.classList.add('stil-sachlich'); }
             // Hat die App cloudflared dabei, gibt es auch den Internet-Link.
             if(/AmateurfunkTrainerApp Tunnel/.test(navigator.userAgent)) document.documentElement.classList.add('android-tunnel');
@@ -1268,6 +1269,35 @@
         html.android-app.stil-verspielt #appHeute .ah-onair b { display: none !important; }
         html.android-app.stil-verspielt #appHeute .ah-onair.aus { filter: none !important; opacity: 1 !important; }
         html.android-app.stil-verspielt #appHeute .ah-onair.aus .oa-schild { background: #3B4A63; color: #C9D3E3; box-shadow: none; }
+
+        /* Farben wie am PC (P41): Gruen, Blau, Orange, Blaugrau - fuer beide Stile der App */
+        html.android-app body.green { --s-bg: #eef8f2; --s-fl2: #e0f1e8; --s-rand: #c3e0cf; --s-rand2: #a9d1ba; --s-navi: #f7fcf9; --s-text: #1b3527; --s-text2: #4f6e5a; }
+        html.android-app.stil-sachlich body.green { --s-haupt: #1d6b44; --s-akzent: #1f8a55; --s-akzent-w: rgba(31,138,85,.12); }
+        html.android-app.stil-verspielt body.green { --s-haupt: #1FA866; --s-haupt2: #178A55; --s-haupt-tief: #0F6B40; --s-akzent: #178A55; --s-akzent-w: rgba(31,168,102,.16); --s-t: #1FA866; }
+        html.android-app body.blue { --s-bg: #eaf3fb; --s-fl2: #dfeaf7; --s-rand: #c3d9ea; --s-rand2: #a7c5e0; --s-navi: #f6faff; --s-text: #16324a; --s-text2: #4a6680; }
+        html.android-app.stil-sachlich body.blue { --s-haupt: #1d4f8a; --s-akzent: #2b6cb0; --s-akzent-w: rgba(43,108,176,.12); }
+        html.android-app.stil-verspielt body.blue { --s-haupt: #2B7BD6; --s-haupt2: #1F63B5; --s-haupt-tief: #164C8C; --s-akzent: #1F63B5; --s-akzent-w: rgba(43,123,214,.16); --s-t: #2B7BD6; }
+        html.android-app body.orange { --s-bg: #fdf3e7; --s-fl2: #faeada; --s-rand: #ecd2b4; --s-rand2: #e0bb92; --s-navi: #fffaf4; --s-text: #4d2e12; --s-text2: #7a5534; }
+        html.android-app.stil-sachlich body.orange { --s-haupt: #a4501a; --s-akzent: #c8611f; --s-akzent-w: rgba(200,97,31,.12); }
+        html.android-app.stil-verspielt body.orange { --s-haupt: #F07A1E; --s-haupt2: #D9621A; --s-haupt-tief: #A84A12; --s-akzent: #D9621A; --s-akzent-w: rgba(240,122,30,.16); --s-t: #F07A1E; }
+        html.android-app body.grey { --s-bg: #e9edf2; --s-fl2: #e1e6ed; --s-rand: #c9d1dc; --s-rand2: #b2bdcb; --s-navi: #f5f7fa; --s-text: #1c2433; --s-text2: #4b5768; }
+        html.android-app.stil-sachlich body.grey { --s-haupt: #3b4a63; --s-akzent: #52657f; --s-akzent-w: rgba(82,101,127,.12); }
+        html.android-app.stil-verspielt body.grey { --s-haupt: #5A6F8E; --s-haupt2: #4A5D79; --s-haupt-tief: #3B4A63; --s-akzent: #4A5D79; --s-akzent-w: rgba(90,111,142,.16); --s-t: #5A6F8E; }
+        html.android-app body.green, html.android-app body.blue, html.android-app body.orange, html.android-app body.grey { background: var(--s-bg) !important; }
+        /* In der Frage die Farbe wie am PC: der Fragenkasten getoent, Antworten weiss, Rahmen in der Farbe */
+        html.android-app body.green .question-area, html.android-app body.green #questionContainer .question-area { background: #e0f1e8 !important; border-color: #c3e0cf !important; }
+        html.android-app body.blue .question-area, html.android-app body.blue #questionContainer .question-area { background: #dfeaf7 !important; border-color: #c3d9ea !important; }
+        html.android-app body.orange .question-area, html.android-app body.orange #questionContainer .question-area { background: #faeada !important; border-color: #ecd2b4 !important; }
+        html.android-app body.grey .question-area, html.android-app body.grey #questionContainer .question-area { background: #e1e6ed !important; border-color: #c9d1dc !important; }
+        html.android-app body.green .question-area .q-text-row, html.android-app body.green .question-area #optionsContainer { background: #e0f1e8 !important; }
+        html.android-app body.blue .question-area .q-text-row, html.android-app body.blue .question-area #optionsContainer { background: #dfeaf7 !important; }
+        html.android-app body.orange .question-area .q-text-row, html.android-app body.orange .question-area #optionsContainer { background: #faeada !important; }
+        html.android-app body.grey .question-area .q-text-row, html.android-app body.grey .question-area #optionsContainer { background: #e1e6ed !important; }
+        html.android-app body.green .option, html.android-app body.blue .option, html.android-app body.orange .option, html.android-app body.grey .option { background: #fff; }
+        html.android-app body.green .option { border-color: #c3e0cf; }
+        html.android-app body.blue .option { border-color: #c3d9ea; }
+        html.android-app body.orange .option { border-color: #ecd2b4; }
+        html.android-app body.grey .option { border-color: #c9d1dc; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23204,7 +23234,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 51, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 54, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -47864,6 +47894,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         html.android-app body.dark #kartenSpiel .ks-loesung { background: #121a33; }
         #kartenSpiel .ks-karte.falsch .ks-loesung { display: flex; }
         #kartenSpiel .ks-loesung .ks-urteil { font-size: 15px; font-weight: 800; color: var(--s-rot, #F2375A); margin-bottom: 10px; }
+        #kartenSpiel .ks-karte.gut .ks-loesung .ks-urteil { color: var(--s-gruen-tief, #11924F); font-size: 18px; }
+        html.android-app body.dark #kartenSpiel .ks-karte.gut .ks-loesung .ks-urteil { color: var(--s-gruen, #34E089); }
         #kartenSpiel .ks-loesung .ks-lfrage { font-size: 14px; color: var(--s-text2, #456); line-height: 1.4; margin-bottom: 10px; }
         #kartenSpiel .ks-loesung .ks-wahr-kopf { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-gruen-tief, #11924F); }
         html.android-app body.dark #kartenSpiel .ks-loesung .ks-wahr-kopf { color: var(--s-gruen, #34E089); }
@@ -48127,6 +48159,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['EMVU', 'Elektromagnetische Verträglichkeit in der Umwelt', 'regel', 'emv', ['EMVG']], ['EMVG', 'Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln', 'regel', 'emv', ['EMVU']],
         ['IBP', 'Internationales Bakenprojekt', 'regel']
     ];
+    // Englische Langformen fuer die Aufloesung (wo die Bedeutung sie nicht schon in Klammern hat)
+    const ABK_EN = { SSB: 'Single Side Band', LSB: 'Lower Side Band', USB: 'Upper Side Band', FM: 'Frequency Modulation', AM: 'Amplitude Modulation',
+        DSB: 'Double Side Band', RTTY: 'Radio Teletype', PSK: 'Phase Shift Keying', SWR: 'Standing Wave Ratio', PEP: 'Peak Envelope Power',
+        ERP: 'Effective Radiated Power', EIRP: 'Equivalent Isotropic Radiated Power', RIT: 'Receiver Incremental Tuning', VFO: 'Variable Frequency Oscillator',
+        VOX: 'Voice Operated Transmit', AGC: 'Automatic Gain Control', ALC: 'Automatic Level Control', BFO: 'Beat Frequency Oscillator',
+        VCO: 'Voltage Controlled Oscillator', CTCSS: 'Continuous Tone Coded Squelch System', DTMF: 'Dual Tone Multi Frequency', MUF: 'Maximum Usable Frequency',
+        LUF: 'Lowest Usable Frequency', BCI: 'Broadcast Interference', TVI: 'Television Interference', EME: 'Earth–Moon–Earth', FSK: 'Frequency Shift Keying',
+        APRS: 'Automatic Packet Reporting System', PM: 'Phase Modulation', ATV: 'Amateur Television', CQ: 'seek you', DX: 'distance', TNX: 'thanks',
+        WX: 'weather', ANT: 'antenna', PWR: 'power', RIG: 'rig', NR: 'number', SIG: 'signal', RPRT: 'report', CW: 'Continuous Wave', DMR: 'Digital Mobile Radio',
+        IARU: 'International Amateur Radio Union', ITU: 'International Telecommunication Union', NF: '', HF: '', EMV: '' };
     const ABK_OHNE_CW = ['MAYDAY', 'MEZ', 'MESZ', 'ARDF', 'OSCAR', 'IRC', 'MOE'];
     const ABK_GRUPPE = { cw: 'CW & Funk', ruf: 'Rufzeichenzusatz', art: 'Betriebsart', tech: 'Technik', regel: 'Regeln & Stellen' };
     // Bei den Aufstockungen (nur Technik) nur Betriebsarten und Technik-Kuerzel
@@ -48140,7 +48182,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const verwL = (verw || []).map(v => alle.find(b => b[0] === v)).filter(b => b && passt(b));
         const falsch = verwL.length && Math.random() < 0.6 ? verwL : andere;
         const art = 'Abkürzung · ' + ABK_GRUPPE[gr];
-        const merk = kz + ' – ' + bed + '.';
+        const en = ABK_EN[kz];
+        const merk = kz + ' – ' + bed + (en && bed.indexOf('(') < 0 ? ' (englisch: ' + en + ')' : '') + '.';
         if(Math.random() < 0.65){
             const k = paar(null, 'abk', art, 'Was bedeutet', kz, bed, falsch.map(b => b[1]), merk);
             // In Telegrafie gebraeuchliche Kuerzel auch als Morsezeichen mit Ton (Dietmar: "Es betrifft vor allem Abkuerzungen und
@@ -48341,6 +48384,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, tippe unten auf <b>Richtig</b> – stimmt sie nicht, auf <b>Falsch</b>. Ein kurzer Wisch mit dem Finger geht auch.</div>'
           + '<label class="ks-schalter ks-tut-an"><span>Swipe-Tutorial vor der ersten Karte<small>zeigt noch einmal, wie das Wischen geht</small></span>'
           + '<button type="button" role="switch" aria-checked="' + (tutVerstanden() ? 'false' : 'true') + '" aria-label="Swipe-Tutorial ein oder aus"><i></i></button></label>'
+          + '<label class="ks-schalter ks-auf-an"><span>Auflösung nach jeder Karte<small>auch bei richtig: was es bedeutet – dann mit „Weiter“</small></span>'
+          + '<button type="button" role="switch" aria-checked="' + (aufloesungAn() ? 'true' : 'false') + '" aria-label="Auflösung ein oder aus"><i></i></button></label>'
           + (nurTechnik() ? '' : '<label class="ks-schalter ks-erw-an"><span>Erweitert<small>auch Q-Gruppen und Landeskenner, die in der Prüfung nicht vorkommen</small></span>'
           + '<button type="button" role="switch" aria-checked="' + (erweitert() ? 'true' : 'false') + '" aria-label="Erweitert ein oder aus"><i></i></button></label>')
           + '<div class="ks-themen-kopf">Thema wählen</div>'
@@ -48350,6 +48395,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      + '<small>' + esc(th.unter(n)) + (best ? ' · ★ ' + best : '') + '</small></button>';
             }).join('') + '</div>';
         el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => los(b.dataset.thema)));
+        const auf = el.querySelector('.ks-auf-an');
+        auf.addEventListener('click', ev => {
+            ev.preventDefault();
+            const b = auf.querySelector('button'), jetztAn = b.getAttribute('aria-checked') !== 'true';
+            b.setAttribute('aria-checked', jetztAn ? 'true' : 'false');
+            schreib(aufKey(), jetztAn ? '1' : '0');
+        });
         const erw = el.querySelector('.ks-erw-an');
         if(erw) erw.addEventListener('click', ev => {
             ev.preventDefault();
@@ -48473,6 +48525,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
 
     // ---------- Swipe-Tutorial ueber der ersten Karte ----------
+    const aufKey = () => 'karten_aufloesung_' + benutzerK();
+    const aufloesungAn = () => lies(aufKey(), '1') === '1';          // Standard: an
     const tutKey = () => 'karten_wisch_verstanden_' + benutzerK();
     const tutVerstanden = () => lies(tutKey(), '') === '1';
     function tutHand(seite){
@@ -48572,36 +48626,45 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const karte = el.querySelector('.ks-karte');
         const gut = (sagtRichtig === k.wahr);
         spiel.warten = true;
-        if(gut){
-            spiel.richtig++;
+        if(gut) spiel.richtig++;
+        else {
+            spiel.fehl.push(k);
+            // Pruefungsfragen, die danebengingen, kommen in "Fehler ueben" - der Lernfortschritt bleibt unberuehrt
+            if(k.qid) tu(() => { if(!errorList.includes(k.qid)){ errorList.push(k.qid); saveErrors(); } });
+        }
+        // Richtig und Aufloesung aus: die Karte fliegt gleich weiter (wie bisher)
+        if(gut && !aufloesungAn()){
             const h = el.querySelector('.ks-hinweis');
             h.className = 'ks-hinweis gut';
             h.textContent = k.wahr ? '✓ Richtig!' : '✓ Richtig – die Antwort stimmt nicht.' + (k.richtigHtml && !k.fahne ? '' : ' Richtig wäre: ' + k.richtig + (k.fahne ? ' ' + fahne(k.richtig) : ''));
             weg(karte, sagtRichtig ? 1 : -1, k.wahr ? 380 : 1300);
-        } else {
-            spiel.fehl.push(k);
-            // Pruefungsfragen, die danebengingen, kommen in "Fehler ueben" - der Lernfortschritt bleibt unberuehrt
-            if(k.qid) tu(() => { if(!errorList.includes(k.qid)){ errorList.push(k.qid); saveErrors(); } });
-            karte.style.transform = '';
-            karte.querySelector('.ks-marke.ja').style.opacity = 0; karte.querySelector('.ks-marke.nein').style.opacity = 0;
-            karte.classList.add('zurueck', 'falsch');
-            const frageKurz = k.gross !== undefined ? k.frage + ' ' + k.gross + '?' : k.frage;
-            karte.querySelector('.ks-loesung').innerHTML =
-                '<div class="ks-urteil">' + (k.wahr ? '✗ Doch – diese Antwort ist richtig.' : '✗ Diese Antwort ist falsch.') + '</div>'
-              + '<div class="ks-lfrage">' + esc(frageKurz) + '</div>'
-              + '<div class="ks-wahr-kopf">Richtig ist</div><div class="ks-wahr">' + richtigHtml(k) + '</div>'
-              + (k.merk ? '<div class="ks-merk">' + esc(k.merk) + '</div>' : '')
-              + '<div class="ks-tipp">Antippen oder Weiter</div>';
-            el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-weiter">Weiter</button>';
-            // Morse: das richtige Zeichen noch einmal vorspielen
-            if(k.morse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.richtig); }, 300);
-            else if(k.grossMorse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.gross); }, 300);
-            // Nach dem Wischen kommt beim Loslassen noch ein Klick auf die Karte - der (und ein schneller Doppeltipp) darf die Loesung nicht gleich ueberspringen
-            const ab = Date.now() + 450;
-            const weiter = () => { if(spiel && spiel.warten && Date.now() >= ab) naechste(); };
-            el.querySelector('.ks-weiter').addEventListener('click', weiter);
-            karte.addEventListener('click', weiter);
+            return;
         }
+        // Die Aufloesung - bei falsch immer, bei richtig, wenn der Schalter an ist (Dietmar: "Es soll nach dem Wischen auch
+        // eine Aufloesung kommen, was es bedeutet." - "Gut waere, wenn man das ein- und ausschalten koennte.")
+        karte.style.transform = '';
+        karte.querySelector('.ks-marke.ja').style.opacity = 0; karte.querySelector('.ks-marke.nein').style.opacity = 0;
+        karte.classList.add('zurueck', 'falsch');
+        karte.classList.toggle('gut', gut);
+        tu(() => { const h = el.querySelector('.ks-hinweis'); h.className = 'ks-hinweis'; h.textContent = ''; });
+        const frageKurz = k.gross !== undefined ? k.frage + ' ' + k.gross + '?' : k.frage;
+        const urteil = gut ? (k.wahr ? '✓ Richtig!' : '✓ Richtig – diese Antwort stimmt nicht.')
+                           : (k.wahr ? '✗ Doch – diese Antwort ist richtig.' : '✗ Diese Antwort ist falsch.');
+        karte.querySelector('.ks-loesung').innerHTML =
+            '<div class="ks-urteil">' + urteil + '</div>'
+          + '<div class="ks-lfrage">' + esc(frageKurz) + '</div>'
+          + '<div class="ks-wahr-kopf">' + (k.gross !== undefined && !k.grossMorse && /bedeut/i.test(k.frage) ? 'Das bedeutet' : k.kuerzel ? 'Die Abkürzung' : 'Richtig ist') + '</div><div class="ks-wahr">' + richtigHtml(k) + '</div>'
+          + (k.merk ? '<div class="ks-merk">' + esc(k.merk) + '</div>' : '')
+          + '<div class="ks-tipp">Antippen oder Weiter</div>';
+        el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-weiter">Weiter</button>';
+        // Morse: das richtige Zeichen noch einmal vorspielen
+        if(k.morse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.richtig); }, 300);
+        else if(k.grossMorse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.gross); }, 300);
+        // Nach dem Wischen kommt beim Loslassen noch ein Klick auf die Karte - der (und ein schneller Doppeltipp) darf die Loesung nicht gleich ueberspringen
+        const ab = Date.now() + 450;
+        const weiter = () => { if(spiel && spiel.warten && Date.now() >= ab) naechste(); };
+        el.querySelector('.ks-weiter').addEventListener('click', weiter);
+        karte.addEventListener('click', weiter);
     }
     function weg(karte, richtung, warte){
         setTimeout(() => {
@@ -49357,31 +49420,38 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // (stilSetzen: 'light' oder 'dark'), damit alles, was den Dark Mode
     // schon kennt - die Zeichnungen "kraeftig weiss" zum Beispiel -, so
     // bleibt, wie es ist.
+    const APP_FARBEN = { gruen: 'green', blau: 'blue', orange: 'orange', grau: 'grey' };
     function designIst(){
         const d = lies('app_design', '');
-        if(d === 'hell' || d === 'dunkel' || d === 'system') return d;
+        if(d === 'hell' || d === 'dunkel' || d === 'system' || APP_FARBEN[d]) return d;
         return lies('theme', 'light') === 'dark' ? 'dunkel' : 'hell';
     }
     const dunkelAbfrage = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     function designAnwenden(){
         const d = designIst();
         const dunkel = d === 'dunkel' || (d === 'system' && !!(dunkelAbfrage && dunkelAbfrage.matches));
+        if(APP_FARBEN[d] && typeof window.stilSetzen === 'function'){ window.stilSetzen(APP_FARBEN[d]); return; }
         if(typeof window.stilSetzen === 'function') window.stilSetzen(dunkel ? 'dark' : 'light');
         else D.body.classList.toggle('dark', dunkel);
     }
     function designSetzenApp(d){
-        if(d !== 'hell' && d !== 'dunkel' && d !== 'system') d = 'hell';
+        if(d !== 'hell' && d !== 'dunkel' && d !== 'system' && !APP_FARBEN[d]) d = 'hell';
         schreib('app_design', d);
         designAnwenden(); tu(einstNachziehen); tu(nachziehen);
     }
     window.appDesignSetzen = designSetzenApp;
+    window.appFarbeKastenHtml = () => einstKasten('Farbe', 'Hell, Dunkel oder in Farbe wie am PC – die Fragen und Antworten werden in der Farbe getönt. Wie Handy: hell oder dunkel nach der Einstellung deines Handys.',
+        '<div class="app-seg app-farb-seg" id="appDesignSeg">'
+      + [['hell', 'Hell'], ['dunkel', 'Dunkel'], ['gruen', 'Grün'], ['blau', 'Blau'], ['orange', 'Orange'], ['system', 'Wie Handy']].map(d => '<button type="button" data-d="' + d[0] + '"' + (designIst() === d[0] ? ' class="an"' : '')
+          + ' onclick="appDesignSetzen(\'' + d[0] + '\')">' + d[1] + '</button>').join('')
+      + '</div>');
     tu(() => { if(dunkelAbfrage) dunkelAbfrage.addEventListener('change', () => { if(designIst() === 'system') designAnwenden(); }); });
     // Die frueheren Farbstile (Gruen, Blau, Orange, Grau) gibt es in der App
     // nicht mehr - dort heisst es jetzt hell oder dunkel.
     tu(() => {
         const soll = designIst();
         const dunkelSoll = soll === 'dunkel' || (soll === 'system' && !!(dunkelAbfrage && dunkelAbfrage.matches));
-        if(dunkelSoll !== D.body.classList.contains('dark') || !/^(light|dark)$/.test(lies('theme', 'light'))) designAnwenden();
+        if(dunkelSoll !== D.body.classList.contains('dark') || !/^(light|dark|green|blue|orange|grey)$/.test(lies('theme', 'light')) || (APP_FARBEN[soll] && lies('theme', '') !== APP_FARBEN[soll])) designAnwenden();
     });
 
     // ---------------- Tageszaehler, Serie, Punkte ----------------
@@ -49395,7 +49465,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const benutzer = () => { try{ return String(currentUser); }catch(e){ return '1'; } };
     const tagK = d => { try{ return tagSchluessel(d); }catch(e){ const x = d ? new Date(d) : new Date(); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); } };
     function tagDaten(){ try{ return JSON.parse(localStorage.getItem(TAG_PREFIX + benutzer()) || '{}') || {}; }catch(e){ return {}; } }
-    function tagesziel(){ const z = parseInt(lies('app_tagesziel', '10'), 10); return [5, 10, 20, 25, 50].includes(z) ? z : 10; }
+    function tagesziel(){ const z = parseInt(lies('app_tagesziel', '10'), 10); return [5, 10, 20, 25, 50, 75].includes(z) ? z : 10; }
     window.appTageszielSetzen = z => { schreib('app_tagesziel', String(z)); tu(einstNachziehen); tu(nachziehen); };
     function heuteAnzahl(){ return tagDaten()[tagK()] || 0; }
     function xpStand(){
@@ -50035,14 +50105,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (stilIst() === s ? ' an' : '') + '" id="appStilKachel_' + s + '" onclick="appStilSetzen(\'' + s + '\')">'
                   + handyVorschau(s, true) + '<b>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b></button>').join('')
               + '</div>')
-          + einstKasten('Hell oder dunkel', 'Wie Handy: folgt der Einstellung deines Handys.',
-                '<div class="app-seg" id="appDesignSeg">'
-              + [['hell', 'Hell'], ['dunkel', 'Dunkel'], ['system', 'Wie Handy']].map(d => '<button type="button" data-d="' + d[0] + '"' + (designIst() === d[0] ? ' class="an"' : '')
-                  + ' onclick="appDesignSetzen(\'' + d[0] + '\')">' + d[1] + '</button>').join('')
-              + '</div>')
           + einstKasten('Tagesziel', 'So viele Fragen am Tag. Die Serie zählt jeden Tag, an dem du geübt hast.',
                 '<div class="app-seg" id="appZielSeg">'
-              + [5, 10, 20, 25, 50].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
+              + [5, 10, 20, 25, 50, 75].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
               + '</div>')
           + '<div class="nur-verspielt">'
           + einstKasten('Funki, dein Helfer', 'Wie oft er auftaucht, Hallo sagt, Tipps gibt, Witze macht und mit dir feiert. Wenig ist wie bisher. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
@@ -54567,6 +54632,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         window.einstellungenOeffnen = function(){
             const r = oeffnen.apply(this, arguments);
             umbauen();
+            // Die Farbe oben im Reiter Anpassen (P41), jedes Mal frisch
+            tu(() => { const b = $('einstBlatt_anpassen'); if(!b || typeof window.appFarbeKastenHtml !== 'function') return;
+                const alt = b.querySelector('#appFarbeKasten'); if(alt) alt.remove();
+                b.insertAdjacentHTML('afterbegin', '<div id="appFarbeKasten">' + window.appFarbeKastenHtml() + '</div>'); });
             return r;
         };
     });
