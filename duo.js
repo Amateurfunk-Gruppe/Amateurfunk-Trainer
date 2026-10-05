@@ -511,6 +511,26 @@
         }catch(e){ return ''; }
     })();
 
+    // ----------------------------------------------------------------
+    //  EINE KENNUNG JE GERAET                            (05.10.2026)
+    //  Anders als CHAT_SITZUNG bleibt sie auch nach dem Neuladen gleich -
+    //  daran erkennt der Server einen Teilnehmer wieder, dessen Seite
+    //  neu geladen wurde, und gibt ihm seine Antworten zurueck (Dietmar:
+    //  "sie muss neu anfangen"). Sie sagt nichts ueber die
+    //  Person, ist nur eine Zufallszahl und bleibt im Browser.
+    // ----------------------------------------------------------------
+    const GERAET_KENNUNG = (function(){
+        try{
+            let k = localStorage.getItem('duo_geraet') || '';
+            if(!/^[0-9a-f]{32}$/.test(k)){
+                const a = new Uint8Array(16); crypto.getRandomValues(a);
+                k = Array.from(a, function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+                localStorage.setItem('duo_geraet', k);
+            }
+            return k;
+        }catch(e){ return ''; }
+    })();
+
     function ensureSocket(){
         return new Promise((resolve,reject)=>{
             if(socket?.connected) return resolve(socket);
@@ -518,7 +538,7 @@
                 if(!window.io){ reject(new Error('Socket.IO fehlt')); return; }
                 try{
                     // auth.sitzung: siehe CHAT_SITZUNG oben (23.09.2026)
-                    socket=io(getBaseUrl(),{transports:['websocket','polling'], timeout:5000, auth:{ sitzung: CHAT_SITZUNG }});
+                    socket=io(getBaseUrl(),{transports:['websocket','polling'], timeout:5000, auth:{ sitzung: CHAT_SITZUNG, geraet: GERAET_KENNUNG }});
                     bindEvents(); resolve(socket);
                 }catch(e){ reject(e); }
             };
@@ -5355,6 +5375,23 @@
         });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
             imRaumGewesen = true;
+            // Zurueck im Raum, waehrend die Runde hier noch laeuft (05.10.2026):
+            // Was waehrend des Abrisses beantwortet wurde, hat der Server nie
+            // bekommen (Dietmar mit Bild: "0 richtig / 0 falsch - laeuft
+            // noch"). Deshalb alle Antworten dieser Runde noch einmal schicken;
+            // der Server ueberschreibt doppelte einfach.
+            setTimeout(()=>{ try{
+                if(!roomCode || !(typeof currentPart === 'string' && currentPart.indexOf('Duo') === 0)) return;
+                if(!Array.isArray(currentQuestions) || typeof progress !== 'object') return;
+                let n = 0;
+                currentQuestions.forEach(q=>{
+                    const pr = progress[q.id];
+                    if(!pr || !pr.answered || typeof q.userAnswerIndex !== 'number') return;
+                    socket.emit('duoAnswer', { code: roomCode, questionId: q.id, optionIndex: q.userAnswerIndex, isCorrect: !!pr.correct, userId: myUserId, art: pr.autoGelernt ? 'gelernt' : '' });
+                    n++;
+                });
+                if(n) console.log('[DUO] Nach dem Wiederverbinden ' + n + ' Antworten erneut gemeldet');
+            }catch(e){} }, 400);
             if(nameOffen){ const nn = nameOffen; nameOffen = ''; try{ socket.emit('nameAendern', { code: data.code, name: nn }); }catch(e){} }
             if(beitrittWiederholung){ clearInterval(beitrittWiederholung); beitrittWiederholung = null; }
             try{ const w = document.getElementById('willkommenWarte'); if(w) w.style.display = 'none'; }catch(e){}
@@ -5607,6 +5644,16 @@
         // ===== GRUPPENRAUM: Jeder in eigenem Tempo - keine Banner/Popups während der laufenden Prüfung.
         // Fortschritt der anderen sieht man bewusst nur im Abschluss-Screen / in der Gesamt-Auswertung,
         // damit während der eigenen Prüfung kein Eindruck von "Warten auf die Gruppe" entsteht.
+        // Nach einem Abriss zurueck im Raum: die bisherigen Antworten (05.10.2026).
+        // Laeuft die Runde auf dieser Seite noch, ist nichts zu tun - die Seite
+        // hat alles. Nach einem Neuladen nimmt startDuoQuizWithQuestions sie
+        // und macht bei der ersten offenen Frage weiter.
+        socket.on('duoBisher', data=>{
+            try{
+                window._duoBisher = data && data.antworten ? { code: data.code, antworten: data.antworten } : null;
+                console.log('[DUO] Zurueck nach Abriss -', Object.keys((data && data.antworten) || {}).length, 'Antworten sind gespeichert');
+            }catch(e){}
+        });
         socket.on('duoProgressUpdate', data=>{
             try{
                 if(typeof window.updateDuoGroupProgress==='function') window.updateDuoGroupProgress(data);

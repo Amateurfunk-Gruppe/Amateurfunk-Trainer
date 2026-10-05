@@ -23248,7 +23248,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 61, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 64, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35146,6 +35146,7 @@ function renderDuoWaitingScreen(){
             <div class="finish-box">
                 <i class="fas fa-flag-checkered" style="color:var(--panel-navy);font-size:2.6rem;"></i>
                 <p style="font-size:1.15rem;font-weight:700;margin-top:8px;">Du bist mit allen Fragen fertig!</p>
+                ${duoEigenesErgebnisHtml()}
                 <div class="sub" id="duoGroupProgressText">Du kannst dir jederzeit die Auswertung ansehen (auch bevor alle fertig sind) - niemand muss auf dich oder andere warten.</div>
                 <div class="btn-group" style="margin-top:1rem;">
                     <button class="btn btn-primary" onclick="window.duo.requestFinalResults()"><i class="fas fa-chart-bar"></i> Gesamt-Auswertung anzeigen</button>
@@ -35182,6 +35183,83 @@ function duoFalsch(r){
 }
 window.duoFalsch = duoFalsch;
 
+// ---- Eigenes Ergebnis, ohne Server (05.10.2026) ----
+function duoEigenesErgebnisHtml(){
+    try{
+        if(window._duoPruefung) return '';
+        const fragen = (typeof currentQuestions !== 'undefined' && Array.isArray(currentQuestions)) ? currentQuestions : [];
+        const gesamt = fragen.length;
+        if(!gesamt) return '';
+        const richtig = fragen.filter(q => progress[q.id] && progress[q.id].correct).length;
+        const falsch = gesamt - richtig;
+        let st;
+        if(gesamt === 25) st = richtig >= 19 ? 'bestanden' : (richtig >= 17 ? 'nachpruefung' : 'nicht');
+        else st = (richtig / gesamt) >= 0.76 ? 'bestanden' : 'nicht';
+        const farbe = st === 'bestanden' ? '#1f9d55' : st === 'nachpruefung' ? '#b8860b' : '#c0392b';
+        const grund = st === 'bestanden' ? 'rgba(31,157,85,0.1)' : st === 'nachpruefung' ? 'rgba(184,134,11,0.12)' : 'rgba(192,57,43,0.1)';
+        const text = st === 'bestanden' ? '<i class="fas fa-check-circle"></i> Bestanden' : st === 'nachpruefung' ? '<i class="fas fa-exclamation-triangle"></i> Grauzone' : '<i class="fas fa-times-circle"></i> Nicht bestanden';
+        return '<div id="duoEigenesErgebnis" style="margin:10px auto 4px; max-width:420px; padding:0.7rem; border-radius:12px; text-align:center; background:' + grund + ';">'
+            + '<div style="font-weight:800; font-size:1.1rem; color:' + farbe + ';">' + text + '</div>'
+            + '<div style="font-size:0.9rem; margin-top:4px;"><b style="color:#14663a;">' + richtig + ' richtig</b> / <b style="color:#a4262c;">' + falsch + ' falsch</b>'
+            + '<span style="color:var(--muted);"> von ' + gesamt + ' · ' + Math.round(100 * richtig / gesamt) + '%</span></div></div>';
+    }catch(e){ return ''; }
+}
+window.duoEigenesErgebnisHtml = duoEigenesErgebnisHtml;
+// ---- Wer ist noch mitten drin? (05.10.2026) ----
+function duoNochDran(){
+    try{
+        const r = (window.duoFinalResultsData && window.duoFinalResultsData.ranking) || [];
+        return r.filter(x => x && x.userId !== window.myUserId && !x.finished);
+    }catch(e){ return []; }
+}
+window.duoAuswertungAktion = function(art){
+    const los = () => {
+        window._duoFinalShown = false; window.closeRealisticModal();
+        if(art === 'neu') neueRundeFragen();
+        else { if(window.duo && window.duo.leave) window.duo.leave(); backToMain(); }
+    };
+    const offen = duoNochDran();
+    if(!offen.length || typeof window.showAppConfirm !== 'function'){ los(); return; }
+    const namen = offen.map(x => escapeHtmlDuo(x.name || 'Teilnehmer') + ' (' + (x.answered || 0) + '/' + (x.total || '?') + ')').join(', ');
+    window.showAppConfirm((offen.length === 1 ? namen + ' ist' : namen + ' sind') + ' noch mitten in der Prüfung. '
+        + (art === 'neu' ? 'Eine neue Runde bricht sie ab.' : 'Beendest du den Raum, fehlt die Gesamt-Auswertung.')
+        + ' Besser kurz warten – die Liste aktualisiert sich von selbst, oder nach unten ziehen.', los,
+        { title: art === 'neu' ? 'Neue Runde jetzt?' : 'Raum jetzt beenden?', icon: 'fa-hourglass-half', confirmLabel: art === 'neu' ? 'Trotzdem neue Runde' : 'Trotzdem beenden', confirmColor: '#a4262c' });
+};
+// ---- Nach unten ziehen = aktualisieren (05.10.2026) ----
+window.duoAuswertungAktualisieren = function(){
+    try{
+        window._duoFinalSig = null;
+        const z = document.getElementById('duoAktualisiertZeile');
+        if(z){ z.textContent = 'Wird aktualisiert …'; }
+        if(window.duo && typeof window.duo.requestFinalResults === 'function') window.duo.requestFinalResults();
+        setTimeout(() => { const z2 = document.getElementById('duoAktualisiertZeile'); if(z2 && /Wird/.test(z2.textContent)) z2.textContent = 'Keine Antwort vom Raum – ist der Server noch an?'; }, 6000);
+    }catch(e){}
+};
+(function(){
+    let y0 = null, zug = 0, rolle = null;
+    const anzeige = () => document.getElementById('duoZiehAnzeige');
+    document.addEventListener('touchstart', e => {
+        if(!window._duoFinalShown || !document.getElementById('duoZiehAnzeige')) { y0 = null; return; }
+        const body = document.getElementById('realisticModalBody');
+        rolle = body ? (body.closest('.realistic-modal') || body) : null;
+        const oben = (!body || body.scrollTop <= 0) && (!rolle || rolle.scrollTop <= 0);
+        y0 = oben && e.touches.length === 1 ? e.touches[0].clientY : null; zug = 0;
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+        if(y0 === null) return;
+        zug = Math.max(0, e.touches[0].clientY - y0);
+        const a = anzeige();
+        if(a){ a.style.height = Math.min(60, zug / 2) + 'px'; a.style.opacity = Math.min(1, zug / 90); a.querySelector('i').style.transform = 'rotate(' + Math.min(360, zug * 3) + 'deg)'; }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+        if(y0 === null) return;
+        const a = anzeige();
+        if(a){ a.style.height = '0px'; a.style.opacity = '0'; }
+        if(zug > 90) window.duoAuswertungAktualisieren();
+        y0 = null; zug = 0;
+    }, { passive: true });
+})();
 window.showDuoFinalResults = function(data){
     try{
         window._duoFinalShown = true;
@@ -35238,7 +35316,9 @@ window.showDuoFinalResults = function(data){
         if (body) {
             body.innerHTML = '<div class="finish-box" style="max-width:640px;margin:0 auto;border:none;box-shadow:none;">'
                 + '<i class="fas fa-trophy" style="color:var(--accent-amber);font-size:2.6rem;text-align:center;"></i>'
+                + '<div id="duoZiehAnzeige" style="height:0;opacity:0;overflow:hidden;text-align:center;color:var(--muted);transition:height .2s,opacity .2s;"><i class="fas fa-rotate" style="font-size:1.4rem;margin-top:14px;"></i></div>'
                 + '<p style="font-size:1.3rem;font-weight:800;text-align:center;margin-top:6px;">' + (window._duoPruefung ? 'Rangliste – Prüfung im Gruppenraum' : 'Gesamt-Auswertung Gruppenraum') + '</p>'
+                + '<div id="duoAktualisiertZeile" style="text-align:center;font-size:0.76rem;color:var(--muted);margin:-2px 0 8px;">Stand ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · zum Aktualisieren nach unten ziehen oder <a href="#" onclick="duoAuswertungAktualisieren(); return false;">hier tippen</a></div>'
                 + meBannerHtml
                 + '<div style="margin-top:0.5rem;border:1px solid var(--line);border-radius:12px;overflow:hidden;">' + (rowsHtml || '<div style="padding:1rem;text-align:center;color:var(--muted);">Noch keine Ergebnisse</div>') + '</div>'
                 // ================================================================
@@ -35268,12 +35348,12 @@ window.showDuoFinalResults = function(data){
                     ? '<button class="btn btn-outline" onclick="duoPruefungZurueckZurAuswertung()"><i class="fas fa-arrow-left"></i> Meine Auswertung</button>'
                     : '')
                 + (istGastgeber
-                    ? '<button class="btn btn-primary" onclick="window._duoFinalShown=false; window.closeRealisticModal(); neueRundeFragen();" '
+                    ? '<button class="btn btn-primary" onclick="duoAuswertungAktion(\'neu\')" '
                       + 'data-tooltip="Frische Fragen für alle im Raum – der Raum und der Einladungslink bleiben bestehen">'
                       + '<i class="fas fa-rotate"></i> ' + (window._duoPruefung ? 'Neue Prüfung für alle' : 'Neue Runde für alle') + '</button>'
                     : '')
                 + '<button class="btn btn-outline" onclick="window._duoFinalShown=false; window.closeRealisticModal();"><i class="fas fa-xmark"></i> Fenster schließen</button>'
-                + '<button class="btn btn-reset" onclick="window._duoFinalShown=false; window.closeRealisticModal(); if(window.duo && window.duo.leave) window.duo.leave(); backToMain();">'
+                + '<button class="btn btn-reset" onclick="' + (istGastgeber ? 'duoAuswertungAktion(\'ende\')' : 'window._duoFinalShown=false; window.closeRealisticModal(); if(window.duo && window.duo.leave) window.duo.leave(); backToMain();') + '">'
                 + '<i class="fas fa-door-open"></i> ' + (istGastgeber ? 'Raum beenden' : 'Raum verlassen') + '</button>'
                 + '</div>'
                 + (istGastgeber
@@ -38066,6 +38146,36 @@ window.startDuoQuizWithQuestions = function(questionsFromServer, meta) {
         var autoGewertetDuo = 0;
         // Unterricht: nichts ueberspringen - alle sind bei derselben Frage.
         if(!(meta && meta.lektion)){ try{ autoGewertetDuo = gelernteVorbelegen(true); }catch(e){} }
+        // Zurueck nach Abriss (05.10.2026): bisherige Antworten vom Server uebernehmen
+        var bisherZahl = 0;
+        try{
+            var bh = window._duoBisher;
+            window._duoBisher = null;
+            if(bh && bh.antworten && (!meta || !meta.code || !bh.code || bh.code === meta.code)){
+                currentQuestions.forEach(function(q){
+                    var a = bh.antworten[q.id];
+                    if(!a) return;
+                    if(!(progress[q.id] && progress[q.id].answered)){
+                        q.userAnswerIndex = (typeof a.optionIndex === 'number') ? a.optionIndex : null;
+                        progress[q.id] = { answered:true, correct:!!a.isCorrect };
+                        bisherZahl++;
+                    }
+                });
+                if(bisherZahl > 0){
+                    totalAnswered = currentQuestions.filter(function(q){ return progress[q.id] && progress[q.id].answered; }).length;
+                    correctCount = currentQuestions.filter(function(q){ return progress[q.id] && progress[q.id].correct; }).length;
+                    var offen = currentQuestions.findIndex(function(q){ return !(progress[q.id] && progress[q.id].answered); });
+                    currentIndex = offen === -1 ? currentQuestions.length : offen;
+                    answered = false; window.answered = false;
+                }
+            }
+        }catch(e){ console.warn('[DUO] Bisherige Antworten', e); }
+        if(bisherZahl > 0){
+            setTimeout(function(){ try{
+                if(window.showAppAlert) window.showAppAlert('Willkommen zurück! Die Verbindung war kurz weg – deine ' + bisherZahl
+                    + ' Antworten sind gespeichert. Es geht bei Frage ' + Math.min(currentIndex + 1, currentQuestions.length) + ' weiter.');
+            }catch(e){} }, 700);
+        }
         examMode = false;
         showSidebar = true;
         currentPart = 'Duo ' + (meta && meta.parts ? meta.parts.join('+') : '');
@@ -41221,7 +41331,39 @@ if (originalSelectOption) {
 
 
 
-<script id="dreifachTipp">
+<style>
+        #handyZaehler { display: none; }
+        @media (max-width: 760px) {
+            html:not(.android-app) body.quiz-laeuft-hz #handyZaehler { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px 2px; padding: 4px 12px;
+                border-radius: 999px; background: var(--panel-navy, #0f2745); color: #fff; font-weight: 700; font-size: 0.95rem; }
+        }
+    </style>
+    <script id="handyZaehlerSkript">
+    (function(){
+        function zeichnen(){
+            try{
+                var q = document.getElementById('qCounter'), c = document.getElementById('questionContainer');
+                if(!q || !c || !c.parentNode) return;
+                var z = document.getElementById('handyZaehler');
+                if(!z){ z = document.createElement('div'); z.id = 'handyZaehler'; z.setAttribute('aria-live', 'polite'); c.parentNode.insertBefore(z, c); }
+                var m = (q.textContent || '').trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+                var nav = document.getElementById('navArea');
+                var laeuft = !!(m && +m[2] > 0 && nav && getComputedStyle(nav).display !== 'none' && c.innerHTML.trim());
+                document.body.classList.toggle('quiz-laeuft-hz', laeuft);
+                var t = m ? 'Frage ' + Math.min(+m[1], +m[2]) + ' von ' + m[2] : '';
+                if(z.textContent !== t) z.innerHTML = t ? '<i class="fas fa-list-ol"></i> ' + t : '';
+            }catch(e){}
+        }
+        function los(){
+            zeichnen();
+            var q = document.getElementById('qCounter');
+            if(q) new MutationObserver(zeichnen).observe(q, { childList: true, characterData: true, subtree: true });
+            setInterval(zeichnen, 1500);
+        }
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', los); else los();
+    })();
+    </script>
+    <script id="dreifachTipp">
 (function(){
     if(!document.documentElement.classList.contains("android-app")) return;
     // Was KEIN leeres Feld ist: alles, was man antippen kann, und Fenster darueber
@@ -50742,10 +50884,18 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function tagesGruss(){
         const name = nameIst(), rest = Math.max(0, tagesziel() - heuteAnzahl()), s = serie();
         const std = new Date().getHours(), nn = name ? ', ' + esc(name) : '', hn = name ? ' ' + esc(name) : '';
+        // Morgens und mittags jedes zweite Mal ein eigener Gruss (05.10.2026)
+        const sp = name ? ' ' + name : '';
+        const sonder = (std >= 5 && std < 10 && Math.random() < 0.5)
+            ? { blase: 'Guten Morgen' + hn + '! Ich wünsche dir einen guten Tag.', sprich: 'Guten Morgen' + sp + '! | Ich wünsche dir einen guten Tag.' }
+            : (std >= 11 && std < 14 && Math.random() < 0.5)
+            ? { blase: 'Mahlzeit' + hn + '! Was gab es Gutes bei dir zu essen?', sprich: 'Mahlzeit' + sp + '! | Was gab es Gutes bei dir zu essen?' }
+            : null;
         let t = (std >= 2 && std < 5)
             ? 'Hey' + hn + ', es ist mitten in der Nacht! Ein paar Fragen noch – aber dann ab ins Bett, morgen ist auch wieder ein Tag. '
             : (std >= 22 || std < 2)
             ? 'So spät noch wach' + nn + '?! Du bist aber fleißig. Bald <b>QRT</b>? So sagen Funker, wenn sie Schluss machen. '
+            : sonder ? sonder.blase + ' '
             : zufall([grussZeit() + nn + '! Da bist du ja!', grussZeit() + nn + '! Schön, dich zu sehen!',
                       'Hey' + hn + ', schön, dass du auch hier bist! Ich hab schon auf dich gewartet.']) + ' ';
         if(!rest) t += 'Dein Tagesziel hast du heute schon geschafft. Stark!';
@@ -50756,6 +50906,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Bliep-Blup (|), beim Gaehnen um 4 Uhr ein muedes Rechnen (^).
         const gesagt = (std >= 2 && std < 5) ? nameTon() + 'Es ist mitten in der Nacht. ^ Ab ins Bett – morgen ist auch wieder ein Tag.'
             : (std >= 22 || std < 2) ? nameTon() + 'So spät noch wach? Du bist aber fleißig.' + (mehrSprechen() ? ' Bald Q R T? So sagen Funker, wenn sie Schluss machen.' : '')
+            : sonder ? sonder.sprich
             : 'Ich bin Funki. | ' + nameTon() + 'Schön, dass du da bist.';
         // Jeden zweiten Tag ein Wort aus dem Funk-ABC statt eines Tipps (04.10.2026)
         const wort = abcWort(), tipp = wort ? '' : naechsterTipp();
@@ -50869,6 +51020,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function kecherSpruch(){
         const n = heuteAnzahl(), rest = Math.max(0, tagesziel() - n), s = serie(), f = zahlAus('repeatErrorsCount');
         const pool = SPRUECHE_FEST.slice();
+        { const st = new Date().getHours(), nm = nameIst(), hn = nm ? ' ' + esc(nm) : '';      // 05.10.2026
+          if(st >= 5 && st < 10) pool.push('Guten Morgen' + hn + '! Ich wünsche dir einen guten Tag.');
+          if(st >= 11 && st < 14) pool.push('Mahlzeit' + hn + '! Was gab es Gutes bei dir zu essen?'); }
         if(rest && n) pool.push('Psst! Nur noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel.', 'Noch <b>' + fragenText(rest) + '</b> – dann tanz ich für dich!');
         if(rest && !n) pool.push('Heute noch keine einzige Frage? Zehn schnelle gehen immer!', 'Mir ist langweilig … eine kleine Runde?');
         if(!rest) pool.push('Tagesziel geschafft – ich bin immer noch ganz aus dem Häuschen!');
@@ -51166,7 +51320,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         antenne: { blase: 'Oh nein, meine <b>Antenne</b> ist verbogen! Biegst du sie wieder gerade?',
                    bitte: 'Oh nein, meine Antenne ist verbogen! Biegst du sie wieder gerade?',
                    knopf: '<i class="fas fa-tower-broadcast"></i> Geradebiegen',
-                   danke: 'Perfekt! Jetzt empfange ich dich wieder glasklar. Danke!', dankeSprich: '{boing} Perfekt! Jetzt empfange ich dich wieder glasklar. Danke!' },
+                   danke: 'Perfekt! Jetzt empfange ich dich wieder glasklar. Danke dir – das ist echter <b>Ham Spirit</b>!',
+                   dankeSprich: '{boing} Perfekt! Jetzt empfange ich dich wieder glasklar. | Danke dir! Das ist echter Hämm Spirit!' },
         staub:   { blase: 'Da ist <b>Staub</b> in meinem Lautsprecher … pustest du mal?',
                    bitte: 'Da ist Staub in meinem Lautsprecher. Pustest du mal?',
                    knopf: '<i class="fas fa-wind"></i> Pusten',

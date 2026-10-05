@@ -7697,6 +7697,9 @@ try{
       // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
       const userName = data.name || data.userName || `Benutzer ${idx}`;
       room.users[socket.id]={name:userName, role:`Teilnehmer`};
+      let zurueckGeholt = false;
+      try{ room.code = room.code || data.code; zurueckGeholt = teilnehmerZurueckholen(room, socket, userName); }catch(e){ console.error('[DUO] Zurueckholen', e); }
+      if(zurueckGeholt) console.log(`[GRUPPENRAUM] ${room.users[socket.id].name} ist nach einem Abriss zurueck in ${data.code} - mit allen Antworten`);
       // Der Ersteller kommt zurueck (siehe DER RAUM GEHOERT DEM, DER IHN
       // ERSTELLT HAT): Host wieder an ihn, der Vertreter wird Teilnehmer.
       let hostZurueck = false;
@@ -7719,6 +7722,12 @@ try{
       // PRUEFUNGSRAUM kommt und nicht in eine Fragerunde - der Haken im
       // Fenster steht dann von selbst richtig (20.09.2026).
       socket.emit('roomJoined',{code:data.code, userId:socket.id, hostId: room.hostId, users:room.users, totalQuestions: room.questions.length, config: room.config || null});
+      // Nach einem Abriss: die bisherigen Antworten zurueck an die Seite (05.10.2026)
+      if(zurueckGeholt && room.allAnswers && room.allAnswers[socket.id]){
+        const bisher = {};
+        Object.entries(room.allAnswers[socket.id]).forEach(([q, a]) => { if(a) bisher[q] = { optionIndex: a.optionIndex, isCorrect: !!a.isCorrect, art: a.art || '' }; });
+        socket.emit('duoBisher', { code: data.code, antworten: bisher });
+      }
       socket.emit('profilbilder', { bilder: profilbilderFuer(room) });
       // Chatverlauf mitschicken - seit 23.09.2026 nur, was seit dem
       // eigenen Beitritt geschrieben wurde. Wer neu kommt, bekommt also
@@ -7923,8 +7932,114 @@ try{
       const room = duoRooms[code];
       if(!room) return;
       if(Object.keys(room.users).length===0){
+        // Abriss statt Abschied (05.10.2026): Wer nur kurz weg ist, kommt
+        // wieder - der Raum wartet dann auf ihn (siehe ZURUECK NACH ABRISS).
+        geparktAufraeumen(room);
+        if(room.geparkt && Object.keys(room.geparkt).length){
+          if(!room._parkUhr) room._parkUhr = setTimeout(() => { room._parkUhr = null; cleanupRoomIfEmpty(code); }, PARK_MS + 1000);
+          return;
+        }
         delete duoRooms[code];
       }
+    }
+
+    // ================================================================
+    //  ZURUECK NACH ABRISS - MIT ALLEN ANTWORTEN        (05.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Sie muss neu anfangen, sie weiss aber nicht
+    //  warum. Vermutlich hat es zwischendrin abgebrochen?" - und vorher:
+    //  "sie hat nicht gesehen, ob sie bestanden hat".
+    //
+    //  Genau so war es: Reisst die Verbindung ab (Handy legt den Bildschirm
+    //  schlafen, WLAN wackelt), loeschte der Server den Teilnehmer samt
+    //  ALLER Antworten. Beim Wiederverbinden kam er mit neuer Kennung und
+    //  null Antworten zurueck - "laeuft noch" fuer immer, keine Auswertung,
+    //  und nach einem Neuladen ging es von vorn los.
+    //
+    //  Jetzt erkennt der Server den Teilnehmer wieder - an der Kennung der
+    //  Seite (auth.sitzung, gilt bis zum Neuladen) oder des Geraets
+    //  (auth.geraet, bleibt auch nach dem Neuladen) - und gibt ihm seine
+    //  Antworten, Zeiten und sein Bild zurueck. Nach einem Neuladen
+    //  bekommt die Seite die bisherigen Antworten ('duoBisher') und macht
+    //  bei der ersten offenen Frage weiter.
+    //  Geparkt wird nur beim Abriss (disconnect), nicht beim bewussten
+    //  Verlassen. Nach drei Stunden ist ein Parkplatz verfallen.
+    // ================================================================
+    const PARK_MS = 3 * 60 * 60 * 1000;
+    function kennungVon(sock){
+      let s = '', g = '';
+      try{ s = String((sock.handshake && sock.handshake.auth && sock.handshake.auth.sitzung) || '').slice(0, 64); }catch(e){}
+      try{ g = String((sock.handshake && sock.handshake.auth && sock.handshake.auth.geraet) || '').slice(0, 64); }catch(e){}
+      return { s, g };
+    }
+    function geparktAufraeumen(room){
+      if(!room.geparkt) return;
+      const jetzt = Date.now();
+      Object.keys(room.geparkt).forEach(k => { if(jetzt - (room.geparkt[k].zeit || 0) > PARK_MS) delete room.geparkt[k]; });
+    }
+    function teilnehmerParken(room, id){
+      const u = room.users && room.users[id];
+      if(!u || (!u.geraet && !u.sitzung)) return;
+      if(!room.geparkt) room.geparkt = {};
+      geparktAufraeumen(room);
+      room.geparkt[u.geraet || u.sitzung] = {
+        name: u.name, geraet: u.geraet || '', sitzung: u.sitzung || '', zeit: Date.now(), runde: room._runde || 0,
+        antworten: (room.allAnswers && room.allAnswers[id]) || null,
+        start: room.startTimes ? room.startTimes[id] : undefined,
+        ende: room.finishTimes ? room.finishTimes[id] : undefined,
+        fertig: !!(room._fertigGemeldet && room._fertigGemeldet[id]),
+        bild: room.bilder ? room.bilder[id] : undefined
+      };
+    }
+    // Uebertraegt alles, was am alten Platz hing, auf den neuen.
+    function teilnehmerUmziehen(room, von, nach){
+      if(room.allAnswers && room.allAnswers[von]){
+        room.allAnswers[nach] = room.allAnswers[von];
+        Object.values(room.allAnswers[nach]).forEach(a => { if(a) a.userId = nach; });
+        delete room.allAnswers[von];
+      }
+      [room.startTimes, room.finishTimes, room._fertigGemeldet, room.bilder, room.ipsVonTeilnehmern].forEach(m => {
+        if(m && m[von] !== undefined && m[nach] === undefined){ m[nach] = m[von]; }
+        if(m) delete m[von];
+      });
+    }
+    // Beim Beitritt: Ist das jemand, der nur kurz weg war? true = zurueckgeholt.
+    function teilnehmerZurueckholen(room, sock, neuerName){
+      const k = kennungVon(sock), neu = sock.id;
+      if(!k.s && !k.g) return false;
+      if(room.users[neu]){ room.users[neu].sitzung = k.s; room.users[neu].geraet = k.g; }
+      // a) Der alte Platz ist noch belegt - der Server hat den Abriss noch
+      //    gar nicht bemerkt (das dauert bis zu 90 s).
+      const alt = Object.keys(room.users).find(id => id !== neu && room.users[id]
+                     && ((k.s && room.users[id].sitzung === k.s) || (k.g && room.users[id].geraet === k.g)));
+      if(alt){
+        const altU = room.users[alt];
+        if(room.users[neu] && /^Benutzer \d+$/.test(room.users[neu].name || '') && altU.name) room.users[neu].name = altU.name;
+        teilnehmerUmziehen(room, alt, neu);
+        if(room.hostId === alt){ room.hostId = neu; if(room.users[neu]) room.users[neu].role = 'Host'; }
+        delete room.users[alt];
+        try{ const s = io.sockets.sockets.get(alt); if(s){ s.data.roomCode = null; s.leave(room.code || sock.data.roomCode); } }catch(e){}
+        return true;
+      }
+      // b) Geparkt
+      geparktAufraeumen(room);
+      if(!room.geparkt) return false;
+      const schl = Object.keys(room.geparkt).find(x => (k.g && room.geparkt[x].geraet === k.g) || (k.s && room.geparkt[x].sitzung === k.s));
+      if(!schl) return false;
+      const p = room.geparkt[schl];
+      delete room.geparkt[schl];
+      if((p.runde || 0) !== (room._runde || 0)) return false;          // inzwischen neue Runde - nichts mitzunehmen
+      if(room.users[neu] && /^Benutzer \d+$/.test(room.users[neu].name || '') && p.name) room.users[neu].name = p.name;
+      if(p.antworten){
+        if(!room.allAnswers) room.allAnswers = {};
+        room.allAnswers[neu] = p.antworten;
+        Object.values(p.antworten).forEach(a => { if(a) a.userId = neu; });
+      }
+      if(p.start !== undefined){ if(!room.startTimes) room.startTimes = {}; room.startTimes[neu] = p.start; }
+      if(p.ende !== undefined){ if(!room.finishTimes) room.finishTimes = {}; room.finishTimes[neu] = p.ende; }
+      if(p.fertig){ if(!room._fertigGemeldet) room._fertigGemeldet = {}; room._fertigGemeldet[neu] = true; }
+      if(p.bild !== undefined){ if(!room.bilder) room.bilder = {}; room.bilder[neu] = p.bild; }
+      return true;
     }
 
     // Jeder Teilnehmer (Host oder nicht) fordert seinen eigenen Start an, unabhängig von allen
@@ -8007,6 +8122,7 @@ try{
       room.finishTimes = {};
       room._fertigGemeldet = {};
       room.finalResultsSent = false;
+      room._runde = (room._runde || 0) + 1;      // Geparkte Antworten gehoeren zur alten Runde (05.10.2026)
       const jetzt = Date.now();
       Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
       io.to(code).emit('duoQuizStarted',{
@@ -8158,6 +8274,7 @@ try{
       room.finishTimes = {};
       room._fertigGemeldet = {};
       room.finalResultsSent = false;
+      room._runde = (room._runde || 0) + 1;      // Geparkte Antworten gehoeren zur alten Runde (05.10.2026)
       const jetzt = Date.now();
       Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
       io.to(code).emit('duoQuizStarted', {
@@ -9388,6 +9505,7 @@ try{
       const code = socket.data.roomCode;
       if(code && duoRooms[code]){
         const wasHost = duoRooms[code].hostId === socket.id;
+        try{ teilnehmerParken(duoRooms[code], socket.id); }catch(e){ console.error('[DUO] Parken', e); }
         delete duoRooms[code].users[socket.id];
         if(duoRooms[code].bilder) delete duoRooms[code].bilder[socket.id];
         // FIX W11: siehe leaveRoom

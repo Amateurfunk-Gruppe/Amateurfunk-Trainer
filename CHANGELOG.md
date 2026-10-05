@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 61 · 05.10.2026
+Stand 64 · 05.10.2026
 
 ### Hinzugefügt
+- Android-App, Funki grüßt passend zur Tageszeit: morgens „Guten Morgen, ich wünsche dir einen guten Tag“, mittags „Mahlzeit! Was gab es Gutes bei dir zu essen?“ – mit dem Namen des Benutzers. Wer ihm die Antenne gerade biegt, bekommt jetzt wie beim Knie ölen ein „Das ist echter Ham Spirit!“.
 - Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC, aber still: kein Hinweis unten, und bei der nächsten Frage ist es wieder aus (nochmal dreimal tippen blendet sie auch so aus). Im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
 - Android-App: Farben wie am PC – unter Einstellungen → Anpassen → „Farbe“ (oben; Hell/Dunkel ist dafür von Allgemein dorthin umgezogen) gibt es jetzt neben Hell und Dunkel auch Grün, Blau und Orange (wie die Stile in der Windows-Fassung), für Sachlich und Verspielt – der Fragenkasten in der Runde ist dann in der Farbe getönt, die Antworten bleiben weiß; auch die Leisten unten (Zurück/Weiter, Hilfen, Navigation) nehmen die Farbe an. Hell bleibt das bisherige Grau. „Wie Handy“ bleibt
 - Android-App, Blättern gemischt: Im Blättern-Fenster gibt es den Schalter „Gemischt“ – dann kommen die Fragen quer durch alle Themen statt zehnmal hintereinander dasselbe. Die Mischung bleibt fest, damit das Lesezeichen trägt; gemischt und der Reihe nach haben je ein eigenes Lesezeichen, „Von vorn“ mischt neu. Auch „Nur Gelernte“, „Rest abarbeiten“ und „Noch nie geübt“ kommen dann gemischt. Am PC bleibt Blättern der Reihe nach
@@ -179,6 +180,9 @@ Stand 61 · 05.10.2026
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Gruppenraum, Verbindung kurz weg: Bisher löschte der Server einen Teilnehmer samt aller Antworten, sobald die Verbindung abriss (Bildschirm aus, WLAN wackelt) – danach hieß es „läuft noch“ für immer, und nach einem Neuladen ging es von vorn los. Jetzt erkennt der Server ihn wieder (auch nach dem Neuladen, drei Stunden lang) und gibt ihm seine Antworten zurück; die Runde geht bei der ersten offenen Frage weiter.
+- Gruppenraum am Handy im Browser: Oben links über der Frage steht jetzt „Frage 3 von 25“ – vorher fehlte der Zähler dort ganz.
+- Gruppenraum: Wer später fertig wird als der Gastgeber, sieht sein Ergebnis (bestanden, Grauzone, nicht bestanden) jetzt sofort auf dem eigenen Gerät – auch wenn der Raum inzwischen beendet ist. „Raum beenden“ und „Neue Runde für alle“ fragen nach, solange noch jemand mitten in der Prüfung ist. Die Gesamt-Auswertung lässt sich durch Herunterziehen (oder „hier tippen“) aktualisieren und zeigt, von wann der Stand ist.
 - Android-App, Vorlesen gleich nach dem Start: Meldet sich das bevorzugte Sprachmodul (z. B. Acapela) nicht, nimmt die App schon nach 10 Sekunden die Stimme von Google statt erst nach zwei langen Anläufen. Statt sofort des Fehlerfensters steht unten kurz „Stimme wird vorbereitet …“, und vorgelesen wird, sobald sie bereit ist.
 - Android-App, Hilfen-Leiste: Der Knopf „Erklärung“ war nach dem Antippen in den Farben Grün, Blau und Orange weiß auf weiß (unsichtbar) – jetzt lila mit weißer Schrift wie in Hell und Dunkel
 - Android-App: Die große Erklärung (Erklärung zur Zeichnung, vergrößert) füllt jetzt den ganzen Bildschirm und lässt sich bis zum Ende rollen – vorher lag sie nur über dem Fragenkasten und war unten abgeschnitten
