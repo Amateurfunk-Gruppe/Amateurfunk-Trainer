@@ -23179,7 +23179,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 47, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 48, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -48157,7 +48157,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return misch(L).slice(0, n).map(l => {
             const v = (l[3] || []).filter(x => x !== l[1]);
             const andere = L.filter(x => x[1] !== l[1]).map(x => x[1]);
-            const k = paar(null, alle ? 'lkplus' : 'lk', alle ? 'Landeskenner · erweitert' : 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
+            const k = paar(null, 'lk', LK_IM_KATALOG.includes(l[0]) ? 'Landeskenner' : 'Landeskenner · erweitert', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
             k.cw = l[0];
             k.antwortHtml = mitFahne(k.antwort);
             k.fahne = true;
@@ -48213,16 +48213,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const antwort = wahr ? wahrText : zufall(falschListe);
         return { thema, art, frage, gross, antwort, wahr, richtig: wahrText, merk, morse };
     }
+    // "Erweitert" (Dietmar: "Bei den Q-Gruppen muss es auch erweitert geben, weil da teilweise auch Q-Gruppen kommen, die in der
+    // Pruefung gar nicht gefragt werden ... besser, wenn das erweitert ein- und ausschaltbar waere"). Aus: nur, was im Katalog steht.
+    const Q_IM_KATALOG = ['QRM', 'QRN', 'QRO', 'QRP', 'QRT', 'QRV', 'QRX', 'QRZ', 'QSB', 'QSL', 'QSO', 'QSY', 'QTH'];
+    const erwKey = () => 'karten_erweitert_' + benutzerK();
+    const erweitert = () => lies(erwKey(), '') === '1';
+    const qListe = () => erweitert() ? QGRUPPEN : QGRUPPEN.filter(x => Q_IM_KATALOG.includes(x[0]));
     const THEMEN = {
         fragen:  { name: 'Prüfungsfragen', unter: n => n + ' Fragen aus dem Katalog', anzahl: () => bank().length,
                    karten: n => misch(bank()).slice(0, n).map(q => ausFrage(q, 'fragen')).filter(Boolean) },
-        qgruppen:{ name: 'Q-Gruppen', unter: () => QGRUPPEN.length + ' Gruppen, mit Morseton', anzahl: () => QGRUPPEN.length, nurVoll: true,
-                   karten: n => misch(QGRUPPEN).slice(0, n).map(x => {
-                       const andere = QGRUPPEN.filter(y => y[0] !== x[0]).map(y => y[1]);
+        qgruppen:{ name: 'Q-Gruppen', unter: () => qListe().length + (erweitert() ? ' Gruppen, erweitert' : ' Gruppen aus den Fragen') + ', mit Morseton', anzahl: () => qListe().length, nurVoll: true,
+                   karten: n => { const L = qListe(); return misch(L).slice(0, n).map(x => {
+                       const andere = L.filter(y => y[0] !== x[0]).map(y => y[1]);
                        const falsch = (x[2] && x[2].length && Math.random() < 0.7) ? x[2] : andere;
-                       const k = paar(null, 'qgruppen', 'Q-Gruppe', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
+                       const k = paar(null, 'qgruppen', Q_IM_KATALOG.includes(x[0]) ? 'Q-Gruppe' : 'Q-Gruppe · erweitert', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
                        k.cw = x[0]; return k;
-                   }) },
+                   }); } },
         abk:     { name: 'Abkürzungen', unter: () => nurTechnik() ? abkListe().length + ' Kürzel: Betriebsarten & Technik' : abkListe().length + ' Kürzel: PSE, K, AWDH, YL, XYL …', anzahl: () => abkListe().length,
                    karten: n => { const l = abkListe(); return misch(l).slice(0, n).map(a => abkKarte(a, l)); } },
         morse:   { name: 'Morsezeichen', unter: () => nurTechnik() ? '36 Zeichen, mit Ton' : '36 Zeichen, mit Ton · Zusatz, eher ab Klasse E', anzahl: () => 36,
@@ -48235,10 +48241,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                        const k = paar(null, 'morse', 'Morsezeichen', 'Wie wird gegeben:', z, MORSE[z], andere.map(y => MORSE[y]), z + ' wird ' + MORSE[z] + ' gegeben.');
                        k.morse = true; return k;
                    }) },
-        lk:      { name: 'Landeskenner', unter: () => lkListe().length + ' Kenner aus den Fragen, mit Morseton', anzahl: () => lkListe().length,
-                   karten: n => lkKarten(n, false) },
-        lkplus:  { name: 'Landeskenner erweitert', unter: () => lkListe(true).length + ' Kenner · Zusatz, auch über den Katalog hinaus', anzahl: () => lkListe(true).length,
-                   karten: n => lkKarten(n, true) },
+        lk:      { name: 'Landeskenner', unter: () => lkListe(erweitert()).length + (erweitert() ? ' Kenner, erweitert' : ' Kenner aus den Fragen') + ', mit Morseton', anzahl: () => lkListe(erweitert()).length,
+                   karten: n => lkKarten(n, erweitert()) },
         stecker: { name: 'Stecker', unter: n => n + ' Fragen, viele mit Bild', anzahl: () => steckerFragen().length, nurVoll: true,
                    karten: n => { const f = steckerFragen(); const k = []; while(f.length && k.length < n){ misch(f).forEach(q => { if(k.length < n){ const c = ausFrage(q, 'stecker'); if(c) k.push(c); } }); } return k; } },
         technik: { name: 'Einheiten & Formeln', unter: () => TECHNIK.length + ' Karten', anzahl: () => TECHNIK.length,
@@ -48248,13 +48252,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                        return paar(null, 'technik', t[0], frage, t[1], t[3], andere, t[4]);
                    }) },
         mix:     { name: 'Alles gemischt', unter: () => 'Von allem etwas', anzahl: () => 1,
-                   karten: n => { const t = themenListe().filter(x => x !== 'mix' && (x !== 'morse' || nurTechnik()) && x !== 'lkplus'); let k = []; t.forEach(x => { k = k.concat(THEMEN[x].karten(Math.ceil(n / t.length) + 1)); }); return misch(k).slice(0, n); } }
+                   karten: n => { const t = themenListe().filter(x => x !== 'mix' && (x !== 'morse' || nurTechnik())); let k = []; t.forEach(x => { k = k.concat(THEMEN[x].karten(Math.ceil(n / t.length) + 1)); }); return misch(k).slice(0, n); } }
     };
     function steckerFragen(){ return bank().filter(q => /Steck(er|verbind)/.test(q.text) && q.part !== 'vorschriften'); }
     function themenListe(){
         // Bei den Aufstockungen nur Technik: Pruefungsfragen (dort nur Technik), Einheiten & Formeln, Technik-Kuerzel und Morsezeichen
         if(nurTechnik()) return ['mix', 'fragen', 'technik', 'abk', 'morse'];
-        return ['mix', 'fragen', 'abk', 'qgruppen', 'lk', 'stecker', 'technik', 'lkplus', 'morse'].filter(t => THEMEN[t].anzahl() > 0);
+        return ['mix', 'fragen', 'abk', 'qgruppen', 'lk', 'stecker', 'technik', 'morse'].filter(t => THEMEN[t].anzahl() > 0);
     }
 
     let el = null, spiel = null;
@@ -48312,6 +48316,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, tippe unten auf <b>Richtig</b> – stimmt sie nicht, auf <b>Falsch</b>. Ein kurzer Wisch mit dem Finger geht auch.</div>'
           + '<label class="ks-schalter ks-tut-an"><span>Swipe-Tutorial vor der ersten Karte<small>zeigt noch einmal, wie das Wischen geht</small></span>'
           + '<button type="button" role="switch" aria-checked="' + (tutVerstanden() ? 'false' : 'true') + '" aria-label="Swipe-Tutorial ein oder aus"><i></i></button></label>'
+          + (nurTechnik() ? '' : '<label class="ks-schalter ks-erw-an"><span>Erweitert<small>auch Q-Gruppen und Landeskenner, die in der Prüfung nicht vorkommen</small></span>'
+          + '<button type="button" role="switch" aria-checked="' + (erweitert() ? 'true' : 'false') + '" aria-label="Erweitert ein oder aus"><i></i></button></label>')
           + '<div class="ks-themen-kopf">Thema wählen</div>'
           + '<div class="ks-themen">' + t.map(k => {
                 const th = THEMEN[k], n = th.anzahl(), best = parseInt(lies(bestKey(k), '0'), 10) || 0;
@@ -48319,6 +48325,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      + '<small>' + esc(th.unter(n)) + (best ? ' · ★ ' + best : '') + '</small></button>';
             }).join('') + '</div>';
         el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => los(b.dataset.thema)));
+        const erw = el.querySelector('.ks-erw-an');
+        if(erw) erw.addEventListener('click', ev => {
+            ev.preventDefault();
+            schreib(erwKey(), erweitert() ? '' : '1');
+            const y = el.querySelector('.ks-start').scrollTop;
+            start();                                           // Zahlen in den Themen neu
+            tu(() => { el.querySelector('.ks-start').scrollTop = y; });
+        });
         const an = el.querySelector('.ks-tut-an');
         an.addEventListener('click', ev => {
             ev.preventDefault();
@@ -48593,7 +48607,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 + '<br><span>Richtig: </span><b>' + esc(k.richtig || '(Bild)') + '</b></div>').join('') + '</div>';
         }
         const ids = [...new Set(spiel.fehl.filter(k => k.qid).map(k => k.qid))];
-        const lk = (t === 'lk' || t === 'lkplus') ? LK_FRAGEN.filter(i => bank().some(q => q.id === i)) : [];
+        const lk = t === 'lk' ? LK_FRAGEN.filter(i => bank().some(q => q.id === i)) : [];
         el.querySelector('.ks-ende').innerHTML =
             '<div class="ks-ergebnis">' + r + '<small> / ' + n + '</small></div>'
           + '<div class="ks-lob">' + esc(lob) + '</div>'
@@ -48613,7 +48627,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         el.querySelector('.ks-fertig').addEventListener('click', zu);
         el.querySelectorAll('.ks-pruef').forEach(p => p.addEventListener('click', () => {
             const liste = p.dataset.ids.split(',');
-            zu(); tu(() => startQuestionSession(liste, (t === 'lk' || t === 'lkplus') && liste.length > 5 ? 'Landeskenner' : 'Match – nachüben'));
+            zu(); tu(() => startQuestionSession(liste, t === 'lk' && liste.length > 5 ? 'Landeskenner' : 'Match – nachüben'));
         }));
     }
 
