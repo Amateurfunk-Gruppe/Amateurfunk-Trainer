@@ -4119,8 +4119,8 @@
     }
 
     // Eine Karte in den Chat haengen (28.09.2026, Kurs und Hausaufgaben).
-    // Die Anfrage "Maja moechte in den Kurs" sieht nur der Kursleiter, die
-    // Antwort nur Maja - beides entsteht im eigenen Browser, nicht als
+    // Die Anfrage "Anna moechte in den Kurs" sieht nur der Kursleiter, die
+    // Antwort nur Anna - beides entsteht im eigenen Browser, nicht als
     // Chatnachricht auf dem Server. Deshalb geht es hier am Verteiler vorbei.
     window.duoChatKarte = function(knoten){
         try{
@@ -5262,7 +5262,7 @@
 
             // ----------------------------------------------------------------
             //  ZURUECK IN DEN RAUM NACH EINEM ABRISS         (21.09.2026)
-            //  Dietmar: "Ich uebe mit meiner Freundin Maja zusammen im
+            //  Dietmar: "Ich uebe mit einer Mitlernerin zusammen im
             //  Gruppenraum. Sie sagt, dass der Chat manchmal nicht geht.
             //  Kommt mir so vor, dass wenn sie fertig ist er nicht mehr geht."
             //
@@ -5274,7 +5274,7 @@
             //
             //  Die Folge war heimtueckisch: Lesen ging weiter (die
             //  Nachrichten des Gastgebers werden ohnehin nach draussen
-            //  kopiert), Schreiben nicht. Maja sah also Dietmars Zeilen
+            //  kopiert), Schreiben nicht. Sie sah also Dietmars Zeilen
             //  hereinkommen, tippte eine Antwort - und die verschwand. Fuer
             //  sie "geht der Chat nicht", fuer ihn wird sie einfach still.
             //

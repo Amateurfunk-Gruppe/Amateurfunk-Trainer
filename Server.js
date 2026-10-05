@@ -6944,7 +6944,7 @@ try{
   //  fragt. Bei allen anderen soll nur erscheinen, das ein Teilnehmer mit
   //  Namen die KI gefragt hat."
   //  Frage, "denkt nach", Antwort und Sprachnachricht gehen nur an den
-  //  Fragenden. Die anderen bekommen eine Zeile "Maja hat den Lerncoach
+  //  Fragenden. Die anderen bekommen eine Zeile "Anna hat den Lerncoach
   //  gefragt." lcPrivat merkt sich je Nachricht die Chat-Sitzung des
   //  Fragenden - so bleibt die Antwort fuer ihn auch nach einem
   //  Neuverbinden im Verlauf, und chatFuer/chatNachrichtOrt lassen sie
@@ -8299,7 +8299,7 @@ try{
       // Lernen nicht unterbrochen.
       // Seit 29.09.2026 auch fuer den, der als Letzter fertig wird - vorher
       // ging dann nur die Gesamt-Auswertung auf, und im Chat stand nichts.
-      // Dietmar: "Wenn meine Frau Maja fertig ist, kommt eine Meldung im
+      // Dietmar: "Wenn meine Mitlernerin fertig ist, kommt eine Meldung im
       // Chat und bei mir kommt nichts".
       if(totalQuestions>0 && answeredCount>=totalQuestions && (!room.lektion || room.lektion.frei)){
         if(!room._fertigGemeldet) room._fertigGemeldet = {};
