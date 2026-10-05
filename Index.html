@@ -1255,6 +1255,9 @@
         }
         /* Die Versionszeile ganz unten auf der Startseite der App (04.10.2026) */
         html.android-app .footer-note .app-stand { display: block; margin-top: 8px; font-size: 0.76rem; letter-spacing: 0.02em; opacity: 0.85; cursor: pointer; font-variant-numeric: tabular-nums; }
+        /* Nachtpruefung 05.10.2026: Auf 360er-Handys stand oben "Amateurfunk-Tr…", auf 320ern "Amateurfu…" - die Schrift wird dort etwas kleiner */
+        @media (max-width: 389px) { html.android-app #appLeiste .al-titel { font-size: 1.0rem; letter-spacing: -0.3px; } }
+        @media (max-width: 339px) { html.android-app #appLeiste .al-titel { font-size: 0.9rem; } }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23128,7 +23131,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 37, datum: '04.10.2026' };
+const TRAINER_STAND = { nr: 38, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -47656,6 +47659,798 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     });
 })();
 </script>
+<style id="kartenStil">
+        /* ================================================================
+           MATCH - WISCHEN WIE BEI TINDER                        (05.10.2026)
+           Dietmar (Bild der Kacheln unter "Ueben", fuenf Stueck): "5 ist eine
+           bloede Zahl, die ein schwarzes Loch hinzufuegt." - "Was neues
+           erfinden" - "Wischen wie bei Tinder" - und genauer: "Bei Match kommt
+           Q-Code, Telegrafie-Code, Landeskenner, Stecker und alle 571 Fragen
+           fuer N. Und Fragen von N auf E und E auf A nur Technik. Es gibt nur
+           richtig und falsch. Oben steht die Frage und unten die Antwort.
+           Swipe rechts richtig und links falsch. Anstatt 4 Antworten 2
+           moeglich." - "Mit Wisch-Erklaerung am Anfang."
+           Jede Karte: oben die Frage (mit Bild, wenn es eins gibt), unten EINE
+           Antwort. Nach rechts wischen = die Antwort ist richtig, nach links =
+           falsch (oder die Knoepfe darunter). Wer danebenliegt, sieht die
+           richtige Antwort. 20 Karten je Runde, Themen zur Wahl. Nur in der App.
+           ================================================================ */
+        #kartenSpiel { position: fixed; inset: 0; z-index: 99990; display: none; flex-direction: column;
+            background: var(--s-bg, #F2F5FC); color: var(--s-text, #0C1731); font-family: inherit;
+            padding: calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 14px); box-sizing: border-box; overscroll-behavior: contain; }
+        #kartenSpiel.offen { display: flex; }
+        #kartenSpiel * { box-sizing: border-box; }
+        #kartenSpiel .ks-kopf { display: flex; align-items: center; gap: 10px; min-height: 44px; flex: 0 0 auto; }
+        #kartenSpiel .ks-zu { width: 40px; height: 40px; border-radius: var(--s-r-klein, 12px); border: 1px solid var(--s-rand2, #ccd); background: var(--s-fl, #fff); color: var(--s-text, #111); font-size: 18px; line-height: 1; cursor: pointer; flex: 0 0 auto; }
+        #kartenSpiel .ks-titel { flex: 1; font-size: 18px; font-weight: 800; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #kartenSpiel .ks-stand { font-size: 14px; font-weight: 700; color: var(--s-text2, #456); font-variant-numeric: tabular-nums; }
+        #kartenSpiel .ks-balken { height: 6px; border-radius: 3px; background: var(--s-fl2, #e8edf6); margin: 8px 0 8px; overflow: hidden; flex: 0 0 auto; }
+        #kartenSpiel .ks-balken i { display: block; height: 100%; width: 0; background: var(--s-haupt, #0FB7B2); transition: width .3s ease; }
+        #kartenSpiel .ks-buehne { flex: 1; position: relative; display: flex; align-items: stretch; justify-content: center; min-height: 0; touch-action: none; }
+        #kartenSpiel .ks-karte { position: relative; width: min(100%, 420px); max-height: 100%; border-radius: var(--s-r-karte, 22px);
+            background: var(--s-fl, #fff); border: 1px solid var(--s-rand2, #d5dbe6); box-shadow: 0 14px 34px rgba(12, 23, 49, .18);
+            display: flex; flex-direction: column; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; will-change: transform; cursor: grab; }
+        html.android-app body.dark #kartenSpiel .ks-karte { background: #121a33; }
+        #kartenSpiel .ks-karte.fliegt { transition: transform .32s ease-in, opacity .32s ease-in; }
+        #kartenSpiel .ks-karte.zurueck { transition: transform .25s cubic-bezier(.2,.9,.3,1.2); }
+        #kartenSpiel .ks-oben { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 22px 20px 14px; overflow: hidden; }
+        #kartenSpiel .ks-art { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-text3, #8a97b5); margin-bottom: 12px; }
+        #kartenSpiel .ks-frage { font-size: 20px; font-weight: 700; line-height: 1.3; word-break: break-word; }
+        #kartenSpiel .ks-frage.gross { font-size: clamp(30px, 10vw, 46px); font-weight: 800; color: var(--s-haupt, #0FB7B2); line-height: 1.1; }
+        #kartenSpiel .ks-frage.mittel { font-size: clamp(22px, 6.6vw, 28px); font-weight: 800; }
+        #kartenSpiel .ks-frage.lang { font-size: 16.5px; }
+        #kartenSpiel .ks-frage.sehrlang { font-size: 14.5px; }
+        #kartenSpiel .ks-frage .ks-gross { display: block; font-size: clamp(30px, 10vw, 46px); font-weight: 800; color: var(--s-haupt, #0FB7B2); margin-top: 6px; line-height: 1.1; letter-spacing: .02em; }
+        #kartenSpiel .ks-bild { margin-top: 12px; max-width: 100%; }
+        #kartenSpiel .ks-bild img, #kartenSpiel .ks-antwort img, #kartenSpiel .ks-wahr img { max-width: 100%; max-height: 22vh; background: #fff; border-radius: 10px; padding: 4px; pointer-events: none; }
+        #kartenSpiel .ks-unten { flex: 0 0 auto; padding: 14px 18px 18px; background: var(--s-fl2, #F3F6FD); border-top: 1px solid var(--s-rand, #e3e6eb); text-align: center; }
+        html.android-app body.dark #kartenSpiel .ks-unten { background: rgba(255,255,255,.06); }
+        #kartenSpiel .ks-antwort-kopf { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-text3, #8a97b5); margin-bottom: 6px; }
+        #kartenSpiel .ks-antwort { font-size: 19px; font-weight: 800; line-height: 1.3; word-break: break-word; }
+        #kartenSpiel .ks-antwort.lang { font-size: 16px; font-weight: 700; }
+        #kartenSpiel .ks-antwort.morse { font-size: 34px; letter-spacing: .12em; }
+        #kartenSpiel .ks-marke { position: absolute; top: 14px; padding: 6px 12px; border: 3px solid; border-radius: 10px; font-weight: 900; font-size: 18px; letter-spacing: .06em; opacity: 0; transform: rotate(-12deg); pointer-events: none; z-index: 2; background: var(--s-fl, #fff); }
+        #kartenSpiel .ks-marke.ja { left: 14px; color: var(--s-gruen, #1FC46F); border-color: var(--s-gruen, #1FC46F); }
+        #kartenSpiel .ks-marke.nein { right: 14px; color: var(--s-rot, #F2375A); border-color: var(--s-rot, #F2375A); transform: rotate(12deg); }
+        #kartenSpiel .ks-loesung { position: absolute; inset: 0; border-radius: inherit; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 22px 20px; text-align: center; background: var(--s-fl, #fff); overflow-y: auto; z-index: 3; }
+        html.android-app body.dark #kartenSpiel .ks-loesung { background: #121a33; }
+        #kartenSpiel .ks-karte.falsch .ks-loesung { display: flex; }
+        #kartenSpiel .ks-loesung .ks-urteil { font-size: 15px; font-weight: 800; color: var(--s-rot, #F2375A); margin-bottom: 10px; }
+        #kartenSpiel .ks-loesung .ks-lfrage { font-size: 14px; color: var(--s-text2, #456); line-height: 1.4; margin-bottom: 10px; }
+        #kartenSpiel .ks-loesung .ks-wahr-kopf { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-gruen-tief, #11924F); }
+        html.android-app body.dark #kartenSpiel .ks-loesung .ks-wahr-kopf { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-loesung .ks-wahr { font-size: 20px; font-weight: 800; line-height: 1.3; margin-top: 4px; }
+        #kartenSpiel .ks-loesung .ks-merk { margin-top: 12px; font-size: 14.5px; line-height: 1.45; color: var(--s-text2, #456); }
+        #kartenSpiel .ks-loesung .ks-tipp { margin-top: 16px; font-size: 13px; color: var(--s-text3, #8a97b5); }
+        #kartenSpiel .ks-hinweis { text-align: center; font-size: 13px; color: var(--s-text3, #8a97b5); min-height: 20px; margin: 8px 0; flex: 0 0 auto; }
+        #kartenSpiel .ks-hinweis.gut { color: var(--s-gruen-tief, #11924F); font-weight: 700; }
+        html.android-app body.dark #kartenSpiel .ks-hinweis.gut { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-knoepfe { display: flex; gap: 12px; flex: 0 0 auto; }
+        #kartenSpiel button.ks-k { flex: 1; min-height: 52px; border-radius: var(--s-r-knopf, 18px); font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1.1; cursor: pointer; border: 0; }
+        #kartenSpiel .ks-nein { background: var(--s-rot-w, rgba(242,55,90,.12)); color: var(--s-rot, #F2375A); }
+        #kartenSpiel .ks-ja { background: var(--s-gruen-w, rgba(31,196,111,.14)); color: var(--s-gruen-tief, #11924F); }
+        html.android-app body.dark #kartenSpiel .ks-ja { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-weiter, #kartenSpiel .ks-nochmal, #kartenSpiel .ks-los { background: var(--s-haupt, #0FB7B2); color: var(--s-auf-haupt, #fff); }
+        #kartenSpiel .ks-pruef, #kartenSpiel .ks-thema { background: var(--s-fl, #fff); color: var(--s-text, #111); border: 1px solid var(--s-rand2, #ccd) !important; }
+        #kartenSpiel .ks-fertig { background: transparent; color: var(--s-text2, #456); border: 1px solid var(--s-rand2, #ccd) !important; }
+        /* Der Anfang: die Wisch-Erklaerung und die Themen */
+        #kartenSpiel .ks-start, #kartenSpiel .ks-ende { flex: 1; display: none; flex-direction: column; align-items: center; gap: 10px; overflow-y: auto; text-align: center; padding-top: 4px; }
+        #kartenSpiel.start .ks-start, #kartenSpiel.fertig .ks-ende { display: flex; }
+        #kartenSpiel.start .ks-buehne, #kartenSpiel.start .ks-knoepfe, #kartenSpiel.start .ks-hinweis, #kartenSpiel.start .ks-balken, #kartenSpiel.start .ks-stand,
+        #kartenSpiel.fertig .ks-buehne, #kartenSpiel.fertig .ks-knoepfe, #kartenSpiel.fertig .ks-hinweis, #kartenSpiel.fertig .ks-balken { display: none; }
+        #kartenSpiel .ks-bild-wisch { width: min(78vw, 300px); height: auto; }
+        #kartenSpiel .ks-wisch-hand { animation: ksWisch 2.4s ease-in-out infinite; transform-origin: 160px 150px; }
+        @keyframes ksWisch { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(46px) rotate(8deg); } 50% { transform: translateX(0) rotate(0); } 75% { transform: translateX(-46px) rotate(-8deg); } }
+        #kartenSpiel .ks-regel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(100%, 380px); }
+        #kartenSpiel .ks-regel div { border-radius: var(--s-r-klein, 12px); padding: 10px 8px; font-size: 14px; font-weight: 700; line-height: 1.3; }
+        #kartenSpiel .ks-regel .l { background: var(--s-rot-w, rgba(242,55,90,.12)); color: var(--s-rot, #F2375A); }
+        #kartenSpiel .ks-regel .r { background: var(--s-gruen-w, rgba(31,196,111,.14)); color: var(--s-gruen-tief, #11924F); }
+        html.android-app body.dark #kartenSpiel .ks-regel .r { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-regel small { display: block; font-weight: 500; color: var(--s-text2, #456); margin-top: 2px; }
+        #kartenSpiel .ks-themen-kopf { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-text3, #8a97b5); margin-top: 8px; }
+        #kartenSpiel .ks-themen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(100%, 380px); }
+        #kartenSpiel .ks-themen button { min-height: 58px; border-radius: var(--s-r-klein, 12px); border: 1px solid var(--s-rand2, #ccd); background: var(--s-fl, #fff); color: var(--s-text, #111);
+            font-family: inherit; font-size: 14.5px; font-weight: 700; text-align: left; padding: 8px 12px; cursor: pointer; line-height: 1.2; }
+        #kartenSpiel .ks-themen button small { display: block; font-size: 12px; font-weight: 500; color: var(--s-text2, #456); margin-top: 2px; }
+        #kartenSpiel .ks-themen button.breit { grid-column: 1 / -1; background: var(--s-haupt, #0FB7B2); color: var(--s-auf-haupt, #fff); border-color: transparent; }
+        #kartenSpiel .ks-themen button.breit small { color: inherit; opacity: .85; }
+        #kartenSpiel .ks-ergebnis { font-size: 54px; font-weight: 800; color: var(--s-haupt, #0FB7B2); line-height: 1; margin-top: 10px; }
+        #kartenSpiel .ks-ergebnis small { font-size: 22px; color: var(--s-text2, #456); font-weight: 700; }
+        #kartenSpiel .ks-lob { font-size: 18px; font-weight: 800; }
+        #kartenSpiel .ks-best { font-size: 14px; color: var(--s-text2, #456); }
+        #kartenSpiel .ks-fehlliste { width: min(100%, 380px); text-align: left; margin: 6px 0; font-size: 13.5px; line-height: 1.45; background: var(--s-fl, #fff); border: 1px solid var(--s-rand, #e3e6eb); border-radius: var(--s-r-klein, 12px); padding: 8px 12px; }
+        #kartenSpiel .ks-fehlliste div + div { border-top: 1px solid var(--s-rand, #e3e6eb); margin-top: 6px; padding-top: 6px; }
+        #kartenSpiel .ks-fehlliste span { color: var(--s-text2, #456); }
+        #kartenSpiel .ks-reihe { display: flex; flex-direction: column; gap: 10px; width: min(100%, 380px); margin-top: 6px; }
+        @media (prefers-reduced-motion: reduce) { #kartenSpiel .ks-karte.fliegt, #kartenSpiel .ks-karte.zurueck { transition: none; } #kartenSpiel .ks-wisch-hand { animation: none; } }
+        /* Die Kachel und das Raster: Bei ungerader Zahl sichtbarer Kacheln nimmt die letzte die ganze Breite - kein Loch mehr */
+        #appHeute .ah-kachel.breit { grid-column: 1 / -1; }
+        #appHeute .ah-ico.tuerkis { background: linear-gradient(135deg, #2EE6D6, #0A94B8); }
+</style>
+<script id="kartenSpielSkript">
+(function(){
+    'use strict';
+    const D = document;
+    // ---------- Die Karten ----------
+    const LANDESKENNER = [
+        ['DL', 'Deutschland', 'DA bis DR ist Deutschland. DS/DT gehört zu Südkorea, DU bis DZ zu den Philippinen.', ['Dänemark', 'Südkorea']],
+        ['DS', 'Südkorea', 'D ist nicht immer Deutschland: DA bis DR Deutschland, DS/DT Südkorea, DU bis DZ Philippinen.', ['Deutschland', 'Philippinen']],
+        ['DU', 'Philippinen', 'DU bis DZ: Philippinen. Deutschland hat nur DA bis DR.', ['Deutschland', 'Südkorea']],
+        ['OE', 'Österreich', 'OE wie Österreich (Ö = OE).', ['Dänemark', 'Estland']],
+        ['OZ', 'Dänemark', 'OZ ist Dänemark – nicht mit OE (Österreich) verwechseln.', ['Österreich', 'Norwegen']],
+        ['ON', 'Belgien', 'ON ist Belgien. Die Niederlande sind PA.', ['Niederlande', 'Luxemburg']],
+        ['OK', 'Tschechien', 'OK Tschechien, OM Slowakei – früher zusammen die Tschechoslowakei.', ['Slowakei', 'Polen']],
+        ['OM', 'Slowakei', 'OM Slowakei, OK Tschechien.', ['Tschechien', 'Slowenien']],
+        ['PA', 'Niederlande', 'PA ist Niederlande. Belgien ist ON.', ['Belgien', 'Polen']],
+        ['SM', 'Schweden', 'SM – Sverige (Schweden). Schottland ist GM.', ['Schottland', 'Slowenien']],
+        ['SP', 'Polen', 'SP ist Polen – nicht Spanien! Spanien ist EA.', ['Spanien', 'Schweden']],
+        ['EA', 'Spanien', 'EA – España.', ['Polen', 'Estland']],
+        ['F', 'Frankreich', 'F – France.', ['Finnland', 'Belgien']],
+        ['I', 'Italien', 'I – Italia.', ['Irland', 'Island']],
+        ['HB9', 'Schweiz', 'HB – Helvetia, der lateinische Name der Schweiz. HB0 ist Liechtenstein.', ['Liechtenstein', 'Österreich']],
+        ['HB0', 'Liechtenstein', 'HB0 – Liechtenstein, HB9 – Schweiz.', ['Schweiz', 'Luxemburg']],
+        ['LX', 'Luxemburg', 'LX – Luxemburg. Nicht mit LU (Argentinien) verwechseln.', ['Argentinien', 'Litauen']],
+        ['LU', 'Argentinien', 'LU ist Argentinien – nicht Luxemburg (LX).', ['Luxemburg', 'Litauen']],
+        ['ZS', 'Südafrika', 'ZS – Südafrika.', ['Schweden', 'Neuseeland']],
+        ['4X', 'Israel', '4X (auch 4Z) – Israel.', ['Irland', 'Island']],
+        ['EI', 'Irland', 'EI – Éire, der irische Name von Irland.', ['Island', 'Spanien']],
+        ['EK', 'Armenien', 'EK – Armenien.', ['Estland', 'Ukraine']],
+        ['EM', 'Ukraine', 'EM bis EO – Ukraine (auch UR).', ['Armenien', 'Estland']],
+        ['ES', 'Estland', 'ES – Estland.', ['Spanien', 'Armenien']],
+        ['VE', 'Kanada', 'VE – Kanada.', ['USA', 'Australien']],
+        ['VK', 'Australien', 'VK – Australien.', ['Kanada', 'Neuseeland']],
+        ['PY', 'Brasilien', 'PY – Brasilien.', ['Japan', 'Argentinien']],
+        ['W', 'USA', 'W, K, N und AA bis AL – USA.', ['Kanada', 'Mexiko']],
+        ['K', 'USA', 'K, W, N und AA bis AL – USA.', ['Kanada', 'Südafrika']],
+        ['ZL', 'Neuseeland', 'ZL – Neuseeland.', ['Südafrika', 'Australien']],
+        ['BY', 'China', 'BY – China.', ['Japan', 'Indien']],
+        ['JA', 'Japan', 'JA – Japan.', ['China', 'Brasilien']],
+        ['VU', 'Indien', 'VU – Indien.', ['China', 'Japan']],
+        ['XE', 'Mexiko', 'XE – Mexiko.', ['Kanada', 'Chile']],
+        ['CE', 'Chile', 'CE – Chile.', ['Kanada', 'Argentinien']],
+        ['CT', 'Portugal', 'CT – Portugal.', ['Spanien', 'Italien']],
+        ['G', 'England', 'G (auch M und 2E) – England. GM ist Schottland.', ['Schottland', 'Irland']],
+        ['GM', 'Schottland', 'GM – Schottland. SM ist Schweden.', ['Schweden', 'England']],
+        ['LA', 'Norwegen', 'LA – Norwegen.', ['Dänemark', 'Lettland']],
+        ['LZ', 'Bulgarien', 'LZ – Bulgarien. Luxemburg ist LX.', ['Luxemburg', 'Litauen']],
+        ['OH', 'Finnland', 'OH – Finnland.', ['Österreich', 'Frankreich']],
+        ['SV', 'Griechenland', 'SV – Griechenland.', ['Schweden', 'Slowenien']],
+        ['HA', 'Ungarn', 'HA (auch HG) – Ungarn.', ['Österreich', 'Rumänien']],
+        ['S5', 'Slowenien', 'S5 – Slowenien. Die Slowakei ist OM.', ['Slowakei', 'Schweden']],
+        ['9A', 'Kroatien', '9A – Kroatien.', ['Slowenien', 'Malta']],
+        ['YO', 'Rumänien', 'YO – Rumänien.', ['Ungarn', 'Bulgarien']],
+        ['UA', 'Russland', 'UA (auch R) – Russland.', ['Ukraine', 'Estland']],
+        ['TF', 'Island', 'TF – Island.', ['Irland', 'Finnland']],
+        ['LY', 'Litauen', 'LY – Litauen, YL – Lettland, ES – Estland.', ['Lettland', 'Luxemburg']],
+        ['YL', 'Lettland', 'YL – Lettland, LY – Litauen.', ['Litauen', 'Estland']],
+        ['9H', 'Malta', '9H – Malta.', ['Kroatien', 'Zypern']]
+    ];
+    // Technik: [Gruppe, A, Verb, B, Merksatz]. Falsche Behauptungen nehmen das B einer anderen Karte derselben Gruppe.
+    const TECHNIK = [
+        ['Einheit', 'Spannung', 'wird gemessen in', 'Volt (V)', 'Spannung U in Volt.'],
+        ['Einheit', 'Strom', 'wird gemessen in', 'Ampere (A)', 'Stromstärke I in Ampere.'],
+        ['Einheit', 'Widerstand', 'wird gemessen in', 'Ohm (Ω)', 'Widerstand R in Ohm.'],
+        ['Einheit', 'Leistung', 'wird gemessen in', 'Watt (W)', 'Leistung P in Watt.'],
+        ['Einheit', 'Kapazität', 'wird gemessen in', 'Farad (F)', 'Kapazität C in Farad.'],
+        ['Einheit', 'Induktivität', 'wird gemessen in', 'Henry (H)', 'Induktivität L in Henry.'],
+        ['Einheit', 'Frequenz', 'wird gemessen in', 'Hertz (Hz)', 'Frequenz f in Hertz – Schwingungen je Sekunde.'],
+        ['Einheit', 'Ladung', 'wird gemessen in', 'Coulomb (C)', 'Ladung Q in Coulomb (1 C = 1 A · 1 s).'],
+        ['Einheit', 'Energie', 'wird gemessen in', 'Joule (J)', 'Energie W in Joule (1 J = 1 W · 1 s).'],
+        ['Einheit', 'Leitwert', 'wird gemessen in', 'Siemens (S)', 'Leitwert G = 1/R in Siemens.'],
+        ['Formelzeichen', 'U', 'steht für', 'Spannung', 'U – Spannung, I – Strom, R – Widerstand.'],
+        ['Formelzeichen', 'I', 'steht für', 'Stromstärke', 'I – Stromstärke.'],
+        ['Formelzeichen', 'R', 'steht für', 'Widerstand', 'R – Widerstand.'],
+        ['Formelzeichen', 'P', 'steht für', 'Leistung', 'P – Leistung (power).'],
+        ['Formelzeichen', 'C', 'steht für', 'Kapazität', 'C – Kapazität (capacity).'],
+        ['Formelzeichen', 'L', 'steht für', 'Induktivität', 'L – Induktivität.'],
+        ['Formelzeichen', 'f', 'steht für', 'Frequenz', 'f – Frequenz.'],
+        ['Formelzeichen', 'λ', 'steht für', 'Wellenlänge', 'λ (Lambda) – Wellenlänge.'],
+        ['Formelzeichen', 'T', 'steht für', 'Periodendauer', 'T – Periodendauer, T = 1/f.'],
+        ['Formelzeichen', 'Z', 'steht für', 'Scheinwiderstand (Impedanz)', 'Z – Scheinwiderstand, X – Blindwiderstand.'],
+        ['Formelzeichen', 'X', 'steht für', 'Blindwiderstand', 'X – Blindwiderstand (XL an der Spule, XC am Kondensator).'],
+        ['Vorsatz', 'piko (p)', 'bedeutet', '10⁻¹²', 'p = 10⁻¹², n = 10⁻⁹, µ = 10⁻⁶, m = 10⁻³.'],
+        ['Vorsatz', 'nano (n)', 'bedeutet', '10⁻⁹', 'n = 10⁻⁹ – ein Milliardstel.'],
+        ['Vorsatz', 'mikro (µ)', 'bedeutet', '10⁻⁶', 'µ = 10⁻⁶ – ein Millionstel.'],
+        ['Vorsatz', 'milli (m)', 'bedeutet', '10⁻³', 'm = 10⁻³ – ein Tausendstel.'],
+        ['Vorsatz', 'kilo (k)', 'bedeutet', '10³', 'k = 10³ – tausend.'],
+        ['Vorsatz', 'Mega (M)', 'bedeutet', '10⁶', 'M = 10⁶ – eine Million.'],
+        ['Vorsatz', 'Giga (G)', 'bedeutet', '10⁹', 'G = 10⁹ – eine Milliarde.'],
+        ['Formel', 'Leistung P', 'berechnet man mit', 'P = U · I', '„PUI“: P = U · I.'],
+        ['Formel', 'Spannung U', 'berechnet man mit', 'U = R · I', '„URI“: U = R · I.'],
+        ['Formel', 'Wellenlänge λ', 'berechnet man mit', 'λ = c / f', 'λ = c / f, mit c = 300 000 km/s. 300 / f in MHz ergibt λ in m.'],
+        ['Formel', 'Periodendauer T', 'berechnet man mit', 'T = 1 / f', 'T = 1 / f – je höher die Frequenz, desto kürzer die Periode.'],
+        ['Formel', 'Blindwiderstand XL einer Spule', 'berechnet man mit', 'XL = 2π · f · L', 'XL = 2π f L – steigt mit der Frequenz.'],
+        ['Formel', 'Blindwiderstand XC eines Kondensators', 'berechnet man mit', 'XC = 1 / (2π · f · C)', 'XC = 1/(2π f C) – sinkt mit der Frequenz.'],
+        ['Formel', 'Resonanzfrequenz f eines Schwingkreises', 'berechnet man mit', 'f = 1 / (2π · √(L · C))', 'Thomsonsche Schwingungsformel.'],
+        ['Formel', 'Leistung P aus U und R', 'berechnet man mit', 'P = U² / R', 'P = U · I und I = U / R ergibt P = U² / R.'],
+        ['Dezibel', '3 dB', 'entspricht bei der Leistung etwa dem Faktor', '2', '3 dB ≈ doppelte Leistung, 10 dB = zehnfache, 20 dB = hundertfache.'],
+        ['Dezibel', '10 dB', 'entspricht bei der Leistung dem Faktor', '10', '10 dB = Faktor 10 bei der Leistung.'],
+        ['Dezibel', '20 dB', 'entspricht bei der Leistung dem Faktor', '100', '20 dB = Faktor 100 bei der Leistung (Faktor 10 bei der Spannung).'],
+        ['Dezibel', '6 dB', 'entspricht bei der Leistung etwa dem Faktor', '4', '6 dB ≈ vierfache Leistung = doppelte Spannung.']
+    ];
+    // Q-Gruppen (Betriebsdienst, Klasse N): [Gruppe, Bedeutung, Verwechslungen]
+    const QGRUPPEN = [
+        ['QRA', 'Name der Funkstelle', ['Standort der Funkstelle']],
+        ['QRG', 'Genaue Frequenz', ['Frequenzwechsel']],
+        ['QRL', 'Die Frequenz ist belegt', ['Bereit zum Empfang']],
+        ['QRM', 'Störungen durch andere Funkstellen', ['Atmosphärische Störungen']],
+        ['QRN', 'Atmosphärische Störungen', ['Störungen durch andere Funkstellen']],
+        ['QRO', 'Sendeleistung erhöhen', ['Sendeleistung verringern']],
+        ['QRP', 'Sendeleistung verringern', ['Sendeleistung erhöhen']],
+        ['QRQ', 'Schneller geben', ['Langsamer geben']],
+        ['QRS', 'Langsamer geben', ['Schneller geben']],
+        ['QRT', 'Sendung einstellen', ['Warten, ich rufe wieder']],
+        ['QRV', 'Ich bin bereit', ['Die Frequenz ist belegt']],
+        ['QRX', 'Warten, ich rufe wieder', ['Sendung einstellen']],
+        ['QRZ', 'Wer ruft mich?', ['Name der Funkstelle']],
+        ['QSB', 'Schwund (Fading)', ['Atmosphärische Störungen']],
+        ['QSL', 'Empfangsbestätigung', ['Funkverbindung']],
+        ['QSO', 'Funkverbindung', ['Empfangsbestätigung']],
+        ['QSY', 'Frequenzwechsel', ['Genaue Frequenz']],
+        ['QTH', 'Standort der Funkstelle', ['Name der Funkstelle']],
+        ['QRK', 'Verständlichkeit der Zeichen', ['Stärke der Zeichen']],
+        ['QSP', 'Nachricht weiterleiten', ['Empfangsbestätigung']]
+    ];
+    // Betriebsabkuerzungen (Telegrafie und Sprechfunk)
+    const ABK = [
+        ['CQ', 'Allgemeiner Anruf an alle'], ['DE', 'von (hier ist)'], ['K', 'Bitte kommen'], ['AR', 'Ende der Nachricht'],
+        ['SK', 'Ende der Verbindung'], ['73', 'Viele Grüße'], ['88', 'Herzliche Grüße (Liebe und Küsse)'], ['TNX', 'Danke'],
+        ['PSE', 'Bitte'], ['UR', 'Dein / Ihr'], ['OM', 'Funkamateur („old man“)'], ['YL', 'Junge Dame, Funkamateurin'],
+        ['XYL', 'Ehefrau'], ['HI', 'Lachen'], ['WX', 'Wetter'], ['RIG', 'Funkgerät, Station'], ['ANT', 'Antenne'],
+        ['PWR', 'Sendeleistung'], ['ES', 'und'], ['FB', 'Sehr gut („fine business“)'], ['GM', 'Guten Morgen'], ['GE', 'Guten Abend'],
+        ['RST', 'Rapport: Lesbarkeit, Stärke, Ton'], ['CUAGN', 'Auf Wiederhören']
+    ];
+    // Morsezeichen (Telegrafie-Code)
+    const MORSE = { A: '·−', B: '−···', C: '−·−·', D: '−··', E: '·', F: '··−·', G: '−−·', H: '····', I: '··', J: '·−−−', K: '−·−', L: '·−··', M: '−−',
+        N: '−·', O: '−−−', P: '·−−·', Q: '−−·−', R: '·−·', S: '···', T: '−', U: '··−', V: '···−', W: '·−−', X: '−··−', Y: '−·−−', Z: '−−··',
+        '0': '−−−−−', '1': '·−−−−', '2': '··−−−', '3': '···−−', '4': '····−', '5': '·····', '6': '−····', '7': '−−···', '8': '−−−··', '9': '−−−−·' };
+    // Die Pruefungsfragen zu Landeskennern und Rufzeichen, und die zu Steckern
+    const LK_FRAGEN = ['VA406', 'VB110', 'BD301', 'BD302', 'BD303', 'BD304', 'BD305', 'BD306', 'BD307', 'BD308', 'BD309', 'BD310', 'BD311', 'BD312', 'BD313', 'BD314', 'BD315', 'BD316', 'BD317', 'BD318'];
+    const RUNDE = 20;
+
+    const $ = id => D.getElementById(id);
+    const tu = f => { try{ return f(); }catch(e){ return undefined; } };
+    const misch = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const zufall = a => a[Math.floor(Math.random() * a.length)];
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const lies = (k, v) => { try{ const x = localStorage.getItem(k); return x === null ? v : x; }catch(e){ return v; } };
+    const schreib = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+    function bank(){ let b = []; tu(() => { b = Array.isArray(questionBank) ? questionBank : []; }); return b; }
+    // Nur Technik im Katalog (N -> E, E -> A, N -> A)
+    function nurTechnik(){ const b = bank(); return b.length > 0 && !b.some(q => q.part !== 'technik'); }
+    function benutzerK(){ let u = 'user1'; tu(() => { u = currentUser || 'user1'; }); return u; }
+    const bestKey = t => 'karten_best_' + t + '_' + benutzerK();
+
+    // ---------- Karten bauen: oben die Frage, unten EINE Antwort ----------
+    // Eine Karte: { thema, art, frage, frageHtml?, groesse, antwort, antwortHtml?, wahr, richtig, richtigHtml?, merk, qid? }
+    function bildFrage(q){
+        let h = '';
+        // Wie in der normalen Runde: Bilder, die schon als Antwort dienen, nicht noch einmal als Fragebild (sonst zeigte z. B. NB401 die Loesung oben)
+        tu(() => { h = getSvgHtml(q.id, (q.options || []).map(o => o && o.image ? String(o.image).trim() : '').filter(Boolean)) || ''; });
+        // ohne Lupe (der Klick nach dem Wischen soll nichts oeffnen)
+        return h.replace(/onclick="[^"]*"/, '').replace(/loading="lazy"/, '').replace(/max-height:260px;/, 'max-height:24vh;').replace(/cursor:zoom-in;/, '');
+    }
+    function bildAntwort(o){
+        if(!o || !o.image || !String(o.image).trim()) return '';
+        const raw = String(o.image).trim();
+        const alt = /_q\.svg$/i.test(raw) ? raw.replace(/_q\.svg$/i, '.svg') : raw.replace(/\.svg$/i, '_q.svg');
+        return '<img src="svgs/' + esc(raw) + '" data-quellen="svgs/' + esc(raw) + '|svgs/' + esc(alt) + '" data-versuch="0" alt="Antwortbild" onerror="naechsteBildquelle(this)">';
+    }
+    function ausFrage(q, thema){
+        const opts = (q.options || []).filter(o => o && ((o.text && String(o.text).trim()) || o.image));
+        const richtig = opts.find(o => o.correct);
+        if(!richtig) return null;
+        const falsche = opts.filter(o => !o.correct);
+        const wahr = Math.random() < 0.5 || !falsche.length;
+        const o = wahr ? richtig : zufall(falsche);
+        const txt = String(o.text || '').trim();
+        return { thema, art: q.part === 'vorschriften' ? 'Vorschriften' : q.part === 'betrieb' ? 'Betrieb' : 'Technik', qid: q.id,
+            frage: q.text, bild: bildFrage(q), antwort: txt, antwortHtml: o.image ? bildAntwort(o) + (txt ? '<div>' + esc(txt) + '</div>' : '') : '',
+            wahr, richtig: String(richtig.text || '').trim(), richtigHtml: richtig.image ? bildAntwort(richtig) : '', merk: '' };
+    }
+    function paar(liste, thema, art, frage, gross, wahrText, falschListe, merk, morse){
+        const wahr = Math.random() < 0.5;
+        const antwort = wahr ? wahrText : zufall(falschListe);
+        return { thema, art, frage, gross, antwort, wahr, richtig: wahrText, merk, morse };
+    }
+    const THEMEN = {
+        fragen:  { name: 'Prüfungsfragen', unter: n => n + ' Fragen aus dem Katalog', anzahl: () => bank().length,
+                   karten: n => misch(bank()).slice(0, n).map(q => ausFrage(q, 'fragen')).filter(Boolean) },
+        qgruppen:{ name: 'Q-Gruppen & Abkürzungen', unter: () => (QGRUPPEN.length + ABK.length) + ' Karten', anzahl: () => QGRUPPEN.length + ABK.length, nurVoll: true,
+                   karten: n => misch(QGRUPPEN.map(x => ['q', x]).concat(ABK.map(x => ['a', x]))).slice(0, n).map(([t, x]) => {
+                       const andere = (t === 'q' ? QGRUPPEN : ABK).filter(y => y[0] !== x[0]).map(y => y[1]);
+                       const falsch = (x[2] && x[2].length && Math.random() < 0.7) ? x[2] : andere;
+                       return paar(null, 'qgruppen', t === 'q' ? 'Q-Gruppe' : 'Abkürzung', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
+                   }) },
+        morse:   { name: 'Morsezeichen', unter: () => '36 Zeichen', anzahl: () => 36, nurVoll: true,
+                   karten: n => misch(Object.keys(MORSE)).slice(0, n).map(z => {
+                       const andere = Object.keys(MORSE).filter(y => y !== z);
+                       if(Math.random() < 0.5){
+                           const k = paar(null, 'morse', 'Morsezeichen', 'Welches Zeichen ist', MORSE[z], z, andere, z + ' wird ' + MORSE[z] + ' gegeben.');
+                           k.grossMorse = true; return k;
+                       }
+                       const k = paar(null, 'morse', 'Morsezeichen', 'Wie wird gegeben:', z, MORSE[z], andere.map(y => MORSE[y]), z + ' wird ' + MORSE[z] + ' gegeben.');
+                       k.morse = true; return k;
+                   }) },
+        lk:      { name: 'Landeskenner', unter: () => LANDESKENNER.length + ' Kenner', anzahl: () => LANDESKENNER.length, nurVoll: true,
+                   karten: n => misch(LANDESKENNER).slice(0, n).map(l => {
+                       const v = (l[3] || []).filter(x => x !== l[1]);
+                       const andere = LANDESKENNER.filter(x => x[1] !== l[1]).map(x => x[1]);
+                       return paar(null, 'lk', 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
+                   }) },
+        stecker: { name: 'Stecker', unter: n => n + ' Fragen, viele mit Bild', anzahl: () => steckerFragen().length, nurVoll: true,
+                   karten: n => { const f = steckerFragen(); const k = []; while(f.length && k.length < n){ misch(f).forEach(q => { if(k.length < n){ const c = ausFrage(q, 'stecker'); if(c) k.push(c); } }); } return k; } },
+        technik: { name: 'Einheiten & Formeln', unter: () => TECHNIK.length + ' Karten', anzahl: () => TECHNIK.length,
+                   karten: n => misch(TECHNIK).slice(0, n).map(t => {
+                       const andere = TECHNIK.filter(x => x[0] === t[0] && x[3] !== t[3]).map(x => x[3]);
+                       const frage = t[0] === 'Einheit' ? 'Worin misst man die' : t[0] === 'Formelzeichen' ? 'Wofür steht das Formelzeichen' : t[0] === 'Vorsatz' ? 'Was bedeutet der Vorsatz' : t[0] === 'Formel' ? 'Wie berechnet man' : 'Was bedeuten';
+                       return paar(null, 'technik', t[0], frage, t[1], t[3], andere, t[4]);
+                   }) },
+        mix:     { name: 'Alles gemischt', unter: () => 'Von allem etwas', anzahl: () => 1,
+                   karten: n => { const t = themenListe().filter(x => x !== 'mix'); let k = []; t.forEach(x => { k = k.concat(THEMEN[x].karten(Math.ceil(n / t.length) + 1)); }); return misch(k).slice(0, n); } }
+    };
+    function steckerFragen(){ return bank().filter(q => /Steck(er|verbind)/.test(q.text) && q.part !== 'vorschriften'); }
+    function themenListe(){
+        // Bei den Aufstockungen nur Technik: die Pruefungsfragen (dort nur Technik) und Einheiten & Formeln
+        if(nurTechnik()) return ['mix', 'fragen', 'technik'];
+        return ['mix', 'fragen', 'qgruppen', 'morse', 'lk', 'stecker', 'technik'].filter(t => THEMEN[t].anzahl() > 0);
+    }
+
+    let el = null, spiel = null;
+    const WISCH_BILD = '<svg class="ks-bild-wisch" viewBox="0 0 320 220" aria-hidden="true">'
+        + '<rect x="110" y="18" width="100" height="136" rx="14" fill="var(--s-fl, #fff)" stroke="var(--s-rand2, #ccd)" stroke-width="3"/>'
+        + '<rect x="124" y="36" width="72" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/><rect x="124" y="52" width="52" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/>'
+        + '<rect x="120" y="110" width="80" height="30" rx="8" fill="var(--s-fl2, #eef2f8)"/><rect x="132" y="121" width="56" height="8" rx="4" fill="var(--s-text2, #456)"/>'
+        + '<path d="M222 70 h62" stroke="#1FC46F" stroke-width="9" stroke-linecap="round"/><path d="M270 54 l18 16 l-18 16" fill="none" stroke="#1FC46F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+        + '<path d="M98 108 h-62" stroke="#F2375A" stroke-width="9" stroke-linecap="round"/><path d="M50 92 l-18 16 l18 16" fill="none" stroke="#F2375A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+        + '<text x="254" y="104" text-anchor="middle" font-size="17" font-weight="800" fill="#1FC46F">richtig</text>'
+        + '<text x="66" y="142" text-anchor="middle" font-size="17" font-weight="800" fill="#F2375A">falsch</text>'
+        + '<g class="ks-wisch-hand"><path d="M150 214 l-6 -40 c-10 -12 -26 -28 -30 -38 c-4 -10 8 -16 16 -8 l14 14 v-58 c0 -12 18 -12 18 0 v34 v-12 c0 -11 17 -11 17 0 v14 v-8 c0 -10 16 -10 16 0 v12 v-4 c0 -9 15 -9 15 1 v34 c0 14 -6 26 -12 36 l-2 15 z" '
+        + 'fill="var(--s-fl, #fff)" stroke="var(--s-text, #0C1731)" stroke-width="6" stroke-linejoin="round"/></g></svg>';
+
+    function bauen(){
+        if(el) return el;
+        el = D.createElement('div');
+        el.id = 'kartenSpiel';
+        el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+        el.innerHTML =
+            '<div class="ks-kopf"><button type="button" class="ks-zu" aria-label="Schließen">✕</button><b class="ks-titel">Match</b><span class="ks-stand"></span></div>'
+          + '<div class="ks-balken"><i></i></div>'
+          + '<div class="ks-start"></div>'
+          + '<div class="ks-buehne"></div>'
+          + '<div class="ks-hinweis" aria-live="polite"></div>'
+          + '<div class="ks-knoepfe"></div>'
+          + '<div class="ks-ende"></div>';
+        D.body.appendChild(el);
+        el.querySelector('.ks-zu').addEventListener('click', zu);
+        // Die Zurueck-Taste des Handys: aus der Runde zum Anfang, vom Anfang zu
+        const alt = window.appZurueck;
+        window.appZurueck = function(){
+            if(el && el.classList.contains('offen')){ if(spiel && !el.classList.contains('start')) start(); else zu(); return true; }
+            return typeof alt === 'function' ? alt.apply(this, arguments) : false;
+        };
+        return el;
+    }
+
+    // ---------- Der Anfang: Wisch-Erklaerung und Themen ----------
+    function auf(thema){
+        bauen();
+        el.classList.add('offen');
+        tu(() => D.body.classList.add('karten-offen'));
+        if(thema && THEMEN[thema]) return los(thema);
+        start();
+    }
+    function start(){
+        spiel = null;
+        el.classList.remove('fertig'); el.classList.add('start');
+        el.querySelector('.ks-titel').textContent = 'Match';
+        const t = themenListe();
+        el.querySelector('.ks-start').innerHTML = WISCH_BILD
+          + '<div class="ks-regel"><div class="l">← nach links<small>Die Antwort ist falsch</small></div><div class="r">nach rechts →<small>Die Antwort ist richtig</small></div></div>'
+          + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, wisch die Karte nach rechts – stimmt sie nicht, nach links. Oder tipp auf die Knöpfe.</div>'
+          + '<div class="ks-themen-kopf">Thema wählen</div>'
+          + '<div class="ks-themen">' + t.map(k => {
+                const th = THEMEN[k], n = th.anzahl(), best = parseInt(lies(bestKey(k), '0'), 10) || 0;
+                return '<button type="button" data-thema="' + k + '" class="' + (k === 'mix' ? 'breit' : '') + '">' + esc(th.name)
+                     + '<small>' + esc(th.unter(n)) + (best ? ' · ★ ' + best : '') + '</small></button>';
+            }).join('') + '</div>';
+        el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => los(b.dataset.thema)));
+    }
+
+    function los(thema){
+        const k = THEMEN[thema].karten(RUNDE).filter(Boolean);
+        if(!k.length){ start(); return; }
+        spiel = { thema, karten: k, i: 0, richtig: 0, fehl: [], warten: false };
+        el.classList.remove('start', 'fertig');
+        el.querySelector('.ks-titel').textContent = 'Match · ' + THEMEN[thema].name;
+        zeigeKarte();
+    }
+    function zu(){
+        if(!el) return;
+        el.classList.remove('offen', 'fertig', 'start');
+        tu(() => D.body.classList.remove('karten-offen'));
+        spiel = null;
+        tu(kachelNachziehen);
+    }
+
+    function frageKlasse(k){
+        if(k.gross !== undefined) return '';
+        const n = String(k.frage || '').length;
+        return n > 190 ? ' sehrlang' : n > 110 ? ' lang' : '';
+    }
+    function zeigeKarte(){
+        const k = spiel.karten[spiel.i];
+        el.querySelector('.ks-stand').textContent = (spiel.i + 1) + ' / ' + spiel.karten.length;
+        el.querySelector('.ks-balken i').style.width = (spiel.i / spiel.karten.length * 100) + '%';
+        const hinweis = el.querySelector('.ks-hinweis');
+        hinweis.className = 'ks-hinweis';
+        hinweis.textContent = spiel.i === 0 ? 'Richtig → nach rechts wischen. Falsch ← nach links.' : '';
+        const frage = k.gross !== undefined
+            ? esc(k.frage) + '<span class="ks-gross">' + esc(k.gross) + (/:$/.test(k.frage) ? '' : '?') + '</span>'
+            : esc(k.frage);
+        const antwort = k.antwortHtml || esc(k.antwort);
+        const aKl = k.morse ? ' morse' : (String(k.antwort || '').length > 60 ? ' lang' : '');
+        el.querySelector('.ks-buehne').innerHTML =
+            '<div class="ks-karte" tabindex="0">'
+          + '<span class="ks-marke ja">RICHTIG</span><span class="ks-marke nein">FALSCH</span>'
+          + '<div class="ks-oben"><div class="ks-art">' + esc(k.art) + (k.qid ? ' · ' + esc(k.qid) : '') + '</div>'
+          + '<div class="ks-frage' + frageKlasse(k) + '">' + frage + (k.gross !== undefined ? '' : '') + '</div>'
+          + (k.bild ? '<div class="ks-bild">' + k.bild + '</div>' : '') + '</div>'
+          + '<div class="ks-unten"><div class="ks-antwort-kopf">Antwort</div><div class="ks-antwort' + aKl + '">' + antwort + '</div></div>'
+          + '<div class="ks-loesung"></div>'
+          + '</div>';
+        el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-nein">← Falsch</button><button type="button" class="ks-k ks-ja">Richtig →</button>';
+        el.querySelector('.ks-ja').addEventListener('click', () => antwort(true));
+        el.querySelector('.ks-nein').addEventListener('click', () => antwort(false));
+        spiel.warten = false;
+        wischenAn(el.querySelector('.ks-karte'));
+    }
+
+    function wischenAn(karte){
+        let x0 = null, y0 = 0, dx = 0, id = null;
+        const ja = karte.querySelector('.ks-marke.ja'), nein = karte.querySelector('.ks-marke.nein');
+        karte.addEventListener('pointerdown', e => {
+            if(!spiel || spiel.warten) return;
+            x0 = e.clientX; y0 = e.clientY; dx = 0; id = e.pointerId;
+            tu(() => karte.setPointerCapture(id));
+            karte.classList.remove('zurueck');
+        });
+        karte.addEventListener('pointermove', e => {
+            if(x0 === null || e.pointerId !== id) return;
+            dx = e.clientX - x0;
+            const dy = (e.clientY - y0) * 0.2;
+            karte.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx / 18) + 'deg)';
+            const s = Math.min(1, Math.abs(dx) / 90);
+            ja.style.opacity = dx > 0 ? s : 0; nein.style.opacity = dx < 0 ? s : 0;
+        });
+        const los = () => {
+            if(x0 === null) return;
+            x0 = null;
+            if(Math.abs(dx) > 90){ antwort(dx > 0); return; }
+            karte.classList.add('zurueck');
+            karte.style.transform = '';
+            ja.style.opacity = 0; nein.style.opacity = 0;
+        };
+        karte.addEventListener('pointerup', los);
+        karte.addEventListener('pointercancel', los);
+    }
+
+    function richtigHtml(k){
+        if(k.richtigHtml) return k.richtigHtml + (k.richtig ? '<div>' + esc(k.richtig) + '</div>' : '');
+        return esc(k.richtig);
+    }
+    function antwort(sagtRichtig){
+        if(!spiel || spiel.warten) return;
+        const k = spiel.karten[spiel.i];
+        const karte = el.querySelector('.ks-karte');
+        const gut = (sagtRichtig === k.wahr);
+        spiel.warten = true;
+        if(gut){
+            spiel.richtig++;
+            const h = el.querySelector('.ks-hinweis');
+            h.className = 'ks-hinweis gut';
+            h.textContent = k.wahr ? '✓ Richtig!' : '✓ Richtig – die Antwort stimmt nicht.' + (k.richtigHtml ? '' : ' Richtig wäre: ' + k.richtig);
+            weg(karte, sagtRichtig ? 1 : -1, k.wahr ? 380 : 1300);
+        } else {
+            spiel.fehl.push(k);
+            // Pruefungsfragen, die danebengingen, kommen in "Fehler ueben" - der Lernfortschritt bleibt unberuehrt
+            if(k.qid) tu(() => { if(!errorList.includes(k.qid)){ errorList.push(k.qid); saveErrors(); } });
+            karte.style.transform = '';
+            karte.querySelector('.ks-marke.ja').style.opacity = 0; karte.querySelector('.ks-marke.nein').style.opacity = 0;
+            karte.classList.add('zurueck', 'falsch');
+            const frageKurz = k.gross !== undefined ? k.frage + ' ' + k.gross + '?' : k.frage;
+            karte.querySelector('.ks-loesung').innerHTML =
+                '<div class="ks-urteil">' + (k.wahr ? '✗ Doch – diese Antwort ist richtig.' : '✗ Diese Antwort ist falsch.') + '</div>'
+              + '<div class="ks-lfrage">' + esc(frageKurz) + '</div>'
+              + '<div class="ks-wahr-kopf">Richtig ist</div><div class="ks-wahr">' + richtigHtml(k) + '</div>'
+              + (k.merk ? '<div class="ks-merk">' + esc(k.merk) + '</div>' : '')
+              + '<div class="ks-tipp">Antippen oder Weiter</div>';
+            el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-weiter">Weiter</button>';
+            // Nach dem Wischen kommt beim Loslassen noch ein Klick auf die Karte - der darf die Loesung nicht gleich ueberspringen
+            const ab = Date.now() + 450;
+            const weiter = () => { if(spiel && spiel.warten && Date.now() >= ab) naechste(); };
+            el.querySelector('.ks-weiter').addEventListener('click', weiter);
+            karte.addEventListener('click', weiter);
+        }
+    }
+    function weg(karte, richtung, warte){
+        setTimeout(() => {
+            if(!spiel) return;
+            karte.classList.add('fliegt');
+            karte.style.transform = 'translate(' + (richtung * 140) + '%, 0) rotate(' + (richtung * 24) + 'deg)';
+            karte.style.opacity = '0';
+            setTimeout(naechste, 300);
+        }, Math.max(0, warte - 300));
+    }
+    function naechste(){
+        if(!spiel) return;
+        spiel.i++;
+        if(spiel.i >= spiel.karten.length){ ende(); return; }
+        zeigeKarte();
+    }
+
+    function ende(){
+        const n = spiel.karten.length, r = spiel.richtig, t = spiel.thema;
+        const alt = parseInt(lies(bestKey(t), '0'), 10) || 0;
+        const rekord = r > alt;
+        if(rekord) schreib(bestKey(t), String(r));
+        const lob = r === n ? 'Volltreffer – alles richtig!' : r >= n * 0.85 ? 'Stark – fast alles!' : r >= n * 0.6 ? 'Gut – weiter so!' : 'Dranbleiben – das wird!';
+        let fehl = '';
+        if(spiel.fehl.length){
+            fehl = '<div class="ks-fehlliste">' + spiel.fehl.map(k => '<div>' + esc(k.gross !== undefined ? k.frage + ' ' + k.gross + '?' : (k.qid ? k.qid + ': ' : '') + String(k.frage).slice(0, 90) + (String(k.frage).length > 90 ? '…' : ''))
+                + '<br><span>Richtig: </span><b>' + esc(k.richtig || '(Bild)') + '</b></div>').join('') + '</div>';
+        }
+        const ids = [...new Set(spiel.fehl.filter(k => k.qid).map(k => k.qid))];
+        const lk = t === 'lk' ? LK_FRAGEN.filter(i => bank().some(q => q.id === i)) : [];
+        el.querySelector('.ks-ende').innerHTML =
+            '<div class="ks-ergebnis">' + r + '<small> / ' + n + '</small></div>'
+          + '<div class="ks-lob">' + esc(lob) + '</div>'
+          + '<div class="ks-best">' + (rekord ? 'Neue Bestleistung!' : 'Bestleistung: ' + Math.max(alt, r) + ' / ' + n) + '</div>'
+          + (ids.length ? '<div class="ks-best">Die danebengegangenen Prüfungsfragen stehen jetzt unter „Fehler üben“.</div>' : '')
+          + fehl
+          + '<div class="ks-reihe">'
+          + '<button type="button" class="ks-k ks-nochmal">Noch eine Runde</button>'
+          + (ids.length ? '<button type="button" class="ks-k ks-pruef" data-ids="' + ids.join(',') + '">Diese Fragen richtig üben (' + ids.length + ')</button>' : '')
+          + (lk.length ? '<button type="button" class="ks-k ks-pruef" data-ids="' + lk.join(',') + '">Prüfungsfragen zu Landeskennern (' + lk.length + ')</button>' : '')
+          + '<button type="button" class="ks-k ks-thema">Anderes Thema</button>'
+          + '<button type="button" class="ks-k ks-fertig">Fertig</button></div>';
+        el.querySelector('.ks-balken i').style.width = '100%';
+        el.classList.add('fertig');
+        el.querySelector('.ks-nochmal').addEventListener('click', () => los(t));
+        el.querySelector('.ks-thema').addEventListener('click', start);
+        el.querySelector('.ks-fertig').addEventListener('click', zu);
+        el.querySelectorAll('.ks-pruef').forEach(p => p.addEventListener('click', () => {
+            const liste = p.dataset.ids.split(',');
+            zu(); tu(() => startQuestionSession(liste, t === 'lk' && liste.length > 5 ? 'Landeskenner' : 'Match – nachüben'));
+        }));
+    }
+
+    // ---------- Die Kachel ----------
+    function kachelNachziehen(){
+        const k = $('ahKKartenK');
+        if(!k) return;
+        const b = k.querySelector('b'), s = k.querySelector('small'), z = $('ahKKarten');
+        if(b) b.textContent = 'Match';
+        if(s) s.textContent = nurTechnik() ? 'wischen: Technik – richtig oder falsch?' : 'wischen: richtig oder falsch?';
+        let best = 0;
+        tu(() => themenListe().forEach(t => { best = Math.max(best, parseInt(lies(bestKey(t), '0'), 10) || 0); }));
+        if(z) z.textContent = best ? '★ ' + best : '';
+        const zeile = $('ahKarten');
+        if(zeile){ const t = zeile.querySelector('.t'); if(t) t.textContent = 'Match (wischen: richtig oder falsch)'; const w = $('ahKartenZahl'); if(w) w.textContent = z ? z.textContent : ''; }
+    }
+    // Bei ungerader Zahl sichtbarer Kacheln nimmt die letzte die ganze Breite
+    function rasterGerade(){
+        const r = $('ahKacheln');
+        if(!r) return;
+        const alle = [...r.querySelectorAll('.ah-kachel')];
+        const sicht = alle.filter(k => !k.classList.contains('aus') && getComputedStyle(k).display !== 'none');
+        const breit = sicht.length % 2 === 1 ? sicht[sicht.length - 1] : null;
+        // Nur aendern, was sich aendert - sonst weckte jede Aenderung den Beobachter unten gleich wieder
+        alle.forEach(k => { const soll = (k === breit); if(k.classList.contains('breit') !== soll) k.classList.toggle('breit', soll); });
+        if(!r.__beo && window.MutationObserver){ r.__beo = new MutationObserver(() => tu(rasterGerade)); r.__beo.observe(r, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] }); }
+    }
+    setInterval(() => { tu(kachelNachziehen); tu(rasterGerade); }, 1500);
+    D.addEventListener('DOMContentLoaded', () => setTimeout(() => { tu(kachelNachziehen); tu(rasterGerade); }, 800));
+
+    window.kartenSpielOeffnen = () => auf();
+    window.kartenSpiel = { auf, los: t => { auf(); los(t); }, start, zu, antwort: s => antwort(s),
+        zustand: () => spiel ? { thema: spiel.thema, i: spiel.i, n: spiel.karten.length, richtig: spiel.richtig, fehl: spiel.fehl.length, karte: spiel.karten[spiel.i] || null, warten: spiel.warten } : null,
+        themen: () => themenListe().map(t => ({ t, n: THEMEN[t].anzahl() })), daten: () => ({ landeskenner: LANDESKENNER.length, technik: TECHNIK.length, q: QGRUPPEN.length, abk: ABK.length }), nurTechnik };
+})();
+</script>
+<style id="logbuchStil">
+        /* ================================================================
+           FUNK-LOGBUCH: ISS UND OSCAR "ARBEITEN"                (05.10.2026)
+           Dietmar: "Eine App bringt viele Moeglichkeiten. Ueberleg dir noch
+           Funktionen. Sei kreativ. Auch im Bereich Funki, Astronaut und ISS
+           inkl. OSCAR."
+           Fliegt die ISS oder der OSCAR-Satellit ueber die Startseite, kann
+           man sie antippen - das ist ein QSO. Es landet mit Datum, UTC-Zeit,
+           Rufzeichen, Frequenz und Betriebsart im Funk-Logbuch (Mehr ->
+           Funk-Logbuch), wie in einem echten Stationstagebuch. Dazu zaehlt das
+           Logbuch, wie oft ISS, Satellit und Astronaut vorbeigekommen sind.
+           Nur in der App, nur Stil Verspielt (dort fliegen sie).
+           ================================================================ */
+        #funkQso { position: fixed; z-index: 100000; pointer-events: none; transform: translate(-50%, -50%) scale(.6); opacity: 0;
+            background: linear-gradient(135deg, #2EE6D6, #7B5CFF); color: #04131f; font-weight: 900; font-size: 18px; padding: 10px 16px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.35); text-align: center; white-space: nowrap; transition: transform .25s cubic-bezier(.2,.9,.3,1.4), opacity .25s; }
+        #funkQso small { display: block; font-size: 12px; font-weight: 700; opacity: .85; }
+        #funkQso.da { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #funkTipp { position: fixed; left: 50%; bottom: calc(var(--app-navi-h, 66px) + 18px); transform: translateX(-50%); z-index: 99998; max-width: min(92vw, 360px);
+            background: var(--s-blatt, #fff); color: var(--s-text, #111); border: 1px solid var(--s-rand2, #ccd); border-radius: 16px; padding: 10px 14px; font-size: 14px; line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25); display: none; }
+        #funkTipp.da { display: block; }
+        #funkLogbuch { position: fixed; inset: 0; z-index: 99990; display: none; flex-direction: column; background: var(--s-bg, #F2F5FC); color: var(--s-text, #0C1731);
+            padding: calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 16px); box-sizing: border-box; overflow-y: auto; }
+        #funkLogbuch.offen { display: flex; }
+        #funkLogbuch * { box-sizing: border-box; }
+        #funkLogbuch .fl-kopf { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+        #funkLogbuch .fl-kopf b { flex: 1; font-size: 18px; font-weight: 800; }
+        #funkLogbuch .fl-zu { width: 40px; height: 40px; border-radius: var(--s-r-klein, 12px); border: 1px solid var(--s-rand2, #ccd); background: var(--s-fl, #fff); color: var(--s-text, #111); font-size: 18px; }
+        #funkLogbuch .fl-zahlen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+        #funkLogbuch .fl-zahl { background: var(--s-fl, #fff); border: 1px solid var(--s-rand, #e3e6eb); border-radius: var(--s-r-klein, 12px); padding: 10px 6px; text-align: center; }
+        #funkLogbuch .fl-zahl b { display: block; font-size: 24px; font-weight: 800; color: var(--s-haupt, #0FB7B2); }
+        #funkLogbuch .fl-zahl small { font-size: 11px; color: var(--s-text2, #456); }
+        #funkLogbuch .fl-tipp { font-size: 14px; line-height: 1.45; color: var(--s-text2, #456); background: var(--s-akzent-w, rgba(15,183,178,.12)); border-radius: var(--s-r-klein, 12px); padding: 10px 12px; }
+        #funkLogbuch .fl-tab { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
+        #funkLogbuch .fl-tab th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--s-text3, #8a97b5); padding: 6px 4px; border-bottom: 1px solid var(--s-rand2, #ccd); }
+        #funkLogbuch .fl-tab td { padding: 8px 4px; border-bottom: 1px solid var(--s-rand, #e3e6eb); vertical-align: top; }
+        #funkLogbuch .fl-tab td b { font-family: var(--font-mono, monospace); }
+        #funkLogbuch .fl-leer { text-align: center; color: var(--s-text3, #8a97b5); padding: 24px 0; font-size: 14px; }
+        #funkLogbuch .fl-wissen { margin-top: 16px; font-size: 13px; line-height: 1.5; color: var(--s-text2, #456); }
+        #funkLogbuch .fl-wissen b { color: var(--s-text, #111); }
+</style>
+<script id="logbuchSkript">
+(function(){
+    'use strict';
+    const D = document, H = D.documentElement;
+    const $ = id => D.getElementById(id);
+    const tu = f => { try{ return f(); }catch(e){ return undefined; } };
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    // Echte Stationen: Die ISS funkt als RS0ISS, NA1SS und - aus dem Columbus-Modul - DP0ISS; Sprachkanal 145,800 MHz FM.
+    // AO-7 (OSCAR 7, 1974) hat einen linearen Transponder: SSB und CW, Abwaerts-Strecke um 145,95 MHz.
+    const STATION = {
+        iss: [{ ruf: 'RS0ISS', qrg: '145,800 MHz', mode: 'FM' }, { ruf: 'NA1SS', qrg: '145,800 MHz', mode: 'FM' }, { ruf: 'DP0ISS', qrg: '145,800 MHz', mode: 'FM' }],
+        sat: [{ ruf: 'AO-7', qrg: '145,950 MHz', mode: 'SSB' }, { ruf: 'AO-7', qrg: '145,950 MHz', mode: 'CW' }],
+        // Der Astronaut funkt aus dem europaeischen Columbus-Modul der ISS
+        astro: [{ ruf: 'DP0ISS', qrg: '145,800 MHz', mode: 'FM' }]
+    };
+    function nutzer(){ let u = 'user1'; tu(() => { u = currentUser || 'user1'; }); return u; }
+    const KEY = () => 'funk_logbuch_' + nutzer();
+    function lesen(){ try{ const d = JSON.parse(localStorage.getItem(KEY()) || 'null'); if(d && typeof d === 'object') return Object.assign({ gesehen: { iss: 0, sat: 0, astro: 0 }, qso: [], tipp: 0 }, d); }catch(e){} return { gesehen: { iss: 0, sat: 0, astro: 0 }, qso: [], tipp: 0 }; }
+    function sichern(d){ try{ if(d.qso.length > 200) d.qso = d.qso.slice(-200); localStorage.setItem(KEY(), JSON.stringify(d)); }catch(e){} }
+    const inApp = () => H.classList.contains('android-app') && H.classList.contains('stil-verspielt');
+
+    // ---------- Sichtungen zaehlen ----------
+    function beobachte(id, art, klasse){
+        const e = $(id);
+        if(!e || e.__lb) return;
+        e.__lb = true;
+        let war = false;
+        new MutationObserver(() => {
+            const ist = e.classList.contains(klasse);
+            if(ist && !war){
+                const d = lesen(); d.gesehen[art] = (d.gesehen[art] || 0) + 1; sichern(d);
+                if(art !== 'astro') tippZeigen();
+                flug = { art, seit: Date.now(), gefangen: false };
+                if(art === 'astro') astroFlug = { gefangen: false };
+            }
+            if(!ist && war && art !== 'astro') flug = null;
+            if(!ist && war && art === 'astro') astroFlug = null;
+            war = ist;
+        }).observe(e, { attributes: true, attributeFilter: ['class'] });
+    }
+    let flug = null, astroFlug = null;
+    setInterval(() => { tu(() => { beobachte('appIss', 'iss', 'fliegt'); beobachte('appSat', 'sat', 'fliegt'); beobachte('appAstro', 'astro', 'da'); }); }, 2000);
+
+    // ---------- Antippen = QSO ----------
+    // Die fliegenden Bilder fassen nichts an (pointer-events: none) - sie sollen nie einen Knopf darunter verdecken.
+    // Getroffen wird deshalb ueber die Lage: Liegt der Finger auf dem Bild, ist es ein QSO, und der Klick darunter faellt aus.
+    // Nur auf der Startseite (nicht in einer Runde, nicht ueber einem Fenster).
+    let klickSperre = 0;
+    function getroffen(x, y){
+        if(!inApp() || D.body.classList.contains('runde-laeuft')) return null;
+        // Der winkende Astronaut laesst sich auch anfunken (nur die Figur, nicht die Blase)
+        if(astroFlug && !astroFlug.gefangen){
+            const a = $('appAstro');
+            if(a && a.classList.contains('da')){ const r = a.getBoundingClientRect(); if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return 'astro'; }
+        }
+        if(!flug || flug.gefangen) return null;
+        const e = flug.art === 'iss' ? $('appIss') : $('appSat');
+        if(!e || !e.classList.contains('fliegt')) return null;
+        const r = e.getBoundingClientRect(), rand = 18;
+        if(x >= r.left - rand && x <= r.right + rand && y >= r.top - rand && y <= r.bottom + rand) return flug.art;
+        return null;
+    }
+    D.addEventListener('pointerdown', ev => {
+        const art = getroffen(ev.clientX, ev.clientY);
+        if(!art) return;
+        ev.preventDefault(); ev.stopPropagation();
+        klickSperre = Date.now() + 600;
+        if(art === 'astro') astroFlug.gefangen = true; else flug.gefangen = true;
+        qso(art, ev.clientX, ev.clientY);
+    }, { capture: true });
+    D.addEventListener('click', ev => { if(Date.now() < klickSperre){ ev.preventDefault(); ev.stopPropagation(); } }, { capture: true });
+
+    function qso(art, x, y){
+        const st = STATION[art][Math.floor(Math.random() * STATION[art].length)];
+        const jetzt = new Date();
+        const d = lesen();
+        d.qso.push({ art, ruf: st.ruf, qrg: st.qrg, mode: st.mode, rst: st.mode === 'CW' ? '599' : '59', zeit: jetzt.toISOString() });
+        sichern(d);
+        let b = $('funkQso');
+        if(!b){ b = D.createElement('div'); b.id = 'funkQso'; D.body.appendChild(b); }
+        b.innerHTML = 'QSO mit ' + esc(st.ruf) + '!<small>' + esc(st.qrg) + ' · ' + esc(st.mode) + ' · ins Logbuch</small>';
+        b.style.left = Math.max(90, Math.min(window.innerWidth - 90, x)) + 'px';
+        b.style.top = Math.max(60, y - 40) + 'px';
+        b.classList.remove('da'); void b.offsetWidth; b.classList.add('da');
+        setTimeout(() => b.classList.remove('da'), 2200);
+        piep();
+        tu(() => { if(navigator.vibrate) navigator.vibrate(40); });
+    }
+    // Ein kurzes "R" in Morse (di-dah-dit) als Bestaetigung - leise
+    function piep(){
+        tu(() => {
+            const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+            const ctx = piep.ctx || (piep.ctx = new C());
+            if(ctx.state === 'suspended') ctx.resume();
+            const e = 0.06; let t = ctx.currentTime + 0.02;
+            [1, 3, 1].forEach(l => {
+                const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 760; o.type = 'sine';
+                g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + 0.005); g.gain.setValueAtTime(0.12, t + l * e); g.gain.linearRampToValueAtTime(0, t + l * e + 0.01);
+                o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + l * e + 0.03); t += l * e + e;
+            });
+        });
+    }
+    // Die ersten drei Ueberfluege: ein kleiner Hinweis, dass man sie antippen kann
+    function tippZeigen(){
+        if(!inApp() || D.body.classList.contains('runde-laeuft')) return;
+        const d = lesen();
+        if((d.tipp || 0) >= 3 || d.qso.length) return;
+        d.tipp = (d.tipp || 0) + 1; sichern(d);
+        let t = $('funkTipp');
+        if(!t){ t = D.createElement('div'); t.id = 'funkTipp'; t.setAttribute('role', 'status'); D.body.appendChild(t); }
+        t.innerHTML = '<b>Schnell antippen!</b> Wer die ISS oder den Satelliten im Vorbeiflug antippt, hat ein QSO – es kommt ins Funk-Logbuch (Mehr).';
+        t.classList.add('da');
+        setTimeout(() => t.classList.remove('da'), 5200);
+    }
+
+    // ---------- Das Logbuch ----------
+    function oeffnen(){
+        let el = $('funkLogbuch');
+        if(!el){
+            el = D.createElement('div'); el.id = 'funkLogbuch'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+            D.body.appendChild(el);
+            const alt = window.appZurueck;
+            window.appZurueck = function(){ const e = $('funkLogbuch'); if(e && e.classList.contains('offen')){ zu(); return true; } return typeof alt === 'function' ? alt.apply(this, arguments) : false; };
+        }
+        const d = lesen();
+        const zeilen = d.qso.slice().reverse().map(q => {
+            const z = new Date(q.zeit);
+            const dat = z.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const utc = String(z.getUTCHours()).padStart(2, '0') + String(z.getUTCMinutes()).padStart(2, '0');
+            return '<tr><td>' + dat + '<br><small>' + utc + ' UTC</small></td><td><b>' + esc(q.ruf) + '</b></td><td>' + esc(q.qrg) + '<br><small>' + esc(q.mode) + '</small></td><td>' + esc(q.rst) + '</td></tr>';
+        }).join('');
+        el.innerHTML = '<div class="fl-kopf"><b><i class="fas fa-satellite"></i> Funk-Logbuch</b><button type="button" class="fl-zu" aria-label="Schließen">✕</button></div>'
+          + '<div class="fl-zahlen">'
+          + '<div class="fl-zahl"><b>' + d.qso.length + '</b><small>QSOs</small></div>'
+          + '<div class="fl-zahl"><b>' + (d.gesehen.iss || 0) + '</b><small>ISS gesehen</small></div>'
+          + '<div class="fl-zahl"><b>' + (d.gesehen.sat || 0) + '</b><small>OSCAR gesehen</small></div>'
+          + '<div class="fl-zahl"><b>' + (d.gesehen.astro || 0) + '</b><small>Astronaut</small></div></div>'
+          + '<div class="fl-tipp">Fliegt die ISS oder der OSCAR-Satellit über die Startseite, tippe sie an – das ist ein QSO und kommt hier ins Logbuch. Auch der winkende Astronaut lässt sich anfunken.</div>'
+          + (zeilen ? '<table class="fl-tab"><thead><tr><th>Datum</th><th>Rufzeichen</th><th>Frequenz</th><th>RST</th></tr></thead><tbody>' + zeilen + '</tbody></table>'
+                    : '<div class="fl-leer">Noch kein QSO im Logbuch.</div>')
+          + '<div class="fl-wissen"><b>Gut zu wissen:</b> Die ISS hat echte Amateurfunk-Rufzeichen – <b>RS0ISS</b>, <b>NA1SS</b> und aus dem europäischen Columbus-Modul <b>DP0ISS</b>. '
+          + 'Ihr Sprachkanal liegt im 2-m-Band auf 145,800 MHz. <b>OSCAR 7</b> (AO-7) startete 1974 und funkt bis heute über einen linearen Transponder in SSB und CW. '
+          + 'Im Logbuch stehen Datum, Uhrzeit in <b>UTC</b>, Rufzeichen, Frequenz, Betriebsart und der Rapport (<b>RST</b>: Lesbarkeit, Stärke, bei CW auch Ton).</div>';
+        el.querySelector('.fl-zu').addEventListener('click', zu);
+        el.classList.add('offen');
+    }
+    function zu(){ const el = $('funkLogbuch'); if(el) el.classList.remove('offen'); }
+    window.funkLogbuchOeffnen = oeffnen;
+    window.funkLogbuch = { oeffnen, zu, lesen, qso: (a) => qso(a || 'iss', innerWidth / 2, innerHeight / 3), getroffen };
+})();
+</script>
 <script id="appRahmen">
 // ================================================================
 //  DER RAHMEN DER ANDROID-APP                           (30.09.2026)
@@ -47830,6 +48625,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Server', 'fas fa-server', 'Andere über den Internet-Link einladen', () => serverFensterOeffnen(), () => H.classList.contains('android-tunnel')],
         ['Darstellung', 'fas fa-palette', 'Sachlich oder verspielt, hell oder dunkel, eckig oder rund', () => einstellungenOeffnen('allgemein')],
         ['Rundgang', 'fas fa-route', 'Die wichtigsten Knöpfe erklärt', () => window.rundgangStarten && window.rundgangStarten()],
+        // Das Funk-Logbuch (05.10.2026): QSOs mit ISS und OSCAR, Sichtungen - nur im Stil Verspielt, dort fliegen sie
+        ['Funk-Logbuch', 'fas fa-satellite', 'Deine QSOs mit ISS und OSCAR', () => window.funkLogbuchOeffnen && funkLogbuchOeffnen(), () => H.classList.contains('stil-verspielt')],
         ['Info & Hilfe', 'fas fa-circle-info', (window.TRAINER_STAND ? 'Version ' + window.TRAINER_STAND.text + ' vom ' + window.TRAINER_STAND.datum + ' · Anleitung' : 'Anleitung, Version, Updates'), () => infoOeffnen()],
         // Von Hand nach einem Update sehen (04.10.2026) - in der App ist der Reiter Update ausgeblendet, und das Fenster beim Start
         // kommt nur einmal je Sitzung. githubOeffnen sagt auch, woran es haengt (kein Netz, GitHub bremst), oder dass alles aktuell ist.
@@ -48007,6 +48804,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         try{
             const pb = $('appPruefblatt');
             if(pb){ pb.remove(); return true; }
+            // Der Rundgang (05.10.2026): Die Zurueck-Taste beendet ihn - bisher ging sie an ihm vorbei und schloss die App.
+            const rg = $('rgHuelle');
+            if(rg){ const x = rg.querySelector('[data-rg="ende"]'); if(x){ x.click(); return true; } rg.remove(); return true; }
             if(mehr.classList.contains('offen')){ mehrZu(); return true; }
             if(such.classList.contains('offen')){ sucheZu(); return true; }
             const lb = $('lightboxOverlay');
@@ -48331,6 +49131,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-zeile aus" id="ahAuffrischen"><span class="sym"><i class="fas fa-rotate"></i></span><span class="t">Gelerntes auffrischen</span><span class="w"><span id="ahAuffrischenZahl">0</span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahPruefung"><span class="sym"><i class="fas fa-stopwatch"></i></span><span class="t">Prüfungssimulation</span><span class="w"><span id="ahPruefungText">3 × 45 min</span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahBlaettern"><span class="sym"><i class="fas fa-book"></i></span><span class="t" id="ahBlaetternText">Fragenkatalog blättern</span><span class="w"><span id="ahBlaetternZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahKarten" onclick="window.kartenSpielOeffnen && kartenSpielOeffnen()"><span class="sym"><i class="fas fa-layer-group"></i></span><span class="t">Match (wischen: richtig oder falsch)</span><span class="w"><span id="ahKartenZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
       + '</div>'
       + '<div class="ah-kacheln" id="ahKacheln">'
       +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
@@ -48338,6 +49139,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Generalprobe</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>wischen: richtig oder falsch?</small></div></button>'
       + '</div>'
       + '<div class="ah-weiter-ueber">Übersicht und Werkzeuge</div>';
     tu(() => {
