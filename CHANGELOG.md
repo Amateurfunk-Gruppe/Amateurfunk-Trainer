@@ -12,7 +12,7 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 58 · 05.10.2026
+Stand 59 · 05.10.2026
 
 ### Hinzugefügt
 - Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC, aber still: kein Hinweis unten, und bei der nächsten Frage ist es wieder aus (nochmal dreimal tippen blendet sie auch so aus). Im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
@@ -177,6 +177,7 @@ Stand 58 · 05.10.2026
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Android-App, Hilfen-Leiste: Der Knopf „Erklärung“ war nach dem Antippen in den Farben Grün, Blau und Orange weiß auf weiß (unsichtbar) – jetzt lila mit weißer Schrift wie in Hell und Dunkel
 - Android-App: Die große Erklärung (Erklärung zur Zeichnung, vergrößert) füllt jetzt den ganzen Bildschirm und lässt sich bis zum Ende rollen – vorher lag sie nur über dem Fragenkasten und war unten abgeschnitten
 - Android-App, Verlauf: Langes Drücken auf eine Runde wählt sie jetzt auch am echten Handy zum Löschen aus – Android brach die Geste bisher ab (Text-Auswahl), jetzt zählt auch Androids eigenes „lange gedrückt“; kein Markieren von Text mehr dabei
 - Android-App, Match, Morsezeichen: Das CW-Signal wird jetzt bei jeder Karte sicher abgespielt – am Handy blieb es teils stumm, weil der Ton erst nach einem Tipp freigegeben wird (jetzt schon beim Tipp auf das Thema). Liegt das Swipe-Tutorial darüber, kommt der Ton, sobald es geschlossen ist. Der Knopf darunter heißt „Erneut abspielen“
