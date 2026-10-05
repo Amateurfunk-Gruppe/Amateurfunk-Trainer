@@ -1303,6 +1303,12 @@
         html.android-app body.orange .option { border-color: #ecd2b4; }
         html.android-app body.grey .option { border-color: #c9d1dc; }
 
+        html.android-app #erklaerGross { padding: 0 !important; }
+        html.android-app #erklaerGross .eg-fenster { position: fixed !important; left: 0 !important; right: 0 !important; width: auto !important;
+            top: 0 !important; bottom: 0 !important; height: auto !important; max-height: none !important; max-width: none !important;
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); border-radius: 0 !important; box-shadow: none !important; }
+        html.android-app #erklaerGross .eg-buehne { overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 2rem !important; }
+
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
            Dietmar: "A gefaellt mir gut. Ich moechte da aber noch das mit
@@ -23238,7 +23244,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 55, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 57, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -41206,6 +41212,32 @@ if (originalSelectOption) {
 
 
 
+<script id="dreifachTipp">
+(function(){
+    if(!document.documentElement.classList.contains("android-app")) return;
+    // Was KEIN leeres Feld ist: alles, was man antippen kann, und Fenster darueber
+    const AKTIV = "button, a, input, select, textarea, label, .option, [onclick], [role=button], [contenteditable], #kartenSpiel, #erklaerGross, .modal, #appMehr, #appWerkBlatt";
+    let tipps = [];
+    document.addEventListener("pointerup", function(e){
+        try{
+            if(!document.body.classList.contains("runde-laeuft")) { tipps = []; return; }
+            if(e.pointerType === "mouse" && e.button !== 0) return;
+            if(e.target && e.target.closest && e.target.closest(AKTIV)) { tipps = []; return; }
+            const jetzt = Date.now();
+            tipps = tipps.filter(t => jetzt - t.z < 700 && Math.hypot(t.x - e.clientX, t.y - e.clientY) < 60);
+            tipps.push({ z: jetzt, x: e.clientX, y: e.clientY });
+            if(tipps.length >= 3){
+                tipps = [];
+                if(typeof window.loesungErlaubt === "function" && !window.loesungErlaubt()) return;
+                if(typeof window.toggleHiddenSolution === "function"){
+                    window.toggleHiddenSolution();
+                    try{ if(navigator.vibrate) navigator.vibrate([20, 40, 20]); }catch(x){}
+                }
+            }
+        }catch(x){}
+    }, true);
+})();
+</script>
 <script id="realistic-exam-logic">
 (function(){
 'use strict';
