@@ -369,6 +369,11 @@
            Leiste, zu mit dem Pfeil im Chat oder der Zurueck-Taste. Er legt
            sich nie von selbst ueber eine Frage. */
         #alChat { display: none; position: relative; }
+        #appLeiste #alTrainer { display: none; position: relative; }
+        html.android-app body.app-trainer-da #appLeiste #alTrainer { display: flex; }
+        #alTrainer .al-zahl { display: none; position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+            background: #1f9d55; color: #fff; font-size: 10px; font-weight: 800; align-items: center; justify-content: center; }
+        #alTrainer .al-zahl.da { display: flex; }
         html.android-app body.app-chat-da #alChat { display: flex; }
         #alChat .al-zahl {
             position: absolute; top: 5px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
@@ -23248,7 +23253,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 64, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 65, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -49171,6 +49176,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     leiste.innerHTML =
         '<div class="al-titel"><span class="al-name">Amateurfunk-<b>Trainer</b></span><span class="al-runde" id="alRunde"></span></div>'
       + '<span id="alUhrPlatz"></span>'
+      + '<button type="button" class="al-knopf" id="alTrainer" aria-label="Trainer: Teilnehmer und Auswertung" title="Trainer: Teilnehmer und Auswertung"><i class="fas fa-chalkboard-user"></i><span class="al-zahl" id="alTrainerZahl"></span></button>'
       + '<button type="button" class="al-knopf" id="alChat" aria-label="Gruppenchat" title="Gruppenchat"><i class="fas fa-comments"></i><span class="al-zahl" id="alChatZahl"></span></button>'
       + '<button type="button" class="al-knopf" id="alSuche" aria-label="Suchen" title="Suchen"><i class="fas fa-magnifying-glass"></i></button>'
       + '<button type="button" class="al-knopf" id="alBenutzer" aria-label="Benutzer" title="Benutzer"><span class="al-avatar" id="alInitiale"></span></button>'
@@ -49223,6 +49229,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(b && b.classList.contains('offen')) klick('duoChatKnopf');
     }
     $('alChat').addEventListener('click', () => D.body.classList.contains('app-chat-offen') ? chatZu() : chatAuf());
+    // Trainer-Knopf (05.10.2026): nur fuer den Gastgeber, oeffnet die Teilnehmer-Uebersicht
+    $('alTrainer').addEventListener('click', () => tu(() => { if(window.duo && window.duo.teilnehmerOeffnen) window.duo.teilnehmerOeffnen(); }));
+    setInterval(() => tu(() => {
+        const gast = !!(window.duo && window.duo.isActive && window.duo.isActive() && window.duo.isHost && window.duo.isHost());
+        D.body.classList.toggle('app-trainer-da', gast);
+        const liste = window.duoTeilnehmerUebersichtData || [], z = $('alTrainerZahl');
+        const fertig = gast ? liste.filter(t => t && t.finished).length : 0;
+        if(z){ const t = fertig ? String(fertig) : ''; if(z.textContent !== t) z.textContent = t; z.classList.toggle('da', !!fertig); }
+    }), 1000);
     // Der Chat oeffnet sich manchmal von selbst (jemand kommt dazu). In der
     // App bleibt er dann zu - gezaehlt wird am Knopf oben, geoeffnet wird
     // nur auf Wunsch. Klappt ihn jemand im Chat selbst zu, ist die Seite weg.

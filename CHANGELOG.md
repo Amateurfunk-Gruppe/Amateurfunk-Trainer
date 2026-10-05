@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 64 · 05.10.2026
+Stand 65 · 05.10.2026
 
 ### Hinzugefügt
+- Android-App, Gruppenraum: Der Gastgeber hat oben neben dem Chat einen Knopf mit Tafel-Zeichen – er öffnet jederzeit, auch mitten in der Runde, die Übersicht: wer im Raum ist, richtig und falsch, wie weit, wer fertig ist. Die grüne Zahl zeigt, wie viele schon fertig sind.
 - Android-App, Funki grüßt passend zur Tageszeit: morgens „Guten Morgen, ich wünsche dir einen guten Tag“, mittags „Mahlzeit! Was gab es Gutes bei dir zu essen?“ – mit dem Namen des Benutzers. Wer ihm die Antenne gerade biegt, bekommt jetzt wie beim Knie ölen ein „Das ist echter Ham Spirit!“.
 - Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC, aber still: kein Hinweis unten, und bei der nächsten Frage ist es wieder aus (nochmal dreimal tippen blendet sie auch so aus). Im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
 - Android-App: Farben wie am PC – unter Einstellungen → Anpassen → „Farbe“ (oben; Hell/Dunkel ist dafür von Allgemein dorthin umgezogen) gibt es jetzt neben Hell und Dunkel auch Grün, Blau und Orange (wie die Stile in der Windows-Fassung), für Sachlich und Verspielt – der Fragenkasten in der Runde ist dann in der Farbe getönt, die Antworten bleiben weiß; auch die Leisten unten (Zurück/Weiter, Hilfen, Navigation) nehmen die Farbe an. Hell bleibt das bisherige Grau. „Wie Handy“ bleibt
