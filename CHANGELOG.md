@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 43 · 05.10.2026
+Stand 47 · 05.10.2026
 
 ### Hinzugefügt
+- Android-App, Blättern gemischt: Im Blättern-Fenster gibt es den Schalter „Gemischt“ – dann kommen die Fragen quer durch alle Themen statt zehnmal hintereinander dasselbe. Die Mischung bleibt fest, damit das Lesezeichen trägt; gemischt und der Reihe nach haben je ein eigenes Lesezeichen, „Von vorn“ mischt neu. Auch „Nur Gelernte“, „Rest abarbeiten“ und „Noch nie geübt“ kommen dann gemischt. Am PC bleibt Blättern der Reihe nach
 - Android-App, Verlauf: Eine Runde lange drücken wählt sie zum Löschen aus (kurzes Rütteln) – unten steht dann „1 löschen“, weitere lassen sich dazutippen; „Abbrechen“ lässt alles stehen. Der Weg über „Einträge löschen …“ bleibt
 - Android-App, neue Kachel „Match“ unter „Üben“ (jetzt sechs statt fünf – kein Loch mehr im Raster; ist eine Kachel ausgeblendet, nimmt die letzte die ganze Breite): Wischen wie bei Tinder. Jede Karte zeigt oben die Frage (mit Bild, wenn es eins gibt) und unten EINE Antwort – nach rechts wischen heißt „die Antwort ist richtig“, nach links „falsch“ (oder die Knöpfe darunter). Statt vier Antworten gibt es nur zwei Möglichkeiten. Am Anfang erklärt ein Bild das Wischen, dann wählt man ein Thema: Alles gemischt, Prüfungsfragen (bei Klasse N alle 571), Q-Gruppen & Abkürzungen, Morsezeichen, Landeskenner (51, abgeglichen mit BD302 bis BD318), Stecker (mit den Katalogbildern) und Einheiten & Formeln. Bei N → E, E → A und N → A gibt es nur Technik: die Prüfungsfragen des Katalogs (dort nur Technik) und Einheiten & Formeln. Wer danebenliegt, sieht die richtige Antwort; 20 Karten je Runde, am Ende Ergebnis, Bestleistung je Thema und die verpassten Karten. Danebengegangene Prüfungsfragen kommen unter „Fehler üben“ und lassen sich gleich als normale Runde nachüben; der Lernfortschritt (gelernt) bleibt unberührt.
 - Android-App, Stil Verspielt: Funk-Logbuch. Wer die ISS oder den OSCAR-Satelliten im Vorbeiflug über der Startseite antippt, hat ein QSO – mit kurzem „R“ in Morse und Eintrag ins Logbuch (Mehr → Funk-Logbuch): Datum, Uhrzeit in UTC, Rufzeichen (RS0ISS, NA1SS, DP0ISS bzw. AO-7), Frequenz, Betriebsart und Rapport, wie in einem echten Stationstagebuch. Auch der winkende Astronaut lässt sich anfunken (DP0ISS aus dem Columbus-Modul). Dazu zählt das Logbuch, wie oft ISS, Satellit und Astronaut vorbeigekommen sind. Die ersten Male erklärt ein kleiner Hinweis, dass man sie antippen kann. In einer Runde fliegen sie weiter durch, ohne etwas anzufassen.
@@ -123,6 +124,8 @@ Stand 43 · 05.10.2026
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Android-App, Match, Einheiten & Formeln: Die Antworten sagen jetzt, was gemeint ist – bei Dezibel „etwa doppelte Leistung (× 2)“ statt nur „2“, „zehnfache Leistung (× 10)“ usw.; bei den Vorsätzen mit Wort, z. B. „10⁻⁶ (ein Millionstel)“
+- Android-App: Der Knopf „Generalprobe starten“ unter „So läuft’s“ heißt jetzt „Prüfung simulieren“, darunter klein: „Wie am Prüfungstag: echte Fragen, mit Uhr, am Ende bestanden oder nicht“. Die Kachel „Prüfungstag“ trägt ebenfalls „Prüfung simulieren“
 - Android-App, Match, Landeskenner: Zu jedem Land steht die Fahne (z. B. Ukraine 🇺🇦), auch in der Lösung groß über dem Ländernamen; England und Schottland mit ihren eigenen Fahnen
 - Android-App, Match, Q-Gruppen, Abkürzungen (die in Telegrafie gebräuchlichen wie PSE, K, AWDH, 73) und Landeskenner auch in Telegrafie: Unter dem großen Kürzel stehen die Morsezeichen (z. B. QRZ = −−·− ·−· −−··), sie werden bei jeder Karte vorgespielt und lassen sich mit „Erneut abspielen“ noch einmal hören
 - Android-App, Match, Landeskenner: Das Thema „Landeskenner“ enthält nur noch die Kenner, die in den Prüfungsfragen vorkommen (40 – dazu neu N für die USA); die übrigen (G, OM, OH, SV, HA, S5, 9A, YO, TF, LY, YL, 9H) stehen zusammen mit allen anderen unter „Landeskenner erweitert“ (Zusatz, am Ende der Liste, nicht in „Alles gemischt“)
@@ -168,6 +171,7 @@ Stand 43 · 05.10.2026
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Android-App, Verlauf: Langes Drücken auf eine Runde wählt sie jetzt auch am echten Handy zum Löschen aus – Android brach die Geste bisher ab (Text-Auswahl), jetzt zählt auch Androids eigenes „lange gedrückt“; kein Markieren von Text mehr dabei
 - Android-App, Match, Morsezeichen: Das CW-Signal wird jetzt bei jeder Karte sicher abgespielt – am Handy blieb es teils stumm, weil der Ton erst nach einem Tipp freigegeben wird (jetzt schon beim Tipp auf das Thema). Liegt das Swipe-Tutorial darüber, kommt der Ton, sobald es geschlossen ist. Der Knopf darunter heißt „Erneut abspielen“
 - Android-App, Stil Verspielt: Während Match oder das Funk-Logbuch offen ist, kommt Funki nicht mehr auf die Startseite darunter – man hörte ihn sprechen, sah ihn aber nicht. Die ISS fliegt weiter durch
 - Android-App: Die Zurück-Taste des Handys beendet jetzt den Rundgang („Willkommen im Amateurfunk-Trainer – Schritt 1 von 12“). Bisher ging sie an ihm vorbei.

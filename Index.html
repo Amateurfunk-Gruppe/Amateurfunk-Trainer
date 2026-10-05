@@ -18019,7 +18019,7 @@ function durchsichtMerken(id){
     if(!id) return;
     try{
         const d = durchsichtStand();
-        d[klasseAktuell().id] = id;
+        d[blaetterMerkKey()] = id;
         localStorage.setItem(durchsichtSchluessel(), JSON.stringify(d));
     }catch(e){}
     // Und ins Blaetter-Buch: Genau das sind die Fragen, die man
@@ -18030,7 +18030,8 @@ function durchsichtMerken(id){
 function durchsichtVergessen(){
     try{
         const d = durchsichtStand();
-        delete d[klasseAktuell().id];
+        delete d[blaetterMerkKey()];
+        if(blaetterGemischt()) blaetterSaat(true);        // gemischt: von vorn = neu mischen
         localStorage.setItem(durchsichtSchluessel(), JSON.stringify(d));
     }catch(e){}
     try{ durchsichtBadge(); }catch(e){}
@@ -18220,10 +18221,55 @@ function durchsichtBank(){
     return (typeof questionBank !== 'undefined' ? questionBank : []);
 }
 
+function blaetterGemischt(){
+    try{ return document.documentElement.classList.contains('android-app') && localStorage.getItem('amateurfunk_blaettern_gemischt_' + currentUser) === '1'; }catch(e){ return false; }
+}
+// Schluessel des Lesezeichens: gemischt und der Reihe nach getrennt
+function blaetterMerkKey(){ return klasseAktuell().id + (blaetterGemischt() ? '_mix' : ''); }
+function blaetterSaat(neu){
+    const k = 'amateurfunk_blaettern_saat_' + currentUser + '_' + klasseAktuell().id;
+    let z = 0;
+    try{ z = parseInt(localStorage.getItem(k) || '', 10); }catch(e){}
+    if(neu || !z){ z = 1 + Math.floor(Math.random() * 2147483000); try{ localStorage.setItem(k, String(z)); }catch(e){} }
+    return z;
+}
+// Feste Mischung aus der gespeicherten Zahl (immer gleich, bis neu gemischt wird)
+function blaetterMischFest(ids){
+    let a = blaetterSaat(false) >>> 0;
+    const r = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const x = ids.slice();
+    for(let i = x.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); const t = x[i]; x[i] = x[j]; x[j] = t; }
+    return x;
+}
+function blaetterMischFrei(ids){
+    if(!blaetterGemischt()) return ids;
+    const x = ids.slice();
+    for(let i = x.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = x[i]; x[i] = x[j]; x[j] = t; }
+    return x;
+}
+function blaetterMischSchalter(){
+    if(!document.documentElement.classList.contains('android-app')) return '';
+    const an = blaetterGemischt();
+    return '<button type="button" class="blaetter-misch" onclick="blaetterMischUmschalten()" role="switch" aria-checked="' + an + '" '
+      + 'style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin-top:0.8rem;padding:0.7rem 0.9rem;border-radius:12px;'
+      + 'border:1px solid rgba(127,140,170,.45);background:transparent;color:inherit;font-family:inherit;text-align:left;cursor:pointer;">'
+      + '<span><b style="font-size:0.95rem;"><i class="fas fa-shuffle"></i> Gemischt</b><br><span style="font-size:0.78rem;opacity:.75;">'
+      + (an ? 'Themen durcheinander – eigenes Lesezeichen. „Von vorn“ mischt neu.' : 'Aus: der Reihe nach wie im Katalog.') + '</span></span>'
+      + '<span style="flex:0 0 auto;width:50px;height:28px;border-radius:999px;position:relative;background:' + (an ? '#1FC46F' : '#8a97b5') + ';">'
+      + '<i style="position:absolute;top:3px;left:' + (an ? '25px' : '3px') + ';width:22px;height:22px;border-radius:50%;background:#fff;"></i></span></button>';
+}
+function blaetterMischUmschalten(){
+    try{ localStorage.setItem('amateurfunk_blaettern_gemischt_' + currentUser, blaetterGemischt() ? '0' : '1'); }catch(e){}
+    try{ durchsichtBadge(); }catch(e){}
+    const p = durchsichtPosition();
+    try{ durchsichtFensterZu(); }catch(e){}
+    if(p.gemerkt && p.index > 0 && typeof durchsichtWeiterFrage === 'function') durchsichtWeiterFrage(p); else durchsichtFrageFenster(p);
+}
+window.blaetterMischUmschalten = blaetterMischUmschalten; window.blaetterMischSchalter = blaetterMischSchalter; window.blaetterGemischt = blaetterGemischt;
 function durchsichtPosition(){
     const bank = durchsichtBank();
-    const ids = bank.map(q => q.id);
-    const merk = durchsichtStand()[klasseAktuell().id];
+    const ids = blaetterGemischt() ? blaetterMischFest(bank.map(q => q.id)) : bank.map(q => q.id);
+    const merk = durchsichtStand()[blaetterMerkKey()];
     let i = merk ? ids.indexOf(merk) : -1;
     let gemerkt = i >= 0;
 
@@ -18369,7 +18415,7 @@ function durchsichtGelernteLos(){
         if(window.showAppAlert) showAppAlert('Es ist noch keine Frage als gelernt abgehakt.');
         return;
     }
-    startQuestionSession(ids, GELERNT_NAME);
+    startQuestionSession(blaetterMischFrei(ids), GELERNT_NAME);
 }
 window.durchsichtGelernteLos = durchsichtGelernteLos;
 
@@ -18402,7 +18448,7 @@ function durchsichtOffeneLos(){
         if(window.showAppAlert) showAppAlert('Es ist keine Frage mehr offen - alles ist abgehakt.');
         return;
     }
-    startQuestionSession(ids, OFFENE_NAME);
+    startQuestionSession(blaetterMischFrei(ids), OFFENE_NAME);
 }
 window.durchsichtOffeneLos = durchsichtOffeneLos;
 
@@ -18461,7 +18507,7 @@ function durchsichtUnberuehrtLos(){
         if(window.showAppAlert) showAppAlert('Jede Frage hat schon einmal eine Antwort bekommen.');
         return;
     }
-    startQuestionSession(ids, UNBERUEHRT_NAME);
+    startQuestionSession(blaetterMischFrei(ids), UNBERUEHRT_NAME);
 }
 window.durchsichtUnberuehrtLos = durchsichtUnberuehrtLos;
 
@@ -18540,6 +18586,7 @@ function durchsichtWeiterFrage(p){
       + '<span class="bk-balken"><i data-ziel="' + anteil.toFixed(1) + '%"></i></span>'
       + '<span class="bk-klein">Weiter beim Lesezeichen. Noch ' + offen + ' Fragen.</span>'
       + '</button></div>'
+      + (typeof blaetterMischSchalter === 'function' ? blaetterMischSchalter() : '')
       + '</div>'
       + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
       + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
@@ -18629,7 +18676,7 @@ function durchsichtFrageFenster(p){
     }else if(nichtsGemerktJetzt){
         k1Zahl  = '<span style="font-size:1.35rem; font-weight:700; color:#0f2745;">' + gesamt + '</span>'
                 + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen</span>';
-        k1Klein = 'Von der ersten bis zur letzten, ohne Mischen.';
+        k1Klein = blaetterGemischt() ? 'Alle Fragen, gemischt – quer durch die Themen.' : 'Von der ersten bis zur letzten, ohne Mischen.';
         k1Ziel  = 0;
     }else{
         k1Zahl  = '<span style="font-size:1.35rem; font-weight:700; color:#0f2745;">' + nr + '</span>'
@@ -18688,8 +18735,8 @@ function durchsichtFrageFenster(p){
         + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#8a5a00;">' + offeneN + '</span>'
         + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> Fragen sind noch zu lernen</span></span>'
         + '<span class="bk-balken orange"><i data-ziel="' + anteilO.toFixed(1) + '%"></i></span>'
-        + '<span class="bk-klein">Geht nur durch das, was noch nicht abgehakt ist — in der Reihenfolge '
-        + 'des Katalogs. Das Lesezeichen bleibt liegen.'
+        + '<span class="bk-klein">Geht nur durch das, was noch nicht abgehakt ist — ' + (blaetterGemischt() ? 'gemischt' : 'in der Reihenfolge des Katalogs') + '. '
+        + 'Das Lesezeichen bleibt liegen.'
         + (offeneN >= gesamt ? gleichSatz : '') + '</span>'
         + '</button>'
       : '';
@@ -18724,12 +18771,13 @@ function durchsichtFrageFenster(p){
       // Der Satz stand hier frueher zweimal untereinander - einmal als
       // Ansage, einmal als Erklaerung darunter. Jetzt steht er einmal.
       + '<div style="font-size:0.8rem; color:#4b5563; margin-bottom:0.75rem; line-height:1.5;">'
-      + 'Blättern geht der Reihe nach durch den Katalog, ohne zu mischen — auch durch das, was schon '
+      + (blaetterGemischt() ? 'Blättern geht gemischt durch den ganzen Katalog — quer durch die Themen, auch durch das, was schon ' : 'Blättern geht der Reihe nach durch den Katalog, ohne zu mischen — auch durch das, was schon ')
       + 'sitzt. Was du kannst, hakst du an der Frage ab; alles andere klickst du mit „Weiter" durch. '
       + 'Der Trainer merkt sich, wo du aufgehört hast.</div>'
       + '<div class="blaetter-kacheln' + (gel ? '' : ' einzeln') + '">' + kachel1 + kachel2 + '</div>'
       + (einstieg ? '<div class="blaetter-rest">' + einstieg + '</div>' : '')
       + (weiss ? '<div class="blaetter-rest">' + weiss + '</div>' : '')
+      + blaetterMischSchalter()
       + '</div>'
       + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; '
       + 'padding:0.8rem 1.2rem; background:#fafbff; border-top:1px solid #e3e9f3;">'
@@ -23131,7 +23179,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 43, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 47, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -47924,13 +47972,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Formelzeichen', 'T', 'steht für', 'Periodendauer', 'T – Periodendauer, T = 1/f.'],
         ['Formelzeichen', 'Z', 'steht für', 'Scheinwiderstand (Impedanz)', 'Z – Scheinwiderstand, X – Blindwiderstand.'],
         ['Formelzeichen', 'X', 'steht für', 'Blindwiderstand', 'X – Blindwiderstand (XL an der Spule, XC am Kondensator).'],
-        ['Vorsatz', 'piko (p)', 'bedeutet', '10⁻¹²', 'p = 10⁻¹², n = 10⁻⁹, µ = 10⁻⁶, m = 10⁻³.'],
-        ['Vorsatz', 'nano (n)', 'bedeutet', '10⁻⁹', 'n = 10⁻⁹ – ein Milliardstel.'],
-        ['Vorsatz', 'mikro (µ)', 'bedeutet', '10⁻⁶', 'µ = 10⁻⁶ – ein Millionstel.'],
-        ['Vorsatz', 'milli (m)', 'bedeutet', '10⁻³', 'm = 10⁻³ – ein Tausendstel.'],
-        ['Vorsatz', 'kilo (k)', 'bedeutet', '10³', 'k = 10³ – tausend.'],
-        ['Vorsatz', 'Mega (M)', 'bedeutet', '10⁶', 'M = 10⁶ – eine Million.'],
-        ['Vorsatz', 'Giga (G)', 'bedeutet', '10⁹', 'G = 10⁹ – eine Milliarde.'],
+        ['Vorsatz', 'piko (p)', 'bedeutet', '10⁻¹² (ein Billionstel)', 'p = 10⁻¹², n = 10⁻⁹, µ = 10⁻⁶, m = 10⁻³.'],
+        ['Vorsatz', 'nano (n)', 'bedeutet', '10⁻⁹ (ein Milliardstel)', 'n = 10⁻⁹ – ein Milliardstel.'],
+        ['Vorsatz', 'mikro (µ)', 'bedeutet', '10⁻⁶ (ein Millionstel)', 'µ = 10⁻⁶ – ein Millionstel.'],
+        ['Vorsatz', 'milli (m)', 'bedeutet', '10⁻³ (ein Tausendstel)', 'm = 10⁻³ – ein Tausendstel.'],
+        ['Vorsatz', 'kilo (k)', 'bedeutet', '10³ (tausend)', 'k = 10³ – tausend.'],
+        ['Vorsatz', 'Mega (M)', 'bedeutet', '10⁶ (eine Million)', 'M = 10⁶ – eine Million.'],
+        ['Vorsatz', 'Giga (G)', 'bedeutet', '10⁹ (eine Milliarde)', 'G = 10⁹ – eine Milliarde.'],
         ['Formel', 'Leistung P', 'berechnet man mit', 'P = U · I', '„PUI“: P = U · I.'],
         ['Formel', 'Spannung U', 'berechnet man mit', 'U = R · I', '„URI“: U = R · I.'],
         ['Formel', 'Wellenlänge λ', 'berechnet man mit', 'λ = c / f', 'λ = c / f, mit c = 300 000 km/s. 300 / f in MHz ergibt λ in m.'],
@@ -47939,10 +47987,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Formel', 'Blindwiderstand XC eines Kondensators', 'berechnet man mit', 'XC = 1 / (2π · f · C)', 'XC = 1/(2π f C) – sinkt mit der Frequenz.'],
         ['Formel', 'Resonanzfrequenz f eines Schwingkreises', 'berechnet man mit', 'f = 1 / (2π · √(L · C))', 'Thomsonsche Schwingungsformel.'],
         ['Formel', 'Leistung P aus U und R', 'berechnet man mit', 'P = U² / R', 'P = U · I und I = U / R ergibt P = U² / R.'],
-        ['Dezibel', '3 dB', 'entspricht bei der Leistung etwa dem Faktor', '2', '3 dB ≈ doppelte Leistung, 10 dB = zehnfache, 20 dB = hundertfache.'],
-        ['Dezibel', '10 dB', 'entspricht bei der Leistung dem Faktor', '10', '10 dB = Faktor 10 bei der Leistung.'],
-        ['Dezibel', '20 dB', 'entspricht bei der Leistung dem Faktor', '100', '20 dB = Faktor 100 bei der Leistung (Faktor 10 bei der Spannung).'],
-        ['Dezibel', '6 dB', 'entspricht bei der Leistung etwa dem Faktor', '4', '6 dB ≈ vierfache Leistung = doppelte Spannung.']
+        ['Dezibel', '3 dB', 'entspricht bei der Leistung etwa dem Faktor', 'etwa doppelte Leistung (× 2)', '3 dB ≈ doppelte Leistung, 10 dB = zehnfache, 20 dB = hundertfache.'],
+        ['Dezibel', '10 dB', 'entspricht bei der Leistung dem Faktor', 'zehnfache Leistung (× 10)', '10 dB = Faktor 10 bei der Leistung.'],
+        ['Dezibel', '20 dB', 'entspricht bei der Leistung dem Faktor', 'hundertfache Leistung (× 100)', '20 dB = Faktor 100 bei der Leistung (Faktor 10 bei der Spannung).'],
+        ['Dezibel', '6 dB', 'entspricht bei der Leistung etwa dem Faktor', 'etwa vierfache Leistung (× 4)', '6 dB ≈ vierfache Leistung = doppelte Spannung.']
     ];
     // Q-Gruppen (Betriebsdienst, Klasse N): [Gruppe, Bedeutung, Verwechslungen]
     const QGRUPPEN = [
@@ -49481,7 +49529,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahLernbedarf"><div class="kz"><span class="ah-ico amber"><i class="fas fa-fire-flame-curved"></i></span><span class="anz" id="ahKLernbedarf">0</span></div><div><b>Lernbedarf</b><small>wackelige Fragen</small></div></button>'
       +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
-      +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Generalprobe</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Prüfung simulieren</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
       + '</div>'
@@ -49856,7 +49904,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, true, true) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
               +   '<div><b>Noch ' + fragenText(d.rest) + ' bis zum Tagesziel</b><small>Dann bleibt deine Serie auf Sendung.</small><span class="swp-bel"><i class="fas fa-tower-broadcast"></i> Tag 13 wartet</span></div></div>'
               + '<div class="swp-kach">' + [['rot', 'fa-rotate-left', '12', 'Fehler üben', 'bis sie sitzen'], ['amber', 'fa-fire-flame-curved', '34', 'Lernbedarf', 'wackelige Fragen'],
-                   ['violett', 'fa-stopwatch', '3×45′', 'Prüfungstag', 'Generalprobe'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
+                   ['violett', 'fa-stopwatch', '3×45′', 'Prüfungstag', 'Prüfung simulieren'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
                   .map(k => '<div><span class="ah-ico ' + k[0] + '"><i class="fas ' + k[1] + '"></i></span><em' + (k[2].length > 3 ? ' class="kl"' : '') + '>' + k[2] + '</em><b>' + k[3] + '</b><small>' + k[4] + '</small></div>').join('') + '</div>';
         }
         return '<div class="swp-rahmen' + (kurz ? ' kurz' : '') + '"><div class="swp ' + (stil === 'sachlich' ? 's' : 'v') + '" aria-hidden="true">'
@@ -50077,7 +50125,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         '<b>CQ</b> ist der Anruf an alle: „Wer möchte mit mir funken?“',
         'In der Prüfung darfst du die <b>Formelsammlung</b> und einen einfachen Taschenrechner benutzen. Das ist kein Schummeln – das ist erlaubt!',
         'Eine <b>QSL-Karte</b> ist eine Postkarte, die Funkamateure nach einer Verbindung tauschen – als Beweis, dass es geklappt hat.',
-        'Mach ab und zu die <b>Generalprobe</b>. Dann kennst du den Ablauf und bist am Prüfungstag viel ruhiger.',
+        'Mach ab und zu die <b>Prüfungssimulation</b>. Dann kennst du den Ablauf und bist am Prüfungstag viel ruhiger.',
         '<b>QTH</b> heißt Standort. „Mein QTH ist Hamburg“ bedeutet: Ich funke aus Hamburg.',
         'Lesen ist anstrengend? In der Runde kann dir das Handy jede Frage <b>vorlesen</b>.',
         'Beim Buchstabieren sagen Funker <b>Alfa, Bravo, Charlie</b> … So versteht man jeden Buchstaben, auch wenn es rauscht.',
@@ -50398,7 +50446,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { ziel: '#ahWahl', text: 'Tipp hier drauf und bestimm selbst: <b>wie viele Fragen</b> und welcher Prüfungsteil. Du bist der Boss!' },
         { ziel: '#ahTag', text: 'Dein <b>Tagesziel</b>. Schaffst du es jeden Tag, bleibst du <b>ON AIR</b>. Ich zähl mit – ich seh alles!' },
         { ziel: '#ahKacheln [data-ziel="ahFehler"]', text: '<b>Schau mal da!</b> Deine Fehler. Die kommen so lange wieder, bis sie sitzen. Da bin ich gnadenlos.' },
-        { ziel: '#ahKacheln [data-ziel="ahPruefung"]', text: 'Die <b>Generalprobe</b>: Prüfung wie echt, mit Uhr. Ich drück dir die Daumen. Also … wenn ich welche hätte.' },
+        { ziel: '#ahKacheln [data-ziel="ahPruefung"]', text: 'Die <b>Prüfungssimulation</b>: Prüfung wie echt, mit Uhr. Ich drück dir die Daumen. Also … wenn ich welche hätte.' },
         { ziel: '#alSuche', text: 'Mit der <b>Lupe</b> findest du jede Frage – mit Nummer oder Stichwort. Schneller, als ich blinzeln kann.' },
         { ziel: '#appNavi [data-bereich="fortschritt"]', text: 'Und hier unten siehst du, <b>wie weit</b> du schon bist. Kleiner Spoiler: immer weiter!' },
         // Teil 2: die Werkzeuge (01.10.2026). Dietmar: "Was mir persoenlich
@@ -53117,7 +53165,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      erklaer: '<b>Sichere</b> ab und zu deinen Lernstand. Dann ist nichts weg – auch nicht auf einem neuen Handy.',
                      sprich: 'Sicher ist sicher! | Speicher ab und zu deinen Lernstand.' },
         pruefung:  { titel: 'So läuft’s', farbe: 'tuerkis', icon: 'fa-clipboard-list', satz: () => ['Keine Panik – so läuft die Prüfung!', 'Wer den Ablauf kennt, bleibt ruhig!'],
-                     erklaer: 'So läuft die <b>Prüfung</b>: jeder Teil mit seinen Fragen und seiner Zeit. Mach vorher die <b>Generalprobe</b>!',
+                     erklaer: 'So läuft die <b>Prüfung</b>: jeder Teil mit seinen Fragen und seiner Zeit. Mach vorher die <b>Prüfungssimulation</b>!',
                      sprich: 'So läuft die Prüfung. | Keine Panik!' },
         termin:    { titel: 'Prüfungstermin', farbe: 'rot', icon: 'fa-calendar-day', satz: () => ['Wann ist dein großer Tag?', 'Ich drück dir die Daumen. Also … wenn ich welche hätte!'],
                      erklaer: 'Trag deinen <b>Prüfungstag</b> ein. Dann rechne ich dir aus, wie viele Fragen am Tag reichen.',
@@ -53265,7 +53313,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const t = esc((grau.textContent || '').replace(/^[^A-Za-zÄÖÜäöü]+/, '').replace(/\s+/g, ' ').trim()).replace(/^Grauzone:/, '<b>Grauzone:</b>');
             html += '<div class="aw-hinweis"><i class="fas fa-circle-info"></i><span>' + t + '</span></div>';
         }
-        return html + '<button type="button" class="aw-knopf" data-tat="generalprobe"><i class="fas fa-stopwatch"></i> Generalprobe starten</button>'
+        return html + '<button type="button" class="aw-knopf" data-tat="generalprobe"><i class="fas fa-stopwatch"></i> Prüfung simulieren</button><div style="text-align:center;font-size:13px;opacity:.75;margin:-4px 0 10px">Wie am Prüfungstag: echte Fragen, mit Uhr, am Ende bestanden oder nicht</div>'
           + zeile('termin', 'rot', 'fa-calendar-day', 'Prüfungstermin', esc(terminKurz()));
     }
     function blattTermin(){
@@ -53419,25 +53467,42 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     });
     werkBlatt.querySelector('.aw-schleier').addEventListener('click', () => werkBlattZu());
     {   // Verlauf: lange druecken = zum Loeschen auswaehlen
+        // Am Handy bricht Android ein ruhiges langes Druecken oft mit pointercancel ab (Text-Auswahl-Geste) und meldet
+        // stattdessen 'contextmenu' - darum zaehlt beides: der eigene Zeitgeber UND das contextmenu-Ereignis.
         let lang = null, x0 = 0, y0 = 0, schluck = 0;
         const ab = () => { if(lang){ clearTimeout(lang.uhr); lang = null; } };
+        const nrVon = b => parseInt(String(b.dataset.tat).split(':')[1], 10);
+        const waehlen = nr => {
+            ab();
+            if(werk.art !== 'verlauf' || werk.bearbeiten || isNaN(nr)) return;
+            schluck = Date.now() + 700;
+            werk.bearbeiten = true; werk.auswahl = new Set([nr]); inhaltZeichnen();
+            tu(() => { if(navigator.vibrate) navigator.vibrate(30); });
+            sprechblase('Ausgewählt! Tipp weitere an – oder unten auf „löschen“.');
+        };
         werkBlatt.addEventListener('pointerdown', e => {
             const b = e.target.closest && e.target.closest('.aw-runde');
             if(!b || werk.art !== 'verlauf' || werk.bearbeiten) return;
             x0 = e.clientX; y0 = e.clientY; ab();
-            const nr = parseInt(String(b.dataset.tat).split(':')[1], 10);
-            lang = { uhr: setTimeout(() => {
-                lang = null; schluck = Date.now() + 700;
-                werk.bearbeiten = true; werk.auswahl = new Set([nr]); inhaltZeichnen();
-                tu(() => { if(navigator.vibrate) navigator.vibrate(30); });
-                sprechblase('Ausgewählt! Tipp weitere an – oder unten auf „löschen“.');
-            }, 550) };
+            const nr = nrVon(b);
+            lang = { uhr: setTimeout(() => waehlen(nr), 550) };
         }, true);
         werkBlatt.addEventListener('pointermove', e => { if(lang && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) ab(); }, true);
-        ['pointerup', 'pointercancel', 'scroll'].forEach(t => werkBlatt.addEventListener(t, ab, true));
+        werkBlatt.addEventListener('pointerup', ab, true);
+        // Rollen bricht ab; pointercancel allein nicht (siehe oben)
+        const rolle = werkBlatt.querySelector('#awRolle') || werkBlatt;
+        rolle.addEventListener('scroll', ab, { passive: true });
+        werkBlatt.addEventListener('touchmove', e => { const t = e.touches && e.touches[0]; if(lang && t && Math.hypot(t.clientX - x0, t.clientY - y0) > 10) ab(); }, { passive: true, capture: true });
+        werkBlatt.addEventListener('contextmenu', e => {
+            const b = e.target.closest && e.target.closest('.aw-runde');
+            if(!b) return;
+            e.preventDefault();
+            if(werk.art === 'verlauf' && !werk.bearbeiten) waehlen(nrVon(b));
+        });
         // Der Klick nach dem langen Druecken soll die Runde nicht gleich wieder abwaehlen oder oeffnen
         werkBlatt.addEventListener('click', e => { if(Date.now() < schluck && e.target.closest && e.target.closest('.aw-runde')){ e.stopPropagation(); e.preventDefault(); schluck = 0; } }, true);
-        werkBlatt.addEventListener('contextmenu', e => { if(e.target.closest && e.target.closest('.aw-runde')) e.preventDefault(); });
+        // Kein Markieren von Text und kein Kontextmenue beim langen Druecken
+        const st = D.createElement('style'); st.textContent = '.aw-runde{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}'; D.head.appendChild(st);
     }
     werkBlatt.querySelector('.aw-zu').addEventListener('click', () => werkBlattZu());
     // Funki im Blatt antippen: er kichert, huepft und sagt etwas anderes
