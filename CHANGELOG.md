@@ -12,10 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 57 · 05.10.2026
+Stand 58 · 05.10.2026
 
 ### Hinzugefügt
-- Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC (nochmal dreimal tippen blendet sie wieder aus). Gleiche Regeln wie F9: gilt als „mit Lösung“, im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
+- Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC, aber still: kein Hinweis unten, und bei der nächsten Frage ist es wieder aus (nochmal dreimal tippen blendet sie auch so aus). Im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
 - Android-App: Farben wie am PC – unter Einstellungen → Anpassen → „Farbe“ (oben; Hell/Dunkel ist dafür von Allgemein dorthin umgezogen) gibt es jetzt neben Hell und Dunkel auch Grün, Blau und Orange (wie die Stile in der Windows-Fassung), für Sachlich und Verspielt – der Fragenkasten in der Runde ist dann in der Farbe getönt, die Antworten bleiben weiß; auch die Leisten unten (Zurück/Weiter, Hilfen, Navigation) nehmen die Farbe an. Hell bleibt das bisherige Grau. „Wie Handy“ bleibt
 - Android-App, Blättern gemischt: Im Blättern-Fenster gibt es den Schalter „Gemischt“ – dann kommen die Fragen quer durch alle Themen statt zehnmal hintereinander dasselbe. Die Mischung bleibt fest, damit das Lesezeichen trägt; gemischt und der Reihe nach haben je ein eigenes Lesezeichen, „Von vorn“ mischt neu. Auch „Nur Gelernte“, „Rest abarbeiten“ und „Noch nie geübt“ kommen dann gemischt. Am PC bleibt Blättern der Reihe nach
 - Android-App, Verlauf: Eine Runde lange drücken wählt sie zum Löschen aus (kurzes Rütteln) – unten steht dann „1 löschen“, weitere lassen sich dazutippen; „Abbrechen“ lässt alles stehen. Der Weg über „Einträge löschen …“ bleibt

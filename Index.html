@@ -23244,7 +23244,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 57, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 58, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -41229,9 +41229,21 @@ if (originalSelectOption) {
             if(tipps.length >= 3){
                 tipps = [];
                 if(typeof window.loesungErlaubt === "function" && !window.loesungErlaubt()) return;
-                if(typeof window.toggleHiddenSolution === "function"){
-                    window.toggleHiddenSolution();
-                    try{ if(navigator.vibrate) navigator.vibrate([20, 40, 20]); }catch(x){}
+                // Geheim (Dietmar: "Unten darf es keinen Hinweis geben ... in der naechsten Frage muss es wieder aus sein.
+                // Das ist sozusagen ein geheimer Cheatcode."): still umschalten, ohne Meldung; bei der naechsten Frage aus.
+                if(typeof window.toggleShowAllAnswers !== "function") return;
+                window.toggleShowAllAnswers();
+                let an = false; try{ an = !!window.showAllAnswers; }catch(x){}
+                clearInterval(window.__geheimUhr);
+                if(an){
+                    let idx = -1; try{ idx = currentIndex; }catch(x){}
+                    window.__geheimUhr = setInterval(function(){
+                        let jetzt = -2; try{ jetzt = currentIndex; }catch(x){}
+                        const weg = jetzt !== idx || !document.body.classList.contains("runde-laeuft");
+                        if(!weg) return;
+                        clearInterval(window.__geheimUhr);
+                        try{ if(window.showAllAnswers) window.toggleShowAllAnswers(); }catch(x){}
+                    }, 150);
                 }
             }
         }catch(x){}
