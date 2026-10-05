@@ -1,0 +1,109 @@
+# ================================================================
+#  NODE.JS FUER ANDROID MIT 16-KB-SEITEN BAUEN          (05.10.2026)
+# ----------------------------------------------------------------
+#  Dietmar: "danach moechte ich in den Google Play Store" - "Bereite es
+#  so weit vor".
+#
+#  Google nimmt seit November 2025 nur noch Apps an, deren Programmteile
+#  auch auf Handys mit 16-KB-Speicherseiten laufen (ab Android 15). Das
+#  fertige Node.js fuer Android (nodejs-mobile 18.20.4) ist nur fuer
+#  4 KB gebunden. Dieser Auftrag baut genau dieselbe Fassung aus den
+#  Quellen neu - nur mit 16-KB-Seiten - und legt sie unter Releases ->
+#  "libnode-16k" ab (Vorabversion: der Updater des Trainers sieht sie
+#  nicht). android.yml nimmt sie von dort, sobald sie da ist.
+#
+#  Nur von Hand starten: Actions -> "Node.js fuer Android mit 16-KB-Seiten
+#  bauen" -> Run workflow. Dauert ein bis zwei Stunden. Einmal reicht -
+#  neu bauen erst, wenn eine andere Node-Fassung gebraucht wird.
+#  nodejs-mobile: MIT-Lizenz (Node.js und Janea Systems).
+# ================================================================
+name: Node.js fuer Android mit 16-KB-Seiten bauen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ arm64, arm ]
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Werkzeuge
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q build-essential gcc-multilib g++-multilib
+
+      - name: Android NDK 24
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" "ndk;24.0.8215888" > /dev/null
+          echo "NDK=$SDK/ndk/24.0.8215888" >> "$GITHUB_ENV"
+
+      - name: Quellen holen (nodejs-mobile 18.20.4)
+        run: git clone --depth 1 --branch v18.20.4 https://github.com/nodejs-mobile/nodejs-mobile.git nm
+
+      - name: Bauen
+        working-directory: nm
+        env:
+          # Der eigentliche Unterschied zur fertigen Fassung
+          LDFLAGS: -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
+        run: ./tools/android_build.sh "$NDK" 24 ${{ matrix.arch }}
+
+      - name: Verkleinern und pruefen
+        working-directory: nm
+        run: |
+          if [ "${{ matrix.arch }}" = arm64 ]; then ABI=arm64-v8a; else ABI=armeabi-v7a; fi
+          SO="out_android/$ABI/libnode.so"
+          "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-unneeded "$SO"
+          ls -la "$SO"
+          readelf -lW "$SO" | grep LOAD
+          if readelf -lW "$SO" | awk '/LOAD/{print $NF}' | grep -qv '0x4000'; then
+            echo "::error::$ABI: libnode.so hat nicht ueberall 16-KB-Seiten."
+            exit 1
+          fi
+          mkdir -p "/tmp/aus/$ABI" && cp "$SO" "/tmp/aus/$ABI/"
+          echo "ABI=$ABI" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libnode-${{ env.ABI }}
+          path: /tmp/aus
+
+  ablegen:
+    needs: bauen
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/teile
+          pattern: libnode-*
+          merge-multiple: true
+
+      - name: Unter Releases ablegen (libnode-16k)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cd /tmp/teile
+          ls -laR
+          if [ ! -f arm64-v8a/libnode.so ]; then
+            echo "::error::Ohne 64-Bit-Fassung (arm64-v8a) hilft es dem Play Store nicht."
+            exit 1
+          fi
+          zip -qr -9 /tmp/libnode-16k.zip .
+          NOTIZ="Bauteil der Android-App, nicht zum Herunterladen gedacht: Node.js fuer Android (nodejs-mobile 18.20.4, MIT-Lizenz) mit 16-KB-Seiten fuer den Google Play Store. Wird von android.yml beim Bauen der App geholt."
+          if ! gh release view libnode-16k >/dev/null 2>&1; then
+            gh release create libnode-16k --prerelease --title "Bauteil: Node.js fuer Android (16 KB)" --notes "$NOTIZ"
+          fi
+          gh release upload libnode-16k /tmp/libnode-16k.zip --clobber

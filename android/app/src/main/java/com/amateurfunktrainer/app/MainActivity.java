@@ -31,6 +31,8 @@ import android.graphics.Typeface;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowInsets;
+import android.window.OnBackInvokedDispatcher;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -81,6 +83,25 @@ public class MainActivity extends Activity {
         vorhang = startbild();
         wurzel.addView(vorhang, new FrameLayout.LayoutParams(-1, -1));
         setContentView(wurzel);
+        // Android 15+ (targetSdk 36, 05.10.2026): Die App zeichnet jetzt bis
+        // unter Statusleiste und Navigationsleiste. Damit nichts darunter
+        // verschwindet, rueckt der Rahmen um genau diese Leisten (und die
+        // Tastatur) ein - der Rand dahinter bleibt im Dunkelblau des Kopfes.
+        if (Build.VERSION.SDK_INT >= 35) {
+            wurzel.setBackgroundColor(Color.parseColor("#0F2745"));
+            wurzel.setOnApplyWindowInsetsListener((v, ins) -> {
+                android.graphics.Insets r = ins.getInsets(WindowInsets.Type.systemBars()
+                    | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
+                v.setPadding(r.left, r.top, r.right, r.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
+        // Zurueck-Geste ab Android 13 (Pflicht ab targetSdk 36 - dort ruft
+        // Android onBackPressed nicht mehr auf). Gleicher Weg wie die Taste.
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::zurueck);
+        }
         Stimme.anmelden(this, stimmMelder);
         web.addJavascriptInterface(new Sprache(), "AndroidSprache");
         web.addJavascriptInterface(new Datei(), "AndroidDatei");
@@ -95,7 +116,8 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setAllowFileAccess(false);
-        s.setUserAgentString(s.getUserAgentString() + " AmateurfunkTrainerApp" + (NodeStarter.tunnelProgramm(this) != null ? " Tunnel" : ""));
+        s.setUserAgentString(s.getUserAgentString() + " AmateurfunkTrainerApp" + (NodeStarter.tunnelProgramm(this) != null ? " Tunnel" : "")
+            + (BuildConfig.PLAY ? " PlayStore" : ""));
 
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageFinished(WebView v, String url) {
@@ -421,7 +443,9 @@ public class MainActivity extends Activity {
      *  (window.appZurueck im Skript "appRahmen"). Nur wenn nicht, geht die App
      *  wie bisher in den Hintergrund. Beendet wird nie - der Server soll
      *  weiterlaufen. */
-    @Override public void onBackPressed() {
+    @Override public void onBackPressed() { zurueck(); }
+
+    private void zurueck() {
         if (web != null && geladen) {
             web.evaluateJavascript(
                 "(function(){try{return !!(window.appZurueck && window.appZurueck());}catch(e){return false;}})()",

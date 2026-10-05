@@ -4175,7 +4175,10 @@ let githubUpdate = null;
 // sie dort jetzt aus. Dietmar: "in der Ersten Version, konnte ich über
 // GitHub Update machen" - also wieder an. Den Neustart nach Programmdateien
 // uebernimmt die App (Knopf "Jetzt neu starten", NeustartActivity).
-try{
+// Play-Store-Fassung der App (05.10.2026): keine Programmdateien von
+// GitHub - Google erlaubt Updates dort nur ueber den Play Store. Die App
+// setzt TRAINER_PLAY (siehe NodeStarter.java); die APK von GitHub nicht.
+if(process.env.TRAINER_PLAY !== '1') try{
   githubUpdate = require('./github_update').einrichten({
     app, localOnly, projektOrdner: __dirname,
     dateien: ABGLEICH_ALLE, kategorie: abgleichKategorie

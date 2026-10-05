@@ -26,12 +26,14 @@ def trainerVersion = { ->
 
 android {
     namespace 'com.amateurfunktrainer.app'
-    compileSdk 34
+    // Android 16 (API 36) - Pflicht fuer neue Apps im Play Store seit
+    // 31.08.2026. Laeuft weiter ab Android 8 (minSdk 26). (05.10.2026)
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.amateurfunktrainer.app'
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode Integer.parseInt(System.getenv('TRAINER_VERSION_CODE') ?: '1')
         versionName trainerVersion()
         ndk {
@@ -40,9 +42,20 @@ android {
         }
         externalNativeBuild {
             cmake {
-                arguments '-DANDROID_STL=c++_shared'
+                // 16-KB-Seiten (Play Store, ab Android 15): die eigene
+                // Bruecke so binden, dass sie auf beiden Seitengroessen laeuft.
+                arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
             }
         }
+        // Play-Store-Fassung (05.10.2026): TRAINER_PLAY=1 beim Bauen. Dann
+        // holt die App keine Programmdateien von GitHub - Updates kommen
+        // dort nur ueber den Play Store (Google-Regel). Die APK fuer GitHub
+        // bleibt wie sie ist.
+        buildConfigField 'boolean', 'PLAY', (System.getenv('TRAINER_PLAY') == '1') ? 'true' : 'false'
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     externalNativeBuild {
@@ -84,6 +97,7 @@ android {
             useLegacyPackaging = true
             // cloudflared ist ein fertiges Go-Programm - nicht anfassen.
             keepDebugSymbols += ['**/libcloudflared.so']
+            if (System.getenv('TRAINER_OHNE_TUNNEL') == '1') excludes += ['**/libcloudflared.so']
         }
     }
 
@@ -118,7 +132,8 @@ android {
 // cloudflared: Apache-2.0-Lizenz, Cloudflare Inc.
 // ----------------------------------------------------------------
 def tunnelHolen = tasks.register('tunnelHolen') {
-    onlyIf { System.getenv('CI') != null }
+    // Play-Paket ohne cloudflared, wenn es die 16-KB-Pruefung nicht besteht (05.10.2026)
+    onlyIf { System.getenv('CI') != null && System.getenv('TRAINER_OHNE_TUNNEL') != '1' }
     doLast {
         def quellen = ['https://packages-cf.termux.dev/apt/termux-main',
                        'https://packages.termux.dev/apt/termux-main',

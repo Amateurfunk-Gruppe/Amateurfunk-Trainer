@@ -105,7 +105,7 @@
                         return false;
                     };
                     var id = await sprich();
-                    if(!id){ await bereitWarten(12000); id = await sprich(); }
+                    if(!id){ var hw = null; try{ hw = document.createElement('div'); hw.textContent = 'Stimme wird vorbereitet \u2026'; hw.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:99999;background:rgba(15,39,69,.92);color:#fff;padding:10px 18px;border-radius:20px;font-size:15px;pointer-events:none'; document.body.appendChild(hw); }catch(e){} await bereitWarten(25000); try{ if(hw) hw.remove(); }catch(e){} id = await sprich(); }
                     if(!id){ await new Promise(function(r){ setTimeout(r, 1800); }); id = await sprich(); }
                     if(!id) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
                     var a = await original('/api/android-tts/' + id);
@@ -23248,7 +23248,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 59, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 61, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -23297,6 +23297,7 @@ async function githubTestFlagge(){
 }
 
 async function githubStartNachschau(versuch){
+    if(imPlayStore()) return;
     if(!laeuftLokal()) return;
     versuch = versuch || 1;
 
@@ -23781,7 +23782,10 @@ function updateFertigZeigen(j){
 // ---------------------------------------------------------------
 // Dasselbe Fenster, nur jetzt gefragt statt beim Start - und deshalb auch
 // dann, wenn es nichts zu holen gibt: Dann sagt es das.
+function imPlayStore(){ return /AmateurfunkTrainerApp/.test(navigator.userAgent) && /PlayStore/.test(navigator.userAgent); }
+function playStoreOeffnen(){ location.href = 'https://play.google.com/store/apps/details?id=com.amateurfunktrainer.app'; }
 async function githubOeffnen(){
+    if(imPlayStore()){ playStoreOeffnen(); return; }
     if(!laeuftLokal()){
         if(typeof showAppAlert === 'function')
             showAppAlert('Das hier ist der Trainer des Entwicklers. Ein Update schreibt Dateien in deinen '
@@ -32554,6 +32558,7 @@ let einstVersionFern = null;    // was beim letzten Nachsehen bei GitHub stand
 // wissen will, ob es etwas Neues gibt, bekommt hier zwei Zahlen und einen
 // Satz - und erst wenn es wirklich etwas zu holen gibt, den Knopf dorthin.
 async function einstGithubNachsehen(){
+    if(imPlayStore()){ playStoreOeffnen(); return; }
     const lage = document.getElementById('einstUpdateLage');
     const knopf = document.getElementById('einstNachsehenBtn');
     if(!lage) return;

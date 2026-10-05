@@ -122,6 +122,7 @@ public final class NodeStarter {
             + "process.env.APPDATA = " + jsText(appdata.getAbsolutePath()) + ";\n"
             + "process.env.TMPDIR = " + jsText(ctx.getCacheDir().getAbsolutePath()) + ";\n"
             + "process.env.TRAINER_ANDROID = '1';\n"
+            + (BuildConfig.PLAY ? "process.env.TRAINER_PLAY = '1';\n" : "")
             + "process.env.TRAINER_TTS_DIR = " + jsText(sprachOrdner(ctx).getAbsolutePath()) + ";\n"
             // cloudflared (Go) soll Namen ueber Android aufloesen, nicht ueber
             // eine resolv.conf, die es am Handy nicht gibt.

@@ -12,7 +12,7 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 59 · 05.10.2026
+Stand 61 · 05.10.2026
 
 ### Hinzugefügt
 - Android-App: Dreimal schnell auf eine leere Stelle der Frage tippen zeigt die Lösung – wie die Taste F9 am PC, aber still: kein Hinweis unten, und bei der nächsten Frage ist es wieder aus (nochmal dreimal tippen blendet sie auch so aus). Im Prüfungssimulator und im Gruppenraum gesperrt. Antworten und Knöpfe lösen es nicht aus
@@ -126,6 +126,7 @@ Stand 59 · 05.10.2026
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Android-App, vorbereitet für den Google Play Store: gebaut für Android 16 (läuft weiter ab Android 8), Zurück-Geste und Bildschirmränder nach den neuen Regeln. Die Play-Store-Fassung holt keine Programmdateien von GitHub – „Nach Update suchen“ öffnet dort den Play Store. Die APK von GitHub und der PC bleiben wie sie sind.
 - Android-App: Neues App-Symbol – Funki, das kleine freche Funkgerät aus der App, statt der Antenne. Rund, eckig oder abgerundet, je nach Handy.
 - Android-App, Tagesziel: zusätzlich 75 Fragen am Tag wählbar (5, 10, 20, 25, 50, 75)
 - Android-App, Match: Auflösung nach jeder Karte – auch wenn man richtig lag, zeigt die Karte jetzt, was es bedeutet (z. B. „LSB – Unteres Seitenband (englisch: Lower Side Band)“), weiter mit „Weiter“ oder Antippen. Abschaltbar am Anfang mit dem Schalter „Auflösung nach jeder Karte“ (dann fliegt eine richtige Karte gleich weiter wie bisher). Bei falsch kommt die Auflösung immer
@@ -178,6 +179,7 @@ Stand 59 · 05.10.2026
 - Supportseite: Fehler und Wünsche über die Facebook-Seite statt über GitHub, Hinweis zu Facebook im Datenschutz
 
 ### Behoben
+- Android-App, Vorlesen gleich nach dem Start: Meldet sich das bevorzugte Sprachmodul (z. B. Acapela) nicht, nimmt die App schon nach 10 Sekunden die Stimme von Google statt erst nach zwei langen Anläufen. Statt sofort des Fehlerfensters steht unten kurz „Stimme wird vorbereitet …“, und vorgelesen wird, sobald sie bereit ist.
 - Android-App, Hilfen-Leiste: Der Knopf „Erklärung“ war nach dem Antippen in den Farben Grün, Blau und Orange weiß auf weiß (unsichtbar) – jetzt lila mit weißer Schrift wie in Hell und Dunkel
 - Android-App: Die große Erklärung (Erklärung zur Zeichnung, vergrößert) füllt jetzt den ganzen Bildschirm und lässt sich bis zum Ende rollen – vorher lag sie nur über dem Fragenkasten und war unten abgeschnitten
 - Android-App, Verlauf: Langes Drücken auf eine Runde wählt sie jetzt auch am echten Handy zum Löschen aus – Android brach die Geste bisher ab (Text-Auswahl), jetzt zählt auch Androids eigenes „lange gedrückt“; kein Markieren von Text mehr dabei

@@ -36,6 +36,21 @@
 #      Auftrag selbst aus, das Schluesselpasswort ist dasselbe. Ein
 #      Release ohne eigenen Schluessel gibt es nicht - dann bricht der
 #      Bau mit einem Hinweis ab, statt still den Test-Schluessel zu nehmen.
+#
+#  PLAY STORE                                           (05.10.2026)
+#  Dietmar: "danach moechte ich in den Google Play Store" - "Bereite es
+#  so weit vor".
+#    - Mit eigenem Schluessel baut der Auftrag zusaetzlich das Paket fuer
+#      den Play Store (.aab, TRAINER_PLAY=1: ohne Datei-Updater von
+#      GitHub). Es haengt NICHT am Release, sondern liegt unter Actions
+#      beim jeweiligen Lauf als "Play-Store-AAB" zum Herunterladen.
+#    - Google verlangt 16-KB-Seiten (ab Android 15). Node.js fuer Android
+#      gibt es fertig nur mit 4 KB - deshalb baut libnode16k.yml es
+#      einmal selbst und legt es unter Releases -> libnode-16k ab. Liegt
+#      es dort, nimmt dieser Auftrag es. Die Pruefung am Ende sagt fuer
+#      jede Programmdatei, ob sie passt.
+#    - cloudflared (Internet-Link) kommt nur ins Play-Paket, wenn es die
+#      16-KB-Pruefung besteht - sonst fehlt dort eben der Knopf dafuer.
 # ================================================================
 name: Android-App bauen
 
@@ -95,7 +110,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: '8.13'
 
       - name: Node.js fuer Android holen (nodejs-mobile 18.20.4)
         run: |
@@ -107,6 +122,23 @@ jobs:
           cp -r package/android/libnode/* "$GITHUB_WORKSPACE/android/app/libnode/"
           rm -rf "$GITHUB_WORKSPACE/android/app/libnode/bin/x86_64"
           ls -la "$GITHUB_WORKSPACE/android/app/libnode/bin/"*
+
+      - name: Node.js mit 16-KB-Seiten einsetzen (falls schon gebaut)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release download libnode-16k -p 'libnode-16k.zip' -D /tmp/l16 2>/dev/null; then
+            unzip -o -q /tmp/l16/libnode-16k.zip -d /tmp/l16/x
+            for abi in arm64-v8a armeabi-v7a; do
+              if [ -f "/tmp/l16/x/$abi/libnode.so" ]; then
+                cp "/tmp/l16/x/$abi/libnode.so" "android/app/libnode/bin/$abi/libnode.so"
+                echo "16-KB-Node.js fuer $abi eingesetzt"
+              fi
+            done
+          else
+            echo "::warning::Noch kein Node.js mit 16-KB-Seiten (Releases -> libnode-16k). Fuer GitHub egal, fuer den Play Store noetig: unter Actions 'Node.js fuer Android mit 16-KB-Seiten bauen' einmal starten."
+          fi
 
       - name: Trainer einpacken
         run: |
@@ -184,6 +216,57 @@ jobs:
         with:
           name: Amateurfunk-Trainer-APK
           path: ${{ steps.apk.outputs.name }}
+
+      # ---------------- Play Store (05.10.2026) ----------------
+      - name: cloudflared fuer den Play Store pruefen
+        if: env.TRAINER_KEYSTORE != ''
+        run: |
+          CF=android/app/libnode/bin/arm64-v8a/libcloudflared.so
+          if [ -f "$CF" ] && readelf -lW "$CF" | awk '/LOAD/{print $NF}' | grep -qv '0x4000\|0x10000'; then
+            echo "cloudflared hat keine 16-KB-Seiten - im Play-Paket ohne Internet-Link."
+            echo "TRAINER_OHNE_TUNNEL=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Play-Store-Paket bauen (.aab)
+        if: env.TRAINER_KEYSTORE != ''
+        working-directory: android
+        env:
+          TRAINER_PLAY: '1'
+        run: gradle --no-daemon --stacktrace bundleRelease
+
+      - name: 16-KB-Pruefung (Play Store)
+        if: env.TRAINER_KEYSTORE != ''
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          rm -rf /tmp/aab && mkdir -p /tmp/aab && unzip -q "$AAB" 'base/lib/*' -d /tmp/aab || true
+          FEHLT=0
+          echo "| Datei | Seiten |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for f in /tmp/aab/base/lib/arm64-v8a/*.so; do
+            [ -f "$f" ] || continue
+            A=$(readelf -lW "$f" | awk '/LOAD/{print $NF}' | sort -u | tr '\n' ' ')
+            if echo "$A" | grep -q '0x1000 \|0x2000 \|0x800 '; then
+              echo "| $(basename $f) | NUR 4 KB ($A) |" >> "$GITHUB_STEP_SUMMARY"; FEHLT=1
+            else
+              echo "| $(basename $f) | ok ($A) |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "$(basename $f): $A"
+          done
+          if [ "$FEHLT" = 1 ]; then
+            echo "::warning::Das Play-Paket hat noch Programmdateien mit 4-KB-Seiten - Google nimmt es so nicht an. Siehe Zusammenfassung."
+          else
+            echo "Alle Programmdateien haben 16-KB-Seiten - bereit fuer den Play Store."
+          fi
+          N="Amateurfunk-Trainer-${TRAINER_VERSION_NAME}-play.aab"
+          cp "$AAB" "$N"
+          echo "AAB_NAME=$N" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        if: env.TRAINER_KEYSTORE != ''
+        with:
+          name: Play-Store-AAB
+          path: ${{ env.AAB_NAME }}
+          retention-days: 90
 
       - name: An das Release haengen
         if: steps.ziel.outputs.tag != ''

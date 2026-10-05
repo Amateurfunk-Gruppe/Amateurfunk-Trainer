@@ -45,6 +45,14 @@ import java.util.Locale;
  * Erst wenn er haengt oder scheitert, wird neu verbunden; beim dritten
  * Mal mit dem Modul von Google als Ausweg, falls es installiert ist.
  * "Start" im Hinweis heisst jetzt: null = noch keine Antwort.
+ *
+ * SCHNELLER AUSWEG (05.10.2026). Dietmar, frisch installierte App 1.298.0,
+ * wieder "Aergerlich": "Modul unbekannt, Start keine Antwort, verbunden
+ * seit 20 s, Versuche 1" - Acapela meldete sich ueberhaupt nicht. Bis
+ * Google einsprang, vergingen zwei Anlaeufe zu je 20 s. Jetzt: 10 s
+ * Geduld, und schon der zweite Anlauf nimmt Google, falls installiert.
+ * Das bevorzugte Modul steht ab sofort gleich im Hinweis, auch wenn es
+ * sich nie meldet.
  */
 final class Stimme {
 
@@ -52,7 +60,7 @@ final class Stimme {
     interface Melder { void melden(String id, boolean ok); }
 
     private static final String GOOGLE = "com.google.android.tts";
-    private static final long GEDULD = 20000;      // ms, so lange darf ein Aufbau dauern
+    private static final long GEDULD = 10000;      // ms, so lange darf ein Aufbau dauern (05.10.2026: vorher 20 s)
     private static final long PAUSE = 5000;        // ms, Mindestabstand zweier Versuche
 
     private static TextToSpeech tts;
@@ -154,7 +162,8 @@ final class Stimme {
         letzterStatus = null;
         // Zwei Anlaeufe mit dem bevorzugten Modul; dann Google als Ausweg
         // (Dietmars Hinweis an sich selbst: "sonst als Modul Google waehlen").
-        if (versuche >= 2 && gewuenscht == null && googleDa()) gewuenscht = GOOGLE;
+        // Seit 05.10.2026 schon nach dem ersten Anlauf ohne Erfolg.
+        if (versuche >= 1 && gewuenscht == null && googleDa()) gewuenscht = GOOGLE;   // 05.10.2026: schon beim zweiten Anlauf
         versuche++;
         try { if (tts != null) tts.shutdown(); } catch (Exception e) { }
         tts = null;
@@ -179,6 +188,8 @@ final class Stimme {
         // spaeter im Hauptthread.
         if (meine == generation) {
             tts = neues;
+            // Fuer den Hinweis: welches Modul gefragt wurde, auch wenn es nie antwortet.
+            if (modul == null) { try { modul = gewuenscht != null ? gewuenscht : neues.getDefaultEngine(); } catch (Exception e) { } }
             if (nachholen) { nachholen = false; einrichten(); }
         }
     }
