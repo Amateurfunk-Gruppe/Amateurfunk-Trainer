@@ -23131,7 +23131,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 42, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 43, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -53192,7 +53192,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         html += werk.bearbeiten
             ? '<div class="aw-fussknoepfe"><button type="button" class="aw-knopf rot" data-tat="loeschen"' + (werk.auswahl.size ? '' : ' disabled') + '><i class="fas fa-trash-can"></i> '
               + (werk.auswahl.size ? werk.auswahl.size + ' löschen' : 'Antippen') + '</button><button type="button" class="aw-knopf leise" data-tat="fertig">Abbrechen</button></div>'
-            : '<button type="button" class="aw-link" data-tat="bearbeiten"><i class="fas fa-trash-can"></i> Einträge löschen …</button>';
+            : '<button type="button" class="aw-link" data-tat="bearbeiten"><i class="fas fa-trash-can"></i> Einträge löschen … <small style="opacity:.75;font-weight:500">(oder eine Runde lange drücken)</small></button>';
         return html;
     }
     function blattVideos(){
@@ -53418,6 +53418,27 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(b && werkBlatt.contains(b)){ e.stopPropagation(); werkTat(b.dataset.tat); }
     });
     werkBlatt.querySelector('.aw-schleier').addEventListener('click', () => werkBlattZu());
+    {   // Verlauf: lange druecken = zum Loeschen auswaehlen
+        let lang = null, x0 = 0, y0 = 0, schluck = 0;
+        const ab = () => { if(lang){ clearTimeout(lang.uhr); lang = null; } };
+        werkBlatt.addEventListener('pointerdown', e => {
+            const b = e.target.closest && e.target.closest('.aw-runde');
+            if(!b || werk.art !== 'verlauf' || werk.bearbeiten) return;
+            x0 = e.clientX; y0 = e.clientY; ab();
+            const nr = parseInt(String(b.dataset.tat).split(':')[1], 10);
+            lang = { uhr: setTimeout(() => {
+                lang = null; schluck = Date.now() + 700;
+                werk.bearbeiten = true; werk.auswahl = new Set([nr]); inhaltZeichnen();
+                tu(() => { if(navigator.vibrate) navigator.vibrate(30); });
+                sprechblase('Ausgewählt! Tipp weitere an – oder unten auf „löschen“.');
+            }, 550) };
+        }, true);
+        werkBlatt.addEventListener('pointermove', e => { if(lang && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) ab(); }, true);
+        ['pointerup', 'pointercancel', 'scroll'].forEach(t => werkBlatt.addEventListener(t, ab, true));
+        // Der Klick nach dem langen Druecken soll die Runde nicht gleich wieder abwaehlen oder oeffnen
+        werkBlatt.addEventListener('click', e => { if(Date.now() < schluck && e.target.closest && e.target.closest('.aw-runde')){ e.stopPropagation(); e.preventDefault(); schluck = 0; } }, true);
+        werkBlatt.addEventListener('contextmenu', e => { if(e.target.closest && e.target.closest('.aw-runde')) e.preventDefault(); });
+    }
     werkBlatt.querySelector('.aw-zu').addEventListener('click', () => werkBlattZu());
     // Funki im Blatt antippen: er kichert, huepft und sagt etwas anderes
     $('awFunki').addEventListener('click', () => {
