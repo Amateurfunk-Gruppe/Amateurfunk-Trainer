@@ -1271,13 +1271,13 @@
         html.android-app.stil-verspielt #appHeute .ah-onair.aus .oa-schild { background: #3B4A63; color: #C9D3E3; box-shadow: none; }
 
         /* Farben wie am PC (P41): Gruen, Blau, Orange, Blaugrau - fuer beide Stile der App */
-        html.android-app body.green { --s-bg: #eef8f2; --s-fl2: #e0f1e8; --s-rand: #c3e0cf; --s-rand2: #a9d1ba; --s-navi: #f7fcf9; --s-text: #1b3527; --s-text2: #4f6e5a; }
+        html.android-app body.green { --s-bg: #eef8f2; --s-fl2: #e0f1e8; --s-rand: #c3e0cf; --s-rand2: #a9d1ba; --s-navi: #e6f4ec; --s-text: #1b3527; --s-text2: #4f6e5a; }
         html.android-app.stil-sachlich body.green { --s-haupt: #1d6b44; --s-akzent: #1f8a55; --s-akzent-w: rgba(31,138,85,.12); }
         html.android-app.stil-verspielt body.green { --s-haupt: #1FA866; --s-haupt2: #178A55; --s-haupt-tief: #0F6B40; --s-akzent: #178A55; --s-akzent-w: rgba(31,168,102,.16); --s-t: #1FA866; }
-        html.android-app body.blue { --s-bg: #eaf3fb; --s-fl2: #dfeaf7; --s-rand: #c3d9ea; --s-rand2: #a7c5e0; --s-navi: #f6faff; --s-text: #16324a; --s-text2: #4a6680; }
+        html.android-app body.blue { --s-bg: #eaf3fb; --s-fl2: #dfeaf7; --s-rand: #c3d9ea; --s-rand2: #a7c5e0; --s-navi: #e4eef9; --s-text: #16324a; --s-text2: #4a6680; }
         html.android-app.stil-sachlich body.blue { --s-haupt: #1d4f8a; --s-akzent: #2b6cb0; --s-akzent-w: rgba(43,108,176,.12); }
         html.android-app.stil-verspielt body.blue { --s-haupt: #2B7BD6; --s-haupt2: #1F63B5; --s-haupt-tief: #164C8C; --s-akzent: #1F63B5; --s-akzent-w: rgba(43,123,214,.16); --s-t: #2B7BD6; }
-        html.android-app body.orange { --s-bg: #fdf3e7; --s-fl2: #faeada; --s-rand: #ecd2b4; --s-rand2: #e0bb92; --s-navi: #fffaf4; --s-text: #4d2e12; --s-text2: #7a5534; }
+        html.android-app body.orange { --s-bg: #fdf3e7; --s-fl2: #faeada; --s-rand: #ecd2b4; --s-rand2: #e0bb92; --s-navi: #fbecdc; --s-text: #4d2e12; --s-text2: #7a5534; }
         html.android-app.stil-sachlich body.orange { --s-haupt: #a4501a; --s-akzent: #c8611f; --s-akzent-w: rgba(200,97,31,.12); }
         html.android-app.stil-verspielt body.orange { --s-haupt: #F07A1E; --s-haupt2: #D9621A; --s-haupt-tief: #A84A12; --s-akzent: #D9621A; --s-akzent-w: rgba(240,122,30,.16); --s-t: #F07A1E; }
         html.android-app body.grey { --s-bg: #e9edf2; --s-fl2: #e1e6ed; --s-rand: #c9d1dc; --s-rand2: #b2bdcb; --s-navi: #f5f7fa; --s-text: #1c2433; --s-text2: #4b5768; }
@@ -1293,6 +1293,10 @@
         html.android-app body.blue .question-area .q-text-row, html.android-app body.blue .question-area #optionsContainer { background: #dfeaf7 !important; }
         html.android-app body.orange .question-area .q-text-row, html.android-app body.orange .question-area #optionsContainer { background: #faeada !important; }
         html.android-app body.grey .question-area .q-text-row, html.android-app body.grey .question-area #optionsContainer { background: #e1e6ed !important; }
+        /* Die Leisten unten (Zurueck/Weiter und Hilfen) in der Farbe statt weiss - Dietmar: "Unten, wo die Leiste ist, ist es noch weiss." */
+        html.android-app body.green #navArea, html.android-app body.green #appDock,
+        html.android-app body.blue #navArea, html.android-app body.blue #appDock,
+        html.android-app body.orange #navArea, html.android-app body.orange #appDock { background: var(--s-navi) !important; border-top-color: var(--s-rand) !important; }
         html.android-app body.green .option, html.android-app body.blue .option, html.android-app body.orange .option, html.android-app body.grey .option { background: #fff; }
         html.android-app body.green .option { border-color: #c3e0cf; }
         html.android-app body.blue .option { border-color: #c3d9ea; }
@@ -23234,7 +23238,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 54, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 55, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
