@@ -23131,7 +23131,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 40, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 42, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -47781,6 +47781,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             background: var(--s-fl2, #eef2f8); color: var(--s-text, #111); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
         #kartenSpiel .ks-hoer.spielt { border-color: var(--s-haupt, #0FB7B2); color: var(--s-haupt, #0FB7B2); }
         #kartenSpiel .ks-hoer-zeile { text-align: center; }
+        #kartenSpiel .ks-fahne { font-size: 1.25em; line-height: 1; vertical-align: -0.08em; margin-left: 6px; }
+        #kartenSpiel .ks-fahne.gross { display: block; font-size: 52px; margin: 0 0 4px; }
+        #kartenSpiel .ks-cw { font-size: clamp(20px, 6vw, 28px); font-weight: 800; letter-spacing: .1em; color: var(--s-text2, #456); margin-top: 6px; white-space: nowrap; }
         #kartenSpiel .ks-marke { position: absolute; top: 14px; padding: 6px 12px; border: 3px solid; border-radius: 10px; font-weight: 900; font-size: 18px; letter-spacing: .06em; opacity: 0; transform: rotate(-12deg); pointer-events: none; z-index: 2; background: var(--s-fl, #fff); }
         #kartenSpiel .ks-marke.ja { left: 14px; color: var(--s-gruen, #1FC46F); border-color: var(--s-gruen, #1FC46F); }
         #kartenSpiel .ks-marke.nein { right: 14px; color: var(--s-rot, #F2375A); border-color: var(--s-rot, #F2375A); transform: rotate(12deg); }
@@ -48051,6 +48054,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['EMVU', 'Elektromagnetische Verträglichkeit in der Umwelt', 'regel', 'emv', ['EMVG']], ['EMVG', 'Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln', 'regel', 'emv', ['EMVU']],
         ['IBP', 'Internationales Bakenprojekt', 'regel']
     ];
+    const ABK_OHNE_CW = ['MAYDAY', 'MEZ', 'MESZ', 'ARDF', 'OSCAR', 'IRC', 'MOE'];
     const ABK_GRUPPE = { cw: 'CW & Funk', ruf: 'Rufzeichenzusatz', art: 'Betriebsart', tech: 'Technik', regel: 'Regeln & Stellen' };
     // Bei den Aufstockungen (nur Technik) nur Betriebsarten und Technik-Kuerzel
     function abkListe(){ return nurTechnik() ? ABK.filter(a => a[2] === 'art' || a[2] === 'tech') : ABK; }
@@ -48064,7 +48068,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const falsch = verwL.length && Math.random() < 0.6 ? verwL : andere;
         const art = 'Abkürzung · ' + ABK_GRUPPE[gr];
         const merk = kz + ' – ' + bed + '.';
-        if(Math.random() < 0.65) return paar(null, 'abk', art, 'Was bedeutet', kz, bed, falsch.map(b => b[1]), merk);
+        if(Math.random() < 0.65){
+            const k = paar(null, 'abk', art, 'Was bedeutet', kz, bed, falsch.map(b => b[1]), merk);
+            // In Telegrafie gebraeuchliche Kuerzel auch als Morsezeichen mit Ton (Dietmar: "Es betrifft vor allem Abkuerzungen und
+            // Q-Code, die auch in Telegrafie genutzt werden") - nicht die reinen Sprechfunk-/Zeit-/Namenskuerzel
+            if(gr === 'cw' && !ABK_OHNE_CW.includes(kz)) k.cw = kz;
+            return k;
+        }
         // umgekehrt: Bedeutung oben, Kuerzel unten
         const k = paar(null, 'abk', art, 'Welche Abkürzung steht für „' + bed + '“?', undefined, kz, falsch.map(b => b[0]), merk);
         delete k.gross; k.kuerzel = true; return k;
@@ -48079,12 +48089,32 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const LK_IM_KATALOG = ['DL', 'DS', 'DU', 'OE', 'OZ', 'ON', 'OK', 'PA', 'SM', 'SP', 'EA', 'F', 'I', 'HB9', 'HB0', 'LX', 'LU', 'ZS', '4X', 'EI', 'EK', 'EM', 'ES',
         'VE', 'VK', 'PY', 'W', 'K', 'N', 'ZL', 'BY', 'JA', 'VU', 'XE', 'CE', 'CT', 'GM', 'LA', 'LZ', 'UA'];
     const lkListe = alle => alle ? LANDESKENNER : LANDESKENNER.filter(l => LK_IM_KATALOG.includes(l[0]));
+    // Fahnen zu den Laendern (Dietmar: "Kann man bei den Landeskennern auch noch die Fahne mit hinzufuegen?") - als Emoji,
+    // Android zeigt sie als Flaggen; England und Schottland mit den eigenen Fahnen (Unterteilungs-Zeichen)
+    const LAND_ISO = { 'Deutschland': 'DE', 'Dänemark': 'DK', 'Südkorea': 'KR', 'Philippinen': 'PH', 'Österreich': 'AT', 'Estland': 'EE', 'Norwegen': 'NO', 'Belgien': 'BE',
+        'Niederlande': 'NL', 'Luxemburg': 'LU', 'Tschechien': 'CZ', 'Slowakei': 'SK', 'Polen': 'PL', 'Slowenien': 'SI', 'Schweden': 'SE', 'Spanien': 'ES', 'Frankreich': 'FR',
+        'Finnland': 'FI', 'Italien': 'IT', 'Irland': 'IE', 'Island': 'IS', 'Schweiz': 'CH', 'Liechtenstein': 'LI', 'Argentinien': 'AR', 'Litauen': 'LT', 'Südafrika': 'ZA',
+        'Neuseeland': 'NZ', 'Israel': 'IL', 'Armenien': 'AM', 'Ukraine': 'UA', 'Kanada': 'CA', 'USA': 'US', 'Australien': 'AU', 'Brasilien': 'BR', 'Japan': 'JP', 'Mexiko': 'MX',
+        'China': 'CN', 'Indien': 'IN', 'Chile': 'CL', 'Portugal': 'PT', 'Lettland': 'LV', 'Bulgarien': 'BG', 'Griechenland': 'GR', 'Ungarn': 'HU', 'Rumänien': 'RO',
+        'Kroatien': 'HR', 'Malta': 'MT', 'Russland': 'RU', 'Zypern': 'CY' };
+    const UNTER = { 'England': 'gbeng', 'Schottland': 'gbsct' };
+    function fahne(land){
+        if(UNTER[land]) return '\u{1F3F4}' + [...UNTER[land]].map(c => String.fromCodePoint(0xE0000 + c.charCodeAt(0))).join('') + '\u{E007F}';
+        const iso = LAND_ISO[land]; if(!iso) return '';
+        return [...iso].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+    }
+    const mitFahne = land => { const f = fahne(land); return esc(land) + (f ? ' <span class="ks-fahne" aria-hidden="true">' + f + '</span>' : ''); };
     function lkKarten(n, alle){
         const L = lkListe(alle);
         return misch(L).slice(0, n).map(l => {
             const v = (l[3] || []).filter(x => x !== l[1]);
             const andere = L.filter(x => x[1] !== l[1]).map(x => x[1]);
-            return paar(null, alle ? 'lkplus' : 'lk', alle ? 'Landeskenner · erweitert' : 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
+            const k = paar(null, alle ? 'lkplus' : 'lk', alle ? 'Landeskenner · erweitert' : 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
+            k.cw = l[0];
+            k.antwortHtml = mitFahne(k.antwort);
+            k.fahne = true;
+            const f = fahne(k.richtig); if(f) k.richtigHtml = '<span class="ks-fahne gross" aria-hidden="true">' + f + '</span>';
+            return k;
         });
     }
     const LK_FRAGEN = ['VA406', 'VB110', 'BD301', 'BD302', 'BD303', 'BD304', 'BD305', 'BD306', 'BD307', 'BD308', 'BD309', 'BD310', 'BD311', 'BD312', 'BD313', 'BD314', 'BD315', 'BD316', 'BD317', 'BD318'];
@@ -48138,11 +48168,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const THEMEN = {
         fragen:  { name: 'Prüfungsfragen', unter: n => n + ' Fragen aus dem Katalog', anzahl: () => bank().length,
                    karten: n => misch(bank()).slice(0, n).map(q => ausFrage(q, 'fragen')).filter(Boolean) },
-        qgruppen:{ name: 'Q-Gruppen', unter: () => QGRUPPEN.length + ' Gruppen', anzahl: () => QGRUPPEN.length, nurVoll: true,
+        qgruppen:{ name: 'Q-Gruppen', unter: () => QGRUPPEN.length + ' Gruppen, mit Morseton', anzahl: () => QGRUPPEN.length, nurVoll: true,
                    karten: n => misch(QGRUPPEN).slice(0, n).map(x => {
                        const andere = QGRUPPEN.filter(y => y[0] !== x[0]).map(y => y[1]);
                        const falsch = (x[2] && x[2].length && Math.random() < 0.7) ? x[2] : andere;
-                       return paar(null, 'qgruppen', 'Q-Gruppe', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
+                       const k = paar(null, 'qgruppen', 'Q-Gruppe', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
+                       k.cw = x[0]; return k;
                    }) },
         abk:     { name: 'Abkürzungen', unter: () => nurTechnik() ? abkListe().length + ' Kürzel: Betriebsarten & Technik' : abkListe().length + ' Kürzel: PSE, K, AWDH, YL, XYL …', anzahl: () => abkListe().length,
                    karten: n => { const l = abkListe(); return misch(l).slice(0, n).map(a => abkKarte(a, l)); } },
@@ -48156,7 +48187,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                        const k = paar(null, 'morse', 'Morsezeichen', 'Wie wird gegeben:', z, MORSE[z], andere.map(y => MORSE[y]), z + ' wird ' + MORSE[z] + ' gegeben.');
                        k.morse = true; return k;
                    }) },
-        lk:      { name: 'Landeskenner', unter: () => lkListe().length + ' Kenner aus den Prüfungsfragen', anzahl: () => lkListe().length,
+        lk:      { name: 'Landeskenner', unter: () => lkListe().length + ' Kenner aus den Fragen, mit Morseton', anzahl: () => lkListe().length,
                    karten: n => lkKarten(n, false) },
         lkplus:  { name: 'Landeskenner erweitert', unter: () => lkListe(true).length + ' Kenner · Zusatz, auch über den Katalog hinaus', anzahl: () => lkListe(true).length,
                    karten: n => lkKarten(n, true) },
@@ -48307,9 +48338,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         klangStopp();
         const code = morseCode(k);
         if(code){
-            const ziel = el.querySelector(k.grossMorse ? '.ks-oben' : '.ks-unten');
+            const ziel = el.querySelector(k.grossMorse || k.cw ? '.ks-oben' : '.ks-unten');
             const z = D.createElement('div'); z.className = 'ks-hoer-zeile';
-            z.innerHTML = '<button type="button" class="ks-hoer" aria-label="Morsezeichen erneut abspielen"><i class="fas fa-volume-high"></i> Erneut abspielen</button>';
+            // Q-Gruppe / Landeskenner: die Zeichen klein unter dem grossen Kuerzel, dann der Knopf
+            z.innerHTML = (k.cw ? '<div class="ks-cw" aria-label="in Telegrafie">' + esc(code).replace(/ /g, '&nbsp;&nbsp;&nbsp;') + '</div>' : '') + '<button type="button" class="ks-hoer" aria-label="Morsezeichen erneut abspielen"><i class="fas fa-volume-high"></i> Erneut abspielen</button>';
             ziel.appendChild(z);
             const b = z.querySelector('.ks-hoer');
             b.addEventListener('click', ev => { ev.stopPropagation(); morseKlang(code, b); });
@@ -48426,6 +48458,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(ctx.state === 'suspended') ctx.resume();
             const e = 0.08; let t = ctx.currentTime + 0.05;
             String(code).split('').forEach(z => {
+                if(z === ' '){ t += 2 * e; return; }              // zwischen Buchstaben: 3 Einheiten (eine ist schon dabei)
                 const l = z === '−' || z === '-' ? 3 : (z === '·' || z === '.' ? 1 : 0);
                 if(!l) return;
                 const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 700; o.type = 'sine';
@@ -48437,7 +48470,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         });
     }
     // Welches Morsezeichen eine Karte zeigt: oben (Welches Zeichen ist ·−?) oder unten als Antwort
-    const morseCode = k => k.grossMorse ? k.gross : k.morse ? k.antwort : '';
+    const inMorse = w => String(w).toUpperCase().split('').filter(b => MORSE[b]).map(b => MORSE[b]).join(' ');
+    const morseCode = k => k.grossMorse ? k.gross : k.morse ? k.antwort : k.cw ? inMorse(k.cw) : '';
 
     function richtigHtml(k){
         if(k.richtigHtml) return k.richtigHtml + (k.richtig ? '<div>' + esc(k.richtig) + '</div>' : '');
@@ -48455,7 +48489,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             spiel.richtig++;
             const h = el.querySelector('.ks-hinweis');
             h.className = 'ks-hinweis gut';
-            h.textContent = k.wahr ? '✓ Richtig!' : '✓ Richtig – die Antwort stimmt nicht.' + (k.richtigHtml ? '' : ' Richtig wäre: ' + k.richtig);
+            h.textContent = k.wahr ? '✓ Richtig!' : '✓ Richtig – die Antwort stimmt nicht.' + (k.richtigHtml && !k.fahne ? '' : ' Richtig wäre: ' + k.richtig + (k.fahne ? ' ' + fahne(k.richtig) : ''));
             weg(karte, sagtRichtig ? 1 : -1, k.wahr ? 380 : 1300);
         } else {
             spiel.fehl.push(k);

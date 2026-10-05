@@ -12,7 +12,7 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 40 · 05.10.2026
+Stand 42 · 05.10.2026
 
 ### Hinzugefügt
 - Android-App, neue Kachel „Match“ unter „Üben“ (jetzt sechs statt fünf – kein Loch mehr im Raster; ist eine Kachel ausgeblendet, nimmt die letzte die ganze Breite): Wischen wie bei Tinder. Jede Karte zeigt oben die Frage (mit Bild, wenn es eins gibt) und unten EINE Antwort – nach rechts wischen heißt „die Antwort ist richtig“, nach links „falsch“ (oder die Knöpfe darunter). Statt vier Antworten gibt es nur zwei Möglichkeiten. Am Anfang erklärt ein Bild das Wischen, dann wählt man ein Thema: Alles gemischt, Prüfungsfragen (bei Klasse N alle 571), Q-Gruppen & Abkürzungen, Morsezeichen, Landeskenner (51, abgeglichen mit BD302 bis BD318), Stecker (mit den Katalogbildern) und Einheiten & Formeln. Bei N → E, E → A und N → A gibt es nur Technik: die Prüfungsfragen des Katalogs (dort nur Technik) und Einheiten & Formeln. Wer danebenliegt, sieht die richtige Antwort; 20 Karten je Runde, am Ende Ergebnis, Bestleistung je Thema und die verpassten Karten. Danebengegangene Prüfungsfragen kommen unter „Fehler üben“ und lassen sich gleich als normale Runde nachüben; der Lernfortschritt (gelernt) bleibt unberührt.
@@ -122,6 +122,8 @@ Stand 40 · 05.10.2026
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Android-App, Match, Landeskenner: Zu jedem Land steht die Fahne (z. B. Ukraine 🇺🇦), auch in der Lösung groß über dem Ländernamen; England und Schottland mit ihren eigenen Fahnen
+- Android-App, Match, Q-Gruppen, Abkürzungen (die in Telegrafie gebräuchlichen wie PSE, K, AWDH, 73) und Landeskenner auch in Telegrafie: Unter dem großen Kürzel stehen die Morsezeichen (z. B. QRZ = −−·− ·−· −−··), sie werden bei jeder Karte vorgespielt und lassen sich mit „Erneut abspielen“ noch einmal hören
 - Android-App, Match, Landeskenner: Das Thema „Landeskenner“ enthält nur noch die Kenner, die in den Prüfungsfragen vorkommen (40 – dazu neu N für die USA); die übrigen (G, OM, OH, SV, HA, S5, 9A, YO, TF, LY, YL, 9H) stehen zusammen mit allen anderen unter „Landeskenner erweitert“ (Zusatz, am Ende der Liste, nicht in „Alles gemischt“)
 - Android-App, Match, Morsezeichen mit Ton: Jedes Zeichen wird beim Aufdecken der Karte vorgespielt (700 Hz, Tempo 15 WpM), der Knopf „Anhören“ spielt es noch einmal; nach einer falschen Antwort ist das richtige Zeichen zu hören
 - Android-App, Match im Dark Mode: Die Zeichnungen (Stecker, Schaltbilder) erscheinen wie in der normalen Runde im Negativ – weiße Linien auf dunklem Grund statt weißer Kästen
