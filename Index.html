@@ -23131,7 +23131,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 38, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 39, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -47674,6 +47674,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
            Antwort. Nach rechts wischen = die Antwort ist richtig, nach links =
            falsch (oder die Knoepfe darunter). Wer danebenliegt, sieht die
            richtige Antwort. 20 Karten je Runde, Themen zur Wahl. Nur in der App.
+           Stand 39: Dietmar "Das wischen kannst doch mit drin lassen.
+           Wichtig waere das das wischen kuerzer wird. Uebern ganzen Display
+           ist umstaendlich. Zusaetzlich unten die Buttons" - ein kurzer Wisch
+           (ab 40 Punkten) oder ein schneller Schubs reicht, die Knoepfe
+           Falsch / Richtig bleiben darunter.
            ================================================================ */
         #kartenSpiel { position: fixed; inset: 0; z-index: 99990; display: none; flex-direction: column;
             background: var(--s-bg, #F2F5FC); color: var(--s-text, #0C1731); font-family: inherit;
@@ -47686,7 +47691,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-stand { font-size: 14px; font-weight: 700; color: var(--s-text2, #456); font-variant-numeric: tabular-nums; }
         #kartenSpiel .ks-balken { height: 6px; border-radius: 3px; background: var(--s-fl2, #e8edf6); margin: 8px 0 8px; overflow: hidden; flex: 0 0 auto; }
         #kartenSpiel .ks-balken i { display: block; height: 100%; width: 0; background: var(--s-haupt, #0FB7B2); transition: width .3s ease; }
-        #kartenSpiel .ks-buehne { flex: 1; position: relative; display: flex; align-items: stretch; justify-content: center; min-height: 0; touch-action: none; }
+        #kartenSpiel .ks-buehne { flex: 1; position: relative; display: flex; align-items: stretch; justify-content: center; min-height: 0; touch-action: manipulation; }
         #kartenSpiel .ks-karte { position: relative; width: min(100%, 420px); max-height: 100%; border-radius: var(--s-r-karte, 22px);
             background: var(--s-fl, #fff); border: 1px solid var(--s-rand2, #d5dbe6); box-shadow: 0 14px 34px rgba(12, 23, 49, .18);
             display: flex; flex-direction: column; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; will-change: transform; cursor: grab; }
@@ -47708,7 +47713,74 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-antwort-kopf { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--s-text3, #8a97b5); margin-bottom: 6px; }
         #kartenSpiel .ks-antwort { font-size: 19px; font-weight: 800; line-height: 1.3; word-break: break-word; }
         #kartenSpiel .ks-antwort.lang { font-size: 16px; font-weight: 700; }
+        #kartenSpiel .ks-antwort.kuerzel { font-size: 36px; font-weight: 800; letter-spacing: .04em; }
+        /* Kuerzel gross wie auf dem Entwurf (Dietmar: "Die Buchstaben groesser sieht schon ganz gut aus und auch so in der 50 Ohm Farbe") */
+        #kartenSpiel .ks-frage .ks-gross.g1 { font-size: clamp(72px, 27vw, 128px); line-height: .95; margin-top: 10px; letter-spacing: 0; }
+        #kartenSpiel .ks-frage .ks-gross.g2 { font-size: clamp(52px, 17vw, 92px); line-height: 1; margin-top: 10px; letter-spacing: 0; }
+        #kartenSpiel .ks-frage .ks-gross.g3 { font-size: clamp(40px, 12.5vw, 66px); line-height: 1.05; margin-top: 8px; }
         #kartenSpiel .ks-antwort.morse { font-size: 34px; letter-spacing: .12em; }
+        /* Dark Mode: Zeichnungen ins Negativ wie in der normalen Runde (weisse Linien, dunkler Grund) - Dietmar: "Im DARK Mode Bilder
+           bitte Dunkel." Grund/Kante so gewaehlt, dass nach invert + contrast(2.6) wieder #0a1b28 und #2b5471 herauskommen. */
+        html.android-app body.dark #kartenSpiel .ks-bild img, html.android-app body.dark #kartenSpiel .ks-antwort img, html.android-app body.dark #kartenSpiel .ks-wahr img {
+            filter: invert(1) contrast(2.6); background: #aca6a1 !important; border: 1px solid #a09085 !important; }
+        /* Swipe-Tutorial ueber der ersten Karte (05.10.2026). Dietmar (mit Entwurfsbild): "Auf dem ersten Mal wischen. Eine kurze
+           Erklaerung ueber der ersten Frage. Danach ist es weg. Darunter ein Feld ich habe es verstanden. Ein aus." Es kommt vor der
+           ersten Karte jeder Runde, bis der Schalter "Ich habe es verstanden" an ist; am Anfang (Themenwahl) laesst es sich wieder einschalten. */
+        /* Dietmar: "Das wird quasi auf der ersten Frage darueber gelegt und der Hintergrund ist abgedunkelt." - die erste Karte
+           bleibt dahinter zu sehen, abgedunkelt; ein Tipp daneben schliesst es auch (ohne es sich zu merken). */
+        #kartenSpiel .ks-tut { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px;
+            padding-top: calc(env(safe-area-inset-top) + 16px); padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+            background: rgba(4, 8, 20, .66); -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px); overflow: auto; transition: opacity .3s ease; animation: ksTutAuf .3s ease; }
+        @keyframes ksTutAuf { from { opacity: 0; } to { opacity: 1; } }
+        #kartenSpiel .ks-tut-in { position: relative; padding-top: 52px !important; }
+        /* Dietmar: "Haette die Erklaerung gerne ueber den ganzen Bildschirm" - die Tafel fuellt den ganzen Schirm, alles etwas groesser */
+        #kartenSpiel .ks-tut { padding: 0 !important; background: var(--s-bg, #fff); -webkit-backdrop-filter: none; backdrop-filter: none; }
+        #kartenSpiel .ks-tut-in { max-width: none !important; min-height: 100%; border-radius: 0 !important; border: 0 !important; box-shadow: none !important; justify-content: center; gap: 16px !important;
+            padding: calc(env(safe-area-inset-top) + 64px) 20px calc(env(safe-area-inset-bottom) + 24px) !important; box-sizing: border-box; }
+        #kartenSpiel .ks-tut-zu { top: calc(env(safe-area-inset-top) + 14px) !important; right: 14px !important; width: 44px !important; height: 44px !important; font-size: 20px !important; }
+        #kartenSpiel .ks-tut-titel { font-size: clamp(30px, 9.5vw, 44px) !important; }
+        #kartenSpiel .ks-tut-unter { font-size: 18px !important; }
+        #kartenSpiel .ks-tut-haende { max-width: 420px !important; }
+        #kartenSpiel .ks-tut-reg { max-width: 420px; font-size: clamp(17px, 5.2vw, 21px) !important; }
+        #kartenSpiel .ks-tut-pille { font-size: 16px !important; }
+        #kartenSpiel .ks-tut-klein { font-size: 15px !important; }
+        #kartenSpiel .ks-tut-in .ks-schalter { max-width: 420px !important; font-size: 17px; padding: 14px 16px; }
+        #kartenSpiel .ks-tut-zu { position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border-radius: var(--s-r-klein, 12px); border: 1px solid var(--s-rand2, #ccd);
+            background: var(--s-fl2, #eef2f8); color: var(--s-text, #111); font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #kartenSpiel .ks-tut.weg { opacity: 0; pointer-events: none; }
+        #kartenSpiel .ks-tut-in { width: 100%; max-width: 420px; padding: 20px 16px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: linear-gradient(var(--s-fl, #fff), var(--s-fl, #fff)), var(--s-bg, #fff); border: 1px solid var(--s-rand2, #ccd); border-radius: var(--s-r-karte, 22px); box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+        #kartenSpiel .ks-tut-titel { font-size: clamp(24px, 7.4vw, 32px); font-weight: 900; line-height: 1.05; display: flex; align-items: center; gap: 10px; }
+        #kartenSpiel .ks-tut-titel i { color: var(--s-gruen, #1FC46F); font-size: .7em; }
+        #kartenSpiel .ks-tut-unter { font-size: 16px; color: var(--s-text2, #456); margin-top: -4px; }
+        #kartenSpiel .ks-tut-haende { display: flex; justify-content: space-between; width: 100%; max-width: 340px; margin: 4px 0 0; }
+        #kartenSpiel .ks-tut-haende svg { width: 46%; height: auto; }
+        #kartenSpiel .ks-tut-hand { fill: var(--s-text, #0C1731); }
+        #kartenSpiel .ks-tut-pfeil { fill: none; stroke: var(--s-text, #0C1731); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+        #kartenSpiel .ks-tut-l .ks-tut-bew { animation: ksTutL 1.8s ease-in-out infinite; }
+        #kartenSpiel .ks-tut-r .ks-tut-bew { animation: ksTutR 1.8s ease-in-out infinite; }
+        @keyframes ksTutL { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-12px); } }
+        @keyframes ksTutR { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(12px); } }
+        #kartenSpiel .ks-tut-reg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; font-size: clamp(14px, 4.3vw, 17px); font-weight: 800; line-height: 1.25; }
+        #kartenSpiel .ks-tut-reg .l { color: var(--s-rot, #F2375A); }
+        #kartenSpiel .ks-tut-reg .r { color: var(--s-gruen-tief, #11924F); }
+        html.android-app body.dark #kartenSpiel .ks-tut-reg .r, body.dark #kartenSpiel .ks-tut-reg .r { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-tut-pille { border: 1px solid var(--s-rand2, #ccd); border-radius: 999px; padding: 8px 16px; font-size: 15px; font-weight: 800; background: var(--s-fl2, #eef2f8); }
+        #kartenSpiel .ks-tut-klein { font-size: 13.5px; color: var(--s-text2, #456); line-height: 1.4; }
+        #kartenSpiel .ks-schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 340px; padding: 10px 14px;
+            border-radius: var(--s-r-klein, 12px); border: 1px solid var(--s-rand2, #ccd); background: var(--s-fl2, #eef2f8); font-size: 15px; font-weight: 700; text-align: left; cursor: pointer; }
+        #kartenSpiel .ks-schalter button { flex: 0 0 auto; width: 52px; height: 30px; border-radius: 999px; border: 0; padding: 0; background: var(--s-rand2, #b9c3d6); position: relative; cursor: pointer; transition: background .2s; }
+        #kartenSpiel .ks-schalter button i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+        #kartenSpiel .ks-schalter button[aria-checked="true"] { background: var(--s-gruen, #1FC46F); }
+        #kartenSpiel .ks-schalter button[aria-checked="true"] i { transform: translateX(22px); }
+        #kartenSpiel .ks-schalter small { display: block; font-weight: 500; font-size: 12.5px; color: var(--s-text2, #456); }
+        #kartenSpiel.start .ks-schalter { margin-top: 2px; }
+        @media (prefers-reduced-motion: reduce) { #kartenSpiel .ks-tut-bew { animation: none !important; } }
+        /* Morsezeichen zum Anhoeren */
+        #kartenSpiel .ks-hoer { display: inline-flex; align-items: center; gap: 6px; margin: 10px auto 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--s-rand2, #ccd);
+            background: var(--s-fl2, #eef2f8); color: var(--s-text, #111); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+        #kartenSpiel .ks-hoer.spielt { border-color: var(--s-haupt, #0FB7B2); color: var(--s-haupt, #0FB7B2); }
+        #kartenSpiel .ks-hoer-zeile { text-align: center; }
         #kartenSpiel .ks-marke { position: absolute; top: 14px; padding: 6px 12px; border: 3px solid; border-radius: 10px; font-weight: 900; font-size: 18px; letter-spacing: .06em; opacity: 0; transform: rotate(-12deg); pointer-events: none; z-index: 2; background: var(--s-fl, #fff); }
         #kartenSpiel .ks-marke.ja { left: 14px; color: var(--s-gruen, #1FC46F); border-color: var(--s-gruen, #1FC46F); }
         #kartenSpiel .ks-marke.nein { right: 14px; color: var(--s-rot, #F2375A); border-color: var(--s-rot, #F2375A); transform: rotate(12deg); }
@@ -47733,14 +47805,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-weiter, #kartenSpiel .ks-nochmal, #kartenSpiel .ks-los { background: var(--s-haupt, #0FB7B2); color: var(--s-auf-haupt, #fff); }
         #kartenSpiel .ks-pruef, #kartenSpiel .ks-thema { background: var(--s-fl, #fff); color: var(--s-text, #111); border: 1px solid var(--s-rand2, #ccd) !important; }
         #kartenSpiel .ks-fertig { background: transparent; color: var(--s-text2, #456); border: 1px solid var(--s-rand2, #ccd) !important; }
-        /* Der Anfang: die Wisch-Erklaerung und die Themen */
+        /* Der Anfang: die Erklaerung und die Themen */
         #kartenSpiel .ks-start, #kartenSpiel .ks-ende { flex: 1; display: none; flex-direction: column; align-items: center; gap: 10px; overflow-y: auto; text-align: center; padding-top: 4px; }
         #kartenSpiel.start .ks-start, #kartenSpiel.fertig .ks-ende { display: flex; }
         #kartenSpiel.start .ks-buehne, #kartenSpiel.start .ks-knoepfe, #kartenSpiel.start .ks-hinweis, #kartenSpiel.start .ks-balken, #kartenSpiel.start .ks-stand,
         #kartenSpiel.fertig .ks-buehne, #kartenSpiel.fertig .ks-knoepfe, #kartenSpiel.fertig .ks-hinweis, #kartenSpiel.fertig .ks-balken { display: none; }
         #kartenSpiel .ks-bild-wisch { width: min(78vw, 300px); height: auto; }
-        #kartenSpiel .ks-wisch-hand { animation: ksWisch 2.4s ease-in-out infinite; transform-origin: 160px 150px; }
-        @keyframes ksWisch { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(46px) rotate(8deg); } 50% { transform: translateX(0) rotate(0); } 75% { transform: translateX(-46px) rotate(-8deg); } }
+        #kartenSpiel .ks-tipp-punkt { animation: ksTipp 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        @keyframes ksTipp { 0%, 40% { transform: translateX(0) scale(.6); opacity: 0; } 15%, 30% { transform: translateX(0) scale(1.15); opacity: 1; } 50%, 90% { transform: translateX(-104px) scale(.6); opacity: 0; } 65%, 80% { transform: translateX(-104px) scale(1.15); opacity: 1; } 100% { opacity: 0; } }
         #kartenSpiel .ks-regel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(100%, 380px); }
         #kartenSpiel .ks-regel div { border-radius: var(--s-r-klein, 12px); padding: 10px 8px; font-size: 14px; font-weight: 700; line-height: 1.3; }
         #kartenSpiel .ks-regel .l { background: var(--s-rot-w, rgba(242,55,90,.12)); color: var(--s-rot, #F2375A); }
@@ -47762,7 +47834,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-fehlliste div + div { border-top: 1px solid var(--s-rand, #e3e6eb); margin-top: 6px; padding-top: 6px; }
         #kartenSpiel .ks-fehlliste span { color: var(--s-text2, #456); }
         #kartenSpiel .ks-reihe { display: flex; flex-direction: column; gap: 10px; width: min(100%, 380px); margin-top: 6px; }
-        @media (prefers-reduced-motion: reduce) { #kartenSpiel .ks-karte.fliegt, #kartenSpiel .ks-karte.zurueck { transition: none; } #kartenSpiel .ks-wisch-hand { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { #kartenSpiel .ks-karte.fliegt, #kartenSpiel .ks-karte.zurueck { transition: none; } #kartenSpiel .ks-tipp-punkt { animation: none; } }
         /* Die Kachel und das Raster: Bei ungerader Zahl sichtbarer Kacheln nimmt die letzte die ganze Breite - kein Loch mehr */
         #appHeute .ah-kachel.breit { grid-column: 1 / -1; }
         #appHeute .ah-ico.tuerkis { background: linear-gradient(135deg, #2EE6D6, #0A94B8); }
@@ -47802,6 +47874,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['PY', 'Brasilien', 'PY – Brasilien.', ['Japan', 'Argentinien']],
         ['W', 'USA', 'W, K, N und AA bis AL – USA.', ['Kanada', 'Mexiko']],
         ['K', 'USA', 'K, W, N und AA bis AL – USA.', ['Kanada', 'Südafrika']],
+        ['N', 'USA', 'N, W, K und AA bis AL – USA.', ['Kanada', 'Mexiko']],
         ['ZL', 'Neuseeland', 'ZL – Neuseeland.', ['Südafrika', 'Australien']],
         ['BY', 'China', 'BY – China.', ['Japan', 'Indien']],
         ['JA', 'Japan', 'JA – Japan.', ['China', 'Brasilien']],
@@ -47889,22 +47962,131 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['QSY', 'Frequenzwechsel', ['Genaue Frequenz']],
         ['QTH', 'Standort der Funkstelle', ['Name der Funkstelle']],
         ['QRK', 'Verständlichkeit der Zeichen', ['Stärke der Zeichen']],
-        ['QSP', 'Nachricht weiterleiten', ['Empfangsbestätigung']]
+        ['QSP', 'Nachricht weiterleiten', ['Empfangsbestätigung']],
+        // ergaenzt nach dem Q-Schluessel der VO Funk (kommen im Katalog nicht vor, sind im Funkbetrieb aber ueblich)
+        ['QRB', 'Entfernung zwischen den Funkstellen', ['Standort der Funkstelle']],
+        ['QRH', 'Die Frequenz schwankt', ['Schwund (Fading)']],
+        ['QRI', 'Ton der Aussendung', ['Verständlichkeit der Zeichen']],
+        ['QRU', 'Ich habe nichts für Sie', ['Ich bin bereit']],
+        ['QSA', 'Stärke der Zeichen', ['Verständlichkeit der Zeichen']],
+        ['QSD', 'Die Zeichen sind verstümmelt', ['Die Frequenz schwankt']],
+        ['QSK', 'Mithören zwischen den eigenen Zeichen (Break-in)', ['Empfangsbestätigung']],
+        ['QSU', 'Auf dieser Frequenz senden oder antworten', ['Frequenzwechsel']],
+        ['QSX', 'Ich höre auf einer anderen Frequenz', ['Frequenzwechsel']],
+        ['QTC', 'Ich habe Nachrichten für Sie', ['Ich habe nichts für Sie']],
+        ['QTR', 'Genaue Uhrzeit', ['Genaue Frequenz']]
     ];
-    // Betriebsabkuerzungen (Telegrafie und Sprechfunk)
+    // Abkuerzungen: Betriebsabkuerzungen (Telegrafie und Sprechfunk) und alles, was in den Pruefungsfragen vorkommt
+    // [Kuerzel, Bedeutung, Gruppe, Sinn-Gruppe (gleicher Sinn = nie als falsche Antwort), Verwechslungen (Kuerzel)]
     const ABK = [
-        ['CQ', 'Allgemeiner Anruf an alle'], ['DE', 'von (hier ist)'], ['K', 'Bitte kommen'], ['AR', 'Ende der Nachricht'],
-        ['SK', 'Ende der Verbindung'], ['73', 'Viele Grüße'], ['88', 'Herzliche Grüße (Liebe und Küsse)'], ['TNX', 'Danke'],
-        ['PSE', 'Bitte'], ['UR', 'Dein / Ihr'], ['OM', 'Funkamateur („old man“)'], ['YL', 'Junge Dame, Funkamateurin'],
-        ['XYL', 'Ehefrau'], ['HI', 'Lachen'], ['WX', 'Wetter'], ['RIG', 'Funkgerät, Station'], ['ANT', 'Antenne'],
-        ['PWR', 'Sendeleistung'], ['ES', 'und'], ['FB', 'Sehr gut („fine business“)'], ['GM', 'Guten Morgen'], ['GE', 'Guten Abend'],
-        ['RST', 'Rapport: Lesbarkeit, Stärke, Ton'], ['CUAGN', 'Auf Wiederhören']
+        // CW & Funk
+        ['CQ', 'Allgemeiner Anruf an alle', 'cw'], ['DE', 'von / hier ist', 'cw', 'von'], ['K', 'Bitte kommen', 'cw', 'kommen', ['KN', 'AR']],
+        ['KN', 'Bitte kommen – nur die gerufene Station', 'cw', 'kommen', ['K']], ['BK', 'Unterbrechung, schnelle Übergabe (break)', 'cw', 'kommen'],
+        ['AR', 'Ende der Nachricht', 'cw', '', ['SK', 'K']], ['SK', 'Ende der Verbindung', 'cw', 'schluss', ['AR']],
+        ['PSE', 'Bitte (please)', 'cw', '', ['TNX']], ['TNX', 'Danke', 'cw', 'danke', ['PSE']], ['TKS', 'Danke (thanks)', 'cw', 'danke'],
+        ['TU', 'Danke dir (thank you)', 'cw', 'danke', ['UR']], ['R', 'Verstanden, alles richtig erhalten', 'cw'], ['AGN', 'Nochmals (again)', 'cw', 'wieder'],
+        ['UR', 'Dein / Ihr (your)', 'cw', '', ['TU']], ['NR', 'Nummer', 'cw'], ['OM', 'Funkamateur (old man)', 'cw', 'person', ['YL', 'OT']],
+        ['OP', 'Funker, Bediener der Station (operator)', 'cw', 'person'], ['YL', 'Junge Dame, Funkamateurin (young lady)', 'cw', '', ['XYL', 'OM']],
+        ['XYL', 'Ehefrau (ex young lady)', 'cw', '', ['YL']], ['HI', 'Lachen', 'cw'], ['WX', 'Wetter', 'cw'],
+        ['RIG', 'Funkgerät, Station', 'cw', 'geraet'], ['ANT', 'Antenne', 'cw'], ['PWR', 'Sendeleistung', 'cw'], ['ES', 'und', 'cw'],
+        ['FB', 'Sehr gut (fine business)', 'cw', 'gut'], ['GUD', 'Gut', 'cw', 'gut'], ['VY', 'Sehr (very)', 'cw'],
+        ['GM', 'Guten Morgen', 'cw', '', ['GA', 'GN']], ['GA', 'Guten Tag (good afternoon)', 'cw', '', ['GM', 'GE']],
+        ['GE', 'Guten Abend', 'cw', '', ['GN', 'GA']], ['GN', 'Gute Nacht', 'cw', '', ['GE', 'GM']],
+        ['GB', 'Auf Wiedersehen (good bye)', 'cw', 'tschuess'], ['AWDH', 'Auf Wiederhören', 'cw', 'tschuess', ['73', 'AGN']],
+        ['CUAGN', 'Bis zum nächsten Mal (see you again)', 'cw', 'tschuess'], ['CUL', 'Bis später (see you later)', 'cw', 'tschuess'],
+        ['73', 'Viele Grüße', 'cw', '', ['88', '55']], ['88', 'Liebe und Küsse (an eine YL)', 'cw', '', ['73']], ['55', 'Viel Erfolg', 'cw', 'glueck', ['73']],
+        ['DR', 'Liebe(r) (dear)', 'cw'], ['SRI', 'Entschuldigung (sorry)', 'cw'], ['HR', 'Hier (here)', 'cw'], ['ABT', 'Ungefähr (about)', 'cw'],
+        ['NW', 'Jetzt (now)', 'cw'], ['MNI', 'Viele (many)', 'cw'], ['HPE', 'Ich hoffe (hope)', 'cw'], ['CFM', 'Ich bestätige (confirm)', 'cw'],
+        ['SIG', 'Signal', 'cw'], ['RPRT', 'Rapport, Empfangsbericht', 'cw', 'rapport'], ['RST', 'Rapport: Lesbarkeit, Signalstärke, Tonqualität', 'cw', 'rapport'],
+        ['DX', 'Große Entfernung, Fernverbindung', 'cw'], ['TEST', 'Contest-Anruf (Wettbewerb)', 'cw', '', ['FD']], ['FD', 'Fieldday', 'cw', '', ['TEST']],
+        ['SWL', 'Kurzwellenhörer (Short Wave Listener)', 'cw'], ['TX', 'Sender', 'cw', '', ['RX', 'TRX']], ['RX', 'Empfänger', 'cw', '', ['TX', 'TRX']],
+        ['TRX', 'Sendeempfänger (Transceiver)', 'cw', 'geraet', ['TX', 'RX']], ['SOS', 'Notzeichen außerhalb des Amateurfunks (Telegrafie)', 'cw', 'not'],
+        ['MAYDAY', 'Notzeichen außerhalb des Amateurfunks (Sprechfunk)', 'cw', 'not'], ['ARDF', 'Amateurfunkpeilen, Fuchsjagd', 'cw', 'peilen'],
+        ['MOE', 'Kennung eines Peilsenders bei der Fuchsjagd', 'cw', 'peilen'], ['OSCAR', 'Satellit mit Amateurfunkstelle', 'cw'],
+        ['UTC', 'Koordinierte Weltzeit', 'cw', '', ['MEZ', 'MESZ']], ['MEZ', 'Mitteleuropäische Zeit (UTC + 1 Stunde)', 'cw', '', ['MESZ', 'UTC']],
+        ['MESZ', 'Mitteleuropäische Sommerzeit (UTC + 2 Stunden)', 'cw', '', ['MEZ', 'UTC']],
+        // ergaenzt nach einer Kursliste der ueblichen Amateurfunk-Abkuerzungen
+        ['AS', 'Bitte warten', 'cw', '', ['K']], ['KA', 'Beginn der Übermittlung', 'cw', '', ['AR']], ['CL', 'Ich schließe meine Station (closing)', 'cw', 'schluss', ['QRV']],
+        ['BCNU', 'Hoffe, dich wiederzutreffen (be seeing you)', 'cw', 'tschuess'], ['AWDS', 'Auf Wiedersehen', 'cw', 'tschuess', ['AWDH']],
+        ['DK', 'Danke (deutsch)', 'cw', 'danke'], ['BD', 'Schlecht (bad)', 'cw', '', ['BTR']], ['BTR', 'Besser (better)', 'cw', '', ['BD']],
+        ['CLG', 'Ruft (calling)', 'cw'], ['CONDX', 'Ausbreitungsbedingungen für DX', 'cw'], ['CPY', 'Aufnehmen, mitschreiben (copy)', 'cw'],
+        ['DWN', 'Abwärts (down)', 'cw', '', ['UP']], ['UP', 'Aufwärts (up)', 'cw', '', ['DWN']], ['FR', 'Für (for)', 'cw'], ['FRD', 'Freund (friend)', 'cw'],
+        ['FRM', 'Von (from)', 'cw', 'von'], ['GL', 'Viel Glück (good luck)', 'cw', 'glueck'], ['HRD', 'Gehört (heard)', 'cw'], ['HV', 'Habe (have)', 'cw'],
+        ['HW', 'Wie werde ich gehört? (how)', 'cw'], ['LID', 'Schlechter Funker', 'cw', '', ['OT']], ['LOG', 'Stationstagebuch (Logbuch)', 'cw'],
+        ['MSG', 'Nachricht (message)', 'cw'], ['NIL', 'Nichts (nil)', 'cw'], ['OT', 'Langjähriger Funkamateur (Oldtimer)', 'cw', 'person', ['OM']],
+        ['HAM', 'Funkamateur', 'cw', 'person'], ['RCVD', 'Empfangen (received)', 'cw'], ['RPT', 'Wiederholen (repeat)', 'cw', 'wieder'],
+        ['SKED', 'Verabredung für eine Verbindung (schedule)', 'cw'], ['SN', 'Bald (soon)', 'cw'], ['STN', 'Station', 'cw', 'geraet'],
+        ['TMW', 'Morgen (tomorrow)', 'cw', '', ['GM']], ['UFB', 'Ganz ausgezeichnet (ultra fine business)', 'cw', 'gut'], ['WKD', 'Gearbeitet: Verbindung gehabt (worked)', 'cw'],
+        ['QST', 'Mitteilung an alle Funkamateure', 'cw', '', ['CQ']], ['IRC', 'Internationaler Antwortschein (für Rückporto)', 'cw'], ['99', 'Verschwinde! (unhöflich)', 'cw', '', ['73']],
+        // Rufzeichenzusaetze
+        ['/p', 'Portabel: tragbare oder vorübergehend ortsfeste Station', 'ruf', '', ['/m']], ['/m', 'Mobil: Station im Fahrzeug', 'ruf', '', ['/p', '/mm']],
+        ['/mm', 'Maritim mobil: Station auf einem Schiff', 'ruf', '', ['/am', '/m']], ['/am', 'Aeronautisch mobil: Station im Flugzeug', 'ruf', '', ['/mm']],
+        ['/R', 'Remote-Betrieb (fernbediente Station)', 'ruf'],
+        // Betriebsarten
+        ['CW', 'Telegrafie (Continuous Wave)', 'art'], ['SSB', 'Einseitenbandmodulation', 'art', 'ssb', ['AM']], ['LSB', 'Unteres Seitenband', 'art', '', ['USB']],
+        ['USB', 'Oberes Seitenband', 'art', '', ['LSB']], ['FM', 'Frequenzmodulation', 'art', '', ['AM']], ['AM', 'Amplitudenmodulation', 'art', '', ['FM']],
+        ['DSB', 'Zweiseitenbandmodulation', 'art', '', ['SSB']], ['RTTY', 'Funkfernschreiben', 'art', 'text'], ['PSK', 'Digitale Text-Betriebsart (Phasenumtastung)', 'art', 'text'],
+        ['SSTV', 'Bildübertragung (Slow Scan Television)', 'art', '', ['ATV']], ['ATV', 'Amateurfunk-Fernsehen', 'art', '', ['SSTV']],
+        ['FSK', 'Frequenzumtastung', 'art', '', ['PSK']], ['APRS', 'Automatisches Positions-Meldesystem', 'art'], ['PM', 'Phasenmodulation', 'art', '', ['FM']], ['DMR', 'Digitaler Sprechfunk (Digital Mobile Radio)', 'art'],
+        // Technik
+        ['PTT', 'Sendetaste am Mikrofon (push to talk)', 'tech', '', ['VOX']], ['VOX', 'Sprachgesteuertes Umschalten auf Senden', 'tech', '', ['PTT']],
+        ['RIT', 'Feinverstimmung nur des Empfängers', 'tech', '', ['VFO']], ['VFO', 'Abstimmbarer Oszillator (Frequenz-Drehknopf)', 'tech', '', ['RIT']],
+        ['SWR', 'Stehwellenverhältnis', 'tech'], ['PEP', 'Spitzenleistung (Hüllkurvenspitze)', 'tech', '', ['ERP']],
+        ['ERP', 'Strahlungsleistung bezogen auf einen Halbwellendipol', 'tech', '', ['EIRP']], ['EIRP', 'Strahlungsleistung bezogen auf einen isotropen Strahler', 'tech', '', ['ERP']],
+        ['NF', 'Niederfrequenz (hörbarer Bereich)', 'tech', 'nf', ['HF']], ['HF', 'Hochfrequenz, auch: Kurzwelle (High Frequency)', 'tech', 'kw', ['NF', 'VHF']],
+        ['KW', 'Kurzwelle', 'tech', 'kw', ['UKW']], ['UKW', 'Ultrakurzwelle', 'tech', 'ukw', ['KW']], ['VHF', 'Very High Frequency (UKW, z. B. 2 m-Band)', 'tech', 'ukw', ['UHF']],
+        ['UHF', 'Ultra High Frequency (z. B. 70 cm-Band)', 'tech', '', ['VHF']], ['EMV', 'Elektromagnetische Verträglichkeit', 'tech', 'emv'],
+        ['RF', 'Hochfrequenz (radio frequency)', 'tech', 'kw', ['AF']], ['AF', 'Niederfrequenz (audio frequency)', 'tech', 'nf', ['RF']], ['SHF', 'Zentimeterwellen (super high frequency)', 'tech', '', ['UHF']],
+        ['AGC', 'Automatische Verstärkungsregelung im Empfänger', 'tech', '', ['ALC']], ['ALC', 'Automatische Pegelregelung im Sender', 'tech', '', ['AGC']],
+        ['BFO', 'Überlagerungsoszillator, macht CW hörbar', 'tech', '', ['VFO']], ['VCO', 'Spannungsgesteuerter Oszillator', 'tech', '', ['VFO']],
+        ['XTAL', 'Quarz', 'tech'], ['PA', 'Endstufe (power amplifier)', 'tech'], ['GP', 'Groundplane-Antenne', 'tech'], ['ZF', 'Zwischenfrequenz', 'tech', '', ['NF']],
+        ['CTCSS', 'Unterton zum Öffnen der Rauschsperre', 'tech', '', ['DTMF']], ['DTMF', 'Tonwahl: zwei Töne je Ziffer', 'tech', '', ['CTCSS']],
+        ['MUF', 'Höchste brauchbare Frequenz', 'tech', '', ['LUF']], ['LUF', 'Niedrigste brauchbare Frequenz', 'tech', '', ['MUF']],
+        ['BCI', 'Störung des Rundfunkempfangs', 'tech', '', ['TVI']], ['TVI', 'Störung des Fernsehempfangs', 'tech', '', ['BCI']], ['EME', 'Erde-Mond-Erde-Verbindung', 'tech'],
+        // Regeln & Stellen
+        ['IARU', 'Internationale Amateurfunk-Union', 'regel', '', ['ITU']], ['ITU', 'Internationale Fernmeldeunion', 'regel', '', ['IARU']],
+        ['RR', 'Radio Regulations (Vollzugsordnung für den Funkdienst der ITU)', 'regel'], ['CEPT', 'Europäische Konferenz der Post- und Fernmeldeverwaltungen', 'regel'],
+        ['AFuG', 'Amateurfunkgesetz', 'regel', '', ['AFuV']], ['AFuV', 'Amateurfunkverordnung', 'regel', '', ['AFuG']], ['TKG', 'Telekommunikationsgesetz', 'regel'],
+        ['BEMFV', 'Verordnung über das Nachweisverfahren zur Begrenzung elektromagnetischer Felder', 'regel', 'emv', ['EMVU']],
+        ['EMVU', 'Elektromagnetische Verträglichkeit in der Umwelt', 'regel', 'emv', ['EMVG']], ['EMVG', 'Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln', 'regel', 'emv', ['EMVU']],
+        ['IBP', 'Internationales Bakenprojekt', 'regel']
     ];
+    const ABK_GRUPPE = { cw: 'CW & Funk', ruf: 'Rufzeichenzusatz', art: 'Betriebsart', tech: 'Technik', regel: 'Regeln & Stellen' };
+    // Bei den Aufstockungen (nur Technik) nur Betriebsarten und Technik-Kuerzel
+    function abkListe(){ return nurTechnik() ? ABK.filter(a => a[2] === 'art' || a[2] === 'tech') : ABK; }
+    function abkKarte(a, alle){
+        const [kz, bed, gr, sinn, verw] = a;
+        // Falsche Antworten: gleiche Gruppe, nie gleicher Sinn (TNX/TKS/TU, K/KN ...)
+        const passt = b => b[0] !== kz && b[1] !== bed && !(sinn && b[3] === sinn);
+        let andere = alle.filter(b => b[2] === gr && passt(b));
+        if(andere.length < 3) andere = alle.filter(passt);
+        const verwL = (verw || []).map(v => alle.find(b => b[0] === v)).filter(b => b && passt(b));
+        const falsch = verwL.length && Math.random() < 0.6 ? verwL : andere;
+        const art = 'Abkürzung · ' + ABK_GRUPPE[gr];
+        const merk = kz + ' – ' + bed + '.';
+        if(Math.random() < 0.65) return paar(null, 'abk', art, 'Was bedeutet', kz, bed, falsch.map(b => b[1]), merk);
+        // umgekehrt: Bedeutung oben, Kuerzel unten
+        const k = paar(null, 'abk', art, 'Welche Abkürzung steht für „' + bed + '“?', undefined, kz, falsch.map(b => b[0]), merk);
+        delete k.gross; k.kuerzel = true; return k;
+    }
     // Morsezeichen (Telegrafie-Code)
     const MORSE = { A: '·−', B: '−···', C: '−·−·', D: '−··', E: '·', F: '··−·', G: '−−·', H: '····', I: '··', J: '·−−−', K: '−·−', L: '·−··', M: '−−',
         N: '−·', O: '−−−', P: '·−−·', Q: '−−·−', R: '·−·', S: '···', T: '−', U: '··−', V: '···−', W: '·−−', X: '−··−', Y: '−·−−', Z: '−−··',
         '0': '−−−−−', '1': '·−−−−', '2': '··−−−', '3': '···−−', '4': '····−', '5': '·····', '6': '−····', '7': '−−···', '8': '−−−··', '9': '−−−−·' };
     // Die Pruefungsfragen zu Landeskennern und Rufzeichen, und die zu Steckern
+    // Landeskenner, die in den Pruefungsfragen (BD302 bis BD318) vorkommen - Dietmar: "Bei Landeskenner nur die wo in den Fragen
+    // vorkommen. Das andere ist erweitert." Die uebrigen (G, OM, OH, SV, HA, S5, 9A, YO, TF, LY, YL, 9H) stehen unter "Landeskenner erweitert".
+    const LK_IM_KATALOG = ['DL', 'DS', 'DU', 'OE', 'OZ', 'ON', 'OK', 'PA', 'SM', 'SP', 'EA', 'F', 'I', 'HB9', 'HB0', 'LX', 'LU', 'ZS', '4X', 'EI', 'EK', 'EM', 'ES',
+        'VE', 'VK', 'PY', 'W', 'K', 'N', 'ZL', 'BY', 'JA', 'VU', 'XE', 'CE', 'CT', 'GM', 'LA', 'LZ', 'UA'];
+    const lkListe = alle => alle ? LANDESKENNER : LANDESKENNER.filter(l => LK_IM_KATALOG.includes(l[0]));
+    function lkKarten(n, alle){
+        const L = lkListe(alle);
+        return misch(L).slice(0, n).map(l => {
+            const v = (l[3] || []).filter(x => x !== l[1]);
+            const andere = L.filter(x => x[1] !== l[1]).map(x => x[1]);
+            return paar(null, alle ? 'lkplus' : 'lk', alle ? 'Landeskenner · erweitert' : 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
+        });
+    }
     const LK_FRAGEN = ['VA406', 'VB110', 'BD301', 'BD302', 'BD303', 'BD304', 'BD305', 'BD306', 'BD307', 'BD308', 'BD309', 'BD310', 'BD311', 'BD312', 'BD313', 'BD314', 'BD315', 'BD316', 'BD317', 'BD318'];
     const RUNDE = 20;
 
@@ -47927,7 +48109,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let h = '';
         // Wie in der normalen Runde: Bilder, die schon als Antwort dienen, nicht noch einmal als Fragebild (sonst zeigte z. B. NB401 die Loesung oben)
         tu(() => { h = getSvgHtml(q.id, (q.options || []).map(o => o && o.image ? String(o.image).trim() : '').filter(Boolean)) || ''; });
-        // ohne Lupe (der Klick nach dem Wischen soll nichts oeffnen)
+        // ohne Lupe (ein Tipp auf die Karte soll nichts oeffnen)
         return h.replace(/onclick="[^"]*"/, '').replace(/loading="lazy"/, '').replace(/max-height:260px;/, 'max-height:24vh;').replace(/cursor:zoom-in;/, '');
     }
     function bildAntwort(o){
@@ -47956,28 +48138,28 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const THEMEN = {
         fragen:  { name: 'Prüfungsfragen', unter: n => n + ' Fragen aus dem Katalog', anzahl: () => bank().length,
                    karten: n => misch(bank()).slice(0, n).map(q => ausFrage(q, 'fragen')).filter(Boolean) },
-        qgruppen:{ name: 'Q-Gruppen & Abkürzungen', unter: () => (QGRUPPEN.length + ABK.length) + ' Karten', anzahl: () => QGRUPPEN.length + ABK.length, nurVoll: true,
-                   karten: n => misch(QGRUPPEN.map(x => ['q', x]).concat(ABK.map(x => ['a', x]))).slice(0, n).map(([t, x]) => {
-                       const andere = (t === 'q' ? QGRUPPEN : ABK).filter(y => y[0] !== x[0]).map(y => y[1]);
+        qgruppen:{ name: 'Q-Gruppen', unter: () => QGRUPPEN.length + ' Gruppen', anzahl: () => QGRUPPEN.length, nurVoll: true,
+                   karten: n => misch(QGRUPPEN).slice(0, n).map(x => {
+                       const andere = QGRUPPEN.filter(y => y[0] !== x[0]).map(y => y[1]);
                        const falsch = (x[2] && x[2].length && Math.random() < 0.7) ? x[2] : andere;
-                       return paar(null, 'qgruppen', t === 'q' ? 'Q-Gruppe' : 'Abkürzung', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
+                       return paar(null, 'qgruppen', 'Q-Gruppe', 'Was bedeutet', x[0], x[1], falsch, x[0] + ' – ' + x[1] + '.');
                    }) },
-        morse:   { name: 'Morsezeichen', unter: () => '36 Zeichen', anzahl: () => 36, nurVoll: true,
+        abk:     { name: 'Abkürzungen', unter: () => nurTechnik() ? abkListe().length + ' Kürzel: Betriebsarten & Technik' : abkListe().length + ' Kürzel: PSE, K, AWDH, YL, XYL …', anzahl: () => abkListe().length,
+                   karten: n => { const l = abkListe(); return misch(l).slice(0, n).map(a => abkKarte(a, l)); } },
+        morse:   { name: 'Morsezeichen', unter: () => nurTechnik() ? '36 Zeichen, mit Ton' : '36 Zeichen, mit Ton · Zusatz, eher ab Klasse E', anzahl: () => 36,
                    karten: n => misch(Object.keys(MORSE)).slice(0, n).map(z => {
                        const andere = Object.keys(MORSE).filter(y => y !== z);
                        if(Math.random() < 0.5){
-                           const k = paar(null, 'morse', 'Morsezeichen', 'Welches Zeichen ist', MORSE[z], z, andere, z + ' wird ' + MORSE[z] + ' gegeben.');
+                           const k = paar(null, 'morse', 'Morsezeichen', 'Welches Zeichen ist das:', MORSE[z], z, andere, z + ' wird ' + MORSE[z] + ' gegeben.');
                            k.grossMorse = true; return k;
                        }
                        const k = paar(null, 'morse', 'Morsezeichen', 'Wie wird gegeben:', z, MORSE[z], andere.map(y => MORSE[y]), z + ' wird ' + MORSE[z] + ' gegeben.');
                        k.morse = true; return k;
                    }) },
-        lk:      { name: 'Landeskenner', unter: () => LANDESKENNER.length + ' Kenner', anzahl: () => LANDESKENNER.length, nurVoll: true,
-                   karten: n => misch(LANDESKENNER).slice(0, n).map(l => {
-                       const v = (l[3] || []).filter(x => x !== l[1]);
-                       const andere = LANDESKENNER.filter(x => x[1] !== l[1]).map(x => x[1]);
-                       return paar(null, 'lk', 'Landeskenner', 'Zu welchem Land gehört', l[0], l[1], v.length && Math.random() < 0.75 ? v : andere, l[2]);
-                   }) },
+        lk:      { name: 'Landeskenner', unter: () => lkListe().length + ' Kenner aus den Prüfungsfragen', anzahl: () => lkListe().length,
+                   karten: n => lkKarten(n, false) },
+        lkplus:  { name: 'Landeskenner erweitert', unter: () => lkListe(true).length + ' Kenner · Zusatz, auch über den Katalog hinaus', anzahl: () => lkListe(true).length,
+                   karten: n => lkKarten(n, true) },
         stecker: { name: 'Stecker', unter: n => n + ' Fragen, viele mit Bild', anzahl: () => steckerFragen().length, nurVoll: true,
                    karten: n => { const f = steckerFragen(); const k = []; while(f.length && k.length < n){ misch(f).forEach(q => { if(k.length < n){ const c = ausFrage(q, 'stecker'); if(c) k.push(c); } }); } return k; } },
         technik: { name: 'Einheiten & Formeln', unter: () => TECHNIK.length + ' Karten', anzahl: () => TECHNIK.length,
@@ -47987,26 +48169,26 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                        return paar(null, 'technik', t[0], frage, t[1], t[3], andere, t[4]);
                    }) },
         mix:     { name: 'Alles gemischt', unter: () => 'Von allem etwas', anzahl: () => 1,
-                   karten: n => { const t = themenListe().filter(x => x !== 'mix'); let k = []; t.forEach(x => { k = k.concat(THEMEN[x].karten(Math.ceil(n / t.length) + 1)); }); return misch(k).slice(0, n); } }
+                   karten: n => { const t = themenListe().filter(x => x !== 'mix' && (x !== 'morse' || nurTechnik()) && x !== 'lkplus'); let k = []; t.forEach(x => { k = k.concat(THEMEN[x].karten(Math.ceil(n / t.length) + 1)); }); return misch(k).slice(0, n); } }
     };
     function steckerFragen(){ return bank().filter(q => /Steck(er|verbind)/.test(q.text) && q.part !== 'vorschriften'); }
     function themenListe(){
-        // Bei den Aufstockungen nur Technik: die Pruefungsfragen (dort nur Technik) und Einheiten & Formeln
-        if(nurTechnik()) return ['mix', 'fragen', 'technik'];
-        return ['mix', 'fragen', 'qgruppen', 'morse', 'lk', 'stecker', 'technik'].filter(t => THEMEN[t].anzahl() > 0);
+        // Bei den Aufstockungen nur Technik: Pruefungsfragen (dort nur Technik), Einheiten & Formeln, Technik-Kuerzel und Morsezeichen
+        if(nurTechnik()) return ['mix', 'fragen', 'technik', 'abk', 'morse'];
+        return ['mix', 'fragen', 'abk', 'qgruppen', 'lk', 'stecker', 'technik', 'lkplus', 'morse'].filter(t => THEMEN[t].anzahl() > 0);
     }
 
     let el = null, spiel = null;
-    const WISCH_BILD = '<svg class="ks-bild-wisch" viewBox="0 0 320 220" aria-hidden="true">'
-        + '<rect x="110" y="18" width="100" height="136" rx="14" fill="var(--s-fl, #fff)" stroke="var(--s-rand2, #ccd)" stroke-width="3"/>'
-        + '<rect x="124" y="36" width="72" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/><rect x="124" y="52" width="52" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/>'
-        + '<rect x="120" y="110" width="80" height="30" rx="8" fill="var(--s-fl2, #eef2f8)"/><rect x="132" y="121" width="56" height="8" rx="4" fill="var(--s-text2, #456)"/>'
-        + '<path d="M222 70 h62" stroke="#1FC46F" stroke-width="9" stroke-linecap="round"/><path d="M270 54 l18 16 l-18 16" fill="none" stroke="#1FC46F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
-        + '<path d="M98 108 h-62" stroke="#F2375A" stroke-width="9" stroke-linecap="round"/><path d="M50 92 l-18 16 l18 16" fill="none" stroke="#F2375A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
-        + '<text x="254" y="104" text-anchor="middle" font-size="17" font-weight="800" fill="#1FC46F">richtig</text>'
-        + '<text x="66" y="142" text-anchor="middle" font-size="17" font-weight="800" fill="#F2375A">falsch</text>'
-        + '<g class="ks-wisch-hand"><path d="M150 214 l-6 -40 c-10 -12 -26 -28 -30 -38 c-4 -10 8 -16 16 -8 l14 14 v-58 c0 -12 18 -12 18 0 v34 v-12 c0 -11 17 -11 17 0 v14 v-8 c0 -10 16 -10 16 0 v12 v-4 c0 -9 15 -9 15 1 v34 c0 14 -6 26 -12 36 l-2 15 z" '
-        + 'fill="var(--s-fl, #fff)" stroke="var(--s-text, #0C1731)" stroke-width="6" stroke-linejoin="round"/></g></svg>';
+    // Erklaerbild: Karte (oben Frage, unten Antwort), darunter die zwei Knoepfe; ein Finger tippt abwechselnd
+    const KNOPF_BILD = '<svg class="ks-bild-wisch" viewBox="0 0 320 210" aria-hidden="true">'
+        + '<rect x="96" y="8" width="128" height="122" rx="14" fill="var(--s-fl, #fff)" stroke="var(--s-rand2, #ccd)" stroke-width="3"/>'
+        + '<rect x="112" y="26" width="96" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/><rect x="112" y="42" width="66" height="9" rx="4" fill="var(--s-text3, #8a97b5)"/>'
+        + '<rect x="108" y="86" width="104" height="32" rx="8" fill="var(--s-fl2, #eef2f8)"/><rect x="126" y="98" width="68" height="8" rx="4" fill="var(--s-text2, #456)"/>'
+        + '<rect x="62" y="146" width="92" height="44" rx="12" fill="rgba(242,55,90,.16)" stroke="#F2375A" stroke-width="3"/>'
+        + '<text x="108" y="174" text-anchor="middle" font-size="17" font-weight="800" fill="#F2375A">✗ Falsch</text>'
+        + '<rect x="166" y="146" width="92" height="44" rx="12" fill="rgba(31,196,111,.18)" stroke="#1FC46F" stroke-width="3"/>'
+        + '<text x="212" y="174" text-anchor="middle" font-size="17" font-weight="800" fill="#1FC46F">✓ Richtig</text>'
+        + '<circle class="ks-tipp-punkt" cx="212" cy="168" r="16" fill="none" stroke="var(--s-haupt, #0FB7B2)" stroke-width="4"/></svg>';
 
     function bauen(){
         if(el) return el;
@@ -48032,7 +48214,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return el;
     }
 
-    // ---------- Der Anfang: Wisch-Erklaerung und Themen ----------
+    // ---------- Der Anfang: Erklaerung und Themen ----------
     function auf(thema){
         bauen();
         el.classList.add('offen');
@@ -48042,12 +48224,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function start(){
         spiel = null;
+        tutEntfernen();
         el.classList.remove('fertig'); el.classList.add('start');
         el.querySelector('.ks-titel').textContent = 'Match';
         const t = themenListe();
-        el.querySelector('.ks-start').innerHTML = WISCH_BILD
-          + '<div class="ks-regel"><div class="l">← nach links<small>Die Antwort ist falsch</small></div><div class="r">nach rechts →<small>Die Antwort ist richtig</small></div></div>'
-          + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, wisch die Karte nach rechts – stimmt sie nicht, nach links. Oder tipp auf die Knöpfe.</div>'
+        el.querySelector('.ks-start').innerHTML = KNOPF_BILD
+          + '<div class="ks-regel"><div class="l">✗ Falsch<small>oder kurz nach links wischen</small></div><div class="r">✓ Richtig<small>oder kurz nach rechts wischen</small></div></div>'
+          + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, tippe unten auf <b>Richtig</b> – stimmt sie nicht, auf <b>Falsch</b>. Ein kurzer Wisch mit dem Finger geht auch.</div>'
+          + '<label class="ks-schalter ks-tut-an"><span>Swipe-Tutorial vor der ersten Karte<small>zeigt noch einmal, wie das Wischen geht</small></span>'
+          + '<button type="button" role="switch" aria-checked="' + (tutVerstanden() ? 'false' : 'true') + '" aria-label="Swipe-Tutorial ein oder aus"><i></i></button></label>'
           + '<div class="ks-themen-kopf">Thema wählen</div>'
           + '<div class="ks-themen">' + t.map(k => {
                 const th = THEMEN[k], n = th.anzahl(), best = parseInt(lies(bestKey(k), '0'), 10) || 0;
@@ -48055,6 +48240,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      + '<small>' + esc(th.unter(n)) + (best ? ' · ★ ' + best : '') + '</small></button>';
             }).join('') + '</div>';
         el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => los(b.dataset.thema)));
+        const an = el.querySelector('.ks-tut-an');
+        an.addEventListener('click', ev => {
+            ev.preventDefault();
+            const b = an.querySelector('button'), jetztAn = b.getAttribute('aria-checked') !== 'true';
+            b.setAttribute('aria-checked', jetztAn ? 'true' : 'false');
+            schreib(tutKey(), jetztAn ? '' : '1');
+        });
     }
 
     function los(thema){
@@ -48067,12 +48259,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function zu(){
         if(!el) return;
+        klangStopp();
+        tutEntfernen();
         el.classList.remove('offen', 'fertig', 'start');
         tu(() => D.body.classList.remove('karten-offen'));
         spiel = null;
         tu(kachelNachziehen);
     }
 
+    // Je kuerzer das Kuerzel, desto groesser (UA, OM, QRZ riesig; CUAGN, HB9 etwas kleiner; lange Begriffe normal)
+    function grossKlasse(g){ const n = String(g).length; return n <= 3 ? 'g1' : n <= 5 ? 'g2' : n <= 9 ? 'g3' : ''; }
     function frageKlasse(k){
         if(k.gross !== undefined) return '';
         const n = String(k.frage || '').length;
@@ -48084,34 +48280,51 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         el.querySelector('.ks-balken i').style.width = (spiel.i / spiel.karten.length * 100) + '%';
         const hinweis = el.querySelector('.ks-hinweis');
         hinweis.className = 'ks-hinweis';
-        hinweis.textContent = spiel.i === 0 ? 'Richtig → nach rechts wischen. Falsch ← nach links.' : '';
+        hinweis.textContent = spiel.i === 0 ? 'Stimmt die Antwort? Tippe auf Richtig oder Falsch – oder wisch kurz.' : '';
         const frage = k.gross !== undefined
-            ? esc(k.frage) + '<span class="ks-gross">' + esc(k.gross) + (/:$/.test(k.frage) ? '' : '?') + '</span>'
+            ? esc(k.frage) + '<span class="ks-gross ' + grossKlasse(k.gross) + '">' + esc(k.gross) + (/:$/.test(k.frage) ? '' : '?') + '</span>'
             : esc(k.frage);
-        const antwort = k.antwortHtml || esc(k.antwort);
-        const aKl = k.morse ? ' morse' : (String(k.antwort || '').length > 60 ? ' lang' : '');
+        // Achtung: nicht "antwort" nennen - sonst verdeckt der Text die Funktion antwort() und die Knoepfe tun nichts
+        const antwortText = k.antwortHtml || esc(k.antwort);
+        const aKl = k.morse ? ' morse' : k.kuerzel ? ' kuerzel' : (String(k.antwort || '').length > 60 ? ' lang' : '');
         el.querySelector('.ks-buehne').innerHTML =
             '<div class="ks-karte" tabindex="0">'
           + '<span class="ks-marke ja">RICHTIG</span><span class="ks-marke nein">FALSCH</span>'
           + '<div class="ks-oben"><div class="ks-art">' + esc(k.art) + (k.qid ? ' · ' + esc(k.qid) : '') + '</div>'
           + '<div class="ks-frage' + frageKlasse(k) + '">' + frage + (k.gross !== undefined ? '' : '') + '</div>'
           + (k.bild ? '<div class="ks-bild">' + k.bild + '</div>' : '') + '</div>'
-          + '<div class="ks-unten"><div class="ks-antwort-kopf">Antwort</div><div class="ks-antwort' + aKl + '">' + antwort + '</div></div>'
+          + '<div class="ks-unten"><div class="ks-antwort-kopf">Antwort</div><div class="ks-antwort' + aKl + '">' + antwortText + '</div></div>'
           + '<div class="ks-loesung"></div>'
           + '</div>';
-        el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-nein">← Falsch</button><button type="button" class="ks-k ks-ja">Richtig →</button>';
+        el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-nein">✗ Falsch</button><button type="button" class="ks-k ks-ja">✓ Richtig</button>';
         el.querySelector('.ks-ja').addEventListener('click', () => antwort(true));
         el.querySelector('.ks-nein').addEventListener('click', () => antwort(false));
         spiel.warten = false;
         wischenAn(el.querySelector('.ks-karte'));
+        tutEntfernen();
+        if(spiel.i === 0 && !tutVerstanden()) tutZeigen();
+        klangStopp();
+        const code = morseCode(k);
+        if(code){
+            const ziel = el.querySelector(k.grossMorse ? '.ks-oben' : '.ks-unten');
+            const z = D.createElement('div'); z.className = 'ks-hoer-zeile';
+            z.innerHTML = '<button type="button" class="ks-hoer" aria-label="Morsezeichen anhören"><i class="fas fa-volume-high"></i> Anhören</button>';
+            ziel.appendChild(z);
+            const b = z.querySelector('.ks-hoer');
+            b.addEventListener('click', ev => { ev.stopPropagation(); morseKlang(code, b); });
+            const nr = spiel.i;
+            setTimeout(() => { if(spiel && spiel.i === nr && !spiel.warten) morseKlang(code, b); }, 350);
+        }
     }
 
     function wischenAn(karte){
-        let x0 = null, y0 = 0, dx = 0, id = null;
+        // Kurz genuegt: ab 40 Punkten zur Seite oder ein schneller Schubs (Dietmar: "Uebern ganzen Display ist umstaendlich")
+        const WEG = 40;
+        let x0 = null, y0 = 0, dx = 0, id = null, t0 = 0;
         const ja = karte.querySelector('.ks-marke.ja'), nein = karte.querySelector('.ks-marke.nein');
         karte.addEventListener('pointerdown', e => {
-            if(!spiel || spiel.warten) return;
-            x0 = e.clientX; y0 = e.clientY; dx = 0; id = e.pointerId;
+            if(!spiel || spiel.warten || (e.target.closest && e.target.closest('.ks-hoer'))) return;
+            x0 = e.clientX; y0 = e.clientY; dx = 0; id = e.pointerId; t0 = Date.now();
             tu(() => karte.setPointerCapture(id));
             karte.classList.remove('zurueck');
         });
@@ -48120,13 +48333,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             dx = e.clientX - x0;
             const dy = (e.clientY - y0) * 0.2;
             karte.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx / 18) + 'deg)';
-            const s = Math.min(1, Math.abs(dx) / 90);
+            const s = Math.min(1, Math.abs(dx) / WEG);
             ja.style.opacity = dx > 0 ? s : 0; nein.style.opacity = dx < 0 ? s : 0;
         });
         const los = () => {
             if(x0 === null) return;
             x0 = null;
-            if(Math.abs(dx) > 90){ antwort(dx > 0); return; }
+            const schnell = Math.abs(dx) > 20 && Math.abs(dx) / Math.max(1, Date.now() - t0) > 0.35;
+            if(Math.abs(dx) >= WEG || schnell){ antwort(dx > 0); return; }
             karte.classList.add('zurueck');
             karte.style.transform = '';
             ja.style.opacity = 0; nein.style.opacity = 0;
@@ -48135,12 +48349,85 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         karte.addEventListener('pointercancel', los);
     }
 
+    // ---------- Swipe-Tutorial ueber der ersten Karte ----------
+    const tutKey = () => 'karten_wisch_verstanden_' + benutzerK();
+    const tutVerstanden = () => lies(tutKey(), '') === '1';
+    function tutHand(seite){
+        // Hand mit gebogenem Pfeil; links gespiegelt
+        const innen = '<g class="ks-tut-bew"><path class="ks-tut-pfeil" d="M40 34 Q84 2 128 28"/><path class="ks-tut-pfeil" d="M112 16 L130 29 L111 38"/>'
+            + '<g transform="translate(-40,-12) scale(.74)"><path class="ks-tut-hand" d="M150 214 l-6 -40 c-10 -12 -26 -28 -30 -38 c-4 -10 8 -16 16 -8 l14 14 v-58 c0 -12 18 -12 18 0 v34 v-12 c0 -11 17 -11 17 0 v14 v-8 c0 -10 16 -10 16 0 v12 v-4 c0 -9 15 -9 15 1 v34 c0 14 -6 26 -12 36 l-2 15 z"/></g></g>';
+        return '<svg class="ks-tut-' + seite + '" viewBox="0 0 160 150" aria-hidden="true">' + (seite === 'l' ? '<g transform="translate(160,0) scale(-1,1)">' + innen + '</g>' : innen) + '</svg>';
+    }
+    function tutZeigen(){
+        const d = D.createElement('div'); d.className = 'ks-tut';
+        d.innerHTML = '<div class="ks-tut-in">'
+          + '<button type="button" class="ks-tut-zu" aria-label="Erklärung schließen">✕</button>'
+          + '<div class="ks-tut-titel">Swipe-Tutorial <i class="fas fa-tower-broadcast"></i></div>'
+          + '<div class="ks-tut-unter">So beantwortest du die Fragen</div>'
+          + '<div class="ks-tut-haende">' + tutHand('l') + tutHand('r') + '</div>'
+          + '<div class="ks-tut-reg"><div class="l">Links wischen<br>= Falsch</div><div class="r">Rechts wischen<br>= Richtig</div></div>'
+          + '<div class="ks-tut-pille">Links für Falsch, Rechts für Richtig</div>'
+          + '<div class="ks-tut-klein">Ein kurzer Wisch reicht. Die Knöpfe unten gehen auch.</div>'
+          + '<label class="ks-schalter"><span>Ich habe es verstanden</span><button type="button" role="switch" aria-checked="false" aria-label="Ich habe es verstanden"><i></i></button></label>'
+          + '</div>';
+        el.appendChild(d);
+        // Tipp auf den abgedunkelten Rand: schliessen, beim naechsten Mal kommt es wieder
+        d.addEventListener('click', ev => { if(ev.target === d) tutWeg(); });
+        // Das X schliesst auch - nur fuer diesmal (gemerkt wird nur der Schalter)
+        d.querySelector('.ks-tut-zu').addEventListener('click', ev => { ev.stopPropagation(); tutWeg(); });
+        const sw = d.querySelector('.ks-schalter button');
+        d.querySelector('.ks-schalter').addEventListener('click', ev => {
+            ev.preventDefault();
+            sw.setAttribute('aria-checked', 'true');
+            schreib(tutKey(), '1');
+            setTimeout(tutWeg, 350);
+        });
+    }
+    const tutEntfernen = () => tu(() => el.querySelectorAll('.ks-tut').forEach(x => x.remove()));
+    function tutWeg(){
+        const d = el && el.querySelector('.ks-tut');
+        if(!d) return;
+        d.classList.add('weg');
+        setTimeout(() => tu(() => d.remove()), 320);
+    }
+
+    // ---------- Morsezeichen mit Ton (Dietmar: "Bei Morsen auch mit Sound.") ----------
+    // 700 Hz, eine Einheit 80 ms (Tempo 15 WpM); "·" = 1 Einheit, "−" = 3, dazwischen 1 Einheit Pause
+    let klang = { ctx: null, teile: [], zeit: null };
+    function klangStopp(){
+        klang.teile.forEach(o => tu(() => o.stop()));
+        klang.teile = [];
+        if(klang.zeit){ clearTimeout(klang.zeit); klang.zeit = null; }
+        tu(() => el.querySelectorAll('.ks-hoer.spielt').forEach(b => b.classList.remove('spielt')));
+    }
+    function morseKlang(code, knopf){
+        klangStopp();
+        tu(() => {
+            const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
+            const ctx = klang.ctx || (klang.ctx = new C());
+            if(ctx.state === 'suspended') ctx.resume();
+            const e = 0.08; let t = ctx.currentTime + 0.05;
+            String(code).split('').forEach(z => {
+                const l = z === '−' || z === '-' ? 3 : (z === '·' || z === '.' ? 1 : 0);
+                if(!l) return;
+                const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 700; o.type = 'sine';
+                g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.22, t + 0.006); g.gain.setValueAtTime(0.22, t + l * e - 0.006); g.gain.linearRampToValueAtTime(0, t + l * e);
+                o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + l * e + 0.02); klang.teile.push(o);
+                t += l * e + e;
+            });
+            if(knopf){ knopf.classList.add('spielt'); klang.zeit = setTimeout(() => { knopf.classList.remove('spielt'); klang.zeit = null; }, Math.round((t - ctx.currentTime) * 1000)); }
+        });
+    }
+    // Welches Morsezeichen eine Karte zeigt: oben (Welches Zeichen ist ·−?) oder unten als Antwort
+    const morseCode = k => k.grossMorse ? k.gross : k.morse ? k.antwort : '';
+
     function richtigHtml(k){
         if(k.richtigHtml) return k.richtigHtml + (k.richtig ? '<div>' + esc(k.richtig) + '</div>' : '');
         return esc(k.richtig);
     }
     function antwort(sagtRichtig){
         if(!spiel || spiel.warten) return;
+        tutWeg();
         const k = spiel.karten[spiel.i];
         const karte = el.querySelector('.ks-karte');
         const gut = (sagtRichtig === k.wahr);
@@ -48166,7 +48453,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + (k.merk ? '<div class="ks-merk">' + esc(k.merk) + '</div>' : '')
               + '<div class="ks-tipp">Antippen oder Weiter</div>';
             el.querySelector('.ks-knoepfe').innerHTML = '<button type="button" class="ks-k ks-weiter">Weiter</button>';
-            // Nach dem Wischen kommt beim Loslassen noch ein Klick auf die Karte - der darf die Loesung nicht gleich ueberspringen
+            // Morse: das richtige Zeichen noch einmal vorspielen
+            if(k.morse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.richtig); }, 300);
+            else if(k.grossMorse) setTimeout(() => { if(spiel && spiel.warten) morseKlang(k.gross); }, 300);
+            // Nach dem Wischen kommt beim Loslassen noch ein Klick auf die Karte - der (und ein schneller Doppeltipp) darf die Loesung nicht gleich ueberspringen
             const ab = Date.now() + 450;
             const weiter = () => { if(spiel && spiel.warten && Date.now() >= ab) naechste(); };
             el.querySelector('.ks-weiter').addEventListener('click', weiter);
@@ -48184,6 +48474,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function naechste(){
         if(!spiel) return;
+        klangStopp();
         spiel.i++;
         if(spiel.i >= spiel.karten.length){ ende(); return; }
         zeigeKarte();
@@ -48201,7 +48492,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 + '<br><span>Richtig: </span><b>' + esc(k.richtig || '(Bild)') + '</b></div>').join('') + '</div>';
         }
         const ids = [...new Set(spiel.fehl.filter(k => k.qid).map(k => k.qid))];
-        const lk = t === 'lk' ? LK_FRAGEN.filter(i => bank().some(q => q.id === i)) : [];
+        const lk = (t === 'lk' || t === 'lkplus') ? LK_FRAGEN.filter(i => bank().some(q => q.id === i)) : [];
         el.querySelector('.ks-ende').innerHTML =
             '<div class="ks-ergebnis">' + r + '<small> / ' + n + '</small></div>'
           + '<div class="ks-lob">' + esc(lob) + '</div>'
@@ -48221,7 +48512,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         el.querySelector('.ks-fertig').addEventListener('click', zu);
         el.querySelectorAll('.ks-pruef').forEach(p => p.addEventListener('click', () => {
             const liste = p.dataset.ids.split(',');
-            zu(); tu(() => startQuestionSession(liste, t === 'lk' && liste.length > 5 ? 'Landeskenner' : 'Match – nachüben'));
+            zu(); tu(() => startQuestionSession(liste, (t === 'lk' || t === 'lkplus') && liste.length > 5 ? 'Landeskenner' : 'Match – nachüben'));
         }));
     }
 
@@ -48231,12 +48522,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!k) return;
         const b = k.querySelector('b'), s = k.querySelector('small'), z = $('ahKKarten');
         if(b) b.textContent = 'Match';
-        if(s) s.textContent = nurTechnik() ? 'wischen: Technik – richtig oder falsch?' : 'wischen: richtig oder falsch?';
+        if(s) s.textContent = nurTechnik() ? 'Technik: richtig oder falsch?' : 'richtig oder falsch?';
         let best = 0;
         tu(() => themenListe().forEach(t => { best = Math.max(best, parseInt(lies(bestKey(t), '0'), 10) || 0); }));
         if(z) z.textContent = best ? '★ ' + best : '';
         const zeile = $('ahKarten');
-        if(zeile){ const t = zeile.querySelector('.t'); if(t) t.textContent = 'Match (wischen: richtig oder falsch)'; const w = $('ahKartenZahl'); if(w) w.textContent = z ? z.textContent : ''; }
+        if(zeile){ const t = zeile.querySelector('.t'); if(t) t.textContent = 'Match (richtig oder falsch?)'; const w = $('ahKartenZahl'); if(w) w.textContent = z ? z.textContent : ''; }
     }
     // Bei ungerader Zahl sichtbarer Kacheln nimmt die letzte die ganze Breite
     function rasterGerade(){
@@ -48253,9 +48544,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     D.addEventListener('DOMContentLoaded', () => setTimeout(() => { tu(kachelNachziehen); tu(rasterGerade); }, 800));
 
     window.kartenSpielOeffnen = () => auf();
-    window.kartenSpiel = { auf, los: t => { auf(); los(t); }, start, zu, antwort: s => antwort(s),
+    window.kartenSpiel = { tutVerstanden, auf, los: t => { auf(); los(t); }, start, zu, antwort: s => antwort(s),
         zustand: () => spiel ? { thema: spiel.thema, i: spiel.i, n: spiel.karten.length, richtig: spiel.richtig, fehl: spiel.fehl.length, karte: spiel.karten[spiel.i] || null, warten: spiel.warten } : null,
-        themen: () => themenListe().map(t => ({ t, n: THEMEN[t].anzahl() })), daten: () => ({ landeskenner: LANDESKENNER.length, technik: TECHNIK.length, q: QGRUPPEN.length, abk: ABK.length }), nurTechnik };
+        themen: () => themenListe().map(t => ({ t, n: THEMEN[t].anzahl() })), daten: () => ({ landeskenner: LANDESKENNER.length, technik: TECHNIK.length, q: QGRUPPEN.length, abk: ABK.length }), nurTechnik, karten: (t, n) => THEMEN[t] ? THEMEN[t].karten(n || 20) : [] };
 })();
 </script>
 <style id="logbuchStil">
@@ -49131,7 +49422,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-zeile aus" id="ahAuffrischen"><span class="sym"><i class="fas fa-rotate"></i></span><span class="t">Gelerntes auffrischen</span><span class="w"><span id="ahAuffrischenZahl">0</span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahPruefung"><span class="sym"><i class="fas fa-stopwatch"></i></span><span class="t">Prüfungssimulation</span><span class="w"><span id="ahPruefungText">3 × 45 min</span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahBlaettern"><span class="sym"><i class="fas fa-book"></i></span><span class="t" id="ahBlaetternText">Fragenkatalog blättern</span><span class="w"><span id="ahBlaetternZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
-      +   '<button type="button" class="ah-zeile" id="ahKarten" onclick="window.kartenSpielOeffnen && kartenSpielOeffnen()"><span class="sym"><i class="fas fa-layer-group"></i></span><span class="t">Match (wischen: richtig oder falsch)</span><span class="w"><span id="ahKartenZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahKarten" onclick="window.kartenSpielOeffnen && kartenSpielOeffnen()"><span class="sym"><i class="fas fa-layer-group"></i></span><span class="t">Match (richtig oder falsch?)</span><span class="w"><span id="ahKartenZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
       + '</div>'
       + '<div class="ah-kacheln" id="ahKacheln">'
       +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
@@ -49139,7 +49430,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Generalprobe</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
-      +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>wischen: richtig oder falsch?</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
       + '</div>'
       + '<div class="ah-weiter-ueber">Übersicht und Werkzeuge</div>';
     tu(() => {
@@ -49885,6 +50176,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!H.classList.contains('stil-verspielt') || D.hidden) return false;
         if(wirdVorgelesen()) return false;                // siehe "Beim Vorlesen ist Funki weg"
         if(D.body.classList.contains('runde-laeuft') || D.body.classList.contains('app-chat-offen')) return false;
+        if(D.body.classList.contains('karten-offen')) return false;          // Match liegt ueber der Startseite
+        { const lb = $('funkLogbuch'); if(lb && lb.classList.contains('offen')) return false; }
         if(!zuSehen(heute) || !zuSehen($('ahMk')) || blatt.classList.contains('offen')) return false;
         const m = $('appMehr'), s = $('appSuchPlatz');
         if((m && m.classList.contains('offen')) || (s && s.classList.contains('offen'))) return false;
