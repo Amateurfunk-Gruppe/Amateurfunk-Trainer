@@ -12,7 +12,7 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 48 · 05.10.2026
+Stand 50 · 05.10.2026
 
 ### Hinzugefügt
 - Android-App, Blättern gemischt: Im Blättern-Fenster gibt es den Schalter „Gemischt“ – dann kommen die Fragen quer durch alle Themen statt zehnmal hintereinander dasselbe. Die Mischung bleibt fest, damit das Lesezeichen trägt; gemischt und der Reihe nach haben je ein eigenes Lesezeichen, „Von vorn“ mischt neu. Auch „Nur Gelernte“, „Rest abarbeiten“ und „Noch nie geübt“ kommen dann gemischt. Am PC bleibt Blättern der Reihe nach
@@ -124,6 +124,7 @@ Stand 48 · 05.10.2026
 - Unterricht im Gruppenraum: Der Kursleiter startet die Lektion für alle, im Gleichschritt – alle sehen seine Frage, die Teilnehmer antworten am Gerät und sehen die Wertung erst beim Auflösen; am Beamer „x von y haben geantwortet“ und nach dem Auflösen an jeder Antwort, wie viele sie gewählt haben (ohne Namen); Leertaste oder Presenter: erst auflösen, dann weiter; am Ende Auswertung für alle. Wählbar über den Knopf „Unterricht“ oder im Gruppenraum-Fenster (Haken „Unterricht“ unter dem Prüfungssimulator, Lektion, Am Beamer, „Jetzt starten“)
 
 ### Geändert
+- Android-App, Stil Verspielt: „ON AIR“ oben rechts sieht jetzt aus wie ein echtes Studio-Schild – rot, mit Mikrofon, weiße Schrift. Darunter steht die Zahl der Tage am Stück, an denen geübt wurde (nur die Zahl). Wer heute noch nicht geübt hat, sieht „OFF AIR“ in Blaugrau mit durchgestrichenem Mikrofon; ab der ersten Frage des Tages leuchtet es rot „ON AIR“. Mit dem Gruppenraum hat es nichts zu tun
 - Android-App, Match, Schalter „Erweitert“ (am Anfang über den Themen): Aus – Q-Gruppen und Landeskenner nur so, wie sie in den Prüfungsfragen vorkommen (13 Q-Gruppen, 40 Landeskenner). Ein – dazu die übrigen (31 Q-Gruppen, 52 Landeskenner), auf der Karte als „erweitert“ gekennzeichnet. Das eigene Thema „Landeskenner erweitert“ entfällt dafür
 - Android-App, Match, Einheiten & Formeln: Die Antworten sagen jetzt, was gemeint ist – bei Dezibel „etwa doppelte Leistung (× 2)“ statt nur „2“, „zehnfache Leistung (× 10)“ usw.; bei den Vorsätzen mit Wort, z. B. „10⁻⁶ (ein Millionstel)“
 - Android-App: Der Knopf „Generalprobe starten“ unter „So läuft’s“ heißt jetzt „Prüfung simulieren“, darunter klein: „Wie am Prüfungstag: echte Fragen, mit Uhr, am Ende bestanden oder nicht“. Die Kachel „Prüfungstag“ trägt ebenfalls „Prüfung simulieren“

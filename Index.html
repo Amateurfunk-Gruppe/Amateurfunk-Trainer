@@ -1259,6 +1259,16 @@
         @media (max-width: 389px) { html.android-app #appLeiste .al-titel { font-size: 1.0rem; letter-spacing: -0.3px; } }
         @media (max-width: 339px) { html.android-app #appLeiste .al-titel { font-size: 0.9rem; } }
 
+        /* ON AIR als Studio-Schild (P40) */
+        html.android-app.stil-verspielt #appHeute .ah-onair { display: inline-flex !important; flex-direction: column; align-items: center; gap: 3px; height: auto !important; padding: 0 !important;
+            background: none !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; }
+        html.android-app.stil-verspielt #appHeute .ah-onair .oa-schild { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 9px; border-radius: 10px;
+            background: #E8101C; color: #fff; font: 800 16px/1 var(--font-display); letter-spacing: 1px; box-shadow: 0 0 16px rgba(232,16,28,.55); }
+        html.android-app.stil-verspielt #appHeute .ah-onair .oa-schild i { font-size: 17px; }
+        html.android-app.stil-verspielt #appHeute .ah-onair b { font: 700 12px/1 var(--font-body) !important; color: var(--s-text2) !important; letter-spacing: 0 !important; }
+        html.android-app.stil-verspielt #appHeute .ah-onair.aus { filter: none !important; opacity: 1 !important; }
+        html.android-app.stil-verspielt #appHeute .ah-onair.aus .oa-schild { background: #3B4A63; color: #C9D3E3; box-shadow: none; }
+
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
            Dietmar: "A gefaellt mir gut. Ich moechte da aber noch das mit
@@ -23179,7 +23189,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 48, datum: '05.10.2026' };
+const TRAINER_STAND = { nr: 50, datum: '05.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -49515,7 +49525,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     heute.setAttribute('aria-label', 'Start');
     heute.innerHTML =
         '<div class="ah-kopf"><div class="ah-gruss" id="ahGruss"><span class="gt" id="ahGrussZeit">Guten Tag</span><span class="name" id="ahGrussName"></span><small id="ahGrussName2"></small></div>'
-      + '<div class="ah-onair" id="ahOnAir"><span class="lampe"></span>ON AIR <b id="ahSerieZahl">0</b></div></div>'
+      + '<div class="ah-onair" id="ahOnAir" role="img"><span class="oa-schild"><i class="fas fa-microphone"></i><span class="oa-wort">ON AIR</span></span><b id="ahSerieZahl">0</b></div></div>'
       + '<div class="ah-chips" id="ahChips"><span class="app-chip ah-xp" id="ahXp"><i class="fas fa-bolt"></i> <span id="ahXpText">0 XP</span></span>'
       + '<button type="button" class="ah-termin" id="ahTermin"></button></div>'
       + '<div class="ah-karte ah-runde" id="ahRunde">'
@@ -49795,6 +49805,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const heuteDabei = n > 0;
         $('ahBelohnungText').textContent = heuteDabei ? 'Tag ' + s + ' auf Sendung' : 'Tag ' + (s + 1) + ' wartet';
         $('ahSerieZahl').textContent = s;
+        $('ahOnAir').setAttribute('aria-label', 'On Air: ' + s + (s === 1 ? ' Tag' : ' Tage') + ' am Stück geübt');
+        { const w = $('ahOnAir').querySelector('.oa-wort'), ic = $('ahOnAir').querySelector('.oa-schild i'); if(w) w.textContent = heuteDabei ? 'ON AIR' : 'OFF AIR'; if(ic) ic.className = heuteDabei ? 'fas fa-microphone' : 'fas fa-microphone-slash'; }
+        $('ahOnAir').title = s + (s === 1 ? ' Tag' : ' Tage') + ' am Stück geübt' + (heuteDabei ? '' : ' – heute noch nicht');
         $('ahOnAir').classList.toggle('aus', !heuteDabei);
         $('ahXpText').textContent = xp.toLocaleString('de-DE') + ' XP';
         tu(() => {
