@@ -23618,7 +23618,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 84, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 85, datum: '06.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -54556,6 +54556,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function sprechblase(html, spaet){
         const s = $('awSprech');
         s.innerHTML = html;
+        tu(() => { if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && window.appFunki && appFunki.sagt){
+            const t = String(html).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            if(t) setTimeout(() => tu(() => appFunki.sagt(t)), spaet ? 600 : 50); } });
         s.style.animationDelay = spaet ? '0.55s' : '0s';
         s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop');
     }
@@ -54687,7 +54690,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     $('awFunki').addEventListener('click', () => {
         const mk = $('awFunki').querySelector('.mk');
         if(mk){ mk.classList.remove('hops'); void mk.offsetWidth; mk.classList.add('hops'); }
-        tu(() => funkiGeraeusch(Math.random() < 0.6 ? 'lachen' : 'bliep'));
+        if(!(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro')) tu(() => funkiGeraeusch(Math.random() < 0.6 ? 'lachen' : 'bliep'));
         const b = WERK_BLAETTER[werk.art];
         sprechblase(zufall(KITZEL) + ' ' + (b ? zufall(b.satz()) : ''));
     });
