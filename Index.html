@@ -23633,7 +23633,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 99, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 100, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -43238,7 +43238,6 @@ function showRealisticFinal(){
       const voll = completedOrder.length >= realisticTeile().length;
       pruefungMerken(results.length ? totalErrors / results.length : 25, totalStatus === 'bestanden', voll, true);
       const zHtml = pruefZettelHtml(st, ct, voll && totalStatus === 'bestanden', { real: true });
-      if(totalStatus === 'bestanden'){ try{ triggerConfetti(false); }catch(e){} }
       window._zettelReal = true; zettelEinblenden(zHtml); window._zettelReal = false;
       const zo = document.getElementById('zettelVorn');
       if(zo){ zo.style.display = 'none'; setTimeout(() => { zo.style.display = ''; }, totalStatus === 'bestanden' ? 1600 : 900); }
@@ -43271,7 +43270,9 @@ function showRealisticFinal(){
       }
     }
     if(speechText && typeof speakExamResult==='function'){
-      setTimeout(()=>{ try{ speakExamResult(speechText); }catch(e){} }, 700);
+      if(totalStatus === 'bestanden' && !realisticExam.duo && typeof triggerConfetti === 'function'){
+        triggerConfetti(true, () => { try{ speakExamResult(speechText); }catch(e){} });
+      } else setTimeout(()=>{ try{ speakExamResult(speechText); }catch(e){} }, 700);
     }
   }catch(e){ console.error('Final TTS', e); }
   realisticExam.active=false;

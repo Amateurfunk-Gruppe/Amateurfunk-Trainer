@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 99 · 07.10.2026
+Stand 100 · 07.10.2026
 
 ### Hinzugefügt
+- Prüfungssimulator bestanden: jetzt mit **Fanfare und Konfetti** wie bei den anderen Runden, die Ansage kommt nach der Fanfare.
 - Prüfungssimulator: Das **Konfetti** ist jetzt auch hier zu sehen – es flog bisher hinter dem Fenster. Die Ergebnis-Kacheln haben kein Loch mehr: Passen nur zwei nebeneinander, geht „Technik“ über die ganze Breite; auf breiten Bildschirmen stehen alle drei in einer Reihe.
 - **Prüfungssimulator zählt jetzt mit:** Der Simulator mit Vorschriften, Betrieb und Technik nacheinander wurde beim Zähler „10 Prüfungssimulationen“ nicht mitgezählt. Jetzt gibt es nach jedem Teil den Zettel für diesen Teil und ganz am Ende den Gesamtzettel – mit allen Teilen, bei Bestehen mit Konfetti, angekreuzter Klasse und dem Zähler.
 - **Letzte Stufe mit Zähler:** Die höchste Stufe (Amateurfunk-Klasse N, E oder A) gibt es jetzt für **10 bestandene Prüfungssimulationen** (Prüfungstag mit allen Teilen des Prüfungsziels). Ein Zähler „3 von 10 Prüfungssimulationen bestanden“ steht bei „Deine Stufen“, an der Level-Karte, auf dem Prüfungszettel und auf dem Zettel nach jeder bestandenen Simulation. Nicht bestandene Simulationen setzen ihn nicht zurück. (Ersetzt die Regel „Schnitt der letzten 10 Prüfungen“.)
