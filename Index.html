@@ -1670,6 +1670,10 @@
         html.pc-breit #kartenSpiel .ks-kopf .ks-stand { order: 2; }
         html.pc-breit #kartenSpiel .ks-kopf .ks-titel { order: 1; padding-left: 4px; }
 
+        /* P90: Ergebnis des Pruefungssimulators - kein Loch neben der letzten Kachel */
+        .rf-teile > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+        @media (min-width: 560px) { .rf-teile:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, 1fr) !important; } .rf-teile > :last-child:nth-child(odd) { grid-column: auto; } }
+
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
            Dietmar: "A gefaellt mir gut. Ich moechte da aber noch das mit
@@ -23629,7 +23633,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 98, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 99, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35416,7 +35420,7 @@ function triggerConfetti(withFanfare = true, afterFanfareCallback = null, versuc
     const canvas = document.getElementById('confettiCanvas');
     if (canvas) { canvas.style.display = 'block'; canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     if (withFanfare) { playFanfare(afterFanfareCallback); }
-    var defaults = { spread: 360, ticks: 70, gravity: 0, decay: 0.94, startVelocity: 30, colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8'] };
+    var defaults = { zIndex: 100000, spread: 360, ticks: 70, gravity: 0, decay: 0.94, startVelocity: 30, colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8'] };
     function shoot() {
         try {
             confettiFn({ ...defaults, particleCount: 40, scalar: 1.2, shapes: ['star'] });
@@ -43184,7 +43188,7 @@ function showRealisticFinal(){
           <div class="sub" style="margin-top:8px; text-align:center;">${realisticExam.duo
             ? `Zusammen <b>${totalCorrect}/${totalQuestions}</b> richtig – aber gewertet wird <b>jeder Bogen für sich</b>: bestanden ist nur, wer überall mindestens 19 von 25 hat.`
             : `Gesamt: <b>${totalCorrect}/${totalQuestions}</b> richtig (${Math.round(totalCorrect/totalQuestions*100)}%) – <b>${totalErrors} Fehler</b>`}</div>
-          <div style="margin:1.1rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">${partsHtml}</div>
+          <div class="rf-teile" style="margin:1.1rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">${partsHtml}</div>
           <div style="margin-top:8px;font-size:0.85rem;background:#f4f7fd;border:1px solid var(--line);border-radius:10px;padding:0.7rem;">${results.length===1 ? `<b>📊 Nur ${REALISTIC_PART_META[completedOrder[0]]?.name || completedOrder[0]}:</b> ${totalCorrect >= 19 ? '✅ Bestanden' : totalCorrect >= 17 ? '⚠️ Grauzone' : '❌ Nicht bestanden'} – Nur dieser Teil wurde geprüft.` : `BNetzA: ≥19 bestanden, 17-18 Grauzone, <17 nicht bestanden.${grauOhneNachpruefung ? ' Mündlich nachgeprüft wird nur, wenn <b>lediglich ein Teil</b> knapp daneben liegt und alle anderen bestanden sind – die knappen Teile lassen sich einzeln wiederholen.' : ''}`}</div>
           ${muendlichAngebot}
           <div class="btn-group" style="margin-top:1rem; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
