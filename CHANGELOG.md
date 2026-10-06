@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 96 · 06.10.2026
+Stand 98 · 07.10.2026
 
 ### Hinzugefügt
+- **Prüfungssimulator zählt jetzt mit:** Der Simulator mit Vorschriften, Betrieb und Technik nacheinander wurde beim Zähler „10 Prüfungssimulationen“ nicht mitgezählt. Jetzt gibt es nach jedem Teil den Zettel für diesen Teil und ganz am Ende den Gesamtzettel – mit allen Teilen, bei Bestehen mit Konfetti, angekreuzter Klasse und dem Zähler.
 - **Letzte Stufe mit Zähler:** Die höchste Stufe (Amateurfunk-Klasse N, E oder A) gibt es jetzt für **10 bestandene Prüfungssimulationen** (Prüfungstag mit allen Teilen des Prüfungsziels). Ein Zähler „3 von 10 Prüfungssimulationen bestanden“ steht bei „Deine Stufen“, an der Level-Karte, auf dem Prüfungszettel und auf dem Zettel nach jeder bestandenen Simulation. Nicht bestandene Simulationen setzen ihn nicht zurück. (Ersetzt die Regel „Schnitt der letzten 10 Prüfungen“.)
 - Der Zettel kommt jetzt auch bei **nicht bestanden** (ohne Konfetti): „Nicht bestanden – gebraucht werden 19 von 25“. Sind in der Simulation nur einzelne Teile geschafft, sind nur diese angekreuzt, dazu der Hinweis: In der echten Prüfung werden bestandene Teile bei der Wiederholung angerechnet – laut Bundesnetzagentur innerhalb von 24 Monaten (mit Datum), danach muss alles neu geprüft werden.
 - **Der Zettel kommt mit dem Konfetti:** Wer bestanden hat – Prüfungssimulation, 25er-Prüfungsrunde eines Teils oder eine Übungsrunde ab 25 Fragen –, bekommt nach dem Konfetti den Zettel mit der Auswertung groß nach vorn geschwungen. Antippen daneben oder „Schließen“ macht ihn zu; bei Prüfungen bleibt er zusätzlich unter dem Ergebnis stehen.

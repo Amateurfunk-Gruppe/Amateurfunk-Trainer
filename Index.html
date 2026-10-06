@@ -23629,7 +23629,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 96, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 98, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -36021,6 +36021,7 @@ const PRUEF_ANZAHL = 10, PRUEF_MAX_FEHLER = 5;
 // P85: Zettel unter dem Pruefungsergebnis. status: { vorschriften: 'bestanden'|'nachpruefung'|'nicht_bestanden'|null, ... }
 function pruefZettelHtml(status, counts, alleBestanden, opts){
     opts = opts || {};
+
     const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     let name = ''; try{ name = getUserName(currentUser) || ''; }catch(x){}
     if(!name){ try{ name = localStorage.getItem('duo_userName') || ''; }catch(x){} }
@@ -36057,6 +36058,7 @@ window.pruefZettelHtml = pruefZettelHtml;
 function zettelEinblenden(html){
     try{
         if(!html) return;
+
         const alt = document.getElementById('zettelVorn'); if(alt) alt.remove();
         if(!document.getElementById('zettelVornCss')){
             const st = document.createElement('style'); st.id = 'zettelVornCss';
@@ -36087,8 +36089,9 @@ function pruefSchnitt(){
     return { n: n, f: n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : 0, ok: l.filter(x => x.ok).length, voll: PRUEF_ANZAHL, max: PRUEF_MAX_FEHLER, sim: simGezaehlt(b) };
 }
 function simGezaehlt(b){ try{ return +((JSON.parse(localStorage.getItem('amateurfunk_simok_' + String(currentUser)) || '{}') || {})[b || pruefZielBuchstabe()]) || 0; }catch(e){ return 0; } }
-function pruefungMerken(fehlerJe25, bestanden, simulation){
+function pruefungMerken(fehlerJe25, bestanden, simulation, real){
     try{
+        if(!real && window.realisticExam && realisticExam.active) return;   // P89: Teile des Simulators zaehlen erst am Ende
         if(typeof isTrainerViewActive !== 'undefined' && isTrainerViewActive) return;
         const b = pruefZielBuchstabe(), l = pruefListe();
         l.push({ k: b, d: new Date().toISOString().slice(0, 10), f: Math.round(fehlerJe25 * 10) / 10, ok: !!bestanden });
@@ -43222,6 +43225,20 @@ function showRealisticFinal(){
       einzel = (typeof verlaufEinzelheiten === 'function') ? verlaufEinzelheiten(alle, stand, totalQuestions, totalCorrect) : undefined;
     }catch(e){ einzel = undefined; }
     addHistoryEntry(histName, totalQuestions, totalCorrect, histStatus, einzel);
+  }
+  // P89: zaehlen und Zettel zeigen (nicht im Gruppenraum)
+  if(!realisticExam.duo){
+    try{
+      const st = {}, ct = {};
+      completedOrder.forEach((p, i) => { const k = (REALISTIC_PART_META[p] || {}).part || p; st[k] = results[i].status; ct[k] = results[i].correct; });
+      const voll = completedOrder.length >= realisticTeile().length;
+      pruefungMerken(results.length ? totalErrors / results.length : 25, totalStatus === 'bestanden', voll, true);
+      const zHtml = pruefZettelHtml(st, ct, voll && totalStatus === 'bestanden', { real: true });
+      if(totalStatus === 'bestanden'){ try{ triggerConfetti(false); }catch(e){} }
+      window._zettelReal = true; zettelEinblenden(zHtml); window._zettelReal = false;
+      const zo = document.getElementById('zettelVorn');
+      if(zo){ zo.style.display = 'none'; setTimeout(() => { zo.style.display = ''; }, totalStatus === 'bestanden' ? 1600 : 900); }
+    }catch(e){}
   }
   // Piper Ansage für Gesamt
   try{
