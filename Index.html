@@ -15790,7 +15790,8 @@ function benutzerSchluessel(slot){
         'amateurfunk_blaetterbuch_'   + slot,   // Lesezeichen im Blaettern
         'afu_qsl_'                    + slot,   // Diplome
         'amateurfunk_legende_'        + slot,   // letzte Stufe (pruefungsreif)
-        'amateurfunk_pruefungen_'     + slot    // die letzten Pruefungen (Fehler je 25)
+        'amateurfunk_pruefungen_'     + slot,   // die letzten Pruefungen (Fehler je 25)
+        'amateurfunk_simok_'          + slot    // Zaehler bestandene Pruefungssimulationen
     ];
 }
 
@@ -23628,7 +23629,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 93, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 96, datum: '06.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -36018,7 +36019,8 @@ window.rundeFertigZu = rundeFertigZu;
 // ================================================================
 const PRUEF_ANZAHL = 10, PRUEF_MAX_FEHLER = 5;
 // P85: Zettel unter dem Pruefungsergebnis. status: { vorschriften: 'bestanden'|'nachpruefung'|'nicht_bestanden'|null, ... }
-function pruefZettelHtml(status, counts, alleBestanden){
+function pruefZettelHtml(status, counts, alleBestanden, opts){
+    opts = opts || {};
     const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     let name = ''; try{ name = getUserName(currentUser) || ''; }catch(x){}
     if(!name){ try{ name = localStorage.getItem('duo_userName') || ''; }catch(x){} }
@@ -36036,31 +36038,69 @@ function pruefZettelHtml(status, counts, alleBestanden){
     const linie = (t, w) => '<div style="display:flex;align-items:flex-end;gap:10px;margin:8px 0 0;"><span style="font-size:.8rem;color:#555;white-space:nowrap;">' + t + '</span><span style="flex:1;border-bottom:1px solid #333;text-align:center;font-weight:700;padding:0 4px 2px;min-height:1.2em;">' + e(w) + '</span></div>';
     return '<div style="background:#fbfbf8;color:#1d1d1d;border-radius:6px;box-shadow:0 6px 22px rgba(0,0,0,.18);padding:18px 18px 14px;margin:16px auto 6px;max-width:520px;text-align:left;font-family:\'Segoe UI\',Roboto,Arial,sans-serif;">'
       + '<div style="font-size:.72rem;color:#555;"><i class="fas fa-tower-broadcast" style="color:#0e7c86;font-size:.85rem !important;display:inline !important;margin:0 !important;"></i> Amateurfunk-Trainer</div>'
-      + '<div style="text-align:center;margin:10px 0 2px;font-size:1.25rem;font-weight:800;line-height:1.2;">Information nach der Prüfungssimulation</div>'
+      + '<div style="text-align:center;margin:10px 0 2px;font-size:1.25rem;font-weight:800;line-height:1.2;">' + (opts.runde ? 'Information nach der Übungsrunde' : 'Information nach der Prüfungssimulation') + '</div>'
       + linie('Name', name || ' ') + linie('hat am', datum)
-      + '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">folgende Teile bestanden:</div>'
-      + '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">' + teil('vorschriften', 'Vorschriften') + teil('betrieb', 'Betrieb') + teil('technik', 'Technik') + '</div>'
+      + (opts.runde
+          ? '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">Ergebnis der Runde:</div><div style="display:flex;justify-content:center;">' + kreuz(opts.runde.ok, e(opts.runde.titel), opts.runde.richtig + '/' + opts.runde.gesamt + ' richtig', false) + '</div>'
+          : '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">folgende Teile bestanden:</div>'
+            + '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">' + teil('vorschriften', 'Vorschriften') + teil('betrieb', 'Betrieb') + teil('technik', 'Technik') + '</div>')
+      + (alleBestanden && !opts.runde ? '<div style="text-align:center;font-size:.85rem;margin:10px 0 0;"><b>Zähler:</b> ' + Math.min(pruefSchnitt().sim, 10) + ' von 10 Prüfungssimulationen bestanden' + (pruefSchnitt().sim >= 10 ? ' – letzte Stufe erreicht!' : '') + '</div>' : '')
       + (alleBestanden ? '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 6px;">und damit die Klasse:</div><div style="display:flex;justify-content:center;">' + kreuz(true, 'Klasse ' + kl, 'alle Teile bestanden', false) + '</div>' : '')
-      + '<div style="text-align:center;font-weight:800;font-size:1.05rem;margin:12px 0 6px;">' + (alleBestanden ? 'Herzlichen Glückwunsch!' : bestandeneTeile.length ? 'Gut gemacht – ' + (bestandeneTeile.length === 1 ? 'ein Teil' : bestandeneTeile.length + ' Teile') + ' geschafft!' : 'Nicht aufgeben – nächstes Mal klappt’s!') + '</div>'
+      + (opts.runde && !opts.runde.ok ? '<div style="text-align:center;font-weight:800;font-size:1.05rem;margin:12px 0 2px;color:#b3261e;">Nicht bestanden</div><div style="text-align:center;font-size:.8rem;color:#555;margin-bottom:6px;">Gebraucht werden ' + Math.ceil(opts.runde.gesamt * 0.76) + ' von ' + opts.runde.gesamt + ' – nächstes Mal klappt’s!</div>' : '')
+      + (!opts.runde && !alleBestanden && bestandeneTeile.length ? '<div style="font-size:.78rem;background:#eef6ee;border:1px solid #cfe3cf;border-radius:6px;padding:7px 9px;margin:10px 0 4px;">In der echten Prüfung werden bestandene Teile bei der Wiederholung angerechnet – laut Bundesnetzagentur innerhalb von <b>24 Monaten</b> (hier also bis <b>' + (() => { const d = new Date(); d.setMonth(d.getMonth() + 24); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); })() + '</b>). Danach muss alles neu geprüft werden.</div>' : '')
+      + (opts.runde && !opts.runde.ok ? '' : '<div style="text-align:center;font-weight:800;font-size:1.05rem;margin:12px 0 6px;">' + ((alleBestanden || (opts.runde && opts.runde.ok)) ? 'Herzlichen Glückwunsch!' : bestandeneTeile.length ? 'Gut gemacht – ' + (bestandeneTeile.length === 1 ? 'ein Teil' : bestandeneTeile.length + ' Teile') + ' geschafft!' : 'Nicht aufgeben – nächstes Mal klappt’s!') + '</div>')
       + '<div style="font-size:.68rem;color:#666;border-top:1px solid #ddd;padding-top:6px;margin-top:6px;">Dieser Zettel ist keine Prüfungsbescheinigung. Er zeigt nur dein Ergebnis im Trainer.</div>'
       + '</div>';
 }
 window.pruefZettelHtml = pruefZettelHtml;
+// P86: Nach bestandener Runde kommt der Zettel mit dem Konfetti nach vorn - antippen oder "Schliessen" macht ihn zu.
+function zettelEinblenden(html){
+    try{
+        if(!html) return;
+        const alt = document.getElementById('zettelVorn'); if(alt) alt.remove();
+        if(!document.getElementById('zettelVornCss')){
+            const st = document.createElement('style'); st.id = 'zettelVornCss';
+            st.textContent = '#zettelVorn{position:fixed;inset:0;z-index:99990;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;animation:zvHell .25s ease-out}'
+              + '#zettelVorn .zv-blatt{width:min(520px,100%);animation:zvRein .55s cubic-bezier(.2,1.3,.4,1) both}'
+              + '#zettelVorn .zv-blatt > div{margin:0 auto !important}'
+              + '#zettelVorn .zv-zu{display:block;margin:12px auto 0;padding:10px 26px;border:0;border-radius:999px;background:#fff;color:#0f2745;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}'
+              + '@keyframes zvHell{from{opacity:0}to{opacity:1}}@keyframes zvRein{from{opacity:0;transform:translateY(40px) rotate(-6deg) scale(.85)}to{opacity:1;transform:none}}'
+              + '@media (prefers-reduced-motion: reduce){#zettelVorn,#zettelVorn .zv-blatt{animation:none}}';
+            document.head.appendChild(st);
+        }
+        const o = document.createElement('div'); o.id = 'zettelVorn'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Dein Zettel');
+        o.innerHTML = '<div class="zv-blatt">' + html + '<button type="button" class="zv-zu">Schließen</button></div>';
+        // Das Konfetti fliegt ueber dem Zettel weiter
+        const cv = document.getElementById('confettiCanvas');
+        if(cv){ cv.style.zIndex = '99995'; cv.style.pointerEvents = 'none'; }
+        const zu = () => { o.remove(); if(cv) cv.style.zIndex = ''; };
+        o.addEventListener('click', ev => { if(ev.target === o || ev.target.closest('.zv-zu')) zu(); });
+        document.addEventListener('keydown', function esc(ev){ if(ev.key === 'Escape'){ zu(); document.removeEventListener('keydown', esc); } });
+        document.body.appendChild(o);
+    }catch(e){}
+}
+window.zettelEinblenden = zettelEinblenden;
 function pruefZielBuchstabe(){ try{ const id = klasseAktuell().id; return id === 'ea' ? 'a' : (id === 'e' || id === 'ne') ? 'e' : 'n'; }catch(e){ return 'n'; } }
 function pruefListe(){ try{ return JSON.parse(localStorage.getItem('amateurfunk_pruefungen_' + String(currentUser)) || '[]') || []; }catch(e){ return []; } }
 function pruefSchnitt(){
     const b = pruefZielBuchstabe(), l = pruefListe().filter(x => x && x.k === b).slice(-PRUEF_ANZAHL), n = l.length;
-    return { n: n, f: n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : 0, ok: l.filter(x => x.ok).length, voll: PRUEF_ANZAHL, max: PRUEF_MAX_FEHLER };
+    return { n: n, f: n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : 0, ok: l.filter(x => x.ok).length, voll: PRUEF_ANZAHL, max: PRUEF_MAX_FEHLER, sim: simGezaehlt(b) };
 }
-function pruefungMerken(fehlerJe25, bestanden){
+function simGezaehlt(b){ try{ return +((JSON.parse(localStorage.getItem('amateurfunk_simok_' + String(currentUser)) || '{}') || {})[b || pruefZielBuchstabe()]) || 0; }catch(e){ return 0; } }
+function pruefungMerken(fehlerJe25, bestanden, simulation){
     try{
         if(typeof isTrainerViewActive !== 'undefined' && isTrainerViewActive) return;
         const b = pruefZielBuchstabe(), l = pruefListe();
         l.push({ k: b, d: new Date().toISOString().slice(0, 10), f: Math.round(fehlerJe25 * 10) / 10, ok: !!bestanden });
         while(l.length > 60) l.shift();
         localStorage.setItem('amateurfunk_pruefungen_' + String(currentUser), JSON.stringify(l));
-        const s = pruefSchnitt();
-        if(s.n >= PRUEF_ANZAHL && s.f <= PRUEF_MAX_FEHLER){
+        // P88: Zaehler der bestandenen Pruefungssimulationen - bei 10 gibt es die letzte Stufe
+        if(simulation && bestanden){
+            const zk = 'amateurfunk_simok_' + String(currentUser);
+            let z = {}; try{ z = JSON.parse(localStorage.getItem(zk) || '{}') || {}; }catch(e){ z = {}; }
+            z[b] = (+z[b] || 0) + 1; localStorage.setItem(zk, JSON.stringify(z));
+        }
+        if(simGezaehlt(b) >= PRUEF_ANZAHL){
             const k = 'amateurfunk_legende_' + String(currentUser);
             let d = {}; try{ d = JSON.parse(localStorage.getItem(k) || '{}') || {}; }catch(e){ d = {}; }
             if(!d[b]){ d[b] = new Date().toISOString().slice(0, 10); localStorage.setItem(k, JSON.stringify(d)); }
@@ -36069,8 +36109,7 @@ function pruefungMerken(fehlerJe25, bestanden){
 }
 function pruefSchnittText(){
     const s = pruefSchnitt();
-    if(!s.n) return 'Noch keine Prüfung gemacht.';
-    return s.n + ' von ' + s.voll + ' Prüfungen · ' + s.ok + ' bestanden · Schnitt ' + s.f.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' Fehler';
+    return Math.min(s.sim, s.voll) + ' von ' + s.voll + ' Prüfungssimulationen bestanden';
 }
 window.pruefSchnitt = pruefSchnitt; window.pruefSchnittText = pruefSchnittText;
 function renderFinishScreen(isTimeUp = false) {
@@ -36159,7 +36198,7 @@ function renderFinishScreen(isTimeUp = false) {
         const testedErrors = testedTotal - testedCorrect;
 
         // P83: Jede Pruefung wird gemerkt (Fehler je 25 Fragen) - daraus rechnet sich die letzte Stufe
-        try{ if (!examFinished) pruefungMerken(testedParts.length ? testedErrors / testedParts.length : 25, overallStatus === 'bestanden'); }catch(e){}
+        try{ if (!examFinished) pruefungMerken(testedParts.length ? testedErrors / testedParts.length : 25, overallStatus === 'bestanden', testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length); }catch(e){}
         if (!examFinished) {
             const histStatus = overallStatus==='bestanden' ? 'pass' : overallStatus==='nachpruefung' ? 'grauzone' : 'fail';
             addHistoryEntry(testedParts.length===3 ? 'Simulator 75' : `Simulator (${testedParts.map(p=>labelOf[p]).join('+')})`, testedTotal, testedCorrect, histStatus);
@@ -36216,7 +36255,7 @@ function renderFinishScreen(isTimeUp = false) {
                     ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
                 </div>
             </div>`;
-        if(overallStatus==='bestanden') { triggerConfetti(true, () => speakExamResult(speechText)); } else { speakExamResult(speechText); }
+        if(overallStatus==='bestanden') { triggerConfetti(true, () => speakExamResult(speechText)); setTimeout(() => zettelEinblenden(pruefZettelHtml(statusMap, counts, testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length)), 1600); } else { speakExamResult(speechText); setTimeout(() => zettelEinblenden(pruefZettelHtml(statusMap, counts, false)), 900); }
         examSimulatorMode = false;
     } else if (examMode) {
         const required = 19;
@@ -36251,7 +36290,7 @@ function renderFinishScreen(isTimeUp = false) {
                     ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
                 </div>
             </div>`;
-        if(correct>=required) { triggerConfetti(true); } else { /* Sprache entfernt */ }
+        if(correct>=required) { triggerConfetti(true); setTimeout(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = 'bestanden'; ct[k] = correct; } zettelEinblenden(pruefZettelHtml(st, ct, false)); }catch(e){} }, 1600); } else { setTimeout(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = 'nicht_bestanden'; ct[k] = correct; } zettelEinblenden(pruefZettelHtml(st, ct, false)); }catch(e){} }, 900); }
     } else {
         // ---- Ausgelassene Fragen: keine Wertung, eine Uebersicht ----
         //
@@ -36304,7 +36343,15 @@ function renderFinishScreen(isTimeUp = false) {
                 </div>
                 <div style="margin-top:8px; font-size:0.8rem; color:var(--muted);">${pass ? '✅ Bestanden! (19/25)' : '❌ 19/25 benötigt'}</div>
             </div>`;
-        if(pass) { triggerConfetti(true); } else { /* Sprache entfernt */ }
+        if(pass) triggerConfetti(true);
+        {
+            if(total >= 25) setTimeout(() => { try{
+                const teile = [...new Set(currentQuestions.map(q => q.part))];
+                const NAMEN = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+                const titel = teile.length === 1 && NAMEN[teile[0]] ? NAMEN[teile[0]] : 'Gemischte Runde';
+                zettelEinblenden(pruefZettelHtml({}, {}, false, { runde: { titel: titel, richtig: correct, gesamt: total, ok: pass } }));
+            }catch(e){} }, pass ? 1600 : 900);
+        }
     }
     isQuizActive = false;
     updateVisibility();
@@ -54289,7 +54336,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const vorPruefung = nr === LETZTE() - 1;
         balkenSetzen($('awStufeBar'), vorPruefung ? 1 : naechste ? (xp - ab) / (naechste - ab) : 1);
         const fehlt = naechste ? Math.ceil((naechste - xp) / 10) : 0;
-        setText($('awStufeNoch'), vorPruefung ? 'Stufe 17: 10 Prüfungen mit höchstens 5 Fehlern im Schnitt. ' + (window.pruefSchnittText ? pruefSchnittText() : '')
+        setText($('awStufeNoch'), vorPruefung ? 'Stufe 17: 10 Prüfungssimulationen bestehen – ' + (window.pruefSchnittText ? pruefSchnittText() : '') + '.'
             : naechste ? 'Noch ' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + (nr + 2) : 'Höchste Stufe – Prüfung bestanden!');
         const al = 'Dein Level: Stufe ' + (nr + 1) + ', ' + STUFEN_NAMEN[nr] + '. Alle Stufen ansehen';
         if($('awLevel').getAttribute('aria-label') !== al) $('awLevel').setAttribute('aria-label', al);
@@ -54450,7 +54497,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      erklaer: 'Jede richtige Antwort bringt dir <b>10 XP</b>, jeder Versuch <b>2 XP</b>. Mit genug XP steigst du eine Stufe auf!',
                      sprich: 'So hoch kannst du steigen!' },
         zettel:    { titel: 'Dein Prüfungszettel', farbe: 'gruen', icon: 'fa-file-signature', satz: () => ['Am Ende zählt nur: bestanden!', 'Ein Kreuz – und du bist dabei!'],
-                     erklaer: 'Das ist dein <b>Prüfungszettel</b>. Schaffst du 10 Prüfungen mit höchstens <b>5 Fehlern</b> im Schnitt, kommt das <b>Kreuz</b> drauf!',
+                     erklaer: 'Das ist dein <b>Prüfungszettel</b>. Bestehst du <b>10 Prüfungssimulationen</b>, kommt das <b>Kreuz</b> drauf!',
                      sprich: 'Am Ende zählt nur: bestanden!' }
     };
     var werkBlatt = D.createElement('div');
@@ -54622,8 +54669,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + zeile('hat am', datum || ' ')
           + '<div style="text-align:center;font-size:.85rem;color:#555;margin:14px 0 8px;">folgende Klasse prüfungsreif geübt:</div>'
           + '<div style="display:flex;justify-content:space-around;margin:0 0 14px;">' + kasten('n') + kasten('e') + kasten('a') + '</div>'
-          + '<div style="text-align:center;font-weight:800;font-size:1.1rem;margin-bottom:10px;">' + (geschafft ? 'Herzlichen Glückwunsch!' : 'Noch ' + Math.max(0, (s.voll || 10) - s.n) + ' Prüfungen bis zur Wertung') + '</div>'
-          + '<div style="font-size:.85rem;text-align:center;margin-bottom:12px;"><b>Letzte Prüfungen:</b> ' + esc(window.pruefSchnittText ? pruefSchnittText() : '') + '<br><span style="color:#555;">Ziel: 10 Prüfungen, im Schnitt höchstens 5 Fehler je 25 Fragen</span></div>'
+          + '<div style="text-align:center;font-weight:800;font-size:1.1rem;margin-bottom:10px;">' + (geschafft ? 'Herzlichen Glückwunsch!' : 'Noch ' + Math.max(0, (s.voll || 10) - (s.sim || 0)) + ' bestandene Prüfungssimulationen') + '</div>'
+          + '<div style="font-size:.85rem;text-align:center;margin-bottom:12px;"><b>Zähler:</b> ' + esc(window.pruefSchnittText ? pruefSchnittText() : '') + '<br><span style="color:#555;">Ziel: 10 bestandene Prüfungssimulationen</span></div>'
           + '<div style="font-size:.72rem;color:#666;border-top:1px solid #ddd;padding-top:8px;">Dieser Zettel ist keine Prüfungsbescheinigung. Er zeigt nur deinen Stand im Trainer.</div>'
           + '<div style="font-size:.8rem;margin-top:10px;"><i>Wie geht es weiter?</i>'
           + '<ol style="margin:6px 0 0 18px;padding:0;line-height:1.45;">'
@@ -54635,12 +54682,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function blattStufen(){
         const xp = xpStand(), nr = stufeNr(xp), naechste = STUFEN[nr + 1], fehlt = naechste ? Math.ceil((naechste - xp) / 10) : 0;
         return '<p class="aw-text">Du hast <b>' + xp.toLocaleString('de-DE') + ' XP</b>'
-          + (nr === LETZTE() - 1 ? '. Die letzte Stufe, <b>' + STUFEN_NAMEN[LETZTE()] + '</b>, gibt es nicht für XP, sondern für deine <b>Prüfungsreife</b>: Mach 10 Prüfungen (Prüfungstag oder eine 25er-Prüfungsrunde) – liegst du dabei im Schnitt bei <b>höchstens 5 Fehlern</b> je 25 Fragen, hast du es geschafft. Am Ende zählt nur: bestanden.</p><p class="aw-text"><b>Dein Stand:</b> ' + (window.pruefSchnittText ? pruefSchnittText() : '') + '.'
+          + (nr === LETZTE() - 1 ? '. Die letzte Stufe, <b>' + STUFEN_NAMEN[LETZTE()] + '</b>, gibt es nicht für XP, sondern für deine <b>Prüfungsreife</b>: Bestehe <b>10 Prüfungssimulationen</b> (Prüfungstag, alle Teile deines Prüfungsziels). Am Ende zählt nur: bestanden.</p><p class="aw-text"><b>Dein Zähler:</b> ' + (window.pruefSchnittText ? pruefSchnittText() : '') + '.'
              : naechste ? ' – noch <b>' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + '</b> bis ' + (/Kanone/.test(STUFEN_NAMEN[nr + 1]) ? 'zur' : 'zum') + ' <b>' + STUFEN_NAMEN[nr + 1] + '</b>.' : '. Prüfungsreif – höher geht’s nicht!') + '</p>'
           + '<button type="button" class="aw-link" data-tat="zettel" style="margin:0 0 10px;"><i class="fas fa-file-signature"></i> Dein Prüfungszettel</button>'
           + STUFEN.map((ab, i) => '<div class="aw-stufe ' + (i === nr ? 'jetzt' : i < nr ? 'ok' : 'zu') + '"' + (i === nr ? ' id="awStufeJetzt"' : '') + '>'
               + '<span class="aw-sst"><i class="fas fa-star"></i><b>' + (i + 1) + '</b></span>'
-              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i === LETZTE() ? '10 Prüfungen, im Schnitt höchstens 5 Fehler' : i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
+              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i === LETZTE() ? '10 Prüfungssimulationen bestehen' + (window.pruefSchnitt ? ' · ' + Math.min(10, pruefSchnitt().sim) + ' / 10' : '') : i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
               + (i === nr ? '<span class="aw-du">DU</span>' : i < nr ? '<i class="fas fa-circle-check aw-ok"></i>' : '<i class="fas fa-lock aw-schloss"></i>') + '</div>').join('');
     }
     function terminInfoZeigen(){
