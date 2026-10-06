@@ -15788,7 +15788,9 @@ function benutzerSchluessel(slot){
         'amateurfunk_pruefungstermin_'+ slot,   // Termin
         'amateurfunk_durchsicht_'     + slot,   // Blaetter-Stand
         'amateurfunk_blaetterbuch_'   + slot,   // Lesezeichen im Blaettern
-        'afu_qsl_'                    + slot    // Diplome
+        'afu_qsl_'                    + slot,   // Diplome
+        'amateurfunk_legende_'        + slot,   // letzte Stufe (pruefungsreif)
+        'amateurfunk_pruefungen_'     + slot    // die letzten Pruefungen (Fehler je 25)
     ];
 }
 
@@ -23626,7 +23628,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 90, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 93, datum: '06.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -36007,6 +36009,70 @@ function rundeFertigZu(){
 }
 window.rundeFertigZu = rundeFertigZu;
 
+// ================================================================
+//  P83 (06.10.2026): Pruefungsreife fuer die letzte Stufe
+//  Jede Pruefung (Simulation oder 25er-Pruefungsrunde eines Teils) wird
+//  je Platz und Pruefungsziel gemerkt: Fehler je 25 Fragen, bestanden ja/nein.
+//  Die letzte Stufe gibt es, sobald die letzten 10 im Schnitt hoechstens
+//  5 Fehler haben. Einmal erreicht, bleibt sie.
+// ================================================================
+const PRUEF_ANZAHL = 10, PRUEF_MAX_FEHLER = 5;
+// P85: Zettel unter dem Pruefungsergebnis. status: { vorschriften: 'bestanden'|'nachpruefung'|'nicht_bestanden'|null, ... }
+function pruefZettelHtml(status, counts, alleBestanden){
+    const e = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    let name = ''; try{ name = getUserName(currentUser) || ''; }catch(x){}
+    if(!name){ try{ name = localStorage.getItem('duo_userName') || ''; }catch(x){} }
+    const heute = new Date(), datum = String(heute.getDate()).padStart(2, '0') + '.' + String(heute.getMonth() + 1).padStart(2, '0') + '.' + heute.getFullYear();
+    const kl = pruefZielBuchstabe().toUpperCase();
+    const kreuz = (an, txt, unter, grau) => '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;min-width:82px;' + (grau ? 'opacity:.4;' : '') + '">'
+        + '<span style="display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:1rem;"><span style="width:26px;height:26px;border:2px solid #333;display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;line-height:1;color:#1a3a8a;font-family:\'Comic Sans MS\',cursive;">' + (an ? '✗' : '') + '</span>' + txt + '</span>'
+        + '<small style="font-size:.7rem;color:#666;">' + unter + '</small></span>';
+    const teil = (k, txt) => {
+        const st = status[k];
+        if(!st) return kreuz(false, txt, 'nicht geprüft', true);
+        return kreuz(st === 'bestanden', txt, counts[k] + '/25' + (st === 'nachpruefung' ? ' · Nachprüfung' : ''), false);
+    };
+    const bestandeneTeile = ['vorschriften', 'betrieb', 'technik'].filter(k => status[k] === 'bestanden');
+    const linie = (t, w) => '<div style="display:flex;align-items:flex-end;gap:10px;margin:8px 0 0;"><span style="font-size:.8rem;color:#555;white-space:nowrap;">' + t + '</span><span style="flex:1;border-bottom:1px solid #333;text-align:center;font-weight:700;padding:0 4px 2px;min-height:1.2em;">' + e(w) + '</span></div>';
+    return '<div style="background:#fbfbf8;color:#1d1d1d;border-radius:6px;box-shadow:0 6px 22px rgba(0,0,0,.18);padding:18px 18px 14px;margin:16px auto 6px;max-width:520px;text-align:left;font-family:\'Segoe UI\',Roboto,Arial,sans-serif;">'
+      + '<div style="font-size:.72rem;color:#555;"><i class="fas fa-tower-broadcast" style="color:#0e7c86;font-size:.85rem !important;display:inline !important;margin:0 !important;"></i> Amateurfunk-Trainer</div>'
+      + '<div style="text-align:center;margin:10px 0 2px;font-size:1.25rem;font-weight:800;line-height:1.2;">Information nach der Prüfungssimulation</div>'
+      + linie('Name', name || ' ') + linie('hat am', datum)
+      + '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">folgende Teile bestanden:</div>'
+      + '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">' + teil('vorschriften', 'Vorschriften') + teil('betrieb', 'Betrieb') + teil('technik', 'Technik') + '</div>'
+      + (alleBestanden ? '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 6px;">und damit die Klasse:</div><div style="display:flex;justify-content:center;">' + kreuz(true, 'Klasse ' + kl, 'alle Teile bestanden', false) + '</div>' : '')
+      + '<div style="text-align:center;font-weight:800;font-size:1.05rem;margin:12px 0 6px;">' + (alleBestanden ? 'Herzlichen Glückwunsch!' : bestandeneTeile.length ? 'Gut gemacht – ' + (bestandeneTeile.length === 1 ? 'ein Teil' : bestandeneTeile.length + ' Teile') + ' geschafft!' : 'Nicht aufgeben – nächstes Mal klappt’s!') + '</div>'
+      + '<div style="font-size:.68rem;color:#666;border-top:1px solid #ddd;padding-top:6px;margin-top:6px;">Dieser Zettel ist keine Prüfungsbescheinigung. Er zeigt nur dein Ergebnis im Trainer.</div>'
+      + '</div>';
+}
+window.pruefZettelHtml = pruefZettelHtml;
+function pruefZielBuchstabe(){ try{ const id = klasseAktuell().id; return id === 'ea' ? 'a' : (id === 'e' || id === 'ne') ? 'e' : 'n'; }catch(e){ return 'n'; } }
+function pruefListe(){ try{ return JSON.parse(localStorage.getItem('amateurfunk_pruefungen_' + String(currentUser)) || '[]') || []; }catch(e){ return []; } }
+function pruefSchnitt(){
+    const b = pruefZielBuchstabe(), l = pruefListe().filter(x => x && x.k === b).slice(-PRUEF_ANZAHL), n = l.length;
+    return { n: n, f: n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : 0, ok: l.filter(x => x.ok).length, voll: PRUEF_ANZAHL, max: PRUEF_MAX_FEHLER };
+}
+function pruefungMerken(fehlerJe25, bestanden){
+    try{
+        if(typeof isTrainerViewActive !== 'undefined' && isTrainerViewActive) return;
+        const b = pruefZielBuchstabe(), l = pruefListe();
+        l.push({ k: b, d: new Date().toISOString().slice(0, 10), f: Math.round(fehlerJe25 * 10) / 10, ok: !!bestanden });
+        while(l.length > 60) l.shift();
+        localStorage.setItem('amateurfunk_pruefungen_' + String(currentUser), JSON.stringify(l));
+        const s = pruefSchnitt();
+        if(s.n >= PRUEF_ANZAHL && s.f <= PRUEF_MAX_FEHLER){
+            const k = 'amateurfunk_legende_' + String(currentUser);
+            let d = {}; try{ d = JSON.parse(localStorage.getItem(k) || '{}') || {}; }catch(e){ d = {}; }
+            if(!d[b]){ d[b] = new Date().toISOString().slice(0, 10); localStorage.setItem(k, JSON.stringify(d)); }
+        }
+    }catch(e){}
+}
+function pruefSchnittText(){
+    const s = pruefSchnitt();
+    if(!s.n) return 'Noch keine Prüfung gemacht.';
+    return s.n + ' von ' + s.voll + ' Prüfungen · ' + s.ok + ' bestanden · Schnitt ' + s.f.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' Fehler';
+}
+window.pruefSchnitt = pruefSchnitt; window.pruefSchnittText = pruefSchnittText;
 function renderFinishScreen(isTimeUp = false) {
     // Die Runde "Noch nie geübt" bekommt ihren eigenen Abschluss - Ton und
     // Fenster, siehe rundeAbschlussMelden(). Der Aufruf steht hier oben,
@@ -36092,6 +36158,8 @@ function renderFinishScreen(isTimeUp = false) {
         const testedTotal = testedParts.length * 25;
         const testedErrors = testedTotal - testedCorrect;
 
+        // P83: Jede Pruefung wird gemerkt (Fehler je 25 Fragen) - daraus rechnet sich die letzte Stufe
+        try{ if (!examFinished) pruefungMerken(testedParts.length ? testedErrors / testedParts.length : 25, overallStatus === 'bestanden'); }catch(e){}
         if (!examFinished) {
             const histStatus = overallStatus==='bestanden' ? 'pass' : overallStatus==='nachpruefung' ? 'grauzone' : 'fail';
             addHistoryEntry(testedParts.length===3 ? 'Simulator 75' : `Simulator (${testedParts.map(p=>labelOf[p]).join('+')})`, testedTotal, testedCorrect, histStatus);
@@ -36141,6 +36209,7 @@ function renderFinishScreen(isTimeUp = false) {
                     <b>📊 Übersicht Klasse N:</b><br>
                     ${uebersichtText}
                 </div>
+                ${pruefZettelHtml(statusMap, counts, overallStatus === 'bestanden' && testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length)}
                 <div class="btn-group" style="margin-top:1rem;">
                                         <button class="btn btn-primary" onclick="startExamSimulator()"><i class="fas fa-redo"></i> Nochmal Simulator</button>
                     <button class="btn btn-primary" onclick="startQuiz()"><i class="fas fa-play"></i> Normal starten</button>
@@ -36162,6 +36231,7 @@ function renderFinishScreen(isTimeUp = false) {
         }
 
         if (!examFinished) {
+            try{ pruefungMerken(total ? errors * 25 / total : 25, correct >= required); }catch(e){}
             addHistoryEntry(currentPart, total, correct, status);
             examFinished = true;
         }
@@ -36175,6 +36245,7 @@ function renderFinishScreen(isTimeUp = false) {
                 <div style="margin-top:8px;font-size:0.8rem;color:var(--muted);">
                     ${correct >= required ? `✅ ${required}/${total} erreicht – bestanden!` : `❌ ${required}/${total} benötigt – Klasse N hat keine Grauzone`}
                 </div>
+                ${(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = correct >= required ? 'bestanden' : 'nicht_bestanden'; ct[k] = correct; } return pruefZettelHtml(st, ct, false); }catch(e){ return ''; } })()}
                 <div class="btn-group">
                                         <button class="btn btn-primary" onclick="backToMain()" style="background:#0f2745;"><i class="fas fa-home"></i> Hauptmenü</button>
                     ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
@@ -50445,9 +50516,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Stufe als Signalstaerke: S1 ... S9, danach S9+10 ... S9+60 dB
     const STUFEN = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000, 6200, 7600, 9200, 11000, 13000];
+    // P83: Die letzte Stufe gibt es nur mit bestandener Pruefungssimulation (alle drei Teile)
+    // Gespeichert je Platz als {"n":"2026-10-06","e":...} - die Stufe gilt fuer das eingestellte Pruefungsziel.
+    const legendeErreicht = () => { try{ const b = (klasseAktuell().id === 'ea') ? 'a' : (['e', 'ne'].includes(klasseAktuell().id) ? 'e' : 'n'); return !!(JSON.parse(localStorage.getItem('amateurfunk_legende_' + benutzer()) || '{}') || {})[b]; }catch(e){ return false; } };
+    window.legendeErreicht = legendeErreicht;
+    function stufeIndex(xp){ let i = 0; while(i + 2 < STUFEN.length && xp >= STUFEN[i + 1]) i++; return legendeErreicht() ? STUFEN.length - 1 : i; }
     function stufe(xp){
-        let i = 0;
-        while(i + 1 < STUFEN.length && xp >= STUFEN[i + 1]) i++;
+        let i = stufeIndex(xp);
         const name = i < 9 ? 'S' + (i + 1) : 'S9+' + ((i - 8) * 10);
         const naechste = STUFEN[i + 1];
         return { name, bis: naechste ? naechste - xp : 0, naechsteName: i + 1 < 9 ? 'S' + (i + 2) : 'S9+' + ((i - 7) * 10) };
@@ -51587,7 +51662,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Erst die Frage, dann Level, Fortschritt, Countdown und jede Kachel.
         { frage: true, text: 'Weiter unten wohnen noch dein <b>Level</b> und deine <b>Werkzeuge</b>: Verlauf, Videos, Hilfe & Kurse und mehr. Soll ich sie dir auch zeigen?',
           knoepfe: [['Ja, zeig her!', 'werkzeuge'], ['Später', 'tourende']] },
-        { teil: 2, ziel: '#awLevel', text: 'Das ist dein <b>Level</b>. Jede richtige Antwort bringt dich höher – vom <b>Funk-Neuling</b> bis zur <b>Funk-Legende</b>. Tipp drauf, dann siehst du alle Stufen!' },
+        { teil: 2, ziel: '#awLevel', text: 'Das ist dein <b>Level</b>. Jede richtige Antwort bringt dich höher – vom <b>Funk-Neuling</b> bis zur bestandenen <b>Amateurfunk-Klasse N</b>. Tipp drauf, dann siehst du alle Stufen!' },
         { teil: 2, ziel: '#awFort', text: 'Hier siehst du, wie viele Fragen schon <b>richtig sitzen</b>. Tipp einen Teil an, um ihn zu üben oder auszulassen.' },
         { teil: 2, ziel: '#awCount', text: 'Dein <b>Countdown</b> zur Prüfung. Mit Termin rechne ich dir aus, wie viele Fragen am Tag reichen. Rechnen kann ich!' },
         { teil: 2, ziel: '#awK_verlauf', text: 'Im <b>Verlauf</b> steht jede Runde. Tipp eine an – dann übst du genau ihre Fehler nochmal.' },
@@ -53105,6 +53180,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(t === 'werkzeuge'){ schreib('robo_werkzeugtour', '1'); tourSchritt(TOUR.findIndex(s => s.teil === 2)); }
         else if(t === 'tourende') tourSchritt(tourStelle('ende'));
         else if(t === 'stufen'){ roboHeim(true); werkBlattAuf('stufen'); }
+        else if(t === 'zettel'){ roboHeim(true); werkBlattAuf('zettel'); }
         else {
             if(robo.modus === 'tour') tourFertig();
             if(robo.modus === 'kurz' || robo.modus === 'hilfe') kurzWeg(); else roboHeim();
@@ -54079,8 +54155,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Die Namen der Stufen: vom Neuling bis zur Legende, keine davon
     // behauptet "pruefungsreif" - das sagen die XP nicht.
     const STUFEN_NAMEN = ['Funk-Neuling', 'Kurzwellen-Lauscher', 'Funk-Lehrling', 'Antennen-Bastler', 'QSO-Starter', 'Frequenz-Profi', 'Band-Entdecker',
-        'Funk-Ass', 'Logbuch-Kenner', 'DX-Jäger', 'Contest-Kanone', 'Relais-Genie', 'Signal-Star', 'Funk-Champion', 'Hochfrequenz-Techniker', 'Hochfrequenz-Meister', 'Funk-Legende'];
-    function stufeNr(xp){ let i = 0; while(i + 1 < STUFEN.length && xp >= STUFEN[i + 1]) i++; return i; }
+        'Funk-Ass', 'Logbuch-Kenner', 'DX-Jäger', 'Contest-Kanone', 'Relais-Genie', 'Signal-Star', 'Funk-Champion', 'Hochfrequenz-Meister', 'Hochfrequenz-Techniker', 'Amateurfunk-Klasse N'];
+    function zielBuchstabe(){ try{ const id = klasseAktuell().id; return id === 'ea' ? 'A' : (id === 'e' || id === 'ne') ? 'E' : 'N'; }catch(e){ return 'N'; } }
+    function letzterName(){ return 'Amateurfunk-Klasse ' + zielBuchstabe(); }
+    function stufeNr(xp){ STUFEN_NAMEN[STUFEN_NAMEN.length - 1] = letzterName(); return stufeIndex(xp); }
+    const LETZTE = () => STUFEN.length - 1;
     var werk = { offen: false, art: '', bearbeiten: false, auswahl: new Set(), zuUhr: 0, countK: '', aufstieg: null, sternNeu: false,
                  frisch: { awLevel: true, awFort: true }, hinweisBis: 0 };
     const WERK_TEILE = [['vorschriften', 'Vorschriften', 'v', 'learnVorschriften', 'countVorschriften'],
@@ -54207,9 +54286,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('awStern').classList.toggle('zwei', nr + 1 >= 10);
         setText($('awStufeName'), STUFEN_NAMEN[nr]);
         setText($('awStufeZeile'), 'Stufe ' + (nr + 1) + ' von ' + STUFEN.length + ' · ' + xp.toLocaleString('de-DE') + ' XP');
-        balkenSetzen($('awStufeBar'), naechste ? (xp - ab) / (naechste - ab) : 1);
+        const vorPruefung = nr === LETZTE() - 1;
+        balkenSetzen($('awStufeBar'), vorPruefung ? 1 : naechste ? (xp - ab) / (naechste - ab) : 1);
         const fehlt = naechste ? Math.ceil((naechste - xp) / 10) : 0;
-        setText($('awStufeNoch'), naechste ? 'Noch ' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + (nr + 2) : 'Höchste Stufe – du bist eine Legende!');
+        setText($('awStufeNoch'), vorPruefung ? 'Stufe 17: 10 Prüfungen mit höchstens 5 Fehlern im Schnitt. ' + (window.pruefSchnittText ? pruefSchnittText() : '')
+            : naechste ? 'Noch ' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + (nr + 2) : 'Höchste Stufe – Prüfung bestanden!');
         const al = 'Dein Level: Stufe ' + (nr + 1) + ', ' + STUFEN_NAMEN[nr] + '. Alle Stufen ansehen';
         if($('awLevel').getAttribute('aria-label') !== al) $('awLevel').setAttribute('aria-label', al);
     }
@@ -54367,7 +54448,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                      sprich: 'Wann ist dein großer Tag?' },
         stufen:    { titel: 'Deine Stufen', farbe: 'violett', icon: 'fa-star', satz: () => ['So hoch kannst du steigen!', 'Auf zur nächsten Stufe!'],
                      erklaer: 'Jede richtige Antwort bringt dir <b>10 XP</b>, jeder Versuch <b>2 XP</b>. Mit genug XP steigst du eine Stufe auf!',
-                     sprich: 'So hoch kannst du steigen!' }
+                     sprich: 'So hoch kannst du steigen!' },
+        zettel:    { titel: 'Dein Prüfungszettel', farbe: 'gruen', icon: 'fa-file-signature', satz: () => ['Am Ende zählt nur: bestanden!', 'Ein Kreuz – und du bist dabei!'],
+                     erklaer: 'Das ist dein <b>Prüfungszettel</b>. Schaffst du 10 Prüfungen mit höchstens <b>5 Fehlern</b> im Schnitt, kommt das <b>Kreuz</b> drauf!',
+                     sprich: 'Am Ende zählt nur: bestanden!' }
     };
     var werkBlatt = D.createElement('div');
     werkBlatt.id = 'appWerkBlatt';
@@ -54518,13 +54602,45 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<button type="button" class="aw-link" data-tat="terminweg" id="awTerminWeg"' + (t ? '' : ' style="display:none"') + '><i class="fas fa-xmark"></i> Termin entfernen</button>'
           + '<div class="aw-linkzeile" id="awTerminLink"></div>';
     }
+    function blattZettel(){
+        let d = {}; try{ d = JSON.parse(lies('amateurfunk_legende_' + benutzer(), '{}') || '{}') || {}; }catch(e){ d = {}; }
+        const b = zielBuchstabe().toLowerCase();
+        let name = ''; try{ name = getUserName(currentUser) || ''; }catch(e){}
+        if(!name) name = lies('duo_userName', '');
+        const s = window.pruefSchnitt ? pruefSchnitt() : { n: 0, f: 0, ok: 0, voll: 10 };
+        const datum = d[b] ? d[b].split('-').reverse().join('.') : '';
+        const kasten = k => '<span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.15rem;">'
+            + '<span style="width:30px;height:30px;border:2px solid #333;display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;line-height:1;color:#1a3a8a;font-family:\'Comic Sans MS\',cursive;">' + (d[k] ? '✗' : '') + '</span>' + k.toUpperCase() + '</span>';
+        const zeile = (t, w) => '<div style="display:flex;align-items:flex-end;gap:10px;margin:10px 0 0;"><span style="font-size:.85rem;color:#555;white-space:nowrap;">' + t + '</span>'
+            + '<span style="flex:1;border-bottom:1px solid #333;text-align:center;font-weight:700;padding:0 4px 2px;min-height:1.3em;">' + esc(w) + '</span></div>';
+        const geschafft = !!d[b];
+        return '<div style="background:#fbfbf8;color:#1d1d1d;border-radius:6px;box-shadow:0 6px 22px rgba(0,0,0,.18);padding:22px 20px 18px;margin:4px 2px 14px;font-family:\'Segoe UI\',Roboto,Arial,sans-serif;">'
+          + '<div style="display:flex;align-items:center;gap:8px;font-size:.75rem;color:#555;"><i class="fas fa-tower-broadcast" style="color:#0e7c86;"></i> Amateurfunk-Trainer</div>'
+          + '<div style="text-align:center;margin:16px 0 6px;font-size:1.45rem;font-weight:800;line-height:1.2;">' + (geschafft ? 'Prüfungsreif!' : 'Auf dem Weg zur Prüfung') + '</div>'
+          + '<div style="text-align:center;font-size:.85rem;color:#555;">Bestätigung aus deinem Übungsstand</div>'
+          + zeile('Name', name || ' ')
+          + zeile('hat am', datum || ' ')
+          + '<div style="text-align:center;font-size:.85rem;color:#555;margin:14px 0 8px;">folgende Klasse prüfungsreif geübt:</div>'
+          + '<div style="display:flex;justify-content:space-around;margin:0 0 14px;">' + kasten('n') + kasten('e') + kasten('a') + '</div>'
+          + '<div style="text-align:center;font-weight:800;font-size:1.1rem;margin-bottom:10px;">' + (geschafft ? 'Herzlichen Glückwunsch!' : 'Noch ' + Math.max(0, (s.voll || 10) - s.n) + ' Prüfungen bis zur Wertung') + '</div>'
+          + '<div style="font-size:.85rem;text-align:center;margin-bottom:12px;"><b>Letzte Prüfungen:</b> ' + esc(window.pruefSchnittText ? pruefSchnittText() : '') + '<br><span style="color:#555;">Ziel: 10 Prüfungen, im Schnitt höchstens 5 Fehler je 25 Fragen</span></div>'
+          + '<div style="font-size:.72rem;color:#666;border-top:1px solid #ddd;padding-top:8px;">Dieser Zettel ist keine Prüfungsbescheinigung. Er zeigt nur deinen Stand im Trainer.</div>'
+          + '<div style="font-size:.8rem;margin-top:10px;"><i>Wie geht es weiter?</i>'
+          + '<ol style="margin:6px 0 0 18px;padding:0;line-height:1.45;">'
+          + '<li><b>Prüfung anmelden</b> bei der Bundesnetzagentur – Termine und Anmeldung findest du unter bundesnetzagentur.de/amateurfunk.</li>'
+          + '<li><b>Nach der bestandenen Prüfung</b> kommen Prüfungsbescheid und Prüfungsbescheinigung (Zeugnis) per Post.</li>'
+          + '<li><b>Rufzeichen beantragen:</b> Auf derselben Seite unter „Anträge und Formulare“ liegt das Formblatt zur Zulassung zum Amateurfunkdienst.</li>'
+          + '</ol></div></div>';
+    }
     function blattStufen(){
         const xp = xpStand(), nr = stufeNr(xp), naechste = STUFEN[nr + 1], fehlt = naechste ? Math.ceil((naechste - xp) / 10) : 0;
         return '<p class="aw-text">Du hast <b>' + xp.toLocaleString('de-DE') + ' XP</b>'
-          + (naechste ? ' – noch <b>' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + '</b> bis ' + (/Kanone|Legende/.test(STUFEN_NAMEN[nr + 1]) ? 'zur' : 'zum') + ' <b>' + STUFEN_NAMEN[nr + 1] + '</b>.' : '. Höher geht’s nicht – du bist ganz oben!') + '</p>'
+          + (nr === LETZTE() - 1 ? '. Die letzte Stufe, <b>' + STUFEN_NAMEN[LETZTE()] + '</b>, gibt es nicht für XP, sondern für deine <b>Prüfungsreife</b>: Mach 10 Prüfungen (Prüfungstag oder eine 25er-Prüfungsrunde) – liegst du dabei im Schnitt bei <b>höchstens 5 Fehlern</b> je 25 Fragen, hast du es geschafft. Am Ende zählt nur: bestanden.</p><p class="aw-text"><b>Dein Stand:</b> ' + (window.pruefSchnittText ? pruefSchnittText() : '') + '.'
+             : naechste ? ' – noch <b>' + fehlt + (fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + '</b> bis ' + (/Kanone/.test(STUFEN_NAMEN[nr + 1]) ? 'zur' : 'zum') + ' <b>' + STUFEN_NAMEN[nr + 1] + '</b>.' : '. Prüfungsreif – höher geht’s nicht!') + '</p>'
+          + '<button type="button" class="aw-link" data-tat="zettel" style="margin:0 0 10px;"><i class="fas fa-file-signature"></i> Dein Prüfungszettel</button>'
           + STUFEN.map((ab, i) => '<div class="aw-stufe ' + (i === nr ? 'jetzt' : i < nr ? 'ok' : 'zu') + '"' + (i === nr ? ' id="awStufeJetzt"' : '') + '>'
               + '<span class="aw-sst"><i class="fas fa-star"></i><b>' + (i + 1) + '</b></span>'
-              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
+              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i === LETZTE() ? '10 Prüfungen, im Schnitt höchstens 5 Fehler' : i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
               + (i === nr ? '<span class="aw-du">DU</span>' : i < nr ? '<i class="fas fa-circle-check aw-ok"></i>' : '<i class="fas fa-lock aw-schloss"></i>') + '</div>').join('');
     }
     function terminInfoZeigen(){
@@ -54535,7 +54651,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         zurueckgeben();
         const art = werk.art;
         const bauer = { verlauf: blattVerlauf, videos: blattVideos, hilfe: blattHilfe, ruf: blattRuf, lernstand: blattLernstand,
-                        pruefung: blattPruefung, termin: blattTermin, stufen: blattStufen }[art];
+                        pruefung: blattPruefung, termin: blattTermin, stufen: blattStufen, zettel: blattZettel }[art];
         let html = '';
         tu(() => { html = bauer ? bauer() : ''; });
         $('awInhalt').innerHTML = html;
@@ -54637,6 +54753,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const p = t.indexOf(':'), was = p < 0 ? t : t.slice(0, p), nr = p < 0 ? NaN : parseInt(t.slice(p + 1), 10);
         const l = lektionen();
         if(was === 'los'){ werkBlattZu(); rundeStarten(); }
+        else if(was === 'zettel'){ werkBlattAuf('zettel'); }
         else if(was === 'eintrag'){
             if(werk.bearbeiten){ werk.auswahl.has(nr) ? werk.auswahl.delete(nr) : werk.auswahl.add(nr); inhaltZeichnen(); return; }
             werkBlattZu(); tu(() => verlaufEintragOeffnen(nr));
@@ -54733,6 +54850,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         schreib('app_stufe_' + benutzer(), String(a.nach));
         werk.sternNeu = true;                             // der Stern springt, sobald die Karte zu sehen ist
         const name = STUFEN_NAMEN[a.nach];
+        if(a.nach === LETZTE()){
+            auftritt('<b>Herzlichen Glückwunsch – Prüfung bestanden!</b> Du hast die höchste Stufe erreicht: <b>' + esc(name) + '</b>. Du bist bereit für die echte Prüfung – bald bist du <b>Funkamateur</b>!',
+                [['Juhu!', 'heim'], ['Zettel ansehen', 'zettel']], 'tanzweg', 'tipp', 'tada');
+            funkiSagt('Juhu! {melodie} Herzlichen Glückwunsch, Prüfung bestanden! | ' + nameTon() + 'Du hast die höchste Stufe erreicht: ' + name + '. Du bist bereit für die echte Prüfung. Bald bist du Funkamateur!', true);
+            return;
+        }
         auftritt('<b>Neue Stufe!</b> Du bist jetzt <b>' + esc(name) + '</b> – Stufe ' + (a.nach + 1) + ' von ' + STUFEN.length + '. Weiter so!'
             + '<span class="rb-tipp">Alle Stufen siehst du unten bei <b>Dein Level</b>.</span>',
             [['Juhu!', 'heim'], ['Stufen ansehen', 'stufen']], 'tanzweg', 'tipp', 'tada');
