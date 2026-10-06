@@ -247,6 +247,23 @@ function letzteVeroeffentlichte() {
 // Die Regel fuer das naechste Mal: Ein Satz oder ein Befehl je System.
 // Was danach kaeme, gehoert in INSTALLATION.md.
 function beschreibung(namen, version, neue) {
+  // ================================================================
+  //  DIE KURZE BESCHREIBUNG GEHT VOR                   (06.10.2026)
+  //  Dietmar, als die Zwischenablage 62.000 Zeichen CHANGELOG trug:
+  //  "zu viel Text. Das liest niemand". Liegt im Ordner eine Datei
+  //  _Release-Beschreibung-<Fassung>.md, ist SIE die Beschreibung -
+  //  so wie beim Release 1.298.0 von Hand. Fehlt sie, der alte Weg.
+  // ================================================================
+  try{
+    const kurz = path.join(WURZEL, '_Release-Beschreibung-' + version + '.md');
+    if (fs.existsSync(kurz)) {
+      const text = fs.readFileSync(kurz, 'utf8').replace(/^\uFEFF/, '').trim();
+      if (text.length > 50) {
+        console.log('  Beschreibung: aus _Release-Beschreibung-' + version + '.md (' + text.length + ' Zeichen).');
+        return text + '\n';
+      }
+    }
+  }catch(e){}
   const finde = r => namen.find(n => r.test(n)) || null;
   const deb = finde(/\.deb$/i);
   const rpm = finde(/\.rpm$/i);

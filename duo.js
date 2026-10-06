@@ -5306,6 +5306,28 @@
             //  zurueck. Nur beim WIEDERverbinden - beim ersten Mal gibt es
             //  noch keinen Raum, in den man zurueckkehren koennte.
             // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            //  NACH EINEM NEUSTART ZURUECK IN DEN EIGENEN RAUM   (06.10.2026)
+            //  Der Server holt laufende Raeume nach einem Neustart zurueck.
+            //  Die Seite des Kursleiters ist dabei neu geladen worden und
+            //  weiss den Raum nicht mehr - wohl aber seinen Schluessel. Mit
+            //  dem klopft sie still an (nichts passiert, wenn es den Raum
+            //  nicht mehr gibt). Nur ohne Einladungslink in der Adresse.
+            // ----------------------------------------------------------------
+            if(ersteVerbindung && !roomCode){
+                try{
+                    const p = new URLSearchParams(window.location.search);
+                    if(!p.get('duo')){
+                        const alle = JSON.parse(localStorage.getItem('duo_hostSchluessel') || '{}') || {};
+                        const jung = Object.keys(alle).filter(k => alle[k] && alle[k].s && Date.now() - (alle[k].zeit || 0) < 3 * 3600000)
+                                          .sort((a, b) => (alle[b].zeit || 0) - (alle[a].zeit || 0));
+                        if(jung.length){
+                            window._duoStillZurueck = jung[0];
+                            socket.emit('joinRoom', { code: jung[0], name: getDuoUserName(), password: '', hostSchluessel: alle[jung[0]].s, still: true });
+                        }
+                    }
+                }catch(e){}
+            }
             if(!ersteVerbindung && roomCode){
                 try{
                     console.log('[DUO] Verbindung war weg - melde mich zurueck in Raum ' + roomCode);
@@ -5375,6 +5397,10 @@
         });
         socket.on('roomJoined', data=>{ console.log('[DUO] roomJoined', data); roomCode=data.code; isHost=data.hostId===myUserId||data.isHost; duoActive=true; window._duoHostId=data.hostId; showRoomUI(data);
             imRaumGewesen = true;
+            if(window._duoStillZurueck && window._duoStillZurueck === data.code){
+                window._duoStillZurueck = null;
+                setTimeout(()=>{ try{ if(window.showAppAlert) window.showAppAlert('Dein Gruppenraum ' + data.code + ' läuft weiter – der Server war nur kurz neu gestartet. Code und Link gelten noch. Wer im Raum war, macht dort weiter, wo er war.'); }catch(e){} }, 800);
+            }
             // Zurueck im Raum, waehrend die Runde hier noch laeuft (05.10.2026):
             // Was waehrend des Abrisses beantwortet wurde, hat der Server nie
             // bekommen (Dietmar mit Bild: "0 richtig / 0 falsch - laeuft

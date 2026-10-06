@@ -6747,6 +6747,83 @@ try{
   lcIo = io;          // Lerncoach: Stand an alle melden (29.09.2026)
   const duoRooms={};
 
+  // ================================================================
+  //  GRUPPENRAEUME UEBERSTEHEN EINEN NEUSTART          (06.10.2026)
+  //  ----------------------------------------------------------------
+  //  Dietmar hat den Vorschlag gewaehlt, nachdem eine Teilnehmerin am 05.10. mitten
+  //  in der Pruefung rausflog: Nach dem Update startete die App neu, und
+  //  alle Raeume lagen nur im Arbeitsspeicher.
+  //  Jetzt schreibt der Server laufende Raeume alle 10 Sekunden in
+  //  data/userdata/raeume.json (Fragen, Antworten, Chat, Namen - keine
+  //  Adressen, keine Bilder). Nach dem Start holt er sie zurueck, wenn
+  //  sie hoechstens drei Stunden alt sind. Alle Teilnehmer stehen dann
+  //  "geparkt" (siehe ZURUECK NACH ABRISS) und bekommen beim
+  //  Wiederkommen ihre Antworten. War der Server vorher offen (ON AIR)
+  //  und liegt der Neustart unter 15 Minuten, ist er es danach wieder.
+  // ================================================================
+  const RAUM_DATEI = path.join(USERDATA_DIR, 'raeume.json');
+  const RAUM_FELDER = ['code','config','questions','questionsFull','pruefungTeile','allAnswers','startTimes','finishTimes','_fertigGemeldet',
+                       '_teilGemeldet','chat','hostSchluessel','password','createdAt','finalResultsSent','_runde','lektion','geparkt'];
+  let raumStandAlt = '';
+  function raeumeSichern(){
+    try{
+      const liste = Object.values(duoRooms).filter(r => r && r.code && ((r.users && Object.keys(r.users).length) || (r.geparkt && Object.keys(r.geparkt).length)));
+      const raeume = liste.map(r => {
+        const o = {};
+        RAUM_FELDER.forEach(f => { if(r[f] !== undefined) o[f] = r[f]; });
+        o.leute = Object.entries(r.users || {}).map(([id, u]) => ({ id, name: u.name, role: u.role, sitzung: u.sitzung || '', geraet: u.geraet || '', host: id === r.hostId }));
+        return o;
+      });
+      const text = JSON.stringify({ zeit: Date.now(), tuer: !!tuerOffen, raeume });
+      if(text === raumStandAlt) return;
+      if(!raeume.length && !raumStandAlt){ return; }
+      ensureUserdataDir();
+      fs.writeFileSync(RAUM_DATEI + '.neu', text);
+      fs.renameSync(RAUM_DATEI + '.neu', RAUM_DATEI);
+      raumStandAlt = text;
+    }catch(e){ console.warn('[RAEUME] Sichern fehlgeschlagen:', e.message); }
+  }
+  function raeumeLaden(){
+    try{
+      if(!fs.existsSync(RAUM_DATEI)) return;
+      const d = JSON.parse(fs.readFileSync(RAUM_DATEI, 'utf8'));
+      const alter = Date.now() - (d.zeit || 0);
+      if(!d || !Array.isArray(d.raeume) || alter > 3 * 60 * 60 * 1000) return;
+      let n = 0;
+      d.raeume.forEach(o => {
+        if(!o || !o.code || duoRooms[o.code]) return;
+        const room = { users:{}, ipsVonTeilnehmern:{}, gesperrteIps:[], questions:[], questionsFull:[], allAnswers:{}, chat:[], hostId:null, bilder:{} };
+        RAUM_FELDER.forEach(f => { if(o[f] !== undefined) room[f] = o[f]; });
+        if(!room.geparkt) room.geparkt = {};
+        (o.leute || []).forEach(p => {
+          const schl = p.geraet || p.sitzung || ('name:' + p.name);
+          room.geparkt[schl] = {
+            name: p.name, geraet: p.geraet || '', sitzung: p.sitzung || '', zeit: Date.now(), runde: room._runde || 0,
+            antworten: (room.allAnswers && room.allAnswers[p.id]) || null,
+            start: room.startTimes ? room.startTimes[p.id] : undefined,
+            ende: room.finishTimes ? room.finishTimes[p.id] : undefined,
+            fertig: !!(room._fertigGemeldet && room._fertigGemeldet[p.id])
+          };
+        });
+        room.allAnswers = {}; room.startTimes = {}; room.finishTimes = {}; room._fertigGemeldet = {}; room._teilGemeldet = room._teilGemeldet || {};
+        // Leerer Raum wartet hoechstens drei Stunden auf seine Leute
+        room._parkUhr = setTimeout(() => { if(duoRooms[o.code] === room && !Object.keys(room.users).length) delete duoRooms[o.code]; }, 3 * 60 * 60 * 1000);
+        duoRooms[o.code] = room;
+        n++;
+      });
+      if(n){
+        console.log('[RAEUME] ' + n + ' Gruppenraum/-raeume nach dem Neustart zurueckgeholt (' + Math.round(alter / 1000) + ' s alt).');
+        if(d.tuer && alter < 15 * 60 * 1000 && !tuerOffen){
+          tuerOffen = true; tuerSchliesstUm = 0;
+          try{ tuerMelden(null); }catch(e){}
+          console.log('[TUER] Wieder offen - war es vor dem Neustart auch.');
+        }
+      }
+    }catch(e){ console.warn('[RAEUME] Laden fehlgeschlagen:', e.message); }
+  }
+  raeumeLaden();
+  setInterval(raeumeSichern, 10000);
+
   // Der Handschlag geht nicht durch die Express-Kette, die Tuer weiter
   // oben sieht ihn also nicht. Deshalb hier noch einmal: Ist die Tuer zu
   // und kommt die Verbindung von einer oeffentlichen Adresse, wird sie
@@ -7635,6 +7712,7 @@ try{
         // FIX: Client sendet 'name', nicht 'userName' -> beide Schlüssel akzeptieren
         const userName = data.name || data.userName || 'Benutzer 1';
         duoRooms[code].users[socket.id]={name:userName, role:'Host'};
+        try{ const k = kennungVon(socket); duoRooms[code].users[socket.id].sitzung = k.s; duoRooms[code].users[socket.id].geraet = k.g; }catch(e){}
         // ================================================================
         //  DER RAUM GEHOERT DEM, DER IHN ERSTELLT HAT         (26.09.2026)
         //  Dietmar: "Bin geflogen. Danach war meine Frau, ploetzlich Host."
@@ -7671,7 +7749,10 @@ try{
       // FIX K7: Ohne diese Pruefung genuegte ein socket.emit('joinRoom') ohne
       // Argument, um den kompletten Server per TypeError zu beenden.
       if(!data || typeof data !== 'object'){ socket.emit('errorMsg','Ungueltige Anfrage'); return; }
-      const room=duoRooms[data.code]; if(!room){ socket.emit('errorMsg','Raum nicht gefunden'); return; }
+      const room=duoRooms[data.code]; if(!room){ if(!data.still) socket.emit('errorMsg','Raum nicht gefunden'); return; }
+      // Stilles Zurueckkehren des Kursleiters nach einem Neustart (06.10.2026):
+      // nur mit passendem Schluessel, sonst einfach nichts.
+      if(data.still && !(room.hostSchluessel && data.hostSchluessel === room.hostSchluessel)) return;
 
       // Gesperrt? Dann hier Schluss - vor dem Passwort, damit ein
       // Gesperrter nicht am Passwort ablesen kann, ob er es richtig hatte.
@@ -7686,7 +7767,8 @@ try{
         return;
       }
 
-      if(room.password){
+      // Der Ersteller (mit seinem Schluessel) braucht kein Passwort (06.10.2026)
+      if(room.password && !(room.hostSchluessel && data.hostSchluessel === room.hostSchluessel)){
         const given = (data.password||'').toString().trim();
         if(given !== room.password){
           socket.emit('errorMsg','Falsches Passwort! Bitte korrektes Passwort eingeben oder Link mit ?pwd=... nutzen.');
@@ -8024,7 +8106,14 @@ try{
       // b) Geparkt
       geparktAufraeumen(room);
       if(!room.geparkt) return false;
-      const schl = Object.keys(room.geparkt).find(x => (k.g && room.geparkt[x].geraet === k.g) || (k.s && room.geparkt[x].sitzung === k.s));
+      let schl = Object.keys(room.geparkt).find(x => (k.g && room.geparkt[x].geraet === k.g) || (k.s && room.geparkt[x].sitzung === k.s));
+      // Nach einem Neustart mit neuem Internet-Link kennt der Browser seine
+      // Kennung nicht mehr (andere Adresse, anderer Speicher). Dann zaehlt
+      // der Name - aber nur, wenn er eindeutig ist (06.10.2026).
+      if(!schl && neuerName && !/^Benutzer \d+$/.test(neuerName)){
+        const passend = Object.keys(room.geparkt).filter(x => String(room.geparkt[x].name || '').trim().toLowerCase() === String(neuerName).trim().toLowerCase());
+        if(passend.length === 1) schl = passend[0];
+      }
       if(!schl) return false;
       const p = room.geparkt[schl];
       delete room.geparkt[schl];
@@ -8123,6 +8212,7 @@ try{
       room._fertigGemeldet = {};
       room.finalResultsSent = false;
       room._runde = (room._runde || 0) + 1;      // Geparkte Antworten gehoeren zur alten Runde (05.10.2026)
+      room._teilGemeldet = {};
       const jetzt = Date.now();
       Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
       io.to(code).emit('duoQuizStarted',{
@@ -8275,6 +8365,7 @@ try{
       room._fertigGemeldet = {};
       room.finalResultsSent = false;
       room._runde = (room._runde || 0) + 1;      // Geparkte Antworten gehoeren zur alten Runde (05.10.2026)
+      room._teilGemeldet = {};
       const jetzt = Date.now();
       Object.keys(room.users).forEach(id => { room.startTimes[id] = jetzt; });
       io.to(code).emit('duoQuizStarted', {
@@ -8421,6 +8512,43 @@ try{
       // ging dann nur die Gesamt-Auswertung auf, und im Chat stand nichts.
       // Dietmar: "Wenn meine Mitlernerin fertig ist, kommt eine Meldung im
       // Chat und bei mir kommt nichts".
+      // ================================================================
+      //  JEDER BOGEN EINZELN IM CHAT                      (06.10.2026)
+      //  Dietmar: "Wir ueben immer Betrieb, Vorschriften und Technik. 3
+      //  Runden a 25 Fragen ... Wenn einer im Gruppenraum schneller ist,
+      //  geht es in den naechsten Abschnitt. Im Chat am Handy muss die
+      //  Meldung mit der Auswertung kommen." Im Pruefungsraum kam bisher
+      //  nur am Ende aller drei Boegen eine Zeile. Jetzt nach jedem Bogen
+      //  (der letzte steckt in der Schlussmeldung).
+      // ================================================================
+      try{
+        if(room.pruefungTeile && room.pruefungTeile.length > 1 && room.questionsFull && answeredCount < totalQuestions){
+          if(!room._teilGemeldet) room._teilGemeldet = {};
+          if(!room._teilGemeldet[uid]) room._teilGemeldet[uid] = {};
+          const NAME = {vorschriften:'Vorschriften', betrieb:'Betrieb', technik:'Technik'};
+          room.pruefungTeile.forEach(tl => {
+            if(room._teilGemeldet[uid][tl.teil]) return;
+            const ids = room.questionsFull.slice(tl.von, tl.bis).map(q => q.id);
+            if(!ids.length || !ids.every(id => room.allAnswers[uid][id])) return;
+            room._teilGemeldet[uid][tl.teil] = true;
+            const r = ids.filter(id => room.allAnswers[uid][id].isCorrect).length;
+            const st = r >= 19 ? 'bestanden' : (r >= 17 ? 'Grauzone' : 'nicht bestanden');
+            const offen = room.pruefungTeile.filter(x => !room._teilGemeldet[uid][x.teil]).map(x => NAME[x.teil] || x.teil);
+            const n = {
+              id: crypto.randomBytes(8).toString('hex'), userId: '__system__',
+              name: (room.users[uid] && room.users[uid].name) || 'Ein Teilnehmer', istHost: uid === room.hostId, automatisch: true,
+              text: '📋 hat ' + (NAME[tl.teil] || tl.teil) + ' abgegeben: ' + r + '/' + ids.length + ' richtig (' + st + ')'
+                  + (offen.length ? ' – weiter mit ' + offen[0] + '.' : '.'),
+              zeit: Date.now()
+            };
+            if(!Array.isArray(room.chat)) room.chat = [];
+            room.chat.push(n);
+            while(room.chat.length > CHAT_VERLAUF_MAX) room.chat.shift();
+            io.to(data.code).emit('duoChatNachricht', n);
+          });
+        }
+      }catch(e){ console.error('[DUO] Bogen-Meldung', e); }
+
       if(totalQuestions>0 && answeredCount>=totalQuestions && (!room.lektion || room.lektion.frei)){
         if(!room._fertigGemeldet) room._fertigGemeldet = {};
         if(!room._fertigGemeldet[uid]){
