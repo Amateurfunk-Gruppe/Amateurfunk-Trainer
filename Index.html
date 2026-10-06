@@ -18788,8 +18788,17 @@ function durchsichtBadge(){
 }
 window.durchsichtBadge = durchsichtBadge;
 
-function durchsichtLos(ab){
+function durchsichtLos(ab, alle){
     const p = durchsichtPosition();
+    if(!alle && p.ids.length){
+        const st = Math.max(0, Math.min(ab || 0, p.ids.length - 1));
+        const weiss = id => { try{ return !isMastered(id); }catch(e){ return true; } };
+        const ids = p.ids.slice(st).filter(weiss).concat(p.ids.slice(0, st).filter(weiss));
+        if(!ids.length){ if(window.showAppAlert) showAppAlert('Alle Fragen sind abgehakt – hier ist nichts mehr offen. Unter „Andere Auswahl“ gibt es den ganzen Katalog und die gelernten Fragen.'); return; }
+        startQuestionSession(ids, DURCHSICHT_NAME);
+        durchsichtMerken(ids[0]);
+        return;
+    }
     if(!p.ids.length){
         if(window.showAppAlert) showAppAlert('Der Fragenkatalog ist noch nicht geladen.');
         return;
@@ -18991,15 +19000,15 @@ function durchsichtWeiterFrage(p){
       + '<div style="padding:1.1rem 1.2rem; font-size:0.9rem; line-height:1.55; color:#16243a;">'
       + '<div style="font-size:1.02rem; font-weight:700; margin-bottom:0.25rem; color:#0f2745;">Beim letzten Stand weitermachen?</div>'
       + '<div style="font-size:0.84rem; color:#4b5563; margin-bottom:0.8rem;">'
-      + 'Du warst zuletzt bei Frage ' + nr + ' von ' + gesamt + '. Blättern zeigt immer den ganzen Katalog, '
-      + 'auch die ' + gel + ' Fragen, die du schon abgehakt hast.</div>'
+      + 'Du warst zuletzt bei Frage ' + nr + ' von ' + gesamt + '. Es kommen nur die Fragen, die du noch nicht abgehakt hast – '
+      + 'die ' + gel + ' gelernten werden übersprungen.</div>'
       + '<div class="blaetter-kacheln einzeln">'
       + '<button type="button" id="durchsichtWeiterJa" class="blaetter-kachel" onclick="durchsichtFensterZu(); durchsichtLos(' + p.index + ');">'
       + '<span class="bk-titel"><i class="fas fa-play"></i> Ja, weitermachen</span>'
       + '<span class="bk-zahl"><span style="font-size:1.35rem; font-weight:700; color:#0f2745;">' + nr + '</span>'
       + '<span style="font-size:0.8rem; color:#4b5563; font-weight:400;"> von ' + gesamt + '</span></span>'
       + '<span class="bk-balken"><i data-ziel="' + anteil.toFixed(1) + '%"></i></span>'
-      + '<span class="bk-klein">Weiter beim Lesezeichen. Noch ' + offen + ' Fragen.</span>'
+      + '<span class="bk-klein">Weiter beim Lesezeichen. Noch ' + durchsichtOffeneZahl(p.ids) + ' offene Fragen.</span>'
       + '</button></div>'
       + (typeof blaetterMischSchalter === 'function' ? blaetterMischSchalter() : '')
       + '</div>'
@@ -19101,7 +19110,7 @@ function durchsichtFrageFenster(p){
     }
 
     const kachel1 =
-        '<button type="button" class="blaetter-kachel" onclick="durchsichtFensterZu(); durchsichtLos(' + k1Ziel + ');">'
+        '<button type="button" class="blaetter-kachel" onclick="durchsichtFensterZu(); durchsichtLos(' + k1Ziel + ', true);">'
       + '<span class="bk-titel"><i class="fas fa-book-open"></i> Ganzer Katalog</span>'
       + '<span class="bk-zahl">' + k1Zahl + '</span>'
       + '<span class="bk-balken"><i data-ziel="' + anteil.toFixed(1) + '%"></i></span>'
@@ -23609,7 +23618,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 82, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 84, datum: '06.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -52616,7 +52625,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           w: '<b>NA1SS</b> ist das Rufzeichen der Amateurfunkstation an Bord der <b>ISS</b>.' },
         { f: 'Wie alt ist <b>Kirian</b>, Deutschlands jüngster Funkamateur?', r: 'Neun Jahre', x: ['Neunzehn Jahre', 'Neunzig Jahre'],
           w: '<b>Kirian</b> ist erst neun – und schon Funkamateur. Bist du der Nächste?' },
-        { f: 'Wer ist <b>Maja</b> vom DOK B05?', r: 'Deutschlands jüngste Funkamateurin', x: ['Eine Astronautin auf der ISS', 'Funkis Schwester'],
+        { f: 'Wer ist <b>Maja</b> vom DOK B05?', r: 'Deutschlands jüngste Funkamateurin', x: ['Eine Radiomoderatorin', 'Funkis Schwester'],
           w: '<b>Maja</b> ist 14 und Deutschlands jüngste Funkamateurin – ihre Lizenz hat sie schon mit zehn bekommen. Bist du die Nächste?' },
         { f: 'Wie viele Funkamateure gibt es ungefähr in Deutschland?', r: 'Rund 61 000', x: ['Rund 600', 'Rund 6 Millionen'],
           w: 'Rund <b>61 000</b> Funkamateure haben in Deutschland eine gültige Lizenz – und du kannst bald dazugehören.' },

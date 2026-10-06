@@ -12,9 +12,11 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.298.0] - 2026-09-25
-Stand 82 · 06.10.2026
+Stand 84 · 06.10.2026
 
 ### Hinzugefügt
+- Blättern zeigt nur noch die Fragen, die du noch nicht abgehakt hast (die weißen) – nacheinander, ab dem Lesezeichen, danach die davor. Die gelernten (grünen) muss man nicht mehr überspringen, und sie tauchen im Verlauf nicht mehr auf. Unter „Andere Auswahl“ gibt es weiter den ganzen Katalog und die gelernten Fragen.
+- Quiz „Wer ist Maja vom DOK B05?“: Die falsche Antwort „Eine Astronautin auf der ISS“ heißt jetzt „Eine Radiomoderatorin“ – die Astronautin im Trainer heißt ja inzwischen selbst Maja.
 - PC, Ansicht „Wie die App“: Das Fenster „Mehr“ hat oben rechts ein X zum Schließen. Die Runde selbst (Fragen, Verlauf, Knöpfe unten) sieht am PC jetzt aus wie in der klassischen Ansicht; nach der Runde geht es zurück zur App-Startseite. Match ist für den PC umgebaut: X rechts oben, Texte für Maus statt Wischen, Pfeiltasten ← Falsch und → Richtig, Enter weiter, Esc schließt. Das Match-Fenster sieht am PC aus wie die übrigen Fenster (Kopfzeile mit Titel und X, weiße Fläche, Themen in drei Spalten). Die Knöpfe „Kopieren“ im Gruppenraum sind am PC kleine, ordentliche Knöpfe in der Zeile; der Info-Knopf unten in der Runde zeigt wieder die Quellenangabe.
 - PC, Ansicht „Wie die App“: Das Gruppenraum-Fenster sieht wieder aus wie in der klassischen Ansicht (vorher war die Spalte mit dem Einladungs-Link zerquetscht). Internet-Link über Cloudflare und eigene Adresse lassen sich wieder erzeugen bzw. eintragen. Ebenso sind dort wieder da: die Reiter Update und Wartung in den Einstellungen und die Auswahl der Piper-Stimmen.
 - Maja lebt: Beim Sprechen bewegt sich ihr Mund, ein Lichtschimmer gleitet ab und zu über das Visier, die blaue LED an der Brust blinkt, aus dem Kopfhörer steigen Funkwellen. Sie schwebt mit Dampfwölkchen aus dem Rucksack ins Bild, macht bei Erfolg (Tagesziel, neue Stufe, richtige Quizantwort, Rundenende) eine Rolle in der Schwerelosigkeit und schüttelt beim Staunen den Kopf.
