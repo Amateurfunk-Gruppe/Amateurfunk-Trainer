@@ -20444,6 +20444,10 @@ function qslKarteGross(name){
 }
 window.qslKarteGross = qslKarteGross;
 
+function teilAktiv(q){
+    try{ const a = getActiveLearnParts(); return !q || !a.length || a.length >= 3 || a.includes(q.part); }catch(e){ return true; }
+}
+window.teilAktiv = teilAktiv;
 function getActiveLearnParts() {
     return Object.keys(activeLearnParts).filter(k => activeLearnParts[k]);
 }
@@ -20461,6 +20465,7 @@ function toggleLearnParts() {
     try{ if(typeof durchsichtBadge === 'function') durchsichtBadge(); }catch(e){}
     // Wenn im Lernmodus, Info aktualisieren
     const active = getActiveLearnParts();
+    try{ updateDifficultBadge(); }catch(e){}
     if (active.length === 0) {
         alert('Bitte mindestens ein Teil aktivieren!');
         activeLearnParts.vorschriften = true;
@@ -20699,7 +20704,8 @@ window.updateErrorBadge = updateErrorBadge;
 
 function updateDifficultBadge() {
     try {
-        const count = Object.keys(difficultQuestions).length;
+        let count = Object.keys(difficultQuestions).length;
+        try{ if(getActiveLearnParts().length < 3 && questionBank && questionBank.length){ const ids = new Set(Object.keys(difficultQuestions)); count = questionBank.filter(q => ids.has(q.id) && teilAktiv(q)).length; } }catch(e){}
         const badge = document.getElementById('difficultCount');
         const btn = document.getElementById('difficultBtn');
         if (badge) {
@@ -22106,6 +22112,8 @@ function repeatDifficult() {
     if (ids.length===0) { alert('🎉 Keine schwierigen Fragen – alles gemeistert!'); return; }
     let pool = questionBank.filter(q => ids.includes(q.id));
     if (pool.length===0) { difficultQuestions={}; saveDifficult(); alert('Liste geleert – Fragen nicht gefunden'); return; }
+    pool = pool.filter(teilAktiv);
+    if (pool.length===0) { if (window.showAppAlert) window.showAppAlert('In den gewählten Prüfungsteilen gibt es gerade keinen Lernbedarf.'); return; }
     pool.sort((a,b)=>{
         const da=difficultQuestions[a.id]||{wrongCount:0,correctStreak:0};
         const db=difficultQuestions[b.id]||{wrongCount:0,correctStreak:0};
@@ -23618,7 +23626,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 85, datum: '06.10.2026' };
+const TRAINER_STAND = { nr: 90, datum: '06.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -33465,8 +33473,11 @@ function ohneGelernte(pool, mindestens){
     const offen = pool.filter(q => !isMastered(q.id));
     if(offen.length === 0) return pool;                 // alles gelernt -> alles wiederholen
     if(mindestens && offen.length < mindestens){
-        const gelernt = shuffleArray(pool.filter(q => isMastered(q.id)));
-        return offen.concat(gelernt.slice(0, mindestens - offen.length));
+        try{
+            const n = offen.length;
+            clearTimeout(window._nurOffenT);
+            window._nurOffenT = setTimeout(() => { if(window.showAppAlert) window.showAppAlert(n === 1 ? 'Nur noch 1 offene Frage in diesem Teil – die kommt jetzt. Gelerntes bleibt ausgeblendet.' : 'Nur noch ' + n + ' offene Fragen in diesem Teil – die kommen jetzt. Gelerntes bleibt ausgeblendet.'); }, 400);
+        }catch(e){}
     }
     return offen;
 }
@@ -33520,6 +33531,7 @@ function selectQuestions(withErrors = false) {
             selected = selected.concat(pool.slice(0, 25));
         });
         selected = shuffleArray(selected);
+        if (selected.length < 75) { examMode = false; currentPart = 'all'; }
         selected.forEach(q => { if (!progress[q.id]) progress[q.id] = { answered: false, correct: false }; });
         return selected.map(prepareQuestion);
     }
@@ -33530,6 +33542,7 @@ function selectQuestions(withErrors = false) {
         currentPart = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' }[part] || part;
         const pool = shuffleArray(ohneGelernte(getFilteredQuestions(part), 25));
         const selected = pool.slice(0, 25);
+        if (selected.length < 25) examMode = false;
         selected.forEach(q => { if (!progress[q.id]) progress[q.id] = { answered: false, correct: false }; });
         return selected.map(prepareQuestion);
     }
@@ -44079,6 +44092,7 @@ function faelligeFragen() {
     try {
         return (questionBank || []).filter(q => {
             const m = masteryData[q.id];
+            if (!teilAktiv(q)) return false;
             if (!m || !m.mastered || !m.gemeistertAm) return false;
             const stufe = Math.min(m.wiederholStufe || 0, AUFFRISCH_INTERVALLE.length - 1);
             return (jetzt - m.gemeistertAm) >= AUFFRISCH_INTERVALLE[stufe] * TAG_MS;
@@ -50430,7 +50444,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return n;
     }
     // Stufe als Signalstaerke: S1 ... S9, danach S9+10 ... S9+60 dB
-    const STUFEN = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000, 6200, 7600, 9200];
+    const STUFEN = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000, 6200, 7600, 9200, 11000, 13000];
     function stufe(xp){
         let i = 0;
         while(i + 1 < STUFEN.length && xp >= STUFEN[i + 1]) i++;
@@ -50456,7 +50470,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // ---------------- Das Maskottchen ----------------
     let mkNr = 0;
     // Funki oder Astronaut? (P55, je Handy)
-    function maskottchenArt(){ try{ return lies('robo_maskottchen', 'funki') === 'astro' ? 'astro' : 'funki'; }catch(e){ return 'funki'; } }
+    function maskottchenArt(){ try{ return lies('robo_maskottchen', 'astro') === 'funki' ? 'funki' : 'astro'; }catch(e){ return 'astro'; } }
     window.maskottchenArt = maskottchenArt;
     // P60: Klasse am <html>, damit der Astronaut schwebt statt huepft
     const astroKlasse = () => { try{ document.documentElement.classList.toggle('astro-begleiter', maskottchenArt() === 'astro'); }catch(e){} };
@@ -50731,7 +50745,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function teilName(){
         const da = teileImKatalog();
-        if(wahl.teil === 'all' && da.length !== 1) return 'alle Teile';
+        if(wahl.teil === 'all' && da.length !== 1){
+            try{ const a = getActiveLearnParts().filter(x => da.includes(x)); if(a.length && a.length < da.length) return 'nur ' + a.map(x => (TEILE.find(y => y[0] === x) || [x, x])[1]).join(' + '); }catch(e){}
+            return 'alle Teile';
+        }
         const t = wahl.teil === 'all' ? da[0] : wahl.teil;
         return (TEILE.find(x => x[0] === t) || TEILE[0])[1];
     }
@@ -53509,7 +53526,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         try{
             const alle = Promise.all(folge.map(f => f.text ? stimmeHolen(ctx, f.text).then(p => { f.puffer = p; }) : null));
             // Kommt die Stimme nicht rasch, ist der Moment vorbei
-            const da = await Promise.race([alle.then(() => true), new Promise(r => setTimeout(() => r(false), 6000))]);
+            const da = await Promise.race([alle.then(() => true), new Promise(r => setTimeout(() => r(false), 16000))]);
             if(!da) return false;
         }catch(e){ return false; }
         if(folge.some(f => f.text && !f.puffer)) return false;
@@ -54062,7 +54079,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Die Namen der Stufen: vom Neuling bis zur Legende, keine davon
     // behauptet "pruefungsreif" - das sagen die XP nicht.
     const STUFEN_NAMEN = ['Funk-Neuling', 'Kurzwellen-Lauscher', 'Funk-Lehrling', 'Antennen-Bastler', 'QSO-Starter', 'Frequenz-Profi', 'Band-Entdecker',
-        'Funk-Ass', 'Logbuch-Kenner', 'DX-Jäger', 'Contest-Kanone', 'Relais-Genie', 'Signal-Star', 'Funk-Champion', 'Funk-Legende'];
+        'Funk-Ass', 'Logbuch-Kenner', 'DX-Jäger', 'Contest-Kanone', 'Relais-Genie', 'Signal-Star', 'Funk-Champion', 'Hochfrequenz-Techniker', 'Hochfrequenz-Meister', 'Funk-Legende'];
     function stufeNr(xp){ let i = 0; while(i + 1 < STUFEN.length && xp >= STUFEN[i + 1]) i++; return i; }
     var werk = { offen: false, art: '', bearbeiten: false, auswahl: new Set(), zuUhr: 0, countK: '', aufstieg: null, sternNeu: false,
                  frisch: { awLevel: true, awFort: true }, hinweisBis: 0 };
@@ -54556,9 +54573,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function sprechblase(html, spaet){
         const s = $('awSprech');
         s.innerHTML = html;
-        tu(() => { if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && window.appFunki && appFunki.sagt){
+        // P79: Maja spricht ihre Blase (beim Oeffnen des Blatts uebernimmt das werkBlattAuf, sonst gleich)
+        if(!spaet) tu(() => { if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && window.appFunki && appFunki.sagt){
             const t = String(html).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-            if(t) setTimeout(() => tu(() => appFunki.sagt(t)), spaet ? 600 : 50); } });
+            if(t) setTimeout(() => tu(() => appFunki.sagt(t)), 50); } });
         s.style.animationDelay = spaet ? '0.55s' : '0s';
         s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop');
     }
@@ -54585,6 +54603,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(robo.da && robo.modus !== 'tour') tu(() => roboHeim(true));   // nie zwei Funkis
         if(!vs) return;
         if(erstes) setTimeout(() => { if(werk.offen && werk.art === art) funkiSagt(b.sprich, true); }, 650);
+        else if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){
+            // P79: Maja piept nicht, sie sagt den Satz aus ihrer Blase
+            const t = (($('awSprech') && $('awSprech').textContent) || '').trim();
+            setTimeout(() => { if(werk.offen && werk.art === art && t) funkiSagt(t, true); }, 650);
+        }
         else setTimeout(() => { if(werk.offen) tu(() => funkiGeraeusch('bliep')); }, 500);
     }
     function werkBlattZu(sofort){

@@ -12,10 +12,14 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 85 · 06.10.2026
+Stand 90 · 06.10.2026
 
 ### Hinzugefügt
-- Maja spricht jetzt auch in den Werkzeug-Blättern (Verlauf, Videos, Hilfe & Kurse, Rufzeichen, Lernstand …): ihre Sprechblase am Rand wird mit ihrer Funkstimme vorgelesen, statt nur zu piepen. Tippt man sie an, sagt sie einen neuen Satz.
+- Zwei neue Stufen: **Hochfrequenz-Techniker** (ab 9.200 XP) und **Hochfrequenz-Meister** (ab 11.000 XP). Die **Funk-Legende** bleibt die höchste Stufe und gibt es jetzt ab 13.000 XP – insgesamt 17 Stufen statt 15. Wer schon ganz oben war, ist jetzt Hochfrequenz-Techniker und kann weiter aufsteigen.
+- „Gelernte ausblenden“ hält sich jetzt auch bei der 25er-Runde eines Prüfungsteils: Sind dort nur noch z. B. 14 Fragen offen, kommen genau diese 14 (als Übungsrunde, ohne 19/25-Wertung) mit kurzem Hinweis – vorher wurde mit gelernten (hellgrünen) Fragen auf 25 aufgefüllt.
+- Die Haken bei Vorschriften, Betrieb und Technik („Dein Fortschritt“) gelten jetzt überall: Auch „Lernbedarf“ und „Auffrischen“ nehmen nur noch Fragen aus den gewählten Teilen, die Zahlen auf den Kacheln zählen nur diese, und auf der Startseite steht „nur Technik“ statt „alle Teile“. Neue Runde, Fehler üben und Blättern hielten sich schon daran.
+- Maja ist jetzt die Standard-Begleiterin im Stil Verspielt (wer Funki lieber mag: Einstellungen → Anpassen → Begleiter). Android-App: Maja ist das neue App-Symbol und winkt im Startbild beim Öffnen der App (kommt mit der nächsten App-Fassung).
+- Maja spricht jetzt auch in den Werkzeug-Blättern (Verlauf, Videos, Hilfe & Kurse, Rufzeichen, Lernstand …): ihre Sprechblase am Rand wird mit ihrer Funkstimme vorgelesen, statt nur zu piepen. Tippt man sie an, sagt sie einen neuen Satz. Braucht die Stimme des Handys beim ersten Mal länger („Stimme wird vorbereitet …“), wartet der Trainer jetzt bis zu 16 Sekunden statt 6 – vorher gab Maja dann auf und blieb still.
 - Blättern zeigt nur noch die Fragen, die du noch nicht abgehakt hast (die weißen) – nacheinander, ab dem Lesezeichen, danach die davor. Die gelernten (grünen) muss man nicht mehr überspringen, und sie tauchen im Verlauf nicht mehr auf. Unter „Andere Auswahl“ gibt es weiter den ganzen Katalog und die gelernten Fragen.
 - Quiz „Wer ist Maja vom DOK B05?“: Die falsche Antwort „Eine Astronautin auf der ISS“ heißt jetzt „Eine Radiomoderatorin“ – die Astronautin im Trainer heißt ja inzwischen selbst Maja.
 - PC, Ansicht „Wie die App“: Das Fenster „Mehr“ hat oben rechts ein X zum Schließen. Die Runde selbst (Fragen, Verlauf, Knöpfe unten) sieht am PC jetzt aus wie in der klassischen Ansicht; nach der Runde geht es zurück zur App-Startseite. Match ist für den PC umgebaut: X rechts oben, Texte für Maus statt Wischen, Pfeiltasten ← Falsch und → Richtig, Enter weiter, Esc schließt. Das Match-Fenster sieht am PC aus wie die übrigen Fenster (Kopfzeile mit Titel und X, weiße Fläche, Themen in drei Spalten). Die Knöpfe „Kopieren“ im Gruppenraum sind am PC kleine, ordentliche Knöpfe in der Zeile; der Info-Knopf unten in der Runde zeigt wieder die Quellenangabe.

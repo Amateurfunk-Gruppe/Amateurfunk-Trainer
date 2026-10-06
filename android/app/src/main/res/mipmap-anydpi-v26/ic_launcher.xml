@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- App-Symbol: die Astronautin (06.10.2026, Dietmar wollte sie als App-Symbol).
+     Das Funki-Symbol (ic_vorne.xml) bleibt liegen, falls es wieder gebraucht wird. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_hintergrund" />
-    <foreground android:drawable="@drawable/ic_vorne" />
+    <foreground android:drawable="@drawable/ic_vorne_maja" />
 </adaptive-icon>
