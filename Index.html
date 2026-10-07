@@ -1674,6 +1674,61 @@
         .rf-teile > :last-child:nth-child(odd) { grid-column: 1 / -1; }
         @media (min-width: 560px) { .rf-teile:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, 1fr) !important; } .rf-teile > :last-child:nth-child(odd) { grid-column: auto; } }
 
+        /* P92: Regeln im Pruefungssimulator - die letzte Kachel fuellt die Zeile */
+        @media (max-width: 700px) { .realistic-rules > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
+
+        /* P93: Fuss des Pruefungssimulators - Start ueber die ganze Breite */
+        .realistic-footer { flex-wrap: wrap; }
+        .realistic-footer #realisticSummary:empty { display: none; }
+        /* ===== P94: Pruefungssimulator "Cockpit" (Dietmar: Vorschlag 3, Farbe nach dem eingestellten Design) ===== */
+        body { --ck-bg1:#eef3fa; --ck-bg2:#ffffff; --ck-line:#d3deec; --ck-card:rgba(15,39,69,.035); --ck-text:#0f2745; --ck-muted:#5b6f88;
+               --ck-num:#1f6fd1; --ck-glow:rgba(31,111,209,.25); --ck-acc1:#e2932f; --ck-acc2:#f4b85a; --ck-acctext:#241400; --ck-r:16px; }
+        body.dark   { --ck-bg1:#0b1a2e; --ck-bg2:#15345a; --ck-line:#23446d; --ck-card:rgba(255,255,255,.045); --ck-text:#ffffff; --ck-muted:#9db6d8;
+                      --ck-num:#7fd0ff; --ck-glow:rgba(127,208,255,.5); --ck-acc1:#ff9f1c; --ck-acc2:#ffcf5c; --ck-acctext:#0b1a2e; }
+        body.green  { --ck-bg1:#0c2418; --ck-bg2:#17452f; --ck-line:#24583d; --ck-card:rgba(255,255,255,.045); --ck-text:#eafff2; --ck-muted:#9cc9ae;
+                      --ck-num:#7ee2a8; --ck-glow:rgba(126,226,168,.45); --ck-acc1:#2fbf71; --ck-acc2:#8be8b2; --ck-acctext:#06210f; }
+        body.blue   { --ck-bg1:#0a1c33; --ck-bg2:#173e6b; --ck-line:#23497a; --ck-card:rgba(255,255,255,.045); --ck-text:#eef6ff; --ck-muted:#a3bfdf;
+                      --ck-num:#8cc8ff; --ck-glow:rgba(140,200,255,.5); --ck-acc1:#3b8fe8; --ck-acc2:#8cc8ff; --ck-acctext:#06172b; }
+        body.orange { --ck-bg1:#2a1606; --ck-bg2:#5a3210; --ck-line:#6b4120; --ck-card:rgba(255,255,255,.05); --ck-text:#fff4e6; --ck-muted:#e0bf9c;
+                      --ck-num:#ffc27a; --ck-glow:rgba(255,194,122,.5); --ck-acc1:#ff9f1c; --ck-acc2:#ffcf5c; --ck-acctext:#2a1606; }
+        body.grey   { --ck-bg1:#1c2024; --ck-bg2:#3a4148; --ck-line:#4b545d; --ck-card:rgba(255,255,255,.05); --ck-text:#f3f6f8; --ck-muted:#b9c2ca;
+                      --ck-num:#e2e8ee; --ck-glow:rgba(226,232,238,.4); --ck-acc1:#aab4be; --ck-acc2:#e2e8ee; --ck-acctext:#1c2024; }
+        body.eckig:not(.app-rund) { --ck-r: 0px; }
+
+        html body .realistic-modal:has(.realistic-parts) { background:var(--ck-bg1) !important; border:1px solid var(--ck-line) !important; border-radius:var(--ck-r) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-modal-header { background:var(--ck-bg1) !important; border-color:var(--ck-line) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-modal-header h3,
+        html body .realistic-modal:has(.realistic-parts) .realistic-modal-header h3 i { color:var(--ck-acc1) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-modal-close { background:var(--ck-card) !important; color:var(--ck-text) !important; border-color:var(--ck-line) !important; border-radius:calc(var(--ck-r) * .75) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-modal-body { background:radial-gradient(120% 60% at 50% 0%, var(--ck-bg2) 0%, var(--ck-bg1) 70%) !important; color:var(--ck-text) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-wrapper { background:transparent !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-header h2,
+        html body .realistic-modal:has(.realistic-parts) .realistic-header h2 i { color:var(--ck-text) !important; }
+        html body .realistic-modal:has(.realistic-parts) .sub,
+        html body .realistic-modal:has(.realistic-parts) h3,
+        html body .realistic-modal:has(.realistic-parts) label,
+        html body .realistic-modal:has(.realistic-parts) label span { color:var(--ck-muted) !important; }
+        html body .realistic-modal:has(.realistic-parts) label > span { color:var(--ck-text) !important; }
+        html body .realistic-modal:has(.realistic-parts) a { color:var(--ck-num) !important; }
+        html body .realistic-modal:has(.realistic-parts) .r-rule { background:var(--ck-card) !important; border:1px solid var(--ck-line) !important; border-radius:calc(var(--ck-r) * .875) !important; }
+        html body .realistic-modal:has(.realistic-parts) .r-rule b { color:var(--ck-num) !important; font-family:'Courier New',monospace !important; text-shadow:0 0 8px var(--ck-glow); }
+        html body .realistic-modal:has(.realistic-parts) .r-rule span { color:var(--ck-muted) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-part-card { background:var(--ck-card) !important; border:1px solid var(--ck-line) !important; border-radius:var(--ck-r) !important; box-shadow:none !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-part-card:hover { border-color:var(--ck-acc1) !important; transform:translateY(-1px); }
+        html body .realistic-modal:has(.realistic-parts) .rpc-name { color:var(--ck-text) !important; }
+        html body .realistic-modal:has(.realistic-parts) .rpc-desc { color:var(--ck-muted) !important; }
+        html body .realistic-modal:has(.realistic-parts) .rpc-icon { background:var(--ck-card) !important; border-radius:calc(var(--ck-r) * .75) !important; }
+        html body .realistic-modal:has(.realistic-parts) .rpc-check { border-color:var(--ck-line) !important; background:transparent !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-part-card.selected { border-color:var(--ck-acc1) !important; background:color-mix(in srgb, var(--ck-acc1) 10%, transparent) !important; box-shadow:0 0 16px color-mix(in srgb, var(--ck-acc1) 35%, transparent) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-part-card.selected .rpc-name { color:var(--ck-acc1) !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-part-card.selected .rpc-check { background:var(--ck-acc1) !important; border-color:var(--ck-acc1) !important; color:var(--ck-acctext) !important; }
+        html body .realistic-modal:has(.realistic-parts) #realisticStartBtn { border-radius:calc(var(--ck-r) * .875) !important; background:linear-gradient(135deg, var(--ck-acc1), var(--ck-acc2)) !important; color:var(--ck-acctext) !important; border:0 !important; box-shadow:0 0 20px color-mix(in srgb, var(--ck-acc1) 45%, transparent) !important; }
+        html body .realistic-modal:has(.realistic-parts) #realisticStartBtn:disabled { opacity:.55; box-shadow:none !important; }
+        html body .realistic-modal:has(.realistic-parts) #realisticStartBtn i { color:inherit !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-footer,
+        html body .realistic-modal:has(.realistic-parts) hr { border-color:var(--ck-line) !important; }
+        html body .realistic-modal:has(.realistic-parts) #realisticSummary { color:var(--ck-text) !important; }
+
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
            Dietmar: "A gefaellt mir gut. Ich moechte da aber noch das mit
@@ -23633,7 +23688,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 100, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 103, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -42315,7 +42370,7 @@ window.showRealisticSelection = function(){
         </div>
       `).join('')}
     </div>
-    <label id="realisticGelerntZeile" style="display:flex; align-items:center; gap:8px; margin-top:0.9rem; font-size:0.85rem; cursor:pointer;">
+    <label id="realisticGelerntZeile" style="display:none !important; align-items:center; gap:8px; margin-top:0.9rem; font-size:0.85rem; cursor:pointer;">
       <!-- flex:0 0 17px, nicht nur width: Beide Kaestchen sind Flex-Kinder, und
            ein Flex-Kind schrumpft, wenn der Text daneben Platz braucht. Genau
            das war am 11.09.2026 zu sehen - Dietmar: "2 unterschiedliche Rahmen
@@ -42333,9 +42388,8 @@ window.showRealisticSelection = function(){
       </span>
     </label>
     <div class="realistic-footer">
-      <button id="realisticStartBtn" class="btn btn-primary" disabled onclick="beginRealisticExam()"><i class="fas fa-play"></i> Prüfung starten</button>
-      <span id="realisticSummary" class="sub" style="font-weight:500;"></span>
-      <button class="btn btn-outline" onclick="closeRealisticModal()" style="margin-left:auto;"><i class="fas fa-times"></i> Schließen</button>
+      <button id="realisticStartBtn" class="btn btn-primary" disabled onclick="beginRealisticExam()" style="flex:1 1 100%; width:100%; justify-content:center; min-height:52px; font-size:1.05rem;"><i class="fas fa-play"></i> Prüfung starten</button>
+      <span id="realisticSummary" class="sub" style="font-weight:500; flex:1 1 100%; text-align:center;"></span>
     </div>
     <div class="sub" style="margin-top:0.9rem; font-size:0.8rem;">💡 ${teile.length === 1
         ? 'Ablauf: 25 Fragen, dann das Ergebnis.'
@@ -42409,6 +42463,7 @@ window.gelernteAutoRichtig = gelernteAutoRichtig;
 // sonst wartet der Raum ewig darauf, dass ich "fertig" werde.
 function gelernteVorbelegen(anServerMelden){
     if(!gelernteAutoRichtig()) return 0;
+    if(window.realisticExam && realisticExam.active && !realisticExam.duo) return 0;   // P92: im Simulator nie
     let anzahl = 0;
     try{
         currentQuestions.forEach(q=>{

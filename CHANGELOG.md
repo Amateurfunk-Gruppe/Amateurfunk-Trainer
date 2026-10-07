@@ -12,9 +12,12 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 100 · 07.10.2026
+Stand 103 · 07.10.2026
 
 ### Hinzugefügt
+- **Prüfungssimulator im Cockpit-Stil:** Das Auswahlfenster sieht jetzt aus wie ein Funkgerät-Display – leuchtende Zahlen, der gewählte Teil leuchtet, der Startknopf glüht. Die Farben richten sich nach dem eingestellten Design (Hell, Dunkel, Grün, Blau, Orange, Grau), die Ecken nach Rund oder Eckig.
+- Prüfungssimulator: Unten fällt „Schließen“ weg (oben ist das X), dafür geht „Prüfung starten“ über die ganze Breite.
+- Prüfungssimulator: Der Haken „Bereits gelernte Fragen nicht mehr fragen“ ist raus – in der Simulation wird jede Frage gestellt, sie zählt ja für die letzte Stufe. (Im Gruppenraum bleibt er.) Die Kachel „Grauzone“ geht auf dem Handy über die ganze Breite, kein Loch mehr daneben.
 - Prüfungssimulator bestanden: jetzt mit **Fanfare und Konfetti** wie bei den anderen Runden, die Ansage kommt nach der Fanfare.
 - Prüfungssimulator: Das **Konfetti** ist jetzt auch hier zu sehen – es flog bisher hinter dem Fenster. Die Ergebnis-Kacheln haben kein Loch mehr: Passen nur zwei nebeneinander, geht „Technik“ über die ganze Breite; auf breiten Bildschirmen stehen alle drei in einer Reihe.
 - **Prüfungssimulator zählt jetzt mit:** Der Simulator mit Vorschriften, Betrieb und Technik nacheinander wurde beim Zähler „10 Prüfungssimulationen“ nicht mitgezählt. Jetzt gibt es nach jedem Teil den Zettel für diesen Teil und ganz am Ende den Gesamtzettel – mit allen Teilen, bei Bestehen mit Konfetti, angekreuzter Klasse und dem Zähler.
