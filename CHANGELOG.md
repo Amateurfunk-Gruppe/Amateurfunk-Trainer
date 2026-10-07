@@ -12,9 +12,11 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 108 · 07.10.2026
+Stand 110 · 07.10.2026
 
 ### Hinzugefügt
+- **Merkhilfen auch für die Klassen E und A:** URI-Dreieck bei Vorwiderstand, Innenwiderstand und Strom im Spannungsteiler (EB513, EC515, EC521, EC522, AB205–AB208, AD106, AD107, AF425, AF426), PUI-Dreieck bei Leistung und Wirkungsgrad (AB213, AB214, AB502, AD319, AD320, AD430) und **beide Dreiecke** dort, wo die Leistung an einem Widerstand gesucht ist (EB509–EB512, EC516, AB301, AC523, AD108, AF427).
+- **PUI-Dreieck für die Leistung:** Bei den Leistungsfragen NB601 bis NB606 steht dieselbe aufklappbare Merkhilfe als PUI-Dreieck – P = U · I, U = P / I, I = P / U.
 - **URI-Dreieck als Merkhilfe:** Bei den Fragen zum Ohmschen Gesetz (NB501 bis NB505, AD106) steht unter den Antworten eine aufklappbare Merkhilfe „URI-Dreieck“ – R = U / I, I = U / R, U = R · I, das Gesuchte farbig markiert. Sie ist zugeklappt (sonst wäre sie schon die Lösung) und klappt nach der Antwort von selbst auf. Zum Abmalen auf den Schmierzettel. Nur beim Üben, nicht in Prüfung und Simulator.
 - **Lernbedarf ohne gelernte Fragen:** Wer eine Frage als gelernt abhakt (von Hand oder nach drei richtigen Antworten), hat sie jetzt auch nicht mehr im Lernbedarf – vorher blieb sie dort, bis sie in der Lernbedarf-Runde dreimal am Stück richtig war. Die Zahl auf der Kachel sinkt entsprechend. Wird die Frage später wieder falsch beantwortet, kommt sie wie bisher zurück.
 - Die Kachel „Prüfungstag“ heißt jetzt **„Prüfung simulieren“** – darunter „wie am echten Prüfungstag“.
