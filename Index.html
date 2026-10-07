@@ -20769,8 +20769,18 @@ function updateErrorBadge() {
 }
 window.updateErrorBadge = updateErrorBadge;
 
+function lernbedarfAufraeumen(){
+    try{
+        if(typeof isMastered !== 'function') return;
+        let weg = 0;
+        Object.keys(difficultQuestions || {}).forEach(id => { if(isMastered(id)){ delete difficultQuestions[id]; weg++; } });
+        if(weg) saveDifficult();
+    }catch(e){}
+}
+window.lernbedarfAufraeumen = lernbedarfAufraeumen;
 function updateDifficultBadge() {
     try {
+        lernbedarfAufraeumen();
         let count = Object.keys(difficultQuestions).length;
         try{ if(getActiveLearnParts().length < 3 && questionBank && questionBank.length){ const ids = new Set(Object.keys(difficultQuestions)); count = questionBank.filter(q => ids.has(q.id) && teilAktiv(q)).length; } }catch(e){}
         const badge = document.getElementById('difficultCount');
@@ -22175,6 +22185,7 @@ function reifeAktualisieren(){
 window.reifeAktualisieren = reifeAktualisieren;
 
 function repeatDifficult() {
+    lernbedarfAufraeumen();
     const ids = Object.keys(difficultQuestions);
     if (ids.length===0) { alert('🎉 Keine schwierigen Fragen – alles gemeistert!'); return; }
     let pool = questionBank.filter(q => ids.includes(q.id));
@@ -23693,7 +23704,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 106, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 107, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }

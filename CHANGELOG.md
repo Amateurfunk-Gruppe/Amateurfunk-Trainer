@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 106 · 07.10.2026
+Stand 107 · 07.10.2026
 
 ### Hinzugefügt
+- **Lernbedarf ohne gelernte Fragen:** Wer eine Frage als gelernt abhakt (von Hand oder nach drei richtigen Antworten), hat sie jetzt auch nicht mehr im Lernbedarf – vorher blieb sie dort, bis sie in der Lernbedarf-Runde dreimal am Stück richtig war. Die Zahl auf der Kachel sinkt entsprechend. Wird die Frage später wieder falsch beantwortet, kommt sie wie bisher zurück.
 - Die Kachel „Prüfungstag“ heißt jetzt **„Prüfung simulieren“** – darunter „wie am echten Prüfungstag“.
 - Prüfungssimulator: Überschrift und die Kacheln (3 Teile, 25 Fragen, 135 Min, 19/25, Grauzone) sind raus – das steht schon in „So läuft’s“. Das Fenster beginnt direkt mit „Womit möchtest du starten?“.
 - Cockpit-Stil des Prüfungssimulators: Bei den hellen Designs (Hell, Grün, Blau, Orange, Grau) bleibt das Fenster jetzt **hell** im jeweiligen Farbton – dunkel wird es nur beim Design Dunkel.
