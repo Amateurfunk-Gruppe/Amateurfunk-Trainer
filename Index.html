@@ -23693,7 +23693,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 105, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 106, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -50861,7 +50861,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahLernbedarf"><div class="kz"><span class="ah-ico amber"><i class="fas fa-fire-flame-curved"></i></span><span class="anz" id="ahKLernbedarf">0</span></div><div><b>Lernbedarf</b><small>wackelige Fragen</small></div></button>'
       +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
-      +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfungstag</b><small>Prüfung simulieren</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfung simulieren</b><small>wie am echten Prüfungstag</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
       + '</div>'
@@ -51241,7 +51241,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, true, true) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
               +   '<div><b>Noch ' + fragenText(d.rest) + ' bis zum Tagesziel</b><small>Dann bleibt deine Serie auf Sendung.</small><span class="swp-bel"><i class="fas fa-tower-broadcast"></i> Tag 13 wartet</span></div></div>'
               + '<div class="swp-kach">' + [['rot', 'fa-rotate-left', '12', 'Fehler üben', 'bis sie sitzen'], ['amber', 'fa-fire-flame-curved', '34', 'Lernbedarf', 'wackelige Fragen'],
-                   ['violett', 'fa-stopwatch', '3×45′', 'Prüfungstag', 'Prüfung simulieren'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
+                   ['violett', 'fa-stopwatch', '3×45′', 'Prüfung simulieren', 'wie am echten Prüfungstag'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
                   .map(k => '<div><span class="ah-ico ' + k[0] + '"><i class="fas ' + k[1] + '"></i></span><em' + (k[2].length > 3 ? ' class="kl"' : '') + '>' + k[2] + '</em><b>' + k[3] + '</b><small>' + k[4] + '</small></div>').join('') + '</div>';
         }
         return '<div class="swp-rahmen' + (kurz ? ' kurz' : '') + '"><div class="swp ' + (stil === 'sachlich' ? 's' : 'v') + '" aria-hidden="true">'
