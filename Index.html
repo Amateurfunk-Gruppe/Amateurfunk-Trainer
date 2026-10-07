@@ -1752,6 +1752,20 @@
         .uri-dreieck .ud-formel { font: 700 22px/1 system-ui, sans-serif; fill: currentColor; }
         .uri-dreieck .ud-klein { font: 400 17px/1 system-ui, sans-serif; fill: var(--muted, #5b6f88); }
         .uri-dreieck .ud-fuss { text-align: center; font-size: .75rem; color: var(--muted, #5b6f88); margin-top: 2px; }
+        /* P101: Farbcode */
+        .fc-farb .fc-bsp { display: block; width: 100%; max-width: 320px; height: auto; margin: 4px auto 2px; }
+        .fc-farb .fc-erkl { font-size: .8rem; text-align: center; color: var(--muted, #5b6f88); margin-bottom: 8px; line-height: 1.45; }
+        .fc-farb .fc-erkl b { color: var(--ink, #10243c); }
+        .fc-tab { width: 100%; border-collapse: separate; border-spacing: 0 3px; font-size: .86rem; }
+        .fc-tab th { text-align: left; font-size: .72rem; color: var(--muted, #5b6f88); font-weight: 600; padding: 0 6px 2px; }
+        .fc-tab td { padding: 3px 6px; background: color-mix(in srgb, var(--line, #d5dfec) 30%, transparent); }
+        .fc-tab td:first-child { padding-left: 3px; border-radius: 6px 0 0 6px; } .fc-tab td:last-child { border-radius: 0 6px 6px 0; }
+        body.eckig:not(.app-rund) .fc-tab td { border-radius: 0 !important; }
+        .fc-chip { display: inline-block; min-width: 76px; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: .8rem; text-align: center; }
+        body.eckig:not(.app-rund) .fc-chip { border-radius: 0; }
+        .fc-tab .fc-z { font-weight: 700; text-align: center; }
+        .fc-tab .fc-m span { color: var(--muted, #5b6f88); font-size: .78rem; white-space: nowrap; }
+        .fc-tab .fc-t { white-space: nowrap; text-align: right; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23723,7 +23737,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 110, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 111, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56323,6 +56337,39 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                fuss: 'P: Leistung in W · U: Spannung in V · I: Strom in A' }
     };
     let satz = SAETZE.uri;
+    // P101: Farbcode der Widerstaende (Dietmar: "Liste kolorieren und bei solchen Fragen hinzufuegen")
+    const FARB_FRAGEN = new Set(['NC102', 'NC103', 'NC104', 'NC105', 'NC106', 'NC107', 'NC108', 'NC109', 'NC110', 'EC113']);
+    const FARBEN = [
+        ['Silber', '–', '10⁻²', '0,01', '±10 %', 'linear-gradient(135deg,#8d8d8d,#e8e8e8 45%,#9a9a9a)', '#222'],
+        ['Gold', '–', '10⁻¹', '0,1', '±5 %', 'linear-gradient(135deg,#a8801a,#f3d36b 45%,#b38b22)', '#222'],
+        ['Schwarz', '0', '10⁰', '1', '–', '#151515', '#fff'],
+        ['Braun', '1', '10¹', '10', '±1 %', '#7b4a1e', '#fff'],
+        ['Rot', '2', '10²', '100', '±2 %', '#d32f2f', '#fff'],
+        ['Orange', '3', '10³', '1 000', '–', '#f57c00', '#fff'],
+        ['Gelb', '4', '10⁴', '10 000', '–', '#fbd431', '#222'],
+        ['Grün', '5', '10⁵', '100 000', '±0,5 %', '#2e9d4b', '#fff'],
+        ['Blau', '6', '10⁶', '1 000 000', '±0,25 %', '#1e63c4', '#fff'],
+        ['Violett', '7', '10⁷', '10 000 000', '±0,1 %', '#7b3fbf', '#fff'],
+        ['Grau', '8', '10⁸', '100 000 000', '–', '#8a8a8a', '#fff'],
+        ['Weiß', '9', '10⁹', '1 000 000 000', '–', '#ffffff', '#222'],
+        ['Keine', '–', '–', '', '±20 %', 'transparent', 'inherit']
+    ];
+    function farbHtml(){
+        const zeilen = FARBEN.map(f => '<tr><td><span class="fc-chip" style="background:' + f[5] + ';color:' + f[6] + ';' + (f[0] === 'Keine' ? 'border:1px dashed currentColor;' : (f[0] === 'Weiß' ? 'border:1px solid #bbb;' : '')) + '">' + f[0] + '</span></td>'
+            + '<td class="fc-z">' + f[1] + '</td><td class="fc-m">' + f[2] + (f[3] ? ' <span>= ' + f[3] + '</span>' : '') + '</td><td class="fc-t">' + f[4] + '</td></tr>').join('');
+        // Ein Beispiel-Widerstand, der in keiner Frage vorkommt: gelb, violett, braun, gold = 47 · 10 = 470 Ω ±5 %
+        const bsp = '<svg viewBox="0 0 320 70" class="fc-bsp" role="img" aria-label="Beispiel: gelb, violett, braun, gold ergibt 470 Ohm plus minus 5 Prozent">'
+            + '<line x1="0" y1="35" x2="320" y2="35" stroke="#888" stroke-width="4"/>'
+            + '<rect x="70" y="12" width="180" height="46" rx="20" fill="#e8d3a8" stroke="#b9a274"/>'
+            + '<rect x="100" y="12" width="14" height="46" fill="#fbd431"/><rect x="128" y="12" width="14" height="46" fill="#7b3fbf"/>'
+            + '<rect x="156" y="12" width="14" height="46" fill="#7b4a1e"/><rect x="214" y="12" width="14" height="46" fill="#d4af37"/></svg>';
+        return '<details class="uri-dreieck fc-farb"' + (offen ? ' open' : '') + '>'
+          + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: der Farbcode <span>– zum Aufklappen antippen</span></summary>'
+          + bsp
+          + '<div class="fc-erkl"><b>1. Ring</b> 1. Ziffer · <b>2. Ring</b> 2. Ziffer · <b>3. Ring</b> Multiplikator · <b>4. Ring</b> Toleranz<br>Beispiel: gelb 4, violett 7, braun ×10 → <b>470 Ω</b>, gold ±5 %</div>'
+          + '<table class="fc-tab"><thead><tr><th>Farbe</th><th>Wert</th><th>Multiplikator</th><th>Toleranz</th></tr></thead><tbody>' + zeilen + '</tbody></table>'
+          + '</details>';
+    }
     function dreieck(x, gesucht, formel, art){
         const hl = (bx, by) => '<rect x="' + (bx - 19) + '" y="' + (by - 21) + '" width="38" height="38" rx="7" class="ud-hl"/>';
         const pos = {}; pos[satz.oben] = [x, 92]; pos[satz.links] = [x - 34, 148]; pos[satz.rechts] = [x + 34, 148];
@@ -56365,12 +56412,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(BEIDE_FRAGEN.has(q.id)) saetze = [SAETZE.uri, SAETZE.pui];
         else if(URI_FRAGEN.has(q.id)) saetze = [SAETZE.uri];
         else if(PUI_FRAGEN.has(q.id)) saetze = [SAETZE.pui];
+        else if(FARB_FRAGEN.has(q.id)) saetze = ['farb'];
         else return;
         try{ offen = !!answered; }catch(e){ offen = false; }
         const k = document.getElementById('optionsContainer');
         if(!k) return;
         let h = '';
-        saetze.forEach(x => { satz = x; h += html(); });
+        saetze.forEach(x => { if(x === 'farb'){ h += farbHtml(); return; } satz = x; h += html(); });
         k.insertAdjacentHTML('afterend', h);
     }
     window.uriDreieckSetzen = setzen;
