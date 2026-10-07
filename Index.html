@@ -1766,6 +1766,46 @@
         .fc-tab .fc-z { font-weight: 700; text-align: center; }
         .fc-tab .fc-m span { color: var(--muted, #5b6f88); font-size: .78rem; white-space: nowrap; }
         .fc-tab .fc-t { white-space: nowrap; text-align: right; }
+        /* P102: Bandplaene, Frequenzen, Rufzeichen */
+        .mh-tab .bp-legende { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 8px; }
+        .mh-tab .bp-leg { font-size: .7rem; font-weight: 700; color: #fff; background: var(--bp); padding: 2px 7px; border-radius: 999px; }
+        .mh-tab .bp-z { border-left: 5px solid var(--bp); background: color-mix(in srgb, var(--bp) 9%, transparent); padding: 6px 8px; margin: 3px 0; border-radius: 0 8px 8px 0; font-size: .8rem; }
+        .mh-tab .bp-k { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+        .mh-tab .bp-k b { font-size: .86rem; }
+        .mh-tab .bp-max { color: var(--muted, #5b6f88); font-size: .74rem; }
+        .mh-tab .bp-mode { color: var(--bp); font-weight: 700; font-size: .76rem; margin-left: auto; filter: brightness(.85); }
+        body.dark .mh-tab .bp-mode { filter: brightness(1.35); }
+        .mh-tab .bp-u { margin-top: 3px; line-height: 1.4; }
+        .mh-tab .fq-wrap { overflow-x: auto; }
+        .fq-tab, .rf-tab { width: 100%; border-collapse: collapse; font-size: .78rem; }
+        .fq-tab th, .rf-tab th { font-size: .7rem; color: var(--muted, #5b6f88); text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--line, #d5dfec); white-space: nowrap; }
+        .fq-tab td, .rf-tab td { padding: 3px 4px; border-bottom: 1px solid color-mix(in srgb, var(--line, #d5dfec) 60%, transparent); vertical-align: middle; }
+        .fq-tab .fq-nr { color: var(--muted, #5b6f88); font-size: .7rem; }
+        .fq-tab .fq-f { white-space: nowrap; } .fq-tab .fq-f small { display: block; color: var(--muted, #5b6f88); font-size: .68rem; }
+        .fq-tab tr.fq-n td { background: color-mix(in srgb, #2e9d4b 12%, transparent); }
+        .fq-st { display: inline-block; min-width: 18px; text-align: center; font-weight: 700; border-radius: 4px; padding: 1px 4px; font-size: .7rem; color: #fff; }
+        .fq-st.fq-p { background: #2b6cb0; } .fq-st.fq-s { background: #8a95a3; }
+        .fq-a, .fq-e, .fq-n, .fq-n2, .rf-tab [class^="kl-"] { display: inline-block; border-radius: 4px; padding: 1px 5px; font-weight: 700; white-space: nowrap; }
+        .fq-a, .rf-tab .kl-A { background: color-mix(in srgb, #e2932f 22%, transparent); color: #9a5a00; }
+        .fq-e, .rf-tab .kl-E { background: color-mix(in srgb, #1e63c4 18%, transparent); color: #1a4f9c; }
+        .fq-n, .fq-n2, .rf-tab .kl-N { background: color-mix(in srgb, #2e9d4b 22%, transparent); color: #1d6b33; }
+        body.dark .fq-a, body.dark .rf-tab .kl-A { color: #ffc47a; } body.dark .fq-e, body.dark .rf-tab .kl-E { color: #9cc4ff; } body.dark .fq-n, body.dark .fq-n2, body.dark .rf-tab .kl-N { color: #8fe0a9; }
+        .fq-tab .fq-leer { color: var(--muted, #5b6f88); opacity: .5; }
+        .mh-tab .rf-t { font-weight: 700; font-size: .8rem; margin: 8px 0 3px; }
+        .rf-tab td:last-child, .rf-tab th:last-child { text-align: center; }
+        body.eckig:not(.app-rund) .mh-tab .bp-z, body.eckig:not(.app-rund) .mh-tab .bp-leg, body.eckig:not(.app-rund) .fq-st, body.eckig:not(.app-rund) .fq-a, body.eckig:not(.app-rund) .fq-e, body.eckig:not(.app-rund) .fq-n, body.eckig:not(.app-rund) .fq-n2, body.eckig:not(.app-rund) .rf-tab [class^="kl-"] { border-radius: 0; }
+        /* P102b: Frequenztabelle als Karten (passt aufs Handy) */
+        .mh-tab .fq-z { border-left: 5px solid var(--line, #c9d6e6); padding: 5px 8px; margin: 3px 0; border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--line, #d5dfec) 25%, transparent); font-size: .8rem; }
+        .mh-tab .fq-z.fq-nz { border-left-color: #2e9d4b; background: color-mix(in srgb, #2e9d4b 12%, transparent); }
+        .mh-tab .fq-k1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+        .mh-tab .fq-k1 .fq-nr { color: var(--muted, #5b6f88); font-size: .7rem; min-width: 16px; }
+        .mh-tab .fq-band { color: var(--muted, #5b6f88); font-size: .74rem; }
+        .mh-tab .fq-k1 .fq-st { margin-left: auto; }
+        .mh-tab .fq-k2 { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+        .mh-tab .fq-c { display: inline-flex; align-items: baseline; gap: 4px; border-radius: 4px; padding: 1px 6px; font-weight: 700; font-size: .76rem; white-space: nowrap; }
+        .mh-tab .fq-c small { font-size: .62rem; opacity: .75; }
+        .mh-tab .fq-c.fq-leer { opacity: .35; font-weight: 400; }
+        body.eckig:not(.app-rund) .mh-tab .fq-z, body.eckig:not(.app-rund) .mh-tab .fq-c { border-radius: 0; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23737,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 111, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 112, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56354,6 +56394,119 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Weiß', '9', '10⁹', '1 000 000 000', '–', '#ffffff', '#222'],
         ['Keine', '–', '–', '', '±20 %', 'transparent', 'inherit']
     ];
+    // ================================================================
+    //  P102 (07.10.2026): Bandplaene 2 m / 70 cm, Frequenztabelle (AFuV Anlage 1)
+    //  und Rufzeichenplan als Merkhilfen - abgeschrieben aus der Formelsammlung
+    //  der Bundesnetzagentur (Hilfsmittel fuer die Pruefung), eingefaerbt.
+    // ================================================================
+    const BP2_FRAGEN = new Set(['BC205', 'BC207', 'BC209', 'BC210', 'BC211', 'BC213', 'BC214', 'BC215', 'BC216', 'BC217', 'BC218']);
+    const BP70_FRAGEN = new Set(['BC206', 'BC208', 'BC212', 'BC219', 'BC220', 'BC221', 'BC222']);
+    const FREQ_FRAGEN = new Set(['VD706', 'VD709', 'VD710', 'VD711', 'VD712', 'VD713', 'VD714', 'VD715', 'VD716', 'VD717', 'VD718', 'VD719',
+        'VD720', 'VD721', 'VD722', 'VD723', 'VD724', 'VD725', 'VD726', 'VD727', 'VD728', 'VD729', 'VD730', 'VD731', 'VD732', 'VD733',
+        'VD734', 'VD735', 'VD736', 'VD737', 'VD743']);
+    const RUF_FRAGEN = new Set(['BD101', 'BD102', 'BD104', 'BD105', 'BD106', 'BD107', 'BD108']);
+    const ART = { sat: ['Satellit', '#8e44ad'], cw: ['Telegrafie / MGM', '#1e63c4'], ssb: ['SSB', '#6a3fbf'], bake: ['Baken', '#6b7785'],
+                  all: ['alle Betriebsarten', '#0e8a8a'], dig: ['Digital', '#00838f'], fm: ['FM / digitale Sprache', '#2e9d4b'], rel: ['Relais', '#e07b00'] };
+    // Auf Deutsch (Dietmar: "Lernhilfen in Deutsch uebersetzen"). Fachkuerzel bleiben (MGM, SSB, EME, APRS, ATV).
+    const BP2 = [
+        ['144,000–144,025', '2,7 kHz', 'alle Betriebsarten', ['nur Satelliten-Downlink'], 'sat'],
+        ['144,025–144,100', '500 Hz', 'Telegrafie', ['144,050 MHz Telegrafie-Anruf', '144,100 MHz Meteorscatter (Random MS)'], 'cw'],
+        ['144,100–144,150', '500 Hz', 'MGM, Telegrafie', ['144,110–144,160 MHz CW und MGM über Mondreflexion (EME)'], 'cw'],
+        ['144,150–144,400', '2,7 kHz', 'MGM, Telegrafie, SSB', ['144,195–144,205 MHz Meteorscatter SSB', '<b>144,300 MHz SSB-Aktivitätszentrum</b>'], 'ssb'],
+        ['144,400–144,490', '500 Hz', 'MGM, Telegrafie', ['nur Baken'], 'bake'],
+        ['144,491–144,493', '500 Hz', 'MGM', ['experimentelle MGM, persönliche MGM-Baken für schwache Signale'], 'cw'],
+        ['144,500–144,794', '20 kHz', 'alle Betriebsarten', ['144,500 MHz Bildübertragung (SSTV, Fax …)', '144,600 MHz Daten-Aktivitätszentrum (MGM, RTTY …)', '144,750 MHz ATV-Rücksprache'], 'all'],
+        ['144,794–144,9625', '12 kHz', 'MGM, digitale Kommunikation', ['144,8000 MHz APRS', '144,8125 · 144,8250 · 144,8375 · 144,8500 · 144,8625 MHz digitale Sprache, Internet-Gateway'], 'dig'],
+        ['144,975–145,194', '12 kHz', 'FM / digitale Sprache', ['nur Relais-Eingaben'], 'rel'],
+        ['145,194–145,206', '12 kHz', 'FM / digitale Sprache', ['Weltraumfunk'], 'sat'],
+        ['145,206–145,5625', '12 kHz', 'FM / digitale Sprache', ['145,2375 · 145,2875 · 145,3375 MHz FM-Internet-Gateway', '<b>145,3750 MHz Anruf digitale Sprache</b>', '<b>145,5000 MHz FM-Anruf</b>'], 'fm'],
+        ['145,575–145,7935', '12 kHz', 'FM / digitale Sprache', ['nur Relais-Ausgaben'], 'rel'],
+        ['145,794–145,806', '12 kHz', 'FM / digitale Sprache', ['Weltraumfunk'], 'sat'],
+        ['145,806–146,000', '12 kHz', 'alle Betriebsarten', ['nur Satellitenfunk'], 'sat']
+    ];
+    const BP70 = [
+        ['430,000–431,975', '20 kHz', 'alle Betriebsarten', ['430,025–430,375 MHz FM-Relais-Ausgaben (1,6 MHz Ablage)', '430,400–430,575 MHz digitale Kommunikation', '430,600–430,925 MHz digitale Relais-Kanäle', '430,925–431,025 MHz Multimode-Kanäle', '431,050–431,825 MHz Relais-Eingaben (7,6 MHz Ablage)', '431,625–431,975 MHz Relais-Eingaben (1,6 MHz Ablage)'], 'all'],
+        ['432,000–432,100', '500 Hz', 'MGM, Telegrafie', ['432,050 MHz Telegrafie-Aktivitätszentrum'], 'cw'],
+        ['432,100–432,400', '2,7 kHz', 'MGM, Telegrafie, SSB', ['<b>432,200 MHz SSB-Aktivitätszentrum</b>', '432,350 MHz Mikrowellen-Rücksprache', '432,370 MHz Meteorscatter-Aktivitätszentrum'], 'ssb'],
+        ['432,400–432,490', '500 Hz', 'MGM, Telegrafie', ['nur Baken'], 'bake'],
+        ['432,491–432,493', '500 Hz', 'experimentelle MGM', ['experimentelle MGM'], 'cw'],
+        ['432,500–432,975', '12 kHz', 'alle Betriebsarten', ['432,500 MHz neue APRS-Frequenz', '432,600–432,9875 MHz Relais-Eingaben Region-1-Standard, 25 kHz Raster, 2 MHz Ablage'], 'all'],
+        ['433,000–433,375', '12 kHz', 'FM, digitale Sprache – Relais', ['Relais-Eingaben Region-1-Standard, 25 kHz Raster, 1,6 MHz Ablage'], 'rel'],
+        ['433,400–433,575', '12 kHz', 'FM, digitale Sprache', ['433,400 MHz SSTV (FM/AFSK)', '<b>433,450 MHz Anruf digitale Sprache</b>', '<b>433,500 MHz FM-Anruf</b>'], 'fm'],
+        ['433,600–434,000', 'keine', 'alle Betriebsarten', ['433,625–433,775 MHz digitale Kommunikations-Kanäle', '434,000 MHz Mittenfrequenz digitaler Experimente'], 'all'],
+        ['434,000–434,594', '12 kHz', 'alle Betriebsarten, ATV', ['434,450–434,575 MHz digitale Kommunikations-Kanäle'], 'all'],
+        ['434,594–434,981', '12 kHz', 'alle Betriebsarten', ['434,600–434,9875 MHz Relais-Ausgaben (12,5 kHz Raster, 1,6 oder 2 MHz Ablage)'], 'rel'],
+        ['435,000–436,000', 'keine', 'Satellitenfunk', [], 'sat'],
+        ['436,000–438,000', 'keine', 'Satellitenfunk, DATV / Daten', ['DATV- und Daten-Aktivitätszentrum'], 'sat'],
+        ['438,000–440,000', 'keine', 'alle Betriebsarten', ['438,025–438,175 MHz digitale Kommunikations-Kanäle', '438,200–438,525 MHz digitale Relais-Kanäle', '438,550–438,625 MHz Multimode', '438,650–439,425 MHz Relais-Ausgaben (7,6 MHz Ablage)', '439,800–439,975 MHz digitale Verbindungs-Kanäle (Links)'], 'all']
+    ];
+    function bandplanHtml(titel, zeilen){
+        const legende = ['cw', 'ssb', 'bake', 'all', 'dig', 'fm', 'rel', 'sat'].filter(k => zeilen.some(z => z[4] === k))
+            .map(k => '<span class="bp-leg" style="--bp:' + ART[k][1] + '">' + ART[k][0] + '</span>').join('');
+        const rows = zeilen.map(z => '<div class="bp-z" style="--bp:' + ART[z[4]][1] + '"><div class="bp-k"><b>' + z[0] + ' MHz</b><span class="bp-max">' + z[1] + '</span><span class="bp-mode">' + z[2] + '</span></div>'
+            + (z[3].length ? '<div class="bp-u">' + z[3].join('<br>') + '</div>' : '') + '</div>').join('');
+        return '<details class="uri-dreieck mh-tab"' + (offen ? ' open' : '') + '>'
+          + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: ' + titel + ' <span>– zum Aufklappen antippen</span></summary>'
+          + '<div class="bp-legende">' + legende + '</div>' + rows
+          + '<div class="ud-fuss">Nach der Formelsammlung der Bundesnetzagentur (IARU Region 1), übersetzt. Die Angabe neben der Frequenz ist die größte empfohlene Bandbreite. MGM = maschinell erzeugte Betriebsarten (z. B. FT8, PSK31), EME = Erde-Mond-Erde.</div></details>';
+    }
+    // Frequenzbereiche: [Nr, von, bis, Einheit, Band, Status, A, E, N, Bestimmungen]
+    const FREQ = [
+        [1, '135,7', '137,8', 'kHz', '2200 m', 'S', '1 W ERP', '', '', '1 2 10'], [2, '472', '479', 'kHz', '630 m', 'S', '1 W ERP', '', '', '1'],
+        [3, '1 810', '1 850', 'kHz', '160 m', 'P', '750 W PEP', '100 W PEP', '', '3'], [4, '1 850', '1 890', 'kHz', '160 m', 'S', '75 W PEP', '75 W PEP', '', '3 10 12 15'],
+        [5, '1 890', '2 000', 'kHz', '160 m', 'S', '10 W PEP', '10 W PEP', '', '3 10 15'], [6, '3 500', '3 800', 'kHz', '80 m', 'P', '750 W PEP', '100 W PEP', '', '3'],
+        [7, '5 351,5', '5 366,5', 'kHz', '60 m', 'S', '9,14 W ERP', '', '', '3'], [8, '7 000', '7 200', 'kHz', '40 m', 'P', '750 W PEP', '', '', '3 13'],
+        [9, '10 100', '10 150', 'kHz', '30 m', 'S', '150 W PEP', '', '', '1 10 12'], [10, '14 000', '14 350', 'kHz', '20 m', 'P', '750 W PEP', '', '', '3 13'],
+        [11, '18 068', '18 168', 'kHz', '17 m', 'P', '750 W PEP', '', '', '3 13'], [12, '21 000', '21 450', 'kHz', '15 m', 'P', '750 W PEP', '100 W PEP', '', '3 13'],
+        [13, '24 890', '24 990', 'kHz', '12 m', 'P', '750 W PEP', '', '', '3 13'], [14, '28', '29,7', 'MHz', '10 m', 'P', '750 W PEP', '100 W PEP', '10 W ERP', '4 13'],
+        [15, '50', '50,4', 'MHz', '6 m', 'S', '750 W PEP', '', '', '5 16'], [16, '50,4', '52', 'MHz', '6 m', 'S', '25 W PEP', '', '', '5 16'],
+        [17, '144', '146', 'MHz', '2 m', 'P', '750 W PEP', '75 W PEP', '6,1 W ERP', '6 13'], [18, '430', '440', 'MHz', '70 cm', 'P', '750 W PEP', '75 W PEP', '6,1 W ERP', '7 13'],
+        [19, '1 240', '1 250', 'MHz', '23 cm', 'S', '750 W PEP', '75 W PEP', '', '8 11 17'], [20, '1 250', '1 260', 'MHz', '23 cm', 'S', '750 W PEP', '75 W PEP', '', '8 11 17'],
+        [21, '1 260', '1 300', 'MHz', '23 cm', 'S', '750 W PEP', '75 W PEP', '', '8 11 13 17'], [22, '2 320', '2 400', 'MHz', '13 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [23, '2 400', '2 450', 'MHz', '13 cm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'], [24, '3 400', '3 475', 'MHz', '9 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [25, '5 650', '5 670', 'MHz', '6 cm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'], [26, '5 670', '5 725', 'MHz', '6 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [27, '5 725', '5 755', 'MHz', '6 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'], [28, '5 755', '5 830', 'MHz', '6 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [29, '5 830', '5 850', 'MHz', '6 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'], [30, '10', '10,4', 'GHz', '3 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [31, '10,4', '10,45', 'GHz', '3 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'], [32, '10,45', '10,5', 'GHz', '3 cm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'],
+        [33, '24', '24,05', 'GHz', '1,2 cm', 'P', '75 W PEP', '5 W PEP', '', '13 17'], [34, '24,05', '24,25', 'GHz', '1,2 cm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [35, '47', '47,2', 'GHz', '6 mm', 'P', '75 W PEP', '5 W PEP', '', '13 17'], [36, '76', '77,5', 'GHz', '4 mm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'],
+        [37, '77,5', '78', 'GHz', '4 mm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'], [38, '78', '79', 'GHz', '4 mm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'],
+        [39, '79', '81', 'GHz', '4 mm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'], [40, '122,25', '123', 'GHz', '2,5 mm', 'S', '75 W PEP', '5 W PEP', '', '9 17'],
+        [41, '134', '136', 'GHz', '2 mm', 'P', '75 W PEP', '5 W PEP', '', '9 13 17'], [42, '136', '141', 'GHz', '2 mm', 'S', '75 W PEP', '5 W PEP', '', '9 13 17'],
+        [43, '241', '248', 'GHz', '1,2 mm', 'S', '75 W PEP', '5 W PEP', '', '13 17'], [44, '248', '250', 'GHz', '1,2 mm', 'P', '75 W PEP', '5 W PEP', '', '13 17'],
+        [45, '> 275', '', 'GHz', '', '–', '–', '–', '', '14 17']
+    ];
+    function freqHtml(){
+        const chip = (w, k, kl) => '<span class="fq-c fq-' + k + (w ? '' : ' fq-leer') + '"><small>' + kl + '</small>' + (w || '–') + '</span>';
+        const rows = FREQ.map(f => '<div class="fq-z' + (f[8] ? ' fq-nz' : '') + '"><div class="fq-k1"><span class="fq-nr">' + f[0] + '</span><b>' + f[1] + (f[2] ? '–' + f[2] : '') + ' ' + f[3] + '</b>'
+            + (f[4] ? '<span class="fq-band">' + f[4] + '</span>' : '') + '<span class="fq-st fq-' + (f[5] === 'P' ? 'p' : 's') + '">' + (f[5] === 'P' ? 'primär' : f[5] === 'S' ? 'sekundär' : '–') + '</span></div>'
+            + '<div class="fq-k2">' + chip(f[6], 'a', 'A') + chip(f[7], 'e', 'E') + chip(f[8], 'n', 'N') + '</div></div>').join('');
+        return '<details class="uri-dreieck mh-tab"' + (offen ? ' open' : '') + '>'
+          + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: Frequenzbereiche und Leistung (AFuV Anlage 1) <span>– zum Aufklappen antippen</span></summary>'
+          + '<div class="bp-legende"><span class="fq-c fq-a"><small>A</small>Klasse A</span><span class="fq-c fq-e"><small>E</small>Klasse E</span><span class="fq-c fq-n"><small>N</small>Klasse N</span></div>'
+          + rows
+          + '<div class="ud-fuss">Grün hinterlegt: Bänder, die auch Klasse N nutzen darf. Leer (–): für diese Klasse nicht zugelassen. Die zusätzlichen Nutzungsbestimmungen (Nr. 1–17) stehen in der Formelsammlung.</div></details>';
+    }
+    const RUF1 = [['DAØ', 'KS', 'A'], ['DA1', 'PZ', 'A'], ['DA2', 'PZ', 'A'], ['DA4', 'SZ', 'E'], ['DA5', 'SZ', 'A'], ['DA6', 'PZ', 'E'], ['DA7', 'KS', 'E'], ['DA8', 'KS', 'N'],
+        ['DBØ', 'RL / FB, (KS auslaufend)', 'A'], ['DB1 – DB9', 'PZ', 'A'], ['DCØ – DC9', 'PZ, (KS auslaufend)', 'A'], ['DDØ – DD9', 'PZ, (KS auslaufend)', 'A'],
+        ['DFØ', 'KS, (RL / FB auslaufend)', 'A'], ['DF1 – DF9', 'PZ', 'A'], ['DGØ – DG9', 'PZ, (KS auslaufend)', 'A'], ['DHØ – DH9', 'PZ, (KS auslaufend)', 'A'],
+        ['DJØ – DJ9', 'PZ', 'A'], ['DKØ', 'KS, (RL / FB auslaufend)', 'A'], ['DK1 – DK9', 'PZ', 'A'], ['DLØ', 'KS, (RL / FB auslaufend)', 'A'], ['DL1 – DL9', 'PZ', 'A'],
+        ['DMØ', 'RL / FB', 'A'], ['DM1 – DM9', 'PZ', 'A'], ['DNØ', 'KS (auslaufend)', 'E'], ['DN1 – DN6', 'AB (auslaufend)', 'A'], ['DN7 – DN8', 'AB (auslaufend)', 'E'],
+        ['DN9', 'PZ', 'N'], ['DOØ', 'RL / FB, (KS auslaufend)', 'E'], ['DO1 – DO9', 'PZ', 'E'], ['DPØ – DP1', 'KS, RL / FB, SZ', 'A'], ['DP2', 'KS, RL / FB, SZ', 'E'],
+        ['DP8', 'KS, RL / FB, SZ', 'N'], ['DR1', 'KSB', 'A'], ['DR2', 'KSB', 'E'], ['DR3', 'KSB', 'N'], ['DR4', 'KSO', 'A'], ['DR5', 'KSO', 'E'], ['DR6', 'KSO', 'N']];
+    const RUF2 = [['DAØ', 'KS', 'A'], ['DA1', 'KS', 'A'], ['DA2 – DA3', 'KS', 'A'], ['DA4', 'SZ (als Klubstationen)', 'E'], ['DA5', 'SZ (als Klubstationen)', 'A'],
+        ['DA6', 'KS', 'E'], ['DA7', 'KS', 'E'], ['DA8', 'KS', 'N'], ['DA9', 'KS', 'E'], ['DBØ – DD9', 'KS', 'A'], ['DFØ – DH9', 'KS', 'A'], ['DJØ – DM9', 'KS', 'A'],
+        ['DNØ', 'KS', 'E'], ['DOØ – DO9', 'KS', 'E'], ['DPØ – DP1', 'KS (mit exterritorialem Standort)', 'A'], ['DP2', 'KS (mit exterritorialem Standort)', 'E'],
+        ['DP3 – DP7', 'KS', 'A'], ['DP8', 'KS (mit exterritorialem Standort)', 'N'], ['DP9', 'KS', 'A'], ['DQØ – DR9', 'KS', 'A']];
+    function rufTab(z){ return '<table class="rf-tab"><thead><tr><th>Rufzeichenreihe</th><th>Verwendungszweck</th><th>Klasse</th></tr></thead><tbody>'
+        + z.map(r => '<tr><td><b>' + r[0] + '</b></td><td>' + r[1] + '</td><td><span class="kl-' + r[2] + '">' + r[2] + '</span></td></tr>').join('') + '</tbody></table>'; }
+    function rufHtml(){
+        return '<details class="uri-dreieck mh-tab"' + (offen ? ' open' : '') + '>'
+          + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: Rufzeichenplan <span>– zum Aufklappen antippen</span></summary>'
+          + '<div class="rf-t">1. Rufzeichen mit 2- oder 3-buchstabigen Suffixen</div>' + rufTab(RUF1)
+          + '<div class="rf-t">2. Rufzeichen mit 1-buchstabigen Suffixen für Klubstationen</div>' + rufTab(RUF2)
+          + '<div class="ud-fuss"><b>PZ</b> personengebunden · <b>KS</b> Klubstation · <b>RL</b> Relaisfunkstelle · <b>FB</b> Funkbake · <b>SZ</b> besondere experimentelle Studien · <b>AB</b> Ausbildungsrufzeichen (bis 31.12.2028) · <b>KSB</b> Klubstation BOS · <b>KSO</b> Klubstation Notfunkgruppen. Ø = Ziffer Null.</div></details>';
+    }
     function farbHtml(){
         const zeilen = FARBEN.map(f => '<tr><td><span class="fc-chip" style="background:' + f[5] + ';color:' + f[6] + ';' + (f[0] === 'Keine' ? 'border:1px dashed currentColor;' : (f[0] === 'Weiß' ? 'border:1px solid #bbb;' : '')) + '">' + f[0] + '</span></td>'
             + '<td class="fc-z">' + f[1] + '</td><td class="fc-m">' + f[2] + (f[3] ? ' <span>= ' + f[3] + '</span>' : '') + '</td><td class="fc-t">' + f[4] + '</td></tr>').join('');
@@ -56413,12 +56566,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(URI_FRAGEN.has(q.id)) saetze = [SAETZE.uri];
         else if(PUI_FRAGEN.has(q.id)) saetze = [SAETZE.pui];
         else if(FARB_FRAGEN.has(q.id)) saetze = ['farb'];
+        else if(BP2_FRAGEN.has(q.id)) saetze = ['bp2'];
+        else if(BP70_FRAGEN.has(q.id)) saetze = ['bp70'];
+        else if(FREQ_FRAGEN.has(q.id)) saetze = ['freq'];
+        else if(RUF_FRAGEN.has(q.id)) saetze = ['ruf'];
         else return;
         try{ offen = !!answered; }catch(e){ offen = false; }
         const k = document.getElementById('optionsContainer');
         if(!k) return;
         let h = '';
-        saetze.forEach(x => { if(x === 'farb'){ h += farbHtml(); return; } satz = x; h += html(); });
+        saetze.forEach(x => { if(x === 'farb'){ h += farbHtml(); return; } if(x === 'bp2'){ h += bandplanHtml('IARU-Bandplan 2 m', BP2); return; } if(x === 'bp70'){ h += bandplanHtml('IARU-Bandplan 70 cm', BP70); return; } if(x === 'freq'){ h += freqHtml(); return; } if(x === 'ruf'){ h += rufHtml(); return; } satz = x; h += html(); });
         k.insertAdjacentHTML('afterend', h);
     }
     window.uriDreieckSetzen = setzen;
