@@ -23777,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 113, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 114, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -33623,13 +33623,7 @@ function ohneGelernte(pool, mindestens){
     if(!Array.isArray(pool) || pool.length === 0) return pool;
     const offen = pool.filter(q => !isMastered(q.id));
     if(offen.length === 0) return pool;                 // alles gelernt -> alles wiederholen
-    if(mindestens && offen.length < mindestens){
-        try{
-            const n = offen.length;
-            clearTimeout(window._nurOffenT);
-            window._nurOffenT = setTimeout(() => { if(window.showAppAlert) window.showAppAlert(n === 1 ? 'Nur noch 1 offene Frage in diesem Teil – die kommt jetzt. Gelerntes bleibt ausgeblendet.' : 'Nur noch ' + n + ' offene Fragen in diesem Teil – die kommen jetzt. Gelerntes bleibt ausgeblendet.'); }, 400);
-        }catch(e){}
-    }
+    // P104: ohne Hinweisfenster (Dietmar: "nervt") - "Frage 1 von 22" oben sagt es schon
     return offen;
 }
 
