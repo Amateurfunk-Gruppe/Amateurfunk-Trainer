@@ -23777,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 116, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 118, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -53191,10 +53191,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '</g></svg>';
     }
     // Suesse Funk-Stimme (hoch wie Funki, aber etwas tiefer und im Funkband) mit Quindar-Ton davor und danach (Roger-Beep) und Rauschen darunter
-    const ASTRO_STIMME = { halb: 6, tempo: 1.03, hp: 380, praes: 5, tp: 4800, chorus: 0.15, vib: 0.04, echo: 0.05, quindar: true };
+    // 07.10.2026, Dietmar hat aus sechs Proben Nr. 4 gewaehlt: Maedchenstimme mit Funk - 5 Halbtoene hoeher, etwas
+    // schneller, klar (kein Schwanken, kaum Doppelstimme), Funkband mit Quindar. Grundstimme am PC: Kerstin.
+    const ASTRO_STIMME = { halb: 5, tempo: 1.05, hp: 380, praes: 5, tp: 4800, chorus: 0.05, vib: 0, echo: 0.05, quindar: true, frau: true };
     // Spricht der Astronaut als Begleiter (06.10.2026, Dietmar: Quindar-Roger-Beep, danach kurzes
     // Rauschen, gerne mit etwas Doppler): dieselbe Funkstimme, dazu gleitet die Tonhoehe leicht.
-    const ASTRO_SPRECH = Object.assign({}, ASTRO_STIMME, { doppler: 0.012 });
+    const ASTRO_SPRECH = Object.assign({}, ASTRO_STIMME);
     const ASTRO_SPRUECHE = [
         { t: 'Hier <b>ISS</b>! <b>Weiter so</b> – du schaffst die Prüfung! Wir hören uns im Funk!', s: 'Hier I S S! Weiter so! Du schaffst die Prüfung. Wir hören uns im Funk!' },
         { t: 'Ich winke von ganz oben: <b>Bleib dran</b>, die Prüfung packst du! Wir hören uns!', s: 'Ich winke von ganz oben. Bleib dran! Die Prüfung packst du. Wir hören uns!' },
@@ -53776,9 +53778,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         return b;
     }
     // Die Stimme des Handys fuer einen Text (24 kHz reichen, das spart Rechenzeit)
+    // P107: Handy-Stimme beim Start still wecken
+    tu(() => {
+        if(!/AmateurfunkTrainerApp/.test(navigator.userAgent)) return;
+        setTimeout(() => { try{ fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: 'Hallo', voice: (window.maskottchenArt && maskottchenArt() === 'astro') ? 'de_DE-kerstin-low.onnx' : lies('ttsVoice', '') }) }).catch(() => {}); }catch(e){} }, 3000);
+    });
     async function stimmeHolen(ctx, text){
+        let st = lies('ttsVoice', '');
+        try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') st = 'de_DE-kerstin-low.onnx'; }catch(e){}
         const r = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ text: text, voice: lies('ttsVoice', '') }) });
+                                            body: JSON.stringify({ text: text, voice: st }) });
         if(!r.ok) return null;
         const b = await r.arrayBuffer();
         if(!b || b.byteLength < 500) return null;
@@ -53816,7 +53826,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         try{
             const alle = Promise.all(folge.map(f => f.text ? stimmeHolen(ctx, f.text).then(p => { f.puffer = p; }) : null));
             // Kommt die Stimme nicht rasch, ist der Moment vorbei
-            const da = await Promise.race([alle.then(() => true), new Promise(r => setTimeout(() => r(false), 16000))]);
+            const da = await Promise.race([alle.then(() => true), new Promise(r => setTimeout(() => r(false), selbst ? 40000 : 16000))]);
             if(!da) return false;
         }catch(e){ return false; }
         if(folge.some(f => f.text && !f.puffer)) return false;

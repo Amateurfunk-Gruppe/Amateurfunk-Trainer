@@ -12,9 +12,11 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 116 · 07.10.2026
+Stand 118 · 07.10.2026
 
 ### Hinzugefügt
+- **Maja hat eine neue Stimme:** eine Mädchenstimme mit Funk-Klang und Quindar-Ton (Probe 4) – etwas höher und flotter, klar ohne Schwanken. Am PC spricht sie mit der Frauenstimme Kerstin, in der App mit der Stimme des Handys.
+- Android-App: Maja spricht jetzt auch gleich nach dem Start. Die Stimme des Handys wird beim Öffnen still im Hintergrund geweckt, und tippt man Maja an, wartet sie bis zu 40 Sekunden auf die Stimme statt nach 16 Sekunden aufzugeben.
 - Merkhilfen öffnen sich nach der Antwort nicht mehr von selbst. War eine offen, klappt sie zu, sobald die Frage beantwortet ist – aufklappen geht jederzeit von Hand.
 - Ist Maja die Begleiterin, spricht sie auch von sich als Maja: Aus „Funki meldet sich zum Dienst!“ wird „Maja meldet sich zum Dienst!“ – in allen Sprechblasen, in den Werkzeug-Blättern und in der Stimme.
 - Das Fenster „Nur noch 22 offene Fragen in diesem Teil …“ kommt nicht mehr – die Runde startet direkt mit den offenen Fragen, oben steht ja „Frage 1 von 22“.
