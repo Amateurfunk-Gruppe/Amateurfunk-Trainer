@@ -1685,14 +1685,15 @@
                --ck-num:#1f6fd1; --ck-glow:rgba(31,111,209,.25); --ck-acc1:#e2932f; --ck-acc2:#f4b85a; --ck-acctext:#241400; --ck-r:16px; }
         body.dark   { --ck-bg1:#0b1a2e; --ck-bg2:#15345a; --ck-line:#23446d; --ck-card:rgba(255,255,255,.045); --ck-text:#ffffff; --ck-muted:#9db6d8;
                       --ck-num:#7fd0ff; --ck-glow:rgba(127,208,255,.5); --ck-acc1:#ff9f1c; --ck-acc2:#ffcf5c; --ck-acctext:#0b1a2e; }
-        body.green  { --ck-bg1:#0c2418; --ck-bg2:#17452f; --ck-line:#24583d; --ck-card:rgba(255,255,255,.045); --ck-text:#eafff2; --ck-muted:#9cc9ae;
-                      --ck-num:#7ee2a8; --ck-glow:rgba(126,226,168,.45); --ck-acc1:#2fbf71; --ck-acc2:#8be8b2; --ck-acctext:#06210f; }
-        body.blue   { --ck-bg1:#0a1c33; --ck-bg2:#173e6b; --ck-line:#23497a; --ck-card:rgba(255,255,255,.045); --ck-text:#eef6ff; --ck-muted:#a3bfdf;
-                      --ck-num:#8cc8ff; --ck-glow:rgba(140,200,255,.5); --ck-acc1:#3b8fe8; --ck-acc2:#8cc8ff; --ck-acctext:#06172b; }
-        body.orange { --ck-bg1:#2a1606; --ck-bg2:#5a3210; --ck-line:#6b4120; --ck-card:rgba(255,255,255,.05); --ck-text:#fff4e6; --ck-muted:#e0bf9c;
-                      --ck-num:#ffc27a; --ck-glow:rgba(255,194,122,.5); --ck-acc1:#ff9f1c; --ck-acc2:#ffcf5c; --ck-acctext:#2a1606; }
-        body.grey   { --ck-bg1:#1c2024; --ck-bg2:#3a4148; --ck-line:#4b545d; --ck-card:rgba(255,255,255,.05); --ck-text:#f3f6f8; --ck-muted:#b9c2ca;
-                      --ck-num:#e2e8ee; --ck-glow:rgba(226,232,238,.4); --ck-acc1:#aab4be; --ck-acc2:#e2e8ee; --ck-acctext:#1c2024; }
+        /* Gruen, Blau, Orange, Grau sind helle Designs mit Farbton - das Cockpit bleibt dort hell, nur Dunkel wird dunkel */
+        body.green  { --ck-bg1:#eef8f2; --ck-bg2:#ffffff; --ck-line:#c3e0cf; --ck-card:rgba(20,128,74,.05); --ck-text:#1b3527; --ck-muted:#4f6e5a;
+                      --ck-num:#14804a; --ck-glow:rgba(20,128,74,.22); --ck-acc1:#22a862; --ck-acc2:#6fd89d; --ck-acctext:#06210f; }
+        body.blue   { --ck-bg1:#eaf3fb; --ck-bg2:#ffffff; --ck-line:#c3d9ea; --ck-card:rgba(31,111,209,.05); --ck-text:#16324a; --ck-muted:#4c6478;
+                      --ck-num:#1f6fd1; --ck-glow:rgba(31,111,209,.22); --ck-acc1:#2f7fd8; --ck-acc2:#7fbcf5; --ck-acctext:#ffffff; }
+        body.orange { --ck-bg1:#fdf3e7; --ck-bg2:#ffffff; --ck-line:#ecd2b4; --ck-card:rgba(196,106,18,.05); --ck-text:#4d2e12; --ck-muted:#7a5738;
+                      --ck-num:#c46a12; --ck-glow:rgba(196,106,18,.22); --ck-acc1:#f08a1a; --ck-acc2:#ffc65c; --ck-acctext:#2a1606; }
+        body.grey   { --ck-bg1:#eceff2; --ck-bg2:#f7f8f9; --ck-line:#b4bbc3; --ck-card:rgba(28,32,36,.04); --ck-text:#1c2024; --ck-muted:#4e5862;
+                      --ck-num:#3a4652; --ck-glow:rgba(58,70,82,.2); --ck-acc1:#4e5a66; --ck-acc2:#7d8a96; --ck-acctext:#ffffff; }
         body.eckig:not(.app-rund) { --ck-r: 0px; }
 
         html body .realistic-modal:has(.realistic-parts) { background:var(--ck-bg1) !important; border:1px solid var(--ck-line) !important; border-radius:var(--ck-r) !important; }
@@ -1728,6 +1729,10 @@
         html body .realistic-modal:has(.realistic-parts) .realistic-footer,
         html body .realistic-modal:has(.realistic-parts) hr { border-color:var(--ck-line) !important; }
         html body .realistic-modal:has(.realistic-parts) #realisticSummary { color:var(--ck-text) !important; }
+        /* P95: Ueberschrift und Regel-Kacheln weg - steht schon in "So laeuft's" davor (Dietmar) */
+        html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > .realistic-header,
+        html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > .realistic-rules { display:none !important; }
+        html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > h3:first-of-type { margin-top:0 !important; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23688,7 +23693,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 103, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 105, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }

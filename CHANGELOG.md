@@ -12,9 +12,11 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 103 · 07.10.2026
+Stand 105 · 07.10.2026
 
 ### Hinzugefügt
+- Prüfungssimulator: Überschrift und die Kacheln (3 Teile, 25 Fragen, 135 Min, 19/25, Grauzone) sind raus – das steht schon in „So läuft’s“. Das Fenster beginnt direkt mit „Womit möchtest du starten?“.
+- Cockpit-Stil des Prüfungssimulators: Bei den hellen Designs (Hell, Grün, Blau, Orange, Grau) bleibt das Fenster jetzt **hell** im jeweiligen Farbton – dunkel wird es nur beim Design Dunkel.
 - **Prüfungssimulator im Cockpit-Stil:** Das Auswahlfenster sieht jetzt aus wie ein Funkgerät-Display – leuchtende Zahlen, der gewählte Teil leuchtet, der Startknopf glüht. Die Farben richten sich nach dem eingestellten Design (Hell, Dunkel, Grün, Blau, Orange, Grau), die Ecken nach Rund oder Eckig.
 - Prüfungssimulator: Unten fällt „Schließen“ weg (oben ist das X), dafür geht „Prüfung starten“ über die ganze Breite.
 - Prüfungssimulator: Der Haken „Bereits gelernte Fragen nicht mehr fragen“ ist raus – in der Simulation wird jede Frage gestellt, sie zählt ja für die letzte Stufe. (Im Gruppenraum bleibt er.) Die Kachel „Grauzone“ geht auf dem Handy über die ganze Breite, kein Loch mehr daneben.
