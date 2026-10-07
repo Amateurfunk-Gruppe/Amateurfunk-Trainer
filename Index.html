@@ -23777,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 114, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 115, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -51812,7 +51812,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Auftritt auf der Buehne. art 'tanzweg': erst quer ueber den Schirm
     // huepfen - Dietmar: "dass er ueber den Bildschirm tanzt".
+    function alsMaja(t){
+        try{ if(typeof t === 'string' && window.maskottchenArt && maskottchenArt() === 'astro') return t.replace(/\bFunkis\b/g, 'Majas').replace(/\bFunki\b/g, 'Maja'); }catch(e){}
+        return t;
+    }
+    window.alsMaja = alsMaja;
     function auftritt(html, knoepfe, art, modus, kuer){
+        html = alsMaja(html);
         tu(astroWeg);                                     // ein winkender Astronaut raeumt das Feld
         uhrenAus();
         robo.modus = modus || 'tipp';
@@ -53796,6 +53802,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // selbst = true: angetippt, Rundgang, Lob oder Probe - ohne Pause davor
     async function funkiSagt(text, selbst, stimme){
         if(!stimme && typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') stimme = ASTRO_SPRECH;
+        try{ if(window.alsMaja) text = alsMaja(text); }catch(e){}
         text = String(text || '').trim().replace(/\bDOK\s*(<\/?b>)?\s*B05\b/g, 'Ortsverband Bravo Null Fünf').replace(/\bDOK\s*(<\/?b>)?\s*C12\b/g, 'Ortsverband Tschar-lie Eins Zwo');
         if(!text || !darfSprechen(selbst)) return false;
         const ctx = tonKontext();
@@ -54894,6 +54901,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(art === 'stufen') setTimeout(() => tu(() => { const j = $('awStufeJetzt'), r = $('awRolle'); if(j && r) r.scrollTop = Math.max(0, j.offsetTop - r.clientHeight / 2 + j.offsetHeight / 2); }), 40);
     }
     function sprechblase(html, spaet){
+        try{ if(window.alsMaja) html = alsMaja(html); }catch(e){}
         const s = $('awSprech');
         s.innerHTML = html;
         // P79: Maja spricht ihre Blase (beim Oeffnen des Blatts uebernimmt das werkBlattAuf, sonst gleich)

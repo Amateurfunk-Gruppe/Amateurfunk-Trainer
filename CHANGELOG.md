@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 114 · 07.10.2026
+Stand 115 · 07.10.2026
 
 ### Hinzugefügt
+- Ist Maja die Begleiterin, spricht sie auch von sich als Maja: Aus „Funki meldet sich zum Dienst!“ wird „Maja meldet sich zum Dienst!“ – in allen Sprechblasen, in den Werkzeug-Blättern und in der Stimme.
 - Das Fenster „Nur noch 22 offene Fragen in diesem Teil …“ kommt nicht mehr – die Runde startet direkt mit den offenen Fragen, oben steht ja „Frage 1 von 22“.
 - Android-App: Der Hinweis „Stimme wird vorbereitet …“ erscheint nicht mehr – die Stimme wird still im Hintergrund vorbereitet.
 - **Weitere Merkhilfen aus der Formelsammlung, eingefärbt:** IARU-Bandplan 2 m (BC205, BC207, BC209–BC211, BC213–BC218) und 70 cm (BC206, BC208, BC212, BC219–BC222) mit farbigen Bereichen (CW/MGM, SSB, Baken, All mode, Digital, FM, Relais, Satellit) und hervorgehobenen Anruffrequenzen – ins Deutsche übersetzt; die Frequenztabelle der AFuV Anlage 1 mit Status und Leistung je Klasse (A orange, E blau, N grün, Bänder der Klasse N grün hinterlegt) bei VD706, VD709–VD737, VD743; der Rufzeichenplan mit farbiger Klasse bei BD101, BD102, BD104–BD108.
