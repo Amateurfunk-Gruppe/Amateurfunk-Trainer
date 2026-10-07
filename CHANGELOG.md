@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 115 · 07.10.2026
+Stand 116 · 07.10.2026
 
 ### Hinzugefügt
+- Merkhilfen öffnen sich nach der Antwort nicht mehr von selbst. War eine offen, klappt sie zu, sobald die Frage beantwortet ist – aufklappen geht jederzeit von Hand.
 - Ist Maja die Begleiterin, spricht sie auch von sich als Maja: Aus „Funki meldet sich zum Dienst!“ wird „Maja meldet sich zum Dienst!“ – in allen Sprechblasen, in den Werkzeug-Blättern und in der Stimme.
 - Das Fenster „Nur noch 22 offene Fragen in diesem Teil …“ kommt nicht mehr – die Runde startet direkt mit den offenen Fragen, oben steht ja „Frage 1 von 22“.
 - Android-App: Der Hinweis „Stimme wird vorbereitet …“ erscheint nicht mehr – die Stimme wird still im Hintergrund vorbereitet.

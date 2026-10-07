@@ -23777,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 115, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 116, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56545,7 +56545,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     let offen = false;
     function html(){
         // Zugeklappt: Bei NB501-NB503 waere das Dreieck sonst schon die Loesung.
-        // Nach der Antwort klappt es von selbst auf.
+        // P106: Nach der Antwort klappt sie wieder zu.
         return '<details class="uri-dreieck"' + (offen ? ' open' : '') + '>'
           + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: das ' + satz.name + ' <span>– zum Aufklappen antippen</span></summary>'
           + '<svg viewBox="0 0 600 250" role="img">'
@@ -56573,7 +56573,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(FREQ_FRAGEN.has(q.id)) saetze = ['freq'];
         else if(RUF_FRAGEN.has(q.id)) saetze = ['ruf'];
         else return;
-        try{ offen = !!answered; }catch(e){ offen = false; }
+        offen = false;   // P106: immer zu - auch nach der Antwort (Dietmar)
         const k = document.getElementById('optionsContainer');
         if(!k) return;
         let h = '';
@@ -56589,7 +56589,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         window.renderQuestion = neu;
         const altWahl = window.selectOption;
         if(typeof altWahl === 'function' && !altWahl._uri){
-            const w = function(){ const r = altWahl.apply(this, arguments); try{ if(answered) document.querySelectorAll('.uri-dreieck').forEach(d => { d.open = true; }); }catch(e){} return r; };
+            const w = function(){ const r = altWahl.apply(this, arguments); try{ if(answered) document.querySelectorAll('.uri-dreieck').forEach(d => { d.open = false; }); }catch(e){} return r; };
             w._uri = true; window.selectOption = w;
         }
     }
