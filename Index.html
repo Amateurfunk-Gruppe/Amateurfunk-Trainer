@@ -1733,6 +1733,25 @@
         html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > .realistic-header,
         html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > .realistic-rules { display:none !important; }
         html body .realistic-modal:has(.realistic-parts) .realistic-wrapper > h3:first-of-type { margin-top:0 !important; }
+        /* P98: URI-Dreieck */
+        .uri-dreieck { margin: 12px 0 4px; padding: 10px 12px 8px; border-radius: 14px; background: var(--card-bg, #fff); border: 1px solid var(--line, #d5dfec); color: var(--ink, #10243c); }
+        body.eckig:not(.app-rund) .uri-dreieck { border-radius: 0; }
+        .uri-dreieck .ud-kopf { font-weight: 700; font-size: .9rem; cursor: pointer; list-style: none; padding: 2px 0; }
+        .uri-dreieck .ud-kopf::-webkit-details-marker { display: none; }
+        .uri-dreieck .ud-kopf::after { content: '\25BE'; float: right; opacity: .6; }
+        .uri-dreieck[open] .ud-kopf::after { content: '\25B4'; }
+        .uri-dreieck[open] .ud-kopf { margin-bottom: 4px; }
+        .uri-dreieck[open] .ud-kopf span { display: none; }
+        .uri-dreieck .ud-kopf i { color: #e2932f; }
+        .uri-dreieck .ud-kopf span { font-weight: 400; color: var(--muted, #5b6f88); font-size: .8rem; }
+        .uri-dreieck svg { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+        .uri-dreieck .ud-linie { fill: none; stroke: currentColor; stroke-width: 2.2; opacity: .55; }
+        .uri-dreieck .ud-gross { font: 600 30px/1 system-ui, sans-serif; fill: currentColor; }
+        .uri-dreieck .ud-gross.ud-an { fill: #fff; }
+        .uri-dreieck .ud-hl { fill: #c4571e; }
+        .uri-dreieck .ud-formel { font: 700 22px/1 system-ui, sans-serif; fill: currentColor; }
+        .uri-dreieck .ud-klein { font: 400 17px/1 system-ui, sans-serif; fill: var(--muted, #5b6f88); }
+        .uri-dreieck .ud-fuss { text-align: center; font-size: .75rem; color: var(--muted, #5b6f88); margin-top: 2px; }
 
         /* ================================================================
            UEBERSICHT UND WERKZEUGE - Entwurf A mit Stufen      (01.10.2026)
@@ -23704,7 +23723,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 107, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 108, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56277,6 +56296,75 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             return r;
         };
     });
+})();
+</script>
+<script id="uriDreieck">
+// ================================================================
+//  P98 (07.10.2026): URI-Dreieck unter den Fragen zum Ohmschen Gesetz
+//  Dietmar: "Bei diesen Fragen moechte ich das URI-Dreieck darunter haben.
+//  Das kann ich mir in der Pruefung auf einen Schmierzettel malen."
+//  Nur beim Ueben - in Pruefung und Simulator nicht.
+// ================================================================
+(function(){
+    const URI_FRAGEN = new Set(['NB501', 'NB502', 'NB503', 'NB504', 'NB505', 'AD106']);
+    function dreieck(x, gesucht, formel, art){
+        const hl = (bx, by) => '<rect x="' + (bx - 19) + '" y="' + (by - 21) + '" width="38" height="38" rx="7" class="ud-hl"/>';
+        const pos = { U: [x, 92], R: [x - 34, 148], I: [x + 34, 148] };
+        const p = pos[gesucht];
+        return '<g>'
+          + '<text x="' + x + '" y="22" class="ud-klein" text-anchor="middle">' + gesucht + ' gesucht</text>'
+          + '<path d="M' + x + ' 40 L' + (x + 90) + ' 180 L' + (x - 90) + ' 180 Z" class="ud-linie"/>'
+          + '<line x1="' + (x - 54) + '" y1="124" x2="' + (x + 54) + '" y2="124" class="ud-linie"/>'
+          + hl(p[0], p[1])
+          + '<text x="' + x + '" y="100" class="ud-gross' + (gesucht === 'U' ? ' ud-an' : '') + '" text-anchor="middle">U</text>'
+          + '<text x="' + (x - 34) + '" y="156" class="ud-gross' + (gesucht === 'R' ? ' ud-an' : '') + '" text-anchor="middle">R</text>'
+          + '<text x="' + x + '" y="154" class="ud-gross" text-anchor="middle">·</text>'
+          + '<text x="' + (x + 34) + '" y="156" class="ud-gross' + (gesucht === 'I' ? ' ud-an' : '') + '" text-anchor="middle">I</text>'
+          + '<text x="' + x + '" y="214" class="ud-formel" text-anchor="middle">' + formel + '</text>'
+          + '<text x="' + x + '" y="238" class="ud-klein" text-anchor="middle">' + art + '</text>'
+          + '</g>';
+    }
+    let offen = false;
+    function html(){
+        // Zugeklappt: Bei NB501-NB503 waere das Dreieck sonst schon die Loesung.
+        // Nach der Antwort klappt es von selbst auf.
+        return '<details class="uri-dreieck"' + (offen ? ' open' : '') + '>'
+          + '<summary class="ud-kopf"><i class="fas fa-lightbulb"></i> Merkhilfe: das URI-Dreieck <span>– zum Aufklappen antippen</span></summary>'
+          + '<svg viewBox="0 0 600 250" role="img">'
+          + dreieck(100, 'R', 'R = U / I', 'geteilt') + dreieck(300, 'I', 'I = U / R', 'geteilt') + dreieck(500, 'U', 'U = R · I', 'mal')
+          + '</svg>'
+          + '<div class="ud-fuss">Finger auf das Gesuchte – der Rest ist die Formel. U: Spannung in V · R: Widerstand in Ω · I: Strom in A</div></details>';
+    }
+    function streng(){
+        try{ if(typeof pruefungStreng === 'function' && pruefungStreng()) return true; }catch(e){}
+        try{ if(window.realisticExam && realisticExam.active) return true; }catch(e){}
+        try{ if(examSimulatorMode || examMode) return true; }catch(e){}
+        return false;
+    }
+    function setzen(){
+        document.querySelectorAll('.uri-dreieck').forEach(x => x.remove());
+        let q = null; try{ q = currentQuestions[currentIndex]; }catch(e){}
+        if(!q || !URI_FRAGEN.has(q.id) || streng()) return;
+        try{ offen = !!answered; }catch(e){ offen = false; }
+        const k = document.getElementById('optionsContainer');
+        if(k) k.insertAdjacentHTML('afterend', html());
+    }
+    window.uriDreieckSetzen = setzen;
+    function einhaengen(){
+        const alt = window.renderQuestion;
+        if(typeof alt !== 'function' || alt._uri) return;
+        const neu = function(){ const r = alt.apply(this, arguments); try{ setzen(); }catch(e){} return r; };
+        neu._uri = true;
+        window.renderQuestion = neu;
+        const altWahl = window.selectOption;
+        if(typeof altWahl === 'function' && !altWahl._uri){
+            const w = function(){ const r = altWahl.apply(this, arguments); try{ const d = document.querySelector('.uri-dreieck'); if(d && answered) d.open = true; }catch(e){} return r; };
+            w._uri = true; window.selectOption = w;
+        }
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(einhaengen, 0));
+    else setTimeout(einhaengen, 0);
+    window.addEventListener('load', () => setTimeout(einhaengen, 50));
 })();
 </script>
 </body>
