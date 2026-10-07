@@ -126,7 +126,7 @@
                         return false;
                     };
                     var id = await sprich();
-                    if(!id){ var hw = null; try{ hw = document.createElement('div'); hw.textContent = 'Stimme wird vorbereitet \u2026'; hw.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:99999;background:rgba(15,39,69,.92);color:#fff;padding:10px 18px;border-radius:20px;font-size:15px;pointer-events:none'; document.body.appendChild(hw); }catch(e){} await bereitWarten(25000); try{ if(hw) hw.remove(); }catch(e){} id = await sprich(); }
+                    if(!id){ await bereitWarten(25000); id = await sprich(); }
                     if(!id){ await new Promise(function(r){ setTimeout(r, 1800); }); id = await sprich(); }
                     if(!id) return new Response('Die Sprachausgabe des Handys antwortet nicht.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
                     var a = await original('/api/android-tts/' + id);
@@ -23777,7 +23777,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 112, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 113, datum: '07.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }

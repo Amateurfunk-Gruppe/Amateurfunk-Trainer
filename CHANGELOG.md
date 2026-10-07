@@ -12,9 +12,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 112 · 07.10.2026
+Stand 113 · 07.10.2026
 
 ### Hinzugefügt
+- Android-App: Der Hinweis „Stimme wird vorbereitet …“ erscheint nicht mehr – die Stimme wird still im Hintergrund vorbereitet.
 - **Weitere Merkhilfen aus der Formelsammlung, eingefärbt:** IARU-Bandplan 2 m (BC205, BC207, BC209–BC211, BC213–BC218) und 70 cm (BC206, BC208, BC212, BC219–BC222) mit farbigen Bereichen (CW/MGM, SSB, Baken, All mode, Digital, FM, Relais, Satellit) und hervorgehobenen Anruffrequenzen – ins Deutsche übersetzt; die Frequenztabelle der AFuV Anlage 1 mit Status und Leistung je Klasse (A orange, E blau, N grün, Bänder der Klasse N grün hinterlegt) bei VD706, VD709–VD737, VD743; der Rufzeichenplan mit farbiger Klasse bei BD101, BD102, BD104–BD108.
 - **Farbcode als Merkhilfe:** Bei den Farbring-Fragen (NC102–NC110, EC113) steht unter den Antworten aufklappbar die Farbcode-Tabelle – jede Farbe als farbiges Feld, mit Wert, Multiplikator und Toleranz, dazu ein Beispiel-Widerstand (gelb, violett, braun, gold = 470 Ω ±5 %).
 - **Merkhilfen auch für die Klassen E und A:** URI-Dreieck bei Vorwiderstand, Innenwiderstand und Strom im Spannungsteiler (EB513, EC515, EC521, EC522, AB205–AB208, AD106, AD107, AF425, AF426), PUI-Dreieck bei Leistung und Wirkungsgrad (AB213, AB214, AB502, AD319, AD320, AD430) und **beide Dreiecke** dort, wo die Leistung an einem Widerstand gesucht ist (EB509–EB512, EC516, AB301, AC523, AD108, AF427).
