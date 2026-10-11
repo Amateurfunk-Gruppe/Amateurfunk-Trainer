@@ -12,9 +12,16 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 138 · 11.10.2026
+Stand 145 · 11.10.2026
 
 ### Hinzugefügt
+- Am Rechner: „Sachlich“ unter Stil der App wechselt jetzt in die klassische Desktop-Ansicht (dort mit größerer Schrift) statt in die mobile Ansicht. „Wie die App“ am Rechner ist immer Verspielt. Am Handy bleibt Sachlich die ruhige App-Ansicht.
+- Stil-Hinweis: Maja fragt jetzt „Passt es dir – oder ist es dir zu bunt?“ statt „Psst – ist dir das zu bunt?“ (Anzeige und Stimme).
+- N → E und E → A: In den Auswahlfeldern für den Prüfungsteil (oben, Gruppenraum, Merkblatt, Neue Runde) stehen Vorschriften und Betrieb nicht mehr – dort gibt es nur Technik, und das Feld heißt entsprechend „Technik“.
+- Erkennung der Ansicht: Am Rechner öffnet der Trainer die klassische Desktop-Ansicht (einmalig auch dort, wo früher im Startfenster die App-Ansicht gewählt wurde; das Startfenster fragt am Rechner nicht mehr), am Handy – Android und iPhone – die mobile Ansicht wie in der App. Umschalten am PC weiter unter Einstellungen → Anpassen → Ansicht am PC.
+- Handy-Browser (z. B. über amateurfunk-trainer.com oder den Link des Gruppenraums): Der Trainer zeigt sich jetzt von selbst wie die installierte App – Startseite, Kacheln, Leiste unten. Wer ausdrücklich „Klassisch“ gewählt hat (Einstellungen → Anpassen), behält das.
+- PC, Ansicht „wie die App“, Stil Sachlich: Die Startseite stand in einer einzigen Spalte über die ganze Bildschirmbreite. Jetzt drei Spalten wie bei Verspielt – Runde und Tagesziel | Üben | Fortschritt und Werkzeuge (bei mittelbreiten Fenstern zwei Spalten).
+- App: Bei Fragen mit Merkhilfe stand neben dem Zahnrad ein zweiter Dreistrich-Knopf (der Merkhilfe-Knopf vom PC). In der App gibt es jetzt nur noch den einen für die Leisten; die Merkhilfe klappt man dort direkt an ihrer Leiste auf.
 - App, Stil **Sachlich**: mehr Farbe (Entwurf 2 „Pastell-Karten“) – zarte Farbflächen für Runde, Tagesziel und Werkzeug-Kacheln, bunte Zeichen in der Übungsliste, blauer Start-Knopf; in den Einstellungen farbig hinterlegte Kästen und blau gefüllte Auswahl. Im Design Dunkel bleibt alles wie bisher.
 - App: Die Knöpfe „ISS vorbeifliegen lassen“, „Maja winken lassen“, „OSCAR-Satellit fliegen lassen“ und „Hör mal“ sind gleich lang über die ganze Breite.
 - Funk-ABC „Morsen“: neuer Knopf **„CQ DX rufen“** – Maja morst „CQ DX CQ DX CQ DX DK8NG PSE K“, mit richtigen Wortabständen; die Zeichen leuchten mit.

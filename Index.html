@@ -28,6 +28,28 @@
                 // DER PC IM STIL DER APP (06.10.2026): Einstellungen -> Anpassen -> "Ansicht am PC".
                 // Dieselben Klassen wie in der App, dazu pc-app - siehe Skript "pcAppAnsicht".
                 try{
+                    // P127 (11.10.2026): Dietmar, Bild vom Handy-Browser auf amateurfunk-trainer.com:
+                    // "Ich haette da gern die gleiche Ansicht, als haette ich die App installiert."
+                    // Am Handy (Touch, kleiner Bildschirm) ist "wie die App" jetzt von selbst an -
+                    // ausser jemand hat ausdruecklich "Klassisch" gewaehlt.
+                    var handy = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) && Math.min(screen.width || 9999, screen.height || 9999) < 600;
+                    if(handy && !localStorage.getItem('pc_ansicht')){
+                        localStorage.setItem('pc_ansicht', 'app');
+                        if(!localStorage.getItem('app_stil')) localStorage.setItem('app_stil', 'verspielt');
+                        localStorage.setItem('pc_ansicht_gefragt', '1');
+                    }
+                    // P128 (11.10.2026): Dietmar: "Besser waere eine Erkennung. Am Desktop die Desktop-
+                    // Version, am Handy (Android und iOS) die mobile Version." Am Rechner gilt deshalb
+                    // einmalig wieder "Klassisch" (auch wer frueher im Startfenster die App-Ansicht
+                    // gewaehlt hat), und das Startfenster fragt am Rechner nicht mehr. Umschalten geht
+                    // weiter unter Einstellungen -> Anpassen -> Ansicht am PC und bleibt dann.
+                    if(!handy && localStorage.getItem('pc_ansicht_erkennung') !== '1'){
+                        localStorage.setItem('pc_ansicht_erkennung', '1');
+                        localStorage.setItem('pc_ansicht', 'klassisch');
+                        localStorage.setItem('pc_ansicht_gefragt', '1');
+                    }
+                }catch(e){}
+                try{
                     // P110 (08.10.2026): Das Fragenfenster am PC. Dietmar: "Die Frage und die
                     // Antworten koennten groesser sein ... bei verspielt auch etwas verspielt."
                     // Verspielt (oder noch nichts gewaehlt): dunkle Frage-Tafel, bunte Kacheln
@@ -42,6 +64,8 @@
                     localStorage.setItem('app_stil_gewaehlt', '1'); localStorage.setItem('app_stilwahl_aus', '1');
                     var Hp = document.documentElement;
                     Hp.classList.add('android-app'); Hp.classList.add('pc-app');
+                    // P127: am Handy ohne die PC-Zugaben (Knopfreihen, Server, Beenden)
+                    try{ if(matchMedia('(pointer: coarse)').matches && Math.min(screen.width || 9999, screen.height || 9999) < 600) Hp.classList.add('pc-handy'); }catch(e){}
                     if((window.innerWidth || 0) >= 900) Hp.classList.add('pc-breit');
                     Hp.classList.add('android-tunnel');   // am PC gibt es den Internet-Link (Cloudflare) wie bisher
                     Hp.classList.add('stil-' + (localStorage.getItem('app_stil') === 'sachlich' ? 'sachlich' : 'verspielt'));
@@ -1427,6 +1451,30 @@
             html.pc-app.stil-verspielt #appWerk > #awUeberLevel { margin-top: 0 !important; }
             html.pc-app.stil-verspielt #appWerk > #awFort { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between; }
             html.pc-app.stil-verspielt #appWerk > #awUeberWerk, html.pc-app.stil-verspielt #appWerk > #awGrid { display: none !important; }
+        }
+        /* P126 (11.10.2026): Dietmar mit Bild der PC-Ansicht "wie die App", Stil Sachlich:
+           "Am PC ist das ja schrecklich" - alles in einer Spalte ueber die ganze Breite.
+           Jetzt drei Spalten wie bei Verspielt: Runde und Tagesziel | Ueben | Fortschritt. */
+        @media (min-width: 1100px) {
+            html.pc-app.stil-sachlich body:not(.runde-laeuft) #appHeute { display: grid !important; max-width: 1560px !important; width: auto !important; margin: 0 auto !important;
+                padding: 0 34px 24px; box-sizing: border-box; flex: none !important; gap: 14px 24px; align-items: start;
+                grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+                grid-template-areas: "kopf kopf chips" "runde liste werk" "tag liste werk" "kach liste werk"; grid-template-rows: auto auto auto 1fr; }
+            html.pc-app.stil-sachlich #appHeute > * { margin-left: 0 !important; margin-right: 0 !important; }
+            html.pc-app.stil-sachlich #appHeute .ah-kopf { grid-area: kopf; margin: 0 !important; }
+            html.pc-app.stil-sachlich #appHeute #ahChips { grid-area: chips; align-self: center; justify-self: end; margin: 0 !important; }
+            html.pc-app.stil-sachlich #ahRunde { grid-area: runde; margin: 0 !important; }
+            html.pc-app.stil-sachlich #ahTag { grid-area: tag; margin: 0 !important; }
+            html.pc-app.stil-sachlich #ahUebenUeber { display: none !important; }
+            html.pc-app.stil-sachlich #appHeute .ah-liste { grid-area: liste; margin: 0 !important; align-self: start; }
+            html.pc-app.stil-sachlich #ahKacheln { grid-area: kach; margin: 0 !important; }
+            html.pc-app.stil-sachlich #appHeute .ah-weiter-ueber { display: none !important; }
+            html.pc-app.stil-sachlich #appWerk { grid-area: werk; margin: 0 !important; }
+            html.pc-app.stil-sachlich #appWerk > :first-child { margin-top: 0 !important; }
+        }
+        @media (min-width: 1100px) and (max-width: 1399px) {
+            html.pc-app.stil-sachlich body:not(.runde-laeuft) #appHeute { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                grid-template-areas: "kopf chips" "runde werk" "tag werk" "liste werk" "kach werk"; grid-template-rows: auto auto auto auto 1fr; }
         }
         /* Etwas schmaler: zwei Spalten, die Runde oben ueber die ganze Breite */
         @media (min-width: 1100px) and (max-width: 1399px) {
@@ -9028,6 +9076,7 @@ body.dark .realistic-modal-overlay { background:rgba(8,13,20,0.72); }
 
 
 
+<style id="pcHandy">html.pc-handy #pcWerkOben, html.pc-handy .pc-werk, html.pc-handy #pcServerChip, html.pc-handy #alBeenden { display: none !important; }</style>
 </head>
 <body>
 <script>
@@ -23787,7 +23836,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 138, datum: '11.10.2026' };
+const TRAINER_STAND = { nr: 145, datum: '11.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -48607,6 +48656,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             schreib('pc_ansicht', 'app');
             // Wer die App-Ansicht am PC waehlt, will sie verspielt (ausser er sagt "sachlich") - und ohne das Fenster "Wie moechtest du lernen?"
             if(stil === 'sachlich' || stil === 'verspielt') schreib('app_stil', stil);
+            // P131: am Rechner ist "wie die App" immer Verspielt (Sachlich ist dort die klassische Ansicht)
+            else if(!H.classList.contains('pc-handy')) schreib('app_stil', 'verspielt');
             else if(lies('app_stil', '') !== 'sachlich') schreib('app_stil', 'verspielt');
             schreib('app_stil_gewaehlt', '1'); schreib('app_stilwahl_aus', '1');
             // Die Farbe vom PC mitnehmen, wenn noch keine App-Farbe gewaehlt ist
@@ -50652,6 +50703,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function stilIst(){ return lies('app_stil', 'sachlich') === 'verspielt' ? 'verspielt' : 'sachlich'; }
     function stilSetzenApp(s){
         s = s === 'verspielt' ? 'verspielt' : 'sachlich';
+        // P131 (11.10.2026): Dietmar: "Wenn ich auf Sachlich am PC klicke, habe ich die mobile
+        // Ansicht. ... Ich moechte, dass es am Desktop auf die Desktop-Version wechselt."
+        // Am Rechner (nicht am Handy) heisst Sachlich deshalb: zurueck zur klassischen Ansicht.
+        if(s === 'sachlich' && H.classList.contains('pc-app') && !H.classList.contains('pc-handy') && typeof window.pcAnsichtSetzen === 'function'){
+            schreib('app_stil', 'sachlich'); window.pcAnsichtSetzen('klassisch'); return;
+        }
         schreib('app_stil', s);
         H.classList.toggle('stil-verspielt', s === 'verspielt');
         H.classList.toggle('stil-sachlich', s === 'sachlich');
@@ -52654,7 +52711,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         w.setAttribute('data-kein-klickton', '');          // Funkis Fenster: Computer-Piep statt Klick
         w.innerHTML = '<div class="ash-karte" role="dialog" aria-label="Stil wählen">'
           + '<div class="ash-funki">' + maskottchen('winkt') + '</div>'
-          + '<h3>Psst – ist dir das zu bunt?</h3>'
+          + '<h3>Passt es dir – oder ist es dir zu bunt?</h3>'   // P130: Dietmar: "Passt es dir" statt "Psst"
           + '<p>Mich gibt es auch in ruhig: Der Stil <b>Sachlich</b> ist klar und schlicht – ganz ohne mich. Tipp an, was dir lieber ist:</p>'
           + '<div class="app-stil-wahl">'
           + ['verspielt', 'sachlich'].map(st => '<button type="button" class="sw-karte' + (st === 'verspielt' ? ' an' : '') + '" data-stil="' + st + '">'
@@ -52674,7 +52731,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }));
         w.querySelector('.ash-ok').addEventListener('click', zu);
         w.querySelector('.ash-zeig').addEventListener('click', () => { zu(); tu(stilMenueZeigen); });
-        funkiSagt('Psst! | Ist dir das zu bunt? Mich gibt es auch in ruhig.', true);
+        funkiSagt('Passt es dir? | Oder ist es dir zu bunt? Mich gibt es auch in ruhig.', true);
     }
     // Funki fuehrt zum Menue: Einstellungen -> Allgemein -> Stil der App
     function stilMenueZeigen(){
@@ -56766,6 +56823,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const m = document.querySelectorAll('.uri-dreieck');
         const zahnrad = document.querySelector('.question-area button[onclick="openTtsSettings()"]');
         if(!m.length || !zahnrad) return;
+        // In der App steht dort schon der Dreistrich fuer die Leisten (dockKnopf) - kein zweiter
+        if(document.getElementById('dockKnopf') || document.documentElement.classList.contains('android-app')) return;
         const b = document.createElement('button');
         b.type = 'button'; b.id = 'merkKnopf';
         b.setAttribute('style', zahnrad.getAttribute('style') || '');
@@ -56903,5 +56962,51 @@ html.android-app.stil-sachlich body:not(.dark) .app-seg { background:#fff !impor
 html.android-app body .app-probe { display:flex !important; width:100% !important; justify-content:center; align-items:center; gap:10px; margin:0 0 8px !important; box-sizing:border-box; }
 html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n+1) { background:#e6f0fd !important; border-color:#c7dcf7 !important; } html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n+2) { background:#fdeedd !important; border-color:#f3dcc0 !important; } html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n) { background:#e2f5ea !important; border-color:#cbe9d8 !important; }
 </style>
+<script id="teileNurImKatalog">
+// ================================================================
+//  P129 (11.10.2026): Dietmar: "Bei N auf E und E auf A kann ich oben
+//  Betrieb, Vorschriften und Technik auswaehlen. Dort darf nur Technik
+//  vorhanden sein." In allen Auswahlfeldern fuer den Pruefungsteil
+//  (oben, Gruppenraum, Merkblatt, Neue Runde) stehen jetzt nur die Teile,
+//  die es im gewaehlten Ziel gibt. Gibt es nur einen, heisst "Alle Teile"
+//  so wie dieser Teil (z. B. "Technik") - der Wert bleibt "alle", damit
+//  keine Pruefungsbogen-Logik fuer einzelne Teile anspringt.
+// ================================================================
+(function(){
+    const NAMEN = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+    const FELDER = ['filterPart', 'duoFilterPart', 'merkblattTeil', 'nrTeil'];
+    let zuletzt = '';
+    function teile(){
+        let bank = null; try{ bank = questionBank; }catch(e){}
+        if(!Array.isArray(bank) || !bank.length) return null;
+        const da = new Set(bank.map(q => q && q.part));
+        return ['vorschriften', 'betrieb', 'technik'].filter(t => da.has(t));
+    }
+    function nachziehen(){
+        const da = teile(); if(!da || !da.length) return;
+        const kennung = da.join(',') + '|' + FELDER.map(id => document.getElementById(id) ? 1 : 0).join('');
+        if(kennung === zuletzt) return;
+        zuletzt = kennung;
+        const einzeln = da.length === 1;
+        FELDER.forEach(id => {
+            const s = document.getElementById(id); if(!s) return;
+            Array.from(s.options).forEach(o => {
+                const v = o.value;
+                if(v === 'all' || v === 'alle'){
+                    if(!o.dataset.text) o.dataset.text = o.textContent;
+                    o.textContent = einzeln ? (id === 'merkblattTeil' ? 'nur ' : '') + NAMEN[da[0]] : o.dataset.text;
+                    return;
+                }
+                if(!NAMEN[v]) return;
+                const weg = einzeln || !da.includes(v);
+                o.hidden = weg; o.disabled = weg;
+                if(weg && s.value === v){ s.value = (Array.from(s.options).find(x => x.value === 'all' || x.value === 'alle') || {}).value || s.value; try{ s.dispatchEvent(new Event('change')); }catch(e){} }
+            });
+        });
+    }
+    setInterval(() => { try{ nachziehen(); }catch(e){} }, 1200);
+    window.teileAuswahlNachziehen = () => { zuletzt = ''; nachziehen(); };
+})();
+</script>
 </body>
 </html>
