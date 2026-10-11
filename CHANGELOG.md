@@ -12,9 +12,30 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 118 · 07.10.2026
+Stand 138 · 11.10.2026
 
 ### Hinzugefügt
+- App, Stil **Sachlich**: mehr Farbe (Entwurf 2 „Pastell-Karten“) – zarte Farbflächen für Runde, Tagesziel und Werkzeug-Kacheln, bunte Zeichen in der Übungsliste, blauer Start-Knopf; in den Einstellungen farbig hinterlegte Kästen und blau gefüllte Auswahl. Im Design Dunkel bleibt alles wie bisher.
+- App: Die Knöpfe „ISS vorbeifliegen lassen“, „Maja winken lassen“, „OSCAR-Satellit fliegen lassen“ und „Hör mal“ sind gleich lang über die ganze Breite.
+- Funk-ABC „Morsen“: neuer Knopf **„CQ DX rufen“** – Maja morst „CQ DX CQ DX CQ DX DK8NG PSE K“, mit richtigen Wortabständen; die Zeichen leuchten mit.
+- „Dein Fortschritt“ bei N → E und E → A: Die Karte war in der Mitte leer. Jetzt steht der eine Prüfungsteil (Technik) mit Zähler und Balken über die ganze Breite da, darunter „In diesem Ziel wird nur Technik geprüft – alle Fragen gehören dazu.“
+- Funk-ABC „Neujahr“: ergänzt – oft hört man sich erst nach Jahren mal wieder.
+- Die QTH-Erklärung beginnt mit „Hallo, ich bin Maja!“ (bei Funki als Begleiter: „Hallo, ich bin Funki!“) – im Funk-ABC und beim ersten Darüberfahren mit der Maus.
+- PC-Browser: Dreimal mit der Maus in ein freies Feld klicken beantwortet die Frage jetzt **sofort richtig** – ein gezeichneter Mauszeiger steht dabei auf der richtigen Antwort und „klickt“ (der echte Zeiger ist ausgeblendet, bis die Maus sich bewegt). Gilt nur für diese Frage. Am Handy zeigt der Dreifach-Tipp weiter still die Lösung.
+- Merkhilfen am PC: Bei Fragen mit Merkhilfe (URI, PUI, Farbcode, Bandpläne, Frequenztabelle, Rufzeichen) steht rechts neben dem Zahnrad ein **Dreistrich-Knopf** – er klappt die Merkhilfe auf und zu und rollt sie ins Bild.
+- Funk-ABC: Maja erklärt **OM** (Old Man, dazu der Very Old Man) – und auch beim Very Old Man bleibt die Frau immer eine YL.
+- Funk-ABC: Maja erklärt **YL / XYL** (liebevoll Young Lady – schon viele Jahre verheiratet, mit Merksatz) und **Neujahr** (ungeschriebenes Gesetz: gute Wünsche bis Ende März). Die beiden Tipps dazu sind angepasst.
+- Maja erklärt jetzt auch den **Ausbilder** (Funk-ABC „Trainee“): Er hat Klasse A oder E, unter seiner Aufsicht darfst du schon funken – mit seinem Rufzeichen und /T bzw. /Trainee (z. B. DL1PZ/Trainee). Dazu eine neue Quizfrage.
+- PC-Browser: Der geheime Dreifach-Tipp der App geht jetzt auch mit der Maus – dreimal schnell in ein freies Feld klicken zeigt die Lösung (still, ohne Hinweis; bei der nächsten Frage wieder aus). Behoben dabei, auch in der App: Die so eingeschaltete Lösung ging bei der nächsten Frage nicht wieder aus.
+- Maus über Maja – nach jedem Start in dieser Reihenfolge: zuerst erklärt Maja QTH (mit Ebelsbach und Gruß), beim nächsten Mal fliegt die ISS vorbei, dann der OSCAR-Satellit, dann schlägt Maja Purzelbäume – danach zeigt sie ihre Kunststücke im Wechsel.
+- Der QTH-Tipp endet jetzt mit: „Ich wünsche euch viel Spaß beim Lernen und viel Erfolg bei der Prüfung!“ Maja spricht Tipps bis 220 Zeichen ganz aus.
+- Maus über Maja: jedes Mal eine andere von neun Animationen (Winken, Salto, Zwinkern, Herzklopfen, Raketenstart mit Dampfwölkchen, Staunen, Schweben mit Gruß, Nachdenken, Trampolin) – nie zweimal dieselbe hintereinander, Maja zeigt dazu kurz das passende Bild.
+- Zwei neue Tipps von Maja: **YL** (junge Dame, z. B. die Freundin) und **XYL** (Ehefrau) – und dass Funkamateure sich noch bis Ende März ein gutes neues Jahr wünschen, weil man sich nicht ständig hört. YL und XYL spricht sie buchstabiert.
+- Fährt die Maus über Maja (oder Funki), freut sie sich: ein kleiner Hüpfer mit Hin-und-her-Wiegen, die Brust-LED blitzt auf, und steht sie gerade, winkt sie.
+- Tippt man Maja nach dem Start zum ersten Mal an, kommt immer zuerst der QTH-Tipp mit Ebelsbach; danach geht es mit den übrigen Tipps weiter.
+- Maja erklärt QTH jetzt mit Ebelsbach: „Mein QTH ist Ebelsbach in JN59IX, B37“ heißt: Ich funke aus Ebelsbach in Unterfranken. Den Locator sagt sie Zeichen für Zeichen (J N 5 9 I X), B37 als „Bravo 37“ – im Tipp, im Funk-ABC und im Quiz.
+- PC-Browser: **Neues Fragenfenster.** Bei „Verspielt“ steht die Frage groß auf einer Tafel in der Farbe des Designs, die vier Antworten als bunte Kacheln untereinander (A blau, B orange, C grün, D lila). Bei „Sachlich“ wird nur die Schrift größer. Richtig/Falsch behalten ihre Farben.
+- PC-Browser: Die Anzeige verkleinert sich beim Weiterklicken in einer Runde nicht mehr (Anzeigegröße „Automatisch“). Eine lange Frage rollt stattdessen; ein früher gemerkter kleinerer Wert wird beim Start vergessen.
 - **Maja hat eine neue Stimme:** eine Mädchenstimme mit Funk-Klang und Quindar-Ton (Probe 4) – etwas höher und flotter, klar ohne Schwanken. Am PC spricht sie mit der Frauenstimme Kerstin, in der App mit der Stimme des Handys.
 - Android-App: Maja spricht jetzt auch gleich nach dem Start. Die Stimme des Handys wird beim Öffnen still im Hintergrund geweckt, und tippt man Maja an, wartet sie bis zu 40 Sekunden auf die Stimme statt nach 16 Sekunden aufzugeben.
 - Merkhilfen öffnen sich nach der Antwort nicht mehr von selbst. War eine offen, klappt sie zu, sobald die Frage beantwortet ist – aufklappen geht jederzeit von Hand.

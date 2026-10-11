@@ -28,6 +28,14 @@
                 // DER PC IM STIL DER APP (06.10.2026): Einstellungen -> Anpassen -> "Ansicht am PC".
                 // Dieselben Klassen wie in der App, dazu pc-app - siehe Skript "pcAppAnsicht".
                 try{
+                    // P110 (08.10.2026): Das Fragenfenster am PC. Dietmar: "Die Frage und die
+                    // Antworten koennten groesser sein ... bei verspielt auch etwas verspielt."
+                    // Verspielt (oder noch nichts gewaehlt): dunkle Frage-Tafel, bunte Kacheln
+                    // untereinander. Sachlich: nur groessere Schrift. Siehe "FRAGENFENSTER AM PC".
+                    if(localStorage.getItem('pc_ansicht') !== 'app')
+                        document.documentElement.classList.add(localStorage.getItem('app_stil') === 'sachlich' ? 'pc-gross' : 'pc-bunt');
+                }catch(e){}
+                try{
                     if(localStorage.getItem('pc_ansicht') !== 'app') return;
                     // Die Frage "sachlich oder verspielt?" ist mit der Wahl am PC schon beantwortet
                     if(!localStorage.getItem('app_stil')) localStorage.setItem('app_stil', 'verspielt');
@@ -1865,6 +1873,8 @@
         #appWerk .aw-balken { height: 12px; background: var(--s-fl2); margin: 12px 0 14px; overflow: hidden; }
         #appWerk .aw-balken i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2EE6D6, #7B5CFF); box-shadow: 0 0 12px rgba(46,230,214,0.5); transition: width 0.9s cubic-bezier(.3, .9, .3, 1); }
         #appWerk .aw-teile { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        #appWerk .aw-teile.einzeln { grid-template-columns: minmax(0, 1fr); }
+        #appWerk .aw-teile.einzeln .aw-teil { pointer-events: none; }   /* P123: der einzige Teil laesst sich nicht abwaehlen */
         #appWerk .aw-teil { position: relative; min-width: 0; padding: 10px 6px 9px; text-align: center; border: 2px solid transparent; font: 700 12.5px var(--font-body); cursor: pointer;
             -webkit-tap-highlight-color: transparent; transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.22s cubic-bezier(.3, 1.7, .5, 1); }
         #appWerk .aw-teil:active { transform: scale(0.94); transition-duration: 0.06s; }
@@ -23777,7 +23787,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 118, datum: '07.10.2026' };
+const TRAINER_STAND = { nr: 138, datum: '11.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -37683,6 +37693,9 @@ window.anzeigeAnwenden = anzeigeAnwenden;
 //  ersten langen Frage nichts mehr zu tun.
 // ============================================================================
 function anzeigeFuerFrageNachgeben(){
+    // P109 (08.10.2026): ABGESCHALTET. Dietmar mit Video: "Das Fenster verkleinert sich beim Weiterklicken."
+    // Die Anzeige bleibt in der Runde, wie sie ist; eine lange Frage rollt stattdessen.
+    return;
     try{
         // IN DER APP GIBT DIE ANZEIGE NICHT NACH            (30.09.2026)
         // Dietmar: "Die Button bei den Fragen sollen fest fixiert sein. Wenn
@@ -37814,6 +37827,8 @@ window.addEventListener('resize', () => {
 //  und ist schnell, aber die Symbolschrift aendert Zeilenhoehen - und
 //  damit die Hoehe der Karte.
 (function anzeigeBeimLaden(){
+    // P109: einen alten "Deckel" aus der Fragenansicht vergessen - sonst bliebe die Seite klein
+    try{ localStorage.removeItem(DECKEL_SCHLUESSEL); }catch(e){}
     const einmal = () => { try{ anzeigeAnwenden(); }catch(e){} };
     if(document.readyState === 'complete') setTimeout(einmal, 60);
     else window.addEventListener('load', () => setTimeout(einmal, 60));
@@ -42038,10 +42053,49 @@ if (originalSelectOption) {
     </script>
     <script id="dreifachTipp">
 (function(){
-    if(!document.documentElement.classList.contains("android-app")) return;
+    // P117 (10.10.2026): auch am PC - dreimal schnell mit der Maus in ein freies Feld klicken.
+    // Dabei wuerde der Browser Text markieren; die Markierung wird gleich wieder aufgehoben.
     // Was KEIN leeres Feld ist: alles, was man antippen kann, und Fenster darueber
     const AKTIV = "button, a, input, select, textarea, label, .option, [onclick], [role=button], [contenteditable], #kartenSpiel, #erklaerGross, .modal, #appMehr, #appWerkBlatt";
     let tipps = [];
+    function mausAntwort(){
+        let q = null, schon = true;
+        try{ q = currentQuestions[currentIndex]; schon = !!answered; }catch(x){}
+        if(!q || schon || !q.options) return false;
+        const i = q.options.findIndex(o => o && o.correct);
+        const el = i < 0 ? null : document.querySelector('#optionsContainer .option[data-optindex="' + i + '"]');
+        if(!el) return false;
+        try{ el.scrollIntoView({ block: "nearest" }); }catch(x){}
+        const r = el.getBoundingClientRect();
+        // Die Anzeige kann vergroessert sein (zoom an html/body) - dann zaehlen die Punkte im Zeiger anders
+        let zf = 1; try{ zf = (parseFloat(getComputedStyle(document.documentElement).zoom) || 1) * (parseFloat(getComputedStyle(document.body).zoom) || 1); }catch(x){}
+        const x = Math.round((r.left + Math.min(r.width * 0.35, 420)) / zf), y = Math.round((r.top + r.height * 0.55) / zf);
+        document.querySelectorAll("#geheimZeiger").forEach(z => z.remove());
+        const z = document.createElement("div");
+        z.id = "geheimZeiger"; z.setAttribute("aria-hidden", "true");
+        z.style.cssText = "position:fixed;left:" + x + "px;top:" + y + "px;width:26px;height:38px;z-index:2147483000;pointer-events:none;filter:drop-shadow(1px 2px 2px rgba(0,0,0,.35))";
+        z.innerHTML = '<span style="position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;background:rgba(47,127,216,.35);transform:scale(0);opacity:0"></span>'
+            + '<svg viewBox="0 0 26 38" width="26" height="38" style="position:absolute;left:0;top:0"><path d="M2 2 L2 30 L9 23.5 L14 35 L19 33 L14 21.5 L23.5 21.5 Z" fill="#fff" stroke="#000" stroke-width="2" stroke-linejoin="round"/></svg>';
+        document.body.appendChild(z);
+        const html = document.documentElement, altCursor = html.style.cursor;
+        html.style.cursor = "none"; document.body.style.cursor = "none";
+        let mx = null, my = null;
+        const weg = () => { try{ z.remove(); }catch(x){} html.style.cursor = altCursor || ""; document.body.style.cursor = ""; document.removeEventListener("mousemove", bewegt, true); };
+        const bewegt = ev => { if(mx === null){ mx = ev.clientX; my = ev.clientY; return; } if(Math.hypot(ev.clientX - mx, ev.clientY - my) > 6) weg(); };
+        setTimeout(() => document.addEventListener("mousemove", bewegt, true), 120);
+        // kurz zeigen, dann "klicken"
+        setTimeout(() => {
+            try{ const k = z.querySelector("span"); k.animate([{ transform: "scale(.2)", opacity: .9 }, { transform: "scale(1.4)", opacity: 0 }], { duration: 450, easing: "ease-out" }); }catch(x){}
+            try{ z.animate([{ transform: "none" }, { transform: "scale(.88)" }, { transform: "none" }], { duration: 180 }); }catch(x){}
+            try{ window.selectOption(i); }catch(x){}
+        }, 380);
+        // bei der naechsten Frage verschwindet er
+        let idx = -1; try{ idx = currentIndex; }catch(x){}
+        const uhr = setInterval(() => { let j = -2; try{ j = currentIndex; }catch(x){}
+            if(!z.isConnected){ clearInterval(uhr); return; }
+            if(j !== idx || !document.body.classList.contains("runde-laeuft")){ clearInterval(uhr); weg(); } }, 200);
+        return true;
+    }
     document.addEventListener("pointerup", function(e){
         try{
             if(!document.body.classList.contains("runde-laeuft")) { tipps = []; return; }
@@ -42052,12 +42106,17 @@ if (originalSelectOption) {
             tipps.push({ z: jetzt, x: e.clientX, y: e.clientY });
             if(tipps.length >= 3){
                 tipps = [];
+                try{ if(e.pointerType === "mouse" && window.getSelection) window.getSelection().removeAllRanges(); }catch(x){}
                 if(typeof window.loesungErlaubt === "function" && !window.loesungErlaubt()) return;
+                // P122 (10.10.2026): am PC mit der Maus - Dietmar fuer sein Facebook-Video: die Frage ist
+                // sofort richtig beantwortet, und ein gezeichneter Mauszeiger steht auf der richtigen Antwort
+                // (den echten Zeiger kann eine Seite nicht bewegen; er wird ausgeblendet, bis die Maus sich bewegt).
+                if(e.pointerType === "mouse" && mausAntwort()) return;
                 // Geheim (Dietmar: "Unten darf es keinen Hinweis geben ... in der naechsten Frage muss es wieder aus sein.
                 // Das ist sozusagen ein geheimer Cheatcode."): still umschalten, ohne Meldung; bei der naechsten Frage aus.
                 if(typeof window.toggleShowAllAnswers !== "function") return;
                 window.toggleShowAllAnswers();
-                let an = false; try{ an = !!window.showAllAnswers; }catch(x){}
+                let an = false; try{ an = !!showAllAnswers; }catch(x){}
                 clearInterval(window.__geheimUhr);
                 if(an){
                     let idx = -1; try{ idx = currentIndex; }catch(x){}
@@ -42066,7 +42125,7 @@ if (originalSelectOption) {
                         const weg = jetzt !== idx || !document.body.classList.contains("runde-laeuft");
                         if(!weg) return;
                         clearInterval(window.__geheimUhr);
-                        try{ if(window.showAllAnswers) window.toggleShowAllAnswers(); }catch(x){}
+                        try{ if(showAllAnswers) window.toggleShowAllAnswers(); }catch(x){}
                     }, 150);
                 }
             }
@@ -50832,6 +50891,73 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 if(b.dataset.pose === p){ b.src = ASTRO_POSEN.steht; b.dataset.pose = 'steht'; } }); }catch(e){} }, ms || 8000);
         }catch(e){}
     };
+    // P113/P115 (10.10.2026): Maus ueber Maja (oder Funki) - jedes Mal eine andere
+    // Animation, nie zweimal dieselbe hintereinander. Dazu wechselt Maja kurz das
+    // passende Bild (Bildnamen wie in ASTRO_POSEN - einige Namen passen nicht zum Bild, deshalb
+    // nach dem Bild gewaehlt: winkt = Winken, zeigt = Zwinkern, zwinkert = Herz, highfive = Nachdenken).
+    // Per Web Animations, damit die Schwebe- und Herein-Animationen nicht neu starten.
+    (function(){
+        const N = 'none';
+        const TRICKS = [
+            { name: 'hallo', pose: 'winkt', ms: 1150, kf: [{ transform: N }, { transform: 'translateY(-7%) rotate(-7deg) scale(1.04)', offset: .22 },
+                { transform: 'translateY(-9%) rotate(6deg) scale(1.05)', offset: .45 }, { transform: 'translateY(-5%) rotate(-4deg) scale(1.03)', offset: .68 },
+                { transform: 'translateY(-1%) rotate(2deg)', offset: .86 }, { transform: N }] },
+            { name: 'salto', pose: 'freut', ms: 1400, kf: [{ transform: N }, { transform: 'translateY(-14%) rotate(-140deg)', offset: .3 },
+                { transform: 'translateY(-8%) rotate(-300deg)', offset: .7 }, { transform: 'rotate(-360deg)' }], easing: 'cubic-bezier(.45,.05,.35,1)' },
+            { name: 'zwinkern', pose: 'zeigt', ms: 1000, kf: [{ transform: N }, { transform: 'rotate(8deg) scale(1.06)', offset: .3 },
+                { transform: 'rotate(8deg) scale(1.06)', offset: .7 }, { transform: N }] },
+            { name: 'herz', pose: 'zwinkert', ms: 1100, kf: [{ transform: N }, { transform: 'scale(1.12)', offset: .18 }, { transform: 'scale(1)', offset: .36 },
+                { transform: 'scale(1.12)', offset: .54 }, { transform: N }] },
+            { name: 'rakete', pose: 'rakete', ms: 1500, puff: true, kf: [{ transform: N }, { transform: 'translateY(4%) scale(.97)', offset: .12 },
+                { transform: 'translateY(-28%) rotate(-4deg)', offset: .45 }, { transform: 'translateY(-24%) rotate(3deg)', offset: .6 }, { transform: N }] },
+            { name: 'staunen', pose: 'staunt', ms: 900, kf: [{ transform: N }, { transform: 'rotate(-7deg)', offset: .2 }, { transform: 'rotate(6deg)', offset: .45 },
+                { transform: 'rotate(-4deg)', offset: .7 }, { transform: N }] },
+            { name: 'schweben', pose: 'salut', ms: 1800, kf: [{ transform: N }, { transform: 'translate(-8%, -5%) rotate(-10deg)', offset: .3 },
+                { transform: 'translate(8%, -8%) rotate(10deg)', offset: .7 }, { transform: N }], easing: 'ease-in-out' },
+            { name: 'nachdenken', pose: 'highfive', ms: 1600, kf: [{ transform: N }, { transform: 'rotate(-9deg) translateY(-3%)', offset: .3 },
+                { transform: 'rotate(-9deg) translateY(-3%)', offset: .7 }, { transform: N }] },
+            { name: 'trampolin', pose: 'daumen', ms: 1100, kf: [{ transform: N }, { transform: 'translateY(3%) scale(1.08, .9)', offset: .15 },
+                { transform: 'translateY(-16%) scale(.95, 1.06)', offset: .45 }, { transform: 'translateY(2%) scale(1.06, .93)', offset: .78 }, { transform: N }] }
+        ];
+        // P116 (10.10.2026): Dietmar - die Reihenfolge nach jedem Start: 1. Maja erklaert QTH,
+        // 2. die ISS fliegt vorbei, 3. der OSCAR-Satellit, 4. Purzelbaeume - danach die
+        // Kunststuecke im Wechsel. Klappt ein Schritt nicht (z. B. Ueberflug nur im
+        // verspielten App-Stil), kommt gleich der naechste.
+        TRICKS.push({ name: 'purzelbaum', pose: 'daumen', ms: 1700, kf: [{ transform: N }, { transform: 'translateY(-10%) rotate(360deg) scale(.92)', offset: .45 },
+            { transform: 'translateY(-4%) rotate(720deg) scale(.95)', offset: .85 }, { transform: 'rotate(720deg)' }], easing: 'cubic-bezier(.45,.05,.35,1)' });
+        let zuletzt = 0, vorher = -1, schritt = 0, sperre = 1600;
+        document.addEventListener('mouseover', e => { try{
+            const mk = e.target && e.target.closest && e.target.closest('.mk');
+            if(!mk || (e.relatedTarget && mk.contains(e.relatedTarget))) return;
+            if(!mk.animate || Date.now() - zuletzt < sperre) return;
+            if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            zuletzt = Date.now(); sperre = 1600;
+            let n = -1;
+            while(schritt < 4 && n < 0){
+                const st = schritt++;
+                if(st === 0 && window.appFunki && appFunki.erklaere){ try{ appFunki.erklaere('qth'); n = 0; sperre = 4000; }catch(err){} }
+                else if(st === 1 && window.majaUeberflug && majaUeberflug('iss')){ sperre = 9000; return; }
+                else if(st === 2 && window.majaUeberflug && majaUeberflug('sat')){ sperre = 9500; return; }
+                else if(st === 3) n = TRICKS.length - 1;               // Purzelbaeume
+            }
+            if(n < 0){ do { n = Math.floor(Math.random() * TRICKS.length); } while(n === vorher && TRICKS.length > 1); }
+            vorher = n;
+            const t = TRICKS[n];
+            mk.animate(t.kf, { duration: t.ms, easing: t.easing || 'ease-in-out' });
+            const led = mk.querySelector('.mk-led');
+            if(led) led.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 1, transform: 'scale(1.9)', filter: 'brightness(1.6)' }, { opacity: 1, transform: 'scale(1)' }],
+                                { duration: 700, iterations: 2 });
+            if(t.puff) mk.querySelectorAll('.mk-puff').forEach((pf, k) => pf.animate([{ opacity: 0, transform: 'translate(0,0) scale(.4)' },
+                { opacity: .9, offset: .25 }, { opacity: 0, transform: 'translate(-20%, 160%) scale(2)' }], { duration: 900, delay: 120 + k * 140 }));
+            // Majas Bild passend zum Trick - danach wieder das alte
+            const b = mk.querySelector('.mk-bild');
+            if(b && t.pose && maskottchenArt() === 'astro' && ASTRO_POSEN[t.pose] && (!b.dataset.pose || ASTRO_RUHIG.indexOf(b.dataset.pose) !== -1)){
+                const alt = b.dataset.pose || 'steht';
+                b.src = ASTRO_POSEN[t.pose]; b.dataset.pose = t.pose;
+                setTimeout(() => { try{ if(b.dataset.pose === t.pose){ b.src = ASTRO_POSEN[alt]; b.dataset.pose = alt; } }catch(err){} }, Math.max(1400, t.ms + 250));
+            }
+        }catch(err){} });
+    })();
     function maskottchen(art){
         if(maskottchenArt() === 'astro') return maskottchenAstro(art);
         const n = ++mkNr, k = 'mkK' + n, l = 'mkL' + n;
@@ -51537,7 +51663,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         'In der Prüfung darfst du die <b>Formelsammlung</b> und einen einfachen Taschenrechner benutzen. Das ist kein Schummeln – das ist erlaubt!',
         'Eine <b>QSL-Karte</b> ist eine Postkarte, die Funkamateure nach einer Verbindung tauschen – als Beweis, dass es geklappt hat.',
         'Mach ab und zu die <b>Prüfungssimulation</b>. Dann kennst du den Ablauf und bist am Prüfungstag viel ruhiger.',
-        '<b>QTH</b> heißt Standort. „Mein QTH ist Hamburg“ bedeutet: Ich funke aus Hamburg.',
+        '<b>QTH</b> heißt Standort. „Mein QTH ist Ebelsbach in JN59IX, B37“ bedeutet: Ich funke aus Ebelsbach in Unterfranken. Ich wünsche euch viel Spaß beim Lernen und viel Erfolg bei der Prüfung!',
+        // P114 (10.10.2026): Dietmar - YL/XYL und das lange Neujahr der Funker
+        '<b>YL</b> heißt <b>Young Lady</b> – junge Dame. <b>XYL</b> heißt: schon viele Jahre verheiratet – die Ehefrau. Tipp mich an, ich erklär’s dir!',
+        'Ein ungeschriebenes Gesetz: Funkamateure wünschen sich <b>bis Ende März ein gutes neues Jahr</b>. Man hört sich ja nicht ständig.',
         'Lesen ist anstrengend? In der Runde kann dir das Handy jede Frage <b>vorlesen</b>.',
         'Beim Buchstabieren sagen Funker <b>Alfa, Bravo, Charlie</b> … So versteht man jeden Buchstaben, auch wenn es rauscht.',
         'Wusstest du? Über Amateurfunk haben Schulklassen schon mit <b>Astronauten auf der ISS</b> gesprochen.',
@@ -51611,7 +51740,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         20: ['Zwanzig am Stück! Ich bin sprachlos – und das als Funkgerät.', '{melodie} Zwanzig am Stück! Ich bin sprachlos. Und das als Funkgerät.']
     };
 
+    // P112 (10.10.2026): Dietmar - der QTH-Tipp kommt beim ersten Antippen nach jedem Start.
+    let qthTippGesagt = false;
     function naechsterTipp(){
+        if(!qthTippGesagt){
+            qthTippGesagt = true;
+            const q = TIPPS.find(t => t.indexOf('JN59IX') >= 0);
+            if(q) return q;
+        }
         let i = parseInt(lies('robo_tipp_nr', '-1'), 10);
         i = (isNaN(i) ? 0 : i + 1) % TIPPS.length;
         schreib('robo_tipp_nr', String(i));
@@ -51629,6 +51765,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.appIssProbe = () => { issUeberflug({ probe: true, stumm: true }); };
     window.appAstroProbe = () => { astroWinken({ probe: true }); };
     window.appSatProbe = () => { satUeberflug({ probe: true, stumm: true }); };
+    // P116: fuer die Maus ueber Maja - mit Rueckmeldung, ob es geklappt hat
+    window.majaUeberflug = art => { let ok = false; tu(() => { ok = !!(art === 'sat' ? satUeberflug({ probe: true, stumm: true }) : issUeberflug({ probe: true, stumm: true })); }); return ok; };
     window.appFunkiProbe = () => {
         if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
         funkiSagt((maskottchenArt() === 'astro' ? 'Hier spricht Maja, deine Astronautin! | ' : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.', true);
@@ -52047,7 +52185,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             : sonder ? sonder.sprich
             : (maskottchenArt() === 'astro' ? 'Hier spricht Maja, deine Astronautin! | ' : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.';
         // Jeden zweiten Tag ein Wort aus dem Funk-ABC statt eines Tipps (04.10.2026)
-        const wort = abcWort(), tipp = wort ? '' : naechsterTipp();
+        // P112: beim ersten Auftritt nach dem Start der QTH-Tipp (Ebelsbach) statt eines ABC-Worts
+        const wort = qthTippGesagt ? abcWort() : null, tipp = wort ? '' : naechsterTipp();
         t += wort ? '<span class="rb-tipp"><b>Funk-ABC:</b> ' + wort.kurz + '</span>' : '<span class="rb-tipp"><b>Tipp:</b> ' + tipp + '</span>';
         const knoepfe = [rest ? ['Los, eine Runde!', 'runde'] : ['Noch ein Tipp', 'tipp']];
         if(wort) knoepfe.push(['Erklär’s mir', 'erkl:' + wort.id]);
@@ -52055,7 +52194,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         auftritt(t, knoepfe, 'tanzweg', 'tipp');
         // Bei Viel und Normal sagt er auch das Tagesziel und den Tipp
         const mehr = !mehrSprechen() ? '' : ' | ' + (rest ? 'Heute fehlen noch ' + fragenText(rest) + ' bis zum Tagesziel.' : 'Das Tagesziel ist schon geschafft. Stark!')
-            + ' | ' + (wort ? 'Das Wort des Tages: ' + redeText(wort.kurz, 100) : redeText(tipp, 140));
+            + ' | ' + (wort ? 'Das Wort des Tages: ' + redeText(wort.kurz, 100) : redeText(tipp, 220));
         funkiSagt(gesagt + mehr, false);
     }
     function zielFeiern(){
@@ -52072,7 +52211,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const tipp = naechsterTipp();
         auftritt(hallo + ' Hier ist ein Tipp für dich:<span class="rb-tipp">' + tipp + '</span>',
             [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
-        funkiSagt('| ' + nurText(hallo) + (mehrSprechen() ? ' | Hier ist ein Tipp für dich. ' + redeText(tipp, 150) : ''), true);
+        funkiSagt('| ' + nurText(hallo) + (mehrSprechen() ? ' | Hier ist ein Tipp für dich. ' + redeText(tipp, 220) : ''), true);
     }
     function rufen(){
         if(robo.da || !roboDarf()) return;
@@ -52729,12 +52868,31 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           sprich: 'Q R N heißt: Ich werde durch atmosphärische Störungen gestört. | Zum Beispiel durch Gewitter. Das knistert und kracht im Lautsprecher! Merkhilfe: N wie Natur.' },
         { id: 'qth', name: 'QTH', frage: 'Weißt du, was mein <b>QTH</b> ist? Tipp mich an!',
           kurz: '<b>QTH</b> ist dein Standort.',
-          html: '<b>QTH</b> ist dein <b>Standort</b>. „Mein QTH ist Hamburg“ heißt: Ich funke aus Hamburg. Mit „QTH?“ fragt man: „Wo ist dein Standort?“',
-          sprich: 'Q T H ist dein Standort. | Mein Q T H ist Hamburg, das heißt: Ich funke aus Hamburg. Mit Q T H, Fragezeichen, fragt man: Wo ist dein Standort?' },
+          html: '<b>Hallo, ich bin Funki!</b><br><br><b>QTH</b> ist dein <b>Standort</b>. „Mein QTH ist Ebelsbach in JN59IX, B37“ heißt: Ich funke aus Ebelsbach in Unterfranken. Mit „QTH?“ fragt man: „Wo ist dein Standort?“ Ich wünsche euch viel Spaß beim Lernen und viel Erfolg bei der Prüfung!',
+          sprich: 'Hallo, ich bin Funki! | Q T H ist dein Standort. | Mein Q T H ist Ebelsbach in J N fünf neun I X, Bravo 37. Das heißt: Ich funke aus Ebelsbach in Unterfranken. | Mit Q T H, Fragezeichen, fragt man: Wo ist dein Standort? | Ich wünsche euch viel Spaß beim Lernen und viel Erfolg bei der Prüfung!' },
         { id: 'qsl', name: 'QSL', frage: 'Was ist eine <b>QSL</b>-Karte? Tipp mich an!',
           kurz: '<b>QSL</b> heißt: „Empfang bestätigt.“ Dazu gibt es Karten – wie Postkarten.',
           html: '<b>QSL</b> heißt: „Ich <b>bestätige</b> den Empfang.“ Funkamateure schicken sich nach einer Verbindung eine <b>QSL-Karte</b> – wie eine Postkarte, auf der steht: „Das war ein Funkkontakt mit mir!“ Dein <b>QSL-Album</b> in der App sammelt deine Karten.',
           sprich: 'Q S L heißt: Ich bestätige den Empfang. | Funkamateure schicken sich nach einer Verbindung eine Q S L Karte, wie eine Postkarte. Dein Q S L Album in der App sammelt deine Karten.' },
+        // P118 (10.10.2026): Dietmar - Ausbilder und Trainee (vgl. VD302, VD306, BD209-BD211)
+        { id: 'trainee', name: 'Trainee', frage: 'Weißt du, was ein <b>Ausbilder</b> beim Funken ist? Tipp mich an!',
+          kurz: 'Mit einem <b>Ausbilder</b> (Klasse A oder E) darfst du schon funken – mit seinem Rufzeichen und <b>/T</b>.',
+          html: 'Was ist ein <b>Ausbilder</b> (Trainer)? Er hat die Lizenz der <b>Klasse A oder E</b>. Unter seiner <b>Aufsicht</b> darfst du schon Amateurfunkbetrieb machen – auch ohne eigene Lizenz. Das heißt <b>Ausbildungsfunkbetrieb</b>. Du nutzt dann das <b>Rufzeichen deines Ausbilders</b> mit <b>/T</b> bzw. <b>/Trainee</b> dahinter, zum Beispiel <b>DL1PZ/Trainee</b>.',
+          sprich: 'Was ist ein Ausbilder? | Er hat die Lizenz der Klasse A oder E. Unter seiner Aufsicht darfst du schon Amateurfunk machen, auch ohne eigene Lizenz. Das heißt Ausbildungsfunkbetrieb. | Du nutzt dann das Rufzeichen deines Ausbilders, mit Schrägstrich T oder Schrägstrich Trainee dahinter. Zum Beispiel: D L 1 P Z, Schrägstrich Trainee.' },
+        // P119 (10.10.2026): Dietmar - YL/XYL und das Neujahr der Funker
+        { id: 'yl', name: 'YL / XYL', frage: 'Kennst du den Unterschied zwischen <b>YL</b> und <b>XYL</b>? Tipp mich an!',
+          kurz: '<b>YL</b> heißt Young Lady, <b>XYL</b>: schon viele Jahre verheiratet.',
+          html: '<b>YL</b> heißt liebevoll <b>Young Lady</b> – junge Dame. So nennen Funker eine Funkerin oder die Freundin. <b>XYL</b> heißt „Young Lady“: <b>schon viele Jahre verheiratet</b> – also die Ehefrau.<br><br>Kleiner Merksatz: <b>Aus der YL wird mit den Jahren die XYL.</b>',
+          sprich: 'Y L heißt liebevoll Young Lady, also junge Dame. So nennen Funker eine Funkerin oder die Freundin. | X Y L heißt Young Lady: schon viele Jahre verheiratet. Also die Ehefrau. | Kleiner Merksatz: Aus der Y L wird mit den Jahren die X Y L.' },
+        // P120 (10.10.2026): Dietmar - OM, Very Old Man, und die Frau bleibt immer YL
+        { id: 'om', name: 'OM', frage: 'Weißt du, was ein <b>OM</b> ist? Tipp mich an!',
+          kurz: '<b>OM</b> heißt Old Man – so nennen Funker einen Funkamateur, egal wie alt.',
+          html: '<b>OM</b> heißt <b>Old Man</b> – so nennen Funker einen Funkamateur, egal wie alt er ist. Zusätzlich unterscheidet man noch den <b>Very Old Man</b> – der ist schon sehr lange dabei.<br><br>Und auch wenn er schon ein Very Old Man ist: <b>Seine Frau bleibt immer eine YL.</b>',
+          sprich: 'O M heißt Old Man. So nennen Funker einen Funkamateur, egal wie alt er ist. | Zusätzlich unterscheidet man noch den Very Old Man. Der ist schon sehr lange dabei. | Und auch wenn er schon ein Very Old Man ist: Seine Frau bleibt immer eine Y L.' },
+        { id: 'neujahr', name: 'Neujahr', frage: 'Weißt du, wie lange Funker sich ein <b>gutes neues Jahr</b> wünschen? Tipp mich an!',
+          kurz: 'Funkamateure wünschen sich <b>bis Ende März</b> ein gutes neues Jahr.',
+          html: 'Das ist ein <b>ungeschriebenes Gesetz</b>: Funkamateure wünschen sich <b>bis Ende März ein gutes neues Jahr</b>. Man hört sich ja nicht ständig – oft hört man sich erst nach Jahren mal wieder. Und wer sich im Februar zum ersten Mal im Jahr auf der Frequenz trifft, wünscht sich eben dann noch „Happy New Year“.',
+          sprich: 'Das ist ein ungeschriebenes Gesetz. | Funkamateure wünschen sich bis Ende März ein gutes neues Jahr. Man hört sich ja nicht ständig. Oft hört man sich erst nach Jahren mal wieder. | Wer sich im Februar zum ersten Mal im Jahr trifft, wünscht sich eben dann noch ein gutes neues Jahr.' },
         { id: 'qrp', name: 'QRP', frage: 'Weißt du, was <b>QRP</b> heißt? Tipp mich an!',
           kurz: '<b>QRP</b> heißt: mit ganz wenig Sendeleistung funken – und trotzdem weit kommen.',
           html: '<b>QRP</b> heißt: mit <b>geringer Sendeleistung</b> funken. Das ist eine Sportart unter Funkern: Wer es mit ein paar Watt in ein fernes Land schafft, ist richtig stolz. Das Gegenteil heißt <b>QRO</b> – hohe Leistung.',
@@ -52755,7 +52913,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           kurz: '<b>Morsen</b>: kurze und lange Töne – die älteste Funk-Sprache.',
           html: '<b>Morsen</b> ist die älteste Funk-Sprache: aus <b>kurzen</b> und <b>langen</b> Tönen wird jeder Buchstabe. Es kommt auch durch, wenn Sprache im Rauschen untergeht. Tipp auf einen Knopf, dann <b>hörst du es</b>:<div class="rb-morse" aria-hidden="true"></div>',
           sprich: 'Morsen ist die älteste Funk Sprache. | Aus kurzen und langen Tönen wird jeder Buchstabe. Es kommt auch durch, wenn Sprache im Rauschen untergeht. Tipp auf einen Knopf, dann hörst du es.',
-          extra: [['Hör mal: CQ', 'morse:CQ'], ['Und 73', 'morse:73']] },
+          extra: [['Hör mal: CQ', 'morse:CQ'], ['Und 73', 'morse:73'], ['CQ DX rufen', 'morse:CQ DX CQ DX CQ DX DK8NG PSE K']] },   // P124: Dietmars Ruf
         { id: 'iss', name: 'ISS', frage: 'Weißt du, dass auf der <b>ISS</b> auch gefunkt wird? Tipp mich an!',
           kurz: 'Auf der <b>ISS</b> gibt es eine Amateurfunkstation – Rufzeichen NA1SS.',
           html: 'Die <b>ISS</b> umrundet die Erde in rund <b>90 Minuten</b> – etwa <b>400 km</b> hoch, mit rund <b>28 000 km/h</b>. An Bord ist eine <b>Amateurfunkstation</b> mit dem Rufzeichen <b>NA1SS</b>. Bei Schulkontakten (<b>ARISS</b>) hört man die Astronauten auf <b>145,800 MHz</b>, im 2-m-Band. Ein echter Überflug dauert ein paar Minuten – nicht ein paar Sekunden wie bei mir!',
@@ -52856,6 +53014,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function morsePlan(wort, einheit){
         const ev = []; let t = 0, nr = 0;
         String(wort).toUpperCase().split('').forEach((b, bi) => {
+            if(b === ' '){ t += 4 * einheit; return; }      // P124: Wortabstand (zusammen rund 7 Einheiten)
             const code = MORSE[b]; if(!code) return;
             if(bi) t += 2 * einheit;                       // zwischen Buchstaben 3 Einheiten (eine ist schon dabei)
             code.split('').forEach((z, k) => {
@@ -52874,8 +53033,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(bl){
             // Die Zeichen als Punkte und Striche anzeigen; beim Abspielen leuchten sie der Reihe nach auf
             let nr = 0;
-            bl.innerHTML = String(wort).toUpperCase().split('').filter(b => MORSE[b]).map(b =>
-                '<span class="mz">' + MORSE[b].split('').map(z => '<i data-n="' + (nr++) + '">' + (z === '-' ? '−' : '·') + '</i>').join('') + '</span>').join('');
+            bl.innerHTML = String(wort).toUpperCase().split('').filter(b => MORSE[b] || b === ' ').map(b => b === ' ' ? '<span class="mz-luecke" style="display:inline-block;width:14px"></span>' :
+                '<span class="mz" title="' + b + '">' + MORSE[b].split('').map(z => '<i data-n="' + (nr++) + '">' + (z === '-' ? '−' : '·') + '</i>').join('') + '</span>').join('');
         }
         p.ev.forEach(e => spaeter(() => {
             const el = roboBlase.querySelector('.rb-morse i[data-n="' + e.i + '"]');
@@ -52905,7 +53064,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { f: 'Was bedeutet <b>QRN</b>?', r: 'Ich werde durch Gewitter & Co. gestört', x: ['Ich werde von anderen Funkern gestört', 'Mein Hund bellt'],
           w: '<b>QRN</b> ist Störung aus der Natur, zum Beispiel Gewitter. <b>N</b> wie Natur.' },
         { f: 'Was ist dein <b>QTH</b>?', r: 'Dein Standort', x: ['Deine Sendeleistung', 'Deine Lieblingsfarbe'],
-          w: '<b>QTH</b> ist der Standort. „Mein QTH ist Hamburg“ heißt: Ich funke aus Hamburg.' },
+          w: '<b>QTH</b> ist der Standort. „Mein QTH ist Ebelsbach in JN59IX, B37“ heißt: Ich funke aus Ebelsbach in Unterfranken.' },
+        { f: 'Welches Rufzeichen nutzt du beim <b>Ausbildungsfunkbetrieb</b>?', r: 'Das Rufzeichen des Ausbilders mit /T bzw. /Trainee', x: ['Ein selbst ausgedachtes Rufzeichen', 'Gar keins – Trainees funken ohne'],
+          w: 'Dein <b>Ausbilder</b> hat <b>Klasse A oder E</b>. Unter seiner Aufsicht nutzt du sein Rufzeichen mit <b>/T</b> bzw. <b>/Trainee</b>, z. B. DL1PZ/Trainee.' },
         { f: 'Was heißt <b>CQ</b>?', r: 'Allgemeiner Anruf: Wer hört mich?', x: ['Ich beende die Verbindung', 'Bitte langsamer sprechen'],
           w: '<b>CQ</b> ruft alle: „Wer hört mich?“ Mit <b>CQ DX</b> ruft man in die Ferne.' },
         { f: 'Was bedeutet <b>DX</b>?', r: 'Große Entfernung', x: ['Doppelte Sendeleistung', 'Digitale Zeichen'],
@@ -53813,7 +53974,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     async function funkiSagt(text, selbst, stimme){
         if(!stimme && typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') stimme = ASTRO_SPRECH;
         try{ if(window.alsMaja) text = alsMaja(text); }catch(e){}
-        text = String(text || '').trim().replace(/\bDOK\s*(<\/?b>)?\s*B05\b/g, 'Ortsverband Bravo Null Fünf').replace(/\bDOK\s*(<\/?b>)?\s*C12\b/g, 'Ortsverband Tschar-lie Eins Zwo');
+        text = String(text || '').trim().replace(/\bDOK\s*(<\/?b>)?\s*B05\b/g, 'Ortsverband Bravo Null Fünf').replace(/\bDOK\s*(<\/?b>)?\s*C12\b/g, 'Ortsverband Tschar-lie Eins Zwo')
+            .replace(/\bJN59IX\b/g, 'J N fünf neun I X').replace(/\bXYL\b/g, 'X Y L').replace(/\bYL\b/g, 'Y L').replace(/\bB37\b/g, 'Bravo 37');   // P111: Locator buchstabiert, DOK B37 als Bravo 37
         if(!text || !darfSprechen(selbst)) return false;
         const ctx = tonKontext();
         if(!ctx) return false;
@@ -54541,9 +54703,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             setText($('awTZ_' + t[0]), z ? z[1] + '/' + z[2] : '–');
             balkenSetzen($('awTB_' + t[0]), z && +z[2] ? +z[1] / +z[2] : 0);
         });
-        const mehrere = da.length > 1 ? '' : 'none';
-        if($('awTeile').style.display !== mehrere){ $('awTeile').style.display = mehrere; $('awTeileInfo').style.display = mehrere; }
-        if(Date.now() > werk.hinweisBis) setText($('awTeileInfo'), aktiv.length >= da.length || !aktiv.length ? 'Antippen: diesen Teil üben oder auslassen' : 'Nur ' + aktiv.join(' + ') + ' · antippen zum Ändern');
+        // P123 (10.10.2026): Dietmar mit Bild von N -> E: "sieht nicht gut aus" - die Karte war in der
+        // Mitte leer. Jetzt steht auch der einzelne Teil da, ueber die ganze Breite, mit einem Satz dazu.
+        const einzeln = da.length === 1;
+        $('awTeile').classList.toggle('einzeln', einzeln);
+        if($('awTeile').style.display) { $('awTeile').style.display = ''; $('awTeileInfo').style.display = ''; }
+        if(einzeln){ const t1 = WERK_TEILE.find(t => t[0] === da[0]); setText($('awTeileInfo'), 'In diesem Ziel wird nur ' + (t1 ? t1[1] : 'ein Teil') + ' geprüft – alle Fragen gehören dazu.'); }
+        else if(Date.now() > werk.hinweisBis) setText($('awTeileInfo'), aktiv.length >= da.length || !aktiv.length ? 'Antippen: diesen Teil üben oder auslassen' : 'Nur ' + aktiv.join(' + ') + ' · antippen zum Ändern');
         const hc = $('hideMasteredCheck'), nc = $('nurGelernteCheck');
         const aus = !!(hc && hc.checked), gesperrt = !!(hc && hc.disabled) || !!(nc && nc.checked);
         $('awAusblendenSchalter').classList.toggle('an', aus);
@@ -56589,6 +56755,34 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let h = '';
         saetze.forEach(x => { if(x === 'farb'){ h += farbHtml(); return; } if(x === 'bp2'){ h += bandplanHtml('IARU-Bandplan 2 m', BP2); return; } if(x === 'bp70'){ h += bandplanHtml('IARU-Bandplan 70 cm', BP70); return; } if(x === 'freq'){ h += freqHtml(); return; } if(x === 'ruf'){ h += rufHtml(); return; } satz = x; h += html(); });
         k.insertAdjacentHTML('afterend', h);
+        knopf();
+    }
+    // P121 (10.10.2026): Dietmar - "Es fehlt das Hamburger-Menue, das es einblendet."
+    // Ein Dreistrich-Knopf rechts neben dem Zahnrad, nur bei Fragen mit Merkhilfe:
+    // klappt die Merkhilfe auf und zu und rollt sie ins Bild.
+    function knopf(){
+        const alt = document.getElementById('merkKnopf');
+        if(alt) alt.remove();
+        const m = document.querySelectorAll('.uri-dreieck');
+        const zahnrad = document.querySelector('.question-area button[onclick="openTtsSettings()"]');
+        if(!m.length || !zahnrad) return;
+        const b = document.createElement('button');
+        b.type = 'button'; b.id = 'merkKnopf';
+        b.setAttribute('style', zahnrad.getAttribute('style') || '');
+        b.className = zahnrad.className;
+        b.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
+        const titel = () => { const auf = m[0].open; b.title = auf ? 'Merkhilfe ausblenden' : 'Merkhilfe einblenden'; b.setAttribute('aria-label', b.title);
+                              b.setAttribute('data-tooltip', b.title); b.setAttribute('aria-pressed', auf ? 'true' : 'false'); b.classList.toggle('an', auf); };
+        b.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            const auf = !m[0].open;
+            m.forEach(d => { d.open = auf; });
+            titel();
+            if(auf) try{ m[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(x){}
+        });
+        m.forEach(d => d.addEventListener('toggle', titel));
+        titel();
+        zahnrad.insertAdjacentElement('afterend', b);
     }
     window.uriDreieckSetzen = setzen;
     function einhaengen(){
@@ -56608,5 +56802,106 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.addEventListener('load', () => setTimeout(einhaengen, 50));
 })();
 </script>
+
+<style id="pcFragenfenster">
+/* ================================================================
+   FRAGENFENSTER AM PC                                  (08.10.2026)
+   ----------------------------------------------------------------
+   Nur im klassischen PC-Fenster (html.pc-bunt / html.pc-gross, gesetzt
+   im Kopf der Seite) und nur ab 1025 Punkten Breite. Die drei
+   Schriftstufen (q-gross, q-mittel, klein) bleiben: die groesste, bei
+   der die Seite ins Fenster passt.
+   Bewertete, gewaehlte und vorgelesene Antworten behalten ihre Farben.
+   ================================================================ */
+@media (min-width: 1025px) {
+  /* --- Sachlich: nur groesser --- */
+  html.pc-gross body.q-gross  .question-area .q-text { font-size: 1.85rem !important; line-height: 1.3 !important; }
+  html.pc-gross body.q-gross  .question-area .option { font-size: 1.6rem !important; }
+  html.pc-gross body.q-mittel .question-area .q-text { font-size: 1.6rem !important; }
+  html.pc-gross body.q-mittel .question-area .option { font-size: 1.42rem !important; }
+
+  /* --- Verspielt: Frage als Tafel in der Farbe des Designs --- */
+  html.pc-bunt body { --pcf-t1: #0f2745; --pcf-t2: #1f4f86; }
+  html.pc-bunt body.blue   { --pcf-t1: #164c8c; --pcf-t2: #2b7bd6; }
+  html.pc-bunt body.green  { --pcf-t1: #0f6b40; --pcf-t2: #1fa866; }
+  html.pc-bunt body.orange { --pcf-t1: #8a3d05; --pcf-t2: #cf6a10; }
+  html.pc-bunt body.grey   { --pcf-t1: #2c3540; --pcf-t2: #56626f; }
+  html.pc-bunt body.dark   { --pcf-t1: #121b28; --pcf-t2: #24364f; }
+  html.pc-bunt body .question-area .q-text-row {
+      background: linear-gradient(135deg, var(--pcf-t1), var(--pcf-t2)) !important;
+      border-radius: 22px !important; padding: 12px 26px 14px !important; border: 0 !important;
+      box-shadow: 0 8px 22px rgba(15,39,69,.18) !important;
+  }
+  html.pc-bunt body .question-area .q-text { margin-bottom: 0 !important; color: #fff !important; font-size: 1.45rem !important; line-height: 1.3 !important; }
+  html.pc-bunt body.q-mittel .question-area .q-text { font-size: 1.75rem !important; }
+  html.pc-bunt body.q-gross  .question-area .q-text { font-size: 2.1rem !important; }
+  html.pc-bunt body .question-area .q-nummer { background: #ffd27a !important; color: #0f2745 !important; border: 0 !important; border-radius: 8px !important; }
+  html.pc-bunt body .question-area .q-meta span { background: rgba(255,255,255,.14) !important; color: #dbe8ff !important; border-color: transparent !important; }
+
+  /* --- Antworten als bunte Kacheln untereinander --- */
+  html.pc-bunt body .question-area #optionsContainer { background: transparent !important; padding: 10px 0 0 !important; display: grid !important; grid-template-columns: 1fr !important; gap: 6px !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option {
+      margin: 0 !important; border-radius: 22px !important; border: 2px solid transparent !important;
+      padding: 6px 18px !important; min-height: 0 !important; display: flex !important; align-items: center !important; gap: 16px !important;
+      font-size: 1.25rem !important; color: #10243c; box-shadow: 0 6px 16px rgba(15,39,69,.08) !important;
+      transition: transform .12s ease, box-shadow .12s ease;
+  }
+  html.pc-bunt body.q-mittel .question-area #optionsContainer > .option { font-size: 1.42rem !important; padding: 8px 18px !important; }
+  html.pc-bunt body.q-gross  .question-area #optionsContainer > .option { font-size: 1.6rem !important; padding: 9px 20px !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(15,39,69,.14) !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option .option-label {
+      width: 40px !important; height: 40px !important; min-width: 40px !important; border-radius: 12px !important; line-height: 1 !important; padding: 0 !important; flex-shrink: 0 !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      color: #fff !important; font-size: 1.15rem !important; font-weight: 800 !important; font-family: inherit !important;
+  }
+  html.pc-bunt body.q-gross .question-area #optionsContainer > .option .option-label { width: 48px !important; height: 48px !important; min-width: 48px !important; font-size: 1.35rem !important; }
+  html.pc-bunt body.q-mittel .question-area #optionsContainer > .option .option-label { width: 44px !important; height: 44px !important; min-width: 44px !important; font-size: 1.25rem !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:nth-child(1) .option-label { background: #2f7fd8 !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:nth-child(2) .option-label { background: #f08a1a !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:nth-child(3) .option-label { background: #22a862 !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:nth-child(4) .option-label { background: #8e44ad !important; }
+  /* die Pastellflaechen nur, solange die Antwort nichts anderes zeigt */
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(1) { background: #e6f0fd !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(2) { background: #fdeedd !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(3) { background: #e2f5ea !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(4) { background: #f1e6f8 !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight) .option-text { color: #10243c !important; }
+  html.pc-bunt body.dark .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(1) { background: #1c2f4a !important; }
+  html.pc-bunt body.dark .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(2) { background: #3a2a18 !important; }
+  html.pc-bunt body.dark .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(3) { background: #183829 !important; }
+  html.pc-bunt body.dark .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(4) { background: #31233f !important; }
+  html.pc-bunt body.dark .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight) .option-text { color: #e8eef7 !important; }
+  /* bewertet: dicker Rand in der Signalfarbe, damit es auch neben den Kacheln klar ist */
+  html.pc-bunt body .question-area #optionsContainer > .option.correct { border-color: #1f8a4c !important; }
+  html.pc-bunt body .question-area #optionsContainer > .option.wrong   { border-color: #c0392b !important; }
+}
+</style>
+
+<style id="sachlichPastell">
+/* ================================================================
+   P125 (11.10.2026): SACHLICH MIT FARBE - Entwurf 2 "Pastell-Karten"
+   Dietmar: "dieses Sachlich ist doch ziemlich eine weisse Flaeche ...
+   ich haette da ein bisschen mehr Farbe drin." Nur hell/farbig, nicht im
+   Design Dunkel. Dazu (alle Stile): die Probe-Knoepfe (ISS, Maja, Satellit,
+   Hoer mal) gleich lang ueber die ganze Breite.
+   ================================================================ */
+
+html.android-app.stil-sachlich body:not(.dark) { background:#f2f5fb !important; }
+html.android-app.stil-sachlich body:not(.dark) #ahRunde { background:#e6f0fd !important; border-color:#c7dcf7 !important; }
+html.android-app.stil-sachlich body:not(.dark) #ahTag { background:#e3f5ec !important; border-color:#bfe6d1 !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-liste { background:transparent !important; border:0 !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-zeile { background:#fff !important; margin-bottom:6px; border:1px solid #e1e7f0 !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+1) i:first-child { color:#d9534f !important; } html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+2) i:first-child { color:#2f7fd8 !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+3) i:first-child { color:#f08a1a !important; } html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+4) i:first-child { color:#22a862 !important; } html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+5) i:first-child { color:#8e44ad !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+1) { background:#e6f0fd !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+2) { background:#fdeedd !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+3) { background:#e2f5ea !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+4) { background:#f1e6f8 !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+5) { background:#fff6d6 !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+6) { background:#e0f4f6 !important; }
+html.android-app.stil-sachlich body:not(.dark) .ah-kachel { border-color:transparent !important; }
+html.android-app.stil-sachlich body:not(.dark) #ahStart { background:#2f7fd8 !important; }
+html.android-app.stil-sachlich body:not(.dark) #einstellungenModal .einst-mitte div[style*='border:1px solid']:nth-of-type(4n+1) { background:#eef4fd !important; border-color:#cfe0f7 !important; } html.android-app.stil-sachlich body:not(.dark) #einstellungenModal .einst-mitte div[style*='border:1px solid']:nth-of-type(4n+2) { background:#fdf3e7 !important; border-color:#f3dcc0 !important; }
+html.android-app.stil-sachlich body:not(.dark) #einstellungenModal .einst-mitte div[style*='border:1px solid']:nth-of-type(4n+3) { background:#ebf7f0 !important; border-color:#cbe9d8 !important; } html.android-app.stil-sachlich body:not(.dark) #einstellungenModal .einst-mitte div[style*='border:1px solid']:nth-of-type(4n+4) { background:#f5eefa !important; border-color:#e2d3ef !important; }
+html.android-app.stil-sachlich body:not(.dark) .app-seg { background:#fff !important; border:1px solid #d7e2f0; } html.android-app.stil-sachlich body:not(.dark) .app-seg button.an { background:#2f7fd8 !important; color:#fff !important; }
+html.android-app body .app-probe { display:flex !important; width:100% !important; justify-content:center; align-items:center; gap:10px; margin:0 0 8px !important; box-sizing:border-box; }
+html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n+1) { background:#e6f0fd !important; border-color:#c7dcf7 !important; } html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n+2) { background:#fdeedd !important; border-color:#f3dcc0 !important; } html.android-app.stil-sachlich body:not(.dark) .app-probe:nth-of-type(3n) { background:#e2f5ea !important; border-color:#cbe9d8 !important; }
+</style>
 </body>
 </html>
