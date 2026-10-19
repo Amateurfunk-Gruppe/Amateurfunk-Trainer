@@ -12,6 +12,15 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
+Stand 214 · 19.10.2026
+
+### Behoben
+- Android-App stürzte nach dem Update sofort beim Start ab. Ursache war eine Zeile in Server.js (Prüfung des Namens beim Lernstand mitnehmen), die das Node.js der Android-App nicht lesen kann. Sie ist jetzt so geschrieben, dass sie überall läuft.
+- Handy: Bei Fragen mit sehr langen Wörtern (z. B. VD701 „Frequenznutzungsplanaufstellungsverordnung“) liefen die Antwortkästen über den Bildschirmrand. Lange Wörter werden jetzt umbrochen.
+
+### Geändert
+- „Dein Fortschritt“: Unter „… Fragen sitzen schon“ steht jetzt, wie viele Fragen schon richtig beantwortet sind, aber noch nicht sitzen. Eine Frage sitzt nach 3× richtig hintereinander – vorher sah es nach einer Lernrunde so aus, als wäre nichts passiert.
+
 Stand 213 · 19.10.2026
 
 ### Behoben

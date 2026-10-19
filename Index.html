@@ -2015,6 +2015,14 @@
         #appWerk .aw-fz { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
         #appWerk .aw-fz b { font: 700 30px/1 var(--font-display); color: var(--s-text); }
         #appWerk .aw-fz span { font-size: 15px; color: var(--s-text2); font-weight: 600; }
+        /* Stand 214: zweite Zeile unter "x von 571 sitzen schon" (Dietmar: "Die Auswertung stimmt nicht.
+           Da fehlen viele, viele gelernte Fragen") - zeigt, was schon richtig war, aber noch nicht sitzt. */
+        #appWerk .aw-unterwegs { font-size: 13.5px; line-height: 1.35; color: var(--s-text2); margin: 4px 0 2px; }
+        #appWerk .aw-unterwegs b { font-weight: 700; color: var(--s-text); }
+        /* Stand 214: Lange Woerter (VD701 "Frequenznutzungsplanaufstellungsverordnung") drueckten die
+           Antwortkaesten breiter als den Bildschirm - Dietmar: "Bei der Frage ueberlaeuft der Text". */
+        #optionsContainer > .option, #optionsContainer > .option-grid { min-width: 0 !important; max-width: 100% !important; }
+        .question-area .option-text, .question-area .question-text, .erg-buehne, .eg-inhalt { overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
         #appWerk .aw-balken { height: 12px; background: var(--s-fl2); margin: 12px 0 14px; overflow: hidden; }
         #appWerk .aw-balken i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2EE6D6, #7B5CFF); box-shadow: 0 0 12px rgba(46,230,214,0.5); transition: width 0.9s cubic-bezier(.3, .9, .3, 1); }
         #appWerk .aw-teile { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -24152,7 +24160,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 213, datum: '19.10.2026' };
+const TRAINER_STAND = { nr: 214, datum: '19.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56558,6 +56566,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       + '<div class="ah-ueber" id="awUeberFort">Dein Fortschritt</div>'
       + '<div class="ah-karte aw-fort" id="awFort">'
       +   '<div class="aw-fz"><b id="awGelernt">0</b><span id="awGelerntText"></span></div>'
+      +   '<div class="aw-unterwegs" id="awUnterwegs"></div>'
       +   '<div class="aw-balken"><i id="awBalken"></i></div>'
       +   '<div class="aw-teile" id="awTeile">' + WERK_TEILE.map(t => '<button type="button" class="aw-teil ' + t[2] + '" data-teil="' + t[0] + '" aria-pressed="true">'
       +       '<span class="aw-ha" aria-hidden="true"><i class="fas fa-check"></i></span>' + t[1] + '<span class="aw-z" id="awTZ_' + t[0] + '">–</span>'
@@ -56728,6 +56737,24 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         setText($('awGelernt'), gel.toLocaleString('de-DE'));
         setText($('awGelerntText'), vs ? 'von ' + alle.toLocaleString('de-DE') + ' Fragen sitzen schon' : 'von ' + alle.toLocaleString('de-DE') + ' Fragen gelernt');
         balkenSetzen($('awBalken'), alle ? gel / alle : 0);
+        // UNTERWEGS (Stand 214, 19.10.2026). Dietmar nach einer Viertelstunde Lernen: "16 von 571 ...
+        // Die Auswertung stimmt nicht. Da fehlen viele, viele gelernte Fragen." Es fehlte nichts: Eine Frage
+        // sitzt erst nach dreimal richtig hintereinander. Jetzt steht darunter, wie viele schon ein- oder
+        // zweimal in Folge richtig waren - so sieht man den Fortschritt sofort.
+        try{
+            let unterwegs = 0;
+            if(typeof questionBank !== 'undefined' && Array.isArray(questionBank) && typeof masteryData !== 'undefined'){
+                questionBank.forEach(q => { const m = q && masteryData[q.id];
+                    if(m && !isMastered(q.id) && (m.streak || 0) > 0) unterwegs++; });
+            }
+            const uz = $('awUnterwegs');
+            if(uz){
+                const html = unterwegs > 0
+                    ? '<b>+ ' + unterwegs.toLocaleString('de-DE') + '</b> ' + (unterwegs === 1 ? 'Frage ist' : 'Fragen sind') + ' schon richtig beantwortet – bei 3× richtig hintereinander ' + (unterwegs === 1 ? 'sitzt sie' : 'sitzen sie') + '.'
+                    : 'Eine Frage sitzt, wenn sie 3× hintereinander richtig beantwortet wurde.';
+                if(uz.innerHTML !== html) uz.innerHTML = html;
+            }
+        }catch(e){}
         // Nur die Teile, die es in diesem Ziel gibt (siehe teileImKatalog) -
         // bei N -> E und E -> A ist das allein Technik, und ein einzelner
         // Teil braucht keine Zeile: Die grosse Zahl darueber sagt dasselbe.
