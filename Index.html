@@ -726,6 +726,7 @@
            ================================================================ */
         #appHeute { display: none; }
         html.android-app.stil-sachlich body:not(.runde-laeuft) #appHeute,
+        html.android-app.stil-verspielt body:not(.runde-laeuft) #appHeute,
         html.android-app.fs-bunt body:not(.runde-laeuft) #appHeute { display: block; margin-bottom: 14px; }
         #appHeute .ah-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 12px; }
         #appHeute .ah-gruss { font: 600 23px/1.2 var(--font-body); letter-spacing: -0.4px; color: var(--s-text); }
@@ -24151,7 +24152,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 211, datum: '19.10.2026' };
+const TRAINER_STAND = { nr: 213, datum: '19.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -37571,6 +37572,313 @@ function pruefSchnittText(){
     return Math.min(s.sim, s.voll) + ' von ' + s.voll + ' Prüfungssimulationen bestanden';
 }
 window.pruefSchnitt = pruefSchnitt; window.pruefSchnittText = pruefSchnittText;
+// ================================================================
+//  DIE ERGEBNISSEITE                                    (19.10.2026)
+// ----------------------------------------------------------------
+//  Dietmar zum alten Fenster "Bestanden": "gefaellt mir so gar nicht.
+//  Das Fenster ist sehr klein und haengt sehr hoch oben." Gewaehlt aus
+//  fuenf Entwuerfen: Vorschlag 3 (Maja) mit der Fragenuebersicht aus
+//  Vorschlag 2 und dem Stempel "Pruefung bestanden". "Mit Maja bei
+//  verspielt, ohne Maja bei Sachlich", "mit Fanfare und Konfetti", und:
+//  "Achte darauf, dass es in der mobilen Version rein passt und im Dark
+//  Mode auch." Gilt fuer alle drei Abschluesse: Lernrunde, Pruefung
+//  eines Teils und Pruefungssimulator - online, am PC und in der App.
+//
+//  Ein Klick auf eine Frage oeffnet sie zum Nachsehen in einem Fenster
+//  (gewaehlte und richtige Antwort, dazu die Erklaerung). Die Runde wird
+//  dabei NICHT wieder geoeffnet - sonst kaeme beim zweiten Abschluss ein
+//  zweiter Eintrag in den Verlauf.
+// ================================================================
+let ergebnisZettel = '';
+let ergebnisFragen = [];
+function ergebnisEsc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function ergebnisKurz(t, n){
+    const d = document.createElement('div'); d.innerHTML = String(t || '');
+    const s = (d.textContent || '').replace(/\s+/g, ' ').trim();
+    return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + ' …' : s;
+}
+function ergebnisVerspielt(){
+    try{
+        const k = document.documentElement.classList;
+        return k.contains('android-app') && k.contains('stil-verspielt');
+    }catch(e){ return false; }
+}
+function ergebnisCss(){
+    if(document.getElementById('ergebnisCss')) return;
+    const st = document.createElement('style'); st.id = 'ergebnisCss';
+    st.textContent = `
+.erg-buehne{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:24px;min-height:calc(100vh - 140px);padding:28px 20px;box-sizing:border-box;border-radius:22px;margin:0 auto;width:100%;max-width:1500px;text-align:left}
+.erg-buehne.vs{background:radial-gradient(circle at 25% 40%,#3b6fe0,#5b3fd1 60%,#2a1f7a)}
+.erg-buehne.sa{background:transparent}
+.erg-maja{position:sticky;top:70px;flex:0 0 340px;align-self:flex-start;display:flex;align-items:flex-start;justify-content:center;min-height:520px;padding-top:110px;box-sizing:border-box}
+.erg-maja img{width:340px;max-width:100%;filter:drop-shadow(0 20px 40px rgba(0,0,0,.35));animation:ergSchweben 4s ease-in-out infinite}
+.erg-blase{position:absolute;top:0;left:90px;width:260px;background:#fff;color:#17243a;border-radius:18px;padding:13px 15px;font:600 15px/1.35 var(--font-body,Inter),sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:2}
+.erg-blase small{display:block;font:700 11px var(--font-body,Inter),sans-serif;letter-spacing:1px;color:#0ea5a8;margin-bottom:2px}
+.erg-karte{position:relative;flex:0 1 900px;min-width:0;overflow:hidden;background:#fff;color:#17243a;border-radius:24px;padding:28px 34px;box-shadow:0 30px 80px rgba(0,0,0,.25);box-sizing:border-box}
+.erg-buehne.sa .erg-karte{flex-basis:1060px;border-radius:14px;border:1px solid #dfe6ee;box-shadow:0 12px 40px rgba(15,39,69,.10)}
+.erg-kopf{font:700 13px var(--font-body,Inter),sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#1f9d55;padding-right:150px}
+.erg-buehne.sa .erg-kopf{color:#5d6b80;font-weight:600}
+.erg-karte.nicht .erg-kopf{color:#c0392b} .erg-karte.nach .erg-kopf{color:#b7791f}
+.erg-titel{font:700 44px/1.1 var(--font-display,'Space Grotesk'),sans-serif;margin:6px 0 4px;padding-right:150px}
+.erg-buehne.vs .erg-titel{background:linear-gradient(90deg,#14a37a,#2a78d6);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.erg-buehne.vs .nicht .erg-titel{background:linear-gradient(90deg,#d64545,#b7791f);-webkit-background-clip:text;background-clip:text}
+.erg-buehne.sa .erg-titel{font-size:38px;color:#0f2745;-webkit-text-fill-color:#0f2745}
+.erg-unter{color:#5d6b80;font-size:15px;margin-bottom:16px;padding-right:150px}
+.erg-stempel{position:absolute;right:30px;top:22px;width:150px;height:150px;border:5px solid #1f9d55;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1f9d55;transform:rotate(12deg);opacity:.92;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #1f9d55;background:rgba(255,255,255,.65);text-align:center;line-height:1.1;animation:ergStempel .5s cubic-bezier(.2,1.6,.4,1) .35s both;pointer-events:none}
+.erg-stempel.nach{border-color:#b7791f;color:#b7791f;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #b7791f}
+.erg-stempel i{font-size:24px;margin-bottom:2px}
+.erg-stempel b{font:700 14px var(--font-display,'Space Grotesk'),sans-serif;letter-spacing:1px}
+.erg-stempel strong{font:700 18px var(--font-display,'Space Grotesk'),sans-serif}
+.erg-stempel span{font:600 11px 'IBM Plex Mono',monospace;margin-top:2px}
+.erg-werte{display:flex;gap:12px;margin-bottom:14px;padding-right:150px}
+.erg-wert{flex:1;min-width:0;border-radius:14px;padding:10px 14px}
+.erg-wert div{font-size:12px;font-weight:600}
+.erg-wert b{font:700 24px var(--font-display,'Space Grotesk'),sans-serif;white-space:nowrap}
+.erg-wert small{font-size:13px;color:#5d6b80;font-weight:500}
+.erg-buehne.sa .erg-wert{border:1px solid #e3e9f3;border-radius:10px;background:#fff}
+.erg-buehne.sa .erg-wert div{text-transform:uppercase;letter-spacing:.8px;color:#5d6b80}
+.erg-w-xp{background:#fff8e6;color:#c27c00} .erg-w-se{background:#eef4ff;color:#2a5bb5} .erg-w-ok{background:#f3faf6;color:#1f7a49} .erg-w-no{background:#fff5f5;color:#c0392b}
+.erg-stufe{display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,#5b3fd1,#3b6fe0);color:#fff;border-radius:16px;padding:10px 16px;margin-bottom:16px}
+.erg-stern{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font:700 17px var(--font-display,'Space Grotesk'),sans-serif;color:#6b3b00;background:#ffd06b;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.erg-stufe b{font:700 16px var(--font-display,'Space Grotesk'),sans-serif}
+.erg-balken{height:7px;background:rgba(255,255,255,.25);border-radius:6px;margin-top:5px;overflow:hidden}
+.erg-balken i{display:block;height:100%;background:#ffd06b;border-radius:6px}
+.erg-grenze{margin:4px 0 14px}
+.erg-grenze .gb{height:12px;background:#eef2f6;border-radius:6px;position:relative}
+.erg-grenze .gb i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:#1d7a4a}
+.erg-karte.nicht .erg-grenze .gb i{background:#d64545} .erg-karte.nach .erg-grenze .gb i{background:#d69e2e}
+.erg-grenze .gb u{position:absolute;top:-6px;bottom:-6px;border-left:3px solid #0f2745}
+.erg-grenze .gl{position:relative;height:18px;font-size:12px;color:#5d6b80}
+.erg-grenze .gl span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.erg-teile{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.erg-teil{border-radius:12px;padding:9px 12px;border:2px solid #c9eedc;background:#f3faf6}
+.erg-teil.nach{border-color:#f0d9a8;background:#fff9ec} .erg-teil.nicht{border-color:#f3c2c2;background:#fff5f5} .erg-teil.leer{border:2px dashed #dfe6ee;background:#f7f9fc;opacity:.7}
+.erg-teil div{font-size:12px;font-weight:700;color:#5d6b80} .erg-teil b{font:700 20px var(--font-display,'Space Grotesk'),sans-serif} .erg-teil small{display:block;font-size:12px;color:#5d6b80}
+.erg-h2{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:4px}
+.erg-h2 h3{font:700 17px var(--font-display,'Space Grotesk'),sans-serif;margin:0;color:inherit}
+.erg-h2 span{color:#5d6b80;font-size:13px}
+.erg-gitter{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:7px;margin:10px 0 14px}
+.erg-f{height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:3px;font:700 14px var(--font-display,'Space Grotesk'),sans-serif;cursor:pointer;border:2px solid #c9eedc;background:#e9f8f1;color:#1f9d55;padding:0;transition:transform .12s}
+.erg-f:hover{transform:translateY(-2px)} .erg-f i{font-size:10px}
+.erg-f.no{border-color:#f3c2c2;background:#fff1f1;color:#d64545} .erg-f.of{border-color:#dfe6ee;background:#f4f6fa;color:#8a97a9}
+.erg-fehler{margin:0 0 4px;padding:0;list-style:none}
+.erg-fehler button{display:flex;gap:12px;align-items:center;width:100%;padding:8px 2px;border:0;border-top:1px solid #e3e9f3;background:none;color:inherit;font:500 14px var(--font-body,Inter),sans-serif;text-align:left;cursor:pointer}
+.erg-fehler button:hover{background:#f6f8fc}
+.erg-fehler code{font:600 13px 'IBM Plex Mono',monospace;background:#fff1f1;color:#d64545;padding:3px 8px;border-radius:6px;flex:none}
+.erg-fehler span{flex:1;min-width:0}
+.erg-fehler .mehr{color:#5d6b80;font-size:13px;padding:6px 2px;border-top:1px solid #e3e9f3}
+.erg-knoepfe{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.erg-k{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 20px;border-radius:12px;font:700 15px var(--font-body,Inter),sans-serif;border:1.5px solid #e3e9f3;background:#fff;color:#17243a;cursor:pointer}
+.erg-k.haupt{border:0;background:linear-gradient(135deg,#22c38e,#14a37a);color:#fff;box-shadow:0 4px 0 rgba(10,90,60,.3)}
+.erg-buehne.sa .erg-k{border-radius:8px} .erg-buehne.sa .erg-k.haupt{background:#0f2745;box-shadow:none}
+.erg-k:hover{filter:brightness(.96)}
+.erg-hinweis{font-size:13px;color:#4b5b73;background:#f4f7fd;border:1px solid #e3e9f3;border-radius:10px;padding:8px 12px;margin:0 0 12px}
+body .erg-buehne .erg-stempel{border-radius:50% !important}
+@keyframes ergStempel{from{opacity:0;transform:rotate(30deg) scale(1.8)}to{opacity:.92;transform:rotate(12deg) scale(1)}}
+@keyframes ergSchweben{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@media (prefers-reduced-motion: reduce){.erg-maja img,.erg-stempel{animation:none}}
+/* Dunkel */
+body.dark .erg-buehne .erg-karte{background:#16202e;color:#e6edf5;border-color:#2b3a4f;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+body.dark .erg-buehne.sa .erg-titel{color:#e6edf5;-webkit-text-fill-color:#e6edf5}
+body.dark .erg-buehne .erg-wert{background:#1b2738;border-color:#2b3a4f}
+body.dark .erg-buehne .erg-wert small,body.dark .erg-buehne .erg-unter,body.dark .erg-buehne .erg-h2 span,body.dark .erg-buehne .erg-grenze .gl{color:#9fb0c6}
+body.dark .erg-buehne .erg-grenze .gb{background:#24324a} body.dark .erg-buehne .erg-grenze .gb u{border-color:#e6edf5}
+body.dark .erg-buehne .erg-f{background:#13301f;border-color:#1f5a3a;color:#5fd69a} body.dark .erg-buehne .erg-f.no{background:#3a1b1b;border-color:#6b2a2a;color:#ff8a8a} body.dark .erg-buehne .erg-f.of{background:#1b2738;border-color:#2b3a4f;color:#9fb0c6}
+body.dark .erg-buehne .erg-fehler button,body.dark .erg-buehne .erg-fehler .mehr{border-color:#2b3a4f} body.dark .erg-buehne .erg-fehler button:hover{background:#1b2738}
+body.dark .erg-buehne .erg-k{background:#1b2738;border-color:#2b3a4f;color:#e6edf5} body.dark .erg-buehne .erg-k.haupt{background:#2a78d6}
+body.dark .erg-buehne .erg-stempel{background:rgba(22,32,46,.7);box-shadow:inset 0 0 0 4px #16202e,inset 0 0 0 7px currentColor;border-color:#3fbf7f;color:#3fbf7f}
+body.dark .erg-buehne .erg-stempel.nach{border-color:#e0a84a;color:#e0a84a}
+body.dark .erg-buehne .erg-teil{background:#13301f;border-color:#1f5a3a} body.dark .erg-buehne .erg-teil.nach{background:#33280f;border-color:#6b5320} body.dark .erg-buehne .erg-teil.nicht{background:#3a1b1b;border-color:#6b2a2a} body.dark .erg-buehne .erg-teil.leer{background:#1b2738;border-color:#2b3a4f}
+body.dark .erg-buehne .erg-teil div,body.dark .erg-buehne .erg-teil small{color:#9fb0c6}
+body.dark .erg-buehne .erg-hinweis{background:#1b2738;border-color:#2b3a4f;color:#c9d6e6}
+body.dark .erg-buehne.vs{background:radial-gradient(circle at 25% 40%,#2a4fa8,#3f2c96 60%,#1a1450)}
+body.dark .erg-buehne .erg-karte{background:#16202e;color:#e6edf5}
+body.dark .erg-buehne .erg-w-xp{background:#3a2e10;color:#ffc24b} body.dark .erg-buehne .erg-w-se{background:#16264a;color:#8fb8ff} body.dark .erg-buehne .erg-w-no{background:#3a1b1b;color:#ff8a8a} body.dark .erg-buehne .erg-w-ok{background:#13301f;color:#5fd69a}
+body.dark .erg-buehne .erg-kopf{filter:brightness(1.25)}
+body.dark .erg-buehne.vs .erg-k.haupt{background:linear-gradient(135deg,#22c38e,#14a37a)}
+body.dark .erg-buehne .erg-fehler code{background:#3a1b1b;color:#ff8a8a}
+/* Schmal (Handy) */
+@media (max-width: 900px){
+  .erg-buehne{flex-direction:column;gap:0;padding:14px 10px 18px;min-height:0;border-radius:16px}
+  .erg-maja{position:relative;top:auto;flex:none;align-self:stretch;min-height:0;height:150px;padding-top:0;justify-content:flex-start;align-items:flex-end;margin-bottom:-14px;z-index:1}
+  .erg-maja img{width:118px;margin-left:6px}
+  .erg-blase{left:120px;right:4px;top:auto;bottom:34px;width:auto;font-size:13px;padding:9px 11px}
+  .erg-karte{flex:none;width:100%;padding:18px 16px;border-radius:18px}
+  .erg-kopf{font-size:11px;padding-right:86px}
+  .erg-titel{font-size:28px !important;padding-right:86px}
+  .erg-unter{font-size:13px;padding-right:0}
+  .erg-stempel{width:84px;height:84px;right:12px;top:12px;border-width:3px;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px currentColor}
+  .erg-stempel i{font-size:14px} .erg-stempel b{font-size:9px} .erg-stempel strong{font-size:11px} .erg-stempel span{font-size:8px}
+  .erg-werte{padding-right:0;gap:8px;flex-wrap:wrap}
+  .erg-wert{flex:1 1 calc(50% - 8px);padding:8px 10px}
+  .erg-wert b{font-size:20px}
+  .erg-teile{gap:6px} .erg-teil{padding:7px 8px} .erg-teil b{font-size:16px}
+  .erg-gitter{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .erg-f{height:36px;font-size:13px}
+  .erg-h2 span{display:none}
+  .erg-knoepfe{flex-direction:column}
+  .erg-k{width:100%}
+}
+/* Das Fenster "Frage nachsehen" */
+#ergFrage{position:fixed;inset:0;z-index:99992;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#ergFrage .ef-blatt{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#17243a;border-radius:18px;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+#ergFrage .ef-kopf{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#ergFrage .ef-kopf code{font:600 13px 'IBM Plex Mono',monospace;background:#eef2f7;padding:3px 8px;border-radius:6px}
+#ergFrage .ef-zu{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:0;border-radius:10px;background:#d64545;color:#fff;font-weight:700;cursor:pointer}
+#ergFrage .ef-frage{font-weight:700;font-size:17px;line-height:1.4;margin-bottom:12px}
+#ergFrage .ef-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;border:1.5px solid #e3e9f3;margin-bottom:8px}
+#ergFrage .ef-opt.ok{border-color:#1f9d55;background:#e9f8f1} #ergFrage .ef-opt.falsch{border-color:#d64545;background:#fff1f1}
+#ergFrage .ef-opt b{flex:none;width:24px} #ergFrage .ef-opt em{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
+#ergFrage .ef-opt img{max-height:90px;max-width:100%}
+#ergFrage .ef-erkl{margin-top:14px;border-top:1px solid #e3e9f3;padding-top:12px;font-size:15px;line-height:1.55}
+#ergFrage .ef-bild img,#ergFrage .ef-bild svg{max-width:100%;max-height:260px}
+body.dark #ergFrage .ef-blatt{background:#16202e;color:#e6edf5}
+body.dark #ergFrage .ef-opt{border-color:#2b3a4f} body.dark #ergFrage .ef-opt.ok{background:#13301f;border-color:#3fbf7f} body.dark #ergFrage .ef-opt.falsch{background:#3a1b1b;border-color:#e06464}
+body.dark #ergFrage .ef-kopf code{background:#24324a} body.dark #ergFrage .ef-erkl{border-color:#2b3a4f}
+`;
+    document.head.appendChild(st);
+}
+
+// o: { status: 'bestanden'|'nach'|'nicht', art: 'pruefung'|'runde', kopf, correct, total, required,
+//      zeit, teile:[{name, richtig, gesamt, status}], hinweis, zettel, knoepfe:[[icon, text, onclick, haupt]] }
+function ergebnisSeiteHtml(o){
+    ergebnisCss();
+    const vs = ergebnisVerspielt();
+    const st = o.status;
+    const fragen = (currentQuestions || []).slice();
+    ergebnisFragen = fragen;
+    ergebnisZettel = o.zettel || '';
+    const quote = o.total ? Math.round(o.correct / o.total * 100) : 0;
+    const fehlerQs = fragen.filter(q => progress[q.id] && progress[q.id].answered && !progress[q.id].correct);
+    const offen = fragen.filter(q => !(progress[q.id] && progress[q.id].answered)).length;
+    const titel = (st === 'bestanden' ? (vs ? '' : 'Bestanden: ') : st === 'nach' ? (vs ? '' : 'Nachprüfung: ') : (vs ? '' : 'Nicht bestanden: '))
+        + o.correct + ' von ' + o.total + ' richtig';
+    const unter = [quote + ' %'];
+    if(o.required) unter.push(o.required + ' richtige ' + (o.teile ? 'je Teil ' : '') + 'waren nötig');
+    if(o.zeit) unter.push(o.zeit);
+    const stempel = st === 'nicht' ? '' : '<div class="erg-stempel' + (st === 'nach' ? ' nach' : '') + '" aria-hidden="true">'
+        + '<i class="fas ' + (st === 'nach' ? 'fa-comments' : 'fa-check') + '"></i>'
+        + '<b>' + (st === 'nach' ? 'NACHPRÜFUNG' : (o.art === 'pruefung' ? 'PRÜFUNG' : 'RUNDE')) + '</b>'
+        + '<strong>' + (st === 'nach' ? 'MÖGLICH' : 'BESTANDEN') + '</strong>'
+        + '<span>' + new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + '</span></div>';
+
+    // Werte: verspielt XP / Serie / Fehler, sachlich Richtig / Fehler / Quote / Zeit
+    let werte = '';
+    const fehlerZahl = fehlerQs.length;
+    if(vs){
+        let sp = {}; try{ sp = window.appSpielstand ? window.appSpielstand() : {}; }catch(e){}
+        const xp = fragen.reduce((s, q) => s + (progress[q.id] && progress[q.id].answered ? (progress[q.id].correct ? 10 : 2) : 0), 0);
+        werte = '<div class="erg-werte">'
+          + '<div class="erg-wert erg-w-xp"><div>Gesammelt</div><b>+' + xp.toLocaleString('de-DE') + ' XP</b></div>'
+          + (sp && sp.serie ? '<div class="erg-wert erg-w-se"><div>Serie</div><b>' + sp.serie + (sp.serie === 1 ? ' Tag' : ' Tage') + ' 🔥</b></div>' : '')
+          + '<div class="erg-wert ' + (fehlerZahl ? 'erg-w-no' : 'erg-w-ok') + '"><div>Fehler</div><b>' + (fehlerZahl ? (fehlerZahl <= 3 ? 'nur ' : '') + fehlerZahl : 'keine 🎯') + '</b></div>'
+          + '</div>';
+        try{
+            const s = window.afuStufeInfo && window.afuStufeInfo();
+            if(s && s.name) werte += '<div class="erg-stufe"><div class="erg-stern">' + s.nr + '</div><div style="flex:1;min-width:0"><b>' + ergebnisEsc(s.name) + '</b>'
+                + '<div class="erg-balken"><i style="width:' + Math.round(Math.max(0, Math.min(1, s.anteil)) * 100) + '%"></i></div>'
+                + '<small style="opacity:.9">' + (s.fehlt ? 'noch ' + s.fehlt + (s.fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + s.naechste : 'Höchste Stufe erreicht') + '</small></div></div>';
+        }catch(e){}
+    } else {
+        werte = '<div class="erg-werte">'
+          + '<div class="erg-wert"><div>Richtig</div><b style="color:#1f9d55">' + o.correct + '</b> <small>von ' + o.total + '</small></div>'
+          + '<div class="erg-wert"><div>Fehler</div><b style="color:#c0392b">' + fehlerZahl + '</b>' + (offen ? ' <small>+ ' + offen + ' offen</small>' : '') + '</div>'
+          + '<div class="erg-wert"><div>Quote</div><b>' + quote + ' %</b></div>'
+          + (o.zeit ? '<div class="erg-wert"><div>Zeit</div><b>' + ergebnisEsc(o.zeit.split(' ')[0]) + '</b> <small>min</small></div>' : '')
+          + '</div>';
+    }
+    // Grenze (nicht beim Simulator - dort sagen es die Teile)
+    let grenze = '';
+    if(o.required && !o.teile && o.total){
+        const g = Math.min(100, o.required / o.total * 100);
+        grenze = '<div class="erg-grenze"><div class="gb"><i style="width:' + quote + '%"></i><u style="left:' + g + '%"></u></div>'
+            + '<div class="gl"><span style="left:' + g + '%">Grenze ' + o.required + '</span></div></div>';
+    }
+    const teile = o.teile ? '<div class="erg-teile">' + o.teile.map(t => {
+        if(!t.gesamt) return '<div class="erg-teil leer"><div>' + t.name + '</div><b>—</b><small>nicht geprüft</small></div>';
+        const k = t.status === 'bestanden' ? '' : t.status === 'nachpruefung' ? ' nach' : ' nicht';
+        return '<div class="erg-teil' + k + '"><div>' + t.name + '</div><b>' + t.richtig + '/' + t.gesamt + '</b><small>'
+            + (t.status === 'bestanden' ? 'bestanden' : t.status === 'nachpruefung' ? 'Nachprüfung' : 'nicht bestanden') + '</small></div>';
+    }).join('') + '</div>' : '';
+    const hinweis = o.hinweis ? '<div class="erg-hinweis">' + o.hinweis + '</div>' : '';
+    const gitter = fragen.length ? '<div class="erg-h2"><h3>' + (fragen.length === 1 ? 'Deine Frage' : 'Deine ' + fragen.length + ' Fragen') + '</h3><span>Anklicken: Frage mit Erklärung ansehen</span></div>'
+        + '<div class="erg-gitter">' + fragen.map((q, i) => {
+            const p = progress[q.id], ok = p && p.answered && p.correct, of = !(p && p.answered);
+            return '<button type="button" class="erg-f' + (of ? ' of' : ok ? '' : ' no') + '" onclick="ergebnisFrageZeigen(' + i + ')" title="' + ergebnisEsc(q.id) + '">'
+                + (i + 1) + '<i class="fas ' + (of ? 'fa-minus' : ok ? 'fa-check' : 'fa-xmark') + '"></i></button>';
+        }).join('') + '</div>' : '';
+    const MAX = 6;
+    const fehlerListe = fehlerQs.length ? '<div class="erg-h2"><h3>' + (vs ? 'Hier hat es gehakt' : 'Falsch beantwortet') + '</h3></div><div class="erg-fehler">'
+        + fehlerQs.slice(0, MAX).map(q => '<button type="button" onclick="ergebnisFrageZeigen(' + fragen.indexOf(q) + ')"><code>' + ergebnisEsc(q.id) + '</code><span>'
+            + ergebnisEsc(ergebnisKurz(q.text, 110)) + '</span><i class="fas fa-chevron-right" style="color:#9aa7b8"></i></button>').join('')
+        + (fehlerQs.length > MAX ? '<div class="mehr">… und ' + (fehlerQs.length - MAX) + ' weitere – alle oben in der Übersicht</div>' : '') + '</div>' : '';
+    const knoepfe = '<div class="erg-knoepfe">' + (o.knoepfe || []).map(k => '<button type="button" class="erg-k' + (k[3] ? ' haupt' : '') + '" onclick="' + k[2] + '"><i class="fas ' + k[0] + '"></i> ' + k[1] + '</button>').join('') + '</div>';
+
+    let maja = '';
+    if(vs){
+        let bild = '';
+        try{
+            const P = window.ASTRO_POSEN || {};
+            bild = st === 'bestanden' ? (P.daumen || P.applaus || P.winkt) : st === 'nach' ? (P.antenne || P.steht) : (P.buch || P.steht);
+        }catch(e){}
+        const satz = st === 'bestanden' ? 'Funkspruch empfangen: <b>Bestanden!</b> ' + o.correct + ' von ' + o.total + (o.art === 'pruefung' ? ' – da kann die Prüfung kommen!' : ' – stark gefunkt!')
+            : st === 'nach' ? 'Knapp! Mit ' + o.correct + ' von ' + o.total + ' gibt es eine <b>mündliche Nachprüfung</b> – das schaffst du!'
+            : 'Noch nicht ganz – ' + o.correct + ' von ' + o.total + '. Übe die Fehler, dann klappt es beim nächsten Mal!';
+        if(bild) maja = '<div class="erg-maja"><div class="erg-blase"><small>MAJA</small>' + satz + '</div><img src="' + bild + '" alt="" draggable="false"></div>';
+    }
+    return '<div class="erg-buehne ' + (vs ? 'vs' : 'sa') + '">' + maja
+        + '<div class="erg-karte ' + (st === 'bestanden' ? 'ok' : st === 'nach' ? 'nach' : 'nicht') + '">' + stempel
+        + '<div class="erg-kopf">' + (st === 'bestanden' && vs ? '<i class="fas fa-trophy" style="color:#f5a524"></i> ' : '') + ergebnisEsc(o.kopf) + '</div>'
+        + '<h1 class="erg-titel">' + titel + '</h1>'
+        + '<div class="erg-unter">' + unter.join(' · ') + '</div>'
+        + werte + teile + grenze + hinweis + gitter + fehlerListe + knoepfe
+        + '</div></div>';
+}
+
+// Nach dem Zeichnen: nach oben, und bei "bestanden" Fanfare und Konfetti
+function ergebnisNachZeichnen(jubel, nachFanfare){
+    try{ window.scrollTo({ top: 0, behavior: 'instant' }); }catch(e){ try{ window.scrollTo(0, 0); }catch(x){} }
+    if(jubel){ try{ triggerConfetti(true, nachFanfare || null); }catch(e){} }
+}
+
+function ergebnisZettelZeigen(){ try{ if(ergebnisZettel) zettelEinblenden(ergebnisZettel); }catch(e){} }
+window.ergebnisZettelZeigen = ergebnisZettelZeigen;
+
+function ergebnisFrageZeigen(i){
+    try{
+        ergebnisCss();
+        const q = ergebnisFragen[i]; if(!q) return;
+        const alt = document.getElementById('ergFrage'); if(alt) alt.remove();
+        const p = progress[q.id] || {};
+        const opts = (q.options || []).map((opt, k) => {
+            const gewaehlt = q.userAnswerIndex === k;
+            const kl = opt.correct ? ' ok' : (gewaehlt ? ' falsch' : '');
+            let inhalt = '';
+            try{ inhalt = opt.image ? renderOptionImage(opt, 'ABCD'[k]) : ''; }catch(e){ inhalt = ''; }
+            if(opt.text) inhalt = '<span>' + opt.text + '</span>' + inhalt;
+            return '<div class="ef-opt' + kl + '"><b>' + 'ABCD'[k] + ':</b><div style="min-width:0">' + inhalt + '</div>'
+                + (opt.correct ? '<em style="color:#1f9d55"><i class="fas fa-check"></i> richtig</em>' : gewaehlt ? '<em style="color:#d64545"><i class="fas fa-xmark"></i> deine Antwort</em>' : '') + '</div>';
+        }).join('');
+        let bild = ''; try{ bild = typeof getSvgHtml === 'function' ? (getSvgHtml(q.id) || '') : ''; }catch(e){}
+        let erkl = '';
+        try{
+            const er = (typeof erklaerMap !== 'undefined' && erklaerMap) ? erklaerMap[q.id] : null;
+            if(er && typeof erklaerInhalt === 'function') erkl = '<div class="ef-erkl erklaer-kasten"><b><i class="fas fa-lightbulb" style="color:#5b3f95"></i> Erklärung</b>' + erklaerInhalt(q, er, true) + '</div>';
+        }catch(e){}
+        const o = document.createElement('div'); o.id = 'ergFrage'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Frage ' + q.id);
+        o.innerHTML = '<div class="ef-blatt"><div class="ef-kopf"><code>' + ergebnisEsc(q.id) + '</code><span style="font-size:13px;color:#5d6b80">Frage ' + (i + 1) + ' von ' + ergebnisFragen.length
+            + (p.answered ? (p.correct ? ' · richtig beantwortet' : ' · falsch beantwortet') : ' · nicht beantwortet') + '</span>'
+            + '<button type="button" class="ef-zu"><i class="fas fa-xmark"></i> Schließen</button></div>'
+            + '<div class="ef-frage">' + (q.text || '') + '</div>' + (bild ? '<div class="ef-bild">' + bild + '</div>' : '') + opts + erkl + '</div>';
+        const zu = () => { o.remove(); document.removeEventListener('keydown', esc); };
+        const esc = ev => { if(ev.key === 'Escape') zu(); };
+        o.addEventListener('click', ev => { if(ev.target === o || ev.target.closest('.ef-zu')) zu(); });
+        document.addEventListener('keydown', esc);
+        document.body.appendChild(o);
+    }catch(e){ console.warn('[Ergebnis] Frage', e); }
+}
+window.ergebnisFrageZeigen = ergebnisFrageZeigen;
+
 function renderFinishScreen(isTimeUp = false) {
     // Die Runde "Noch nie geübt" bekommt ihren eigenen Abschluss - Ton und
     // Fenster, siehe rundeAbschlussMelden(). Der Aufruf steht hier oben,
@@ -37692,29 +38000,28 @@ function renderFinishScreen(isTimeUp = false) {
               ? `❌ ${grayParts.map(p=>labelOf[p]).join(' und ')} je 17 oder 18/25 – eine mündliche Nachprüfung gibt es nur, wenn lediglich ein Teil knapp daneben liegt. Die Teile lassen sich einzeln wiederholen.${passedParts.length ? ' Bestanden: ' + passedParts.map(p=>labelOf[p]).join(', ') + '.' : ''} Gesamt ${testedErrors} Fehler.`
             : `❌ Mindestens ein Teil (${failParts.map(p=>labelOf[p]).join(', ')}) unter 17/25 → direkt nicht bestanden.${grayParts.length ? ' In der Grauzone: ' + grayParts.map(p=>labelOf[p]).join(', ') + '.' : ''}${passedParts.length ? ' Bestanden: ' + passedParts.map(p=>labelOf[p]).join(', ') + '.' : ''} Gesamt ${testedErrors} Fehler.`;
 
-        container.innerHTML = `
-            <div class="finish-box" style="max-width:720px;">
-                <i class="fas ${overallStatus==='bestanden' ? 'fa-trophy' : overallStatus==='nachpruefung' ? 'fa-exclamation-triangle' : 'fa-times-circle'}" style="color:${statusColor};font-size:3.2rem;"></i>
-                <p style="font-size:1.5rem;font-weight:800;color:${statusColor}; margin-top:8px;">${statusText}</p>
-                <div class="sub" style="margin-top:8px; font-size:1rem; font-weight:600; color:var(--ink);">${speechText}</div>
-                <div class="sub" style="margin-top:10px;">Gesamt: <b>${testedCorrect} / ${testedTotal}</b> richtig (${testedTotal>0 ? Math.round((testedCorrect/testedTotal)*100) : 0}%) – <b>${testedErrors} Fehler</b> – ${isTimeUp ? 'Zeit abgelaufen' : `Zeit: ${(testedParts.length*15) - Math.floor(examTimeRemaining/60)} Min`}</div>
-                <div style="margin:1.1rem 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-                    ${partCard('Vorschriften', vorschriftenQs, correctV, statusV)}
-                    ${partCard('Betrieb', betriebQs, correctB, statusB)}
-                    ${partCard('Technik', technikQs, correctT, statusT)}
-                </div>
-                <div style="margin-top:8px;font-size:0.85rem;color:var(--ink); background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.6rem 0.8rem; text-align:left;">
-                    <b>📊 Übersicht Klasse N:</b><br>
-                    ${uebersichtText}
-                </div>
-                ${pruefZettelHtml(statusMap, counts, overallStatus === 'bestanden' && testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length)}
-                <div class="btn-group" style="margin-top:1rem;">
-                                        <button class="btn btn-primary" onclick="startExamSimulator()"><i class="fas fa-redo"></i> Nochmal Simulator</button>
-                    <button class="btn btn-primary" onclick="startQuiz()"><i class="fas fa-play"></i> Normal starten</button>
-                    ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
-                </div>
-            </div>`;
-        if(overallStatus==='bestanden') { triggerConfetti(true, () => speakExamResult(speechText)); setTimeout(() => zettelEinblenden(pruefZettelHtml(statusMap, counts, testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length)), 1600); } else { speakExamResult(speechText); setTimeout(() => zettelEinblenden(pruefZettelHtml(statusMap, counts, false)), 900); }
+        // DIE ERGEBNISSEITE (19.10.2026) - siehe ergebnisSeiteHtml()
+        const simAlle = testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length;
+        const simSek = examStartTime ? Math.max(0, Math.round((Date.now() - examStartTime) / 1000)) : 0;
+        const simZeit = simSek ? Math.floor(simSek / 60) + ':' + String(simSek % 60).padStart(2, '0') + ' min' : '';
+        container.innerHTML = ergebnisSeiteHtml({
+            status: overallStatus === 'bestanden' ? 'bestanden' : overallStatus === 'nachpruefung' ? 'nach' : 'nicht',
+            art: 'pruefung',
+            kopf: 'Prüfungssimulation · Klasse ' + pruefZielBuchstabe().toUpperCase() + (testedParts.length && testedParts.length < 3 ? ' · ' + testedParts.map(p => labelOf[p]).join(' + ') : '') + (isTimeUp ? ' · Zeit abgelaufen' : ''),
+            correct: testedCorrect, total: testedTotal, required: 19, zeit: simZeit,
+            teile: [['vorschriften', 'Vorschriften', vorschriftenQs, correctV, statusV], ['betrieb', 'Betrieb', betriebQs, correctB, statusB], ['technik', 'Technik', technikQs, correctT, statusT]]
+                .map(t => ({ name: t[1], gesamt: t[2].length, richtig: t[3], status: t[4] })),
+            hinweis: uebersichtText,
+            zettel: pruefZettelHtml(statusMap, counts, overallStatus === 'bestanden' && simAlle),
+            knoepfe: [
+                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
+                ['fa-redo', 'Nochmal Simulator', 'startExamSimulator()', !errorList.length],
+                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()'],
+                ['fa-house', 'Startseite', 'backToMain()']
+            ]
+        });
+        if(overallStatus === 'bestanden') ergebnisNachZeichnen(true, () => speakExamResult(speechText));
+        else { ergebnisNachZeichnen(false); speakExamResult(speechText); }
         examSimulatorMode = false;
     } else if (examMode) {
         const required = 19;
@@ -37734,22 +38041,17 @@ function renderFinishScreen(isTimeUp = false) {
             examFinished = true;
         }
 
-        container.innerHTML = `
-            <div class="finish-box">
-                <i class="fas ${correct >= required ? 'fa-check-circle' : 'fa-times-circle'}" style="color:${statusColor};font-size:3rem;"></i>
-                <p style="font-size:1.3rem;font-weight:700;color:${statusColor};">${currentPart} – ${statusText}</p>
-                <div class="sub" style="font-weight:600; color:var(--ink);">${speech}</div>
-                <div class="sub" style="margin-top:8px;">${correct} von ${total} richtig (${Math.round((correct/total)*100)}%) – ${errors} Fehler</div>
-                <div style="margin-top:8px;font-size:0.8rem;color:var(--muted);">
-                    ${correct >= required ? `✅ ${required}/${total} erreicht – bestanden!` : `❌ ${required}/${total} benötigt – Klasse N hat keine Grauzone`}
-                </div>
-                ${(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = correct >= required ? 'bestanden' : 'nicht_bestanden'; ct[k] = correct; } return pruefZettelHtml(st, ct, false); }catch(e){ return ''; } })()}
-                <div class="btn-group">
-                                        <button class="btn btn-primary" onclick="backToMain()" style="background:#0f2745;"><i class="fas fa-home"></i> Hauptmenü</button>
-                    ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
-                </div>
-            </div>`;
-        if(correct>=required) { triggerConfetti(true); setTimeout(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = 'bestanden'; ct[k] = correct; } zettelEinblenden(pruefZettelHtml(st, ct, false)); }catch(e){} }, 1600); } else { setTimeout(() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = 'nicht_bestanden'; ct[k] = correct; } zettelEinblenden(pruefZettelHtml(st, ct, false)); }catch(e){} }, 900); }
+        container.innerHTML = ergebnisSeiteHtml({
+            status: correct >= required ? 'bestanden' : 'nicht', art: 'pruefung',
+            kopf: 'Prüfung · ' + currentPart, correct: correct, total: total, required: required,
+            zettel: (() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = correct >= required ? 'bestanden' : 'nicht_bestanden'; ct[k] = correct; } return pruefZettelHtml(st, ct, false); }catch(e){ return ''; } })(),
+            knoepfe: [
+                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
+                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()', !errorList.length],
+                ['fa-house', 'Startseite', 'backToMain()']
+            ]
+        });
+        ergebnisNachZeichnen(correct >= required);
     } else {
         // ---- Ausgelassene Fragen: keine Wertung, eine Uebersicht ----
         //
@@ -37788,29 +38090,22 @@ function renderFinishScreen(isTimeUp = false) {
             examFinished = true;
         }
 
-        container.innerHTML = `
-            <div class="finish-box">
-                <i class="fas ${pass ? 'fa-check-circle' : 'fa-times-circle'}" style="color:${pass ? 'var(--good)' : 'var(--bad)'};font-size:3rem;"></i>
-                <p style="font-size:1.3rem;font-weight:700;color:${pass ? 'var(--good)' : 'var(--bad)'};">${pass ? '🎉 Bestanden!' : '❌ Nicht bestanden'}</p>
-                <div class="sub" style="font-weight:600; color:var(--ink);">${speech}</div>
-                <div class="sub">${correct} von ${total} richtig (${Math.round((correct/total)*100)}%) – ${errors} Fehler</div>
-                <div class="sub" style="margin-top:4px; font-size:0.75rem; color:var(--muted);">Benötigt: ${requiredNormal} von ${total}</div>
-                <div class="sub" style="margin-top:6px;">${errorList.length > 0 ? '⚠️ ' + errorList.length + ' Fehler' : '🎯 Alles richtig!'}</div>
-                <div class="btn-group">
-                                        <button class="btn btn-primary" onclick="backToMain()" style="background:#0f2745;"><i class="fas fa-home"></i> Hauptmenü</button>
-                    ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
-                </div>
-                <div style="margin-top:8px; font-size:0.8rem; color:var(--muted);">${pass ? '✅ Bestanden! (19/25)' : '❌ 19/25 benötigt'}</div>
-            </div>`;
-        if(pass) triggerConfetti(true);
-        {
-            if(total >= 25) setTimeout(() => { try{
+        container.innerHTML = ergebnisSeiteHtml({
+            status: pass ? 'bestanden' : 'nicht', art: 'runde',
+            kopf: 'Lernrunde · ' + rundenName(), correct: correct, total: total, required: requiredNormal,
+            zettel: total >= 25 ? (() => { try{
                 const teile = [...new Set(currentQuestions.map(q => q.part))];
                 const NAMEN = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
                 const titel = teile.length === 1 && NAMEN[teile[0]] ? NAMEN[teile[0]] : 'Gemischte Runde';
-                zettelEinblenden(pruefZettelHtml({}, {}, false, { runde: { titel: titel, richtig: correct, gesamt: total, ok: pass } }));
-            }catch(e){} }, pass ? 1600 : 900);
-        }
+                return pruefZettelHtml({}, {}, false, { runde: { titel: titel, richtig: correct, gesamt: total, ok: pass } });
+            }catch(e){ return ''; } })() : '',
+            knoepfe: [
+                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
+                ...(total >= 25 ? [['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()']] : []),
+                ['fa-house', 'Startseite', 'backToMain()', !errorList.length]
+            ]
+        });
+        ergebnisNachZeichnen(pass);
     }
     isQuizActive = false;
     updateVisibility();
@@ -38927,6 +39222,8 @@ function anzeigeAnwenden(){
         //  innerHeight - beide in der vergroesserten Ansicht - und darf
         //  deshalb direkt verglichen werden.
         try{
+            // Die Ergebnisseite (19.10.2026) darf scrollen - sie wird nicht auf Fensterhoehe verkleinert
+            if(document.querySelector('.erg-buehne')) throw new Error('ergebnisseite');
             const LUFT = 14;   // Punkte, die unten frei bleiben sollen
 
             // ZWEI BEDINGUNGEN, NICHT EINE.
@@ -52087,7 +52384,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const q = $('qCounter');
         const t = q ? q.textContent.trim() : '';
         const m = t.match(/^(\d+)\s*\/\s*(\d+)$/);
-        const neu = m ? ('Frage ' + m[1] + ' von ' + m[2]) : (t || 'Frage');
+        let neu = m ? ('Frage ' + m[1] + ' von ' + m[2]) : (t || 'Frage');
+        if(D.querySelector('.erg-buehne')) neu = 'Ergebnis';   // die Ergebnisseite (19.10.2026)
         if(r.textContent !== neu) r.textContent = neu;
     }
     function gruppenZahl(){
@@ -52287,6 +52585,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         schreib('app_stil', s);
         H.classList.toggle('stil-verspielt', s === 'verspielt');
         H.classList.toggle('stil-sachlich', s === 'sachlich');
+        // Stil der Frage mitziehen, solange keiner ausdruecklich gewaehlt ist (19.10.2026). Dietmar am Handy:
+        // "Beim Umstellen von sachlich auf verspielt habe ich nur eine weisse Oberflaeche. Schliesse ich den
+        // Browser, funktioniert es." Beim Neuladen setzt der Kopf der Seite fs-bunt (Verspielt) bzw. fs-petrol
+        // (Sachlich) - beim Umschalten ohne Neuladen blieb fs-petrol stehen, und Verspielt ohne fs-bunt
+        // zeigte die Startseite gar nicht.
+        tu(() => {
+            if(/^(bunt|petrol|navy|schlicht)$/.test(lies('afu_fragenstil', ''))) return;
+            const fs = s === 'verspielt' ? 'bunt' : (lies('pc_ansicht', '') === 'app' ? 'petrol' : 'schlicht');
+            ['bunt', 'petrol', 'navy', 'schlicht'].forEach(f => H.classList.toggle('fs-' + f, f === fs));
+        });
         if(s !== 'verspielt') tu(() => roboHeim(true));
         tu(klickTonSteuern);                              // Verspielt: nur die eigenen Toene, kein Maus-Klick
         tu(stilAnAppMelden);                              // fuer das Startbild beim naechsten Start
@@ -56343,6 +56651,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(vs) levelNachziehen(xp, nr);
         fortschrittNachziehen(vs);
     }
+    // Fuer die Ergebnisseite (19.10.2026): Stufe, Name und Fortschritt zur naechsten
+    window.afuStufeInfo = () => { const xp = xpStand(), nr = stufeNr(xp), ab = STUFEN[nr], n = STUFEN[nr + 1];
+        return { nr: nr + 1, name: STUFEN_NAMEN[nr], anteil: n ? (xp - ab) / (n - ab) : 1, fehlt: n ? Math.ceil((n - xp) / 10) : 0, naechste: nr + 2, xp: xp }; };
     function levelNachziehen(xp, nr){
         // Dein Level
         const ab = STUFEN[nr], naechste = STUFEN[nr + 1];

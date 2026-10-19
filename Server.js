@@ -6406,10 +6406,21 @@ function lsIp(req){
   return z;
 }
 
+// ANDROID-ABSTURZ (19.10.2026): Dietmar: "Nach dem Update startet die App kurz und stuerzt sofort ab."
+// Node.js in der Android-App ist ohne Unicode-Daten gebaut (nodejs-mobile, --with-intl=none). Dort ist ein
+// Muster mit \p{L} schon beim Einlesen ein Syntaxfehler - Server.js startete gar nicht, die App ging zu.
+// Deshalb wird das Muster erst zur Laufzeit gebaut; klappt das nicht, gilt eine Liste ohne \p{...}.
+// Kein \p{...} als festes Muster in Dateien, die Node laedt!
+const LS_NAME_MUSTER = (() => {
+  try{ return new RegExp('^[\\p{L}\\p{N} ._\\-\\/]+$', 'u'); }
+  catch(e){ return /^[A-Za-z0-9\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F ._\-\/]+$/; }
+})();
 function lsNameSauber(roh){
-  const n = String(roh || '').normalize('NFC').replace(/\s+/g, ' ').trim();
+  let n = String(roh || '');
+  try{ n = n.normalize('NFC'); }catch(e){}
+  n = n.replace(/\s+/g, ' ').trim();
   if(n.length < 3 || n.length > 24) return null;
-  if(!/^[\p{L}\p{N} ._\-\/]+$/u.test(n)) return null;
+  if(!LS_NAME_MUSTER.test(n)) return null;
   return n;
 }
 function lsPinGut(p){ return typeof p === 'string' && /^\d{4,6}$/.test(p); }

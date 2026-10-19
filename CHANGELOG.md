@@ -12,6 +12,21 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
+Stand 213 · 19.10.2026
+
+### Behoben
+- Handy, Wechsel von Sachlich auf Verspielt in den Einstellungen: Die Startseite blieb weiß, erst nach dem Neustart des Browsers war sie da. Der Stil der Frage wechselt jetzt beim Umschalten mit (Verspielt: Bunt, Sachlich: Petrol), solange keiner ausdrücklich gewählt ist.
+
+Stand 212 · 19.10.2026
+
+### Geändert
+- **Neue Ergebnisseite** nach jeder Runde, jeder Prüfung und dem Prüfungssimulator – statt des kleinen Fensters oben: groß und mittig, mit dem Ergebnis („22 von 25 richtig“, Quote, nötige Richtige, beim Simulator Zeit und die drei Teile), einem Balken mit der Grenze, allen Fragen als grüne/rote Kästchen und der Liste der falsch beantworteten Fragen. Ein Klick auf eine Frage zeigt sie mit deiner und der richtigen Antwort und der Erklärung. Bei „bestanden“ ein Stempel („Prüfung bestanden“, „Runde bestanden“, bei Grauzone „Nachprüfung möglich“), Fanfare und Konfetti.
+- Stil **Verspielt**: Maja gratuliert (oder macht Mut), dazu gesammelte XP, Serie und deine Stufe. Stil **Sachlich**: ohne Maja, ruhig mit Richtig/Fehler/Quote/Zeit.
+- Passt aufs Handy (einspaltig, Maja klein oben) und in den dunklen Modus. Der Prüfungszettel springt nicht mehr von selbst auf, sondern kommt über den Knopf „Prüfungszettel“.
+
+### Behoben
+- Das alte Fenster zeigte nach jeder bestandenen Runde „Bestanden! (19/25)“, auch wenn die Runde nur eine Frage hatte.
+
 Stand 211 · 19.10.2026
 
 ### Geändert
