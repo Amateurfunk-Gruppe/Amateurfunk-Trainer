@@ -11,6 +11,31 @@ const os  = require('os');        // fuer die Ermittlung der lokalen Netzwerkadr
 const zlib = require('zlib');     // fuer das Projekt-Paket zum Mitnehmen (ZIP)
 
 // ================================================================
+//  SERVER-MODUS PER MERKDATEI                            (12.10.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Mein Server ist staendig Offline." Im Protokoll des
+//  ThinkPads: "[ENDE] Kein Fenster mehr offen. Der Trainer macht
+//  Feierabend." - er war ueber START.bat / das Symbol auf dem Desktop
+//  gestartet worden statt ueber START-SERVER.bat. Dann gilt der
+//  Feierabend: Ist kein Browser mehr offen, beendet er sich.
+//
+//  Liegt neben Server.js die Datei _SERVER-MODUS.txt, ist dieser
+//  Rechner ein Server - egal, wie der Trainer gestartet wurde:
+//  kein Feierabend, kein Browser, Tuer von Anfang an offen, nur
+//  127.0.0.1 (wie START-SERVER.bat). Der Unterstrich sorgt dafuer,
+//  dass die Datei nie auf GitHub, den USB-Stick oder per
+//  _Server-Aktualisieren.bat auf einen anderen Rechner wandert.
+// ================================================================
+try{
+  if(fs.existsSync(path.join(__dirname, '_SERVER-MODUS.txt'))){
+    process.env.AFU_BROWSER = '';
+    process.env.AFU_TUER = '1';
+    if(process.env.AFU_NUR_LOKAL === undefined || process.env.AFU_NUR_LOKAL === '') process.env.AFU_NUR_LOKAL = '1';
+    process.env.AFU_SERVER_MODUS = '1';
+  }
+}catch(e){}
+
+// ================================================================
 // FIX K7: Globaler Fehlerfang.
 // Vorher konnte ein einziger unbehandelter Fehler (z.B. EPIPE beim
 // Schreiben nach piper.exe oder ein fehlerhaftes Socket-Paket) den
@@ -1392,8 +1417,11 @@ app.get('/api/neuanfang', localOnly, (req,res)=>{
 // auch alles, was ueber den Einladungslink kommt, bleibt bei 256 KB.
 const jsonAllgemein = express.json({limit:'256kb'});
 const jsonLernstand = express.json({limit:'8mb'});
+// Lernstand mitnehmen (11.10.2026): ein Platz, oeffentlich erreichbar - 2 MB je Anfrage.
+const jsonMitnehmen = express.json({limit:'2mb'});
 app.use((req, res, next) => {
   if(req.method === 'POST' && req.path === '/api/userdata' && isLocalRequest(req)) return jsonLernstand(req, res, next);
+  if(req.method === 'POST' && req.path.indexOf('/api/lernstand/') === 0) return jsonMitnehmen(req, res, next);
   return jsonAllgemein(req, res, next);
 });
 
@@ -6100,10 +6128,34 @@ app.post('/api/kurs/anfrage', (req, res) => {
   const geheim = crypto.randomBytes(24).toString('hex');
   const id = kursId('a');
   k.anfragen[id] = { id, name, art, zeit: jetzt, g: kursHash(geheim), status: 'offen' };
-  kursSpeichern();
-  console.log('[KURS] Anfrage von "' + name + '" (' + art + ') fuer ' + k.name);
-  res.json({ ok: true, id, geheim, kurs: k.name, leiter: k.leiter || '' });
+  // ------------------------------------------------------------
+  //  AUTOMATISCH AUFNEHMEN                              (12.10.2026)
+  //  Dietmar: "Kurse muessen automatisch bestaetigt werden." Die
+  //  Anfrage wird sofort angenommen; der Schluessel geht gleich mit
+  //  der Antwort zurueck. Gibt es im Kurs schon jemanden mit genau
+  //  diesem Namen, kommt das neue Geraet zu ihm (Handy + PC derselben
+  //  Person). Abmelden/Entfernen geht weiter in der Kursuebersicht.
+  // ------------------------------------------------------------
+  const gleich = Object.values(k.teilnehmer || {}).find(t => String(t.name || '').trim().toLowerCase() === name.trim().toLowerCase());
+  const token = kursAufnehmenIntern(k, k.anfragen[id], gleich ? gleich.id : '');
+  k.anfragen[id].abgeholt = jetzt; delete k.anfragen[id].token;
+  kursSpeichern(true);
+  console.log('[KURS] "' + name + '" (' + art + ') automatisch aufgenommen in ' + k.name + (gleich ? ' (weiteres Geraet)' : ''));
+  res.json({ ok: true, id, geheim, kurs: k.name, leiter: k.leiter || '', status: 'ja', token });
 });
+
+// Aufnehmen - gemeinsam fuer "automatisch" und den Knopf des Kursleiters
+function kursAufnehmenIntern(k, a, zu){
+  let t = zu && k.teilnehmer[zu];
+  if(!t){
+    const tid = kursId('t');
+    t = k.teilnehmer[tid] = { id: tid, name: a.name, geraete: [], seit: Date.now(), zuletzt: 0 };
+  }
+  const token = crypto.randomBytes(24).toString('hex');
+  t.geraete.push({ h: kursHash(token), art: a.art, seit: Date.now(), zuletzt: 0 });
+  a.status = 'ja'; a.token = token; a.tid = t.id;
+  return token;
+}
 
 app.get('/api/kurs/anfrage/:id', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -6221,16 +6273,9 @@ app.post('/api/kurs/aufnehmen', localOnly, (req, res) => {
   const b = req.body || {};
   const a = (k.anfragen || {})[String(b.id || '')];
   if(!a || a.status !== 'offen') return res.status(404).json({ error: 'Anfrage nicht gefunden' });
-  let t = b.zu && k.teilnehmer[b.zu];
-  if(!t){
-    const tid = kursId('t');
-    t = k.teilnehmer[tid] = { id: tid, name: a.name, geraete: [], seit: Date.now(), zuletzt: 0 };
-  }
-  const token = crypto.randomBytes(24).toString('hex');
-  t.geraete.push({ h: kursHash(token), art: a.art, seit: Date.now(), zuletzt: 0 });
-  a.status = 'ja'; a.token = token; a.tid = t.id;
+  kursAufnehmenIntern(k, a, b.zu || '');
   kursSpeichern(true);
-  console.log('[KURS] "' + a.name + '" aufgenommen' + (b.zu ? ' (Geraet zu ' + t.name + ')' : ''));
+  console.log('[KURS] "' + a.name + '" aufgenommen' + (b.zu ? ' (weiteres Geraet)' : ''));
   res.json(kursUebersicht());
 });
 
@@ -6299,6 +6344,265 @@ app.post('/api/kurs/fragen-leiter', localOnly, (req, res) => {
   const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.slice(0, 100) : [];
   res.json({ fragen: ids.map(id => kat[String(id)]).filter(Boolean) });
 });
+
+// ================================================================
+//  LERNSTAND MITNEHMEN - NAME + PIN                     (11.10.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Wenn jemand auf meinem Trainer uebt und den Browser
+//  danach schliesst, ist dann der Verlauf weg?" - "Würde es nicht Sinn
+//  machen, mal PHP zu installieren und eine Datenbank?" - "Das klingt
+//  gut mit Name und PIN." - "Bauen wir das mit der PIN jetzt ein?"
+//
+//  FREIWILLIG. Ohne Anmeldung bleibt alles wie bisher: Der Lernstand
+//  liegt im Browser des Besuchers. Wer "Lernstand mitnehmen" waehlt,
+//  legt einen Namen (Spitzname/Rufzeichen) und eine PIN an. Danach
+//  liegt eine Kopie des Lernstands EINES Platzes hier auf dem Server,
+//  und jedes andere Geraet holt sie mit Name + PIN ab.
+//
+//  KEIN PHP, KEINE DATENBANK-SOFTWARE. Eine JSON-Datei je Lernstand in
+//  data\lernstand\. Der Dateiname ist ein Fingerabdruck des Namens -
+//  im Ordner steht kein Name im Klartext.
+//
+//  DIE PIN wird nie gespeichert, nur ihr Fingerabdruck (scrypt mit
+//  eigenem Salz). Nach der Anmeldung bekommt das Geraet einen
+//  Zufallsschluessel ("Token"); damit gleicht es im Hintergrund ab,
+//  ohne die PIN zu kennen. Hier liegt auch davon nur der Fingerabdruck.
+//
+//  SCHUTZ GEGEN RATEN: 5 falsche PINs -> der Name ist 15 Minuten
+//  gesperrt, jede weitere Sperre doppelt so lang (hoechstens 24 h).
+//  Dazu je Adresse hoechstens 30 Fehlversuche in der Stunde und
+//  hoechstens 5 neue Lernstaende in der Stunde.
+//
+//  AUFRAEUMEN: Was 12 Monate nicht benutzt wurde, loescht der Server
+//  beim Start und danach einmal am Tag. Dazu "Meinen Lernstand
+//  loeschen" mit PIN.
+//
+//  Die Wege liegen VOR der Liste der oeffentlichen Dateien (isPublicPath)
+//  und HINTER Tuer, Laendersperre und Bremse - fuer sie gilt also alles,
+//  was fuer jeden Besucher gilt. localOnly waere hier falsch: Gerade
+//  Besucher von aussen sollen das nutzen.
+// ================================================================
+const LS_ORDNER = path.join(__dirname, 'data', 'lernstand');
+try{ fs.mkdirSync(LS_ORDNER, { recursive: true }); }catch(e){}
+const LS_MAX_BYTES     = 2 * 1024 * 1024;         // je Lernstand
+const LS_MAX_KONTEN    = 5000;                    // Platte schuetzen
+const LS_MAX_GERAETE   = 10;                      // Tokens je Lernstand
+const LS_FEHL_MAX      = 5;
+const LS_SPERRE_MS     = 15 * 60 * 1000;
+const LS_SPERRE_MAX_MS = 24 * 3600 * 1000;
+const LS_UNBENUTZT_MS  = 365 * 24 * 3600 * 1000;
+const LS_IP_FEHL_MAX   = 30;                      // je Stunde und Adresse
+const LS_IP_NEU_MAX    = 5;                       // je Stunde und Adresse
+const lsIpZaehler = new Map();                    // ip -> { fehl, neu, bis }
+
+function lsIp(req){
+  const ip = ipRoh(req) || 'unbekannt';
+  const jetzt = Date.now();
+  let z = lsIpZaehler.get(ip);
+  if(!z || z.bis < jetzt){ z = { fehl: 0, neu: 0, bis: jetzt + 3600 * 1000 }; lsIpZaehler.set(ip, z); }
+  if(lsIpZaehler.size > 5000){                    // alte Eintraege wegraeumen
+    for(const [k, v] of lsIpZaehler){ if(v.bis < jetzt) lsIpZaehler.delete(k); }
+  }
+  return z;
+}
+
+function lsNameSauber(roh){
+  const n = String(roh || '').normalize('NFC').replace(/\s+/g, ' ').trim();
+  if(n.length < 3 || n.length > 24) return null;
+  if(!/^[\p{L}\p{N} ._\-\/]+$/u.test(n)) return null;
+  return n;
+}
+function lsPinGut(p){ return typeof p === 'string' && /^\d{4,6}$/.test(p); }
+function lsId(name){
+  return crypto.createHash('sha256').update('afu-lernstand|' + name.toLowerCase()).digest('hex').slice(0, 40);
+}
+function lsDatei(id){ return path.join(LS_ORDNER, id + '.json'); }
+function lsLesen(id){
+  try{ return JSON.parse(fs.readFileSync(lsDatei(id), 'utf8')); }catch(e){ return null; }
+}
+function lsSchreiben(id, konto){
+  const ziel = lsDatei(id), tmp = ziel + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(konto));
+  fs.renameSync(tmp, ziel);
+}
+function lsPinHash(pin, salz){
+  return crypto.scryptSync(pin, Buffer.from(salz, 'hex'), 32).toString('hex');
+}
+function lsPinStimmt(konto, pin){
+  try{
+    const a = Buffer.from(lsPinHash(pin, konto.salz), 'hex');
+    const b = Buffer.from(String(konto.pin || ''), 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  }catch(e){ return false; }
+}
+function lsTokenHash(t){ return crypto.createHash('sha256').update(String(t)).digest('hex'); }
+function lsNeuesToken(konto){
+  const t = crypto.randomBytes(32).toString('base64url');
+  konto.tokens = (konto.tokens || []).filter(x => x && x.h);
+  konto.tokens.push({ h: lsTokenHash(t), seit: Date.now() });
+  while(konto.tokens.length > LS_MAX_GERAETE) konto.tokens.shift();
+  return t;
+}
+function lsDatenGut(d){
+  if(!d || typeof d !== 'object' || Array.isArray(d)) return false;
+  try{ return Buffer.byteLength(JSON.stringify(d)) <= LS_MAX_BYTES; }catch(e){ return false; }
+}
+// Name + Token pruefen. Gibt { id, konto } oder schickt selbst die Antwort.
+function lsMitToken(req, res){
+  const name = lsNameSauber((req.body || {}).name);
+  const token = String((req.body || {}).token || '');
+  if(!name || !token){ res.status(400).json({ fehler: 'eingabe' }); return null; }
+  const id = lsId(name), konto = lsLesen(id);
+  const h = lsTokenHash(token);
+  if(!konto || !(konto.tokens || []).some(x => x && x.h === h)){
+    res.status(401).json({ fehler: 'abgemeldet' }); return null;
+  }
+  return { id, konto, h };
+}
+// PIN pruefen samt Sperre. Gibt true oder schickt selbst die Antwort.
+function lsPinPruefen(req, res, id, konto, pin){
+  const jetzt = Date.now();
+  if(konto.gesperrtBis && konto.gesperrtBis > jetzt){
+    res.status(429).json({ fehler: 'gesperrt', sekunden: Math.ceil((konto.gesperrtBis - jetzt) / 1000) });
+    return false;
+  }
+  const z = lsIp(req);
+  if(z.fehl >= LS_IP_FEHL_MAX){
+    res.status(429).json({ fehler: 'gesperrt', sekunden: Math.ceil((z.bis - jetzt) / 1000) });
+    return false;
+  }
+  if(!lsPinGut(pin) || !lsPinStimmt(konto, pin)){
+    z.fehl++;
+    konto.fehl = (konto.fehl || 0) + 1;
+    let rest = LS_FEHL_MAX - konto.fehl;
+    if(konto.fehl >= LS_FEHL_MAX){
+      const dauer = Math.min(LS_SPERRE_MS * Math.pow(2, konto.sperren || 0), LS_SPERRE_MAX_MS);
+      konto.gesperrtBis = jetzt + dauer;
+      konto.sperren = (konto.sperren || 0) + 1;
+      konto.fehl = 0; rest = 0;
+      console.log('[LERNSTAND] Zu viele falsche PINs - ein Name ist ' + Math.round(dauer / 60000) + ' Min. gesperrt.');
+    }
+    try{ lsSchreiben(id, konto); }catch(e){}
+    if(rest <= 0) res.status(429).json({ fehler: 'gesperrt', sekunden: Math.ceil((konto.gesperrtBis - jetzt) / 1000) });
+    else res.status(403).json({ fehler: 'pin', rest: rest });
+    return false;
+  }
+  konto.fehl = 0; konto.sperren = 0; konto.gesperrtBis = 0;
+  return true;
+}
+
+app.post('/api/lernstand/anlegen', (req, res) => {
+  try{
+    const b = req.body || {};
+    const name = lsNameSauber(b.name);
+    if(!name) return res.status(400).json({ fehler: 'name' });
+    if(!lsPinGut(b.pin)) return res.status(400).json({ fehler: 'pinform' });
+    if(!lsDatenGut(b.daten)) return res.status(400).json({ fehler: 'daten' });
+    const z = lsIp(req);
+    if(z.neu >= LS_IP_NEU_MAX) return res.status(429).json({ fehler: 'zuviele', sekunden: Math.ceil((z.bis - Date.now()) / 1000) });
+    const id = lsId(name);
+    if(fs.existsSync(lsDatei(id))) return res.status(409).json({ fehler: 'vergeben' });
+    let anzahl = 0;
+    try{ anzahl = fs.readdirSync(LS_ORDNER).filter(f => f.endsWith('.json')).length; }catch(e){}
+    if(anzahl >= LS_MAX_KONTEN) return res.status(507).json({ fehler: 'voll' });
+    const salz = crypto.randomBytes(16).toString('hex');
+    const jetzt = Date.now();
+    const konto = { name, salz, pin: lsPinHash(b.pin, salz), tokens: [], version: 1,
+                    stand: jetzt, zuletzt: jetzt, angelegt: jetzt, daten: b.daten };
+    const token = lsNeuesToken(konto);
+    lsSchreiben(id, konto);
+    z.neu++;
+    console.log('[LERNSTAND] Neuer Lernstand angelegt (jetzt ' + (anzahl + 1) + ').');
+    res.json({ ok: true, name, token, version: 1, stand: jetzt });
+  }catch(e){ console.warn('[LERNSTAND] anlegen', e.message); res.status(500).json({ fehler: 'server' }); }
+});
+
+app.post('/api/lernstand/anmelden', (req, res) => {
+  try{
+    const b = req.body || {};
+    const name = lsNameSauber(b.name);
+    if(!name) return res.status(400).json({ fehler: 'name' });
+    const id = lsId(name), konto = lsLesen(id);
+    if(!konto){
+      lsIp(req).fehl++;                           // Namen durchprobieren kostet auch
+      return res.status(404).json({ fehler: 'unbekannt' });
+    }
+    if(!lsPinPruefen(req, res, id, konto, String(b.pin || ''))) return;
+    const token = lsNeuesToken(konto);
+    konto.zuletzt = Date.now();
+    lsSchreiben(id, konto);
+    res.json({ ok: true, name: konto.name, token, version: konto.version, stand: konto.stand, daten: konto.daten });
+  }catch(e){ console.warn('[LERNSTAND] anmelden', e.message); res.status(500).json({ fehler: 'server' }); }
+});
+
+app.post('/api/lernstand/laden', (req, res) => {
+  try{
+    const k = lsMitToken(req, res); if(!k) return;
+    k.konto.zuletzt = Date.now();
+    try{ lsSchreiben(k.id, k.konto); }catch(e){}
+    const antwort = { ok: true, name: k.konto.name, version: k.konto.version, stand: k.konto.stand };
+    if(!(req.body || {}).nurStand) antwort.daten = k.konto.daten;
+    res.json(antwort);
+  }catch(e){ res.status(500).json({ fehler: 'server' }); }
+});
+
+app.post('/api/lernstand/speichern', (req, res) => {
+  try{
+    const k = lsMitToken(req, res); if(!k) return;
+    const b = req.body || {};
+    if(!lsDatenGut(b.daten)) return res.status(400).json({ fehler: 'daten' });
+    if(!b.erzwingen && Number(b.basis) !== k.konto.version){
+      return res.status(409).json({ fehler: 'neuer', version: k.konto.version, stand: k.konto.stand });
+    }
+    const jetzt = Date.now();
+    k.konto.daten = b.daten;
+    k.konto.version = (k.konto.version || 0) + 1;
+    k.konto.stand = jetzt;
+    k.konto.zuletzt = jetzt;
+    lsSchreiben(k.id, k.konto);
+    res.json({ ok: true, version: k.konto.version, stand: jetzt });
+  }catch(e){ console.warn('[LERNSTAND] speichern', e.message); res.status(500).json({ fehler: 'server' }); }
+});
+
+app.post('/api/lernstand/abmelden', (req, res) => {
+  try{
+    const k = lsMitToken(req, res); if(!k) return;
+    k.konto.tokens = (k.konto.tokens || []).filter(x => x && x.h !== k.h);
+    lsSchreiben(k.id, k.konto);
+    res.json({ ok: true });
+  }catch(e){ res.status(500).json({ fehler: 'server' }); }
+});
+
+app.post('/api/lernstand/loeschen', (req, res) => {
+  try{
+    const b = req.body || {};
+    const name = lsNameSauber(b.name);
+    if(!name) return res.status(400).json({ fehler: 'name' });
+    const id = lsId(name), konto = lsLesen(id);
+    if(!konto) return res.status(404).json({ fehler: 'unbekannt' });
+    if(!lsPinPruefen(req, res, id, konto, String(b.pin || ''))) return;
+    fs.unlinkSync(lsDatei(id));
+    console.log('[LERNSTAND] Ein Lernstand wurde von seinem Besitzer geloescht.');
+    res.json({ ok: true });
+  }catch(e){ res.status(500).json({ fehler: 'server' }); }
+});
+
+function lsAufraeumen(){
+  try{
+    const grenze = Date.now() - LS_UNBENUTZT_MS;
+    let weg = 0;
+    fs.readdirSync(LS_ORDNER).forEach(f => {
+      if(!f.endsWith('.json')) return;
+      const k = lsLesen(f.slice(0, -5));
+      if(k && (k.zuletzt || k.stand || 0) < grenze){
+        try{ fs.unlinkSync(path.join(LS_ORDNER, f)); weg++; }catch(e){}
+      }
+    });
+    if(weg) console.log('[LERNSTAND] ' + weg + ' Lernstand/-staende nach 12 Monaten ohne Nutzung geloescht.');
+  }catch(e){}
+}
+setTimeout(lsAufraeumen, 20 * 1000);
+setInterval(lsAufraeumen, 24 * 3600 * 1000).unref();
 
 app.use((req,res,next)=>{
   if(isPublicPath(req.path)) return next();
@@ -9863,6 +10167,7 @@ function feierabendPruefen(){
 const NUR_LOKAL = (process.env.AFU_NUR_LOKAL === '1');
 server.listen(PORT, NUR_LOKAL ? '127.0.0.1' : '0.0.0.0', async ()=>{
   if(NUR_LOKAL) console.log('[NETZ] AFU_NUR_LOKAL=1 - der Trainer hoert nur auf 127.0.0.1 (kein WLAN-Zugang).');
+  if(process.env.AFU_SERVER_MODUS === '1') console.log('[SERVER-MODUS] _SERVER-MODUS.txt gefunden - dieser Rechner ist Server: kein Feierabend, Tuer offen.');
   // Zuerst der Browser, dann das Uebrige: Der Trainer soll aufgehen,
   // waehrend im Fenster noch die Tunnel-Zeilen durchlaufen.
   if(process.env.AFU_BROWSER === '1') browserOeffnen(`http://localhost:${PORT}`);

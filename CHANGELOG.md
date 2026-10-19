@@ -12,9 +12,263 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 ---
 
 ## [1.299.0] - 2026-10-06
-Stand 145 · 11.10.2026
+Stand 211 · 19.10.2026
+
+### Geändert
+- Abschied für Besucher („Danke fürs Üben!“): Unter dem Download-Knopf steht jetzt „Für Windows, Linux, Mac und Android“ und der Hinweis „Demnächst auch im Google Play Store“.
+
+Stand 210 · 19.10.2026
+
+Stand 209 · 19.10.2026
+
+### Geändert
+- Große Erklärung: Ein Klick ins Fenster (nicht auf einen Knopf) oder daneben schließt sie und zeigt wieder die Antworten. Oben rechts steht dafür ein deutlicher roter Knopf **✕ Schließen**.
+
+Stand 208 · 19.10.2026
+
+### Geändert
+- Die Karte „Letzte Prüfungen“ heißt jetzt **Dein Verlauf**.
+- Der Knopf **Erklärung** öffnet die Erklärung jetzt sofort im großen Fenster. „Kleiner“ führt zum Kasten an der Stelle der Antworten, das ✕ schließt beides und zeigt wieder die Antworten.
+
+Stand 207 · 19.10.2026
 
 ### Hinzugefügt
+- Karte „Letzte Prüfungen“: Jede Zeile hat jetzt einen Mülleimer. Nach einer Rückfrage wird der Eintrag aus dem Verlauf gelöscht.
+
+Stand 206 · 19.10.2026
+
+### Hinzugefügt
+- PC, Ansicht „Wie die App“, Stil Verspielt: In der Lücke unter „Dein Fortschritt“ steht jetzt die Karte **Letzte Prüfungen**: die letzten Runden mit Datum, Teil, Richtige, Prozent und bestanden/nicht bestanden. Ein Klick auf eine Zeile öffnet die Fehler dieser Runde, „Alle“ öffnet den Verlauf. Es stehen so viele Zeilen da, wie Platz ist (höchstens fünf).
+
+### Geändert
+- „Deine Stufen“: **Dein Prüfungszettel** ist jetzt ein deutlicher grüner Knopf und steht direkt neben „Du hast … XP – noch … bis zum …“.
+
+Stand 205 · 19.10.2026
+
+### Behoben
+- PC-Fassung aus dem Arbeitsordner, Stil Verspielt: Die Startseite war nur halb so breit, rechts standen „Folien zum Lehrgang“ und ein ✕ frei im Bild. Ursache: zwölf CSS-Regeln für runde Ecken (`:is(` doppelt geöffnet, einmal geschlossen). Ab der ersten fehlerhaften Regel verwarf der Browser den Rest des Stilblocks, darunter das Blatt von unten und die Folien. In der Cloud-Fassung fiel es nicht auf, weil der Bau die Stile dort neu ordnet. Alle zwölf Regeln sind repariert.
+
+Stand 204 · 19.10.2026
+
+### Behoben
+- PC, Ansicht „Wie die App“: Der Kasten „Dein Fortschritt“ hatte große Lücken, weil er sich über die ganze Spalte streckte. Er ist jetzt so hoch wie sein Inhalt; die Prüftermin-Karte sitzt unten bündig mit der Runde.
+- Die Kacheln füllen jetzt vier volle Reihen: neu dazu kommen Diplome (QSL-Album) und Lernstand (sichern und einlesen).
+
+Stand 203 · 19.10.2026
+
+### Behoben
+- PC, Ansicht „Wie die App“: Die Startseite war höher als der Bildschirm, seit Videos, Hilfe & Kurse und Rufzeichen bei den Kacheln stehen (vier Reihen, alle so hoch wie die längste Beschreibung). Die Beschreibungen sind jetzt höchstens zwei Zeilen lang, die Untertitel einzeilig, das Polster etwas kleiner.
+- Der Hinweiston-Kasten unten links ist weg.
+- Hinweiston: neue Fassung von `sounds/formelblatt.mp3`; die Datei trägt eine Versionsnummer im Aufruf, damit der Browser nicht die alte aus dem Zwischenspeicher spielt.
+
+### Geändert
+- PC, Ansicht „Wie die App“: Die Überschrift „Alles auf einen Klick“ über der Knopfreihe ist entfernt.
+
+Stand 202 · 19.10.2026
+
+### Behoben
+- Hinweiston: Der Trainer versucht den Ton jetzt immer sofort. Hat man den Ton für die Seite im Browser erlaubt (Edge: Medien-Autoplay → Zulassen), kommt er auch ohne vorherigen Klick; nur bei echter Browser-Sperre wird er vorgemerkt (ohne Hinweis-Kasten unten links).
+
+Stand 201 · 19.10.2026
+
+### Geändert
+- Der Hinweiston beim Formelblatt ist jetzt Dietmars eigene Datei `sounds/formelblatt.mp3`. Der selbst erzeugte Zweiklang bleibt als Ersatz, falls die Datei fehlt. Wie bisher spielt der Browser Ton erst nach einem Klick in die Seite; bis dahin wird der Ton vorgemerkt.
+
+Stand 200 · 19.10.2026
+
+### Behoben
+- Formelton: Wird eine Frage von außen geöffnet, bevor in der Seite geklickt wurde, lässt der Browser keinen Ton zu (NotAllowedError); der Ton kam dann erst Sekunden später. Der Trainer merkt sich den Ton jetzt und spielt ihn beim nächsten Klick oder Tastendruck sofort, solange dieselbe Frage offen ist. Unten links steht dann kurz „Ton wartet: einmal in die Seite klicken“.
+
+Stand 199 · 19.10.2026
+
+### Geändert
+- Fehlersuche beim Formelton: Unten links erscheint kurz, was der Trainer beim Ton macht (gespielt, übersprungen und warum). Kommt der Ton-Kontext nicht in Gang, spielt der Trainer den Zweiklang stattdessen als Audio-Datei.
+
+Stand 198 · 19.10.2026
+
+### Behoben
+- Der Formelton kam nicht, wenn man dieselbe Frage noch einmal gezielt öffnete (zum Beispiel VD737 über die Suche oder das Admin-Feld); nur beim Weiterklicken zu einer neuen Frage war er zu hören. Jetzt klingt er bei jedem gezielten Öffnen und nach dem Verlassen der Runde wieder.
+
+### Geändert
+- Im Kasten „Formelblatt“ unter Einstellungen stehen jetzt die aktuellen Zahlen (Klasse N: 123 von 571 Fragen, Aufstieg auf A: 328 von 716).
+
+Stand 197 · 19.10.2026
+
+### Behoben
+- Der Hinweiston beim Formelblatt war am PC oft nicht zu hören. Der Trainer legt jetzt beim ersten Klick oder Tastendruck einen Ton-Kontext an und weckt ihn vor jedem Ton auf; der Ton ist außerdem etwas lauter. Kommt dieselbe Frage später noch einmal, klingt er wieder.
+
+Stand 196 · 18.10.2026
+
+### Hinzugefügt
+- Die Android-App zählt jetzt anonym mit (Trainer geöffnet, Runde, Prüfung, je Frage richtig/falsch), wie die Online-Fassung – ohne Namen und Kennung. In den Einstellungen gibt es den Schalter „Statistik senden“ (An/Aus); „Do Not Track“ wird beachtet.
+
+### Geändert
+- Am Handy steht „Abmelden“ (bzw. „Anmelden“) auf der Startseite jetzt rechts neben dem Namen, nicht mehr in einer eigenen Zeile darunter.
+
+Stand 195 · 18.10.2026
+
+### Behoben
+- Eine Frage aus Technik E oder A (zum Beispiel EF201) zeigte „Klasse N“. Das Schild nennt jetzt die richtige Klasse (EF201 gehört zu „N → E“), und ein Sprung auf so eine Frage (Link aus dem Admin-Dashboard, Forum) stellt die Klasse automatisch um.
+
+### Geändert
+- Nach „Abmelden und Lernstand hier entfernen“ fragt der Trainer gleich nach Name und PIN.
+- „Abmelden“ bietet jetzt zwei Wege: „Abmelden und Lernstand hier entfernen“ (vorher wird mit dem Konto abgeglichen; klappt das nicht, bleibt alles) und „Nur abmelden – Lernstand bleibt hier“. Nach dem Anmelden mit Name und PIN ist der Stand wieder da.
+
+Stand 192 · 18.10.2026
+
+### Geändert
+- Forum-Kachel: das Zeichen steht links neben dem Text, wie bei den beiden anderen Kacheln.
+- Die Forum-Kachel zwischen den zwei Lernkacheln ist schmaler, die Fragenummer darunter entfällt.
+- „Im Forum diskutieren“ steht bei zwei Lernkacheln (Videolehrgang und 50 Ohm) als schmale Kachel dazwischen, mit kürzerem Text; sonst weiter in einer eigenen Zeile darunter.
+
+Stand 189 · 18.10.2026
+
+### Geändert
+- „Abmelden“ fragt jetzt im Fenster des Trainers (mit Maskottchen) statt mit dem Browser-Kasten nach.
+
+### Behoben
+- Am PC steht oben in der Kopfzeile (neben „Info“) ein Knopf „Anmelden“, nach der Anmeldung „Abmelden“.
+- Am PC ragte der Knopf „Abmelden“ rechts aus dem Feld heraus. Die Knopfreihe bricht jetzt um, alles bleibt sichtbar.
+- Auf der Startseite (Sachlich und Verspielt) steht ein Knopf „Anmelden“, nach der Anmeldung „Abmelden“ – ohne Umweg über „Mehr“.
+- Am PC (klassische Ansicht) steht in der Knopfreihe „Anmelden“, nach der Anmeldung „Angemeldet: Name“ mit einem eigenen Knopf „Abmelden“.
+- In den Stilen „Sachlich“ und „Verspielt“ fehlte der Knopf zum Anmelden und Abmelden (Lernstand mitnehmen). Er steht jetzt unter „Mehr“: „Anmelden“, und nach der Anmeldung „Abmelden“ mit dem Namen darunter.
+
+Stand 183 · 18.10.2026
+
+### Hinzugefügt
+- Forum (nur Online-Fassung): Unter jeder Frage der Knopf „Im Forum diskutieren“, sobald der Sysop das Forum eingeschaltet hat. Er öffnet das Forum mit der Fragenummer – dort stehen die Themen zu genau dieser Frage. Nicht in der Prüfung.
+- Wer im Trainer unter „Lernstand mitnehmen“ angemeldet ist, ist im Forum automatisch angemeldet (sso.html, nur für amateurfunk-trainer.com).
+- Anpassen → Stil der Frage: Farbwahl für die Antworten. „Bunt“ wie bisher (vier Farben) oder eine Farbe für alle vier: Blau, Grün, Petrol, Orange, Grau oder Lila – ruhiger fürs Auge. Gilt im Stil „Bunt“, hell und dunkel.
+
+Stand 182 · 18.10.2026
+
+### Hinzugefügt
+- Für das Admin-Dashboard (nur Online-Fassung, ohne Namen oder Kennung, „Do Not Track“ wird beachtet): je beantworteter Frage nur „richtig“ oder „falsch“ als Summe (gesammelt in Paketen), Nutzungsdauer (nur sichtbare Zeit), Handy oder PC.
+- Ankündigung aus dem Admin-Dashboard erscheint oben im Trainer; mit ✕ ausblendbar.
+- Sprung zu einer einzelnen Frage: trainer.amateurfunk-trainer.com/?ueben=NA208.
+
+Stand 181 · 18.10.2026
+
+### Hinzugefügt
+- Zähler für das Admin-Dashboard (nur Online-Fassung): Trainer geöffnet, Lernrunde, 2-Minuten-Runde, Prüfung gestartet, Ergebnis einer vollständigen Prüfung (bestanden/Nachprüfung/nicht bestanden) und das eingestellte Prüfungsziel – als Tagessumme an amateurfunk-trainer.com. Keine Fragen, Antworten, Namen oder Kennungen; „Do Not Track“ wird beachtet.
+
+Stand 180 · 18.10.2026
+
+### Hinzugefügt
+- Rechenhelfer: Unter jedem Rechenschritt der Erklärung, der sich nachrechnen lässt, stehen die Tasten für den Rechner (z. B. „4,7 k × 2,2 n =“), dazu „vorführen“: Der Rechner öffnet sich und tippt die Rechnung Taste für Taste ein, die gedrückte Taste leuchtet auf. Tasten erscheinen nur, wenn der Rechner damit genau das Ergebnis des Schritts bekommt (498 Schritte in 298 Fragen). Hinweis, wie man die Vorsätze auf einem normalen Taschenrechner tippt (EXP).
+- 2-Minuten-Runde: Knopf „2 Min“ (in der App „2-Minuten-Runde“): 5 schnelle Fragen aus dem gewählten Teil, ohne Gelerntes, mit Fehler-Magnet; am Ende „Geschafft in 1:32 Minuten – 4 von 5 richtig“.
+- Frust-Bremse: Nach drei falschen Antworten in Folge (nur in Übungsrunden) ein aufmunternder Hinweis, und als nächste Frage eine aus demselben Teil, die man schon richtig hatte.
+
+Stand 179 · 18.10.2026
+
+### Geändert
+- Prüfungsraum-Geräusche als Haken: Im Startfenster der Prüfung „Geräusche wie im Prüfungsraum (Examination Time)“ ankreuzen – beim Klick auf „Prüfung starten“ öffnet sich „Examination Classroom“ von myNoise in einem neuen Tab (dort einmal Play drücken). Der Haken bleibt gespeichert.
+
+Stand 178 · 18.10.2026
+
+### Hinzugefügt
+- Geräusche wie im Prüfungsraum: Im Startfenster der Prüfung öffnet der Knopf „Geräusche wie im Prüfungsraum (neuer Tab)“ die Seite „Examination Classroom“ von myNoise in einem neuen Tab (in der App im Browser). Dort Play drücken, zurück zum Trainer – die Geräusche laufen im Hintergrund weiter. Die im Trainer erzeugten Geräusche aus Stand 177 sind wieder entfernt (Dietmar nach drei Hörproben: „Examination Time im 2. Tab gefällt mir besser“).
+
+Stand 176 · 18.10.2026
+
+### Hinzugefügt
+- Fehler-Magnet: In Übungsrunden kommen Fragen, die du oft falsch hast (Lernbedarf, Fehlerliste, öfter falsch als richtig), öfter dran – bis zu 4 von 10 Fragen, der Rest bleibt zufällig. Beim Start meldet sich der Magnet unten rechts („Fehler-Magnet: 8 von 25 Fragen aus deinen Schwachstellen“). Haken „Fehler-Magnet“ neben „Gelerntes erneut prüfen“; Prüfungsrunden, Prüfungssimulator und „Alle Fragen“ bleiben rein zufällig. Am Lernstand wird nichts gespeichert oder geändert.
+- Schutzschirm: Liegt ein Prüfungsteil nach dem Lernstand unter 19 von 25 Punkten, warnt ein Kasten auf der Hauptansicht („Achtung, Vorschriften: etwa 16 von 25 Punkten – nötig sind 19“) mit Knopf „… üben (20 Fragen)“. Erscheint erst, wenn je Teil genug beantwortet ist; lässt sich bis zum nächsten Start wegklicken. Keine gesperrten Fächer.
+
+Stand 175 · 18.10.2026
+
+### Behoben
+- Antwort unter der Maus: Die gewählte Farbe (Einstellungen → Anpassen) erscheint jetzt in allen Fragenstilen – Bunt, Petrol, Navy und Schlicht, hell und dunkel. Bisher wirkte sie nur bei Schlicht.
+
+Stand 174 · 18.10.2026
+
+### Geändert
+- Merkliste meldet sich wie „Gelernt“: grün beim Merken („VA104 gemerkt – Merkliste: 1“), rot beim Herausnehmen.
+
+Stand 173 · 18.10.2026
+
+### Geändert
+- Kurze Hinweise nur noch unten rechts: Beim Abhaken als gelernt kam bisher eine Meldung in der Mitte und eine rechts – jetzt eine, mit der Fragennummer (z. B. „VA104 als gelernt abgehakt – wird nicht mehr abgefragt“). Auch Merken, Notiz, Fehlerwertung und Gruppenraum melden sich unten rechts. Mehrere Hinweise stapeln sich übereinander; wenn einer ausblendet, rutschen die anderen nach unten nach.
+
+Stand 172 · 18.10.2026
+
+### Behoben
+- Einstellungen → Chat: „Chat rechts andocken“ steht wieder sauber in einer Reihe mit „Sprachnachrichten automatisch abspielen“ (Kästchen links, Text daneben, Beschreibung eingerückt).
+
+Stand 171 · 18.10.2026
+
+### Behoben
+- Eckig/Rund am PC gilt jetzt auch in der Frage: Bei Eckig sind Frage-Tafel, Antworten und Buchstaben-Kästchen eckig (vorher immer rund), bei Rund werden auch die Knöpfe in der Frage-Tafel, die Schilder, die Kacheln Lektion/50 Ohm, die Merkhilfe, die Zahlenkästchen links und die Knopfleiste unten rund.
+
+Stand 170 · 18.10.2026
+
+### Hinzugefügt
+- Eckig oder Rund jetzt auch in der klassischen Ansicht am PC: Einstellungen → Anpassen → Form. Es ändern sich nur die Ecken von Knöpfen, Feldern und Karten – Farben, Aufteilung und Größe bleiben gleich. Die Wahl gilt für dieses Gerät (App-Ansicht und klassische Ansicht gemeinsam), Voreinstellung am PC bleibt Eckig.
+
+Stand 169 · 18.10.2026
+
+### Geändert
+- Lernstand mitnehmen: Nach „Jetzt abgleichen“, nach dem Anlegen und nach dem Anmelden schließt sich das Fenster von selbst – kein ✕ mehr nötig. Unten erscheint kurz eine Meldung, z. B. „Abgeglichen – dein Lernstand ist auf dem Trainer.“ Klappt etwas nicht, bleibt das Fenster mit dem Hinweis offen; stehen zwei Lernstände zur Wahl, bleibt die Frage stehen.
+
+Stand 168 · 18.10.2026
+
+### Geändert
+- Die Versionsnummer steht jetzt auch in der klassischen (sachlichen) Ansicht – oben direkt neben „Amateurfunk-Trainer“, wie in Verspielt (z. B. „Version 2.168“). Ein Klick darauf öffnet Info & Hilfe.
+
+Stand 167 · 18.10.2026
+
+### Behoben
+- Formelblatt auf iPhone, iPad und Android-Handy: Der Browser zeigte das PDF im Fenster nicht oder nur die erste Seite, „Größer“ öffnete es in einem eigenen Tab ohne Rückweg zum Trainer. Jetzt erscheint das Blatt auf Handy und Tablet (und in schmalen Fenstern) als Bild – gleich auf dem richtigen Blatt, blättern mit den Pfeilen, „Größer“ vergrößert im Fenster, das ✕ bleibt immer sichtbar. Am PC mit Maus bleibt das PDF mit Stift und Textmarker. Esc schließt das Formelblatt.
+
+Stand 166 · 18.10.2026
+
+### Hinzugefügt
+- Sprung von der Webseite: Die neuen Themenseiten auf amateurfunk-trainer.com (alle 169 Abschnitte des Fragenkatalogs) haben einen Knopf „Diese Fragen im Trainer üben“. Er öffnet den Trainer und startet sofort eine Lernrunde mit genau den Fragen dieses Abschnitts – auch wenn er zu einer anderen Klasse gehört; die gewählte Klasse bleibt dabei, wie sie ist.
+
+Stand 165 · 17.10.2026
+
+### Hinzugefügt
+- Lernstand einlesen übernimmt jetzt alles aus der Datei: auch Übungszeit, QSL-Karten, CB-Einstieg und die Antwort-Statistik, aus der die Punkte (XP) für das Level entstehen. Bisher kam nur der Lernfortschritt mit – man blieb beim „Funk-Neuling“ stehen. Beim Sichern gehen Punkte, Tageszähler und eine bestandene Simulation mit. Beim Start werden die Punkte nie kleiner angezeigt, als die Antwort-Statistik hergibt.
+- Maja spricht zuverlässig: Ihre Sätze (in Teilen gesprochen) wurden gleichzeitig berechnet – das schafft die Sprachausgabe im Browser nicht, ein Teil brach ab und Maja blieb stumm. Jetzt wird nacheinander gerechnet, jede Stimme bleibt geladen (Vorlesen und Maja stören sich nicht mehr), und ein Fehlversuch wird einmal wiederholt. Spricht Maja, bevor man irgendwo getippt hat (der Browser erlaubt dann noch keinen Ton), holt sie es beim ersten Tippen nach.
+- Lernstand mitnehmen (Name + PIN) jetzt auch in der Online-Version: Der Trainer sucht beim Start den neuen Lernstand-Dienst bei Cloudflare und zeigt die Funktion erst, wenn er antwortet. Von der alten Adresse (pages.dev) geht der Abgleich an trainer.amateurfunk-trainer.com – so lässt sich ein Lernstand auch auf die neue Adresse mitnehmen. Im Datenschutz-Hinweis steht jetzt auch die tägliche Sicherung (30 Tage).
+- Schneller am Handy: Die Erklärungen (2,7 MB) laden nebenher, der Trainer wartet beim Start nicht mehr auf sie.
+- Öffnet sich die Erklärung am PC, wird zuerst die Erklär-Tafel kürzer (sie scrollt in sich) und erst dann die Frage etwas kleiner – die Knopfleiste deckt nichts mehr zu.
+- Am Handy erscheinen „Beamer-Modus“ und „Chat rechts andocken“ nicht mehr in den Einstellungen – beides gibt es nur am PC.
+- App-Ansicht am PC: Die Kopfzeile mit „Amateurfunk-Trainer“ steht jetzt bündig über dem Inhalt (in Verspielt und Sachlich, bei jeder Fensterbreite). Das OFF-AIR-Schild auf der Startseite ist weg.
+- Lange Fragen am PC passen jetzt ohne Scrollen ins Fenster: Ist eine Frage höher als der Platz über der Knopfleiste, wird nur diese Frage stufenweise etwas kleiner gestellt. Die Knopfleiste liegt nicht mehr über dem Verlauf und „Verlauf ausblenden“.
+- Einstellungen aufgeräumt: Unter „Allgemein“ steht nur noch, was ab „Profilbild“ kommt; alles zum Aussehen liegt unter „Anpassen“. Sachlich/Verspielt gibt es nur noch einmal – am PC „Stil am PC“, am Handy „Stil der App“ (dort ganz oben). „Vollbild am Handy“ erscheint am PC nicht mehr.
+- Am PC, Stil Verspielt: Eine Runde sieht jetzt genauso aus wie in Sachlich – gleicher Abstand oben, gleiche Anzeigegröße, gleiche Breite. Vorher schrumpfte die Automatik dort auf 60–90 %, weil eine alte Höhe der Seitenspalte mitgemessen wurde.
+
+### Behoben
+- Bildantworten (z. B. Schaltbilder) stehen in allen Fragen-Stilen wieder zwei mal zwei nebeneinander statt untereinander.
+- Am PC, Stil „Bunt“: Frage-Tafel und Antwort-Kacheln etwas niedriger (weniger Innenabstand, Schrift eine Spur kleiner), damit auch lange Fragen ohne Scrollen ins Fenster passen. Petrol, Navy und Schlicht ebenso.
+- Einstellungen aufgeräumt: Unter Allgemein stehen nur noch Profilbild, Chat, Beamer-Modus, Nachschlagen und Folgendes. Alles zum Aussehen ist unter Anpassen – ganz oben „Stil am PC“ (Sachlich / Verspielt), dann „Stil der Frage“, Anzeigegröße, Vollbild am Handy, Farbstil bzw. Stil der App, Form, Farbe und Begleiter.
+- Am PC: Alle vier Fragen-Stile haben dieselbe Schriftgröße, und die Startseite der klassischen Ansicht ist so breit wie eine Runde – nichts springt mehr beim Wechsel.
+- Einstellungen → Allgemein: neuer Kasten „Stil der Frage“ mit vier Stilen zur Wahl – Bunt (farbige Tafel, bunte Antworten), Petrol (Strich links, Petrol-Buchstaben), Navy (dunkle Tafel, weiße Antworten) und Schlicht (klassisch). Gilt am PC und am Handy, in beiden Ansichten.
+- Am PC sind Runden jetzt in beiden Stilen gleich breit (etwas schmaler als bisher in der klassischen Ansicht), unabhängig von der Anzeigegröße.
+- ON AIR / OFF AIR ist von der Startseite verschwunden.
+- Am PC (Ansicht wie die App): Die Startseite ist wieder kompakter – höchstens 1720 Pixel breit und mittig, in Verspielt wie in Sachlich. Die Knopfreihe oben (Gruppenraum, Unterricht, Statistik, Verlauf, Drucken) nutzt die ganze Breite.
+- Handy (Stil Sachlich): neue ruhige Frageansicht „Petrol“ – Frage auf weißer Karte mit petrolfarbenem Strich links, Buchstaben A–D in Petrol-Kästchen, Antworten hellgrau.
+- Handy (Stil Verspielt): Die Frage steht jetzt wie am PC auf einer farbigen Tafel, die Antworten als bunte Kacheln mit farbigen Buchstaben A–D.
+- Einstellungen: „Stil am PC“ (Sachlich / Verspielt) steht nur noch unter Allgemein, nicht mehr doppelt auch unter Anpassen.
+- Cloudflare-Fassung: Der Trainer läuft jetzt auch ohne eigenen Rechner bei Cloudflare (amateurfunk-trainer-app.pages.dev) – mit Piper-Stimmen direkt im Browser. Im Trainer selbst dafür nur ein Schalter: „Lernstand mitnehmen“ bleibt dort aus, bis der Lernstand-Dienst in der Cloud läuft.
+
+### Behoben
+- Am PC im eckigen Stil lag unter der Knopfleiste einer laufenden Runde eine zweite Linie knapp über dem Kartenrand. Die Leiste hat unten keine eigene Linie mehr.
+- Gruppenraum für Besucher der Online-Version: klarer Hinweis „Gemeinsames Lernen ist in der Online-Version ausgeschaltet – es funktioniert nur mit dem heruntergeladenen Trainer auf dem eigenen Rechner“; Server-Adresse und Einladungslink des Gastgebers werden Besuchern nicht mehr angezeigt.
+- Lernstand mitnehmen: Nach dem Anmelden mit Name und PIN bekommt der Platz diesen Namen, wenn er noch keinen hat – er steht dann unter Einstellungen → Benutzer und in der Auswahl.
+- Besucher über die Internet-Adresse sehen unter Einstellungen → Benutzer nur noch ihren eigenen Platz („Dein Name“) statt zehn Plätzen; mehrere Plätze für Ortsverband oder Volkshochschule gibt es im heruntergeladenen Trainer.
+- Gruppenraum für Besucher über den Server: Statt des grauen, gesperrten Knopfes „Raum erstellen“ steht dort jetzt ein grüner Knopf „Trainer kostenlos herunterladen“ (zur Download-Seite auf amateurfunk-trainer.com) mit kurzer Info: Über den Server geht das nicht, der Gruppenraum ist für Kursleiter und Übende untereinander gedacht. Einem Raum beitreten geht weiterhin per Einladungslink.
+- Willkommensfenster: Statt des Hakens „Ich nehme am Kurs teil“ gibt es jetzt einen grünen Knopf „Am Kurs teilnehmen“ – Name eintragen, Knopf drücken, dabei. Ohne Namen erinnert das Fenster daran.
+- Willkommensfenster und Kursanmeldung: Der Satz „Der Kursleiter bestätigt dich einmal“ heißt jetzt „Du bist sofort dabei“ (die Aufnahme ist seit Stand 152 automatisch). Der Download-Hinweis zeigt auf amateurfunk-trainer.com/download und ist anklickbar.
+- Kurs: Wer beitreten möchte, wird jetzt automatisch aufgenommen – kein Warten mehr auf den Kursleiter; im Chat steht „Der Trainer hat deinen Kurs automatisch bestätigt“. Gibt es im Kurs schon jemanden mit genau diesem Namen, kommt das neue Gerät zu ihm (z. B. Handy und PC derselben Person). Entfernen und Geräte abmelden geht weiter in der Kursübersicht.
+- Server-Modus per Merkdatei: Liegt im Trainer-Ordner die Datei `_SERVER-MODUS.txt`, verhält sich der Trainer immer wie mit START-SERVER.bat – kein Feierabend, wenn kein Browser offen ist, Tür von Anfang an offen, nur 127.0.0.1 –, auch wenn er über START.bat oder das Desktop-Symbol gestartet wurde. Behebt, dass der Server-Laptop nach dem Schließen des Browsers offline ging.
+- Am PC: „Ansicht am PC“ heißt jetzt „Stil am PC“ und zeigt wie in der App zwei Karten mit Bild – „Sachlich“ (die klassische Ansicht, schlicht) und „Verspielt“ (wie die App, mit Maja). Ein Klick auf das Bild schaltet um. Der Kasten steht jetzt ganz oben unter Einstellungen → Allgemein und weiterhin unter Anpassen.
+- Vorschau „Sachlich“ (Stil der App und Startfenster): zeigt jetzt die neuen Pastellfarben – blaue Runde-Karte, grünes Tagesziel, farbige Symbole in der Liste.
+- Lernstand mitnehmen: Klappt das Anlegen oder Anmelden nicht, sagt das Fenster jetzt genauer warum (z. B. „Der Server kennt ‚Lernstand mitnehmen‘ noch nicht – Trainer neu starten“, „zu groß“, „keine Verbindung“) statt nur „Das hat nicht geklappt“.
+- Lernstand mitnehmen: aufklappbarer Hinweis „Datenschutz – was wird gespeichert?“ im Begrüßungs- und im Anmeldefenster (ohne Anmeldung nichts auf dem Server; mit Name und PIN: Name, Lernstand, PIN nur als Fingerabdruck; keine E-Mail, keine Weitergabe; Löschen jederzeit, automatisch nach 12 Monaten).
+- Lernstand mitnehmen: Wer den Trainer über amateurfunk-trainer.com aufruft, wird jetzt gleich begrüßt und gefragt – „Name und PIN anlegen“, „Ich habe schon Name und PIN“ oder „Ohne Anmeldung lernen“ (gilt für diesen Besuch; mit „Nicht mehr fragen“ dauerhaft). Wer angemeldet ist, wird nicht mehr gefragt. Das Fenster ist jetzt farbig: Kopf in Türkis-Blau-Violett mit Maja, orangefarbener Hauptknopf, Hinweise „Handy · PC & Tablet · ohne E-Mail“.
+- Lernstand mitnehmen (über amateurfunk-trainer.com): Wer möchte, legt Name (Spitzname oder Rufzeichen) und eine 4- bis 6-stellige PIN an. Der Lernstand des Platzes liegt dann zusätzlich auf dem Trainer und lässt sich auf jedem anderen Gerät mit Name und PIN abholen; danach gleicht er sich im Hintergrund ab. Ohne E-Mail, ohne Passwort, freiwillig – ohne Anmeldung bleibt alles wie bisher. Die PIN wird nur als Fingerabdruck gespeichert; nach 5 falschen PINs ist der Name eine Weile gesperrt. Unbenutzte Lernstände löscht der Trainer nach 12 Monaten, „Lernstand auf dem Trainer löschen“ geht jederzeit. Zu finden unter Lernstand (Kachel bzw. Knopf „Mitnehmen“) und in den Einstellungen unter Update.
 - Am Rechner: „Sachlich“ unter Stil der App wechselt jetzt in die klassische Desktop-Ansicht (dort mit größerer Schrift) statt in die mobile Ansicht. „Wie die App“ am Rechner ist immer Verspielt. Am Handy bleibt Sachlich die ruhige App-Ansicht.
 - Stil-Hinweis: Maja fragt jetzt „Passt es dir – oder ist es dir zu bunt?“ statt „Psst – ist dir das zu bunt?“ (Anzeige und Stimme).
 - N → E und E → A: In den Auswahlfeldern für den Prüfungsteil (oben, Gruppenraum, Merkblatt, Neue Runde) stehen Vorschriften und Betrieb nicht mehr – dort gibt es nur Technik, und das Feld heißt entsprechend „Technik“.

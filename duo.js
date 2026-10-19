@@ -4993,33 +4993,55 @@
         + 'Ein eigener Gruppenraum lässt sich hier nicht eröffnen — er würde die Verbindung '
         + 'des Kursleiters stören.\n\nEinem Raum beitreten geht: dafür den Einladungslink des '
         + 'Kursleiters anklicken. Und wer den Trainer behalten will, bekommt ihn kostenlos '
-        + 'auf amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
+        + 'auf amateurfunk-trainer.com/download.';
+
+    const DEMO_DOWNLOAD = 'https://amateurfunk-trainer.com/download/';
 
     function demoKnopfNachziehen(){
         const knopf = document.getElementById('duoCreateRoomBtn');
         if(!knopf) return;
         if(!vonAussen){
             knopf.disabled = false;
+            knopf.style.removeProperty('display');
             knopf.style.opacity = '';
             knopf.style.cursor = '';
             knopf.removeAttribute('data-demo');
+            try{ const md = document.getElementById('duoModal'); if(md) md.classList.remove('besucher-aussen'); }catch(e){}
             const alt = document.getElementById('duoDemoHinweis');
             if(alt) alt.remove();
             return;
         }
+        // ------------------------------------------------------------
+        //  STATT GESPERRTEM KNOPF: DER WEG ZUM EIGENEN TRAINER (16.10.2026)
+        //  Dietmar: "Der Button Gruppenraum soll bleiben. Derzeit ist der
+        //  Button deaktiviert. Mir wuerde es besser gefallen, wenn da der
+        //  Link zum Download steht bei dem Button. Kurze Info, das es ueber
+        //  dem Server nicht geht. Das diese Funktion fuer Kursleiter und
+        //  Uebende untereinander gedacht ist."
+        //  Der Riegel bleibt (Server lehnt createRoom von aussen weiter ab),
+        //  nur zeigt der Besucher statt eines grauen Knopfes jetzt den
+        //  Download - der echte Knopf ist per data-demo versteckt.
+        // ------------------------------------------------------------
+        try{ const md = document.getElementById('duoModal'); if(md) md.classList.add('besucher-aussen'); }catch(e){}
         knopf.disabled = true;
-        knopf.style.opacity = '0.45';
-        knopf.style.cursor = 'not-allowed';
         knopf.setAttribute('data-demo', '1');
-        knopf.setAttribute('data-tooltip', 'Auf einem fremden Trainer nicht möglich — einem Raum beitreten geht');
+        knopf.style.setProperty('display', 'none', 'important');
         if(!document.getElementById('duoDemoHinweis')){
             const hinweis = document.createElement('div');
             hinweis.id = 'duoDemoHinweis';
             hinweis.className = 'duo-demo-hinweis';
-            hinweis.innerHTML = '🔒 <b>Das ist nicht dein Trainer.</b> Ein eigener Raum lässt sich hier nicht eröffnen — '
-                + 'er würde die Verbindung des Kursleiters stören. <b>Beitreten geht:</b> den Einladungslink '
-                + 'des Kursleiters anklicken.';
-            knopf.parentNode.insertBefore(hinweis, knopf.nextSibling);
+            hinweis.innerHTML = '<a id="duoDemoDownload" href="' + DEMO_DOWNLOAD + '" target="_blank" rel="noopener" '
+                + 'style="display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 8px;padding:10px 14px;'
+                + 'border-radius:8px;background:#1c7a46;color:#fff;font-weight:700;font-size:0.9rem;text-decoration:none;">'
+                + '<i class="fas fa-download" aria-hidden="true"></i> Trainer kostenlos herunterladen</a>'
+                + '<b>Gemeinsames Lernen ist in der Online-Version ausgeschaltet.</b> Es funktioniert nur mit dem '
+                + '<b>heruntergeladenen Trainer auf deinem eigenen Rechner</b> – gedacht für Kursleiter und Übende untereinander: '
+                + 'Raum eröffnen, Link an die Gruppe schicken, gemeinsam üben. '
+                + '<b>Eingeladen?</b> Dann klick einfach den Einladungslink des Kursleiters an.';
+            // Oben links, wo beim Gastgeber Server-Adresse und Einladungslink stehen.
+            const oben = document.querySelector('#duoModal .duo-links > .duo-oben');
+            if(oben){ hinweis.style.marginTop = '0'; hinweis.style.marginBottom = '1rem'; hinweis.style.fontSize = '0.85rem'; oben.insertBefore(hinweis, oben.firstChild); }
+            else knopf.parentNode.insertBefore(hinweis, knopf.nextSibling);
         }
     }
 
