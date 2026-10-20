@@ -729,12 +729,63 @@
         html.android-app.stil-verspielt body:not(.runde-laeuft) #appHeute,
         html.android-app.fs-bunt body:not(.runde-laeuft) #appHeute { display: block; margin-bottom: 14px; }
         #appHeute .ah-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 12px; }
-        #appHeute .ah-gruss { font: 600 23px/1.2 var(--font-body); letter-spacing: -0.4px; color: var(--s-text); }
+        /* 20.10.2026, Dietmar: "Die Schrift ist jetzt viel groesser als die
+           Buttons daneben. Mach doch die Schrift auch etwas kleiner." - der
+           Gruss stand mit 23 px neben 14-px-Knoepfen. */
+        #appHeute .ah-gruss { font: 600 20px/1.25 var(--font-body); letter-spacing: -0.3px; color: var(--s-text); }
         #appHeute .ah-gruss small { display: none; }
         #appHeute .ah-gruss { min-width: 0; }
         #appHeute .ah-kopf > .ah-anmeld { flex: none; margin: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap; }
         #appHeute .ah-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
         #appHeute .ah-chips #appZielZeile { margin: 0 !important; }
+        /* ---- Kopfzeile: Knoepfe bis an den Rand ----          (20.10.2026)
+           Dietmar mit einem Bild der Kopfzeile: "diese Buttons sind schon sehr
+           verrutscht. Man koennte die von der Laenge so anpassen, dass es rechts
+           und links auch anstaendig buendig ist". In der App stehen die beiden
+           Chips jetzt an den Aussenkanten - genau unter "Guten Morgen" und
+           unter dem Knopf rechts. */
+        #appHeute .ah-termin:empty { display: none; }
+        #appHeute .ah-forum { display: none; }
+        #appHeute .ah-kachel.ah-kforum { display: none; }
+        body.forum-an #appHeute .ah-kachel.ah-kforum { display: flex; }
+        body.forum-an #appHeute .ah-forum { display: inline-flex; }
+        #appHeute .ah-kopf > .ah-forum { flex: none; margin: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap; }
+        @media (max-width: 900px) {
+            /* Der Ziel-Chip waechst, die XP-Kachel sitzt dadurch genau an der
+               rechten Kante. Bricht die Zeile um (sehr schmale Geraete), steht
+               der Rest sauber links statt auseinandergezogen. */
+            html.android-app #appHeute .ah-chips > #appZielZeile { flex: 1 1 auto; min-width: 0; }
+            html.android-app #appHeute .ah-chips > #appZielZeile > .app-chip { width: 100%; }
+            html.android-app #appHeute #appZielChip .fa-caret-down { margin-left: auto; }
+            /* Die Kopfzeile stand auf "space-between". Mit drei Teilen - Gruss,
+               Forum, Abmelden - riss das eine Luecke zwischen die beiden
+               Knoepfe (20.10.2026, Dietmar). Jetzt schiebt der Gruss alles
+               nach rechts, und die Knoepfe stehen mit einem festen Abstand
+               nebeneinander. */
+            html.android-app #appHeute .ah-kopf { gap: 8px; justify-content: flex-start; }
+            html.android-app #appHeute .ah-kopf > .ah-gruss { flex: 1 1 auto; min-width: 0; margin-right: auto; }
+            html.android-app #appHeute .ah-kopf > .ah-forum,
+            html.android-app #appHeute .ah-kopf > .ah-anmeld { padding: 8px 11px; }
+        }
+        /* Ganz schmal: lieber nur die Zeichen als abgeschnittene Woerter */
+        /* Dietmar am 20.10.2026: "Entferne das Wort abmelden in dem Button und
+           fuege lieber Forum bei dem Button hinzu." Das Forum ist neu und muss
+           gefunden werden; was der Pfeil daneben tut, weiss jeder. In der
+           Kopfzeile traegt deshalb nur das Forum ein Wort. Am PC, wo der
+           Anmelde-Knopf bei den Chips steht, bleibt sein Wort stehen. */
+        #appHeute .ah-kopf > .ah-anmeld span { display: none; }
+        #appHeute .ah-kopf > .ah-anmeld { padding: 8px 12px; }
+        #appHeute .ah-kopf > .ah-anmeld i { margin: 0; }
+        /* Stil Sachlich: dort steht zusaetzlich der Termin-Knopf im Kopf. Mit
+           Forum und Abmelden daneben wurde der Gruss am Handy zusammengequetscht
+           und abgeschnitten ("Guten Mor..."). Deshalb bekommt der Gruss dort die
+           ganze erste Zeile, die Knoepfe ruecken darunter. (20.10.2026) */
+        @media (max-width: 560px) {
+            html.android-app.stil-sachlich #appHeute .ah-kopf { flex-wrap: wrap; }
+            html.android-app.stil-sachlich #appHeute .ah-kopf > .ah-gruss { flex: 1 1 100%; margin: 0 0 8px; }
+            html.android-app.stil-sachlich #appHeute .ah-kopf > .ah-termin { margin-right: auto; }
+        }
+        #appHeute .ah-gruss .gt { white-space: nowrap; }
         #appHeute .ah-termin { font-size: 13.5px; color: var(--s-text2); background: none; border: 0; padding: 0; font-family: inherit; }
         #appHeute .ah-termin b { color: var(--s-text); font-weight: 600; }
         html.android-app.stil-sachlich .app-chip, html.android-app.stil-verspielt .app-chip { background: var(--s-fl); color: var(--s-text); border-color: var(--s-rand2); height: 36px; font-size: 14px; }
@@ -765,6 +816,86 @@
         #appHeute .ah-belohnung { display: none; }
 
         #appHeute .ah-ueber { font-size: 13px; font-weight: 600; color: var(--s-text3); margin: 16px 0 8px 4px; }
+        /* ---- Bist du bereit? Die Pruefungsreife je Teil ----  (20.10.2026) */
+        #awReife { padding: 15px 14px 13px; }
+        #awReife .awr-kopf { margin-bottom: 10px; }
+        #awReife .awr-kopf b { display: block; font: 700 15px/1.2 var(--font-display, inherit); color: var(--s-text); }
+        #awReife .awr-kopf small { font-size: 12px; color: var(--s-text3); }
+        #awReife .awr-teil { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-top: 1px solid var(--s-rand); }
+        #awReife .awr-teil:first-of-type { border-top: 0; }
+        #awReife .awr-z { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center; color: #fff; }
+        #awReife .awr-z svg { width: 23px; height: 23px; display: block; }
+        #awReife .awr-zt { flex: 1; min-width: 0; }
+        #awReife .awr-zt b { display: block; font-size: 14px; color: var(--s-text); }
+        #awReife .awr-zt small { font-size: 11.5px; color: var(--s-text3); }
+        #awReife .awr-bal { display: block; height: 6px; border-radius: 999px; background: var(--s-fl2); margin-top: 5px; overflow: hidden; border: 1px solid var(--s-rand); }
+        #awReife .awr-bal i { display: block; height: 100%; border-radius: 999px; transition: width .5s cubic-bezier(.2,1,.3,1); }
+        #awReife .awr-wert { flex: 0 0 auto; font: 700 12px var(--font-body, inherit); padding: 4px 10px; border-radius: 999px; }
+        #awReife .bereit .awr-z { background: linear-gradient(135deg, var(--s-gruen, #1FC46F), var(--s-gruen-tief, #11924F)); }
+        #awReife .bereit .awr-bal i { background: var(--s-gruen, #1FC46F); }
+        #awReife .bereit .awr-wert { background: var(--s-gruen-w, rgba(31,196,111,.12)); color: var(--s-gruen-tief, #11924F); }
+        #awReife .fast .awr-z { background: linear-gradient(135deg, var(--s-amber, #FFA41B), var(--s-amber-tief, #D97F00)); }
+        #awReife .fast .awr-bal i { background: var(--s-amber, #FFA41B); }
+        #awReife .fast .awr-wert { background: rgba(255,164,27,.16); color: var(--s-amber-tief, #D97F00); }
+        #awReife .offen .awr-z { background: linear-gradient(135deg, #9aa7bd, #6f7d96); }
+        #awReife .offen .awr-bal i { background: #9aa7bd; }
+        #awReife .offen .awr-wert { background: var(--s-fl2); color: var(--s-text3); }
+        #awReife .awr-satz { margin-top: 11px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px);
+            border: 1px solid var(--s-rand); font-size: 12.5px; line-height: 1.45; color: var(--s-text2);
+            background: linear-gradient(135deg, var(--s-akzent-w, rgba(15,183,178,.12)), transparent); }
+        #awReife .awr-satz b { color: var(--s-text); }
+        body.dark #awReife .bereit .awr-wert { color: var(--s-gruen, #34E089); }
+        body.dark #awReife .fast .awr-wert { color: var(--s-amber, #FFB547); }
+
+        /* ---- Lernpfad: die 14 Lektionen als Weg mit Stationen ---- */
+        #awPfad { padding: 15px 14px 13px; }
+        #awPfad .apf-kopf { margin-bottom: 12px; }
+        #awPfad .apf-kopf b { display: block; font: 700 15px/1.2 var(--font-display, inherit); color: var(--s-text); }
+        #awPfad .apf-kopf small { font-size: 12px; color: var(--s-text3); }
+        #awPfad .apf-weg { list-style: none; margin: 0; padding: 0; }
+        #awPfad .apf-strip { display: flex; gap: 3px; margin: 0 0 13px; }
+        #awPfad .apf-strip i { flex: 1 1 0; height: 6px; border-radius: 999px; background: var(--s-fl2); border: 1px solid var(--s-rand); }
+        #awPfad .apf-strip i.f { background: var(--s-gruen, #1FC46F); border-color: transparent; }
+        #awPfad .apf-strip i.j { background: var(--s-akzent, #0FB7B2); border-color: transparent; box-shadow: 0 0 0 2px var(--s-akzent-w, rgba(15,183,178,.18)); }
+        #awPfad .apf-st.letzte { padding-bottom: 0; }
+        #awPfad .apf-st.letzte::before { display: none; }
+        #awPfad .apf-st { position: relative; display: flex; align-items: flex-start; gap: 12px;
+            padding: 0 0 13px 0; width: 100%; border: 0; background: none; text-align: left;
+            color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        #awPfad .apf-st:last-child { padding-bottom: 0; }
+        /* der Weg zwischen den Stationen */
+        #awPfad .apf-st::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: -1px;
+            width: 2px; border-radius: 2px; background: var(--s-rand); }
+        #awPfad .apf-st:last-child::before { display: none; }
+        #awPfad .apf-st.fertig::before { background: var(--s-gruen, #1FC46F); opacity: .55; }
+        #awPfad .apf-pkt { position: relative; z-index: 1; flex: 0 0 auto; width: 28px; height: 28px;
+            border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--font-body, inherit);
+            background: var(--s-fl2); color: var(--s-text3); border: 1.5px solid var(--s-rand); }
+        #awPfad .fertig .apf-pkt { background: linear-gradient(135deg, var(--s-gruen, #1FC46F), var(--s-gruen-tief, #11924F));
+            color: #fff; border-color: transparent; font-size: 13px; }
+        #awPfad .jetzt .apf-pkt { background: linear-gradient(135deg, var(--s-akzent, #0FB7B2), var(--s-akzent-tief, #0A94B8));
+            color: #fff; border-color: transparent; box-shadow: 0 0 0 4px var(--s-akzent-w, rgba(15,183,178,.16)); }
+        #awPfad .apf-txt { flex: 1; min-width: 0; padding-top: 2px; }
+        #awPfad .apf-txt b { display: block; font-size: 13.5px; font-weight: 600; color: var(--s-text);
+            line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #awPfad .fertig .apf-txt b, #awPfad .offen .apf-txt b { color: var(--s-text2); font-weight: 500; }
+        #awPfad .apf-txt small { display: block; font-size: 11.5px; color: var(--s-text3); margin-top: 1px; }
+        #awPfad .apf-bal { display: block; height: 5px; border-radius: 999px; background: var(--s-fl2);
+            margin-top: 6px; overflow: hidden; border: 1px solid var(--s-rand); }
+        #awPfad .apf-bal i { display: block; height: 100%; border-radius: 999px;
+            background: var(--s-akzent, #0FB7B2); transition: width .5s cubic-bezier(.2,1,.3,1); }
+        #awPfad .apf-marke { flex: 0 0 auto; margin-top: 3px; font: 700 11px var(--font-body, inherit);
+            padding: 3px 9px; border-radius: 999px; background: var(--s-akzent-w, rgba(15,183,178,.14)); color: var(--s-akzent-tief, #0A94B8); }
+        #awPfad .apf-karte { flex: 0 0 auto; margin-top: 2px; width: 24px; height: 24px; display: grid;
+            place-items: center; color: var(--s-gruen-tief, #11924F); font-size: 13px; }
+        body.dark #awPfad .apf-marke { color: var(--s-akzent, #34D9D4); }
+        body.dark #awPfad .apf-karte { color: var(--s-gruen, #34E089); }
+        #awPfad .apf-satz { margin-top: 12px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px);
+            border: 1px solid var(--s-rand); font-size: 12.5px; line-height: 1.45; color: var(--s-text2);
+            background: linear-gradient(135deg, var(--s-akzent-w, rgba(15,183,178,.12)), transparent); }
+        #awPfad .apf-satz b { color: var(--s-text); }
+        #awPfad .apf-mehr { margin-top: 10px; width: 100%; border: 1px solid var(--s-rand); background: var(--s-fl2);
+            color: var(--s-text2); border-radius: 999px; padding: 7px 12px; font: 600 12.5px var(--font-body, inherit); cursor: pointer; }
         #appHeute .ah-liste { background: var(--s-fl); border: 1px solid var(--s-rand); box-shadow: var(--s-schatten); overflow: hidden; }
         html.android-app body.eckig.app-rund #appHeute .ah-liste , html:not(.android-app) body.eckig.app-rund #appHeute .ah-liste{ border-radius: var(--s-r-karte) !important; }
         #appHeute .ah-zeile { display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 56px; position: relative; width: 100%;
@@ -782,7 +913,7 @@
 
         /* ---------- Verspielt: der Startbildschirm mit Leben ---------- */
         html.android-app.stil-verspielt #appHeute .ah-gruss { font: 500 13px/1.2 var(--font-body); color: var(--s-text2); }
-        html.android-app.stil-verspielt #appHeute .ah-gruss small { display: block; font: 700 22px/1.15 var(--font-display); color: var(--s-text); letter-spacing: -0.3px; margin-top: 2px; }
+        html.android-app.stil-verspielt #appHeute .ah-gruss small { display: block; font: 700 20px/1.2 var(--font-display); color: var(--s-text); letter-spacing: -0.3px; margin-top: 2px; }
         html.android-app.stil-verspielt #appHeute .ah-gruss .gt { display: block; }
         html.android-app.stil-verspielt #appHeute .ah-gruss .name { display: none; }
         html.android-app.stil-verspielt #appHeute .ah-onair {
@@ -9054,6 +9185,7 @@
         }
         .finish-box .sub { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
         .finish-box .btn-group { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:1rem; }
+
         .exam-result-grid {
             display:grid;
             grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
@@ -24160,7 +24292,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 218, datum: '20.10.2026' };
+const TRAINER_STAND = { nr: 221, datum: '20.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -31202,7 +31334,16 @@ async function playTTSSegment(seg, token){
     if(token!==ttsQueueToken) return;
     clearTTSHighlightsOnly();
     if(seg.selector){
-        const el=document.querySelector(seg.selector);
+        // Die gelbe Marke gehoert zu DER Frage, zu der das Stueck geschrieben
+        // wurde. Blaettert der Trainer waehrenddessen weiter (automatisches
+        // Weiterblaettern nach 0,3 s), zeigt derselbe Platzhalter
+        // [data-optindex="2"] laengst auf eine Antwort der NEUEN Frage - und
+        // "Das war die richtige Antwort" markierte dort die falsche Stelle.
+        // Steht in seg.frageNr eine Nummer, wird nur noch markiert, solange
+        // dieselbe Frage auf dem Schirm steht. Gesprochen wird weiter: der
+        // Satz gehoert zu dem Klick, den der Lernende eben gemacht hat.
+        const passendeFrage = (seg.frageNr === undefined) || (seg.frageNr === currentIndex);
+        const el = passendeFrage ? document.querySelector(seg.selector) : null;
         if(el){ el.classList.add(seg.klasse || 'tts-highlight'); el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
     }
     // Gast an einem Server ohne Stimme: das eigene Geraet liest vor (ab dem zweiten Stueck ohne Umweg ueber den Server)
@@ -31512,6 +31653,7 @@ async function playTTSQueue(segments, btn, zurueck){
             stuecke.push({
                 text: t,
                 selector: seg.selector,
+                frageNr: seg.frageNr,
                 klasse: seg.klasse,
                 worte: seg.worte,
                 wortVon: von,
@@ -31722,7 +31864,8 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
     try{ if(localStorage.getItem('ttsAutoReadAnswer') === '0') return; }catch(e){}
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
     const text = isCorrect ? 'Das war die richtige Antwort.' : 'Das war leider die falsche Antwort.';
-    const segments=[{text, selector:`[data-optindex="${idx}"]`}];
+    // frageNr: An diese Frage ist die gelbe Marke gebunden (siehe playTTSSegment).
+    const segments=[{text, selector:`[data-optindex="${idx}"]`, frageNr: currentIndex}];
     playTTSQueue(segments, null);
 }
 
@@ -31794,7 +31937,7 @@ function einstellungenSchluessel(){
 function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
-                      levelUpTon: true, rundeFertig: true,
+                      levelUpTon: true, rundeFertig: true, rundenFeier: true,
                       mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
@@ -31811,6 +31954,8 @@ function einstellungenLaden(){
             // Dasselbe beim Level-up und beim Rundenabschluss.
             if(d && d.levelUpTon === false) einstellungen.levelUpTon = false;
             if(d && d.rundeFertig === false) einstellungen.rundeFertig = false;
+            // Das Rundenende mit dem Begleiter ist ebenfalls von Haus aus an (20.10.2026).
+            if(d && d.rundenFeier === false) einstellungen.rundenFeier = false;
             if(d && d.knopfUmfang === 'lang') einstellungen.knopfUmfang = 'lang';
             if(d && MAUS_FARBEN.hasOwnProperty(d.mausFarbe)) einstellungen.mausFarbe = d.mausFarbe;
             if(d && MAUS_RAND_ARTEN.indexOf(d.mausRand) >= 0) einstellungen.mausRand = d.mausRand;
@@ -31936,6 +32081,8 @@ function einstellungenAnwenden(){
     if(lu) lu.checked = (einstellungen.levelUpTon !== false);
     const rf = document.getElementById('einstRundeFertig');
     if(rf) rf.checked = (einstellungen.rundeFertig !== false);
+    const rfe = document.getElementById('einstRundenFeier');
+    if(rfe) rfe.checked = (einstellungen.rundenFeier !== false);
     const ft = document.getElementById('einstFormelTon');
     if(ft){
         ft.checked  = (einstellungen.formelTon !== false);
@@ -33501,7 +33648,16 @@ function einstBlaetterFuellen(){
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Fenster, wenn „Noch nie geübt" durch ist</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
           + 'Am Ende dieser Runde meldet sich der Trainer und bietet an, gleich mit den '
-          + 'Stolpersteinen weiterzumachen.</span></span></label>')
+          + 'Stolpersteinen weiterzumachen.</span></span></label>'
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.55rem;" '
+          + 'data-vorlesen-kurz="Der Begleiter freut sich am Rundenende." '
+          + 'data-vorlesen="Der Begleiter freut sich am Rundenende. Auf der Ergebnisseite macht Funki einen Sprung und Maja eine Rolle in der Schwerelosigkeit. Ohne Haken steht der Begleiter ruhig da.">'
+          + '<input type="checkbox" id="einstRundenFeier" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'rundenFeier\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Der Begleiter freut sich am Rundenende</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Auf der Ergebnisseite macht Funki einen Sprung, Maja eine Rolle in der Schwerelosigkeit. '
+          + 'Ohne Haken steht der Begleiter ruhig da.</span></span></label>')
       + einstKasten('Schrift', '',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" '
           + 'data-vorlesen-kurz="Schrift beim Vorlesen vergrößern." '
@@ -37554,6 +37710,62 @@ function pruefSchnitt(){
     return { n: n, f: n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : 0, ok: l.filter(x => x.ok).length, voll: PRUEF_ANZAHL, max: PRUEF_MAX_FEHLER, sim: simGezaehlt(b) };
 }
 function simGezaehlt(b){ try{ return +((JSON.parse(localStorage.getItem('amateurfunk_simok_' + String(currentUser)) || '{}') || {})[b || pruefZielBuchstabe()]) || 0; }catch(e){ return 0; } }
+// ================================================================
+//  PRUEFUNGSREIFE JE TEIL                            (20.10.2026)
+//  ----------------------------------------------------------------
+//  Dietmar wollte aus Etappe 3 als Erstes die Pruefungsreife. Bisher
+//  sagt der Trainer nur, WIE VIEL schon gelernt ist. Die eigentliche
+//  Frage ist aber: wuerdest du heute bestehen - und zwar in jedem
+//  der drei Teile einzeln? Genau daran scheitert die Pruefung: Wer in
+//  Technik glaenzt und in Betrieb patzt, faellt durch.
+//
+//  Gerechnet wird aus den letzten zehn Pruefungen JE TEIL. Gezaehlt
+//  wird jede 25er-Pruefung eines Teils und jeder Teil einer
+//  Simulation, mit der Zahl der Fehler.
+//
+//    bereit  - im Schnitt hoechstens 5 Fehler von 25 (wie die echte
+//              Huerde: 19 von 25 sind 6 Fehler)
+//    fast    - 6 bis 8 Fehler
+//    offen   - mehr als 8, oder noch nicht geprueft
+//
+//  Die Liste steht neben der alten (amateurfunk_pruefungen_*), damit
+//  nichts verlorengeht, was schon gezaehlt wurde.
+// ================================================================
+const REIFE_ANZAHL = 10, REIFE_BEREIT = 5, REIFE_FAST = 8;
+const REIFE_TEILE = ['vorschriften', 'betrieb', 'technik'];
+const REIFE_NAMEN = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+function reifeListe(){ try{ return JSON.parse(localStorage.getItem('amateurfunk_pruefteile_' + String(currentUser)) || '[]') || []; }catch(e){ return []; } }
+function reifeMerken(teile){
+    try{
+        if(!teile) return;
+        const b = pruefZielBuchstabe(), l = reifeListe(), d = new Date().toISOString().slice(0, 10);
+        REIFE_TEILE.forEach(t => {
+            const e = teile[t];
+            if(!e || typeof e.f !== 'number' || !isFinite(e.f)) return;
+            l.push({ k: b, t: t, d: d, f: Math.round(e.f * 10) / 10, ok: !!e.ok });
+        });
+        while(l.length > 180) l.shift();          // 60 Pruefungen mal drei Teile
+        localStorage.setItem('amateurfunk_pruefteile_' + String(currentUser), JSON.stringify(l));
+    }catch(e){}
+}
+// Welche Teile hat das eingestellte Pruefungsziel ueberhaupt?
+function reifeTeileDaZiel(){
+    try{ return REIFE_TEILE.filter(t => (questionBank || []).some(q => q.part === t)); }catch(e){ return REIFE_TEILE.slice(); }
+}
+function pruefReife(){
+    const b = pruefZielBuchstabe(), alle = reifeListe();
+    return reifeTeileDaZiel().map(t => {
+        const l = alle.filter(x => x && x.k === b && x.t === t).slice(-REIFE_ANZAHL);
+        const n = l.length;
+        const f = n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : null;
+        const stufe = n === 0 ? 'offen' : (f <= REIFE_BEREIT ? 'bereit' : f <= REIFE_FAST ? 'fast' : 'offen');
+        // Der Balken: 0 Fehler = voll, 12 Fehler und mehr = leer
+        const anteil = n === 0 ? 0.06 : Math.max(0.06, Math.min(1, 1 - (f / 12)));
+        return { teil: t, name: REIFE_NAMEN[t] || t, n: n, fehler: f, stufe: stufe, anteil: anteil,
+                 bestanden: l.filter(x => x.ok).length };
+    });
+}
+window.pruefReife = pruefReife;
 function pruefungMerken(fehlerJe25, bestanden, simulation, real){
     try{
         if(!real && window.realisticExam && realisticExam.active) return;   // P89: Teile des Simulators zaehlen erst am Ende
@@ -37675,6 +37887,30 @@ function ergebnisCss(){
 .erg-fehler code{font:600 13px 'IBM Plex Mono',monospace;background:#fff1f1;color:#d64545;padding:3px 8px;border-radius:6px;flex:none}
 .erg-fehler span{flex:1;min-width:0}
 .erg-fehler .mehr{color:#5d6b80;font-size:13px;padding:6px 2px;border-top:1px solid #e3e9f3}
+/* ---- "Hier hat es gehakt" klappt zu ----                 (20.10.2026)
+   Dietmar: "Wenn ich jetzt viele Fehler habe, habe ich ein Problem, weil
+   dann wird das viel zu lang. [...] sollte man das irgendwie einklappen
+   koennen oder eingeklappt sein beim Oeffnen."
+   Bis zu drei Fehler stehen offen da - das ist kurz und man will sie sehen.
+   Ab vier ist die Liste zugeklappt; die Zahl steht daneben, ein Tipper
+   oeffnet sie. Gebaut mit <details>, das kann der Browser von selbst -
+   kein Skript, und es funktioniert auch, wenn etwas anderes klemmt. */
+.erg-haken{margin-top:6px}
+.erg-haken>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;
+  font:700 17px var(--font-display,'Space Grotesk'),sans-serif;color:inherit;padding:8px 2px;border-radius:10px}
+.erg-haken>summary::-webkit-details-marker{display:none}
+.erg-haken>summary::marker{content:''}
+.erg-haken>summary:hover{background:#f6f8fc}
+.erg-haken>summary b{font:700 12px var(--font-body,Inter),sans-serif;background:#fff1f1;color:#d64545;
+  border-radius:999px;padding:3px 10px}
+.erg-haken>summary .pf{margin-left:auto;color:#9aa7b8;font-size:13px;transition:transform .2s}
+.erg-haken[open]>summary .pf{transform:rotate(180deg)}
+.erg-haken>summary .zu{font:500 13px var(--font-body,Inter),sans-serif;color:#5d6b80}
+.erg-haken[open]>summary .zu{display:none}
+.erg-fehler button span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.dark .erg-buehne .erg-haken>summary:hover{background:#1b2738}
+body.dark .erg-buehne .erg-haken>summary b{background:#3a1b1b;color:#ff8a8a}
+body.dark .erg-buehne .erg-haken>summary .zu{color:#9fb0c6}
 .erg-knoepfe{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
 .erg-k{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 20px;border-radius:12px;font:700 15px var(--font-body,Inter),sans-serif;border:1.5px solid #e3e9f3;background:#fff;color:#17243a;cursor:pointer}
 .erg-k.haupt{border:0;background:linear-gradient(135deg,#22c38e,#14a37a);color:#fff;box-shadow:0 4px 0 rgba(10,90,60,.3)}
@@ -37684,7 +37920,26 @@ function ergebnisCss(){
 body .erg-buehne .erg-stempel{border-radius:50% !important}
 @keyframes ergStempel{from{opacity:0;transform:rotate(30deg) scale(1.8)}to{opacity:.92;transform:rotate(12deg) scale(1)}}
 @keyframes ergSchweben{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@media (prefers-reduced-motion: reduce){.erg-maja img,.erg-stempel{animation:none}}
+/* ---- Rundenende mit Begleiter (20.10.2026) ----
+   Bisher stand auf der Ergebnisseite immer Maja - auch bei dem, der Funki
+   gewaehlt hat. Jetzt kommt der Begleiter, den man sich ausgesucht hat, und
+   er freut sich kurz: Funki springt mit beiden Armen hoch, Maja macht ihre
+   Rolle in der Schwerelosigkeit (dieselbe Bewegung wie sonst im Trainer).
+   Danach schwebt sie weiter wie bisher. Abschaltbar unter Einstellungen. */
+.erg-maja .mk{width:340px;max-width:100%;filter:drop-shadow(0 20px 40px rgba(0,0,0,.35))}
+.erg-maja .mk svg{width:100%;height:auto;display:block;overflow:visible}
+.erg-maja .mk > span{display:none}
+.erg-maja.feiert img{animation:ergRolle 1.5s cubic-bezier(.45,.05,.35,1) .25s both,ergSchweben 4s ease-in-out 1.8s infinite}
+@keyframes ergRolle{0%{transform:none}30%{transform:translateY(-9%) rotate(-140deg)}70%{transform:translateY(-5%) rotate(-300deg)}100%{transform:rotate(-360deg)}}
+.erg-maja.feiert .mk-huepf{animation:ergSprung 1.05s cubic-bezier(.3,1.5,.4,1) .25s 2}
+@keyframes ergSprung{0%{transform:translateY(0) scale(1)}18%{transform:translateY(4%) scaleY(.9) scaleX(1.07)}
+  48%{transform:translateY(-16%) scaleY(1.08) scaleX(.95) rotate(-8deg)}
+  72%{transform:translateY(0) scaleY(.95) scaleX(1.04) rotate(4deg)}100%{transform:translateY(0) scale(1)}}
+.erg-maja.feiert .mk-arm-l{animation:ergArmL 1.05s ease-in-out .25s 2;transform-origin:12px 88px}
+.erg-maja.feiert .mk-arm-r{animation:ergArmR 1.05s ease-in-out .25s 2;transform-origin:100px 88px}
+@keyframes ergArmL{0%,100%{transform:rotate(0)}45%{transform:rotate(-125deg)}}
+@keyframes ergArmR{0%,100%{transform:rotate(0)}45%{transform:rotate(125deg)}}
+@media (prefers-reduced-motion: reduce){.erg-maja img,.erg-maja .mk,.erg-maja .mk *,.erg-stempel{animation:none !important}}
 /* Dunkel */
 body.dark .erg-buehne .erg-karte{background:#16202e;color:#e6edf5;border-color:#2b3a4f;box-shadow:0 12px 40px rgba(0,0,0,.4)}
 body.dark .erg-buehne.sa .erg-titel{color:#e6edf5;-webkit-text-fill-color:#e6edf5}
@@ -37710,6 +37965,7 @@ body.dark .erg-buehne .erg-fehler code{background:#3a1b1b;color:#ff8a8a}
   .erg-buehne{flex-direction:column;gap:0;padding:14px 10px 18px;min-height:0;border-radius:16px}
   .erg-maja{position:relative;top:auto;flex:none;align-self:stretch;min-height:0;height:150px;padding-top:0;justify-content:flex-start;align-items:flex-end;margin-bottom:-14px;z-index:1}
   .erg-maja img{width:118px;margin-left:6px}
+  .erg-maja .mk{width:112px;margin-left:8px}
   .erg-blase{left:120px;right:4px;top:auto;bottom:34px;width:auto;font-size:13px;padding:9px 11px}
   .erg-karte{flex:none;width:100%;padding:18px 16px;border-radius:18px}
   .erg-kopf{font-size:11px;padding-right:86px}
@@ -37727,6 +37983,35 @@ body.dark .erg-buehne .erg-fehler code{background:#3a1b1b;color:#ff8a8a}
   .erg-knoepfe{flex-direction:column}
   .erg-k{width:100%}
 }
+/* ---- Die Ergebnisseite als Teil der App ----            (20.10.2026)
+   Dietmar am Handy: "Dieser lila Rand gefaellt mir in der App [...] nicht.
+   Es wirkt auch irgendwie alles sehr abgeschnitten und gar nicht wie ein
+   Teil von der App." - "Es sieht aus wie ein Blatt, was man einem vorlegt."
+   Er hat recht: ein lila Plakat, darin ein weisses Blatt mit Stempel.
+   In der App spricht jetzt alles dieselbe Sprache wie die Startseite:
+   heller Grund, darauf Karten mit weichen Ecken und weichem Schatten.
+   Der Begleiter sitzt in einer Karte wie die "Bereit fuer eine Runde?"-Karte,
+   das Ergebnis in der naechsten darunter. Am PC bleibt das Plakat. */
+html.android-app .erg-buehne{background:transparent !important;padding:0;border-radius:0;overflow:visible;min-height:0;gap:0}
+html.android-app .erg-buehne .erg-maja{display:flex;flex-direction:row-reverse;align-items:flex-end;justify-content:flex-end;
+  background:linear-gradient(135deg,var(--s-haupt2,#0A94B8),var(--s-v,#7B5CFF));
+  border-radius:var(--s-r-karte,26px);box-shadow:var(--s-schatten,0 6px 18px rgba(22,44,92,.08));
+  position:relative;z-index:1;height:auto;min-height:0;padding:12px 14px 30px;margin:0 0 -24px;overflow:hidden}
+html.android-app .erg-buehne .erg-maja img,
+html.android-app .erg-buehne .erg-maja .mk{width:98px;max-width:98px;margin:0;flex:0 0 auto}
+html.android-app .erg-buehne .erg-blase{position:static;flex:1 1 auto;width:auto;margin:0 0 4px 10px;min-width:0;
+  border-radius:16px;padding:10px 12px;font-size:13.5px;box-shadow:0 6px 16px rgba(10,20,45,.18)}
+html.android-app .erg-buehne .erg-karte{background:var(--s-fl,#fff);border-radius:var(--s-r-karte,26px);
+  box-shadow:var(--s-schatten,0 6px 18px rgba(22,44,92,.08));padding:20px 16px 16px;position:relative;z-index:2;
+  border:1px solid var(--s-rand,rgba(16,36,74,.08))}
+html.android-app body.dark .erg-buehne .erg-karte{background:#111a30;border-color:rgba(255,255,255,.10)}
+/* Der Stempel darf nicht mehr in die Ueberschrift ragen */
+html.android-app .erg-buehne .erg-stempel{width:78px;height:78px;right:10px;top:10px}
+html.android-app .erg-buehne .erg-stempel b{font-size:8px}
+html.android-app .erg-buehne .erg-stempel strong{font-size:10px}
+html.android-app .erg-buehne .erg-stempel span{font-size:7px}
+html.android-app .erg-buehne .erg-titel{padding-right:78px}
+html.android-app .erg-buehne .erg-kopf{padding-right:78px}
 /* Das Fenster "Frage nachsehen" */
 #ergFrage{position:fixed;inset:0;z-index:99992;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 #ergFrage .ef-blatt{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#17243a;border-radius:18px;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
@@ -37808,7 +38093,10 @@ function ergebnisSeiteHtml(o){
             const s = window.afuStufeInfo && window.afuStufeInfo();
             if(s && s.name) werte += '<div class="erg-stufe"><div class="erg-stern">' + s.nr + '</div><div style="flex:1;min-width:0"><b>' + ergebnisEsc(s.name) + '</b>'
                 + '<div class="erg-balken"><i style="width:' + Math.round(Math.max(0, Math.min(1, s.anteil)) * 100) + '%"></i></div>'
-                + '<small style="opacity:.9">' + (s.fehlt ? 'noch ' + s.fehlt + (s.fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + s.naechste : 'Höchste Stufe erreicht') + '</small></div></div>';
+                + '<small style="opacity:.9">' + (s.pruefung
+                      ? 'Stufe ' + s.naechste + ' gibt es mit zehn bestandenen Prüfungssimulationen'
+                      : s.fehlt ? 'noch ' + s.fehlt + (s.fehlt === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' bis Stufe ' + s.naechste
+                      : 'Höchste Stufe erreicht') + '</small></div></div>';
         }catch(e){}
     } else {
         werte = '<div class="erg-werte">'
@@ -37822,8 +38110,11 @@ function ergebnisSeiteHtml(o){
     let grenze = '';
     if(o.required && !o.teile && o.total){
         const g = Math.min(100, o.required / o.total * 100);
+        // Liegt die Grenze ganz rechts (z. B. eine Frage, 100 %), lief das Schild
+        // "Grenze 16" aus dem Bild heraus. Ab 80 % haengt es deshalb rechtsbuendig.
+        const schild = g >= 80 ? 'right:0; left:auto; transform:none' : 'left:' + g + '%';
         grenze = '<div class="erg-grenze"><div class="gb"><i style="width:' + quote + '%"></i><u style="left:' + g + '%"></u></div>'
-            + '<div class="gl"><span style="left:' + g + '%">Grenze ' + o.required + '</span></div></div>';
+            + '<div class="gl"><span style="' + schild + '">Grenze ' + o.required + '</span></div></div>';
     }
     const teile = o.teile ? '<div class="erg-teile">' + o.teile.map(t => {
         if(!t.gesamt) return '<div class="erg-teil leer"><div>' + t.name + '</div><b>—</b><small>nicht geprüft</small></div>';
@@ -37838,11 +38129,21 @@ function ergebnisSeiteHtml(o){
             return '<button type="button" class="erg-f' + (of ? ' of' : ok ? '' : ' no') + '" onclick="ergebnisFrageZeigen(' + i + ')" title="' + ergebnisEsc(q.id) + '">'
                 + (i + 1) + '<i class="fas ' + (of ? 'fa-minus' : ok ? 'fa-check' : 'fa-xmark') + '"></i></button>';
         }).join('') + '</div>' : '';
-    const MAX = 6;
-    const fehlerListe = fehlerQs.length ? '<div class="erg-h2"><h3>' + (vs ? 'Hier hat es gehakt' : 'Falsch beantwortet') + '</h3></div><div class="erg-fehler">'
+    // Bis zu drei Fehler stehen offen da, ab vier ist die Liste zugeklappt
+    // (20.10.2026, Dietmar: sonst wird die Seite viel zu lang).
+    const MAX = 12;
+    const offenAb = 3;
+    const fehlerListe = fehlerQs.length
+        ? '<details class="erg-haken"' + (fehlerQs.length <= offenAb ? ' open' : '') + '>'
+        + '<summary><span class="t">' + (vs ? 'Hier hat es gehakt' : 'Falsch beantwortet') + '</span>'
+        + '<b>' + fehlerQs.length + '</b>'
+        + (fehlerQs.length > offenAb ? '<span class="zu">ansehen</span>' : '')
+        + '<i class="fas fa-chevron-down pf" aria-hidden="true"></i></summary>'
+        + '<div class="erg-fehler">'
         + fehlerQs.slice(0, MAX).map(q => '<button type="button" onclick="ergebnisFrageZeigen(' + fragen.indexOf(q) + ')"><code>' + ergebnisEsc(q.id) + '</code><span>'
             + ergebnisEsc(ergebnisKurz(q.text, 110)) + '</span><i class="fas fa-chevron-right" style="color:#9aa7b8"></i></button>').join('')
-        + (fehlerQs.length > MAX ? '<div class="mehr">… und ' + (fehlerQs.length - MAX) + ' weitere – alle oben in der Übersicht</div>' : '') + '</div>' : '';
+        + (fehlerQs.length > MAX ? '<div class="mehr">… und ' + (fehlerQs.length - MAX) + ' weitere – alle oben in der Übersicht</div>' : '')
+        + '</div></details>' : '';
     // ERGEBNIS TEILEN (Stand 216, 19.10.2026): nach bestandener Pruefung ein Knopf, der am Handy
     // WhatsApp/Signal/Telegram anbietet (Web Share) und sonst den Text in die Zwischenablage legt.
     let kn = (o.knoepfe || []).slice();
@@ -37868,7 +38169,19 @@ function ergebnisSeiteHtml(o){
         const satz = st === 'bestanden' ? 'Funkspruch empfangen: <b>Bestanden!</b> ' + o.correct + ' von ' + o.total + (o.art === 'pruefung' ? ' – da kann die Prüfung kommen!' : ' – stark gefunkt!')
             : st === 'nach' ? 'Knapp! Mit ' + o.correct + ' von ' + o.total + ' gibt es eine <b>mündliche Nachprüfung</b> – das schaffst du!'
             : 'Noch nicht ganz – ' + o.correct + ' von ' + o.total + '. Übe die Fehler, dann klappt es beim nächsten Mal!';
-        if(bild) maja = '<div class="erg-maja"><div class="erg-blase"><small>MAJA</small>' + satz + '</div><img src="' + bild + '" alt="" draggable="false"></div>';
+        // Wer FUNKI gewaehlt hat, sieht Funki - bisher stand hier immer Maja.
+        // "feiert": die kurze Freude am Rundenende (Sprung bzw. Rolle).
+        let wer = 'astro';
+        try{ wer = (localStorage.getItem('robo_maskottchen') === 'funki') ? 'funki' : 'astro'; }catch(e){}
+        const feiert = (!einstellungen || einstellungen.rundenFeier !== false) ? ' feiert' : '';
+        let figur = '', name = 'MAJA';
+        if(wer === 'funki'){
+            try{ if(typeof appMaskottchen === 'function') figur = appMaskottchen(''); }catch(e){}
+            if(figur) name = 'FUNKI';
+        }
+        if(!figur && bild) figur = '<img src="' + bild + '" alt="" draggable="false">';
+        if(figur) maja = '<div class="erg-maja' + feiert + '"><div class="erg-blase"><small>' + name + '</small>'
+            + satz + '</div>' + figur + '</div>';
     }
     return '<div class="erg-buehne ' + (vs ? 'vs' : 'sa') + '">' + maja
         + '<div class="erg-karte ' + (st === 'bestanden' ? 'ok' : st === 'nach' ? 'nach' : 'nicht') + '">' + stempel
@@ -37880,6 +38193,7 @@ function ergebnisSeiteHtml(o){
 }
 
 // Nach dem Zeichnen: nach oben, und bei "bestanden" Fanfare und Konfetti
+
 function ergebnisNachZeichnen(jubel, nachFanfare){
     try{ window.scrollTo({ top: 0, behavior: 'instant' }); }catch(e){ try{ window.scrollTo(0, 0); }catch(x){} }
     if(jubel){ try{ triggerConfetti(true, nachFanfare || null); }catch(e){} }
@@ -38010,6 +38324,8 @@ function renderFinishScreen(isTimeUp = false) {
 
         // P83: Jede Pruefung wird gemerkt (Fehler je 25 Fragen) - daraus rechnet sich die letzte Stufe
         try{ if (!examFinished) pruefungMerken(testedParts.length ? testedErrors / testedParts.length : 25, overallStatus === 'bestanden', testedParts.length >= ['vorschriften', 'betrieb', 'technik'].filter(p => questionBank.some(q => q.part === p)).length); }catch(e){}
+        // P90 (20.10.2026): jeder geprueefte Teil einzeln - daraus rechnet sich die Pruefungsreife
+        try{ if (!examFinished){ const tt = {}; testedParts.forEach(p => { tt[p] = { f: 25 - (counts[p] || 0), ok: (counts[p] || 0) >= 19 }; }); reifeMerken(tt); } }catch(e){}
         if (!examFinished) {
             const histStatus = overallStatus==='bestanden' ? 'pass' : overallStatus==='nachpruefung' ? 'grauzone' : 'fail';
             addHistoryEntry(testedParts.length===3 ? 'Simulator 75' : `Simulator (${testedParts.map(p=>labelOf[p]).join('+')})`, testedTotal, testedCorrect, histStatus);
@@ -38081,6 +38397,12 @@ function renderFinishScreen(isTimeUp = false) {
 
         if (!examFinished) {
             try{ pruefungMerken(total ? errors * 25 / total : 25, correct >= required); }catch(e){}
+            // Welcher Teil war das? Die Fragen der Runde wissen es (20.10.2026).
+            try{
+                const teile = [...new Set((currentQuestions || []).map(q => q.part))];
+                if(teile.length === 1 && REIFE_TEILE.indexOf(teile[0]) >= 0)
+                    reifeMerken({ [teile[0]]: { f: total ? errors * 25 / total : 25, ok: correct >= required } });
+            }catch(e){}
             addHistoryEntry(currentPart, total, correct, status);
             examFinished = true;
         }
@@ -45191,6 +45513,9 @@ function showRealisticFinal(){
       completedOrder.forEach((p, i) => { const k = (REALISTIC_PART_META[p] || {}).part || p; st[k] = results[i].status; ct[k] = results[i].correct; });
       const voll = completedOrder.length >= realisticTeile().length;
       pruefungMerken(results.length ? totalErrors / results.length : 25, totalStatus === 'bestanden', voll, true);
+      // P90: jeder Teil einzeln fuer die Pruefungsreife (20.10.2026)
+      try{ const tt = {}; completedOrder.forEach((p, i) => { const k = (REALISTIC_PART_META[p] || {}).part || p;
+            tt[k] = { f: 25 - (results[i].correct || 0), ok: (results[i].correct || 0) >= 19 }; }); reifeMerken(tt); }catch(e){}
       const zHtml = pruefZettelHtml(st, ct, voll && totalStatus === 'bestanden', { real: true });
       window._zettelReal = true; zettelEinblenden(zHtml); window._zettelReal = false;
       const zo = document.getElementById('zettelVorn');
@@ -53074,7 +53399,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     heute.setAttribute('aria-label', 'Start');
     heute.innerHTML =
         '<div class="ah-kopf"><div class="ah-gruss" id="ahGruss"><span class="gt" id="ahGrussZeit">Guten Tag</span><span class="name" id="ahGrussName"></span><small id="ahGrussName2"></small></div>'
-      + '<div class="ah-onair" id="ahOnAir" role="img"><span class="oa-schild"><i class="fas fa-microphone"></i><span class="oa-wort">ON AIR</span></span><b id="ahSerieZahl">0</b></div></div>'
+      + '<div class="ah-onair" id="ahOnAir" role="img"><span class="oa-schild"><i class="fas fa-microphone"></i><span class="oa-wort">ON AIR</span></span><b id="ahSerieZahl">0</b></div>'
+      // Forum oben neben Abmelden (20.10.2026, Dietmar: "oben bei Abmelden
+      // koennte man vielleicht auch noch den Button Forum mit einbauen").
+      // Er erscheint nur, wenn das Forum erreichbar ist (body.forum-an).
+      + '<button type="button" class="app-chip ah-forum" id="ahForum" title="Zum Forum" aria-label="Zum Forum"><i class="fas fa-comments"></i> <span>Forum</span></button></div>'
       + '<div class="ah-chips" id="ahChips"><span class="app-chip ah-xp" id="ahXp"><i class="fas fa-bolt"></i> <span id="ahXpText">0 XP</span></span>'
       + '<button type="button" class="ah-termin" id="ahTermin"></button>'
       // Anmelden / Abmelden gut sichtbar auf der Startseite (18.10.2026, Dietmar: "ich will das auf der Main als Button")
@@ -53109,6 +53438,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
       +   '<button type="button" class="ah-kachel breit" data-ziel="ahZweiMin" id="ahKZweiMin"><div class="kz"><span class="ah-ico amber"><i class="fas fa-bolt"></i></span><span class="anz klein">5 Fragen</span></div><div><b>2-Minuten-Runde</b><small>schnell zwischendurch</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
+      // Forum als eigene Kachel (20.10.2026, Dietmar: "wenn wir kein Forum
+      // auffuehren, wird es auch selten oder nie genutzt. Wir muessen dafuer
+      // auch intern Werbung machen."). Sie erscheint nur, wenn das Forum
+      // erreichbar ist (body.forum-an).
+      +   '<button type="button" class="ah-kachel ah-kforum" id="ahKForumK"><div class="kz"><span class="ah-ico blau"><i class="fas fa-comments"></i></span></div><div><b>Forum</b><small>fragen und mitreden</small></div></button>'
       + '</div>'
       + '<div class="ah-weiter-ueber">Übersicht und Werkzeuge</div>';
     tu(() => {
@@ -53142,6 +53476,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     $('ahPruefung').addEventListener('click', () => klick('examSimulatorBtn'));
     $('ahBlaettern').addEventListener('click', () => klick('durchsichtBtn'));
     heute.querySelectorAll('.ah-kachel').forEach(k => k.addEventListener('click', () => klick(k.dataset.ziel)));
+    const forumAuf = () => tu(() => {
+        try{ afuZaehl && afuZaehl('forum'); }catch(e){}
+        if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/forum/');
+        else window.open('https://amateurfunk-trainer.com/forum/', '_blank', 'noopener');
+    });
+    tu(() => { const k = $('ahKForumK'); if(k) k.addEventListener('click', forumAuf); });
+    tu(() => { const f = $('ahForum'); if(f) f.addEventListener('click', () => tu(() => {
+        try{ afuZaehl && afuZaehl('forum'); }catch(e){}
+        if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/forum/');
+        else window.open('https://amateurfunk-trainer.com/forum/', '_blank', 'noopener');
+    })); });
     $('ahAnmelden').addEventListener('click', () => tu(() => {
         const st = window.lsStatus ? window.lsStatus() : null;
         if(!st || !st.ok) return;
@@ -54055,6 +54400,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const TOUR = [
         { text: () => 'Hey' + (nameIst() ? ' ' + esc(nameIst()) : '') + '! Ich bin ' + FUNKI + ', dein Trainer! Ich wohne hier in der Karte und kenne jeden Knopf. Kleine Führung gefällig?',
           knoepfe: [['Klar, zeig her!', 'weiter'], ['Später', 'heim']], anfang: true, kuer: 'tada' },
+        // Das Forum als erster Halt (20.10.2026). Dietmar: "Derzeit denken
+        // viele, das ist nur eine LAN-App. Wir haben jetzt aber auch ein Forum
+        // und das soll auch diskutiert werden." - "Maya soll das beim Rundgang
+        // auch erklaeren und Funki natuerlich auch. Ideal waere das als erster
+        // Schritt." Gibt es das Forum gerade nicht (body.forum-an fehlt), ist
+        // der Knopf unsichtbar und der Rundgang ueberspringt diesen Halt von
+        // selbst - das macht tourSchritt() mit zuSehen().
+        { ziel: '#ahForum', text: 'Zuerst das Beste: unser <b>Forum</b>! Hier bist du nicht allein – frag, was du nicht verstehst, und echte Funkamateure antworten dir. Zu jeder Prüfungsfrage gibt es einen eigenen Platz zum Nachfragen.' },
         { ziel: '#ahStart', text: '<b>Psst – hier!</b> Damit geht’s los. Jede richtige Antwort bringt dir <b>10 XP</b>. Ka-tsching!' },
         { ziel: '#ahWahl', text: 'Tipp hier drauf und bestimm selbst: <b>wie viele Fragen</b> und welcher Prüfungsteil. Du bist der Boss!' },
         { ziel: '#ahTag', text: 'Dein <b>Tagesziel</b>. Schaffst du es jeden Tag, bleibst du <b>ON AIR</b>. Ich zähl mit – ich seh alles!' },
@@ -54078,7 +54431,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { teil: 2, ziel: '#awK_ruf', text: 'Schon ein <b>Wunsch-Rufzeichen</b>? Hier schaust du, ob es noch frei ist.' },
         { teil: 2, ziel: '#awK_lernstand', text: 'Unter <b>Lernstand</b> sicherst du alles, was du gelernt hast. Sicher ist sicher!' },
         { teil: 2, ziel: '#awK_pruefung', text: '<b>So läuft’s</b>: alles über die Prüfung – welche Teile, wie viele Fragen, wie viel Zeit. Keine Panik!' },
-        { text: () => 'Das war’s schon! Brauchst du mich, <b>tipp mich einfach an</b>. Und keine Sorge – ich tauch sowieso immer wieder mal auf. <b>73!</b>'
+        { text: () => 'Das war’s schon! Brauchst du mich, <b>tipp mich einfach an</b> – und wenn eine Frage zwickt, ab ins <b>Forum</b>. Dort sitzen die, die es schon hinter sich haben. <b>73!</b>'
             + '<span class="rb-tipp">73 sagen Funker, wenn sie „Viele Grüße“ meinen.</span>', knoepfe: [['Los geht’s!', 'heim']], ende: true }
     ];
     // Gezaehlt wird je Teil: "3 von 7" im Rundgang, "2 von 9" bei den Werkzeugen
@@ -56657,7 +57010,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +     '<span class="aw-sx"><b>CB-Erfahrung anrechnen</b><small>Was du vom CB-Funk kennst, zählt als gelernt</small></span><span class="ar-schalter" id="awCbSchalter"></span></button>'
       + '</div>'
       + '<div class="ah-karte aw-letzte" id="awLetzte" aria-label="Dein Verlauf"></div>'
+      + '<div class="ah-ueber" id="awUeberPfad" style="display:none">Lehrgang</div>'
+      + '<div class="ah-karte aw-pfad" id="awPfad" style="display:none"></div>'
       + '<div class="ah-ueber" id="awUeberPruef">Prüfung</div>'
+      + '<div class="ah-karte aw-reife" id="awReife" style="display:none"></div>'
       + '<button type="button" class="ah-karte aw-count" id="awCount"></button>'
       + '<div class="ah-ueber" id="awUeberWerk">Werkzeuge</div>'
       + '<div class="aw-grid" id="awGrid">' + WERK_KACHELN.map(k => '<button type="button" class="ah-kachel aw-kachel" id="awK_' + k.art + '" data-blatt="' + k.art + '">'
@@ -56738,10 +57094,209 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }
         if(vs) levelNachziehen(xp, nr);
         fortschrittNachziehen(vs);
+        tu(pfadNachziehen);
+        tu(reifeNachziehen);
     }
     // Fuer die Ergebnisseite (19.10.2026): Stufe, Name und Fortschritt zur naechsten
     window.afuStufeInfo = () => { const xp = xpStand(), nr = stufeNr(xp), ab = STUFEN[nr], n = STUFEN[nr + 1];
-        return { nr: nr + 1, name: STUFEN_NAMEN[nr], anteil: n ? (xp - ab) / (n - ab) : 1, fehlt: n ? Math.ceil((n - xp) / 10) : 0, naechste: nr + 2, xp: xp }; };
+        // Die letzte Stufe haengt nicht an Punkten, sondern an zehn bestandenen
+        // Pruefungssimulationen (P83). Wer die Punkte dafuer laengst hat, stand
+        // sonst vor "noch -16 richtige Antworten bis Stufe 17" - eine Zahl, die
+        // es nicht geben darf (20.10.2026, von Dietmar am Handy entdeckt).
+        const vorPruefung = nr === LETZTE() - 1;
+        const fehlt = n ? Math.max(0, Math.ceil((n - xp) / 10)) : 0;
+        return { nr: nr + 1, name: STUFEN_NAMEN[nr],
+                 anteil: vorPruefung ? 1 : (n ? Math.max(0, Math.min(1, (xp - ab) / (n - ab))) : 1),
+                 fehlt: vorPruefung ? 0 : fehlt, pruefung: vorPruefung,
+                 naechste: nr + 2, xp: xp }; };
+    // ---------------- Bist du bereit? (Pruefungsreife je Teil) ----------------
+    //  20.10.2026, aus Etappe 3. Nicht "wie viel hast du gelernt", sondern
+    //  "wuerdest du heute bestehen" - und das je Teil, denn genau daran
+    //  scheitert die Pruefung. Gerechnet wird in pruefReife().
+    //  Die Karte erscheint erst, wenn es ueberhaupt etwas zu zeigen gibt,
+    //  also nach der ersten Pruefung oder 25er-Runde eines Teils.
+    const REIFE_WORT = { bereit: 'bereit', fast: 'fast', offen: 'offen' };
+    // Die Zeichen der drei Teile - selbst gezeichnet, nicht von der Stange
+    // (20.10.2026). Dietmar: "Das Ikon fuer Betrieb gefaellt mir nicht. Da
+    // gehoert kein Laster rein." - dann, mit einem Bild aus dem Hobby:
+    // "bei [Technik] so eine Richtantenne. Und bei Betrieb koennte man die
+    // Morsetaste nehmen oder das Funkgeraet" - "Betrieb Morse-Taste, klingt
+    // doch gut."
+    //   Vorschriften - Urkunde mit Paragraph
+    //   Betrieb      - Morsetaste von der Seite, nach Dietmars Vorbild:
+    //                  Grundplatte, Lagerbock, langer Hebel nach rechts,
+    //                  Knopf am rechten Ende, darunter der Kontakt.
+    //                  Zwei Fassungen davor flogen raus: die erste sah aus
+    //                  "wie ein Panzer" (Dietmar, 20.10.2026), die zweite war
+    //                  dem Vorbild zwar treu, aber bei 23 Punkten Groesse nur
+    //                  noch ein Klecks. Weniger Striche, dafuer erkennbar.
+    //   Technik      - Richtantenne (Yagi), waagrecht und auf den Text
+    //                  gerichtet: langes Element hinten links, die kurzen
+    //                  Direktoren zeigen nach rechts (Dietmar, 20.10.2026:
+    //                  "dreh bitte die Antenne Richtung Text, dass sie
+    //                  waagrecht steht und nicht nach unten zeigt.")
+    // Linien statt Bilddatei: bleibt bei jeder Groesse scharf, nimmt die
+    // Farbe der Karte an und kostet keine Ladezeit.
+    const REIFE_SVG = {
+        vorschriften: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M6 2.8h8.2L19 7.4v11.4a1.8 1.8 0 0 1-1.8 1.8H6a1.8 1.8 0 0 1-1.8-1.8V4.6A1.8 1.8 0 0 1 6 2.8Z"/>'
+            + '<path d="M14 2.9v3.6a1 1 0 0 0 1 1h3.7"/>'
+            + '<text x="11.7" y="17" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Georgia,serif" fill="currentColor" stroke="none">\u00a7</text>'
+            + '</svg>',
+        // Morsetaste nach Dietmars Vorlage: Grundplatte, Lagerbock mit Loch,
+        // durchlaufender Hebel, Kontakt und Pfosten, rechts der Griff.
+        // Das Zeichen ist breit und flach, darum sitzt es etwas groesser im Kasten.
+        betrieb: '<svg viewBox="0 0 24 24" style="width:32px;height:32px" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<rect x="1.2" y="12.5" width="14.59" height="3.77" rx="0.85"/>'
+            + '<path d="M4.34 12.5V9.34a1.62 1.62 0 0 1 3.24 0V12.5"/>'
+            + '<circle cx="5.96" cy="9.8" r="0.6" fill="currentColor" stroke="none"/>'
+            + '<path d="M1.2 9.8H17.48L19.9 12.5H21.11V10.47"/>'
+            + '<rect x="11.3" y="9.41" width="1.21" height="1.06" rx="0.22" fill="currentColor" stroke="none"/>'
+            + '<rect x="10.82" y="11.1" width="2.32" height="1.45" rx="0.3" fill="currentColor" stroke="none"/>'
+            + '<path d="M20.29 8.06H22.8L22.22 10.47H20.77Z"/>'
+            + '</svg>',
+        technik: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M3.6 12h17"/><path d="M5.4 4.8v14.4"/><path d="M9.6 6.6v10.8"/>'
+            + '<path d="M13.8 8.2v7.6"/><path d="M18 9.6v4.8"/>'
+            + '</svg>'
+    };
+    // ================================================================
+    //  DER LERNPFAD                                       (20.10.2026)
+    //  ----------------------------------------------------------------
+    //  Statt vierzehn Zeilen in einer Liste ein Weg mit Stationen: oben
+    //  der ganze Pfad als Streifen - vierzehn Felder, so sieht man mit
+    //  einem Blick, wo man steht -, darunter die Stationen um die
+    //  aktuelle herum. "Alle Stationen" klappt den Rest auf.
+    //  Geschaffte Stationen haben ihre QSL-Karte; Antippen oeffnet das
+    //  Album. Die Station, die dran ist, startet ihre Fragen.
+    //  Dietmar: "Ich moechte, dass du weitreichender und auch an einer
+    //  optischen Aufarbeitung denkst und das Ganze auch im Dark Mode
+    //  abgleichst."
+    // ================================================================
+    let pfadAlle = false;
+    function pfadKurz(name){
+        return String(name || '').replace(/^\s*Lektion\s*\d+\s*(?:[-–—:.]\s*)?/i, '').trim() || String(name || '');
+    }
+    function pfadNummer(name, i){
+        const m = String(name || '').match(/Lektion\s*0*(\d+)/i);
+        return m ? +m[1] : (i + 1);
+    }
+    function pfadNachziehen(){
+        const el = $('awPfad'), ue = $('awUeberPfad');
+        if(!el) return;
+        let lek = [];
+        tu(() => { lek = (window.qslLektionen ? qslLektionen() : []) || []; });
+        if(lek.length < 3){
+            if(el.style.display !== 'none'){ el.style.display = 'none'; if(ue) ue.style.display = 'none'; }
+            return;
+        }
+        el.style.display = ''; if(ue) ue.style.display = '';
+        let karten = {};
+        tu(() => { karten = (window.qslStand ? qslStand() : {}) || {}; });
+        const fertig = lek.filter(x => x.gelernt >= x.gesamt).length;
+        let jetzt = lek.findIndex(x => x.gelernt >= x.gesamt ? false : true);
+        if(jetzt < 0) jetzt = lek.length - 1;
+        // Die Station, die dran ist: die erste angefangene, sonst die erste offene.
+        const angefangen = lek.findIndex(x => x.gelernt > 0 && x.gelernt < x.gesamt);
+        if(angefangen >= 0) jetzt = angefangen;
+
+        // ---- Der ganze Weg als Streifen
+        const streifen = lek.map((x, i) => '<i class="' + (x.gelernt >= x.gesamt ? 'f' : i === jetzt ? 'j' : '') + '"></i>').join('');
+
+        // ---- Welche Stationen stehen da? Ohne "alle" ein Fenster um die aktuelle.
+        const alle = pfadAlle || lek.length <= 6;
+        const von = alle ? 0 : Math.max(0, jetzt - 1);
+        const bis = alle ? lek.length : Math.min(lek.length, jetzt + 4);
+
+        let zeilen = '';
+        for(let i = von; i < bis; i++){
+            const x = lek[i];
+            const voll = x.gelernt >= x.gesamt;
+            const art = voll ? 'fertig' : (i === jetzt ? 'jetzt' : 'offen');
+            const anteil = x.gesamt ? Math.round(100 * x.gelernt / x.gesamt) : 0;
+            const hatKarte = !!karten[x.name];
+            const letzte = (i === bis - 1);
+            zeilen += '<button type="button" class="apf-st ' + art + (letzte ? ' letzte' : '') + '" data-lek="' + esc(x.name) + '" data-voll="' + (voll ? '1' : '') + '">'
+                + '<span class="apf-pkt">' + (voll ? '<i class="fas fa-check"></i>' : pfadNummer(x.name, i)) + '</span>'
+                + '<span class="apf-txt"><b>' + esc(pfadKurz(x.name)) + '</b>'
+                + '<small>' + (voll
+                        ? x.gesamt + ' von ' + x.gesamt + ' Fragen' + (hatKarte ? ' · QSL-Karte da' : '')
+                        : x.gelernt + ' von ' + x.gesamt + ' Fragen')
+                + '</small>'
+                + (art === 'jetzt' ? '<span class="apf-bal"><i style="width:' + anteil + '%"></i></span>' : '')
+                + '</span>'
+                + (voll
+                    ? (hatKarte ? '<span class="apf-karte"><i class="fas fa-award"></i></span>' : '')
+                    : (i === jetzt ? '<span class="apf-marke">dran</span>' : ''))
+                + '</button>';
+        }
+
+        // ---- Der Satz darunter nennt immer den naechsten Schritt
+        const x = lek[jetzt];
+        let satz;
+        if(fertig >= lek.length){
+            satz = '<b>Alle Stationen geschafft.</b> Der ganze Lehrgang sitzt – jetzt zählen die Prüfungssimulationen.';
+        } else if(x.gelernt > 0){
+            const offen = x.gesamt - x.gelernt;
+            satz = '<b>' + esc(pfadKurz(x.name)) + '</b> ist angefangen – noch ' + offen + (offen === 1 ? ' Frage' : ' Fragen') + ', dann kommt die QSL-Karte.';
+        } else {
+            satz = 'Als Nächstes wartet <b>' + esc(pfadKurz(x.name)) + '</b> mit ' + x.gesamt + ' Fragen. Antippen und los.';
+        }
+
+        const neu = '<div class="apf-kopf"><b>Dein Lernpfad</b>'
+            + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft</small></div>'
+            + '<div class="apf-strip" aria-hidden="true">' + streifen + '</div>'
+            + '<ol class="apf-weg">' + zeilen + '</ol>'
+            + '<div class="apf-satz">' + satz + '</div>'
+            + (lek.length > 6
+                ? '<button type="button" class="apf-mehr" data-pfadalle="1">' + (alle ? 'Weniger zeigen' : 'Alle ' + lek.length + ' Stationen') + '</button>'
+                : '');
+        if(neu !== werk.pfadK){ werk.pfadK = neu; el.innerHTML = neu; }
+    }
+
+    function reifeNachziehen(){
+        const el = $('awReife'); if(!el) return;
+        let r = []; tu(() => { r = (window.pruefReife ? pruefReife() : []) || []; });
+        const schonGeprueft = r.filter(x => x.n > 0);
+        if(!schonGeprueft.length){ if(el.style.display !== 'none') el.style.display = 'none'; return; }
+        el.style.display = '';
+        const bereit = r.filter(x => x.stufe === 'bereit').length;
+        const fast = r.filter(x => x.stufe === 'fast');
+        const offen = r.filter(x => x.stufe === 'offen');
+        // Der Satz nennt immer den naechsten Schritt - und laesst keinen Teil
+        // unter den Tisch fallen, auch wenn zwei verschiedene Dinge anstehen.
+        const liste = a => a.map(x => x.name).join(a.length === 2 ? ' und ' : ', ');
+        let satz;
+        if(bereit === r.length){
+            satz = '<b>Alle Teile bereit.</b> Du k\u00f6nntest zur Pr\u00fcfung gehen \u2013 halt den Stand mit einer Simulation pro Woche.';
+        }else{
+            const teile = [];
+            if(offen.length){
+                const nie = offen.filter(x => !x.n), schwach = offen.filter(x => x.n);
+                if(nie.length) teile.push(liste(nie) + (nie.length === 1 ? ' wurde noch nicht gepr\u00fcft' : ' wurden noch nicht gepr\u00fcft'));
+                if(schwach.length) teile.push(liste(schwach) + (schwach.length === 1 ? ' braucht noch \u00dcbung' : ' brauchen noch \u00dcbung'));
+            }
+            if(fast.length) teile.push('bei ' + liste(fast) + ' fehlt wenig');
+            const kopf = offen.length
+                ? '<b>Noch ' + (offen.length === 1 ? 'ein Teil' : offen.length + ' Teile') + '.</b> '
+                : '<b>Fast geschafft.</b> ';
+            const rat = offen.some(x => !x.n)
+                ? ' Eine Pr\u00fcfungssimulation zeigt dir, wo du stehst.'
+                : ' Eine Runde <b>Fehler \u00fcben</b>, dann noch eine Simulation.';
+            satz = kopf + teile.join(', ').replace(/^./, c => c.toUpperCase()) + '.' + rat;
+        }
+        const sig = JSON.stringify(r.map(x => [x.teil, x.n, Math.round((x.fehler || 0) * 10), x.stufe])) + '|' + satz;
+        if(el.dataset.sig === sig) return;
+        el.dataset.sig = sig;
+        el.innerHTML = '<div class="awr-kopf"><b>Bist du bereit?</b><small>Aus deinen letzten Pr\u00fcfungen je Teil</small></div>'
+          + r.map(x => '<div class="awr-teil ' + x.stufe + '">'
+              + '<span class="awr-z">' + (REIFE_SVG[x.teil] || '') + '</span>'
+              + '<span class="awr-zt"><b>' + x.name + '</b><small>'
+              + (x.n ? '\u00d8 ' + (Math.round(x.fehler * 10) / 10).toLocaleString('de-DE') + ' Fehler von 25 \u00b7 ' + x.n + (x.n === 1 ? ' Pr\u00fcfung' : ' Pr\u00fcfungen') : 'noch nicht gepr\u00fcft')
+              + '</small><span class="awr-bal"><i style="width:' + Math.round(x.anteil * 100) + '%"></i></span></span>'
+              + '<span class="awr-wert">' + REIFE_WORT[x.stufe] + '</span></div>').join('')
+          + '<div class="awr-satz">' + satz + '</div>';
+    }
     function levelNachziehen(xp, nr){
         // Dein Level
         const ab = STUFEN[nr], naechste = STUFEN[nr + 1];
@@ -56916,6 +57471,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(e.target.closest('#awCb')){ tu(() => $('cbModusCheck').click()); setTimeout(() => tu(nachziehen), 40); return; }
         if(e.target.closest('#awLevel')){ werkBlattAuf('stufen'); return; }
         if(e.target.closest('#awCount')){ werkBlattAuf('termin'); return; }
+        if(e.target.closest('[data-pfadalle]')){ pfadAlle = !pfadAlle; werk.pfadK = null; tu(pfadNachziehen); return; }
+        const st = e.target.closest('.apf-st');
+        if(st){
+            const name = st.dataset.lek || '';
+            if(st.dataset.voll){ tu(() => { if(window.qslAlbumOeffnen) qslAlbumOeffnen(); }); }
+            else if(name){ tu(() => { if(window.lektionFragenLernen) lektionFragenLernen(name); }); }
+            return;
+        }
         const k = e.target.closest('[data-blatt]');
         if(k) werkBlattAuf(k.dataset.blatt);
     });
@@ -57085,7 +57648,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { such: '#buchKlasseNBtn',                          farbe: 'rot',     icon: 'fa-book',            titel: 'Buch Klasse N',    unter: 'Das Lehrbuch zum Einstieg', nurSichtbar: true }
     ];
     function blattHilfe(){
-        let html = '';
+        // Das Forum ganz oben: hier sucht jemand Hilfe, und das Forum ist der
+        // kuerzeste Weg dorthin (20.10.2026, Dietmar: "Wir muessen dafuer auch
+        // intern Werbung machen."). Nur, wenn es gerade erreichbar ist.
+        let html = D.body.classList.contains('forum-an')
+            ? zeile('forum', 'tuerkis', 'fa-comments', 'Forum', 'Frag die, die es schon hinter sich haben',
+                    '<i class="fas fa-arrow-up-right-from-square aw-pf" aria-hidden="true"></i>')
+            : '';
         HILFE_ZEILEN.forEach((z, i) => {
             const b = D.querySelector(z.such);
             if(!b || (z.nurSichtbar && b.style.display === 'none')) return;
@@ -57309,6 +57878,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Folien: in der neuen App laden und selbst zeigen (siehe FOLIEN IN DER APP), sonst der Link wie bisher
             if(/pdf-slides/.test(HILFE_ZEILEN[nr].such) && typeof window.appFolienAuf === 'function' && window.appFolienAuf()) return;
             klickAuf(HILFE_ZEILEN[nr].such);
+        }
+        else if(was === 'forum'){
+            werkBlattZu();
+            tu(() => { try{ afuZaehl && afuZaehl('forum'); }catch(e){}
+                if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/forum/');
+                else window.open('https://amateurfunk-trainer.com/forum/', '_blank', 'noopener'); });
         }
         else if(was === 'mitnehmen'){ werkBlattZu(); tu(() => window.lernstandMitnehmen()); }
         else if(was === 'sichern'){ werkBlattZu(); klickAuf('button[onclick="lernstandExportieren()"]') || tu(() => lernstandExportieren()); }
@@ -59427,6 +60002,11 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
             h.style.display = verfuegbar() ? '' : 'none';
             if(ht) ht.textContent = ein ? 'Abmelden' : 'Anmelden';
             h.title = ein ? 'Angemeldet als ' + z.name + ' – hier abmelden' : 'Mit Name und PIN auf jedem Gerät derselbe Stand';
+            // In der Kopfzeile steht nur noch das Zeichen (20.10.2026, Dietmar:
+            // "Entferne das Wort abmelden in dem Button und fuege lieber Forum
+            // bei dem Button hinzu"). Damit Vorlesen und Tastatur weiter wissen,
+            // was der Knopf tut, wandert das Wort in aria-label.
+            h.setAttribute('aria-label', ein ? 'Abmelden' : 'Anmelden');
             var hi = h.querySelector('i'); if(hi) hi.className = ein ? 'fas fa-right-from-bracket' : 'fas fa-cloud-arrow-up';
         }
     }
