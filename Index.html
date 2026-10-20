@@ -2993,13 +2993,13 @@
          ================================================================ -->
     <!-- Titel und Beschreibung fuer Google (26.09.2026). Dietmar: "Also ich persoenlich stelle mir vor, dass das bei Google auftaucht." und "Vorschlag B. Mit intelligent." Dann: "Ohne Konto und dann noch kostenlos. Passt das noch mit rein? Vielleicht auch noch ohne Anmeldung." und "nimm das, was du denkst, was die groesste Reichweite aufbaut." Die Suchwoerter vorn ("Amateurfunkpruefung", "Pruefungsfragen"), N, E und A stehen schon im Titel, "intelligent" gleich mit dem belegt, was es tut. Gleich auf Startseite, Projektseite und im Trainer. -->
 <title>Amateurfunkprüfung lernen – Klasse N, E und A, kostenlos</title>
-    <link rel="canonical" href="https://amateurfunk-trainer.com/">
+    <link rel="canonical" href="https://trainer.amateurfunk-trainer.com/">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Amateurfunk-Trainer">
     <meta property="og:title" content="Amateurfunkprüfung lernen – Klasse N, E und A, kostenlos">
     <meta property="og:description" content="Amateurfunkprüfung mit intelligentem Lernsystem: Fehler kommen wieder, bis sie sitzen. 1750 Prüfungsfragen mit Lösungsweg – kostenlos, ohne Anmeldung.">
-    <meta property="og:url" content="https://amateurfunk-trainer.com/">
+    <meta property="og:url" content="https://trainer.amateurfunk-trainer.com/">
     <meta property="og:image" content="https://amateurfunk-trainer.com/vorschau.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -24160,7 +24160,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 214, datum: '19.10.2026' };
+const TRAINER_STAND = { nr: 218, datum: '20.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -37749,6 +37749,29 @@ body.dark #ergFrage .ef-kopf code{background:#24324a} body.dark #ergFrage .ef-er
 
 // o: { status: 'bestanden'|'nach'|'nicht', art: 'pruefung'|'runde', kopf, correct, total, required,
 //      zeit, teile:[{name, richtig, gesamt, status}], hinweis, zettel, knoepfe:[[icon, text, onclick, haupt]] }
+function ergebnisTeilen(){
+    const t = window.__ergTeilen; if(!t) return;
+    const voll = t.text + ' ' + t.url;
+    const gemeldet = ok => { try{ (window.showAppAlert || alert)(ok ? 'Text kopiert – jetzt z. B. in WhatsApp oder Signal einfügen.' : voll); }catch(e){} };
+    const kopieren = () => {
+        try{
+            if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(voll).then(() => gemeldet(true), () => altKopie()); return; }
+        }catch(e){}
+        altKopie();
+    };
+    const altKopie = () => {
+        try{
+            const ta = document.createElement('textarea'); ta.value = voll; ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select();
+            const ok = document.execCommand('copy'); ta.remove(); gemeldet(ok);
+        }catch(e){ gemeldet(false); }
+    };
+    try{
+        if(navigator.share){ navigator.share({ title: 'Amateurfunk-Trainer', text: t.text, url: t.url }).catch(err => { if(!err || err.name !== 'AbortError') kopieren(); }); return; }
+    }catch(e){}
+    kopieren();
+}
+window.ergebnisTeilen = ergebnisTeilen;
 function ergebnisSeiteHtml(o){
     ergebnisCss();
     const vs = ergebnisVerspielt();
@@ -37820,7 +37843,20 @@ function ergebnisSeiteHtml(o){
         + fehlerQs.slice(0, MAX).map(q => '<button type="button" onclick="ergebnisFrageZeigen(' + fragen.indexOf(q) + ')"><code>' + ergebnisEsc(q.id) + '</code><span>'
             + ergebnisEsc(ergebnisKurz(q.text, 110)) + '</span><i class="fas fa-chevron-right" style="color:#9aa7b8"></i></button>').join('')
         + (fehlerQs.length > MAX ? '<div class="mehr">… und ' + (fehlerQs.length - MAX) + ' weitere – alle oben in der Übersicht</div>' : '') + '</div>' : '';
-    const knoepfe = '<div class="erg-knoepfe">' + (o.knoepfe || []).map(k => '<button type="button" class="erg-k' + (k[3] ? ' haupt' : '') + '" onclick="' + k[2] + '"><i class="fas ' + k[0] + '"></i> ' + k[1] + '</button>').join('') + '</div>';
+    // ERGEBNIS TEILEN (Stand 216, 19.10.2026): nach bestandener Pruefung ein Knopf, der am Handy
+    // WhatsApp/Signal/Telegram anbietet (Web Share) und sonst den Text in die Zwischenablage legt.
+    let kn = (o.knoepfe || []).slice();
+    if(st === 'bestanden' && o.art === 'pruefung'){
+        try{
+            const b = (typeof pruefZielBuchstabe === 'function') ? pruefZielBuchstabe() : 'n';
+            const kl = 'Klasse ' + b.toUpperCase();
+            window.__ergTeilen = { url: 'https://amateurfunk-trainer.com/klasse-' + b + '/',
+                text: 'Bestanden! ' + o.correct + ' von ' + o.total + ' richtig (' + quote + ' %) in der Amateurfunk-Prüfungssimulation ' + kl
+                    + '. Geübt mit dem kostenlosen Amateurfunk-Trainer:' };
+            kn.push(['fa-share-nodes', 'Ergebnis teilen', 'ergebnisTeilen()', false]);
+        }catch(e){}
+    }
+    const knoepfe = '<div class="erg-knoepfe">' + kn.map(k => '<button type="button" class="erg-k' + (k[3] ? ' haupt' : '') + '" onclick="' + k[2] + '"><i class="fas ' + k[0] + '"></i> ' + k[1] + '</button>').join('') + '</div>';
 
     let maja = '';
     if(vs){
@@ -47912,6 +47948,41 @@ function statistikFuellen() {
 // ---------------------------------------------------------------
 // Lernstand sichern / einlesen
 // ---------------------------------------------------------------
+// Faecher, die die Lernstand-Datei zusaetzlich traegt (Stand 215)
+const LS_DATEI_EXTRA = ['amateurfunk_simok_', 'amateurfunk_pruefungen_', 'amateurfunk_favorites_', 'amateurfunk_notizen_',
+    'amateurfunk_pruefungstermin_', 'amateurfunk_durchsicht_', 'amateurfunk_blaetterbuch_'];
+function lernstandExport_extraEinlesen(app, u, jsonLies){
+    const x = app.extra && app.extra[u];
+    if (!x || typeof x !== 'object') return;
+    Object.keys(x).forEach(b => {
+        try{
+            if (LS_DATEI_EXTRA.indexOf(b) < 0 || typeof x[b] !== 'string') return;
+            const k = b + u, lokalRoh = localStorage.getItem(k);
+            if (b === 'amateurfunk_simok_'){
+                // je Pruefungsziel der groessere Zaehler - es darf nichts kleiner werden
+                const aus = JSON.parse(x[b]) || {}, l = jsonLies(k, {});
+                Object.keys(aus).forEach(z => { const v = +aus[z] || 0; if (v > (+l[z] || 0)) l[z] = v; });
+                localStorage.setItem(k, JSON.stringify(l));
+            } else if (b === 'amateurfunk_pruefungen_' || b === 'amateurfunk_favorites_'){
+                // Listen: zusammenfuehren, doppelte nur einmal
+                const aus = JSON.parse(x[b]), l = JSON.parse(lokalRoh || '[]');
+                if (!Array.isArray(aus)) return;
+                const alle = (Array.isArray(l) ? l : []).concat(aus), gesehen = new Set(), neu = [];
+                alle.forEach(e => { const s = JSON.stringify(e); if (!gesehen.has(s)){ gesehen.add(s); neu.push(e); } });
+                if (b === 'amateurfunk_pruefungen_') neu.sort((a, c) => String((a && a.d) || '').localeCompare(String((c && c.d) || '')));
+                while (b === 'amateurfunk_pruefungen_' && neu.length > 60) neu.shift();
+                localStorage.setItem(k, JSON.stringify(neu));
+            } else if (b === 'amateurfunk_notizen_'){
+                // Notizen: was hier schon steht, bleibt; fehlende kommen dazu
+                const aus = JSON.parse(x[b]) || {}, l = jsonLies(k, {});
+                Object.keys(aus).forEach(id => { if (l[id] === undefined || l[id] === '') l[id] = aus[id]; });
+                localStorage.setItem(k, JSON.stringify(l));
+            } else if (lokalRoh === null || lokalRoh === '' || lokalRoh === '{}' || lokalRoh === '[]'){
+                localStorage.setItem(k, x[b]);      // Termin, Blaetter-Stand: nur, wenn hier noch nichts steht
+            }
+        }catch(e){ console.warn('[Lernstand-Datei] ' + b, e); }
+    });
+}
 function lernstandExportieren() {
     try {
         // WICHTIG: getAllLocalUserData() liest aus dem localStorage, nicht aus
@@ -47934,6 +48005,13 @@ function lernstandExportieren() {
                 const x = localStorage.getItem('amateurfunk_xp_' + u); if (x) app.xp[u] = x;
                 try{ const t = JSON.parse(localStorage.getItem('amateurfunk_tagesfragen_' + u) || 'null'); if (t) app.tagesfragen[u] = t; }catch(e){}
                 try{ const l = JSON.parse(localStorage.getItem('amateurfunk_legende_' + u) || 'null'); if (l) app.legende[u] = l; }catch(e){}
+                // Stand 215 (19.10.2026), Dietmar: "Die 4 Pruefungssimulationen wurden nicht mitgenommen."
+                // Zaehler der bestandenen Simulationen, die letzten Pruefungen, Merkliste, Notizen,
+                // Pruefungstermin und Blaetter-Stand kommen jetzt mit in die Datei.
+                LS_DATEI_EXTRA.forEach(b => {
+                    const v = localStorage.getItem(b + u);
+                    if (v !== null && v !== '' && v !== '{}' && v !== '[]') { app.extra = app.extra || {}; (app.extra[u] = app.extra[u] || {})[b] = v; }
+                });
             });
             paket.daten.app = app;
         }catch(e){}
@@ -48052,6 +48130,7 @@ function lernstandSchreiben(d) {
         const jsonLies = (k, ersatz) => { try{ const v = JSON.parse(localStorage.getItem(k) || 'null'); return (v && typeof v === 'object') ? v : ersatz; }catch(e){ return ersatz; } };
         const app = (d.app && typeof d.app === 'object') ? d.app : {};
         nutzer.forEach(u => {
+            lernstandExport_extraEinlesen(app, u, jsonLies);
             try{
                 const c = d.cb && d.cb[u];
                 if (c && typeof c === 'object' && (c.modus !== undefined || Array.isArray(c.aus)))

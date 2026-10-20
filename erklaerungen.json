@@ -5424,7 +5424,7 @@
       "kniff": "Plus an der Katode heißt Sperrrichtung. Das Feld zieht die freien Ladungsträger von der Grenzschicht weg, und die Zone ohne Ladungsträger wird breiter.",
       "warum_falsch": {
         "Sie verändert sich nicht.": "An der Diode liegt Spannung, und die wirkt immer auf die Zone. Unverändert bliebe sie nur ohne angelegte Spannung.",
-        "Sie verschwindet.": "Das wäre Durchlassrichtung mit mehr als etwa 0,7 V — also Plus an der Anode. Hier liegt das Plus auf der anderen Seite.",
+        "Sie verschwindet.": "Ganz verschwinden tut die Zone nie. In Durchlassrichtung wird sie nur sehr schmal — das ist die Antwort „Sie verengt sich“. Hier liegt das Plus ohnehin an der Katode, also Sperrrichtung.",
         "Sie verengt sich.": "Das ist die Antwort für Durchlassrichtung. Hier liegen +5 V an der Katode, nicht an der Anode: die Polung ist umgekehrt und damit auch die Wirkung."
       }
     },
@@ -5602,7 +5602,7 @@
       "frage": "Warum soll bei dem gezeigten Basisspannungsteiler der Strom durch R₂ etwa 10-mal größer als der Basisstrom sein?",
       "richtig": "Damit der Arbeitspunkt stabil bleibt.",
       "bild": "Emitterschaltung mit BASISSPANNUNGSTEILER: R₁ von der Plusleitung zur Basis, R₂ von der Basis nach Masse. Der Pfeil mit „0,6 V\" steht an R₂ — das ist die Spannung, die der Teiler an der Basis einstellt. Dazu C₁ am Eingang, R_C und C₂ am Ausgang. Ein Emitterwiderstand ist nicht vorhanden.",
-      "kniff": "Ein Spannungsteiler hält seine Spannung nur, solange der abgezweigte Strom klein gegen den Querstrom ist. Beim zehnfachen Querstrom verschiebt ein schwankender Basisstrom die Basisspannung kaum — und damit bleibt der Arbeitspunkt stehen, auch bei Erwärmung oder beim Tausch gegen einen Transistor mit anderer Stromverstärkung.",
+      "kniff": "Ein Spannungsteiler hält seine Spannung nur, solange der abgezweigte Strom klein gegen den Querstrom ist. Beim zehnfachen Querstrom verschiebt ein schwankender Basisstrom die Basisspannung kaum — und damit bleibt der Arbeitspunkt stehen, auch beim Tausch gegen einen Transistor mit anderer Stromverstärkung. Gegen das Wandern bei Erwärmung hülfe erst ein Emitterwiderstand, den diese Schaltung nicht hat.",
       "warum_falsch": {
         "Damit R₂ eine Stromgegenkopplung bewirkt.": "Stromgegenkopplung macht der EMITTERwiderstand, nicht der Querwiderstand des Basisteilers. R₂ liegt nicht im Emitterzweig — in dieser Schaltung gibt es gar keinen Emitterwiderstand.",
         "Damit sich der Basisstrom bei Erwärmung nicht ändert.": "Der Basisstrom ändert sich trotzdem, und er darf es. Festgehalten wird die Basis-SPANNUNG; dass der Arbeitspunkt dabei stehen bleibt, ist die Folge.",
@@ -6348,7 +6348,7 @@
       "warum_falsch": {
         "LSB-Signalen.": "Der Ringmodulator liefert beide Seitenbänder. Um das untere allein zu behalten, müsste ein steilflankiges Seitenbandfilter folgen; der einfache Schwingkreis am Ausgang liegt auf der Trägerfrequenz und kann die beiden Seitenbänder nicht trennen.",
         "frequenzmodulierten Signalen.": "Für FM müsste die Frequenz gezogen werden, etwa über eine Kapazitätsdiode im Oszillatorkreis. Hier wird das Trägersignal von außen eingespeist und die Dioden können nur seine Amplitude beeinflussen.",
-        "phasenmodulierten Signalen.": "Auch dafür bräuchte es ein von der NF gesteuertes Phasenglied. Der Ring schaltet nur um und ändert damit Amplitude und Vorzeichen, nicht die Phase eines durchlaufenden Trägers — der Träger ist am Ausgang sogar unterdrückt."
+        "phasenmodulierten Signalen.": "Auch dafür bräuchte es ein von der NF gesteuertes Phasenglied. Der Ring kehrt im Takt der Niederfrequenz nur die Polarität um, also 180 Grad und sonst nichts. Phasenmodulation bräuchte ein Glied, das die Phase stufenlos verschiebt — und der Träger ist am Ausgang ohnehin unterdrückt."
       }
     },
     "AF406": {
@@ -6538,7 +6538,7 @@
       "frage": "Einem Halbwellendipol wird die Sendeleistung über eine abgestimmte λ/2-Speiseleitung zugeführt. Wie hoch ist die Impedanz Z₁ am Einspeisepunkt des Dipols? Und wie hoch ist die Impedanz Z₂ am Anfang der Speiseleitung?",
       "richtig": "Z₁ und Z₂ sind niederohmig.",
       "bild": "Ein waagerechter Draht, an beiden Enden über Isolatoren (die kleinen Kreise) an gestrichelten Halteseilen aufgehängt. Genau in der Mitte ist er aufgetrennt und wird dort gespeist; dieser Punkt ist mit Z1 bezeichnet. Von dort führt eine zweidrähtige Leitung mit Stegen senkrecht nach unten, an ihrem unteren Ende die beiden Anschlusspunkte mit der Bezeichnung Z2. Längen stehen in der Zeichnung nicht — welcher Dipol und welche Leitungslänge gemeint sind, sagt nur der Fragentext.",
-      "kniff": "Zwei Regeln, hintereinander angewandt. Erstens der Speisepunkt: in der Mitte eines Halbwellendipols liegt das Strommaximum, dort ist der Widerstand klein (um 60 Ω); in der Mitte eines Ganzwellendipols liegt ein Stromnullpunkt und ein Spannungsmaximum, dort ist er groß (einige kΩ). Zweitens die Leitung: eine abgestimmte λ/2-Leitung wiederholt die Impedanz an ihrem Anfang, eine λ/4-Leitung dreht sie um — aus hochohmig wird niederohmig und umgekehrt. Hier: Halbwellendipol in der Mitte gespeist, also Z1 niederohmig, und die λ/2-Leitung gibt diesen Wert unverändert weiter — Z2 ebenfalls niederohmig.",
+      "kniff": "Zwei Regeln, hintereinander angewandt. Erstens der Speisepunkt: in der Mitte eines Halbwellendipols liegt das Strommaximum, dort ist der Widerstand klein (etwa 75 Ω, je nach Aufbauhöhe 40 bis 90 Ω); in der Mitte eines Ganzwellendipols liegt ein Stromnullpunkt und ein Spannungsmaximum, dort ist er groß (einige kΩ). Zweitens die Leitung: eine abgestimmte λ/2-Leitung wiederholt die Impedanz an ihrem Anfang, eine λ/4-Leitung dreht sie um — aus hochohmig wird niederohmig und umgekehrt. Hier: Halbwellendipol in der Mitte gespeist, also Z1 niederohmig, und die λ/2-Leitung gibt diesen Wert unverändert weiter — Z2 ebenfalls niederohmig.",
       "warum_falsch": {
         "Z₁ ist niederohmig und Z₂ hochohmig.": "Z1 ist richtig erkannt, aber die Umkehrung würde eine λ/4-Leitung leisten. Eine halbe Wellenlänge bringt dieselbe Impedanz wieder an den Anfang.",
         "Z₁ ist hochohmig und Z₂ niederohmig.": "Das ist die Antwort zu AG415: Ganzwellendipol mit λ/4-Leitung. Der Halbwellendipol wird in der Mitte im Strommaximum gespeist und ist dort gerade nicht hochohmig.",
@@ -6619,7 +6619,7 @@
       ],
       "warum_falsch": {
         "Adapter BNC-Buchse auf N-Stecker": "Ein Adapter ändert nur die Steckform, nicht die Leistung. Die 15 W kämen unverändert an den 1,2-W-Abschluss und würden ihn zerstören.",
-        "25 m langes Koaxialkabel vom Typ RG213 (MIL)": "Ein Kabel dämpft viel zu wenig: RG213 hat auf 145 MHz grob 5 bis 6 dB je 100 m, die 25 m bringen also nur etwa 1,5 dB. Aus 15 W würden rund 11 W — der Abschluss ist trotzdem hin.",
+        "25 m langes Koaxialkabel vom Typ RG213 (MIL)": "Ein Kabel dämpft viel zu wenig: RG213 hat auf 145 MHz grob 8 dB je 100 m, die 25 m bringen also nur etwa 2 dB. Aus 15 W würden rund 9 bis 10 W — der Abschluss ist trotzdem hin.",
         "Stehwellenmessgerät": "Ein Stehwellenmessgerät soll die Leistung gerade möglichst unverändert durchlassen; es koppelt nur eine winzige Probe aus. Als Schutz für den Messkopf taugt es nicht."
       }
     },
@@ -7928,9 +7928,9 @@
       "frage": "Was zeigt diese Darstellung?",
       "richtig": "Sie zeigt einen λ/2-Faltdipol mit λ/2-Umwegleitung. Durch die Anordnung wird der Fußpunktwiderstand der symmetrischen Antenne von 240 Ω an ein unsymmetrisches 60 Ω-Antennenkabel angepasst.",
       "bild": "Oben der Strahler: zwei parallele Leiter, an den Enden verbunden — eine flache Schleife, deren Gesamtlänge mit λ/2 bemaßt ist. Das ist ein Faltdipol. Der untere Leiter ist in der Mitte aufgetrennt; dort liegen die beiden Speiseklemmen. Von unten kommt die Speiseleitung mit 60 Ω senkrecht heran. Zwischen den Speiseklemmen verläuft ein halbkreisförmig gebogenes Koaxkabel, dessen Länge mit l = λ/2 · V_K angegeben ist (halbe Wellenlänge, mit dem Verkürzungsfaktor des Kabels gerechnet). An der Speisestelle sind mehrere Verbindungspunkte gezeichnet: die Abschirmungen von Speiseleitung und Umwegleitung laufen zusammen, die Innenleiter gehen an die beiden Klemmen des Faltdipols — die übliche Verdrahtung einer λ/2-Umwegleitung.",
-      "kniff": "Zwei Dinge stehen in der Zeichnung und müssen zusammenpassen: der Strahler ist ein Faltdipol, und der hat den vierfachen Fußpunktwiderstand des einfachen Dipols, also rund 240 Ω. Die halbwellenlange Umwegleitung dreht die Phase um 180 ° und setzt dadurch den Widerstand im Verhältnis 4 : 1 herab: 240 Ω / 4 = 60 Ω — genau der Wert des angeschriebenen Kabels. Zugleich macht sie aus dem symmetrischen Anschluss einen unsymmetrischen.",
+      "kniff": "Zwei Dinge stehen in der Zeichnung und müssen zusammenpassen: der Strahler ist ein Faltdipol, und der hat den vierfachen Fußpunktwiderstand des einfachen Dipols, also rund 240 Ω. Die halbwellenlange Umwegleitung dreht die Phase um 180 ° und transformiert selbst 1 : 1; dadurch liegen an der Speisestelle die beiden Hälften des Faltdipols (je 120 Ω gegen Erde) phasenrichtig parallel: 120 Ω ∥ 120 Ω = 60 Ω — genau der Wert des angeschriebenen Kabels. Insgesamt wirkt die Anordnung also wie 4 : 1. Zugleich macht sie aus dem symmetrischen Anschluss einen unsymmetrischen.",
       "warum_falsch": {
-        "Sie zeigt einen symmetrischen 60 Ω-Schleifendipol mit Koaxialkabel-Balun. Durch die Anordnung wird die symmetrische Antenne an ein unsymmetrisches 60 Ω-Antennenkabel angepasst.": "Der Faltdipol hat rund 240 Ω, nicht 60 Ω — die 60 Ω gehören zum Kabel. Und die Umwegleitung symmetriert nicht nur, sie transformiert zugleich im Verhältnis 4 : 1; ohne diese Transformation würde die Angabe des Kabels nicht passen.",
+        "Sie zeigt einen symmetrischen 60 Ω-Schleifendipol mit Koaxialkabel-Balun. Durch die Anordnung wird die symmetrische Antenne an ein unsymmetrisches 60 Ω-Antennenkabel angepasst.": "Der Faltdipol hat rund 240 Ω, nicht 60 Ω — die 60 Ω gehören zum Kabel. Und die Umwegleitung symmetriert nicht nur: durch die phasenrichtige Parallelschaltung der beiden 120-Ω-Hälften wirkt die Anordnung insgesamt wie 4 : 1; ohne das würde die Angabe des Kabels nicht passen.",
         "Sie zeigt einen symmetrischen 60 Ω-Schleifendipol mit einem koaxialen Leitungskreis, der als Sperrfilter zur Unterdrückung von unerwünschten Aussendungen eingesetzt ist.": "Ein Sperrfilter wäre ein Leitungsstück, das eine Frequenz blockiert. Diese Leitung liegt zwischen den beiden Speiseklemmen und überträgt das Signal mit 180 ° Verschiebung — sie filtert nichts. Auch die 60 Ω für den Strahler sind falsch.",
         "Sie zeigt einen λ/2-Dipol mit symmetrierender λ/2-Umwegleitung. Durch die Anordnung wird der Fußpunktwiderstand der symmetrischen Antenne von 120 Ω an ein unsymmetrisches 60 Ω-Antennenkabel angepasst.": "Gezeichnet ist kein einfacher Dipol, sondern ein Faltdipol: zwei parallele Leiter, an den Enden verbunden. Damit sind es 240 Ω und nicht 120 Ω — und 120 Ω durch 4 ergäbe 30 Ω, was zum 60-Ohm-Kabel ebenfalls nicht passt."
       }
@@ -8398,7 +8398,7 @@
       "kniff": "Gefragt ist, ob die Anlage an den Sender angepasst ist — also was der Sender an seinem Ausgang zu sehen bekommt. Zur Anlage gehört alles, was dahinter kommt: Filter, Kabel, Tuner und Antenne. Gemessen werden muss deshalb an der ersten Stelle hinter dem Sender, damit nichts aus der Kette herausfällt. Das ist Punkt 1. Weiter hinten messen heißt jeweils, einen Teil der Anlage aus der Messung auszuschließen.",
       "warum_falsch": {
         "Punkt 2": "Hier liegt das Filter schon vor der Messstelle und wird nicht mitgemessen, obwohl der Sender auch es treiben muss. Eine Fehlanpassung, die das Filter verursacht, bliebe unentdeckt.",
-        "Punkt 3": "Hier bleiben Filter und die 15 m Kabel außerhalb der Messung. Das Kabel dämpft die hin- und rücklaufende Welle; das gemessene Stehwellenverhältnis fällt deshalb günstiger aus als das, was der Sender tatsächlich vorfindet.",
+        "Punkt 3": "Hier bleiben Filter und die 15 m Kabel außerhalb der Messung. Das Kabel dämpft die hin- und rücklaufende Welle; der Sender an Punkt 1 sieht deshalb ein günstigeres Stehwellenverhältnis als das hier gemessene — gefragt ist aber, was der Sender tatsächlich vorfindet.",
         "Punkt 4": "An dieser Stelle misst man das Stehwellenverhältnis der Antenne selbst — genau die Fehlanpassung, die der Antennentuner umwandeln soll. Dieser Wert darf hoch sein, ohne dass der Sender etwas davon merkt; über die Anpassung an den Sender sagt er nichts."
       }
     },
@@ -8762,10 +8762,10 @@
       "frage": "Was stellt die folgende Schaltung dar?",
       "richtig": "Hochpass",
       "bild": "Ein Vierpol: links die Eingangsklemmen mit dem Spannungspfeil U_E, rechts die Ausgangsklemmen mit dem Pfeil U_A. In der oberen Leitung liegt ein Kondensator — zwei kurze parallele Striche — längs im Signalweg. Dahinter zweigt am Knotenpunkt ein senkrechter Zweig nach unten ab, in dem ein Rechteck (Widerstand) zur unteren Leitung führt. Die untere Leitung läuft ohne Bauteil von links nach rechts durch. Der Ausgang wird also über dem Querwiderstand abgegriffen.",
-      "kniff": "Bei solchen Vierpolen entscheidet, welches Bauteil längs und welches quer liegt. Der Kondensator liegt hier längs: sein Widerstand ist bei tiefen Frequenzen groß und wird mit steigender Frequenz kleiner. Tiefe Frequenzen kommen also kaum durch, hohe fast ungehindert — ein Hochpass. Den Widerstand im Querzweig braucht man nur als Gegenstück, damit überhaupt eine Spannung abfallen kann; er ist frequenzunabhängig. Für Bandpass oder Sperrkreis fehlt hier alles: dazu bräuchte man Spule und Kondensator zusammen, die eine Resonanz bilden.",
+      "kniff": "Bei solchen Vierpolen entscheidet, welches Bauteil längs und welches quer liegt. Der Kondensator liegt hier längs: sein Widerstand ist bei tiefen Frequenzen groß und wird mit steigender Frequenz kleiner. Tiefe Frequenzen kommen also kaum durch, hohe fast ungehindert — ein Hochpass. Den Widerstand im Querzweig braucht man nur als Gegenstück, damit überhaupt eine Spannung abfallen kann; er ist frequenzunabhängig. Für Bandpass oder Sperrkreis fehlt hier alles: ein Bandpass braucht zwei Grenzfrequenzen, also ein zweites frequenzabhängiges Glied, und ein Sperrkreis eine Resonanz aus Spule und Kondensator.",
       "warum_falsch": {
         "Tiefpass": "Dafür müssten die beiden Bauteile die Plätze tauschen: Widerstand längs, Kondensator quer. Dann würde der Kondensator die hohen Frequenzen nach unten ableiten. Hier sitzt er im Signalweg und sperrt gerade die tiefen.",
-        "Bandpass": "Ein Bandpass lässt nur einen Streifen zwischen zwei Grenzfrequenzen durch, dafür sind mindestens zwei verschiedene Reaktanzen nötig — eine Spule und ein Kondensator. Im Bild gibt es nur einen Kondensator; oberhalb der Grenzfrequenz bleibt die Schaltung durchlässig.",
+        "Bandpass": "Ein Bandpass lässt nur einen Streifen zwischen zwei Grenzfrequenzen durch; dafür braucht es zwei frequenzabhängige Glieder, etwa einen Hochpass und einen Tiefpass hintereinander. Hier gibt es nur das eine, und oberhalb der Grenzfrequenz bleibt die Schaltung durchlässig.",
         "Sperrkreis": "Ein Sperrkreis ist ein Schwingkreis aus Spule und Kondensator, der eine einzige Frequenz herausnimmt. Eine Spule fehlt im Bild ganz, und ein Widerstand ist von der Frequenz unabhängig — ohne zwei gegenläufige Reaktanzen gibt es keine Resonanz."
       }
     },
@@ -9583,7 +9583,7 @@
       "warum_falsch": {
         "E_1": "E1 steht am abfallenden Hang der zweiten Kuppe, ein gutes Stück unterhalb ihres Gipfels. Genau dieser Gipfel liegt zwischen S und E1 und verdeckt die Sichtlinie. E1 liegt also im Funkschatten, obwohl es näher am Sender ist als E3.",
         "E_2": "E2 steht im tiefsten Punkt des Tals, noch tiefer als E1. Auch hier steht die zweite Kuppe im Weg, und zwar noch deutlicher. Von allen vier Standorten ist dieser der am stärksten abgeschattete.",
-        "E_4": "E4 steht hinter der Kuppe von E3, auf dem abfallenden Hang. Die Linie von S kommt über die zweite Kuppe frei hinweg, läuft dann aber in die dritte Kuppe hinein. E4 liegt damit im Schatten des Hügels, auf dem E3 steht — und E3 fängt das Signal gerade vor ihm ab."
+        "E_4": "E4 steht hinter der Kuppe von E3, auf dem abfallenden Hang. Die Linie von S kommt über die zweite Kuppe frei hinweg, läuft dann aber in die dritte Kuppe hinein. E4 liegt damit im Schatten des Hügels, auf dem E3 steht. Nicht E3 nimmt das Signal weg, sondern die Kuppe verdeckt die Sichtlinie."
       }
     },
     "NI102": {
@@ -9784,7 +9784,7 @@
       "warum_falsch": {
         "1 = Kathode; 2 = Anode": "Genau vertauscht. Der Querstrich markiert die Kathode, und er liegt rechts, bei Anschluss 2. Auf der Seite von Anschluss 1 steht das Dreieck, also die Anode.",
         "1 = Emitter; 2 = Anode": "Der Emitter ist ein Anschluss des Transistors, nicht der Diode. Ein Transistor hat drei Anschlüsse und sein Zeichen einen senkrechten Balken mit zwei schräg abgehenden Leitungen; hier gibt es nur zwei Anschlüsse. Dass in derselben Antwort „Anode“ vorkommt, macht sie nicht besser: die Begriffe gehören zu verschiedenen Bauteilen.",
-        "1 = Basis; 2 = Kathode": "Die Basis ist der Steueranschluss eines Transistors. Auch sie gehört nicht zu einer Diode mit ihren zwei Anschlüssen. Und selbst die zweite Hälfte stimmt nicht: die Kathode liegt an Anschluss 2, nicht die Basis an 1."
+        "1 = Basis; 2 = Kathode": "Die Basis ist der Steueranschluss eines Transistors. Auch sie gehört nicht zu einer Diode mit ihren zwei Anschlüssen. Die zweite Hälfte stimmt sogar — die Kathode liegt an Anschluss 2 —, aber Anschluss 1 ist die Anode, nicht die Basis."
       }
     },
     "NE205": {
@@ -9940,7 +9940,7 @@
       "frage": "Das folgende Signal wird als U₁ an den Eingang der Schaltung mit Siliziumdioden gelegt. Wie sieht das zugehörige Ausgangssignal U₂ aus?",
       "richtig": "",
       "bild": "Oben links das Eingangssignal U₁ über der Zeit: eine erste Halbwelle bis +0,5 V, dann eine Halbwelle bis −0,5 V, dann eine große bis +1 V und eine große bis −1 V; gestrichelte Hilfslinien liegen bei 0,5 V und 1 V. Oben rechts die Schaltung: von der Eingangsklemme führt ein Widerstand in Reihe nach rechts; dahinter liegen zwei Siliziumdioden quer zwischen der oberen und der unteren Leitung, antiparallel gepolt — die eine leitet nach unten, die andere nach oben. U₁ ist am Eingang, U₂ hinter dem Widerstand über den beiden Dioden abgegriffen. Darunter vier Verläufe von U₂. Einer zeigt alle vier Halbwellen oben und unten flach gekappt, alle auf gleicher Höhe, schon die kleinen. Einer zeigt nur die beiden negativen Halbwellen, rund und unbeschnitten, dazwischen Null. Einer zeigt die kleine erste Halbwelle noch rund und unversehrt, während erst die beiden großen Halbwellen oben und unten flach gekappt sind. Einer zeigt nur die beiden positiven Halbwellen, rund und unbeschnitten, dazwischen Null.",
-      "kniff": "Zwei antiparallele Dioden über dem Ausgang sind keine Gleichrichtung, sondern eine Begrenzung: solange die Spannung unter der Schwellspannung bleibt, sperren beide Dioden und das Signal läuft unverändert durch; darüber leitet je nach Vorzeichen die eine oder die andere und hält U₂ fest. Bei Silizium liegt die Schwellspannung bei etwa 0,7 V. Die Halbwellen mit 0,5 V liegen darunter und bleiben rund, die mit 1 V werden bei rund 0,7 V flach abgeschnitten — genau der Verlauf, in dem nur die großen Halbwellen gekappt sind. Wer das Bild mit den vier gleich hoch gekappten Halbwellen nimmt, hat mit etwa 0,3 V gerechnet, also mit Germanium (Nachbarfrage AC406). Die beiden Bilder mit nur positiven oder nur negativen Halbwellen entstehen, wenn man das antiparallele Paar für eine einzelne Gleichrichterdiode hält; weil immer eine der beiden Dioden in Sperrrichtung liegt, verschwindet hier keine Halbwelle.",
+      "kniff": "Zwei antiparallele Dioden über dem Ausgang sind keine Gleichrichtung, sondern eine Begrenzung: solange die Spannung unter der Schwellspannung bleibt, sperren beide Dioden und das Signal läuft unverändert durch; darüber leitet je nach Vorzeichen die eine oder die andere und hält U₂ fest. Bei Silizium liegt die Schwellspannung bei etwa 0,7 V. Die Halbwellen mit 0,5 V liegen darunter und bleiben rund, die mit 1 V werden bei rund 0,7 V flach abgeschnitten — genau der Verlauf, in dem nur die großen Halbwellen gekappt sind. Wer das Bild mit den vier gleich hoch gekappten Halbwellen nimmt, hat mit einer Schwellspannung von etwa 0,3 V gerechnet — das wäre eine Germaniumdiode (Nachbarfrage AC406), nicht die Siliziumdiode aus dieser Frage. Die beiden Bilder mit nur positiven oder nur negativen Halbwellen entstehen, wenn man das antiparallele Paar für eine einzelne Gleichrichterdiode hält; weil immer eine der beiden Dioden in Sperrrichtung liegt, verschwindet hier keine Halbwelle.",
       "warum_falsch": {}
     },
     "AC406": {
@@ -10076,7 +10076,7 @@
     "BD303": {
       "frage": "Welche Länder sind der Reihe nach den folgenden Landeskennern zugeordnet? Die Landeskenner OE, ON und OK entsprechen den Ländern ...",
       "richtig": "Österreich, Belgien und Tschechien.",
-      "kniff": "Vier Landeskenner beginnen mit O, und sie liegen alle vier um Deutschland herum — das ist die Falle dieser Fragengruppe. Nur OE klingt nach seinem Land.",
+      "kniff": "Vier Nachbarn Deutschlands haben Landeskenner mit O — OE, ON, OK, OZ —, und genau diese vier werden in dieser Fragengruppe durcheinandergewürfelt (Finnland OH und die Slowakei OM fangen ebenfalls mit O an). Nur OE klingt nach seinem Land.",
       "liste": [
         {
           "k": "OE",
@@ -10652,12 +10652,12 @@
     "VD724": {
       "frage": "Wie hoch ist die maximal zulässige isotrope Strahlungsleistung (EIRP) für Funkamateure mit der Zulassungsklasse N im 2 m- und 70 cm-Band?",
       "richtig": "10 W",
-      "kniff": "Die Klasse N darf auf 2 m und 70 cm 10 W EIRP strahlen. Gemeint ist die gestrahlte Leistung: was aus dem Gerät kommt, mal dem Gewinn der Antenne.",
+      "kniff": "Die Klasse N darf auf 2 m und 70 cm höchstens 10 W EIRP abstrahlen. EIRP ist die Leistung, die in Hauptrichtung der Antenne tatsächlich ankommt: Senderleistung minus Kabelverluste, mal Antennengewinn gegenüber einem Kugelstrahler (dBi).",
       "gruppe": "leistung",
       "warum_falsch": {
-        "100 W": "Das ist die Kurzwellengrenze der Klasse E, nicht die der Klasse N.",
-        "25 W": "Diese Zahl kommt in den Leistungsgrenzen des Amateurfunks nicht vor.",
-        "5 W": "Das ist die typische Senderleistung eines Handfunkgeräts — und die Grenze der Klasse E über 1300 MHz. Als EIRP-Grenze der Klasse N ist sie zu niedrig."
+        "100 W": "100 W PEP ist die Kurzwellengrenze der Klasse E (z. B. 80 m, 15 m, 10 m). Auf 2 m und 70 cm darf die Klasse N nur 10 W EIRP abstrahlen.",
+        "25 W": "25 W PEP gibt es nur für die Klasse A im Bereich 50,4 bis 52 MHz (6-m-Band). Mit der Klasse N auf 2 m und 70 cm hat diese Zahl nichts zu tun.",
+        "5 W": "5 W PEP ist die Grenze der Klasse E in den Bändern ab 2320 MHz – und eine typische Leistung von Handfunkgeräten. Als EIRP-Grenze der Klasse N ist sie zu niedrig."
       }
     },
     "VD725": {
@@ -10685,18 +10685,18 @@
     "VD727": {
       "frage": "Was gilt für die Rufzeicheninhaber der Klasse E im Frequenzbereich 1810–1850 kHz?",
       "richtig": "Maximal 100 W PEP",
-      "kniff": "Kurzwelle und Klasse E heißt 100 W PEP — auf allen Kurzwellenbändern, die die Klasse E darf, also auch im 160-m-Band. Die 75 W gehören zu 2 m und 70 cm, nicht hierher.",
+      "kniff": "Im unteren Teil des 160-m-Bandes (1810–1850 kHz) gilt für die Klasse E dasselbe wie auf den Kurzwellenbändern: 100 W PEP. Darüber wird es enger: 1850–1890 kHz 75 W PEP, 1890–2000 kHz 10 W PEP – an Wochenenden dürfen es auch dort 100 W PEP sein. Die 750 W gehören allein der Klasse A.",
       "gruppe": "leistung",
       "warum_falsch": {
-        "Maximal 75 W PEP": "Die 75 W sind die Grenze der Klasse E auf 2 m und 70 cm. 1810 bis 1850 kHz ist Kurzwelle, dort gelten 100 W PEP.",
+        "Maximal 75 W PEP": "75 W PEP gelten für die Klasse E auf 2 m und 70 cm – und unter der Woche im Nachbarbereich 1850–1890 kHz. Zwischen 1810 und 1850 kHz sind es 100 W PEP.",
         "Maximal 750 W PEP": "Das ist die Grenze der Klasse A.",
-        "Maximal 10 W PEP": "Die 10 W gehören zur Klasse N — und dort als EIRP, nicht als PEP."
+        "Maximal 10 W PEP": "10 W PEP gelten für die Klassen A und E unter der Woche erst im oberen Teil des 160-m-Bandes (1890–2000 kHz). Im Bereich 1810–1850 kHz darf die Klasse E 100 W PEP."
       }
     },
     "VD728": {
       "frage": "Wie hoch ist die maximal zulässige Senderausgangsleistung für Rufzeicheninhaber der Klasse A im Frequenzbereich 3,5–3,8 MHz?",
       "richtig": "750 W PEP",
-      "kniff": "3,5 bis 3,8 MHz ist das 80-m-Band, und die Klasse A darf dort wie fast überall 750 W PEP. Merke die Ausnahmen, nicht die Regel: nur 30 m und alles über 1300 MHz liegen darunter.",
+      "kniff": "3,5 bis 3,8 MHz ist das 80-m-Band, und die Klasse A darf dort wie fast überall 750 W PEP. Merke die Ausnahmen, nicht die Regel: 30 m (150 W), alles über 1300 MHz (75 W), 6 m (25 W), der obere Teil von 160 m sowie die schmalen Bereiche auf Lang-, Mittel- und 60-m-Welle (dort in ERP) liegen darunter.",
       "gruppe": "leistung",
       "warum_falsch": {
         "75 W PEP": "Das ist die Grenze der Klasse A oberhalb 1300 MHz, nicht auf 80 m.",
@@ -10707,12 +10707,12 @@
     "VD729": {
       "frage": "Was gilt für die Rufzeicheninhaber der Klassen A und E im Frequenzbereich 3,5–3,8 MHz?",
       "richtig": "Maximal 750 W PEP für Klasse A und maximal 100 W PEP für Klasse E",
-      "kniff": "Zwei Klassen in einer Antwort: A siebenhundertfünfzig, E hundert. Auf Kurzwelle stimmt dieses Paar fast immer — nur im 30-m-Band hat A 150 W.",
+      "kniff": "Zwei Klassen in einer Antwort: A siebenhundertfünfzig, E hundert. Auf den meisten Kurzwellenbändern stimmt dieses Paar – Ausnahmen sind zum Beispiel das 30-m-Band (A 150 W) und der obere Teil des 160-m-Bandes.",
       "gruppe": "leistung",
       "warum_falsch": {
-        "Maximal 10 W PEP für beide Klassen": "Die 10 W gehören zur Klasse N, und dort als EIRP.",
+        "Maximal 10 W PEP für beide Klassen": "10 W PEP gelten für A und E nur unter der Woche im oberen Teil des 160-m-Bandes (1890–2000 kHz), nicht auf 80 m.",
         "Maximal 750 W PEP für beide Klassen": "750 W darf nur die Klasse A. Die Klasse E bleibt bei 100 W PEP.",
-        "Maximal 150 W PEP für Klasse A und maximal 10 W PEP für Klasse E": "Beide Zahlen stehen an der falschen Stelle: die 150 W gelten der Klasse A nur auf 30 m, und die 10 W gehören überhaupt zur Klasse N."
+        "Maximal 150 W PEP für Klasse A und maximal 10 W PEP für Klasse E": "Beide Zahlen stehen an der falschen Stelle: 150 W PEP gelten der Klasse A im 30-m-Band, und 10 W PEP gibt es nur unter der Woche im oberen 160-m-Band. Auf 80 m darf die Klasse E 100 W PEP."
       }
     },
     "VD730": {
@@ -10766,7 +10766,7 @@
       "gruppe": "leistung",
       "warum_falsch": {
         "Maximal 750 W PEP für beide Klassen": "750 W darf nur die Klasse A.",
-        "Maximal 10 W PEP für beide Klassen": "Die 10 W gehören zur Klasse N, und dort als EIRP.",
+        "Maximal 10 W PEP für beide Klassen": "10 W PEP gibt es für A und E nur unter der Woche im oberen Teil des 160-m-Bandes. Auf 2 m und 70 cm sind 10 W die Grenze der Klasse N – und zwar als EIRP.",
         "Maximal 100 W PEP für Klasse A und 50 W PEP für Klasse E": "Die Klasse A darf auch hier 750 W. Und die Klasse E hat auf 2 m und 70 cm 75 W, nicht 50 — die 50 W ERP sind die Grenze der Relaisfunkstelle."
       }
     },
@@ -10798,7 +10798,7 @@
       "kniff": "Oberhalb 1300 MHz hat die Klasse A 75 W PEP und die Klasse E 5 W PEP. Die 5 W sind der kleinste PEP-Wert im ganzen Katalog.",
       "gruppe": "leistung",
       "warum_falsch": {
-        "Maximal 1 W PEP": "Diese Zahl kommt in den Leistungsgrenzen nicht vor.",
+        "Maximal 1 W PEP": "1 W gibt es nur als ERP-Grenze der Klasse A auf Langwelle und Mittelwelle (135,7–137,8 kHz und 472–479 kHz). In den Bändern über 1300 MHz darf die Klasse E 5 W PEP.",
         "Maximal 100 W PEP": "Das ist die Grenze der Klasse E auf Kurzwelle, nicht über 1300 MHz.",
         "Maximal 75 W PEP": "Die 75 W gelten dort der Klasse A. Die Klasse E darf 5 W PEP."
       }
@@ -10982,7 +10982,7 @@
     "VA103": {
       "frage": "Wozu dient der Amateurfunkdienst über Satelliten nach den Begriffsbestimmung in den Radio Regulations (RR)?",
       "richtig": "Den gleichen Zwecken wie der übrige Amateurfunkdienst",
-      "kniff": "Der Amateurfunkdienst über Satelliten hat keinen eigenen Zweck, sondern denselben wie der übrige Amateurfunkdienst — nur mit Raumfunkstellen. Wo eine Antwort eine konkrete Messaufgabe nennt, beschreibt sie einen Forschungs- oder Wetterdienst und schiebt dem Amateurfunk einen fremden Auftrag unter.",
+      "kniff": "Der Amateurfunkdienst über Satelliten hat keinen eigenen Zweck, sondern denselben wie der übrige Amateurfunkdienst — nur mit Raumfunkstellen auf Erdsatelliten (RR 1.57). Wo eine Antwort eine konkrete Messaufgabe nennt, beschreibt sie einen Forschungs- oder Wetterdienst und schiebt dem Amateurfunk einen fremden Auftrag unter.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Der Ermittlung der Dämpfung der ionisierenden Regionen": "Dämpfungsmessungen an der Ionosphäre sind eine Forschungsaufgabe und keiner der definierten Zwecke des Amateurfunkdienstes.",
@@ -11059,7 +11059,7 @@
     "VA304": {
       "frage": "Was ist in den Radio Regulations (RR) bezüglich der Morsequalifikation für Funkamateure festgelegt?",
       "richtig": "Die nationale Verwaltung eines jeden Landes legt eigenständig fest, ob eine Morseprüfung erforderlich ist.",
-      "kniff": "Hier verteilen die Radio Regulations nur die Zuständigkeit: ob eine Morseprüfung verlangt wird, entscheidet jede nationale Verwaltung selbst. Eine Regelung dieses Inhalts ist etwas anderes als Schweigen. Wo eine Antwort eine Frequenz- oder Leistungsgrenze nennt, ist die Grenze erfunden.",
+      "kniff": "Hier verteilen die Radio Regulations nur die Zuständigkeit: ob eine Morseprüfung verlangt wird, entscheidet jede nationale Verwaltung selbst (RR 25.5, so seit der WRC-03). Eine Regelung dieses Inhalts ist etwas anderes als Schweigen. Wo eine Antwort eine Frequenz- oder Leistungsgrenze nennt, ist die Grenze erfunden.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "In den Radio Regulations (RR) werden bezüglich der Morsequalifikation keine Regelungen getroffen.": "Es gibt eine Regelung — sie überlässt die Entscheidung der nationalen Verwaltung; das ist nicht dasselbe wie keine Regelung.",
@@ -11224,10 +11224,10 @@
     "VC119": {
       "frage": "Was gilt hinsichtlich der Störfestigkeit der Amateurfunkstelle nach dem Wortlaut des Amateurfunkgesetzes (AFuG)?",
       "richtig": "Der Funkamateur darf von den grundlegenden Anforderungen nach dem Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln (EMVG) abweichen und kann den Grad der Störfestigkeit seiner Amateurfunkstelle selbst bestimmen.",
-      "kniff": "Trenne Störfestigkeit von Störaussendung. Für die Empfindlichkeit seiner eigenen Station darf der Funkamateur von den grundlegenden Anforderungen abweichen und selbst bestimmen, wie störfest sie ist — er trägt dann die Folgen. Das ist etwas anderes, als Störungen dulden zu müssen: der Unterschied liegt zwischen „darf selbst bestimmen“ und „muss hinnehmen“.",
+      "kniff": "Trenne Störfestigkeit von Störaussendung. Für die Empfindlichkeit seiner eigenen Station darf der Funkamateur von den grundlegenden Anforderungen abweichen und selbst bestimmen, wie störfest sie ist – das ist ein Recht, keine Pflicht. Die Kehrseite: Ist seine Station weniger störfest, muss er Störungen durch Geräte hinnehmen, die ihrerseits die Anforderungen erfüllen (§ 7 Abs. 2 AFuG).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
-        "Amateurfunkstellen müssen elektromagnetische Störungen durch andere Betriebsmittel hinnehmen, selbst wenn diese nicht den grundlegenden Anforderungen nach dem Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln (EMVG) entsprechen.": "Macht aus dem Recht abzuweichen eine Duldungspflicht; gegen Betriebsmittel, die die grundlegenden Anforderungen nicht einhalten, bleibt der Weg über die Störungsbearbeitung offen.",
+        "Amateurfunkstellen müssen elektromagnetische Störungen durch andere Betriebsmittel hinnehmen, selbst wenn diese nicht den grundlegenden Anforderungen nach dem Gesetz über die elektromagnetische Verträglichkeit von Betriebsmitteln (EMVG) entsprechen.": "Hinnehmen muss er Störungen nur von Geräten, die die grundlegenden Anforderungen erfüllen – und auch das nur, wenn seine eigene Station weniger störfest ist. Gegen Geräte, die die Anforderungen nicht einhalten, bleibt der Weg über die Störungsbearbeitung offen.",
         "Amateurfunkstellen sind hinsichtlich ihrer Störfestigkeit anderen Betriebsmitteln gleichgestellt.": "Gerade darin liegt die Besonderheit des Amateurfunkgesetzes — eine Gleichstellung besteht bei der Störfestigkeit nicht.",
         "Der Funkamateur muss seine Amateurfunkstelle im Abstand von 2 Jahren einer Störfestigkeitsprüfung durch die BNetzA unterziehen lassen.": "Erfindet eine wiederkehrende Prüfung durch die Behörde; technische Unterlagen sind nur auf Anforderung vorzulegen."
       }
@@ -11235,7 +11235,7 @@
     "VC121": {
       "frage": "Kann der Funkamateur laut Amateurfunkgesetz (AFuG) eine Standortbescheinigung erhalten?",
       "richtig": "Die BNetzA stellt auf Antrag eine Standortbescheinigung aus.",
-      "kniff": "Achte auf „auf Antrag“: von selbst kommt die Standortbescheinigung nicht, mit der Rufzeichenzuteilung schon gar nicht. Die Bescheinigung ist ein Papier der Behörde und damit etwas anderes als ein selbst geführter Nachweis. Die Antwort, es gebe sie auch auf Antrag nicht, streicht eine Möglichkeit, die ausdrücklich vorgesehen ist.",
+      "kniff": "Achte auf „auf Antrag“: von selbst kommt die Standortbescheinigung nicht, mit der Rufzeichenzuteilung schon gar nicht. Die Bescheinigung ist ein Papier der Behörde und damit etwas anderes als ein selbst geführter Nachweis. Die Antwort, es gebe sie auch auf Antrag nicht, streicht eine Möglichkeit, die ausdrücklich vorgesehen ist (§ 7 Abs. 3 AFuG).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Die BNetzA stellt mit der Zuteilung des Rufzeichens eine Standortbescheinigung aus.": "Koppelt zwei getrennte Vorgänge: die Zuteilung betrifft die Person, die Bescheinigung den Standort und den Schutz von Personen im Feld.",
@@ -11246,7 +11246,7 @@
     "VC122": {
       "frage": "Die Bundesnetzagentur kann bei Verstößen gegen AFuG oder AFuV ...",
       "richtig": "eine Einschränkung des Betriebes oder die Außerbetriebnahme der Amateurfunkstelle anordnen.",
-      "kniff": "Die Behörde ordnet an, sie greift nicht selbst zu: sie kann den Betrieb einschränken oder die Außerbetriebnahme verlangen. Prüfe bei jeder Antwort, ob sie über das Anordnen hinausgeht oder ein Prüfungsverfahren an die Stelle der Aufsicht setzt.",
+      "kniff": "Die Behörde ordnet an, sie greift nicht selbst zu: sie kann den Betrieb einschränken oder die Außerbetriebnahme verlangen (§ 11 Abs. 1 AFuG). Prüfe bei jeder Antwort, ob sie über das Anordnen hinausgeht oder ein Prüfungsverfahren an die Stelle der Aufsicht setzt.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "einen sofortigen Abbau der Amateurfunkstelle noch vor Ort anordnen.": "Die Anordnung betrifft den Betrieb, nicht den körperlichen Abbau der Anlage.",
@@ -11290,12 +11290,12 @@
     "VD107": {
       "frage": "In welchem Fall hat ein Funkamateur der Bundesnetzagentur gemäß Amateurfunkverordnung (AFuV) technische Unterlagen über seine Sendeanlage vorzulegen?",
       "richtig": "Auf Anforderung der Bundesnetzagentur",
-      "kniff": "Die Verordnung verlangt keine Einsendung von selbst, sondern erst, wenn die Behörde die Unterlagen anfordert; bereithalten musst du sie. Die falschen Antworten binden die Pflicht jeweils an einen Anlass — jede Änderung, eine Leistungsgrenze, den Erhalt der Zulassung. Keiner dieser Anlässe steht in der Verordnung.",
+      "kniff": "Die Verordnung verlangt keine Einsendung von selbst: Erst wenn die Bundesnetzagentur sie anfordert, legst du technische Unterlagen über deine Sendeanlage vor, dazu eine Skizze der ortsfesten Antennenanlage (§ 16 Abs. 5 AFuV). Die falschen Antworten binden die Pflicht jeweils an einen Anlass – jede Änderung, eine Leistungsgrenze, den Erhalt der Zulassung. Keiner dieser Anlässe steht in der Verordnung.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Bei jeder technischen Änderung an der Sendeanlage": "Änderungen beurteilst du selbst; eine Vorlagepflicht bei jeder Änderung gibt es nicht — erneut anzuzeigen ist gegebenenfalls die ortsfeste Stelle nach dem Nachweisverfahren.",
         "Bei Sendeleistungen größer als 750 W": "Eine erfundene Schwelle; Leistungsgrenzen sind Betriebsgrenzen und kein Anlass für die Vorlage von Unterlagen.",
-        "Unverzüglich nach Erhalt der Amateurfunkzulassung": "Macht aus dem Bereithalten eine Einsendung; die Zulassung selbst löst keine Vorlage aus."
+        "Unverzüglich nach Erhalt der Amateurfunkzulassung": "Macht aus einer Vorlage auf Anforderung eine Pflicht von selbst; die Zulassung allein löst keine Vorlage aus."
       }
     },
     "VD201": {
@@ -11455,7 +11455,7 @@
     "VE509": {
       "frage": "Bei welcher Stelle und zu welchem Zeitpunkt ist die Anzeige gemäß der Verordnung über das Nachweisverfahren zur Begrenzung elektromagnetischer Felder (BEMFV) für eine ortsfeste Amateurfunkanlage mit einer EIRP ab 10 W einzureichen?",
       "richtig": "Die Anzeige ist vor Aufnahme des Betriebs der Amateurfunkanlage bei der zuständigen Außenstelle der BNetzA einzureichen.",
-      "kniff": "Zwei Angaben müssen stimmen: der Zeitpunkt vor Aufnahme des Betriebs und die zuständige, nicht eine beliebige Außenstelle. Die falschen Antworten verändern jeweils nur eine dieser beiden Angaben — vergleiche sie Wort für Wort. Eine Frist nach Betriebsbeginn wäre sinnlos, weil der Schutz vorher wirken soll.",
+      "kniff": "Zwei Angaben müssen stimmen: der Zeitpunkt vor Aufnahme des Betriebs und die zuständige, nicht eine beliebige Außenstelle. Die falschen Antworten verändern jeweils nur eine dieser beiden Angaben — vergleiche sie Wort für Wort. Eine Frist nach Betriebsbeginn wäre sinnlos, weil der Schutz vorher wirken soll (§ 9 Abs. 1 BEMFV).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Die Anzeige ist spätestens drei Monate nach Betriebsaufnahme bei der zuständigen Außenstelle der BNetzA einzureichen.": "Falscher Zeitpunkt: angezeigt wird vor Aufnahme des Betriebs, nicht Monate danach.",
@@ -11466,7 +11466,7 @@
     "VE510": {
       "frage": "Wann ist erneut eine Anzeige einer ortsfesten Amateurfunkanlage gemäß der Verordnung über das Nachweisverfahren zur Begrenzung elektromagnetischer Felder (BEMFV) bei der zuständigen Stelle der BNetzA einzureichen?",
       "richtig": "Wenn die bestehende Anzeige nicht mehr den tatsächlichen Gegebenheiten entspricht, ist vom Betreiber das Anzeigeverfahren erneut durchzuführen.",
-      "kniff": "Anlass für die erneute Anzeige ist, dass die Angaben nicht mehr den tatsächlichen Gegebenheiten entsprechen — nicht ein Kalender und nicht ein Schreiben der Behörde. Die Prüfung liegt fortlaufend bei dir. Jede Antwort, die eine Jahresfrist oder eine Aufforderung nennt, verschiebt die Verantwortung.",
+      "kniff": "Anlass für die erneute Anzeige ist, dass die Angaben nicht mehr den tatsächlichen Gegebenheiten entsprechen — nicht ein Kalender und nicht ein Schreiben der Behörde (§ 9 Abs. 4 BEMFV). Die Prüfung liegt fortlaufend bei dir. Jede Antwort, die eine Jahresfrist oder eine Aufforderung nennt, verschiebt die Verantwortung.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Bei einem Wechsel der nationalen Zeugnisklasse": "Die Zeugnisklasse gehört nicht zu den Angaben, an denen die Anzeige hängt; maßgeblich sind die tatsächlichen Verhältnisse am Standort.",
@@ -11477,7 +11477,7 @@
     "VE512": {
       "frage": "Welche Unterlagen sind ergänzend zur Anzeige gemäß der Verordnung über das Nachweisverfahren zur Begrenzung elektromagnetischer Felder (BEMFV) einer ortsfesten Amateurfunkanlage bei der zuständigen Außenstelle der BNetzA einzureichen?",
       "richtig": "Der Anzeige ist eine nachvollziehbare zeichnerische Darstellung des standortbezogenen Sicherheitsabstands und des vom Betreiber kontrollierbaren Bereichs beizufügen.",
-      "kniff": "Unterscheide, was mit der Anzeige eingereicht wird und was du nur bereithältst. Eingereicht wird eine nachvollziehbare Zeichnung von Sicherheitsabstand und kontrollierbarem Bereich; Antennendiagramme, Lageplan und Bauzeichnung gehören zu der Dokumentation, die erst auf Aufforderung vorzulegen ist. Diese beiden Listen werden im Katalog gern getauscht.",
+      "kniff": "Unterscheide, was mit der Anzeige eingereicht wird und was du nur bereithältst. Eingereicht wird eine nachvollziehbare Zeichnung von Sicherheitsabstand und kontrollierbarem Bereich; Antennendiagramme, Lageplan und Bauzeichnung gehören zu der Dokumentation, die erst auf Aufforderung vorzulegen ist. Diese beiden Listen werden im Katalog gern getauscht (§ 9 Abs. 3 BEMFV).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Es sind keine weiteren Unterlagen beizufügen.": "Die Zeichnung ist der Kern der Anzeige; ohne sie ist der Sicherheitsabstand nicht nachvollziehbar.",
@@ -11499,7 +11499,7 @@
     "VE514": {
       "frage": "Was hat ein Funkamateur zu beachten, nachdem er seine ortsfeste Amateurfunkstelle bei der Bundesnetzagentur gemäß BEMFV angezeigt hat?",
       "richtig": "Er hat eine Dokumentation über die Einhaltung der Anforderungen mit allen erforderlichen Unterlagen bereitzuhalten und fortlaufend zu prüfen, ob die Bedingungen, unter denen die Anzeige durchgeführt wurde, noch zutreffend sind. Bei wesentlichen Änderungen ist die Amateurfunkstelle erneut anzuzeigen.",
-      "kniff": "Mit der Anzeige ist die Sache nicht erledigt: die Dokumentation bleibt bei dir, du prüfst fortlaufend, ob die Bedingungen noch zutreffen, und bei wesentlichen Änderungen zeigst du erneut an. Die falschen Antworten enden entweder zu früh oder erfinden einen Jahresrhythmus oder eine Einsendung. Bereithalten heißt bei dir behalten, nicht vorlegen.",
+      "kniff": "Mit der Anzeige ist die Sache nicht erledigt: die Dokumentation bleibt bei dir, du prüfst fortlaufend, ob die Bedingungen noch zutreffen, und bei wesentlichen Änderungen zeigst du erneut an. Die falschen Antworten enden entweder zu früh oder erfinden einen Jahresrhythmus oder eine Einsendung. Bereithalten heißt bei dir behalten, nicht vorlegen (§ 9 Abs. 4 BEMFV).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Das Anzeigeverfahren ist jedes Jahr erneut durchzuführen, um die Aktualität zu gewährleisten.": "Erfindet einen Jahresrhythmus; Anlass für die erneute Anzeige ist die wesentliche Änderung.",
@@ -13024,7 +13024,7 @@
       "warum_falsch": {
         "1800–1990 kHz": "Beide Kanten sind um 10 bzw. 190 kHz verschoben. 1800 kHz ist die international übliche Untergrenze, in Deutschland beginnt das Band erst bei 1810.",
         "1800–1900 kHz": "Fängt 10 kHz zu früh an und endet 100 kHz zu früh.",
-        "1805–1850 kHz": "Nur 45 kHz breit. Die 1850 kHz sind eine Marke INNERHALB des Bandes — bis dorthin gilt für die Klasse E die Grenze von 100 W PEP. Das Bandende ist es nicht."
+        "1805–1850 kHz": "Nur 45 kHz breit. Die 1850 kHz sind eine Marke INNERHALB des Bandes — bis dorthin darf die Klasse E 100 W PEP, darüber gilt unter der Woche weniger (an Wochenenden wieder 100 W). Das Bandende ist es nicht."
       }
     },
     "VD710": {
@@ -13583,7 +13583,7 @@
     "VD205": {
       "frage": "Wann muss der Funkamateur sein Rufzeichen nennen?",
       "richtig": "Am Anfang und am Ende jeder Funkverbindung sowie mindestens alle 10 Minuten",
-      "kniff": "Drei Gelegenheiten, und man kann sie sich als Rahmen denken: am Anfang, am Ende und unterwegs mindestens alle zehn Minuten. Die Zehn ist die Zahl, die man behalten muss — die falschen Antworten bieten fünfzehn Minuten, fünf Minuten oder gar keine feste Frist.",
+      "kniff": "Drei Gelegenheiten, und man kann sie sich als Rahmen denken: am Anfang, am Ende und unterwegs mindestens alle zehn Minuten (§ 11 Abs. 1 AFuV). Die Zehn ist die Zahl, die man behalten muss — die falschen Antworten bieten fünfzehn Minuten, fünf Minuten oder gar keine feste Frist.",
       "gruppe": "rufzeichen",
       "warum_falsch": {
         "Mindestens alle 15 Minuten während einer Funkverbindung": "Fünf Minuten zu lang, und Anfang und Ende fehlen ganz.",
@@ -13748,7 +13748,7 @@
     "VD104": {
       "frage": "Welche Kommunikationsinhalte dürfen im Amateurfunkverkehr laut AFuV zum Zwecke der Verschleierung verschlüsselt werden?",
       "richtig": "Steuersignale für Satelliten, für fernbediente und automatisch arbeitende Stationen und für Remote-Betrieb",
-      "kniff": "Erlaubt ist das Verschlüsseln nur dort, wo es nicht um Inhalte für Menschen geht, sondern um Befehle an Geräte: Satelliten, fernbediente und automatisch arbeitende Stationen, Remote-Betrieb. Der Grund liegt auf der Hand — sonst könnte jeder fremde Anlagen steuern. Für alles, was ein Mensch dem anderen sagt, bleibt es bei der offenen Sprache.",
+      "kniff": "Erlaubt ist das Verschlüsseln nur dort, wo es nicht um Inhalte für Menschen geht, sondern um Befehle an Geräte: Satelliten, fernbediente und automatisch arbeitende Stationen, Remote-Betrieb (§ 16 Abs. 8 AFuV). Der Grund liegt auf der Hand — sonst könnte jeder fremde Anlagen steuern. Für alles, was ein Mensch dem anderen sagt, bleibt es bei der offenen Sprache.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Inhalte, die schützenswerte technische Sachverhalte des Amateurfunkdienstes betreffen": "Es gibt keine Geheimnisse im Amateurfunkdienst, die man vor anderen Funkamateuren schützen dürfte. Technik zu teilen ist gerade sein Zweck.",
@@ -13759,7 +13759,7 @@
     "VD105": {
       "frage": "Dürfen im Amateurfunkverkehr internationale Not-, Dringlichkeits- und Sicherheitszeichen (z. B. MAYDAY, PAN PAN, SÉCURITÉ) ausgesendet werden?",
       "richtig": "Der Gebrauch dieser Zeichen ist ausdrücklich untersagt.",
-      "kniff": "MAYDAY, PAN PAN und SÉCURITÉ sind die Zeichen des See- und Flugfunks. Wer sie aussendet, löst dort einen Apparat aus, der auf ganz anderen Frequenzen hört — und macht damit die Zeichen wertlos für die, denen sie gehören. Deshalb ist der Gebrauch im Amateurfunk ausdrücklich untersagt, und zwar ohne Ausnahme. Wie man in einer Notlage tatsächlich hilft, ist eine andere Frage, aber nicht mit diesen Wörtern.",
+      "kniff": "MAYDAY, PAN PAN und SÉCURITÉ sind die Zeichen des See- und Flugfunks. Wer sie aussendet, löst dort einen Apparat aus, der auf ganz anderen Frequenzen hört — und macht damit die Zeichen wertlos für die, denen sie gehören. Deshalb ist der Gebrauch im Amateurfunk ausdrücklich untersagt, und zwar ohne Ausnahme (§ 16 Abs. 9 AFuV). Wie man in einer Notlage tatsächlich hilft, ist eine andere Frage, aber nicht mit diesen Wörtern.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Amateurfunkstellen in Küstennähe ist es erlaubt, diese Zeichen auszusenden.": "Der Standort ändert nichts. Gerade in Küstennähe wäre die Verwechslung mit dem Seefunk am größten.",
@@ -13770,7 +13770,7 @@
     "VD106": {
       "frage": "Welche technischen Anforderungen stellt die Amateurfunkverordnung u. a. an eine Amateurfunkstelle?",
       "richtig": "Sie ist nach den allgemein anerkannten Regeln der Technik einzurichten und zu unterhalten.",
-      "kniff": "Die Verordnung schreibt keine Bauteile vor, sondern einen Maßstab: nach den allgemein anerkannten Regeln der Technik einrichten und unterhalten. Genau das ist der Grundgedanke — der Funkamateur darf selbst bauen, muss aber nach dem Stand des Wissens bauen. Alle drei falschen Antworten machen daraus eine konkrete Vorschrift, und an dieser Bauart erkennt man sie.",
+      "kniff": "Die Verordnung schreibt keine Bauteile vor, sondern einen Maßstab: nach den allgemein anerkannten Regeln der Technik einrichten und unterhalten. Genau das ist der Grundgedanke — der Funkamateur darf selbst bauen, muss sich dabei aber an die in der Fachwelt bewährten und anerkannten Regeln halten (§ 16 Abs. 1 AFuV). Alle drei falschen Antworten machen daraus eine konkrete Vorschrift, und an dieser Bauart erkennt man sie.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Das Sendesignal muss über ein Koaxialkabel der Antenne zugeführt werden.": "Eine Speiseleitung kann auch zweidrähtig sein. Die Verordnung schreibt keine Kabelart vor.",
@@ -13792,7 +13792,7 @@
     "VD109": {
       "frage": "Wann muss der Funkamateur Angaben über den Betrieb seiner Amateurfunkstelle schriftlich festhalten, z. B. als Logbuch?",
       "richtig": "Auf Verlangen der Bundesnetzagentur",
-      "kniff": "Nur auf Verlangen der Bundesnetzagentur — eine allgemeine Logbuchpflicht gibt es im deutschen Amateurfunk nicht. Das passt zum Grundgedanken der Verordnung: Rechenschaft im Einzelfall statt Papier auf Vorrat. Ein Logbuch für sich selbst zu führen ist natürlich sinnvoll, aber es ist keine Pflicht.",
+      "kniff": "Grundsätzlich nur auf Verlangen der Bundesnetzagentur – eine allgemeine Logbuchpflicht für den normalen Amateurfunkbetrieb gibt es in Deutschland nicht. Für einzelne Sonderfälle kann die Bundesnetzagentur Aufzeichnungen vorschreiben. Ein Logbuch für sich selbst zu führen ist natürlich trotzdem sinnvoll.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Bei Funkbetrieb auf der Kurzwelle": "Das Band spielt keine Rolle. Die Pflicht entsteht erst mit dem Verlangen der Behörde.",
@@ -13803,7 +13803,7 @@
     "VD110": {
       "frage": "Welche Aussage trifft die Amateurfunkverordnung (AFuV) hinsichtlich unerwünschter Aussendungen?",
       "richtig": "Unerwünschte Aussendungen sind auf das geringstmögliche Maß zu beschränken.",
-      "kniff": "Auf das geringstmögliche Maß — ein Maßstab, keine Grenze. Das ist typisch für die Verordnung: sie verlangt, das Beste zu tun, was möglich ist, statt eine Zahl zu nennen, die man gerade noch einhalten darf. Zwei der falschen Antworten bieten genau solche Zahlen an, und daran erkennt man sie.",
+      "kniff": "Auf das geringstmögliche Maß — ein Maßstab, keine Grenze (§ 16 Abs. 4 AFuV). Das ist typisch für die Verordnung: sie verlangt, das Beste zu tun, was möglich ist, statt eine Zahl zu nennen, die man gerade noch einhalten darf. Zwei der falschen Antworten bieten genau solche Zahlen an, und daran erkennt man sie.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Unerwünschte Aussendungen sind auf 40 dB bezogen auf das Nutzsignal zu beschränken.": "Eine Dezibelzahl steht in der Verordnung nicht. Sie wäre auch eine Erlaubnis: alles unter 40 dB dürfte man dann stehen lassen.",
@@ -13814,7 +13814,7 @@
     "VD111": {
       "frage": "Was ist bei Abgleicharbeiten und Messungen an Sendern im Hinblick auf die Aussendung zu beachten?",
       "richtig": "Es sind geeignete Maßnahmen zu treffen, die ein freies Abstrahlen von Signalen wirkungsvoll verhindern.",
-      "kniff": "Gefragt ist, was mit der AUSSENDUNG passiert, nicht was mit dem Gerät. Beim Abgleich soll nichts nach draußen gelangen — also Abschlusswiderstand statt Antenne, oder abschirmen. Nicht zu verwechseln mit dem anderen Grund, aus dem man einen Abschlusswiderstand benutzt: dort geht es darum, die Endstufe zu schützen. Hier geht es um die anderen.",
+      "kniff": "Gefragt ist, was mit der AUSSENDUNG passiert, nicht was mit dem Gerät. Beim Abgleich soll nichts nach draußen gelangen — also Abschlusswiderstand statt Antenne, oder abschirmen (§ 16 Abs. 6 AFuV). Nicht zu verwechseln mit dem anderen Grund, aus dem man einen Abschlusswiderstand benutzt: dort geht es darum, die Endstufe zu schützen. Hier geht es um die anderen.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Das Sendergehäuse darf nicht geöffnet werden.": "Zum Abgleichen muss man oft hinein. Die Verordnung verbietet das nicht — sie verlangt nur, dass dabei nichts abgestrahlt wird.",
@@ -13847,7 +13847,7 @@
     "VD114": {
       "frage": "Welche Daten zum Inhaber eines personengebundenen Rufzeichens sind in der von der Bundesnetzagentur veröffentlichten Rufzeichenliste enthalten?",
       "richtig": "Name, Rufzeichen und, wenn nicht widersprochen wurde, die Anschrift",
-      "kniff": "Drei Angaben: Name, Rufzeichen und — nur wenn nicht widersprochen wurde — die Anschrift. Der Sinn ist die Erreichbarkeit für QSL-Karten und Rückfragen, nicht die Person. Deshalb steht dort nichts, was man zum Funken nicht braucht: kein Geburtsdatum, keine Telefonnummer, keine E-Mail-Adresse.",
+      "kniff": "Drei Angaben: Name, Rufzeichen und — nur wenn nicht widersprochen wurde — die Anschrift. Rufzeichen und Name stehen immer in der Liste, auch nach einem Widerspruch (§ 15 Abs. 4 AFuV). Der Sinn ist die Erreichbarkeit für QSL-Karten und Rückfragen, nicht die Person. Deshalb steht dort nichts, was man zum Funken nicht braucht: kein Geburtsdatum, keine Telefonnummer, keine E-Mail-Adresse.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Name, Rufzeichen und die E-Mail-Adresse": "Die E-Mail-Adresse gehört nicht in die Liste. Und es fehlt der Widerspruch, der bei der Anschrift ausdrücklich vorgesehen ist.",
@@ -13880,7 +13880,7 @@
     "VD117": {
       "frage": "Wie ist der Begriff „Klubstation“ nach dem Wortlaut der Amateurfunkverordnung (AFuV) definiert?",
       "richtig": "Eine „Klubstation“ ist eine Amateurfunkstelle, die von mindestens drei Mitgliedern einer Gruppe von Funkamateuren unter Verwendung eines gemeinschaftlich genutzten Rufzeichens betrieben wird.",
-      "kniff": "Zwei Bestandteile, und beide müssen stimmen: mindestens DREI Mitglieder, und ein GEMEINSCHAFTLICH genutztes Rufzeichen. Die Drei ist die einzige Zahl in diesem ganzen Abschnitt der Verordnung — und sie sagt etwas über Personen, nicht über Technik. Ein Verein muss es nicht sein, ein besonderer Standort auch nicht.",
+      "kniff": "Zwei Bestandteile, und beide müssen stimmen: mindestens DREI Mitglieder, und ein GEMEINSCHAFTLICH genutztes Rufzeichen. Die Drei ist die einzige Mindestzahl in den Begriffsbestimmungen der Verordnung (§ 2 Nr. 3 AFuV) — und sie sagt etwas über Personen, nicht über Technik. Ein Verein muss es nicht sein, ein besonderer Standort auch nicht.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Eine „Klubstation“ ist eine Amateurfunkstelle, die nur von einem eingetragenen Verein betrieben werden darf.": "Eine Gruppe von Funkamateuren genügt. Eine Rechtsform verlangt die Verordnung nicht.",
@@ -13902,7 +13902,7 @@
     "VD119": {
       "frage": "Wie ist der Begriff „Funkbake“ nach dem Wortlaut der Amateurfunkverordnung (AFuV) definiert?",
       "richtig": "Eine „Funkbake“ ist eine automatisch arbeitende Amateurfunk-Sendeanlage (auch in Satelliten), die selbsttätig ständig wiederkehrende Aussendungen zur Feldstärkebeobachtung oder zu Empfangsversuchen erzeugt.",
-      "kniff": "Eine Funkbake arbeitet automatisch und sendet immer dasselbe, damit man an ihr etwas MESSEN kann: ob und wie stark sie ankommt. Daher der Zweck in der Definition — Feldstärkebeobachtung und Empfangsversuche. Alle drei falschen Antworten machen daraus eine Positionsbestimmung, und das ist die Aufgabe ganz anderer Einrichtungen.",
+      "kniff": "Eine Funkbake arbeitet automatisch und sendet immer dasselbe, damit man an ihr etwas MESSEN kann (§ 2 Nr. 6 AFuV): ob und wie stark sie ankommt. Daher der Zweck in der Definition — Feldstärkebeobachtung und Empfangsversuche. Alle drei falschen Antworten machen daraus eine Positionsbestimmung, und das ist die Aufgabe ganz anderer Einrichtungen.",
       "gruppe": "afuv-pflichten",
       "warum_falsch": {
         "Eine „Funkbake“ ist eine automatisch arbeitende Amateurfunk-Sendeanlage (auch in Satelliten), die selbsttätig ständig wiederkehrende Aussendungen zur Positionsbestimmung auf hoher See erzeugt.": "Wortgleich mit der richtigen Antwort bis auf den Zweck — und gerade der entscheidet. Seezeichen sind Sache des Seefunkdienstes.",
@@ -13983,14 +13983,14 @@
       "gruppe": "afug",
       "warum_falsch": {
         "muss die einschlägigen Bestimmungen der BNetzA zur elektrischen Sicherheit nicht beachten.": "Die Freiheit beim Gerät ist keine Freiheit von allem: das Recht, selbst zu bauen, entbindet nicht von den Regeln, die Menschen vor der Anlage schützen.",
-        "benötigt in keinem Fall eine Standortbescheinigung der BNetzA für seine Amateurfunkstelle.": "Das „in keinem Fall“ ist zu viel; Standortfragen bleiben eine eigene Pflichtenreihe, und die Frage nach dem Betriebsrecht für Sendeanlagen beantwortet sie nicht.",
+        "benötigt in keinem Fall eine Standortbescheinigung der BNetzA für seine Amateurfunkstelle.": "„In keinem Fall“ ist zu absolut: Nach § 8 Abs. 1 BEMFV braucht auch eine Amateurfunkanlage eine Standortbescheinigung, wenn am Standort bereits andere ortsfeste Funkanlagen stehen. Im Normalfall genügt die Anzeige nach § 9 BEMFV ab 10 W EIRP. Außerdem fragt die Aufgabe nach einem Recht beim Betrieb von Sendeanlagen, nicht nach Befreiungen.",
         "darf mit seiner Amateurfunkstelle jederzeit Nachrichten für und an Dritte übermitteln, die nicht den Amateurfunkdienst betreffen.": "Genau das ist verboten, mit Ausnahme von Not- und Katastrophenfällen; „jederzeit“ streicht die Ausnahme zur Regel und macht aus dem Funkamateur einen Nachrichtenübermittler für andere."
       }
     },
     "VC110": {
       "frage": "Was gilt für Funkamateure hinsichtlich der Frequenznutzung? Ein Funkamateur darf mit seiner Amateurfunkstelle ...",
       "richtig": "auf den für den Amateurfunkdienst ausgewiesenen Frequenzen senden.",
-      "kniff": "Der Satz muss bei „den für den Amateurfunkdienst ausgewiesenen Frequenzen“ endigen, und jede Erweiterung darüber hinaus ist die Falle. Weder eigene Rücksichtnahme noch eine internationale Zuweisung noch ein Übungszweck erweitert den zugewiesenen Bereich. Merke besonders: die Not- und Katastrophenausnahme des AFuG betrifft Nachrichten für Dritte, nicht die Frequenzwahl.",
+      "kniff": "Der Satz muss bei „den für den Amateurfunkdienst ausgewiesenen Frequenzen“ endigen, und jede Erweiterung darüber hinaus ist die Falle. Weder eigene Rücksichtnahme noch eine internationale Zuweisung noch ein Übungszweck erweitert den zugewiesenen Bereich. Merke besonders: die Not- und Katastrophenausnahme des AFuG (§ 5 Abs. 5) betrifft Nachrichten für Dritte, nicht die Frequenzwahl.",
       "gruppe": "afug",
       "warum_falsch": {
         "beliebige Frequenzen nutzen, sofern keine anderen Funkdienste gestört werden.": "Setzt eigene Störungsfreiheit an die Stelle der Zuweisung; die Frequenzen sind aber ausgewiesen und nicht durch das eigene Urteil über mögliche Störungen ersetzbar.",
@@ -14001,7 +14001,7 @@
     "VC111": {
       "frage": "Mit welchen Funkstellen darf der Funkamateur Funkverkehr abwickeln?",
       "richtig": "Ausschließlich mit anderen Amateurfunkstellen",
-      "kniff": "Es geht um die Gegenstelle, und geprüft wird, ob du das entscheidende Wort „ausschließlich“ mitliest. Maßgeblich ist nicht, wo eine Funkstelle arbeitet, sondern was sie ist: nur eine Amateurfunkstelle kommt als Partner in Frage. Jede Antwort, die einen weiteren Funkdienst dazunimmt, macht den Funkamateur zum Mittler für fremde Nachrichten und bricht damit die Begrenzung, die der Zweck setzt.",
+      "kniff": "Es geht um die Gegenstelle, und geprüft wird, ob du das entscheidende Wort „ausschließlich“ mitliest. Maßgeblich ist nicht, wo eine Funkstelle arbeitet, sondern was sie ist: nur eine Amateurfunkstelle kommt als Partner in Frage. Jede Antwort, die einen weiteren Funkdienst dazunimmt, macht den Funkamateur zum Mittler für fremde Nachrichten und bricht damit die Begrenzung, die der Zweck setzt (§ 5 Abs. 5 AFuG).",
       "gruppe": "afug",
       "warum_falsch": {
         "Mit allen Funkstellen, die auf den Amateurfunkbändern tätig sind": "Verwechselt Aufenthalt mit Eigenschaft: eine fremde Funkstelle wird nicht zur Amateurfunkstelle, nur weil sie auf einem Amateurfunkband auftaucht.",
@@ -14034,7 +14034,7 @@
     "VC114": {
       "frage": "Darf die Amateurfunkstelle zu gewerblichwirtschaftlichen Zwecken betrieben werden? Eine Amateurfunkstelle darf ...",
       "richtig": "nicht zu gewerblich-wirtschaftlichen Zwecken betrieben werden.",
-      "kniff": "Drei Antworten bauen jeweils einen Weg zum gewerblichen Betrieb — über eine Genehmigung, über eine Anzeige, über die Art des angebotenen Dienstes. Das Verbot kennt aber kein Verfahren, das es aufhebt, denn der gewerbliche Zweck widerspricht dem Dienst selbst und nicht bloß einer Formvorschrift. Lies jede Antwort bis zum Ende: verboten sind der gewerblich-wirtschaftliche Zweck und das geschäftsmäßige Erbringen von Telekommunikationsdiensten.",
+      "kniff": "Drei Antworten bauen jeweils einen Weg zum gewerblichen Betrieb — über eine Genehmigung, über eine Anzeige, über die Art des angebotenen Dienstes. Das Verbot kennt aber kein Verfahren, das es aufhebt, denn der gewerbliche Zweck widerspricht dem Dienst selbst und nicht bloß einer Formvorschrift. Lies jede Antwort bis zum Ende: verboten sind der gewerblich-wirtschaftliche Zweck und das geschäftsmäßige Erbringen von Telekommunikationsdiensten (§ 5 Abs. 4 AFuG).",
       "gruppe": "afug",
       "warum_falsch": {
         "nach Genehmigung durch die Bundesnetzagentur zu gewerblich-wirtschaftlichen Zwecken betrieben werden.": "Es gibt keine Genehmigung, die vom Verbot befreit; die Behörde teilt Rufzeichen zu und lässt zur Teilnahme zu, sie kann den Zweck des Dienstes aber nicht für einen Einzelnen ändern.",
@@ -14056,7 +14056,7 @@
     "VC116": {
       "frage": "Welche personengebundenen Rufzeichen darf ein Funkamateur benutzen?",
       "richtig": "Nur ein ihm von der Bundesnetzagentur zugeteiltes Rufzeichen",
-      "kniff": "Personengebunden heißt: das Rufzeichen folgt der Person und nicht dem Gerät, und zugeteilt wird es von der Bundesnetzagentur. Prüfe jede Antwort an diesen zwei Punkten — wer teilt zu, und an wen ist es gebunden. Die verlockende Antwort ist die von der fremden Station: wer dort sitzt, wechselt damit nicht sein Rufzeichen, denn das des Inhabers bleibt an ihn gebunden.",
+      "kniff": "Personengebunden heißt: das Rufzeichen folgt der Person und nicht dem Gerät, und zugeteilt wird es von der Bundesnetzagentur (§ 5 Abs. 1 AFuG). An einer Klubstation gilt etwas anderes: dort sendet man unter dem Rufzeichen der Klubstation. Prüfe jede Antwort an diesen zwei Punkten — wer teilt zu, und an wen ist es gebunden. Die verlockende Antwort ist die von der fremden Station: wer dort sitzt, wechselt damit nicht sein Rufzeichen, denn das des Inhabers bleibt an ihn gebunden.",
       "gruppe": "afug",
       "warum_falsch": {
         "Nur ein von einer Amateurfunkvereinigung zugeteiltes Rufzeichen": "Verwechselt Verein mit Behörde: Vereinigungen vertreten Funkamateure, zuteilen kann das Rufzeichen nur die Bundesnetzagentur.",
@@ -14067,7 +14067,7 @@
     "VC120": {
       "frage": "Darf der Funkamateur bei Selbstbaugeräten von den grundlegenden Anforderungen zur Störfestigkeit im Sinne des Gesetzes über die elektromagnetische Verträglichkeit von Betriebsmitteln (EMVG) abweichen?",
       "richtig": "Ja, er kann den Grad der Störfestigkeit seiner Geräte selbst bestimmen.",
-      "kniff": "Die erlaubende Antwort ist die richtige, und das ist folgerichtig: die grundlegenden Anforderungen des EMVG gelten für Betriebsmittel, die auf den Markt kommen, und schützen damit Käufer und Markt — nicht den Experimentator. Ein Selbstbaugerät hat keinen Käufer; wer die Störfestigkeit zu gering ansetzt, trägt die Folge selbst, deshalb darf er den Grad selbst bestimmen. Beachte den Zuschnitt der Frage: es geht um die Unempfindlichkeit gegen Störungen von außen, und nur darauf bezieht sich die Abweichung.",
+      "kniff": "Die erlaubende Antwort ist die richtige, und das ist folgerichtig: die grundlegenden Anforderungen des EMVG gelten für Betriebsmittel, die auf den Markt kommen, und schützen damit Käufer und Markt — nicht den Experimentator. Ein Selbstbaugerät hat keinen Käufer; wer die Störfestigkeit zu gering ansetzt, trägt die Folge selbst, deshalb darf er den Grad selbst bestimmen (§ 7 Abs. 2 AFuG). Beachte den Zuschnitt der Frage: es geht um die Unempfindlichkeit gegen Störungen von außen, und nur darauf bezieht sich die Abweichung.",
       "gruppe": "afug",
       "warum_falsch": {
         "Ja, aber nur in Richtung Verbesserung der Störfestigkeit": "Halbiert die Freiheit mit einer Einschränkung, die im Gesetz nicht steht — eine bessere Störfestigkeit wäre ohnehin nie das Problem, erlaubt ist gerade das Abweichen nach unten.",
@@ -14078,7 +14078,7 @@
     "VC124": {
       "frage": "Welche der folgenden Handlungen sind Ordnungswidrigkeiten im Sinne des Amateurfunkgesetzes (AFuG) und können mit Bußgeldern von bis zu 5000 bzw. 10000 Euro geahndet werden?",
       "richtig": "(1) Betrieb ohne Zulassung und Zuteilung eines Rufzeichens; (2) Geschäftsmäßiges Erbringen von Telekommunikationsdiensten; (3) Nachrichtenübermittlung an Dritte",
-      "kniff": "Bußgeld bedeutet Ordnungswidrigkeit, nicht Straftat, und die Frage prüft, ob du die drei Tatbestände des AFuG kennst: Betrieb ohne Zulassung und ohne zugeteiltes Rufzeichen, geschäftsmäßiges Erbringen von Telekommunikationsdiensten, Nachrichtenübermittlung an Dritte. Es sind genau die Verstöße gegen die Grundsätze, die aus dem Zweck folgen — wer keine Erlaubnis hat, wer Dienste verkauft, wer für Fremde übermittelt. Halte jede Dreiergruppe daneben: alle anderen Aufzählungen nennen betriebliche und technische Einzelheiten, also Pflichten aus anderen Vorschriften, und lassen alle drei Tatbestände des Gesetzes aus.",
+      "kniff": "Bußgeld bedeutet Ordnungswidrigkeit, nicht Straftat, und die Frage prüft, ob du die drei Bußgeldtatbestände aus § 9 AFuG kennst: Betrieb ohne Zulassung und ohne zugeteiltes Rufzeichen (bis 5000 Euro), geschäftsmäßiges Erbringen von Telekommunikationsdiensten (bis 10000 Euro), Nachrichtenübermittlung an Dritte (bis 5000 Euro). Es sind genau die Verstöße gegen die Grundsätze, die aus dem Zweck folgen — wer keine Erlaubnis hat, wer Dienste verkauft, wer für Fremde übermittelt. Halte jede Dreiergruppe daneben: alle anderen Aufzählungen nennen betriebliche und technische Einzelheiten, also Pflichten aus anderen Vorschriften, und lassen alle drei Tatbestände des Gesetzes aus.",
       "gruppe": "afug",
       "warum_falsch": {
         "(1) Überschreiten der zulässigen Sendeleistung; (2) Dauerhafte Verlegung der Amateurfunkstelle an einen anderen Standort; (3) Funkbetrieb ohne Mitführen der Zulassungsurkunde": "Keiner der drei Tatbestände des AFuG kommt vor: gefragt wäre der Betrieb ganz ohne Zulassung, hier steht nur das Fehlen der Urkunde am Mann; ein Standortwechsel und eine Leistungsgrenze sind Betriebsfragen und nicht die verbotenen Zwecke.",
@@ -14136,15 +14136,15 @@
       "kniff": "Zwei Antworten verneinen und unterscheiden sich nur im Gebiet, zwei bejahen und unterscheiden sich nur darin, wessen Bestimmungen gelten. Der Streit um Heimat- oder Gastlandrecht ist hier eine Falle, denn er stellt sich erst, wenn überhaupt eine Berechtigung für das Ausland besteht. Entscheide also zuerst über die Klasse und dann über das Gebiet; die Europäische Union kommt in keiner dieser Regelungen als Grenze vor.",
       "gruppe": "cept",
       "warum_falsch": {
-        "Nein, die Zulassungsklasse N ist nur innerhalb der Europäischen Union gültig.": "Das „Nein“ stimmt, das Gebiet nicht: die Europäische Union ist nicht der Rahmen, in dem eine Zulassung gilt, und für die Klasse N gibt es überhaupt keine Empfehlung, die eine Grenze überschreiten würde.",
-        "Ja, der Betrieb in allen CEPT-Ländern ist zulässig, wenn sich der Funkamateur an die Bestimmungen seines Gastlandes hält.": "Nennt die richtige Bedingung, aber für die falsche Klasse; so funktioniert es für A und E, während die Klasse N gar keine CEPT-Berechtigung hat, an die sich diese Bedingung hängen könnte.",
+        "Nein, die Zulassungsklasse N ist nur innerhalb der Europäischen Union gültig.": "Das „Nein“ stimmt, das Gebiet nicht: die Europäische Union ist nicht der Rahmen, in dem eine Zulassung gilt. Die CEPT-Regelungen gelten für die Klassen A und E; als CEPT-Novice hat Deutschland die Klasse E gemeldet, die Klasse N ist nur national gültig.",
+        "Ja, der Betrieb in allen CEPT-Ländern ist zulässig, wenn sich der Funkamateur an die Bestimmungen seines Gastlandes hält.": "Nennt die richtige Bedingung, aber für die falsche Klasse; so funktioniert es für A und E, während die Klasse N keiner CEPT-Regelung zugeordnet ist.",
         "Ja, der Betrieb in allen CEPT-Ländern ist zulässig, wenn sich der Funkamateur an die Bestimmungen seines Heimatlandes hält.": "Hier ist doppelt getauscht: die Klasse hat keine Berechtigung im Ausland, und selbst bei A oder E wäre nicht das Heimatrecht der Maßstab."
       }
     },
     "VB106": {
       "frage": "Darf ein Funkamateur mit einer „CEPT-Novice-Amateurfunkgenehmigung“ in allen CEPT-Ländern Amateurfunkverkehr abwickeln?",
       "richtig": "Nein, nur in Ländern, die die ECC-Empfehlung (05)06 umgesetzt haben, sofern er dort keinen festen Wohnsitz hat.",
-      "kniff": "Das Wort „alle“ ist das Signal für die Falle, gleich ob es auf die Länder oder auf eine Pflicht zur Anwendung zielt. Von den beiden verneinenden Antworten ist die richtige die, die zwei Einschränkungen nennt: das Land hat umgesetzt, und dort besteht kein fester Wohnsitz. Prüfe zuletzt, ob die genannte Nummer zur Einsteigerklasse passt.",
+      "kniff": "Das Wort „alle“ ist das Signal für die Falle, gleich ob es auf die Länder oder auf eine Pflicht zur Anwendung zielt. Von den beiden verneinenden Antworten ist die richtige die, die zwei Einschränkungen nennt: das Land hat die ECC-Empfehlung (05)06 umgesetzt, und dort besteht kein fester Wohnsitz. Im Gastland gelten dessen Regeln (Ziffer 2.2 der Empfehlung). Prüfe zuletzt, ob die genannte Nummer zur Einsteigerklasse passt.",
       "gruppe": "cept",
       "warum_falsch": {
         "Ja, er muss sich aber an die Amateurfunkregelungen des Heimatlandes halten.": "Dreht den Maßstab um: im Gastland gelten dessen Regelungen, und ein „Ja“ für alle Länder wäre schon deshalb falsch, weil nicht jedes Land umgesetzt hat.",
@@ -14254,7 +14254,7 @@
     "VD303": {
       "frage": "Nicht-Funkamateure dürfen am Ausbildungsfunkbetrieb ...",
       "richtig": "nur unter unmittelbarer Anleitung und Aufsicht eines Funkamateurs mit zugeteiltem Rufzeichen der Klasse A oder E teilnehmen.",
-      "kniff": "Lies die Antworten auf zwei Wörter hin: unmittelbar und Aufsicht. Fällt eines weg, ist es nicht mehr der Fall, in dem ohne eigene Zulassung gesendet werden darf. Eine Antwort tut das Gegenteil und schränkt zusätzlich auf einen Ort ein — auch das ist falsch, denn gebunden ist der Betrieb an die Person des Ausbilders.",
+      "kniff": "Lies die Antworten auf zwei Wörter hin: unmittelbar und Aufsicht. Fällt eines weg, ist es nicht mehr der Fall, in dem ohne eigene Zulassung gesendet werden darf. Eine Antwort tut das Gegenteil und schränkt zusätzlich auf einen Ort ein — auch das ist falsch, denn gebunden ist der Betrieb an die Person des Ausbilders (§ 12 Abs. 2 AFuV).",
       "gruppe": "ausbildung",
       "warum_falsch": {
         "auch an Wochenenden ohne besondere Auflagen teilnehmen.": "Erfindet eine Ausnahme nach dem Kalender; die Bedingungen sind an keinen Wochentag gebunden.",
@@ -14270,13 +14270,13 @@
       "warum_falsch": {
         "nur an einer Klubstation durchgeführt werden.": "Macht aus einer Möglichkeit eine Pflicht; der Ausbildungsfunkbetrieb ist an keine bestimmte Station gebunden.",
         "nur mit einer maximalen Strahlungsleistung von 10 W EIRP durchgeführt werden.": "Die Zahl ist aus dem Personenschutz geborgt, wo ab 10 W EIRP der Nachweis für ortsfeste Amateurfunkstellen zu führen ist; mit dem Berechtigungsumfang des Ausbilders hat sie nichts zu tun.",
-        "nicht in Morsetelegrafie durchgeführt werden.": "Verbietet eine Betriebsart, die dem Ausbilder offensteht; der Auszubildende darf alles, was in dessen Umfang liegt — für die Telegrafie gibt es sogar den eigenen Zusatz „/T“."
+        "nicht in Morsetelegrafie durchgeführt werden.": "Verbietet eine Betriebsart, die dem Ausbilder offensteht; der Auszubildende darf alles, was in dessen Umfang liegt – auch Morsetelegrafie. Dafür gibt es sogar einen eigenen Rufzeichenzusatz: „/T“ bei Telegrafie und digitalen Betriebsarten, „/Trainee“ im Sprechfunk."
       }
     },
     "VD305": {
       "frage": "Was ist bei der Durchführung von Ausbildungsfunkverkehr zu beachten?",
       "richtig": "Der Ausbilder hat auf Verlangen der Bundesnetzagentur Auskunft über Art und Umfang des Ausbildungsfunkbetriebs zu geben.",
-      "kniff": "Drei Antworten verbieten etwas — eine Betriebsart, einen Ort, die Teilnahme an Wettbewerben. Die gesuchte verbietet nichts, sondern verlangt etwas, und zwar vom Ausbilder gegenüber der Behörde. Wenn du bei einer Ausbildungsfrage vor einer Reihe von Verboten stehst, prüfe zuerst, ob überhaupt eines davon in der Verordnung steht.",
+      "kniff": "Drei Antworten verbieten etwas — eine Betriebsart, einen Ort, die Teilnahme an Wettbewerben. Die gesuchte verbietet nichts, sondern verlangt etwas, und zwar vom Ausbilder gegenüber der Behörde (§ 12 Abs. 4 AFuV). Wenn du bei einer Ausbildungsfrage vor einer Reihe von Verboten stehst, prüfe zuerst, ob überhaupt eines davon in der Verordnung steht.",
       "gruppe": "ausbildung",
       "warum_falsch": {
         "Der Ausbildungsfunkverkehr darf ausschließlich in Telefonie (SSB oder FM) durchgeführt werden.": "Schneidet die Betriebsarten zurecht; erlaubt ist, was die Rufzeichenzuteilung des Ausbilders hergibt, und die endet nicht beim Sprechfunk.",
@@ -14331,7 +14331,7 @@
     "VE506": {
       "frage": "Was muss ein Funkamateur zum Schutz von Personen bei dem Betrieb von ortsfesten Amateurfunkanlagen gemäß der Verordnung über das Nachweisverfahren zur Begrenzung elektromagnetischer Felder (BEMFV) vornehmen?",
       "richtig": "Er hat den zur Einhaltung der Grenzwerte erforderlichen Sicherheitsabstand einer Funkanlage mit EIRP von 10 W oder mehr rechnerisch oder messtechnisch zu ermitteln und in nachvollziehbarer Form zu dokumentieren.",
-      "kniff": "Zwei Antworten bieten einen pauschalen Abstand an, der ohne jede Rechnung gelten soll. Dass bei gleicher Leistung einmal 25 m und einmal 10 m dastehen, zeigt schon, dass die Zahl erfunden ist: der Abstand hängt von Frequenz, Antenne und Gewinn ab und muss deshalb im Einzelfall ermittelt werden. Achte zusätzlich darauf, welche Bezugsgröße genannt wird — die Schwelle ist in EIRP angegeben, nicht in PEP.",
+      "kniff": "Zwei Antworten bieten einen pauschalen Abstand an, der ohne jede Rechnung gelten soll. Dass bei gleicher Leistung einmal 25 m und einmal 10 m dastehen, zeigt schon, dass die Zahl erfunden ist: der Abstand hängt von Frequenz, Antenne und Gewinn ab und muss deshalb im Einzelfall ermittelt werden. Achte zusätzlich darauf, welche Bezugsgröße genannt wird — die Schwelle ist in EIRP angegeben, nicht in PEP. Und noch ein Schritt gehört dazu: Eine ortsfeste Anlage mit 10 W EIRP oder mehr muss vor der Inbetriebnahme bei der Bundesnetzagentur angezeigt werden (§ 9 Abs. 1 BEMFV); Ermitteln und Dokumentieren des Sicherheitsabstands regelt § 9 Abs. 2.",
       "gruppe": "personenschutz",
       "warum_falsch": {
         "Er kann bei einer Leistung von bis zu 100 W PEP den standardisierten Sicherheitsabstand von 25 m annehmen.": "Einen standardisierten Sicherheitsabstand, den man pauschal annehmen darf, gibt es nicht. Zusätzlich ist die Bezugsgröße falsch gewählt: maßgeblich ist die gestrahlte Leistung, nicht eine Senderleistung in PEP.",
@@ -14342,7 +14342,7 @@
     "VE507": {
       "frage": "Für welche Amateurfunkstellen muss der Schutz von Personen in elektromagnetischen Feldern vom Funkamateur dokumentiert werden?",
       "richtig": "Für alle ortsfesten Amateurfunkstellen ab einer äquivalenten isotropen Strahlungsleistung von 10 W EIRP",
-      "kniff": "Hier müssen zwei Merkmale zusammen stimmen: ortsfest und ab 10 W EIRP. Lies jede Antwort daraufhin, welches der beiden sie weglässt. Eine nennt nur die Ortsfestigkeit, eine nur die Schwelle, eine keines von beiden — und nur eine Antwort hat beide.",
+      "kniff": "Hier müssen zwei Merkmale zusammen stimmen: ortsfest und ab 10 W EIRP (§ 9 BEMFV). Lies jede Antwort daraufhin, welches der beiden sie weglässt. Eine nennt nur die Ortsfestigkeit, eine nur die Schwelle, eine keines von beiden — und nur eine Antwort hat beide.",
       "gruppe": "personenschutz",
       "warum_falsch": {
         "Für alle ortsfesten Amateurfunkstellen": "Die Ortsfestigkeit ist richtig erfasst, die Schwelle fehlt. Damit müsste auch eine Station mit wenigen Watt an einer einfachen Antenne dokumentieren, obwohl sie unterhalb von 10 W EIRP bleibt.",
@@ -14408,7 +14408,7 @@
     "VE519": {
       "frage": "Kann die Bundesnetzagentur für den Betrieb einer ortsfesten Amateurfunkstelle eine Standortbescheinigung fordern?",
       "richtig": "Nur wenn sich am Standort der vorgesehenen ortsfesten Amateurfunkstelle bereits ortsfeste Funkanlagen befinden, die selbst eine Standortbescheinigung benötigen.",
-      "kniff": "Die Frage lässt sich nicht mit einem glatten Ja oder Nein beantworten; gesucht ist die Bedingung. Diese Bedingung liegt nicht in der eigenen Station, sondern im Standort: entscheidend ist, ob dort schon Anlagen stehen, die selbst eine Standortbescheinigung brauchen. Jede Antwort, die eine Eigenschaft der Amateurfunkstelle als Auslöser nennt, sucht an der falschen Stelle.",
+      "kniff": "Die Frage lässt sich nicht mit einem glatten Ja oder Nein beantworten; gesucht ist die Bedingung. Diese Bedingung liegt nicht in der eigenen Station, sondern im Standort: entscheidend ist, ob dort schon Anlagen stehen, die selbst eine Standortbescheinigung brauchen (§ 8 Abs. 1 BEMFV). Jede Antwort, die eine Eigenschaft der Amateurfunkstelle als Auslöser nennt, sucht an der falschen Stelle.",
       "gruppe": "personenschutz",
       "warum_falsch": {
         "Nur wenn die Amateurfunkstelle gewerblich genutzt wird": "Amateurfunk ist seinem Zweck nach nicht gewerblich, die Bedingung könnte also nie eintreten. Mit dem Feld am Standort hat die Art der Nutzung ohnehin nichts zu tun.",
@@ -14433,7 +14433,7 @@
       "kniff": "Die vier Antworten unterscheiden sich jeweils nur an einer Stelle. Zwei tauschen das Wort aus, das sagt, für wen die Pflicht gilt, und eine tauscht das Zeichen aus, das sie belegt. Halte zwei Dinge getrennt: wer die Anforderungen einhalten muss (der, der in Serie fertigt und verkauft) und wer das Zeichen anbringt (der Hersteller selbst, nicht eine Behörde).",
       "gruppe": "geraetesicherheit",
       "warum_falsch": {
-        "Selbstgebaute Funkgeräte müssen die grundlegenden Anforderungen nach dem Funkanlagengesetz (FuAG) einhalten und eine CE-Kennzeichnung tragen.": "Vertauscht die beiden Welten. Selbstgebaute Geräte werden nicht auf dem Markt bereitgestellt; sie dürfen kein CE-Zeichen tragen, weil dieses Zeichen eine Erklärung des Herstellers über ein in Verkehr gebrachtes Produkt ist.",
+        "Selbstgebaute Funkgeräte müssen die grundlegenden Anforderungen nach dem Funkanlagengesetz (FuAG) einhalten und eine CE-Kennzeichnung tragen.": "Vertauscht die beiden Welten. Selbstgebaute Geräte werden nicht auf dem Markt bereitgestellt; sie brauchen kein CE-Zeichen, denn dieses Zeichen ist die Erklärung eines Herstellers über ein in Verkehr gebrachtes Produkt – ohne das Prüfverfahren dahinter darf es auch niemand anbringen.",
         "Die Funkgeräte müssen eine nationale Zulassungskennzeichnung nach Vorgabe der BNetzA tragen.": "Erfindet ein behördliches Prüfzeichen. Verlangt ist die CE-Kennzeichnung, die der Hersteller selbst anbringt; eine Einzelzulassung des Gerätes durch die Bundesnetzagentur gibt es dafür nicht.",
         "Seriengefertigte Amateurfunkgeräte unterliegen nicht dem Funkanlagengesetz (FuAG).": "Kehrt den Anwendungsbereich um. Seriengefertigte Geräte sind der Kern des Funkanlagengesetzes; ausgenommen ist umgekehrt der Selbstbau."
       }
@@ -14463,10 +14463,10 @@
     "VE602": {
       "frage": "Nach welchen Bauvorschriften müssen Außenantennenanlagen errichtet werden?",
       "richtig": "Es gelten die baurechtlichen Bestimmungen des jeweiligen Bundeslandes.",
-      "kniff": "Eine Außenantenne ist zuerst ein Bauwerk und erst danach Funktechnik. Also antwortet nicht das Funkrecht, sondern das Baurecht — und das ist Sache der Länder. Prüfe bei jeder Antwort, ob sie überhaupt Bauvorschriften nennt: zwei behaupten, es gebe keine oder nur Empfehlungen, eine greift zum Funkgesetz.",
+      "kniff": "Eine Außenantenne ist zuerst ein Bauwerk und erst danach Funktechnik. Also antwortet nicht das Funkrecht, sondern das Baurecht — und die Bauordnungen (Genehmigung, Abstandsflächen, Standsicherheit) erlassen die Länder. Prüfe bei jeder Antwort, ob sie überhaupt Bauvorschriften nennt: zwei behaupten, es gebe keine oder nur Empfehlungen, eine greift zum Funkgesetz.",
       "gruppe": "geraetesicherheit",
       "warum_falsch": {
-        "Es gelten die Bestimmungen des Amateurfunkgesetzes (AFuG).": "Das Amateurfunkgesetz regelt die Teilnahme am Amateurfunkdienst. Über Masten, Höhen und Standsicherheit steht dort nichts, und Baurecht ist zudem Sache der Länder, nicht des Bundes.",
+        "Es gelten die Bestimmungen des Amateurfunkgesetzes (AFuG).": "Das Amateurfunkgesetz regelt die Teilnahme am Amateurfunkdienst. Über Masten, Höhen und Standsicherheit steht dort nichts – das regeln die Bauordnungen der Länder.",
         "Es sind nur die Empfehlungen der Amateurfunkverbände zu beachten.": "Empfehlungen eines Verbandes sind keine Bauvorschriften. Ein Verband kann Hinweise geben, aber keine Genehmigungspflicht begründen und keine aufheben.",
         "Für private Amateurfunkanlagen sind keine besonderen Vorschriften zu beachten.": "Das Baurecht fragt nicht, wozu eine Antenne dient. Auch eine privat genutzte Außenantenne ist ein Bauwerk und fällt unter die Bauordnung des Landes."
       }
@@ -14496,7 +14496,7 @@
     "VD601": {
       "frage": "Was versteht der Funkamateur unter „Remote-Betrieb“?",
       "richtig": "Funkbetrieb, bei dem eine räumlich entfernte Amateurfunkstation z. B. über das Internet betrieben wird",
-      "kniff": "Drei Antworten beschreiben etwas, das es im Funkbetrieb wirklich gibt, nur eben keinen Remote-Betrieb. Suche das Merkmal, das allen drei fehlt: der Bediener ist an einem Ort, die sendende Station an einem anderen, und dazwischen liegt ein Netz. Fehlt die räumliche Trennung oder das Netz, ist es kein Remote-Betrieb.",
+      "kniff": "Drei Antworten beschreiben etwas, das es im Funkbetrieb wirklich gibt, nur eben keinen Remote-Betrieb. Suche das Merkmal, das allen drei fehlt: der Bediener ist an einem Ort, die sendende Station an einem anderen, und dazwischen liegt ein Netz. Erlaubt ist das nur mit Klasse A (§ 13a AFuV). Fehlt die räumliche Trennung oder das Netz, ist es kein Remote-Betrieb.",
       "gruppe": "remote",
       "warum_falsch": {
         "Funkbetrieb über sehr weite Entfernungen (größer 500 km UKW, größer 2000 km KW)": "Hier geht es um die Reichweite der Funkverbindung; beim Remote-Betrieb zählt aber der Abstand zwischen Bediener und Station, nicht die überbrückte Funkstrecke.",
@@ -14507,7 +14507,7 @@
     "VD602": {
       "frage": "Ist für „Remote-Betrieb“ bei der BNetzA eine Betriebsmeldung erforderlich?",
       "richtig": "Ja, für den Betreiber der Remote-Station",
-      "kniff": "Die Frage zielt auf eine Person, nicht auf eine Handlung. Prüfe jede Antwort danach, wen sie in die Pflicht nimmt: gemeldet wird, wer für die Station einsteht, nicht wer sie gelegentlich benutzt. Nutzer können wechseln, der Betreiber bleibt derselbe.",
+      "kniff": "Die Frage zielt auf eine Person, nicht auf eine Handlung. Prüfe jede Antwort danach, wen sie in die Pflicht nimmt: gemeldet wird, wer für die Station einsteht, nicht wer sie gelegentlich benutzt. Der Betreiber gibt dabei seine Kontaktdaten an, damit er bei Störungen sofort erreichbar ist (§ 13a Abs. 3 AFuV). Nutzer können wechseln, der Betreiber bleibt derselbe.",
       "gruppe": "remote",
       "warum_falsch": {
         "Ja, für Betreiber und Nutzer der Remote-Station": "Sie zieht die Nutzer mit in die Meldepflicht, obwohl diese für die Station selbst nicht einstehen; gemeldet wird nur der, an dem die Verantwortung hängt.",
@@ -14540,7 +14540,7 @@
     "VD605": {
       "frage": "Wie muss der Betreiber die Betriebssicherheit seiner „Remote-Station“ gewährleisten? Der Betreiber muss sicherstellen, dass ...",
       "richtig": "die „Remote-Station“ unter seiner mittelbaren Kontrolle steht.",
-      "kniff": "Drei Antworten bieten technische Vorkehrungen an, in denen der Betreiber selbst nicht vorkommt. Gesucht ist die, die ihn die Station in der Hand behalten lässt. Achte auf das Wort „mittelbar“: es meint nicht, dass er daneben sitzt, aber auch nicht, dass er nur zusieht, sondern den jederzeit möglichen Zugriff aus der Ferne bis zum Abschalten.",
+      "kniff": "Drei Antworten bieten technische Vorkehrungen an, in denen der Betreiber selbst nicht vorkommt. Gesucht ist die, die ihn die Station in der Hand behalten lässt. Achte auf das Wort „mittelbar“: es meint nicht, dass er daneben sitzt, aber auch nicht, dass er nur zusieht, sondern den jederzeit möglichen Zugriff aus der Ferne bis zum Abschalten (§ 2 Nr. 6a AFuV: „ununterbrochene, mittelbare und vollständige Kontrolle“).",
       "gruppe": "remote",
       "warum_falsch": {
         "für die „Remote-Station“ keine selbstgebauten Komponenten zum Einsatz kommen.": "Das verwechselt Betriebssicherheit mit Gerätebau; Selbstbau gehört zum Amateurfunk und sagt nichts darüber, ob der Betreiber die Station im Griff hat.",
@@ -14551,7 +14551,7 @@
     "VD606": {
       "frage": "Was ist bei der Übertragung des Nutzungsrechts an einer „Remote-Station“ auf andere Funkamateure zu beachten?",
       "richtig": "Der Betreiber muss sicherstellen, dass nur von ihm berechtigte Funkamateure die Station nutzen können.",
-      "kniff": "Die Frage spricht vom Nutzungsrecht, die Pflicht bleibt aber beim Betreiber: er muss den Zugang technisch so sichern, dass nur von ihm Berechtigte an die Station kommen. Prüfe jede Antwort mit der Frage, ob hinterher noch feststeht, wer gesendet hat. Antworten, die den Zugang öffnen oder die Klassenhürde senken, fallen dabei durch.",
+      "kniff": "Die Frage spricht vom Nutzungsrecht, die Pflicht bleibt aber beim Betreiber: er muss unberechtigten Zugriff nach dem Stand der Technik ausschließen, sodass nur von ihm Berechtigte an die Station kommen (§ 13a Abs. 5 AFuV). Prüfe jede Antwort mit der Frage, ob hinterher noch feststeht, wer gesendet hat. Antworten, die den Zugang öffnen oder die Klassenhürde senken, fallen dabei durch.",
       "gruppe": "remote",
       "warum_falsch": {
         "Der Zugang für die Nutzung der „Remote-Station“ muss für alle Funkamateure öffentlich sein.": "Ein öffentlicher Zugang ist das Gegenteil der Anforderung; dann könnte jeder senden, und niemand wäre dem Sendebetrieb mehr zuzuordnen.",
@@ -14584,12 +14584,12 @@
     "VD609": {
       "frage": "Wem darf Zugriff auf eine Klubstation im Remote-Betrieb eingeräumt werden?",
       "richtig": "Nur Mitgliedern der Gruppe von Funkamateuren, die die Klubstation betreibt",
-      "kniff": "Bei einer Klubstation tritt zur Klasse eine zweite Bedingung: der Kreis der Zugangsberechtigten ist auf die Gruppe beschränkt, die die Station betreibt. Die falschen Antworten tauschen dieses Merkmal gegen ein anderes aus, gegen Bedürftigkeit, einen Eintrag in einer Urkunde oder eine Meldung bei der Behörde. Frage dich bei jeder, ob danach noch die Gruppe selbst bestimmt, wer an ihre Station darf.",
+      "kniff": "Bei einer Klubstation tritt zur Klasse eine zweite Bedingung: der Kreis der Zugangsberechtigten ist auf die Gruppe beschränkt, die die Station betreibt (§ 13a Abs. 1 AFuV). Die falschen Antworten tauschen dieses Merkmal gegen ein anderes aus, gegen Bedürftigkeit, einen Eintrag in einer Urkunde oder eine Meldung bei der Behörde. Frage dich bei jeder, ob danach noch die Gruppe selbst bestimmt, wer an ihre Station darf.",
       "gruppe": "remote",
       "warum_falsch": {
         "Nur Funkamateuren, die die Klubstation persönlich nicht aufsuchen können": "Sie macht aus dem Remote-Zugang einen Ersatz für einen verhinderten Besuch; eine solche Prüfung der Bedürftigkeit gibt es nicht, es zählt die Mitgliedschaft in der Gruppe.",
         "Nur auf der Zuteilungsurkunde eingetragenen Mitgliedern der Gruppe von Funkamateuren": "Die Zuteilung benennt den verantwortlichen Funkamateur, nicht jedes Mitglied; wer in der Urkunde nicht steht, ist deshalb nicht vom Zugang ausgeschlossen.",
-        "Nur bei der Bundesnetzagentur schriftlich oder elektronisch gemeldeten Funkamateuren": "Das überträgt die Meldepflicht des Betreibers auf die Nutzer; einzelne Nutzer werden der Behörde nicht gemeldet, und eine Meldung würde aus ihnen auch keine Mitglieder machen."
+        "Nur bei der Bundesnetzagentur schriftlich oder elektronisch gemeldeten Funkamateuren": "Das überträgt die Meldepflicht des Betreibers auf die Nutzer; einzelne Nutzer werden der Behörde nicht gemeldet. Nur auf Verlangen gibt der Rufzeicheninhaber Auskunft über den Kreis der Berechtigten – und eine Meldung würde aus niemandem ein Mitglied machen."
       }
     },
     "VD401": {
@@ -14640,7 +14640,7 @@
       "frage": "Welche Aussage ist hinsichtlich der Standortänderung einer Klubstation zutreffend?",
       "richtig": "Kurzzeitige Standortänderungen müssen der BNetzA nicht angezeigt werden.",
       "prinzip": "Eine Rufzeichenzuteilung hängt an der Station und an dem Menschen, der für sie einsteht, nicht an einem Platz auf der Landkarte. Ein Ortswechsel für kurze Zeit ändert daran nichts, also gibt es auch nichts anzuzeigen. Was die Zuteilung dauerhaft betrifft, bleibt dagegen anzeigepflichtig; deshalb steht in der richtigen Antwort das Wort „kurzzeitig“, und eine Antwort ohne dieses Wort greift zu weit.",
-      "kniff": "Vergleiche die vier Antworten Wort für Wort, sie unterscheiden sich nur in einem Zusatz. Zwei sprechen von kurzzeitigen Änderungen und widersprechen sich, eine lässt das Wort „kurzzeitig“ weg und macht daraus eine allgemeine Regel, eine verbietet den Ortswechsel gleich ganz. Gesucht ist die Antwort, die die Anzeige nur für den kurzzeitigen Fall erspart.",
+      "kniff": "Vergleiche die vier Antworten Wort für Wort, sie unterscheiden sich nur in einem Zusatz. Zwei sprechen von kurzzeitigen Änderungen und widersprechen sich, eine lässt das Wort „kurzzeitig“ weg und macht daraus eine allgemeine Regel, eine verbietet den Ortswechsel gleich ganz. Gesucht ist die Antwort, die die Anzeige nur für den kurzzeitigen Fall erspart – eine dauerhafte Verlegung der ortsfesten Station ist dagegen anzuzeigen.",
       "gruppe": "klubstation-relais",
       "warum_falsch": {
         "Kurzzeitige Standortänderungen sind der BNetzA anzuzeigen.": "Sie behauptet das Gegenteil; für den kurzzeitigen Ortswechsel entfällt die Anzeige gerade.",
@@ -14651,7 +14651,7 @@
     "VD501": {
       "frage": "Was ist notwendig, damit ein Funkamateur eine Amateurfunkstelle als Relaisfunkstelle oder Funkbake betreiben darf?",
       "richtig": "Es bedarf einer Rufzeichenzuteilung für den Betrieb einer fernbedienten oder automatisch arbeitenden Amateurfunkstelle.",
-      "kniff": "Gefragt ist, was notwendig ist, und die Antwort muss an der Station hängen, nicht an der Person: die Stelle arbeitet fernbedient oder automatisch, also sitzt dort niemand. Suche deshalb die Antwort, die eine eigene Rufzeichenzuteilung genau für diesen Fall verlangt. Die übrigen Antworten stellen auf die Person ab, auf ihre Klasse oder ihre Jahre, und gehen damit an der Frage vorbei.",
+      "kniff": "Gefragt ist, was notwendig ist, und die Antwort muss an der Station hängen, nicht an der Person: die Stelle arbeitet fernbedient oder automatisch, also sitzt dort niemand. Suche deshalb die Antwort, die eine eigene Rufzeichenzuteilung genau für diesen Fall verlangt (§ 13 Abs. 1 AFuV). Die übrigen Antworten stellen auf die Person ab, auf ihre Klasse oder ihre Jahre, und gehen damit an der Frage vorbei.",
       "gruppe": "klubstation-relais",
       "warum_falsch": {
         "Es sind keine besonderen Bedingungen zu erfüllen.": "Sie stellt die automatisch arbeitende Stelle der gewöhnlichen Station gleich; dann gäbe es keine Zuteilung, an der ihr Betrieb hängt.",
@@ -14732,7 +14732,7 @@
       "gruppe": "stoerungen",
       "warum_falsch": {
         "Er kann seine Sendeleistung uneingeschränkt erhöhen.": "Aus „du musst nichts ändern“ wird hier „du darfst alles“; die Leistungsgrenzen der eigenen Zulassung gelten unverändert weiter.",
-        "Er hat seine Sendeleistung so einzurichten, dass der Empfang nicht mehr beeinträchtigt wird.": "Das wäre das freiwillige Entgegenkommen zur Wahrung des Friedens, hier aber als Pflicht ausgegeben — und eine Pflicht entsteht unterhalb des Störfestigkeitswertes nicht.",
+        "Er hat seine Sendeleistung so einzurichten, dass der Empfang nicht mehr beeinträchtigt wird.": "Das wäre ein freiwilliges Entgegenkommen. Weil die Feldstärke unter dem Störfestigkeitswert der Norm bleibt, liegt die Ursache beim Empfänger; eine Pflicht, die Sendeleistung zu senken, folgt daraus nicht.",
         "Er hat den Betrieb seiner Amateurfunkstelle einzustellen.": "Eine Einstellung des Betriebs wäre die Folge eines Verstoßes; der Grenzwert ist hier gerade eingehalten."
       }
     },
@@ -14872,18 +14872,18 @@
     "VE102": {
       "frage": "Bedarf jede Frequenznutzung einer Frequenzzuteilung?",
       "richtig": "Jede Frequenznutzung bedarf einer vorherigen Frequenzzuteilung.",
-      "kniff": "Drei Antworten bauen eine Ausnahme ein: eine Leistungsschwelle, ein schlichtes „auch ohne“ und einen Frequenzbereich als Beispiel. Die Frage lässt dafür keinen Raum, sie fragt nach „jeder“ Frequenznutzung. Merke dir den Unterschied, an dem die Ausnahmen scheitern: dass man für manche Nutzungen kein eigenes Papier beantragen muss, heißt nicht, dass keine Zuteilung vorliegt.",
+      "kniff": "Drei Antworten bauen eine Ausnahme ein: eine Leistungsschwelle, ein schlichtes „auch ohne“ und einen Frequenzbereich als Beispiel. Die Frage lässt dafür keinen Raum, sie fragt nach „jeder“ Frequenznutzung – und genau so steht es in § 91 Abs. 1 TKG. Merke dir den Unterschied, an dem die Ausnahmen scheitern: dass man für manche Nutzungen kein eigenes Papier beantragen muss, heißt nicht, dass keine Zuteilung vorliegt.",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Erst ab 0,1 W ist eine Frequenzzuteilung erforderlich.": "Eine Leistungsschwelle gibt es hier nicht; die Zuteilung hängt an der Nutzung der Frequenz und nicht an der Höhe der Leistung.",
         "Eine Frequenznutzung ist auch ohne Frequenzzuteilung zulässig.": "Das ist die genaue Umkehrung des Grundsatzes; Frequenzen ohne Zuteilung zu nutzen ist gerade der Tatbestand, der geahndet wird.",
-        "Es gibt Ausnahmen von der Notwendigkeit zur Frequenzzuteilung, z. B. die ISM-Frequenzen.": "Hier wird „ohne eigenen Antrag“ mit „ohne Zuteilung“ verwechselt; die Zuteilung fehlt dort nicht, sie ist nur nicht einzeln erteilt."
+        "Es gibt Ausnahmen von der Notwendigkeit zur Frequenzzuteilung, z. B. die ISM-Frequenzen.": "Hier wird „ohne eigenen Antrag“ mit „ohne Zuteilung“ verwechselt; für ISM-Bereiche gibt es eine Allgemeinzuteilung (§ 91 Abs. 2 TKG) – die Zuteilung fehlt dort nicht, sie ist nur nicht einzeln erteilt."
       }
     },
     "VE103": {
       "frage": "Welcher der nachfolgend genannten Tatbestände ist eine Ordnungswidrigkeit gemäß Telekommunikationsgesetz (TKG)?",
       "richtig": "Nutzung von Frequenzen ohne Frequenzzuteilung",
-      "kniff": "Achte auf das Gesetz im Fragetext. Gesucht ist ein Verstoß gegen das TKG, also gegen die Frequenzordnung — nicht gegen die Pflichten, die für Funkamateure im AFuG und in der AFuV stehen. Ordne jede Antwort zuerst einem Regelwerk zu; drei beschreiben Amateurfunkrecht, und nur eine greift die Frequenzordnung selbst an.",
+      "kniff": "Achte auf das Gesetz im Fragetext. Gesucht ist ein Verstoß gegen das TKG, also gegen die Frequenzordnung — nicht gegen die Pflichten, die für Funkamateure im AFuG und in der AFuV stehen. Ordne jede Antwort zuerst einem Regelwerk zu; drei beschreiben Amateurfunkrecht, und nur eine greift die Frequenzordnung selbst an (§ 228 Abs. 2 Nr. 17 TKG – dort sind bis zu 500000 Euro Geldbuße vorgesehen).",
       "gruppe": "rechtsquellen",
       "warum_falsch": {
         "Nutzung von öffentlichen Telekommunikationseinrichtungen zur Vernetzung von Relaisfunkstellen": "Das betrifft die Zusammenschaltung von Relaisfunkstellen und damit das Amateurfunkrecht, nicht die Frequenzordnung des TKG.",
@@ -14949,7 +14949,7 @@
     "BA106": {
       "frage": "Wie wird das Rufzeichen „DM4EAX“ mit dem internationalen Buchstabieralphabet buchstabiert?",
       "richtig": "Delta Mike 4 Echo Alfa X-ray",
-      "kniff": "X-ray steht in allen vier Zeilen und hilft dir nicht weiter. Entschieden wird an M, E und A, und jede falsche Zeile hat dort zwei Wörter getauscht. Prüfe das A besonders genau, denn dort steht der Erdteilname, der leicht durchrutscht.",
+      "kniff": "X-ray steht in allen vier Zeilen und hilft dir nicht weiter. Entschieden wird an M, E und A, und jede falsche Zeile hat dort zwei Wörter getauscht. Prüfe das A besonders genau: es heißt Alfa, nicht Amerika — der Erdteilname rutscht leicht durch.",
       "gruppe": "buchstabieren",
       "warum_falsch": {
         "Delta Madagascar 4 Echo Amerika X-ray": "Madagascar steht nicht in der Liste, M ist Mike, und Amerika steht nicht in der Liste, A ist Alfa.",
@@ -16484,7 +16484,7 @@
       "warum_falsch": {
         "Stationen aus Nordamerika zu hören sind, die über Refraktion (Brechung) an energiereichen leuchtenden Nachtwolken (NLCs) empfangen werden.": "Beides trifft nicht zu: die Entfernung ist für einen Sporadic-E-Sprung viel zu groß, und leuchtende Nachtwolken sind Eiswolken, keine ionisierten Bereiche. Der Name der Ausbreitungsart verweist auf die E-Region, nicht auf Wolken.",
         "Stationen aus Nordamerika zu hören sind, die über Reflexion an Ionisationserscheinungen des Polarkreises empfangen werden.": "Auch hier ist die Entfernung zu groß, und der Mechanismus gehört zu einer anderen Ausbreitungsart: Ionisation in der Polarlichtzone ist Aurora, nicht Sporadic-E.",
-        "Stationen aus Entfernungen von 1000–2000 km zu hören sind, die über Reflexion an Ionisationserscheinungen des Polarkreises empfangen werden.": "Die Entfernung stimmt, die Begründung nicht: gearbeitet wird über Brechung in der sporadischen E-Region, nicht über Ionisation am Polarkreis. Der angehängte Text „Messinstrumente“ ist eine Abschnittsüberschrift aus dem Katalog und gehört nicht zur Antwort."
+        "Stationen aus Entfernungen von 1000–2000 km zu hören sind, die über Reflexion an Ionisationserscheinungen des Polarkreises empfangen werden.": "Die Entfernung stimmt, die Begründung nicht: gearbeitet wird über Brechung in der sporadischen E-Region, nicht über Ionisation am Polarkreis."
       }
     },
     "NK201": {
@@ -16627,7 +16627,7 @@
       "warum_falsch": {
         "höchstens 1,8 kHz betragen.": "So schmal muss Sprache nicht werden; 1,8 kHz schneidet die Höhen weiter weg als nötig und kostet Verständlichkeit, ohne einen Nachbarn zu schonen.",
         "höchstens 15,0 kHz betragen.": "15 kHz ist die Größenordnung einer Rundfunkübertragung mit vollem Tonumfang — ein SSB-Signal wäre damit mehr als fünfmal so breit, wie die Nachricht es verlangt.",
-        "höchstens 3,1 kHz betragen.": "Diese Zahl liegt sogar über den 3 kHz der höchsten NF-Frequenz; sie entsteht, wenn man die beiden Größen des Blattes vertauscht und dabei noch aufrundet."
+        "höchstens 3,1 kHz betragen.": "3,1 kHz ist eine gängige SSB-Filterbreite mancher Geräte, liegt aber über der hier verlangten Grenze von 2,7 kHz — und sogar über den 3 kHz der höchsten NF-Frequenz."
       }
     },
     "EJ211": {
@@ -17199,7 +17199,7 @@
       ],
       "warum_falsch": {
         "420 ⋅ 10⁶ A.": "Hier fehlt das Minus im Exponenten: statt 420 Millionstel Ampere stehen dort 420 Millionen Ampere.",
-        "42 ⋅ 10⁻⁶ A.": "Das ergibt 0,000042 A — das Komma wurde nur fünf statt sechs Stellen verschoben, der Wert ist zehnmal zu klein.",
+        "42 ⋅ 10⁻⁶ A.": "Das ergibt 0,000042 A — das Komma wanderte fünf Stellen, der Exponent wurde aber um sechs gesenkt — der Wert ist zehnmal zu klein.",
         "420 ⋅ 10⁻⁵ A.": "Das ergibt 0,0042 A — der Exponent ist um eins zu groß gelassen, der Wert ist zehnmal zu groß."
       }
     },
@@ -17310,7 +17310,7 @@
       ],
       "warum_falsch": {
         "220 pF.": "Die Zahl 220 ist richtig gebildet, aber p steht für 10⁻¹² und n für 10⁻⁹; 220 pF sind tausendmal zu klein.",
-        "22 pF.": "Hier stimmt beides nicht: das Komma wanderte nur eine Stelle und der Vorsatz ist p statt n, also ist der Wert zehntausendmal zu klein.",
+        "22 pF.": "Hier stimmt beides nicht: das Komma wanderte nur zwei statt drei Stellen, und der Vorsatz ist p statt n, also ist der Wert zehntausendmal zu klein.",
         "22 nF.": "Das Komma wanderte nur zwei statt drei Stellen; 22 nF sind zehnmal zu klein."
       }
     },
@@ -18581,7 +18581,7 @@
       "warum_falsch": {
         "1,00 kV": "Das ist die Spannungsfestigkeit, aber nicht die engere Grenze: bei 1000 V an 100 kΩ entstehen 10 W Wärme, zugelassen sind 6 W.",
         "100 V": "Diese Zahl gehört zum Widerstand mit 10 kΩ und 1 W, dort ist √(1 · 10 000) = 100 V. Hier wären 100 V erst 0,1 W, also weit unter der Grenze.",
-        "0,07 kV": "So klein wird das Ergebnis nur mit einem Faktor-10-Fehler: 774,6 V geteilt durch 10 sind 77,5 V. Die Gegenprobe zeigt, wie weit das daneben liegt — bei 70 V setzt der Widerstand 70²/100 000 gleich 0,049 W um, weniger als ein Hundertstel der erlaubten 6 W."
+        "0,07 kV": "So klein wird das Ergebnis nur mit einem Faktor-10-Fehler: etwa ein Zehntel des richtigen Werts. Die Gegenprobe zeigt, wie weit das daneben liegt — bei 70 V setzt der Widerstand 70²/100 000 gleich 0,049 W um, weniger als ein Hundertstel der erlaubten 6 W."
       }
     },
     "EB512": {
@@ -19291,7 +19291,7 @@
         "Probe: beide Zahlen sind neu, keine Eingangsfrequenz steht wieder da — 10,7 MHz und 66,7 MHz"
       ],
       "warum_falsch": {
-        "45,3 MHz und 88,1 MHz": "Beide Zahlen liegen falsch. Die Differenz muss hier unter 28 MHz liegen, 45,3 MHz ist größer als beide Eingangsfrequenzen; und 88,1 MHz liegt über der Summe 66,7 MHz. Ein nachvollziehbarer Rechenweg führt nicht dorthin.",
+        "45,3 MHz und 88,1 MHz": "Das sind Produkte dritter Ordnung: 3 · 28 − 38,7 = 45,3 und 3 · 38,7 − 28 = 88,1. Sie entstehen zwar schwach mit, gefragt sind aber die hauptsächlich erzeugten Mischfrequenzen — Summe und Differenz.",
         "17,3 MHz und 49,4 MHz": "Hier ist je eine Eingangsfrequenz verdoppelt und die andere abgezogen: 2 · 28 − 38,7 = 17,3 und 2 · 38,7 − 28 = 49,4. Solche Produkte höherer Ordnung entstehen zwar auch, gefragt sind aber die hauptsächlich erzeugten.",
         "56 MHz und 77,4 MHz": "Das sind die verdoppelten Eingangsfrequenzen, 2 · 28 = 56 und 2 · 38,7 = 77,4. Verdoppelt wird in einem Vervielfacher; hier sind die beiden Frequenzen gar nicht miteinander verrechnet worden."
       }
@@ -19721,7 +19721,7 @@
       "kniff": "Achte auf beide Zahlen, nicht nur auf den Anfang. Gefragt ist der ganze Bereich, in dem die für DX wichtigen Regionen sitzen, und der reicht bis 450 km hinauf. Die drei anderen Angebote hören zu früh auf oder beginnen zu tief.",
       "gruppe": "ausbreitung",
       "warum_falsch": {
-        "90–130 km Höhe.": "In diesem Streifen liegen mit 100 bis 110 km die sporadischen E-Regionen; sie bringen Sonderöffnungen, tragen aber nicht den regelmäßigen DX-Verkehr.",
+        "90–130 km Höhe.": "In diesem Streifen liegt die E-Schicht (rund 110 km), dazu die sporadischen E-Regionen; sie bringen Sonderöffnungen und kurze Strecken, tragen aber nicht den weltweiten DX-Verkehr.",
         "130–200 km Höhe.": "Der Anfang stimmt, doch bei 200 km ist der Bereich abgeschnitten und lässt gerade den Teil weg, in dem die F2-Region arbeitet.",
         "50–90 km Höhe.": "Das ist der unterste der angebotenen Bereiche, und unten dämpft die Ionisation, statt die Welle für DX zurückzubiegen."
       }
@@ -21220,7 +21220,7 @@
       "warum_falsch": {
         "einen Überschuss an beweglichen Elektronenlöchern.": "Das ist P-leitendes Material. Löcher im Überschuss bedeuten Elektronenmangel.",
         "ein Fehlen von Atomen im Gitter des Halbleiterkristalls.": "Eine Lücke im Kristallgitter ist ein Fehler im Material, keine Dotierung. Die Fremdatome sitzen im Gitter, sie fehlen nicht.",
-        "ein Fehlen von Dotierungsatomen.": "Ohne Dotierungsatome wäre es reines Silizium — also ein Isolator und weder N- noch P-leitend."
+        "ein Fehlen von Dotierungsatomen.": "Ohne Dotierungsatome wäre es reines Silizium — ein Eigenhalbleiter, der nur sehr schlecht leitet und weder N- noch P-leitend ist."
       }
     },
     "AB107": {
@@ -21229,7 +21229,7 @@
       "prinzip": "P wie positiv: dreiwertige Fremdatome haben ein Bindungselektron zu wenig. Die Lücke, das Loch, wandert wie eine positive Ladung.",
       "kniff": "Das Loch ist kein Teilchen, sondern eine fehlende Bindung, die weitergereicht wird. Beweglich ist sie trotzdem — deshalb steht in der Antwort \"beweglich\".",
       "warum_falsch": {
-        "ein Fehlen von Dotierungsatomen.": "Ohne Dotierung ist der Kristall rein und isoliert. P-Leitung entsteht erst durch die dreiwertigen Fremdatome.",
+        "ein Fehlen von Dotierungsatomen.": "Ohne Dotierung ist der Kristall rein und leitet nur sehr schlecht. P-Leitung entsteht erst durch die dreiwertigen Fremdatome.",
         "einen Überschuss an beweglichen Elektronen.": "Das ist N-leitendes Material. Beim P-Typ überwiegen die Löcher.",
         "ein Fehlen von Atomen im Gitter des Halbleiterkristalls.": "Eine Gitterlücke ist ein Kristallfehler. Das Loch beim P-Halbleiter ist etwas anderes: eine fehlende Bindung an einem Atom, das sehr wohl da ist."
       }
@@ -22002,7 +22002,7 @@
       "prinzip": "Der FET hat drei Anschlüsse: Source (Quelle), Drain (Senke) und Gate (Tor). Die Ladungsträger laufen von Source nach Drain, das Gate steuert.",
       "kniff": "Emitter, Basis und Kollektor gehören zum bipolaren Transistor. Wo einer dieser Namen in der Antwort auftaucht, ist sie schon falsch.",
       "warum_falsch": {
-        "Emitter, Drain, Source": "Emitter gehört zum bipolaren Transistor. Beim FET heißt dieser Anschluss Gate.",
+        "Emitter, Drain, Source": "Emitter gehört zum bipolaren Transistor; beim FET entspricht ihm die Source. In dieser Aufzählung fehlt damit das Gate.",
         "Gate, Source, Kollektor": "Kollektor gehört zum bipolaren Transistor. Beim FET heißt er Drain.",
         "Emitter, Basis, Kollektor": "Das sind alle drei Anschlüsse des bipolaren Transistors, nicht die des FET."
       }
@@ -22430,7 +22430,7 @@
       "prinzip": "Im C-Betrieb liegt der Arbeitspunkt unterhalb der Leitgrenze. Ohne Ansteuerung fließt gar kein Strom — der Transistor leitet nur während eines Teils der positiven Halbwelle.",
       "kniff": "Kein Ruhestrom heißt keine Verlustleistung im Leerlauf, und daher der hohe Wirkungsgrad. Der Preis ist ein stark verzerrtes Signal, das erst ein Schwingkreis wieder zur Sinusform ergänzt.",
       "warum_falsch": {
-        "Bei etwa 70–80 % des Stromes bei Nennleistung": "So hohe Ruheströme gibt es bei keiner Betriebsart. Selbst im A-Betrieb liegt der Ruhestrom bei etwa der Hälfte des Maximalstroms.",
+        "Bei etwa 70–80 % des Stromes bei Nennleistung": "Zu keiner Betriebsart passt dieser Wert. Im A-Betrieb fließt der volle Strom ständig, auch ohne Signal; im AB-Betrieb ist es nur ein kleiner Rest, und im C-Betrieb gar keiner.",
         "Bei fast 100 % des Stromes bei Nennleistung": "Das wäre ein Transistor, der ständig voll leitet — er würde sich ohne Signal zerstören.",
         "Bei etwa 10–20 % des Stromes bei Nennleistung": "Das ist der AB-Betrieb. Im C-Betrieb ist der Ruhestrom genau null."
       }
@@ -22852,7 +22852,7 @@
       "warum_falsch": {
         "800 Hz nicht überschreiten.": "Damit ginge zu viel Verständlichkeit verloren. Die Laute, die Wörter unterscheidbar machen, liegen weiter oben.",
         "1,8 kHz nicht überschreiten.": "Schon knapp. Verständlich bleibt es, aber deutlich dumpfer als nötig.",
-        "15 kHz nicht überschreiten.": "Das ist Rundfunkqualität. Das SSB-Signal wäre fünfmal so breit wie üblich und würde entsprechend viele Nachbarn stören."
+        "15 kHz nicht überschreiten.": "Das ist Rundfunkqualität. Das SSB-Signal wäre gut fünfmal so breit wie üblich und würde entsprechend viele Nachbarn stören."
       }
     },
     "AE209": {
@@ -22896,7 +22896,7 @@
       "warum_falsch": {
         "Die Trägerunterdrückung nimmt ab.": "Die hängt vom Abgleich des Balancemischers ab. Mit dem NF-Pegel davor hat sie nichts zu tun.",
         "Das Signal kann im Empfänger nicht demoduliert werden.": "Demodulieren lässt es sich weiterhin. Es klingt nur schlecht.",
-        "Die Modulation des Senders führt zur Zerstörung der Endstufe.": "Der Kompressor arbeitet auf der Niederfrequenzseite und erhöht die Spitzenleistung nicht. Die Endstufe merkt davon nichts."
+        "Die Modulation des Senders führt zur Zerstörung der Endstufe.": "Der Kompressor arbeitet auf der Niederfrequenzseite und erhöht die Spitzenleistung nicht. Die mittlere Leistung und damit die Wärme steigen zwar, zerstört wird die Endstufe davon aber nicht."
       }
     },
     "AE213": {
@@ -23015,7 +23015,7 @@
       ],
       "warum_falsch": {
         "12 kHz": "Das ist der übliche Wert für Schmalband-FM mit vollem Hub. Aus diesen Zahlen ergibt er sich nicht.",
-        "5,8 kHz": "Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort.",
+        "5,8 kHz": "Hier wurde nur die Modulationsfrequenz verdoppelt und der Hub einfach dazugezählt: 2 · 2 + 1,8 = 5,8. Verdoppelt wird aber die Summe aus beiden.",
         "3,8 kHz": "Das ist die Summe aus Hub und Modulationsfrequenz, aber ohne die Verdopplung. Ein Schritt zu früh aufgehört."
       }
     },
@@ -23485,7 +23485,7 @@
       "warum_falsch": {
         "Durch eine niedrige zweite ZF erreicht man leicht eine gute Spiegelselektion.": "Der Spiegel wird von der ersten ZF bestimmt. Bei der zweiten ZF ist er längst mit hindurch.",
         "Mit einer niedrigen ersten ZF erreicht man leicht gute Werte bei der Kreuzmodulation.": "Kreuzmodulation hängt von der Linearität der Eingangsstufe ab, nicht von der Lage der ZF.",
-        "Durch eine hohe erste ZF erreicht man leicht eine hohe Empfindlichkeit.": "Empfindlichkeit kommt aus der Rauschzahl der Eingangsstufe. Eine hohe ZF macht den Empfänger eher unempfindlicher, weil die Bauteile dort rauschärmer sein müssen."
+        "Durch eine hohe erste ZF erreicht man leicht eine hohe Empfindlichkeit.": "Empfindlichkeit kommt aus der Rauschzahl der Eingangsstufe. Eine hohe ZF macht es eher schwerer, denn bei höheren Frequenzen rauschen die Stufen stärker und verstärken weniger."
       }
     },
     "AF114": {
@@ -23818,7 +23818,7 @@
       "kniff": "Beide Schritte brauchen eigene Bauteile. Der Saug- oder Sperrkreis in den falschen Antworten wäre viel zu stumpf: Der Träger liegt unmittelbar am Rand des Seitenbandes, dazwischen liegen nur wenige hundert Hertz.",
       "warum_falsch": {
         "In einem Balancemodulator wird ein Zweiseitenband-Signal erzeugt. In einem Frequenzteiler wird ein Seitenband abgespalten.": "Ein Frequenzteiler teilt eine Frequenz, er trennt keine Seitenbänder. Dafür braucht es ein Filter.",
-        "In einem Balancemodulator wird ein Zweiseitenband-Signal erzeugt. Ein auf die Trägerfrequenz abgestimmter Saugkreis filtert den Träger aus.": "Den Träger hat der Balancemodulator schon entfernt — dieser Schritt wäre überflüssig. Und das eine Seitenband bliebe übrig, es wäre also gar kein SSB.",
+        "In einem Balancemodulator wird ein Zweiseitenband-Signal erzeugt. Ein auf die Trägerfrequenz abgestimmter Saugkreis filtert den Träger aus.": "Den Träger hat der Balancemodulator schon entfernt — dieser Schritt wäre überflüssig. Und beide Seitenbänder blieben stehen, es wäre also gar kein SSB.",
         "In einem Balancemodulator wird ein Zweiseitenband-Signal erzeugt. Ein auf die Trägerfrequenz abgestimmter Sperrkreis filtert den Träger aus.": "Derselbe Fehler: Der Träger ist bereits weg, und das zweite Seitenband wird nicht entfernt."
       }
     },
@@ -24595,7 +24595,7 @@
       "prinzip": "Bei 5/8 λ liegt der Erhebungswinkel der Hauptkeule am flachsten. Wird der Strahler noch länger, hebt sich die Keule wieder und es entsteht eine zweite, steile Keule.",
       "kniff": "5/8 λ ist ein Optimum, kein Immer-mehr-ist-besser. Und der Strahler ist in dieser Länge nicht mehr resonant — deshalb sitzt am Fußpunkt einer 5/8-λ-Vertikalen immer eine Anpassspule.",
       "warum_falsch": {
-        "3/4 λ": "Zu lang. Die Hauptkeule hebt sich wieder an, und es bildet sich eine zweite Keule unter steilem Winkel.",
+        "3/4 λ": "Zu lang. Die Hauptstrahlung hebt sich auf etwa 50 Grad an, und nur eine schwächere zweite Keule bleibt flach am Horizont.",
         "λ/2": "Strahlt bereits recht flach, aber nicht so flach wie 5/8 λ.",
         "λ/4": "Die gebräuchlichste Länge, aber der Erhebungswinkel ist deutlich steiler als bei 5/8 λ."
       }
@@ -24634,7 +24634,7 @@
         "G = 10 · log(321) = 25,1 dBi"
       ],
       "warum_falsch": {
-        "28,1 dBi": "Drei Dezibel zu viel — das wäre der doppelte Gewinn und entspräche einer um 40 % größeren Fläche.",
+        "28,1 dBi": "Drei Dezibel zu viel — das wäre der doppelte Gewinn und entspräche der doppelten Spiegelfläche, also einem um gut 40 % größeren Durchmesser.",
         "12,5 dBi": "Etwa die Hälfte des richtigen Werts. Hier wurde vermutlich das Quadrat vergessen.",
         "16,8 dBi": "Zu dieser Zahl führt keine der üblichen Verwechslungen — eine Blindantwort."
       }
@@ -24685,7 +24685,7 @@
         "G = 10 · log(17 109) = 42,3 dBi"
       ],
       "warum_falsch": {
-        "25,9 dBi": "Weit zu wenig — das läge unter dem 30-cm-Spiegel bei niedrigerer Frequenz.",
+        "25,9 dBi": "Weit zu wenig — das ist etwa der Gewinn des 30-cm-Spiegels bei 5,7 GHz (25,1 dBi), für 120 cm bei 10,4 GHz viel zu klein.",
         "50,5 dBi": "Acht Dezibel zu viel. Das entspräche einem Spiegel von rund 3 m Durchmesser.",
         "21,2 dBi": "Etwa die Hälfte des richtigen Werts, vermutlich ohne das Quadrat gerechnet."
       }
@@ -24781,7 +24781,7 @@
       ],
       "warum_falsch": {
         "ca. 20 Ω": "Viel zu niedrig. Ein solcher Wert käme nur bei einem sehr dicken Innenleiter zustande.",
-        "ca. 95 Ω": "Das ist der Wert ohne das Dielektrikum, also für Luft — die Wurzel aus εr wurde vergessen.",
+        "ca. 95 Ω": "Das kommt heraus, wenn man mit dem Außendurchmesser des Mantels (7,4 mm) rechnet statt mit dem der Isolierung (4,4 mm).",
         "ca. 50 Ω": "Der häufigste Kabelwert, aber hier ergeben die Abmessungen 75 Ω. Dafür müsste der Innenleiter dicker sein."
       }
     },
@@ -24881,7 +24881,7 @@
       "frage": "Wie bezeichnet man den Effekt, dass sich mit steigender Frequenz der Elektronenstrom mehr und mehr zur Oberfläche eines Leiters hin verlagert, so dass sich mit steigender Frequenz der ohmsche Verlustwiderstand des Leiters erhöht?",
       "richtig": "Als Skin-Effekt",
       "prinzip": "Der Wechselstrom erzeugt im Leiter ein Magnetfeld, und dieses treibt den Strom nach außen. Mit steigender Frequenz bleibt nur noch eine dünne Randschicht stromführend — daher der Name.",
-      "kniff": "Weil weniger Querschnitt genutzt wird, steigt der Widerstand. Deshalb versilbert man Spulendraht und verwendet Hohlleiter — im Inneren fließt ohnehin nichts.",
+      "kniff": "Weil weniger Querschnitt genutzt wird, steigt der Widerstand. Deshalb versilbert man Spulendraht und nimmt für hohe Leistungen Rohre statt Volldraht — im Inneren fließt ohnehin nichts.",
       "warum_falsch": {
         "Als Dunning-Kruger-Effekt": "Ein Begriff aus der Psychologie. Mit Hochfrequenztechnik hat er nichts zu tun.",
         "Als Doppler-Effekt": "Die Frequenzverschiebung bei bewegter Quelle oder bewegtem Empfänger.",
@@ -25095,7 +25095,7 @@
       "frage": "Wodurch können Mantelwellen auf Koaxialkabeln verursacht werden?",
       "richtig": "Durch symmetrische Antennen, schlechte Erdung asymmetrischer Antennen oder Einkopplung in den Koax-Schirm",
       "prinzip": "Mantelwellen entstehen immer dann, wenn die Symmetrie gestört ist: bei einer symmetrischen Antenne ohne Balun, bei einer unsymmetrischen Antenne mit schlechter Erdung, oder durch Einkopplung von außen in den Schirm.",
-      "kniff": "Drei verschiedene Wege zum selben Ergebnis. Die drei falschen Antworten nennen dagegen Kabellängen und Vielfache von λ/4 — Mantelwellen entstehen aber nicht durch Längen, sondern durch fehlende Symmetrie.",
+      "kniff": "Drei verschiedene Wege zum selben Ergebnis. Zwei der falschen Antworten nennen dagegen Kabellängen und Vielfache von λ/4 — Mantelwellen entstehen aber nicht durch Längen, sondern durch fehlende Symmetrie.",
       "warum_falsch": {
         "Durch Asymmetrie der Spannungsversorgung oder durch Dielektrika der Speiseleitung, die einen hohen Widerstand aufweisen": "Die Spannungsversorgung hat mit der Hochfrequenzsymmetrie der Antenne nichts zu tun.",
         "Durch Oberwellen auf Speiseleitungen, deren Länge ein Vielfaches von λ/4 oder 5/8 λ betragen": "Oberwellen sind ein Frequenzproblem. Mantelwellen entstehen unabhängig von der Kabellänge.",
@@ -26308,8 +26308,8 @@
       ],
       "warum_falsch": {
         "den D-Netz-Mobilfunkbereich.": "Der liegt bei rund 900 MHz — das wäre die dreißigste Harmonische.",
-        "den UKW-Betriebsfunk-Bereich.": "Der liegt oberhalb des Rundfunkbandes, bei rund 150 MHz und darüber.",
-        "den 2 m-Amateurfunkbereich.": "Der beginnt bei 144 MHz. Dafür bräuchte es die fünfte Harmonische."
+        "den UKW-Betriebsfunk-Bereich.": "Betriebsfunk liegt neben dem Rundfunkband, unter anderem unterhalb von 87,5 MHz und oberhalb von 146 MHz. Die 88,5 MHz liegen dagegen mitten im Rundfunkband.",
+        "den 2 m-Amateurfunkbereich.": "Der reicht von 144 bis 146 MHz, und keine Harmonische von 29,5 MHz trifft ihn: die vierte liegt bei 118 MHz, die fünfte mit 147,5 MHz schon darüber."
       }
     },
     "AJ205": {
@@ -26424,7 +26424,7 @@
       "frage": "Um die Gefahr von unerwünschten Eigenschwingungen in HF-Schaltungen zu verringern, ...",
       "richtig": "sollte jede Stufe gut abgeschirmt sein.",
       "prinzip": "Jede Stufe für sich abzuschirmen unterbricht die Kopplung zwischen ihnen. Ein einziges großes Gehäuse um alles herum verhindert nur die Abstrahlung nach außen — innen koppelt weiter alles mit allem.",
-      "kniff": "Abschirmen nach außen und Entkoppeln nach innen sind zwei verschiedene Aufgaben. Gegen Eigenschwingungen hilft nur die zweite.",
+      "kniff": "Ein Blech um das ganze Gerät wirkt nur nach außen. Gegen Eigenschwingungen hilft, jede Stufe einzeln abzuschirmen: so sind die Stufen voneinander entkoppelt und können sich nicht gegenseitig aufschaukeln.",
       "warum_falsch": {
         "sollte die vollständige Schaltung in einem einzelnen Metallgehäuse untergebracht sein.": "Das schirmt nach außen. Innen bleibt die Kopplung zwischen den Stufen bestehen.",
         "sollten die Abschirmungen der einzelnen Stufen nicht miteinander verbunden werden.": "Unverbundene Schirme wirken nicht. Sie brauchen einen gemeinsamen Massebezug.",
@@ -26490,9 +26490,9 @@
       "frage": "Was gilt beim Sendebetrieb für unerwünschte Aussendungen im Frequenzbereich zwischen 1,7 und 35 MHz? Sofern die Leistung einer unerwünschten Aussendung ...",
       "richtig": "0,25 μW überschreitet, sollte sie um mindestens 40 dB gegenüber der maximalen PEP des Senders gedämpft werden.",
       "prinzip": "Unterhalb von 30 MHz gilt: Eine unerwünschte Aussendung über 0,25 μW soll um mindestens 40 dB gegenüber der Spitzenleistung gedämpft sein. Es sind zwei Bedingungen, und die schwächere von beiden genügt.",
-      "kniff": "Zwei Zahlen zum Merken, und sie unterscheiden sich je nach Bereich: unter 30 MHz sind es 40 dB, darüber 60 dB. Die Leistungsschwelle von 0,25 μW ist in beiden Fällen gleich.",
+      "kniff": "Zwei Zahlen zum Merken, und sie unterscheiden sich je nach Bereich: im Bereich 1,7–35 MHz sind es 40 dB, im Bereich 50–1000 MHz 60 dB. Die Leistungsschwelle von 0,25 μW ist in beiden Fällen gleich.",
       "warum_falsch": {
-        "0,25 μW überschreitet, sollte sie um mindestens 60 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Die Schwelle stimmt, die Dämpfung nicht — 60 dB gelten oberhalb von 50 MHz.",
+        "0,25 μW überschreitet, sollte sie um mindestens 60 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Die Schwelle stimmt, die Dämpfung nicht — 60 dB gelten im Bereich 50–1000 MHz.",
         "1 μW überschreitet, sollte sie um mindestens 60 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Beide Werte falsch.",
         "1 μW überschreitet, sollte sie um mindestens 50 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Ebenfalls beide Werte falsch."
       }
@@ -26505,7 +26505,7 @@
       "warum_falsch": {
         "1 μW überschreitet, sollte sie um mindestens 60 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Die Dämpfung stimmt, die Schwelle nicht — sie liegt bei 0,25 μW.",
         "1 μW überschreitet, sollte sie um mindestens 50 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Beide Werte falsch.",
-        "0,25 μW überschreitet, sollte sie um mindestens 40 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Die Schwelle stimmt, die Dämpfung nicht — 40 dB gelten unterhalb von 30 MHz."
+        "0,25 μW überschreitet, sollte sie um mindestens 40 dB gegenüber der maximalen PEP des Senders gedämpft werden.": "Die Schwelle stimmt, die Dämpfung nicht — 40 dB gelten im Bereich 1,7–35 MHz."
       }
     },
     "AK101": {
@@ -26774,9 +26774,9 @@
       "frage": "Ab welchen Sendeleistungen kann an Sendeantennen Verletzungsgefahr durch hochfrequente Spannungen bestehen?",
       "richtig": "Bereits bei geringen Sendeleistungen von wenigen Watt",
       "prinzip": "An den Enden eines Strahlers liegt ein Spannungsbauch. Dort können schon bei wenigen Watt Spannungen entstehen, die bei Berührung eine Verbrennung verursachen.",
-      "kniff": "Hochfrequenzverbrennungen tun zunächst kaum weh, gehen aber tief — die Nerven werden mit verödet. Deshalb gilt der Grundsatz: Eine Antenne wird im Sendebetrieb nie berührt, gleich bei welcher Leistung.",
+      "kniff": "Hochfrequenzverbrennungen können tief ins Gewebe gehen und werden an der Hautoberfläche oft unterschätzt. Deshalb gilt der Grundsatz: Eine Antenne wird im Sendebetrieb nie berührt – gleich bei welcher Leistung.",
       "warum_falsch": {
-        "Auf Kurzwelle ab 100 Watt, auf VHF/UHF ab 50 Watt": "Eine solche Schwelle gibt es nicht. Entscheidend ist die Spannung am Strahlerende, und die ist auch bei kleinen Leistungen hoch.",
+        "Auf Kurzwelle ab 100 Watt, auf VHF/UHF ab 50 Watt": "Eine solche Schwelle gibt es nicht. Entscheidend ist die Spannung am Strahler, und die kann schon bei wenigen Watt gefährlich hoch sein – besonders an den Enden von Antennen und bei endgespeisten oder schlecht angepassten Antennen.",
         "Bei Sendeleistungen höher 100 Watt": "Auch das setzt eine Schwelle voraus, die es nicht gibt.",
         "Bei Sendeleistungen höher 500 Watt": "Erst recht zu hoch angesetzt. Verbrennungen sind schon bei wenigen Watt möglich."
       }
