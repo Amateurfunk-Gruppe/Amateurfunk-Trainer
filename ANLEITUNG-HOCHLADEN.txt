@@ -1,0 +1,41 @@
+ANLEITUNG HOCHLADEN - Stand 2.230 (20.10.2026)
+================================================
+Neu: PC-Startseite fuellt die Hoehe genau aus, Klasse und XP links
+     neben der Version, Name gross bei Maja, untere Reiter buendig,
+     Maja kommt erst nach Antippen/zwei Klicks, und der Forum-Chat
+     zeigt immer Datum und Uhrzeit (das steckt in der Webseite).
+
+ACHTUNG: Diesmal alle drei Schritte - die Webseite hat sich auch geaendert.
+
+SCHRITT 1 - GitHub (fuer Android-App und PC-Programm)
+  1. Im Ordner C:\Users\dietmar\Desktop\Amateurfunk-Trainer
+     doppelt auf  Hochladen.bat  klicken.
+  2. Warten, bis das Fenster fertig ist.
+  ERFOLG: Das Fenster meldet, dass das Hochladen erfolgreich war.
+
+SCHRITT 2 - Trainer im Browser
+  Datei:   _Webseite\trainer-cloud.zip   (24.271.677 Bytes)
+  1. dash.cloudflare.com oeffnen und anmelden.
+  2. Links "Workers & Pages" anklicken.
+  3. Projekt  amateurfunk-trainer-app  anklicken.
+  4. Oben rechts "Bereitstellung erstellen" (Create deployment).
+  5. Umgebung: Produktion.
+  6. trainer-cloud.zip in das Feld ziehen.
+  7. "Speichern und bereitstellen" (Save and Deploy).
+  ERFOLG: Cloudflare meldet 871 Dateien.
+          trainer.amateurfunk-trainer.com zeigt Stand 2.230.
+
+SCHRITT 3 - Webseite
+  Datei:   _Webseite\webseite-upload.zip   (9.739.817 Bytes)
+  Genau wie Schritt 2, aber:
+  3. Projekt  amateurfunk-trainer  (ohne "-app") anklicken.
+  6. webseite-upload.zip in das Feld ziehen.
+  ERFOLG: Cloudflare meldet 1074 Dateien.
+          amateurfunk-trainer.com/klasse-n/ oeffnet sich.
+
+ACHTUNG
+  - NICHT die alte "Webseite-Cloudflare.zip" nehmen (nur 24 Dateien).
+    Die kann geloescht werden.
+  - Die zwei Zips nicht vertauschen:
+    trainer-cloud.zip  -> amateurfunk-trainer-app
+    webseite-upload.zip -> amateurfunk-trainer

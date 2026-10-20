@@ -1633,11 +1633,12 @@
             html.pc-app #pcWerkOben { margin: 0 !important; }
             html.pc-app.stil-verspielt body:not(.runde-laeuft) #appHeute { display: grid !important; max-width: 1720px !important; width: auto !important; margin: 0 auto !important; padding: 0 34px;
                 box-sizing: border-box; flex: none !important;
-                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.95fr); gap: 16px 24px;
-                grid-template-areas: "kopf chips chips" "pc pc pc" "runde tag werk" "runde kach werk";
-                grid-template-rows: auto auto auto 1fr; min-height: calc(100vh - 160px); }
+                grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr) minmax(0, 0.95fr); gap: 16px 24px;
+                grid-template-areas: "pc pc pc" "runde tag werk" "runde kach werk" "runde term werk";
+                grid-template-rows: auto auto 1fr auto; }
             html.pc-app.stil-verspielt #appHeute > * { margin-left: 0 !important; margin-right: 0 !important; }
-            html.pc-app.stil-verspielt #appHeute .ah-kopf { grid-area: kopf; margin: 0 !important; }
+            /* Die zweite Kopfzeile faellt weg: Knoepfe oben in der Leiste, Gruss bei Maja. */
+            html.pc-app.stil-verspielt #appHeute .ah-kopf { display: none !important; }
             html.pc-app.stil-verspielt #appHeute #ahChips { grid-area: chips; align-self: center; justify-self: end; margin: 0 !important; }
             html.pc-app.stil-verspielt #pcWerkOben { grid-area: pc; }
             html.pc-app.stil-verspielt #appHeute .ah-liste, html.pc-app.stil-verspielt #appHeute .ah-weiter-ueber,
@@ -1645,23 +1646,66 @@
             html.pc-app.stil-verspielt #ahRunde { grid-area: runde; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; margin: 0 !important; }
             html.pc-app.stil-verspielt #ahRunde .ah-mk { width: 250px !important; right: 40px !important; }
             html.pc-app.stil-verspielt #ahTag { grid-area: tag; margin: 0 !important; }
-            html.pc-app.stil-verspielt #ahKacheln { grid-area: kach; align-content: stretch; grid-auto-rows: 1fr; margin: 0 !important;
+            /* 20.10.2026 Dietmar: "bei den Kacheln wird auch viel Platz verschwendet."
+               Die Reihen waren alle gleich hoch gestreckt (1fr), dadurch stand unter
+               jeder Kachel ein leerer Streifen. Jetzt ist jede Reihe so hoch wie ihr
+               Inhalt, die Kacheln stehen oben buendig. */
+            html.pc-app.stil-verspielt #ahKacheln { grid-area: kach; align-content: stretch; grid-auto-rows: minmax(min-content, 1fr); margin: 0 !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel.breit { grid-column: auto !important; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel:last-child:nth-child(3n+1) { grid-column: 1 / -1 !important; flex-direction: row; align-items: center; gap: 12px; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel:last-child:nth-child(3n+1) .pc-besch { display: none; }
+            /* 20.10.2026 Dietmar: "Maja ist laenger als die Seite rechts. Die Kacheln in der Mitte muessen wieder etwas groesser werden." Alle drei Spalten enden auf einer Linie: die Kachelreihen teilen sich die freie Hoehe, der Lehrpfad verteilt seine Stationen. */
+            html.pc-app.stil-verspielt #appWerk > #awPfad { flex: 1 1 auto; display: flex; flex-direction: column; margin-bottom: 0 !important; }
+            html.pc-app.stil-verspielt #awPfad .apf-weg { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel { min-height: 0 !important; }
             /* 19.10.2026 Dietmar: "Seite zu hoch". Seit Videos, Hilfe & Kurse und Rufzeichen bei den Kacheln stehen, sind es
                zehn Kacheln = vier Reihen, und die laengste Beschreibung (Pruefung simulieren) machte alle Reihen gleich hoch.
                Jetzt: Beschreibung hoechstens zwei Zeilen, Untertitel einzeilig, etwas weniger Polster. */
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel { padding: 11px 12px; gap: 6px; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            html.pc-app.stil-verspielt #ahKacheln .pc-besch { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 4px; }
-            html.pc-app.stil-verspielt #appWerk { grid-area: werk; min-height: 0; display: flex !important; flex-direction: column; margin: 0 !important; }
+            /* 20.10.2026: alles muss auf 1891x943 ohne Scrollen passen - die Langtexte in den Kacheln fallen weg, der Untertitel sagt genug. */
+            html.pc-app.stil-verspielt #ahKacheln .pc-besch { display: none; }
+            /* Dietmar: "Bei den Kacheln ist links daneben viel freie Flaeche." Symbol links, Text rechts daneben - halb so hoch. */
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 11px; padding: 9px 12px; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .kz { display: contents; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .kz > .ah-ico { grid-column: 1; grid-row: 1; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .kz > .anz { grid-column: 3; grid-row: 1; padding: 0; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel > div:not(.kz) { grid-column: 2; grid-row: 1; min-width: 0; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .anz:empty { display: none; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel { position: relative; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel b { line-height: 1.15; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .kz > .anz.klein { white-space: nowrap; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .ah-ico { width: 38px; height: 38px; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel { column-gap: 9px; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel .kz > .anz.klein { position: absolute; right: 11px; bottom: 8px; font-size: 11.5px; line-height: 1; }
+            html.pc-app.stil-verspielt #ahKacheln .ah-kachel:has(.anz.klein:not(:empty)) small { padding-right: 48px; }
+            html.pc-app.stil-verspielt #awPfad .apf-satz { display: none; }
+            html.pc-app.stil-verspielt #appWerk { grid-area: werk; min-height: 0; padding-bottom: 0 !important; display: flex !important; flex-direction: column; margin: 0 !important; }
             html.pc-app.stil-verspielt #appWerk > #awUeberLevel { margin-top: 0 !important; }
             html.pc-app.stil-verspielt #appWerk > #awFort { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
             /* 19.10.2026 Dietmar: Luecken im Fortschrittskasten. Der Kasten bleibt so hoch wie sein Inhalt, die Prueftermin-Karte sitzt unten buendig mit der Runde. */
-            html.pc-app.stil-verspielt #appWerk > #awCount { margin-top: auto !important; }
+            /* 20.10.2026 Dietmar: "Dein Level / Dein Fortschritt / Lehrgang diesen Text
+               aus der Main entfernen." Am PC tragen die Karten ihre Ueberschrift selbst. */
+            html.pc-app.stil-verspielt #appWerk > .ah-ueber { display: none !important; }
+            /* 20.10.2026 Dietmar: "was sollen diese 2 Luecken?" Die erste kam vom leeren
+               Verlaufskasten (war nur unsichtbar, nahm aber Platz weg), die zweite vom
+               automatischen Rand ueber der Prueftermin-Karte. Beides weg: die Karten
+               stehen jetzt ohne Loch untereinander. */
+            html.pc-app.stil-verspielt #appWerk > #awCount { margin-top: 0 !important; }
+            /* 20.10.2026 Dietmar: alles muss auf 1891x943 passen. Die Pruefungs-Karte wandert in die mittlere Spalte (dort war Platz). */
+            html.pc-app.stil-verspielt #appHeute > #awCount { grid-area: term; align-self: start; margin: 0 !important; }
             html.pc-app.stil-verspielt #appWerk > #awLetzte { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; overflow: hidden; margin: 14px 0 14px !important; padding: 12px 16px; }
-            html.pc-app.stil-verspielt #appWerk > #awLetzte.awl-zu-klein { visibility: hidden; }
+            html.pc-app.stil-verspielt #appWerk > #awLetzte.awl-zu-klein { display: none !important; }
+            html.pc-app.stil-verspielt #appWerk > .ah-karte { padding-top: 10px; padding-bottom: 10px; }
+            html.pc-app.stil-verspielt #appWerk > #awFort .aw-klein { display: none; }
+            html.pc-app.stil-verspielt #appWerk > #awFort { gap: 8px; }
+            html.pc-app.stil-verspielt #appWerk { gap: 12px; }
+            html.pc-app.stil-verspielt #appWerk > #awFort .aw-balken { margin: 6px 0 8px; }
+            html.pc-app.stil-verspielt #appWerk > #awFort .aw-schalt { margin-top: 6px; }
+            html.pc-app.stil-verspielt #awPfad .apf-kopf { margin-bottom: 8px; }
+            html.pc-app.stil-verspielt #awPfad .apf-strip { margin-bottom: 8px; }
+            html.pc-app.stil-verspielt #awPfad .apf-mehr { margin-top: 6px; }
             html.pc-app.stil-verspielt #appWerk > #awUeberWerk, html.pc-app.stil-verspielt #appWerk > #awGrid { display: none !important; }
         }
         /* P126 (11.10.2026): Dietmar mit Bild der PC-Ansicht "wie die App", Stil Sachlich:
@@ -1836,6 +1880,47 @@
         /* P66 */
         #roboBlase .rb-knoepfe button { flex: 1 1 auto; }
         html.pc-app [id$="Modal"] .app-stil-wahl { max-width: 560px; }
+
+        /* Am PC sitzen die Knoepfe der Startseite oben in der Leiste, der Gruss
+           steht in der Runden-Karte bei Maja bzw. Funki (20.10.2026, Dietmar:
+           "Verschiebe beim Desktop die Buttons oben in die rote markierte
+            Leiste und den Namen gruen markiert bei Maja mit rein."). */
+        html.pc-app #appLeiste #ahChips { display: flex; align-items: center; gap: 8px; margin: 0 10px 0 0; flex: 0 0 auto; }
+        html.pc-app #appLeiste #ahChips > * { margin: 0 !important; }
+        html.pc-app #appLeiste #ahChips .ah-termin { flex: none; }
+        html.pc-app #appLeiste #ahChips .ah-termin:empty { display: none; }
+        /* Im Stil Verspielt steckt der Pruefungstermin in der Countdown-Karte, nicht oben */
+        html.pc-app.stil-verspielt #appLeiste #ahChips .ah-termin { display: none !important; }
+        html.pc-app #appLeiste #ahChips .ah-onair { margin-left: 4px; }
+        /* Der Name steht gross darueber - die kleine Wiederholung darunter faellt weg */
+        html.pc-app.stil-verspielt #appHeute .ah-runde > .ah-gruss small { display: none; }
+        html.pc-app #appLeiste .al-titel { flex: 0 0 auto; margin-right: auto; }
+        html.pc-app.pc-passt, html.pc-app.pc-passt body { overflow-y: hidden !important; }
+        /* 20.10.2026 Dietmar: "Kann man aus den Icons auch Buttons machen? Haette das gerne bei Chat und Suche." Nur am PC: Chat und Suche
+           sehen aus wie Forum und Abmelden - Rahmen, Symbol und Wort. */
+        /* 20.10.2026 Dietmar: "Die Leiste unten kann paar mm nach unten." Am PC sitzt sie fast am Rand (3 statt 12 px). */
+        html.pc-app.android-app.stil-verspielt #appNavi { bottom: 3px; }
+        html.pc-app #appLeiste #alChat, html.pc-app #appLeiste #alSuche { position: relative; width: auto; flex: 0 0 auto; height: 36px; padding: 0 14px; gap: 8px; margin: 0 2px;
+            border: 1px solid var(--s-rand2, var(--line)); background: var(--s-fl, var(--card-bg)); color: var(--s-text, var(--ink)); font: 600 14px var(--font-body, inherit); }
+        html.pc-app #appLeiste #alChat i, html.pc-app #appLeiste #alSuche i { font-size: 14px; color: var(--s-akzent, var(--tuerkis)); }
+        html.pc-app #appLeiste #alChat::after { content: 'Chat'; }
+        html.pc-app #appLeiste #alSuche::after { content: 'Suche'; }
+        html.pc-app #appLeiste #alChat .al-zahl { top: -7px; right: -7px; }
+        html.pc-app #appLeiste .al-titel { display: flex; align-items: center; gap: 10px; }
+        html.pc-app #appLeiste .al-titel #appZielZeile { display: flex; margin: 0 0 0 6px !important; flex: 0 0 auto; }
+        html.pc-app #appLeiste .al-titel #appZielZeile .app-chip { margin: 0 !important; }
+        html.pc-app #appLeiste .al-titel #ahXp { margin: 0 0 0 -2px !important; flex: 0 0 auto; }
+        html.pc-app.stil-verspielt #appHeute .ah-runde > .ah-gruss { position: relative; margin: 0 0 18px; padding: 0; max-width: none; }
+        html.pc-app.stil-verspielt #appHeute .ah-runde > .ah-gruss .gt { display: block; font-size: 19px; font-weight: 600; color: rgba(255,255,255,0.82); }
+        html.pc-app.stil-verspielt #appHeute .ah-runde > .ah-gruss .name { display: block; font: 700 46px/1.08 var(--font-display); color: #fff; letter-spacing: -0.4px; }
+
+        /* 20.10.2026 Dietmar: "Die Buttons liegen rechts und links ausserhalb. Nimm sie nur etwas weiter in die Mitte." Am PC stehen die fuenf Reiter innerhalb der Inhaltsbreite (1720 px, mittig), nicht am Bildschirmrand. */
+        html.pc-app.android-app:is(.stil-verspielt, .stil-sachlich) #appNavi { padding-left: max(24px, calc((100% - 1720px) / 2 + 34px)); padding-right: max(24px, calc((100% - 1720px) / 2 + 34px)); }
+        /* 20.10.2026 Dietmar: "sie sollen rechts und links mit dem Hauptfenster buendig werden" und "die Kachel zum Anklicken koennen etwas breiter werden". Die fuenf Reiter sind breite Kacheln, die erste links und die letzte rechts buendig mit der Hauptflaeche (die genaue Kante setzt pcFit()). */
+        html.pc-app.android-app:is(.stil-verspielt, .stil-sachlich) #appNavi { grid-template-columns: repeat(5, minmax(0, 180px)); justify-content: space-between; }
+        html.pc-app #appNavi button { border-radius: 14px; background: color-mix(in srgb, var(--s-akzent, var(--tuerkis)) 6%, transparent); transition: background 0.15s; }
+        html.pc-app #appNavi button.an { background: color-mix(in srgb, var(--s-akzent, var(--tuerkis)) 14%, transparent); }
+        html.pc-app #appNavi button .an-pille { background: transparent !important; }
 
         /* P67: Mauseffekte am PC. ":not(#pcX)" hebt die Regeln ueber die alten Knopf-Regeln vom PC (button:hover ...) */
         @media (hover: hover) and (pointer: fine) {
@@ -2209,6 +2294,25 @@
         @keyframes awRakete { 0%, 100% { transform: rotate(-20deg) translate(0, 0); } 50% { transform: rotate(-20deg) translate(3px, -4px); } }
         html.android-app body.eckig.app-rund #appWerk .aw-gross , html:not(.android-app) body.eckig.app-rund #appWerk .aw-gross{ border-radius: 22px !important; }
         html.android-app body.eckig.app-rund #appWerk .aw-chip , html:not(.android-app) body.eckig.app-rund #appWerk .aw-chip{ border-radius: 10px !important; }
+        /* 20.10.2026: gleiche Regeln fuer die Pruefungs-Karte, wenn sie am PC in der mittleren Spalte steht */
+        #appHeute > .aw-count { display: flex; align-items: center; gap: 14px; min-height: 110px; color: #fff; border: 0; overflow: hidden;
+            background: linear-gradient(135deg, #FF8A3D 0%, #FF4D6D 100%); box-shadow: 0 14px 28px rgba(255,77,109,0.30), inset 0 1px 0 rgba(255,255,255,0.3);
+            transition: transform 0.22s cubic-bezier(.3, 1.7, .5, 1); }
+        #appHeute > .aw-count:active { transform: scale(0.97); transition-duration: 0.06s; }
+        #appHeute > .aw-count.leer { background: linear-gradient(135deg, #FFB547 0%, #FF7A45 100%); box-shadow: 0 14px 28px rgba(255,122,69,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
+        #appHeute > .aw-count .aw-gross { width: 78px; height: 78px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            background: rgba(255,255,255,0.18); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
+        #appHeute > .aw-count .aw-gross b { font: 700 32px/1 var(--font-display); }
+        #appHeute > .aw-count .aw-gross.lang b { font-size: 26px; }
+        #appHeute > .aw-count .aw-gross > i { font-size: 26px; }
+        #appHeute > .aw-count .aw-gross small { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.92; }
+        #appHeute > .aw-count .aw-ct { flex: 1; min-width: 0; position: relative; }
+        #appHeute > .aw-count h4 { margin: 0; padding-right: 24px; font: 700 17px/1.25 var(--font-display); color: #fff; }
+        #appHeute > .aw-count p { margin: 4px 0 8px; font-size: 13px; line-height: 1.35; opacity: 0.94; color: #fff; }
+        #appHeute > .aw-count .aw-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.22); padding: 5px 9px; font-size: 12.5px; font-weight: 700; }
+        #appHeute > .aw-count .aw-rakete { position: absolute; right: 14px; top: 12px; font-size: 22px; opacity: 0.85; animation: awRakete 3.6s ease-in-out infinite; }
+        html.android-app body.eckig.app-rund #appHeute > .aw-count .aw-gross , html:not(.android-app) body.eckig.app-rund #appHeute > .aw-count .aw-gross{ border-radius: 22px !important; }
+        html.android-app body.eckig.app-rund #appHeute > .aw-count .aw-chip , html:not(.android-app) body.eckig.app-rund #appHeute > .aw-count .aw-chip{ border-radius: 10px !important; }
 
         /* ---- Werkzeuge ---- */
         #appWerk .aw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -24292,7 +24396,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 221, datum: '20.10.2026' };
+const TRAINER_STAND = { nr: 232, datum: '20.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -52852,7 +52956,71 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Ganz oben ist die untere Leiste immer da - auch wenn die Seite ohne
     // Scroll-Ereignis nach oben gesprungen ist (neue Ansicht, Runde vorbei).
     function leisteOben(){ const y = window.scrollY || 0; if(y <= 60 || y + window.innerHeight >= D.documentElement.scrollHeight - 24) D.body.classList.remove('app-navi-weg'); }
-    function nachziehen(){ tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); tu(rundeHoehe); tu(sperreLoesen); tu(leisteOben); }
+    function pcFit(){
+        // 20.10.2026 Dietmar: "Auf der Groesse muss alles rein. Wenn moeglich dynamisch, damit es auch auf kleineren Monitoren passt."
+        // Und: "Bildgroesse steht auf automatisch und es ist eine Luecke drin."
+        // Die Startseite am PC (Stil Verspielt) fuellt die Hoehe zwischen Leiste oben und Reitern unten genau aus: zu hoch -> kleiner
+        // gerechnet, zu niedrig -> etwas groesser (hoechstens 112 %). Gemessen wird am Ergebnis (Bildschirm-Pixel) und in wenigen
+        // Schritten nachgeregelt - so stimmt es auch, wenn Browser oder Seite selbst gezoomt sind (Chrome/Edge, "Bildgroesse automatisch").
+        const h = $('appHeute'), navi = $('appNavi');
+        if(!h) return;
+        const cl = H.classList;
+        const pc = cl.contains('pc-app') && !D.body.classList.contains('runde-laeuft');
+        const aktiv = pc && cl.contains('stil-verspielt') && h.offsetParent !== null;
+        if(!aktiv && h.style.zoom) h.style.zoom = '';
+        // Klassen-Wahl links neben die Version (Dietmar 20.10.2026) - die Version entsteht erst spaeter, darum hier nachholen
+        if(pc){
+            const ziel = $('appZielZeile'), ver = $('pcVersion'), xp = $('ahXp');
+            if(ziel && ver && ver.parentNode && ziel.parentNode !== ver.parentNode) ver.parentNode.insertBefore(ziel, ver.nextSibling);
+            if(ziel && xp && ziel.parentNode && xp.parentNode !== ziel.parentNode) ziel.parentNode.insertBefore(xp, ziel.nextSibling);   // XP direkt hinter die Klasse (Dietmar 20.10.2026)
+        }
+        const naviDa = !!navi && getComputedStyle(navi).display !== 'none';
+        if(aktiv){
+            let z = parseFloat(h.style.zoom) || 1;
+            for(let n = 0; n < 6; n++){
+                const r = h.getBoundingClientRect();
+                // scrollunabhaengig: Oberkante der Seite = r.top + scrollY (sonst schrumpft sie beim Scrollen - Dietmar 20.10.2026)
+                const oben = r.top + (window.scrollY || 0);
+                const unten = naviDa ? navi.getBoundingClientRect().top : innerHeight;
+                const platz = unten - oben - 12;
+                if(r.height <= 0 || platz <= 0) break;
+                if(Math.abs(platz - r.height) <= 4) break;
+                let zn = z * platz / r.height;
+                zn = Math.min(1.12, Math.max(0.55, Math.round(zn * 1000) / 1000));
+                if(Math.abs(zn - z) < 0.003) break;
+                z = zn;
+                h.style.zoom = (z > 0.997 && z < 1.003) ? '' : String(z);
+            }
+        }
+        // Passt alles, gibt es nichts zu scrollen (Dietmar 20.10.2026: "minimal kann ich scrollen und dabei veraendert es die Groesse. Das gefaellt mir gar nicht").
+        // Nur wenn selbst die kleinste Stufe nicht reicht, bleibt die Seite scrollbar.
+        let passt = false;
+        if(aktiv){
+            const r2 = h.getBoundingClientRect(), un = naviDa ? navi.getBoundingClientRect().top : innerHeight;
+            passt = (parseFloat(h.style.zoom) || 1) > 0.56 || (r2.bottom <= un);
+        }
+        if(passt !== H.classList.contains('pc-passt')){
+            H.classList.toggle('pc-passt', passt);
+            if(passt && window.scrollY) window.scrollTo(0, 0);
+        }
+        // Reiter unten: links/rechts buendig mit der Hauptflaeche (Dietmar 20.10.2026). Auch hier wird an den Kacheln selbst
+        // gemessen und nachgeregelt.
+        const ref = $('pcWerkOben') || h;
+        const tk = navi ? navi.querySelectorAll(':scope > button') : [];
+        if(pc && naviDa && ref && ref.offsetParent !== null && tk.length > 1){
+            for(let n = 0; n < 4; n++){
+                const r = ref.getBoundingClientRect(), a = tk[0].getBoundingClientRect(), b = tk[tk.length - 1].getBoundingClientRect();
+                const dl = a.left - r.left, dr = b.right - r.right;
+                if(Math.abs(dl) <= 1.5 && Math.abs(dr) <= 1.5) break;
+                const cs = getComputedStyle(navi);
+                const pl0 = parseFloat(cs.paddingLeft) || 0, pr0 = parseFloat(cs.paddingRight) || 0;
+                navi.style.paddingLeft = Math.max(8, Math.round(pl0 - dl * 0.95)) + 'px';
+                navi.style.paddingRight = Math.max(8, Math.round(pr0 + dr * 0.95)) + 'px';
+            }
+        }
+    }
+    window.addEventListener('resize', () => tu(pcFit));
+    function nachziehen(){ tu(pcFit); tu(avatar); tu(zielText); tu(rundenText); tu(gruppenZahl); tu(chatZahl); tu(tastaturPruefen); tu(rundeHoehe); tu(sperreLoesen); tu(leisteOben); }
     nachziehen();
     setInterval(nachziehen, 1000);
     // Die Fragennummer oben sofort mitziehen, nicht erst nach einer Sekunde.
@@ -53482,6 +53650,34 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else window.open('https://amateurfunk-trainer.com/forum/', '_blank', 'noopener');
     });
     tu(() => { const k = $('ahKForumK'); if(k) k.addEventListener('click', forumAuf); });
+    // ================================================================
+    //  AM PC: KOPFZEILE IN DIE OBERE LEISTE            (20.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Verschiebe beim Desktop die Buttons oben in die rote
+    //  markierte Leiste und den Namen gruen markiert bei Maja mit rein.
+    //  Da kannst den Namen groesser schreiben."
+    //  Die zweite Zeile (Gruss | Forum | Klasse | XP | Abmelden) kostete
+    //  Hoehe und stand halb leer da. Jetzt wandern die Knoepfe nach oben
+    //  neben die Zeichen der Leiste, der Gruss in die Runden-Karte zu
+    //  Maja bzw. Funki - dort ist Platz, und er darf groesser sein.
+    //  Der Forum-Knopf sitzt dabei links neben Abmelden.
+    // ================================================================
+    tu(() => {
+        if(!document.documentElement.classList.contains('pc-app')) return;
+        const f = $('ahForum'), chips = $('ahChips'), ab = $('ahAnmelden');
+        if(f && chips && ab && f.parentNode !== chips) chips.insertBefore(f, ab);
+        const leiste = $('appLeiste'), erst = $('alTrainer') || $('alChat');
+        if(leiste && chips && erst && chips.parentNode !== leiste) leiste.insertBefore(chips, erst);
+        const gruss = $('ahGruss'), runde = $('ahRunde');
+        if(gruss && runde && gruss.parentNode !== runde) runde.insertBefore(gruss, runde.firstChild);
+        // 20.10.2026 Dietmar: "Die Klassen waehlen, bitte links neben der Version."
+        const ziel = $('appZielZeile'), ver = $('pcVersion');
+        if(ziel && ver && ver.parentNode && ziel.parentNode !== ver.parentNode) ver.parentNode.insertBefore(ziel, ver.nextSibling);
+    });
+    // XP-Anzeige antippbar: oeffnet die Stufen (wie die Level-Karte) - Dietmar 20.10.2026: "Wenn ich auf XP klicke, kommt nichts."
+    tu(() => { const x = $('ahXp'); if(!x) return; x.style.cursor = 'pointer'; x.setAttribute('role', 'button'); x.setAttribute('tabindex', '0'); x.title = 'Deine Stufe und alle Stufen ansehen';
+        const auf = () => tu(() => { const l = $('awLevel'); if(l) l.click(); });
+        x.addEventListener('click', auf); x.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); auf(); } }); });
     tu(() => { const f = $('ahForum'); if(f) f.addEventListener('click', () => tu(() => {
         try{ afuZaehl && afuZaehl('forum'); }catch(e){}
         if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/forum/');
@@ -54026,6 +54222,16 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const RG = document.documentElement.classList.contains('pc-breit') ? 2.3 : 1;   // am PC groesser
     const RW = Math.round(92 * RG), RH = Math.round(115 * RG);              // so gross wie in der Karte
     const robo = { da: false, modus: '', schritt: 0, uhren: [], bw: 0, bh: 0, frei: 0, breite: 0, stapel: false };
+    // 20.10.2026 Dietmar: "Maja soll nicht beim Start gleich ins Bild kommen. Erst wenn man sie anklickt oder angefangen hat Buttons zu klicken.
+    // Sofort beim Start ist etwas laestig." Von selbst kommt sie erst, wenn zwei Knoepfe gedrueckt wurden - oder sofort, wenn man sie antippt.
+    robo.erlaubt = false; robo.klicks = 0;
+    D.addEventListener('click', e => {
+        if(robo.erlaubt) return;
+        const t = e.target && e.target.closest ? e.target : null;
+        if(!t) return;
+        if(t.closest('.ah-mk, #roboHelfer, #roboBlase, #ahRunde .maskottchen, .ah-maja')){ robo.erlaubt = true; return; }
+        if(t.closest('button, .ah-kachel, [role="button"], a')){ robo.klicks++; if(robo.klicks >= 2) robo.erlaubt = true; }
+    }, true);
     // Die Anzeigegroesse (Einstellungen -> Allgemein) setzt html.style.zoom.
     // getBoundingClientRect und innerWidth zaehlen dann in Bildschirm-
     // punkten, left/top/width in ungezoomten - wie bei bildZoomAn(). Hier
@@ -56854,6 +57060,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(robo.modus && !ortPasst()) roboHeim(true);    // Runde, Fenster oder Stilwechsel
             return;
         }
+        if(!robo.erlaubt){ robo.frei = 0; return; }      // noch nichts angeklickt: Maja bleibt in der Karte
         const jetzt0 = Date.now();
         if(!roboDarf()){ robo.frei = 0; tu(() => begleiten(jetzt0)); tu(() => issPruefen(jetzt0, true)); return; }
         robo.fensterEl = null;
@@ -57184,6 +57391,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function pfadNachziehen(){
         const el = $('awPfad'), ue = $('awUeberPfad');
         if(!el) return;
+        tu(() => {
+            const hc = document.documentElement.classList;
+            if(!hc.contains('pc-app') || !hc.contains('stil-verspielt')) return;
+            const c = $('awCount'), k = $('ahKacheln');
+            if(c && k && c.parentNode !== k.parentNode){
+                k.parentNode.insertBefore(c, k.nextSibling);
+                c.addEventListener('click', () => werkBlattAuf('termin'));
+            }
+        });
         let lek = [];
         tu(() => { lek = (window.qslLektionen ? qslLektionen() : []) || []; });
         if(lek.length < 3){
@@ -57206,7 +57422,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // ---- Welche Stationen stehen da? Ohne "alle" ein Fenster um die aktuelle.
         const alle = pfadAlle || lek.length <= 6;
         const von = alle ? 0 : Math.max(0, jetzt - 1);
-        const bis = alle ? lek.length : Math.min(lek.length, jetzt + 4);
+        const bis = alle ? lek.length : Math.min(lek.length, jetzt + (H.classList.contains('pc-app') ? 3 : 4));
 
         let zeilen = '';
         for(let i = von; i < bis; i++){
