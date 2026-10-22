@@ -472,3 +472,7 @@ neu 1.txt
 
 # Private Anleitung fuer den Heimnetz-Laptop (Benutzername, Netzwerk) - nicht auf GitHub
 SERVER-FREIGABE.txt
+
+# Hoerproben der Maja-Stimme und das Webseiten-Paket (21.10.2026) - nur zum Anhoeren/Hochladen bei Cloudflare, nicht auf GitHub und nicht in die App
+/stimmproben/
+/webseite-upload.zip
