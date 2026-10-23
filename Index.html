@@ -177,6 +177,14 @@
             try{
                 var stil = localStorage.getItem('app_stil') === 'verspielt' ? 'verspielt' : 'sachlich';
                 document.documentElement.classList.add('stil-' + stil);
+                // STIL DER FRAGE IN DER APP (23.10.2026): Der Kopf setzte fs-bunt / fs-petrol bisher nur im Browser, nicht in der
+                // App. Die Farben von Verspielt (vor allem Dunkel) und die bunten Antworten haengen aber an dieser Klasse -
+                // wer "Nicht mehr anzeigen" bei der Stilwahl gesetzt hatte, sah nach dem Neustart eine halb helle Oberflaeche.
+                var fsA = localStorage.getItem('afu_fragenstil');
+                if(!/^(bunt|petrol|navy|schlicht)$/.test(fsA || '')) fsA = stil === 'verspielt' ? 'bunt' : 'petrol';
+                document.documentElement.classList.add('fs-' + fsA);
+                var faA = localStorage.getItem('afu_antwortfarbe');
+                if(/^(blau|gruen|petrol|orange|grau|lila)$/.test(faA || '')) document.documentElement.classList.add('fa-' + faA);
                 var ds = localStorage.getItem('app_design');
                 if(ds === 'system' && window.matchMedia)
                     localStorage.setItem('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -24453,7 +24461,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 303, datum: '23.10.2026' };
+const TRAINER_STAND = { nr: 304, datum: '23.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -38351,7 +38359,7 @@ html.android-app .erg-buehne .erg-kopf{padding-right:78px}
    Stilen und bei jeder Runde; Maja entfaellt hier; Teilen-Knopf immer. */
 .erg-kachel{display:flex;align-items:center;gap:16px;margin:0 0 14px;padding:16px;border-radius:4px;color:#fff;
   background:linear-gradient(135deg,#0E7FA6,#1564C9 55%,#5B3FE0);box-shadow:0 8px 22px rgba(30,70,200,.25)}
-.erg-kachel.k-gelb{background:linear-gradient(135deg,#a8691a,#d69e2e 60%,#e0a030);box-shadow:0 8px 22px rgba(200,140,30,.25)}
+.erg-kachel.k-gelb{background:linear-gradient(135deg,#6e430a,#8a560c 60%,#9a650c);box-shadow:0 8px 22px rgba(200,140,30,.25)}
 .erg-kachel.k-grau{background:linear-gradient(135deg,#4a5a78,#2b3a55);box-shadow:0 8px 22px rgba(40,60,100,.25)}
 .erg-buehne.vs .erg-kachel,body.app-rund .erg-kachel{border-radius:16px}
 html.android-app .erg-buehne .erg-kachel{border-radius:calc(var(--s-r-karte,26px) * .7)}
@@ -38370,9 +38378,21 @@ html.android-app .erg-buehne .erg-teilen{border-radius:calc(var(--s-r-karte,26px
 .erg-teilen:hover{filter:brightness(1.06)}
 body.dark .erg-buehne.sa .erg-teilen{background:#2a78d6}
 .erg-fragen{margin:2px 0 6px}
-.erg-fragen>summary b.gut{background:#e9f8f1;color:#1f9d55}
+.erg-fragen>summary b.gut{background:#e9f8f1;color:#136a38}
+.erg-haken>summary b{color:#b02a2a}
+.erg-f{color:#136a38}
+.erg-f.no{color:#b02a2a}
+.erg-f.of{color:#56657a}
+.erg-fehler code{color:#b02a2a}
+.erg-w-xp{color:#8f5600}.erg-w-no{color:#a82a1e}
 body.dark .erg-buehne .erg-fragen>summary b.gut{background:#13301f;color:#5fd69a}
-.erg-fragen>summary .t{margin-right:2px}
+.erg-fragen>summary{flex-wrap:nowrap;white-space:nowrap}
+.erg-fragen>summary .t{margin-right:2px;white-space:nowrap}
+.erg-fragen>summary b{white-space:nowrap;flex:none}
+.erg-fragen>summary .zu{white-space:nowrap}
+.erg-haken>summary .t{white-space:nowrap}
+.erg-haken>summary b{white-space:nowrap}
+@media (max-width: 420px){ .erg-fragen>summary .zu{display:none} }
 .erg-fragen .erg-gitter{margin-top:8px}
 .erg-fragen .erg-f:not(.no):not(.of) i{display:none}
 .erg-fragen .erg-hilfe{font-size:12.5px;color:#5d6b80;margin:-6px 0 10px}
@@ -38385,6 +38405,9 @@ body.dark .erg-buehne .erg-fragen .erg-hilfe{color:#9fb0c6}
   .erg-fragen .erg-f{height:46px;font-size:17px;border-radius:10px}
 }
 @media (prefers-reduced-motion: reduce){.erg-kachel .erg-siegel{animation:none !important}}
+body.dark .erg-buehne.sa .erg-wert div{color:#9fb0c6}
+body.dark .erg-buehne.sa .erg-wert b[style*="1f9d55"]{color:#5fd69a !important}
+body.dark .erg-buehne.sa .erg-wert b[style*="c0392b"]{color:#ff8a8a !important}
 /* Das Fenster "Frage nachsehen" */
 #ergFrage{position:fixed;inset:0;z-index:99992;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 #ergFrage .ef-blatt{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#17243a;border-radius:18px;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
@@ -38432,7 +38455,7 @@ async function ergebnisBildErzeugen(d){
     x.fillStyle = g; x.fillRect(0, 0, W, H);
     const rK = d.rund ? 16 : 3, rKarte = d.rund ? 14 : 3, rZ = d.rund ? 11 : 2;
     // Kachel
-    const farben = { gruen: ['#0E7FA6', '#1564C9', '#5B3FE0'], gelb: ['#a8691a', '#d69e2e', '#e0a030'], grau: ['#4a5a78', '#3a4966', '#2b3a55'] }[d.art.typ];
+    const farben = { gruen: ['#0E7FA6', '#1564C9', '#5B3FE0'], gelb: ['#6e430a', '#8a560c', '#9a650c'], grau: ['#4a5a78', '#3a4966', '#2b3a55'] }[d.art.typ];
     g = x.createLinearGradient(18, 18, W - 18, 18 + kachelH); g.addColorStop(0, farben[0]); g.addColorStop(.55, farben[1]); g.addColorStop(1, farben[2]);
     x.fillStyle = g; rr(18, 18, W - 36, kachelH, rK); x.fill();
     const svg = ergebnisSiegelSvg(d.art.typ, d.art.oben, d.art.unten, 'img');
@@ -38571,9 +38594,10 @@ function ergebnisSeiteHtml(o){
     const quote = o.total ? Math.round(o.correct / o.total * 100) : 0;
     const fehlerQs = fragen.filter(q => progress[q.id] && progress[q.id].answered && !progress[q.id].correct);
     const offen = fragen.filter(q => !(progress[q.id] && progress[q.id].answered)).length;
-    const titel = (st === 'bestanden' ? (vs ? '' : 'Bestanden: ') : st === 'nach' ? (vs ? '' : 'Nachprüfung: ') : (vs ? '' : 'Nicht bestanden: '))
-        + o.correct + ' von ' + o.total + ' richtig';
-    const unter = [quote + ' %'];
+    const titel = o.correct + ' von ' + o.total + ' richtig';
+    const unter = [];
+    if(st === 'nach') unter.push('Nachprüfung möglich'); else if(st === 'nicht') unter.push('Nicht bestanden');
+    unter.push(quote + ' %');
     if(o.required) unter.push(o.required + ' richtige ' + (o.teile ? 'je Teil ' : '') + 'waren nötig');
     if(o.zeit) unter.push(o.zeit);
     const art = ergebnisArt(st, o.art);
