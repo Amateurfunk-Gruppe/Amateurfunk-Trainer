@@ -40,7 +40,7 @@
 // Stelle, an der man einem Browser sagen kann, dass er alles Alte
 // wegwerfen soll - beim Aktivieren loescht die Funktion unten jeden
 // Speicher, der nicht so heisst.
-const SPEICHER = 'afu-trainer-v2';
+const SPEICHER = 'afu-trainer-v3';   // v3 seit 23.10.2026: Katalog ohne Netz (siehe unten)
 
 // Was beim ersten Besuch schon einmal mitgenommen wird, damit ein
 // spaeterer Start ohne Netz nicht auf eine leere Seite laeuft.
@@ -101,12 +101,20 @@ self.addEventListener('fetch', ereignis => {
             // Teilinhalt (206) hat im Speicher nichts verloren.
             if (frisch && frisch.status === 200 && frisch.type === 'basic') {
                 const kopie = frisch.clone();
-                caches.open(SPEICHER).then(sp => sp.put(anfrage, kopie)).catch(() => {});
+                // OHNE NETZ TROTZDEM FRAGEN (23.10.2026). Dietmar, mit Bild vom
+                // Handy ("Keine Internetverbindung", "Klasse N - laedt...",
+                // "0 Fragen offen"): Der Trainer holt fragen.json & Co. mit
+                // "?v=" + Zeitstempel, damit der Browser nie etwas Altes
+                // liefert. Fuer den Speicher hier ist jede Adresse damit
+                // neu - und ohne Netz fand er nie den Katalog. Deshalb wird
+                // ohne das Fragezeichen abgelegt und ohne es gesucht.
+                const schluessel = adresse.origin + adresse.pathname;
+                caches.open(SPEICHER).then(sp => sp.put(schluessel, kopie)).catch(() => {});
             }
             return frisch;
         } catch (e) {
-            // Kein Netz: das zuletzt Gesehene.
-            const gespeichert = await caches.match(anfrage);
+            // Kein Netz: das zuletzt Gesehene (ohne Zeitstempel in der Adresse).
+            const gespeichert = await caches.match(anfrage, { ignoreSearch: true });
             if (gespeichert) return gespeichert;
             // Eine Seite, die noch nie da war - dann wenigstens die
             // Startseite, statt der Fehlerseite des Browsers.
