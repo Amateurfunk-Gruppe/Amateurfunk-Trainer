@@ -24453,7 +24453,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 300, datum: '23.10.2026' };
+const TRAINER_STAND = { nr: 303, datum: '23.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -38248,6 +38248,7 @@ body.dark .erg-buehne .erg-haken>summary .zu{color:#9fb0c6}
 .erg-k.haupt{border:0;background:linear-gradient(135deg,#22c38e,#14a37a);color:#fff;box-shadow:0 4px 0 rgba(10,90,60,.3)}
 .erg-buehne.sa .erg-k{border-radius:8px} .erg-buehne.sa .erg-k.haupt{background:#0f2745;box-shadow:none}
 .erg-k:hover{filter:brightness(.96)}
+.erg-buehne.vs .erg-k.haupt,body.dark .erg-buehne.vs .erg-k.haupt{background:#2b7de9 !important;box-shadow:none !important;color:#fff}
 .erg-hinweis{font-size:13px;color:#4b5b73;background:#f4f7fd;border:1px solid #e3e9f3;border-radius:10px;padding:8px 12px;margin:0 0 12px}
 body .erg-buehne .erg-stempel{border-radius:50% !important}
 @keyframes ergStempel{from{opacity:0;transform:rotate(30deg) scale(1.8)}to{opacity:.92;transform:rotate(12deg) scale(1)}}
@@ -38344,6 +38345,46 @@ html.android-app .erg-buehne .erg-stempel strong{font-size:10px}
 html.android-app .erg-buehne .erg-stempel span{font-size:7px}
 html.android-app .erg-buehne .erg-titel{padding-right:78px}
 html.android-app .erg-buehne .erg-kopf{padding-right:78px}
+
+/* ---- Ergebnis-Kachel mit Siegel, Teilen-Knopf, einklappbares Raster ----   (23.10.2026)
+   Dietmar: Siegel mit der Muetze aus 50 Ohm in einer Kachel oben, in beiden
+   Stilen und bei jeder Runde; Maja entfaellt hier; Teilen-Knopf immer. */
+.erg-kachel{display:flex;align-items:center;gap:16px;margin:0 0 14px;padding:16px;border-radius:4px;color:#fff;
+  background:linear-gradient(135deg,#0E7FA6,#1564C9 55%,#5B3FE0);box-shadow:0 8px 22px rgba(30,70,200,.25)}
+.erg-kachel.k-gelb{background:linear-gradient(135deg,#a8691a,#d69e2e 60%,#e0a030);box-shadow:0 8px 22px rgba(200,140,30,.25)}
+.erg-kachel.k-grau{background:linear-gradient(135deg,#4a5a78,#2b3a55);box-shadow:0 8px 22px rgba(40,60,100,.25)}
+.erg-buehne.vs .erg-kachel,body.app-rund .erg-kachel{border-radius:16px}
+html.android-app .erg-buehne .erg-kachel{border-radius:calc(var(--s-r-karte,26px) * .7)}
+.erg-kachel .erg-siegel{flex:none;width:104px;height:104px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));animation:ergSiegel .7s cubic-bezier(.3,1.4,.4,1) .1s both}
+.erg-kachel .erg-siegel svg{width:100%;height:100%;display:block}
+@keyframes ergSiegel{from{opacity:0;transform:scale(1.7) rotate(25deg)}to{opacity:1;transform:none}}
+.erg-kachel .erg-kt{flex:1;min-width:0}
+.erg-kachel .erg-kopf{color:#fff !important;padding:0 !important;opacity:.92;filter:none !important;font-size:11px}
+.erg-kachel .erg-titel{padding:0 !important;margin:4px 0 4px !important;color:#fff !important;-webkit-text-fill-color:#fff !important;background:none !important;font-size:30px !important;line-height:1.08}
+.erg-kachel .erg-unter{color:rgba(255,255,255,.92) !important;padding:0 !important;margin:0 !important;font-size:14px}
+.erg-buehne .erg-werte{padding-right:0 !important}
+.erg-teilen{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:0 0 14px;padding:15px;border:0;border-radius:4px;
+  background:#0f2745;color:#fff;font:800 17px var(--font-body,Inter),sans-serif;cursor:pointer}
+.erg-buehne.vs .erg-teilen,body.app-rund .erg-teilen{border-radius:14px;background:linear-gradient(135deg,#0E7FA6,#1564C9 60%,#5B3FE0);box-shadow:0 8px 20px rgba(38,80,220,.3)}
+html.android-app .erg-buehne .erg-teilen{border-radius:calc(var(--s-r-karte,26px) * .6)}
+.erg-teilen:hover{filter:brightness(1.06)}
+body.dark .erg-buehne.sa .erg-teilen{background:#2a78d6}
+.erg-fragen{margin:2px 0 6px}
+.erg-fragen>summary b.gut{background:#e9f8f1;color:#1f9d55}
+body.dark .erg-buehne .erg-fragen>summary b.gut{background:#13301f;color:#5fd69a}
+.erg-fragen>summary .t{margin-right:2px}
+.erg-fragen .erg-gitter{margin-top:8px}
+.erg-fragen .erg-f:not(.no):not(.of) i{display:none}
+.erg-fragen .erg-hilfe{font-size:12.5px;color:#5d6b80;margin:-6px 0 10px}
+body.dark .erg-buehne .erg-fragen .erg-hilfe{color:#9fb0c6}
+@media (max-width: 900px){
+  .erg-kachel{gap:12px;padding:14px}
+  .erg-kachel .erg-siegel{width:92px;height:92px}
+  .erg-kachel .erg-titel{font-size:26px !important}
+  .erg-gitter{grid-template-columns:repeat(5,minmax(0,1fr)) !important;gap:8px !important}
+  .erg-fragen .erg-f{height:46px;font-size:17px;border-radius:10px}
+}
+@media (prefers-reduced-motion: reduce){.erg-kachel .erg-siegel{animation:none !important}}
 /* Das Fenster "Frage nachsehen" */
 #ergFrage{position:fixed;inset:0;z-index:99992;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 #ergFrage .ef-blatt{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;color:#17243a;border-radius:18px;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
@@ -38366,7 +38407,89 @@ body.dark #ergFrage .ef-kopf code{background:#24324a} body.dark #ergFrage .ef-er
 
 // o: { status: 'bestanden'|'nach'|'nicht', art: 'pruefung'|'runde', kopf, correct, total, required,
 //      zeit, teile:[{name, richtig, gesamt, status}], hinweis, zettel, knoepfe:[[icon, text, onclick, haupt]] }
-function ergebnisTeilen(){
+// ---- Das Bild zum Teilen: Kachel mit Siegel, Raster, Fusszeile (23.10.2026) ----
+// Wird aus den Ergebnissen gezeichnet (Canvas), nicht vom Bildschirm abfotografiert -
+// das Raster ist also auch drauf, wenn es auf der Seite eingeklappt ist.
+async function ergebnisBildErzeugen(d){
+    const lade = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+    try{ await document.fonts.load('800 20px Inter'); }catch(e){}
+    const S = 3, W = 360, n = d.felder.length;
+    const zeigeRaster = n > 0 && n <= 75;
+    const sp = n <= 25 ? 5 : n <= 50 ? 8 : 10, luecke = n <= 25 ? 8 : 6, innen = W - 36 - 28;
+    const zw = (innen - (sp - 1) * luecke) / sp, zh = n <= 25 ? 46 : n <= 50 ? 30 : 24;
+    const zeilen = Math.ceil(n / sp);
+    const rasterH = zeigeRaster ? zeilen * zh + (zeilen - 1) * luecke : 0;
+    const kachelH = 124, kopfH = 46;
+    const karteH = 14 + kopfH + (zeigeRaster ? rasterH + 12 + 16 : 22) + 14;
+    const H = 18 + kachelH + 12 + karteH + 16 + 26 + 18;
+    const c = document.createElement('canvas'); c.width = W * S; c.height = H * S;
+    const x = c.getContext('2d'); x.scale(S, S);
+    const FONT = '"Inter","Segoe UI",Arial,sans-serif';
+    const rr = (px, py, w, h, r) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); };
+    const kuerzen = (t, br) => { while(t.length > 1 && x.measureText(t).width > br) t = t.slice(0, -2) + '…'; return t; };
+    // Hintergrund
+    let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1a3f'); g.addColorStop(.55, '#101f4d'); g.addColorStop(1, '#0c1633');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const rK = d.rund ? 16 : 3, rKarte = d.rund ? 14 : 3, rZ = d.rund ? 11 : 2;
+    // Kachel
+    const farben = { gruen: ['#0E7FA6', '#1564C9', '#5B3FE0'], gelb: ['#a8691a', '#d69e2e', '#e0a030'], grau: ['#4a5a78', '#3a4966', '#2b3a55'] }[d.art.typ];
+    g = x.createLinearGradient(18, 18, W - 18, 18 + kachelH); g.addColorStop(0, farben[0]); g.addColorStop(.55, farben[1]); g.addColorStop(1, farben[2]);
+    x.fillStyle = g; rr(18, 18, W - 36, kachelH, rK); x.fill();
+    const svg = ergebnisSiegelSvg(d.art.typ, d.art.oben, d.art.unten, 'img');
+    const sImg = await lade('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+    if(sImg){ x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = 8; x.shadowOffsetY = 4; x.drawImage(sImg, 32, 18 + (kachelH - 104) / 2, 104, 104); x.restore(); }
+    const tx = 150, tb = W - 18 - 14 - tx;
+    x.fillStyle = 'rgba(255,255,255,.92)'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+    { let px = 11; const kt = String(d.kopf || '').toUpperCase(); x.font = '800 ' + px + 'px ' + FONT; while(px > 8 && x.measureText(kt).width > tb){ px -= .5; x.font = '800 ' + px + 'px ' + FONT; } x.fillText(kuerzen(kt, tb), tx, 18 + 34); }
+    x.fillStyle = '#fff'; x.font = '800 28px ' + FONT;
+    x.fillText(d.art.titel[0], tx, 18 + 66); x.fillText(d.art.titel[1], tx, 18 + 96);
+    x.fillStyle = 'rgba(255,255,255,.95)'; x.font = '500 13.5px ' + FONT;
+    x.fillText(kuerzen(d.correct + ' von ' + d.total + ' richtig · ' + d.quote + ' %', tb), tx, 18 + 116);
+    // Karte
+    const ky = 18 + kachelH + 12;
+    x.fillStyle = 'rgba(255,255,255,.07)'; rr(18, ky, W - 36, karteH, rKarte); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 1; rr(18.5, ky + .5, W - 37, karteH - 1, rKarte); x.stroke();
+    { let px = 15; const kt = d.kopf || 'Ergebnis'; x.fillStyle = '#eaf1ff'; x.font = '800 ' + px + 'px ' + FONT; while(px > 11 && x.measureText(kt).width > 190){ px -= .5; x.font = '800 ' + px + 'px ' + FONT; } x.fillText(kuerzen(kt, 190), 32, ky + 14 + 15); }
+    x.fillStyle = '#a9bad8'; x.font = '500 12.5px ' + FONT; x.fillText(n + (n === 1 ? ' Frage' : ' Fragen'), 32, ky + 14 + 33);
+    x.textAlign = 'right'; x.font = '800 26px ' + FONT;
+    x.fillStyle = d.art.typ === 'gruen' ? '#2fbf71' : d.art.typ === 'gelb' ? '#f0b64a' : '#ff8a8a';
+    x.fillText(d.correct + '/' + d.total, W - 32, ky + 14 + 26); x.textAlign = 'left';
+    const gy = ky + 14 + kopfH;
+    if(zeigeRaster){
+        d.felder.forEach((f, i) => {
+            const cx = 32 + (i % sp) * (zw + luecke), cy = gy + Math.floor(i / sp) * (zh + luecke);
+            x.fillStyle = f === 1 ? '#2f9e5b' : f === 0 ? '#d64550' : '#3a4a66'; rr(cx, cy, zw, zh, rZ); x.fill();
+            x.fillStyle = '#fff'; x.font = '800 ' + (n <= 25 ? 17 : n <= 50 ? 12 : 11) + 'px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle';
+            x.fillText(String(i + 1), cx + zw / 2, cy + zh / 2 + 1); x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+        });
+        const ly = gy + rasterH + 12 + 10;
+        x.fillStyle = '#2f9e5b'; rr(32, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = '#a9bad8'; x.font = '500 12px ' + FONT; x.fillText('richtig', 47, ly);
+        x.fillStyle = '#d64550'; rr(100, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = '#a9bad8'; x.fillText('falsch', 115, ly);
+    } else {
+        x.fillStyle = 'rgba(255,255,255,.14)'; rr(32, gy, innen, 10, 5); x.fill();
+        x.fillStyle = d.art.typ === 'gruen' ? '#2f9e5b' : d.art.typ === 'gelb' ? '#d69e2e' : '#d64550'; rr(32, gy, Math.max(10, innen * Math.min(1, d.quote / 100)), 10, 5); x.fill();
+    }
+    // Fusszeile
+    const fy = ky + karteH + 16 + 17, ic = await lade('icon-192.png');
+    x.font = '700 13px ' + FONT; const t1 = 'Amateurfunk-Trainer', t2 = ' · amateurfunk-trainer.com';
+    x.font = '700 13px ' + FONT; const w1 = x.measureText(t1).width; x.font = '600 12px ' + FONT; const w2 = x.measureText(t2).width;
+    const gesamt = (ic ? 32 : 0) + w1 + w2, x0 = (W - gesamt) / 2;
+    if(ic){ x.save(); rr(x0, fy - 17, 24, 24, 6); x.clip(); x.drawImage(ic, x0, fy - 17, 24, 24); x.restore(); }
+    x.fillStyle = '#eaf1ff'; x.font = '700 13px ' + FONT; x.fillText(t1, x0 + (ic ? 32 : 0), fy);
+    x.fillStyle = 'rgba(234,241,255,.85)'; x.font = '600 12px ' + FONT; x.fillText(t2, x0 + (ic ? 32 : 0) + w1, fy);
+    return await new Promise(res => c.toBlob(b => res(b), 'image/png'));
+}
+// Schon beim Zeichnen der Seite vorbereiten, damit der Tipp auf "Teilen" sofort teilen kann
+// (manche Handys erlauben das Teilen nur direkt nach dem Tipp).
+function ergebnisBildVorbereiten(){
+    const t = window.__ergTeilen; if(!t || !t.bild) return;
+    t.dateiFertig = null;
+    t.dateiVersprechen = ergebnisBildErzeugen(t.bild).then(b => {
+        if(b){ try{ t.dateiFertig = new File([b], 'amateurfunk-trainer-ergebnis.png', { type: 'image/png' }); }catch(e){} }
+        return t.dateiFertig;
+    }).catch(e => { console.warn('[Ergebnis] Bild', e); return null; });
+}
+async function ergebnisTeilen(){
     const t = window.__ergTeilen; if(!t) return;
     const voll = t.text + ' ' + t.url;
     const gemeldet = ok => { try{ (window.showAppAlert || alert)(ok ? 'Text kopiert – jetzt z. B. in WhatsApp oder Signal einfügen.' : voll); }catch(e){} };
@@ -38383,12 +38506,61 @@ function ergebnisTeilen(){
             const ok = document.execCommand('copy'); ta.remove(); gemeldet(ok);
         }catch(e){ gemeldet(false); }
     };
+    let datei = t.dateiFertig || null;
+    if(!datei && t.dateiVersprechen){ try{ datei = await t.dateiVersprechen; }catch(e){} }
+    // 1) Bild + Text an eine App (WhatsApp, Signal, Telegram ...)
+    try{
+        if(datei && navigator.share && navigator.canShare && navigator.canShare({ files: [datei] })){
+            await navigator.share({ files: [datei], text: voll, title: 'Amateurfunk-Trainer' }); return;
+        }
+    }catch(err){ if(err && err.name === 'AbortError') return; }
+    // 2) nur Text (und Link)
     try{
         if(navigator.share){ navigator.share({ title: 'Amateurfunk-Trainer', text: t.text, url: t.url }).catch(err => { if(!err || err.name !== 'AbortError') kopieren(); }); return; }
     }catch(e){}
+    // 3) Am PC: Bild speichern, Text kopieren
+    if(datei){
+        try{
+            const u = URL.createObjectURL(datei), a = document.createElement('a');
+            a.href = u; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+            try{ navigator.clipboard && navigator.clipboard.writeText(voll); }catch(e){}
+            try{ (window.showAppAlert || alert)('Bild gespeichert, Text kopiert – beides z. B. in WhatsApp Web einfügen.'); }catch(e){}
+            return;
+        }catch(e){}
+    }
     kopieren();
 }
 window.ergebnisTeilen = ergebnisTeilen;
+
+// ---- Siegel mit Muetze (selbst gezeichnet; Muetze = Font-Awesome-Symbol "graduation-cap") ----
+const ERG_MUETZE = "M320 416Q308 416 296 412L16 311Q1 304 0 288Q1 272 16 265L74 244Q49 205 48 156V128Q45 84 26 47Q16 28 3 10Q-2 3 1 -5Q4 -13 12 -16L76 -32Q83 -33 89 -30Q94 -26 96 -19Q106 47 94 89Q89 111 80 131V156Q81 202 108 238Q127 261 157 273L314 335Q328 339 335 326Q339 312 326 305L169 244Q150 236 137 222L296 164Q308 160 320 160Q332 160 344 164L624 265Q639 272 640 288Q639 304 624 311L344 412Q332 416 320 416ZM128 40Q130 12 184 -9Q238 -31 320 -32Q402 -31 456 -9Q510 12 512 40L497 185L355 134Q338 128 320 128Q302 128 286 134L143 185L128 40Z";
+function ergebnisSiegelSvg(typ, oben, unten, uid){
+    const F = { gruen: ['#6fe03a', '#2fb300'], gelb: ['#ffd25e', '#e0900f'], grau: ['#9db3d6', '#4d6791'] }[typ] || ['#6fe03a', '#2fb300'];
+    const n = 36, R = 96, r = 90, pts = [];
+    for(let i = 0; i <= n * 8; i++){
+        const t = i / (n * 8) * 2 * Math.PI, rad = R - (R - r) * (0.5 + 0.5 * Math.cos(t * n));
+        pts.push((100 + rad * Math.sin(t)).toFixed(2) + ',' + (100 - rad * Math.cos(t)).toFixed(2));
+    }
+    const zack = 'M' + pts.join(' L') + 'Z';
+    const id = 'sg' + uid;
+    return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200" aria-hidden="true">'
+        + '<defs><linearGradient id="g' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + F[0] + '"/><stop offset="1" stop-color="' + F[1] + '"/></linearGradient>'
+        + '<path id="o' + id + '" d="M 36,100 A 64,64 0 0 1 164,100"/><path id="u' + id + '" d="M 30,100 A 70,70 0 0 0 170,100"/></defs>'
+        + '<path d="' + zack + '" fill="#fff"/>'
+        + '<circle cx="100" cy="100" r="85" fill="url(#g' + id + ')"/><circle cx="100" cy="100" r="78" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>'
+        + '<ellipse cx="100" cy="55" rx="70" ry="40" fill="#fff" opacity=".12"/>'
+        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (oben.length > 8 ? 19 : 25) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#o' + id + '" xlink:href="#o' + id + '" startOffset="50%">' + oben + '</textPath></text>'
+        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (unten.length > 8 ? 16 : 19) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#u' + id + '" xlink:href="#u' + id + '" startOffset="50%">' + unten + '</textPath></text>'
+        + '<path d="' + ERG_MUETZE + '" fill="#fff" transform="translate(56.81,127.90) scale(0.135,-0.135)"/></svg>';
+}
+// Aussehen je Ergebnis: Farbe, Siegeltexte, Titel fuers Bild
+function ergebnisArt(st, art){
+    if(st === 'bestanden') return { typ: 'gruen', k: 'k-gruen', oben: art === 'pruefung' ? 'PRÜFUNG' : 'RUNDE', unten: 'BESTANDEN',
+        titel: [art === 'pruefung' ? 'Prüfung' : 'Runde', 'bestanden'] };
+    if(st === 'nach') return { typ: 'gelb', k: 'k-gelb', oben: 'NACHPRÜFUNG', unten: 'MÖGLICH', titel: ['Fast', 'geschafft'] };
+    return { typ: 'grau', k: 'k-grau', oben: 'DRAN', unten: 'BLEIBEN', titel: ['Weiter', 'üben'] };
+}
+
 function ergebnisSeiteHtml(o){
     ergebnisCss();
     const vs = ergebnisVerspielt();
@@ -38404,11 +38576,9 @@ function ergebnisSeiteHtml(o){
     const unter = [quote + ' %'];
     if(o.required) unter.push(o.required + ' richtige ' + (o.teile ? 'je Teil ' : '') + 'waren nötig');
     if(o.zeit) unter.push(o.zeit);
-    const stempel = st === 'nicht' ? '' : '<div class="erg-stempel' + (st === 'nach' ? ' nach' : '') + '" aria-hidden="true">'
-        + '<i class="fas ' + (st === 'nach' ? 'fa-comments' : 'fa-check') + '"></i>'
-        + '<b>' + (st === 'nach' ? 'NACHPRÜFUNG' : (o.art === 'pruefung' ? 'PRÜFUNG' : 'RUNDE')) + '</b>'
-        + '<strong>' + (st === 'nach' ? 'MÖGLICH' : 'BESTANDEN') + '</strong>'
-        + '<span>' + new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + '</span></div>';
+    const art = ergebnisArt(st, o.art);
+    const siegel = '<div class="erg-siegel">' + ergebnisSiegelSvg(art.typ, art.oben, art.unten, Date.now() % 100000) + '</div>';
+    const stempel = '';
 
     // Werte: verspielt XP / Serie / Fehler, sachlich Richtig / Fehler / Quote / Zeit
     let werte = '';
@@ -38455,12 +38625,18 @@ function ergebnisSeiteHtml(o){
             + (t.status === 'bestanden' ? 'bestanden' : t.status === 'nachpruefung' ? 'Nachprüfung' : 'nicht bestanden') + '</small></div>';
     }).join('') + '</div>' : '';
     const hinweis = o.hinweis ? '<div class="erg-hinweis">' + o.hinweis + '</div>' : '';
-    const gitter = fragen.length ? '<div class="erg-h2"><h3>' + (fragen.length === 1 ? 'Deine Frage' : 'Deine ' + fragen.length + ' Fragen') + '</h3><span>Anklicken: Frage mit Erklärung ansehen</span></div>'
+    const nRichtig = fragen.filter(q => progress[q.id] && progress[q.id].answered && progress[q.id].correct).length;
+    const breit = (() => { try{ return window.matchMedia('(min-width: 901px)').matches && !document.documentElement.classList.contains('android-app'); }catch(e){ return false; } })();
+    const gitter = fragen.length ? '<details class="erg-haken erg-fragen"' + ((breit || fragen.length === 1) ? ' open' : '') + '>'
+        + '<summary><span class="t">' + (fragen.length === 1 ? 'Deine Frage' : 'Deine ' + fragen.length + ' Fragen') + '</span>'
+        + '<b class="gut">' + nRichtig + ' ✓</b>' + (fehlerQs.length ? '<b>' + fehlerQs.length + ' ✗</b>' : '')
+        + '<span class="zu">ansehen</span><i class="fas fa-chevron-down pf" aria-hidden="true"></i></summary>'
+        + '<div class="erg-hilfe">Antippen: Frage mit Erklärung ansehen</div>'
         + '<div class="erg-gitter">' + fragen.map((q, i) => {
             const p = progress[q.id], ok = p && p.answered && p.correct, of = !(p && p.answered);
             return '<button type="button" class="erg-f' + (of ? ' of' : ok ? '' : ' no') + '" onclick="ergebnisFrageZeigen(' + i + ')" title="' + ergebnisEsc(q.id) + '">'
                 + (i + 1) + '<i class="fas ' + (of ? 'fa-minus' : ok ? 'fa-check' : 'fa-xmark') + '"></i></button>';
-        }).join('') + '</div>' : '';
+        }).join('') + '</div></details>' : '';
     // Bis zu drei Fehler stehen offen da, ab vier ist die Liste zugeklappt
     // (20.10.2026, Dietmar: sonst wird die Seite viel zu lang).
     const MAX = 12;
@@ -38479,20 +38655,25 @@ function ergebnisSeiteHtml(o){
     // ERGEBNIS TEILEN (Stand 216, 19.10.2026): nach bestandener Pruefung ein Knopf, der am Handy
     // WhatsApp/Signal/Telegram anbietet (Web Share) und sonst den Text in die Zwischenablage legt.
     let kn = (o.knoepfe || []).slice();
-    if(st === 'bestanden' && o.art === 'pruefung'){
-        try{
-            const b = (typeof pruefZielBuchstabe === 'function') ? pruefZielBuchstabe() : 'n';
-            const kl = 'Klasse ' + b.toUpperCase();
-            window.__ergTeilen = { url: 'https://amateurfunk-trainer.com/klasse-' + b + '/',
-                text: 'Bestanden! ' + o.correct + ' von ' + o.total + ' richtig (' + quote + ' %) in der Amateurfunk-Prüfungssimulation ' + kl
-                    + '. Geübt mit dem kostenlosen Amateurfunk-Trainer:' };
-            kn.push(['fa-share-nodes', 'Ergebnis teilen', 'ergebnisTeilen()', false]);
-        }catch(e){}
-    }
+    try{
+        const b = (typeof pruefZielBuchstabe === 'function') ? pruefZielBuchstabe() : 'n';
+        const kl = 'Klasse ' + b.toUpperCase();
+        const ein = o.correct + ' von ' + o.total + ' richtig (' + quote + ' %)';
+        const text = st === 'bestanden'
+            ? (o.art === 'pruefung' ? 'Bestanden! ' + ein + ' in der Amateurfunk-Prüfungssimulation ' + kl + '. Geübt mit dem kostenlosen Amateurfunk-Trainer:'
+                                     : 'Geschafft! ' + ein + ' beim Üben für die Amateurfunk-Prüfung ' + kl + ' – mit dem kostenlosen Amateurfunk-Trainer:')
+            : st === 'nach' ? 'Knapp dran: ' + ein + ' in der Prüfungssimulation ' + kl + '. Ich übe weiter mit dem kostenlosen Amateurfunk-Trainer:'
+            : 'Ich übe gerade für die Amateurfunk-Prüfung ' + kl + ': ' + ein + '. Mit dem kostenlosen Amateurfunk-Trainer:';
+        window.__ergTeilen = { url: 'https://amateurfunk-trainer.com/klasse-' + b + '/', text: text,
+            bild: { art: art, kopf: String(o.kopf || '').replace(/\s*\((Übung|übung)\)/, ''), correct: o.correct, total: o.total, quote: quote,
+                    felder: fragen.map(q => { const p = progress[q.id]; return p && p.answered ? (p.correct ? 1 : 0) : -1; }),
+                    rund: vs || (document.body && document.body.classList.contains('app-rund')) } };
+    }catch(e){ window.__ergTeilen = null; }
+    const teilenKnopf = window.__ergTeilen ? '<button type="button" class="erg-teilen" onclick="ergebnisTeilen()"><i class="fas fa-share-nodes"></i> Ergebnis teilen</button>' : '';
     const knoepfe = '<div class="erg-knoepfe">' + kn.map(k => '<button type="button" class="erg-k' + (k[3] ? ' haupt' : '') + '" onclick="' + k[2] + '"><i class="fas ' + k[0] + '"></i> ' + k[1] + '</button>').join('') + '</div>';
 
     let maja = '';
-    if(vs){
+    if(false){
         let bild = '';
         try{
             const P = window.ASTRO_POSEN || {};
@@ -38515,11 +38696,13 @@ function ergebnisSeiteHtml(o){
         if(figur) maja = '<div class="erg-maja' + feiert + '"><div class="erg-blase"><small>' + name + '</small>'
             + satz + '</div>' + figur + '</div>';
     }
-    return '<div class="erg-buehne ' + (vs ? 'vs' : 'sa') + '">' + maja
-        + '<div class="erg-karte ' + (st === 'bestanden' ? 'ok' : st === 'nach' ? 'nach' : 'nicht') + '">' + stempel
-        + '<div class="erg-kopf">' + (st === 'bestanden' && vs ? '<i class="fas fa-trophy" style="color:#f5a524"></i> ' : '') + ergebnisEsc(o.kopf) + '</div>'
+    const kachel = '<div class="erg-kachel ' + art.k + '">' + siegel + '<div class="erg-kt"><div class="erg-kopf">'
+        + (st === 'bestanden' && vs ? '<i class="fas fa-trophy" style="color:#ffd25e"></i> ' : '') + ergebnisEsc(o.kopf) + '</div>'
         + '<h1 class="erg-titel">' + titel + '</h1>'
-        + '<div class="erg-unter">' + unter.join(' · ') + '</div>'
+        + '<div class="erg-unter">' + unter.join(' · ') + '</div></div></div>';
+    return '<div class="erg-buehne ' + (vs ? 'vs' : 'sa') + '">' + maja
+        + '<div class="erg-karte ' + (st === 'bestanden' ? 'ok' : st === 'nach' ? 'nach' : 'nicht') + '">'
+        + kachel + teilenKnopf
         + werte + teile + grenze + hinweis + gitter + fehlerListe + knoepfe
         + '</div></div>';
 }
@@ -38527,6 +38710,7 @@ function ergebnisSeiteHtml(o){
 // Nach dem Zeichnen: nach oben, und bei "bestanden" Fanfare und Konfetti
 
 function ergebnisNachZeichnen(jubel, nachFanfare){
+    try{ ergebnisBildVorbereiten(); }catch(e){}
     try{ window.scrollTo({ top: 0, behavior: 'instant' }); }catch(e){ try{ window.scrollTo(0, 0); }catch(x){} }
     if(jubel){ try{ triggerConfetti(true, nachFanfare || null); }catch(e){} }
 }
@@ -61201,6 +61385,8 @@ html:not(.android-app) body.eckig.app-rund:not(#fx) .kopf-version { border-radiu
 html:not(.android-app) body.eckig.app-rund:not(#fx) :is(.question-area button, #favListBtn, .q-marke, #rechnerBtn, #erklaerBtn, #erklaerLesenNurBtn, #ttsBtn) { border-radius: 10px !important; }
 html:not(.android-app) body.eckig.app-rund:not(#fx) .question-area .q-meta span { border-radius: 6px !important; }
 html:not(.android-app) body.eckig.app-rund:not(#fx) .lernkachel { border-radius: 14px !important; }
+html:not(.android-app) body.eckig.app-rund:not(#fx) .forum-knopf { border-radius: 14px !important; }   /* 23.10.2026: "Im Forum diskutieren" rund wie die Kacheln daneben, wenn Rund eingestellt ist */
+html.android-app body.eckig.app-rund:not(#fx) .forum-knopf { border-radius: var(--s-r-karte, 14px) !important; }
 html:not(.android-app) body.eckig.app-rund:not(#fx) :is(.stat-chip, .result-box) { border-radius: 10px !important; }
 html:not(.android-app) body.eckig.app-rund:not(#fx) .dot-sidebar { border-radius: 6px !important; }
 html:not(.android-app) body.eckig.app-rund:not(#fx) #navArea.action-row { border-radius: 18px !important; }
@@ -61601,6 +61787,35 @@ html:not(.android-app) body.dark ::-webkit-scrollbar-track{background:rgba(255,2
 html:not(.android-app) body.dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
 html:not(.android-app) body.dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.45);background-clip:padding-box}
 html:not(.android-app) body.dark ::-webkit-scrollbar-corner{background:transparent}
+
+/* MAUS-FARBE AUCH BEI DEN KACHELN UNTER DER FRAGE   (23.10.2026)
+   Dietmar: "Hier möchte ich auch ein Mouseoverlay in der gleichen Farbe wie bei den Antworten."
+   Gilt für "50 Ohm – Bauelemente", "Im Forum diskutieren" (Mitte) und "50 Ohm – Lösungsweg": gleiche Farbe (--maus-grund),
+   gleicher Rand, der einmal herumläuft (--maus-rand, mausRandLang), gleiche Schalter aus Einstellungen → Anpassen
+   (Rand ganz aus, Lauf aus, sanftes Aufleuchten) und schwarze Schrift auf dem hellen Feld (hell wie dunkel, wie bei den Antworten). Nur mit Maus. */
+html body :is(.lernkachel, .forum-knopf.forum-mitte) { position: relative; }
+html body :is(.lernkachel, .forum-knopf.forum-mitte)::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1; border-radius: inherit;
+    background:
+        linear-gradient(var(--maus-rand), var(--maus-rand)) left  top    / 0 3px no-repeat,
+        linear-gradient(var(--maus-rand), var(--maus-rand)) right top    / 3px 0 no-repeat,
+        linear-gradient(var(--maus-rand), var(--maus-rand)) right bottom / 0 3px no-repeat,
+        linear-gradient(var(--maus-rand), var(--maus-rand)) left  bottom / 3px 0 no-repeat;
+}
+@media (hover: hover) {
+    html:not(#fx) body :is(.lernkachel, .forum-knopf.forum-mitte):hover { background: var(--maus-grund) !important; border-color: var(--maus-rand) !important; }
+    html:not(#fx) body :is(.lernkachel, .forum-knopf.forum-mitte):hover::before { animation: mausRandLang 1.2s linear forwards; }
+    html:not(#fx) body :is(.lernkachel, .forum-knopf.forum-mitte):hover,
+    html:not(#fx) body :is(.lernkachel, .forum-knopf.forum-mitte):hover * { color: #000 !important; }
+    html:not(#fx) body.maus-ohne-lauf :is(.lernkachel, .forum-knopf.forum-mitte):hover::before { animation: none; background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%; }
+}
+html body.maus-ohne-rand :is(.lernkachel, .forum-knopf.forum-mitte)::before { display: none; }
+html body.maus-leuchten :is(.lernkachel, .forum-knopf.forum-mitte) { transition: background-color 0.55s ease, color 0.55s ease, border-color 0.55s ease; }
+@media (prefers-reduced-motion: reduce) {
+    html:not(#fx) body :is(.lernkachel, .forum-knopf.forum-mitte):hover::before { animation: none; background-size: 100% 3px, 3px 100%, 100% 3px, 3px 100%; }
+    html body.maus-leuchten :is(.lernkachel, .forum-knopf.forum-mitte) { transition: none; }
+}
+
 </style>
 <style id="polarFuss">
 /* FUSSZEILE IM POLAR-LOOK (21.10.2026): Dietmar markierte die Zeile "Offizieller Katalog ... Facebook" am Bild: "Hätte das gerne angepasst."
