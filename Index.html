@@ -1019,6 +1019,37 @@
             position: relative; color: #0B2A63; background: linear-gradient(180deg, #FFFFFF, #E4EEFF); font-weight: 700; font-size: 17px;
             box-shadow: 0 5px 0 rgba(10,30,80,0.35), 0 12px 24px rgba(0,0,0,0.25);
         }
+        /* Sachlich bekommt dieselbe grosse Startkarte wie verspielt - nur ohne Maja     (23.10.2026)
+           Dietmar: "Dieses Fenster ist schon ein ziemlicher Eyecatcher und man sieht sofort, wo es
+           eigentlich richtig zur Sache geht."  Variante A "Blau wie verspielt". Ecken bleiben wie im
+           sachlichen Stil; die Wellen laufen langsam (nicht bei "Bewegung reduzieren"). */
+        /* Farben der grossen Startkarte passend zur gewaehlten App-Farbe (hell/dunkel: Blau-Violett wie verspielt) */
+        html.android-app.stil-sachlich body { --sk-g: radial-gradient(120% 90% at 100% 0%, rgba(160,132,255,0.95) 0%, transparent 55%), linear-gradient(140deg, #0E7FA6 0%, #1564C9 55%, #5B3FE0 100%); --sk-sch: rgba(38,80,220,0.38); --sk-bt: #0B2A63; }
+        html.android-app.stil-sachlich body.blue { --sk-g: radial-gradient(120% 90% at 100% 0%, rgba(120,190,255,0.85) 0%, transparent 55%), linear-gradient(140deg, #0F6FB8 0%, #1556B5 60%, #123F96 100%); --sk-sch: rgba(21,86,181,0.38); --sk-bt: #0B2A63; }
+        html.android-app.stil-sachlich body.green { --sk-g: radial-gradient(120% 90% at 100% 0%, rgba(140,235,180,0.85) 0%, transparent 55%), linear-gradient(140deg, #0C6B49 0%, #12875A 60%, #0E6A48 100%); --sk-sch: rgba(14,106,72,0.38); --sk-bt: #0A4A31; }
+        html.android-app.stil-sachlich body.orange { --sk-g: radial-gradient(120% 90% at 100% 0%, rgba(255,205,140,0.9) 0%, transparent 55%), linear-gradient(140deg, #B64C08 0%, #D86A12 60%, #C25A0C 100%); --sk-sch: rgba(194,90,12,0.38); --sk-bt: #7A3205; }
+        html.android-app.stil-sachlich body.grey { --sk-g: radial-gradient(120% 90% at 100% 0%, rgba(190,205,222,0.8) 0%, transparent 55%), linear-gradient(140deg, #35424F 0%, #4B5C6D 60%, #3C4A59 100%); --sk-sch: rgba(53,66,79,0.38); --sk-bt: #26313C; }
+        html.android-app.stil-sachlich #appHeute .ah-runde {
+            color: #fff; border: 0; overflow: hidden; padding: 18px;
+            background: var(--sk-g);
+            box-shadow: 0 18px 40px var(--sk-sch), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        html.android-app.stil-sachlich #appHeute .ah-runde::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) calc(var(--ah-welle) - 18px) calc(var(--ah-welle) - 16.5px), transparent calc(var(--ah-welle) - 16.5px) var(--ah-welle));
+            animation: ahWellen 3.2s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) { html.android-app.stil-sachlich #appHeute .ah-runde::before { animation: none; } }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-l { position: relative; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+        html.android-app.stil-sachlich #appHeute .ah-runde h2 { position: relative; color: #fff; font-weight: 700; letter-spacing: -0.4px; }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-wahl { position: relative; }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-wahl .w { background: rgba(255,255,255,0.16); color: #fff; }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-wahl .aendern, html.android-app.stil-sachlich #appHeute .ah-runde .ah-wahl .aendern * { color: #fff; }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-wahl .aendern { text-decoration: underline; text-underline-offset: 3px; }
+        html.android-app.stil-sachlich #appHeute .ah-runde .ah-knopf {
+            position: relative; color: var(--sk-bt); background: linear-gradient(180deg, #FFFFFF, #E4EEFF); font-weight: 700;
+            box-shadow: 0 5px 0 rgba(10,30,80,0.35), 0 12px 24px rgba(0,0,0,0.25);
+        }
         html.android-app.stil-verspielt #appHeute .ah-ring { width: 86px; height: 86px; }
         html.android-app.stil-verspielt #appHeute .ah-ring .z b { font: 700 22px var(--font-display); }
         html.android-app.stil-verspielt #appHeute .ah-tag b.t { font: 700 16.5px/1.25 var(--font-display); }
@@ -24422,7 +24453,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 294, datum: '21.10.2026' };
+const TRAINER_STAND = { nr: 300, datum: '23.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56914,7 +56945,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Englischer Rahmen (Maja als ISS): vorn "Here ISS, International Space Station", hinten "How copy? Over." - fertige Aufnahmen aus sounds/
         if(stimme && stimme.rahmen){
             try{
-                const [vorn, hinten] = await Promise.all([rahmenKlip(ctx, 'sounds/maja-here-iss.mp3?v=1'), rahmenKlip(ctx, 'sounds/maja-how-copy-over.mp3?v=1')]);
+                const [vorn, hinten, funkRausch] = await Promise.all([rahmenKlip(ctx, 'sounds/maja-here-iss.mp3?v=2'), rahmenKlip(ctx, 'sounds/maja-how-copy-over.mp3?v=1'), rahmenKlip(ctx, 'sounds/funkrauschen.mp3?v=1')]);
+                if(funkRausch) ton.rauschPuffer = funkRausch;   // 2.296: echtes Funkrauschen (Aufnahme von Dietmar) statt Rechenrauschen
                 if(vorn && hinten){
                     const sr0 = vorn.sampleRate, pause = () => ({ puffer: ctx.createBuffer(1, Math.round(sr0 * 0.35), sr0) });
                     const mitte = folge.map(f => f.puffer && f.puffer.sampleRate !== sr0 ? Object.assign({}, f, { puffer: umgetastet(ctx, f.puffer, sr0) }) : f);
@@ -57084,24 +57116,25 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const bett = (ab, bis) => {
                 const n = Math.floor(ctx.sampleRate * 1.5), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
                 for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
-                const s = neu(ctx.createBufferSource()); s.buffer = nb; s.loop = true;
-                const h2 = neu(ctx.createBiquadFilter()); h2.type = 'highpass'; h2.frequency.value = 600; h2.Q.value = 0.7;
+                const echt = ton.rauschPuffer;   // echtes Funkrauschen: durchgaengig, ohne Pulsieren
+                const s = neu(ctx.createBufferSource()); s.buffer = echt || nb; s.loop = true;
+                const h2 = neu(ctx.createBiquadFilter()); h2.type = 'highpass'; h2.frequency.value = echt ? 200 : 600; h2.Q.value = 0.7;
                 const l2 = neu(ctx.createBiquadFilter()); l2.type = 'lowpass'; l2.frequency.value = 4200; l2.Q.value = 0.7;
-                const g = neu(ctx.createGain()), st0 = (st.rausch != null ? st.rausch : 0.05);
+                const g = neu(ctx.createGain()), st0 = echt ? 0.2 : (st.rausch != null ? st.rausch : 0.05);   // echtes Rauschen ist auf Pegel 0,1 normiert: 0,2 -> etwa -34 dB unter der Stimme
                 g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(st0, ab + 0.03);
                 g.gain.setValueAtTime(st0, bis - 0.05); g.gain.linearRampToValueAtTime(0, bis);
                 // das Rauschen atmet leicht, wie bei schwachem Empfang
-                const wo = neu(ctx.createOscillator()); wo.frequency.value = 3.3;
-                const wg = neu(ctx.createGain()); wg.gain.value = 0.014; wo.connect(wg); wg.connect(g.gain);
+                const wo = neu(ctx.createOscillator()); wo.frequency.value = 3.3;   // (bei echtem Rauschen kein kuenstliches Atmen)
+                const wg = neu(ctx.createGain()); wg.gain.value = echt ? 0 : st0 * 0.2; wo.connect(wg); wg.connect(g.gain);
                 s.connect(h2); h2.connect(l2); l2.connect(g); g.connect(tonAus);
-                s.start(ab); s.stop(bis + 0.02); wo.start(ab); wo.stop(bis + 0.02);
+                s.start(ab, echt ? Math.random() * Math.max(0, echt.duration - 0.5) : 0); s.stop(bis + 0.02); wo.start(ab); wo.stop(bis + 0.02);
                 // dazu ein leises Knistern
-                for(let t = ab + 0.1 + Math.random() * 0.2; t < bis - 0.15; t += 0.12 + Math.random() * 0.35){
+                for(let t = echt ? bis : ab + 0.1 + Math.random() * 0.2; t < bis - 0.15; t += 0.4 + Math.random() * 1.0){
                     const kn2 = Math.floor(ctx.sampleRate * (0.005 + Math.random() * 0.009)), kb = ctx.createBuffer(1, kn2, ctx.sampleRate), kd = kb.getChannelData(0);
                     for(let i = 0; i < kn2; i++) kd[i] = (Math.random() * 2 - 1) * (1 - i / kn2);
                     const ks = neu(ctx.createBufferSource()); ks.buffer = kb;
                     const kf = neu(ctx.createBiquadFilter()); kf.type = 'bandpass'; kf.frequency.value = 2400 + Math.random() * 1600; kf.Q.value = 0.9;
-                    const kg = neu(ctx.createGain()); kg.gain.value = 0.07 + Math.random() * 0.07;
+                    const kg = neu(ctx.createGain()); kg.gain.value = 0.025 + Math.random() * 0.03;
                     ks.connect(kf); kf.connect(kg); kg.connect(tonAus); ks.start(t);
                 }
             };
@@ -57111,14 +57144,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             } else if(teil === 'mitte'){
                 bett(t0 - 0.02, te + 0.12);
             } else if(spaetTeil){
-                bett(t0 - 0.02, te + 0.52);
+                bett(t0 - 0.02, te + 0.85);
                 qton(te + 0.02, 2475);
-                rauschen(te + 0.29, 0.16, 0.07);
+                rauschen(te + 0.29, 0.42, 0.17);   // 2.297: Rauschen nach dem Roger-Piep laenger und lauter (Dietmar)
             } else {
-                bett(t0, te + 0.52);
+                bett(t0, te + 0.85);
                 qton(t0 + 0.04, 2525);
                 qton(te + 0.02, 2475);
-                rauschen(te + 0.29, 0.16, 0.07);
+                rauschen(te + 0.29, 0.42, 0.17);   // 2.297: Rauschen nach dem Roger-Piep laenger und lauter (Dietmar)
             }
         } else {
             piep(te, 1180, 0.07); piep(te + 0.085, 1560, 0.08);
@@ -60374,7 +60407,7 @@ body.handy .forum-zeile { margin-top: 6px; }
    ================================================================ */
 
 html.android-app.stil-sachlich body:not(.dark) { background:#f2f5fb !important; }
-html.android-app.stil-sachlich body:not(.dark) #ahRunde { background:#e6f0fd !important; border-color:#c7dcf7 !important; }
+html.android-app.stil-sachlich body:not(.dark) #ahRunde { background: var(--sk-g) !important; border-color:transparent !important; }   /* 23.10.2026: grosse Startkarte auch im hellen sachlichen Stil blau */
 html.android-app.stil-sachlich body:not(.dark) #ahTag { background:#e3f5ec !important; border-color:#bfe6d1 !important; }
 html.android-app.stil-sachlich body:not(.dark) .ah-liste { background:transparent !important; border:0 !important; }
 html.android-app.stil-sachlich body:not(.dark) .ah-zeile { background:#fff !important; margin-bottom:6px; border:1px solid #e1e7f0 !important; }
@@ -60383,7 +60416,7 @@ html.android-app.stil-sachlich body:not(.dark) .ah-zeile:nth-child(5n+3) i:first
 html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+1) { background:#e6f0fd !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+2) { background:#fdeedd !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+3) { background:#e2f5ea !important; }
 html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+4) { background:#f1e6f8 !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+5) { background:#fff6d6 !important; } html.android-app.stil-sachlich body:not(.dark) .ah-kachel:nth-child(6n+6) { background:#e0f4f6 !important; }
 html.android-app.stil-sachlich body:not(.dark) .ah-kachel { border-color:transparent !important; }
-html.android-app.stil-sachlich body:not(.dark) #ahStart { background:#2f7fd8 !important; }
+html.android-app.stil-sachlich body:not(.dark) #ahStart { background: linear-gradient(180deg, #FFFFFF, #E4EEFF) !important; color:var(--sk-bt) !important; }
 /* 21.10.2026 Dietmar: Die Einstellungs-Kaesten nicht mehr in vier Pastellfarben (verwirrend), sondern in einem dezenten Graublau - in Sachlich und in Verspielt. */
 html.android-app body:not(.dark) #einstellungenModal .einst-mitte div[style*='border:1px solid'] { background:#edf1f7 !important; border-color:#d3dce8 !important; }
 html.android-app body:not(.dark) #einstellungenModal .app-seg { background:#fff !important; border:1px solid #d7e2f0; } html.android-app.stil-sachlich body:not(.dark) .app-seg { background:#fff !important; border:1px solid #d7e2f0; } html.android-app.stil-sachlich body:not(.dark) .app-seg button.an { background:#2f7fd8 !important; color:#fff !important; }

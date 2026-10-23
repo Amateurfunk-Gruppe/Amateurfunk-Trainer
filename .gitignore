@@ -476,3 +476,6 @@ SERVER-FREIGABE.txt
 # Hoerproben der Maja-Stimme und das Webseiten-Paket (21.10.2026) - nur zum Anhoeren/Hochladen bei Cloudflare, nicht auf GitHub und nicht in die App
 /stimmproben/
 /webseite-upload.zip
+# Cloudflare-Pakete (23.10.2026) - nur zum Hochladen bei Cloudflare, nicht auf GitHub und nicht in die App
+/trainer-cloud.zip
+/trainer-cloud-*.zip
