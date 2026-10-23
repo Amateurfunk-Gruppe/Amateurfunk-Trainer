@@ -11,6 +11,25 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## [1.304.0] - 2026-10-23
+Stand 304 · 23.10.2026
+
+### Neu
+- **Die Ergebnisseite neu – rechteckige Kachel mit Siegel.** Dietmar, mit dem Bild eines anderen Trainers: „Wie würde es aussehen wenn wir beides miteinander verschmelzen?" und „Kann man das irgendwie oben in einer rechteckigen Kachel einbauen? Das runde Siegel wirkt da so freistehend eher doof." Oben steht jetzt eine blaue Kachel mit einem selbst gezeichneten runden Siegel (gezackter Rand, Bogentext, in der Mitte die Mütze von 50 Ohm): „Prüfung bestanden" bzw. „Runde bestanden", bei knappem Ergebnis „Nachprüfung möglich" (gelb), sonst „Weiter üben" (grau). Daneben „22 von 25 richtig", darunter Prozent und die nötige Punktzahl. Gilt für beide Stile und auch im Lernmodus; Maja tritt auf der Ergebnisseite nicht mehr auf (Dietmar: „Maja wird bei verspielt nicht benötigt"), Konfetti und Fanfare bleiben (Dietmar: „mit Konfetti und Fanfare, dann passt es").
+- **„Ergebnis teilen" – mit Bild.** Dietmar: „Den Button Teilen habe ich noch nicht gesehen. Wäre eine gute Werbung für uns!" Der Knopf steht auf jeder Ergebnisseite direkt unter der Kachel. Geteilt wird ein fertiges Bild (Siegel, „Prüfung bestanden", Karte „Technik · Klasse N · 25 Fragen" mit Punktestand und dem nummerierten Raster grün/rot, Fußzeile Amateurfunk-Trainer · amateurfunk-trainer.com) zusammen mit Text und Link – über das Teilen-Fenster des Handys; am PC wird das Bild gespeichert und der Text in die Zwischenablage gelegt. Nach Dietmars Vorlage: „Geteilt würde mir in der Art besser gefallen."
+- **Das Fragenraster lässt sich einklappen.** Dietmar: „Die Fragen, eingeklappt, könnte man das noch teilen?" Die nummerierten Felder stehen in einer Zeile „Deine 25 Fragen · 22 ✓ · 3 ✗", am Handy eingeklappt, am PC offen. „Fehler üben (n)" und „Prüfungszettel" bleiben unten (Dietmar: „Das gehört noch unten mit dazu").
+- **Sachlich bekommt die große blaue Startkarte** – wie verspielt, nur ohne Maja, Ecken wie im sachlichen Stil, die Wellen laufen langsam. Dietmar: „Dieses Fenster ist schon ein ziemlicher Eyecatcher und man sieht sofort, wo es eigentlich richtig zur Sache geht."
+- **Neue Store-Bilder** in Hell und Dunkel (je acht, mit der neuen Ergebnisseite), unter `_PlayStore\Screenshots-2026-10-23`.
+
+### Geändert
+- **Kacheln am PC heben sich beim Überfahren** (Stand 301) und die **Forum-Kachel ist bei „rund" wirklich rund** (Stand 302).
+- **Titel der Ergebnisseite kürzer.** „Bestanden: 22 von 25 richtig" lief am Handy über vier Zeilen; der Status steht jetzt in der Zeile darunter.
+
+### Behoben
+- **Dunkler Modus im verspielten Stil der App.** In der echten Android-App fehlte dem Seitenkopf die Klasse für den Fragenstil, deshalb griffen die bunten Farben nicht – im Browser am Handy schon. Jetzt gilt in der App dasselbe wie dort: ohne eigene Wahl sind die Fragen bei verspielt bunt, bei sachlich petrol.
+- **Ohne Netz trotzdem Fragen (Webseite).** Dietmar, mit Bild vom Handy („Keine Internetverbindung", „Klasse N · lädt…", „0 Fragen offen"): Der Trainer holt den Katalog mit einem Zeitstempel in der Adresse, und der Offline-Speicher der Webseite fand ihn deshalb nie wieder. `sw.js` legt die Dateien jetzt ohne Zeitstempel ab und sucht auch so; nach dem ersten Besuch mit Netz läuft der Trainer im Browser auch offline.
+- **Kontraste:** gelbe Kachel bei „Nachprüfung möglich" dunkler, Chips und Felder im hellen Modus kräftiger, Beschriftungen der Kacheln im dunklen sachlichen Stil heller; die Zeile „Deine 25 Fragen" bricht nicht mehr um.
+
 ## [1.299.0] - 2026-10-06
 Stand 232 · 20.10.2026
 
