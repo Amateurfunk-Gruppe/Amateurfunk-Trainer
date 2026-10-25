@@ -33272,6 +33272,9 @@ const EINST_REITER = [
     // an." Dort steht, wie die Antwort unter der Maus aussieht - mit
     // Vorschau. Die Palette als Zeichen, weil es um Farbe geht.
     { id:'anpassen',  name:'Anpassen',  symbol:'fa-palette' },
+    // 25.10.2026 Dietmar: "Sounds moechte ich rechts neben Anpassen."
+    // 21.10.2026 Dietmar: "so vieles mit Sound ... einen extra Reiter mit Sounds, damit die Benutzer gleich sehen, wo man das abschalten kann."
+    { id:'sounds',    name:'Sounds',    symbol:'fa-volume-high' },
     // Das Zeichen ist am 07.09.2026 gewechselt. Dietmar hat das
     // internationale Sehbehinderten-Zeichen geschickt - das durchgestrichene
     // Auge auf blauem Grund - und gesagt: "Das Zeichen gefaellt mir gut."
@@ -33283,8 +33286,6 @@ const EINST_REITER = [
     // kommt keine Datei dazu und nichts Fremdes ins Projekt.
     { id:'vorlesen',  name:'Nachteilsausgleich', symbol:'fa-eye-low-vision' },
     { id:'lernen',    name:'Lernen',    symbol:'fa-graduation-cap' },
-    // 21.10.2026 Dietmar: "so vieles mit Sound ... einen extra Reiter mit Sounds, damit die Benutzer gleich sehen, wo man das abschalten kann."
-    { id:'sounds',    name:'Sounds',    symbol:'fa-volume-high' },
     // Dietmar am 09.09.2026, drei Wuensche auf einmal:
     //   "Unter Einstellungen, fehlt der Bereich Lernende: Hier koennen die
     //    Benutzer ihren Namen eingeben."
@@ -34670,17 +34671,25 @@ function openTtsSettings() {
 //  dort kuemmert sich der PC-Ansicht-Haken (kastenEinsetzen) darum.
 // ================================================================
 function appEinstellungenAufraeumen(){
-    if(!ttsImApp()) return;
+    // Auch im Handy-Browser (Dietmar 25.10.2026: "in der Mobilen Version ueber Link ist auch das Desktop Zeug raus wie in der App?" - "ja").
+    // Dort bleiben Vollbild, Anzeigegroesse, Klickton und die Druckknoepfe, weil der Browser sie kann.
+    const nurApp = ttsImApp();
+    let handyBrowser = false;
+    try{
+        let grob = false; try{ grob = matchMedia('(pointer: coarse)').matches; }catch(e){}
+        handyBrowser = !nurApp && (document.documentElement.classList.contains('pc-handy') || (grob && (window.innerWidth || 0) < 1000));
+    }catch(e){}
+    if(!nurApp && !handyBrowser) return;
     const $ = id => document.getElementById(id);
     const kasten = el => { let k = el; while(k && k.parentElement && !/^einstBlatt_/.test(k.parentElement.id) && k.parentElement.id !== 'einstVerschoben') k = k.parentElement; return k; };
     const weg = el => { if(el) el.style.display = 'none'; };
     const wegKasten = id => { const e = $(id); if(e) weg(kasten(e)); };
     // Allgemein
     wegKasten('einstBeamer');
-    wegKasten('einstVollbildAuto');
+    if(nurApp) wegKasten('einstVollbildAuto');
     try{ const l = $('einstChatAndocken') && $('einstChatAndocken').closest('label'); weg(l); }catch(e){}
     // Anzeigegroesse: nur ein Feld. Die App hat keine Adressleiste und kein F11.
-    try{
+    if(nurApp) try{
         const paar = $('einstAnzeige') && $('einstAnzeige').closest('.anzeige-paar');
         if(paar && !paar.dataset.app){
             paar.dataset.app = '1';
@@ -34701,7 +34710,7 @@ function appEinstellungenAufraeumen(){
     wegKasten('einstBildZoomAn');
     try{ const l = $('einstMausVorlesen') && $('einstMausVorlesen').closest('label'); weg(l); }catch(e){}
     // Sounds: der Klickton "am Rechner" - die App hat "Toene beim Tippen"
-    try{ const l = $('einstKlickTon') && $('einstKlickTon').closest('label'); weg(l); }catch(e){}
+    if(nurApp) try{ const l = $('einstKlickTon') && $('einstKlickTon').closest('label'); weg(l); }catch(e){}
     // Lerncoach nur am Trainer-PC
     try{ $('einstTab_lerncoach').classList.add('reiter-weg'); }catch(e){}
     // Kurs: Am Beamer. Vor der Pruefung: die Druckknoepfe.
@@ -34709,7 +34718,7 @@ function appEinstellungenAufraeumen(){
         const t = (k.firstElementChild && k.firstElementChild.textContent || '').trim();
         if(/^Am Beamer$/i.test(t)) weg(k);
     });
-    document.querySelectorAll('#einstBlatt_merkblatt button').forEach(b => { if(/drucken/i.test(b.textContent)) weg(b); });
+    if(nurApp) document.querySelectorAll('#einstBlatt_merkblatt button').forEach(b => { if(/drucken/i.test(b.textContent)) weg(b); });
     // Woerter
     const ersetzen = (el, von, nach) => { if(!el || el.dataset.appWort) return; el.dataset.appWort = '1'; el.innerHTML = el.innerHTML.split(von).join(nach); };
     try{ document.querySelectorAll('#einstBlatt_benutzer, #einstBlatt_vorlesen, #einstBlatt_kurs').forEach(b => {
@@ -34725,7 +34734,7 @@ function appEinstellungenAufraeumen(){
         });
     }); }catch(e){}
     // Anzeigegroesse: der Einleitungstext spricht von Vollbild und F11
-    try{ const sel = $('einstAnzeige'); const k = sel && kasten(sel); const u = k && k.children[1]; if(u && !u.dataset.appWort){ u.dataset.appWort = '1'; u.textContent = 'Wie gro\u00df der Trainer in der App dargestellt wird. \u201eAutomatisch\u201c richtet sich nach dem Bildschirm.'; } }catch(e){}
+    if(nurApp) try{ const sel = $('einstAnzeige'); const k = sel && kasten(sel); const u = k && k.children[1]; if(u && !u.dataset.appWort){ u.dataset.appWort = '1'; u.textContent = 'Wie gro\u00df der Trainer in der App dargestellt wird. \u201eAutomatisch\u201c richtet sich nach dem Bildschirm.'; } }catch(e){}
     try{ const k = $('einstBlatt_allgemein'); if(k) k.querySelectorAll('div').forEach(e => { if(e.children.length <= 6 && /Strg\+V/.test(e.innerHTML) && !e.dataset.appWort){ e.dataset.appWort = '1'; e.innerHTML = e.innerHTML.replace(/<b>Strg\+V<\/b> und Eingabe/g, 'lange dr\u00fccken, <b>Einf\u00fcgen</b> und abschicken').replace(/Strg\+V/g, 'Einf\u00fcgen'); } }); }catch(e){}
 }
 window.appEinstellungenAufraeumen = appEinstellungenAufraeumen;
