@@ -285,6 +285,8 @@
                 border-right: none !important; border-bottom: 1px solid #e3e9f3; padding: 0.4rem !important; gap: 4px; flex-shrink: 0; }
             #einstellungenModal .einst-leiste button, #infoModal .einst-leiste button {
                 width: auto !important; flex: 0 0 auto; margin: 0 !important; white-space: nowrap; display: flex !important; }
+            /* Ein Reiter, der nicht gezeigt werden soll (Lerncoach in der App, 25.10.2026), bleibt weg */
+            #einstellungenModal .einst-leiste button.reiter-weg { display: none !important; }
         }
     </style>
     <!-- ================================================================
@@ -772,6 +774,26 @@
            und links auch anstaendig buendig ist". In der App stehen die beiden
            Chips jetzt an den Aussenkanten - genau unter "Guten Morgen" und
            unter dem Knopf rechts. */
+        /* Lern-Modus-Schalter rechts neben dem Namen (25.10.2026) */
+        #appHeute .ah-lern { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; cursor: pointer; user-select: none; -webkit-user-select: none; margin-left: 6px; }
+        #appHeute .ah-lern .z { display: flex; align-items: center; gap: 8px; }
+        #appHeute .ah-lern .t { font: 700 13.5px/1 var(--font-body); color: var(--s-text); white-space: nowrap; }
+        #appHeute .ah-lern small { font: 500 11.5px/1 var(--font-body); color: var(--s-text2, #5b6b80); white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+        #appHeute .ah-lern .sw { position: relative; width: 40px; height: 22px; flex: none; }
+        #appHeute .ah-lern .sw input { position: absolute; inset: 0; opacity: 0; margin: 0; width: 100%; height: 100%; cursor: pointer; }
+        #appHeute .ah-lern .sw i { position: absolute; inset: 0; border-radius: 999px; background: rgba(91,107,128,0.35); border: 1.5px solid rgba(91,107,128,0.45); transition: background 0.2s, border-color 0.2s; }
+        #appHeute .ah-lern .sw i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: transform 0.2s; }
+        #appHeute .ah-lern .sw input:checked + i { background: var(--s-akzent, #1f6fd1); border-color: var(--s-akzent, #1f6fd1); }
+        #appHeute .ah-lern .sw input:checked + i::after { transform: translateX(18px); }
+        body.eckig:not(.app-rund) #appHeute .ah-lern .sw i { border-radius: 6px; }
+        body.eckig:not(.app-rund) #appHeute .ah-lern .sw i::after { border-radius: 3px; }
+        html.android-app.stil-verspielt #appHeute .ah-lern .sw input:checked + i { background: #2b7de9; border-color: #2b7de9; }
+        /* Am PC in der Breite nicht - dort gibt es den Kasten in den Einstellungen nicht und das Handy dunkelt nicht ab */
+        html.pc-app:not(.pc-handy) #appHeute .ah-lern { display: none; }
+        /* Sachlich am Handy: der Gruss hat die ganze erste Zeile - der Schalter sitzt darum IM Gruss, rechts vom Namen */
+        html.android-app.stil-sachlich #appHeute .ah-gruss { display: flex; align-items: center; gap: 4px; }
+        html.android-app.stil-sachlich #appHeute .ah-gruss > .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        html.android-app.stil-sachlich #appHeute .ah-gruss > .ah-lern { margin-left: auto; }
         #appHeute .ah-termin:empty { display: none; }
         #appHeute .ah-forum { display: none; }
         #appHeute .ah-kachel.ah-kforum { display: none; }
@@ -973,6 +995,21 @@
            @property nicht, steht das Muster still wie bisher. */
         @property --ah-welle { syntax: '<length>'; inherits: false; initial-value: 0px; }
         @keyframes ahWellen { from { --ah-welle: 0px; } to { --ah-welle: 18px; } }
+        /* DAS BLINKEN (25.10.2026). Dietmar, mit Video vom Xiaomi (und vom Samsung seiner
+           Frau): auf der Auswertung des Pruefungssimulators wurde der Bildschirm alle ein bis
+           zwei Sekunden fuer einen Augenblick weiss. Dahinter lief die Startkarte weiter -
+           die Funkwellen zeichnen 60-mal je Sekunde einen neuen Farbverlauf ueber die ganze
+           Karte, und darueber liegen Flaechen mit Weichzeichner (Leiste, Fenster). Das
+           schafft die Grafik mancher Handys nicht; sie laesst dann Kacheln fallen, und das
+           sieht aus wie ein weisser Blitz. Zwei Massnahmen: Die Wellen laufen in Schritten
+           (12 statt 60 Bilder je Sekunde, sieht man nicht), und sie halten an, sobald die
+           Startseite nicht zu sehen ist - in einer Runde, hinter einem Fenster, im
+           Hintergrund (html.start-ruht, gesetzt im Takt der Startseite). */
+        html.android-app #appHeute .ah-runde::before { animation-timing-function: steps(36, end) !important; }
+        html.start-ruht #appHeute .ah-runde::before,
+        body.runde-laeuft #appHeute .ah-runde::before,
+        body:has(#realisticExamModal.open) #appHeute .ah-runde::before,
+        body:has(#einstellungenModal[style*="display: flex"]) #appHeute .ah-runde::before { animation-play-state: paused !important; }
         html.android-app.stil-verspielt #appHeute .ah-runde::before {
             background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) calc(var(--ah-welle) - 18px) calc(var(--ah-welle) - 16.5px), transparent calc(var(--ah-welle) - 16.5px) var(--ah-welle));
             animation: ahWellen 3.2s linear infinite;
@@ -1343,8 +1380,8 @@
         html.android-app body.dark .app-form-mini b { background: #4A7FA6; }
         /* Der Hinweis "Es spricht die Stimme deines Handys" war im Dunkeln
            hell auf hell - kaum lesbar. */
-        html.android-app body.dark .app-stimme-hinweis { background: var(--s-akzent-w) !important; border-color: rgba(69,194,206,0.40) !important; color: var(--s-text2) !important; }
-        html.android-app body.dark .app-stimme-hinweis b { color: var(--s-text) !important; }
+        html.android-app body.dark .app-stimme-hinweis, html.android-app body.dark .app-stimme-verweis { background: var(--s-akzent-w) !important; border-color: rgba(69,194,206,0.40) !important; color: var(--s-text2) !important; }
+        html.android-app body.dark .app-stimme-hinweis b, html.android-app body.dark .app-stimme-verweis b { color: var(--s-text) !important; }
         /* Die Modellwahl beim Lerncoach ragte am Handy ueber den Rand. */
         html.android-app #einstellungenModal select { max-width: 100%; }
         /* "Funki spricht" im Kasten "Funki, dein Helfer" (30.09.2026) */
@@ -24461,7 +24498,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 304, datum: '23.10.2026' };
+const TRAINER_STAND = { nr: 306, datum: '25.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32309,6 +32346,11 @@ function einstellungenAnwenden(){
         const vb = document.getElementById('einstVollbildAuto');
         if(vb){ vb.checked = vollbildAutoAn(); vollbildAutoSetzen(vb.checked); }
     }catch(e){}
+    try{
+        const ba = document.getElementById('einstBildschirmAn');
+        if(ba){ ba.checked = bildschirmAnGewollt(); bildschirmAnText(ba.checked); }
+    }catch(e){}
+    try{ Object.keys(MAJA_FUNK_TEILE).forEach(k => majaFunkSetzen(k, majaFunkAn(k))); }catch(e){}
     const kurz = document.getElementById('einstUmfangKurz');
     const lang = document.getElementById('einstUmfangLang');
     if(kurz) kurz.checked = einstellungen.knopfUmfang !== 'lang';
@@ -33283,6 +33325,7 @@ function einstReiterZeigen(id){
     // Jeder Reiter holt sich beim Aufschlagen seine Zahlen frisch. Ein
     // Fenster, das beim zweiten Oeffnen alte Werte zeigt, ist schlimmer
     // als eines, das eine halbe Sekunde braucht.
+    if(id === 'sounds')   { try{ appStimmenNachziehen(); }catch(e){} }
     if(id === 'lernen')   { try{ einstLernenFuellen(); }catch(e){} }
     if(id === 'benutzer') { try{ einstBenutzerFuellen(); }catch(e){} }
     if(id === 'merkblatt'){ try{ einstMerkblattFuellen(); }catch(e){} }
@@ -33290,8 +33333,10 @@ function einstReiterZeigen(id){
     if(id === 'lerncoach'){ try{ einstLerncoachFuellen(); }catch(e){} }
     if(id === 'update')   { try{ einstUpdateFuellen(); }catch(e){} }
     if(id === 'wartung')  { try{ einstProgrammeFuellen(); }catch(e){} try{ einstOhmLageFuellen(); }catch(e){} }
+    try{ appEinstellungenAufraeumen(); }catch(e){}
     if(id === 'vorlesen') {
         try{ ttsFelderNachziehen(); }catch(e){}
+        try{ appStimmenNachziehen(); }catch(e){}
         try{ einstAlteStimmenPruefen(); }catch(e){}
         try{ naFelderNachziehen(); }catch(e){}
         try{ autoWeiterFelderNachziehen(); }catch(e){}
@@ -33571,6 +33616,21 @@ function einstBlaetterFuellen(){
           + 'onchange="vollbildAutoSetzen(this.checked)">'
           + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beim Öffnen gleich ins Vollbild</span></label>'
           + '<div id="einstVollbildText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>')
+      // BILDSCHIRM ANLASSEN (25.10.2026). Dietmar: "In der Android Version blinkt das
+      // Display bei meiner Frau ihrem Samsung Handy. Bei mir uebrigens auch." - Maja:
+      // "ueberall". Das Handy dunkelt ab, sobald man eine Weile nichts antippt - beim
+      // Zuhoeren oder Nachdenken also mitten in der Frage. In der App haelt
+      // AndroidApp.bildschirmAn den Bildschirm wach, im Browser am Handy die
+      // Wake-Lock-Schnittstelle. Siehe bildschirmWachhalten().
+      + '<div id="einstBildschirmKasten">' + einstKasten('Lern-Modus',
+            'Solange der Trainer offen ist, bleibt der Bildschirm an und dunkelt nicht ab \u2013 '
+          + 'auch wenn du eine Weile nur zuh\u00f6rst oder nachdenkst. Der Akku h\u00e4lt daf\u00fcr etwas k\u00fcrzer; '
+          + 'sobald du den Trainer verl\u00e4sst, gilt wieder die Einstellung des Handys.',
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
+          + '<input type="checkbox" id="einstBildschirmAn" style="width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="bildschirmAnSetzen(this.checked)">'
+          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Lern-Modus: Bildschirm bleibt an</span></label>'
+          + '<div id="einstBildschirmText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>') + '</div>'
       // In der App heisst es seit dem 30.09.2026 "Stil der App" und "Hell oder
       // dunkel" (siehe ZWEI STILE FUER DIE APP) - die sechs Farbstile gibt es
       // nur noch am PC.
@@ -33721,10 +33781,9 @@ function einstBlaetterFuellen(){
         einstKasten('Stimme', 'Wer vorliest — und eine Probe, damit man es hört, bevor man sich entscheidet.',
             '<div id="einstZielStimme"></div>'
           // In der Android-App spricht die Stimme des Handys (29.09.2026).
-          + '<div class="nur-app app-stimme-hinweis" style="font-size:0.82rem; line-height:1.55; background:#eaf4ff; border:1px solid #9cc3ea; padding:0.55rem 0.7rem; margin-bottom:0.6rem;">'
-          + '<b>Es spricht die Stimme deines Handys.</b> Welche Stimme das ist, stellst du in Android ein: '
-          + 'Einstellungen → Bedienungshilfen → Sprachausgabe (je nach Handy auch unter „Zusätzliche Einstellungen“). '
-          + 'Fehlt dort Deutsch, einmal die deutsche Sprachdatei laden.</div>'
+          + '<div class="nur-app app-stimme-verweis" style="font-size:0.82rem; line-height:1.55; background:#eaf4ff; border:1px solid #9cc3ea; padding:0.55rem 0.7rem; margin-bottom:0.6rem;">'
+          + '<b>Es spricht die Stimme deines Handys.</b> Sprachmodul (Google, Samsung, Acapela) und Stimme wählst du jetzt unter <b>Sounds</b>. '
+          + '<button type="button" style="' + EINST_KNOPF + ' margin-top:0.4rem;" onclick="einstReiterZeigen(\'sounds\')"><i class="fas fa-volume-high"></i> Zu Sounds</button></div>'
           // Geschwindigkeit und Klang (26.09.2026). Dietmar: "Koennen wir
           // die Piperstimme anpassen? Zb. etwas schneller vorlesen und
           // anders klingen lassen?" und "Bei Geschwindigkeit beim vorlesen
@@ -33983,6 +34042,23 @@ function einstBlaetterFuellen(){
       + '<input type="checkbox" id="' + id + '" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" onchange="' + wechsel + '">'
       + '<span><b style="color:#0f2745; font-size:0.85rem;">' + titel + '</b>'
       + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">' + text + '</span></span></label>';
+    // MAJAS FUNK-KLANG (25.10.2026, Dietmar: "Das muss bei Sounds mit rein. Etwas abgetrennt, von den anderen Einstellungen")
+    // VORLESE-STIMME IN DER APP (25.10.2026, Dietmar: "Baue das unter Sounds mit ein.")
+    const appStimmeHtml = '<div class="nur-app" style="margin-top:1.6rem; padding-top:1.1rem; border-top:2px dashed var(--border, #c9d3df);">'
+        + '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin-bottom:0.5rem;">Nur in der App</div>'
+        + einstKasten('Vorlese-Stimme', 'Wer die Fragen vorliest: Sprachmodul (Google, Samsung, Acapela …) und Stimme. Mit „Anhören“ vorher ausprobieren.',
+            '<div class="app-stimme-hinweis" style="font-size:0.82rem; line-height:1.55; background:#eaf4ff; border:1px solid #9cc3ea; padding:0.55rem 0.7rem;">'
+          + '<b>Es spricht die Stimme deines Handys.</b> Welche Stimme das ist, stellst du in Android ein: '
+          + 'Einstellungen → Bedienungshilfen → Sprachausgabe (je nach Handy auch unter „Zusätzliche Einstellungen“). '
+          + 'Fehlt dort Deutsch, einmal die deutsche Sprachdatei laden.</div>') + '</div>';
+    const majaFunkHtml = '<div id="einstMajaFunkKasten" style="margin-top:1.6rem; padding-top:1.1rem; border-top:2px dashed var(--border, #c9d3df);">'
+        + '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin-bottom:0.5rem;">Nur für Maja</div>'
+        + einstKasten('Maja: Funk-Klang',
+            'Maja klingt wie über Funk. Du kannst jeden Teil einzeln ausschalten.',
+            [['quetschen', 'Gequetschter Funk-Klang (enges Band, hart komprimiert)'], ['rauschen', 'Rauschen und Knistern'], ['piepser', 'Piepser vorn und hinten (Quindar und Roger)']].map(x =>
+              '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.35rem 0;">'
+            + '<input type="checkbox" id="einstMaja_' + x[0] + '" style="width:18px; height:18px; cursor:pointer;" onchange="majaFunkSetzen(\'' + x[0] + '\', this.checked)">'
+            + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">' + x[1] + '</span></label>').join('')) + '</div>';
     document.getElementById('einstBlatt_sounds').innerHTML =
         einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
             + 'beim Einschalten hörst du ihn einmal zur Probe.',
@@ -33993,7 +34069,7 @@ function einstBlaetterFuellen(){
           + tonZeile('einstMagnetTon', "einstellungenUmschalten('magnetTon', this.checked)", 'Fehler-Magnet: Ton beim Aussuchen',
                 'Ein kurzer Klang, wenn der Magnet dir eine Frage aus deinen Schwachstellen vorlegt. Das Symbol blinkt dann trotzdem.', 'Ton, wenn der Magnet eine Frage aussucht.', ' margin-top:0.55rem;')
           + tonZeile('einstLevelUpTon', "einstellungenUmschalten('levelUpTon', this.checked)", 'Belohnung: Ton, wenn eine Frage sitzt',
-                'Dreimal hintereinander richtig, oder die Runde „Noch nie geübt“ ist durch. Kein Fenster, nur der Klang.', 'Ton, wenn eine Frage sitzt.', ' margin-top:0.55rem;'));
+                'Dreimal hintereinander richtig, oder die Runde „Noch nie geübt“ ist durch. Kein Fenster, nur der Klang.', 'Ton, wenn eine Frage sitzt.', ' margin-top:0.55rem;')) + appStimmeHtml + majaFunkHtml;
 
     // ---- Update ----
     document.getElementById('einstBlatt_update').innerHTML =
@@ -34576,6 +34652,172 @@ try{ einstellungenLaden(); }catch(e){}
 function openTtsSettings() {
     try{ einstellungenOeffnen('vorlesen'); }catch(e){}
 }
+
+// ================================================================
+//  EINSTELLUNGEN OHNE PC-KRAM IN DER APP                (25.10.2026)
+//  Dietmar: "In der Android App gibt es Funktionen die aus der Desktop
+//  Version sind. Zum Beispiel Mouseoverlay. Was koennen wir alles
+//  entfernen? Gehe die Einstellungen durch." Gefunden (App nachgestellt,
+//  jede Seite angesehen): Beamer-Modus, Chat rechts andocken, Vollbild am
+//  Handy (die App ist immer im Vollbild), die Zweiteilung der
+//  Anzeigegroesse (Normal/Vollbild F11), Antwort hervorheben (Mouseover),
+//  Knoepfe vorlesen (Maus), Tastatur (1-4, F8, F9), Bilder vergroessern
+//  (Maus), Am Beamer (Leertaste, Esc), Lerncoach (nur am Trainer-PC),
+//  Klickton "am Rechner" (die App hat "Toene beim Tippen"), die
+//  Druckknoepfe (aus der App heraus wird nicht gedruckt) und ein paar
+//  Woerter: "Rechner" -> "Handy", "Strg+V" -> "Einfuegen".
+//  Nur in der echten App (ttsImApp): im Browser am Handy bleibt alles,
+//  dort kuemmert sich der PC-Ansicht-Haken (kastenEinsetzen) darum.
+// ================================================================
+function appEinstellungenAufraeumen(){
+    if(!ttsImApp()) return;
+    const $ = id => document.getElementById(id);
+    const kasten = el => { let k = el; while(k && k.parentElement && !/^einstBlatt_/.test(k.parentElement.id) && k.parentElement.id !== 'einstVerschoben') k = k.parentElement; return k; };
+    const weg = el => { if(el) el.style.display = 'none'; };
+    const wegKasten = id => { const e = $(id); if(e) weg(kasten(e)); };
+    // Allgemein
+    wegKasten('einstBeamer');
+    wegKasten('einstVollbildAuto');
+    try{ const l = $('einstChatAndocken') && $('einstChatAndocken').closest('label'); weg(l); }catch(e){}
+    // Anzeigegroesse: nur ein Feld. Die App hat keine Adressleiste und kein F11.
+    try{
+        const paar = $('einstAnzeige') && $('einstAnzeige').closest('.anzeige-paar');
+        if(paar && !paar.dataset.app){
+            paar.dataset.app = '1';
+            const kinder = Array.from(paar.children);
+            // Reihenfolge: Titel, Titel, Info, Info, Feld, Feld - das jeweils zweite weg
+            kinder.forEach((k, i) => { if(i % 2 === 1) k.style.display = 'none'; });
+            const t = kinder[0]; if(t) t.innerHTML = '<i class="fas fa-mobile-screen"></i> Gr\u00f6\u00dfe der Anzeige';
+            const inf = kinder[2]; if(inf) inf.textContent = 'Wie gro\u00df der Trainer in der App dargestellt wird.';
+            paar.style.gridTemplateColumns = '1fr';
+        }
+        weg($('einstAnzeigeVollText'));
+    }catch(e){}
+    // Anpassen: das Mouseover
+    wegKasten('einstMausProbe');
+    // Nachteilsausgleich: Maus und Tastatur
+    wegKasten('einstUmfangKurz');
+    wegKasten('tastaturCheckbox');
+    wegKasten('einstBildZoomAn');
+    try{ const l = $('einstMausVorlesen') && $('einstMausVorlesen').closest('label'); weg(l); }catch(e){}
+    // Sounds: der Klickton "am Rechner" - die App hat "Toene beim Tippen"
+    try{ const l = $('einstKlickTon') && $('einstKlickTon').closest('label'); weg(l); }catch(e){}
+    // Lerncoach nur am Trainer-PC
+    try{ $('einstTab_lerncoach').classList.add('reiter-weg'); }catch(e){}
+    // Kurs: Am Beamer. Vor der Pruefung: die Druckknoepfe.
+    document.querySelectorAll('[id^=einstBlatt_] > div').forEach(k => {
+        const t = (k.firstElementChild && k.firstElementChild.textContent || '').trim();
+        if(/^Am Beamer$/i.test(t)) weg(k);
+    });
+    document.querySelectorAll('#einstBlatt_merkblatt button').forEach(b => { if(/drucken/i.test(b.textContent)) weg(b); });
+    // Woerter
+    const ersetzen = (el, von, nach) => { if(!el || el.dataset.appWort) return; el.dataset.appWort = '1'; el.innerHTML = el.innerHTML.split(von).join(nach); };
+    try{ document.querySelectorAll('#einstBlatt_benutzer, #einstBlatt_vorlesen, #einstBlatt_kurs').forEach(b => {
+        b.querySelectorAll('div, span, p, b').forEach(e => {
+            if(e.children.length !== 0 || e.dataset.appWort) return;
+            const t = e.textContent;
+            if(/Rechner|Klick/.test(t)){
+                e.dataset.appWort = '1';
+                e.textContent = t.replace(/an diesem Rechner/g, 'an diesem Handy').replace(/f\u00fcr diesen Rechner/g, 'f\u00fcr dieses Handy')
+                    .replace(/einen Rechner teilen/g, 'ein Handy teilen').replace(/Rechner/g, 'Handy')
+                    .replace(/jeder Klick/g, 'jedes Antippen').replace(/Klick und mit Enter/g, 'Antippen');
+            }
+        });
+    }); }catch(e){}
+    // Anzeigegroesse: der Einleitungstext spricht von Vollbild und F11
+    try{ const sel = $('einstAnzeige'); const k = sel && kasten(sel); const u = k && k.children[1]; if(u && !u.dataset.appWort){ u.dataset.appWort = '1'; u.textContent = 'Wie gro\u00df der Trainer in der App dargestellt wird. \u201eAutomatisch\u201c richtet sich nach dem Bildschirm.'; } }catch(e){}
+    try{ const k = $('einstBlatt_allgemein'); if(k) k.querySelectorAll('div').forEach(e => { if(e.children.length <= 6 && /Strg\+V/.test(e.innerHTML) && !e.dataset.appWort){ e.dataset.appWort = '1'; e.innerHTML = e.innerHTML.replace(/<b>Strg\+V<\/b> und Eingabe/g, 'lange dr\u00fccken, <b>Einf\u00fcgen</b> und abschicken').replace(/Strg\+V/g, 'Einf\u00fcgen'); } }); }catch(e){}
+}
+window.appEinstellungenAufraeumen = appEinstellungenAufraeumen;
+
+// ================================================================
+//  STIMMENWAHL IN DER APP                                (23.10.2026)
+//  Dietmar, nach dem Umstieg von Acapela auf Google: "irgendwie klingt
+//  das immer noch wie ein Mann" - "ich kann die Sprache nur auf Deutsch
+//  umstellen kein Mann keine Frau". Google laesst am Handy oft nur die
+//  Sprache waehlen, nicht die Stimme. Deshalb fragt die Seite die App
+//  (AndroidSprache.stimmen, ab der App vom 23.10.2026) nach allen
+//  deutschen Stimmen des Moduls und zeigt sie hier zum Anhoeren; die
+//  gewaehlte merkt sich die App und setzt sie bei jedem Start wieder.
+//  Aeltere Apps kennen stimmen() nicht - dann bleibt der alte Hinweis.
+// ================================================================
+function appStimmenNachziehen(){
+    const box = document.querySelector('.app-stimme-hinweis');
+    if(!box || !ttsImApp()) return;
+    const A = window.AndroidSprache;
+    if(!A || typeof A.stimmen !== 'function'){
+        return;   // alte App: der Text "Es spricht die Stimme deines Handys" bleibt
+    }
+    let liste = [];
+    try{ liste = JSON.parse(A.stimmen() || '[]') || []; }catch(e){ liste = []; }
+    const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    // SPRACHMODUL WAEHLEN (25.10.2026, Dietmar: "Kann man die Vorlese-Stimmen auch noch auswaehlen? Google, Samsung und Acapella")
+    // Android kennt mehrere Sprachmodule (Google, Samsung, Acapela ...). Die App spricht mit dem gewaehlten.
+    let module = [];
+    try{ if(typeof A.module === 'function') module = JSON.parse(A.module() || '[]') || []; }catch(e){ module = []; }
+    let modHtml = '';
+    if(module.length > 1 && typeof A.modulWaehlen === 'function'){
+        const mzeile = (paket, titel, aktiv) =>
+              '<label style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.5rem; border:1px solid ' + (aktiv ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)') + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:inherit; border-radius:10px; cursor:pointer;">'
+            + '<input type="radio" name="appModul" value="' + esc(paket) + '" ' + (aktiv ? 'checked' : '') + ' onchange="appModulWaehlen(this.value)" style="width:18px; height:18px; flex:0 0 18px;">'
+            + '<span style="flex:1; min-width:0;"><b style="font-size:0.85rem;">' + esc(titel) + '</b></span></label>';
+        modHtml = '<div style="margin-bottom:0.8rem;"><b>Sprachmodul</b> \u2013 wer spricht (Google, Samsung, Acapela \u2026):'
+            + '<div style="margin-top:0.4rem; display:flex; flex-direction:column; gap:0.35rem;">'
+            + module.map(m => mzeile(m.name, m.label || m.name, !!m.gewaehlt)).join('')
+            + '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.3rem; line-height:1.5;">Nach dem Wechsel dauert es einen Moment, bis das neue Modul bereit ist. Die Stimmen darunter geh\u00f6ren immer zum gew\u00e4hlten Modul.</div></div>';
+    }
+    if(!liste.length){
+        box.innerHTML = modHtml + '<b>Es spricht die Stimme deines Handys.</b> '
+            + 'Die Stimmen sind noch nicht gemeldet \u2013 kurz warten und die Einstellungen noch einmal \u00f6ffnen. '
+            + '<button type="button" style="' + EINST_KNOPF + ' margin-top:0.4rem;" onclick="appStimmenNachziehen()">Noch einmal nachsehen</button>';
+        return;
+    }
+    // Lesbare Namen: Google nennt seine Stimmen "de-de-x-nfh-local" - daraus
+    // wird "Stimme 1 \u00b7 nfh \u00b7 ohne Internet". Die Kennung bleibt
+    // sichtbar, damit man am Telefon dar\u00fcber reden kann.
+    const kurz = n => { const m = /-x-([a-z0-9]+)-(local|network)$/i.exec(n); return m ? m[1] : n; };
+    const gewaehlt = liste.find(v => v.gewaehlt);
+    let h = modHtml + '<b>Es spricht die Stimme deines Handys.</b> Welche, w\u00e4hlst du hier \u2013 mit \u201eAnh\u00f6ren\u201c vorher ausprobieren:'
+          + '<div class="app-stimmen" style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.35rem;">';
+    const zeile = (name, titel, unter, aktiv) =>
+          '<label style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.5rem; border:1px solid ' + (aktiv ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)') + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit); cursor:pointer;">'
+        + '<input type="radio" name="appStimme" value="' + esc(name) + '" ' + (aktiv ? 'checked' : '') + ' onchange="appStimmeWaehlen(this.value)" style="width:18px; height:18px; flex:0 0 18px;">'
+        + '<span style="flex:1; min-width:0;"><b style="font-size:0.85rem;">' + esc(titel) + '</b>'
+        + (unter ? '<span style="display:block; font-size:0.72rem; opacity:0.75;">' + esc(unter) + '</span>' : '') + '</span>'
+        + '<button type="button" style="' + EINST_KNOPF + ' padding:0.3rem 0.6rem; font-size:0.78rem;" onclick="appStimmeProbe(' + JSON.stringify(name).replace(/"/g,'&quot;') + ')"><i class="fas fa-volume-up"></i> Anh\u00f6ren</button>'
+        + '</label>';
+    h += zeile('', 'Standard des Handys', 'So, wie es in den Android-Einstellungen steht', !gewaehlt);
+    liste.forEach((v, i) => {
+        h += zeile(v.name, 'Stimme ' + (i + 1) + ' \u00b7 ' + kurz(v.name),
+                   (v.sprache || 'de') + (v.netz ? ' \u00b7 braucht Internet' : ' \u00b7 ohne Internet') + (v.guete >= 400 ? ' \u00b7 hohe G\u00fcte' : ''),
+                   !!v.gewaehlt);
+    });
+    h += '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.4rem; line-height:1.5;">'
+       + 'Welche davon m\u00e4nnlich oder weiblich klingt, verr\u00e4t Android nicht \u2013 einfach durchh\u00f6ren. '
+       + 'Mehr Stimmen bekommst du in den Android-Einstellungen unter \u201eSprachausgabe\u201c (Sprachdaten f\u00fcr Deutsch laden).</div>';
+    box.innerHTML = h;
+}
+function appModulWaehlen(paket){
+    try{
+        window.AndroidSprache.modulWaehlen(paket || '');
+        const box = document.querySelector('.app-stimme-hinweis');
+        if(box) box.innerHTML = '<b>Das Sprachmodul wird gewechselt \u2026</b> einen Moment.';
+        [2000, 5000, 9000].forEach(ms => setTimeout(() => { try{ appStimmenNachziehen(); }catch(e){} }, ms));
+    }catch(e){}
+}
+function appStimmeWaehlen(name){
+    try{ const ok = window.AndroidSprache.waehlen(name || ''); if(ok === false) ttsMeldung('Die Stimme konnte nicht gesetzt werden \u2013 ist das Sprachmodul schon bereit?'); }catch(e){}
+    try{ appStimmenNachziehen(); }catch(e){}
+    try{ appStimmeProbe(name || ''); }catch(e){}
+}
+function appStimmeProbe(name){
+    try{
+        const A = window.AndroidSprache;
+        if(name !== undefined && A && typeof A.waehlen === 'function') A.waehlen(name || '');
+        if(A && typeof A.probe === 'function') A.probe('Hallo, ich bin Maja. So klinge ich beim Vorlesen der Fragen. Ein Widerstand von 470 Ohm hat die Ringe gelb, violett und braun.');
+    }catch(e){}
+}
+window.appModulWaehlen = appModulWaehlen; window.appStimmenNachziehen = appStimmenNachziehen; window.appStimmeWaehlen = appStimmeWaehlen; window.appStimmeProbe = appStimmeProbe;
 
 // Stimmen da, Programm nicht: der haeufigste Fall ausserhalb von Windows.
 // Der Text sagt, wonach gesucht wurde und was zu tun ist - nicht "es geht
@@ -40696,6 +40938,70 @@ function vollbildAutoSetzen(an){
         ? 'Der Trainer geht am Handy beim ersten Antippen von selbst ins Vollbild.'
         : 'Das Vollbild wird nur über den Knopf oben eingeschaltet.';
 }
+
+// ================================================================
+//  LERN-MODUS: BILDSCHIRM BLEIBT AN                      (25.10.2026)
+//  Dietmar: "Ich habe auf einer Webseite einen Button gesehen ... Wenn man
+//  das aktiviert hat, wurde die Seite nicht abgedunkelt und blieb am
+//  Leben. Wir nennen es Lern-Modus."
+//  Dietmar: "In der Android Version blinkt das Display bei meiner Frau
+//  ihrem Samsung Handy. Bei mir uebrigens auch." - Maja: "ueberall".
+//  Das Handy dunkelt nach seiner eigenen Zeit ab, wenn niemand tippt;
+//  beim Zuhoeren oder Nachdenken also mitten in der Frage. Standard: an,
+//  am Handy (App und Browser). Am PC gibt es den Kasten nicht.
+//  App: AndroidApp.bildschirmAn (MainActivity, FLAG_KEEP_SCREEN_ON).
+//  Browser: navigator.wakeLock - der Browser gibt die Sperre beim
+//  Wechsel in den Hintergrund von selbst frei, deshalb wird sie bei
+//  jeder Rueckkehr neu geholt.
+// ================================================================
+// Majas Funk-Klang: Quetschen, Rauschen und Piepser einzeln ein/aus (Dietmar 25.10.2026: "Rauschen und quetscht sollte man ausschalten koennen")
+const MAJA_FUNK_TEILE = { quetschen: 'afu_maja_quetschen', rauschen: 'afu_maja_rauschen', piepser: 'afu_maja_piepser' };
+function majaFunkAn(teil){ try{ return localStorage.getItem(MAJA_FUNK_TEILE[teil || 'quetschen']) !== 'nein'; }catch(e){ return true; } }
+function majaFunkSetzen(teil, an){
+    try{ localStorage.setItem(MAJA_FUNK_TEILE[teil], an ? 'ja' : 'nein'); }catch(e){}
+    try{ const e = document.getElementById('einstMaja_' + teil); if(e) e.checked = !!an; }catch(e){}
+}
+window.majaFunkAn = majaFunkAn; window.majaFunkSetzen = majaFunkSetzen;
+const BILDSCHIRM_AN_SCHLUESSEL = 'afu_bildschirm_an';
+function bildschirmAnGewollt(){
+    try{ return localStorage.getItem(BILDSCHIRM_AN_SCHLUESSEL) !== 'nein'; }catch(e){ return true; }
+}
+function bildschirmAnText(an){
+    const t = document.getElementById('einstBildschirmText');
+    if(t) t.textContent = an
+        ? 'Lern-Modus an \u2013 der Bildschirm bleibt an, solange der Trainer offen ist.'
+        : 'Lern-Modus aus \u2013 das Handy dunkelt wie gewohnt ab.';
+}
+function bildschirmAnSetzen(an){
+    try{ localStorage.setItem(BILDSCHIRM_AN_SCHLUESSEL, an ? 'ja' : 'nein'); }catch(e){}
+    bildschirmAnText(an);
+    bildschirmWachhalten();
+}
+let _wakeLock = null;
+async function bildschirmWachhalten(){
+    const an = bildschirmAnGewollt();
+    // Echte App: das Fenster selbst wachhalten.
+    try{
+        if(window.AndroidApp && typeof window.AndroidApp.bildschirmAn === 'function'){
+            window.AndroidApp.bildschirmAn(!!an);
+            return;
+        }
+    }catch(e){}
+    // Browser: Wake Lock, wo es ihn gibt (Chrome, Edge, Safari ab 16.4).
+    try{
+        if(!('wakeLock' in navigator)) return;
+        if(!an){ if(_wakeLock){ try{ await _wakeLock.release(); }catch(e){} _wakeLock = null; } return; }
+        if(_wakeLock && !_wakeLock.released) return;
+        if(document.visibilityState !== 'visible') return;
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    }catch(e){ _wakeLock = null; }
+}
+window.bildschirmWachhalten = bildschirmWachhalten; window.bildschirmAnSetzen = bildschirmAnSetzen;
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible'){ try{ bildschirmWachhalten(); }catch(e){} } });
+window.addEventListener('load', () => { setTimeout(() => { try{ bildschirmWachhalten(); }catch(e){} }, 1500); });
+// Im Browser braucht der erste Wake Lock eine Nutzeraktion - das erste Antippen reicht.
+document.addEventListener('pointerdown', () => { try{ bildschirmWachhalten(); }catch(e){} }, { once: true });
 window.vollbildAutoSetzen = vollbildAutoSetzen;
 
 (function vollbildAutoVorbereiten(){
@@ -51509,10 +51815,44 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         try{ const ca = $('einstChatAndocken'); const l = ca && ca.closest('label'); if(l) l.style.display = handy ? 'none' : 'flex'; }catch(e){}   // 'flex', nicht '' - sonst rutscht das Kaestchen aus der Reihe (17.10.2026)
         // Am PC kein Handy-Kram: Stil der App und Vollbild am Handy weg
         try{ const v = kastenVon('einstVollbildAuto'); if(v) v.style.display = handy ? '' : 'none'; }catch(e){}
+        try{ const bk = $('einstBildschirmKasten'); if(bk) bk.style.display = handy ? '' : 'none'; }catch(e){}
         anp.insertAdjacentHTML('afterbegin', (handy ? '' : '<div id="pcAnsichtKasten">' + window.pcAnsichtKastenHtml() + '</div>')
             + '<div id="fragenstilKasten">' + window.fragenstilKastenHtml() + '</div>');
         // Am Handy steht Sachlich/Verspielt ganz oben
         if(handy && appStil){ const st = $('fragenstilKasten'); if(st) st.insertAdjacentElement('beforebegin', appStil); }
+        // ORDNUNG AM HANDY (25.10.2026). Dietmar: "In den Einstellungen moechte ich
+        // ebenfalls mehr Struktur. Da ist vieles Durcheinander." Die Kaesten unter
+        // Anpassen stehen in drei Gruppen: Aussehen, Begleiter, Beim Ueben - in fester
+        // Reihenfolge, mit einer Zwischenzeile je Gruppe.
+        if(handy) tu(() => anpassenOrdnen(anp));
+    }
+    function anpassenOrdnen(anp){
+        const GRUPPEN = [
+            ['Aussehen',   ['Stil der App', 'Farbe', 'Form', 'Stil der Frage', 'Anzeigegr\u00f6\u00dfe']],
+            ['Begleiter',  ['Begleiter', 'Funki, dein Helfer', 'Maja, deine Helferin', 'ISS, Astronaut & Satellit']],
+            ['Beim \u00dcben', ['Tagesziel', 'Lern-Modus', 'T\u00f6ne beim Tippen', 'Leisten unter der Frage', 'Vollbild am Handy', 'Antwort hervorheben']]
+        ];
+        const titelVon = k => ((k.firstElementChild && k.firstElementChild.textContent) || '').trim().toLowerCase();
+        const versteckt = k => { for(let e = k; e && e !== anp; e = e.parentElement){ if(e.classList.contains('nur-pc') || getComputedStyle(e).display === 'none') return true; } return false; };
+        const alle = Array.from(anp.querySelectorAll('div[style*="border:1px solid"]')).filter(k => !k.parentElement.closest('div[style*="border:1px solid"]') && !versteckt(k));
+        const gefunden = new Set();
+        anp.querySelectorAll('.anp-gruppe').forEach(e => e.remove());
+        for(const [name, titel] of GRUPPEN){
+            const zeile = D.createElement('div'); zeile.className = 'anp-gruppe';
+            zeile.style.cssText = 'font-size:0.78rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--s-text2, #5b6b80); margin:0.9rem 0 0.4rem 0.1rem;';
+            zeile.textContent = name;
+            let n = 0;
+            for(const t of titel){
+                const k = alle.find(x => !gefunden.has(x) && titelVon(x) === t.toLowerCase());
+                if(!k) continue;
+                if(!n) anp.appendChild(zeile);
+                gefunden.add(k); anp.appendChild(k); n++;
+            }
+        }
+        // Was keiner Gruppe zugeordnet ist, kommt ans Ende, so wie es war.
+        alle.forEach(k => { if(!gefunden.has(k)) anp.appendChild(k); });
+        // Leere Huellen (nur-app, einstVerschoben ...) raeumen: sie wuerden sonst Raender und Abstaende hinterlassen
+        Array.from(anp.children).forEach(c => { if(!c.classList.contains('anp-gruppe') && !c.textContent.trim() && !c.querySelector('input,select,button')) c.remove(); });
     }
     function einstHaken(){
         const alt = window.einstellungenOeffnen;
@@ -51521,7 +51861,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         neu._pcAnsicht = true;
         window.einstellungenOeffnen = neu;
     }
-    if(!echteApp){
+    // Seit 25.10.2026 auch in der echten App. Dietmar: "In den Einstellungen moechte ich
+    // ebenfalls mehr Struktur. Da ist vieles Durcheinander. In der mobilen Version war es
+    // besser. Mir fehlt die Umstellung von den Farben in den Antworten." - Die Ordnung
+    // (Stil der App ganz oben, Stil der Frage mit den Antwortfarben, Anzeigegroesse, Form
+    // unter Anpassen; Profilbild, Chat, Nachschlagen unter Allgemein) galt bisher nur im
+    // Handy-Browser; die echte App war ausgenommen und zeigte die alte Reihenfolge.
+    {
         // Andere Teile wickeln einstellungenOeffnen beim Laden ein - der Haken kommt zuletzt und prueft nach.
         window.addEventListener('load', () => { setTimeout(einstHaken, 400); setInterval(einstHaken, 3000); });
     }
@@ -53709,7 +54055,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         tu(() => { D.querySelectorAll('#roboHelfer .mk, .robo-hopp .mk, .swp-mk .mk, .ash-funki .mk').forEach(mk => { const art = (mk.className || '').replace(/\bmk\b/, '').trim(); mk.outerHTML = appMaskottchen(art); }); });
         tu(() => { if(window.funkiNameFrisch) funkiNameFrisch(); });
         tu(() => { if(window.appFunki && appFunki.zustand && appFunki.zustand().da) appFunki.heim(); });
-        tu(() => { if(window.appFunki && appFunki.sagt) appFunki.sagt(v === 'astro' ? 'Hier spricht Maja, deine Astronautin! Ab jetzt lerne ich mit dir.' : 'Funki ist wieder da! Schön, dass du mich gewählt hast.'); });
+        tu(() => { if(window.appFunki && appFunki.sagt) appFunki.sagt(v === 'astro' ? 'Hier spricht Maja, US-Astronautin auf der ISS! Ab jetzt lerne ich mit dir. | Normalerweise spreche ich Englisch – ich hoffe, du verstehst mich.' : 'Funki ist wieder da! Schön, dass du mich gewählt hast.'); });
     };
     window.appFarbeKastenHtml = () => einstKasten('Farbe', 'Hell, Dunkel oder in Farbe wie am PC – die Fragen und Antworten werden in der Farbe getönt.',
         '<div class="app-seg app-farb-seg" id="appDesignSeg">'
@@ -54048,7 +54394,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       // Forum oben neben Abmelden (20.10.2026, Dietmar: "oben bei Abmelden
       // koennte man vielleicht auch noch den Button Forum mit einbauen").
       // Er erscheint nur, wenn das Forum erreichbar ist (body.forum-an).
-      + '<button type="button" class="app-chip ah-forum" id="ahForum" title="Zum Forum" aria-label="Zum Forum"><i class="fas fa-comments"></i> <span>Forum</span></button></div>'
+      + '<button type="button" class="app-chip ah-forum" id="ahForum" title="Zum Forum" aria-label="Zum Forum"><i class="fas fa-comments"></i> <span>Forum</span></button>'
+      // LERN-MODUS RECHTS NEBEN DEM NAMEN (25.10.2026). Dietmar, mit dem Bild eines
+      // "Kochmodus"-Schalters aus einer Rezept-App: "Das moechte ich rechts neben dem
+      // Namen." Ein Schalter, darunter "Display bleibt an". Siehe bildschirmWachhalten().
+      + '<label class="ah-lern" id="ahLern" title="Lern-Modus: der Bildschirm bleibt an, solange der Trainer offen ist">'
+      +   '<span class="z"><span class="t">Lern-Modus</span><span class="sw"><input type="checkbox" id="ahLernAn" aria-label="Lern-Modus: Bildschirm bleibt an"><i></i></span></span>'
+      +   '<small><i class="fas fa-circle-info"></i> Display bleibt an</small></label></div>'
       + '<div class="ah-chips" id="ahChips"><span class="app-chip ah-xp" id="ahXp"><i class="fas fa-bolt"></i> <span id="ahXpText">0 XP</span></span>'
       + '<button type="button" class="ah-termin" id="ahTermin"></button>'
       // Anmelden / Abmelden gut sichtbar auf der Startseite (18.10.2026, Dietmar: "ich will das auf der Main als Button")
@@ -54112,6 +54464,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 
     // Knoepfe des Startbildschirms -> die bewaehrten Knoepfe dahinter
     $('ahStart').addEventListener('click', () => rundeStarten());
+    // Lern-Modus-Schalter (25.10.2026): umschalten, Einstellungs-Haken mitziehen
+    tu(() => { const l = $('ahLernAn'); l.addEventListener('change', () => { try{ bildschirmAnSetzen(l.checked); }catch(e){} try{ const e = document.getElementById('einstBildschirmAn'); if(e) e.checked = l.checked; }catch(e){} }); });
     $('ahAendern').addEventListener('click', e => { e.stopPropagation(); blattAuf(); });
     $('ahWahl').addEventListener('click', () => blattAuf());
     $('ahFehler').addEventListener('click', () => klick('repeatErrorsBtn'));
@@ -54341,6 +54695,24 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         $('ahGrussZeit').textContent = vs ? grussZeit() + ',' : grussZeit() + (name ? ',' : '');
         $('ahGrussName').textContent = name ? ' ' + name : '';
         $('ahGrussName2').textContent = name || 'schön, dass du da bist';
+        // Die Funkwellen der Startkarte halten an, wenn die Startseite nicht zu sehen ist (25.10.2026, "das Blinken")
+        tu(() => {
+            const h = $('appHeute'); let ruht = D.hidden || !h || h.offsetParent === null || D.body.classList.contains('runde-laeuft');
+            if(!ruht){ const r = h.getBoundingClientRect(); ruht = r.bottom <= 0 || r.top >= window.innerHeight; }
+            // Fenster darueber: nur solche, die wirklich zu sehen sind und die Startseite verdecken
+            if(!ruht) ruht = [...D.querySelectorAll('#realisticExamModal.open, #einstellungenModal, .modal.open, [role="dialog"]')].some(e => {
+                if(e.id === 'ahLern' || e.closest('#appHeute')) return false;
+                const cs = getComputedStyle(e); if(cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
+                const b = e.getBoundingClientRect(); return b.width > window.innerWidth * 0.6 && b.height > window.innerHeight * 0.5;
+            });
+            H.classList.toggle('start-ruht', ruht);
+        });
+        // Lern-Modus-Schalter rechts (25.10.2026)
+        tu(() => {
+            const l = $('ahLernAn'), lab = $('ahLern');
+            if(lab){ const ziel = vs ? $('ahGruss').parentElement : $('ahGruss'); if(lab.parentElement !== ziel) ziel.appendChild(lab); }
+            if(l && document.activeElement !== l){ const an = window.bildschirmAnGewollt ? bildschirmAnGewollt() : true; if(l.checked !== an) l.checked = an; }
+        });
         // Termin - Sachlich: als Pille rechts neben dem Gruss, Verspielt: unter den Chips (dort verborgen)
         const tb = $('ahTermin'), tz = vs ? $('ahChips') : $('ahGruss').parentElement;
         if(tb.parentElement !== tz){ if(vs) tz.appendChild(tb); else tz.insertBefore(tb, $('ahOnAir')); }
@@ -54643,7 +55015,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '<button type="button" class="app-probe" onclick="appAstroProbe()"><i class="fas fa-user-astronaut"></i> Maja winken lassen</button>'
               + '<button type="button" class="app-probe" onclick="appSatProbe()"><i class="fas fa-satellite-dish"></i> OSCAR-Satellit fliegen lassen</button>')
           // Toene beim Tippen (01.10.2026)
-          + einstKasten('Töne beim Tippen', 'Ein leises Plopp bei Knöpfen und Kacheln, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
+          + einstKasten('Töne beim Tippen', 'Ein leises Plopp beim Tippen auf Buttons, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
                 '<div class="app-seg" id="appTippSeg">'
               + [['an', 'An'], ['aus', 'Aus']].map(f => '<button type="button" data-t="' + f[0] + '"' + ((lies('app_tipptoene', 'an') === 'aus' ? 'aus' : 'an') === f[0] ? ' class="an"' : '')
                   + ' onclick="appTippToeneSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
@@ -54762,7 +55134,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         'Eine <b>Richtantenne</b> wie die Yagi bündelt das Signal wie eine Taschenlampe. Das gibt Antennengewinn – aber keine zusätzliche Sendeleistung.',
         'Funkamateure können sogar <b>Fernsehen</b> senden: Amateurfunk-TV, kurz <b>ATV</b>. Das braucht die hohen Bänder.',
         '<b>CQ DX</b> heißt: „Ich rufe in die Ferne!“ Wer antwortet, kommt vielleicht von einem anderen Erdteil.',
-        'Auch Astronauten funken: <b>Dr. Ulf Merbold</b> trägt das Rufzeichen <b>DB1KM</b>. Frag mich nach den Funkern im All!'
+        'Auch Astronauten funken: <b>Dr. Ulf Merbold</b> trägt das Rufzeichen <b>DB1KM</b>. Frag mich nach den Funkern im Weltraum!'
     ];
     // ================================================================
     //  MEHR ODER WENIGER FUNKI                               (04.10.2026)
@@ -54809,7 +55181,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function buchstabiert(t){ return String(t).replace(/\b(Q[A-Z]{2}|CQ|DX|ATV|SSTV|ISS|DARC)\b/g, m => m.split('').join(' ')); }
     // Aus der Blase einen gesprochenen Satz machen: nur Text, kurz, Abkuerzungen buchstabiert
     function redeText(html, max){
-        const roh = nurText(html);
+        // Internetadressen werden nicht vorgelesen (25.10.2026, Dietmar: "er liest GitHub als Link vor?")
+        const roh = nurText(html).replace(/\bhier:\s*https?:\/\/\S+/g, 'auf unserer Internetseite').replace(/https?:\/\/\S+/g, 'auf unserer Internetseite').replace(/\s+([,.!?])/g, '$1');
         if(/[·−]{2,}/.test(roh)) return 'Ich übe Morsen. ^ Das heißt: lachen!';        // der Morse-Witz mit Punkten und Strichen
         return buchstabiert(kurzGesagt(roh, max || 110));
     }
@@ -54853,7 +55226,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.majaUeberflug = art => { let ok = false; tu(() => { ok = !!(art === 'sat' ? satUeberflug({ probe: true, stumm: true }) : issUeberflug({ probe: true, stumm: true })); }); return ok; };
     window.appFunkiProbe = () => {
         if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
-        funkiSagt((maskottchenArt() === 'astro' ? 'Hier spricht Maja, deine Astronautin! | ' : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.', true);
+        funkiSagt((maskottchenArt() === 'astro' ? majaEinstieg() : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.', true);
     };
 
     // Uhren, die beim Heimgehen alle zusammen enden
@@ -55034,11 +55407,29 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     // Auftritt auf der Buehne. art 'tanzweg': erst quer ueber den Schirm
     // huepfen - Dietmar: "dass er ueber den Bildschirm tanzt".
+    // RUFZEICHEN IM BUCHSTABIERALPHABET (25.10.2026). Dietmar: "Rufzeichen sollen im
+    // Buchstabieralphabet gesagt werden." Beim Sprechen (nicht in der Sprechblase) wird
+    // DF4TR zu "Delta Foxtrot vier Tango Romeo" - auch die mit Bindestrich geschriebenen
+    // Formen wie D-F-4-T-R. Erkannt wird, was wie ein Rufzeichen aussieht: ein bis zwei
+    // Buchstaben, eine Ziffer, ein bis vier Buchstaben (DF4TR, KI5KFH, NA1SS, DB1KM, DK8NG).
+    const NATO = { A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo', F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett', K: 'Kilo', L: 'Lima', M: 'Mike',
+        N: 'November', O: 'Oscar', P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango', U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-Ray', Y: 'Yankee', Z: 'Zulu' };
+    const ZIFFER = ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'];
+    function rufzeichenSprechen(t){
+        if(typeof t !== 'string' || !t) return t;
+        const buchst = rz => rz.replace(/-/g, '').split('').map(c => /\d/.test(c) ? ZIFFER[+c] : (NATO[c] || c)).join(' ');
+        // mit Bindestrichen (D-F-4-T-R) und am Stueck (DF4TR); nicht in Woertern, nicht die Q-Gruppen
+        return t.replace(/\b([A-Z](?:-[A-Z])?-\d(?:-[A-Z]){1,4})\b/g, (m, rz) => buchst(rz))
+                .replace(/\b([A-Z]{1,2}\d[A-Z]{1,4})\b/g, (m, rz) => buchst(rz));
+    }
+    window.rufzeichenSprechen = rufzeichenSprechen;
     function alsMaja(t){
         try{ if(typeof t === 'string' && window.maskottchenArt && maskottchenArt() === 'astro') return t.replace(/\bFunkis\b/g, 'Majas').replace(/\bFunki\b/g, 'Maja'); }catch(e){}
         return t;
     }
     window.alsMaja = alsMaja;
+    // Fuer den Bau des Sprachpakets (sounds/maja, 25.10.2026): dieselben Umformungen wie beim Sprechen.
+    window.__funkiWerkzeug = () => ({ redeText, nurText, alsMaja, kurzGesagt, buchstabiert, rufzeichenSprechen });
     function auftritt(html, knoepfe, art, modus, kuer){
         html = alsMaja(html);
         tu(astroWeg);                                     // ein winkender Astronaut raeumt das Feld
@@ -55228,12 +55619,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function fragenText(n){ return n + (n === 1 ? ' Frage' : ' Fragen'); }
     const zufall = a => a[Math.floor(Math.random() * a.length)];
+    // MAJA, US-ASTRONAUTIN (25.10.2026). Dietmar: "Maja soll sagen, dass sie US-Astronautin auf
+    // der ISS ist. Ich spreche normal Englisch. Ich hoffe du kannst mich verstehen." Die neue
+    // Stimme hat einen leichten US-Akzent - "deswegen koennen wir ab und an auch mal was
+    // Englisches sagen". Meist der gewohnte Einstieg, ab und zu ein englischer.
+    const MAJA_EINSTIEGE = ['Hier spricht Maja, deine Astronautin! | ', 'Hier spricht Maja, deine Astronautin! | ', 'Hier spricht Maja, deine Astronautin! | ',
+        'Good morning from the ISS! Hier spricht Maja. | ', 'This is Maja, calling from the ISS! | ', 'Hier spricht Maja, US-Astronautin auf der ISS! | '];
+    function majaEinstieg(){ return MAJA_EINSTIEGE[Math.floor(Math.random() * MAJA_EINSTIEGE.length)]; }
     function tagesGruss(){
         const name = nameIst(), rest = Math.max(0, tagesziel() - heuteAnzahl()), s = serie();
         const std = new Date().getHours(), nn = name ? ', ' + esc(name) : '', hn = name ? ' ' + esc(name) : '';
         // Eigene Gruesse je Tageszeit (05.10.2026; 06.10.2026 mehr davon - Dietmar:
         // "Eine schoene Spielerei waere, wenn sich Funki und Co mehr nach der Tageszeit richten")
-        const sp = name ? ' ' + name : '';
+        const sp = '';   // beim Sprechen ohne Namen (25.10.2026), siehe nameTon
         tu(() => { if(window.astroPose) astroPose(std >= 22 || std < 5 ? 'gaehnt' : (std >= 5 && std < 10 ? 'salut' : 'winkt'), 12000); });
         const SONDER_MORGEN = [
             { blase: 'Guten Morgen' + hn + '! Ich wünsche dir einen guten Tag.', sprich: 'Guten Morgen' + sp + '! | Ich wünsche dir einen guten Tag.' },
@@ -55267,15 +55665,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             : zufall([grussZeit() + nn + '! Da bist du ja!', grussZeit() + nn + '! Schön, dich zu sehen!',
                       'Hey' + hn + ', schön, dass du auch hier bist! Ich hab schon auf dich gewartet.']) + ' ';
         if(!rest) t += 'Dein Tagesziel hast du heute schon geschafft. Stark!';
-        else if(s > 1) t += 'Du bist seit <b>' + s + ' Tagen</b> ON AIR. Heute fehlen noch <b>' + fragenText(rest) + '</b> – packen wir’s?';
-        else t += 'Heute fehlen dir noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel. Packen wir’s?';
+        else if(s > 1) t += 'Du bist seit <b>' + s + ' Tagen</b> ON AIR. Heute ' + (rest === 1 ? 'fehlt' : 'fehlen') + ' noch <b>' + fragenText(rest) + '</b> – packen wir’s?';
+        else t += 'Heute ' + (rest === 1 ? 'fehlt' : 'fehlen') + ' dir noch <b>' + fragenText(rest) + '</b> bis zum Tagesziel. Packen wir’s?';
         // Gesprochen (FUNKI SPRICHT) - Dietmar: "Ich bin Funki ... (Name) ...
         // schoen, dass du da bist. Rauschen, Piep." Zwischen den Teilen ein
         // Bliep-Blup (|), beim Gaehnen um 4 Uhr ein muedes Rechnen (^).
         const gesagt = (std >= 2 && std < 5) ? nameTon() + 'Es ist mitten in der Nacht. ^ Ab ins Bett – morgen ist auch wieder ein Tag.'
             : (std >= 22 || std < 2) ? nameTon() + 'So spät noch wach? Du bist aber fleißig.' + (mehrSprechen() ? ' Bald Q R T? So sagen Funker, wenn sie Schluss machen.' : '')
             : sonder ? sonder.sprich
-            : (maskottchenArt() === 'astro' ? 'Hier spricht Maja, deine Astronautin! | ' : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.';
+            : (maskottchenArt() === 'astro' ? majaEinstieg() : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.';
         // Jeden zweiten Tag ein Wort aus dem Funk-ABC statt eines Tipps (04.10.2026)
         // P112: beim ersten Auftritt nach dem Start der QTH-Tipp (Ebelsbach) statt eines ABC-Worts
         const wort = qthTippGesagt ? abcWort() : null, tipp = wort ? '' : naechsterTipp();
@@ -55285,7 +55683,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         knoepfe.push([rest ? 'Später' : 'Tschüss', 'heim']);
         auftritt(t, knoepfe, 'tanzweg', 'tipp');
         // Bei Viel und Normal sagt er auch das Tagesziel und den Tipp
-        const mehr = !mehrSprechen() ? '' : ' | ' + (rest ? 'Heute fehlen noch ' + fragenText(rest) + ' bis zum Tagesziel.' : 'Das Tagesziel ist schon geschafft. Stark!')
+        const mehr = !mehrSprechen() ? '' : ' | ' + (rest ? (rest === 1 ? 'Heute fehlt noch eine Frage bis zum Tagesziel.' : 'Heute fehlen noch ' + fragenText(rest) + ' bis zum Tagesziel.') : 'Das Tagesziel ist schon geschafft. Stark!')
             + ' | ' + (wort ? 'Das Wort des Tages: ' + redeText(wort.kurz, 100) : redeText(tipp, 220));
         funkiSagt(gesagt + mehr, false);
     }
@@ -55297,7 +55695,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             [['Noch eine Runde', 'runde'], ['Tschüss', 'heim']], 'tanzweg', 'tipp');
         funkiSagt('Juhu! {melodie} Tagesziel geschafft. ' + nameTon() + 'Du bist gut.', true);
     }
-    const HALLO = ['Du hast gerufen?', 'Funki meldet sich zum Dienst!', 'Kuckuck!', 'Hab ich da meinen Namen gehört?', 'Na, du?'];
+    const HALLO = ['Du hast gerufen?', 'Funki meldet sich zum Dienst!', 'Huhu!', 'Hab ich da meinen Namen gehört?', 'Na, du?'];
     function rufenJetzt(){
         const hallo = zufall(HALLO);
         const tipp = naechsterTipp();
@@ -55317,7 +55715,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  bleibt bedienbar, nach gut fuenf Sekunden ist er wieder weg.
     //  Antippen holt ihn ganz heraus. Hoechstens dreimal je Start, nie
     //  gleich nach einer Beruehrung, nie waehrend einer Runde.
-    const SPRUECHE_FEST = ['Kuckuck! Nur mal gucken, ob du noch da bist.', 'CQ, CQ – hört mich jemand? Ah, du!', 'Wusstest du? <b>73</b> heißt „Viele Grüße“.',
+    // "Kuckuck" ist raus (25.10.2026, Dietmar: "Das spricht die nicht besonders gut aus.")
+    const SPRUECHE_FEST = ['Huhu! Nur mal schauen, ob du noch da bist.', 'CQ, CQ – hört mich jemand? Ah, du!', 'Wusstest du? <b>73</b> heißt „Viele Grüße“.',
         'Ich hab heute schon tausendmal geblinzelt. Und du so?', 'Antippen erlaubt. Ich beiße nicht – ich funke nur.', 'Psst! Hier drüben! … Nur so.',
         // Dietmar: "Funki darf gerne auch ein eigenes Leben haben."
         'Ich hab heute meine Antenne poliert. Sieht man, oder?', 'Ich hab versucht, mit dem Toaster zu funken. Keine Antwort.',
@@ -55484,7 +55883,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Name und Bliep-Blup - ohne Worte surrt er beim Hereinlugen
         if(opt.sprich) funkiSagt(typeof opt.sprich === 'string' ? opt.sprich : nameTon() + redeText(text, 110), !!opt.sprichSofort);
         // Viel und Normal: er sagt, was in der Blase steht (04.10.2026); der Name nur ab und zu
-        else if(!opt.stumm && mehrSprechen() && darfSprechen(false)) spaeter(() => funkiSagt((Math.random() < 0.25 ? nameTon() : '') + redeText(text, 110), false), 300);
+        else if(!opt.stumm && mehrSprechen() && darfSprechen(false)) spaeter(() => funkiSagt(redeText(text, 110), false), 300);
         else spaeter(() => funkiGeraeusch(opt.ton || 'surren'), 120);
     }
     // Die Blase neben dem hereinlugenden Funki
@@ -56011,12 +56410,21 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           html: 'Die <b>ISS</b> umrundet die Erde in rund <b>90 Minuten</b> – etwa <b>400 km</b> hoch, mit rund <b>28 000 km/h</b>. An Bord ist eine <b>Amateurfunkstation</b> mit dem Rufzeichen <b>NA1SS</b>. Bei Schulkontakten (<b>ARISS</b>) hört man die Astronauten auf <b>145,800 MHz</b>, im 2-m-Band. Ein echter Überflug dauert ein paar Minuten – nicht ein paar Sekunden wie bei mir!',
           extra: [['Astronaut winkt', 'astro']],
           sprich: 'Die I S S umrundet die Erde in neunzig Minuten, vierhundert Kilometer hoch. | An Bord ist eine Amateurfunkstation mit dem Rufzeichen N-A-1-S-S. Bei Schulkontakten hört man die Astronauten auf hundertfünfundvierzig Komma acht Megahertz.' },
-        { id: 'astro', name: 'Funker im All', frage: 'Weißt du, welche <b>deutschen Astronauten</b> Funkamateure sind? Tipp mich an!',
-          kurz: 'Deutsche Funker im All: Ulf Merbold (<b>DB1KM</b>), Thomas Reiter (<b>DF4TR</b>), Matthias Maurer (<b>KI5KFH</b>).',
-          html: 'Auch im All gibt es <b>Funkamateure</b>! <b>Dr. Ulf Merbold</b>, deutscher Physiker und ESA-Astronaut, trägt das Rufzeichen <b>DB1KM</b> – er flog 1983 mit dem Spacelab und später zur Raumstation Mir. <b>Thomas Reiter</b> (<b>DF4TR</b>) war auf der Mir und 2006 auf der <b>ISS</b>, <b>Matthias Maurer</b> (<b>KI5KFH</b>) 2021 und 2022. Manchmal sind Funkamateure von der ISS sogar live zu hören!',
+        // WAKE-UP-CALL (25.10.2026). Dietmar, mit der NASA-Aufnahme STS-26 (Robin Williams weckt die
+        // Discovery): "Eine Erklaerung von Maja: Wusstest du das die Bodenkontrolle jeden Tag die ISS
+        // weckt? - wake-up-call anhoeren". Die Aufnahme selbst bleibt draussen (Robin Williams'
+        // Stimme gehoert seinen Erben); der Knopf fuehrt zu den Originalen bei YouTube.
+        { id: 'wakeup', name: 'Wake-up-Call', frage: 'Wusstest du, dass die <b>Bodenkontrolle</b> die Astronauten jeden Morgen weckt? Tipp mich an!',
+          kurz: 'Der <b>Wake-up-Call</b>: Houston weckt die Besatzung mit Musik – ein Lied, das die Familien ausgesucht haben.',
+          html: 'Bei den <b>Space-Shuttle</b>-Flügen hat die Bodenkontrolle in Houston die Besatzung jeden Morgen per Funk geweckt – der <b>Wake-up-Call</b>: meist ein Lied, das sich die Familien oder das Team ausgesucht hatten, dazu ein „Good morning!“ vom CAPCOM. 1988 weckte sogar <b>Robin Williams</b> die Crew der <b>Discovery</b>: „Good morning, Discovery!“ Auf der <b>ISS</b> klingelt heute meist ein ganz normaler Wecker – zu besonderen Anlässen gibt es den Wake-up-Call aber bis heute.',
+          extra: [['Wake-up-Call anhören', 'link:https://www.youtube.com/results?search_query=space+shuttle+wake-up+call+STS-26+Robin+Williams']],
+          sprich: 'Bei den Space-Shuttle-Flügen hat die Bodenkontrolle in Houston die Besatzung jeden Morgen per Funk geweckt. | Der Wake-up-Call: meist ein Lied, das sich die Familien ausgesucht hatten, dazu ein Good morning von der Bodenstation. Einmal hat sogar Robin Williams die Discovery geweckt. Auf der I S S klingelt heute meist ein ganz normaler Wecker.' },
+        { id: 'astro', name: 'Funker im Weltraum', frage: 'Weißt du, welche <b>deutschen Astronauten</b> Funkamateure sind? Tipp mich an!',
+          kurz: 'Deutsche Funker im Weltraum: Ulf Merbold (<b>DB1KM</b>), Thomas Reiter (<b>DF4TR</b>), Matthias Maurer (<b>KI5KFH</b>).',
+          html: 'Auch im Weltraum gibt es <b>Funkamateure</b>! <b>Dr. Ulf Merbold</b>, deutscher Physiker und ESA-Astronaut, trägt das Rufzeichen <b>DB1KM</b> – er flog 1983 mit dem Spacelab und später zur Raumstation Mir. <b>Thomas Reiter</b> (<b>DF4TR</b>) war auf der Mir und 2006 auf der <b>ISS</b>, <b>Matthias Maurer</b> (<b>KI5KFH</b>) 2021 und 2022. Manchmal sind Funkamateure von der ISS sogar live zu hören!',
           extra: [['Astronaut winkt', 'astro']],
-          sprich: 'Auch im All gibt es Funkamateure! | Doktor Ulf Merbold, deutscher Physiker und E S A Astronaut, hat das Rufzeichen D-B-1-K-M. Er flog neunzehnhundertdreiundachtzig mit dem Spacelab und später zur Mir. | Thomas Reiter, D-F-4-T-R, war auf der Mir und auf der I S S. Und Matthias Maurer, K-I-5-K-F-H, funkte von der I S S.' },
-        { id: 'oscar', name: 'OSCAR', frage: 'Weißt du, dass Funkamateure eigene <b>Satelliten</b> haben? Tipp mich an – CQ aus dem All!',
+          sprich: 'Auch im Weltraum gibt es Funkamateure! | Doktor Ulf Merbold, deutscher Physiker und E S A Astronaut, hat das Rufzeichen D-B-1-K-M. Er flog neunzehnhundertdreiundachtzig mit dem Spacelab und später zur Mir. | Thomas Reiter, D-F-4-T-R, war auf der Mir und auf der I S S. Und Matthias Maurer, K-I-5-K-F-H, funkte von der I S S.' },
+        { id: 'oscar', name: 'OSCAR', frage: 'Weißt du, dass Funkamateure eigene <b>Satelliten</b> haben? Tipp mich an – CQ aus dem Space!',
           kurz: 'Seit 1961 fliegen Satelliten von Funkamateuren – die <b>OSCAR</b>-Reihe.',
           html: '<b>OSCAR</b> heißt „Orbiting Satellite Carrying Amateur Radio“. <b>OSCAR 1</b> startete am <b>12. Dezember 1961</b>, wog nur 4,5 kg und funkte „HI HI“ in Morse im 2-m-Band – nach etwa sieben Wochen verglühte er. Beim Vorbeiflug rutscht der Ton nach unten: der <b>Doppler-Effekt</b>.',
           extra: [['Satellit fliegen lassen', 'sat']],
@@ -56310,9 +56718,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { t: 'Da! Die <b>ISS</b>! Ob die Astronauten gerade funken?', s: 'Da! Die I S S! Ob die Astronauten gerade funken?', id: 'iss' },
         { t: 'Hast du sie gesehen? Die <b>ISS</b> ist schneller als jedes Flugzeug – rund 28 000 km/h!', s: 'Hast du sie gesehen? Die I S S ist schneller als jedes Flugzeug. Achtundzwanzigtausend Kilometer pro Stunde!', id: 'iss' },
         { t: 'Winke mal! Auf der <b>ISS</b> war schon <b>Matthias Maurer</b> auf Sendung – Rufzeichen KI5KFH.', s: 'Winke mal! Auf der I S S war schon Matthias Maurer auf Sendung. K-I-5-K-F-H.', id: 'astro' },
-        { t: 'Auch <b>Thomas Reiter</b> hat von dort oben gefunkt – <b>DF4TR</b>. Ein echter Funkamateur im All!', s: 'Auch Thomas Reiter hat von dort oben gefunkt. D-F-4-T-R. Ein echter Funkamateur im All!', id: 'astro' },
+        { t: 'Auch <b>Thomas Reiter</b> hat von dort oben gefunkt – <b>DF4TR</b>. Ein echter Funkamateur im Space!', s: 'Auch Thomas Reiter hat von dort oben gefunkt. D-F-4-T-R. Ein echter Funkamateur im Space!', id: 'astro' },
         { t: 'Schau an – die <b>ISS</b> macht ihre Runde. Alle 90 Minuten einmal um die Erde!', s: 'Schau an. Die I S S macht ihre Runde. Alle neunzig Minuten einmal um die Erde!', id: 'iss' },
-        { t: 'Tipp mich an: Ich erzähl dir, wer von dort oben schon gefunkt hat!', s: 'Tipp mich an. Ich erzähl dir, wer von dort oben schon gefunkt hat!', id: 'astro' }
+        { t: 'Tipp mich an: Ich erzähl dir, wer von dort oben schon gefunkt hat!', s: 'Tipp mich an. Ich erzähl dir, wer von dort oben schon gefunkt hat!', id: 'astro' },
+        { t: 'Wusstest du? Die <b>Bodenkontrolle</b> weckt die Astronauten jeden Morgen per Funk – mit Musik! Tipp mich an.', s: 'Wusstest du? Die Bodenkontrolle weckt die Astronauten jeden Morgen per Funk. Mit Musik! Tipp mich an.', id: 'wakeup' },
+        // Ab und zu Englisch (25.10.2026) - Maja ist US-Astronautin, die Stimme hat den Akzent dazu
+        { t: '<b>Roger that!</b> Von hier oben sehe ich, wie du lernst – keep going!', s: 'Roger that! Von hier oben sehe ich, wie du lernst. Keep going!', id: 'iss' },
+        { t: '<b>Houston, we have no problem</b> – du bist voll auf Kurs!', s: 'Houston, we have no problem. Du bist voll auf Kurs!', id: 'iss' },
+        { t: '<b>Good morning, Deutschland!</b> Hier oben geht die Sonne alle 90 Minuten auf.', s: 'Good morning, Deutschland! Hier oben geht die Sonne alle neunzig Minuten auf.', id: 'iss' },
+        { t: 'Ich bin <b>US-Astronautin</b> und spreche eigentlich Englisch – aber für dich übe ich Deutsch. Deal?', s: 'Ich bin US-Astronautin und spreche eigentlich Englisch. Aber für dich übe ich Deutsch. Deal?', id: 'astro' }
     ];
     function issUeberflug(opt){
         opt = opt || {};
@@ -56507,7 +56921,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const dauer = Math.min(10000, 4200 + nurText(e.t).length * 55);
         astroUhren.push(setTimeout(() => {
             astroBlase.classList.add('da');
-            if(issTonAn() && !opt.stumm) funkiSagt((nameIst() && Math.random() < 0.4 ? nameIst() + '. ' : '') + e.s, true, Object.assign({}, ASTRO_STIMME, { rahmen: true }));
+            if(issTonAn() && !opt.stumm) funkiSagt(e.s, true, Object.assign({}, ASTRO_STIMME, { rahmen: true }));   // ohne Namen (25.10.2026)
         }, 700));
         astroUhren.push(setTimeout(() => astroWeg(false), 700 + dauer));
         return true;
@@ -56586,7 +57000,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     const SAT_SPRUECHE = [
         { t: 'Da! <b>OSCAR</b>! Der Funk-Satellit ruft: <b>CQ, CQ, CQ</b>!', s: 'Da! Oscar! Der Funk Satellit ruft: C Q, C Q, C Q!' },
-        { t: 'Hast du es gehört? Ein <b>CQ-Ruf</b> aus dem All – „Wer hört mich?“ Ich hab geantwortet!', s: 'Hast du es gehört? Ein C Q Ruf aus dem All. Wer hört mich? Ich habe geantwortet!' },
+        { t: 'Hast du es gehört? Ein <b>CQ-Ruf</b> aus dem Weltraum – „Wer hört mich?“ Ich hab geantwortet!', s: 'Hast du es gehört? Ein C Q Ruf aus dem Weltraum. Wer hört mich? Ich habe geantwortet!' },
         { t: 'Der allererste, <b>OSCAR 1</b>, funkte 1961 nur „HI“. Der hier ist gesprächiger!', s: 'Der allererste, Oscar eins, funkte neunzehnhunderteinundsechzig nur: Hi. Der hier ist gesprächiger!' },
         { t: 'Hör auf die Tonhöhe: Sie rutscht beim Vorbeiflug nach unten – das ist der <b>Doppler-Effekt</b>!', s: 'Hör auf die Tonhöhe. Sie rutscht beim Vorbeiflug nach unten. Das ist der Doppler Effekt!' },
         { t: 'Tipp mich an: Ich erzähl dir von den <b>OSCAR</b>-Satelliten!', s: 'Tipp mich an. Ich erzähl dir von den Oscar Satelliten!' }
@@ -56646,6 +57060,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(t === 'abc') abcMenue();
         else if(t.indexOf('erkl:') === 0) erklaeren(t.slice(5));
         else if(t.indexOf('morse:') === 0) morseSpielen(t.slice(6));
+        else if(t.indexOf('link:') === 0){ try{ window.open(t.slice(5), '_blank', 'noopener'); }catch(e){} }   // Wake-up-Call anhoeren (25.10.2026)
         else if(t === 'quiz') quizStarten();
         else if(t === 'astro'){ roboHeim(true); setTimeout(() => tu(() => astroWinken({ probe: true })), 700); }
         else if(t === 'sat'){ roboHeim(true); setTimeout(() => tu(() => satUeberflug({ probe: true })), 700); }
@@ -56800,7 +57215,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const ton = { ctx: null, nr: 0, zuletzt: 0, knoten: [], quelle: null, geraeusch: 0 };
     const nurText = html => { const d = D.createElement('div'); d.innerHTML = html; return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
     // "Maja. | " - der Name, dann ein Bliep-Blup. Ohne Namen bleibt es beim Satz.
-    const nameTon = () => nameIst() ? nameIst() + '. | ' : '';
+    // OHNE NAMEN BEIM SPRECHEN (25.10.2026). Dietmar: "Dann soll es ohne Namen
+    // sprechen. In der Sprechblase mit Namen und beim Sprechen ohne." - Majas
+    // Saetze liegen als fertige Tondateien vor (sounds/maja), da passt kein Name
+    // hinein; die Sprechblase zeigt ihn weiter.
+    const nameTon = () => '';
     // Die ersten Saetze, solange es kurz bleibt
     function kurzGesagt(html, max){
         const t = nurText(html), saetze = t.match(/[^.!?…]+[.!?…]+["“”]?|[^.!?…]+$/g) || [t];
@@ -57064,9 +57483,54 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         for(let i = 0; i < n; i++){ const p = i * puffer.sampleRate / sr, k = Math.floor(p), f = p - k; y[i] = (x[k] || 0) * (1 - f) + (x[k + 1] || 0) * f; }
         return neu;
     }
+    // ================================================================
+    //  MAJAS SPRACHPAKET                                   (25.10.2026)
+    //  Dietmar: "Die Stimmen von Kerstin (Maja) koennen wir doch auf GitHub
+    //  hochladen" - "Ich meinte das wir die Sound File auf GitHub hochladen"
+    //  - "nur das was Maja sagt". Alle festen Saetze von Maja (Gruesse,
+    //  Sprueche, Tipps, Lob, Rundgang, Stufen, Tagesziel-Zahlen) liegen
+    //  fertig eingelesen (Kerstin) in sounds/maja/, dazu paket.json mit
+    //  Satz -> Datei. Vor dem Sprechen schaut der Trainer dort nach; nur
+    //  was fehlt (Name, "Hoer mal", freie Zahlen), spricht die Stimme des
+    //  Geraets. So klingt Maja in der App wie am PC - ohne Netz, ohne
+    //  Sprachmodul. Nur fuer Maja (astro); Funki nimmt weiter die gewaehlte
+    //  Stimme.
+    // ================================================================
+    let majaPaket = null, majaPaketLaden = null;
+    function majaPaketHolen(){
+        if(majaPaket || majaPaketLaden) return majaPaketLaden || Promise.resolve(majaPaket);
+        majaPaketLaden = fetch('sounds/maja/paket.json', { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
+            .then(j => { majaPaket = (j && j.dateien) ? j : { dateien: {} }; return majaPaket; })
+            .catch(() => { majaPaket = { dateien: {} }; return majaPaket; });
+        return majaPaketLaden;
+    }
+    function imMajaPaket(text){
+        try{ return !!(majaPaket && majaPaket.dateien && majaPaket.dateien[String(text).trim()]); }catch(e){ return false; }
+    }
+    window.imMajaPaket = imMajaPaket;
+    tu(() => setTimeout(() => tu(majaPaketHolen), 2500));
     async function stimmeHolen(ctx, text){
         let st = lies('ttsVoice', '');
-        try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') st = 'de_DE-kerstin-low.onnx'; }catch(e){}
+        let maja = false;
+        try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){ st = 'de_DE-kerstin-low.onnx'; maja = true; } }catch(e){}
+        if(maja){
+            try{
+                const p = await majaPaketHolen();
+                const datei = p && p.dateien && p.dateien[String(text).trim()];
+                if(datei){
+                    const r0 = await fetch('sounds/maja/' + datei, { cache: 'force-cache' });
+                    if(r0.ok){
+                        const b0 = await r0.arrayBuffer();
+                        if(b0 && b0.byteLength > 200){
+                            let dek0 = ctx;
+                            tu(() => { if(window.OfflineAudioContext) dek0 = new OfflineAudioContext(1, 1, 24000); });   // 24 kHz: passt fuer Kerstin (16 k) wie fuer Google-Stimmen (24 k)
+                            const puffer = await new Promise((ja, nein) => { const q = dek0.decodeAudioData(b0, ja, nein); if(q && q.then) q.then(ja, nein); });
+                            if(puffer) return puffer;
+                        }
+                    }
+                }
+            }catch(e){}
+        }
         const r = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ text: text, voice: st }) });
         if(!r.ok) return null;
@@ -57120,6 +57584,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     async function funkiSagt(text, selbst, stimme){
         if(!stimme && typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') stimme = ASTRO_SPRECH;
         try{ if(window.alsMaja) text = alsMaja(text); }catch(e){}
+        try{ text = rufzeichenSprechen(text); }catch(e){}
+        // CQ spricht Maja englisch (Dietmar 25.10.2026: "CQ muss Seek You gesprochen werden")
+        try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && typeof text === 'string') text = text.replace(/\bC ?Q-Ruf\b/g, 'Seek-You-Ruf').replace(/\bC ?Q\b/g, 'Seek You'); }catch(e){}
+        // AB UND ZU ENGLISCH (25.10.2026). Dietmar: "Hinten oder vorne dran, gerne was in Englisch."
+        // Maja ist US-Astronautin: Etwa jeder dritte Satz bekommt vorn oder hinten einen kurzen
+        // englischen Funkspruch als eigenes Stueck - nicht beim ISS-Rahmen (der hat "How copy? Over.").
+        try{
+            if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && !(stimme && stimme.rahmen) && typeof text === 'string' && text.length > 12 && Math.random() < 0.33){
+                const VORN = ['Roger.', 'Copy that!', 'Hi there!', 'Maja here.', 'Good to see you!'];
+                const HINTEN = ['Over.', 'Over and out.', 'Keep going!', 'Stay tuned!', 'See you up there!', 'Roger that.'];
+                const w = a => a[Math.floor(Math.random() * a.length)];
+                text = Math.random() < 0.5 ? w(VORN) + ' | ' + text : text + ' | ' + w(HINTEN);
+            }
+        }catch(e){}
         text = String(text || '').trim().replace(/\bDOK\s*(<\/?b>)?\s*B05\b/g, 'Ortsverband Bravo Null Fünf').replace(/\bDOK\s*(<\/?b>)?\s*C12\b/g, 'Ortsverband Tschar-lie Eins Zwo')
             .replace(/\bJN59IX\b/g, 'J N fünf neun I X').replace(/\bXYL\b/g, 'X Y L').replace(/\bYL\b/g, 'Y L').replace(/\bB37\b/g, 'Bravo 37');   // P111: Locator buchstabiert, DOK B37 als Bravo 37
         if(!text || !darfSprechen(selbst)) return false;
@@ -57134,7 +57612,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Lange Saetze bei Maja (21.10.2026): erst den ersten Satz rechnen und sprechen, den Rest waehrend dessen -
         // auf dem Handy rechnet die Stimme Sekunden; so faengt Maja nach einem Drittel der Zeit an.
         let rest = null, restPs = [], anteile = [1], rahmenSr = 0, rahmenHinten = null;
-        if(stimme && stimme.quindar && folge.length === 1 && folge[0].text && folge[0].text.length >= 90){
+        if(stimme && stimme.quindar && folge.length === 1 && folge[0].text && folge[0].text.length >= 90 && !imMajaPaket(folge[0].text)){
             const tl = satzTeile(folge[0].text);
             if(tl.length >= 2){
                 const gesamt = tl.reduce((n, x) => n + x.length, 0); let lauf = 0;
@@ -57207,6 +57685,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // st: andere Stimme (nur fuer Hoerproben), sonst STIMME
     function roboterton(ctx, folge, nr, st){
         st = Object.assign({}, STIMME, st || {});
+        // Funk-Klang bei Maja (Einstellungen): Quetschen, Rauschen und Piepser einzeln abschaltbar
+        let ohneRausch = false, ohnePiep = false;
+        try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){
+            ohneRausch = !majaFunkAn('rauschen'); ohnePiep = !majaFunkAn('piepser');
+            if(!majaFunkAn('quetschen')) st = Object.assign(st, { halb: 0, tempo: 1, hp: 70, praes: 0, tp: 12000, chorus: 0, echo: 0, fading: 0, doppler: 0, duenn: false, komprimiert: false, vib: 0 });
+        } }catch(e){}
         const kn = [], neu = k => { kn.push(k); return k; };
         const faktor = Math.pow(2, st.halb / 12), rate = faktor * st.tempo;
         // 1. Die Teile zu einem Stueck - mit Luecken, in die die Toene kommen
@@ -57289,6 +57773,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         toene.forEach(t => roboGeraeusch(ctx, tonAus, kn, tv + t.bei / st.tempo + 0.03, t.art));
         // Rauschen vorher und nachher (wie beim Druecken der Sendetaste)
         const rauschen = (ab, lang, staerke) => {
+            if(ohneRausch) return;
             const n = Math.max(1, Math.floor(ctx.sampleRate * lang));
             const nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
             for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
@@ -57302,6 +57787,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         };
         // Der Piep am Ende: zwei kurze Toene (Dietmar: "Rauschen und Piep gefaellt mir gut")
         const piep = (ab, hz, lang) => {
+            if(ohnePiep) return;
             const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = hz;
             const g = neu(ctx.createGain());
             g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(0.15, ab + 0.008);
@@ -57309,12 +57795,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             o.connect(g); g.connect(tonAus);
             o.start(ab); o.stop(ab + lang + 0.01);
         };
-        if(!qd) rauschen(t0, 0.13, 0.11);
+        if(!qd && !ohneRausch) rauschen(t0, 0.13, 0.11);
         q.start(tv); vo.start(tv); lfo.start(tv); vo.stop(te); lfo.stop(te);
         if(qd){
             // Astronaut (Dietmar, 04.10.2026: "suesse Stimme mit dem Quindar-Roger-Beep mit Rauschen dahinter"):
             // Quindar-Ton davor (2525 Hz), die Stimme, Quindar-Ton danach (2475 Hz = der Roger-Beep) - und die ganze Zeit Funkrauschen darunter
             const qton = (ab, hz) => {
+                if(ohnePiep) return;
                 const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = hz;
                 const g = neu(ctx.createGain());
                 g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(0.13, ab + 0.012);
@@ -57322,6 +57809,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 o.connect(g); g.connect(tonAus); o.start(ab); o.stop(ab + 0.26);
             };
             const bett = (ab, bis) => {
+                if(ohneRausch) return;
                 const n = Math.floor(ctx.sampleRate * 1.5), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
                 for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
                 const echt = ton.rauschPuffer;   // echtes Funkrauschen: durchgaengig, ohne Pulsieren

@@ -32,6 +32,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.window.OnBackInvokedDispatcher;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -293,6 +294,19 @@ public class MainActivity extends Activity {
     /** Fuer die Seite: nach einem Update mit Programmdateien neu starten
      *  (29.09.2026, Knopf "Jetzt neu starten" im Update-Fenster). */
     class AppSteuerung {
+        /** Bildschirm anlassen (25.10.2026). Dietmar: "In der Android Version
+         *  blinkt das Display bei meiner Frau ihrem Samsung Handy. Bei mir
+         *  uebrigens auch." - der Bildschirm dunkelte beim Lernen ab, sobald
+         *  man eine Weile nichts antippt (zum Beispiel beim Zuhoeren). Die
+         *  Seite schaltet das hier an oder aus (Einstellungen -> Allgemein). */
+        @JavascriptInterface public void bildschirmAn(final boolean an) {
+            haupt.post(() -> {
+                try {
+                    if (an) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                } catch (Exception e) { }
+            });
+        }
         @JavascriptInterface public void neuStarten() {
             haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));
         }
@@ -348,6 +362,13 @@ public class MainActivity extends Activity {
         }
         /** Woran es liegt, wenn nichts kommt - fuer den Hinweis in der Seite. */
         @JavascriptInterface public String zustand() { return Stimme.zustand(); }
+        // Stimmenwahl (23.10.2026) - siehe Stimme.java.
+        @JavascriptInterface public String stimmen() { return Stimme.stimmen(); }
+        @JavascriptInterface public boolean waehlen(String name) { return Stimme.waehlen(name); }
+        @JavascriptInterface public boolean probe(String text) { return Stimme.probe(text); }
+        // Modulwahl (25.10.2026): Google, Samsung, Acapela ...
+        @JavascriptInterface public String module() { return Stimme.module(); }
+        @JavascriptInterface public boolean modulWaehlen(String paket) { return Stimme.modulWaehlen(paket); }
     }
 
     class Datei {

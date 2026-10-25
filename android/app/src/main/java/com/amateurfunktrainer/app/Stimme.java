@@ -7,9 +7,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
+import android.content.SharedPreferences;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Die Stimme des Handys - EINE Verbindung je App-Prozess (30.09.2026).
@@ -53,6 +59,15 @@ import java.util.Locale;
  * Geduld, und schon der zweite Anlauf nimmt Google, falls installiert.
  * Das bevorzugte Modul steht ab sofort gleich im Hinweis, auch wenn es
  * sich nie meldet.
+ *
+ * STIMMENWAHL (23.10.2026). Dietmar, nach dem Umstieg von Acapela auf
+ * Google: "irgendwie klingt das immer noch wie ein Mann" und "ich kann
+ * die Sprache nur auf Deutsch umstellen kein Mann keine Frau". Bisher
+ * sagte die App dem Modul nur "Deutsch" und nahm, was es als Standard
+ * lieferte. Jetzt zaehlt sie alle deutschen Stimmen des Moduls auf
+ * (stimmen()), die Seite zeigt sie unter Einstellungen -> Vorlesen zum
+ * Anhoeren (probe()), und die gewaehlte (waehlen()) bleibt gespeichert
+ * und wird bei jedem Aufbau wieder gesetzt. Leer = Standard des Moduls.
  */
 final class Stimme {
 
@@ -78,6 +93,11 @@ final class Stimme {
     private static int letzterFehler = 0;
     private static Melder melder;
     private static final Handler HAUPT = new Handler(Looper.getMainLooper());
+    private static final String ABLAGE = "stimme";          // SharedPreferences
+    private static final String ABLAGE_NAME = "name";
+    private static String gewaehlteStimme = null;           // null = noch nicht gelesen, "" = Standard des Moduls
+    private static final String ABLAGE_MODUL = "modul";      // gewaehltes Sprachmodul (Paketname), "" = Standard des Handys
+    private static boolean modulGeladen = false;
 
     private Stimme() { }
 
@@ -85,6 +105,7 @@ final class Stimme {
     static synchronized void anmelden(Context ctx, Melder m) {
         melder = m;
         app = ctx.getApplicationContext();
+        modulLaden();
         if (tts == null) { neu(); return; }
         if (!bereit) { nachsehen(); return; }
         // Bereit - aber hat jemand inzwischen das Modul gewechselt?
@@ -204,6 +225,7 @@ final class Stimme {
         } catch (Exception e) { r = TextToSpeech.LANG_NOT_SUPPORTED; }
         letzteSprache = r;
         bereit = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
+        if (bereit) stimmeAnwenden();
         try { modul = tts.getDefaultEngine(); } catch (Exception e) { modul = null; }
         if (gewuenscht != null) modul = gewuenscht;
         if (bereit) versuche = 0;
@@ -218,6 +240,162 @@ final class Stimme {
                 }
             });
         } catch (Exception e) { }
+    }
+
+    // ---- Modulwahl (25.10.2026): Google, Samsung, Acapela ... ----
+
+    /** Einmal pro Start: das gemerkte Sprachmodul wieder wählen, wenn es noch installiert ist. */
+    private static void modulLaden() {
+        if (modulGeladen || app == null) return;
+        modulGeladen = true;
+        String m;
+        try { m = app.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE).getString(ABLAGE_MODUL, ""); }
+        catch (Exception e) { m = ""; }
+        if (m == null || m.isEmpty()) return;
+        try { app.getPackageManager().getPackageInfo(m, 0); gewuenscht = m; }
+        catch (Exception e) { /* nicht mehr installiert: Standard */ }
+    }
+
+    /**
+     * Alle Sprachmodule des Handys als JSON-Liste:
+     * [{"name":"com.google.android.tts","label":"Sprachausgabe von Google","gewaehlt":true}, ...]
+     * "gewaehlt" = das Modul, das gerade spricht. Leer, solange noch kein Modul verbunden war.
+     */
+    static synchronized String module() {
+        if (tts == null) return "[]";
+        List<TextToSpeech.EngineInfo> eng;
+        try { eng = tts.getEngines(); } catch (Exception e) { return "[]"; }
+        if (eng == null) return "[]";
+        String aktiv = modul == null ? "" : modul;
+        StringBuilder sb = new StringBuilder("[");
+        boolean erste = true;
+        for (TextToSpeech.EngineInfo e : eng) {
+            if (!erste) sb.append(',');
+            erste = false;
+            sb.append("{\"name\":").append(json(e.name))
+              .append(",\"label\":").append(json(e.label))
+              .append(",\"gewaehlt\":").append(e.name.equals(aktiv))
+              .append('}');
+        }
+        return sb.append(']').toString();
+    }
+
+    /** Sprachmodul wählen und merken. "" = Standard des Handys. Baut die Verbindung neu auf. */
+    static synchronized boolean modulWaehlen(String paket) {
+        if (app == null) return false;
+        String p = paket == null ? "" : paket.trim();
+        try { app.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE).edit().putString(ABLAGE_MODUL, p).putString(ABLAGE_NAME, "").apply(); }
+        catch (Exception e) { }
+        gewaehlteStimme = "";                       // die Stimmen sind je Modul andere
+        gewuenscht = p.isEmpty() ? null : p;
+        modulGeladen = true;
+        versuche = 0;
+        modul = null;
+        neu();
+        return true;
+    }
+
+    // ---- Stimmenwahl (23.10.2026) ----
+
+    private static String gemerkt() {
+        if (gewaehlteStimme == null) {
+            try { gewaehlteStimme = app.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE).getString(ABLAGE_NAME, ""); }
+            catch (Exception e) { gewaehlteStimme = ""; }
+            if (gewaehlteStimme == null) gewaehlteStimme = "";
+        }
+        return gewaehlteStimme;
+    }
+
+    /** Die gemerkte Stimme setzen - nur mit Sperre, nur wenn das Modul bereit ist. */
+    private static boolean stimmeAnwenden() {
+        if (tts == null || app == null) return false;
+        String name = gemerkt();
+        if (name.isEmpty()) return true;                       // Standard des Moduls
+        try {
+            Set<Voice> alle = tts.getVoices();
+            if (alle == null) return false;
+            for (Voice v : alle) {
+                if (name.equals(v.getName())) return tts.setVoice(v) == TextToSpeech.SUCCESS;
+            }
+        } catch (Exception e) { }
+        return false;                                          // nicht (mehr) da: Standard bleibt
+    }
+
+    private static String json(String s) {
+        if (s == null) return "\"\"";
+        StringBuilder b = new StringBuilder("\"");
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '"' || c == '\\') b.append('\\').append(c);
+            else if (c < 32) b.append(' ');
+            else b.append(c);
+        }
+        return b.append('"').toString();
+    }
+
+    /**
+     * Alle deutschen Stimmen des Moduls als JSON-Liste:
+     * [{"name":..,"sprache":"de-DE","guete":..,"netz":false,"gewaehlt":false}, ...]
+     * Leer, solange das Modul nicht bereit ist.
+     */
+    static synchronized String stimmen() {
+        if (tts == null || !bereit) return "[]";
+        Set<Voice> alle;
+        try { alle = tts.getVoices(); } catch (Exception e) { return "[]"; }
+        if (alle == null) return "[]";
+        List<Voice> de = new ArrayList<>();
+        for (Voice v : alle) {
+            try {
+                Locale l = v.getLocale();
+                if (l == null || !"de".equalsIgnoreCase(l.getLanguage())) continue;
+                de.add(v);
+            } catch (Exception e) { }
+        }
+        // Erst die ohne Netz, dann nach Guete absteigend, dann nach Name.
+        Collections.sort(de, (a, b) -> {
+            if (a.isNetworkConnectionRequired() != b.isNetworkConnectionRequired()) return a.isNetworkConnectionRequired() ? 1 : -1;
+            if (a.getQuality() != b.getQuality()) return b.getQuality() - a.getQuality();
+            return a.getName().compareTo(b.getName());
+        });
+        String name = gemerkt();
+        StringBuilder sb = new StringBuilder("[");
+        boolean erste = true;
+        for (Voice v : de) {
+            if (!erste) sb.append(',');
+            erste = false;
+            sb.append("{\"name\":").append(json(v.getName()))
+              .append(",\"sprache\":").append(json(v.getLocale().toLanguageTag()))
+              .append(",\"guete\":").append(v.getQuality())
+              .append(",\"netz\":").append(v.isNetworkConnectionRequired())
+              .append(",\"gewaehlt\":").append(name.equals(v.getName()))
+              .append('}');
+        }
+        return sb.append(']').toString();
+    }
+
+    /** Stimme merken und sofort setzen. "" oder null = Standard des Moduls. */
+    static synchronized boolean waehlen(String name) {
+        if (app == null) return false;
+        gewaehlteStimme = name == null ? "" : name;
+        try { app.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE).edit().putString(ABLAGE_NAME, gewaehlteStimme).apply(); }
+        catch (Exception e) { }
+        if (tts == null || !bereit) return false;
+        if (gewaehlteStimme.isEmpty()) {
+            try { tts.setLanguage(Locale.GERMANY); } catch (Exception e) { }
+            return true;
+        }
+        return stimmeAnwenden();
+    }
+
+    /** Spricht den Satz direkt ueber den Lautsprecher - zum Anhoeren in den Einstellungen. */
+    static boolean probe(String text) {
+        TextToSpeech t;
+        synchronized (Stimme.class) {
+            if (!bereit || tts == null || text == null || text.isEmpty()) return false;
+            t = tts;
+        }
+        try { return t.speak(text.length() > 400 ? text.substring(0, 400) : text, TextToSpeech.QUEUE_FLUSH, null, "probe") == TextToSpeech.SUCCESS; }
+        catch (Exception e) { return false; }
     }
 
     private static void fertig(String id, boolean ok) {
