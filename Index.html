@@ -226,8 +226,10 @@
                         var j = await r.json();
                         if(j && j.expanded) text = j.expanded;
                     }catch(e){}
-                    // Thorsten (Piper), wenn geladen und gewaehlt - sonst die Stimme des Handys
-                    if(window.AfuPiperApp && window.AfuPiperApp.aktiv()){
+                    // Thorsten (Piper), wenn geladen und gewaehlt - aber NUR fuer Frage und Antwort vorlesen
+                    // (Dietmar 26.10.2026: "Thorsten darf nur bei den Fragen und Antworten auftauchen").
+                    // Maja, Erklaerungen, Knopf-Ansagen und alles andere nehmen ihre eigene Stimme.
+                    if(daten.thorsten === true && window.AfuPiperApp && window.AfuPiperApp.aktiv()){
                         try{ return await window.AfuPiperApp.sprechen(text); }
                         catch(ePiper){ console.warn('[Piper App] Thorsten antwortet nicht, Handystimme:', ePiper && ePiper.message); }
                     }
@@ -5198,17 +5200,20 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
            Lehrgangs am Tag, nachts das 50-Ohm-Blau mit dunkler Schrift -
            dieselbe Markierung, die auch die gerade gelesene Antwort traegt.
            ================================================================ */
+        /* 26.10.2026 Dietmar (Bild vom PC, "die LED?" im gelben Kasten): "soll nur die Schrift ohne dem
+           Rahmen beim Vorlesen hervorgehoben werden ... Die Schrift soll die eingestellte Farbe
+           verwenden." Wie in der App: nur die Schriftfarbe, kein Grund, kein Rahmen. Die Farbe kommt
+           aus Einstellungen -> Mitlesen (--wort-tag am Tag, --wort-nacht nachts), Vorgabe Gelb. */
         .tts-wort-an {
-            background: #ffe066;
-            color: #0f2745;
-            border-radius: 3px;
-            box-shadow: 0 0 0 2px #ffe066;
+            background: none !important; box-shadow: none !important; border-radius: 0; text-decoration: none;
+            color: var(--wort-tag, #d47600) !important;
         }
-        body.dark .tts-wort-an {
-            background: #00adef;
-            color: #04283a;
-            box-shadow: 0 0 0 2px #00adef;
-        }
+        body.dark .tts-wort-an { color: var(--wort-nacht, #fee066) !important; }
+        /* Heller Grund der gefaerbten Antwort: auch nachts der Tageston */
+        body :is(.tts-highlight, .maus-liest, .correct, .wrong) .tts-wort-an { color: var(--wort-tag, #d47600) !important; }
+        /* Dunkle Frage-Tafel (Stil der Frage "Bunt" am PC): der helle Ton */
+        html.fs-bunt:not(.android-app) body .question-area .q-text-row .tts-wort-an { color: var(--wort-nacht, #fee066) !important; }
+        body.wort-aus .tts-wort-an { color: inherit !important; }
         /* Auf Papier hat ein Leuchtstift nichts verloren. */
         @media print {
             .tts-wort-an { background: none !important; color: inherit !important; box-shadow: none !important; }
@@ -24803,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 311, datum: '26.10.2026' };
+const TRAINER_STAND = { nr: 313, datum: '26.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -31925,6 +31930,7 @@ async function ttsGeraetestimme(seg, token){
 
 async function playTTSSegment(seg, token){
     if(token!==ttsQueueToken) return;
+    try{ if(window.afuHgLeise) window.afuHgLeise(); }catch(e){}
     clearTTSHighlightsOnly();
     if(seg.selector){
         // Die gelbe Marke gehoert zu DER Frage, zu der das Stueck geschrieben
@@ -31966,7 +31972,7 @@ async function playTTSSegment(seg, token){
         // und noch einmal, statt dem Lernenden ein Fenster hinzustellen.
         let res;
         for(let versuch = 0; ; versuch++){
-            res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice, klang: ttsKlangWert()})});
+            res=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:seg.text, voice:selectedVoice, klang: ttsKlangWert(), thorsten: !!seg.thorsten})});
             if(res.status !== 429 || versuch >= 4) break;
             console.warn('[TTS] ausgelastet - warte kurz und versuche es noch einmal (' + (versuch+1) + ')');
             await new Promise(r => setTimeout(r, 800 * (versuch + 1)));
@@ -32309,6 +32315,7 @@ async function playTTSQueue(segments, btn, zurueck){
                 frageNr: seg.frageNr,
                 klasse: seg.klasse,
                 worte: seg.worte,
+                thorsten: !!seg.thorsten,
                 wortVon: von,
                 wortBis: vorher / gesamt,
                 pause: (i === teile.length - 1) ? (seg.pause || 0) : 0,
@@ -32380,7 +32387,7 @@ function vorleseFrage(){
     const kenner = (typeof kennerThema === 'function') && kennerThema(q);
     const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
-    const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk'}];
+    const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk', thorsten:true}];
     // NUR DIE FRAGE, wenn die Antworten unter der Maus kommen sollen -
     // siehe "DIE ANTWORT UNTER DER MAUS VORLESEN" (26.09.2026).
     if(einstellungen.mausVorlesen){ playTTSQueue(segments, btn); return; }
@@ -32398,7 +32405,7 @@ function antwortSegment(q, i, sprich){
     const istBild = !!(opt.image && String(opt.image).trim());
     // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
     const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
-    return { text, selector:`[data-optindex="${i}"]`,
+    return { text, selector:`[data-optindex="${i}"]`, thorsten:true,
              pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 };
 }
 
@@ -32524,7 +32531,7 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
     const text = isCorrect ? 'Das war die richtige Antwort.' : 'Das war leider die falsche Antwort.';
     // frageNr: An diese Frage ist die gelbe Marke gebunden (siehe playTTSSegment).
-    const segments=[{text, selector:`[data-optindex="${idx}"]`, frageNr: currentIndex}];
+    const segments=[{text, selector:`[data-optindex="${idx}"]`, frageNr: currentIndex, thorsten:true}];
     playTTSQueue(segments, null);
 }
 
@@ -35230,7 +35237,7 @@ function appPiperKarteHtml(){
     const rahmen = 'display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.55rem; border:1px solid ' + (aktiv ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)')
         + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit); margin-bottom:0.6rem; flex-wrap:wrap;';
     const kn = ' padding:0.3rem 0.6rem; font-size:0.78rem;';
-    const kopf = '<b style="font-size:0.85rem;">Thorsten (Piper)</b><span style="display:block; font-size:0.72rem; opacity:0.75;">m\u00e4nnlich \u00b7 nat\u00fcrlich \u00b7 l\u00e4uft ohne Internet</span>';
+    const kopf = '<b style="font-size:0.85rem;">Thorsten (Piper)</b><span style="display:block; font-size:0.72rem; opacity:0.75;">m\u00e4nnlich \u00b7 nat\u00fcrlich \u00b7 l\u00e4uft ohne Internet</span><span style="display:block; font-size:0.72rem; opacity:0.75;">Liest nur Fragen und Antworten vor. Maja und alles andere behalten ihre Stimme.</span>';
     let h = '<section id="appPiperKarte" style="' + rahmen + '">';   // section statt div: Hell/Dunkel stylen div-Kaesten mit Rand um, das waere hier nicht gewollt
     if(da){
         h += '<label style="display:flex; align-items:center; gap:0.5rem; flex:1 1 auto; min-width:0; cursor:pointer;">'
@@ -35263,7 +35270,7 @@ async function appPiperProbe(){
     const P = window.AfuPiperApp; if(!P) return;
     appPiperMeldung('Thorsten wird vorbereitet \u2026');
     try{
-        const r = await P.sprechen('So klingt die Stimme, die dich durch das Men\u00fc f\u00fchrt \u2014 zum Beispiel beim Bl\u00e4ttern durch den Fragenkatalog.');
+        const r = await P.sprechen('Welche Einheit hat die Kapazit\u00e4t? Antwort A: Farad. Antwort B: Henry.');
         const url = URL.createObjectURL(await r.blob());
         const a = new Audio(url); a.onended = () => URL.revokeObjectURL(url);
         await a.play();
@@ -41580,7 +41587,9 @@ function majaFunkSetzen(teil, an){
 // Stufen fuer Rauschen, Knistern (QRN) und Stoersignale (QRM): 0 = aus, 1 = leise, 2 = mittel (Standard), 3 = stark
 // (Dietmar 25.10.2026: "Das Rauschen ist in Ordnung, es muss aber ausschaltbar sein ... staerker und schwaecher ... auch QRM und QRN")
 const MAJA_STUFEN = { rauschen: 'afu_maja_rauschen_stufe', qrn: 'afu_maja_qrn_stufe', qrm: 'afu_maja_qrm_stufe' };
-const MAJA_STUFEN_FAKTOR = { rauschen: [0, 0.5, 1, 1.9], qrn: [0, 0.5, 1, 1.8], qrm: [0, 0.3, 0.6, 0.95] };
+// QRM bei "Stark": Lautstaerke der Morsezeichen gegenueber dem alten Wert (26.10.2026: "bei stark noch etwas staerker")
+var QRM_STARK_PEGEL = 1.8;
+const MAJA_STUFEN_FAKTOR = { rauschen: [0, 0.3, 0.6, 1.2], qrn: [0, 0.5, 1, 1.8], qrm: [0, 0.3, 0.6, 0.95] };
 function majaStufe(name){
     try{
         const w = localStorage.getItem(MAJA_STUFEN[name]);
@@ -54608,6 +54617,88 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
 })();
 </script>
+<script id="wortFarbePC">
+/* MITLESEN AM PC (26.10.2026): An/Aus und Farbe des gesprochenen Worts auch in der klassischen
+   Ansicht. In der App-Ansicht (android-app) macht das der Block im Stilskript, dieselben Schluessel. */
+(function(){
+    var H = document.documentElement;
+    if(H.classList.contains('android-app')) return;
+    var F = {
+        gelb:   { name: 'Gelb',    tag: '#d47600', nacht: '#fee066' },
+        blau:   { name: 'Blau',    tag: '#0b63c4', nacht: '#4fc9f7' },
+        gruen:  { name: 'Grün',    tag: '#1f8a4c', nacht: '#7be495' },
+        orange: { name: 'Orange',  tag: '#d9480f', nacht: '#ffab4d' },
+        rot:    { name: 'Rot',     tag: '#c62828', nacht: '#ff7b7b' },
+        lila:   { name: 'Violett', tag: '#7a3ea8', nacht: '#d9a6ff' }
+    };
+    var KNOPF = 'min-height:32px; padding:0.35rem 0.85rem; border-radius:16px; font-family:inherit; font-size:0.78rem; font-weight:600; border:1px solid #b0c4d8; cursor:pointer;';
+    function lies(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
+    function schreib(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+    function an(){ return lies('app_wort_an', '1') !== '0'; }
+    function farbe(){ var k = lies('app_wort_farbe', 'gelb'); return F[k] ? k : 'gelb'; }
+    function anwenden(){
+        try{
+            var f = F[farbe()];
+            H.style.setProperty('--wort-tag', f.tag);
+            H.style.setProperty('--wort-nacht', f.nacht);
+            if(document.body) document.body.classList.toggle('wort-aus', !an());
+            document.querySelectorAll('#einstWortFarben button').forEach(function(b){
+                var ein = b.dataset.f === farbe();
+                b.style.borderColor = ein ? 'var(--panel-navy)' : '#e3e9f3';
+                b.style.boxShadow = ein ? 'inset 0 0 0 2px #fff' : 'none';
+                b.setAttribute('aria-pressed', ein ? 'true' : 'false');
+            });
+            var n = document.getElementById('einstWortName'); if(n) n.textContent = f.name;
+            document.querySelectorAll('#pcWortSeg button').forEach(function(b){
+                var ein = b.dataset.w === (an() ? 'an' : 'aus');
+                var dk = document.body && document.body.classList.contains('dark');
+                b.style.setProperty('background', ein ? (dk ? '#19c3a8' : '#0f2745') : (dk ? 'rgba(255,255,255,0.08)' : '#fff'), 'important');
+                b.style.setProperty('color', ein ? (dk ? '#06222b' : '#fff') : (dk ? '#dce8f4' : '#0f2745'), 'important');
+                b.setAttribute('aria-pressed', ein ? 'true' : 'false');
+            });
+        }catch(e){}
+    }
+    window.pcWortSetzen = function(v){ schreib('app_wort_an', v === 'aus' ? '0' : '1'); anwenden(); };
+    window.pcWortFarbeSetzen = function(k){ if(F[k]) schreib('app_wort_farbe', k); anwenden(); };
+    function kasten(){
+        var f = farbe();
+        var knoepfe = Object.keys(F).map(function(k){
+            return '<button type="button" data-f="' + k + '" onclick="pcWortFarbeSetzen(\'' + k + '\')" title="' + F[k].name + '" aria-label="Farbe ' + F[k].name + '" '
+                + 'style="--wt:' + F[k].tag + '; --wn:' + F[k].nacht + '; width:40px; height:34px; border-radius:8px; border:2px solid ' + (k === f ? 'var(--panel-navy)' : '#e3e9f3') + '; cursor:pointer;"></button>';
+        }).join(' ');
+        var seg = [['an', 'An'], ['aus', 'Aus']].map(function(x){
+            return '<button type="button" data-w="' + x[0] + '" onclick="pcWortSetzen(\'' + x[0] + '\')" style="' + KNOPF + '">' + x[1] + '</button>';
+        }).join(' ');
+        return einstKasten('Mitlesen',
+            'Das Wort, das gerade gesprochen wird, bekommt beim Vorlesen eine andere Schriftfarbe – in der Frage, in den Antworten und in der Erklärung. Nur die Farbe, kein Rahmen.',
+            '<div id="pcWortSeg" style="display:flex; gap:0.4rem;">' + seg + '</div>'
+          + '<div style="font-size:0.72rem; font-weight:700; color:#4b5b73; margin-top:0.8rem;">Farbe</div>'
+          + '<div id="einstWortFarben" style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + knoepfe + '</div>'
+          + '<div id="einstWortName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;">' + F[f].name + '</div>'
+          + '<div style="margin-top:0.7rem; padding:0.5rem 0.65rem; border:1px dashed #c9d4e2; border-radius:8px; font-size:0.9rem; line-height:1.5; color:var(--panel-navy, #0f2745);">So sieht es aus: Der Trainer liest, und <span class="tts-wort-an">dieses</span> Wort wird gerade gesprochen.</div>');
+    }
+    try{
+        var st = document.createElement('style');
+        st.textContent = '#einstWortFarben button { background: var(--wt) !important; } body.dark #einstWortFarben button { background: var(--wn) !important; }';
+        document.head.appendChild(st);
+    }catch(e){}
+    anwenden();
+    window.addEventListener('DOMContentLoaded', anwenden);
+    var alt = window.einstellungenOeffnen;
+    if(typeof alt !== 'function' || typeof einstKasten !== 'function') return;
+    window.einstellungenOeffnen = function(){
+        var r = alt.apply(this, arguments);
+        try{
+            var haken = document.getElementById('einstMausVorlesen');
+            var lab = haken && haken.closest('label');
+            var box = lab && lab.parentElement;
+            if(box && !document.getElementById('pcWortSeg')) box.insertAdjacentHTML('afterend', kasten());
+            anwenden();
+        }catch(e){}
+        return r;
+    };
+})();
+</script>
 <script id="appStilSkript">
 // ================================================================
 //  ZWEI STILE FUER DIE APP - ETAPPE 1                   (30.09.2026)
@@ -58777,9 +58868,65 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }
         return !!tu(() => { spielen(); return true; });
     }
+    // ---- Funk-Ausklang (26.10.2026) ----------------------------------------------------------
+    // Dietmar: "Der Morse-Code kann, nachdem Maja gesprochen hat, gerne auch noch ein bisschen andauern" (Hoerprobe 7 war gut:
+    // Maja spricht, danach laeuft CQ ISS aus) - "Wenn dann aber Thorsten oder Maja wieder was spricht, muss das im Hintergrund
+    // rutschen." Der Ausklang haengt an einer eigenen Lautstaerke (nicht an den Knoten der Sprache) und wird leise, sobald
+    // wieder jemand spricht (Maja oder eine Vorlese-Stimme), statt abgeschnitten zu werden.
+    const hg = { g: null, ctx: null, bis: 0 };
+    function hgLeise(){
+        try{
+            if(hg.g && hg.ctx && hg.ctx.currentTime < hg.bis){
+                const jetzt = hg.ctx.currentTime, g = hg.g.gain;
+                const aktuell = g.value;
+                g.cancelScheduledValues(jetzt); g.setValueAtTime(aktuell, jetzt);
+                g.setTargetAtTime(Math.min(aktuell, 0.15), jetzt, 0.12);                                   // in den Hintergrund
+                g.setTargetAtTime(0, Math.max(jetzt + 0.8, hg.bis - 1.4), 0.45);                           // und weich ausklingen, kein hartes Ende
+            }
+        }catch(e){}
+    }
+    window.afuHgLeise = hgLeise;
+    const MORSE_ZEICHEN = { A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',
+        '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','/':'-..-.' };
+    const MORSE_SPRUECHE = ['CQ DE DL1ABC K', 'QRZ DE OE3XYZ', 'CQ CQ DE DB0XYZ', '73 ES GL DE DK2ZZ'];
+    function morseAusklang(ctx, ab, pegel, art){
+        try{
+            const cq = art ? art === 'cq' : Math.random() < 0.6;
+            const dit = cq ? 0.05 : 0.055 + Math.random() * 0.02, hz = 520 + Math.random() * 420;
+            const text = cq ? 'CQ ISS CQ ISS' : MORSE_SPRUECHE[Math.floor(Math.random() * MORSE_SPRUECHE.length)];
+            const g = ctx.createGain(); g.gain.value = 0;   // weich einsetzen, siehe unten
+            const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 1.2;
+            bp.connect(g); g.connect(ctx.destination);
+            let tt = ab;
+            text.split(' ').forEach((wort, wi) => {
+                if(wi) tt += dit * 4;
+                for(const ch of wort){
+                    for(const z of (MORSE_ZEICHEN[ch] || '')){
+                        if(tt > ab + 8) break;   // nicht laenger als etwa acht Sekunden
+                        const d = dit * (z === '-' ? 3 : 1);
+                        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = hz;
+                        const og = ctx.createGain();
+                        og.gain.setValueAtTime(0, tt); og.gain.linearRampToValueAtTime(pegel, tt + 0.006);
+                        og.gain.setValueAtTime(pegel, tt + d - 0.006); og.gain.linearRampToValueAtTime(0, tt + d);
+                        o.connect(og); og.connect(bp); o.start(tt); o.stop(tt + d + 0.01);
+                        tt += d + dit;
+                    }
+                    tt += dit * 2;
+                }
+            });
+            const ende = tt + 0.2;
+            // Dietmar: "Das Ganze soll leicht ansteigen und auch wieder abfallen. Das soll kein hartes Ende sein."
+            const gesamt = ende - ab, ein = Math.min(1.4, gesamt * 0.3), aus = Math.min(2.4, gesamt * 0.4);
+            g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(1, ab + ein);
+            g.gain.setValueAtTime(1, ende - aus); g.gain.linearRampToValueAtTime(0, ende);
+            hg.g = g; hg.ctx = ctx; hg.bis = ende;
+            setTimeout(() => { try{ g.disconnect(); }catch(e){} }, Math.max(1000, (ende - ctx.currentTime) * 1000 + 500));
+        }catch(e){}
+    }
     // folge: [{ puffer } | { ton: 'bliep' | 'rechnen' | 'rutsch' }, ...]
     // st: andere Stimme (nur fuer Hoerproben), sonst STIMME
     function roboterton(ctx, folge, nr, st){
+        hgLeise();   // ein laufender Morse-Ausklang rutscht in den Hintergrund, sobald wieder gesprochen wird
         st = Object.assign({}, STIMME, st || {});
         // Funk-Klang bei Maja (Einstellungen): Quetschen, Rauschen und Piepser einzeln abschaltbar
         let ohneRausch = false, ohnePiep = false, stufeRausch = 1, stufeQrn = 1, stufeQrm = 1, ohneBett = false;
@@ -58922,6 +59069,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 // das Rauschen atmet leicht, wie bei schwachem Empfang
                 const wo = neu(ctx.createOscillator()); wo.frequency.value = 3.3;   // (bei echtem Rauschen kein kuenstliches Atmen)
                 const wg = neu(ctx.createGain()); wg.gain.value = echt ? 0 : st0 * 0.2; wo.connect(wg); wg.connect(g.gain);
+                // FADING (Dietmar 26.10.2026): "Das Rauschen in der Stimme kann gern mal etwas schwaecher und staerker und auch wieder
+                // schwaecher werden, so wie es in der Realitaet auch ist. Das nennt man Fading." Zwei langsame Wellen (etwa alle 2 bis 4
+                // und alle 1 Sekunde) heben und senken die Rauschstaerke um bis zu etwa die Haelfte; am Anfang und Ende blenden sie ein/aus.
+                if(stufeRausch > 0){
+                    const fadeWelle = (f, tiefe) => {
+                        const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = f;
+                        const fg = neu(ctx.createGain()), t = st0 * tiefe * (Math.random() < 0.5 ? 1 : -1);
+                        fg.gain.setValueAtTime(0, ab); fg.gain.linearRampToValueAtTime(t, ab + 0.4);
+                        fg.gain.setValueAtTime(t, Math.max(ab + 0.41, bis - 0.35)); fg.gain.linearRampToValueAtTime(0, Math.max(ab + 0.5, bis - 0.05));
+                        o.connect(fg); fg.connect(g.gain); o.start(ab); o.stop(bis + 0.02);
+                    };
+                    fadeWelle(0.25 + Math.random() * 0.3, 0.55);
+                    fadeWelle(0.8 + Math.random() * 0.6, 0.18);
+                }
                 if(stufeRausch > 0){ s.connect(h2); h2.connect(l2); l2.connect(g); g.connect(tonAus); }
                 s.start(ab, echt ? Math.random() * Math.max(0, echt.duration - 0.5) : 0); s.stop(bis + 0.02); wo.start(ab); wo.stop(bis + 0.02);
                 // dazu ein leises Knistern
@@ -58936,22 +59097,45 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                     const kg = neu(ctx.createGain()); kg.gain.value = (0.025 + Math.random() * 0.03) * (echt ? 2.2 : 1) * (Math.random() < 0.12 ? 2.5 : 1);
                     ks.connect(kf); kf.connect(kg); kg.connect(tonAus); ks.start(t);
                 }
-                // QRM: ein anderer Funker auf der Frequenz - leise Morsezeichen oder ein pfeifender Ueberlagerungston
-                if(st.qrm && stufeQrm > 0 && Math.random() < st.qrm * stufeQrm / 0.6 && bis - ab > 1.2){
-                    const dauerQ = Math.min(bis - ab - 0.4, 1.0 + Math.random() * 1.6), anf = ab + 0.2 + Math.random() * Math.max(0, bis - ab - dauerQ - 0.4);
+                // QRM: ein anderer Funker auf der Frequenz - leise Morsezeichen (auch mal "CQ ISS") oder ein pfeifender Ueberlagerungston
+                // 26.10.2026 Dietmar: "Das mit Stoersignale (QRM) mit dem Morsecode ist echt mega! Koennte bei stark noch etwas staerker
+                // sein." und "Im Hintergrund vielleicht noch ein CQ ISS". Stark ist jetzt lauter (QRM_STARK_PEGEL), und ein Teil der
+                // Morsezeichen ist echtes CQ ISS. window.__qrmTest steht nur fuer Hoerproben da.
+                const qt = window.__qrmTest || null;
+                if(st.qrm && stufeQrm > 0 && (qt || Math.random() < st.qrm * stufeQrm / 0.6) && bis - ab > 1.2){
+                    const cqIss = qt && qt.art ? qt.art === 'cq' : (Math.random() < 0.4);
+                    const ditCq = 0.05;
+                    const dauerQ = cqIss ? Math.min(bis - ab - 0.4, 53 * ditCq + 0.1) : Math.min(bis - ab - 0.4, 1.0 + Math.random() * 1.6), anf = ab + 0.2 + Math.random() * Math.max(0, bis - ab - dauerQ - 0.4);
+                    const pegel = 0.03 * (qt && qt.pegel ? qt.pegel : (stufeQrm > 0.9 ? QRM_STARK_PEGEL : 1));
                     const bpq = neu(ctx.createBiquadFilter()); bpq.type = 'bandpass'; bpq.frequency.value = 900; bpq.Q.value = 1.2;
                     const qg = neu(ctx.createGain()); qg.gain.value = 1; bpq.connect(qg); qg.connect(tonAus);
-                    if(Math.random() < 0.6){
+                    if(cqIss || Math.random() < 0.6){
                         // Morsezeichen
-                        const hz = 520 + Math.random() * 420, dit = 0.055 + Math.random() * 0.025;
-                        let tt = anf;
-                        while(tt < anf + dauerQ){
-                            const lang = Math.random() < 0.45 ? 3 : 1, d = dit * lang;
+                        const hz = 520 + Math.random() * 420, dit = cqIss ? ditCq : 0.055 + Math.random() * 0.025;
+                        const setze = (tt, d) => {
                             const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = hz;
-                            const og = neu(ctx.createGain()); og.gain.setValueAtTime(0, tt); og.gain.linearRampToValueAtTime(0.03, tt + 0.006);
-                            og.gain.setValueAtTime(0.03, tt + d - 0.006); og.gain.linearRampToValueAtTime(0, tt + d);
+                            const og = neu(ctx.createGain()); og.gain.setValueAtTime(0, tt); og.gain.linearRampToValueAtTime(pegel, tt + 0.006);
+                            og.gain.setValueAtTime(pegel, tt + d - 0.006); og.gain.linearRampToValueAtTime(0, tt + d);
                             o.connect(og); og.connect(bpq); o.start(tt); o.stop(tt + d + 0.01);
-                            tt += d + dit * (Math.random() < 0.2 ? 3 : 1);
+                        };
+                        let tt = anf;
+                        if(cqIss){
+                            // CQ ISS: -.-. --.- / .. ... ...
+                            const MUSTER = ['-.-.', '--.-', ' ', '..', '...', '...'];
+                            for(const buchst of MUSTER){
+                                if(buchst === ' '){ tt += dit * 4; continue; }   // 3 Einheiten Buchstabenpause sind schon da, dazu 4 = 7
+                                for(const z of buchst){
+                                    if(tt > anf + dauerQ) break;
+                                    const d = dit * (z === '-' ? 3 : 1); setze(tt, d); tt += d + dit;
+                                }
+                                tt += dit * 2;   // Buchstabenpause: 1 (nach dem letzten Zeichen) + 2 = 3
+                            }
+                        } else {
+                            while(tt < anf + dauerQ){
+                                const lang = Math.random() < 0.45 ? 3 : 1, d = dit * lang;
+                                setze(tt, d);
+                                tt += d + dit * (Math.random() < 0.2 ? 3 : 1);
+                            }
                         }
                     } else {
                         // Pfeifton, der vorbeizieht
@@ -58981,6 +59165,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         } else {
             piep(te, 1180, 0.07); piep(te + 0.085, 1560, 0.08);
             rauschen(te + 0.18, 0.08, 0.08);
+        }
+        // Morse-Ausklang nach dem Roger-Piep (nur Maja, nur am Ende des Satzes, so oft wie die Stoersignale es erlauben)
+        if(qd && !fruehTeil && teil !== 'mitte' && !ohneBett && stufeQrm > 0 && (window.__qrmTest || Math.random() < 0.55)){
+            const qtt = window.__qrmTest || null;
+            morseAusklang(ctx, te + 0.95, 0.03 * (qtt && qtt.pegel ? qtt.pegel : (stufeQrm > 0.9 ? QRM_STARK_PEGEL : 1)), qtt && qtt.art);
         }
         ton.knoten = spaetTeil ? ton.knoten.concat(kn) : kn; ton.quelle = q; ton.ohrJetzt = ohr;
         // Mund und Antenne
@@ -61626,7 +61815,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const btn = $('ttsBtn');
             const kenner = (typeof kennerThema === 'function') && kennerThema(q);
             const sprich = t => kenner ? kennerSprechen(t) : t;
-            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn() }];
+            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), thorsten: true }];
             let mitAntworten = !nurFrage();
             try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
             if(mitAntworten && typeof antwortSegment === 'function'){
@@ -63513,6 +63702,19 @@ html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#
 }
 html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) #appNavi{ border-radius:var(--opt-r,20px); box-shadow:0 10px 28px rgba(0,0,16,.4); }
 html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .app-footer-note, html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .footer-note{ background:none !important; border:0 !important; box-shadow:none !important; }
+</style>
+<style id="segDunkelSicher">
+/* 26.10.2026 Dietmar (Bild, dunkel): "im dunklen Modus sehe ich nicht was ausgewaehlt ist." Im dunklen Polar-Look
+   (body.dark oder body.graphit) bekommt die gewaehlte Schaltflaeche immer eine leuchtende Fuellung mit dunkler Schrift
+   und ein Haekchen - egal, welche aeltere Regel sonst greift. Die Ids im Selektor stehen nur fuer die Vorrangstufe. */
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal .app-seg button.an {
+    background: #2de8d8 !important; color: #04283a !important; font-weight: 800 !important; border: 0 !important;
+    box-shadow: 0 0 0 2px #2de8d8, 0 4px 12px rgba(45,232,216,.25) !important;
+}
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal .app-seg button.an::before { content: "\2713\00a0"; }
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal .app-seg button:not(.an) { color: #c3d4e4 !important; background: transparent !important; }
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal #appDesignSeg button.an {
+    background: rgba(45,232,216,.22) !important; color: #fff !important; box-shadow: inset 0 0 0 2px #2de8d8 !important; }
 </style>
 </body>
 </html>
