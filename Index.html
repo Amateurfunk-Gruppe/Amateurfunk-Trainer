@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 327, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 331, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34531,6 +34531,15 @@ function einstBlaetterFuellen(){
           + '<b>Es spricht die Stimme deines Handys.</b> Welche Stimme das ist, stellst du in Android ein: '
           + 'Einstellungen → Bedienungshilfen → Sprachausgabe (je nach Handy auch unter „Zusätzliche Einstellungen“). '
           + 'Fehlt dort Deutsch, einmal die deutsche Sprachdatei laden.</div>') + '</div>';
+    // SPRECHER (27.10.2026, Dietmar: "Funki und Maja sind Sprecher und das gehoert unter Sounds."): wer beim Lernen spricht, steht jetzt hier
+    const sprecherWert = () => { try{ const v = localStorage.getItem('robo_stimme') || 'an'; return ['aus', 'wenig', 'an', 'viel'].includes(v) ? v : 'an'; }catch(e){ return 'an'; } };
+    const sprecherHtml = '<div id="einstSprecherKasten" style="margin:0 0 0.2rem;">'
+        + einstKasten('Sprecher: Funki und Maja', 'Wie viel dein Begleiter sagt: Bei Viel spricht er fast zu allem, was er zeigt, auch Tipps und Rundgang. Normal ist öfter als bisher, Wenig nur ab und zu. Aus ist ganz still.',
+            '<div class="app-seg" id="appFunkiStimmeSeg">'
+          + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-s="' + f[0] + '"' + (sprecherWert() === f[0] ? ' class="an"' : '')
+              + ' onclick="appFunkiStimmeSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+          + '</div>'
+          + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>') + '</div>';
     const majaFunkHtml = '<div id="einstMajaFunkKasten" style="margin-top:1.6rem; padding-top:1.1rem; border-top:2px dashed var(--border, #c9d3df);">'
         + '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin-bottom:0.5rem;">Nur für Maja</div>'
         + einstKasten('Maja: Funk-Klang',
@@ -34550,6 +34559,7 @@ function einstBlaetterFuellen(){
       + '<button type="button" id="einstSoundAus" onclick="soundVoreinstellung(\'aus\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-xmark"></i> Alle Sounds aus</button>'
       + '<button type="button" id="einstSoundNoetig" onclick="soundVoreinstellung(\'eigen\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-low"></i> Selbst ausgewählte Sounds</button>'
       + '<div id="einstSoundHinweis" role="status" style="display:none; flex:1 1 100%; font-size:0.88rem; font-weight:600; color:inherit; margin:0.1rem 0 0;"></div></div>'
+      + sprecherHtml
       + einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
             + 'beim Einschalten hörst du ihn einmal zur Probe.',
             tonZeile('einstKlickTon', 'einstKlickTonSetzen(this.checked)', 'Klickton bei Knöpfen',
@@ -41701,6 +41711,8 @@ function soundSchnellMarkieren(){
     }catch(x){}
 }
 setInterval(soundSchnellMarkieren, 600);
+// Sprecher: die Auswahl zeigt immer den echten Wert von "Funki spricht"
+setInterval(() => { try{ let v = localStorage.getItem('robo_stimme') || 'an'; if(!['aus', 'wenig', 'an', 'viel'].includes(v)) v = 'an'; document.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === v)); }catch(e){} }, 600);
 const MAJA_TRAURIG = "Oh. Du hast mein Rauschen ausgeschaltet. Ich hatte mich schon so an dich gewöhnt. Aber keine Sorge: Unter Einstellungen, Sounds, bekomme ich es jederzeit zurück.";
 function majaProbeHinweis(t){
     try{
@@ -55826,15 +55838,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + (helferRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
-              // FUNKI SPRICHT (30.09.2026) - ein eigener Regler fuer die Stimme; vier Stufen seit 04.10.2026
-              + '<div class="app-unterzeile"><b>Funki spricht</b><small>Wie viel er sagt: Bei Viel spricht er fast zu allem, was er zeigt – auch Tipps und Rundgang. Normal ist öfter als bisher, Wenig nur ab und zu (wie bisher). Aus ist ganz still. Es spricht die Stimme deines Handys.</small></div>'
-              + '<div class="app-seg" id="appFunkiStimmeSeg">'
-              + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-s="' + f[0] + '"' + (stimmeRegler() === f[0] ? ' class="an"' : '')
-                  + ' onclick="appFunkiStimmeSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
-              + '</div>'
+              // "Funki spricht" ist seit 27.10.2026 unter Einstellungen -> Sounds ("Sprecher: Funki und Maja")
               + '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.7rem 0 0.2rem;"><input type="checkbox" id="appFrostCb" style="width:18px; height:18px; cursor:pointer;" onchange="appMajaFrost(this.checked)">'
               + '<span style="font-size:0.85rem; font-weight:600;">Maja einfrieren (stilles Standbild, kein Auftauchen, kein Sprechen)</span></label>'
-              + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>')
+              )
           // ISS-Ueberflug (04.10.2026)
           + einstKasten('ISS, Astronaut & Satellit', 'Ab und zu fliegt die Raumstation mit Ton quer über die Startseite – manchmal winkt ein Astronaut seitlich herein und macht dir Mut, und manchmal ruft der OSCAR-Satellit „CQ“ im Vorbeiflug. Nie in einer Runde, nie beim Vorlesen und nur im Stil Verspielt.',
                 '<div class="app-seg" id="appIssSeg">'
@@ -56050,6 +56057,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus' && lies('robo_frost', '') !== '1'; }   // eingefroren: kein Auftauchen von selbst
     // 27.10.2026, Dietmar: "Maja sollte man bei Verspielt freezen können ... nicht jeder mag das ständige Auftauchen in der Hauptansicht und in den Fragen."
+    window.appMajaStimmeSetzen = v => { v = ['aus', 'wenig', 'an', 'viel'].includes(v) ? v : 'an'; if(window.appFunkiStimmeSetzen) window.appFunkiStimmeSetzen(v); else schreib('robo_stimme', v); };
     window.appMajaFrost = an => { schreib('robo_frost', an ? '1' : '0'); if(an) tu(funkiVerstummen); astroKlasse(); tu(einstNachziehen); };
     window.appFunkiSetzen = v => { schreib('robo_tipps', reglerListe().includes(v) ? v : 'an'); tu(einstNachziehen); };
     // Funki spricht: An/Aus und eine Probe (30.09.2026)
@@ -61757,9 +61765,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             tu(() => { const b = $('einstBlatt_anpassen'); if(!b || typeof window.appFarbeKastenHtml !== 'function') return;
                 const alt = b.querySelector('#appFarbeKasten'); if(alt) alt.remove();
                 b.insertAdjacentHTML('afterbegin', '<div id="appFarbeKasten">' + window.appFarbeKastenHtml() + '</div>');
-                const altB = b.querySelector('#appBegleiterKasten'); if(altB) altB.remove();
-                if(typeof window.appBegleiterKastenHtml === 'function' && $('appFarbeKasten'))
-                    $('appFarbeKasten').insertAdjacentHTML('afterend', '<div id="appBegleiterKasten">' + window.appBegleiterKastenHtml() + '</div>'); });
+                const altB = b.querySelector('#appBegleiterKasten'); if(altB) altB.remove(); });
+            // Der Begleiter (Funki oder Maja) steht seit 27.10.2026 unter Sounds, direkt unter den zwei Knoepfen und vor den Sprechern
+            tu(() => { const sb = $('einstBlatt_sounds'); if(!sb || typeof window.appBegleiterKastenHtml !== 'function') return;
+                const alt = sb.querySelector('#einstBegleiterKasten'); if(alt) alt.remove();
+                const ziel = sb.querySelector('#einstSprecherKasten') || sb.querySelector('#einstSoundSchnell');
+                if(!ziel) return;
+                const html = '<div id="einstBegleiterKasten" style="margin:0 0 0.2rem;">' + window.appBegleiterKastenHtml() + '</div>';
+                if(ziel.id === 'einstSprecherKasten') ziel.insertAdjacentHTML('beforebegin', html); else ziel.insertAdjacentHTML('afterend', html); });
             return r;
         };
     });
@@ -63826,7 +63839,7 @@ html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#
 <style id="majaNurVerspielt">
 /* 27.10.2026 (Dietmar: "Ich glaube, es ist besser, wenn Maja komplett bei Sachlich raus ist"): Majas Funk-Klang gibt es nur im Stil Verspielt -
    im klassischen Sachlich am PC und im App-Stil Sachlich bleibt die Karte weg. */
-html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKasten { display: none !important; }
+html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKasten, html:not(.android-app) #einstSprecherKasten, html.stil-sachlich #einstSprecherKasten, html:not(.android-app) #einstBegleiterKasten, html.stil-sachlich #einstBegleiterKasten { display: none !important; }
 </style>
 <style id="majaFrost">
 /* 27.10.2026: Maja einfrieren (Verspielt) - Standbild ohne Bewegung; der Knopf sitzt klein an ihr */
