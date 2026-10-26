@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 313, datum: '26.10.2026' };
+const TRAINER_STAND = { nr: 315, datum: '26.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34531,7 +34531,7 @@ function einstBlaetterFuellen(){
               '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.35rem 0;">'
             + '<input type="checkbox" id="einstMaja_' + x[0] + '" style="width:18px; height:18px; cursor:pointer;" onchange="majaFunkSetzen(\'' + x[0] + '\', this.checked)">'
             + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">' + x[1] + '</span></label>').join('')
-          + [['rauschen', 'Rauschen'], ['qrn', 'Knistern (QRN, Gewitter und Atmosphäre)'], ['qrm', 'Störsignale (QRM, andere Funker auf der Frequenz)']].map(x =>
+          + [['rauschen', 'Rauschen'], ['qrn', 'Knistern (QRN, Gewitter und Atmosphäre)'], ['qrm', 'Störsignale (QRM, andere Funker auf der Frequenz)'], ['cw', 'Telegrafie und CQ-Rufe (CW, „CQ ISS“ – läuft auch nach Majas Satz noch 3 bis 5 Sekunden im Hintergrund)']].map(x =>
               '<label style="display:flex; gap:0.6rem; align-items:center; margin:0.55rem 0 0.2rem;">'
             + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600; flex:1 1 auto;">' + x[1] + '</span>'
             + '<select id="einstMajaStufe_' + x[0] + '" style="flex:0 0 auto; font-size:0.85rem; padding:0.25rem 0.4rem;" onchange="majaStufeSetzen(\'' + x[0] + '\', this.value, true)">'
@@ -41578,7 +41578,7 @@ function vollbildAutoSetzen(an){
 //  jeder Rueckkehr neu geholt.
 // ================================================================
 // Majas Funk-Klang: Quetschen, Rauschen und Piepser einzeln ein/aus (Dietmar 25.10.2026: "Rauschen und quetscht sollte man ausschalten koennen")
-const MAJA_FUNK_TEILE = { quetschen: 'afu_maja_quetschen', rauschen: 'afu_maja_rauschen', piepser: 'afu_maja_piepser', doppler: 'afu_maja_doppler' };
+const MAJA_FUNK_TEILE = { quetschen: 'afu_maja_quetschen', rauschen: 'afu_maja_rauschen', piepser: 'afu_maja_piepser', doppler: 'afu_maja_doppler', morse: 'afu_maja_morse' };
 function majaFunkAn(teil){ try{ return localStorage.getItem(MAJA_FUNK_TEILE[teil || 'quetschen']) !== 'nein'; }catch(e){ return true; } }
 function majaFunkSetzen(teil, an){
     try{ localStorage.setItem(MAJA_FUNK_TEILE[teil], an ? 'ja' : 'nein'); }catch(e){}
@@ -41586,10 +41586,10 @@ function majaFunkSetzen(teil, an){
 }
 // Stufen fuer Rauschen, Knistern (QRN) und Stoersignale (QRM): 0 = aus, 1 = leise, 2 = mittel (Standard), 3 = stark
 // (Dietmar 25.10.2026: "Das Rauschen ist in Ordnung, es muss aber ausschaltbar sein ... staerker und schwaecher ... auch QRM und QRN")
-const MAJA_STUFEN = { rauschen: 'afu_maja_rauschen_stufe', qrn: 'afu_maja_qrn_stufe', qrm: 'afu_maja_qrm_stufe' };
+const MAJA_STUFEN = { rauschen: 'afu_maja_rauschen_stufe', qrn: 'afu_maja_qrn_stufe', qrm: 'afu_maja_qrm_stufe', cw: 'afu_maja_cw_stufe' };
 // QRM bei "Stark": Lautstaerke der Morsezeichen gegenueber dem alten Wert (26.10.2026: "bei stark noch etwas staerker")
 var QRM_STARK_PEGEL = 1.8;
-const MAJA_STUFEN_FAKTOR = { rauschen: [0, 0.3, 0.6, 1.2], qrn: [0, 0.5, 1, 1.8], qrm: [0, 0.3, 0.6, 0.95] };
+const MAJA_STUFEN_FAKTOR = { rauschen: [0, 0.3, 0.6, 1.2], qrn: [0, 0.5, 1, 1.8], qrm: [0, 0.3, 0.6, 0.95], cw: [0, 0.6, 1, 1.8] };
 function majaStufe(name){
     try{
         const w = localStorage.getItem(MAJA_STUFEN[name]);
@@ -41597,11 +41597,13 @@ function majaStufe(name){
         if(name === 'rauschen' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;   // alte Einstellung uebernehmen
         if(name === 'qrn' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;
         if(name === 'qrm' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;
+        if(name === 'cw' && localStorage.getItem(MAJA_FUNK_TEILE.morse) === 'nein') return 0;   // das Haekchen aus Stand 314 uebernehmen
     }catch(e){}
     return 2;
 }
 function majaStufeSetzen(name, wert, probe){
     wert = Math.max(0, Math.min(3, parseInt(wert, 10) || 0));
+    if(name === 'cw') window.__cwProbe = true;   // die Probe soll den Morse-Ausklang auch hoeren lassen
     try{ localStorage.setItem(MAJA_STUFEN[name], String(wert)); }catch(e){}
     try{ localStorage.setItem(MAJA_FUNK_TEILE.rauschen, majaStufe('rauschen') > 0 ? 'ja' : 'nein'); }catch(e){}
     try{ const e = document.getElementById('einstMajaStufe_' + name); if(e) e.value = String(wert); }catch(e){}
@@ -41622,7 +41624,7 @@ function majaProbeHinweis(t){
 function majaFunkProbe(){
     // Die Probe spricht in jedem Stil (auch Sachlich und am PC): Aufnahme maja_034 aus dem Paket, mit allen eingestellten Funk-Effekten
     try{
-        if(typeof window.majaProbeSagen === 'function'){ window.majaProbeSagen('Das war nur Rauschen – kein Problem!'); majaProbeHinweis(''); }
+        if(typeof window.majaProbeSagen === 'function'){ window.__cwProbe = true; window.majaProbeSagen('Das war nur Rauschen – kein Problem!'); majaProbeHinweis(''); }
         else majaProbeHinweis('Maja gibt es nur im Stil „Verspielt“. Stell oben unter „Stil am PC“ auf Verspielt um, dann hörst du die Probe.');
     }catch(e){}
 }
@@ -58888,12 +58890,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     window.afuHgLeise = hgLeise;
     const MORSE_ZEICHEN = { A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',
         '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','/':'-..-.' };
-    const MORSE_SPRUECHE = ['CQ DE DL1ABC K', 'QRZ DE OE3XYZ', 'CQ CQ DE DB0XYZ', '73 ES GL DE DK2ZZ'];
+    const MORSE_SPRUECHE = ['CQ DX', 'QRZ QRZ', 'DE DL1X K', '73 ES GL', 'CQ CQ DX'];
     function morseAusklang(ctx, ab, pegel, art){
         try{
             const cq = art ? art === 'cq' : Math.random() < 0.6;
-            const dit = cq ? 0.05 : 0.055 + Math.random() * 0.02, hz = 520 + Math.random() * 420;
-            const text = cq ? 'CQ ISS CQ ISS' : MORSE_SPRUECHE[Math.floor(Math.random() * MORSE_SPRUECHE.length)];
+            const hz = 520 + Math.random() * 420;
+            const text = cq ? (Math.random() < 0.5 ? 'CQ ISS' : 'CQ CQ ISS') : MORSE_SPRUECHE[Math.floor(Math.random() * MORSE_SPRUECHE.length)];
+            // Dietmar 26.10.2026: "Telegrafierufe, CW, kann gern bis 3 bis 5 Sekunden lang gehen." Die Zeichengeschwindigkeit wird so gewaehlt,
+            // dass der ganze Ruf in 3 bis 5 Sekunden fertig ist (nicht mitten im Buchstaben abgeschnitten).
+            let einheiten = 0;
+            text.split(' ').forEach((w, wi) => { if(wi) einheiten += 4; for(const ch of w){ for(const z of (MORSE_ZEICHEN[ch] || '')) einheiten += (z === '-' ? 3 : 1) + 1; einheiten += 2; } });
+            const dit = Math.max(0.04, Math.min(0.09, (3.2 + Math.random() * 1.6) / einheiten));
             const g = ctx.createGain(); g.gain.value = 0;   // weich einsetzen, siehe unten
             const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 1.2;
             bp.connect(g); g.connect(ctx.destination);
@@ -58902,7 +58909,6 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 if(wi) tt += dit * 4;
                 for(const ch of wort){
                     for(const z of (MORSE_ZEICHEN[ch] || '')){
-                        if(tt > ab + 8) break;   // nicht laenger als etwa acht Sekunden
                         const d = dit * (z === '-' ? 3 : 1);
                         const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = hz;
                         const og = ctx.createGain();
@@ -58929,9 +58935,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         hgLeise();   // ein laufender Morse-Ausklang rutscht in den Hintergrund, sobald wieder gesprochen wird
         st = Object.assign({}, STIMME, st || {});
         // Funk-Klang bei Maja (Einstellungen): Quetschen, Rauschen und Piepser einzeln abschaltbar
-        let ohneRausch = false, ohnePiep = false, stufeRausch = 1, stufeQrn = 1, stufeQrm = 1, ohneBett = false;
+        let ohneRausch = false, ohnePiep = false, ohneMorse = false, stufeCw = 1, stufeRausch = 1, stufeQrn = 1, stufeQrm = 1, ohneBett = false;
         try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){
             ohnePiep = !majaFunkAn('piepser');
+            stufeCw = MAJA_STUFEN_FAKTOR.cw[majaStufe('cw')]; ohneMorse = stufeCw === 0;   // Dietmar 26.10.2026: Telegrafie und CQ-Rufe: aus, schwach, stark
             stufeRausch = MAJA_STUFEN_FAKTOR.rauschen[majaStufe('rauschen')]; stufeQrn = MAJA_STUFEN_FAKTOR.qrn[majaStufe('qrn')]; stufeQrm = MAJA_STUFEN_FAKTOR.qrm[majaStufe('qrm')];
             ohneRausch = stufeRausch === 0;   // das kurze Rauschen hinter dem Roger-Piep gehoert zum Rauschen
             ohneBett = stufeRausch === 0 && stufeQrn === 0 && stufeQrm === 0;
@@ -59103,13 +59110,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 // Morsezeichen ist echtes CQ ISS. window.__qrmTest steht nur fuer Hoerproben da.
                 const qt = window.__qrmTest || null;
                 if(st.qrm && stufeQrm > 0 && (qt || Math.random() < st.qrm * stufeQrm / 0.6) && bis - ab > 1.2){
-                    const cqIss = qt && qt.art ? qt.art === 'cq' : (Math.random() < 0.4);
+                    const cqIss = ohneMorse ? false : (qt && qt.art ? qt.art === 'cq' : (Math.random() < 0.4));
                     const ditCq = 0.05;
                     const dauerQ = cqIss ? Math.min(bis - ab - 0.4, 53 * ditCq + 0.1) : Math.min(bis - ab - 0.4, 1.0 + Math.random() * 1.6), anf = ab + 0.2 + Math.random() * Math.max(0, bis - ab - dauerQ - 0.4);
-                    const pegel = 0.03 * (qt && qt.pegel ? qt.pegel : (stufeQrm > 0.9 ? QRM_STARK_PEGEL : 1));
+                    const pegel = 0.03 * (qt && qt.pegel ? qt.pegel : stufeCw);
                     const bpq = neu(ctx.createBiquadFilter()); bpq.type = 'bandpass'; bpq.frequency.value = 900; bpq.Q.value = 1.2;
                     const qg = neu(ctx.createGain()); qg.gain.value = 1; bpq.connect(qg); qg.connect(tonAus);
-                    if(cqIss || Math.random() < 0.6){
+                    if(!ohneMorse && (cqIss || Math.random() < 0.6)){
                         // Morsezeichen
                         const hz = 520 + Math.random() * 420, dit = cqIss ? ditCq : 0.055 + Math.random() * 0.025;
                         const setze = (tt, d) => {
@@ -59167,9 +59174,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             rauschen(te + 0.18, 0.08, 0.08);
         }
         // Morse-Ausklang nach dem Roger-Piep (nur Maja, nur am Ende des Satzes, so oft wie die Stoersignale es erlauben)
-        if(qd && !fruehTeil && teil !== 'mitte' && !ohneBett && stufeQrm > 0 && (window.__qrmTest || Math.random() < 0.55)){
+        if(qd && !ohneMorse && !fruehTeil && teil !== 'mitte' && (window.__qrmTest || window.__cwProbe || Math.random() < 0.55)){
             const qtt = window.__qrmTest || null;
-            morseAusklang(ctx, te + 0.95, 0.03 * (qtt && qtt.pegel ? qtt.pegel : (stufeQrm > 0.9 ? QRM_STARK_PEGEL : 1)), qtt && qtt.art);
+            window.__cwProbe = false;
+            morseAusklang(ctx, te + 0.95, 0.03 * (qtt && qtt.pegel ? qtt.pegel : stufeCw), qtt && qtt.art);
         }
         ton.knoten = spaetTeil ? ton.knoten.concat(kn) : kn; ton.quelle = q; ton.ohrJetzt = ohr;
         // Mund und Antenne
