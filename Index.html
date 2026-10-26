@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 335, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 336, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -58927,6 +58927,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ton.zuletzt = Date.now();
         tu(() => { if(ctx.state === 'suspended') ctx.resume(); });
         const folge = zerlegen(text);
+        // 26.10.2026 Dietmar: "bei Maya ist oefter so ein Tuedeluet, Piep, Tuedeluet, Piep drin. Das kann weg. Das ist noch von Funky."
+        // Die Effekttoene aus dem Text ({bliep}, {rechnen}, | ^ ~ ...) gehoeren zu Funki; Maja spricht ohne sie (bleibt: Quindar-Ton vorn/hinten, Rauschen).
+        try{ if((stimme && stimme.quindar) || (typeof maskottchenArt === 'function' && maskottchenArt() === 'astro')){ for(let i = folge.length - 1; i >= 0; i--) if(folge[i].ton) folge.splice(i, 1); } }catch(e){}
         if(!folge.some(f => f.text)) return false;
         // Lange Saetze bei Maja (21.10.2026): erst den ersten Satz rechnen und sprechen, den Rest waehrend dessen -
         // auf dem Handy rechnet die Stimme Sekunden; so faengt Maja nach einem Drittel der Zeit an.
