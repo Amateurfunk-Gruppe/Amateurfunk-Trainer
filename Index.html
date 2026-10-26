@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 336, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 337, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35291,7 +35291,7 @@ function appPiperLaden(){
                       const dat = ['/piper-web/piper-worker.js', '/piper-web/piper_phonemize.wasm', '/piper-web/piper_phonemize.data'];
                       Promise.all(dat.map(f => fetch(f + '?v=app1', { method: 'HEAD' }).then(r => r.status, () => 'kein Zugriff'))).then(st => {
                           const nein = st.some(x => x !== 200);
-                          appPiperMeldung(window.appPiperLetzte + ' Programmdateien in der App: ' + (nein ? 'FEHLEN (' + st.join(' / ') + ') \u2013 diese App-Version ist zu alt, bitte die neue App aus dem Play Store installieren.' : 'vorhanden (' + st.join(' / ') + ').'));
+                          appPiperMeldung(window.appPiperLetzte + ' Programmdateien in der App: ' + (nein ? 'FEHLEN (' + st.join(' / ') + ') \u2013 der Server der App liefert sie nicht aus. Das ist ein Fehler in der App, nicht an deinem Handy.' : 'vorhanden (' + st.join(' / ') + ').'));
                       });
                   }catch(x){} });
     setTimeout(() => { try{ appStimmenNachziehen(); }catch(x){} }, 50);

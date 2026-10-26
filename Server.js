@@ -5070,7 +5070,10 @@ const PUBLIC_FILES = new Set([
 // Ordner statt bei einem CDN. Ohne diesen Eintrag waeren die Symbole zwar
 // da, aber nicht abrufbar - der Schutz laesst nur durch, was hier steht.
 // /fonts/ seit dem 22.09.2026: die Textschriften, vorher von Google.
-const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/', '/fontawesome/', '/fonts/'];
+// /piper-web/ seit dem 26.10.2026: die Programmdateien fuer die Stimme Thorsten (Web-Piper). Ohne diesen Eintrag lieferte der Server in der
+// Android-App fuer piper-worker.js, piper_phonemize.wasm/.data und ort/ einen 404, obwohl alles in der App liegt - der Download der Stimme
+// schlug dann mit "Piper laeuft hier nicht" fehl (Dietmar: "Ich kann die Stimme Thorsten nicht downloaden"). Nur Programmdateien, nichts Persoenliches.
+const PUBLIC_DIRS = ['/svgs/', '/sounds/', '/formelsammlung/', '/fontawesome/', '/fonts/', '/piper-web/'];
 
 function isPublicPath(rawPath){
   let p;
