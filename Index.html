@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 315, datum: '26.10.2026' };
+const TRAINER_STAND = { nr: 316, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -57452,6 +57452,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // Im Funk-ABC-Bild: Lampe und Wellen blinken von selbst
     const satBildKoerper = () => satKoerper().replace('class="sat-lampe"', 'class="iss-licht"').replace('class="sat-wellen"', 'class="sat-wellen eb-bogen"');
     const ERKL_BILD = {
+        // QSL-Karte im eigenen Entwurf (27.10.2026): selbst gezeichnet, keine Fotos und keine Vorlage einer echten Karte
+        neumayer: () => eb('<defs><linearGradient id="nmHim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1f4a"/><stop offset="1" stop-color="#3b5f9e"/></linearGradient></defs>'
+            + '<rect x="1" y="1" width="238" height="94" rx="6" fill="url(#nmHim)" stroke="#9fc2ff" stroke-width="1.4"/>'
+            + '<g fill="#fff" opacity=".85"><circle cx="24" cy="14" r=".9"/><circle cx="52" cy="26" r=".7"/><circle cx="96" cy="12" r=".8"/><circle cx="150" cy="22" r=".7"/><circle cx="214" cy="12" r=".9"/><circle cx="196" cy="30" r=".7"/></g>'
+            + '<text x="120" y="25" text-anchor="middle" font-size="19" font-weight="800" fill="#fff" letter-spacing="1.5" style="font-family:system-ui,sans-serif">DP0GVN</text>'
+            + '<text x="120" y="36" text-anchor="middle" font-size="6.4" fill="#cfe3ff" style="font-family:system-ui,sans-serif">Neumayer Station III · Antarctica</text>'
+            + '<path d="M1 74Q60 66 120 70T239 68V90a6 6 0 0 1-6 6H7a6 6 0 0 1-6-6z" fill="#eef5ff"/>'
+            + '<path d="M62 56h92v9H62z" fill="#f4f6f9"/><path d="M62 52h92v5H62z" fill="#d6372f"/>'
+            + '<g fill="#ffd96a"><rect x="70" y="59" width="4" height="3"/><rect x="80" y="59" width="4" height="3"/><rect x="90" y="59" width="4" height="3"/><rect x="100" y="59" width="4" height="3"/><rect x="110" y="59" width="4" height="3"/></g>'
+            + '<path d="M70 65v10M90 65v10M126 65v10M146 65v10" stroke="#40506a" stroke-width="2"/>'
+            + '<path d="M186 74V46M180 52l6-6 6 6" stroke="#fff" stroke-width="1.4" fill="none"/>'
+            + '<path class="eb-a eb-bogen" d="M194 50q7-6 0-13M200 53q12-10 0-22" stroke="#ffd96a" fill="none" stroke-width="1.4"/>'
+            + '<text x="120" y="88" text-anchor="middle" font-size="5.6" fill="#40506a" style="font-family:system-ui,sans-serif">Atka Bay · Ekström Ice Shelf · QSL · 73</text>'),
         cq: () => eb('<circle class="eb-ring" cx="120" cy="52" r="96"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:.95s"/><circle class="eb-ring" cx="120" cy="52" r="96" style="animation-delay:1.9s"/>'
             + '<path class="eb-l" d="M120 82V48M112 56l8-8 8 8"/><circle class="eb-fa" cx="120" cy="44" r="4.5"/><path class="eb-t" d="M110 82h20"/>'
             + '<path class="eb-t" d="M18 84V68l12-10 12 10v16zM198 84V68l12-10 12 10v16z"/><text class="eb-txt-g" x="120" y="16">CQ · CQ · CQ</text>'),
@@ -57621,6 +57634,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           kurz: '<b>Ham Spirit</b>: Funkamateure heißen auf Englisch „Hams“ – und helfen einander.',
           html: 'Funkamateure heißen auf Englisch <b>„Hams“</b> (nicht „Schinken“!). <b>Ham Spirit</b> ist ihr Geist: Man <b>hilft einander</b>, teilt sein Wissen, baut zusammen und freut sich über jede Verbindung – egal, wie weit sie reicht. <b>73!</b> heißt „Viele Grüße“.',
           sprich: 'Funkamateure heißen auf Englisch Hämms. Nicht Schinken! | Hämm Spirit ist ihr Geist: Man hilft einander, teilt sein Wissen und baut zusammen. Dreiundsiebzig heißt: Viele Grüße!' }
+        ,{ id: 'neumayer', name: 'Neumayer-Station', frage: 'Weißt du, wo Funker im <b>ewigen Eis</b> überwintern? Tipp mich an – <b>Neumayer</b>!',
+          kurz: '<b>Neumayer</b>: die deutsche Forschungsstation in der Antarktis – Rufzeichen <b>DP0GVN</b>.',
+          html: 'Die <b>Neumayer-Station</b> ist eine deutsche Forschungsstation in der <b>Antarktis</b>. Im Winter leben dort nur etwa <b>neun</b> Menschen. Ihr Rufzeichen ist <b>DP0GVN</b> – ein echtes <b>DX</b>!<br><b>Fangfrage in der Prüfung:</b> „Exterritorial“ heißt außerhalb von Deutschland. „Klubstation“ klingt gut, nennt aber <b>Gaststreitkräfte in Deutschland</b> – und die betreiben die Station nicht. Richtig ist: <b>Amateurfunkstelle der Klasse A, exterritorial</b>.',
+          sprich: 'Die Neumayer-Station ist eine deutsche Forschungsstation in der Antarktis. | Im Winter leben dort nur etwa neun Menschen. Ihr Rufzeichen ist D P null G V N. Wer sie ruft, hat ein echtes D X! | Aufgepasst bei der Prüfungsfrage, das ist eine Fangfrage! Exterritorial heißt, außerhalb von Deutschland. Klubstation klingt gut, nennt aber Gaststreitkräfte in Deutschland, und die betreiben die Station nicht. Richtig ist: Amateurfunkstelle der Klasse A, exterritorial.' }
     ];
     const ERKL_PEEK = {};
     // beim Hereinlugen: jede Frage (frage, bei den Juengsten auch frage2) fuehrt zum selben Begriff
@@ -58900,7 +58917,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // dass der ganze Ruf in 3 bis 5 Sekunden fertig ist (nicht mitten im Buchstaben abgeschnitten).
             let einheiten = 0;
             text.split(' ').forEach((w, wi) => { if(wi) einheiten += 4; for(const ch of w){ for(const z of (MORSE_ZEICHEN[ch] || '')) einheiten += (z === '-' ? 3 : 1) + 1; einheiten += 2; } });
-            const dit = Math.max(0.04, Math.min(0.09, (3.2 + Math.random() * 1.6) / einheiten));
+            const dit = Math.max(0.05, Math.min(0.12, (4.5 + Math.random() * 2.0) / einheiten));   // 27.10.: Dietmar hoerte nur ~2 s -> Ruf 4,5 bis 6,5 s, kurze Fades
             const g = ctx.createGain(); g.gain.value = 0;   // weich einsetzen, siehe unten
             const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 1.2;
             bp.connect(g); g.connect(ctx.destination);
@@ -58922,7 +58939,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             });
             const ende = tt + 0.2;
             // Dietmar: "Das Ganze soll leicht ansteigen und auch wieder abfallen. Das soll kein hartes Ende sein."
-            const gesamt = ende - ab, ein = Math.min(1.4, gesamt * 0.3), aus = Math.min(2.4, gesamt * 0.4);
+            const gesamt = ende - ab, ein = Math.min(0.5, gesamt * 0.1), aus = Math.min(1.2, gesamt * 0.2);
             g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(1, ab + ein);
             g.gain.setValueAtTime(1, ende - aus); g.gain.linearRampToValueAtTime(0, ende);
             hg.g = g; hg.ctx = ctx; hg.bis = ende;
@@ -59177,7 +59194,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(qd && !ohneMorse && !fruehTeil && teil !== 'mitte' && (window.__qrmTest || window.__cwProbe || Math.random() < 0.55)){
             const qtt = window.__qrmTest || null;
             window.__cwProbe = false;
-            morseAusklang(ctx, te + 0.95, 0.03 * (qtt && qtt.pegel ? qtt.pegel : stufeCw), qtt && qtt.art);
+            morseAusklang(ctx, te + 0.6, 0.045 * (qtt && qtt.pegel ? qtt.pegel : stufeCw), qtt && qtt.art);
         }
         ton.knoten = spaetTeil ? ton.knoten.concat(kn) : kn; ton.quelle = q; ton.ohrJetzt = ohr;
         // Mund und Antenne
