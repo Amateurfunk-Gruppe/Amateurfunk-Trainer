@@ -185,6 +185,9 @@ final class Stimme {
         // (Dietmars Hinweis an sich selbst: "sonst als Modul Google waehlen").
         // Seit 05.10.2026 schon nach dem ersten Anlauf ohne Erfolg.
         if (versuche >= 1 && gewuenscht == null && googleDa()) gewuenscht = GOOGLE;   // 05.10.2026: schon beim zweiten Anlauf
+        // 25.10.2026: Antwortet ein ausdruecklich gewaehltes Modul (zum Beispiel Acapela mit abgeschaltetem
+        // Server) nicht, spricht die App weiter mit Google. Gemerkt bleibt die Wahl des Benutzers.
+        else if (versuche >= 1 && gewuenscht != null && !gewuenscht.equals(GOOGLE) && googleDa()) gewuenscht = GOOGLE;
         versuche++;
         try { if (tts != null) tts.shutdown(); } catch (Exception e) { }
         tts = null;
@@ -267,14 +270,22 @@ final class Stimme {
         try { eng = tts.getEngines(); } catch (Exception e) { return "[]"; }
         if (eng == null) return "[]";
         String aktiv = modul == null ? "" : modul;
+        // Standard des Handys (25.10.2026, Dietmar: "Ich kann das leider nicht mehr zurueckstellen"):
+        // eine eigene Zeile, damit man nach einem Ausflug zu einem anderen Modul genau dorthin zurueck kann,
+        // wo man vorher war - ohne dass die App ein Modul vorgibt.
+        String standardName = "";
+        try { standardName = tts.getDefaultEngine(); } catch (Exception e) { }
+        String standardLabel = "";
+        for (TextToSpeech.EngineInfo e : eng) if (e.name.equals(standardName)) standardLabel = e.label;
         StringBuilder sb = new StringBuilder("[");
-        boolean erste = true;
+        sb.append("{\"name\":\"\",\"label\":")
+          .append(json("Standard des Handys" + (standardLabel.isEmpty() ? "" : " (" + standardLabel + ")")))
+          .append(",\"gewaehlt\":").append(gewuenscht == null).append('}');
         for (TextToSpeech.EngineInfo e : eng) {
-            if (!erste) sb.append(',');
-            erste = false;
+            sb.append(',');
             sb.append("{\"name\":").append(json(e.name))
               .append(",\"label\":").append(json(e.label))
-              .append(",\"gewaehlt\":").append(e.name.equals(aktiv))
+              .append(",\"gewaehlt\":").append(gewuenscht != null && e.name.equals(aktiv))
               .append('}');
         }
         return sb.append(']').toString();

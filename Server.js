@@ -4530,12 +4530,39 @@ app.post('/api/abgleich/herkunft', localOnly, (req,res)=>{
   res.json({ok:true, quelle});
 });
 
+// ----------------------------------------------------------------
+//  IN DER APP: IM WLAN NUR AUF WUNSCH ERREICHBAR            (26.10.2026)
+//  Dietmar: "Und wenn ich den Gruppenraum doch nicht gestartet habe, muss ich
+//  doch auch nicht ueber WLAN erreichbar sein." - "Kann man das nicht in den
+//  Einstellungen abschalten?"
+//  Auf dem Handy (TRAINER_ANDROID) nimmt der Trainer von aussen nur noch Verbindungen an,
+//  wenn "Im WLAN erreichbar" eingeschaltet ist (Einstellungen). Standard: aus. Die App selbst
+//  spricht ueber 127.0.0.1 und merkt davon nichts. Am PC bleibt alles wie es war.
+//  Die Wahl steht in wlan-freigabe.txt im Heimordner der App.
+// ----------------------------------------------------------------
+const WLAN_DATEI = path.join(process.env.HOME || os.homedir(), 'wlan-freigabe.txt');
+let wlanFreigabe = false;
+if(process.env.TRAINER_ANDROID){ try{ wlanFreigabe = fs.readFileSync(WLAN_DATEI, 'utf8').trim() === 'ja'; }catch(e){} }
+function istLoopbackAdresse(a){ a = String(a || '').replace(/^::ffff:/, ''); return a === '127.0.0.1' || a === '::1'; }
+app.get('/api/wlan-freigabe', (req, res) => {
+  if(!isLocalRequest(req)) return res.status(403).json({error:'nur auf diesem Geraet'});
+  res.json({ android: !!process.env.TRAINER_ANDROID, an: !process.env.TRAINER_ANDROID || wlanFreigabe });
+});
+app.post('/api/wlan-freigabe', localOnly, (req, res) => {
+  if(!process.env.TRAINER_ANDROID) return res.json({ android:false, an:true });
+  wlanFreigabe = !!(req.body && req.body.an);
+  try{ fs.writeFileSync(WLAN_DATEI, wlanFreigabe ? 'ja' : 'nein'); }catch(e){ console.warn('[NETZ] WLAN-Wahl nicht gespeichert:', e.message); }
+  console.log('[NETZ] Im WLAN erreichbar:', wlanFreigabe ? 'ja' : 'nein');
+  res.json({ android:true, an:wlanFreigabe });
+});
 app.get('/api/lan-info',(req,res)=>{
-  const adressen = lokaleAdressen();
+  const gesperrt = !!process.env.TRAINER_ANDROID && !wlanFreigabe;
+  const adressen = gesperrt ? [] : lokaleAdressen();
   res.json({
     adressen: adressen.map(a=>({ip:a.ip, adapter:a.name, privat:a.privat})),
     port: PORT,
-    empfehlung: adressen.length ? `http://${adressen[0].ip}:${PORT}` : null
+    empfehlung: adressen.length ? `http://${adressen[0].ip}:${PORT}` : null,
+    wlanAus: gesperrt
   });
 });
 
@@ -10176,6 +10203,10 @@ function feierabendPruefen(){
 //  flaeche weniger, ohne dass draussen etwas fehlt.
 // ----------------------------------------------------------------
 const NUR_LOKAL = (process.env.AFU_NUR_LOKAL === '1');
+// Handy: Verbindungen von anderen Geraeten gleich beim Anklopfen abweisen, solange "Im WLAN erreichbar" aus ist
+server.on('connection', sock => {
+  if(process.env.TRAINER_ANDROID && !wlanFreigabe && !istLoopbackAdresse(sock.remoteAddress)) sock.destroy();
+});
 server.listen(PORT, NUR_LOKAL ? '127.0.0.1' : '0.0.0.0', async ()=>{
   if(NUR_LOKAL) console.log('[NETZ] AFU_NUR_LOKAL=1 - der Trainer hoert nur auf 127.0.0.1 (kein WLAN-Zugang).');
   if(process.env.AFU_SERVER_MODUS === '1') console.log('[SERVER-MODUS] _SERVER-MODUS.txt gefunden - dieser Rechner ist Server: kein Feierabend, Tuer offen.');

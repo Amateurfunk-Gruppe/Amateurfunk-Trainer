@@ -45,6 +45,18 @@ function expandTTS(text){
   // von Piper sonst gar nicht oder falsch ausgesprochen. Deshalb ganz am
   // Anfang zu "Lambda" ausgeschrieben, bevor irgendeine andere Regel laeuft.
   t = t.replace(/λ/g, 'Lambda');
+  // µΩ muss VOR der Regel fuer das Mikrozeichen (-> "Mü") laufen, sonst wird "MüOhm" daraus.
+  t = t.replace(/([µμ])Ω/g, 'Mikroohm');
+
+  // DEZIMALPUNKT (25.10.2026). Dietmar: "nicht 140057 MHz sondern 14.0057 MHz".
+  // Wer "14.0057 MHz" oder "145.500 MHz" schreibt, meint ein Dezimalkomma;
+  // gelesen wurde daraus "einhundertfuenfundvierzigtausendfuenfhundert".
+  //  - vor MHz/GHz ist der Punkt IMMER ein Komma (Tausenderpunkt gibt es dort nicht),
+  //  - sonst, wenn nach dem Punkt nicht genau drei Ziffern stehen (7.1, 0.5, 14.0057),
+  //  - genau drei Ziffern vor kHz, Hz, Ohm ... bleiben Tausenderpunkt (3.500 kHz).
+  // Datum (13.09.2026) und Nummern wie 144.315.0 bleiben unangetastet.
+  t = t.replace(/(?<![\d.,])(\d{1,3})\.(\d+)(?![\d.])(?=\s*(?:MHz|MHZ|GHz|GHZ)\b)/g, '$1,$2');
+  t = t.replace(/(?<![\d.,])(\d+)\.(\d{1,2}|\d{4,})(?![\d.])(?!\s*\.\d)(?!\s*Uhr)/g, '$1,$2');
 
   // HTML RAUS, BEVOR PIPER ES LIEST (16.09.2026). Der Katalog unterstreicht
   // an 29 Stellen ein Wort - "<u>nicht</u> abhaengig" (EC205) -, und die
@@ -361,6 +373,15 @@ function expandTTS(text){
     'ITU-R':'I T U R'
   };
 
+  // Milli-, Mikro-, Giga-Ohm (25.10.2026): "5 mΩ" wurde zu "5 mOhm" und damit
+  // falsch gesprochen. Dietmar: Milliohm, Mikroampere, Megaohm ... muessen alle exakt kommen.
+  t=t.replace(/(\d+[.,]?\d*)\s*mΩ/g, '$1 Milliohm');
+  t=t.replace(/(\d+[.,]?\d*)\s*[µμu]Ω/g, '$1 Mikroohm');
+  t=t.replace(/(\d+[.,]?\d*)\s*GΩ/g, '$1 Gigaohm');
+  t=t.replace(/(?<![A-Za-zÄÖÜäöüß])mΩ/g, 'Milliohm');
+  t=t.replace(/(?<![A-Za-zÄÖÜäöüß])[µμ]Ω/g, 'Mikroohm');
+  t=t.replace(/(?<![A-Za-zÄÖÜäöüß])GΩ/g, 'Gigaohm');
+  t=t.replace(/(\d+[.,]?\d*)\s*mOhm\b/g, '$1 Milliohm');
   t=t.replace(/(\d+[.,]?\d*)\s*kΩ/g, '$1 Kilo Ohm');
   t=t.replace(/(\d+[.,]?\d*)\s*MΩ/g, '$1 Mega Ohm');
   t=t.replace(/(\d+[.,]?\d*)\s*Ω/g, '$1 Ohm');
@@ -390,7 +411,19 @@ function expandTTS(text){
     .replace(/(\d+[.,]?\d*)\s*W\b/g,(m,n)=>`${n} Watt`)
     .replace(/(\d+[.,]?\d*)\s*V\b/g,(m,n)=>`${n} Volt`)
     .replace(/(\d+[.,]?\d*)\s*A\b/g,(m,n)=>`${n} Ampere`)
-    .replace(/(\d+[.,]?\d*)\s*J\b/g,(m,n)=>`${n} Joule`);
+    .replace(/(\d+[.,]?\d*)\s*J\b/g,(m,n)=>`${n} Joule`)
+    // Einzelbuchstaben direkt hinter einer Zahl (25.10.2026): 4 H, 10 F, 2 S.
+    .replace(/(\d+[.,]?\d*)\s*H\b(?!\s*[A-Za-zÄÖÜäöü])/g,(m,n)=>`${n} Henry`)
+    .replace(/(\d+[.,]?\d*)\s*F\b(?!\s*[A-Za-zÄÖÜäöü])/g,(m,n)=>`${n} Farad`)
+    .replace(/(\d+[.,]?\d*)\s*S\b(?!\s*[A-Za-zÄÖÜäöü])/g,(m,n)=>`${n} Siemens`)
+    .replace(/(\d+[.,]?\d*)\s*nA\b/g,(m,n)=>`${n} Nanoampere`)
+    .replace(/(\d+[.,]?\d*)\s*pA\b/g,(m,n)=>`${n} Pikoampere`)
+    .replace(/(\d+[.,]?\d*)\s*nW\b/g,(m,n)=>`${n} Nanowatt`)
+    .replace(/(\d+[.,]?\d*)\s*pW\b/g,(m,n)=>`${n} Pikowatt`)
+    .replace(/(\d+[.,]?\d*)\s*nV\b/g,(m,n)=>`${n} Nanovolt`)
+    .replace(/(\d+[.,]?\d*)\s*pF\b/g,(m,n)=>`${n} Pikofarad`)
+    .replace(/(\d+[.,]?\d*)\s*ns\b/g,(m,n)=>`${n} Nanosekunden`)
+    .replace(/(\d+[.,]?\d*)\s*dBW\b/g,(m,n)=>`${n} Dezibel Watt`);
   t=einheiten(t);
   // Mikro-Einheiten ohne Zahl davor ("von µF nach nF") und die
   // Permeabilitaet "µr" (16.09.2026).
@@ -477,6 +510,7 @@ function expandTTS(text){
     // Auch die uebrigen Einheiten in Klammern - "(100 V)" hiess bis zum
     // 16.09.2026 "hundert fau" (16.09.2026).
     inner=einheiten(inner);
+    inner=inner.replace(/mΩ/g, 'Milliohm').replace(/[µμ]Ω/g, 'Mikroohm').replace(/GΩ/g, 'Gigaohm');
     inner=inner.replace(/kΩ/g, 'Kilo Ohm');
     inner=inner.replace(/MΩ/g, 'Mega Ohm');
     inner=inner.replace(/Ω/g, 'Ohm');
@@ -484,6 +518,23 @@ function expandTTS(text){
   });
 
   t=t.replace(/\s{2,}/g,' ').trim();
+
+  // ZUSAMMENGESETZTE EINHEITEN MIT "OHM" UND "HENRY" (25.10.2026). Das H nach
+  // einem Vokal ist fuer die Aussprache nur ein Dehnungszeichen: "Millihenry"
+  // wurde zu "Milli-Enri" (das H fehlt), "Milliohm" zu "Milli-Ohhm". Mit
+  // Leerzeichen sprechen beide Stimmen jeden Teil sauber - wie schon bei
+  // "Kilo Ohm" und "Mega Ohm".
+  t = t.replace(/\b(Milli|Mikro|Giga|Kilo|Mega|Nano)(ohm|henry)\b/gi,
+      (m, v, w) => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() + ' ' + (w.toLowerCase() === 'ohm' ? 'Ohm' : 'Henry'));
+
+  // SATZENDE MIT PUNKT (25.10.2026). Dietmar hoerte bei "... in alle
+  // horizontalen Richtungen ab?" statt "ab" ein gedehntes "App". Gemessen
+  // mit Thorsten: Endet der Text auf "?", "," oder gar nichts, spricht die
+  // Stimme das letzte Wort so; nur mit PUNKT kommt "ab". Deshalb endet jeder
+  // Text, der an die Stimme geht, auf genau einen Punkt. Die Frage-Melodie
+  // geht damit verloren - ein falsch gesprochenes Wort ist schlimmer.
+  t = t.replace(/[\s?!.,;:\u2026]+$/, '');
+  if(t) t += '.';
 
   console.log(`[PRE V15] ${text.slice(0,70)} -> ${t.slice(0,130)}`);
   return t;

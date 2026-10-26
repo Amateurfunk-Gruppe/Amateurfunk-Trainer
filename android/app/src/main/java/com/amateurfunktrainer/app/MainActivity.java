@@ -31,6 +31,7 @@ import android.graphics.Typeface;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.window.OnBackInvokedDispatcher;
@@ -66,10 +67,53 @@ public class MainActivity extends Activity {
     private View vorhang;
     private TextView vorhangText;
     private View startFunki;          // Funki im Startbild (01.10.2026), siehe StartFunki.java
+    private View wurzelAnsicht;       // der Rahmen um die Seite (Hintergrund = Farbe der Navigationsleiste ab Android 15)
+    private boolean leisteVersteckt = false;   // Einstellung "Leiste unten ausblenden" (25.10.2026)
+
+    private void leisteAnwenden() {
+        try {
+            Window w = getWindow();
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.view.WindowInsetsController c = w.getInsetsController();
+                if (c == null) return;
+                c.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                if (leisteVersteckt) c.hide(WindowInsets.Type.navigationBars());
+                else c.show(WindowInsets.Type.navigationBars());
+            } else {
+                View dv = w.getDecorView();
+                int v = dv.getSystemUiVisibility();
+                int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                dv.setSystemUiVisibility(leisteVersteckt ? (v | flags) : (v & ~flags));
+            }
+        } catch (Throwable e) { }
+    }
+
+    @Override public void onWindowFocusChanged(boolean fokus) {
+        super.onWindowFocusChanged(fokus);
+        if (fokus && leisteVersteckt) leisteAnwenden();   // Android holt die Leiste nach manchen Wechseln zurueck
+    }
 
     @Override protected void onCreate(Bundle zustand) {
         super.onCreate(zustand);
         getWindow().setStatusBarColor(Color.parseColor("#0F2745"));
+        // Navigationsleiste unten (25.10.2026, Dietmar: "die bleibt weiss im dunklen
+        // Modus sieht ziemlich bloed aus"): im gleichen Dunkelblau wie der Kopf,
+        // mit hellen Symbolen. Ohne das malt Android sie hell.
+        try{
+            Window fenster = getWindow();
+            fenster.setNavigationBarColor(Color.parseColor("#0F2745"));
+            if (Build.VERSION.SDK_INT >= 29) {
+                fenster.setNavigationBarContrastEnforced(false);
+                fenster.setNavigationBarDividerColor(Color.parseColor("#0F2745"));
+            }
+            if (Build.VERSION.SDK_INT >= 30) {
+                fenster.getInsetsController().setSystemBarsAppearance(0,
+                    android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+            } else if (Build.VERSION.SDK_INT >= 26) {
+                View dv = fenster.getDecorView();
+                dv.setSystemUiVisibility(dv.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            }
+        }catch(Throwable e){}
 
         Intent dienst = new Intent(this, TrainerService.class);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(dienst); else startService(dienst);
@@ -80,6 +124,7 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#0F2745"));
         FrameLayout wurzel = new FrameLayout(this);
+        wurzelAnsicht = wurzel;
         wurzel.addView(web, new FrameLayout.LayoutParams(-1, -1));
         vorhang = startbild();
         wurzel.addView(vorhang, new FrameLayout.LayoutParams(-1, -1));
@@ -306,6 +351,32 @@ public class MainActivity extends Activity {
                     else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 } catch (Exception e) { }
             });
+        }
+        /** Farbe der Navigationsleiste unten (25.10.2026, Dietmar: "Die Leiste soll sich nach der Farbe
+         *  dann anpassen"). Die Seite liest ihren Hintergrund ab und meldet ihn; hell = dunkle Symbole. */
+        @JavascriptInterface public void leiste(final String hex, final boolean hell) {
+            haupt.post(() -> {
+                try {
+                    int farbe = Color.parseColor(hex);
+                    Window w = getWindow();
+                    w.setNavigationBarColor(farbe);
+                    if (wurzelAnsicht != null) wurzelAnsicht.setBackgroundColor(farbe);
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        int an = hell ? android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS : 0;
+                        w.getInsetsController().setSystemBarsAppearance(an,
+                            android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                    } else if (Build.VERSION.SDK_INT >= 26) {
+                        View dv = w.getDecorView();
+                        int v = dv.getSystemUiVisibility();
+                        dv.setSystemUiVisibility(hell ? (v | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR) : (v & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR));
+                    }
+                } catch (Throwable e) { }
+            });
+        }
+        /** Navigationsleiste ausblenden (25.10.2026, Dietmar: "In den Einstellungen sollte man diese
+         *  Leiste auch ausblenden koennen"). Ein Wisch vom unteren Rand holt sie kurz zurueck. */
+        @JavascriptInterface public void leisteAus(final boolean aus) {
+            haupt.post(() -> { leisteVersteckt = aus; leisteAnwenden(); });
         }
         @JavascriptInterface public void neuStarten() {
             haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));

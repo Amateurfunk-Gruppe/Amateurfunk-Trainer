@@ -701,6 +701,14 @@
     // ohne DNS und ohne Internet, solange alle im selben WLAN sind.
     function zeigeLanLink(el, pwd){
         if(!el) return;
+        if(roomCode && !lanAdresse && lanWlanAus){
+            // 26.10.2026: In der Handy-App ist das WLAN fuer andere aus, solange man es nicht einschaltet
+            el.removeAttribute('href');
+            el.textContent = '📶 Im gleichen WLAN: erst in den Einstellungen „Im WLAN erreichbar“ einschalten.';
+            el.title = 'Dein Handy nimmt sonst keine Verbindungen von anderen Geraeten an.';
+            el.style.display = 'block';
+            return;
+        }
         if(!roomCode || !lanAdresse){ el.style.display='none'; return; }
         const link = lanAdresse + '?duo=' + encodeURIComponent(roomCode) + (pwd ? '#pwd=' + encodeURIComponent(pwd) : '');
         el.href = link;
@@ -992,7 +1000,7 @@
     // Sitzen alle im selben WLAN (Clubheim, zu Hause), braucht es keinen
     // Tunnel - dann haengt nichts an DNS, Internet oder einem fremden Dienst.
     // ================================================================
-    let lanAdresse = null;
+    let lanAdresse = null, lanWlanAus = false;
     async function lanAdresseHolen(){
         if(lanAdresse) return lanAdresse;
         try{
@@ -1000,6 +1008,7 @@
             if(!res.ok) return null;
             const j = await res.json();
             lanAdresse = j.empfehlung || null;
+            lanWlanAus = !!j.wlanAus;     // Handy-App: "Im WLAN erreichbar" ist aus (Einstellungen)
             return lanAdresse;
         }catch(e){ return null; }
     }

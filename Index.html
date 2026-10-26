@@ -174,6 +174,16 @@
             // Der Stil der App (30.09.2026, siehe "ZWEI STILE FUER DIE APP"):
             // sachlich oder verspielt - als Klasse am <html>, damit schon das
             // erste Bild stimmt. "Wie Handy" stellt hell/dunkel hier vorab.
+            // ERSTER START DER APP (26.10.2026): Dietmar: "Beim Installieren von der App haette ich gern erst einmal das Dunkle
+            // ... vielleicht nicht das Bunte mit den Fragen." Wer noch nie etwas gewaehlt hat (kein Stil gewaehlt, keine Farbe,
+            // kein Hell/Dunkel), startet dunkel (Polar) und mit einer ruhigen Antwortfarbe statt bunter Antworten. Alles bleibt
+            // unter Einstellungen -> Anpassen aenderbar; wer schon gewaehlt hat, bleibt unberuehrt.
+            try{
+                if(!localStorage.getItem('app_stil_gewaehlt') && !localStorage.getItem('app_design') && !localStorage.getItem('theme')){
+                    localStorage.setItem('app_design', 'dunkel'); localStorage.setItem('theme', 'dark');
+                    if(!localStorage.getItem('afu_antwortfarbe')) localStorage.setItem('afu_antwortfarbe', 'blau');
+                }
+            }catch(e){}
             try{
                 var stil = localStorage.getItem('app_stil') === 'verspielt' ? 'verspielt' : 'sachlich';
                 document.documentElement.classList.add('stil-' + stil);
@@ -181,7 +191,7 @@
                 // App. Die Farben von Verspielt (vor allem Dunkel) und die bunten Antworten haengen aber an dieser Klasse -
                 // wer "Nicht mehr anzeigen" bei der Stilwahl gesetzt hatte, sah nach dem Neustart eine halb helle Oberflaeche.
                 var fsA = localStorage.getItem('afu_fragenstil');
-                if(!/^(bunt|petrol|navy|schlicht)$/.test(fsA || '')) fsA = stil === 'verspielt' ? 'bunt' : 'petrol';
+                if(!/^(bunt|petrol|navy|schlicht)$/.test(fsA || '')) fsA = 'bunt';   // 26.10.2026: auch Sachlich in der App zunaechst mit bunter Frage (Dietmar: "Richtig schoen ist eigentlich nur bunt")
                 document.documentElement.classList.add('fs-' + fsA);
                 var faA = localStorage.getItem('afu_antwortfarbe');
                 if(/^(blau|gruen|petrol|orange|grau|lila)$/.test(faA || '')) document.documentElement.classList.add('fa-' + faA);
@@ -677,7 +687,7 @@
             --s-r-karte: 26px; --s-r-knopf: 20px; --s-r-klein: 14px;
             --s-glow1: rgba(20,184,196,0.16); --s-glow2: rgba(124,92,255,0.12);
         }
-        html.android-app.fs-bunt body.dark {
+        html.android-app.fs-bunt body.dark, html.android-app.stil-verspielt body.dark {   /* 26.10.2026: auch bei Stil der Frage Petrol/Navy/Schlicht - sonst blieben Verspielt-Flaechen im Dunkeln weiss */
             --s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
             --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
             --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
@@ -689,9 +699,40 @@
             --s-glow1: rgba(34,211,238,0.20); --s-glow2: rgba(139,92,246,0.22);
         }
 
+        /* ---------- Sachlich in den Farben von Bunt (26.10.2026) ----------
+           Dietmar: "Richtig schoen ist eigentlich nur bunt. Wenn ich den Stil veraendere, ist der Hintergrund schwarz."
+           Sachlich behaelt seine Formen, nimmt aber Hintergrund, Verlauf und Farben von Bunt (hell und dunkel). */
+        html.android-app.stil-sachlich {
+            --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.10); --s-rand2: rgba(16,36,74,0.16);
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
+            --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
+            --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
+            --s-rot: #F2375A; --s-rot-w: rgba(242,55,90,0.10); --s-amber: #FFA41B; --s-amber-tief: #D97F00;
+            --s-v: #7B5CFF; --s-b: #FF7A33; --s-t: #0FB7B2;
+            --s-schatten: 0 6px 18px rgba(22,44,92,0.08); --s-navi: rgba(255,255,255,0.94); --s-blatt: #FFFFFF; --s-schleier: rgba(12,23,49,0.42);
+            --s-glow1: rgba(20,184,196,0.16); --s-glow2: rgba(124,92,255,0.12);
+        }
+        html.android-app.stil-sachlich body.dark {
+            --s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
+            --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
+            --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
+            --s-rot: #FF4D6D; --s-rot-w: rgba(255,77,109,0.14); --s-amber: #FFB547; --s-amber-tief: #E08A00;
+            --s-v: #A084FF; --s-b: #FF8B4D; --s-t: #2EE6D6;
+            --s-schatten: 0 8px 22px rgba(0,0,0,0.35); --s-navi: rgba(15,22,45,0.9); --s-blatt: #0F1730; --s-schleier: rgba(3,6,15,0.62);
+            --s-glow1: rgba(34,211,238,0.20); --s-glow2: rgba(139,92,246,0.22);
+        }
+        html.android-app.stil-sachlich body::before {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(380px 380px at -12% -6%, var(--s-glow1), transparent 70%),
+                        radial-gradient(400px 400px at 118% 42%, var(--s-glow2), transparent 70%);
+        }
+
         /* ---------- Seite ---------- */
-        html.android-app.stil-sachlich body, html.android-app.fs-bunt body { background: var(--s-bg) !important; color: var(--s-text); }
-        html.android-app.fs-bunt body::before {
+        html.android-app.stil-sachlich body, html.android-app.stil-verspielt body, html.android-app.fs-bunt body { background: var(--s-bg) !important; color: var(--s-text); }
+        html.android-app.fs-bunt body::before, html.android-app.stil-verspielt body::before {
             content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
             background: radial-gradient(380px 380px at -12% -6%, var(--s-glow1), transparent 70%),
                         radial-gradient(400px 400px at 118% 42%, var(--s-glow2), transparent 70%);
@@ -1301,6 +1342,7 @@
         .swp-held .swp-w { position: relative; }
         .swp-held .swp-w span { background: rgba(255,255,255,0.16); color: #fff; }
         .swp-mk { position: absolute; right: 10px; top: 10px; width: 92px; }
+        .swp-mast { position: absolute; right: 18px; top: 14px; font-size: 52px; line-height: 1; color: rgba(255,255,255,0.85); }
         .swp-held .swp-knopf { position: relative; background: linear-gradient(180deg, #FFFFFF, #E4EEFF); color: #0B2A63; font-weight: 700; box-shadow: 0 4px 0 rgba(10,30,80,0.35); }
         .swp.v .swp-karte { background: rgba(255,255,255,0.9); border-color: rgba(15,23,40,0.06); box-shadow: 0 8px 20px rgba(40,60,120,0.08); }
         .swp.v .swp-rz { width: 86px; }
@@ -2738,7 +2780,7 @@
         html.android-app #formelAppLeiste .fa-blatt { width: 44px; height: 40px; border: 1px solid var(--line, #d5dde8); background: #f4f7fb; color: var(--panel-navy, #0f2745); font-size: 1rem; cursor: pointer; }
         html.android-app #formelAppLeiste .fa-blatt:disabled { opacity: 0.35; }
         html.android-app #formelAppStand { font-size: 0.9rem; font-weight: 600; color: var(--panel-navy, #0f2745); text-align: center; }
-        html.android-app #formelAppRolle { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #eef2f7; position: relative; }
+        html.android-app #formelAppRolle { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #eef2f7; position: relative; touch-action: pan-x pan-y; overscroll-behavior: contain; }
         html.android-app #formelAppBild { display: block; max-width: none; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
         html.android-app #formelAppHinweis { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: var(--muted, #5b6b7f); font-size: 0.95rem; padding: 0 16px; pointer-events: none; }
         html.android-app body.eckig.app-rund #formelAppLeiste .fa-blatt , html:not(.android-app) body.eckig.app-rund #formelAppLeiste .fa-blatt{ border-radius: 12px !important; }
@@ -3241,7 +3283,183 @@
         html.android-app .finish-box .btn-group .btn { width: 100% !important; min-width: 0 !important; max-width: none !important; margin: 0 !important; white-space: normal !important; justify-content: center; min-height: 48px; }
         html.android-app .ausgelassen-zeile { min-width: 0; max-width: 100%; box-sizing: border-box; }
         html.android-app .ausgelassen-zeile > span:nth-child(3) { display: none; }   /* der Teil (Technik...) - am Handy kein Platz */
-    </style>
+    /* Plaetze in Einstellungen -> Benutzer im Dunkeln (26.10.2026): Nummern-Kreise und "aktiv" waren hell/weiss */
+body.dark .platz-zeile > span[style*="#e8eef6"] { background: rgba(255,255,255,0.12) !important; color: #b4c3da !important; }
+body.dark .platz-zeile > span[style*="#eef7f1"] { background: rgba(31,196,111,0.18) !important; color: #6fe3a4 !important; }
+body.dark .platz-zeile { border-top-color: rgba(255,255,255,0.12) !important; }
+/* Auswertung/Fenster im Dunkeln (26.10.2026): weisse Balken, weisser Schliessen-Knopf, dunkelblaue Ueberschriften auf dunklem Grund */
+body.dark .reife-zeile div[style*="#eef2f7"] { background: rgba(255,255,255,0.12) !important; }
+body.dark [style*="color:var(--panel-navy)"] { color: #9cc8ff !important; }
+body.dark #statistikModal button.x-zu.btn-outline, body.dark .x-zu.btn-outline, body.dark button.x-zu { background: rgba(255,255,255,0.10) !important; color: #fff !important; border-color: rgba(255,255,255,0.22) !important; }
+/* ---------- sachlichWieVerspielt ---------- */
+html.android-app:not(.pc-app).stil-sachlich {--s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
+            --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
+            --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
+            --s-rot: #F2375A; --s-rot-w: rgba(242,55,90,0.10); --s-amber: #FFA41B; --s-amber-tief: #D97F00;
+            --s-v: #7B5CFF; --s-b: #FF7A33; --s-t: #0FB7B2;
+            --s-schatten: 0 6px 18px rgba(22,44,92,0.08); --s-navi: rgba(255,255,255,0.94); --s-blatt: #FFFFFF; --s-schleier: rgba(12,23,49,0.42);
+            --s-r-karte: 26px; --s-r-knopf: 20px; --s-r-klein: 14px;
+            --s-glow1: rgba(20,184,196,0.16); --s-glow2: rgba(124,92,255,0.12);}
+html.android-app:not(.pc-app).stil-sachlich body.dark {--s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
+            --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
+            --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
+            --s-rot: #FF4D6D; --s-rot-w: rgba(255,77,109,0.14); --s-amber: #FFB547; --s-amber-tief: #E08A00;
+            --s-v: #A084FF; --s-b: #FF8B4D; --s-t: #2EE6D6;
+            --s-schatten: 0 8px 22px rgba(0,0,0,0.35); --s-navi: rgba(15,22,45,0.9); --s-blatt: #0F1730; --s-schleier: rgba(3,6,15,0.62);
+            --s-glow1: rgba(34,211,238,0.20); --s-glow2: rgba(139,92,246,0.22);}
+html.android-app:not(.pc-app).stil-sachlich body {background: var(--s-bg) !important; color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich body::before {content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(380px 380px at -12% -6%, var(--s-glow1), transparent 70%),
+                        radial-gradient(400px 400px at 118% 42%, var(--s-glow2), transparent 70%);}
+html.android-app:not(.pc-app).stil-sachlich #app.card {background: transparent !important; border: 0 !important; box-shadow: none !important;}
+html.android-app:not(.pc-app).stil-sachlich .filter-bar {display: none !important;}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste {background: var(--s-navi); color: var(--s-text); border-bottom: 1px solid var(--s-rand);}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste {backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-knopf {color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-titel b {color: var(--s-akzent);}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-avatar {background: linear-gradient(145deg, #FFB547, #FF5F8F); color: #fff;}
+html.android-app:not(.pc-app).stil-sachlich #alBenutzer .al-stufe {display: block; position: absolute; right: -1px; bottom: 3px; height: 15px; padding: 0 4px; line-height: 15px;
+            font: 800 9.5px/15px var(--font-display); color: var(--s-auf-haupt); background: var(--s-haupt); border: 1.5px solid var(--s-navi);}
+html.android-app:not(.pc-app).stil-sachlich #appNavi {background: var(--s-navi); border-top: 1px solid var(--s-rand);}
+html.android-app:not(.pc-app).stil-sachlich #appNavi button {color: var(--s-text3);}
+html.android-app:not(.pc-app).stil-sachlich #appNavi button.an {color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich #appNavi button.an .an-pille {background: var(--s-akzent-w); color: var(--s-akzent);}
+html.android-app:not(.pc-app).stil-sachlich {--app-navi-h: 82px;}
+html.android-app:not(.pc-app).stil-sachlich #appNavi {left: 12px; right: 12px; bottom: 12px; height: 68px; padding: 6px 2px; border: 1px solid var(--s-rand2);
+            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);}
+html.android-app:not(.pc-app).stil-sachlich #appMehr .am-blatt {background: var(--s-blatt); color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich #appMehr .am-schleier {background: var(--s-schleier);}
+html.android-app:not(.pc-app).stil-sachlich #appMehr .am-zeile {color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich #appMehr .am-zeile > i {color: var(--s-akzent);}
+html.android-app:not(.pc-app).stil-sachlich #appMehr .am-zeile small {color: var(--s-text2);}
+html.android-app:not(.pc-app).stil-sachlich #appSuchPlatz.offen {background: var(--s-navi); border-bottom-color: var(--s-rand);}
+html.android-app:not(.pc-app).stil-sachlich .exam-info,
+html.android-app:not(.pc-app).stil-sachlich #masteryDisplay {background: var(--s-fl) !important; border: 1px solid var(--s-rand) !important; box-shadow: var(--s-schatten) !important; color: var(--s-text);}
+html.android-app:not(.pc-app).stil-sachlich body:not(.runde-laeuft) #appHeute {display: block; margin-bottom: 14px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-lern .sw input:checked + i {background: #2b7de9; border-color: #2b7de9;}
+html.android-app:not(.pc-app).stil-sachlich .app-chip {background: var(--s-fl); color: var(--s-text); border-color: var(--s-rand2); height: 36px; font-size: 14px;}
+html.android-app:not(.pc-app).stil-sachlich .app-chip i {color: var(--s-akzent);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-gruss {font: 500 13px/1.2 var(--font-body); color: var(--s-text2);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-gruss small {display: block; font: 700 20px/1.2 var(--font-display); color: var(--s-text); letter-spacing: -0.3px; margin-top: 2px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-gruss .gt {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-gruss .name {display: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair {display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px 0 10px; border-radius: 12px;
+            background: linear-gradient(180deg, #3A0B14, #25060C); border: 1px solid rgba(255,77,109,0.55);
+            font: 600 12.5px/1 var(--font-mono); letter-spacing: 1.4px; color: #FF6B86;
+            box-shadow: 0 0 18px rgba(255,60,95,0.45), inset 0 0 12px rgba(255,60,95,0.25); text-shadow: 0 0 10px rgba(255,80,110,0.9);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair.aus {filter: grayscale(1) brightness(0.9); opacity: 0.7; box-shadow: none; text-shadow: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair .lampe {width: 8px; height: 8px; border-radius: 50% !important; background: #FF4D6D; box-shadow: 0 0 10px #FF4D6D, 0 0 20px #FF4D6D;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair b {font: 700 15px var(--font-display); letter-spacing: 0; color: #fff; text-shadow: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-xp {display: inline-flex;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-xp i {color: var(--s-amber) !important;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-termin {display: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde {color: #fff; border: 0; overflow: hidden; padding: 18px;
+            background: radial-gradient(120% 90% at 100% 0%, rgba(160,132,255,0.95) 0%, transparent 55%), linear-gradient(140deg, #0E7FA6 0%, #1564C9 55%, #5B3FE0 100%);
+            box-shadow: 0 18px 40px rgba(38,80,220,0.38), inset 0 1px 0 rgba(255,255,255,0.3);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde::before {content: ""; position: absolute; inset: 0; background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) 0 1.5px, transparent 1.5px 18px); pointer-events: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde::before {background: repeating-radial-gradient(circle at 88% 30%, rgba(255,255,255,0.10) calc(var(--ah-welle) - 18px) calc(var(--ah-welle) - 16.5px), transparent calc(var(--ah-welle) - 16.5px) var(--ah-welle));
+            animation: ahWellen 3.2s linear infinite;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kachel,
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-zeile,
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-wahl .aendern,
+html.android-app:not(.pc-app).stil-sachlich #appNavi button,
+html.android-app:not(.pc-app).stil-sachlich #roboBlase button,
+html.android-app:not(.pc-app).stil-sachlich .app-seg button,
+html.android-app:not(.pc-app).stil-sachlich #appRundeBlatt button {transition: transform 0.22s cubic-bezier(.3, 1.7, .5, 1);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kachel:active,
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-zeile:active,
+html.android-app:not(.pc-app).stil-sachlich #appNavi button:active,
+html.android-app:not(.pc-app).stil-sachlich #roboBlase button:active,
+html.android-app:not(.pc-app).stil-sachlich .app-seg button:active,
+html.android-app:not(.pc-app).stil-sachlich #appRundeBlatt button:active {transform: scale(0.94); transition-duration: 0.06s;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-knopf {transition: transform 0.2s cubic-bezier(.3, 1.7, .5, 1), box-shadow 0.2s ease;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-knopf:active {transform: translateY(4px) scale(0.98); box-shadow: 0 1px 0 rgba(10,30,80,0.35), 0 4px 10px rgba(0,0,0,0.2); transition-duration: 0.06s;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-kopf,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-chips,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-karte,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-kachel {animation: ahRein 0.5s cubic-bezier(.2, .9, .3, 1.15) both; animation-delay: calc(var(--i, 0) * 45ms);}
+@media (prefers-reduced-motion: reduce) {
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-kopf,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-chips,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-karte,
+html.android-app:not(.pc-app).stil-sachlich #appHeute.rein .ah-kachel {animation: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kachel:active,
+html.android-app:not(.pc-app).stil-sachlich #appNavi button:active {transform: none;}
+}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-belohnung.hopst {animation: ahHopst 0.7s ease both;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ring.lebt .z b {display: inline-block; animation: ahZahl 1.1s ease both;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ring.lebt path.fort {stroke-dasharray: 1 1; animation: ahRingZeichnen 1.1s cubic-bezier(.45,.05,.25,1) both;}
+@media (prefers-reduced-motion: reduce) {
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde::before {animation: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ring.lebt path.fort {animation: none; stroke-dasharray: none;}
+}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-l {position: relative; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde h2 {position: relative; color: #fff; font: 700 24px/1.15 var(--font-display); max-width: 205px; letter-spacing: -0.4px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-wahl {position: relative; max-width: 230px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-wahl .w {background: rgba(255,255,255,0.16); color: #fff;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-wahl .aendern {color: #fff; text-decoration: underline; text-underline-offset: 3px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-mk {display: block; position: absolute; right: 12px; top: 12px; width: 92px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde .ah-knopf {position: relative; color: #0B2A63; background: linear-gradient(180deg, #FFFFFF, #E4EEFF); font-weight: 700; font-size: 17px;
+            box-shadow: 0 5px 0 rgba(10,30,80,0.35), 0 12px 24px rgba(0,0,0,0.25);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ring {width: 86px; height: 86px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ring .z b {font: 700 22px var(--font-display);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-tag b.t {font: 700 16.5px/1.25 var(--font-display);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-belohnung {display: inline-flex; margin-top: 8px; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--s-amber); background: rgba(255,164,27,0.14); padding: 5px 9px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-serie {display: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-liste {display: none;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kacheln {display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
+html.android-app:not(.pc-app).stil-sachlich #appRundeBlatt h2 {font: 700 24px var(--font-display);}
+html.android-app:not(.pc-app).stil-sachlich #appRundeBlatt .ar-seg button.an {background: var(--s-haupt); color: var(--s-auf-haupt); box-shadow: 0 4px 12px rgba(16,183,208,0.35);}
+html.android-app:not(.pc-app).stil-sachlich #appRundeBlatt .ar-los {font-weight: 700; font-size: 17px; background: linear-gradient(180deg, color-mix(in srgb, var(--s-haupt) 88%, white) 0%, var(--s-haupt) 45%, var(--s-haupt2) 100%); box-shadow: 0 5px 0 var(--s-haupt-tief), 0 12px 26px rgba(16,183,208,0.35);}
+html.android-app:not(.pc-app).stil-sachlich #roboHelfer.da {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #roboBlase.da {display: block; animation: blaseAuf 0.22s ease-out;}
+html.android-app:not(.pc-app).stil-sachlich #roboRing.da {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-mk {cursor: pointer; -webkit-tap-highlight-color: transparent;}
+html.android-app:not(.pc-app).stil-sachlich #roboSperre.da {display: block; animation: sperreAuf 0.3s ease-out;}
+html.android-app:not(.pc-app).stil-sachlich .nur-verspielt {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #roboRuf.da {display: block; animation: rufAuf 1.2s ease-out forwards;}
+html.android-app:not(.pc-app).stil-sachlich #appIss.fliegt {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #appSat.fliegt {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #appAstro.da {display: block;}
+html.android-app:not(.pc-app).stil-sachlich #appAstroBlase.da {display: block; animation: blaseAuf 0.22s ease-out;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair {display: inline-flex !important; flex-direction: column; align-items: center; gap: 3px; height: auto !important; padding: 0 !important;
+            background: none !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair .oa-schild {display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 9px; border-radius: 10px;
+            background: #E8101C; color: #fff; font: 800 16px/1 var(--font-display); letter-spacing: 1px; box-shadow: 0 0 16px rgba(232,16,28,.55);}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair .oa-schild i {font-size: 17px;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair b {display: none !important;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair.aus {filter: none !important; opacity: 1 !important;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-onair.aus .oa-schild {background: #3B4A63; color: #C9D3E3; box-shadow: none;}
+html.android-app:not(.pc-app).stil-sachlich #appWerk {display: block; padding-bottom: 4px;}
+html.android-app:not(.pc-app).stil-sachlich .main-col > #examInfo,
+html.android-app:not(.pc-app).stil-sachlich .main-col > #masteryDisplay,
+html.android-app:not(.pc-app).stil-sachlich .app-layout > #historyCol,
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-weiter-ueber {display: none !important;}
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ueber {font: 700 12px var(--font-body); letter-spacing: 1.1px; text-transform: uppercase; color: var(--s-text3); margin: 18px 0 9px 4px;}
+html.android-app:not(.pc-app).stil-sachlich #appWerk #awUeberPruef {display: none;}
+
+/* ====== Sachlich sieht aus wie Verspielt - nur ohne Maja, ohne XP, etwas ruhiger   (26.10.2026) ======
+   Dietmar: "Im Prinzip soll es sachlich genauso aussehen wie verspielt, nur halt ohne Maja und nicht ganz so bunt."
+   und: "Die Umstellung von Maja auf sachlich ist extrem hart ... da ist ein riesengrosses Loch drin."
+   Darum sitzt dort, wo Maja steht, ein kleiner Sendemast in den Funkwellen. */
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-mk,
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-xp { display: none !important; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-gruss { display: block; flex: 1 1 auto; margin: 0 auto 0 0; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kopf > .ah-gruss { flex: 1 1 auto; margin: 0 auto 0 0; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-kopf { flex-wrap: nowrap; align-items: center; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-termin { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 12px; font-size: 14px; color: var(--s-text); background: var(--s-fl); border: 1px solid var(--s-rand2); max-width: 100%; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-termin:empty { display: none; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde { background: var(--sk-g); box-shadow: 0 18px 40px var(--sk-sch), inset 0 1px 0 rgba(255,255,255,0.3); }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-runde::after { content: ""; position: absolute; right: 16px; top: 14px; width: 92px; height: 92px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 40 L36 94 M50 40 L64 94 M41 72 H59 M45 56 H55' stroke-opacity='.8'/%3E%3Ccircle cx='50' cy='33' r='5' fill='%23fff' fill-opacity='.9' stroke='none'/%3E%3Cpath d='M38 23 A16 16 0 0 0 38 43 M62 23 A16 16 0 0 1 62 43' stroke-opacity='.75'/%3E%3Cpath d='M28 15 A28 28 0 0 0 28 51 M72 15 A28 28 0 0 1 72 51' stroke-opacity='.5'/%3E%3C/svg%3E") no-repeat center / contain; opacity: 0.9; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ico { background: var(--s-akzent-w); color: var(--s-akzent); box-shadow: none; }
+html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ico::after { display: none; }
+html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute .ah-kachel { background: var(--s-fl) !important; border-color: var(--s-rand) !important; }
+</style>
     <!-- ================================================================
          WIE EINE APP, NICHT WIE EINE WEBSEITE
          ----------------------------------------------------------------
@@ -24498,7 +24716,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 306, datum: '25.10.2026' };
+const TRAINER_STAND = { nr: 307, datum: '26.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -27346,6 +27564,66 @@ document.addEventListener('keydown', e => {
 //  bleibt das PDF mit Stift und Textmarker wie gehabt. In der Android-
 //  App malt weiter die App selbst (appFormelZeichnen).
 // ================================================================
+// ================================================================
+//  FORMELBLATT: ZWEI FINGER ZUM ZOOMEN, EIN FINGER ZUM VERSCHIEBEN   (25.10.2026)
+//  Dietmars Frau hat ein kleines Handy: "Auseinander sliden zum vergroessern und
+//  verschieben." Das Blatt soll sich wie ein Bild ziehen lassen. Waehrend die
+//  Finger auf dem Glas sind, wird das vorhandene Bild nur gestreckt (flott, ohne
+//  Ruckeln); beim Loslassen meldet diese Funktion die neue Zoomstufe an den
+//  Aufrufer, der das Blatt scharf nachzeichnet (App) bzw. die Breite setzt (Web).
+//  Das Verschieben ist das normale Rollen der Flaeche. Zweimal tippen: hinein-
+//  oder wieder herauszoomen. Gleiche Gesten in der App und im Handy-Browser.
+// ================================================================
+const FORMEL_ZOOM_MAX = 4;
+function formelGestenAnbringen(rolle, bild, zoomLesen, zoomSetzen){
+    if(!rolle || !bild || rolle.dataset.gesten) return;
+    rolle.dataset.gesten = '1';
+    try{ rolle.style.touchAction = 'pan-x pan-y'; rolle.style.overscrollBehavior = 'contain'; }catch(e){}
+    const abstand = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    // Das Bild auf die Zoomstufe z bringen; der Punkt (cx, cy) in der Flaeche bleibt unter den Fingern.
+    const strecken = (z, q) => {
+        const w = q.w0 * z / q.z0;
+        bild.style.width = Math.round(w) + 'px';
+        const f = w / Math.max(1, q.w0);
+        rolle.scrollLeft = (q.sl + q.cx) * f - q.cx;
+        rolle.scrollTop = (q.st + q.cy) * f - q.cy;
+    };
+    const start = (cx, cy) => ({ z0: zoomLesen(), w0: bild.offsetWidth || 1, cx, cy, sl: rolle.scrollLeft, st: rolle.scrollTop });
+    let p = null, letzterTipp = null, bewegt = false;
+    rolle.addEventListener('touchstart', e => {
+        if(e.touches.length === 2){
+            const r = rolle.getBoundingClientRect();
+            p = start((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top);
+            p.d0 = abstand(e.touches) || 1; p.z = p.z0;
+            letzterTipp = null;
+        }
+        bewegt = false;
+    }, { passive: true });
+    rolle.addEventListener('touchmove', e => {
+        bewegt = true;
+        if(!p || e.touches.length !== 2) return;
+        e.preventDefault();
+        p.z = Math.max(1, Math.min(FORMEL_ZOOM_MAX, p.z0 * abstand(e.touches) / p.d0));
+        strecken(p.z, p);
+    }, { passive: false });
+    const ende = e => {
+        if(p && e.touches.length < 2){ const z = p.z, z0 = p.z0; p = null; if(Math.abs(z - z0) > 0.01) zoomSetzen(z); return; }
+        if(e.type !== 'touchend' || e.changedTouches.length !== 1 || e.touches.length || bewegt) return;
+        const t = e.changedTouches[0], jetzt = Date.now();
+        if(letzterTipp && jetzt - letzterTipp.zeit < 320 && Math.hypot(t.clientX - letzterTipp.x, t.clientY - letzterTipp.y) < 40){
+            letzterTipp = null;
+            const r = rolle.getBoundingClientRect();
+            const q = start(t.clientX - r.left, t.clientY - r.top);
+            const z = q.z0 > 1.05 ? 1 : 2.5;
+            strecken(z, q);
+            zoomSetzen(z);
+        }
+        else letzterTipp = { zeit: jetzt, x: t.clientX, y: t.clientY };
+    };
+    rolle.addEventListener('touchend', ende, { passive: true });
+    rolle.addEventListener('touchcancel', ende, { passive: true });
+}
+window.formelGestenAnbringen = formelGestenAnbringen;
 const FORMEL_WEB = { seite: 0, zoom: 1, von: 3, bis: 22 };
 function formelAppMalt(){ const a = window.AndroidApp; return !!(a && typeof a.pdfSeite === 'function' && typeof a.pdfSeiten === 'function'); }
 function formelBilderNutzen(){
@@ -27390,7 +27668,7 @@ function formelWebSeite(seite){
             formelWebSeite(FORMEL_WEB.seite + (b.dataset.tat === 'weiter' ? 1 : -1));
         };
         const fuss = buehne.nextElementSibling;
-        if(fuss) fuss.textContent = 'Amtliches Hilfsmittel der Bundesnetzagentur – in der Prüfung wird es genau so ausgehändigt. Blättern mit den Pfeilen, „Größer“ vergrößert das Blatt.';
+        if(fuss) fuss.textContent = 'Amtliches Hilfsmittel der Bundesnetzagentur – in der Prüfung wird es genau so ausgehändigt. Blättern mit den Pfeilen. Mit zwei Fingern vergrößern, mit einem Finger verschieben, zweimal tippen zoomt hinein und wieder heraus.';
         // Auf dem Handy ist 96vh oft hoeher als der sichtbare Teil (Adressleiste)
         try{ const k = document.getElementById('formelKasten'); if(k && window.CSS && CSS.supports('height', '96dvh')) k.style.height = 'calc(96dvh / var(--afu-zoom, 1))'; }catch(e){}
     }
@@ -27404,12 +27682,13 @@ function formelWebSeite(seite){
     if(bild){
         const ziel = 'formelsammlung/seite-' + String(seite).padStart(2, '0') + '.jpg';
         if(bild.getAttribute('src') !== ziel) bild.setAttribute('src', ziel);
-        bild.style.width = (FORMEL_WEB.zoom > 1 ? 200 : 100) + '%';
+        bild.style.width = Math.round(FORMEL_WEB.zoom * 100) + '%';
     }
     const rolle = document.getElementById('formelWebRolle');
     if(rolle && neu){ rolle.scrollTop = 0; rolle.scrollLeft = 0; }
+    if(rolle) formelGestenAnbringen(rolle, document.getElementById('formelWebBild'), () => FORMEL_WEB.zoom, z => { FORMEL_WEB.zoom = z; formelWebSeite(FORMEL_WEB.seite); });
     const g = document.getElementById('formelExternBtn');
-    if(g){ g.textContent = FORMEL_WEB.zoom > 1 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – zum Lesen im Blatt rollen'; }
+    if(g){ g.textContent = FORMEL_WEB.zoom > 1.02 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – oder mit zwei Fingern aufziehen'; }
     const unter = document.getElementById('formelUnterzeile');
     if(unter) unter.textContent = 'Blatt ' + (seite - 2) + ' · Seite ' + seite + ' im PDF';
 }
@@ -28846,7 +29125,8 @@ function infoFuellen() {
             ['Jede Frage automatisch', 'Liest jede neue Frage von selbst vor.'],
             ['Antwort bestätigen', 'Sagt nach dem Klick, ob es richtig war.'],
             ['Knöpfe vorlesen', 'Spricht den Hinweistext, wenn die Maus über einem Knopf steht oder der Tabulator dort landet. Wahlweise kurz oder in ganzen Sätzen.'],
-            ['Schrift vergrößern', 'Die Antwort, die gerade vorgelesen wird, tritt hervor.']
+            ['Schrift vergrößern', 'Die Antwort, die gerade vorgelesen wird, tritt hervor.'],
+            ['Majas Stimme', 'Majas Sätze wurden mit Grok (xAI) erzeugt, Stimme „Carina“. Created with Grok. Maja ist eine erfundene Figur, keine echte Person.']
         ])
       + infoBlock('Weitere Stimmen',
             'Mitgeliefert wird nur Thorsten. Das Setup bliebe sonst nicht mehr transportabel — eine Stimme wiegt 30 bis 110 MB.',
@@ -31826,6 +32106,63 @@ function ttsInStuecke(text){
     return aus.filter(Boolean);
 }
 
+// ================================================================
+//  FUNK-EFFEKT NACH DER FRAGE                         (25.10.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "bei verspielt koennten wir noch einbauen, dass danach der
+//  Quindar-Roger-Beep kommt und dieses kurze Rauschen" - "jedoch nur
+//  beim Vorlesen der Frage, bei Antworten muss es nicht dabei sein."
+//
+//  Wie am Funkgeraet: Nach dem Sprechen kommt der kurze Quindar-Ton
+//  (2475 Hz, 250 ms) und danach das Rauschen, wenn der Traeger faellt.
+//  Alles wird mit Web-Audio erzeugt - keine Tondatei noetig. Nur im Stil
+//  "Verspielt", und mit Haken in den Einstellungen abschaltbar.
+// ================================================================
+function funkEffektAktiv(){
+    try{
+        if(localStorage.getItem('app_stil') !== 'verspielt') return false;
+        return !(einstellungen && einstellungen.funkEffekt === false);
+    }catch(e){ return false; }
+}
+function funkEffektSpielen(){
+    return new Promise(resolve => {
+        try{
+            if(!funkEffektAktiv()){ resolve(); return; }
+            const ctx = formelAudioHolen();
+            if(!ctx){ resolve(); return; }
+            const t0 = ctx.currentTime + 0.05;
+            // Quindar-Ton: 250 ms, weicher Ein- und Ausstieg gegen das Knacken
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = 'sine'; o.frequency.value = 2475;
+            g.gain.setValueAtTime(0, t0);
+            g.gain.linearRampToValueAtTime(0.22, t0 + 0.012);
+            g.gain.setValueAtTime(0.22, t0 + 0.238);
+            g.gain.linearRampToValueAtTime(0, t0 + 0.25);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t0); o.stop(t0 + 0.26);
+            // Squelch-Rauschen: die Rauschsperre schliesst - kraeftiges Rauschen,
+            // rund 100 ms, dann schlagartig Schluss (kein Auslaufen).
+            const n = Math.floor(ctx.sampleRate * 0.10);
+            const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+            const d = buf.getChannelData(0);
+            for(let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1);
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2800; bp.Q.value = 0.5;
+            const g2 = ctx.createGain();
+            const tn = t0 + 0.28;
+            g2.gain.setValueAtTime(0, tn);
+            g2.gain.linearRampToValueAtTime(0.34, tn + 0.003);
+            g2.gain.setValueAtTime(0.34, tn + 0.097);
+            g2.gain.linearRampToValueAtTime(0, tn + 0.10);
+            src.connect(bp); bp.connect(g2); g2.connect(ctx.destination);
+            src.start(tn);
+            window.__funkEffektZaehler = (window.__funkEffektZaehler || 0) + 1;
+            setTimeout(resolve, 480);
+        }catch(e){ resolve(); }
+    });
+}
+window.funkEffektSpielen = funkEffektSpielen;
+
 async function playTTSQueue(segments, btn, zurueck){
     ttsQueueToken++;
     // Was noch aus einem frueheren Vorgang spricht, hoert hier auf. Sonst
@@ -31887,13 +32224,19 @@ async function playTTSQueue(segments, btn, zurueck){
                 worte: seg.worte,
                 wortVon: von,
                 wortBis: vorher / gesamt,
-                pause: (i === teile.length - 1) ? (seg.pause || 0) : 0
+                pause: (i === teile.length - 1) ? (seg.pause || 0) : 0,
+                effekt: (i === teile.length - 1) ? (seg.effekt || null) : null
             });
         });
     }
     for(const seg of stuecke){
         if(token!==ttsQueueToken){ vorleseBuchen(); return; } // gestoppt/neu gestartet
         await playTTSSegment(seg, token);
+        // Funk-Effekt nach der FRAGE (nur Stil "Verspielt").
+        if(seg.effekt === 'funk' && token===ttsQueueToken){
+            try{ await funkEffektSpielen(); }catch(e){}
+            if(token!==ttsQueueToken){ vorleseBuchen(); return; }
+        }
         // Die Pause nach einer Bildantwort. Die Hervorhebung bleibt dabei
         // stehen - deshalb wird hier gewartet und nicht schon in
         // playTTSSegment, das raeumt am Ende auf.
@@ -31950,7 +32293,7 @@ function vorleseFrage(){
     const kenner = (typeof kennerThema === 'function') && kennerThema(q);
     const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
-    const segments=[{text:sprich(q.text)+'.', selector:null}];
+    const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk'}];
     // NUR DIE FRAGE, wenn die Antworten unter der Maus kommen sollen -
     // siehe "DIE ANTWORT UNTER DER MAUS VORLESEN" (26.09.2026).
     if(einstellungen.mausVorlesen){ playTTSQueue(segments, btn); return; }
@@ -32166,7 +32509,7 @@ const MAUS_FARBEN = {
 // "DIE ANTWORT UNTER DER MAUS VORLESEN" weiter unten. Standard AUS.
 const MAUS_RAND_ARTEN = ['lauf', 'fest', 'kein'];
 let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffekt: true };
 
 function einstellungenSchluessel(){
     return 'amateurfunk_einstellungen_' + (typeof currentUser !== 'undefined' ? currentUser : 'user1');
@@ -32176,7 +32519,7 @@ function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
                       levelUpTon: true, rundeFertig: true, rundenFeier: true, magnetTon: true,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffekt: true };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
@@ -32202,6 +32545,7 @@ function einstellungenLaden(){
             else if(d && d.mausLauf === false) einstellungen.mausRand = 'fest';   // alter Stand
             if(d && d.mausLeuchten === false) einstellungen.mausLeuchten = false;
             einstellungen.mausVorlesen = !!(d && d.mausVorlesen);
+            if(d && d.funkEffekt === false) einstellungen.funkEffekt = false;
         }
     }catch(e){}
     einstellungenAnwenden();
@@ -32350,7 +32694,9 @@ function einstellungenAnwenden(){
         const ba = document.getElementById('einstBildschirmAn');
         if(ba){ ba.checked = bildschirmAnGewollt(); bildschirmAnText(ba.checked); }
     }catch(e){}
-    try{ Object.keys(MAJA_FUNK_TEILE).forEach(k => majaFunkSetzen(k, majaFunkAn(k))); }catch(e){}
+    try{ ['quetschen', 'piepser'].forEach(k => majaFunkSetzen(k, majaFunkAn(k))); Object.keys(MAJA_STUFEN).forEach(k => { const e = document.getElementById('einstMajaStufe_' + k); if(e) e.value = String(majaStufe(k)); }); }catch(e){}
+    try{ const la = document.getElementById('einstLeisteAus'); if(la) la.checked = appLeisteAus(); }catch(e){}
+    try{ appWlanLaden(); }catch(e){}
     const kurz = document.getElementById('einstUmfangKurz');
     const lang = document.getElementById('einstUmfangLang');
     if(kurz) kurz.checked = einstellungen.knopfUmfang !== 'lang';
@@ -32405,6 +32751,7 @@ function einstellungenUmschalten(feld, an){
     }
     // Beim Einschalten einmal sagen, was jetzt gilt - ohne Haken bleibt
     // eine angefangene Antwort trotzdem zu Ende gesprochen.
+    if(feld === 'funkEffekt' && an){ try{ funkEffektSpielen(); }catch(e){} }
     if(feld === 'mausVorlesen'){
         try{ mausVorleseVerlassen(); }catch(e){}
         if(an) knopfSprechen('Die Antwort unter der Maus wird jetzt vorgelesen.');
@@ -33632,6 +33979,26 @@ function einstBlaetterFuellen(){
           + 'onchange="bildschirmAnSetzen(this.checked)">'
           + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Lern-Modus: Bildschirm bleibt an</span></label>'
           + '<div id="einstBildschirmText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>') + '</div>'
+      // NAVIGATIONSLEISTE (25.10.2026). Dietmar: "In den Einstellungen sollte man diese Leiste auch ausblenden koennen."
+      // Nur in der Android-App: die Leiste unten (Quadrat, Kreis, Dreieck). Sie nimmt sonst die Farbe der App an.
+      + '<div class="nur-app" id="einstLeisteKasten">' + einstKasten('Leiste unten (Android)',
+            'Die Leiste mit den drei Symbolen am unteren Rand. Sie \u00fcbernimmt die Farbe der App. '
+          + 'Wenn du sie ausblendest, bekommt der Trainer mehr Platz; zum Zur\u00fcckgehen wischst du einfach vom unteren Rand nach oben, dann erscheint sie kurz.',
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
+          + '<input type="checkbox" id="einstLeisteAus" style="width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="appLeisteAusSetzen(this.checked)">'
+          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Leiste unten ausblenden</span></label>') + '</div>'
+      // IM WLAN ERREICHBAR (26.10.2026). Dietmar: "Wenn ich den Gruppenraum doch nicht gestartet habe, muss ich doch auch nicht
+      // ueber WLAN erreichbar sein" - "Kann man das nicht in den Einstellungen abschalten?" Nur in der App; Standard: aus.
+      + '<div class="nur-app" id="einstWlanKasten" style="display:none;">' + einstKasten('Im WLAN erreichbar (Gruppenraum)',
+            'Nur einschalten, wenn du als Gastgeber einen Gruppenraum anbietest und andere im selben WLAN mitmachen sollen. '
+          + 'Aus: Dein Handy nimmt keine Verbindungen von anderen Ger\u00e4ten an. Zum Lernen allein brauchst du das nicht. '
+          + 'Die App merkt sich die Wahl.',
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
+          + '<input type="checkbox" id="einstWlanAn" style="width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="appWlanSetzen(this.checked)">'
+          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Im WLAN f\u00fcr andere erreichbar</span></label>'
+          + '<div id="einstWlanText" style="font-size:0.75rem; color:var(--muted); margin-top:0.4rem;"></div>') + '</div>'
       // In der App heisst es seit dem 30.09.2026 "Stil der App" und "Hell oder
       // dunkel" (siehe ZWEI STILE FUER DIE APP) - die sechs Farbstile gibt es
       // nur noch am PC.
@@ -33841,7 +34208,17 @@ function einstBlaetterFuellen(){
           + 'Der Vorlese-Knopf und das automatische Vorlesen sprechen dann <b>nur die Frage</b>. '
           + 'Jede Antwort wird gesprochen, sobald die Maus auf ihr steht — mit der Tabulatortaste genauso. '
           + 'Wechselst du zu einer anderen Antwort, bricht die alte sofort ab. So weiß man auch ohne '
-          + 'hinzusehen, wo die Maus gerade ist.</span></span></label>')
+          + 'hinzusehen, wo die Maus gerade ist.</span></span></label>'
+          // Funk-Effekt (25.10.2026): Roger-Beep + Rauschen nach der Frage, nur im Stil Verspielt.
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.6rem;" '
+          + 'data-vorlesen-kurz="Funk-Effekt nach der Frage." '
+          + 'data-vorlesen="Funk-Effekt nach der Frage. Im Stil Verspielt kommt nach der vorgelesenen Frage ein kurzer Roger-Beep mit Rauschen, wie am Funkgerät.">'
+          + '<input type="checkbox" id="einstFunkEffekt" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
+          + 'onchange="einstellungenUmschalten(\'funkEffekt\', this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Funk-Effekt nach der Frage</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Im Stil <b>Verspielt</b> kommt nach der vorgelesenen Frage ein kurzer Roger-Beep mit Rauschen — wie am Funkgerät. '
+          + 'Nach den Antworten nicht.</span></span></label>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
             + 'Gleiches gilt, wenn du mit der Tabulatortaste dorthin springst.',
             '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin-bottom:0.4rem;" '
@@ -34056,10 +34433,16 @@ function einstBlaetterFuellen(){
         + '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin-bottom:0.5rem;">Nur für Maja</div>'
         + einstKasten('Maja: Funk-Klang',
             'Maja klingt wie über Funk. Du kannst jeden Teil einzeln ausschalten.',
-            [['quetschen', 'Gequetschter Funk-Klang (enges Band, hart komprimiert)'], ['rauschen', 'Rauschen und Knistern'], ['piepser', 'Piepser vorn und hinten (Quindar und Roger)']].map(x =>
+            [['quetschen', 'Gequetschter Funk-Klang (enges Band, hart komprimiert)'], ['piepser', 'Roger-Piep vorn und hinten (Quindar) mit kurzem Rauschen dahinter']].map(x =>
               '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.35rem 0;">'
             + '<input type="checkbox" id="einstMaja_' + x[0] + '" style="width:18px; height:18px; cursor:pointer;" onchange="majaFunkSetzen(\'' + x[0] + '\', this.checked)">'
-            + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">' + x[1] + '</span></label>').join('')) + '</div>';
+            + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">' + x[1] + '</span></label>').join('')
+          + [['rauschen', 'Rauschen'], ['qrn', 'Knistern (QRN, Gewitter und Atmosphäre)'], ['qrm', 'Störsignale (QRM, andere Funker auf der Frequenz)']].map(x =>
+              '<label style="display:flex; gap:0.6rem; align-items:center; margin:0.55rem 0 0.2rem;">'
+            + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600; flex:1 1 auto;">' + x[1] + '</span>'
+            + '<select id="einstMajaStufe_' + x[0] + '" style="flex:0 0 auto; font-size:0.85rem; padding:0.25rem 0.4rem;" onchange="majaStufeSetzen(\'' + x[0] + '\', this.value, true)">'
+            + '<option value="0">Aus</option><option value="1">Leise</option><option value="2">Mittel</option><option value="3">Stark</option></select></label>').join('')
+          + '<button type="button" style="margin-top:0.8rem; padding:0.5rem 1rem; font-size:0.85rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer;" onclick="majaFunkProbe()">▶ Probe hören</button>') + '</div>';
     document.getElementById('einstBlatt_sounds').innerHTML =
         einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
             + 'beim Einschalten hörst du ihn einmal zur Probe.',
@@ -34437,6 +34820,8 @@ function einstMausKnoepfeNachziehen(){
     if(le) le.checked = (einstellungen.mausLeuchten !== false);
     const mv = document.getElementById('einstMausVorlesen');
     if(mv) mv.checked = !!einstellungen.mausVorlesen;
+    const fe = document.getElementById('einstFunkEffekt');
+    if(fe) fe.checked = (einstellungen.funkEffekt !== false);
 }
 
 // Der Reiter "Lernen" zeigt den Blaetter-Stand - dieselben Zahlen wie im
@@ -34773,11 +35158,14 @@ function appStimmenNachziehen(){
         modHtml = '<div style="margin-bottom:0.8rem;"><b>Sprachmodul</b> \u2013 wer spricht (Google, Samsung, Acapela \u2026):'
             + '<div style="margin-top:0.4rem; display:flex; flex-direction:column; gap:0.35rem;">'
             + module.map(m => mzeile(m.name, m.label || m.name, !!m.gewaehlt)).join('')
-            + '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.3rem; line-height:1.5;">Nach dem Wechsel dauert es einen Moment, bis das neue Modul bereit ist. Die Stimmen darunter geh\u00f6ren immer zum gew\u00e4hlten Modul.</div></div>';
+            + '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.3rem; line-height:1.5;">Nach dem Wechsel dauert es einen Moment, bis das neue Modul bereit ist. Antwortet ein Modul gar nicht (zum Beispiel weil sein Server nicht l\u00e4uft), spricht die App nach einigen Sekunden mit Google. \u201eStandard des Handys\u201c ist das Modul aus den Android-Einstellungen. Die Stimmen darunter geh\u00f6ren immer zum gew\u00e4hlten Modul.</div></div>';
     }
     if(!liste.length){
+        const mehrere = module.length > 1;
         box.innerHTML = modHtml + '<b>Es spricht die Stimme deines Handys.</b> '
-            + 'Die Stimmen sind noch nicht gemeldet \u2013 kurz warten und die Einstellungen noch einmal \u00f6ffnen. '
+            + 'Gerade meldet das Sprachmodul keine Stimmen. Das kann einen Moment dauern \u2013 tippe dann auf \u201eNoch einmal nachsehen\u201c. '
+            + 'Bleibt die Liste leer, ist das Modul vermutlich gerade nicht erreichbar (zum Beispiel wenn sein Server nicht antwortet)'
+            + (mehrere ? '. W\u00e4hle oben ein anderes Modul, zum Beispiel Google, oder versuche es sp\u00e4ter noch einmal. ' : '. Versuche es sp\u00e4ter noch einmal. ')
             + '<button type="button" style="' + EINST_KNOPF + ' margin-top:0.4rem;" onclick="appStimmenNachziehen()">Noch einmal nachsehen</button>';
         return;
     }
@@ -34811,7 +35199,7 @@ function appModulWaehlen(paket){
         window.AndroidSprache.modulWaehlen(paket || '');
         const box = document.querySelector('.app-stimme-hinweis');
         if(box) box.innerHTML = '<b>Das Sprachmodul wird gewechselt \u2026</b> einen Moment.';
-        [2000, 5000, 9000].forEach(ms => setTimeout(() => { try{ appStimmenNachziehen(); }catch(e){} }, ms));
+        [2000, 5000, 9000, 16000, 26000].forEach(ms => setTimeout(() => { try{ appStimmenNachziehen(); }catch(e){} }, ms));
     }catch(e){}
 }
 function appStimmeWaehlen(name){
@@ -34823,7 +35211,7 @@ function appStimmeProbe(name){
     try{
         const A = window.AndroidSprache;
         if(name !== undefined && A && typeof A.waehlen === 'function') A.waehlen(name || '');
-        if(A && typeof A.probe === 'function') A.probe('Hallo, ich bin Maja. So klinge ich beim Vorlesen der Fragen. Ein Widerstand von 470 Ohm hat die Ringe gelb, violett und braun.');
+        if(A && typeof A.probe === 'function') A.probe('So klingt die Stimme, die dich durch das Men\u00fc f\u00fchrt \u2014 zum Beispiel beim Bl\u00e4ttern durch den Fragenkatalog.');   // derselbe Satz wie "Probe h\u00f6ren" in der Windows-Version (Dietmar 25.10.2026: nicht "ich bin Maja" - das ist die Stimme, die durch Fragen und Antworten f\u00fchrt)
     }catch(e){}
 }
 window.appModulWaehlen = appModulWaehlen; window.appStimmenNachziehen = appStimmenNachziehen; window.appStimmeWaehlen = appStimmeWaehlen; window.appStimmeProbe = appStimmeProbe;
@@ -40747,8 +41135,81 @@ function browserfarbeNachziehen(){
         const hex = '#' + [1,2,3].map(i => Number(m[i]).toString(16).padStart(2,'0')).join('');
         meta.setAttribute('content', hex);
     }catch(e){}
+    try{ if(typeof appLeisteFaerben === 'function') appLeisteFaerben(); }catch(e){}
 }
 window.browserfarbeNachziehen = browserfarbeNachziehen;
+
+// ================================================================
+//  DIE NAVIGATIONSLEISTE DER ANDROID-APP                (25.10.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Die Leiste soll sich nach der Farbe dann anpassen" und
+//  "In den Einstellungen sollte man diese Leiste auch ausblenden
+//  koennen." Die Leiste unten (Quadrat, Kreis, Dreieck) gehoert Android;
+//  die App darf ihr aber eine Farbe geben (AndroidApp.leiste) oder sie
+//  verstecken (AndroidApp.leisteAus - ein Wisch vom unteren Rand holt
+//  sie kurz zurueck). Die Farbe wird, wie bei der Browserleiste, vom
+//  Hintergrund der Seite abgelesen. Ist der ein Verlauf (Verspielt
+//  dunkel), nimmt sie das untere Ende des Verlaufs.
+// ================================================================
+const LEISTE_AUS_SCHLUESSEL = 'afu_leiste_aus';
+function appLeisteAus(){ try{ return localStorage.getItem(LEISTE_AUS_SCHLUESSEL) === 'ja'; }catch(e){ return false; } }
+function appLeisteFaerben(){
+    try{
+        const A = window.AndroidApp;
+        if(!A || typeof A.leiste !== 'function' || !document.body) return;
+        const rgb = t => { const m = String(t || '').match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?/); return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null; };
+        const cs = getComputedStyle(document.body);
+        let c = rgb(cs.backgroundColor);
+        if(!c || c[3] < 0.5){
+            const alle = String(cs.backgroundImage || '').match(/rgba?\([^)]*\)/g);
+            if(alle && alle.length) c = rgb(alle[alle.length - 1]);
+        }
+        if(!c || c[3] < 0.5) c = rgb(getComputedStyle(document.documentElement).backgroundColor);
+        if(!c || c[3] < 0.5) return;
+        const hex = '#' + c.slice(0, 3).map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+        const hell = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) > 150;
+        A.leiste(hex, hell);
+    }catch(e){}
+}
+function appLeisteAusAnwenden(){
+    try{ const A = window.AndroidApp; if(A && typeof A.leisteAus === 'function') A.leisteAus(appLeisteAus()); }catch(e){}
+}
+function appLeisteAusSetzen(aus){
+    try{ localStorage.setItem(LEISTE_AUS_SCHLUESSEL, aus ? 'ja' : 'nein'); }catch(e){}
+    appLeisteAusAnwenden();
+}
+// Im WLAN erreichbar (nur Handy-App): die Wahl liegt im Server der App (POST /api/wlan-freigabe), Standard aus
+function appWlanText(an){
+    const t = document.getElementById('einstWlanText');
+    if(t) t.textContent = an ? 'An: Andere im selben WLAN k\u00f6nnen deinen Gruppenraum \u00fcber die Adresse mit 192.168 erreichen. Nach dem Kursabend wieder ausschalten.'
+                             : 'Aus: Nur die App auf diesem Handy kommt an den Trainer.';
+}
+async function appWlanLaden(){
+    const k = document.getElementById('einstWlanKasten'), c = document.getElementById('einstWlanAn');
+    if(!k || !c) return;
+    try{
+        const r = await fetch('/api/wlan-freigabe', { cache: 'no-store' });
+        if(!r.ok) return;
+        const j = await r.json();
+        if(!j || !j.android) return;                  // am PC gibt es das nicht
+        k.style.display = '';
+        c.checked = !!j.an; appWlanText(!!j.an);
+    }catch(e){}
+}
+async function appWlanSetzen(an){
+    try{
+        const r = await fetch('/api/wlan-freigabe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ an: !!an }) });
+        const j = r.ok ? await r.json() : null;
+        const c = document.getElementById('einstWlanAn');
+        if(j && c){ c.checked = !!j.an; appWlanText(!!j.an); }
+    }catch(e){}
+}
+window.appWlanSetzen = appWlanSetzen; window.appWlanLaden = appWlanLaden;
+window.appLeisteFaerben = appLeisteFaerben; window.appLeisteAusSetzen = appLeisteAusSetzen; window.appLeisteAus = appLeisteAus;
+window.addEventListener('load', () => { setTimeout(() => { appLeisteFaerben(); appLeisteAusAnwenden(); }, 600); });
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible'){ appLeisteFaerben(); appLeisteAusAnwenden(); } });
+try{ new MutationObserver(() => { clearTimeout(window._leisteT); window._leisteT = setTimeout(appLeisteFaerben, 150); })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'data-design', 'style'] }); }catch(e){}
 document.addEventListener('DOMContentLoaded', browserfarbeNachziehen);
 
 function applyThemeButtonLabel() {
@@ -40970,7 +41431,37 @@ function majaFunkSetzen(teil, an){
     try{ localStorage.setItem(MAJA_FUNK_TEILE[teil], an ? 'ja' : 'nein'); }catch(e){}
     try{ const e = document.getElementById('einstMaja_' + teil); if(e) e.checked = !!an; }catch(e){}
 }
+// Stufen fuer Rauschen, Knistern (QRN) und Stoersignale (QRM): 0 = aus, 1 = leise, 2 = mittel (Standard), 3 = stark
+// (Dietmar 25.10.2026: "Das Rauschen ist in Ordnung, es muss aber ausschaltbar sein ... staerker und schwaecher ... auch QRM und QRN")
+const MAJA_STUFEN = { rauschen: 'afu_maja_rauschen_stufe', qrn: 'afu_maja_qrn_stufe', qrm: 'afu_maja_qrm_stufe' };
+const MAJA_STUFEN_FAKTOR = { rauschen: [0, 0.5, 1, 1.9], qrn: [0, 0.5, 1, 1.8], qrm: [0, 0.3, 0.6, 0.95] };
+function majaStufe(name){
+    try{
+        const w = localStorage.getItem(MAJA_STUFEN[name]);
+        if(w !== null && w !== '') return Math.max(0, Math.min(3, parseInt(w, 10) || 0));
+        if(name === 'rauschen' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;   // alte Einstellung uebernehmen
+        if(name === 'qrn' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;
+        if(name === 'qrm' && localStorage.getItem(MAJA_FUNK_TEILE.rauschen) === 'nein') return 0;
+    }catch(e){}
+    return 2;
+}
+function majaStufeSetzen(name, wert, probe){
+    wert = Math.max(0, Math.min(3, parseInt(wert, 10) || 0));
+    try{ localStorage.setItem(MAJA_STUFEN[name], String(wert)); }catch(e){}
+    try{ localStorage.setItem(MAJA_FUNK_TEILE.rauschen, majaStufe('rauschen') > 0 ? 'ja' : 'nein'); }catch(e){}
+    try{ const e = document.getElementById('einstMajaStufe_' + name); if(e) e.value = String(wert); }catch(e){}
+    if(probe){
+        // Rauschen ganz aus: Maja ist gespielt traurig (Aufnahme maja_941; Dietmar 26.10.2026)
+        if(name === 'rauschen' && wert === 0){ try{ if(document.documentElement.classList.contains('stil-verspielt') && typeof window.majaSagtPaket === 'function') window.majaSagtPaket(MAJA_TRAURIG); }catch(e){} }
+        else majaFunkProbe();
+    }
+}
+const MAJA_TRAURIG = "Oh. Du hast mein Rauschen ausgeschaltet. Ich hatte mich schon so an dich gewöhnt. Aber keine Sorge: Unter Einstellungen, Sounds, bekomme ich es jederzeit zurück.";
+function majaFunkProbe(){
+    try{ if(typeof funkiSagt === 'function') funkiSagt('Das war nur Rauschen – kein Problem!', true); }catch(e){}
+}
 window.majaFunkAn = majaFunkAn; window.majaFunkSetzen = majaFunkSetzen;
+window.majaStufe = majaStufe; window.majaStufeSetzen = majaStufeSetzen; window.majaFunkProbe = majaFunkProbe;
 const BILDSCHIRM_AN_SCHLUESSEL = 'afu_bildschirm_an';
 function bildschirmAnGewollt(){
     try{ return localStorage.getItem(BILDSCHIRM_AN_SCHLUESSEL) !== 'nein'; }catch(e){ return true; }
@@ -54002,7 +54493,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // zeigte die Startseite gar nicht.
         tu(() => {
             if(/^(bunt|petrol|navy|schlicht)$/.test(lies('afu_fragenstil', ''))) return;
-            const fs = s === 'verspielt' ? 'bunt' : (lies('pc_ansicht', '') === 'app' ? 'petrol' : 'schlicht');
+            const fs = (s === 'verspielt' || H.classList.contains('android-app')) ? 'bunt' : (lies('pc_ansicht', '') === 'app' ? 'petrol' : 'schlicht');
             ['bunt', 'petrol', 'navy', 'schlicht'].forEach(f => H.classList.toggle('fs-' + f, f === fs));
         });
         if(s !== 'verspielt') tu(() => roboHeim(true));
@@ -54699,9 +55190,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function nachziehen(){
         if(!D.body) return;
         const vs = stilIst() === 'verspielt';
+        // Sachlich auf dem Handy hat dieselbe Anordnung wie Verspielt (Dietmar 26.10.2026: "sachlich genauso aussehen wie verspielt, nur ohne Maja") - Texte bleiben sachlich
+        const lay = vs || (H.classList.contains('android-app') && !H.classList.contains('pc-app'));
         // Gruss
         const name = nameIst();
-        $('ahGrussZeit').textContent = vs ? grussZeit() + ',' : grussZeit() + (name ? ',' : '');
+        $('ahGrussZeit').textContent = lay ? grussZeit() + ',' : grussZeit() + (name ? ',' : '');
         $('ahGrussName').textContent = name ? ' ' + name : '';
         $('ahGrussName2').textContent = name || 'schön, dass du da bist';
         // Die Funkwellen der Startkarte halten an, wenn die Startseite nicht zu sehen ist (25.10.2026, "das Blinken")
@@ -54719,13 +55212,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Lern-Modus-Schalter rechts (25.10.2026)
         tu(() => {
             const l = $('ahLernAn'), lab = $('ahLern');
-            if(lab){ const ziel = vs ? $('ahGruss').parentElement : $('ahGruss'); if(lab.parentElement !== ziel) ziel.appendChild(lab); }
+            if(lab){ const ziel = lay ? $('ahGruss').parentElement : $('ahGruss'); if(lab.parentElement !== ziel) ziel.appendChild(lab); }
             if(l && document.activeElement !== l){ const an = window.bildschirmAnGewollt ? bildschirmAnGewollt() : true; if(l.checked !== an) l.checked = an; }
         });
         // Termin - Sachlich: als Pille rechts neben dem Gruss, Verspielt: unter den Chips (dort verborgen)
-        const tb = $('ahTermin'), tz = vs ? $('ahChips') : $('ahGruss').parentElement;
-        if(tb.parentElement !== tz){ if(vs) tz.appendChild(tb); else tz.insertBefore(tb, $('ahOnAir')); }
-        const th = vs ? terminText() : terminPille();
+        const tb = $('ahTermin'), tz = lay ? $('ahChips') : $('ahGruss').parentElement;
+        if(tb.parentElement !== tz){ if(lay) tz.appendChild(tb); else tz.insertBefore(tb, $('ahOnAir')); }
+        const th = lay ? terminText() : terminPille();
         if(tb.innerHTML !== th) tb.innerHTML = th;
         // Offene Fragen und Wahl. Solange das Blatt "Neue Runde" offen ist,
         // gilt, was darin angetippt wurde - sonst holte sich dieser Takt
@@ -54880,30 +55373,23 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const navi = (v) => '<div class="swp-navi">' + [['fa-book-open', 'Lernen'], ['fa-stopwatch', 'Prüfung'], ['fa-users', 'Gruppe'], ['fa-chart-simple', 'Fortschritt'], ['fa-bars', 'Mehr']]
             .map((b, i) => '<span' + (i ? '' : ' class="an"') + '><i class="fas ' + b[0] + '"></i>' + b[1] + '</span>').join('') + '</div>';
         let inhalt;
-        if(stil === 'sachlich'){
-            inhalt = '<div class="swp-kopf"><b>' + d.gruss + (nm ? ', ' + nm : '') + '</b><span class="swp-av">' + init + '</span></div>'
-              + '<div class="swp-chips"><span class="swp-chip"><i class="fas fa-graduation-cap"></i> Klasse ' + d.klasse + ' <i class="fas fa-chevron-down"></i></span><span class="swp-leise">Prüfungstermin eintragen</span></div>'
-              + '<div class="swp-karte swp-runde"><div class="swp-l">Neue Runde</div><div class="swp-h">' + d.fragen + ' Fragen offen</div>'
-              +   '<div class="swp-w"><span>25 Fragen</span><span>alle Teile</span></div><div class="swp-knopf"><i class="fas fa-play"></i> Runde starten</div></div>'
-              + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, false, true) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
-              +   '<div><b>Tagesziel: noch ' + fragenText(d.rest) + '</b><small><i class="fas fa-calendar-check"></i> 12 Tage in Folge geübt</small></div></div>'
-              + '<div class="swp-ue">Üben</div>'
-              + '<div class="swp-liste">' + [['fa-rotate-left', 'Fehler üben', '12'], ['fa-list-check', 'Lernbedarf', '34'], ['fa-stopwatch', 'Prüfungssimulation', '3 × 45 min'], ['fa-book', 'Fragenkatalog', String(d.fragen)]]
-                  .map(z => '<div class="swp-z"><i class="fas ' + z[0] + '"></i><span>' + z[1] + '</span><em>' + z[2] + ' <i class="fas fa-chevron-right"></i></em></div>').join('') + '</div>';
+        const sach = stil === 'sachlich';   // 26.10.2026: Sachlich sieht aus wie Verspielt - ohne Maja, ohne XP, ruhiger
+        if(false){
+            inhalt = '';
         } else {
-            inhalt = '<div class="swp-kopf"><span class="swp-av">' + init + '<em>' + stufe(1240).name + '</em></span><div class="swp-gruss"><small>' + d.gruss + ',</small><b>' + (nm || 'schön, dass du da bist') + '</b></div>'
-              +   '<span class="swp-onair"><i></i>ON AIR <b>12</b></span></div>'
-              + '<div class="swp-chips"><span class="swp-chip"><i class="fas fa-graduation-cap"></i> Klasse ' + d.klasse + ' <i class="fas fa-chevron-down"></i></span><span class="swp-chip"><i class="fas fa-bolt"></i> 1.240 XP</span></div>'
-              + '<div class="swp-held"><div class="swp-l">' + d.fragen + ' Fragen warten auf dich</div><div class="swp-h">Bereit für eine Runde?</div>'
-              +   '<div class="swp-w"><span>25 Fragen</span><span>alle Teile</span></div><div class="swp-mk">' + maskottchen('winkt') + '</div>'
+            inhalt = '<div class="swp-kopf"><span class="swp-av">' + init + (sach ? '' : '<em>' + stufe(1240).name + '</em>') + '</span><div class="swp-gruss"><small>' + d.gruss + ',</small><b>' + (nm || 'schön, dass du da bist') + '</b></div>'
+              +   (sach ? '' : '<span class="swp-onair"><i></i>ON AIR <b>12</b></span>') + '</div>'
+              + '<div class="swp-chips"><span class="swp-chip"><i class="fas fa-graduation-cap"></i> Klasse ' + d.klasse + ' <i class="fas fa-chevron-down"></i></span>' + (sach ? '<span class="swp-chip"><i class="fas fa-calendar-plus"></i> Termin</span>' : '<span class="swp-chip"><i class="fas fa-bolt"></i> 1.240 XP</span>') + '</div>'
+              + '<div class="swp-held"><div class="swp-l">' + (sach ? 'Neue Runde' : d.fragen + ' Fragen warten auf dich') + '</div><div class="swp-h">' + (sach ? d.fragen + ' Fragen offen' : 'Bereit für eine Runde?') + '</div>'
+              +   '<div class="swp-w"><span>25 Fragen</span><span>alle Teile</span></div>' + (sach ? '<div class="swp-mast"><i class="fas fa-tower-broadcast"></i></div>' : '<div class="swp-mk">' + maskottchen('winkt') + '</div>') + ''
               +   '<div class="swp-knopf"><i class="fas fa-play"></i> Runde starten</div></div>'
               + '<div class="swp-karte swp-tag">' + ringSvg(d.n / d.z, true, true) + '<div class="swp-rz"><b>' + d.n + '</b><small>von ' + d.z + '</small></div>'
-              +   '<div><b>Noch ' + fragenText(d.rest) + ' bis zum Tagesziel</b><small>Dann bleibt deine Serie auf Sendung.</small><span class="swp-bel"><i class="fas fa-tower-broadcast"></i> Tag 13 wartet</span></div></div>'
+              +   (sach ? '<div><b>Tagesziel: noch ' + fragenText(d.rest) + '</b><small>Dann bleibt deine Serie auf Sendung.</small></div></div>' : '<div><b>Noch ' + fragenText(d.rest) + ' bis zum Tagesziel</b><small>Dann bleibt deine Serie auf Sendung.</small><span class="swp-bel"><i class="fas fa-tower-broadcast"></i> Tag 13 wartet</span></div></div>')
               + '<div class="swp-kach">' + [['rot', 'fa-rotate-left', '12', 'Fehler üben', 'bis sie sitzen'], ['amber', 'fa-fire-flame-curved', '34', 'Lernbedarf', 'wackelige Fragen'],
                    ['violett', 'fa-stopwatch', '3×45′', 'Prüfung simulieren', 'wie am echten Prüfungstag'], ['blau', 'fa-book-open', String(d.fragen), 'Katalog', 'alle Fragen blättern']]
-                  .map(k => '<div><span class="ah-ico ' + k[0] + '"><i class="fas ' + k[1] + '"></i></span><em' + (k[2].length > 3 ? ' class="kl"' : '') + '>' + k[2] + '</em><b>' + k[3] + '</b><small>' + k[4] + '</small></div>').join('') + '</div>';
+                  .map(k => '<div><span class="ah-ico ' + (sach ? 'tuerkis' : k[0]) + '"><i class="fas ' + k[1] + '"></i></span><em' + (k[2].length > 3 ? ' class="kl"' : '') + '>' + k[2] + '</em><b>' + k[3] + '</b><small>' + k[4] + '</small></div>').join('') + '</div>';
         }
-        return '<div class="swp-rahmen' + (kurz ? ' kurz' : '') + '"><div class="swp ' + (stil === 'sachlich' ? 's' : 'v') + '" aria-hidden="true">'
+        return '<div class="swp-rahmen' + (kurz ? ' kurz' : '') + '"><div class="swp v' + (sach ? ' sach' : '') + '" aria-hidden="true">'
           + status + '<div class="swp-in">' + inhalt + '</div>' + navi() + '</div></div>';
     }
     // Verkleinern auf die Breite der Karte - auch wenn die Karte erst
@@ -54934,7 +55420,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<div class="sw-wahl">'
           + ['sachlich', 'verspielt'].map(s => '<button type="button" class="sw-karte' + (s === gewaehlt ? ' an' : '') + '" data-stil="' + s + '">'
               + handyVorschau(s) + '<b><span class="sw-kreis"></span>' + (s === 'sachlich' ? 'Sachlich' : 'Verspielt') + '</b>'
-              + '<small>' + (s === 'sachlich' ? 'Klar und ruhig. Große Schrift, keine Ablenkung.' : 'Punkte, Serien und Funki, der immer wieder vorbeischaut.') + '</small></button>').join('')
+              + '<small>' + (s === 'sachlich' ? 'Wie Verspielt, nur ruhiger: ohne Maja, ohne Punkte und Serien.' : 'Punkte, Serien und Funki, der immer wieder vorbeischaut.') + '</small></button>').join('')
           + '</div>'
           + '<div class="sw-fuss">'
           // Bei jedem Start, bis man es abwaehlt (01.10.2026) - Dietmar:
@@ -55620,7 +56106,260 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
 
     // ----- Tipps, Tagesgruss, Feiern, Antippen
+    // ================================================================
+    //  MAJAS ERSTER AUFTRITT UND HINWEISE                  (26.10.2026)
+    //  Dietmar: "Maja soll bei der ersten Begruessung sagen, dass man in den Einstellungen
+    //  vieles aendern kann ... und zum Forum verweisen." Zwei Nachrichten, einmal je Geraet:
+    //  1. Begruessung mit den Einstellungen, 2. das Forum mit Knopf. Dazu gelegentlich ein
+    //  Hinweis zu Einstellungen und App (statt des normalen Tipps). Die Saetze sind fertig
+    //  aufgenommen (sounds/maja-grok, maja_900 bis maja_924); der Text muss mit paket.json
+    //  Buchstabe fuer Buchstabe uebereinstimmen.
+    // ================================================================
+    const MAJA_WILLKOMMEN = "Hier spricht Maja, deine Astronautin! Schön, dass du an Bord bist. Bevor es losgeht, noch ein kurzer Funkspruch: In den Einstellungen kannst du ganz viel nach deinem Geschmack verändern. Du kannst Farben, Schrift und Größe aussuchen. Du kannst festlegen, ob dir die Fragen vorgelesen werden und mit welcher Stimme. Alle Töne lassen sich einzeln ein- und ausschalten, auch mein Funk-Klang mit Rauschen, Knistern und Roger-Piep. Dein Tagesziel stellst du dort ein. Und du wählst, wer dich beim Lernen begleitet. Schau einfach mal rein. Over, und viel Erfolg!";
+    const MAJA_FORUM = "Noch etwas: Zu diesem Trainer gibt es auch ein Amateurfunk-Forum. Dort fragst du die, die es schon hinter sich haben, und kannst dich mit anderen austauschen. Schau mal rein!";
+    const MAJA_HINWEISE = [
+{
+"s": "Übrigens: Mein Trainer kann auch hell. Unter Einstellungen, Anpassen, Farbe, schaltest du von Dunkel auf Hell um. Es gibt auch Grün, Blau, Orange und Grau. Probier einfach aus, was dir gefällt.",
+"b": "Übrigens: Mein Trainer kann auch hell. Unter Einstellungen, Anpassen, Farbe, schaltest du von Dunkel auf Hell um. Es gibt auch Grün, Blau, Orange und Grau. Probier einfach aus, was dir gefällt.",
+"e": true,
+"p": true
+},
+{
+"s": "Schau mal in die Einstellungen. Dort stellst du Farbe, Stil, Schriftgröße und vieles mehr ein. Der Trainer soll sich genau so anfühlen, wie du ihn magst.",
+"b": "Schau mal in die Einstellungen. Dort stellst du Farbe, Stil, Schriftgröße und vieles mehr ein. Der Trainer soll sich genau so anfühlen, wie du ihn magst.",
+"e": true,
+"k": "e",
+"p": true
+},
+{
+"s": "Unter Sounds regelst du alles, was knistert, piept und rauscht. Auch mich kannst du dort leiser drehen. Ich nehme es dir nicht übel. Na gut, ein kleines bisschen.",
+"b": "Unter Sounds regelst du alles, was knistert, piept und rauscht. Auch mich kannst du dort leiser drehen. Ich nehme es dir nicht übel. Na gut, ein kleines bisschen.",
+"e": true,
+"k": "e",
+"p": true
+},
+{
+"s": "In den Einstellungen findest du auch das Vorlesen. Der Trainer liest dir Fragen und Antworten vor, wenn du gerade nicht aufs Display schauen magst.",
+"b": "In den Einstellungen findest du auch das Vorlesen. Der Trainer liest dir Fragen und Antworten vor, wenn du gerade nicht aufs Display schauen magst.",
+"e": true,
+"k": "e",
+"p": true
+},
+{
+"s": "Lernt noch jemand mit dir auf diesem Handy? Dann legt in den Einstellungen unter Benutzer jeder seinen eigenen Platz an. So behält jeder seinen eigenen Lernstand.",
+"b": "Lernt noch jemand mit dir auf diesem Handy? Dann legt in den Einstellungen unter Benutzer jeder seinen eigenen Platz an. So behält jeder seinen eigenen Lernstand.",
+"e": true,
+"k": "e",
+"p": true
+},
+{
+"s": "Du willst auf einem anderen Gerät weiterlernen? Dann nimm deinen Lernstand mit, mit Name und PIN. Das ist freiwillig und steht in den Einstellungen.",
+"b": "Du willst auf einem anderen Gerät weiterlernen? Dann nimm deinen Lernstand mit, mit Name und PIN. Das ist freiwillig und steht in den Einstellungen.",
+"e": true,
+"k": "e",
+"p": true
+},
+{
+"s": "Du hast eine Frage, die dir keine Ruhe lässt? Im Forum zum Trainer diskutieren andere Lernende mit dir. Sobald das Forum offen ist, findest du den Knopf auf der Startseite und unter jeder Frage.",
+"b": "Du hast eine Frage, die dir keine Ruhe lässt? Im Forum zum Trainer diskutieren andere Lernende mit dir. Sobald das Forum offen ist, findest du den Knopf auf der Startseite und unter jeder Frage.",
+"e": false,
+"k": "f",
+"p": true
+},
+{
+"s": "Kein Mensch weiß alles. Auch Astronauten fragen manchmal nach. Schau mal im Forum vorbei, die Funkgemeinde freut sich über jeden Neuen.",
+"b": "Kein Mensch weiß alles. Auch Astronauten fragen manchmal nach. Schau mal im Forum vorbei, die Funkgemeinde freut sich über jeden Neuen.",
+"e": false,
+"k": "f",
+"p": true
+},
+{
+"s": "Wusstest du schon? Den Trainer gibt es auch als Webseite für den Computer. Amateurfunk-Trainer Punkt com. Da lernst du auf dem großen Bildschirm, direkt im Browser, ohne etwas zu installieren.",
+"b": "Wusstest du schon? Den Trainer gibt es auch als Webseite für den Computer: amateurfunk-trainer.com. Da lernst du auf dem großen Bildschirm, direkt im Browser, ohne etwas zu installieren.",
+"e": false,
+"k": "w",
+"p": true
+},
+{
+"s": "Unterwegs am Handy, zu Hause am Computer: beides geht. Mit Name und PIN hast du deinen Lernstand auf jedem Gerät dabei.",
+"b": "Unterwegs am Handy, zu Hause am Computer: beides geht. Mit Name und PIN hast du deinen Lernstand auf jedem Gerät dabei.",
+"e": false,
+"k": "w",
+"p": true
+},
+{
+"s": "Gerade Schaltpläne und Formeln sieht man auf dem großen Bildschirm viel besser. Probier die Webseite am Computer doch mal aus.",
+"b": "Gerade Schaltpläne und Formeln sieht man auf dem großen Bildschirm viel besser. Probier die Webseite am Computer doch mal aus.",
+"e": false,
+"k": "w",
+"p": true
+},
+{
+"s": "Übrigens: Mein Funk-Klang ist nicht in Stein gemeißelt. In den Einstellungen unter Sounds machst du das Rauschen leiser, lauter oder ganz aus.",
+"b": "Übrigens: Mein Funk-Klang ist nicht in Stein gemeißelt. In den Einstellungen unter Sounds machst du das Rauschen leiser, lauter oder ganz aus.",
+"e": true
+},
+{
+"s": "Das Knistern nennt man QRN, die fremden Funker auf deiner Frequenz QRM. Beides kannst du in den Einstellungen leise drehen. Oder ganz abschalten, wenn dich das nervt.",
+"b": "Das Knistern nennt man QRN, die fremden Funker auf deiner Frequenz QRM. Beides kannst du in den Einstellungen leise drehen. Oder ganz abschalten, wenn dich das nervt.",
+"e": true
+},
+{
+"s": "Wenn dir mein Funk-Klang zu verrauscht ist, kein Problem. Einstellungen, Sounds, und dann gehst du mit dem Rauschen auf Aus. Ich bin dir nicht böse.",
+"b": "Wenn dir mein Funk-Klang zu verrauscht ist, kein Problem. Einstellungen, Sounds, und dann gehst du mit dem Rauschen auf Aus. Ich bin dir nicht böse.",
+"e": true
+},
+{
+"s": "Du magst den Roger-Piep nicht? Einfach in den Einstellungen abschalten. Ich piepse dann nur noch im Herzen.",
+"b": "Du magst den Roger-Piep nicht? Einfach in den Einstellungen abschalten. Ich piepse dann nur noch im Herzen.",
+"e": true
+},
+{
+"s": "Du kannst mich auch ganz ohne Funk-Klang hören. Dann klinge ich wie jemand, der mit dir im Wohnzimmer sitzt statt im Weltall.",
+"b": "Du kannst mich auch ganz ohne Funk-Klang hören. Dann klinge ich wie jemand, der mit dir im Wohnzimmer sitzt statt im Weltall.",
+"e": true
+},
+{
+"s": "Dein Name steht in den Einstellungen. Wenn du ihn einträgst, kann ich dich ansprechen. Ohne Namen sage ich einfach: Funkamateur.",
+"b": "Dein Name steht in den Einstellungen. Wenn du ihn einträgst, kann ich dich ansprechen. Ohne Namen sage ich einfach: Funkamateur.",
+"e": true
+},
+{
+"s": "In den Einstellungen findest du das Tagesziel. Stell dir eine Zahl ein, die zu deinem Alltag passt. Lieber ein kleines Ziel jeden Tag als ein großes alle zwei Wochen.",
+"b": "In den Einstellungen findest du das Tagesziel. Stell dir eine Zahl ein, die zu deinem Alltag passt. Lieber ein kleines Ziel jeden Tag als ein großes alle zwei Wochen.",
+"e": true
+},
+{
+"s": "Ist dir die Schrift zu klein? In den Einstellungen kannst du Schrift und Anzeigegröße anpassen. Lesen soll ja kein Funkloch sein.",
+"b": "Ist dir die Schrift zu klein? In den Einstellungen kannst du Schrift und Anzeigegröße anpassen. Lesen soll ja kein Funkloch sein.",
+"e": true
+},
+{
+"s": "Wer in der Prüfung mehr Zeit braucht, findet dafür eine eigene Einstellung. Schau mal rein.",
+"b": "Wer in der Prüfung mehr Zeit braucht, findet dafür eine eigene Einstellung. Schau mal rein.",
+"e": true
+},
+{
+"s": "Du entscheidest, wer dich begleitet: Funki, dein kleiner Helfer, oder ich. Das stellst du in den Einstellungen ein. Aber ehrlich, ich bin besser.",
+"b": "Du entscheidest, wer dich begleitet: Funki, dein kleiner Helfer, oder ich. Das stellst du in den Einstellungen ein. Aber ehrlich, ich bin besser.",
+"e": true
+},
+{
+"s": "Funki ist auch nett. Aber er war noch nie auf der I S S.",
+"b": "Funki ist auch nett. Aber er war noch nie auf der I S S.",
+"e": true
+},
+{
+"s": "Du kannst dir die Fragen auch vorlesen lassen. Welche Stimme dabei spricht, stellst du unter Vorlesen ein.",
+"b": "Du kannst dir die Fragen auch vorlesen lassen. Welche Stimme dabei spricht, stellst du unter Vorlesen ein.",
+"e": true
+},
+{
+"s": "Dein Lernstand gehört dir. Unter den Einstellungen kannst du ihn sichern und auf ein anderes Gerät mitnehmen. Mach das ruhig ab und zu, dann ist nichts verloren.",
+"b": "Dein Lernstand gehört dir. Unter den Einstellungen kannst du ihn sichern und auf ein anderes Gerät mitnehmen. Mach das ruhig ab und zu, dann ist nichts verloren.",
+"e": true
+},
+{
+"s": "Für den Kurs am Beamer gibt es in den Einstellungen einen eigenen Modus. Den kann dein Ausbilder einschalten.",
+"b": "Für den Kurs am Beamer gibt es in den Einstellungen einen eigenen Modus. Den kann dein Ausbilder einschalten.",
+"e": true
+},
+{
+"s": "Wenn du bei einer Frage nicht weiterkommst, schreib Hey KI davor. Der Lerncoach erklärt dir dann die Frage, und die Antwort sieht nur du.",
+"b": "Wenn du bei einer Frage nicht weiterkommst, schreib Hey KI davor. Der Lerncoach erklärt dir dann die Frage, und die Antwort sieht nur du.",
+"e": false
+},
+{
+"s": "Im Prüfungssimulator übst du wie in der echten Prüfung: drei Teile, jeweils fünfundzwanzig Fragen, fünfundvierzig Minuten. Die Auflösung gibt es erst am Ende.",
+"b": "Im Prüfungssimulator übst du wie in der echten Prüfung: drei Teile, jeweils fünfundzwanzig Fragen, fünfundvierzig Minuten. Die Auflösung gibt es erst am Ende.",
+"e": false
+},
+{
+"s": "Was du falsch beantwortet hast, sammelt sich bei Fehler wiederholen. Ein Tipp darauf, und du übst genau diese Fragen noch einmal.",
+"b": "Was du falsch beantwortet hast, sammelt sich bei Fehler wiederholen. Ein Tipp darauf, und du übst genau diese Fragen noch einmal.",
+"e": false
+},
+{
+"s": "Gelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt. Das heißt Auffrischen. Ohne das vergisst man schneller, als man denkt.",
+"b": "Gelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt. Das heißt Auffrischen. Ohne das vergisst man schneller, als man denkt.",
+"e": false
+},
+{
+"s": "Du kennst die Nummer einer Frage? Gib sie bei Suchen ein, zum Beispiel N C vier null vier. Der Trainer springt direkt dorthin.",
+"b": "Du kennst die Nummer einer Frage? Gib sie bei Suchen ein, zum Beispiel NC404. Der Trainer springt direkt dorthin.",
+"e": false
+},
+{
+"s": "Im Chat schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, und mit dem Bild-Knopf ein Foto.",
+"b": "Im Chat schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, und mit dem Bild-Knopf ein Foto.",
+"e": false
+},
+{
+"s": "Beim Blättern siehst du alle Fragen der Reihe nach, mit Lösung und Erklärung. Ganz ohne Druck. Gut zum Einlesen.",
+"b": "Beim Blättern siehst du alle Fragen der Reihe nach, mit Lösung und Erklärung. Ganz ohne Druck. Gut zum Einlesen.",
+"e": false
+},
+{
+"s": "Trag deinen Prüfungstermin ein. Dann rechnet dir der Trainer aus, wie viele Fragen du pro Tag schaffen solltest.",
+"b": "Trag deinen Prüfungstermin ein. Dann rechnet dir der Trainer aus, wie viele Fragen du pro Tag schaffen solltest.",
+"e": false
+},
+{
+"s": "Bei Rechenaufgaben lohnt sich das Formelblatt. Wenn zu einer Frage etwas darin steht, pulst der Knopf. Üb ruhig, die richtige Stelle schnell zu finden. Das brauchst du in der Prüfung.",
+"b": "Bei Rechenaufgaben lohnt sich das Formelblatt. Wenn zu einer Frage etwas darin steht, pulst der Knopf. Üb ruhig, die richtige Stelle schnell zu finden. Das brauchst du in der Prüfung.",
+"e": false
+}
+];
+    function majaStartNachricht(){
+        const st = lies('robo_maja_start', '');
+        if(st === '2') return false;
+        if(st === '1') return majaForumNachricht();
+        schreib('robo_maja_start', '1');
+        tu(() => window.astroPose && astroPose('winkt', 12000));
+        auftritt('<b>Hier spricht Maja, deine Astronautin!</b> Schön, dass du an Bord bist.'
+            + '<span class="rb-tipp">In den <b>Einstellungen</b> kannst du ganz viel nach deinem Geschmack verändern: <b>Farben, Schrift und Größe</b> · '
+            + '<b>Vorlesen</b> und Stimme · alle <b>Töne</b> einzeln an und aus (auch mein <b>Funk-Klang</b> mit Rauschen, Knistern und Roger-Piep) · dein <b>Tagesziel</b> · '
+            + 'und wer dich beim Lernen begleitet.</span>',
+            [['Weiter', 'majaforum'], ['Einstellungen öffnen', 'majaeinst']], 'tanzweg', 'tipp');
+        funkiSagt(MAJA_WILLKOMMEN, true);
+        return true;
+    }
+    function majaForumNachricht(){
+        schreib('robo_maja_start', '2');
+        tu(() => window.astroPose && astroPose('zeigt'));
+        auftritt('<b>Noch etwas:</b> Zu diesem Trainer gibt es auch ein <b>Amateurfunk-Forum</b>. Dort fragst du die, die es schon hinter sich haben, und kannst dich mit anderen austauschen.',
+            [['Zum Forum', 'majaforumauf'], ['Später', 'heim']], '', 'tipp');
+        funkiSagt(MAJA_FORUM, true);
+        return true;
+    }
+    function majaForumOeffnen(){
+        roboHeim(true);
+        tu(() => { if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/forum/'); else window.open('https://amateurfunk-trainer.com/forum/', '_blank', 'noopener'); });
+    }
+    // Hinweis statt Tipp: jeder dritte Tipp bei Maja, der Reihe nach
+    function majaHinweisDran(){
+        try{
+            if(maskottchenArt() !== 'astro') return false;
+            const z = parseInt(lies('robo_maja_hinw_zaehler', '0'), 10) || 0;
+            schreib('robo_maja_hinw_zaehler', String(z + 1));
+            return z % 3 === 2;
+        }catch(e){ return false; }
+    }
+    function majaHinweisZeigen(){
+        let i = parseInt(lies('robo_maja_hinw_nr', '-1'), 10);
+        i = (isNaN(i) ? 0 : i + 1) % MAJA_HINWEISE.length;
+        // Hinweise mit "p" werden nur gezeigt, wenn Majas Aufnahme dafuer schon im Paket liegt (sonst klaenge sie anders)
+        for(let n = 0; n < MAJA_HINWEISE.length && MAJA_HINWEISE[i].p && !imMajaPaket(MAJA_HINWEISE[i].s); n++) i = (i + 1) % MAJA_HINWEISE.length;
+        schreib('robo_maja_hinw_nr', String(i));
+        const h = MAJA_HINWEISE[i];
+        tu(() => window.astroPose && astroPose('zeigt'));
+        auftritt('<b>Tipp:</b> ' + esc(h.b), h.k === 'f' ? [['Zum Forum', 'majaforumauf'], ['Noch ein Tipp', 'tipp']] : h.k === 'w' ? [['Zur Webseite', 'majawebauf'], ['Noch ein Tipp', 'tipp']] : h.e ? [['Einstellungen öffnen', 'majaeinst'], ['Noch ein Tipp', 'tipp']] : [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
+        if(mehrSprechen()) funkiSagt(h.s, true);
+    }
+    window.majaStartNachricht = majaStartNachricht; window.majaHinweisZeigen = majaHinweisZeigen;
+    window.majaSagtPaket = (t) => { try{ if(maskottchenArt() === 'astro' && mehrSprechen()) funkiSagt(t, true); }catch(e){} };
     function tippZeigen(){
+        if(majaHinweisDran()){ majaHinweisZeigen(); return; }
         tu(() => window.astroPose && astroPose('zeigt'));
         const tipp = naechsterTipp();
         auftritt('<b>Tipp:</b> ' + tipp, [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
@@ -56876,7 +57615,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // 21.10.2026, Dietmar wählte aus den Hörproben "4_US_Heart_Deutsch_und_am_Ende_How_copy_Over" ("Bingo!"): helle Frauenstimme,
     // Funkband wie im ISS-Video (300-3400 Hz, stark komprimiert), Klang wandert von satt/dunkel zu dünn/hell (Tonhöhe steigt, Bässe gehen),
     // kaum Rauschen, Fading, Roger-Beep. Englischer Rahmen (nur bei den ISS-Sprüchen): "Here ISS, International Space Station" ... "How copy? Over."
-    const ASTRO_STIMME = { halb: 1.5, tempo: 1.03, hp: 300, praes: 4, tp: 3400, chorus: 0.03, vib: 0, echo: 0.04, fading: 0.12, doppler: -0.08, rausch: 0.007, duenn: true, komprimiert: true, quindar: true, frau: true };
+    const ASTRO_STIMME = { halb: 1.5, tempo: 1.03, hp: 300, praes: 4, tp: 3400, chorus: 0.03, vib: 0, echo: 0.04, fading: 0.22, doppler: -0.08, rausch: 0.007, rauschEcht: 0.22, qrm: 0.5, qrn: 1, duenn: true, komprimiert: true, quindar: true, frau: true };
     // Spricht der Astronaut als Begleiter (06.10.2026, Dietmar: Quindar-Roger-Beep, danach kurzes
     // Rauschen, gerne mit etwas Doppler): dieselbe Funkstimme, dazu gleitet die Tonhoehe leicht.
     const ASTRO_SPRECH = Object.assign({}, ASTRO_STIMME);
@@ -57061,6 +57800,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(t === 'weiter') tourSchritt(robo.schritt + 1);
         else if(t === 'tipp') tippZeigen();
         else if(t === 'tour') tourSchritt(1);
+        else if(t === 'majaforum'){ majaForumNachricht(); }
+        else if(t === 'majaforumauf') majaForumOeffnen();
+        else if(t === 'majawebauf'){ roboHeim(true); tu(() => { if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/'); else window.open('https://amateurfunk-trainer.com/', '_blank', 'noopener'); }); }
+        else if(t === 'majaeinst'){ roboHeim(true); tu(() => einstellungenOeffnen()); }
         else if(t === 'runde'){ roboHeim(true); rundeStarten(); }
         else if(t === 'vorlesen'){ kurzWeg(); tu(() => { const b = $('ttsBtn'); if(b) b.click(); }); }
         else if(t.indexOf('antwort:') === 0) plauschAntwort(parseInt(t.slice(8), 10));
@@ -57508,7 +58251,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     let majaPaket = null, majaPaketLaden = null;
     function majaPaketHolen(){
         if(majaPaket || majaPaketLaden) return majaPaketLaden || Promise.resolve(majaPaket);
-        majaPaketLaden = fetch('sounds/maja/paket.json', { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
+        majaPaketLaden = fetch('sounds/maja-grok/paket.json', { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
             .then(j => { majaPaket = (j && j.dateien) ? j : { dateien: {} }; return majaPaket; })
             .catch(() => { majaPaket = { dateien: {} }; return majaPaket; });
         return majaPaketLaden;
@@ -57527,7 +58270,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 const p = await majaPaketHolen();
                 const datei = p && p.dateien && p.dateien[String(text).trim()];
                 if(datei){
-                    const r0 = await fetch('sounds/maja/' + datei, { cache: 'force-cache' });
+                    const r0 = await fetch('sounds/maja-grok/' + datei, { cache: 'force-cache' });
                     if(r0.ok){
                         const b0 = await r0.arrayBuffer();
                         if(b0 && b0.byteLength > 200){
@@ -57592,8 +58335,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // selbst = true: angetippt, Rundgang, Lob oder Probe - ohne Pause davor
     async function funkiSagt(text, selbst, stimme){
         if(!stimme && typeof maskottchenArt === 'function' && maskottchenArt() === 'astro') stimme = ASTRO_SPRECH;
-        try{ if(window.alsMaja) text = alsMaja(text); }catch(e){}
-        try{ text = rufzeichenSprechen(text); }catch(e){}
+        const imPaketGanz = (typeof text === 'string' && imMajaPaket(text));   // fertig aufgenommener Satz (Maja-Paket): nicht mehr umformen
+        try{ if(window.alsMaja && !imPaketGanz) text = alsMaja(text); }catch(e){}
+        try{ if(!imPaketGanz) text = rufzeichenSprechen(text); }catch(e){}
         // CQ spricht Maja englisch (Dietmar 25.10.2026: "CQ muss Seek You gesprochen werden")
         try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro' && typeof text === 'string') text = text.replace(/\bC ?Q-Ruf\b/g, 'Seek-You-Ruf').replace(/\bC ?Q\b/g, 'Seek You'); }catch(e){}
         // AB UND ZU ENGLISCH (25.10.2026). Dietmar: "Hinten oder vorne dran, gerne was in Englisch."
@@ -57637,6 +58381,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(!da) return false;
         }catch(e){ return false; }
         if(folge.some(f => f.text && !f.puffer)) return false;
+        // Echtes Funkrauschen (Aufnahme von Dietmar) auch ohne ISS-Rahmen laden - sonst bleibt nur das kaum hoerbare Rechenrauschen.
+        if(stimme && stimme.quindar && !ton.rauschPuffer){ try{ const fr = await Promise.race([rahmenKlip(ctx, 'sounds/funkrauschen.mp3?v=1'), new Promise(r => setTimeout(() => r(null), 2500))]); if(fr) ton.rauschPuffer = fr; }catch(e){} }
         // Englischer Rahmen (Maja als ISS): vorn "Here ISS, International Space Station", hinten "How copy? Over." - fertige Aufnahmen aus sounds/
         if(stimme && stimme.rahmen){
             try{
@@ -57695,9 +58441,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function roboterton(ctx, folge, nr, st){
         st = Object.assign({}, STIMME, st || {});
         // Funk-Klang bei Maja (Einstellungen): Quetschen, Rauschen und Piepser einzeln abschaltbar
-        let ohneRausch = false, ohnePiep = false;
+        let ohneRausch = false, ohnePiep = false, stufeRausch = 1, stufeQrn = 1, stufeQrm = 1, ohneBett = false;
         try{ if(typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){
-            ohneRausch = !majaFunkAn('rauschen'); ohnePiep = !majaFunkAn('piepser');
+            ohnePiep = !majaFunkAn('piepser');
+            stufeRausch = MAJA_STUFEN_FAKTOR.rauschen[majaStufe('rauschen')]; stufeQrn = MAJA_STUFEN_FAKTOR.qrn[majaStufe('qrn')]; stufeQrm = MAJA_STUFEN_FAKTOR.qrm[majaStufe('qrm')];
+            ohneRausch = stufeRausch === 0;   // das kurze Rauschen hinter dem Roger-Piep gehoert zum Rauschen
+            ohneBett = stufeRausch === 0 && stufeQrn === 0 && stufeQrm === 0;
             if(!majaFunkAn('quetschen')) st = Object.assign(st, { halb: 0, tempo: 1, hp: 70, praes: 0, tp: 12000, chorus: 0, echo: 0, fading: 0, doppler: 0, duenn: false, komprimiert: false, vib: 0 });
         } }catch(e){}
         const kn = [], neu = k => { kn.push(k); return k; };
@@ -57818,29 +58567,58 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 o.connect(g); g.connect(tonAus); o.start(ab); o.stop(ab + 0.26);
             };
             const bett = (ab, bis) => {
-                if(ohneRausch) return;
+                if(ohneBett) return;
                 const n = Math.floor(ctx.sampleRate * 1.5), nb = ctx.createBuffer(1, n, ctx.sampleRate), nd = nb.getChannelData(0);
                 for(let i = 0; i < n; i++) nd[i] = Math.random() * 2 - 1;
                 const echt = ton.rauschPuffer;   // echtes Funkrauschen: durchgaengig, ohne Pulsieren
                 const s = neu(ctx.createBufferSource()); s.buffer = echt || nb; s.loop = true;
                 const h2 = neu(ctx.createBiquadFilter()); h2.type = 'highpass'; h2.frequency.value = echt ? 200 : 600; h2.Q.value = 0.7;
                 const l2 = neu(ctx.createBiquadFilter()); l2.type = 'lowpass'; l2.frequency.value = 4200; l2.Q.value = 0.7;
-                const g = neu(ctx.createGain()), st0 = echt ? 0.2 : (st.rausch != null ? st.rausch : 0.05);   // echtes Rauschen ist auf Pegel 0,1 normiert: 0,2 -> etwa -34 dB unter der Stimme
+                const g = neu(ctx.createGain()), st0 = (echt ? (st.rauschEcht || 0.2) : (st.rausch != null ? st.rausch : 0.05)) * stufeRausch;   // echtes Rauschen ist auf Pegel 0,1 normiert: 0,2 -> etwa -34 dB unter der Stimme
                 g.gain.setValueAtTime(0, ab); g.gain.linearRampToValueAtTime(st0, ab + 0.03);
                 g.gain.setValueAtTime(st0, bis - 0.05); g.gain.linearRampToValueAtTime(0, bis);
                 // das Rauschen atmet leicht, wie bei schwachem Empfang
                 const wo = neu(ctx.createOscillator()); wo.frequency.value = 3.3;   // (bei echtem Rauschen kein kuenstliches Atmen)
                 const wg = neu(ctx.createGain()); wg.gain.value = echt ? 0 : st0 * 0.2; wo.connect(wg); wg.connect(g.gain);
-                s.connect(h2); h2.connect(l2); l2.connect(g); g.connect(tonAus);
+                if(stufeRausch > 0){ s.connect(h2); h2.connect(l2); l2.connect(g); g.connect(tonAus); }
                 s.start(ab, echt ? Math.random() * Math.max(0, echt.duration - 0.5) : 0); s.stop(bis + 0.02); wo.start(ab); wo.stop(bis + 0.02);
                 // dazu ein leises Knistern
-                for(let t = echt ? bis : ab + 0.1 + Math.random() * 0.2; t < bis - 0.15; t += 0.4 + Math.random() * 1.0){
+                // QRN (atmosphaerisches Knistern) - 25.10.2026, Dietmar: "Ein Rauschen war nicht wirklich zu hoeren und auch kein
+                // QRM oder sonstige Dinge". Jetzt knistert es auch ueber dem echten Rauschen, gelegentlich mit einem lauteren Knacks.
+                const dichteQrn = (st.qrn != null ? st.qrn : 0) * stufeQrn;
+                for(let t = (!dichteQrn) ? bis : ab + 0.1 + Math.random() * 0.2; t < bis - 0.15; t += (0.4 + Math.random() * 1.0) / Math.max(0.3, dichteQrn || 1)){
                     const kn2 = Math.floor(ctx.sampleRate * (0.005 + Math.random() * 0.009)), kb = ctx.createBuffer(1, kn2, ctx.sampleRate), kd = kb.getChannelData(0);
                     for(let i = 0; i < kn2; i++) kd[i] = (Math.random() * 2 - 1) * (1 - i / kn2);
                     const ks = neu(ctx.createBufferSource()); ks.buffer = kb;
                     const kf = neu(ctx.createBiquadFilter()); kf.type = 'bandpass'; kf.frequency.value = 2400 + Math.random() * 1600; kf.Q.value = 0.9;
-                    const kg = neu(ctx.createGain()); kg.gain.value = 0.025 + Math.random() * 0.03;
+                    const kg = neu(ctx.createGain()); kg.gain.value = (0.025 + Math.random() * 0.03) * (echt ? 2.2 : 1) * (Math.random() < 0.12 ? 2.5 : 1);
                     ks.connect(kf); kf.connect(kg); kg.connect(tonAus); ks.start(t);
+                }
+                // QRM: ein anderer Funker auf der Frequenz - leise Morsezeichen oder ein pfeifender Ueberlagerungston
+                if(st.qrm && stufeQrm > 0 && Math.random() < st.qrm * stufeQrm / 0.6 && bis - ab > 1.2){
+                    const dauerQ = Math.min(bis - ab - 0.4, 1.0 + Math.random() * 1.6), anf = ab + 0.2 + Math.random() * Math.max(0, bis - ab - dauerQ - 0.4);
+                    const bpq = neu(ctx.createBiquadFilter()); bpq.type = 'bandpass'; bpq.frequency.value = 900; bpq.Q.value = 1.2;
+                    const qg = neu(ctx.createGain()); qg.gain.value = 1; bpq.connect(qg); qg.connect(tonAus);
+                    if(Math.random() < 0.6){
+                        // Morsezeichen
+                        const hz = 520 + Math.random() * 420, dit = 0.055 + Math.random() * 0.025;
+                        let tt = anf;
+                        while(tt < anf + dauerQ){
+                            const lang = Math.random() < 0.45 ? 3 : 1, d = dit * lang;
+                            const o = neu(ctx.createOscillator()); o.type = 'sine'; o.frequency.value = hz;
+                            const og = neu(ctx.createGain()); og.gain.setValueAtTime(0, tt); og.gain.linearRampToValueAtTime(0.03, tt + 0.006);
+                            og.gain.setValueAtTime(0.03, tt + d - 0.006); og.gain.linearRampToValueAtTime(0, tt + d);
+                            o.connect(og); og.connect(bpq); o.start(tt); o.stop(tt + d + 0.01);
+                            tt += d + dit * (Math.random() < 0.2 ? 3 : 1);
+                        }
+                    } else {
+                        // Pfeifton, der vorbeizieht
+                        const o = neu(ctx.createOscillator()); o.type = 'sine';
+                        o.frequency.setValueAtTime(1500 + Math.random() * 300, anf); o.frequency.linearRampToValueAtTime(500 + Math.random() * 200, anf + dauerQ);
+                        const og = neu(ctx.createGain()); og.gain.setValueAtTime(0, anf); og.gain.linearRampToValueAtTime(0.025, anf + dauerQ * 0.35);
+                        og.gain.linearRampToValueAtTime(0, anf + dauerQ);
+                        o.connect(og); og.connect(bpq); o.start(anf); o.stop(anf + dauerQ + 0.01);
+                    }
                 }
             };
             if(fruehTeil){
@@ -58188,6 +58966,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(window.scrollY <= 150){
             robo.frei++;
             if(robo.frei >= 2){
+                if(maskottchenArt() === 'astro' && lies('robo_maja_start', '') !== '2' && (lies('robo_maja_start', '') !== '1' || jetzt - (robo.letzter || 0) > 20000)){ if(majaStartNachricht()) return; }
                 if(lies('robo_tour_gesehen', '') !== '1'){ tourStarten(); return; }
                 if(werk.aufstieg && jetzt - (robo.letzter || 0) > 8000){ stufeFeiern(); return; }     // neue Stufe (UEBERSICHT UND WERKZEUGE)
                 if(heuteAnzahl() >= tagesziel() && lies('robo_ziel_tag', '') !== t){ schreib('robo_ziel_tag', t); schreib('robo_gruss_tag', t); zielFeiern(); return; }
@@ -59634,6 +60413,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const rolle = $('formelAppRolle'), bild = $('formelAppBild'), stand = $('formelAppStand'), hinweis = $('formelAppHinweis');
         if(!rolle || !bild) return;
         formel.seite = seite;
+        tu(() => { const g = $('formelExternBtn'); if(g) g.textContent = formel.zoom > 1.02 ? 'Kleiner' : 'Größer'; });
         if(stand) stand.textContent = 'Blatt ' + (seite - 2) + ' \u00b7 Seite ' + seite + ' von ' + formel.seiten;
         rolle.querySelectorAll('.fa-blatt').forEach(b => { b.disabled = b.dataset.tat === 'weiter' ? seite >= formel.seiten : seite <= 1; });
         const breite = Math.max(200, rolle.clientWidth - 2);
@@ -59655,12 +60435,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!formel.seiten) tu(() => { formel.seiten = Number(window.AndroidApp.pdfSeiten(FORMEL_DATEI)) || 0; });
         if(!formel.seiten) return false;
         if(!$('formelAppRolle')) formelAppBauen(buehne);
+        formelGestenAn();
         const g = $('formelExternBtn');
-        if(g){ g.textContent = formel.zoom > 1 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – zum Lesen im Blatt rollen'; }
-        tu(() => { const f = buehne.parentElement && buehne.parentElement.querySelector(':scope > div:last-child'); if(f && f !== buehne) f.textContent = 'Amtliches Hilfsmittel der Bundesnetzagentur – in der Prüfung wird es genau so ausgehändigt. Blättern mit den Pfeilen, „Größer“ zum Vergrößern.'; });
+        if(g){ g.textContent = formel.zoom > 1.02 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – oder mit zwei Fingern aufziehen'; }
+        tu(() => { const f = buehne.parentElement && buehne.parentElement.querySelector(':scope > div:last-child'); if(f && f !== buehne) f.textContent = 'Amtliches Hilfsmittel der Bundesnetzagentur – in der Prüfung wird es genau so ausgehändigt. Blättern mit den Pfeilen. Mit zwei Fingern vergrößern, mit einem Finger verschieben, zweimal tippen zoomt hinein und wieder heraus.'; });
         formelAppSeite(Math.max(1, Math.min(seite || 1, formel.seiten)));
         return true;
     };
+    function formelGestenAn(){
+        const rolle = $('formelAppRolle'), bild = $('formelAppBild');
+        window.formelGestenAnbringen(rolle, bild, () => formel.zoom, z => { formel.zoom = z; formelAppSeite(formel.seite || 1); });
+    }
     // "Groesser" in der App: zwischen Blattbreite und doppelt umschalten
     window.appFormelGroesser = function(){
         if(!formelAppDa() || !$('formelAppRolle')) return false;
@@ -62358,21 +63143,21 @@ html:not(.android-app).fs-bunt body.dark.graphit .footer-note #footerTeile{ colo
 <style id="polarApp">
 /* POLAR AUCH IN DER APP-ANSICHT (21.10.2026): Dietmar: "im dunklen Modus gibt es kein Polar". Seite im schrägen Farbverlauf (hell links oben, dunkel rechts unten),
    Kacheln, Kästen, Kopf- und Fußleiste als Glas wie das Polar am PC. */
-html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz){
+html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz){
     background:linear-gradient(135deg,#2c4fa8 0%,#1c3277 28%,#10204f 58%,#070d28 100%) fixed !important;
     --s-bg:#0b1438; --s-fl:rgba(255,255,255,.075); --s-fl2:rgba(255,255,255,.115); --s-rand:rgba(255,255,255,.15); --s-rand2:rgba(255,255,255,.24);
     --s-navi:rgba(18,34,84,.86); --s-blatt:#14245a; --s-schatten:0 10px 26px rgba(0,0,16,.34);
 }
-html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz) :is(.ah-kachel, #ahTag, #awFort, #awPfad, .app-chip, .al-knopf){
+html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) :is(.ah-kachel, #ahTag, #awFort, #awPfad, .app-chip, .al-knopf){
     background-image:linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.025)) !important;
     border-color:rgba(255,255,255,.17) !important;
 }
-html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz) :is(#appLeiste, #appNavi){
+html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) :is(#appLeiste, #appNavi){
     background:linear-gradient(135deg, rgba(40,72,158,.82), rgba(12,22,60,.88)) !important;
     border-color:rgba(255,255,255,.18) !important;
 }
-html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz) #appNavi{ border-radius:var(--opt-r,20px); box-shadow:0 10px 28px rgba(0,0,16,.4); }
-html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz) .app-footer-note, html.android-app.stil-verspielt.fs-bunt body.dark:not(#zz) .footer-note{ background:none !important; border:0 !important; box-shadow:none !important; }
+html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) #appNavi{ border-radius:var(--opt-r,20px); box-shadow:0 10px 28px rgba(0,0,16,.4); }
+html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .app-footer-note, html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .footer-note{ background:none !important; border:0 !important; box-shadow:none !important; }
 </style>
 </body>
 </html>

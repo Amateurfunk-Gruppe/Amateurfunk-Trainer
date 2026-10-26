@@ -81,7 +81,7 @@ public class TrainerService extends Service {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm.getNotificationChannel(KANAL) == null) {
             NotificationChannel k = new NotificationChannel(KANAL, "Trainer-Server", NotificationManager.IMPORTANCE_LOW);
-            k.setDescription("Zeigt, dass der Trainer laeuft und unter welcher Adresse ihn andere im WLAN erreichen.");
+            k.setDescription("Zeigt, dass der Trainer auf diesem Handy laeuft.");
             nm.createNotificationChannel(k);
         }
         PendingIntent oeffnen = PendingIntent.getActivity(this, 0,
@@ -89,7 +89,8 @@ public class TrainerService extends Service {
         PendingIntent beenden = PendingIntent.getService(this, 1,
             new Intent(this, TrainerService.class).setAction(BEENDEN), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         String ip = wlanAdresse();
-        String text = ip != null ? "Im WLAN erreichbar unter http://" + ip + ":3000" : "Läuft auf diesem Handy";
+        // 26.10.2026: Nur noch "laeuft auf diesem Handy" - im WLAN ist der Trainer nur erreichbar, wenn man es in den Einstellungen einschaltet
+        String text = "Läuft auf diesem Handy";
         return new Notification.Builder(this, KANAL)
             .setSmallIcon(R.drawable.ic_benachrichtigung)
             .setContentTitle("Amateurfunk-Trainer läuft")
