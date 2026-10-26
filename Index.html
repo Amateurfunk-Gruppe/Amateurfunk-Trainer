@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 322, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 325, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34547,9 +34547,9 @@ function einstBlaetterFuellen(){
           + '<button type="button" style="margin-top:0.8rem; padding:0.5rem 1rem; font-size:0.85rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer;" onclick="majaFunkProbe()">▶ Probe hören</button>') + '</div>';
     document.getElementById('einstBlatt_sounds').innerHTML =
         '<div id="einstSoundSchnell" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:0 0 0.9rem;">'
-      + '<button type="button" onclick="soundVoreinstellung(\'aus\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-xmark"></i> Alle Sounds aus</button>'
-      + '<button type="button" onclick="soundVoreinstellung(\'noetig\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-low"></i> Nur die nötigsten</button>'
-      + '<div id="einstSoundHinweis" role="status" style="display:none; flex:1 1 100%; font-size:0.8rem; color:#0f2745;"></div></div>'
+      + '<button type="button" id="einstSoundAus" onclick="soundVoreinstellung(\'aus\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-xmark"></i> Alle Sounds aus</button>'
+      + '<button type="button" id="einstSoundNoetig" onclick="soundVoreinstellung(\'noetig\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-low"></i> Nur die nötigsten</button>'
+      + '<div id="einstSoundHinweis" role="status" style="display:none; flex:1 1 100%; font-size:0.88rem; font-weight:600; color:inherit; margin:0.1rem 0 0;"></div></div>'
       + einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
             + 'beim Einschalten hörst du ihn einmal zur Probe.',
             tonZeile('einstKlickTon', 'einstKlickTonSetzen(this.checked)', 'Klickton bei Knöpfen',
@@ -41630,7 +41630,7 @@ function majaStufeSetzen(name, wert, probe){
 // art 'noetig': nur der Formelblatt-Zweiklang bleibt an (er weist auf das Formelblatt hin), alles andere aus
 function soundVoreinstellung(art){
     const nur = art === 'noetig';
-    try{ if(window.klickSound) window.klickSound.aus(); }catch(e){}
+    try{ if(window.klickSound) window.klickSound.aus(); else localStorage.setItem('klickSoundAus', '1'); }catch(e){}
     try{
         einstellungen.formelTon = nur; einstellungen.magnetTon = false; einstellungen.levelUpTon = false; einstellungen.funkEffektAn = false;
         einstellungenSpeichern();
@@ -41641,12 +41641,46 @@ function soundVoreinstellung(art){
     ['quetschen', 'doppler', 'piepser'].forEach(t => majaFunkSetzen(t, false));
     ['rauschen', 'qrn', 'qrm', 'cw'].forEach(n => majaStufeSetzen(n, 0, false));
     try{ einstellungenAnwenden(); }catch(e){}
+    soundSchnellMarkieren();
     try{
         const h = document.getElementById('einstSoundHinweis');
         if(h){ h.textContent = nur ? 'Fertig: Nur der Formelblatt-Zweiklang ist an, alles andere ist aus.' : 'Fertig: Alle Sounds sind aus.'; h.style.display = 'block'; }
     }catch(e){}
 }
 window.soundVoreinstellung = soundVoreinstellung;
+// Welcher der beiden Knoepfe gerade gilt, sieht man an der Farbe (Dietmar: "Ich sehe auch nicht, was aktiviert ist"): tuerkis mit Haken = aktiv
+function soundSchnellArt(){
+    try{
+        const g = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+        const e = einstellungen || {};
+        if(e.magnetTon || e.levelUpTon || e.funkEffektAn) return '';
+        const klickAus = !window.klickSound || !window.klickSound.istAn ? g('klickSoundAus') === '1' : !window.klickSound.istAn();
+        if(!klickAus) return '';
+        if(document.documentElement.classList.contains('stil-verspielt')){
+            if(g('robo_stimme') !== 'aus' || g('robo_iss_ton') !== 'aus' || g('app_tipptoene') !== 'aus') return '';
+            if(['quetschen', 'doppler', 'piepser'].some(t => majaFunkAn(t))) return '';
+            if(['rauschen', 'qrn', 'qrm', 'cw'].some(n => majaStufe(n) !== 0)) return '';
+        }
+        return e.formelTon ? 'noetig' : 'aus';
+    }catch(x){ return ''; }
+}
+function soundSchnellMarkieren(){
+    try{
+        const art = soundSchnellArt();
+        [['einstSoundAus', 'aus'], ['einstSoundNoetig', 'noetig']].forEach(([id, a]) => {
+            const b = document.getElementById(id); if(!b) return;
+            const an = art === a, st = b.style;
+            st.setProperty('background', an ? '#0a7f86' : '#e6f6f7', 'important');
+            st.setProperty('color', an ? '#ffffff' : '#0f2745', 'important');
+            st.setProperty('border-color', an ? '#0a7f86' : '#0a7f86', 'important');
+            b.setAttribute('aria-pressed', an ? 'true' : 'false');
+            const t = b.dataset.t || (b.dataset.t = b.textContent.trim());
+            b.querySelectorAll('.snd-haken').forEach(x => x.remove());
+            if(an){ const h = document.createElement('i'); h.className = 'fas fa-check snd-haken'; h.style.marginLeft = '0.35rem'; b.appendChild(h); }
+        });
+    }catch(x){}
+}
+setInterval(soundSchnellMarkieren, 600);
 const MAJA_TRAURIG = "Oh. Du hast mein Rauschen ausgeschaltet. Ich hatte mich schon so an dich gewöhnt. Aber keine Sorge: Unter Einstellungen, Sounds, bekomme ich es jederzeit zurück.";
 function majaProbeHinweis(t){
     try{
