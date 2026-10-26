@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 331, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 332, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -58816,7 +58816,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 const p = await majaPaketHolen();
                 const datei = p && p.dateien && p.dateien[String(text).trim()];
                 if(datei){
-                    const r0 = await fetch('sounds/maja-grok/' + datei, { cache: 'force-cache' });
+                    const r0 = await fetch('sounds/maja-grok/' + datei + '?q=80', { cache: 'force-cache' });   // ?q=80: neue Aufnahmen (80 kbit/s statt 40), sonst liefert der Zwischenspeicher die alten
                     if(r0.ok){
                         const b0 = await r0.arrayBuffer();
                         if(b0 && b0.byteLength > 200){
