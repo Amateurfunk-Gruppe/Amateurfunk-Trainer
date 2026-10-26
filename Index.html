@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 332, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 335, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35273,14 +35273,27 @@ function appPiperKarteHtml(){
         h += '<span style="flex:1 1 auto; min-width:0;">' + kopf + '<span style="display:block; font-size:0.72rem; opacity:0.75;">Einmal laden: ca. ' + P.mb + ' MB \u2013 am besten im WLAN.</span></span>'
            + '<button type="button" style="' + EINST_KNOPF + kn + '" onclick="appPiperLaden()"><i class="fas fa-download"></i> Herunterladen</button>';
     }
-    return h + '<div id="appPiperMeldung" style="flex:1 0 100%; font-size:0.74rem; line-height:1.5; display:none;"></div></section>';
+    // Die Meldung bleibt stehen (27.10.2026, Dietmar: "das wird nur so kurz angezeigt, kann es nicht lesen"): Die Karte wird oft neu
+    // gezeichnet und hat die Meldung dabei jedes Mal weggewischt. Jetzt merkt sich appPiperLetzte sie bis zum naechsten Versuch.
+    const mt = String(window.appPiperLetzte || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    return h + '<div id="appPiperMeldung" style="flex:1 0 100%; font-size:0.82rem; font-weight:600; line-height:1.5; user-select:text; display:' + (mt ? 'block' : 'none') + ';">' + mt + '</div></section>';
 }
-function appPiperMeldung(t){ try{ const e = document.getElementById('appPiperMeldung'); if(e){ e.textContent = t || ''; e.style.display = t ? 'block' : 'none'; } }catch(x){} }
+window.appPiperLetzte = '';
+function appPiperMeldung(t){ try{ window.appPiperLetzte = t || ''; const e = document.getElementById('appPiperMeldung'); if(e){ e.textContent = t || ''; e.style.display = t ? 'block' : 'none'; } }catch(x){} }
 function appPiperLaden(){
     const P = window.AfuPiperApp; if(!P) return;
+    appPiperMeldung('');
     P.installieren((geladen, gesamt) => { try{ const e = document.getElementById('appPiperStatus'); if(e) e.textContent = 'Wird geladen \u2026 ' + Math.round(geladen * 100 / gesamt) + ' %'; }catch(x){} })
         .then(() => { P.setzeAktiv(true); try{ appStimmenNachziehen(); }catch(x){} setTimeout(() => { try{ appPiperProbe(); }catch(x){} }, 300); },
-              e => { try{ appStimmenNachziehen(); appPiperMeldung('Das Laden hat nicht geklappt (' + ((e && e.message) || 'unbekannt') + '). Pr\u00fcfe das Internet und tippe noch einmal auf Herunterladen.'); }catch(x){} });
+              e => { try{ appPiperMeldung('Das Laden hat nicht geklappt (' + ((e && e.name && e.name !== 'Error' ? e.name + ': ' : '') + ((e && e.message) || 'unbekannt')) + '). Pr\u00fcfe das Internet und tippe noch einmal auf Herunterladen.'); appStimmenNachziehen(); appPiperMeldung(window.appPiperLetzte); }catch(x){}
+                  // Pruefen, ob die Programmdateien in der App liegen (27.10.2026, Dietmar: "Piper laeuft hier nicht")
+                  try{
+                      const dat = ['/piper-web/piper-worker.js', '/piper-web/piper_phonemize.wasm', '/piper-web/piper_phonemize.data'];
+                      Promise.all(dat.map(f => fetch(f + '?v=app1', { method: 'HEAD' }).then(r => r.status, () => 'kein Zugriff'))).then(st => {
+                          const nein = st.some(x => x !== 200);
+                          appPiperMeldung(window.appPiperLetzte + ' Programmdateien in der App: ' + (nein ? 'FEHLEN (' + st.join(' / ') + ') \u2013 diese App-Version ist zu alt, bitte die neue App aus dem Play Store installieren.' : 'vorhanden (' + st.join(' / ') + ').'));
+                      });
+                  }catch(x){} });
     setTimeout(() => { try{ appStimmenNachziehen(); }catch(x){} }, 50);
 }
 function appPiperWaehlen(){
@@ -58531,7 +58544,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(ton.ctx) return ton.ctx;
         const AC = window.AudioContext || window.webkitAudioContext;
         if(!AC) return null;
-        tu(() => { ton.ctx = new AC(); });
+        // 27.10.2026 Stand 333: In der Android-App (WebView) hoert Dietmar bei Majas Stimme kleine Aussetzer ("patzt ein klein wenig").
+        // Der Standard 'interactive' arbeitet mit sehr kleinem Puffer und reisst ab, sobald das Handy kurz anderes zu tun hat.
+        // 'playback' nimmt einen groesseren Puffer: Majas Satz beginnt einen Hauch spaeter, laeuft aber ohne Unterbrechung.
+        tu(() => { ton.ctx = window.AndroidSprache ? new AC({ latencyHint: 'playback' }) : new AC(); });
+        if(!ton.ctx) tu(() => { ton.ctx = new AC(); });
         return ton.ctx;
     }
     // Wer spricht? Ist ein Blatt der Werkzeuge offen, der Funki auf dessen
