@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 316, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 322, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32213,8 +32213,10 @@ function ttsInStuecke(text){
 // ================================================================
 function funkEffektAktiv(){
     try{
-        if(localStorage.getItem('app_stil') !== 'verspielt') return false;
-        return !(einstellungen && einstellungen.funkEffekt === false);
+        // 27.10.2026, Dietmar: "Beim Vorlesen der Frage kommt bei Sachlich der Roger-Beep ... bei Verspielt einschaltbar, von Haus aus deaktiviert."
+        // Massgeblich ist der Stil, der gerade WIRKLICH laeuft (Klasse), nicht der gemerkte Wert app_stil (der bleibt am PC auch in der klassischen Ansicht stehen).
+        if(!document.documentElement.classList.contains('stil-verspielt')) return false;
+        return !!(einstellungen && einstellungen.funkEffektAn === true);
     }catch(e){ return false; }
 }
 function funkEffektSpielen(){
@@ -32603,7 +32605,7 @@ const MAUS_FARBEN = {
 // "DIE ANTWORT UNTER DER MAUS VORLESEN" weiter unten. Standard AUS.
 const MAUS_RAND_ARTEN = ['lauf', 'fest', 'kein'];
 let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffekt: true };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false };
 
 function einstellungenSchluessel(){
     return 'amateurfunk_einstellungen_' + (typeof currentUser !== 'undefined' ? currentUser : 'user1');
@@ -32613,7 +32615,7 @@ function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
                       levelUpTon: true, rundeFertig: true, rundenFeier: true, magnetTon: true,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffekt: true };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
@@ -32639,7 +32641,13 @@ function einstellungenLaden(){
             else if(d && d.mausLauf === false) einstellungen.mausRand = 'fest';   // alter Stand
             if(d && d.mausLeuchten === false) einstellungen.mausLeuchten = false;
             einstellungen.mausVorlesen = !!(d && d.mausVorlesen);
-            if(d && d.funkEffekt === false) einstellungen.funkEffekt = false;
+            if(d && d.funkEffektAn === true) einstellungen.funkEffektAn = true;   // nur wer ihn selbst eingeschaltet hat
+        }
+        // 27.10.2026, Dietmar: "Unter Sachlich hat man seine Ruhe ... nur die nötigsten Sounds aktiviert." Im Stil Sachlich (nicht Verspielt) sind die
+        // Zusatztöne von Haus aus aus - aber nur, solange der Nutzer sie noch nie selbst gesetzt hat (gespeicherte Werte gelten weiter).
+        if(!document.documentElement.classList.contains('stil-verspielt')){
+            let dd = null; try{ dd = JSON.parse(localStorage.getItem(einstellungenSchluessel()) || 'null'); }catch(e){}
+            ['formelTon', 'magnetTon', 'levelUpTon'].forEach(k => { if(!(dd && typeof dd[k] === 'boolean')) einstellungen[k] = false; });
         }
     }catch(e){}
     einstellungenAnwenden();
@@ -32845,7 +32853,7 @@ function einstellungenUmschalten(feld, an){
     }
     // Beim Einschalten einmal sagen, was jetzt gilt - ohne Haken bleibt
     // eine angefangene Antwort trotzdem zu Ende gesprochen.
-    if(feld === 'funkEffekt' && an){ try{ funkEffektSpielen(); }catch(e){} }
+    if(feld === 'funkEffektAn' && an){ try{ funkEffektSpielen(); }catch(e){} }
     if(feld === 'mausVorlesen'){
         try{ mausVorleseVerlassen(); }catch(e){}
         if(an) knopfSprechen('Die Antwort unter der Maus wird jetzt vorgelesen.');
@@ -34308,10 +34316,10 @@ function einstBlaetterFuellen(){
           + 'data-vorlesen-kurz="Funk-Effekt nach der Frage." '
           + 'data-vorlesen="Funk-Effekt nach der Frage. Im Stil Verspielt kommt nach der vorgelesenen Frage ein kurzer Roger-Beep mit Rauschen, wie am Funkgerät.">'
           + '<input type="checkbox" id="einstFunkEffekt" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" '
-          + 'onchange="einstellungenUmschalten(\'funkEffekt\', this.checked)">'
+          + 'onchange="einstellungenUmschalten(\'funkEffektAn\', this.checked)">'
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Funk-Effekt nach der Frage</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
-          + 'Im Stil <b>Verspielt</b> kommt nach der vorgelesenen Frage ein kurzer Roger-Beep mit Rauschen — wie am Funkgerät. '
+          + 'Nur im Stil <b>Verspielt</b>: Nach der vorgelesenen Frage kommt ein kurzer Roger-Beep mit Rauschen — wie am Funkgerät. Von Haus aus aus. '
           + 'Nach den Antworten nicht.</span></span></label>')
       + einstKasten('Knöpfe', 'Fährst du mit der Maus über einen Knopf, wird der Hinweistext gesprochen. '
             + 'Gleiches gilt, wenn du mit der Tabulatortaste dorthin springst.',
@@ -34538,7 +34546,11 @@ function einstBlaetterFuellen(){
             + '<option value="0">Aus</option><option value="1">Leise</option><option value="2">Mittel</option><option value="3">Stark</option></select></label>').join('')
           + '<button type="button" style="margin-top:0.8rem; padding:0.5rem 1rem; font-size:0.85rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer;" onclick="majaFunkProbe()">▶ Probe hören</button>') + '</div>';
     document.getElementById('einstBlatt_sounds').innerHTML =
-        einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
+        '<div id="einstSoundSchnell" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:0 0 0.9rem;">'
+      + '<button type="button" onclick="soundVoreinstellung(\'aus\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-xmark"></i> Alle Sounds aus</button>'
+      + '<button type="button" onclick="soundVoreinstellung(\'noetig\')" style="flex:1 1 0; min-width:9.5rem; box-sizing:border-box; padding:0.7rem 0.8rem; font-size:0.88rem; font-weight:700; border:2px solid #0a7f86; background:#e6f6f7; color:#0f2745; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.45rem;"><i class="fas fa-volume-low"></i> Nur die nötigsten</button>'
+      + '<div id="einstSoundHinweis" role="status" style="display:none; flex:1 1 100%; font-size:0.8rem; color:#0f2745;"></div></div>'
+      + einstKasten('Sounds', 'Alle Töne des Trainers an einer Stelle. Jeder lässt sich einzeln abschalten; '
             + 'beim Einschalten hörst du ihn einmal zur Probe.',
             tonZeile('einstKlickTon', 'einstKlickTonSetzen(this.checked)', 'Klickton bei Knöpfen',
                 'Ein leises Klicken, wenn du einen Knopf drückst (am Rechner).', 'Klickton bei Knöpfen.')
@@ -34915,7 +34927,7 @@ function einstMausKnoepfeNachziehen(){
     const mv = document.getElementById('einstMausVorlesen');
     if(mv) mv.checked = !!einstellungen.mausVorlesen;
     const fe = document.getElementById('einstFunkEffekt');
-    if(fe) fe.checked = (einstellungen.funkEffekt !== false);
+    if(fe) fe.checked = (einstellungen.funkEffektAn === true);
 }
 
 // Der Reiter "Lernen" zeigt den Blaetter-Stand - dieselben Zahlen wie im
@@ -41613,6 +41625,28 @@ function majaStufeSetzen(name, wert, probe){
         else majaFunkProbe();
     }
 }
+// ALLE SOUNDS AUS / NUR DIE NOETIGSTEN (27.10.2026, Dietmar: "Bei Sounds muss oben ein Button rein: alle Sounds aus und nur die nötigsten Sounds. Sound aus setzt alles zurück auf AUS.")
+// art 'aus': wirklich alles auf aus (Klickton, Formelblatt-Zweiklang, Magnet, Belohnung, Funk-Effekt, Funki-Stimme und -Töne, ISS-Ton, Tipp-Töne, Majas Funk-Klang)
+// art 'noetig': nur der Formelblatt-Zweiklang bleibt an (er weist auf das Formelblatt hin), alles andere aus
+function soundVoreinstellung(art){
+    const nur = art === 'noetig';
+    try{ if(window.klickSound) window.klickSound.aus(); }catch(e){}
+    try{
+        einstellungen.formelTon = nur; einstellungen.magnetTon = false; einstellungen.levelUpTon = false; einstellungen.funkEffektAn = false;
+        einstellungenSpeichern();
+    }catch(e){}
+    try{ if(window.appFunkiStimmeSetzen) window.appFunkiStimmeSetzen('aus'); else localStorage.setItem('robo_stimme', 'aus'); }catch(e){}
+    try{ if(window.appIssTonSetzen) window.appIssTonSetzen('aus'); else localStorage.setItem('robo_iss_ton', 'aus'); }catch(e){}
+    try{ if(window.appTippToeneSetzen) window.appTippToeneSetzen('aus'); else localStorage.setItem('app_tipptoene', 'aus'); }catch(e){}
+    ['quetschen', 'doppler', 'piepser'].forEach(t => majaFunkSetzen(t, false));
+    ['rauschen', 'qrn', 'qrm', 'cw'].forEach(n => majaStufeSetzen(n, 0, false));
+    try{ einstellungenAnwenden(); }catch(e){}
+    try{
+        const h = document.getElementById('einstSoundHinweis');
+        if(h){ h.textContent = nur ? 'Fertig: Nur der Formelblatt-Zweiklang ist an, alles andere ist aus.' : 'Fertig: Alle Sounds sind aus.'; h.style.display = 'block'; }
+    }catch(e){}
+}
+window.soundVoreinstellung = soundVoreinstellung;
 const MAJA_TRAURIG = "Oh. Du hast mein Rauschen ausgeschaltet. Ich hatte mich schon so an dich gewöhnt. Aber keine Sorge: Unter Einstellungen, Sounds, bekomme ich es jederzeit zurück.";
 function majaProbeHinweis(t){
     try{
@@ -54917,7 +54951,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function maskottchenArt(){ try{ return lies('robo_maskottchen', 'astro') === 'funki' ? 'funki' : 'astro'; }catch(e){ return 'astro'; } }
     window.maskottchenArt = maskottchenArt;
     // P60: Klasse am <html>, damit der Astronaut schwebt statt huepft
-    const astroKlasse = () => { try{ document.documentElement.classList.toggle('astro-begleiter', maskottchenArt() === 'astro'); }catch(e){} };
+    const astroKlasse = () => { try{ document.documentElement.classList.toggle('astro-begleiter', maskottchenArt() === 'astro'); const fr = lies('robo_frost', '') === '1'; document.documentElement.classList.toggle('maja-frost', fr); const kn = document.getElementById('ahFrost'); if(kn){ kn.classList.toggle('an', fr); kn.setAttribute('aria-pressed', fr ? 'true' : 'false'); kn.title = fr ? 'Maja auftauen' : 'Maja einfrieren'; } }catch(e){} };
     astroKlasse(); setInterval(astroKlasse, 1000);
     // Der Astronaut: gleiche Teile und Klassen wie Funki (Antenne = Funkantenne am Tornister,
     // Visier statt Bildschirm, Brusttafel statt Lautsprecher) - alle Animationen passen weiter.
@@ -55160,7 +55194,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<h2 id="ahOffen">Fragen üben</h2>'
       +   '<div class="ah-wahl" id="ahWahl"><span class="w" id="ahWahlAnzahl"></span><span class="w" id="ahWahlTeil"></span><span class="w" id="ahWahlGelernt"></span>'
       +   '<button type="button" class="aendern" id="ahAendern"><i class="fas fa-sliders"></i> Ändern</button></div>'
-      +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '</div>'
+      +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '<button type="button" class="ah-frost" id="ahFrost" aria-label="Maja einfrieren oder auftauen" title="Maja einfrieren" onclick="event.stopPropagation(); appMajaFrost(localStorage.getItem(\'robo_frost\') !== \'1\')"><i class="fas fa-snowflake"></i></button></div>'
       +   '<button type="button" class="ah-knopf" id="ahStart"><i class="fas fa-play"></i> <span id="ahStartText">Runde starten</span></button>'
       + '</div>'
       + '<div class="ah-karte ah-tag" id="ahTag"><div class="ah-ring" id="ahRing"></div>'
@@ -55744,6 +55778,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-s="' + f[0] + '"' + (stimmeRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiStimmeSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
               + '</div>'
+              + '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.7rem 0 0.2rem;"><input type="checkbox" id="appFrostCb" style="width:18px; height:18px; cursor:pointer;" onchange="appMajaFrost(this.checked)">'
+              + '<span style="font-size:0.85rem; font-weight:600;">Maja einfrieren (stilles Standbild, kein Auftauchen, kein Sprechen)</span></label>'
               + '<button type="button" class="app-probe" onclick="appFunkiProbe()"><i class="fas fa-volume-high"></i> Hör mal</button>')
           // ISS-Ueberflug (04.10.2026)
           + einstKasten('ISS, Astronaut & Satellit', 'Ab und zu fliegt die Raumstation mit Ton quer über die Startseite – manchmal winkt ein Astronaut seitlich herein und macht dir Mut, und manchmal ruft der OSCAR-Satellit „CQ“ im Vorbeiflug. Nie in einer Runde, nie beim Vorlesen und nur im Stil Verspielt.',
@@ -55782,6 +55818,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         D.querySelectorAll('#appDesignSeg button').forEach(b => b.classList.toggle('an', b.dataset.d === window.designAnzeige()));
         D.querySelectorAll('#appZielSeg button').forEach(b => b.classList.toggle('an', parseInt(b.dataset.z, 10) === tagesziel()));
         D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === helferRegler()));
+        { const fc = $('appFrostCb'); if(fc) fc.checked = lies('robo_frost', '') === '1'; }
         D.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === stimmeRegler()));
         D.querySelectorAll('#appIssSeg button').forEach(b => b.classList.toggle('an', b.dataset.i === issRegler()));
         D.querySelectorAll('#appIssTonSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (issTonAn() ? 'an' : 'aus')));
@@ -55898,9 +55935,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function reglerListe(){ return ['viel', 'an', 'wenig', 'aus']; }
     function reglerLies(k){ const v = lies(k, 'an'); return reglerListe().includes(v) ? v : 'an'; }
     function helferRegler(){ return reglerLies('robo_tipps'); }
-    function stimmeRegler(){ return reglerLies('robo_stimme'); }
+    // 27.10.2026, Dietmar: "Ich glaube, es ist besser, wenn Maja komplett bei Sachlich raus ist." Im Stil Sachlich spricht Funki/Maja nie
+    const sachlichStill = () => document.documentElement.classList.contains('stil-sachlich');
+    function stimmeRegler(){ return sachlichStill() ? 'aus' : reglerLies('robo_stimme'); }
     function issRegler(){ return reglerLies('robo_iss'); }
-    function issTonAn(){ return lies('robo_iss_ton', 'an') !== 'aus'; }
+    function issTonAn(){ return lies('robo_iss_ton', (document.documentElement.classList.contains('stil-sachlich') ? 'aus' : 'an')) !== 'aus'; }
     // Spricht er zu allem, was er sagt (Hereinlugen, Tipps, Rundgang, Antworten)?
     function mehrSprechen(){ const s = stimmeRegler(); return s === 'viel' || s === 'an'; }
     const zwischen = a => a[0] + Math.random() * a[1];
@@ -55955,7 +55994,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         schreib('robo_tipp_nr', String(i));
         return TIPPS[i];
     }
-    function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus'; }
+    function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus' && lies('robo_frost', '') !== '1'; }   // eingefroren: kein Auftauchen von selbst
+    // 27.10.2026, Dietmar: "Maja sollte man bei Verspielt freezen können ... nicht jeder mag das ständige Auftauchen in der Hauptansicht und in den Fragen."
+    window.appMajaFrost = an => { schreib('robo_frost', an ? '1' : '0'); if(an) tu(funkiVerstummen); astroKlasse(); tu(einstNachziehen); };
     window.appFunkiSetzen = v => { schreib('robo_tipps', reglerListe().includes(v) ? v : 'an'); tu(einstNachziehen); };
     // Funki spricht: An/Aus und eine Probe (30.09.2026)
     window.appTippToeneSetzen = v => { schreib('app_tipptoene', v === 'aus' ? 'aus' : 'an'); tu(einstNachziehen); };
@@ -55970,7 +56011,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // P116: fuer die Maus ueber Maja - mit Rueckmeldung, ob es geklappt hat
     window.majaUeberflug = art => { let ok = false; tu(() => { ok = !!(art === 'sat' ? satUeberflug({ probe: true, stumm: true }) : issUeberflug({ probe: true, stumm: true })); }); return ok; };
     window.appFunkiProbe = () => {
-        if(lies('robo_stimme', 'an') === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
+        if(stimmeRegler() === 'aus'){ schreib('robo_stimme', 'an'); tu(einstNachziehen); }
         funkiSagt((maskottchenArt() === 'astro' ? majaEinstieg() : 'Ich bin Funki. | ') + nameTon() + 'Schön, dass du da bist.', true);
     };
 
@@ -58401,7 +58442,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  Allgemein -> "Funki spricht" (Stimme und Toene). Klappt etwas nicht
     //  (keine Stimme, zu langsam), bleibt er einfach stumm.
     // ================================================================
-    const stimmeAn = () => lies('robo_stimme', 'an') !== 'aus';
+    const stimmeAn = () => !document.documentElement.classList.contains('stil-sachlich') && lies('robo_frost', '') !== '1' && lies('robo_stimme', 'an') !== 'aus';
     // Hoerprobe 6 (Dietmar, 01.10.2026: "6 ist gut"): 7 Halbtoene hoeher,
     // eine Spur flotter, hell und freundlich - Telefon-Klang mit Hoehen,
     // leise Doppelstimme, nur ein Hauch Vibrieren und Metall
@@ -63727,6 +63768,27 @@ html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#
 }
 html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) #appNavi{ border-radius:var(--opt-r,20px); box-shadow:0 10px 28px rgba(0,0,16,.4); }
 html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .app-footer-note, html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark:not(#zz) .footer-note{ background:none !important; border:0 !important; box-shadow:none !important; }
+</style>
+<style id="majaNurVerspielt">
+/* 27.10.2026 (Dietmar: "Ich glaube, es ist besser, wenn Maja komplett bei Sachlich raus ist"): Majas Funk-Klang gibt es nur im Stil Verspielt -
+   im klassischen Sachlich am PC und im App-Stil Sachlich bleibt die Karte weg. */
+html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKasten { display: none !important; }
+</style>
+<style id="majaFrost">
+/* 27.10.2026: Maja einfrieren (Verspielt) - Standbild ohne Bewegung; der Knopf sitzt klein an ihr */
+#appHeute .ah-frost { display: none; }
+html.android-app.stil-verspielt #appHeute .ah-frost { display: flex; position: absolute; left: -6px; bottom: -4px; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; border: 0; font-size: 13px; cursor: pointer; background: rgba(255,255,255,.88); color: #1c6fb8; box-shadow: 0 2px 6px rgba(0,0,0,.25); z-index: 3; }
+html.android-app.stil-verspielt #appHeute .ah-frost.an { background: #1c6fb8; color: #fff; }
+html.maja-frost .mk, html.maja-frost .mk *, html.maja-frost #ahMk, html.maja-frost #ahMk * { animation: none !important; transition: none !important; }
+html.maja-frost .mk .mk-wellen, html.maja-frost .mk .mk-puff { display: none !important; }
+</style>
+<style id="auswahlDunkel">
+/* 27.10.2026 (Dietmar: "Beim Aufklappen im Polar-Modus ist die Auswahl weiss mit weisser Schrift"): die aufgeklappte Liste einer Auswahl
+   (select) bekommt im dunklen Stil und in Polar eigene dunkle Farben - sonst zeichnet der Browser einen weissen Grund unter die helle Schrift. */
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) select { color-scheme: dark; }
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) select option,
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) select optgroup { background-color: #14224a !important; color: #eaf2ff !important; }
+html:not(#zz) body:not(#zz2):is(.dark, .graphit) select option:checked { background-color: #2de8d8 !important; color: #04283a !important; }
 </style>
 <style id="segDunkelSicher">
 /* 26.10.2026 Dietmar (Bild, dunkel): "im dunklen Modus sehe ich nicht was ausgewaehlt ist." Im dunklen Polar-Look
