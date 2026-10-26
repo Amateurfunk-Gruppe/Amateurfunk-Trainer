@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script type="importmap">{ "imports": { "onnxruntime-web/wasm": "/piper-web/ort/ort.wasm.min.js" } }</script>
     <script id="lernstandEinspielen">
     // LERNSTAND MITNEHMEN (11.10.2026): Ein Lernstand vom Trainer wird HIER
     // eingespielt, ganz am Anfang des Ladens - bevor irgendein Teil des
@@ -225,6 +226,11 @@
                         var j = await r.json();
                         if(j && j.expanded) text = j.expanded;
                     }catch(e){}
+                    // Thorsten (Piper), wenn geladen und gewaehlt - sonst die Stimme des Handys
+                    if(window.AfuPiperApp && window.AfuPiperApp.aktiv()){
+                        try{ return await window.AfuPiperApp.sprechen(text); }
+                        catch(ePiper){ console.warn('[Piper App] Thorsten antwortet nicht, Handystimme:', ePiper && ePiper.message); }
+                    }
                     var sprich = function(){
                         var id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
                         return new Promise(function(fertig){
@@ -263,6 +269,86 @@
                 return original(input, init);
             };
         }catch(e){}
+    })();
+    </script>
+    <script id="piperApp">
+    /* ================================================================
+       THORSTEN (PIPER) IN DER APP                          (26.10.2026)
+       Dietmar: "Wir bauen Thorsten mit ein zum nachtraeglichen Download."
+       Die Stimme (de_DE-thorsten-medium, rund 63 MB) wird erst auf Knopfdruck
+       geladen und im Speicher der App abgelegt (OPFS); gerechnet wird mit
+       Piper im Browser (onnxruntime-web) in einem Hintergrund-Prozess. Danach
+       laeuft sie ohne Internet. Ist sie gewaehlt, geht jedes Vorlesen
+       (/api/tts) zuerst dorthin; klappt es nicht, spricht die Handystimme.
+       ================================================================ */
+    (function(){
+        if(!window.AndroidSprache) return;
+        var ID = 'de_DE-thorsten-medium', MB = 63;
+        var pw = null, nr = 0, warten = {}, laedt = false;
+        function lies(k, v){ try{ var x = localStorage.getItem(k); return x === null ? v : x; }catch(e){ return v; } }
+        function schreib(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+        function moeglich(){ try{ return !!(window.Worker && window.WebAssembly && navigator.storage && navigator.storage.getDirectory); }catch(e){ return false; } }
+        function worker(){
+            if(pw !== null) return pw;
+            try{
+                if(!moeglich()){ pw = false; return pw; }
+                pw = new Worker('/piper-web/piper-worker.js?v=app1', { type: 'module' });
+                pw.onmessage = function(e){
+                    var m = e.data || {};
+                    if(m.bereit) return;
+                    var w = warten[m.id];
+                    if(!w) return;
+                    if(m.total){ if(w.fort) w.fort(m.loaded, m.total); }
+                    else if(m.ok){ delete warten[m.id]; w.ja(m.buf); }
+                    else if(m.ok === false){ delete warten[m.id]; w.nein(new Error(m.fehler || 'Fehler')); }
+                };
+                pw.onerror = function(){
+                    try{ pw.terminate(); }catch(e){}
+                    pw = false;
+                    Object.keys(warten).forEach(function(k){ var w = warten[k]; delete warten[k]; w.nein(new Error('Hintergrund-Prozess nicht gestartet')); });
+                };
+            }catch(e){ pw = false; }
+            return pw;
+        }
+        function rechnen(text, fort){
+            var w = worker();
+            if(!w) return Promise.reject(new Error('Piper laeuft hier nicht'));
+            return new Promise(function(ja, nein){
+                var id = ++nr;
+                warten[id] = { ja: ja, nein: nein, fort: fort };
+                w.postMessage({ op: 'predict', id: id, stimme: ID, text: text });
+            });
+        }
+        window.AfuPiperApp = {
+            id: ID, mb: MB,
+            moeglich: moeglich,
+            installiert: function(){ return lies('afu_piper_thorsten', '') === 'da'; },
+            aktiv: function(){ return this.installiert() && lies('afu_piper_aktiv', 'nein') === 'ja'; },
+            laedt: function(){ return laedt; },
+            setzeAktiv: function(an){ schreib('afu_piper_aktiv', an ? 'ja' : 'nein'); },
+            // Laden = einmal einen kurzen Satz rechnen: dabei holt Piper die Stimme und legt sie ab
+            installieren: function(fort){
+                if(laedt) return Promise.reject(new Error('Laeuft schon'));
+                laedt = true;
+                try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+                return rechnen('Hallo.', fort).then(function(){ schreib('afu_piper_thorsten', 'da'); laedt = false; },
+                                                    function(e){ laedt = false; throw e; });
+            },
+            sprechen: function(text){
+                return rechnen(text).then(function(buf){
+                    return new Response(buf, { status: 200, headers: { 'Content-Type': 'audio/wav', 'X-TTS-Voice': 'Thorsten (Piper)', 'X-TTS-Rate': '22050' } });
+                });
+            },
+            entfernen: async function(){
+                try{
+                    var t = await import('/piper-web/piper-tts-web.js?v=app1');
+                    await t.remove(ID);
+                }catch(e){ console.warn('[Piper App] entfernen:', e && e.message); }
+                schreib('afu_piper_thorsten', ''); schreib('afu_piper_aktiv', 'nein');
+                try{ if(pw){ pw.terminate(); } }catch(e){}
+                pw = null;
+            }
+        };
     })();
     </script>
     <style>
@@ -18901,6 +18987,7 @@ function diagnoseNotieren(q, gewaehlt, richtig){
     // anderes gemacht. Das ist keine Bearbeitungszeit.
     if(sek > 0 && sek < 600){ e.t.push(sek); if(e.t.length > DIAG_MAX) e.t.shift(); }
     if(!richtig && gewaehlt >= 0){ e.f.push(gewaehlt); if(e.f.length > DIAG_MAX) e.f.shift(); }
+    if(!richtig && gewaehlt >= 0){ try{ window.majaWiederFalsch && window.majaWiederFalsch(q.id, e.f.length); }catch(_e){} }
     // ================================================================
     //  DIE FALSCHE ANTWORT ALS TEXT, NICHT ALS NUMMER
     // ----------------------------------------------------------------
@@ -24716,7 +24803,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 307, datum: '26.10.2026' };
+const TRAINER_STAND = { nr: 311, datum: '26.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32694,7 +32781,7 @@ function einstellungenAnwenden(){
         const ba = document.getElementById('einstBildschirmAn');
         if(ba){ ba.checked = bildschirmAnGewollt(); bildschirmAnText(ba.checked); }
     }catch(e){}
-    try{ ['quetschen', 'piepser'].forEach(k => majaFunkSetzen(k, majaFunkAn(k))); Object.keys(MAJA_STUFEN).forEach(k => { const e = document.getElementById('einstMajaStufe_' + k); if(e) e.value = String(majaStufe(k)); }); }catch(e){}
+    try{ ['quetschen', 'doppler', 'piepser'].forEach(k => majaFunkSetzen(k, majaFunkAn(k))); Object.keys(MAJA_STUFEN).forEach(k => { const e = document.getElementById('einstMajaStufe_' + k); if(e) e.value = String(majaStufe(k)); }); }catch(e){}
     try{ const la = document.getElementById('einstLeisteAus'); if(la) la.checked = appLeisteAus(); }catch(e){}
     try{ appWlanLaden(); }catch(e){}
     const kurz = document.getElementById('einstUmfangKurz');
@@ -34433,7 +34520,7 @@ function einstBlaetterFuellen(){
         + '<div style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin-bottom:0.5rem;">Nur für Maja</div>'
         + einstKasten('Maja: Funk-Klang',
             'Maja klingt wie über Funk. Du kannst jeden Teil einzeln ausschalten.',
-            [['quetschen', 'Gequetschter Funk-Klang (enges Band, hart komprimiert)'], ['piepser', 'Roger-Piep vorn und hinten (Quindar) mit kurzem Rauschen dahinter']].map(x =>
+            [['quetschen', 'Gequetschter Funk-Klang (enges Band, hart komprimiert)'], ['doppler', 'Doppler-Effekt (die Tonhöhe sinkt über den Satz, wie bei einem Satelliten)'], ['piepser', 'Roger-Piep vorn und hinten (Quindar) mit kurzem Rauschen dahinter']].map(x =>
               '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer; margin:0.35rem 0;">'
             + '<input type="checkbox" id="einstMaja_' + x[0] + '" style="width:18px; height:18px; cursor:pointer;" onchange="majaFunkSetzen(\'' + x[0] + '\', this.checked)">'
             + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">' + x[1] + '</span></label>').join('')
@@ -35135,6 +35222,58 @@ window.appEinstellungenAufraeumen = appEinstellungenAufraeumen;
 //  gewaehlte merkt sich die App und setzt sie bei jedem Start wieder.
 //  Aeltere Apps kennen stimmen() nicht - dann bleibt der alte Hinweis.
 // ================================================================
+// ---- Thorsten (Piper) zum Nachladen (26.10.2026) ----
+function appPiperKarteHtml(){
+    const P = window.AfuPiperApp;
+    if(!P || !P.moeglich()) return '';
+    const da = P.installiert(), aktiv = P.aktiv(), laedt = P.laedt();
+    const rahmen = 'display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.55rem; border:1px solid ' + (aktiv ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)')
+        + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit); margin-bottom:0.6rem; flex-wrap:wrap;';
+    const kn = ' padding:0.3rem 0.6rem; font-size:0.78rem;';
+    const kopf = '<b style="font-size:0.85rem;">Thorsten (Piper)</b><span style="display:block; font-size:0.72rem; opacity:0.75;">m\u00e4nnlich \u00b7 nat\u00fcrlich \u00b7 l\u00e4uft ohne Internet</span>';
+    let h = '<section id="appPiperKarte" style="' + rahmen + '">';   // section statt div: Hell/Dunkel stylen div-Kaesten mit Rand um, das waere hier nicht gewollt
+    if(da){
+        h += '<label style="display:flex; align-items:center; gap:0.5rem; flex:1 1 auto; min-width:0; cursor:pointer;">'
+           + '<input type="radio" name="appStimme" ' + (aktiv ? 'checked' : '') + ' onchange="appPiperWaehlen()" style="width:18px; height:18px; flex:0 0 18px;">'
+           + '<span style="flex:1; min-width:0;">' + kopf + '</span></label>'
+           + '<button type="button" style="' + EINST_KNOPF + kn + '" onclick="appPiperProbe()"><i class="fas fa-volume-up"></i> Anh\u00f6ren</button>'
+           + '<button type="button" style="' + EINST_KNOPF + kn + '" onclick="appPiperEntfernen()">Entfernen</button>';
+    } else if(laedt){
+        h += '<span style="flex:1 1 auto; min-width:0;">' + kopf + '</span><span id="appPiperStatus" style="font-size:0.8rem; font-weight:700;">Wird geladen \u2026</span>';
+    } else {
+        h += '<span style="flex:1 1 auto; min-width:0;">' + kopf + '<span style="display:block; font-size:0.72rem; opacity:0.75;">Einmal laden: ca. ' + P.mb + ' MB \u2013 am besten im WLAN.</span></span>'
+           + '<button type="button" style="' + EINST_KNOPF + kn + '" onclick="appPiperLaden()"><i class="fas fa-download"></i> Herunterladen</button>';
+    }
+    return h + '<div id="appPiperMeldung" style="flex:1 0 100%; font-size:0.74rem; line-height:1.5; display:none;"></div></section>';
+}
+function appPiperMeldung(t){ try{ const e = document.getElementById('appPiperMeldung'); if(e){ e.textContent = t || ''; e.style.display = t ? 'block' : 'none'; } }catch(x){} }
+function appPiperLaden(){
+    const P = window.AfuPiperApp; if(!P) return;
+    P.installieren((geladen, gesamt) => { try{ const e = document.getElementById('appPiperStatus'); if(e) e.textContent = 'Wird geladen \u2026 ' + Math.round(geladen * 100 / gesamt) + ' %'; }catch(x){} })
+        .then(() => { P.setzeAktiv(true); try{ appStimmenNachziehen(); }catch(x){} setTimeout(() => { try{ appPiperProbe(); }catch(x){} }, 300); },
+              e => { try{ appStimmenNachziehen(); appPiperMeldung('Das Laden hat nicht geklappt (' + ((e && e.message) || 'unbekannt') + '). Pr\u00fcfe das Internet und tippe noch einmal auf Herunterladen.'); }catch(x){} });
+    setTimeout(() => { try{ appStimmenNachziehen(); }catch(x){} }, 50);
+}
+function appPiperWaehlen(){
+    try{ window.AfuPiperApp.setzeAktiv(true); }catch(e){}
+    try{ appStimmenNachziehen(); }catch(e){}
+    try{ appPiperProbe(); }catch(e){}
+}
+async function appPiperProbe(){
+    const P = window.AfuPiperApp; if(!P) return;
+    appPiperMeldung('Thorsten wird vorbereitet \u2026');
+    try{
+        const r = await P.sprechen('So klingt die Stimme, die dich durch das Men\u00fc f\u00fchrt \u2014 zum Beispiel beim Bl\u00e4ttern durch den Fragenkatalog.');
+        const url = URL.createObjectURL(await r.blob());
+        const a = new Audio(url); a.onended = () => URL.revokeObjectURL(url);
+        await a.play();
+        appPiperMeldung('');
+    }catch(e){ appPiperMeldung('Thorsten konnte nicht sprechen (' + ((e && e.message) || 'unbekannt') + ').'); }
+}
+async function appPiperEntfernen(){
+    try{ await window.AfuPiperApp.entfernen(); }catch(e){}
+    try{ appStimmenNachziehen(); }catch(e){}
+}
 function appStimmenNachziehen(){
     const box = document.querySelector('.app-stimme-hinweis');
     if(!box || !ttsImApp()) return;
@@ -35162,7 +35301,7 @@ function appStimmenNachziehen(){
     }
     if(!liste.length){
         const mehrere = module.length > 1;
-        box.innerHTML = modHtml + '<b>Es spricht die Stimme deines Handys.</b> '
+        box.innerHTML = modHtml + appPiperKarteHtml() + '<b>Es spricht die Stimme deines Handys.</b> '
             + 'Gerade meldet das Sprachmodul keine Stimmen. Das kann einen Moment dauern \u2013 tippe dann auf \u201eNoch einmal nachsehen\u201c. '
             + 'Bleibt die Liste leer, ist das Modul vermutlich gerade nicht erreichbar (zum Beispiel wenn sein Server nicht antwortet)'
             + (mehrere ? '. W\u00e4hle oben ein anderes Modul, zum Beispiel Google, oder versuche es sp\u00e4ter noch einmal. ' : '. Versuche es sp\u00e4ter noch einmal. ')
@@ -35174,7 +35313,13 @@ function appStimmenNachziehen(){
     // sichtbar, damit man am Telefon dar\u00fcber reden kann.
     const kurz = n => { const m = /-x-([a-z0-9]+)-(local|network)$/i.exec(n); return m ? m[1] : n; };
     const gewaehlt = liste.find(v => v.gewaehlt);
-    let h = modHtml + '<b>Es spricht die Stimme deines Handys.</b> Welche, w\u00e4hlst du hier \u2013 mit \u201eAnh\u00f6ren\u201c vorher ausprobieren:'
+    // Die Liste ist eingeklappt (Dietmar 26.10.2026: "Die Liste an Stimmen moechte ich zum Ausklappen haben ... unter Sounds muss es eingeklappt sein"). Beim Neuaufbau bleibt sie offen, wenn sie offen war.
+    const warAuf = !!(document.querySelector('.app-stimmen-auf') || {}).open;
+    const aktuell = gewaehlt ? 'Stimme ' + (liste.indexOf(gewaehlt) + 1) + ' \u00b7 ' + kurz(gewaehlt.name) : 'Standard des Handys';
+    const piperAn = !!(window.AfuPiperApp && window.AfuPiperApp.aktiv());
+    let h = modHtml + appPiperKarteHtml() + '<b>Es spricht ' + (piperAn ? 'Thorsten.</b> Die Stimme deines Handys (' : 'die Stimme deines Handys.</b> Aktuell: ') + esc(aktuell) + (piperAn ? ') ist abgew\u00e4hlt.' : '.')
+          + '<details class="app-stimmen-auf"' + (warAuf ? ' open' : '') + ' style="margin-top:0.5rem;">'
+          + '<summary style="cursor:pointer; font-weight:700; font-size:0.85rem; padding:0.45rem 0.6rem; border:1px solid rgba(0,0,0,0.18); background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit); list-style-position:inside;">Stimmen ansehen und anh\u00f6ren (' + (liste.length + 1) + ')</summary>'
           + '<div class="app-stimmen" style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.35rem;">';
     const zeile = (name, titel, unter, aktiv) =>
           '<label style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.5rem; border:1px solid ' + (aktiv ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)') + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit); cursor:pointer;">'
@@ -35183,13 +35328,13 @@ function appStimmenNachziehen(){
         + (unter ? '<span style="display:block; font-size:0.72rem; opacity:0.75;">' + esc(unter) + '</span>' : '') + '</span>'
         + '<button type="button" style="' + EINST_KNOPF + ' padding:0.3rem 0.6rem; font-size:0.78rem;" onclick="appStimmeProbe(' + JSON.stringify(name).replace(/"/g,'&quot;') + ')"><i class="fas fa-volume-up"></i> Anh\u00f6ren</button>'
         + '</label>';
-    h += zeile('', 'Standard des Handys', 'So, wie es in den Android-Einstellungen steht', !gewaehlt);
+    h += zeile('', 'Standard des Handys', 'So, wie es in den Android-Einstellungen steht', !gewaehlt && !piperAn);
     liste.forEach((v, i) => {
         h += zeile(v.name, 'Stimme ' + (i + 1) + ' \u00b7 ' + kurz(v.name),
                    (v.sprache || 'de') + (v.netz ? ' \u00b7 braucht Internet' : ' \u00b7 ohne Internet') + (v.guete >= 400 ? ' \u00b7 hohe G\u00fcte' : ''),
-                   !!v.gewaehlt);
+                   !!v.gewaehlt && !piperAn);
     });
-    h += '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.4rem; line-height:1.5;">'
+    h += '</div></details><div style="font-size:0.72rem; color:var(--muted); margin-top:0.4rem; line-height:1.5;">'
        + 'Welche davon m\u00e4nnlich oder weiblich klingt, verr\u00e4t Android nicht \u2013 einfach durchh\u00f6ren. '
        + 'Mehr Stimmen bekommst du in den Android-Einstellungen unter \u201eSprachausgabe\u201c (Sprachdaten f\u00fcr Deutsch laden).</div>';
     box.innerHTML = h;
@@ -35203,6 +35348,7 @@ function appModulWaehlen(paket){
     }catch(e){}
 }
 function appStimmeWaehlen(name){
+    try{ if(window.AfuPiperApp) window.AfuPiperApp.setzeAktiv(false); }catch(e){}
     try{ const ok = window.AndroidSprache.waehlen(name || ''); if(ok === false) ttsMeldung('Die Stimme konnte nicht gesetzt werden \u2013 ist das Sprachmodul schon bereit?'); }catch(e){}
     try{ appStimmenNachziehen(); }catch(e){}
     try{ appStimmeProbe(name || ''); }catch(e){}
@@ -41425,7 +41571,7 @@ function vollbildAutoSetzen(an){
 //  jeder Rueckkehr neu geholt.
 // ================================================================
 // Majas Funk-Klang: Quetschen, Rauschen und Piepser einzeln ein/aus (Dietmar 25.10.2026: "Rauschen und quetscht sollte man ausschalten koennen")
-const MAJA_FUNK_TEILE = { quetschen: 'afu_maja_quetschen', rauschen: 'afu_maja_rauschen', piepser: 'afu_maja_piepser' };
+const MAJA_FUNK_TEILE = { quetschen: 'afu_maja_quetschen', rauschen: 'afu_maja_rauschen', piepser: 'afu_maja_piepser', doppler: 'afu_maja_doppler' };
 function majaFunkAn(teil){ try{ return localStorage.getItem(MAJA_FUNK_TEILE[teil || 'quetschen']) !== 'nein'; }catch(e){ return true; } }
 function majaFunkSetzen(teil, an){
     try{ localStorage.setItem(MAJA_FUNK_TEILE[teil], an ? 'ja' : 'nein'); }catch(e){}
@@ -41452,13 +41598,24 @@ function majaStufeSetzen(name, wert, probe){
     try{ const e = document.getElementById('einstMajaStufe_' + name); if(e) e.value = String(wert); }catch(e){}
     if(probe){
         // Rauschen ganz aus: Maja ist gespielt traurig (Aufnahme maja_941; Dietmar 26.10.2026)
-        if(name === 'rauschen' && wert === 0){ try{ if(document.documentElement.classList.contains('stil-verspielt') && typeof window.majaSagtPaket === 'function') window.majaSagtPaket(MAJA_TRAURIG); }catch(e){} }
+        if(name === 'rauschen' && wert === 0){ try{ if(typeof window.majaProbeSagen === 'function') window.majaProbeSagen(MAJA_TRAURIG); else majaFunkProbe(); }catch(e){} }
         else majaFunkProbe();
     }
 }
 const MAJA_TRAURIG = "Oh. Du hast mein Rauschen ausgeschaltet. Ich hatte mich schon so an dich gewöhnt. Aber keine Sorge: Unter Einstellungen, Sounds, bekomme ich es jederzeit zurück.";
+function majaProbeHinweis(t){
+    try{
+        let e = document.getElementById('einstMajaProbeHinweis');
+        if(!e){ const k = document.getElementById('einstMajaFunkKasten'); if(!k) return; e = document.createElement('div'); e.id = 'einstMajaProbeHinweis'; e.style.cssText = 'margin-top:0.6rem; font-size:0.82rem; line-height:1.5; background:#fff4d6; border:1px solid #e0b84a; color:#4a3500; padding:0.5rem 0.7rem;'; k.appendChild(e); }
+        e.textContent = t; e.style.display = t ? 'block' : 'none';
+    }catch(x){}
+}
 function majaFunkProbe(){
-    try{ if(typeof funkiSagt === 'function') funkiSagt('Das war nur Rauschen – kein Problem!', true); }catch(e){}
+    // Die Probe spricht in jedem Stil (auch Sachlich und am PC): Aufnahme maja_034 aus dem Paket, mit allen eingestellten Funk-Effekten
+    try{
+        if(typeof window.majaProbeSagen === 'function'){ window.majaProbeSagen('Das war nur Rauschen – kein Problem!'); majaProbeHinweis(''); }
+        else majaProbeHinweis('Maja gibt es nur im Stil „Verspielt“. Stell oben unter „Stil am PC“ auf Verspielt um, dann hörst du die Probe.');
+    }catch(e){}
 }
 window.majaFunkAn = majaFunkAn; window.majaFunkSetzen = majaFunkSetzen;
 window.majaStufe = majaStufe; window.majaStufeSetzen = majaStufeSetzen; window.majaFunkProbe = majaFunkProbe;
@@ -56357,7 +56514,182 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(mehrSprechen()) funkiSagt(h.s, true);
     }
     window.majaStartNachricht = majaStartNachricht; window.majaHinweisZeigen = majaHinweisZeigen;
+    window.majaProbeSagen = (t) => {
+        try{
+            majaPaketHolen().then(async () => {
+                let ok = false;
+                try{ ok = await funkiSagt(t, 'probe', ASTRO_SPRECH); }catch(e){ ok = false; }
+                if(ok){ tu(() => majaProbeHinweis('')); return; }
+                // Warum still? Kurze Auskunft in den Einstellungen (zum Abfotografieren), dazu ein zweiter Versuch beim naechsten Tippen
+                let ctxS = 'kein Ton-Kontext'; tu(() => { const c = tonKontext(); if(c) ctxS = c.state; });
+                tu(() => majaProbeHinweis('Die Probe konnte gerade nicht abgespielt werden. Tippe noch einmal auf „Probe hören“. (Aufnahme im Paket: ' + (imMajaPaket(t) ? 'ja' : 'nein') + ' · Stimme: ' + (stimmeAn() ? 'an' : 'aus') + ' · Stil Verspielt: ' + (H.classList.contains('stil-verspielt') ? 'ja' : 'nein') + ' · Audio: ' + ctxS + ')'));
+            });
+        }catch(e){}
+    };
     window.majaSagtPaket = (t) => { try{ if(maskottchenArt() === 'astro' && mehrSprechen()) funkiSagt(t, true); }catch(e){} };
+
+    // ---------------- Majas Zusatzsaetze (maja_925 bis 929, 26.10.2026) ----------------
+    //  Pause nach etwa 30 Minuten Lernen, zwei gespielt verärgerte Sprüche bei derselben falschen Frage,
+    //  Übungserinnerung am Abend, Abschied "Dreiundsiebzig" beim Beenden (Android: Zurück-Taste auf der Startseite).
+    //  Nur bei Maja im Stil Verspielt und nur, wenn die Aufnahme im Paket liegt (sonst klänge sie anders).
+    const MAJA_PAUSE   = 'Du hast schon lange geübt. Mach mal fünf Minuten Pause. Trink was. Das Gehirn sortiert in der Pause ganz von allein.';
+    const MAJA_FALSCH2 = 'Hey! Schon wieder dieselbe Frage falsch? Na gut, ich bin nicht echt sauer. Aber schau dir diesmal die Erklärung an!';
+    const MAJA_FALSCH3 = 'Du hast die Erklärung wieder weggeklickt, ohne sie zu lesen. Ich habe es gesehen. Von hier oben sieht man alles.';
+    const MAJA_ABEND   = 'Ich bin kein Wecker, aber wenn du heute noch nicht geübt hast, würde ich mich über ein paar Fragen freuen.';
+    const MAJA_ABSCHIED = 'Viel Erfolg bei der Prüfung. Und danach sehen wir uns auf dem Band. Dreiundsiebzig!';
+    // Mehr Abwechslung (26.10.2026, maja_948 bis 977): mehrere Saetze je Anlass, zufaellig und nie zweimal hintereinander derselbe
+    const MAJA_GRUPPEN = {
+        gruss: [
+        "Maja an Bord! Schön, dass du wieder da bist.",
+        "Hallo, hier ist Maja. Bereit für ein paar Fragen?",
+        "Da bist du ja! Die Antenne ist ausgerichtet, es kann losgehen.",
+        "Willkommen zurück am Funkgerät. Ich habe schon auf dich gewartet.",
+        "Guten Tag, Funkfreund! Heute knacken wir ein paar Prüfungsfragen.",
+        "Na, wer meldet sich da? Das kenne ich doch! Los geht es."
+    ],
+        lob: [
+        "Starke Runde! Das war richtig gut.",
+        "Wow, fast alles richtig. Ich bin stolz auf dich.",
+        "So macht Funken Spaß! Weiter so.",
+        "Das sitzt. Die Prüfung kann kommen.",
+        "Hervorragend! Dafür gibt es ein dickes Lob von hier oben.",
+        "Du bist auf einem guten Weg. Jede Runde macht dich sicherer."
+    ],
+        trost: [
+        "Nicht schlimm. Aus Fehlern lernt man am meisten.",
+        "Das war nur ein kleiner Knacks im Signal. Gleich klappt es besser.",
+        "Kopf hoch! Jeder Funker hat mal klein angefangen.",
+        "Das war schwer, das gebe ich zu. Schau dir die Erklärung an, dann sitzt es beim nächsten Mal.",
+        "Eine Pause und ein Schluck Wasser, dann probieren wir es noch einmal.",
+        "Ich glaube an dich. Noch eine Runde?"
+    ],
+        abschied: [MAJA_ABSCHIED].concat([
+        "Bis bald! Ich halte die Frequenz für dich frei.",
+        "Schön war es mit dir. Bis zum nächsten Mal.",
+        "Ich mache jetzt Funkstille. Aber morgen bin ich wieder da.",
+        "Gute Verbindung und bis später. Dreiundsiebzig!"
+    ]),
+        mut: [
+        "Tief durchatmen. Du hast viel geübt, du schaffst das.",
+        "Lies jede Frage in Ruhe. Die richtige Antwort steht immer da.",
+        "Du kennst das alles schon. Jetzt musst du es nur noch zeigen.",
+        "Ich drücke dir ganz fest die Daumen."
+    ],
+        spass: [
+        "Funkstille hier. Hallo? Ist da jemand?",
+        "Ich habe gerade ein Signal von einem Lernwilligen empfangen. Das bist wohl du!",
+        "Im Weltraum hört dich zwar niemand schreien, aber über Funk hört man mich ganz gut.",
+        "Mein Lieblingswort ist übrigens Dreiundsiebzig."
+    ]
+    };
+    function majaPick(g){
+        try{
+            if(maskottchenArt() !== 'astro') return null;
+            const l = (MAJA_GRUPPEN[g] || []).filter(t => imMajaPaket(t));
+            if(!l.length) return null;
+            const k = 'robo_maja_letzt_' + g, letzt = lies(k, '');
+            const frei = l.length > 1 ? l.filter(t => t !== letzt) : l;
+            const t = frei[Math.floor(Math.random() * frei.length)];
+            schreib(k, t);
+            return t;
+        }catch(e){ return null; }
+    }
+    const majaZ = { aktion: Date.now(), falschBei: 0, falschQ: {}, abschiedBei: 0, abschiedBis: 0, start: Date.now() };
+    function majaZusatzDarf(text){
+        try{
+            return maskottchenArt() === 'astro' && document.documentElement.classList.contains('stil-verspielt') && tippsAn()
+                && imMajaPaket(text) && !pruefungLaeuft() && !wirdVorgelesen() && !robo.da && !document.hidden
+                && (document.body.classList.contains('runde-laeuft') || roboDarf());
+        }catch(e){ return false; }
+    }
+    function majaZusatzSagen(text){
+        const inRunde = document.body.classList.contains('runde-laeuft');
+        kurzauftritt(esc(text), { ort: inRunde ? 'runde' : 'start', sprich: text, sprichSofort: true, dauer: 8500 });
+        return !!(robo.da && robo.modus === 'kurz');
+    }
+    ['pointerdown', 'keydown', 'touchstart'].forEach(ev => tu(() => document.addEventListener(ev, () => { majaZ.aktion = Date.now(); }, { passive: true, capture: true })));
+    // Lernzeit des Tages zaehlen (nur wenn gerade etwas gemacht wird) und Abend-Erinnerung
+    tu(() => setInterval(() => {
+        try{
+            if(document.hidden || maskottchenArt() !== 'astro') return;
+            const t = tagK(), jetzt = Date.now();
+            if(jetzt - majaZ.aktion < 90000){
+                let z = {}; try{ z = JSON.parse(lies('robo_maja_lernzeit', '{}')) || {}; }catch(e){ z = {}; }
+                if(z.t !== t) z = { t: t, s: 0 };
+                z.s += 20; schreib('robo_maja_lernzeit', JSON.stringify(z));
+                if(z.s >= 1800 && lies('robo_maja_pause_tag', '') !== t && jetzt - (robo.letzter || 0) > 15000 && majaZusatzDarf(MAJA_PAUSE)){
+                    if(majaZusatzSagen(MAJA_PAUSE)) schreib('robo_maja_pause_tag', t);
+                }
+            }
+            // Mut: am Tag vor der Pruefung und am Pruefungstag, einmal je Tag, wenn ein Termin eingetragen ist
+            try{
+                const term = getPruefungstermin();
+                if(term && lies('robo_maja_mut_tag', '') !== t && !document.body.classList.contains('runde-laeuft') && jetzt - majaZ.start > 45000 && jetzt - (robo.letzter || 0) > 30000){
+                    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+                    const tage = Math.round((new Date(term + 'T00:00:00') - d0) / 86400000);
+                    if(tage === 0 || tage === 1){
+                        const mt = majaPick('mut');
+                        if(mt && majaZusatzDarf(mt) && majaZusatzSagen(mt)) schreib('robo_maja_mut_tag', t);
+                    }
+                }
+            }catch(e){}
+            // Funkstille: lange nichts getippt, auf der Startseite - etwas Lustiges, hoechstens dreimal am Tag, alle 15 Minuten
+            try{
+                let sz = {}; try{ sz = JSON.parse(lies('robo_maja_spass', '{}')) || {}; }catch(e){ sz = {}; }
+                if(sz.t !== t) sz = { t: t, n: 0, z: 0 };
+                if(jetzt - majaZ.aktion > 120000 && jetzt - majaZ.aktion < 900000 && sz.n < 3 && jetzt - sz.z > 900000 && !document.body.classList.contains('runde-laeuft') && jetzt - (robo.letzter || 0) > 60000){
+                    const sp = majaPick('spass');
+                    if(sp && majaZusatzDarf(sp) && majaZusatzSagen(sp)){ sz.n++; sz.z = jetzt; schreib('robo_maja_spass', JSON.stringify(sz)); }
+                }
+            }catch(e){}
+            const h = new Date().getHours();
+            if(h >= 18 && h < 23 && heuteAnzahl() === 0 && lies('robo_maja_abend_tag', '') !== t && lies('robo_tour_gesehen', '') === '1'
+               && jetzt - majaZ.start > 60000 && jetzt - (robo.letzter || 0) > 30000 && !document.body.classList.contains('runde-laeuft') && majaZusatzDarf(MAJA_ABEND)){
+                if(majaZusatzSagen(MAJA_ABEND)) schreib('robo_maja_abend_tag', t);
+            }
+        }catch(e){}
+    }, 20000));
+    // Dieselbe Frage mehrmals falsch (wird in diagnoseNotieren gemeldet)
+    window.majaWiederFalsch = (id, anzahl) => {
+        try{
+            if(anzahl < 2) return;
+            const text = anzahl >= 3 ? MAJA_FALSCH3 : MAJA_FALSCH2, stufe = anzahl >= 3 ? 3 : 2;
+            if((majaZ.falschQ[id] || 0) >= stufe) return;
+            if(Date.now() - majaZ.falschBei < 240000) return;                  // hoechstens alle vier Minuten
+            setTimeout(() => {
+                if(majaZusatzDarf(text) && majaZusatzSagen(text)){ majaZ.falschQ[id] = stufe; majaZ.falschBei = Date.now(); }
+            }, 1400);
+        }catch(e){}
+    };
+    // Abschied: Android, Zurueck-Taste auf der Startseite. Der erste Druck verabschiedet, der zweite (innerhalb 20 s) beendet.
+    window.majaAbschied = () => {
+        try{
+            const jetzt = Date.now();
+            if(!document.documentElement.classList.contains('android-app') || document.documentElement.classList.contains('pc-app')) return false;
+            if(jetzt < majaZ.abschiedBis) return false;                          // zweiter Druck: App geht zu
+            if(jetzt - majaZ.abschiedBei < 1800000) return false;               // hoechstens alle 30 Minuten
+            const text = majaPick('abschied') || MAJA_ABSCHIED;
+            if(!majaZusatzDarf(text)) return false;
+            if(!majaZusatzSagen(text)) return false;
+            majaZ.abschiedBei = jetzt; majaZ.abschiedBis = jetzt + 20000;
+            return true;
+        }catch(e){ return false; }
+    };
+    tu(() => {
+        const alt = window.appZurueck;
+        window.appZurueck = function(){
+            if(typeof alt === 'function' && alt.apply(this, arguments)) return true;
+            return !!(window.majaAbschied && window.majaAbschied());
+        };
+    });
+    // Aeusserste Huelle (nach allen anderen Zurueck-Behandlungen): Direkt nach dem Abschied geht die App beim naechsten Druck zu
+    tu(() => setTimeout(() => {
+        const alt2 = window.appZurueck;
+        window.appZurueck = function(){
+            if(Date.now() < majaZ.abschiedBis) return false;
+            return typeof alt2 === 'function' ? alt2.apply(this, arguments) : false;
+        };
+    }, 4000));
     function tippZeigen(){
         if(majaHinweisDran()){ majaHinweisZeigen(); return; }
         tu(() => window.astroPose && astroPose('zeigt'));
@@ -58009,6 +58341,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         mundZu();
     }
     function darfSprechen(selbst){
+        if(selbst === 'probe') return !D.hidden;      // Hoerprobe in den Einstellungen: in jedem Stil und am PC
         if(!stimmeAn() || !H.classList.contains('stil-verspielt') || D.hidden) return false;
         if(pruefungLaeuft() || wirdVorgelesen()) return false;
         if(D.body.classList.contains('im-gruppenraum') || D.body.classList.contains('gast-im-raum')) return false;
@@ -58283,6 +58616,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 }
             }catch(e){}
         }
+        // In der Android-App spricht Maja nur ihre eigenen Aufnahmen. Was nicht im Paket liegt, bleibt stumm (nur in der Blase) -
+        // die Handystimme klaenge anders (Dietmar 26.10.2026: "immer wieder kommt das Fallback").
+        if(maja && window.AndroidApp) return null;
         const r = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ text: text, voice: st }) });
         if(!r.ok) return null;
@@ -58380,6 +58716,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const da = await Promise.race([alle.then(() => true), new Promise(r => setTimeout(() => r(false), selbst ? 40000 : 16000))]);
             if(!da) return false;
         }catch(e){ return false; }
+        // App: Teile ohne Maja-Aufnahme weglassen statt mit der Handystimme zu sprechen
+        if(window.AndroidApp && typeof maskottchenArt === 'function' && maskottchenArt() === 'astro'){
+            for(let i = folge.length - 1; i >= 0; i--) if(folge[i].text && !folge[i].puffer) folge.splice(i, 1);
+            if(!folge.some(f => f.text)) return false;
+        }
         if(folge.some(f => f.text && !f.puffer)) return false;
         // Echtes Funkrauschen (Aufnahme von Dietmar) auch ohne ISS-Rahmen laden - sonst bleibt nur das kaum hoerbare Rechenrauschen.
         if(stimme && stimme.quindar && !ton.rauschPuffer){ try{ const fr = await Promise.race([rahmenKlip(ctx, 'sounds/funkrauschen.mp3?v=1'), new Promise(r => setTimeout(() => r(null), 2500))]); if(fr) ton.rauschPuffer = fr; }catch(e){} }
@@ -58447,6 +58788,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             stufeRausch = MAJA_STUFEN_FAKTOR.rauschen[majaStufe('rauschen')]; stufeQrn = MAJA_STUFEN_FAKTOR.qrn[majaStufe('qrn')]; stufeQrm = MAJA_STUFEN_FAKTOR.qrm[majaStufe('qrm')];
             ohneRausch = stufeRausch === 0;   // das kurze Rauschen hinter dem Roger-Piep gehoert zum Rauschen
             ohneBett = stufeRausch === 0 && stufeQrn === 0 && stufeQrm === 0;
+            if(!majaFunkAn('doppler')) st = Object.assign(st, { doppler: 0 });   // Dietmar 26.10.2026: Doppler-Effekt ausschaltbar
             if(!majaFunkAn('quetschen')) st = Object.assign(st, { halb: 0, tempo: 1, hp: 70, praes: 0, tp: 12000, chorus: 0, echo: 0, fading: 0, doppler: 0, duenn: false, komprimiert: false, vib: 0 });
         } }catch(e){}
         const kn = [], neu = k => { kn.push(k); return k; };
@@ -58977,9 +59319,22 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             }
         } else robo.frei = 0;
         if(lies('robo_tour_gesehen', '') !== '1' || jetzt - robo.beruehrt < 4000) return;
-        if(robo.nachRunde){ robo.nachRunde = false; if(jetzt - robo.letzter > 20000){ kurzauftritt(rundenSpruch(), { dauer: 7000 }); return; } }
+        if(robo.nachRunde){
+            robo.nachRunde = false;
+            if(jetzt - robo.letzter > 20000){
+                // Maja: bei sehr guter oder schwacher Runde oft ein aufgenommener Satz (Lob / Aufmunterung), sonst der Spruch mit der Prozentzahl
+                const bil = robo.bilanz;
+                const art = bil ? (bil.anteil >= 80 ? 'lob' : (bil.anteil < 50 ? 'trost' : '')) : '';
+                const clip = (art && Math.random() < 0.6) ? majaPick(art) : null;
+                if(clip){ robo.bilanz = null; kurzauftritt(esc(clip), { dauer: 7000, sprich: clip, sprichSofort: true }); return; }
+                kurzauftritt(rundenSpruch(), { dauer: 7000 });
+                return;
+            }
+        }
         if(robo.wiederDa){
             robo.wiederDa = false;
+            const grz = majaPick('gruss');
+            if(grz){ kurzauftritt(esc(grz), { sprich: grz, sprichSofort: true }); return; }
             const nn = nameIst() ? ', ' + esc(nameIst()) : '', hn = nameIst() ? ' ' + esc(nameIst()) : '';
             kurzauftritt(zufall(['Hey' + hn + ', schön, dass du wieder da bist! Ich hab schon auf dich gewartet.', 'Da bist du ja wieder' + nn + '! Ich hab mich schon gelangweilt.']),
                 { sprich: nameTon() + 'Schön, dass du wieder da bist. | Ich hab schon auf dich gewartet.' });
