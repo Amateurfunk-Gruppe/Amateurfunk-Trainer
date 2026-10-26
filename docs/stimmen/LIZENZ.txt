@@ -1,0 +1,9 @@
+Stimme "Thorsten" (de_DE-thorsten-medium) fuer Piper
+
+Kopie der Stimme aus https://huggingface.co/rhasspy/piper-voices (Ordner de/de_DE/thorsten/medium).
+Das Archiv rhasspy/piper-voices steht unter der MIT-Lizenz.
+Die Trainingsdaten (Thorsten-Voice, Thorsten Mueller, https://github.com/thorstenMueller/Thorsten-Voice) stehen unter CC0.
+
+Diese Kopie dient dem Amateurfunk-Trainer: Die App laedt die Stimme einmalig von hier (raw.githubusercontent.com) und faellt bei Fehlern auf Hugging Face zurueck.
+
+MIT-Lizenz (Piper-Stimmen-Archiv): Die Erlaubnis wird hiermit kostenlos jeder Person erteilt, die eine Kopie dieser Software und der zugehoerigen Dokumentationsdateien erhaelt, uneingeschraenkt damit zu verfahren, einschliesslich Nutzung, Kopie, Aenderung, Veroeffentlichung und Weitergabe, unter der Bedingung, dass dieser Hinweis in allen Kopien erhalten bleibt. Die Software wird ohne jede Gewaehrleistung bereitgestellt.

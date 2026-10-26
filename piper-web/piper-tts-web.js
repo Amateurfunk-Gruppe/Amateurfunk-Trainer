@@ -187,7 +187,22 @@ async function readBlob(url) {
     return void 0;
   }
 }
+// AFU 26.10.2026 (Dietmar: "Ich mag es nicht, wenn ich auf andere angewiesen bin"): Die Stimme Thorsten (medium) liegt auch bei uns auf GitHub
+// (docs/stimmen/...). Zuerst von dort holen, nur wenn das scheitert von Hugging Face. Gespeichert wird weiter unter dem Hugging-Face-Namen
+// (writeBlob/readBlob erkennen daran die Stimme), der Rest der Bibliothek merkt vom Umweg nichts.
+const AFU_SPIEGEL = "https://raw.githubusercontent.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/main/docs/stimmen";
 async function fetchBlob(url, callback) {
+  if (url.indexOf(HF_BASE + "/") === 0 && url.indexOf("de_DE-thorsten-medium") !== -1) {
+    try {
+      const sp = AFU_SPIEGEL + url.slice(HF_BASE.length);
+      const blob = await fetchBlobEinzeln(sp, callback);
+      const gut = sp.endsWith(".onnx") ? blob.size > 1000000 : (blob.size > 100 && JSON.parse(await blob.text()));
+      if (gut) return blob;
+    } catch (e) { console.warn("[Piper] GitHub-Kopie nicht geladen, nehme Hugging Face:", e && e.message); }
+  }
+  return fetchBlobEinzeln(url, callback);
+}
+async function fetchBlobEinzeln(url, callback) {
   var _a;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Download fehlgeschlagen (" + res.status + "): " + url.split("/").at(-1));

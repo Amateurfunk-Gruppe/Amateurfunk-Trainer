@@ -47,6 +47,10 @@ bz2tar.js
 *.dll
 *.onnx
 *.onnx.json
+# Ausnahme (26.10.2026): die Stimme Thorsten liegt auch bei uns auf GitHub, die App laedt sie von dort (docs/stimmen).
+# docs/ kommt nicht in die App und nicht in das Cloudflare-Paket.
+!/docs/stimmen/
+!/docs/stimmen/**
 
 # Alte Codestaende und Sicherungen - dafuer ist ab jetzt die Git-Historie da.
 #
