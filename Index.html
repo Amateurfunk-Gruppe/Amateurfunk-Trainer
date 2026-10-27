@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 338, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 339, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -57622,7 +57622,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         astro: () => eb(ebRaum + (window.ASTRO_POSEN ? '<image class="eb-wackel" href="' + window.ASTRO_POSEN.steht + '" x="94" y="8" width="54" height="88" preserveAspectRatio="xMidYMid meet"/>' : ebAstro) + '<text class="eb-txt" x="44" y="26" style="fill:#fff">DB1KM</text><text class="eb-txt" x="202" y="26" style="fill:#fff">DF4TR</text><text class="eb-txt" x="202" y="84" style="fill:#fff">KI5KFH</text>'),
         oscar: () => eb(ebRaum + '<g transform="translate(40 4) scale(0.82)"><g class="eb-wackel">' + satBildKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">OSCAR · seit 1961 · „HI HI“ im 2-m-Band</text>'),
         oscar7: () => eb(ebRaum + '<g transform="translate(40 4) scale(0.82)"><g class="eb-wackel">' + satBildKoerper() + '</g></g><text class="eb-txt" x="120" y="92" style="fill:#fff">OSCAR 7 · 1974 · seit 2002 wieder da</text>'),
-        jung: () => eb('<text class="eb-txt-g" x="62" y="14">Kirian · 9</text><text class="eb-txt-g" x="178" y="14">Maja · 14</text>'
+        jung: () => eb('<text class="eb-txt-g" x="62" y="14">Kirian · 9</text><text class="eb-txt-g" x="178" y="14">Maja · 11</text>'
             // links der Junge, rechts das Maedchen: jeder mit Handfunkgeraet, beide hupfen abwechselnd
             + '<g class="eb-hupf"><circle class="eb-l" cx="62" cy="38" r="11"/><path class="eb-t" d="M52 34q10-10 20 0"/>'
             + '<path class="eb-l" d="M62 49v22M62 71l-9 11M62 71l9 11M62 56l-12 10M62 56l13-9"/>'
