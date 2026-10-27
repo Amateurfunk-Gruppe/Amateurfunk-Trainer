@@ -24823,7 +24823,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 354, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 356, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -52681,9 +52681,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<span style="font-size:.72rem;color:var(--muted,#5b6b80)">' + f[2] + '</span></button>').join('');
         // ANTWORTFARBEN (18.10.2026). Dietmars YL: "Das ist zu bunt." Bunt oder eine Farbe fuer alle vier.
         const faJetzt = (function(){ const m = (document.documentElement.className.match(/\bfa-(blau|gruen|petrol|orange|grau|lila)\b/) || [])[1]; return m || 'bunt'; })();
-        const FA = [['bunt','Bunt','linear-gradient(135deg,#2f7fd8 25%,#f08a1a 25% 50%,#22a862 50% 75%,#8e44ad 75%)'],['blau','Blau','#2f7fd8'],['gruen','Grün','#22a862'],
+        const FA = [['bunt','Mehrfarbig','linear-gradient(135deg,#2f7fd8 25%,#f08a1a 25% 50%,#22a862 50% 75%,#8e44ad 75%)'],['blau','Blau','#2f7fd8'],['gruen','Grün','#22a862'],
                     ['petrol','Petrol','#0a7f86'],['orange','Orange','#f08a1a'],['grau','Grau','#5b6b80'],['lila','Lila','#8e44ad']];
-        const farben = '<div style="margin-top:12px"><b style="display:block;margin-bottom:6px">Antwortfarben' + (jetzt !== 'bunt' ? ' <span style="font-weight:400;font-size:.8rem;color:var(--muted,#5b6b80)">(gilt im Stil „Bunt“)</span>' : '') + '</b>'
+        // 27.10.2026 Dietmar: "Stil in der Farbe gibt es uebrigens zweimal." Bunt und Petrol standen als Stil UND als Antwortfarbe da.
+        // Die Farbwahl gilt nur im Stil Bunt - nur dort wird sie jetzt gezeigt; "Bunt" heisst darin "Mehrfarbig".
+        const farben = jetzt !== 'bunt' ? '' : '<div style="margin-top:12px"><b style="display:block;margin-bottom:6px">Antwortfarben</b>'
             + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + FA.map(f => '<button type="button" onclick="antwortfarbeSetzen(\'' + f[0] + '\')" aria-pressed="' + (f[0] === faJetzt) + '" title="' + f[1] + '"'
             + ' style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:20px;background:#fff;cursor:pointer;font:inherit;color:inherit;border:2px solid ' + (f[0] === faJetzt ? '#0a7f86' : '#d9e2ec') + '">'
             + '<span style="width:18px;height:18px;border-radius:50%;background:' + f[2] + '"></span>' + f[1] + (f[0] === faJetzt ? ' <i class="fas fa-check" style="color:#0a7f86"></i>' : '') + '</button>').join('') + '</div>'
@@ -52700,7 +52702,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Form - danach wie bisher (Antwort unter der Maus ...).
         const allg = $('einstBlatt_allgemein'), anp = $('einstBlatt_anpassen');
         if(!allg || !anp) return;
-        ['pcAnsichtKasten0', 'pcAnsichtKasten', 'fragenstilKasten'].forEach(id => { const a = $(id); if(a) a.remove(); });
+        ['pcAnsichtKasten0', 'pcAnsichtKasten', 'fragenstilKasten'].forEach(id => { const a = $(id); if(a) a.remove(); anp.querySelectorAll('[data-huelle="' + id + '"]').forEach(x => x.remove()); });
         // Nur verschieben, was in Allgemein (frisch gezeichnet) noch vor dem Profilbild steht.
         const neu = [];
         for(const k of Array.from(allg.children)){
@@ -52748,6 +52750,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const versteckt = k => { for(let e = k; e && e !== anp; e = e.parentElement){ if(e.classList.contains('nur-pc') || getComputedStyle(e).display === 'none') return true; } return false; };
         const alle = Array.from(anp.querySelectorAll('div[style*="border:1px solid"]')).filter(k => !k.parentElement.closest('div[style*="border:1px solid"]') && !versteckt(k));
         const gefunden = new Set();
+        // 27.10.2026 Dietmar: "Stil in der Farbe gibt es uebrigens zweimal." Die Kaesten aus der Huelle (fragenstilKasten, appFarbeKasten ...)
+        // werden unten herausgenommen und die leere Huelle geloescht - beim naechsten Oeffnen fand das Aufraeumen die alte Fassung nicht
+        // mehr und setzte eine zweite daneben (bei jedem Oeffnen eine mehr). Jetzt merkt sich der Kasten, aus welcher Huelle er kommt.
+        alle.forEach(k => { const w = k.parentElement; if(w && w !== anp && /Kasten\d?$/.test(w.id || '')){ k.dataset.huelle = w.id; } });
         anp.querySelectorAll('.anp-gruppe').forEach(e => e.remove());
         for(const [name, titel] of GRUPPEN){
             const zeile = D.createElement('div'); zeile.className = 'anp-gruppe';
@@ -58945,7 +58951,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     let majaPaket = null, majaPaketLaden = null;
     function majaPaketHolen(){
         if(majaPaket || majaPaketLaden) return majaPaketLaden || Promise.resolve(majaPaket);
-        majaPaketLaden = fetch('sounds/maja-grok/paket.json', { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
+        // ?v=Stand (27.10.2026): Mit force-cache blieb auf dem Handy die ALTE paket.json im Zwischenspeicher haengen - neue Saetze
+        // (Neumayer, Kirian/Maja 11) fehlten darin, Maja blieb stumm. Jede neue Fassung holt sie jetzt frisch.
+        majaPaketLaden = fetch('sounds/maja-grok/paket.json?v=' + (typeof TRAINER_STAND !== 'undefined' ? TRAINER_STAND.nr : 0), { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
             .then(j => { majaPaket = (j && j.dateien) ? j : { dateien: {} }; return majaPaket; })
             .catch(() => { majaPaket = { dateien: {} }; return majaPaket; });
         return majaPaketLaden;
@@ -58964,7 +58972,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 const p = await majaPaketHolen();
                 const datei = p && p.dateien && p.dateien[String(text).trim()];
                 if(datei){
-                    const r0 = await fetch('sounds/maja-grok/' + datei + '?q=80', { cache: 'force-cache' });   // ?q=80: neue Aufnahmen (80 kbit/s statt 40), sonst liefert der Zwischenspeicher die alten
+                    const r0 = await fetch('sounds/maja-grok/' + datei + '?q=81', { cache: 'force-cache' });   // ?q=81 (vorher 80, 27.10.2026: neu aufgenommene Saetze unter alten Dateinamen): neue Aufnahmen (80 kbit/s statt 40), sonst liefert der Zwischenspeicher die alten
                     if(r0.ok){
                         const b0 = await r0.arrayBuffer();
                         if(b0 && b0.byteLength > 200){
@@ -61915,6 +61923,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Die Farbe oben im Reiter Anpassen (P41), jedes Mal frisch
             tu(() => { const b = $('einstBlatt_anpassen'); if(!b || typeof window.appFarbeKastenHtml !== 'function') return;
                 const alt = b.querySelector('#appFarbeKasten'); if(alt) alt.remove();
+                b.querySelectorAll('[data-huelle="appFarbeKasten"]').forEach(x => x.remove());
                 b.insertAdjacentHTML('afterbegin', '<div id="appFarbeKasten">' + window.appFarbeKastenHtml() + '</div>');
                 const altB = b.querySelector('#appBegleiterKasten'); if(altB) altB.remove(); });
             // Der Begleiter (Funki oder Maja) steht seit 27.10.2026 unter Sounds, direkt unter den zwei Knoepfen und vor den Sprechern
