@@ -24808,7 +24808,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 337, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 338, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -57737,11 +57737,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           extra: [['Satellit fliegen lassen', 'sat']],
           sprich: 'Oscar sieben, von neunzehnhundertvierundsiebzig, fiel mit kaputter Batterie aus. | Im Jahr zweitausendzwei meldete er sich zurück, wie von Zauberhand. Er funkt bis heute! | Später kamen Oscar zehn und Oscar dreizehn. Dreizehn hat AMSAT Deutschland gebaut.' },
         { id: 'jung', name: 'Die Jüngsten', frage: 'Kirian ist erst 9 – Deutschlands jüngster Funkamateur! Bist du der Nächste? Tipp mich an.',
-          frage2: 'Maja ist erst 14 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.',
-          kurz: 'Kirian ist 9, Maja ist 14 – Deutschlands jüngste Funker. <b>Bist du der Nächste?</b>',
-          html: '<b>Kirian</b> (DOK <b>C12</b>) ist erst <b>neun</b> Jahre alt und gilt als Deutschlands <b>jüngster Funkamateur</b>. <b>Maja</b> (DOK <b>B05</b>) ist <b>14</b> und Deutschlands <b>jüngste Funkamateurin</b> – ihre Lizenz hat sie schon mit zehn bekommen. <b>Bist du der Nächste? Oder die Nächste?</b>',
+          frage2: 'Maja ist erst 11 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.',
+          kurz: 'Kirian ist 9, Maja ist 11 – Deutschlands jüngste Funker. <b>Bist du der Nächste?</b>',
+          html: '<b>Kirian</b> (DOK <b>C12</b>) ist erst <b>neun</b> Jahre alt und gilt als Deutschlands <b>jüngster Funkamateur</b>. <b>Maja</b> (DOK <b>B05</b>) ist <b>11</b> und Deutschlands <b>jüngste Funkamateurin</b> – ihre Lizenz hat sie schon mit zehn bekommen. <b>Bist du der Nächste? Oder die Nächste?</b>',
           extra: [['Ich bin der Nächste!', 'naechste:er'], ['Ich bin die Nächste!', 'naechste:sie']],
-          sprich: 'Kirian, vom Ortsverband Tschar-lie Eins Zwo, ist erst neun Jahre alt und gilt als Deutschlands jüngster Funkamateur. | Maja, vom Ortsverband Bravo Null Fünf, ist vierzehn und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen. | Bist du der Nächste? Oder die Nächste?' },
+          sprich: 'Kirian, vom Ortsverband Tschar-lie Eins Zwo, ist erst neun Jahre alt und gilt als Deutschlands jüngster Funkamateur. | Maja, vom Ortsverband Bravo Null Fünf, ist elf und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen. | Bist du der Nächste? Oder die Nächste?' },
         { id: 'zahl', name: 'Funker in Deutschland', frage: 'Wie viele <b>Funkamateure</b> gibt es in Deutschland? Rate mal – tipp mich an!',
           kurz: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure.',
           html: 'In Deutschland gibt es rund <b>61 000</b> Funkamateure mit gültiger Lizenz. Über <b>50 000</b> haben die <b>Klasse A</b>, gut <b>9 000</b> die <b>Klasse E</b> und gut <b>1 000</b> die Einsteigerklasse <b>N</b> – die wächst gerade kräftig. Über <b>33 000</b> sind im <b>DARC</b>. Du kannst bald einer von ihnen sein!',
@@ -57898,7 +57898,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         { f: 'Wie alt ist <b>Kirian</b>, Deutschlands jüngster Funkamateur?', r: 'Neun Jahre', x: ['Neunzehn Jahre', 'Neunzig Jahre'],
           w: '<b>Kirian</b> ist erst neun – und schon Funkamateur. Bist du der Nächste?' },
         { f: 'Wer ist <b>Maja</b> vom DOK B05?', r: 'Deutschlands jüngste Funkamateurin', x: ['Eine Radiomoderatorin', 'Funkis Schwester'],
-          w: '<b>Maja</b> ist 14 und Deutschlands jüngste Funkamateurin – ihre Lizenz hat sie schon mit zehn bekommen. Bist du die Nächste?' },
+          w: '<b>Maja</b> ist 11 und Deutschlands jüngste Funkamateurin – ihre Lizenz hat sie schon mit zehn bekommen. Bist du die Nächste?' },
         { f: 'Wie viele Funkamateure gibt es ungefähr in Deutschland?', r: 'Rund 61 000', x: ['Rund 600', 'Rund 6 Millionen'],
           w: 'Rund <b>61 000</b> Funkamateure haben in Deutschland eine gültige Lizenz – und du kannst bald dazugehören.' },
         { f: 'Wofür steht <b>OSCAR</b>?', r: 'Orbiting Satellite Carrying Amateur Radio', x: ['Ein Filmpreis – aber für Funker', 'Oben Senden Chaos, Alles Rauscht'],

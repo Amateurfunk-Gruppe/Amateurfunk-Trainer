@@ -1,6 +1,6 @@
 {
  "stimme": "grok-carina",
- "stand": "2026-10-26",
+ "stand": "2026-10-27",
  "dateien": {
   "Ab ins Bett – morgen ist auch wieder ein Tag.": "maja_001.mp3",
   "Ahhh, das tut gut!": "maja_587.mp3",
@@ -531,7 +531,6 @@
   "Hier ist ein Tipp für dich. Lies jede Frage bis zum Ende. Kleine Wörter wie „nicht“ oder „kein“ drehen die ganze Frage um.": "maja_336.mp3",
   "Hier ist ein Tipp für dich. Mach ab und zu die Prüfungssimulation. Dann kennst du den Ablauf und bist am Prüfungstag viel ruhiger.": "maja_337.mp3",
   "Hier ist ein Tipp für dich. Mahlzeit! Was gab’s bei dir heute Gutes zum Mittagessen?": "maja_338.mp3",
-  "Hier ist ein Tipp für dich. Maja ist erst 14 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.": "maja_339.mp3",
   "Hier ist ein Tipp für dich. Mein Akku hat 73 Prozent. Das ist auch ein Gruß, ich weiß: Viele Grüße!": "maja_340.mp3",
   "Hier ist ein Tipp für dich. Mein Akku ist fast leer … kannst du mich aufladen?": "maja_341.mp3",
   "Hier ist ein Tipp für dich. Mein Akku ist fast leer.": "maja_342.mp3",
@@ -750,10 +749,7 @@
   "Mahlzeit!": "maja_797.mp3",
   "Mahlzeit! Was gab’s bei dir heute Gutes zum Mittagessen?": "maja_798.mp3",
   "Maja here.": "maja_468.mp3",
-  "Maja ist erst 14 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.": "maja_799.mp3",
   "Maja meldet sich zum Dienst!": "maja_469.mp3",
-  "Maja, vom Ortsverband Bravo Null Fünf, ist vierzehn und Deutschlands jüngste Funkamateurin.": "maja_800.mp3",
-  "Maja, vom Ortsverband Bravo Null Fünf, ist vierzehn und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen.": "maja_470.mp3",
   "Mal sehen, ob alles sitzt!": "maja_471.mp3",
   "Mein Akku hat 73 Prozent. Das ist auch ein Gruß, ich weiß: Viele Grüße!": "maja_801.mp3",
   "Mein Akku ist fast leer … kannst du mich aufladen?": "maja_802.mp3",
@@ -1064,6 +1060,12 @@
   "Die Neumayer-Station ist eine deutsche Forschungsstation in der Antarktis.": "maja_978.mp3",
   "Im Winter leben dort nur etwa neun Menschen. Ihr Rufzeichen ist D P null G V N. Wer sie ruft, hat ein echtes D X!": "maja_979.mp3",
   "Im Winter leben dort nur etwa neun Menschen. Ihr Rufzeichen ist D P null G V N. Wer sie ruft, hat ein echtes DX!": "maja_979.mp3",
-  "Aufgepasst bei der Prüfungsfrage, das ist eine Fangfrage! Exterritorial heißt, außerhalb von Deutschland. Klubstation klingt gut, nennt aber Gaststreitkräfte in Deutschland, und die betreiben die Station nicht. Richtig ist: Amateurfunkstelle der Klasse A, exterritorial.": "maja_980.mp3"
+  "Aufgepasst bei der Prüfungsfrage, das ist eine Fangfrage! Exterritorial heißt, außerhalb von Deutschland. Klubstation klingt gut, nennt aber Gaststreitkräfte in Deutschland, und die betreiben die Station nicht. Richtig ist: Amateurfunkstelle der Klasse A, exterritorial.": "maja_980.mp3",
+  "Maja ist erst 11 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.": "maja_981.mp3",
+  "Hier ist ein Tipp für dich. Maja ist erst 11 – Deutschlands jüngste Funkamateurin! Bist du die Nächste? Tipp mich an.": "maja_982.mp3",
+  "Maja, vom Ortsverband Bravo Null Fünf, ist elf und Deutschlands jüngste Funkamateurin.": "maja_983.mp3",
+  "Maja, vom Ortsverband Bravo Null Fünf, ist elf und Deutschlands jüngste Funkamateurin. Ihre Lizenz hat sie schon mit zehn bekommen.": "maja_984.mp3",
+  "Weißt du, wo Funker im ewigen Eis überwintern? Tipp mich an – Neumayer!": "maja_985.mp3",
+  "Hier ist ein Tipp für dich. Weißt du, wo Funker im ewigen Eis überwintern? Tipp mich an – Neumayer!": "maja_986.mp3"
  }
 }
