@@ -625,7 +625,7 @@
             const z = eigeneAdresse() ? 'ok' : tunnelGeprueft.zustand;
             if(z === 'laeuft' || z === 'unbekannt'){
                 linkEl.href='#';
-                linkEl.textContent='🔎 Link wird geprueft... (ca. 15-40 Sekunden, bitte noch nicht kopieren)';
+                linkEl.textContent='🔎 Link wird geprüft – bitte warten';
                 linkEl.style.color='#e67e22';
                 linkEl.style.fontWeight='600';
                 linkEl.style.cursor='default';
@@ -4358,26 +4358,56 @@
         // damit weiss auf Hellgruen. Aus JavaScript gesetzte Farben gewinnen
         // gegen jeden Stil; nur aus dem Stilblock heraus kann die Nachtsicht
         // ueberhaupt mitreden.
+        // 27.10.2026, Dietmar: Bernstein sah nach Warnung aus, obwohl "Versuch 1
+        // von 3" kurz nach dem Start normal ist. Jetzt drei Stufen: gut (gruen),
+        // wartet (grau, Kreis gruen: Versuch 1 oder 2) und warn (bernstein: erst
+        // ab dem dritten Fehlversuch oder wenn die Wache nicht laeuft).
         const gut = j.laeuft && j.fehlversuche === 0;
+        const wartet = !gut && j.laeuft && j.fehlversuche > 0 && j.fehlversuche < 3;
         zeile.style.display = 'block';
-        zeile.className = 'duo-wache ' + (gut ? 'gut' : 'warn');
+        zeile.className = 'duo-wache ' + (gut ? 'gut' : (wartet ? 'wartet' : 'warn'));
 
-        let t = '';
-        t += (gut ? '🟢' : '🟠') + ' <b>Tunnel-Wache läuft.</b> ';
-        t += 'Der Trainer meldet sich alle ' + (j.pulsTaktMin || 4) + ' Minuten bei Cloudflare — '
-           + 'damit die Leitung nicht wegen Ruhe abgebaut wird.';
-        t += '<br>Zuletzt durchgekommen: <b>' + wacheZeitText(j.letzterPuls, j.jetzt) + '</b>.';
-        if(j.imRaum > 0) t += ' Im Raum: <b>' + j.imRaum + '</b>.';
+        // 27.10.2026, Dietmar: "Tunnel-Wache laeuft. Der Text darunter muss
+        // eingeklappt sein. Evtl koennen wir den Text etwas kuerzen." Sichtbar
+        // bleibt die Kopfzeile; ein Klick klappt die Einzelheiten auf. Der Zustand
+        // (offen/zu) bleibt ueber die Minuten-Aktualisierung erhalten.
+        const kopf = (gut || wartet) ? '🟢' : '🟠';
+        let d = '';
+        d += 'Der Trainer meldet sich alle ' + (j.pulsTaktMin || 4) + ' Minuten bei Cloudflare, damit die Leitung nicht abgebaut wird.';
+        d += '<br>Zuletzt durchgekommen: <b>' + wacheZeitText(j.letzterPuls, j.jetzt) + '</b>.';
+        if(j.imRaum > 0) d += ' Im Raum: <b>' + j.imRaum + '</b>.';
         if(j.fehlversuche > 0){
-            t += '<br>⚠️ ' + (j.meldung || 'Keine Antwort von außen.')
-               + ' Nach drei Fehlversuchen baue ich die Leitung von selbst neu auf.';
+            const mld = String(j.meldung || 'Keine Antwort von außen.');
+            d += '<br>' + (wartet ? '⏳ ' + mld.replace(/^Keine Antwort/, 'Noch keine Antwort') : '⚠️ ' + mld)
+               + ' Nach drei Fehlversuchen baue ich die Leitung neu auf.';
         }
         if(j.neustarts > 0){
-            t += '<br>🔁 Die Leitung wurde ' + j.neustarts + '× neu aufgebaut'
+            d += '<br>🔁 Leitung ' + j.neustarts + '× neu aufgebaut'
                + (j.letzterNeustart ? ' (zuletzt ' + wacheZeitText(j.letzterNeustart, j.jetzt) + ')' : '')
-               + '. <b>Jeder Neuaufbau bedeutet einen neuen Link</b> — der oben ist der gültige.';
+               + '. <b>Jeder Neuaufbau bringt einen neuen Link</b> – der oben gilt.';
         }
-        zeile.innerHTML = t;
+        let offen = false;
+        try{ offen = localStorage.getItem('duo_wache_offen') === '1'; }catch(e){}
+        // Kopfzeile wie beim Besucher-Kasten darunter (Dietmar, 27.10.2026: "Darunter das
+        // gefaellt mir besser. So moechte ich das oben auch haben."): Text links, rechts der
+        // eckige Pfeil-Knopf (.drz-klapp) im gleichen Format und mit gleichem Abstand.
+        zeile.innerHTML = '<div class="duo-wache-kopf" style="display:flex; align-items:flex-start; gap:6px; cursor:pointer;">'
+            + '<span style="flex:1;">' + kopf + ' <b>Tunnel-Wache läuft.</b></span>'
+            + '<button type="button" class="drz-klapp" aria-label="Auf- oder zuklappen" aria-expanded="' + offen + '" title="Auf- oder zuklappen" style="width:24px; height:24px; margin-top:-3px;">'
+            + '<i class="fas fa-chevron-down" style="transform:' + (offen ? 'rotate(180deg)' : 'rotate(0deg)') + ';"></i></button></div>'
+            + '<div class="duo-wache-text" style="' + (offen ? '' : 'display:none; ') + 'margin-top:6px;">' + d + '</div>';
+        try{
+            const kopfEl = zeile.querySelector('.duo-wache-kopf');
+            const kb = zeile.querySelector('.drz-klapp');
+            kopfEl.addEventListener('click', function(){
+                const tx = zeile.querySelector('.duo-wache-text');
+                const jetzt = tx.style.display === 'none';
+                tx.style.display = jetzt ? '' : 'none';
+                kb.setAttribute('aria-expanded', String(jetzt));
+                kb.querySelector('i').style.transform = jetzt ? 'rotate(180deg)' : 'rotate(0deg)';
+                try{ localStorage.setItem('duo_wache_offen', jetzt ? '1' : '0'); }catch(e){}
+            });
+        }catch(e){}
     }
 
     function wacheAnzeigeStarten(){

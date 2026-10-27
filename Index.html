@@ -9058,6 +9058,20 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             color: #eaeff4 !important;
             border-color: #3a7ba3 !important;
         }
+        /* Browser-Autofill (27.10.2026, Dietmar: "im Gruppenraum ist das Feld
+           weiss mit dem Namen. Das moechte ich auch gefaerbt haben."): Chrome und
+           Edge faerben ein vorausgefuelltes Feld hellblau und ueberschreiben dabei
+           background. Dagegen hilft nur der innere Schatten, und die Schrift muss
+           mit -webkit-text-fill-color gesetzt werden. */
+        body.dark #duoModal input:-webkit-autofill,
+        body.dark #duoModal input:-webkit-autofill:hover,
+        body.dark #duoModal input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #12354c inset !important;
+            box-shadow: 0 0 0 1000px #12354c inset !important;
+            -webkit-text-fill-color: #eaeff4 !important;
+            caret-color: #eaeff4 !important;
+            transition: background-color 99999s ease-out 0s;
+        }
         body.dark #ttsSettingsModal #ttsVoiceHint {
             color: #b3cbdb !important;
         }
@@ -11607,6 +11621,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                    Jetzt stehen sie hier, wo die Nachtsicht mitreden kann.
                    duo.js setzt nur noch, ob es gut aussieht oder nicht. */
                 .duo-wache.gut  { background:#eef8f1; border:1px solid #bfe3cb; color:#1c6b3a; }
+                .duo-wache.wartet { background:#eef2f6; border:1px solid #c3d0db; color:#3d5366; }
                 .duo-wache.warn { background:#fff6e5; border:1px solid #f0d7a0; color:#7a5a10; }
                 /* Die Besucherzeile: blau, damit sie sich von der gruenen
                    Wache unterscheidet - die eine sagt "die Leitung steht",
@@ -11652,9 +11667,9 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 </button>
                 <div class="duo-collapsible-content">
                     <div style="display:flex; gap:6px;">
-                        <input type="text" id="duoUserNameInput" placeholder="z.B. dein Vorname oder Rufzeichen" maxlength="20" style="flex:1; padding:0.5rem 0.8rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.85rem;">
-                        <button onclick="var v=window.setUserName(document.getElementById('duoUserNameInput').value); var h=document.getElementById('duoNameHint'); if(h) h.textContent = v ? '✅ Gespeichert als \''+v+'\'' : 'Name gelöscht'; setTimeout(function(){ if(window.refreshUserLabels) window.refreshUserLabels(); if(window.updateDuoNameHint) updateDuoNameHint(); }, 1500);" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Speichern"><i class="fas fa-save"></i> Speichern</button>
-                        <button onclick="document.getElementById('duoUserNameInput').value=''; window.setUserName(''); if(window.updateDuoNameHint) updateDuoNameHint();" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Namen leeren"><i class="fas fa-times"></i></button>
+                        <input type="text" id="duoUserNameInput" autocomplete="off" placeholder="z.B. dein Vorname oder Rufzeichen" maxlength="20" style="flex:1; padding:0.5rem 0.8rem; border-radius:20px; border:1px solid #a8c0de; font-size:0.85rem;">
+                        <button onclick="var v=window.setUserName(document.getElementById('duoUserNameInput').value); var h=document.getElementById('duoNameHint'); if(h) h.textContent = v ? '✅ Gespeichert als \''+v+'\'' : 'Name gelöscht'; setTimeout(function(){ if(window.refreshUserLabels) window.refreshUserLabels(); if(window.updateDuoNameHint) updateDuoNameHint(); }, 1500); var sb=this; sb.innerHTML='<i class=&quot;fas fa-check&quot;></i>'; setTimeout(function(){ sb.innerHTML='<i class=&quot;fas fa-save&quot;></i>'; }, 1500);" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Speichern" aria-label="Speichern"><i class="fas fa-save"></i></button>
+                        <button onclick="document.getElementById('duoUserNameInput').value=''; window.setUserName(''); if(window.updateDuoNameHint) updateDuoNameHint();" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.75rem;" title="Namen leeren" aria-label="Namen leeren"><i class="fas fa-times"></i></button>
                     </div>
                     <div id="duoNameHint" style="font-size:0.7rem; color:var(--muted); margin-top:6px;">Gilt für den aktuell gewählten Benutzer – erscheint im Verlauf, bei Fehlern, im Lernbedarf und im Gruppenraum.</div>
                 </div>
@@ -16755,10 +16770,10 @@ function einstBenutzerFuellen(){
             +   (ziel ? '<br><span style="color:var(--panel-navy); font-weight:600;">' + ziel + '</span>' : '')
             + '</span>'
             + (jetzt
-                ? '<span style="flex:0 0 auto; font-size:0.68rem; font-weight:700; color:#1f9d55; '
-                  + 'background:#eef7f1; border-radius:9px; padding:3px 8px;">aktiv</span>'
+                ? '<span style="flex:0 0 74px; width:74px; box-sizing:border-box; text-align:center; font-size:0.68rem; font-weight:700; color:#1f9d55; '
+                  + 'background:#eef7f1; border-radius:9px; padding:3px 0;">aktiv</span>'
                 : '<button type="button" onclick="benutzerWechselnAus(\'' + slot + '\')" '
-                  + 'style="' + EINST_KNOPF + ' flex:0 0 auto; padding:0.2rem 0.6rem; font-size:0.7rem;"'
+                  + 'style="' + EINST_KNOPF + ' flex:0 0 74px; width:74px; box-sizing:border-box; justify-content:center; text-align:center; padding:0.2rem 0; font-size:0.7rem;"'
                   + (da ? '' : ' disabled title="Erst einen Namen vergeben"')
                   + '>wechseln</button>')
             // Zuruecksetzen. Dietmar am 09.09.2026: "Hier benoetigt es hinter
@@ -24808,7 +24823,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 339, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 353, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -42208,6 +42223,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         try{
             if(!ueberGeteiltenLink()) return;
             if(localStorage.getItem('demo_hinweis_gesehen')) return;
+            // Schon mit Name und PIN angemeldet: der Name steht fest, nicht noch einmal fragen.
+            try{ if(window.lsStatus && window.lsStatus().name){ localStorage.setItem('demo_hinweis_gesehen', '1'); return; } }catch(e){}
             const m = document.getElementById('willkommenModal');
             if(!m) return;
             // Mit Raumcode im Link: nur Name und Knopf. Der Rest des Textes
@@ -42276,6 +42293,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             }catch(e){}
+        }catch(e){}
+    };
+    // Wer sich anmelden will, braucht das Namensfenster nicht: zu, als
+    // gesehen merken, Anmeldefenster auf.
+    window.willkommenErledigt = function(){
+        try{
+            const m = document.getElementById('willkommenModal');
+            if(m){ m.style.display = 'none'; m.classList.remove('open'); }
+            localStorage.setItem('demo_hinweis_gesehen', '1');
+        }catch(e){}
+    };
+    window.willkommenAnmelden = function(){
+        try{ window.willkommenErledigt(); }catch(e){}
+        try{
+            if(typeof window.lernstandMitnehmen === 'function'){
+                window.lernstandMitnehmen();
+                if(typeof window.lsReiter === 'function' && !(window.lsStatus && window.lsStatus().name)) window.lsReiter('an');
+            }
         }catch(e){}
     };
     // duo.js ruft das, sobald der Beitritt gelungen ist: Fenster zu, Knopf
@@ -44939,6 +44974,14 @@ if (originalSelectOption) {
         }
         body.dark #duoWacheZeile.gut b,
         body.dark #duoWacheZeile.gut strong { color: #d6f7e6 !important; }
+        /* Wartet (Versuch 1 oder 2 von 3): grau statt Bernstein, 27.10.2026 */
+        body.dark #duoWacheZeile.wartet {
+            background: #1d2f3d !important;
+            border: 1px solid #47657c !important;
+            color: #c3d4e0 !important;
+        }
+        body.dark #duoWacheZeile.wartet b,
+        body.dark #duoWacheZeile.wartet strong { color: #eef5fa !important; }
         body.dark #duoWacheZeile.warn {
             background: #3a2f14 !important;
             border: 1px solid #7a5f28 !important;
@@ -47690,6 +47733,14 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
                     font-size:0.92rem; font-family:var(--font-mono);">
       <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;">
         Steht nur im Chat und in der Teilnehmerliste dieses Trainers. Ohne Eintrag heißt du „Besucher".</div>
+      <!-- 27.10.2026, Dietmar: "Mich ärgert es, dass beim Start erst mal zwei
+           Fenster kommen. Trage ich Name und PIN ein, werde ich erneut nach
+           meinem Namen gefragt." Wer schon einen Lernstand mit Name und PIN
+           hat, geht von hier direkt zur Anmeldung; das Willkommensfenster
+           geht dabei zu und kommt nicht wieder. -->
+      <div id="willkommenAnmeldenZeile" style="margin-top:0.8rem; padding-top:0.7rem; border-top:1px dashed var(--line); font-size:0.85rem;">
+        Schon einen Lernstand mit Name und PIN?
+        <button type="button" onclick="willkommenAnmelden()" style="background:none; border:none; padding:0; color:#2f5fd0; font-weight:700; text-decoration:underline; cursor:pointer; font-size:inherit;">Hier anmelden</button></div>
       <!-- Kurs und Hausaufgaben (28.09.2026): nur sichtbar, wenn der
            Kursleiter einen Kurs angelegt hat (kursWillkommenZeigen). -->
       <!-- Kurs: Knopf statt Haken (16.10.2026). Dietmar: "Waere hier ein
@@ -62795,7 +62846,9 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
     window.lsVerfuegbar = verfuegbar;
 
     function zustand(){ try{ return JSON.parse(lsGet(SYNC_KEY) || 'null'); }catch(e){ return null; } }
-    function zustandSetzen(z){ if(z) lsSet(SYNC_KEY, JSON.stringify(z)); else lsDel(SYNC_KEY); try{ barAktualisieren(); }catch(e){} }
+    function zustandSetzen(z){ if(z) lsSet(SYNC_KEY, JSON.stringify(z)); else lsDel(SYNC_KEY); try{ barAktualisieren(); }catch(e){}
+        // Angemeldet: das Namensfenster vom Start ist erledigt (27.10.2026).
+        try{ if(z && z.token && window.willkommenErledigt) window.willkommenErledigt(); }catch(e){} }
     // Knopfreihe am PC (18.10.2026, Dietmar: "kein abmelden vorhanden"): "Anmelden", nach der Anmeldung
     // "Angemeldet: Name" und daneben "Abmelden".
     function barAktualisieren(){
@@ -63774,6 +63827,12 @@ html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:n
 html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;color:#fff!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] h3 i:not(#q1):not(#q2){color:#7be3c9!important}
+/* 27.10.2026 Dietmar zur Auswertung: "Das muss noch in Polar angepasst werden." Im Stil Polar (body.graphit) faerbte die
+   Graphit-Regel fuer .exam-info, #masteryDisplay und .history-col auch die Kaesten INNERHALB der Fenster grau (#1b2027) -
+   die Pruefungsreife links in der Auswertung stand als grauer Block im blauen Fenster. In Fenstern bekommen sie den
+   Polar-Ton wie die Kaesten rechts: halbdurchsichtiges Weiss, feiner heller Rand, runde Ecken. */
+html:not(#zz):not(.android-app) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
+html:not(#zz):not(.android-app) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
 </style>
 <style id="polarRest">
 /* 21.10.2026 Dietmar: "Hier ist auch noch der Graphit vorhanden" (Ziel-Fenster) und "dieser Scrollbalken hat einen weißen Hintergrund" */
@@ -63889,6 +63948,101 @@ html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal .app-seg bu
 html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal .app-seg button:not(.an) { color: #c3d4e4 !important; background: transparent !important; }
 html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal #appDesignSeg button.an {
     background: rgba(45,232,216,.22) !important; color: #fff !important; box-shadow: inset 0 0 0 2px #2de8d8 !important; }
+</style>
+
+<style id="duoPolitur">
+/* ================================================================
+   GRUPPENRAUM-FENSTER: "Glas"  (27.10.2026)
+   Dietmar: "Koennen wir die ganze Seite optisch aufwerten?" - Vorschlag 1
+   (Glas) gewaehlt; Namensfeld wie Variante B (Speichern und Leeren als
+   kleine Quadrate mit runden Ecken, nicht als Ovale).
+   Nur Aussehen: Aufbau, ids und das Auf- und Zuklappen der Kaesten
+   bleiben unveraendert. Formen gelten fuer alle Aussehen, Farben nur
+   fuer das dunkle.
+   ================================================================ */
+#duoModal > div { border-radius:26px !important; }
+#duoModal h2 { font-size:1.3rem !important; letter-spacing:.2px; }
+#duoModal .duo-collapsible,
+#duoModal .nur-gastgeber[style*="border-radius:12px"],
+#duoModal .raum-kasten,
+#duoModal #duoUnterrichtZeile,
+#duoModal #duoPruefungZeile { border-radius:18px !important; }
+#duoModal .duo-collapsible-header { padding:.8rem 1rem !important; }
+#duoModal .raum-sinnbild { border-radius:18px !important; transition:transform .15s ease, border-color .15s ease; }
+#duoModal .raum-sinnbild:hover { transform:translateY(-3px); }
+#duoModal .duo-knopfreihe button,
+#duoModal .duo-knopfreihe-links button { border-radius:999px !important; min-height:44px; font-weight:700; }
+/* Der Hinweistext unter dem Namensfeld entfaellt (27.10.2026, Dietmar: "Der Text darunter kann raus").
+   Die Rueckmeldung nach dem Speichern gibt jetzt der Knopf selbst: kurz ein Haken. */
+#duoModal #duoNameHint { display:none !important; }
+/* Knopfreihe im Raum (27.10.2026, Dietmar: "Der Button Neue Runde ueberlaeuft. Das ist
+   breiter als die oberen."): Die vier Knoepfe standen in vier gleich breiten Spalten
+   und passten nicht zu den zwei Spalten darueber - "Neue Runde" ragte ueber den Rand
+   der linken Spalte, "Auswertung" begann vor der rechten. Jetzt zwei Knoepfe genau
+   unter der linken, zwei genau unter der rechten Spalte; die Luecke dazwischen ist
+   so breit wie die zwischen den Spalten (1,4rem). */
+@media (min-width: 761px) {
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start { display:grid !important; grid-template-columns:repeat(2, minmax(0,1fr)) calc(1.4rem - 16px) repeat(2, minmax(0,1fr)) !important; column-gap:8px !important; row-gap:8px; }
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start > .btn { min-width:0 !important; width:auto !important; grid-row:1; justify-content:center; }
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start > #duoStartBtn { grid-column:1; }
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start > #duoNeueRundeBtn { grid-column:2; }
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start > #duoAuswertungBtn { grid-column:4; }
+  body:not(.schmal) #duoModal .duo-knopfreihe-links.mit-start > #duoSchliessenBtn { grid-column:5; margin-left:0 !important; }
+}
+/* Die WLAN-Adresse faellt auf (27.10.2026, Dietmar: "Das moechte ich in gelb. Es muss sich etwas
+   hervorheben."): gelbes Schild mit Rand. Im dunklen Aussehen helle Schrift auf getoenter Flaeche,
+   im hellen dunkles Braun auf hellem Gelb (Kontrast). */
+#duoModal #duoLocalLink { padding:.35rem .5rem !important; border-radius:10px !important; font-weight:700 !important; font-size:.68rem !important; letter-spacing:-.1px; text-decoration:none !important; background:#fff4c2 !important; border:1px solid #e0b800 !important; color:#5c4300 !important; box-sizing:border-box; }
+#duoModal #duoLocalLink:hover { background:#ffeb85 !important; }
+body.dark #duoModal #duoLocalLink { background:rgba(255,213,79,.22) !important; border:1px solid rgba(255,213,79,.85) !important; color:#ffe566 !important; }
+body.dark #duoModal #duoLocalLink:hover { background:rgba(255,213,79,.24) !important; }
+/* Der Einladungslink bekommt dieselbe gelbe Hervorhebung (27.10.2026, Dietmar: "Den Einladungslink
+   moechte ich in der gleichen Farbe"). Ausgenommen die Fehlerfarbe (rot), die soll rot bleiben. */
+#duoModal #duoLink:not([style*="c0392b"]):not([style*="rgb(192, 57, 43)"]) { display:block; padding:.4rem .6rem; margin-top:4px; border-radius:10px; text-decoration:none !important; background:#fff4c2 !important; border:1px solid #e0b800 !important; color:#5c4300 !important; box-sizing:border-box; }
+#duoModal #duoLink:not([style*="c0392b"]):not([style*="rgb(192, 57, 43)"]):hover { background:#ffeb85 !important; }
+body.dark #duoModal #duoLink:not([style*="c0392b"]):not([style*="rgb(192, 57, 43)"]) { background:rgba(255,213,79,.22) !important; border:1px solid rgba(255,213,79,.85) !important; color:#ffe566 !important; }
+body.dark #duoModal #duoLink:not([style*="c0392b"]):not([style*="rgb(192, 57, 43)"]):hover { background:rgba(255,213,79,.3) !important; }
+/* Abstand unter der Kopfzeile: die Linie unter "Dein Name" lag direkt am Feld (27.10.2026) */
+#duoModal .duo-collapsible-content { padding-top:.75rem !important; }
+/* Namensfeld: Feld niedrig, zwei kleine Knoepfe mit runden Ecken */
+#duoModal #duoAccName .duo-collapsible-content > div:first-child { gap:6px !important; align-items:center; flex-wrap:nowrap !important; }
+#duoModal #duoUserNameInput { height:36px !important; padding:0 12px !important; border-radius:10px !important; font-size:0.88rem !important; }
+#duoModal #duoAccName .duo-collapsible-content > div:first-child > button.btn { width:36px !important; height:36px !important; min-width:36px !important; min-height:36px !important; padding:0 !important; border-radius:10px !important; justify-content:center; flex:0 0 36px !important; font-size:.85rem !important; }
+
+body.dark #duoModal > div { background: radial-gradient(1200px 600px at 10% -10%, #1d4a7a 0%, #0f2b40 55%, #0a1c2b 100%) !important; border:1px solid rgba(120,190,255,.25) !important; box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08) !important; }
+body.dark #duoModal .duo-collapsible,
+body.dark #duoModal .nur-gastgeber[style*="border-radius:12px"],
+body.dark #duoModal .raum-kasten,
+body.dark #duoModal #duoUnterrichtZeile,
+body.dark #duoModal #duoPruefungZeile { background: rgba(255,255,255,.055) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.14) !important; box-shadow:0 8px 24px rgba(0,0,0,.25) !important; }
+body.dark #duoModal .duo-collapsible-header { background:transparent !important; }
+body.dark #duoModal .duo-collapsible-header .left { color:#e8f6ff !important; font-weight:700; }
+body.dark #duoModal .duo-collapsible-header .left i { color:#4fd8c4 !important; }
+body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left,
+body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left i { color:#ffc266 !important; }
+body.dark #duoModal .raum-sinnbild { background:rgba(255,255,255,.07) !important; border:1px solid rgba(255,255,255,.16) !important; }
+body.dark #duoModal .raum-sinnbild:hover { border-color:#4fd8c4 !important; }
+body.dark #duoModal .btn-primary { background:linear-gradient(135deg,#2fe0a8,#22b8d8) !important; color:#032a24 !important; border:none !important; box-shadow:0 6px 18px rgba(34,184,216,.35) !important; }
+body.dark #duoModal .btn-primary i { color:#032a24 !important; }
+
+/* Heller Modus: gleiche Formen, dazu weiche Schatten und ein Hauch Farbe,
+   damit das Fenster zum dunklen passt (27.10.2026: "achte darauf, dass es
+   auch im hellen Modus noch passt"). */
+body:not(.dark) #duoModal > div { box-shadow:0 24px 70px rgba(15,39,69,.35) !important; }
+body:not(.dark):not(.papier) #duoModal > div { background:linear-gradient(180deg,#ffffff 0%,#f4f8fd 100%) !important; }
+body:not(.dark):not(.papier) #duoModal .duo-collapsible,
+body:not(.dark):not(.papier) #duoModal .nur-gastgeber[style*="border-radius:12px"],
+body:not(.dark):not(.papier) #duoModal .raum-kasten,
+body:not(.dark):not(.papier) #duoModal #duoUnterrichtZeile,
+body:not(.dark):not(.papier) #duoModal #duoPruefungZeile { box-shadow:0 4px 14px rgba(15,39,69,.08) !important; }
+body:not(.dark):not(.papier) #duoModal .duo-collapsible.name-box,
+body:not(.dark):not(.papier) #duoModal .duo-collapsible.config-box { background:linear-gradient(180deg,#f3f8ff,#e9f2fd) !important; }
+body:not(.dark) #duoModal .raum-sinnbild { box-shadow:0 4px 12px rgba(15,39,69,.08); }
+body:not(.dark) #duoModal .raum-sinnbild:hover { border-color:#22b8d8 !important; box-shadow:0 8px 20px rgba(34,184,216,.25); }
+body:not(.dark) #duoModal .btn-primary { background:linear-gradient(135deg,#1c8f9a,#1f6fb8) !important; color:#fff !important; border:none !important; box-shadow:0 6px 16px rgba(31,111,184,.3) !important; }
+body:not(.dark) #duoModal .btn-primary i { color:#fff !important; }
+/* "Schliessen" war im hellen Modus ein blasses Graugruen mit weisser Schrift - zu wenig Kontrast. */
+body:not(.dark):not(.papier) #duoModal #duoSchliessenBtn { background:#4f6070 !important; color:#fff !important; }
 </style>
 </body>
 </html>
