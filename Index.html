@@ -24823,7 +24823,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 353, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 354, datum: '27.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -28244,7 +28244,9 @@ function beamerBedienungAufbauen(){
         const w = document.createElement('div');
         w.id = 'beamerWartet';
         w.innerHTML = '<i class="fas fa-video"></i> Beamer-Modus ist an \u2013 '
-                    + 'er schaltet um, sobald du eine Runde startest.';
+                    + 'er schaltet um, sobald du eine Runde startest. '
+                    + '<button type="button" id="beamerLektionKnopf" onclick="unterrichtOeffnen()">'
+                    + '<i class="fas fa-chalkboard-user"></i> Lektion wählen</button>';
         document.body.appendChild(w);
     }
     if(!document.getElementById('beamerRaus')){
@@ -29147,7 +29149,7 @@ function infoFuellen() {
       + infoBlock('Beamer-Modus',
             'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg.',
             [
-            ['Einschalten', 'In den Einstellungen unter Allgemein, oder mit <b>Strg+B</b>.'],
+            ['Einschalten', 'In den Einstellungen unter Beamer, oder mit <b>Strg+B</b>.'],
             ['Weiterblättern', 'Leertaste, Pfeiltasten oder der Presenter.'],
             ['Beenden', '<b>Esc</b> oder noch einmal Strg+B.'],
             'Zusammen mit dem Vollbild-Knopf bleibt vom Bildschirm nichts übrig außer der Frage.'
@@ -29212,7 +29214,8 @@ function infoFuellen() {
         infoBlock('Fünf Reiter',
             'Zu erreichen über das Zahnrad in der Kopfzeile.',
             [
-            ['Allgemein', 'Anzeigegröße, Farbstil, Beamer-Modus, Bedienung per Tastatur.'],
+            ['Allgemein', 'Anzeigegröße, Farbstil, Bedienung per Tastatur.'],
+            ['Beamer', 'Beamer-Modus, Bilder vergrößern und eine kurze Anleitung zum Beamer.'],
             ['Vorlesen', 'Stimme, was gesprochen wird, weitere Stimmen.'],
             ['Lernen', 'Der Blätter-Stand mit den Zahlen und den beiden Knöpfen.'],
             ['Update', 'Version hier und bei GitHub, Lernstand sichern und einlesen.'],
@@ -33068,7 +33071,7 @@ const KNOPF_ERKLAERUNG = {
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
     // 26.09.2026: "fuenf Reiter" stimmte laengst nicht mehr - jetzt sind es neun.
-    einstellungenBtn: 'Einstellungen. Das Fenster hat zehn Reiter: Allgemein für Anzeigegröße, Farbstil und Beamer-Modus, Anpassen für die Antwort unter der Maus, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Vor der Prüfung, Kursauswertung, Lerncoach für die KI im Chat, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
+    einstellungenBtn: 'Einstellungen. Das Fenster hat elf Reiter: Allgemein für Profilbild, Chat und Nachschlagen, Anpassen für Anzeigegröße, Farbstil und die Antwort unter der Maus, Sounds, Beamer für den Beamer-Modus und das Vergrößern von Bildern, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Vor der Prüfung, Kursauswertung, Lerncoach für die KI im Chat, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
     lernVideoBtn: 'Videolehrgang. Michael, DL2YMR, erklärt genau diese Frage in seinem Lehrgang. Der Knopf öffnet ein neues Fenster und springt dort an die Stelle im Video, an der es losgeht.',
     lernOhmBtn: 'Bei 50 Ohm nachlesen. 50 Ohm ist der Lehrgang des DARC. Dort steht das Kapitel, in dem diese Frage erklärt wird — zum Lesen statt zum Ansehen. Der Knopf öffnet die Seite im Browser.',
     einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
@@ -33739,6 +33742,9 @@ const EINST_REITER = [
     // 25.10.2026 Dietmar: "Sounds moechte ich rechts neben Anpassen."
     // 21.10.2026 Dietmar: "so vieles mit Sound ... einen extra Reiter mit Sounds, damit die Benutzer gleich sehen, wo man das abschalten kann."
     { id:'sounds',    name:'Sounds',    symbol:'fa-volume-high' },
+    // 27.10.2026 Dietmar: "Der Beamer Modus, Bild vergroessern und einen Beamer verwenden, moechte ich unter
+    // Einstellungen als eigenen Reiter dazu haben. Ich habe ihn gesucht und nicht gefunden."
+    { id:'beamer',    name:'Beamer',    symbol:'fa-display' },
     // Das Zeichen ist am 07.09.2026 gewechselt. Dietmar hat das
     // internationale Sehbehinderten-Zeichen geschickt - das durchgestrichene
     // Auge auf blauem Grund - und gesagt: "Das Zeichen gefaellt mir gut."
@@ -33771,6 +33777,45 @@ const EINST_REITER = [
 ];
 let einstReiterJetzt = 'allgemein';
 
+// Lektionen am Beamer (27.10.2026). Dietmar: "In dem Beamer Modus muss auch die
+// Lektionen fuer die Klasse N vorhanden sein." Der Reiter Beamer zeigt die Lektionen
+// des gewaehlten Pruefungsziels (Klasse N: 14) und startet eine davon gleich am
+// Beamer - dieselbe Runde wie im Unterricht, mit der Fragenreihenfolge der Folien.
+function einstBeamerLektionenFuellen(){
+    const z = document.getElementById('einstBeamerLektionen'); if(!z) return;
+    let kurs = null, lek = [];
+    try{ kurs = kursAktuell(); lek = kurs.lek || []; }catch(e){}
+    if(!lek.length){ z.innerHTML = ''; return; }
+    const stand = (typeof unterrichtStandHolen === 'function') ? unterrichtStandHolen() : {};
+    let vor = 0, zeit = 0;
+    Object.keys(stand).forEach(k => { if(stand[k] && stand[k].t > zeit){ zeit = stand[k].t; vor = (+k) - 1; } });
+    if(!(vor >= 0 && vor < lek.length)) vor = 0;
+    const opt = lek.map((l, i) => {
+        let n = 0; try{ n = unterrichtFragen(i).length; }catch(e){}
+        return '<option value="' + i + '"' + (i === vor ? ' selected' : '') + '>Lektion ' + (i + 1) + ' · '
+            + unterrichtEsc(l.t) + ' (' + n + ' Fragen)</option>';
+    }).join('');
+    z.innerHTML = einstKasten('Lektionen am Beamer',
+        'Die ' + lek.length + ' Lektionen des ' + unterrichtEsc(kurs.name) + ' in der Reihenfolge der Folien von 50ohm.de. '
+      + 'Gewählt wird hier, gestartet wird gleich am Beamer.',
+        '<select id="einstBeamerLektion" style="width:100%; max-width:440px; padding:0.45rem 0.6rem; border-radius:8px; '
+      + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;" aria-label="Lektion wählen">' + opt + '</select>'
+      + '<div style="margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.5rem;">'
+      + '<button type="button" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.8rem;" '
+      + 'onclick="einstBeamerLektionStarten()"><i class="fas fa-display"></i> Lektion am Beamer starten</button>'
+      + '<button type="button" class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.8rem;" '
+      + 'onclick="einstellungenSchliessen(); unterrichtOeffnen()"><i class="fas fa-chalkboard-user"></i> Unterricht öffnen</button></div>');
+}
+function einstBeamerLektionStarten(){
+    const f = document.getElementById('einstBeamerLektion'); if(!f) return;
+    const i = parseInt(f.value, 10) || 0;
+    // Die Lektion faengt vorn an; wer mittendrin einsteigen will, nimmt "Unterricht oeffnen".
+    einstellungenSchliessen();
+    try{ unterrichtBeamerMerken(true); const h = document.getElementById('unterrichtBeamer'); if(h) h.checked = true; }catch(e){}
+    unterrichtStarten(i, 0, true);
+}
+window.einstBeamerLektionStarten = einstBeamerLektionStarten;
+
 function einstReiterZeigen(id){
     if(!EINST_REITER.some(r => r.id === id)) id = 'allgemein';
     // Der Lerncoach wird nur am Trainer-PC eingerichtet (29.09.2026).
@@ -33791,6 +33836,7 @@ function einstReiterZeigen(id){
     // Fenster, das beim zweiten Oeffnen alte Werte zeigt, ist schlimmer
     // als eines, das eine halbe Sekunde braucht.
     if(id === 'sounds')   { try{ appStimmenNachziehen(); }catch(e){} }
+    if(id === 'beamer')   { try{ einstBeamerLektionenFuellen(); }catch(e){} }
     if(id === 'lernen')   { try{ einstLernenFuellen(); }catch(e){} }
     if(id === 'benutzer') { try{ einstBenutzerFuellen(); }catch(e){} }
     if(id === 'merkblatt'){ try{ einstMerkblattFuellen(); }catch(e){} }
@@ -33908,6 +33954,7 @@ function einstellungenOeffnen(reiter){
           + '<div id="einstBlatt_vorlesen" style="display:none;"></div>'
           + '<div id="einstBlatt_lernen"   style="display:none;"></div>'
           + '<div id="einstBlatt_sounds"   style="display:none;"></div>'
+          + '<div id="einstBlatt_beamer"   style="display:none;"></div>'
           + '<div id="einstBlatt_benutzer" style="display:none;"></div>'
           + '<div id="einstBlatt_merkblatt" style="display:none;"></div>'
           + '<div id="einstBlatt_kurs"     style="display:none;"></div>'
@@ -34174,12 +34221,6 @@ function einstBlaetterFuellen(){
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
           + 'Der Chat steht als Spalte am rechten Rand, von oben bis unten und immer aufgeklappt; die Seite rückt '
           + 'nach links, damit er nichts verdeckt. Dasselbe schaltet der Knopf im Chatkopf. Nur auf breiten Bildschirmen.</span></span></label>')
-      + einstKasten('Beamer-Modus', 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
-            + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. <b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.',
-            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
-          + '<input type="checkbox" id="einstBeamer" style="width:18px; height:18px; cursor:pointer;" '
-          + 'onchange="beamerSetzen(this.checked)">'
-          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beamer-Modus einschalten</span></label>')
       + einstKasten('Nachschlagen',
             'Wohin der Knopf neben der Frage führt. Im Gruppenraum und im '
           + 'Prüfungssimulator zählt Nachschlagen weiterhin als Fehler, egal welches Ziel.',
@@ -34207,6 +34248,56 @@ function einstBlaetterFuellen(){
           + 'geöffnet — dort genügt <b>Strg+V</b> und Eingabe. Aus demselben Grund steht '
           + '<b>Gemini</b> gar nicht zur Wahl: Dort müsste man die Frage abtippen.</div>')
       ;   // "Tastatur" ist am 07.09.2026 in den Nachteilsausgleich gewandert.
+
+    // ---- Beamer ----
+    // Eigener Reiter (27.10.2026).
+    document.getElementById('einstBlatt_beamer').innerHTML =
+        einstKasten('Beamer-Modus', 'Für den Kursraum: nur Frage und Antworten, dreimal so groß, alles andere weg. '
+            + 'Weiterblättern mit Leertaste, Pfeiltasten oder dem Presenter. <b>Strg+B</b> schaltet um, <b>Esc</b> beendet ihn.',
+            '<label style="display:flex; gap:0.6rem; align-items:center; cursor:pointer;">'
+          + '<input type="checkbox" id="einstBeamer" style="width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="beamerSetzen(this.checked)">'
+          + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beamer-Modus einschalten</span></label>')
+      + '<div id="einstBeamerLektionen"></div>'
+      + einstKasten('Bilder vergrößern',
+            'Für Bilder in den Fragen, zum Beispiel Schaltpläne: Fährst du mit der Maus darüber, wächst das Bild an seiner Stelle. Hier wird '
+          + 'eingestellt, wie weit. Am Beamer ist das praktisch, wenn ein Bild gezeigt werden soll.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
+          + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
+          + 'data-vorlesen="Stärker vergrößern. Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Mit diesem Haken wird es deutlich größer als bisher.">'
+          + '<input type="checkbox" id="einstBildZoomAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="bildZoomUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Ohne Haken bleibt es beim bisherigen Maß — groß genug zum Erkennen, klein genug, '
+          + 'dass die Frage daneben noch zu sehen ist.</span></span></label>'
+          + '<select id="einstBildZoom" onchange="bildZoomSetzen(this.value)" '
+          + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
+          + 'data-vorlesen="Hier wählst du, wie stark ein Bild beim Überfahren wächst — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1.3">ein Drittel größer</option>'
+          + '<option value="1.5">halb so groß wieder dazu</option>'
+          + '<option value="2">doppelt so groß</option>'
+          + '<option value="2.4">so groß wie möglich</option>'
+          + '</select>'
+          + '<div id="einstBildZoomText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>')
+      + einstKasten('Beamer verwenden',
+            null,
+            '<div style="font-size:0.78rem; line-height:1.6; color:var(--muted);">'
+          + '<b>1. Beamer anschließen.</b> Am Rechner mit Kabel oder drahtlos verbinden. Mit <b>Windows+P</b> wählst du, '
+          + 'ob das Bild gespiegelt („Duplizieren") oder als zweiter Bildschirm („Erweitern") erscheint.'
+          + '<br><br><b>2. Trainer auf den Beamer.</b> Das Fenster auf den Beamer ziehen und mit <b>F11</b> ins Vollbild schalten.'
+          + '<br><br><b>3. Beamer-Modus einschalten.</b> Oben der Haken, oder mit <b>Strg+B</b>. Dann steht nur die Frage mit den '
+          + 'Antworten auf dem Schirm, dreimal so groß. Weiter mit <b>Leertaste</b> oder den Pfeiltasten, Schluss mit <b>Esc</b>.'
+          + '<br><br><b>4. Im Gruppenraum.</b> Beim Unterricht den Haken <b>Am Beamer</b> setzen: Die Runde läuft dann '
+          + 'groß an der Wand und zeigt, wie viele schon geantwortet haben.'
+          + '<br><br><b>5. Hinterher.</b> Unter <b>Kursauswertung</b> lässt sich ein gesicherter Kursabend mit '
+          + '„Am Beamer durchgehen" noch einmal zeigen – ohne Namen.'
+          + '<br><br><b>Alles größer statt nur die Frage?</b> Das ganze Bild des Trainers stellst du unter <b>Anpassen</b> bei der Anzeigegröße ein.'
+          + '</div>'
+          + '<button type="button" class="btn btn-outline" style="margin-top:0.6rem; padding:0.4rem 0.9rem; font-size:0.8rem;" '
+          + 'onclick="einstReiterZeigen(\'anpassen\')"><i class="fas fa-expand"></i> Anzeigegröße öffnen</button>');
 
     // ---- Anpassen ----
     // Eigener Reiter (26.09.2026). Dietmar: "Lege einen Reiter Anpassen
@@ -34469,29 +34560,6 @@ function einstBlaetterFuellen(){
           + 'steht der Zähler still — die Ansage wird nie abgeschnitten. Und die <b>letzte Frage</b> '
           + 'bleibt stehen; ins Ergebnis geht es nur auf Klick. Jede Taste und jeder Klick halten '
           + 'den Zähler ebenfalls an.</div>')
-      + einstKasten('Bilder vergrößern',
-            'Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Hier wird '
-          + 'eingestellt, wie weit.',
-            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
-          + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
-          + 'data-vorlesen="Stärker vergrößern. Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Mit diesem Haken wird es deutlich größer als bisher.">'
-          + '<input type="checkbox" id="einstBildZoomAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
-          + 'onchange="bildZoomUmschalten(this.checked)">'
-          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
-          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
-          + 'Ohne Haken bleibt es beim bisherigen Maß — groß genug zum Erkennen, klein genug, '
-          + 'dass die Frage daneben noch zu sehen ist.</span></span></label>'
-          + '<select id="einstBildZoom" onchange="bildZoomSetzen(this.value)" '
-          + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
-          + 'data-vorlesen="Hier wählst du, wie stark ein Bild beim Überfahren wächst — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
-          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
-          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
-          + '<option value="1.3">ein Drittel größer</option>'
-          + '<option value="1.5">halb so groß wieder dazu</option>'
-          + '<option value="2">doppelt so groß</option>'
-          + '<option value="2.4">so groß wie möglich</option>'
-          + '</select>'
-          + '<div id="einstBildZoomText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>')
       + einstKasten('Mehr Zeit in der Prüfung',
             'Nur für den Prüfungssimulator und die Prüfungsübersicht. Der Trainer rechnet '
           + 'dann mit der längeren Zeit, damit das Üben dem entspricht, was am Prüfungstag gilt.',
@@ -35202,6 +35270,7 @@ function appEinstellungenAufraeumen(){
     const wegKasten = id => { const e = $(id); if(e) weg(kasten(e)); };
     // Allgemein
     wegKasten('einstBeamer');
+    try{ $('einstTab_beamer').classList.add('reiter-weg'); }catch(e){}   // Beamer-Reiter: nur am Rechner (27.10.2026)
     if(nurApp) wegKasten('einstVollbildAuto');
     try{ const l = $('einstChatAndocken') && $('einstChatAndocken').closest('label'); weg(l); }catch(e){}
     // Anzeigegroesse: nur ein Feld. Die App hat keine Adressleiste und kein F11.
@@ -44708,6 +44777,17 @@ if (originalSelectOption) {
             border-top: 2px solid #00adef;
         }
 
+        /* Lektion waehlen (27.10.2026): Dietmar: "In dem Beamer Modus muss auch die
+           Lektionen fuer die Klasse N vorhanden sein." Der Knopf sitzt im Balken; das
+           Unterrichtsfenster liegt im Beamer-Modus ueber Balken und Beenden-Knopf. */
+        #beamerLektionKnopf {
+            margin-left: 6px; padding: 0.4rem 0.9rem; border-radius: 8px; cursor: pointer;
+            font: 700 0.85rem/1 var(--font-body), "Segoe UI", sans-serif;
+            background: #00adef; color: #ffffff; border: 0;
+        }
+        #beamerLektionKnopf:hover { filter: brightness(1.1); }
+        body.beamer #unterrichtModal { z-index: 100010; }
+
         body.beamer.beamer-live { padding: 0 !important; }
         body.beamer.beamer-live .card {
             max-width: none !important; width: calc(100vw / var(--afu-zoom, 1)) !important;
@@ -52643,7 +52723,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let appStil = null;
         try{ const k = $('appStilKachel_verspielt'); appStil = k && k.closest('.nur-app'); if(appStil) appStil.style.display = handy ? '' : 'none'; }catch(e){}
         // Am Handy kein PC-Kram (17.10.2026): Beamer-Modus und "Chat rechts andocken" gibt es dort nicht
-        try{ const bm = $('einstBeamer'); let k = bm; while(k && k.parentElement && k.parentElement !== allg && k.parentElement !== anp && k.parentElement.id !== 'einstVerschoben') k = k.parentElement; if(k && k !== bm) k.style.display = handy ? 'none' : ''; }catch(e){}
+        try{ const bm = $('einstBeamer'); let k = bm; while(k && k.parentElement && k.parentElement !== allg && k.parentElement !== anp && !/^einstBlatt_/.test(k.parentElement.id) && k.parentElement.id !== 'einstVerschoben') k = k.parentElement; if(k && k !== bm) k.style.display = handy ? 'none' : ''; }catch(e){}
         try{ const ca = $('einstChatAndocken'); const l = ca && ca.closest('label'); if(l) l.style.display = handy ? 'none' : 'flex'; }catch(e){}   // 'flex', nicht '' - sonst rutscht das Kaestchen aus der Reihe (17.10.2026)
         // Am PC kein Handy-Kram: Stil der App und Vollbild am Handy weg
         try{ const v = kastenVon('einstVollbildAuto'); if(v) v.style.display = handy ? '' : 'none'; }catch(e){}
