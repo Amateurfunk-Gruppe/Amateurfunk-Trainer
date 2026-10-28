@@ -1697,6 +1697,25 @@
         #roboBlase .rb-morse .mz { display: inline-block; margin-right: 12px; }
         #roboBlase .rb-morse i { font-style: normal; opacity: 0.35; transition: opacity 0.08s, color 0.08s; }
         #roboBlase .rb-morse i.an { opacity: 1; color: var(--s-amber); }
+        /* Start-Sequenz (28.10.2026): Maja im Raketenanzug, einmal am Tag; Vollbild ueber der Seite, ein Tipp beendet sie */
+        #appStartSeq { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 2147483000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+                       background: radial-gradient(120% 90% at 50% 40%, #12315c, #0F2745 55%, #07142a 100%); opacity: 0; transition: opacity 0.35s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        #appStartSeq.da { opacity: 1; }
+        #appStartSeq.weg { opacity: 0; transition: opacity 0.6s; }
+        #appStartSeq .ss-st { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; }
+        #appStartSeq .ss-st i { position: absolute; border-radius: 50%; background: #fff; opacity: 0.55; animation: ssFunkel 3s ease-in-out infinite; }
+        @keyframes ssFunkel { 50% { opacity: 0.15; } }
+        #appStartSeq .ss-maja { position: relative; width: min(64vw, 270px); opacity: 0; transform: translateY(26px) scale(0.92); transition: opacity 0.6s, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        #appStartSeq .ss-maja.da { opacity: 1; transform: none; }
+        #appStartSeq .ss-maja img { display: block; width: 100%; height: auto; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.6)); }
+        #appStartSeq .ss-titel { position: relative; font: 800 clamp(1.3rem, 6.4vw, 1.85rem)/1.1 system-ui, sans-serif; color: #f3f5f8; text-align: center; padding: 0 12px; opacity: 0; transform: translateY(8px); transition: opacity 0.8s, transform 0.8s; }
+        #appStartSeq .ss-titel b { color: #35dff0; font-weight: inherit; }
+        #appStartSeq .ss-titel.da { opacity: 1; transform: none; }
+        html.android-app body #appStartSeq .ss-balken { position: relative; width: min(56vw, 230px); height: 6px; border-radius: 3px !important; background: rgba(95, 211, 196, 0.25); overflow: hidden; opacity: 0; transition: opacity 0.6s; }
+        html.android-app body #appStartSeq .ss-balken.da { opacity: 1; }
+        html.android-app body #appStartSeq .ss-balken i { display: block; width: 0; height: 100%; border-radius: 3px !important; background: #5FD3C4; transition: width 2.9s linear; }
+        html.android-app body #appStartSeq .ss-balken.da i { width: 100%; }
+        @media (prefers-reduced-motion: reduce) { #appStartSeq .ss-st i { animation: none; } }
         /* Die ISS fliegt durch den Schirm: fest, ueber allem, fasst nichts an */
         #appIss { position: fixed; left: 0; top: 0; z-index: 99999; pointer-events: none; display: none; transform-origin: center; will-change: transform, opacity; }
         html.android-app.stil-verspielt #appIss.fliegt { display: block; }
@@ -24828,7 +24847,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 367, datum: '28.10.2026' };
+const TRAINER_STAND = { nr: 368, datum: '28.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -56094,6 +56113,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + '<button type="button" class="app-probe" onclick="appIssProbe()"><i class="fas fa-satellite"></i> ISS vorbeifliegen lassen</button>'
               + '<button type="button" class="app-probe" onclick="appAstroProbe()"><i class="fas fa-user-astronaut"></i> Maja winken lassen</button>'
               + '<button type="button" class="app-probe" onclick="appSatProbe()"><i class="fas fa-satellite-dish"></i> OSCAR-Satellit fliegen lassen</button>')
+          // Start-Sequenz (28.10.2026)
+          + einstKasten('Start-Sequenz', 'Einmal am Tag, beim ersten Start: Maja zündet im Raketenanzug den Antrieb. Im All ist es still, nur weiche Gas-Stöße beim Einschalten der Düsen und im Funkgerät ein leises Rauschen, dazu läuft leise CQ in Morsezeichen, nach dem Morsen ist Ruhe. Ein Tipp beendet sie.',
+                '<div class="app-seg" id="appStartSeqSeg">'
+              + [['an', 'Mit Ton'], ['stumm', 'Nur Bild'], ['aus', 'Aus']].map(f => '<button type="button" data-q="' + f[0] + '"' + ((window.__startSeqModus ? window.__startSeqModus() : 'an') === f[0] ? ' class="an"' : '')
+                  + ' onclick="appStartSeqSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
+              + '</div>'
+              + '<button type="button" class="app-probe" onclick="appStartSeqProbe()"><i class="fas fa-rocket"></i> Start-Sequenz ansehen</button>')
           // Toene beim Tippen (01.10.2026)
           + einstKasten('Töne beim Tippen', 'Ein leises Plopp beim Tippen auf Buttons, statt des Maus-Klicks. In der Prüfung und während vorgelesen wird, klickt es wie gewohnt. Aus heißt ganz still.',
                 '<div class="app-seg" id="appTippSeg">'
@@ -56121,6 +56147,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         D.querySelectorAll('#appFunkiStimmeSeg button').forEach(b => b.classList.toggle('an', b.dataset.s === stimmeRegler()));
         D.querySelectorAll('#appIssSeg button').forEach(b => b.classList.toggle('an', b.dataset.i === issRegler()));
         D.querySelectorAll('#appIssTonSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (issTonAn() ? 'an' : 'aus')));
+        D.querySelectorAll('#appStartSeqSeg button').forEach(b => b.classList.toggle('an', b.dataset.q === seqModus()));
         D.querySelectorAll('#appTippSeg button').forEach(b => b.classList.toggle('an', b.dataset.t === (lies('app_tipptoene', 'an') === 'aus' ? 'aus' : 'an')));
         D.querySelectorAll('#appDockSeg button').forEach(b => b.classList.toggle('an', b.dataset.k === (lies('app_dock_an', '1') === '0' ? 'aus' : 'an')));
         // Fuer Vorleseprogramme: welcher Knopf gewaehlt ist (30.09.2026)
@@ -58173,6 +58200,89 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         funkiSagt((ok ? '{melodie} ' : '~ ') + redeText(kopf, 90) + (ok ? '' : ' Richtig wäre: ' + redeText(a.q.r, 60) + '.') + ' | ' + redeText(a.q.w, 120)
             + (extra ? ' | Zehn richtige insgesamt. Du bist jetzt Funk-ABC-Meister!' : ''), true);
     }
+
+    // ================================================================
+    //  START-SEQUENZ: MAJA IM RAKETENANZUG                   (28.10.2026)
+    //  ----------------------------------------------------------------
+    //  Dietmar: "Das koennen wir als Start Sequenz fuer die App verwenden."
+    //  - "Hier oben ist nur Stille zu hoeren, ausser im Funkgeraet." -
+    //  "Unterhalb von Maja" (der Schriftzug). Danach: "Nimm die Stimme von
+    //  Maja raus." und "Nur am Ende den Roger Beep".
+    //  Maja schwebt im All, packt die Griffe ihres Raketenrucksacks und
+    //  zuendet; im Weltraum ist es still: drei weiche Gas-Stoesse (Stickstoffduesen der MMU, "Psst",
+    //  keine Klicks) beim Einschalten (2,25 / 2,65 / 3,05 s), sonst nur im
+    //  Funkgeraet ein ganz leises Rauschen (Rauschsperre oeffnet bei 3,4 s), im Hintergrund
+    //  laeuft "CQ CQ" in Morsezeichen (650 Hz, leichtes Schwanken), und am
+    //  Ende des Morsens ist Ruhe, kein Nachrauschen ("Nimm das weg"). Keine
+    //  Stimme, kein Roger-Beep ("Nimm den Roger Beep raus"). Dazu erscheint unter ihr der Schriftzug und der Ladebalken.
+    //  Einmal am Tag, beim ersten Start des Tages; ein Tipp beendet sie.
+    //  Nur im Stil Verspielt und nie bei "Bewegung reduzieren". Einstellungen
+    //  -> Allgemein -> Start-Sequenz: Mit Ton, Nur Bild, Aus - dazu ein
+    //  Knopf zum Ansehen. Das Bild (6 s, durchsichtig) und der Ton liegen in
+    //  sounds/start/. Laedt etwas nicht rechtzeitig, bleibt alles wie bisher
+    //  und der Tag zaehlt nicht als gezeigt.
+    // ================================================================
+    const SEQ_DAUER = 7000;
+    let seqLaeuft = false;
+    const seqModus = () => { const v = lies('app_startseq', 'an'); return v === 'aus' ? 'aus' : (v === 'stumm' ? 'stumm' : 'an'); };
+    function startSeq(opt){
+        opt = opt || {};
+        if(seqLaeuft || !D.body) return false;
+        if(!opt.probe){
+            if(seqModus() === 'aus' || ruhigGewuenscht() || !H.classList.contains('stil-verspielt') || D.hidden) return false;
+            if(lies('app_startseq_tag', '') === tagK()) return false;
+            if(tu(() => pruefungLaeuft())) return false;
+        }
+        seqLaeuft = true;
+        const stand = (window.TRAINER_STAND && window.TRAINER_STAND.nr) || 0;
+        const mitTon = seqModus() !== 'stumm';
+        const bild = new Image();
+        let ton = null, el = null, fertig = false, zeiten = [];
+        const spaeter = (ms, fn) => { zeiten.push(setTimeout(() => tu(fn), ms)); };
+        const ende = () => {
+            if(fertig) return; fertig = true;
+            zeiten.forEach(clearTimeout);
+            if(ton){ const t = ton; let v = 1; const ab = setInterval(() => { v -= 0.2; if(v <= 0){ clearInterval(ab); tu(() => t.pause()); } else tu(() => { t.volume = v; }); }, 60); }
+            if(el){ el.classList.add('weg'); const e2 = el; setTimeout(() => tu(() => e2.remove()), 800); }
+            setTimeout(() => { seqLaeuft = false; }, 900);
+        };
+        const losgehts = () => {
+            if(fertig) return;
+            if(!opt.probe) schreib('app_startseq_tag', tagK());
+            el = D.createElement('div'); el.id = 'appStartSeq'; el.setAttribute('aria-hidden', 'true');
+            let sterne = '';
+            for(let i = 0; i < 50; i++){ const g = 1 + Math.random() * 2; sterne += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 100).toFixed(1) + '%;width:' + g.toFixed(1) + 'px;height:' + g.toFixed(1) + 'px;animation-delay:' + (Math.random() * 3).toFixed(1) + 's"></i>'; }
+            el.innerHTML = '<div class="ss-st">' + sterne + '</div><div class="ss-maja"></div><div class="ss-titel">Amateurfunk-<b>Trainer</b></div><div class="ss-balken"><i></i></div>';
+            D.body.appendChild(el);
+            el.addEventListener('pointerdown', ende);
+            const m = el.querySelector('.ss-maja');
+            bild.alt = ''; m.appendChild(bild);
+            requestAnimationFrame(() => { el.classList.add('da'); m.classList.add('da'); });
+            if(ton) tu(() => { ton.currentTime = 0; const p = ton.play(); if(p && p.catch) p.catch(() => {}); });
+            spaeter(3400, () => { el.querySelector('.ss-titel').classList.add('da'); spaeter(600, () => el.querySelector('.ss-balken').classList.add('da')); });
+            spaeter(SEQ_DAUER, ende);
+        };
+        // Bild (und Ton) erst holen; was nicht rechtzeitig da ist, wird weggelassen (Ton) oder bricht ab (Bild)
+        const bildDa = new Promise(ok => { bild.onload = () => ok(true); bild.onerror = () => ok(false); bild.src = 'sounds/start/maja-start.webp?v=' + stand; });
+        const tonDa = mitTon ? new Promise(ok => {
+            const a = new Audio(); a.preload = 'auto';
+            a.oncanplaythrough = () => ok(a); a.onerror = () => ok(null);
+            a.src = 'sounds/start/maja-start.mp3?v=' + stand;
+            setTimeout(() => ok(null), 4000);
+        }) : Promise.resolve(null);
+        Promise.all([bildDa, tonDa]).then(r => {
+            if(!r[0]){ seqLaeuft = false; return; }
+            ton = r[1];
+            losgehts();
+        });
+        setTimeout(() => { if(!el && !fertig){ fertig = true; seqLaeuft = false; } }, 6000);
+        return true;
+    }
+    window.majaStartSeq = startSeq; window.__startSeqModus = seqModus;
+    window.appStartSeqSetzen = v => { schreib('app_startseq', v === 'aus' ? 'aus' : (v === 'stumm' ? 'stumm' : 'an')); tu(einstNachziehen); };
+    window.appStartSeqProbe = () => { startSeq({ probe: true }); };
+    // Beim Start: etwas warten, bis das Startbild der App weg ist und die Seite steht
+    setTimeout(() => tu(() => startSeq()), 700);
 
     // ================================================================
     //  DIE ISS FLIEGT DURCH DEN SCHIRM                       (04.10.2026)
