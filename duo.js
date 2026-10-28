@@ -774,7 +774,7 @@
         if(document.getElementById('duoTeilnehmerModal')) return;
         const overlay = document.createElement('div');
         overlay.id = 'duoTeilnehmerModal';
-        overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,39,69,0.75);z-index:99997;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);';
+        overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,39,69,0.75);z-index:99997;align-items:center;justify-content:center;padding:1rem;';
         overlay.innerHTML =
             '<div style="background:var(--card-bg,#fff);color:var(--ink,#0f2745);border-radius:18px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.4);padding:1.2rem;box-sizing:border-box;">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;">' +

@@ -833,7 +833,7 @@
 
         /* ---------- Obere Leiste ---------- */
         html.android-app.stil-sachlich #appLeiste, html.android-app.stil-verspielt #appLeiste { background: var(--s-navi); color: var(--s-text); border-bottom: 1px solid var(--s-rand); }
-        html.android-app.stil-verspielt #appLeiste { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app.stil-verspielt #appLeiste { backdrop-filter: none; -webkit-backdrop-filter: none; }
         html.android-app.stil-sachlich #appLeiste .al-knopf, html.android-app.stil-verspielt #appLeiste .al-knopf { color: var(--s-text); }
         html.android-app.stil-sachlich #appLeiste .al-titel b, html.android-app.stil-verspielt #appLeiste .al-titel b { color: var(--s-akzent); }
         html.android-app.stil-sachlich #appLeiste .al-avatar { background: var(--s-haupt); color: var(--s-auf-haupt); }
@@ -856,7 +856,7 @@
         html.android-app.stil-verspielt { --app-navi-h: 82px; }
         html.android-app.stil-verspielt #appNavi {
             left: 12px; right: 12px; bottom: 12px; height: 68px; padding: 6px 2px; border: 1px solid var(--s-rand2);
-            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: none; -webkit-backdrop-filter: none;
         }
         html.android-app.fs-bunt body.app-navi-weg #appNavi { transform: translateY(calc(100% + 18px)); }
         html.android-app.fs-bunt body.eckig.app-rund #appNavi { border-radius: 30px !important; }
@@ -875,7 +875,7 @@
             background: var(--s-fl) !important; border: 1px solid var(--s-rand) !important; box-shadow: var(--s-schatten) !important; color: var(--s-text);
         }
         html.android-app.fs-bunt body:not(.dark) .exam-info, html.android-app.fs-bunt body:not(.dark) #masteryDisplay { backdrop-filter: none; }
-        html.android-app.fs-bunt body.dark .exam-info, html.android-app.fs-bunt body.dark #masteryDisplay { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app.fs-bunt body.dark .exam-info, html.android-app.fs-bunt body.dark #masteryDisplay { backdrop-filter: none; -webkit-backdrop-filter: none; }
         html.android-app body.eckig.app-rund .exam-info, html:not(.android-app) body.eckig.app-rund .exam-info, html.android-app body.eckig.app-rund #masteryDisplay , html:not(.android-app) body.eckig.app-rund #masteryDisplay{ border-radius: var(--s-r-karte, 16px) !important; }
 
         /* ================================================================
@@ -1233,7 +1233,7 @@
         html.android-app.stil-verspielt #appHeute .ah-liste { display: none; }
         html.android-app.stil-verspielt #appHeute .ah-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         #appHeute .ah-kachel { padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--s-rand); background: var(--s-fl); box-shadow: var(--s-schatten); color: var(--s-text); text-align: left; font-family: inherit; cursor: pointer; }
-        html.android-app.fs-bunt body.dark #appHeute .ah-kachel, html.android-app.fs-bunt body.dark #appHeute .ah-karte:not(.ah-runde) { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        html.android-app.fs-bunt body.dark #appHeute .ah-kachel, html.android-app.fs-bunt body.dark #appHeute .ah-karte:not(.ah-runde) { backdrop-filter: none; -webkit-backdrop-filter: none; }
         html.android-app body.eckig.app-rund #appHeute .ah-kachel , html:not(.android-app) body.eckig.app-rund #appHeute .ah-kachel{ border-radius: 24px !important; }
         #appHeute .ah-kachel.aus { display: none; }
         #appHeute .ah-kachel .kz { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -2089,11 +2089,16 @@
         }
 
         /* P60: Der Astronaut schwebt langsam - kein Huepfen, Tanzen, Rollen */
-        html.astro-begleiter .mk .mk-bild { animation: astroSchweben 7s ease-in-out infinite; transform-origin: 50% 60%; }
+        /* Stand 367: der ganze Koerper schwebt, wiegt sich und atmet - Mund, Visier und LED bewegen sich mit */
+        html.astro-begleiter .mk { transform-origin: 50% 88%; animation: astroKoerper 9s ease-in-out infinite, astroAtmen 3.6s ease-in-out infinite; }
+        @keyframes astroKoerper { 0%, 100% { translate: 0 0; rotate: -2.4deg; } 25% { translate: 3px -4px; rotate: .6deg; } 50% { translate: 0 -8px; rotate: 2.6deg; } 75% { translate: -3px -3px; rotate: -.4deg; } }
+        @keyframes astroAtmen { 0%, 100% { scale: 1 1; } 50% { scale: 1.014 1.03; } }
+        html.astro-begleiter :is(#roboHelfer, .aw-funki).spricht .mk { animation: astroKoerper 9s ease-in-out infinite, astroAtmen 3.6s ease-in-out infinite, astroReden 1.15s ease-in-out infinite; }
+        @keyframes astroReden { 0%, 100% { transform: rotate(0deg) translateY(0); } 30% { transform: rotate(1.4deg) translateY(-2px); } 70% { transform: rotate(-1.4deg) translateY(-1px); } }
         @keyframes astroSchweben { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-6px) rotate(1.5deg); } }
         html.astro-begleiter #roboHelfer:is(.huepft, .tanzt, .tada, .rollt, .rollt-l, .plopp) .robo-hopp { animation: none !important; }
         html.astro-begleiter .mk.hops, html.astro-begleiter #appWerkBlatt .aw-funki .mk.hops { animation: none !important; }
-        @media (prefers-reduced-motion: reduce) { html.astro-begleiter .mk .mk-bild { animation: none !important; } }
+        @media (prefers-reduced-motion: reduce) { html.astro-begleiter .mk, html.astro-begleiter :is(#roboHelfer, .aw-funki).spricht .mk { animation: none !important; } }
 
         /* P62: die Astronautin winkt seitlich herein - als Bild, schwebt sanft */
         #appAstro .as-bild { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 14px rgba(0,0,0,.3)); animation: astroSchweben 7s ease-in-out infinite; }
@@ -2223,10 +2228,10 @@
         /* Lage je Bild (Prozent der Bildgroesse) */
         .mk:has(> .mk-bild[data-pose="winkt"]) > .mk-visier { left: 4.5%; top: 10.4%; width: 54.9%; height: 34.4%; }
         .mk:has(> .mk-bild[data-pose="winkt"]) > .mk-led { left: 47.5%; top: 58%; }
-        .mk:has(> .mk-bild[data-pose="winkt"]) > .mk-mund { left: 36%; top: 34.4%; }
+        .mk:has(> .mk-bild[data-pose="winkt"]) > .mk-mund { left: 34.05%; top: 33%; width: 9.8%; margin-left: -4.9%; rotate: -7deg; }
         .mk:has(> .mk-bild:is([data-pose="steht"], [data-pose="hoert"])) > .mk-visier { left: 25%; top: 17.8%; width: 51.8%; height: 22.6%; }
         .mk:has(> .mk-bild:is([data-pose="steht"], [data-pose="hoert"])) > .mk-led { left: 44.8%; top: 57.5%; }
-        .mk:has(> .mk-bild:is([data-pose="steht"], [data-pose="hoert"])) > .mk-mund { left: 41.4%; top: 34.2%; }
+        .mk:has(> .mk-bild:is([data-pose="steht"], [data-pose="hoert"])) > .mk-mund { left: 40.8%; top: 33.1%; width: 10.8%; margin-left: -5.4%; rotate: 4deg; }
         /* Lichtschimmer ueber das Visier */
         .mk > .mk-visier { border-radius: 50% !important; overflow: hidden; }
         .mk > .mk-visier i { position: absolute; top: -20%; bottom: -20%; width: 28%; left: -40%; transform: skewX(-18deg);
@@ -2237,10 +2242,10 @@
             box-shadow: 0 0 6px 2px rgba(80, 230, 255, .9); animation: mkLed 2.4s ease-in-out infinite; }
         @keyframes mkLed { 0%, 100% { opacity: .15; } 45%, 60% { opacity: 1; } }
         /* Mund beim Sprechen */
-        .mk > .mk-mund { width: 5.5%; height: 2.4%; margin: 0 0 0 -2.75%; border-radius: 0 0 50% 50% / 0 0 100% 100% !important; background: #3b2116;
+        .mk > .mk-mund { width: 10.8%; height: 2.6%; margin: 0 0 0 -5.4%; border-radius: 0 0 50% 50% / 0 0 100% 100% !important; background: #3b2116;
             opacity: 0; transform-origin: 50% 0; transform: scaleY(.2); transition: opacity .15s; }
         :is(#roboHelfer, .aw-funki).spricht .mk > .mk-mund { opacity: .92; animation: mkReden .26s ease-in-out infinite alternate; }
-        @keyframes mkReden { from { transform: scaleY(.25); } to { transform: scaleY(1.25); } }
+        @keyframes mkReden { from { transform: scaleY(.92); } to { transform: scaleY(1.4); } }
         /* Funkwellen aus dem Kopfhoerer */
         .mk > .mk-wellen { left: 93%; top: 26%; width: 18%; height: 14%; }
         .mk > .mk-wellen i { position: absolute; left: 0; top: 50%; width: 40%; height: 70%; border: 2px solid rgba(47, 211, 238, .9); border-left: 0; border-top-color: transparent; border-bottom-color: transparent;
@@ -3406,7 +3411,7 @@ html.android-app:not(.pc-app).stil-sachlich body::before {content: ""; position:
 html.android-app:not(.pc-app).stil-sachlich #app.card {background: transparent !important; border: 0 !important; box-shadow: none !important;}
 html.android-app:not(.pc-app).stil-sachlich .filter-bar {display: none !important;}
 html.android-app:not(.pc-app).stil-sachlich #appLeiste {background: var(--s-navi); color: var(--s-text); border-bottom: 1px solid var(--s-rand);}
-html.android-app:not(.pc-app).stil-sachlich #appLeiste {backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);}
+html.android-app:not(.pc-app).stil-sachlich #appLeiste {backdrop-filter: none; -webkit-backdrop-filter: none;}
 html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-knopf {color: var(--s-text);}
 html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-titel b {color: var(--s-akzent);}
 html.android-app:not(.pc-app).stil-sachlich #appLeiste .al-avatar {background: linear-gradient(145deg, #FFB547, #FF5F8F); color: #fff;}
@@ -3418,7 +3423,7 @@ html.android-app:not(.pc-app).stil-sachlich #appNavi button.an {color: var(--s-t
 html.android-app:not(.pc-app).stil-sachlich #appNavi button.an .an-pille {background: var(--s-akzent-w); color: var(--s-akzent);}
 html.android-app:not(.pc-app).stil-sachlich {--app-navi-h: 82px;}
 html.android-app:not(.pc-app).stil-sachlich #appNavi {left: 12px; right: 12px; bottom: 12px; height: 68px; padding: 6px 2px; border: 1px solid var(--s-rand2);
-            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);}
+            box-shadow: 0 14px 34px rgba(0,0,0,0.25); backdrop-filter: none; -webkit-backdrop-filter: none;}
 html.android-app:not(.pc-app).stil-sachlich #appMehr .am-blatt {background: var(--s-blatt); color: var(--s-text);}
 html.android-app:not(.pc-app).stil-sachlich #appMehr .am-schleier {background: var(--s-schleier);}
 html.android-app:not(.pc-app).stil-sachlich #appMehr .am-zeile {color: var(--s-text);}
@@ -6508,7 +6513,7 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             max-width: 80%;
             text-align: center;
             font-weight: 500;
-            backdrop-filter: blur(4px);
+            backdrop-filter: none;
         }
         .lightbox-zoom-hint {
             position: absolute;
@@ -6519,7 +6524,7 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             background: rgba(0,0,0,0.3);
             padding: 6px 14px;
             border-radius: 20px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: none;
         }
 
         @keyframes lightboxFade {
@@ -24823,7 +24828,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 356, datum: '27.10.2026' };
+const TRAINER_STAND = { nr: 367, datum: '28.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -53218,7 +53223,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
            bleibt dahinter zu sehen, abgedunkelt; ein Tipp daneben schliesst es auch (ohne es sich zu merken). */
         #kartenSpiel .ks-tut { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px;
             padding-top: calc(env(safe-area-inset-top) + 16px); padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
-            background: rgba(4, 8, 20, .66); -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px); overflow: auto; transition: opacity .3s ease; animation: ksTutAuf .3s ease; }
+            background: rgba(4, 8, 20, .66); -webkit-backdrop-filter: none; backdrop-filter: none; overflow: auto; transition: opacity .3s ease; animation: ksTutAuf .3s ease; }
         @keyframes ksTutAuf { from { opacity: 0; } to { opacity: 1; } }
         #kartenSpiel .ks-tut-in { position: relative; padding-top: 52px !important; }
         /* Dietmar: "Haette die Erklaerung gerne ueber den ganzen Bildschirm" - die Tafel fuellt den ganzen Schirm, alles etwas groesser */
@@ -53243,6 +53248,33 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-tut-unter { font-size: 16px; color: var(--s-text2, #456); margin-top: -4px; }
         #kartenSpiel .ks-tut-haende { display: flex; justify-content: space-between; width: 100%; max-width: 340px; margin: 4px 0 0; }
         #kartenSpiel .ks-tut-haende svg { width: 46%; height: auto; }
+        /* Swipe-Tutorial (28.10.2026, Dietmar mit Video): die Karte kippt einmal nach links (FALSCH) und einmal nach rechts (RICHTIG), wie beim echten Wischen */
+        #kartenSpiel .ks-tut-demo { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 6px 0 2px; }
+        #kartenSpiel .ks-tut-karte { position: relative; width: min(58vw, 210px); aspect-ratio: 3 / 3.4; border: 2px solid var(--s-rand2, #ccd); border-radius: 18px; background: var(--s-fl, #fff); box-shadow: 0 10px 26px rgba(0,0,0,.16);
+            display: flex; flex-direction: column; overflow: visible; animation: ksDemoKarte 5.6s ease-in-out infinite; }
+        #kartenSpiel .ks-tut-karte .o { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 9px; padding: 0 16px; }
+        #kartenSpiel .ks-tut-karte .u { padding: 10px 16px 14px; border-top: 1px solid var(--s-rand, #e3e6eb); background: var(--s-fl2, #eef2f8); border-radius: 0 0 16px 16px; display: flex; flex-direction: column; gap: 7px; }
+        #kartenSpiel .ks-tut-karte .u b { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--s-text3, #8a97b5); }
+        #kartenSpiel .ks-tut-karte i { display: block; height: 9px; border-radius: 5px; background: var(--s-text3, #8a97b5); opacity: .55; }
+        #kartenSpiel .ks-tut-st { position: absolute; top: 12px; padding: 4px 9px; border: 3px solid; border-radius: 9px; font-weight: 900; font-size: 15px; letter-spacing: .06em; background: var(--s-fl, #fff); opacity: 0; }
+        #kartenSpiel .ks-tut-st.ja { left: 10px; color: var(--s-gruen-tief, #11924F); border-color: var(--s-gruen, #1FC46F); transform: rotate(-12deg); animation: ksDemoJa 5.6s ease-in-out infinite; }
+        #kartenSpiel .ks-tut-st.nein { right: 10px; color: var(--s-rot, #F2375A); border-color: var(--s-rot, #F2375A); transform: rotate(12deg); animation: ksDemoNein 5.6s ease-in-out infinite; }
+        html.android-app body.dark #kartenSpiel .ks-tut-st.ja { color: var(--s-gruen, #34E089); }
+        #kartenSpiel .ks-tut-wort { position: relative; width: 100%; height: 30px; }
+        #kartenSpiel .ks-tut-wort span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; opacity: 0; }
+        #kartenSpiel .ks-tut-wort .nein { color: var(--s-rot, #F2375A); animation: ksDemoNein 5.6s ease-in-out infinite; }
+        #kartenSpiel .ks-tut-wort .ja { color: var(--s-gruen-tief, #11924F); animation: ksDemoJa 5.6s ease-in-out infinite; }
+        html.android-app body.dark #kartenSpiel .ks-tut-wort .ja { color: var(--s-gruen, #34E089); }
+        @keyframes ksDemoKarte { 0%, 4% { transform: none; } 16%, 32% { transform: translate(-58px, 6px) rotate(-12deg); } 44%, 52% { transform: none; } 64%, 80% { transform: translate(58px, 6px) rotate(12deg); } 92%, 100% { transform: none; } }
+        @keyframes ksDemoNein { 0%, 6% { opacity: 0; } 15%, 32% { opacity: 1; } 42%, 100% { opacity: 0; } }
+        @keyframes ksDemoJa { 0%, 52% { opacity: 0; } 62%, 80% { opacity: 1; } 90%, 100% { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { #kartenSpiel .ks-tut-karte, #kartenSpiel .ks-tut-st, #kartenSpiel .ks-tut-wort span { animation: none; } #kartenSpiel .ks-tut-st, #kartenSpiel .ks-tut-wort span { opacity: 1; } #kartenSpiel .ks-tut-wort span { position: static; } #kartenSpiel .ks-tut-wort { display: flex; gap: 18px; justify-content: center; } }
+        html.android-app body.dark #kartenSpiel .ks-tut-karte, body.dark #kartenSpiel .ks-tut-karte { background: #18224a; }
+        html.android-app body.dark #kartenSpiel .ks-tut-karte .u, body.dark #kartenSpiel .ks-tut-karte .u { background: #121a38; }
+        html.android-app body.dark #kartenSpiel .ks-tut-st, body.dark #kartenSpiel .ks-tut-st { background: #18224a; }
+        html.pc-app body.dark #kartenSpiel .ks-tut-karte { background: #1b2433; border-color: #2a3548; }
+        html.pc-app body.dark #kartenSpiel .ks-tut-karte .u { background: #141c2a; }
+        html.pc-app body.dark #kartenSpiel .ks-tut-st { background: #1b2433; }
         #kartenSpiel .ks-tut-hand { fill: var(--s-text, #0C1731); }
         #kartenSpiel .ks-tut-pfeil { fill: none; stroke: var(--s-text, #0C1731); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
         #kartenSpiel .ks-tut-l .ks-tut-bew { animation: ksTutL 1.8s ease-in-out infinite; }
@@ -53319,6 +53351,44 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         #kartenSpiel .ks-themen button small { display: block; font-size: 12px; font-weight: 500; color: var(--s-text2, #456); margin-top: 2px; }
         #kartenSpiel .ks-themen button.breit { grid-column: 1 / -1; background: var(--s-haupt, #0FB7B2); color: var(--s-auf-haupt, #fff); border-color: transparent; }
         #kartenSpiel .ks-themen button.breit small { color: inherit; opacity: .85; }
+        /* Neuer Anfang (28.10.2026): Satz, Einstellungen, Starten in der Mitte, Themen unten */
+        #kartenSpiel .ks-start { align-items: stretch; text-align: left; gap: 12px; padding-top: 8px; }
+        /* Im Browser am Desktop nicht ueber die ganze Breite ziehen: mittig, hoechstens 560 Pixel (am Handy ist es ohnehin schmaler) */
+        #kartenSpiel .ks-start > * { align-self: center; width: 100%; max-width: 560px; }
+        html.pc-app #kartenSpiel .ks-start > * { max-width: none; }
+        #kartenSpiel .ks-eins { font-size: 15px; line-height: 1.45; color: var(--s-text2, #456); padding: 0 2px; }
+        #kartenSpiel .ks-eins b { color: var(--s-text, #0C1731); }
+        #kartenSpiel .ks-einst { border: 1px solid var(--s-rand2, #ccd); background: var(--s-fl, #fff); border-radius: var(--s-r-klein, 12px); padding: 10px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+        #kartenSpiel .ks-einst-kopf { font-size: 16.5px; font-weight: 800; padding: 4px 4px 4px; }
+        #kartenSpiel .ks-einst-kopf i { font-size: .9em; margin-right: 4px; color: var(--s-text2, #456); }
+        #kartenSpiel .ks-einst .ks-schalter { max-width: none; margin: 0; }
+        #kartenSpiel .ks-mitte { flex: 1 0 auto; min-height: 112px; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; }
+        #kartenSpiel .ks-wahl { text-align: center; font-size: 14px; color: var(--s-text2, #456); }
+        #kartenSpiel .ks-wahl b { color: var(--s-text, #0C1731); }
+        #kartenSpiel button.ks-startknopf { flex: 0 0 auto; width: 100%; height: 58px; min-height: 58px; font-size: 18px; font-weight: 800; }
+        #kartenSpiel .ks-startknopf i { margin-right: 8px; font-size: .85em; }
+        /* Starten im selben Gruen wie die Schalter (Dietmar 28.10.2026); am PC bleibt es im PC-Blau wie die dortigen Schalter */
+        #kartenSpiel button.ks-startknopf { background: var(--s-gruen, #1FC46F); color: #04281a; }
+        html.pc-app #kartenSpiel button.ks-startknopf { background: #0f2745; color: #fff; }
+        html.pc-app body.dark #kartenSpiel button.ks-startknopf { background: #2563a8; color: #fff; }
+        #kartenSpiel .ks-wahlfeld { display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto; }
+        #kartenSpiel .ks-wahlfeld .ks-themen-kopf { margin-top: 0; padding: 0 2px; }
+        #kartenSpiel .ks-wahlfeld .ks-themen { width: 100%; }
+        #kartenSpiel .ks-themen button { position: relative; }
+        #kartenSpiel .ks-themen button.on { border-color: var(--s-haupt, #0FB7B2); box-shadow: inset 0 0 0 1px var(--s-haupt, #0FB7B2); background: rgba(15, 183, 178, .14); background: color-mix(in srgb, var(--s-haupt, #0FB7B2) 16%, var(--s-fl, #fff)); }
+        #kartenSpiel .ks-themen button.on::after { content: "✓"; position: absolute; right: 10px; top: 6px; color: var(--s-haupt, #0FB7B2); font-weight: 900; font-size: 15px; }
+        html.pc-app #kartenSpiel .ks-themen button.on { border-color: #0f2745; box-shadow: inset 0 0 0 1px #0f2745; background: #eef3fa; }
+        html.pc-app #kartenSpiel .ks-themen button.on::after { color: #0f2745; }
+        html.pc-app body.dark #kartenSpiel .ks-themen button.on { border-color: #4a90e0 !important; box-shadow: inset 0 0 0 1px #4a90e0; background: #1e3350 !important; }
+        html.pc-app body.dark #kartenSpiel .ks-themen button.on::after { color: #7dd3fc; }
+        html.pc-app #kartenSpiel .ks-eins { color: #5b6b80; }
+        html.pc-app #kartenSpiel .ks-einst { border-radius: 6px; border-color: #e1e7f0; background: #fff; }
+        html.pc-app body.dark #kartenSpiel .ks-einst { background: #1b2433; border-color: #2a3548; }
+        html.pc-app #kartenSpiel .ks-startknopf { max-width: 420px; align-self: center; }
+        html.pc-app body.dark #kartenSpiel .ks-eins, html.pc-app body.dark #kartenSpiel .ks-wahl { color: #aab8cc; }
+        html.pc-app body.dark #kartenSpiel :is(.ks-eins b, .ks-wahl b, .ks-einst-kopf) { color: #e6ecf5; }
+        html.pc-app body.dark #kartenSpiel :is(.ks-themen button small, .ks-schalter small) { color: #aab8cc; }
+        html.pc-app body.dark #kartenSpiel .ks-einst-kopf i { color: #aab8cc; }
         #kartenSpiel .ks-ergebnis { font-size: 54px; font-weight: 800; color: var(--s-haupt, #0FB7B2); line-height: 1; margin-top: 10px; }
         #kartenSpiel .ks-ergebnis small { font-size: 22px; color: var(--s-text2, #456); font-weight: 700; }
         #kartenSpiel .ks-lob { font-size: 18px; font-weight: 800; }
@@ -53633,6 +53703,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function nurTechnik(){ const b = bank(); return b.length > 0 && !b.some(q => q.part !== 'technik'); }
     function benutzerK(){ let u = 'user1'; tu(() => { u = currentUser || 'user1'; }); return u; }
     const bestKey = t => 'karten_best_' + t + '_' + benutzerK();
+    const themaKey = () => 'karten_thema_' + benutzerK();
 
     // ---------- Karten bauen: oben die Frage, unten EINE Antwort ----------
     // Eine Karte: { thema, art, frage, frageHtml?, groesse, antwort, antwortHtml?, wahr, richtig, richtigHtml?, merk, qid? }
@@ -53748,6 +53819,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(e.key === 'ArrowLeft') k('.ks-nein');
             else if(e.key === 'ArrowRight') k('.ks-ja');
             else if(e.key === 'Escape') k('.ks-zu');
+            else if(e.key === 'Enter' && el.classList.contains('start')) k('.ks-startknopf');
             else if(e.key === 'Enter'){ const bs = [...el.querySelectorAll('.ks-knoepfe button')].filter(b => b.offsetParent); if(bs.length === 1){ e.preventDefault(); bs[0].click(); } }
         }, true); }
         // Die Zurueck-Taste des Handys: aus der Runde zum Anfang, vom Anfang zu
@@ -53773,22 +53845,35 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         el.classList.remove('fertig'); el.classList.add('start');
         el.querySelector('.ks-titel').textContent = 'Match';
         const t = themenListe();
-        el.querySelector('.ks-start').innerHTML = KNOPF_BILD
-          + '<div class="ks-regel"><div class="l">✗ Falsch<small>' + (pcMatch() ? 'oder Pfeiltaste ←' : 'oder kurz nach links wischen') + '</small></div><div class="r">✓ Richtig<small>' + (pcMatch() ? 'oder Pfeiltaste →' : 'oder kurz nach rechts wischen') + '</small></div></div>'
-          + '<div style="font-size:14px;line-height:1.45;color:var(--s-text2,#456);max-width:380px">Oben steht die Frage, unten <b>eine</b> Antwort. Stimmt sie, ' + (pcMatch() ? 'klicke' : 'tippe') + ' unten auf <b>Richtig</b> – stimmt sie nicht, auf <b>Falsch</b>. ' + (pcMatch() ? 'Mit den Pfeiltasten <b>←</b> und <b>→</b> geht es auch, <b>Esc</b> schließt.' : 'Ein kurzer Wisch mit dem Finger geht auch.') + '</div>'
+        // NEUER ANFANG (28.10.2026, Dietmar: "Ich habe die Seite Match aufgemacht und wusste ehrlich gesagt nicht, wie ich das starten soll."):
+        // oben ein Satz und die Einstellungen (immer offen), in der Mitte der Knopf "Starten", unten die Themen zum Auswaehlen.
+        // Ein Thema antippen waehlt es nur aus; gestartet wird mit dem Knopf. Das zuletzt gespielte Thema ist vorgewaehlt.
+        let gw = lies(themaKey(), 'mix'); if(t.indexOf(gw) < 0) gw = 'mix';
+        const gwName = k => esc(THEMEN[k].name);
+        el.querySelector('.ks-start').innerHTML =
+            '<div class="ks-eins">' + (pcMatch() ? 'Stimmt die Antwort? Klicke <b>Richtig</b> oder <b>Falsch</b> – oder nimm die Pfeiltasten <b>←</b> und <b>→</b>. <b>Esc</b> schließt.' : 'Stimmt die Antwort? Tippe <b>Richtig</b> oder <b>Falsch</b> – oder wische kurz.') + '</div>'
+          + '<div class="ks-einst"><div class="ks-einst-kopf"><i class="fas fa-gear" aria-hidden="true"></i> Einstellungen</div>'
           + '<label class="ks-schalter ks-tut-an"><span>' + (pcMatch() ? 'Kurze Anleitung vor der ersten Karte<small>zeigt noch einmal, wie es geht</small>' : 'Swipe-Tutorial vor der ersten Karte<small>zeigt noch einmal, wie das Wischen geht</small>') + '</span>'
           + '<button type="button" role="switch" aria-checked="' + (tutVerstanden() ? 'false' : 'true') + '" aria-label="Swipe-Tutorial ein oder aus"><i></i></button></label>'
-          + '<label class="ks-schalter ks-auf-an"><span>Auflösung nach jeder Karte<small>auch bei richtig: was es bedeutet – dann mit „Weiter“</small></span>'
+          + '<label class="ks-schalter ks-auf-an"><span>Auflösung nach jeder Karte<small>auch bei richtig: was es bedeutet</small></span>'
           + '<button type="button" role="switch" aria-checked="' + (aufloesungAn() ? 'true' : 'false') + '" aria-label="Auflösung ein oder aus"><i></i></button></label>'
-          + (nurTechnik() ? '' : '<label class="ks-schalter ks-erw-an"><span>Erweitert<small>auch Q-Gruppen und Landeskenner, die in der Prüfung nicht vorkommen</small></span>'
+          + (nurTechnik() ? '' : '<label class="ks-schalter ks-erw-an"><span>Erweitert<small>auch Q-Gruppen und Landeskenner</small></span>'
           + '<button type="button" role="switch" aria-checked="' + (erweitert() ? 'true' : 'false') + '" aria-label="Erweitert ein oder aus"><i></i></button></label>')
-          + '<div class="ks-themen-kopf">Thema wählen</div>'
+          + '</div>'
+          + '<div class="ks-mitte"><div class="ks-wahl">Gewählt: <b class="ks-wahl-name">' + gwName(gw) + '</b></div>'
+          + '<button type="button" class="ks-k ks-los ks-startknopf"><i class="fas fa-play" aria-hidden="true"></i> Starten</button></div>'
+          + '<div class="ks-wahlfeld"><div class="ks-themen-kopf">Was möchtest du spielen?</div>'
           + '<div class="ks-themen">' + t.map(k => {
                 const th = THEMEN[k], n = th.anzahl(), best = parseInt(lies(bestKey(k), '0'), 10) || 0;
-                return '<button type="button" data-thema="' + k + '" class="' + (k === 'mix' ? 'breit' : '') + '">' + esc(th.name)
+                return '<button type="button" data-thema="' + k + '" class="' + (k === gw ? 'on' : '') + '" aria-pressed="' + (k === gw ? 'true' : 'false') + '">' + esc(th.name)
                      + '<small>' + esc(th.unter(n)) + (best ? ' · ★ ' + best : '') + '</small></button>';
-            }).join('') + '</div>';
-        el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => los(b.dataset.thema)));
+            }).join('') + '</div></div>';
+        el.querySelectorAll('.ks-themen button').forEach(b => b.addEventListener('click', () => {
+            gw = b.dataset.thema; schreib(themaKey(), gw);
+            el.querySelectorAll('.ks-themen button').forEach(x => { const an = x === b; x.classList.toggle('on', an); x.setAttribute('aria-pressed', an ? 'true' : 'false'); });
+            el.querySelector('.ks-wahl-name').textContent = THEMEN[gw].name;
+        }));
+        el.querySelector('.ks-startknopf').addEventListener('click', () => los(gw));
         const auf = el.querySelector('.ks-auf-an');
         auf.addEventListener('click', ev => {
             ev.preventDefault();
@@ -53815,6 +53900,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 
     function los(thema){
         klangEntsperren();
+        schreib(themaKey(), thema);
         const k = THEMEN[thema].karten(RUNDE).filter(Boolean);
         if(!k.length){ start(); return; }
         spiel = { thema, karten: k, i: 0, richtig: 0, fehl: [], warten: false };
@@ -53935,9 +54021,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<button type="button" class="ks-tut-zu" aria-label="Erklärung schließen">✕</button>'
           + '<div class="ks-tut-titel">Swipe-Tutorial <i class="fas fa-tower-broadcast"></i></div>'
           + '<div class="ks-tut-unter">So beantwortest du die Fragen</div>'
-          + '<div class="ks-tut-haende">' + tutHand('l') + tutHand('r') + '</div>'
+          + '<div class="ks-tut-demo" aria-hidden="true"><div class="ks-tut-karte"><span class="ks-tut-st ja">RICHTIG</span><span class="ks-tut-st nein">FALSCH</span>'
+          + '<div class="o"><i style="width:86%"></i><i style="width:58%"></i></div><div class="u"><b>Antwort</b><i style="width:72%"></i></div></div>'
+          + '<div class="ks-tut-wort"><span class="nein">← Falsch</span><span class="ja">Richtig →</span></div></div>'
           + '<div class="ks-tut-reg"><div class="l">Links wischen<br>= Falsch</div><div class="r">Rechts wischen<br>= Richtig</div></div>'
-          + '<div class="ks-tut-pille">Links für Falsch, Rechts für Richtig</div>'
           + '<div class="ks-tut-klein">Ein kurzer Wisch reicht. Die Knöpfe unten gehen auch.</div>'
           + '<label class="ks-schalter"><span>Ich habe es verstanden</span><button type="button" role="switch" aria-checked="false" aria-label="Ich habe es verstanden"><i></i></button></label>'
           + '</div>';
@@ -55282,6 +55369,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         document.addEventListener('mouseover', e => { try{
             const mk = e.target && e.target.closest && e.target.closest('.mk');
             if(!mk || (e.relatedTarget && mk.contains(e.relatedTarget))) return;
+            if(mk.closest('#roboHelfer')) return;   // 27.10.2026: die auftauchende Maja loest sich beim Antippen auf; ein Tippen schickt vorher ein mouseover, das sonst die QTH-Erklaerung startet
             if(!mk.animate || Date.now() - zuletzt < sperre) return;
             if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             zuletzt = Date.now(); sperre = 1600;
@@ -57889,8 +57977,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           sprich: 'Funkamateure heißen auf Englisch Hämms. Nicht Schinken! | Hämm Spirit ist ihr Geist: Man hilft einander, teilt sein Wissen und baut zusammen. Dreiundsiebzig heißt: Viele Grüße!' }
         ,{ id: 'neumayer', name: 'Neumayer-Station', frage: 'Weißt du, wo Funker im <b>ewigen Eis</b> überwintern? Tipp mich an – <b>Neumayer</b>!',
           kurz: '<b>Neumayer</b>: die deutsche Forschungsstation in der Antarktis – Rufzeichen <b>DP0GVN</b>.',
-          html: 'Die <b>Neumayer-Station</b> ist eine deutsche Forschungsstation in der <b>Antarktis</b>. Im Winter leben dort nur etwa <b>neun</b> Menschen. Ihr Rufzeichen ist <b>DP0GVN</b> – ein echtes <b>DX</b>!<br><b>Fangfrage in der Prüfung:</b> „Exterritorial“ heißt außerhalb von Deutschland. „Klubstation“ klingt gut, nennt aber <b>Gaststreitkräfte in Deutschland</b> – und die betreiben die Station nicht. Richtig ist: <b>Amateurfunkstelle der Klasse A, exterritorial</b>.',
-          sprich: 'Die Neumayer-Station ist eine deutsche Forschungsstation in der Antarktis. | Im Winter leben dort nur etwa neun Menschen. Ihr Rufzeichen ist D P null G V N. Wer sie ruft, hat ein echtes D X! | Aufgepasst bei der Prüfungsfrage, das ist eine Fangfrage! Exterritorial heißt, außerhalb von Deutschland. Klubstation klingt gut, nennt aber Gaststreitkräfte in Deutschland, und die betreiben die Station nicht. Richtig ist: Amateurfunkstelle der Klasse A, exterritorial.' }
+          html: 'Die <b>Neumayer-Station</b> ist eine deutsche Forschungsstation in der <b>Antarktis</b>. Im Winter leben auf der Forschungsstation nur etwa <b>neun</b> Menschen. Ihr Rufzeichen ist <b>DP0GVN</b> – ein echtes <b>DX</b>!<br>In der Prüfung hilft dir die <b>Formelsammlung, Seite 5</b>. Dort steht: Die Rufzeichenreihe <b>DP</b> (Delta Papa) ist für Rufzeichen mit <b>exterritorialem Standort</b> vorgesehen. <b>Exterritorial</b> heißt: außerhalb von Deutschland, hier in der Antarktis. <b>DP0GVN</b> (Delta Papa Null Golf Victor November) ist also eine <b>Amateurfunkstelle der Klasse A, exterritorial</b>.',
+          sprich: 'Die Neumayer-Station ist eine deutsche Forschungsstation in der Antarktis. | Im Winter leben auf der Forschungsstation nur etwa neun Menschen. Ihr Rufzeichen ist Delta Papa Null Golf Victor November. Wer sie ruft, hat ein echtes D X! | In der Prüfung hilft dir die Formelsammlung, Seite fünf. Dort steht: Die Rufzeichenreihe Delta Papa ist für Rufzeichen mit exterritorialem Standort vorgesehen. Exterritorial heißt: außerhalb von Deutschland, hier in der Antarktis. Delta Papa Null Golf Victor November ist also eine Amateurfunkstelle der Klasse A, exterritorial.' }
     ];
     const ERKL_PEEK = {};
     // beim Hereinlugen: jede Frage (frage, bei den Juengsten auch frage2) fuehrt zum selben Begriff
@@ -58537,9 +58625,30 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(robo.modus === 'tour' && st.ziel) roboTat('weiter');
         else roboTat('heim');
     });
+    // IN LUFT AUFLOESEN (27.10.2026). Dietmar: "Wenn Maja irgendwo ins Bild kommt und das Reden anfaengt und ich dann draufklicke,
+    // dass Maja sich in Luft aufloest. Manchmal nervt sie ein wenig." Wer redet und angetippt wird, hoert auf, flackert durchsichtig
+    // (dieselbe Bewegung wie beim Unsichtbar-Kunststueck), ein paar Funken, weg. Auch wenn sie gerade nicht redet: "Wenn ich Maja
+    // anklicke, weil sie mich gerade in einer schwierigen Situation nervt, muss sie verschwinden. Sie kann spaeter wieder auftauchen."
+    // Im Rundgang nicht: Dort fuehrt Antippen weiter.
+    function roboAufloesen(){
+        const x = robo.cx, y = robo.cy;
+        uhrenAus();
+        blaseZu();
+        roboRing.classList.remove('da');
+        roboSperre.classList.remove('da', 'klar');
+        tu(funkiVerstummen);
+        robo.modus = 'aufloesen';
+        roboEl.classList.remove('winkt', 'tanzt', 'huepft', 'plopp', 'taucht');
+        roboKlasse('tarnt');
+        tu(() => funken(x, y));
+        tu(() => funkiGeraeusch('zauber'));
+        spaeter(() => roboHeim(true), 1150);
+    }
     // Funki selbst antippen: im Rundgang weiter, sonst ein Tanz
     roboEl.addEventListener('click', () => {
         if(!robo.modus) return;
+        if(robo.modus === 'aufloesen') return;
+        if(robo.modus !== 'tour'){ roboAufloesen(); return; }   // jedes Antippen: Dietmar 27.10.2026 "Wenn ich Maja anklicke, weil sie mich gerade in einer schwierigen Situation nervt, muss sie verschwinden."
         // Mitten im Kunststueck angetippt: er kichert und macht weiter
         if(robo.modus === 'kunst' || robo.modus === 'frei'){ zurufen(zufall(KITZEL)); if(!wirdVorgelesen()) tu(() => funkiGeraeusch('lachen')); return; }
         if(robo.modus === 'kurz'){ robo.kurzHilfe ? hilfeZeigen() : rufenJetzt(); return; }
@@ -64039,6 +64148,36 @@ html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal #appDesignS
     background: rgba(45,232,216,.22) !important; color: #fff !important; box-shadow: inset 0 0 0 2px #2de8d8 !important; }
 </style>
 
+<style id="appLeicht">
+/* WENIGER GRAFIKLAST IN DER APP                                          (27.10.2026)
+   Maja schreibt: "Das Bild flackert wieder extrem", Dietmar mit Video: besonders stark beim Hoch- und Runterschieben
+   der Ergebnisseite - ein weisses Rechteck, dann fuer ein bis drei Bilder alles leer (die Grafik des Handys laesst Kacheln fallen,
+   wie beim Blinken im Oktober). Die schwebende Leiste unten und ihr Gegenstueck hatten einen Weichzeichner (backdrop-filter) und
+   eine eigene Ebene (will-change). Die Leiste ist aber ohnehin deckend gefaerbt (--s-navi) - der Weichzeichner sieht man nicht, er kostet nur.
+   Und wenn sie nach unten wegfaehrt (in der Runde, auf der Ergebnisseite), blieb sie als Ebene mit Weichzeichner ueber dem
+   scrollenden Inhalt liegen. Jetzt: kein Weichzeichner, und weg ist weg. */
+html.android-app #appNavi, html.android-app #appLeiste { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.android-app body.app-navi-weg #appNavi { visibility: hidden; will-change: auto; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+html.android-app .erg-buehne .erg-maja img, html.android-app .erg-buehne .erg-maja .mk { filter: none !important; }
+/* KEIN WEICHZEICHNER MEHR AUF DEN KACHELN (27.10.2026, Stand 361). Dietmar mit Video: "Auf der Startseite blinkt es auch immer wieder mal,
+   vor allem wenn ich scrolle" und "nach der Pruefung erst mal ein kurzer Moment eine reine weisse Flaeche". Im Video wird fuer ein, zwei Bilder
+   die ganze Flaeche weiss. Ursache: im dunklen Aussehen hatten auf der Startseite gut zwanzig Kacheln (Heute-Karten, Level, Fortschritt,
+   Werkzeuge) je einen Weichzeichner (backdrop-filter: blur 18px), dazu die Info-Leiste in der Runde. Beim Scrollen und beim Wechsel von der Runde zur
+   Ergebnisseite kommt die Grafik des Handys damit nicht hinterher und malt solche Ebenen weiss. Sichtbar ist der Weichzeichner ohnehin nicht -
+   dahinter liegt nur der glatte Farbverlauf. Darum hier aus, die Kacheln behalten ihre Farbe. */
+html.android-app #appHeute .ah-kachel, html.android-app #appHeute .ah-karte,
+html.android-app .exam-info, html.android-app #masteryDisplay,
+html.android-app #appHeute *, html.android-app .erg-buehne * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* LEISTE UNTEN BUENDIG (27.10.2026). Dietmar: "Die Menueleiste moechte ich auf keinen Fall oben rund haben, ich moechte sie so haben
+   wie sie jetzt ist, nur etwas weiter runter, dass sie buendig unten sitzt." Form, Breite (12 px Rand links und rechts), Rahmen und
+   Schatten bleiben; sie sitzt nur ganz unten statt 12 px darueber. Ohne Weichzeichner scheint der Inhalt durch die leicht durchsichtige
+   Farbe - darum liegt die Seitenfarbe als zweite Schicht darunter (deckend). */
+html.android-app:not(.pc-app):is(.stil-verspielt, .stil-sachlich) { --app-navi-h: 70px; }
+html.android-app:not(.pc-app):is(.stil-verspielt, .stil-sachlich) body #appNavi {
+    bottom: 0; height: 68px;
+    background: linear-gradient(var(--s-navi), var(--s-navi)), var(--s-bg, #0C121C);
+}
+</style>
 <style id="duoPolitur">
 /* ================================================================
    GRUPPENRAUM-FENSTER: "Glas"  (27.10.2026)
@@ -64103,7 +64242,7 @@ body.dark #duoModal .duo-collapsible,
 body.dark #duoModal .nur-gastgeber[style*="border-radius:12px"],
 body.dark #duoModal .raum-kasten,
 body.dark #duoModal #duoUnterrichtZeile,
-body.dark #duoModal #duoPruefungZeile { background: rgba(255,255,255,.055) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.14) !important; box-shadow:0 8px 24px rgba(0,0,0,.25) !important; }
+body.dark #duoModal #duoPruefungZeile { background: rgba(255,255,255,.055) !important; -webkit-backdrop-filter: none; backdrop-filter: none; border:1px solid rgba(255,255,255,.14) !important; box-shadow:0 8px 24px rgba(0,0,0,.25) !important; }
 body.dark #duoModal .duo-collapsible-header { background:transparent !important; }
 body.dark #duoModal .duo-collapsible-header .left { color:#e8f6ff !important; font-weight:700; }
 body.dark #duoModal .duo-collapsible-header .left i { color:#4fd8c4 !important; }
