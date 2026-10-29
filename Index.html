@@ -3802,6 +3802,9 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
            Rand, die man nicht bemerkt.
            ================================================================ */
         html { scrollbar-gutter: stable; }
+        /* Stand 385: In der App-Ansicht am PC scrollt nicht die Seite, sondern ihr Inhalt - der freigehaltene Platz blieb
+           als leerer weisser Streifen rechts stehen (Dietmar: "der weisse Scrollbalken, auf dem man nichts scrollen kann"). */
+        html.pc-app { scrollbar-gutter: auto; }
 
         body {
             background:
@@ -24858,7 +24861,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 382, datum: '29.10.2026' };
+const TRAINER_STAND = { nr: 385, datum: '29.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -64328,14 +64331,29 @@ html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt.aktiv:not(#q1):not(#q2){background:rgba(52,211,153,.16)!important;border-color:#34d399!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2) span[style*="border"]{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.20)!important;border-radius:6px!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] button[style*="min-height:38px"]:not(#q1):not(#q2),html:not(#zz):not(.android-app) body:not(#zz2).dark #rundeModal .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;color:#fff!important;border-radius:999px!important}
-/* Scrollbalken im dunklen Stil am PC: schmal, ohne weißen Grund */
-html:not(.android-app) body.dark *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.30) transparent}
-html:not(.android-app):has(body.dark){scrollbar-color:rgba(255,255,255,.30) #0b1330}
-html:not(.android-app) body.dark ::-webkit-scrollbar{width:12px;height:12px;background:transparent}
-html:not(.android-app) body.dark ::-webkit-scrollbar-track{background:rgba(255,255,255,.04)}
-html:not(.android-app) body.dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
-html:not(.android-app) body.dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.45);background-clip:padding-box}
-html:not(.android-app) body.dark ::-webkit-scrollbar-corner{background:transparent}
+/* Scrollbalken im dunklen Stil am PC: schmal, ohne weißen Grund. Stand 383: auch in der App-Ansicht am PC (Dietmar: "kann man den Scrollbalken auch noch färben?") */
+html:is(:not(.android-app),.pc-app) body.dark *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.30) transparent}
+html:is(:not(.android-app),.pc-app):has(body.dark){scrollbar-color:rgba(255,255,255,.30) #0b1330}
+html:is(:not(.android-app),.pc-app) body.dark ::-webkit-scrollbar{width:12px;height:12px;background:transparent}
+html:is(:not(.android-app),.pc-app) body.dark ::-webkit-scrollbar-track{background:rgba(255,255,255,.04)}
+html:is(:not(.android-app),.pc-app) body.dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+html:is(:not(.android-app),.pc-app) body.dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.45);background-clip:padding-box}
+html:is(:not(.android-app),.pc-app) body.dark ::-webkit-scrollbar-corner{background:transparent}
+/* Stand 385: dieselben Farben auch fuer die Rollleiste der Seite selbst (html), fuer Browser ohne scrollbar-color */
+html:is(:not(.android-app),.pc-app):has(body.dark)::-webkit-scrollbar{width:12px;height:12px;background:#0b1330}
+html:is(:not(.android-app),.pc-app):has(body.dark)::-webkit-scrollbar-track{background:#0b1330}
+html:is(:not(.android-app),.pc-app):has(body.dark)::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+html:is(:not(.android-app),.pc-app):has(body:not(.dark))::-webkit-scrollbar{width:12px;height:12px;background:#eef2f8}
+html:is(:not(.android-app),.pc-app):has(body:not(.dark))::-webkit-scrollbar-track{background:#eef2f8}
+html:is(:not(.android-app),.pc-app):has(body:not(.dark))::-webkit-scrollbar-thumb{background:rgba(15,39,69,.30);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+/* Stand 384: auch im Hellen gefaerbt (Dietmar: "Haette man den auch faerben koennen?") - schmal, Spur fast unsichtbar, Griff in Dunkelblau */
+html:is(:not(.android-app),.pc-app) body:not(.dark) *{scrollbar-width:thin;scrollbar-color:rgba(15,39,69,.32) transparent}
+html:is(:not(.android-app),.pc-app):has(body:not(.dark)){scrollbar-color:rgba(15,39,69,.32) #eef2f8}
+html:is(:not(.android-app),.pc-app) body:not(.dark) ::-webkit-scrollbar{width:12px;height:12px;background:transparent}
+html:is(:not(.android-app),.pc-app) body:not(.dark) ::-webkit-scrollbar-track{background:rgba(15,39,69,.05)}
+html:is(:not(.android-app),.pc-app) body:not(.dark) ::-webkit-scrollbar-thumb{background:rgba(15,39,69,.30);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+html:is(:not(.android-app),.pc-app) body:not(.dark) ::-webkit-scrollbar-thumb:hover{background:rgba(15,39,69,.48);background-clip:padding-box}
+html:is(:not(.android-app),.pc-app) body:not(.dark) ::-webkit-scrollbar-corner{background:transparent}
 
 /* MAUS-FARBE AUCH BEI DEN KACHELN UNTER DER FRAGE   (23.10.2026)
    Dietmar: "Hier möchte ich auch ein Mouseoverlay in der gleichen Farbe wie bei den Antworten."
