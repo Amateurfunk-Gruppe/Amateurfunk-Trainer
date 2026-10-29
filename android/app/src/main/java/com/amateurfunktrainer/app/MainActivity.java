@@ -408,6 +408,30 @@ public class MainActivity extends Activity {
     }
 
     // ================================================================
+    //  ZWISCHENSPEICHER BEI NEUER APP-VERSION LEEREN      (29.10.2026)
+    //  Dietmar: "Kann man das so einbauen, dass, wenn es ein Update gibt,
+    //  automatisch der Cache geloescht wird?" Die App merkt sich den
+    //  versionCode, mit dem sie zuletzt lief. Ist er neu, leert sie einmal
+    //  den Speicher des Browserfensters (Seiten, Skripte, Bilder), bevor
+    //  der Trainer geladen wird. localStorage (Lernstand, Einstellungen)
+    //  bleibt unberuehrt. Die Seite selbst macht dasselbe fuer ihren
+    //  Service Worker (Index.html, Stand 378).
+    // ================================================================
+    private void neueVersionAufraeumen() {
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            long code = Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : (long) pi.versionCode;
+            android.content.SharedPreferences sp = getSharedPreferences("trainer", MODE_PRIVATE);
+            long alt = sp.getLong("version_gesehen", -1L);
+            if (alt == code) return;
+            if (alt != -1L && web != null) {
+                try { web.clearCache(true); } catch (Throwable e) { }
+            }
+            sp.edit().putLong("version_gesehen", code).apply();
+        } catch (Throwable e) { }
+    }
+
+    // ================================================================
     //  SPRACHAUSGABE DES HANDYS                          (29.09.2026)
     //  Dietmar: "So richtig angepasst fuer Android ist es nicht." Unter
     //  anderem: "Fuer das Vorlesen fehlt noch die Sprachausgabe" - Piper
