@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.content.ContentValues;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -28,6 +29,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -65,6 +67,8 @@ public class MainActivity extends Activity {
     // Oberflaeche - siehe Stimme.java.
     private final Stimme.Melder stimmMelder = this::melden;
     private View vorhang;
+    private boolean seiteHell = false;   // meldet die Seite ueber leiste(); fuer die eigenen Dialoge (29.10.2026)
+    private String seiteFarbe = "#0f2b40";
     private TextView vorhangText;
     private View startFunki;          // Funki im Startbild (01.10.2026), siehe StartFunki.java
     private View wurzelAnsicht;       // der Rahmen um die Seite (Hintergrund = Farbe der Navigationsleiste ab Android 15)
@@ -193,6 +197,19 @@ public class MainActivity extends Activity {
                     }
                 }});
             }
+            // EIGENE DIALOGE STATT DER WEISSEN ANDROID-FENSTER (29.10.2026). Dietmar: "solche weissen,
+            // schrecklichen Fenster, die mit dieser wunderschoenen App ueberhaupt nichts mehr zu tun haben."
+            // alert(), confirm() und prompt() der Seite kommen hier an und werden als Blatt im Stil des
+            // Trainers gezeigt - hell oder dunkel, je nachdem, was die Seite zuletzt gemeldet hat.
+            @Override public boolean onJsAlert(WebView v, String url, String text, android.webkit.JsResult r) {
+                dialog(text, null, false, (ok, eingabe) -> r.confirm()); return true;
+            }
+            @Override public boolean onJsConfirm(WebView v, String url, String text, android.webkit.JsResult r) {
+                dialog(text, null, true, (ok, eingabe) -> { if (ok) r.confirm(); else r.cancel(); }); return true;
+            }
+            @Override public boolean onJsPrompt(WebView v, String url, String text, String vorgabe, android.webkit.JsPromptResult r) {
+                dialog(text, vorgabe == null ? "" : vorgabe, true, (ok, eingabe) -> { if (ok) r.confirm(eingabe); else r.cancel(); }); return true;
+            }
             // Bilder fuer den Chat, Lernstand einlesen
             @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> rueckruf, FileChooserParams p) {
                 if (dateiRueckruf != null) dateiRueckruf.onReceiveValue(null);
@@ -258,64 +275,134 @@ public class MainActivity extends Activity {
     //  Trainer geladen ist.
     // ================================================================
     private View startbild() {
-        LinearLayout f = new LinearLayout(this);
-        f.setOrientation(LinearLayout.VERTICAL);
-        f.setGravity(Gravity.CENTER);
-        f.setBackgroundColor(Color.parseColor("#0F2745"));
-        int pad = dp(32);
-        f.setPadding(pad, pad, pad, pad);
-        f.setClickable(true);
-
-        // Funki statt Antenne (01.10.2026) - Dietmar: "Die Antenne raus und
-        // ein animierter Funki rein." Im Stil Sachlich und wenn etwas nicht
-        // klappt, bleibt das Zeichen (siehe StartFunki.java).
-        View funki = StartFunki.bild(this);
-        startFunki = funki;
-        if (funki != null) {
-            f.addView(funki, new LinearLayout.LayoutParams(dp(170), dp(190)));
-        } else {
+        // STARTBILD: MAJA IM RAKETENANZUG IM WELTRAUM (29.10.2026, Master 2). Dietmar: "Ich moechte
+        // aber im Hintergrund den Weltraum so wie bei der Rakete" - "die lange Version einbauen".
+        // Das ganze Bild (Verlauf, funkelnde Sterne, Maja, Schriftzug, LOADING-Anzeige) liegt in
+        // res/raw/funki_start.html und fuellt das Browserfenster bildschirmfuellend. Dauert der
+        // Start laenger als die Animation, bleibt das letzte Bild stehen, der Balken kriecht weiter.
+        // Im Stil Sachlich (StartFunki.bild liefert dort nichts) bleibt das schlichte Bild mit Zeichen.
+        FrameLayout rahmen = new FrameLayout(this);
+        rahmen.setBackgroundColor(Color.parseColor("#0e1646"));
+        rahmen.setClickable(true);
+        View probe = StartFunki.bild(this);
+        boolean verspielt = probe != null;
+        if (probe != null) StartFunki.freigeben(probe);
+        if (verspielt) {
+            try {
+                WebView w = new WebView(this);
+                w.setBackgroundColor(Color.TRANSPARENT);
+                w.getSettings().setJavaScriptEnabled(true);
+                w.getSettings().setAllowFileAccess(true);
+                w.setVerticalScrollBarEnabled(false); w.setHorizontalScrollBarEnabled(false);
+                w.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                w.loadUrl("file:///android_res/raw/funki_start.html");
+                startFunki = w;
+                rahmen.addView(w, new FrameLayout.LayoutParams(-1, -1));
+            } catch (Throwable e) { startFunki = null; verspielt = false; }
+        }
+        if (!verspielt) {
+            LinearLayout f = new LinearLayout(this);
+            f.setOrientation(LinearLayout.VERTICAL); f.setGravity(Gravity.CENTER);
             ImageView zeichen = new ImageView(this);
             zeichen.setImageResource(R.mipmap.ic_launcher);
             f.addView(zeichen, new LinearLayout.LayoutParams(dp(112), dp(112)));
+            TextView name = new TextView(this);
+            name.setText("Amateurfunk-Trainer"); name.setTextColor(Color.WHITE);
+            name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30); name.setTypeface(Typeface.DEFAULT_BOLD); name.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2); lp.topMargin = dp(24);
+            f.addView(name, lp);
+            rahmen.addView(f, new FrameLayout.LayoutParams(-1, -1));
         }
-
-        TextView name = new TextView(this);
-        name.setText("Amateurfunk-Trainer");
-        name.setTextColor(Color.WHITE);
-        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
-        name.setTypeface(Typeface.DEFAULT_BOLD);
-        name.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
-        lp.topMargin = dp(24);
-        f.addView(name, lp);
-
-        ProgressBar kreisel = new ProgressBar(this);
-        kreisel.setIndeterminate(true);
-        kreisel.setIndeterminateTintList(ColorStateList.valueOf(Color.parseColor("#5FD3C4")));
-        LinearLayout.LayoutParams kp = new LinearLayout.LayoutParams(dp(44), dp(44));
-        kp.topMargin = dp(32);
-        f.addView(kreisel, kp);
-
+        // Hinweise bei Startproblemen (unten), sonst leer
         vorhangText = new TextView(this);
-        vorhangText.setText("wird gestartet …");
+        vorhangText.setText("");
         vorhangText.setTextColor(Color.parseColor("#D0DAE6"));
-        vorhangText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        vorhangText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         vorhangText.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2, -2);
-        tp.topMargin = dp(16);
-        f.addView(vorhangText, tp);
-        return f;
+        vorhangText.setPadding(dp(24), 0, dp(24), dp(40));
+        FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        rahmen.addView(vorhangText, tp);
+        vorhangSeit = SystemClock.uptimeMillis();
+        return rahmen;
+    }
+
+    interface DialogAntwort { void fertig(boolean ok, String eingabe); }
+    /** Ein Blatt im Stil des Trainers: abgerundet, hell oder dunkel wie die Seite, Knoepfe in Tuerkis. */
+    private void dialog(String text, String vorgabe, boolean abbrechen, DialogAntwort antwort) {
+        final boolean hell = seiteHell;
+        final int grund = hell ? Color.WHITE : Color.parseColor("#0f2b40");
+        final int schrift = hell ? Color.parseColor("#14213d") : Color.parseColor("#eaeff4");
+        final int rand = hell ? Color.parseColor("#d5dcec") : Color.parseColor("#2b5471");
+        final int akzent = hell ? Color.parseColor("#0f2745") : Color.parseColor("#5fd3c4");
+        final int akzentSchrift = hell ? Color.WHITE : Color.parseColor("#04283a");
+        final android.app.Dialog d = new android.app.Dialog(this);
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout blatt = new LinearLayout(this);
+        blatt.setOrientation(LinearLayout.VERTICAL);
+        GradientDrawable form = new GradientDrawable();
+        form.setColor(grund); form.setCornerRadius(dp(22)); form.setStroke(dp(1), rand);
+        blatt.setBackground(form);
+        blatt.setPadding(dp(22), dp(20), dp(22), dp(14));
+        TextView t = new TextView(this);
+        t.setText(text == null ? "" : text); t.setTextColor(schrift); t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16); t.setLineSpacing(0, 1.25f);
+        blatt.addView(t, new LinearLayout.LayoutParams(-1, -2));
+        final android.widget.EditText feld;
+        if (vorgabe != null) {
+            feld = new android.widget.EditText(this);
+            feld.setText(vorgabe); feld.setTextColor(schrift); feld.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            feld.setHintTextColor(rand); feld.setBackgroundTintList(ColorStateList.valueOf(akzent));
+            LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.topMargin = dp(10);
+            blatt.addView(feld, fp);
+        } else feld = null;
+        LinearLayout zeile = new LinearLayout(this);
+        zeile.setOrientation(LinearLayout.HORIZONTAL); zeile.setGravity(Gravity.END);
+        LinearLayout.LayoutParams zp = new LinearLayout.LayoutParams(-1, -2); zp.topMargin = dp(18);
+        if (abbrechen) {
+            TextView nein = knopf("Abbrechen", Color.TRANSPARENT, hell ? Color.parseColor("#4b5b73") : Color.parseColor("#b3cbdb"), rand);
+            nein.setOnClickListener(x -> { d.dismiss(); antwort.fertig(false, null); });
+            LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-2, -2); np.rightMargin = dp(8);
+            zeile.addView(nein, np);
+        }
+        TextView ja = knopf("OK", akzent, akzentSchrift, akzent);
+        ja.setOnClickListener(x -> { d.dismiss(); antwort.fertig(true, feld == null ? null : feld.getText().toString()); });
+        zeile.addView(ja, new LinearLayout.LayoutParams(-2, -2));
+        blatt.addView(zeile, zp);
+        d.setContentView(blatt);
+        d.setCancelable(abbrechen);
+        d.setOnCancelListener(x -> antwort.fertig(false, null));
+        Window w = d.getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            w.setLayout(Math.min(dp(420), getResources().getDisplayMetrics().widthPixels - dp(32)), -2);
+            w.setDimAmount(0.55f);
+        }
+        try { d.show(); } catch (Exception e) { antwort.fertig(false, null); }
+    }
+    private TextView knopf(String text, int grund, int schrift, int rand) {
+        TextView k = new TextView(this);
+        k.setText(text); k.setTextColor(schrift); k.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15); k.setTypeface(Typeface.DEFAULT_BOLD);
+        k.setPadding(dp(18), dp(10), dp(18), dp(10)); k.setGravity(Gravity.CENTER); k.setClickable(true); k.setFocusable(true);
+        GradientDrawable f = new GradientDrawable(); f.setColor(grund); f.setCornerRadius(dp(14)); f.setStroke(dp(1), rand);
+        k.setBackground(f);
+        return k;
     }
 
     private int dp(int wert) {
         return Math.round(wert * getResources().getDisplayMetrics().density);
     }
 
+    private long vorhangSeit = 0;
+    private boolean vorhangGeht = false;
     private void vorhangWeg() {
-        if (vorhang == null || vorhang.getVisibility() != View.VISIBLE) return;
-        vorhang.animate().alpha(0f).setDuration(250).withEndAction(() -> {
+        if (vorhang == null || vorhang.getVisibility() != View.VISIBLE || vorhangGeht) return;
+        // Die Animation (3,3 s) darf zu Ende laufen, auch wenn die App frueher fertig ist (29.10.2026)
+        long rest = 3300 - (SystemClock.uptimeMillis() - vorhangSeit);
+        if (rest > 0) { haupt.postDelayed(this::vorhangWeg, rest); return; }
+        vorhangGeht = true;
+        if (startFunki instanceof WebView) { try { ((WebView) startFunki).evaluateJavascript("window.voll&&voll()", null); } catch (Throwable e) { } }
+        vorhang.animate().alpha(0f).setDuration(250).setStartDelay(250).withEndAction(() -> {
             vorhang.setVisibility(View.GONE);
-            StartFunki.freigeben(startFunki);     // das kleine Browserfenster wird nicht mehr gebraucht
+            if (startFunki instanceof WebView) { try { ((WebView) startFunki).destroy(); } catch (Throwable e) { } }
             startFunki = null;
         }).start();
     }
@@ -358,6 +445,7 @@ public class MainActivity extends Activity {
             haupt.post(() -> {
                 try {
                     int farbe = Color.parseColor(hex);
+                    seiteHell = hell; seiteFarbe = hex;
                     Window w = getWindow();
                     w.setNavigationBarColor(farbe);
                     if (wurzelAnsicht != null) wurzelAnsicht.setBackgroundColor(farbe);
@@ -377,6 +465,22 @@ public class MainActivity extends Activity {
          *  Leiste auch ausblenden koennen"). Ein Wisch vom unteren Rand holt sie kurz zurueck. */
         @JavascriptInterface public void leisteAus(final boolean aus) {
             haupt.post(() -> { leisteVersteckt = aus; leisteAnwenden(); });
+        }
+        /** Energiesparmodus des Handys (29.10.2026, Reiter Energie). Die Seite fragt beim Start und beim
+         *  Zurueckkommen nach; sie schaltet dann von selbst in den ruhigen Modus. */
+        @JavascriptInterface public boolean sparmodus() {
+            try {
+                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+                return pm != null && pm.isPowerSaveMode();
+            } catch (Throwable e) { return false; }
+        }
+        /** Oeffnet die Akku-Einstellung des Handys, wo man den Sparmodus ausschalten kann. Abschalten
+         *  darf die App ihn nicht selbst. */
+        @JavascriptInterface public void akkuEinstellungen() {
+            haupt.post(() -> {
+                try { startActivity(new Intent(android.provider.Settings.ACTION_BATTERY_SAVER_SETTINGS)); }
+                catch (Throwable e) { try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Throwable e2) { } }
+            });
         }
         @JavascriptInterface public void neuStarten() {
             haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));
@@ -501,10 +605,10 @@ public class MainActivity extends Activity {
             } catch (Exception e) { }
             final boolean ok = da;
             haupt.postDelayed(() -> {
-                if (ok) { geladen = true; web.loadUrl(ADRESSE); }
+                if (ok) { geladen = true; neueVersionAufraeumen(); web.loadUrl(ADRESSE); }
                 else if (versuch < 400) {
                     // Beim allerersten Start packt die App erst aus.
-                    if (versuch == 20 && vorhangText != null) vorhangText.setText("wird gestartet …\nBeim ersten Start dauert es etwas länger.");
+                    if (versuch == 20 && vorhangText != null) vorhangText.setText("Beim ersten Start dauert es etwas länger …");
                     aufServerWarten(versuch + 1);
                 }
                 else if (vorhangText != null) vorhangText.setText("Der Trainer startet nicht.\nBitte die App ganz schließen (Benachrichtigung „Beenden“) und neu öffnen.");
