@@ -2099,12 +2099,13 @@
             html.pc-app #kartenSpiel .ks-karte { border-radius: 8px !important; border: 1px solid #e1e7f0; box-shadow: 0 6px 18px rgba(15,39,69,.12); width: min(100%, 560px); }
             html.pc-app #kartenSpiel .ks-ergebnis { color: #0f2745; }
             /* dunkel */
-            html.pc-app body.dark #kartenSpiel { background: #141c2a; color: #e6ecf5; }
-            html.pc-app body.dark #kartenSpiel .ks-kopf { background: #1b2433; border-color: #2a3548; }
+            /* Stand 382: Polar-Verlauf wie alle Fenster am PC (vorher Graphit #141c2a) */
+            html.pc-app body.dark #kartenSpiel { background: linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%); color: #e6ecf5; border: 1px solid rgba(255,255,255,.22); }
+            html.pc-app body.dark #kartenSpiel .ks-kopf { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
             html.pc-app body.dark #kartenSpiel :is(.ks-kopf .ks-titel, .ks-themen-kopf) { color: #e6ecf5; }
             html.pc-app body.dark #kartenSpiel .ks-kopf .ks-titel::before { color: #7dd3fc; }
-            html.pc-app body.dark #kartenSpiel .ks-kopf .ks-zu { background: #1b2433; color: #e6ecf5; border-color: #2f4058; }
-            html.pc-app body.dark #kartenSpiel :is(.ks-schalter, .ks-themen button:not(.breit), .ks-karte) { background: #1b2433 !important; color: #e6ecf5; border-color: #2a3548 !important; }
+            html.pc-app body.dark #kartenSpiel .ks-kopf .ks-zu { background: rgba(255,255,255,.10); color: #e6ecf5; border-color: rgba(255,255,255,.24); }
+            html.pc-app body.dark #kartenSpiel :is(.ks-schalter, .ks-themen button:not(.breit), .ks-karte) { background: rgba(255,255,255,.08) !important; color: #e6ecf5; border-color: rgba(255,255,255,.16) !important; }
             html.pc-app body.dark #kartenSpiel .ks-themen button.breit, html.pc-app body.dark #kartenSpiel :is(.ks-weiter, .ks-nochmal, .ks-los), html.pc-app body.dark #kartenSpiel .ks-schalter button[aria-checked="true"] { background: #2563a8; border-color: #2563a8; }
             html.pc-app body.dark #kartenSpiel .ks-start > div[style*="max-width"] { color: #aab8cc !important; }
         }
@@ -2286,6 +2287,10 @@
         html.astro-begleiter .mk.schuetteln { animation: mkSchuetteln .9s ease-in-out both !important; }
         @keyframes mkSchuetteln { 0%, 100% { transform: none; } 20% { transform: rotate(-7deg); } 45% { transform: rotate(6deg); } 70% { transform: rotate(-4deg); } }
         @media (prefers-reduced-motion: reduce) { .mk > span, .mk > span i, html.astro-begleiter .mk { animation: none !important; } }
+        /* Ruhiger Modus (Stand 380): ohne Mundbewegung bleibt der Mund ganz weg - sonst steht beim Sprechen ein dunkler
+           Strich ueber Majas Lachen (Dietmar, 29.10.2026: "Bei Maja wird der Mund nicht richtig dargestellt"). */
+        html.ruhig .mk > .mk-mund, html.ruhig :is(#roboHelfer, .aw-funki).spricht .mk > .mk-mund { opacity: 0 !important; animation: none !important; }
+        @media (prefers-reduced-motion: reduce) { :is(#roboHelfer, .aw-funki).spricht .mk > .mk-mund { opacity: 0 !important; } }
 
         /* P77: Match am PC - X rechts oben */
         html.pc-breit #kartenSpiel .ks-kopf .ks-zu { order: 3; margin-left: 8px; }
@@ -24853,7 +24858,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 379, datum: '29.10.2026' };
+const TRAINER_STAND = { nr: 382, datum: '29.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -33946,9 +33951,14 @@ function ruhigModusAktiv(){
     const hand = energieLies('afu_ruhig', 'auto');
     if(hand === 'an') return true;
     if(hand === 'aus') return false;
+    // Stand 380: "Automatisch" greift nur am Handy. Am PC hatte Windows (Animationseffekte aus) Maja
+    // stillgelegt - Dietmar: "Standard ist es ausgeschaltet. Das ist doch doof." Am PC bleibt alles an,
+    // wer es ruhig will, waehlt "Immer an".
+    if(!energieHandy()) return false;
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
     return energieLies('afu_energie_auto', 'an') === 'an' && sparmodusAn();
 }
+function energieHandy(){ try{ return /AmateurfunkTrainerApp/.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches); }catch(e){ return false; } }
 window.ruhigModusAktiv = ruhigModusAktiv;
 function energieSetzen(k, v){ energieSchreib(k, v); try{ einstEnergieFuellen(); }catch(e){} try{ document.documentElement.classList.toggle('ruhig', ruhigModusAktiv()); }catch(e){} }
 window.energieSetzen = energieSetzen;
@@ -33959,6 +33969,17 @@ function einstEnergieFuellen(){
     const seg = (id, key, std, wahl) => '<div class="app-seg" id="' + id + '">'
         + wahl.map(w => '<button type="button"' + (energieLies(key, std) === w[0] ? ' class="an"' : '') + ' onclick="energieSetzen(\'' + key + '\',\'' + w[0] + '\')">' + w[1] + '</button>').join('') + '</div>';
     const spar = sparmodusAn();
+    // Stand 380: steht dabei, ob der ruhige Modus gerade wirkt und warum - Dietmar hatte ihn am PC an und
+    // wunderte sich, dass Maja nur noch als Standbild kam ("Die Grafiken scheinen wieder die alten zu sein").
+    const ruhigStand = () => {
+        const hand = energieLies('afu_ruhig', 'auto');
+        const system = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const an = ruhigModusAktiv();
+        let grund = '';
+        if(an) grund = hand === 'an' ? 'weil hier „Immer an“ gewählt ist' : system ? 'weil das Handy „Bewegung reduzieren“ eingestellt hat' : 'weil das Handy im Energiesparmodus ist';
+        return '<div style="margin-bottom:0.5rem; font-size:0.85rem; line-height:1.5;"><i class="fas ' + (an ? 'fa-pause-circle' : 'fa-play-circle') + '" style="color:' + (an ? '#e0a040' : '#1fc46f') + '; margin-right:6px;"></i>'
+          + (an ? 'Ruhiger Modus ist gerade <b>an</b> – Maja steht still, ' + grund + '.' : 'Ruhiger Modus ist gerade <b>aus</b> – Maja bewegt sich.') + '</div>';
+    };
     const stand = app
         ? '<div style="margin-bottom:0.6rem; font-size:0.85rem; line-height:1.5;"><i class="fas ' + (spar ? 'fa-battery-quarter' : 'fa-battery-full') + '" style="color:' + (spar ? '#e0a040' : '#1fc46f') + '; margin-right:6px;"></i>'
           + (spar ? 'Energiesparmodus ist <b>an</b> – der Trainer läuft gerade im ruhigen Modus.' : 'Energiesparmodus ist <b>aus</b>.') + '</div>'
@@ -33969,8 +33990,9 @@ function einstEnergieFuellen(){
           + '<div style="font-size:0.8rem; margin:0.2rem 0 0.3rem;">Im Sparmodus automatisch ruhiger Modus</div>' + seg('energieAutoSeg', 'afu_energie_auto', 'an', [['an', 'An'], ['aus', 'Aus']])
           + '<div style="font-size:0.8rem; margin:0.6rem 0 0.3rem;">Hinweis beim Start, wenn der Sparmodus an ist</div>' + seg('energieHinweisSeg', 'afu_energie_hinweis', 'an', [['an', 'An'], ['aus', 'Aus']])
           + (app ? '<button type="button" class="app-probe" style="margin-top:0.6rem;" onclick="try{AndroidApp.akkuEinstellungen()}catch(e){}"><i class="fas fa-battery-half"></i> Akku-Einstellungen des Handys öffnen</button>' : ''))
-      + einstKasten('Ruhiger Modus', 'Ohne Maja-Animationen, funkelnde Sterne und Übergänge – nur Standbilder. Spart Akku und ruckelt nicht. „Automatisch“ folgt dem Sparmodus und der Einstellung „Bewegung reduzieren“ des Handys.',
-            seg('energieRuhigSeg', 'afu_ruhig', 'auto', [['auto', 'Automatisch'], ['an', 'Immer an'], ['aus', 'Immer aus']]))
+      + einstKasten('Ruhiger Modus', 'Ohne Maja-Animationen, funkelnde Sterne und Übergänge – nur Standbilder. Spart Akku und ruckelt nicht. „Automatisch“ folgt am Handy dem Sparmodus und der Einstellung „Bewegung reduzieren“; am PC heißt Automatisch: aus.',
+            ruhigStand()
+          + seg('energieRuhigSeg', 'afu_ruhig', 'auto', [['auto', 'Automatisch'], ['an', 'Immer an'], ['aus', 'Immer aus']]))
       + einstKasten('Zwischenspeicher', 'Bei jedem neuen Stand des Trainers wird der Zwischenspeicher von selbst geleert (seit Stand 378). Hängt trotzdem etwas oder wird etwas veraltet angezeigt, hilft dieser Knopf. Verlauf, Lernfortschritt und Lernstand bleiben dabei erhalten.',
             '<button type="button" class="app-probe" onclick="clearCacheAndReload()"><i class="fas fa-broom"></i> Cache leeren</button>')
       + '</div>';
@@ -41910,9 +41932,10 @@ function soundSchnellMarkieren(){
         [['einstSoundAus', 'aus'], ['einstSoundNoetig', 'eigen']].forEach(([id, a]) => {
             const b = document.getElementById(id); if(!b) return;
             const an = art === a, st = b.style;
-            st.setProperty('background', an ? '#0a7f86' : '#e6f6f7', 'important');
-            st.setProperty('color', an ? '#ffffff' : '#0f2745', 'important');
-            st.setProperty('border-color', '#0a7f86', 'important');
+            const dunkel = document.body.classList.contains('dark');   // Stand 382: im Dunkeln kein helles Feld (Dietmar: keine weissen Flaechen)
+            st.setProperty('background', an ? '#0a7f86' : (dunkel ? 'rgba(255,255,255,.08)' : '#e6f6f7'), 'important');
+            st.setProperty('color', an ? '#ffffff' : (dunkel ? '#e8efff' : '#0f2745'), 'important');
+            st.setProperty('border-color', dunkel && !an ? 'rgba(255,255,255,.28)' : '#0a7f86', 'important');
             b.setAttribute('aria-pressed', an ? 'true' : 'false');
             b.querySelectorAll('.snd-haken').forEach(x => x.remove());
             if(an){ const h = document.createElement('i'); h.className = 'fas fa-check snd-haken'; h.style.marginLeft = '0.35rem'; b.appendChild(h); }
@@ -53491,7 +53514,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         html.pc-app body.dark #kartenSpiel .ks-themen button.on::after { color: #7dd3fc; }
         html.pc-app #kartenSpiel .ks-eins { color: #5b6b80; }
         html.pc-app #kartenSpiel .ks-einst { border-radius: 6px; border-color: #e1e7f0; background: #fff; }
-        html.pc-app body.dark #kartenSpiel .ks-einst { background: #1b2433; border-color: #2a3548; }
+        html.pc-app body.dark #kartenSpiel .ks-einst { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.16); }   /* Stand 382: Polar statt Graphit */
         html.pc-app #kartenSpiel .ks-startknopf { max-width: 420px; align-self: center; }
         html.pc-app body.dark #kartenSpiel .ks-eins, html.pc-app body.dark #kartenSpiel .ks-wahl { color: #aab8cc; }
         html.pc-app body.dark #kartenSpiel :is(.ks-eins b, .ks-wahl b, .ks-einst-kopf) { color: #e6ecf5; }
@@ -55541,6 +55564,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             }
         }catch(err){} });
     })();
+    // Stand 381: Schneeflocke in 3D (Filz-Optik, nach Dietmars Bild) statt des Font-Awesome-Zeichens am Einfrier-Knopf
+    const FLOCKE_SVG = '<svg class="ah-flocke" viewBox="-62 -62 124 124" aria-hidden="true"><defs><linearGradient id="ahFlG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" class="fl-m" stop-color="#ffffff"/><stop offset="1" stop-color="#cfe3f3"/></linearGradient></defs><path class="fl-tief" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95" transform="translate(1.4,1.9)"/><path class="fl-bild" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95"/><path class="fl-licht" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95"/></svg>';
     function maskottchen(art){
         if(maskottchenArt() === 'astro') return maskottchenAstro(art);
         const n = ++mkNr, k = 'mkK' + n, l = 'mkL' + n;
@@ -55640,7 +55665,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<h2 id="ahOffen">Fragen üben</h2>'
       +   '<div class="ah-wahl" id="ahWahl"><span class="w" id="ahWahlAnzahl"></span><span class="w" id="ahWahlTeil"></span><span class="w" id="ahWahlGelernt"></span>'
       +   '<button type="button" class="aendern" id="ahAendern"><i class="fas fa-sliders"></i> Ändern</button></div>'
-      +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '<button type="button" class="ah-frost" id="ahFrost" aria-label="Maja einfrieren oder auftauen" title="Maja einfrieren" onclick="event.stopPropagation(); appMajaFrost(localStorage.getItem(\'robo_frost\') !== \'1\')"><i class="fas fa-snowflake"></i></button></div>'
+      +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '<button type="button" class="ah-frost" id="ahFrost" aria-label="Maja einfrieren oder auftauen" title="Maja einfrieren" onclick="event.stopPropagation(); appMajaFrost(localStorage.getItem(\'robo_frost\') !== \'1\')">' + FLOCKE_SVG + '</button></div>'
       +   '<button type="button" class="ah-knopf" id="ahStart"><i class="fas fa-play"></i> <span id="ahStartText">Runde starten</span></button>'
       + '</div>'
       + '<div class="ah-karte ah-tag" id="ahTag"><div class="ah-ring" id="ahRing"></div>'
@@ -56213,7 +56238,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
               + [5, 10, 20, 25, 50, 75].map(z => '<button type="button" data-z="' + z + '"' + (tagesziel() === z ? ' class="an"' : '') + ' onclick="appTageszielSetzen(' + z + ')">' + z + '</button>').join('')
               + '</div>')
           + '<div class="nur-verspielt">'
-          + einstKasten('Funki, dein Helfer', 'Wie oft er auftaucht, Hallo sagt, Tipps gibt, Witze macht und mit dir feiert. Wenig ist wie bisher. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst.',
+          + einstKasten('Funki, dein Helfer', 'Wie oft er auftaucht, Hallo sagt, Tipps gibt, Witze macht und mit dir feiert. Wenig ist wie bisher. Bei Aus kommt er nur, wenn du ihn in der großen Karte antippst Am PC kommt sie von selbst nur, wenn du eine Minute lang nichts gemacht hast – solange du arbeitest: Maus drauf, und Maja zeigt ein Kunststück; Klick, und sie kommt mit einem Tipp.',
                 '<div class="app-seg" id="appFunkiSeg">'
               + [['viel', 'Viel'], ['an', 'Normal'], ['wenig', 'Wenig'], ['aus', 'Aus']].map(f => '<button type="button" data-f="' + f[0] + '"' + (helferRegler() === f[0] ? ' class="an"' : '')
                   + ' onclick="appFunkiSetzen(\'' + f[0] + '\')">' + f[1] + '</button>').join('')
@@ -56382,7 +56407,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  gelten weiter (an = Normal).
     // ================================================================
     function reglerListe(){ return ['viel', 'an', 'wenig', 'aus']; }
-    function reglerLies(k){ const v = lies(k, 'an'); return reglerListe().includes(v) ? v : 'an'; }
+    function reglerLies(k, std){ const v = lies(k, std || 'an'); return reglerListe().includes(v) ? v : (std || 'an'); }
+    // Stand 381, Dietmar: "Maja nervt oft am Desktop. Sie soll in der Hauptansicht erst bei Mouseover oder beim
+    // Anklicken kommen ... Sie darf gerne kommen, wenn man inaktiv ist. Wenn ich aktiv bin, die Maus bewege oder
+    // damit arbeite, soll sie nach der Regel kommen." Am PC mit Maus taucht Maja auf der Startseite darum nur
+    // noch von selbst auf, wenn eine Minute lang weder Maus noch Tastatur bewegt wurde. Solange man arbeitet:
+    // die Maus auf ihr loest ihre Kunststuecke aus, ein Klick auf sie holt sie mit Tipp heraus. In einer Runde
+    // und am Handy bleibt alles wie bisher.
+    const PC_RUHE_MS = 60000;
+    let pcAktiv = Date.now();
+    ['mousemove', 'mousedown', 'keydown', 'wheel'].forEach(ev => D.addEventListener(ev, () => { pcAktiv = Date.now(); }, { passive: true, capture: true }));
+    function pcMaus(){ try{ return H.classList.contains('pc-app') && !/AmateurfunkTrainerApp/.test(navigator.userAgent) && window.matchMedia && matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches; }catch(e){ return false; } }
+    function pcRuhe(){ return !pcMaus() || D.body.classList.contains('runde-laeuft') || Date.now() - pcAktiv >= PC_RUHE_MS; }
+    window.pcRuhe = pcRuhe;
     function helferRegler(){ return reglerLies('robo_tipps'); }
     // 27.10.2026, Dietmar: "Ich glaube, es ist besser, wenn Maja komplett bei Sachlich raus ist." Im Stil Sachlich spricht Funki/Maja nie
     const sachlichStill = () => document.documentElement.classList.contains('stil-sachlich');
@@ -56443,7 +56480,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         schreib('robo_tipp_nr', String(i));
         return TIPPS[i];
     }
-    function tippsAn(){ return lies('robo_tipps', 'an') !== 'aus' && lies('robo_frost', '') !== '1'; }   // eingefroren: kein Auftauchen von selbst
+    function tippsAn(){ return helferRegler() !== 'aus' && lies('robo_frost', '') !== '1' && pcRuhe(); }   // am PC nur, wenn gerade niemand arbeitet (Stand 381)   // eingefroren: kein Auftauchen von selbst
     // 27.10.2026, Dietmar: "Maja sollte man bei Verspielt freezen können ... nicht jeder mag das ständige Auftauchen in der Hauptansicht und in den Fragen."
     window.appMajaStimmeSetzen = v => { v = ['aus', 'wenig', 'an', 'viel'].includes(v) ? v : 'an'; if(window.appFunkiStimmeSetzen) window.appFunkiStimmeSetzen(v); else schreib('robo_stimme', v); };
     window.appMajaFrost = an => { schreib('robo_frost', an ? '1' : '0'); if(an) tu(funkiVerstummen); astroKlasse(); tu(einstNachziehen); };
@@ -58670,7 +58707,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!opt.probe && (ruhigGewuenscht() || robo.da || wirdVorgelesen() || (!roboDarf() && !rundeBesuchOk(Date.now())))) return false;
         astroUhren.forEach(clearTimeout); astroUhren = [];
         const e = zufall(ASTRO_SPRUECHE), W = window.innerWidth, z = zf(), links = Math.random() < 0.5;
-        const aw = Math.round(Math.min(W * 0.26, 104)), ah = Math.round(aw * 1.3);
+        const aw = Math.round(pcMaus() ? Math.min(W * 0.16, 230) : Math.min(W * 0.26, 104)), ah = Math.round(aw * 1.3);   // Stand 381: am PC gut doppelt so gross (Dietmar: "sehr klein am Desktop")
         const o = randOben(), u = randUnten();
         const cy = o + ah / 2 + Math.max(0, u - o - ah) * (roboDarf() ? 0.2 + Math.random() * 0.55 : 0.62 + Math.random() * 0.33);
         astroDa = true; astroProbe = !!opt.probe;
@@ -58682,7 +58719,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         astroEl.innerHTML = astroSVG();
         // Die Blase: neben dem Kopf, der Zipfel zeigt auf ihn
         astroBlase.innerHTML = '<div class="ab-kopf">Maja</div>' + e.t;
-        const bw = Math.min(230 * z, W - aw * 0.74 - 22);
+        const bw = Math.min((pcMaus() ? 320 : 230) * z, W - aw * 0.74 - 22);
         astroBlase.style.width = px(bw);
         astroBlase.style.visibility = 'hidden'; astroBlase.style.display = 'block';
         const bh = astroBlase.getBoundingClientRect().height;
@@ -64262,24 +64299,27 @@ html:not(.android-app).fs-bunt body.dark.runde-laeuft #bildZoomEbene img,
 html:not(.android-app).fs-bunt body.dark.runde-laeuft .lightbox-overlay img{background:#f1e5bf!important;border-color:#c5a04f!important;border-radius:10px}
 </style>
 <style id="polarFenster">
+/* Stand 382: auch in der App-Ansicht am PC (html.pc-app) - Dietmar: "in den Einstellungen 2 trifft man auf geschmacklos.
+   Hier wuerde ich mir am Desktop etwas anderes zumindest bei Polar wuenschen." */
 /* 21.10.2026 Dietmar: "Hier ist auch noch der Dark Mode Graphit vorhanden." (Fenster "Fragerunde abbrechen?")
    Alle Fenster (Modal) am PC im dunklen Polar-Stil: Farbverlauf wie Einstellungen/Info. Die Graphit-Grautöne kommen aus den
    --nacht-Variablen; sie werden innerhalb der Fenster auf Polar-Töne gesetzt, dadurch färbt sich auch alles Innere um. */
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){--nacht-tief:rgba(255,255,255,.06);--nacht-grund:rgba(255,255,255,.06);--nacht-flaeche:rgba(255,255,255,.07);--nacht-feld:rgba(255,255,255,.09);--nacht-kante:rgba(255,255,255,.16);--nacht-kante2:rgba(255,255,255,.26);--nacht-schrift:#e8efff;--nacht-leise:#b4c3e6;--nacht-hell:#ffffff;--darc-feld:rgba(255,255,255,.09);--darc-rahmen:rgba(255,255,255,.07);--card-bg:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--darc-blau:#5eead4;--darc-blau-hell:#99f6e4}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){background:rgba(3,6,18,.84)!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] > div:first-child:not(#q1):not(#q2){background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:24px!important;box-shadow:0 24px 70px rgba(0,0,0,.6)!important;overflow:hidden}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] > div:first-child > div:not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2) *{color:#05302a!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;color:#fff!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] h3 i:not(#q1):not(#q2){color:#7be3c9!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){--nacht-tief:rgba(255,255,255,.06);--nacht-grund:rgba(255,255,255,.06);--nacht-flaeche:rgba(255,255,255,.07);--nacht-feld:rgba(255,255,255,.09);--nacht-kante:rgba(255,255,255,.16);--nacht-kante2:rgba(255,255,255,.26);--nacht-schrift:#e8efff;--nacht-leise:#b4c3e6;--nacht-hell:#ffffff;--darc-feld:rgba(255,255,255,.09);--darc-rahmen:rgba(255,255,255,.07);--card-bg:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--darc-blau:#5eead4;--darc-blau-hell:#99f6e4}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){background:rgba(3,6,18,.84)!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] > div:first-child:not(#q1):not(#q2){background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:24px!important;box-shadow:0 24px 70px rgba(0,0,0,.6)!important;overflow:hidden}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] > div:first-child > div:not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2) *{color:#05302a!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;color:#fff!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] h3 i:not(#q1):not(#q2){color:#7be3c9!important}
 /* 27.10.2026 Dietmar zur Auswertung: "Das muss noch in Polar angepasst werden." Im Stil Polar (body.graphit) faerbte die
    Graphit-Regel fuer .exam-info, #masteryDisplay und .history-col auch die Kaesten INNERHALB der Fenster grau (#1b2027) -
    die Pruefungsreife links in der Auswertung stand als grauer Block im blauen Fenster. In Fenstern bekommen sie den
    Polar-Ton wie die Kaesten rechts: halbdurchsichtiges Weiss, feiner heller Rand, runde Ecken. */
-html:not(#zz):not(.android-app) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
+html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
+html:not(#zz).pc-app body:not(#zz2).dark #funkLogbuch{background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important}
 </style>
 <style id="polarRest">
 /* 21.10.2026 Dietmar: "Hier ist auch noch der Graphit vorhanden" (Ziel-Fenster) und "dieser Scrollbalken hat einen weißen Hintergrund" */
@@ -64373,6 +64413,15 @@ html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKa
 #appHeute .ah-frost { display: none; }
 html.android-app.stil-verspielt #appHeute .ah-frost { display: flex; position: absolute; left: -6px; bottom: -4px; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; border: 0; font-size: 13px; cursor: pointer; background: rgba(255,255,255,.88); color: #1c6fb8; box-shadow: 0 2px 6px rgba(0,0,0,.25); z-index: 3; }
 html.android-app.stil-verspielt #appHeute .ah-frost.an { background: #1c6fb8; color: #fff; }
+/* Stand 381: die Schneeflocke in 3D */
+html.android-app.stil-verspielt #appHeute .ah-frost { width: 56px; height: 56px; background: transparent; box-shadow: none; border-radius: 0; left: -14px; bottom: -12px; padding: 0; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)); transition: transform .2s, filter .3s; }
+html.android-app.stil-verspielt #appHeute .ah-frost:hover { transform: scale(1.12) rotate(12deg); }
+html.android-app.stil-verspielt #appHeute .ah-frost.an { background: transparent; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)) drop-shadow(0 0 7px rgba(190,240,255,.9)); }
+#appHeute .ah-frost .ah-flocke { width: 100%; height: 100%; display: block; }
+#appHeute .ah-frost .ah-flocke path { fill: none; stroke-width: 7.5; stroke-linecap: butt; stroke-linejoin: miter; }
+#appHeute .ah-frost .ah-flocke .fl-tief { stroke: #b7cfe3; }
+#appHeute .ah-frost .ah-flocke .fl-bild { stroke: url(#ahFlG); }
+#appHeute .ah-frost .ah-flocke .fl-licht { stroke: #fff; stroke-opacity: .7; stroke-width: 2.2; }
 html.maja-frost .mk, html.maja-frost .mk *, html.maja-frost #ahMk, html.maja-frost #ahMk * { animation: none !important; transition: none !important; }
 html.maja-frost .mk .mk-wellen, html.maja-frost .mk .mk-puff { display: none !important; }
 </style>
@@ -64550,6 +64599,21 @@ body.dark #afuAuswahl .aw-opt.an{background:rgba(95,211,196,.16);color:#5fd3c4}
 body.dark #afuAuswahl .aw-opt i{color:#5fd3c4}
 html.android-app:is(.stil-verspielt,.stil-sachlich:not(.pc-app)) body.dark #afuAuswahl .aw-blatt{background:linear-gradient(160deg,#1e3a86,#0f1f52 60%,#0a1538);border-color:rgba(255,255,255,.18)}
 @media (prefers-reduced-motion: reduce){#afuAuswahl,#afuAuswahl .aw-blatt{transition:none}}
+/* Stand 382: am PC mit Maus (App-Ansicht ueber den Link) sitzt die Liste als Aufklappmenue direkt am Feld statt als Blatt unten (Dietmar: "Am Desktop kann man das definitiv besser loesen.") */
+#afuAuswahl.aw-pc{display:block;background:transparent;align-items:initial;justify-content:initial}
+#afuAuswahl.aw-pc .aw-blatt{position:fixed;width:auto;min-width:200px;max-width:min(420px,calc(100vw - 24px));max-height:min(340px,calc(100vh - 24px));border-radius:14px;padding:6px 0;box-shadow:0 14px 40px rgba(0,0,0,.4),0 0 0 1px rgba(0,0,0,.08);transform:translateY(-6px) scale(.98);transform-origin:top left}
+#afuAuswahl.aw-pc.oben .aw-blatt{transform-origin:bottom left}
+#afuAuswahl.aw-pc.da .aw-blatt{transform:none}
+#afuAuswahl.aw-pc .aw-griff{display:none}
+#afuAuswahl.aw-pc .aw-titel{padding:6px 14px 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+#afuAuswahl.aw-pc .aw-liste{padding:0 6px 2px}
+#afuAuswahl.aw-pc .aw-opt{font-size:.93rem;padding:8px 12px;border-radius:9px;gap:10px}
+#afuAuswahl.aw-pc .aw-opt:hover{background:rgba(20,33,61,.08)}
+body.dark #afuAuswahl.aw-pc .aw-opt:hover{background:rgba(255,255,255,.09)}
+body.dark #afuAuswahl.aw-pc .aw-blatt{border-bottom:1px solid #2b5471}
+#afuAuswahl.aw-pc .aw-opt i{width:18px}
+#afuAuswahl.aw-pc .aw-kal,#afuAuswahl.aw-pc .aw-zeit{min-width:300px}
+
 /* Ruhiger Modus (Reiter Energie): keine Bewegung, nur Standbilder */
 html.ruhig *, html.ruhig *::before, html.ruhig *::after{animation:none !important;transition:none !important}
 /* Hinweis beim Start, wenn der Sparmodus an ist */
@@ -64583,6 +64647,24 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
     var H = document.documentElement;
     function zustaendig(){ return H.classList.contains('android-app') || (window.matchMedia && matchMedia('(pointer: coarse)').matches); }
     var offen = null;
+    // Stand 382: am PC mit Maus als Aufklappmenue am Feld statt als Blatt unten
+    function pcMaus(){ try{ return H.classList.contains('pc-app') && !/AmateurfunkTrainerApp/.test(navigator.userAgent) && matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches; }catch(e){ return false; } }
+    function verankern(wrap, el, minBreite){
+        if(!pcMaus()) return;
+        wrap.classList.add('aw-pc');
+        // Alles in CSS-Punkten des gezoomten Dokuments (html.style.zoom): Bildschirmwerte durch den Zoom teilen
+        var z = parseFloat(H.style.zoom) > 0 ? parseFloat(H.style.zoom) : 1;
+        var b = wrap.querySelector('.aw-blatt'), q = el.getBoundingClientRect(), W = window.innerWidth / z, Hh = window.innerHeight / z;
+        var r = { left: q.left / z, top: q.top / z, bottom: q.bottom / z, width: q.width / z };
+        b.style.minWidth = Math.max(minBreite || 0, Math.round(r.width)) + 'px';
+        b.style.visibility = 'hidden'; b.style.left = '0px'; b.style.top = '0px';
+        var bw = b.offsetWidth, bh = b.offsetHeight;
+        var unten = Hh - r.bottom - 8, oben = r.top - 8, nachOben = unten < bh && oben > unten;
+        if(nachOben){ b.style.maxHeight = Math.min(340, oben) + 'px'; bh = Math.min(bh, oben); wrap.classList.add('oben'); b.style.top = Math.round(Math.max(8, r.top - 6 - bh)) + 'px'; }
+        else { b.style.maxHeight = Math.min(340, unten) + 'px'; b.style.top = Math.round(r.bottom + 6) + 'px'; }
+        var links = Math.round(r.left); if(links + bw > W - 12) links = Math.max(12, Math.round(W - 12 - bw));
+        b.style.left = links + 'px'; b.style.visibility = '';
+    }
     function schliessen(){ if(!offen) return; var e = offen; offen = null; e.classList.remove('da'); setTimeout(function(){ e.remove(); }, 200); }
     function titelFuer(sel){
         try{
@@ -64615,8 +64697,8 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
             if(b){ var i = +b.dataset.i; if(sel.selectedIndex !== i){ sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } schliessen(); return; }
             if(ev.target === wrap) schliessen();
         });
-        document.body.appendChild(wrap); offen = wrap;
-        requestAnimationFrame(function(){ wrap.classList.add('da'); var an = wrap.querySelector('.aw-opt.an'); if(an) an.scrollIntoView({ block: 'center' }); });
+        document.body.appendChild(wrap); offen = wrap; verankern(wrap, sel, 200);
+        requestAnimationFrame(function(){ wrap.classList.add('da'); var an = wrap.querySelector('.aw-opt.an'), li = wrap.querySelector('.aw-liste'); if(an && li) li.scrollTop = Math.max(0, an.offsetTop - li.clientHeight / 2 + an.offsetHeight / 2); });
     }
     function abfangen(ev){
         if(!zustaendig()) return;
@@ -64633,18 +64715,18 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
 
     // Datum und Uhrzeit (in der App und am Handy): eigenes Blatt statt des Android-Fensters
     var MON = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-    function blatt(titel, innen){
+    function blatt(titel, innen, anker){
         schliessen();
         var wrap = document.createElement('div'); wrap.id = 'afuAuswahl';
         wrap.innerHTML = '<div class="aw-blatt"><div class="aw-griff"></div>' + (titel ? '<div class="aw-titel">' + titel.replace(/</g, '&lt;') + '</div>' : '') + innen + '</div>';
         wrap.addEventListener('click', function(ev){ if(ev.target === wrap) schliessen(); });
-        document.body.appendChild(wrap); offen = wrap; requestAnimationFrame(function(){ wrap.classList.add('da'); });
+        document.body.appendChild(wrap); offen = wrap; if(anker) verankern(wrap, anker, 300); requestAnimationFrame(function(){ wrap.classList.add('da'); });
         return wrap;
     }
     function datumBlatt(inp){
         var heute = new Date(); var v = inp.value && /^\d{4}-\d{2}-\d{2}$/.test(inp.value) ? inp.value.split('-').map(Number) : null;
         var jahr = v ? v[0] : heute.getFullYear(), monat = v ? v[1] - 1 : heute.getMonth(), tag = v ? v[2] : heute.getDate();
-        var w = blatt(titelFuer(inp) || 'Datum', '<div class="aw-kal"><div class="aw-kal-kopf"><button type="button" data-m="-1">&#8249;</button><span class="aw-kal-mon"></span><button type="button" data-m="1">&#8250;</button></div><div class="aw-kal-grid"></div></div><div class="aw-fuss"><button type="button" class="ab">Abbrechen</button><button type="button" class="ok">Übernehmen</button></div>');
+        var w = blatt(titelFuer(inp) || 'Datum', '<div class="aw-kal"><div class="aw-kal-kopf"><button type="button" data-m="-1">&#8249;</button><span class="aw-kal-mon"></span><button type="button" data-m="1">&#8250;</button></div><div class="aw-kal-grid"></div></div><div class="aw-fuss"><button type="button" class="ab">Abbrechen</button><button type="button" class="ok">Übernehmen</button></div>', inp);
         function zeichnen(){
             w.querySelector('.aw-kal-mon').textContent = MON[monat] + ' ' + jahr;
             var g = w.querySelector('.aw-kal-grid'), h = '';
@@ -64672,7 +64754,7 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
         var hs = '', ms = '';
         for(var i = 0; i < 24; i++) hs += '<button type="button" data-h="' + i + '"' + (i === st ? ' class="an"' : '') + '>' + String(i).padStart(2, '0') + '</button>';
         for(var j = 0; j < 60; j += 5) ms += '<button type="button" data-mi="' + j + '"' + (j === mi ? ' class="an"' : '') + '>' + String(j).padStart(2, '0') + '</button>';
-        var w = blatt(titelFuer(inp) || 'Uhrzeit', '<div class="aw-zeit"><div class="sp">' + hs + '</div><div class="sp">' + ms + '</div></div><div class="aw-fuss"><button type="button" class="ab">Abbrechen</button><button type="button" class="ok">Übernehmen</button></div>');
+        var w = blatt(titelFuer(inp) || 'Uhrzeit', '<div class="aw-zeit"><div class="sp">' + hs + '</div><div class="sp">' + ms + '</div></div><div class="aw-fuss"><button type="button" class="ab">Abbrechen</button><button type="button" class="ok">Übernehmen</button></div>', inp);
         w.addEventListener('click', function(ev){
             var b = ev.target.closest('button'); if(!b) return;
             if(b.dataset.h !== undefined){ st = +b.dataset.h; b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('an', x === b); }); }
