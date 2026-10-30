@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand 390 (30.10.2026): Android-Sicherung ueber Google, bis Android 11.
+     Nur die interne Lernstand-Kopie - keine Folien, Stimmen oder Zwischenspeicher. -->
+<full-backup-content>
+    <include domain="file" path="lernstand/" />
+</full-backup-content>

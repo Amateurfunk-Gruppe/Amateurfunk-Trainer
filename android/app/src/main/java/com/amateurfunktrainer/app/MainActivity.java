@@ -590,6 +590,72 @@ public class MainActivity extends Activity {
                 haupt.post(() -> Toast.makeText(MainActivity.this, "Speichern nicht möglich.", Toast.LENGTH_LONG).show());
             }
         }
+
+        // ============================================================
+        //  TAEGLICHE SICHERUNG IN EINE DATEI              (Stand 390)
+        //  Dietmar, 30.10.2026: "wenn die App den Lernstand jeden Tag
+        //  einmal speichert, dann muss er eine alte Datei ueberschreiben
+        //  und nicht jedes Mal eine neue Datei anlegen" - "3 Monate
+        //  taeglich ... ueber 90 Eintraege". Und: "Vielleicht kann man
+        //  den Lernstand auch intern in der App ablegen."
+        //  Darum zwei Orte, beide werden UEBERSCHRIEBEN:
+        //   1. intern: files/lernstand/sicherung.json - ueberlebt Updates
+        //      und "Cache leeren"; ueber die Android-Sicherung (Google)
+        //      kommt sie nach einer Neuinstallation zurueck.
+        //   2. Downloads/Amateurfunk-Trainer/Lernstand-Sicherung.json -
+        //      ueberlebt auch das Deinstallieren. Die Adresse der Datei
+        //      merkt sich die App; nach einer Neuinstallation darf Android
+        //      die alte nicht mehr ueberschreiben, dann entsteht einmalig
+        //      eine neue, die ab da ueberschrieben wird.
+        //  Ohne Meldung - das geschieht still im Hintergrund.
+        // ============================================================
+        @JavascriptInterface public boolean internSchreiben(String text) {
+            try {
+                File ordner = new File(getFilesDir(), "lernstand");
+                if (!ordner.exists()) ordner.mkdirs();
+                File neu = new File(ordner, "sicherung.neu"), ziel = new File(ordner, "sicherung.json");
+                try (OutputStream out = new FileOutputStream(neu)) { out.write(text.getBytes("UTF-8")); }
+                return neu.renameTo(ziel) || (ziel.delete() && neu.renameTo(ziel));   // erst ganz schreiben, dann tauschen
+            } catch (Exception e) { return false; }
+        }
+        @JavascriptInterface public String internLesen() {
+            try {
+                File ziel = new File(new File(getFilesDir(), "lernstand"), "sicherung.json");
+                if (!ziel.exists()) return "";
+                byte[] b = new byte[(int) ziel.length()];
+                try (java.io.FileInputStream in = new java.io.FileInputStream(ziel)) { int n = 0; while (n < b.length) { int r = in.read(b, n, b.length - n); if (r < 0) break; n += r; } }
+                return new String(b, "UTF-8");
+            } catch (Exception e) { return ""; }
+        }
+        @JavascriptInterface public String dateiSchreiben(String text) {
+            final String name = "Lernstand-Sicherung.json";
+            try {
+                byte[] daten = text.getBytes("UTF-8");
+                android.content.SharedPreferences sp = getSharedPreferences("trainer", MODE_PRIVATE);
+                if (Build.VERSION.SDK_INT >= 29) {
+                    String alt = sp.getString("sicherung_uri", "");
+                    if (!alt.isEmpty()) {
+                        try (OutputStream out = getContentResolver().openOutputStream(Uri.parse(alt), "wt")) {
+                            if (out != null) { out.write(daten); return "ok"; }
+                        } catch (Exception e) { /* geloescht oder nicht mehr unsere - neu anlegen */ }
+                    }
+                    ContentValues v = new ContentValues();
+                    v.put(MediaStore.Downloads.DISPLAY_NAME, name);
+                    v.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                    v.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Amateurfunk-Trainer");
+                    Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                    if (u == null) return "fehler";
+                    try (OutputStream out = getContentResolver().openOutputStream(u)) { out.write(daten); }
+                    sp.edit().putString("sicherung_uri", u.toString()).apply();
+                    return "neu";
+                } else {
+                    File ordner = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Amateurfunk-Trainer");
+                    if (!ordner.exists()) ordner.mkdirs();
+                    try (OutputStream out = new FileOutputStream(new File(ordner, name))) { out.write(daten); }
+                    return "ok";
+                }
+            } catch (Exception e) { return "fehler"; }
+        }
     }
 
     private static String endungFuer(String mime) {

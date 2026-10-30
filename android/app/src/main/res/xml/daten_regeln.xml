@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand 390 (30.10.2026): Android-Sicherung ueber Google und Umzug aufs neue Handy, ab Android 12.
+     Nur die interne Lernstand-Kopie - keine Folien, Stimmen oder Zwischenspeicher. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="lernstand/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="lernstand/" />
+    </device-transfer>
+</data-extraction-rules>

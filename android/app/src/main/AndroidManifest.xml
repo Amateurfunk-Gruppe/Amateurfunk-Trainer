@@ -28,7 +28,9 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/netz"
-        android:allowBackup="false"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/sicherung_regeln"
+        android:dataExtractionRules="@xml/daten_regeln"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
