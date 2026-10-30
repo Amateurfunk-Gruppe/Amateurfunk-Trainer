@@ -24861,7 +24861,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 385, datum: '29.10.2026' };
+const TRAINER_STAND = { nr: 386, datum: '30.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -33803,6 +33803,8 @@ const EINST_REITER = [
     // 25.10.2026 Dietmar: "Sounds moechte ich rechts neben Anpassen."
     // 21.10.2026 Dietmar: "so vieles mit Sound ... einen extra Reiter mit Sounds, damit die Benutzer gleich sehen, wo man das abschalten kann."
     { id:'sounds',    name:'Sounds',    symbol:'fa-volume-high' },
+    // Stand 386: Energie direkt nach Sounds - Dietmar: "die ist fuer mich schon ziemlich wichtig und gehoert an den Anfang" / "rechts neben Sound"
+    { id:'energie',   name:'Energie',   symbol:'fa-battery-half' },
     // 27.10.2026 Dietmar: "Der Beamer Modus, Bild vergroessern und einen Beamer verwenden, moechte ich unter
     // Einstellungen als eigenen Reiter dazu haben. Ich habe ihn gesucht und nicht gefunden."
     { id:'beamer',    name:'Beamer',    symbol:'fa-display' },
@@ -33836,7 +33838,6 @@ const EINST_REITER = [
     // Energie (29.10.2026). Dietmar: "mein Handy laeuft meist auf Energiesparmodus ... wenn es das Lacken
     // anfaengt" und "Dann sollten wir das in einem extra Reiter aufnehmen" - "Energie". Alles, was mit Tempo
     // und Akku zu tun hat: Sparmodus-Automatik, ruhiger Modus, Hinweis, Zwischenspeicher.
-    { id:'energie',   name:'Energie',   symbol:'fa-battery-half' },
     { id:'update',    name:'Update',    symbol:'fa-cloud-arrow-down' },
     { id:'wartung',   name:'Wartung',   symbol:'fa-screwdriver-wrench' }
 ];
@@ -63239,6 +63240,14 @@ body:not(.dark) .swp.s .swp-chip { background:#fff !important; }
 #lsFenster input:focus{outline:none;border-color:#3D6BF2;box-shadow:0 0 0 4px rgba(61,107,242,.15);background:#fff;}
 #lsFenster input[type=password]{letter-spacing:.35em;}
 #lsFenster .ls-tipp{font-size:.77rem;color:#5b6b80;margin-top:.8rem;line-height:1.5;}
+#lsFenster .ls-pin-erklaert{font-size:.82rem;line-height:1.5;margin:.2rem 0 .9rem;padding:.55rem .75rem;border-radius:10px;background:#fff6e5;border:1px solid #ffd9a0;color:#5a3d0a;}
+#lsFenster .ls-pin-erklaert i{color:#e08a00;margin-right:4px;}
+#lsFenster .ls-online{font-size:.82rem;line-height:1.5;margin:0 0 .9rem;padding:.55rem .75rem;border-radius:10px;background:#eaf6ff;border:1px solid #bfe0f7;color:#0f2745;}
+#lsFenster .ls-online i{color:#1c6fb8;margin-right:4px;}
+#lsFenster .ls-online a{color:#1c6fb8;font-weight:700;word-break:break-all;}
+body.dark #lsFenster .ls-online{background:rgba(95,211,196,.10);border-color:rgba(95,211,196,.3);color:#dce9f2;}
+body.dark #lsFenster .ls-online a{color:#5fd3c4;}
+body.dark #lsFenster .ls-pin-erklaert{background:rgba(255,181,71,.12);border-color:rgba(255,181,71,.35);color:#ffe2b0;}
 #lsFenster .ls-fehler{color:#d1343b;font-size:.84rem;font-weight:600;min-height:1.2em;margin-top:.55rem;}
 #lsFenster .ls-knoepfe{display:flex;flex-direction:column;gap:9px;margin-top:.9rem;}
 #lsFenster .ls-knopf{min-height:48px;border-radius:999px !important;border:none;color:#fff;font:inherit;font-size:.98rem;font-weight:800;cursor:pointer;padding:.55rem 1.1rem;
@@ -63298,10 +63307,11 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
 //  Aenderungen hoch. Hat sich auf BEIDEN Seiten etwas getan, wird
 //  gefragt, welcher Stand gilt - nichts wird still ueberschrieben.
 //
-//  WO ES ZU SEHEN IST: nur ueber https (also amateurfunk-trainer.com),
-//  nicht am eigenen Trainer-PC und nicht in der Android-App - dort
-//  waere "auf dem Server" ja wieder dasselbe Geraet. Zum Testen:
-//  ?lernstand=1 an die Adresse haengen.
+//  WO ES ZU SEHEN IST: ueber https (amateurfunk-trainer.com) - und seit
+//  Stand 386 auch in der Android-App und im heruntergeladenen Trainer
+//  (127.0.0.1): die nehmen den Lernstand-Worker in der Cloud, sobald er
+//  antwortet (AFU_LS_BASIS). Vorher war es dort aus, weil "auf dem
+//  Server" dasselbe Geraet gewesen waere. Zum Testen: ?lernstand=1.
 // ================================================================
 (function(){
     'use strict';
@@ -63318,11 +63328,13 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
 
     function verfuegbar(){
         try{
-            // Die echte Android-App (nicht der Handy-Browser, der nur so aussieht)
-            if(/AmateurfunkTrainerApp/.test(navigator.userAgent || '')) return false;
             // Cloudflare-Fassung ohne Server.js: erst mit dem Lernstand-Worker (16.10.2026)
             if(window.AFU_CLOUD && !window.AFU_CLOUD_LERNSTAND) return false;
             if(/[?&]lernstand=1\b/.test(location.search)) return true;
+            // Stand 386: Android-App und heruntergeladener Trainer (127.0.0.1) nehmen den Lernstand-Worker in der
+            // Cloud - sobald er geantwortet hat (siehe start()). Dietmar: "Haben wir das mit der PIN auch in der
+            // Android-App?" Vorher war es dort aus, weil "auf dem Server" dasselbe Geraet gewesen waere.
+            if(window.AFU_LS_LOKAL_OK) return true;
             return location.protocol === 'https:';
         }catch(e){ return false; }
     }
@@ -63544,13 +63556,13 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         zeigen(
             '<div class="ls-reiter"><button type="button" class="' + (neu ? 'an' : '') + '" onclick="lsReiter(\'neu\')">Neu anlegen</button>'
           + '<button type="button" class="' + (neu ? '' : 'an') + '" onclick="lsReiter(\'an\')">Anmelden</button></div>'
-          + '<label for="lsName">Name</label><input id="lsName" autocomplete="username" maxlength="24" placeholder="Spitzname oder Rufzeichen">'
-          + '<label for="lsPin">PIN (4 bis 6 Ziffern)</label><input id="lsPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="' + (neu ? 'new-password' : 'current-password') + '">'
+          + '<label for="lsName">Name</label><input id="lsName" autocomplete="username" maxlength="24" placeholder="' + (neu ? 'z. B. Markus75 oder DL1ABC' : 'Dein Name von der Anmeldung') + '">'
+          + '<label for="lsPin">' + (neu ? 'PIN ausdenken (4 bis 6 Ziffern)' : 'PIN (4 bis 6 Ziffern)') + '</label><input id="lsPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="' + (neu ? 'new-password' : 'current-password') + '">'
           + (neu ? '<label for="lsPin2">PIN wiederholen</label><input id="lsPin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password">' : '')
           + '<div class="ls-fehler" id="lsFehler"></div>'
           + '<div class="ls-knoepfe"><button type="button" class="ls-knopf" id="lsLos" onclick="lsLos()">' + (neu ? '<i class="fas fa-rocket"></i> Anlegen und mitnehmen' : '<i class="fas fa-right-to-bracket"></i> Anmelden') + '</button></div>'
           + '<div class="ls-tipp">' + (neu
-                ? '<b>Kein voller Name nötig</b> – ein Spitzname oder dein Rufzeichen reicht. Keine E-Mail, kein Passwort. <b>PIN gut merken:</b> Vergessen lässt sie sich nicht zurückholen.'
+                ? '<b>Die PIN denkst du dir selbst aus</b> – niemand vergibt sie, niemand schickt sie dir. Sie ist dein Schlüssel: Nur mit Name und PIN kommt man an deinen Lernstand. Also nicht 0000 oder 1234, sondern eine Zahl, die nur du dir merkst. <b>Gut merken:</b> Vergessen lässt sie sich nicht zurückholen.<br><b>Beim Namen:</b> Peter oder Markus sind schnell vergeben – nimm Markus75, Klaus-Peter oder dein Rufzeichen. Keine E-Mail nötig.'
                 : 'Name und PIN wie beim Anlegen. Nach 5 falschen PINs ist der Name eine Weile gesperrt.')
           + '<br>Mit geht der Lernstand von <b>' + esc(platzName()) + '</b>.</div>' + datenschutz(),
             neu ? { titel: 'Name und PIN anlegen', unter: 'Einmal anlegen – und dein Lernstand ist auf jedem Gerät dabei.', kicker: 'IN 10 SEKUNDEN', pose: 'freut' }
@@ -63817,13 +63829,17 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
           + '<span class="ls-chip c2"><i class="fas fa-laptop"></i> PC &amp; Tablet</span>'
           + '<span class="ls-chip c3"><i class="fas fa-lock"></i> ohne E-Mail</span></div>'
           + '<p>Leg dir einen <b>Namen und eine PIN</b> an – dann ist dein Lernstand auf jedem Gerät da, und du lernst weiter, wo du aufgehört hast.</p>'
+          // 30.10.2026, Dietmar: "mich schreiben jetzt oefters Benutzer an und die fragen mich nach der PIN" - die PIN denkt man sich selbst aus
+          + '<p class="ls-pin-erklaert"><i class="fas fa-key"></i> <b>Beides denkst du dir selbst aus.</b> Niemand schickt dir eine PIN – sie ist dein eigener Schlüssel, damit nur du an deinen Lernstand kommst.</p>'
+          // 30.10.2026, Dietmar: "dass es den Trainer auch online gibt und man damit z. B. am Desktop oder am Tablet arbeiten kann"
+          + (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '<p class="ls-online"><i class="fas fa-globe"></i> <b>Den Trainer gibt es auch online:</b> <a href="https://trainer.amateurfunk-trainer.com" target="_blank" rel="noopener">trainer.amateurfunk-trainer.com</a> – am PC, Laptop oder Tablet im Browser, ohne Installation. Mit Name und PIN lernst du dort genau da weiter, wo du hier aufgehört hast.</p>' : '')
           + '<div class="ls-knoepfe">'
           + '<button type="button" class="ls-knopf" onclick="lsReiter(\'neu\')"><i class="fas fa-user-plus"></i> Name und PIN anlegen</button>'
           + '<button type="button" class="ls-knopf leise" onclick="lsReiter(\'an\')"><i class="fas fa-right-to-bracket"></i> Ich habe schon Name und PIN</button>'
           + '<button type="button" class="ls-knopf leise" onclick="lsOhne()">Ohne Anmeldung lernen</button></div>'
           + '<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:.8rem;margin-top:.8rem;cursor:pointer">'
           + '<input type="checkbox" id="lsNichtFragen" style="width:auto;min-height:0;margin:0"> Nicht mehr fragen</label>'
-          + '<div class="ls-tipp">Ohne Anmeldung bleibt dein Lernstand nur in diesem Browser. Mitnehmen kannst du ihn später jederzeit unter <b>Lernstand</b>.</div>'
+          + '<div class="ls-tipp">Ohne Anmeldung bleibt dein Lernstand nur ' + (/AmateurfunkTrainerApp/.test(navigator.userAgent || '') ? 'in dieser App auf diesem Handy' : 'in diesem Browser') + '. Mitnehmen kannst du ihn später jederzeit unter <b>Lernstand</b>.</div>'
           + datenschutz(),
             { titel: 'Dein Lernstand – überall dabei!', unter: 'Am Handy anfangen, am PC weiterlernen.', kicker: 'NEU · KOSTENLOS', pose: 'winkt' });
     }
@@ -63848,6 +63864,18 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         // Cloud-Fassung: erst nachsehen, ob der Lernstand-Worker antwortet (17.10.2026)
         if(window.AFU_CLOUD && !window.AFU_CLOUD_LERNSTAND && window.afuLsPruefung){
             window.afuLsPruefung.then(function(da){ if(da) start(); });
+            return;
+        }
+        // Stand 386: lokal (App, eigener Trainer-PC) erst beim Cloud-Worker nachfragen, ob er da ist
+        if(!window.AFU_CLOUD && !window.AFU_LS_LOKAL_OK && !window.AFU_LS_LOKAL_GEPRUEFT && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]lernstand=1\b/.test(location.search)){
+            window.AFU_LS_LOKAL_GEPRUEFT = true;
+            var basis = 'https://trainer.amateurfunk-trainer.com';
+            try{
+                fetch(basis + '/api/lernstand/status', { cache: 'no-store' })
+                    .then(function(r){ return r.ok ? r.json() : null; })
+                    .then(function(j){ if(j && j.ok && j.dienst === 'afu-lernstand'){ window.AFU_LS_BASIS = basis; window.AFU_LS_LOKAL_OK = true; start(); } })
+                    .catch(function(){});
+            }catch(e){}
             return;
         }
         if(!verfuegbar()) return;
@@ -64432,8 +64460,15 @@ html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKa
 html.android-app.stil-verspielt #appHeute .ah-frost { display: flex; position: absolute; left: -6px; bottom: -4px; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; border: 0; font-size: 13px; cursor: pointer; background: rgba(255,255,255,.88); color: #1c6fb8; box-shadow: 0 2px 6px rgba(0,0,0,.25); z-index: 3; }
 html.android-app.stil-verspielt #appHeute .ah-frost.an { background: #1c6fb8; color: #fff; }
 /* Stand 381: die Schneeflocke in 3D */
-html.android-app.stil-verspielt #appHeute .ah-frost { width: 56px; height: 56px; background: transparent; box-shadow: none; border-radius: 0; left: -14px; bottom: -12px; padding: 0; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)); transition: transform .2s, filter .3s; }
-html.android-app.stil-verspielt #appHeute .ah-frost:hover { transform: scale(1.12) rotate(12deg); }
+html.android-app.stil-verspielt #appHeute .ah-frost { width: 56px; height: 56px; background: transparent; box-shadow: none; border-radius: 0; left: -14px; bottom: -12px; padding: 0; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)); transition: filter .3s; transform: none !important; }
+/* Stand 386: am Handy ist Maja in der Karte nur gut 90 Punkte breit - dort die Flocke klein und links unten NEBEN ihr,
+   nicht ueber ihr (Dietmar: "Wenn ich da drauf klicke, loest sich Maja in Luft auf ... Ueberlagerung"). Kippen nur mit Maus
+   (hover:hover), nie bei Beruehrung - am Handy blieb der gekippte Zustand haengen. Kein eckiger Tipp-Rahmen. */
+html.android-app:not(.pc-app).stil-verspielt #appHeute .ah-frost { width: 34px; height: 34px; left: -10px; bottom: -6px; }
+html.android-app.stil-verspielt #appHeute .ah-frost { outline: none; -webkit-tap-highlight-color: transparent; }
+html.android-app.stil-verspielt #appHeute .ah-frost:focus { outline: none; }
+/* Dietmar: "die Schneeflocke darf sich auf keinen Fall drehen" - mit Maus nur ein leichtes Aufhellen, keine Bewegung */
+@media (hover: hover) and (pointer: fine) { html.android-app.stil-verspielt #appHeute .ah-frost:hover { filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)) brightness(1.08); } }
 html.android-app.stil-verspielt #appHeute .ah-frost.an { background: transparent; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)) drop-shadow(0 0 7px rgba(190,240,255,.9)); }
 #appHeute .ah-frost .ah-flocke { width: 100%; height: 100%; display: block; }
 #appHeute .ah-frost .ah-flocke path { fill: none; stroke-width: 7.5; stroke-linecap: butt; stroke-linejoin: miter; }
