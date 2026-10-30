@@ -23,10 +23,30 @@
         }
         function einspielen(s, slot){
             var weg = [], i, k;
+            // Stand 390: Punkte, Serie, Uebungszeit und Pruefungsstufe gehen beim Einspielen nie verloren -
+            // es gilt je Wert der groessere (Dietmar verlor so 2000 XP und seine Serie).
+            var behalten = {};
+            // ... ausser der neue Stand ist ein Zuruecksetzen (neuerer Neustart-Stempel)
+            var nNeu = +((s && s.schluessel && s.schluessel.amateurfunk_neustart) || 0), nAlt = +(localStorage.getItem('amateurfunk_neustart_' + slot) || 0);
+            if(!(nNeu > nAlt)) ['amateurfunk_xp_', 'amateurfunk_tagesfragen_', 'amateurfunk_uebungszeit_', 'amateurfunk_legende_'].forEach(function(b){
+                var v = localStorage.getItem(b + slot); if(v !== null) behalten[b] = v; });
             for(i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if(k && gehoertDazu(k, slot)) weg.push(k); }
             weg.forEach(function(k){ localStorage.removeItem(k); });
             var sch = (s && s.schluessel) || {};
             Object.keys(sch).forEach(function(b){ if(typeof sch[b] === 'string') localStorage.setItem(b + '_' + slot, sch[b]); });
+            Object.keys(behalten).forEach(function(b){
+                try{
+                    var neu = localStorage.getItem(b + slot), alt = behalten[b];
+                    if(neu === null){ localStorage.setItem(b + slot, alt); return; }
+                    if(b === 'amateurfunk_xp_'){ if((parseInt(alt, 10) || 0) > (parseInt(neu, 10) || 0)) localStorage.setItem(b + slot, alt); return; }
+                    var a = JSON.parse(alt) || {}, n = JSON.parse(neu) || {};
+                    Object.keys(a).forEach(function(t){
+                        if(b === 'amateurfunk_legende_'){ if(n[t] === undefined) n[t] = a[t]; return; }
+                        var va = Number(a[t]); if(isFinite(va) && !(Number(n[t]) >= va)) n[t] = a[t];
+                    });
+                    localStorage.setItem(b + slot, JSON.stringify(n));
+                }catch(e){}
+            });
             var alle = null;
             try{ alle = JSON.parse(localStorage.getItem('examHistory') || 'null'); }catch(e){}
             if(!alle || typeof alle !== 'object' || Array.isArray(alle)) alle = {};
@@ -765,7 +785,7 @@
         /* ---------- Farben: Verspielt ---------- */
         html.android-app.stil-verspielt {
             --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -777,7 +797,7 @@
         }
         html.android-app.fs-bunt body.dark, html.android-app.stil-verspielt body.dark {   /* 26.10.2026: auch bei Stil der Frage Petrol/Navy/Schlicht - sonst blieben Verspielt-Flaechen im Dunkeln weiss */
             --s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
-            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #A0ACC9;
             --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
             --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
             --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
@@ -792,7 +812,7 @@
            Sachlich behaelt seine Formen, nimmt aber Hintergrund, Verlauf und Farben von Bunt (hell und dunkel). */
         html.android-app.stil-sachlich {
             --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.10); --s-rand2: rgba(16,36,74,0.16);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -803,7 +823,7 @@
         }
         html.android-app.stil-sachlich body.dark {
             --s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
-            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #A0ACC9;
             --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
             --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
             --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
@@ -2456,7 +2476,7 @@
         html.android-app body.eckig.app-rund #appWerk .ah-karte , html:not(.android-app) body.eckig.app-rund #appWerk .ah-karte{ border-radius: var(--s-r-karte) !important; }
 
         /* ---- Dein Level ---- */
-        #appWerk .aw-level { display: flex; align-items: center; gap: 14px; color: #fff; border: 0; overflow: hidden; padding: 16px 16px 16px 12px;
+        #appWerk .aw-level { display: flex; align-items: center; gap: 14px; color: #fff; border: 0; overflow: hidden; padding: 16px 16px 16px 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.25);
             background: radial-gradient(120% 120% at 100% 0%, rgba(185,162,255,0.55) 0%, transparent 55%), linear-gradient(135deg, #7B5CFF 0%, #2F6BF0 100%);
             box-shadow: 0 14px 30px rgba(70,80,240,0.30), inset 0 1px 0 rgba(255,255,255,0.28); transition: transform 0.22s cubic-bezier(.3, 1.7, .5, 1); }
         #appWerk .aw-level:active { transform: scale(0.97); transition-duration: 0.06s; }
@@ -2537,7 +2557,7 @@
             background: linear-gradient(135deg, #FF8A3D 0%, #FF4D6D 100%); box-shadow: 0 14px 28px rgba(255,77,109,0.30), inset 0 1px 0 rgba(255,255,255,0.3);
             transition: transform 0.22s cubic-bezier(.3, 1.7, .5, 1); }
         #appWerk .aw-count:active { transform: scale(0.97); transition-duration: 0.06s; }
-        #appWerk .aw-count.leer { background: linear-gradient(135deg, #FFB547 0%, #FF7A45 100%); box-shadow: 0 14px 28px rgba(255,122,69,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
+        #appWerk .aw-count.leer { background: linear-gradient(135deg, #E07B12 0%, #D04A1E 100%); box-shadow: 0 14px 28px rgba(255,122,69,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
         #appWerk .aw-gross { width: 78px; height: 78px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
             background: rgba(255,255,255,0.18); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
         #appWerk .aw-gross b { font: 700 32px/1 var(--font-display); }
@@ -2559,7 +2579,7 @@
         #appHeute > .aw-count:active { transform: scale(0.97); transition-duration: 0.06s; }
         #appHeute > .ah-kacheln + .aw-count { margin-top: 14px; }   /* 21.10.2026: Abstand zwischen der letzten Kachel (Lernstand) und der Prueftermin-Karte */
         #appHeute > .aw-count { width: 100%; box-sizing: border-box; }   /* 21.10.2026: ist ein Knopf - ohne Breite schrumpfte die Prueftermin-Karte auf den Inhalt */
-        #appHeute > .aw-count.leer { background: linear-gradient(135deg, #FFB547 0%, #FF7A45 100%); box-shadow: 0 14px 28px rgba(255,122,69,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
+        #appHeute > .aw-count.leer { background: linear-gradient(135deg, #E07B12 0%, #D04A1E 100%); box-shadow: 0 14px 28px rgba(255,122,69,0.28), inset 0 1px 0 rgba(255,255,255,0.3); }
         #appHeute > .aw-count .aw-gross { width: 78px; height: 78px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
             background: rgba(255,255,255,0.18); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
         #appHeute > .aw-count .aw-gross b { font: 700 32px/1 var(--font-display); }
@@ -3412,7 +3432,7 @@ body.dark [style*="color:var(--panel-navy)"] { color: #9cc8ff !important; }
 body.dark #statistikModal button.x-zu.btn-outline, body.dark .x-zu.btn-outline, body.dark button.x-zu { background: rgba(255,255,255,0.10) !important; color: #fff !important; border-color: rgba(255,255,255,0.22) !important; }
 /* ---------- sachlichWieVerspielt ---------- */
 html.android-app:not(.pc-app).stil-sachlich {--s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #8A97B5;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -3422,7 +3442,7 @@ html.android-app:not(.pc-app).stil-sachlich {--s-bg: #F2F5FC; --s-fl: #FFFFFF; -
             --s-r-karte: 26px; --s-r-knopf: 20px; --s-r-klein: 14px;
             --s-glow1: rgba(20,184,196,0.16); --s-glow2: rgba(124,92,255,0.12);}
 html.android-app:not(.pc-app).stil-sachlich body.dark {--s-bg: #060A16; --s-fl: rgba(255,255,255,0.055); --s-fl2: rgba(255,255,255,0.085); --s-rand: rgba(255,255,255,0.10); --s-rand2: rgba(255,255,255,0.16);
-            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #6F7B9C;
+            --s-text: #F3F6FF; --s-text2: #AEB8D3; --s-text3: #A0ACC9;
             --s-haupt: #2EE6D6; --s-haupt2: #10B7D0; --s-haupt-tief: #0A7F95; --s-auf-haupt: #032A2F;
             --s-akzent: #2EE6D6; --s-akzent-w: rgba(46,230,214,0.16);
             --s-gruen: #34E089; --s-gruen-tief: #14A35C; --s-gruen-w: rgba(52,224,137,0.14);
@@ -3694,7 +3714,7 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
       "author": { "@type": "Person", "name": "Dietmar Reh" },
       "image": "https://amateurfunk-trainer.com/vorschau.jpg",
       "downloadUrl": "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer/releases/latest",
-      "installUrl": "https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/",
+      "installUrl": "https://amateurfunk-trainer.com/download/",
       "sameAs": ["https://www.facebook.com/amateurfunktrainer/", "https://github.com/Amateurfunk-Gruppe/Amateurfunk-Trainer"],
       "softwareHelp": { "@type": "CreativeWork", "url": "https://amateurfunk-trainer.com/support.html" },
       "keywords": "Amateurfunk, Amateurfunkprüfung, Amateurfunklizenz, Prüfungsfragen, Fragenkatalog, Bundesnetzagentur, Klasse N, Klasse E, Klasse A, Amateurfunkzeugnis, Lernprogramm, Prüfungssimulator, Nachteilsausgleich, Vorlesen, Hörbuch, Lösungswege",
@@ -16913,14 +16933,40 @@ function benutzerSchluessel(slot){
     ];
 }
 
-function benutzerZuruecksetzen(slot){
+function benutzerZuruecksetzen(slot, ausEinstellungen){
     const nr   = USER_SLOTS.indexOf(slot) + 1;
     const name = getUserName(slot);
     const wer  = name ? ('Platz ' + nr + ' („' + name + '“)') : ('Platz ' + nr);
 
     const weiter = () => {
         try{
-            benutzerSchluessel(slot).forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+            // Stand 390: Der Abgleich fuehrt Lernstaende zusammen. Damit ein bewusstes
+            // Zuruecksetzen nicht vom anderen Geraet wieder aufgefuellt wird, traegt der
+            // Platz einen Neustart-Stempel - die Seite mit dem neueren gilt, wie sie ist.
+            // Dietmar, 30.10.2026: "da muss auch der Hinweis kommen, dass das endgueltig
+            // ist" - darum auch Punkte (XP) und Serie weg und keine Notfall-Kopie.
+            benutzerSchluessel(slot).concat(['amateurfunk_xp_' + slot, 'amateurfunk_tagesfragen_' + slot])
+                .forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+            ['letzte', 'beste'].forEach(a => { try{ localStorage.removeItem('lsNotfall:' + a + ':' + slot); }catch(e){} });
+            try{ localStorage.setItem('amateurfunk_neustart_' + slot, String(Date.now())); }catch(e){}
+            // Der aktive Platz: ueber das Kopfstueck neu laden (wie beim Abgleich), sonst
+            // schriebe der Trainer beim Verlassen Punkte und Fortschritt aus dem Arbeits-
+            // speicher zurueck. Was nicht zurueckgesetzt wird (Pruefungsziel ...), bleibt.
+            // Nach dem Laden traegt der Abgleich den leeren Stand ins Konto.
+            if(slot === currentUser && window.lsGehoertDazu){
+                const weg = new Set(benutzerSchluessel(slot).concat(['amateurfunk_xp_' + slot, 'amateurfunk_tagesfragen_' + slot]));
+                const s = { format: 1, schluessel: {}, verlauf: [] };
+                for(let i = 0; i < localStorage.length; i++){
+                    const k = localStorage.key(i);
+                    if(k && window.lsGehoertDazu(k, slot) && !weg.has(k)) s.schluessel[k.slice(0, -(slot.length + 1))] = localStorage.getItem(k);
+                }
+                try{
+                    sessionStorage.setItem('ls_einspielen', JSON.stringify({ slot: slot, s: s }));
+                    sessionStorage.setItem('ls_meldung', 'Lernstand zurückgesetzt – du beginnst von vorn.');
+                    location.reload();
+                    return;
+                }catch(e){}
+            }
             // Der gemeinsame Verlauf haelt ein Fach je Platz - das gehoert
             // mit geleert, sonst kaeme es beim naechsten Start zurueck.
             try{
@@ -16965,24 +17011,33 @@ function benutzerZuruecksetzen(slot){
     const modal = document.getElementById('genericConfirmModal');
     if(modal){
         document.getElementById('genericConfirmTitle').innerHTML =
-            '<span id="genericConfirmIcon"><i class="fas fa-rotate-left" style="color:#a5281b;"></i></span> Platz zurücksetzen?';
+            '<span id="genericConfirmIcon"><i class="fas fa-rotate-left" style="color:#a5281b;"></i></span> ' + (ausEinstellungen ? 'Lernstand zurücksetzen?' : 'Platz zurücksetzen?');
+        // Stand 390: angemeldet -> auch im Konto und auf allen Geraeten
+        let konto = '';
+        try{ const st = window.lsStatus && window.lsStatus(); if(st && st.name && slot === currentUser) konto = st.name; }catch(e){}
         document.getElementById('genericConfirmMessage').innerHTML =
             'Wirklich den Lernstand von <b>' + wer + '</b> zurücksetzen?';
         document.getElementById('genericConfirmDetails').innerHTML =
-            '• weg: Verlauf, Fehlerliste, Lernbedarf, Lernfortschritt, Merkliste,<br>'
-            + '&nbsp;&nbsp;Prüfungstermin und Blätter-Stand<br>'
-            + '• bleibt: Name, Prüfungsziel und Einstellungen des Platzes<br>'
-            + '• <b>lässt sich nicht rückgängig machen</b>';
+            '<ul style="margin:.2rem 0 0 1.1rem;padding:0;line-height:1.55;">'
+            + '<li><b>weg:</b> Lernfortschritt, Punkte (XP) und Serie, Verlauf, Fehlerliste, Lernbedarf, Merkliste, Prüfungstermin und Blätter-Stand</li>'
+            + (konto ? '<li><b>auch in deinem Konto „' + konto + '“</b> – auf jedem Gerät, auf dem du angemeldet bist oder dich wieder anmeldest</li>' : '')
+            + '<li><b>bleibt:</b> Name, Prüfungsziel und Einstellungen des Platzes</li></ul>'
+            + '<div style="margin-top:.6rem;padding:.6rem .7rem;border-radius:10px;background:rgba(165,40,27,.10);border:1px solid rgba(165,40,27,.35);">'
+            + '⚠️ <b>Das ist endgültig.</b> Der Lernstand ist danach weg und kommt auch mit Name und PIN nicht zurück – '
+            + 'außer du hast vorher eine <b>Sicherungsdatei</b> angelegt.'
+            + '<div style="margin-top:.5rem;"><button type="button" onclick="lernstandExportieren()" style="' + (typeof EINST_KNOPF === 'string' ? EINST_KNOPF : '') + '">'
+            + '<i class="fas fa-download"></i> Erst Sicherungsdatei anlegen</button></div></div>';
         const btn = document.getElementById('genericConfirmBtn');
         btn.innerHTML = '<i class="fas fa-rotate-left"></i> Zurücksetzen';
         btn.style.background = '#a5281b';
-        btn.onclick = function(){ closeGenericConfirmModal(); weiter(); };
+        btn.classList.add('gefahr');
+        btn.onclick = function(){ btn.classList.remove('gefahr'); closeGenericConfirmModal(); weiter(); };
         modal.style.display = 'flex';
         modal.classList.add('open');
         return;
     }
-    if(confirm(wer + ' verliert Verlauf, Fehler, Lernbedarf, Lernfortschritt und Merkliste.'
-             + ' Der Name bleibt. Das laesst sich nicht rueckgaengig machen.')) weiter();
+    if(confirm(wer + ' verliert Lernfortschritt, Punkte, Serie, Verlauf, Fehler, Lernbedarf und Merkliste.'
+             + ' Der Name bleibt. Das ist endgueltig - nur mit einer Sicherungsdatei kommt er zurueck.')) weiter();
 }
 window.benutzerZuruecksetzen = benutzerZuruecksetzen;
 
@@ -24861,7 +24916,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 386, datum: '30.10.2026' };
+const TRAINER_STAND = { nr: 390, datum: '30.10.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -28159,7 +28214,7 @@ function beendenAbschied(ok){
 //  Gruen wie der Download-Knopf im Chat. "Doch weiterlernen" laedt die
 //  Seite neu, falls der Klick auf Beenden ein Versehen war.
 // ----------------------------------------------------------------
-const BESUCHER_DOWNLOAD = 'https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/';
+const BESUCHER_DOWNLOAD = 'https://amateurfunk-trainer.com/download/';   // Stand 387: die GitHub-Seite leitet nur noch weiter
 
 function besucherAbschied(){
     try{ document.body.classList.remove('beamer'); }catch(e){}
@@ -32693,7 +32748,7 @@ function einstellungenSchluessel(){
 function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
-                      levelUpTon: true, rundeFertig: true, rundenFeier: true, magnetTon: true,
+                      levelUpTon: true, rundeFertig: true, rundenFeier: true, magnetTon: true, fanfareTon: true,
                       mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false };
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
@@ -32711,6 +32766,8 @@ function einstellungenLaden(){
             if(d && d.levelUpTon === false) einstellungen.levelUpTon = false;
             // Der Magnet-Ton ist von Haus aus an (21.10.2026).
             if(d && d.magnetTon === false) einstellungen.magnetTon = false;
+            // Stand 388: die Fanfare bei bestandener Runde laesst sich abschalten (Tester Bernd: "wie kann ich den Ton am Schluss einer Runde ausschalten?")
+            if(d && d.fanfareTon === false) einstellungen.fanfareTon = false;
             if(d && d.rundeFertig === false) einstellungen.rundeFertig = false;
             // Das Rundenende mit dem Begleiter ist ebenfalls von Haus aus an (20.10.2026).
             if(d && d.rundenFeier === false) einstellungen.rundenFeier = false;
@@ -32726,7 +32783,7 @@ function einstellungenLaden(){
         // Zusatztöne von Haus aus aus - aber nur, solange der Nutzer sie noch nie selbst gesetzt hat (gespeicherte Werte gelten weiter).
         if(!document.documentElement.classList.contains('stil-verspielt')){
             let dd = null; try{ dd = JSON.parse(localStorage.getItem(einstellungenSchluessel()) || 'null'); }catch(e){}
-            ['formelTon', 'magnetTon', 'levelUpTon'].forEach(k => { if(!(dd && typeof dd[k] === 'boolean')) einstellungen[k] = false; });
+            ['formelTon', 'magnetTon', 'levelUpTon', 'fanfareTon'].forEach(k => { if(!(dd && typeof dd[k] === 'boolean')) einstellungen[k] = false; });
         }
     }catch(e){}
     einstellungenAnwenden();
@@ -32848,6 +32905,8 @@ function einstellungenAnwenden(){
     if(mtn) mtn.checked = (einstellungen.magnetTon !== false);
     const lu = document.getElementById('einstLevelUpTon');
     if(lu) lu.checked = (einstellungen.levelUpTon !== false);
+    const fft = document.getElementById('einstFanfareTon');
+    if(fft) fft.checked = (einstellungen.fanfareTon !== false);
     const rf = document.getElementById('einstRundeFertig');
     if(rf) rf.checked = (einstellungen.rundeFertig !== false);
     const rfe = document.getElementById('einstRundenFeier');
@@ -33827,6 +33886,10 @@ const EINST_REITER = [
     //   "Das gehoert auch unter Einstellungen in einem extra Reiter mit
     //    rein." (ueber die gespeicherte Kursauswertung)
     { id:'benutzer',  name:'Benutzer',  symbol:'fa-users-gear' },
+    // Stand 390 (30.10.2026), Dietmar: "in den Einstellungen, dass wir den Namen und die PIN aendern
+    // koennen" und "einen Button zum Zuruecksetzen von dem Lernstand". Alles zum Lernstand an einem
+    // Ort: sichern, einlesen, mitnehmen (Name/PIN), zuruecksetzen - vorher stand es unter "Update".
+    { id:'lernstand', name:'Lernstand', symbol:'fa-floppy-disk' },
     // Intern heisst es weiter "merkblatt" - Reiter-Kennung und
     // Funktionsnamen. Sichtbar ist "Vor der Pruefung": Dietmar am
     // 09.09.2026, "Der Name Merkblatt gefaellt mir nicht."
@@ -33882,6 +33945,36 @@ function einstBeamerLektionStarten(){
 }
 window.einstBeamerLektionStarten = einstBeamerLektionStarten;
 
+// Reiter "Lernstand" (Stand 390) - wird bei jedem Aufschlagen neu gebaut,
+// damit "Angemeldet als ..." nach Anmelden oder Namensaenderung stimmt.
+function einstLernstandFuellen(){
+    const bl = document.getElementById('einstBlatt_lernstand'); if(!bl) return;
+    let zahlen = '';
+    try{
+        const k = window.lsKennzahlen && window.lsKennzahlen();
+        if(k) zahlen = '<div style="font-size:0.84rem; line-height:1.6; margin-bottom:0.6rem;">Jetzt: <b>' + k.gelernt.toLocaleString('de-DE') + '</b> ' + (k.gelernt === 1 ? 'Frage' : 'Fragen') + ' gelernt · '
+            + k.beantwortet.toLocaleString('de-DE') + ' beantwortet' + (k.xp ? ' · ' + k.xp.toLocaleString('de-DE') + ' XP' : '') + '</div>';
+    }catch(e){}
+    bl.innerHTML = ''
+      + einstKasten('Lernstand sichern', 'Zur Sicherheit, vor jedem Update und vor dem Zurücksetzen. Die Datei enthält Verlauf, '
+            + 'Lernfortschritt, Punkte, Lernbedarf und Fehler — von allen Benutzern.',
+            zahlen + '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">'
+          + '<button type="button" style="' + EINST_KNOPF + '" onclick="lernstandExportieren()">'
+          + '<i class="fas fa-download"></i> Als Datei sichern</button>'
+          + '<button type="button" style="' + EINST_KNOPF + '" onclick="lernstandDateiWaehlen()">'
+          + '<i class="fas fa-upload"></i> Aus Datei einlesen</button></div>')
+      + (window.lsEinstKasten && window.lsEinstKasten()
+            ? einstKasten('Lernstand mitnehmen', 'Freiwillig: Mit Name und PIN liegt der Lernstand dieses Platzes '
+                + 'zusätzlich auf dem Trainer – und jedes andere Gerät holt ihn ab.', window.lsEinstKasten())
+            : '')
+      // Stand 390, Dietmar: "Also brauchen wir auch noch einen Button zum Zuruecksetzen von dem Lernstand."
+      + einstKasten('Lernstand zurücksetzen', 'Von vorn beginnen: Alles, was dieser Platz gelernt hat, ist danach weg – '
+            + 'bist du mit Name und PIN angemeldet, auch im Konto und auf deinen anderen Geräten. Das ist endgültig.',
+            '<button type="button" class="einst-gefahr" style="' + EINST_KNOPF + ' color:#a5281b; border-color:rgba(165,40,27,.45);" onclick="benutzerZuruecksetzen(currentUser, true)">'
+          + '<i class="fas fa-rotate-left"></i> Lernstand zurücksetzen</button>');
+}
+window.einstLernstandFuellen = einstLernstandFuellen;
+
 function einstReiterZeigen(id){
     if(!EINST_REITER.some(r => r.id === id)) id = 'allgemein';
     // Der Lerncoach wird nur am Trainer-PC eingerichtet (29.09.2026).
@@ -33910,6 +34003,7 @@ function einstReiterZeigen(id){
     if(id === 'lerncoach'){ try{ einstLerncoachFuellen(); }catch(e){} }
     if(id === 'energie')  { try{ einstEnergieFuellen(); }catch(e){} }
     if(id === 'update')   { try{ einstUpdateFuellen(); }catch(e){} }
+    if(id === 'lernstand'){ try{ einstLernstandFuellen(); }catch(e){} }
     if(id === 'wartung')  { try{ einstProgrammeFuellen(); }catch(e){} try{ einstOhmLageFuellen(); }catch(e){} }
     try{ appEinstellungenAufraeumen(); }catch(e){}
     if(id === 'vorlesen') {
@@ -34088,6 +34182,7 @@ function einstellungenOeffnen(reiter){
           + '<div id="einstBlatt_sounds"   style="display:none;"></div>'
           + '<div id="einstBlatt_beamer"   style="display:none;"></div>'
           + '<div id="einstBlatt_benutzer" style="display:none;"></div>'
+          + '<div id="einstBlatt_lernstand" style="display:none;"></div>'
           + '<div id="einstBlatt_merkblatt" style="display:none;"></div>'
           + '<div id="einstBlatt_kurs"     style="display:none;"></div>'
           + '<div id="einstBlatt_lerncoach" style="display:none;"></div>'
@@ -34785,7 +34880,9 @@ function einstBlaetterFuellen(){
           + tonZeile('einstMagnetTon', "einstellungenUmschalten('magnetTon', this.checked)", 'Fehler-Magnet: Ton beim Aussuchen',
                 'Ein kurzer Klang, wenn der Magnet dir eine Frage aus deinen Schwachstellen vorlegt. Das Symbol blinkt dann trotzdem.', 'Ton, wenn der Magnet eine Frage aussucht.', ' margin-top:0.55rem;')
           + tonZeile('einstLevelUpTon', "einstellungenUmschalten('levelUpTon', this.checked)", 'Belohnung: Ton, wenn eine Frage sitzt',
-                'Dreimal hintereinander richtig, oder die Runde „Noch nie geübt“ ist durch. Kein Fenster, nur der Klang.', 'Ton, wenn eine Frage sitzt.', ' margin-top:0.55rem;')) + appStimmeHtml + majaFunkHtml;
+                'Dreimal hintereinander richtig, oder die Runde „Noch nie geübt“ ist durch. Kein Fenster, nur der Klang.', 'Ton, wenn eine Frage sitzt.', ' margin-top:0.55rem;')
+          + tonZeile('einstFanfareTon', "einstellungenUmschalten('fanfareTon', this.checked)", 'Fanfare bei bestandener Runde',
+                'Die Fanfare mit Konfetti am Ende einer bestandenen Runde oder Prüfung. Ohne Haken gibt es nur das Konfetti.', 'Fanfare bei bestandener Runde.', ' margin-top:0.55rem;')) + appStimmeHtml + majaFunkHtml;
 
     // ---- Update ----
     document.getElementById('einstBlatt_update').innerHTML =
@@ -34798,17 +34895,7 @@ function einstBlaetterFuellen(){
           + 'style="' + EINST_KNOPF + ' background:#0f2745; color:#fff; border-color:#0f2745;">'
           + '<i class="fab fa-github"></i> Bei GitHub nachsehen</button></div>'
           + '<div id="einstUpdateLage" style="margin-top:0.6rem; font-size:0.8rem; line-height:1.6;"></div>')
-      + einstKasten('Lernstand sichern', 'Vor jedem Update zu empfehlen. Die Datei enthält Verlauf, '
-            + 'Lernfortschritt, Lernbedarf und Fehler — von allen Benutzern.',
-            '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">'
-          + '<button type="button" style="' + EINST_KNOPF + '" onclick="lernstandExportieren()">'
-          + '<i class="fas fa-download"></i> Als Datei sichern</button>'
-          + '<button type="button" style="' + EINST_KNOPF + '" onclick="lernstandDateiWaehlen()">'
-          + '<i class="fas fa-upload"></i> Aus Datei einlesen</button></div>')
-      + (window.lsEinstKasten && window.lsEinstKasten()
-            ? einstKasten('Lernstand mitnehmen', 'Freiwillig: Mit Name und PIN liegt der Lernstand dieses Platzes '
-                + 'zusätzlich auf dem Trainer – und jedes andere Gerät holt ihn ab.', window.lsEinstKasten())
-            : '');
+;
 
     // ---- Wartung ----
     document.getElementById('einstBlatt_wartung').innerHTML =
@@ -38349,6 +38436,8 @@ let confettiAnimId = null;
 let fanfareAudio = null;
 
 function playFanfare(callback) {
+    // Stand 388: abschaltbar (Einstellungen -> Sounds), auch ueber "Alle Sounds aus"
+    try { if (typeof einstellungen !== 'undefined' && einstellungen && einstellungen.fanfareTon === false) { if (callback) setTimeout(callback, 0); return; } } catch (e) {}
     try {
         if (!fanfareAudio) {
             // MP3 statt WAV: dieselben 12 Sekunden in 278 statt 2300 KB.
@@ -41878,14 +41967,14 @@ const SOUND_EIGEN = 'afu_sounds_eigen';
 function soundStandLesen(){
     const g = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
     const e = einstellungen || {};
-    return { formelTon: !!e.formelTon, magnetTon: !!e.magnetTon, levelUpTon: !!e.levelUpTon, funkEffektAn: !!e.funkEffektAn,
+    return { formelTon: !!e.formelTon, magnetTon: !!e.magnetTon, levelUpTon: !!e.levelUpTon, funkEffektAn: !!e.funkEffektAn, fanfareTon: e.fanfareTon !== false,
              klickAus: g('klickSoundAus'), issTon: g('robo_iss_ton'), tippTon: g('app_tipptoene'),
              teile: ['quetschen', 'doppler', 'piepser'].map(t => majaFunkAn(t)), stufen: ['rauschen', 'qrn', 'qrm', 'cw'].map(n => majaStufe(n)) };
 }
 function soundStandSetzen(z){
     try{ if(window.klickSound){ if(z.klickAus === '1') window.klickSound.aus(); else window.klickSound.an(); } else localStorage.setItem('klickSoundAus', z.klickAus === '1' ? '1' : '0'); }catch(e){}
     try{
-        einstellungen.formelTon = !!z.formelTon; einstellungen.magnetTon = !!z.magnetTon; einstellungen.levelUpTon = !!z.levelUpTon; einstellungen.funkEffektAn = !!z.funkEffektAn;
+        einstellungen.formelTon = !!z.formelTon; einstellungen.magnetTon = !!z.magnetTon; einstellungen.levelUpTon = !!z.levelUpTon; einstellungen.funkEffektAn = !!z.funkEffektAn; einstellungen.fanfareTon = z.fanfareTon !== false;
         einstellungenSpeichern();
     }catch(e){}
     try{ if(window.appIssTonSetzen) window.appIssTonSetzen(z.issTon === 'aus' ? 'aus' : 'an'); else localStorage.setItem('robo_iss_ton', z.issTon === 'aus' ? 'aus' : 'an'); }catch(e){}
@@ -41898,7 +41987,7 @@ function soundVoreinstellung(art){
     if(art === 'aus'){
         // nur merken, wenn gerade etwas an ist (sonst bliebe das gemerkte Eigene nicht erhalten)
         if(soundSchnellArt() !== 'aus'){ try{ localStorage.setItem(SOUND_EIGEN, JSON.stringify(soundStandLesen())); }catch(e){} }
-        soundStandSetzen({ formelTon: false, magnetTon: false, levelUpTon: false, funkEffektAn: false, klickAus: '1', issTon: 'aus', tippTon: 'aus', teile: [false, false, false], stufen: [0, 0, 0, 0] });
+        soundStandSetzen({ formelTon: false, magnetTon: false, levelUpTon: false, funkEffektAn: false, fanfareTon: false, klickAus: '1', issTon: 'aus', tippTon: 'aus', teile: [false, false, false], stufen: [0, 0, 0, 0] });
         text = 'Fertig: Alle Sounds sind aus.';
     } else {
         let z = null; try{ z = JSON.parse(localStorage.getItem(SOUND_EIGEN) || 'null'); }catch(e){}
@@ -41919,7 +42008,7 @@ function soundSchnellArt(){
     try{
         const g = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
         const e = einstellungen || {};
-        if(e.formelTon || e.magnetTon || e.levelUpTon || e.funkEffektAn) return 'eigen';
+        if(e.formelTon || e.magnetTon || e.levelUpTon || e.funkEffektAn || e.fanfareTon !== false) return 'eigen';
         const klickAus = !window.klickSound || !window.klickSound.istAn ? g('klickSoundAus') === '1' : !window.klickSound.istAn();
         if(!klickAus) return 'eigen';
         if(document.documentElement.classList.contains('stil-verspielt')){
@@ -43850,6 +43939,23 @@ if (originalSelectOption) {
            Stimme, 26.09.2026): zwei Auswahlfelder nebeneinander, am Handy
            untereinander. Dark Mode uebernimmt die Modal-Regel fuer select. */
         .tts-regler { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.55rem; }
+        /* ===== FARBABGLEICH VOR DER FREIGABE (Stand 390, 30.10.2026) =====
+           Dietmar: "Nicht, dass dann am Ende wieder weisse Schrift auf weissem
+           Grund steht ... Das muss optisch jetzt wirklich zusammenpassen."
+           Alle Farbwelten (PC 9, wie die App 2, App 8, Handy 4) wurden mit
+           einer Kontrastmessung durchgegangen; das hier sind die Stellen
+           unter 3:1, die wirklich schlecht lesbar waren. */
+        body.dark .tts-regler label { color: var(--nacht-leise, #b4c0d4) !important; }
+        #appHeute > .aw-count.leer, #appWerk .aw-count.leer { text-shadow: 0 1px 2px rgba(0,0,0,0.18); }
+        html.android-app body:not(.dark) #appHeute .ah-belohnung { color: #A85700 !important; }
+        body:not(.dark) .swp-bel { color: #A85700 !important; }
+        html:not(.android-app) body.klar .filter-bar .btn.btn-primary .start-badge { background: #04283a !important; color: #ffffff !important; }
+        html:not(.android-app) body.klar .kopf-version { color: #c3cfdf !important; }
+        html.android-app #alBenutzer .al-stufe { text-shadow: 0 1px 1px rgba(0,0,0,0.35); }
+        /* Gefahr-Knoepfe (Zuruecksetzen) bleiben in jeder Farbwelt rot */
+        #genericConfirmModal #genericConfirmBtn.gefahr, body.dark #genericConfirmModal #genericConfirmBtn.gefahr { background: #b3261e !important; border-color: #b3261e !important; color: #ffffff !important; }
+        #einstellungenModal button.einst-gefahr { color: #a5281b !important; border-color: rgba(165,40,27,0.45) !important; }
+        body.dark #einstellungenModal button.einst-gefahr { color: #ff8a80 !important; border-color: rgba(255,138,128,0.55) !important; background: rgba(255,138,128,0.08) !important; }
         .tts-regler label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.72rem; font-weight: 700; color: #4b5b73; min-width: 180px; flex: 1 1 180px; max-width: 260px; }
         .tts-regler select { padding: 0.4rem 0.6rem; border-radius: 8px; border: 1px solid #b0c4d8; font-family: inherit; font-size: 0.83rem; font-weight: 400; background: #fff; color: #0f2745; cursor: pointer; }
 
@@ -48337,6 +48443,7 @@ function openAbortQuizModal(){
 function closeGenericConfirmModal(){
     const modal = document.getElementById('genericConfirmModal');
     if(modal){ modal.style.display='none'; modal.classList.remove('open'); }
+    try{ const b = document.getElementById('genericConfirmBtn'); if(b) b.classList.remove('gefahr'); }catch(e){}
 }
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){
@@ -50239,12 +50346,8 @@ function lernstandExport_extraEinlesen(app, u, jsonLies){
         }catch(e){ console.warn('[Lernstand-Datei] ' + b, e); }
     });
 }
-function lernstandExportieren() {
-    try {
-        // WICHTIG: getAllLocalUserData() liest aus dem localStorage, nicht aus
-        // den Variablen im Arbeitsspeicher. Ohne dieses Wegschreiben fehlten in
-        // der Sicherung genau die Antworten der laufenden Sitzung - beim Testen
-        // kam dadurch eine Datei mit 0 Fragen heraus.
+// Das Paket fuer die Datei - auch die taegliche Sicherung der App nutzt es (Stand 390).
+function lernstandPaket() {
         try { saveMastery(); } catch (e) {}
         try { saveDifficult(); } catch (e) {}
         try { saveErrors(); } catch (e) {}
@@ -50271,6 +50374,15 @@ function lernstandExportieren() {
             });
             paket.daten.app = app;
         }catch(e){}
+        return paket;
+}
+function lernstandExportieren() {
+    try {
+        // WICHTIG: getAllLocalUserData() liest aus dem localStorage, nicht aus
+        // den Variablen im Arbeitsspeicher. Ohne dieses Wegschreiben fehlten in
+        // der Sicherung genau die Antworten der laufenden Sitzung - beim Testen
+        // kam dadurch eine Datei mit 0 Fragen heraus.
+        const paket = lernstandPaket();
         const text = JSON.stringify(paket, null, 2);
         const blob = new Blob([text], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -50342,15 +50454,31 @@ function lernstandDateiGewaehlt(input) {
         const info = 'Verlauf: ' + zaehle(d.examHistory) + ' Einträge · Lernfortschritt: ' + zaehle(d.mastery) +
             ' Fragen · Lernbedarf: ' + zaehle(d.difficult) + ' · Fehler: ' + zaehle(d.errors);
         const uebernehmen = () => { lernstandSchreiben(d); };
+        // Stand 390: echte Zahlen - jetzt, in der Datei und danach
+        let zahlen = '';
+        try{
+            const u = String(currentUser || 'user1');
+            const sch = s => ({ schluessel: s });
+            const jetzt = { amateurfunk_mastery: localStorage.getItem('amateurfunk_mastery_' + u) || '{}' };
+            const datei = { amateurfunk_mastery: JSON.stringify((d.mastery && d.mastery[u]) || {}) };
+            const kz = window.lsKennzahlen;
+            if (kz && window.lsZusammenfuehren){
+                const a = kz(sch(jetzt)), b = kz(sch(datei)), c = kz(window.lsZusammenfuehren(sch(jetzt), sch(datei), false));
+                const f = n => n.toLocaleString('de-DE');
+                zahlen = '<br><br>Jetzt: <b>' + f(a.gelernt) + '</b> gelernt · ' + f(a.beantwortet) + ' beantwortet'
+                       + '<br>In der Datei: <b>' + f(b.gelernt) + '</b> gelernt · ' + f(b.beantwortet) + ' beantwortet'
+                       + '<br>Danach: <b>' + f(c.gelernt) + '</b> gelernt · ' + f(c.beantwortet) + ' beantwortet';
+            }
+        }catch(e){}
         if (typeof window.showAppConfirm === 'function') {
-            window.showAppConfirm('Diesen Lernstand übernehmen?', uebernehmen, {
+            window.showAppConfirm('Diesen Lernstand dazunehmen?', uebernehmen, {
                 title: 'Lernstand einlesen',
                 icon: 'fa-upload',
-                details: 'Gesichert am ' + (paket.erstellt || '?').slice(0, 10) + '<br>' + info +
-                    '<br><br><b>Dein jetziger Lernstand wird dabei überschrieben.</b>',
-                confirmLabel: '<i class="fas fa-upload"></i> Übernehmen'
+                details: 'Gesichert am ' + (paket.erstellt || '?').slice(0, 10) + '<br>' + info + zahlen +
+                    '<br><br><b>Nichts geht verloren:</b> Datei und jetziger Lernstand werden zusammengeführt – je Frage gilt der bessere Stand.',
+                confirmLabel: '<i class="fas fa-upload"></i> Zusammenführen'
             });
-        } else if (confirm('Lernstand übernehmen? Der jetzige wird überschrieben.\n' + info)) {
+        } else if (confirm('Lernstand dazunehmen? Datei und jetziger Stand werden zusammengeführt.\n' + info)) {
             uebernehmen();
         }
     };
@@ -50362,17 +50490,39 @@ function lernstandSchreiben(d) {
     const h = document.getElementById('lernstandHinweis');
     try {
         const nutzer = USER_SLOTS;
-        if (d.examHistory) localStorage.setItem('examHistory', JSON.stringify(d.examHistory));
+        // Stand 390: Die Datei ERSETZT den Lernstand nicht mehr, sie wird mit ihm
+        // zusammengefuehrt - je Frage gilt der Eintrag mit mehr Antworten, gelernt
+        // bleibt gelernt, nichts verschwindet. Vorher eine Notfall-Kopie.
+        try{ if (window.lsNotfallAnlegen) window.lsNotfallAnlegen('vor dem Einlesen einer Datei'); }catch(e){}
+        try{ saveMastery(); saveDifficult(); saveErrors(); }catch(e){}
+        const vereint = window.lsZusammenfuehren;
+        let alleVerlauf = null;
+        try{ alleVerlauf = JSON.parse(localStorage.getItem('examHistory') || 'null'); }catch(e){}
+        if (!alleVerlauf || typeof alleVerlauf !== 'object' || Array.isArray(alleVerlauf)) alleVerlauf = {};
         nutzer.forEach(u => {
-            if (d.mastery && d.mastery[u]) localStorage.setItem('amateurfunk_mastery_' + u, JSON.stringify(d.mastery[u]));
-            if (d.difficult && d.difficult[u]) localStorage.setItem('amateurfunk_difficult_' + u, JSON.stringify(d.difficult[u]));
-            if (d.errors && d.errors[u]) localStorage.setItem('amateurfunk_errors_' + u, JSON.stringify(d.errors[u]));
+            const FAECHER = [['amateurfunk_mastery', d.mastery], ['amateurfunk_difficult', d.difficult], ['amateurfunk_errors', d.errors]];
+            const hier = { schluessel: {}, verlauf: Array.isArray(alleVerlauf[u]) ? alleVerlauf[u] : [] };
+            const dort = { schluessel: {}, verlauf: (d.examHistory && Array.isArray(d.examHistory[u])) ? d.examHistory[u] : [] };
+            FAECHER.forEach(([b, quelle]) => {
+                const l = localStorage.getItem(b + '_' + u); if (l) hier.schluessel[b] = l;
+                if (quelle && quelle[u]) dort.schluessel[b] = JSON.stringify(quelle[u]);
+            });
+            if (typeof vereint === 'function'){
+                const g = vereint(hier, dort, false);
+                FAECHER.forEach(([b]) => { if (g.schluessel[b] !== undefined) localStorage.setItem(b + '_' + u, g.schluessel[b]); });
+                if (g.verlauf) alleVerlauf[u] = g.verlauf;
+            } else {
+                // Notweg ohne Abgleich-Baustein: wie frueher
+                FAECHER.forEach(([b, quelle]) => { if (quelle && quelle[u]) localStorage.setItem(b + '_' + u, JSON.stringify(quelle[u])); });
+                if (dort.verlauf.length) alleVerlauf[u] = dort.verlauf;
+            }
         });
+        localStorage.setItem('examHistory', JSON.stringify(alleVerlauf));
         // Altbestand-Schluessel fuer user1 mitziehen, sonst gewinnt beim
         // naechsten Laden womoeglich wieder der alte Wert.
-        if (d.mastery && d.mastery.user1) localStorage.setItem('amateurfunk_mastery', JSON.stringify(d.mastery.user1));
-        if (d.difficult && d.difficult.user1) localStorage.setItem('amateurfunk_difficult', JSON.stringify(d.difficult.user1));
-        if (d.errors && d.errors.user1) localStorage.setItem('amateurfunk_errors', JSON.stringify(d.errors.user1));
+        ['amateurfunk_mastery', 'amateurfunk_difficult', 'amateurfunk_errors'].forEach(b => {
+            const v = localStorage.getItem(b + '_user1'); if (v !== null) localStorage.setItem(b, v);
+        });
 
         // ================================================================
         //  ALLES AUS DER DATEI UEBERNEHMEN                    (17.10.2026)
@@ -50454,6 +50604,69 @@ function lernstandSchreiben(d) {
     }
 }
 window.lernstandSchreiben = lernstandSchreiben;
+
+// ================================================================
+//  TAEGLICHE SICHERUNG IN DER ANDROID-APP                 (Stand 390)
+//  Dietmar, 30.10.2026: "wenn die App den Lernstand jeden Tag einmal
+//  speichert, dann muss er eine alte Datei ueberschreiben" - "3 Monate
+//  taeglich ... ueber 90 Eintraege" - "Vielleicht kann man den Lernstand
+//  auch intern in der App ablegen."
+//  * Einmal am Tag: Downloads/Amateurfunk-Trainer/Lernstand-Sicherung.json,
+//    immer DIESELBE Datei, sie wird ueberschrieben.
+//  * Intern (files/lernstand): bei jedem Wechsel weg von der App, hoechstens
+//    alle 5 Minuten. Diese Kopie nimmt die Android-Sicherung (Google) mit.
+//  * Ein leerer Lernstand ueberschreibt nie eine Sicherung.
+//  * Startet die App leer (neu installiert, Daten geloescht) und es gibt
+//    die interne Kopie, kommt sie von selbst zurueck - zusammengefuehrt.
+//  Nur in der App ab Stand 390 (AndroidDatei.dateiSchreiben); im Browser
+//  und in aelteren Apps passiert hier nichts.
+// ================================================================
+(function(){
+    const A = window.AndroidDatei;
+    if (!A || typeof A.dateiSchreiben !== 'function' || typeof A.internSchreiben !== 'function') return;
+    const MERK = 'lsAppSicherung';
+    const merk = () => { try{ return JSON.parse(localStorage.getItem(MERK) || '{}') || {}; }catch(e){ return {}; } };
+    const heute = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const beantwortet = d => { let n = 0; try{ USER_SLOTS.forEach(u => { n += Object.keys((d && d.mastery && d.mastery[u]) || {}).length; }); }catch(e){} return n; };
+    function sichern(mitDatei){
+        try{
+            const paket = lernstandPaket();
+            const n = beantwortet(paket.daten);
+            if (!n) return;                                   // leer: nichts ueberschreiben
+            const text = JSON.stringify(paket);
+            const m = merk();
+            if (A.internSchreiben(text)) m.intern = Date.now();
+            if (mitDatei && m.tag !== heute()){
+                const r = String(A.dateiSchreiben(JSON.stringify(paket, null, 1)));
+                if (r === 'ok' || r === 'neu'){ m.tag = heute(); m.datei = Date.now(); m.fragen = n; }
+            }
+            localStorage.setItem(MERK, JSON.stringify(m));
+        }catch(e){ console.warn('[App-Sicherung]', e); }
+    }
+    window.lsAppSichern = sichern;
+    // Start: leer? Dann die interne Kopie zurueckholen.
+    function zurueckholen(){
+        try{
+            if (sessionStorage.getItem('ls_intern_geholt')) return false;
+            let hier = 0;
+            USER_SLOTS.forEach(u => { try{ hier += Object.keys(JSON.parse(localStorage.getItem('amateurfunk_mastery_' + u) || '{}') || {}).length; }catch(e){} });
+            if (hier) return false;
+            const roh = A.internLesen && A.internLesen();
+            if (!roh) return false;
+            const paket = JSON.parse(roh);
+            if (!paket || paket.typ !== 'klasse-n-trainer-lernstand' || !beantwortet(paket.daten)) return false;
+            sessionStorage.setItem('ls_intern_geholt', '1');
+            lernstandSchreiben(paket.daten);
+            return true;
+        }catch(e){ return false; }
+    }
+    setTimeout(() => { if (!zurueckholen()) sichern(true); }, 15000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'hidden') return;
+        const m = merk();
+        if (m.tag !== heute() || !m.intern || Date.now() - m.intern > 5 * 60 * 1000) sichern(true);
+    });
+})();
 
 // Beim Start nachruesten und Zaehler setzen
 document.addEventListener('DOMContentLoaded', function () {
@@ -52302,7 +52515,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 //  (Handy, Gast, ausgeblendet), wird der Schritt uebersprungen.
 // ================================================================
 (function(){
-    const RUNDGANG_STANDARD = "# Rundgang für neue Teilnehmer\n\n## Willkommen im Amateurfunk-Trainer\nSchön, dass du da bist! In gut einer Minute zeige ich dir die wichtigsten Knöpfe. Mit **Weiter** geht es zum nächsten Schritt, mit dem Kreuz hörst du jederzeit auf.\n\n## Hier geht es los [start]\n**Start** beginnt eine Runde mit Prüfungsfragen. Die Zahl am Knopf zeigt, wie viele Fragen du noch lernen musst.\n\n## Was und wie viel [auswahl]\nHier wählst du den Prüfungsteil – Vorschriften, Betrieb oder Technik – und wie viele Fragen eine Runde hat.\n\n## Fehler wiederholen [fehler]\nWas du falsch beantwortet hast, sammelt sich hier. Ein Klick, und du übst genau diese Fragen noch einmal.\n\n## Lernbedarf [lernbedarf]\nFragen, die öfter danebengehen. Sie verschwinden erst, wenn du sie dreimal richtig hattest.\n\n## Auffrischen [auffrischen]\nGelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt.\n\n## Blättern [blaettern]\nAlle Fragen der Reihe nach ansehen – mit Lösung und Erklärung, ganz ohne Druck.\n\n## Prüfungssimulator [pruefung]\nWie die echte Prüfung: drei Teile mit je 25 Fragen und 45 Minuten. Die Auflösung gibt es erst am Ende.\n\n## Unterricht [unterricht]\nDie Lektionen in der Reihenfolge der 50ohm-Folien – der Stoff und die passenden Fragen, Schritt für Schritt.\n\n## Suchen [suche]\nEine Fragennummer wie **NC404** oder ein Stichwort eingeben – der Trainer springt direkt dorthin.\n\n## Dein Lernfortschritt [fortschritt]\nHier siehst du, wie viel schon sitzt. Trag deinen Prüfungstermin ein, dann rechnet dir der Trainer aus, wie viel du pro Tag schaffen solltest.\n\n## Der Chat [chat]\nHier schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, mit dem Bild-Knopf ein Foto.\n\n## Frag die KI [ki]\nSchreib **Hey KI** vor deine Frage – der Lerncoach erklärt dir jede Prüfungsfrage. Die Antwort siehst nur du.\n\n## Wo bekomme ich den Trainer?\nDen Amateurfunk-Trainer zum Herunterladen gibt es hier: https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/ – kostenlos, ohne Anmeldung, für Windows, Linux und Mac.\n\n## Das war's! [info]\nDen Rundgang findest du jederzeit wieder unter **Info**. Viel Erfolg bei der Prüfung – 73!\n";
+    const RUNDGANG_STANDARD = "# Rundgang für neue Teilnehmer\n\n## Willkommen im Amateurfunk-Trainer\nSchön, dass du da bist! In gut einer Minute zeige ich dir die wichtigsten Knöpfe. Mit **Weiter** geht es zum nächsten Schritt, mit dem Kreuz hörst du jederzeit auf.\n\n## Hier geht es los [start]\n**Start** beginnt eine Runde mit Prüfungsfragen. Die Zahl am Knopf zeigt, wie viele Fragen du noch lernen musst.\n\n## Was und wie viel [auswahl]\nHier wählst du den Prüfungsteil – Vorschriften, Betrieb oder Technik – und wie viele Fragen eine Runde hat.\n\n## Fehler wiederholen [fehler]\nWas du falsch beantwortet hast, sammelt sich hier. Ein Klick, und du übst genau diese Fragen noch einmal.\n\n## Lernbedarf [lernbedarf]\nFragen, die öfter danebengehen. Sie verschwinden erst, wenn du sie dreimal richtig hattest.\n\n## Auffrischen [auffrischen]\nGelerntes kommt nach ein paar Tagen wieder, damit es hängen bleibt.\n\n## Blättern [blaettern]\nAlle Fragen der Reihe nach ansehen – mit Lösung und Erklärung, ganz ohne Druck.\n\n## Prüfungssimulator [pruefung]\nWie die echte Prüfung: drei Teile mit je 25 Fragen und 45 Minuten. Die Auflösung gibt es erst am Ende.\n\n## Unterricht [unterricht]\nDie Lektionen in der Reihenfolge der 50ohm-Folien – der Stoff und die passenden Fragen, Schritt für Schritt.\n\n## Suchen [suche]\nEine Fragennummer wie **NC404** oder ein Stichwort eingeben – der Trainer springt direkt dorthin.\n\n## Dein Lernfortschritt [fortschritt]\nHier siehst du, wie viel schon sitzt. Trag deinen Prüfungstermin ein, dann rechnet dir der Trainer aus, wie viel du pro Tag schaffen solltest.\n\n## Der Chat [chat]\nHier schreibst du mit allen, die gerade im Trainer sind. Mit dem Mikrofon schickst du eine Sprachnachricht, mit dem Bild-Knopf ein Foto.\n\n## Frag die KI [ki]\nSchreib **Hey KI** vor deine Frage – der Lerncoach erklärt dir jede Prüfungsfrage. Die Antwort siehst nur du.\n\n## Wo bekomme ich den Trainer?\nDen Amateurfunk-Trainer zum Herunterladen gibt es hier: https://amateurfunk-trainer.com/download/ – kostenlos, ohne Anmeldung, für Windows, Linux und Mac.\n\n## Das war's! [info]\nDen Rundgang findest du jederzeit wieder unter **Info**. Viel Erfolg bei der Prüfung – 73!\n";
     // Die Ziele mit "#app..." / "#al..." gibt es nur in der Android-App
     // (30.09.2026, Skript "appRahmen"): Dort stehen Pruefung, Gruppe und
     // Fortschritt in der unteren Leiste, Suche und Chat oben, Info und
@@ -55667,6 +55880,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       + '<div class="ah-karte ah-runde" id="ahRunde">'
       +   '<div class="ah-l" id="ahRundeL">Neue Runde</div>'
       +   '<h2 id="ahOffen">Fragen üben</h2>'
+      +   '<p class="ah-erkl" id="ahErkl" hidden></p>'
       +   '<div class="ah-wahl" id="ahWahl"><span class="w" id="ahWahlAnzahl"></span><span class="w" id="ahWahlTeil"></span><span class="w" id="ahWahlGelernt"></span>'
       +   '<button type="button" class="aendern" id="ahAendern"><i class="fas fa-sliders"></i> Ändern</button></div>'
       +   '<div class="ah-mk" id="ahMk">' + maskottchen('winkt') + '<button type="button" class="ah-frost" id="ahFrost" aria-label="Maja einfrieren oder auftauen" title="Maja einfrieren" onclick="event.stopPropagation(); appMajaFrost(localStorage.getItem(\'robo_frost\') !== \'1\')">' + FLOCKE_SVG + '</button></div>'
@@ -55691,7 +55905,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel" data-ziel="ahLernbedarf"><div class="kz"><span class="ah-ico amber"><i class="fas fa-fire-flame-curved"></i></span><span class="anz" id="ahKLernbedarf">0</span></div><div><b>Lernbedarf</b><small>wackelige Fragen</small></div></button>'
       +   '<button type="button" class="ah-kachel aus" data-ziel="ahAuffrischen" id="ahKAuffrischenK"><div class="kz"><span class="ah-ico gruen"><i class="fas fa-rotate"></i></span><span class="anz" id="ahKAuffrischen">0</span></div><div><b>Auffrischen</b><small>Gelerntes festigen</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahPruefung"><div class="kz"><span class="ah-ico violett"><i class="fas fa-stopwatch"></i></span><span class="anz klein" id="ahKPruefung">3×45′</span></div><div><b>Prüfung simulieren</b><small>wie am echten Prüfungstag</small></div></button>'
-      +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Katalog</b><small>alle Fragen blättern</small></div></button>'
+      +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Blättern</b><small>ganzer Katalog</small></div></button>'
       +   '<button type="button" class="ah-kachel breit" data-ziel="ahZweiMin" id="ahKZweiMin"><div class="kz"><span class="ah-ico amber"><i class="fas fa-bolt"></i></span><span class="anz klein">5 Fragen</span></div><div><b>2-Minuten-Runde</b><small>schnell zwischendurch</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
       // Forum als eigene Kachel (20.10.2026, Dietmar: "wenn wir kein Forum
@@ -55987,7 +56201,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(!blatt.classList.contains('offen')) wahlLesen();
         const offen = offeneZahl();
         $('ahOffen').textContent = vs ? 'Bereit für eine Runde?' : (offen !== null ? offen + ' Fragen offen' : 'Fragen üben');
-        $('ahRundeL').textContent = vs ? (offen !== null ? offen + ' Fragen warten auf dich' : 'Neue Runde') : 'Neue Runde';
+        // Stand 389: "offen" erklaeren - zwei Tester hielten den Zaehler fuer kaputt, weil er nach einer Runde kaum sinkt.
+        // Dietmar: Variante B, "klaert besser auf". Offen = noch nicht 3x richtig hintereinander; dazu, wie viele schon unterwegs sind.
+        $('ahRundeL').textContent = vs ? (offen !== null ? offen + ' Fragen offen' : 'Neue Runde') : 'Neue Runde';
+        tu(() => {
+            const e = $('ahErkl'); if(!e) return;
+            if(offen === null){ e.hidden = true; return; }
+            let unterwegs = 0;
+            tu(() => { if(typeof questionBank !== 'undefined' && Array.isArray(questionBank) && typeof masteryData !== 'undefined')
+                questionBank.forEach(q => { const m = q && masteryData[q.id]; if(m && !isMastered(q.id) && (m.streak || 0) > 0) unterwegs++; }); });
+            const t = 'Offen heißt: noch nicht 3× richtig hintereinander und nicht als gelernt abgehakt.'
+                + (unterwegs > 0 ? ' ' + unterwegs.toLocaleString('de-DE') + (unterwegs === 1 ? ' ist' : ' sind') + ' schon auf gutem Weg.' : '');
+            if(e.textContent !== t) e.textContent = t;
+            e.hidden = false;
+        });
         $('ahWahlAnzahl').textContent = wahl.anzahl === 'all' ? 'Alle Fragen' : wahl.anzahl + ' Fragen';
         $('ahWahlTeil').textContent = teilName();
         $('ahWahlGelernt').textContent = wahl.gelernt ? 'ohne Gelerntes' : 'mit Gelerntem';
@@ -63242,6 +63469,10 @@ body:not(.dark) .swp.s .swp-chip { background:#fff !important; }
 #lsFenster .ls-tipp{font-size:.77rem;color:#5b6b80;margin-top:.8rem;line-height:1.5;}
 #lsFenster .ls-pin-erklaert{font-size:.82rem;line-height:1.5;margin:.2rem 0 .9rem;padding:.55rem .75rem;border-radius:10px;background:#fff6e5;border:1px solid #ffd9a0;color:#5a3d0a;}
 #lsFenster .ls-pin-erklaert i{color:#e08a00;margin-right:4px;}
+#lsFenster .ls-warn{background:#fff1e6;border-color:#ffb27a;color:#5a2a00}
+body.dark #lsFenster .ls-warn{background:rgba(255,140,60,.14);border-color:rgba(255,160,90,.45);color:#ffd9bd}
+#lsFenster .ls-notfall{background:#eef6ff;border-color:#9cc8f0}
+body.dark #lsFenster .ls-notfall{background:rgba(95,170,255,.12);border-color:rgba(120,190,255,.4)}
 #lsFenster .ls-online{font-size:.82rem;line-height:1.5;margin:0 0 .9rem;padding:.55rem .75rem;border-radius:10px;background:#eaf6ff;border:1px solid #bfe0f7;color:#0f2745;}
 #lsFenster .ls-online i{color:#1c6fb8;margin-right:4px;}
 #lsFenster .ls-online a{color:#1c6fb8;font-weight:700;word-break:break-all;}
@@ -63251,7 +63482,7 @@ body.dark #lsFenster .ls-pin-erklaert{background:rgba(255,181,71,.12);border-col
 #lsFenster .ls-fehler{color:#d1343b;font-size:.84rem;font-weight:600;min-height:1.2em;margin-top:.55rem;}
 #lsFenster .ls-knoepfe{display:flex;flex-direction:column;gap:9px;margin-top:.9rem;}
 #lsFenster .ls-knopf{min-height:48px;border-radius:999px !important;border:none;color:#fff;font:inherit;font-size:.98rem;font-weight:800;cursor:pointer;padding:.55rem 1.1rem;
-  background:linear-gradient(135deg,#FFB547 0%,#FF7A1A 60%,#FF4E50 100%);box-shadow:0 8px 20px rgba(255,110,40,.35);transition:transform .12s;}
+  background:linear-gradient(135deg,#F0961A 0%,#EE6212 60%,#E33E42 100%);box-shadow:0 8px 20px rgba(255,110,40,.35);transition:transform .12s;text-shadow:0 1px 2px rgba(0,0,0,.22);}
 #lsFenster .ls-knopf:active{transform:scale(.98);}
 #lsFenster .ls-knopf.blau{background:linear-gradient(135deg,#3D6BF2,#7A4CF0);box-shadow:0 8px 20px rgba(61,107,242,.3);}
 #lsFenster .ls-knopf.leise{background:#fff;color:#2f4fd1;border:2px solid #dbe6f5;box-shadow:none;font-weight:700;}
@@ -63447,6 +63678,74 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
     function gelernt(s){
         try{ var m = JSON.parse((s && s.schluessel && s.schluessel.amateurfunk_mastery) || '{}'); return Object.keys(m || {}).length; }catch(e){ return 0; }
     }
+    // ================================================================
+    //  NIE STILL ERSETZEN                                  (Stand 390)
+    //  Dietmar hatte 542 von 571 Fragen gelernt; beim Anmelden in der App
+    //  kam aus der Cloud ein kleiner Stand (16 gelernt) und ersetzte alles.
+    //  Darum: (1) echte Kennzahlen statt "Eintraege" - gelernt, beantwortet,
+    //  Punkte, zuletzt geuebt; (2) ein deutlich kleinerer Stand wird nie
+    //  still uebernommen; (3) vor JEDEM Ersetzen legt der Trainer eine
+    //  Notfall-Kopie an, die sich unter "Lernstand" zurueckholen laesst.
+    // ================================================================
+    function kennzahlen(s){
+        var k = { gelernt: 0, beantwortet: 0, xp: 0, zuletzt: '' };
+        try{
+            var m = JSON.parse((s && s.schluessel && s.schluessel.amateurfunk_mastery) || '{}') || {};
+            Object.keys(m).forEach(function(id){ k.beantwortet++; if(m[id] && m[id].mastered) k.gelernt++; });
+        }catch(e){}
+        try{ k.xp = parseInt((s && s.schluessel && s.schluessel.amateurfunk_xp) || '0', 10) || 0; }catch(e){}
+        ['amateurfunk_tagesfragen', 'amateurfunk_uebungszeit'].forEach(function(b){
+            try{ var t = JSON.parse((s && s.schluessel && s.schluessel[b]) || '{}') || {};
+                 Object.keys(t).forEach(function(d){ if(/^\d{4}-\d{2}-\d{2}$/.test(d) && d > k.zuletzt) k.zuletzt = d; }); }catch(e){}
+        });
+        return k;
+    }
+    function kennText(k){
+        return '<b>' + k.gelernt.toLocaleString('de-DE') + '</b> gelernt · ' + k.beantwortet.toLocaleString('de-DE') + ' beantwortet'
+            + (k.xp ? ' · ' + k.xp.toLocaleString('de-DE') + ' XP' : '')
+            + (k.zuletzt ? '<br><small>zuletzt geübt am ' + k.zuletzt.split('-').reverse().join('.') + '</small>' : '');
+    }
+    // Ein Stand ist "deutlich kleiner", wenn er mehr als 10 gelernte Fragen weniger hat.
+    function deutlichKleiner(neu, alt){ return kennzahlen(neu).gelernt + 10 < kennzahlen(alt).gelernt; }
+    // Notfall-Kopien: die letzte und die beste (meiste gelernte). Der Schluessel
+    // beginnt bewusst nicht mit amateurfunk_ / afu_ - sonst wanderte er selbst
+    // in den Abgleich und wuerde beim Einspielen mit weggeraeumt.
+    var NOTFALL = 'lsNotfall:';
+    function notfallLesen(slot, art){ try{ return JSON.parse(lsGet(NOTFALL + art + ':' + slot) || 'null'); }catch(e){ return null; } }
+    function notfallAnlegen(slot, grund){
+        try{
+            var s = schnappschuss(slot), k = kennzahlen(s);
+            if(!k.beantwortet) return;
+            var eintrag = JSON.stringify({ zeit: Date.now(), grund: grund || '', k: k, s: s });
+            try{ localStorage.setItem(NOTFALL + 'letzte:' + slot, eintrag); }catch(e){}
+            var beste = notfallLesen(slot, 'beste');
+            if(!beste || !beste.k || k.gelernt >= beste.k.gelernt){ try{ localStorage.setItem(NOTFALL + 'beste:' + slot, eintrag); }catch(e){} }
+        }catch(e){}
+    }
+    window.lsNotfallAnlegen = function(grund){ notfallAnlegen(platz(), grund); };
+    // Welche Kopie bietet sich zum Zurueckholen an? Die mit den meisten gelernten Fragen,
+    // aber nur, wenn sie mehr hat als der jetzige Stand.
+    function notfallAngebot(slot){
+        var jetzt = kennzahlen(schnappschuss(slot)), best = null;
+        ['beste', 'letzte'].forEach(function(a){ var n = notfallLesen(slot, a); if(n && n.k && n.s && n.k.gelernt > jetzt.gelernt && (!best || n.k.gelernt > best.k.gelernt)) best = n; });
+        return best;
+    }
+    function notfallHtml(slot){
+        var n = notfallAngebot(slot);
+        if(!n) return '';
+        return '<div class="ls-box ls-notfall"><b>Früherer Lernstand gesichert</b><br>' + kennText(n.k)
+            + '<br><small>gesichert am ' + esc(zeit(n.zeit)) + (n.grund ? ' – ' + esc(n.grund) : '') + '</small>'
+            + '<div class="ls-knoepfe" style="margin-top:.6rem"><button type="button" class="ls-knopf blau" onclick="lsNotfallZurueck()"><i class="fas fa-clock-rotate-left"></i> Diesen Stand zurückholen</button></div></div>';
+    }
+    window.lsNotfallZurueck = function(){
+        var slot = platz(), n = notfallAngebot(slot);
+        if(!n) return;
+        notfallAnlegen(slot, 'vor dem Zurückholen');
+        var z = zustand();
+        if(z && z.token){ z.abdruck = ''; zustandSetzen(z); }   // danach wird der zurueckgeholte Stand hochgeladen
+        einspielen(n.s, slot, 'Früherer Lernstand zurückgeholt: ' + n.k.gelernt + ' Fragen gelernt.');
+    };
+    window.lsNotfallHtml = function(){ return notfallHtml(platz()); };
     // "Leer" heisst: noch nichts gelernt. Ein frisches Geraet hat schon ein
     // paar Faecher (leere Fehlerliste, XP 0) - die zaehlen nicht.
     function anzahl(s, b){
@@ -63457,10 +63756,135 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         return gelernt(s) === 0 && anzahl(s, 'amateurfunk_errors') === 0 && anzahl(s, 'amateurfunk_favorites') === 0
             && anzahl(s, 'amateurfunk_difficult') === 0 && !(s.verlauf && s.verlauf.length);
     }
+    // ================================================================
+    //  ZUSAMMENFUEHREN STATT ERSETZEN                      (Stand 390)
+    //  Dietmar, 30.10.2026: "wenn ich die App installiere und die PIN
+    //  eingebe, dass ich dann weniger habe ... Das muss genau exakt das
+    //  Gleiche sein ... Da darf nichts verschwinden."
+    //  Zwei Staende werden deshalb nie mehr gegeneinander ausgetauscht,
+    //  sondern vereint:
+    //   * je Frage gilt der Eintrag mit mehr Antworten (das ist der
+    //     neuere); bei Gleichstand gewinnt "gelernt" - ausser die Cloud
+    //     ist nachweislich neuer (dortNeuer), dann gilt ihr Eintrag, damit
+    //     ein bewusstes "nicht gelernt" vom anderen Geraet ankommt;
+    //   * eine Frage, die nur eine Seite kennt, bleibt immer;
+    //   * Zaehler (XP, Tagesfragen, Uebungszeit, bestandene Simulationen,
+    //     Diagnose) nehmen je den groesseren Wert, Listen werden vereint;
+    //   * Ausnahme "Platz zuruecksetzen": Die Seite mit dem neueren
+    //     Neustart-Stempel (amateurfunk_neustart) gilt so, wie sie ist.
+    // ================================================================
+    function jl(t, ersatz){ try{ var v = JSON.parse(t); return (v === null || v === undefined) ? ersatz : v; }catch(e){ return ersatz; } }
+    function antworten(e){ return e ? ((+e.totalCorrect || 0) + (+e.totalWrong || 0)) : -1; }
+    // Wer gewinnt bei Frage id? 'h' oder 'd'; 0 = Gleichstand
+    function sieger(mh, md, id, dortNeuer){
+        var a = antworten(mh[id]), b = antworten(md[id]);
+        if(a !== b) return a > b ? 'h' : 'd';
+        if(a < 0) return 0;                                   // keine Seite kennt die Frage
+        if(dortNeuer) return 'd';
+        var gh = !!(mh[id] && mh[id].mastered), gd = !!(md[id] && md[id].mastered);
+        if(gh !== gd) return gh ? 'h' : 'd';
+        return 0;
+    }
+    function zaehlerMax(a, b){
+        var x = Object.assign({}, a || {});
+        Object.keys(b || {}).forEach(function(t){ var v = Number(b[t]), w = Number(x[t]);
+            if(x[t] === undefined || (isFinite(v) && !(w >= v))) x[t] = b[t]; });
+        return x;
+    }
+    function listeVereint(a, b){
+        var gesehen = {}, neu = [];
+        (Array.isArray(a) ? a : []).concat(Array.isArray(b) ? b : []).forEach(function(e){
+            var k = JSON.stringify(e); if(!gesehen[k]){ gesehen[k] = 1; neu.push(e); } });
+        return neu;
+    }
+    function nachDatum(l, feld){ return l.sort(function(a, c){ return String((a && a[feld]) || '').localeCompare(String((c && c[feld]) || '')); }); }
+    function zusammenfuehren(hier, dort, dortNeuer){
+        hier = hier || {}; dort = dort || {};
+        var H = hier.schluessel || {}, D = dort.schluessel || {};
+        // Platz zurueckgesetzt? Dann gilt die Seite mit dem neueren Stempel.
+        var nh = +H.amateurfunk_neustart || 0, nd = +D.amateurfunk_neustart || 0;
+        if(nh !== nd) return JSON.parse(JSON.stringify(nh > nd ? hier : dort));
+        var mh = jl(H.amateurfunk_mastery, {}) || {}, md = jl(D.amateurfunk_mastery, {}) || {};
+        var g = { format: 1, schluessel: {}, verlauf: null }, S = {};
+        // Lernfortschritt
+        var m = {};
+        Object.keys(mh).concat(Object.keys(md)).forEach(function(id){
+            if(m[id]) return;
+            var w = sieger(mh, md, id, dortNeuer) || (md[id] ? 'd' : 'h');
+            var e = Object.assign({}, (w === 'h' ? mh[id] : md[id]) || mh[id] || md[id]);
+            var o = w === 'h' ? md[id] : mh[id];
+            if(o){ e.totalCorrect = Math.max(+e.totalCorrect || 0, +o.totalCorrect || 0); e.totalWrong = Math.max(+e.totalWrong || 0, +o.totalWrong || 0); }
+            m[id] = e;
+        });
+        if(Object.keys(m).length) S.amateurfunk_mastery = JSON.stringify(m);
+        // Fehlerliste und Lernbedarf: je Frage entscheidet dieselbe Seite wie beim Lernfortschritt
+        var eh = jl(H.amateurfunk_errors, []), ed = jl(D.amateurfunk_errors, []);
+        if(Array.isArray(eh) && Array.isArray(ed)){
+            var fe = [];
+            eh.concat(ed).forEach(function(id){
+                if(fe.indexOf(id) >= 0) return;
+                var w = sieger(mh, md, id, dortNeuer), drin = w === 'h' ? eh.indexOf(id) >= 0 : w === 'd' ? ed.indexOf(id) >= 0
+                        : (dortNeuer ? ed.indexOf(id) >= 0 : true);
+                if(drin) fe.push(id);
+            });
+            if(fe.length) S.amateurfunk_errors = JSON.stringify(fe);
+        }
+        var dh = jl(H.amateurfunk_difficult, {}) || {}, dd = jl(D.amateurfunk_difficult, {}) || {}, df = {};
+        Object.keys(dh).concat(Object.keys(dd)).forEach(function(id){
+            if(df[id]) return;
+            var w = sieger(mh, md, id, dortNeuer);
+            if(w === 'h'){ if(dh[id]) df[id] = dh[id]; return; }
+            if(w === 'd'){ if(dd[id]) df[id] = dd[id]; return; }
+            if(dortNeuer){ if(dd[id]) df[id] = dd[id]; return; }
+            df[id] = !dd[id] ? dh[id] : !dh[id] ? dd[id] : ((+dh[id].wrongCount || 0) > (+dd[id].wrongCount || 0) ? dh[id] : dd[id]);
+        });
+        if(Object.keys(df).length) S.amateurfunk_difficult = JSON.stringify(df);
+        // Alle anderen Faecher
+        Object.keys(H).concat(Object.keys(D)).forEach(function(b){
+            if(S[b] !== undefined || b === 'amateurfunk_mastery' || b === 'amateurfunk_errors' || b === 'amateurfunk_difficult') return;
+            var a = H[b], c = D[b];
+            if(a === undefined || c === undefined){ S[b] = a !== undefined ? a : c; return; }
+            if(a === c){ S[b] = a; return; }
+            var x = jl(a, a), y = jl(c, c), r;
+            if(b === 'amateurfunk_xp' || b === 'amateurfunk_neustart'){ r = String(Math.max(+x || 0, +y || 0)); }
+            else if(/^(amateurfunk_tagesfragen|amateurfunk_uebungszeit|amateurfunk_simok)$/.test(b)){ r = JSON.stringify(zaehlerMax(x, y)); }
+            else if(b === 'amateurfunk_legende'){ r = JSON.stringify(Object.assign({}, y || {}, x || {})); }
+            else if(b === 'amateurfunk_diagnose'){
+                var dg = Object.assign({}, x || {});
+                Object.keys(y || {}).forEach(function(id){ if(!dg[id] || ((y[id] && y[id].n) || 0) > ((dg[id] && dg[id].n) || 0)) dg[id] = y[id]; });
+                r = JSON.stringify(dg);
+            }
+            else if(b === 'amateurfunk_pruefungen'){ var pl = nachDatum(listeVereint(x, y), 'd'); while(pl.length > 60) pl.shift(); r = JSON.stringify(pl); }
+            else if(Array.isArray(x) && Array.isArray(y)){ r = dortNeuer ? c : JSON.stringify(listeVereint(x, y)); }
+            else if(x && y && typeof x === 'object' && typeof y === 'object'){
+                // Objekte (Notizen, Diplome, Lesezeichen ...): die neuere Seite gewinnt, fehlende Eintraege kommen dazu
+                r = JSON.stringify(dortNeuer ? Object.assign({}, x, y) : Object.assign({}, y, x));
+            }
+            else if(isFinite(+x) && isFinite(+y) && String(x).trim() !== '' && String(y).trim() !== ''){ r = String(Math.max(+x, +y)); }
+            else r = dortNeuer ? c : a;
+            S[b] = r;
+        });
+        Object.keys(S).sort().forEach(function(b){ g.schluessel[b] = S[b]; });
+        // Verlauf: vereint, nach Datum
+        var v = listeVereint(hier.verlauf, dort.verlauf);
+        g.verlauf = v.length ? nachDatum(v, 'date') : (hier.verlauf || dort.verlauf || null);
+        return g;
+    }
+    window.lsZusammenfuehren = zusammenfuehren;
+    // Fuer "Lernstand einlesen" aus der Datei: ein einzelnes Fach vereinen
+    window.lsFachVereinen = function(b, hierRoh, dortRoh){
+        var s1 = { schluessel: {} }, s2 = { schluessel: {} };
+        if(hierRoh) s1.schluessel[b] = hierRoh;
+        if(dortRoh) s2.schluessel[b] = dortRoh;
+        return zusammenfuehren(s1, s2, false).schluessel[b];
+    };
+    window.lsKennzahlen = function(s){ return kennzahlen(s || schnappschuss(platz())); };
+
     // Einspielen = in den sessionStorage legen und neu laden; das Kopfstueck
     // (lernstandEinspielen) spielt ihn ein, bevor der Trainer startet.
     var umbau = false;
     function einspielen(s, slot, text){
+        notfallAnlegen(slot, 'vor dem Übernehmen eines anderen Stands');
         umbau = true;
         try{ if(text) sessionStorage.setItem('ls_meldung', text); }catch(e){}
         try{
@@ -63560,6 +63984,7 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
           + '<label for="lsPin">' + (neu ? 'PIN ausdenken (4 bis 6 Ziffern)' : 'PIN (4 bis 6 Ziffern)') + '</label><input id="lsPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="' + (neu ? 'new-password' : 'current-password') + '">'
           + (neu ? '<label for="lsPin2">PIN wiederholen</label><input id="lsPin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password">' : '')
           + '<div class="ls-fehler" id="lsFehler"></div>'
+          + notfallHtml(platz())
           + '<div class="ls-knoepfe"><button type="button" class="ls-knopf" id="lsLos" onclick="lsLos()">' + (neu ? '<i class="fas fa-rocket"></i> Anlegen und mitnehmen' : '<i class="fas fa-right-to-bracket"></i> Anmelden') + '</button></div>'
           + '<div class="ls-tipp">' + (neu
                 ? '<b>Die PIN denkst du dir selbst aus</b> – niemand vergibt sie, niemand schickt sie dir. Sie ist dein Schlüssel: Nur mit Name und PIN kommt man an deinen Lernstand. Also nicht 0000 oder 1234, sondern eine Zahl, die nur du dir merkst. <b>Gut merken:</b> Vergessen lässt sie sich nicht zurückholen.<br><b>Beim Namen:</b> Peter oder Markus sind schnell vergeben – nimm Markus75, Klaus-Peter oder dein Rufzeichen. Keine E-Mail nötig.'
@@ -63608,32 +64033,69 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         }
     };
 
-    // Angemeldet: Wer gewinnt - Server oder dieses Geraet?
+    // Angemeldet: Server und dieses Geraet werden vereint (Stand 390).
+    // Frueher kam hier die Frage "welcher soll gelten" - und ein leeres
+    // Geraet uebernahm still den Stand vom Server, auch einen kleineren.
     function nachAnmeldung(j, slot){
         var hier = schnappschuss(slot), dort = j.daten || {};
         var basis = { name: j.name, token: j.token, version: j.version, slot: slot, stand: j.stand };
-        if(leer(hier) || fingerabdruck(hier) === fingerabdruck(dort)){
-            basis.abdruck = fingerabdruck(dort);
+        // Hier wurde zurueckgesetzt, im Konto liegt noch ein Stand: nicht still loeschen - fragen.
+        var nh = +((hier.schluessel || {}).amateurfunk_neustart || 0), nd = +(((dort || {}).schluessel || {}).amateurfunk_neustart || 0);
+        if(nh > nd && !leer(dort)) return neustartFrage(basis, hier, dort, nh);
+        var k = vereinen(basis, hier, dort, false, leer(hier) ? 'Willkommen zurück, ' + j.name + '! Dein Lernstand ist da' : 'Angemeldet – beide Lernstände sind zusammengeführt');
+        if(k !== 'eingespielt') fertigZu('Angemeldet als ' + j.name + ' – dein Lernstand reist jetzt mit.');
+    }
+    function neustartFrage(basis, hier, dort, wann){
+        zeigen('<p><b>Auf diesem Gerät hast du den Lernstand am ' + esc(zeit(wann)) + ' zurückgesetzt.</b></p>'
+          + '<div class="ls-box">☁ <b>In deinem Konto</b> liegt noch: ' + kennText(kennzahlen(dort)) + '</div>'
+          + '<div class="ls-knoepfe"><button type="button" class="ls-knopf blau" onclick="lsNeustartWahl(\'holen\')"><i class="fas fa-cloud-arrow-down"></i> Den Stand aus dem Konto holen</button>'
+          + '<button type="button" class="ls-knopf rot" onclick="lsNeustartWahl(\'leeren\')"><i class="fas fa-rotate-left"></i> Auch im Konto zurücksetzen</button></div>'
+          + '<div class="ls-tipp"><b>Auch im Konto zurücksetzen ist endgültig</b> – der Lernstand ist dann auf allen Geräten weg, außer du hast eine Sicherungsdatei.</div>',
+            { titel: 'Zurückgesetzt – auch im Konto?', unter: 'Was soll ab jetzt gelten?', kicker: 'KURZ ENTSCHEIDEN', pose: 'denkt' });
+        window.lsNeustartWahl = function(w){
+            if(w === 'holen'){
+                var h2 = JSON.parse(JSON.stringify(hier)); delete h2.schluessel.amateurfunk_neustart;
+                vereinen(basis, h2, dort, false, 'Lernstand aus dem Konto geholt');
+            } else {
+                basis.abdruck = ''; zustandSetzen(basis);
+                abgleichen(true);
+                fertigZu('Zurückgesetzt – auch im Konto. Du beginnst von vorn.');
+            }
+        };
+    }
+    // Vereint hier und dort. Hat dieses Geraet schon alles, wird nur
+    // hochgeladen (Rueckgabe: Promise des Abgleichs); sonst wird der
+    // vereinte Stand eingespielt und nach dem Neuladen hochgeladen
+    // (Rueckgabe: 'eingespielt').
+    function vereinen(basis, hier, dort, dortNeuer, meldung){
+        var g = zusammenfuehren(hier, dort, dortNeuer);
+        var fh = fingerabdruck(hier), fd = fingerabdruck(dort), fg = fingerabdruck(g);
+        if(fg === fh){
+            basis.abdruck = (fh === fd) ? fd : '';
             zustandSetzen(basis);
-            if(leer(hier) && !leer(dort)){ zu(); return einspielen(dort, slot, 'Willkommen zurück, ' + j.name + '! Dein Lernstand ist da.'); }
-            return fertigZu('Angemeldet als ' + j.name + ' – dein Lernstand reist jetzt mit.');
+            return fh !== fd ? abgleichen(true) : Promise.resolve(true);
         }
-        if(leer(dort)){
-            basis.abdruck = '';
-            zustandSetzen(basis);
-            abgleichen(true);
-            return fertigZu('Angemeldet – der Lernstand dieses Geräts wird hochgeladen.');
-        }
-        wahlZeigen(basis, hier, dort, j.stand);
+        // Nach dem Neuladen unterscheidet sich der Stand vom Server -> der Abgleich laedt ihn hoch
+        basis.abdruck = fd;
+        zustandSetzen(basis);
+        zu();
+        var kz = kennzahlen(g);
+        einspielen(g, basis.slot, (meldung || 'Lernstand zusammengeführt') + ': ' + kz.gelernt.toLocaleString('de-DE') + ' Fragen gelernt'
+            + (kz.xp ? ', ' + kz.xp.toLocaleString('de-DE') + ' XP' : '') + '.');
+        return 'eingespielt';
     }
     function wahlZeigen(basis, hier, dort, stand){
+        var kd = kennzahlen(dort), kh = kennzahlen(hier), dortKlein = kd.gelernt + 10 < kh.gelernt, hierKlein = kh.gelernt + 10 < kd.gelernt;
+        var kDort = '<button type="button" class="ls-knopf ' + (hierKlein || !dortKlein ? 'blau' : 'leise') + '" onclick="lsWahl(\'dort\')">Den vom Trainer nehmen</button>';
+        var kHier = '<button type="button" class="ls-knopf ' + (dortKlein ? 'blau' : 'leise') + '" onclick="lsWahl(\'hier\')">Den von diesem Gerät behalten</button>';
         zeigen('<p><b>Auf beiden Seiten liegt ein Lernstand.</b> Welcher soll gelten?</p>'
-          + '<div class="ls-box">☁ <b>Auf dem Trainer</b>: ' + gelernt(dort) + ' Fragen gelernt'
-          + (stand ? '<br><small>zuletzt am ' + esc(zeit(stand)) + '</small>' : '') + '</div>'
-          + '<div class="ls-box">📱 <b>Auf diesem Gerät</b>: ' + gelernt(hier) + ' Fragen gelernt</div>'
-          + '<div class="ls-knoepfe"><button type="button" class="ls-knopf blau" onclick="lsWahl(\'dort\')">Den vom Trainer nehmen</button>'
-          + '<button type="button" class="ls-knopf leise" onclick="lsWahl(\'hier\')">Den von diesem Gerät behalten</button></div>'
-          + '<div class="ls-tipp">Der andere Stand wird dabei ersetzt. Wer sichergehen will, holt sich vorher mit „Lernstand sichern“ eine Datei.</div>',
+          + '<div class="ls-box">☁ <b>Auf dem Trainer</b> (Cloud): ' + kennText(kd)
+          + (stand ? '<br><small>abgeglichen am ' + esc(zeit(stand)) + '</small>' : '') + '</div>'
+          + '<div class="ls-box">📱 <b>Auf diesem Gerät</b>: ' + kennText(kh) + '</div>'
+          + (dortKlein ? '<div class="ls-box ls-warn">⚠️ <b>Achtung:</b> Der Stand auf dem Trainer hat <b>' + (kh.gelernt - kd.gelernt).toLocaleString('de-DE') + ' gelernte Fragen weniger</b> als dieses Gerät. Meist willst du hier „Den von diesem Gerät behalten“.</div>' : '')
+          + (hierKlein ? '<div class="ls-box ls-warn">⚠️ Dieses Gerät hat <b>' + (kd.gelernt - kh.gelernt).toLocaleString('de-DE') + ' gelernte Fragen weniger</b> als der Trainer.</div>' : '')
+          + '<div class="ls-knoepfe">' + (dortKlein ? kHier + kDort : kDort + kHier) + '</div>'
+          + '<div class="ls-tipp">Der andere Stand wird dabei ersetzt – vorher legt der Trainer aber eine Sicherheitskopie an. Du findest sie unter <b>Lernstand</b> und kannst sie jederzeit zurückholen.</div>',
             { titel: 'Zwei Lernstände gefunden', unter: 'Du hast an zwei Geräten gelernt – welcher soll gelten?', kicker: 'KURZ ENTSCHEIDEN', pose: 'denkt' });
         window.lsWahl = function(w){
             var slot = basis.slot;
@@ -63662,11 +64124,15 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
     function angemeldetZeigen(z, hinweis){
         nameUebernehmen();
         zeigen((hinweis ? '<div class="ls-box ls-gut">✅ ' + esc(hinweis) + '</div>' : '')
+          + notfallHtml(platz())
           + '<p>Angemeldet als <b>' + esc(z.name) + '</b>. Dein Lernstand wird auf dem Trainer mitgeführt – auf jedem anderen Gerät mit <b>Name und PIN</b> anmelden, und er ist da.</p>'
           + '<p style="font-size:.8rem;color:var(--muted,#5b6b80)">Zuletzt abgeglichen: ' + (z.stand ? esc(zeit(z.stand)) : '–') + '</p>'
           + '<div class="ls-fehler" id="lsFehler"></div>'
           + '<div class="ls-knoepfe"><button type="button" class="ls-knopf blau" onclick="lsJetzt()"><i class="fas fa-rotate"></i> Jetzt abgleichen</button>'
+          + '<button type="button" class="ls-knopf leise" onclick="lsNameFrage()"><i class="fas fa-pen"></i> Name ändern</button>'
+          + '<button type="button" class="ls-knopf leise" onclick="lsPinFrage()"><i class="fas fa-key"></i> PIN ändern</button>'
           + '<button type="button" class="ls-knopf leise" onclick="lsAbmelden()"><i class="fas fa-right-from-bracket"></i> Auf diesem Gerät abmelden</button>'
+          + '<button type="button" class="ls-knopf rot" onclick="lsZu(); benutzerZuruecksetzen(currentUser, true)"><i class="fas fa-rotate-left"></i> Von vorn beginnen – Lernstand überall zurücksetzen</button>'
           + '<button type="button" class="ls-knopf rot" onclick="lsLoeschenFrage()"><i class="fas fa-trash"></i> Lernstand auf dem Trainer löschen</button></div>'
           + '<div class="ls-tipp">Abmelden lässt den Lernstand auf diesem Gerät und auf dem Trainer, wie er ist.</div>',
             { titel: 'Alles dabei, ' + z.name + '!', unter: 'Dein Lernstand reist jetzt mit – auf jedes Gerät.', kicker: 'ANGEMELDET', pose: 'daumen' });
@@ -63695,6 +64161,68 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         var z = zustand(); if(!z) return zu();
         api('abmelden', { name: z.name, token: z.token }).catch(function(){});
         zustandSetzen(null); zu(); melden('Abgemeldet. Der Lernstand bleibt auf diesem Gerät.');
+    };
+    // ---- Name und PIN aendern (Stand 390) --------------------------------
+    // Dietmar, 30.10.2026: "in den Einstellungen, dass wir den Namen und die
+    // PIN aendern koennen". Beides nur mit der jetzigen PIN; der Lernstand
+    // bleibt, wie er ist. Andere angemeldete Geraete laufen weiter und
+    // erfahren den neuen Namen beim naechsten Abgleich.
+    function enterLos(ids, f){ ids.forEach(function(id){ var el = $(id); if(el) el.addEventListener('keydown', function(e){ if(e.key === 'Enter') f(); }); }); }
+    function pinFeld(id, text, auto){ return '<label for="' + id + '">' + text + '</label><input id="' + id + '" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="' + auto + '">'; }
+    window.lsNameFrage = function(){
+        var z = zustand(); if(!(z && z.token)) return oeffnen();
+        zeigen('<p>Jetzt: <b>' + esc(z.name) + '</b></p>'
+          + '<label for="lsNeuName">Neuer Name</label><input id="lsNeuName" autocomplete="username" maxlength="24" placeholder="z. B. Markus75 oder DL1ABC">'
+          + pinFeld('lsPin', 'Zur Bestätigung deine PIN', 'current-password')
+          + '<div class="ls-fehler" id="lsFehler"></div>'
+          + '<div class="ls-knoepfe"><button type="button" class="ls-knopf blau" id="lsLos" onclick="lsNameAendern()"><i class="fas fa-check"></i> Name ändern</button>'
+          + '<button type="button" class="ls-knopf leise" onclick="lernstandMitnehmen()">Doch nicht</button></div>'
+          + '<div class="ls-tipp">Dein Lernstand bleibt, wie er ist. Auf anderen Geräten meldest du dich ab jetzt mit dem neuen Namen an – wo du schon angemeldet bist, läuft alles weiter.</div>',
+            { titel: 'Name ändern', unter: 'Die PIN bleibt gleich.', kicker: 'KONTO', pose: 'denkt' });
+        setTimeout(function(){ try{ $('lsNeuName').focus(); }catch(e){} }, 50);
+        enterLos(['lsNeuName', 'lsPin'], window.lsNameAendern);
+    };
+    window.lsNameAendern = function(){
+        var z = zustand(); if(!(z && z.token)) return oeffnen();
+        var neu = ($('lsNeuName') && $('lsNeuName').value || '').trim(), pin = ($('lsPin') && $('lsPin').value || '').trim();
+        if(neu.length < 3) return fehler('Bitte einen Namen mit mindestens 3 Zeichen.');
+        if(!/^\d{4,6}$/.test(pin)) return fehler('Die PIN besteht aus 4 bis 6 Ziffern.');
+        if(neu === z.name) return fehler('Das ist schon dein Name.');
+        fehler(''); knopfSperren(true);
+        api('umbenennen', { name: z.name, token: z.token, pin: pin, neuName: neu }).then(function(j){
+            knopfSperren(false);
+            if(!j.ok) return fehler(j._status === 404 ? 'Der Lernstand-Dienst kennt „Name ändern“ noch nicht. Bitte später noch einmal.' : fehlerText(j));
+            var alt = z.name; z.name = j.name; zustandSetzen(z);
+            // Hiess der Platz wie das Konto, zieht er mit
+            try{ if(typeof getUserName === 'function' && typeof setUserName === 'function' && getUserName(platz()) === String(alt).slice(0, 20)) setUserName(String(j.name).slice(0, 20), platz()); }catch(e){}
+            angemeldetZeigen(z, 'Name geändert: Du heißt jetzt „' + j.name + '“.');
+        }).catch(function(){ knopfSperren(false); fehler(fehlerText(null)); });
+    };
+    window.lsPinFrage = function(){
+        var z = zustand(); if(!(z && z.token)) return oeffnen();
+        zeigen(pinFeld('lsPin', 'Jetzige PIN', 'current-password')
+          + pinFeld('lsNeuPin', 'Neue PIN (4 bis 6 Ziffern)', 'new-password')
+          + pinFeld('lsNeuPin2', 'Neue PIN wiederholen', 'new-password')
+          + '<div class="ls-fehler" id="lsFehler"></div>'
+          + '<div class="ls-knoepfe"><button type="button" class="ls-knopf blau" id="lsLos" onclick="lsPinAendern()"><i class="fas fa-check"></i> PIN ändern</button>'
+          + '<button type="button" class="ls-knopf leise" onclick="lernstandMitnehmen()">Doch nicht</button></div>'
+          + '<div class="ls-tipp">Dein Lernstand bleibt, wie er ist. Wo du schon angemeldet bist, läuft alles weiter – die neue PIN brauchst du nur beim nächsten Anmelden. <b>Gut merken:</b> Eine vergessene PIN lässt sich nicht zurückholen.</div>',
+            { titel: 'PIN ändern', unter: 'Name: ' + z.name, kicker: 'KONTO', pose: 'denkt' });
+        setTimeout(function(){ try{ $('lsPin').focus(); }catch(e){} }, 50);
+        enterLos(['lsPin', 'lsNeuPin', 'lsNeuPin2'], window.lsPinAendern);
+    };
+    window.lsPinAendern = function(){
+        var z = zustand(); if(!(z && z.token)) return oeffnen();
+        var pin = ($('lsPin') && $('lsPin').value || '').trim(), n1 = ($('lsNeuPin') && $('lsNeuPin').value || '').trim(), n2 = ($('lsNeuPin2') && $('lsNeuPin2').value || '').trim();
+        if(!/^\d{4,6}$/.test(pin) || !/^\d{4,6}$/.test(n1)) return fehler('Die PIN besteht aus 4 bis 6 Ziffern.');
+        if(n1 !== n2) return fehler('Die beiden neuen PINs sind nicht gleich.');
+        if(n1 === pin) return fehler('Die neue PIN ist dieselbe wie die alte.');
+        fehler(''); knopfSperren(true);
+        api('pinaendern', { name: z.name, token: z.token, pin: pin, neuPin: n1 }).then(function(j){
+            knopfSperren(false);
+            if(!j.ok) return fehler(j._status === 404 ? 'Der Lernstand-Dienst kennt „PIN ändern“ noch nicht. Bitte später noch einmal.' : fehlerText(j));
+            angemeldetZeigen(zustand() || z, 'PIN geändert. Beim nächsten Anmelden gilt die neue PIN.');
+        }).catch(function(){ knopfSperren(false); fehler(fehlerText(null)); });
     };
     window.lsLoeschenFrage = function(){
         var z = zustand(); if(!z) return zu();
@@ -63738,7 +64266,7 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         }
         return api('speichern', { name: z.name, token: z.token, daten: s, basis: z.version, erzwingen: !!erzwingen }).then(function(j){
             fertig();
-            if(j.ok){ z.version = j.version; z.stand = j.stand; z.abdruck = abdruck; zustandSetzen(z); return true; }
+            if(j.ok){ z.version = j.version; z.stand = j.stand; z.abdruck = abdruck; if(j.name) z.name = j.name; zustandSetzen(z); return true; }
             if(j.fehler === 'neuer') return streitFall(z, s);
             if(j.fehler === 'abgemeldet'){ zustandSetzen(null); melden(fehlerText(j)); }
             return false;
@@ -63753,24 +64281,25 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
             return false;
         }
         if(j.version === z.version) return true;
-        // Dort ist es neuer. Hier hat sich nichts getan -> uebernehmen.
+        // Dort ist es neuer. Hier hat sich nichts getan -> dort gilt je Frage,
+        // aber was nur hier steht, bleibt (Stand 390).
         if(fingerabdruck(s) === z.abdruck){
             return api('laden', { name: z.name, token: z.token }).then(function(v){
                 if(!v || !v.ok) return false;
-                z.version = v.version; z.stand = v.stand; z.abdruck = fingerabdruck(v.daten || {});
-                zustandSetzen(z);
-                einspielen(v.daten || {}, z.slot || platz(), 'Lernstand vom anderen Gerät übernommen.');
-                return true;
+                var basis = { name: v.name || z.name, token: z.token, version: v.version, slot: z.slot || platz(), stand: v.stand };
+                var r = vereinen(basis, s, v.daten || {}, true, 'Lernstand vom anderen Gerät übernommen');
+                return r === 'eingespielt' ? false : r;
             });
         }
         return streitFall(z, s);
     }
+    // Hier UND dort geaendert: vereinen statt fragen (Stand 390).
     function streitFall(z, s){
         return api('laden', { name: z.name, token: z.token }).then(function(v){
             if(!v || !v.ok) return false;
-            var basis = { name: z.name, token: z.token, version: v.version, slot: z.slot || platz(), stand: v.stand };
-            wahlZeigen(basis, s, v.daten || {}, v.stand);
-            return false;
+            var basis = { name: v.name || z.name, token: z.token, version: v.version, slot: z.slot || platz(), stand: v.stand };
+            var r = vereinen(basis, s, v.daten || {}, false, 'Lernstände beider Geräte zusammengeführt');
+            return r === 'eingespielt' ? false : r;
         });
     }
 
@@ -63782,7 +64311,10 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
             + (z && z.token ? 'Angemeldet als <b>' + esc(z.name) + '</b> – wird im Hintergrund abgeglichen.'
                             : 'Mit Name und PIN auf jedem Gerät denselben Stand – ohne E-Mail, ohne Passwort.')
             + '</div><button type="button" style="' + (typeof EINST_KNOPF === 'string' ? EINST_KNOPF : '') + '" onclick="lernstandMitnehmen()">'
-            + '<i class="fas fa-cloud-arrow-up"></i> ' + (z && z.token ? 'Verwalten' : 'Mitnehmen einrichten') + '</button>';
+            + '<i class="fas fa-cloud-arrow-up"></i> ' + (z && z.token ? 'Verwalten' : 'Mitnehmen einrichten') + '</button>'
+            // Stand 390: Name und PIN aendern direkt in den Einstellungen
+            + (z && z.token ? ' <button type="button" style="' + (typeof EINST_KNOPF === 'string' ? EINST_KNOPF : '') + '" onclick="lsNameFrage()"><i class="fas fa-pen"></i> Name ändern</button>'
+                            + ' <button type="button" style="' + (typeof EINST_KNOPF === 'string' ? EINST_KNOPF : '') + '" onclick="lsPinFrage()"><i class="fas fa-key"></i> PIN ändern</button>' : '');
     };
     window.lsZeilenText = function(){
         var z = zustand();
@@ -64459,6 +64991,9 @@ html:not(.android-app) #einstMajaFunkKasten, html.stil-sachlich #einstMajaFunkKa
 #appHeute .ah-frost { display: none; }
 html.android-app.stil-verspielt #appHeute .ah-frost { display: flex; position: absolute; left: -6px; bottom: -4px; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; border: 0; font-size: 13px; cursor: pointer; background: rgba(255,255,255,.88); color: #1c6fb8; box-shadow: 0 2px 6px rgba(0,0,0,.25); z-index: 3; }
 html.android-app.stil-verspielt #appHeute .ah-frost.an { background: #1c6fb8; color: #fff; }
+/* Stand 389: Erklaerung unter dem Zaehler der offenen Fragen */
+#appHeute .ah-erkl{position:relative;z-index:1;margin:6px 0 10px;font-size:13px;line-height:1.4;font-weight:600;color:rgba(255,255,255,.92);max-width:min(30em,calc(100% - 118px))}
+html.stil-verspielt #appHeute .ah-erkl{margin:4px 0 6px;font-size:12px;max-width:min(30em,calc(100% - 140px))}
 /* Stand 381: die Schneeflocke in 3D */
 html.android-app.stil-verspielt #appHeute .ah-frost { width: 56px; height: 56px; background: transparent; box-shadow: none; border-radius: 0; left: -14px; bottom: -12px; padding: 0; filter: drop-shadow(2px 3px 3px rgba(10,42,85,.5)); transition: filter .3s; transform: none !important; }
 /* Stand 386: am Handy ist Maja in der Karte nur gut 90 Punkte breit - dort die Flocke klein und links unten NEBEN ihr,

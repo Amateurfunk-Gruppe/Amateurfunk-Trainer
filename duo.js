@@ -3556,7 +3556,7 @@
         anhangZeichnen();
     };
 
-    const DOWNLOAD_SEITE = 'https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/';
+    const DOWNLOAD_SEITE = 'https://amateurfunk-trainer.com/download/';
     const DOWNLOAD_TEXT  = 'Den Amateurfunk-Trainer zum Herunterladen gibt es hier: ' + DOWNLOAD_SEITE
                          + ' \u2013 kostenlos, ohne Anmeldung, f\u00fcr Windows, Linux und Mac.';
     let downloadZuletzt = 0;

@@ -1946,8 +1946,8 @@ const TUER_ZU_SEITE = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8
   + '<p>Der Amateurfunk-Trainer wird von einem privaten Rechner aus geteilt, und der '
   + 'Kursleiter hat gerade zu. Später noch einmal vorbeischauen lohnt sich.</p>'
   + '<p>Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung unter '
-  + '<a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">'
-  + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. Dann läuft er auf deinem '
+  + '<a href="https://amateurfunk-trainer.com/download/">'
+  + 'amateurfunk-trainer.com/download</a>. Dann läuft er auf deinem '
   + 'eigenen Rechner, unabhängig von allen anderen.</p>'
   + (supportSeiteDa() ? '<p style="font-size:0.85rem;color:#94a3b8;margin:0;"><a href="/support.html">Support und Datenschutz</a></p>' : '')
   + '</div></body></html>';
@@ -2231,7 +2231,7 @@ function sperrSeite(land, ip){
     + (wartet ? 'Anfrage läuft …' : 'Zutritt anfragen') + '</button>'
     + '<div id="m">' + (wartet ? 'Deine Anfrage liegt beim Kursleiter.' : '') + '</div>'
     + '<p class="z">Den Trainer gibt es auch zum Mitnehmen — kostenlos und ohne Anmeldung '
-    + 'unter <a href="https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/">amateurfunk-gruppe.github.io/Amateurfunk-Trainer</a>. '
+    + 'unter <a href="https://amateurfunk-trainer.com/download/">amateurfunk-trainer.com/download</a>. '
     + 'Dann läuft er auf deinem eigenen Rechner, ganz ohne Sperre.'
     + (land ? '<br>Erkanntes Land: ' + htmlText(land) : '')
     + (supportSeiteDa() ? '<br><a href="/support.html">Support und Datenschutz</a>' : '') + '</p>'
@@ -6718,7 +6718,7 @@ app.get('/', (req, res, next) => {
   // stimmt. Siehe der lange Kommentar am Willkommensfenster.
   const demo = ' Der Trainer l\u00e4uft auf einem privaten Rechner und ist erreichbar, solange '
              + 'dieser eingeschaltet ist. Zum Behalten gibt es das Programm kostenlos auf '
-             + 'amateurfunk-gruppe.github.io/Amateurfunk-Trainer.';
+             + 'amateurfunk-trainer.com/download.';
   const text  = (raum
     ? 'Einladung in den Gruppenraum: gemeinsam \u00fcben, Frage f\u00fcr Frage, mit Punktestand. '
       + 'Der amtliche Fragenkatalog der Bundesnetzagentur mit einer Erkl\u00e4rung zu jeder Frage.'

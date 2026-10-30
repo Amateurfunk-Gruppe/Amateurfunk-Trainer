@@ -12,7 +12,16 @@ Der Lernfortschritt bleibt dort, wo er entsteht: auf dem eigenen Rechner.
 Entwickelt von **Dietmar Reh**. Kostenfrei für Lernende, Ortsverbände und
 Volkshochschulen — [Einzelheiten unten](#urheberrecht-nutzung-und-kontakt).
 
-**→ [Projektseite: alle Funktionen im Überblick](https://amateurfunk-gruppe.github.io/Amateurfunk-Trainer/)**
+> ### 🌐 [amateurfunk-trainer.com](https://amateurfunk-trainer.com/) – die Webseite des Trainers
+> **[▶ Online üben, ohne Installation: trainer.amateurfunk-trainer.com](https://trainer.amateurfunk-trainer.com/)**
+>
+> Alle 1750 Prüfungsfragen der Bundesnetzagentur für Klasse N, E und A – **jede mit Lösungsweg**,
+> Rechenaufgaben Schritt für Schritt vorgerechnet. Mit [Lexikon](https://amateurfunk-trainer.com/lexikon/),
+> [Rechnern](https://amateurfunk-trainer.com/rechner/), [allen Prüfungsfragen nach Themen](https://amateurfunk-trainer.com/pruefungsfragen/)
+> und dem [Lehrgang Klasse N](https://amateurfunk-trainer.com/lehrgang/).
+> Die **Android-App** kommt voraussichtlich ab Mitte November 2026 zu Google Play.
+>
+> Dieses Repository ist die Ablage des Quelltexts. Alles Weitere steht auf **[amateurfunk-trainer.com](https://amateurfunk-trainer.com/)**.
 
 > **Die Lizenz in einem Satz:** Der Quelltext ist einsehbar und jede
 > nicht-kommerzielle Nutzung ist frei — auch in Ortsverbänden, Schulen und
