@@ -70,7 +70,9 @@ self.addEventListener('activate', ereignis => {
     ereignis.waitUntil((async () => {
         // Alte Speicherstaende wegraeumen.
         const namen = await caches.keys();
-        await Promise.all(namen.filter(n => n !== SPEICHER).map(n => caches.delete(n)));
+        // Majas Sprachpakete (Stand 394) liegen in eigenen Speichern ("maja-sprache-...") und
+        // bleiben stehen - sonst waeren nach jedem Update 200 MB neu herunterzuladen.
+        await Promise.all(namen.filter(n => n !== SPEICHER && !n.startsWith('maja-sprache')).map(n => caches.delete(n)));
         await self.clients.claim();
     })());
 });

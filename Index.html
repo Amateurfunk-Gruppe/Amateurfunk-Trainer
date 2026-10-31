@@ -1074,7 +1074,7 @@
             background: var(--s-fl2); color: var(--s-text3); border: 1.5px solid var(--s-rand); }
         #awPfad .fertig .apf-pkt { background: linear-gradient(135deg, var(--s-gruen, #1FC46F), var(--s-gruen-tief, #11924F));
             color: #fff; border-color: transparent; font-size: 13px; }
-        #awPfad .jetzt .apf-pkt { background: linear-gradient(135deg, var(--s-akzent, #0FB7B2), var(--s-akzent-tief, #0A94B8));
+        #awPfad .jetzt .apf-pkt { text-shadow: 0 1px 2px rgba(0,0,0,0.35); background: linear-gradient(135deg, var(--s-akzent, #0FB7B2), var(--s-akzent-tief, #0A94B8));
             color: #fff; border-color: transparent; box-shadow: 0 0 0 4px var(--s-akzent-w, rgba(15,183,178,.16)); }
         #awPfad .apf-txt { flex: 1; min-width: 0; padding-top: 2px; }
         #awPfad .apf-txt b { display: block; font-size: 13.5px; font-weight: 600; color: var(--s-text);
@@ -12564,6 +12564,7 @@ function confirmCacheClear(){
 // Wer nur den Verlauf loswerden will, hat dafür den Knopf "Löschen" im Verlauf-Feld - der
 // kann sogar einzelne Zeilen. Die beiden anderen Benutzer bleiben unangetastet.
 function openFullResetModal(){
+    if(typeof benutzerZuruecksetzen === 'function'){ benutzerZuruecksetzen(currentUser, true); return; }   // Stand 393
     try{
         const label = document.getElementById('fullResetUserLabel');
         if(label){
@@ -16949,6 +16950,7 @@ function benutzerZuruecksetzen(slot, ausEinstellungen){
                 .forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
             ['letzte', 'beste'].forEach(a => { try{ localStorage.removeItem('lsNotfall:' + a + ':' + slot); }catch(e){} });
             try{ localStorage.setItem('amateurfunk_neustart_' + slot, String(Date.now())); }catch(e){}
+            try{ if(window.lsAppSichern) window.lsAppSichern(false); }catch(e){}   // App: interne Kopie leeren (Stand 392)
             // Der aktive Platz: ueber das Kopfstueck neu laden (wie beim Abgleich), sonst
             // schriebe der Trainer beim Verlassen Punkte und Fortschritt aus dem Arbeits-
             // speicher zurueck. Was nicht zurueckgesetzt wird (Pruefungsziel ...), bleibt.
@@ -17657,7 +17659,14 @@ function startQuestionSession(ids, label, startIndex){
 function startSearchResultSession(){
     const isFav = searchResultState.mode === 'fav';
     const ids = isFav ? favoriteQuestions.slice() : searchResultState.ids;
-    startQuestionSession(ids, isFav ? 'Merkliste' : 'Suche: ' + searchResultState.query);
+    const los = () => {
+        // Eine laufende Runde vorher sichern (sonst ginge ihr Stand verloren).
+        try{ if(isFav && isQuizActive && typeof rundeSpeichern === 'function') rundeSpeichern(); }catch(e){}
+        startQuestionSession(ids, isFav ? 'Merkliste' : 'Suche: ' + searchResultState.query);
+    };
+    // Merkliste angefangen und nicht fertig: fragen, ob es dort weitergeht.
+    if(isFav && typeof rundeAngebotZeigen === 'function' && rundeAngebotZeigen(los, 'merk')) return;
+    los();
 }
 window.toggleFavorite = toggleFavorite;
 window.toggleFavoriteCurrent = toggleFavoriteCurrent;
@@ -20186,7 +20195,7 @@ function durchsichtWeiterFrage(p){
     const anteil = gesamt ? Math.max(1.2, Math.min(100, (p.index / gesamt) * 100)) : 0;
     const gel    = durchsichtGelernte().length;
     const knopf = 'min-height:40px; padding:0.5rem 1rem; border-radius:20px; font-weight:600; cursor:pointer; '
-                + 'font-family:inherit; font-size:0.84rem; border:1px solid #b0c4d8; background:#fff; color:#16243a !important;';
+                + 'font-family:inherit; font-size:0.84rem; border:1px solid #b0c4d8; background:#fff; color:#16243a;';
     modal.innerHTML =
         '<div style="background:#fff; border-radius:22px; width:100%; max-width:560px; overflow:hidden; '
       + 'box-shadow:0 24px 64px rgba(0,0,0,0.35);">'
@@ -20408,14 +20417,14 @@ function durchsichtFrageFenster(p){
       + (buch.gesehen
           ? '<button onclick="durchsichtStandLoeschen()" class="btn" '
             + 'style="margin-right:auto; min-height:36px; padding:0.45rem 1rem; border-radius:20px; '
-            + 'font-weight:600; border:1px solid #eec3bd; background:#fff; color:#a5281b !important; '
+            + 'font-weight:600; border:1px solid #eec3bd; background:#fff; color:#a5281b; '
             + 'cursor:pointer; font-family:inherit; font-size:0.8rem;" '
             + 'data-tooltip="Lesezeichen und Blätter-Buch für dieses Prüfungsziel wegwerfen. Der Lernstand bleibt.">'
             + '<i class="fas fa-eraser"></i> Stand löschen</button>'
           : '<span style="margin-right:auto;"></span>')
       + '<button onclick="durchsichtFensterZu(); durchsichtVergessen(); durchsichtLos(0);" class="btn" '
       + 'style="min-height:36px; padding:0.45rem 1rem; border-radius:20px; font-weight:600; '
-      + 'border:1px solid #b0c4d8; background:#fff; color:#16243a !important; cursor:pointer; '
+      + 'border:1px solid #b0c4d8; background:#fff; color:#16243a; cursor:pointer; '
       + 'font-family:inherit; font-size:0.8rem;" '
       + 'data-tooltip="Lesezeichen zurück auf die erste Frage – der Lernstand bleibt">'
       + '<i class="fas fa-rotate-left"></i> Neu beginnen</button>'
@@ -24916,7 +24925,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 390, datum: '30.10.2026' };
+const TRAINER_STAND = { nr: 394, datum: '01.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -31970,7 +31979,7 @@ function ttsPiperWeg(){
              + 'An deinem Ger\u00e4t musst du nichts einstellen.';
     }
     return 'So kommt sie dazu: Einstellungen \u2192 Wartung \u2192 Hilfsprogramme \u2192 bei Piper auf \u201eHolen\u201c. '
-         + 'Danach Einstellungen \u2192 Nachteilsausgleich \u2192 Stimme \u2192 \u201eStimmen hinzuf\u00fcgen\u201c.'
+         + 'Danach Einstellungen \u2192 Vorlesen \u2192 Stimme \u2192 \u201eStimmen hinzuf\u00fcgen\u201c.'
          + (ttsIstWindows() ? ' Wahlweise das Windows-ZIP noch einmal herunterladen \u2013 darin sind Piper und die Stimmen enthalten.' : '');
 }
 function ttsMeldung(text){
@@ -32078,6 +32087,17 @@ async function playTTSSegment(seg, token){
         const passendeFrage = (seg.frageNr === undefined) || (seg.frageNr === currentIndex);
         const el = passendeFrage ? document.querySelector(seg.selector) : null;
         if(el){ el.classList.add(seg.klasse || 'tts-highlight'); el.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+    }
+    // Majas Sprachpaket (Stand 394): erst die Aufnahme, sonst wie bisher die eingebaute Stimme -
+    // dann in sprechbaren Stuecken, weil ein Maja-Abschnitt nicht zerlegt wurde.
+    if(seg.maja){
+        if(await majaSegmentSpielen(seg, token)) return;
+        if(token!==ttsQueueToken) return;
+        for(const t of ttsInStuecke(seg.text)){
+            if(token!==ttsQueueToken) return;
+            await playTTSSegment(Object.assign({}, seg, { maja: null, text: t }), token);
+        }
+        return;
     }
     // Gast an einem Server ohne Stimme: das eigene Geraet liest vor (ab dem zweiten Stueck ohne Umweg ueber den Server)
     if(window._ttsGeraet && await ttsGeraetestimme(seg, token)) return;
@@ -32428,6 +32448,13 @@ async function playTTSQueue(segments, btn, zurueck){
     // Stuecke.
     const stuecke = [];
     for(const seg of (segments || [])){
+        // Majas Aufnahme (Stand 394) ist ein Stueck - sie wird nicht zerlegt.
+        if(seg && seg.maja){
+            stuecke.push({ text: seg.text, selector: seg.selector, frageNr: seg.frageNr, klasse: seg.klasse,
+                           worte: null, thorsten: !!seg.thorsten, wortVon: 0, wortBis: 1,
+                           pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja });
+            continue;
+        }
         const teile = ttsInStuecke(seg && seg.text);
         if(!teile.length) continue;
         // ----------------------------------------------------------------
@@ -32514,6 +32541,309 @@ async function playTTSQueue(segments, btn, zurueck){
 // ================================================================
 const BILD_PAUSE_MS = 2600;
 
+// ================================================================
+//  MAJA LIEST DIE PRUEFUNGSFRAGEN VOR - SPRACHPAKETE   (Stand 394)
+//  ----------------------------------------------------------------
+//  Dietmar (31.10.2026): "Das waere dann natuerlich dann so, dass Non plus
+//  Ultra ... mit diesem MP3-File, das klingt bei Weitem besser als dieses
+//  Piper ... Wobei ich bei dem Piper sogar sagen wuerde, das lassen wir
+//  noch drin. Wir bieten dann aber die anderen Sprachpakete dann zum
+//  Download an." Und am 01.11.: "Die Klasse N mit den Fragen und den
+//  Antworten. Bei den anderen Klassen nur die Fragen. Hier muessen wir
+//  ergaenzen, dass die Antworten noch folgen."
+//
+//  Die Aufnahmen (Grok, Stimme Carina) liegen im eigenen Cloudflare-
+//  Projekt "maja-sprache" - zu gross fuer die App und fuer jeden Trainer-
+//  Upload. Je Paket: ein Verzeichnis (Kennung -> Teil, Anfang, Laenge)
+//  und Teile bis 20 MB, in denen die MP3-Dateien aneinanderhaengen. Der
+//  Trainer laedt ein Paket auf Wunsch einmal herunter und legt es in den
+//  Zwischenspeicher des Browsers (Cache API); gespielt wird ein Ausschnitt
+//  daraus. Ohne Paket - oder wenn etwas fehlt - liest wie bisher Thorsten
+//  bzw. die Geraetestimme.
+//
+//  Antworten heissen "Kennung-n" (n = Platz im amtlichen Katalog). Weil
+//  der Trainer die Antworten mischt, wird die Antwort am Text erkannt:
+//  das Verzeichnis traegt je Antwort einen kurzen Textschluessel.
+// ================================================================
+const MAJA_SPRACHE_QUELLEN = ['https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
+const MAJA_SPRACHE_CACHE = 'maja-sprache-v1';
+const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten'] };
+const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {} };
+
+function majaSpracheMoeglich(){
+    try{ return typeof caches !== 'undefined' && typeof fetch === 'function' && typeof Blob !== 'undefined'; }catch(e){ return false; }
+}
+function majaSpracheAn(){
+    try{ return localStorage.getItem('maja_sprache_an') !== '0'; }catch(e){ return true; }
+}
+function majaSpracheAnSetzen(an){
+    try{ localStorage.setItem('maja_sprache_an', an ? '1' : '0'); }catch(e){}
+}
+function majaSpracheInstalliert(){
+    try{ return JSON.parse(localStorage.getItem('maja_sprache_pakete') || '{}') || {}; }catch(e){ return {}; }
+}
+function majaSpracheMerken(o){
+    try{ localStorage.setItem('maja_sprache_pakete', JSON.stringify(o)); }catch(e){}
+}
+function majaSpracheNorm(t){
+    return String(t || '').toLowerCase().replace(/[^0-9a-zäöüß]/g, '').slice(0, 60);
+}
+// Verzeichnisse der geladenen Pakete in den Speicher holen (klein: 15-150 KB).
+let majaSpracheIdxVersprechen = null;
+function majaSpracheIndizesLaden(){
+    if(majaSpracheIdxVersprechen) return majaSpracheIdxVersprechen;
+    majaSpracheIdxVersprechen = (async () => {
+        if(!majaSpracheMoeglich()) return;
+        const inst = majaSpracheInstalliert();
+        const ids = Object.keys(inst);
+        if(!ids.length) return;
+        const c = await caches.open(MAJA_SPRACHE_CACHE);
+        let weg = false;
+        for(const pid of ids){
+            try{
+                const r = await c.match(inst[pid].quelle + inst[pid].index);
+                // Hat der Browser den Speicher geraeumt, gilt das Paket als nicht geladen.
+                if(r) majaSprache.idx[pid] = await r.json();
+                else { delete inst[pid]; weg = true; }
+            }catch(e){}
+        }
+        if(weg) majaSpracheMerken(inst);
+    })().catch(() => {});
+    return majaSpracheIdxVersprechen;
+}
+// Marke fuer die FRAGE: { pid, e } oder null
+function majaFrageMarke(q){
+    try{
+        if(!q || !majaSpracheAn()) return null;
+        const inst = majaSpracheInstalliert();
+        for(const pid of Object.keys(inst)){
+            if(!/-fragen$/.test(pid)) continue;
+            const idx = majaSprache.idx[pid];
+            const e = idx && idx[q.id];
+            if(e) return { pid, e };
+        }
+    }catch(e){}
+    return null;
+}
+// Marke fuer eine ANTWORT - erkannt am Text, weil die Reihenfolge gemischt ist
+function majaAntwortMarke(q, opt){
+    try{
+        if(!q || !opt || !majaSpracheAn()) return null;
+        const n = majaSpracheNorm(opt.text);
+        if(!n) return null;
+        const inst = majaSpracheInstalliert();
+        for(const pid of Object.keys(inst)){
+            if(!/-antworten$/.test(pid)) continue;
+            const idx = majaSprache.idx[pid];
+            if(!idx) continue;
+            for(let k = 1; k <= 8; k++){
+                const e = idx[q.id + '-' + k];
+                if(e && e[3] === n) return { pid, e };
+            }
+        }
+    }catch(e){}
+    return null;
+}
+async function majaSpracheBlob(m){
+    const inst = majaSpracheInstalliert()[m.pid];
+    if(!inst) return null;
+    const name = inst.teile[m.e[0]];
+    if(!name) return null;
+    let b = majaSprache.teile[name];
+    if(!b){
+        const c = await caches.open(MAJA_SPRACHE_CACHE);
+        const r = await c.match(inst.quelle + name);
+        if(!r) return null;
+        b = await r.blob();
+        majaSprache.teile[name] = b;
+    }
+    return b.slice(m.e[1], m.e[1] + m.e[2], 'audio/mpeg');
+}
+// Spielt Majas Aufnahme. true = gespielt (oder abgebrochen), false = bitte die normale Stimme nehmen.
+async function majaSegmentSpielen(seg, token){
+    let blob = null;
+    try{ blob = await majaSpracheBlob(seg.maja); }catch(e){ blob = null; }
+    if(!blob || blob.size < 200) return false;
+    if(token !== ttsQueueToken) return true;
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentTtsUrl = url; currentTtsAudio = audio;
+    try{ ttsTempoAnwenden(audio); }catch(e){}
+    ttsAudioMerken(audio, url);
+    return await new Promise(resolve => {
+        let gespielt = false, aus = false;
+        const fertig = ok => {
+            if(aus) return; aus = true;
+            ttsAudioAnhalten(audio);
+            currentTtsUrl = null; currentTtsAudio = null;
+            resolve(ok);
+        };
+        audio.onended = () => fertig(true);
+        audio.onerror = () => fertig(gespielt);
+        audio.play().then(() => { gespielt = true; if(token !== ttsQueueToken) fertig(true); })
+                    .catch(() => fertig(false));
+    });
+}
+window.majaSegmentSpielen = majaSegmentSpielen;
+
+async function majaSpracheListe(neu){
+    if(majaSprache.liste && !neu) return majaSprache.liste;
+    for(const q of MAJA_SPRACHE_QUELLEN){
+        try{
+            const r = await fetch(q + 'pakete.json', { cache: 'no-cache' });
+            if(!r.ok) continue;
+            const j = await r.json();
+            if(j && Array.isArray(j.pakete)){ majaSprache.liste = j; majaSprache.quelle = q; return j; }
+        }catch(e){}
+    }
+    return null;
+}
+
+async function majaSpracheLaden(pid){
+    if(majaSprache.laeuft[pid]) return;
+    majaSprache.laeuft[pid] = true; majaSprache.fehler[pid] = ''; majaSprache.fortschritt[pid] = 0;
+    majaSpracheKarteZeichnen();
+    try{
+        const L = await majaSpracheListe();
+        if(!L) throw new Error('Die Sprachpakete sind gerade nicht erreichbar. Besteht eine Internetverbindung?');
+        const p = L.pakete.find(x => x.id === pid);
+        if(!p) throw new Error('Dieses Paket gibt es nicht.');
+        const quelle = majaSprache.quelle;
+        try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+        const c = await caches.open(MAJA_SPRACHE_CACHE);
+        let fertigBytes = 0;
+        for(const t of p.teile){
+            const url = quelle + t.datei;
+            const schon = await c.match(url);
+            if(!schon){
+                const res = await fetch(url, { cache: 'no-cache' });
+                if(!res.ok) throw new Error('Download fehlgeschlagen (' + res.status + ').');
+                let blob;
+                if(res.body && res.body.getReader){
+                    const leser = res.body.getReader(); const stuecke = []; let n = 0;
+                    for(;;){
+                        const { done, value } = await leser.read();
+                        if(done) break;
+                        stuecke.push(value); n += value.length;
+                        majaSprache.fortschritt[pid] = (fertigBytes + n) / p.bytes;
+                        majaSpracheFortschrittZeigen(pid);
+                    }
+                    blob = new Blob(stuecke, { type: 'application/octet-stream' });
+                }else{
+                    blob = await res.blob();
+                }
+                if(t.bytes && blob.size !== t.bytes) throw new Error('Die Datei kam unvollständig an. Bitte noch einmal versuchen.');
+                await c.put(url, new Response(blob, { headers: { 'Content-Type': 'application/octet-stream' } }));
+            }
+            fertigBytes += t.bytes || 0;
+            majaSprache.fortschritt[pid] = fertigBytes / p.bytes;
+            majaSpracheFortschrittZeigen(pid);
+        }
+        const ir = await fetch(quelle + p.index, { cache: 'no-cache' });
+        if(!ir.ok) throw new Error('Das Verzeichnis des Pakets fehlt.');
+        const ij = await ir.json();
+        await c.put(quelle + p.index, new Response(JSON.stringify(ij), { headers: { 'Content-Type': 'application/json' } }));
+        const inst = majaSpracheInstalliert();
+        inst[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, anzahl: p.anzahl, bytes: p.bytes, stand: L.stand || '' };
+        majaSpracheMerken(inst);
+        majaSprache.idx[pid] = ij;
+    }catch(e){
+        majaSprache.fehler[pid] = (e && e.message) || 'Fehler beim Herunterladen.';
+    }
+    majaSprache.laeuft[pid] = false;
+    majaSpracheKarteZeichnen();
+}
+window.majaSpracheLaden = majaSpracheLaden;
+
+async function majaSpracheEntfernen(pid){
+    const inst = majaSpracheInstalliert();
+    const p = inst[pid];
+    if(p){
+        try{
+            const c = await caches.open(MAJA_SPRACHE_CACHE);
+            for(const t of p.teile){ await c.delete(p.quelle + t); delete majaSprache.teile[t]; }
+            await c.delete(p.quelle + p.index);
+        }catch(e){}
+    }
+    delete inst[pid]; delete majaSprache.idx[pid];
+    majaSpracheMerken(inst);
+    majaSpracheKarteZeichnen();
+}
+window.majaSpracheEntfernen = majaSpracheEntfernen;
+
+function majaSpracheFortschrittZeigen(pid){
+    const b = document.getElementById('majaSpracheBalken_' + pid);
+    const t = document.getElementById('majaSpracheProzent_' + pid);
+    const v = Math.max(0, Math.min(1, majaSprache.fortschritt[pid] || 0));
+    if(b) b.style.width = Math.round(v * 100) + '%';
+    if(t) t.textContent = Math.round(v * 100) + ' %';
+}
+
+const MAJA_SPRACHE_TITEL = {
+    'N-fragen':    ['Fragen Klasse N', 'alle 571 Fragen der Klasse N'],
+    'N-antworten': ['Antworten Klasse N', 'alle Antworten der Klasse N, ohne reine Bild-Antworten'],
+    'E-fragen':    ['Fragen Aufbau N auf E', '463 Fragen, die für Klasse E dazukommen'],
+    'A-fragen':    ['Fragen Aufbau E auf A', '716 Fragen, die für Klasse A dazukommen']
+};
+const MAJA_SPRACHE_MB = { 'N-fragen': 38, 'N-antworten': 87, 'E-fragen': 31, 'A-fragen': 58 };
+
+function majaSpracheKarteZeichnen(){
+    const blatt = document.getElementById('einstBlatt_sprechen');
+    if(!blatt) return;
+    let k = document.getElementById('majaSpracheKarte');
+    if(!k){
+        k = document.createElement('div');
+        k.id = 'majaSpracheKarte';
+        blatt.insertBefore(k, blatt.firstChild);
+    }
+    if(!majaSpracheMoeglich()){
+        k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
+            'Dieser Browser kann keine Sprachpakete speichern. Es liest weiter die eingebaute Stimme vor.', '');
+        return;
+    }
+    const inst = majaSpracheInstalliert();
+    let kl = 'n';
+    try{ kl = (klasseAktuell().id || 'n').toLowerCase(); }catch(e){}
+    const braucht = MAJA_SPRACHE_BRAUCHT[kl] || MAJA_SPRACHE_BRAUCHT.n;
+    const zeile = pid => {
+        const [titel, sub] = MAJA_SPRACHE_TITEL[pid];
+        const da = !!inst[pid], laeuft = !!majaSprache.laeuft[pid], fehler = majaSprache.fehler[pid];
+        const noetig = braucht.includes(pid);
+        let rechts;
+        if(laeuft){
+            rechts = '<div style="min-width:120px;"><div style="height:8px; border-radius:4px; background:rgba(127,140,160,0.25); overflow:hidden;">'
+                + '<div id="majaSpracheBalken_' + pid + '" style="height:100%; width:' + Math.round((majaSprache.fortschritt[pid] || 0) * 100) + '%; background:#0e9aa7;"></div></div>'
+                + '<div id="majaSpracheProzent_' + pid + '" style="font-size:0.72rem; color:var(--muted); text-align:right; margin-top:2px;">'
+                + Math.round((majaSprache.fortschritt[pid] || 0) * 100) + ' %</div></div>';
+        }else if(da){
+            rechts = '<button type="button" style="' + EINST_KNOPF + '" onclick="majaSpracheEntfernen(\'' + pid + '\')"><i class="fas fa-trash-can"></i> Entfernen</button>';
+        }else{
+            rechts = '<button type="button" style="' + EINST_KNOPF + '" onclick="majaSpracheLaden(\'' + pid + '\')"><i class="fas fa-download"></i> Laden (' + MAJA_SPRACHE_MB[pid] + ' MB)</button>';
+        }
+        return '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0; border-top:1px solid rgba(127,140,160,0.2);">'
+            + '<div style="flex:1; min-width:0;">'
+            + '<div style="font-size:0.84rem; font-weight:600;">' + (da ? '<i class="fas fa-circle-check" style="color:#16a34a;"></i> ' : '') + titel
+            + (noetig ? ' <span style="font-size:0.68rem; font-weight:600; color:#0e9aa7;">· für deine Klasse</span>' : '') + '</div>'
+            + '<div style="font-size:0.72rem; color:var(--muted);">' + sub + (da && inst[pid].stand ? ' · Stand ' + inst[pid].stand : '') + '</div>'
+            + (fehler ? '<div style="font-size:0.72rem; color:#d9403a; margin-top:2px;">' + fehler + '</div>' : '')
+            + '</div>' + rechts + '</div>';
+    };
+    const an = majaSpracheAn();
+    const inhalt =
+        '<label style="display:flex; align-items:center; gap:0.5rem; font-size:0.84rem; cursor:pointer; margin-bottom:0.4rem;">'
+        + '<input type="checkbox" ' + (an ? 'checked' : '') + ' onchange="majaSpracheAnSetzen(this.checked)"> Maja liest vor, wenn das Paket geladen ist</label>'
+        + ['N-fragen', 'N-antworten', 'E-fragen', 'A-fragen'].map(zeile).join('')
+        + '<div style="padding:0.45rem 0; border-top:1px solid rgba(127,140,160,0.2); font-size:0.78rem; color:var(--muted);">'
+        + '<i class="fas fa-hourglass-half"></i> <b>Antworten Aufbau N auf E und E auf A folgen.</b> Bis dahin liest bei diesen Fragen die eingebaute Stimme die Antworten vor.</div>';
+    k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
+        'Maja liest die Prüfungsfragen mit ihrer eigenen Stimme vor – viel natürlicher als die eingebaute Stimme. '
+        + 'Ein Paket wird einmal heruntergeladen und bleibt auf diesem Gerät. Ohne Paket liest wie bisher die eingebaute Stimme.', inhalt);
+}
+window.majaSpracheKarteZeichnen = majaSpracheKarteZeichnen;
+window.majaSpracheAnSetzen = majaSpracheAnSetzen;
+setTimeout(() => { try{ majaSpracheIndizesLaden(); }catch(e){} }, 2500);
+
+
 function vorleseFrage(){
     const q=currentQuestions[currentIndex]; if(!q) return;
     const btn=document.getElementById('ttsBtn');
@@ -32523,7 +32853,7 @@ function vorleseFrage(){
     const kenner = (typeof kennerThema === 'function') && kennerThema(q);
     const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
-    const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk', thorsten:true}];
+    const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk', thorsten:true, maja: majaFrageMarke(q)}];
     // NUR DIE FRAGE, wenn die Antworten unter der Maus kommen sollen -
     // siehe "DIE ANTWORT UNTER DER MAUS VORLESEN" (26.09.2026).
     if(einstellungen.mausVorlesen){ playTTSQueue(segments, btn); return; }
@@ -32541,8 +32871,10 @@ function antwortSegment(q, i, sprich){
     const istBild = !!(opt.image && String(opt.image).trim());
     // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
     const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
-    return { text, selector:`[data-optindex="${i}"]`, thorsten:true,
-             pause: (istBild && !hatText) ? BILD_PAUSE_MS : 0 };
+    // Majas Aufnahme der Antwort (Stand 394) - ohne "Antwort A", deshalb eine kurze Pause danach.
+    const maja = hatText ? majaAntwortMarke(q, opt) : null;
+    return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja,
+             pause: (istBild && !hatText) ? BILD_PAUSE_MS : (maja ? 450 : 0) };
 }
 
 // ================================================================
@@ -32866,7 +33198,7 @@ async function einstProgrammHolen(was){
         if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
         if(lage) lage.innerHTML = '<span style="color:#1c6b3a;">✅ Fertig. '
             + (was === 'piper'
-                ? 'Die Sprachausgabe ist bereit — im Reiter Nachteilsausgleich eine Stimme wählen.'
+                ? 'Die Sprachausgabe ist bereit — im Reiter Vorlesen eine Stimme wählen.'
                 : 'Der Tunnel steht bereit — im Gruppenraum auf „Tunnel starten".')
             + '</span>';
     }catch(e){
@@ -33863,6 +34195,9 @@ const EINST_REITER = [
     // 21.10.2026 Dietmar: "so vieles mit Sound ... einen extra Reiter mit Sounds, damit die Benutzer gleich sehen, wo man das abschalten kann."
     { id:'sounds',    name:'Sounds',    symbol:'fa-volume-high' },
     // Stand 386: Energie direkt nach Sounds - Dietmar: "die ist fuer mich schon ziemlich wichtig und gehoert an den Anfang" / "rechts neben Sound"
+    // Stand 393 (31.10.2026), Dietmar: "rechts neben Sound den Reiter Vorlesen ... alles, was mit Vorlesen zu tun hat,
+    // Stimme und so weiter, das gehoert da rein. Und Sounds ist alles, was mit Pieptoenen und Maja und Fanfare zu tun hat."
+    { id:'sprechen',  name:'Vorlesen',  symbol:'fa-comment-dots' },
     { id:'energie',   name:'Energie',   symbol:'fa-battery-half' },
     // 27.10.2026 Dietmar: "Der Beamer Modus, Bild vergroessern und einen Beamer verwenden, moechte ich unter
     // Einstellungen als eigenen Reiter dazu haben. Ich habe ihn gesucht und nicht gefunden."
@@ -33975,6 +34310,70 @@ function einstLernstandFuellen(){
 }
 window.einstLernstandFuellen = einstLernstandFuellen;
 
+// ================================================================
+//  REITER VORLESEN                                       (Stand 393)
+//  Dietmar, 31.10.2026: "Ich finde die Einstellung nicht, wo ich am Handy
+//  einstellen kann, dass er automatisch jede Frage vorliest" - sie stand
+//  unter Nachteilsausgleich. Dann: "rechts neben Sound den Reiter
+//  Vorlesen ... Stimme und so weiter. Und Sounds ist alles, was mit
+//  diesen Pieptoenen und Maja und Fanfare und so weiter zu tun hat."
+//  Die Kaesten werden nur umgehaengt - Kennungen, Haken und gespeicherte
+//  Werte bleiben, wie sie sind. Laeuft bei jedem Aufschlagen eines
+//  Reiters (manche Kaesten entstehen erst spaeter) und ist wiederholbar.
+// ================================================================
+function einstUmordnen(){
+    const blatt = id => document.getElementById('einstBlatt_' + id);
+    const ziel = blatt('sprechen'); if(!ziel) return;
+    const kasten = (id, titel) => {
+        const bl = blatt(id); if(!bl) return null;
+        const t = [...bl.querySelectorAll('div[style*="text-transform:uppercase"]')].find(d => d.textContent.trim() === titel);
+        if(!t) return null;
+        let e = t;
+        while(e.parentElement && e.parentElement !== bl && e.parentElement.id !== 'einstVerschoben') e = e.parentElement;
+        return e;
+    };
+    // 1. Vorlesen: App-Stimmenwahl (aus Sounds), dann Stimme/Tempo, Fragen und Antworten, Mitlesen, Schrift (aus Nachteilsausgleich)
+    [['sounds', 'Nur in der App'], ['sprechen', 'Nur in der App'], ['vorlesen', 'Stimme'], ['sprechen', 'Stimme'],
+     ['vorlesen', 'Fragen und Antworten'], ['sprechen', 'Fragen und Antworten'], ['vorlesen', 'Mitlesen'], ['sprechen', 'Mitlesen'],
+     ['vorlesen', 'Schrift'], ['sprechen', 'Schrift']].forEach(([von, titel]) => {
+        const k = kasten(von, titel);
+        if(k && k.parentElement !== ziel) ziel.appendChild(k);
+    });
+    // 2. Toene beim Tippen (App, stand unter Anpassen) zu den Sounds
+    const ton = kasten('anpassen', 'Töne beim Tippen'), snd = blatt('sounds');
+    if(ton && snd && ton.parentElement !== snd){ const s = kasten('sounds', 'Sounds'); if(s && s.nextSibling) snd.insertBefore(ton, s.nextSibling); else snd.appendChild(ton); }
+    // 3. "Statistik senden" ist keine Hilfe beim Lernen, sondern Datenschutz: nach Allgemein (ans Ende)
+    const al = blatt('allgemein');
+    ['vorlesen', 'sprechen'].forEach(von => { const k = kasten(von, 'Statistik senden'); if(k && al) al.appendChild(k); });
+    // 4. Lernen: alles, was beim Ueben passiert (vorher verteilt auf Anpassen und Nachteilsausgleich)
+    const ln = blatt('lernen');
+    if(ln){
+        [['anpassen', 'Tagesziel'], ['anpassen', 'Lern-Modus'],
+         ['vorlesen', 'Antwort zurücknehmen'], ['vorlesen', 'Automatisch weiter'], ['vorlesen', 'Formelblatt'], ['vorlesen', 'Belohnung']]
+        .forEach(([von, titel]) => { const k = kasten(von, titel); if(k && k.parentElement !== ln) ln.appendChild(k); });
+    }
+    // 5. Die Wahl des Begleiters (Funki oder Maja) ist kein Ton: von Sounds zu Anpassen, unter die Ueberschrift "Begleiter"
+    const ap = blatt('anpassen'), bg = kasten('sounds', 'Begleiter');
+    if(ap && bg){
+        const h = [...ap.querySelectorAll('.anp-gruppe')].find(e => e.textContent.trim() === 'Begleiter');
+        if(h && h.nextSibling) ap.insertBefore(bg, h.nextSibling); else ap.appendChild(bg);
+    }
+    // 6. Die App-Ueberschrift "Beim Üben" steht jetzt nur noch ueber den Leisten
+    if(ap) [...ap.querySelectorAll('.anp-gruppe')].forEach(e => { if(e.textContent.trim() === 'Beim Üben') e.textContent = 'Leisten'; });
+    // 7. Im Nachteilsausgleich ein Wegweiser
+    const na = blatt('vorlesen');
+    if(na && !document.getElementById('einstVorlesenWeg')){
+        const w = document.createElement('div');
+        w.id = 'einstVorlesenWeg';
+        w.innerHTML = einstKasten('Vorlesen und Lernen', 'Stimme, „Jede Frage automatisch vorlesen“, Mitlesen und die Schrift beim Vorlesen stehen jetzt unter <b>Vorlesen</b>. '
+            + 'Antwort zurücknehmen, Automatisch weiter, Formelblatt-Hinweis und Belohnung stehen unter <b>Lernen</b>.',
+            '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;"><button type="button" style="' + EINST_KNOPF + '" onclick="einstReiterZeigen(\'sprechen\')"><i class="fas fa-comment-dots"></i> Zu Vorlesen</button>'
+          + '<button type="button" style="' + EINST_KNOPF + '" onclick="einstReiterZeigen(\'lernen\')"><i class="fas fa-graduation-cap"></i> Zu Lernen</button></div>');
+        na.insertBefore(w, na.firstChild);
+    }
+}
+window.einstUmordnen = einstUmordnen;
+
 function einstReiterZeigen(id){
     if(!EINST_REITER.some(r => r.id === id)) id = 'allgemein';
     // Der Lerncoach wird nur am Trainer-PC eingerichtet (29.09.2026).
@@ -34006,7 +34405,10 @@ function einstReiterZeigen(id){
     if(id === 'lernstand'){ try{ einstLernstandFuellen(); }catch(e){} }
     if(id === 'wartung')  { try{ einstProgrammeFuellen(); }catch(e){} try{ einstOhmLageFuellen(); }catch(e){} }
     try{ appEinstellungenAufraeumen(); }catch(e){}
-    if(id === 'vorlesen') {
+    try{ einstUmordnen(); }catch(e){}
+    setTimeout(() => { try{ einstUmordnen(); }catch(e){} }, 0);   // die App baut "Mitlesen" und "Statistik" erst danach ein
+    if(id === 'sprechen') { try{ appStimmenNachziehen(); }catch(e){} try{ majaSpracheKarteZeichnen(); }catch(e){} }
+    if(id === 'vorlesen' || id === 'sprechen') {
         try{ ttsFelderNachziehen(); }catch(e){}
         try{ appStimmenNachziehen(); }catch(e){}
         try{ einstAlteStimmenPruefen(); }catch(e){}
@@ -34082,7 +34484,8 @@ function einstEnergieFuellen(){
         ? '<div style="margin-bottom:0.6rem; font-size:0.85rem; line-height:1.5;"><i class="fas ' + (spar ? 'fa-battery-quarter' : 'fa-battery-full') + '" style="color:' + (spar ? '#e0a040' : '#1fc46f') + '; margin-right:6px;"></i>'
           + (spar ? 'Energiesparmodus ist <b>an</b> – der Trainer läuft gerade im ruhigen Modus.' : 'Energiesparmodus ist <b>aus</b>.') + '</div>'
         : '<div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.6rem;">Im Browser kann der Trainer den Energiesparmodus nicht erkennen; diese Automatik wirkt in der Android-App.</div>';
-    ziel.innerHTML = '<div class="nur-app" style="display:block;">'
+    // Stand 393: am PC (Maus, kein Handy) bleibt der Handy-Sparmodus weg - dort gibt es ihn nicht
+    ziel.innerHTML = '<div class="nur-app" style="display:' + (energieHandy() ? 'block' : 'none') + ';">'
       + einstKasten('Energiesparmodus des Handys', 'Android lässt keine App den Sparmodus abschalten. Der Trainer kann ihn aber erkennen und sich darauf einstellen.',
             stand
           + '<div style="font-size:0.8rem; margin:0.2rem 0 0.3rem;">Im Sparmodus automatisch ruhiger Modus</div>' + seg('energieAutoSeg', 'afu_energie_auto', 'an', [['an', 'An'], ['aus', 'Aus']])
@@ -34180,6 +34583,7 @@ function einstellungenOeffnen(reiter){
           + '<div id="einstBlatt_vorlesen" style="display:none;"></div>'
           + '<div id="einstBlatt_lernen"   style="display:none;"></div>'
           + '<div id="einstBlatt_sounds"   style="display:none;"></div>'
+          + '<div id="einstBlatt_sprechen" style="display:none;"></div>'
           + '<div id="einstBlatt_beamer"   style="display:none;"></div>'
           + '<div id="einstBlatt_benutzer" style="display:none;"></div>'
           + '<div id="einstBlatt_lernstand" style="display:none;"></div>'
@@ -34820,8 +35224,7 @@ function einstBlaetterFuellen(){
           + 'mündliche Abnahme sein. Nachweis (ärztliches Attest) gehört zur Anmeldung. '
           + 'Was hier eingestellt ist, gilt deshalb nur zum Üben.</div>')
       + '<p style="margin:0.2rem 0 0; font-size:0.74rem; color:#6b7280; line-height:1.5;">'
-      + 'Vorlesen und Schrift gelten nur für den gerade gewählten Benutzer, '
-      + 'Tastatur und Prüfungszeit für diesen Rechner. '
+      + 'Tastatur und Prüfungszeit gelten für diesen Rechner. '
       + 'Wird gerade eine Frage vorgelesen, schweigen die Knopftexte.</p>';
 
     // ---- Lernen ----  (Inhalt kommt beim Aufschlagen, siehe einstLernenFuellen)
@@ -34923,14 +35326,12 @@ function einstBlaetterFuellen(){
           + '<button type="button" id="einstFehlerBtn" style="' + EINST_KNOPF + '" onclick="fehlerMelden()" '
           + 'data-tooltip="Etwas stimmt nicht? Schreib mir – die Mail ist schon vorbereitet, du musst nur beschreiben, was passiert ist.">'
           + '<i class="fas fa-bug"></i> Fehler melden</button></div>')
+      // Stand 393: Hier stand ein drittes Zuruecksetzen (altes "Alles zuruecksetzen" ohne Neustart-Stempel - der
+      // Abgleich haette Punkte und Stufe zurueckgebracht). Jetzt gibt es eines, unter Lernstand.
       + einstKasten('Zurücksetzen',
-            'Löscht Verlauf, Fehler, Lernbedarf und Lernfortschritt — nur für den gerade gewählten Benutzer. '
-            + 'Das lässt sich nicht rückgängig machen; vorher sichern lohnt sich.',
-            '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">'
-          + '<button type="button" id="einstResetBtn" style="' + EINST_KNOPF + ' border-color:#eec3bd; color:#a5281b;" '
-          + 'onclick="einstellungenSchliessen(); openFullResetModal();" '
-          + 'data-tooltip="⚠️ Verlauf, Fehler, Lernbedarf &amp; Lernfortschritt komplett zurücksetzen">'
-          + '<i class="fas fa-trash-alt"></i> Alles zurücksetzen</button></div>', '#eec3bd');
+            'Den Lernstand zurücksetzen findest du jetzt an einer Stelle: im Reiter Lernstand.',
+            '<button type="button" id="einstResetBtn" style="' + EINST_KNOPF + '" onclick="einstReiterZeigen(\'lernstand\')">'
+          + '<i class="fas fa-floppy-disk"></i> Zu Lernstand</button>');
 
     // Die Vorlese-Bedienelemente aus dem alten Fenster herueberholen.
     // appendChild VERSCHIEBT den Knoten, es kopiert ihn nicht - genau
@@ -35646,11 +36047,26 @@ function appStimmenNachziehen(){
             + '</div><div style="font-size:0.72rem; color:var(--muted); margin-top:0.3rem; line-height:1.5;">Nach dem Wechsel dauert es einen Moment, bis das neue Modul bereit ist. Antwortet ein Modul gar nicht (zum Beispiel weil sein Server nicht l\u00e4uft), spricht die App nach einigen Sekunden mit Google. \u201eStandard des Handys\u201c ist das Modul aus den Android-Einstellungen. Die Stimmen darunter geh\u00f6ren immer zum gew\u00e4hlten Modul.</div></div>';
     }
     if(!liste.length){
+        // Stand 393 (31.10.2026), Dietmar: "Mein Acapela funktioniert wieder und ich habe das auch im Handy eingestellt,
+        // aber der Trainer verwendet das nicht." Auf dem Bild: Modul Acapela gewaehlt, darunter Thorsten (Piper) aktiv -
+        // und keine Stimmenliste. Acapela nennt Android keine einzelnen Stimmen; ohne Liste gab es aber auch keinen Weg
+        // zurueck zur Handy-Stimme, Thorsten blieb aktiv und las Fragen und Antworten. Jetzt steht hier immer die Zeile
+        // "Stimme des Handys" - bereit oder nicht.
         const mehrere = module.length > 1;
-        box.innerHTML = modHtml + appPiperKarteHtml() + '<b>Es spricht die Stimme deines Handys.</b> '
-            + 'Gerade meldet das Sprachmodul keine Stimmen. Das kann einen Moment dauern \u2013 tippe dann auf \u201eNoch einmal nachsehen\u201c. '
-            + 'Bleibt die Liste leer, ist das Modul vermutlich gerade nicht erreichbar (zum Beispiel wenn sein Server nicht antwortet)'
-            + (mehrere ? '. W\u00e4hle oben ein anderes Modul, zum Beispiel Google, oder versuche es sp\u00e4ter noch einmal. ' : '. Versuche es sp\u00e4ter noch einmal. ')
+        const piperAn = !!(window.AfuPiperApp && window.AfuPiperApp.aktiv());
+        let bereit = false;
+        try{ if(typeof A.zustand === 'function') bereit = !!(JSON.parse(A.zustand() || '{}') || {}).bereit; }catch(e){}
+        const handyZeile = '<label style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.5rem; margin-bottom:0.6rem; border:1px solid ' + (!piperAn ? 'var(--s-akzent,#1f6fd1)' : 'rgba(0,0,0,0.12)') + '; background:var(--s-fl, rgba(255,255,255,0.55)); color:var(--s-text, inherit);">'
+            + '<input type="radio" name="appStimme" value="" ' + (!piperAn ? 'checked' : '') + ' onchange="appStimmeWaehlen(\'\')" style="width:18px; height:18px; flex:0 0 18px;">'
+            + '<span style="flex:1; min-width:0;"><b style="font-size:0.85rem;">Stimme des Handys</b><span style="display:block; font-size:0.72rem; opacity:0.75;">die Standardstimme des Sprachmoduls oben</span></span>'
+            + '<button type="button" style="' + EINST_KNOPF + ' padding:0.3rem 0.6rem; font-size:0.78rem;" onclick="appStimmeProbe(\'\')"><i class="fas fa-volume-up"></i> Anh\u00f6ren</button></label>';
+        box.innerHTML = modHtml + appPiperKarteHtml() + handyZeile
+            + '<b>Es spricht ' + (piperAn ? 'Thorsten.</b> Die Stimme deines Handys ist abgew\u00e4hlt \u2013 bei \u201eStimme des Handys\u201c wieder einschalten. ' : 'die Stimme deines Handys.</b> ')
+            + (bereit
+                ? 'Das Sprachmodul ist bereit, nennt aber keine einzelnen Stimmen (Acapela und manche andere machen das so) \u2013 es spricht mit der Stimme, die in seiner eigenen App eingestellt ist. '
+                : 'Gerade meldet das Sprachmodul keine Stimmen. Das kann einen Moment dauern \u2013 tippe dann auf \u201eNoch einmal nachsehen\u201c. '
+                  + 'Bleibt es so, ist das Modul vermutlich gerade nicht erreichbar (zum Beispiel wenn sein Server nicht antwortet)'
+                  + (mehrere ? '. W\u00e4hle oben ein anderes Modul, zum Beispiel Google, oder versuche es sp\u00e4ter noch einmal. ' : '. Versuche es sp\u00e4ter noch einmal. '))
             + '<button type="button" style="' + EINST_KNOPF + ' margin-top:0.4rem;" onclick="appStimmenNachziehen()">Noch einmal nachsehen</button>';
         return;
     }
@@ -36672,10 +37088,19 @@ function neueRundeVorbereiten(){
 // ================================================================
 const RUNDE_PRAEFIX = 'amateurfunk_runde_';
 
-function rundeSchluessel(){
+// Die Merkliste hat ihren eigenen Merkposten (Stand 394). Ein Tester:
+// "Gut waere auch, wenn man den Herzchendurchlauf beim naechsten Mal
+// fortsetzen kann, hab nur die Haelfte geschafft und der Stand ist dann
+// weg." Vorher teilte sie sich den Platz mit der normalen Runde - wer
+// danach normal uebte, ueberschrieb sie, und "Merkliste lernen" fing
+// ohnehin immer vorne an.
+// art 'merk' = Merkliste, 'haupt' = normale Runde. Ohne Angabe: die
+// Merkliste, solange gerade eine Merkliste-Runde laeuft, sonst die normale.
+function rundeSchluessel(art){
     let kl = 'n';
     try{ if(typeof klasseAktuell === 'function') kl = klasseAktuell().id || 'n'; }catch(e){}
-    return RUNDE_PRAEFIX + (currentUser || 'user1') + '_' + kl;
+    if(!art) art = (isQuizActive && currentPart === 'Merkliste') ? 'merk' : 'haupt';
+    return RUNDE_PRAEFIX + (currentUser || 'user1') + '_' + kl + (art === 'merk' ? '_merkliste' : '');
 }
 
 // Schluessel einer Antwort, um sie im Katalog wiederzufinden. Der Text
@@ -36732,26 +37157,33 @@ function rundeSpeichern(){
 }
 window.rundeSpeichern = rundeSpeichern;
 
-function rundeLesen(){
+function rundeLesen(art){
     try{
-        const j = JSON.parse(localStorage.getItem(rundeSchluessel()) || 'null');
+        const j = JSON.parse(localStorage.getItem(rundeSchluessel(art)) || 'null');
         if(!j || j.v !== 1 || !Array.isArray(j.fragen) || !j.fragen.length) return null;
         return j;
     }catch(e){ return null; }
 }
 
-function rundeVerwerfen(){
-    try{ localStorage.removeItem(rundeSchluessel()); }catch(e){}
+function rundeVerwerfen(art){
+    try{ localStorage.removeItem(rundeSchluessel(art)); }catch(e){}
 }
 window.rundeVerwerfen = rundeVerwerfen;
 
-function rundeFortsetzen(){
-    const j = rundeLesen();
+function rundeFortsetzen(art){
+    const j = rundeLesen(art);
     if(!j) return false;
     const wieder = [];
+    // Merkliste: Herzen, die inzwischen entfernt wurden, fallen heraus;
+    // neu gemerkte Fragen kommen hinten dazu.
+    const merk = (art === 'merk');
+    const merkSet = merk ? new Set(favoriteQuestions) : null;
+    let indexNeu = j.index|0;
+    j.fragen.forEach((f, i) => { if(merk && !merkSet.has(f.id) && i < (j.index|0)) indexNeu--; });
     for(const f of j.fragen){
         const roh = questionBank.find(x => x.id === f.id);
         if(!roh) continue;                       // Frage gibt es nicht mehr
+        if(merk && !merkSet.has(f.id)) continue; // Herz entfernt
         let vorbereitet;
         if(Array.isArray(f.o) && f.o.length === (roh.options||[]).length
            && f.o.every(i => i >= 0 && i < roh.options.length)){
@@ -36775,6 +37207,15 @@ function rundeFortsetzen(){
         if(f.m === 1) vorbereitet._magnet = true;
         else if(f.m === undefined && !j.examMode && !j.nurGelernte && magnetGewicht(roh.id) > 1) vorbereitet._magnet = true;
         wieder.push(vorbereitet);
+    }
+    if(merk){
+        const schon = new Set(wieder.map(q => q.id));
+        favoriteQuestions.forEach(id => {
+            if(schon.has(id)) return;
+            const roh = questionBank.find(x => x.id === id);
+            if(roh){ wieder.push(prepareQuestion(roh)); schon.add(id); }
+        });
+        j.index = Math.max(0, indexNeu);
     }
     if(!wieder.length) return false;
 
@@ -36839,12 +37280,15 @@ let rundeSchonGefragt = false;
 //
 // "neuBeginnen" ist das, was passieren soll, wenn der Nutzer die alte
 // Runde verwirft: die frische Runde, die er mit "Start" wollte.
-function rundeAngebotZeigen(neuBeginnen){
-    if(isQuizActive || rundeSchonGefragt) return false;
+function rundeAngebotZeigen(neuBeginnen, art){
+    const merk = (art === 'merk');
+    if(!merk && (isQuizActive || rundeSchonGefragt)) return false;
     if(!nurNormalesLernen()) return false;
-    const j = rundeLesen();
+    const j = rundeLesen(merk ? 'merk' : 'haupt');
     if(!j) return false;
-    rundeSchonGefragt = true;
+    // Merkliste: nur anbieten, wenn noch etwas offen ist.
+    if(merk && (j.beantwortet || 0) >= j.fragen.length) return false;
+    if(!merk) rundeSchonGefragt = true;
 
     let modal = document.getElementById('rundeModal');
     if(!modal){
@@ -36869,10 +37313,12 @@ function rundeAngebotZeigen(neuBeginnen){
         '<div style="background:#fff; border-radius:18px; padding:1.5rem 1.6rem; max-width:480px; width:96%; '
         + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
         + '<h3 style="margin:0 0 0.5rem; font-size:1.1rem; color:#0f2745;">'
-        + '<i class="fas fa-bookmark" style="color:#0e9aa7;"></i> Weiterlernen?</h3>'
+        + (merk ? '<i class="fas fa-heart" style="color:#e11d48;"></i> Merkliste weiterlernen?</h3>'
+                : '<i class="fas fa-bookmark" style="color:#0e9aa7;"></i> Weiterlernen?</h3>')
         + '<p style="margin:0 0 0.4rem; font-size:0.9rem; color:#16232f; line-height:1.6;">'
         + 'Du warst bei <b>Frage ' + ((j.index|0) + 1) + ' von ' + j.fragen.length + '</b>'
-        + (teilBeschriftung(j.teil) ? ' in &bdquo;' + teilBeschriftung(j.teil).replace(/</g,'&lt;') + '&ldquo;' : '')
+        + (!merk && teilBeschriftung(j.teil) ? ' in &bdquo;' + teilBeschriftung(j.teil).replace(/</g,'&lt;') + '&ldquo;' : '')
+        + (merk ? ' deiner Merkliste' : '')
         + (wann ? ' &mdash; zuletzt ' + wann : '') + '.</p>'
         + '<p style="margin:0 0 1.1rem; font-size:0.82rem; color:#3d5266;">'
         + (j.beantwortet||0) + ' beantwortet, ' + offen + ' noch offen'
@@ -36889,16 +37335,24 @@ function rundeAngebotZeigen(neuBeginnen){
     modal.style.display = 'flex';
 
     const zu = () => { modal.style.display = 'none'; };
-    document.getElementById('rundeWeiterBtn').onclick = () => { zu(); rundeFortsetzen(); };
+    document.getElementById('rundeWeiterBtn').onclick = () => {
+        zu();
+        if(merk){
+            // Laeuft gerade eine andere Runde, wird sie vorher gesichert.
+            try{ if(isQuizActive) rundeSpeichern(); }catch(e){}
+            try{ closeSearchResults(); }catch(e){}
+            if(!rundeFortsetzen('merk') && typeof neuBeginnen === 'function') neuBeginnen();
+        }else rundeFortsetzen();
+    };
     document.getElementById('rundeNeuBtn').onclick    = () => {
         zu();
-        rundeVerwerfen();
+        rundeVerwerfen(merk ? 'merk' : 'haupt');
         if(typeof neuBeginnen === 'function') neuBeginnen();
     };
     // Klick daneben heisst weder ja noch nein: das Fenster geht zu, es
     // startet nichts, der Merkposten bleibt liegen. Damit der naechste
     // Klick auf "Start" wieder fragt, wird der Merker zurueckgesetzt.
-    modal.onclick = e => { if(e.target === modal){ zu(); rundeSchonGefragt = false; } };
+    modal.onclick = e => { if(e.target === modal){ zu(); if(!merk) rundeSchonGefragt = false; } };
     return true;
 }
 window.rundeAngebotZeigen = rundeAngebotZeigen;
@@ -39925,7 +40379,8 @@ function renderFinishScreen(isTimeUp = false) {
     // Durchgespielt heisst durchgespielt. Bliebe der Merkposten liegen,
     // boete der Trainer beim naechsten Start an, eine fertige Runde
     // "fortzusetzen" - bei der letzten Frage, die schon beantwortet ist.
-    try{ rundeVerwerfen(); }catch(e){}
+    // Die Merkliste hat ihren eigenen Merkposten (Stand 394).
+    try{ rundeVerwerfen(currentPart === 'Merkliste' ? 'merk' : 'haupt'); }catch(e){}
 
     // Pruefungsraum: Das Ende einer Runde wertet finishRealisticPart aus -
     // mit Zwischenergebnis und der Frage nach der naechsten Runde. Der
@@ -43946,6 +44401,7 @@ if (originalSelectOption) {
            einer Kontrastmessung durchgegangen; das hier sind die Stellen
            unter 3:1, die wirklich schlecht lesbar waren. */
         body.dark .tts-regler label { color: var(--nacht-leise, #b4c0d4) !important; }
+        #einstBlatt_sprechen .app-stimme-verweis { display: none !important; }
         #appHeute > .aw-count.leer, #appWerk .aw-count.leer { text-shadow: 0 1px 2px rgba(0,0,0,0.18); }
         html.android-app body:not(.dark) #appHeute .ah-belohnung { color: #A85700 !important; }
         body:not(.dark) .swp-bel { color: #A85700 !important; }
@@ -45402,7 +45858,7 @@ if (originalSelectOption) {
         body.dark #duoModal .duo-collapsible.pwd-box .duo-collapsible-header .left * { color: #ffc266 !important; }
 
         /* Abbrechen und Zumachen bleiben Panel, nicht Signal. */
-        body.dark [id$="Modal"] button[style*="min-height:38px"] {
+        body.dark [id$="Modal"] button[style*="min-height:"] {
             background: linear-gradient(#133048, #0a1e2c) !important;
             border: 1px solid var(--nacht-kante2) !important;
             color: #cfe2ee !important;
@@ -50628,11 +51084,17 @@ window.lernstandSchreiben = lernstandSchreiben;
     const merk = () => { try{ return JSON.parse(localStorage.getItem(MERK) || '{}') || {}; }catch(e){ return {}; } };
     const heute = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
     const beantwortet = d => { let n = 0; try{ USER_SLOTS.forEach(u => { n += Object.keys((d && d.mastery && d.mastery[u]) || {}).length; }); }catch(e){} return n; };
+    const neustart = () => { let s = 0; try{ USER_SLOTS.forEach(u => { s = Math.max(s, +localStorage.getItem('amateurfunk_neustart_' + u) || 0); }); }catch(e){} return s; };
     function sichern(mitDatei){
         try{
             const paket = lernstandPaket();
+            paket.neustart = neustart();
             const n = beantwortet(paket.daten);
-            if (!n) return;                                   // leer: nichts ueberschreiben
+            if (!n){
+                // Leer nach einem bewussten Zuruecksetzen: die interne Kopie leeren, sonst kaeme sie beim naechsten Start zurueck
+                if (paket.neustart) A.internSchreiben(JSON.stringify({ typ: paket.typ, version: 1, erstellt: paket.erstellt, neustart: paket.neustart, daten: {} }));
+                return;                                       // sonst: nichts ueberschreiben
+            }
             const text = JSON.stringify(paket);
             const m = merk();
             if (A.internSchreiben(text)) m.intern = Date.now();
@@ -50655,6 +51117,7 @@ window.lernstandSchreiben = lernstandSchreiben;
             if (!roh) return false;
             const paket = JSON.parse(roh);
             if (!paket || paket.typ !== 'klasse-n-trainer-lernstand' || !beantwortet(paket.daten)) return false;
+            if (neustart() > (+paket.neustart || 0)) return false;   // hier wurde nach der Kopie zurueckgesetzt
             sessionStorage.setItem('ls_intern_geholt', '1');
             lernstandSchreiben(paket.daten);
             return true;
@@ -61457,7 +61920,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             inhaltZeichnen(); tu(nachziehen);
             sprechblase($('nurGelernteCheck') && $('nurGelernteCheck').checked ? 'Mal sehen, ob alles sitzt!' : 'Alles klar – wieder alle Fragen!');
         }
-        else if(was === 'zuruecksetzen'){ werkBlattZu(); tu(() => window.appLernstandNullen()); }
+        // Stand 392: derselbe Weg wie am PC (benutzerZuruecksetzen) - mit Neustart-Stempel, damit weder das Konto noch
+        // die interne Kopie den Stand zurueckbringen. Dietmar: "jetzt habe ich auch wieder 571 Fragen offen aber ich bin
+        // immer noch Hochfrequenztechniker". Vorher nullte die App nur die Faecher dieses Handys - und der Abgleich
+        // fuehrte den alten Stand gleich wieder zusammen.
+        else if(was === 'zuruecksetzen'){ werkBlattZu(); tu(() => (typeof benutzerZuruecksetzen === 'function' ? benutzerZuruecksetzen(currentUser, true) : window.appLernstandNullen())); }
         else if(was === 'generalprobe'){ werkBlattZu(); klick('examSimulatorBtn'); }
         else if(was === 'termin') werkBlattAuf('termin');
         else if(was === 'terminweg'){ tu(() => setPruefungstermin('')); inhaltZeichnen(); tu(nachziehen); sprechblase('Okay, kein Termin. Sag Bescheid, wenn’s ernst wird!'); }
@@ -64638,18 +65105,18 @@ html.android-app.fs-bunt body.dark #afuRueck.schlecht{background:rgba(248,113,11
    Design Graphit (body.dark) und nur waehrend einer Runde.
    Tiefblauer Verlauf, Glas-Kacheln, runde Knoepfe, Buchstaben-Chips.
    ================================================================ */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft{background:radial-gradient(120% 90% at 50% 0%,#24408f 0%,#13214d 45%,#0b1330 100%) fixed!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #app.card{background:transparent!important;border-color:rgba(255,255,255,.10)!important;box-shadow:none!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .left-sidebar{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:20px!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .question-area{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:20px!important;box-shadow:none!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft{background:radial-gradient(120% 90% at 50% 0%,#24408f 0%,#13214d 45%,#0b1330 100%) fixed!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #app.card{background:transparent!important;border-color:rgba(255,255,255,.10)!important;box-shadow:none!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .left-sidebar{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:20px!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .question-area{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:20px!important;box-shadow:none!important}
 html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-text-row{background:transparent!important;box-shadow:none!important;border:0!important}
 html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-text{font-family:"Space Grotesk",Inter,sans-serif!important;line-height:1.38!important}
 html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-nummer{font:700 12px/1 Inter,sans-serif!important;border-radius:999px!important;padding:6px 10px!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-meta span{font:600 12px/1 Inter,sans-serif!important;border-radius:999px!important;padding:6px 10px!important;background:rgba(255,255,255,.14)!important;color:#e6efff!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-meta span{font:600 12px/1 Inter,sans-serif!important;border-radius:999px!important;padding:6px 10px!important;background:rgba(255,255,255,.14)!important;color:#e6efff!important}
 /* Knoepfe ueber der Frage: runde Glas-Knoepfe */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste button{border-radius:999px!important;background:rgba(255,255,255,.14)!important;border:0!important;color:#fff!important;box-shadow:none!important;min-height:36px}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste button i{color:#fff!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste button:hover{background:rgba(255,255,255,.24)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste button{border-radius:999px!important;background:rgba(255,255,255,.14)!important;border:0!important;color:#fff!important;box-shadow:none!important;min-height:36px}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste button i{color:#fff!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste button:hover{background:rgba(255,255,255,.24)!important}
 /* Antworten: Glas-Kacheln mit Buchstaben-Chip */
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n){background:rgba(255,255,255,.07)!important;border:1.5px solid rgba(255,255,255,.16)!important;border-radius:var(--opt-r,18px)!important;box-shadow:none!important}
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover{background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.30)!important}
@@ -64664,47 +65131,52 @@ html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .questio
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option.wrong{background:rgba(248,113,113,.20)!important;border:1.5px solid #f87171!important;border-radius:var(--opt-r,18px)!important}
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option.wrong:nth-child(n) .option-label{background:#f87171!important;color:#4a0d0d!important}
 /* Merkhilfe und Lern-Kacheln */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft details.uri-dreieck,html:not(.android-app).fs-bunt body.dark.runde-laeuft .lernkachel{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:14px!important;box-shadow:none!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft details.uri-dreieck,html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .lernkachel,html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .forum-knopf.forum-mitte{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:14px!important;box-shadow:none!important}
 /* untere Leiste */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #navArea{background:rgba(11,19,48,.85)!important;border-top:1px solid rgba(255,255,255,.10)!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #navArea .nav-btn{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.22)!important;color:#fff!important;border-radius:var(--opt-r,18px)!important;box-shadow:none!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #navArea #nextBtn.nav-btn-primary{background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #navArea{background:rgba(11,19,48,.85)!important;border-top:1px solid rgba(255,255,255,.10)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #navArea .nav-btn{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.22)!important;color:#fff!important;border-radius:var(--opt-r,18px)!important;box-shadow:none!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #navArea #nextBtn.nav-btn-primary{background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
 /* Feinschliff: Rahmen weg, Kopfzeile und Verlauf als Glas */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #app.card{border-color:transparent!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #navArea{background:rgba(11,19,48,.97)!important} /* 29.10.2026: deckend, kein Glas mehr */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .question-area{background:rgba(255,255,255,.03)!important;border-color:rgba(255,255,255,.08)!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .left-sidebar{background:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.10)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #app.card{border-color:transparent!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #navArea{background:rgba(11,19,48,.97)!important} /* 29.10.2026: deckend, kein Glas mehr */
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .question-area{background:rgba(255,255,255,.03)!important;border-color:rgba(255,255,255,.08)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .left-sidebar{background:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.10)!important}
 /* VERLAUF IN POLAR: RICHTIG UND FALSCH BLEIBEN SICHTBAR (28.10.2026). Dietmar, mit Bild: "in Polar sind die antworten im Verlauf nicht sichtbar."
    Die Glas-Regel darunter faerbte alle Punkte des Verlaufs gleich; gruen, rot, gelernt, angekreuzt und der Ring der aktuellen Frage gingen unter.
    Jetzt bekommt nur der noch offene Punkt das Glas, die anderen behalten ihre Farben aus "body.dark .dot-sidebar.correct-dot" usw. */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .left-sidebar :is(.stat-chip,.result-box,.progress-dots-sidebar > :not(.correct-dot):not(.wrong-dot):not(.gelernt-dot):not(.beantwortet-dot):not(.current-dot),#uebungszeitHalter > *){background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.14)!important;border-radius:10px!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft .left-sidebar .progress-dots-sidebar > .dot-sidebar{border-radius:10px!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft .header :is(.btn,.btn-theme,button):not(#q1):not(#q2),html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft .header .btn-theme,html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft .header button{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft .header{border-bottom-color:rgba(255,255,255,.10)!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft #navArea .btn-google{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.22)!important;color:#fff!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark.runde-laeuft .header :is(#bankBadge,#searchInput):not(#q1):not(#q2){background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#e6efff!important;box-shadow:none!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .left-sidebar :is(.stat-chip,.result-box,.progress-dots-sidebar > :not(.correct-dot):not(.wrong-dot):not(.gelernt-dot):not(.beantwortet-dot):not(.current-dot),#uebungszeitHalter > *){background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.14)!important;border-radius:10px!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft .left-sidebar .progress-dots-sidebar > .dot-sidebar{border-radius:10px!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft .header :is(.btn,.btn-theme,button):not(#q1):not(#q2),html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft .header .btn-theme,html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft .header button{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft .header{border-bottom-color:rgba(255,255,255,.10)!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft #navArea .btn-google{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.22)!important;color:#fff!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft .header :is(#bankBadge,#searchInput):not(#q1):not(#q2){background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#e6efff!important;box-shadow:none!important}
 /* ================================================================
    DIE HAUPTSEITE AM PC, DUNKEL IM LOOK DER APP              (21.10.2026)
    Dietmar: "Die Fragen und die Hauptseite passen nicht mehr zusammen."
    Gleicher Verlauf, gleiche Glas-Kacheln, gleiche runden Knoepfe.
    Nur am PC (nicht html.android-app) und nur im dunklen Design.
    ================================================================ */
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark{background:radial-gradient(120% 90% at 50% 0%,#24408f 0%,#13214d 45%,#0b1330 100%) fixed!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #app.card{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark .header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.10)!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark .header :is(.btn,.btn-theme,button,#bankBadge,#searchInput):not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
+/* Stand 390 (30.10.2026), Dietmar: "Bunt passt. Petrol, Navy usw. veraendert das Polar." Der Polar-Look der SEITE
+   (Hintergrund, Kopf, Knoepfe, Fenster, Fusszeile) galt nur im Stil der Frage "Bunt" (html.fs-bunt); bei Petrol, Navy
+   und Schlicht fiel die Seite in das alte flache Graphit zurueck - mit Knoepfen, die man nicht lesen konnte. Jetzt gilt
+   Polar bei jedem Stil der Frage; der Stil aendert nur noch die Tafel und die Antworten. :not(.fs-kein) statt .fs-bunt
+   haelt die Gewichtung der Regeln gleich (fs-kein gibt es nicht). */
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark{background:radial-gradient(120% 90% at 50% 0%,#24408f 0%,#13214d 45%,#0b1330 100%) fixed!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #app.card{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark .header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.10)!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark .header :is(.btn,.btn-theme,button,#bankBadge,#searchInput):not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
 /* Karten */
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark :is(.filter-bar,#examInfo,#masteryDisplay,#historyCol):not(#q1){background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:20px!important;box-shadow:none!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #examInfo th{background:rgba(255,255,255,.07)!important;color:#cfe0ff!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #masteryDisplay > div:not(#q1){background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:14px!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark :is(.filter-bar,#examInfo,#masteryDisplay,#historyCol):not(#q1){background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:20px!important;box-shadow:none!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #examInfo th{background:rgba(255,255,255,.07)!important;color:#cfe0ff!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #masteryDisplay > div:not(#q1){background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:14px!important}
 /* Knoepfe, Auswahlfelder, Eingaben: runde Glas-Pillen */
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark :is(.filter-bar .btn,.filter-bar select,#historyCol select,#masteryDisplay select,#masteryDisplay input,#masteryDisplay .btn-lernstand,#masteryDisplay .btn-lernstand-hell,#masteryDisplay .btn,#historyCol .btn):not(#q1):not(#q2):not(.btn-primary){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark :is(.filter-bar .btn,#masteryDisplay .btn-lernstand,#masteryDisplay .btn-lernstand-hell,#masteryDisplay .btn):not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #startBtn:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #startBtn:not(#q1):not(#q2) *{color:#05302a!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #masteryDisplay :is(input,select){border-radius:12px!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #masteryDisplay label:not(#q1):not(#q2){padding-left:12px!important;padding-right:12px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:12px!important}
-html:not(#zz):not(.android-app).fs-bunt body:not(#zz2).dark #historyCol :is(th,thead,thead tr):not(#q1){background:rgba(255,255,255,.07)!important;color:#cfe0ff!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark :is(.filter-bar .btn,.filter-bar select,#historyCol select,#masteryDisplay select,#masteryDisplay input,#masteryDisplay .btn-lernstand,#masteryDisplay .btn-lernstand-hell,#masteryDisplay .btn,#historyCol .btn):not(#q1):not(#q2):not(.btn-primary){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark :is(.filter-bar .btn,#masteryDisplay .btn-lernstand,#masteryDisplay .btn-lernstand-hell,#masteryDisplay .btn):not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #startBtn:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #startBtn:not(#q1):not(#q2) *{color:#05302a!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #masteryDisplay :is(input,select){border-radius:12px!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #masteryDisplay label:not(#q1):not(#q2){padding-left:12px!important;padding-right:12px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:12px!important}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark #historyCol :is(th,thead,thead tr):not(#q1){background:rgba(255,255,255,.07)!important;color:#cfe0ff!important}
 /* 21.10.2026 Dietmar: der Rahmen um die untere Knopfleiste (oben und seitlich, unten offen) faellt im Dark Mode weg */
 html:not(#zz):not(.android-app) body:not(#zz2).dark #navArea:not(#q1):not(#q2){border:0!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(rgba(11,19,48,0),rgba(11,19,48,.92) 35%)!important;outline:0!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark #navArea #googleSearchBtn:not(#q1):not(#q2){border-radius:var(--opt-r,18px)!important}
@@ -64839,12 +65311,22 @@ html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .questio
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover .option-label{background:rgba(11,30,51,.14)!important;color:#0b1e33!important}
 /* 21.10.2026 Dietmar: "wenn ich auf gelernt markiert klicke ... bleiben die Felder einfarbig ... ich hätte hier gern wieder die Farbe drin mit dem Grün abgehakt und Rot markiert."
    Die Knöpfe oben (Haken, Herz, Notiz) trugen im Dunkel alle dasselbe Glas - auch wenn sie eingeschaltet waren. */
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionGelerntBtn.an{background:#16a34a!important;box-shadow:0 0 0 2px rgba(74,222,128,.35)!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionFavBtn.an{background:#e11d48!important;box-shadow:0 0 0 2px rgba(251,113,133,.35)!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionNotizBtn.an{background:#e2932f!important;box-shadow:0 0 0 2px rgba(251,191,36,.30)!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste :is(#questionGelerntBtn,#questionFavBtn,#questionNotizBtn).an i{color:#fff!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionGelerntBtn.an:hover{background:#22b958!important}
-html:not(.android-app).fs-bunt body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionFavBtn.an:hover{background:#f43f5e!important}
+/* Stand 393 (31.10.2026), Dietmar vom Handy: "wenn ich einen als gelernt abhake oder markiert habe, hat der Button keine
+   Farbe. Gelernt abgehakt ist er gruen, markiert rot." In der App ueberdeckte die runde Knopfleiste (Glas fuer alle Knoepfe)
+   den Zustand - jetzt dieselben Farben wie am PC, in jedem Stil und hell wie dunkel. */
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #questionGelerntBtn.an:not(#q1){background:#16a34a!important;color:#fff!important;box-shadow:0 0 0 2px rgba(74,222,128,.35)!important}
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #questionFavBtn.an:not(#q1){background:#e11d48!important;color:#fff!important;box-shadow:0 0 0 2px rgba(251,113,133,.35)!important}
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #questionNotizBtn.an:not(#q1){background:#e2932f!important;color:#fff!important;box-shadow:0 0 0 2px rgba(251,191,36,.35)!important}
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste :is(#questionGelerntBtn,#questionFavBtn,#questionNotizBtn).an:not(#q1) i{color:#fff!important}
+/* Gleiches fuer den Knopf "Leisten unten ein/aus" (gefunden bei der Gesamtpruefung): eingeschaltet heller mit Ring */
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #dockKnopf.an:not(#q1){background:rgba(255,255,255,.34)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)!important}
+html.android-app body:not(.dark).runde-laeuft #questionContainer .q-knopfleiste #dockKnopf.an:not(#q1){box-shadow:inset 0 0 0 2px rgba(15,39,69,.35)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionGelerntBtn.an{background:#16a34a!important;box-shadow:0 0 0 2px rgba(74,222,128,.35)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionFavBtn.an{background:#e11d48!important;box-shadow:0 0 0 2px rgba(251,113,133,.35)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionNotizBtn.an{background:#e2932f!important;box-shadow:0 0 0 2px rgba(251,191,36,.30)!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste :is(#questionGelerntBtn,#questionFavBtn,#questionNotizBtn).an i{color:#fff!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionGelerntBtn.an:hover{background:#22b958!important}
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionFavBtn.an:hover{background:#f43f5e!important}
 /* 21.10.2026 Dietmar: "Bei den Bildern ist noch immer Graphit vorhanden." - Bildantworten (Kasten, Kacheln, Bildfläche) im Polar-Ton */
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer.options-grid{background:transparent!important;border:0!important;box-shadow:none!important}
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option-grid:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):not(:hover):nth-child(n){background:rgba(255,255,255,.07)!important;border:1.5px solid rgba(255,255,255,.16)!important;border-radius:var(--opt-r)!important;box-shadow:none!important}
@@ -64883,6 +65365,64 @@ html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] h
 html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
 html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
 html:not(#zz).pc-app body:not(#zz2).dark #funkLogbuch{background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important}
+/* Stand 391 (30.10.2026), Dietmar: "um den Fragen rum ist es immer noch schiefergrau. Muss das so sein?" - Nein. Die dunklen
+   Fassungen von Petrol, Navy und Schlicht stammten aus der Graphit-Zeit (Schiefer #172534 / #0b1a2c). Im Polar-Look werden
+   Tafel und Antworten jetzt Glas wie bei Bunt; was den Stil ausmacht, bleibt: Petrols Strich links und Tuerkis-Buchstaben,
+   Navys dunkle Tafel, Schlicht ohne Farben. */
+html:not(#zz):not(.android-app):is(.fs-petrol,.fs-navy,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight){background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.14)!important}
+/* Maus-Farbe (Anpassen) gilt auch hier - Dietmar: "mit der Maus ueber der Frage ... gelb eingestellt ... wird die Schrift nur schwarz" */
+html:not(#zz):not(#zy):not(.android-app):is(.fs-petrol,.fs-navy,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):hover{background:var(--maus-grund,#a8dcf6)!important;border-color:var(--maus-rand,#00adef)!important}
+html:not(#zz):not(#zy):not(.android-app):is(.fs-petrol,.fs-navy,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:is(.tts-highlight,.maus-liest):not(.correct):not(.wrong){background:var(--maus-grund,#a8dcf6)!important;border-color:var(--maus-rand,#00adef)!important}
+html:not(#zz):not(#zy):not(.android-app):is(.fs-petrol,.fs-navy,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:is(:hover,.tts-highlight,.maus-liest):not(.correct):not(.wrong):not(.gewaehlt) .option-text{color:#0b1e33!important}
+html:not(#zz):not(#zy):not(.android-app).fs-navy body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:is(:hover,.tts-highlight,.maus-liest):not(.correct):not(.wrong):not(.gewaehlt) .option-label{background:rgba(11,30,51,.16)!important;color:#0b1e33!important}
+html:not(#zz):not(.android-app):is(.fs-petrol,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area .q-text-row{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.14)!important}
+html:not(#zz):not(.android-app).fs-petrol body:not(#zz2).dark.runde-laeuft .question-area .q-text-row{border-left-color:#2bb3ba!important}
+html:not(#zz):not(.android-app).fs-navy body:not(#zz2).dark.runde-laeuft .question-area .q-text-row{background:rgba(5,12,40,.55)!important;border-color:rgba(255,255,255,.14)!important}
+html:not(#zz):not(.android-app).fs-navy body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option .option-label{background:rgba(255,255,255,.16)!important;color:#fff!important}
+/* Stand 391 (30.10.2026), Dietmar: "Ich habe hier bunt und mehrfarbig ausgewaehlt. Und siehst du, mehrfarbig, ich nicht."
+   Der Polar-Look (21.10.) machte im Dunklen alle Antworten zu gleichem Glas mit weissen Buchstaben - die Farbwahl unter
+   Anpassen (Mehrfarbig oder eine Farbe) war damit im Dunklen wirkungslos. Jetzt: Buchstaben in der gewaehlten Farbe, die
+   Antwort selbst als leicht getoentes Glas in derselben Farbe. Bewertete Antworten (richtig/falsch/gewaehlt) wie gehabt. */
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:nth-child(1) .option-label{background:#2f7fd8!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:nth-child(2) .option-label{background:#f08a1a!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:nth-child(3) .option-label{background:#22a862!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:nth-child(4) .option-label{background:#8e44ad!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(1){background:rgba(47,127,216,.17)!important;border-color:rgba(47,127,216,.45)!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(2){background:rgba(240,138,26,.15)!important;border-color:rgba(240,138,26,.45)!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(3){background:rgba(34,168,98,.16)!important;border-color:rgba(34,168,98,.45)!important}
+html:not(#fx):not(#fy):not([class*="fa-"]).fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(4){background:rgba(142,68,173,.18)!important;border-color:rgba(142,68,173,.5)!important}
+html:not(#fx):not(#fy)[class*="fa-"].fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:nth-child(n) .option-label{background:var(--af-l)!important}
+html:not(#fx):not(#fy)[class*="fa-"].fs-bunt body.dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n){background:color-mix(in srgb,var(--af-l) 17%,transparent)!important;border-color:color-mix(in srgb,var(--af-l) 45%,transparent)!important}
+html:not(#zz):not(#zy):not(.android-app):is(.fs-petrol,.fs-navy,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area :is(.options,#optionsContainer):not(.options-grid){background:transparent!important}
+html:not(#zz):not(#zy):not(.android-app):is(.fs-petrol,.fs-schlicht) body:not(#zz2).dark.runde-laeuft .question-area .q-text-row{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.14)!important}
+html:not(#zz):not(#zy):not(.android-app).fs-petrol body:not(#zz2).dark.runde-laeuft .question-area .q-text-row{border-left-color:#2bb3ba!important}
+html:not(#zz):not(#zy):not(.android-app).fs-schlicht body:not(#zz2).dark.runde-laeuft .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important}
+/* Stand 392, Dietmar (Bild "Form: Eckig | Rund"): "wenn ich was auswaehle, dann moechte ich das auch markiert haben".
+   Im Polar-Fenster bekamen beide Kacheln dasselbe Glas; die Markierung der gewaehlten (tuerkiser Rand) ging unter.
+   Jetzt wie bei "Stil am PC": tuerkiser Rand, Ring, Haken vor dem Namen. */
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark #einstellungenModal .app-form-kachel:not(#q1):not(#q2){background:rgba(255,255,255,.06)!important;border:2px solid rgba(255,255,255,.18)!important;color:#dbe6ff!important;box-shadow:none!important}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark #einstellungenModal .app-form-kachel.an:not(#q1):not(#q2){background:rgba(43,182,198,.18)!important;border-color:#2bb6c6!important;color:#fff!important;box-shadow:0 0 0 3px rgba(43,182,198,.25)!important}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark #einstellungenModal .app-form-kachel.an > span::before{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;font-size:.85em;margin-right:6px;color:#6fe0ec}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark #einstellungenModal .app-form-mini i{background:rgba(255,255,255,.85)!important;border-color:transparent!important}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark #einstellungenModal .app-form-mini b{background:#0b1a2c!important}
+/* Stand 392, Dietmar (Bild): "wenn ich auf eckig umschalte, dann ist das Feld Forum eckig, aber die zwei Buttons rechts
+   und links, die bleiben rund." Die drei Kacheln unter der Frage folgen jetzt gemeinsam der Form: Eckig = 6 px wie die
+   Antworten, Rund = 14 px. Die Regel braucht zwei Kennungen (#zz), weil eine aeltere Rund-Regel mit #favListBtn sonst gewinnt. */
+html:not(.android-app) body.dark.runde-laeuft{--kachel-r:6px}
+html:not(.android-app) body.dark.runde-laeuft.app-rund{--kachel-r:14px}
+html:not(#zz):not(.android-app):not(.fs-kein) body:not(#zz2).dark.runde-laeuft :is(.lernkachel,.forum-knopf.forum-mitte,details.uri-dreieck):not(#q1){border-radius:var(--kachel-r,6px)!important}
+/* Stand 392, Dietmar (Video): "sanftes Aufblenden und aussenrum sitzt ein duenner gelber Rand. Obwohl ich gar keinen Rand
+   eingestellt habe. Und bei den drei unteren Buttons ... wesentlich heller und ohne diesen Rand, es wirkt ganz anders."
+   Befund: (1) "Kein Rand" wirkte im dunklen Polar nur auf den laufenden Rand, die Randfarbe selbst wurde trotzdem gelb;
+   (2) "Feld leuchtet sanft auf" griff bei Bunt nicht (eigene Uebergangsregel), bei Petrol/Navy/Schlicht schon, und die
+   Kacheln unter der Frage hatten einen eigenen, schnelleren Uebergang. Jetzt folgen Antworten und Kacheln in allen vier
+   Stilen denselben zwei Einstellungen aus Anpassen. */
+html:not(#zz):not(#zy):not(#zx):not(.android-app) body:not(#zz2).dark.runde-laeuft.maus-ohne-rand .question-area #optionsContainer > .option:is(:hover,.tts-highlight,.maus-liest):not(.correct):not(.wrong):not(.gewaehlt){border-color:rgba(255,255,255,.14)!important}
+html:not(#zz):not(#zy):not(#zx):not(.android-app) body:not(#zz2).dark.runde-laeuft.maus-ohne-rand :is(.lernkachel,.forum-knopf.forum-mitte):hover{border-color:rgba(255,255,255,.14)!important}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark.runde-laeuft.maus-leuchten .question-area #optionsContainer > .option,
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark.runde-laeuft.maus-leuchten :is(.lernkachel,.forum-knopf.forum-mitte){transition:background-color .55s ease,color .55s ease,border-color .55s ease,transform .12s ease,box-shadow .12s ease!important}
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark.runde-laeuft:not(.maus-leuchten) .question-area #optionsContainer > .option,
+html:not(#zz):not(#zy):not(.android-app) body:not(#zz2).dark.runde-laeuft:not(.maus-leuchten) :is(.lernkachel,.forum-knopf.forum-mitte){transition:transform .12s ease,box-shadow .12s ease!important}
 </style>
 <style id="polarRest">
 /* 21.10.2026 Dietmar: "Hier ist auch noch der Graphit vorhanden" (Ziel-Fenster) und "dieser Scrollbalken hat einen weißen Hintergrund" */
@@ -64890,7 +65430,7 @@ html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2):hover{background:rgba(255,255,255,.13)!important;border-color:rgba(255,255,255,.32)!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt.aktiv:not(#q1):not(#q2){background:rgba(52,211,153,.16)!important;border-color:#34d399!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2) span[style*="border"]{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.20)!important;border-radius:6px!important}
-html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] button[style*="min-height:38px"]:not(#q1):not(#q2),html:not(#zz):not(.android-app) body:not(#zz2).dark #rundeModal .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;color:#fff!important;border-radius:999px!important}
+html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] button[style*="min-height:"]:not(#q1):not(#q2),html:not(#zz):not(.android-app) body:not(#zz2).dark #rundeModal .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;color:#fff!important;border-radius:999px!important}
 /* Scrollbalken im dunklen Stil am PC: schmal, ohne weißen Grund. Stand 383: auch in der App-Ansicht am PC (Dietmar: "kann man den Scrollbalken auch noch färben?") */
 html:is(:not(.android-app),.pc-app) body.dark *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.30) transparent}
 html:is(:not(.android-app),.pc-app):has(body.dark){scrollbar-color:rgba(255,255,255,.30) #0b1330}
@@ -64947,19 +65487,19 @@ html body.maus-leuchten :is(.lernkachel, .forum-knopf.forum-mitte) { transition:
 <style id="polarFuss">
 /* FUSSZEILE IM POLAR-LOOK (21.10.2026): Dietmar markierte die Zeile "Offizieller Katalog ... Facebook" am Bild: "Hätte das gerne angepasst."
    Gedämpfte Schrift, Links in der Akzentfarbe, OHNE Rahmen (Dietmar: ohne Rahmen). */
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note{
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note{
     margin:20px auto 14px !important; padding:10px 20px !important; border:0 !important; border-top:0 !important;
     border-radius:0 !important; background:none !important; box-shadow:none !important;
     color:rgba(226,234,255,.68) !important; font-size:.78rem !important; line-height:1.55 !important; letter-spacing:.01em;
 }
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note > i.fas{ color:#7be3c9 !important; margin-right:4px; }
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note a{
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note > i.fas{ color:#7be3c9 !important; margin-right:4px; }
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note a{
     color:#8fe6d0 !important; font-weight:600 !important; text-decoration:none !important;
     border-bottom:1px dotted rgba(143,230,208,.55) !important; transition:color .15s, border-color .15s;
 }
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note a:hover{ color:#fff !important; border-bottom:1px solid #fff !important; }
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note a i{ color:inherit !important; }
-html:not(.android-app).fs-bunt body.dark.graphit .footer-note #footerTeile{ color:rgba(255,255,255,.92); font-weight:600; }
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note a:hover{ color:#fff !important; border-bottom:1px solid #fff !important; }
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note a i{ color:inherit !important; }
+html:not(.android-app):not(.fs-kein) body.dark.graphit .footer-note #footerTeile{ color:rgba(255,255,255,.92); font-weight:600; }
 </style>
 <style id="polarApp">
 /* POLAR AUCH IN DER APP-ANSICHT (21.10.2026): Dietmar: "im dunklen Modus gibt es kein Polar". Seite im schrägen Farbverlauf (hell links oben, dunkel rechts unten),

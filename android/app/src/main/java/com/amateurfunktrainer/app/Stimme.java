@@ -218,14 +218,78 @@ final class Stimme {
         }
     }
 
+    /**
+     * Deutsch einstellen - aber mit der Stimme, die im Sprachmodul selbst gewaehlt ist (Stand 393, 31.10.2026).
+     * Dietmar: "Seltsam, es verwendet Acapela, aber nicht die Stimme, die ich ausgewaehlt habe." Vorher stellte die App
+     * hart auf Locale.GERMANY; Module wie Acapela nehmen dann ihre erste deutsche Stimme statt der eingestellten.
+     * Jetzt der Reihe nach: (1) die Sprache aus den Einstellungen mit Variante (Acapela: JULIA); (2) die Standardstimme
+     * des Moduls; (3) die Standardsprache; (4) erst dann de-DE bzw. de.
+     * Nur mit Sperre.
+     */
+    private static int deutschWieImModul() {
+        if (tts == null) return TextToSpeech.LANG_NOT_SUPPORTED;
+        try {
+            // (1) Die Sprache aus den Einstellungen des Moduls - mit Land und Variante. Acapela fuehrt die Stimme als
+            //     Variante: bei Dietmar "Deutsch (Deutschland, JULIA)". Fehlt die Variante, aus der Android-Einstellung.
+            Locale std = null;
+            try { std = tts.getDefaultLanguage(); } catch (Exception e) { std = null; }
+            if (std == null || std.getVariant() == null || std.getVariant().isEmpty()) {
+                Locale aus = ausAndroidEinstellung();
+                if (aus != null) std = aus;
+            }
+            boolean deutsch = std != null && "de".equalsIgnoreCase(std.getLanguage());
+            if (deutsch && std.getVariant() != null && !std.getVariant().isEmpty()) {
+                int r = tts.setLanguage(std);
+                if (r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED) return r;
+            }
+            // (2) Die Standardstimme des Moduls (Module mit Stimmen-Schnittstelle, z. B. Google, Samsung)
+            Voice dv = null;
+            try { dv = tts.getDefaultVoice(); } catch (Exception e) { dv = null; }
+            if (dv != null && dv.getLocale() != null && "de".equalsIgnoreCase(dv.getLocale().getLanguage())
+                    && tts.setVoice(dv) == TextToSpeech.SUCCESS) return TextToSpeech.LANG_COUNTRY_AVAILABLE;
+            // (3) Die Standardsprache ohne Variante
+            if (deutsch) {
+                int r = tts.setLanguage(std);
+                if (r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED) return r;
+            }
+            // (4) wie bisher
+            int r = tts.setLanguage(Locale.GERMANY);
+            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) r = tts.setLanguage(Locale.GERMAN);
+            return r;
+        } catch (Exception e) { return TextToSpeech.LANG_NOT_SUPPORTED; }
+    }
+
+    /**
+     * Die Sprache, die in den Android-Einstellungen (Sprachausgabe -> Sprache) fuer das laufende Modul steht.
+     * Android legt sie als "paket:deu-DEU-JULIA,anderes:..." ab (Settings.Secure "tts_default_locale").
+     * Gibt de-DE-JULIA zurueck, sonst null.
+     */
+    private static Locale ausAndroidEinstellung() {
+        try {
+            String alle = android.provider.Settings.Secure.getString(app.getContentResolver(), "tts_default_locale");
+            if (alle == null || alle.isEmpty()) return null;
+            String paket = modul;
+            try { if (paket == null || paket.isEmpty()) paket = gewuenscht != null ? gewuenscht : tts.getDefaultEngine(); } catch (Exception e) { }
+            String wert = null;
+            for (String teil : alle.split(",")) {
+                int dp = teil.indexOf(':');
+                if (dp < 0) { if (wert == null) wert = teil; continue; }        // alte Form ohne Paket
+                if (paket != null && teil.substring(0, dp).equals(paket)) { wert = teil.substring(dp + 1); break; }
+            }
+            if (wert == null) return null;
+            String[] s = wert.split("[-_]");
+            if (s.length == 0 || !(s[0].equalsIgnoreCase("de") || s[0].equalsIgnoreCase("deu") || s[0].equalsIgnoreCase("ger"))) return null;
+            String land = s.length > 1 ? s[1] : "";
+            if (land.equalsIgnoreCase("DEU")) land = "DE"; else if (land.equalsIgnoreCase("AUT")) land = "AT"; else if (land.equalsIgnoreCase("CHE")) land = "CH";
+            String variante = s.length > 2 ? s[2] : "";
+            return new Locale("de", land.toUpperCase(Locale.ROOT), variante);
+        } catch (Exception e) { return null; }
+    }
+
     /** Das Modul hat sich gemeldet: Sprache einstellen, Rueckmeldungen anschliessen. Nur mit Sperre. */
     private static void einrichten() {
         if (tts == null) return;
-        int r;
-        try {
-            r = tts.setLanguage(Locale.GERMANY);
-            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) r = tts.setLanguage(Locale.GERMAN);
-        } catch (Exception e) { r = TextToSpeech.LANG_NOT_SUPPORTED; }
+        int r = deutschWieImModul();
         letzteSprache = r;
         bereit = r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
         if (bereit) stimmeAnwenden();
@@ -392,7 +456,7 @@ final class Stimme {
         catch (Exception e) { }
         if (tts == null || !bereit) return false;
         if (gewaehlteStimme.isEmpty()) {
-            try { tts.setLanguage(Locale.GERMANY); } catch (Exception e) { }
+            deutschWieImModul();
             return true;
         }
         return stimmeAnwenden();
