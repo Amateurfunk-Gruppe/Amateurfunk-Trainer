@@ -12070,7 +12070,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
          dort gehört sie hin - direkt neben den Lektionen. Hier unten blieb nur
          die Herkunft des Fragenkatalogs. -->
     <div class="footer-note">
-        <i class="fas fa-info-circle"></i> Offizieller Katalog der Bundesnetzagentur Stand: März 2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
+        <i class="fas fa-info-circle"></i> Fragenkatalog der Bundesnetzagentur, 3. Auflage, gültig seit 24.06.2024 · <span id="footerTeile">Klasse N</span> · <span class="footer-quelle">Empfehlung: <a href="https://www.50ohm.de" target="_blank" rel="noopener"
                title="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung."
                data-tooltip="Auf der Seite von 50 Ohm findest du Kurse, Trainings-App, Ausbildungspaten und das Buch Klasse N zur Ausbildung.">50ohm.de</a> — der Amateurfunk-Lehrgang des <a href="https://www.darc.de" target="_blank" rel="noopener">DARC</a></span><span class="footer-support-huelle"> · <a href="support.html" class="footer-support" target="_blank" rel="noopener">Support</a> · <a href="support.html#datenschutz" class="footer-support" target="_blank" rel="noopener">Datenschutz</a> · <a href="https://www.facebook.com/amateurfunktrainer/" class="footer-support" target="_blank" rel="noopener" data-tooltip="Die Seite des Trainers auf Facebook – Neuigkeiten rund ums Thema Amateurfunk">Facebook</a></span><span id="besucherZaehler" class="footer-zaehler" style="display:none;"><span class="fz-kopf">Besucherzähler</span><span class="fz-zahl" id="besucherZaehlerZahl">0</span></span>
     </div>
@@ -24935,7 +24935,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 395, datum: '01.11.2026' };
+const TRAINER_STAND = { nr: 396, datum: '01.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32107,7 +32107,7 @@ async function playTTSSegment(seg, token){
         if(token!==ttsQueueToken) return;
         for(const t of ttsInStuecke(seg.text)){
             if(token!==ttsQueueToken) return;
-            await playTTSSegment(Object.assign({}, seg, { maja: null, text: t }), token);
+            await playTTSSegment(Object.assign({}, seg, { maja: null, text: t, worte: null }), token);
         }
         return;
     }
@@ -32181,7 +32181,7 @@ async function playTTSSegment(seg, token){
                     await new Promise(resolve=>{
                         // Ein Ausgang fuer alle drei Wege: erst schweigen,
                         // dann weitermachen.
-                        const fertig=()=>{ try{ ttsWorteEnde(); }catch(e){} ttsAudioAnhalten(audio); resolve(); };
+                        const fertig=()=>{ try{ if(!ttsWortLauf || ttsWortLauf.audio === audio) ttsWorteEnde(); }catch(e){} ttsAudioAnhalten(audio); resolve(); };   // Stand 396 (Gegenpruefung): nur die eigene Marke beenden
                         audio.onended=()=>{ console.log('[TTS] ✓ PIPER ERFOLG'); fertig(); };
                         audio.onerror=(e)=>{ console.error('Piper Audio Error', e); fertig(); };
                         audio.play().then(()=>{
@@ -32463,7 +32463,7 @@ async function playTTSQueue(segments, btn, zurueck){
         // Majas Aufnahme (Stand 394) ist ein Stueck - sie wird nicht zerlegt.
         if(seg && seg.maja){
             stuecke.push({ text: seg.text, selector: seg.selector, frageNr: seg.frageNr, klasse: seg.klasse,
-                           worte: null, thorsten: !!seg.thorsten, wortVon: 0, wortBis: 1,
+                           worte: seg.worte || null, thorsten: !!seg.thorsten, wortVon: 0, wortBis: 1,
                            pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja });
             continue;
         }
@@ -32696,10 +32696,19 @@ async function majaSegmentSpielen(seg, token){
     currentTtsUrl = url; currentTtsAudio = audio;
     try{ ttsTempoAnwenden(audio); }catch(e){}
     ttsAudioMerken(audio, url);
+    // Stand 396: Mitlesen auch bei Majas Aufnahme. Dietmar: "Das Markieren beim Vorlesen geht nicht mehr.
+    // Offensichtlich ist das fuer Piper ausgelegt." Die Marke folgt der Abspielzeit der Aufnahme, verteilt
+    // nach Wortlaenge - genau wie bei Piper (ttsWorteStarten).
+    if(seg.worte && seg.selector){
+        try{ ttsWorteStarten(document.querySelector(seg.selector), audio, 0, 1); }catch(e){}
+    }
     return await new Promise(resolve => {
         let gespielt = false, aus = false;
         const fertig = ok => {
             if(aus) return; aus = true;
+            // Gegenpruefung 396: nur die eigene Marke beenden - ein spaet abgebrochenes altes Stueck darf die Marke
+            // des neuen nicht loeschen (play() wird nach ttsAllesAnhalten erst spaeter mit AbortError abgelehnt).
+            try{ if(!ttsWortLauf || ttsWortLauf.audio === audio) ttsWorteEnde(); }catch(e){}
             ttsAudioAnhalten(audio);
             currentTtsUrl = null; currentTtsAudio = null;
             resolve(ok);
@@ -56379,7 +56388,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         TRICKS.push({ name: 'purzelbaum', pose: 'daumen', ms: 1700, kf: [{ transform: N }, { transform: 'translateY(-10%) rotate(360deg) scale(.92)', offset: .45 },
             { transform: 'translateY(-4%) rotate(720deg) scale(.95)', offset: .85 }, { transform: 'rotate(720deg)' }], easing: 'cubic-bezier(.45,.05,.35,1)' });
         let zuletzt = 0, vorher = -1, schritt = 0, sperre = 1600;
-        document.addEventListener('mouseover', e => { try{
+        // Stand 396 (01.11.2026), Dietmar: "Mit Mouseoverlay muss weg. Nur bei anklicken, darf Maja kommen".
+        // Frueher startete schon das Darueberfahren mit der Maus QTH-Erklaerung, ISS-Ueberflug und Kunststuecke.
+        // Die Funktion bleibt (mkTrick), haengt aber an keinem mouseover mehr; Maja kommt nur per Klick (rufen()).
+        const mkTrick = e => { try{
             const mk = e.target && e.target.closest && e.target.closest('.mk');
             if(!mk || (e.relatedTarget && mk.contains(e.relatedTarget))) return;
             if(mk.closest('#roboHelfer')) return;   // 27.10.2026: die auftauchende Maja loest sich beim Antippen auf; ein Tippen schickt vorher ein mouseover, das sonst die QTH-Erklaerung startet
@@ -56410,7 +56422,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 astroSetze(b, t.pose);
                 setTimeout(() => { try{ if(b.dataset.pose === t.pose) astroSetze(b, alt); }catch(err){} }, Math.max(ASTRO_ANIM[t.pose] ? 4500 : 1400, t.ms + 250));
             }
-        }catch(err){} });
+        }catch(err){} };
+        window.mkTrick = mkTrick;
     })();
     // Stand 381: Schneeflocke in 3D (Filz-Optik, nach Dietmars Bild) statt des Font-Awesome-Zeichens am Einfrier-Knopf
     const FLOCKE_SVG = '<svg class="ah-flocke" viewBox="-62 -62 124 124" aria-hidden="true"><defs><linearGradient id="ahFlG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" class="fl-m" stop-color="#ffffff"/><stop offset="1" stop-color="#cfe3f3"/></linearGradient></defs><path class="fl-tief" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95" transform="translate(1.4,1.9)"/><path class="fl-bild" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95"/><path class="fl-licht" d="M0 0 L0.00 54.00 M0.00 22.00 L13.93 31.75 M0.00 22.00 L-13.93 31.75 M0.00 38.00 L10.65 45.46 M0.00 38.00 L-10.65 45.46 M0 0 L-46.77 27.00 M-19.05 11.00 L-20.53 27.94 M-19.05 11.00 L-34.46 3.82 M-32.91 19.00 L-34.04 31.95 M-32.91 19.00 L-44.69 13.51 M0 0 L-46.77 -27.00 M-19.05 -11.00 L-34.46 -3.82 M-19.05 -11.00 L-20.53 -27.94 M-32.91 -19.00 L-44.69 -13.51 M-32.91 -19.00 L-34.04 -31.95 M0 0 L-0.00 -54.00 M-0.00 -22.00 L-13.93 -31.75 M-0.00 -22.00 L13.93 -31.75 M-0.00 -38.00 L-10.65 -45.46 M-0.00 -38.00 L10.65 -45.46 M0 0 L46.77 -27.00 M19.05 -11.00 L20.53 -27.94 M19.05 -11.00 L34.46 -3.82 M32.91 -19.00 L34.04 -31.95 M32.91 -19.00 L44.69 -13.51 M0 0 L46.77 27.00 M19.05 11.00 L34.46 3.82 M19.05 11.00 L20.53 27.94 M32.91 19.00 L44.69 13.51 M32.91 19.00 L34.04 31.95"/></svg>';
@@ -63369,7 +63382,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Stand 395: auch hier Majas Aufnahme der Frage (Sprachpaket) - diese App-Fassung von
             // vorleseFrage kannte die Marke nicht, deshalb las die App die Frage mit der Handystimme.
             const majaMarke = (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null;
-            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: majaMarke ? false : wortAn(), thorsten: true, maja: majaMarke }];
+            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), thorsten: true, maja: majaMarke }];
             let mitAntworten = !nurFrage();
             try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
             if(mitAntworten && typeof antwortSegment === 'function'){
@@ -65712,6 +65725,12 @@ html.android-app.stil-verspielt #appHeute .ah-frost { width: 56px; height: 56px;
    nicht ueber ihr (Dietmar: "Wenn ich da drauf klicke, loest sich Maja in Luft auf ... Ueberlagerung"). Kippen nur mit Maus
    (hover:hover), nie bei Beruehrung - am Handy blieb der gekippte Zustand haengen. Kein eckiger Tipp-Rahmen. */
 html.android-app:not(.pc-app).stil-verspielt #appHeute .ah-frost { width: 34px; height: 34px; left: -10px; bottom: -6px; }
+/* Stand 396: am PC sass die Flocke links unten an Maja - ab etwa 1500 Punkten Breite auf dem Namen darunter
+   (Dietmar: "Freez sitzt etwas ungünstig." - "auf keinen Fall nach oben verschieben"). Sie bleibt links unten neben
+   "Guten Tag," und wird nur so weit angehoben, dass sie den Namen nicht mehr beruehrt. App am Handy unveraendert. */
+html.android-app.pc-app:not(.pc-handy).stil-verspielt #appHeute .ah-frost { bottom: 14px; }
+/* Link am Handy: dieselbe kleine Flocke links unten wie in der Android-App (vorher 56 Punkte gross ueber Majas Beinen) */
+html.android-app.pc-handy.stil-verspielt #appHeute .ah-frost { width: 34px; height: 34px; left: -10px; bottom: -6px; }
 html.android-app.stil-verspielt #appHeute .ah-frost { outline: none; -webkit-tap-highlight-color: transparent; }
 html.android-app.stil-verspielt #appHeute .ah-frost:focus { outline: none; }
 /* Dietmar: "die Schneeflocke darf sich auf keinen Fall drehen" - mit Maus nur ein leichtes Aufhellen, keine Bewegung */
