@@ -2170,6 +2170,10 @@
         html.pc-app.stil-verspielt #appHeute .ah-runde > .ah-gruss small { display: none; }
         html.pc-app #appLeiste .al-titel { flex: 0 0 auto; margin-right: auto; }
         html.pc-app.pc-passt, html.pc-app.pc-passt body { overflow-y: hidden !important; }
+        /* 01.11.2026 Dietmar: "der Abstand kann gerne etwas kleiner sein". Passt die Startseite ins Fenster (pc-passt), muss unter
+           ihr kein Platz fuer die Reiterleiste mehr frei bleiben - die Leiste liegt fest am Rand, und pcFit fuehrt die Seite bis
+           12 Bildpunkte davor. Ohne diese Zeile hielt der Platz fuer die Leiste (Leistenhoehe + 14 px) die Seite ein Stueck hoeher. */
+        html.pc-app.pc-passt:not(.pc-handy) body:not(.runde-laeuft) { padding-bottom: 24px !important; }
         /* 20.10.2026 Dietmar: "Kann man aus den Icons auch Buttons machen? Haette das gerne bei Chat und Suche." Nur am PC: Chat und Suche
            sehen aus wie Forum und Abmelden - Rahmen, Symbol und Wort. */
         /* 20.10.2026 Dietmar: "Die Leiste unten kann paar mm nach unten." Am PC sitzt sie fast am Rand (3 statt 12 px). */
@@ -11425,6 +11429,10 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                             data-vorlesen-kurz="Antwort zurücknehmen."
                             data-vorlesen="Antwort zurücknehmen. Die Wertung wird rückgängig gemacht und die Frage steht wieder offen."><i class="fas fa-rotate-left"></i> Zurücknehmen</button>
                     <button class="nav-btn nav-btn-primary" id="nextBtn">Weiter <i class="fas fa-chevron-right"></i></button>
+                    <!-- Stand 395: In der Pruefung endet ein Teil erst mit "Abgeben" (oder wenn die Uhr ablaeuft). -->
+                    <button class="nav-btn nav-btn-primary zurueck-aus" id="pruefAbgebenBtn" onclick="pruefungAbgeben()"
+                            data-tooltip="Alle Fragen beantwortet – jetzt abgeben und auswerten. Bis dahin kannst du jede Antwort noch ändern."
+                            data-vorlesen-kurz="Abgeben."><i class="fas fa-flag-checkered" style="color:currentColor !important;"></i> Abgeben</button>
                     <button class="nav-btn" id="homeBtn" onclick="backToMain()" data-tooltip="Zurück zur Hauptansicht" style="display:none;"><i class="fas fa-home"></i> Hauptmenü</button>
                     <!-- Die Quellenangabe holen, die waehrend der Runde weg ist.
                          Sie liegt dann am Fensterrand und nicht in der Seite -
@@ -12510,7 +12518,9 @@ function confirmCacheClear(){
             });
         }
         if ('caches' in window) {
-            caches.keys().then(function(names) { for (let name of names) { caches.delete(name); } });
+            // Stand 395: Majas Sprachpakete (Speicher "maja-sprache-...") bleiben - sie sind kein
+            // Zwischenspeicher, sondern bewusst geladene Daten (sonst 200 MB neu herunterladen).
+            caches.keys().then(function(names) { for (let name of names) { if(String(name).indexOf('maja-sprache') !== 0) caches.delete(name); } });
         }
         try{
             document.cookie.split(';').forEach(function(c) {
@@ -24925,7 +24935,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 394, datum: '01.11.2026' };
+const TRAINER_STAND = { nr: 395, datum: '01.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -24950,7 +24960,9 @@ window.TRAINER_STAND = TRAINER_STAND; window.standText = standText;
         console.log('Neuer Stand ' + neu + ' (vorher ' + alt + ') - Zwischenspeicher wird geleert');
         var arbeit = [];
         if('serviceWorker' in navigator) arbeit.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister(); })); }).catch(function(){}));
-        if('caches' in window) arbeit.push(caches.keys().then(function(ns){ return Promise.all(ns.map(function(n){ return caches.delete(n); })); }).catch(function(){}));
+        // Stand 395: Majas Sprachpakete ("maja-sprache-...") NICHT wegraeumen. Bis 394 loeschte jedes
+        // Update hier alle Speicher - damit waren nach jedem neuen Stand auch die geladenen Pakete weg.
+        if('caches' in window) arbeit.push(caches.keys().then(function(ns){ return Promise.all(ns.filter(function(n){ return String(n).indexOf('maja-sprache') !== 0; }).map(function(n){ return caches.delete(n); })); }).catch(function(){}));
         Promise.all(arbeit).then(function(){ setTimeout(function(){ location.reload(); }, 50); });
     }catch(e){}
 })();
@@ -32567,7 +32579,8 @@ const BILD_PAUSE_MS = 2600;
 // ================================================================
 const MAJA_SPRACHE_QUELLEN = ['https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
 const MAJA_SPRACHE_CACHE = 'maja-sprache-v1';
-const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten'] };
+// Pruefungsziele wie in KLASSEN: n = Klasse N, e = Klasse E (N + Aufbau), ne = nur Aufbau N auf E, ea = Aufbau E auf A (Stand 395).
+const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten'], ne: ['E-fragen'], ea: ['A-fragen'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten'] };
 const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {} };
 
 function majaSpracheMoeglich(){
@@ -32608,9 +32621,22 @@ function majaSpracheIndizesLaden(){
             }catch(e){}
         }
         if(weg) majaSpracheMerken(inst);
-    })().catch(() => {});
+    })().catch(() => {}).then(() => { majaSprache.idxFertig = true; });
     return majaSpracheIdxVersprechen;
 }
+// Stand 395: Wird gleich nach dem Start vorgelesen, sind die Verzeichnisse der Pakete
+// evtl. noch nicht gelesen - dann erst warten (Cache, unter einer Sekunde), sonst
+// spraeche bei der ersten Frage die eingebaute Stimme statt Maja.
+// true = es wird gewartet und danach weiter() aufgerufen.
+function majaSpracheWartet(weiter){
+    try{
+        if(majaSprache.idxFertig || !majaSpracheAn() || !majaSpracheMoeglich()) return false;
+        if(!Object.keys(majaSpracheInstalliert()).length) return false;
+        majaSpracheIndizesLaden().then(() => { majaSprache.idxFertig = true; weiter(); });
+        return true;
+    }catch(e){ return false; }
+}
+window.majaSpracheWartet = majaSpracheWartet;
 // Marke fuer die FRAGE: { pid, e } oder null
 function majaFrageMarke(q){
     try{
@@ -32846,6 +32872,7 @@ setTimeout(() => { try{ majaSpracheIndizesLaden(); }catch(e){} }, 2500);
 
 function vorleseFrage(){
     const q=currentQuestions[currentIndex]; if(!q) return;
+    if(majaSpracheWartet(() => window.vorleseFrage())) return;
     const btn=document.getElementById('ttsBtn');
     // Landeskenner und Rufzeichen werden buchstabiert - siehe kennerSprechen().
     // Die Sperre steckt in kennerThema(): in allen anderen Fragen bleibt der
@@ -38307,7 +38334,8 @@ function renderQuestion() {
                 if (!opt.correct && i === q.userAnswerIndex) cls += ' wrong';
             }
         } else if (answered) {
-            cls += ' disabled';
+            // Stand 395: In der Pruefung bleiben die Kacheln anklickbar (umentscheiden).
+            if (!pruefungStreng()) cls += ' disabled';
             if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) {
                 // Nur markieren, WAS angekreuzt wurde - nicht, ob es stimmt.
                 if (i === q.userAnswerIndex) cls += ' gewaehlt';
@@ -38350,7 +38378,7 @@ function renderQuestion() {
         // "Bild A" sagt einem Vorleseprogramm nichts, was der Buchstabe
         // nicht schon sagt - siehe vorleseFrage().
         const ansage = 'Antwort ' + labels[i] + (opt.text ? ': ' + opt.text : '');
-        const gesperrt = answered ? ' aria-disabled="true"' : '';
+        const gesperrt = (answered && !pruefungStreng()) ? ' aria-disabled="true"' : '';
         html += `<div class="${cls}" data-optindex="${i}" onclick="selectOption(${i})"
              role="button" tabindex="0"${gesperrt} aria-label="${String(ansage).replace(/"/g,'&quot;')}"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectOption(${i});}">
@@ -38616,6 +38644,7 @@ function renderQuestion() {
     // verschwinden, auch wenn niemand nextQuestion() aufgerufen hat (etwa
     // ueber die Punktleiste links).
     try{ zurueckKnopfNachziehen(); }catch(e){}
+    try{ pruefungAbgebenKnopf(); }catch(e){}
     // Der Formelblatt-Knopf wird bei jeder Frage neu entschieden: Er
     // erscheint nur, wenn es zu genau dieser Frage eine Stelle gibt.
     try{ formelKnopfSetzen(); }catch(e){}
@@ -38749,7 +38778,16 @@ function afuRueckWeg(){ try{ const e = document.getElementById('afuRueck'); if(e
 function afuRueckPruefen(){ try{ const e = document.getElementById('afuRueck'); const q = currentQuestions[currentIndex]; if(e && e.className && (!q || e.dataset.q !== String(q.id))) e.className = ''; }catch(err){} }
 function selectOption(optIndex) {
     const q = currentQuestions[currentIndex];
-    if (!q || answered) return;
+    if (!q) return;
+    if (answered) {
+        // Stand 395: In der Pruefungssimulation darf man umentscheiden - wie in der echten
+        // Pruefung, bis man abgibt. Ein Tester: "wenn man sich vertippt hat, kann man die Antwort
+        // in der Pruefung nicht mehr korrigieren. In der echten Pruefung darf man schon korrigieren."
+        // Erst die alte Antwort dieser Frage herausnehmen, dann wie eine neue werten.
+        if (!(pruefungAenderbar() && optIndex !== q.userAnswerIndex && pruefungAntwortLoesen(q))) return;
+    }
+    // Abgegebener Pruefungsteil (Zwischenergebnis steht da): nichts mehr annehmen.
+    try{ if (window.realisticExam && window.realisticExam.active && window.realisticExam.teilAbgegeben) return; }catch(e){}
     // Unterricht im Gruppenraum: Der Kursleiter loest mit dem Klick auf.
     if (typeof unterrichtRaumAntwortAbfangen === 'function' && unterrichtRaumAntwortAbfangen()) return;
     // (Gruppenraum-Turn-Check entfernt - jeder geht in eigenem Tempo, siehe oben)
@@ -38764,6 +38802,11 @@ function selectOption(optIndex) {
 
     // VOR jeder Aenderung: die Kopie fuer "Zuruecknehmen".
     try{ antwortSicherungNehmen(q); }catch(e){}
+    // Stand 395: in der Pruefung je Frage der Stand VOR ihrer Antwort (zum Umentscheiden)
+    // _pruefNochmal: diese Frage wurde in dieser Pruefung schon einmal beantwortet -
+    // Diagnose, Tagesstatistik und XP zaehlen nur die erste Antwort, nicht jedes Umentscheiden.
+    let pruefNochmal = false;
+    try{ if(pruefungStreng()){ pruefNochmal = !!q._pruefBeantwortet; q._pruefBeantwortet = true; pruefungAntwortVorherMerken(q); } }catch(e){}
 
     q.userAnswerIndex = optIndex;
     answered = true;
@@ -38807,7 +38850,7 @@ function selectOption(optIndex) {
     // Die stille Messung. Sie steht VOR der Fehlerliste, weil sie mehr
     // weiss als diese: nicht nur DASS es falsch war, sondern WELCHE
     // Antwort es war und wie lange es gedauert hat.
-    try{ diagnoseNotieren(q, optIndex, isCorrect); }catch(e){}
+    try{ if(!pruefNochmal) diagnoseNotieren(q, optIndex, isCorrect); }catch(e){}
 
     if (!isCorrect) {
         if (!errorList.includes(qId)) errorList.push(qId);
@@ -38822,7 +38865,7 @@ function selectOption(optIndex) {
     saveDifficult();
     saveMastery();
     // Frust-Bremse und 2-Minuten-Runde (18.10.2026)
-    try{ afuFrage(qId, isCorrect); }catch(e){}
+    try{ if(!pruefNochmal) afuFrage(qId, isCorrect); }catch(e){}
     try{ frustBremse(q, isCorrect); }catch(e){}
     try{ zweiMinutenFertig(); }catch(e){}
     if (window.duo && window.duo.isActive && window.duo.isActive()) {
@@ -38846,6 +38889,8 @@ function selectOption(optIndex) {
           if(window.duo && window.duo.isActive && window.duo.isActive()) return;
           if(window.realisticExam && window.realisticExam.active) return;
         }catch(e){}
+        // Stand 395: In der Pruefung endet nichts von selbst - erst "Abgeben" (oder die Uhr).
+        if (pruefungStreng()) return;
         const allAnswered = currentQuestions.every(qq => progress[qq.id] && progress[qq.id].answered);
         // Bis zum Ende zaehlt nur noch, ob nach mir ueberhaupt eine Frage kommt,
         // die noch gestellt wird - automatisch gewertete zaehlen nicht mit.
@@ -40817,8 +40862,15 @@ let antwortSicherung = null;
 function zurueckKnopfNachziehen(){
     const b = document.getElementById('zurueckNehmenBtn');
     if(!b) return;
-    const zeigen = !!(antwortSicherung && zurueckNehmenAn()
+    let zeigen = !!(antwortSicherung && zurueckNehmenAn()
                    && antwortSicherung.index === currentIndex);
+    // Stand 395: in der Pruefung fest eingebaut - bei jeder beantworteten Frage, bis zum Abgeben
+    try{
+        if(pruefungStreng() && !examFinished){
+            const q = currentQuestions[currentIndex];
+            zeigen = !!(pruefungZuruecknehmbar() && q && q._pruefVorher && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined);
+        }
+    }catch(e){}
     // Ueber eine Klasse und nicht ueber style.display: .nav-btn setzt
     // display mit !important, dagegen kommt ein Inline-Wert nicht an.
     b.classList.toggle('zurueck-aus', !zeigen);
@@ -40862,8 +40914,95 @@ function antwortSicherungNehmen(q){
     }catch(e){ antwortSicherung = null; }
 }
 
+// ----------------------------------------------------------------
+//  PRUEFUNG: ANTWORT AENDERN UND ZURUECKNEHMEN (Stand 395, fest eingebaut)
+//  In der Pruefung kann man vor- und zurueckblaettern und jede Frage
+//  bis zum Abgeben aendern. Die Sicherung oben reicht dafuer nicht: sie
+//  gilt nur bis zum Weiterblaettern und stellt die ganze Fehlerliste
+//  zurueck. Hier gilt deshalb je Frage ein eigener Stand von VOR ihrer
+//  Antwort, und zurueckgenommen wird nur, was zu DIESER Frage gehoert.
+// ----------------------------------------------------------------
+// Aenderbar: Pruefung laeuft, und dieser Teil ist noch nicht abgegeben (auch nicht
+// waehrend das Zwischenergebnis zwischen zwei Teilen auf dem Schirm steht).
+function pruefungAenderbar(){
+    try{
+        if(!pruefungStreng() || examFinished) return false;
+        if(window.realisticExam && window.realisticExam.active && window.realisticExam.teilAbgegeben) return false;
+        return true;
+    }catch(e){ return false; }
+}
+window.pruefungAenderbar = pruefungAenderbar;
+// Zuruecknehmen (Frage wieder offen) nur allein - im Gruppenraum kennt der Server
+// kein "wieder offen"; dort geht Umentscheiden (die neue Antwort ueberschreibt die alte).
+function pruefungZuruecknehmbar(){
+    try{ return pruefungAenderbar() && !(window.realisticExam && window.realisticExam.duo); }catch(e){ return false; }
+}
+function pruefungAntwortVorherMerken(q){
+    const id = q.id;
+    const kopie = (x) => (x === undefined || x === null) ? null : JSON.parse(JSON.stringify(x));
+    q._pruefVorher = {
+        progress:  kopie(progress[id]),
+        fehler:    errorList.includes(id),
+        difficult: kopie(typeof difficultQuestions !== 'undefined' ? difficultQuestions[id] : null),
+        mastery:   kopie(typeof masteryData !== 'undefined' ? masteryData[id] : null)
+    };
+}
+function pruefungAntwortLoesen(q){
+    const v = q && q._pruefVorher;
+    if(!v || q.userAnswerIndex === null || q.userAnswerIndex === undefined) return false;
+    const id = q.id;
+    const warRichtig = !!(q.options[q.userAnswerIndex] || {}).correct;
+    q.userAnswerIndex = null;
+    totalAnswered = Math.max(0, totalAnswered - 1);
+    if(warRichtig) correctCount = Math.max(0, correctCount - 1);
+    if(v.progress) progress[id] = JSON.parse(JSON.stringify(v.progress)); else { try{ delete progress[id]; }catch(e){} }
+    const i = errorList.indexOf(id);
+    if(v.fehler && i < 0) errorList.push(id);
+    if(!v.fehler && i > -1) errorList.splice(i, 1);
+    try{ if(v.difficult) difficultQuestions[id] = JSON.parse(JSON.stringify(v.difficult)); else delete difficultQuestions[id]; }catch(e){}
+    try{ if(v.mastery) masteryData[id] = JSON.parse(JSON.stringify(v.mastery)); else delete masteryData[id]; }catch(e){}
+    try{ saveErrors(); }catch(e){}
+    try{ saveDifficult(); }catch(e){}
+    try{ saveMastery(); }catch(e){}
+    if(currentQuestions[currentIndex] === q) answered = false;
+    return true;
+}
+window.pruefungAntwortLoesen = pruefungAntwortLoesen;
+// "Abgeben": erst damit endet ein Pruefungsteil (oder wenn die Uhr ablaeuft).
+function pruefungAbgeben(){
+    if(!pruefungAenderbar()) return;                 // schon abgegeben - nicht ein zweites Mal werten
+    try{ if(currentQuestions.some(qq => !(progress[qq.id] && progress[qq.id].answered))) return; }catch(e){ return; }
+    try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+    if(window.realisticExam && window.realisticExam.active && typeof finishRealisticPart === 'function'){ finishRealisticPart(false); return; }
+    currentIndex = currentQuestions.length; renderQuestion();
+}
+window.pruefungAbgeben = pruefungAbgeben;
+function pruefungAbgebenKnopf(){
+    try{
+        const b = document.getElementById('pruefAbgebenBtn');
+        if(!b) return;
+        const offen = currentQuestions.filter(qq => !(progress[qq.id] && progress[qq.id].answered)).length;
+        const zeigen = pruefungAenderbar() && currentIndex < currentQuestions.length && offen === 0;
+        // Ueber die Klasse - .nav-btn setzt display mit !important (siehe zurueckKnopfNachziehen)
+        b.classList.toggle('zurueck-aus', !zeigen);
+    }catch(e){}
+}
+window.pruefungAbgebenKnopf = pruefungAbgebenKnopf;
+
 function antwortZurueck(){
     try{ afuRueckWeg(); }catch(e){}
+    // Stand 395: In der Pruefung immer moeglich, fuer jede Frage, bis zum Abgeben.
+    if(pruefungStreng() && !examFinished){
+        const q = currentQuestions[currentIndex];
+        if(pruefungZuruecknehmbar() && q && pruefungAntwortLoesen(q)){
+            antwortSicherung = null;
+            try{ rundeSichernSpaeter(); }catch(e){}
+            renderQuestion();
+            try{ zurueckKnopfNachziehen(); }catch(e){}
+            try{ if(typeof ansagen === 'function') ansagen('Antwort zurückgenommen. Die Frage steht wieder offen.'); }catch(e){}
+        }
+        return;
+    }
     const sich = antwortSicherung;
     if(!sich || !zurueckNehmenAn()) return;
     // Nur die Frage, zu der die Sicherung gehoert.
@@ -40916,7 +41055,8 @@ document.addEventListener('keydown', function(e){
     if(!(e.ctrlKey || e.metaKey) || (e.key !== 'z' && e.key !== 'Z')) return;
     const z = e.target && e.target.tagName;
     if(z === 'INPUT' || z === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
-    if(!antwortSicherung || !zurueckNehmenAn()) return;
+    const inPruefung = (function(){ try{ const q = currentQuestions[currentIndex]; return pruefungZuruecknehmbar() && q && q._pruefVorher && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined; }catch(x){ return false; } })();
+    if(!inPruefung && (!antwortSicherung || !zurueckNehmenAn())) return;
     e.preventDefault();
     antwortZurueck();
 });
@@ -42761,7 +42901,7 @@ document.addEventListener('keydown', function (e) {
         const i = parseInt(e.key, 10) - 1;
         const q = currentQuestions && currentQuestions[currentIndex];
         if (!q || !q.options || i >= q.options.length) return;
-        if (answered) return;                       // zweimal antworten geht nicht
+        if (answered && !(typeof pruefungAenderbar === 'function' && pruefungAenderbar())) return;   // zweimal antworten geht nicht - in der Pruefung umentscheiden schon (Stand 395)
         e.preventDefault();
         selectOption(i);
         return;
@@ -47406,6 +47546,7 @@ window.beginRealisticExam = function(){
 
 function startRealisticPart(){
   try{ closeRealisticModal(); }catch(e){}
+  realisticExam.teilAbgegeben = false;          // Stand 395: neuer Teil, wieder aenderbar
   const part = realisticExam.order[realisticExam.currentIdx];
   realisticExam.currentPart = part;
   const duo = !!realisticExam.duo;
@@ -47712,6 +47853,9 @@ function stopRealisticTimer(){
 window.stopRealisticTimer = stopRealisticTimer;
 
 window.finishRealisticPart = function(isTimeUp){
+  // Stand 395: ab hier ist dieser Teil abgegeben - keine Aenderung, kein zweites Werten
+  if(realisticExam.teilAbgegeben) return;
+  realisticExam.teilAbgegeben = true;
   stopRealisticTimer();
   const part = realisticExam.currentPart;
   // Pruefungsraum: Was bei Zeitablauf offen blieb, ist ein Fehler - und
@@ -47897,7 +48041,8 @@ function showRealisticFinal(){
       const prog = r.progress ? r.progress[q.id] : null;
       const answered = prog && prog.answered;
       const userIdx = q.userAnswerIndex;
-      detailHtml += `<div class="rev-q"><div class="qtext">${i+1}. ${q.text||''} ${!answered?'<span class="rev-tag t-no">nicht beantwortet</span>':''}</div>`;
+      // Stand 395: Katalognummer dazu (Tester: "Zum Nacharbeiten der Fehler finde ich nicht die Katalognummer, z. B. AD228")
+      detailHtml += `<div class="rev-q"><div class="vf-frage-kopf"><span class="vf-id">${i+1}. ${q.id||''}</span></div><div class="qtext">${q.text||''} ${!answered?'<span class="rev-tag t-no">nicht beantwortet</span>':''}</div>`;
       (q.options||[]).forEach((opt,oi)=>{
         const isCorr = !!opt.correct;
         const isUser = userIdx===oi;
@@ -48263,14 +48408,11 @@ window.renderQuestion = function(){
   const res = _origRenderQuestion ? _origRenderQuestion.apply(this, arguments) : null;
   if(window.realisticExam && realisticExam.active){
     const navArea = document.getElementById('navArea');
-    const allAnswered = currentQuestions.every(q=>progress[q.id] && progress[q.id].answered);
-    if(navArea){
-      if(allAnswered){
-        navArea.style.display='none';
-      } else {
-        navArea.style.display='flex';
-      }
-    }
+    // Stand 395: Alles beantwortet heisst nicht mehr "sofort auswerten". Man darf
+    // noch blaettern und aendern; abgegeben wird mit dem Knopf "Abgeben" (oder die Uhr).
+    if(navArea) navArea.style.display='flex';
+    try{ pruefungAbgebenKnopf(); }catch(e){}
+    const allAnswered = false;
     if(allAnswered){
       if(!window._realisticAutoFinishTriggered){
         window._realisticAutoFinishTriggered = true;
@@ -55607,6 +55749,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             if(ziel && xp && ziel.parentNode && xp.parentNode !== ziel.parentNode) ziel.parentNode.insertBefore(xp, ziel.nextSibling);   // XP direkt hinter die Klasse (Dietmar 20.10.2026)
         }
         const naviDa = !!navi && getComputedStyle(navi).display !== 'none';
+        // 01.11.2026 Dietmar (Bild, gelb markiert): "Am Desktop ist unten seit dem letzten Release eine Luecke entstanden."
+        // Ursache: Groesser als 112 % wird nicht gerechnet (sonst wird es zu breit) - auf hohen Fenstern blieb darunter Platz frei.
+        // Jetzt wird erst ohne Zusatzhoehe gemessen; reicht 112 % nicht, waechst die Startseite in der Hoehe bis an die Reiter
+        // (die Kacheln in der Mitte werden etwas hoeher). Messen und Setzen geschehen ohne Zeichnen dazwischen - kein Flackern.
+        if(h.style.minHeight) h.style.minHeight = '';
         if(aktiv){
             let z = parseFloat(h.style.zoom) || 1;
             for(let n = 0; n < 6; n++){
@@ -55623,6 +55770,26 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 z = zn;
                 h.style.zoom = (z > 0.997 && z < 1.003) ? '' : String(z);
             }
+            // Luecke unter der Startseite schliessen (siehe oben)
+            try{
+                const r = h.getBoundingClientRect();
+                const unten = naviDa ? navi.getBoundingClientRect().top : innerHeight;
+                const luecke = unten - 12 - r.bottom;
+                // Verhaeltnis Bildschirm-Pixel zu CSS-Pixel am Element selbst messen (Seiten- und Browser-Zoom stecken beide darin)
+                const css = parseFloat(getComputedStyle(h).height) || 0, k = css > 0 ? r.height / css : 0;
+                if(luecke > 4 && k > 0){
+                    let mh = Math.floor((r.height + luecke) / k);
+                    h.style.minHeight = mh + 'px';
+                    // Die Seite darf dadurch nicht laenger als das Fenster werden (sonst liesse sie sich ein Stueck schieben)
+                    for(let n = 0; n < 3; n++){
+                        const ueber = D.documentElement.scrollHeight - innerHeight;
+                        if(ueber <= 0) break;
+                        mh -= Math.ceil(ueber / k) + 1;
+                        if(mh * k <= r.height){ h.style.minHeight = ''; break; }
+                        h.style.minHeight = mh + 'px';
+                    }
+                }
+            }catch(e){}
         }
         // Passt alles, gibt es nichts zu scrollen (Dietmar 20.10.2026: "minimal kann ich scrollen und dabei veraendert es die Groesse. Das gefaellt mir gar nicht").
         // Nur wenn selbst die kleinste Stufe nicht reicht, bleibt die Seite scrollbar.
@@ -56051,10 +56218,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const alt = window.selectOption;
         if(typeof alt !== 'function') return;
         window.selectOption = function(i){
-            let vorher = true, q = null;
-            try{ vorher = answered; q = currentQuestions[currentIndex]; }catch(e){}
+            let vorher = true, q = null, nochmal = false;
+            try{ vorher = answered; q = currentQuestions[currentIndex]; nochmal = !!(q && q._pruefBeantwortet); }catch(e){}
             const r = alt.apply(this, arguments);
-            try{ if(!vorher && answered && q && q.options && q.options[i]) { antwortZaehlen(!!q.options[i].correct); nachziehen(); tu(() => funkiAntwort(!!q.options[i].correct)); } }catch(e){}
+            // Stand 395: in der Pruefung zaehlt nur die erste Antwort je Frage (Zuruecknehmen + neu = kein neues XP)
+            try{ if(!vorher && !nochmal && answered && q && q.options && q.options[i]) { antwortZaehlen(!!q.options[i].correct); nachziehen(); tu(() => funkiAntwort(!!q.options[i].correct)); } }catch(e){}
             return r;
         };
     });
@@ -63194,10 +63362,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         // Das Aussehen (nur Schriftfarbe) steht im Stilblatt, .tts-wort-an.
         window.vorleseFrage = function(){
             const q = currentQuestions[currentIndex]; if(!q) return;
+            if(typeof majaSpracheWartet === 'function' && majaSpracheWartet(() => window.vorleseFrage())) return;
             const btn = $('ttsBtn');
             const kenner = (typeof kennerThema === 'function') && kennerThema(q);
             const sprich = t => kenner ? kennerSprechen(t) : t;
-            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), thorsten: true }];
+            // Stand 395: auch hier Majas Aufnahme der Frage (Sprachpaket) - diese App-Fassung von
+            // vorleseFrage kannte die Marke nicht, deshalb las die App die Frage mit der Handystimme.
+            const majaMarke = (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null;
+            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: majaMarke ? false : wortAn(), thorsten: true, maja: majaMarke }];
             let mitAntworten = !nurFrage();
             try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
             if(mitAntworten && typeof antwortSegment === 'function'){
