@@ -1063,53 +1063,53 @@
         body.dark #awReife .fast .awr-wert { color: var(--s-amber, #FFB547); }
 
         /* ---- Lernpfad: die 14 Lektionen als Weg mit Stationen ---- */
-        #awPfad { padding: 15px 14px 13px; }
-        #awPfad .apf-kopf { margin-bottom: 12px; }
-        #awPfad .apf-kopf b { display: block; font: 700 15px/1.2 var(--font-display, inherit); color: var(--s-text); }
-        #awPfad .apf-kopf small { font-size: 12px; color: var(--s-text3); }
-        #awPfad .apf-weg { list-style: none; margin: 0; padding: 0; }
-        #awPfad .apf-strip { display: flex; gap: 3px; margin: 0 0 13px; }
-        #awPfad .apf-strip i { flex: 1 1 0; height: 6px; border-radius: 999px; background: var(--s-fl2); border: 1px solid var(--s-rand); }
-        #awPfad .apf-strip i.f { background: var(--s-gruen, #1FC46F); border-color: transparent; }
-        #awPfad .apf-strip i.j { background: var(--s-akzent, #0FB7B2); border-color: transparent; box-shadow: 0 0 0 2px var(--s-akzent-w, rgba(15,183,178,.18)); }
-        #awPfad .apf-st.letzte { padding-bottom: 0; }
-        #awPfad .apf-st.letzte::before { display: none; }
-        #awPfad .apf-st { position: relative; display: flex; align-items: flex-start; gap: 12px;
+        :is(#awPfad,#awPfadVoll) { padding: 15px 14px 13px; }
+        :is(#awPfad,#awPfadVoll) .apf-kopf { margin-bottom: 12px; }
+        :is(#awPfad,#awPfadVoll) .apf-kopf b { display: block; font: 700 15px/1.2 var(--font-display, inherit); color: var(--s-text); }
+        :is(#awPfad,#awPfadVoll) .apf-kopf small { font-size: 12px; color: var(--s-text3); }
+        :is(#awPfad,#awPfadVoll) .apf-weg { list-style: none; margin: 0; padding: 0; }
+        :is(#awPfad,#awPfadVoll) .apf-strip { display: flex; gap: 3px; margin: 0 0 13px; }
+        :is(#awPfad,#awPfadVoll) .apf-strip i { flex: 1 1 0; height: 6px; border-radius: 999px; background: var(--s-fl2); border: 1px solid var(--s-rand); }
+        :is(#awPfad,#awPfadVoll) .apf-strip i.f { background: var(--s-gruen, #1FC46F); border-color: transparent; }
+        :is(#awPfad,#awPfadVoll) .apf-strip i.j { background: var(--s-akzent, #0FB7B2); border-color: transparent; box-shadow: 0 0 0 2px var(--s-akzent-w, rgba(15,183,178,.18)); }
+        :is(#awPfad,#awPfadVoll) .apf-st.letzte { padding-bottom: 0; }
+        :is(#awPfad,#awPfadVoll) .apf-st.letzte::before { display: none; }
+        :is(#awPfad,#awPfadVoll) .apf-st { position: relative; display: flex; align-items: flex-start; gap: 12px;
             padding: 0 0 13px 0; width: 100%; border: 0; background: none; text-align: left;
             color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        #awPfad .apf-st:last-child { padding-bottom: 0; }
+        :is(#awPfad,#awPfadVoll) .apf-st:last-child { padding-bottom: 0; }
         /* der Weg zwischen den Stationen */
-        #awPfad .apf-st::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: -1px;
+        :is(#awPfad,#awPfadVoll) .apf-st::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: -1px;
             width: 2px; border-radius: 2px; background: var(--s-rand); }
-        #awPfad .apf-st:last-child::before { display: none; }
-        #awPfad .apf-st.fertig::before { background: var(--s-gruen, #1FC46F); opacity: .55; }
-        #awPfad .apf-pkt { position: relative; z-index: 1; flex: 0 0 auto; width: 28px; height: 28px;
+        :is(#awPfad,#awPfadVoll) .apf-st:last-child::before { display: none; }
+        :is(#awPfad,#awPfadVoll) .apf-st.fertig::before { background: var(--s-gruen, #1FC46F); opacity: .55; }
+        :is(#awPfad,#awPfadVoll) .apf-pkt { position: relative; z-index: 1; flex: 0 0 auto; width: 28px; height: 28px;
             border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--font-body, inherit);
             background: var(--s-fl2); color: var(--s-text3); border: 1.5px solid var(--s-rand); }
-        #awPfad .fertig .apf-pkt { background: linear-gradient(135deg, var(--s-gruen, #1FC46F), var(--s-gruen-tief, #11924F));
+        :is(#awPfad,#awPfadVoll) .fertig .apf-pkt { background: linear-gradient(135deg, var(--s-gruen, #1FC46F), var(--s-gruen-tief, #11924F));
             color: #fff; border-color: transparent; font-size: 13px; }
-        #awPfad .jetzt .apf-pkt { text-shadow: 0 1px 2px rgba(0,0,0,0.35); background: linear-gradient(135deg, var(--s-akzent, #0FB7B2), var(--s-akzent-tief, #0A94B8));
+        :is(#awPfad,#awPfadVoll) .jetzt .apf-pkt { text-shadow: 0 1px 2px rgba(0,0,0,0.35); background: linear-gradient(135deg, var(--s-akzent, #0FB7B2), var(--s-akzent-tief, #0A94B8));
             color: #fff; border-color: transparent; box-shadow: 0 0 0 4px var(--s-akzent-w, rgba(15,183,178,.16)); }
-        #awPfad .apf-txt { flex: 1; min-width: 0; padding-top: 2px; }
-        #awPfad .apf-txt b { display: block; font-size: 13.5px; font-weight: 600; color: var(--s-text);
+        :is(#awPfad,#awPfadVoll) .apf-txt { flex: 1; min-width: 0; padding-top: 2px; }
+        :is(#awPfad,#awPfadVoll) .apf-txt b { display: block; font-size: 13.5px; font-weight: 600; color: var(--s-text);
             line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #awPfad .fertig .apf-txt b, #awPfad .offen .apf-txt b { color: var(--s-text2); font-weight: 500; }
-        #awPfad .apf-txt small { display: block; font-size: 11.5px; color: var(--s-text3); margin-top: 1px; }
-        #awPfad .apf-bal { display: block; height: 5px; border-radius: 999px; background: var(--s-fl2);
+        :is(#awPfad,#awPfadVoll) .fertig .apf-txt b, :is(#awPfad,#awPfadVoll) .offen .apf-txt b { color: var(--s-text2); font-weight: 500; }
+        :is(#awPfad,#awPfadVoll) .apf-txt small { display: block; font-size: 11.5px; color: var(--s-text3); margin-top: 1px; }
+        :is(#awPfad,#awPfadVoll) .apf-bal { display: block; height: 5px; border-radius: 999px; background: var(--s-fl2);
             margin-top: 6px; overflow: hidden; border: 1px solid var(--s-rand); }
-        #awPfad .apf-bal i { display: block; height: 100%; border-radius: 999px;
+        :is(#awPfad,#awPfadVoll) .apf-bal i { display: block; height: 100%; border-radius: 999px;
             background: var(--s-akzent, #0FB7B2); transition: width .5s cubic-bezier(.2,1,.3,1); }
-        #awPfad .apf-marke { flex: 0 0 auto; margin-top: 3px; font: 700 11px var(--font-body, inherit);
+        :is(#awPfad,#awPfadVoll) .apf-marke { flex: 0 0 auto; margin-top: 3px; font: 700 11px var(--font-body, inherit);
             padding: 3px 9px; border-radius: 999px; background: var(--s-akzent-w, rgba(15,183,178,.14)); color: var(--s-akzent-tief, #0A94B8); }
-        #awPfad .apf-karte { flex: 0 0 auto; margin-top: 2px; width: 24px; height: 24px; display: grid;
+        :is(#awPfad,#awPfadVoll) .apf-karte { flex: 0 0 auto; margin-top: 2px; width: 24px; height: 24px; display: grid;
             place-items: center; color: var(--s-gruen-tief, #11924F); font-size: 13px; }
-        body.dark #awPfad .apf-marke { color: var(--s-akzent, #34D9D4); }
-        body.dark #awPfad .apf-karte { color: var(--s-gruen, #34E089); }
-        #awPfad .apf-satz { margin-top: 12px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px);
+        body.dark :is(#awPfad,#awPfadVoll) .apf-marke { color: var(--s-akzent, #34D9D4); }
+        body.dark :is(#awPfad,#awPfadVoll) .apf-karte { color: var(--s-gruen, #34E089); }
+        :is(#awPfad,#awPfadVoll) .apf-satz { margin-top: 12px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px);
             border: 1px solid var(--s-rand); font-size: 12.5px; line-height: 1.45; color: var(--s-text2);
             background: linear-gradient(135deg, var(--s-akzent-w, rgba(15,183,178,.12)), transparent); }
-        #awPfad .apf-satz b { color: var(--s-text); }
-        #awPfad .apf-mehr { margin-top: 10px; width: 100%; border: 1px solid var(--s-rand); background: var(--s-fl2);
+        :is(#awPfad,#awPfadVoll) .apf-satz b { color: var(--s-text); }
+        :is(#awPfad,#awPfadVoll) .apf-mehr { margin-top: 10px; width: 100%; border: 1px solid var(--s-rand); background: var(--s-fl2);
             color: var(--s-text2); border-radius: 999px; padding: 7px 12px; font: 600 12.5px var(--font-body, inherit); cursor: pointer; }
         #appHeute .ah-liste { background: var(--s-fl); border: 1px solid var(--s-rand); box-shadow: var(--s-schatten); overflow: hidden; }
         html.android-app body.eckig.app-rund #appHeute .ah-liste , html:not(.android-app) body.eckig.app-rund #appHeute .ah-liste{ border-radius: var(--s-r-karte) !important; }
@@ -1935,11 +1935,46 @@
             html.pc-app.stil-verspielt #ahKacheln { grid-area: kach; align-content: stretch; grid-auto-rows: minmax(min-content, 1fr); margin: 0 !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel.breit { grid-column: auto !important; }
+            /* Stand 400 - Dietmar 02.11.2026 (Bild der Kacheln): "Ich habe auch das Gefuehl das hier Buttons fehlen."
+               Seit Stolpersteine sind es 14 Kacheln: in der letzten Reihe standen 2 Kacheln und ein Loch. Jetzt teilen sich die
+               letzten 2 Kacheln die ganze Reihe (6er-Raster, jede Kachel 2 breit, die letzten zwei je 3). */
+            html.pc-app.stil-verspielt #ahKacheln { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+            html.pc-app.stil-verspielt #ahKacheln > .ah-kachel, html.pc-app.stil-verspielt #ahKacheln > .ah-kachel.breit { grid-column: span 2 !important; }
+            html.pc-app.stil-verspielt #ahKacheln > .ah-kachel:last-child:nth-child(3n+2),
+            html.pc-app.stil-verspielt #ahKacheln > .ah-kachel:nth-last-child(2):nth-child(3n+1) { grid-column: span 3 !important; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel:last-child:nth-child(3n+1) { grid-column: 1 / -1 !important; flex-direction: row; align-items: center; gap: 12px; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel:last-child:nth-child(3n+1) .pc-besch { display: none; }
             /* 20.10.2026 Dietmar: "Maja ist laenger als die Seite rechts. Die Kacheln in der Mitte muessen wieder etwas groesser werden." Alle drei Spalten enden auf einer Linie: die Kachelreihen teilen sich die freie Hoehe, der Lehrpfad verteilt seine Stationen. */
             html.pc-app.stil-verspielt #appWerk > #awPfad { flex: 1 1 auto; display: flex; flex-direction: column; margin-bottom: 0 !important; }
             html.pc-app.stil-verspielt #awPfad .apf-weg { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between; }
+            /* Stand 400 - Dietmar 02.11.2026: "Die Hauptansicht verkleinert sich nach dem anmelden" und "Mit F5 ist das Bild erst gross
+               und danach richtet es sich neu und wird klein." Ursache: Mit Pruefungen im Lernstand kam rechts die Karte
+               "Bist du bereit?" dazu (300 Punkte hoch), die rechte Spalte wurde zu hoch, und pcFit rechnete alles auf 80 % herunter.
+               Am PC ist die Karte jetzt kompakt (drei Teile nebeneinander, der Satz steht im Hinweis beim Draufzeigen) und immer da -
+               auch vor dem Anmelden. So ist die Seite vorher und nachher gleich gross und springt nicht mehr. Der Lernpfad zeigt
+               dafuer 2 statt 3 Stationen. */
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife { display: grid; grid-template-columns: repeat(var(--awr-n, 3), minmax(0, 1fr)); gap: 6px; padding: 10px 12px 11px; height: 110px; box-sizing: border-box; overflow: hidden; align-content: start; }   /* feste Hoehe: leer und gezeichnet gleich hoch (Gegenpruefung 400) */
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-kopf { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 2px; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-kopf b { display: inline; font-size: 14px; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-kopf small { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-teil { display: grid; grid-template-columns: 24px minmax(0, 1fr); grid-template-areas: "z b" "z w" "l l";
+                column-gap: 7px; row-gap: 1px; align-items: center; padding: 7px 8px 8px; border: 1px solid var(--s-rand); border-radius: 12px; min-width: 0; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-teil:first-of-type { border-top: 1px solid var(--s-rand); }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-z { grid-area: z; width: 24px; height: 24px; border-radius: 8px; align-self: start; margin-top: 2px; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-z svg { width: 16px !important; height: 16px !important; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-teil[data-teil="betrieb"] .awr-z svg { width: 20px !important; height: 20px !important; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-zt { display: contents; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-zt b { grid-area: b; font-size: 12.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-zt small { display: none; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-bal { grid-area: l; margin-top: 6px; height: 5px; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-wert { grid-area: w; justify-self: start; padding: 1px 7px; font-size: 10.5px; line-height: 1.4; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #awReife .awr-satz { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #appWerk:has(> #awReife:not([style*="none"])) #awPfad .apf-weg:not(.apf-alle) > .apf-st:nth-child(n+3) { display: none; }
+            /* Stand 400 - Dietmar 02.11.2026 (Video): "Das Bild wird wieder klein, sobald ich auf Dein Lernpfad klicke. Das darf nicht
+               passieren!" Aufgeklappt ("Alle Stationen") wurde die rechte Spalte hoch und pcFit verkleinerte alles. Jetzt bleibt die
+               Karte so hoch wie vorher, die Stationen rollen darin (contain:size - die Liste zaehlt fuer die Hoehe nicht mit). */
+            html.pc-app.stil-verspielt:not(.pc-handy) #awPfad .apf-weg.apf-alle { contain: size; flex: 1 1 auto; min-height: 110px; overflow-y: auto; justify-content: flex-start; overscroll-behavior: contain; padding-right: 4px; scrollbar-width: thin; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #appWerk:has(> #awReife:not([style*="none"])) #awPfad .apf-weg:not(.apf-alle) > .apf-st:nth-child(2)::before { display: none; }
             html.pc-app.stil-verspielt #ahKacheln .ah-kachel { min-height: 0 !important; }
             /* 19.10.2026 Dietmar: "Seite zu hoch". Seit Videos, Hilfe & Kurse und Rufzeichen bei den Kacheln stehen, sind es
                zehn Kacheln = vier Reihen, und die laengste Beschreibung (Pruefung simulieren) machte alle Reihen gleich hoch.
@@ -1983,6 +2018,13 @@
             html.pc-app.stil-verspielt #appWerk > #awFort .aw-klein { display: none; }
             html.pc-app.stil-verspielt #appWerk > #awFort { gap: 8px; }
             html.pc-app.stil-verspielt #appWerk { gap: 12px; }
+            /* Stand 400 - Dietmar 02.11.2026 (Bild): "Die Höhe ist auch asynchron ... Bist du bereit, das sitzt höher. Der Abstand nach
+               unten von '571 Fragen sitzen schon' und auch die Stufe darüber haben alle eine grössere Lücke. Besser wäre wenn die üblichen
+               Abstände eingehalten und die Funktionen etwas gestreckt werden." Die Karten rechts hatten zum Spaltabstand noch je 12 px
+               Rand unten (24 statt 12 zwischen den Karten, 12 fehlten unten). Jetzt: Abstand wie in der Mitte (16 px), kein Extra-Rand,
+               die letzte Karte endet buendig mit "Wann ist deine Prüfung?"; der Lernpfad streckt sich. */
+            html.pc-app.stil-verspielt:not(.pc-handy) #appWerk { gap: 16px; }
+            html.pc-app.stil-verspielt:not(.pc-handy) #appWerk > .ah-karte { margin-top: 0 !important; margin-bottom: 0 !important; }
             html.pc-app.stil-verspielt #appWerk > #awFort .aw-balken { margin: 6px 0 8px; }
             html.pc-app.stil-verspielt #appWerk > #awFort .aw-schalt { margin-top: 6px; }
             html.pc-app.stil-verspielt #awPfad .apf-kopf { margin-bottom: 8px; }
@@ -11370,6 +11412,14 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                      USB-Stick im Auto. Steht bewusst unter dem Videolehrgang: Beides
                      ist Lernen ohne Bildschirm, und die Lektionen von dort sind
                      zugleich die Einteilung der MP3-Dateien. -->
+                <!-- Stand 400 - Dietmar 02.11.2026: "Bei Sachlich kann Hörbuch durch Stolpersteine ersetzt werden." Das Hörbuch-Feld
+                     bleibt aus; an seiner Stelle startet Stolpersteine (ansehen und anhören, mit Auto). Gleiches style-Muster wie die
+                     anderen Felder, damit die Dunkel-Regeln greifen (div[style*="background:#f4f7fd"]). -->
+                <div id="stolperFeld" style="display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.8rem;">
+                    <span style="font-size:0.8rem; font-weight:600; color:var(--panel-navy);"><i class="fas fa-headphones"></i> Stolpersteine:</span>
+                    <span style="font-size:0.78rem; color:var(--muted);">Frage und richtige Antwort ansehen und anhören – mit „Auto“ läuft es von allein</span>
+                    <button type="button" onclick="stolperOeffnen()" class="btn-lernstand" style="margin-left:auto;"><i class="fas fa-play"></i> Stolpersteine</button>
+                </div>
                 <div id="hoerbuchFeld" style="display:none; align-items:center; gap:0.7rem; flex-wrap:wrap; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.8rem;">
                     <span style="font-size:0.8rem; font-weight:600; color:var(--panel-navy);"><i class="fas fa-headphones"></i> Hörbuch:</span>
                     <select id="hbInhalt" onchange="hbVorschau()" class="select-schmal" data-tooltip="Welche Fragen sollen gesprochen werden?">
@@ -25037,7 +25087,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 399, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 400, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -51778,7 +51828,8 @@ window.hbAbfragen = hbAbfragen;
         const r = await fetch('/api/hoerbuch/stand', { cache: 'no-store' });
         if (!r.ok) return;
         const feld = document.getElementById('hoerbuchFeld');
-        if (feld) feld.classList.add('hb-an');   // nicht style.display, siehe CSS
+        // Stand 400: Das Hoerbuch ist Geschichte (Dietmar 02.11.2026) - das Feld bleibt aus, Stolpersteine steht an seiner Stelle.
+        void feld;
         hbAbfragen();
     } catch (e) { /* ohne Server (Datei direkt geöffnet) bleibt das Feld aus */ }
 })();
@@ -54012,7 +54063,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function aufbauen(){
         const heute = $('appHeute'), runde = $('ahRunde');
         if(!heute || !runde || $('pcWerkOben')) return !!$('pcWerkOben');
-        heute.insertBefore(reihe('pcWerkOben', '', lokal() ? REIHE_OBEN : REIHE_OBEN.filter(x => x[2] !== 'Hörbuch')), runde);
+        heute.insertBefore(reihe('pcWerkOben', '', REIHE_OBEN.filter(x => x[2] !== 'Hörbuch')), runde);   // Stand 400, Dietmar: "Hörbuch wird eigentlich nicht mehr benötigt" - das macht jetzt Stolpersteine mit Majas Stimme
         tu(kachelnErgaenzen);
         // Das Blatt "Mehr" bekommt am PC ein X zum Schliessen (Dietmar: "Hier fehlt das X rechts oben")
         tu(() => {
@@ -61507,6 +61558,45 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const m = String(name || '').match(/Lektion\s*0*(\d+)/i);
         return m ? +m[1] : (i + 1);
     }
+    // Stand 400: die Stationszeilen - fuer die Karte und fuer das Fenster "Dein Lernpfad"
+    function pfadZeilen(lek, karten, jetzt, von, bis){
+        let zeilen = '';
+        for(let i = von; i < bis; i++){
+            const x = lek[i];
+            const voll = x.gelernt >= x.gesamt;
+            const art = voll ? 'fertig' : (i === jetzt ? 'jetzt' : 'offen');
+            const anteil = x.gesamt ? Math.round(100 * x.gelernt / x.gesamt) : 0;
+            const hatKarte = !!karten[x.name];
+            const letzte = (i === bis - 1);
+            zeilen += '<button type="button" class="apf-st ' + art + (letzte ? ' letzte' : '') + '" data-lek="' + esc(x.name) + '" data-voll="' + (voll ? '1' : '') + '">'
+                + '<span class="apf-pkt">' + (voll ? '<i class="fas fa-check"></i>' : pfadNummer(x.name, i)) + '</span>'
+                + '<span class="apf-txt"><b>' + esc(pfadKurz(x.name)) + '</b>'
+                + '<small>' + (voll
+                        ? x.gesamt + ' von ' + x.gesamt + ' Fragen' + (hatKarte ? ' · QSL-Karte da' : '')
+                        : x.gelernt + ' von ' + x.gesamt + ' Fragen')
+                + '</small>'
+                + (art === 'jetzt' ? '<span class="apf-bal"><i style="width:' + anteil + '%"></i></span>' : '')
+                + '</span>'
+                + (voll
+                    ? (hatKarte ? '<span class="apf-karte"><i class="fas fa-award"></i></span>' : '')
+                    : (i === jetzt ? '<span class="apf-marke">dran</span>' : ''))
+                + '</button>';
+        }
+        return zeilen;
+    }
+    function blattPfad(){
+        let lek = [], karten = {};
+        tu(() => { lek = (window.qslLektionen ? qslLektionen() : []) || []; });
+        tu(() => { const ziel = window.kursZiel ? kursZiel() : null; lek = lek.filter(l => ziel ? l.kurs === ziel : !l.kurs); });
+        tu(() => { karten = (window.qslStand ? qslStand() : {}) || {}; });
+        if(!lek.length) return '';
+        let jetzt = lek.findIndex(x => x.gelernt < x.gesamt); if(jetzt < 0) jetzt = lek.length - 1;
+        const angefangen = lek.findIndex(x => x.gelernt > 0 && x.gelernt < x.gesamt); if(angefangen >= 0) jetzt = angefangen;
+        const streifen = lek.map((x, i) => '<i class="' + (x.gelernt >= x.gesamt ? 'f' : i === jetzt ? 'j' : '') + '"></i>').join('');
+        return '<div id="awPfadVoll" class="aw-pfad-voll"><div class="apf-strip" aria-hidden="true">' + streifen + '</div>'
+            + '<ol class="apf-weg apf-alle">' + pfadZeilen(lek, karten, jetzt, 0, lek.length) + '</ol></div>';
+    }
+    function pcBreitVerspielt(){ const hc = H.classList; return hc.contains('pc-app') && !hc.contains('pc-handy') && hc.contains('stil-verspielt') && innerWidth >= 1100; }
     function pfadNachziehen(){
         const el = $('awPfad'), ue = $('awUeberPfad');
         if(!el) return;
@@ -61541,32 +61631,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const streifen = lek.map((x, i) => '<i class="' + (x.gelernt >= x.gesamt ? 'f' : i === jetzt ? 'j' : '') + '"></i>').join('');
 
         // ---- Welche Stationen stehen da? Ohne "alle" ein Fenster um die aktuelle.
-        const alle = pfadAlle || lek.length <= 6;
+        const alle = (pfadAlle && !pcBreitVerspielt()) || lek.length <= 6;
         const von = alle ? 0 : Math.max(0, jetzt - 1);
         const bis = alle ? lek.length : Math.min(lek.length, jetzt + (H.classList.contains('pc-app') ? 3 : 4));
 
-        let zeilen = '';
-        for(let i = von; i < bis; i++){
-            const x = lek[i];
-            const voll = x.gelernt >= x.gesamt;
-            const art = voll ? 'fertig' : (i === jetzt ? 'jetzt' : 'offen');
-            const anteil = x.gesamt ? Math.round(100 * x.gelernt / x.gesamt) : 0;
-            const hatKarte = !!karten[x.name];
-            const letzte = (i === bis - 1);
-            zeilen += '<button type="button" class="apf-st ' + art + (letzte ? ' letzte' : '') + '" data-lek="' + esc(x.name) + '" data-voll="' + (voll ? '1' : '') + '">'
-                + '<span class="apf-pkt">' + (voll ? '<i class="fas fa-check"></i>' : pfadNummer(x.name, i)) + '</span>'
-                + '<span class="apf-txt"><b>' + esc(pfadKurz(x.name)) + '</b>'
-                + '<small>' + (voll
-                        ? x.gesamt + ' von ' + x.gesamt + ' Fragen' + (hatKarte ? ' · QSL-Karte da' : '')
-                        : x.gelernt + ' von ' + x.gesamt + ' Fragen')
-                + '</small>'
-                + (art === 'jetzt' ? '<span class="apf-bal"><i style="width:' + anteil + '%"></i></span>' : '')
-                + '</span>'
-                + (voll
-                    ? (hatKarte ? '<span class="apf-karte"><i class="fas fa-award"></i></span>' : '')
-                    : (i === jetzt ? '<span class="apf-marke">dran</span>' : ''))
-                + '</button>';
-        }
+        let zeilen = pfadZeilen(lek, karten, jetzt, von, bis);
 
         // ---- Der Satz darunter nennt immer den naechsten Schritt
         const x = lek[jetzt];
@@ -61583,10 +61652,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const neu = '<div class="apf-kopf"><b>Dein Lernpfad</b>'
             + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft' + (function(){ try{ const z = window.kursZiel ? kursZiel() : null; return z ? ' · ' + ({ ne: 'Aufbau N → E', ea: 'Aufbau E → A', e: 'Klasse E' })[z] + ' (50ohm.de)' : ''; }catch(e){ return ''; } })() + '</small></div>'
             + '<div class="apf-strip" aria-hidden="true">' + streifen + '</div>'
-            + '<ol class="apf-weg">' + zeilen + '</ol>'
+            + '<ol class="apf-weg' + (alle ? ' apf-alle' : '') + '">' + zeilen + '</ol>'
             + '<div class="apf-satz">' + satz + '</div>'
             + (lek.length > 6
-                ? '<button type="button" class="apf-mehr" data-pfadalle="1">' + (alle ? 'Weniger zeigen' : 'Alle ' + lek.length + ' Stationen') + '</button>'
+                ? '<button type="button" class="apf-mehr" data-pfadalle="1">' + (alle ? 'Weniger zeigen' : 'Alle ' + lek.length + ' Stationen') + (pcBreitVerspielt() ? ' <i class="fas fa-up-right-from-square" style="font-size:.8em;opacity:.7"></i>' : '') + '</button>'
                 : '');
         if(neu !== werk.pfadK){ werk.pfadK = neu; el.innerHTML = neu; }
     }
@@ -61595,8 +61664,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const el = $('awReife'); if(!el) return;
         let r = []; tu(() => { r = (window.pruefReife ? pruefReife() : []) || []; });
         const schonGeprueft = r.filter(x => x.n > 0);
-        if(!schonGeprueft.length){ if(el.style.display !== 'none') el.style.display = 'none'; return; }
-        el.style.display = '';
+        // Stand 400: Am PC (breit, Verspielt) steht die kompakte Karte immer da - sonst springt die Seite nach dem Anmelden
+        // oder nach F5 von gross auf klein, sobald die ersten Pruefungen im Lernstand auftauchen (Dietmar 02.11.2026).
+        const pcImmer = H.classList.contains('pc-app') && !H.classList.contains('pc-handy') && H.classList.contains('stil-verspielt') && innerWidth >= 1100;
+        if(pcImmer && !r.length){ if(el.style.display) el.style.display = ''; return; }   // Pruefungsdaten noch nicht bereit: Platz halten (min-height), nichts zeichnen
+        if(!schonGeprueft.length && !pcImmer){ if(el.style.display !== 'none') el.style.display = 'none'; return; }
+        if(el.style.display) el.style.display = '';
+        const nTeile = String(r.length || 1);
+        if(el.style.getPropertyValue('--awr-n') !== nTeile) el.style.setProperty('--awr-n', nTeile);
         const bereit = r.filter(x => x.stufe === 'bereit').length;
         const fast = r.filter(x => x.stufe === 'fast');
         const offen = r.filter(x => x.stufe === 'offen');
@@ -61625,8 +61700,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const sig = JSON.stringify(r.map(x => [x.teil, x.n, Math.round((x.fehler || 0) * 10), x.stufe])) + '|' + satz;
         if(el.dataset.sig === sig) return;
         el.dataset.sig = sig;
+        el.title = satz.replace(/<[^>]+>/g, '');   // Stand 400: am PC ist der Satz ausgeblendet, er steht hier im Hinweis
         el.innerHTML = '<div class="awr-kopf"><b>Bist du bereit?</b><small>Aus deinen letzten Pr\u00fcfungen je Teil</small></div>'
-          + r.map(x => '<div class="awr-teil ' + x.stufe + '">'
+          + r.map(x => '<div class="awr-teil ' + x.stufe + '" data-teil="' + x.teil + '">'
               + '<span class="awr-z">' + (REIFE_SVG[x.teil] || '') + '</span>'
               + '<span class="awr-zt"><b>' + x.name + '</b><small>'
               + (x.n ? '\u00d8 ' + (Math.round(x.fehler * 10) / 10).toLocaleString('de-DE') + ' Fehler von 25 \u00b7 ' + x.n + (x.n === 1 ? ' Pr\u00fcfung' : ' Pr\u00fcfungen') : 'noch nicht gepr\u00fcft')
@@ -61808,7 +61884,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(e.target.closest('#awCb')){ tu(() => $('cbModusCheck').click()); setTimeout(() => tu(nachziehen), 40); return; }
         if(e.target.closest('#awLevel')){ werkBlattAuf('stufen'); return; }
         if(e.target.closest('#awCount')){ werkBlattAuf('termin'); return; }
-        if(e.target.closest('[data-pfadalle]')){ pfadAlle = !pfadAlle; werk.pfadK = null; tu(pfadNachziehen); return; }
+        if(e.target.closest('[data-pfadalle]')){
+            // Stand 400 - Dietmar: "Sobald sich Dein Lernpfad streckt, zieht es das Bild lang. Hier fehlt ein Scrollbalken oder es
+            // öffnet sich ein Fenster wie bei Deine Stufen." Am PC (breit, Verspielt) oeffnet "Alle Stationen" ein Fenster.
+            if(pcBreitVerspielt()){ werkBlattAuf('pfad'); return; }
+            pfadAlle = !pfadAlle; werk.pfadK = null; tu(pfadNachziehen); return;
+        }
         const st = e.target.closest('.apf-st');
         if(st){
             const name = st.dataset.lek || '';
@@ -61882,6 +61963,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         termin:    { titel: 'Prüfungstermin', farbe: 'rot', icon: 'fa-calendar-day', satz: () => ['Wann ist dein großer Tag?', 'Ich drück dir die Daumen. Also … wenn ich welche hätte!'],
                      erklaer: 'Trag deinen <b>Prüfungstag</b> ein. Dann rechne ich dir aus, wie viele Fragen am Tag reichen.',
                      sprich: 'Wann ist dein großer Tag?' },
+        pfad:      { titel: 'Dein Lernpfad', farbe: 'tuerkis', icon: 'fa-route', satz: () => ['Station für Station zur Prüfung!', 'Such dir die nächste Station aus!'],
+                     erklaer: 'Das ist dein <b>Lernpfad</b>: alle Stationen auf einen Blick. Tipp eine an – dann geht es mit ihren Fragen los. Jede fertige Station bringt eine <b>QSL-Karte</b>!',
+                     sprich: 'Station für Station zur Prüfung!' },
         stufen:    { titel: 'Deine Stufen', farbe: 'violett', icon: 'fa-star', satz: () => ['So hoch kannst du steigen!', 'Auf zur nächsten Stufe!'],
                      erklaer: 'Jede richtige Antwort bringt dir <b>10 XP</b>, jeder Versuch <b>2 XP</b>. Mit genug XP steigst du eine Stufe auf!',
                      sprich: 'So hoch kannst du steigen!' },
@@ -62096,7 +62180,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         zurueckgeben();
         const art = werk.art;
         const bauer = { verlauf: blattVerlauf, videos: blattVideos, hilfe: blattHilfe, ruf: blattRuf, lernstand: blattLernstand,
-                        pruefung: blattPruefung, termin: blattTermin, stufen: blattStufen, zettel: blattZettel }[art];
+                        pruefung: blattPruefung, termin: blattTermin, stufen: blattStufen, zettel: blattZettel, pfad: blattPfad }[art];
         let html = '';
         tu(() => { html = bauer ? bauer() : ''; });
         $('awInhalt').innerHTML = html;
@@ -62111,6 +62195,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }
         if(art === 'pruefung') unter = (($('examInfoTitel') || {}).textContent || '').replace(/[^\p{L}\p{N}\s.,·–-]/gu, '').trim();
         if(art === 'stufen') unter = 'Stufe ' + (stufeNr(xpStand()) + 1) + ' von ' + STUFEN.length;
+        if(art === 'pfad') tu(() => { const k = D.querySelector('#awPfad .apf-kopf small'); unter = k ? k.textContent : ''; });
         $('awUnter').textContent = unter;
         if(art === 'ruf'){
             leihen($('rufzeichenInput'), $('awRufFeld'));
@@ -62129,6 +62214,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 if(e.target.value) sprechblase(zufall(['Notiert! Ich zähl mit.', 'Eingetragen – das schaffst du!', 'Super, jetzt haben wir ein Ziel!']));
             });
         }
+        if(art === 'pfad') setTimeout(() => tu(() => { const j = D.querySelector('#awPfadVoll .apf-st.jetzt'), r = $('awRolle'); if(j && r) r.scrollTop = Math.max(0, j.offsetTop - r.clientHeight / 2); }), 60);
         if(art === 'stufen') setTimeout(() => tu(() => { const j = $('awStufeJetzt'), r = $('awRolle'); if(j && r) r.scrollTop = Math.max(0, j.offsetTop - r.clientHeight / 2 + j.offsetHeight / 2); }), 40);
     }
     function sprechblase(html, spaet){
@@ -62240,6 +62326,14 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(was === 'terminweg'){ tu(() => setPruefungstermin('')); inhaltZeichnen(); tu(nachziehen); sprechblase('Okay, kein Termin. Sag Bescheid, wenn’s ernst wird!'); }
     }
     werkBlatt.addEventListener('click', e => {
+        const st = e.target.closest('#awPfadVoll .apf-st');
+        if(st){
+            const name = st.dataset.lek || '', voll = !!st.dataset.voll;
+            werkBlattZu(true);
+            if(voll) tu(() => { if(window.qslAlbumOeffnen) qslAlbumOeffnen(); });
+            else if(name) tu(() => { if(window.lektionFragenLernen) lektionFragenLernen(name); });
+            return;
+        }
         const b = e.target.closest('[data-tat]');
         if(b && werkBlatt.contains(b)){ e.stopPropagation(); werkTat(b.dataset.tat); }
     });
@@ -66312,7 +66406,7 @@ body.dark #stolperBlatt.gezeigt .st-opt.richtig .st-ok{color:#4ade80}
 #stolperBlatt .st-merk{margin-top:12px;font-size:13.5px;line-height:1.45;display:none;gap:8px;align-items:flex-start}
 #stolperBlatt.gezeigt .st-merk.da{display:flex}
 #stolperBlatt .st-merk i{color:#f59e0b;margin-top:3px}
-#stolperBlatt .st-spricht{display:flex;align-items:center;justify-content:center;gap:8px;min-height:22px;margin:8px 0 6px;font-size:13px;visibility:hidden}
+#stolperBlatt .st-spricht{display:flex;align-items:center;justify-content:center;gap:8px;min-height:22px;margin:8px auto 6px;font-size:13px;visibility:hidden}
 #stolperBlatt .st-spricht.an{visibility:visible}
 #stolperBlatt .st-spricht i.fa-volume-high{color:#0ea5a4}
 body.dark #stolperBlatt .st-spricht i.fa-volume-high{color:#2dd4bf}
@@ -66372,6 +66466,113 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
 #stolperEinst .se-haken .se-zahl{margin-left:auto;font-size:12.5px;opacity:.75}
 #stolperEinst .se-haken.aus{opacity:.4;pointer-events:none}
 #stolperEinst .se-hinweis{margin-top:8px;font-size:12.5px;line-height:1.45;opacity:.8}
+#stolperEinst .st-auto{display:flex;align-items:center;gap:14px;width:100%;margin-top:10px;padding:11px 18px;border-radius:999px!important;border:2px solid #f59e0b;background:rgba(245,158,11,.10);color:inherit;text-align:left;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+#stolperEinst .st-auto i{font-size:24px;color:#d97706}
+body.dark #stolperEinst .st-auto i{color:#fbbf24}
+#stolperEinst .st-auto b{display:block;font-size:16px}
+#stolperEinst .st-auto small{display:block;font-size:12.5px;opacity:.8;margin-top:1px}
+#stolperEinst .st-auto:disabled{opacity:.45;cursor:default}
+#stolperEinst .se-auto-info{margin-top:8px;font-size:13px;line-height:1.45}
+#stolperEinst .se-auto-info:empty{display:none}
+#stolperEinst .se-auto-wahl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+#stolperEinst .se-auto-wahl button{padding:8px 14px;border-radius:999px!important;border:1px solid #d3deec;background:transparent;color:inherit;font:700 13.5px/1.2 Inter,system-ui,sans-serif;cursor:pointer}
+#stolperEinst .se-auto-wahl .se-auto-laden{background:linear-gradient(135deg,#34d399,#22b8cf);border-color:transparent;color:#05302a}
+body.dark #stolperEinst .se-auto-wahl button{border-color:rgba(255,255,255,.28)}
+#stolperBlatt .st-auto-marke{display:none;align-items:center;gap:6px;padding:5px 11px;border-radius:999px!important;background:rgba(245,158,11,.16);color:#b45309;font:700 12.5px/1.2 Inter,system-ui,sans-serif;white-space:nowrap}
+body.dark #stolperBlatt .st-auto-marke{color:#fbbf24}
+#stolperBlatt.st-auto .st-auto-marke{display:inline-flex}
+@media (max-width:480px){#stolperBlatt .st-auto-marke .st-am-t{display:none}#stolperBlatt .st-auto-marke{padding:6px 9px}}
+/* ---- Stand 400: am PC ----
+   Dietmar, 02.11.2026 (Bild 1): "Die Position von den Stolpersteine gefaellt mir nicht." -> Einstellungen am PC als Fenster in der Mitte.
+   (Bild 3): "Ich wuerde mir wuenschen, das das Fenster so aussieht wie bei Start im Lernmodus." -> breite Fragekarte mit den
+   Antwort-Zeilen A-D wie im Lernmodus (dieselben Klassen .q-kopfzeile/.q-text/.option, also auch dieselbe Frage-Darstellung
+   "Farbig" usw.), die runden Knoepfe darunter. */
+#stolperEinst.se-gross{align-items:center;padding:24px}
+#stolperEinst.se-gross .se-blatt{max-width:640px;border-radius:22px;padding:18px 24px 22px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+#stolperEinst.se-gross .se-griff{display:none}
+body.dark #stolperEinst.se-gross .se-blatt{border:1px solid rgba(255,255,255,.2)}
+body.eckig.app-rund #stolperEinst.se-gross .se-blatt{border-radius:22px!important}
+body.eckig:not(.app-rund) #stolperEinst.se-gross .se-blatt{border-radius:0!important}
+#stolperBlatt.st-gross{padding:18px 28px 16px}
+#stolperBlatt.st-gross > *{max-width:1320px}
+#stolperBlatt.st-gross .st-inhalt{flex:0 1 auto}
+#stolperBlatt.st-gross .st-spricht{margin-top:auto;padding-top:14px;font-size:14.5px}
+#stolperBlatt.st-gross .st-titel b{font-size:20px}
+#stolperBlatt.st-gross .st-stand{font-size:14px}
+#stolperBlatt.st-gross .st-inhalt{margin-top:16px;padding:24px 26px;border-radius:20px;background:#fafcff;border:1px solid #e3e9f3;box-shadow:0 10px 30px rgba(15,39,69,.08)}
+body.dark #stolperBlatt.st-gross .st-inhalt{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.10);box-shadow:none;border-radius:28px}
+body.dark #stolperBlatt.st-gross .sg-kopf{border-radius:28px 28px 0 0}
+body.eckig.app-rund #stolperBlatt.st-gross .st-inhalt{border-radius:20px!important}
+/* Fragekarte wie im Lernmodus: dunkelblauer Kopf mit Nummer, Teil, Klasse und grosser Frage, darunter die Antwortzeilen
+   mit farbigem Buchstaben (Stil "Farbig": A blau, B orange, C gruen, D lila - sonst alle blau). */
+#stolperBlatt.st-gross .sg-kopf{margin:-24px -26px 0;padding:20px 26px 22px;background:linear-gradient(135deg,#173a63,#0f2745);color:#fff;border-radius:20px 20px 0 0}
+body.dark #stolperBlatt.st-gross .sg-kopf{background:transparent;padding-bottom:6px}
+#stolperBlatt.st-gross .sg-marken{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+#stolperBlatt.st-gross .sg-nr{background:#ffd27a;color:#0f2745;font:700 16px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;padding:8px 13px;border-radius:4px}
+#stolperBlatt.st-gross .sg-tag{background:rgba(255,255,255,.12);color:#fff;font:600 15px/1 Inter,system-ui,sans-serif;padding:8px 13px;border-radius:999px}
+#stolperBlatt.st-gross .sg-falsch{background:rgba(255,107,107,.22);color:#ffd0d0}
+#stolperBlatt.st-gross .sg-text{font:700 clamp(22px,1.85vw,35px)/1.38 "Space Grotesk",Inter,Arial,sans-serif;color:#fff}
+#stolperBlatt.st-gross .st-bild{margin:16px 0 0}
+#stolperBlatt.st-gross .st-bild img,#stolperBlatt.st-gross .st-bild svg{max-height:260px}
+#stolperBlatt.st-gross .sg-opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+#stolperBlatt.st-gross .sg-opt{--sg:#2f7fd8;--sg-w:#e6f0fd;--sg-d:rgba(47,127,216,.17);--sg-dr:rgba(47,127,216,.45);
+  display:flex;align-items:center;gap:20px;min-height:60px;padding:6px 22px;background:var(--sg-w);border:2px solid transparent;border-radius:6px;
+  color:#0b1626;font:400 clamp(19px,1.55vw,28px)/1.35 Arial,"Helvetica Neue",Helvetica,sans-serif;box-shadow:0 6px 16px rgba(15,39,69,.08);transition:opacity .35s,background .35s,border-color .35s}
+html.fs-bunt:not([class*="fa-"]) #stolperBlatt.st-gross .sg-opt:nth-child(2){--sg:#f08a1a;--sg-w:#fdeedd;--sg-d:rgba(240,138,26,.15);--sg-dr:rgba(240,138,26,.45)}
+html.fs-bunt:not([class*="fa-"]) #stolperBlatt.st-gross .sg-opt:nth-child(3){--sg:#22a862;--sg-w:#e2f5ea;--sg-d:rgba(34,168,98,.16);--sg-dr:rgba(34,168,98,.45)}
+html.fs-bunt:not([class*="fa-"]) #stolperBlatt.st-gross .sg-opt:nth-child(4){--sg:#8e44ad;--sg-w:#f1e6f8;--sg-d:rgba(142,68,173,.18);--sg-dr:rgba(142,68,173,.5)}
+/* Stand 400, Dietmar: "wenn ich bei Mehrfarbig und Orange auswähle, bleibt es Bunt." Die Frage-Darstellung folgt jetzt
+   genau dem Lernmodus: Farbig mit Antwortfarbe (eine Farbe fuer alle vier), Petrol, Navy und Schlicht. */
+html.fs-bunt[class*="fa-"] #stolperBlatt.st-gross .sg-opt{--sg:var(--af-l);--sg-w:var(--af-h);--sg-d:color-mix(in srgb,var(--af-l) 17%,transparent);--sg-dr:color-mix(in srgb,var(--af-l) 45%,transparent)}
+html.fs-petrol #stolperBlatt.st-gross .sg-opt{--sg:#0a7f86;--sg-w:#f7fafb;--sg-d:rgba(255,255,255,.07);--sg-dr:rgba(255,255,255,.14);border-color:#d9e3e6}
+html.fs-petrol body.dark #stolperBlatt.st-gross .sg-opt{--sg:#1f9aa2}
+html.fs-navy #stolperBlatt.st-gross .sg-opt{--sg:#0f2745;--sg-w:#fff;--sg-d:rgba(255,255,255,.07);--sg-dr:rgba(255,255,255,.14);border-color:#d9e2ec}
+html.fs-navy body.dark #stolperBlatt.st-gross .sg-opt{--sg:rgba(255,255,255,.16)}
+html.fs-schlicht #stolperBlatt.st-gross .sg-opt{--sg:#e9eef4;--sg-w:#fff;--sg-d:rgba(255,255,255,.07);--sg-dr:rgba(255,255,255,.14);border-color:#d9e2ec;box-shadow:none}
+html.fs-schlicht #stolperBlatt.st-gross .sg-bu{color:#10243c}
+html.fs-schlicht body.dark #stolperBlatt.st-gross .sg-opt{--sg:rgba(255,255,255,.14)}
+html.fs-schlicht body.dark #stolperBlatt.st-gross .sg-bu{color:#fff}
+/* Kopf: Petrol und Schlicht hell mit dunkler Schrift (Petrol mit Strich links), Navy dunkelblau */
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .sg-kopf{background:#fff;color:#10243c;border-bottom:1px solid #d9e3e6}
+html.fs-petrol body:not(.dark) #stolperBlatt.st-gross .sg-kopf{border-left:5px solid #0a7f86}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .sg-text{color:#10243c}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .sg-tag{background:#eef2f6;color:#10243c}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .sg-falsch{background:rgba(239,68,68,.12);color:#b91c1c}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .st-mk{background:#fff;border-color:#d3deec;color:#10243c}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .st-mk.st-gelernt.an{background:#16a34a;border-color:#16a34a;color:#fff}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .st-mk.st-merken.an{background:#e11d48;border-color:#e11d48;color:#fff}
+html:is(.fs-petrol,.fs-schlicht) body:not(.dark) #stolperBlatt.st-gross .sg-text .tts-wort-an{color:var(--wort-tag,#d47600)!important}
+html.fs-petrol body.dark #stolperBlatt.st-gross .sg-kopf{background:rgba(255,255,255,.06);border-left:5px solid #2bb3ba;padding-bottom:22px}
+html.fs-schlicht body.dark #stolperBlatt.st-gross .sg-kopf{background:rgba(255,255,255,.06);padding-bottom:22px}
+html.fs-navy body.dark #stolperBlatt.st-gross .sg-kopf{background:rgba(5,12,40,.55);padding-bottom:22px}
+body.dark #stolperBlatt.st-gross .sg-opt{background:var(--sg-d);border:1px solid var(--sg-dr);color:#fff;box-shadow:none}
+#stolperBlatt.st-gross .sg-bu{flex:0 0 48px;width:48px;height:48px;border-radius:8px;background:var(--sg);color:#fff;display:flex;align-items:center;justify-content:center;font:800 21px/1 Inter,Arial,sans-serif}
+#stolperBlatt.st-gross .sg-ot{flex:1;min-width:0}
+#stolperBlatt.st-gross .sg-ot img{max-height:120px;max-width:100%;background:#fff;padding:3px;border-radius:6px;vertical-align:middle}
+#stolperBlatt.st-gross .st-ok{display:none;margin-left:auto;padding-left:12px;font-size:24px;color:#16a34a}
+#stolperBlatt.st-gross.gezeigt .sg-opt:not(.richtig){opacity:.45}
+#stolperBlatt.st-gross.gezeigt .sg-opt.richtig{background:#dcf5e5;border-color:#22a862}
+body.dark #stolperBlatt.st-gross.gezeigt .sg-opt.richtig{background:rgba(34,197,94,.24);border-color:#22c55e}
+#stolperBlatt.st-gross.gezeigt .sg-opt.richtig .sg-bu{background:#16a34a;color:#fff}
+#stolperBlatt.st-gross.gezeigt .sg-opt.richtig .st-ok{display:block}
+body.dark #stolperBlatt.st-gross.gezeigt .sg-opt.richtig .st-ok{color:#4ade80}
+body.eckig.app-rund #stolperBlatt.st-gross .sg-kopf{border-radius:20px 20px 0 0!important}
+body.eckig.app-rund #stolperBlatt.st-gross :is(.sg-opt,.sg-bu,.sg-nr){border-radius:8px!important}
+body.eckig.app-rund #stolperBlatt.st-gross .sg-tag{border-radius:999px!important}
+/* Mitlesen: auf dunklem Grund der helle Ton (wie im Lernmodus) */
+#stolperBlatt.st-gross .sg-text .tts-wort-an,body.dark #stolperBlatt :is(.sg-opt,.st-opt).richtig .tts-wort-an,body.dark #stolperBlatt .st-ftext .tts-wort-an{color:var(--wort-nacht,#fee066)!important}
+/* Stand 400: Gelernt und Merken */
+#stolperBlatt .st-mk-reihe{margin-left:auto;display:inline-flex;gap:6px;flex:0 0 auto}
+#stolperBlatt .st-mk{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px!important;border:1px solid #d3deec;background:#fff;color:#10243c;font:600 12.5px/1.2 Inter,system-ui,sans-serif;cursor:pointer}
+#stolperBlatt .st-mk b{font-weight:700}
+body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.24);color:#fff}
+#stolperBlatt .st-mk.st-gelernt.an{background:#16a34a;border-color:#16a34a;color:#fff}
+#stolperBlatt .st-mk.st-merken.an{background:#e11d48;border-color:#e11d48;color:#fff}
+#stolperBlatt.st-gross .st-mk{padding:8px 15px;font-size:15px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:#fff}
+#stolperBlatt.st-gross .st-mk.st-gelernt.an{background:#16a34a;border-color:#16a34a}
+#stolperBlatt.st-gross .st-mk.st-merken.an{background:#e11d48;border-color:#e11d48}
+#stolperBlatt.st-gross .st-merk{margin-top:14px;font-size:15px}
+#stolperBlatt.st-gross .st-knoepfe{margin-top:4px}
 </style>
 <script id="stolpersteine">
 (function(){
@@ -66418,10 +66619,12 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
     window.stolperAnzahl = () => auswahl(einst(), true).length;
 
     // ---------------- Das Einstellungs-Blatt ----------------
+    // Stand 400: breites Fenster (PC, auch die klassische Ansicht, Tablet quer) - Lernmodus-Ansicht und Einstellungen in der Mitte
+    function grossesFenster(){ const hc = D.documentElement.classList; return innerWidth >= 900 && innerHeight >= 600 && !hc.contains('pc-handy'); }
     function einstOeffnen(beimLaufen){
         const alt = D.getElementById('stolperEinst'); if(alt) alt.remove();
         const e = einst(), l = listen();
-        const w = D.createElement('div'); w.id = 'stolperEinst'; w.className = 'stolper-fenster';
+        const w = D.createElement('div'); w.id = 'stolperEinst'; w.className = 'stolper-fenster' + (grossesFenster() ? ' se-gross' : '');
         const seg = (feld, werte) => '<div class="se-seg" data-feld="' + feld + '">' + werte.map(v => '<button type="button" data-w="' + v[0] + '"' + (String(e[feld]) === String(v[0]) ? ' class="an"' : '') + '>' + v[1] + '</button>').join('') + '</div>';
         const haken = (feld, text, zahl) => '<label class="se-haken se-liste"><input type="checkbox" data-feld="' + feld + '"' + (e[feld] ? ' checked' : '') + '><span>' + text + '</span><span class="se-zahl">' + zahl + '</span></label>';
         let alleText = '';
@@ -66436,7 +66639,8 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             + '<div class="se-ue">Vorlesen</div>' + seg('vorlesen', [['beides', 'Frage + Lösung'], ['loesung', 'Nur Lösung'], ['aus', 'Aus']])
             + '<div class="se-ue">Weiter nach</div>' + seg('weiter', [['4', '4 s'], ['6', '6 s'], ['10', '10 s'], ['vorlesen', 'Nach dem Vorlesen']])
             + '<label class="se-haken"><input type="checkbox" data-feld="merksatz"' + (e.merksatz ? ' checked' : '') + '><span>Kurzen Merksatz zeigen</span></label>'
-            + '<button type="button" class="st-los"></button></div>';
+            + '<button type="button" class="st-los"></button>'
+            + '<button type="button" class="st-auto"><i class="fas fa-car-side"></i><span><b>Auto</b><small>Frage und Lösung vorlesen, blättert von selbst weiter</small></span></button><div class="se-auto-info"></div></div>';
         D.body.appendChild(w);
         const los = w.querySelector('.st-los');
         function nachziehen(){
@@ -66444,8 +66648,9 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             w.querySelectorAll('.se-liste').forEach(x => x.classList.toggle('aus', e.art === 'alle'));
             const h = w.querySelector('.se-alle'); if(h) h.style.display = e.art === 'alle' ? '' : 'none';
             los.disabled = !n;
+            const au = w.querySelector('.st-auto'); if(au) au.disabled = !bank().length;   // Auto ohne Stolpersteine nimmt alle Fragen
             const min = Math.max(1, Math.round(n * (e.weiter === 'vorlesen' ? (e.vorlesen === 'aus' ? 6 : 16) : (+e.weiter + (e.anzeige === 'aufdecken' ? 3 : 0))) / 60));
-            los.innerHTML = n ? '<i class="fas fa-play"></i> ' + (beimLaufen ? 'Übernehmen' : 'Los geht\'s') + ' – ' + n + ' Fragen, etwa ' + min + ' Minuten'
+            los.innerHTML = n ? '<i class="fas fa-play"></i> ' + (beimLaufen ? 'Übernehmen' : 'Los geht\'s') + ' – ' + n + ' Fragen, etwa ' + min + (min === 1 ? ' Minute' : ' Minuten')
                               : 'Keine Stolpersteine – prima! Oder „Alle Fragen meiner Klasse“';
         }
         w.addEventListener('click', ev => {
@@ -66453,27 +66658,101 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             if(t === w || t.closest('.se-zu')){ w.remove(); if(beimLaufen) lauf.weiterNachEinst(false); return; }
             const b = t.closest('.se-seg button');
             if(b){ const f = b.parentElement.dataset.feld; e[f] = b.dataset.w; b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('an', x === b)); einstSchreiben(e); nachziehen(); return; }
-            if(t.closest('.st-los') && !los.disabled){ w.remove(); einstSchreiben(e); if(beimLaufen) lauf.weiterNachEinst(true); else lauf.start(); }
+            if(t.closest('.st-los') && !los.disabled){ w.remove(); einstSchreiben(e); if(beimLaufen) lauf.weiterNachEinst(true); else { lauf.auto = false; lauf.start(); } return; }
+            if(t.closest('.st-auto') && !t.closest('.st-auto').disabled){ autoLos(e, w, false); return; }
+            if(t.closest('.se-auto-ohne')){ autoLos(e, w, true); return; }
+            if(t.closest('.se-auto-laden')){ if(w.dataset.laedt) return; w.dataset.laedt = '1'; majaFuersAutoLaden(e, w).finally(() => { delete w.dataset.laedt; }); return; }
         });
         w.addEventListener('change', ev => { const i = ev.target; if(i && i.dataset.feld){ e[i.dataset.feld] = !!i.checked; einstSchreiben(e); nachziehen(); } });
         nachziehen();
     }
 
+    // ---------------- Gelernt und Merken (Stand 400) ----------------
+    // Dietmar 02.11.2026: "Ich möchte die Möglichkeit zum Gelernt und Markieren haben." Dieselben Funktionen wie im Lernmodus
+    // (Haken = gelernt, wird nicht mehr abgefragt; Herz = Merkliste).
+    function istGelernt(id){ try{ return !!isMastered(id); }catch(x){ return false; } }
+    function istGemerkt(id){ try{ return Array.isArray(favoriteQuestions) && favoriteQuestions.indexOf(id) >= 0; }catch(x){ return false; } }
+    function mkKnoepfe(id){
+        const g = istGelernt(id), m = istGemerkt(id);
+        return '<div class="st-mk-reihe">'
+            + '<button type="button" class="st-mk st-gelernt' + (g ? ' an' : '') + '" data-id="' + esc(id) + '" aria-pressed="' + g + '" title="Haken = gelernt: diese Frage nicht mehr abfragen"><i class="fas fa-circle-check"></i><b>Gelernt</b></button>'
+            + '<button type="button" class="st-mk st-merken' + (m ? ' an' : '') + '" data-id="' + esc(id) + '" aria-pressed="' + m + '" title="Herz = Merkliste"><i class="fas fa-heart"></i><b>Merken</b></button></div>';
+    }
+    function mkKlick(b){
+        const id = b.dataset.id; if(!id) return;
+        let an;
+        if(b.classList.contains('st-gelernt')){ an = !istGelernt(id); try{ alsGelerntMarkieren(id, an); }catch(x){} an = istGelernt(id); }
+        else { try{ toggleFavorite(id); }catch(x){} an = istGemerkt(id); }
+        b.classList.toggle('an', an); b.setAttribute('aria-pressed', String(an));
+    }
+
+    // ---------------- Auto (Stand 400) ----------------
+    // Dietmar 02.11.2026: "Ideal wäre wenn man das im Auto über Stolpersteine es laufen lassen kann und man dabei zuhören
+    // kann ... Auto Car Play, ein Button mit einem Auto. Hier ist das vor eingestellt. Frage und die richtige Antwort vorlesen
+    // und weiter blättern. Hörbuch ist damit dann Geschichte." Die Voreinstellung gilt nur fuer diesen Durchlauf, die eigenen
+    // Einstellungen bleiben, wie sie sind. Am Ende geht es von vorn los - ohne Bedienung.
+    const AUTO = { anzeige: 'sofort', vorlesen: 'beides', weiter: 'vorlesen' };
+    function majaPaketeFehlen(){
+        try{ if(!majaSpracheMoeglich()) return []; }catch(x){ return []; }
+        let kl = 'n'; try{ kl = (klasseAktuell().id || 'n').toLowerCase(); }catch(x){}
+        let inst = {}; try{ inst = majaSpracheInstalliert(); }catch(x){}
+        const braucht = (typeof MAJA_SPRACHE_BRAUCHT !== 'undefined' && (MAJA_SPRACHE_BRAUCHT[kl] || MAJA_SPRACHE_BRAUCHT.n)) || [];
+        return braucht.filter(pid => !inst[pid]);
+    }
+    async function autoLos(e, w, ohneMaja){
+        const info = w.querySelector('.se-auto-info');
+        const sag = (t, art) => { if(info){ info.innerHTML = t; info.className = 'se-auto-info' + (art ? ' ' + art : ''); } };
+        let majaAn = true; try{ majaAn = majaSpracheAn(); }catch(x){}
+        const fehlen = (ohneMaja || !majaAn) ? [] : majaPaketeFehlen();
+        if(fehlen.length){
+            const mb = fehlen.reduce((a, pid) => a + ((typeof MAJA_SPRACHE_MB !== 'undefined' && MAJA_SPRACHE_MB[pid]) || 0), 0);
+            sag('Mit Majas Stimme klingt es im Auto am besten. Dafür fehlen noch Sprachpakete (etwa ' + mb + ' MB, am besten im WLAN laden – sie bleiben auf dem Gerät).'
+                + '<span class="se-auto-wahl"><button type="button" class="se-auto-laden"><i class="fas fa-download"></i> Majas Stimme laden</button>'
+                + '<button type="button" class="se-auto-ohne">Ohne Maja losfahren</button></span>');
+            return;
+        }
+        w.remove(); einstSchreiben(e);
+        lauf.auto = true; lauf.start();
+    }
+    async function majaFuersAutoLaden(e, w){
+        const info = w.querySelector('.se-auto-info');
+        const sag = t => { if(info){ info.innerHTML = t; info.className = 'se-auto-info'; } };
+        const knopf = w.querySelector('.st-auto'); if(knopf) knopf.disabled = true;
+        try{
+            for(const pid of majaPaketeFehlen()){
+                const uhr = setInterval(() => { try{ sag('Lade Majas Stimme (' + pid + ') … ' + Math.round((majaSprache.fortschritt[pid] || 0) * 100) + ' % – das Fenster bleibt offen, mit X brichst du ab'); }catch(x){} }, 400);
+                try{ await majaSpracheLaden(pid); }finally{ clearInterval(uhr); }
+                if(majaSprache.fehler && majaSprache.fehler[pid]){
+                    sag(esc(majaSprache.fehler[pid]) + '<span class="se-auto-wahl"><button type="button" class="se-auto-ohne">Ohne Maja losfahren</button></span>');
+                    if(knopf) knopf.disabled = false; return;
+                }
+            }
+        }finally{ if(knopf) knopf.disabled = false; }
+        if(!D.body.contains(w)) return;   // inzwischen geschlossen
+        autoLos(e, w, true);
+    }
+
     // ---------------- Der Durchlauf ----------------
     const lauf = {
-        liste: [], idx: 0, pause: false, token: 0, el: null, warte: null,
+        liste: [], idx: 0, pause: false, token: 0, el: null, warte: null, auto: false,
+        e(){ return this.auto ? Object.assign(einst(), AUTO) : einst(); },
         start(){
-            const e = einst();
+            const e = this.e();
             this.liste = auswahl(e); this.idx = 0; this.pause = false;
+            if(!this.liste.length && this.auto) this.liste = auswahl(Object.assign({}, e, { art: 'alle' }));   // Auto ohne Stolpersteine: alle Fragen
             if(!this.liste.length) return;
             this.aufbauen();
+            this.el.classList.toggle('st-auto', !!this.auto);
             this.zeigen();
         },
         aufbauen(){
             const alt = D.getElementById('stolperBlatt'); if(alt) alt.remove();
+            if(this.taste){ D.removeEventListener('keydown', this.taste); this.taste = null; }          // Stand 400: neu aufgebaut (Auto aus dem Zahnrad) - keine doppelten Zuhoerer
+            if(this.sicht){ D.removeEventListener('visibilitychange', this.sicht); this.sicht = null; }
             const el = D.createElement('div'); el.id = 'stolperBlatt'; el.className = 'stolper-fenster'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Stolpersteine');
             el.innerHTML = '<div class="st-kopf"><span class="st-ico"><i class="fas fa-headphones"></i></span>'
-                + '<div class="st-titel"><b>Stolpersteine</b><small>Nur ansehen und anhören – nichts antippen</small></div>'
+                + '<div class="st-titel"><b>Stolpersteine</b><small>Ansehen und anhören</small></div>'
+                + '<span class="st-auto-marke" title="Auto: läuft von allein"><i class="fas fa-car-side"></i><span class="st-am-t"> Auto · läuft von allein</span></span>'
                 + '<button type="button" class="st-rund st-einst" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>'
                 + '<button type="button" class="st-rund st-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'
                 + '<div class="st-stand"><span class="st-zahl"></span><span class="st-leise st-was"></span></div>'
@@ -66491,6 +66770,7 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             el.querySelector('.st-einst').addEventListener('click', () => { this.anhalten(); einstOeffnen(true); });
             el.querySelector('.st-zurueck').addEventListener('click', () => { if(this.idx > 0){ this.idx = Math.min(this.idx, this.liste.length) - 1; this.pause = false; this.zeigen(); } });
             el.querySelector('.st-vor').addEventListener('click', () => this.naechste());
+            el.querySelector('.st-inhalt').addEventListener('click', ev => { const b = ev.target.closest('.st-mk'); if(b) mkKlick(b); });
             el.querySelector('.st-play').addEventListener('click', () => { if(this.idx >= this.liste.length){ this.idx = 0; this.pause = false; this.zeigen(); return; } if(this.pause){ this.pause = false; this.zeigen(); } else this.anhalten(); });
             D.addEventListener('keydown', this.taste = ev => { if(ev.key === 'Escape' && !D.getElementById('stolperEinst')) this.zu(); });
             D.addEventListener('visibilitychange', this.sicht = () => { if(D.visibilityState === 'visible' && this.el) this.wach(true); });
@@ -66536,6 +66816,7 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
         weiterNachEinst(neu){
             if(neu){
                 const id = (this.liste[this.idx] || {}).id;
+                this.auto = false; if(this.el) this.el.classList.remove('st-auto');   // eigene Einstellung uebernommen: Auto ist vorbei
                 this.liste = auswahl(einst());
                 if(!this.liste.length) return this.zu();
                 const i = this.liste.findIndex(q => q.id === id); this.idx = i >= 0 ? i : 0;
@@ -66543,25 +66824,45 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             this.pause = false; this.zeigen();
         },
         zeigen(){
-            const e = einst(), q = this.liste[this.idx]; if(!q) return this.ende();
+            const e = this.e(), q = this.liste[this.idx]; if(!q) return this.ende();
             const tok = ++this.token; clearTimeout(this.warte);
             const el = this.el;
             el.classList.remove('gezeigt');
             el.querySelector('.st-zahl').innerHTML = '<b>' + (this.idx + 1) + '</b> von ' + this.liste.length;
-            el.querySelector('.st-was').textContent = (e.art === 'alle' ? zielName() : 'Meine Stolpersteine') + ' · ' + ({ schwer: 'schwerste zuerst', misch: 'gemischt', teil: 'nach Prüfungsteil' })[e.reihe];
+            el.querySelector('.st-was').textContent = (this.auto ? 'Auto · ' : '') + (e.art === 'alle' ? zielName() : 'Meine Stolpersteine') + ' · ' + ({ schwer: 'schwerste zuerst', misch: 'gemischt', teil: 'nach Prüfungsteil' })[e.reihe];
             el.querySelector('.st-balken i').style.width = Math.round(100 * (this.idx + 1) / this.liste.length) + '%';
             let falsch = 0; try{ falsch = (masteryData[q.id] && masteryData[q.id].totalWrong) || 0; }catch(x){}
             // wie im Trainer: Antwortbilder nicht noch einmal als Fragebild
             let bild = ''; try{ bild = (typeof getSvgHtml === 'function') ? (getSvgHtml(q.id, (q.options || []).map(o => (o && o.image ? String(o.image).trim() : '')).filter(Boolean)) || '') : ''; }catch(x){}
             const richtigIdx = q.options.findIndex(o => o && o.correct);
-            const opts = q.options.map((o, i) => {
+            // Stand 400: am PC sieht die Frage aus wie im Lernmodus (Dietmar 02.11.2026)
+            const gross = grossesFenster();
+            el.classList.toggle('st-gross', gross);
+            if(gross){
+                const teil = ({ B: 'Betrieb', V: 'Vorschriften', T: 'Technik' })[String(q.id || '').charAt(0)] || '';
+                const gOpts = q.options.map((o, i) => {
+                    const img = o.image && String(o.image).trim() ? '<img src="svgs/' + esc(String(o.image).trim()) + '" alt="Bild ' + 'ABCD'[i] + '">' : '';
+                    return '<div class="sg-opt' + (i === richtigIdx ? ' richtig' : '') + '" data-st="' + i + '"><span class="sg-bu">' + 'ABCD'[i] + '</span>'
+                        + '<span class="sg-ot">' + esc(o.text || '') + img + '</span><i class="fas fa-check st-ok"></i></div>';
+                }).join('');
+                let gMerk = ''; try{ const x = (window.erklaerMap || {})[q.id]; gMerk = x && x.kniff ? String(x.kniff) : ''; }catch(x){}
+                if(gMerk){ const m1 = gMerk.match(/^.{20,220}?[.!?](?=\s|$)/); gMerk = m1 ? m1[0] : (gMerk.length > 220 ? gMerk.slice(0, 217).replace(/\s+\S*$/, '') + ' …' : gMerk); }
+                el.querySelector('.st-inhalt').innerHTML = '<div class="sg-kopf"><div class="sg-marken"><span class="sg-nr">' + esc(q.id) + '</span>'
+                    + (teil ? '<span class="sg-tag"><i class="fas fa-tag"></i> ' + teil + '</span>' : '') + '<span class="sg-tag"><i class="fas fa-layer-group"></i> ' + esc(zielName()) + '</span>'
+                    + (falsch ? '<span class="sg-tag sg-falsch"><i class="fas fa-triangle-exclamation"></i> ' + falsch + '× falsch</span>' : '') + mkKnoepfe(q.id) + '</div>'
+                    + '<div class="sg-text st-ftext">' + esc(q.text) + '</div></div>'
+                    + (bild ? '<div class="st-bild">' + bild + '</div>' : '')
+                    + '<div class="sg-opts">' + gOpts + '</div>'
+                    + '<div class="st-merk' + (e.merksatz && gMerk ? ' da' : '') + '"><i class="fas fa-lightbulb"></i><span>' + esc(gMerk) + '</span></div>';
+            }
+            const opts = gross ? '' : q.options.map((o, i) => {
                 const img = o.image && String(o.image).trim() ? '<img src="svgs/' + esc(String(o.image).trim()) + '" alt="Bild ' + 'ABCD'[i] + '">' : '';
                 return '<div class="st-opt' + (i === richtigIdx ? ' richtig' : '') + '" data-st="' + i + '"><span class="st-bu">' + 'ABCD'[i] + '</span><span class="st-ot">' + esc(o.text || '') + img + '</span><i class="fas fa-check st-ok"></i></div>';
             }).join('');
             let merk = ''; try{ const x = (window.erklaerMap || {})[q.id]; merk = x && x.kniff ? String(x.kniff) : ''; }catch(x){}
             // nur der erste Satz - ein Merksatz, keine Erklaerung (die steht im Trainer bei der Frage)
             if(merk){ const m1 = merk.match(/^.{20,220}?[.!?](?=\s|$)/); merk = m1 ? m1[0] : (merk.length > 220 ? merk.slice(0, 217).replace(/\s+\S*$/, '') + ' …' : merk); }
-            el.querySelector('.st-inhalt').innerHTML = '<div class="st-frage"><div class="st-marken"><span class="st-nr">' + esc(q.id) + '</span>' + (falsch ? '<span>' + falsch + '× falsch</span>' : '') + '</div>'
+            if(!gross) el.querySelector('.st-inhalt').innerHTML = '<div class="st-frage"><div class="st-marken"><span class="st-nr">' + esc(q.id) + '</span>' + (falsch ? '<span>' + falsch + '× falsch</span>' : '') + mkKnoepfe(q.id) + '</div>'
                 + '<div class="st-ftext">' + esc(q.text) + '</div>' + (bild ? '<div class="st-bild">' + bild + '</div>' : '') + '</div>' + opts
                 + '<div class="st-merk' + (e.merksatz && merk ? ' da' : '') + '"><i class="fas fa-lightbulb"></i><span>' + esc(merk) + '</span></div>';
             el.querySelector('.st-inhalt').scrollTop = 0;
@@ -66592,7 +66893,7 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
                 const frageSeg = { text: sprich(q.text) + '.', selector: '#stolperBlatt .st-ftext', klasse: 'tts-frage', worte: wortAn, thorsten: true,
                                    maja: (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null };
                 const ro = q.options[richtigIdx] || {};
-                const loesSeg = { text: 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') + '.', selector: '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
+                const loesSeg = { text: 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') + '.', selector: gross ? '#stolperBlatt .sg-opt.richtig' : '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
                                   maja: (ro.text && typeof majaAntwortMarke === 'function') ? majaAntwortMarke(q, ro) : null };
                 const start = Date.now();
                 if(e.anzeige === 'aufdecken'){
@@ -66611,7 +66912,7 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
                 if(tok !== this.token) return;
                 // Wartezeit bis zur naechsten Frage, sichtbar im Ring
                 const schonMs = Date.now() - start;
-                const nochMs = weiterMs ? Math.max(1200, weiterMs - schonMs) : 1800;
+                const nochMs = weiterMs ? Math.max(1200, weiterMs - schonMs) : (this.auto ? 2500 : 1800);
                 unten.textContent = 'Weiter in ' + Math.ceil(nochMs / 1000) + ' s · Display bleibt an';
                 this.ring(0, nochMs);
                 await warten(nochMs);
@@ -66633,10 +66934,24 @@ body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
             el.querySelector('.st-schliessen').addEventListener('click', () => this.zu());
             el.querySelector('.st-unten').textContent = '';
             this.pause = true; this.knopf();
+            // Auto: ohne Bedienung von vorn
+            if(this.auto){
+                const tok = this.token;
+                el.querySelector('.st-unten').textContent = 'Auto: gleich geht es von vorn los';
+                this.warte = setTimeout(() => {
+                    if(tok !== this.token || !this.el || !this.auto) return;
+                    // frisch auswaehlen: inzwischen als gelernt Abgehakte fallen so heraus (Gegenpruefung 400)
+                    const e2 = this.e(); let l = auswahl(e2); if(!l.length) l = auswahl(Object.assign({}, e2, { art: 'alle' }));
+                    const ohneGelernt = l.filter(q => !istGelernt(q.id)); if(ohneGelernt.length) l = ohneGelernt;
+                    if(l.length) this.liste = l;
+                    this.idx = 0; this.pause = false; this.zeigen();
+                }, 4000);
+            }
         },
         zu(){
             this.token++; clearTimeout(this.warte); try{ stopTTS(); }catch(x){}
             const s = D.getElementById('stolperEinst'); if(s) s.remove();
+            this.auto = false;
             if(this.el){ this.el.remove(); this.el = null; }
             if(this.taste){ D.removeEventListener('keydown', this.taste); this.taste = null; }
             if(this.sicht){ D.removeEventListener('visibilitychange', this.sicht); this.sicht = null; }
