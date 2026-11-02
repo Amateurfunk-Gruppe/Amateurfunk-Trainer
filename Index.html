@@ -25087,7 +25087,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 400, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 401, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32616,7 +32616,7 @@ async function playTTSQueue(segments, btn, zurueck){
         if(seg && seg.maja){
             stuecke.push({ text: seg.text, selector: seg.selector, frageNr: seg.frageNr, klasse: seg.klasse,
                            worte: seg.worte || null, thorsten: !!seg.thorsten, wortVon: 0, wortBis: 1,
-                           pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja });
+                           pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja, majaVor: seg.majaVor || null });
             continue;
         }
         const teile = ttsInStuecke(seg && seg.text);
@@ -32732,7 +32732,9 @@ const BILD_PAUSE_MS = 2600;
 const MAJA_SPRACHE_QUELLEN = ['https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
 const MAJA_SPRACHE_CACHE = 'maja-sprache-v1';
 // Pruefungsziele wie in KLASSEN: n = Klasse N, e = Klasse E (N + Aufbau), ne = nur Aufbau N auf E, ea = Aufbau E auf A (Stand 395).
-const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten'], ne: ['E-fragen'], ea: ['A-fragen'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten'] };
+// Stand 401: die Antworten Aufbau N auf E und E auf A sind da (Grok, 02.11.2026).
+const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten', 'E-antworten'], ne: ['E-fragen', 'E-antworten'],
+                               ea: ['A-fragen', 'A-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten', 'E-antworten', 'A-antworten'] };
 const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {} };
 
 function majaSpracheMoeglich(){
@@ -32743,6 +32745,49 @@ function majaSpracheAn(){
 }
 function majaSpracheAnSetzen(an){
     try{ localStorage.setItem('maja_sprache_an', an ? '1' : '0'); }catch(e){}
+}
+// ================================================================
+//  MAJA SAGT RICHTIG / FALSCH, "ANTWORT A" BIS "D"        (Stand 401)
+//  ----------------------------------------------------------------
+//  Dietmar (01.11.2026): "das war richtig und er sollte sich auch richtig
+//  darueber freuen ... 2 oder 3 verschiedene Soundfile" - "vielleicht auch
+//  eine Runde Sounds dann zum deaktivieren". Und: "Denn da kommt noch die
+//  Google-Stimme." Je drei Saetze (maja_992-994 richtig, 995-997 falsch)
+//  im Wechsel, abschaltbar in der Karte "Majas Stimme". Dazu die Ansagen
+//  "Antwort A" bis "D" (maja_998-1001) vor Majas Antworten - die werden
+//  gemischt, die Aufnahme selbst hat keinen Buchstaben.
+//  Die Dateien liegen fest im Trainer (sounds/maja-grok, zusammen ~0,2 MB).
+//  Sie gelten nur, wenn Maja ueberhaupt vorliest: ein Sprachpaket ist
+//  geladen und "Maja liest vor" ist an. Sonst bleibt alles wie bisher.
+// ================================================================
+const MAJA_RUECK = {
+    richtig: ['maja_992.mp3', 'maja_993.mp3', 'maja_994.mp3'],
+    falsch:  ['maja_995.mp3', 'maja_996.mp3', 'maja_997.mp3']
+};
+const MAJA_BUCHSTABE = ['maja_998.mp3', 'maja_999.mp3', 'maja_1000.mp3', 'maja_1001.mp3'];
+function majaRueckAn(){
+    try{ return localStorage.getItem('maja_rueck_an') !== '0'; }catch(e){ return true; }
+}
+function majaRueckAnSetzen(an){
+    try{ localStorage.setItem('maja_rueck_an', an ? '1' : '0'); }catch(e){}
+}
+window.majaRueckAnSetzen = majaRueckAnSetzen;
+// Liest Maja gerade vor? (Paket geladen und eingeschaltet)
+function majaLiestVor(){
+    try{ return majaSpracheAn() && majaSpracheMoeglich() && Object.keys(majaSpracheInstalliert()).length > 0; }catch(e){ return false; }
+}
+function majaDateiMarke(datei){
+    return { url: 'sounds/maja-grok/' + datei + '?v=' + (typeof TRAINER_STAND !== 'undefined' ? TRAINER_STAND.nr : 0) };
+}
+// Naechste der drei Fassungen - der Reihe nach, damit keine zweimal hintereinander kommt
+function majaRueckMarke(richtig){
+    const liste = richtig ? MAJA_RUECK.richtig : MAJA_RUECK.falsch, k = 'maja_rueck_nr_' + (richtig ? 'r' : 'f');
+    let i = 0;
+    try{ i = ((parseInt(localStorage.getItem(k) || '-1', 10) + 1) % liste.length + liste.length) % liste.length; localStorage.setItem(k, String(i)); }catch(e){}
+    return majaDateiMarke(liste[i]);
+}
+function majaBuchstabeMarke(i){
+    return (i >= 0 && i < MAJA_BUCHSTABE.length) ? majaDateiMarke(MAJA_BUCHSTABE[i]) : null;
 }
 function majaSpracheInstalliert(){
     try{ return JSON.parse(localStorage.getItem('maja_sprache_pakete') || '{}') || {}; }catch(e){ return {}; }
@@ -32823,6 +32868,14 @@ function majaAntwortMarke(q, opt){
     return null;
 }
 async function majaSpracheBlob(m){
+    // Stand 401: einzelne Datei aus sounds/maja-grok (richtig/falsch, "Antwort A")
+    if(m && m.blob) return m.blob;
+    if(m && m.url){
+        const r = await fetch(m.url, { cache: 'force-cache' });
+        if(!r.ok) return null;
+        const b = await r.blob();
+        return b.slice(0, b.size, 'audio/mpeg');
+    }
     const inst = majaSpracheInstalliert()[m.pid];
     if(!inst) return null;
     const name = inst.teile[m.e[0]];
@@ -32843,6 +32896,15 @@ async function majaSegmentSpielen(seg, token){
     try{ blob = await majaSpracheBlob(seg.maja); }catch(e){ blob = null; }
     if(!blob || blob.size < 200) return false;
     if(token !== ttsQueueToken) return true;
+    // Stand 401: erst "Antwort B" (eigene kleine Aufnahme), dann die Antwort selbst
+    if(seg.majaVor){
+        let vor = null;
+        try{ vor = await majaSpracheBlob(seg.majaVor); }catch(e){ vor = null; }
+        if(vor && vor.size >= 200){
+            await majaSegmentSpielen({ maja: { blob: vor } }, token);
+            if(token !== ttsQueueToken) return true;
+        }
+    }
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     currentTtsUrl = url; currentTtsAudio = audio;
@@ -32970,9 +33032,12 @@ const MAJA_SPRACHE_TITEL = {
     'N-fragen':    ['Fragen Klasse N', 'alle 571 Fragen der Klasse N'],
     'N-antworten': ['Antworten Klasse N', 'alle Antworten der Klasse N, ohne reine Bild-Antworten'],
     'E-fragen':    ['Fragen Aufbau N auf E', '463 Fragen, die für Klasse E dazukommen'],
-    'A-fragen':    ['Fragen Aufbau E auf A', '716 Fragen, die für Klasse A dazukommen']
+    'E-antworten': ['Antworten Aufbau N auf E', 'die Antworten zu diesen 463 Fragen, ohne reine Bild-Antworten'],
+    'A-fragen':    ['Fragen Aufbau E auf A', '716 Fragen, die für Klasse A dazukommen'],
+    'A-antworten': ['Antworten Aufbau E auf A', 'die Antworten zu diesen 716 Fragen, ohne reine Bild-Antworten']
 };
-const MAJA_SPRACHE_MB = { 'N-fragen': 38, 'N-antworten': 87, 'E-fragen': 31, 'A-fragen': 58 };
+const MAJA_SPRACHE_MB = { 'N-fragen': 38, 'N-antworten': 87, 'E-fragen': 31, 'E-antworten': 50, 'A-fragen': 58, 'A-antworten': 89 };
+const MAJA_SPRACHE_REIHE = ['N-fragen', 'N-antworten', 'E-fragen', 'E-antworten', 'A-fragen', 'A-antworten'];
 
 function majaSpracheKarteZeichnen(){
     const blatt = document.getElementById('einstBlatt_sprechen');
@@ -33019,9 +33084,11 @@ function majaSpracheKarteZeichnen(){
     const inhalt =
         '<label style="display:flex; align-items:center; gap:0.5rem; font-size:0.84rem; cursor:pointer; margin-bottom:0.4rem;">'
         + '<input type="checkbox" ' + (an ? 'checked' : '') + ' onchange="majaSpracheAnSetzen(this.checked)"> Maja liest vor, wenn das Paket geladen ist</label>'
-        + ['N-fragen', 'N-antworten', 'E-fragen', 'A-fragen'].map(zeile).join('')
-        + '<div style="padding:0.45rem 0; border-top:1px solid rgba(127,140,160,0.2); font-size:0.78rem; color:var(--muted);">'
-        + '<i class="fas fa-hourglass-half"></i> <b>Antworten Aufbau N auf E und E auf A folgen.</b> Bis dahin liest bei diesen Fragen die eingebaute Stimme die Antworten vor.</div>';
+        + MAJA_SPRACHE_REIHE.map(zeile).join('')
+        + '<label style="display:flex; align-items:flex-start; gap:0.5rem; font-size:0.84rem; cursor:pointer; padding-top:0.55rem; border-top:1px solid rgba(127,140,160,0.2);">'
+        + '<input type="checkbox" style="margin-top:3px;" ' + (majaRueckAn() ? 'checked' : '') + ' onchange="majaRueckAnSetzen(this.checked)">'
+        + '<span>Maja sagt nach deiner Antwort, ob sie stimmt<br><span style="font-size:0.72rem; color:var(--muted);">Sie freut sich bei richtig und muntert dich bei falsch auf – je drei Sätze im Wechsel. '
+        + 'Gilt, sobald ein Sprachpaket geladen ist und „Antwort mit Sprachausgabe bestätigen“ an ist.</span></span></label>';
     k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
         'Maja liest die Prüfungsfragen mit ihrer eigenen Stimme vor – viel natürlicher als die eingebaute Stimme. '
         + 'Ein Paket wird einmal heruntergeladen und bleibt auf diesem Gerät. Ohne Paket liest wie bisher die eingebaute Stimme.', inhalt);
@@ -33059,9 +33126,10 @@ function antwortSegment(q, i, sprich){
     const istBild = !!(opt.image && String(opt.image).trim());
     // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
     const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
-    // Majas Aufnahme der Antwort (Stand 394) - ohne "Antwort A", deshalb eine kurze Pause danach.
+    // Majas Aufnahme der Antwort (Stand 394) - davor seit Stand 401 Majas "Antwort A" (eigene Aufnahme),
+    // danach eine kurze Pause.
     const maja = hatText ? majaAntwortMarke(q, opt) : null;
-    return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja,
+    return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja, majaVor: maja ? majaBuchstabeMarke(i) : null,
              pause: (istBild && !hatText) ? BILD_PAUSE_MS : (maja ? 450 : 0) };
 }
 
@@ -33186,8 +33254,11 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
     try{ if(localStorage.getItem('ttsAutoReadAnswer') === '0') return; }catch(e){}
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
     const text = isCorrect ? 'Das war die richtige Antwort.' : 'Das war leider die falsche Antwort.';
+    // Stand 401: Liest Maja vor, sagt sie es selbst - drei Saetze im Wechsel (abschaltbar).
+    // Fehlt die Datei, nimmt playTTSSegment wie bisher den Satz oben.
+    const maja = (majaLiestVor() && majaRueckAn()) ? majaRueckMarke(!!isCorrect) : null;
     // frageNr: An diese Frage ist die gelbe Marke gebunden (siehe playTTSSegment).
-    const segments=[{text, selector:`[data-optindex="${idx}"]`, frageNr: currentIndex, thorsten:true}];
+    const segments=[{text, selector:`[data-optindex="${idx}"]`, frageNr: currentIndex, thorsten:true, maja}];
     playTTSQueue(segments, null);
 }
 
@@ -58139,6 +58210,29 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
 "s": "Bei Rechenaufgaben lohnt sich das Formelblatt. Wenn zu einer Frage etwas darin steht, pulst der Knopf. Üb ruhig, die richtige Stelle schnell zu finden. Das brauchst du in der Prüfung.",
 "b": "Bei Rechenaufgaben lohnt sich das Formelblatt. Wenn zu einer Frage etwas darin steht, pulst der Knopf. Üb ruhig, die richtige Stelle schnell zu finden. Das brauchst du in der Prüfung.",
 "e": false
+},
+{
+"s": "Wusstest du das? In der Prüfung bekommst du die Formelsammlung der Bundesnetzagentur. Beim Aufstieg von E nach A hilft sie dir bei fast der Hälfte der neuen Technikfragen!",
+"b": "Wusstest du das? In der Prüfung bekommst du die Formelsammlung der Bundesnetzagentur. Beim Aufstieg von E nach A hilft sie dir bei fast der Hälfte der neuen Technikfragen!",
+"e": false,
+"k": "fs",
+"z": ["ea", "a"],
+"p": true
+},
+{
+"s": "Beim Aufstieg von N nach E hilft die Formelsammlung bei ungefähr jeder dritten neuen Technikfrage. In Klasse N bei etwa jeder fünften.",
+"b": "Beim Aufstieg von N nach E hilft die Formelsammlung bei ungefähr jeder dritten neuen Technikfrage. In Klasse N bei etwa jeder fünften.",
+"e": false,
+"k": "fs",
+"z": ["n", "e", "ne"],
+"p": true
+},
+{
+"s": "Schau dir die Formelsammlung schon beim Lernen an. Dann weißt du in der Prüfung sofort, wo was steht. Die Rechenwege dazu findest du auf unserer Webseite.",
+"b": "Schau dir die Formelsammlung schon beim Lernen an. Dann weißt du in der Prüfung sofort, wo was steht. Die Rechenwege dazu findest du auf unserer Webseite.",
+"e": false,
+"k": "fs",
+"p": true
 }
 ];
     function majaStartNachricht(){
@@ -58180,11 +58274,15 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let i = parseInt(lies('robo_maja_hinw_nr', '-1'), 10);
         i = (isNaN(i) ? 0 : i + 1) % MAJA_HINWEISE.length;
         // Hinweise mit "p" werden nur gezeigt, wenn Majas Aufnahme dafuer schon im Paket liegt (sonst klaenge sie anders)
-        for(let n = 0; n < MAJA_HINWEISE.length && MAJA_HINWEISE[i].p && !imMajaPaket(MAJA_HINWEISE[i].s); n++) i = (i + 1) % MAJA_HINWEISE.length;
+        // Stand 401: Hinweise mit "z" (Pruefungsziel) nur beim passenden Ziel - die Formelblatt-Saetze 989-991
+        let ziel = 'n';
+        try{ ziel = (klasseAktuell().id || 'n').toLowerCase(); }catch(e){}
+        const passt = h => !(h.p && !imMajaPaket(h.s)) && !(h.z && !h.z.includes(ziel));
+        for(let n = 0; n < MAJA_HINWEISE.length && !passt(MAJA_HINWEISE[i]); n++) i = (i + 1) % MAJA_HINWEISE.length;
         schreib('robo_maja_hinw_nr', String(i));
         const h = MAJA_HINWEISE[i];
         tu(() => window.astroPose && astroPose('zeigt'));
-        auftritt('<b>Tipp:</b> ' + esc(h.b), h.k === 'f' ? [['Zum Forum', 'majaforumauf'], ['Noch ein Tipp', 'tipp']] : h.k === 'w' ? [['Zur Webseite', 'majawebauf'], ['Noch ein Tipp', 'tipp']] : h.e ? [['Einstellungen öffnen', 'majaeinst'], ['Noch ein Tipp', 'tipp']] : [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
+        auftritt('<b>Tipp:</b> ' + esc(h.b), h.k === 'fs' ? [['Formelsammlung mit Rechenwegen', 'majarechenwege'], ['Noch ein Tipp', 'tipp']] : h.k === 'f' ? [['Zum Forum', 'majaforumauf'], ['Noch ein Tipp', 'tipp']] : h.k === 'w' ? [['Zur Webseite', 'majawebauf'], ['Noch ein Tipp', 'tipp']] : h.e ? [['Einstellungen öffnen', 'majaeinst'], ['Noch ein Tipp', 'tipp']] : [['Noch ein Tipp', 'tipp'], ['Erklär mir was', 'abc'], ['Rundgang', 'tour']], '', 'tipp');
         if(mehrSprechen()) funkiSagt(h.s, true);
     }
     window.majaStartNachricht = majaStartNachricht; window.majaHinweisZeigen = majaHinweisZeigen;
@@ -59920,6 +60018,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else if(t === 'tour') tourSchritt(1);
         else if(t === 'majaforum'){ majaForumNachricht(); }
         else if(t === 'majaforumauf') majaForumOeffnen();
+        else if(t === 'majarechenwege'){ roboHeim(true); tu(() => { const u = 'https://amateurfunk-trainer.com/formelsammlung/'; if(typeof openExternalTab === 'function') openExternalTab(u); else window.open(u, '_blank', 'noopener'); }); }
         else if(t === 'majawebauf'){ roboHeim(true); tu(() => { if(typeof openExternalTab === 'function') openExternalTab('https://amateurfunk-trainer.com/'); else window.open('https://amateurfunk-trainer.com/', '_blank', 'noopener'); }); }
         else if(t === 'majaeinst'){ roboHeim(true); tu(() => einstellungenOeffnen()); }
         else if(t === 'runde'){ roboHeim(true); rundeStarten(); }
@@ -66895,6 +66994,8 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
                 const ro = q.options[richtigIdx] || {};
                 const loesSeg = { text: 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') + '.', selector: gross ? '#stolperBlatt .sg-opt.richtig' : '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
                                   maja: (ro.text && typeof majaAntwortMarke === 'function') ? majaAntwortMarke(q, ro) : null };
+                // Stand 401: vor Majas Aufnahme ihr "Antwort B" - die Aufnahme selbst nennt keinen Buchstaben
+                if(loesSeg.maja && typeof majaBuchstabeMarke === 'function') loesSeg.majaVor = majaBuchstabeMarke(richtigIdx);
                 const start = Date.now();
                 if(e.anzeige === 'aufdecken'){
                     unten.textContent = 'Überleg kurz … gleich kommt die Lösung';
