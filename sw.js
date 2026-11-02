@@ -94,7 +94,9 @@ self.addEventListener('fetch', ereignis => {
     if (adresse.pathname.startsWith('/api/')
      || adresse.pathname.startsWith('/socket.io/')
      || adresse.pathname.startsWith('/tts')
-     || adresse.pathname.startsWith('/hoerbuch')) return;
+     || adresse.pathname.startsWith('/hoerbuch')
+     // Majas Sprachpakete (Stand 402): legt der Trainer selbst in seinen Speicher (maja-sprache-v1) - hier nicht doppelt.
+     || adresse.pathname.startsWith('/sprache/')) return;
 
     ereignis.respondWith((async () => {
         try {

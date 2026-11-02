@@ -25087,7 +25087,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 401, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 402, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32729,7 +32729,10 @@ const BILD_PAUSE_MS = 2600;
 //  der Trainer die Antworten mischt, wird die Antwort am Text erkannt:
 //  das Verzeichnis traegt je Antwort einen kurzen Textschluessel.
 // ================================================================
-const MAJA_SPRACHE_QUELLEN = ['https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
+// Stand 402: Die Pakete liegen jetzt auch im Trainer selbst (Ordner sprache/ in trainer-cloud.zip) - Dietmar
+// muss dann nur noch die eine ZIP hochladen. Reihenfolge: erst derselbe Server (Web), dann der Trainer-Server
+// (fuer die App), zuletzt das alte Projekt maja-sprache. Genommen wird die erste Liste, die sich lesen laesst.
+const MAJA_SPRACHE_QUELLEN = ['sprache/', 'https://trainer.amateurfunk-trainer.com/sprache/', 'https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
 const MAJA_SPRACHE_CACHE = 'maja-sprache-v1';
 // Pruefungsziele wie in KLASSEN: n = Klasse N, e = Klasse E (N + Aufbau), ne = nur Aufbau N auf E, ea = Aufbau E auf A (Stand 395).
 // Stand 401: die Antworten Aufbau N auf E und E auf A sind da (Grok, 02.11.2026).
@@ -32937,15 +32940,31 @@ window.majaSegmentSpielen = majaSegmentSpielen;
 
 async function majaSpracheListe(neu){
     if(majaSprache.liste && !neu) return majaSprache.liste;
-    for(const q of MAJA_SPRACHE_QUELLEN){
-        try{
-            const r = await fetch(q + 'pakete.json', { cache: 'no-cache' });
-            if(!r.ok) continue;
-            const j = await r.json();
-            if(j && Array.isArray(j.pakete)){ majaSprache.liste = j; majaSprache.quelle = q; return j; }
-        }catch(e){}
-    }
-    return null;
+    // Stand 402: Alle Quellen fragen und die Listen zusammenlegen - jedes Paket kommt von der ersten Quelle,
+    // die es hat. Im Trainer selbst (sprache/) liegen nur die neuen Antwort-Pakete E und A, der Rest im alten
+    // Projekt maja-sprache. Jede Quelle hat 8 s Zeit.
+    const holen = q => new Promise(fertig => {
+        const uhr = setTimeout(() => fertig(null), 8000);
+        fetch(q + 'pakete.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
+            .then(j => fertig(j && Array.isArray(j.pakete) ? j : null), () => fertig(null)).finally(() => clearTimeout(uhr));
+    });
+    const listen = await Promise.all(MAJA_SPRACHE_QUELLEN.map(holen));
+    const pakete = [], schon = new Set();
+    let stand = '', erste = null;
+    listen.forEach((j, i) => {
+        if(!j) return;
+        if(erste === null) erste = i;
+        for(const p of j.pakete){
+            if(!p || schon.has(p.id)) continue;
+            schon.add(p.id);
+            pakete.push(Object.assign({}, p, { _quelle: MAJA_SPRACHE_QUELLEN[i], _stand: j.stand || '' }));
+        }
+        if(!stand) stand = j.stand || '';
+    });
+    if(erste === null) return null;
+    majaSprache.liste = { stand, pakete };
+    majaSprache.quelle = MAJA_SPRACHE_QUELLEN[erste];
+    return majaSprache.liste;
 }
 
 async function majaSpracheLaden(pid){
@@ -32953,11 +32972,13 @@ async function majaSpracheLaden(pid){
     majaSprache.laeuft[pid] = true; majaSprache.fehler[pid] = ''; majaSprache.fortschritt[pid] = 0;
     majaSpracheKarteZeichnen();
     try{
-        const L = await majaSpracheListe();
+        let L = await majaSpracheListe();
+        // Stand 402: Fehlt das Paket in der gemerkten Liste, die Liste einmal frisch holen (vorher half nur F5).
+        if(L && !L.pakete.some(x => x.id === pid)) L = await majaSpracheListe(true);
         if(!L) throw new Error('Die Sprachpakete sind gerade nicht erreichbar. Besteht eine Internetverbindung?');
         const p = L.pakete.find(x => x.id === pid);
         if(!p) throw new Error('Dieses Paket gibt es nicht.');
-        const quelle = majaSprache.quelle;
+        const quelle = p._quelle || majaSprache.quelle;
         try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
         const c = await caches.open(MAJA_SPRACHE_CACHE);
         let fertigBytes = 0;
@@ -32993,7 +33014,7 @@ async function majaSpracheLaden(pid){
         const ij = await ir.json();
         await c.put(quelle + p.index, new Response(JSON.stringify(ij), { headers: { 'Content-Type': 'application/json' } }));
         const inst = majaSpracheInstalliert();
-        inst[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, anzahl: p.anzahl, bytes: p.bytes, stand: L.stand || '' };
+        inst[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, anzahl: p.anzahl, bytes: p.bytes, stand: p._stand || L.stand || '' };
         majaSpracheMerken(inst);
         majaSprache.idx[pid] = ij;
     }catch(e){
