@@ -3108,6 +3108,16 @@
         html.android-app .app-bild-lupe:active { background: #eef2f9; }
         html.android-app body.dark .app-bild-lupe { background: rgba(16,32,52,0.92); color: #dbe6f3; border-color: rgba(255,255,255,0.22); }
         html.android-app body.eckig.app-rund .app-bild-lupe , html:not(.android-app) body.eckig.app-rund .app-bild-lupe{ border-radius: 50% !important; }
+        /* Stand 404 - Dietmar (PC, AF601): "Die Lupe zum vergroessern fehlt." Die Lupe wird auch am PC (App-Ansicht)
+           an jede Bildantwort gehaengt, war dort aber ohne Gestaltung - ein winziger weisser Knopf unter dem Bild.
+           Jetzt wie am Handy: runder Knopf oben rechts in der Kachel, im Dunkeln dunkel. */
+        html:not(.android-app) #questionContainer .option-grid { position: relative; }
+        html:not(.android-app) .app-bild-lupe { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(15,39,69,0.18);
+            background: rgba(255,255,255,0.94); color: var(--panel-navy, #0f2745); font-size: 16px; display: inline-flex; align-items: center; justify-content: center;
+            cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 3; padding: 0; margin: 0; transition: transform 0.12s ease, background 0.12s ease; }
+        html:not(.android-app) .app-bild-lupe:hover { transform: scale(1.08); background: #ffffff; }
+        html:not(.android-app) body.dark .app-bild-lupe { background: rgba(16,32,52,0.94); color: #dbe6f3; border-color: rgba(255,255,255,0.28); }
+        html:not(.android-app) body.dark .app-bild-lupe:hover { background: rgba(30,52,80,0.98); }
 
         /* ================================================================
            FOLIEN IN DER APP                                    (01.10.2026)
@@ -3403,6 +3413,15 @@
         html.android-app body.dark .app-wort-probe { border-color: var(--nacht-kante2, #2b5471); color: var(--nacht-hell, #f0f7fc); }
         html.android-app .app-wort-probe b { font-weight: inherit; color: var(--wort-tag, #d47600) !important; }
         html.android-app body.dark .app-wort-probe b { color: var(--wort-nacht, #fee066) !important; }
+        /* Stand 404 - Dietmar (PC, App-Ansicht): "Wo ist hier die Farbe?" Die Farbfelder und das Beispielwort waren nur
+           fuer die Android-App gestaltet; am PC zeigten die Knoepfe den dunklen Knopfgrund und "dieses" stand weiss da. */
+        html body #einstWortFarben button[data-f] { background: var(--wt) !important; background-image: none !important; }
+        html body.dark #einstWortFarben button[data-f] { background: var(--wn) !important; background-image: none !important; }
+        html body.dark #einstWortFarben button[data-f][aria-pressed="false"] { border-color: var(--nacht-kante2, #2b5471) !important; }
+        html body .app-wort-probe { margin-top: 0.7rem; padding: 0.5rem 0.65rem; border: 1px dashed #c9d4e2; border-radius: 8px; font-size: 0.9rem; line-height: 1.5; color: var(--panel-navy, #0f2745); }
+        html body.dark .app-wort-probe { border-color: var(--nacht-kante2, #2b5471); color: var(--nacht-hell, #f0f7fc); }
+        html body .app-wort-probe b { font-weight: inherit; color: var(--wort-tag, #d47600) !important; }
+        html body.dark .app-wort-probe b { color: var(--wort-nacht, #fee066) !important; }
 
         /* BLAETTERN IM DUNKELN: KRAEFTIGERE FARBEN (02.10.2026)
            Dietmar (Bild vom Blaettern-Fenster, dunkel): "Die Farbe hier
@@ -25087,7 +25106,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 402, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 404, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -33150,6 +33169,11 @@ function antwortSegment(q, i, sprich){
     // Majas Aufnahme der Antwort (Stand 394) - davor seit Stand 401 Majas "Antwort A" (eigene Aufnahme),
     // danach eine kurze Pause.
     const maja = hatText ? majaAntwortMarke(q, opt) : null;
+    // Stand 403: Bild-Antworten (ohne Text) - Dietmar: "bei Bilder spricht noch immer Thorsten von Piper".
+    // Liest Maja vor, sagt sie dort ihr "Antwort A" selbst.
+    if(!hatText && majaLiestVor()){
+        return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja: majaBuchstabeMarke(i), pause: istBild ? BILD_PAUSE_MS : 0 };
+    }
     return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja, majaVor: maja ? majaBuchstabeMarke(i) : null,
              pause: (istBild && !hatText) ? BILD_PAUSE_MS : (maja ? 450 : 0) };
 }
@@ -67017,6 +67041,8 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
                                   maja: (ro.text && typeof majaAntwortMarke === 'function') ? majaAntwortMarke(q, ro) : null };
                 // Stand 401: vor Majas Aufnahme ihr "Antwort B" - die Aufnahme selbst nennt keinen Buchstaben
                 if(loesSeg.maja && typeof majaBuchstabeMarke === 'function') loesSeg.majaVor = majaBuchstabeMarke(richtigIdx);
+                // Stand 403: Bild-Antwort - Maja sagt "Antwort B" statt Thorsten
+                else if(!ro.text && typeof majaLiestVor === 'function' && majaLiestVor()) loesSeg.maja = majaBuchstabeMarke(richtigIdx);
                 const start = Date.now();
                 if(e.anzeige === 'aufdecken'){
                     unten.textContent = 'Überleg kurz … gleich kommt die Lösung';
