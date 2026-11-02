@@ -28,7 +28,14 @@
             var behalten = {};
             // ... ausser der neue Stand ist ein Zuruecksetzen (neuerer Neustart-Stempel)
             var nNeu = +((s && s.schluessel && s.schluessel.amateurfunk_neustart) || 0), nAlt = +(localStorage.getItem('amateurfunk_neustart_' + slot) || 0);
-            if(!(nNeu > nAlt)) ['amateurfunk_xp_', 'amateurfunk_tagesfragen_', 'amateurfunk_uebungszeit_', 'amateurfunk_legende_'].forEach(function(b){
+            // Stand 397: Kommt ein Zuruecksetzen an (von hier oder aus dem Konto), muss auch die Datei des eigenen
+            // Servers (App, PC-Programm) fuer diesen Platz leer werden - sonst holt sie den alten Stand zurueck,
+            // der dann wieder ins Konto wandert. Erledigt loadPersistentFromServer() beim Start.
+            // Gegenpruefung 397: nicht bei jedem Einspielen eines alten Stempels (z. B. neu anmelden nach dem Abmelden - dann
+            // bleibt die Datei als Rueckfall), sondern nur hier zurueckgesetzt, schon frueher einen Stempel gehabt oder
+            // ein frisches Zuruecksetzen (letzte 14 Tage) von einem anderen Geraet.
+            if((s && s.zurueckgesetzt) || (nNeu > nAlt && (nAlt > 0 || Date.now() - nNeu < 14 * 864e5))){ try{ localStorage.setItem('afuDateiLeeren:' + slot, String(Date.now())); }catch(e){} }
+            if(!(nNeu > nAlt) && !(s && s.zurueckgesetzt)) ['amateurfunk_xp_', 'amateurfunk_tagesfragen_', 'amateurfunk_uebungszeit_', 'amateurfunk_legende_'].forEach(function(b){
                 var v = localStorage.getItem(b + slot); if(v !== null) behalten[b] = v; });
             for(i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if(k && gehoertDazu(k, slot)) weg.push(k); }
             weg.forEach(function(k){ localStorage.removeItem(k); });
@@ -572,6 +579,8 @@
         }
         #appNavi .an-pille { width: 56px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
         #appNavi button.an { color: var(--ink); }
+        /* Stand 397: kein heller Rahmen um den angetippten Knopf - die Markierung ist die blaue Pille */
+        #appNavi button:focus:not(:focus-visible) { outline: none !important; box-shadow: none !important; }
         #appNavi button.an .an-pille { background: rgba(10,156,176,0.18); background: color-mix(in srgb, var(--tuerkis) 22%, transparent); color: var(--ink); }
         #appNavi .an-zahl {
             position: absolute; top: -2px; left: calc(50% + 8px); min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box;
@@ -590,6 +599,11 @@
         @keyframes amHoch { from { transform: translateY(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
         #appMehr .am-griff { width: 34px; height: 4px; background: var(--line); margin: 6px auto 12px; }
         #appMehr h3 { font-size: 1rem; font-weight: 700; margin: 0 22px 6px; }
+        /* Stand 397: Schliessen-X oben rechts wie bei "Neue Runde" */
+        #appMehr .am-kz { display: flex; align-items: center; justify-content: space-between; padding-right: 14px; }
+        #appMehr .am-kz h3 { margin-bottom: 6px; }
+        #appMehr .am-zu { width: 40px; height: 40px; border: 0; border-radius: 50% !important; background: var(--s-fl2, rgba(20,33,61,.08)); color: var(--s-text2, inherit); display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer; flex-shrink: 0; }
+        html.pc-app #appMehr .am-blatt .am-kz { grid-column: 1 / -1; }
         #appMehr .am-zeile {
             display: flex; align-items: center; gap: 16px; width: 100%; padding: 12px 22px; border: none; background: transparent;
             color: var(--ink); font-family: inherit; text-align: left; cursor: pointer;
@@ -12265,6 +12279,13 @@ async function loadPersistentFromServer(){
         if(!res.ok) return false;
         const serverData = await res.json();
         console.log('📂 Server-Datei geladen:', serverData);
+        // Stand 397: Ein Platz, der NACH dem letzten Speichern der Datei zurueckgesetzt wurde, bekommt aus ihr
+        // nichts zurueck (sonst kaeme der alte Lernstand wieder, falls das Leeren der Datei nicht geklappt hat).
+        const dateiZeit = Date.parse(serverData && serverData.updatedAt) || 0;
+        const frischZurueck = u => { try{ return (+localStorage.getItem('amateurfunk_neustart_' + u) || 0) > dateiZeit; }catch(e){ return false; } };
+        const leeren = u => { try{ return !!localStorage.getItem('afuDateiLeeren:' + u); }catch(e){ return false; } };
+        const SLOTS = USER_SLOTS.filter(u => !frischZurueck(u) && !leeren(u));
+        USER_SLOTS.filter(leeren).forEach(u => { try{ persistentPlatzLeeren(u).then(ok => { if(ok) try{ localStorage.removeItem('afuDateiLeeren:' + u); }catch(e){} }); }catch(e){} });
 
         let restored = false;
         // Verlauf wiederherstellen wenn local leer oder Server mehr hat
@@ -12275,7 +12296,7 @@ async function loadPersistentFromServer(){
             // Wenn lokal leer aber Server hat Daten -> wiederherstellen
             // Oder wenn Server für einen Benutzer mehr Einträge hat
             let needRestore = false;
-            USER_SLOTS.forEach(u=>{
+            SLOTS.forEach(u=>{
                 const l = (localHist[u]||[]).length;
                 const s = (serverHist[u]||[]).length;
                 if(s > l) needRestore = true;
@@ -12284,6 +12305,7 @@ async function loadPersistentFromServer(){
             if(!localHistRaw || needRestore){
                 // Merge: nimm Server wenn lokal leer, sonst behalte längeren Verlauf
                 if(!localHistRaw){
+                    USER_SLOTS.forEach(u => { if(!SLOTS.includes(u)) serverHist[u] = []; });   // Stand 397
                     localStorage.setItem('examHistory', JSON.stringify(serverHist));
                     console.log('✅ Verlauf aus Datei wiederhergestellt');
                     restored = true;
@@ -12291,7 +12313,7 @@ async function loadPersistentFromServer(){
                     // Wenn Server mehr hat, merge (für jeden Benutzer den längeren nehmen)
                     let merged = {...localHist};
                     let changed = false;
-                    USER_SLOTS.forEach(u=>{
+                    SLOTS.forEach(u=>{
                         if((serverHist[u]||[]).length > (merged[u]||[]).length){
                             merged[u]=serverHist[u];
                             changed=true;
@@ -12311,7 +12333,7 @@ async function loadPersistentFromServer(){
         try{
             const serverCb = serverData.cb;
             if(serverCb && typeof serverCb === 'object'){
-                USER_SLOTS.forEach(u=>{
+                SLOTS.forEach(u=>{
                     const d = serverCb[u];
                     if(!d || typeof d !== 'object') return;
                     if(d.modus === undefined && !Array.isArray(d.aus)) return;
@@ -12337,7 +12359,7 @@ async function loadPersistentFromServer(){
                     localStorage.setItem(QSL_RUFZEICHEN, q.rufzeichen);
                     restored = true;
                 }
-                USER_SLOTS.forEach(u=>{
+                SLOTS.forEach(u=>{
                     const d = q[u];
                     if(!d || typeof d !== 'object' || !Object.keys(d).length) return;
                     const key = 'afu_qsl_' + u;
@@ -12370,7 +12392,7 @@ async function loadPersistentFromServer(){
         try{
             const sz = serverData.uebungszeit;
             if(sz && typeof sz === 'object'){
-                USER_SLOTS.forEach(u=>{
+                SLOTS.forEach(u=>{
                     const ausDatei = sz[u];
                     if(!ausDatei || typeof ausDatei !== 'object') return;
                     const key = ZEIT_PREFIX + u;
@@ -12395,7 +12417,7 @@ async function loadPersistentFromServer(){
         try{
             const sd = serverData.diagnose;
             if(sd && typeof sd === 'object'){
-                USER_SLOTS.forEach(u=>{
+                SLOTS.forEach(u=>{
                     const ausDatei = sd[u];
                     if(!ausDatei || typeof ausDatei !== 'object' || !Object.keys(ausDatei).length) return;
                     const key = DIAG_PREFIX + u;
@@ -12416,7 +12438,7 @@ async function loadPersistentFromServer(){
         }catch(e){ console.warn('Diagnose Restore Fehler', e); }
 
         // Lernfortschritt (mastery) wiederherstellen
-        USER_SLOTS.forEach(u=>{
+        SLOTS.forEach(u=>{
             try{
                 const key = 'amateurfunk_mastery_' + u;
                 const localRaw = localStorage.getItem(key);
@@ -12431,7 +12453,7 @@ async function loadPersistentFromServer(){
         });
 
         // Lernbedarf (difficult) wiederherstellen
-        USER_SLOTS.forEach(u=>{
+        SLOTS.forEach(u=>{
             try{
                 const key = 'amateurfunk_difficult_' + u;
                 const localRaw = localStorage.getItem(key);
@@ -12446,7 +12468,7 @@ async function loadPersistentFromServer(){
         });
 
         // Fehlerlisten
-        USER_SLOTS.forEach(u=>{
+        SLOTS.forEach(u=>{
             try{
                 const key = 'amateurfunk_errors_' + u;
                 const localRaw = localStorage.getItem(key);
@@ -16944,6 +16966,26 @@ function benutzerSchluessel(slot){
     ];
 }
 
+// Stand 397 (01.11.2026), Dietmar mit Bildschirmvideo: Lernstand zurueckgesetzt - danach war alles wieder da
+// (Fortschritt, Verlauf, 368 XP, Stufe). Ursache: In der App und im PC-Programm liegt der Lernstand zusaetzlich in
+// der Datei des eigenen Servers (/api/userdata). Die blieb voll; beim Neustart holte loadPersistentFromServer()
+// Fortschritt, Verlauf, Uebungszeit und Diagnose zurueck, und aus der Diagnose rechneten sich die Punkte neu.
+// Uebungszeit und Diagnose fuehrt der Server beim Gesamt-Speichern zusammen (werden nie kleiner) - deshalb hier je
+// Feld ein Einzel-Update, das den Platz in der Datei ERSETZT.
+function persistentPlatzLeeren(slot){
+    if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && !PERSISTENT_FILE_ENABLED) return Promise.resolve(false);
+    // Gegenpruefung 397: Die Datei kennt nur die Plaetze 1 bis 3 - fuer die anderen gibt es nichts zu leeren
+    if(!['user1', 'user2', 'user3'].includes(slot)) return Promise.resolve(true);
+    const felder = [['examHistory', []], ['mastery', {}], ['difficult', {}], ['errors', []], ['diagnose', {}], ['uebungszeit', {}], ['qsl', {}], ['cb', {}]];
+    let kette = Promise.resolve(true);
+    felder.forEach(([typ, leer]) => {
+        kette = kette.then(ok => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: typ, user: slot, data: leer }) }).then(r => ok && (r.ok || r.status === 400 || r.status === 404)).catch(() => false));   // 400/404: Datei kennt das nicht (oder kein eigener Server)
+    });
+    return kette;
+}
+window.persistentPlatzLeeren = persistentPlatzLeeren;
+
 function benutzerZuruecksetzen(slot, ausEinstellungen){
     const nr   = USER_SLOTS.indexOf(slot) + 1;
     const name = getUserName(slot);
@@ -16973,9 +17015,14 @@ function benutzerZuruecksetzen(slot, ausEinstellungen){
                     if(k && window.lsGehoertDazu(k, slot) && !weg.has(k)) s.schluessel[k.slice(0, -(slot.length + 1))] = localStorage.getItem(k);
                 }
                 try{
+                    // Stand 397: "zurueckgesetzt" sagt dem Einspielen nach dem Neuladen, dass Punkte, Serie und
+                    // Uebungszeit NICHT vom Geraet behalten werden (sonst gleicher Stempel -> behalten).
+                    s.zurueckgesetzt = true;
                     sessionStorage.setItem('ls_einspielen', JSON.stringify({ slot: slot, s: s }));
                     sessionStorage.setItem('ls_meldung', 'Lernstand zurückgesetzt – du beginnst von vorn.');
-                    location.reload();
+                    // Stand 397: erst die Datei des eigenen Servers leeren, dann neu laden (hoechstens 4 Sekunden warten)
+                    let neu = false; const laden = () => { if(neu) return; neu = true; location.reload(); };
+                    persistentPlatzLeeren(slot).then(laden, laden); setTimeout(laden, 4000);
                     return;
                 }catch(e){}
             }
@@ -17010,7 +17057,7 @@ function benutzerZuruecksetzen(slot, ausEinstellungen){
             }
             try{ benutzerListeAufbauen(); }catch(e){}
             try{ einstBenutzerFuellen(); }catch(e){}
-            try{ if(typeof savePersistentToServer === 'function') savePersistentToServer(); }catch(e){}
+            try{ persistentPlatzLeeren(slot).then(() => { try{ if(typeof savePersistentToServer === 'function') savePersistentToServer(); }catch(e){} }); }catch(e){}   // Stand 397
             if(typeof showAppAlert === 'function') showAppAlert(wer + ' ist zurückgesetzt.');
         }catch(e){
             console.error('[Platz zuruecksetzen]', e);
@@ -21232,6 +21279,37 @@ function qslKarteSvg(lektion, d, kennung, nurBild){
 // Damit stehen die vierzehn Lektionen jetzt immer da - das ist der Sinn
 // der Sache: Dietmar: "Das Ziel ist, die Benutzer dazu zu bringen, alle
 // Diplome zu erhalten."
+// ================================================================
+//  LERNPFAD JE PRUEFUNGSZIEL                           (Stand 399)
+//  Dietmar, 02.11.2026: "pruef bitte nach ob in allen Klassen separat eine eigene Lernklasse ist. Es gibt eine fuer N
+//  ... fuer E und A muesste es auch eine geben." Bisher kamen die Stationen nur aus dem Videolehrgang der Klasse N.
+//  Fuer N -> E, E -> A und den Direkteinstieg E kommen sie jetzt aus den Kapiteln der 50ohm-Lehrgaenge (KURSE):
+//  N -> E 16 Stationen / 463 Fragen, E -> A 14 / 716, E 23 / 1034. Die Namen tragen das Ziel in Klammern, damit
+//  sich die QSL-Karten der Klassen nie in die Quere kommen (Album und Lernstand fuehren sie nach Namen).
+// ================================================================
+const KURS_ZIELNAME = { ne: 'N → E', ea: 'E → A', e: 'Klasse E' };
+const kursLekCache = {};
+function kursLektionenRoh(id){
+    if(kursLekCache[id]) return kursLekCache[id];
+    let k = null;
+    try{ k = (typeof KURSE === 'object' && KURSE && KURSE[id]) ? KURSE[id] : null; }catch(e){ k = null; }
+    if(!k || !Array.isArray(k.lek) || !KURS_ZIELNAME[id]) return [];
+    const raus = [];
+    k.lek.forEach((l, i) => {
+        const ids = [];
+        (l.a || []).forEach(a => { if(a && a[3]) String(a[3]).split(/\s+/).forEach(x => { if(x && ids.indexOf(x) < 0) ids.push(x); }); });
+        if(ids.length) raus.push({ name: 'Lektion ' + String(i + 1).padStart(2, '0') + ' – ' + l.t + ' (' + KURS_ZIELNAME[id] + ')', ids, kurs: id });
+    });
+    kursLekCache[id] = raus;
+    return raus;
+}
+function kursZiel(){ try{ const id = klasseAktuell().id; return KURS_ZIELNAME[id] ? id : null; }catch(e){ return null; } }
+function kursLektionFinden(name){
+    for(const id of Object.keys(KURS_ZIELNAME)){ const l = kursLektionenRoh(id).find(x => x.name === name); if(l) return l; }
+    return null;
+}
+window.kursZiel = kursZiel; window.kursLektionenRoh = kursLektionenRoh;
+
 function qslLektionen(){
     const raus = [];
     try{
@@ -21259,6 +21337,23 @@ function qslLektionen(){
                 noetig += Math.max(0, 3 - reihe);
             });
             raus.push({ name, gesamt: ids.length, gelernt, noetig, motiv: i % QSL_MOTIVE.length, ids });
+        });
+    }catch(e){}
+    // Stand 399: die Stationen des eingestellten Ziels (N -> E, E -> A, E) dazu - die 14 Lektionen der Klasse N
+    // bleiben im Album, wie Dietmar es wollte ("Es muessten 14 sein!").
+    try{
+        const ziel = kursZiel();
+        if(ziel) kursLektionenRoh(ziel).forEach((l, i) => {
+            let gelernt = 0, noetig = 0;
+            l.ids.forEach(id => {
+                let fertig = false;
+                try{ fertig = isMastered(id); }catch(e){}
+                if(fertig){ gelernt++; return; }
+                let reihe = 0;
+                try{ reihe = (masteryData[id] && masteryData[id].streak) || 0; }catch(e){}
+                noetig += Math.max(0, 3 - reihe);
+            });
+            raus.push({ name: l.name, gesamt: l.ids.length, gelernt, noetig, motiv: (i + 14) % QSL_MOTIVE.length, ids: l.ids.slice(), kurs: ziel });
         });
     }catch(e){}
     return raus;
@@ -21290,7 +21385,10 @@ function qslPruefen(stillNachtragen){
     const neu = [];
     try{
         const stand = qslStand();
-        const erstesMal = !localStorage.getItem(qslSchluessel() + '_start');
+        // Stand 399 (Gegenpruefung): eigener Start-Merker je Pruefungsziel - sonst feierte das erste Speichern nach dem
+        // Update alle schon fertigen Stationen von N -> E, E -> A oder E auf einmal
+        const startK = qslSchluessel() + '_start' + (function(){ try{ const z = kursZiel(); return z ? '_' + z : ''; }catch(e){ return ''; } })();
+        const erstesMal = !localStorage.getItem(startK);
         qslLektionen().forEach(l => {
             if(l.gelernt < l.gesamt) return;
             if(stand[l.name]) return;
@@ -21303,7 +21401,7 @@ function qslPruefen(stillNachtragen){
             if(!stillNachtragen && !erstesMal) neu.push(l.name);
         });
         qslStandSchreiben(stand);
-        try{ localStorage.setItem(qslSchluessel() + '_start', '1'); }catch(e){}
+        try{ localStorage.setItem(startK, '1'); localStorage.setItem(qslSchluessel() + '_start', '1'); }catch(e){}
     }catch(e){}
     qslPruefungLaeuft = false;
     if(neu.length) qslJubel(neu[0], neu.length - 1);
@@ -21452,7 +21550,9 @@ function qslAlbumFuellen(modal){
     // umschalten - das sagt der Kopftext dann auch.
     let fremdesZiel = false;
     try{
-        const probe = (lektionen[0] && lektionen[0].ids) ? lektionen[0].ids[0] : null;
+        // Stand 399: Probe aus den Stationen des eingestellten Ziels (bei N -> E / E -> A sind die N-Lektionen nie geladen)
+        const zl = (function(){ try{ const z = kursZiel(); return z ? lektionen.find(l => l.kurs === z) : null; }catch(e){ return null; } })() || lektionen[0];
+        const probe = (zl && zl.ids) ? zl.ids[0] : null;
         fremdesZiel = !!(probe && !questionBank.some(q => q.id === probe));
     }catch(e){}
 
@@ -23877,6 +23977,8 @@ function lektionenAusVideoMap() {
 }
 
 function lektionFragen(name) {
+    // Stand 399: Station eines 50ohm-Lehrgangs (N -> E, E -> A, E)
+    try{ const kl = kursLektionFinden(name); if(kl){ const set = new Set(kl.ids); return questionBank.filter(q => set.has(q.id)); } }catch(e){}
     const map = (typeof videoMap === 'object' && Object.keys(videoMap).length)
         ? videoMap : (window.EMBEDDED_VIDEO_MAP || {});
     return questionBank.filter(q => map[q.id] && map[q.id].lesson === name);
@@ -24935,7 +25037,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 396, datum: '01.11.2026' };
+const TRAINER_STAND = { nr: 399, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -53607,7 +53709,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             : '<div><b>Stil am PC</b>' + inhalt + '</div>';
     };
     // STIL DER FRAGE - vier zur Wahl (16.10.2026)
-    const FS = [['bunt','Bunt','Farbige Tafel, bunte Antworten'],['petrol','Petrol','Strich links, Petrol-Buchstaben'],
+    const FS = [['bunt','Farbig','Farbige Tafel, farbige Antworten'],['petrol','Petrol','Strich links, Petrol-Buchstaben'],
                 ['navy','Navy','Dunkle Tafel, weiße Antworten'],['schlicht','Schlicht','Klassisch, ohne Farben']];
     function fsJetzt(){ const H = document.documentElement; const t = FS.find(f => H.classList.contains('fs-' + f[0])); return t ? t[0] : 'bunt'; }
     function fsMini(id){
@@ -53656,7 +53758,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + FA.map(f => '<button type="button" onclick="antwortfarbeSetzen(\'' + f[0] + '\')" aria-pressed="' + (f[0] === faJetzt) + '" title="' + f[1] + '"'
             + ' style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:20px;background:#fff;cursor:pointer;font:inherit;color:inherit;border:2px solid ' + (f[0] === faJetzt ? '#0a7f86' : '#d9e2ec') + '">'
             + '<span style="width:18px;height:18px;border-radius:50%;background:' + f[2] + '"></span>' + f[1] + (f[0] === faJetzt ? ' <i class="fas fa-check" style="color:#0a7f86"></i>' : '') + '</button>').join('') + '</div>'
-            + '<span style="display:block;margin-top:6px;font-size:.78rem;color:var(--muted,#5b6b80)">Bunt: jede Antwort in einer anderen Farbe. Sonst alle vier in derselben – ruhiger fürs Auge.</span></div>';
+            + '<span style="display:block;margin-top:6px;font-size:.78rem;color:var(--muted,#5b6b80)">Mehrfarbig: jede Antwort in einer anderen Farbe. Sonst alle vier in derselben – ruhiger fürs Auge.</span></div>';
         const inhalt = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">' + karten + '</div>' + farben;
         return typeof window.einstKasten === 'function'
             ? einstKasten('Stil der Frage', 'So sehen Frage und Antworten beim Üben aus – am PC und am Handy. Gilt sofort.', inhalt)
@@ -53784,7 +53886,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 '<i class="psw-leiste"></i><i class="psw-zeile"></i><i class="psw-zeile"></i><i class="psw-zeile kurz"></i>'))
             + karte('sachlich', schmal ? 'Sachlich' : 'Wie die App: Sachlich', 'Klar und ruhig, große Schrift – ohne Begleiter.',
                 '<i class="psw-kopf"></i><i class="psw-block"></i><i class="psw-zeile"></i><i class="psw-zeile"></i>')
-            + karte('verspielt', schmal ? 'Verspielt' : 'Wie die App: Verspielt', 'Bunt, mit Punkten, Serie und Maja oder Funki.',
+            + karte('verspielt', schmal ? 'Verspielt' : 'Wie die App: Verspielt', 'Farbig, mit Punkten, Serie und Maja oder Funki.',
                 '<i class="psw-held"><em class="fas fa-user-astronaut"></em></i><i class="psw-kacheln"><u></u><u></u><u></u></i>')
             + '</div><button type="button" class="psw-los"><i class="fas fa-check"></i> So lernen</button>'
             + '<button type="button" class="psw-spaeter">Erst mal so lassen</button></div>';
@@ -53874,7 +53976,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ahPruefung: 'Drei Bögen mit Uhr – wie bei der Bundesnetzagentur.',
         ahBlaettern: 'Alle Fragen in Ruhe durchblättern.',
         ahKarten: 'Wischen: Ist die Antwort richtig oder falsch?',
-        ahZweiMin: 'Fünf schnelle Fragen für zwischendurch.'
+        ahZweiMin: 'Fünf schnelle Fragen für zwischendurch.',
+        ahStolper: 'Deine wackligen Fragen mit Lösung – nur ansehen und anhören.'
     };
     function kachelnErgaenzen(){
         const r = $('ahKacheln'); if(!r || r.querySelector('.pc-kachel')) return;
@@ -55533,7 +55636,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     navi.addEventListener('click', e => {
         const b = e.target.closest('button[data-bereich]');
-        if(b) bereich(b.dataset.bereich);
+        if(b){ try{ b.blur(); }catch(err){} bereich(b.dataset.bereich); }   // Stand 397: kein Fokus-Rahmen, der nach dem Schliessen stehen bleibt
     });
     // Beim Scrollen nach unten macht die Leiste Platz, beim Scrollen nach
     // oben kommt sie sofort wieder (30.09.2026). Dietmar: "Wenn ich nach
@@ -55558,9 +55661,29 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(was === 'mehr'){ mehrUmschalten(); return; }
         mehrZu();
         if(was === 'lernen'){ try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, 0); } return; }
-        if(was === 'pruefung'){ klick('examSimulatorBtn'); return; }
-        if(was === 'gruppe'){ if(!klick('duoBtn')) tu(() => window.duoInit()); return; }
-        if(was === 'fortschritt'){ klick('statistikBtn'); return; }
+        if(was === 'pruefung'){ naviMerken(was); klick('examSimulatorBtn'); return; }
+        if(was === 'gruppe'){ naviMerken(was); if(!klick('duoBtn')) tu(() => window.duoInit()); return; }
+        if(was === 'fortschritt'){ naviMerken(was); klick('statistikBtn'); return; }
+    }
+    // Stand 397 (Dietmar, Video): "Lernen" und "Mehr" leuchten blau, Pruefung, Gruppe und Fortschritt nicht -
+    // "Entweder ich habe ueberall dieses Blau oder ich habe es nicht." Jetzt leuchtet der Bereich, der gerade offen
+    // ist; ist man wieder auf der Startseite (Mitte des Bildschirms gehoert zu #appHeute), wieder "Lernen".
+    let naviWache = 0;
+    function naviMerken(was){
+        naviAn(was);
+        clearInterval(naviWache);
+        let n = 0;
+        naviWache = setInterval(() => {
+            n++;
+            let daheim = false;
+            try{ const e = D.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2); daheim = !!(e && e.closest && e.closest('#appHeute')); }catch(err){}
+            // Gegenpruefung 397: auch zurueck, wenn kein Fenster mehr offen ist (z. B. gescrollt, Mitte nicht auf der Startseite)
+            if(!daheim){ try{ daheim = ![...D.querySelectorAll('[id$="Modal"]')].some(m => m.offsetWidth > 0 && getComputedStyle(m).display !== 'none' && getComputedStyle(m).visibility !== 'hidden'); }catch(err){} }
+            if((daheim && n > 2) || n > 7200){
+                clearInterval(naviWache);
+                if(!mehr.classList.contains('offen')) naviAn('lernen');
+            }
+        }, 500);
     }
 
     // ---------------- Blatt "Mehr" ----------------
@@ -55593,7 +55716,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const mehr = D.createElement('div');
     mehr.id = 'appMehr';
     mehr.innerHTML = '<div class="am-schleier"></div><div class="am-blatt" role="dialog" aria-label="Mehr">'
-        + '<div class="am-griff"></div><h3>Mehr</h3>'
+        + '<div class="am-griff"></div><div class="am-kz"><h3>Mehr</h3><button type="button" class="am-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'   // Stand 397: X oben rechts (Dietmar: "ich tue mich da teilweise sehr schwer")
         + EINTRAEGE.map((e, i) => '<button type="button" class="am-zeile" data-nr="' + i + '"><i class="' + e[1] + '"></i>'
             + '<span><b>' + e[0] + '</b><small id="appMehrUnter_' + i + '">' + e[2] + '</small></span></button>').join('')
         + '</div>';
@@ -55610,6 +55733,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     });
     mehr.querySelector('.am-schleier').addEventListener('click', () => mehrZu());
     mehr.addEventListener('click', e => {
+        if(e.target.closest('.am-zu')){ mehrZu(); return; }
         const z = e.target.closest('.am-zeile');
         if(!z) return;
         const eintrag = EINTRAEGE[+z.dataset.nr];
@@ -56543,6 +56667,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-zeile" id="ahPruefung"><span class="sym"><i class="fas fa-stopwatch"></i></span><span class="t">Prüfungssimulation</span><span class="w"><span id="ahPruefungText">3 × 45 min</span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahBlaettern"><span class="sym"><i class="fas fa-book"></i></span><span class="t" id="ahBlaetternText">Fragenkatalog blättern</span><span class="w"><span id="ahBlaetternZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
       +   '<button type="button" class="ah-zeile" id="ahKarten" onclick="window.kartenSpielOeffnen && kartenSpielOeffnen()"><span class="sym"><i class="fas fa-layer-group"></i></span><span class="t">Match (richtig oder falsch?)</span><span class="w"><span id="ahKartenZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
+      +   '<button type="button" class="ah-zeile" id="ahStolper" onclick="window.stolperOeffnen && stolperOeffnen()"><span class="sym"><i class="fas fa-headphones"></i></span><span class="t">Stolpersteine (ansehen &amp; anhören)</span><span class="w"><span id="ahStolperZahl"></span> <i class="fas fa-chevron-right"></i></span></button>'
       + '</div>'
       + '<div class="ah-kacheln" id="ahKacheln">'
       +   '<button type="button" class="ah-kachel" data-ziel="ahFehler"><div class="kz"><span class="ah-ico rot"><i class="fas fa-rotate-left"></i></span><span class="anz" id="ahKFehler">0</span></div><div><b>Fehler üben</b><small>bis sie sitzen</small></div></button>'
@@ -56552,6 +56677,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
       +   '<button type="button" class="ah-kachel" data-ziel="ahBlaettern"><div class="kz"><span class="ah-ico blau"><i class="fas fa-book-open"></i></span><span class="anz klein" id="ahKBlaettern"></span></div><div><b>Blättern</b><small>ganzer Katalog</small></div></button>'
       +   '<button type="button" class="ah-kachel breit" data-ziel="ahZweiMin" id="ahKZweiMin"><div class="kz"><span class="ah-ico amber"><i class="fas fa-bolt"></i></span><span class="anz klein">5 Fragen</span></div><div><b>2-Minuten-Runde</b><small>schnell zwischendurch</small></div></button>'
       +   '<button type="button" class="ah-kachel" data-ziel="ahKarten" id="ahKKartenK"><div class="kz"><span class="ah-ico tuerkis"><i class="fas fa-heart-pulse"></i></span><span class="anz klein" id="ahKKarten"></span></div><div><b>Match</b><small>richtig oder falsch?</small></div></button>'
+      // Stand 399: Stolpersteine neben Match (Dietmar: "Das koennen wir neben Match einbauen.")
+      +   '<button type="button" class="ah-kachel" data-ziel="ahStolper" id="ahKStolperK"><div class="kz"><span class="ah-ico amber"><i class="fas fa-headphones"></i></span><span class="anz" id="ahKStolper"></span></div><div><b>Stolpersteine</b><small>nur ansehen &amp; anhören</small></div></button>'
       // Forum als eigene Kachel (20.10.2026, Dietmar: "wenn wir kein Forum
       // auffuehren, wird es auch selten oder nie genutzt. Wir muessen dafuer
       // auch intern Werbung machen."). Sie erscheint nur, wenn das Forum
@@ -61374,7 +61501,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // ================================================================
     let pfadAlle = false;
     function pfadKurz(name){
-        return String(name || '').replace(/^\s*Lektion\s*\d+\s*(?:[-–—:.]\s*)?/i, '').trim() || String(name || '');
+        return String(name || '').replace(/^\s*Lektion\s*\d+\s*(?:[-–—:.]\s*)?/i, '').replace(/\s*\((?:N → E|E → A|Klasse E)\)\s*$/, '').trim() || String(name || '');
     }
     function pfadNummer(name, i){
         const m = String(name || '').match(/Lektion\s*0*(\d+)/i);
@@ -61394,6 +61521,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         });
         let lek = [];
         tu(() => { lek = (window.qslLektionen ? qslLektionen() : []) || []; });
+        // Stand 399: nur die Stationen des eingestellten Pruefungsziels (Klasse N: der Videolehrgang)
+        tu(() => { const ziel = window.kursZiel ? kursZiel() : null; lek = lek.filter(l => ziel ? l.kurs === ziel : !l.kurs); });
         if(lek.length < 3){
             if(el.style.display !== 'none'){ el.style.display = 'none'; if(ue) ue.style.display = 'none'; }
             return;
@@ -61452,7 +61581,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }
 
         const neu = '<div class="apf-kopf"><b>Dein Lernpfad</b>'
-            + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft</small></div>'
+            + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft' + (function(){ try{ const z = window.kursZiel ? kursZiel() : null; return z ? ' · ' + ({ ne: 'Aufbau N → E', ea: 'Aufbau E → A', e: 'Klasse E' })[z] + ' (50ohm.de)' : ''; }catch(e){ return ''; } })() + '</small></div>'
             + '<div class="apf-strip" aria-hidden="true">' + streifen + '</div>'
             + '<ol class="apf-weg">' + zeilen + '</ol>'
             + '<div class="apf-satz">' + satz + '</div>'
@@ -63198,7 +63327,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 const altB = b.querySelector('#appBegleiterKasten'); if(altB) altB.remove(); });
             // Der Begleiter (Funki oder Maja) steht seit 27.10.2026 unter Sounds, direkt unter den zwei Knoepfen und vor den Sprechern
             tu(() => { const sb = $('einstBlatt_sounds'); if(!sb || typeof window.appBegleiterKastenHtml !== 'function') return;
-                const alt = sb.querySelector('#einstBegleiterKasten'); if(alt) alt.remove();
+                // Stand 397 (Dietmar, Bild: "Es gibt doppelte Beiträge. Ich kann mehrmals Maja und Funki auswählen.") - der Kasten wird von
+                // einstUmordnen nach Anpassen umgehaengt; die alte Suche nur unter Sounds fand ihn dort nicht -> bei jedem Oeffnen einer mehr.
+                document.querySelectorAll('#einstBegleiterKasten').forEach(x => x.remove());
                 const ziel = sb.querySelector('#einstSprecherKasten') || sb.querySelector('#einstSoundSchnell');
                 if(!ziel) return;
                 const html = '<div id="einstBegleiterKasten" style="margin:0 0 0.2rem;">' + window.appBegleiterKastenHtml() + '</div>';
@@ -65529,26 +65660,28 @@ html:not(.android-app).fs-bunt body.dark.runde-laeuft #bildZoomEbene img,
 html:not(.android-app).fs-bunt body.dark.runde-laeuft .lightbox-overlay img{background:#f1e5bf!important;border-color:#c5a04f!important;border-radius:10px}
 </style>
 <style id="polarFenster">
+/* Stand 397 (01.11.2026), Dietmar mit Bildern aus der App: "In der Android-App habe ich diesen Polar-Style nicht. Das ist immer noch
+   teilweise so ein schiefer Mix." Die Fenster-Regeln galten nur am PC und im Handy-Browser; jetzt auch in der Android-App. */
 /* Stand 382: auch in der App-Ansicht am PC (html.pc-app) - Dietmar: "in den Einstellungen 2 trifft man auf geschmacklos.
    Hier wuerde ich mir am Desktop etwas anderes zumindest bei Polar wuenschen." */
 /* 21.10.2026 Dietmar: "Hier ist auch noch der Dark Mode Graphit vorhanden." (Fenster "Fragerunde abbrechen?")
    Alle Fenster (Modal) am PC im dunklen Polar-Stil: Farbverlauf wie Einstellungen/Info. Die Graphit-Grautöne kommen aus den
    --nacht-Variablen; sie werden innerhalb der Fenster auf Polar-Töne gesetzt, dadurch färbt sich auch alles Innere um. */
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){--nacht-tief:rgba(255,255,255,.06);--nacht-grund:rgba(255,255,255,.06);--nacht-flaeche:rgba(255,255,255,.07);--nacht-feld:rgba(255,255,255,.09);--nacht-kante:rgba(255,255,255,.16);--nacht-kante2:rgba(255,255,255,.26);--nacht-schrift:#e8efff;--nacht-leise:#b4c3e6;--nacht-hell:#ffffff;--darc-feld:rgba(255,255,255,.09);--darc-rahmen:rgba(255,255,255,.07);--card-bg:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--darc-blau:#5eead4;--darc-blau-hell:#99f6e4}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"]:not(#q1){background:rgba(3,6,18,.84)!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] > div:first-child:not(#q1):not(#q2){background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:24px!important;box-shadow:0 24px 70px rgba(0,0,0,.6)!important;overflow:hidden}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] > div:first-child > div:not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2) *{color:#05302a!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;color:#fff!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark [id$="Modal"] h3 i:not(#q1):not(#q2){color:#7be3c9!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"]:not(#q1){--nacht-tief:rgba(255,255,255,.06);--nacht-grund:rgba(255,255,255,.06);--nacht-flaeche:rgba(255,255,255,.07);--nacht-feld:rgba(255,255,255,.09);--nacht-kante:rgba(255,255,255,.16);--nacht-kante2:rgba(255,255,255,.26);--nacht-schrift:#e8efff;--nacht-leise:#b4c3e6;--nacht-hell:#ffffff;--darc-feld:rgba(255,255,255,.09);--darc-rahmen:rgba(255,255,255,.07);--card-bg:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--darc-blau:#5eead4;--darc-blau-hell:#99f6e4}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"]:not(#q1){background:rgba(3,6,18,.84)!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] > div:first-child:not(#q1):not(#q2){background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:24px!important;box-shadow:0 24px 70px rgba(0,0,0,.6)!important;overflow:hidden}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] > div:first-child > div:not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2){background:linear-gradient(135deg,#34d399,#22b8cf)!important;color:#05302a!important;border:0!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(52,211,153,.16)!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] .btn-primary:not(#q1):not(#q2) *{color:#05302a!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:999px!important;color:#fff!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] .btn-outline:not(#q1):not(#q2):hover{background:rgba(255,255,255,.18)!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"] h3 i:not(#q1):not(#q2){color:#7be3c9!important}
 /* 27.10.2026 Dietmar zur Auswertung: "Das muss noch in Polar angepasst werden." Im Stil Polar (body.graphit) faerbte die
    Graphit-Regel fuer .exam-info, #masteryDisplay und .history-col auch die Kaesten INNERHALB der Fenster grau (#1b2027) -
    die Pruefungsreife links in der Auswertung stand als grauer Block im blauen Fenster. In Fenstern bekommen sie den
    Polar-Ton wie die Kaesten rechts: halbdurchsichtiges Weiss, feiner heller Rand, runde Ecken. */
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
-html:not(#zz):is(:not(.android-app),.pc-app) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
+html:not(#zz) body:not(#zz2).dark.graphit [id$="Modal"] :is(.exam-info, #masteryDisplay, .history-col):not(#q1):not(#q2){background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:18px!important}
+html:not(#zz) body:not(#zz2).dark.graphit [id$="Modal"] .exam-info :is(.stat-zeile, .befund-zeile):not(#q1):not(#q2){border-color:rgba(255,255,255,.12)!important}
 html:not(#zz).pc-app body:not(#zz2).dark #funkLogbuch{background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%)!important}
 /* Stand 391 (30.10.2026), Dietmar: "um den Fragen rum ist es immer noch schiefergrau. Muss das so sein?" - Nein. Die dunklen
    Fassungen von Petrol, Navy und Schlicht stammten aus der Graphit-Zeit (Schiefer #172534 / #0b1a2c). Im Polar-Look werden
@@ -65900,6 +66033,11 @@ body:not(.dark):not(.papier) #duoModal #duoSchliessenBtn { background:#4f6070 !i
 #afuAuswahl .aw-blatt{width:100%;max-width:560px;max-height:72vh;display:flex;flex-direction:column;border-radius:22px 22px 0 0;background:#fff;color:#14213d;box-shadow:0 -12px 40px rgba(0,0,0,.35);transform:translateY(40px);transition:transform .22s cubic-bezier(.2,.8,.2,1);padding-bottom:max(10px,env(safe-area-inset-bottom))}
 #afuAuswahl.da .aw-blatt{transform:none}
 #afuAuswahl .aw-griff{width:44px;height:5px;border-radius:3px;background:rgba(20,33,61,.22);margin:10px auto 4px}
+/* Stand 397: Schliessen-X oben rechts in jedem Auswahl-Blatt (Dietmar: "da moechte ich auf jeden Fall oben rechts noch dieses x") */
+#afuAuswahl .aw-blatt{position:relative}
+#afuAuswahl .aw-zu{position:absolute;top:10px;right:12px;width:40px;height:40px;border:0;border-radius:50% !important;background:rgba(20,33,61,.08);color:inherit;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+#afuAuswahl .aw-titel{padding-right:64px}
+body.dark #afuAuswahl .aw-zu{background:rgba(255,255,255,.12);color:#fff}
 #afuAuswahl .aw-titel{padding:6px 22px 8px;font:700 .95rem/1.3 Inter,system-ui,sans-serif;color:#0f2745}
 #afuAuswahl .aw-liste{overflow-y:auto;padding:0 10px 6px}
 #afuAuswahl .aw-gruppe{padding:12px 14px 4px;font:700 .68rem/1 Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#5b6b80}
@@ -65998,7 +66136,10 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
         schliessen();
         var wrap = document.createElement('div'); wrap.id = 'afuAuswahl';
         var titel = titelFuer(sel);
-        var html = '<div class="aw-blatt" role="listbox"><div class="aw-griff"></div>' + (titel ? '<div class="aw-titel">' + titel.replace(/</g, '&lt;') + '</div>' : '') + '<div class="aw-liste">';
+        // Stand 397: ohne eigene Beschriftung den Titel des Kastens nehmen (z. B. "Anzeigegröße") - sonst laege das X auf der ersten Zeile
+        if(!titel){ try{ var e = sel; for(var t = 0; t < 6 && e && !titel; t++){ e = e.parentElement; var u = e && e.querySelector('div[style*="text-transform:uppercase"]'); if(u && u.textContent.trim().length < 60) titel = u.textContent.trim(); } }catch(err){} }
+        if(!titel) titel = 'Bitte wählen';
+        var html = '<div class="aw-blatt" role="listbox"><div class="aw-griff"></div><button type="button" class="aw-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button>' + (titel ? '<div class="aw-titel">' + titel.replace(/</g, '&lt;') + '</div>' : '') + '<div class="aw-liste">';
         var knoten = sel.children, idx = 0;
         function opt(o){
             var h = '<button type="button" class="aw-opt' + (o.selected ? ' an' : '') + '" data-i="' + idx + '"' + (o.disabled ? ' disabled' : '') + '><i class="fas fa-check"></i><span>' + o.textContent.replace(/</g, '&lt;') + '</span></button>';
@@ -66012,6 +66153,7 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
         html += '</div></div>';
         wrap.innerHTML = html;
         wrap.addEventListener('click', function(ev){
+            if(ev.target.closest('.aw-zu')){ schliessen(); return; }
             var b = ev.target.closest('.aw-opt');
             if(b){ var i = +b.dataset.i; if(sel.selectedIndex !== i){ sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } schliessen(); return; }
             if(ev.target === wrap) schliessen();
@@ -66037,8 +66179,8 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
     function blatt(titel, innen, anker){
         schliessen();
         var wrap = document.createElement('div'); wrap.id = 'afuAuswahl';
-        wrap.innerHTML = '<div class="aw-blatt"><div class="aw-griff"></div>' + (titel ? '<div class="aw-titel">' + titel.replace(/</g, '&lt;') + '</div>' : '') + innen + '</div>';
-        wrap.addEventListener('click', function(ev){ if(ev.target === wrap) schliessen(); });
+        wrap.innerHTML = '<div class="aw-blatt"><div class="aw-griff"></div><button type="button" class="aw-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button>' + (titel ? '<div class="aw-titel">' + titel.replace(/</g, '&lt;') + '</div>' : '') + innen + '</div>';
+        wrap.addEventListener('click', function(ev){ if(ev.target === wrap || ev.target.closest('.aw-zu')) schliessen(); });
         document.body.appendChild(wrap); offen = wrap; if(anker) verankern(wrap, anker, 300); requestAnimationFrame(function(){ wrap.classList.add('da'); });
         return wrap;
     }
@@ -66116,5 +66258,406 @@ body:not(.dark) #afuSparHinweis{background:#fff;color:#14213d;border-color:#d5dc
     document.addEventListener('visibilitychange', function(){ if(!document.hidden){ try{ if(window.ruhigModusAktiv) H.classList.toggle('ruhig', ruhigModusAktiv()); }catch(e){} } });
 })();
 </script>
+<style id="stolperStil">
+/* ================================================================
+   STOLPERSTEINE                                         (Stand 399)
+   Dietmar, 01.11.2026: "dass alle Stolpersteine automatisch beantwortet durchlaufen ... Kurzzeitgedaechtnis.
+   Du faehrst zur Bundesnetzagentur und hoerst dir alle Fragen noch mal an." Nur die Frage, gleich gruen die
+   Loesung, auf Wunsch vorgelesen, automatisch weiter. Dazu: "Nimm bitte auch noch alle Fragen mit auf ...
+   Klasse E dann nur Technik und Klasse A auch nur Technik" und "oben rechts noch dieses X".
+   Hell: weiss/hellblau. Dunkel: Polar-Verlauf wie alle Fenster. Runde Knoepfe auch im Stil "eckig".
+   ================================================================ */
+#stolperBlatt{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 14px);
+  background:linear-gradient(160deg,#f3f7ff 0%,#e4ecfb 100%);color:#10243c;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+body.dark #stolperBlatt{background:linear-gradient(135deg,#2c4fa8 0%,#1c3277 28%,#10204f 58%,#070d28 100%);color:#fff}
+#stolperBlatt *{box-sizing:border-box}
+/* Am PC (breites Fenster) in einer lesbaren Spalte */
+#stolperBlatt > *{width:100%;max-width:720px;margin-left:auto;margin-right:auto}
+#stolperBlatt .st-kopf{display:flex;align-items:center;gap:10px}
+#stolperBlatt .st-ico{width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3b2500;display:flex;align-items:center;justify-content:center;font-size:18px}
+#stolperBlatt .st-titel{flex:1;min-width:0}
+#stolperBlatt .st-titel b{display:block;font-size:18px;line-height:1.2}
+#stolperBlatt .st-titel small{display:block;font-size:12.5px;color:#4a5d78;line-height:1.3}
+body.dark #stolperBlatt .st-titel small,body.dark #stolperBlatt .st-leise{color:rgba(255,255,255,.74)}
+#stolperBlatt .st-rund{width:44px;height:44px;flex:0 0 44px;border-radius:50% !important;border:1px solid #d3deec;background:#fff;color:inherit;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;padding:0}
+body.dark #stolperBlatt .st-rund{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22)}
+#stolperBlatt .st-stand{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:13px}
+#stolperBlatt .st-leise{color:#4a5d78}
+#stolperBlatt .st-balken{height:6px;border-radius:4px;background:#d3deec;margin-top:6px;overflow:hidden}
+body.dark #stolperBlatt .st-balken{background:rgba(255,255,255,.14)}
+#stolperBlatt .st-balken i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width .3s}
+#stolperBlatt .st-inhalt{flex:1;min-height:0;overflow-y:auto;margin-top:12px;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+#stolperBlatt .st-frage{padding:14px;border-radius:16px;background:#fff;border:1px solid #d3deec}
+body.dark #stolperBlatt .st-frage{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.18)}
+#stolperBlatt .st-marken{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;margin-bottom:8px}
+#stolperBlatt .st-marken span{border:1px solid #d3deec;border-radius:6px;padding:2px 7px}
+body.dark #stolperBlatt .st-marken span{border-color:rgba(255,255,255,.22)}
+#stolperBlatt .st-marken .st-nr{background:#fbbf24;border-color:#fbbf24;color:#3b2500;font-weight:800}
+#stolperBlatt .st-ftext{font-size:17px;font-weight:700;line-height:1.38}
+#stolperBlatt .st-bild{margin-top:10px;text-align:center}
+#stolperBlatt .st-bild img,#stolperBlatt .st-bild svg{max-width:100%;max-height:200px;background:#fff;border-radius:10px;padding:4px}
+#stolperBlatt .st-opt{display:flex;gap:10px;align-items:center;padding:12px;margin-top:9px;border-radius:14px;border:2px solid #d3deec;background:#fff;transition:opacity .35s,background .35s,border-color .35s}
+body.dark #stolperBlatt .st-opt{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.08)}
+#stolperBlatt .st-opt .st-bu{flex:0 0 28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#e9eef6;color:#10243c}
+body.dark #stolperBlatt .st-opt .st-bu{background:rgba(255,255,255,.14);color:#fff}
+#stolperBlatt .st-opt .st-ot{flex:1;font-size:15px;line-height:1.35;min-width:0}
+#stolperBlatt .st-opt .st-ot img{max-width:100%;max-height:110px;background:#fff;border-radius:8px;padding:3px}
+#stolperBlatt .st-opt .st-ok{display:none;color:#16a34a;font-size:18px}
+#stolperBlatt.gezeigt .st-opt:not(.richtig){opacity:.5}
+#stolperBlatt.gezeigt .st-opt.richtig{border-color:#22c55e;background:#e3f8ea}
+body.dark #stolperBlatt.gezeigt .st-opt.richtig{background:rgba(34,197,94,.22)}
+#stolperBlatt.gezeigt .st-opt.richtig .st-bu{background:#22c55e;color:#05301a}
+#stolperBlatt.gezeigt .st-opt.richtig .st-ok{display:block}
+body.dark #stolperBlatt.gezeigt .st-opt.richtig .st-ok{color:#4ade80}
+#stolperBlatt .st-merk{margin-top:12px;font-size:13.5px;line-height:1.45;display:none;gap:8px;align-items:flex-start}
+#stolperBlatt.gezeigt .st-merk.da{display:flex}
+#stolperBlatt .st-merk i{color:#f59e0b;margin-top:3px}
+#stolperBlatt .st-spricht{display:flex;align-items:center;justify-content:center;gap:8px;min-height:22px;margin:8px 0 6px;font-size:13px;visibility:hidden}
+#stolperBlatt .st-spricht.an{visibility:visible}
+#stolperBlatt .st-spricht i.fa-volume-high{color:#0ea5a4}
+body.dark #stolperBlatt .st-spricht i.fa-volume-high{color:#2dd4bf}
+#stolperBlatt .st-wellen{display:inline-flex;gap:3px;align-items:center;height:16px}
+#stolperBlatt .st-wellen b{width:3px;height:6px;border-radius:2px;background:#0ea5a4;animation:stWelle .9s ease-in-out infinite}
+body.dark #stolperBlatt .st-wellen b{background:#2dd4bf}
+#stolperBlatt .st-wellen b:nth-child(2){animation-delay:.15s}#stolperBlatt .st-wellen b:nth-child(3){animation-delay:.3s}#stolperBlatt .st-wellen b:nth-child(4){animation-delay:.45s}#stolperBlatt .st-wellen b:nth-child(5){animation-delay:.6s}
+@keyframes stWelle{0%,100%{height:5px}50%{height:16px}}
+@media (prefers-reduced-motion: reduce){#stolperBlatt .st-wellen b{animation:none;height:10px}}
+#stolperBlatt .st-knoepfe{display:flex;align-items:center;justify-content:center;gap:26px}
+#stolperBlatt .st-seite{width:66px;height:66px;border-radius:50% !important;border:2px solid #d3deec;background:#fff;color:inherit;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+body.dark #stolperBlatt .st-seite{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22)}
+#stolperBlatt .st-seite:disabled{opacity:.35}
+#stolperBlatt .st-play{position:relative;width:96px;height:96px;border:0;background:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#05302a}
+#stolperBlatt .st-play svg{position:absolute;inset:0;width:96px;height:96px}
+#stolperBlatt .st-play .st-ring-grund{stroke:#d3deec}
+body.dark #stolperBlatt .st-play .st-ring-grund{stroke:rgba(255,255,255,.18)}
+#stolperBlatt .st-play i{position:relative;font-size:30px}
+#stolperBlatt .st-unten{text-align:center;font-size:12.5px;margin-top:10px}
+#stolperBlatt .st-ende{text-align:center;padding:30px 10px}
+#stolperBlatt .st-ende .st-pokal{font-size:46px;color:#f59e0b}
+#stolperBlatt .st-ende b{display:block;font-size:20px;margin-top:10px}
+#stolperBlatt .st-ende p{font-size:14.5px;line-height:1.5}
+#stolperBlatt .st-los,#stolperEinst .st-los{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:999px !important;font:800 16px/1.2 Inter,system-ui,sans-serif;background:linear-gradient(135deg,#34d399,#22b8cf);color:#05302a;cursor:pointer}
+#stolperEinst .st-los:disabled{opacity:.45;cursor:default}
+#stolperBlatt .st-zweit{display:block;width:100%;margin-top:10px;padding:12px;border-radius:999px !important;border:1px solid #d3deec;background:#fff;color:inherit;font:700 15px/1.2 Inter,system-ui,sans-serif;cursor:pointer}
+body.dark #stolperBlatt .st-zweit{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22)}
+/* Form "rund": body.eckig macht sonst alles eckig (border-radius:0 !important) */
+body.eckig.app-rund #stolperBlatt .st-frage{border-radius:16px!important}
+body.eckig.app-rund #stolperBlatt .st-opt{border-radius:14px!important}
+body.eckig.app-rund #stolperBlatt :is(.st-bu,.st-marken span){border-radius:7px!important}
+body.eckig.app-rund #stolperBlatt .st-ico{border-radius:12px!important}
+body.eckig.app-rund #stolperBlatt :is(.st-balken,.st-balken i){border-radius:4px!important}
+body.eckig.app-rund #stolperBlatt :is(.st-bild img,.st-opt img){border-radius:8px!important}
+body.eckig.app-rund #stolperEinst .se-blatt{border-radius:22px 22px 0 0!important}
+body.eckig.app-rund #stolperEinst :is(.se-seg button,.se-griff){border-radius:999px!important}
+/* Das Einstellungs-Blatt von unten */
+#stolperEinst{position:fixed;inset:0;z-index:2147483100;display:flex;align-items:flex-end;justify-content:center;background:rgba(3,6,18,.55)}
+#stolperEinst .se-blatt{position:relative;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 18px);background:#fff;color:#10243c;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+body.dark #stolperEinst .se-blatt{background:linear-gradient(135deg,#2e50a8 0%,#213f8a 26%,#14275c 62%,#0b1433 100%);color:#fff;border-top:1px solid rgba(255,255,255,.2)}
+#stolperEinst .se-griff{width:44px;height:5px;border-radius:3px;background:#d3deec;margin:0 auto 10px}
+body.dark #stolperEinst .se-griff{background:rgba(255,255,255,.28)}
+#stolperEinst .se-kopf{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#stolperEinst .se-kopf b{font-size:18px}
+#stolperEinst .se-kopf b i{color:#f59e0b}
+#stolperEinst .se-zu{width:42px;height:42px;flex:0 0 42px;border:0;border-radius:50% !important;background:rgba(20,33,61,.08);color:inherit;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+body.dark #stolperEinst .se-zu{background:rgba(255,255,255,.14)}
+#stolperEinst .se-ue{margin-top:16px;font-size:11.5px;letter-spacing:.08em;font-weight:800;color:#0a7f86;text-transform:uppercase}
+body.dark #stolperEinst .se-ue{color:#7be3c9}
+#stolperEinst .se-seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+#stolperEinst .se-seg button{padding:8px 12px;border-radius:999px;font:600 13.5px/1.2 Inter,system-ui,sans-serif;border:1px solid #d3deec;background:transparent;color:inherit;cursor:pointer}
+body.dark #stolperEinst .se-seg button{border-color:rgba(255,255,255,.24)}
+#stolperEinst .se-seg button.an{background:linear-gradient(135deg,#34d399,#22b8cf);border-color:transparent;color:#05302a}
+#stolperEinst .se-haken{display:flex;gap:10px;align-items:center;margin-top:10px;cursor:pointer;font-size:14.5px}
+#stolperEinst .se-haken input{width:20px;height:20px;accent-color:#22c55e;flex:0 0 20px;margin:0}
+#stolperEinst .se-haken .se-zahl{margin-left:auto;font-size:12.5px;opacity:.75}
+#stolperEinst .se-haken.aus{opacity:.4;pointer-events:none}
+#stolperEinst .se-hinweis{margin-top:8px;font-size:12.5px;line-height:1.45;opacity:.8}
+</style>
+<script id="stolpersteine">
+(function(){
+    const D = document;
+    const EINST = 'afu_stolper_einst';
+    const STANDARD = { art: 'stolper', fehler: true, bedarf: true, merk: false, reihe: 'schwer', anzeige: 'sofort', vorlesen: 'beides', weiter: 'vorlesen', merksatz: true };
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    function einst(){ let e = {}; try{ e = JSON.parse(localStorage.getItem(EINST) || '{}') || {}; }catch(x){} return Object.assign({}, STANDARD, e); }
+    function einstSchreiben(e){ try{ localStorage.setItem(EINST, JSON.stringify(e)); }catch(x){} }
+    function bank(){ try{ return Array.isArray(questionBank) ? questionBank : []; }catch(x){ return []; } }
+    function zielName(){ try{ const k = klasseAktuell(); return k.id === 'ne' ? 'Aufbau N → E' : k.id === 'ea' ? 'Aufbau E → A' : k.name || 'Klasse N'; }catch(x){ return ''; } }
+    function listen(){
+        let f = [], b = [], m = [];
+        try{ f = Array.isArray(errorList) ? errorList.slice() : []; }catch(x){}
+        try{ b = Object.keys(difficultQuestions || {}); }catch(x){}
+        try{ m = Array.isArray(favoriteQuestions) ? favoriteQuestions.slice() : []; }catch(x){}
+        const da = new Set(bank().map(q => q.id));
+        return { fehler: f.filter(i => da.has(i)), bedarf: b.filter(i => da.has(i)), merk: m.filter(i => da.has(i)) };
+    }
+    function gewicht(id){
+        let w = 0;
+        try{ const m = masteryData[id]; if(m) w += (m.totalWrong || 0) * 2 - (m.streak || 0); }catch(x){}
+        try{ const d = difficultQuestions[id]; if(d) w += (d.wrongCount || 0); }catch(x){}
+        try{ if(errorList.indexOf(id) >= 0) w += 1; }catch(x){}
+        return w;
+    }
+    function teilRang(q){ const c = String(q.id || '').charAt(0); return c === 'B' ? 0 : c === 'V' ? 1 : 2; }
+    function auswahl(e, ohneSort){
+        let qs;
+        if(e.art === 'alle') qs = bank().slice();
+        else {
+            const l = listen(), ids = new Set();
+            if(e.fehler) l.fehler.forEach(i => ids.add(i));
+            if(e.bedarf) l.bedarf.forEach(i => ids.add(i));
+            if(e.merk) l.merk.forEach(i => ids.add(i));
+            qs = bank().filter(q => ids.has(q.id));
+        }
+        if(ohneSort) return qs;
+        if(e.reihe === 'misch'){ for(let i = qs.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [qs[i], qs[j]] = [qs[j], qs[i]]; } }
+        else if(e.reihe === 'teil') qs.sort((a, b) => teilRang(a) - teilRang(b) || String(a.id).localeCompare(String(b.id), 'de', { numeric: true }));
+        else qs.sort((a, b) => gewicht(b.id) - gewicht(a.id) || String(a.id).localeCompare(String(b.id), 'de', { numeric: true }));
+        return qs;
+    }
+    window.stolperAnzahl = () => auswahl(einst(), true).length;
+
+    // ---------------- Das Einstellungs-Blatt ----------------
+    function einstOeffnen(beimLaufen){
+        const alt = D.getElementById('stolperEinst'); if(alt) alt.remove();
+        const e = einst(), l = listen();
+        const w = D.createElement('div'); w.id = 'stolperEinst'; w.className = 'stolper-fenster';
+        const seg = (feld, werte) => '<div class="se-seg" data-feld="' + feld + '">' + werte.map(v => '<button type="button" data-w="' + v[0] + '"' + (String(e[feld]) === String(v[0]) ? ' class="an"' : '') + '>' + v[1] + '</button>').join('') + '</div>';
+        const haken = (feld, text, zahl) => '<label class="se-haken se-liste"><input type="checkbox" data-feld="' + feld + '"' + (e[feld] ? ' checked' : '') + '><span>' + text + '</span><span class="se-zahl">' + zahl + '</span></label>';
+        let alleText = '';
+        try{ const k = klasseAktuell(); alleText = k.id === 'ne' ? 'Aufbau N → E: nur die ' + bank().length + ' Technikfragen E' : k.id === 'ea' ? 'Aufbau E → A: nur die ' + bank().length + ' Technikfragen A' : zielName() + ': alle ' + bank().length + ' Fragen (Betrieb, Vorschriften, Technik)'; }catch(x){}
+        w.innerHTML = '<div class="se-blatt" role="dialog" aria-label="Stolpersteine einstellen"><div class="se-griff"></div>'
+            + '<div class="se-kopf"><b><i class="fas fa-sliders"></i> Stolpersteine einstellen</b><button type="button" class="se-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'
+            + '<div class="se-ue">Welche Fragen</div>' + seg('art', [['stolper', 'Meine Stolpersteine'], ['alle', 'Alle Fragen meiner Klasse']])
+            + haken('fehler', 'Fehlerliste', l.fehler.length) + haken('bedarf', 'Lernbedarf (wackelig)', l.bedarf.length) + haken('merk', 'Merkliste', l.merk.length)
+            + '<div class="se-hinweis se-alle">' + esc(alleText) + '</div>'
+            + '<div class="se-ue">Reihenfolge</div>' + seg('reihe', [['schwer', 'Schwerste zuerst'], ['misch', 'Gemischt'], ['teil', 'Betrieb → Vorschriften → Technik']])
+            + '<div class="se-ue">Anzeige</div>' + seg('anzeige', [['sofort', 'Lösung sofort'], ['aufdecken', 'Erst Frage, nach 3 s Lösung']])
+            + '<div class="se-ue">Vorlesen</div>' + seg('vorlesen', [['beides', 'Frage + Lösung'], ['loesung', 'Nur Lösung'], ['aus', 'Aus']])
+            + '<div class="se-ue">Weiter nach</div>' + seg('weiter', [['4', '4 s'], ['6', '6 s'], ['10', '10 s'], ['vorlesen', 'Nach dem Vorlesen']])
+            + '<label class="se-haken"><input type="checkbox" data-feld="merksatz"' + (e.merksatz ? ' checked' : '') + '><span>Kurzen Merksatz zeigen</span></label>'
+            + '<button type="button" class="st-los"></button></div>';
+        D.body.appendChild(w);
+        const los = w.querySelector('.st-los');
+        function nachziehen(){
+            const n = e.art === 'alle' ? bank().length : auswahl(e, true).length;
+            w.querySelectorAll('.se-liste').forEach(x => x.classList.toggle('aus', e.art === 'alle'));
+            const h = w.querySelector('.se-alle'); if(h) h.style.display = e.art === 'alle' ? '' : 'none';
+            los.disabled = !n;
+            const min = Math.max(1, Math.round(n * (e.weiter === 'vorlesen' ? (e.vorlesen === 'aus' ? 6 : 16) : (+e.weiter + (e.anzeige === 'aufdecken' ? 3 : 0))) / 60));
+            los.innerHTML = n ? '<i class="fas fa-play"></i> ' + (beimLaufen ? 'Übernehmen' : 'Los geht\'s') + ' – ' + n + ' Fragen, etwa ' + min + ' Minuten'
+                              : 'Keine Stolpersteine – prima! Oder „Alle Fragen meiner Klasse“';
+        }
+        w.addEventListener('click', ev => {
+            const t = ev.target;
+            if(t === w || t.closest('.se-zu')){ w.remove(); if(beimLaufen) lauf.weiterNachEinst(false); return; }
+            const b = t.closest('.se-seg button');
+            if(b){ const f = b.parentElement.dataset.feld; e[f] = b.dataset.w; b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('an', x === b)); einstSchreiben(e); nachziehen(); return; }
+            if(t.closest('.st-los') && !los.disabled){ w.remove(); einstSchreiben(e); if(beimLaufen) lauf.weiterNachEinst(true); else lauf.start(); }
+        });
+        w.addEventListener('change', ev => { const i = ev.target; if(i && i.dataset.feld){ e[i.dataset.feld] = !!i.checked; einstSchreiben(e); nachziehen(); } });
+        nachziehen();
+    }
+
+    // ---------------- Der Durchlauf ----------------
+    const lauf = {
+        liste: [], idx: 0, pause: false, token: 0, el: null, warte: null,
+        start(){
+            const e = einst();
+            this.liste = auswahl(e); this.idx = 0; this.pause = false;
+            if(!this.liste.length) return;
+            this.aufbauen();
+            this.zeigen();
+        },
+        aufbauen(){
+            const alt = D.getElementById('stolperBlatt'); if(alt) alt.remove();
+            const el = D.createElement('div'); el.id = 'stolperBlatt'; el.className = 'stolper-fenster'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Stolpersteine');
+            el.innerHTML = '<div class="st-kopf"><span class="st-ico"><i class="fas fa-headphones"></i></span>'
+                + '<div class="st-titel"><b>Stolpersteine</b><small>Nur ansehen und anhören – nichts antippen</small></div>'
+                + '<button type="button" class="st-rund st-einst" aria-label="Einstellungen"><i class="fas fa-gear"></i></button>'
+                + '<button type="button" class="st-rund st-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'
+                + '<div class="st-stand"><span class="st-zahl"></span><span class="st-leise st-was"></span></div>'
+                + '<div class="st-balken"><i></i></div>'
+                + '<div class="st-inhalt"></div>'
+                + '<div class="st-spricht"><i class="fas fa-volume-high"></i><span>Vorlesen …</span><span class="st-wellen"><b></b><b></b><b></b><b></b><b></b></span></div>'
+                + '<div class="st-knoepfe"><button type="button" class="st-seite st-zurueck" aria-label="Vorherige Frage"><i class="fas fa-backward-step"></i></button>'
+                + '<button type="button" class="st-play" aria-label="Pause"><svg viewBox="0 0 100 100"><circle class="st-ring-grund" cx="50" cy="50" r="46" fill="none" stroke-width="5"/>'
+                + '<circle class="st-ring" cx="50" cy="50" r="46" fill="none" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289" transform="rotate(-90 50 50)"/>'
+                + '<defs><linearGradient id="stKnopfG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22b8cf"/></linearGradient></defs><circle cx="50" cy="50" r="37" fill="url(#stKnopfG)"/></svg><i class="fas fa-pause"></i></button>'
+                + '<button type="button" class="st-seite st-vor" aria-label="Nächste Frage"><i class="fas fa-forward-step"></i></button></div>'
+                + '<div class="st-unten st-leise"></div>';
+            D.body.appendChild(el); this.el = el;
+            el.querySelector('.st-zu').addEventListener('click', () => this.zu());
+            el.querySelector('.st-einst').addEventListener('click', () => { this.anhalten(); einstOeffnen(true); });
+            el.querySelector('.st-zurueck').addEventListener('click', () => { if(this.idx > 0){ this.idx = Math.min(this.idx, this.liste.length) - 1; this.pause = false; this.zeigen(); } });
+            el.querySelector('.st-vor').addEventListener('click', () => this.naechste());
+            el.querySelector('.st-play').addEventListener('click', () => { if(this.idx >= this.liste.length){ this.idx = 0; this.pause = false; this.zeigen(); return; } if(this.pause){ this.pause = false; this.zeigen(); } else this.anhalten(); });
+            D.addEventListener('keydown', this.taste = ev => { if(ev.key === 'Escape' && !D.getElementById('stolperEinst')) this.zu(); });
+            D.addEventListener('visibilitychange', this.sicht = () => { if(D.visibilityState === 'visible' && this.el) this.wach(true); });
+            try{ D.body.style.overflow = 'hidden'; }catch(x){}
+            this.wach(true);
+        },
+        wach(an){
+            try{ if(window.AndroidApp && typeof AndroidApp.bildschirmAn === 'function'){ AndroidApp.bildschirmAn(an ? true : !!(window.bildschirmAnGewollt && bildschirmAnGewollt())); return; } }catch(x){}
+            try{
+                if(an && 'wakeLock' in navigator && !(this.lock && !this.lock.released)) navigator.wakeLock.request('screen').then(l => {
+                    if(!this.el){ l.release().catch(() => {}); return; }          // inzwischen geschlossen
+                    this.lock = l; l.addEventListener('release', () => { if(this.lock === l) this.lock = null; });
+                }).catch(() => {});
+                if(!an && this.lock){ this.lock.release().catch(() => {}); this.lock = null; try{ window.bildschirmWachhalten && bildschirmWachhalten(); }catch(x){} }
+            }catch(x){}
+        },
+        ring(anteil, ms){
+            const r = this.el && this.el.querySelector('.st-ring'); if(!r) return;
+            r.style.transition = 'none'; r.style.strokeDashoffset = String(289 * (1 - anteil));
+            if(ms){ void r.getBoundingClientRect(); r.style.transition = 'stroke-dashoffset ' + ms + 'ms linear'; r.style.strokeDashoffset = '0'; }
+        },
+        knopf(){
+            const p = this.el.querySelector('.st-play');
+            p.querySelector('i').className = 'fas ' + (this.pause ? 'fa-play' : 'fa-pause');
+            p.setAttribute('aria-label', this.pause ? 'Weiter abspielen' : 'Pause');
+            this.el.querySelector('.st-zurueck').disabled = this.idx <= 0;
+            this.el.querySelector('.st-vor').disabled = this.idx >= this.liste.length;
+        },
+        anhalten(){
+            this.pause = true; this.token++; clearTimeout(this.warte);
+            try{ stopTTS(); }catch(x){}
+            this.el.querySelector('.st-spricht').classList.remove('an');
+            this.ring(0, 0); this.knopf();
+            this.el.querySelector('.st-unten').textContent = 'Pausiert – ▶ spielt weiter';
+        },
+        naechste(){
+            if(this.idx >= this.liste.length) return;
+            this.token++; clearTimeout(this.warte); try{ stopTTS(); }catch(x){}
+            this.idx++; this.pause = false;
+            if(this.idx >= this.liste.length) return this.ende();
+            this.zeigen();
+        },
+        weiterNachEinst(neu){
+            if(neu){
+                const id = (this.liste[this.idx] || {}).id;
+                this.liste = auswahl(einst());
+                if(!this.liste.length) return this.zu();
+                const i = this.liste.findIndex(q => q.id === id); this.idx = i >= 0 ? i : 0;
+            }
+            this.pause = false; this.zeigen();
+        },
+        zeigen(){
+            const e = einst(), q = this.liste[this.idx]; if(!q) return this.ende();
+            const tok = ++this.token; clearTimeout(this.warte);
+            const el = this.el;
+            el.classList.remove('gezeigt');
+            el.querySelector('.st-zahl').innerHTML = '<b>' + (this.idx + 1) + '</b> von ' + this.liste.length;
+            el.querySelector('.st-was').textContent = (e.art === 'alle' ? zielName() : 'Meine Stolpersteine') + ' · ' + ({ schwer: 'schwerste zuerst', misch: 'gemischt', teil: 'nach Prüfungsteil' })[e.reihe];
+            el.querySelector('.st-balken i').style.width = Math.round(100 * (this.idx + 1) / this.liste.length) + '%';
+            let falsch = 0; try{ falsch = (masteryData[q.id] && masteryData[q.id].totalWrong) || 0; }catch(x){}
+            // wie im Trainer: Antwortbilder nicht noch einmal als Fragebild
+            let bild = ''; try{ bild = (typeof getSvgHtml === 'function') ? (getSvgHtml(q.id, (q.options || []).map(o => (o && o.image ? String(o.image).trim() : '')).filter(Boolean)) || '') : ''; }catch(x){}
+            const richtigIdx = q.options.findIndex(o => o && o.correct);
+            const opts = q.options.map((o, i) => {
+                const img = o.image && String(o.image).trim() ? '<img src="svgs/' + esc(String(o.image).trim()) + '" alt="Bild ' + 'ABCD'[i] + '">' : '';
+                return '<div class="st-opt' + (i === richtigIdx ? ' richtig' : '') + '" data-st="' + i + '"><span class="st-bu">' + 'ABCD'[i] + '</span><span class="st-ot">' + esc(o.text || '') + img + '</span><i class="fas fa-check st-ok"></i></div>';
+            }).join('');
+            let merk = ''; try{ const x = (window.erklaerMap || {})[q.id]; merk = x && x.kniff ? String(x.kniff) : ''; }catch(x){}
+            // nur der erste Satz - ein Merksatz, keine Erklaerung (die steht im Trainer bei der Frage)
+            if(merk){ const m1 = merk.match(/^.{20,220}?[.!?](?=\s|$)/); merk = m1 ? m1[0] : (merk.length > 220 ? merk.slice(0, 217).replace(/\s+\S*$/, '') + ' …' : merk); }
+            el.querySelector('.st-inhalt').innerHTML = '<div class="st-frage"><div class="st-marken"><span class="st-nr">' + esc(q.id) + '</span>' + (falsch ? '<span>' + falsch + '× falsch</span>' : '') + '</div>'
+                + '<div class="st-ftext">' + esc(q.text) + '</div>' + (bild ? '<div class="st-bild">' + bild + '</div>' : '') + '</div>' + opts
+                + '<div class="st-merk' + (e.merksatz && merk ? ' da' : '') + '"><i class="fas fa-lightbulb"></i><span>' + esc(merk) + '</span></div>';
+            el.querySelector('.st-inhalt').scrollTop = 0;
+            this.knopf();
+            const unten = el.querySelector('.st-unten');
+            const weiterMs = e.weiter === 'vorlesen' ? (e.vorlesen === 'aus' ? 6000 : 0) : (+e.weiter || 6) * 1000;
+            const aufdecken = () => { if(tok !== this.token) return; el.classList.add('gezeigt'); };
+            const warten = ms => new Promise(r => { this.warte = setTimeout(r, ms); });
+            const sprechen = async segs => {
+                if(!segs.length || e.vorlesen === 'aus') return;
+                el.querySelector('.st-spricht').classList.add('an');
+                // Gegenpruefung 399: playTTSQueue endet nicht, wenn jemand anderes das Vorlesen anhaelt (nur pause()).
+                // Deshalb auch weiter, sobald die Vorlese-Warteschlange einem anderen gehoert, spaetestens nach 90 s.
+                await new Promise(fertig => {
+                    let aus = false; const ende = () => { if(aus) return; aus = true; clearInterval(wache); clearTimeout(notbremse); fertig(); };
+                    let meins = null;
+                    try{ playTTSQueue(segs, null).then(ende, ende); }catch(x){ ende(); }
+                    try{ meins = ttsQueueToken; }catch(x){}
+                    const wache = setInterval(() => { try{ if(tok !== this.token || (meins !== null && ttsQueueToken !== meins)) ende(); }catch(x){ ende(); } }, 400);
+                    const notbremse = setTimeout(ende, 90000);
+                });
+                if(tok === this.token) el.querySelector('.st-spricht').classList.remove('an');
+            };
+            (async () => {
+                let sprich = t => t;
+                try{ if(typeof kennerThema === 'function' && kennerThema(q)) sprich = t => kennerSprechen(t); }catch(x){}
+                const wortAn = (() => { try{ return localStorage.getItem('app_wort_an') !== '0'; }catch(x){ return true; } })();
+                const frageSeg = { text: sprich(q.text) + '.', selector: '#stolperBlatt .st-ftext', klasse: 'tts-frage', worte: wortAn, thorsten: true,
+                                   maja: (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null };
+                const ro = q.options[richtigIdx] || {};
+                const loesSeg = { text: 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') + '.', selector: '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
+                                  maja: (ro.text && typeof majaAntwortMarke === 'function') ? majaAntwortMarke(q, ro) : null };
+                const start = Date.now();
+                if(e.anzeige === 'aufdecken'){
+                    unten.textContent = 'Überleg kurz … gleich kommt die Lösung';
+                    this.ring(0, 3000);
+                    if(e.vorlesen === 'beides') await sprechen([frageSeg]);
+                    const rest = 3000 - (Date.now() - start); if(rest > 0) await warten(rest);
+                    if(tok !== this.token) return;
+                    aufdecken();
+                    if(e.vorlesen !== 'aus') await sprechen([loesSeg]);
+                } else {
+                    aufdecken();
+                    if(e.vorlesen === 'beides') await sprechen([frageSeg, loesSeg]);
+                    else if(e.vorlesen === 'loesung') await sprechen([loesSeg]);
+                }
+                if(tok !== this.token) return;
+                // Wartezeit bis zur naechsten Frage, sichtbar im Ring
+                const schonMs = Date.now() - start;
+                const nochMs = weiterMs ? Math.max(1200, weiterMs - schonMs) : 1800;
+                unten.textContent = 'Weiter in ' + Math.ceil(nochMs / 1000) + ' s · Display bleibt an';
+                this.ring(0, nochMs);
+                await warten(nochMs);
+                if(tok !== this.token) return;
+                this.naechste();
+            })();
+            if(e.anzeige !== 'aufdecken') unten.textContent = e.vorlesen === 'aus' ? 'Display bleibt an' : 'Vorlesen … · Display bleibt an';
+        },
+        ende(){
+            this.token++; clearTimeout(this.warte); try{ stopTTS(); }catch(x){}
+            const el = this.el; if(!el) return;
+            el.classList.remove('gezeigt'); this.ring(1, 0);
+            el.querySelector('.st-balken i').style.width = '100%';
+            el.querySelector('.st-spricht').classList.remove('an');
+            el.querySelector('.st-inhalt').innerHTML = '<div class="st-ende"><div class="st-pokal"><i class="fas fa-flag-checkered"></i></div><b>Alle ' + this.liste.length + ' Fragen angesehen</b>'
+                + '<p class="st-leise">Gut gemacht. Kurz vor der Prüfung bleibt so das Wichtigste frisch im Kopf.</p>'
+                + '<button type="button" class="st-los st-nochmal"><i class="fas fa-rotate-right"></i> Nochmal von vorn</button><button type="button" class="st-zweit st-schliessen">Schließen</button></div>';
+            el.querySelector('.st-nochmal').addEventListener('click', () => { this.idx = 0; this.pause = false; this.zeigen(); });
+            el.querySelector('.st-schliessen').addEventListener('click', () => this.zu());
+            el.querySelector('.st-unten').textContent = '';
+            this.pause = true; this.knopf();
+        },
+        zu(){
+            this.token++; clearTimeout(this.warte); try{ stopTTS(); }catch(x){}
+            const s = D.getElementById('stolperEinst'); if(s) s.remove();
+            if(this.el){ this.el.remove(); this.el = null; }
+            if(this.taste){ D.removeEventListener('keydown', this.taste); this.taste = null; }
+            if(this.sicht){ D.removeEventListener('visibilitychange', this.sicht); this.sicht = null; }
+            try{ D.body.style.overflow = ''; }catch(x){}
+            this.wach(false);
+        }
+    };
+    window.stolperOeffnen = () => einstOeffnen(false);
+    window.stolperLauf = lauf;
+
+    // Zahl auf der Kachel und in der Zeile
+    function zahlNachziehen(){
+        let n = 0; try{ n = window.stolperAnzahl(); }catch(x){}
+        const e = einst();
+        const t = e.art === 'alle' ? String(bank().length) : String(n);   // n ohne Sortieren gezaehlt
+        const k = D.getElementById('ahKStolper'); if(k && k.textContent !== t) k.textContent = t;
+        const z = D.getElementById('ahStolperZahl'); if(z && z.textContent !== t) z.textContent = t;
+    }
+    setInterval(() => { try{ zahlNachziehen(); }catch(x){} }, 2000);
+})();
+</script>
+
 </body>
 </html>
