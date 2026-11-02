@@ -3112,8 +3112,8 @@
            an jede Bildantwort gehaengt, war dort aber ohne Gestaltung - ein winziger weisser Knopf unter dem Bild.
            Jetzt wie am Handy: runder Knopf oben rechts in der Kachel, im Dunkeln dunkel. */
         html:not(.android-app) #questionContainer .option-grid { position: relative; }
-        html:not(.android-app) .app-bild-lupe { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(15,39,69,0.18);
-            background: rgba(255,255,255,0.94); color: var(--panel-navy, #0f2745); font-size: 16px; display: inline-flex; align-items: center; justify-content: center;
+        html:not(.android-app) .app-bild-lupe { position: absolute; top: 8px; right: 8px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(15,39,69,0.18);
+            background: rgba(255,255,255,0.94); color: var(--panel-navy, #0f2745); font-size: 20px; display: inline-flex; align-items: center; justify-content: center;
             cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 3; padding: 0; margin: 0; transition: transform 0.12s ease, background 0.12s ease; }
         html:not(.android-app) .app-bild-lupe:hover { transform: scale(1.08); background: #ffffff; }
         html:not(.android-app) body.dark .app-bild-lupe { background: rgba(16,32,52,0.94); color: #dbe6f3; border-color: rgba(255,255,255,0.28); }
@@ -13497,11 +13497,54 @@ function bildZoomAn(img){
             gr.style.transform = 'scale(1)';
             gr.style.opacity = '1';
         });
+        bildZoomLupeZeigen(img);
     }catch(e){}
+}
+// ================================================================
+//  DIE LUPE BLEIBT, WENN DAS BILD GROSS IST            (Stand 406)
+//  Dietmar: "Bei Mouseoverlay verschwindet die Lupe." Die grosse Ansicht
+//  liegt ueber allem (z-index 100000) und deckte den Lupen-Knopf der
+//  Kachel zu. Solange sie offen ist, steht deshalb ein Zwilling des
+//  Knopfs genau an dessen Stelle obendrauf. Ein Klick darauf oeffnet das
+//  Bild wie der Knopf selbst; die Maus darauf schliesst die grosse
+//  Ansicht nicht.
+// ================================================================
+function bildZoomLupeZeigen(img){
+    try{
+        if(document.documentElement.classList.contains('android-app')) return;
+        const k = img.closest && img.closest('.option-grid');
+        const b = k && k.querySelector('.app-bild-lupe');
+        if(!b) return;
+        const r = b.getBoundingClientRect();
+        if(!r.width || !r.height) return;
+        let m = document.getElementById('bildZoomLupe');
+        if(!m){
+            m = document.createElement('button');
+            m.type = 'button'; m.id = 'bildZoomLupe'; m.className = 'app-bild-lupe';
+            m.setAttribute('aria-label', 'Bild vergrößern'); m.setAttribute('data-kein-klickton', '');
+            m.innerHTML = '<i class="fas fa-magnifying-glass-plus"></i>';
+            m.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation();
+                const ziel = m._ziel;
+                bildLupeZu();
+                if(ziel && document.body.contains(ziel)) ziel.click();
+            });
+            document.body.appendChild(m);
+        }
+        m._ziel = b;
+        // Die Seite kann gezoomt sein (wie bei der grossen Ansicht): Bildschirmpunkte zurueck in Seitenpunkte
+        const z = (typeof bildZoomFaktorAnzeige === 'function') ? (bildZoomFaktorAnzeige() || 1) : 1;
+        m.style.cssText = 'position:fixed; left:' + Math.round(r.left / z) + 'px; top:' + Math.round(r.top / z) + 'px; right:auto; bottom:auto; '
+            + 'width:' + Math.round(r.width / z) + 'px; height:' + Math.round(r.height / z) + 'px; z-index:100001; display:inline-flex; margin:0;';
+    }catch(e){}
+}
+function bildZoomLupeWeg(){
+    try{ const m = document.getElementById('bildZoomLupe'); if(m) m.style.display = 'none'; }catch(e){}
 }
 let bildZoomOriginal = null;
 function bildZoomAus(){
     try{
+        bildZoomLupeWeg();
         const o = document.getElementById('bildZoomEbene');
         if(o) o.style.display = 'none';
         if(bildZoomOriginal){ bildZoomOriginal.style.opacity = ''; bildZoomOriginal = null; }
@@ -13578,6 +13621,8 @@ function bildVomFinger(e){
 // neu gezeichnet, einzeln angehaengte Zuhoerer waeren jedes Mal weg.
 document.addEventListener('mouseover', function(e){
     if(bildVomFinger(e)) return;
+    // Die Maus auf dem Lupen-Zwilling (Stand 406) laesst die grosse Ansicht offen
+    if(e.target && e.target.closest && e.target.closest('#bildZoomLupe')) return;
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
     if(img){ if(!bildZoomOriginal) bildLupeVormerken(img, e.clientX, e.clientY); }
     else bildLupeZu();
@@ -13593,6 +13638,7 @@ document.addEventListener('mousemove', function(e){
 }, true);
 document.addEventListener('mouseout', function(e){
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
+    if(img && e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#bildZoomLupe')) return;
     if(img) bildLupeZu();
 }, true);
 window.addEventListener('scroll', bildLupeZu, true);
@@ -25106,7 +25152,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 404, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 406, datum: '02.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -63332,6 +63378,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 tu(() => window.openLightbox(img.currentSrc || img.src, name ? 'Antwort ' + name : ''));
             });
             kachel.appendChild(b);
+            // Stand 405 - Dietmar: "wir hatten die davor rechts oben im Bild und groesser". Am PC sitzt das Bild unter
+            // der Beschriftung "A:" - die Lupe kommt deshalb in die rechte obere Ecke des BILDES, nicht der Kachel.
+            if(!document.documentElement.classList.contains('android-app')){
+                const setz = () => {
+                    try{
+                        if(!img.isConnected || !img.offsetWidth) return;
+                        b.style.top = (img.offsetTop + 10) + 'px';
+                        b.style.right = Math.max(6, kachel.clientWidth - (img.offsetLeft + img.offsetWidth) + 10) + 'px';
+                    }catch(e){}
+                };
+                setz();
+                img.addEventListener('load', setz);
+                try{ if(window.ResizeObserver) new ResizeObserver(setz).observe(kachel); }catch(e){}
+            }
         });
     }
     tu(() => {
