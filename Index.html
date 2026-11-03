@@ -13140,13 +13140,44 @@ function bildZoomUmschalten(an){
 }
 window.bildZoomUmschalten = bildZoomUmschalten;
 
+// Stand 412 - Dietmar: "Eigentlich gehoert das unter Nachteilausgleich rein oder doppelt bei Beamer und Nachteilausgleich."
+// Gewaehlt: doppelt. Derselbe Kasten steht bei Beamer (sfx '') und bei Nachteilsausgleich (sfx '_na');
+// beide schreiben dieselbe Einstellung, bildZoomFelderNachziehen() haelt beide gleich.
+function bildZoomKasten(sfx){
+    return einstKasten('Bilder vergrößern',
+            'Klickst du auf die Lupe an einem Bild, wird es groß angezeigt. Hier wird eingestellt, wie groß. '
+          + 'Mit der Maus darüber wächst es immer nur ein wenig.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
+          + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
+          + 'data-vorlesen="Stärker vergrößern. Klickst du auf die Lupe an einem Bild, wird es groß angezeigt. Mit diesem Haken wird es deutlich größer. Fährst du nur mit der Maus darüber, wächst es ein wenig.">'
+          + '<input type="checkbox" id="einstBildZoomAn' + sfx + '" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="bildZoomUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Gilt für den Klick auf die Lupe an einem Bild. Ohne Haken wird das Bild etwa halb so breit wie das Fenster; '
+          + 'mit Haken so groß, wie du es unten wählst. Nur mit der Maus darüber wächst es immer ein wenig.</span></span></label>'
+          + '<select id="einstBildZoom' + sfx + '" onchange="bildZoomSetzen(this.value)" '
+          + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
+          + 'data-vorlesen="Hier wählst du, wie groß ein Bild nach dem Klick auf die Lupe wird — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1.3">ein Drittel größer</option>'
+          + '<option value="1.5">halb so groß wieder dazu</option>'
+          + '<option value="2">doppelt so groß</option>'
+          + '<option value="2.4">so groß wie möglich</option>'
+          + '</select>'
+          + '<div id="einstBildZoomText' + sfx + '" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>');
+}
 function bildZoomFelderNachziehen(){
     const an = bildZoomGross();
     const f  = bildZoomFaktor();
     if(an){ try{ localStorage.setItem(BILDZOOM_SCHLUESSEL + '_letzt', String(f)); }catch(e){} }
-    const haken = document.getElementById('einstBildZoomAn');
+    for(const sfx of ['', '_na']) bildZoomFelderEins(sfx, an, f);
+}
+function bildZoomFelderEins(sfx, an, f){
+    const haken = document.getElementById('einstBildZoomAn' + sfx);
     if(haken) haken.checked = an;
-    const feld = document.getElementById('einstBildZoom');
+    const feld = document.getElementById('einstBildZoom' + sfx);
     if(feld){
         feld.disabled = !an;
         feld.style.opacity = an ? '1' : '0.45';
@@ -13159,7 +13190,7 @@ function bildZoomFelderNachziehen(){
             feld.value = beste.value;
         }
     }
-    const t = document.getElementById('einstBildZoomText');
+    const t = document.getElementById('einstBildZoomText' + sfx);
     if(t){
         t.textContent = !an
             ? 'Aus — nach dem Klick auf die Lupe wird ein Bild bis zu 55 % so breit wie das Fenster.'
@@ -25213,7 +25244,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 410, datum: '03.11.2026' };
+const TRAINER_STAND = { nr: 412, datum: '03.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34993,12 +35024,14 @@ function einstEnergieFuellen(){
           + '<div style="font-size:0.8rem; margin:0.2rem 0 0.3rem;">Im Sparmodus automatisch ruhiger Modus</div>' + seg('energieAutoSeg', 'afu_energie_auto', 'an', [['an', 'An'], ['aus', 'Aus']])
           + '<div style="font-size:0.8rem; margin:0.6rem 0 0.3rem;">Hinweis beim Start, wenn der Sparmodus an ist</div>' + seg('energieHinweisSeg', 'afu_energie_hinweis', 'an', [['an', 'An'], ['aus', 'Aus']])
           + (app ? '<button type="button" class="app-probe" style="margin-top:0.6rem;" onclick="try{AndroidApp.akkuEinstellungen()}catch(e){}"><i class="fas fa-battery-half"></i> Akku-Einstellungen des Handys öffnen</button>' : ''))
+      // Stand 411 - Dietmar (Bild vom leeren Reiter am PC): "ist das Normal das bei dem Reiter Energie nichts drin ist am Desktop?"
+      // Nur der Handy-Kasten gehoert in den nur-app-Block. Bis 410 schloss der Block erst am Ende - am PC war der Reiter leer.
+      + '</div>'
       + einstKasten('Ruhiger Modus', 'Ohne Maja-Animationen, funkelnde Sterne und Übergänge – nur Standbilder. Spart Akku und ruckelt nicht. „Automatisch“ folgt am Handy dem Sparmodus und der Einstellung „Bewegung reduzieren“; am PC heißt Automatisch: aus.',
             ruhigStand()
           + seg('energieRuhigSeg', 'afu_ruhig', 'auto', [['auto', 'Automatisch'], ['an', 'Immer an'], ['aus', 'Immer aus']]))
       + einstKasten('Zwischenspeicher', 'Bei jedem neuen Stand des Trainers wird der Zwischenspeicher von selbst geleert (seit Stand 378). Hängt trotzdem etwas oder wird etwas veraltet angezeigt, hilft dieser Knopf. Verlauf, Lernfortschritt und Lernstand bleiben dabei erhalten.',
-            '<button type="button" class="app-probe" onclick="clearCacheAndReload()"><i class="fas fa-broom"></i> Cache leeren</button>')
-      + '</div>';
+            '<button type="button" class="app-probe" onclick="clearCacheAndReload()"><i class="fas fa-broom"></i> Cache leeren</button>');
 }
 window.einstEnergieFuellen = einstEnergieFuellen;
 
@@ -35393,29 +35426,7 @@ function einstBlaetterFuellen(){
           + 'onchange="beamerSetzen(this.checked)">'
           + '<span style="font-size:0.85rem; color:#0f2745; font-weight:600;">Beamer-Modus einschalten</span></label>')
       + '<div id="einstBeamerLektionen"></div>'
-      + einstKasten('Bilder vergrößern',
-            'Für Bilder in den Fragen, zum Beispiel Schaltpläne: Fährst du mit der Maus darüber, wächst das Bild an seiner Stelle. Hier wird '
-          + 'eingestellt, wie weit. Am Beamer ist das praktisch, wenn ein Bild gezeigt werden soll.',
-            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
-          + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
-          + 'data-vorlesen="Stärker vergrößern. Klickst du auf die Lupe an einem Bild, wird es groß angezeigt. Mit diesem Haken wird es deutlich größer. Fährst du nur mit der Maus darüber, wächst es ein wenig.">'
-          + '<input type="checkbox" id="einstBildZoomAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
-          + 'onchange="bildZoomUmschalten(this.checked)">'
-          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
-          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
-          + 'Gilt für den Klick auf die Lupe an einem Bild. Ohne Haken wird das Bild etwa halb so breit wie das Fenster; '
-          + 'mit Haken so groß, wie du es unten wählst. Nur mit der Maus darüber wächst es immer ein wenig.</span></span></label>'
-          + '<select id="einstBildZoom" onchange="bildZoomSetzen(this.value)" '
-          + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
-          + 'data-vorlesen="Hier wählst du, wie groß ein Bild nach dem Klick auf die Lupe wird — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
-          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
-          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
-          + '<option value="1.3">ein Drittel größer</option>'
-          + '<option value="1.5">halb so groß wieder dazu</option>'
-          + '<option value="2">doppelt so groß</option>'
-          + '<option value="2.4">so groß wie möglich</option>'
-          + '</select>'
-          + '<div id="einstBildZoomText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>')
+      + bildZoomKasten('')
       + einstKasten('Beamer verwenden',
             null,
             '<div style="font-size:0.78rem; line-height:1.6; color:var(--muted);">'
@@ -35694,6 +35705,7 @@ function einstBlaetterFuellen(){
           + 'steht der Zähler still — die Ansage wird nie abgeschnitten. Und die <b>letzte Frage</b> '
           + 'bleibt stehen; ins Ergebnis geht es nur auf Klick. Jede Taste und jeder Klick halten '
           + 'den Zähler ebenfalls an.</div>')
+      + bildZoomKasten('_na')
       + einstKasten('Mehr Zeit in der Prüfung',
             'Nur für den Prüfungssimulator und die Prüfungsübersicht. Der Trainer rechnet '
           + 'dann mit der längeren Zeit, damit das Üben dem entspricht, was am Prüfungstag gilt.',
@@ -36416,6 +36428,7 @@ function appEinstellungenAufraeumen(){
     wegKasten('einstUmfangKurz');
     wegKasten('tastaturCheckbox');
     wegKasten('einstBildZoomAn');
+    wegKasten('einstBildZoomAn_na');
     try{ const l = $('einstMausVorlesen') && $('einstMausVorlesen').closest('label'); weg(l); }catch(e){}
     // Sounds: der Klickton "am Rechner" - die App hat "Toene beim Tippen"
     if(nurApp) try{ const l = $('einstKlickTon') && $('einstKlickTon').closest('label'); weg(l); }catch(e){}
