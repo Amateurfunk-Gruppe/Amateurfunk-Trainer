@@ -58,6 +58,24 @@ function expandTTS(text){
   t = t.replace(/(?<![\d.,])(\d{1,3})\.(\d+)(?![\d.])(?=\s*(?:MHz|MHZ|GHz|GHZ)\b)/g, '$1,$2');
   t = t.replace(/(?<![\d.,])(\d+)\.(\d{1,2}|\d{4,})(?![\d.])(?!\s*\.\d)(?!\s*Uhr)/g, '$1,$2');
 
+  // FREQUENZEN WIE IM AMATEURFUNK (Stand 408, 03.11.2026). Dietmar: "im Amateurfunk spricht man
+  // Frequenzen auch anders aus, zum Beispiel 14,235. 14 Komma Zwei Drei Fuenf" - und zu AE405
+  // ("14 072,43 kHz"): "So waere das doch richtig. 14,07243". Die Stimme machte aus "14 072,43" etwas,
+  // was es nicht gibt ("Zwaenzig").
+  //  - Kilohertz mit Tausender-Leerzeichen und Komma (14 072,43 kHz) werden zu Megahertz (14,07243 MHz),
+  //  - nach dem Komma vor Hz/kHz/MHz/GHz jede Ziffer einzeln: "14 Komma zwei drei fuenf Megahertz".
+  const ZIFFER = ['null','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun'];
+  t = t.replace(/(?<![\d,.])(\d{1,3})[    ](\d{3}),(\d+)\s*kHz\b/g, (m, a, b, c) => a + ',' + b + c + ' MHz');
+  const HZ = { Hz: 'Hertz', kHz: 'Kilohertz', MHz: 'Megahertz', MHZ: 'Megahertz', GHz: 'Gigahertz', GHZ: 'Gigahertz' };
+  t = t.replace(/(?<![\d,.])(\d+),(\d+)\s*(Hz|kHz|MHz|MHZ|GHz|GHZ)\b/g,
+      (m, a, b, u) => a + ' Komma ' + b.split('').map(z => ZIFFER[+z]).join(' ') + ' ' + HZ[u]);
+  // UHRZEITEN (Stand 408). Dietmar: "Uhrzeit spricht Maja als Elf Dreissig aus." -> "11 Uhr 30 UTC".
+  t = t.replace(/\b(\d{1,2}):(\d{2})\b(\s*Uhr\b)?(?=\s*(?:UTC|MEZ|MESZ|Uhr)?\b)/g, (m, h, mi, uhr, pos, ganz) => {
+      const danach = ganz.slice(pos + m.length, pos + m.length + 6);
+      if(!uhr && !/^\s*(UTC|MEZ|MESZ)\b/.test(danach)) return m;
+      return String(parseInt(h, 10)) + ' Uhr' + (parseInt(mi, 10) ? ' ' + parseInt(mi, 10) : '');
+  });
+
   // HTML RAUS, BEVOR PIPER ES LIEST (16.09.2026). Der Katalog unterstreicht
   // an 29 Stellen ein Wort - "<u>nicht</u> abhaengig" (EC205) -, und die
   // Anfuehrungszeichen bei AF305 stehen als &bdquo;?&ldquo; im Text. Die

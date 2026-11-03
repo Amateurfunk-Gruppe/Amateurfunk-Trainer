@@ -508,6 +508,21 @@
         body.dark #appLeiste .al-avatar { color: #04283a; }
         body.runde-laeuft #appLeiste #alSuche,
         body.runde-laeuft #appLeiste #alBenutzer { display: none; }
+        /* Stand 410 - Dietmar (Bild mit gelber Markierung): "Baue die Suche oben rechts neben den Button Forum mit ein."
+           Am PC steht das Suchfeld fest in der Kopfleiste, links neben "Forum". Keine lange Leiste mehr. */
+        #alSuchFest { flex: 1 1 auto; max-width: 620px; min-width: 180px; margin: 0 14px 0 18px; display: flex; align-items: center; }
+        #alSuchFest .suchfeld-huelle { display: flex !important; width: 100% !important; gap: 6px !important; align-items: center !important; }
+        #alSuchFest #searchInput { flex: 1 1 auto !important; width: auto !important; min-width: 0 !important; height: 36px !important;
+            font-size: 14px !important; padding: 0 0.8rem 0 2rem !important; box-sizing: border-box; border-radius: 10px; }
+        #alSuchFest .suchfeld-huelle > button { height: 36px !important; min-width: 36px; width: auto !important; padding: 0 10px !important; border-radius: 10px !important; }
+        #alSuchFest .suchfeld-huelle > i.fa-search { top: 50%; transform: translateY(-50%); left: 11px !important; }
+        body.runde-laeuft #alSuchFest { display: none; }
+        /* Stand 410 - Dietmar zur klassischen Ansicht (Sachlich): "Bei Sachlich sieht es ähnlich aus. Hier können wir den
+           Platz auch ausnutzen." Das Suchfeld waechst in die freie Flaeche bis vor die Knoepfe rechts (hoechstens 520 Punkte)
+           und schrumpft bei schmalen Fenstern wieder auf die alten 145 - die Kopfzeile bleibt einzeilig. */
+        html:not(.android-app) .header > .header-left { flex: 1 1 auto; min-width: 0; }
+        html:not(.android-app) .header .suchfeld-huelle { flex: 1 1 145px; max-width: 520px; min-width: 0; margin-right: 14px; }
+        html:not(.android-app) .header .suchfeld-huelle #searchInput { flex: 1 1 145px; width: 145px !important; min-width: 100px; }
         /* Die Pruefungsuhr wandert aus der alten Kopfzeile hierher. */
         #alUhrPlatz #examTimerDisplay {
             margin: 0 4px 0 0; padding: 0.3rem 0.7rem; font-size: 0.9rem; font-weight: 700; white-space: nowrap;
@@ -3114,8 +3129,11 @@
         html:not(.android-app) #questionContainer .option-grid { position: relative; }
         html:not(.android-app) .app-bild-lupe { position: absolute; top: 8px; right: 8px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(15,39,69,0.18);
             background: rgba(255,255,255,0.94); color: var(--panel-navy, #0f2745); font-size: 20px; display: inline-flex; align-items: center; justify-content: center;
-            cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 3; padding: 0; margin: 0; transition: transform 0.12s ease, background 0.12s ease; }
+            cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 61; padding: 0; margin: 0; transition: transform 0.12s ease, background 0.12s ease; }
         html:not(.android-app) .app-bild-lupe:hover { transform: scale(1.08); background: #ffffff; }
+        /* Stand 407 - Dietmar: "wenn ich auf das Feld mit der Lupe gehe, verschwindet die Lupe kurz ... Die Lupe muss
+           bleiben." Das Bild unter der Maus bekommt z-index 60 (Schatten beim Draufzeigen) und lag damit ueber der Lupe
+           (z-index 3), bis die grosse Ansicht kam. Die Lupe liegt jetzt darueber (61). */
         html:not(.android-app) body.dark .app-bild-lupe { background: rgba(16,32,52,0.94); color: #dbe6f3; border-color: rgba(255,255,255,0.28); }
         html:not(.android-app) body.dark .app-bild-lupe:hover { background: rgba(30,52,80,0.98); }
 
@@ -10703,6 +10721,7 @@ async function klasseWaehlen(id) {
     // es nur fuer Klasse N. Ohne das Leeren blieben 14 Lektionen mit null
     // Fragen im Feld stehen.
     await klasseFragenNachladen();
+    try{ majaSpracheAutoLaden(); }catch(e){}   // Stand 408: Majas Pakete der neuen Klasse still nachladen
 }
 window.klasseWaehlen = klasseWaehlen;
 
@@ -13143,11 +13162,9 @@ function bildZoomFelderNachziehen(){
     const t = document.getElementById('einstBildZoomText');
     if(t){
         t.textContent = !an
-            ? 'Aus — die Vergrößerung bleibt so, dass daneben noch etwas zu sehen ist.'
-            : (f >= BILD_ZOOM_VOLL
-                ? 'Ein Bild wird jetzt so groß wie das Fenster des Trainers — Kante auf Kante.'
-                : 'Ein Bild darf jetzt bis zu ' + Math.round(Math.min(0.92, 0.62 * f) * 100)
-                  + ' % der Breite des Trainerfensters einnehmen (sonst 62 %).');
+            ? 'Aus — nach dem Klick auf die Lupe wird ein Bild bis zu 55 % so breit wie das Fenster.'
+            : 'Nach dem Klick auf die Lupe wird ein Bild jetzt bis zu ' + Math.round(Math.min(0.92, 0.55 * f) * 100)
+              + ' % so breit wie das Fenster (ohne Haken 55 %).';
     }
 }
 window.bildZoomFelderNachziehen = bildZoomFelderNachziehen;
@@ -13281,8 +13298,21 @@ function bildZoomEbene(){
         o.innerHTML = '<img alt="" style="position:absolute; box-sizing:border-box; background:#fff; '
             + 'border:1px solid #c3d0de; border-radius:12px; padding:8px; '
             + 'box-shadow:0 6px 18px rgba(0,0,0,0.28), 0 0 0 1px rgba(15,39,69,0.10); object-fit:contain; '
-            + 'transform:scale(0.75); opacity:0; transition:transform 0.18s ease-out, opacity 0.18s ease-out;">';
+            + 'transform:scale(0.75); opacity:0; transition:transform 0.18s ease-out, opacity 0.18s ease-out; '
+            + 'pointer-events:auto; cursor:pointer;">';
         document.body.appendChild(o);
+        // Stand 407 - Dietmar: "Bedenke, dass ich das Bild auch anklicken koennen muss ... wenn ich auf den
+        // Rand von dem Bild klicke, habe ich die Frage beantwortet."
+        // Das vergroesserte Bild verhaelt sich wie die Kachel darunter: ein Klick darauf ist derselbe Klick
+        // wie auf das kleine Bild (Antwort waehlen). Nur die Lupe oeffnet die grosse Ansicht. Und weil die
+        // Maus jetzt auf dem grossen Bild liegt, bleibt es offen, bis sie es verlaesst - so ist die Lupe
+        // in seiner Ecke auch erreichbar.
+        o.firstChild.addEventListener('click', function(e){
+            e.preventDefault(); e.stopPropagation();
+            const ziel = bildZoomOriginal;
+            bildLupeZu();
+            if(ziel && document.body.contains(ziel)) ziel.click();
+        });
     }
     return o;
 }
@@ -13316,8 +13346,11 @@ function bildZoomAn(img){
         const mass = gross ? BILD_MASS.vollbild : BILD_MASS.normal;
         const imRaster = img.classList.contains('option-image');
         const max  = imRaster ? mass.antwort : mass.frage;
-        // Der Wunschfaktor aus den Einstellungen (Nachteilsausgleich).
-        const bz = (typeof bildZoomFaktor === 'function') ? bildZoomFaktor() : 1;
+        // Stand 407 - Dietmar: "wenn ich auf die Lupe klicke, ist es gross, je nachdem, wie ich es im
+        // Nachteilsausgleich eingestellt habe. Und wenn ich nicht drauf klicke, dann ist es nur ein bisschen Zoom."
+        // Beim Draufzeigen gilt deshalb immer das Grundmass; der Wunschfaktor aus dem Nachteilsausgleich
+        // bestimmt die grosse Ansicht nach dem Klick (openLightbox).
+        const bz = 1;
         const anteilB = Math.min(0.92, mass.anteilB * bz);
         const anteilH = Math.min(0.92, mass.anteilH * bz);
         // ================================================================
@@ -13457,6 +13490,7 @@ function bildZoomAn(img){
 
         const o = bildZoomEbene();
         const gr = o.querySelector('img');
+        gr.title = img.title || '';   // Stand 407: wie auf der Kachel ("Antwort A waehlen")
         // Erst die Originalquelle - damit sofort etwas zu sehen ist -, dann
         // die um eine viewBox ergaenzte Fassung, sobald sie vorliegt. Beim
         // zweiten Mal kommt sie aus dem Cache und ist sofort da.
@@ -13534,8 +13568,30 @@ function bildZoomLupeZeigen(img){
         m._ziel = b;
         // Die Seite kann gezoomt sein (wie bei der grossen Ansicht): Bildschirmpunkte zurueck in Seitenpunkte
         const z = (typeof bildZoomFaktorAnzeige === 'function') ? (bildZoomFaktorAnzeige() || 1) : 1;
-        m.style.cssText = 'position:fixed; left:' + Math.round(r.left / z) + 'px; top:' + Math.round(r.top / z) + 'px; right:auto; bottom:auto; '
-            + 'width:' + Math.round(r.width / z) + 'px; height:' + Math.round(r.height / z) + 'px; z-index:100001; display:inline-flex; margin:0;';
+        const lb = Math.round(r.width / z), lh = Math.round(r.height / z);
+        // Stand 407 - Dietmar (Video 02.11.2026): "Unten links ist die Lupe dann beim Vergroessern in der Mitte ...
+        // rechts ... links oben ... rechts oben. Das ist doch keine Einheit."
+        // Die Lupe sitzt deshalb auch auf dem vergroesserten Bild immer an derselben Stelle wie auf der Kachel:
+        // oben rechts, 10 Punkte vom Rand. Sie geht mit, solange das Bild waechst.
+        const gr = document.querySelector('#bildZoomEbene img');
+        const setz = function(){
+            const q = (gr && gr.offsetParent !== null) ? gr.getBoundingClientRect() : null;
+            if(q && q.width > 0){
+                m.style.left = Math.round(q.right / z - 10 - lb) + 'px';
+                m.style.top  = Math.round(q.top / z + 10) + 'px';
+            }else{
+                const o = b.getBoundingClientRect();
+                m.style.left = Math.round(o.left / z) + 'px'; m.style.top = Math.round(o.top / z) + 'px';
+            }
+        };
+        m.style.cssText = 'position:fixed; right:auto; bottom:auto; width:' + lb + 'px; height:' + lh + 'px; z-index:100001; display:inline-flex; margin:0;';
+        setz();
+        const folgen = function(){
+            if(m.style.display === 'none' || m._ziel !== b || !b.isConnected) return;
+            setz();
+            requestAnimationFrame(folgen);
+        };
+        requestAnimationFrame(folgen);
     }catch(e){}
 }
 function bildZoomLupeWeg(){
@@ -13623,8 +13679,13 @@ document.addEventListener('mouseover', function(e){
     if(bildVomFinger(e)) return;
     // Die Maus auf dem Lupen-Zwilling (Stand 406) laesst die grosse Ansicht offen
     if(e.target && e.target.closest && e.target.closest('#bildZoomLupe')) return;
+    // Stand 407: Die Maus auf dem vergroesserten Bild laesst es ebenfalls offen
+    if(e.target && e.target.closest && e.target.closest('#bildZoomEbene')) return;
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
-    if(img){ if(!bildZoomOriginal) bildLupeVormerken(img, e.clientX, e.clientY); }
+    if(img){
+        if(bildZoomOriginal && img !== bildZoomOriginal) bildLupeZu();
+        if(!bildZoomOriginal) bildLupeVormerken(img, e.clientX, e.clientY);
+    }
     else bildLupeZu();
 }, true);
 document.addEventListener('mousemove', function(e){
@@ -13638,7 +13699,7 @@ document.addEventListener('mousemove', function(e){
 }, true);
 document.addEventListener('mouseout', function(e){
     const img = e.target.closest && e.target.closest('.q-image img, .option-grid .option-image');
-    if(img && e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#bildZoomLupe')) return;
+    if(img && e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#bildZoomLupe, #bildZoomEbene')) return;
     if(img) bildLupeZu();
 }, true);
 window.addEventListener('scroll', bildLupeZu, true);
@@ -25152,7 +25213,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 406, datum: '02.11.2026' };
+const TRAINER_STAND = { nr: 410, datum: '03.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -26576,6 +26637,14 @@ function sprechbar(text){
     t = t.replace(/\u2192/g, ' ergibt ');                // →
     t = t.replace(/\u2260/g, ' ist nicht ');             // ≠
     t = t.replace(/=/g, ' ist ');
+    // Stand 408 - Dietmar: "Uhrzeit spricht Maja als Elf Dreissig aus. Das gefaellt mir auch nicht."
+    // Uhrzeiten (vor Uhr, UTC, MEZ, MESZ) heissen "11 Uhr 30", "20 Uhr" - nicht "11 zu 30".
+    t = t.replace(/\b(\d{1,2}):(\d{2})\b(\s*Uhr\b)?(?=\s*(?:Uhr|UTC|MEZ|MESZ|U T C|M E Z|M E S Z)?\b)/g, function(m, h, mi, uhr, pos, ganz){
+        const danach = ganz.slice(pos + m.length, pos + m.length + 8);
+        if(!uhr && !/^\s*(UTC|MEZ|MESZ|U T C|M E Z|M E S Z)\b/.test(danach)) return m;
+        const hh = String(parseInt(h, 10)), mm = parseInt(mi, 10);
+        return hh + ' Uhr' + (mm ? ' ' + mm : '');
+    });
     t = t.replace(/(\d)\s*:\s*(\d)/g, '$1 zu $2');      // Verhaeltnis 1:4
     t = t.replace(/\u03c0/g, ' pi ');                    // π
     // Omega und Lambda haben hier bis zum 13.09.2026 gefehlt. Piper
@@ -32799,6 +32868,9 @@ const BILD_PAUSE_MS = 2600;
 // (fuer die App), zuletzt das alte Projekt maja-sprache. Genommen wird die erste Liste, die sich lesen laesst.
 const MAJA_SPRACHE_QUELLEN = ['sprache/', 'https://trainer.amateurfunk-trainer.com/sprache/', 'https://sprache.amateurfunk-trainer.com/', 'https://maja-sprache.pages.dev/'];
 const MAJA_SPRACHE_CACHE = 'maja-sprache-v1';
+// Stand 408: Ein Teil kann auch eine volle Adresse haben. So liegen die alten, unveraenderten Teile weiter im
+// Projekt maja-sprache, und im Trainer nur der kleine Korrektur-Teil (neu aufgenommene Frequenzen und Uhrzeiten).
+function majaTeilUrl(quelle, datei){ return /^https?:\/\//.test(String(datei)) ? String(datei) : quelle + datei; }
 // Pruefungsziele wie in KLASSEN: n = Klasse N, e = Klasse E (N + Aufbau), ne = nur Aufbau N auf E, ea = Aufbau E auf A (Stand 395).
 // Stand 401: die Antworten Aufbau N auf E und E auf A sind da (Grok, 02.11.2026).
 const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten', 'E-antworten'], ne: ['E-fragen', 'E-antworten'],
@@ -32828,9 +32900,12 @@ function majaSpracheAnSetzen(an){
 //  Sie gelten nur, wenn Maja ueberhaupt vorliest: ein Sprachpaket ist
 //  geladen und "Maja liest vor" ist an. Sonst bleibt alles wie bisher.
 // ================================================================
+// Stand 408 - Dietmar: "Die 2 x 3 Saetze mit richtig und falsch sind mir zu lebhaft. Ich moechte eine
+// einfache Version davon." Gewaehlt: "Das ist richtig." / "Das ist leider falsch." - je ein Satz, ruhig.
+// (992-997 bleiben im Paket, werden aber nicht mehr gespielt.)
 const MAJA_RUECK = {
-    richtig: ['maja_992.mp3', 'maja_993.mp3', 'maja_994.mp3'],
-    falsch:  ['maja_995.mp3', 'maja_996.mp3', 'maja_997.mp3']
+    richtig: ['maja_1002.mp3'],
+    falsch:  ['maja_1003.mp3']
 };
 const MAJA_BUCHSTABE = ['maja_998.mp3', 'maja_999.mp3', 'maja_1000.mp3', 'maja_1001.mp3'];
 function majaRueckAn(){
@@ -32951,7 +33026,7 @@ async function majaSpracheBlob(m){
     let b = majaSprache.teile[name];
     if(!b){
         const c = await caches.open(MAJA_SPRACHE_CACHE);
-        const r = await c.match(inst.quelle + name);
+        const r = await c.match(majaTeilUrl(inst.quelle, name));
         if(!r) return null;
         b = await r.blob();
         majaSprache.teile[name] = b;
@@ -33034,6 +33109,7 @@ async function majaSpracheListe(neu){
 
 async function majaSpracheLaden(pid){
     if(majaSprache.laeuft[pid]) return;
+    try{ localStorage.removeItem('maja_sprache_weg_' + pid); }catch(e){}
     majaSprache.laeuft[pid] = true; majaSprache.fehler[pid] = ''; majaSprache.fortschritt[pid] = 0;
     majaSpracheKarteZeichnen();
     try{
@@ -33048,7 +33124,7 @@ async function majaSpracheLaden(pid){
         const c = await caches.open(MAJA_SPRACHE_CACHE);
         let fertigBytes = 0;
         for(const t of p.teile){
-            const url = quelle + t.datei;
+            const url = majaTeilUrl(quelle, t.datei);
             const schon = await c.match(url);
             if(!schon){
                 const res = await fetch(url, { cache: 'no-cache' });
@@ -33079,6 +33155,16 @@ async function majaSpracheLaden(pid){
         const ij = await ir.json();
         await c.put(quelle + p.index, new Response(JSON.stringify(ij), { headers: { 'Content-Type': 'application/json' } }));
         const inst = majaSpracheInstalliert();
+        // Stand 408: Teile einer aelteren Fassung, die nicht mehr gebraucht werden, aus dem Speicher nehmen
+        try{
+            const alt = inst[pid];
+            if(alt && alt.teile){
+                const bleibt = new Set(p.teile.map(t => majaTeilUrl(quelle, t.datei)).concat([quelle + p.index]));
+                for(const u of alt.teile.map(t => majaTeilUrl(alt.quelle, t)).concat([alt.quelle + alt.index])){
+                    if(!bleibt.has(u)) await c.delete(u);
+                }
+            }
+        }catch(e){}
         inst[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, anzahl: p.anzahl, bytes: p.bytes, stand: p._stand || L.stand || '' };
         majaSpracheMerken(inst);
         majaSprache.idx[pid] = ij;
@@ -33091,12 +33177,13 @@ async function majaSpracheLaden(pid){
 window.majaSpracheLaden = majaSpracheLaden;
 
 async function majaSpracheEntfernen(pid){
+    try{ localStorage.setItem('maja_sprache_weg_' + pid, '1'); }catch(e){}   // Stand 408: bleibt weg, kein Auto-Laden
     const inst = majaSpracheInstalliert();
     const p = inst[pid];
     if(p){
         try{
             const c = await caches.open(MAJA_SPRACHE_CACHE);
-            for(const t of p.teile){ await c.delete(p.quelle + t); delete majaSprache.teile[t]; }
+            for(const t of p.teile){ await c.delete(majaTeilUrl(p.quelle, t)); delete majaSprache.teile[t]; }
             await c.delete(p.quelle + p.index);
         }catch(e){}
     }
@@ -33105,6 +33192,71 @@ async function majaSpracheEntfernen(pid){
     majaSpracheKarteZeichnen();
 }
 window.majaSpracheEntfernen = majaSpracheEntfernen;
+
+// ================================================================
+//  PAKETE FUER DIE EIGENE KLASSE LADEN SICH SELBST          (Stand 408)
+// ----------------------------------------------------------------
+//  Dietmar (03.11.2026): "Nach dem Neustart sind meine Maja Stimmen immer weg. Lass uns das nach
+//  Klasse spezifisch aufbauen. Fehlen diese, werden sie automatisch ohne Hinweis im Hintergrund
+//  nachgeladen."
+//  Beim Start (nach ein paar Sekunden Ruhe), nach einem Klassenwechsel und wenn das Netz
+//  zurueckkommt: Fuer jedes Paket der eigenen Klasse (MAJA_SPRACHE_BRAUCHT) wird geprueft, ob es
+//  vermerkt ist UND alle Teile wirklich im Speicher liegen. Fehlt etwas, wird es still geladen -
+//  ohne Meldung, nur die Karte in den Einstellungen zeigt den Fortschritt.
+//  Ausnahme: Ein Paket, das jemand selbst mit "Entfernen" weggenommen hat, bleibt weg, bis er es
+//  wieder von Hand laedt - sonst kaeme es sofort zurueck und der Knopf waere wirkungslos.
+// ================================================================
+let majaSpracheAutoLaeuft = false;
+async function majaSpracheVollstaendig(pid){
+    const p = majaSpracheInstalliert()[pid];
+    if(!p || !p.teile || !p.teile.length) return false;
+    try{
+        const c = await caches.open(MAJA_SPRACHE_CACHE);
+        for(const t of p.teile){ if(!(await c.match(majaTeilUrl(p.quelle, t)))) return false; }
+        if(!(await c.match(p.quelle + p.index))) return false;
+        return true;
+    }catch(e){ return false; }
+}
+async function majaSpracheAutoLaden(){
+    if(majaSpracheAutoLaeuft) return;
+    if(!majaSpracheMoeglich() || !majaSpracheAn()) return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    majaSpracheAutoLaeuft = true;
+    try{
+        let kl = 'n';
+        try{ kl = (klasseAktuell().id || 'n').toLowerCase(); }catch(e){}
+        const braucht = MAJA_SPRACHE_BRAUCHT[kl] || MAJA_SPRACHE_BRAUCHT.n;
+        // Stand 408: Gibt es von einem geladenen Paket eine neuere Fassung, still nachziehen. Geladen wird dabei nur,
+        // was noch fehlt (meist der kleine Korrektur-Teil) - die alten Teile liegen schon im Speicher.
+        try{
+            const L = await majaSpracheListe(true);
+            if(L){
+                const inst0 = majaSpracheInstalliert();
+                for(const pid of Object.keys(inst0)){
+                    const p = L.pakete.find(x => x.id === pid);
+                    if(p && p._stand && inst0[pid].stand !== p._stand && !majaSprache.laeuft[pid]) await majaSpracheLaden(pid);
+                }
+            }
+        }catch(e){}
+        for(const pid of braucht){
+            let weg = false;
+            try{ weg = localStorage.getItem('maja_sprache_weg_' + pid) === '1'; }catch(e){}
+            if(weg || majaSprache.laeuft[pid]) continue;
+            if(await majaSpracheVollstaendig(pid)) continue;
+            // Vermerk ohne Daten (oder unvollstaendig): Vermerk weg, dann neu laden
+            const inst = majaSpracheInstalliert();
+            if(inst[pid]){ delete inst[pid]; majaSpracheMerken(inst); delete majaSprache.idx[pid]; }
+            await majaSpracheLaden(pid);
+        }
+    }catch(e){}
+    majaSpracheAutoLaeuft = false;
+}
+window.majaSpracheAutoLaden = majaSpracheAutoLaden;
+(function(){
+    const start = function(){ setTimeout(function(){ try{ majaSpracheAutoLaden(); }catch(e){} }, 8000); };
+    if(document.readyState === 'complete') start(); else window.addEventListener('load', start);
+    window.addEventListener('online', function(){ setTimeout(function(){ try{ majaSpracheAutoLaden(); }catch(e){} }, 3000); });
+})();
 
 function majaSpracheFortschrittZeigen(pid){
     const b = document.getElementById('majaSpracheBalken_' + pid);
@@ -33173,7 +33325,7 @@ function majaSpracheKarteZeichnen(){
         + MAJA_SPRACHE_REIHE.map(zeile).join('')
         + '<label style="display:flex; align-items:flex-start; gap:0.5rem; font-size:0.84rem; cursor:pointer; padding-top:0.55rem; border-top:1px solid rgba(127,140,160,0.2);">'
         + '<input type="checkbox" style="margin-top:3px;" ' + (majaRueckAn() ? 'checked' : '') + ' onchange="majaRueckAnSetzen(this.checked)">'
-        + '<span>Maja sagt nach deiner Antwort, ob sie stimmt<br><span style="font-size:0.72rem; color:var(--muted);">Sie freut sich bei richtig und muntert dich bei falsch auf – je drei Sätze im Wechsel. '
+        + '<span>Maja sagt nach deiner Antwort, ob sie stimmt<br><span style="font-size:0.72rem; color:var(--muted);">Ruhig und kurz: „Das ist richtig.“ oder „Das ist leider falsch.“ '
         + 'Gilt, sobald ein Sprachpaket geladen ist und „Antwort mit Sprachausgabe bestätigen“ an ist.</span></span></label>';
     k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
         'Maja liest die Prüfungsfragen mit ihrer eigenen Stimme vor – viel natürlicher als die eingebaute Stimme. '
@@ -35246,16 +35398,16 @@ function einstBlaetterFuellen(){
           + 'eingestellt, wie weit. Am Beamer ist das praktisch, wenn ein Bild gezeigt werden soll.',
             '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;" '
           + 'data-vorlesen-kurz="Bilder stärker vergrößern." '
-          + 'data-vorlesen="Stärker vergrößern. Fährst du mit der Maus über ein Bild, wächst es an seiner Stelle. Mit diesem Haken wird es deutlich größer als bisher.">'
+          + 'data-vorlesen="Stärker vergrößern. Klickst du auf die Lupe an einem Bild, wird es groß angezeigt. Mit diesem Haken wird es deutlich größer. Fährst du nur mit der Maus darüber, wächst es ein wenig.">'
           + '<input type="checkbox" id="einstBildZoomAn" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
           + 'onchange="bildZoomUmschalten(this.checked)">'
           + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
           + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
-          + 'Ohne Haken bleibt es beim bisherigen Maß — groß genug zum Erkennen, klein genug, '
-          + 'dass die Frage daneben noch zu sehen ist.</span></span></label>'
+          + 'Gilt für den Klick auf die Lupe an einem Bild. Ohne Haken wird das Bild etwa halb so breit wie das Fenster; '
+          + 'mit Haken so groß, wie du es unten wählst. Nur mit der Maus darüber wächst es immer ein wenig.</span></span></label>'
           + '<select id="einstBildZoom" onchange="bildZoomSetzen(this.value)" '
           + 'data-vorlesen-kurz="Wie stark die Bilder wachsen." '
-          + 'data-vorlesen="Hier wählst du, wie stark ein Bild beim Überfahren wächst — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
+          + 'data-vorlesen="Hier wählst du, wie groß ein Bild nach dem Klick auf die Lupe wird — ein Drittel größer, halb so groß wieder dazu, doppelt so groß oder so groß wie möglich." '
           + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
           + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
           + '<option value="1.3">ein Drittel größer</option>'
@@ -43089,19 +43241,27 @@ function openLightbox(src, caption) {
                 if(!nw || !nh) return;
                 const vb = overlay.clientWidth || window.innerWidth;
                 const vh = overlay.clientHeight || window.innerHeight;
-                // Rand, Innenabstand und Beschriftung ziehen wir ab
-                const maxB = Math.max(80, vb * 0.92 - 26);
-                const maxH = Math.max(80, vh * 0.84 - 26);
+                // Stand 407 - die Groesse folgt dem Nachteilsausgleich ("Staerker vergroessern"):
+                // aus 55 %, ein Drittel groesser 72 %, halb so gross dazu 83 %, doppelt und mehr bis 92 % der
+                // Fensterbreite. Nie groesser als das Fenster (vorher wurde das Bild am Rand abgeschnitten).
+                const bz = (typeof bildZoomFaktor === 'function') ? bildZoomFaktor() : 1;
+                const anB = Math.min(0.92, 0.55 * bz), anH = Math.min(0.78, 0.50 * bz);   // oben bleibt Platz fuer das X, unten fuer die Bildunterschrift
+                const maxB = Math.max(80, vb * anB - 26);
+                const maxH = Math.max(80, vh * anH - 26);
                 let f = Math.min(maxB / nw, maxH / nh);
                 f = Math.min(f, 12);
                 if(f < 1.05) { img.style.width = ''; return; }
-                img.style.width = Math.round(nw * f) + 'px';
-                // Falls die Seite per Zoom (pcFit) verkleinert wird: nachmessen
-                const r = img.getBoundingClientRect();
-                if(img.offsetWidth && r.width){
-                    const z = r.width / img.offsetWidth;
-                    if(z > 0 && Math.abs(z - 1) > 0.02) img.style.width = Math.round(nw * f / z) + 'px';
-                }
+                // Falls die Seite gezoomt ist (pcFit): Massstab am Hintergrund messen, nicht am Bild - das Bild
+                // laeuft beim Oeffnen noch durch seine Aufzoom-Bewegung, dann misst es zu klein (Stand 407).
+                let z = 1;
+                try{ const ro = overlay.getBoundingClientRect(); if(overlay.offsetWidth && ro.width) z = ro.width / overlay.offsetWidth; }catch(e){}
+                if(!(z > 0)) z = 1;
+                let breite = nw * f;
+                // Sicherheitsnetz: mit Rand und Rahmen (2 x 13 Punkte) nie groesser als das Fenster
+                const wv = window.innerWidth, hv = window.innerHeight;
+                const k = Math.min(1, (wv * 0.96) / ((breite + 26) * z), (hv * 0.80) / ((breite * nh / nw + 26) * z));
+                breite = breite * k;
+                img.style.width = Math.round(breite) + 'px';
             };
             if(img.complete && img.naturalWidth) passen(); else img.onload = passen;
         }
@@ -55753,8 +55913,20 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         try{ if(such.contains(D.activeElement)) D.activeElement.blur(); }catch(e){}
         D.body.classList.remove('app-tastatur');
     }
+    // Stand 410: Am PC (nicht Handy-Breite) wohnt das Suchfeld fest in der Kopfleiste links neben "Forum".
+    tu(() => {
+        const H = D.documentElement;
+        if(!H.classList.contains('pc-app') || H.classList.contains('pc-handy')) return;
+        const titel = leiste.querySelector('.al-titel'), h = D.querySelector('.suchfeld-huelle');
+        if(!titel || !h) return;
+        const fest = D.createElement('div'); fest.id = 'alSuchFest';
+        titel.insertAdjacentElement('afterend', fest);
+        fest.appendChild(h);
+    });
     function sucheAuf(){
         mehrZu();
+        // Steht das Feld fest in der Leiste, springt der Knopf "Suche" nur hinein
+        if($('alSuchFest')){ const i = $('searchInput'); if(i) tu(() => { i.focus(); i.select(); }); return; }
         such.classList.add('offen');
         const i = $('searchInput');
         if(i) setTimeout(() => { try{ i.focus(); }catch(e){} }, 60);
