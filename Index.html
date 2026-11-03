@@ -17183,7 +17183,10 @@ function benutzerSchluessel(slot){
         'afu_qsl_'                    + slot,   // Diplome
         'amateurfunk_legende_'        + slot,   // letzte Stufe (pruefungsreif)
         'amateurfunk_pruefungen_'     + slot,   // die letzten Pruefungen (Fehler je 25)
-        'amateurfunk_simok_'          + slot    // Zaehler bestandene Pruefungssimulationen
+        'amateurfunk_simok_'          + slot,   // Zaehler bestandene Pruefungssimulationen
+        // Stand 416 - Dietmar (Bild der Auswertung nach dem Zuruecksetzen): "müsste das nicht auch einen Reset haben?"
+        // Der Kasten "Geraten oder gewusst?" (schnelle Antworten, Trefferquote) blieb voll.
+        'amateurfunk_tempo_'          + slot    // Antwortzeiten fuer "Geraten oder gewusst?"
     ];
 }
 
@@ -25282,7 +25285,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 415, datum: '03.11.2026' };
+const TRAINER_STAND = { nr: 416, datum: '03.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32944,7 +32947,7 @@ function majaTeilUrl(quelle, datei){ return /^https?:\/\//.test(String(datei)) ?
 // Stand 401: die Antworten Aufbau N auf E und E auf A sind da (Grok, 02.11.2026).
 const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten', 'E-antworten'], ne: ['E-fragen', 'E-antworten'],
                                ea: ['A-fragen', 'A-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten', 'E-antworten', 'A-antworten'] };
-const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {} };
+const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {}, vor: {}, zuerst: {} };
 
 function majaSpracheMoeglich(){
     try{ return typeof caches !== 'undefined' && typeof fetch === 'function' && typeof Blob !== 'undefined'; }catch(e){ return false; }
@@ -32986,7 +32989,7 @@ function majaRueckAnSetzen(an){
 window.majaRueckAnSetzen = majaRueckAnSetzen;
 // Liest Maja gerade vor? (Paket geladen und eingeschaltet)
 function majaLiestVor(){
-    try{ return majaSpracheAn() && majaSpracheMoeglich() && Object.keys(majaSpracheInstalliert()).length > 0; }catch(e){ return false; }
+    try{ return majaSpracheAn() && majaSpracheMoeglich() && majaPaketIds().length > 0; }catch(e){ return false; }
 }
 function majaDateiMarke(datei){
     return { url: 'sounds/maja-grok/' + datei + '?v=' + (typeof TRAINER_STAND !== 'undefined' ? TRAINER_STAND.nr : 0) };
@@ -33006,6 +33009,12 @@ function majaSpracheInstalliert(){
 }
 function majaSpracheMerken(o){
     try{ localStorage.setItem('maja_sprache_pakete', JSON.stringify(o)); }catch(e){}
+}
+// Stand 416: geladene Pakete und solche, deren Verzeichnis schon da ist (sie laden gerade)
+function majaPaketIds(){
+    const ids = Object.keys(majaSpracheInstalliert());
+    for(const pid of Object.keys(majaSprache.vor || {})) if(ids.indexOf(pid) < 0) ids.push(pid);
+    return ids;
 }
 function majaSpracheNorm(t){
     return String(t || '').toLowerCase().replace(/[^0-9a-zäöüß]/g, '').slice(0, 60);
@@ -33039,21 +33048,153 @@ function majaSpracheIndizesLaden(){
 // true = es wird gewartet und danach weiter() aufgerufen.
 function majaSpracheWartet(weiter){
     try{
-        if(majaSprache.idxFertig || !majaSpracheAn() || !majaSpracheMoeglich()) return false;
-        if(!Object.keys(majaSpracheInstalliert()).length) return false;
-        majaSpracheIndizesLaden().then(() => { majaSprache.idxFertig = true; weiter(); });
-        return true;
+        if(!majaSpracheAn() || !majaSpracheMoeglich()) return false;
+        if(!majaSprache.idxFertig && Object.keys(majaSpracheInstalliert()).length){
+            majaSpracheIndizesLaden().then(() => { majaSprache.idxFertig = true; weiter(); });
+            return true;
+        }
+        // Stand 416: Ohne Stimmenpaket kein Vorlesen - es laedt spaetestens jetzt, still.
+        let q = null; try{ q = currentQuestions[currentIndex]; }catch(e){}
+        return majaHoltNoch(q, weiter);
     }catch(e){ return false; }
+}
+
+// ================================================================
+//  MAJAS STIMME IST EINFACH DA                              (Stand 416)
+// ----------------------------------------------------------------
+//  Ein Tester: "Das ding rennt da nur so durch!! Von Frage zu Frage ohne Antwort und das in einem
+//  Tempo!" Dietmar: "Ohne Stimmenpaket, kein Vorlesen!" - "Der Benutzer darf davon nichts
+//  mitbekommen, das da Stimmen nachgeladen werden. Die sind einfach vorhanden, wenn man die Klasse
+//  ausgewählt hat." - "Sie laden spätestens nach, wenn man auf vorlesen klickt." - "Der Button
+//  Start, würde auch gehen."
+//  Beim Start, beim Klassenwechsel und bei jeder angezeigten Frage laedt der Trainer still die
+//  Pakete der Klasse - den Teil mit der gerade gezeigten Frage zuerst. Soll vorgelesen werden und
+//  dieser Teil fehlt noch, wartet das Vorlesen ohne Meldung (der Knopf dreht nur kurz), bis er da
+//  ist, und Maja spricht. Kommt er nicht (kein Netz), wird nicht vorgelesen.
+// ================================================================
+const majaHol = { lauf: 0, q: null, bereit: null };
+function majaPflicht(){ try{ return majaSpracheAn() && majaSpracheMoeglich(); }catch(e){ return false; } }
+function majaKlassePakete(){
+    let kl = 'n'; try{ kl = (klasseAktuell().id || 'n').toLowerCase(); }catch(e){}
+    return MAJA_SPRACHE_BRAUCHT[kl] || MAJA_SPRACHE_BRAUCHT.n;
+}
+// Verzeichnis eines Pakets: aus dem Speicher oder (klein) aus dem Netz - ohne das Paket zu vermerken
+async function majaVerzeichnis(pid){
+    if(majaSprache.idx[pid]) return { idx: majaSprache.idx[pid], rec: majaSpracheInstalliert()[pid] };
+    if(majaSprache.vor[pid]) return { idx: majaSprache.vor[pid].idx, rec: majaSprache.vor[pid] };
+    const L = await majaSpracheListe();
+    const p = L && L.pakete.find(x => x.id === pid);
+    if(!p) return null;
+    const quelle = p._quelle || majaSprache.quelle;
+    const r = await fetch(quelle + p.index, { cache: 'no-cache' });
+    if(!r.ok) return null;
+    const ij = await r.json();
+    if(!majaSprache.vor[pid]) majaSprache.vor[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, idx: ij };
+    return { idx: ij, rec: majaSprache.vor[pid] };
+}
+// Welche Teile braucht diese Frage (Frage und ihre Antworten)?
+async function majaTeileFuer(q, alle){
+    const noetig = [];
+    for(const pid of (alle ? MAJA_SPRACHE_BRAUCHT.a : majaKlassePakete())){
+        let v = null; try{ v = await majaVerzeichnis(pid); }catch(e){ v = null; }
+        if(!v || !v.idx || !v.rec) continue;
+        const nrs = new Set();
+        if(/-fragen$/.test(pid)){ const e = v.idx[q.id]; if(e) nrs.add(e[0]); }
+        else for(let k = 1; k <= 8; k++){ const e = v.idx[q.id + '-' + k]; if(e) nrs.add(e[0]); }
+        nrs.forEach(nr => { const name = v.rec.teile[nr]; if(name) noetig.push({ pid, nr, url: majaTeilUrl(v.rec.quelle, name), frage: /-fragen$/.test(pid) }); });
+    }
+    // Frage aus einer anderen Klasse (etwa ueber die Suche): in allen Paketen nachsehen
+    if(!alle && !noetig.some(n => n.frage)) return majaTeileFuer(q, true);
+    return noetig;
+}
+// 'ok' = alles fuer diese Frage liegt im Speicher (ggf. erst jetzt geladen), 'keine' = es gibt keine
+// Aufnahme dieser Frage (dann die eingebaute Stimme), false = kam nicht (kein Netz) oder abgebrochen.
+// abbruch() = nicht mehr warten
+async function majaVorbereiten(q, abbruch, ohneWarten){
+    if(!q || !majaPflicht()) return 'keine';
+    try{ await majaSpracheIndizesLaden(); }catch(e){}
+    let noetig = [], netz = true;
+    try{ noetig = await majaTeileFuer(q); }catch(e){ noetig = []; }
+    if(!noetig.some(n => n.frage)){
+        // Verzeichnisse nicht erreichbar (kein Netz) - oder es gibt die Frage wirklich nicht
+        try{ netz = !!(await majaSpracheListe()); }catch(e){ netz = false; }
+        return netz ? 'keine' : false;
+    }
+    const c = await caches.open(MAJA_SPRACHE_CACHE);
+    const ende = Date.now() + 240000;
+    for(const n of noetig){
+        if(await c.match(n.url)) continue;
+        majaSprache.zuerst[n.pid] = n.nr;
+        if(!majaSprache.laeuft[n.pid]) majaSpracheLaden(n.pid);
+        if(ohneWarten) continue;
+        for(;;){
+            await new Promise(r => setTimeout(r, 400));
+            if(abbruch && abbruch()) return false;
+            if(await c.match(n.url)) break;
+            if(!majaSprache.laeuft[n.pid]){
+                if(await c.match(n.url)) break;
+                if(majaSprache.fehler[n.pid] || Date.now() > ende) return false;
+                majaSprache.zuerst[n.pid] = n.nr; majaSpracheLaden(n.pid);
+            }
+            if(Date.now() > ende) return false;
+        }
+    }
+    return 'ok';
+}
+window.majaVorbereiten = majaVorbereiten;
+// Fuer jede gezeigte Frage: ihren Teil zuerst laden, ohne zu warten
+function majaVorrang(q){
+    if(!q || !majaPflicht()) return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    majaVorbereiten(q, null, true).catch(() => {});
+}
+window.majaVorrang = majaVorrang;
+// Vorlesen der Frage: true = es wird erst still geladen, danach kommt weiter()
+function majaHoltNoch(q, weiter){
+    if(!q || !majaPflicht()) return false;
+    if(majaHol.bereit === q.id) return false;
+    // schnell: alle Pakete der Klasse sind fertig geladen und die Frage ist darin
+    try{
+        const inst = majaSpracheInstalliert(), m = majaFrageMarke(q);
+        if(m && inst[m.pid] && majaKlassePakete().every(pid => inst[pid])){ majaHol.bereit = q.id; return false; }
+    }catch(e){}
+    const btn = document.getElementById('ttsBtn');
+    // Noch ein Tipp auf den Knopf waehrend des Wartens: weiter warten (nicht doppelt laden, nicht abbrechen)
+    if(majaHol.q === q.id) return true;
+    const lauf = ++majaHol.lauf; majaHol.q = q.id;
+    if(btn){ btn.dataset.majaWartet = '1'; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vorlesen'; }
+    const weg = () => { try{ return lauf !== majaHol.lauf || currentQuestions[currentIndex] !== q; }catch(e){ return true; } };
+    majaVorbereiten(q, weg).then(ok => {
+        if(lauf !== majaHol.lauf) return;
+        majaHol.q = null; majaKnopfNormal(btn);
+        if(weg()) return;
+        if(ok){ majaHol.bereit = q.id; try{ weiter(); }catch(e){} }   // 'ok' oder 'keine'; false = kein Vorlesen
+    }, () => { if(lauf === majaHol.lauf){ majaHol.q = null; majaKnopfNormal(btn); } });
+    return true;
+}
+// Jede gezeigte Frage (auch die erste nach "Runde starten"): ihr Teil kommt zuerst
+(function(){
+    const an = () => {
+        const alt = window.renderQuestion;
+        if(typeof alt !== 'function' || alt._majaVorrang) return;
+        const neu = function(){ const r = alt.apply(this, arguments); try{ majaVorrang(currentQuestions[currentIndex]); }catch(e){} return r; };
+        neu._majaVorrang = true; window.renderQuestion = neu;
+    };
+    if(document.readyState === 'complete') an(); else window.addEventListener('load', an);
+})();
+function majaKnopfNormal(btn){
+    if(!btn || !btn.dataset.majaWartet) return;
+    delete btn.dataset.majaWartet;
+    btn.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
 }
 window.majaSpracheWartet = majaSpracheWartet;
 // Marke fuer die FRAGE: { pid, e } oder null
 function majaFrageMarke(q){
     try{
         if(!q || !majaSpracheAn()) return null;
-        const inst = majaSpracheInstalliert();
-        for(const pid of Object.keys(inst)){
+        for(const pid of majaPaketIds()){
             if(!/-fragen$/.test(pid)) continue;
-            const idx = majaSprache.idx[pid];
+            const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
             const e = idx && idx[q.id];
             if(e) return { pid, e };
         }
@@ -33066,10 +33207,9 @@ function majaAntwortMarke(q, opt){
         if(!q || !opt || !majaSpracheAn()) return null;
         const n = majaSpracheNorm(opt.text);
         if(!n) return null;
-        const inst = majaSpracheInstalliert();
-        for(const pid of Object.keys(inst)){
+        for(const pid of majaPaketIds()){
             if(!/-antworten$/.test(pid)) continue;
-            const idx = majaSprache.idx[pid];
+            const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
             if(!idx) continue;
             for(let k = 1; k <= 8; k++){
                 const e = idx[q.id + '-' + k];
@@ -33088,7 +33228,7 @@ async function majaSpracheBlob(m){
         const b = await r.blob();
         return b.slice(0, b.size, 'audio/mpeg');
     }
-    const inst = majaSpracheInstalliert()[m.pid];
+    const inst = majaSpracheInstalliert()[m.pid] || majaSprache.vor[m.pid];
     if(!inst) return null;
     const name = inst.teile[m.e[0]];
     if(!name) return null;
@@ -33191,8 +33331,18 @@ async function majaSpracheLaden(pid){
         const quelle = p._quelle || majaSprache.quelle;
         try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
         const c = await caches.open(MAJA_SPRACHE_CACHE);
+        // Stand 416: erst das kleine Verzeichnis, dann zuerst der Teil, den das Vorlesen gerade braucht
+        // (majaSprache.zuerst) - so spricht Maja, bevor das ganze Paket da ist (majaSprache.vor).
+        const ir = await fetch(quelle + p.index, { cache: 'no-cache' });
+        if(!ir.ok) throw new Error('Das Verzeichnis des Pakets fehlt.');
+        const ij = await ir.json();
+        majaSprache.vor[pid] = { quelle, teile: p.teile.map(t => t.datei), index: p.index, idx: ij };
         let fertigBytes = 0;
-        for(const t of p.teile){
+        const offen = p.teile.map((t, i) => i);
+        while(offen.length){
+            const w = majaSprache.zuerst[pid], wi = offen.indexOf(w);
+            const nr = wi >= 0 ? offen.splice(wi, 1)[0] : offen.shift();
+            const t = p.teile[nr];
             const url = majaTeilUrl(quelle, t.datei);
             const schon = await c.match(url);
             if(!schon){
@@ -33219,9 +33369,6 @@ async function majaSpracheLaden(pid){
             majaSprache.fortschritt[pid] = fertigBytes / p.bytes;
             majaSpracheFortschrittZeigen(pid);
         }
-        const ir = await fetch(quelle + p.index, { cache: 'no-cache' });
-        if(!ir.ok) throw new Error('Das Verzeichnis des Pakets fehlt.');
-        const ij = await ir.json();
         await c.put(quelle + p.index, new Response(JSON.stringify(ij), { headers: { 'Content-Type': 'application/json' } }));
         const inst = majaSpracheInstalliert();
         // Stand 408: Teile einer aelteren Fassung, die nicht mehr gebraucht werden, aus dem Speicher nehmen
@@ -33256,7 +33403,7 @@ async function majaSpracheEntfernen(pid){
             await c.delete(p.quelle + p.index);
         }catch(e){}
     }
-    delete inst[pid]; delete majaSprache.idx[pid];
+    delete inst[pid]; delete majaSprache.idx[pid]; delete majaSprache.vor[pid];
     majaSpracheMerken(inst);
     majaSpracheKarteZeichnen();
 }
@@ -33308,9 +33455,9 @@ async function majaSpracheAutoLaden(){
             }
         }catch(e){}
         for(const pid of braucht){
-            let weg = false;
-            try{ weg = localStorage.getItem('maja_sprache_weg_' + pid) === '1'; }catch(e){}
-            if(weg || majaSprache.laeuft[pid]) continue;
+            // Stand 416: Dietmar: "Die sind einfach vorhanden, wenn man die Klasse ausgewählt hat." -
+            // die Pakete der eigenen Klasse kommen immer, auch nach "Entfernen".
+            if(majaSprache.laeuft[pid]) continue;
             if(await majaSpracheVollstaendig(pid)) continue;
             // Vermerk ohne Daten (oder unvollstaendig): Vermerk weg, dann neu laden
             const inst = majaSpracheInstalliert();
@@ -33356,8 +33503,8 @@ function majaSpracheKarteZeichnen(){
         blatt.insertBefore(k, blatt.firstChild);
     }
     if(!majaSpracheMoeglich()){
-        k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
-            'Dieser Browser kann keine Sprachpakete speichern. Es liest weiter die eingebaute Stimme vor.', '');
+        k.innerHTML = einstKasten('Majas Stimme',
+            'Dieser Browser kann Majas Stimme nicht speichern. Es liest weiter die eingebaute Stimme vor.', '');
         return;
     }
     const inst = majaSpracheInstalliert();
@@ -33388,17 +33535,18 @@ function majaSpracheKarteZeichnen(){
             + '</div>' + rechts + '</div>';
     };
     const an = majaSpracheAn();
+    // Stand 416, Dietmar (Vorschlag A): "Der Benutzer darf davon nichts mitbekommen, das da Stimmen nachgeladen werden."
+    // Keine Pakete, keine MB, kein Laden/Entfernen mehr - die Stimmen der Klasse sind einfach da.
+    void zeile;
     const inhalt =
         '<label style="display:flex; align-items:center; gap:0.5rem; font-size:0.84rem; cursor:pointer; margin-bottom:0.4rem;">'
-        + '<input type="checkbox" ' + (an ? 'checked' : '') + ' onchange="majaSpracheAnSetzen(this.checked)"> Maja liest vor, wenn das Paket geladen ist</label>'
-        + MAJA_SPRACHE_REIHE.map(zeile).join('')
+        + '<input type="checkbox" ' + (an ? 'checked' : '') + ' onchange="majaSpracheAnSetzen(this.checked); try{ if(this.checked) majaSpracheAutoLaden(); }catch(e){}"> Maja liest vor</label>'
         + '<label style="display:flex; align-items:flex-start; gap:0.5rem; font-size:0.84rem; cursor:pointer; padding-top:0.55rem; border-top:1px solid rgba(127,140,160,0.2);">'
         + '<input type="checkbox" style="margin-top:3px;" ' + (majaRueckAn() ? 'checked' : '') + ' onchange="majaRueckAnSetzen(this.checked)">'
         + '<span>Maja sagt nach deiner Antwort, ob sie stimmt<br><span style="font-size:0.72rem; color:var(--muted);">Ruhig und kurz: „Das ist richtig.“ oder „Das ist leider falsch.“ '
-        + 'Gilt, sobald ein Sprachpaket geladen ist und „Antwort mit Sprachausgabe bestätigen“ an ist.</span></span></label>';
-    k.innerHTML = einstKasten('Majas Stimme – Sprachpakete',
-        'Maja liest die Prüfungsfragen mit ihrer eigenen Stimme vor – viel natürlicher als die eingebaute Stimme. '
-        + 'Ein Paket wird einmal heruntergeladen und bleibt auf diesem Gerät. Ohne Paket liest wie bisher die eingebaute Stimme.', inhalt);
+        + 'Gilt, wenn „Antwort mit Sprachausgabe bestätigen“ an ist.</span></span></label>';
+    k.innerHTML = einstKasten('Majas Stimme',
+        'Maja liest die Prüfungsfragen und Antworten mit ihrer eigenen Stimme vor – viel natürlicher als die eingebaute Stimme.', inhalt);
 }
 window.majaSpracheKarteZeichnen = majaSpracheKarteZeichnen;
 window.majaSpracheAnSetzen = majaSpracheAnSetzen;
@@ -67129,8 +67277,9 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
     async function autoLos(e, w, ohneMaja){
         const info = w.querySelector('.se-auto-info');
         const sag = (t, art) => { if(info){ info.innerHTML = t; info.className = 'se-auto-info' + (art ? ' ' + art : ''); } };
-        let majaAn = true; try{ majaAn = majaSpracheAn(); }catch(x){}
-        const fehlen = (ohneMaja || !majaAn) ? [] : majaPaketeFehlen();
+        // Stand 416: keine Frage nach Sprachpaketen mehr - sie laden still (Dietmar: "Der Benutzer darf davon nichts mitbekommen")
+        try{ majaSpracheAutoLaden(); }catch(x){}
+        const fehlen = [];
         if(fehlen.length){
             const mb = fehlen.reduce((a, pid) => a + ((typeof MAJA_SPRACHE_MB !== 'undefined' && MAJA_SPRACHE_MB[pid]) || 0), 0);
             sag('Mit Majas Stimme klingt es im Auto am besten. Dafür fehlen noch Sprachpakete (etwa ' + mb + ' MB, am besten im WLAN laden – sie bleiben auf dem Gerät).'
@@ -67298,7 +67447,7 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
             const weiterMs = e.weiter === 'vorlesen' ? (e.vorlesen === 'aus' ? 6000 : 0) : (+e.weiter || 6) * 1000;
             const aufdecken = () => { if(tok !== this.token) return; el.classList.add('gezeigt'); };
             const warten = ms => new Promise(r => { this.warte = setTimeout(r, ms); });
-            const sprechen = async segs => {
+            const sprechenEcht = async segs => {
                 if(!segs.length || e.vorlesen === 'aus') return;
                 el.querySelector('.st-spricht').classList.add('an');
                 // Gegenpruefung 399: playTTSQueue endet nicht, wenn jemand anderes das Vorlesen anhaelt (nur pause()).
@@ -67314,6 +67463,16 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
                 if(tok === this.token) el.querySelector('.st-spricht').classList.remove('an');
             };
             (async () => {
+                // Stand 416: Ohne Stimmenpaket kein Vorlesen - fehlt Majas Aufnahme noch, still laden und warten
+                let stumm = false;
+                if(e.vorlesen !== 'aus' && typeof majaVorbereiten === 'function'){
+                    if(e.anzeige !== 'aufdecken') unten.textContent = 'Vorlesen … · Display bleibt an';
+                    let ok = 'keine'; try{ ok = await majaVorbereiten(q, () => tok !== this.token); }catch(x){ ok = false; }
+                    if(tok !== this.token) return;
+                    stumm = !ok;
+                }
+                try{ if(typeof majaVorrang === 'function') majaVorrang(this.liste[this.idx + 1]); }catch(x){}
+                const sprechen = async segs => { if(!stumm) await sprechenEcht(segs); };
                 let sprich = t => t;
                 try{ if(typeof kennerThema === 'function' && kennerThema(q)) sprich = t => kennerSprechen(t); }catch(x){}
                 const wortAn = (() => { try{ return localStorage.getItem('app_wort_an') !== '0'; }catch(x){ return true; } })();
@@ -67343,7 +67502,13 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
                 if(tok !== this.token) return;
                 // Wartezeit bis zur naechsten Frage, sichtbar im Ring
                 const schonMs = Date.now() - start;
-                const nochMs = weiterMs ? Math.max(1200, weiterMs - schonMs) : (this.auto ? 2500 : 1800);
+                let nochMs = weiterMs ? Math.max(1200, weiterMs - schonMs) : (this.auto ? 2500 : 1800);
+                // Stand 416: Ging das Vorlesen schief (keine Stimme, kein Netz), war es nach Sekundenbruchteilen vorbei -
+                // dann raste der Durchlauf von Frage zu Frage. Jetzt bleibt jede Frage so lange stehen, dass man sie lesen kann.
+                if(!weiterMs && schonMs < 2500){
+                    const zeichen = String(q.text || '').length + String((q.options[richtigIdx] || {}).text || '').length;
+                    nochMs = Math.max(nochMs, Math.min(20000, Math.max(6000, zeichen * 60)) - schonMs);
+                }
                 unten.textContent = 'Weiter in ' + Math.ceil(nochMs / 1000) + ' s · Display bleibt an';
                 this.ring(0, nochMs);
                 await warten(nochMs);
