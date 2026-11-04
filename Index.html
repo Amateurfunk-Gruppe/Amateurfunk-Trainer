@@ -3707,6 +3707,12 @@ html.android-app.stil-sachlich:is(:not(.pc-app), .pc-handy) #appHeute .ah-runde:
 /* Stand 415 (03.11.2026) - Dietmar: "Wir haben zweimal Pruefungstermin eintragen ... das obere unterhalb der Klasse muss raus."
    Die Karte weiter unten (awCount) bleibt und oeffnet den Termin wie bisher. Auch im Handy-Link (Dietmar: "Ja, auch raus"). */
 html.android-app.stil-sachlich:is(:not(.pc-app), .pc-handy) #appHeute .ah-termin { display: none !important; }
+/* Stand 418 - Dietmar: "Besucherzähler können wir ausbauen" - nur in der App */
+html.android-app:not(.pc-app) #besucherZaehler { display: none !important; }
+/* Stand 419 - Dietmar (Bild Sachlich und Verspielt, 173 von 25): "bei sachlich passt das nicht ganz".
+   Der Ring war in Sachlich 66 Punkte gross in einem 86er Feld (oben links), die Zahl stand ueber dem Ring. Jetzt fuellt er das Feld. */
+html.android-app.stil-sachlich #appHeute .ah-ring svg { width: 100% !important; height: 100% !important; }
+#appHeute .ah-ring .z b.lang { font-size: 17px !important; }
 html.android-app:not(.pc-app).stil-sachlich #appHeute .ah-ico::after { display: none; }
 html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute .ah-kachel { background: var(--s-fl) !important; border-color: var(--s-rand) !important; }
 </style>
@@ -11649,6 +11655,14 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <input type="checkbox" id="ttsAutoReadAnswerCheckbox" style="width:18px; height:18px; cursor:pointer;">
                 <label for="ttsAutoReadAnswerCheckbox" style="font-size:0.85rem; cursor:pointer;">Antwort mit Sprachausgabe bestätigen</label>
             </div>
+            <!-- Stand 420 - Dietmar: "dass der Buchstabe bei den Antworten z.b Antwort a Antwort b ... dass man das weglassen kann" -->
+            <label id="ttsBlockBuchstaben" style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin:0.2rem 0 0.8rem;"
+                 data-vorlesen-kurz="Antwort A bis D mit vorlesen."
+                 data-vorlesen="Antwort A bis D mit vorlesen. Ohne Haken liest der Trainer bei den Antworten nur den Text, ohne Antwort A, Antwort B und so weiter. Bei Antworten, die nur ein Bild sind, bleibt der Buchstabe.">
+                <input type="checkbox" id="ttsBuchstabenCheckbox" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" onchange="ttsBuchstabenSetzen(this.checked)">
+                <span><b style="color:#0f2745; font-size:0.85rem;">„Antwort A“ bis „Antwort D“ mit vorlesen</b>
+                    <span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">Ohne Haken liest der Trainer nur den Text der Antwort. Bei Antworten, die nur ein Bild sind, bleibt der Buchstabe.</span></span>
+            </label>
             <!-- Der Schalter fuer die Tastaturbedienung. Er steht hier und
                  nicht in der Hauptansicht, weil hier schon alles zusammen
                  liegt, was beim Bedienen hilft - und weil die Hauptansicht
@@ -13157,7 +13171,28 @@ window.bildZoomUmschalten = bildZoomUmschalten;
 // Stand 412 - Dietmar: "Eigentlich gehoert das unter Nachteilausgleich rein oder doppelt bei Beamer und Nachteilausgleich."
 // Gewaehlt: doppelt. Derselbe Kasten steht bei Beamer (sfx '') und bei Nachteilsausgleich (sfx '_na');
 // beide schreiben dieselbe Einstellung, bildZoomFelderNachziehen() haelt beide gleich.
+// App oder Handy-Link (nicht die App-Ansicht am PC)
+function bildZoomHandy(){ try{ const c = document.documentElement.classList; return c.contains('android-app') && (!c.contains('pc-app') || c.contains('pc-handy')); }catch(e){ return false; } }
 function bildZoomKasten(sfx){
+    // Stand 418 - Dietmar (App): "Vergrößern fehlt" - gewählt "A und B": in der Frage größer und die Lupe öffnet größer
+    if(bildZoomHandy()) return einstKasten('Bilder vergrößern',
+            'Bilder in der Frage stehen größer da, und die Lupe öffnet sie gleich stärker vergrößert. '
+          + 'Mit einem Finger verschieben, mit zwei Fingern weiter vergrößern.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-bottom:0.55rem;">'
+          + '<input type="checkbox" id="einstBildZoomAn' + sfx + '" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="bildZoomUmschalten(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Stärker vergrößern</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Gilt für die Bilder in der Frage und für die Lupe. Wie groß, wählst du unten.</span></span></label>'
+          + '<select id="einstBildZoom' + sfx + '" onchange="bildZoomSetzen(this.value)" '
+          + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
+          + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1.3">ein Drittel größer</option>'
+          + '<option value="1.5">halb so groß wieder dazu</option>'
+          + '<option value="2">doppelt so groß</option>'
+          + '<option value="2.4">so groß wie möglich</option>'
+          + '</select>'
+          + '<div id="einstBildZoomText' + sfx + '" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>');
     return einstKasten('Bilder vergrößern',
             'Klickst du auf die Lupe an einem Bild, wird es groß angezeigt. Hier wird eingestellt, wie groß. '
           + 'Mit der Maus darüber wächst es immer nur ein wenig.',
@@ -13187,6 +13222,7 @@ function bildZoomFelderNachziehen(){
     const f  = bildZoomFaktor();
     if(an){ try{ localStorage.setItem(BILDZOOM_SCHLUESSEL + '_letzt', String(f)); }catch(e){} }
     for(const sfx of ['', '_na']) bildZoomFelderEins(sfx, an, f);
+    try{ if(window.appBildGross) window.appBildGross(); }catch(e){}
 }
 function bildZoomFelderEins(sfx, an, f){
     const haken = document.getElementById('einstBildZoomAn' + sfx);
@@ -13205,7 +13241,10 @@ function bildZoomFelderEins(sfx, an, f){
         }
     }
     const t = document.getElementById('einstBildZoomText' + sfx);
-    if(t){
+    if(t && bildZoomHandy()){
+        t.textContent = !an ? 'Aus — Bilder in der Frage in normaler Größe, die Lupe zeigt sie so breit wie der Bildschirm.'
+            : 'An — Bilder in der Frage bis ' + Math.round(appBildAnteil(f) * 100) + ' % der Breite, die Lupe öffnet ' + String(f).replace('.', ',') + '-mal so groß.';
+    }else if(t){
         t.textContent = !an
             ? 'Aus — nach dem Klick auf die Lupe wird ein Bild bis zu 55 % so breit wie das Fenster.'
             : 'Nach dem Klick auf die Lupe wird ein Bild jetzt bis zu ' + Math.round(Math.min(0.92, 0.55 * f) * 100)
@@ -13213,6 +13252,51 @@ function bildZoomFelderEins(sfx, an, f){
     }
 }
 window.bildZoomFelderNachziehen = bildZoomFelderNachziehen;
+
+// ================================================================
+//  APP: BILDER IN DER FRAGE GROESSER                       (Stand 418)
+// ----------------------------------------------------------------
+//  Dietmar (Bild vom Nachteilsausgleich in der App): "Vergrößern fehlt" - gewählt "A und B".
+//  B: Mit Haken steht das Bild der Frage gleich groesser da - je Stufe ein Anteil der Breite
+//  (ein Drittel 45 %, halb 60 %, doppelt 78 %, so gross wie moeglich 96 %). Grosse Bilder werden nie
+//  kleiner. A (die Lupe oeffnet groesser) steht beim Zwei-Finger-Zoom der App.
+//  Nur in der App und im Handy-Link (html.android-app); am PC bleibt alles wie bisher.
+// ================================================================
+window.bildZoomHandy = bildZoomHandy;
+function appBildAnteil(f){ return f >= 2.3 ? 0.96 : f >= 1.9 ? 0.78 : f >= 1.45 ? 0.60 : 0.45; }
+function appBildGross(){
+    if(!bildZoomHandy()) return;
+    const an = bildZoomGross(), f = bildZoomFaktor();
+    document.querySelectorAll('#questionContainer .q-image img').forEach(img => {
+        if(!an){ if(img.dataset.afuGross){ img.style.width = ''; img.style.maxWidth = ''; img.style.height = ''; delete img.dataset.afuGross; } return; }
+        const setz = () => {
+            const box = img.parentElement; if(!box) return;
+            const breite = box.clientWidth || 0; if(!breite) return;
+            const alt = img.dataset.afuGross ? 0 : img.getBoundingClientRect().width;
+            const ziel = Math.min(breite, Math.max(alt, breite * appBildAnteil(f)));
+            img.style.width = Math.round(ziel) + 'px'; img.style.maxWidth = '100%'; img.style.height = 'auto';
+            img.dataset.afuGross = '1';
+        };
+        // SVG ohne viewBox waechst nicht mit - dieselbe skalierbare Fassung wie die Lupe nehmen
+        if(!img.dataset.afuVb && /\.svg(\?|$)/i.test(img.src) && typeof svgMitViewBox === 'function'){
+            img.dataset.afuVb = '1';
+            const orig = img.src;
+            svgMitViewBox(orig).then(u => { if(u && u !== orig){ img.onload = setz; img.src = u; } else setz(); }, setz);
+            return;
+        }
+        if(img.complete && img.naturalWidth) setz(); else img.addEventListener('load', setz, { once: true });
+    });
+}
+window.appBildGross = appBildGross;
+(function(){
+    const an = () => {
+        const alt = window.renderQuestion;
+        if(typeof alt !== 'function' || alt._appBildGross) return;
+        const neu = function(){ const r = alt.apply(this, arguments); try{ appBildGross(); }catch(e){} return r; };
+        neu._appBildGross = true; window.renderQuestion = neu;
+    };
+    if(document.readyState === 'complete') an(); else window.addEventListener('load', an);
+})();
 
 // ----------------------------------------------------------------
 //  "SO GROSS WIE MOEGLICH" HEISST: SO GROSS WIE DER TRAINER
@@ -25054,6 +25138,8 @@ async function besucherZaehlerHolen(){
 }
 
 function besucherZaehlerStarten(){
+    // Stand 418 - Dietmar: "Besucherzähler können wir ausbauen. Das verwirrt einen nur" - gewählt: nur in der App
+    try{ if(ttsImApp()){ const f = document.getElementById('besucherZaehler'); if(f) f.style.display = 'none'; return; } }catch(e){}
     besucherZaehlerHolen();
     if(zaehlerUhr) clearInterval(zaehlerUhr);
     // Eine Minute reicht: Die Zahl ist eine Randnotiz, kein Messgeraet.
@@ -25285,7 +25371,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 416, datum: '03.11.2026' };
+const TRAINER_STAND = { nr: 420, datum: '03.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32037,13 +32123,59 @@ let currentTtsUrl = null;
 //  koennen mehrere unterwegs sein - das war ja der Fehler.
 // ================================================================
 const ttsLaufendeAudios = new Set();
+// ================================================================
+//  IPHONE UND IPAD: EIN TONSPIELER FUER ALLES             (Stand 417)
+// ----------------------------------------------------------------
+//  Tester Michael (iPhone, Chrome): Nach der Pause in Stolpersteine "sind die Fragen nicht die
+//  Antworten durchgerasst so das er nur den Browser schliessen konnte."
+//  Auf iPhone und iPad (auch in Chrome, das dort Safari ist) darf eine Seite einen Ton nur
+//  abspielen, wenn ein Tipp ihn ausloest. Jede neue Aufnahme (new Audio) wurde ausserhalb des
+//  Tipps abgelehnt - dann war das Vorlesen sofort vorbei und der Durchlauf sprang weiter.
+//  Ein Tonspieler, der einmal durch einen Tipp freigegeben wurde, darf danach weiterspielen.
+//  Darum nimmt das Vorlesen dort immer denselben Spieler und gibt ihn beim ersten Tipp frei.
+//  Android und PC bleiben, wie sie sind.
+// ================================================================
+const TTS_IOS = (() => { try{ return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }catch(e){ return false; } })();
+const TTS_STILLE = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+const ttsSpieler = { el: null, frei: false };
+function ttsAudioNeu(url){
+    if(!TTS_IOS) return new Audio(url);
+    if(!ttsSpieler.el){ ttsSpieler.el = new Audio(); try{ ttsSpieler.el.setAttribute('playsinline', ''); }catch(e){} }
+    const a = ttsSpieler.el;
+    try{ a.pause(); }catch(e){}
+    a.onended = null; a.onerror = null; a.onplay = null; a.ontimeupdate = null;
+    try{ a.playbackRate = 1; }catch(e){}
+    a.src = url;
+    return a;
+}
+window.ttsAudioNeu = ttsAudioNeu;
+// Gehoert der (gemeinsame) Spieler noch zu diesem Stueck? Ein spaetes Ende des alten Stuecks darf das neue
+// nicht anhalten und seine Marke nicht loeschen.
+function ttsMeins(audio, url){
+    try{ return !(TTS_IOS && audio === ttsSpieler.el && url && audio.src !== url); }catch(e){ return true; }
+}
+if(TTS_IOS){
+    const freigeben = () => {
+        if(ttsSpieler.frei) return;
+        if(!ttsSpieler.el){ ttsSpieler.el = new Audio(); try{ ttsSpieler.el.setAttribute('playsinline', ''); }catch(e){} }
+        const a = ttsSpieler.el;
+        if(a.src && !a.paused) { ttsSpieler.frei = true; return; }
+        try{
+            a.src = TTS_STILLE;
+            const p = a.play();
+            if(p && p.then) p.then(() => { ttsSpieler.frei = true; }, () => {});
+            else ttsSpieler.frei = true;
+        }catch(e){}
+    };
+    ['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, freigeben, { capture: true, passive: true }));
+}
 function ttsAudioMerken(audio, url){
     ttsLaufendeAudios.add({ audio, url });
 }
 function ttsAudioAnhalten(audio){
     for(const e of Array.from(ttsLaufendeAudios)){
         if(e.audio !== audio) continue;
-        try{ e.audio.pause(); }catch(x){}
+        if(ttsMeins(audio, e.url)) try{ e.audio.pause(); }catch(x){}
         try{ if(e.url) URL.revokeObjectURL(e.url); }catch(x){}
         ttsLaufendeAudios.delete(e);
     }
@@ -32526,7 +32658,7 @@ async function playTTSSegment(seg, token){
                 console.log('[TTS] Piper WAV Größe:', blob.size);
                 if(blob.size>500){
                     const url=URL.createObjectURL(blob); currentTtsUrl=url;
-                    const audio=new Audio(url); currentTtsAudio=audio;
+                    const audio=ttsAudioNeu(url); currentTtsAudio=audio;
                     ttsTempoAnwenden(audio);
                     ttsAudioMerken(audio, url);
                     // Die Marke laeuft ueber die Woerter mit - nur dort, wo
@@ -32539,7 +32671,7 @@ async function playTTSSegment(seg, token){
                     await new Promise(resolve=>{
                         // Ein Ausgang fuer alle drei Wege: erst schweigen,
                         // dann weitermachen.
-                        const fertig=()=>{ try{ if(!ttsWortLauf || ttsWortLauf.audio === audio) ttsWorteEnde(); }catch(e){} ttsAudioAnhalten(audio); resolve(); };   // Stand 396 (Gegenpruefung): nur die eigene Marke beenden
+                        const fertig=()=>{ if(!ttsMeins(audio, url)){ ttsAudioAnhalten(audio); resolve(); return; } try{ if(!ttsWortLauf || ttsWortLauf.audio === audio) ttsWorteEnde(); }catch(e){} ttsAudioAnhalten(audio); resolve(); };   // Stand 396 (Gegenpruefung): nur die eigene Marke beenden
                         audio.onended=()=>{ console.log('[TTS] ✓ PIPER ERFOLG'); fertig(); };
                         audio.onerror=(e)=>{ console.error('Piper Audio Error', e); fertig(); };
                         audio.play().then(()=>{
@@ -33258,7 +33390,7 @@ async function majaSegmentSpielen(seg, token){
         }
     }
     const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+    const audio = ttsAudioNeu(url);   // Stand 417: iPhone/iPad - der freigegebene Spieler
     currentTtsUrl = url; currentTtsAudio = audio;
     try{ ttsTempoAnwenden(audio); }catch(e){}
     ttsAudioMerken(audio, url);
@@ -33272,6 +33404,7 @@ async function majaSegmentSpielen(seg, token){
         let gespielt = false, aus = false;
         const fertig = ok => {
             if(aus) return; aus = true;
+            if(!ttsMeins(audio, url)){ ttsAudioAnhalten(audio); resolve(ok); return; }   // Stand 417: der Spieler spielt schon das naechste Stueck
             // Gegenpruefung 396: nur die eigene Marke beenden - ein spaet abgebrochenes altes Stueck darf die Marke
             // des neuen nicht loeschen (play() wird nach ttsAllesAnhalten erst spaeter mit AbortError abgelehnt).
             try{ if(!ttsWortLauf || ttsWortLauf.audio === audio) ttsWorteEnde(); }catch(e){}
@@ -33574,13 +33707,18 @@ function vorleseFrage(){
 }
 // Ein Antwort-Abschnitt fuer die Sprachausgabe - fuer die ganze Frage
 // (vorleseFrage) und fuer die Antwort unter der Maus derselbe Satz.
+// Stand 420: "Antwort A" bis "D" vorlesen - abschaltbar (Standard: an, wie bisher)
+function ttsBuchstabenAn(){ try{ return localStorage.getItem('tts_buchstaben') !== '0'; }catch(e){ return true; } }
+function ttsBuchstabenSetzen(an){ try{ localStorage.setItem('tts_buchstaben', an ? '1' : '0'); }catch(e){} }
+window.ttsBuchstabenAn = ttsBuchstabenAn; window.ttsBuchstabenSetzen = ttsBuchstabenSetzen;
 function antwortSegment(q, i, sprich){
     const opt = q.options[i];
     const label=String.fromCharCode(65+i);
     const hatText = !!(opt.text && opt.text.trim());
     const istBild = !!(opt.image && String(opt.image).trim());
     // Ohne Text nur der Buchstabe - "Bild" sagt nichts.
-    const text = hatText ? `Antwort ${label}: ${sprich(opt.text)}.` : `Antwort ${label}.`;
+    const buch = ttsBuchstabenAn();
+    const text = hatText ? (buch ? `Antwort ${label}: ${sprich(opt.text)}.` : `${sprich(opt.text)}.`) : `Antwort ${label}.`;
     // Majas Aufnahme der Antwort (Stand 394) - davor seit Stand 401 Majas "Antwort A" (eigene Aufnahme),
     // danach eine kurze Pause.
     const maja = hatText ? majaAntwortMarke(q, opt) : null;
@@ -33589,7 +33727,7 @@ function antwortSegment(q, i, sprich){
     if(!hatText && majaLiestVor()){
         return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja: majaBuchstabeMarke(i), pause: istBild ? BILD_PAUSE_MS : 0 };
     }
-    return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja, majaVor: maja ? majaBuchstabeMarke(i) : null,
+    return { text, selector:`[data-optindex="${i}"]`, thorsten:true, maja, majaVor: (maja && buch) ? majaBuchstabeMarke(i) : null,
              pause: (istBild && !hatText) ? BILD_PAUSE_MS : (maja ? 450 : 0) };
 }
 
@@ -36043,6 +36181,7 @@ function einstBlaetterFuellen(){
     holen('ttsBlockStimme',       'einstZielStimme');
     holen('ttsBlockAuto',         'einstZielAuto');
     holen('ttsBlockAntwort',      'einstZielAntwort');
+    holen('ttsBlockBuchstaben',   'einstZielAntwort');   // Stand 420: direkt unter "Antwort mit Sprachausgabe bestätigen"
     holen('ttsBlockTastatur',     'einstZielTastatur');
     holen('ttsBlockTastaturText', 'einstZielTastatur');
 
@@ -36614,7 +36753,7 @@ function appEinstellungenAufraeumen(){
     wegKasten('einstUmfangKurz');
     wegKasten('tastaturCheckbox');
     wegKasten('einstBildZoomAn');
-    wegKasten('einstBildZoomAn_na');
+    // Stand 418: "Bilder vergrößern" im Nachteilsausgleich bleibt am Handy (Dietmar: "Vergrößern fehlt")
     try{ const l = $('einstMausVorlesen') && $('einstMausVorlesen').closest('label'); weg(l); }catch(e){}
     // Sounds: der Klickton "am Rechner" - die App hat "Toene beim Tippen"
     if(nurApp) try{ const l = $('einstKlickTon') && $('einstKlickTon').closest('label'); weg(l); }catch(e){}
@@ -36854,6 +36993,7 @@ async function ttsFelderNachziehen() {
     }catch(e){}
     document.getElementById('ttsAutoReadCheckbox').checked = localStorage.getItem('ttsAutoRead') === '1';
     document.getElementById('ttsAutoReadAnswerCheckbox').checked = localStorage.getItem('ttsAutoReadAnswer') !== '0';
+    try{ const bc = document.getElementById('ttsBuchstabenCheckbox'); if(bc) bc.checked = ttsBuchstabenAn(); }catch(e){}
     const tk = document.getElementById('tastaturCheckbox');
     if (tk) tk.checked = tastaturBedienung();
     const select = document.getElementById('ttsVoiceSelect');
@@ -57599,7 +57739,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             ringStand = rk;
             const ring = $('ahRing');
             ring.classList.remove('lebt');
-            ring.innerHTML = ringSvg(n / z, vs) + '<div class="z"><b>' + n + '</b><small>von ' + z + '</small></div>';
+            ring.innerHTML = ringSvg(n / z, vs) + '<div class="z"><b' + (String(n).length >= 4 ? ' class="lang"' : '') + '>' + n + '</b><small>von ' + z + '</small></div>';
             ringOffen = true;
         }
         if(ringOffen && ringImBild && !D.hidden) tu(ringBeleben);
@@ -63667,10 +63807,12 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     tu(() => {
         const alt = window.openLightbox;
         if(typeof alt !== 'function') return;
+        // Stand 418: Mit "Stärker vergrößern" (Nachteilsausgleich) oeffnet das Bild gleich in der gewaehlten Stufe
+        const gross = () => { try{ if(window.bildZoomGross && bildZoomGross() && window.bildZoomHandy && bildZoomHandy()){ lupe.s = Math.min(6, bildZoomFaktor()); lupe.tx = 0; lupe.ty = 0; lupe.setz(); } }catch(e){} };
         window.openLightbox = function(src, cap){
             lupe.reset();
-            if(typeof window.svgMitViewBox === 'function') window.svgMitViewBox(src).then(u => alt(u, cap), () => alt(src, cap));
-            else alt(src, cap);
+            if(typeof window.svgMitViewBox === 'function') window.svgMitViewBox(src).then(u => { alt(u, cap); gross(); }, () => { alt(src, cap); gross(); });
+            else { alt(src, cap); gross(); }
         };
         const hinweis = D.querySelector('#lightboxOverlay .lightbox-zoom-hint');
         if(hinweis) hinweis.innerHTML = '<i class="fas fa-hand-pointer"></i> Zwei Finger oder doppelt tippen: größer · daneben tippen: schließen';
@@ -67479,10 +67621,11 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
                 const frageSeg = { text: sprich(q.text) + '.', selector: '#stolperBlatt .st-ftext', klasse: 'tts-frage', worte: wortAn, thorsten: true,
                                    maja: (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null };
                 const ro = q.options[richtigIdx] || {};
-                const loesSeg = { text: 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') + '.', selector: gross ? '#stolperBlatt .sg-opt.richtig' : '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
+                const buch = (typeof ttsBuchstabenAn !== 'function') || ttsBuchstabenAn() || !ro.text;   // Stand 420
+                const loesSeg = { text: (buch ? 'Richtig ist ' + 'ABCD'[richtigIdx] + (ro.text ? ': ' + sprich(ro.text) : '') : 'Richtig ist: ' + sprich(ro.text)) + '.', selector: gross ? '#stolperBlatt .sg-opt.richtig' : '#stolperBlatt .st-opt.richtig', worte: wortAn, thorsten: true,
                                   maja: (ro.text && typeof majaAntwortMarke === 'function') ? majaAntwortMarke(q, ro) : null };
                 // Stand 401: vor Majas Aufnahme ihr "Antwort B" - die Aufnahme selbst nennt keinen Buchstaben
-                if(loesSeg.maja && typeof majaBuchstabeMarke === 'function') loesSeg.majaVor = majaBuchstabeMarke(richtigIdx);
+                if(loesSeg.maja && typeof majaBuchstabeMarke === 'function'){ if(buch) loesSeg.majaVor = majaBuchstabeMarke(richtigIdx); }
                 // Stand 403: Bild-Antwort - Maja sagt "Antwort B" statt Thorsten
                 else if(!ro.text && typeof majaLiestVor === 'function' && majaLiestVor()) loesSeg.maja = majaBuchstabeMarke(richtigIdx);
                 const start = Date.now();
