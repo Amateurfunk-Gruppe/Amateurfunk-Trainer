@@ -522,6 +522,8 @@
            und schrumpft bei schmalen Fenstern wieder auf die alten 145 - die Kopfzeile bleibt einzeilig. */
         html:not(.android-app) .header > .header-left { flex: 1 1 auto; min-width: 0; }
         html:not(.android-app) .header .suchfeld-huelle { flex: 1 1 145px; max-width: 520px; min-width: 0; margin-right: 14px; }
+        /* Stand 424: in der Runde der klassischen Ansicht wie in der App-Ansicht ohne Suchfeld - die Kopfzeile bleibt einzeilig */
+        @media (min-width: 1025px){ html:is(.pc-gross, .pc-bunt):not(.android-app):not(.pc-app) body.runde-laeuft .header .suchfeld-huelle, html:is(.pc-gross, .pc-bunt):not(.android-app):not(.pc-app) body.runde-laeuft .header #favListBtn { display: none !important; } }
         html:not(.android-app) .header .suchfeld-huelle #searchInput { flex: 1 1 145px; width: 145px !important; min-width: 100px; }
         /* Die Pruefungsuhr wandert aus der alten Kopfzeile hierher. */
         #alUhrPlatz #examTimerDisplay {
@@ -2836,6 +2838,35 @@
         #appWerkBlatt #rufzeichenBtn { display: flex !important; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 52px; margin: 0 !important; padding: 0 !important; border: 0 !important;
             color: #fff !important; font: 700 16px var(--font-body) !important; background: linear-gradient(180deg, #B9A2FF, #6A45F5) !important; box-shadow: 0 5px 0 #4A2BC2, 0 12px 24px rgba(106,69,245,0.3) !important; }
         #appWerkBlatt #rufzeichenBtn i { color: #fff !important; }
+        /* ---- Pruefungstermine der BNetzA (Stand 421) ---- */
+        .bt-box { margin: 0 0 12px; }
+        .bt-box .bt-l { display: block; font-size: 13px; font-weight: 600; color: var(--s-text3, var(--muted)); margin: 0 2px 6px; }
+        .bt-box select { display: block; width: 100%; height: 48px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--s-rand2, var(--line)); background: var(--s-fl, var(--card-bg, #fff)); color: var(--s-text, var(--ink)); font: 600 16px var(--font-body, inherit); box-sizing: border-box; }
+        .bt-box .bt-ue { font-size: 13px; font-weight: 600; color: var(--s-text3, var(--muted)); margin: 12px 2px 6px; }
+        .bt-box .bt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .bt-box .bt-chip { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border-radius: 12px; border: 2px solid var(--s-akzent, #0B8796); background: var(--s-akzent-w, rgba(11,135,150,.10)); color: var(--s-text, var(--ink)); font: 700 15px var(--font-body, inherit); cursor: pointer; text-align: left; max-width: 100%; }
+        .bt-box .bt-chip small { font-weight: 500; font-size: 12px; color: var(--s-text2, var(--muted)); }
+        .bt-box .bt-chip.an { background: var(--s-akzent, #0B8796); color: #fff; } .bt-box .bt-chip.an small { color: #e6fbff; }
+        .bt-box .bt-chip.voll { border-color: var(--s-rand2, var(--line)); background: transparent; color: var(--s-text2, var(--muted)); }
+        .bt-box .bt-chip.voll.an { border-color: #5b6b80; background: #5b6b80; color: #fff; } .bt-box .bt-chip.voll.an small { color: #eef2f7; }
+        .bt-box .bt-hinweis { font-size: 13px; color: var(--s-text2, var(--muted)); margin: 8px 2px 0; }
+        .bt-box .bt-quelle { font-size: 12px; color: var(--s-text3, var(--muted)); margin: 8px 2px 0; line-height: 1.4; } .bt-box .bt-quelle a { color: inherit; }
+        #appWerkBlatt .bt-oder { font-size: 13px; font-weight: 600; color: var(--s-text3); margin: 16px 2px 8px; }
+        .bt-box .kurz { display: none; }
+        /* PC (Stand 422, Dietmar: "hier wird viel Platz verschenkt"): Ort und Hinweis in einer Zeile, Termine in einer Reihe */
+        #terminBnetza.bt-box { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0.45rem 0 0; border-top: 1px dashed var(--line); }
+        #terminBnetza.bt-box[hidden] { display: none; }
+        #terminBnetza .bt-kopf { order: 0; } #terminBnetza .bt-quelle { order: 1; margin: 0 0 0 auto !important; } #terminBnetza .bt-reihe { order: 2; flex: 1 1 100%; margin-top: 2px !important; }
+        #terminBnetza .bt-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+        #terminBnetza .bt-l { display: inline; margin: 0; font-size: 0.8rem; }
+        #terminBnetza.bt-box select { width: auto; min-width: 170px; height: 32px; font-size: 13px; border-width: 1px; border-radius: 8px; }
+        #terminBnetza .bt-hinweis { margin: 0; font-size: 0.8rem; }
+        #terminBnetza .bt-reihe { display: flex; flex-direction: column; gap: 5px; }
+        #terminBnetza .bt-gr { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 8px; } #terminBnetza .bt-gr .bt-ue { flex: 0 0 auto; padding-top: 4px; } #terminBnetza .bt-gr .bt-chips { flex: 1 1 auto; min-width: 0; gap: 6px; }
+        #terminBnetza .bt-ue { margin: 0; font-size: 0.8rem; } #terminBnetza .lang { display: none; } #terminBnetza .kurz { display: inline; }
+        #terminBnetza.bt-box .bt-chip { flex-direction: row; align-items: baseline; gap: 6px; padding: 3px 9px; font-size: 13px; border-width: 1px; border-radius: 8px; }
+        #terminBnetza.bt-box .bt-chip small { font-size: 11.5px; } #terminBnetza.bt-box .bt-chip > span { white-space: nowrap; }
+        #terminBnetza .bt-quelle { font-size: 0.7rem; }
         #appWerkBlatt .aw-info2 { margin: 14px 2px 6px; font-size: 14px; line-height: 1.45; color: var(--s-text2); }
         #appWerkBlatt .aw-info2:empty { display: none; }
         #appWerkBlatt .aw-info2 #rufzeichenInfo { font-size: 14px !important; }
@@ -11345,6 +11376,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     <a href="https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/SpezielleAnwendungen/Amateurfunk/_DL/Pruefungstermine.pdf"
                        target="_blank" rel="noopener" style="margin-left:auto; font-size:0.75rem; color:var(--panel-navy);"
                        data-tooltip="Termine und Orte der Bundesnetzagentur (öffnet ein PDF im Browser)"><i class="fas fa-external-link-alt"></i> Termine der Bundesnetzagentur</a>
+                    <div id="terminBnetza" class="bt-box" hidden></div>
                 </div>
                 <!-- ================================================================
                      IST DAS RUFZEICHEN NOCH FREI?
@@ -25371,7 +25403,92 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
 // (oberste Ueberschrift im CHANGELOG) gleich bleibt - so sieht man in der App und am PC, welche Fassung gerade laeuft.
 // Dieselbe Nummer steht im CHANGELOG als Zeile "Stand N · TT.MM.JJJJ" unter der obersten Version; von dort liest
 // github_update.js den Stand bei GitHub ("Stand 37 ist da, du hast 36").
-const TRAINER_STAND = { nr: 420, datum: '03.11.2026' };
+
+// ================================================================
+//  PRUEFUNGSTERMINE DER BUNDESNETZAGENTUR              (Stand 421, 04.11.2026)
+//  Dietmar: "Im Menü sollte man auch die Bundesnetzargentur Ort auswählen
+//  können." - "Das muss von der Pdf automatisch übernommen werden mit der
+//  Quelle dazu" - gewaehlt "Webseite und Trainer". Ort waehlen, freien Termin
+//  antippen; das Datum selbst eintippen geht weiter. Ohne Netz: der zuletzt
+//  geladene Stand, beim allerersten Mal ohne Netz nur das Datumsfeld.
+// ================================================================
+(function(){
+    const QUELLE = 'https://amateurfunk-trainer.com/api/kommentare/termine';
+    const MON = ['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sep.','Okt.','Nov.','Dez.'], WT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    let daten = null, laden = null;
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    function gemerkt(){ try{ return JSON.parse(localStorage.getItem('afu_bnetza_termine') || 'null'); }catch(e){ return null; } }
+    function holen(){
+        if(laden) return laden;
+        laden = fetch(QUELLE, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+            if(j && j.ok && Array.isArray(j.orte) && j.orte.length){ daten = j; try{ localStorage.setItem('afu_bnetza_termine', JSON.stringify(j)); }catch(e){} }
+            return daten;
+        }).catch(() => daten);
+        setTimeout(() => { laden = null; }, 10 * 60e3);   // spaeter neu holen
+        return laden;
+    }
+    function ortKey(){ let u = ''; try{ u = String(typeof currentUser !== 'undefined' ? currentUser : ''); }catch(e){} return 'afu_pruefort' + (u ? '_' + u : ''); }
+    function ortIst(){ try{ return localStorage.getItem(ortKey()) || ''; }catch(e){ return ''; } }
+    function ortSetzen(o){ try{ if(o) localStorage.setItem(ortKey(), o); else localStorage.removeItem(ortKey()); }catch(e){} }
+    function wahlIst(){ try{ return localStorage.getItem(ortKey() + '_wahl') || ''; }catch(e){ return ''; } }
+    function wahlSetzen(w){ try{ localStorage.setItem(ortKey() + '_wahl', w); }catch(e){} }
+    function heute(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function kurz(s){ const p = s.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return WT[d.getDay()] + ' ' + (+p[2]) + '. ' + MON[+p[1] - 1] + ' ' + p[0]; }
+    function zeit(j, z){ return ((j.zeiten && j.zeiten[z]) || { V: 'Vormittags', M: 'Mittags', N: 'Nachmittags' }[z] || '').replace(/s$/, ''); }
+    function lang(s){ const p = String(s || '').split('-'); return p.length === 3 ? (+p[2]) + '.' + (+p[1]) + '.' + p[0] : ''; }
+    function oeffnen(url){ try{ if(typeof openExternalTab === 'function'){ openExternalTab(url); return; } }catch(e){} window.open(url, '_blank', 'noopener'); }
+    function malen(el, opt){
+        const j = daten || gemerkt();
+        if(!j || !Array.isArray(j.orte)){ el.innerHTML = ''; el.hidden = true; return; }
+        el.hidden = false;
+        let ort = ortIst(); if(!j.orte.some(o => o.ort === ort)) ort = '';
+        const h = heute(), jetzt = (opt.aktuell && opt.aktuell()) || '';
+        let html = '<div class="bt-kopf"><label class="bt-l" for="' + opt.id + '-ort"><span class="lang">Prüfungsort der Bundesnetzagentur</span><span class="kurz">Prüfungsort:</span></label><select id="' + opt.id + '-ort"><option value="">Ort wählen …</option>'
+            + j.orte.map(o => '<option' + (o.ort === ort ? ' selected' : '') + '>' + esc(o.ort) + '</option>').join('') + '</select>';
+        let reihe = '';
+        const o = j.orte.find(x => x.ort === ort);
+        if(o){
+            // Stand 421 - Dietmar: "ich habe am 21.11. Das sollte wenn er ausgebucht ist, auch so angezeigt werden."
+            // Freie und ausgebuchte Termine; beide lassen sich antippen (wer schon angemeldet ist, traegt seinen ein).
+            const frei = o.frei.filter(f => f.d >= h).map(f => Object.assign({ voll: false }, f));
+            const voll = (o.voll || []).filter(f => f.d >= h).map(f => Object.assign({ voll: true }, f));
+            const alle = frei.concat(voll);
+            // Gleicher Tag zweimal (Vormittag/Mittag): nur den angetippten markieren
+            const wahl = wahlIst(); let an = alle.findIndex(f => f.d === jetzt && (f.d + (f.z || '') + (f.voll ? 'v' : '')) === wahl); if(an < 0) an = alle.findIndex(f => f.d === jetzt);
+            const chip = (f, i) => {
+                const dazu = [f.z ? zeit(j, f.z) : '', f.t || ''].concat((f.fn || []).map(n => (j.fussnoten || {})[n] || '')).filter(Boolean);
+                if(f.voll) dazu.push(i === an ? 'dein Termin · ausgebucht' : 'ausgebucht');
+                return '<button type="button" class="bt-chip' + (f.voll ? ' voll' : '') + (i === an ? ' an' : '') + '" data-d="' + esc(f.d) + '" data-w="' + esc(f.d + (f.z || '') + (f.voll ? 'v' : '')) + '"' + (i === an ? ' aria-pressed="true"' : '') + '><span>' + (i === an ? '<i class="fas fa-check"></i> ' : '') + esc(kurz(f.d)) + '</span>' + (dazu.length ? '<small>' + esc(dazu.join(' · ')) + '</small>' : '') + '</button>';
+            };
+            if(!frei.length) html += '<div class="bt-hinweis">In ' + esc(o.ort) + ' ist zurzeit kein Termin frei.</div>';
+            if(o.hinweis && o.hinweis.length) html += '<div class="bt-hinweis">' + o.hinweis.map(esc).join(' · ') + '</div>';
+            if(frei.length) reihe += '<div class="bt-gr"><div class="bt-ue"><span class="lang">Freie Termine – antippen zum Eintragen</span><span class="kurz">Frei:</span></div><div class="bt-chips">' + frei.map((f, i) => chip(f, i)).join('') + '</div></div>';
+            if(voll.length) reihe += '<div class="bt-gr"><div class="bt-ue"><span class="lang">Ausgebucht – schon angemeldet? Dann deinen Termin antippen</span><span class="kurz">Ausgebucht – schon angemeldet? Antippen:</span></div><div class="bt-chips">' + voll.map((f, i) => chip(f, frei.length + i)).join('') + '</div></div>';
+        }
+        html += '</div>' + (reihe ? '<div class="bt-reihe">' + reihe + '</div>' : '');
+        html += '<div class="bt-quelle"><span class="lang">Stand der Bundesnetzagentur: </span><span class="kurz">Stand BNetzA: </span>' + esc(lang(j.stand)) + ' · Quelle: <a href="' + esc(j.quelle || 'https://www.bundesnetzagentur.de/amateurfunk-termine') + '" data-extern="1">Bundesnetzagentur (PDF)</a><span class="lang"> · anmelden musst du dich dort</span></div>';
+        el.innerHTML = html;
+        el.querySelector('select').addEventListener('change', e => { ortSetzen(e.target.value); malen(el, opt); });
+        el.querySelectorAll('.bt-chip').forEach(b => b.addEventListener('click', () => { wahlSetzen(b.getAttribute('data-w')); opt.waehlen(b.getAttribute('data-d')); malen(el, opt); }));
+        const a = el.querySelector('a[data-extern]'); if(a) a.addEventListener('click', e => { e.preventDefault(); oeffnen(a.href); });
+    }
+    window.bnetzaTermine = function(el, opt){
+        if(!el) return;
+        opt = Object.assign({ id: el.id || 'bt' }, opt || {});
+        malen(el, opt);
+        holen().then(() => { if(document.body.contains(el)) malen(el, opt); });
+    };
+    // PC und Webseite: das Kaestchen unter dem Datumsfeld
+    function pcStart(){
+        const el = document.getElementById('terminBnetza');
+        if(!el) return;
+        window.bnetzaTermine(el, { id: 'terminBnetza', aktuell: () => ((document.getElementById('terminInput') || {}).value || ''),
+            waehlen: (d) => { const f = document.getElementById('terminInput'); if(f) f.value = d; try{ setPruefungstermin(d); }catch(e){} } });
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
+})();
+
+const TRAINER_STAND = { nr: 424, datum: '04.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35223,10 +35340,22 @@ function einstUmordnen(){
         const w = document.createElement('div');
         w.id = 'einstVorlesenWeg';
         w.innerHTML = einstKasten('Vorlesen und Lernen', 'Stimme, „Jede Frage automatisch vorlesen“, Mitlesen und die Schrift beim Vorlesen stehen jetzt unter <b>Vorlesen</b>. '
-            + 'Antwort zurücknehmen, Automatisch weiter, Formelblatt-Hinweis und Belohnung stehen unter <b>Lernen</b>.',
+            + 'Automatisch weiter, Formelblatt-Hinweis und Belohnung stehen unter <b>Lernen</b>. Antwort zurücknehmen steht direkt hier darunter und unter Lernen.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;"><button type="button" style="' + EINST_KNOPF + '" onclick="einstReiterZeigen(\'sprechen\')"><i class="fas fa-comment-dots"></i> Zu Vorlesen</button>'
           + '<button type="button" style="' + EINST_KNOPF + '" onclick="einstReiterZeigen(\'lernen\')"><i class="fas fa-graduation-cap"></i> Zu Lernen</button></div>');
         na.insertBefore(w, na.firstChild);
+    }
+    // 8. Stand 421 - Dietmar: "im Trainer Online übern Link finde ich unter Nachteilsausgleich nicht Antwort
+    //    zurücknehmen" - gewaehlt "Ja, zusätzlich dort". Zweiter Schalter, derselbe Wert wie unter Lernen.
+    if(na && !document.getElementById('einstZurueckNehmen2')){
+        const z = document.createElement('div');
+        z.innerHTML = einstKasten('Antwort zurücknehmen bei Fehlklick', 'Ein Fehlklick ist keine falsche Antwort. Derselbe Schalter steht auch unter Lernen.',
+            '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;" data-vorlesen-kurz="Antwort zurücknehmen erlauben.">'
+          + '<input type="checkbox" id="einstZurueckNehmen2" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" onchange="zurueckNehmenSetzen(this.checked)"' + (zurueckNehmenAn() ? ' checked' : '') + '>'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Antwort zurücknehmen erlauben</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">Nach dem Antworten erscheint <i>Zurücknehmen</i> in der Knopfreihe unter der Frage.</span></span></label>');
+        const weg = document.getElementById('einstVorlesenWeg');
+        if(weg && weg.nextSibling) na.insertBefore(z, weg.nextSibling); else na.appendChild(z);
     }
 }
 window.einstUmordnen = einstUmordnen;
@@ -38320,7 +38449,16 @@ function updateVisibility() {
     // Diese eine Marke entscheidet, ob die Karte fensterhoch ist. Sie
     // gehoert hierher, weil dies der einzige Ort ist, an dem zwischen
     // Runde und Hauptansicht zuverlaessig umgeschaltet wird.
-    try{ document.body.classList.toggle('runde-laeuft', !!(isActive || examFinished)); }catch(e){}
+    try{
+        const vorher = document.body.classList.contains('runde-laeuft');
+        document.body.classList.toggle('runde-laeuft', !!(isActive || examFinished));
+        // Stand 424: in der klassischen Ansicht die Groesse beim Wechsel Runde/Hauptmenue neu einpassen
+        const H = document.documentElement;
+        if(vorher !== document.body.classList.contains('runde-laeuft') && !H.classList.contains('pc-app') && !H.classList.contains('android-app') && (window.innerWidth || 0) > SCHMAL_GRENZE){
+            const neu = () => { try{ if(typeof anzeigeAnwenden === 'function') anzeigeAnwenden(); if(typeof fragenGroesseAnpassen === 'function') fragenGroesseAnpassen(); }catch(e){} };
+            setTimeout(neu, 80); setTimeout(neu, 700);
+        }
+    }catch(e){}
     // Die eingeblendete Quellenzeile gilt nur fuer die Runde. Wer zurueck
     // in die Hauptansicht geht, findet sie dort ohnehin ganz unten.
     try{
@@ -41664,6 +41802,9 @@ window.zurueckNehmenSetzen = zurueckNehmenSetzen;
 function zurueckNehmenFelderNachziehen(){
     const h = document.getElementById('einstZurueckNehmen');
     if(h) h.checked = zurueckNehmenAn();
+    // Stand 421: derselbe Schalter steht auch im Nachteilsausgleich
+    const h2 = document.getElementById('einstZurueckNehmen2');
+    if(h2) h2.checked = zurueckNehmenAn();
     const t = document.getElementById('einstZurueckText');
     if(t) t.textContent = zurueckNehmenAn()
         ? 'Nach einer Antwort steht „Zurücknehmen" in der Knopfreihe — auch mit Strg+Z.'
@@ -42435,6 +42576,22 @@ function anzeigeWahl(welche){
 //  Deshalb: gerechnet wird nur, wenn ausdruecklich danach gefragt wird
 //  (das tut allein anzeigeAnwenden, und zwar nur nach unten), sonst kommt
 //  das gemerkte Ergebnis zum selben Fenster zurueck.
+// ================================================================
+//  KLASSISCHE ANSICHT: DIE RUNDE RECHNET WIE IN DER APP-ANSICHT   (Stand 424)
+//  Dietmar (zwei Bilder, Verspielt und Sachlich): "Sachlich muss die gleiche
+//  Ansicht haben ... das die Fragerunde bei Sachlich zu klein ist." Am PC ist
+//  Sachlich die klassische Ansicht. Dort wurde die Groesse aus der Hoehe des
+//  Hauptmenues gerechnet und beim Start der Runde nicht neu bestimmt. Jetzt
+//  bekommt die Runde dieselbe Rechnung wie die Runde der App-Ansicht (Verspielt)
+//  und wird beim Start und beim Ende der Runde neu eingepasst.
+// ================================================================
+function anzeigeKlassikRunde(){
+    try{
+        const H = document.documentElement, B = document.body;
+        return !!B && B.classList.contains('runde-laeuft') && !H.classList.contains('pc-app') && !H.classList.contains('android-app')
+            && (H.classList.contains('pc-gross') || H.classList.contains('pc-bunt')) && (window.innerWidth || 0) > SCHMAL_GRENZE;
+    }catch(e){ return false; }
+}
 function anzeigeAutomatisch(neuRechnen){
     const b = window.innerWidth  || ANZEIGE_BREITE;
     const h = window.innerHeight || ANZEIGE_HOEHE;
@@ -42445,7 +42602,7 @@ function anzeigeAutomatisch(neuRechnen){
     // Runde am PC in der App-Ansicht (16.10.2026): dieselbe Groesse wie die klassische Ansicht.
     // Dietmar: "Es darf nirgends einen Unterschied geben." Die klassische Automatik landet bei
     // einer Runde rechnerisch bei Breite/1520 bzw. Hoehe/820 - das hier nachgebildet, ohne Gedaechtnis.
-    if(b > SCHMAL_GRENZE && document.documentElement.classList.contains('pc-runde'))
+    if(b > SCHMAL_GRENZE && (document.documentElement.classList.contains('pc-runde') || anzeigeKlassikRunde()))
         return Math.floor(Math.max(0.6, Math.min(1.5, b / 1520, h / 820)) * 20) / 20;
     if(!neuRechnen && anzeigeAutomatisch._kennung === kennung && anzeigeAutomatisch._wert)
         return anzeigeAutomatisch._wert;
@@ -42713,7 +42870,7 @@ function anzeigeAnwenden(){
             // zurueck, die die Fragenansicht gerade weggenommen hat.
             let obenGrenze = 1.5;
             try{
-                const d = deckelFuer(anzeigeKennung());
+                const d = anzeigeKlassikRunde() ? 0 : deckelFuer(anzeigeKennung());   // der Deckel gilt fuer das Hauptmenue
                 if(d) obenGrenze = Math.min(obenGrenze, d);
             }catch(e){}
             let schritte = 0;
@@ -42733,7 +42890,7 @@ function anzeigeAnwenden(){
             // Passt selbst 60 Prozent nicht, bleibt der Balken. Dann ist
             // Scrollen richtig und kein Fehler.
         }catch(err){}
-        anzeigeAutomatisch._wert = f;
+        if(!anzeigeKlassikRunde()) anzeigeAutomatisch._wert = f;   // der Wert der Runde gilt nicht fuers Hauptmenue
     }
     try{ anzeigeFeldNachziehen(); }catch(err){}
     return f;
@@ -62826,7 +62983,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     }
     function blattTermin(){
         const t = terminIst();
-        return '<label class="aw-feld aw-datum"><span>Dein Prüfungstag</span><input type="date" id="awTerminFeld" value="' + esc(t) + '"></label>'
+        return '<div id="awTerminBnetza" class="bt-box" hidden></div><div class="bt-oder" id="awTerminOder" hidden>Oder das Datum selbst eintragen</div>'
+          + '<label class="aw-feld aw-datum"><span>Dein Prüfungstag</span><input type="date" id="awTerminFeld" value="' + esc(t) + '"></label>'
           + '<div class="aw-info2" id="awTerminInfo"></div>'
           + '<button type="button" class="aw-link" data-tat="terminweg" id="awTerminWeg"' + (t ? '' : ' style="display:none"') + '><i class="fas fa-xmark"></i> Termin entfernen</button>'
           + '<div class="aw-linkzeile" id="awTerminLink"></div>';
@@ -62907,6 +63065,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(art === 'termin'){
             leihen(D.querySelector('#masteryDisplay a[href*="Pruefungstermine"]'), $('awTerminLink'));
             terminInfoZeigen();
+            tu(() => { if(window.bnetzaTermine) window.bnetzaTermine($('awTerminBnetza'), { id: 'awTerminBnetza', aktuell: () => (($('awTerminFeld') || {}).value || ''),
+                waehlen: (d) => { const f = $('awTerminFeld'); if(!f) return; f.value = d; f.dispatchEvent(new Event('change', { bubbles: true })); } });
+                const zeig = () => { const b = $('awTerminBnetza'), o = $('awTerminOder'); if(b && o) o.hidden = b.hidden; }; zeig(); setTimeout(zeig, 1500); setTimeout(zeig, 5000); });
             $('awTerminFeld').addEventListener('change', e => {
                 tu(() => setPruefungstermin(e.target.value || ''));
                 terminInfoZeigen();
