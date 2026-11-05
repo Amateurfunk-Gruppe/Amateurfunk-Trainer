@@ -660,7 +660,7 @@
         #appLeiste #alTrainer { display: none; position: relative; }
         html.android-app body.app-trainer-da #appLeiste #alTrainer { display: flex; }
         #alTrainer .al-zahl { display: none; position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
-            background: #1f9d55; color: #fff; font-size: 10px; font-weight: 800; align-items: center; justify-content: center; }
+            background: #147a3a; color: #fff; font-size: 10px; font-weight: 800; align-items: center; justify-content: center; }
         #alTrainer .al-zahl.da { display: flex; }
         html.android-app body.app-chat-da #alChat { display: flex; }
         #alChat .al-zahl {
@@ -816,7 +816,7 @@
         /* ---------- Farben: Verspielt ---------- */
         html.android-app.stil-verspielt {
             --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #5B6887;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -843,7 +843,7 @@
            Sachlich behaelt seine Formen, nimmt aber Hintergrund, Verlauf und Farben von Bunt (hell und dunkel). */
         html.android-app.stil-sachlich {
             --s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.10); --s-rand2: rgba(16,36,74,0.16);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #5B6887;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -1120,6 +1120,7 @@
             padding: 3px 9px; border-radius: 999px; background: var(--s-akzent-w, rgba(15,183,178,.14)); color: var(--s-akzent-tief, #0A94B8); }
         :is(#awPfad,#awPfadVoll) .apf-karte { flex: 0 0 auto; margin-top: 2px; width: 24px; height: 24px; display: grid;
             place-items: center; color: var(--s-gruen-tief, #11924F); font-size: 13px; }
+        body:not(.dark) :is(#awPfad,#awPfadVoll) .apf-marke { color: var(--s-haupt-tief, #07708C); }   /* Stand 426: 'dran' lag bei 3,0:1 */
         body.dark :is(#awPfad,#awPfadVoll) .apf-marke { color: var(--s-akzent, #34D9D4); }
         body.dark :is(#awPfad,#awPfadVoll) .apf-karte { color: var(--s-gruen, #34E089); }
         :is(#awPfad,#awPfadVoll) .apf-satz { margin-top: 12px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px);
@@ -2424,6 +2425,9 @@
         html body .realistic-modal:has(.realistic-parts) .realistic-modal-header { background:var(--ck-bg1) !important; border-color:var(--ck-line) !important; }
         html body .realistic-modal:has(.realistic-parts) .realistic-modal-header h3,
         html body .realistic-modal:has(.realistic-parts) .realistic-modal-header h3 i { color:var(--ck-acc1) !important; }
+        /* Stand 426: im Hellen war der Titel bernsteinfarben auf hellgrau (2,2:1) - dunkler Bernstein, 5:1 */
+        html body:not(.dark) .realistic-modal:has(.realistic-parts) .realistic-modal-header h3,
+        html body:not(.dark) .realistic-modal:has(.realistic-parts) .realistic-modal-header h3 i { color:#9a5b0b !important; }
         html body .realistic-modal:has(.realistic-parts) .realistic-modal-close { background:var(--ck-card) !important; color:var(--ck-text) !important; border-color:var(--ck-line) !important; border-radius:calc(var(--ck-r) * .75) !important; }
         html body .realistic-modal:has(.realistic-parts) .realistic-modal-body { background:radial-gradient(120% 60% at 50% 0%, var(--ck-bg2) 0%, var(--ck-bg1) 70%) !important; color:var(--ck-text) !important; }
         html body .realistic-modal:has(.realistic-parts) .realistic-wrapper { background:transparent !important; }
@@ -2609,8 +2613,8 @@
         #appWerk .aw-ha { position: absolute; top: -7px; right: -6px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff;
             box-shadow: 0 3px 8px rgba(0,0,0,0.2); transition: transform 0.25s cubic-bezier(.3, 1.7, .5, 1), opacity 0.2s; }
         #appWerk .aw-teil.v { background: rgba(123,92,255,0.12); border-color: rgba(123,92,255,0.55); color: #6A45F5; }
-        #appWerk .aw-teil.b { background: rgba(255,138,0,0.12); border-color: rgba(255,138,0,0.55); color: #C26F00; }
-        #appWerk .aw-teil.t { background: rgba(15,183,178,0.12); border-color: rgba(15,183,178,0.55); color: #07807C; }
+        #appWerk .aw-teil.b { background: rgba(255,138,0,0.12); border-color: rgba(255,138,0,0.55); color: #9A5800; }   /* Stand 427: #C26F00 lag bei 3,4:1, jetzt 5,0:1 */
+        #appWerk .aw-teil.t { background: rgba(15,183,178,0.12); border-color: rgba(15,183,178,0.55); color: #067470; }   /* Stand 427: #07807C lag bei 4,3:1, jetzt 5,0:1 */
         #appWerk .aw-teil.v .aw-mini i, #appWerk .aw-teil.v .aw-ha { background: #7B5CFF; }
         #appWerk .aw-teil.b .aw-mini i, #appWerk .aw-teil.b .aw-ha { background: #FF8A00; }
         #appWerk .aw-teil.t .aw-mini i, #appWerk .aw-teil.t .aw-ha { background: #0FB7B2; }
@@ -2690,7 +2694,7 @@
         #awLetzte .awl-s { justify-self: end; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; color: #fff; }
         #awLetzte .awl-weg { justify-self: end; width: 24px; height: 20px; padding: 0; border: 0; background: none; color: var(--s-text2); opacity: .55; cursor: pointer; font-size: 13px; border-radius: 6px; }
         #awLetzte .awl-weg:hover { opacity: 1; color: #d64545; background: rgba(214,69,69,.1); }
-        #awLetzte .awl-s.ok { background: #1f9d55; } #awLetzte .awl-s.nein { background: #d64545; } #awLetzte .awl-s.grau { background: #e0a106; }
+        #awLetzte .awl-s.ok { background: #147a3a; } #awLetzte .awl-s.nein { background: #d64545; } #awLetzte .awl-s.grau { background: #e0a106; }
         #awLetzte .awl-leer { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--s-text2); }
         #awLetzte .awl-los { border: 0; background: var(--s-fl2); color: var(--s-text); font: 700 13px var(--font-body); padding: 7px 12px; cursor: pointer; }
         html.android-app body.eckig.app-rund #appWerk :is(.aw-bar, .aw-bar i, .aw-balken, .aw-balken i, .aw-mini, .aw-mini i), html:not(.android-app) body.eckig.app-rund #appWerk :is(.aw-bar, .aw-bar i, .aw-balken, .aw-balken i, .aw-mini, .aw-mini i) { border-radius: 99px !important; }
@@ -2753,6 +2757,8 @@
         #appWerkBlatt .aw-zt small { display: block; font-size: 12.5px; color: var(--s-text2); margin-top: 1px; line-height: 1.35; }
         #appWerkBlatt .aw-pf { color: var(--s-text3); font-size: 13px; flex: none; }
         #appWerkBlatt .aw-gefahr b { color: var(--s-rot); }
+        body:not(.dark) #appWerkBlatt .aw-gefahr b { color: #c42a3d; }   /* Stand 426: #f2375a auf Hell lag bei 3,5:1, jetzt 5,3:1 */
+        body.dark #appWerkBlatt .aw-gefahr b { color: #ff8a9e; }   /* Stand 426: #ff4d6d auf Blau lag bei 3,3:1 */
         #appWerkBlatt .aw-text { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: var(--s-text2); }
         #appWerkBlatt .aw-ue2 { font: 700 12px var(--font-body); letter-spacing: 1.1px; text-transform: uppercase; color: var(--s-text3); margin: 16px 0 9px 4px; }
         #appWerkBlatt .aw-knopf { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 52px; margin: 6px 0 14px; border: 0; color: #fff; font: 700 16px var(--font-body); cursor: pointer;
@@ -3088,6 +3094,9 @@
         html.android-app.stil-sachlich #appWerk .aw-count h4 { color: var(--s-text); font-weight: 600; }
         html.android-app.stil-sachlich #appWerk .aw-count p { color: var(--s-text2); opacity: 1; }
         html.android-app.stil-sachlich #appWerk .aw-chip { background: var(--s-akzent-w); color: var(--s-akzent); }
+        /* Stand 426 (Pruefung Kontrast, hell): grosse Zahl 2,3:1 und Chip 3,0:1 - jetzt im tiefen Tuerkis (5,6:1 bzw. 5,3:1); dunkel unveraendert */
+        html.android-app.stil-sachlich body:not(.dark) #appWerk .aw-gross b { color: var(--s-haupt-tief, #07708C); }
+        html.android-app.stil-sachlich body:not(.dark) #appWerk .aw-chip { color: var(--s-haupt-tief, #07708C); }
         html.android-app.stil-sachlich #appWerk .aw-rakete { display: none; }
         html.android-app.stil-sachlich #appWerk .aw-count:active { transform: none; background: var(--s-fl2); }
         /* Werkzeuge: Kacheln in Grau und Navy (Entwurf B) */
@@ -3560,7 +3569,7 @@ body.dark [style*="color:var(--panel-navy)"] { color: #9cc8ff !important; }
 body.dark #statistikModal button.x-zu.btn-outline, body.dark .x-zu.btn-outline, body.dark button.x-zu { background: rgba(255,255,255,0.10) !important; color: #fff !important; border-color: rgba(255,255,255,0.22) !important; }
 /* ---------- sachlichWieVerspielt ---------- */
 html.android-app:not(.pc-app).stil-sachlich {--s-bg: #F2F5FC; --s-fl: #FFFFFF; --s-fl2: #F3F6FD; --s-rand: rgba(16,36,74,0.08); --s-rand2: rgba(16,36,74,0.14);
-            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #6B7896;
+            --s-text: #0C1731; --s-text2: #46557A; --s-text3: #5B6887;
             --s-haupt: #0FB7B2; --s-haupt2: #0A94B8; --s-haupt-tief: #07708C; --s-auf-haupt: #FFFFFF;
             --s-akzent: #0A94B8; --s-akzent-w: rgba(15,183,178,0.16);
             --s-gruen: #1FC46F; --s-gruen-tief: #11924F; --s-gruen-w: rgba(31,196,111,0.12);
@@ -3938,11 +3947,14 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             --accent-amber: #e2932f;
             --accent-amber-soft: #fdf1e0;
             --line: #e3e9f3;
-            --good: #1f9d55;
+            /* Stand 426 (04.11.2026, Pruefung mit axe): Gruen und Orange als SCHRIFT auf hellem Grund lagen bei
+               3,5:1 und 2,7:1 ("23 von 25 sitzt", "Es reicht - aber knapp", "Zu lernen: 242"). Jetzt 4,6:1 - auch
+               weisse Schrift auf diesen Farben (Schilder) erreicht 4,5:1. */
+            --good: #147a3a;
             --good-bg: #dcf3e5;
-            --bad: #d9403a;
+            --bad: #c8352f;
             --bad-bg: #fbe1df;
-            --warn: #d68a1f;
+            --warn: #b45309;
             --warn-bg: #fdf1d8;
             --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
             --font-body: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -4331,7 +4343,7 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
         .btn-difficult:hover { background: #7d3c98; }
         .btn-abort { background: #34495e; color: white !important; }
         .btn-abort:hover { background: #2c3e50; }
-        .mastery-badge { background: #1f9d55; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .mastery-badge { background: #147a3a; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
         .nav-btn-abort { background: #6c757d; color: white !important; }
         .difficult-badge { background: white; color: #8e44ad; border-radius: 10px; padding: 1px 6px; font-size: 0.65rem; margin-left: 4px; font-weight: 800; }
         .error-badge { background: white; color: var(--bad); border-radius: 10px; padding: 1px 6px; font-size: 0.65rem; margin-left: 4px; font-weight: 800; }
@@ -5587,10 +5599,10 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
         }
         /* Das X deutlich (19.10.2026): rot, mit Wort */
         #erklaerGross .eg-zu { width: auto; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px;
-            background: #d64545; border-color: #d64545; color: #fff; font-weight: 700; font-size: 1rem; }
+            background: #c53030; border-color: #c53030; color: #fff; font-weight: 700; font-size: 1rem; }   /* Stand 426: #d64545 lag mit Weiss bei 4,4:1 */
         #erklaerGross .eg-zu:hover { background: #b93636; border-color: #b93636; }
         #erklaerGross .eg-buehne { cursor: zoom-out; }
-        body.dark #erklaerGross .eg-zu, html.android-app body #erklaerGross .eg-zu { background: #d64545 !important; border-color: #d64545 !important; color: #fff !important; }
+        body.dark #erklaerGross .eg-zu, html.android-app body #erklaerGross .eg-zu { background: #c53030 !important; border-color: #c53030 !important; color: #fff !important; }   /* Stand 426: 4,4:1 -> 5,5:1 */
         #erklaerGross .eg-buehne { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1.1rem 1.3rem 1.4rem; }
         /* DIE EIGENTLICHE SACHE: die Schrift. 1,35rem gegenüber 0,86rem im
            Kasten - gut das Anderthalbfache -, dazu mehr Zeilenabstand.
@@ -6026,7 +6038,7 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
         #notizFeld textarea:focus { border-color: #e2932f; }
         #notizFeld .notiz-fuss {
             margin-top: 5px; display: flex; align-items: center; justify-content: space-between;
-            gap: 10px; font-size: 0.7rem; color: #9a8350;
+            gap: 10px; font-size: 0.7rem; color: #6f5c2e;   /* Stand 426: #9a8350 auf Creme lag bei 3,5:1 */
         }
         #notizFeld .notiz-fuss button {
             background: none; border: none; color: #8a6d00; cursor: pointer;
@@ -6034,6 +6046,9 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             padding: 0;
         }
         body.dark #notizFeld { background: #2a2114; border-color: #5a4a28; }
+        /* Stand 426: Kopf, Fuss und Knoepfe der Notiz waren im Dunkeln dunkelgold auf Braun (3,2:1) */
+        body.dark #notizFeld .notiz-kopf, body.dark #notizFeld .notiz-fuss, body.dark #notizFeld .notiz-fuss button,
+        body.dark #notizFeld .notiz-kopf button { color: #e6c874; }
         body.dark #notizFeld textarea { background: #1f1a11; color: #f0e6d2; border-color: #5a4a28; }
 
         /* Die kurze Einblendung nach einem Klick auf Merken oder Gelernt.
@@ -9395,9 +9410,9 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             --ink: #16232f;
             --line: #c3d0de;
             --panel-navy: #0f2745;
-            --good: #1f9d55;  --good-bg: #dcf3e5;
-            --bad:  #d9403a;  --bad-bg:  #fbe1df;
-            --warn: #d68a1f;  --warn-bg: #fdf1d8;
+            --good: #147a3a;  --good-bg: #dcf3e5;
+            --bad:  #c8352f;  --bad-bg:  #fbe1df;
+            --warn: #b45309;  --warn-bg: #fdf1d8;
             --accent-amber: #e2932f;  --accent-amber-soft: #fdf1e0;
             --card-bg: #ffffff;
         }
@@ -9432,9 +9447,9 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             --panel-navy-light: #0f2b40;
             --card-bg: #ffffff;
             --bg: #eef2f9;
-            --good: #1f9d55;  --good-bg: #dcf3e5;
-            --bad:  #d9403a;  --bad-bg:  #fbe1df;
-            --warn: #d68a1f;  --warn-bg: #fdf1d8;
+            --good: #147a3a;  --good-bg: #dcf3e5;
+            --bad:  #c8352f;  --bad-bg:  #fbe1df;
+            --warn: #b45309;  --warn-bg: #fdf1d8;
             --accent-amber: #e2932f;  --accent-amber-soft: #fdf1e0;
         }
         /* Das Schliesskreuz sass als helles Grau auf Weiss */
@@ -9717,6 +9732,10 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
         }
         body.dark .badge i, body.dark .btn-primary i,
         body.dark .sidebar-tab i, body.dark .exam-timer i { color: #041a24 !important; }
+        /* Stand 426: die Uhr selbst ("45:00") war weiss auf Cyan (2,6:1); jetzt dunkel wie ihr Symbol, 9:1 */
+        body.dark .exam-timer:not(.warning):not(.danger) { color: #041a24 !important; }
+        /* Stand 426: "Vorlesen" im Erklaer-Fenster war weiss auf Cyan (2,6:1) */
+        body.dark #erklaerGross .eg-lesen { color: #041a24; }
         /* Gruppenraum behaelt weisse Schrift - dafuer ein etwas kraeftigeres
            Pink: auf dem hellen #e84393 lag Weiss bei 3,71:1, jetzt 5,1:1.
            Gilt in allen Themes, damit der Knopf ueberall gleich aussieht. */
@@ -10070,6 +10089,10 @@ body.dark .rev-opt.wrong { border-color:var(--bad); background:rgba(239,68,68,0.
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   background:var(--card-bg);
+  /* Stand 426 (04.11.2026), Dietmar (Bild vom Handy): "Das Fenster ist noch unten sehr abgeschnitten."
+     In der App ist das Fenster bildschirmhoch, der Inhalt aber kuerzer - darunter schien der
+     Fenster-Hintergrund durch wie ein abgeschnittener Rand. Der Inhalt fuellt jetzt die Hoehe. */
+  flex:1 1 auto; min-height:0;
 }
 body.dark .realistic-modal { background:var(--card-bg); border-color:var(--line); }
 body.dark .realistic-modal-header { background:#0d2639; border-color:var(--line); }
@@ -10100,6 +10123,16 @@ body.dark .realistic-modal-overlay { background:rgba(8,13,20,0.72); }
 
 
 <style id="pcHandy">html.pc-handy #pcWerkOben, html.pc-handy .pc-werk, html.pc-handy #pcServerChip, html.pc-handy #alBeenden { display: none !important; }</style>
+<style id="tuerkisDunkel">
+/* Stand 427 (05.11.2026) - Dietmar: "Wie wuerde es aussehen wenn wir das Tuerkis in dunkel tuerkis aendern" - nach Vorschau
+   (heute / mittel / dunkel): "es dunkle sieht schon ganz gut aus das rechte". In der hellen App-Ansicht (Verspielt und Sachlich)
+   wird das Tuerkis dunkler: Knoepfe "Ueben", "Kopieren", Symbole, Balken, Schriftzug "Trainer". Weiss auf dem Knopf vorher 2,5:1,
+   jetzt 4,9:1. Dunkel (Polar) und PC bleiben. --s-haupt-tief bleibt #07708C (Tageszahl, "dran"). */
+html.android-app.stil-verspielt body:not(.dark), html.android-app.stil-sachlich body:not(.dark) {
+  --s-haupt: #097E7A; --s-haupt2: #08718A; --s-akzent: #08718A; --s-t: #097E7A;
+}
+html.android-app.stil-verspielt body:not(.dark) .al-name b, html.android-app.stil-sachlich body:not(.dark) .al-name b { color: #08718A !important; }
+</style>
 </head>
 <body>
 <script>
@@ -16152,7 +16185,7 @@ function kursleiterFuellen(){
     Object.keys(r.teile).forEach(t => {
         const x = r.teile[t];
         const q = x.echt > 0 ? Math.round(x.falsch / x.echt * 100) : 0;
-        const farbe = q >= 40 ? '#c0392b' : (q >= 20 ? '#b8860b' : '#1f9d55');
+        const farbe = q >= 40 ? '#c0392b' : (q >= 20 ? '#b8860b' : '#147a3a');
         html += '<tr style="border-top:1px solid var(--line);">' +
             '<td style="padding:6px 2px; font-weight:700;">' + kaEsc(T[t] || t) + '</td>' +
             '<td>' + x.echt + '</td><td>' + x.falsch + '</td>' +
@@ -16187,7 +16220,7 @@ function kursleiterFuellen(){
             const farbe = (e.urteil === 'geraten') ? '#c0392b'
                         : (e.urteil === 'gemischt') ? '#b8860b'
                         : (e.urteil === 'zu_wenig' || e.urteil === 'keine_schnellen') ? 'var(--muted)'
-                        : '#1f9d55';
+                        : '#147a3a';
             const befund = (e.urteil === 'geraten') ? 'sieht nach Raten aus'
                          : (e.urteil === 'auswendig') ? 'sitzt auswendig'
                          : (e.urteil === 'gewusst') ? 'gewusst'
@@ -16247,7 +16280,7 @@ function kursleiterFuellen(){
 
     // ---- Die Fragen ------------------------------------------------------
     r.liste.forEach(z => {
-        const farbe = z.quote >= 50 ? '#c0392b' : (z.quote >= 25 ? '#b8860b' : '#1f9d55');
+        const farbe = z.quote >= 50 ? '#c0392b' : (z.quote >= 25 ? '#b8860b' : '#147a3a');
         const richtig = (z.q.options || []).find(o => o.correct);
         html += '<div style="border:1px solid var(--line); border-radius:10px; padding:9px 11px; margin-bottom:7px;">' +
             '<div style="display:flex; align-items:center; gap:8px; font-size:0.72rem; margin-bottom:4px;">' +
@@ -16269,7 +16302,7 @@ function kursleiterFuellen(){
         }
         if (richtig) {
             html += '<div style="font-size:0.76rem; padding:5px 8px; border-radius:7px; background:#eef7f1; ' +
-                'border-left:3px solid #1f9d55;"><b>Richtig:</b> ' + kaEsc(richtig.text) + '</div>';
+                'border-left:3px solid #147a3a;"><b>Richtig:</b> ' + kaEsc(richtig.text) + '</div>';
         }
         if (kursleiterNamen && z.wer.length) {
             html += '<div style="font-size:0.72rem; color:var(--muted); margin-top:5px;">' +
@@ -16669,7 +16702,7 @@ function kursGespeicherteZeigen(id){
         + '<i class="fas fa-display"></i> Am Beamer durchgehen</button></div>';
 
     x.fragen.forEach(f => {
-        const farbe = f.quote >= 50 ? '#c0392b' : (f.quote >= 25 ? '#b8860b' : '#1f9d55');
+        const farbe = f.quote >= 50 ? '#c0392b' : (f.quote >= 25 ? '#b8860b' : '#147a3a');
         html += '<div style="border:1px solid var(--line); border-radius:10px; padding:9px 11px; margin-bottom:7px;">'
             + '<div style="display:flex; align-items:center; gap:8px; font-size:0.72rem; margin-bottom:4px;">'
             +   '<span style="font-family:var(--font-mono); font-weight:700; color:var(--panel-navy);">'
@@ -16685,7 +16718,7 @@ function kursGespeicherteZeigen(id){
                   + e(f.irrtum.text) + ' <span style="color:var(--muted);">(' + f.irrtum.n + '&times;)</span></div>'
                 : '')
             + '<div style="font-size:0.76rem; padding:5px 8px; border-radius:7px; background:#eef7f1; '
-            +   'border-left:3px solid #1f9d55;"><b>Richtig:</b> ' + e(f.richtig) + '</div>'
+            +   'border-left:3px solid #147a3a;"><b>Richtig:</b> ' + e(f.richtig) + '</div>'
             + '</div>';
     });
 
@@ -16908,7 +16941,7 @@ function kursleiterDrucken(){
             + '.text { font-weight:600; line-height:1.3; margin-bottom:4pt; }'
             + '.irrtum { background:#fdeeee; border-left:2.5pt solid #c0392b; padding:4pt 7pt;'
             +          ' margin-bottom:3pt; line-height:1.3; }'
-            + '.richtig { background:#eef7f1; border-left:2.5pt solid #1f9d55; padding:4pt 7pt; line-height:1.3; }'
+            + '.richtig { background:#eef7f1; border-left:2.5pt solid #147a3a; padding:4pt 7pt; line-height:1.3; }'
             + '.wer { font-size:8pt; color:#777; margin-top:3pt; }'
             + '.fuss { margin-top:12pt; padding-top:6pt; border-top:0.7pt solid #ccc;'
             +        ' font-size:8pt; color:#777; text-align:center; }'
@@ -17056,11 +17089,11 @@ function einstOhmLageFuellen(){
             });
         }catch(ex){}
 
-        el.innerHTML = '<span style="color:#1f9d55; font-weight:600;">✔ Vorhanden.</span> '
+        el.innerHTML = '<span style="color:#147a3a; font-weight:600;">✔ Vorhanden.</span> '
             + '<b>' + gesamt + '</b> Fragen zugeordnet, davon <b>' + mitL + '</b> mit Lösungsweg'
             + (ohmIndexStand ? ' · geholt am ' + ohmIndexStand.split('-').reverse().join('.') : '') + '.'
             + '<br>' + (imZiel > 0
-                ? '<b style="color:#1f9d55;">' + imZiel + '</b> davon gehören zu deinem Ziel '
+                ? '<b style="color:#147a3a;">' + imZiel + '</b> davon gehören zu deinem Ziel '
                   + '<b>' + (zielName || 'dieser Klasse') + '</b>.'
                 : '<b style="color:#b8860b;">Für dein Ziel ' + (zielName || 'diese Klasse')
                   + ' ist noch keine darunter.</b> Der DARC ergänzt die Lösungswege nach und nach – '
@@ -17185,7 +17218,7 @@ function einstBenutzerFuellen(){
             + '<span style="width:22px; height:22px; flex:0 0 auto; border-radius:50%; '
             +   'display:inline-flex; align-items:center; justify-content:center; font-size:0.68rem; '
             +   'font-weight:700; background:' + (da ? 'var(--panel-navy)' : '#e8eef6') + '; '
-            +   'color:' + (da ? '#fff' : '#8b9bb0') + ';">' + (i + 1) + '</span>'
+            +   'color:' + (da ? '#fff' : '#5b6b80') + ';">' + (i + 1) + '</span>'   // Stand 426: #8b9bb0 lag bei 2,4:1
             + '<input type="text" class="platz-name" id="benutzerName_' + slot + '" value="' + name.replace(/"/g,'&quot;') + '" '
             +   'maxlength="20" placeholder="' + (da ? '' : 'Name eingeben zum Anlegen') + '" '
             +   'onchange="benutzerNameSetzen(\'' + slot + '\', this.value)" '
@@ -17198,7 +17231,7 @@ function einstBenutzerFuellen(){
             +   (ziel ? '<br><span style="color:var(--panel-navy); font-weight:600;">' + ziel + '</span>' : '')
             + '</span>'
             + (jetzt
-                ? '<span style="flex:0 0 74px; width:74px; box-sizing:border-box; text-align:center; font-size:0.68rem; font-weight:700; color:#1f9d55; '
+                ? '<span style="flex:0 0 74px; width:74px; box-sizing:border-box; text-align:center; font-size:0.68rem; font-weight:700; color:#147a3a; '
                   + 'background:#eef7f1; border-radius:9px; padding:3px 0;">aktiv</span>'
                 : '<button type="button" onclick="benutzerWechselnAus(\'' + slot + '\')" '
                   + 'style="' + EINST_KNOPF + ' flex:0 0 74px; width:74px; box-sizing:border-box; justify-content:center; text-align:center; padding:0.2rem 0; font-size:0.7rem;"'
@@ -19906,6 +19939,7 @@ function frageSchnitt(id){
 }
 
 function saveErrors() {
+    if(!window.afuLernstandGeladen) return;   // Stand 425: nie vor dem Laden schreiben (siehe saveMastery)
     try {
         const key = 'amateurfunk_errors_' + currentUser;
         localStorage.setItem(key, JSON.stringify(errorList));
@@ -19929,6 +19963,7 @@ function saveErrors() {
 }
 
 function saveDifficult() {
+    if(!window.afuLernstandGeladen) return;   // Stand 425: nie vor dem Laden schreiben (siehe saveMastery)
     try {
         const key = 'amateurfunk_difficult_' + currentUser;
         localStorage.setItem(key, JSON.stringify(difficultQuestions));
@@ -19954,6 +19989,11 @@ function loadDifficult() {
 }
 
 function saveMastery() {
+    // Stand 425 (04.11.2026): VOR dem Laden des Lernstands nie schreiben. Dietmars Konto wurde leer, weil der
+    // Abgleich 3,5 s nach dem Start einen Schnappschuss nahm, waehrend die App noch auf /api/userdata wartete:
+    // saveMastery() schrieb das leere masteryData aus dem Arbeitsspeicher ueber den echten Lernstand - und der
+    // Abgleich lud diesen leeren Stand ins Konto. Siehe afuLernstandGeladen beim Start.
+    if(!window.afuLernstandGeladen) return;
     try {
         const key = 'amateurfunk_mastery_' + currentUser;
         localStorage.setItem(key, JSON.stringify(masteryData));
@@ -21124,7 +21164,7 @@ function updateMasteryDisplay() {
             if (total > 0) {
                 elStartBadge.textContent = toLearn;
                 elStartBadge.style.display = 'inline';
-                elStartBadge.style.color = toLearn > 0 ? '' : '#1f9d55';
+                elStartBadge.style.color = toLearn > 0 ? '' : '#147a3a';
             } else {
                 elStartBadge.style.display = 'none';
             }
@@ -22997,14 +23037,14 @@ function stolpersteineOeffnen(){
                 +   'style="border-top:1px solid var(--line); padding:9px 2px; display:flex; gap:10px; '
                 +   'background:' + (gemerkt ? '#fff6f8' : 'transparent') + ';">'
                 + '<span style="flex:0 0 auto; width:34px; text-align:right; font-weight:700; '
-                +   'color:' + (x.sitzt ? '#1f9d55' : '#c0392b') + '; font-size:0.82rem;">'
+                +   'color:' + (x.sitzt ? '#147a3a' : '#c0392b') + '; font-size:0.82rem;">'
                 +   x.falsch + '&times;</span>'
                 + '<span style="flex:1; min-width:0;">'
                 +   '<span style="display:flex; align-items:center; gap:7px; font-size:0.7rem; '
                 +     'color:var(--muted); margin-bottom:2px;">'
                 +     '<b style="font-family:var(--font-mono); color:var(--panel-navy);">' + esc(x.q.id) + '</b>'
                 +     '<span>' + esc(T[x.q.part] || x.q.part || '') + '</span>'
-                +     (x.sitzt ? '<span style="color:#1f9d55; font-weight:700;">sitzt wieder</span>' : '')
+                +     (x.sitzt ? '<span style="color:#147a3a; font-weight:700;">sitzt wieder</span>' : '')
                 +   '</span>'
                 +   '<span style="display:block; font-size:0.8rem; line-height:1.4;">' + esc(x.q.text) + '</span>'
                 +   (richtig && richtig.text
@@ -23227,7 +23267,7 @@ window.blaetterStand = blaetterStand;
 
 function themenFarbe(quote){
     if(quote === null) return '#7f8c9b';
-    if(quote >= 76) return '#1f9d55';
+    if(quote >= 76) return '#147a3a';
     if(quote >= 60) return '#b8860b';
     return '#c0392b';
 }
@@ -23776,7 +23816,7 @@ function reifeAktualisieren(){
                 teile2.push('<b>' + w.gelernt + '</b> von ' + w.pool + ' gelernt (' + anteil + '\u202f%)');
             }
             if(w.quote !== null && w.quote !== undefined){
-                const f = w.quote >= 76 ? '#1f9d55' : (w.quote >= 60 ? '#b8860b' : '#c0392b');
+                const f = w.quote >= 76 ? '#147a3a' : (w.quote >= 60 ? '#b8860b' : '#c0392b');
                 teile2.push('Trefferquote <b style="color:' + f + ';">' + w.quote + '\u202f%</b>');
             }
             if(w.unberuehrt) teile2.push(w.unberuehrt + ' noch nie geübt');
@@ -25488,7 +25528,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 424, datum: '04.11.2026' };
+const TRAINER_STAND = { nr: 427, datum: '05.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -30363,7 +30403,7 @@ function unterrichtStilEinbauen(){
         '#unterrichtModal .u-quelle a{color:inherit;}',
         '#unterrichtModal .u-leer{padding:1rem;color:var(--muted);font-size:0.85rem;}',
         '@media (max-width:760px){#unterrichtModal .u-rumpf{grid-template-columns:1fr;grid-template-rows:30vh minmax(0,1fr);}}',
-        'body.dark #unterrichtModal{--ink:#f0f7fc;--muted:#8ba6bb;--line:#1d3b52;--panel-navy:#00adef;color:var(--nacht-schrift,#f0f7fc);}',
+        'body.dark #unterrichtModal{--ink:#f0f7fc;--muted:#a3bccc;--line:#1d3b52;--panel-navy:#00adef;color:var(--nacht-schrift,#f0f7fc);}',
         'body.dark #unterrichtModal .u-mini{background:var(--nacht-flaeche,#0f2b40);}',
         'body.dark #unterrichtModal .u-lek.an{background:#12405e !important;border-color:#00adef !important;}',
         'body.dark #unterrichtModal .u-nr{color:#062033;}',
@@ -34849,10 +34889,37 @@ function ttsTempoAnwenden(audio){
     }catch(e){}
 }
 const TTS_PROBE_SATZ = 'So klingt die Stimme jetzt: Die Frequenz von 145 Megahertz liegt im 2-Meter-Band.';
+// Stand 426 (04.11.2026), Dietmar: "Wenn ich die Geschwindigkeit aendere, hoere ich Thorsten." Die Probe nach dem
+// Umstellen kam immer von Piper (ttsVoice), obwohl Maja die Fragen liest. Liest Maja (Sprachpaket an und eine
+// Frage im Paket), spricht die Probe jetzt Maja: die laufende Frage, sonst die erste Frage des Pakets - im neuen
+// Tempo. Nur wenn das nicht geht, kommt der Probesatz der Piper-Stimme wie bisher.
+async function majaTempoProbe(){
+    try{
+        if(typeof majaSpracheAn !== 'function' || !majaSpracheAn()) return false;
+        if(typeof majaSpracheIndizesLaden === 'function') await majaSpracheIndizesLaden();
+        let q = null;
+        try{ q = (typeof currentQuestions !== 'undefined' && currentQuestions[currentIndex]) || null; }catch(e){}
+        let m = q ? majaFrageMarke(q) : null;
+        if(!m){
+            for(const pid of majaPaketIds()){
+                if(!/-fragen$/.test(pid)) continue;
+                const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
+                const id = idx && Object.keys(idx)[0];
+                if(id){ m = majaFrageMarke({ id: id }); if(m) break; }
+            }
+        }
+        if(!m) return false;
+        if(typeof ttsQueueActive !== 'undefined' && ttsQueueActive) return true;   // die vorgelesene Frage hat Vorrang
+        try{ knopfStimmeAus(); }catch(e){}
+        try{ ttsAllesAnhalten(); }catch(e){}
+        const token = ++ttsQueueToken;
+        return await majaSegmentSpielen({ maja: m }, token);
+    }catch(e){ return false; }
+}
 function ttsTempoSetzen(v){
     const z = parseFloat(v);
     try{ localStorage.setItem('ttsTempo', String(TTS_TEMPI.indexOf(z) >= 0 ? z : 1)); }catch(e){}
-    knopfSprechen(TTS_PROBE_SATZ);
+    majaTempoProbe().then(function(ok){ if(!ok) knopfSprechen(TTS_PROBE_SATZ); });
 }
 window.ttsTempoSetzen = ttsTempoSetzen;
 function ttsKlangSetzen(k){
@@ -36152,6 +36219,18 @@ function einstBlaetterFuellen(){
           + '<option value="12">nach 12 Sekunden</option>'
           + '</select>'
           + '<div id="einstAutoWeiterText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>'
+          // Stand 426 (04.11.2026), Dietmar (App, Pruefungssimulator): "Er springt nach dem Antippen oft zwei Fragen
+          // weiter ... Bitte stelle sicher, dass der Timer in der Pruefungssimulation standardmaessig AUS ist."
+          // Im Simulator blaettert der Trainer nur noch von selbst, wenn das hier ausdruecklich eingeschaltet ist.
+          + '<label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer; margin-top:0.6rem;" '
+          + 'data-vorlesen-kurz="Auch im Prüfungssimulator." '
+          + 'data-vorlesen="Auch im Prüfungssimulator von selbst weiterblättern. Aus heißt: In der Prüfung geht es nur auf Klick weiter, wie am Prüfungstag.">'
+          + '<input type="checkbox" id="einstAutoWeiterSim" style="margin-top:0.15rem; width:18px; height:18px; cursor:pointer;" '
+          + 'onchange="autoWeiterSimSetzen(this.checked)">'
+          + '<span><b style="color:#0f2745; font-size:0.85rem;">Auch im Prüfungssimulator</b>'
+          + '<span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">'
+          + 'Aus: In der Prüfung geht es nur auf Klick weiter — wie am Prüfungstag.'
+          + '</span></span></label>'
           + '<div style="font-size:0.74rem; color:#6b7280; margin-top:0.5rem; line-height:1.5; '
           + 'border-top:1px solid #e3e9f3; padding-top:0.5rem;">'
           + 'Zwei Dinge sind eingebaut, damit es nicht überrumpelt: Solange <b>vorgelesen</b> wird, '
@@ -39861,7 +39940,14 @@ function selectOption(optIndex) {
         // Die Kacheln verraten es dort schon nicht mehr - die Stimme tat
         // es aber weiter. Am Ende des Teils spricht der Trainer sehr
         // wohl: dann kommt die Auswertung, und die gehoert dazu.
-        if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) return;
+        if (pruefungStreng() || (typeof unterrichtVerdeckt === 'function' && unterrichtVerdeckt())) {
+            // Stand 426 (04.11.2026), Dietmar (Video aus dem Pruefungssimulator): "Beim Pruefungssimulator spricht
+            // Maja weiter, obwohl ich die Antwort schon geklickt habe." Hier wurde nur die Rueckmeldung
+            // unterdrueckt - das laufende Vorlesen der Antworten lief weiter. Wer geantwortet hat, braucht den
+            // Rest nicht mehr zu hoeren: Vorlesen anhalten (Maja-Aufnahmen, Piper und Browser-Stimme).
+            try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+            return;
+        }
         const q = currentQuestions[currentIndex]; if (!q) return;
         let correctText = ''; let correctLabel = '';
         for (let i=0;i<q.options.length;i++){ if(q.options[i].correct){ correctText = q.options[i].text || ('Option ' + ['A','B','C','D'][i]); correctLabel = String.fromCharCode(65+i); break; } }
@@ -40130,7 +40216,7 @@ window.updateDuoGroupProgress = function(data){
 function escapeHtmlDuo(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function duoExamStatusBadge(status, finished){
     if(!finished) return '<span style="color:var(--muted);font-weight:500;font-size:0.8rem;">läuft noch</span>';
-    if(status==='bestanden') return '<span style="color:#1f9d55;font-weight:700;font-size:0.8rem;"><i class="fas fa-check-circle"></i> Bestanden</span>';
+    if(status==='bestanden') return '<span style="color:#147a3a;font-weight:700;font-size:0.8rem;"><i class="fas fa-check-circle"></i> Bestanden</span>';
     if(status==='nachpruefung') return '<span style="color:#b8860b;font-weight:700;font-size:0.8rem;"><i class="fas fa-exclamation-triangle"></i> Grauzone</span>';
     return '<span style="color:#c0392b;font-weight:700;font-size:0.8rem;"><i class="fas fa-times-circle"></i> Nicht bestanden</span>';
 }
@@ -40156,7 +40242,7 @@ function duoEigenesErgebnisHtml(){
         let st;
         if(gesamt === 25) st = richtig >= 19 ? 'bestanden' : (richtig >= 17 ? 'nachpruefung' : 'nicht');
         else st = (richtig / gesamt) >= 0.76 ? 'bestanden' : 'nicht';
-        const farbe = st === 'bestanden' ? '#1f9d55' : st === 'nachpruefung' ? '#b8860b' : '#c0392b';
+        const farbe = st === 'bestanden' ? '#147a3a' : st === 'nachpruefung' ? '#b8860b' : '#c0392b';
         const grund = st === 'bestanden' ? 'rgba(31,157,85,0.1)' : st === 'nachpruefung' ? 'rgba(184,134,11,0.12)' : 'rgba(192,57,43,0.1)';
         const text = st === 'bestanden' ? '<i class="fas fa-check-circle"></i> Bestanden' : st === 'nachpruefung' ? '<i class="fas fa-exclamation-triangle"></i> Grauzone' : '<i class="fas fa-times-circle"></i> Nicht bestanden';
         return '<div id="duoEigenesErgebnis" style="margin:10px auto 4px; max-width:420px; padding:0.7rem; border-radius:12px; text-align:center; background:' + grund + ';">'
@@ -40765,7 +40851,7 @@ function ergebnisCss(){
 .erg-blase small{display:block;font:700 11px var(--font-body,Inter),sans-serif;letter-spacing:1px;color:#0ea5a8;margin-bottom:2px}
 .erg-karte{position:relative;flex:0 1 900px;min-width:0;overflow:hidden;background:#fff;color:#17243a;border-radius:24px;padding:28px 34px;box-shadow:0 30px 80px rgba(0,0,0,.25);box-sizing:border-box}
 .erg-buehne.sa .erg-karte{flex-basis:1060px;border-radius:14px;border:1px solid #dfe6ee;box-shadow:0 12px 40px rgba(15,39,69,.10)}
-.erg-kopf{font:700 13px var(--font-body,Inter),sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#1f9d55;padding-right:150px}
+.erg-kopf{font:700 13px var(--font-body,Inter),sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#147a3a;padding-right:150px}
 .erg-buehne.sa .erg-kopf{color:#5d6b80;font-weight:600}
 .erg-karte.nicht .erg-kopf{color:#c0392b} .erg-karte.nach .erg-kopf{color:#b7791f}
 .erg-titel{font:700 44px/1.1 var(--font-display,'Space Grotesk'),sans-serif;margin:6px 0 4px;padding-right:150px}
@@ -40773,7 +40859,7 @@ function ergebnisCss(){
 .erg-buehne.vs .nicht .erg-titel{background:linear-gradient(90deg,#d64545,#b7791f);-webkit-background-clip:text;background-clip:text}
 .erg-buehne.sa .erg-titel{font-size:38px;color:#0f2745;-webkit-text-fill-color:#0f2745}
 .erg-unter{color:#5d6b80;font-size:15px;margin-bottom:16px;padding-right:150px}
-.erg-stempel{position:absolute;right:30px;top:22px;width:150px;height:150px;border:5px solid #1f9d55;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1f9d55;transform:rotate(12deg);opacity:.92;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #1f9d55;background:rgba(255,255,255,.65);text-align:center;line-height:1.1;animation:ergStempel .5s cubic-bezier(.2,1.6,.4,1) .35s both;pointer-events:none}
+.erg-stempel{position:absolute;right:30px;top:22px;width:150px;height:150px;border:5px solid #147a3a;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#147a3a;transform:rotate(12deg);opacity:.92;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #147a3a;background:rgba(255,255,255,.65);text-align:center;line-height:1.1;animation:ergStempel .5s cubic-bezier(.2,1.6,.4,1) .35s both;pointer-events:none}
 .erg-stempel.nach{border-color:#b7791f;color:#b7791f;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 7px #b7791f}
 .erg-stempel i{font-size:24px;margin-bottom:2px}
 .erg-stempel b{font:700 14px var(--font-display,'Space Grotesk'),sans-serif;letter-spacing:1px}
@@ -40807,7 +40893,7 @@ function ergebnisCss(){
 .erg-h2 h3{font:700 17px var(--font-display,'Space Grotesk'),sans-serif;margin:0;color:inherit}
 .erg-h2 span{color:#5d6b80;font-size:13px}
 .erg-gitter{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:7px;margin:10px 0 14px}
-.erg-f{height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:3px;font:700 14px var(--font-display,'Space Grotesk'),sans-serif;cursor:pointer;border:2px solid #c9eedc;background:#e9f8f1;color:#1f9d55;padding:0;transition:transform .12s}
+.erg-f{height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:3px;font:700 14px var(--font-display,'Space Grotesk'),sans-serif;cursor:pointer;border:2px solid #c9eedc;background:#e9f8f1;color:#147a3a;padding:0;transition:transform .12s}
 .erg-f:hover{transform:translateY(-2px)} .erg-f i{font-size:10px}
 .erg-f.no{border-color:#f3c2c2;background:#fff1f1;color:#d64545} .erg-f.of{border-color:#dfe6ee;background:#f4f6fa;color:#8a97a9}
 .erg-fehler{margin:0 0 4px;padding:0;list-style:none}
@@ -41005,7 +41091,7 @@ body.dark .erg-buehne.sa .erg-wert b[style*="c0392b"]{color:#ff8a8a !important}
 #ergFrage .ef-zu{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:0;border-radius:10px;background:#d64545;color:#fff;font-weight:700;cursor:pointer}
 #ergFrage .ef-frage{font-weight:700;font-size:17px;line-height:1.4;margin-bottom:12px}
 #ergFrage .ef-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;border:1.5px solid #e3e9f3;margin-bottom:8px}
-#ergFrage .ef-opt.ok{border-color:#1f9d55;background:#e9f8f1} #ergFrage .ef-opt.falsch{border-color:#d64545;background:#fff1f1}
+#ergFrage .ef-opt.ok{border-color:#147a3a;background:#e9f8f1} #ergFrage .ef-opt.falsch{border-color:#d64545;background:#fff1f1}
 #ergFrage .ef-opt b{flex:none;width:24px} #ergFrage .ef-opt em{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
 #ergFrage .ef-opt img{max-height:90px;max-width:100%}
 #ergFrage .ef-erkl{margin-top:14px;border-top:1px solid #e3e9f3;padding-top:12px;font-size:15px;line-height:1.55}
@@ -41215,7 +41301,7 @@ function ergebnisSeiteHtml(o){
         }catch(e){}
     } else {
         werte = '<div class="erg-werte">'
-          + '<div class="erg-wert"><div>Richtig</div><b style="color:#1f9d55">' + o.correct + '</b> <small>von ' + o.total + '</small></div>'
+          + '<div class="erg-wert"><div>Richtig</div><b style="color:#147a3a">' + o.correct + '</b> <small>von ' + o.total + '</small></div>'
           + '<div class="erg-wert"><div>Fehler</div><b style="color:#c0392b">' + fehlerZahl + '</b>' + (offen ? ' <small>+ ' + offen + ' offen</small>' : '') + '</div>'
           + '<div class="erg-wert"><div>Quote</div><b>' + quote + ' %</b></div>'
           + (o.zeit ? '<div class="erg-wert"><div>Zeit</div><b>' + ergebnisEsc(o.zeit.split(' ')[0]) + '</b> <small>min</small></div>' : '')
@@ -41344,7 +41430,7 @@ function ergebnisFrageZeigen(i){
             try{ inhalt = opt.image ? renderOptionImage(opt, 'ABCD'[k]) : ''; }catch(e){ inhalt = ''; }
             if(opt.text) inhalt = '<span>' + opt.text + '</span>' + inhalt;
             return '<div class="ef-opt' + kl + '"><b>' + 'ABCD'[k] + ':</b><div style="min-width:0">' + inhalt + '</div>'
-                + (opt.correct ? '<em style="color:#1f9d55"><i class="fas fa-check"></i> richtig</em>' : gewaehlt ? '<em style="color:#d64545"><i class="fas fa-xmark"></i> deine Antwort</em>' : '') + '</div>';
+                + (opt.correct ? '<em style="color:#147a3a"><i class="fas fa-check"></i> richtig</em>' : gewaehlt ? '<em style="color:#d64545"><i class="fas fa-xmark"></i> deine Antwort</em>' : '') + '</div>';
         }).join('');
         let bild = ''; try{ bild = typeof getSvgHtml === 'function' ? (getSvgHtml(q.id) || '') : ''; }catch(e){}
         let erkl = '';
@@ -41742,6 +41828,9 @@ window.ausgelasseneUeben = ausgelasseneUeben;
 
 function prevQuestion() {
     if (typeof unterrichtRaumZurueckAbfangen === 'function' && unterrichtRaumZurueckAbfangen()) return;
+    const jetztZurueck = Date.now();   // Stand 426: nie zwei Schritte auf einmal (siehe nextQuestion)
+    if (jetztZurueck - (window.__zurueckZuletzt || 0) < 300) return;
+    window.__zurueckZuletzt = jetztZurueck;
     try{ rundeSichernSpaeter(); }catch(e){}
     // Automatisch als richtig gewertete (bereits gelernte) Fragen werden
     // uebersprungen - siehe gelernteVorbelegen().
@@ -42059,7 +42148,17 @@ function autoWeiterSekunden(){
     }catch(e){ return 0; }
 }
 window.autoWeiterSekunden = autoWeiterSekunden;
-function autoWeiterAn(){ return autoWeiterSekunden() > 0; }
+// Stand 426: Im Pruefungssimulator nur, wenn ausdruecklich eingeschaltet (Standard: aus).
+const AUTOWEITER_SIM_SCHLUESSEL = 'amateurfunk_autoweiter_sim';
+function autoWeiterImSimulator(){ try{ return localStorage.getItem(AUTOWEITER_SIM_SCHLUESSEL) === '1'; }catch(e){ return false; } }
+window.autoWeiterImSimulator = autoWeiterImSimulator;
+function autoWeiterSimSetzen(an){ try{ localStorage.setItem(AUTOWEITER_SIM_SCHLUESSEL, an ? '1' : '0'); }catch(e){} if(!an && autoWeiterUhr && typeof pruefungStreng === 'function' && pruefungStreng()) autoWeiterAbbrechen(); try{ autoWeiterFelderNachziehen(); }catch(e){} }
+window.autoWeiterSimSetzen = autoWeiterSimSetzen;
+function autoWeiterAn(){
+    if(autoWeiterSekunden() <= 0) return false;
+    try{ if(typeof pruefungStreng === 'function' && pruefungStreng() && !autoWeiterImSimulator()) return false; }catch(e){}
+    return true;
+}
 window.autoWeiterAn = autoWeiterAn;
 
 // Wird gerade gesprochen? Drei Wege, auf denen der Trainer redet -
@@ -42108,7 +42207,12 @@ function autoWeiterStarten(){
         if(autoWeiterSpricht()) return;
         autoWeiterRest--;
         if(autoWeiterRest > 0){ autoWeiterKnopfText(autoWeiterRest); return; }
-        autoWeiterAbbrechen();
+        // Stand 426: die Uhr selbst anhalten - nicht ueber autoWeiterAbbrechen, das die App zeitweise uebergeht.
+        // Sonst konnte die Uhr nach dem Umblaettern weiterlaufen und eine Sekunde spaeter NOCH EINMAL
+        // umblaettern (Dietmar: "springt oft zwei Fragen weiter").
+        if(autoWeiterUhr){ clearInterval(autoWeiterUhr); autoWeiterUhr = null; }
+        autoWeiterRest = 0;
+        try{ autoWeiterKnopfText(null); }catch(e){}
         try{ nextQuestion(); }catch(e){}
     }, 1000);
 }
@@ -42133,11 +42237,13 @@ function autoWeiterUmschalten(an){
 window.autoWeiterUmschalten = autoWeiterUmschalten;
 
 function autoWeiterFelderNachziehen(){
-    const an = autoWeiterAn();
+    const an = autoWeiterSekunden() > 0;
     const n  = autoWeiterSekunden();
     if(an){ try{ localStorage.setItem(AUTOWEITER_SCHLUESSEL + '_letzt', String(n)); }catch(e){} }
     const haken = document.getElementById('einstAutoWeiterAn');
     if(haken) haken.checked = an;
+    const sim = document.getElementById('einstAutoWeiterSim');
+    if(sim){ sim.checked = autoWeiterImSimulator(); sim.disabled = !an; }
     const feld = document.getElementById('einstAutoWeiter');
     if(feld){
         feld.disabled = !an;
@@ -42165,6 +42271,8 @@ window.autoWeiterFelderNachziehen = autoWeiterFelderNachziehen;
 document.addEventListener('keydown', () => { if(autoWeiterUhr) autoWeiterAbbrechen(); }, true);
 document.addEventListener('pointerdown', (e) => {
     if(!autoWeiterUhr) return;
+    // Stand 426: In der App haelt Beruehren (Rollen, Lesen) die Uhr nicht an - siehe dort (autoWeiterPointerAus).
+    if(window.autoWeiterPointerAus) return;
     // Der Klick auf "Weiter" selbst soll weiterblaettern und nicht nur
     // die Uhr abstellen - das erledigt der Knopf, hier wird nur die Uhr
     // stillgelegt.
@@ -42174,6 +42282,12 @@ document.addEventListener('pointerdown', (e) => {
 function nextQuestion() {
     // Unterricht im Gruppenraum: Kursleiter loest erst auf, Teilnehmer warten.
     if (typeof unterrichtRaumWeiterAbfangen === 'function' && unterrichtRaumWeiterAbfangen()) return;
+    // Stand 426 (04.11.2026): Nie zwei Fragen auf einmal. Zwei "Weiter" innerhalb von 300 ms kommen nicht von
+    // zwei Klicks, sondern von doppelten Ereignissen (Uhr und Klick, zwei Tastenhoerer, Tipp und Klick).
+    // Dietmar (App, Pruefungssimulator): "Er springt nach dem Antippen oft zwei Fragen weiter."
+    const jetztWeiter = Date.now();
+    if (jetztWeiter - (window.__weiterZuletzt || 0) < 300) return;
+    window.__weiterZuletzt = jetztWeiter;
     try{ autoWeiterAbbrechen(); }catch(e){}
     // Wer weiterblaettert, laesst die Antwort stehen.
     antwortSicherung = null;
@@ -44037,6 +44151,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCB();
     try{ einstellungenLaden(); }catch(e){}
     loadMastery();
+    // Stand 425: Ab jetzt duerfen Lernfortschritt, Fehler und Lernbedarf gespeichert und abgeglichen werden.
+    // Vorher darf niemand den (noch leeren) Arbeitsspeicher wegschreiben - sonst ueberschreibt er den echten Stand.
+    try{ window.afuLernstandGeladen = true; document.dispatchEvent(new CustomEvent('afu-lernstand-geladen')); }catch(e){}
     // Wacht darueber, dass niemand tagelang mit einer alten Seite arbeitet.
     try{ standWacheStarten(); }catch(e){}
     // Hat der Trainer beim Start etwas vom Entwickler nachgezogen? Dann einmal sagen.
@@ -46757,7 +46874,7 @@ if (originalSelectOption) {
         body.dark [id$="Modal"] [style*="color:#b03024"],
         body.dark [id$="Modal"] [style*="color:#c0392b"] { color: #ff8f82 !important; }
         body.dark [id$="Modal"] [style*="color:#15703c"],
-        body.dark [id$="Modal"] [style*="color:#1f9d55"] { color: #35d08a !important; }
+        body.dark [id$="Modal"] [style*="color:#147a3a"] { color: #35d08a !important; }
         body.dark [id$="Modal"] [style*="color:#6f5500"],
         body.dark [id$="Modal"] [style*="color:#8a6d00"] { color: #ffc266 !important; }
 
@@ -46967,6 +47084,8 @@ if (originalSelectOption) {
         }
         body.dark #duoDemoHinweis.duo-demo-hinweis b,
         body.dark #duoDemoHinweis.duo-demo-hinweis strong { color: #ffe9c4 !important; }
+        /* Stand 426 (Pruefung Kontrast): der Download-Knopf im Hinweis bekam im Dunklen die Linkfarbe Mint auf Gruen (3,6:1) - weiss (5,5:1) */
+        body.dark #duoDemoHinweis #duoDemoDownload { color: #fff !important; }
         /* Die Ueberschrift einer aufklappbaren Gruppe sitzt in span.left und
            trug das dunkle Hausblau - auf schwarzem Grund unsichtbar. */
         body.dark #duoModal .duo-collapsible-header,
@@ -47049,6 +47168,7 @@ if (originalSelectOption) {
         body.dark #einstellungenModal [style*="color:#4b5b73"],
         body.dark #einstellungenModal [style*="color:#5b6b80"],
         body.dark #einstellungenModal [style*="color:#6b7280"] { color: var(--nacht-leise) !important; }
+        body:not(.dark) #einstellungenModal [style*="color:#6b7280"] { color: #5f6b7a !important; }   /* Stand 426: 4,3:1 auf #edf1f7, jetzt 5,1:1 */
         body.dark #einstellungenModal [style*="color:#8a5a12"] { color: #ffc266 !important; }
         body.dark #einstellungenModal .anzeige-paar .ap-titel { color: var(--nacht-hell) !important; }
         body.dark #einstellungenModal .anzeige-paar .ap-titel i { color: var(--nacht-leise) !important; }
@@ -48778,7 +48898,7 @@ function zeigeGelerntHinweis(anzahl, gesamt){
         const box = document.createElement('div');
         box.id = 'gelerntHinweisBox';
         box.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); top:14px; z-index:100001;'
-            + 'background:#1f9d55; color:#ffffff; padding:0.6rem 1.1rem; border-radius:22px;'
+            + 'background:#147a3a; color:#ffffff; padding:0.6rem 1.1rem; border-radius:22px;'
             + 'font-size:0.85rem; font-weight:600; box-shadow:0 6px 18px rgba(0,0,0,0.25);'
             + 'opacity:0; transition:opacity 0.25s;';
         box.innerHTML = '<i class="fas fa-check-circle"></i> ' + anzahl + ' von ' + gesamt
@@ -49460,7 +49580,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
     </div>
     <div style="padding:1.1rem 1.2rem; font-size:0.88rem; line-height:1.5; color:var(--ink);">
       <div style="background:#f0f7ff; border:1px solid #c2d6f0; border-radius:12px; padding:0.75rem 0.9rem; margin-bottom:0.8rem;">
-        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-shield-alt" style="color:#1f9d55;"></i> Geschützt und bleibt erhalten:</div>
+        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-shield-alt" style="color:#147a3a;"></i> Geschützt und bleibt erhalten:</div>
         <div style="font-size:0.82rem; color:var(--ink); line-height:1.6;">
           • Verlauf (alle 3 Benutzer)<br>
           • Lernbedarf (schwierige Fragen)<br>
@@ -49504,7 +49624,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
         </div>
       </div>
       <div style="background:#f0f7ff; border:1px solid #c2d6f0; border-radius:12px; padding:0.75rem 0.9rem; margin-bottom:0.8rem;">
-        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-shield-alt" style="color:#1f9d55;"></i> Bleibt erhalten:</div>
+        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-shield-alt" style="color:#147a3a;"></i> Bleibt erhalten:</div>
         <div style="font-size:0.82rem; color:var(--ink); line-height:1.6;">
           • Die anderen beiden Benutzer<br>
           • Benutzernamen, Prüfungstermin und Einstellungen
@@ -49525,12 +49645,12 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
 <div id="masteryClearModal" style="display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); z-index:99996; align-items:center; justify-content:center; padding:1rem;">
   <div style="background:white; border-radius:22px; width:100%; max-width:460px; box-shadow:0 24px 64px rgba(0,0,0,0.35); border:1px solid var(--line); animation: modalPop 0.24s ease; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.2rem; border-bottom:1px solid var(--line); background:#f9fbff;">
-      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-graduation-cap" style="color:#1f9d55;"></i> Lernfortschritt zurücksetzen?</h3>
+      <h3 style="font-family:var(--font-display); font-size:1.05rem; color:var(--panel-navy); display:flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-graduation-cap" style="color:#147a3a;"></i> Lernfortschritt zurücksetzen?</h3>
       <button onclick="closeMasteryClearModal()" style="width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:white; cursor:pointer; font-size:1.2rem; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--muted);">×</button>
     </div>
     <div style="padding:1.1rem 1.2rem; font-size:0.88rem; line-height:1.5; color:var(--ink);">
       <div style="background:#f0f7ff; border:1px solid #c2d6f0; border-radius:12px; padding:0.75rem 0.9rem; margin-bottom:0.8rem;">
-        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-info-circle" style="color:#1f9d55;"></i> Was passiert:</div>
+        <div style="font-weight:700; font-size:0.8rem; color:var(--panel-navy); margin-bottom:4px;"><i class="fas fa-info-circle" style="color:#147a3a;"></i> Was passiert:</div>
         <div style="font-size:0.82rem; color:var(--ink); line-height:1.6;">
           • <span id="masteryClearCount" style="font-weight:800;">0</span> als gelernt markierte Fragen werden zurückgesetzt<br>
           • Fragen erscheinen wieder im normalen Lernmodus<br>
@@ -49877,7 +49997,7 @@ console.log('[Realistic Exam] Modal-Version aktiv - Teile richten sich nach dem 
       return {icon:'fa-circle-exclamation', color:'var(--bad)', title:'Fehler'};
     }
     if(/^\s*(🎉|✅)/.test(s)){
-      return {icon:'fa-circle-check', color:'#1f9d55', title:'Erledigt'};
+      return {icon:'fa-circle-check', color:'#147a3a', title:'Erledigt'};
     }
     if(/^\s*⏰/.test(s)){
       return {icon:'fa-clock', color:'#e2932f', title:'Zeit abgelaufen'};
@@ -50337,7 +50457,7 @@ function einstMerkblattFuellen(){
             + '<th>wacklig</th><th>nie geübt</th></tr>';
         lage.teile.forEach(t => {
             const farbe = t.quote === null ? 'var(--muted)'
-                        : (t.quote >= 76 ? '#1f9d55' : (t.quote >= 60 ? '#b8860b' : '#c0392b'));
+                        : (t.quote >= 76 ? '#147a3a' : (t.quote >= 60 ? '#b8860b' : '#c0392b'));
             lageHtml += '<tr style="border-top:1px solid #e8eef6;">'
                 + '<td style="padding:6px 2px; font-weight:700;">' + t.name + '</td>'
                 + '<td style="color:' + farbe + '; font-weight:700;">'
@@ -50488,7 +50608,7 @@ function merkblattDrucken(anzahl, teil){
             let zeilenT = '';
             lage.teile.forEach(t => {
                 const farbe = t.quote === null ? '#777'
-                            : (t.quote >= 76 ? '#1f9d55' : (t.quote >= 60 ? '#b8860b' : '#c0392b'));
+                            : (t.quote >= 76 ? '#147a3a' : (t.quote >= 60 ? '#b8860b' : '#c0392b'));
                 const breite = t.quote === null ? 0 : t.quote;
                 zeilenT += '<tr>'
                     + '<td class="tname">' + e(t.name) + '</td>'
@@ -50633,7 +50753,7 @@ function merkblattDrucken(anzahl, teil){
             + '.hueLLe i { display:block; height:100%; }'
             + '.lage-satz { margin-top:6pt; font-size:9pt; }'
             + '.lage-satz2 { margin-top:2pt; font-size:8.5pt; color:#667; }'
-            + '.hinweisbox { border-left:3pt solid #1f9d55; background:#f2faf5; padding:6pt 9pt;'
+            + '.hinweisbox { border-left:3pt solid #147a3a; background:#f2faf5; padding:6pt 9pt;'
             +              ' font-size:8.5pt; color:#245; margin-bottom:11pt; }'
             + '.frage { border:0.7pt solid #c8d2dd; border-radius:3pt; padding:7pt 9pt 8pt;'
             +         ' margin-bottom:7pt; page-break-inside:avoid; break-inside:avoid; }'
@@ -50647,7 +50767,7 @@ function merkblattDrucken(anzahl, teil){
             + '.text { font-weight:600; line-height:1.35; margin-bottom:5pt; }'
             + '.bild { display:block; margin:5pt auto; max-width:78%; max-height:52mm;'
             +        ' border:0.5pt solid #ccc; background:#fff; padding:2pt; }'
-            + '.antwort { background:#eef7f1; border-left:2.5pt solid #1f9d55; padding:5pt 8pt;'
+            + '.antwort { background:#eef7f1; border-left:2.5pt solid #147a3a; padding:5pt 8pt;'
             +           ' line-height:1.35; display:flex; gap:6pt; align-items:flex-start;'
             +           ' flex-wrap:wrap; }'
             // Das Bild der richtigen Antwort. Weiss hinterlegt, weil die
@@ -50656,7 +50776,7 @@ function merkblattDrucken(anzahl, teil){
             + '.abild { display:block; width:100%; max-width:88mm; max-height:56mm;'
             +         ' margin:3pt auto 1pt; background:#fff; border:0.5pt solid #cfe0d4;'
             +         ' border-radius:2pt; padding:4pt; }'
-            + '.hk { color:#1f9d55; font-weight:700; flex:0 0 auto; }'
+            + '.hk { color:#147a3a; font-weight:700; flex:0 0 auto; }'
             + '.hinweis { color:#777; }'
             + '.fuss { margin-top:12pt; padding-top:6pt; border-top:0.7pt solid #ccc;'
             +        ' font-size:8pt; color:#777; text-align:center; }'
@@ -51758,7 +51878,7 @@ function statistikFuellen() {
         const themen = (typeof blaetterStand === 'function') ? blaetterStand() : [];
         if(themen.length){
             const farbe = (typeof themenFarbe === 'function') ? themenFarbe
-                        : (q => q === null ? '#777' : (q >= 76 ? '#1f9d55' : (q >= 60 ? '#b8860b' : '#c0392b')));
+                        : (q => q === null ? '#777' : (q >= 76 ? '#147a3a' : (q >= 60 ? '#b8860b' : '#c0392b')));
             const gesamtF = themen.reduce((a,x) => a + x.gesamt, 0);
             const sitzenF = themen.reduce((a,x) => a + x.sitzt, 0);
             let zeilenTh = '';
@@ -51978,7 +52098,7 @@ function lernstandExportieren() {
         // mehr - man klickt und weiss nicht, ob etwas passiert ist.
         const h = document.getElementById('lernstandHinweis');
         const gut = '✅ Datei erstellt – liegt im Download-Ordner.';
-        if (h) h.innerHTML = '<span style="color:#1f9d55;">' + gut + '</span>';
+        if (h) h.innerHTML = '<span style="color:#147a3a;">' + gut + '</span>';
         else if (window.showAppAlert) showAppAlert(gut);
     } catch (e) {
         const h = document.getElementById('lernstandHinweis');
@@ -51997,7 +52117,7 @@ window.lernstandExportieren = lernstandExportieren;
 function lernstandMeldung(text, istFehler){
     const h = document.getElementById('lernstandHinweis');
     if(h && h.offsetParent !== null){
-        h.innerHTML = '<span style="color:' + (istFehler ? '#c0392b' : '#1f9d55') + ';">' + text + '</span>';
+        h.innerHTML = '<span style="color:' + (istFehler ? '#c0392b' : '#147a3a') + ';">' + text + '</span>';
         return;
     }
     try{ if(window.showAppAlert) window.showAppAlert((istFehler ? '❌ ' : '✅ ') + text.replace(/<[^>]*>/g,'')); }catch(e){}
@@ -52095,6 +52215,17 @@ function lernstandSchreiben(d) {
             }
         });
         localStorage.setItem('examHistory', JSON.stringify(alleVerlauf));
+        // Stand 425 (04.11.2026): Bis zum Neuladen kein Abgleich mehr - und der Arbeitsspeicher wird sofort
+        // nachgezogen. Vorher konnte der Abgleich (alle 45 s) in den 1,2 s bis zum Neuladen einen Schnappschuss
+        // nehmen: saveMastery() schrieb dabei den ALTEN Arbeitsspeicher ueber den gerade eingelesenen Stand,
+        // und der ging dann so ins Konto. Nachgestellt am 04.11.2026.
+        try{ window.afuLernstandUmbau = true; }catch(e){}
+        try{
+            const cu = String(currentUser || 'user1');
+            masteryData = JSON.parse(localStorage.getItem('amateurfunk_mastery_' + cu) || '{}') || {};
+            errorList = JSON.parse(localStorage.getItem('amateurfunk_errors_' + cu) || '[]') || [];
+            difficultQuestions = JSON.parse(localStorage.getItem('amateurfunk_difficult_' + cu) || '{}') || {};
+        }catch(e){}
         // Altbestand-Schluessel fuer user1 mitziehen, sonst gewinnt beim
         // naechsten Laden womoeglich wieder der alte Wert.
         ['amateurfunk_mastery', 'amateurfunk_difficult', 'amateurfunk_errors'].forEach(b => {
@@ -62897,7 +63028,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         html += werk.bearbeiten
             ? '<div class="aw-fussknoepfe"><button type="button" class="aw-knopf rot" data-tat="loeschen"' + (werk.auswahl.size ? '' : ' disabled') + '><i class="fas fa-trash-can"></i> '
               + (werk.auswahl.size ? werk.auswahl.size + ' löschen' : 'Antippen') + '</button><button type="button" class="aw-knopf leise" data-tat="fertig">Abbrechen</button></div>'
-            : '<button type="button" class="aw-link" data-tat="bearbeiten"><i class="fas fa-trash-can"></i> Einträge löschen … <small style="opacity:.75;font-weight:500">(oder eine Runde lange drücken)</small></button>';
+            : '<button type="button" class="aw-link" data-tat="bearbeiten"><i class="fas fa-trash-can"></i> Einträge löschen … <small style="opacity:.9;font-weight:500">(oder eine Runde lange drücken)</small></button>';
         return html;
     }
     function blattVideos(){
@@ -64337,19 +64468,24 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     //  des eigenen Tippers). Das Original-Anhalten per pointerdown wird
     //  in der App uebersprungen (siehe autoWeiterAbbrechen unten).
     tu(() => {
-        window.autoWeiterSpricht = function(){ return false; };
+        // Stand 426: Die Uhr wartet auf Majas und Pipers Aufnahmen (die enden sicher), nicht mehr auf die
+        // Browser-Stimme (die im WebView haengen bleiben kann - der Grund fuer das fruehere "return false").
+        window.autoWeiterSpricht = function(){
+            try{ if(window.currentTtsAudio && !window.currentTtsAudio.paused) return true; }catch(e){}
+            try{ if(typeof ttsLaufendeAudios !== 'undefined' && ttsLaufendeAudios.size > 0) return true; }catch(e){}
+            return false;
+        };
         const alt = window.selectOption;
         if(typeof alt !== 'function') return;
-        let beruehrt = false, antwortZeit = 0, ignorieren = false;
+        let beruehrt = false, antwortZeit = 0;
         const BEDIENUNG = 'button, a[href], input, select, textarea, label, .sidebar-tab, .ahf, [data-ziel], [role="button"]:not(.option):not(.option-grid)';
         const istBedienung = z => !!(z && z.closest && z.closest(BEDIENUNG) && !z.closest('.option, .option-grid'));
-        // Das Original haelt bei jedem pointerdown an - in der App nicht.
+        // Das Original haelt bei jedem pointerdown an - in der App nicht. Stand 426: per Flagge statt ueber einen
+        // zeitlichen Umweg ("ignorieren" + setTimeout 0). Der Umweg liess auch die Uhr selbst und nextQuestion()
+        // ins Leere laufen, wenn ein Tipp mit dem Uhrtakt zusammenfiel - die Uhr lief weiter und blaetterte eine
+        // Sekunde spaeter noch einmal um (Dietmar: "springt oft zwei Fragen weiter").
+        window.autoWeiterPointerAus = true;
         const abbrechenAlt = window.autoWeiterAbbrechen;
-        if(typeof abbrechenAlt === 'function') window.autoWeiterAbbrechen = function(){ if(ignorieren) return; return abbrechenAlt.apply(this, arguments); };
-        window.addEventListener('pointerdown', e => {
-            if(!e.isTrusted) return;
-            ignorieren = true; setTimeout(() => { ignorieren = false; }, 0);
-        }, true);
         window.addEventListener('click', e => {
             if(!e.isTrusted || Date.now() - antwortZeit < 900) return;
             if(istBedienung(e.target)){ beruehrt = true; tu(() => abbrechenAlt && abbrechenAlt()); }
@@ -65405,6 +65541,8 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
     // Einspielen und Schnappschuss genau dieselben Faecher meinen.
     function gehoertDazu(k, slot){ return window.lsGehoertDazu ? window.lsGehoertDazu(k, slot) : false; }
     function schnappschuss(slot){
+        // Stand 425: saveMastery & Co. schreiben vor dem Laden nichts mehr (Waechter dort) - hier nur zur Sicherheit
+        if(!window.afuLernstandGeladen) return { format: 1, schluessel: {}, verlauf: null, ungeladen: true };
         try{ if(typeof saveMastery === 'function') saveMastery(); }catch(e){}
         try{ if(typeof saveDifficult === 'function') saveDifficult(); }catch(e){}
         try{ if(typeof saveErrors === 'function') saveErrors(); }catch(e){}
@@ -66007,6 +66145,9 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         if(!z || !z.token || !verfuegbar()) return Promise.resolve(false);
         if(z.slot && z.slot !== platz()) return Promise.resolve(false);   // anderer Platz aktiv
         if(laeuft || umbau) return Promise.resolve(false);
+        // Stand 425: Solange der Trainer den Lernstand noch nicht geladen hat (er wartet beim Start auf
+        // /api/userdata), gibt es nichts abzugleichen - ein Schnappschuss waere leer und wuerde das Konto leeren.
+        if(!window.afuLernstandGeladen || window.afuLernstandUmbau) return Promise.resolve(false);   // Umbau: Datei wird gerade eingelesen, gleich wird neu geladen
         laeuft = true;
         var slot = z.slot || platz();
         var s = schnappschuss(slot), abdruck = fingerabdruck(s);
@@ -66022,7 +66163,7 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         return api('speichern', { name: z.name, token: z.token, daten: s, basis: z.version, erzwingen: !!erzwingen }).then(function(j){
             fertig();
             if(j.ok){ z.version = j.version; z.stand = j.stand; z.abdruck = abdruck; if(j.name) z.name = j.name; zustandSetzen(z); return true; }
-            if(j.fehler === 'neuer') return streitFall(z, s);
+            if(j.fehler === 'neuer' || j.fehler === 'leer') return streitFall(z, s);   // 'leer': Worker v2 schuetzt vor leerem Stand -> vereinen
             if(j.fehler === 'abgemeldet'){ zustandSetzen(null); melden(fehlerText(j)); }
             return false;
         }).catch(function(){ fertig(); return false; });
@@ -66171,7 +66312,9 @@ body.dark #lsFenster .ls-knopf.rot{background:transparent;}
         try{ if(sessionStorage.getItem('ls_formular') === 'an' && !zustand()){ sessionStorage.removeItem('ls_formular'); reiter = 'an'; setTimeout(formularZeigen, 700); } }catch(e){}
         try{ var t = sessionStorage.getItem('ls_meldung'); if(t){ sessionStorage.removeItem('ls_meldung'); setTimeout(function(){ melden(t); }, 900); } }catch(e){}
         if(!zustand()) return;
-        setTimeout(function(){ abgleichen(true); }, 3500);
+        // Stand 425: der erste Abgleich wartet, bis der Lernstand geladen ist (nicht einfach 3,5 s)
+        var erster = function(){ if(window.afuLernstandGeladen) abgleichen(true); else setTimeout(erster, 500); };
+        setTimeout(erster, 3500);
         setInterval(function(){ abgleichen(false); }, 45000);
         document.addEventListener('visibilitychange', function(){
             if(document.visibilityState === 'hidden') abgleichen(false);
@@ -66365,6 +66508,9 @@ body:has(#afuRueck.zeigen) #appDock, body:has(.erg-buehne) #afuRueck{display:non
 html.android-app.fs-bunt body.dark.runde-laeuft{background:radial-gradient(120% 70% at 50% 0%,#24408f 0%,#13214d 45%,#0b1330 100%) fixed!important}
 html.android-app.fs-bunt body.dark.runde-laeuft #appLeiste{background:transparent!important;border:0!important}
 html.android-app.fs-bunt body.dark.runde-laeuft #appLeiste *{color:#fff!important}
+/* Stand 426: die Pruefungsuhr in der App-Leiste (Polar, Runde laeuft) blieb durch die Zeile darueber weiss auf Cyan (2,6:1) -
+   jetzt dunkel wie am PC (9:1); in den Warnstufen bleibt die eigene Farbe */
+html.android-app.fs-bunt body.dark.runde-laeuft #appLeiste #examTimerDisplay:not(.warning):not(.danger),html.android-app.fs-bunt body.dark.runde-laeuft #appLeiste #examTimerDisplay:not(.warning):not(.danger) *{color:#041a24!important}
 html.android-app.fs-bunt body.dark.runde-laeuft #appLeiste::after{background:linear-gradient(90deg,#5eead4,#60a5fa);height:5px;left:14px;right:14px;width:calc((100% - 28px)*var(--p2,0));border-radius:5px;bottom:2px}
 html.android-app.fs-bunt body.dark.runde-laeuft #questionContainer .question-area{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
 html.android-app.fs-bunt body.dark.runde-laeuft #questionContainer .q-text-row{background:transparent!important;box-shadow:none!important;border:0!important}
