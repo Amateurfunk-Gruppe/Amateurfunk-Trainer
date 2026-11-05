@@ -12503,14 +12503,6 @@ function getAllLocalUserData(){
                 data.errors[u] = raw ? JSON.parse(raw) : [];
             }catch(e){ data.errors[u] = []; }
         });
-        // Fehler je Pruefungsziel (Stand 433): welche Frage in welchem Ziel falsch war
-        data.errziel = {};
-        USER_SLOTS.forEach(u=>{
-            try{
-                const d = JSON.parse(localStorage.getItem('amateurfunk_errziel_' + u) || '{}');
-                data.errziel[u] = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
-            }catch(e){ data.errziel[u] = {}; }
-        });
         // CB-Einstieg: Haken und die von Hand zurueckgeholten Fragen.
         data.cb = {}; USER_SLOTS.forEach(u => { data.cb[u] = {}; });
         USER_SLOTS.forEach(u=>{
@@ -12554,7 +12546,7 @@ function getAllLocalUserData(){
             }catch(e){ data.qsl[u] = {}; }
         });
         return data;
-    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:slotFaecher([]), mastery:slotFaecher({}), difficult:slotFaecher({}), errors:slotFaecher([]), errziel:slotFaecher({}), cb:slotFaecher({}) }; }
+    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:slotFaecher([]), mastery:slotFaecher({}), difficult:slotFaecher({}), errors:slotFaecher([]), cb:slotFaecher({}) }; }
 }
 
 async function savePersistentToServer(){
@@ -12782,10 +12774,6 @@ async function loadPersistentFromServer(){
                     localStorage.setItem(key, JSON.stringify(serverErr));
                     if(u==='user1') localStorage.setItem('amateurfunk_errors', JSON.stringify(serverErr));
                     console.log(`✅ Fehler ${u} aus Datei wiederhergestellt`);
-                    try{
-                        const ez = serverData.errziel && serverData.errziel[u];
-                        if(ez && typeof ez === 'object' && !Array.isArray(ez) && !localStorage.getItem('amateurfunk_errziel_' + u)) localStorage.setItem('amateurfunk_errziel_' + u, JSON.stringify(ez));
-                    }catch(e2){}
                     restored = true;
                 }
             }catch(e){}
@@ -12871,7 +12859,6 @@ function confirmCacheClear(){
             'amateurfunk_errors','duo_userName','theme',
             'amateurfunk_gelernteAutoRichtig','amateurfunk_nurGelernte','amateurfunk_activeParts_uebernommen'];
         KLASSEN.forEach(k => preserveKeys.push('amateurfunk_activeParts_' + k.id));
-        USER_SLOTS.forEach(u => preserveKeys.push('amateurfunk_errziel_' + u));
         USER_SLOTS.forEach(u => {
             preserveKeys.push('amateurfunk_mastery_' + u, 'amateurfunk_difficult_' + u,
                 'amateurfunk_errors_' + u, 'amateurfunk_userName_' + u,
@@ -12937,7 +12924,7 @@ async function confirmFullReset(){
     closeFullResetModal();
     try{
         // Lokale Listen im Speicher leeren
-        errorList = []; errZiel = {};
+        errorList = [];
         difficultQuestions = {};
         masteryData = {};
 
@@ -17500,7 +17487,6 @@ function benutzerSchluessel(slot){
         'amateurfunk_mastery_'        + slot,   // Lernfortschritt
         'amateurfunk_difficult_'      + slot,   // Lernbedarf
         'amateurfunk_errors_'         + slot,   // Fehlerliste
-        'amateurfunk_errziel_'        + slot,   // Fehler je Pruefungsziel (Stand 433)
         'amateurfunk_favorites_'      + slot,   // Merkliste
         'amateurfunk_notizen_'        + slot,   // Notizen an den Fragen
         'amateurfunk_diagnose_'       + slot,   // gewaehlte Antworten und Zeiten
@@ -17531,7 +17517,7 @@ function persistentPlatzLeeren(slot){
     if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && !PERSISTENT_FILE_ENABLED) return Promise.resolve(false);
     // Gegenpruefung 397: Die Datei kennt nur die Plaetze 1 bis 3 - fuer die anderen gibt es nichts zu leeren
     if(!['user1', 'user2', 'user3'].includes(slot)) return Promise.resolve(true);
-    const felder = [['examHistory', []], ['mastery', {}], ['difficult', {}], ['errors', []], ['errziel', {}], ['diagnose', {}], ['uebungszeit', {}], ['qsl', {}], ['cb', {}]];
+    const felder = [['examHistory', []], ['mastery', {}], ['difficult', {}], ['errors', []], ['diagnose', {}], ['uebungszeit', {}], ['qsl', {}], ['cb', {}]];
     let kette = Promise.resolve(true);
     felder.forEach(([typ, leer]) => {
         kette = kette.then(ok => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -17556,7 +17542,7 @@ function benutzerZuruecksetzen(slot, ausEinstellungen){
             if(slot === currentUser){
                 try{ masteryData = {}; }catch(e){}
                 try{ difficultQuestions = {}; }catch(e){}
-                try{ errorList = []; errZiel = {}; }catch(e){}
+                try{ errorList = []; }catch(e){}
                 try{ favoriteQuestions = []; }catch(e){}
                 ['amateurfunk_mastery', 'amateurfunk_difficult', 'amateurfunk_errors'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
             }
@@ -20124,28 +20110,15 @@ function saveErrors() {
     if(!window.afuLernstandGeladen) return;   // Stand 425: nie vor dem Laden schreiben (siehe saveMastery)
     try {
         const zid = errListeZiel || errZielId();
-        let alle;
-        if(!errZielBereit){
-            // Noch nichts geladen: nur ergaenzen, nie etwas der anderen Ziele verlieren
-            const roh = JSON.parse(localStorage.getItem('amateurfunk_errors_' + currentUser) || '[]');
-            alle = Array.isArray(roh) ? roh.slice() : [];
-            errorList.forEach(id => { if(alle.indexOf(id) < 0) alle.push(id); });
-        } else {
-            const inListe = new Set(errorList);
-            Object.keys(errZiel).forEach(id => {
-                const t = errZiel[id], hat = t.indexOf(zid) >= 0;
-                if(inListe.has(id)){ if(!hat) t.push(zid); }
-                else if(hat) t.splice(t.indexOf(zid), 1);
-                if(!t.length) delete errZiel[id];
-            });
-            errorList.forEach(id => { if(!errZiel[id]) errZiel[id] = [zid]; });
-            alle = Object.keys(errZiel);
-            localStorage.setItem(errZielSchluessel(), JSON.stringify(errZiel));
-        }
         const key = 'amateurfunk_errors_' + currentUser;
-        localStorage.setItem(key, JSON.stringify(alle));
+        let alt = [];
+        try{ const roh = JSON.parse(localStorage.getItem(key) || '[]'); if(Array.isArray(roh)) alt = roh; }catch(e){}
+        // Was zu anderen Zielen gehoert, bleibt stehen; im eigenen Ziel gilt errorList
+        const behalten = errGeladen ? alt.filter(id => !errImZiel(id, zid)) : alt.slice();
+        errorList.forEach(id => { if(behalten.indexOf(id) < 0) behalten.push(id); });
+        localStorage.setItem(key, JSON.stringify(behalten));
         // global fallback for compatibility
-        localStorage.setItem('amateurfunk_errors', JSON.stringify(alle));
+        localStorage.setItem('amateurfunk_errors', JSON.stringify(behalten));
     } catch(e) {}
     // update badge visibility
     try {
@@ -24251,30 +24224,36 @@ function openDifficultClearModal(){
     if(modal){ modal.style.display='flex'; modal.classList.add('open'); }
 }
 // ================================================================
-//  FEHLER JE PRUEFUNGSZIEL GETRENNT (Stand 433)
+//  FEHLER JE PRUEFUNGSZIEL (Stand 433)
 //
 //  Dietmar (Video, 05.11.2026): "Fehler werden mitgenommen! Wenn ich in N
 //  Fehler mache, zeigt es Direkteinstieg die Fehler an und bei E auf A auch.
-//  Das muss getrennt werden!"
+//  Das muss getrennt werden!" Und zur Klarstellung: "Bei Direkteinstieg
+//  Klasse E wird es nicht getrennt, da Betrieb und Vorschriften da noch
+//  dazu gehoeren." Bei der Bundesnetzagentur: Klasse N = Betrieb, Technik,
+//  Vorschriften; Direkteinstieg E = dazu Technik E; E -> A = nur Technik A.
 //
-//  errorList im Arbeitsspeicher ist jetzt die Liste des GEWAEHLTEN Ziels.
-//  Gespeichert wird weiter die Gesamtliste unter amateurfunk_errors_<platz>
-//  (alte Fassungen, Sicherung und Abgleich zwischen Geraeten lesen sie
-//  unveraendert), dazu je Frage, in welchen Zielen sie falsch war:
-//  amateurfunk_errziel_<platz> = { "NA209": ["n"], "EA116": ["e","ne"] }.
-//  Alte Fehler ohne Ziel werden einmal nach ihrem Fragenkuerzel zugeordnet
-//  (V, B, N = Klasse N bzw. das gerade gewaehlte E; E = E und N -> E; A = E -> A).
+//  errorList im Arbeitsspeicher ist darum die Liste des GEWAEHLTEN Ziels:
+//  alle Fehler, deren Frage zu diesem Ziel gehoert.
+//    Klasse N          VA..NK   (Vorschriften, Betrieb, Technik N)
+//    N -> E            EA..EK   (Technik E)
+//    Direkteinstieg E  beides   (die N-Fragen gehoeren dazu)
+//    E -> A            AA..AK   (Technik A)
+//  Gespeichert wird weiter EINE Gesamtliste (amateurfunk_errors_<platz>) -
+//  Sicherung, Abgleich zwischen Geraeten und die Datei des Servers lesen sie
+//  unveraendert. Beim Speichern bleiben die Fehler der anderen Ziele
+//  unberuehrt stehen; ein richtig beantworteter Fehler verschwindet nur dort,
+//  wo seine Frage zum Ziel gehoert.
 // ================================================================
-let errZiel = {};
-let errZielBereit = false;
 let errListeZiel = null;   // fuer welches Ziel errorList gerade geladen ist
-function errZielSchluessel(slot){ return 'amateurfunk_errziel_' + (slot || currentUser); }
+let errGeladen = false;
 function errZielId(){ try{ return klasseAktuell().id; }catch(e){ return 'n'; } }
-function errZielRaten(id, zid){
+function errImZiel(id, zid){
     const s = String(id || '');
-    if(/^A[A-K]\d/.test(s)) return ['ea'];
-    if(/^E[A-K]\d/.test(s)) return ['e', 'ne'];
-    return [zid === 'e' ? 'e' : 'n'];
+    if(zid === 'ea') return /^A[A-K]\d/.test(s);
+    if(zid === 'ne') return /^E[A-K]\d/.test(s);
+    if(zid === 'e')  return /^[VBNE][A-K]\d/.test(s);
+    return /^[VBN][A-K]\d/.test(s);
 }
 function loadErrors() {
     let U = [];
@@ -24287,21 +24266,10 @@ function loadErrors() {
             if (Array.isArray(parsed)) U = parsed;
         }
     } catch(e) {}
-    let M = {};
-    try { M = JSON.parse(localStorage.getItem(errZielSchluessel()) || '{}') || {}; } catch(e) { M = {}; }
-    if (!M || typeof M !== 'object' || Array.isArray(M)) M = {};
     const zid = errZielId();
-    const gueltig = (typeof KLASSEN !== 'undefined') ? KLASSEN.map(k => k.id) : ['n', 'e', 'ne', 'ea'];
-    const neu = {};
-    U.forEach(id => {
-        let t = Array.isArray(M[id]) ? M[id].filter(z => gueltig.includes(z)) : [];
-        if (!t.length) t = errZielRaten(id, zid);
-        neu[id] = t;
-    });
-    errZiel = neu;
-    errZielBereit = true;
     errListeZiel = zid;
-    errorList = U.filter(id => errZiel[id].includes(zid));
+    errGeladen = true;
+    errorList = U.filter(id => errImZiel(id, zid));
     console.log(`✅ ${errorList.length} Fehlerfragen geladen (Ziel ${zid}, gesamt ${U.length})`);
     try{ updateErrorBadge(); }catch(e){}
     setTimeout(()=>saveErrors(), 100);
@@ -64723,7 +64691,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             window.closeMasteryClearModal();
             let u = '1'; tu(() => { u = String(currentUser); });
             const sch = (k, w) => { try{ localStorage.setItem(k, typeof w === 'string' ? w : JSON.stringify(w)); }catch(e){} };
-            tu(() => { masteryData = {}; errorList = []; errZiel = {}; difficultQuestions = {}; diagnoseDaten = {}; uebungsTage = {}; });
+            tu(() => { masteryData = {}; errorList = []; difficultQuestions = {}; diagnoseDaten = {}; uebungsTage = {}; });
             sch('amateurfunk_mastery_' + u, {}); sch('amateurfunk_errors_' + u, []); sch('amateurfunk_difficult_' + u, {});
             sch('amateurfunk_mastery', {}); sch('amateurfunk_errors', []); sch('amateurfunk_difficult', {});
             sch('amateurfunk_diagnose_' + u, {}); sch('amateurfunk_uebungszeit_' + u, {});
@@ -64740,7 +64708,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             try{
                 if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && PERSISTENT_FILE_ENABLED){
                     const send = (type, data) => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, user: u, data: data }) });
-                    await Promise.all([send('errors', []), send('errziel', {}), send('difficult', {}), send('mastery', {}), send('history', []), send('diagnose', {}), send('uebungszeit', {})]);
+                    await Promise.all([send('errors', []), send('difficult', {}), send('mastery', {}), send('history', []), send('diagnose', {}), send('uebungszeit', {})]);
                 }
             }catch(e){}
             tu(() => { if(typeof saveMastery === 'function') saveMastery(); });
