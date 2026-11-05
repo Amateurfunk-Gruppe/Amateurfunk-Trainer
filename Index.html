@@ -97,6 +97,25 @@
          ================================================================ -->
     <script>
     (function(){
+        // NUR NOCH HELL UND POLAR (Stand 428, 05.11.2026). Dietmar: "Hell-mit-Polar-Effekten wird Standard und Polar sind
+        // die einzigen Style die es gibt. Die Farbe kann in den Einstellungen veraendert werden. Papier Warm, Grey Mode, Klar
+        // Kontrastreich, Luftig und Hell bitte komplett entfernen." - Farben fuer Hell: "Gruen, Blau" (Violett, Orange raus).
+        // Alte Werte werden hier, vor allem anderen, umgeschrieben: Green -> Hell Gruen, Blue -> Hell Blau, alle anderen
+        // hellen Stile -> Hell Tuerkis. Die Farbe von Hell steht in afu_hellfarbe und als Klasse hf-... am <html>.
+        try{
+            var t0 = localStorage.getItem('theme'), hf0 = localStorage.getItem('afu_hellfarbe'), ad0 = localStorage.getItem('app_design');
+            var alt0 = { green: 'gruen', pastell: 'gruen', blue: 'blau', gruen: 'gruen', blau: 'blau' };
+            if(t0 && /^(green|pastell|blue|orange|grey|luftig|klar|papier)$/.test(t0)){
+                if(!/^(tuerkis|gruen|blau)$/.test(hf0 || '')){ hf0 = alt0[t0] || 'blau'; localStorage.setItem('afu_hellfarbe', hf0); }
+                localStorage.setItem('theme', 'light');
+            }
+            if(ad0 && /^(gruen|blau|orange|grau)$/.test(ad0)){
+                if(!/^(tuerkis|gruen|blau)$/.test(hf0 || '')){ hf0 = alt0[ad0] || 'blau'; localStorage.setItem('afu_hellfarbe', hf0); }
+                localStorage.setItem('app_design', 'hell');
+            }
+            if(!/^(tuerkis|gruen|blau)$/.test(hf0 || '')) hf0 = 'blau';   // Stand 429: Arktis Blau ist der Standard
+            document.documentElement.classList.add('hf-' + hf0);
+        }catch(e){ try{ document.documentElement.classList.add('hf-blau'); }catch(e2){} }
         try{
             // HANDY-ERKENNUNG (21.10.2026): Dietmar: "es macht noch immer diesen Sprung von der App auf eine Desktop aehnliche
             // Version." Im Chrome-Fenster am Handy (Desktop-Seite, Custom Tab) meldet der Bildschirm manchmal 600 und mehr Punkte -
@@ -178,7 +197,6 @@
                         localStorage.setItem('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                     else if(dp === 'dunkel') localStorage.setItem('theme', 'dark');
                     else if(dp === 'hell') localStorage.setItem('theme', 'light');
-                    else if({ gruen: 1, blau: 1, orange: 1, grau: 1 }[dp]) localStorage.setItem('theme', { gruen: 'green', blau: 'blue', orange: 'orange', grau: 'grey' }[dp]);
                 }catch(e){}
                 return;
             }
@@ -207,8 +225,9 @@
             // kein Hell/Dunkel), startet dunkel (Polar) und mit einer ruhigen Antwortfarbe statt bunter Antworten. Alles bleibt
             // unter Einstellungen -> Anpassen aenderbar; wer schon gewaehlt hat, bleibt unberuehrt.
             try{
+                // Stand 428 (05.11.2026): Dietmar: "Hell-mit-Polar-Effekten wird Standard" - der erste Start ist jetzt hell (Tuerkis).
                 if(!localStorage.getItem('app_stil_gewaehlt') && !localStorage.getItem('app_design') && !localStorage.getItem('theme')){
-                    localStorage.setItem('app_design', 'dunkel'); localStorage.setItem('theme', 'dark');
+                    localStorage.setItem('app_design', 'hell'); localStorage.setItem('theme', 'light');
                     if(!localStorage.getItem('afu_antwortfarbe')) localStorage.setItem('afu_antwortfarbe', 'blau');
                 }
             }catch(e){}
@@ -228,7 +247,6 @@
                     localStorage.setItem('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 else if(ds === 'dunkel') localStorage.setItem('theme', 'dark');
                 else if(ds === 'hell') localStorage.setItem('theme', 'light');
-                else if({ gruen: 1, blau: 1, orange: 1, grau: 1 }[ds]) localStorage.setItem('theme', { gruen: 'green', blau: 'blue', orange: 'orange', grau: 'grey' }[ds]);
             }catch(e){ document.documentElement.classList.add('stil-sachlich'); }
             // Hat die App cloudflared dabei, gibt es auch den Internet-Link.
             if(/AmateurfunkTrainerApp Tunnel/.test(navigator.userAgent)) document.documentElement.classList.add('android-tunnel');
@@ -2139,7 +2157,10 @@
         /* X zum Schliessen im Blatt "Mehr" (am PC) */
         .pc-mehr-zu { display: none; }
         html.pc-breit #appMehr .am-blatt { position: absolute; }
-        html.pc-breit #appMehr .pc-mehr-zu { display: flex; align-items: center; justify-content: center; position: absolute; top: 12px; right: 14px; z-index: 2;
+        /* Stand 429 - Dietmar (Bild): "Rechts oben im Eck ist das X in Rund und Viereckig." Es gab zwei Schliessen-Knoepfe uebereinander (der alte PC-Knopf und das X in der Kopfzeile). Es bleibt das X der Kopfzeile. */
+        html.pc-breit #appMehr .pc-mehr-zu { display: none !important; }
+        html.pc-breit body.eckig:not(.app-rund) #appMehr .am-zu { border-radius: 0 !important; }
+        html.pc-breit #appMehr .pc-mehr-zu-alt { display: flex; align-items: center; justify-content: center; position: absolute; top: 12px; right: 14px; z-index: 2;
             width: 36px; height: 36px; border: 0; border-radius: 50% !important; background: var(--s-fl2, #e8eef7); color: var(--s-text, #17243a); font-size: 1rem; cursor: pointer; }
         html.pc-breit body.eckig:not(.app-rund) #appMehr .pc-mehr-zu { border-radius: 0 !important; }
         html.pc-breit #appMehr .pc-mehr-zu:hover { filter: brightness(.94); }
@@ -10123,15 +10144,93 @@ body.dark .realistic-modal-overlay { background:rgba(8,13,20,0.72); }
 
 
 <style id="pcHandy">html.pc-handy #pcWerkOben, html.pc-handy .pc-werk, html.pc-handy #pcServerChip, html.pc-handy #alBeenden { display: none !important; }</style>
-<style id="tuerkisDunkel">
-/* Stand 427 (05.11.2026) - Dietmar: "Wie wuerde es aussehen wenn wir das Tuerkis in dunkel tuerkis aendern" - nach Vorschau
-   (heute / mittel / dunkel): "es dunkle sieht schon ganz gut aus das rechte". In der hellen App-Ansicht (Verspielt und Sachlich)
-   wird das Tuerkis dunkler: Knoepfe "Ueben", "Kopieren", Symbole, Balken, Schriftzug "Trainer". Weiss auf dem Knopf vorher 2,5:1,
-   jetzt 4,9:1. Dunkel (Polar) und PC bleiben. --s-haupt-tief bleibt #07708C (Tageszahl, "dran"). */
+<style id="hellPolar">
+/* ================================================================
+   HELL MIT POLAR-EFFEKTEN                          (Stand 428, 05.11.2026)
+   ----------------------------------------------------------------
+   Dietmar (Bild vom PC in Polar): "Wie wuerde das in Hell mit solchen Effekten aussehen?" - nach Vorschau:
+   "Ich moechte bei Sachlich nur deine Helle und Polar Version haben" - "Hell-mit-Polar-Effekten wird Standard und
+   Polar sind die einzigen Style die es gibt. Die Farbe kann in den Einstellungen veraendert werden." Farben: Tuerkis
+   (Standard), Gruen, Blau. Die Farbe steht als hf-... am <html> (Kopf der Seite, afu_hellfarbe).
+   1. Farbe in der hellen App (Verspielt und Sachlich): Knoepfe, Symbole, Balken, Schriftzug "Trainer".
+      Tuerkis seit Stand 427: Dietmar "es dunkle sieht schon ganz gut aus das rechte" (weiss darauf 4,9:1).
+   2. Glas in Sachlich hell (App, Handy-Link) und am PC (klassische Ansicht = Sachlich): Verlauf als Grund,
+      halb durchsichtige Kaesten mit hellem Rand und weichem Schatten, runde Knoepfe.
+   Polar (dunkel) bleibt, wie es ist.
+   ================================================================ */
+html { --hp-a: #1D5FBF; --hp-a2: #1A55AD; --hp-rgb: 29, 95, 191; --hp-g1: #f7faff; --hp-g2: #e1ecff; --hp-g3: #c9dbf7; }   /* Stand 429: Blau ist der Standard */
+html.hf-tuerkis { --hp-a: #097E7A; --hp-a2: #08718A; --hp-rgb: 9, 126, 122; --hp-g1: #f6fbfb; --hp-g2: #ddf0ef; --hp-g3: #c4e3e1; }
+html.hf-gruen { --hp-a: #1E7A3C; --hp-a2: #1B6E36; --hp-rgb: 30, 122, 60; --hp-g1: #f7fbf7; --hp-g2: #e2f1e5; --hp-g3: #c9e5cf; }
+html.hf-blau  { --hp-a: #1D5FBF; --hp-a2: #1A55AD; --hp-rgb: 29, 95, 191; --hp-g1: #f7faff; --hp-g2: #e1ecff; --hp-g3: #c9dbf7; }
+
+/* 1. Farbe in der hellen App */
 html.android-app.stil-verspielt body:not(.dark), html.android-app.stil-sachlich body:not(.dark) {
-  --s-haupt: #097E7A; --s-haupt2: #08718A; --s-akzent: #08718A; --s-t: #097E7A;
+  --s-haupt: var(--hp-a); --s-haupt2: var(--hp-a2); --s-akzent: var(--hp-a2); --s-t: var(--hp-a);
+  --s-akzent-w: rgba(var(--hp-rgb), 0.12);
 }
-html.android-app.stil-verspielt body:not(.dark) .al-name b, html.android-app.stil-sachlich body:not(.dark) .al-name b { color: #08718A !important; }
+html.android-app.stil-verspielt body:not(.dark) .al-name b, html.android-app.stil-sachlich body:not(.dark) .al-name b { color: var(--hp-a2) !important; }
+
+/* 2a. Glas in Sachlich hell (App und Handy-Link) */
+html.android-app.stil-sachlich body:not(.dark):not(#hpx) {
+  background: linear-gradient(160deg, var(--hp-g1) 0%, var(--hp-g2) 45%, var(--hp-g3) 100%) fixed !important;
+  --s-bg: transparent; --s-fl: rgba(255,255,255,0.62); --s-fl2: rgba(255,255,255,0.5);
+  --s-rand: rgba(255,255,255,0.95); --s-rand2: rgba(110,140,200,0.22);
+  --s-navi: rgba(255,255,255,0.97); --s-blatt: rgba(255,255,255,0.96);
+  --s-schatten: 0 14px 32px -20px rgba(30,64,140,0.40);
+}
+html.android-app.stil-sachlich body:not(.dark) :is(.ah-karte, .ah-kachel, #appWerk > div, #appWerk > button, #awPfad) {
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid rgba(255,255,255,0.95) !important; border-radius: 22px !important;
+  box-shadow: 0 14px 32px -20px rgba(30,64,140,0.40), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+html.android-app.stil-sachlich body:not(.dark) #appLeiste { background: rgba(255,255,255,0.6) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.9) !important; }
+html.android-app.stil-sachlich body:not(.dark) #appNavi { background: rgba(255,255,255,0.97) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.95) !important; }
+html.android-app.stil-sachlich body:not(.dark) #questionContainer .option { background: rgba(255,255,255,0.7) !important; border-radius: 18px !important; }
+
+/* 2b. Glas am PC (klassische Ansicht) */
+html:not(.android-app) body:not(.dark) {
+  background: linear-gradient(135deg, var(--hp-g1) 0%, var(--hp-g2) 40%, var(--hp-g3) 100%) fixed !important;
+}
+html:not(.android-app) body:not(.dark) #app.card { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html:not(.android-app) body:not(.dark) #app .header { border-bottom: 1px solid rgba(60, 100, 170, 0.14) !important; }
+html:not(.android-app) body:not(.dark) #app :is(.filter-bar, #examInfo, #masteryDisplay, #historyCol) {
+  background: rgba(255, 255, 255, 0.58) !important;
+  backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.95) !important; border-radius: 22px !important;
+  box-shadow: 0 18px 40px -22px rgba(30, 64, 140, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+html:not(.android-app) body:not(.dark) #masteryDisplay > div:not(:first-child), html:not(.android-app) body:not(.dark) #masteryDisplay div#stolperFeld {
+  background: rgba(255, 255, 255, 0.62) !important; border: 1px solid rgba(110, 140, 200, 0.18) !important; border-radius: 16px !important;
+}
+html:not(.android-app) body:not(.dark) #examInfo th, html:not(.android-app) body:not(.dark) #historyCol th { background: rgba(var(--hp-rgb), 0.08) !important; }
+html:not(.android-app) body:not(.dark) #app :is(.btn, .btn-theme, .btn-lernstand-hell, .btn-outline, select, #searchInput, #terminInput, #rufzeichenInput) {
+  border-radius: 999px !important; background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(110, 140, 200, 0.28) !important; box-shadow: 0 4px 12px -8px rgba(30, 64, 140, 0.35) !important;
+}
+html:not(.android-app) body:not(.dark) #app :is(.btn, .btn-theme, .btn-lernstand-hell, .btn-outline):hover { background: #ffffff !important; }
+/* Stand 431 - Dietmar: "Den Start Button in Arktis moechte ich genau in der Farbe haben" (Bild: Sichern/Einlesen/Angemeldet).
+   Start ist gefuellt in der Arktis-Farbe, genau wie Sichern und Einlesen (var(--hp-a), weisse Schrift, Pille). */
+html:not(.android-app) body:not(.dark) #app #startBtn {
+  background: var(--hp-a) !important; color: #ffffff !important; border: 0 !important; box-shadow: none !important;
+}
+html:not(.android-app) body:not(.dark) #app #startBtn:hover { filter: brightness(1.08); }
+html:not(.android-app) body:not(.dark) #app #startBtn i { color: #ffffff !important; }
+html:not(.android-app) body:not(.dark) #app #startBtn .start-badge { background: rgba(0, 0, 0, 0.26) !important; color: #ffffff !important; }
+html:not(.android-app) body:not(.dark) #app .btn-lernstand, html:not(.android-app) body:not(.dark) #app .header button:not([class]) {
+  border-radius: 999px !important; background: var(--hp-a) !important; color: #fff !important; border: 0 !important;
+}
+html:not(.android-app) body:not(.dark) #app .header #favListBtn { background: rgba(255, 241, 244, 0.85) !important; color: #b01238 !important; }
+
+/* Stand 429 - Dietmar: "Die Menueleiste (weiss) laeuft rechts und links ueber. Wir fixen das wie bei Polar und entfernen
+   die weisse Menueleiste und setzen dafuer farblich angepasste Leiste." Die Knopfleiste unten (PC, Frage-Ansicht) hat in
+   Arktis keinen weissen Kasten mehr: kein Rand, kein Schatten, ein Verlauf in der Seitenfarbe; die Knoepfe fuellen die Breite. */
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea{background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;padding:14px 54px 30px!important;overflow:visible!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons{display:flex!important;gap:14px!important;width:100%!important;max-width:none!important;justify-content:stretch!important;align-items:stretch!important;margin:0!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons > *{flex:1 1 0!important;min-width:0!important;height:58px!important;font-size:1rem!important;white-space:nowrap;margin:0!important;background:rgba(255,255,255,.72)!important;border:1px solid rgba(110,140,200,.30)!important;border-radius:var(--opt-r,18px)!important;color:#0f2745!important;box-shadow:0 4px 12px -8px rgba(30,64,140,.35)!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons > *:hover{background:#fff!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons > #nextBtn{flex:1.7 1 0!important;font-size:1.1rem!important;background:linear-gradient(135deg,var(--hp-a),var(--hp-a2))!important;color:#fff!important;border:0!important;box-shadow:0 8px 20px -10px rgba(var(--hp-rgb),.7)!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons > :last-child:not(#nextBtn){flex:0 0 58px!important}
+html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea #googleSearchBtn{border-radius:var(--opt-r,18px)!important}
 </style>
 </head>
 <body>
@@ -10461,6 +10560,7 @@ function klasseZahlMerken(id, anzahl) {
 // Fußzeile stehen dort schon, hier kommt der Rest der Anzeige nach.
 function klasseAnzeigeAktualisieren() {
     const kl = klasseAktuell();
+    try{ if(typeof lernTeileAbgleichen === 'function') lernTeileAbgleichen(); }catch(e){}
     try{ if(typeof cbPanelAktualisieren === 'function') cbPanelAktualisieren(); }catch(e){}
     try{ if(typeof durchsichtBadge === 'function') durchsichtBadge(); }catch(e){}
     const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
@@ -10938,9 +11038,10 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                     || /^172\.(1[6-9]|2\d|3[01])\./.test(h)
                     || /^169\.254\./.test(h)
                     || location.protocol === 'file:';
+                // Stand 428: der Blue Mode ist entfernt - Besucher sehen den Standard, Hell in Tuerkis
                 if(!eigenesNetz){
-                    gespeichert = 'blue';
-                    localStorage.setItem('theme', 'blue');
+                    gespeichert = 'light';
+                    localStorage.setItem('theme', 'light');
                 }
             }catch(e){}
         }
@@ -10957,11 +11058,8 @@ window.klasseFragenNachladen = klasseFragenNachladen;
         }
         // 'pastell' war der fruehere Name des Green Mode - weiter akzeptieren,
         // damit eine gespeicherte Einstellung nicht verlorengeht.
-        else if (gespeichert === 'green' || gespeichert === 'pastell') document.body.classList.add('green');
-        else if (gespeichert === 'blue') document.body.classList.add('blue');
-        else if (gespeichert === 'orange') document.body.classList.add('orange');
-        else if (gespeichert === 'grey') document.body.classList.add('grey');
-        else if (gespeichert === 'luftig' || gespeichert === 'klar' || gespeichert === 'papier') document.body.classList.add(gespeichert);
+        // Stand 428: Green, Blue, Orange, Grey, Luftig, Klar und Papier gibt es nicht mehr (der Kopf der Seite hat sie
+        // schon in Hell + Farbe umgeschrieben) - es bleiben Hell und Polar.
         else if (gespeichert === 'graphit') document.body.classList.add('dark', 'graphit');
         // Die Form ist keine Wahl mehr, sondern gesetzt. Sie wird hier
         // vergeben, BEVOR das erste Mal gezeichnet wird - sonst blitzte
@@ -11728,6 +11826,23 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <span><b style="color:#0f2745; font-size:0.85rem;">„Antwort A“ bis „Antwort D“ mit vorlesen</b>
                     <span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">Ohne Haken liest der Trainer nur den Text der Antwort. Bei Antworten, die nur ein Bild sind, bleibt der Buchstabe.</span></span>
             </label>
+            <!-- Stand 429 - Dietmar: "die Bilder, wenn sie vorgelesen werden, vergroessern sich kurz, mit einer Zeitangabe" -->
+            <div id="ttsBlockBild" style="margin:0.2rem 0 0.8rem;"
+                 data-vorlesen-kurz="Bilder beim Vorlesen vergrößern."
+                 data-vorlesen="Bilder beim Vorlesen vergrößern. Hat die Frage oder eine Antwort ein Bild, wird es nach dem Vorlesen groß gezeigt, mit einem Sekundenzähler. Das Vorlesen wartet, bis die Zeit um ist. Ein Tippen oder die Taste Escape beendet die Wartezeit früher.">
+                <label style="display:flex; gap:0.6rem; align-items:flex-start; cursor:pointer;">
+                    <input type="checkbox" id="ttsBildGrossCheckbox" style="margin-top:0.15rem; width:18px; height:18px; flex:0 0 18px; cursor:pointer;" onchange="ttsBildGrossSetzen(this.checked)">
+                    <span><b style="color:#0f2745; font-size:0.85rem;">Bilder beim Vorlesen kurz vergrößern</b>
+                        <span style="display:block; font-size:0.76rem; color:#4b5563; line-height:1.5;">Das Bild erscheint groß, mit Sekundenzähler. Das Vorlesen wartet, bis die Zeit um ist. Tippen oder Esc beendet die Wartezeit früher.</span></span>
+                </label>
+                <div style="margin:0.4rem 0 0 1.65rem; display:flex; align-items:center; gap:8px; font-size:0.82rem;">
+                    <label for="ttsBildSekunden">Dauer:</label>
+                    <select id="ttsBildSekunden" onchange="ttsBildSekundenSetzen(this.value)" style="padding:4px 8px; border-radius:8px;">
+                        <option value="3">3 Sekunden</option><option value="4">4 Sekunden</option><option value="5">5 Sekunden</option>
+                        <option value="6">6 Sekunden</option><option value="8">8 Sekunden</option><option value="10">10 Sekunden</option><option value="15">15 Sekunden</option>
+                    </select>
+                </div>
+            </div>
             <!-- Der Schalter fuer die Tastaturbedienung. Er steht hier und
                  nicht in der Hauptansicht, weil hier schon alles zusammen
                  liegt, was beim Bedienen hilft - und weil die Hauptansicht
@@ -12741,7 +12856,8 @@ function confirmCacheClear(){
         const preserveKeys = ['examHistory','amateurfunk_currentUser','amateurfunk_activeParts',
             'amateurfunk_hideMastered','amateurfunk_mastery','amateurfunk_difficult',
             'amateurfunk_errors','duo_userName','theme',
-            'amateurfunk_gelernteAutoRichtig','amateurfunk_nurGelernte'];
+            'amateurfunk_gelernteAutoRichtig','amateurfunk_nurGelernte','amateurfunk_activeParts_uebernommen'];
+        KLASSEN.forEach(k => preserveKeys.push('amateurfunk_activeParts_' + k.id));
         USER_SLOTS.forEach(u => {
             preserveKeys.push('amateurfunk_mastery_' + u, 'amateurfunk_difficult_' + u,
                 'amateurfunk_errors_' + u, 'amateurfunk_userName_' + u,
@@ -13898,6 +14014,57 @@ document.addEventListener('mouseout', function(e){
 }, true);
 window.addEventListener('scroll', bildLupeZu, true);
 window.addEventListener('resize', bildLupeZu);
+
+// ================================================================
+//  DIE LUPE AN JEDER BILDANTWORT - AUCH IN DER KLASSISCHEN PC-ANSICHT   (Stand 429)
+//  ----------------------------------------------------------------
+//  Dietmar (05.11.2026): "Bei den Bildern fehlt wieder die Lupe. Und Nachteilsausgleich
+//  Bild vergroessern funktioniert nicht!" Beides ist eines: Die Lupen-Knoepfe wurden nur in der
+//  App-Ansicht (html.android-app) angelegt. Am klassischen PC gab es sie nicht - die Stilregeln
+//  (html:not(.android-app) .app-bild-lupe) und der Lupen-Zwilling beim Draufzeigen waren da, aber
+//  der Knopf selbst nie. Ohne Lupe oeffnet sich die grosse Ansicht nicht, und der Faktor aus dem
+//  Nachteilsausgleich (Einstellungen -> Nachteilsausgleich -> Bilder vergroessern) blieb ohne Wirkung.
+//  Hier wird dieselbe Lupe fuer den klassischen PC angelegt, genau wie in der App-Ansicht.
+// ================================================================
+(function(){
+    const H = document.documentElement;
+    if(H.classList.contains('android-app')) return;
+    function lupenNachziehen(){
+        document.querySelectorAll('#questionContainer .option-grid .option-image:not([data-lupe])').forEach(img => {
+            img.dataset.lupe = '1';
+            const kachel = img.closest('.option-grid');
+            if(!kachel || kachel.querySelector('.app-bild-lupe')) return;
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'app-bild-lupe'; b.setAttribute('aria-label', 'Bild vergrößern'); b.setAttribute('data-kein-klickton', '');
+            b.innerHTML = '<i class="fas fa-magnifying-glass-plus"></i>';
+            b.addEventListener('click', e => {
+                e.stopPropagation(); e.preventDefault();
+                const l = kachel.querySelector('.option-label'), name = l ? l.textContent.replace(/[:\s]+$/, '') : '';
+                try{ window.openLightbox(img.currentSrc || img.src, name ? 'Antwort ' + name : ''); }catch(e2){}
+            });
+            kachel.appendChild(b);
+            if(getComputedStyle(kachel).position === 'static') kachel.style.position = 'relative';
+            // Die Lupe sitzt in der rechten oberen Ecke des BILDES (nicht der Kachel).
+            const setz = () => {
+                try{
+                    if(!img.isConnected || !img.offsetWidth) return;
+                    b.style.top = (img.offsetTop + 10) + 'px';
+                    b.style.right = Math.max(6, kachel.clientWidth - (img.offsetLeft + img.offsetWidth) + 10) + 'px';
+                }catch(e){}
+            };
+            setz();
+            img.addEventListener('load', setz);
+            try{ if(window.ResizeObserver) new ResizeObserver(setz).observe(kachel); }catch(e){}
+        });
+    }
+    function start(){
+        const q = document.getElementById('questionContainer');
+        if(!q || !window.MutationObserver) return;
+        new MutationObserver(lupenNachziehen).observe(q, { childList: true, subtree: true });
+        lupenNachziehen();
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 
 // Kurzer, nicht blockierender Hinweis, wenn im Gruppenraum oder im
 // Pruefungssimulator ein Blick auf die Loesung als Fehler gezaehlt wurde -
@@ -22174,8 +22341,62 @@ function teilAktiv(q){
     try{ const a = getActiveLearnParts(); return !q || !a.length || a.length >= 3 || a.includes(q.part); }catch(e){ return true; }
 }
 window.teilAktiv = teilAktiv;
+// ================================================================
+//  "LERNEN AKTIV FUER" - FUER JEDES PRUEFUNGSZIEL EINZELN (Stand 432)
+//
+//  Sabine (Handy, E -> A): "Fehler ueben 7", aber dann "Keine Fehlerfragen
+//  gefunden". Ursache: Die Haken Vorschriften/Betrieb/Technik galten fuer
+//  ALLE Ziele zugleich. Bei E -> A und N -> E gibt es aber nur Technik -
+//  war Technik (etwa wegen einer Runde in Klasse N) abgewaehlt, blieb der
+//  Stapel leer. Dietmar: "Nur bei der Klasse N oder Direkteinstieg auf E
+//  ist Betrieb und Vorschriften vorhanden. Bei N nach E und E nach A gibt
+//  es nur Technik!"
+//
+//  Jetzt: 1) jedes Ziel merkt seine Auswahl selbst (amateurfunk_activeParts_<ziel>),
+//  2) angezeigt werden nur Teile, die es im Ziel gibt, 3) liegt nach einem
+//  Wechsel gar nichts Gewaehltes im Ziel, werden alle Teile des Ziels
+//  angeschaltet und es steht ein kurzer Hinweis da.
+//  Der alte Schluessel amateurfunk_activeParts bleibt unberuehrt stehen; beim
+//  ersten Start nach dem Update wird er fuer das gerade gewaehlte Ziel
+//  uebernommen. Fortschritt, Fehler und XP werden nicht angefasst.
+// ================================================================
+const LERNTEILE_ALLE = ['vorschriften', 'betrieb', 'technik'];
+const LERNTEILE_NAMEN = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
+function lernTeileSchluessel(){
+    let id = 'n';
+    try{ id = klasseAktuell().id; }catch(e){}
+    return 'amateurfunk_activeParts_' + id;
+}
+function lernTeileVerfuegbar(){
+    try{
+        if(Array.isArray(questionBank) && questionBank.length){
+            const da = new Set(questionBank.map(q => q && q.part));
+            const l = LERNTEILE_ALLE.filter(t => da.has(t));
+            if(l.length) return l;
+        }
+    }catch(e){}
+    return LERNTEILE_ALLE.slice();
+}
+function lernTeileSpeichern(){
+    try { localStorage.setItem(lernTeileSchluessel(), JSON.stringify(activeLearnParts)); } catch(e){}
+}
+function lernTeileAnzeigen(){
+    // Haken setzen und Teile ausblenden, die es im Ziel nicht gibt
+    const da = lernTeileVerfuegbar();
+    [['vorschriften','learnVorschriften'],['betrieb','learnBetrieb'],['technik','learnTechnik']].forEach(x => {
+        const cb = document.getElementById(x[1]);
+        if(!cb) return;
+        cb.checked = !!activeLearnParts[x[0]];
+        const lab = cb.closest('label');
+        if(lab) lab.style.display = da.includes(x[0]) ? '' : 'none';
+    });
+}
 function getActiveLearnParts() {
-    return Object.keys(activeLearnParts).filter(k => activeLearnParts[k]);
+    const a = Object.keys(activeLearnParts).filter(k => activeLearnParts[k]);
+    // Sicherheitsnetz: Ist im Ziel nichts davon vorhanden, gilt alles, was es gibt
+    const da = lernTeileVerfuegbar();
+    if(!a.some(t => da.includes(t))) return da;
+    return a;
 }
 function toggleLearnParts() {
     const v = document.getElementById('learnVorschriften');
@@ -22184,38 +22405,63 @@ function toggleLearnParts() {
     if (v) activeLearnParts.vorschriften = v.checked;
     if (b) activeLearnParts.betrieb = b.checked;
     if (t) activeLearnParts.technik = t.checked;
-    try { localStorage.setItem('amateurfunk_activeParts', JSON.stringify(activeLearnParts)); } catch(e){}
+    const da = lernTeileVerfuegbar();
+    if (!da.some(x => activeLearnParts[x])) {
+        // Es muss ein Teil bleiben, den es im Ziel auch gibt
+        const x0 = da[0];
+        activeLearnParts[x0] = true;
+        lernTeileAnzeigen();
+        try{
+            if(typeof showAppAlert === 'function') showAppAlert('Ein Teil muss an bleiben – sonst gibt es keine Fragen.');
+            else alert('Bitte mindestens ein Teil aktivieren!');
+        }catch(e){}
+    }
+    lernTeileSpeichern();
     updateMasteryDisplay();
     // Das Blaettern haengt seit dem 05.09.2026 am selben Filter - die Zahl
     // am Knopf muss also mitgehen, sonst stuende dort die alte.
     try{ if(typeof durchsichtBadge === 'function') durchsichtBadge(); }catch(e){}
-    // Wenn im Lernmodus, Info aktualisieren
-    const active = getActiveLearnParts();
     try{ updateDifficultBadge(); }catch(e){}
-    if (active.length === 0) {
-        alert('Bitte mindestens ein Teil aktivieren!');
-        activeLearnParts.vorschriften = true;
-        if (v) v.checked = true;
-        try { localStorage.setItem('amateurfunk_activeParts', JSON.stringify(activeLearnParts)); } catch(e){}
-    }
 }
 function loadLearnParts() {
     try {
-        const data = localStorage.getItem('amateurfunk_activeParts');
+        const key = lernTeileSchluessel();
+        let data = localStorage.getItem(key);
+        if (data === null && localStorage.getItem('amateurfunk_activeParts_uebernommen') === null) {
+            // Erster Start nach dem Update: die bisherige gemeinsame Auswahl
+            // gilt fuer das Ziel, das gerade gewaehlt ist. Alle anderen
+            // Ziele fangen mit allen Teilen an.
+            const alt = localStorage.getItem('amateurfunk_activeParts');
+            if (alt) { data = alt; try { localStorage.setItem(key, alt); } catch(e){} }
+            try { localStorage.setItem('amateurfunk_activeParts_uebernommen', '1'); } catch(e){}
+        }
+        let neu = { vorschriften: true, betrieb: true, technik: true };
         if (data) {
             const parsed = JSON.parse(data);
-            if (parsed && typeof parsed === 'object') {
-                activeLearnParts = { ...activeLearnParts, ...parsed };
-            }
+            if (parsed && typeof parsed === 'object') neu = { ...neu, ...parsed };
         }
-        const v = document.getElementById('learnVorschriften');
-        const b = document.getElementById('learnBetrieb');
-        const t = document.getElementById('learnTechnik');
-        if (v) v.checked = !!activeLearnParts.vorschriften;
-        if (b) b.checked = !!activeLearnParts.betrieb;
-        if (t) t.checked = !!activeLearnParts.technik;
+        activeLearnParts = neu;
     } catch(e){}
+    lernTeileAnzeigen();
 }
+// Nach jedem Laden eines Katalogs (auch nach einem Zielwechsel): Auswahl des
+// Ziels holen und pruefen, dass im Ziel etwas gewaehlt ist.
+function lernTeileAbgleichen(){
+    loadLearnParts();
+    try{
+        const da = lernTeileVerfuegbar();
+        if(Array.isArray(questionBank) && questionBank.length && !da.some(t => activeLearnParts[t])){
+            const war = Object.keys(activeLearnParts).filter(k => !activeLearnParts[k]).map(k => LERNTEILE_NAMEN[k]);
+            LERNTEILE_ALLE.forEach(t => { activeLearnParts[t] = true; });
+            lernTeileSpeichern();
+            lernTeileAnzeigen();
+            const txt = (da.length === 1 ? LERNTEILE_NAMEN[da[0]] : da.map(t => LERNTEILE_NAMEN[t]).join(' + ')) + ' war abgewählt – für dieses Ziel sind jetzt alle Teile an.';
+            if(typeof showAppAlert === 'function') setTimeout(() => { try{ showAppAlert(txt); }catch(e){} }, 700);
+        }
+    }catch(e){}
+    try{ updateMasteryDisplay(); }catch(e){}
+}
+window.lernTeileAbgleichen = lernTeileAbgleichen;
 // ================================================================
 // PRÜFUNGSTERMIN
 //
@@ -25528,7 +25774,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 427, datum: '05.11.2026' };
+const TRAINER_STAND = { nr: 432, datum: '05.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -32542,6 +32788,7 @@ function clearTTSHighlights(){
 function stopTTS(){
     ttsQueueActive=false;
     ttsQueueToken++;
+    try{ bildVorleseZu(); }catch(e){}   // Stand 429: das grosse Bild beim Vorlesen schliesst mit
     if(currentTtsAudio){ try{ currentTtsAudio.pause(); }catch{} currentTtsAudio=null; }
     if(currentTtsUrl){ try{ URL.revokeObjectURL(currentTtsUrl); }catch{} currentTtsUrl=null; }
     // Und alles, was sonst noch spricht. Bis zum 14.09.2026 stand hier nur
@@ -33111,7 +33358,8 @@ async function playTTSQueue(segments, btn, zurueck){
         if(seg && seg.maja){
             stuecke.push({ text: seg.text, selector: seg.selector, frageNr: seg.frageNr, klasse: seg.klasse,
                            worte: seg.worte || null, thorsten: !!seg.thorsten, wortVon: 0, wortBis: 1,
-                           pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja, majaVor: seg.majaVor || null });
+                           pause: seg.pause || 0, effekt: seg.effekt || null, maja: seg.maja, majaVor: seg.majaVor || null,
+                           bildSel: seg.bildSel || null, bildName: seg.bildName || '' });
             continue;
         }
         const teile = ttsInStuecke(seg && seg.text);
@@ -33141,7 +33389,9 @@ async function playTTSQueue(segments, btn, zurueck){
                 wortVon: von,
                 wortBis: vorher / gesamt,
                 pause: (i === teile.length - 1) ? (seg.pause || 0) : 0,
-                effekt: (i === teile.length - 1) ? (seg.effekt || null) : null
+                effekt: (i === teile.length - 1) ? (seg.effekt || null) : null,
+                bildSel: (i === teile.length - 1) ? (seg.bildSel || null) : null,
+                bildName: seg.bildName || ''
             });
         });
     }
@@ -33156,7 +33406,15 @@ async function playTTSQueue(segments, btn, zurueck){
         // Die Pause nach einer Bildantwort. Die Hervorhebung bleibt dabei
         // stehen - deshalb wird hier gewartet und nicht schon in
         // playTTSSegment, das raeumt am Ende auf.
-        if(seg.pause > 0){
+        // Stand 429: Gehoert zum Abschnitt ein Bild, wird es jetzt gross gezeigt - mit
+        // Sekundenzaehler. Das Vorlesen wartet, bis die Zeit um ist (oder man klickt).
+        // Ist das Zeigen aus oder fehlt das Bild, gilt die alte Pause.
+        let bildGezeigt = false;
+        if(seg.bildSel && token===ttsQueueToken){
+            try{ bildGezeigt = await bildVorleseZeigen(seg.bildSel, seg.bildName, token); }catch(e){ bildGezeigt = false; }
+            if(token!==ttsQueueToken){ vorleseBuchen(); return; }
+        }
+        if(seg.pause > 0 && !bildGezeigt){
             await new Promise(r => setTimeout(r, seg.pause));
             if(token!==ttsQueueToken){ vorleseBuchen(); return; }
         }
@@ -33854,6 +34112,8 @@ function vorleseFrage(){
     const sprich = (t) => kenner ? kennerSprechen(t) : t;
     // Die Frage selbst wird nicht mit dem Overlay/Highlight markiert - nur die Antworten
     const segments=[{text:sprich(q.text)+'.', selector:null, effekt:'funk', thorsten:true, maja: majaFrageMarke(q)}];
+    // Stand 429: Hat die Frage ein Bild, wird es nach dem Vorlesen kurz gross gezeigt.
+    try{ if(document.querySelector('#questionContainer .q-image img')){ segments[0].bildSel = '#questionContainer .q-image img'; segments[0].bildName = 'Bild zur Frage'; } }catch(e){}
     // NUR DIE FRAGE, wenn die Antworten unter der Maus kommen sollen -
     // siehe "DIE ANTWORT UNTER DER MAUS VORLESEN" (26.09.2026).
     if(einstellungen.mausVorlesen){ playTTSQueue(segments, btn); return; }
@@ -33865,10 +34125,110 @@ function vorleseFrage(){
 // Ein Antwort-Abschnitt fuer die Sprachausgabe - fuer die ganze Frage
 // (vorleseFrage) und fuer die Antwort unter der Maus derselbe Satz.
 // Stand 420: "Antwort A" bis "D" vorlesen - abschaltbar (Standard: an, wie bisher)
+
+// ================================================================
+//  BILDER BEIM VORLESEN KURZ VERGROESSERN                (Stand 429)
+//  ----------------------------------------------------------------
+//  Dietmar (05.11.2026): "Unter dem Reiter Vorlesen moechte ich, dass die
+//  Bilder, wenn sie vorgelesen werden, sich automatisch kurz vergroessern,
+//  mit einer Zeitangabe dazu. Das muss dann das Vorlesen auch abwarten."
+//
+//  Nach dem Satz "Antwort A." (oder der Frage, wenn sie ein Bild hat) legt
+//  sich das Bild gross ueber die Seite, mit "noch 4 s" und einem
+//  schrumpfenden Balken. In dieser Zeit schweigt das Vorlesen - die Warte-
+//  schlange (playTTSQueue) wartet auf das Ende, dann geht es mit der
+//  naechsten Antwort weiter. Ein Klick (oder Esc) beendet die Wartezeit
+//  frueher; Stop oder ein neuer Vorgang schliesst das Bild sofort.
+//  Einstellungen -> Vorlesen: Haken und Dauer (Standard: an, 5 Sekunden).
+// ================================================================
+function ttsBildGrossAn(){ try{ return localStorage.getItem('tts_bild_gross') !== '0'; }catch(e){ return true; } }
+function ttsBildGrossSetzen(an){ try{ localStorage.setItem('tts_bild_gross', an ? '1' : '0'); }catch(e){} try{ ttsBildDauerNachziehen(); }catch(e){} }
+function ttsBildSekunden(){ try{ const n = parseFloat(localStorage.getItem('tts_bild_sek')); return (n >= 2 && n <= 20) ? n : 5; }catch(e){ return 5; } }
+function ttsBildSekundenSetzen(n){ try{ localStorage.setItem('tts_bild_sek', String(parseFloat(n) || 5)); }catch(e){} }
+function ttsBildDauerNachziehen(){
+    const s = document.getElementById('ttsBildSekunden'); if(s){ s.value = String(ttsBildSekunden()); s.disabled = !ttsBildGrossAn(); }
+    const c = document.getElementById('ttsBildGrossCheckbox'); if(c) c.checked = ttsBildGrossAn();
+}
+window.ttsBildGrossAn = ttsBildGrossAn; window.ttsBildGrossSetzen = ttsBildGrossSetzen;
+window.ttsBildSekundenSetzen = ttsBildSekundenSetzen; window.ttsBildDauerNachziehen = ttsBildDauerNachziehen;
+
+let bildVorleseSchliessen = null;      // schliesst das gerade offene grosse Bild
+function bildVorleseZu(){ if(bildVorleseSchliessen){ const f = bildVorleseSchliessen; bildVorleseSchliessen = null; try{ f(); }catch(e){} } }
+window.bildVorleseZu = bildVorleseZu;
+
+// Liefert true, wenn das Bild gezeigt und die Zeit abgewartet wurde.
+function bildVorleseZeigen(sel, name, token){
+    return new Promise(resolve => {
+        if(!ttsBildGrossAn()){ resolve(false); return; }
+        let quelle = null;
+        try{ const el = document.querySelector(sel); quelle = el && (el.currentSrc || el.src); }catch(e){}
+        if(!quelle){ resolve(false); return; }
+        bildVorleseZu();
+        try{ if(typeof bildLupeZu === 'function') bildLupeZu(); }catch(e){}
+        const sek = ttsBildSekunden();
+        const o = document.createElement('div');
+        o.id = 'bildVorleseEbene';
+        o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', (name || 'Bild') + ', wird kurz vergrößert');
+        o.style.cssText = 'position:fixed; inset:0; z-index:100001; display:flex; align-items:center; justify-content:center; '
+            + 'flex-direction:column; gap:14px; padding:16px; box-sizing:border-box; background:rgba(8,16,36,0.72); '
+            + 'opacity:0; transition:opacity .18s ease-out; cursor:pointer;';
+        o.innerHTML = '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center; color:#fff; font:700 1.05rem Inter,system-ui,sans-serif;">'
+            + '<span id="bvName"></span>'
+            + '<span id="bvZeit" style="background:#fff; color:#0f2745; border-radius:999px; padding:3px 14px; min-width:4.2em; text-align:center; font-variant-numeric:tabular-nums;"></span></div>'
+            + '<img alt="" style="width:min(92vw,1000px); height:min(64vh,640px); object-fit:contain; background:#fff; border-radius:14px; padding:10px; box-sizing:border-box; box-shadow:0 12px 40px rgba(0,0,0,.45);">'
+            + '<div style="width:min(70vw,420px); height:6px; border-radius:3px; background:rgba(255,255,255,.28); overflow:hidden;"><div id="bvBalken" style="height:100%; width:100%; background:#2EE6D6;"></div></div>'
+            + '<div style="color:rgba(255,255,255,.85); font:500 .8rem Inter,system-ui,sans-serif;">Tippen oder Esc: weiter</div>';
+        o.querySelector('#bvName').textContent = name || 'Bild';
+        o.querySelector('img').src = quelle;
+        document.body.appendChild(o);
+        requestAnimationFrame(() => { o.style.opacity = '1'; });
+        const t0 = Date.now(), gesamt = sek * 1000;
+        let fertig = false, uhr = null;
+        const ende = (gezeigt) => {
+            if(fertig) return; fertig = true;
+            if(uhr) clearInterval(uhr);
+            document.removeEventListener('keydown', taste, true);
+            if(bildVorleseSchliessen === schliessen) bildVorleseSchliessen = null;
+            o.style.opacity = '0';
+            setTimeout(() => { try{ o.remove(); }catch(e){} }, 200);
+            resolve(gezeigt);
+        };
+        const schliessen = () => ende(true);
+        const taste = (e) => { if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); ende(true); } };
+        document.addEventListener('keydown', taste, true);
+        o.addEventListener('click', () => ende(true));
+        bildVorleseSchliessen = schliessen;
+        const zeit = o.querySelector('#bvZeit'), balken = o.querySelector('#bvBalken');
+        const zeichnen = () => {
+            const rest = Math.max(0, gesamt - (Date.now() - t0));
+            zeit.textContent = 'noch ' + Math.ceil(rest / 1000) + ' s';
+            balken.style.width = (rest / gesamt * 100) + '%';
+            return rest;
+        };
+        zeichnen();
+        uhr = setInterval(() => {
+            if(token !== ttsQueueToken){ ende(false); return; }   // Stop oder neuer Vorgang
+            if(zeichnen() <= 0) ende(true);
+        }, 100);
+    });
+}
+window.bildVorleseZeigen = bildVorleseZeigen;
+
 function ttsBuchstabenAn(){ try{ return localStorage.getItem('tts_buchstaben') !== '0'; }catch(e){ return true; } }
 function ttsBuchstabenSetzen(an){ try{ localStorage.setItem('tts_buchstaben', an ? '1' : '0'); }catch(e){} }
 window.ttsBuchstabenAn = ttsBuchstabenAn; window.ttsBuchstabenSetzen = ttsBuchstabenSetzen;
 function antwortSegment(q, i, sprich){
+    const s = antwortSegmentOhneBild(q, i, sprich);
+    try{
+        const o = q.options[i];
+        if(o && o.image && String(o.image).trim()){
+            s.bildSel = '#optionsContainer [data-optindex="' + i + '"] img';
+            s.bildName = 'Antwort ' + String.fromCharCode(65 + i);
+        }
+    }catch(e){}
+    return s;
+}
+function antwortSegmentOhneBild(q, i, sprich){
     const opt = q.options[i];
     const label=String.fromCharCode(65+i);
     const hatText = !!(opt.text && opt.text.trim());
@@ -33968,6 +34328,7 @@ async function mausVorleseSprechen(el){
     // vorgehoben usw." - das Gelb hier war die Vorlese-Markierung.
     const seg = antwortSegment(q, i, sprich);
     seg.klasse = 'maus-liest';
+    delete seg.bildSel;   // unter der Maus zeigt schon die Lupe das Bild
     const p = playTTSQueue([seg], null);
     mausVorleseQueueToken = ttsQueueToken;   // playTTSQueue hat es eben hochgezaehlt
     try{ await p; }catch(e){}
@@ -35701,13 +36062,18 @@ window.appFormSetzen = appFormSetzen;
 
 function einstBlaetterFuellen(){
     // ---- Allgemein ----
-    const farben = { light:'#eef2f9', dark:'#0f2b40', green:'#dff0e4', blue:'#dde9f7', orange:'#fbe8d4', grey:'#e6e6e6',
-                     luftig:'linear-gradient(135deg,#f3f6fb 55%,#2563eb 55%)', klar:'linear-gradient(135deg,#ffffff 55%,#0f2745 55%)', papier:'linear-gradient(135deg,#f1ebe0 55%,#b45309 55%)', graphit:'linear-gradient(135deg,#15191e 55%,#38bdf8 55%)' };
-    const stilKnoepfe = STILE.map(st =>
-        '<button type="button" id="einstStil_' + st + '" onclick="einstStilWaehlen(\'' + st + '\')" '
-      + 'title="' + ((STIL_ANZEIGE[st] && STIL_ANZEIGE[st].label) || st) + '" '
-      + 'style="width:40px; height:34px; border-radius:8px; border:2px solid #e3e9f3; cursor:pointer; '
-      + '--kachel:' + (farben[st] || '#eee') + '; background:' + (farben[st] || '#eee') + ';"></button>').join(' ');
+    // Stand 428: vier Kacheln - Hell in Tuerkis, Gruen, Blau und Polar (dunkel)
+    const STIL_KACHELN = [
+        ['light:blau',    'Arktis · Blau',   'linear-gradient(135deg,#e6efff 55%,#1D5FBF 55%)'],
+        ['light:gruen',   'Arktis · Grün',   'linear-gradient(135deg,#e6f3e9 55%,#1E7A3C 55%)'],
+        ['light:tuerkis', 'Arktis · Türkis', 'linear-gradient(135deg,#eaf5f4 55%,#097E7A 55%)'],
+        ['graphit',       'Polar (dunkel)', 'linear-gradient(135deg,#3a5fb0 55%,#0e1a40 55%)']
+    ];
+    const stilKnoepfe = STIL_KACHELN.map(k =>
+        '<button type="button" id="einstStil_' + k[0].replace(':', '_') + '" onclick="einstStilWaehlen(\'' + k[0] + '\')" '
+      + 'title="' + k[1] + '" aria-label="Farbstil ' + k[1] + '" data-vorlesen-kurz="' + k[1] + '." '
+      + 'style="width:46px; height:36px; border-radius:10px; border:2px solid #e3e9f3; cursor:pointer; '
+      + '--kachel:' + k[2] + '; background:' + k[2] + ';"></button>').join(' ');
     let mausGrpVor = null;
     const mausKnoepfe = Object.keys(MAUS_FARBEN).map(k => {
         const luecke = '';  // gleiche Abstände überall (Dietmar 21.10.2026), die Reihenfolge nach Farbfamilien bleibt
@@ -35853,7 +36219,7 @@ function einstBlaetterFuellen(){
       // In der App heisst es seit dem 30.09.2026 "Stil der App" und "Hell oder
       // dunkel" (siehe ZWEI STILE FUER DIE APP) - die sechs Farbstile gibt es
       // nur noch am PC.
-      + '<div class="nur-pc">' + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand. Die vier zweifarbigen Kacheln sind die neuen Stile: Luftig, Klar, Papier und Polar – Polar ist der dunkle Stil.',
+      + '<div class="nur-pc">' + einstKasten('Farbstil', 'Gilt für diesen Rechner, nicht für den Lernstand. Arktis ist der helle Stil, in Türkis, Grün oder Blau – Polar ist der dunkle.',
             '<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">' + stilKnoepfe + '</div>'
           + '<div id="einstStilName" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem;"></div>') + '</div>'
       + (typeof window.appStilEinstHtml === 'function' ? window.appStilEinstHtml() : '')
@@ -36389,7 +36755,8 @@ function einstBlaetterFuellen(){
     holen('ttsBlockStimme',       'einstZielStimme');
     holen('ttsBlockAuto',         'einstZielAuto');
     holen('ttsBlockAntwort',      'einstZielAntwort');
-    holen('ttsBlockBuchstaben',   'einstZielAntwort');   // Stand 420: direkt unter "Antwort mit Sprachausgabe bestätigen"
+    holen('ttsBlockBuchstaben',   'einstZielAntwort');
+    holen('ttsBlockBild',         'einstZielAntwort');   // Stand 429   // Stand 420: direkt unter "Antwort mit Sprachausgabe bestätigen"
     holen('ttsBlockTastatur',     'einstZielTastatur');
     holen('ttsBlockTastaturText', 'einstZielTastatur');
 
@@ -36618,7 +36985,10 @@ function einstStimmenFortschritt(){
 }
 
 function einstStilWaehlen(stil){
-    try{ stilSetzen(stil); }catch(e){}
+    // 'light:gruen' = Hell in Gruen (Stand 428)
+    const teile = String(stil || '').split(':');
+    try{ if(teile[0] === 'light' && teile[1]) hellFarbeSetzen(teile[1]); }catch(e){}
+    try{ stilSetzen(teile[0]); }catch(e){}
     einstStilKnoepfeNachziehen();
 }
 window.einstStilWaehlen = einstStilWaehlen;
@@ -36626,14 +36996,17 @@ window.einstStilWaehlen = einstStilWaehlen;
 function einstStilKnoepfeNachziehen(){
     let jetzt = 'light';
     try{ jetzt = aktuellerStil(); }catch(e){}
-    for(const st of STILE){
-        const b = document.getElementById('einstStil_' + st);
-        if(!b) continue;
-        b.style.borderColor = (st === jetzt) ? 'var(--panel-navy)' : '#e3e9f3';
-        b.style.boxShadow   = (st === jetzt) ? '0 0 0 2px #fff inset' : 'none';
-    }
+    const hf = (typeof hellFarbe === 'function') ? hellFarbe() : 'blau';
+    const aktiv = (jetzt === 'light') ? 'light_' + hf : 'graphit';
+    ['light_tuerkis', 'light_gruen', 'light_blau', 'graphit'].forEach(id => {
+        const b = document.getElementById('einstStil_' + id);
+        if(!b) return;
+        b.style.borderColor = (id === aktiv) ? 'var(--panel-navy)' : '#e3e9f3';
+        b.style.boxShadow   = (id === aktiv) ? '0 0 0 2px #fff inset' : 'none';
+        b.setAttribute('aria-pressed', id === aktiv ? 'true' : 'false');
+    });
     const n = document.getElementById('einstStilName');
-    if(n) n.textContent = (STIL_ANZEIGE[jetzt] && STIL_ANZEIGE[jetzt].label) || jetzt;
+    if(n) n.textContent = jetzt === 'light' ? 'Arktis · ' + ((window.HELL_FARBEN && HELL_FARBEN[hf]) || 'Türkis') : 'Polar (dunkel)';
 }
 
 // Die Farbe der Antwort unter der Maus (26.09.2026). Nach der Wahl laeuft
@@ -37202,6 +37575,7 @@ async function ttsFelderNachziehen() {
     document.getElementById('ttsAutoReadCheckbox').checked = localStorage.getItem('ttsAutoRead') === '1';
     document.getElementById('ttsAutoReadAnswerCheckbox').checked = localStorage.getItem('ttsAutoReadAnswer') !== '0';
     try{ const bc = document.getElementById('ttsBuchstabenCheckbox'); if(bc) bc.checked = ttsBuchstabenAn(); }catch(e){}
+    try{ ttsBildDauerNachziehen(); }catch(e){}
     const tk = document.getElementById('tastaturCheckbox');
     if (tk) tk.checked = tastaturBedienung();
     const select = document.getElementById('ttsVoiceSelect');
@@ -41105,76 +41479,149 @@ body.dark #ergFrage .ef-kopf code{background:#24324a} body.dark #ergFrage .ef-er
 
 // o: { status: 'bestanden'|'nach'|'nicht', art: 'pruefung'|'runde', kopf, correct, total, required,
 //      zeit, teile:[{name, richtig, gesamt, status}], hinweis, zettel, knoepfe:[[icon, text, onclick, haupt]] }
-// ---- Das Bild zum Teilen: Kachel mit Siegel, Raster, Fusszeile (23.10.2026) ----
-// Wird aus den Ergebnissen gezeichnet (Canvas), nicht vom Bildschirm abfotografiert -
-// das Raster ist also auch drauf, wenn es auf der Seite eingeklappt ist.
+// ---- Das Bild zum Teilen (Stand 431, 05.11.2026): heller Polar-Stil, schraeger Antwortbogen, Stempel, Konfetti ----
+// Wird aus den Ergebnissen gezeichnet (Canvas), nicht vom Bildschirm abfotografiert.
 async function ergebnisBildErzeugen(d){
     const lade = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
-    try{ await document.fonts.load('800 20px Inter'); }catch(e){}
-    const S = 3, W = 360, n = d.felder.length;
-    const zeigeRaster = n > 0 && n <= 75;
-    const sp = n <= 25 ? 5 : n <= 50 ? 8 : 10, luecke = n <= 25 ? 8 : 6, innen = W - 36 - 28;
-    const zw = (innen - (sp - 1) * luecke) / sp, zh = n <= 25 ? 46 : n <= 50 ? 30 : 24;
+    try{ await document.fonts.load('800 20px Inter'); await document.fonts.load('500 12px Inter'); }catch(e){}
+    const S = 3, W = 360, P = 14, n = d.felder.length;
+    const NAVY = '#0F2745', TUERKIS = '#0A9CB0', GRAU = '#33435e';
+    const FONT = '"Inter","Segoe UI",Arial,sans-serif';
+    const teile = (d.teile || []).filter(t => t.gesamt);
+    const heroH = 238, barH = 42;
+    const zeigeRaster = !teile.length && n > 0 && n <= 75;
+    const sp = n <= 25 ? 5 : n <= 50 ? 8 : 10, luecke = n <= 25 ? 8 : 6, innen = W - 2 * P - 28;
+    const zw = (innen - (sp - 1) * luecke) / sp, zh = n <= 25 ? 40 : n <= 50 ? 28 : 22;
     const zeilen = Math.ceil(n / sp);
     const rasterH = zeigeRaster ? zeilen * zh + (zeilen - 1) * luecke : 0;
-    const kachelH = 124, kopfH = 46;
-    const karteH = 14 + kopfH + (zeigeRaster ? rasterH + 12 + 16 : 22) + 14;
-    const H = 18 + kachelH + 12 + karteH + 16 + 26 + 18;
+    const kopfH = 44;
+    const karteH = teile.length ? 14 + kopfH + teile.length * 36 + 6 : 14 + kopfH + (zeigeRaster ? rasterH + 12 + 16 : 22) + 12;
+    const fussH = 70;
+    const H = P + heroH + 12 + karteH + 6 + fussH;
     const c = document.createElement('canvas'); c.width = W * S; c.height = H * S;
     const x = c.getContext('2d'); x.scale(S, S);
-    const FONT = '"Inter","Segoe UI",Arial,sans-serif';
     const rr = (px, py, w, h, r) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); };
-    const kuerzen = (t, br) => { while(t.length > 1 && x.measureText(t).width > br) t = t.slice(0, -2) + '…'; return t; };
+    const kuerzen = (t, br) => { t = String(t); while(t.length > 1 && x.measureText(t).width > br) t = t.slice(0, -2) + '…'; return t; };
+    const rK = d.rund ? 16 : 4, rKarte = d.rund ? 14 : 4, rZ = d.rund ? 9 : 2;
+    const farbeZahl = d.art.typ === 'gruen' ? '#147a3a' : d.art.typ === 'gelb' ? '#b7791f' : '#c0392b';
     // Hintergrund
-    let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1a3f'); g.addColorStop(.55, '#101f4d'); g.addColorStop(1, '#0c1633');
+    let g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#f7faff'); g.addColorStop(.45, '#e1ecff'); g.addColorStop(1, '#c9dbf7');
     x.fillStyle = g; x.fillRect(0, 0, W, H);
-    const rK = d.rund ? 16 : 3, rKarte = d.rund ? 14 : 3, rZ = d.rund ? 11 : 2;
-    // Kachel
-    const farben = { gruen: ['#0E7FA6', '#1564C9', '#5B3FE0'], gelb: ['#6e430a', '#8a560c', '#9a650c'], grau: ['#4a5a78', '#3a4966', '#2b3a55'] }[d.art.typ];
-    g = x.createLinearGradient(18, 18, W - 18, 18 + kachelH); g.addColorStop(0, farben[0]); g.addColorStop(.55, farben[1]); g.addColorStop(1, farben[2]);
-    x.fillStyle = g; rr(18, 18, W - 36, kachelH, rK); x.fill();
+    // --- Kopfbild ---
+    const hx = P, hy = P, hw = W - 2 * P;
+    x.save(); rr(hx, hy, hw, heroH, rK); x.clip();
+    g = x.createLinearGradient(hx, hy, hx + hw * .5, hy + heroH); g.addColorStop(0, '#f4f9ff'); g.addColorStop(.6, '#d8e8fb'); g.addColorStop(1, '#c3dbf6');
+    x.fillStyle = g; x.fillRect(hx, hy, hw, heroH);
+    // Konfetti (immer dieselbe Verteilung, damit das Bild ruhig wirkt)
+    let seed = 20261105; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const KF = ['#FF9AA8', '#FFC857', '#6FE0A0', '#7CC4FF', '#B79BFF', '#FF8A5B', '#4FD1C5'];
+    const konfetti = (anz, nurRand) => {
+        for(let i = 0; i < anz; i++){
+            let px = hx + rnd() * hw, py = hy + rnd() * (heroH - barH + 8);
+            if(nurRand) px = hx + rnd() * 78;
+            const f = KF[Math.floor(rnd() * KF.length)], k = rnd(), r = rnd() * Math.PI * 2;
+            x.save(); x.translate(px, py); x.rotate(r); x.fillStyle = f;
+            if(k < .5){ x.fillRect(-5, -2.5, 10 + rnd() * 5, 4 + rnd() * 2); }
+            else if(k < .8){ x.beginPath(); x.arc(0, 0, 3 + rnd() * 2.5, 0, 7); x.fill(); }
+            else { x.beginPath(); for(let q = 0; q < 10; q++){ const a = q * Math.PI / 5, rad = q % 2 ? 2.6 : 6; x.lineTo(Math.sin(a) * rad, -Math.cos(a) * rad); } x.closePath(); x.fill(); }
+            x.restore();
+        }
+    };
+    konfetti(92, false);
+    // Antwortbogen (schraeg, unten und rechts angeschnitten)
+    const bogenFelder = (d.felder || []).slice(0, 14);
+    x.save(); x.translate(hx + 86, hy + 18); x.rotate(-4 * Math.PI / 180);
+    x.shadowColor = 'rgba(10,30,70,.42)'; x.shadowBlur = 14; x.shadowOffsetY = 7;
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 262, 230); x.shadowColor = 'transparent';
+    x.strokeStyle = 'rgba(0,0,0,.08)'; x.lineWidth = .8; x.strokeRect(0, 0, 262, 230);
+    x.textAlign = 'left'; x.textBaseline = 'alphabetic'; x.fillStyle = NAVY; x.font = '800 9.5px ' + FONT;
+    x.fillText('Antwortbogen für die', 10, 19); x.fillText(d.pruefung ? 'Probeprüfung' : 'Übungsrunde', 10, 31);
+    x.fillStyle = '#5a6a86'; x.font = '500 7px ' + FONT; x.fillText('Prüfungsteil', 10, 47);
+    x.strokeStyle = '#cfd6e4'; x.lineWidth = .8; x.beginPath(); x.moveTo(10, 51); x.lineTo(152, 51); x.stroke();
+    const zeilenBogen = teile.length ? teile.map(t => ({ n: t.name, ok: t.status === 'bestanden', z: t.gesamt })) : [{ n: String(d.kurz || 'Übungsrunde'), ok: d.art.typ === 'gruen', z: n }];
+    zeilenBogen.slice(0, 4).forEach((t, i) => {
+        const ty = 66 + i * 17;
+        x.strokeStyle = NAVY; x.lineWidth = 1; x.strokeRect(10.5, ty - 7.5, 8, 8);
+        if(t.ok){ x.strokeStyle = '#1fa24a'; x.lineWidth = 1.6; x.beginPath(); x.moveTo(11.5, ty - 3.5); x.lineTo(14, ty - 1); x.lineTo(18.5, ty - 8); x.stroke(); }
+        x.fillStyle = NAVY; x.font = '500 7.5px ' + FONT; x.textAlign = 'left'; x.fillText(kuerzen(t.n, 84), 24, ty);
+        x.fillStyle = '#6c7a94'; x.font = '500 6.5px ' + FONT; x.textAlign = 'right'; x.fillText(t.z + ' Fragen', 152, ty); x.textAlign = 'left';
+    });
+    [['Rufzeichen:', 'beantragt'], ['Datum:', d.datum || ''], ['Zeit:', d.zeit || '']].forEach((z, i) => {
+        const ty = 134 + i * 16; x.fillStyle = '#33435e'; x.font = '500 7px ' + FONT; x.fillText(z[0], 10, ty);
+        const lx = 10 + x.measureText(z[0]).width + 5;
+        x.strokeStyle = NAVY; x.lineWidth = .8; x.beginPath(); x.moveTo(lx, ty + 2); x.lineTo(152, ty + 2); x.stroke();
+        x.fillStyle = NAVY; x.font = '800 7.5px ' + FONT; x.fillText(z[1] + (z[0] === 'Zeit:' && z[1] ? ' min' : ''), lx + 3, ty);
+    });
+    // Raster
+    const rx = 164, rw0 = 22, cw = 14.5, rh0 = 13, rhz = 13.6;
+    x.fillStyle = '#eef2f9'; x.fillRect(rx, 8, rw0 + 4 * cw, rh0);
+    x.strokeStyle = NAVY; x.lineWidth = .9; x.strokeRect(rx, 8, rw0 + 4 * cw, rh0);
+    x.fillStyle = NAVY; x.font = '800 7px ' + FONT; x.textAlign = 'center';
+    x.fillText('Nr.', rx + rw0 / 2, 17.2); 'ABCD'.split('').forEach((b, k) => x.fillText(b, rx + rw0 + k * cw + cw / 2, 17.2));
+    for(let i = 0; i < 14; i++){
+        const ry = 8 + rh0 + i * rhz;
+        x.fillStyle = '#eef2f9'; x.fillRect(rx, ry, rw0, rhz);
+        x.strokeStyle = '#8a97ad'; x.lineWidth = .7; x.strokeRect(rx, ry, rw0, rhz);
+        for(let k = 0; k < 4; k++) x.strokeRect(rx + rw0 + k * cw, ry, cw, rhz);
+        x.fillStyle = NAVY; x.font = '800 6.5px ' + FONT; x.fillText(String(i + 1).padStart(2, '0'), rx + rw0 / 2, ry + 9.4);
+        const f = bogenFelder[i];
+        if(f === 1 || f === 0){
+            const kx = rx + rw0 + (((i * 7 + 3) % 4)) * cw + cw / 2, ky2 = ry + rhz / 2;
+            x.strokeStyle = f === 1 ? '#17a34a' : '#d64550'; x.lineWidth = 1.7; x.lineCap = 'round';
+            x.beginPath(); x.moveTo(kx - 3.3, ky2 - 3.3); x.lineTo(kx + 3.3, ky2 + 3.3); x.moveTo(kx + 3.3, ky2 - 3.3); x.lineTo(kx - 3.3, ky2 + 3.3); x.stroke(); x.lineCap = 'butt';
+        }
+    }
+    x.textAlign = 'left'; x.restore();
+    konfetti(12, true);
+    // Stempel
     const svg = ergebnisSiegelSvg(d.art.typ, d.art.oben, d.art.unten, 'img');
     const sImg = await lade('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
-    if(sImg){ x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = 8; x.shadowOffsetY = 4; x.drawImage(sImg, 32, 18 + (kachelH - 104) / 2, 104, 104); x.restore(); }
-    const tx = 150, tb = W - 18 - 14 - tx;
-    x.fillStyle = 'rgba(255,255,255,.92)'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
-    { let px = 11; const kt = String(d.kopf || '').toUpperCase(); x.font = '800 ' + px + 'px ' + FONT; while(px > 8 && x.measureText(kt).width > tb){ px -= .5; x.font = '800 ' + px + 'px ' + FONT; } x.fillText(kuerzen(kt, tb), tx, 18 + 34); }
-    x.fillStyle = '#fff'; x.font = '800 28px ' + FONT;
-    x.fillText(d.art.titel[0], tx, 18 + 66); x.fillText(d.art.titel[1], tx, 18 + 96);
-    x.fillStyle = 'rgba(255,255,255,.95)'; x.font = '500 13.5px ' + FONT;
-    x.fillText(kuerzen(d.correct + ' von ' + d.total + ' richtig · ' + d.quote + ' %', tb), tx, 18 + 116);
-    // Karte
-    const ky = 18 + kachelH + 12;
-    x.fillStyle = 'rgba(255,255,255,.07)'; rr(18, ky, W - 36, karteH, rKarte); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 1; rr(18.5, ky + .5, W - 37, karteH - 1, rKarte); x.stroke();
-    { let px = 15; const kt = d.kopf || 'Ergebnis'; x.fillStyle = '#eaf1ff'; x.font = '800 ' + px + 'px ' + FONT; while(px > 11 && x.measureText(kt).width > 190){ px -= .5; x.font = '800 ' + px + 'px ' + FONT; } x.fillText(kuerzen(kt, 190), 32, ky + 14 + 15); }
-    x.fillStyle = '#a9bad8'; x.font = '500 12.5px ' + FONT; x.fillText(n + (n === 1 ? ' Frage' : ' Fragen'), 32, ky + 14 + 33);
-    x.textAlign = 'right'; x.font = '800 26px ' + FONT;
-    x.fillStyle = d.art.typ === 'gruen' ? '#2fbf71' : d.art.typ === 'gelb' ? '#f0b64a' : '#ff8a8a';
-    x.fillText(d.correct + '/' + d.total, W - 32, ky + 14 + 26); x.textAlign = 'left';
+    if(sImg){ x.save(); x.translate(hx + 8 + 49, hy + 96 + 49); x.rotate(-9 * Math.PI / 180); x.shadowColor = 'rgba(0,60,20,.3)'; x.shadowBlur = 8; x.shadowOffsetY = 5; x.drawImage(sImg, -49, -49, 98, 98); x.restore(); }
+    // Leiste unten mit Schriftzug
+    const by = hy + heroH - barH;
+    x.fillStyle = '#F1F6FF'; x.fillRect(hx, by, hw, barH);
+    x.fillStyle = '#c9d8f0'; x.fillRect(hx, by, hw, 1);
+    x.textBaseline = 'middle'; x.textAlign = 'left'; x.font = '800 17px ' + FONT; x.fillStyle = NAVY; x.fillText('Amateurfunk', hx + 16, by + barH / 2 + 1);
+    const wA = x.measureText('Amateurfunk').width; x.fillStyle = TUERKIS; x.fillText('-Trainer', hx + 16 + wA, by + barH / 2 + 1);
+    x.textAlign = 'right'; x.font = '600 10px ' + FONT; x.fillStyle = GRAU;
+    x.fillText(kuerzen(d.correct + ' von ' + d.total + ' richtig · ' + d.quote + ' %', 120), hx + hw - 14, by + barH / 2 + 1);
+    x.restore(); x.textBaseline = 'alphabetic'; x.textAlign = 'left';
+    // --- Ergebniskarte ---
+    const ky = P + heroH + 12;
+    x.fillStyle = 'rgba(255,255,255,.7)'; rr(P, ky, hw, karteH, rKarte); x.fill();
+    x.strokeStyle = '#b9c7de'; x.lineWidth = 1; rr(P + .5, ky + .5, hw - 1, karteH - 1, rKarte); x.stroke();
+    { let px = 15; const kt = teile.length ? 'Ergebnis je Teil' : (d.kopf || 'Ergebnis'); x.fillStyle = NAVY; x.font = '800 ' + px + 'px ' + FONT; while(px > 11 && x.measureText(kt).width > 190){ px -= .5; x.font = '800 ' + px + 'px ' + FONT; } x.fillText(kuerzen(kt, 190), P + 14, ky + 14 + 15); }
+    x.fillStyle = '#5a6a86'; x.font = '500 12px ' + FONT; x.fillText(teile.length ? (d.pruefung ? 'Probeprüfung · ' : '') + 'Klasse ' + d.klasse : n + (n === 1 ? ' Frage' : ' Fragen'), P + 14, ky + 14 + 33);
+    x.textAlign = 'right'; x.font = '800 26px ' + FONT; x.fillStyle = farbeZahl;
+    x.fillText(d.correct + '/' + d.total, W - P - 14, ky + 14 + 26); x.textAlign = 'left';
     const gy = ky + 14 + kopfH;
-    if(zeigeRaster){
+    if(teile.length){
+        teile.forEach((t, i) => {
+            const zy = gy + i * 36;
+            x.fillStyle = '#fff'; rr(P + 12, zy, hw - 24, 30, 8); x.fill(); x.strokeStyle = '#c5d2e6'; x.lineWidth = 1; rr(P + 12.5, zy + .5, hw - 25, 29, 8); x.stroke();
+            x.fillStyle = NAVY; x.font = '500 13px ' + FONT; x.textBaseline = 'middle'; x.fillText(t.name, P + 24, zy + 16);
+            x.textAlign = 'right'; x.font = '800 13.5px ' + FONT; x.fillStyle = t.status === 'bestanden' ? '#147a3a' : t.status === 'nachpruefung' ? '#b7791f' : '#c0392b';
+            x.fillText(t.richtig + '/' + t.gesamt, W - P - 24, zy + 16); x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+        });
+    } else if(zeigeRaster){
         d.felder.forEach((f, i) => {
-            const cx = 32 + (i % sp) * (zw + luecke), cy = gy + Math.floor(i / sp) * (zh + luecke);
-            x.fillStyle = f === 1 ? '#2f9e5b' : f === 0 ? '#d64550' : '#3a4a66'; rr(cx, cy, zw, zh, rZ); x.fill();
-            x.fillStyle = '#fff'; x.font = '800 ' + (n <= 25 ? 17 : n <= 50 ? 12 : 11) + 'px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle';
+            const cx = P + 14 + (i % sp) * (zw + luecke), cy = gy + Math.floor(i / sp) * (zh + luecke);
+            x.fillStyle = f === 1 ? '#2f9e5b' : f === 0 ? '#d64550' : '#d5deed'; rr(cx, cy, zw, zh, rZ); x.fill();
+            x.fillStyle = f === -1 ? '#4a5a78' : '#fff'; x.font = '800 ' + (n <= 25 ? 16 : n <= 50 ? 11.5 : 10.5) + 'px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle';
             x.fillText(String(i + 1), cx + zw / 2, cy + zh / 2 + 1); x.textAlign = 'left'; x.textBaseline = 'alphabetic';
         });
         const ly = gy + rasterH + 12 + 10;
-        x.fillStyle = '#2f9e5b'; rr(32, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = '#a9bad8'; x.font = '500 12px ' + FONT; x.fillText('richtig', 47, ly);
-        x.fillStyle = '#d64550'; rr(100, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = '#a9bad8'; x.fillText('falsch', 115, ly);
+        x.fillStyle = '#2f9e5b'; rr(P + 14, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = GRAU; x.font = '500 12px ' + FONT; x.fillText('richtig', P + 29, ly);
+        x.fillStyle = '#d64550'; rr(P + 82, ly - 9, 10, 10, 2); x.fill(); x.fillStyle = GRAU; x.fillText('falsch', P + 97, ly);
     } else {
-        x.fillStyle = 'rgba(255,255,255,.14)'; rr(32, gy, innen, 10, 5); x.fill();
-        x.fillStyle = d.art.typ === 'gruen' ? '#2f9e5b' : d.art.typ === 'gelb' ? '#d69e2e' : '#d64550'; rr(32, gy, Math.max(10, innen * Math.min(1, d.quote / 100)), 10, 5); x.fill();
+        x.fillStyle = '#d5deed'; rr(P + 14, gy, innen, 10, 5); x.fill();
+        x.fillStyle = farbeZahl; rr(P + 14, gy, Math.max(10, innen * Math.min(1, d.quote / 100)), 10, 5); x.fill();
     }
-    // Fusszeile
-    const fy = ky + karteH + 16 + 17, ic = await lade('icon-192.png');
-    x.font = '700 13px ' + FONT; const t1 = 'Amateurfunk-Trainer', t2 = ' · amateurfunk-trainer.com';
-    x.font = '700 13px ' + FONT; const w1 = x.measureText(t1).width; x.font = '600 12px ' + FONT; const w2 = x.measureText(t2).width;
-    const gesamt = (ic ? 32 : 0) + w1 + w2, x0 = (W - gesamt) / 2;
-    if(ic){ x.save(); rr(x0, fy - 17, 24, 24, 6); x.clip(); x.drawImage(ic, x0, fy - 17, 24, 24); x.restore(); }
-    x.fillStyle = '#eaf1ff'; x.font = '700 13px ' + FONT; x.fillText(t1, x0 + (ic ? 32 : 0), fy);
-    x.fillStyle = 'rgba(234,241,255,.85)'; x.font = '600 12px ' + FONT; x.fillText(t2, x0 + (ic ? 32 : 0) + w1, fy);
+    // --- Fusszeile: Schriftzug und Link ---
+    const fy = ky + karteH + 6 + 30;
+    x.textAlign = 'left'; x.font = '800 20px ' + FONT; const wa = x.measureText('Amateurfunk').width, wt = x.measureText('-Trainer').width;
+    const f0 = (W - wa - wt) / 2; x.fillStyle = NAVY; x.fillText('Amateurfunk', f0, fy); x.fillStyle = TUERKIS; x.fillText('-Trainer', f0 + wa, fy);
+    x.textAlign = 'center'; x.font = '800 13px ' + FONT; x.fillStyle = TUERKIS; x.fillText('amateurfunk-trainer.com', W / 2, fy + 21); x.textAlign = 'left';
     return await new Promise(res => c.toBlob(b => res(b), 'image/png'));
 }
 // Schon beim Zeichnen der Seite vorbereiten, damit der Tipp auf "Teilen" sofort teilen kann
@@ -41243,12 +41690,12 @@ function ergebnisSiegelSvg(typ, oben, unten, uid){
     const id = 'sg' + uid;
     return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200" aria-hidden="true">'
         + '<defs><linearGradient id="g' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + F[0] + '"/><stop offset="1" stop-color="' + F[1] + '"/></linearGradient>'
-        + '<path id="o' + id + '" d="M 36,100 A 64,64 0 0 1 164,100"/><path id="u' + id + '" d="M 30,100 A 70,70 0 0 0 170,100"/></defs>'
+        + '<path id="o' + id + '" d="M 44,100 A 56,56 0 0 1 156,100"/><path id="u' + id + '" d="M 34,100 A 66,66 0 0 0 166,100"/></defs>'
         + '<path d="' + zack + '" fill="#fff"/>'
         + '<circle cx="100" cy="100" r="85" fill="url(#g' + id + ')"/><circle cx="100" cy="100" r="78" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>'
         + '<ellipse cx="100" cy="55" rx="70" ry="40" fill="#fff" opacity=".12"/>'
-        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (oben.length > 8 ? 19 : 25) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#o' + id + '" xlink:href="#o' + id + '" startOffset="50%">' + oben + '</textPath></text>'
-        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (unten.length > 8 ? 16 : 19) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#u' + id + '" xlink:href="#u' + id + '" startOffset="50%">' + unten + '</textPath></text>'
+        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (oben.length > 8 ? 15.5 : 20) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#o' + id + '" xlink:href="#o' + id + '" startOffset="50%">' + oben + '</textPath></text>'
+        + '<text font-family="Inter,Arial,sans-serif" font-weight="800" font-size="' + (unten.length > 8 ? 13.5 : 15.5) + '" fill="#fff" letter-spacing="2" text-anchor="middle"><textPath href="#u' + id + '" xlink:href="#u' + id + '" startOffset="50%">' + unten + '</textPath></text>'
         + '<path d="' + ERG_MUETZE + '" fill="#fff" transform="translate(56.81,127.90) scale(0.135,-0.135)"/></svg>';
 }
 // Aussehen je Ergebnis: Farbe, Siegeltexte, Titel fuers Bild
@@ -41363,9 +41810,24 @@ function ergebnisSeiteHtml(o){
                                      : 'Geschafft! ' + ein + ' beim Üben für die Amateurfunk-Prüfung ' + kl + ' – mit dem kostenlosen Amateurfunk-Trainer:')
             : st === 'nach' ? 'Knapp dran: ' + ein + ' in der Prüfungssimulation ' + kl + '. Ich übe weiter mit dem kostenlosen Amateurfunk-Trainer:'
             : 'Ich übe gerade für die Amateurfunk-Prüfung ' + kl + ': ' + ein + '. Mit dem kostenlosen Amateurfunk-Trainer:';
-        window.__ergTeilen = { url: 'https://amateurfunk-trainer.com/klasse-' + b + '/', text: text,
+        const felderL = fragen.map(q => { const p = progress[q.id]; return p && p.answered ? (p.correct ? 1 : 0) : -1; });
+        const jetzt = new Date(), datumT = String(jetzt.getDate()).padStart(2, '0') + '.' + String(jetzt.getMonth() + 1).padStart(2, '0') + '.' + jetzt.getFullYear();
+        const zeitT = o.zeit ? String(o.zeit).split(' ')[0] : '';
+        const teileL = (o.teile || []).map(t => ({ name: t.name, richtig: t.richtig, gesamt: t.gesamt, status: t.status }));
+        // Der Link zur Ergebnis-Seite traegt die Werte hinter dem "#" - das schickt der Browser nie an einen Server.
+        let linkUrl = 'https://amateurfunk-trainer.com/klasse-' + b + '/';
+        try{
+            const pk = { v: 1, k: b.toUpperCase(), a: o.art === 'pruefung' ? 'p' : 'r', s: st === 'bestanden' ? 'b' : st === 'nach' ? 'n' : 'x',
+                c: o.correct, t: o.total, z: zeitT, d: datumT, tl: teileL.filter(t => t.gesamt).map(t => [t.name, t.richtig, t.gesamt, t.status === 'bestanden' ? 'b' : t.status === 'nachpruefung' ? 'n' : 'x']),
+                f: felderL.map(v => v === 1 ? '1' : v === 0 ? '0' : '-').join('') };
+            if(pk.f.length > 80) delete pk.f;
+            const bytes = new TextEncoder().encode(JSON.stringify(pk)); let bin = ''; bytes.forEach(by => bin += String.fromCharCode(by));
+            linkUrl = 'https://amateurfunk-trainer.com/ergebnis/#' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }catch(e){}
+        window.__ergTeilen = { url: linkUrl, text: text,
             bild: { art: art, kopf: String(o.kopf || '').replace(/\s*\((Übung|übung)\)/, ''), correct: o.correct, total: o.total, quote: quote,
-                    felder: fragen.map(q => { const p = progress[q.id]; return p && p.answered ? (p.correct ? 1 : 0) : -1; }),
+                    felder: felderL, teile: teileL, pruefung: o.art === 'pruefung', klasse: b.toUpperCase(), datum: datumT, zeit: zeitT,
+                    kurz: String(o.kopf || '').replace(/^Lernrunde\s*·\s*/, '').replace(/\s*\((Übung|übung)\)/, ''),
                     rund: vs || (document.body && document.body.classList.contains('app-rund')) } };
     }catch(e){ window.__ergTeilen = null; }
     const teilenKnopf = window.__ergTeilen ? '<button type="button" class="erg-teilen" onclick="ergebnisTeilen()"><i class="fas fa-share-nodes"></i> Ergebnis teilen</button>' : '';
@@ -43242,35 +43704,39 @@ for(const ereignis of ['fullscreenchange','webkitfullscreenchange','mozfullscree
 // 'dark' nicht mehr zur Wahl; ein gespeichertes 'dark' wird zu Graphit.
 // Die Klasse dark am body bleibt - Graphit baut darauf auf, und die
 // Android-App (Hell/Dunkel) nutzt sie weiter wie bisher.
-const STILE = ['light', 'green', 'blue', 'orange', 'grey', 'luftig', 'klar', 'papier', 'graphit'];
+// NUR NOCH HELL UND POLAR (Stand 428, 05.11.2026) - Dietmar: "Hell-mit-Polar-Effekten wird Standard und Polar sind
+// die einzigen Style die es gibt. Die Farbe kann in den Einstellungen veraendert werden. Papier Warm, Grey Mode, Klar
+// Kontrastreich, Luftig und Hell bitte komplett entfernen." Hell hat drei Farben (HELL_FARBEN), Polar ist der dunkle Stil.
+const STILE = ['light', 'graphit'];
 const istAndroidApp = () => { try { return document.documentElement.classList.contains('android-app'); } catch (e) { return false; } };
-const STILE_NEU = ['luftig', 'klar', 'papier', 'graphit'];
+const STILE_NEU = ['graphit'];
 const STIL_ANZEIGE = {
-    light:  { label: 'Light Mode',  icon: 'fas fa-sun' },
-    dark:   { label: 'Dark Mode',   icon: 'fas fa-moon' },
-    green:  { label: 'Green Mode',  icon: 'fas fa-leaf' },
-    blue:   { label: 'Blue Mode',   icon: 'fas fa-water' },
-    orange: { label: 'Orange Mode', icon: 'fas fa-fire' },
-    grey:   { label: 'Grey Mode',   icon: 'fas fa-sliders' },
-    luftig: { label: 'Luftig & hell',          icon: 'fas fa-cloud' },
-    klar:   { label: 'Klar & kontrastreich',   icon: 'fas fa-square' },
-    papier: { label: 'Papier & warm',          icon: 'fas fa-book' },
-    graphit:{ label: 'Polar',                  icon: 'fas fa-circle-half-stroke' }
+    light:  { label: 'Arktis', icon: 'fas fa-snowflake' },   // Stand 428 - Dietmar: "Nenne es nicht Light Mode sondern Arktis. Das passt Namentlich besser zu Polar."
+    dark:   { label: 'Polar',  icon: 'fas fa-moon' },
+    graphit:{ label: 'Polar',  icon: 'fas fa-circle-half-stroke' }
 };
+const HELL_FARBEN = { tuerkis: 'Türkis', gruen: 'Grün', blau: 'Blau' };
+function hellFarbe(){ try{ const f = localStorage.getItem('afu_hellfarbe'); return HELL_FARBEN[f] ? f : 'blau'; }catch(e){ return 'blau'; } }
+function hellFarbeSetzen(f){
+    if(!HELL_FARBEN[f]) f = 'blau';
+    try{ localStorage.setItem('afu_hellfarbe', f); }catch(e){}
+    const H = document.documentElement;
+    Object.keys(HELL_FARBEN).forEach(k => H.classList.toggle('hf-' + k, k === f));
+    try{ browserfarbeNachziehen(); }catch(e){}
+}
+window.hellFarbe = hellFarbe; window.hellFarbeSetzen = hellFarbeSetzen; window.HELL_FARBEN = HELL_FARBEN;
 
 function aktuellerStil() {
-    for (const st of STILE_NEU) if (document.body.classList.contains(st)) return st;
+    if (document.body.classList.contains('graphit')) return 'graphit';
     if (document.body.classList.contains('dark'))  return 'dark';
-    if (document.body.classList.contains('green')) return 'green';
-    if (document.body.classList.contains('blue')) return 'blue';
-    if (document.body.classList.contains('orange')) return 'orange';
-    if (document.body.classList.contains('grey')) return 'grey';
     return 'light';
 }
 
 function stilSetzen(stil) {
-    if (stil === 'pastell') stil = 'green';          // alter Name, gespeicherte Werte
-    if (stil === 'dark' && !istAndroidApp()) stil = 'graphit';   // am PC heisst die Nacht jetzt Graphit
+    // alte Namen (gespeicherte Werte, Lernstand-Dateien): Green/Blue -> Hell mit der Farbe, alle anderen hellen -> Hell
+    if (stil === 'green' || stil === 'pastell') { hellFarbeSetzen('gruen'); stil = 'light'; }
+    else if (stil === 'blue') { hellFarbeSetzen('blau'); stil = 'light'; }
+    if (stil === 'dark' && !istAndroidApp()) stil = 'graphit';   // am PC heisst die Nacht Polar (intern graphit)
     if (STILE.indexOf(stil) === -1 && !(stil === 'dark' && istAndroidApp())) stil = 'light';
     document.body.classList.remove('dark', 'green', 'blue', 'orange', 'grey', 'pastell', 'luftig', 'klar', 'papier', 'graphit');
     if (stil === 'graphit') document.body.classList.add('dark');     // Graphit ist eine Nacht - alle Dunkelregeln gelten
@@ -44010,10 +44476,13 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
-startBtn.addEventListener('click', startQuiz);
-repeatErrorsBtn.addEventListener('click', repeatErrors);
-prevBtn.addEventListener('click', prevQuestion);
-nextBtn.addEventListener('click', nextQuestion);
+// Stand 429: ueber window aufrufen. Der Pruefungssimulator ersetzt window.nextQuestion
+// (letzte Frage -> Zwischenergebnis, "Weiter zu Betrieb"); ein hier festgehaltener Verweis
+// auf die alte Funktion umging das, und der Knopf "Weiter" zeigte die Rundenauswertung ohne Weiterweg.
+startBtn.addEventListener('click', () => (window.startQuiz || startQuiz)());
+repeatErrorsBtn.addEventListener('click', () => (window.repeatErrors || repeatErrors)());
+prevBtn.addEventListener('click', () => (window.prevQuestion || prevQuestion)());
+nextBtn.addEventListener('click', () => (window.nextQuestion || nextQuestion)());
 filterPart.addEventListener('change', ()=>{ resetAll(); if(typeof syncDuoModalFromMain==='function') syncDuoModalFromMain(); });
 filterCount.addEventListener('change', ()=>{ resetAll(); if(typeof syncDuoModalFromMain==='function') syncDuoModalFromMain(); });
 
@@ -49509,7 +49978,8 @@ window.renderQuestion = function(){
     const navArea = document.getElementById('navArea');
     // Stand 395: Alles beantwortet heisst nicht mehr "sofort auswerten". Man darf
     // noch blaettern und aendern; abgegeben wird mit dem Knopf "Abgeben" (oder die Uhr).
-    if(navArea) navArea.style.display='flex';
+    // Stand 429: nach der letzten Frage steht die Auswertung - die Knopfleiste bleibt dann weg.
+    if(navArea && currentIndex < currentQuestions.length) navArea.style.display='flex';
     try{ pruefungAbgebenKnopf(); }catch(e){}
     const allAnswered = false;
     if(allAnswered){
@@ -52878,86 +53348,20 @@ body.dark .mnp-frage { background:transparent; border-color:var(--line); }
    ================================================================ */
 
 /* ---------- 1  LUFTIG & HELL ---------- */
-html:not(.android-app) body.luftig { background: #f3f6fb !important; color: #1f2a3a; }
-html:not(.android-app) body.luftig #app.card { background: transparent !important; box-shadow: none !important; border: 0 !important; padding: 18px 26px !important; }
-html:not(.android-app) body.luftig .header,
-html:not(.android-app) body.luftig .filter-bar { background: #fff !important; border: 1px solid #e4e9f2 !important; border-radius: 18px !important; box-shadow: 0 8px 24px -18px rgba(15,39,69,.35) !important; }
-html:not(.android-app) body.luftig .header { padding: 12px 18px !important; margin-bottom: 12px !important; }
-html:not(.android-app) body.luftig .filter-bar { padding: 10px 14px !important; margin-bottom: 14px !important; }
-html:not(.android-app) body.luftig .header h1 { font-family: 'Space Grotesk', 'Segoe UI', sans-serif !important; letter-spacing: -.01em; }
-html:not(.android-app) body.luftig .btn, html:not(.android-app) body.luftig .btn-theme, html:not(.android-app) body.luftig select, html:not(.android-app) body.luftig .nav-btn { border-radius: 999px !important; border: 1px solid #dfe6f0 !important; background: #fff !important; color: #1f2a3a !important; box-shadow: none !important; }
-html:not(.android-app) body.luftig .btn-primary, html:not(.android-app) body.luftig #nextBtn { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
-html:not(.android-app) body.luftig .btn-danger { background: #fff1f1 !important; border-color: #f3c2c2 !important; color: #b42318 !important; }
-html:not(.android-app) body.luftig .btn-difficult { background: #fff5e8 !important; border-color: #f6d7ae !important; color: #9a5b00 !important; }
-html:not(.android-app) body.luftig .badge { border-radius: 999px !important; }
-html:not(.android-app) body.luftig .exam-info, html:not(.android-app) body.luftig #masteryDisplay, html:not(.android-app) body.luftig .history-col, html:not(.android-app) body.luftig .question-area { background: #fff !important; border: 1px solid #e4e9f2 !important; border-radius: 18px !important; box-shadow: 0 8px 24px -18px rgba(15,39,69,.35) !important; }
-html:not(.android-app) body.luftig .question-area { padding: 24px !important; }
-html:not(.android-app) body.luftig .question-area .q-text-row { border-radius: 14px !important; }
-html:not(.android-app) body.luftig .q-text { font-family: 'Space Grotesk', 'Segoe UI', sans-serif !important; font-size: 1.24rem !important; line-height: 1.4 !important; color: #13203a !important; }
-html:not(.android-app) body.luftig .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #f8fafd !important; }
-html:not(.android-app) body.luftig .question-area .option, html:not(.android-app) body.luftig .question-area .option-grid { border-radius: 14px !important; border: 1px solid #e4e9f2 !important; box-shadow: none !important; padding: 9px 14px 9px 18px !important; margin-bottom: 0 !important; }
-html:not(.android-app) body.luftig .question-area .option:not(.correct):not(.wrong) .option-label { color: #2563eb !important; }
-html:not(.android-app) body.luftig .sidebar-tab { border-radius: 14px !important; background: #e8eefc !important; color: #1d4ed8 !important; }
-html:not(.android-app) body.luftig .footer-note { background: transparent !important; border: 0 !important; color: #6b7a90 !important; }
-html:not(.android-app) body.luftig [id$="Modal"] > div:first-child, html:not(.android-app) body.luftig #einstellungenModal > div { border-radius: 22px !important; }
 
 /* ---------- 2  KLAR & KONTRASTREICH ---------- */
-html:not(.android-app) body.klar { background: #ffffff !important; color: #0b1220; }
-html:not(.android-app) body.klar #app.card { background: #fff !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; border-radius: 0 !important; }
-html:not(.android-app) body.klar .header { background: #0f2745 !important; color: #fff !important; border: 0 !important; border-radius: 0 !important; padding: 14px 26px !important; margin: 0 !important; }
-html:not(.android-app) body.klar .header h1, html:not(.android-app) body.klar .header h1 * { color: #fff !important; }
-html:not(.android-app) body.klar .header .btn, html:not(.android-app) body.klar .header .btn-theme, html:not(.android-app) body.klar .header select, html:not(.android-app) body.klar .header input { background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.28) !important; color: #fff !important; border-radius: 0 !important; }
-html:not(.android-app) body.klar .header .badge { background: #00adef !important; color: #04283a !important; border-radius: 0 !important; }
-html:not(.android-app) body.klar .filter-bar { background: #f2f5f9 !important; border: 0 !important; border-bottom: 3px solid #00adef !important; border-radius: 0 !important; padding: 12px 26px !important; margin: 0 0 18px !important; }
-html:not(.android-app) body.klar .btn, html:not(.android-app) body.klar select, html:not(.android-app) body.klar .nav-btn { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; background: #fff !important; color: #0f2745 !important; font-weight: 700 !important; box-shadow: none !important; }
-html:not(.android-app) body.klar .btn-primary, html:not(.android-app) body.klar #nextBtn { background: #00adef !important; border-color: #00adef !important; color: #04283a !important; }
-html:not(.android-app) body.klar .btn-danger { border-color: #b42318 !important; color: #b42318 !important; }
-html:not(.android-app) body.klar .btn-difficult { border-color: #c2410c !important; color: #c2410c !important; }
 /* Inhalt so breit wie die Kopfleiste (Dietmar, Bild: "Pruefungsuebersicht und Lernfortschritt
    muss genauso breit wie das darueber sein"): kein Innenrand mehr links und rechts. */
-html:not(.android-app) body.klar .app-layout { padding: 0 !important; }
-html:not(.android-app) body.klar .exam-info, html:not(.android-app) body.klar #masteryDisplay, html:not(.android-app) body.klar .history-col, html:not(.android-app) body.klar .question-area { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; }
-html:not(.android-app) body.klar .exam-info { border-left: 8px solid #00adef !important; }
-html:not(.android-app) body.klar .footer-note { border-top: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; margin: 18px 0 0 !important; }
-html:not(.android-app) body.klar .q-text { font-size: 1.24rem !important; font-weight: 800 !important; line-height: 1.4 !important; color: #0f2745 !important; }
-html:not(.android-app) body.klar .question-area .option, html:not(.android-app) body.klar .question-area .option-grid { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; border-left: 10px solid #0f2745 !important; padding: 10px 14px 10px 18px !important; margin-bottom: 0 !important; box-shadow: none !important; }
-html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fff !important; }
-html:not(.android-app) body.klar .question-area .option:not(.correct):not(.wrong) .option-label { color: #0f2745 !important; font-weight: 800 !important; }
-html:not(.android-app) body.klar .sidebar-tab { border-radius: 0 !important; background: #0f2745 !important; color: #fff !important; }
 /* Die Knopfleiste unten: Dietmar (Bild): "Die Button Reihe laeuft rechts und
    links ueber." Sie ist so breit wie der Kasten samt Rand und deckte dessen
    Rand ab. Hier bekommt sie denselben Rand und keine Rundung - sie ist der
    Fuss des Kastens, nicht ein schwebendes Brett. */
-html:not(.android-app) body.klar.runde-laeuft #navArea { border: 1.5px solid #0f2745 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; box-sizing: border-box !important; }
 /* ... und so breit wie der Inhalt (Dietmar, zweites Bild, rot markiert: "laeuft
    ueber unten in der Leiste"): Der Kasten hat in Klar und Luftig 26 Punkte
    Rand innen, die Leiste war so breit wie der ganze Kasten. Jetzt zieht sie
-   die 26 Punkte je Seite ab und endet mit Verlauf-Spalte und Fragenkasten. */
-html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #navArea { width: min(100% - 2rem, 1440px) !important; }   /* Klar: Inhalt so breit wie die Kopfleiste, die Knopfleiste auch */
-html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #navArea { width: calc(min(100% - 2rem, 1440px) - 52px) !important; }
-html:not(.android-app) body.klar [id$="Modal"] > div:first-child, html:not(.android-app) body.klar #einstellungenModal > div { border-radius: 0 !important; border: 1.5px solid #0f2745 !important; }
+   die 26 Punkte je Seite ab und endet mit Verlauf-Spalte und Fragenkasten. */   /* Klar: Inhalt so breit wie die Kopfleiste, die Knopfleiste auch */
 
 /* ---------- 3  PAPIER & WARM ---------- */
-html:not(.android-app) body.papier { background: #f1ebe0 !important; color: #2b2418; }
-html:not(.android-app) body.papier #app.card { background: #faf6ee !important; border: 1px solid #e1d6c2 !important; border-radius: 14px !important; box-shadow: 0 20px 50px -30px rgba(70,50,20,.45) !important; }
-html:not(.android-app) body.papier .header { background: transparent !important; border: 0 !important; border-bottom: 1px solid #e1d6c2 !important; border-radius: 0 !important; padding-bottom: 12px !important; }
-html:not(.android-app) body.papier .header h1 { font-family: Georgia, 'Times New Roman', serif !important; font-weight: 700 !important; color: #2b2418 !important; }
-html:not(.android-app) body.papier .header h1 * { color: #b45309 !important; }
-html:not(.android-app) body.papier .badge { background: #efe3cc !important; color: #6b4a0f !important; border-radius: 8px !important; border: 1px solid #dcc9a4 !important; }
-html:not(.android-app) body.papier .filter-bar { background: #f4ecdd !important; border: 1px solid #e1d6c2 !important; border-radius: 12px !important; padding: 10px 14px !important; }
-html:not(.android-app) body.papier .btn, html:not(.android-app) body.papier .btn-theme, html:not(.android-app) body.papier select, html:not(.android-app) body.papier .nav-btn { border-radius: 10px !important; border: 1px solid #d9ccb3 !important; background: #fffdf8 !important; color: #2b2418 !important; box-shadow: 0 1px 0 #e9dfcc !important; }
-html:not(.android-app) body.papier .btn-primary, html:not(.android-app) body.papier #nextBtn { background: #b45309 !important; border-color: #b45309 !important; color: #fff !important; }
-html:not(.android-app) body.papier .btn-danger { color: #9a2d1f !important; border-color: #e2b3a8 !important; background: #fff4f1 !important; }
-html:not(.android-app) body.papier .btn-difficult { color: #8a5a00 !important; border-color: #e3c98f !important; background: #fff8e6 !important; }
-html:not(.android-app) body.papier .exam-info, html:not(.android-app) body.papier #masteryDisplay, html:not(.android-app) body.papier .history-col, html:not(.android-app) body.papier .question-area { background: #fffdf8 !important; border: 1px solid #e1d6c2 !important; border-radius: 12px !important; box-shadow: none !important; }
-html:not(.android-app) body.papier th { background: #f4ecdd !important; color: #4a3a1f !important; }
-html:not(.android-app) body.papier .footer-note { background: transparent !important; border: 0 !important; border-top: 1px solid #e1d6c2 !important; color: #6f6252 !important; }
-html:not(.android-app) body.papier .q-text { font-family: Georgia, 'Times New Roman', serif !important; font-size: 1.24rem !important; line-height: 1.4 !important; color: #2b2418 !important; font-weight: 600 !important; }
-html:not(.android-app) body.papier .question-area .option, html:not(.android-app) body.papier .question-area .option-grid { border-radius: 12px !important; border: 1px solid #e1d6c2 !important; padding: 9px 14px 9px 18px !important; margin-bottom: 0 !important; box-shadow: 0 1px 0 #ebe2d0 !important; }
-html:not(.android-app) body.papier .question-area .option:not(.correct):not(.wrong):not(.gewaehlt):not(.tts-highlight) { background: #fffdf8 !important; }
-html:not(.android-app) body.papier .question-area .option:not(.correct):not(.wrong) .option-label { color: #b45309 !important; font-family: Georgia, serif !important; }
-html:not(.android-app) body.papier .sidebar-tab { border-radius: 10px !important; background: #efe6d6 !important; color: #4a3a1f !important; }
-html:not(.android-app) body.papier [id$="Modal"] > div:first-child, html:not(.android-app) body.papier #einstellungenModal > div { background: #faf6ee !important; border-radius: 14px !important; }
 
 /* ---------- 4  GRAPHIT (DUNKEL) - auf den Nachtregeln (.dark) ---------- */
 html:not(.android-app) body.dark.graphit { --nacht-tief: #111418; --nacht-grund: #0e1114; --nacht-flaeche: #15191e; --nacht-feld: #1e242b; --nacht-kante: #262c35; --nacht-kante2: #323a44; --nacht-schrift: #d9dee5; --nacht-leise: #8b95a3; --nacht-hell: #f3f5f8; --darc-feld: #1e242b; --darc-rahmen: #15191e; --darc-blau: #38bdf8; --darc-blau-hell: #7dd3fc; --darc-frage: #f3f5f8; --card-bg: #15191e; --line: #262c35; background: #0e1114 !important; }
@@ -52986,109 +53390,17 @@ html:not(.android-app) body.dark.graphit [id$="Modal"] > div:first-child, html:n
 
 /* ----- Papier: Variablen, damit alles, was var(--ink) / var(--line) /
    var(--panel-navy) benutzt, warm wird (Beschriftungen, Knoepfe) ----- */
-html:not(.android-app) body.papier { --panel-navy: #4a3a1f; --panel-navy-light: #6b5530; --ink: #2b2418; --muted: #6f6252; --line: #e1d6c2; --bg: #f1ebe0; --card-bg: #fffdf8; --accent-amber-soft: #f7ead2; }
 /* die Zeilen selbst */
-html:not(.android-app) body.papier [style*="background:#f4f7fd" i],
-html:not(.android-app) body.papier [style*="background: #f4f7fd" i],
-html:not(.android-app) body.papier [style*="background:#fafbff" i],
-html:not(.android-app) body.papier [style*="background: #fafbff" i],
-html:not(.android-app) body.papier [style*="background:#f9fbff" i],
-html:not(.android-app) body.papier [style*="background: #f9fbff" i],
-html:not(.android-app) body.papier [style*="background:#f7fafd" i],
-html:not(.android-app) body.papier [style*="background: #f7fafd" i],
-html:not(.android-app) body.papier [style*="background:#f0f7ff" i],
-html:not(.android-app) body.papier [style*="background: #f0f7ff" i],
-html:not(.android-app) body.papier [style*="background:#eef2f9" i],
-html:not(.android-app) body.papier [style*="background: #eef2f9" i],
-html:not(.android-app) body.papier [style*="background:#eef4fc" i],
-html:not(.android-app) body.papier [style*="background: #eef4fc" i],
-html:not(.android-app) body.papier [style*="background:#eef2f8" i],
-html:not(.android-app) body.papier [style*="background: #eef2f8" i],
-html:not(.android-app) body.papier [style*="background:#e8edf3" i],
-html:not(.android-app) body.papier [style*="background: #e8edf3" i],
-html:not(.android-app) body.papier [style*="background:#eef7f8" i],
-html:not(.android-app) body.papier [style*="background: #eef7f8" i] { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
-html:not(.android-app) body.papier [style*="solid #b0c4d8" i],
-html:not(.android-app) body.papier [style*="solid #a8c0de" i],
-html:not(.android-app) body.papier [style*="solid #c2d6f0" i],
-html:not(.android-app) body.papier [style*="solid #e3e9f3" i],
-html:not(.android-app) body.papier [style*="solid #cfdae8" i],
-html:not(.android-app) body.papier [style*="solid #dbe6f5" i] { border-color: #d9ccb3 !important; }
 /* feste Dunkelblau-Schrift -> warmes Braun (nur als Schrift, nicht als Flaeche) */
-html:not(.android-app) body.papier [style*=" color:#0f2745" i], html:not(.android-app) body.papier [style*=";color:#0f2745" i], html:not(.android-app) body.papier [style^="color:#0f2745" i], html:not(.android-app) body.papier [style*=" color: #0f2745" i], html:not(.android-app) body.papier [style*=" color:#16243a" i], html:not(.android-app) body.papier [style*=" color:#4b5b73" i] { color: #3a2d17 !important; }
 /* Knoepfe und Felder in den Zeilen: weisse Flaeche -> Papierweiss */
-html:not(.android-app) body.papier #masteryDisplay [style*="background:#fff;" i], html:not(.android-app) body.papier #masteryDisplay [style*="background: #fff;" i], html:not(.android-app) body.papier #masteryDisplay [style*="background:#ffffff" i], html:not(.android-app) body.papier #masteryDisplay input, html:not(.android-app) body.papier #masteryDisplay select { background-color: #fffdf8 !important; }
-html:not(.android-app) body.papier #masteryDisplay input, html:not(.android-app) body.papier #masteryDisplay select, html:not(.android-app) body.papier #masteryDisplay .btn { border-color: #d9ccb3 !important; color: #2b2418 !important; }
-html:not(.android-app) body.papier #masteryDisplay [style*="background:var(--panel-navy)" i], html:not(.android-app) body.papier #masteryDisplay [style*="background: var(--panel-navy)" i] { background: #4a3a1f !important; border-color: #4a3a1f !important; color: #fffdf8 !important; }
-html:not(.android-app) body.papier .footer-note a, html:not(.android-app) body.papier .footer-note .ohm { color: #4a3a1f !important; }
-html:not(.android-app) body.papier .fz-kopf, html:not(.android-app) body.papier .fz-zahl { background: #efe6d6 !important; color: #4a3a1f !important; }
-html:not(.android-app) body.papier .fz-zahl { background: #fffdf8 !important; color: #2b2418 !important; }
-html:not(.android-app) body.papier #difficultCount, html:not(.android-app) body.papier .difficult-badge { background: #f3e2bd !important; color: #7a4a00 !important; }
-html:not(.android-app) body.papier #masteryStats, html:not(.android-app) body.papier #terminInfo { color: #6f6252 !important; }
 /* Klassen mit festem Hellblau */
-html:not(.android-app) body.papier .vf-hinweis, html:not(.android-app) body.papier .realistic-rules .r-rule, html:not(.android-app) body.papier .rpc-icon, html:not(.android-app) body.papier #unterrichtModal .u-liste, html:not(.android-app) body.papier #unterrichtModal .u-haken, html:not(.android-app) body.papier #unterrichtModal .k-kasten { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
 
 /* ----- Luftig: runde Zeilen im Ton der Karten ----- */
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f4f7fd" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f4f7fd" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#fafbff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #fafbff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f9fbff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f9fbff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f7fafd" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f7fafd" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#f0f7ff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #f0f7ff" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef2f9" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef2f9" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef4fc" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef4fc" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef2f8" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef2f8" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#e8edf3" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #e8edf3" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background:#eef7f8" i],
-html:not(.android-app) body.luftig #masteryDisplay [style*="background: #eef7f8" i] { background: #f6f8fc !important; border-color: #e4e9f2 !important; border-radius: 14px !important; }
-html:not(.android-app) body.luftig .fz-kopf { background: #eef3fb !important; }
 
 /* ----- Klar: eckige Zeilen mit klarer Linie ----- */
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#f4f7fd" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #f4f7fd" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#fafbff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #fafbff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#f9fbff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #f9fbff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#f7fafd" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #f7fafd" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#f0f7ff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #f0f7ff" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef2f9" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef2f9" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef4fc" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef4fc" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef2f8" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef2f8" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#e8edf3" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #e8edf3" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background:#eef7f8" i],
-html:not(.android-app) body.klar #masteryDisplay [style*="background: #eef7f8" i] { background: #f2f5f9 !important; border: 1px solid #9fb2c8 !important; border-radius: 0 !important; }
-html:not(.android-app) body.klar .fz-kopf { background: #e6edf5 !important; border-radius: 0 !important; }
 /* ----- Papier: Fragenansicht, Seitenleiste, Fenster ----- */
 /* Der graue Block um Frage und Antworten (DARC-Vorbild, #dddddd) und die
    Luecken dazwischen werden Sand; die Felder bleiben Papierweiss. */
-html:not(.android-app) body.papier { --darc-rahmen: #efe6d6; --darc-feld: #fffdf8; }
-html:not(.android-app) body.papier .left-sidebar { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
-html:not(.android-app) body.papier .left-sidebar .stat-chip { background: #efe6d6 !important; border-color: #e1d6c2 !important; }
-html:not(.android-app) body.papier .left-sidebar .result-box.waiting { background: #efe6d6 !important; color: #6f6252 !important; }
-html:not(.android-app) body.papier .dot-sidebar:not(.correct-dot):not(.wrong-dot):not(.beantwortet-dot):not(.gelernt-dot) { background: #fffdf8; border-color: #a8946a; color: #4a3a1f; }
-html:not(.android-app) body.papier .dot-sidebar.beantwortet-dot { background: #e6d9bd !important; border-color: #a8946a !important; color: #3a2d17 !important; }
-html:not(.android-app) body.papier .option.gewaehlt, html:not(.android-app) body.papier .option-grid.gewaehlt { background: #f3e6cd !important; border-color: #4a3a1f !important; box-shadow: inset 0 0 0 2px #4a3a1f !important; }
-html:not(.android-app) body.papier .uebungszeit { background: #f2ead9 !important; border-color: #e1d6c2 !important; color: #4a3a1f !important; }
-html:not(.android-app) body.papier .uebungszeit .zeit-wert { color: #7a4a00 !important; }
-html:not(.android-app) body.papier .realistic-modal-header { background: #f7f0e2 !important; border-bottom-color: #e1d6c2 !important; }
-html:not(.android-app) body.papier #duoModal .name-box, html:not(.android-app) body.papier #duoModal .config-box, html:not(.android-app) body.papier #duoModal .zu { background: #f7f0e2 !important; border-color: #e1d6c2 !important; }
-html:not(.android-app) body.papier [id$="Modal"] a:not(.btn):not([class*="btn"]) { color: #9a4a06; }
-html:not(.android-app) body.papier .q-meta span, html:not(.android-app) body.papier .progress-stats span { background: #efe6d6 !important; color: #4a3a1f !important; }
 /* ----- Graphit: Reste, die in Dunkel hell geblieben sind ----- */
 /* Der Rundgang-Kasten in der Info (#eaf4ff, helle Schrift darauf -> unlesbar)
    und das Rufzeichenfeld bei den Diplomen (weiss). Ausserdem der Schleier hinter
@@ -53121,7 +53433,6 @@ html:not(.android-app) body:not(.klar):not(.beamer) .header { margin-bottom: 0 !
 html:not(.android-app) body:not(.klar):not(.beamer):not(.luftig) .header { padding-bottom: var(--sk-hk, 12px) !important; }
 html:not(.android-app) body:not(.klar):not(.beamer) .filter-bar { margin-top: var(--sk-g1, 12px) !important; margin-bottom: var(--sk-g2, 12px) !important; }
 html:not(.android-app) body:not(.klar):not(.beamer) .footer-note { margin-top: var(--sk-g3, 10px) !important; }
-html:not(.android-app) body.luftig { --sk-pad: 6px; --sk-g1: 10px; }
 html:not(.android-app) body.graphit { --sk-g1: 10px; --sk-g2: 10px; }
 /* Seitenrand gleich (26 Punkte im Inneren wie bei Klar und Luftig): sonst
    bricht die Knopfleiste in den alten Stilen frueher in zwei Zeilen um und
@@ -53133,10 +53444,6 @@ html:not(.android-app) body:not(.klar):not(.luftig):not(.beamer) #app.card { pad
    gut. Die gleiche Farbe soll auch rechts sein. Start, Fehler und Lernbedarf
    koennen so bleiben."). Sie trugen eine eigene Toenung - in den neuen Stilen
    weg, die Kanten und Schrift der uebrigen Knoepfe gelten. */
-html:not(.android-app) body.luftig .btn-exam, html:not(.android-app) body.luftig .btn-modus { background: #fff !important; border-color: #dfe6f0 !important; color: #1f2a3a !important; }
-html:not(.android-app) body.klar .btn-exam, html:not(.android-app) body.klar .btn-modus { background: #fff !important; border: 1.5px solid #0f2745 !important; color: #0f2745 !important; }
-html:not(.android-app) body.papier .btn-exam, html:not(.android-app) body.papier .btn-modus { background: #fffdf8 !important; border-color: #d9ccb3 !important; color: #2b2418 !important; }
-html:not(.android-app) body.luftig .btn-exam i, html:not(.android-app) body.luftig .btn-modus i, html:not(.android-app) body.klar .btn-exam i, html:not(.android-app) body.klar .btn-modus i, html:not(.android-app) body.papier .btn-exam i, html:not(.android-app) body.papier .btn-modus i { color: #7e8ea6 !important; }
 html:not(.android-app) body.dark.graphit .filter-bar .btn.btn-modus i, html:not(.android-app) body.dark.graphit .filter-bar .btn.btn-exam i, html:not(.android-app) body.dark.graphit .filter-bar #duoBtn i { color: #7d9bb1 !important; }
 html:not(.android-app) body.dark.graphit .filter-bar #duoBtn { color: #cfe2ee !important; }
 /* Waehrend einer Runde haelt die Karte unten Platz fuer die schwebende
@@ -53146,8 +53453,6 @@ html:not(.android-app) body.dark.graphit .filter-bar #duoBtn { color: #cfe2ee !i
 @media (min-width: 1025px) {
 html:not(.android-app) body.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: 6.5rem !important; }
 /* Klar und Luftig tragen oben weniger Rand und sind in der Runde sonst hoeher */
-html:not(.android-app) body.klar.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: calc(6.5rem - 10px) !important; }
-html:not(.android-app) body.luftig.runde-laeuft:not(.beamer-live) #app.card { padding-bottom: calc(6.5rem - 6px) !important; }
 }
 /* ================================================================
    KOPFLEISTE EIN STUECK KLEINER                           (02.10.2026)
@@ -54676,7 +54981,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Die Farbe vom PC mitnehmen, wenn noch keine App-Farbe gewaehlt ist
             if(!lies('app_design', '')){
                 const t = lies('theme', 'light');
-                schreib('app_design', { dark: 'dunkel', graphit: 'dunkel', green: 'gruen', blue: 'blau', orange: 'orange', grey: 'grau' }[t] || 'hell');
+                schreib('app_design', { dark: 'dunkel', graphit: 'dunkel' }[t] || 'hell');
             }
         } else {
             schreib('pc_ansicht', 'klassisch');
@@ -57228,7 +57533,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // (stilSetzen: 'light' oder 'dark'), damit alles, was den Dark Mode
     // schon kennt - die Zeichnungen "kraeftig weiss" zum Beispiel -, so
     // bleibt, wie es ist.
-    const APP_FARBEN = { gruen: 'green', blau: 'blue', orange: 'orange', grau: 'grey' };
+    const APP_FARBEN = {};   // Stand 428: Gruen, Blau, Orange, Grau als eigene Stile gibt es nicht mehr - Hell hat jetzt eine Farbe (afu_hellfarbe)
     function designIst(){
         const d = lies('app_design', '');
         if(d === 'hell' || d === 'dunkel' || d === 'system' || APP_FARBEN[d]) return d;
@@ -57245,6 +57550,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         else D.body.classList.toggle('dark', dunkel);
     }
     function designSetzenApp(d){
+        // Stand 428: 'hell-gruen' = Hell in Gruen
+        const m = /^hell-(tuerkis|gruen|blau)$/.exec(String(d || ''));
+        if(m){ try{ window.hellFarbeSetzen && window.hellFarbeSetzen(m[1]); }catch(e){} d = 'hell'; }
         if(d !== 'hell' && d !== 'dunkel' && d !== 'system' && !APP_FARBEN[d]) d = 'hell';
         schreib('app_design', d);
         designAnwenden(); tu(einstNachziehen); tu(nachziehen);
@@ -57267,11 +57575,17 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         tu(() => { if(window.appFunki && appFunki.zustand && appFunki.zustand().da) appFunki.heim(); });
         tu(() => { if(window.appFunki && appFunki.sagt) appFunki.sagt(v === 'astro' ? 'Hier spricht Maja, US-Astronautin auf der ISS! Ab jetzt lerne ich mit dir. | Normalerweise spreche ich Englisch – ich hoffe, du verstehst mich.' : 'Funki ist wieder da! Schön, dass du mich gewählt hast.'); });
     };
-    window.appFarbeKastenHtml = () => einstKasten('Farbe', 'Hell, Dunkel oder in Farbe wie am PC – die Fragen und Antworten werden in der Farbe getönt.',
-        '<div class="app-seg app-farb-seg" id="appDesignSeg">'
-      + [['hell', 'Hell'], ['dunkel', 'Dunkel'], ['gruen', 'Grün'], ['blau', 'Blau'], ['orange', 'Orange']].map(d => '<button type="button" data-d="' + d[0] + '"' + (((designIst() === 'system' ? (dunkelAbfrage && dunkelAbfrage.matches ? 'dunkel' : 'hell') : designIst())) === d[0] ? ' class="an"' : '')
-          + ' onclick="appDesignSetzen(\'' + d[0] + '\')"><span class="fk-ph"><i></i><i></i><i></i></span><span class="fk-t">' + d[1] + '</span></button>').join('')
-      + '</div>');
+    // Stand 428 (05.11.2026): nur noch Hell (in Tuerkis, Gruen oder Blau) und Polar (dunkel)
+    window.appFarbeKastenHtml = () => {
+        const d = designIst() === 'system' ? (dunkelAbfrage && dunkelAbfrage.matches ? 'dunkel' : 'hell') : designIst();
+        const hf = window.hellFarbe ? window.hellFarbe() : 'blau';
+        const aktiv = d === 'dunkel' ? 'dunkel' : 'hell-' + hf;
+        return einstKasten('Farbe', 'Arktis ist der helle Stil, in Türkis, Grün oder Blau – Polar ist der dunkle. Die Fragen und Antworten werden in der Farbe getönt.',
+            '<div class="app-seg app-farb-seg" id="appDesignSeg">'
+          + [['hell-blau', 'Blau'], ['hell-gruen', 'Grün'], ['hell-tuerkis', 'Türkis'], ['dunkel', 'Polar']].map(x => '<button type="button" data-d="' + x[0] + '"' + (aktiv === x[0] ? ' class="an"' : '')
+              + ' aria-pressed="' + (aktiv === x[0] ? 'true' : 'false') + '" onclick="appDesignSetzen(\'' + x[0] + '\')"><span class="fk-ph"><i></i><i></i><i></i></span><span class="fk-t">' + x[1] + '</span></button>').join('')
+          + '</div>');
+    };
     tu(() => { if(dunkelAbfrage) dunkelAbfrage.addEventListener('change', () => { if(designIst() === 'system') designAnwenden(); }); });
     // Die frueheren Farbstile (Gruen, Blau, Orange, Grau) gibt es in der App
     // nicht mehr - dort heisst es jetzt hell oder dunkel.
@@ -58302,7 +58616,9 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     };
     function einstNachziehen(){
         ['sachlich', 'verspielt'].forEach(s => { const k = $('appStilKachel_' + s); if(k) k.classList.toggle('an', stilIst() === s); });
-        D.querySelectorAll('#appDesignSeg button').forEach(b => b.classList.toggle('an', b.dataset.d === window.designAnzeige()));
+        // Stand 428: Hell traegt die Farbe im Namen (hell-tuerkis, hell-gruen, hell-blau)
+        { const da = window.designAnzeige(), soll = da === 'dunkel' ? 'dunkel' : 'hell-' + (window.hellFarbe ? window.hellFarbe() : 'blau');
+          D.querySelectorAll('#appDesignSeg button').forEach(b => { b.classList.toggle('an', b.dataset.d === soll); b.setAttribute('aria-pressed', b.dataset.d === soll ? 'true' : 'false'); }); }
         D.querySelectorAll('#appZielSeg button').forEach(b => b.classList.toggle('an', parseInt(b.dataset.z, 10) === tagesziel()));
         D.querySelectorAll('#appFunkiSeg button').forEach(b => b.classList.toggle('an', b.dataset.f === helferRegler()));
         { const fc = $('appFrostCb'); if(fc) fc.checked = lies('robo_frost', '') === '1'; }
@@ -66433,7 +66749,7 @@ html.android-app:not(#zz) body.dark #einstellungenModal .btn-outline { backgroun
 html.android-app:not(#zz) body.dark #einstellungenModal button[style*='border:1px solid #b0c4d8'] { background:rgba(255,255,255,.06) !important; color:#eaf4fb !important; border:1px solid rgba(255,255,255,.18) !important; border-radius:12px !important; font-weight:600; }
 html.android-app:not(#zz) body.dark #einstellungenModal button[onclick*='einstellungenSchliessen'][style*='border:1px solid #b0c4d8'] { background:var(--s-haupt, #2de8d8) !important; color:var(--s-auf-haupt, #04283a) !important; border:0 !important; min-height:44px; padding:0.5rem 1.4rem !important; font-weight:800; box-shadow:0 6px 16px rgba(45,232,216,.25); }
 /* 21.10.2026 Dietmar: Farbauswahl als fuenf kleine Vorschau-Kacheln (Vorschlag 4) */
-html.android-app:not(#zz) body #einstellungenModal #appDesignSeg { display:grid !important; grid-template-columns:repeat(5,1fr); gap:7px !important; background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; border-radius:0 !important; }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg { display:grid !important; grid-template-columns:repeat(4,1fr); gap:7px !important; background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; border-radius:0 !important; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button { height:auto !important; min-width:0; padding:5px 3px 7px !important; border-radius:12px !important; background:transparent !important; border:2px solid transparent !important; box-shadow:none !important; display:flex !important; flex-direction:column; align-items:center; gap:6px; font-size:11.5px !important; font-weight:600; color:#52667d !important; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button::before, html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button::after { content:none !important; display:none !important; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg .fk-ph { display:flex; flex-direction:column; gap:4px; width:100%; height:62px; border-radius:9px; padding:7px 6px; box-shadow:0 1px 3px rgba(0,0,0,.18); }
@@ -66445,9 +66761,15 @@ html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=h
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=dunkel] .fk-ph { background:#10263b; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=dunkel] .fk-ph i { background:#27455f; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=dunkel] .fk-ph i:first-child { background:#2de8d8; }
-html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=gruen] .fk-ph { background:#1f9d5c; }
-html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=blau] .fk-ph { background:#2f7fd8; }
-html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=orange] .fk-ph { background:#f08a1a; }
+/* Stand 428: Hell in drei Farben - heller Verlauf, oben ein Balken in der Farbe */
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d^=hell-] .fk-ph { border:1px solid #cfd9e8; }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d^=hell-] .fk-ph i { background:rgba(255,255,255,.85); }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-tuerkis] .fk-ph { background:linear-gradient(160deg,#f6fbfb,#c4e3e1); }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-tuerkis] .fk-ph i:first-child { background:#097E7A; }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-gruen] .fk-ph { background:linear-gradient(160deg,#f7fbf7,#c9e5cf); }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-gruen] .fk-ph i:first-child { background:#1E7A3C; }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-blau] .fk-ph { background:linear-gradient(160deg,#f7faff,#c9dbf7); }
+html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button[data-d=hell-blau] .fk-ph i:first-child { background:#1D5FBF; }
 html.android-app:not(#zz) body:not(.dark) #einstellungenModal #appDesignSeg button.an { border-color:#0f2745 !important; background:#e3e9f1 !important; color:#0f2745 !important; font-weight:800; }
 html.android-app:not(#zz) body #einstellungenModal #appDesignSeg button.an .fk-t::after { content:' \2713'; }
 html.android-app:not(#zz) body.dark #einstellungenModal #appDesignSeg button { color:#c3d4e4 !important; opacity:1 !important; filter:none !important; }
