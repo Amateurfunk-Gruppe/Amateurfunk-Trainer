@@ -901,6 +901,10 @@ function getDefaultUserdata(){
     // Antworten mit Zeiten, und die geuebten Sekunden je Tag.
     diagnose:    { user1: {}, user2: {}, user3: {} },
     uebungszeit: { user1: {}, user2: {}, user3: {} },
+    // Fehler je Pruefungsziel (Stand 433): je Benutzer { frageId: ["n","e",...] }.
+    // Ohne dieses Feld liefe die Fehlerliste von Klasse N, E und A nach einem
+    // Neustart wieder zusammen.
+    errziel:     { user1: {}, user2: {}, user3: {} },
     version: 2,
     updatedAt: new Date().toISOString()
   };
@@ -922,7 +926,8 @@ function normalisiereUserdata(roh){
     ['cb',          'objekt'],
     ['qsl',         'objekt'],
     ['diagnose',    'objekt'],
-    ['uebungszeit', 'objekt']
+    ['uebungszeit', 'objekt'],
+    ['errziel',     'objekt']
   ];
   for(const [feld, art] of felder){
     if(!istObjekt(roh[feld])) continue;                 // falscher Typ -> Standard behalten
@@ -2565,7 +2570,7 @@ app.get('/api/userdata', localOnly, (req,res)=>{
 // leeren Standardwerte ein. Die Uebungszeit war also NIE gesichert -
 // obwohl der Kommentar in getDefaultUserdata() genau das behauptete.
 // Dietmar hat es gemerkt: "Mit der Uebungszeit stimmt was nicht."
-const FELD_TYP = { examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt',
+const FELD_TYP = { errziel:'objekt', examHistory:'array', errors:'array', mastery:'objekt', difficult:'objekt',
                    cb:'objekt', qsl:'objekt', diagnose:'objekt', uebungszeit:'objekt' };
 const TYP_ALIAS = {
   history:'examHistory', examHistory:'examHistory',
@@ -2575,7 +2580,8 @@ const TYP_ALIAS = {
   cb:'cb',               cbEinstieg:'cb',
   qsl:'qsl',             sammelalbum:'qsl',
   diagnose:'diagnose',   messung:'diagnose',
-  uebungszeit:'uebungszeit', zeit:'uebungszeit'
+  uebungszeit:'uebungszeit', zeit:'uebungszeit',
+  errziel:'errziel'
 };
 
 // ----------------------------------------------------------------
@@ -2673,6 +2679,7 @@ app.post('/api/userdata', localOnly, (req,res)=>{
         mastery:     incoming.mastery     || current.mastery,
         difficult:   incoming.difficult   || current.difficult,
         errors:      incoming.errors      || current.errors,
+        errziel:     incoming.errziel     || current.errziel || { user1: {}, user2: {}, user3: {} },
         cb:          incoming.cb          || current.cb,
         qsl:         incoming.qsl         || current.qsl,
         // Diese zwei werden zusammengefuehrt, nicht ersetzt - siehe

@@ -10561,6 +10561,7 @@ function klasseZahlMerken(id, anzahl) {
 function klasseAnzeigeAktualisieren() {
     const kl = klasseAktuell();
     try{ if(typeof lernTeileAbgleichen === 'function') lernTeileAbgleichen(); }catch(e){}
+    try{ if(typeof updateErrorBadge === 'function') updateErrorBadge(); }catch(e){}
     try{ if(typeof cbPanelAktualisieren === 'function') cbPanelAktualisieren(); }catch(e){}
     try{ if(typeof durchsichtBadge === 'function') durchsichtBadge(); }catch(e){}
     const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
@@ -12502,6 +12503,14 @@ function getAllLocalUserData(){
                 data.errors[u] = raw ? JSON.parse(raw) : [];
             }catch(e){ data.errors[u] = []; }
         });
+        // Fehler je Pruefungsziel (Stand 433): welche Frage in welchem Ziel falsch war
+        data.errziel = {};
+        USER_SLOTS.forEach(u=>{
+            try{
+                const d = JSON.parse(localStorage.getItem('amateurfunk_errziel_' + u) || '{}');
+                data.errziel[u] = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+            }catch(e){ data.errziel[u] = {}; }
+        });
         // CB-Einstieg: Haken und die von Hand zurueckgeholten Fragen.
         data.cb = {}; USER_SLOTS.forEach(u => { data.cb[u] = {}; });
         USER_SLOTS.forEach(u=>{
@@ -12545,7 +12554,7 @@ function getAllLocalUserData(){
             }catch(e){ data.qsl[u] = {}; }
         });
         return data;
-    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:slotFaecher([]), mastery:slotFaecher({}), difficult:slotFaecher({}), errors:slotFaecher([]), cb:slotFaecher({}) }; }
+    }catch(e){ console.error('getAllLocalUserData Fehler', e); return { examHistory:slotFaecher([]), mastery:slotFaecher({}), difficult:slotFaecher({}), errors:slotFaecher([]), errziel:slotFaecher({}), cb:slotFaecher({}) }; }
 }
 
 async function savePersistentToServer(){
@@ -12773,6 +12782,10 @@ async function loadPersistentFromServer(){
                     localStorage.setItem(key, JSON.stringify(serverErr));
                     if(u==='user1') localStorage.setItem('amateurfunk_errors', JSON.stringify(serverErr));
                     console.log(`✅ Fehler ${u} aus Datei wiederhergestellt`);
+                    try{
+                        const ez = serverData.errziel && serverData.errziel[u];
+                        if(ez && typeof ez === 'object' && !Array.isArray(ez) && !localStorage.getItem('amateurfunk_errziel_' + u)) localStorage.setItem('amateurfunk_errziel_' + u, JSON.stringify(ez));
+                    }catch(e2){}
                     restored = true;
                 }
             }catch(e){}
@@ -12858,6 +12871,7 @@ function confirmCacheClear(){
             'amateurfunk_errors','duo_userName','theme',
             'amateurfunk_gelernteAutoRichtig','amateurfunk_nurGelernte','amateurfunk_activeParts_uebernommen'];
         KLASSEN.forEach(k => preserveKeys.push('amateurfunk_activeParts_' + k.id));
+        USER_SLOTS.forEach(u => preserveKeys.push('amateurfunk_errziel_' + u));
         USER_SLOTS.forEach(u => {
             preserveKeys.push('amateurfunk_mastery_' + u, 'amateurfunk_difficult_' + u,
                 'amateurfunk_errors_' + u, 'amateurfunk_userName_' + u,
@@ -12923,7 +12937,7 @@ async function confirmFullReset(){
     closeFullResetModal();
     try{
         // Lokale Listen im Speicher leeren
-        errorList = [];
+        errorList = []; errZiel = {};
         difficultQuestions = {};
         masteryData = {};
 
@@ -17486,6 +17500,7 @@ function benutzerSchluessel(slot){
         'amateurfunk_mastery_'        + slot,   // Lernfortschritt
         'amateurfunk_difficult_'      + slot,   // Lernbedarf
         'amateurfunk_errors_'         + slot,   // Fehlerliste
+        'amateurfunk_errziel_'        + slot,   // Fehler je Pruefungsziel (Stand 433)
         'amateurfunk_favorites_'      + slot,   // Merkliste
         'amateurfunk_notizen_'        + slot,   // Notizen an den Fragen
         'amateurfunk_diagnose_'       + slot,   // gewaehlte Antworten und Zeiten
@@ -17516,7 +17531,7 @@ function persistentPlatzLeeren(slot){
     if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && !PERSISTENT_FILE_ENABLED) return Promise.resolve(false);
     // Gegenpruefung 397: Die Datei kennt nur die Plaetze 1 bis 3 - fuer die anderen gibt es nichts zu leeren
     if(!['user1', 'user2', 'user3'].includes(slot)) return Promise.resolve(true);
-    const felder = [['examHistory', []], ['mastery', {}], ['difficult', {}], ['errors', []], ['diagnose', {}], ['uebungszeit', {}], ['qsl', {}], ['cb', {}]];
+    const felder = [['examHistory', []], ['mastery', {}], ['difficult', {}], ['errors', []], ['errziel', {}], ['diagnose', {}], ['uebungszeit', {}], ['qsl', {}], ['cb', {}]];
     let kette = Promise.resolve(true);
     felder.forEach(([typ, leer]) => {
         kette = kette.then(ok => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -17541,7 +17556,7 @@ function benutzerZuruecksetzen(slot, ausEinstellungen){
             if(slot === currentUser){
                 try{ masteryData = {}; }catch(e){}
                 try{ difficultQuestions = {}; }catch(e){}
-                try{ errorList = []; }catch(e){}
+                try{ errorList = []; errZiel = {}; }catch(e){}
                 try{ favoriteQuestions = []; }catch(e){}
                 ['amateurfunk_mastery', 'amateurfunk_difficult', 'amateurfunk_errors'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
             }
@@ -20108,17 +20123,36 @@ function frageSchnitt(id){
 function saveErrors() {
     if(!window.afuLernstandGeladen) return;   // Stand 425: nie vor dem Laden schreiben (siehe saveMastery)
     try {
+        const zid = errListeZiel || errZielId();
+        let alle;
+        if(!errZielBereit){
+            // Noch nichts geladen: nur ergaenzen, nie etwas der anderen Ziele verlieren
+            const roh = JSON.parse(localStorage.getItem('amateurfunk_errors_' + currentUser) || '[]');
+            alle = Array.isArray(roh) ? roh.slice() : [];
+            errorList.forEach(id => { if(alle.indexOf(id) < 0) alle.push(id); });
+        } else {
+            const inListe = new Set(errorList);
+            Object.keys(errZiel).forEach(id => {
+                const t = errZiel[id], hat = t.indexOf(zid) >= 0;
+                if(inListe.has(id)){ if(!hat) t.push(zid); }
+                else if(hat) t.splice(t.indexOf(zid), 1);
+                if(!t.length) delete errZiel[id];
+            });
+            errorList.forEach(id => { if(!errZiel[id]) errZiel[id] = [zid]; });
+            alle = Object.keys(errZiel);
+            localStorage.setItem(errZielSchluessel(), JSON.stringify(errZiel));
+        }
         const key = 'amateurfunk_errors_' + currentUser;
-        localStorage.setItem(key, JSON.stringify(errorList));
+        localStorage.setItem(key, JSON.stringify(alle));
         // global fallback for compatibility
-        localStorage.setItem('amateurfunk_errors', JSON.stringify(errorList));
+        localStorage.setItem('amateurfunk_errors', JSON.stringify(alle));
     } catch(e) {}
     // update badge visibility
     try {
         if (typeof errorBadge !== 'undefined' && errorBadge) {
-            if (errorList.length > 0) {
+            if (fehlerAnzahl() > 0) {
                 errorBadge.style.display = 'inline';
-                if (errorCountSpan) errorCountSpan.textContent = errorList.length;
+                if (errorCountSpan) errorCountSpan.textContent = fehlerAnzahl();
             } else {
                 errorBadge.style.display = 'none';
             }
@@ -22634,9 +22668,24 @@ function confirmMasteryClear(){
 
 // Zeigt die Anzahl der Fehlerfragen im roten "Fehler"-Knopf an -
 // analog zur Zahl im Lernbedarf-Knopf darunter.
+// Fehler gehoeren zu den Fragen eines Katalogs. Klasse N und E teilen sich die
+// Fragennummern, N -> E ebenso mit E; E -> A hat eigene. Im Ziel zaehlen und
+// geuebt werden deshalb nur Fehler, die es dort gibt (Dietmar, 05.11.2026: "Wenn ich
+// in N Fehler mache und in E auf A noch nie Fehler hatte, duerfen da auch keine sein").
+// Die Fehlerliste selbst bleibt unveraendert - beim Wechsel zurueck ist alles wieder da.
+function fehlerImZiel(){
+    try{
+        const el = Array.isArray(errorList) ? errorList : [];
+        if(!Array.isArray(questionBank) || !questionBank.length) return el;
+        const ids = new Set(questionBank.map(q => q && q.id));
+        return el.filter(id => ids.has(id));
+    }catch(e){ return Array.isArray(errorList) ? errorList : []; }
+}
+function fehlerAnzahl(){ return fehlerImZiel().length; }
+window.fehlerImZiel = fehlerImZiel; window.fehlerAnzahl = fehlerAnzahl;
 function updateErrorBadge() {
     try {
-        const count = Array.isArray(errorList) ? errorList.length : 0;
+        const count = Array.isArray(errorList) ? fehlerAnzahl() : 0;
         const badge = document.getElementById('repeatErrorsCount');
         if (badge) {
             if (count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
@@ -24201,23 +24250,61 @@ function openDifficultClearModal(){
     };
     if(modal){ modal.style.display='flex'; modal.classList.add('open'); }
 }
+// ================================================================
+//  FEHLER JE PRUEFUNGSZIEL GETRENNT (Stand 433)
+//
+//  Dietmar (Video, 05.11.2026): "Fehler werden mitgenommen! Wenn ich in N
+//  Fehler mache, zeigt es Direkteinstieg die Fehler an und bei E auf A auch.
+//  Das muss getrennt werden!"
+//
+//  errorList im Arbeitsspeicher ist jetzt die Liste des GEWAEHLTEN Ziels.
+//  Gespeichert wird weiter die Gesamtliste unter amateurfunk_errors_<platz>
+//  (alte Fassungen, Sicherung und Abgleich zwischen Geraeten lesen sie
+//  unveraendert), dazu je Frage, in welchen Zielen sie falsch war:
+//  amateurfunk_errziel_<platz> = { "NA209": ["n"], "EA116": ["e","ne"] }.
+//  Alte Fehler ohne Ziel werden einmal nach ihrem Fragenkuerzel zugeordnet
+//  (V, B, N = Klasse N bzw. das gerade gewaehlte E; E = E und N -> E; A = E -> A).
+// ================================================================
+let errZiel = {};
+let errZielBereit = false;
+let errListeZiel = null;   // fuer welches Ziel errorList gerade geladen ist
+function errZielSchluessel(slot){ return 'amateurfunk_errziel_' + (slot || currentUser); }
+function errZielId(){ try{ return klasseAktuell().id; }catch(e){ return 'n'; } }
+function errZielRaten(id, zid){
+    const s = String(id || '');
+    if(/^A[A-K]\d/.test(s)) return ['ea'];
+    if(/^E[A-K]\d/.test(s)) return ['e', 'ne'];
+    return [zid === 'e' ? 'e' : 'n'];
+}
 function loadErrors() {
+    let U = [];
     try {
         const key = 'amateurfunk_errors_' + currentUser;
         let data = localStorage.getItem(key);
         if (!data) data = localStorage.getItem('amateurfunk_errors'); // fallback old key
         if (data) {
             const parsed = JSON.parse(data);
-            if (Array.isArray(parsed)) {
-                errorList = parsed;
-                console.log(`✅ ${errorList.length} Fehlerfragen geladen`);
-                setTimeout(()=>saveErrors(), 100);
-                return;
-            }
+            if (Array.isArray(parsed)) U = parsed;
         }
     } catch(e) {}
-    errorList = [];
-    saveErrors();
+    let M = {};
+    try { M = JSON.parse(localStorage.getItem(errZielSchluessel()) || '{}') || {}; } catch(e) { M = {}; }
+    if (!M || typeof M !== 'object' || Array.isArray(M)) M = {};
+    const zid = errZielId();
+    const gueltig = (typeof KLASSEN !== 'undefined') ? KLASSEN.map(k => k.id) : ['n', 'e', 'ne', 'ea'];
+    const neu = {};
+    U.forEach(id => {
+        let t = Array.isArray(M[id]) ? M[id].filter(z => gueltig.includes(z)) : [];
+        if (!t.length) t = errZielRaten(id, zid);
+        neu[id] = t;
+    });
+    errZiel = neu;
+    errZielBereit = true;
+    errListeZiel = zid;
+    errorList = U.filter(id => errZiel[id].includes(zid));
+    console.log(`✅ ${errorList.length} Fehlerfragen geladen (Ziel ${zid}, gesamt ${U.length})`);
+    try{ updateErrorBadge(); }catch(e){}
+    setTimeout(()=>saveErrors(), 100);
 }
 
 function clearErrors() {
@@ -25774,7 +25861,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 432, datum: '05.11.2026' };
+const TRAINER_STAND = { nr: 433, datum: '05.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -38447,9 +38534,12 @@ function selectQuestions(withErrors = false) {
     if (!withErrors && currentPart !== 'Lernbedarf') {
         pool = ohneGelernte(pool);
     }
-    if (withErrors && errorList.length > 0) {
-        const errorPool = filtered.filter(q => errorList.includes(q.id));
-        if (errorPool.length > 0) pool = errorPool;
+    if (withErrors) {
+        // Nur echte Fehler dieses Ziels - ohne sie bleibt der Topf leer, statt
+        // mit beliebigen anderen Fragen aufgefuellt zu werden.
+        let errorPool = filtered.filter(q => errorList.includes(q.id));
+        if (!errorPool.length) errorPool = questionBank.filter(q => errorList.includes(q.id));
+        pool = errorPool;
     }
     // Fehler-Magnet: nur in normalen Uebungsrunden, nicht bei "Fehler
     // wiederholen" - dort sind ohnehin nur Fehler im Topf.
@@ -38871,7 +38961,7 @@ function repeatErrors() {
         return;
     }
 
-    if (errorList.length === 0) {
+    if (fehlerAnzahl() === 0) {
         // Seit der Knopf immer sichtbar ist, wird hier oefter geklickt.
         // Ein blockierendes alert() waere dafuer zu grob.
         if (window.showAppAlert) window.showAppAlert('Gerade keine Fehler zum Wiederholen.');
@@ -39475,10 +39565,10 @@ function renderQuestion() {
             errorBadge.style.display = 'none';
         }
     } else {
-        if (errorList.length > 0) {
+        if (fehlerAnzahl() > 0) {
             errorBadge.style.display = 'inline';
-            errorCountSpan.textContent = errorList.length;
-            errorBadge.title = `Deine Fehler: ${errorList.length}`;
+            errorCountSpan.textContent = fehlerAnzahl();
+            errorBadge.title = `Deine Fehler: ${fehlerAnzahl()}`;
         } else {
             errorBadge.style.display = 'none';
         }
@@ -42052,8 +42142,8 @@ function renderFinishScreen(isTimeUp = false) {
             hinweis: uebersichtText,
             zettel: pruefZettelHtml(statusMap, counts, overallStatus === 'bestanden' && simAlle),
             knoepfe: [
-                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
-                ['fa-redo', 'Nochmal Simulator', 'startExamSimulator()', !errorList.length],
+                ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
+                ['fa-redo', 'Nochmal Simulator', 'startExamSimulator()', !fehlerAnzahl()],
                 ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()'],
                 ['fa-house', 'Startseite', 'backToMain()']
             ]
@@ -42090,8 +42180,8 @@ function renderFinishScreen(isTimeUp = false) {
             kopf: 'Prüfung · ' + currentPart, correct: correct, total: total, required: required,
             zettel: (() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = correct >= required ? 'bestanden' : 'nicht_bestanden'; ct[k] = correct; } return pruefZettelHtml(st, ct, false); }catch(e){ return ''; } })(),
             knoepfe: [
-                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
-                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()', !errorList.length],
+                ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
+                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()', !fehlerAnzahl()],
                 ['fa-house', 'Startseite', 'backToMain()']
             ]
         });
@@ -42144,9 +42234,9 @@ function renderFinishScreen(isTimeUp = false) {
                 return pruefZettelHtml({}, {}, false, { runde: { titel: titel, richtig: correct, gesamt: total, ok: pass } });
             }catch(e){ return ''; } })() : '',
             knoepfe: [
-                ...(errorList.length > 0 ? [['fa-rotate-left', 'Fehler üben (' + errorList.length + ')', 'repeatErrors()', true]] : []),
+                ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
                 ...(total >= 25 ? [['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()']] : []),
-                ['fa-house', 'Startseite', 'backToMain()', !errorList.length]
+                ['fa-house', 'Startseite', 'backToMain()', !fehlerAnzahl()]
             ]
         });
         ergebnisNachZeichnen(pass);
@@ -42259,7 +42349,7 @@ function abschlussMitAusgelassenen(ausgelassen){
             <div class="btn-group" style="margin-top:1rem;">
                 <button class="btn btn-primary" onclick="backToMain()"><i class="fas fa-home"></i> Hauptmenü</button>
                 <button class="btn btn-primary" onclick="ausgelasseneUeben()"><i class="fas fa-forward"></i> Ausgelassene jetzt üben (${offen})</button>
-                ${errorList.length > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${errorList.length})</button>` : ''}
+                ${fehlerAnzahl() > 0 ? `<button class="btn btn-danger" onclick="repeatErrors()"><i class="fas fa-exclamation-triangle"></i> Fehler (${fehlerAnzahl()})</button>` : ''}
             </div>
         </div>`;
 }
@@ -42939,9 +43029,9 @@ function resetAll() {
     accuracySpan.textContent = '0%';
     // Badge aus gespeichertem errorList wiederherstellen, nicht auf 0 setzen
     try {
-        if (typeof errorList !== 'undefined' && errorList.length > 0) {
+        if (typeof errorList !== 'undefined' && fehlerAnzahl() > 0) {
             errorBadge.style.display = 'inline';
-            errorCountSpan.textContent = errorList.length;
+            errorCountSpan.textContent = fehlerAnzahl();
         } else {
             errorBadge.style.display = 'none';
             errorCountSpan.textContent = '0';
@@ -52693,7 +52783,7 @@ function lernstandSchreiben(d) {
         try{
             const cu = String(currentUser || 'user1');
             masteryData = JSON.parse(localStorage.getItem('amateurfunk_mastery_' + cu) || '{}') || {};
-            errorList = JSON.parse(localStorage.getItem('amateurfunk_errors_' + cu) || '[]') || [];
+            try{ loadErrors(); }catch(e2){ errorList = []; }
             difficultQuestions = JSON.parse(localStorage.getItem('amateurfunk_difficult_' + cu) || '{}') || {};
         }catch(e){}
         // Altbestand-Schluessel fuer user1 mitziehen, sonst gewinnt beim
@@ -64633,7 +64723,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             window.closeMasteryClearModal();
             let u = '1'; tu(() => { u = String(currentUser); });
             const sch = (k, w) => { try{ localStorage.setItem(k, typeof w === 'string' ? w : JSON.stringify(w)); }catch(e){} };
-            tu(() => { masteryData = {}; errorList = []; difficultQuestions = {}; diagnoseDaten = {}; uebungsTage = {}; });
+            tu(() => { masteryData = {}; errorList = []; errZiel = {}; difficultQuestions = {}; diagnoseDaten = {}; uebungsTage = {}; });
             sch('amateurfunk_mastery_' + u, {}); sch('amateurfunk_errors_' + u, []); sch('amateurfunk_difficult_' + u, {});
             sch('amateurfunk_mastery', {}); sch('amateurfunk_errors', []); sch('amateurfunk_difficult', {});
             sch('amateurfunk_diagnose_' + u, {}); sch('amateurfunk_uebungszeit_' + u, {});
@@ -64650,7 +64740,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             try{
                 if(typeof PERSISTENT_FILE_ENABLED !== 'undefined' && PERSISTENT_FILE_ENABLED){
                     const send = (type, data) => fetch('/api/userdata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: type, user: u, data: data }) });
-                    await Promise.all([send('errors', []), send('difficult', {}), send('mastery', {}), send('history', []), send('diagnose', {}), send('uebungszeit', {})]);
+                    await Promise.all([send('errors', []), send('errziel', {}), send('difficult', {}), send('mastery', {}), send('history', []), send('diagnose', {}), send('uebungszeit', {})]);
                 }
             }catch(e){}
             tu(() => { if(typeof saveMastery === 'function') saveMastery(); });
