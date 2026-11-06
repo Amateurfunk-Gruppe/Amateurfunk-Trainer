@@ -11,6 +11,15 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 463 (06.11.2026)
+
+- Online-Fassung aufgeräumt (Dietmar: „Ist da noch mehr so altes Zeug drin?“): In den Einstellungen sind die Reiter Update, Wartung, Kursauswertung und Lerncoach sowie die Kästen Profilbild und Chat im Reiter Allgemein ausgeblendet. Sie gehören zum Laptop-Server (GitHub-Update, Hilfsprogramme, Gruppenraum) und zeigten online nur Fehlermeldungen wie „Der Trainer läuft vielleicht nicht mehr (HTTP 404)“. Der Blätter-Stand nennt keine Datei auf dem Rechner mehr. Am Trainer-PC und in der PC-Fassung bleibt alles.
+
+## Stand 462 (06.11.2026)
+
+- Ergebnis teilen: Der Link zeigt bei Facebook, WhatsApp & Co. jetzt das fertige Ergebnisbild (Stempel, Antwortbogen, Datum, Zeit, Kreuze) und den Titel „Probeprüfung bestanden (22/25)“. Vorher stand das Ergebnis hinter dem „#“, das die Dienste nie sehen, und es kam nur „Geteiltes Ergebnis“ ohne Bild. Beim Teilen legt der Trainer das Bild (JPEG, 1200 × 630) über einen kleinen Cloudflare-Worker (`ergebnis-worker.js`, Speicher KV, 90 Tage) ab und teilt den kurzen Link `/e/<id>`. Klappt das nicht (offline, Worker nicht eingerichtet), bleibt der bisherige Link.
+- Support-Seite (`support.html`) neu geschrieben: Sie behauptete noch, der Trainer laufe auf einem privaten Rechner, der nicht immer an sei, und beschrieb den alten Laptop-Server (Gruppenraum, Besucherliste, Zutrittsanfragen, „gerade nicht online“). Jetzt steht dort, dass er bei Cloudflare rund um die Uhr läuft; die Datenschutz-Kurzfassung verweist auf die Datenschutzerklärung der Webseite.
+
 ## Stand 461 (06.11.2026)
 
 - Merkliste (dunkel, Polar): Die Herzen gemerkter Fragen sind wieder rot. Eine Polar-Regel für alle Knöpfe in Fenstern hatte das Rot überdeckt.

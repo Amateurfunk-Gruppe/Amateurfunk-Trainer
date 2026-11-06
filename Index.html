@@ -26079,7 +26079,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 461, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 463, datum: '06.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -36137,6 +36137,26 @@ function einstUmordnen(){
 }
 window.einstUmordnen = einstUmordnen;
 
+// ONLINE-FASSUNG AUFRAEUMEN (Stand 463, 06.11.2026)
+// Dietmar: "Ist da noch mehr so altes Zeug drin?" - Die Einstellungen kamen vom Trainer-PC mit dem Laptop-Server und zeigten
+// online Reiter und Kaesten, die dort nichts tun: Update/Wartung (GitHub, Hilfsprogramme), Kursauswertung (Gruppenraum),
+// Profilbild und Chat (Gruppenraum). Online werden sie ausgeblendet; am Trainer-PC und in der PC-Fassung bleibt alles.
+function einstOnlineAufraeumen(modal){
+    if(!window.AFU_CLOUD || laeuftLokal()) return;
+    ['kurs', 'lerncoach', 'update', 'wartung'].forEach(id => {
+        const t = document.getElementById('einstTab_' + id); if(t) t.style.display = 'none';
+        const b = document.getElementById('einstBlatt_' + id); if(b) b.setAttribute('hidden', '');
+    });
+    const allg = document.getElementById('einstBlatt_allgemein');
+    if(allg){
+        [...allg.children].forEach(k => {
+            const kopf = (k.firstElementChild && k.firstElementChild.textContent || '').trim().toLowerCase();
+            if(kopf === 'profilbild' || kopf === 'chat') k.style.display = 'none';
+        });
+    }
+}
+window.einstOnlineAufraeumen = einstOnlineAufraeumen;
+
 function einstReiterZeigen(id){
     if(!EINST_REITER.some(r => r.id === id)) id = 'allgemein';
     // Der Lerncoach wird nur am Trainer-PC eingerichtet (29.09.2026).
@@ -36375,6 +36395,7 @@ function einstellungenOeffnen(reiter){
           + '</div></div>';
         document.body.appendChild(modal);
         einstBlaetterFuellen();
+        try{ einstOnlineAufraeumen(modal); }catch(e){}
     }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -37460,8 +37481,8 @@ function einstLernenFuellen(){
 
     ziel.innerHTML = einstKasten('Blätter-Stand',
         'Beim Blättern führt der Trainer Buch: welche Fragen du durchgesehen und welche du '
-      + 'abgehakt hast. Das steht in einer eigenen Datei (<span style="font-family:var(--font-mono);">'
-      + 'data\\userdata\\blaettern.json</span>) und lässt sich wegwerfen, ohne dass am Lernstand '
+      + 'abgehakt hast. Das steht ' + ((window.AFU_CLOUD && !laeuftLokal()) ? 'getrennt in deinem Browser' : 'in einer eigenen Datei (<span style="font-family:var(--font-mono);">'
+      + 'data\\userdata\\blaettern.json</span>)') + ' und lässt sich wegwerfen, ohne dass am Lernstand '
       + 'etwas passiert. Gilt für <b>' + kl + '</b>.',
         '<div style="display:flex; gap:1.6rem; flex-wrap:wrap; padding:0.55rem 0.7rem; background:#f7faff; '
       + 'border:1px solid #e0e8f5; border-radius:10px; font-size:0.8rem;">'
@@ -42108,8 +42129,45 @@ function ergebnisBildVorbereiten(){
         return t.dateiFertig;
     }).catch(e => { console.warn('[Ergebnis] Bild', e); return null; });
 }
+// ERGEBNIS-LINK MIT VORSCHAUBILD (Stand 462, 06.11.2026)
+// Dietmar: Bei Facebook zeigte der Ergebnis-Link nur "Geteiltes Ergebnis" ohne Bild - das Ergebnis steckt hinter dem "#",
+// und das sieht Facebook nie. Jetzt legt der Trainer beim Teilen das fertige Ergebnisbild (1200 x 630) bei Cloudflare ab
+// (Worker ergebnis-worker.js, 90 Tage) und teilt den kurzen Link /e/<id>. Klappt das nicht, bleibt der alte Link.
+async function ergebnisKurzLink(t){
+    if(t.kurzUrl) return t.kurzUrl;
+    if(!t.frag || !t.bild) return null;
+    const basis = (typeof window.AFU_LS_BASIS === 'string') ? window.AFU_LS_BASIS : '';
+    if(!basis && !/^(trainer\.amateurfunk-trainer\.com|localhost|127\.0\.0\.1|trainer\.test)$/.test(location.hostname)) return null;
+    let png = null;
+    try{ png = await ergebnisBildErzeugen(t.bild); }catch(e){}
+    if(!png) return null;
+    const jpg = await new Promise(res => {
+        const u = URL.createObjectURL(png), im = new Image();
+        im.onload = () => { try{
+            const c = document.createElement('canvas'); c.width = 1200; c.height = 630;
+            const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 1200, 630); x.drawImage(im, 0, 0, 1200, 630);
+            c.toBlob(b => { URL.revokeObjectURL(u); res(b); }, 'image/jpeg', 0.86);
+        }catch(e){ URL.revokeObjectURL(u); res(null); } };
+        im.onerror = () => { URL.revokeObjectURL(u); res(null); };
+        im.src = u;
+    });
+    if(!jpg || jpg.size > 440 * 1024) return null;
+    const b64 = await new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => res(''); r.readAsDataURL(jpg); });
+    if(!b64) return null;
+    const ac = (typeof AbortController === 'function') ? new AbortController() : null;
+    const uhr = setTimeout(() => { try{ ac && ac.abort(); }catch(e){} }, 9000);
+    try{
+        const r = await fetch(basis + '/e/neu', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ f: t.frag, b: b64, t: t.titel || '' }), signal: ac ? ac.signal : undefined });
+        const j = await r.json();
+        if(j && j.ok && j.url){ t.kurzUrl = j.url; return j.url; }
+    }catch(e){ console.debug('[Ergebnis-Link]', e && e.message); }
+    finally{ clearTimeout(uhr); }
+    return null;
+}
 async function ergebnisTeilen(){
     const t = window.__ergTeilen; if(!t) return;
+    try{ const k = await ergebnisKurzLink(t); if(k) t.url = k; }catch(e){}
     const voll = t.text + ' ' + t.url;
     const gemeldet = ok => { try{ (window.showAppAlert || alert)(ok ? 'Text kopiert – jetzt z. B. in WhatsApp oder Signal einfügen.' : voll); }catch(e){} };
     const kopieren = () => {
@@ -42316,6 +42374,7 @@ function ergebnisSeiteHtml(o){
         const teileL = (o.teile || []).map(t => ({ name: t.name, richtig: t.richtig, gesamt: t.gesamt, status: t.status }));
         // Der Link zur Ergebnis-Seite traegt die Werte hinter dem "#" - das schickt der Browser nie an einen Server.
         let linkUrl = 'https://amateurfunk-trainer.com/klasse-' + b + '/';
+        let fragT = '', titelT = '';
         try{
             const pk = { v: 1, k: b.toUpperCase(), a: o.art === 'pruefung' ? 'p' : 'r', s: st === 'bestanden' ? 'b' : st === 'nach' ? 'n' : 'x',
                 c: o.correct, t: o.total, z: zeitT, d: datumT, tl: teileL.filter(t => t.gesamt).map(t => [t.name, t.richtig, t.gesamt, t.status === 'bestanden' ? 'b' : t.status === 'nachpruefung' ? 'n' : 'x']),
@@ -42323,8 +42382,11 @@ function ergebnisSeiteHtml(o){
             if(pk.f.length > 80) delete pk.f;
             const bytes = new TextEncoder().encode(JSON.stringify(pk)); let bin = ''; bytes.forEach(by => bin += String.fromCharCode(by));
             linkUrl = 'https://amateurfunk-trainer.com/ergebnis/#' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            fragT = linkUrl.split('#')[1];
+            titelT = (pk.s === 'b' ? (pk.a === 'p' ? 'Probeprüfung bestanden' : 'Übungsrunde geschafft') : pk.s === 'n' ? 'Fast geschafft' : 'Weiter üben')
+                + ' (' + o.correct + '/' + o.total + ') – Amateurfunk-Trainer';
         }catch(e){}
-        window.__ergTeilen = { url: linkUrl, text: text,
+        window.__ergTeilen = { url: linkUrl, frag: fragT, titel: titelT, text: text,
             bild: { art: art, kopf: String(o.kopf || '').replace(/\s*\((Übung|übung)\)/, ''), correct: o.correct, total: o.total, quote: quote,
                     felder: felderL, teile: teileL, pruefung: o.art === 'pruefung', klasse: b.toUpperCase(), datum: datumT, zeit: zeitT,
                     kurz: String(o.kopf || '').replace(/^Lernrunde\s*·\s*/, '').replace(/\s*\((Übung|übung)\)/, ''),
