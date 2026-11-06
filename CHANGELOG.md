@@ -11,6 +11,18 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 471 (06.11.2026)
+- App (Sachlich und Verspielt): Alle Schließen-Kreuze in den Fenstern sind jetzt gleich breit wie hoch (40 Punkte) und in der Form „rund“ ein echter Kreis. Vorher waren z. B. das X in der Statistik (33 × 40), in den Sprach-Einstellungen und im Gruppenraum (28 × 30) oval, andere nur ein schlichtes Kreuz ohne Form.
+
+## Stand 470 (06.11.2026)
+- App, Stil Sachlich: Die Zwischenzeilen „Fortschritt“, „Lehrgang“, „Werkzeuge“ und das Werkzeug-Gitter hatten einen Glas-Rahmen wie eine Karte; er ist weg.
+
+## Stand 469 (06.11.2026)
+- Formelblatt in der App: Der runde Schließen-Knopf verdeckte oben rechts den Weiter-Pfeil (sah aus wie ein zweites, eckiges X). Die Blätter-Leiste lässt jetzt rechts Platz, beide Knöpfe sind sichtbar und unterscheidbar.
+- App-Startseite: Die breiten leeren Streifen über dem Katalog-Hinweis und unter „Version …“ (vor der unteren Leiste) sind schmaler, es wird weniger Platz verschenkt.
+- App: Die Leiste oben ist im hellen Stil (auch Sachlich) voll deckend, der Hintergrund schimmert nicht mehr durch.
+- Ergebnisseite: Der Knopf „Prüfungszettel" ist entfernt (der Zettel steht im Ergebnisbild); „Startseite" steht dafür neben „Nochmal Simulator".
+
 ## Stand 468 (06.11.2026)
 - Prüfungsreife: Die echten Ergebnisse der Prüfungssimulationen (je Teil die letzten bis zu 10) rechnen jetzt mit. Wer jede Simulation besteht, bleibt nicht mehr bei „21 von 25 / 9 von 10 Prüfungen“ hängen, nur weil viele Fragen noch nie drankamen; wer oft durchfällt, wird entsprechend vorsichtiger eingestuft.
 - App: Der Kasten „Antwort hervorheben" (Farbe, Rand, sanftes Aufleuchten, Vorschau zum Antippen) ist unter Einstellungen → Anpassen wieder da; er war seit der Aufräum-Runde für die App (Stand 418) ausgeblendet.

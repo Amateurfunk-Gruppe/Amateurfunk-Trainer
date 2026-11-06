@@ -3056,6 +3056,8 @@
         html.android-app #formelAppLeiste { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; background: #fff; border-bottom: 1px solid var(--line, #d5dde8); }
         html.android-app #formelAppLeiste .fa-blatt { width: 44px; height: 40px; border: 1px solid var(--line, #d5dde8); background: #f4f7fb; color: var(--panel-navy, #0f2745); font-size: 1rem; cursor: pointer; }
         html.android-app #formelAppLeiste .fa-blatt:disabled { opacity: 0.35; }
+        /* Stand 468 - Dietmar (Bild): "Beim Formelblatt ist oben rechts ein runder und ein viereckiger X." Der eckige war der Weiter-Pfeil, den der runde Schliessen-Knopf verdeckte. Die Leiste lasst jetzt rechts Platz dafuer. */
+        html.android-app #formelAppLeiste { padding-right: 66px; }
         html.android-app #formelAppStand { font-size: 0.9rem; font-weight: 600; color: var(--panel-navy, #0f2745); text-align: center; }
         html.android-app #formelAppRolle { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #eef2f7; position: relative; touch-action: pan-x pan-y; overscroll-behavior: contain; }
         html.android-app #formelAppBild { display: block; max-width: none; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
@@ -10399,6 +10401,21 @@ html.android-app.stil-sachlich body:not(.dark) :is(.ah-karte, .ah-kachel, #appWe
   backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
   border: 1px solid rgba(255,255,255,0.95) !important; border-radius: 22px !important;
   box-shadow: 0 14px 32px -20px rgba(30,64,140,0.40), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+/* Stand 469 - Dietmar (Bilder, Sachlich): "Hier ist ueber der Ueberschrift noch ein Rahmen." Die Glas-Karte oben traf mit "#appWerk > div" auch die
+   Zwischenzeilen (Fortschritt, Lehrgang, Werkzeuge) und das Werkzeug-Gitter. Die sind keine Karten - ohne Rahmen, Schatten und Rundung. */
+/* Stand 470 - Dietmar: "Pruefe bitte alle X zum Schliessen in der App. In manchen ist es kein runder, sondern ein ovaler Kreis in Sachlich und Verspielt."
+   Gemessen: z. B. das X im Statistik-Fenster war 33 x 40 Punkte, im Einstellungen-Sprachfenster und im Gruppenraum 28 x 30. Jetzt sind alle
+   Schliessen-Knoepfe gleich breit wie hoch; in der Form "rund" sind sie ein echter Kreis. (.afu-x = jedes schlichte x / Kreuz im Fenster-Kopf, markiert vom Skript "afuXFormen") */
+html.android-app:not(#a1) body:not(#a2) :is(button.x-zu, button.afu-x):not(.fz-knopf):not(#a3){
+  width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; max-width: 40px !important;
+  padding: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  line-height: 1 !important; flex: 0 0 40px; box-sizing: border-box !important;
+}
+html.android-app:not(#a1) body.app-rund:not(#a2) :is(button.x-zu, button.afu-x):not(.fz-knopf):not(#a3){ border-radius: 50% !important; }
+html.android-app.stil-sachlich body:not(.dark):not(#zz2) :is(.ah-ueber, #awGrid, .aw-grid){
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
 }
 html.android-app.stil-sachlich body:not(.dark) #appLeiste { background: rgba(255,255,255,0.6) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.9) !important; }
 html.android-app.stil-sachlich body:not(.dark) #appNavi { background: rgba(255,255,255,0.97) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.95) !important; }
@@ -26136,7 +26153,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 468, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 471, datum: '06.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -42755,7 +42772,6 @@ function renderFinishScreen(isTimeUp = false) {
             knoepfe: [
                 ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
                 ['fa-redo', 'Nochmal Simulator', 'startExamSimulator()', !fehlerAnzahl()],
-                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()'],
                 ['fa-house', 'Startseite', 'backToMain()']
             ]
         });
@@ -42792,8 +42808,7 @@ function renderFinishScreen(isTimeUp = false) {
             zettel: (() => { try{ const k = (currentQuestions[0] || {}).part, st = {}, ct = {}; if(k){ st[k] = correct >= required ? 'bestanden' : 'nicht_bestanden'; ct[k] = correct; } return pruefZettelHtml(st, ct, false); }catch(e){ return ''; } })(),
             knoepfe: [
                 ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
-                ['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()', !fehlerAnzahl()],
-                ['fa-house', 'Startseite', 'backToMain()']
+                ['fa-house', 'Startseite', 'backToMain()', !fehlerAnzahl()]
             ]
         });
         ergebnisNachZeichnen(correct >= required);
@@ -42846,7 +42861,6 @@ function renderFinishScreen(isTimeUp = false) {
             }catch(e){ return ''; } })() : '',
             knoepfe: [
                 ...(fehlerAnzahl() > 0 ? [['fa-rotate-left', 'Fehler üben (' + fehlerAnzahl() + ')', 'repeatErrors()', true]] : []),
-                ...(total >= 25 ? [['fa-file-signature', 'Prüfungszettel', 'ergebnisZettelZeigen()']] : []),
                 ['fa-house', 'Startseite', 'backToMain()', !fehlerAnzahl()]
             ]
         });
@@ -68781,6 +68795,13 @@ html:not(#zz) body:not(#zz2):is(.dark, .graphit) #einstellungenModal #appDesignS
    Und wenn sie nach unten wegfaehrt (in der Runde, auf der Ergebnisseite), blieb sie als Ebene mit Weichzeichner ueber dem
    scrollenden Inhalt liegen. Jetzt: kein Weichzeichner, und weg ist weg. */
 html.android-app #appNavi, html.android-app #appLeiste { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* Stand 468 - Dietmar (Bild, App): "Oben die Leiste ist aus Glas. Der Hintergrund schimmert durch. Moechte da kein Glaseffekt haben." Im hellen Stil Sachlich war sie nur zu 60 % deckend. Jetzt in beiden Stilen voll deckend. */
+html.android-app:not(#zz1) body:not(.dark):not(#zz2) #appLeiste{ background:#fff !important; background-color:#fff !important; }
+/* Stand 468 - Dietmar (Bild mit zwei roten Kaesten, App-Startseite): "Unten in der App wird Platz verschenkt. Der muss raus." Zwischen den Werkzeugen und
+   dem Katalog-Hinweis sowie zwischen "Version ..." und der unteren Leiste lag je ein breiter leerer Streifen. Jetzt knapp. */
+html.android-app:not(.pc-app):not(#zz1) body:not(.runde-laeuft):not(#zz2) .footer-note{ margin-top:4px !important; padding-top:8px !important; padding-bottom:0 !important; }
+html.android-app:not(.pc-app):not(#zz1) body:not(.runde-laeuft):not(#zz2) #app{ padding-bottom:0 !important; }
+html.android-app:not(.pc-app):not(#zz1) body:not(.runde-laeuft):not(#zz2){ padding-bottom:calc(68px + 8px) !important; }
 html.android-app body.app-navi-weg #appNavi { visibility: hidden; will-change: auto; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
 html.android-app .erg-buehne .erg-maja img, html.android-app .erg-buehne .erg-maja .mk { filter: none !important; }
 /* KEIN WEICHZEICHNER MEHR AUF DEN KACHELN (27.10.2026, Stand 361). Dietmar mit Video: "Auf der Startseite blinkt es auch immer wieder mal,
@@ -69775,6 +69796,23 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
     setInterval(() => { try{ zahlNachziehen(); }catch(x){} }, 2000);
 })();
 </script>
+<script id="afuXFormen">
+// Stand 470: markiert alle schlichten Schliessen-Kreuze in Fenstern (Text nur x / Kreuz), damit CSS sie gleich breit wie hoch macht.
+(function(){
+    let t = null;
+    const tag = () => { t = null; try{
+        document.querySelectorAll('[id$="Modal"] button, #uhrFenster button').forEach(b => {
+            if(b.classList.contains('afu-x') || b.classList.contains('fz-knopf')) return;
+            const x = (b.textContent || '').trim();
+            if(/^[\u00d7\u2715\u2716]$/.test(x) && b.children.length === 0) b.classList.add('afu-x');
+        });
+    }catch(e){} };
+    const plan = () => { if(t === null) t = setTimeout(tag, 400); };
+    const start = () => { try{ new MutationObserver(plan).observe(document.body, { childList: true, subtree: true }); }catch(e){} tag(); };
+    if(document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
 
 </body>
 </html>
