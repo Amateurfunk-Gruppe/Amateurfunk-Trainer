@@ -10193,6 +10193,10 @@ html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-gr
 html.android-app .pc-nurfrage{ display:none !important; }
 /* Stand 446: Im Simulator bleiben Formelblatt und Taschenrechner auch am Handy an der Frage (sonst treten sie dort zurueck). */
 body.handy.runde-laeuft.sim-hilfen #rechnerBtn, body.handy.runde-laeuft.sim-hilfen #formelBtn{ display:inline-flex !important; }
+/* Stand 467 - Dietmar (Bild, App, Simulator): "Oben in der Liste steht Formelblatt und das ueberlaeuft." Am Handy ist der Formelblatt-Knopf
+   jetzt wie der Rechner ein runder Knopf nur mit Symbol (Text aus, Symbol bleibt). Der Name steht im Tooltip/Titel. */
+body.handy.runde-laeuft.sim-hilfen #formelBtn{ font-size:0 !important; width:36px !important; height:36px !important; min-width:36px; padding:0 !important; align-items:center; justify-content:center; flex-shrink:0; }
+body.handy.runde-laeuft.sim-hilfen #formelBtn i{ font-size:1rem !important; margin:0 !important; }
 /* Stand 445 - Dietmar (Bild): "Die Aufteilung der Buttons oben ist nicht gut." In der Runde (klassische Ansicht, grosse Anzeige) rutschten
    Uhr und Knoepfe in eine zweite Zeile. Jetzt: Version, Klasse und "Ziel wählen" haben in der Runde nichts verloren (Dietmar) - sie ruhen dort, alles bleibt in einer Zeile. */
 @media (min-width: 1025px){
@@ -23078,6 +23082,39 @@ function reifeChance(id, schnitt){
     }catch(e){ return schnitt; }
 }
 
+// ================================================================
+//  DIE ECHTEN SIMULATOR-ERGEBNISSE RECHNEN MIT   (Stand 468, 06.11.2026)
+//  Dietmar: "Sabine besteht jede Pruefung und sie sagt, das passt sich nicht an. Immer 9 Pruefungen."
+//  Bis hier rechnete die Pruefungsreife nur aus dem Lernstand (wie oft jede Frage richtig war). Wer viele Fragen noch nie
+//  gesehen hat, bekam dafuer den Teilschnitt - und blieb bei "21 von 25 / 9 von 10", egal wie gut die Simulationen liefen.
+//  Jetzt zaehlen die letzten bis zu 10 Simulator-Ergebnisse dieses Teils (Realistisch/Gruppenpruefung) mit: Das Modell wiegt
+//  etwa drei Pruefungsteile (75 Fragen), die echten Ergebnisse wiegen mit ihren Fragen dagegen. Alle Wahrscheinlichkeiten
+//  des Teils werden gleichmaessig zum gemischten Wert verschoben.
+// ================================================================
+function reifeSimErgebnisse(teil){
+    try{
+        const name = (typeof REALISTIC_PART_META !== 'undefined' && REALISTIC_PART_META[teil]) ? REALISTIC_PART_META[teil].name : null;
+        if(!name || typeof history === 'undefined' || !history || typeof currentUser === 'undefined') return null;
+        const h = Array.isArray(history[currentUser]) ? history[currentUser] : [];
+        const es = h.filter(e => e && (e.part === 'Realistisch ' + name || e.part === 'Gruppenprüfung ' + name)
+                                  && (e.total || 0) >= 20 && typeof e.correct === 'number').slice(-10);
+        if(es.length < 2) return null;
+        let r = 0, t = 0; es.forEach(e => { r += e.correct; t += e.total; });
+        return t > 0 ? { n: es.length, fragen: t, quote: r / t } : null;
+    }catch(e){ return null; }
+}
+function reifeKalibrieren(teil, chancen){
+    try{
+        const sim = reifeSimErgebnisse(teil);
+        if(!sim || !chancen.length) return chancen;
+        const modell = chancen.reduce((a, b) => a + b, 0) / chancen.length;
+        const VOR = 75;
+        const ziel = (modell * VOR + sim.quote * sim.fragen) / (VOR + sim.fragen);
+        const diff = ziel - modell;
+        return chancen.map(c => Math.max(0.02, Math.min(0.99, c + diff)));
+    }catch(e){ return chancen; }
+}
+
 // Ein Pruefungsteil, durchgerechnet.
 function reifeTeil(teil){
     const pool = (typeof realisticPool === 'function') ? realisticPool(teil) : [];
@@ -23128,8 +23165,9 @@ function reifeTeil(teil){
         return Object.assign({ teil, pool: pool.length, beantwortet, genug: false }, stand);
     }
 
-    let summe = 0;
-    pool.forEach(q => { summe += reifeChance(q.id, schnitt); });
+    let chancen = pool.map(q => reifeChance(q.id, schnitt));
+    chancen = reifeKalibrieren(teil, chancen);
+    const summe = chancen.reduce((a, b) => a + b, 0);
     const punkte = Math.round((summe / pool.length) * REIFE_BOGEN * 10) / 10;
 
     let lage = 'schlecht';
@@ -23300,7 +23338,7 @@ function reifeVonZehn(){
             });
             if(beantwortet < REIFE_MINDEST){ fehlend.push(name); continue; }
             const schnitt = (richtig + falsch) > 0 ? (richtig / (richtig + falsch)) : 0.5;
-            toepfe.push(pool.map(q => reifeChance(q.id, schnitt)));
+            toepfe.push(reifeKalibrieren(teil, pool.map(q => reifeChance(q.id, schnitt))));
         }
         if(fehlend.length) return { unvollstaendig: fehlend };
 
@@ -23328,6 +23366,7 @@ function reifeVonZehn(){
             anteil: anteil,
             // Gerundet, aber ehrlich an den Rändern: 9,6 von 10 darf nicht
             // zu "10 von 10" werden, solange es eben nicht immer klappt.
+            simN: teile.reduce((a, t) => a + ((reifeSimErgebnisse(t) || {}).n || 0), 0),
             vonZehn: (anteil >= 0.995) ? 10 : (anteil <= 0.005 ? 0 : Math.max(1, Math.min(9, Math.round(anteil * 10)))),
             teile: teile.length
         };
@@ -24302,6 +24341,7 @@ function reifeAktualisieren(){
                     + '<div class="stat-kuerzbar" data-weg="5" style="font-size:0.72rem; color:var(--muted); margin-top:0.45rem;">'
                     +   'Zweitausend Mal nachgespielt: je Prüfungsteil 25 Fragen gezogen und einzeln '
                     +   'gewürfelt. Bestanden zählt nur, wenn <b>jeder</b> Teil auf ' + REIFE_NOETIG + ' Punkte kommt.'
+                    +   (z.simN ? ' Deine letzten Simulator-Ergebnisse rechnen mit.' : '')
                     + '</div></div>';
             }
         }catch(e){ console.error('[Reife] Zehnerblock', e); }
@@ -26096,7 +26136,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 466, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 468, datum: '06.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35957,6 +35997,8 @@ const EINST_REITER = [
     // Stand 393 (31.10.2026), Dietmar: "rechts neben Sound den Reiter Vorlesen ... alles, was mit Vorlesen zu tun hat,
     // Stimme und so weiter, das gehoert da rein. Und Sounds ist alles, was mit Pieptoenen und Maja und Fanfare zu tun hat."
     { id:'sprechen',  name:'Vorlesen',  symbol:'fa-comment-dots' },
+    // Stand 467, Dietmar: "Den Reiter moechte ich direkt rechts neben Vorlesen."
+    { id:'bestenliste', name:'Bestenliste', symbol:'fa-ranking-star' },
     { id:'energie',   name:'Energie',   symbol:'fa-battery-half' },
     // 27.10.2026 Dietmar: "Der Beamer Modus, Bild vergroessern und einen Beamer verwenden, moechte ich unter
     // Einstellungen als eigenen Reiter dazu haben. Ich habe ihn gesucht und nicht gefunden."
@@ -35985,7 +36027,6 @@ const EINST_REITER = [
     // Ort: sichern, einlesen, mitnehmen (Name/PIN), zuruecksetzen - vorher stand es unter "Update".
     { id:'lernstand', name:'Lernstand', symbol:'fa-floppy-disk' },
     // Stand 437 (06.11.2026), Dietmar: "Möchte hier auch einen Reiter" (Bestenliste in den Einstellungen am PC).
-    { id:'bestenliste', name:'Bestenliste', symbol:'fa-ranking-star' },
     // Intern heisst es weiter "merkblatt" - Reiter-Kennung und
     // Funktionsnamen. Sichtbar ist "Vor der Pruefung": Dietmar am
     // 09.09.2026, "Der Name Merkblatt gefaellt mir nicht."
@@ -37754,8 +37795,7 @@ function appEinstellungenAufraeumen(){
         }
         weg($('einstAnzeigeVollText'));
     }catch(e){}
-    // Anpassen: das Mouseover
-    wegKasten('einstMausProbe');
+    // Anpassen: "Antwort hervorheben" bleibt in der App (Stand 468, Dietmar: "Das vermisse ich in der App") - Farbe/Rand/Leuchten gelten auch beim Antippen.
     // Nachteilsausgleich: Maus und Tastatur
     wegKasten('einstUmfangKurz');
     wegKasten('tastaturCheckbox');
@@ -40034,7 +40074,9 @@ function renderQuestion() {
     // ================================================================
     const metaHtml = `<div class="q-meta">
         <span><i class="fas fa-tag"></i> ${partLabel}</span>
-        <span><i class="fas fa-layer-group"></i> ${(typeof frageKlassenName === 'function' ? frageKlassenName(q) : (typeof klasseAktuell === 'function' ? klasseAktuell().name : 'Klasse N'))}</span>
+        ${(() => { /* Stand 467: "Klasse N kann da raus" - die Klasse zeigt der Kopf ohnehin; nur wenn die Frage aus einer anderen Klasse stammt, bleibt der Hinweis */
+            let kn = '', ka = ''; try{ kn = (typeof frageKlassenName === 'function') ? frageKlassenName(q) : ''; ka = (typeof klasseAktuell === 'function') ? klasseAktuell().name : ''; }catch(e){}
+            return (kn && kn !== ka) ? '<span><i class="fas fa-layer-group"></i> ' + kn + '</span>' : ''; })()}
         ${examSimulatorMode ? `<span class="exam-mode-badge"><i class="fas ${(window.realisticExam && window.realisticExam.duo) ? 'fa-users' : 'fa-graduation-cap'}"></i> ${(window.realisticExam && window.realisticExam.duo) ? 'PRÜFUNG' : 'SIMULATOR'} ${currentIndex+1}/${currentQuestions.length}</span>` : ''}
         ${examSimulatorMode && examTimerRunning ? `<span style="font-family:var(--font-mono);font-weight:700;color:${examTimeRemaining <= 300 ? 'var(--bad)' : 'var(--panel-navy)'};"><i class="fas fa-stopwatch"></i> ${String(Math.floor(examTimeRemaining/60)).padStart(2,'0')}:${String(examTimeRemaining%60).padStart(2,'0')}</span>` : ''}
         ${examSimulatorMode && !examTimerRunning ? `<span style="font-size:0.7rem;color:var(--muted);"><i class="fas fa-clock"></i> ${(window.realisticExam && window.realisticExam.duo) ? 'Uhr läuft ab „Prüfung starten"' : 'Timer startet bei 1. Antwort'}</span>` : ''}
@@ -68178,6 +68220,8 @@ html.android-app:not(#zz) body.dark #einstellungenModal #appDesignSeg button.an 
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste{display:flex!important;flex-wrap:wrap;gap:8px!important;margin-top:4px}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste button:not([style*='display:none']):not([style*='display: none']):not([hidden]){width:38px!important;height:38px!important;min-width:0!important;padding:0!important;border-radius:50%!important;background:rgba(255,255,255,.16)!important;border:0!important;color:#fff!important;font-size:15px!important;display:inline-grid;place-items:center;box-shadow:none!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste button:not([style*='display:none']) i{color:#fff!important;margin:0!important;font-size:15px!important;line-height:1!important}
+/* Stand 467: Formelblatt-Knopf im Simulator ist nur Symbol (Text 'Formelblatt' lief ueber den runden Knopf). */
+html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #formelBtn:not(#zz){font-size:0!important;overflow:hidden!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn{font-size:0!important;line-height:1!important;background:rgba(255,255,255,.26)!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn i{font-size:16px!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn{display:inline-flex!important;align-items:center;justify-content:center}   /* 21.10.2026: Lautsprecher sass zu hoch (Text "Vorlesen" mit Schriftgroesse 0 belegte eine eigene Gitterzeile) */

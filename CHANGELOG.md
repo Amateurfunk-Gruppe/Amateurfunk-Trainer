@@ -11,6 +11,15 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 468 (06.11.2026)
+- Prüfungsreife: Die echten Ergebnisse der Prüfungssimulationen (je Teil die letzten bis zu 10) rechnen jetzt mit. Wer jede Simulation besteht, bleibt nicht mehr bei „21 von 25 / 9 von 10 Prüfungen“ hängen, nur weil viele Fragen noch nie drankamen; wer oft durchfällt, wird entsprechend vorsichtiger eingestuft.
+- App: Der Kasten „Antwort hervorheben" (Farbe, Rand, sanftes Aufleuchten, Vorschau zum Antippen) ist unter Einstellungen → Anpassen wieder da; er war seit der Aufräum-Runde für die App (Stand 418) ausgeblendet.
+
+## Stand 467 (06.11.2026)
+- Simulator am Handy: Der Formelblatt-Knopf ist jetzt wie der Rechner ein runder Knopf nur mit Symbol; der Text „Formelblatt" lief über den Knopf hinaus.
+- An der Frage steht „Klasse N" nicht mehr; der Hinweis erscheint nur noch, wenn eine Frage aus einer höheren Klasse stammt.
+- Einstellungen: Der Reiter „Bestenliste" sitzt jetzt direkt rechts neben „Vorlesen".
+
 ## Stand 466 (06.11.2026)
 - "Ergebnis teilen": Der Link wird jetzt bei jedem Klick automatisch in die Zwischenablage kopiert (schon im Klick gestartet, damit Browser es erlauben; der kurze /e/-Link wird nachgeliefert). PC: Hinweis "Link kopiert" und fertig, nur noch Strg+V. Handy: grüner Hinweis "Link kopiert" und danach wie bisher das Teilen-Fenster.
 
