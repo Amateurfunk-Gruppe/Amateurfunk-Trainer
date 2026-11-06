@@ -10183,9 +10183,13 @@ body.dark .rk{ --rk-c:#34d399; --rk-t:#eef5ff; --rk-mu:#9db4d0; --rk-ln:rgba(255
    das gesprochene Wort (Mitlesen) bekommt darauf einen dunklen Ton. */
 html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid).gewaehlt:hover:not(.tts-highlight):not(#q1):not(#q2):not(#q3){ background:var(--darc-gewaehlt,#f9a05a) !important; }
 html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid).gewaehlt:hover:not(.tts-highlight):not(#q1):not(#q2):not(#q3) :is(.option-text,.option-label){ color:#000 !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3){ background:#ffd600 !important; border-color:#fff3a0 !important; box-shadow:0 0 0 2px #ffd600, 0 0 20px rgba(255,214,0,.55) !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) :is(.option-text,.option-label){ color:#1a1300 !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .tts-wort-an{ color:var(--wort-box,#7a1f00) !important; font-weight:800; }
+/* Stand 464 (06.11.2026), Dietmar: "warum sieht das jetzt scho schrecklich aus?" - Die vorgelesene / angefahrene Antwort war im Dunkeln
+ ein volles, grelles Gelb mit orangeroter Wortmarke und dunklem Buchstaben. Jetzt: dunkles Bernstein mit goldenem Rand, helle Schrift,
+ das gesprochene Wort golden hinterlegt. Das ganze Feld bleibt hervorgehoben, blendet aber nicht mehr. */
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3){ background:#3a2f06 !important; border-color:#ffd600 !important; box-shadow:0 0 0 1px #ffd600, 0 0 14px rgba(255,214,0,.25) !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) :is(.option-text){ color:#fff7d6 !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .option-label{ background:#ffd600 !important; color:#1a1300 !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .tts-wort-an{ color:#fff !important; background:rgba(255,214,0,.30) !important; border-radius:4px; box-shadow:0 2px 0 #ffd600 !important; font-weight:800; }
 html.android-app .pc-nurfrage{ display:none !important; }
 /* Stand 446: Im Simulator bleiben Formelblatt und Taschenrechner auch am Handy an der Frage (sonst treten sie dort zurueck). */
 body.handy.runde-laeuft.sim-hilfen #rechnerBtn, body.handy.runde-laeuft.sim-hilfen #formelBtn{ display:inline-flex !important; }
@@ -10223,10 +10227,23 @@ html:not(#b1):not(#b2) body:not(#b3) #blAnsehen:not(#b4):not(#b5):hover{filter:b
 #formelModal .fz-griff{cursor:move;font-size:.95rem}
 #formelModal .fz-extern{display:none;width:auto;border-radius:20px;padding:0 14px;font-size:.85rem;font-weight:700}
 #formelModal:has(#formelWebRolle) .fz-extern{display:inline-flex}
+/* Stand 465, Dietmar: "Durch drücken der linken Maustaste möchte ich das ganze Formelblatt ... verschieben können. Das Zeichen rechts oben ist für den Arsch."
+   Das Blatt ist ein PDF in der Anzeige des Browsers - Klicks darin kommen bei der Seite nie an (sein Wunsch: "Es muss das PDF bleiben").
+   Darum eine schmale Griffleiste über dem Blatt, die ganze Breite, zum Greifen und Ziehen; das alte kleine Zeichen entfällt. */
+#formelModal .fz-leiste{flex:0 0 auto;height:26px;cursor:grab;background:linear-gradient(#e9eef5,#dde5ef);border-radius:14px 14px 0 0;border-bottom:1px solid #c5d0de;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none}
+#formelModal .fz-leiste:hover{background:linear-gradient(#e1e8f2,#d3ddea)}
+#formelModal .fz-leiste:active,#formelModal.fz-zieht .fz-leiste{cursor:grabbing}
+#formelModal .fz-leiste i{display:block;width:54px;height:8px;background:radial-gradient(circle,#7d8da3 1.6px,transparent 2px) 0 0/9px 8px repeat-x}
+#formelModal .fz-griff{display:none!important}
+#formelModal #formelBuehne{border-radius:0 0 14px 14px!important}
+#formelModal.fz-zieht #formelPdf{pointer-events:none}
+html body.dark #formelModal .fz-leiste{background:linear-gradient(#cfd8e4,#c2cddb)}
 /* schmal (Handy, kleines Fenster): die Knoepfe liegen auf dem Blatt, unten rechts */
 @media (max-width:900px){
   #formelModal #formelKopf.fz-schwebe{top:6px;right:6px}
   #formelModal .fz-griff{display:none}
+  #formelModal .fz-leiste{display:none}
+  #formelModal #formelBuehne{border-radius:14px!important}
 }
 html:not(#h1):not(#h2) body:not(#h3).dark #formelModal #formelKasten:not(#h4):not(#h5){background:#e4e8ee!important}
 html:not(#h1):not(#h2) body:not(#h3) #formelModal #formelKopf .fz-knopf:not(#h4):not(#h5){width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;max-width:none;border-radius:50%!important;background:#fff!important;border:1px solid #aeb9c7!important;color:#0f2745!important;padding:0!important;box-shadow:0 3px 12px rgba(0,0,0,.35)!important}
@@ -26079,7 +26096,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 463, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 466, datum: '06.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -28824,6 +28841,8 @@ function formelOeffnen(stelleId){
             +   '<button type="button" class="fz-knopf fz-griff" title="Zum Verschieben hier anfassen" aria-label="Fenster verschieben"><i class="fas fa-up-down-left-right"></i></button>'
             +   '<button type="button" class="fz-knopf x-zu" onclick="formelSchliessen()" title="Schließen (Esc)" aria-label="Schließen">&#10005;</button>'
             + '</div>'
+            // Stand 465: schmale Griffleiste ueber dem Blatt - das Zeichen rechts oben war zu klein zum Treffen
+            + '<div id="formelGriff" class="fz-leiste" title="Hier mit gedrückter linker Maustaste ziehen, um das Blatt zu verschieben" aria-label="Blatt verschieben"><i></i></div>'
             + '<div id="formelBuehne" style="background:#eef2f7; flex:1; min-height:0; display:flex; border-radius:14px; overflow:hidden;">'
             +   '<iframe id="formelPdf" title="Formelsammlung" style="flex:1; width:100%; border:0; background:#fff;"></iframe>'
             + '</div>'
@@ -28900,9 +28919,12 @@ function formelZiehbarMachen(m){
         kasten.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
         e.preventDefault();
     };
-    const loslassen = () => { start = null; };
-    kopf.addEventListener('mousedown', anfassen);
-    kopf.addEventListener('touchstart', anfassen, { passive:false });
+    const loslassen = () => { start = null; m.classList.remove('fz-zieht'); };
+    const leiste = m.querySelector('#formelGriff');
+    const anfassenL = e => { m.classList.add('fz-zieht'); anfassen(e); };
+    kopf.addEventListener('mousedown', anfassenL);
+    kopf.addEventListener('touchstart', anfassenL, { passive:false });
+    if(leiste){ leiste.addEventListener('mousedown', anfassenL); leiste.addEventListener('touchstart', anfassenL, { passive:false }); }
     document.addEventListener('mousemove', ziehen);
     document.addEventListener('touchmove', ziehen, { passive:false });
     document.addEventListener('mouseup', loslassen);
@@ -42165,47 +42187,72 @@ async function ergebnisKurzLink(t){
     finally{ clearTimeout(uhr); }
     return null;
 }
+// LINK BEIM TEILEN AUTOMATISCH KOPIEREN (Stand 466, 06.11.2026)
+// Dietmar: "Es war extrem schwierig den Link nach bestandener Pruefung zu teilen. Ich moechte, dass wenn ich auf
+// Pruefung teilen klicke, automatisch der Link kopiert wird." Jetzt startet das Kopieren schon im Klick (Safari/Chrome
+// erlauben die Zwischenablage nur dort), der kurze Link wird nachgeliefert, sobald er fertig ist. Danach: Handy ->
+// Teilen-Fenster wie bisher, PC -> Hinweis "Link kopiert" (nur Strg+V in Facebook/WhatsApp/Forum).
+function ergebnisHinweis(text){
+    try{
+        let h = document.getElementById('ergKopierHinweis');
+        if(!h){
+            h = document.createElement('div'); h.id = 'ergKopierHinweis';
+            h.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;background:#1b5e20;color:#fff;font:600 16px/1.35 system-ui,sans-serif;padding:12px 18px;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.4);max-width:90vw;text-align:center;pointer-events:none';
+            document.body.appendChild(h);
+        }
+        h.textContent = text; h.style.display = 'block';
+        clearTimeout(h._t); h._t = setTimeout(() => { h.style.display = 'none'; }, 4200);
+    }catch(e){}
+}
+function ergebnisTextKopieren(text){
+    return new Promise(res => {
+        const alt = () => {
+            try{
+                const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+                ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+                const ok = document.execCommand('copy'); ta.remove(); res(!!ok);
+            }catch(e){ res(false); }
+        };
+        try{
+            if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){ navigator.clipboard.writeText(text).then(() => res(true), alt); return; }
+        }catch(e){}
+        alt();
+    });
+}
 async function ergebnisTeilen(){
     const t = window.__ergTeilen; if(!t) return;
-    try{ const k = await ergebnisKurzLink(t); if(k) t.url = k; }catch(e){}
-    const voll = t.text + ' ' + t.url;
-    const gemeldet = ok => { try{ (window.showAppAlert || alert)(ok ? 'Text kopiert – jetzt z. B. in WhatsApp oder Signal einfügen.' : voll); }catch(e){} };
-    const kopieren = () => {
-        try{
-            if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(voll).then(() => gemeldet(true), () => altKopie()); return; }
-        }catch(e){}
-        altKopie();
-    };
-    const altKopie = () => {
-        try{
-            const ta = document.createElement('textarea'); ta.value = voll; ta.setAttribute('readonly', '');
-            ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select();
-            const ok = document.execCommand('copy'); ta.remove(); gemeldet(ok);
-        }catch(e){ gemeldet(false); }
-    };
+    // Kurzen Link holen (laeuft im Hintergrund), Kopieren schon jetzt im Klick anstossen
+    const linkP = (async () => { try{ const k = await ergebnisKurzLink(t); if(k) t.url = k; }catch(e){} return t.url; })();
+    let kopieP = null;
+    try{
+        if(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write && window.isSecureContext){
+            kopieP = navigator.clipboard.write([new ClipboardItem({ 'text/plain': linkP.then(u => new Blob([u], { type: 'text/plain' })) })]).then(() => true, () => false);
+        }
+    }catch(e){ kopieP = null; }
+    const url = await linkP;
+    let kopiert = kopieP ? await kopieP : false;
+    if(!kopiert) kopiert = await ergebnisTextKopieren(url);
+    const voll = t.text + ' ' + url;
+    const handy = (() => { try{ return window.matchMedia('(pointer:coarse)').matches || document.documentElement.classList.contains('android-app'); }catch(e){ return false; } })();
+    if(!handy){
+        // PC: Link liegt in der Zwischenablage - fertig. Ohne Zwischenablage: Link zum Markieren anzeigen.
+        try{ (window.showAppAlert || alert)(kopiert ? 'Link kopiert ✓ – jetzt z. B. in Facebook, WhatsApp Web oder ins Forum einfügen (Strg+V).' : voll); }catch(e){}
+        return;
+    }
+    if(kopiert) ergebnisHinweis('Link kopiert ✓');
     let datei = t.dateiFertig || null;
     if(!datei && t.dateiVersprechen){ try{ datei = await t.dateiVersprechen; }catch(e){} }
-    // 1) Bild + Text an eine App (WhatsApp, Signal, Telegram ...)
+    // Handy 1) Bild + Text an eine App (WhatsApp, Signal, Telegram ...)
     try{
         if(datei && navigator.share && navigator.canShare && navigator.canShare({ files: [datei] })){
             await navigator.share({ files: [datei], text: voll, title: 'Amateurfunk-Trainer' }); return;
         }
     }catch(err){ if(err && err.name === 'AbortError') return; }
-    // 2) nur Text (und Link)
+    // Handy 2) nur Text (und Link)
     try{
-        if(navigator.share){ navigator.share({ title: 'Amateurfunk-Trainer', text: t.text, url: t.url }).catch(err => { if(!err || err.name !== 'AbortError') kopieren(); }); return; }
+        if(navigator.share){ navigator.share({ title: 'Amateurfunk-Trainer', text: t.text, url: url }).catch(() => {}); return; }
     }catch(e){}
-    // 3) Am PC: Bild speichern, Text kopieren
-    if(datei){
-        try{
-            const u = URL.createObjectURL(datei), a = document.createElement('a');
-            a.href = u; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
-            try{ navigator.clipboard && navigator.clipboard.writeText(voll); }catch(e){}
-            try{ (window.showAppAlert || alert)('Bild gespeichert, Text kopiert – beides z. B. in WhatsApp Web einfügen.'); }catch(e){}
-            return;
-        }catch(e){}
-    }
-    kopieren();
+    if(!kopiert){ try{ (window.showAppAlert || alert)(voll); }catch(e){} }
 }
 window.ergebnisTeilen = ergebnisTeilen;
 

@@ -11,6 +11,16 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 466 (06.11.2026)
+- "Ergebnis teilen": Der Link wird jetzt bei jedem Klick automatisch in die Zwischenablage kopiert (schon im Klick gestartet, damit Browser es erlauben; der kurze /e/-Link wird nachgeliefert). PC: Hinweis "Link kopiert" und fertig, nur noch Strg+V. Handy: grüner Hinweis "Link kopiert" und danach wie bisher das Teilen-Fenster.
+
+## Stand 465 (06.11.2026)
+- Formelblatt: Eine Griffleiste mit Punkten oberhalb des PDFs verschiebt das ganze Blatt mit gedrückter linker Maustaste (das PDF bleibt ein PDF). Das alte Symbol rechts oben ist entfernt; beim Ziehen reagiert das PDF nicht dazwischen.
+
+## Stand 464 (06.11.2026)
+
+- Vorgelesene und angefahrene Antwort im Dunkeln (Polar, Arktis …): Statt vollem, grellem Gelb mit orangeroter Wortmarke jetzt dunkles Bernstein mit goldenem Rand, heller Schrift und goldenem Buchstaben; das gesprochene Wort ist golden hinterlegt und unterstrichen. Das ganze Feld bleibt hervorgehoben, blendet aber nicht mehr.
+
 ## Stand 463 (06.11.2026)
 
 - Online-Fassung aufgeräumt (Dietmar: „Ist da noch mehr so altes Zeug drin?“): In den Einstellungen sind die Reiter Update, Wartung, Kursauswertung und Lerncoach sowie die Kästen Profilbild und Chat im Reiter Allgemein ausgeblendet. Sie gehören zum Laptop-Server (GitHub-Update, Hilfsprogramme, Gruppenraum) und zeigten online nur Fehlermeldungen wie „Der Trainer läuft vielleicht nicht mehr (HTTP 404)“. Der Blätter-Stand nennt keine Datei auf dem Rechner mehr. Am Trainer-PC und in der PC-Fassung bleibt alles.
