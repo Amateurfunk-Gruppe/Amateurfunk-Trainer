@@ -11,6 +11,23 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 475 (06.11.2026)
+
+- **Klassische PC-Ansicht: alle Schließen-Kreuze sind jetzt echte Kreise.** Dietmar (Bild Auswertung): „Rund (Kreis) ist was anderes. Das ist ein Ei oder Oval.“ Gemessen am PC: Statistik 35,8 × 44, Gruppenraum 30,6 × 33. Gleich breit wie hoch (36 Punkte), Rundung 50 %. In der App (Handy und PC-App) war das seit Stand 470/471 schon so.
+
+## Stand 474 (06.11.2026)
+
+- **Am PC: „Bist du bereit?“ schneidet nicht mehr unten ab.** Dietmar (Bild): „Es schneidet unten ab!“ und „Lernpfad juckt mich eh 0 die Bohne … passe das andere lieber in der Größe an.“ Der Lernpfad steht am PC nicht mehr auf der Startseite (am Handy bleibt er). „Bist du bereit?“ nimmt den frei gewordenen Platz: Zehner-Kasten, Punkte je Teil mit Balken und die Ansage darunter.
+
+## Stand 473 (06.11.2026)
+
+- **„Bist du bereit?“ rechnet jetzt wie die Prüfungsreife.** Dietmar (Bild der App neben der PC-Ansicht): „Das am PC ist besser als in der App.“ Die Karte zeigt oben „X von 10 Prüfungen bestanden“ mit Balken, je Teil „23 von 25 Punkten · Grenze 19“ (Balken mit Strich an der Bestehensgrenze, Wort sitzt / knapp / zu wenig) und darunter die Ansage („Du wärst durch.“ / „Heute würdest du an Betrieb scheitern.“). Fehlen in einem Teil noch Antworten, bleibt die alte Anzeige aus den letzten Prüfungen.
+
+## Stand 472 (06.11.2026)
+
+- **„Bist du bereit?“ nennt jetzt auch „X von 10 Prüfungen bestanden“.** Dietmar: „Bist du bereit sagt nicht, von wievielen Prüfungen ich von 10 schaffe.“ Die Zeile steht über dem Hinweissatz und rechnet wie die Prüfungsreife (2000 Durchgänge, Simulator-Ergebnisse zählen mit). Fehlen noch Antworten in einem Teil, steht dort, in welchem.
+- **Prüfungsreife in der App wie am PC.** Dietmar: „Das am PC ist besser als in der App. Kannst das so einbauen?“ Je Teil eine Zeile (Name, Balken, „23 von 25“), statt untereinander; die lange Erklärung unter dem Zehner-Kasten entfällt in der App.
+
 ## Stand 471 (06.11.2026)
 - App (Sachlich und Verspielt): Alle Schließen-Kreuze in den Fenstern sind jetzt gleich breit wie hoch (40 Punkte) und in der Form „rund“ ein echter Kreis. Vorher waren z. B. das X in der Statistik (33 × 40), in den Sprach-Einstellungen und im Gruppenraum (28 × 30) oval, andere nur ein schlichtes Kreuz ohne Form.
 

@@ -1094,6 +1094,18 @@
             border: 1px solid var(--s-rand); font-size: 12.5px; line-height: 1.45; color: var(--s-text2);
             background: linear-gradient(135deg, var(--s-akzent-w, rgba(15,183,178,.12)), transparent); }
         #awReife .awr-satz b { color: var(--s-text); }
+        /* Stand 472 - Dietmar 06.11.2026: "Bist du bereit sagt nicht, von wievielen Pruefungen ich von 10 schaffe" */
+        #awReife .awr-zehn { margin: 10px 0 4px; padding: 10px 12px; border-radius: var(--s-r-klein, 14px); border: 1px solid var(--s-rand); }
+        #awReife .awr-zehn .awr-zk { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        #awReife .awr-zehn b { font-size: 22px; font-weight: 800; line-height: 1; }
+        #awReife .awr-zehn .awr-zk > span { font-size: 13px; color: var(--s-text); font-weight: 600; }
+        #awReife .awr-zehn small { margin-left: auto; font-size: 12px; color: var(--s-text2); }
+        #awReife .awr-zbal { display: block; height: 10px; border-radius: 999px; background: var(--s-fl2); margin-top: 8px; overflow: hidden; }
+        #awReife .awr-zbal i { display: block; height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,1,.3,1); }
+        #awReife .awr-bal { position: relative; }
+        #awReife .awr-bal u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--s-text, #fff); opacity: .8; text-decoration: none; }
+        #awReife .awr-zt b.awr-pkt { display: inline !important; font-size: inherit !important; color: var(--s-text); }
+        #awReife .awr-zehn.zu-wenig { font-size: 12.5px; color: var(--s-text2); }
         body.dark #awReife .bereit .awr-wert { color: var(--s-gruen, #34E089); }
         body.dark #awReife .fast .awr-wert { color: var(--s-amber, #FFB547); }
 
@@ -10413,6 +10425,13 @@ html.android-app:not(#a1) body:not(#a2) :is(button.x-zu, button.afu-x):not(.fz-k
   line-height: 1 !important; flex: 0 0 40px; box-sizing: border-box !important;
 }
 html.android-app:not(#a1) body.app-rund:not(#a2) :is(button.x-zu, button.afu-x):not(.fz-knopf):not(#a3){ border-radius: 50% !important; }
+/* Stand 475 - Dietmar 06.11.2026 (Bild Auswertung am PC, klassische Ansicht): "Rund (Kreis) ist was anderes. Das ist ein Ei oder Oval." Gemessen: Statistik-Fenster 35,8 x 44,
+   Gruppenraum 30,6 x 33. Gleiche Regel wie in der App, aber fuer die klassische PC-Ansicht (dort gibt es kein android-app und kein app-rund) - immer ein echter Kreis. */
+html:not(.android-app):not(#a1) body:not(#a2) :is(button.x-zu, button.afu-x):not(.fz-knopf):not(#a3){
+  width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; max-width: 36px !important; max-height: 36px !important;
+  padding: 0 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  line-height: 1 !important; flex: 0 0 36px; box-sizing: border-box !important; border-radius: 50% !important; aspect-ratio: 1 / 1;
+}
 html.android-app.stil-sachlich body:not(.dark):not(#zz2) :is(.ah-ueber, #awGrid, .aw-grid){
   border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important;
   backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
@@ -26153,7 +26172,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 471, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 475, datum: '06.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -64415,18 +64434,61 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 : ' Eine Runde <b>Fehler \u00fcben</b>, dann noch eine Simulation.';
             satz = kopf + teile.join(', ').replace(/^./, c => c.toUpperCase()) + '.' + rat;
         }
-        const sig = JSON.stringify(r.map(x => [x.teil, x.n, Math.round((x.fehler || 0) * 10), x.stufe])) + '|' + satz;
+        // Stand 472/473: Die Karte rechnet wie die Pruefungsreife (Statistik): je Teil Punkte von 25, dazu
+        // "X von 10 Pruefungen bestanden". Dietmar 06.11.2026: "Das am PC ist besser als in der App."
+        // Neu gerechnet wird nur, wenn sich Antworten oder Pruefungen aendern (sonst wuerfelt die Zahl bei jedem Zeichnen).
+        let zehn = '', rt = {}, satz2 = '';
+        tu(() => {
+            (typeof realisticTeile === 'function' ? realisticTeile() : []).forEach(t => { const w = reifeTeil(t); if(w) rt[String(t).split('_')[0]] = w; });
+            let h = 0; const md = (typeof masteryData !== 'undefined' && masteryData) ? masteryData : {};
+            for(const k in md){ const m = md[k]; if(m) h += (m.totalCorrect || 0) * 3 + (m.totalWrong || 0) * 7; }
+            const hist = (typeof history !== 'undefined' && history && history[currentUser]) ? history[currentUser].length : 0;
+            const key = h + '|' + hist + '|' + r.length;
+            if(el._zehnKey !== key || el._zehnZ === undefined){ el._zehnKey = key; el._zehnZ = (window.reifeVonZehn ? reifeVonZehn() : null); }
+            const z = el._zehnZ;
+            if(!z) return;
+            if(z.unvollstaendig){
+                zehn = '<div class="awr-zehn zu-wenig">Von 10 Prüfungen: dazu fehlen noch Antworten in ' + z.unvollstaendig.join(' und ') + '.</div>';
+                return;
+            }
+            const wort = z.vonZehn === 10 ? 'Alle zehn' : (z.vonZehn === 0 ? 'Keine' : String(z.vonZehn));
+            const farbe = (window.reifeFarbeText ? reifeFarbeText(z.anteil) : 'inherit');
+            const kurz = z.anteil >= 0.9 ? 'Das sitzt.' : (z.anteil >= 0.6 ? 'Reicht meistens.' : (z.anteil >= 0.25 ? 'Noch Tagesglück.' : 'Noch Zufall.'));
+            const bst = (window.reifeFarbe ? reifeFarbe(Math.max(0, Math.min(1, z.anteil))) : null);
+            const fl = bst ? 'hsl(' + bst.h + ',' + bst.s + '%,' + bst.l + '%)' : farbe;
+            zehn = '<div class="awr-zehn"><div class="awr-zk"><b style="color:' + farbe + '">' + wort + '</b><span>' + (z.vonZehn === 10 ? 'Prüfungen bestanden' : 'von 10 Prüfungen bestanden') + '</span><small>' + kurz + '</small></div>'
+                + '<span class="awr-zbal"><i style="width:' + Math.round(z.anteil * 100) + '%;background:' + fl + '"></i></span></div>';
+        });
+        // Ansage wie in der Statistik - nur wenn jeder Teil genug Antworten hat
+        const reifeAlle = r.length && r.every(x => rt[x.teil] && rt[x.teil].genug);
+        if(reifeAlle){
+            const ws = r.map(x => rt[x.teil]);
+            const schl = ws.reduce((a, w) => (!a || w.punkte < a.punkte) ? w : a, null);
+            const nm = x => (r.find(y => rt[y.teil] === x) || {}).name || '';
+            if(ws.some(w => w.lage === 'schlecht')) satz2 = '<b>Heute würdest du an ' + nm(schl) + ' scheitern.</b> Dir fehlen dort im Schnitt ' + (Math.round(Math.max(0, REIFE_NOETIG - schl.punkte) * 10) / 10).toString().replace('.', ',') + ' Punkte zur Grenze. Eine Runde <b>Fehler üben</b> hilft am meisten.';
+            else if(ws.every(w => w.lage === 'gut')) satz2 = '<b>Du wärst durch.</b> Alle Teile liegen sicher über der Grenze von ' + REIFE_NOETIG + ' Punkten.';
+            else satz2 = '<b>Es reicht – aber knapp.</b> Ein Teil liegt nur knapp über der Grenze; ein schlechter Tag genügt, und es kippt.';
+        }
+        const sig = JSON.stringify(r.map(x => [x.teil, x.n, Math.round((x.fehler || 0) * 10), x.stufe])) + '|' + satz + '|' + zehn + '|' + satz2 + '|' + r.map(x => rt[x.teil] ? rt[x.teil].punkte : '-').join(',');
         if(el.dataset.sig === sig) return;
         el.dataset.sig = sig;
         el.title = satz.replace(/<[^>]+>/g, '');   // Stand 400: am PC ist der Satz ausgeblendet, er steht hier im Hinweis
-        el.innerHTML = '<div class="awr-kopf"><b>Bist du bereit?</b><small>Aus deinen letzten Pr\u00fcfungen je Teil</small></div>'
-          + r.map(x => '<div class="awr-teil ' + x.stufe + '" data-teil="' + x.teil + '">'
+        el.innerHTML = '<div class="awr-kopf"><b>Bist du bereit?</b><small>' + (reifeAlle ? 'Aus deinem Lernstand und deinen Pr\u00fcfungen' : 'Aus deinen letzten Pr\u00fcfungen je Teil') + '</small></div>'
+          + zehn
+          + r.map(x => {
+              const w = rt[x.teil], pk = (reifeAlle && w) ? w : null;
+              const st = pk ? (pk.lage === 'gut' ? 'bereit' : (pk.lage === 'knapp' ? 'fast' : 'offen')) : x.stufe;
+              const wortT = pk ? (pk.lage === 'gut' ? 'sitzt' : (pk.lage === 'knapp' ? 'knapp' : 'zu wenig')) : REIFE_WORT[x.stufe];
+              const zeile = pk ? ('<b class="awr-pkt">' + Math.round(pk.punkte) + ' von ' + REIFE_BOGEN + '</b> \u00b7 Grenze ' + REIFE_NOETIG
+                  + (x.n ? ' \u00b7 ' + x.n + (x.n === 1 ? ' Pr.' : ' Pr.') : ''))
+                  : (x.n ? '\u00d8 ' + (Math.round(x.fehler * 10) / 10).toLocaleString('de-DE') + ' Fehler von 25 \u00b7 ' + x.n + (x.n === 1 ? ' Pr\u00fcfung' : ' Pr\u00fcfungen') : 'noch nicht gepr\u00fcft');
+              const anteilT = pk ? Math.max(0.04, Math.min(1, pk.punkte / REIFE_BOGEN)) : x.anteil;
+              return '<div class="awr-teil ' + st + '" data-teil="' + x.teil + '">'
               + '<span class="awr-z">' + (REIFE_SVG[x.teil] || '') + '</span>'
-              + '<span class="awr-zt"><b>' + x.name + '</b><small>'
-              + (x.n ? '\u00d8 ' + (Math.round(x.fehler * 10) / 10).toLocaleString('de-DE') + ' Fehler von 25 \u00b7 ' + x.n + (x.n === 1 ? ' Pr\u00fcfung' : ' Pr\u00fcfungen') : 'noch nicht gepr\u00fcft')
-              + '</small><span class="awr-bal"><i style="width:' + Math.round(x.anteil * 100) + '%"></i></span></span>'
-              + '<span class="awr-wert">' + REIFE_WORT[x.stufe] + '</span></div>').join('')
-          + '<div class="awr-satz">' + satz + '</div>';
+              + '<span class="awr-zt"><b>' + x.name + '</b><small>' + zeile
+              + '</small><span class="awr-bal"><i style="width:' + Math.round(anteilT * 100) + '%"></i>' + (pk ? '<u style="left:' + Math.round(REIFE_NOETIG / REIFE_BOGEN * 100) + '%"></u>' : '') + '</span></span>'
+              + '<span class="awr-wert">' + wortT + '</span></div>'; }).join('')
+          + '<div class="awr-satz">' + (satz2 || satz) + '</div>';
     }
     function levelNachziehen(xp, nr){
         // Dein Level
@@ -69796,6 +69858,26 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
     setInterval(() => { try{ zahlNachziehen(); }catch(x){} }, 2000);
 })();
 </script>
+<style id="reifeApp472">
+/* Stand 474 - Dietmar 06.11.2026 (Bild vom PC): "Es schneidet unten ab!" und "Lernpfad juckt mich eh 0 die Bohne ... passe das andere lieber in der Groesse an."
+   Am PC fehlt der Lernpfad auf der Startseite; "Bist du bereit?" nimmt den freien Platz und zeigt alles (Zehner-Kasten, Punkte je Teil, Ansage). */
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #appWerk > #awPfad:not(#zz2){ display:none !important; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #appWerk > #awReife:not(#zz2){ flex:1 1 auto !important; height:auto !important; min-height:110px; overflow:hidden; align-content:start; gap:8px 10px !important; padding:12px 14px !important; margin-bottom:0 !important; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-zehn{ grid-column:1 / -1; margin:2px 0 4px; padding:8px 12px; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-zehn b{ font-size:20px; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-teil{ grid-template-areas:"z b" "z s" "l l" "w w" !important; row-gap:3px; padding-top:8px; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-zt small{ display:block !important; grid-area:s; font-size:11px; line-height:1.3; white-space:normal; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-bal{ margin-top:4px !important; height:6px !important; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-wert{ margin-top:2px; }
+html.pc-app.stil-verspielt:not(.pc-handy):not(#zz1) #awReife:not(#zz2) .awr-satz{ position:static !important; width:auto !important; height:auto !important; margin:6px 0 0 !important; padding:9px 12px !important; clip:auto !important; overflow:visible !important; white-space:normal !important; border:1px solid var(--s-rand) !important; grid-column:1 / -1; font-size:12.5px; }
+/* Stand 472 - Dietmar 06.11.2026: "Das am PC ist besser als in der App. Kannst das so einbauen?"
+   Pruefungsreife in der App wie am PC: je Teil EINE Zeile (Name | Balken | Punkte), die lange Erklaerung weg. */
+html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3){ display:grid !important; grid-template-columns: 90px minmax(0,1fr) 84px !important; gap:.45rem !important; align-items:center !important; }
+html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > div:first-child{ font-size:.84rem !important; }
+html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > div:nth-child(3){ text-align:right !important; font-size:.78rem !important; white-space:nowrap !important; }
+html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-stand:not(#zz3){ grid-column:1 / -1; font-size:.72rem !important; }
+html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .stat-kuerzbar:not(#zz3){ display:none !important; }
+</style>
 <script id="afuXFormen">
 // Stand 470: markiert alle schlichten Schliessen-Kreuze in Fenstern (Text nur x / Kreuz), damit CSS sie gleich breit wie hoch macht.
 (function(){
