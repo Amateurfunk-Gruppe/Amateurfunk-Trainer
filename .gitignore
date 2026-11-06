@@ -483,3 +483,8 @@ SERVER-FREIGABE.txt
 # Cloudflare-Pakete (23.10.2026) - nur zum Hochladen bei Cloudflare, nicht auf GitHub und nicht in die App
 /trainer-cloud.zip
 /trainer-cloud-*.zip
+
+# Zugangsdaten fuer die Bestenliste (06.11.2026) - niemals ins Repository
+/Bestenliste-Einrichten/
+/_Bestenliste-Einrichten/
+**/geheim.txt

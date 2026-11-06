@@ -11,7 +11,120 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 461 (06.11.2026)
+
+- Merkliste (dunkel, Polar): Die Herzen gemerkter Fragen sind wieder rot. Eine Polar-Regel für alle Knöpfe in Fenstern hatte das Rot überdeckt.
+
+## Stand 460 (06.11.2026)
+
+- Handy und Android-App: Die neue Anordnung der Bildantworten (Buchstabe oben links, schmale Zeichnung) gilt nur noch am PC (ab 900 Punkten Breite). Am Handy war die Zeichnung dadurch viel zu klein geworden (77 statt 157 Punkte breit); dort ist es wieder wie vorher, nur mit abgedunkeltem Bildfeld.
+
+## Stand 459 (06.11.2026)
+
+- Warmton der großen Bilder dezenter: neuer Standard 5000 K (wenig Farbe). 4500 K, 3800 K, 3000 K und Aus bleiben unter Nachteilsausgleich → Bilder vergrößern wählbar.
+- Lupe am Bild in der Frage (z. B. NE207): jetzt auch in der App-Ansicht am PC, nicht nur in der klassischen Ansicht.
+
+## Stand 458 (06.11.2026)
+
+- Bildantworten (Entwurf C): Der Buchstabe sitzt als Marke oben links im Feld. Das Bild ist nur so breit wie die Zeichnung, die Zeichnungen fallen dadurch größer aus (auf dem Testschirm 131 statt 90 Punkte hoch), die Lupe ist kleiner. Die automatische Anpassung an die Fensterhöhe bleibt.
+
+## Stand 457 (06.11.2026)
+
+- Bildantworten: Weiß bleibt nur die Zeichnung selbst; der Rest des Bildfeldes ist abgedunkelt (hell: grau, dunkel: dunkelblau). Das Feld bleibt so groß wie bisher, Hover und Markierung beim Vorlesen gelten weiter für das ganze Feld.
+
+## Stand 456 (06.11.2026)
+
+- Frage mit Bild (z. B. NE207): Am Bild in der Frage sitzt jetzt die Lupe, wie bei den Antworten.
+- Bilder, die beim Vorlesen automatisch groß erscheinen, folgen jetzt dem Nachteilsausgleich („Stärker vergrößern“).
+- Blaulichtfilter für große Bilder: Das vergrößerte weiße Bild wird warm getönt wie Licht mit 3800 K. Einstellbar unter Nachteilsausgleich → Bilder vergrößern: Aus, 4500 K, 3800 K (Standard), 3000 K. Gilt für Mouseover, Lupe und den Vorlese-Zoom. Das sanfte Aufhellen beim Öffnen bleibt.
+
+## Stand 455 (06.11.2026)
+
+- Bilder vergrößern am PC: Der Nachteilsausgleich („Stärker vergrößern“) gilt jetzt auch beim Darüberfahren mit der Maus, nicht nur beim Klick auf die Lupe. Ohne Haken bleibt es bei der bisherigen kleinen Vergrößerung. Die Hinweistexte in den Einstellungen sind angepasst.
+
+## Stand 454 (06.11.2026)
+
+- Prüfungssimulator: mehr Abwechslung. Die 25 Fragen verteilen sich wie im echten Bogen anteilig auf die Kapitel (VA…VE, BA…BG, NA…NK), und der Trainer merkt sich, was schon dran war (nur auf diesem Gerät). Zuerst kommen Fragen, die noch nie oder am längsten nicht gestellt wurden; erst wenn alle einmal dran waren, beginnt die Runde von vorn. Im Startfenster steht, wie viele noch nie gestellt wurden.
+- Vergrößerte Bilder (Lupe und Klick) werden in etwa einer Sekunde sanft von gedämpft zu normal hell.
+- Formelblatt/Hilfsmittel: Fenster ist ein Blatt Papier ohne Kopfleiste und ohne Fußtext; Schließen (X), Verschieben und „Größer“ liegen auf dem Blatt, Blättern als kleine Leiste unten.
+
+## Stand 452 (06.11.2026)
+
+- Formelblatt und Bandplan: Der Hintergrund wird beim Öffnen kaum noch abgedunkelt, die Frage dahinter bleibt gut lesbar (dunkel und hell).
+
+## Stand 451 (06.11.2026)
+
+- Teilen-Bild: Querformat 1200 × 630 (Facebook-Linkbild 1,91 : 1) – links der Antwortbogen mit Stempel, rechts eine schmale Ergebnisleiste mit Gesamtpunkten und den Teilen. In der Vorschau füllt es die ganze Breite.
+- Ergebnis nach der Prüfungssimulation: Reihenfolge Bild, Knöpfe, Fehler zum Nachlesen, Bestenliste. Pokal und die drei Kästen oben entfallen (steht im Bild). Eine Zeile unter dem Bild nennt „Bestanden / Nicht bestanden“. Im Gruppenraum bleibt alles wie vorher.
+- „Nochmal Simulator“ und „Hauptmenü“: hell, rechteckig mit runden Ecken, zwei gleich breite Knöpfe über die ganze Breite wie „Eintragen / Nein, danke“.
+- Fehler zum Nachlesen: bleiben aufklappbar, jetzt mit Pfeil.
+
+## Stand 450 (06.11.2026)
+
+- Hilfsmittel-Fenster (Formelsammlung, Bandplan und die anderen Blätter): Fenster breiter, das Blatt wird rund ein Viertel größer. Kopf und Fuß sind im dunklen Stil Lichtgrau statt Polar-Blau. Der Schließen-Knopf X ist ein runder Kreis.
+- Prüfungssimulation: Der Zettel „Information nach der Prüfungssimulation“ springt nach dem Gesamtergebnis nicht mehr über das Bild. Gezählt wird weiter, der Zettel steht unter „Dein Prüfungszettel“ und auf der Ergebnisseite als Knopf, wo es ihn gibt.
+
+## Stand 449 (06.11.2026)
+
+- Bestenliste: Der Knopf „Bestenliste ansehen“ nach dem Eintragen füllt die ganze Breite, Zeichen und Text stehen nebeneinander.
+- Prüfungssimulation: Der Kasten „BNetzA: ≥19 bestanden, 17-18 Grauzone, <17 nicht bestanden.“ unter dem Gesamtergebnis ist weg. Die Hinweise bei nur einem Teil oder bei knappen Teilen bleiben.
+
+## Stand 448 (06.11.2026)
+
+- Prüfungssimulation: Wer nach einem Teil aufhört (zum Beispiel nach Betrieb), kann beim nächsten Mal mit den übrigen Teilen weitermachen (Vorschriften, dann Technik). Das Fenster zeigt oben „Weiter mit …“ oder „Lieber ganz neu beginnen“. Das Gesamtergebnis zählt am Ende alle drei Teile. Gilt nur für Klasse N und Direkteinstieg Klasse E, nicht im Gruppenraum; gemerkt wird 30 Tage.
+
+## Stand 447 (06.11.2026)
+
+- Dunkel (Polar): Zeichnungen und Bildantworten sind wieder weiß mit schwarzer Zeichnung (kein Negativ mehr), auch beim Vergrößern und in der Android-App.
+
+## Stand 446 (06.11.2026)
+
+- Prüfungssimulation: Formelblatt und Taschenrechner sind immer da, auch am Handy, ohne dass die Frage dazu passt.
+- Nach jedem Teil (Vorschriften, Betrieb, Technik) erscheint ein Prüfungsbogen im Polar-Stil: Zeichen des Teils, Stempel (Bestanden, Grauzone, Nicht bestanden), 25 Felder grün/rot, Zeit, Hinweis und Karte für den nächsten Teil.
+
 ## [1.305.0]
+
+- **Kopfzeile in der Runde in einer Zeile (Stand 445):** Dietmar: „Die Aufteilung der Buttons oben ist nicht gut. … Version, Klasse und Ziel wählen muss raus.“ In einer Prüfungs-/Übungsrunde (klassische Ansicht, große Anzeige) rutschten Uhr und Knöpfe in eine zweite Zeile. Jetzt entfallen dort Version, Klassen-Anzeige und „Ziel wählen“; links steht nur der Name, rechts Uhr und Knöpfe – in einer Zeile (geprüft bei 1100 bis 1881 Pixel Breite).
+
+- **Einstellungen → Vorlesen wieder in Ordnung (Stand 444):** Dietmar: „Das sieht schrecklich aus.“ Beim Einbau von „Antworten vorlesen“ (Stand 442/443) war durch einen Fehler von mir ein Stück der Seite verloren gegangen: Klang, „Probe hören“, „Stimmen hinzufügen“ und die Überschrift „Fragen und Antworten“ fehlten, und die Haken standen nebeneinander. Alles ist wieder da, die Haken stehen untereinander; „Antworten vorlesen“ steht im Kasten „Fragen und Antworten“. Stand 442 und 443 bitte nicht mehr benutzen.
+
+- **Gewählte Antwort bleibt orange, vorgelesene Antwort kräftig gelb (Stand 443):** Dietmar (Video): „Dass es beim Anklicken einer Frage so dunkel wird, gefällt mir nicht. Ich möchte zusätzlich beim Vorlesen ein kräftiges Gelb.“ Im dunklen Polar wurde die gewählte Antwort unter der Maus dunkelblau mit schwarzer Schrift (kaum lesbar); jetzt bleibt sie orange. Die gerade vorgelesene Antwort leuchtet im Dunkeln kräftig gelb mit dunkler Schrift; das gesprochene Wort (Mitlesen) erscheint darauf in einem dunklen Ton der gewählten Farbe (bei Gelb dunkelbraun).
+
+- **Mitlesen auch am PC, „Nur die Frage vorlesen“, Knopf im Prüfungssimulator (Stand 442):** Dietmar: „Bei Mitlesen passiert nichts, wenn ich die Farbe ändere.“ – Am PC wurde in Frage und Antworten gar kein Wort markiert (nur in der Erklärung); jetzt bekommt das gesprochene Wort auch dort die gewählte Farbe (An/Aus und Farbe unter Einstellungen → Vorlesen → Mitlesen). Neu am PC: eigener Haken „Antworten vorlesen“ (Dietmar: „Ich möchte, dass die Antworten ein- und ausschaltbar sind“): mit Haken Frage und alle Antworten, ohne Haken nur die Frage – unabhängig von „Antwort unter der Maus vorlesen“. „Prüfung starten“ im Prüfungssimulator war im dunklen Polar fast schwarz; jetzt grün-türkis wie „Start“.
+
+- **Probe nach „Klang“ spricht Maja (Stand 441):** Dietmar: „Thorsten redet nur bei Klang.“ Beim Umstellen von Klang kam die Probe noch von Thorsten; jetzt wie bei der Geschwindigkeit: Liest Maja, spricht auch diese Probe Maja, sonst der Probesatz der gewählten Stimme. Hinweis: Der Klang (ruhig, normal, lebhaft) wirkt nur auf die Computerstimmen, nicht auf Majas Aufnahmen.
+
+- **„Probe hören“ spricht Maja (Stand 440):** Dietmar: „Bei Probehören, liest Thorsten vor.“ – Gewünscht: Maja. Im Reiter Vorlesen spricht der Knopf jetzt mit Majas Stimme, wenn das Sprachpaket an ist (eine Frage aus dem Paket im eingestellten Tempo, wie bei der Probe nach dem Umstellen der Geschwindigkeit). Ohne Maja-Paket bleibt es beim Probesatz der gewählten Stimme.
+
+- **Einstellungen-Fenster in einer Runde genauso groß wie über der Hauptansicht (Stand 439):** Dietmar (drei Bilder): „Wenn ich über die Prüfungssimulation zu Einstellungen gehe, ist das Fenster für Einstellungen in die Breite gezogen. Das gleiche auch bei Start Üben in einer anderen Größe.“ Ursache: In einer Runde rechnet die Anzeige-Automatik größer (Breite/1520, Höhe/820) als in der Hauptansicht, und das Fenster wuchs mit. Jetzt wird es beim Öffnen auf die Größe der Hauptansicht zurückgerechnet (am PC, bei „Automatisch“). Gemessen bei 1366×768, 1600×900 und 1920×1080: Breite und Höhe in Hauptansicht und Runde gleich.
+
+- **Reiter „Bestenliste“ in den Einstellungen (Stand 437, Stand 438):** Dietmar (Bild der Einstellungen am PC): „Möchte hier auch einen Reiter“ und, nach dem ersten Stand mit Knopf: „Hätten wir das 2. Fenster nicht mit einbauen können?“ Neuer Reiter zwischen Lernstand und Vor der Prüfung; die Liste steht jetzt direkt darin (Ziele N, E, N → E, E → A, Monate, Plätze, Mein Eintrag mit Name ändern und Austragen), darunter der Datenschutz-Hinweis. Gilt am PC und in der App; das bekannte Fenster bleibt für die Ergebnisseite und „Mehr“. Im dunklen Stil ist das gewählte Ziel jetzt grün hervorgehoben (vorher kaum zu sehen). Der Hilfetext des Einstellungen-Knopfes nennt jetzt auch Energie, Lernstand und Bestenliste.
+
+- **Ergebnisseite am PC neu, in zwei Spalten (Stand 436):** Dietmar: „Für den PC ist das nichts. Das müssen wir ändern!“ Gleiche Gestaltung wie in der App, am PC in zwei Spalten: links das Bild mit dem Zettel, das Ergebnis, die Chips und „Ergebnis teilen“ / „Fehler üben“; rechts die 25 Fragen (aufgeklappt, mit Fehlerliste) und die Knöpfe Prüfungszettel und Startseite. Folgt dem Stil: hell bei hell, dunkel bei Polar. In einem schmalen Fenster (unter 900 px) steht alles in einer Spalte.
+- **Lernfortschritt in Polar wieder grün (Stand 436):** Dietmar: „Bei Polar am Desktop ist der Lernfortschritt schwarz geworden. Baue ihn auf Grün mit Farbverlauf um.“ Die Füllung des Balkens hatte dieselbe fast schwarze Farbe wie die Leiste dahinter; jetzt Grün mit Verlauf.
+
+- **Fortschrittsbalken hell und dunkel gleich (Stand 436):** Dietmar: „Der Strich ist in der dunklen Version zu kurz“, dann: „5 Pixel bei hell und 5 Pixel bei dunkel, und die graue Linie darunter muss auch dabei sein.“ Der türkisfarbene Balken reicht in beiden Modi von Rand zu Rand, ist je 5 px dick und hat darunter dieselbe feine Linie (hell: grau, dunkel: ein helles Blaugrau).
+
+- **Ergebnisseite: Bild mit dem Zettel schließt oben nahtlos an (Stand 436):** Dietmar: „Dann würde das oben nahtlos ausschauen und nicht so abgeschnitten.“ Der Spalt unter dem Kopfstreifen ist weg, das Bild reicht randlos bis an den Streifen, und die Seite beginnt in der Farbe der Bild-Unterkante. Unten ist der Kartenrand des Teilen-Bildes (Rundung, Schatten, zweite Umrandung) abgeschnitten, das Bild geht ohne Linie in die Seite über.
+
+- **Ergebnisseite füllt das ganze Fenster (Stand 436):** Dietmar: „Ein ganzes Bild ohne Hintergrund, ohne Schatten, das das ganze Fenster abdeckt.“ Helle Seite randlos unter dem Kopfstreifen der App, auch bei dunkler App; ohne Rahmen, ohne Schatten, ohne dunklen Streifen darunter. Der Modus „eckig“ machte vorher auch Kästen und Knöpfe eckig; auf dieser Seite sind sie wieder rund. Vom Teilen-Bild wird nur die Karte gezeigt, ohne hellen Rand.
+
+- **Ergebnisseite füllt die ganze Fläche (Stand 436):** Dietmar: „Nicht mit einem schwarzen Loch unten dran und einem dunkelblauen Rahmen.“ Die helle Seite reicht jetzt randlos bis an die Kanten und bis ganz nach unten, auch bei dunkler App; nur der Kopfstreifen der App bleibt (dunkel: blau, hell: weiß).
+
+- **Animationen abschaltbar, auch Majas Bewegtbild:** Im Reiter Energie heißt der Schalter jetzt „Animationen aus (Ruhiger Modus)“ (Automatisch / Immer an / Immer aus). Bisher liefen Majas Bilder „steht“ und „winkt“ im ruhigen Modus trotzdem weiter, weil sie selbst animierte WebP sind (5 und 35 Bilder). Jetzt zeigt Maja dort echte Standbilder, sofort beim Umschalten. Mit „Immer an“ steht die ganze App still; das hilft auch bei der Fehlersuche (Flackern).
+- **Weichzeichner und Schatten an den Puff-Wölkchen und der Schneeflocke entfernt (Stand 436).** Dietmar: „Entfernen.“ Die drei kleinen Wölkchen am Maskottchen haben keinen Weichzeichner mehr, die Schneeflocke an Maja keinen Schlagschatten. Ist Maja eingefroren, leuchtet die Flocke weiter, jetzt mit einem einfachen hellen Schein.
+- **Schlagschatten am Stern bei „Deine Stufen“ entfernt (Stand 436).** Dietmar: „Entferne auch hier den Schlagschatten.“ Der Stern wackelt weiter, nur ohne Schatten, den das Handy bei jeder Bewegung neu berechnen musste.
+- **Majas Schlagschatten entfernt (Stand 436).** Dietmar: „Entferne den Schlagschatten.“ Majas Bilder (das Winken hat 35 Einzelbilder) trugen einen weichen Schatten, den das Handy bei jedem Bild neu berechnen musste – der wahrscheinlichste Grund für das Blinken der Startseite. Maja sieht sonst unverändert aus.
+- **Neue Ergebnisseite in der App – helle Seite, auch bei dunkler App (Stand 436).** Dietmar: „Dieses Fenster zum Schluss finde ich wahnsinnig schrecklich“ (zu viele Kästen, zu dunkel und kantig, das Bild mit dem Antwortbogen fehlt); nach mehreren Entwürfen: „Genau dieses helle Bild – in hell und in dunkel.“ Nach Lernrunde und 25er-Prüfung steht unter dem blauen Streifen „Ergebnis“ oben das Teilen-Bild (Siegel, Antwortbogen), darunter ein Satz („Geschafft – 25 von 25“) mit drei kleinen Chips (XP, Serie, Fehler), dann „Ergebnis teilen“ und „Fehler üben“. Stufe und „Deine 25 Fragen“ sind eingeklappt, die falschen Fragen stehen in „Deine 25 Fragen“ unter dem Raster. Unten stehen „Prüfungszettel“ und „Startseite“ als zwei hervorgehobene Knöpfe nebeneinander. Die Seite ist immer hell; der blaue Streifen oben bleibt auch im Dunkelmodus. Betrifft den Stil Verspielt in der App; Sachlich und der Browser behalten die bisherige Seite.
+- **Startseite blinkt nicht mehr: die Funkwellen stehen still (Stand 436).** Dietmar, zwei Videos (Stand 433): „Nach dem normalen Lernen und der Startseite ist es genau das Gleiche, es blinkt.“ Alle 3 Sekunden wurde die große Karte und die Tagesziel-Karte für einen Augenblick weiß – auch ohne Simulation. Die wandernden Wellen in der Startkarte malen den Farbverlauf der ganzen Karte ständig neu; das war schon am 25.10. der Verdacht, damals nur gedrosselt. Jetzt bleibt das Ringmuster stehen. Maja und Funki bewegen sich weiter.
+- **Prüfungssimulation: Hilfen-Menü klappt bei jeder neuen Frage zu (Stand 436).** Dietmar: „Wenn ich zur nächsten Frage weitergehe, soll es komplett wieder verschwunden sein – ich klappe es auf, wenn ich es brauche.“ In der Simulation steht „Hilfen anzeigen“ auf jeder neuen Frage wieder zugeklappt. Eine Antwort auf derselben Frage klappt nichts zu. In Lernrunden bleibt es, wie du es eingestellt hast.
+- **Auswertung der Simulation schlank, Startseite flackert nicht mehr (Stand 436).** Dietmar (Video, Stand 433): „Nach der Prüfungssimulation blinkt mein Display … nach der Simulation werden alle Fragen noch angezeigt, das ist sehr viel Input. Besser nur die falschen, eingeklappt.“ Die „Detaillierte Auswertung“ listete alle 75 Fragen mit allen Antworten (rund 1000 Elemente) und blieb nach „Hauptmenü“ unsichtbar im Speicher. Jetzt: „Deine Fehler zum Nachlesen“ – je Bogen nur die falschen und offenen Fragen, alle eingeklappt; die Antworten entstehen erst beim Aufklappen. Beim Hauptmenü wird die Auswertung ganz geleert (Speicher der Seite danach rund 1000 Elemente kleiner).
+- **Das Teilen-Bild steht gleich auf dem Ergebnis (Stand 436).** Dietmar: „Im Lernmodus kommt auch nicht dieses Bild, das wir heute erstellt haben.“ Das Bild (Siegel, Antwortbogen, Ergebnis je Teil) war nur im Teilen-Menü zu sehen. Jetzt zeigt das Ergebnis es als Vorschau direkt über „Ergebnis teilen“ – nach Lernrunde, Prüfung und Prüfungssimulation. Antippen teilt es.
+- **Leerer blauer Bildschirm nach dem Prüfungssimulator abgefangen (Stand 436).** Dietmar: Nach Frage 25, Ergebnis und „Hauptmenü“ blieb nur ein blauer Bildschirm mit „Frage 25 von 25“, die App musste beendet werden. Im Test nicht nachstellbar (1 und 3 Bögen, „Weiter“ und „Abgeben“). Zwei Sicherungen: „Hauptmenü“ nach dem Simulator setzt die laufende Runde jetzt immer zurück, und ein Wächter bringt die App nach etwa zwei Sekunden selbst zur Startseite, falls je eine Runde ohne Frage und ohne Fenster dasteht.
+- **Prüfungssimulator, Frage 25: „Weiter“ nicht mehr abgeschnitten (Stand 436).** Dietmar (Bild der Leiste unten): „Das sieht sehr komisch aus, und rechts daneben war zum Teil noch ein Button zu sehen.“ Waren alle 25 Fragen beantwortet, standen Zurücknehmen, Abgeben, Zurück, Weiter und Hauptmenü in einer Zeile – breiter als der Bildschirm. Jetzt ersetzt „Abgeben“ das „Weiter“ (auf der letzten Frage gibt es nichts zum Weitergehen), und die Zeile passt.
+- **Ergebnis teilen auch im Prüfungssimulator (Stand 436).** Dietmar (Bild vom Ergebnis nach drei Bögen): „Dachte wir haben da was anderes?“ Das Teilen-Bild und die Ergebnis-Seite aus Stand 431 gab es nur bei Übungsrunden und der einfachen Prüfung. Jetzt steht der Knopf „Ergebnis teilen“ auch unter dem Ergebnis des Simulators mit den echten Bögen (Vorschriften, Betrieb, Technik – bei E auch Technik E; bei N→E und E→A ein Bogen): Bild mit Antwortbogen und Stempel, Text und Link zur Seite amateurfunk-trainer.com/ergebnis/ mit den Teilen und der Zeit.
+- **Bestenliste (Stand 435).** Dietmar, mit einem Bild von 12db.de: „Die veröffentlichen öffentlich die Bestenliste, sowas könnten wir auch übernehmen.“ Neu unter Mehr → Bestenliste: eine öffentliche Monatsliste mit je einem Podium für N, E, N→E und E→A (20 Plätze, Monate zum Zurückblättern, eigener Platz hervorgehoben). Gewertet wird ein vollständiger Durchgang der Prüfungssimulation: Durchschnitt der richtigen Antworten je Bogen (von 25), Versuche, Gesamtzeit; je Monat zählt der beste Durchgang. Nach der Simulation fragt eine Karte „In die Bestenliste?“ mit Vorschau auf den Platz; Name frei wählbar oder „OM/YL“ mit Zahl. Nichts geht ohne Ja raus; Name ändern und Austragen (löscht alles) in der Bestenliste. Nicht gewertet: Gruppenraum, unvollständige Durchgänge, Durchgänge mit vorbelegten „bereits gelernten“ Fragen. Dazu ein neuer Cloudflare-Worker `afu-bestenliste` (Einrichtung siehe bl-paket), eine öffentliche Seite /bestenliste/ auf der Webseite und ein Abschnitt in der Datenschutzerklärung.
+- **Kachel „Prüfung simulieren“ zeigt die echte Zahl (Stand 434).** Dietmar: „Hier müsste eigentlich dreimal 25 Fragen drin stehen.“ Die Kachel war fest auf „3×45′“ geschrieben. Jetzt steht dort die Zahl der Prüfungsbögen des gewählten Ziels mal 25 Fragen: N 3×25, Direkteinstieg E 4×25, N→E 1×25, E→A 1×25. Dasselbe in der Zeile „Prüfungssimulation“.
 - Stil „Verspielt“: Nach dem Vorlesen der Frage (nicht der Antworten) kommt ein kurzer Quindar-Roger-Beep mit Funk-Rauschen. In den Einstellungen unter „Fragen und Antworten“ abschaltbar.
 - Majas Stimme: neue Sprachaufnahmen (899 Sätze, Stimme „Carina“, mit Gefühl: lustig, müde, kichernd ...). Die Funk-Effekte liegen wie bisher darüber. Das Paket liegt in sounds/maja-grok; der Trainer nimmt es statt des alten Kerstin-Pakets. Quelle der Stimme: erzeugt mit Grok (xAI), Hinweis steht unter Info.
 - Aussprache: Dezimalpunkt vor MHz/GHz wird zum Komma (14.0057 MHz = vierzehn Komma null null fünf sieben Megahertz), Milliohm, Mikroohm, Milli-/Nanohenry und Einzel-Einheiten (H, F, S, nA, pA ...) werden richtig gesprochen, jeder Text endet mit Punkt (sonst klang „ab“ wie „App“).
