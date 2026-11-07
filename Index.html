@@ -10073,7 +10073,7 @@ details.rev-q[open] > summary { margin-bottom:6px; }
 .vf-antwort-bild { max-width:220px; max-height:110px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:3px; }
 .vf-hinweis { display:flex; gap:10px; align-items:flex-start; background:#f4f7fd; border:1px solid var(--line); border-radius:10px; padding:0.7rem 0.9rem; font-size:0.88rem; color:var(--ink); line-height:1.45; }
 .vf-hinweis > i { color:var(--panel-navy); margin-top:3px; }
-.review-part.realistic-review.vf-offen { margin-top:1rem; }
+.review-part.realistic-review.vf-offen, .review-part.realistic-review.vf-richtig { margin-top:1rem; }
 .vf-offen-zeile { display:flex; gap:10px; align-items:baseline; padding:6px 0; border-top:1px solid var(--line); font-size:0.85rem; color:var(--ink); }
 .vf-offen-zeile .vf-id { font-weight:400; color:var(--muted); font-size:0.78rem; flex:0 0 auto; }
 .vf-offen-text { flex:1 1 auto; min-width:0; }
@@ -19083,18 +19083,19 @@ function verlaufEinzelheiten(fragen, stand, total, correct){
     try{
         if(!Array.isArray(fragen) || !fragen.length) return null;
         stand = stand || {};
-        const falsch = [], offen = [], gesehen = new Set();
+        const falsch = [], offen = [], richtig = [], gesehen = new Set();
         fragen.forEach(q => {
             if(!q || !q.id || gesehen.has(q.id)) return;
             gesehen.add(q.id);
             const p = stand[q.id];
             if(p && p.answered){
                 if(!p.correct) falsch.push([q.id, verlaufAntwortPlatz(q)]);
+                else richtig.push(q.id);
             } else if(!q._autoGelernt){
                 offen.push(q.id);
             }
         });
-        const e = { f: falsch.slice(0, VERLAUF_EINZEL_MAX) };
+        const e = { f: falsch.slice(0, VERLAUF_EINZEL_MAX), r: richtig.slice(0, VERLAUF_EINZEL_MAX) };   // r: richtig beantwortet (seit Stand 476)
         if(offen.length){
             const fehlerLautErgebnis = Math.max(0, (total || 0) - (correct || 0));
             if(falsch.length + offen.length <= fehlerLautErgebnis){
@@ -19222,9 +19223,9 @@ function verlaufFehlerHtml(x, nr){
     }
     const teile = { vorschriften: 'Vorschriften', betrieb: 'Betrieb', technik: 'Technik' };
     let marken = '';
-    if(errorList.includes(id)) marken += '<span class="vf-marke vf-marke-fehler"><i class="fas fa-exclamation-triangle"></i> unter Fehler</span>';
+    if(w !== -9 && errorList.includes(id)) marken += '<span class="vf-marke vf-marke-fehler"><i class="fas fa-exclamation-triangle"></i> unter Fehler</span>';
     if(verlaufImLernbedarf(id)) marken += '<span class="vf-marke vf-marke-lern"><i class="fas fa-fire"></i> im Lernbedarf</span>';
-    const zusatz = w === -1 ? '<span class="rev-tag t-no">nicht beantwortet</span>'
+    const zusatz = w === -9 ? '' : w === -1 ? '<span class="rev-tag t-no">nicht beantwortet</span>'
                  : w === -2 ? '<span class="rev-tag t-no">Lösung angesehen</span>' : '';
     let h = '<div class="rev-q">'
           + '<div class="vf-frage-kopf"><span class="vf-id">' + nr + '. ' + verlaufEsc(id) + '</span>'
@@ -19243,7 +19244,7 @@ function verlaufFehlerHtml(x, nr){
         const meine = oi === w;
         const cls = 'rev-opt' + (richtig ? ' correct' : (meine ? ' wrong' : ''));
         const inhalt = (o && o.text ? '<span>' + formelHtml(o.text) + '</span>' : '') + verlaufAntwortBild(o, oi);
-        const marke = richtig ? '<span class="rev-tag t-ok">Richtige Antwort</span>'
+        const marke = richtig ? '<span class="rev-tag t-ok">' + (w === -9 ? 'Deine Antwort · richtig' : 'Richtige Antwort') + '</span>'
                     : (meine ? '<span class="rev-tag t-you">Deine Antwort</span>' : '');
         h += '<div class="' + cls + '"><span class="vf-antwort">' + inhalt + '</span>' + marke + '</div>';
     });
@@ -19292,12 +19293,14 @@ function verlaufFensterZeichnen(){
 
     const f = e.f.filter(x => Array.isArray(x) && x[0]);
     const a = Array.isArray(e.a) ? e.a.filter(Boolean) : [];
+    const r = Array.isArray(e.r) ? e.r.filter(Boolean) : [];
     const fehlen = verlaufFehlendeIds(e);
     const imKatalog = f.filter(x => verlaufFrage(x[0])).length;
 
     h += '<div class="vf-knoepfe">';
     if(imKatalog) h += '<button class="btn btn-primary" onclick="verlaufFragenUeben(\'f\')"><i class="fas fa-rotate-right"></i> Fehler erneut üben (' + imKatalog + ')</button>';
     if(fehlen.length) h += '<button class="btn btn-outline" onclick="verlaufInFehlerUebernehmen()"><i class="fas fa-plus"></i> In Fehler und Lernbedarf übernehmen (' + fehlen.length + ')</button>';
+    if(r.some(id => verlaufFrage(id))) h += '<button class="btn btn-outline" onclick="verlaufFragenUeben(\'r\')"><i class="fas fa-check"></i> Richtige noch einmal üben (' + r.filter(id => verlaufFrage(id)).length + ')</button>';
     h += '</div>';
 
     let stand;
@@ -19307,10 +19310,20 @@ function verlaufFensterZeichnen(){
     else stand = (fehlen.length === 1 ? 'Eine Frage steht' : fehlen.length + ' Fragen stehen')
                + ' nicht mehr unter Fehler und im Lernbedarf, weil du sie seitdem richtig hattest. Der Knopf holt sie zurück.';
     h += '<div class="vf-stand">' + stand + '</div>';
+    if(!Array.isArray(e.r) && correct > 0){
+        h += '<div class="vf-stand">Die richtig beantworteten Fragen speichert der Trainer erst seit Stand 476 (07.11.2026). Diese Runde ist älter.</div>';
+    }
 
     if(f.length){
         h += '<div class="vf-abschnitt">Fehler (' + f.length + ')</div>';
         f.forEach((x, i) => { h += verlaufFehlerHtml(x, i + 1); });
+    }
+
+    if(r.length){
+        let rh = '';
+        r.forEach((id, i) => { rh += verlaufFehlerHtml([id, -9], i + 1); });
+        h += '<details class="review-part realistic-review vf-richtig"' + (f.length ? '' : ' open') + '><summary><i class="fas fa-circle-check"></i> Richtig (' + r.length + ')</summary>'
+           + '<div class="review-body">' + rh + '</div></details>';
     }
 
     if(a.length){
@@ -19340,7 +19353,7 @@ function verlaufFragenUeben(art){
             return;
         }
     }catch(x){}
-    const ids = art === 'a' ? (e.a || []) : (e.f || []).map(x => x && x[0]);
+    const ids = art === 'a' ? (e.a || []) : art === 'r' ? (e.r || []) : (e.f || []).map(x => x && x[0]);
     const pool = [];
     ids.forEach(id => { const q = verlaufFrage(id); if(q && pool.indexOf(q) === -1) pool.push(q); });
     if(!pool.length){
@@ -19360,7 +19373,7 @@ function verlaufFragenUeben(art){
     currentPart = 'all';
     currentQuestions = pool.map(q => { try{ return prepareQuestion(q); }catch(x){ return q; } });
     neueRundeVorbereiten();
-    rundeNameFest = { name: (art === 'a' ? 'Ausgelassene' : 'Fehler') + (tag ? ' vom ' + tag : ' aus dem Verlauf'), fragen: currentQuestions };
+    rundeNameFest = { name: (art === 'a' ? 'Ausgelassene' : art === 'r' ? 'Richtige' : 'Fehler') + (tag ? ' vom ' + tag : ' aus dem Verlauf'), fragen: currentQuestions };
     renderQuestion();
     navArea.style.display = 'flex';
     updateVisibility();
@@ -26172,7 +26185,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 475, datum: '06.11.2026' };
+const TRAINER_STAND = { nr: 476, datum: '07.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -42936,6 +42949,7 @@ function verlaufEintragSetzen(part, total, correct, status){
             // eine eben nachgeholte Frage ist nicht mehr "ausgelassen".
             delete rundeVerlaufEintrag.f;
             delete rundeVerlaufEintrag.a;
+            delete rundeVerlaufEintrag.r;
             try{
                 const einzel = verlaufEinzelheiten(verlaufRundeFragen(), verlaufRundeStand(), total, correct);
                 if (einzel) Object.assign(rundeVerlaufEintrag, einzel);

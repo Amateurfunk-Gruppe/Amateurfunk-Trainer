@@ -11,6 +11,10 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## Stand 476 (07.11.2026)
+
+- **Verlauf: Richtige und Falsche sind sichtbar.** Dietmar (Bild Verlauf, Rückmeldung einer Testerin: „Meine richtigen sind weg … die muss ich doch auch nacharbeiten“): Bei 25 von 25 war das Fenster leer. Der Trainer schreibt jetzt auch die richtig beantworteten Fragen mit (`r`). Im Fenster: aufklappbarer Abschnitt „Richtig (n)“ mit allen Antworten (grün, „Deine Antwort · richtig“), bei 0 Fehlern gleich offen, dazu der Knopf „Richtige noch einmal üben“. Ältere Runden haben die Richtigen nicht gespeichert; dort steht ein Hinweis.
+
 ## Stand 475 (06.11.2026)
 
 - **Klassische PC-Ansicht: alle Schließen-Kreuze sind jetzt echte Kreise.** Dietmar (Bild Auswertung): „Rund (Kreis) ist was anderes. Das ist ein Ei oder Oval.“ Gemessen am PC: Statistik 35,8 × 44, Gruppenraum 30,6 × 33. Gleich breit wie hoch (36 Punkte), Rundung 50 %. In der App (Handy und PC-App) war das seit Stand 470/471 schon so.
