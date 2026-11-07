@@ -47,9 +47,11 @@ final class StartFunki {
         return "sachlich".equals(c.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE).getString(STIL, ""));
     }
 
-    /** Funki als kleines Browserfenster - oder null: dann zeigt das Startbild das Zeichen. */
+    /** Das Startbild als Browserfenster - oder null: dann zeigt das Startbild das Zeichen.
+     *  Stand 484 (07.11.2026), Dietmar: "Startbild in Sachlich das gleiche wie bei Verspielt." Im Stil
+     *  Sachlich zeigte die App das App-Symbol als rohes Quadrat mit abgeschnittener Maja. Jetzt kommt in
+     *  beiden Stilen Maja im Weltraum; das Zeichen bleibt nur noch der Notnagel, wenn das Fenster scheitert. */
     static View bild(Context c) {
-        if (sachlich(c)) return null;
         try {
             String html = lesen(c.getResources().openRawResource(R.raw.funki_start));
             WebView w = new WebView(c);

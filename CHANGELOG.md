@@ -13,9 +13,16 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 483 · 07.11.2026
+Stand 484 · 07.11.2026
 
-Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme.
+Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum.
+
+## Stand 484 (07.11.2026)
+
+- Dietmar (Bilder BD317, VE308, Handy): „Bei verspielt wird ein rechteckiger Kasten angezeigt als Button.“ Der leere Kasten war der Formelblatt-Knopf: Eine Regel von Stand 467 (nur Symbol, kein Text) galt in jeder Runde statt nur im Simulator und zwang den beim Üben ausgeblendeten Knopf sichtbar – ohne Symbol, weil das nur im Simulator eine Größe hat. Betroffen war der Fragen-Stil Bunt, Hell wie Polar, Verspielt wie Sachlich. Jetzt gilt die Regel nur im Simulator; beim Üben bleiben Haken, Herz, Vorlesen, Zahnrad und Menü.
+- Dietmar (Bild Formelsammlung, App, Polar): „oben rechts im Eck wieder zwei Buttons … Rund und Viereck“. Das Viereck war der schwebende Kopf des Formelfensters: Die Polar-Regel von Stand 450 (hellgrau mit Rand) schlug die Regel von 453 (durchsichtig). Jetzt nur noch das runde X.
+- Dietmar (BE311, Handy): „Maja sagt komplett andere Zahlen.“ Geprüft per Spracherkennung: Die Frage ist richtig (Nachaufnahme k2), die Antworten B, C und D sagen falsche Zahlen („12 290“, „12 490“, gestottert). Die drei Antworten sind aus dem Verzeichnis genommen (`N-antworten-index-k3.json`, Paketstand „07.11.2026 b“), dort liest bis zur Neuaufnahme die eingebaute Stimme; Antwort A bleibt Maja. Der Trainer zieht die neue Fassung beim Start still nach.
+- Android-App (`StartFunki.java`, eigener Bau): „Startbild in Sachlich das gleiche wie bei Verspielt.“ Im Stil Sachlich zeigte die App das App-Symbol als rohes Quadrat mit abgeschnittener Maja; jetzt in beiden Stilen Maja im Weltraum mit Ladebalken.
 
 ## Stand 483 (07.11.2026)
 

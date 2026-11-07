@@ -10272,6 +10272,9 @@ html body.dark #formelModal .fz-leiste{background:linear-gradient(#cfd8e4,#c2cdd
   #formelModal #formelBuehne{border-radius:14px!important}
 }
 html:not(#h1):not(#h2) body:not(#h3).dark #formelModal #formelKasten:not(#h4):not(#h5){background:#e4e8ee!important}
+/* Stand 484 - Dietmar (Bild Formelsammlung, App, Polar): "oben rechts im Eck wieder zwei Buttons ... Rund und Viereck". Das Viereck war der
+   schwebende Kopf selbst: Die Polar-Regel von Stand 450 (#formelKopf hellgrau mit Rand) schlug die Regel von 453 (kein Hintergrund). */
+html:not(#h1):not(#h2) body:not(#h3).dark #formelModal #formelKopf.fz-schwebe:not(#h4):not(#h5){background:none!important;border:0!important;box-shadow:none!important}
 html:not(#h1):not(#h2) body:not(#h3) #formelModal #formelKopf .fz-knopf:not(#h4):not(#h5){width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;max-width:none;border-radius:50%!important;background:#fff!important;border:1px solid #aeb9c7!important;color:#0f2745!important;padding:0!important;box-shadow:0 3px 12px rgba(0,0,0,.35)!important}
 html:not(#h1):not(#h2) body:not(#h3) #formelModal #formelKopf .fz-extern:not(#h4):not(#h5){width:auto!important;border-radius:20px!important;padding:0 14px!important}
 </style>
@@ -26200,7 +26203,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 483, datum: '07.11.2026' };
+const TRAINER_STAND = { nr: 484, datum: '07.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -68354,8 +68357,11 @@ html.android-app:not(#zz) body.dark #einstellungenModal #appDesignSeg button.an 
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste{display:flex!important;flex-wrap:wrap;gap:8px!important;margin-top:4px}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste button:not([style*='display:none']):not([style*='display: none']):not([hidden]){width:38px!important;height:38px!important;min-width:0!important;padding:0!important;border-radius:50%!important;background:rgba(255,255,255,.16)!important;border:0!important;color:#fff!important;font-size:15px!important;display:inline-grid;place-items:center;box-shadow:none!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste button:not([style*='display:none']) i{color:#fff!important;margin:0!important;font-size:15px!important;line-height:1!important}
-/* Stand 467: Formelblatt-Knopf im Simulator ist nur Symbol (Text 'Formelblatt' lief ueber den runden Knopf). */
-html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #formelBtn:not(#zz){font-size:0!important;overflow:hidden!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+/* Stand 467: Formelblatt-Knopf im Simulator ist nur Symbol (Text 'Formelblatt' lief ueber den runden Knopf).
+   Stand 484 - Dietmar (Bilder BD317, VE308): "Bei verspielt wird ein rechteckiger Kasten angezeigt als Button." Die Regel galt in jeder Runde,
+   nicht nur im Simulator: Beim Ueben zwang sie den eigentlich ausgeblendeten Formelblatt-Knopf sichtbar - ohne Symbol (das hat nur im
+   Simulator eine Groesse) als leeren Kasten. Jetzt nur noch im Simulator (.sim-hilfen); beim Ueben bleibt er am Handy aus wie geplant. */
+html.android-app.fs-bunt body.runde-laeuft.sim-hilfen #questionContainer .q-knopfleiste #formelBtn:not(#zz){font-size:0!important;overflow:hidden!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn{font-size:0!important;line-height:1!important;background:rgba(255,255,255,.26)!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn i{font-size:16px!important}
 html.android-app.fs-bunt body.runde-laeuft #questionContainer .q-knopfleiste #ttsBtn{display:inline-flex!important;align-items:center;justify-content:center}   /* 21.10.2026: Lautsprecher sass zu hoch (Text "Vorlesen" mit Schriftgroesse 0 belegte eine eigene Gitterzeile) */
