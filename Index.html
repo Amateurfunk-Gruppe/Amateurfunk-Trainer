@@ -10197,13 +10197,21 @@ body.dark .rk{ --rk-c:#34d399; --rk-t:#eef5ff; --rk-mu:#9db4d0; --rk-ln:rgba(255
    das gesprochene Wort (Mitlesen) bekommt darauf einen dunklen Ton. */
 html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid).gewaehlt:hover:not(.tts-highlight):not(#q1):not(#q2):not(#q3){ background:var(--darc-gewaehlt,#f9a05a) !important; }
 html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid).gewaehlt:hover:not(.tts-highlight):not(#q1):not(#q2):not(#q3) :is(.option-text,.option-label){ color:#000 !important; }
-/* Stand 464 (06.11.2026), Dietmar: "warum sieht das jetzt scho schrecklich aus?" - Die vorgelesene / angefahrene Antwort war im Dunkeln
- ein volles, grelles Gelb mit orangeroter Wortmarke und dunklem Buchstaben. Jetzt: dunkles Bernstein mit goldenem Rand, helle Schrift,
- das gesprochene Wort golden hinterlegt. Das ganze Feld bleibt hervorgehoben, blendet aber nicht mehr. */
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3){ background:#3a2f06 !important; border-color:#ffd600 !important; box-shadow:0 0 0 1px #ffd600, 0 0 14px rgba(255,214,0,.25) !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) :is(.option-text){ color:#fff7d6 !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .option-label{ background:#ffd600 !important; color:#1a1300 !important; }
-html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .tts-wort-an{ color:#fff !important; background:rgba(255,214,0,.30) !important; border-radius:4px; box-shadow:0 2px 0 #ffd600 !important; font-weight:800; }
+/* Stand 477 (07.11.2026), Dietmar (Video Arktis und Polar): "Ich moechte Vorlesen wie in Arktis." In Arktis: Antwort voll hellgelb, dunkle Schrift,
+   Buchstabe dunkelblau, das gesprochene Wort nur orange - kein Rahmen, keine Unterstreichung. Jetzt in Polar genauso. */
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3){ background:#ffe066 !important; border-color:transparent !important; box-shadow:none !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) :is(.option-text){ color:#111 !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .option-label{ background:#0c2644 !important; color:#fff !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .question-area :is(.option,.option-grid):is(.tts-highlight,.maus-liest):not(#q1):not(#q2):not(#q3) .tts-wort-an{ color:#d47600 !important; background:none !important; box-shadow:none !important; border-radius:0; font-weight:inherit; text-decoration:none; }
+/* Stand 477 (07.11.2026), Dietmar (Bild, Hell mit Navy-Frage): "Vorlesen ist in der Farbe von dem Rahmen und man kann den Kasten von dem Button nicht sehen.
+   Passe das so an wie die anderen daneben." Der Knopf war navy auf der navyfarbenen Fragetafel. Jetzt hell wie Taschenrechner und Formelblatt, auch bei "Stop". */
+html.fs-bunt:not(.android-app):not(#zz) body:not(.dark):not(#zz2) .question-area #ttsBtn:not(#zz3){ background:#eef2f9 !important; color:#0f2745 !important; border:1px solid #e3e9f3 !important; }
+html.fs-bunt:not(.android-app):not(#zz) body:not(.dark):not(#zz2) .question-area #ttsBtn:not(#zz3):hover{ background:#dfe7f4 !important; }
+/* Stand 479 (07.11.2026), Dietmar (Bild, Hell, Sachlich, Fragen-Stil Navy): "Der Button rechts oben ist in Arktis bei Sachlich noch immer dunkel. Das muessen wir aendern."
+   Die Regel aus Stand 477 galt nur beim Fragen-Stil Bunt. Bei Navy, Petrol und Schlicht blieb der Vorlesen-Knopf dunkelblau (bei Navy auf der gleich dunklen Tafel unsichtbar).
+   Jetzt in Hell bei allen Fragen-Stilen und allen Ansichten hell wie Taschenrechner und die anderen Knoepfe. Polar bleibt unveraendert. */
+html:is(.fs-navy,.fs-petrol,.fs-schlicht):not(#zz) body:not(.dark):not(#zz2) .question-area #ttsBtn:not(#zz3){ background:#eef2f9 !important; color:#0f2745 !important; border:1px solid #e3e9f3 !important; }
+html:is(.fs-navy,.fs-petrol,.fs-schlicht):not(#zz) body:not(.dark):not(#zz2) .question-area #ttsBtn:not(#zz3):hover{ background:#dfe7f4 !important; }
 html.android-app .pc-nurfrage{ display:none !important; }
 /* Stand 446: Im Simulator bleiben Formelblatt und Taschenrechner auch am Handy an der Frage (sonst treten sie dort zurueck). */
 body.handy.runde-laeuft.sim-hilfen #rechnerBtn, body.handy.runde-laeuft.sim-hilfen #formelBtn{ display:inline-flex !important; }
@@ -10461,6 +10469,13 @@ html:not(.android-app) body:not(.dark) #app :is(.btn, .btn-theme, .btn-lernstand
   border: 1px solid rgba(110, 140, 200, 0.28) !important; box-shadow: 0 4px 12px -8px rgba(30, 64, 140, 0.35) !important;
 }
 html:not(.android-app) body:not(.dark) #app :is(.btn, .btn-theme, .btn-lernstand-hell, .btn-outline):hover { background: #ffffff !important; }
+/* Stand 480 (07.11.2026), Pruefbericht Befund 1: Die Glasknoepfe oben machen den Grund weiss, setzen aber keine Schrift.
+   .btn-reset und .btn-primary behielten "color: white !important" - im Gruppenraum (klassischer PC, Hell) standen
+   "Schliessen", "Raum erstellen", "Jetzt starten" und "Mitmachen" weiss auf weiss. Jetzt dunkle Schrift wie bei den anderen
+   Glasknoepfen, und "Schliessen" bekommt wieder sein Grau aus Z. "#duoModal #duoSchliessenBtn" (dort verlor die Regel). */
+html:not(.android-app) body:not(.dark) #app :is(#duoModal, #ttsSettingsModal) :is(.btn-reset, .btn-primary):not(#zz) { color: #0f2745 !important; }   /* nur in den Fenstern - "Start 571" auf der Startseite ist blau und bleibt weiss beschriftet */
+html:not(.android-app) body:not(.dark):not(.papier) #app #duoModal #duoSchliessenBtn:not(#zz) { background: #4f6070 !important; color: #fff !important; }
+html:not(.android-app) body:not(.dark):not(.papier) #app #duoModal #duoSchliessenBtn:not(#zz):hover { background: #3f4e5c !important; }
 /* Stand 431 - Dietmar: "Den Start Button in Arktis moechte ich genau in der Farbe haben" (Bild: Sichern/Einlesen/Angemeldet).
    Start ist gefuellt in der Arktis-Farbe, genau wie Sichern und Einlesen (var(--hp-a), weisse Schrift, Pille). */
 html:not(.android-app) body:not(.dark) #app #startBtn {
@@ -26185,7 +26200,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 476, datum: '07.11.2026' };
+const TRAINER_STAND = { nr: 483, datum: '07.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34182,10 +34197,26 @@ function majaAntwortMarke(q, opt){
         if(!q || !opt || !majaSpracheAn()) return null;
         const n = majaSpracheNorm(opt.text);
         if(!n) return null;
+        // Stand 483 (07.11.2026), Dietmar: "Maja liest falsch vor. Zu 2,7 kOhm sagt sie bei der Frage NC106 27 Kilo Ohm."
+        // Der Vergleichstext (Kleinbuchstaben und Ziffern, hoechstens 60 Zeichen) ist bei 94 Fragen fuer zwei Antworten gleich:
+        // "2,7 kOhm" und "27 kOhm" -> "27k", Hochzahlen und Rechenzeichen fallen weg, lange Antworten mit gleichem Anfang.
+        // Die erste passende Nummer gewann - Maja las die Aufnahme einer ANDEREN Antwort. Jetzt zuerst die Nummer der Antwort
+        // im Katalog (Reihenfolge der Fragendatei = Nummer im Sprachpaket); der Text dient nur noch als Gegenprobe.
+        let nr = 0;
+        try{
+            const bank = (typeof questionBank !== 'undefined' && Array.isArray(questionBank)) ? questionBank : [];
+            const o = bank.find(x => x && x.id === q.id);
+            if(o && Array.isArray(o.options)){ const i = o.options.findIndex(x => x && x.text === opt.text); if(i >= 0) nr = i + 1; }
+        }catch(e){}
         for(const pid of majaPaketIds()){
             if(!/-antworten$/.test(pid)) continue;
             const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
             if(!idx) continue;
+            if(nr){
+                const e = idx[q.id + '-' + nr];
+                if(e && e[3] === n) return { pid, e };
+                continue;
+            }
             for(let k = 1; k <= 8; k++){
                 const e = idx[q.id + '-' + k];
                 if(e && e[3] === n) return { pid, e };
@@ -35333,7 +35364,7 @@ const KNOPF_ERKLAERUNG = {
     duoRoomBtn: 'Gruppenraum öffnen. Hier verwaltest du die Teilnehmer, siehst ihren Fortschritt und kannst einzelne wieder entfernen. Sie kommen über einen Link herein, im Browser, ohne Installation und ohne Anmeldung. Die Lösungstaste F9 ist im Raum abgeschaltet.',
     infoBtn: 'Info. Eine kurze Anleitung: was der Trainer kann, wie die Klassen N, E und A zusammenhängen und wie er bedient wird. Ganz unten stehen die Versionsnummer und die Suche nach Aktualisierungen.',
     // 26.09.2026: "fuenf Reiter" stimmte laengst nicht mehr - jetzt sind es neun.
-    einstellungenBtn: 'Einstellungen. Das Fenster hat mehrere Reiter: Allgemein für Profilbild, Chat und Nachschlagen, Anpassen für Anzeigegröße, Farbstil und die Antwort unter der Maus, Sounds, Energie für Akku und ruhigen Modus, Beamer für den Beamer-Modus und das Vergrößern von Bildern, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Lernstand zum Sichern und Zurücksetzen, Bestenliste für deinen Eintrag und Namen, Vor der Prüfung, Kursauswertung, Lerncoach für die KI im Chat, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
+    einstellungenBtn: 'Einstellungen. Das Fenster hat mehrere Reiter: Allgemein für Profilbild, Chat und Nachschlagen, Anpassen für Anzeigegröße, Farbstil und die Antwort unter der Maus, Sounds, Leistung für Akku und ruhigen Modus, Beamer für den Beamer-Modus und das Vergrößern von Bildern, Nachteilsausgleich für Stimme, Vorlesen und Tastatur, Lernen für den Blätter-Stand, Benutzer, Lernstand zum Sichern und Zurücksetzen, Bestenliste für deinen Eintrag und Namen, Vor der Prüfung, Kursauswertung, Lerncoach für die KI im Chat, Update für neue Fassungen von GitHub, und Wartung zum Aufräumen und Zurücksetzen.',
     lernVideoBtn: 'Videolehrgang. Michael, DL2YMR, erklärt genau diese Frage in seinem Lehrgang. Der Knopf öffnet ein neues Fenster und springt dort an die Stelle im Video, an der es losgeht.',
     lernOhmBtn: 'Bei 50 Ohm nachlesen. 50 Ohm ist der Lehrgang des DARC. Dort steht das Kapitel, in dem diese Frage erklärt wird — zum Lesen statt zum Ansehen. Der Knopf öffnet die Seite im Browser.',
     einstCacheBtn: 'Cache leeren. Der Trainer lädt seine Dateien neu, falls etwas hängt oder veraltet angezeigt wird. Verlauf, Lernfortschritt und Lernstand bleiben dabei vollständig erhalten.',
@@ -36048,7 +36079,7 @@ const EINST_REITER = [
     { id:'sprechen',  name:'Vorlesen',  symbol:'fa-comment-dots' },
     // Stand 467, Dietmar: "Den Reiter moechte ich direkt rechts neben Vorlesen."
     { id:'bestenliste', name:'Bestenliste', symbol:'fa-ranking-star' },
-    { id:'energie',   name:'Energie',   symbol:'fa-battery-half' },
+    { id:'energie',   name:'Leistung',  symbol:'fa-battery-half' },   // Stand 481: Dietmar "Den Reiter Energie moechte ich umbenennen in Leistung." (Kennung bleibt energie)
     // 27.10.2026 Dietmar: "Der Beamer Modus, Bild vergroessern und einen Beamer verwenden, moechte ich unter
     // Einstellungen als eigenen Reiter dazu haben. Ich habe ihn gesucht und nicht gefunden."
     { id:'beamer',    name:'Beamer',    symbol:'fa-display' },
@@ -43351,6 +43382,7 @@ document.addEventListener('keydown', function(e){
 //     naechsten Klick auf eine Antwort faengt sie von vorn an.
 // ================================================================
 const AUTOWEITER_SCHLUESSEL = 'amateurfunk_autoweiter';   // Sekunden, '0' = aus
+const AUTOWEITER_MAX_WARTEN = 30;   // Stand 481: so lange wartet die Uhr hoechstens aufs Vorlesen (Sekunden)
 let autoWeiterUhr  = null;
 let autoWeiterRest = 0;
 
@@ -43377,9 +43409,14 @@ window.autoWeiterAn = autoWeiterAn;
 // Wird gerade gesprochen? Drei Wege, auf denen der Trainer redet -
 // die eigene Warteschlange, eine abgespielte Piper-Datei und die
 // Stimme des Browsers.
+// Stand 480 (07.11.2026), Pruefbericht Befund 2: Am klassischen PC wartete die Uhr nicht auf Maja und Piper und
+// schnitt das Vorlesen ab. Ursache: window.ttsQueueActive und window.currentTtsAudio gibt es nicht - beide sind
+// let-Variablen und stehen nie auf window. Jetzt wie in der App (Stand 426): die laufenden Aufnahmen selbst
+// (currentTtsAudio, ttsLaufendeAudios - die enden sicher), dazu am PC weiter die Browser-Stimme.
+// ttsQueueActive bewusst nicht: bricht die Warteschlange mit einem Fehler ab, bliebe es stehen und die Uhr mit.
 function autoWeiterSpricht(){
-    try{ if(window.ttsQueueActive) return true; }catch(e){}
-    try{ if(window.currentTtsAudio && !window.currentTtsAudio.paused) return true; }catch(e){}
+    try{ if(typeof currentTtsAudio !== 'undefined' && currentTtsAudio && !currentTtsAudio.paused) return true; }catch(e){}
+    try{ if(typeof ttsLaufendeAudios !== 'undefined' && ttsLaufendeAudios.size > 0) return true; }catch(e){}
     try{ if('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending)) return true; }catch(e){}
     return false;
 }
@@ -43415,9 +43452,13 @@ function autoWeiterStarten(){
 
     autoWeiterRest = Math.round(autoWeiterSekunden());
     autoWeiterKnopfText(autoWeiterRest);
+    let gewartet = 0;   // Stand 481: Sekunden, die die Uhr schon aufs Vorlesen gewartet hat
     autoWeiterUhr = setInterval(() => {
         // Solange gesprochen wird, steht die Uhr still.
-        if(autoWeiterSpricht()) return;
+        // Stand 481 (07.11.2026), Dietmar: "Zeitlimit fuer Auto-Weiter am klassischen PC, falls eine Aufnahme haengen
+        // bleibt." Hoechstens AUTOWEITER_MAX_WARTEN Sekunden; danach zaehlt die Uhr weiter, auch wenn noch etwas spricht.
+        // In der App gibt es dafuer schon das eigene Netz (Zeit plus 3 s).
+        if(autoWeiterSpricht() && gewartet < AUTOWEITER_MAX_WARTEN){ gewartet++; return; }
         autoWeiterRest--;
         if(autoWeiterRest > 0){ autoWeiterKnopfText(autoWeiterRest); return; }
         // Stand 426: die Uhr selbst anhalten - nicht ueber autoWeiterAbbrechen, das die App zeitweise uebergeht.
@@ -66456,7 +66497,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Stand 395: auch hier Majas Aufnahme der Frage (Sprachpaket) - diese App-Fassung von
             // vorleseFrage kannte die Marke nicht, deshalb las die App die Frage mit der Handystimme.
             const majaMarke = (typeof majaFrageMarke === 'function') ? majaFrageMarke(q) : null;
-            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), thorsten: true, maja: majaMarke }];
+            // Stand 482 (07.11.2026), Dietmar: "Funk-Effekt nach der Frage ... Wenn Maja am Desktop und in der App vorliest, kommt das nicht.
+            // Ist das defekt?" Ja: Diese App-Fassung von vorleseFrage kannte die Marke effekt:'funk' nicht (die PC-Fassung schon) -
+            // in App und PC-App kam der Roger-Beep deshalb nie, mit keiner Stimme. Jetzt wie dort.
+            const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), effekt: 'funk', thorsten: true, maja: majaMarke }];
             let mitAntworten = !nurFrage();
             try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
             if(mitAntworten && typeof antwortSegment === 'function'){
@@ -69891,6 +69935,31 @@ html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > 
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > div:nth-child(3){ text-align:right !important; font-size:.78rem !important; white-space:nowrap !important; }
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-stand:not(#zz3){ grid-column:1 / -1; font-size:.72rem !important; }
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .stat-kuerzbar:not(#zz3){ display:none !important; }
+</style>
+<style id="farben481">
+/* Stand 481 (07.11.2026), Pruefbericht Befunde 3, 4, 6, 8 - nach Vergleichsbild, Dietmar: "1 - 5 bitte einbauen."
+   3: Polar - gedaempfte Schrift (s-text2/3, muted, nacht-leise; in Fenstern eigene Werte) heller, von 3,3-4,9:1 auf 4,7-6,5:1.
+   4: Termin-Kachel "Wann ist deine Pruefung?" dunkleres Orange und dunklerer Chip, 2,8-3,5:1 -> 5,7-8,8:1 (Hell und Polar).
+   6: Hell - Link "50 Ohm ..." unter der Frage #0077B6 statt Cyan, 2,55:1 -> 4,87:1. Polar bleibt (5,39:1).
+   8: Polar - Platzhalter 2,0-2,7:1 -> 5,1-6,2:1, Feldrand 1,5-2,2:1 -> 3,5-5,3:1 (klassischer PC). */
+body.dark{--s-text2:#CFD8EE!important;--s-text3:#C3CDE6!important;--nacht-leise:#B7C9D9!important;--muted:#B7C9D9!important}
+html body.dark #einstellungenModal [id^="einstTab_"]:not([aria-selected="true"]), html body.dark #einstellungenModal [id^="einstTab_"]:not([aria-selected="true"]) *{color:#D6E0F5!important}
+body.dark #statistikInhalt{--bad:#FFB4AB!important}
+html:not(.stil-sachlich) #appHeute > .aw-count.leer, html:not(.stil-sachlich) #appWerk .aw-count.leer{background:linear-gradient(135deg,#B45309 0%,#9A3412 100%)!important}
+body:not(.dark) .lernkachel .lern-oben.lern-blau{color:#0077B6!important}
+html:not(#zz) body:not(#zz2).dark [id$="Modal"]:not(#q1):not(#q2){--nacht-leise:#D6E0F5!important;--muted:#B7C9D9!important;--s-text2:#CFD8EE!important;--s-text3:#C3CDE6!important}
+html body.dark #app #searchInput::placeholder{color:#C8D2E8!important}
+html:not(.stil-sachlich) #appHeute > .aw-count .aw-chip, html:not(.stil-sachlich) #appWerk .aw-count .aw-chip{background:rgba(0,0,0,.22)!important}   /* nur Verspielt - Sachlich hat eine eigene helle Kachel mit dunkler Schrift */
+html:not(#zz):not(#zy) body:not(#zz2).dark #app :is(#searchInput,#terminInput,#rufzeichenInput,.filter-bar select,#userSelect,#lektionSelect):not(#q1):not(#q2){border:1px solid rgba(255,255,255,.55)!important}
+body.dark #app :is(input,textarea)::placeholder{color:#C8D2E8!important;opacity:1!important}
+/* Nachgemessen im Bau: das Wort "TERMIN" im Symbol der Kachel lag auf weissem Schleier (3,5:1) - Schleier dunkel;
+   rote Zaehler "0 / 59" in der Statistik (fest #c0392b, in Polar #ff8f82, 4,0:1) und Titel "Pruefungsreife" (4,0:1) heller. */
+html:not(.stil-sachlich) #appHeute > .aw-count .aw-gross, html:not(.stil-sachlich) #appWerk .aw-count .aw-gross{background:rgba(0,0,0,.2)!important}
+html:not(#zz) body:not(#zz2).dark #statistikInhalt span[style*="#c0392b"]:not(#q1){color:#FFB4AB!important}
+html:not(#zz) body:not(#zz2).dark #reifeKasten [style*="color:var(--panel-navy)"]:not(#q1){color:#C2DEFF!important}
+/* Stand 481, Dietmar (Bild vom Handy): Luecke zwischen den Werkzeug-Kacheln und "Fragenkatalog der Bundesnetzagentur ..."
+   - "bitte ein paar Pixel weiter runter." Nur in der Handy-App: Rand unter der Startseite 14 -> 4 px (gesamt etwa 30 -> 20 px). */
+html.android-app:not(.pc-app):not(#zz) #appHeute:not(#zz2){ margin-bottom:4px !important; }
 </style>
 <script id="afuXFormen">
 // Stand 470: markiert alle schlichten Schliessen-Kreuze in Fenstern (Text nur x / Kreuz), damit CSS sie gleich breit wie hoch macht.

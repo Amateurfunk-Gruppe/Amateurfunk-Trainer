@@ -11,6 +11,55 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ---
 
+## [1.306.0]
+
+Stand 483 · 07.11.2026
+
+Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme.
+
+## Stand 483 (07.11.2026)
+
+- **Maja liest jede Antwort mit ihrer eigenen Aufnahme.** Dietmar: „Maja liest falsch vor. Zu 2,7 kΩ sagt sie bei der Frage NC106 27 Kilo Ohm.“ Ursache im Trainer, nicht in der Aufnahme: Die Antwort-Aufnahme wurde über einen gekürzten Vergleichstext gesucht (nur Kleinbuchstaben und Ziffern, höchstens 60 Zeichen). „2,7 kΩ“ und „27 kΩ“ ergaben beide „27k“, Hochzahlen und Rechenzeichen fielen weg („42 ⋅ 10⁻³ A“ = „42 ⋅ 10³ A“), lange Antworten mit gleichem Anfang sahen gleich aus – genommen wurde die erste passende. Betroffen waren 141 Antworten in 94 Fragen (N, E und A; z. B. EA109: B, C und D klangen wie A). Jetzt sucht der Trainer über die Nummer der Antwort im Katalog, der Text ist nur noch Gegenprobe. Geprüft: alle 1750 Fragen, jede Antwort mit Text bekommt ihre eigene Aufnahme. Majas Aufnahmen selbst sind unverändert.
+
+## Stand 482 (07.11.2026)
+
+- **Funk-Effekt nach der Frage kommt wieder – in App und PC-App.** Dietmar: „Funk-Effekt nach der Frage … Wenn Maja am Desktop und in der App vorliest, kommt das nicht. Ist das defekt?“ – „Habe es unter ‚Verspielt‘ in der App und am Desktop getestet. Es kommt leider nichts.“ Ja, defekt: Die App und die PC-App lesen mit einer eigenen Fassung von `vorleseFrage()`, und der fehlte die Marke für den Roger-Beep – er kam dort nie, mit keiner Stimme. Jetzt kommt er nach der Frage (nicht nach den Antworten), nur im Stil Verspielt und nur, wenn eingeschaltet. In der klassischen PC-Ansicht gibt es den Stil Verspielt nicht; dort bleibt er aus.
+
+## Stand 481 (07.11.2026)
+
+Dietmar zum Vergleichsbild und zu den weiteren Vorschlägen: „1 - 5 bitte einbauen.“
+
+- **Polar: gedämpfte Schrift besser lesbar (Prüfbericht Befund 3).** Nebentexte wie „bis sie sitzen“, „von 10“, der Kasten „Prüfungsreife“, die Reiter der Einstellungen, die Seitenleiste „Auswertung“ und die Zähler „(0/195)“ lagen bei 3,3–4,9:1. Die vier blassen Farbtöne in Polar sind heller (z. B. `#AEB8D3` → `#CFD8EE`), jetzt 4,7–6,5:1. Nach dem Bau nachgemessen und nachgebessert: rote Zähler „0 / 59“ in der Statistik (4,0 → 5,2:1) und Titel „Prüfungsreife“ (4,0 → 5,0:1). Hell unverändert.
+- **Kachel „Wann ist deine Prüfung?“ (Befund 4).** Dunkleres Orange und dunklerer Chip „Termin eintragen“: 2,8–3,5:1 → 5,7–8,8:1, in Hell und Polar. Das Wort „TERMIN“ im Symbol lag auf einem weißen Schleier (3,5:1), jetzt 7,5:1. Nur im Stil Verspielt – Sachlich hat eine eigene helle Kachel mit dunkler Schrift und bleibt, wie sie war (eine erste Fassung hatte sie mitgefärbt, beim Nachmessen 1,2:1 – vor der Lieferung behoben).
+- **Hell: Link „50 Ohm – …“ unter der Frage (Befund 6).** `#0077B6` statt Cyan: 2,55:1 → 4,87:1. Polar unverändert.
+- **Polar: Eingabefelder am klassischen PC (Befund 8).** Platzhalter („z. B. DL1ABC“, „Suche: NC404 oder DX“) 2,0–2,7:1 → 5,1–6,2:1, Feldrand 1,5–2,2:1 → 3,5–5,3:1.
+- **Handy-App: kleinere Lücke über dem Fußtext.** Dietmar (Bild vom Handy): Zwischen den Werkzeug-Kacheln und „Fragenkatalog der Bundesnetzagentur …“ war eine Lücke – „bitte ein paar Pixel weiter runter.“ In Version 2.433 rund 60 px, seit Stand 480 rund 30 px, jetzt rund 20 px. PC-Ansichten unverändert.
+- **Einstellungen: Reiter „Energie“ heißt jetzt „Leistung“.** Dietmar: „Den Reiter Energie möchte ich umbenennen in Leistung.“ Inhalt unverändert (Energiesparmodus des Handys, Ruhiger Modus, Zwischenspeicher); gespeicherte Einstellungen bleiben.
+- **Funkwellen auf der blauen Startkarte** (Dietmar: „Ich möchte das standardmäßig aus haben.“): stehen seit Stand 436 fest still, in jeder Einstellung. Auf dem Handy mit App-Version 2.433 laufen sie noch – das ändert sich mit dem nächsten App-Bau.
+- **Auto-Weiter: Zeitlimit beim Vorlesen.** Dietmar: „Zeitlimit für Auto-Weiter am klassischen PC, falls eine Aufnahme hängen bleibt.“ Die Uhr wartet aufs Vorlesen höchstens 30 Sekunden und zählt dann weiter. In der App gilt wie bisher deren eigenes Netz.
+
+## Stand 480 (07.11.2026)
+
+Dietmar: „Ja, mach Stand 480 mit Befund 1 und 2 (Gruppenraum-Knöpfe im klassischen PC in Hell; autoWeiterSpricht() am klassischen PC). Nimm in denselben Stand das neue Maja-Paket N auf.“
+
+- **Gruppenraum, klassischer PC, Hell: Knöpfe wieder lesbar (Prüfbericht Befund 1).** „Schließen“, „Raum erstellen“, „Jetzt starten“ und „Mitmachen“ standen weiß auf weiß (1,0:1). Ursache: Die Glasknöpfe von Arktis machen den Grund weiß, setzen aber keine Schrift; `.btn-reset` und `.btn-primary` behielten Weiß. Jetzt dunkle Schrift wie die anderen Glasknöpfe, „Schließen“ wieder grau mit weißer Schrift. Polar und die App unverändert.
+- **Klassischer PC: Auto-Weiter wartet wieder, solange Maja oder Piper vorliest (Prüfbericht Befund 2).** Die Uhr blätterte nach der eingestellten Zeit um und schnitt die Stimme ab, obwohl die Einstellung „Solange vorgelesen wird, steht die Uhr“ verspricht. Ursache: Die Abfrage suchte `window.ttsQueueActive` und `window.currentTtsAudio` – beide gibt es nur als `let`-Variablen, nie auf `window`. Jetzt wie in der App: Die Uhr wartet auf die laufenden Aufnahmen und die Browser-Stimme. App und PC-App unverändert.
+- **Majas Paket N mit Nachaufnahmen.** Neu aufgenommen: Fragen VC124, BE104, BE110, BE306, BE308, BE309, BE310, BE311; Antworten BB107-1/-4, BB110-1/-2/-4, BE104-1/-3/-4, NF111-1, VD721-1 bis -4, VE301-1/-3. Neue Dateinamen (k2), damit kein alter Zwischenspeicher greift. Weiter 21 Dateien in `sprache/`.
+
+## Stand 479 (07.11.2026)
+
+- **Hell, Fragen-Stil Navy, Petrol und Schlicht: der Vorlesen-Knopf ist hell wie die anderen.** Dietmar (Bild, klassische PC-Ansicht): „Der Button rechts oben ist in Arktis bei Sachlich noch immer dunkel. Das müssen wir ändern. Ich vermute, dass es in den Einstellungen bei Navy liegt.“ Die Korrektur aus Stand 477 galt nur beim Fragen-Stil Bunt. Jetzt gilt sie bei allen Fragen-Stilen und in allen Ansichten (Handy-App, PC-App, klassischer PC): hellgrau `#eef2f9`, Schrift `#0f2745`, wie Taschenrechner und Formelblatt. Polar (dunkel) bleibt unverändert.
+
+## Stand 478 (07.11.2026)
+
+- **Neu gebaut für das Web, damit der Vorlesen-Knopf sichtbar ist.** Dietmar (Bild, Desktop über den Link): „Bei Arktis (Heller Modus) unter Navy ist der Button schlecht erkennbar, da er die gleiche Farbe wie der Hintergrund nutzt. Wir müssen ihn farblich so anpassen, dass er zu den anderen dazu passt.“ Die Anpassung steht seit Stand 477 im Code (hellgrau wie Taschenrechner); im Web war noch der alte Stand. Dieser Stand enthält sie und bekommt eine neue Nummer, damit der Update-Vergleich greift. Gemessen in der klassischen PC-Ansicht: Knopf `#eef2f9`, Schrift `#0f2745`.
+
+## Stand 477 (07.11.2026)
+
+- **Vorlesen in Polar wie in Arktis.** Dietmar (Video): „Ich möchte Vorlesen wie in Arktis.“ In Polar hatte die vorgelesene Antwort einen Rahmen und das gesprochene Wort war unterstrichen. Jetzt: Antwort voll hellgelb mit dunkler Schrift, dunkelblauer Buchstabe, das gesprochene Wort nur orange. Kein Rahmen, keine Unterstreichung.
+
+- **Hell mit Navy-Frage: der Vorlesen-Knopf hat wieder einen sichtbaren Kasten.** Dietmar (Bild): Der Knopf war navy auf der navyfarbenen Fragetafel, der Kasten war nicht zu sehen. Jetzt hell wie Taschenrechner und die anderen Knöpfe daneben, auch bei „Stop“.
+
 ## Stand 476 (07.11.2026)
 
 - **Verlauf: Richtige und Falsche sind sichtbar.** Dietmar (Bild Verlauf, Rückmeldung einer Testerin: „Meine richtigen sind weg … die muss ich doch auch nacharbeiten“): Bei 25 von 25 war das Fenster leer. Der Trainer schreibt jetzt auch die richtig beantworteten Fragen mit (`r`). Im Fenster: aufklappbarer Abschnitt „Richtig (n)“ mit allen Antworten (grün, „Deine Antwort · richtig“), bei 0 Fehlern gleich offen, dazu der Knopf „Richtige noch einmal üben“. Ältere Runden haben die Richtigen nicht gespeichert; dort steht ein Hinweis.
