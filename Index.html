@@ -14318,6 +14318,27 @@ window.addEventListener('resize', bildLupeZu);
 //  der Knopf selbst nie. Ohne Lupe oeffnet sich die grosse Ansicht nicht, und der Faktor aus dem
 //  Nachteilsausgleich (Einstellungen -> Nachteilsausgleich -> Bilder vergroessern) blieb ohne Wirkung.
 //  Hier wird dieselbe Lupe fuer den klassischen PC angelegt, genau wie in der App-Ansicht.
+// Stand 486 - Dietmar (NB201, PC): "Bei Verspielt sieht die Lupe zu gross aus. Das verdeckt das Bild." - "Die groesse
+// von der Lupe ist gut und auch gut klickbar. Sie darf aber nicht auf, sondern neben dem Bild liegen." - "Wichtig: Wir
+// muessen bei der groesse unterscheiden! Das ueberlagern ist nur bei kleinen Bildern zu sehen. Bei den groessen passt es!"
+// Bei einem KLEINEN Fragebild (niedriger als etwa zweieinhalb Lupen oder schmaler als vier) steht die Lupe rechts
+// daneben, senkrecht mittig - sofern rechts Platz ist. Grosse Bilder behalten die Lupe in der Ecke. Die Lupen an den
+// Bildantworten bleiben unveraendert ("Hier bitte nichts veraendern"). Gilt fuer PC, PC-App und Handy-App
+// (beide Fassungen) - deshalb steht die Funktion VOR der Klammer, die in der App gleich wieder aussteigt.
+function frageLupePlatz(b, img, kachel){
+    const rechts = img.offsetLeft + img.offsetWidth, bw = b.offsetWidth || 40, bh = b.offsetHeight || 40;
+    const klein = img.offsetHeight < bh * 2.5 || img.offsetWidth < bw * 4;
+    if(klein && kachel.clientWidth - rechts >= bw + 10){
+        b.style.right = 'auto';
+        b.style.left = (rechts + 8) + 'px';
+        b.style.top = Math.max(0, img.offsetTop + Math.round((img.offsetHeight - bh) / 2)) + 'px';
+    } else {
+        b.style.left = 'auto';
+        b.style.top = (img.offsetTop + 6) + 'px';
+        b.style.right = Math.max(4, kachel.clientWidth - rechts + 6) + 'px';
+    }
+}
+window.frageLupePlatz = frageLupePlatz;
 // ================================================================
 (function(){
     const H = document.documentElement;
@@ -14369,8 +14390,7 @@ window.addEventListener('resize', bildLupeZu);
             const setz = () => {
                 try{
                     if(!img.isConnected || !img.offsetWidth) return;
-                    b.style.top = (img.offsetTop + 6) + 'px';
-                    b.style.right = Math.max(4, kachel.clientWidth - (img.offsetLeft + img.offsetWidth) + 6) + 'px';
+                    frageLupePlatz(b, img, kachel);
                 }catch(e){}
             };
             setz();
@@ -26203,7 +26223,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 484, datum: '07.11.2026' };
+const TRAINER_STAND = { nr: 486, datum: '08.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -66037,6 +66057,8 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             const setz = () => {
                 try{
                     if(!img.isConnected || !img.offsetWidth) return;
+                    // Stand 486: kleine Fragebilder bekommen die Lupe daneben statt darauf - siehe frageLupePlatz
+                    if(typeof window.frageLupePlatz === 'function'){ window.frageLupePlatz(b, img, kachel); return; }
                     b.style.top = (img.offsetTop + 6) + 'px';
                     b.style.right = Math.max(4, kachel.clientWidth - (img.offsetLeft + img.offsetWidth) + 6) + 'px';
                 }catch(e){}
@@ -66504,6 +66526,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             // Ist das defekt?" Ja: Diese App-Fassung von vorleseFrage kannte die Marke effekt:'funk' nicht (die PC-Fassung schon) -
             // in App und PC-App kam der Roger-Beep deshalb nie, mit keiner Stimme. Jetzt wie dort.
             const segments = [{ text: sprich(q.text) + '.', selector: '.question-area .q-text', klasse: 'tts-frage', worte: wortAn(), effekt: 'funk', thorsten: true, maja: majaMarke }];
+            // Stand 486 - Dietmar: "Beim Vorlesen der Frage moechte ich ... die Option mit Zeit vergroessern beim Vorlesen."
+            // Die Einstellung (Stand 429, "Bilder beim Vorlesen kurz vergroessern") gab es, aber diese App-Fassung von
+            // vorleseFrage kannte das Fragebild nicht - in Handy-App und PC-App wurde nur bei Bildantworten vergroessert.
+            try{ if(document.querySelector('#questionContainer .q-image img')){ segments[0].bildSel = '#questionContainer .q-image img'; segments[0].bildName = 'Bild zur Frage'; } }catch(e){}
             let mitAntworten = !nurFrage();
             try{ if(einstellungen && einstellungen.mausVorlesen) mitAntworten = false; }catch(e){}
             if(mitAntworten && typeof antwortSegment === 'function'){
@@ -68762,6 +68788,22 @@ html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt.aktiv:not(#q1):not(#q2){background:rgba(52,211,153,.16)!important;border-color:#34d399!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark .klasse-opt:not(#q1):not(#q2) span[style*="border"]{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.20)!important;border-radius:6px!important}
 html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] button[style*="min-height:"]:not(#q1):not(#q2),html:not(#zz):not(.android-app) body:not(#zz2).dark #rundeModal .btn-outline:not(#q1):not(#q2){background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.24)!important;color:#fff!important;border-radius:999px!important}
+/* Stand 485 - Dietmar (Bild 08.11., PC, Polar, "Fragerunde abbrechen?"): "Zurück zur Hauptansicht. Müsste das Haus nicht weiss sein?" Ja: Der Knopf
+   ist hier Glas mit weisser Schrift, aber die Polar-Regel ".btn-primary *" (dunkle Schrift fuer den tuerkisen Knopf) faerbte das Haus-Symbol dunkel.
+   Symbole in den Glasknoepfen jetzt weiss wie die Schrift. Am Handy bleibt der Knopf tuerkis mit dunkler Schrift und dunklem Symbol. */
+html:not(#zz):not(.android-app) body:not(#zz2).dark [id$="Modal"] button[style*="min-height:"]:not(#q1):not(#q2) *,html:not(#zz):not(.android-app) body:not(#zz2).dark #rundeModal .btn-outline:not(#q1):not(#q2) *{color:#fff!important}
+/* Stand 486 - 08.11.2026, Dietmar: "Beim Trainer wird richtig und falsch mit einem Glaseffekt dargestellt.
+   Ich haette das gerne in gruen oder rot ohne dem Effekt. So in der Art wie auch beim Vorlesen."
+   Betrifft den Stil Bunt in Polar (Handy-App und PC): bewertete Antworten waren Glas (20 % Farbe + farbiger Rand).
+   Jetzt deckend in den DARC-Farben (gruen #3bb583, rot #fe756c) mit dunkler Schrift, Buchstabenfeld wie beim
+   Vorlesen dunkel-durchscheinend. Gilt fuer Text- und Bildantworten. Haken und Kreuz bleiben. */
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > :is(.option,.option-grid).correct:not(#q1):not(#q2):nth-child(n){background:var(--darc-richtig,#3bb583)!important;border:1.5px solid rgba(0,0,0,.25)!important;box-shadow:none!important;color:#0b1e33!important}
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > :is(.option,.option-grid).wrong:not(#q1):not(#q2):nth-child(n){background:var(--darc-falsch,#fe756c)!important;border:1.5px solid rgba(0,0,0,.25)!important;box-shadow:none!important;color:#0b1e33!important}
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > :is(.option,.option-grid):is(.correct,.wrong):not(#q1):not(#q2) .option-text,
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > :is(.option,.option-grid):is(.correct,.wrong):not(#q1):not(#q2)::after{color:#0b1e33!important}
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > :is(.option,.option-grid):is(.correct,.wrong):not(#q1):not(#q2):nth-child(n) .option-label{background:rgba(11,30,51,.16)!important;color:#0b1e33!important}
+/* der Farbverlauf nach der Antwort (antwortWisch) lief in Polar als Glasschleier - auf deckender Farbe entfaellt er */
+html.fs-bunt:not(#f1):not(#f2) body.dark.runde-laeuft:not(#f3):not(#f4) .question-area #optionsContainer > .option:is(.correct,.wrong):not(#q1):not(#q2):not(#q3){background-image:none!important;animation:none!important}
 /* Scrollbalken im dunklen Stil am PC: schmal, ohne weißen Grund. Stand 383: auch in der App-Ansicht am PC (Dietmar: "kann man den Scrollbalken auch noch färben?") */
 html:is(:not(.android-app),.pc-app) body.dark *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.30) transparent}
 html:is(:not(.android-app),.pc-app):has(body.dark){scrollbar-color:rgba(255,255,255,.30) #0b1330}
@@ -69941,6 +69983,21 @@ html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > 
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-zeile:not(#zz3) > div:nth-child(3){ text-align:right !important; font-size:.78rem !important; white-space:nowrap !important; }
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .reife-stand:not(#zz3){ grid-column:1 / -1; font-size:.72rem !important; }
 html.android-app:not(#zz1) body:not(#zz2) #reifeKasten .stat-kuerzbar:not(#zz3){ display:none !important; }
+</style>
+<style id="farben485">
+/* Stand 485 - Dietmar (08.11., Android-App, Sachlich, Pruefungssimulation): "ein dunkler Button mit dunkler Schrift, den habe ich nicht lesen koennen".
+   Gemeint ist "Pruefung starten", solange kein Teil gewaehlt ist: In Polar war der Knopf auf 60 % gedimmt (Schrift 136,150,163 auf 25,40,58 = 4,9:1,
+   im WebView wirkt das dunkler), in Hell lag graue Schrift auf Sand (2,8:1). Jetzt bleibt der Knopf voll sichtbar, nur gedaempft gefaerbt:
+   Polar helle Schrift auf dunklem Glas mit Rand (ca. 9:1), Hell dunkle Schrift auf hellem Grau (ca. 7:1). Gilt in allen Stilen. */
+html:not(#zz):not(#zy) body:not(#zz2).dark .realistic-modal #realisticStartBtn:not(#q1):not(#q2):not(#q3):disabled{ opacity:1 !important; background:rgba(255,255,255,.08) !important; color:#C3CDE6 !important; border:1px solid rgba(255,255,255,.28) !important; box-shadow:none !important; }
+html:not(#zz):not(#zy) body:not(#zz2).dark .realistic-modal #realisticStartBtn:not(#q1):not(#q2):not(#q3):disabled i{ color:#C3CDE6 !important; }
+html:not(#zz):not(#zy) body:not(#zz2):not(.dark) .realistic-modal #realisticStartBtn:not(#q1):not(#q2):not(#q3):disabled{ opacity:1 !important; background:#e3e9f1 !important; color:#3f5063 !important; border:1px solid #c9d3df !important; box-shadow:none !important; }
+html:not(#zz):not(#zy) body:not(#zz2):not(.dark) .realistic-modal #realisticStartBtn:not(#q1):not(#q2):not(#q3):disabled i{ color:#3f5063 !important; }
+/* Stand 485 - Dietmar (Bild 08.11., Android-App, Sachlich Polar, Blatt "Neue Runde"): gewaehlter Pruefungsteil und gewaehlte Anzahl ("Technik", "50")
+   dunkelgruen auf dunkelgrau, nicht lesbar. Zwei Regeln bissen sich: Zeile ~1386 gibt dem gewaehlten Knopf in Polar Sachlich den dunklen Grund #2C3648,
+   Zeile ~3732 (Handy Sachlich) die Schrift var(--s-auf-haupt), die in Polar dunkel ist (#06262C, gedacht fuer den tuerkisen Grund). Jetzt helle Schrift
+   auf dem dunklen Grund mit feinem Ring. PC-App und Hell waren richtig. */
+html.android-app.stil-sachlich:not(#zz) body.dark:not(#zz2) #appRundeBlatt .ar-seg button.an:not(#q1){ background:#2C3648 !important; color:#E6EDF7 !important; box-shadow:0 0 0 1px rgba(255,255,255,.22), 0 1px 3px rgba(0,0,0,.35) !important; }
 </style>
 <style id="farben481">
 /* Stand 481 (07.11.2026), Pruefbericht Befunde 3, 4, 6, 8 - nach Vergleichsbild, Dietmar: "1 - 5 bitte einbauen."
