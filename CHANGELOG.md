@@ -13,9 +13,24 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 486 · 08.11.2026
+Stand 488 · 08.11.2026
 
-Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot.
+Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 488 (08.11.2026)
+
+- **Aufstockung N → A ist zurück.** Dietmar: „Auf vielfachen Wunsch wurde gefordert von der Community, dass es einen Direkteinstieg von der Klasse N auf die Klasse A gibt.“ Unter „Ziel wählen“ gibt es wieder die Karte „Aufstockung N → A“ (Fragendatei Fragen-N-Auf-A.json: 463 Technikfragen E + 716 Technikfragen A = 1179). Die Prüfung besteht aus zwei Teilen: Technik E (25 Fragen, 45 Minuten) und Technik A (25 Fragen, 60 Minuten); Vorschriften und Betrieb entfallen wie bei jeder Aufstockung. Der Direkteinstieg A bleibt draußen.
+- Der Lehrgang zeigt für N → A beide Aufbaukurse hintereinander (16 Stationen N → E, dann 14 Stationen E → A, zusammen 30), die Folien nennen den Aufbaukurs N → E als passend, Majas Sprachpakete laden die Pakete E und A, die Fehlerliste führt Fragen aus E und A.
+- Bestenliste: eigener Reiter „N→A“ (2 Bögen à 25 Fragen), im Trainer und auf der Webseite. **Der Bestenliste-Worker `afu-bestenliste` muss das Ziel `na` ebenfalls kennen (zwei Bögen), sonst meldet der Reiter einen Fehler.**
+- Webseite: Seite „Aufstieg N → A“, „Klasse A“, KI-Fakten, llms.txt und Bestenliste sprechen jetzt vom eigenen Ziel „N → A“ statt von zwei Etappen; die zwei Etappen bleiben als Alternative genannt.
+
+## Stand 487 (08.11.2026)
+
+- Google Play: Der Produktionsantrag wurde am 08.11.2026 genehmigt, Dietmar hat 1167 (1.306.0, Stand 486) als erstes Produktions-Release eingereicht (Länder DE, AT, CH, LI, LU). Dietmar: „wir müssen das auch noch im Trainer und auf der Webseite eintragen, dass die App jetzt öffentlich und kostenlos genutzt werden kann.“
+- Blatt „Mehr“ (PC-App und Handy-Browser): neuer Eintrag „Android-App – Kostenlos bei Google Play – für Handy und Tablet“, öffnet den Store-Eintrag (`play.google.com/store/apps/details?id=com.amateurfunktrainer.app`); das Play-Dreieck steht in den vier Google-Farben (Dietmar: „in der Original-Google-Farbe als Icon“). In der Android-App selbst wird der Eintrag nicht gezeigt. Dietmar: „Unter Einstellung möchte ich über einen Link einen Hinweis, dass es den Trainer für Android gibt.“
+- Abschiedsfenster am PC („Trainer kostenlos herunterladen“): aus „Demnächst auch im Google Play Store“ wurde ein Link „Jetzt auch kostenlos im Google Play Store“.
+- Webseite (eigene Lieferung `webseite-upload-2026-11-08b.zip`): Startseite mit drittem Knopf „Android-App · Google Play“ neben „Jetzt kostenlos üben“ und Hinweiskasten „Jetzt auch als Android-App bei Google Play“; Download-Seite mit Abschnitt Android berichtigt (statt „ab Mitte November, Testphase“) und Knopf „Bei Google Play laden“; KI-Fakten-Tabelle; geteilte Ergebnisseite mit zweitem Knopf „Android-App – kostenlos bei Google Play“ in gleicher Größe; Sitemap-Datum.
+- Außerdem heute: acht neue Play-Store-Screenshots (1080 × 2140) aus dem Trainer Stand 486 (Startseite, Antwort, Hilfen, Erklärung, Prüfungsauswahl, laufende Prüfung, Vorlesen, Merkhilfe); Dietmar setzt sie im Store-Eintrag selbst ein.
 
 ## Stand 486 (08.11.2026)
 

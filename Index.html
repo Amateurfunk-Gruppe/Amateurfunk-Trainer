@@ -10541,6 +10541,12 @@ html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(
 // geloescht wird nichts. Wer die beiden Ziele zurueckhaben will, traegt
 // hier zwei Zeilen ein, und alles andere (Simulator, Druck, Uebersicht)
 // zieht von selbst nach: Der Pruefungsumfang steht in KLASSE_LAGE.
+//
+// AM 08.11.2026 IST "N → A" ZURUECK. Die Community hat es sich "auf
+// vielfachen Wunsch" gewuenscht (Dietmar): ein Direktweg von N auf A. Die
+// Pruefung besteht dann aus Technik E und Technik A (zwei Teile, 463 + 716
+// = 1179 Fragen); Vorschriften und Betrieb schreibt man nicht noch einmal.
+// Der Direkteinstieg A bleibt draussen.
 const KLASSEN = [
     { id:'n',   datei:'fragen.json',         name:'Klasse N',
       titel:'Direkteinstieg Klasse N · Basis',
@@ -10551,6 +10557,9 @@ const KLASSEN = [
     { id:'ne',  datei:'Fragen-N-Auf-E.json', name:'N → E',
       titel:'Aufstockung N → E',
       note:'Du hast N bereits bestanden.' },
+    { id:'na',  datei:'Fragen-N-Auf-A.json', name:'N → A',
+      titel:'Aufstockung N → A',
+      note:'Du hast N bereits bestanden und willst direkt auf A, ohne Zwischenstation E.' },
     { id:'ea',  datei:'Fragen-E-Auf-A.json', name:'E → A',
       titel:'Aufstockung E → A',
       note:'Du hast E bereits bestanden.' },
@@ -10757,6 +10766,7 @@ const KLASSE_LAGE = {
     n:   { lizenz:'keine', ziel:'N', art:'erst' },
     e:   { lizenz:'keine', ziel:'E', art:'erst' },
     ne:  { lizenz:'N',     ziel:'E', art:'auf'  },
+    na:  { lizenz:'N',     ziel:'A', art:'auf'  },
     ea:  { lizenz:'E',     ziel:'A', art:'auf'  }
     // 'cbn' ist am 07.09.2026 mit dem Ziel "CB → N" herausgefallen
     // (siehe KLASSEN weiter oben).
@@ -11094,7 +11104,7 @@ function klasseModalFuellen() {
     //  Namen, die es nicht mehr gibt, stoeren hier nicht: Gebaut wird nur,
     //  was in KLASSEN steht. Sie stehen zu lassen waere trotzdem falsch -
     //  wer die Liste liest, soll sehen, was es wirklich gibt.
-    const ZEILEN_FOLGE = ['n','e','ne','ea'];
+    const ZEILEN_FOLGE = ['n','e','ne','na','ea'];
 
     modal.innerHTML =
         '<div style="background:#fff; border-radius:18px; padding:1.4rem; max-width:640px; width:96%; '
@@ -11391,7 +11401,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                  dem Abzeichen, weil beides dasselbe aussagt: welcher
                  Fragenpool gerade geladen ist. -->
             <button class="btn btn-outline btn-sm" id="klasseBtn" onclick="klasseModalOeffnen()"
-                    data-tooltip="Prüfungsziel wählen: Klasse N, Aufstockung N→E oder E→A, Direkteinstieg E oder A"
+                    data-tooltip="Prüfungsziel wählen: Klasse N, Aufstockung N→E, N→A oder E→A, Direkteinstieg E"
                     style="border-radius:20px;"><i class="fas fa-graduation-cap"></i> Ziel wählen</button>
             <div class="suchfeld-huelle" style="position:relative;display:inline-flex;align-items:center;gap:4px;">
                 <input type="text" id="searchInput" placeholder="Suche: NC404 oder DX"
@@ -22223,10 +22233,12 @@ function qslKarteSvg(lektion, d, kennung, nurBild){
 //  N -> E 16 Stationen / 463 Fragen, E -> A 14 / 716, E 23 / 1034. Die Namen tragen das Ziel in Klammern, damit
 //  sich die QSL-Karten der Klassen nie in die Quere kommen (Album und Lernstand fuehren sie nach Namen).
 // ================================================================
-const KURS_ZIELNAME = { ne: 'N → E', ea: 'E → A', e: 'Klasse E' };
+const KURS_ZIELNAME = { ne: 'N → E', ea: 'E → A', e: 'Klasse E', na: 'N → A' };
 const kursLekCache = {};
 function kursLektionenRoh(id){
     if(kursLekCache[id]) return kursLekCache[id];
+    // N -> A (08.11.2026): beide Aufbaukurse hintereinander - erst N -> E, dann E -> A.
+    if(id === 'na') return (kursLekCache.na = kursLektionenRoh('ne').concat(kursLektionenRoh('ea')));
     let k = null;
     try{ k = (typeof KURSE === 'object' && KURSE && KURSE[id]) ? KURSE[id] : null; }catch(e){ k = null; }
     if(!k || !Array.isArray(k.lek) || !KURS_ZIELNAME[id]) return [];
@@ -24291,6 +24303,7 @@ const OHM_AUSGABEN = {
     e:  ['NE', 'NEA', 'N', 'EA'],
     ne: ['NE', 'NEA', 'N'],
     ea: ['EA', 'NEA', 'A'],
+    na: ['EA', 'NEA', 'NE', 'A', 'N'],
     a:  ['A', 'EA', 'NEA']
 };
 function ohmSeite(id){
@@ -24646,6 +24659,7 @@ function errImZiel(id, zid){
     const s = String(id || '');
     if(zid === 'ea') return /^A[A-K]\d/.test(s);
     if(zid === 'ne') return /^E[A-K]\d/.test(s);
+    if(zid === 'na') return /^[EA][A-K]\d/.test(s);
     if(zid === 'e')  return /^[VBNE][A-K]\d/.test(s);
     return /^[VBN][A-K]\d/.test(s);
 }
@@ -26223,7 +26237,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 486, datum: '08.11.2026' };
+const TRAINER_STAND = { nr: 488, datum: '08.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -29579,7 +29593,7 @@ function besucherAbschied(){
       // Dietmar 19.10.2026: Android mit aufnehmen und "dass es demnaechst den Trainer im Google PlayStore gibt"
       + '<div style="display:inline-flex; align-items:center; gap:0.45rem; margin-top:0.9rem; padding:0.4rem 0.8rem; '
       + 'border:1px solid #2b3540; border-radius:999px; font-size:0.8rem; color:#c9d3dc;">'
-      + '<i class="fab fa-google-play" style="color:#34a853;"></i> Demnächst auch im Google Play Store</div>'
+      + '<i class="fab fa-google-play" style="color:#34a853;"></i> <a href="https://play.google.com/store/apps/details?id=com.amateurfunktrainer.app" target="_blank" rel="noopener" style="color:inherit;">Jetzt auch kostenlos im Google Play Store</a></div>'
       + '<div style="margin-top:1.8rem;">'
       + '<button type="button" id="besucherWeiter" style="background:none; border:none; color:#8a97a3; '
       + 'text-decoration:underline; cursor:pointer; font-size:0.85rem; font-family:inherit;">Doch weiterlernen</button>'
@@ -30985,6 +30999,7 @@ const KURSE = {"n":{"key":"N","name":"Gesamtkurs Klasse N","lek":[{"t":"Erste Sc
 function kursId(){
     let id = 'n';
     try{ id = klasseAktuell().id; }catch(e){}
+    if(id === 'na') id = 'ne';     // N -> A: der Videolehrgang beginnt mit dem Aufbau N -> E
     return KURSE[id] ? id : 'n';
 }
 function kursAktuell(){ return KURSE[kursId()]; }
@@ -32116,7 +32131,7 @@ function frageKlassenName(q){
     try {
         const akt = klasseAktuell();
         const b = q && typeof q.id === 'string' ? q.id.charAt(0) : '';
-        const rang = { n: 1, e: 2, ne: 2, ea: 3 }, noetig = { E: 2, A: 3 }[b];
+        const rang = { n: 1, e: 2, ne: 2, na: 3, ea: 3 }, noetig = { E: 2, A: 3 }[b];
         if (noetig && (rang[akt.id] || 1) < noetig) {
             const k = KLASSEN.find(x => x.id === (b === 'E' ? 'ne' : 'ea'));
             return k ? k.name : 'Klasse ' + b;
@@ -32141,7 +32156,7 @@ async function uebenPerLink(){
     // gibt es in jeder Klasse, da aendert sich nichts. Aus Klasse N wird "N -> E" (die Fragen der Aufstockung).
     try {
         const noetig = g.charAt(0) === 'E' ? 'ne' : (g.charAt(0) === 'A' ? 'ea' : '');
-        const rang = { n: 1, e: 2, ne: 2, ea: 3 };
+        const rang = { n: 1, e: 2, ne: 2, na: 3, ea: 3 };
         const jetzt = (typeof klasseAktuell === 'function') ? klasseAktuell().id : 'n';
         if (noetig && (rang[jetzt] || 1) < rang[noetig] && typeof klasseWaehlen === 'function') {
             await klasseWaehlen(noetig);
@@ -33959,7 +33974,7 @@ function majaTeilUrl(quelle, datei){ return /^https?:\/\//.test(String(datei)) ?
 // Pruefungsziele wie in KLASSEN: n = Klasse N, e = Klasse E (N + Aufbau), ne = nur Aufbau N auf E, ea = Aufbau E auf A (Stand 395).
 // Stand 401: die Antworten Aufbau N auf E und E auf A sind da (Grok, 02.11.2026).
 const MAJA_SPRACHE_BRAUCHT = { n: ['N-fragen', 'N-antworten'], e: ['N-fragen', 'E-fragen', 'N-antworten', 'E-antworten'], ne: ['E-fragen', 'E-antworten'],
-                               ea: ['A-fragen', 'A-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten', 'E-antworten', 'A-antworten'] };
+                               ea: ['A-fragen', 'A-antworten'], na: ['E-fragen', 'A-fragen', 'E-antworten', 'A-antworten'], a: ['N-fragen', 'E-fragen', 'A-fragen', 'N-antworten', 'E-antworten', 'A-antworten'] };
 const majaSprache = { liste: null, quelle: null, idx: {}, teile: {}, laeuft: {}, fehler: {}, fortschritt: {}, vor: {}, zuerst: {} };
 
 function majaSpracheMoeglich(){
@@ -35431,7 +35446,7 @@ const KNOPF_ERKLAERUNG_TIP = {
     'Alle 14 Lektionen mit Kapitelmarken und Lernfortschritt':
         'Lektionen. Der Lehrgang ist in vierzehn Lektionen geteilt. Du siehst zu jeder die Kapitelmarken und wie weit du darin schon gekommen bist.',
     'Prüfungsziel wählen':
-        'Prüfungsziel wählen. Hier legst du fest, worauf du hinarbeitest: Klasse N als Einstieg, die Aufstockung von N auf E, von E auf A, der Direkteinstieg in Klasse E oder der CB-Einstieg. Die Wahl bestimmt, welche Fragen der Trainer dir überhaupt vorlegt.',
+        'Prüfungsziel wählen. Hier legst du fest, worauf du hinarbeitest: Klasse N als Einstieg, die Aufstockung von N auf E, von N direkt auf A, von E auf A oder der Direkteinstieg in Klasse E. Die Wahl bestimmt, welche Fragen der Trainer dir überhaupt vorlegt.',
     'Stille zwischen Frage und Antwort':
         'Die Pause zwischen Frage und Antwort im Hörbuch. So lange bleibt es still, damit du selbst antworten kannst, bevor die Lösung kommt.',
     'Welche Fragen sollen gesprochen werden?':
@@ -41666,7 +41681,7 @@ function zettelEinblenden(html){
     }catch(e){}
 }
 window.zettelEinblenden = zettelEinblenden;
-function pruefZielBuchstabe(){ try{ const id = klasseAktuell().id; return id === 'ea' ? 'a' : (id === 'e' || id === 'ne') ? 'e' : 'n'; }catch(e){ return 'n'; } }
+function pruefZielBuchstabe(){ try{ const id = klasseAktuell().id; return (id === 'ea' || id === 'na') ? 'a' : (id === 'e' || id === 'ne') ? 'e' : 'n'; }catch(e){ return 'n'; } }
 function pruefListe(){ try{ return JSON.parse(localStorage.getItem('amateurfunk_pruefungen_' + String(currentUser)) || '[]') || []; }catch(e){ return []; } }
 function pruefSchnitt(){
     const b = pruefZielBuchstabe(), l = pruefListe().filter(x => x && x.k === b).slice(-PRUEF_ANZAHL), n = l.length;
@@ -53088,9 +53103,9 @@ window.uebungszeitOeffnen = uebungszeitOeffnen;
     const tu = fn => { try{ return fn(); }catch(e){ console.debug('[Bestenliste]', e && e.message); } };
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-    const ZIELE = [['n', 'N'], ['e', 'E'], ['ne', 'N→E'], ['ea', 'E→A']];
-    const ZIEL_NAME = { n:'Klasse N', e:'Klasse E', ne:'N → E', ea:'E → A' };
-    const BOEGEN = { n:3, e:4, ne:1, ea:1 };
+    const ZIELE = [['n', 'N'], ['e', 'E'], ['ne', 'N→E'], ['na', 'N→A'], ['ea', 'E→A']];
+    const ZIEL_NAME = { n:'Klasse N', e:'Klasse E', ne:'N → E', na:'N → A', ea:'E → A' };
+    const BOEGEN = { n:3, e:4, ne:1, na:2, ea:1 };
     const MONATSNAME = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
     const MIN_SEK_JE_BOGEN = 40;
     let zustand = { ziel:'n', monat:'', monate:[], daten:null, platz:null, laedt:false };
@@ -58514,13 +58529,29 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         ['Nach Update suchen', 'fas fa-cloud-arrow-down', 'Bei GitHub nachsehen, ob es eine neuere Fassung gibt', () => githubOeffnen()],
         // Dietmar: "Facebook Gruppe stimmt auch nicht ich habe keine Gruppe
         // noch nicht es ist nur die Seite oder einfach auch nur Facebook."
-        ['Facebook', 'fab fa-facebook', 'Neuigkeiten rund ums Thema Amateurfunk', () => klick('facebookBtn')]
+        ['Facebook', 'fab fa-facebook', 'Neuigkeiten rund ums Thema Amateurfunk', () => klick('facebookBtn')],
+        // Stand 487 (08.11.2026) - Dietmar: "Unter Einstellung moechte ich ueber einen Link einen Hinweis, dass es den
+        // Trainer fuer Android gibt." Die App ist seit heute oeffentlich bei Google Play (Produktionsfreigabe 08.11.2026).
+        // In der Android-App selbst waere der Hinweis sinnlos, dort bleibt er weg; PC-App und Handy-Browser zeigen ihn.
+        ['Android-App', 'play-bunt', 'Kostenlos bei Google Play – für Handy und Tablet', () => playStoreLink(), () => !(H.classList.contains('android-app') && !H.classList.contains('pc-app'))]
     ];
+    function playStoreLink(){
+        const a = D.createElement('a');
+        a.href = 'https://play.google.com/store/apps/details?id=com.amateurfunktrainer.app'; a.target = '_blank'; a.rel = 'noopener';
+        D.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 0);
+    }
+    // Stand 487 - Dietmar: "kann man das unter Einstellungen in der Original-Google-Farbe als Icon verwenden" -
+    // das Play-Dreieck in den vier Google-Play-Farben statt des einfarbigen Font-Awesome-Zeichens.
+    const PLAY_BUNT = '<svg class="am-play" aria-hidden="true" viewBox="0 0 22 24" style="width:24px;height:22px;flex:0 0 24px;display:block;">'
+        + '<path d="M1.5 1.2 12.6 12 1.5 22.8c-.4-.3-.6-.8-.6-1.4V2.6c0-.6.2-1.1.6-1.4z" fill="#00d7fe"/>'
+        + '<path d="M12.6 12 1.5 1.2c.4-.3 1-.4 1.6 0l13 7.3-3.5 3.5z" fill="#00f076"/>'
+        + '<path d="M12.6 12l3.5 3.5-13 7.3c-.6.4-1.2.3-1.6 0L12.6 12z" fill="#ff3a44"/>'
+        + '<path d="M16.1 8.5l3.8 2.1c1.1.6 1.1 2.1 0 2.8l-3.8 2.1L12.6 12l3.5-3.5z" fill="#ffd500"/></svg>';
     const mehr = D.createElement('div');
     mehr.id = 'appMehr';
     mehr.innerHTML = '<div class="am-schleier"></div><div class="am-blatt" role="dialog" aria-label="Mehr">'
         + '<div class="am-griff"></div><div class="am-kz"><h3>Mehr</h3><button type="button" class="am-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'   // Stand 397: X oben rechts (Dietmar: "ich tue mich da teilweise sehr schwer")
-        + EINTRAEGE.map((e, i) => '<button type="button" class="am-zeile" data-nr="' + i + '"><i class="' + e[1] + '"></i>'
+        + EINTRAEGE.map((e, i) => '<button type="button" class="am-zeile" data-nr="' + i + '">' + (e[1] === 'play-bunt' ? PLAY_BUNT : '<i class="' + e[1] + '"></i>')
             + '<span><b>' + e[0] + '</b><small id="appMehrUnter_' + i + '">' + e[2] + '</small></span></button>').join('')
         + '</div>';
     D.body.appendChild(mehr);
@@ -59139,7 +59170,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const STUFEN = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000, 6200, 7600, 9200, 11000, 13000];
     // P83: Die letzte Stufe gibt es nur mit bestandener Pruefungssimulation (alle drei Teile)
     // Gespeichert je Platz als {"n":"2026-10-06","e":...} - die Stufe gilt fuer das eingestellte Pruefungsziel.
-    const legendeErreicht = () => { try{ const b = (klasseAktuell().id === 'ea') ? 'a' : (['e', 'ne'].includes(klasseAktuell().id) ? 'e' : 'n'); return !!(JSON.parse(localStorage.getItem('amateurfunk_legende_' + benutzer()) || '{}') || {})[b]; }catch(e){ return false; } };
+    const legendeErreicht = () => { try{ const b = (['ea', 'na'].includes(klasseAktuell().id)) ? 'a' : (['e', 'ne'].includes(klasseAktuell().id) ? 'e' : 'n'); return !!(JSON.parse(localStorage.getItem('amateurfunk_legende_' + benutzer()) || '{}') || {})[b]; }catch(e){ return false; } };
     window.legendeErreicht = legendeErreicht;
     function stufeIndex(xp){ let i = 0; while(i + 2 < STUFEN.length && xp >= STUFEN[i + 1]) i++; return legendeErreicht() ? STUFEN.length - 1 : i; }
     function stufe(xp){
@@ -64158,7 +64189,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     // behauptet "pruefungsreif" - das sagen die XP nicht.
     const STUFEN_NAMEN = ['Funk-Neuling', 'Kurzwellen-Lauscher', 'Funk-Lehrling', 'Antennen-Bastler', 'QSO-Starter', 'Frequenz-Profi', 'Band-Entdecker',
         'Funk-Ass', 'Logbuch-Kenner', 'DX-Jäger', 'Contest-Kanone', 'Relais-Genie', 'Signal-Star', 'Funk-Champion', 'Hochfrequenz-Meister', 'Hochfrequenz-Techniker', 'Amateurfunk-Klasse N'];
-    function zielBuchstabe(){ try{ const id = klasseAktuell().id; return id === 'ea' ? 'A' : (id === 'e' || id === 'ne') ? 'E' : 'N'; }catch(e){ return 'N'; } }
+    function zielBuchstabe(){ try{ const id = klasseAktuell().id; return (id === 'ea' || id === 'na') ? 'A' : (id === 'e' || id === 'ne') ? 'E' : 'N'; }catch(e){ return 'N'; } }
     function letzterName(){ return 'Amateurfunk-Klasse ' + zielBuchstabe(); }
     function stufeNr(xp){ STUFEN_NAMEN[STUFEN_NAMEN.length - 1] = letzterName(); return stufeIndex(xp); }
     const LETZTE = () => STUFEN.length - 1;
@@ -64465,7 +64496,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         }
 
         const neu = '<div class="apf-kopf"><b>Dein Lernpfad</b>'
-            + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft' + (function(){ try{ const z = window.kursZiel ? kursZiel() : null; return z ? ' · ' + ({ ne: 'Aufbau N → E', ea: 'Aufbau E → A', e: 'Klasse E' })[z] + ' (50ohm.de)' : ''; }catch(e){ return ''; } })() + '</small></div>'
+            + '<small>' + fertig + ' von ' + lek.length + ' Stationen geschafft' + (function(){ try{ const z = window.kursZiel ? kursZiel() : null; return z ? ' · ' + ({ ne: 'Aufbau N → E', ea: 'Aufbau E → A', e: 'Klasse E', na: 'Aufbau N → E → A' })[z] + ' (50ohm.de)' : ''; }catch(e){ return ''; } })() + '</small></div>'
             + '<div class="apf-strip" aria-hidden="true">' + streifen + '</div>'
             + '<ol class="apf-weg' + (alle ? ' apf-alle' : '') + '">' + zeilen + '</ol>'
             + '<div class="apf-satz">' + satz + '</div>'
@@ -65684,10 +65715,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         const ziel = folienZiel();
         let h = '<p class="afo-text">Die Foliensätze zum Lehrgang. Einmal laden – dann liegen sie in der App und gehen auch ohne Internet.</p>';
         if(ziel === 'ea') h += '<p class="afo-text">Für E → A hat der DARC noch keine fertigen Folien veröffentlicht.</p>';
+        if(ziel === 'na') h += '<p class="afo-text">Für N → A: erst der Aufbaukurs N → E. Für den Teil E → A hat der DARC noch keine fertigen Folien veröffentlicht.</p>';
         FOLIEN.forEach(f => {
             const n = f[0], g = folienGroesse(n), da = g > 0, st = folien.stand[n] || null, laeuft = lauf === n;
             h += '<div class="afo-karte" data-datei="' + n + '"><div class="afo-zeile"><span class="ah-ico tuerkis"><i class="fas fa-file-pdf"></i></span>'
-               + '<span class="afo-zt"><b>' + f[1] + (f[4] === ziel ? ' <em class="afo-passt">passt zu deinem Ziel</em>' : '') + '</b><small>' + f[3] + ' · ' + (da ? 'liegt in der App · ' + folienMB(g) + ' MB' : 'PDF, ca. ' + f[2] + ' MB') + '</small></span></div>';
+               + '<span class="afo-zt"><b>' + f[1] + ((f[4] === ziel || (ziel === 'na' && f[4] === 'ne')) ? ' <em class="afo-passt">passt zu deinem Ziel</em>' : '') + '</b><small>' + f[3] + ' · ' + (da ? 'liegt in der App · ' + folienMB(g) + ' MB' : 'PDF, ca. ' + f[2] + ' MB') + '</small></span></div>';
             if(laeuft){
                 const b = st && st.b || 0, gs = st && st.g || 0;
                 h += '<div class="afo-bar"><i style="width:' + (gs ? Math.round(100 * b / gs) : 0) + '%"></i></div>'
@@ -69552,7 +69584,7 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
     function einst(){ let e = {}; try{ e = JSON.parse(localStorage.getItem(EINST) || '{}') || {}; }catch(x){} return Object.assign({}, STANDARD, e); }
     function einstSchreiben(e){ try{ localStorage.setItem(EINST, JSON.stringify(e)); }catch(x){} }
     function bank(){ try{ return Array.isArray(questionBank) ? questionBank : []; }catch(x){ return []; } }
-    function zielName(){ try{ const k = klasseAktuell(); return k.id === 'ne' ? 'Aufbau N → E' : k.id === 'ea' ? 'Aufbau E → A' : k.name || 'Klasse N'; }catch(x){ return ''; } }
+    function zielName(){ try{ const k = klasseAktuell(); return k.id === 'ne' ? 'Aufbau N → E' : k.id === 'na' ? 'Aufbau N → A' : k.id === 'ea' ? 'Aufbau E → A' : k.name || 'Klasse N'; }catch(x){ return ''; } }
     function listen(){
         let f = [], b = [], m = [];
         try{ f = Array.isArray(errorList) ? errorList.slice() : []; }catch(x){}
@@ -69597,7 +69629,7 @@ body.dark #stolperBlatt .st-mk{background:rgba(255,255,255,.10);border-color:rgb
         const seg = (feld, werte) => '<div class="se-seg" data-feld="' + feld + '">' + werte.map(v => '<button type="button" data-w="' + v[0] + '"' + (String(e[feld]) === String(v[0]) ? ' class="an"' : '') + '>' + v[1] + '</button>').join('') + '</div>';
         const haken = (feld, text, zahl) => '<label class="se-haken se-liste"><input type="checkbox" data-feld="' + feld + '"' + (e[feld] ? ' checked' : '') + '><span>' + text + '</span><span class="se-zahl">' + zahl + '</span></label>';
         let alleText = '';
-        try{ const k = klasseAktuell(); alleText = k.id === 'ne' ? 'Aufbau N → E: nur die ' + bank().length + ' Technikfragen E' : k.id === 'ea' ? 'Aufbau E → A: nur die ' + bank().length + ' Technikfragen A' : zielName() + ': alle ' + bank().length + ' Fragen (Betrieb, Vorschriften, Technik)'; }catch(x){}
+        try{ const k = klasseAktuell(); alleText = k.id === 'ne' ? 'Aufbau N → E: nur die ' + bank().length + ' Technikfragen E' : k.id === 'na' ? 'Aufbau N → A: nur die ' + bank().length + ' Technikfragen E und A' : k.id === 'ea' ? 'Aufbau E → A: nur die ' + bank().length + ' Technikfragen A' : zielName() + ': alle ' + bank().length + ' Fragen (Betrieb, Vorschriften, Technik)'; }catch(x){}
         w.innerHTML = '<div class="se-blatt" role="dialog" aria-label="Stolpersteine einstellen"><div class="se-griff"></div>'
             + '<div class="se-kopf"><b><i class="fas fa-sliders"></i> Stolpersteine einstellen</b><button type="button" class="se-zu" aria-label="Schließen"><i class="fas fa-xmark"></i></button></div>'
             + '<div class="se-ue">Welche Fragen</div>' + seg('art', [['stolper', 'Meine Stolpersteine'], ['alle', 'Alle Fragen meiner Klasse']])
