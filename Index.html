@@ -35,7 +35,7 @@
             // bleibt die Datei als Rueckfall), sondern nur hier zurueckgesetzt, schon frueher einen Stempel gehabt oder
             // ein frisches Zuruecksetzen (letzte 14 Tage) von einem anderen Geraet.
             if((s && s.zurueckgesetzt) || (nNeu > nAlt && (nAlt > 0 || Date.now() - nNeu < 14 * 864e5))){ try{ localStorage.setItem('afuDateiLeeren:' + slot, String(Date.now())); }catch(e){} }
-            if(!(nNeu > nAlt) && !(s && s.zurueckgesetzt)) ['amateurfunk_xp_', 'amateurfunk_tagesfragen_', 'amateurfunk_uebungszeit_', 'amateurfunk_legende_'].forEach(function(b){
+            if(!(nNeu > nAlt) && !(s && s.zurueckgesetzt)) ['amateurfunk_xp_', 'amateurfunk_tagesfragen_', 'amateurfunk_uebungszeit_', 'amateurfunk_legende_', 'afu_sim_gesehen_'].forEach(function(b){
                 var v = localStorage.getItem(b + slot); if(v !== null) behalten[b] = v; });
             for(i = 0; i < localStorage.length; i++){ k = localStorage.key(i); if(k && gehoertDazu(k, slot)) weg.push(k); }
             weg.forEach(function(k){ localStorage.removeItem(k); });
@@ -46,6 +46,16 @@
                     var neu = localStorage.getItem(b + slot), alt = behalten[b];
                     if(neu === null){ localStorage.setItem(b + slot, alt); return; }
                     if(b === 'amateurfunk_xp_'){ if((parseInt(alt, 10) || 0) > (parseInt(neu, 10) || 0)) localStorage.setItem(b + slot, alt); return; }
+                    // Stand 489: gesehene Fragen aus Simulator und Ueben - zusammenfuehren, nie weniger als vorher
+                    if(b === 'afu_sim_gesehen_'){
+                        var ga = JSON.parse(alt) || {}, gn = JSON.parse(neu) || {};
+                        Object.keys(ga).forEach(function(id){
+                            var x = ga[id], y = gn[id];
+                            if(!Array.isArray(x)) return;
+                            if(!Array.isArray(y)) gn[id] = x; else gn[id] = [Math.max(+x[0] || 0, +y[0] || 0), Math.max(+x[1] || 0, +y[1] || 0)];
+                        });
+                        localStorage.setItem(b + slot, JSON.stringify(gn)); return;
+                    }
                     var a = JSON.parse(alt) || {}, n = JSON.parse(neu) || {};
                     Object.keys(a).forEach(function(t){
                         if(b === 'amateurfunk_legende_'){ if(n[t] === undefined) n[t] = a[t]; return; }
@@ -3455,6 +3465,15 @@
             transition: transform 0.22s ease, opacity 0.22s ease;
         }
         html.android-app body.runde-laeuft.mit-dock #appDock.weg { transform: translateY(calc(100% + 8px)); opacity: 0; pointer-events: none; }
+        /* WEISSES BLINKEN UNTEN (09.11.2026). Dietmar: "Mein Display blinkt weiss in der
+           Pruefungssimulation." Auf dem Video verschwinden Dock (Hilfen anzeigen) und
+           Zurueck/Weiter zusammen fuer etwa 0,4 s, der Streifen ist weiss, waehrend der
+           Trainer vorliest und die Woerter wechseln. Beide Leisten sind feststehend mit
+           Schatten und liegen bisher auf der Ebene der Seite; die Seite wird bei jedem
+           Wortwechsel neu gezeichnet. Jetzt bekommt jede Leiste eine eigene Ebene, damit
+           sie vom Neuzeichnen des Textes unberuehrt bleibt. */
+        html.android-app body.runde-laeuft #navArea,
+        html.android-app body.runde-laeuft.mit-dock #appDock { will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         @media (prefers-reduced-motion: reduce) { html.android-app body.runde-laeuft.mit-dock #appDock { transition: none; } }
         html.android-app body.runde-laeuft.mit-dock #sidebarToggleBtn { display: none !important; }
         html.android-app body.runde-laeuft.mit-dock {
@@ -26237,7 +26256,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 488, datum: '08.11.2026' };
+const TRAINER_STAND = { nr: 490, datum: '09.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -40855,6 +40874,7 @@ function selectOption(optIndex) {
         handleDifficultOnCorrect(qId);
     }
     handleMasteryOnAnswer(qId, isCorrect);
+    if (isCorrect) simGesehenRichtig(qId);
     saveErrors();
     saveDifficult();
     saveMastery();
@@ -49879,23 +49899,48 @@ window.updateDuoGelerntInfo = updateDuoGelerntInfo;
 //      am laengsten nicht mehr dran waren. Erst wenn alle einmal dran
 //      waren, beginnt die Runde von vorn.
 // ================================================================
-const SIM_GESEHEN_KEY = 'afu_sim_gesehen';
-function simGesehenLesen(){
-  try{ const o = JSON.parse(localStorage.getItem(SIM_GESEHEN_KEY) || '{}'); return (o && typeof o === 'object') ? o : {}; }
-  catch(e){ return {}; }
-}
-function simGesehenMerken(fragen){
+const SIM_GESEHEN_ALT = 'afu_sim_gesehen';            // bis Stand 488: ein Gerät, beim Ziehen gemerkt
+const SIM_GESEHEN_PRAEFIX = 'afu_sim_gesehen_';      // ab Stand 489: je Benutzer, im Lernstand
+//  STAND 489 (09.11.2026). Dietmar: "Wenn ich eine Frage mal beantwortet habe,
+//  dass die im Ranking nach unten rutscht ... Das muss im Lernstand mit
+//  aufgenommen werden. Ausser bei Fragen die man falsch beantwortet."
+//  Gemerkt wird nun, wenn eine Frage RICHTIG beantwortet wurde - im Simulator
+//  und im Ueben. Falsche Antworten zaehlen nicht: die Frage bleibt vorn. Der
+//  Merker liegt unter afu_sim_gesehen_<Benutzer>, geht damit mit dem Lernstand
+//  auf jedes Geraet (Handy, PC, Web, App). Form je Frage: [Anzahl, Zeitpunkt].
+function simGesehenSchluessel(){ return SIM_GESEHEN_PRAEFIX + currentUser; }
+function simGesehenRoh(){
   try{
-    const o = simGesehenLesen();
-    const jetzt = Date.now();
-    (fragen || []).forEach(q => {
-      const e = o[q.id] || { n:0, t:0 };
-      o[q.id] = { n:(e.n||0)+1, t:jetzt };
-    });
-    localStorage.setItem(SIM_GESEHEN_KEY, JSON.stringify(o));
+    let o = JSON.parse(localStorage.getItem(simGesehenSchluessel()) || 'null');
+    if(!o || typeof o !== 'object' || Array.isArray(o)){
+      // Einmalig den alten Merker dieses Geraets uebernehmen
+      o = {};
+      try{
+        const alt = JSON.parse(localStorage.getItem(SIM_GESEHEN_ALT) || 'null');
+        if(alt && typeof alt === 'object') Object.keys(alt).forEach(id => { const e = alt[id]; if(e && (e.n || 0) > 0) o[id] = [e.n|0, +e.t || 0]; });
+      }catch(e){}
+    }
+    return o;
+  }catch(e){ return {}; }
+}
+function simGesehenLesen(){
+  const o = simGesehenRoh(), r = {};
+  Object.keys(o).forEach(id => { const e = o[id]; if(Array.isArray(e)) r[id] = { n: e[0]|0, t: +e[1] || 0 }; });
+  return r;
+}
+// Frage richtig beantwortet: nach hinten schieben. Falsch: nichts tun.
+function simGesehenRichtig(qId){
+  try{
+    if(!qId) return;
+    const o = simGesehenRoh(), e = o[qId];
+    o[qId] = [(Array.isArray(e) ? (e[0]|0) : 0) + 1, Date.now()];
+    localStorage.setItem(simGesehenSchluessel(), JSON.stringify(o));
   }catch(e){}
 }
-window.simGesehenZuruecksetzen = function(){ try{ localStorage.removeItem(SIM_GESEHEN_KEY); }catch(e){} };
+window.simGesehenRichtig = simGesehenRichtig;
+// bleibt aus Gruenden der Verträglichkeit bestehen; gemerkt wird erst beim Beantworten
+function simGesehenMerken(fragen){}
+window.simGesehenZuruecksetzen = function(){ try{ localStorage.removeItem(simGesehenSchluessel()); localStorage.removeItem(SIM_GESEHEN_ALT); }catch(e){} };
 function pickAbwechslung(pool, n){
   try{
     if(!Array.isArray(pool) || pool.length <= n) return pickRandom(pool, n);
@@ -49946,7 +49991,7 @@ function pickAbwechslung(pool, n){
     return pickRandom(pool, n);
   }
 }
-window.pickAbwechslung = pickAbwechslung; window.simGesehenMerken = simGesehenMerken;
+window.pickAbwechslung = pickAbwechslung; window.simGesehenMerken = simGesehenMerken; window.simGesehenLesen = simGesehenLesen;
 
 function pickRandom(arr,n){
   const shuffled=[...arr];
@@ -50207,7 +50252,6 @@ function startRealisticPart(){
     }
   } else {
     picked = schwer ? pickSchwer(pool,25) : pickAbwechslung(pool,25);
-    simGesehenMerken(picked);
   }
   currentQuestions = picked.map(q=>{ try{ return prepareQuestion(q, duo); }catch(e){ return q; } });
   currentIndex=0;
@@ -53107,7 +53151,9 @@ window.uebungszeitOeffnen = uebungszeitOeffnen;
     const ZIEL_NAME = { n:'Klasse N', e:'Klasse E', ne:'N → E', na:'N → A', ea:'E → A' };
     const BOEGEN = { n:3, e:4, ne:1, na:2, ea:1 };
     const MONATSNAME = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-    const MIN_SEK_JE_BOGEN = 40;
+    // Stand 490: 120 statt 40 Sekunden (knapp 5 Sekunden je Frage). Ein Eintrag mit 25 Fragen in 81 Sekunden
+    // war nur mit einem Programm moeglich; der Worker prueft dieselbe Grenze.
+    const MIN_SEK_JE_BOGEN = 120;
     let zustand = { ziel:'n', monat:'', monate:[], daten:null, platz:null, laedt:false };
 
     function basis(){
@@ -53289,7 +53335,7 @@ window.uebungszeitOeffnen = uebungszeitOeffnen;
         });
         if(platzMein && platzMein.platz > d.plaetze.length)
             h += '<div class="bl-z ich"><span class="bl-pl">' + platzMein.platz + '</span><span class="bl-n">' + esc(platzMein.name || 'Du') + ' (du)</span><span class="bl-w">' + zahl(platzMein.punkte) + '<small>/25</small></span><span class="bl-k">' + platzMein.versuche + '×</span><span class="bl-k" style="width:46px">' + zeitText(platzMein.zeit) + '</span></div>';
-        h += '</div><div class="bl-klein" style="margin:0 .2rem .8rem">Gezählt wird der beste vollständige Durchgang im Monat: Durchschnitt der Punkte je Bogen, Anzahl Versuche, bei Gleichstand die schnellere Zeit. Am 1. fängt die Liste neu an.</div>';
+        h += '</div><div class="bl-klein" style="margin:0 .2rem .8rem">Gezählt wird der beste vollständige Durchgang im Monat: Durchschnitt der Punkte je Bogen, Anzahl Versuche, bei Gleichstand die schnellere Zeit. Am 1. fängt die Liste neu an.</div><div class="bl-klein" style="margin:-.4rem .2rem .8rem">Die Bestenliste ist für Menschen gedacht. Wenn du eine KI oder ein Programm benutzt, trage dich bitte nicht ein.</div>';
         // Mein Eintrag
         if(mein.dabei){
             h += '<div class="bl-mein" id="blMein"><div style="font-weight:800;margin-bottom:.2rem">Mein Eintrag</div>'
@@ -53348,6 +53394,7 @@ window.uebungszeitOeffnen = uebungszeitOeffnen;
             if(mein.dabei && mein.id){ senden(e, '', true); return; }
             host.innerHTML = '<div class="bl-karte" id="blKarte"><h4><i class="fas fa-ranking-star" style="color:var(--accent-amber,#e2932f)"></i> In die Bestenliste?</h4>'
                 + '<div style="font-size:.9rem;color:var(--muted,#5b6b80)" id="blVorschau">Dein Durchgang: <b style="color:var(--ink,#162436)">' + zahl(e.punkte) + ' von 25</b> im Schnitt, ' + zeitText(e.zeit) + ' Min. Wie soll dein Name in der Liste erscheinen?</div>'
+                + '<div style="font-size:.8rem;color:var(--muted,#5b6b80);margin:.35rem 0">Die Bestenliste ist für Menschen gedacht. Wenn du eine KI oder ein Programm benutzt, trage dich bitte nicht ein.</div>'
                 + '<input class="bl-eingabe" id="blNameEin" maxlength="20" placeholder="Rufzeichen oder Spitzname (leer = OM/YL …)" autocomplete="off">'
                 + '<div id="blKarteFehler" class="bl-fehler"></div>'
                 + '<div style="display:flex;gap:8px"><button type="button" class="bl-knopf haupt" style="flex:1.4" id="blEintragen">Eintragen</button><button type="button" class="bl-knopf" style="flex:1" id="blNein">Nein, danke</button></div>'
@@ -53979,7 +54026,7 @@ function statistikFuellen() {
 // ---------------------------------------------------------------
 // Faecher, die die Lernstand-Datei zusaetzlich traegt (Stand 215)
 const LS_DATEI_EXTRA = ['amateurfunk_simok_', 'amateurfunk_pruefungen_', 'amateurfunk_favorites_', 'amateurfunk_notizen_',
-    'amateurfunk_pruefungstermin_', 'amateurfunk_durchsicht_', 'amateurfunk_blaetterbuch_'];
+    'amateurfunk_pruefungstermin_', 'amateurfunk_durchsicht_', 'amateurfunk_blaetterbuch_', 'afu_sim_gesehen_'];
 function lernstandExport_extraEinlesen(app, u, jsonLies){
     const x = app.extra && app.extra[u];
     if (!x || typeof x !== 'object') return;
@@ -54001,6 +54048,15 @@ function lernstandExport_extraEinlesen(app, u, jsonLies){
                 if (b === 'amateurfunk_pruefungen_') neu.sort((a, c) => String((a && a.d) || '').localeCompare(String((c && c.d) || '')));
                 while (b === 'amateurfunk_pruefungen_' && neu.length > 60) neu.shift();
                 localStorage.setItem(k, JSON.stringify(neu));
+            } else if (b === 'afu_sim_gesehen_'){
+                // gesehene Fragen: je Frage die groesseren Werte
+                const aus = JSON.parse(x[b]) || {}, l = jsonLies(k, {});
+                Object.keys(aus).forEach(id => {
+                    const a = aus[id], c = l[id];
+                    if (!Array.isArray(a)) return;
+                    l[id] = Array.isArray(c) ? [Math.max(+a[0] || 0, +c[0] || 0), Math.max(+a[1] || 0, +c[1] || 0)] : a;
+                });
+                localStorage.setItem(k, JSON.stringify(l));
             } else if (b === 'amateurfunk_notizen_'){
                 // Notizen: was hier schon steht, bleibt; fehlende kommen dazu
                 const aus = JSON.parse(x[b]) || {}, l = jsonLies(k, {});

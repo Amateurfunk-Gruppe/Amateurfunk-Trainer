@@ -488,3 +488,9 @@ SERVER-FREIGABE.txt
 /Bestenliste-Einrichten/
 /_Bestenliste-Einrichten/
 **/geheim.txt
+
+# Arbeitsdateien von Claude-Sitzungen (10.11.2026) - Worker-Texte, Test-Worker und die Rufzeichenliste gehen nie auf GitHub
+/kommentare-worker-*.txt
+/afu-bestenliste-worker.txt
+/rufzeichen-test-worker.txt
+/rufzeichenliste_afu.pdf

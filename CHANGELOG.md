@@ -13,9 +13,23 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 488 · 08.11.2026
+Stand 490 · 09.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 490 (09.11.2026)
+
+### Geändert
+- Bestenliste: Hinweis für Menschen und KI: „Die Bestenliste ist für Menschen gedacht. Wenn du eine KI oder ein Programm benutzt, trage dich bitte nicht ein.“ – in der Liste und in der Karte „In die Bestenliste?“, auf der Webseite und in llms.txt.
+- Bestenliste: Mindestzeit je Bogen von 40 auf 120 Sekunden angehoben (Trainer und Worker `afu-bestenliste`). Anlass: ein Eintrag mit 25 von 25 in 81 Sekunden, mit einem Testprogramm gegen den echten Trainer nachgestellt (wer über 40 Sekunden wartet, kam durch). Der Worker muss dieselbe Zahl haben, sonst lehnt er zu schnelle Einträge nicht ab.
+
+## Stand 489 (09.11.2026)
+
+### Geändert
+- Prüfungssimulator wechselt die Fragen jetzt über alle Geräte: Der Merker „schon richtig beantwortet“ gehört zum Lernstand (`afu_sim_gesehen_<Benutzer>`) und gleicht sich zwischen Handy, PC, Web und App ab (Konto, Lernstand-Datei). Gemerkt wird, wenn eine Frage richtig beantwortet wurde, im Simulator und im Üben. Falsch beantwortete Fragen bleiben vorn. Beim Einspielen werden die Stände zusammengeführt (je Frage der größere Wert), der alte Merker des Geräts wird einmalig übernommen.
+
+### Behoben
+- Prüfungssimulation, Android: Beim Vorlesen blinkte unten kurz ein weißer Streifen, die Leisten „Hilfen anzeigen“ und Zurück/Weiter waren für etwa 0,4 Sekunden weg (Bildschirmvideo von Dietmar). Beide Leisten liegen jetzt auf einer eigenen Ebene (`will-change: transform`), damit das Neuzeichnen des Textes sie nicht mehr mitreißt. Nur auf dem Gerät prüfbar, im Browser lässt sich der Fehler nicht nachstellen.
 
 ## Stand 488 (08.11.2026)
 
