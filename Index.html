@@ -3,6 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script id="ruhe491">
+    /* ================================================================
+       RUHE IM LEERLAUF                                  (Stand 491, 10.11.2026)
+       Dietmar (Bildschirmvideo Handy-App, Lernmodus): "Es blinkt. Ist doch irgendwo ein
+       Weichzeichner oder ein Glasfilter, irgendwas ueberlastet sogar mein modernes Handy."
+       Gemessen: Weichzeichner und Daueranimationen gibt es auf der Fragenseite keine. Aber
+       die Seite schrieb im Leerlauf rund 50-mal je Sekunde in sich selbst - dieselben
+       Klassen, Titel und Texte noch einmal. Der Browser meldet jedes solche Schreiben an die
+       Beobachter (MutationObserver) weiter, und die stiessen ihrerseits Arbeit an: die
+       Kopfzeile wurde jede Sekunde neu eingepasst (Layout neu berechnen), obwohl sich nichts
+       geaendert hatte.
+       Hier wird deshalb an der Quelle gespart: Ein Schreiben, das nichts aendert, findet
+       nicht statt. Am Ergebnis aendert das nichts - nur die Arbeit dahinter entfaellt.
+       Bewusst NICHT abgefangen: innerHTML mit Markup (dort haengen Klick-Behandler an den
+       neuen Knoten), src/href/value und alles, was durch erneutes Setzen etwas neu laedt.
+       ================================================================ */
+    (function(){
+        try{
+            var TL = DOMTokenList.prototype, add0 = TL.add, rem0 = TL.remove;
+            TL.add = function(){ for(var i = 0; i < arguments.length; i++){ if(!this.contains(arguments[i])) return add0.apply(this, arguments); } };
+            TL.remove = function(){ for(var i = 0; i < arguments.length; i++){ if(this.contains(arguments[i])) return rem0.apply(this, arguments); } };
+        }catch(e){}
+        function eigenschaft(proto, name, gleich){
+            try{
+                var d = Object.getOwnPropertyDescriptor(proto, name);
+                if(!d || !d.set || !d.configurable) return;
+                Object.defineProperty(proto, name, { configurable: true, enumerable: d.enumerable, get: d.get,
+                    set: function(v){ var g = false; try{ g = gleich.call(this, v); }catch(e){} if(g) return; d.set.call(this, v); } });
+            }catch(e){}
+        }
+        function attr(name){ return function(v){ return v != null && this.getAttribute(name) === String(v); }; }
+        // nur ein Textknoten mit genau diesem Text (oder leer und nichts drin)
+        function textGleich(el, s){ var f = el.firstChild; return f === null ? s === '' : (f === el.lastChild && f.nodeType === 3 && f.data === s); }
+        eigenschaft(Element.prototype, 'className', function(v){ return this.getAttribute('class') === String(v); });
+        eigenschaft(HTMLElement.prototype, 'title', attr('title'));
+        eigenschaft(HTMLElement.prototype, 'tabIndex', attr('tabindex'));
+        [['role','role'],['ariaLabel','aria-label'],['ariaPressed','aria-pressed'],['ariaExpanded','aria-expanded'],['ariaHidden','aria-hidden'],['ariaSelected','aria-selected'],['ariaChecked','aria-checked'],['ariaCurrent','aria-current'],['ariaDisabled','aria-disabled']]
+            .forEach(function(p){ eigenschaft(Element.prototype, p[0], attr(p[1])); });
+        eigenschaft(Node.prototype, 'textContent', function(v){
+            var s = v == null ? '' : String(v);
+            if(this.nodeType === 1) return textGleich(this, s);
+            if(this.nodeType === 3) return this.data === s;
+            return false;
+        });
+        eigenschaft(HTMLElement.prototype, 'innerText', function(v){
+            var s = v == null ? '' : String(v);
+            return s.indexOf('\n') < 0 && s.indexOf('\r') < 0 && textGleich(this, s);
+        });
+        // innerHTML nur im harmlosen Fall: reiner Text ohne Markup und ohne Zeichenverweise
+        eigenschaft(Element.prototype, 'innerHTML', function(v){
+            var s = v == null ? '' : String(v);
+            return s.indexOf('<') < 0 && s.indexOf('&') < 0 && textGleich(this, s);
+        });
+        try{
+            var sa0 = Element.prototype.setAttribute;
+            Element.prototype.setAttribute = function(n, v){
+                if(arguments.length > 1 && typeof n === 'string' && (n === 'class' || n === 'title' || n === 'role' || n === 'tabindex' || n === 'style'
+                    || n.lastIndexOf('aria-', 0) === 0 || n.lastIndexOf('data-', 0) === 0)){
+                    try{ if(this.getAttribute(n) === String(v)) return; }catch(e){}
+                }
+                return sa0.apply(this, arguments);
+            };
+        }catch(e){}
+    })();
+    </script>
     <script type="importmap">{ "imports": { "onnxruntime-web/wasm": "/piper-web/ort/ort.wasm.min.js" } }</script>
     <script id="lernstandEinspielen">
     // LERNSTAND MITNEHMEN (11.10.2026): Ein Lernstand vom Trainer wird HIER
@@ -553,6 +618,32 @@
         /* Stand 424: in der Runde der klassischen Ansicht wie in der App-Ansicht ohne Suchfeld - die Kopfzeile bleibt einzeilig */
         @media (min-width: 1025px){ html:is(.pc-gross, .pc-bunt):not(.android-app):not(.pc-app) body.runde-laeuft .header .suchfeld-huelle, html:is(.pc-gross, .pc-bunt):not(.android-app):not(.pc-app) body.runde-laeuft .header #favListBtn { display: none !important; } }
         html:not(.android-app) .header .suchfeld-huelle #searchInput { flex: 1 1 145px; width: 145px !important; min-width: 100px; }
+        /* ---- LUPE IN DER KOPFZEILE (Stand 494, 11.11.2026) ----
+           Dietmar: "oben ... bei den Icons links daneben eine Lupe, wenn ich da draufklicke, oeffnet sich ein Feld wo ich
+           die Frage Nummer eingeben kann, aber nur am Desktop." Zu sehen nur am PC (ab 1025 Punkten, nicht am Handy) und
+           nur in der Runde - dort, wo die Kopfzeile seit Stand 424 kein Suchfeld mehr hat. Die Marke pruefung-aus setzt
+           simulatorAufraeumen() in Pruefung, Gruppenraum, Unterricht und Hausaufgabe.
+           Das Feld schwebt links neben der Lupe (position: absolute), damit beim Aufklappen kein Knopf verrutscht und die
+           Kopfzeile einzeilig bleibt. Der Grund ist deckend - in schmalen Fenstern liegt das Feld ueber dem Namen. */
+        #kopfSuche { display: none !important; position: relative; align-items: center; }
+        @media (min-width: 1025px){
+            html:not(.android-app):not(.pc-handy) body.runde-laeuft .header #kopfSuche:not(.pruefung-aus) { display: inline-flex !important; }
+        }
+        #kopfSucheFeld {
+            display: none; position: absolute; right: calc(100% + 6px); top: 0; height: 100%; width: 240px; z-index: 30;
+            box-sizing: border-box; margin: 0; padding: 0 1rem; border-radius: 999px !important;   /* wie die Knoepfe daneben - auch bei Form "eckig" */
+            border: 1px solid rgba(70, 105, 175, 0.45); background: #ffffff; color: var(--ink);
+            font-family: var(--font-mono); font-size: 0.85rem; outline: none;
+            box-shadow: 0 6px 16px -8px rgba(30, 64, 140, 0.45);
+        }
+        #kopfSuche.offen #kopfSucheFeld { display: block; animation: kopfSucheAuf 0.14s ease-out; }
+        /* Der Rahmen bei der Eingabe kommt vom allgemeinen Fokusrahmen (body.eckig :focus-visible) - wie in jedem Feld. */
+        #kopfSucheFeld:focus { border-color: var(--panel-navy); }
+        #kopfSucheFeld::placeholder { color: var(--muted); opacity: 1; }
+        body.dark #kopfSucheFeld { background: #1b2d68; border-color: rgba(255, 255, 255, 0.34); color: #ffffff; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.6); }
+        body.dark #kopfSucheFeld:focus { border-color: rgba(255, 255, 255, 0.7); }
+        body.dark #kopfSucheFeld::placeholder { color: #c8d2e8; }
+        @keyframes kopfSucheAuf { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
         /* Die Pruefungsuhr wandert aus der alten Kopfzeile hierher. */
         #alUhrPlatz #examTimerDisplay {
             margin: 0 4px 0 0; padding: 0.3rem 0.7rem; font-size: 0.9rem; font-weight: 700; white-space: nowrap;
@@ -10338,6 +10429,26 @@ html:not(#r1):not(#r2) body:not(#r3).dark #realisticExamModal .realistic-final.r
 .realistic-final details.review-part > summary::after{content:"";display:inline-block;width:.55em;height:.55em;margin-left:.7em;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s;opacity:.8}
 .realistic-final details.review-part[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
 </style>
+<style id="ergKnoepfe491">
+/* Stand 491, Dietmar (Handy, Polar, Ende der Pruefungssimulation): "Ergebnis teilen, den Button möchte ich genauso haben wie die anderen auch und auch weiß."
+   Und: "Bitte achte darauf dass es in der hellen Version dann farblich auch zusammenpasst. Alle Buttons."
+   Alle drei Knoepfe (Ergebnis teilen, Nochmal Simulator, Hauptmenue) haben jetzt dieselbe Form. Polar: hell mit dunkler Schrift (wie Stand 450).
+   Hell: dunkelblau mit weisser Schrift. Vorher war "Ergebnis teilen" ein eigener, eckiger Verlaufsknopf, und in Hell galten die Regeln von 450/451 gar nicht. */
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5){background:#0f2745!important;background-image:none!important;color:#fff!important;border:1px solid #0f2745!important;border-radius:12px!important;box-shadow:none!important;min-height:46px!important;height:auto!important;padding:.6rem 1.3rem!important;font-family:inherit!important;font-size:.95rem!important;font-weight:700!important;line-height:1.2!important;letter-spacing:normal!important;text-transform:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:.5rem!important;filter:none!important;cursor:pointer}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5):hover{background:#17365e!important}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5) :is(i,svg){font-size:1.05rem!important;width:auto!important;height:auto!important;margin:0!important;color:#fff!important}
+html:not(#r1):not(#r2) body:not(#r3).dark #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5){background:#e9eef4!important;color:#0f2745!important;border:1px solid #c3ccd7!important}
+html:not(#r1):not(#r2) body:not(#r3).dark #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5):hover{background:#fff!important}
+html:not(#r1):not(#r2) body:not(#r3).dark #realisticExamModal .realistic-final :is(.btn-group .btn,.erg-teilen):not(#r4):not(#r5) :is(i,svg){color:#0f2745!important}
+/* "Ergebnis teilen" ueber die ganze Breite, die zwei darunter gleich breit nebeneinander - jetzt auch in Hell */
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final .erg-teilen:not(#r4):not(#r5){display:flex!important;width:100%!important;margin:0 0 8px!important}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final.rf-neu .btn-group:not(#r4){display:flex!important;flex-wrap:nowrap!important;gap:8px!important;width:100%;justify-content:stretch!important}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final.rf-neu .btn-group .btn:not(#r4):not(#r5){flex:1 1 0!important;width:auto!important;min-width:0!important;justify-content:center!important}
+/* Stand 492, Dietmar (Bild vom Pruefungsende): "Kannst du bitte das Bestanden unter teilen darueber setzen?" - die Zeile "Bestanden! ..." steht jetzt ganz oben, darunter folgen die drei Knoepfe ohne Unterbrechung */
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final.rf-neu .rf-kompakt:not(#r4){margin:.2rem 0 .8rem!important}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final.rf-neu .btn-group:not(#r4):not(#r5){margin-top:0!important}
+html:not(#r1):not(#r2) body:not(#r3) #realisticExamModal .realistic-final.rf-neu #ergTeilenHost:not(#r4){margin:0!important}
+</style>
 <style id="simWeiter448">
 .sim-weiter{margin:1rem 0 .4rem;padding:.9rem 1rem;border-radius:14px;border:1.5px solid #22b8cf;background:rgba(34,184,207,.10)}
 .sim-weiter .sw-text{font-size:.92rem;line-height:1.45}
@@ -11450,6 +11561,22 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <button id="trainerRefreshBtn" type="button" style="display:none; background:none; border:1px solid #e0c080; color:#8a6d00; border-radius:50%; width:26px; height:26px; align-items:center; justify-content:center; cursor:pointer; font-size:0.75rem;" onclick="var sel=document.getElementById('trainerParticipantSelect'); if(window.duoTrainerData && window.updateTrainerParticipantSelect) window.updateTrainerParticipantSelect(window.duoTrainerData); if(sel && sel.value) onTrainerParticipantChange(sel.value);" data-tooltip="Ansicht neu laden, falls Wechsel zum Teilnehmer nicht direkt greift"><i class="fas fa-sync-alt"></i></button>
                 <span id="trainerModeBadge" style="display:none; background:#e2932f; color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">TRAINER MODUS</span>
             </div>
+            <!-- DIE LUPE IN DER KOPFZEILE (Stand 494, 11.11.2026)
+                 Dietmar, mit Bild aus einer Runde am PC: "Baue mir bitte oben in der Liste bei den Icons links
+                 daneben eine Lupe, wenn ich da draufklicke, öffnet sich ein Feld wo ich die Frage Nummer eingeben
+                 kann, aber nur am Desktop." - "in der ganz oberen Reihe. Da, wo auch Amateurfunktrainer steht."
+
+                 In der Runde hat die Kopfzeile kein Suchfeld (Stand 424) - dort steht jetzt die Lupe. Klick, Nummer
+                 tippen, Eingabetaste: gesucht wird genau wie im Suchfeld der Startseite (searchQuestion). Das Feld
+                 klappt links neben der Lupe auf und schwebt ueber der Zeile, es schiebt also keinen Knopf zur Seite.
+                 Zu sehen ist die Lupe nur am PC und nur in der Runde; in Pruefung, Gruppenraum, Unterricht und
+                 Hausaufgabe bleibt sie weg, weil ein Sprung dort die Runde zerreissen wuerde.
+                 Stilblatt und Skript: "LUPE IN DER KOPFZEILE". -->
+            <span id="kopfSuche">
+                <input type="text" id="kopfSucheFeld" placeholder="Fragennummer, z. B. NB502" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="60"
+                       aria-label="Fragennummer eingeben" onkeydown="kopfSucheTaste(event)" onblur="kopfSucheVerlassen()">
+                <button class="btn" id="kopfSucheBtn" type="button" onclick="kopfSucheKlick()" style="padding:0.35rem 0.6rem; min-height:32px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:700;" data-tooltip="Zu einer Frage springen: Lupe anklicken, Fragennummer eintippen (zum Beispiel NB502), Eingabetaste" data-vorlesen-kurz="Zu einer Frage springen." aria-label="Frage suchen" aria-expanded="false"><i class="fas fa-search"></i></button>
+            </span>
             <!-- DIE UEBUNGSZEIT BEKOMMT EINEN EIGENEN PLATZ
                  Dietmar am 11.09.2026: "Übungszeit, kommt aus Auswertung raus
                  und erhält einen Extra Button oben neben Einstellungen."
@@ -18354,6 +18481,16 @@ function simulatorAufraeumen(){
         const sc = document.querySelector('.sidebar-column');
         if (sc) sc.classList.toggle('pruefung-aus', streng);
     }catch(e){}
+    // Stand 494: Die Lupe der Kopfzeile springt zu einer anderen Frage. Das
+    // passt nur zum freien Lernen - siehe kopfSucheGesperrt().
+    try{
+        const lupe = document.getElementById('kopfSuche');
+        if (lupe) {
+            const zu = (typeof kopfSucheGesperrt === 'function') ? kopfSucheGesperrt() : streng;
+            lupe.classList.toggle('pruefung-aus', zu);
+            if (zu && lupe.classList.contains('offen') && typeof kopfSucheSchliessen === 'function') kopfSucheSchliessen();
+        }
+    }catch(e){}
 }
 window.simulatorAufraeumen = simulatorAufraeumen;
 
@@ -18549,6 +18686,84 @@ function jumpToQuestionId(found) {
     if (input) input.value = '';
     try{ updateQuestionFavButton(); }catch(e){}
 }
+
+// ===== LUPE IN DER KOPFZEILE (Stand 494, 11.11.2026) ========================
+// Dietmar: "oben ... bei den Icons links daneben eine Lupe, wenn ich da
+// draufklicke, oeffnet sich ein Feld wo ich die Frage Nummer eingeben kann,
+// aber nur am Desktop." Knopf und Feld stehen in der Kopfzeile (#kopfSuche),
+// wann sie zu sehen sind, regelt das Stilblatt "LUPE IN DER KOPFZEILE".
+//
+// Gesucht wird mit searchQuestion() - also genau wie im Suchfeld der
+// Startseite: Nummer (auch ein Teil davon) springt zur Frage, ein Wort
+// oeffnet die Trefferliste. Eine zweite Suche mit eigenen Regeln gaebe nur
+// zwei Antworten auf dieselbe Eingabe.
+//
+// Gesperrt, wo ein Sprung die Runde zerreissen wuerde: Pruefungssimulator
+// und Pruefungsdurchgang, Gruppenraum (alle sitzen an derselben Frage),
+// Unterricht und Hausaufgabe (die Liste gehoert zur Lektion).
+function kopfSucheGesperrt(){
+    try{ if(typeof nurNormalesLernen === 'function' && !nurNormalesLernen()) return true; }catch(e){}
+    try{ if(typeof hausaufgabeAktiv === 'function' && hausaufgabeAktiv()) return true; }catch(e){}
+    try{ if(typeof unterrichtAktiv === 'function' && unterrichtAktiv()) return true; }catch(e){}
+    return false;
+}
+function kopfSucheOffen(){
+    const h = document.getElementById('kopfSuche');
+    return !!(h && h.classList.contains('offen'));
+}
+function kopfSucheOeffnen(){
+    const h = document.getElementById('kopfSuche'), feld = document.getElementById('kopfSucheFeld'), knopf = document.getElementById('kopfSucheBtn');
+    if(!h || !feld || !knopf || kopfSucheGesperrt()) return;
+    // Die Ecken wie beim Knopf daneben (rund oder eckig, je nach Form und Stil)
+    try{ const r = getComputedStyle(knopf).borderRadius; if(r) feld.style.setProperty('border-radius', r, 'important'); }catch(e){}
+    feld.value = '';
+    h.classList.add('offen');
+    knopf.setAttribute('aria-expanded', 'true');
+    try{ feld.focus({ preventScroll: true }); }catch(e){ try{ feld.focus(); }catch(e2){} }
+}
+function kopfSucheSchliessen(){
+    const h = document.getElementById('kopfSuche'), feld = document.getElementById('kopfSucheFeld'), knopf = document.getElementById('kopfSucheBtn');
+    if(h) h.classList.remove('offen');
+    if(knopf) knopf.setAttribute('aria-expanded', 'false');
+    if(feld){ feld.value = ''; try{ if(document.activeElement === feld) feld.blur(); }catch(e){} }
+}
+// Die Lupe: zu -> auf. Offen mit Eingabe -> suchen. Offen und leer -> wieder zu.
+function kopfSucheKlick(){
+    if(!kopfSucheOffen()){ kopfSucheOeffnen(); return; }
+    const feld = document.getElementById('kopfSucheFeld');
+    if(feld && feld.value.trim()) kopfSucheLos(); else kopfSucheSchliessen();
+}
+function kopfSucheLos(){
+    const feld = document.getElementById('kopfSucheFeld'), haupt = document.getElementById('searchInput');
+    const wert = feld ? feld.value.trim() : '';
+    kopfSucheSchliessen();
+    if(!wert || !haupt || kopfSucheGesperrt()) return;
+    haupt.value = wert;
+    searchQuestion();
+}
+function kopfSucheTaste(e){
+    // Was hier getippt wird, gehoert dem Feld allein. Sonst blaettern die
+    // Pfeiltasten in der Runde, und Buchstaben oder Ziffern einer
+    // Fragennummer ("NB502") kreuzen bei eingeschalteter Tastaturbedienung
+    // Antworten an.
+    e.stopPropagation();
+    if(e.key === 'Enter'){ e.preventDefault(); kopfSucheLos(); }
+    else if(e.key === 'Escape'){ e.preventDefault(); kopfSucheSchliessen(); }
+}
+function kopfSucheVerlassen(){
+    // Feld verlassen, ohne etwas getippt zu haben: wieder zuklappen. Kurz
+    // warten - ein Klick auf die Lupe nimmt dem Feld zuerst den Fokus, und
+    // kopfSucheKlick() soll dann noch wissen, dass es offen war.
+    setTimeout(() => {
+        try{
+            const feld = document.getElementById('kopfSucheFeld');
+            if(feld && document.activeElement !== feld && !feld.value.trim()) kopfSucheSchliessen();
+        }catch(e){}
+    }, 200);
+}
+window.kopfSucheGesperrt = kopfSucheGesperrt; window.kopfSucheKlick = kopfSucheKlick; window.kopfSucheLos = kopfSucheLos;
+window.kopfSucheTaste = kopfSucheTaste; window.kopfSucheVerlassen = kopfSucheVerlassen;
+window.kopfSucheOeffnen = kopfSucheOeffnen; window.kopfSucheSchliessen = kopfSucheSchliessen;
 
 // ===== Trefferliste / Merkliste als Fenster =================================
 function openSearchResults(){
@@ -25532,7 +25747,8 @@ function serverSchalterZeichnen(){
     if(!k || !t) return;
     if(!laeuftLokal()){ k.style.display = 'none'; return; }
     k.style.display = '';
-    k.classList.remove('schalter-ein', 'schalter-aus', 'schalter-gleich');
+    // Stand 491: nicht mehr erst alle drei Klassen entfernen und dann eine setzen (zwei Aenderungen je Sekunde), sondern nur bei Wechsel
+    const farbe = n => { ['schalter-ein', 'schalter-aus', 'schalter-gleich'].forEach(c => { if(c !== n && k.classList.contains(c)) k.classList.remove(c); }); if(!k.classList.contains(n)) k.classList.add(n); };
     const rest = tuerStand.schliesstUm ? (tuerStand.schliesstUm - Date.now()) : 0;
     // Der Schalter zeigt den ZUSTAND, nicht die Handlung. Dietmar am
     // 22.09.2026: "Server ein oder ist er aus? Er ist aus. Es muss in Rot
@@ -25541,7 +25757,7 @@ function serverSchalterZeichnen(){
     // andersherum - gruen "Server ein" als Einladung zum Einschalten -,
     // und genau das hat er als "ist er an?" gelesen.
     if(rest > 0){
-        k.classList.add('schalter-gleich');
+        farbe('schalter-gleich');
         // Bei der Zeitschaltuhr sind es fuenf Minuten - dann "4:37" statt
         // "277 s" (25.09.2026).
         const sekRest = Math.ceil(rest / 1000);
@@ -25550,11 +25766,11 @@ function serverSchalterZeichnen(){
             : sekRest + ' s');
         k.setAttribute('data-tooltip', 'Noch einmal klicken, um den Server doch offen zu lassen');
     } else if(tuerStand.offen){
-        k.classList.add('schalter-ein');
+        farbe('schalter-ein');
         t.textContent = 'Server ein';
         k.setAttribute('data-tooltip', 'Der Server ist offen. Klicken schließt ihn – mit einer Minute Vorwarnung für alle, die gerade da sind.');
     } else {
-        k.classList.add('schalter-aus');
+        farbe('schalter-aus');
         t.textContent = 'Server aus';
         k.setAttribute('data-tooltip', 'Der Server ist zu. Klicken gibt ihn für Besucher über den geteilten Link frei.');
     }
@@ -26256,7 +26472,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 490, datum: '09.11.2026' };
+const TRAINER_STAND = { nr: 498, datum: '11.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34235,6 +34451,117 @@ function majaKnopfNormal(btn){
     btn.innerHTML = '<i class="fas fa-volume-up"></i> Vorlesen';
 }
 window.majaSpracheWartet = majaSpracheWartet;
+// ================================================================
+//  MAJAS EINZELDATEIEN                          (Stand 493, 11.11.2026)
+//  ----------------------------------------------------------------
+//  Dietmar: "Ich wuerde es gerne selbst hinzufuegen koennen. Wenn man das so aufdroeseln wuerde:
+//  Frage: VD735.mp3, Antwort A: VD735_A.mp3 ... Antwort D: VD735_D.mp3. Nur so kann ich selbst
+//  ohne dich ein MP3 ersetzen."
+//
+//  Bisher steckte jede Nachaufnahme in einem Paket-Teil (N-fragen-k4.bin ...) mit Verzeichnis - das
+//  kann nur der Bau. Jetzt gibt es daneben einen Ordner "einzeln" im Projekt maja-sprache:
+//
+//      einzeln/VD735.mp3      die Frage
+//      einzeln/VD735_A.mp3    Antwort A  (A bis D = Reihenfolge in der Fragendatei, wie im Sprachpaket -1 bis -4)
+//      einzeln/liste.json     { "stand": "...", "dateien": { "VD735": [Bytes, Zeit], "VD735_D": [Bytes, Zeit] } }
+//
+//  Die Liste schreibt _Maja-Einzeln.bat. Steht eine Aufnahme in der Liste, nimmt Maja sie STATT der
+//  Aufnahme aus dem Paket. Fehlt die Liste oder die Datei, bleibt alles wie bisher. Die Adresse traegt
+//  Groesse und Zeit (?v=...), damit eine ersetzte Datei sofort gilt. Die Dateien werden nach dem Start
+//  still in den Speicher gelegt, damit sie auch ohne Netz da sind; die letzte Liste merkt sich der Trainer.
+// ================================================================
+const MAJA_EINZELN_QUELLEN = ['https://maja-sprache.pages.dev/einzeln/', 'https://sprache.amateurfunk-trainer.com/einzeln/'];
+const MAJA_EINZELN_MERK = 'maja_einzeln_liste';
+const MAJA_EINZELN_NAME = /^[A-Z]{2}\d{3}(_[A-D])?$/;
+const majaEinzeln = { quelle: '', dateien: {}, stand: '', laeuft: false, zuletzt: 0 };
+function majaEinzelnPruefen(j){
+    const aus = {};
+    try{
+        const d = j && j.dateien;
+        if(!d || typeof d !== 'object') return aus;
+        let n = 0;
+        for(const k of Object.keys(d)){
+            const v = d[k];
+            if(!MAJA_EINZELN_NAME.test(k) || !Array.isArray(v)) continue;
+            const bytes = +v[0], zeit = +v[1];
+            if(!(bytes > 200 && bytes < 3000000) || !isFinite(zeit)) continue;
+            aus[k] = [bytes, zeit];
+            if(++n >= 600) break;
+        }
+    }catch(e){}
+    return aus;
+}
+(function(){
+    try{
+        const j = JSON.parse(localStorage.getItem(MAJA_EINZELN_MERK) || 'null');
+        if(j && MAJA_EINZELN_QUELLEN.indexOf(j.quelle) >= 0){ majaEinzeln.quelle = j.quelle; majaEinzeln.dateien = majaEinzelnPruefen(j); majaEinzeln.stand = String(j.stand || ''); }
+    }catch(e){}
+})();
+function majaEinzelnHat(name){ return !!(name && majaEinzeln.quelle && majaEinzeln.dateien[name]); }
+function majaEinzelnUrl(name){ const e = majaEinzeln.dateien[name]; return e ? majaEinzeln.quelle + name + '.mp3?v=' + e[0] + '-' + e[1] : ''; }
+// Die Aufnahme selbst: erst aus dem Speicher, sonst aus dem Netz (und dann in den Speicher). null = nicht zu haben.
+async function majaEinzelnBlob(name){
+    const e = majaEinzeln.dateien[name], url = majaEinzelnUrl(name);
+    if(!e || !url) return null;
+    let c = null;
+    try{ c = await caches.open(MAJA_SPRACHE_CACHE); }catch(x){ c = null; }
+    try{
+        const r = c && await c.match(url);
+        if(r){ const b = await r.blob(); if(b.size === e[0]) return b.slice(0, b.size, 'audio/mpeg'); }
+    }catch(x){}
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+    const r = await fetch(url, { cache: 'no-store' });
+    if(!r.ok) return null;
+    const b = await r.blob();
+    // Fehlt die Datei, liefert Cloudflare die Startseite des Projekts - daran erkannt, dass die Groesse nicht stimmt.
+    if(b.size !== e[0]) return null;
+    try{ if(c) await c.put(url, new Response(b, { headers: { 'Content-Type': 'audio/mpeg' } })); }catch(x){}
+    return b.slice(0, b.size, 'audio/mpeg');
+}
+// Liste frisch holen, Dateien still in den Speicher legen, Ueberholtes wegnehmen. Hoechstens alle 60 s.
+async function majaEinzelnHolen(sofort){
+    if(majaEinzeln.laeuft) return;
+    if(!sofort && Date.now() - majaEinzeln.zuletzt < 60000) return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    majaEinzeln.laeuft = true; majaEinzeln.zuletzt = Date.now();
+    try{
+        let neu = null;
+        for(const q of MAJA_EINZELN_QUELLEN){
+            try{
+                const ab = (typeof AbortController === 'function') ? new AbortController() : null;
+                const uhr = setTimeout(() => { try{ ab && ab.abort(); }catch(x){} }, 8000);
+                const r = await fetch(q + 'liste.json?t=' + Date.now(), { cache: 'no-store', signal: ab ? ab.signal : undefined });
+                clearTimeout(uhr);
+                if(!r.ok) continue;
+                let j = null;
+                try{ j = await r.json(); }catch(x){ j = null; }
+                if(!j || !j.dateien || typeof j.dateien !== 'object'){
+                    // Die Quelle antwortet, hat aber keine Liste (Cloudflare liefert dann die Startseite des Projekts).
+                    // Kam die gemerkte Liste von genau dieser Quelle, gibt es den Ordner dort nicht mehr: Liste leeren,
+                    // sonst spielte der Trainer die gemerkten Einzeldateien fuer immer weiter. Andere Quelle: weiterfragen.
+                    if(q === majaEinzeln.quelle && Object.keys(majaEinzeln.dateien).length){ neu = { quelle: q, dateien: {}, stand: '' }; break; }
+                    continue;
+                }
+                neu = { quelle: q, dateien: majaEinzelnPruefen(j), stand: String(j.stand || '') };
+                break;
+            }catch(x){}
+        }
+        if(neu){
+            majaEinzeln.quelle = neu.quelle; majaEinzeln.dateien = neu.dateien; majaEinzeln.stand = neu.stand;
+            try{ localStorage.setItem(MAJA_EINZELN_MERK, JSON.stringify(neu)); }catch(x){}
+            const gilt = new Set(Object.keys(neu.dateien).map(majaEinzelnUrl));
+            try{
+                const c = await caches.open(MAJA_SPRACHE_CACHE);
+                for(const req of await c.keys()){
+                    if(MAJA_EINZELN_QUELLEN.some(q => req.url.indexOf(q) === 0) && !gilt.has(req.url)) await c.delete(req);
+                }
+            }catch(x){}
+            for(const name of Object.keys(neu.dateien)){ try{ await majaEinzelnBlob(name); }catch(x){} }
+        }
+    }catch(e){}
+    majaEinzeln.laeuft = false;
+}
+window.majaEinzeln = majaEinzeln; window.majaEinzelnHolen = majaEinzelnHolen;
 // Marke fuer die FRAGE: { pid, e } oder null
 function majaFrageMarke(q){
     try{
@@ -34243,7 +34570,7 @@ function majaFrageMarke(q){
             if(!/-fragen$/.test(pid)) continue;
             const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
             const e = idx && idx[q.id];
-            if(e) return { pid, e };
+            if(e) return majaEinzelnHat(q.id) ? { pid, e, einzeln: q.id } : { pid, e };   // Stand 493
         }
     }catch(e){}
     return null;
@@ -34269,14 +34596,16 @@ function majaAntwortMarke(q, opt){
             if(!/-antworten$/.test(pid)) continue;
             const idx = majaSprache.idx[pid] || (majaSprache.vor[pid] && majaSprache.vor[pid].idx);
             if(!idx) continue;
+            // Stand 493: Einzeldatei VD735_A ... _D (A = erste Antwort der Fragendatei) geht vor
+            const mit = (e, k) => { const name = q.id + '_' + 'ABCD'.charAt(k - 1); return (k >= 1 && k <= 4 && majaEinzelnHat(name)) ? { pid, e, einzeln: name } : { pid, e }; };
             if(nr){
                 const e = idx[q.id + '-' + nr];
-                if(e && e[3] === n) return { pid, e };
+                if(e && e[3] === n) return mit(e, nr);
                 continue;
             }
             for(let k = 1; k <= 8; k++){
                 const e = idx[q.id + '-' + k];
-                if(e && e[3] === n) return { pid, e };
+                if(e && e[3] === n) return mit(e, k);
             }
         }
     }catch(e){}
@@ -34285,6 +34614,10 @@ function majaAntwortMarke(q, opt){
 async function majaSpracheBlob(m){
     // Stand 401: einzelne Datei aus sounds/maja-grok (richtig/falsch, "Antwort A")
     if(m && m.blob) return m.blob;
+    // Stand 493: Dietmars Einzeldatei geht vor; ist sie nicht zu haben, die Aufnahme aus dem Paket
+    if(m && m.einzeln){
+        try{ const eb = await majaEinzelnBlob(m.einzeln); if(eb) return eb; }catch(e){}
+    }
     if(m && m.url){
         const r = await fetch(m.url, { cache: 'force-cache' });
         if(!r.ok) return null;
@@ -34501,6 +34834,7 @@ async function majaSpracheAutoLaden(){
     if(majaSpracheAutoLaeuft) return;
     if(!majaSpracheMoeglich() || !majaSpracheAn()) return;
     if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    try{ majaEinzelnHolen(); }catch(e){}     // Stand 493: Dietmars Einzeldateien, laeuft nebenher
     majaSpracheAutoLaeuft = true;
     try{
         let kl = 'n';
@@ -39511,6 +39845,9 @@ function updateVisibility() {
     try{
         const vorher = document.body.classList.contains('runde-laeuft');
         document.body.classList.toggle('runde-laeuft', !!(isActive || examFinished));
+        // Stand 494: Ausserhalb der Runde gibt es die Lupe der Kopfzeile nicht - ein offenes Feld klappt zu,
+        // sonst stuende es zu Beginn der naechsten Runde noch offen da.
+        try{ if(!(isActive || examFinished) && typeof kopfSucheOffen === 'function' && kopfSucheOffen()) kopfSucheSchliessen(); }catch(e){}
         // Stand 424: in der klassischen Ansicht die Groesse beim Wechsel Runde/Hauptmenue neu einpassen
         const H = document.documentElement;
         if(vorher !== document.body.classList.contains('runde-laeuft') && !H.classList.contains('pc-app') && !H.classList.contains('android-app') && (window.innerWidth || 0) > SCHMAL_GRENZE){
@@ -41664,7 +42001,7 @@ function pruefZettelHtml(status, counts, alleBestanden, opts){
           ? '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">Ergebnis der Runde:</div><div style="display:flex;justify-content:center;">' + kreuz(opts.runde.ok, e(opts.runde.titel), opts.runde.richtig + '/' + opts.runde.gesamt + ' richtig', false) + '</div>'
           : '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 8px;">folgende Teile bestanden:</div>'
             + '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">' + teil('vorschriften', 'Vorschriften') + teil('betrieb', 'Betrieb') + teil('technik', 'Technik') + '</div>')
-      + (alleBestanden && !opts.runde ? '<div style="text-align:center;font-size:.85rem;margin:10px 0 0;"><b>Zähler:</b> ' + Math.min(pruefSchnitt().sim, 10) + ' von 10 Prüfungssimulationen bestanden' + (pruefSchnitt().sim >= 10 ? ' – letzte Stufe erreicht!' : '') + '</div>' : '')
+      + (alleBestanden && !opts.runde ? '<div style="text-align:center;font-size:.85rem;margin:10px 0 0;"><b>Zähler:</b> ' + pruefSchnitt().sim + ' von 10 Prüfungssimulationen bestanden' + (pruefSchnitt().sim >= 10 ? ' – letzte Stufe erreicht!' : '') + '</div>' : '')
       + (alleBestanden ? '<div style="text-align:center;font-size:.8rem;color:#555;margin:12px 0 6px;">und damit die Klasse:</div><div style="display:flex;justify-content:center;">' + kreuz(true, 'Klasse ' + kl, 'alle Teile bestanden', false) + '</div>' : '')
       + (opts.runde && !opts.runde.ok ? '<div style="text-align:center;font-weight:800;font-size:1.05rem;margin:12px 0 2px;color:#b3261e;">Nicht bestanden</div><div style="text-align:center;font-size:.8rem;color:#555;margin-bottom:6px;">Gebraucht werden ' + Math.ceil(opts.runde.gesamt * 0.76) + ' von ' + opts.runde.gesamt + ' – nächstes Mal klappt’s!</div>' : '')
       + (!opts.runde && !alleBestanden && bestandeneTeile.length ? '<div style="font-size:.78rem;background:#eef6ee;border:1px solid #cfe3cf;border-radius:6px;padding:7px 9px;margin:10px 0 4px;">In der echten Prüfung werden bestandene Teile bei der Wiederholung angerechnet – laut Bundesnetzagentur innerhalb von <b>24 Monaten</b> (hier also bis <b>' + (() => { const d = new Date(); d.setMonth(d.getMonth() + 24); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); })() + '</b>). Danach muss alles neu geprüft werden.</div>' : '')
@@ -41787,7 +42124,7 @@ function pruefungMerken(fehlerJe25, bestanden, simulation, real){
 }
 function pruefSchnittText(){
     const s = pruefSchnitt();
-    return Math.min(s.sim, s.voll) + ' von ' + s.voll + ' Prüfungssimulationen bestanden';
+    return s.sim + ' von ' + s.voll + ' Prüfungssimulationen bestanden';   // Stand 491: der Zaehler laeuft ueber 10 hinaus weiter (Dietmar: "11 von 10")
 }
 window.pruefSchnitt = pruefSchnitt; window.pruefSchnittText = pruefSchnittText;
 // ================================================================
@@ -42076,12 +42413,16 @@ body.dark .egn-pc .egn-chip{background:#1d2b44;color:#e6edf5;box-shadow:none}bod
 body.dark .egn-pc .egn-z{background:#1b2738;color:#e6edf5}
 body.dark .egn-pc .egn-z em.gut{color:#5fd68a}body.dark .egn-pc .egn-z em.no,body.dark .egn-pc .egn-fkopf em{color:#ff8a8a}
 body.dark .egn-pc .egn-balken{background:#2b3a4f}
-body.dark .egn-pc .egn-f{background:#16301f;border-color:#2c6b45;color:#5fd68a}
-body.dark .egn-pc .egn-f.no{background:#3a1b1b;border-color:#7a3030;color:#ff8a8a}
+/* Stand 492 (11.11.2026) - Dietmar, mit Bild der Ergebnisseite am PC in Polar: "Die Fehler in rot und die richtigen in gruen ohne
+   Glas Effekt." Vorher dunkel getoente Felder (#16301f / #3a1b1b) mit heller Schrift - das wirkte wie Glas. Jetzt volle Farbe, weisse Schrift. */
+body.dark .egn-pc .egn-f{background:#17803f;border-color:#17803f;color:#fff}
+body.dark .egn-pc .egn-f.no{background:#c93a3a;border-color:#c93a3a;color:#fff}
 body.dark .egn-pc .egn-f.of{background:#1f2a3b;border-color:#33445c;color:#8fa0b8}
-body.dark .egn-pc .egn-fz{color:#e6edf5;border-top-color:#2b3a4f}body.dark .egn-pc .egn-fz code{background:#3a1b1b;color:#ff8a8a}
+body.dark .egn-pc .egn-fz{color:#e6edf5;border-top-color:#2b3a4f}body.dark .egn-pc .egn-fz code{background:#c93a3a;color:#fff}
 body.dark .egn-pc .egn-fkopf{border-top-color:#2b3a4f}
-body.dark .egn-pc .egn-pa{background:#1b2738;border-color:#33507e;color:#e6edf5;box-shadow:none}body.dark .egn-pc .egn-pa i{color:#6fb0ff}
+/* Stand 492 - Dietmar, selbes Bild: "Hier moechte ich den Button bei Polar in Weiss haben." Wie die Knoepfe am Pruefungsende (Stand 491). */
+body.dark .egn-pc .egn-pa{background:#e9eef4;border-color:#c3ccd7;color:#0f2745;box-shadow:none}body.dark .egn-pc .egn-pa i{color:#0f2745}
+body.dark .egn-pc .egn-pa:hover{background:#fff;filter:none}
 body.dark .egn-pc .egn-teile>div{background:#1b2738}body.dark .egn-pc .egn-teile b{color:#e6edf5}body.dark .egn-pc .egn-teile span{color:#a9b8cf}
 .egn-bild:not(.da){display:flex;align-items:center;justify-content:center;height:150px;background:linear-gradient(135deg,#0E7FA6,#1564C9 55%,#5B3FE0)}
 .egn-bild:not(.da) .egn-siegel{width:120px;height:120px}
@@ -42120,6 +42461,11 @@ body.dark .egn-pc .egn-teile>div{background:#1b2738}body.dark .egn-pc .egn-teile
 .egn .egn-pa i{font-size:22px;color:#2a7be4}
 .egn .egn-pa:active{transform:scale(.97)}
 .egn-unten{margin-top:14px}
+/* Stand 492 (11.11.2026) - Dietmar, mit Bild der Ergebnisseite am Handy: "Der Button Startseite muss schmaeler und ueber die
+   ganze Breite gehen." Stand ein Knopf allein in der Zweierreihe, war er eine hohe Kachel ueber die halbe Breite (Zeichen oben,
+   Text darunter). Ein einzelner Knopf ist jetzt flach, geht ueber die ganze Breite, Zeichen und Text nebeneinander. Zwei bleiben Kacheln. */
+.egn .egn-paar > .egn-pa:only-child{grid-column:1 / -1;flex-direction:row;gap:9px;padding:12px 15px;min-height:0}
+.egn .egn-paar > .egn-pa:only-child i{font-size:17px}
 .egn .egn-b3{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;border-radius:14px;padding:14px;margin:0 0 10px;font:700 15.5px var(--font-body,Inter),sans-serif;color:#16336b;background:#fff;border:1.5px solid #b9cbe8;cursor:pointer}
 .egn-links{display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap}
 .egn-links button{background:none;border:0;color:#16336b;font:700 14.5px var(--font-body,Inter),sans-serif;padding:8px 6px;cursor:pointer}
@@ -42491,6 +42837,35 @@ function ergebnisArt(st, art){
     return { typ: 'grau', k: 'k-grau', oben: 'DRAN', unten: 'BLEIBEN', titel: ['Weiter', 'üben'] };
 }
 
+// DIE ERGEBNISSEITE AM PC PASST AUF DEN BILDSCHIRM (Stand 496, 11.11.2026)
+// Dietmar, mit Bild der Simulator-Ergebnisseite: "Ich moechte hier eine andere Ansicht. Mir ist das zu gross." -
+// auf Nachfrage: alles kleiner, gleicher Aufbau, die ganze Seite ohne Rollen auf dem Bildschirm.
+// Die Seite (.egn-pc) wird als Ganzes verkleinert (zoom): hoechstens 85 %, und so weit darunter, dass sie von ihrer
+// Oberkante bis zum unteren Fensterrand passt (nicht unter 55 %). Gerechnet wird beim Zeigen und wenn das Fenster
+// seine Groesse aendert - NICHT beim Aufklappen von "Deine Fragen" oder der Stufe, sonst spraenge die Groesse
+// unter der Maus.
+function egnEinpassen(){
+    try{
+        document.querySelectorAll('.egn.egn-pc').forEach(el => {
+            if(el.offsetParent === null) return;
+            const alt = parseFloat(el.style.zoom) || 1;
+            const r = el.getBoundingClientRect();
+            if(r.height < 50) return;
+            const h1 = r.height / alt;                               // Hoehe bei 100 %
+            // Oberkante im ungerollten Zustand: in einem Fenster zaehlt dessen Rollstand, sonst der der Seite
+            let roll = window.scrollY || 0;
+            for(let e = el.parentElement; e && e !== document.body; e = e.parentElement){ if(e.scrollTop > 0){ roll = e.scrollTop; break; } }
+            const oben = Math.max(0, r.top + roll);
+            const platz = window.innerHeight - oben - 18;
+            let z = Math.min(0.85, platz / h1);
+            z = Math.max(0.55, Math.floor(z * 100) / 100);
+            if(Math.abs(z - alt) >= 0.01) el.style.zoom = String(z);
+        });
+    }catch(e){}
+}
+window.egnEinpassen = egnEinpassen;
+try{ window.addEventListener('resize', () => { clearTimeout(window.__egnPassT); window.__egnPassT = setTimeout(egnEinpassen, 150); }); }catch(e){}
+
 function ergebnisSeiteHtml(o){
     ergebnisCss();
     const vs = ergebnisVerspielt();
@@ -42660,9 +43035,13 @@ function ergebnisSeiteHtml(o){
         if((vs && handyApp) || pcSeite){
             const sp2 = (() => { try{ return window.appSpielstand ? window.appSpielstand() : {}; }catch(e){ return {}; } })();
             const xp2 = fragen.reduce((t, q) => t + (progress[q.id] && progress[q.id].answered ? (progress[q.id].correct ? 10 : 2) : 0), 0);
+            // Stand 497: In der Pruefung zaehlt eine offen gelassene Frage als Fehler - so steht es im Hinweis
+            // ("Gesamt 3 Fehler"). Die Marke oben zaehlte nur die falsch angekreuzten ("Fehler: 2"). Dietmar: angleichen.
+            const egnOffen = o.teile ? fragen.filter(q => !(progress[q.id] && progress[q.id].answered)).length : 0;
+            const egnFehler = fehlerQs.length + egnOffen;
             const chips = '<div class="egn-chips"><span class="egn-chip">+' + xp2.toLocaleString('de-DE') + ' XP</span>'
                 + (sp2 && sp2.serie ? '<span class="egn-chip">' + sp2.serie + (sp2.serie === 1 ? ' Tag' : ' Tage') + ' 🔥</span>' : '')
-                + '<span class="egn-chip ' + (fehlerQs.length ? 'no' : 'ok') + '">' + (fehlerQs.length ? 'Fehler: ' + fehlerQs.length : 'Fehler: keine 🎯') + '</span></div>';
+                + '<span class="egn-chip ' + (egnFehler ? 'no' : 'ok') + '">' + (egnFehler ? 'Fehler: ' + egnFehler : 'Fehler: keine 🎯') + '</span></div>';
             const kopfSatz = st === 'bestanden' ? (o.art === 'pruefung' ? 'Bestanden' : 'Geschafft') : st === 'nach' ? 'Nachprüfung möglich' : 'Noch nicht bestanden';
             const unterT = [ergebnisEsc(String(o.kopf || '').replace(/\s*\((Übung|übung)\)/, '')), quote + ' %']
                 .concat(o.required ? [o.required + ' richtige ' + (o.teile ? 'je Teil ' : '') + 'waren nötig'] : []).concat(o.zeit ? [ergebnisEsc(o.zeit)] : []);
@@ -42681,7 +43060,7 @@ function ergebnisSeiteHtml(o){
                 + fehlerQs.slice(0, 12).map(q => '<button type="button" class="egn-fz" onclick="ergebnisFrageZeigen(' + fragen.indexOf(q) + ')"><code>' + ergebnisEsc(q.id) + '</code><span>' + ergebnisEsc(ergebnisKurz(q.text, 110)) + '</span><i class="fas fa-chevron-right"></i></button>').join('')
                 + (fehlerQs.length > 12 ? '<div class="egn-mehr">… und ' + (fehlerQs.length - 12) + ' weitere – alle oben in der Übersicht</div>' : '') : '';
             const fragenZ = fragen.length ? '<details class="egn-z egn-fragen"' + (fragen.length === 1 || pcSeite ? ' open' : '') + '><summary><span><b>' + (fragen.length === 1 ? 'Deine Frage' : 'Deine ' + fragen.length + ' Fragen')
-                + ' <em class="gut">· ' + nRichtig + ' ✓</em>' + (fehlerQs.length ? ' <em class="no">· ' + fehlerQs.length + ' ✗</em>' : '') + '</b><small>Antippen: Frage mit Erklärung ansehen</small></span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>'
+                + ' <em class="gut">· ' + nRichtig + ' ✓</em>' + (fehlerQs.length ? ' <em class="no">· ' + fehlerQs.length + ' ✗</em>' : '') + (egnOffen ? ' <em class="no">· ' + egnOffen + ' offen</em>' : '') + '</b><small>Antippen: Frage mit Erklärung ansehen</small></span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>'
                 + '<div class="egn-gitter">' + fragen.map((q, i) => {
                     const pq = progress[q.id], okq = pq && pq.answered && pq.correct, ofq = !(pq && pq.answered);
                     return '<button type="button" class="egn-f' + (ofq ? ' of' : okq ? '' : ' no') + '" onclick="ergebnisFrageZeigen(' + i + ')" title="' + ergebnisEsc(q.id) + '">' + (i + 1)
@@ -42695,6 +43074,7 @@ function ergebnisSeiteHtml(o){
                 + '<div class="egn-u">' + unterT.join(' · ') + '</div>' + chips + teileZ
                 + (hinweis || '') + teilenKnopf.replace('erg-teilen', 'egn-b1') + knN;
             const egnKl = (st === 'bestanden' ? 'ok' : st === 'nach' ? 'nach' : 'nicht');
+            if(pcSeite){ try{ [0, 250, 900, 2000].forEach(t => setTimeout(egnEinpassen, t)); }catch(e){} }
             if(pcSeite) return '<div class="egn egn-pc ' + egnKl + '"><div class="egn-l">' + egnKopf + '</div>'
                 + '<div class="egn-r">' + stufeZ + fragenZ + '<div class="egn-paar">' + linksN + '</div></div></div>';
             return '<div class="egn ' + egnKl + '">' + egnKopf + stufeZ + fragenZ + '<div class="egn-paar">' + linksN + '</div></div>';
@@ -43600,6 +43980,27 @@ function nextQuestion() {
     const jetztWeiter = Date.now();
     if (jetztWeiter - (window.__weiterZuletzt || 0) < 300) return;
     window.__weiterZuletzt = jetztWeiter;
+    // Stand 498 - Dietmar: "Wenn eine ausgelassen wurde, muss der Hinweis erfolgen, dass eine ausgelassen wurde.
+    // Niemand gibt eine Frage ohne Antwort ab." Bisher beendete "Weiter" auf der letzten Frage den Pruefungsteil
+    // auch mit offenen Fragen - ohne ein Wort, die offene zaehlte still als Fehler. Jetzt: Hinweis, und der
+    // Trainer springt zur ersten offenen Frage. Abgegeben wird erst, wenn alles beantwortet ist ("Abgeben"),
+    // oder wenn die Uhr ablaeuft (finishRealisticPart(true) - das laeuft nicht hier durch).
+    try{
+        if (typeof pruefungStreng === 'function' && pruefungStreng() && !examFinished
+            && currentQuestions.length && currentIndex >= currentQuestions.length - 1) {
+            const offen = [];
+            currentQuestions.forEach((q, i) => { if (!(progress[q.id] && progress[q.id].answered)) offen.push(i); });
+            if (offen.length) {
+                const nrn = offen.slice(0, 8).map(i => i + 1).join(', ') + (offen.length > 8 ? ' …' : '');
+                const text = (offen.length === 1 ? 'Frage ' + nrn + ' ist noch nicht beantwortet.' : offen.length + ' Fragen sind noch nicht beantwortet: ' + nrn + '.')
+                    + ' Abgeben kannst du erst, wenn alle Fragen beantwortet sind.';
+                if (offen[0] !== currentIndex) { currentIndex = offen[0]; answered = false; renderQuestion(); }
+                try{ if (window.showAppAlert) window.showAppAlert(text); }catch(e){}
+                try{ if (typeof ansagen === 'function') ansagen(text); }catch(e){}
+                return;
+            }
+        }
+    }catch(e){}
     try{ autoWeiterAbbrechen(); }catch(e){}
     // Wer weiterblaettert, laesst die Antwort stehen.
     antwortSicherung = null;
@@ -48909,6 +49310,35 @@ if (originalSelectOption) {
         f = Math.round((f - 0.05) * 100) / 100;
         kinder.forEach(function(k){ k.style.zoom = String(f); });
       }
+      // Stand 495 - Dietmar, mit Bild (NI401, halbe Karte leer): "Die Antworten koennen den Platz besser ausnutzen."
+      // Das Gegenstueck zum Verkleinern: Bleibt in der Karte Platz frei, wachsen die ANTWORTEN in Schritten von 5 %
+      // (hoechstens 125 % - darueber waeren sie groesser als die Frage). Gewachsen wird nur in den freien Raum der
+      // Karte: Sobald die Karte selbst hoeher wuerde oder etwas unter die Knopfleiste reichte, gilt der Schritt davor.
+      // Bildantworten bleiben aussen vor, die rechnet bilderGroesseAnpassen() schon in den Platz.
+      try{
+        var ok = document.getElementById('optionsContainer');
+        if(f === 1 && ok && ok.parentElement === qa && !ok.querySelector('img, svg, .option-grid')){
+          var passt = function(){
+            try{ sync(); }catch(e5){}
+            return Math.round(qa.getBoundingClientRect().height) <= hoeheVor + 1
+                && qa.getBoundingClientRect().bottom + 18 - (nav.getBoundingClientRect().top - 6) <= 0
+                && H.scrollHeight - window.innerHeight <= 1
+                && ok.scrollWidth <= ok.clientWidth + 1
+                && (qa.getBoundingClientRect().bottom - letztes().getBoundingClientRect().bottom) >= 14;
+          };
+          var letztes = function(){ for(var j = kinder.length - 1; j >= 0; j--){ if(kinder[j].offsetParent !== null && kinder[j].getBoundingClientRect().height > 0) return kinder[j]; } return ok; };
+          var hoeheVor = Math.round(qa.getBoundingClientRect().height);
+          if(passt()){
+            var g = 1;
+            while(g < 1.25 - 0.001){
+              var neuG = Math.round((g + 0.05) * 100) / 100;
+              ok.style.zoom = String(neuG);
+              if(!passt()){ ok.style.zoom = (g === 1) ? '' : String(g); break; }
+              g = neuG;
+            }
+          }
+        }
+      }catch(e6){}
       try{ sync(); }catch(e3){}
     }catch(e){}
   }
@@ -48929,6 +49359,17 @@ if (originalSelectOption) {
     }, 1000);
   }catch(e){}
   window.addEventListener('resize', function(){ setTimeout(frageEinpassen, 150); });
+  // Stand 494 - Dietmar, mit Video (NB503, URI-Dreieck): "Wenn ich das dann wieder schliesse, bleiben die Antworten
+  // klein. Die Antworten muessen wieder gross werden nach dem Schliessen." Der Waechter oben meldet sich nur, wenn die
+  // Fragenflaeche ihre Groesse aendert. Fuellt sie das Fenster ohnehin (Mindesthoehe), aendert das Zuklappen der
+  // Merkhilfe nichts daran - und die Verkleinerung blieb stehen. Jetzt passt jedes Auf- und Zuklappen in der Frage
+  // (Merkhilfen sind <details>) neu ein. "toggle" steigt nicht auf, deshalb in der Fangphase.
+  document.addEventListener('toggle', function(e){
+    try{
+      if(!e.target || !e.target.closest || !e.target.closest('.question-area')) return;
+      setTimeout(frageEinpassen, 30); setTimeout(frageEinpassen, 300);
+    }catch(x){}
+  }, true);
   document.addEventListener('DOMContentLoaded', function(){ patch(); setTimeout(sync, 200); });
   patch();
   setTimeout(patch, 500);
@@ -49146,10 +49587,10 @@ if (originalSelectOption) {
                 if(!z){ z = document.createElement('div'); z.id = 'handyZaehler'; z.setAttribute('aria-live', 'polite'); c.parentNode.insertBefore(z, c); }
                 var m = (q.textContent || '').trim().match(/^(\d+)\s*\/\s*(\d+)$/);
                 var nav = document.getElementById('navArea');
-                var laeuft = !!(m && +m[2] > 0 && nav && getComputedStyle(nav).display !== 'none' && c.innerHTML.trim());
+                var laeuft = !!(m && +m[2] > 0 && nav && getComputedStyle(nav).display !== 'none' && (c.firstElementChild || (c.textContent || '').trim()));   // Stand 491: nicht alle 1,5 s die ganze Frage als Text ausgeben
                 document.body.classList.toggle('quiz-laeuft-hz', laeuft);
                 var t = m ? 'Frage ' + Math.min(+m[1], +m[2]) + ' von ' + m[2] : '';
-                if(z.textContent !== t) z.innerHTML = t ? '<i class="fas fa-list-ol"></i> ' + t : '';
+                if((z.textContent || '').trim() !== t) z.innerHTML = t ? '<i class="fas fa-list-ol"></i> ' + t : '';   // Stand 491: der Vergleich scheiterte am Leerzeichen hinter dem Symbol - der Zaehler wurde alle 1,5 s neu geschrieben
             }catch(e){}
         }
         function los(){
@@ -50816,8 +51257,8 @@ function showRealisticFinal(){
     body.innerHTML = `
       <div class="realistic-final${realisticExam.duo ? '' : ' rf-neu'}">
         <div class="finish-box" style="max-width:680px; margin:0 auto; border:none; box-shadow:none;">
-          ${realisticExam.duo ? '' : '<div id="ergTeilenHost"></div>'}
           <div class="rf-kompakt"><span style="color:${statusColor};">${statusIcon} ${statusText}</span> – ${overallText}</div>
+          ${realisticExam.duo ? '' : '<div id="ergTeilenHost"></div>'}
           <div class="rf-alt">
           <div style="font-size:3.2rem; text-align:center;">${statusIcon}</div>
           <p style="font-size:1.6rem;font-weight:800;color:${statusColor};margin-top:8px; text-align:center;">${statusText}</p>
@@ -64306,7 +64747,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     function balkenSetzen(i, anteil){
         if(!i) return;
         const w = (Math.round(Math.max(0, Math.min(1, anteil || 0)) * 1000) / 10) + '%';
-        i.dataset.ziel = w;
+        if(i.dataset.ziel !== w) i.dataset.ziel = w;   // Stand 491: nicht jede Runde dasselbe noch einmal schreiben
         if(!i.dataset.waechst && i.style.width !== w) i.style.width = w;
     }
     function lektionen(){
@@ -65115,7 +65556,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
           + '<button type="button" class="aw-zettel-knopf" data-tat="zettel"><i class="fas fa-file-signature"></i> Dein Prüfungszettel</button></div>'
           + STUFEN.map((ab, i) => '<div class="aw-stufe ' + (i === nr ? 'jetzt' : i < nr ? 'ok' : 'zu') + '"' + (i === nr ? ' id="awStufeJetzt"' : '') + '>'
               + '<span class="aw-sst"><i class="fas fa-star"></i><b>' + (i + 1) + '</b></span>'
-              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i === LETZTE() ? '10 Prüfungssimulationen bestehen' + (window.pruefSchnitt ? ' · ' + Math.min(10, pruefSchnitt().sim) + ' / 10' : '') : i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
+              + '<span class="aw-zt"><b>' + STUFEN_NAMEN[i] + '</b><small>' + (i === LETZTE() ? '10 Prüfungssimulationen bestehen' + (window.pruefSchnitt ? ' · ' + pruefSchnitt().sim + ' / 10' : '') : i ? 'ab ' + ab.toLocaleString('de-DE') + ' XP' : 'Hier geht’s los') + '</small></span>'
               + (i === nr ? '<span class="aw-du">DU</span>' : i < nr ? '<i class="fas fa-circle-check aw-ok"></i>' : '<i class="fas fa-lock aw-schloss"></i>') + '</div>').join('');
     }
     function terminInfoZeigen(){
