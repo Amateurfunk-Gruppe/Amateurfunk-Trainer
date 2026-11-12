@@ -13,9 +13,30 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 498 · 11.11.2026
+Stand 500 · 12.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 500 (12.11.2026)
+
+### Geändert
+- Durchsicht der Handy-App nach allem, was das Bild unruhig machen kann. Dietmar: „Ich würde empfehlen, du gehst die ganze App nochmal durch und suchst nach Schwachstellen, die ein Blinken auslösen könnten. Darunter auch Weichzeichner, Glaseffekte, alles, was dieses Problem auslösen könnte.“ Gemessen mit `pruef/blink500.js` in Polar/Hell und Verspielt/Sachlich auf 13 Seiten (Startseite, vier Reiter, Einstellungen, Runde offen/Erklärung/richtig/falsch, Ergebnisseite, Prüfung): laufende Animationen, Schreibvorgänge im Leerlauf, Filter, Weichzeichner, große Schatten, Bewegtbilder, Leinwände. Geändert:
+  - Verdeckte Daueranimationen angehalten. Hinter den Reitern Prüfung/Gruppe/Fortschritt/Mehr und hinter den Einstellungen liefen in „Verspielt“ bis zu acht Daueranimationen der Startseite weiter (Majas Visier-Glanz, Lampe, Wellen, Funkelstern der Stufe). `html.start-ruht` wird jetzt auch gesetzt, wenn ein Reiter die Startkarte verdeckt (drei Tastpunkte), und hält dann alle Animationen in `#appHeute` und `#appWerk` an; ebenso in der Runde. Nachher: 0 laufende Animationen auf diesen Seiten.
+  - `soundSchnellMarkieren()` schrieb alle 0,6 s den Haken am Ton-Knopf neu (3 Schreibvorgänge je Sekunde, sobald die Einstellungen einmal offen waren – auch in jeder Runde danach). Jetzt nur noch bei Änderung. Nachher: 0 Schreibvorgänge im Leerlauf der Einstellungen, 0 bis 2 in der Runde.
+  - Kein Schlagschatten-Filter (`drop-shadow`) mehr auf der bewegten Maja in der Handy-App (`#roboHelfer .mk`, `.erg-maja .mk`, `#appAstro`, `.erg-siegel`); am PC unverändert.
+  - Keine großen weichen Schatten mehr an bildschirmgroßen Flächen der Handy-App (`#ahRunde`, `#roboBlase`, `.exam-info`, `.am-blatt`, `.erg-karte`, `.q-text-row`); in Polar zusätzlich nicht an den 35 Symbolen, Kacheln und Karten der Startseite (auf dunklem Grund ohnehin kaum sichtbar).
+  - Nirgends in der Handy-App mehr ein Weichzeichner hinter Flächen (`backdrop-filter`); in „Sachlich hell“ trugen ihn noch die Werkzeug-Kacheln.
+  - Die Konfetti-Leinwand (`#confettiCanvas`) blieb nach dem Konfetti als leere, bildschirmgroße Ebene liegen; sie wird nach 8 Sekunden ausgeblendet.
+- Gefunden, aber nicht geändert: Der Seitenhintergrund der App ist ein feststehender Farbverlauf (`background … fixed`); manche Handys zeichnen ihn beim Rollen neu. Ein Umbau auf eine eigene feste Ebene ist möglich, ändert aber das Aussehen aller Stile und gehört auf dem Gerät geprüft.
+
+## Stand 499 (12.11.2026)
+
+### Behoben
+- Blinken in der Android-App: Ursache gefunden. Dietmar (Xiaomi, auch das Samsung seiner Frau): Das Display blinkt in festem Abstand, auch in den Einstellungen bei ruhigem Modus – und nie während einer Bildschirmaufnahme. Mit fest 60 Hz in den Handy-Einstellungen: „Jetzt blinkt nichts mehr.“ Es ist also das Umschalten des Handys zwischen 60 und 120 Hz, nicht der Trainer. Die App hält ihr Fenster jetzt auf einer festen Bildwiederholrate (`MainActivity.bildrateSetzen`, `preferredDisplayModeId`), Vorgabe: fest die höchste Rate des Displays, schon beim Start (Dietmar: „Wenn das Handy auf 120 Hertz läuft, kann die App auch gerne auf 120 Hz laufen. Sie darf aber nicht ständig umspringen.“).
+- Formelblatt am Handy: Blinken beim Zoomen. Dietmar (App, Formelblatt): „Blinkt beim Verschieben und Zoomen.“ Beim Aufziehen mit zwei Fingern bekam das Bild bei jeder Fingerbewegung eine neue Breite; das Handy musste das große Blatt jedes Mal neu anordnen und neu zeichnen und kam nicht nach. Jetzt wird während der Geste nur die fertige Bildebene gestreckt und verschoben (`transform`), Breite und Rollstand werden einmal beim Loslassen gesetzt (`formelGestenAnbringen`, gilt für App und Handy-Browser). Das Bild liegt auf einer eigenen Ebene (`will-change: transform`, ohne Schatten), und das scharf nachgezeichnete Blatt wird erst getauscht, wenn es fertig entschlüsselt ist. Nur auf dem Gerät prüfbar.
+
+### Hinzugefügt
+- Einstellungen → Leistung → „Bildwiederholrate“ (nur in der App, ab der AAB mit `AndroidApp.bildrate`). Dietmar: „Kann man einen Schalter einbauen und auf 60 Hz und 120 Hz erzwingen?“ Wahl: Fest 120 Hz (bzw. die höchste Rate, die das Display kann – `AndroidApp.bildraten()`) / Fest 60 Hz (für ältere Handys) / Handy entscheidet. Schlüssel `afu_bildrate`. In einer älteren App fehlt der Kasten.
 
 ## Stand 498 (11.11.2026)
 

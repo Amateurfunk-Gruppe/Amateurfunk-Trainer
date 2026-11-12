@@ -100,6 +100,11 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle zustand) {
         super.onCreate(zustand);
         getWindow().setStatusBarColor(Color.parseColor("#0F2745"));
+        // Bildwiederholrate (12.11.2026): gemerkte Wahl gleich beim Start. Vorgabe: fest die hoechste Rate (999 = die naechstliegende, also die hoechste) - das Umschalten
+        // des Handys zwischen 60 und 120 Hz war als Blinken zu sehen. Siehe AppSteuerung.bildrate.
+        // Dietmar: "Wenn das Handy auf 120 Hertz laeuft, kann die App auch gerne auf 120 Hz laufen. Sie darf aber
+        // nicht staendig umspringen auf 60 und 120."
+        try { bildrateSetzen(getSharedPreferences("trainer", MODE_PRIVATE).getInt("bildrate", 999)); } catch (Throwable e) { }
         // Navigationsleiste unten (25.10.2026, Dietmar: "die bleibt weiss im dunklen
         // Modus sieht ziemlich bloed aus"): im gleichen Dunkelblau wie der Kopf,
         // mit hellen Symbolen. Ohne das malt Android sie hell.
@@ -449,6 +454,26 @@ public class MainActivity extends Activity {
 
     /** Fuer die Seite: nach einem Update mit Programmdateien neu starten
      *  (29.09.2026, Knopf "Jetzt neu starten" im Update-Fenster). */
+    /** Haelt das Fenster auf einer festen Bildwiederholrate (siehe AppSteuerung.bildrate). hz <= 0 gibt die
+     *  Wahl an das Handy zurueck. Gewaehlt wird der Modus mit derselben Aufloesung, dessen Rate am naechsten liegt. */
+    void bildrateSetzen(int hz) {
+        try {
+            Window w = getWindow();
+            WindowManager.LayoutParams lp = w.getAttributes();
+            if (hz <= 0) { lp.preferredDisplayModeId = 0; lp.preferredRefreshRate = 0f; w.setAttributes(lp); return; }
+            android.view.Display d = getWindowManager().getDefaultDisplay();
+            android.view.Display.Mode jetzt = d.getMode();
+            android.view.Display.Mode best = null;
+            for (android.view.Display.Mode m : d.getSupportedModes()) {
+                if (m.getPhysicalWidth() != jetzt.getPhysicalWidth() || m.getPhysicalHeight() != jetzt.getPhysicalHeight()) continue;
+                if (best == null || Math.abs(m.getRefreshRate() - hz) < Math.abs(best.getRefreshRate() - hz)) best = m;
+            }
+            if (best != null) { lp.preferredDisplayModeId = best.getModeId(); lp.preferredRefreshRate = best.getRefreshRate(); }
+            else lp.preferredRefreshRate = (float) hz;
+            w.setAttributes(lp);
+        } catch (Throwable e) { }
+    }
+
     class AppSteuerung {
         /** Bildschirm anlassen (25.10.2026). Dietmar: "In der Android Version
          *  blinkt das Display bei meiner Frau ihrem Samsung Handy. Bei mir
@@ -505,6 +530,29 @@ public class MainActivity extends Activity {
                 try { startActivity(new Intent(android.provider.Settings.ACTION_BATTERY_SAVER_SETTINGS)); }
                 catch (Throwable e) { try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Throwable e2) { } }
             });
+        }
+        /** Bildwiederholrate festlegen (12.11.2026). Dietmar: Das Display blinkt in festem Abstand, nie waehrend
+         *  einer Bildschirmaufnahme; mit fest 60 Hz am Handy "blinkt nichts mehr" - es ist das Umschalten des
+         *  Handys zwischen 60 und 120 Hz. "Kann man einen Schalter einbauen und auf 60 Hz und 120 Hz erzwingen?"
+         *  hz = 0: das Handy entscheidet. Die Wahl wird gemerkt und gilt schon beim naechsten Start (onCreate). */
+        @JavascriptInterface public void bildrate(final int hz) {
+            try { getSharedPreferences("trainer", MODE_PRIVATE).edit().putInt("bildrate", hz).apply(); } catch (Throwable e) { }
+            haupt.post(() -> bildrateSetzen(hz));
+        }
+        /** Die Raten, die dieses Display bei der jetzigen Aufloesung kann, z. B. "60,90,120". */
+        @JavascriptInterface public String bildraten() {
+            try {
+                android.view.Display d = getWindowManager().getDefaultDisplay();
+                android.view.Display.Mode jetzt = d.getMode();
+                java.util.TreeSet<Integer> raten = new java.util.TreeSet<>();
+                for (android.view.Display.Mode m : d.getSupportedModes()) {
+                    if (m.getPhysicalWidth() == jetzt.getPhysicalWidth() && m.getPhysicalHeight() == jetzt.getPhysicalHeight())
+                        raten.add(Math.round(m.getRefreshRate()));
+                }
+                StringBuilder sb = new StringBuilder();
+                for (Integer r : raten) { if (sb.length() > 0) sb.append(','); sb.append(r); }
+                return sb.toString();
+            } catch (Throwable e) { return ""; }
         }
         @JavascriptInterface public void neuStarten() {
             haupt.post(() -> NeustartActivity.neuStarten(MainActivity.this));

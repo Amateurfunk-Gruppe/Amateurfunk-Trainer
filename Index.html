@@ -1325,6 +1325,24 @@
            Farbverlauf der ganzen Startkarte immer wieder neu (am 25.10. nur auf 12 Bilder je Sekunde gedrosselt). Das Ringmuster
            bleibt, es wandert nur nicht mehr. */
         html.android-app #appHeute .ah-runde::before { animation: none !important; }
+        /* Stand 500 (Durchsicht "Blinken", 12.11.2026): Ist die Startseite nicht zu sehen (Runde, Fenster, anderer Reiter),
+           ruht ALLES Bewegte auf ihr - Majas Visier-Glanz, Lampe, Wellen, der Funkelstern der Stufe. Bisher liefen diese
+           Daueranimationen verdeckt weiter; jede meldet sich alle paar Sekunden kurz und haelt die Grafik in Bewegung. */
+        html.start-ruht :is(#appHeute, #appWerk) *, html.start-ruht :is(#appHeute, #appWerk) *::before, html.start-ruht :is(#appHeute, #appWerk) *::after,
+        body.runde-laeuft :is(#appHeute, #appWerk) *, body.runde-laeuft :is(#appHeute, #appWerk) *::before, body.runde-laeuft :is(#appHeute, #appWerk) *::after { animation-play-state: paused !important; }
+        /* Stand 500: In der Handy-App kein Schlagschatten-Filter auf Maja. Ein Filter auf einer bewegten Figur (sie schwebt,
+           atmet, das Bild selbst ist ein Bewegtbild) wird bei jedem Bild neu gerechnet - wie am 06.11. (Stand 436) auf der
+           Startkarte. Am PC bleibt der Schatten. */
+        html.android-app #roboHelfer .mk, html.android-app .erg-maja .mk, html.android-app #appAstro svg, html.android-app #appAstro .as-bild, html.android-app .erg-siegel { filter: none !important; }
+        /* Stand 500: In der Handy-App keine grossen weichen Schatten an bildschirmgrossen Flaechen. Beim Rollen muss das Handy
+           sie fuer jede neue Kachel mitzeichnen (bis 40 px Weichheit rund um Karten, die fast den ganzen Bildschirm fuellen). */
+        html.android-app:not(#zz):not(#zy) body:not(#zx) :is(#ahRunde, #roboBlase, .exam-info, .am-blatt, .erg-karte, .q-text-row) { box-shadow: none !important; }
+        /* Stand 500: Polar in der Handy-App - die Startseite trug 35 weiche Schatten (14 Symbole, Kacheln, Karten; bis 26 px weich).
+           Auf dem dunklen Grund sieht man sie kaum, beim Rollen der Startseite muss das Handy sie trotzdem alle zeichnen. */
+        html.android-app:not(#zz):not(#zy) body.dark:not(#zx) :is(#appHeute, #appWerk) :is(.ah-ico, .ah-kachel, .ah-karte, #ahStart, #ahTag, #awLevel, #awFort, #awPfad, #awCount, [id^="ahK"]) { box-shadow: none !important; }
+        /* Stand 500: In der Handy-App nirgends ein Weichzeichner hinter Flaechen (backdrop-filter). Leiste, Startseite und
+           Ergebnisseite waren schon frei (Stand 357/361); in "Sachlich hell" trugen ihn noch die Werkzeug-Kacheln. */
+        html.android-app:not(#zz):not(#zy) body:not(#zx) *, html.android-app:not(#zz):not(#zy) body:not(#zx) *::before, html.android-app:not(#zz):not(#zy) body:not(#zx) *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
         html.start-ruht #appHeute .ah-runde::before,
         body.runde-laeuft #appHeute .ah-runde::before,
         body:has(#realisticExamModal.open) #appHeute .ah-runde::before,
@@ -3173,7 +3191,8 @@
         html.android-app #formelAppLeiste { padding-right: 66px; }
         html.android-app #formelAppStand { font-size: 0.9rem; font-weight: 600; color: var(--panel-navy, #0f2745); text-align: center; }
         html.android-app #formelAppRolle { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #eef2f7; position: relative; touch-action: pan-x pan-y; overscroll-behavior: contain; }
-        html.android-app #formelAppBild { display: block; max-width: none; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+        /* Stand 499: eigene Ebene (will-change) - Rollen und Strecken des Blatts ohne Neuzeichnen; ohne Schatten, der bei jedem Bild mitgerechnet wuerde */
+        html.android-app #formelAppBild { display: block; max-width: none; height: auto; background: #fff; will-change: transform; }
         html.android-app #formelAppHinweis { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: var(--muted, #5b6b7f); font-size: 0.95rem; padding: 0 16px; pointer-events: none; }
         html.android-app body.eckig.app-rund #formelAppLeiste .fa-blatt , html:not(.android-app) body.eckig.app-rund #formelAppLeiste .fa-blatt{ border-radius: 12px !important; }
         html.android-app body.dark #formelAppLeiste { background: #0f2238; border-color: rgba(255,255,255,0.14); }
@@ -26472,7 +26491,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 498, datum: '11.11.2026' };
+const TRAINER_STAND = { nr: 500, datum: '12.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -29406,10 +29425,23 @@ function formelGestenAnbringen(rolle, bild, zoomLesen, zoomSetzen){
         if(!p || e.touches.length !== 2) return;
         e.preventDefault();
         p.z = Math.max(1, Math.min(FORMEL_ZOOM_MAX, p.z0 * abstand(e.touches) / p.d0));
-        strecken(p.z, p);
+        // Stand 499 - Dietmar (Formelblatt in der App): "Blinkt beim Verschieben und Zoomen." Bisher bekam das Bild
+        // bei jeder Fingerbewegung eine neue Breite - das Handy musste das grosse Blatt jedes Mal neu anordnen und
+        // neu zeichnen und kam nicht nach (leere Flaechen blitzen auf). Jetzt wird waehrend der Geste nur die fertige
+        // Bildebene gestreckt und verschoben (transform - das macht die Grafikkarte, ohne neu zu zeichnen); Breite
+        // und Rollstand werden einmal beim Loslassen gesetzt.
+        const f = p.z / p.z0;
+        const sl2 = (p.sl + p.cx) * f - p.cx, st2 = (p.st + p.cy) * f - p.cy;
+        bild.style.transformOrigin = '0 0';
+        bild.style.transform = 'translate(' + (p.sl - sl2) + 'px,' + (p.st - st2) + 'px) scale(' + f + ')';
     }, { passive: false });
     const ende = e => {
-        if(p && e.touches.length < 2){ const z = p.z, z0 = p.z0; p = null; if(Math.abs(z - z0) > 0.01) zoomSetzen(z); return; }
+        if(p && e.touches.length < 2){
+            const z = p.z, z0 = p.z0, q = p; p = null;
+            bild.style.transform = '';
+            if(Math.abs(z - z0) > 0.01){ strecken(z, q); zoomSetzen(z); }
+            return;
+        }
         if(e.type !== 'touchend' || e.changedTouches.length !== 1 || e.touches.length || bewegt) return;
         const t = e.changedTouches[0], jetzt = Date.now();
         if(letzterTipp && jetzt - letzterTipp.zeit < 320 && Math.hypot(t.clientX - letzterTipp.x, t.clientY - letzterTipp.y) < 40){
@@ -36778,7 +36810,29 @@ function ruhigModusAktiv(){
 }
 function energieHandy(){ try{ return /AmateurfunkTrainerApp/.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches); }catch(e){ return false; } }
 window.ruhigModusAktiv = ruhigModusAktiv;
-function energieSetzen(k, v){ energieSchreib(k, v); try{ einstEnergieFuellen(); }catch(e){} try{ document.documentElement.classList.toggle('ruhig', ruhigModusAktiv()); }catch(e){} try{ if(window.astroRuheAnwenden) window.astroRuheAnwenden(); }catch(e){} }
+// BILDWIEDERHOLRATE IN DER APP FESTLEGEN (Stand 499, 12.11.2026)
+// Dietmar (Xiaomi, auch das Samsung seiner Frau): Das Display blinkt in festem Abstand - auch in den Einstellungen bei
+// ruhigem Modus, und nie waehrend einer Bildschirmaufnahme. Mit fest 60 Hz am Handy: "Jetzt blinkt nichts mehr."
+// Ursache ist also das Umschalten des Handys zwischen 60 und 120 Hz, nicht der Trainer. Dietmar: "Kann man einen
+// Schalter einbauen und auf 60 Hz und 120 Hz erzwingen?" - "dann koennen wir es doch festlegen, dass es nicht
+// umschaltet?" Die App (MainActivity, AndroidApp.bildrate) haelt das Fenster auf einer festen Rate.
+// Vorgabe: fest die hoechste Rate des Displays. Dietmar: "Wenn das Handy auf 120 Hertz laeuft, kann die App auch gerne
+// auf 120 Hz laufen. Sie darf aber nicht staendig umspringen auf 60 und 120." - und einzeln auf 60 Hz stellbar, "fuer
+// Handys, die aelter sind". Schluessel afu_bildrate: 'hoch' | '60' | 'auto'.
+function bildrateKann(){ try{ return !!(window.AndroidApp && typeof AndroidApp.bildrate === 'function'); }catch(e){ return false; } }
+function bildrateHoechste(){
+    try{ const l = String(AndroidApp.bildraten() || '').split(',').map(x => Math.round(parseFloat(x))).filter(x => x > 0); return l.length ? Math.max.apply(null, l) : 60; }catch(e){ return 60; }
+}
+function bildrateAnwenden(){
+    if(!bildrateKann()) return;
+    try{
+        const w = energieLies('afu_bildrate', 'hoch');
+        AndroidApp.bildrate(w === 'auto' ? 0 : w === 'hoch' ? bildrateHoechste() : 60);
+    }catch(e){}
+}
+window.bildrateAnwenden = bildrateAnwenden;
+try{ bildrateAnwenden(); }catch(e){}
+function energieSetzen(k, v){ energieSchreib(k, v); try{ if(k === 'afu_bildrate') bildrateAnwenden(); }catch(e){} try{ einstEnergieFuellen(); }catch(e){} try{ document.documentElement.classList.toggle('ruhig', ruhigModusAktiv()); }catch(e){} try{ if(window.astroRuheAnwenden) window.astroRuheAnwenden(); }catch(e){} }
 window.energieSetzen = energieSetzen;
 function einstEnergieFuellen(){
     const ziel = document.getElementById('einstBlatt_energie');
@@ -36809,6 +36863,8 @@ function einstEnergieFuellen(){
           + '<div style="font-size:0.8rem; margin:0.2rem 0 0.3rem;">Im Sparmodus automatisch ruhiger Modus</div>' + seg('energieAutoSeg', 'afu_energie_auto', 'an', [['an', 'An'], ['aus', 'Aus']])
           + '<div style="font-size:0.8rem; margin:0.6rem 0 0.3rem;">Hinweis beim Start, wenn der Sparmodus an ist</div>' + seg('energieHinweisSeg', 'afu_energie_hinweis', 'an', [['an', 'An'], ['aus', 'Aus']])
           + (app ? '<button type="button" class="app-probe" style="margin-top:0.6rem;" onclick="try{AndroidApp.akkuEinstellungen()}catch(e){}"><i class="fas fa-battery-half"></i> Akku-Einstellungen des Handys öffnen</button>' : ''))
+      + (bildrateKann() ? einstKasten('Bildwiederholrate', 'Viele Handys schalten ständig zwischen 60 und 120 Bildern je Sekunde um. Bei manchen sieht man das als kurzes Blinken in festem Abstand. Mit einer festen Rate schaltet das Handy im Trainer nicht mehr um. 60 Hz schont ältere Handys und den Akku. Gilt nur für diese App.',
+            seg('energieBildrateSeg', 'afu_bildrate', bildrateHoechste() > 60 ? 'hoch' : '60', (bildrateHoechste() > 60 ? [['hoch', 'Fest ' + bildrateHoechste() + ' Hz']] : []).concat([['60', 'Fest 60 Hz'], ['auto', 'Handy entscheidet']]))) : '')
       // Stand 411 - Dietmar (Bild vom leeren Reiter am PC): "ist das Normal das bei dem Reiter Energie nichts drin ist am Desktop?"
       // Nur der Handy-Kasten gehoert in den nur-app-Block. Bis 410 schloss der Block erst am Ende - am PC war der Reiter leer.
       + '</div>'
@@ -41371,6 +41427,9 @@ function triggerConfetti(withFanfare = true, afterFanfareCallback = null, versuc
     }
     const canvas = document.getElementById('confettiCanvas');
     if (canvas) { canvas.style.display = 'block'; canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    // Stand 500 (Durchsicht "Blinken"): Die Leinwand blieb nach dem Konfetti als leere, bildschirmgrosse Ebene ueber
+    // allem liegen - bis zum naechsten Seitenwechsel. Nach 8 Sekunden ist der Regen vorbei, dann kommt sie weg.
+    try{ clearTimeout(window.__konfettiAus); window.__konfettiAus = setTimeout(() => { try{ const c = document.getElementById('confettiCanvas'); if(c) c.style.display = 'none'; }catch(e){} }, 8000); }catch(e){}
     if (withFanfare) { playFanfare(afterFanfareCallback); }
     var defaults = { zIndex: 100000, spread: 360, ticks: 70, gravity: 0, decay: 0.94, startVelocity: 30, colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8'] };
     function shoot() {
@@ -45433,6 +45492,12 @@ function soundSchnellMarkieren(){
             const b = document.getElementById(id); if(!b) return;
             const an = art === a, st = b.style;
             const dunkel = document.body.classList.contains('dark');   // Stand 382: im Dunkeln kein helles Feld (Dietmar: keine weissen Flaechen)
+            // Stand 500 (Durchsicht "Blinken"): Diese Funktion laeuft alle 0,6 s. Bisher nahm sie jedes Mal den Haken weg
+            // und setzte ihn neu - 3 Schreibvorgaenge je Sekunde, solange das Einstellungsfenster einmal offen war,
+            // auch in jeder Runde danach. Jetzt nur noch, wenn sich Auswahl oder Hell/Dunkel geaendert haben.
+            const zustand = (an ? '1' : '0') + (dunkel ? 'd' : 'h');
+            if(b.dataset.sndStand === zustand && (!!b.querySelector('.snd-haken')) === an) return;
+            b.dataset.sndStand = zustand;
             st.setProperty('background', an ? '#0a7f86' : (dunkel ? 'rgba(255,255,255,.08)' : '#e6f6f7'), 'important');
             st.setProperty('color', an ? '#ffffff' : (dunkel ? '#e8efff' : '#0f2745'), 'important');
             st.setProperty('border-color', dunkel && !an ? 'rgba(255,255,255,.28)' : '#0a7f86', 'important');
@@ -60305,6 +60370,19 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 const cs = getComputedStyle(e); if(cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
                 const b = e.getBoundingClientRect(); return b.width > window.innerWidth * 0.6 && b.height > window.innerHeight * 0.5;
             });
+            // Stand 500 (Durchsicht "Blinken"): Auch ein Reiter (Pruefung, Gruppe, Fortschritt, Mehr) liegt ueber der
+            // Startseite. Dahinter liefen Majas Visier-Glanz, die Lampe, die Wellen und der Funkelstern weiter.
+            // Drei Punkte der Startkarte abtasten: liegt ueberall etwas Fremdes obenauf, ruht die Startseite.
+            if(!ruht){
+                try{
+                    const r = h.getBoundingClientRect(), W = window.innerWidth, Hh = window.innerHeight;
+                    const y = Math.max(4, Math.min(Hh - 4, (Math.max(0, r.top) + Math.min(Hh, r.bottom)) / 2));
+                    ruht = [0.2, 0.5, 0.8].every(f => {
+                        const o = D.elementFromPoint(Math.max(2, Math.min(W - 2, r.left + r.width * f)), y);
+                        return !!o && !h.contains(o) && !o.contains(h) && !(o.closest && o.closest('#roboHelfer, #appAstro, #appAstroBlase'));
+                    });
+                }catch(e){}
+            }
             H.classList.toggle('start-ruht', ruht);
         });
         // Lern-Modus-Schalter rechts (25.10.2026)
@@ -66137,7 +66215,11 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         setTimeout(() => {
             if(formel.seite !== seite) return;
             const d = formelBild(seite, px);
-            if(d){ bild.src = d; bild.style.display = ''; if(hinweis) hinweis.textContent = ''; }
+            // Stand 499: erst fertig entschluesseln, dann tauschen - sonst steht einen Augenblick ein leeres Blatt da
+            if(d){
+                const zeigen = () => { if(formel.seite !== seite) return; bild.src = d; bild.style.display = ''; if(hinweis) hinweis.textContent = ''; };
+                try{ const vor = new Image(); vor.src = d; if(vor.decode && bild.getAttribute('src')) vor.decode().then(zeigen, zeigen); else zeigen(); }catch(e){ zeigen(); }
+            }
             else{ bild.removeAttribute('src'); bild.style.display = 'none'; if(hinweis) hinweis.textContent = 'Die Seite lässt sich gerade nicht zeichnen. Bitte noch einmal versuchen.'; }
         }, 0);
     }
