@@ -13,9 +13,15 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 500 · 12.11.2026
+Stand 501 · 12.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 501 (12.11.2026)
+
+### Behoben
+- Verlauf in der App-Ansicht am PC: Die Balken reichten nur bis zur Mitte. Dietmar (Bild vom Verlauf-Fenster, 97 Runden): „Die grünen Balken hören in der Desktop-Version in der Hälfte von dem Bild auf.“ Gezeigt wurden immer die letzten 12 Runden, je Balken höchstens 26 Punkte breit; am Handy füllt das die Breite, im 780 Punkte breiten PC-Fenster nur die Hälfte (gemessen: 289 von 608 Punkten frei). Auf die Frage „mehr Runden zeigen oder die 12 Balken breiter machen?“ wählte er: mehr Runden zeigen. Jetzt stehen so viele der letzten Runden da, wie in die Breite passen (`kurveEinpassen()`, mindestens 12, höchstens 60): am PC 23 statt 12 (je 25,5 Punkte breit, rechts bündig), am Handy im Hochformat weiter 12. Bei geänderter Fensterbreite und beim Drehen des Handys wird neu gezählt. Wer weniger Runden hat, als hineinpassen, sieht wie bisher nur seine Runden von links. Die klassische PC-Ansicht hat dieses Fenster nicht.
+- In der Web-Fassung steht jetzt auch die Korrektur der Frage NH305 („Bei welcher Ausbreitungsart“, Leerzeichen fehlte): Sie ist seit dem 11.11. bei GitHub, war in `trainer-cloud-2.500.zip` aber noch nicht enthalten, weil die damalige Bauumgebung einen älteren Abzug von `fragen.json` benutzte (444168 statt 444169 Bytes).
 
 ## Stand 500 (12.11.2026)
 

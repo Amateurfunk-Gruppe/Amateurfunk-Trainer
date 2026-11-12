@@ -26491,7 +26491,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 500, datum: '12.11.2026' };
+const TRAINER_STAND = { nr: 501, datum: '12.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -65479,6 +65479,39 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
     const zeile = (tat, farbe, icon, titel, unter, rechts) => '<button type="button" class="aw-zeile" data-tat="' + tat + '"><span class="ah-ico ' + farbe + '"><i class="fas ' + icon + '"></i></span>'
         + '<span class="aw-zt"><b>' + titel + '</b><small>' + unter + '</small></span>' + (rechts || '<i class="fas fa-chevron-right aw-pf" aria-hidden="true"></i>') + '</button>';
 
+    // Stand 501 - Dietmar (App-Ansicht am PC, Verlauf): "Die gruenen Balken hoeren in der Desktop-Version in der
+    // Haelfte von dem Bild auf." Es waren immer die letzten 12 Runden, je Balken hoechstens 26 Punkte breit - am
+    // Handy fuellt das die Breite, im 780 Punkte breiten PC-Fenster nur die Haelfte. Seine Wahl: mehr Runden zeigen.
+    // Jetzt so viele der letzten Runden, wie in die Breite passen (mindestens 12 wie bisher, hoechstens 60).
+    // Gezeichnet wird zuerst mit 12 (das Blatt ist beim Zeichnen noch unsichtbar und hat keine Breite),
+    // kurveEinpassen() fuellt auf, sobald es sichtbar ist, und bei geaenderter Fensterbreite.
+    const VERLAUF_BALKEN = 12, VERLAUF_BALKEN_MAX = 60;
+    const verlaufProzent = e => e.total ? Math.round(100 * e.correct / e.total) : 0;
+    const kurveHtml = (h, n) => h.slice(-n).map((e, i) => '<i class="' + esc(e.status || '') + '" style="--h:' + Math.max(5, verlaufProzent(e)) + '%;--n:' + i + '"></i>').join('');
+    function kurveEinpassen(){
+        const k = D.querySelector('#appWerkBlatt .aw-kurve');
+        if(!k || !k.firstElementChild) return;
+        const h = verlaufDaten();
+        if(h.length <= VERLAUF_BALKEN) return;
+        // Massstab messen (das Blatt kann verkleinert sein): ein 100 Punkte breiter Fuehler in derselben Flaeche
+        const mess = D.createElement('span');
+        mess.style.cssText = 'position:absolute;visibility:hidden;width:100px;height:0;margin:0;padding:0;border:0';
+        k.appendChild(mess);
+        const f = mess.getBoundingClientRect().width / 100, b = k.getBoundingClientRect().width;
+        k.removeChild(mess);
+        if(!(f > 0) || !(b > 0)) return;
+        const cs = getComputedStyle(k), z = v => parseFloat(v) || 0, luecke = z(cs.columnGap);
+        const innen = b / f - z(cs.paddingLeft) - z(cs.paddingRight) - z(cs.borderLeftWidth) - z(cs.borderRightWidth);
+        const breit = z(getComputedStyle(k.firstElementChild).maxWidth) || 26;
+        // aufrunden: der letzte Balken passt gerade nicht mehr ganz - dann werden alle etwas schmaler und schliessen rechts buendig ab (wie am Handy: 12 Balken zu 23,8)
+        const n = Math.min(VERLAUF_BALKEN_MAX, h.length, Math.max(VERLAUF_BALKEN, Math.ceil((innen + luecke - 0.5) / (breit + luecke))));
+        if(n !== k.children.length) k.innerHTML = kurveHtml(h, n);
+    }
+    let kurveUhr = 0;
+    window.addEventListener('resize', () => {
+        if(!werk.offen || werk.art !== 'verlauf') return;
+        clearTimeout(kurveUhr); kurveUhr = setTimeout(() => tu(kurveEinpassen), 150);
+    });
     function blattVerlauf(){
         const h = verlaufDaten();
         if(!h.length) return '<div class="aw-leer"><span class="ah-ico blau"><i class="fas fa-chart-line"></i></span><b>Noch keine Runde</b>'
@@ -65486,10 +65519,10 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
             + '<button type="button" class="aw-knopf" data-tat="los"><i class="fas fa-play"></i> Runde starten</button>';
         let r = 0, g = 0, ok = 0;
         h.forEach(e => { r += +e.correct || 0; g += +e.total || 0; if(e.status === 'pass') ok++; });
-        const pz = e => e.total ? Math.round(100 * e.correct / e.total) : 0;
+        const pz = verlaufProzent;
         let html = '<div class="aw-chips3"><span><b>' + h.length + '</b>' + (h.length === 1 ? 'Runde' : 'Runden') + '</span><span><b>' + (g ? Math.round(100 * r / g) : 0) + ' %</b>im Schnitt</span>'
           + '<span><b>' + ok + '</b>bestanden</span></div>'
-          + '<div class="aw-kurve" aria-hidden="true">' + h.slice(-12).map((e, i) => '<i class="' + esc(e.status || '') + '" style="--h:' + Math.max(5, pz(e)) + '%;--n:' + i + '"></i>').join('') + '</div>'
+          + '<div class="aw-kurve" aria-hidden="true">' + kurveHtml(h, VERLAUF_BALKEN) + '</div>'
           + '<div class="aw-liste">';
         for(let i = h.length - 1; i >= 0; i--){
             const e = h[i], st = e.status === 'pass' ? 'pass' : e.status === 'fail' ? 'fail' : 'grauzone';
@@ -65649,6 +65682,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let html = '';
         tu(() => { html = bauer ? bauer() : ''; });
         $('awInhalt').innerHTML = html;
+        if(art === 'verlauf') tu(kurveEinpassen);   // Stand 501: Balken bis zum Rand (wirkt, sobald das Blatt sichtbar ist)
         let unter = '';
         if(art === 'hilfe'){
             // Dietmar (01.10.2026): "Was haeltst du davon, wenn wir da reinschreiben: Hier hilft dir der DARC oder 50 Ohm?"
@@ -65715,6 +65749,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         if(vs) sprechblase(erstes ? b.erklaer : zufall(b.satz()), true); else $('awSprech').textContent = '';
         werkBlatt.classList.remove('offen', 'zu'); void werkBlatt.offsetWidth;
         werkBlatt.classList.add('offen');
+        if(art === 'verlauf') tu(kurveEinpassen);   // Stand 501: erst jetzt hat das Blatt eine Breite
         $('awRolle').scrollTop = 0;
         if(robo.da && robo.modus !== 'tour') tu(() => roboHeim(true));   // nie zwei Funkis
         if(!vs) return;
