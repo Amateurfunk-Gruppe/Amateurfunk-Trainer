@@ -10407,6 +10407,61 @@ html:not(#h1):not(#h2) body:not(#h3).dark #formelModal #formelKopf.fz-schwebe:no
 html:not(#h1):not(#h2) body:not(#h3) #formelModal #formelKopf .fz-knopf:not(#h4):not(#h5){width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;max-width:none;border-radius:50%!important;background:#fff!important;border:1px solid #aeb9c7!important;color:#0f2745!important;padding:0!important;box-shadow:0 3px 12px rgba(0,0,0,.35)!important}
 html:not(#h1):not(#h2) body:not(#h3) #formelModal #formelKopf .fz-extern:not(#h4):not(#h5){width:auto!important;border-radius:20px!important;padding:0 14px!important}
 </style>
+<style id="formelMaus502">
+/* Stand 502 (13.11.2026) - Dietmar zum Formelblatt am PC: "kann man das so einrichten, das vergrösssern auch mit dem Mausrad von dem Blatt kommt?",
+   "Beim vergrössern mit + springt das Blatt auf eine andere Seite.", "Mit Strg und Mausrad ist es das gleiche."
+   Das Springen macht der PDF-Betrachter des Browsers (Edge) selbst; die Seite bekommt dort weder Mausrad noch Klicks mit.
+   Darum zeigt der PC das Blatt jetzt als Bild mit eigenem Vergroessern: Mausrad vergroessert an der Stelle des Zeigers, Plus und Minus,
+   mit gedrueckter Maustaste verschieben. Seine frueheren Vorgaben bleiben erfuellt ("Es muss das PDF bleiben", "Die Werkzeuge zum Markieren
+   und Zeichnen muessen drin bleiben"): der Umschalter in der Griffleiste holt das PDF mit Stift mit einem Klick zurueck, die Wahl wird gemerkt.
+   Handy, Tablet und App bleiben, wie sie waren. */
+#formelModal .fz-art{display:none;position:absolute;left:12px;top:2px;z-index:6;gap:0;align-items:center}
+#formelModal.fz-wahl .fz-art{display:inline-flex}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal .fz-art .fz-artk:not(#h4):not(#h5){height:22px!important;min-height:0!important;min-width:0!important;width:auto!important;margin:0!important;padding:0 11px!important;font-size:.74rem!important;font-weight:700!important;line-height:1!important;letter-spacing:0!important;text-transform:none!important;color:#0f2745!important;background:#fff!important;border:1px solid #aeb9c7!important;border-radius:0!important;box-shadow:none!important;cursor:pointer;white-space:nowrap;transform:none!important;filter:none!important;opacity:1!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal .fz-art .fz-artk:first-child:not(#h4):not(#h5){border-radius:11px 0 0 11px!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal .fz-art .fz-artk:last-child:not(#h4):not(#h5){border-radius:0 11px 11px 0!important;border-left:0!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal .fz-art .fz-artk:hover:not(#h4):not(#h5){background:#f3f6fa!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal .fz-art .fz-artk[aria-pressed="true"]:not(#h4):not(#h5){background:#0f2745!important;border-color:#0f2745!important;color:#fff!important}
+#formelWebLeiste .fw-nurmaus{display:none}
+/* Dietmar (13.11.2026): "ich möchte Markieren und die Buttons zum blättern oben behalten" - am PC liegt die Leiste oben wie die des
+   PDF-Betrachters: links Hand, Stift, Textmarker, Radierer, alles loeschen; in der Mitte Blaettern; rechts Verkleinern, Stufe, Vergroessern. */
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste:not(#h4):not(#h5){position:static!important;z-index:auto!important;transform:none!important;left:auto!important;bottom:auto!important;width:100%!important;box-sizing:border-box!important;flex:0 0 auto;flex-wrap:nowrap;justify-content:center;gap:5px!important;padding:5px 58px 5px 10px!important;background:#eef2f7!important;border:0!important;border-bottom:1px solid #c5d0de!important;border-radius:0!important;box-shadow:none!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-gruppe:not(#h4):not(#h5){display:inline-flex!important;align-items:center;gap:4px}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-g-werk:not(#h4):not(#h5){order:-1;margin-right:auto}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-g-zoom:not(#h4):not(#h5){margin-left:auto}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-blatt:not(#h4):not(#h5){width:36px!important;height:32px!important;min-width:0!important;min-height:0!important;max-width:none!important;padding:0!important;margin:0!important;border:1px solid #c3cddb!important;border-radius:8px!important;background:#fff!important;color:#0f2745!important;font-size:1rem!important;font-weight:400!important;line-height:1!important;box-shadow:none!important;display:inline-flex!important;align-items:center;justify-content:center;cursor:pointer;transform:none!important;filter:none!important;opacity:1}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-blatt:hover:not(#h4):not(#h5){background:#f3f6fa!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-blatt[aria-pressed="true"]:not(#h4):not(#h5){background:#0f2745!important;border-color:#0f2745!important;color:#fff!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-blatt:disabled:not(#h4):not(#h5){opacity:.35!important;cursor:default}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste .fw-blatt i:not(#h4):not(#h5){color:inherit!important;font-size:.92rem!important;margin:0!important;width:auto!important;height:auto!important;display:inline-block!important;background:none!important}
+html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste #formelWebStand:not(#h4):not(#h5),html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste #formelWebZoom:not(#h4):not(#h5){color:#0f2745!important;font-size:.9rem!important;font-weight:600!important;background:none!important}
+#formelWebZoom{min-width:50px;text-align:center;white-space:nowrap}
+#formelModal.fz-maus #formelWebStand{min-width:104px;text-align:center}
+#formelModal.fz-maus #formelWebRolle{position:relative;cursor:grab}
+#formelModal.fz-maus #formelWebRolle.fw-zieht{cursor:grabbing}
+#formelModal.fz-maus #formelWebRolle.fw-w-stift,#formelModal.fz-maus #formelWebRolle.fw-w-marker{cursor:crosshair}
+#formelModal.fz-maus #formelWebRolle.fw-w-radierer{cursor:cell}
+#formelModal.fz-maus #formelWebBild{aspect-ratio:1117 / 1579;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+#formelModal.fz-maus .fz-extern{display:none!important}
+#formelWebMark{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;mix-blend-mode:multiply;overflow:visible;display:none}
+#formelModal.fz-maus #formelWebMark{display:block}
+#formelWebMark path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#formelWebMark path.stift{stroke:#d81e2c;stroke-width:3.2}
+#formelWebMark path.marker{stroke:#ffe94a;stroke-width:24;stroke-linecap:butt}
+</style>
+<style id="merkAlle502">
+/* Stand 502 - Dietmar (Bild der Handy-Ansicht von "Alle Stolpersteine"): "Wenn das die Ansicht von der App ist, muss da Ordnung rein gebracht werden."
+   Die Knopfzeile hat jetzt eine feste Ordnung: am PC eine Reihe, die Zahl am Ende; am Handy ein Raster mit zwei Spalten -
+   oben "hartnäckigsten üben" über die ganze Breite, darunter "markierte üben" und "Alle markieren" nebeneinander,
+   dann "zu Fehler / Lernbedarf" über die ganze Breite. Die Knöpfe stehen immer da (ohne Markierung ausgegraut). */
+.merk-zeile{margin-top:.6rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.merk-zeile button:disabled{opacity:.45;cursor:default}
+@media (max-width:700px){
+  .merk-zeile{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+  .merk-zeile > button{width:100%;min-width:0;min-height:42px;margin:0!important;justify-content:center;text-align:center;white-space:normal;line-height:1.2}
+  .merk-zeile > .merk-breit{grid-column:1 / -1}
+}
+</style>
 <style id="hilfsmittel450">
 /* Stand 452, Dietmar: "Beim Oeffnen vom Formelblatt moechte ich den Hintergrund besser erkennen koennen." Die Abdunklung war im Polar-Stil rgba(3,6,18,.84) - jetzt nur ein Hauch, die Frage dahinter bleibt lesbar. */
 html:not(#h1):not(#h2) body:not(#h3).dark #formelModal:not(#h4):not(#h5){background:rgba(8,18,34,.10)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -15374,6 +15429,11 @@ function alsGelerntMarkieren(qId, gelernt){
         masteryData[qId].gemeistertAm = Date.now();
         masteryData[qId].wiederholStufe = masteryData[qId].wiederholStufe || 0;
         masteryData[qId].vonHand = true;          // nur zur Nachvollziehbarkeit
+        // Stand 503 - Dietmar: "Markiere ich eine Frage als gelernt ist sie in Fehler üben und Lernbedarf raus."
+        try{ const fi = errorList.indexOf(qId); if(fi !== -1){ errorList.splice(fi, 1); saveErrors(); } }catch(e){}
+        try{ if(difficultQuestions && difficultQuestions[qId]){ delete difficultQuestions[qId]; saveDifficult(); } }catch(e){}
+        try{ updateErrorBadge(); }catch(e){}
+        try{ updateDifficultBadge(); }catch(e){}
     } else {
         masteryData[qId].streak = 0;
         masteryData[qId].mastered = false;
@@ -15530,6 +15590,43 @@ function fragenPasstInsFenster(){
     return ((window.innerHeight || 0) - fuss.getBoundingClientRect().bottom) >= FRAGEN_LUFT;
 }
 
+// ============================================================================
+//  DIE SCHRIFTSTUFE STEHT STILL, SOLANGE DIESELBE FRAGE DASTEHT   (Stand 503)
+// ----------------------------------------------------------------------------
+//  Dietmar am 13.11.2026, mit Video (NB605, App-Ansicht am PC): "beim anklicken
+//  einer Frage zuckt das Bild. Kann man das ändern?" Im Video werden die
+//  Antworten nach dem Klick fuer vier Bilder (130 ms) kleiner und dann wieder
+//  gross. Nachgestellt und je Bild mitgeschrieben (pruef/zuck502.js): Der Klick
+//  zeichnet die Frage neu, und dabei wurde die Schriftstufe jedes Mal von oben
+//  neu ausprobiert - gemessen mitten im Zeichnen, bevor die App-Ansicht ihre
+//  Zeilen unter den Antworten angefuegt hat. Die Messung stimmte deshalb nicht,
+//  und 160 ms spaeter (Nachziehen) oder 120 ms spaeter (Fenster-Ereignis der
+//  App-Ansicht) wurde sie berichtigt: gross -> mittel -> gross oder umgekehrt.
+//  Jetzt:
+//   1. Die Stufe wird je Frage und Fenstergroesse einmal entschieden und gemerkt.
+//      Wird dieselbe Frage neu gezeichnet (Antwort angeklickt), bleibt sie.
+//   2. Die eingepasste Groesse von Frage und Antworten (frageEinpassen) wird noch
+//      im selben Zug nach dem Zeichnen wiederhergestellt, bevor der Browser malt.
+// ============================================================================
+let fragenStufeMerk = null;      // { k: Schluessel aus Frage und Fenster, stufe: 'q-gross' | 'q-mittel' | '' }
+function fragenStufeSchluessel(){
+    try{
+        const q = (typeof currentQuestions !== 'undefined' && currentQuestions) ? currentQuestions[currentIndex] : null;
+        if(!q || !q.id) return '';
+        const H = document.documentElement;
+        return q.id + '|' + (window.innerWidth || 0) + 'x' + (window.innerHeight || 0) + '|'
+             + String(getComputedStyle(H).getPropertyValue('--afu-zoom') || '').trim() + '|'
+             + (H.classList.contains('pc-runde') ? 'r' : '') + (H.classList.contains('pc-gross') ? 'g' : '');
+    }catch(e){ return ''; }
+}
+function fragenStufeJetzt(){
+    const c = document.body.classList;
+    return c.contains('q-gross') ? 'q-gross' : (c.contains('q-mittel') ? 'q-mittel' : '');
+}
+function fragenStufeMerken(){
+    const k = fragenStufeSchluessel();
+    if(k) fragenStufeMerk = { k: k, stufe: fragenStufeJetzt() };
+}
 function fragenGroesseAnpassen(){
     try{
         const leiste = document.querySelector('.nav-buttons');
@@ -15537,12 +15634,22 @@ function fragenGroesseAnpassen(){
         if(!leiste || !bereich) return;
         // Nur waehrend einer Runde. In der Hauptansicht gibt es keine Frage.
         if(!document.body.classList.contains('runde-laeuft')) return;
+        // Dieselbe Frage im selben Fenster: die gemerkte Stufe bleibt stehen (Stand 503)
+        const k = fragenStufeSchluessel();
+        if(k && fragenStufeMerk && fragenStufeMerk.k === k){
+            if(fragenStufeJetzt() !== fragenStufeMerk.stufe){
+                document.body.classList.remove('q-gross', 'q-mittel');
+                if(fragenStufeMerk.stufe) document.body.classList.add(fragenStufeMerk.stufe);
+            }
+            return;
+        }
         for(const stufe of FRAGEN_STUFEN){
             document.body.classList.remove('q-gross', 'q-mittel');
             if(stufe) document.body.classList.add(stufe);
-            if(fragenPasstInsFenster()) return;
+            if(fragenPasstInsFenster()) break;
         }
         // Keine passt: Es bleibt bei der kleinsten, dann wird gerollt.
+        fragenStufeMerken();
     }catch(e){ /* die Groesse ist nie ein Grund fuer einen Fehler */ }
 }
 window.fragenGroesseAnpassen = fragenGroesseAnpassen;
@@ -15567,9 +15674,10 @@ function fragenGroesseNachziehen(){
         if(document.body.classList.contains('q-gross')){
             document.body.classList.remove('q-gross');
             document.body.classList.add('q-mittel');
-            if(fragenPasstInsFenster()) return;
+            if(fragenPasstInsFenster()){ fragenStufeMerken(); return; }
         }
         document.body.classList.remove('q-mittel');
+        fragenStufeMerken();      // Stand 503: die kleinere Stufe gilt fuer diese Frage weiter
     }catch(e){}
 }
 window.fragenGroesseNachziehen = fragenGroesseNachziehen;
@@ -23443,13 +23551,29 @@ function reifeChance(id, schnitt){
 //  etwa drei Pruefungsteile (75 Fragen), die echten Ergebnisse wiegen mit ihren Fragen dagegen. Alle Wahrscheinlichkeiten
 //  des Teils werden gleichmaessig zum gemischten Wert verschoben.
 // ================================================================
+// Stand 502 - Dietmar (13.11.2026, Bild "Alle zehn Prüfungen bestanden", 10 Pr. je Teil): "Wenn man über 10 ist, soll es auf 20
+// weiter gehen. Danach auf 30. Mehr als 30 ist blödsinn" - und auf Nachfrage: "Alle 10 Prüfungen bestanden, ändert sich zu
+// Alle 20 Prüfungen bestanden". Die Karte hat deshalb drei Stufen, nach der Zahl der gemachten Prüfungen je Teil:
+// bis 10 Prüfungen "von 10", ab der 11. "von 20", ab der 21. "von 30" - mehr nicht. Gerechnet wird je Teil mit
+// den letzten 10, 20 oder 30 Prüfungen.
+function reifeStufe(){
+    try{
+        if(typeof reifeListe !== 'function' || typeof pruefZielBuchstabe !== 'function') return 10;
+        const b = pruefZielBuchstabe(), alle = reifeListe(), je = {};
+        alle.forEach(x => { if(x && x.k === b && x.t) je[x.t] = (je[x.t] || 0) + 1; });
+        const n = Object.keys(je).reduce((a, t) => Math.max(a, je[t]), 0);
+        return n > 20 ? 30 : (n > 10 ? 20 : 10);
+    }catch(e){ return 10; }
+}
+window.reifeStufe = reifeStufe;
+// Geschrieben wird die Zahl als Ziffer ("Alle 20"), wie Dietmar es nennt - "Alle zwanzig" brach am Handy in die zweite Zeile um.
 function reifeSimErgebnisse(teil){
     try{
         const name = (typeof REALISTIC_PART_META !== 'undefined' && REALISTIC_PART_META[teil]) ? REALISTIC_PART_META[teil].name : null;
         if(!name || typeof history === 'undefined' || !history || typeof currentUser === 'undefined') return null;
         const h = Array.isArray(history[currentUser]) ? history[currentUser] : [];
         const es = h.filter(e => e && (e.part === 'Realistisch ' + name || e.part === 'Gruppenprüfung ' + name)
-                                  && (e.total || 0) >= 20 && typeof e.correct === 'number').slice(-10);
+                                  && (e.total || 0) >= 20 && typeof e.correct === 'number').slice(-reifeStufe());
         if(es.length < 2) return null;
         let r = 0, t = 0; es.forEach(e => { r += e.correct; t += e.total; });
         return t > 0 ? { n: es.length, fragen: t, quote: r / t } : null;
@@ -23714,12 +23838,15 @@ function reifeVonZehn(){
         }
 
         const anteil = bestanden / REIFE_DURCHGAENGE;
+        const stufe = reifeStufe();
         return {
             anteil: anteil,
             // Gerundet, aber ehrlich an den Rändern: 9,6 von 10 darf nicht
             // zu "10 von 10" werden, solange es eben nicht immer klappt.
             simN: teile.reduce((a, t) => a + ((reifeSimErgebnisse(t) || {}).n || 0), 0),
-            vonZehn: (anteil >= 0.995) ? 10 : (anteil <= 0.005 ? 0 : Math.max(1, Math.min(9, Math.round(anteil * 10)))),
+            // Stand 502: die Skala ist die Stufe (10, 20 oder 30). "Alle" gilt wie bisher ab 99,5 %.
+            von: stufe,
+            vonZehn: (anteil >= 0.995) ? stufe : (anteil <= 0.005 ? 0 : Math.max(1, Math.min(stufe - 1, Math.round(anteil * stufe)))),
             teile: teile.length
         };
     }catch(e){ console.error('[Reife] vonZehn', e); return null; }
@@ -23888,6 +24015,125 @@ function alleStolpersteine(){
 }
 window.alleStolpersteine = alleStolpersteine;
 
+// ============================================================================
+//  ALLE MARKIEREN - UND AUF WUNSCH UNTER FEHLER / LERNBEDARF       (Stand 502)
+// ----------------------------------------------------------------------------
+//  Dietmar am 13.11.2026, mit Bildern von "Alle Stolpersteine" und "Woran es
+//  liegt": "Ich möchte hier unbedingt die Option alle zu Markieren ... ggf. auch
+//  zusätzlich unter Fehler / Lernbedarf aufzunehmen. Das sind die Fragen, die ich
+//  unbedingt lernen muss."
+//  In beiden Fenstern stehen deshalb zwei Knöpfe:
+//   - "Alle N markieren" setzt das Herz an jede Frage der Liste (ein Speicher-
+//     vorgang). Sind alle markiert, nimmt derselbe Knopf die Herzen wieder weg -
+//     nur die dieser Liste, andere Fragen der Merkliste bleiben.
+//   - "N markierte zu Fehler / Lernbedarf" nimmt die markierten Fragen dieser
+//     Liste in die Fehlerliste und in den Lernbedarf auf - wie "Übernehmen" im
+//     Verlauf: kein zusätzlicher Fehler wird gezählt; was als gelernt galt, kommt
+//     wieder zum Üben dran. Davor steht eine Rückfrage mit den Zahlen.
+// ----------------------------------------------------------------------------
+function merkAlleIds(wo){
+    try{
+        if(wo === 'stolper') return alleStolpersteine().map(x => x.q.id);
+        return Array.from(new Set(Array.from(document.querySelectorAll('#befundeListe [id^="befundZeile_"]')).map(e => e.id.slice(12)).filter(Boolean)));
+    }catch(e){ return []; }
+}
+function merkAlleKnoepfe(wo, ids){
+    try{
+        const n = ids.length;
+        if(!n || typeof isFavorite !== 'function') return '';
+        const mark = ids.filter(id => isFavorite(id)).length;
+        const stil = 'style="font-size:0.78rem; padding:5px 12px;"';
+        return '<button type="button" class="btn btn-outline merk-alle' + (wo === 'befund' ? ' merk-breit' : '') + '" ' + stil + ' onclick="merkAlleSchalten(\'' + wo + '\')" '
+             +   'title="' + (mark === n ? 'Das Herz bei allen Fragen dieser Liste wieder wegnehmen' : 'Das Herz an alle Fragen dieser Liste setzen (Merkliste)') + '">'
+             +   '<i class="fas fa-heart" style="color:#b01238;"></i> ' + (mark === n ? 'Alle abwählen' : 'Alle ' + n + ' markieren') + '</button>'
+             + '<button type="button" class="btn btn-outline merk-fehler merk-breit" ' + stil + (mark ? '' : ' disabled') + ' onclick="merkZuFehlern(\'' + wo + '\')" '
+             +   'title="Die markierten Fragen dieser Liste zusätzlich in die Fehlerliste und in den Lernbedarf aufnehmen">'
+             +   '<i class="fas fa-list-check"></i> ' + (mark ? mark + ' markierte' : 'Markierte') + ' zu Fehler / Lernbedarf</button>';
+        // Dietmar (13.11.2026): "Das 109 von 109 markiert wird nicht benötigt. In den Buttons steht auch noch mal die Zahl." - die Zeile entfaellt.
+    }catch(e){ return ''; }
+}
+// Die Knopfzeile von "Alle Stolpersteine" - eine Stelle fuer den ersten Aufbau und fuer das Nachziehen
+function stolperKnopfzeile(liste){
+    const offen = liste.filter(x => !x.sitzt).length, ids = liste.map(x => x.q.id);
+    const markiert = ids.filter(id => isFavorite(id)).length;
+    const stil = 'style="font-size:0.78rem; padding:5px 12px;"';
+    return (offen
+            ? '<button type="button" class="btn btn-primary merk-breit" ' + stil + ' onclick="stolpersteineUeben()">'
+              + '<i class="fas fa-play"></i> Die ' + Math.min(offen, 30) + ' hartnäckigsten üben</button>'
+            : '')
+         + '<button type="button" class="btn btn-outline merk-ueben" ' + stil + (markiert ? '' : ' disabled') + ' onclick="stolpersteineMarkierteUeben()">'
+         +   '<i class="fas fa-heart" style="color:#b01238;"></i> ' + (markiert ? markiert + ' markierte üben' : 'Markierte üben') + '</button>'
+         + merkAlleKnoepfe('stolper', ids);
+}
+// Viele Herzen auf einmal: ein Speichervorgang statt einer je Frage
+function merklisteViele(ids, an){
+    if(!Array.isArray(favoriteQuestions)) favoriteQuestions = [];
+    if(an) ids.forEach(id => { if(favoriteQuestions.indexOf(id) === -1) favoriteQuestions.push(id); });
+    else { const weg = new Set(ids); favoriteQuestions = favoriteQuestions.filter(id => !weg.has(id)); }
+    const fehler = saveFavorites();
+    if(fehler){ try{ if(typeof markeHinweisZeigen === 'function') markeHinweisZeigen('Merkliste konnte nicht gespeichert werden: ' + fehler); }catch(e){} }
+    try{ renderSearchResults(); }catch(e){}
+    try{ updateQuestionFavButton(); }catch(e){}
+}
+// Beide Fenster neu zeichnen, wenn sie offen sind - die Liste bleibt an ihrer Stelle stehen
+function merkFensterNeu(){
+    [['stolperModal', 'stolperListe', () => stolpersteineOeffnen()], ['befundeModal', 'befundeListe', () => befundeOeffnen()]].forEach(([mId, lId, zeichnen]) => {
+        try{
+            const m = document.getElementById(mId);
+            if(!m || m.style.display === 'none') return;
+            const l = document.getElementById(lId), stand = l ? l.scrollTop : 0;
+            zeichnen();
+            const l2 = document.getElementById(lId);
+            if(l2) l2.scrollTop = stand;
+        }catch(e){}
+    });
+}
+function merkAlleSchalten(wo){
+    try{
+        const ids = merkAlleIds(wo);
+        if(!ids.length) return;
+        merklisteViele(ids, !ids.every(id => isFavorite(id)));
+        merkFensterNeu();
+    }catch(e){ console.error('[Merkliste] alle', e); }
+}
+window.merkAlleSchalten = merkAlleSchalten;
+function merkZuFehlern(wo){
+    try{
+        const ids = merkAlleIds(wo).filter(id => isFavorite(id));
+        if(!ids.length) return;
+        const gelernt = ids.filter(id => masteryData[id] && masteryData[id].mastered).length;
+        const schon = ids.filter(id => errorList.includes(id) && difficultQuestions[id]).length;
+        const los = () => {
+            try{
+                ids.forEach(id => {
+                    if(!errorList.includes(id)) errorList.push(id);
+                    if(!difficultQuestions[id]) difficultQuestions[id] = { wrongCount: 1, correctStreak: 0, lastWrong: new Date().toISOString() };
+                    // Eine gelernte Frage kommt wieder zum Ueben - sonst blendete "Gelernte ausblenden" sie gleich wieder aus
+                    const m = masteryData[id];
+                    if(m && m.mastered){ m.mastered = false; m.streak = 0; m.wiederholStufe = 0; m.gemeistertAm = null; }
+                });
+                saveErrors(); saveDifficult(); saveMastery();
+                try{ updateErrorBadge(); }catch(x){}
+                try{ updateDifficultBadge(); }catch(x){}
+                try{ if(typeof updateMasteryDisplay === 'function') updateMasteryDisplay(); }catch(x){}
+                merkFensterNeu();
+                try{ if(typeof markeHinweisZeigen === 'function') markeHinweisZeigen(ids.length + (ids.length === 1 ? ' Frage steht' : ' Fragen stehen') + ' jetzt unter Fehler und im Lernbedarf.'); }catch(x){}
+            }catch(x){ if(window.showAppAlert) showAppAlert('Aufnehmen fehlgeschlagen: ' + x.message); }
+        };
+        const frage = ids.length + (ids.length === 1 ? ' markierte Frage' : ' markierte Fragen') + ' unter Fehler und Lernbedarf aufnehmen?';
+        const details = 'Sie stehen danach in der Fehlerliste und im Lernbedarf. Es wird kein zusätzlicher Fehler gezählt.'
+            + (gelernt ? '<br><br><b>' + gelernt + '</b> davon ' + (gelernt === 1 ? 'gilt' : 'gelten') + ' heute als gelernt. '
+                         + (gelernt === 1 ? 'Sie kommt' : 'Sie kommen') + ' wieder zum Üben dran und ' + (gelernt === 1 ? 'zählt' : 'zählen') + ' bis dahin nicht mehr als gelernt.' : '')
+            + (schon ? '<br><br>' + schon + (schon === 1 ? ' steht' : ' stehen') + ' schon in beiden Listen.' : '');
+        if(typeof window.showAppConfirm === 'function'){
+            // Die Rueckfrage muss vor dem offenen Fenster liegen (gleiche Ebene - das spaetere Element gewinnt)
+            try{ const g = document.getElementById('genericConfirmModal'); if(g && g.parentNode) g.parentNode.appendChild(g); }catch(x){}
+            window.showAppConfirm(frage, los, { title: 'Fehler / Lernbedarf', icon: 'fa-list-check', details: details, confirmLabel: '<i class="fas fa-plus"></i> Aufnehmen' });
+        } else if(confirm(frage + '\n' + details.replace(/<[^>]*>/g, ' '))) los();
+    }catch(e){ console.error('[Merkliste] zu Fehlern', e); }
+}
+window.merkZuFehlern = merkZuFehlern;
+
 function stolpersteineOeffnen(){
     try{
         const liste = alleStolpersteine();
@@ -23936,22 +24182,7 @@ function stolpersteineOeffnen(){
                 : '<br>Sobald du eine Frage falsch beantwortest, steht hier künftig auch der Satz, '
                   + 'warum gerade diese Antwort falsch war.')
               + '</div>'
-              + '<div style="margin-top:0.6rem; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">'
-              + (offen
-                ? '<button type="button" class="btn btn-primary" '
-                  + 'style="font-size:0.78rem; padding:5px 12px;" onclick="stolpersteineUeben()">'
-                  + '<i class="fas fa-play"></i> Die ' + Math.min(offen, 30) + ' hartnäckigsten üben</button>'
-                : '')
-              + (markiert
-                ? '<button type="button" class="btn btn-outline" '
-                  + 'style="font-size:0.78rem; padding:5px 12px;" onclick="stolpersteineMarkierteUeben()">'
-                  + '<i class="fas fa-heart" style="color:#b01238;"></i> ' + markiert
-                  + ' markierte üben</button>'
-                : '')
-              + (markiert
-                ? '<span style="font-size:0.74rem; color:var(--muted);">'
-                  + markiert + ' von ' + liste.length + ' markiert</span>'
-                : '')
+              + '<div class="merk-zeile" id="stolperKnoepfe">' + stolperKnopfzeile(liste)
               + '</div>'
             : '<div style="font-size:0.82rem; color:var(--muted);">Noch keine falsche Antwort erfasst.</div>';
 
@@ -24080,23 +24311,10 @@ function stolpersteinKopfNachziehen(){
         // Der einfachste sichere Weg: den Kopf neu bauen. Er ist klein,
         // enthält keine Bildlaufleiste und kein Eingabefeld - dort stört
         // ein Neuaufbau niemanden.
-        const merker = kopf.querySelector('div:last-child');
+        const merker = document.getElementById('stolperKnoepfe');
         if(!merker) return;
-        const offen = liste.filter(x => !x.sitzt).length;
-        merker.innerHTML =
-              (offen
-                ? '<button type="button" class="btn btn-primary" '
-                  + 'style="font-size:0.78rem; padding:5px 12px;" onclick="stolpersteineUeben()">'
-                  + '<i class="fas fa-play"></i> Die ' + Math.min(offen, 30) + ' hartnäckigsten üben</button>'
-                : '')
-            + (markiert
-                ? '<button type="button" class="btn btn-outline" '
-                  + 'style="font-size:0.78rem; padding:5px 12px;" onclick="stolpersteineMarkierteUeben()">'
-                  + '<i class="fas fa-heart" style="color:#b01238;"></i> ' + markiert
-                  + ' markierte üben</button>'
-                  + '<span style="font-size:0.74rem; color:var(--muted);">'
-                  + markiert + ' von ' + liste.length + ' markiert</span>'
-                : '');
+        merker.innerHTML = stolperKnopfzeile(liste);
+        befundeKopfNachziehen();
     }catch(e){ console.error('[Stolpersteine] Kopf', e); }
 }
 
@@ -24666,7 +24884,8 @@ function reifeAktualisieren(){
                     + 'In der Prüfung muss jeder Teil einzeln bestanden werden; eine Gesamtaussage '
                     + 'ohne einen davon wäre geraten.</div>';
             } else if(z){
-                const wort = z.vonZehn === 10 ? 'Alle zehn'
+                const zVon = z.von || 10;
+                const wort = z.vonZehn === zVon ? 'Alle ' + zVon
                            : (z.vonZehn === 0 ? 'Keine' : z.vonZehn);
                 // Zahl und Balken im selben Farbton - sonst sagt die eine
                 // Haelfte des Kastens etwas anderes als die andere. Die
@@ -24686,7 +24905,7 @@ function reifeAktualisieren(){
                     +   '<span style="font-size:1.25rem; font-weight:800; color:' + farbeZ + '; line-height:1;">'
                     +     wort + '</span>'
                     +   '<span style="font-size:0.9rem; font-weight:600; color:var(--panel-navy);">'
-                    +     (z.vonZehn === 10 ? 'Prüfungen bestanden' : 'von 10 Prüfungen bestanden') + '</span>'
+                    +     (z.vonZehn === zVon ? 'Prüfungen bestanden' : 'von ' + zVon + ' Prüfungen bestanden') + '</span>'
                     +   '<span style="margin-left:auto; font-size:0.8rem; color:' + farbeZ + '; font-weight:600;">'
                     +     satz + '</span>'
                     + '</div>'
@@ -24850,6 +25069,8 @@ function repeatDifficult() {
     if (pool.length===0) { difficultQuestions={}; saveDifficult(); alert('Liste geleert – Fragen nicht gefunden'); return; }
     pool = pool.filter(teilAktiv);
     if (pool.length===0) { if (window.showAppAlert) window.showAppAlert('In den gewählten Prüfungsteilen gibt es gerade keinen Lernbedarf.'); return; }
+    // Stand 503: eine angefangene Lernbedarf-Runde geht genau dort weiter, wo sie unterbrochen wurde
+    if (typeof rundeWeiterOhneFrage === 'function' && rundeWeiterOhneFrage('bedarf')) return;
     pool.sort((a,b)=>{
         const da=difficultQuestions[a.id]||{wrongCount:0,correctStreak:0};
         const db=difficultQuestions[b.id]||{wrongCount:0,correctStreak:0};
@@ -26491,7 +26712,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 501, datum: '12.11.2026' };
+const TRAINER_STAND = { nr: 503, datum: '13.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -29237,13 +29458,26 @@ function formelOeffnen(stelleId){
             +   '<button type="button" class="fz-knopf x-zu" onclick="formelSchliessen()" title="Schließen (Esc)" aria-label="Schließen">&#10005;</button>'
             + '</div>'
             // Stand 465: schmale Griffleiste ueber dem Blatt - das Zeichen rechts oben war zu klein zum Treffen
-            + '<div id="formelGriff" class="fz-leiste" title="Hier mit gedrückter linker Maustaste ziehen, um das Blatt zu verschieben" aria-label="Blatt verschieben"><i></i></div>'
+            + '<div id="formelGriff" class="fz-leiste" title="Hier mit gedrückter linker Maustaste ziehen, um das Blatt zu verschieben" aria-label="Blatt verschieben">'
+            // Stand 502: Umschalter Blatt (Bild mit Mausrad) / PDF mit Stift - nur am PC sichtbar
+            +   '<span id="formelArt" class="fz-art" role="group" aria-label="Ansicht des Blattes">'
+            +     '<button type="button" class="fz-artk" data-art="bild" title="Blatt als Bild: Das Mausrad vergrößert, mit gedrückter Maustaste verschieben">Blatt</button>'
+            +     '<button type="button" class="fz-artk" data-art="pdf" title="PDF im Betrachter des Browsers: mit Suche, Drucken und Stift">PDF mit Stift</button>'
+            +   '</span>'
+            + '<i></i></div>'
             + '<div id="formelBuehne" style="background:#eef2f7; flex:1; min-height:0; display:flex; border-radius:14px; overflow:hidden;">'
             +   '<iframe id="formelPdf" title="Formelsammlung" style="flex:1; width:100%; border:0; background:#fff;"></iframe>'
             + '</div>'
             + '</div>';
         document.body.appendChild(m);
         m.addEventListener('click', e => { if(e.target === m) formelSchliessen(); });
+        m.addEventListener('click', e => {
+            const b = e.target && e.target.closest ? e.target.closest('.fz-artk') : null;
+            if(!b) return;
+            formelArtJetzt = b.dataset.art === 'pdf' ? 'pdf' : 'bild';
+            try{ localStorage.setItem(FORMEL_ART_MERKER, formelArtJetzt); }catch(err){}
+            formelZeichnen();
+        });
         formelZiehbarMachen(m);
     }
     // ZURUECK IN DIE MITTE. Dietmar: "Beim nächsten mal öffen, ist es
@@ -29460,14 +29694,197 @@ function formelGestenAnbringen(rolle, bild, zoomLesen, zoomSetzen){
 window.formelGestenAnbringen = formelGestenAnbringen;
 const FORMEL_WEB = { seite: 0, zoom: 1, von: 3, bis: 22 };
 function formelAppMalt(){ const a = window.AndroidApp; return !!(a && typeof a.pdfSeite === 'function' && typeof a.pdfSeiten === 'function'); }
-function formelBilderNutzen(){
+// Stand 502: am PC (Maus, breites Fenster) ist das Bild mit Mausrad der Normalfall; das PDF mit Stift bleibt waehlbar.
+const FORMEL_ART_MERKER = 'afu_formel_art';
+let formelArtJetzt = '';
+function formelMausGeraet(){
     if(formelAppMalt()) return false;
     try{
-        if(navigator.pdfViewerEnabled === false) return true;
-        if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
-        if((window.innerWidth || 9999) < 820) return true;
+        if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return false;
+        if((window.innerWidth || 9999) < 820) return false;
     }catch(e){}
-    return false;
+    return true;
+}
+function formelPdfMoeglich(){ return formelMausGeraet() && navigator.pdfViewerEnabled !== false; }
+function formelPcArt(){
+    if(!formelArtJetzt){ try{ formelArtJetzt = localStorage.getItem(FORMEL_ART_MERKER) === 'pdf' ? 'pdf' : 'bild'; }catch(e){ formelArtJetzt = 'bild'; } }
+    return formelArtJetzt;
+}
+function formelBilderNutzen(){
+    if(formelAppMalt()) return false;
+    if(!formelPdfMoeglich()) return true;      // Handy, Tablet, schmales Fenster, Browser ohne PDF-Anzeige: wie bisher das Bild
+    return formelPcArt() !== 'pdf';
+}
+function formelMausAn(){ const m = document.getElementById('formelModal'); return !!(m && m.classList.contains('fz-maus')); }
+const FORMEL_BLATT_FORM = 1579 / 1117;          // Hoehe durch Breite der Seitenbilder (A4)
+// Dietmar (13.11.2026, mit Bild: Tabelle fuellt die Breite): "Von Haus aus, gleich etwas grösser wäre auch noch gut" -
+// am PC oeffnet das Blatt mit 120 %, waagerecht mittig; die leeren Seitenraender fallen damit weg. Nicht mehr: auf manchen
+// Blaettern (Blatt 8) beginnt der Text schon bei 10,5 % der Breite - bei 125 % stiesse er an den Fensterrand.
+const FORMEL_PC_START = 1.2;
+const FORMEL_STUFEN = [0.5, 0.67, 0.8, 1, 1.2, 1.5, 2, 2.5, 3, 4];
+function formelMausZoomMin(rolle){
+    // kleinste Stufe: das ganze Blatt ist zu sehen
+    const h = rolle.clientHeight - 2, b = rolle.offsetWidth;
+    if(!(h > 50) || !(b > 50)) return 1;
+    return Math.max(0.3, Math.min(1, Math.floor(1000 * h / (b * FORMEL_BLATT_FORM)) / 1000 - 0.002));
+}
+function formelMausStand(){
+    const z = document.getElementById('formelWebZoom');
+    if(z) z.textContent = Math.round(FORMEL_WEB.zoom * 100) + ' %';
+}
+// Auf die Stufe z bringen; der Punkt unter dem Zeiger (clientX, clientY) bleibt, wo er ist. Ohne Punkt: die Mitte der Flaeche.
+function formelMausZoomen(z, clientX, clientY){
+    const rolle = document.getElementById('formelWebRolle'), bild = document.getElementById('formelWebBild');
+    if(!rolle || !bild) return;
+    z = Math.max(formelMausZoomMin(rolle), Math.min(FORMEL_ZOOM_MAX, Number(z) || 1));
+    if(clientX == null){ const rr = rolle.getBoundingClientRect(); clientX = rr.left + rr.width / 2; clientY = rr.top + rr.height / 2; }
+    const r0 = bild.getBoundingClientRect();
+    const fx = r0.width ? (clientX - r0.left) / r0.width : 0.5, fy = r0.height ? (clientY - r0.top) / r0.height : 0.5;
+    FORMEL_WEB.zoom = z;
+    bild.style.width = (z * 100).toFixed(2) + '%';
+    // gemessen wird in Bildschirmpunkten, gerollt in Punkten der Seite (Anzeigefaktor der PC-Ansicht) - k rechnet um
+    const r1 = bild.getBoundingClientRect(), k = (r1.width / (bild.offsetWidth || 1)) || 1;
+    rolle.scrollLeft += (r1.left + fx * r1.width - clientX) / k;
+    rolle.scrollTop += (r1.top + fy * r1.height - clientY) / k;
+    formelMausStand();
+    formelMarkLage();
+    formelWebScharf();
+}
+// ---- Markieren auf dem Blatt (Stift, Textmarker, Radierer) ----
+// Die Striche liegen als Vektoren ueber dem Bild, gemessen in Bildpunkten des Blattes (1117 x 1579) - sie wachsen beim Vergroessern mit.
+// Gemerkt je Blatt, solange der Trainer offen ist (wie im PDF-Betrachter: nichts wird gespeichert).
+const FORMEL_MARK = {};
+const FORMEL_BLATT_B = 1117, FORMEL_BLATT_H = 1579;
+function formelMarkLage(){
+    const sv = document.getElementById('formelWebMark'), bild = document.getElementById('formelWebBild');
+    if(!sv || !bild) return;
+    sv.style.left = bild.offsetLeft + 'px'; sv.style.top = bild.offsetTop + 'px';
+    sv.style.width = bild.offsetWidth + 'px'; sv.style.height = bild.offsetHeight + 'px';
+}
+function formelMarkPfad(pts){
+    if(pts.length === 1) return 'M' + pts[0][0] + ' ' + pts[0][1] + 'l0.01 0';
+    return pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('');
+}
+function formelMarkZeichnen(){
+    const sv = document.getElementById('formelWebMark');
+    if(!sv) return;
+    formelMarkLage();
+    while(sv.firstChild) sv.removeChild(sv.firstChild);
+    (FORMEL_MARK[FORMEL_WEB.seite] || []).forEach(st => {
+        const pf = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pf.setAttribute('class', st.art === 'marker' ? 'marker' : 'stift');
+        pf.setAttribute('d', formelMarkPfad(st.pts));
+        sv.appendChild(pf);
+        st.pfad = pf;
+    });
+    const leer = document.querySelector('#formelWebLeiste [data-tat="leeren"]');
+    if(leer) leer.disabled = !(FORMEL_MARK[FORMEL_WEB.seite] || []).length;
+}
+function formelWerkSetzen(werk){
+    werk = ['stift', 'marker', 'radierer'].includes(werk) ? werk : 'hand';
+    FORMEL_WEB.werk = werk;
+    document.querySelectorAll('#formelWebLeiste [data-werk]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.werk === werk)));
+    const rolle = document.getElementById('formelWebRolle');
+    if(rolle) ['stift', 'marker', 'radierer'].forEach(w => rolle.classList.toggle('fw-w-' + w, w === werk));
+}
+// Punkt auf dem Blatt (in Bildpunkten) unter einer Bildschirmstelle
+function formelMarkPunkt(bild, x, y){
+    const r = bild.getBoundingClientRect();
+    const fx = Math.max(0, Math.min(1, (x - r.left) / (r.width || 1))), fy = Math.max(0, Math.min(1, (y - r.top) / (r.height || 1)));
+    return [Math.round(fx * FORMEL_BLATT_B * 10) / 10, Math.round(fy * FORMEL_BLATT_H * 10) / 10];
+}
+// Radierer: nimmt den Strich weg, der unter dem Zeiger liegt (mit etwas Spielraum, damit auch der duenne Stift zu treffen ist)
+function formelRadieren(bild, x, y){
+    const liste = FORMEL_MARK[FORMEL_WEB.seite];
+    if(!liste || !liste.length) return;
+    const r = bild.getBoundingClientRect(), p = formelMarkPunkt(bild, x, y), spiel = 8 * FORMEL_BLATT_B / (r.width || FORMEL_BLATT_B);
+    const nah = st => {
+        const grenze = (st.art === 'marker' ? 12 : 1.6) + spiel, pts = st.pts;
+        for(let i = 0; i < pts.length; i++){
+            const a = pts[i], b = pts[i + 1] || a, dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+            const t = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) : 0;
+            if(Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy)) <= grenze) return true;
+        }
+        return false;
+    };
+    for(let i = liste.length - 1; i >= 0; i--){ if(nah(liste[i])){ liste.splice(i, 1); formelMarkZeichnen(); return; } }
+}
+let formelZug = null;
+document.addEventListener('mousemove', e => {
+    if(!formelZug) return;
+    if(formelZug.art === 'strich'){
+        const p = formelMarkPunkt(formelZug.bild, e.clientX, e.clientY), pts = formelZug.strich.pts, l = pts[pts.length - 1];
+        if(Math.hypot(p[0] - l[0], p[1] - l[1]) < 1.2) return;
+        pts.push(p);
+        if(formelZug.strich.pfad) formelZug.strich.pfad.setAttribute('d', formelMarkPfad(pts));
+        return;
+    }
+    if(formelZug.art === 'radierer'){ formelRadieren(formelZug.bild, e.clientX, e.clientY); return; }
+    formelZug.rolle.scrollLeft = formelZug.sl - (e.clientX - formelZug.x) / formelZug.k;
+    formelZug.rolle.scrollTop = formelZug.st - (e.clientY - formelZug.y) / formelZug.k;
+});
+document.addEventListener('mouseup', () => { if(formelZug){ formelZug.rolle.classList.remove('fw-zieht'); formelZug = null; } });
+function formelMausAnbringen(rolle, bild){
+    if(!rolle || !bild || rolle.dataset.maus) return;
+    rolle.dataset.maus = '1';
+    bild.draggable = false;
+    bild.addEventListener('dragstart', e => e.preventDefault());
+    // Ebene fuer die Markierungen, liegt genau ueber dem Blatt
+    const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sv.id = 'formelWebMark';
+    sv.setAttribute('viewBox', '0 0 ' + FORMEL_BLATT_B + ' ' + FORMEL_BLATT_H);
+    sv.setAttribute('preserveAspectRatio', 'none');
+    sv.setAttribute('aria-hidden', 'true');
+    rolle.appendChild(sv);
+    try{ new ResizeObserver(formelMarkLage).observe(bild); }catch(e){ window.addEventListener('resize', formelMarkLage); }
+    // Mausrad: vergroessern und verkleinern an der Stelle des Zeigers - auch mit Strg (sonst wuerde der Browser die ganze Seite vergroessern)
+    rolle.addEventListener('wheel', e => {
+        if(!formelMausAn()) return;
+        e.preventDefault();
+        let d = e.deltaY;
+        if(e.deltaMode === 1) d *= 33; else if(e.deltaMode === 2) d *= 300;
+        if(!d) return;
+        formelMausZoomen(FORMEL_WEB.zoom * Math.max(0.8, Math.min(1.25, Math.exp(-d * 0.0015))), e.clientX, e.clientY);
+    }, { passive: false });
+    // linke Maustaste auf dem Blatt: je nach Werkzeug verschieben, zeichnen oder radieren
+    rolle.addEventListener('mousedown', e => {
+        if(!formelMausAn() || e.button !== 0 || e.target !== bild) return;
+        const werk = FORMEL_WEB.werk || 'hand';
+        e.preventDefault();
+        if(werk === 'radierer'){ formelZug = { art: 'radierer', rolle, bild }; formelRadieren(bild, e.clientX, e.clientY); return; }
+        if(werk === 'stift' || werk === 'marker'){
+            const strich = { art: werk, pts: [formelMarkPunkt(bild, e.clientX, e.clientY)] };
+            (FORMEL_MARK[FORMEL_WEB.seite] = FORMEL_MARK[FORMEL_WEB.seite] || []).push(strich);
+            formelMarkZeichnen();
+            formelZug = { art: 'strich', rolle, bild, strich };
+            return;
+        }
+        const r = bild.getBoundingClientRect();
+        formelZug = { art: 'hand', rolle, x: e.clientX, y: e.clientY, sl: rolle.scrollLeft, st: rolle.scrollTop, k: (r.width / (bild.offsetWidth || 1)) || 1 };
+        rolle.classList.add('fw-zieht');
+    });
+}
+// Stark vergroessert reicht das Seitenbild mit 1117 Punkten Breite nicht - dann das Bild in doppelter Aufloesung nachladen
+// (formelsammlung/gross/seite-NN.webp). Erst fertig laden, dann tauschen - so blitzt nichts. Fehlt der Ordner, bleibt das kleine Bild.
+function formelWebScharf(){
+    const bild = document.getElementById('formelWebBild');
+    if(!bild || !formelMausAn() || FORMEL_WEB.grossFehlt) return;
+    const seite = FORMEL_WEB.seite;
+    if(bild.dataset.gross === String(seite) || FORMEL_WEB.laedt === seite) return;
+    if(bild.getBoundingClientRect().width * (window.devicePixelRatio || 1) < 1200) return;
+    FORMEL_WEB.laedt = seite;
+    const ziel = 'formelsammlung/gross/seite-' + String(seite).padStart(2, '0') + '.webp';
+    const vor = new Image();
+    const fertig = () => {
+        if(FORMEL_WEB.laedt === seite) FORMEL_WEB.laedt = 0;
+        const b = document.getElementById('formelWebBild');
+        if(!b || FORMEL_WEB.seite !== seite || !formelMausAn()) return;
+        b.setAttribute('src', ziel);
+        b.dataset.gross = String(seite);
+    };
+    vor.onload = () => { if(vor.decode) vor.decode().then(fertig, fertig); else fertig(); };
+    vor.onerror = () => { if(FORMEL_WEB.laedt === seite) FORMEL_WEB.laedt = 0; FORMEL_WEB.grossFehlt = true; };
+    vor.src = ziel;
 }
 function formelWebStil(){
     if(document.getElementById('formelWebStil')) return;
@@ -29493,12 +29910,35 @@ function formelWebSeite(seite){
             + '<button type="button" class="fw-blatt" data-tat="zurueck" aria-label="Vorheriges Blatt">&#10094;</button>'
             + '<span id="formelWebStand"></span>'
             + '<button type="button" class="fw-blatt" data-tat="weiter" aria-label="Nächstes Blatt">&#10095;</button>'
+            // Stand 502: am PC zusaetzlich Verkleinern, Stufe, Vergroessern - und die Werkzeuge zum Markieren
+            + '<span class="fw-gruppe fw-g-zoom fw-nurmaus">'
+            +   '<button type="button" class="fw-blatt" data-tat="kleiner" aria-label="Verkleinern" title="Verkleinern (oder Mausrad)">&#8722;</button>'
+            +   '<span id="formelWebZoom"></span>'
+            +   '<button type="button" class="fw-blatt" data-tat="groesser" aria-label="Vergrößern" title="Vergrößern (oder Mausrad)">+</button>'
+            + '</span>'
+            + '<span class="fw-gruppe fw-g-werk fw-nurmaus" role="group" aria-label="Markieren">'
+            +   '<button type="button" class="fw-blatt" data-werk="hand" aria-label="Verschieben" title="Verschieben: Blatt mit gedrückter Maustaste bewegen"><i class="fas fa-hand"></i></button>'
+            +   '<button type="button" class="fw-blatt" data-werk="stift" aria-label="Stift" title="Stift: auf dem Blatt zeichnen"><i class="fas fa-pen"></i></button>'
+            +   '<button type="button" class="fw-blatt" data-werk="marker" aria-label="Textmarker" title="Textmarker: Stellen gelb anstreichen"><i class="fas fa-highlighter"></i></button>'
+            +   '<button type="button" class="fw-blatt" data-werk="radierer" aria-label="Radierer" title="Radierer: einen Strich anklicken oder darüberfahren"><i class="fas fa-eraser"></i></button>'
+            +   '<button type="button" class="fw-blatt" data-tat="leeren" aria-label="Alle Markierungen auf diesem Blatt löschen" title="Alle Markierungen auf diesem Blatt löschen"><i class="fas fa-trash-can"></i></button>'
+            + '</span>'
             + '</div>'
             + '<div id="formelWebRolle"><img id="formelWebBild" alt="Formelsammlung der Bundesnetzagentur" decoding="async"></div>';
         buehne.style.flexDirection = 'column';
         buehne.onclick = e => {
+            const wk = e.target && e.target.closest ? e.target.closest('[data-werk]') : null;
+            if(wk){ formelWerkSetzen(wk.dataset.werk); return; }
             const b = e.target && e.target.closest ? e.target.closest('[data-tat]') : null;
             if(!b) return;
+            if(b.dataset.tat === 'leeren'){ delete FORMEL_MARK[FORMEL_WEB.seite]; formelMarkZeichnen(); return; }
+            if(b.dataset.tat === 'groesser' || b.dataset.tat === 'kleiner'){
+                // feste Stufen, damit 100 % und 125 % immer genau getroffen werden
+                const jetzt = FORMEL_WEB.zoom, auf = b.dataset.tat === 'groesser';
+                const z = auf ? FORMEL_STUFEN.find(x => x > jetzt * 1.02) : FORMEL_STUFEN.slice().reverse().find(x => x < jetzt * 0.98);
+                formelMausZoomen(z || (auf ? FORMEL_ZOOM_MAX : 0.3));
+                return;
+            }
             formelWebSeite(FORMEL_WEB.seite + (b.dataset.tat === 'weiter' ? 1 : -1));
         };
         const fuss = buehne.nextElementSibling;
@@ -29511,16 +29951,23 @@ function formelWebSeite(seite){
     FORMEL_WEB.seite = seite;
     const stand = document.getElementById('formelWebStand');
     if(stand) stand.textContent = 'Blatt ' + (seite - 2) + ' von ' + (FORMEL_WEB.bis - 2);
-    buehne.querySelectorAll('.fw-blatt').forEach(b => { b.disabled = b.dataset.tat === 'weiter' ? seite >= FORMEL_WEB.bis : seite <= FORMEL_WEB.von; });
+    buehne.querySelectorAll('.fw-blatt[data-tat="weiter"],.fw-blatt[data-tat="zurueck"]').forEach(b => { b.disabled = b.dataset.tat === 'weiter' ? seite >= FORMEL_WEB.bis : seite <= FORMEL_WEB.von; });
     const bild = document.getElementById('formelWebBild');
     if(bild){
         const ziel = 'formelsammlung/seite-' + String(seite).padStart(2, '0') + '.jpg';
-        if(bild.getAttribute('src') !== ziel) bild.setAttribute('src', ziel);
-        bild.style.width = Math.round(FORMEL_WEB.zoom * 100) + '%';
+        // Stand 502: liegt fuer dieses Blatt schon das scharfe grosse Bild an, bleibt es stehen
+        if(bild.dataset.gross !== String(seite) && bild.getAttribute('src') !== ziel){ bild.setAttribute('src', ziel); delete bild.dataset.gross; }
+        bild.style.width = (formelMausAn() ? (FORMEL_WEB.zoom * 100).toFixed(2) : Math.round(FORMEL_WEB.zoom * 100)) + '%';
     }
     const rolle = document.getElementById('formelWebRolle');
-    if(rolle && neu){ rolle.scrollTop = 0; rolle.scrollLeft = 0; }
+    if(rolle && (neu || (FORMEL_WEB.frisch && formelMausAn()))){     // am Handy wie bisher nur bei einem anderen Blatt
+        rolle.scrollTop = 0;
+        // Stand 502: am PC steht das vergroesserte Blatt waagerecht mittig (Handy wie bisher: links oben)
+        rolle.scrollLeft = formelMausAn() ? Math.max(0, (rolle.scrollWidth - rolle.clientWidth) / 2) : 0;
+    }
+    FORMEL_WEB.frisch = false;
     if(rolle) formelGestenAnbringen(rolle, document.getElementById('formelWebBild'), () => FORMEL_WEB.zoom, z => { FORMEL_WEB.zoom = z; formelWebSeite(FORMEL_WEB.seite); });
+    if(rolle && formelMausAn()){ formelMausAnbringen(rolle, document.getElementById('formelWebBild')); formelMausStand(); formelWebScharf(); formelWerkSetzen(FORMEL_WEB.werk || 'hand'); formelMarkZeichnen(); }
     const g = document.getElementById('formelExternBtn');
     if(g){ g.textContent = FORMEL_WEB.zoom > 1.02 ? 'Kleiner' : 'Größer'; g.title = 'Das Blatt vergrößern – oder mit zwei Fingern aufziehen'; }
     const unter = document.getElementById('formelUnterzeile');
@@ -29528,15 +29975,36 @@ function formelWebSeite(seite){
 }
 
 function formelZeichnen(){
-    const rahmen = document.getElementById('formelPdf');
+    let rahmen = document.getElementById('formelPdf');
     const titel  = document.getElementById('formelTitel');
     const unter  = document.getElementById('formelUnterzeile');
+    // Stand 502: am PC Umschalter zeigen und merken, ob das Blatt als Bild mit Maus-Bedienung laeuft
+    const fm = document.getElementById('formelModal');
+    if(fm){
+        const wahl = formelPdfMoeglich(), bildArt = formelBilderNutzen();
+        fm.classList.toggle('fz-wahl', wahl);
+        fm.classList.toggle('fz-maus', formelMausGeraet() && bildArt);
+        fm.querySelectorAll('.fz-artk').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.art === 'pdf') !== bildArt)));
+        FORMEL_WEB.grossFehlt = false;
+        // zurueck zum PDF: die Bild-Buehne wieder gegen den Rahmen tauschen
+        if(!bildArt && !rahmen && document.getElementById('formelWebRolle')){
+            const bu = document.getElementById('formelBuehne');
+            if(bu){
+                bu.onclick = null; bu.style.flexDirection = '';
+                bu.innerHTML = '<iframe id="formelPdf" title="Formelsammlung" style="flex:1; width:100%; border:0; background:#fff;"></iframe>';
+                rahmen = document.getElementById('formelPdf');
+                FORMEL_WEB.seite = 0;
+            }
+        }
+    }
     // Handy, Tablet, schmales Fenster: das Blatt als Bild (siehe oben)
     if(formelBilderNutzen() && (rahmen || document.getElementById('formelWebRolle'))){
         const st = formelStelleJetzt;
         const name = st ? String(st.titel || '').replace(/\s*\(Blatt\s*\d+\)\s*$/, '') : 'Formelsammlung';
         if(titel) titel.textContent = name;
-        FORMEL_WEB.zoom = 1;
+        FORMEL_WEB.zoom = formelMausAn() ? FORMEL_PC_START : 1;
+        FORMEL_WEB.frisch = true;               // Stand 502: beim Aufschlagen wieder oben und (am PC) mittig
+        FORMEL_WEB.werk = 'hand';               // und mit der Hand zum Verschieben; Markierungen bleiben je Blatt stehen
         formelWebSeite(st ? st.seite : FORMEL_WEB.von);
         return;
     }
@@ -39371,7 +39839,8 @@ function selectQuestions(withErrors = false) {
         return selected.map(prepareQuestion);
     }
 
-    if (countValue === 'all') {
+    // Stand 503: "Fehler üben" geht nicht mehr hier entlang - mit Rundengroesse "alle" kamen sonst alle Fragen statt nur der Fehler.
+    if (countValue === 'all' && !withErrors) {
         examMode = false;
         showSidebar = true;
         currentPart = 'all';
@@ -39450,7 +39919,10 @@ function selectQuestions(withErrors = false) {
     // Fehler-Magnet: nur in normalen Uebungsrunden, nicht bei "Fehler
     // wiederholen" - dort sind ohnehin nur Fehler im Topf.
     magnetLetzteIds = new Set();
-    const selected = withErrors ? shuffleArray(pool).slice(0, count) : magnetZiehen(pool, count);
+    // Stand 503 - Dietmar (13.11.2026, Bilder: Kachel "Fehler üben 118", Runde mit 25 Fragen): "Fehler üben zeigt 118 Fehler
+    // und nur 25 werden geladen." Die Fehler-Runde richtete sich nach der eingestellten Rundengroesse und zog daraus zufaellig.
+    // Jetzt laedt "Fehler üben" immer ALLE Fehler des Ziels - die Zahl auf der Kachel ist die Zahl der Fragen in der Runde.
+    const selected = withErrors ? shuffleArray(pool) : magnetZiehen(pool, count);
     selected.forEach(q => { if (!progress[q.id]) progress[q.id] = { answered: false, correct: false }; });
     const fertig = selected.map(prepareQuestion);
     if (!withErrors) fertig.forEach(p => { if (magnetLetzteIds.has(p.id)) p._magnet = true; });
@@ -39515,11 +39987,56 @@ const RUNDE_PRAEFIX = 'amateurfunk_runde_';
 // ohnehin immer vorne an.
 // art 'merk' = Merkliste, 'haupt' = normale Runde. Ohne Angabe: die
 // Merkliste, solange gerade eine Merkliste-Runde laeuft, sonst die normale.
+// Stand 503 - Dietmar (13.11.2026): "Ich möchte wenn ich Fehler übe, auch alle Fehler haben ... Wenn ich unterbreche, geht es
+// genau da weiter wo ich aufgehört habe. Das gleiche möchte ich auch bei Lernbedarf." Darum zwei weitere Merkposten:
+// 'fehler' (Fehler üben) und 'bedarf' (Lernbedarf). Ein Klick auf "Fehler üben" oder "Lernbedarf" setzt die angefangene
+// Runde ohne Rueckfrage fort; erst wenn sie durchgespielt ist, beginnt der naechste Klick eine neue mit allen Fragen.
+// Welche Art gerade laeuft: Merkliste und Lernbedarf am Namen der Runde, die Fehler-Runde an einer Marke an der
+// Fragenliste selbst (currentQuestions._art) - jede andere Runde legt eine neue Liste an, die Marke ist dann von selbst weg.
+function rundeArtJetzt(){
+    try{
+        if(currentPart === 'Merkliste') return 'merk';
+        if(currentQuestions && currentQuestions._art === 'fehler') return 'fehler';
+        if(currentPart === 'Lernbedarf') return 'bedarf';
+    }catch(e){}
+    return 'haupt';
+}
 function rundeSchluessel(art){
     let kl = 'n';
     try{ if(typeof klasseAktuell === 'function') kl = klasseAktuell().id || 'n'; }catch(e){}
-    if(!art) art = (isQuizActive && currentPart === 'Merkliste') ? 'merk' : 'haupt';
-    return RUNDE_PRAEFIX + (currentUser || 'user1') + '_' + kl + (art === 'merk' ? '_merkliste' : '');
+    if(!art) art = isQuizActive ? rundeArtJetzt() : 'haupt';
+    return RUNDE_PRAEFIX + (currentUser || 'user1') + '_' + kl
+         + (art === 'merk' ? '_merkliste' : (art === 'fehler' ? '_fehler' : (art === 'bedarf' ? '_lernbedarf' : '')));
+}
+// Die Fragen, die gerade zu "Fehler üben" bzw. "Lernbedarf" gehoeren - in der Reihenfolge einer neuen Runde
+function rundeMitglieder(art){
+    try{
+        if(art === 'fehler'){
+            const filtered = getFilteredQuestions(filterPart.value);
+            let pool = filtered.filter(q => errorList.includes(q.id));
+            if(!pool.length) pool = questionBank.filter(q => errorList.includes(q.id));
+            return pool.map(q => q.id);
+        }
+        if(art === 'bedarf'){
+            lernbedarfAufraeumen();
+            const ids = Object.keys(difficultQuestions);
+            return questionBank.filter(q => ids.includes(q.id)).filter(teilAktiv)
+                .sort((a, b) => {
+                    const da = difficultQuestions[a.id] || { wrongCount: 0, correctStreak: 0 }, db = difficultQuestions[b.id] || { wrongCount: 0, correctStreak: 0 };
+                    if(db.wrongCount !== da.wrongCount) return db.wrongCount - da.wrongCount;
+                    return da.correctStreak - db.correctStreak;
+                }).map(q => q.id);
+        }
+    }catch(e){}
+    return [];
+}
+// Angefangene Fehler- oder Lernbedarf-Runde fortsetzen. true = laeuft wieder, false = es gibt nichts fortzusetzen.
+function rundeWeiterOhneFrage(art){
+    try{
+        if(!nurNormalesLernen()) return false;
+        if(!rundeLesen(art)) return false;
+        return !!rundeFortsetzen(art);
+    }catch(e){ return false; }
 }
 
 // Schluessel einer Antwort, um sie im Katalog wiederzufinden. Der Text
@@ -39595,8 +40112,11 @@ function rundeFortsetzen(art){
     const wieder = [];
     // Merkliste: Herzen, die inzwischen entfernt wurden, fallen heraus;
     // neu gemerkte Fragen kommen hinten dazu.
-    const merk = (art === 'merk');
-    const merkSet = merk ? new Set(favoriteQuestions) : null;
+    // Stand 503: dasselbe gilt fuer "Fehler üben" und "Lernbedarf" - was nicht mehr auf der Liste steht (richtig beantwortet,
+    // als gelernt markiert), faellt heraus; neu Hinzugekommenes kommt hinten dazu. "merk" heisst hier: eine Runde mit Liste.
+    const liste = (art === 'merk') ? favoriteQuestions.slice() : ((art === 'fehler' || art === 'bedarf') ? rundeMitglieder(art) : null);
+    const merk = !!liste;
+    const merkSet = merk ? new Set(liste) : null;
     let indexNeu = j.index|0;
     j.fragen.forEach((f, i) => { if(merk && !merkSet.has(f.id) && i < (j.index|0)) indexNeu--; });
     for(const f of j.fragen){
@@ -39629,7 +40149,7 @@ function rundeFortsetzen(art){
     }
     if(merk){
         const schon = new Set(wieder.map(q => q.id));
-        favoriteQuestions.forEach(id => {
+        liste.forEach(id => {
             if(schon.has(id)) return;
             const roh = questionBank.find(x => x.id === id);
             if(roh){ wieder.push(prepareQuestion(roh)); schon.add(id); }
@@ -39637,6 +40157,9 @@ function rundeFortsetzen(art){
         j.index = Math.max(0, indexNeu);
     }
     if(!wieder.length) return false;
+    // Stand 503: Fehler- und Lernbedarf-Runde - ist nichts mehr offen, ist die Runde durch; dann beginnt eine neue.
+    if((art === 'fehler' || art === 'bedarf') && wieder.every(q => q.userAnswerIndex !== null)){ rundeVerwerfen(art); return false; }
+    if(art === 'fehler') wieder._art = 'fehler';
 
     isQuizActive = true;
     examFinished = false;
@@ -39874,6 +40397,8 @@ function repeatErrors() {
         else alert('Keine Fehler zum Wiederholen!');
         return;
     }
+    // Stand 503: eine angefangene Fehler-Runde geht genau dort weiter, wo sie unterbrochen wurde
+    if (rundeWeiterOhneFrage('fehler')) return;
     isQuizActive = true;
     examFinished = false;
     currentQuestions = selectQuestions(true);
@@ -39881,6 +40406,7 @@ function repeatErrors() {
         alert('❌ Keine Fehlerfragen gefunden.');
         return;
     }
+    currentQuestions._art = 'fehler';
     examMode = false;
     showSidebar = true;
     currentPart = 'all';
@@ -42149,7 +42675,7 @@ function reifeTeileDaZiel(){
 function pruefReife(){
     const b = pruefZielBuchstabe(), alle = reifeListe();
     return reifeTeileDaZiel().map(t => {
-        const l = alle.filter(x => x && x.k === b && x.t === t).slice(-REIFE_ANZAHL);
+        const l = alle.filter(x => x && x.k === b && x.t === t).slice(-(typeof reifeStufe === 'function' ? reifeStufe() : REIFE_ANZAHL));   // Stand 502: 10, 20 oder 30
         const n = l.length;
         const f = n ? l.reduce((a, x) => a + (+x.f || 0), 0) / n : null;
         const stufe = n === 0 ? 'offen' : (f <= REIFE_BEREIT ? 'bereit' : f <= REIFE_FAST ? 'fast' : 'offen');
@@ -43203,7 +43729,7 @@ function renderFinishScreen(isTimeUp = false) {
     // boete der Trainer beim naechsten Start an, eine fertige Runde
     // "fortzusetzen" - bei der letzten Frage, die schon beantwortet ist.
     // Die Merkliste hat ihren eigenen Merkposten (Stand 394).
-    try{ rundeVerwerfen(currentPart === 'Merkliste' ? 'merk' : 'haupt'); }catch(e){}
+    try{ rundeVerwerfen(rundeArtJetzt()); }catch(e){}     // Stand 503: auch 'fehler' und 'bedarf'
 
     // Pruefungsraum: Das Ende einer Runde wertet finishRealisticPart aus -
     // mit Zwischenergebnis und der Frage nach der naechsten Runde. Der
@@ -49317,6 +49843,11 @@ if (originalSelectOption) {
       var orig = window.renderQuestion;
       window.renderQuestion = function(){
         var r = orig.apply(this, arguments);
+        // Stand 503 - Dietmar, mit Video: "beim anklicken einer Frage zuckt das Bild." Das Neuzeichnen baut Frage und
+        // Antworten neu auf; ihre eingepasste Groesse (frageEinpassen) kam erst 10 bis 250 ms spaeter wieder dazu - so
+        // lange standen die Antworten in der falschen Groesse da. Jetzt wird noch im selben Zug eingepasst, bevor der
+        // Browser malt (Mikroaufgabe, nach allen Ergaenzungen der App-Ansicht). Die spaeteren Durchgaenge bleiben als Netz.
+        try{ Promise.resolve().then(frageEinpassen); }catch(e0){}
         setTimeout(frageEinpassen, 10);
         setTimeout(frageEinpassen, 400);
         setTimeout(sync, 20);
@@ -53353,6 +53884,14 @@ function befundKnoepfe(id, alle){
          + '</span>';
 }
 
+// Stand 502: Kopfzeile mit "Alle markieren" und "zu Fehler / Lernbedarf" (siehe merkAlleKnoepfe)
+function befundeKopfNachziehen(){
+    try{
+        const k = document.getElementById('befundeKopf');
+        if(!k) return;
+        k.innerHTML = merkAlleKnoepfe('befund', merkAlleIds('befund'));
+    }catch(e){}
+}
 function befundeOeffnen(){
     try{
         let m = document.getElementById('befundeModal');
@@ -53370,6 +53909,7 @@ function befundeOeffnen(){
                 + '<i class="fas fa-magnifying-glass-chart"></i> Woran es liegt</h3>'
                 + '<button type="button" class="btn btn-outline x-zu" style="padding:4px 10px;" '
                 + 'onclick="document.getElementById(\'befundeModal\').style.display=\'none\'">&#10005;</button></div>'
+                + '<div id="befundeKopf" class="merk-zeile" style="flex:0 0 auto; margin:0.2rem 0 0.5rem;"></div>'
                 + '<div id="befundeListe" style="flex:1; overflow-y:auto;"></div></div>';
             document.body.appendChild(m);
             m.addEventListener('click', e => { if(e.target === m) m.style.display = 'none'; });
@@ -53380,6 +53920,7 @@ function befundeOeffnen(){
         const inhalt = m.querySelector('#befundeListe');
         const roh = befundeHtml(true) || '';
         inhalt.innerHTML = roh.replace(/<h4[^>]*>Woran es liegt<\/h4>/, '');
+        befundeKopfNachziehen();
         m.style.display = 'flex';
     }catch(e){ console.debug('Befunde:', e.message); }
 }
@@ -65135,12 +65676,13 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 zehn = '<div class="awr-zehn zu-wenig">Von 10 Prüfungen: dazu fehlen noch Antworten in ' + z.unvollstaendig.join(' und ') + '.</div>';
                 return;
             }
-            const wort = z.vonZehn === 10 ? 'Alle zehn' : (z.vonZehn === 0 ? 'Keine' : String(z.vonZehn));
+            const zVon = z.von || 10;
+            const wort = z.vonZehn === zVon ? 'Alle ' + zVon : (z.vonZehn === 0 ? 'Keine' : String(z.vonZehn));
             const farbe = (window.reifeFarbeText ? reifeFarbeText(z.anteil) : 'inherit');
             const kurz = z.anteil >= 0.9 ? 'Das sitzt.' : (z.anteil >= 0.6 ? 'Reicht meistens.' : (z.anteil >= 0.25 ? 'Noch Tagesglück.' : 'Noch Zufall.'));
             const bst = (window.reifeFarbe ? reifeFarbe(Math.max(0, Math.min(1, z.anteil))) : null);
             const fl = bst ? 'hsl(' + bst.h + ',' + bst.s + '%,' + bst.l + '%)' : farbe;
-            zehn = '<div class="awr-zehn"><div class="awr-zk"><b style="color:' + farbe + '">' + wort + '</b><span>' + (z.vonZehn === 10 ? 'Prüfungen bestanden' : 'von 10 Prüfungen bestanden') + '</span><small>' + kurz + '</small></div>'
+            zehn = '<div class="awr-zehn"><div class="awr-zk"><b style="color:' + farbe + '">' + wort + '</b><span>' + (z.vonZehn === zVon ? 'Prüfungen bestanden' : 'von ' + zVon + ' Prüfungen bestanden') + '</span><small>' + kurz + '</small></div>'
                 + '<span class="awr-zbal"><i style="width:' + Math.round(z.anteil * 100) + '%;background:' + fl + '"></i></span></div>';
         });
         // Ansage wie in der Statistik - nur wenn jeder Teil genug Antworten hat
