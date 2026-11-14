@@ -26812,7 +26812,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 505, datum: '14.11.2026' };
+const TRAINER_STAND = { nr: 506, datum: '14.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -70071,7 +70071,8 @@ html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .questio
 body.maus-ohne-rand.dark.runde-laeuft #optionsContainer > .option:is(.tts-highlight,.maus-liest):not(.correct):not(.wrong):nth-child(n):nth-child(n){border-color:transparent!important}
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover{background:var(--maus-grund,#a8dcf6)!important;border-color:var(--maus-rand,#00adef)!important}
 html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover .option-text{color:#0b1e33!important}
-html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover .option-label{background:rgba(11,30,51,.14)!important;color:#0b1e33!important}
+/* 14.11.2026 Stand 506, Dietmar: "Der Buchstabe der Frage muss am Desktop in der Farbe die Eingestellt ist bleiben." Beim Überfahren im Dunkelmodus wurde der Buchstabe bisher dunkel getönt; jetzt behält er seine Farbe (Blau, Orange, Grün, Violett) mit weißer Schrift. */
+html:not(#fx):not(.android-app).fs-bunt body.dark.runde-laeuft:not(#fy) .question-area #optionsContainer > .option:not(.correct):not(.wrong):not(.gewaehlt):not(.maus-liest):not(.tts-highlight):nth-child(n):hover .option-label{color:#fff!important}
 /* 21.10.2026 Dietmar: "wenn ich auf gelernt markiert klicke ... bleiben die Felder einfarbig ... ich hätte hier gern wieder die Farbe drin mit dem Grün abgehakt und Rot markiert."
    Die Knöpfe oben (Haken, Herz, Notiz) trugen im Dunkel alle dasselbe Glas - auch wenn sie eingeschaltet waren. */
 /* Stand 393 (31.10.2026), Dietmar vom Handy: "wenn ich einen als gelernt abhake oder markiert habe, hat der Button keine

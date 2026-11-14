@@ -13,9 +13,14 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 505 · 14.11.2026
+Stand 506 · 14.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 506 (14.11.2026)
+
+### Behoben
+- Am Desktop im Dunkelmodus: Der Buchstabe der Antwort (A bis D) behält beim Überfahren mit der Maus seine Farbe mit weißer Schrift, statt dunkel zu werden.
 
 ## Stand 505 (14.11.2026)
 
