@@ -10462,6 +10462,28 @@ html:not(#h1):not(#h2) body:not(#h3) #formelModal.fz-maus #formelWebLeiste #form
   .merk-zeile > .merk-breit{grid-column:1 / -1}
 }
 </style>
+<style id="konfettiGelernt504">
+/* Stand 504: die Einstellung "Konfetti, wenn eine Frage sitzt" gibt es nur am PC (nicht in der Android-App, nicht am Handy, nicht im schmalen Fenster) */
+html.android-app:not(.pc-app) #einstKonfettiGelerntZeile, html.pc-handy #einstKonfettiGelerntZeile{display:none!important}
+@media (max-width:899px){#einstKonfettiGelerntZeile{display:none!important}}
+@media (pointer:coarse){#einstKonfettiGelerntZeile{display:none!important}}
+</style>
+<style id="probePruefungen505">
+/* Stand 505: Karte "Meine Probeprüfungen" im Verlauf (App-Blatt und klassische Spalte) */
+.pp-karte{margin:.7rem 0;padding:.65rem .75rem .6rem;border:1px solid rgba(127,140,160,.35);border-radius:12px;background:rgba(127,140,160,.10);color:inherit;text-align:left}
+.pp-kopf{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.2rem .6rem;margin-bottom:.35rem}
+.pp-kopf b{font-size:.95rem}.pp-kopf small{font-size:.78rem;opacity:.85}
+.pp-leg{display:flex;flex-wrap:wrap;gap:.2rem .8rem;font-size:.74rem;opacity:.9;margin-top:.25rem}
+.pp-leg span{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.pp-leg i{display:inline-block;width:.6rem;height:.6rem;border-radius:50%}
+.pp-leg i.pp-grenze{width:1rem;height:0;border-radius:0;border-top:2px dashed #ff6b6b;background:none}
+.pp-drei{display:grid;gap:.5rem}
+.pp-teil{padding:.45rem .55rem;border-radius:10px;background:rgba(127,140,160,.12);min-width:0}
+.pp-teil>b{font-size:.85rem}
+.pp-teil .pp-tendenz{margin-top:.15rem;font-size:.76rem;white-space:nowrap}
+.pp-tendenz{margin-top:.4rem;font-size:.85rem}.pp-tendenz small{opacity:.85;font-size:.76rem;white-space:nowrap}
+.pp-tendenz.pp-steigend i{color:#2f9e44}.pp-tendenz.pp-fallend i{color:#e03131}
+</style>
 <style id="hilfsmittel450">
 /* Stand 452, Dietmar: "Beim Oeffnen vom Formelblatt moechte ich den Hintergrund besser erkennen koennen." Die Abdunklung war im Polar-Stil rgba(3,6,18,.84) - jetzt nur ein Hauch, die Frage dahinter bleibt lesbar. */
 html:not(#h1):not(#h2) body:not(#h3).dark #formelModal:not(#h4):not(#h5){background:rgba(8,18,34,.10)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -12248,6 +12270,7 @@ window.klasseFragenNachladen = klasseFragenNachladen;
                 <span>📊 Verlauf</span>
                 <span class="stats" id="historyStats"></span>
             </h3>
+            <div id="historyProbe"></div>
             
             <!-- Dietmar am 02.09.2026: "Es soll erklaeren, dass wenn man in einem
                  Ortsverband an einem Computer mehrere Benutzer lernen."
@@ -15424,6 +15447,7 @@ function alsGelerntMarkieren(qId, gelernt){
     }
     if(!masteryData[qId]) masteryData[qId] = { streak:0, mastered:false, totalCorrect:0, totalWrong:0 };
     if(gelernt){
+        if(!masteryData[qId].mastered){ try{ gelerntKonfetti(); }catch(e){} }      // Stand 504: von Hand abgehakt - auf Wunsch Konfetti
         masteryData[qId].streak = 3;
         masteryData[qId].mastered = true;
         masteryData[qId].gemeistertAm = Date.now();
@@ -19273,7 +19297,82 @@ function verlaufEintragLoeschen(stelle) {
 }
 window.verlaufEintragLoeschen = verlaufEintragLoeschen;
 
+// ================================================================
+//  MEINE PROBEPRÜFUNGEN MIT TENDENZ                       (Stand 505)
+//  Wunsch aus dem Forum (Sabine, 05.11.2026): die echten Simulationen auswerten, "sodass man eine Tendenz sieht".
+//  Dietmar am 14.11.2026 zum Vorschlag "eine Kurve nur über die Simulationen mit der 19er-Grenze": "Das bitte mit einbauen".
+//  Gezeigt wird jeder Prüfungsteil aus dem Prüfungssimulator (Verlaufseintrag "Realistisch <Teil>" oder "Gruppenprüfung <Teil>",
+//  25 Fragen) als Punkt: richtige Antworten von 25, gestrichelt die Grenze 19. Die Summenzeile "Realistisch 3×25" zaehlt nicht
+//  noch einmal. Tendenz: Schnitt der letzten 5 Teile gegen die 5 davor (bei weniger: zweite Haelfte gegen erste).
+//  Der Verlauf merkt sich hoechstens 100 Runden - aeltere Pruefungen fallen heraus.
+// ================================================================
+function probePruefungenDaten(h){
+    const namen = {};
+    try{ Object.keys(REALISTIC_PART_META).forEach(k => { namen[REALISTIC_PART_META[k].name] = REALISTIC_PART_META[k].part || k; }); }catch(e){}
+    const aus = [];
+    (h || []).forEach(e => {
+        if(!e || typeof e.part !== 'string') return;
+        const m = /^(Realistisch|Gruppenprüfung) (.+)$/.exec(e.part);
+        if(!m || !namen[m[2]] || !((+e.total || 0) >= 20) || typeof e.correct !== 'number') return;
+        aus.push({ teil: namen[m[2]], name: m[2], punkte: Math.round(e.correct * 25 / e.total * 10) / 10, datum: e.date, ok: e.correct * 25 / e.total >= 19 });
+    });
+    return aus;
+}
+function probePruefungenTendenz(d){
+    if(d.length < 4) return null;
+    const n = d.length >= 10 ? 5 : Math.floor(d.length / 2);
+    const mittel = a => a.reduce((x, y) => x + y.punkte, 0) / a.length;
+    const neu = mittel(d.slice(-n)), alt = mittel(d.slice(-2 * n, -n)), diff = neu - alt;
+    return { n: n, neu: neu, alt: alt, art: diff >= 0.5 ? 'steigend' : diff <= -0.5 ? 'fallend' : 'gleichbleibend' };
+}
+function probePruefungenHtml(h, eng){
+    // Dietmar am 14.11.2026 zu sechs Entwuerfen: "ich möchte 1" - drei kleine Kurven, je Pruefungsteil eine eigene mit eigener Tendenz.
+    // Dietmar gleich danach: "3 Ansichten mit Betrieb, Vorschriften und Technik nur bei der Klasse N und Direkteinstieg auf E.
+    // Bei N auf E und von E auf A nur ein Diagramm mit Technik. Und das soll die komplette Breite von dem Fenster einnehmen."
+    // Gezeigt werden deshalb genau die Teile, die der Pruefungssimulator fuer die gewaehlte Klasse prueft (realisticTeile()).
+    // eng = schmale Spalte (klassische Ansicht) oder Handy: die Kurven stehen untereinander statt nebeneinander.
+    let d; try{ d = probePruefungenDaten(h); }catch(e){ return ''; }
+    if(!d || !d.length) return '';
+    let teile = []; try{ teile = realisticTeile(); }catch(e){}
+    if(!teile.length) teile = Object.keys(REALISTIC_PART_META);
+    const gruppen = teile.map(k => ({ k: k, meta: REALISTIC_PART_META[k], a: d.filter(x => x.name === REALISTIC_PART_META[k].name) })).filter(g => g.a.length);
+    if(!gruppen.length) return '';
+    if(eng === undefined){ try{ eng = (window.innerWidth || 0) < 700; }catch(e){ eng = false; } }
+    const farbe = { vorschriften: '#4dabf7', betrieb: '#ffa94d', technik: '#38d9a9' };
+    const mehrTechnik = gruppen.filter(g => g.meta.part === 'technik').length > 1;
+    const z = v => String(Math.round(v * 10) / 10).replace('.', ',');
+    const alle = [].concat.apply([], gruppen.map(g => g.a));
+    const tief = Math.max(0, Math.min(17, Math.floor(Math.min.apply(null, alle.map(x => x.punkte))) - 1)), hoch = 25;
+    const einzeln = gruppen.length === 1;
+    // Zeichenflaeche passend zur spaeteren Breite, damit die Schrift lesbar bleibt
+    const B = eng ? 340 : (einzeln ? 640 : 200), H = eng ? 100 : (einzeln ? 150 : 104), li = 24, re = 8, ob = 8, un = 10;
+    const Y = v => ob + (hoch - v) * (H - ob - un) / (hoch - tief);
+    let karten = '';
+    gruppen.forEach(g => {
+        const a = g.a, f = farbe[g.meta.part] || '#adb5bd';
+        const name = (g.meta.part === 'technik' && !mehrTechnik) ? 'Technik' : g.meta.name;
+        const X = i => a.length === 1 ? (li + B - re) / 2 : li + i * (B - li - re) / (a.length - 1);
+        let svg = '<svg viewBox="0 0 ' + B + ' ' + H + '" role="img" aria-label="' + name + ': richtige Antworten von 25 je Probeprüfung, Grenze 19" style="display:block;width:100%;height:auto">';
+        [25, 19, tief].forEach(v => { svg += '<text x="' + (li - 5) + '" y="' + (Y(v) + 3.5) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".75">' + v + '</text>'; });
+        svg += '<line x1="' + li + '" x2="' + (B - re) + '" y1="' + Y(19) + '" y2="' + Y(19) + '" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="5 4"/>';
+        if(a.length > 1) svg += '<polyline points="' + a.map((x, i) => X(i).toFixed(1) + ',' + Y(x.punkte).toFixed(1)).join(' ') + '" fill="none" stroke="' + f + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+        a.forEach((x, i) => { svg += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(x.punkte).toFixed(1) + '" r="3" fill="' + f + '" stroke="' + (x.ok ? 'none' : '#ff6b6b') + '" stroke-width="1.6"><title>' + x.name + ': ' + z(x.punkte) + ' von 25</title></circle>'; });
+        svg += '</svg>';
+        const tn = probePruefungenTendenz(a);
+        const wort = tn ? (tn.art === 'gleichbleibend' ? 'gleich' : tn.art) : '';
+        const pfeil = tn ? (tn.art === 'steigend' ? 'fa-arrow-trend-up' : tn.art === 'fallend' ? 'fa-arrow-trend-down' : 'fa-arrow-right') : '';
+        karten += '<div class="pp-teil"><b style="color:' + f + '">' + name + '</b>' + svg
+               + '<div class="pp-tendenz' + (tn ? ' pp-' + tn.art : '') + '">Schnitt ' + z(a.reduce((x, y) => x + y.punkte, 0) / a.length)
+               + (tn ? ' · <i class="fas ' + pfeil + '"></i> <b>' + wort + '</b>' : '') + '</div></div>';
+    });
+    const ok = alle.filter(x => x.ok).length;
+    return '<div class="pp-karte" id="probePruefungen"><div class="pp-kopf"><b>Meine Probeprüfungen</b><small>' + alle.length + (alle.length === 1 ? ' Prüfungsteil' : ' Prüfungsteile') + ' · ' + ok + ' bestanden</small></div>'
+         + '<div class="pp-drei" style="grid-template-columns:' + ((eng || einzeln) ? '1fr' : 'repeat(' + gruppen.length + ',minmax(0,1fr))') + '">' + karten + '</div>'
+         + '<div class="pp-leg"><span><i class="pp-grenze"></i>Grenze 19 von 25</span><span>Tendenz: letzte 5 gegen die 5 davor</span></div></div>';
+}
+window.probePruefungenHtml = probePruefungenHtml;
 function renderHistory() {
+    try{ const pp = document.getElementById('historyProbe'); if(pp) pp.innerHTML = probePruefungenHtml(getCurrentHistory(), true); }catch(e){}
     const body = document.getElementById('historyBody');
     const stats = document.getElementById('historyStats');
     const userHistory = getCurrentHistory();
@@ -22141,6 +22240,7 @@ function handleMasteryOnAnswer(qId, isCorrect) {
                 // Frage vom Lernstapel in den Bestand. Der Ton dazu ist
                 // abschaltbar (Einstellungen -> Belohnung).
                 try{ levelUpSpielen(); }catch(e){}
+                try{ gelerntKonfetti(); }catch(e){}      // Stand 504: auf Wunsch Konfetti (nur PC, in den Einstellungen)
             } else {
                 // Schon gemeisterte Frage erneut richtig -> naechste Stufe,
                 // der Abstand bis zur naechsten Auffrischung waechst.
@@ -26712,7 +26812,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 503, datum: '13.11.2026' };
+const TRAINER_STAND = { nr: 505, datum: '14.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -34002,6 +34102,7 @@ function clearTTSHighlights(){
     ttsHighlightTimers=[];
 }
 function stopTTS(){
+    try{ if(ergebnisAnsageTon && Date.now() - ergebnisAnsageBeginn > 1500){ ergebnisAnsageTon.pause(); ergebnisAnsageTon = null; ergebnisAnsageLauf++; } }catch(e){}      // Stand 505: auch die Ergebnis-Ansage verstummt - ausser in den ersten 1,5 s: da laufen noch Zeitgeber der letzten Antwort ab, die sonst die Ansage sofort abwuergen
     ttsQueueActive=false;
     ttsQueueToken++;
     try{ bildVorleseZu(); }catch(e){}   // Stand 429: das grosse Bild beim Vorlesen schliesst mit
@@ -35803,7 +35904,8 @@ const MAUS_FARBEN = {
 // "DIE ANTWORT UNTER DER MAUS VORLESEN" weiter unten. Standard AUS.
 const MAUS_RAND_ARTEN = ['lauf', 'fest', 'kein'];
 let einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false,
+                      konfettiGelernt: false };      // Stand 504: Konfetti, wenn eine Frage sitzt - von Haus aus AUS
 
 function einstellungenSchluessel(){
     return 'amateurfunk_einstellungen_' + (typeof currentUser !== 'undefined' ? currentUser : 'user1');
@@ -35813,7 +35915,8 @@ function einstellungenLaden(){
     einstellungen = { knoepfeVorlesen: false, knopfUmfang: 'kurz', vorlesenGross: false,
                       formelHinweis: true, formelTon: true,
                       levelUpTon: true, rundeFertig: true, rundenFeier: true, magnetTon: true, fanfareTon: true,
-                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false };
+                      mausFarbe: 'blau', mausRand: 'lauf', mausLeuchten: true, mausVorlesen: false, funkEffektAn: false,
+                      konfettiGelernt: false };      // Stand 504: Konfetti, wenn eine Frage sitzt - von Haus aus AUS
     try{
         const raw = localStorage.getItem(einstellungenSchluessel());
         if(raw){
@@ -35842,6 +35945,7 @@ function einstellungenLaden(){
             if(d && d.mausLeuchten === false) einstellungen.mausLeuchten = false;
             einstellungen.mausVorlesen = !!(d && d.mausVorlesen);
             if(d && d.funkEffektAn === true) einstellungen.funkEffektAn = true;   // nur wer ihn selbst eingeschaltet hat
+            if(d && d.konfettiGelernt === true) einstellungen.konfettiGelernt = true;   // Stand 504: ebenso
         }
         // 27.10.2026, Dietmar: "Unter Sachlich hat man seine Ruhe ... nur die nötigsten Sounds aktiviert." Im Stil Sachlich (nicht Verspielt) sind die
         // Zusatztöne von Haus aus aus - aber nur, solange der Nutzer sie noch nie selbst gesetzt hat (gespeicherte Werte gelten weiter).
@@ -35969,6 +36073,8 @@ function einstellungenAnwenden(){
     if(mtn) mtn.checked = (einstellungen.magnetTon !== false);
     const lu = document.getElementById('einstLevelUpTon');
     if(lu) lu.checked = (einstellungen.levelUpTon !== false);
+    const kg = document.getElementById('einstKonfettiGelernt');
+    if(kg) kg.checked = (einstellungen.konfettiGelernt === true);
     const fft = document.getElementById('einstFanfareTon');
     if(fft) fft.checked = (einstellungen.fanfareTon !== false);
     const rf = document.getElementById('einstRundeFertig');
@@ -36047,6 +36153,9 @@ function einstellungenUmschalten(feld, an){
     }
     if(feld === 'levelUpTon' && an){
         try{ levelUpSpielen(); }catch(e){}
+    }
+    if(feld === 'konfettiGelernt' && an){
+        try{ gelerntKonfetti(true); }catch(e){}
     }
     // Rand mit oder ohne Lauf, Feld mit oder ohne Aufleuchten: in der
     // Vorschau gleich einmal vorfuehren.
@@ -38157,6 +38266,10 @@ function einstBlaetterFuellen(){
                 'Ein kurzer Klang, wenn der Magnet dir eine Frage aus deinen Schwachstellen vorlegt. Das Symbol blinkt dann trotzdem.', 'Ton, wenn der Magnet eine Frage aussucht.', ' margin-top:0.55rem;')
           + tonZeile('einstLevelUpTon', "einstellungenUmschalten('levelUpTon', this.checked)", 'Belohnung: Ton, wenn eine Frage sitzt',
                 'Dreimal hintereinander richtig, oder die Runde „Noch nie geübt“ ist durch. Kein Fenster, nur der Klang.', 'Ton, wenn eine Frage sitzt.', ' margin-top:0.55rem;')
+          // Stand 504 - Dietmar: "nur am Desktop. Baue mir Konfetti ein wenn eine Frage als Gelernt erkannt oder als gelernt abgehackt wird.
+          // Ich möchte das in den Einstellungen zum ein und ausschalten. Standardmäßig ist es deaktiviert."
+          + tonZeile('einstKonfettiGelernt', "einstellungenUmschalten('konfettiGelernt', this.checked)", 'Belohnung: Konfetti, wenn eine Frage sitzt',
+                'Ein kurzer Konfetti-Regen, wenn eine Frage als gelernt erkannt wird (dreimal hintereinander richtig) oder du sie als gelernt abhakst. Nur am PC, nicht in der Prüfung.', 'Konfetti, wenn eine Frage sitzt.', ' margin-top:0.55rem;', 'einstKonfettiGelerntZeile')
           + tonZeile('einstFanfareTon', "einstellungenUmschalten('fanfareTon', this.checked)", 'Fanfare bei bestandener Runde',
                 'Die Fanfare mit Konfetti am Ende einer bestandenen Runde oder Prüfung. Ohne Haken gibt es nur das Konfetti.', 'Fanfare bei bestandener Runde.', ' margin-top:0.55rem;')) + appStimmeHtml + majaFunkHtml;
 
@@ -40178,6 +40291,8 @@ function rundeFortsetzen(art){
         const beantwortet = q.userAnswerIndex !== null;
         const istRichtig = beantwortet && !!(q.options[q.userAnswerIndex] || {}).correct;
         progress[q.id] = { answered: beantwortet, correct: istRichtig };
+        // Stand 505: schon vor dem Fortsetzen beantwortet - zaehlt beim naechsten Abbruch nicht noch einmal im Verlauf
+        if(beantwortet) q._vorher = true;
         if(beantwortet){ gezaehlt++; if(istRichtig) richtig++; }
     }
     totalAnswered = gezaehlt;
@@ -41977,7 +42092,63 @@ window.addEventListener('resize',()=>{
     if(c && c.style.display!=='none'){ c.width=window.innerWidth; c.height=window.innerHeight; }
 });
 
+// ================================================================
+//  ERGEBNIS-ANSAGE ALS AUFNAHME                          (Stand 505)
+//  Dietmar am 14.11.2026: "Der Trainer sagt mit Piper Stimme, sie haben die Prüfung bestanden." - "Kurz würde mir langen.
+//  Da würde ich eine Männliche Stimme auswählen." - "es soll so klingen, als wäre es ein Mitarbeiter der Bundesnetzargentur"
+//  Acht Aufnahmen in sounds/ergebnis-ansage/ (MP3, mono, 24 kHz, 80 kbit/s, -19 LUFS):
+//    01 alle drei Teile bestanden   02 ein Teil bestanden        03 zwei Teile bestanden
+//    04 Prüfung nicht bestanden     05 ein Teil nicht bestanden  06 Grauzone, Nachprüfung möglich
+//    07 mehrere Teile knapp, keine Nachprüfung                   08 Anhang "Die Einzelergebnisse ..." (nach jeder Ansage)
+//  Die Zahlen werden nicht mehr gesprochen, sie stehen auf dem Bildschirm. Fehlt eine Datei oder spielt sie nicht,
+//  spricht wie bisher die eingestellte Stimme den ganzen Satz (speakExamResultStimme).
+// ================================================================
+const ERGEBNIS_ANSAGE_V = '505';
+let ergebnisAnsageTon = null, ergebnisAnsageLauf = 0, ergebnisAnsageBeginn = 0;
+function ergebnisAnsageArt(text){
+    const t = String(text || '');
+    if(/lediglich ein Teil knapp daneben/.test(t)) return 7;
+    if(/^Sie haben die Prüfung nicht bestanden/.test(t)) return 4;
+    if(/Nachprüfung möglich/.test(t)) return 6;
+    if(/nicht bestanden/.test(t)) return 5;
+    if(/alle (\d+) Teile bestanden/.test(t)) return (+RegExp.$1 >= 3) ? 1 : 3;
+    if(/Ihre Prüfung bestanden!/.test(t)) return 1;
+    if(/die geprüften Teile bestanden/.test(t)) return 3;
+    if(/bestanden/.test(t)) return 2;
+    return 0;
+}
+function ergebnisAnsageStopp(){
+    ergebnisAnsageLauf++;
+    try{ if(ergebnisAnsageTon){ ergebnisAnsageTon.pause(); ergebnisAnsageTon = null; } }catch(e){}
+}
+function ergebnisAnsageSpielen(nr, wennNicht){
+    const lauf = ++ergebnisAnsageLauf;
+    ergebnisAnsageBeginn = Date.now();
+    let ersatz = false;
+    const notfall = () => { if(ersatz || lauf !== ergebnisAnsageLauf) return; ersatz = true; ergebnisAnsageTon = null; try{ wennNicht(); }catch(e){} };
+    const spiel = (n, danach, beiFehler) => {
+        try{
+            const a = new Audio('sounds/ergebnis-ansage/ergebnis_0' + n + '.mp3?v=' + ERGEBNIS_ANSAGE_V);
+            a.volume = 1; ergebnisAnsageTon = a;
+            a.onended = () => { if(lauf !== ergebnisAnsageLauf) return; if(danach) danach(); else ergebnisAnsageTon = null; };
+            a.onerror = () => { if(beiFehler) beiFehler(); };
+            const v = a.play(); if(v && v.catch) v.catch(() => { if(beiFehler) beiFehler(); });
+        }catch(e){ if(beiFehler) beiFehler(); }
+    };
+    spiel(nr, () => spiel(8, null, null), notfall);
+}
 function speakExamResult(text){
+    const roh = text;
+    const nr = ergebnisAnsageArt(roh);
+    try{ ergebnisAnsageStopp(); }catch(e){}
+    if(!nr){ speakExamResultStimme(roh); return; }
+    try{ lastExamSpeechText = roh; }catch(e){}
+    try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+    try{ if(typeof stopTTS==='function') stopTTS(); }catch(e){}
+    ergebnisAnsageSpielen(nr, () => speakExamResultStimme(roh));
+}
+window.ergebnisAnsageArt = ergebnisAnsageArt;
+function speakExamResultStimme(text){
     // Auch hier durch die Aussprache-Tabelle: Diese Ansage kann ueber die
     // Notstimme des Browsers laufen, und die kommt nie am Server und
     // damit nie an expandTTS vorbei.
@@ -42350,6 +42521,49 @@ window.showDuoFinalResults = function(data){
 // ================================================================
 let levelUpAudio = null;
 
+// ================================================================
+//  KONFETTI, WENN EINE FRAGE SITZT                       (Stand 504)
+//  Dietmar am 13.11.2026: "nur am Desktop. Baue mir Konfetti ein wenn eine Frage als Gelernt erkannt oder als gelernt
+//  abgehackt wird. Ich möchte das in den Einstellungen zum ein und ausschalten. Standardmäßig ist es deaktiviert."
+//  - nur am PC (Maus, Fenster ab 900 Punkten, nicht die Android-App, nicht die Handy-Ansicht)
+//  - nur wenn in den Einstellungen eingeschaltet (einstellungen.konfettiGelernt, von Haus aus aus)
+//  - nicht in der Prüfung und nicht im Gruppenraum: dort verriete das Konfetti, dass die Antwort richtig war
+//  - hoechstens ein Regen je 700 ms, falls mehrere Fragen auf einmal abgehakt werden
+// ================================================================
+let gelerntKonfettiZuletzt = 0;
+function konfettiAmPc(){
+    try{
+        if(window.AndroidApp) return false;
+        const H = document.documentElement;
+        if(H.classList.contains('pc-handy')) return false;
+        if(H.classList.contains('android-app') && !H.classList.contains('pc-app')) return false;
+        if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return false;
+        return (window.innerWidth || 0) >= 900;
+    }catch(e){ return false; }
+}
+function gelerntKonfetti(probe){
+    try{
+        if(!probe && !(einstellungen && einstellungen.konfettiGelernt === true)) return false;
+        if(!konfettiAmPc()) return false;
+        if(!probe){
+            try{ if(typeof examMode !== 'undefined' && examMode) return false; }catch(e){}
+            try{ if(typeof nurNormalesLernen === 'function' && !nurNormalesLernen()) return false; }catch(e){}
+        }
+        const jetzt = Date.now();
+        if(jetzt - gelerntKonfettiZuletzt < 700) return false;
+        const fn = (typeof confetti !== 'undefined') ? confetti : null;
+        if(!fn) return false;
+        gelerntKonfettiZuletzt = jetzt;
+        try{ window.gelerntKonfettiZahl = (window.gelerntKonfettiZahl || 0) + 1; }catch(e){}
+        const farben = ['#34d399', '#22b8cf', '#ffd43b', '#ff6b6b', '#845ef7', '#ffffff'];
+        // Dietmar gleich danach: "konfetti könnte breiter sein." - statt eines Wurfs aus der Mitte jetzt fünf über die ganze Fensterbreite
+        const wurf = (x, n, v, sp) => { try{ fn({ particleCount: n, spread: sp, startVelocity: v, origin: { x: x, y: 0.75 }, colors: farben, ticks: 150, scalar: 0.95, zIndex: 100000 }); }catch(e){} };
+        wurf(0.5, 60, 46, 100); wurf(0.14, 45, 44, 85); wurf(0.86, 45, 44, 85);
+        setTimeout(() => { wurf(0.32, 35, 34, 120); wurf(0.68, 35, 34, 120); }, 150);
+        return true;
+    }catch(e){ return false; }
+}
+window.gelerntKonfetti = gelerntKonfetti;
 function levelUpSpielen(){
     try{
         if(einstellungen && einstellungen.levelUpTon === false) return;
@@ -44654,13 +44868,17 @@ function verlaufBeiAbbruch() {
         // Selbst beantwortet - daran haengt, ob der Eintrag ueberhaupt sinnvoll
         // ist. Wer eine Runde startet und sofort abbricht, hat nichts geleistet,
         // auch wenn schon gelernte Fragen automatisch als richtig dastehen.
-        const selbst = currentQuestions.filter(q => progress[q.id] && progress[q.id].answered && !q._autoGelernt);
+        // Stand 505 - Dietmar am 14.11.2026: "Nur Fehler oder Lernbedarf öffnen ohne etwas zu beantworten, lösst viele Fehler aus."
+        // "Alles was nicht beantwortet wurde, darf niemals als Fehler deklariert werden." Ursache: eine fortgesetzte Runde bringt
+        // die Antworten von frueher mit (q._vorher); die standen schon im Verlauf und wurden beim Verlassen erneut eingetragen.
+        // Jetzt zaehlt nur, was seit dem Oeffnen wirklich beantwortet wurde - ohne neue Antwort gibt es keinen Eintrag.
+        const selbst = currentQuestions.filter(q => progress[q.id] && progress[q.id].answered && !q._autoGelernt && !q._vorher);
         if (selbst.length === 0) return false;
         // Gezaehlt wird dann aber ALLES, was als beantwortet gilt - also auch die
         // bereits gelernten Fragen, die der Haken automatisch als richtig setzt.
         // Ohne sie stand im Verlauf "8 von 13, 62 %, nicht bestanden", waehrend
         // dieselbe Runde in Wahrheit 20 von 25 richtig hatte und bestanden war.
-        const gezaehlt = currentQuestions.filter(q => progress[q.id] && progress[q.id].answered);
+        const gezaehlt = currentQuestions.filter(q => progress[q.id] && progress[q.id].answered && !q._vorher);
         const gesamt = gezaehlt.length;
         const richtig = gezaehlt.filter(q => progress[q.id].correct).length;
         const status = (richtig / gesamt) >= 0.76 ? 'pass' : 'fail';
@@ -44717,6 +44935,7 @@ function backToMain() {
     if (typeof stopConfetti === 'function') stopConfetti();
     try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch{}
     if (typeof stopTTS === 'function') try{ stopTTS(); }catch{}
+    try{ ergebnisAnsageStopp(); }catch(e){}      // Stand 505: beim Verlassen verstummt die Ergebnis-Ansage sofort, auch in ihren ersten 1,5 s
     examSimulatorMode = false;
     examMode = false;
     isQuizActive = false;
@@ -66065,6 +66284,7 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
         let html = '<div class="aw-chips3"><span><b>' + h.length + '</b>' + (h.length === 1 ? 'Runde' : 'Runden') + '</span><span><b>' + (g ? Math.round(100 * r / g) : 0) + ' %</b>im Schnitt</span>'
           + '<span><b>' + ok + '</b>bestanden</span></div>'
           + '<div class="aw-kurve" aria-hidden="true">' + kurveHtml(h, VERLAUF_BALKEN) + '</div>'
+          + ((typeof probePruefungenHtml === 'function') ? probePruefungenHtml(h) : '')      // Stand 505: Meine Probeprüfungen mit Tendenz
           + '<div class="aw-liste">';
         for(let i = h.length - 1; i >= 0; i--){
             const e = h[i], st = e.status === 'pass' ? 'pass' : e.status === 'fail' ? 'fail' : 'grauzone';

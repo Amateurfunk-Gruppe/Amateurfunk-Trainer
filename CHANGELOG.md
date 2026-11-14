@@ -13,9 +13,25 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 503 · 13.11.2026
+Stand 505 · 14.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 505 (14.11.2026)
+
+### Hinzugefügt
+- „Meine Probeprüfungen“ mit Tendenz im Verlauf (App-Blatt und klassische Spalte). Wunsch aus dem Forum (Sabine): die Simulationen auswerten, „sodass man eine Tendenz sieht“; Dietmar zum Vorschlag „eine Kurve nur über die Simulationen mit der 19er-Grenze“: „Das bitte mit einbauen“. Drei kleine Kurven, je Prüfungsteil eine (Dietmar zu sechs Entwürfen: „ich möchte 1“): jede Probeprüfung ein Punkt (richtige von 25), gestrichelt die Grenze 19, darunter Schnitt und Tendenz des Teils (steigend / gleichbleibend / fallend, letzte 5 gegen die 5 davor). Gezeigt werden genau die Teile, die der Simulator für die gewählte Klasse prüft (Dietmar: „3 Ansichten mit Betrieb, Vorschriften und Technik nur bei der Klasse N und Direkteinstieg auf E. Bei N auf E und von E auf A nur ein Diagramm mit Technik. Und das soll die komplette Breite von dem Fenster einnehmen.“); am Handy und in der schmalen klassischen Spalte stehen die Kurven untereinander. Die Karte erscheint ab dem ersten Prüfungsteil, die Tendenz ab vier Ergebnissen je Teil (`probePruefungenHtml`).
+
+### Behoben
+- Verlauf: Öffnen von „Fehler üben“ oder „Lernbedarf“ ohne zu antworten trug eine Teilrunde mit Fehlern ein. Dietmar: „Nur Fehler oder Lernbedarf öffnen, ohne etwas zu beantworten, löst viele Fehler aus.“ – „Alles, was nicht beantwortet wurde, darf niemals als Fehler deklariert werden.“ Ursache (seit Stand 503): Eine fortgesetzte Runde bringt die Antworten von früher mit, und die wurden beim Verlassen erneut als Teilrunde gebucht. Jetzt zählt beim Abbruch nur, was seit dem Öffnen beantwortet wurde; ohne neue Antwort gibt es keinen Eintrag (`rundeFortsetzen` markiert `q._vorher`, `verlaufBeiAbbruch` lässt sie aus).
+
+### Geändert
+- Ergebnis-Ansage nach Prüfung und Prüfungssimulation als Aufnahme statt mit der Piper-Stimme. Dietmar: „Der Trainer sagt mit Piper Stimme, sie haben die Prüfung bestanden.“ – „Kurz würde mir langen. Da würde ich eine männliche Stimme auswählen.“ – „Es soll so klingen, als wäre es ein Mitarbeiter der Bundesnetzagentur.“ Acht Aufnahmen von Dietmar in `sounds/ergebnis-ansage/` (`ergebnis_01.mp3` bis `ergebnis_08.mp3`, MP3 mono 24 kHz 80 kbit/s, −19 LUFS): alle drei Teile bestanden, ein Teil bestanden, zwei Teile bestanden, Prüfung nicht bestanden, ein Teil nicht bestanden, Grauzone mit Nachprüfung, mehrere Teile knapp ohne Nachprüfung, dazu der Anhang „Die Einzelergebnisse entnehmen Sie bitte der Anzeige.“ nach jeder Ansage. Die Zahlen werden nicht mehr gesprochen, sie stehen auf dem Bildschirm. Fehlt eine Datei oder lässt sie sich nicht abspielen, spricht wie bisher die eingestellte Stimme den ganzen Satz (`speakExamResult` → `ergebnisAnsageSpielen`, Ersatz `speakExamResultStimme`); `stopTTS` beendet auch die Aufnahme.
+
+## Stand 504 (13.11.2026)
+
+### Hinzugefügt
+- Konfetti, wenn eine Frage sitzt (nur am PC, abschaltbar, von Haus aus aus). Dietmar: „nur am Desktop. Baue mir Konfetti ein, wenn eine Frage als Gelernt erkannt oder als gelernt abgehakt wird. Ich möchte das in den Einstellungen zum Ein- und Ausschalten. Standardmäßig ist es deaktiviert.“ Neuer Haken unter Einstellungen → Sounds, direkt unter „Belohnung: Ton, wenn eine Frage sitzt“: „Belohnung: Konfetti, wenn eine Frage sitzt“ (`einstellungen.konfettiGelernt`). Eingeschaltet gibt es einen kurzen Konfetti-Regen, wenn eine Frage zum dritten Mal hintereinander richtig beantwortet ist (`handleMasteryOnAnswer`) oder von Hand als gelernt abgehakt wird (`alsGelerntMarkieren`); beim Einschalten einmal zur Probe. Dietmar nach dem ersten Bau: „Konfetti könnte breiter sein.“ – statt eines Wurfs aus der Mitte kommen jetzt fünf über die ganze Fensterbreite. Nur am PC: Maus, Fenster ab 900 Punkten, klassische Ansicht und App-Ansicht; nicht in der Android-App, nicht in der Handy-Ansicht, dort fehlt auch der Haken. Nicht in der Prüfung, im Prüfungssimulator und im Gruppenraum, weil das Konfetti sonst die richtige Antwort verriete.
 
 ## Stand 503 (13.11.2026)
 
