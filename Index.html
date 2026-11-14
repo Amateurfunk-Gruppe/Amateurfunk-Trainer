@@ -26812,7 +26812,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 506, datum: '14.11.2026' };
+const TRAINER_STAND = { nr: 508, datum: '14.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -40189,7 +40189,10 @@ function rundeSpeichern(){
                 const versuch = q.options.map(o => platz.has(antwortSchluessel(o)) ? platz.get(antwortSchluessel(o)) : -1);
                 if(versuch.every(i => i >= 0)) ord = versuch;
             }
-            fragen.push({ id: q.id, o: ord, a: (q.userAnswerIndex === null ? null : q.userAnswerIndex), m: q._magnet ? 1 : 0 });
+            const eintrag = { id: q.id, o: ord, a: (q.userAnswerIndex === null ? null : q.userAnswerIndex), m: q._magnet ? 1 : 0 };
+            // Stand 507: der Stand vor der Antwort geht mit, damit sich auch nach dem Fortsetzen einer Runde eine Antwort zuruecknehmen laesst
+            if(q.userAnswerIndex !== null && q._zurueckVorher) eintrag.z = q._zurueckVorher;
+            fragen.push(eintrag);
         }
         localStorage.setItem(rundeSchluessel(), JSON.stringify({
             v: 1,
@@ -40256,6 +40259,7 @@ function rundeFortsetzen(art){
         }
         // Fehler-Magnet: die Markierung geht mit der gespeicherten Runde mit. Aeltere Staende ohne
         // Markierung (vor 2.267) werden aus dem Lernstand neu eingeschaetzt.
+        if(f.z && typeof f.z === 'object' && vorbereitet.userAnswerIndex !== null) vorbereitet._zurueckVorher = f.z;
         if(f.m === 1) vorbereitet._magnet = true;
         else if(f.m === undefined && !j.examMode && !j.nurGelernte && magnetGewicht(roh.id) > 1) vorbereitet._magnet = true;
         wieder.push(vorbereitet);
@@ -40293,6 +40297,18 @@ function rundeFortsetzen(art){
         progress[q.id] = { answered: beantwortet, correct: istRichtig };
         // Stand 505: schon vor dem Fortsetzen beantwortet - zaehlt beim naechsten Abbruch nicht noch einmal im Verlauf
         if(beantwortet) q._vorher = true;
+        // Stand 507: Runden, die vor diesem Stand gespeichert wurden, kennen den Stand vor der Antwort nicht. Dann gilt eine
+        // Naeherung zum Zuruecknehmen: In "Fehler ueben" stand die Frage vorher sicher auf der Liste; sonst bleibt die Liste, wie sie ist,
+        // und Lernbedarf und Lernfortschritt bleiben unangetastet.
+        if(beantwortet && !q._zurueckVorher){
+            try{
+                const kp = (x) => (x === undefined || x === null) ? null : JSON.parse(JSON.stringify(x));
+                q._zurueckVorher = { f9: undefined, progress: null,
+                    fehler: (art === 'fehler') ? true : errorList.includes(q.id),
+                    difficult: kp(typeof difficultQuestions !== 'undefined' ? difficultQuestions[q.id] : null),
+                    mastery:   kp(typeof masteryData !== 'undefined' ? masteryData[q.id] : null), naeherung: true };
+            }catch(e){}
+        }
         if(beantwortet){ gezaehlt++; if(istRichtig) richtig++; }
     }
     totalAnswered = gezaehlt;
@@ -41854,6 +41870,10 @@ function selectOption(optIndex) {
     // Diagnose, Tagesstatistik und XP zaehlen nur die erste Antwort, nicht jedes Umentscheiden.
     let pruefNochmal = false;
     try{ if(pruefungStreng()){ pruefNochmal = !!q._pruefBeantwortet; q._pruefBeantwortet = true; pruefungAntwortVorherMerken(q); } }catch(e){}
+    // Stand 506 (14.11.2026), Dietmar: "klicke ich auf einen der Roten im Verlauf, habe ich kein Antwort zurück nehmen".
+    // Beim Lernen merkt sich jede Frage ihren Stand VOR der Antwort - so laesst sie sich auch zuruecknehmen, wenn man
+    // sie spaeter ueber die Punktleiste wieder oeffnet (die Gesamt-Sicherung gilt nur fuer die gerade beantwortete Frage).
+    try{ if(!pruefungStreng()) pruefungAntwortVorherMerken(q, '_zurueckVorher'); }catch(e){}
 
     q.userAnswerIndex = optIndex;
     answered = true;
@@ -44393,6 +44413,13 @@ function zurueckKnopfNachziehen(){
             zeigen = !!(pruefungZuruecknehmbar() && q && q._pruefVorher && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined);
         }
     }catch(e){}
+    // Stand 506: Beim Lernen auch fuer eine aelter beantwortete Frage, die ueber die Punktleiste geoeffnet wurde
+    try{
+        if(!pruefungStreng() && zurueckNehmenAn()){
+            const q2 = currentQuestions[currentIndex];
+            if(q2 && q2._zurueckVorher && q2.userAnswerIndex !== null && q2.userAnswerIndex !== undefined) zeigen = true;
+        }
+    }catch(e){}
     // Ueber eine Klasse und nicht ueber style.display: .nav-btn setzt
     // display mit !important, dagegen kommt ein Inline-Wert nicht an.
     b.classList.toggle('zurueck-aus', !zeigen);
@@ -44459,22 +44486,25 @@ window.pruefungAenderbar = pruefungAenderbar;
 function pruefungZuruecknehmbar(){
     try{ return pruefungAenderbar() && !(window.realisticExam && window.realisticExam.duo); }catch(e){ return false; }
 }
-function pruefungAntwortVorherMerken(q){
+function pruefungAntwortVorherMerken(q, feld){
     const id = q.id;
     const kopie = (x) => (x === undefined || x === null) ? null : JSON.parse(JSON.stringify(x));
-    q._pruefVorher = {
+    q[feld || '_pruefVorher'] = {
+        f9:        q._f9AlsFehlerGewertet,
         progress:  kopie(progress[id]),
         fehler:    errorList.includes(id),
         difficult: kopie(typeof difficultQuestions !== 'undefined' ? difficultQuestions[id] : null),
         mastery:   kopie(typeof masteryData !== 'undefined' ? masteryData[id] : null)
     };
 }
-function pruefungAntwortLoesen(q){
-    const v = q && q._pruefVorher;
+function pruefungAntwortLoesen(q, feld){
+    const v = q && q[feld || '_pruefVorher'];
     if(!v || q.userAnswerIndex === null || q.userAnswerIndex === undefined) return false;
     const id = q.id;
     const warRichtig = !!(q.options[q.userAnswerIndex] || {}).correct;
     q.userAnswerIndex = null;
+    // Stand 506: nur beim Lernen (eigenes Feld) wird auch der Merker "als Fehler gewertet" zurueckgesetzt
+    if(feld){ if(v.f9 === undefined) { try{ delete q._f9AlsFehlerGewertet; }catch(e){} } else q._f9AlsFehlerGewertet = v.f9; }
     totalAnswered = Math.max(0, totalAnswered - 1);
     if(warRichtig) correctCount = Math.max(0, correctCount - 1);
     if(v.progress) progress[id] = JSON.parse(JSON.stringify(v.progress)); else { try{ delete progress[id]; }catch(e){} }
@@ -44527,6 +44557,26 @@ function antwortZurueck(){
             try{ if(typeof ansagen === 'function') ansagen('Antwort zurückgenommen. Die Frage steht wieder offen.'); }catch(e){}
         }
         return;
+    }
+    // Stand 506: eine aelter beantwortete Frage (ueber die Punktleiste geoeffnet): nur ihren eigenen Stand zurueckholen
+    if(zurueckNehmenAn() && (!antwortSicherung || antwortSicherung.index !== currentIndex)){
+        const q0 = currentQuestions[currentIndex];
+        if(q0 && q0._zurueckVorher && q0.userAnswerIndex !== null && q0.userAnswerIndex !== undefined){
+            try{ autoWeiterAbbrechen(); }catch(e){}
+            try{ if (typeof stopTTS === 'function') stopTTS(); }catch(e){}
+            try{ if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+            if(pruefungAntwortLoesen(q0, '_zurueckVorher')){
+                antwortSicherung = null;
+                try{ rundeSichernSpaeter(); }catch(e){}
+                renderQuestion();
+                try{ updateMasteryDisplay(); }catch(e){}
+                try{ updateErrorBadge(); }catch(e){}
+                try{ updateDifficultBadge(); }catch(e){}
+                try{ zurueckKnopfNachziehen(); }catch(e){}
+                try{ if(typeof ansagen === 'function') ansagen('Antwort zurückgenommen. Die Frage steht wieder offen.'); }catch(e){}
+            }
+            return;
+        }
     }
     const sich = antwortSicherung;
     if(!sich || !zurueckNehmenAn()) return;
@@ -44581,7 +44631,8 @@ document.addEventListener('keydown', function(e){
     const z = e.target && e.target.tagName;
     if(z === 'INPUT' || z === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
     const inPruefung = (function(){ try{ const q = currentQuestions[currentIndex]; return pruefungZuruecknehmbar() && q && q._pruefVorher && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined; }catch(x){ return false; } })();
-    if(!inPruefung && (!antwortSicherung || !zurueckNehmenAn())) return;
+    const altFrage = (function(){ try{ const q = currentQuestions[currentIndex]; return !pruefungStreng() && zurueckNehmenAn() && q && q._zurueckVorher && q.userAnswerIndex !== null && q.userAnswerIndex !== undefined; }catch(x){ return false; } })();
+    if(!inPruefung && !altFrage && (!antwortSicherung || !zurueckNehmenAn())) return;
     e.preventDefault();
     antwortZurueck();
 });

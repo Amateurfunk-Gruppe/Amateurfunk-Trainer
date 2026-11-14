@@ -13,9 +13,19 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 506 · 14.11.2026
+Stand 508 · 14.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 508 (14.11.2026)
+
+### Behoben
+- „Antwort zurücknehmen“: Auch für Fragen, die du in einer früheren Sitzung beantwortet hast und deren Runde du fortsetzt, gibt es jetzt „Zurücknehmen“. Neu gespeicherte Runden behalten den genauen Stand vor der Antwort. Bei älteren gespeicherten Runden gilt eine Näherung: In „Fehler üben“ steht die Frage danach wieder auf der Fehlerliste, Lernbedarf und Lernfortschritt bleiben unverändert.
+
+## Stand 507 (14.11.2026)
+
+### Behoben
+- „Antwort zurücknehmen“ (Haken unter Lernen / Nachteilsausgleich): Der Knopf „Zurücknehmen“ und Strg+Z gelten jetzt auch für eine Frage, die du über „Zurück“ oder die Punktleiste (zum Beispiel eine rote Zahl) wieder öffnest. Bisher ging es nur für die gerade beantwortete Frage; nach „Weiter“ und „Zurück“ war der Knopf weg. Zurückgenommen wird nur diese eine Frage, die anderen Antworten bleiben.
 
 ## Stand 506 (14.11.2026)
 
