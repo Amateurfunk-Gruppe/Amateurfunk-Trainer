@@ -2,6 +2,10 @@
 <!-- Amateurfunk-Trainer fuer Android (29.09.2026) -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 20.11.2026: Play Console meldet, ACCESS_WIFI_STATE mache WLAN zur Pflicht (schliesst Geraete aus). -->
+    <!-- Die App laeuft auch ohne WLAN (Mobilfunk, nur lokal). Daher ausdruecklich optional. -->
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
