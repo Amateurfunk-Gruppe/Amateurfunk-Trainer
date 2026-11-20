@@ -4,8 +4,15 @@
 
 # Amateurfunk-Trainer
 
-Ein Lernprogramm für die deutsche Amateurfunkprüfung — **Klasse N, E und A**.
-Läuft auf dem eigenen Rechner, ohne Konto, ohne Internetzwang, ohne Werbung.
+Ein kostenloses Lernprogramm für die deutsche Amateurfunkprüfung — **Klasse N, E und A**, ohne Werbung.
+
+**Drei Wege, den Trainer zu nutzen:**
+
+- **Online im Browser, ohne Installation und ohne Konto:** [trainer.amateurfunk-trainer.com](https://trainer.amateurfunk-trainer.com/), auch auf dem Handy.
+- **Als Android-App:** kommt voraussichtlich ab Mitte November 2026 zu Google Play.
+- **Lokal auf dem eigenen Rechner**, auf Wunsch ohne Internet (Anleitung unten).
+
+**Lizenz:** Der Quelltext ist einsehbar, die nicht-kommerzielle Nutzung ist frei. Der Trainer steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE), nicht unter einer MIT-Lizenz und **nicht** unter einer Open-Source-Lizenz.
 
 Der Lernfortschritt bleibt dort, wo er entsteht: auf dem eigenen Rechner.
 
