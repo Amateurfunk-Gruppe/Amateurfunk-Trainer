@@ -117,7 +117,7 @@
                         Object.keys(ga).forEach(function(id){
                             var x = ga[id], y = gn[id];
                             if(!Array.isArray(x)) return;
-                            if(!Array.isArray(y)) gn[id] = x; else gn[id] = [Math.max(+x[0] || 0, +y[0] || 0), Math.max(+x[1] || 0, +y[1] || 0)];
+                            if(!Array.isArray(y)) gn[id] = x; else gn[id] = [Math.max(+x[0] || 0, +y[0] || 0), Math.max(+x[1] || 0, +y[1] || 0), Math.max(+x[2] || 0, +y[2] || 0), Math.max(+x[3] || 0, +y[3] || 0)];
                         });
                         localStorage.setItem(b + slot, JSON.stringify(gn)); return;
                     }
@@ -2039,6 +2039,8 @@
             letter-spacing: 0; color: var(--muted, #5b6b80); background: var(--s-fl2, rgba(127,140,160,0.14)); vertical-align: 2px; cursor: pointer; }
         body.runde-laeuft #appLeiste .pc-version { display: none; }
         #alBeenden { display: none; }
+        #alVollbild { display: none; }
+        html.pc-app:not(.pc-handy) #alVollbild { display: flex; }
         html.pc-app #alBeenden { display: flex; }
         html.pc-app #appHeute .ah-chips .ah-onair { margin-left: 8px; }
         /* Kacheln: Videos, Hilfe, Rufzeichen dazu; je eine kurze Beschreibung */
@@ -2442,6 +2444,19 @@
             html.pc-app body.dark :is(.aw-zeile, .am-zeile, .ah-kachel, .sw-karte):not(#pcX):hover { filter: brightness(1.18); }
             html.pc-app body :is(#appLeiste .al-knopf, #appNavi button, #roboBlase .rb-knoepfe button, .app-seg button, #pcBlatt .pcb-zu):not(#pcX):hover { filter: brightness(1.12); transform: none !important; box-shadow: none !important; }
             html.pc-app #appNavi button:hover .an-pille { background: color-mix(in srgb, var(--tuerkis) 14%, transparent); }
+        /* Stand 513 (18.11.2026) - Dietmar, mit Bild der Kopfzeile: "wir haben in Verspielt 2 mal die Suche. Das rechte kann raus und dafuer das Bild
+           vergroessern rein." Am PC steht das Suchfeld (#searchInput) schon links in der Kopfzeile; die Lupe "Suche" rechts ist dasselbe. Im Stil Verspielt
+           faellt sie weg, dafuer wird das Profilbild groesser (Stand 514: 58 statt 30 Punkte). Handy-Ansicht und die anderen Stile bleiben unveraendert. */
+        html.pc-app:not(.pc-handy).stil-verspielt #appLeiste #alSuche { display: none !important; }
+        /* Stand 516: Dietmar, mit Bild der Kopfzeile: "Das Profilbild muss genau so gross wie die Buttons daneben sein." Das Bild fuellt jetzt genau die Flaeche
+           eines Knopfes (44 x 44 Punkte, wie Vollbild, Drei Punkte und Beenden); die Kopfzeile hat wieder ihre normale Hoehe. (Stand 514 hatte 58 Punkte, zu gross.) */
+        html.pc-app:not(.pc-handy).stil-verspielt #appLeiste .al-knopf#alBenutzer { width: 44px; height: 44px; flex: 0 0 44px; }
+        html.pc-app:not(.pc-handy).stil-verspielt #appLeiste .al-avatar { width: 44px; height: 44px; font-size: 1.2rem; }
+        /* Stand 517: Dietmar, "Faellt dir was auf?": Das Abzeichen (S9+80) war fast so breit wie das Foto und deckte das untere Drittel ab. Jetzt kleiner
+           (Schrift 8 Punkte, Hoehe 12) und in die rechte untere Ecke gesetzt, es ragt nur noch ein Stueck ueber den Rand. */
+        html.pc-app:not(.pc-handy).stil-verspielt #appLeiste #alBenutzer .al-stufe:not(#zz) { height: 12px; padding: 0 4px; font: 800 8px/12px var(--font-display); right: -5px; bottom: -2px; border-width: 1px; }
+        /* Stand 517: Dietmar: "Wenn ich das in eckig auch eckig habe, ja." Bei eckiger Form (ohne Rundung der App) ist auch das Abzeichen eckig, bei runder Form bleibt es die Pille. */
+        html.pc-app:not(.pc-handy).stil-verspielt body.eckig:not(.app-rund) #appLeiste #alBenutzer .al-stufe:not(#zz):not(#zz2) { border-radius: 3px !important; }
             html.pc-app #appLeiste .al-knopf:hover { background: color-mix(in srgb, var(--tuerkis) 14%, transparent) !important; border-radius: 12px; }
             html.pc-app body :is(.ah-kachel, .aw-zeile, .am-zeile, .sw-karte):not(#pcX):active { transform: scale(.99) !important; }
         }
@@ -5983,6 +5998,16 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
             display: flex; align-items: flex-end; gap: 2px;
             height: 54px; margin: 0.5rem 0 0.15rem;
         }
+        /* Stand 512 (17.11.2026) - Dietmar: "kannst das Fenster in der Desktop Version etwas groesser machen?" Das Fenster ist breiter (860 statt 660 px),
+           die Saeulen am PC hoeher und die Kacheln mit etwas mehr Luft. Am Handy bleibt alles wie es war. */
+        @media (min-width: 900px) {
+            #uebungszeitModal .wochen-reihe { height: 96px; }
+            #uebungszeitModal .wochen-achse { font-size: 0.7rem; }
+            #uebungszeitModal .zeit-reihe-titel { font-size: 0.74rem; }
+            #uebungszeitModal .zeit-kachel .k-wert { font-size: 1.25rem; }
+            #uebungszeitModal .zeit-kachel .k-name { font-size: 0.76rem; }
+            #uebungszeitModal .zeit-kachel > div { padding: 10px 14px; }
+        }
         .wochen-reihe .w-spalte {
             flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
             height: 100%; cursor: default;
@@ -6027,6 +6052,16 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
         .wochen-achse span { flex: 1; text-align: center; }
         body.dark .wochen-reihe .w-saeule { background: #2b4a63; }
         body.dark .wochen-reihe .w-spalte.leer .w-saeule { background: #24384a; }
+        /* Stand 510 (17.11.2026) - Dietmar: "Farblich ist die Lernzeit, alles andere als schoen." Er hat Vorschlag 1 gewaehlt, "Ruhiges Gruen":
+           Werktage gruen, Wochenende helleres Gruen, heute und die laufende Woche gelb. Gilt in hell und dunkel, im Tage- und im Wochendiagramm. */
+        .wochen-reihe .w-saeule, body.dark .wochen-reihe .w-saeule { background: #2f9e6f; }
+        .tage-reihe .w-spalte.wochenende .w-saeule, body.dark .tage-reihe .w-spalte.wochenende .w-saeule { background: #7fd1a8; }
+        .wochen-reihe .w-spalte:hover .w-saeule, body.dark .wochen-reihe .w-spalte:hover .w-saeule { background: #45b886; }
+        .wochen-reihe .w-spalte.jetzt .w-saeule, body.dark .wochen-reihe .w-spalte.jetzt .w-saeule,
+        .tage-reihe .w-spalte.jetzt .w-saeule, body.dark .tage-reihe .w-spalte.jetzt .w-saeule { background: #ffd23f; }
+        .wochen-reihe .w-spalte.leer .w-saeule { background: #aab3bf; }
+        .tage-reihe .w-spalte.wochenende.leer .w-saeule { background: #c8cfd8; }
+        body.dark .wochen-reihe .w-spalte.leer .w-saeule, body.dark .tage-reihe .w-spalte.wochenende.leer .w-saeule { background: #24384a; }
 
         .zeit-kachel {
             display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10478,6 +10513,12 @@ html.android-app:not(.pc-app) #einstKonfettiGelerntZeile, html.pc-handy #einstKo
 .pp-leg i{display:inline-block;width:.6rem;height:.6rem;border-radius:50%}
 .pp-leg i.pp-grenze{width:1rem;height:0;border-radius:0;border-top:2px dashed #ff6b6b;background:none}
 .pp-drei{display:grid;gap:.5rem}
+/* Stand 518, Dietmar: "In Sachlich verdeckt die Statistik den Verlauf. Der muss einklappbar sein. Beim Start minimiert." */
+details.pp-karte>summary{cursor:pointer;list-style:none;margin-bottom:0}
+details.pp-karte>summary::-webkit-details-marker{display:none}
+details.pp-karte[open]>summary{margin-bottom:.35rem}
+.pp-pfeil{margin-left:auto;font-size:.8rem;opacity:.8;transition:transform .15s}
+details.pp-karte[open] .pp-pfeil{transform:rotate(180deg)}
 .pp-teil{padding:.45rem .55rem;border-radius:10px;background:rgba(127,140,160,.12);min-width:0}
 .pp-teil>b{font-size:.85rem}
 .pp-teil .pp-tendenz{margin-top:.15rem;font-size:.76rem;white-space:nowrap}
@@ -19366,9 +19407,9 @@ function probePruefungenHtml(h, eng){
                + (tn ? ' · <i class="fas ' + pfeil + '"></i> <b>' + wort + '</b>' : '') + '</div></div>';
     });
     const ok = alle.filter(x => x.ok).length;
-    return '<div class="pp-karte" id="probePruefungen"><div class="pp-kopf"><b>Meine Probeprüfungen</b><small>' + alle.length + (alle.length === 1 ? ' Prüfungsteil' : ' Prüfungsteile') + ' · ' + ok + ' bestanden</small></div>'
+    return '<details class="pp-karte" id="probePruefungen"' + (window._ppOffen ? ' open' : '') + ' ontoggle="window._ppOffen=this.open"><summary class="pp-kopf"><b>Meine Probeprüfungen</b><small>' + alle.length + (alle.length === 1 ? ' Prüfungsteil' : ' Prüfungsteile') + ' · ' + ok + ' bestanden</small><i class="fas fa-chevron-down pp-pfeil" aria-hidden="true"></i></summary>'
          + '<div class="pp-drei" style="grid-template-columns:' + ((eng || einzeln) ? '1fr' : 'repeat(' + gruppen.length + ',minmax(0,1fr))') + '">' + karten + '</div>'
-         + '<div class="pp-leg"><span><i class="pp-grenze"></i>Grenze 19 von 25</span><span>Tendenz: letzte 5 gegen die 5 davor</span></div></div>';
+         + '<div class="pp-leg"><span><i class="pp-grenze"></i>Grenze 19 von 25</span><span>Tendenz: letzte 5 gegen die 5 davor</span></div></details>';
 }
 window.probePruefungenHtml = probePruefungenHtml;
 function renderHistory() {
@@ -26812,7 +26853,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 508, datum: '14.11.2026' };
+const TRAINER_STAND = { nr: 522, datum: '19.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -38145,14 +38186,15 @@ function einstBlaetterFuellen(){
           + '</span></span></label>'
           + '<select id="einstAutoWeiter" onchange="autoWeiterSetzen(this.value)" '
           + 'data-vorlesen-kurz="Wartezeit bis zur nächsten Frage." '
-          + 'data-vorlesen="Hier wählst du, wie lange der Trainer nach der Antwort wartet, bevor er weiterblättert. Zur Wahl stehen zwei, drei, fünf, acht oder zwölf Sekunden." '
+          + 'data-vorlesen="Hier wählst du, wie lange der Trainer nach der Antwort wartet, bevor er weiterblättert. Zur Wahl stehen eine, zwei, drei, fünf, sechs oder sieben Sekunden." '
           + 'style="width:100%; max-width:230px; padding:0.45rem 0.6rem; border-radius:8px; '
           + 'border:1px solid #b0c4d8; font-family:inherit; font-size:0.83rem;">'
+          + '<option value="1">nach 1 Sekunde</option>'
           + '<option value="2">nach 2 Sekunden</option>'
           + '<option value="3">nach 3 Sekunden</option>'
           + '<option value="5">nach 5 Sekunden</option>'
-          + '<option value="8">nach 8 Sekunden</option>'
-          + '<option value="12">nach 12 Sekunden</option>'
+          + '<option value="6">nach 6 Sekunden</option>'
+          + '<option value="7">nach 7 Sekunden</option>'
           + '</select>'
           + '<div id="einstAutoWeiterText" style="font-size:0.75rem; color:var(--muted); margin-top:0.45rem; line-height:1.5;"></div>'
           // Stand 426 (04.11.2026), Dietmar (App, Pruefungssimulator): "Er springt nach dem Antippen oft zwei Fragen
@@ -40277,6 +40319,15 @@ function rundeFortsetzen(art){
     // Stand 503: Fehler- und Lernbedarf-Runde - ist nichts mehr offen, ist die Runde durch; dann beginnt eine neue.
     if((art === 'fehler' || art === 'bedarf') && wieder.every(q => q.userAnswerIndex !== null)){ rundeVerwerfen(art); return false; }
     if(art === 'fehler') wieder._art = 'fehler';
+    // Stand 509 (14.11.2026), Dietmar: "Wenn ich bei Fehler üben draufklicke und es öffne, ist Frage 1 schon beantwortet ... Dann müsste
+    // eigentlich wieder bei Frage 1 anfangen." und bei Lernbedarf: "Dann darf die Antwort nicht schon dastehen." Fehler üben und Lernbedarf
+    // gehen beim Wiederöffnen von vorn durch, was noch auf der Liste steht - ohne die alten Antworten und ohne Zähler. Wer in Fehler üben
+    // richtig geantwortet hat, ist ohnehin schon von der Liste (siehe oben); Lernbedarf braucht drei richtige Antworten, dafür muss
+    // die Frage wieder offen sein.
+    if(art === 'fehler' || art === 'bedarf'){
+        wieder.forEach(q => { q.userAnswerIndex = null; try{ delete q._zurueckVorher; }catch(e){} });
+        j.index = 0;
+    }
 
     isQuizActive = true;
     examFinished = false;
@@ -41928,7 +41979,7 @@ function selectOption(optIndex) {
         handleDifficultOnCorrect(qId);
     }
     handleMasteryOnAnswer(qId, isCorrect);
-    if (isCorrect) simGesehenRichtig(qId);
+    if (isCorrect) simGesehenRichtig(qId); else { try{ simGesehenFalsch(qId); }catch(e){} }
     saveErrors();
     saveDifficult();
     saveMastery();
@@ -44797,12 +44848,14 @@ function autoWeiterFelderNachziehen(){
                 if(d < abstand){ abstand = d; beste = o; }
             }
             feld.value = beste.value;
+            // Stand 520: Ein frueher gespeicherter Wert (8 oder 12 s), den es nicht mehr gibt, wird auf die naechste Stufe gesetzt, damit Feld, Text und Uhr dasselbe sagen.
+            if(parseFloat(beste.value) !== n){ try{ localStorage.setItem(AUTOWEITER_SCHLUESSEL, beste.value); }catch(e){} }
         }
     }
     const t = document.getElementById('einstAutoWeiterText');
     if(t){
         t.textContent = an
-            ? 'Nach der Antwort ' + n + ' Sekunden warten, dann zur nächsten Frage.'
+            ? 'Nach der Antwort ' + autoWeiterSekunden() + (autoWeiterSekunden() === 1 ? ' Sekunde' : ' Sekunden') + ' warten, dann zur nächsten Frage.'
             : 'Aus — weitergeblättert wird nur auf Klick oder mit Enter.';
     }
 }
@@ -45860,6 +45913,20 @@ function stilSetzen(stil) {
     try { localStorage.setItem('theme', stil); } catch (e) {}
     applyThemeButtonLabel();
     browserfarbeNachziehen();
+    // Stand 509 (14.11.2026), Dietmar (Video, Fehler üben): "Klicke ich auf Arktis, sind die Antworten plötzlich klein." Beim Umschalten
+    // ändert sich das Layout, die gemerkte Schriftstufe der Frage kann dabei aus einer Messung mitten im Umbau stammen und bleibt dann
+    // stehen. Deshalb: Merker vergessen und die Stufe neu bestimmen, sobald die Anzeige steht (zweimal, falls das erste Mal noch zu früh war).
+    try{
+        if(document.body.classList.contains('runde-laeuft')){
+            [350, 1000].forEach(function(ms){ setTimeout(function(){
+                try{
+                    if(!document.body.classList.contains('runde-laeuft')) return;
+                    fragenStufeMerk = null;
+                    fragenGroesseAnpassen();
+                }catch(e){}
+            }, ms); });
+        }
+    }catch(e){}
 }
 window.stilSetzen = stilSetzen;
 
@@ -46040,6 +46107,13 @@ function vollbildKnopfNachziehen(){
         f.innerHTML = anF ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
         f.setAttribute('title', anF ? 'Vollbild verlassen' : 'Vollbild – der obere Teil des Browsers verschwindet');
         f.setAttribute('data-tooltip', f.getAttribute('title'));
+    }
+    const al = document.getElementById('alVollbild');
+    if(al){
+        const anA = vollbildLaeuft();
+        al.innerHTML = anA ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+        al.title = anA ? 'Vollbild verlassen (oder Esc)' : 'Vollbild – der obere Teil des Browsers verschwindet (wie F11)';
+        al.setAttribute('aria-label', anA ? 'Vollbild verlassen' : 'Vollbild einschalten');
     }
     const b = document.getElementById('vollbildBtn');
     if(!b) return;
@@ -46587,8 +46661,11 @@ document.addEventListener('keydown', function (e) {
         selectOption(i);
         return;
     }
-    if (e.key === 'Enter' || e.key === 'ArrowRight') {
+    // Stand 519, Dietmar: "Die Space Taste soll weiter zur naechsten Frage springen. Moechte auf Speed gehen, klicken kostet Zeit."
+    // Auch wenn gerade ein Knopf den Fokus hat (nach dem Antippen einer Antwort), loest die Leertaste sonst zusaetzlich einen Klick aus - deshalb preventDefault, unten auch beim Loslassen.
+    if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
+        if (e.repeat) return;
         if (typeof nextQuestion === 'function') nextQuestion();
         return;
     }
@@ -46596,6 +46673,15 @@ document.addEventListener('keydown', function (e) {
         e.preventDefault();
         if (typeof prevQuestion === 'function') prevQuestion();
     }
+});
+
+document.addEventListener('keyup', function (e) {
+    if (e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (!tastaturBedienung() || typeof isQuizActive === 'undefined' || !isQuizActive) return;
+    const z = e.target;
+    if (z && (z.tagName === 'INPUT' || z.tagName === 'TEXTAREA' || z.tagName === 'SELECT' || z.isContentEditable)) return;
+    if ([...document.querySelectorAll('div[id$="Modal"]')].some(function (m) { return getComputedStyle(m).display !== 'none'; })) return;
+    e.preventDefault();
 });
 
 // Stand 429: ueber window aufrufen. Der Pruefungssimulator ersetzt window.nextQuestion
@@ -48750,11 +48836,23 @@ if (originalSelectOption) {
             border-color: var(--darc-falsch) !important;
             color: #3a0f0a !important;
         }
+        /* Stand 509 (14.11.2026), Dietmar: "Wenn ich eine Frage als gelernt abhake, möchte ich die auch grün haben und nicht nur so ein
+           bisschen grün." Im Dunkelmodus ist ein als gelernt abgehakter Punkt jetzt so voll grün wie ein richtig beantworteter. */
         body.dark .dot-sidebar.gelernt-dot {
-            background: #0d3326 !important;
+            background: var(--darc-richtig) !important;
             border-color: var(--darc-richtig) !important;
-            color: #7ee0b4 !important;
+            color: #06281a !important;
         }
+        /* Dasselbe im Hellmodus (Arktis), in allen Farbstilen: voll grün wie "richtig beantwortet". Der Rand bleibt dem aktuellen Punkt. */
+        html:not(#g509a) body:not(.dark):not(#g509b) .dot-sidebar.gelernt-dot {
+            background: #157f4b !important;
+            color: #ffffff !important;
+        }
+        html:not(#g509a) body:not(.dark):not(#g509b) .dot-sidebar.gelernt-dot:not(.current-dot) {
+            border-color: #157f4b !important;
+        }
+        html:not(#g509a) body.grey:not(.dark):not(#g509b) .dot-sidebar.gelernt-dot { background: #1e7a44 !important; }
+        html:not(#g509a) body.grey:not(.dark):not(#g509b) .dot-sidebar.gelernt-dot:not(.current-dot) { border-color: #1e7a44 !important; }
         body.dark .dot-sidebar.beantwortet-dot {
             background: #1d3b52 !important;
             border-color: #3d7aa0 !important;
@@ -51232,7 +51330,7 @@ function simGesehenRoh(){
 }
 function simGesehenLesen(){
   const o = simGesehenRoh(), r = {};
-  Object.keys(o).forEach(id => { const e = o[id]; if(Array.isArray(e)) r[id] = { n: e[0]|0, t: +e[1] || 0 }; });
+  Object.keys(o).forEach(id => { const e = o[id]; if(Array.isArray(e)) r[id] = { n: e[0]|0, t: +e[1] || 0, g: e[2]|0, gt: +e[3] || 0 }; });   // Stand 522: g = wie oft gezogen, gt = wann zuletzt gezogen
   return r;
 }
 // Frage richtig beantwortet: nach hinten schieben. Falsch: nichts tun.
@@ -51240,11 +51338,31 @@ function simGesehenRichtig(qId){
   try{
     if(!qId) return;
     const o = simGesehenRoh(), e = o[qId];
-    o[qId] = [(Array.isArray(e) ? (e[0]|0) : 0) + 1, Date.now()];
+    o[qId] = [(Array.isArray(e) ? (e[0]|0) : 0) + 1, Date.now(), Array.isArray(e) ? (e[2]|0) : 0, Array.isArray(e) ? (+e[3] || 0) : 0];
     localStorage.setItem(simGesehenSchluessel(), JSON.stringify(o));
   }catch(e){}
 }
 window.simGesehenRichtig = simGesehenRichtig;
+// Stand 522, Dietmar: "Wenn man fast alles angelernt hat, muss sich alles durchmischen. Fragen aus der letzten Pruefungssimulation sollten weiter unten angesiedelt werden."
+// Form je Frage jetzt [richtig, Zeit, gezogen, zuletzt gezogen]. Aeltere Eintraege mit zwei Werten gelten als nie gezogen (0, 0).
+// Gezogen wird beim Zusammenstellen eines Bogens. Falsch beantwortet: die Frage wird wieder "ungezogen" und steht vorn (wie seit Stand 489).
+function simGesehenGezogen(ids){
+  try{
+    const o = simGesehenRoh(), jetzt = Date.now();
+    (ids || []).forEach((id, i) => { if(!id) return; const e = o[id]; o[id] = [Array.isArray(e) ? (e[0]|0) : 0, Array.isArray(e) ? (+e[1] || 0) : 0, (Array.isArray(e) ? (e[2]|0) : 0) + 1, jetzt + i]; });
+    localStorage.setItem(simGesehenSchluessel(), JSON.stringify(o));
+  }catch(e){}
+}
+function simGesehenFalsch(qId){
+  try{
+    if(!qId) return;
+    const o = simGesehenRoh(), e = o[qId];
+    if(!Array.isArray(e) || (!(e[2]|0) && !(+e[3]))) return;
+    o[qId] = [e[0]|0, +e[1] || 0, Math.max(0, (e[2]|0) - 1), 0];
+    localStorage.setItem(simGesehenSchluessel(), JSON.stringify(o));
+  }catch(e){}
+}
+window.simGesehenGezogen = simGesehenGezogen; window.simGesehenFalsch = simGesehenFalsch;
 // bleibt aus Gruenden der Verträglichkeit bestehen; gemerkt wird erst beim Beantworten
 function simGesehenMerken(fragen){}
 window.simGesehenZuruecksetzen = function(){ try{ localStorage.removeItem(simGesehenSchluessel()); localStorage.removeItem(SIM_GESEHEN_ALT); }catch(e){} };
@@ -51270,29 +51388,21 @@ function pickAbwechslung(pool, n){
     }
     let raus = [];
     namen.forEach(g => {
-      // Seltenste zuerst, bei gleicher Haeufigkeit die am laengsten nicht gesehene, dann Zufall
+      // Stand 522: Zuerst die Fragen, die am seltensten GEZOGEN wurden, bei gleicher Zahl die, deren letzte Ziehung am laengsten her ist
+      // (Fragen aus dem letzten Bogen stehen damit ganz hinten). Danach wie bisher: seltener richtig beantwortet, laenger her, Zufall.
       const sortiert = kapitel[g]
-        .map(q => { const e = gesehen[q.id]; return { q, n: e ? (e.n||0) : 0, t: e ? (e.t||0) : 0, z: Math.random() }; })
-        .sort((a,b) => (a.n - b.n) || (a.t - b.t) || (a.z - b.z));
-      // Innerhalb der gleichen Haeufigkeitsstufe zufaellig mischen, sonst
-      // kaeme bei lauter ungesehenen immer dieselbe Reihenfolge heraus.
-      const stufen = {};
-      sortiert.forEach(x => { (stufen[x.n] = stufen[x.n] || []).push(x); });
-      const geordnet = [];
-      Object.keys(stufen).map(Number).sort((a,b)=>a-b).forEach(k => {
-        const st = stufen[k];
-        // dieselbe Stufe: aeltere Sicht zuerst, aber Gruppen gleicher Zeit mischen
-        for(let i = st.length-1; i>0; i--){ const j = Math.floor(Math.random()*(i+1)); [st[i],st[j]]=[st[j],st[i]]; }
-        if(k > 0) st.sort((a,b) => a.t - b.t);
-        st.forEach(x => geordnet.push(x.q));
-      });
+        .map(q => { const e = gesehen[q.id]; return { q, n: e ? (e.n||0) : 0, t: e ? (e.t||0) : 0, g: e ? (e.g||0) : 0, gt: e ? (e.gt||0) : 0, z: Math.random() }; })
+        .sort((a,b) => (a.g - b.g) || (a.gt - b.gt) || (a.n - b.n) || (a.t - b.t) || (a.z - b.z));
+      const geordnet = sortiert.map(x => x.q);
       raus = raus.concat(geordnet.slice(0, platz[g]));
     });
     if(raus.length < n){
       const drin = {}; raus.forEach(q => { drin[q.id] = true; });
       raus = raus.concat(pickRandom(pool.filter(q => !drin[q.id]), n - raus.length));
     }
-    return pickRandom(raus, n);
+    const bogen = pickRandom(raus, n);
+    simGesehenGezogen(bogen.map(q => q.id));
+    return bogen;
   }catch(e){
     console.debug('Abwechslung:', e.message);
     return pickRandom(pool, n);
@@ -51466,7 +51576,7 @@ function abwechslungInfo(){
         const teile = realisticTeile();
         let gesamt = 0, neu = 0;
         teile.forEach(t => realisticPool(t).forEach(q => { gesamt++; if(!g[q.id]) neu++; }));
-        el.textContent = gesamt ? ('Abwechslung: Es kommen zuerst Fragen, die im Simulator noch nicht oder am längsten nicht dran waren. Noch nie gestellt: ' + neu + ' von ' + gesamt + '.') : '';
+        el.textContent = gesamt ? ('Abwechslung: Es kommen zuerst Fragen, die im Simulator am seltensten und am längsten nicht dran waren; Fragen aus dem letzten Bogen kommen zuletzt. Noch nie gestellt: ' + neu + ' von ' + gesamt + '.') : '';
     }catch(e){}
 }
 function schwerInfoAktualisieren(){
@@ -51987,7 +52097,16 @@ function showRealisticInterim(isTimeUp){
   }catch(e){ console.error('TTS Fehler', e); }
 }
 
+// Stand 521, Dietmar: "Wenn ich auf weiter klicke und die Fragen geladen sind, spricht noch immer der Trainer: Herzlichen Glueckwunsch. Sobald ich weiter klicke, muss das beendet werden."
+// Die Ergebnis-Ansage (Aufnahme oder Stimme) wird beim Weiterklicken in jedem Fall beendet - stopTTS allein tut das in den ersten 1,5 s und zwischen zwei Aufnahmen nicht.
+function ergebnisAnsageBeenden(){
+  try{ ergebnisAnsageStopp(); }catch(e){}
+  try{ if(typeof stopTTS === 'function') stopTTS(); }catch(e){}
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+}
+window.ergebnisAnsageBeenden = ergebnisAnsageBeenden;
 window.nextRealisticPart = function(){
+  ergebnisAnsageBeenden();
   window._isTransitioningRealistic = true;
   try{ closeRealisticModal(); }catch(e){}
   realisticExam.currentIdx++;
@@ -52362,6 +52481,7 @@ window.duoPruefungZurueckZurAuswertung = function(){
 };
 
 window.backToMainRealistic = function(){
+  try{ ergebnisAnsageBeenden(); }catch(e){}
   // Stand 436: Hauptmenue aus dem Ergebnis darf nie an der Rueckfrage "Runde abbrechen?" haengen bleiben
   isQuizActive = false;
   closeRealisticModal();
@@ -54413,7 +54533,7 @@ function uebungszeitOeffnen(){
             m.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,39,69,0.62); '
                 + 'z-index:99997; align-items:center; justify-content:center; padding:1rem;';
             m.innerHTML =
-                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:660px; width:95%; '
+                '<div style="background:#fff; border-radius:18px; padding:1.3rem; max-width:860px; width:95%; '
                 + 'max-height:calc(88vh / var(--afu-zoom, 1)); display:flex; flex-direction:column; '
                 + 'box-shadow:0 20px 60px rgba(0,0,0,0.4);">'
                 + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:0.6rem; flex:0 0 auto;">'
@@ -54429,7 +54549,7 @@ function uebungszeitOeffnen(){
         const html = uebungszeitAuswertungHtml(true);
         inhalt.innerHTML = html || ('<div style="font-size:0.85rem; color:var(--muted); line-height:1.6;">'
             + 'Hier steht, wie lange du geübt hast &ndash; diese Woche, insgesamt und in den '
-            + 'letzten acht Wochen. Gemessen wird von selbst, sobald du die erste Frage '
+            + 'letzten vier Wochen. Gemessen wird von selbst, sobald du die erste Frage '
             + 'beantwortest.<br><br>Gezählt wird nur, solange wirklich geübt wird: Nach 90 '
             + 'Sekunden ohne Klick oder Tastendruck hält die Uhr an.</div>');
         m.style.display = 'flex';
@@ -54817,7 +54937,7 @@ function uebungszeitAuswertungHtml(ohneTitel){
 
         // ---- Die letzten 14 Tage ----
         const WOCHENTAG = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-        const tage = zeitTageReihe(14);
+        const tage = zeitTageReihe(28);   // Stand 511: vier Wochen (Dietmar: "4 Wochen oben, langt doch")
         const tGipfel = Math.max.apply(null, tage.map(t => t.sek).concat([1]));
         let tSaeulen = '', tAchse = '';
         tage.forEach((t, i) => {
@@ -54886,12 +55006,10 @@ function uebungszeitAuswertungHtml(ohneTitel){
              +   '<div style="font-size:0.72rem; color:var(--muted);">'
              +     'Gezählt wird nur, solange wirklich geübt wird &ndash; nach 90 Sekunden '
              +     'ohne Klick oder Tastendruck hält die Uhr an.</div>'
-             +   '<div class="zeit-reihe-titel">Die letzten 14 Tage</div>'
+             +   '<div class="zeit-reihe-titel">Die letzten 4 Wochen</div>'
              +   '<div class="wochen-reihe tage-reihe">' + tSaeulen + '</div>'
              +   '<div class="wochen-achse tage-achse">' + tAchse + '</div>'
-             +   '<div class="zeit-reihe-titel">Die letzten acht Wochen &middot; die rechte läuft noch</div>'
-             +   '<div class="wochen-reihe">' + saeulen + '</div>'
-             +   '<div class="wochen-achse">' + achse + '</div>'
+             /* Stand 511 (17.11.2026) - Dietmar: "Die untere Leiste wird nicht benötigt, wenn das so blöd aussieht". Die Acht-Wochen-Säulen sind weg; die 14 Tage und die vier Kacheln bleiben. */
              +   '<div class="zeit-kachel">'
              +     '<div><div class="k-wert">' + zeitText(g.summe) + '</div>'
              +       '<div class="k-name">insgesamt, seit ' + datumText(g.erster) + '</div></div>'
@@ -55371,7 +55489,7 @@ function lernstandExport_extraEinlesen(app, u, jsonLies){
                 Object.keys(aus).forEach(id => {
                     const a = aus[id], c = l[id];
                     if (!Array.isArray(a)) return;
-                    l[id] = Array.isArray(c) ? [Math.max(+a[0] || 0, +c[0] || 0), Math.max(+a[1] || 0, +c[1] || 0)] : a;
+                    l[id] = Array.isArray(c) ? [Math.max(+a[0] || 0, +c[0] || 0), Math.max(+a[1] || 0, +c[1] || 0), Math.max(+a[2] || 0, +c[2] || 0), Math.max(+a[3] || 0, +c[3] || 0)] : a;
                 });
                 localStorage.setItem(k, JSON.stringify(l));
             } else if (b === 'amateurfunk_notizen_'){
@@ -58211,6 +58329,18 @@ window._muendlich = { QUER, REGEL, zustand: () => mnp, buchstabiert, sprechText,
                 v.title = 'Stand ' + window.TRAINER_STAND.nr + ' vom ' + window.TRAINER_STAND.datum + ' – Info & Hilfe öffnen';
                 v.addEventListener('click', () => tu(() => { infoOeffnen(); infoAbschnittZeigen('daten'); }));
                 t.insertAdjacentElement('afterend', v);
+            }
+        });
+        // Vollbild oben in der Leiste (Stand 515, 18.11.2026). Dietmar, mit Bild des Knopfes aus der klassischen Ansicht: "Der Button fehlt immer noch".
+        // Dort sitzt er in der Kopfzeile (#vollbildBtn); in der PC-App fehlte er. Gleiche Funktion (vollbildUm), das Zeichen wechselt ueber vollbildKnopfNachziehen.
+        tu(() => {
+            const m = $('alMehr');
+            if(m && !$('alVollbild') && typeof vollbildUm === 'function'){
+                const b = D.createElement('button'); b.type = 'button'; b.className = 'al-knopf'; b.id = 'alVollbild';
+                b.title = 'Vollbild – der obere Teil des Browsers verschwindet (wie F11)'; b.setAttribute('aria-label', 'Vollbild einschalten');
+                b.innerHTML = '<i class="fas fa-expand"></i>';
+                b.addEventListener('click', () => tu(() => vollbildUm()));
+                m.insertAdjacentElement('beforebegin', b);
             }
         });
         // Beenden oben in der Leiste - am PC laeuft der Server, bis man ihn beendet

@@ -13,9 +13,84 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 508 · 14.11.2026
+Stand 522 · 19.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 522 (19.11.2026)
+
+### Geändert
+- Prüfungssimulator, Ziehung der Fragen: Der Trainer merkt sich jetzt zusätzlich, wie oft und wann eine Frage gezogen wurde (im Lernstand, neben dem Zähler „richtig beantwortet“). Gezogen wird zuerst, was am seltensten dran war, bei gleicher Zahl das, was am längsten nicht mehr dran war. Fragen aus dem letzten Bogen kommen damit zuletzt, alles durchmischt sich gleichmäßig. Falsch beantwortete Fragen stehen wie bisher wieder vorn. Die Verteilung nach Lernzielen bleibt. Test mit Pool 172 bis 204: 16 Bögen nacheinander ohne eine einzige Frage aus dem Bogen davor, jede Frage 1 bis 4 Mal.
+- Lernstand: Der Eintrag je Frage hat jetzt vier Werte (richtig, Zeit, gezogen, zuletzt gezogen). Ältere Lernstand-Dateien mit zwei Werten bleiben gültig, beim Zusammenführen gilt je Wert der größere.
+
+## Stand 521 (19.11.2026)
+
+### Behoben
+- Prüfungssimulator: Beim Klick auf „Weiter zu Betrieb“ (oder zur nächsten Runde) und auf „Hauptmenü“ wird die Ergebnis-Ansage („Herzlichen Glückwunsch …“) sofort beendet, Aufnahme wie Stimme. Vorher sprach sie in die nächste Runde hinein, weil das Beenden in den ersten 1,5 Sekunden und zwischen zwei Aufnahmen nicht griff. Das Vorlesen der Fragen startet danach wie eingestellt.
+
+## Stand 520 (19.11.2026)
+
+### Geändert
+- Einstellungen, „Von selbst weiterblättern“: Die Wartezeiten sind jetzt 1, 2, 3, 5, 6 und 7 Sekunden (vorher 2, 3, 5, 8 und 12). Ein früher gespeicherter Wert von 8 oder 12 Sekunden wird auf 7 gesetzt, damit Auswahlfeld, Text und Uhr dasselbe zeigen.
+
+## Stand 519 (19.11.2026)
+
+### Hinzugefügt
+- Tastatur: Die Leertaste springt zur nächsten Frage, wie Enter und Pfeil rechts. Sie gilt, wenn „Bedienung per Tastatur“ in den Einstellungen an ist. Gehaltene Taste springt nur einmal, ein Fokus auf einem Antwortknopf löst keinen zusätzlichen Klick aus.
+
+## Stand 518 (18.11.2026)
+
+### Geändert
+- Verlauf: Die Karte „Meine Probeprüfungen“ (Statistik mit den drei Kurven) ist einklappbar und beim Öffnen zugeklappt, damit sie den Verlauf darunter nicht verdeckt. Ein Tipp auf die Kopfzeile klappt sie auf und zu, die Wahl bleibt beim Neuzeichnen erhalten.
+
+## Stand 517 (18.11.2026)
+
+### Geändert
+- Kopfzeile am PC (Verspielt): Das Stufen-Abzeichen am Profilbild (z. B. S9+80) ist kleiner und sitzt in der rechten unteren Ecke, das Gesicht bleibt frei. Bei eckiger Form ist das Abzeichen ebenfalls eckig, bei runder Form eine Pille.
+
+## Stand 516 (18.11.2026)
+
+### Geändert
+- Kopfzeile am PC (Verspielt): Das Profilbild ist genau so groß wie die Knöpfe daneben (44 × 44 Punkte), die Kopfzeile wieder normal hoch.
+
+## Stand 515 (18.11.2026)
+
+### Behoben
+- PC-App (Verspielt und Sachlich): Der Vollbild-Knopf fehlte in der Kopfzeile. Er sitzt jetzt links neben den drei Punkten, schaltet wie F11 um und wechselt sein Zeichen.
+
+## Stand 514 (18.11.2026)
+
+### Geändert
+- Kopfzeile am PC, Stil Verspielt: Profilbild nochmal deutlich größer (58 statt 44 Punkte), die Kopfzeile ist dafür etwas höher (66 Punkte).
+
+## Stand 513 (18.11.2026)
+
+### Geändert
+- Kopfzeile am PC, Stil Verspielt: Die zweite Suche (Lupe rechts) ist weg, weil das Suchfeld links schon da ist. Dafür ist das Profilbild größer (44 statt 30 Punkte).
+
+## Stand 512 (17.11.2026)
+
+### Geändert
+- „Deine Übungszeit“ am PC: Fenster breiter (860 statt 660 px), Säulen höher, Kacheln größer. Am Handy unverändert.
+
+## Stand 511 (17.11.2026)
+
+### Geändert
+- „Deine Übungszeit“: Die Säulen „Die letzten acht Wochen“ sind entfallen. Oben stehen jetzt die letzten vier Wochen (28 Tage) statt 14 Tage, darunter die vier Kacheln.
+
+## Stand 510 (17.11.2026)
+
+### Geändert
+- „Deine Übungszeit“: neue Farben, „Ruhiges Grün“. Werktage grün, Wochenende helleres Grün, heute und die laufende Woche gelb; in hell und dunkel, bei den 14 Tagen und den acht Wochen. Leere Tage und Wochen bleiben grau.
+
+## Stand 509 (14.11.2026)
+
+### Behoben
+- Umschalten zwischen Polar und Arktis in einer laufenden Runde: Die Schriftstufe der Frage wird danach neu bestimmt, damit die Antworten nicht kleiner stehen bleiben als nötig (gemeldet bei „Fehler üben“).
+
+### Geändert
+- „Fehler üben“ und „Lernbedarf“: Beim erneuten Öffnen beginnt die Runde wieder bei Frage 1, mit den Fragen, die noch auf der Liste stehen, und ohne die alten Antworten. Vorher stand beim Öffnen eine Frage schon beantwortet da. In „Fehler üben“ fehlen richtig beantwortete Fragen weiterhin (sie sind von der Liste), in „Lernbedarf“ bleibt die Frage, bis sie drei Mal richtig beantwortet ist.
+- Punktleiste: Eine als gelernt abgehakte Frage ist jetzt voll grün, genau wie eine richtig beantwortete, im Dunkelmodus und in Arktis (vorher dunkelgrün mit Ring beziehungsweise blassgrün).
 
 ## Stand 508 (14.11.2026)
 
