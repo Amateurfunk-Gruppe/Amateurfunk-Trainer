@@ -13,9 +13,143 @@ unten auf der Startseite und unter Mehr, am PC als „Stand 2.037“ neben der V
 
 ## [1.306.0]
 
-Stand 522 · 19.11.2026
+Stand 529 · 23.11.2026
 
 Nächste App-Fassung für den Play Store (Produktion). Enthält alle Stände seit 1.305.0 (Stand 446 bis 483): u. a. „Bist du bereit?“ mit „X von 10 Prüfungen bestanden“ und Punkten je Teil, Verlauf mit richtig beantworteten Fragen, Vorlesen in Polar wie in Arktis, Vorlesen-Knopf in Hell lesbar, Gruppenraum-Knöpfe am PC lesbar, Auto-Weiter wartet auf Maja (mit Zeitlimit), Majas Nachaufnahmen Klasse N, bessere Kontraste in Polar, Reiter „Leistung“, kleinere Lücke über dem Fußtext, Funk-Effekt nach der Frage in der App, Maja liest jede Antwort mit der richtigen Aufnahme, kein leerer Kasten mehr in der Knopfzeile, Formelblatt-X in Polar ohne Viereck, Startbild auch im Stil Sachlich mit Maja im Weltraum, richtig/falsch in Polar deckend grün/rot, Lupe neben kleinen Fragebildern, Fragebild beim Vorlesen auch in der App groß mit Sekundenzähler.
+
+## Stand 548 (23.11.2026)
+
+### Geändert
+- "Bist du bereit?": Die Karte zählt jetzt weiter als bis 30. Nach 30 Prüfungen je Teil geht sie auf "Alle 40", danach auf "Alle 50 Prüfungen bestanden". Mehr als 50 gibt es nicht (gespeichert werden die letzten 60 je Teil).
+
+## Stand 547 (23.11.2026)
+
+### Geändert
+- Ausdruck: Das Deckblatt (mit Hinweisen zu Bestehensgrenze und mündlicher Nachprüfung) entfällt, es gab es in der echten Prüfung nicht. Der Ausdruck beginnt mit dem Antwortbogen. Damit ist auch der Text zur mündlichen Nachprüfung aus dem Ausdruck raus.
+
+## Stand 546 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Ankreuzfelder viereckig (8,5 x 8,5 mm), Raster zusammen 42,5 mm breit.
+
+## Stand 545 (23.11.2026)
+
+### Geändert
+- Antwortbogen: Der unscharfe Platzhaltertext links reicht weiter nach unten, etwa bis zum Ende des Rasters.
+
+## Stand 544 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Felder deutlich rechteckig (12 x 8,5 mm), Nr-Spalte 6 mm (Raster zusammen 54 mm). Mehr Abstand unter der Überschrift (8 mm).
+
+## Stand 543 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Ankreuzfelder rechteckig (11 x 9 mm, Raster zusammen 5 cm breit). Der Text links reicht bis etwa 1 cm an das Raster. Die Unterstriche links bei Name, Vorname usw. sind weg.
+
+## Stand 542 (23.11.2026)
+
+### Geändert
+- Antwortbogen: Links unter den Feldern ein unscharfer Textblock wie im Original (nur Platzhalter, nicht lesbar), damit das Blatt voll wirkt.
+
+## Stand 541 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Raster füllt das Blatt bis fast unten (Zeilen 9 mm hoch, Zahlen größer), nicht mehr gedrückt. Rechts nur knapp 2 cm Rand.
+
+## Stand 540 (23.11.2026)
+
+### Geändert
+- Fragenbogen (Ausdruck): Die Kennung (VD609 - Frage 3 [V]) über der Frage ist weg. Es steht nur die Nummer, fett und etwas größer (14 pt), wie im echten Fragenbogen.
+
+## Stand 539 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Inhalt 55 mm tiefer auf dem Blatt, ausgewogener wie in der echten Prüfung.
+
+## Stand 538 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Alle Rahmen und Trennlinien außenrum sind weg. Das Ankreuz-Raster steht frei auf dem Blatt, etwa 2 cm vom rechten Rand.
+
+## Stand 537 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Die Spalte mit den Fragen-Kennungen (VD301 - Frage 1 [V]) ist wieder weg, wie auf dem echten Bogen. Es steht nur noch 1 bis 25 und A–D.
+
+## Stand 536 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Raster weiter nach links, die Beschriftung (z. B. VD301 - Frage 1 [V]) steht jetzt mit im Rahmen der Tabelle.
+
+## Stand 535 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Ankreuzfelder schmaler (6 x 5,5 mm, gerade Platz für ein X), Nummernspalte 7 mm; Raster zusammen 31 mm.
+
+## Stand 534 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Das Ankreuz-Raster ist nur noch 5 cm breit (Spalte Nr mit 1, 2, 3 ... und A–D je 1 cm). Die Beschriftung "VC118 - Frage 1 [V]" steht ohne Rahmen links vom Raster.
+
+## Stand 533 (23.11.2026)
+
+### Geändert
+- Trainer-Knopf (Doktorhut) und Majas Fehler-Ansage gibt es nur noch in der Prüfungssimulation (vom Trainer geführte Prüfung). Im Lernmodus ist der Knopf weg, Maja verhält sich dort wie vorher. Der Knopf "Verklickt" bleibt in beiden.
+
+## Stand 532 (23.11.2026)
+
+### Geändert
+- Antwortbogen und Schablone: Ankreuzbereich A–D insgesamt 5 cm breit (je Feld 12,5 x 5,5 mm), wie im Original.
+
+## Stand 531 (23.11.2026)
+
+### Geändert
+- Lösungsschablone: gleiches Raster wie der Antwortbogen (Zeilen und Felder 5,5 mm), richtige Antwort als X im Feld; lässt sich neben den Antwortbogen legen.
+
+## Stand 530 (23.11.2026)
+
+### Neu
+- Antwortbogen: Hinweis zur Korrektur wie in der echten Prüfung (durchstreichen, neu ankreuzen, sonst Buchstabe links neben die Zeile; rechts frei für die BNetzA).
+
+## Stand 529 (23.11.2026)
+
+### Geändert
+- Ausdruck der Probeprüfung: Keine Angaben zu farbigem Papier mehr auf Deckblatt und Antwortbogen (in der echten Prüfung gibt es kein farbiges Papier). Der farbige Kasten ist weiß.
+
+## Stand 528 (23.11.2026)
+
+### Geändert
+- Antwortbogen: Die Ankreuzfelder A bis D sind nur noch etwa 5,5 mm groß, gerade so, dass ein X hineinpasst, wie im Original.
+
+## Stand 527 (23.11.2026)
+
+### Geändert
+- Ausdruck der Probeprüfung, Antwortbogen: Jede Zeile trägt jetzt dieselbe Beschriftung wie im Fragenbogen (z. B. „VD204 - Frage 1 [V]“) statt nur der Nummer. Die Ankreuzfelder A bis D sind schmal wie im Original, die Beschriftungsspalte dafür breiter.
+
+## Stand 526 (20.11.2026)
+
+### Geändert
+- „Verklickt“: Jede falsche Antwort beim Lernen wird automatisch im Lernstand als „verklickt“ vermerkt (Knopf orange). Ein Klick nimmt den Vermerk zurück, ein weiterer setzt ihn wieder. Im Prüfungssimulator wird nichts automatisch vermerkt.
+
+## Stand 525 (20.11.2026)
+
+### Geändert
+- „Verklickt“: Ein zweiter Klick am selben Tag nimmt den Vermerk wieder zurück.
+
+## Stand 524 (20.11.2026)
+
+### Behoben
+- Trainer-Knopf und „Verklickt“-Knopf wurden beim Einschalten nicht farbig (die Farbregeln des grünen Hakens überschrieben sie). Jetzt blau bzw. orange. Bei eingeschaltetem Trainer und falscher Antwort spricht Maja nur noch die Fehler-Ansage, nicht mehr zusätzlich „falsche Antwort“.
+
+## Stand 523 (20.11.2026)
+
+### Hinzugefügt
+- Trainer-Knopf (Doktorhut mit Quaste) links neben dem grünen Haken, beim Lernen und im Prüfungssimulator. Ein Klick schaltet ein oder aus (blau = an). Ist er an und die Antwort falsch, hört Maja sofort auf und spricht „Das ist ein Fehler! Nimm dir einen Moment und lies die Frage und die Antworten einmal neu durch.“ (Aufnahme `sounds/maja-fehler.mp3`). Im Simulator bleiben Kacheln und Haken dabei neutral.
+- Knopf „Verklickt“ (Hand): Nach einer falschen Antwort (im Prüfungssimulator nach jeder beantworteten Frage) vermerkt er die Frage mit Datum im Lernstand. Der Eintrag bleibt stehen, auch wenn später etwas zurückgenommen wird, und geht in den Lernstand-Export.
+
+### Geändert
+- Prüfungssimulator: Der grüne „Gelernt“-Haken ist dort weg, weil seine Farbe einen Fehler verriet. Beim Lernen bleibt er.
 
 ## Stand 522 (19.11.2026)
 

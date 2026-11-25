@@ -5380,6 +5380,13 @@ html.android-app:not(.pc-app).stil-sachlich body:not(.dark) #appHeute #ahTag, ht
            ist der verlaessliche Kanal, nicht der Farbton. */
         .q-marke          { color: #6b7a8d; border: 1px solid var(--line); }
         .q-marke:hover    { border-color: #9fb0c4; }
+        /* Stand 524: Die Regeln fuer den gruenen Haken (#questionGelerntBtn, hell und dunkel) sind mit !important
+           geschrieben - die beiden neuen Knoepfe brauchen dasselbe, sonst bleibt "an" grau. */
+        html body #questionTrainerBtn.an, html body.dark #questionTrainerBtn.an, html body .question-area #questionTrainerBtn.an { background:#1d4ed8 !important; border-color:#93c5fd !important; color:#ffffff !important; box-shadow:0 0 0 2px rgba(96,165,250,.45) !important; }
+        html body #questionVerklicktBtn.an, html body.dark #questionVerklicktBtn.an, html body .question-area #questionVerklicktBtn.an { background:#b45309 !important; border-color:#fcd34d !important; color:#ffffff !important; }
+        html body #questionTrainerBtn svg, html body #questionVerklicktBtn i { color:inherit !important; }
+        .q-marke-verklickt.an { background: #b45309; border-color: #b45309; color: #ffffff; }
+        .q-marke-trainer.an { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; }
         .q-marke-gelernt.an { background: #15703c; border-color: #15703c; color: #ffffff; }
         .q-marke-merken.an  { background: #e11d48; border-color: #e11d48; color: #ffffff; }
 
@@ -10770,6 +10777,18 @@ html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(
 html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea .nav-buttons > :last-child:not(#nextBtn){flex:0 0 58px!important}
 html:not(.android-app):not(.fs-kein) body:not(.dark):not(#hpx).runde-laeuft:not(.beamer-live) #navArea #googleSearchBtn{border-radius:var(--opt-r,18px)!important}
 </style>
+<style id="trainerKnopfStil">
+/* Stand 524: steht ganz am Ende des Kopfes, damit die Farbe des Trainer- und des Verklickt-Knopfes nicht von den Regeln des gruenen Hakens ueberschrieben wird */
+html body #questionContainer .q-knopfleiste #questionTrainerBtn.an,
+html body.dark #questionContainer .q-knopfleiste #questionTrainerBtn.an,
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionTrainerBtn.an,
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #questionTrainerBtn.an:not(#q1){background:#1d4ed8!important;border-color:#93c5fd!important;color:#fff!important;box-shadow:0 0 0 2px rgba(96,165,250,.45)!important}
+html body #questionContainer .q-knopfleiste #questionVerklicktBtn.an,
+html body.dark #questionContainer .q-knopfleiste #questionVerklicktBtn.an,
+html:not(.android-app):not(.fs-kein) body.dark.runde-laeuft #questionContainer .q-knopfleiste #questionVerklicktBtn.an,
+html.android-app body.runde-laeuft #questionContainer .q-knopfleiste #questionVerklicktBtn.an:not(#q1){background:#b45309!important;border-color:#fcd34d!important;color:#fff!important}
+#questionTrainerBtn svg{fill:currentColor!important}
+</style>
 </head>
 <body>
 <!-- Stand 456: Warmton (Blaulichtfilter) fuer grosse Bilder, Farbtemperatur 4500 / 3800 / 3000 K (Dietmar: "Ein Wert von 3800?") -->
@@ -15564,8 +15583,84 @@ function gelerntPunkt(qId){
     }catch(e){ return false; }
 }
 
+// Stand 523: "Verklickt" - Protokoll im Lernstand (bleibt auch bestehen, wenn man etwas zuruecknimmt)
+function verklicktSchluessel(){ return 'amateurfunk_verklickt_' + currentUser; }
+function verklicktListe(){
+    try{ const l = JSON.parse(localStorage.getItem(verklicktSchluessel()) || '[]'); return Array.isArray(l) ? l : []; }catch(e){ return []; }
+}
+// Stand 526: jede falsche Antwort beim Lernen wird automatisch als "verklickt" vermerkt (Knopf orange);
+// ein Klick auf den Knopf nimmt den Vermerk zurueck. Im Pruefungssimulator wird nichts automatisch vermerkt.
+function verklicktAuto(q){
+    try{
+        if(!q || pruefungStreng()) return;
+        const l = verklicktListe();
+        const heute = new Date().toISOString().slice(0,10);
+        if(l.some(e => e && e.id === q.id && String(e.d || '').slice(0,10) === heute)) return;
+        l.push({ id: q.id, d: new Date().toISOString(), auto: true });
+        localStorage.setItem(verklicktSchluessel(), JSON.stringify(l));
+    }catch(e){}
+}
+function verklicktVermerken(){
+    const q = currentQuestions[currentIndex]; if(!q) return;
+    const l = verklicktListe();
+    const heute = new Date().toISOString().slice(0,10);
+    const schon = l.some(e => e && e.id === q.id && String(e.d || '').slice(0,10) === heute);
+    if(schon){
+        // Stand 525: zweiter Klick nimmt den Vermerk von heute wieder zurueck
+        const rest = l.filter(e => !(e && e.id === q.id && String(e.d || '').slice(0,10) === heute));
+        try{ localStorage.setItem(verklicktSchluessel(), JSON.stringify(rest)); }catch(e){}
+        try{ if(typeof saveMastery === 'function') saveMastery(); }catch(e){}
+        try{ verklicktKnopfZeigen(); }catch(e){}
+        try{ if(typeof zeigeFehlerwertungHinweis === 'function') zeigeFehlerwertungHinweis('fas fa-rotate-left', q.id + ': Verklickt-Vermerk zurückgenommen', 'schlecht'); }catch(e){}
+        return;
+    }
+    if(!schon){
+        l.push({ id: q.id, d: new Date().toISOString(), ant: (progress[q.id] && progress[q.id].selected !== undefined) ? progress[q.id].selected : null, pruefung: !!pruefungStreng() });
+        try{ localStorage.setItem(verklicktSchluessel(), JSON.stringify(l)); }catch(e){}
+        try{ if(typeof saveMastery === 'function') saveMastery(); }catch(e){}
+    }
+    try{ verklicktKnopfZeigen(); }catch(e){}
+    try{ if(typeof zeigeFehlerwertungHinweis === 'function') zeigeFehlerwertungHinweis('fas fa-hand-pointer', schon ? q.id + ': heute schon als verklickt vermerkt' : q.id + ': als verklickt im Lernstand vermerkt', 'gut'); }catch(e){}
+}
+function verklicktKnopfZeigen(){
+    const b = document.getElementById('questionVerklicktBtn'); if(!b) return;
+    const q = currentQuestions[currentIndex];
+    let zeigen = false;
+    try{
+        const pr = q && progress[q.id];
+        if(pr && pr.answered) zeigen = pruefungStreng() ? true : (pr.correct === false);
+    }catch(e){}
+    b.style.display = zeigen ? '' : 'none';
+    const heute = new Date().toISOString().slice(0,10);
+    const an = !!(q && verklicktListe().some(e => e && e.id === q.id && String(e.d || '').slice(0,10) === heute));
+    b.classList.toggle('an', an);
+}
+window.verklicktVermerken = verklicktVermerken;
+window.verklicktKnopfZeigen = verklicktKnopfZeigen;
+function trainerFehlerUmschalten(){
+    let an = false;
+    try{ an = localStorage.getItem('trainerFehler') !== '1'; localStorage.setItem('trainerFehler', an ? '1' : '0'); }catch(e){}
+    try{ trainerKnopfZeigen(); }catch(e){}
+    try{ if(typeof zeigeFehlerwertungHinweis === 'function') zeigeFehlerwertungHinweis('fas fa-user-graduate', an ? 'Trainer an: Maja meldet Fehler' : 'Trainer aus', an ? 'gut' : 'schlecht'); }catch(e){}
+}
+// Stand 533: Trainer (Doktorhut) nur in der Pruefungssimulation = vom Trainer gefuehrte Pruefung
+function trainerAktiv(){
+    try{ return localStorage.getItem('trainerFehler') === '1' && !!pruefungStreng(); }catch(e){ return false; }
+}
+window.trainerAktiv = trainerAktiv;
+function trainerKnopfZeigen(){
+    const b = document.getElementById('questionTrainerBtn'); if(!b) return;
+    try{ if(pruefungStreng()) b.style.removeProperty('display'); else b.style.setProperty('display','none','important'); }catch(e){}
+    let an = false; try{ an = localStorage.getItem('trainerFehler') === '1'; }catch(e){}
+    b.classList.toggle('an', an);
+    b.setAttribute('aria-pressed', an ? 'true' : 'false');
+    try{ verklicktKnopfZeigen(); }catch(e){}
+}
+window.trainerFehlerUmschalten = trainerFehlerUmschalten;
+window.trainerKnopfZeigen = trainerKnopfZeigen;
 function updateGelerntButton(){
     try{
+        try{ trainerKnopfZeigen(); }catch(e){}
         const btn = document.getElementById('questionGelerntBtn');
         if(!btn) return;
         const q = currentQuestions[currentIndex];
@@ -18662,6 +18757,7 @@ function simulatorAufraeumen(){
     const streng = pruefungStreng();
     const weg = [
         'googleSearchBtn',   // Nachschlagen waehrend der Pruefung
+        'questionGelerntBtn', // Stand 523: der gruene Haken verriet einen Fehler (Farbe weg) - in der Pruefung gibt es ihn nicht
         'historyCol',        // Verlaufsspalte rechts
         'sidebarToggleBtn'   // "Verlauf ausblenden"
     ];
@@ -18669,6 +18765,8 @@ function simulatorAufraeumen(){
         const el = document.getElementById(id);
         if (el) el.classList.toggle('pruefung-aus', streng);
     });
+    // Stand 523: der Trainer-Knopf steht links vom gruenen Haken, im Lernen und in der Pruefung
+    try{ trainerKnopfZeigen(); }catch(e){}
     try{
         const sc = document.querySelector('.sidebar-column');
         if (sc) sc.classList.toggle('pruefung-aus', streng);
@@ -23703,7 +23801,7 @@ function reifeStufe(){
         const b = pruefZielBuchstabe(), alle = reifeListe(), je = {};
         alle.forEach(x => { if(x && x.k === b && x.t) je[x.t] = (je[x.t] || 0) + 1; });
         const n = Object.keys(je).reduce((a, t) => Math.max(a, je[t]), 0);
-        return n > 20 ? 30 : (n > 10 ? 20 : 10);
+        return n > 40 ? 50 : (n > 30 ? 40 : (n > 20 ? 30 : (n > 10 ? 20 : 10)));   // Stand 548: weiter auf 40 und 50 (Dietmar 23.11.2026: "Möchte hier mehr als 30"); gespeichert werden 60 je Teil
     }catch(e){ return 10; }
 }
 window.reifeStufe = reifeStufe;
@@ -26853,7 +26951,7 @@ let updateTestGesehen = '';   // welcher Probelauf schon gezeigt wurde
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pcStart); else setTimeout(pcStart, 0);
 })();
 
-const TRAINER_STAND = { nr: 522, datum: '19.11.2026' };
+const TRAINER_STAND = { nr: 548, datum: '20.11.2026' };
 // Angezeigt wird der Stand als 2.0NN (Dietmar: "Version 36 klingt nicht gut. Besser waere 2.036") - in der App als
 // "Version 2.037", am PC neben der Versionsnummer als "Stand 2.037".
 function standText(n){ return '2.' + String(n).padStart(3, '0'); }
@@ -35867,6 +35965,8 @@ function vorleseAntwort(isCorrect, correctText, correctLabel){
     const q=currentQuestions[currentIndex]; if(!q) return;
     // Der Haken "Antwort mit Sprachausgabe bestaetigen" (Einstellungen -> Vorlesen): ausdrueckliches Nein = still. Ohne Eintrag bleibt es wie bisher (an).
     try{ if(localStorage.getItem('ttsAutoReadAnswer') === '0') return; }catch(e){}
+    // Stand 524: Trainer an + falsch: hier spricht Maja nichts, die Fehler-Ansage kommt aus selectOption
+    try{ if(!isCorrect && trainerAktiv()) return; }catch(e){}
     const idx=correctLabel?correctLabel.charCodeAt(0)-65:q.options.findIndex(o=>o.correct);
     const text = isCorrect ? 'Das war die richtige Antwort.' : 'Das war leider die falsche Antwort.';
     // Stand 401: Liest Maja vor, sagt sie es selbst - drei Saetze im Wechsel (abschaltbar).
@@ -41372,6 +41472,16 @@ function renderQuestion() {
             <span class="q-nummer">${q.id}</span>
             ${metaHtml}
         <div class="q-knopfleiste">
+            <button id="questionVerklicktBtn" class="q-marke q-marke-verklickt" style="display:none" onclick="verklicktVermerken()"
+                    aria-label="Verklickt oder verlesen: im Lernstand vermerken"
+                    title="Verklickt (orange) = diese falsche Antwort ist im Lernstand als verlesen oder verklickt vermerkt. Das passiert automatisch. Ein Klick nimmt es zurück, ein weiterer setzt es wieder."
+                    data-tooltip="Verklickt: ich habe mich verlesen oder verklickt. Das wird im Lernstand vermerkt und bleibt dort."
+                    ><i class="fas fa-hand-pointer"></i></button>
+            <button id="questionTrainerBtn" class="q-marke q-marke-trainer" onclick="trainerFehlerUmschalten()"
+                    aria-label="Trainer: Fehler melden ein oder aus"
+                    title="Trainer = Maja meldet einen Fehler sofort. Klick schaltet ein oder aus."
+                    data-tooltip="Trainer: Maja sagt sofort, wenn die Antwort falsch war. Klick schaltet ein oder aus."
+                    ><svg viewBox="0 0 640 512" width="1.1em" height="1em" fill="currentColor" aria-hidden="true" style="display:block"><path d="M320 40L20 170l300 130 300-130z"/><path d="M150 290v90c0 40 80 72 170 72s170-32 170-72v-90l-170 74z" opacity=".9"/><rect x="578" y="170" width="24" height="150" rx="12"/><circle cx="590" cy="340" r="26"/></svg></button>
             <button id="questionGelerntBtn" class="q-marke q-marke-gelernt" onclick="toggleGelerntCurrent()"
                     aria-label="Als gelernt abhaken"
                     title="Haken = GELERNT — diese Frage nicht mehr abfragen.&#10;(Das Herz daneben ist die Merkliste.)"
@@ -41939,6 +42049,8 @@ function selectOption(optIndex) {
     // Der wichtigste Speicherpunkt: hier ist gerade Arbeit entstanden, die
     // beim Schliessen sonst verloren waere.
     try{ rundeSichernSpaeter(); }catch(e){}
+    // Stand 523: Trainer-Schalter - bei falscher Antwort sofort still (nicht erst nach 300 ms)
+    try{ if(!isCorrect && trainerAktiv() && typeof stopTTS === 'function') stopTTS(); }catch(e){}
 
     // Rueckmeldung fuer Vorleseprogramme. Ohne das sieht man die gruene
     // oder rote Kachel - und wer sie nicht sieht, erfaehrt nichts. Bei
@@ -41979,6 +42091,7 @@ function selectOption(optIndex) {
         handleDifficultOnCorrect(qId);
     }
     handleMasteryOnAnswer(qId, isCorrect);
+    try{ if(!isCorrect && !pruefNochmal) verklicktAuto(q); }catch(e){}
     if (isCorrect) simGesehenRichtig(qId); else { try{ simGesehenFalsch(qId); }catch(e){} }
     saveErrors();
     saveDifficult();
@@ -42021,6 +42134,16 @@ function selectOption(optIndex) {
         }
     }, 300);
     setTimeout(() => {
+        // Stand 523: Trainer-Schalter. Falsche Antwort: Maja hoert sofort auf und sagt den Fehler-Satz.
+        try{
+            if(!isCorrect && trainerAktiv()){
+                const satz = 'Das ist ein Fehler! Nimm dir einen Moment und lies die Frage und die Antworten einmal neu durch.';
+                const ton = new Audio('sounds/maja-fehler.mp3?v=523'); ton.volume = 1;
+                ton.onerror = function(){ try{ playTTSQueue([{text: satz, frageNr: currentIndex, thorsten:true}], null); }catch(e){} };
+                const pr = ton.play(); if(pr && pr.catch) pr.catch(function(){ ton.onerror(); });
+                return;
+            }
+        }catch(e){}
         // IM PRUEFUNGSSIMULATOR WIRD NICHT VORGELESEN, OB ES STIMMTE.
         // Dietmar: "Das war die Richtige oder das war leider die falsche
         // Antwort. Das gibt es in der Pruefung nicht und muss im
@@ -47352,16 +47475,13 @@ function printExam() {
 <div class="deckblatt">
     <div class="deckblatt-header"><span>Bundesnetzagentur - Referat 225 - Amateurfunk</span><span>Mitteilung Nr. 256/2023 - Ab 24.06.2024</span></div>
     <div class="deckblatt-title">AMATEURFUNKPRÜFUNG - ${klasseText} - ${bogen.titel}</div>
-    <div class="deckblatt-sub">Amtlicher Fragenkatalog 2023/2024 - 25 Fragen ${bogen.titel} - Bogen ${bogenNr}-${bogen.kurz} - Datum ${datum} - ${bogen.amtlich ? 'Original ' + bogen.papier + ' Papier' : bogen.papier + ' Papier zur Unterscheidung'}</div>
+    <div class="deckblatt-sub">Amtlicher Fragenkatalog 2023/2024 - 25 Fragen ${bogen.titel} - Bogen ${bogenNr}-${bogen.kurz} - Datum ${datum}</div>
 
     <div class="deckblatt-grid" style="grid-template-columns: 1fr;">
-        <div class="deckblatt-box ${bogen.farbe}" style="min-height:80px;">
-            <b>${bogen.titel} - ${bogen.papier.toUpperCase()} PAPIER</b>
+        <div class="deckblatt-box" style="min-height:80px;">
+            <b>${bogen.titel}</b>
             ${bogen.beschreibung}<br>
-            Prüfungsdauer: ${bogen.minuten} Minuten<br>
-            ${bogen.amtlich
-                ? 'Originalfarbe: ' + bogen.papier + ' (wie im Prüfungsraum 2023)'
-                : 'Farbe hier nur zum Auseinanderhalten der Bögen'}
+            Prüfungsdauer: ${bogen.minuten} Minuten
         </div>
     </div>
 
@@ -47393,12 +47513,14 @@ function printExam() {
         function buildAntwortbogen(bogen) {
             let rows = '';
             for (let i = 1; i <= 25; i++) {
+                // Stand 527: Zeilenbeschriftung wie im Fragenbogen ("VD204 - Frage 1 [V]"), die Ankreuzfelder A-D schmal wie im Original
+                const qZ = bogen.fragen[i-1];
                 rows += `<tr><td class="num">${i}</td><td class="box"></td><td class="box"></td><td class="box"></td><td class="box"></td></tr>`;
             }
             return `
 <div class="page-break"></div>
 <div class="antwortbogen">
-    <div class="antwortbogen-title">ANTWORTBOGEN - ${klasseText} - ERSTES BLATT NACH DECKBLATT - ${bogen.titel}</div>
+    <div class="antwortbogen-title">ANTWORTBOGEN - ${klasseText} - ${bogen.titel}</div>
     <div class="antwortbogen-body">
         <div class="bogen-fields">
             <div class="row"><label>BOGEN:</label><div class="line" style="font-family:Calibri, monospace; font-weight:bold;">${bogenNr}-${bogen.kurz}</div></div>
@@ -47408,15 +47530,21 @@ function printExam() {
             <div class="row"><label>DATUM:</label><div class="line">${datum}</div></div>
             <div class="row"><label>ORT:</label><div class="line"></div></div>
             <div class="row"><label>UNTERSCHRIFT:</label><div class="line"></div></div>
-            <div style="margin-top:10px; padding:8px; border:2px solid #000; background:${bogen.hex}; font-weight:bold; font-size:11pt; text-align:center; text-transform:uppercase;">
-                ${bogen.titel}<br><span style="font-size:9pt; font-weight:normal; text-transform:none;">${bogen.papier} Papier - 25 Fragen - ${bogen.minuten} Min - 19/25 zum Bestehen</span>
+            <div style="margin-top:10px; padding:8px 0; border:none; background:#fff; font-weight:bold; font-size:11pt; text-align:center; text-transform:uppercase;">
+                ${bogen.titel}<br><span style="font-size:9pt; font-weight:normal; text-transform:none;">25 Fragen - ${bogen.minuten} Min - 19/25 zum Bestehen</span>
             </div>
             <div class="bogen-hinweis" style="margin-top:10px; font-size:9pt; line-height:1.35;">
                 <b>Dieser Bogen gehört zu: ${bogen.titel}</b><br>
                 Prüfungsdauer: ${bogen.minuten} Minuten<br>
                 Benötigt: 19/25 zum Bestehen<br>
-                Farbe: ${bogen.papier}<br><br>
+                <br>
                 19/25 bestehen,<br>17-18 Nachprüfung,<br>&lt;17 nicht bestanden.
+            </div>
+            <div class="bogen-hinweis" style="margin-top:8px; font-size:8.5pt; line-height:1.35; padding:5px 0;">
+                <b>Korrektur:</b> Falsches Kreuz durchstreichen und im Feld daneben neu ankreuzen. Liegt man auch dann falsch, den Buchstaben <b>außerhalb der Tabelle links neben die Zeile</b> schreiben. <b>Rechts neben der Tabelle nichts eintragen</b> - dort setzt die Bundesnetzagentur ihre Korrektur an.
+            </div>
+            <div class="bogen-unscharf" aria-hidden="true">
+                Hinweise zur Bearbeitung des Antwortbogens. Tragen Sie Ihren Namen, Ihren Vornamen und das Datum in die dafür vorgesehenen Felder ein. Der Fragenbogen und dieser Antwortbogen gehören zusammen und dürfen nicht getrennt werden. Kreuzen Sie je Frage genau eine Antwort an. Eine Frage mit mehreren Kreuzen wird als falsch gewertet. Schreiben Sie nur mit dem ausgegebenen Stift und nicht in den Bereich rechts neben den Feldern. Nach Ablauf der Zeit legen Sie alle Unterlagen auf den Tisch und warten auf die Aufsicht. Prüfungsort, Prüfungsteil und Bogennummer müssen mit den Angaben auf dem Fragenbogen übereinstimmen. Unterschreiben Sie erst nach der Prüfung. Hilfsmittel, die nicht zugelassen sind, dürfen nicht auf dem Tisch liegen. Bei Täuschungsversuchen wird der Prüfungsteil als nicht bestanden gewertet. Die Ergebnisse werden Ihnen von der Bundesnetzagentur schriftlich mitgeteilt. Bewahren Sie diese Hinweise nicht auf, sie gelten nur für diese Prüfung. Wer den Prüfungsraum vorzeitig verlässt, gibt alle Unterlagen bei der Aufsicht ab und darf den Raum erst nach Ende des Prüfungsteils wieder betreten. Mobiltelefone und andere elektronische Geräte sind auszuschalten und außerhalb der Reichweite aufzubewahren. Fragen zum Ablauf richten Sie bitte nur an die Aufsicht und nicht an andere Teilnehmer. Sollten Sie sich unwohl fühlen, melden Sie sich sofort per Handzeichen. Die Bearbeitungszeit beginnt, sobald die Aufsicht den Beginn bekannt gibt, und endet mit der Ansage zum Abgeben der Unterlagen. Bitte prüfen Sie vor der Abgabe, dass bei jeder Frage ein Kreuz gesetzt ist und alle Angaben oben vollständig und gut lesbar eingetragen wurden.
             </div>
         </div>
         <div class="grid">
@@ -47426,7 +47554,7 @@ function printExam() {
             </table>
         </div>
     </div>
-    <div class="footer">Antwortbogen ${bogen.titel} - ERSTES BLATT NACH DECKBLATT - 25 Fragen - Bogen ${bogenNr}-${bogen.kurz}</div>
+    <div class="footer">Antwortbogen ${bogen.titel} - 25 Fragen - Bogen ${bogenNr}-${bogen.kurz}</div>
 </div>`;
         }
 
@@ -47445,8 +47573,7 @@ function printExam() {
                 const allTextEmpty = q.options.every(o => !o.text || o.text.trim() === '');
 
                 html += `<div class="question-block">
-                <div class="q-id">${q.id} - Frage ${num} [${partLetter}]</div>
-                <div class="q-text">${num}. ${formelHtml(q.text)}</div>`;
+                <div class="q-text"><b class="q-nr">${num}.</b> ${formelHtml(q.text)}</div>`;
 
                 if (svgHtml && !hasOptImages) {
                     const optNames = q.options.map(o => o.image ? String(o.image).trim() : '').filter(Boolean);
@@ -47483,25 +47610,25 @@ function printExam() {
 
         function buildLoesung(bogen) {
             const questions = bogen.fragen, partTitle = bogen.titel, partLetter = bogen.kurz;
-            let grid = '';
+            // Stand 531: Schablone mit gleichem Zeilenraster wie der Antwortbogen (Zeilen 5,5 mm, Felder 12,5 x 5,5 mm), damit sie neben den Antwortbogen gelegt werden kann
+            let rows = '';
             questions.forEach((q, idx) => {
-                const num = idx + 1;
                 const letter = getCorrectLetter(q);
-                grid += `<div class="solution-item"><span>${num}. ${q.id}</span><span><b>${letter}</b></span></div>`;
+                let cells = '';
+                ['A','B','C','D'].forEach(L => { cells += `<td class="box">${L === letter ? '<b>X</b>' : ''}</td>`; });
+                rows += `<tr><td class="num">${idx + 1}</td>${cells}</tr>`;
             });
-            const listStr = questions.map((q,i)=> (i+1)+':'+getCorrectLetter(q)).join(', ');
             return `
 <div class="page-break"></div>
-<div class="loesung-header">
-    <div style="font-size:12pt; font-weight:bold; text-transform:uppercase;">Lösungsschablone - ${partTitle}</div>
-    <div style="font-size:8pt; margin-top:2px;">Bogen ${bogenNr}-${partLetter} - Datum ${datum} - 25 Fragen - Zum Abtrennen</div>
-</div>
-<div class="cut-line"><span>✂️ Hier abtrennen - Lösung ${partTitle}</span></div>
-<div style="font-size:9pt; margin-bottom:6px; border:1.5px solid #c00; background:#fff0f0; padding:5px; font-family:Calibri, Arial, sans-serif;">
-    <b>${partTitle} - Hinweis:</b> 19/25 = bestanden. 17-18/25 = mündliche Nachprüfung möglich. &lt;17 = nicht bestanden. - ${listStr}
-</div>
-<div class="solution-grid">
-${grid}
+<div class="antwortbogen schablone">
+    <div class="antwortbogen-title">LÖSUNGSSCHABLONE - ${partTitle} - Bogen ${bogenNr}-${partLetter}</div>
+    <div style="font-size:8pt; font-family:Calibri, Arial, sans-serif; margin:4px 0 6px 0;">Neben den Antwortbogen legen: Zeilen und Felder sind genau so groß wie dort (Felder viereckig 8,5 x 8,5 mm, ohne Fragen-Kennung). Ein X im Feld = richtige Antwort. 19/25 = bestanden.</div>
+    <div class="grid">
+        <table>
+            <tr><th>Nr</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+            ${rows}
+        </table>
+    </div>
 </div>
 <div class="footer">Lösungsschablone ${partTitle} - Bogen ${bogenNr}-${partLetter} - ${new Date().toLocaleString('de-DE')}</div>
 `;
@@ -47533,22 +47660,34 @@ ${grid}
     .wichtig-box { border: 2.5px solid #000; margin: 0; padding: 10px; background: #fff; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; line-height: 1.45; }
     .wichtig-box h4 { margin: 0 0 6px 0; font-size: 11pt; text-transform: uppercase; border-bottom: 1.5px solid #000; padding-bottom: 3px; }
     .ablauf-box { border: 1px solid #000; margin: 0; padding: 8px; background: #fffff0; font-family: Calibri, Arial, sans-serif; font-size: 8.5pt; line-height: 1.4; }
-    .antwortbogen { border: 1.5px solid #000; padding: 0; font-family: Calibri, Arial, sans-serif; }
-    .antwortbogen-title { font-size: 11pt; font-weight: bold; padding: 6px 10px; border-bottom: 1.5px solid #000; background: #e8e8e8; text-transform: uppercase; text-align: center; }
+    .antwortbogen { margin-top: 0; border: none; padding: 0; font-family: Calibri, Arial, sans-serif; }
+    .antwortbogen-title { font-size: 11pt; font-weight: bold; padding: 6px 10px 8mm 10px; border-bottom: none; background: none; text-transform: uppercase; text-align: center; }
     .antwortbogen-body { display: flex; }
-    .bogen-fields { width: 44%; border-right: 1.5px solid #000; padding: 10px; font-size: 10pt; }
+    .bogen-unscharf { margin-top: 12px; font-size: 9pt; line-height: 1.5; color: #555; filter: blur(1.4px); text-align: justify; padding-right: 8px; }
+    .antwortbogen .footer, .antwortbogen + .footer { border-top: none; }
+    .bogen-fields { flex: 1; margin-right: 10mm; border-right: none; padding: 10px; font-size: 10pt; }
     .bogen-fields .row { display: flex; margin: 8px 0; align-items: flex-end; }
     .bogen-fields label { width: 95px; font-weight: bold; font-size: 9pt; text-transform: uppercase; }
-    .bogen-fields .line { flex: 1; border-bottom: 1px solid #000; min-height: 16px; }
-    .grid { width: 56%; }
-    .grid table { width: 100%; border-collapse: collapse; font-size: 8.5pt; font-family: Calibri, Arial, sans-serif; }
+    .bogen-fields .line { flex: 1; border-bottom: none; min-height: 16px; }
+    .grid { flex: none; width: auto; }
+    .grid table { width: 42.5mm; margin-left: auto; margin-right: 7mm; table-layout: fixed; border-collapse: collapse; font-size: 8.5pt; font-family: Calibri, Arial, sans-serif; }
     .grid th, .grid td { border: 1px solid #000; padding: 4px 1px; text-align: center; }
     .grid th { background: #000; color: #fff; }
-    .grid td.num { background: #f0f0f0; font-weight: bold; width: 28px; }
-    .grid td.box { width: 28px; height: 18px; }
+    .grid tr { height: 8.5mm; }
+    .grid th { height: 8.5mm; line-height: 1; box-sizing: border-box; }
+    .grid td { line-height: 1; box-sizing: border-box; }
+    .grid th:first-child { width: auto; }
+    .grid th:not(.lbl) { width: 8.5mm; padding: 2px 0; }
+    .grid th.lbl { width: 32mm; }
+    .grid th:first-child:not(.lbl) { width: 8.5mm; }
+    .grid th:not(.lbl):not(:first-child) { width: 8.5mm; }
+    .grid td.lbl { width: 32mm; background: #f0f0f0; color: #000; padding: 0 0 0 4px; text-align: left; font-size: 7pt; font-weight: normal; white-space: nowrap; overflow: hidden; height: 5.5mm; }
+    .grid td.num { background: #f0f0f0; font-weight: bold; text-align: left; padding: 0; width: 8.5mm; text-align: center; height: 8.5mm; font-size: 10pt; white-space: nowrap; overflow: hidden; }
+    .grid td.box { width: 8.5mm; height: 8.5mm; padding: 0; }
     .header-bnetza { font-family: Calibri, Arial, sans-serif; font-size: 7.5pt; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 8px; display: flex; justify-content: space-between; }
     .question-block { margin-bottom: 14px; padding-bottom: 8px; border-bottom: 0.5px dotted #aaa; page-break-inside: avoid; break-inside: avoid; font-family: Calibri, Arial, sans-serif; }
     .q-id { font-weight: bold; font-size: 9pt; color: #333; }
+    .q-nr { font-weight: 700; font-size: 14pt; margin-right: 4px; }
     .q-text { margin: 3px 0 6px 0; font-size: 12pt; font-weight: 500; line-height: 1.35; }
     .q-image { margin: 8px 0 10px 14px; text-align: center; page-break-inside: avoid; }
     .q-image img { max-width: 360px; max-height: 260px; border: 1px solid #000; background: #fff; padding: 4px; display: block; margin: 6px auto; }
@@ -47579,8 +47718,10 @@ ${grid}
         // Ein Durchgang je Bogen, in der Reihenfolge der Pruefung:
         // erst das Nichttechnische, dann Technik von unten nach oben.
         for (const bogen of boegen) {
-            htmlContent += buildDeckblattWrapper(bogen);
-            htmlContent += buildAntwortbogen(bogen);
+            // Stand 547: Kein Deckblatt mehr (gab es in der echten Pruefung nicht). Der erste Bogen beginnt ohne Seitenumbruch.
+            { let ab = buildAntwortbogen(bogen);
+              if(bogen === boegen[0]) ab = ab.replace('<div class="page-break"></div>', '');
+              htmlContent += ab; }
             htmlContent += buildFragenBlock(bogen);
             htmlContent += buildLoesung(bogen);
         }
@@ -55461,7 +55602,7 @@ function statistikFuellen() {
 // ---------------------------------------------------------------
 // Faecher, die die Lernstand-Datei zusaetzlich traegt (Stand 215)
 const LS_DATEI_EXTRA = ['amateurfunk_simok_', 'amateurfunk_pruefungen_', 'amateurfunk_favorites_', 'amateurfunk_notizen_',
-    'amateurfunk_pruefungstermin_', 'amateurfunk_durchsicht_', 'amateurfunk_blaetterbuch_', 'afu_sim_gesehen_'];
+    'amateurfunk_pruefungstermin_', 'amateurfunk_durchsicht_', 'amateurfunk_blaetterbuch_', 'afu_sim_gesehen_', 'amateurfunk_verklickt_'];
 function lernstandExport_extraEinlesen(app, u, jsonLies){
     const x = app.extra && app.extra[u];
     if (!x || typeof x !== 'object') return;
@@ -55474,7 +55615,7 @@ function lernstandExport_extraEinlesen(app, u, jsonLies){
                 const aus = JSON.parse(x[b]) || {}, l = jsonLies(k, {});
                 Object.keys(aus).forEach(z => { const v = +aus[z] || 0; if (v > (+l[z] || 0)) l[z] = v; });
                 localStorage.setItem(k, JSON.stringify(l));
-            } else if (b === 'amateurfunk_pruefungen_' || b === 'amateurfunk_favorites_'){
+            } else if (b === 'amateurfunk_pruefungen_' || b === 'amateurfunk_favorites_' || b === 'amateurfunk_verklickt_'){
                 // Listen: zusammenfuehren, doppelte nur einmal
                 const aus = JSON.parse(x[b]), l = JSON.parse(lokalRoh || '[]');
                 if (!Array.isArray(aus)) return;
